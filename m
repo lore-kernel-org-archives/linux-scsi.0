@@ -1,59 +1,75 @@
-From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH] scsi: hpsa: make access_method const
-Date: Wed, 30 Aug 2017 19:23:12 +0530
-Message-ID: <1504101192-17837-1-git-send-email-bhumirks@gmail.com>
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [v5 00/14] mpt3sas driver NVMe support:
+Date: Wed, 30 Aug 2017 19:38:24 +0530
+Message-ID: <1504102118-7152-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: julia.lawall@lip6.fr, don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Make these const as they are not modified anywhere.
+Ventura Series controller are Tri-mode. The controller and
+firmware are capable of supporting NVMe devices and
+PCIe switches to be connected with the controller. This
+patch set adds driver level support for NVMe devices and
+PCIe switches.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
-To compile-test hpsa.h, I test-compiled scsi/hpsa.c which
-includes this file.
+mpt3sas v5 patset:
+1) Removed the check to find data transfer length
+exceeding MDTS, Since we are setting max I/O size to
+match MDTS, this check is not required.
 
- drivers/scsi/hpsa.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+mpt3sas v4 patset:
+1) Removed code which detects gaps/holes in IO data buffers.
+With commit-id 5a8d75a1b8c99bdc926ba69b7b7dbe4fae81a5af (block:
+fix bio_will_gap() for first bvec with offset) driver can always assume that
+their won't be any holes in the data buffers pointed by SGE's
 
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 018f980..4688b8f 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -628,28 +628,28 @@ static unsigned long SA5_ioaccel_mode1_completed(struct ctlr_info *h, u8 q)
- 	.command_completed =	SA5_completed,
- };
- 
--static struct access_method SA5_ioaccel_mode1_access = {
-+static const struct access_method SA5_ioaccel_mode1_access = {
- 	.submit_command =	SA5_submit_command,
- 	.set_intr_mask =	SA5_performant_intr_mask,
- 	.intr_pending =		SA5_ioaccel_mode1_intr_pending,
- 	.command_completed =	SA5_ioaccel_mode1_completed,
- };
- 
--static struct access_method SA5_ioaccel_mode2_access = {
-+static const struct access_method SA5_ioaccel_mode2_access = {
- 	.submit_command =	SA5_submit_command_ioaccel2,
- 	.set_intr_mask =	SA5_performant_intr_mask,
- 	.intr_pending =		SA5_performant_intr_pending,
- 	.command_completed =	SA5_performant_completed,
- };
- 
--static struct access_method SA5_performant_access = {
-+static const struct access_method SA5_performant_access = {
- 	.submit_command =	SA5_submit_command,
- 	.set_intr_mask =	SA5_performant_intr_mask,
- 	.intr_pending =		SA5_performant_intr_pending,
- 	.command_completed =	SA5_performant_completed,
- };
- 
--static struct access_method SA5_performant_access_no_read = {
-+static const struct access_method SA5_performant_access_no_read = {
- 	.submit_command =	SA5_submit_command_no_read,
- 	.set_intr_mask =	SA5_performant_intr_mask,
- 	.intr_pending =		SA5_performant_intr_pending,
+2) Added Patch 14, This has sparse warning fixes.
+
+mpt3sas v3 patset:
+Posting version v3. This accommodates below changes
+over v2 patch.
+
+1. In the MPI header files patch, Reformatted headers to have type
+and variable on one line as suggested.
+2. As suggested, started using blk_queue_virt_boundary() API
+for NVMe drives and simplified the PRP formation.
+3. Removed 'TODO' comments
+
+Suganath Prabu S (14):
+  Update MPI Header
+  mpt3sas: Add nvme device support in slave alloc,  target      alloc
+    and probe
+  mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+  mpt3sas: Added support for nvme encapsulated request      message.
+  mpt3sas: API 's to support NVMe drive addition to  SML
+  mpt3sas: API's to remove nvme drive from sml
+  mpt3sas: Handle NVMe PCIe device related events  generated            
+           from firmware.
+  mpt3sas: Set NVMe device queue depth as 128
+  mpt3sas: scan and add nvme device after controller  reset
+  mpt3as: Add-Task-management-debug-info-for-NVMe-drives.
+  mpt3sas: NVMe drive support for BTDHMAPPING ioctl  command      and
+    log info
+  mpt3sas: Fix nvme drives checking for tlr.
+  mpt3sas: Update mpt3sas driver version.
+  mpt3sas: Fix sparse warnings
+
+ drivers/scsi/mpt3sas/mpi/mpi2.h          |   43 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  564 +++++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h     |   11 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |  282 +++-
+ drivers/scsi/mpt3sas/mpi/mpi2_pci.h      |  112 ++
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   14 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c      |  675 +++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  171 ++-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |  100 ++
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  158 ++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 2079 +++++++++++++++++++++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |    2 +-
+ 12 files changed, 3937 insertions(+), 274 deletions(-)
+ create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
+
 -- 
-1.9.1
+2.5.5
