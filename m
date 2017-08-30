@@ -1,219 +1,155 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH 1/6] pm80xx : redefine sas_identify_frame structure
-Date: Wed, 30 Aug 2017 18:03:41 +0200
-Message-ID: <CAD+HZHUq0Jy1uZgh1JcrDJfTiSCe-NxEj_Ospyi7RGDuO4hxwg@mail.gmail.com>
+From: Viswas G <viswas.g@microsemi.com>
+Subject: RE: [PATCH 1/6] pm80xx : redefine sas_identify_frame structure
+Date: Wed, 30 Aug 2017 16:28:40 +0000
+Message-ID: <E96847475729F24299853D257F7211218C8C9929@avsrvexchmbx1.microsemi.net>
 References: <20150130060645.23653-1-Viswas.G@microsemi.com>
- <20150130060645.23653-2-Viswas.G@microsemi.com> <CAD+HZHWwL=sjCC=4uKG8erLBTk=C+OWxsj9ACQf767Fma+hCKw@mail.gmail.com>
+ <20150130060645.23653-2-Viswas.G@microsemi.com>
+ <CAD+HZHWwL=sjCC=4uKG8erLBTk=C+OWxsj9ACQf767Fma+hCKw@mail.gmail.com>
  <E96847475729F24299853D257F7211218C8C98EB@avsrvexchmbx1.microsemi.net>
+ <CAD+HZHUq0Jy1uZgh1JcrDJfTiSCe-NxEj_Ospyi7RGDuO4hxwg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33942 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751405AbdH3QDn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 12:03:43 -0400
-Received: by mail-wm0-f68.google.com with SMTP id l19so2267098wmi.1
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2017 09:03:42 -0700 (PDT)
-In-Reply-To: <E96847475729F24299853D257F7211218C8C98EB@avsrvexchmbx1.microsemi.net>
+Received: from mail-dm3nam03on0053.outbound.protection.outlook.com ([104.47.41.53]:13696
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751463AbdH3Q27 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Aug 2017 12:28:59 -0400
+In-Reply-To: <CAD+HZHUq0Jy1uZgh1JcrDJfTiSCe-NxEj_Ospyi7RGDuO4hxwg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <viswas.g@microsemi.com>
+To: Jack Wang <xjtuwjp@gmail.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi Tharmarajan <vasanthalakshmi.thar@microsemi.com>
 
-2017-08-30 17:41 GMT+02:00 Viswas G <viswas.g@microsemi.com>:
-> Hi Jack,
->
-> The firmware expectation is that there is no 4 byte CRC. This causes the =
-IOMB to be generated incorrectly for PHY_START. Local structure for SAS Ide=
-ntify included in the driver so that it matches the Programmer's Manual and=
- Firmware expectations.
->
-> The sas_identify struct from the kernel includes the checksum word (32-bi=
-ts) . So it is 32 bytes rather than 28 bytes. The changed size for the sas =
-identify frame means that the "spasti" field for PHY_START is at a differen=
-t offset than documented, word 11 rather than word 10. We're not changing t=
-he phy analog settings so this doesn't really matter, but the docs indicate=
- that the sas frame's crc isn't included. So having a local definition will=
- be better than taking the system definition.
->
-> Regards,
-> Viswas G
-
-Hi Viswas,
-
-The spasti field is only for pm80xx, not for pm8001, I think it's
-better to move sas_identify_frame_local to pm80xx_hwi.h.
-
-Regards,
-Jack
-
-
->
->> -----Original Message-----
->> From: Jack Wang [mailto:xjtuwjp@gmail.com]
->> Sent: Tuesday, August 29, 2017 4:49 PM
->> To: Viswas G <viswas.g@microsemi.com>
->> Cc: linux-scsi@vger.kernel.org; Vasanthalakshmi Tharmarajan
->> <vasanthalakshmi.thar@microsemi.com>
->> Subject: Re: [PATCH 1/6] pm80xx : redefine sas_identify_frame structure
->>
->> EXTERNAL EMAIL
->>
->>
->> 2015-01-30 7:06 GMT+01:00 Viswas G <Viswas.G@microsemi.com>:
->> > sas_identify structure defined by pm80xx doesn't have CRC field.
->> > So added a new sas_identify structure without CRC.
->> >
->> > Signed-off-by: Raj Dinesh <Raj.Dinesh@microsemi.com>
->> > Signed-off-by: Viswas G <Viswas.G@microsemi.com>
->> > ---
->> >  drivers/scsi/pm8001/pm8001_hwi.h |  2 +-
->> >  drivers/scsi/pm8001/pm8001_sas.h | 95
->> ++++++++++++++++++++++++++++++++++++++++
->> >  drivers/scsi/pm8001/pm80xx_hwi.h |  2 +-
->> >  3 files changed, 97 insertions(+), 2 deletions(-)
->> >
->> > diff --git a/drivers/scsi/pm8001/pm8001_hwi.h
->> b/drivers/scsi/pm8001/pm8001_hwi.h
->> > index e4867e690c84..f4331afe9b0b 100644
->> > --- a/drivers/scsi/pm8001/pm8001_hwi.h
->> > +++ b/drivers/scsi/pm8001/pm8001_hwi.h
->> > @@ -157,7 +157,7 @@ struct mpi_msg_hdr{
->> >  struct phy_start_req {
->> >         __le32  tag;
->> >         __le32  ase_sh_lm_slr_phyid;
->> > -       struct sas_identify_frame sas_identify;
->> > +       struct sas_identify_frame_local sas_identify;
->> >         u32     reserved[5];
->> >  } __attribute__((packed, aligned(4)));
->> >
->> > diff --git a/drivers/scsi/pm8001/pm8001_sas.h
->> b/drivers/scsi/pm8001/pm8001_sas.h
->> > index e81a8fa7ef1a..2e17505ed5b8 100644
->> > --- a/drivers/scsi/pm8001/pm8001_sas.h
->> > +++ b/drivers/scsi/pm8001/pm8001_sas.h
->> > @@ -118,6 +118,101 @@ extern const struct pm8001_dispatch
->> pm8001_80xx_dispatch;
->> >  struct pm8001_hba_info;
->> >  struct pm8001_ccb_info;
->> >  struct pm8001_device;
->> > +#ifdef __LITTLE_ENDIAN_BITFIELD
->> > +struct sas_identify_frame_local {
->> > +       /* Byte 0 */
->> > +       u8  frame_type:4;
->> > +       u8  dev_type:3;
->> > +       u8  _un0:1;
->> > +
->> > +       /* Byte 1 */
->> > +       u8  _un1;
->> > +
->> > +       /* Byte 2 */
->> > +       union {
->> > +               struct {
->> > +                       u8  _un20:1;
->> > +                       u8  smp_iport:1;
->> > +                       u8  stp_iport:1;
->> > +                       u8  ssp_iport:1;
->> > +                       u8  _un247:4;
->> > +               };
->> > +               u8 initiator_bits;
->> > +       };
->> > +
->> > +       /* Byte 3 */
->> > +       union {
->> > +               struct {
->> > +                       u8  _un30:1;
->> > +                       u8 smp_tport:1;
->> > +                       u8 stp_tport:1;
->> > +                       u8 ssp_tport:1;
->> > +                       u8 _un347:4;
->> > +               };
->> > +               u8 target_bits;
->> > +       };
->> > +
->> > +       /* Byte 4 - 11 */
->> > +       u8 _un4_11[8];
->> > +
->> > +       /* Byte 12 - 19 */
->> > +       u8 sas_addr[SAS_ADDR_SIZE];
->> > +
->> > +       /* Byte 20 */
->> > +       u8 phy_id;
->> > +
->> > +       u8 _un21_27[7];
->> > +
->> > +} __packed;
->> > +
->> > +#elif defined(__BIG_ENDIAN_BITFIELD)
->> > +struct sas_identify_frame_local {
->> > +       /* Byte 0 */
->> > +       u8  _un0:1;
->> > +       u8  dev_type:3;
->> > +       u8  frame_type:4;
->> > +
->> > +       /* Byte 1 */
->> > +       u8  _un1;
->> > +
->> > +       /* Byte 2 */
->> > +       union {
->> > +               struct {
->> > +                       u8  _un247:4;
->> > +                       u8  ssp_iport:1;
->> > +                       u8  stp_iport:1;
->> > +                       u8  smp_iport:1;
->> > +                       u8  _un20:1;
->> > +               };
->> > +               u8 initiator_bits;
->> > +       };
->> > +
->> > +       /* Byte 3 */
->> > +       union {
->> > +               struct {
->> > +                       u8 _un347:4;
->> > +                       u8 ssp_tport:1;
->> > +                       u8 stp_tport:1;
->> > +                       u8 smp_tport:1;
->> > +                       u8 _un30:1;
->> > +               };
->> > +               u8 target_bits;
->> > +       };
->> > +
->> > +       /* Byte 4 - 11 */
->> > +       u8 _un4_11[8];
->> > +
->> > +       /* Byte 12 - 19 */
->> > +       u8 sas_addr[SAS_ADDR_SIZE];
->> > +
->> > +       /* Byte 20 */
->> > +       u8 phy_id;
->> > +
->> > +       u8 _un21_27[7];
->> > +} __packed;
->> > +#else
->> > +#error "Bitfield order not defined!"
->> > +#endif
->> >  /* define task management IU */
->> >  struct pm8001_tmf_task {
->> >         u8      tmf;
->> > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h
->> b/drivers/scsi/pm8001/pm80xx_hwi.h
->> > index 7a443bad6163..1ee2ec210065 100644
->> > --- a/drivers/scsi/pm8001/pm80xx_hwi.h
->> > +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
->> > @@ -248,7 +248,7 @@ struct mpi_msg_hdr {
->> >  struct phy_start_req {
->> >         __le32  tag;
->> >         __le32  ase_sh_lm_slr_phyid;
->> > -       struct sas_identify_frame sas_identify; /* 28 Bytes */
->> > +       struct sas_identify_frame_local sas_identify; /* 28 Bytes */
->> >         __le32 spasti;
->> >         u32     reserved[21];
->> >  } __attribute__((packed, aligned(4)));
->> > --
->> > 2.12.3
->> >
->> Did this cause any trouble? I guest not, as we does memset for
->> phy_start_req,  why bother?
->>
->> Jack
+VGhhbmtzLiBXZSB3aWxsIG1vdmUgdGhhdCB0byBwbTgweHhfaHdpLmguDQoNClJlZ2FyZHMsDQpW
+aXN3YXMgRw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEphY2sgV2Fu
+ZyBbbWFpbHRvOnhqdHV3anBAZ21haWwuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIEF1Z3VzdCAz
+MCwgMjAxNyA5OjM0IFBNDQo+IFRvOiBWaXN3YXMgRyA8dmlzd2FzLmdAbWljcm9zZW1pLmNvbT4N
+Cj4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBWYXNhbnRoYWxha3NobWkgVGhhcm1h
+cmFqYW4NCj4gPHZhc2FudGhhbGFrc2htaS50aGFyQG1pY3Jvc2VtaS5jb20+DQo+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0ggMS82XSBwbTgweHggOiByZWRlZmluZSBzYXNfaWRlbnRpZnlfZnJhbWUgc3Ry
+dWN0dXJlDQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4gDQo+IDIwMTctMDgtMzAgMTc6NDEg
+R01UKzAyOjAwIFZpc3dhcyBHIDx2aXN3YXMuZ0BtaWNyb3NlbWkuY29tPjoNCj4gPiBIaSBKYWNr
+LA0KPiA+DQo+ID4gVGhlIGZpcm13YXJlIGV4cGVjdGF0aW9uIGlzIHRoYXQgdGhlcmUgaXMgbm8g
+NCBieXRlIENSQy4gVGhpcyBjYXVzZXMgdGhlDQo+IElPTUIgdG8gYmUgZ2VuZXJhdGVkIGluY29y
+cmVjdGx5IGZvciBQSFlfU1RBUlQuIExvY2FsIHN0cnVjdHVyZSBmb3IgU0FTDQo+IElkZW50aWZ5
+IGluY2x1ZGVkIGluIHRoZSBkcml2ZXIgc28gdGhhdCBpdCBtYXRjaGVzIHRoZSBQcm9ncmFtbWVy
+J3MgTWFudWFsDQo+IGFuZCBGaXJtd2FyZSBleHBlY3RhdGlvbnMuDQo+ID4NCj4gPiBUaGUgc2Fz
+X2lkZW50aWZ5IHN0cnVjdCBmcm9tIHRoZSBrZXJuZWwgaW5jbHVkZXMgdGhlIGNoZWNrc3VtIHdv
+cmQgKDMyLQ0KPiBiaXRzKSAuIFNvIGl0IGlzIDMyIGJ5dGVzIHJhdGhlciB0aGFuIDI4IGJ5dGVz
+LiBUaGUgY2hhbmdlZCBzaXplIGZvciB0aGUgc2FzDQo+IGlkZW50aWZ5IGZyYW1lIG1lYW5zIHRo
+YXQgdGhlICJzcGFzdGkiIGZpZWxkIGZvciBQSFlfU1RBUlQgaXMgYXQgYSBkaWZmZXJlbnQNCj4g
+b2Zmc2V0IHRoYW4gZG9jdW1lbnRlZCwgd29yZCAxMSByYXRoZXIgdGhhbiB3b3JkIDEwLiBXZSdy
+ZSBub3QgY2hhbmdpbmcNCj4gdGhlIHBoeSBhbmFsb2cgc2V0dGluZ3Mgc28gdGhpcyBkb2Vzbid0
+IHJlYWxseSBtYXR0ZXIsIGJ1dCB0aGUgZG9jcyBpbmRpY2F0ZQ0KPiB0aGF0IHRoZSBzYXMgZnJh
+bWUncyBjcmMgaXNuJ3QgaW5jbHVkZWQuIFNvIGhhdmluZyBhIGxvY2FsIGRlZmluaXRpb24gd2ls
+bCBiZQ0KPiBiZXR0ZXIgdGhhbiB0YWtpbmcgdGhlIHN5c3RlbSBkZWZpbml0aW9uLg0KPiA+DQo+
+ID4gUmVnYXJkcywNCj4gPiBWaXN3YXMgRw0KPiANCj4gSGkgVmlzd2FzLA0KPiANCj4gVGhlIHNw
+YXN0aSBmaWVsZCBpcyBvbmx5IGZvciBwbTgweHgsIG5vdCBmb3IgcG04MDAxLCBJIHRoaW5rIGl0
+J3MNCj4gYmV0dGVyIHRvIG1vdmUgc2FzX2lkZW50aWZ5X2ZyYW1lX2xvY2FsIHRvIHBtODB4eF9o
+d2kuaC4NCj4gDQo+IFJlZ2FyZHMsDQo+IEphY2sNCj4gDQo+IA0KPiA+DQo+ID4+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206IEphY2sgV2FuZyBbbWFpbHRvOnhqdHV3anBA
+Z21haWwuY29tXQ0KPiA+PiBTZW50OiBUdWVzZGF5LCBBdWd1c3QgMjksIDIwMTcgNDo0OSBQTQ0K
+PiA+PiBUbzogVmlzd2FzIEcgPHZpc3dhcy5nQG1pY3Jvc2VtaS5jb20+DQo+ID4+IENjOiBsaW51
+eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgVmFzYW50aGFsYWtzaG1pIFRoYXJtYXJhamFuDQo+ID4+
+IDx2YXNhbnRoYWxha3NobWkudGhhckBtaWNyb3NlbWkuY29tPg0KPiA+PiBTdWJqZWN0OiBSZTog
+W1BBVENIIDEvNl0gcG04MHh4IDogcmVkZWZpbmUgc2FzX2lkZW50aWZ5X2ZyYW1lIHN0cnVjdHVy
+ZQ0KPiA+Pg0KPiA+PiBFWFRFUk5BTCBFTUFJTA0KPiA+Pg0KPiA+Pg0KPiA+PiAyMDE1LTAxLTMw
+IDc6MDYgR01UKzAxOjAwIFZpc3dhcyBHIDxWaXN3YXMuR0BtaWNyb3NlbWkuY29tPjoNCj4gPj4g
+PiBzYXNfaWRlbnRpZnkgc3RydWN0dXJlIGRlZmluZWQgYnkgcG04MHh4IGRvZXNuJ3QgaGF2ZSBD
+UkMgZmllbGQuDQo+ID4+ID4gU28gYWRkZWQgYSBuZXcgc2FzX2lkZW50aWZ5IHN0cnVjdHVyZSB3
+aXRob3V0IENSQy4NCj4gPj4gPg0KPiA+PiA+IFNpZ25lZC1vZmYtYnk6IFJhaiBEaW5lc2ggPFJh
+ai5EaW5lc2hAbWljcm9zZW1pLmNvbT4NCj4gPj4gPiBTaWduZWQtb2ZmLWJ5OiBWaXN3YXMgRyA8
+Vmlzd2FzLkdAbWljcm9zZW1pLmNvbT4NCj4gPj4gPiAtLS0NCj4gPj4gPiAgZHJpdmVycy9zY3Np
+L3BtODAwMS9wbTgwMDFfaHdpLmggfCAgMiArLQ0KPiA+PiA+ICBkcml2ZXJzL3Njc2kvcG04MDAx
+L3BtODAwMV9zYXMuaCB8IDk1DQo+ID4+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysNCj4gPj4gPiAgZHJpdmVycy9zY3NpL3BtODAwMS9wbTgweHhfaHdpLmggfCAgMiAr
+LQ0KPiA+PiA+ICAzIGZpbGVzIGNoYW5nZWQsIDk3IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
+KC0pDQo+ID4+ID4NCj4gPj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
+MDFfaHdpLmgNCj4gPj4gYi9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuaA0KPiA+PiA+
+IGluZGV4IGU0ODY3ZTY5MGM4NC4uZjQzMzFhZmU5YjBiIDEwMDY0NA0KPiA+PiA+IC0tLSBhL2Ry
+aXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2h3aS5oDQo+ID4+ID4gKysrIGIvZHJpdmVycy9zY3Np
+L3BtODAwMS9wbTgwMDFfaHdpLmgNCj4gPj4gPiBAQCAtMTU3LDcgKzE1Nyw3IEBAIHN0cnVjdCBt
+cGlfbXNnX2hkcnsNCj4gPj4gPiAgc3RydWN0IHBoeV9zdGFydF9yZXEgew0KPiA+PiA+ICAgICAg
+ICAgX19sZTMyICB0YWc7DQo+ID4+ID4gICAgICAgICBfX2xlMzIgIGFzZV9zaF9sbV9zbHJfcGh5
+aWQ7DQo+ID4+ID4gLSAgICAgICBzdHJ1Y3Qgc2FzX2lkZW50aWZ5X2ZyYW1lIHNhc19pZGVudGlm
+eTsNCj4gPj4gPiArICAgICAgIHN0cnVjdCBzYXNfaWRlbnRpZnlfZnJhbWVfbG9jYWwgc2FzX2lk
+ZW50aWZ5Ow0KPiA+PiA+ICAgICAgICAgdTMyICAgICByZXNlcnZlZFs1XTsNCj4gPj4gPiAgfSBf
+X2F0dHJpYnV0ZV9fKChwYWNrZWQsIGFsaWduZWQoNCkpKTsNCj4gPj4gPg0KPiA+PiA+IGRpZmYg
+LS1naXQgYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaA0KPiA+PiBiL2RyaXZlcnMv
+c2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5oDQo+ID4+ID4gaW5kZXggZTgxYThmYTdlZjFhLi4yZTE3
+NTA1ZWQ1YjggMTAwNjQ0DQo+ID4+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFf
+c2FzLmgNCj4gPj4gPiArKysgYi9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaA0KPiA+
+PiA+IEBAIC0xMTgsNiArMTE4LDEwMSBAQCBleHRlcm4gY29uc3Qgc3RydWN0IHBtODAwMV9kaXNw
+YXRjaA0KPiA+PiBwbTgwMDFfODB4eF9kaXNwYXRjaDsNCj4gPj4gPiAgc3RydWN0IHBtODAwMV9o
+YmFfaW5mbzsNCj4gPj4gPiAgc3RydWN0IHBtODAwMV9jY2JfaW5mbzsNCj4gPj4gPiAgc3RydWN0
+IHBtODAwMV9kZXZpY2U7DQo+ID4+ID4gKyNpZmRlZiBfX0xJVFRMRV9FTkRJQU5fQklURklFTEQN
+Cj4gPj4gPiArc3RydWN0IHNhc19pZGVudGlmeV9mcmFtZV9sb2NhbCB7DQo+ID4+ID4gKyAgICAg
+ICAvKiBCeXRlIDAgKi8NCj4gPj4gPiArICAgICAgIHU4ICBmcmFtZV90eXBlOjQ7DQo+ID4+ID4g
+KyAgICAgICB1OCAgZGV2X3R5cGU6MzsNCj4gPj4gPiArICAgICAgIHU4ICBfdW4wOjE7DQo+ID4+
+ID4gKw0KPiA+PiA+ICsgICAgICAgLyogQnl0ZSAxICovDQo+ID4+ID4gKyAgICAgICB1OCAgX3Vu
+MTsNCj4gPj4gPiArDQo+ID4+ID4gKyAgICAgICAvKiBCeXRlIDIgKi8NCj4gPj4gPiArICAgICAg
+IHVuaW9uIHsNCj4gPj4gPiArICAgICAgICAgICAgICAgc3RydWN0IHsNCj4gPj4gPiArICAgICAg
+ICAgICAgICAgICAgICAgICB1OCAgX3VuMjA6MTsNCj4gPj4gPiArICAgICAgICAgICAgICAgICAg
+ICAgICB1OCAgc21wX2lwb3J0OjE7DQo+ID4+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgdTgg
+IHN0cF9pcG9ydDoxOw0KPiA+PiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHU4ICBzc3BfaXBv
+cnQ6MTsNCj4gPj4gPiArICAgICAgICAgICAgICAgICAgICAgICB1OCAgX3VuMjQ3OjQ7DQo+ID4+
+ID4gKyAgICAgICAgICAgICAgIH07DQo+ID4+ID4gKyAgICAgICAgICAgICAgIHU4IGluaXRpYXRv
+cl9iaXRzOw0KPiA+PiA+ICsgICAgICAgfTsNCj4gPj4gPiArDQo+ID4+ID4gKyAgICAgICAvKiBC
+eXRlIDMgKi8NCj4gPj4gPiArICAgICAgIHVuaW9uIHsNCj4gPj4gPiArICAgICAgICAgICAgICAg
+c3RydWN0IHsNCj4gPj4gPiArICAgICAgICAgICAgICAgICAgICAgICB1OCAgX3VuMzA6MTsNCj4g
+Pj4gPiArICAgICAgICAgICAgICAgICAgICAgICB1OCBzbXBfdHBvcnQ6MTsNCj4gPj4gPiArICAg
+ICAgICAgICAgICAgICAgICAgICB1OCBzdHBfdHBvcnQ6MTsNCj4gPj4gPiArICAgICAgICAgICAg
+ICAgICAgICAgICB1OCBzc3BfdHBvcnQ6MTsNCj4gPj4gPiArICAgICAgICAgICAgICAgICAgICAg
+ICB1OCBfdW4zNDc6NDsNCj4gPj4gPiArICAgICAgICAgICAgICAgfTsNCj4gPj4gPiArICAgICAg
+ICAgICAgICAgdTggdGFyZ2V0X2JpdHM7DQo+ID4+ID4gKyAgICAgICB9Ow0KPiA+PiA+ICsNCj4g
+Pj4gPiArICAgICAgIC8qIEJ5dGUgNCAtIDExICovDQo+ID4+ID4gKyAgICAgICB1OCBfdW40XzEx
+WzhdOw0KPiA+PiA+ICsNCj4gPj4gPiArICAgICAgIC8qIEJ5dGUgMTIgLSAxOSAqLw0KPiA+PiA+
+ICsgICAgICAgdTggc2FzX2FkZHJbU0FTX0FERFJfU0laRV07DQo+ID4+ID4gKw0KPiA+PiA+ICsg
+ICAgICAgLyogQnl0ZSAyMCAqLw0KPiA+PiA+ICsgICAgICAgdTggcGh5X2lkOw0KPiA+PiA+ICsN
+Cj4gPj4gPiArICAgICAgIHU4IF91bjIxXzI3WzddOw0KPiA+PiA+ICsNCj4gPj4gPiArfSBfX3Bh
+Y2tlZDsNCj4gPj4gPiArDQo+ID4+ID4gKyNlbGlmIGRlZmluZWQoX19CSUdfRU5ESUFOX0JJVEZJ
+RUxEKQ0KPiA+PiA+ICtzdHJ1Y3Qgc2FzX2lkZW50aWZ5X2ZyYW1lX2xvY2FsIHsNCj4gPj4gPiAr
+ICAgICAgIC8qIEJ5dGUgMCAqLw0KPiA+PiA+ICsgICAgICAgdTggIF91bjA6MTsNCj4gPj4gPiAr
+ICAgICAgIHU4ICBkZXZfdHlwZTozOw0KPiA+PiA+ICsgICAgICAgdTggIGZyYW1lX3R5cGU6NDsN
+Cj4gPj4gPiArDQo+ID4+ID4gKyAgICAgICAvKiBCeXRlIDEgKi8NCj4gPj4gPiArICAgICAgIHU4
+ICBfdW4xOw0KPiA+PiA+ICsNCj4gPj4gPiArICAgICAgIC8qIEJ5dGUgMiAqLw0KPiA+PiA+ICsg
+ICAgICAgdW5pb24gew0KPiA+PiA+ICsgICAgICAgICAgICAgICBzdHJ1Y3Qgew0KPiA+PiA+ICsg
+ICAgICAgICAgICAgICAgICAgICAgIHU4ICBfdW4yNDc6NDsNCj4gPj4gPiArICAgICAgICAgICAg
+ICAgICAgICAgICB1OCAgc3NwX2lwb3J0OjE7DQo+ID4+ID4gKyAgICAgICAgICAgICAgICAgICAg
+ICAgdTggIHN0cF9pcG9ydDoxOw0KPiA+PiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHU4ICBz
+bXBfaXBvcnQ6MTsNCj4gPj4gPiArICAgICAgICAgICAgICAgICAgICAgICB1OCAgX3VuMjA6MTsN
+Cj4gPj4gPiArICAgICAgICAgICAgICAgfTsNCj4gPj4gPiArICAgICAgICAgICAgICAgdTggaW5p
+dGlhdG9yX2JpdHM7DQo+ID4+ID4gKyAgICAgICB9Ow0KPiA+PiA+ICsNCj4gPj4gPiArICAgICAg
+IC8qIEJ5dGUgMyAqLw0KPiA+PiA+ICsgICAgICAgdW5pb24gew0KPiA+PiA+ICsgICAgICAgICAg
+ICAgICBzdHJ1Y3Qgew0KPiA+PiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHU4IF91bjM0Nzo0
+Ow0KPiA+PiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHU4IHNzcF90cG9ydDoxOw0KPiA+PiA+
+ICsgICAgICAgICAgICAgICAgICAgICAgIHU4IHN0cF90cG9ydDoxOw0KPiA+PiA+ICsgICAgICAg
+ICAgICAgICAgICAgICAgIHU4IHNtcF90cG9ydDoxOw0KPiA+PiA+ICsgICAgICAgICAgICAgICAg
+ICAgICAgIHU4IF91bjMwOjE7DQo+ID4+ID4gKyAgICAgICAgICAgICAgIH07DQo+ID4+ID4gKyAg
+ICAgICAgICAgICAgIHU4IHRhcmdldF9iaXRzOw0KPiA+PiA+ICsgICAgICAgfTsNCj4gPj4gPiAr
+DQo+ID4+ID4gKyAgICAgICAvKiBCeXRlIDQgLSAxMSAqLw0KPiA+PiA+ICsgICAgICAgdTggX3Vu
+NF8xMVs4XTsNCj4gPj4gPiArDQo+ID4+ID4gKyAgICAgICAvKiBCeXRlIDEyIC0gMTkgKi8NCj4g
+Pj4gPiArICAgICAgIHU4IHNhc19hZGRyW1NBU19BRERSX1NJWkVdOw0KPiA+PiA+ICsNCj4gPj4g
+PiArICAgICAgIC8qIEJ5dGUgMjAgKi8NCj4gPj4gPiArICAgICAgIHU4IHBoeV9pZDsNCj4gPj4g
+PiArDQo+ID4+ID4gKyAgICAgICB1OCBfdW4yMV8yN1s3XTsNCj4gPj4gPiArfSBfX3BhY2tlZDsN
+Cj4gPj4gPiArI2Vsc2UNCj4gPj4gPiArI2Vycm9yICJCaXRmaWVsZCBvcmRlciBub3QgZGVmaW5l
+ZCEiDQo+ID4+ID4gKyNlbmRpZg0KPiA+PiA+ICAvKiBkZWZpbmUgdGFzayBtYW5hZ2VtZW50IElV
+ICovDQo+ID4+ID4gIHN0cnVjdCBwbTgwMDFfdG1mX3Rhc2sgew0KPiA+PiA+ICAgICAgICAgdTgg
+ICAgICB0bWY7DQo+ID4+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MHh4
+X2h3aS5oDQo+ID4+IGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgweHhfaHdpLmgNCj4gPj4gPiBp
+bmRleCA3YTQ0M2JhZDYxNjMuLjFlZTJlYzIxMDA2NSAxMDA2NDQNCj4gPj4gPiAtLS0gYS9kcml2
+ZXJzL3Njc2kvcG04MDAxL3BtODB4eF9od2kuaA0KPiA+PiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9w
+bTgwMDEvcG04MHh4X2h3aS5oDQo+ID4+ID4gQEAgLTI0OCw3ICsyNDgsNyBAQCBzdHJ1Y3QgbXBp
+X21zZ19oZHIgew0KPiA+PiA+ICBzdHJ1Y3QgcGh5X3N0YXJ0X3JlcSB7DQo+ID4+ID4gICAgICAg
+ICBfX2xlMzIgIHRhZzsNCj4gPj4gPiAgICAgICAgIF9fbGUzMiAgYXNlX3NoX2xtX3Nscl9waHlp
+ZDsNCj4gPj4gPiAtICAgICAgIHN0cnVjdCBzYXNfaWRlbnRpZnlfZnJhbWUgc2FzX2lkZW50aWZ5
+OyAvKiAyOCBCeXRlcyAqLw0KPiA+PiA+ICsgICAgICAgc3RydWN0IHNhc19pZGVudGlmeV9mcmFt
+ZV9sb2NhbCBzYXNfaWRlbnRpZnk7IC8qIDI4IEJ5dGVzICovDQo+ID4+ID4gICAgICAgICBfX2xl
+MzIgc3Bhc3RpOw0KPiA+PiA+ICAgICAgICAgdTMyICAgICByZXNlcnZlZFsyMV07DQo+ID4+ID4g
+IH0gX19hdHRyaWJ1dGVfXygocGFja2VkLCBhbGlnbmVkKDQpKSk7DQo+ID4+ID4gLS0NCj4gPj4g
+PiAyLjEyLjMNCj4gPj4gPg0KPiA+PiBEaWQgdGhpcyBjYXVzZSBhbnkgdHJvdWJsZT8gSSBndWVz
+dCBub3QsIGFzIHdlIGRvZXMgbWVtc2V0IGZvcg0KPiA+PiBwaHlfc3RhcnRfcmVxLCAgd2h5IGJv
+dGhlcj8NCj4gPj4NCj4gPj4gSmFjaw0K
