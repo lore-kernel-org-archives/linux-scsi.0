@@ -1,32 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 0/3] Rework handling of scsi_device.vpd_pg8[03]
-Date: Tue, 29 Aug 2017 21:42:37 -0400
-Message-ID: <yq1val5zv8y.fsf@oracle.com>
-References: <20170829155013.11124-1-bart.vanassche@wdc.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [Patch v2 1/2] libiscsi: Fix use-after-free race during iscsi_session_teardown
+Date: Tue, 29 Aug 2017 21:45:46 -0400
+Message-ID: <yq1r2vtzv3p.fsf@oracle.com>
+References: <20170713161122.89375-1-khazhy@google.com>
+	<20170829182914.5oza32ohjj4lua6j@straylight.hirudinean.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46819 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751318AbdH3Bmm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 21:42:42 -0400
-In-Reply-To: <20170829155013.11124-1-bart.vanassche@wdc.com> (Bart Van
-        Assche's message of "Tue, 29 Aug 2017 08:50:10 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBDVIJONZ3YDRBUVRTDGQKGQEN3WGH6Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20170829182914.5oza32ohjj4lua6j-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
+	(Chris Leech's message of "Tue, 29 Aug 2017 11:29:14 -0700")
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: 'Khazhismel Kumykov' via open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>
 
 
-Bart,
+Chris,
 
-> The conclusion of a recent discussion about the handling of SCSI device VPD
-> data is that the code should be reworked such that that data is freed through
-> kfree_rcu() instead of kfree(). The three patches in this series realize this
-> and also simplify the VPD code. Please consider these patches for kernel
-> v4.14.
+> Looks good to me, fixes up the code given that the comment there about
+> calling iscsi_remove_session wasn't being followed.
 
-Applied to 4.14/scsi-queue. Thanks!
+Applied these two to 4.14/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
