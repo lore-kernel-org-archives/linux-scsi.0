@@ -1,40 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [Patch v2 1/2] libiscsi: Fix use-after-free race during iscsi_session_teardown
-Date: Tue, 29 Aug 2017 21:45:46 -0400
-Message-ID: <yq1r2vtzv3p.fsf@oracle.com>
-References: <20170713161122.89375-1-khazhy@google.com>
-	<20170829182914.5oza32ohjj4lua6j@straylight.hirudinean.org>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH 1/3] scsi: aacraid: fix indentation errors
+Date: Wed, 30 Aug 2017 02:10:02 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A8D0C1979@avsrvexchmbx1.microsemi.net>
+References: <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBUVRTDGQKGQEN3WGH6Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20170829182914.5oza32ohjj4lua6j-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
-	(Chris Leech's message of "Tue, 29 Aug 2017 11:29:14 -0700")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: 'Khazhismel Kumykov' via open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nikola Pajkovsky <npajkovsky@suse.cz>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Chris,
 
-> Looks good to me, fixes up the code given that the comment there about
-> calling iscsi_remove_session wasn't being followed.
-
-Applied these two to 4.14/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+> -----Original Message-----
+> From: Nikola Pajkovsky [mailto:npajkovsky@suse.cz]
+> Sent: Tuesday, August 29, 2017 4:59 AM
+> To: dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+> Cc: Nikola Pajkovsky <npajkovsky@suse.cz>; James E.J. Bottomley
+> <jejb@linux.vnet.ibm.com>; Martin K. Petersen
+> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: [PATCH 1/3] scsi: aacraid: fix indentation errors
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> fix stupid indent error, no rocket science here.
+>=20
+> Signed-off-by: Nikola Pajkovsky <npajkovsky@suse.cz>
+> ---
+[.....]
+Reviewed-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.co=
+m>
