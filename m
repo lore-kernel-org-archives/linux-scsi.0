@@ -1,127 +1,48 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3 1/4] Call scsi_initialize_rq() also for filesystem requests
-Date: Wed, 30 Aug 2017 16:58:39 -0700
-Message-ID: <20170830235842.29725-2-bart.vanassche@wdc.com>
+Subject: [PATCH v3 3/4] Show .retries and .jiffies_at_alloc in debugfs
+Date: Wed, 30 Aug 2017 16:58:41 -0700
+Message-ID: <20170830235842.29725-4-bart.vanassche@wdc.com>
 References: <20170830235842.29725-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:37462 "EHLO
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:2692 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750895AbdH3X7e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 19:59:34 -0400
+        with ESMTP id S1750895AbdH3X76 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 19:59:58 -0400
 In-Reply-To: <20170830235842.29725-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Brian King <brking@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
-If a pass-through request is submitted then blk_get_request()
-initializes that request by calling scsi_initialize_rq(). Also
-call this function for filesystem requests. Introduce
-CMD_INITIALIZED to keep track of whether or not a request has
-already been initialized.
+Make these two member variables available in debugfs such that
+their value can be verified by kernel developers. An example of
+the new output:
+
+ffff8804a513d480 {.op=READ, .cmd_flags=META|PRIO, .rq_flags=MQ_INFLIGHT|DONTPREP|IO_STAT|STATS, .atomic_flags=STARTED, .tag=17, .internal_tag=-1, .cmd=Read(10) 28 00 08 81 32 38 00 00 08 00, .retries=0, allocated 0.010 s ago}
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Brian King <brking@linux.vnet.ibm.com>
 Cc: Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi_lib.c  | 26 ++++++++++++++++++++++----
- include/scsi/scsi_cmnd.h |  3 +++
- 2 files changed, 25 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_debugfs.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 938a7e398cd4..4bfe0df35823 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -642,6 +642,11 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
- 	if (blk_queue_add_random(q))
- 		add_disk_randomness(req->rq_disk);
- 
-+	if (!blk_rq_is_scsi(req)) {
-+		WARN_ON_ONCE(!(cmd->flags & SCMD_INITIALIZED));
-+		cmd->flags &= ~SCMD_INITIALIZED;
-+	}
-+
- 	if (req->mq_ctx) {
- 		/*
- 		 * In the MQ case the command gets freed by __blk_mq_end_request,
-@@ -1110,7 +1115,8 @@ EXPORT_SYMBOL(scsi_init_io);
-  * scsi_initialize_rq - initialize struct scsi_cmnd.req
-  * @rq: Request associated with the SCSI command to be initialized.
-  *
-- * Called from inside blk_get_request().
-+ * Called from inside blk_get_request() for pass-through requests and from
-+ * inside scsi_init_command() for filesystem requests.
-  */
- void scsi_initialize_rq(struct request *rq)
+diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
+index a97c9507103d..5e9755008aed 100644
+--- a/drivers/scsi/scsi_debugfs.c
++++ b/drivers/scsi/scsi_debugfs.c
+@@ -6,8 +6,10 @@
+ void scsi_show_rq(struct seq_file *m, struct request *rq)
  {
-@@ -1154,7 +1160,13 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- {
- 	void *buf = cmd->sense_buffer;
- 	void *prot = cmd->prot_sdb;
--	unsigned int unchecked_isa_dma = cmd->flags & SCMD_UNCHECKED_ISA_DMA;
-+	struct request *rq = blk_mq_rq_from_pdu(cmd);
-+	unsigned int flags = cmd->flags & SCMD_PRESERVED_FLAGS;
-+
-+	if (!blk_rq_is_scsi(rq) && !(flags & SCMD_INITIALIZED)) {
-+		flags |= SCMD_INITIALIZED;
-+		scsi_initialize_rq(rq);
-+	}
+ 	struct scsi_cmnd *cmd = container_of(scsi_req(rq), typeof(*cmd), req);
++	int msecs = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
+ 	char buf[80];
  
- 	/* zero out the cmd, except for the embedded scsi_request */
- 	memset((char *)cmd + sizeof(cmd->req), 0,
-@@ -1163,7 +1175,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	cmd->device = dev;
- 	cmd->sense_buffer = buf;
- 	cmd->prot_sdb = prot;
--	cmd->flags = unchecked_isa_dma;
-+	cmd->flags = flags;
- 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
- 	cmd->jiffies_at_alloc = jiffies;
- 
-@@ -1350,6 +1362,8 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
- 
- 	ret = scsi_setup_cmnd(sdev, req);
- out:
-+	if (ret != BLKPREP_OK)
-+		cmd->flags &= ~SCMD_INITIALIZED;
- 	return scsi_prep_return(q, req, ret);
+ 	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
+-	seq_printf(m, ", .cmd=%s", buf);
++	seq_printf(m, ", .cmd=%s, .retries=%d, allocated %d.%03d s ago", buf,
++		   cmd->retries, msecs / 1000, msecs % 1000);
  }
- 
-@@ -1869,6 +1883,7 @@ static int scsi_mq_prep_fn(struct request *req)
- 	struct scsi_device *sdev = req->q->queuedata;
- 	struct Scsi_Host *shost = sdev->host;
- 	struct scatterlist *sg;
-+	int ret;
- 
- 	scsi_init_command(sdev, cmd);
- 
-@@ -1902,7 +1917,10 @@ static int scsi_mq_prep_fn(struct request *req)
- 
- 	blk_mq_start_request(req);
- 
--	return scsi_setup_cmnd(sdev, req);
-+	ret = scsi_setup_cmnd(sdev, req);
-+	if (ret != BLK_STS_OK)
-+		cmd->flags &= ~SCMD_INITIALIZED;
-+	return ret;
- }
- 
- static void scsi_mq_done(struct scsi_cmnd *cmd)
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index f5afcff8d76f..a9f8f7e79d83 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -57,6 +57,9 @@ struct scsi_pointer {
- /* for scmd->flags */
- #define SCMD_TAGGED		(1 << 0)
- #define SCMD_UNCHECKED_ISA_DMA	(1 << 1)
-+#define SCMD_INITIALIZED	(1 << 3)
-+/* flags preserved across unprep / reprep */
-+#define SCMD_PRESERVED_FLAGS	(SCMD_UNCHECKED_ISA_DMA | SCMD_INITIALIZED)
- 
- struct scsi_cmnd {
- 	struct scsi_request req;
 -- 
 2.14.1
