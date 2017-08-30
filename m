@@ -1,96 +1,34 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
-Date: Wed, 30 Aug 2017 18:00:26 +0530
-Message-ID: <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
-References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <yq1lgmbauxt.fsf@oracle.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Fix an integer overflow in sysfs code
+Date: Wed, 30 Aug 2017 15:36:19 +0300
+Message-ID: <20170830123619.3yzvxdz6kaiwuc4z@mwanda>
+References: <CAER+mfKPOt03DmPB4FTCjVvQ=2uRSMVbBHP-3CdoG+mQnSiYFw@mail.gmail.com>
+ <20170830122106.dmdfril4kwi4p5e5@mwanda>
+ <CAER+mf+sKmuDHmdsx_QfFgA4iNCQkhPAOvJBq3ydKpFXh2hJRQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1lgmbauxt.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48031 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbdH3Mgu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 08:36:50 -0400
+Content-Disposition: inline
+In-Reply-To: <CAER+mf+sKmuDHmdsx_QfFgA4iNCQkhPAOvJBq3ydKpFXh2hJRQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: shqking <shqking@gmail.com>
+Cc: qla2xxx-upstream@qlogic.com, Joe Carnuccio <joe.carnuccio@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, security@kernel.org
 
-Hi Martin,
+On Wed, Aug 30, 2017 at 08:28:52PM +0800, shqking wrote:
+> Hi,
+> 
+> Glad to see it is fixed.
+> 
+> Can I apply for a CVE ID for this bug?
+> 
 
-Replied in line.
+We don't handle that on this list.  You'd need to ask on
+oss-security@lists.openwall.com.
 
-- I don't understand why you go through all these hoops to decide
-  whether to use PRPs or IEEE scatterlists. If the firmware translation
-  is slow, why even bother with the SG format in the first place? Set
-  the max I/O size to match MDTS and you're done.
-
-=>  We will  set MDTS value as max hw sectors using
-blk_queue_max_hw_sectors(). As of now, we see correct MDTS value is
-being set to block layer via VPD page 0xb0 (Block limits VPD page )
-response from FW for NVME device.
-=> I will remove MDTS checks in IO path.
-
-
-- What's the benefit of using SG for regular I/O commands?
-
-=>  Broadcom's IT Tri-mode HBA hardware has a capability of
-translating IEEE SGLs to PRP's only up to ~4 page block size.
-If the IO block size is greater than that (along with other condition
-described code base_is_prp_possible), driver has to frame the PRP's to
-avoid FW intervention. Both the case is a fast path, but for smaller
-IO (up to 20K) size will frame IEEE SGL and large IO size will frame
-PRP format SGL. Theoretically we want to use h/w capability (to
-translate IEEE to PRP) for smaller IO size to leverage h/w capability.
-We are investigating if at all we can send all PRP and avoid checks in
-driver, but that exercise may take time as we have many different
-opinions. We prefer to use existing code as it is stable and in-line
-with h/w requirement.
-
-
-- If the unmap translation in firmware is slow, why don't you translate
-  WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
-  applications to do encapsulated passthrough?
-
-=> As of now, current FW supports UNMAP command but not WRITE_SAME for
-NVME drive. We did some experiment to convert UMAP command in driver,
-but that is not really giving any performance improvement. We would
-like to continue with UNMAP (and all other non-read/write commands) to
-be handled in FW.
-
-
-- Also make sure you attribute your patches correctly (From: root
-<root@dhcp-135-24-192-103.dhcp.avagotech.net>). And you don't need
-that long CC: list. Just send the patch series to
-linux-scsi@vger.kernel.org.
-
-=>  I will fix this type of issue going forward
-
-Thanks,
-Suganath Prabu S
-
-On Wed, Aug 23, 2017 at 7:48 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> Suganath,
->
->>   mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
->
-> I'm still confused about this patch.
->
->  - I don't understand why you go through all these hoops to decide
->    whether to use PRPs or IEEE scatterlists. If the firmware translation
->    is slow, why even bother with the SG format in the first place? Set
->    the max I/O size to match MDTS and you're done.
->
->  - What's the benefit of using SG for regular I/O commands?
->
->  - If the unmap translation in firmware is slow, why don't you translate
->    WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
->    applications to do encapsulated passthrough?
->
-> Also make sure you attribute your patches correctly (From: root
-> <root@dhcp-135-24-192-103.dhcp.avagotech.net>). And you don't need that
-> long CC: list. Just send the patch series to linux-scsi@vger.kernel.org.
->
-> Thanks!
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+regards,
+dan carpenter
