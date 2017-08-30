@@ -1,50 +1,133 @@
-From: Eric Dumazet <edumazet@google.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Fix an integer overflow in sysfs code
-Date: Wed, 30 Aug 2017 06:20:54 -0700
-Message-ID: <CANn89iJBtAFJjz7wY2=2pO5SdNGhJx8M8_V-dEq81NhsFHeAUA@mail.gmail.com>
-References: <CAER+mfKPOt03DmPB4FTCjVvQ=2uRSMVbBHP-3CdoG+mQnSiYFw@mail.gmail.com>
- <20170830122106.dmdfril4kwi4p5e5@mwanda> <20170830131235.GC12924@kroah.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.13-rc6
+Date: Wed, 30 Aug 2017 14:29:37 +0100
+Message-ID: <1504099777.2928.7.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:36247 "EHLO
-        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbdH3NU4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 09:20:56 -0400
-Received: by mail-yw0-f172.google.com with SMTP id h127so31017160ywf.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2017 06:20:56 -0700 (PDT)
-In-Reply-To: <20170830131235.GC12924@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, qla2xxx-upstream@qlogic.com, shqking <shqking@gmail.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "security@kernel.org" <security@kernel.org>
 
-On Wed, Aug 30, 2017 at 6:12 AM, Greg KH <greg@kroah.com> wrote:
-> On Wed, Aug 30, 2017 at 03:21:07PM +0300, Dan Carpenter wrote:
->> The value of "size" comes from the user.  When we add "start + size"
->> it could lead to an integer overflow bug.
->>
->> It means we vmalloc() a lot more memory than we had intended.  I believe
->> that on 64 bit systems vmalloc() can succeed even if we ask it to
->> allocate huge 4GB buffers.  So we would get memory corruption and likely
->> a crash when we call ha->isp_ops->write_optrom() and ->read_optrom().
->>
->> Only root can trigger this bug.
->>
->> Fixes: b7cc176c9eb3 ("[SCSI] qla2xxx: Allow region-based flash-part accesses.")
->> Reported-by: shqking <shqking@gmail.com>
->> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
->
-> Cc: stable <stable@vger.kernel.org>
->
-> perhaps?
->
-> thanks,
->
-> greg k-h
+Three minor fixes: a NULL deref in qedf, an off by one in sg and a fix
+to IPR to prevent an error on initialisation.
 
-Also a link to https://bugzilla.kernel.org/show_bug.cgi?id=194061
-since shqking did a fair bit of analysis, not only report the bug.
+The patch is available here:
 
-Thanks.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Brian King (1):
+      scsi: ipr: Set no_report_opcodes for RAID arrays
+
+Christophe JAILLET (1):
+      scsi: qedf: Fix a potential NULL pointer dereference
+
+Dan Carpenter (1):
+      scsi: sg: off by one in sg_ioctl()
+
+And the diffstat:
+
+ drivers/scsi/ipr.c           |  1 +
+ drivers/scsi/qedf/qedf_els.c | 14 ++++++++------
+ drivers/scsi/sg.c            |  2 +-
+ 3 files changed, 10 insertions(+), 7 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index da5bdbdcce52..f838bd73befa 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4945,6 +4945,7 @@ static int ipr_slave_configure(struct scsi_device *sdev)
+ 		}
+ 		if (ipr_is_vset_device(res)) {
+ 			sdev->scsi_level = SCSI_SPC_3;
++			sdev->no_report_opcodes = 1;
+ 			blk_queue_rq_timeout(sdev->request_queue,
+ 					     IPR_VSET_RW_TIMEOUT);
+ 			blk_queue_max_hw_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
+diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
+index eb07f1de8afa..59c18ca4cda9 100644
+--- a/drivers/scsi/qedf/qedf_els.c
++++ b/drivers/scsi/qedf/qedf_els.c
+@@ -489,7 +489,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
+ 
+ 	/* If a SRR times out, simply free resources */
+ 	if (srr_req->event == QEDF_IOREQ_EV_ELS_TMO)
+-		goto out_free;
++		goto out_put;
+ 
+ 	/* Normalize response data into struct fc_frame */
+ 	mp_req = &(srr_req->mp_req);
+@@ -501,7 +501,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
+ 	if (!fp) {
+ 		QEDF_ERR(&(qedf->dbg_ctx),
+ 		    "fc_frame_alloc failure.\n");
+-		goto out_free;
++		goto out_put;
+ 	}
+ 
+ 	/* Copy frame header from firmware into fp */
+@@ -526,9 +526,10 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
+ 	}
+ 
+ 	fc_frame_free(fp);
+-out_free:
++out_put:
+ 	/* Put reference for original command since SRR completed */
+ 	kref_put(&orig_io_req->refcount, qedf_release_cmd);
++out_free:
+ 	kfree(cb_arg);
+ }
+ 
+@@ -780,7 +781,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
+ 
+ 	/* If a REC times out, free resources */
+ 	if (rec_req->event == QEDF_IOREQ_EV_ELS_TMO)
+-		goto out_free;
++		goto out_put;
+ 
+ 	/* Normalize response data into struct fc_frame */
+ 	mp_req = &(rec_req->mp_req);
+@@ -792,7 +793,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
+ 	if (!fp) {
+ 		QEDF_ERR(&(qedf->dbg_ctx),
+ 		    "fc_frame_alloc failure.\n");
+-		goto out_free;
++		goto out_put;
+ 	}
+ 
+ 	/* Copy frame header from firmware into fp */
+@@ -884,9 +885,10 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
+ 
+ out_free_frame:
+ 	fc_frame_free(fp);
+-out_free:
++out_put:
+ 	/* Put reference for original command since REC completed */
+ 	kref_put(&orig_io_req->refcount, qedf_release_cmd);
++out_free:
+ 	kfree(cb_arg);
+ }
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index d7ff71e0c85c..84e782d8e7c3 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1021,7 +1021,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 			read_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 			val = 0;
+ 			list_for_each_entry(srp, &sfp->rq_list, entry) {
+-				if (val > SG_MAX_QUEUE)
++				if (val >= SG_MAX_QUEUE)
+ 					break;
+ 				memset(&rinfo[val], 0, SZ_SG_REQ_INFO);
+ 				rinfo[val].req_state = srp->done + 1;
