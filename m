@@ -1,66 +1,54 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] scsi: qla2xxx: Fix an integer overflow in sysfs code
-Date: Wed, 30 Aug 2017 15:21:07 +0300
-Message-ID: <20170830122106.dmdfril4kwi4p5e5@mwanda>
-References: <CAER+mfKPOt03DmPB4FTCjVvQ=2uRSMVbBHP-3CdoG+mQnSiYFw@mail.gmail.com>
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Subject: Re: possible circular locking dependency detected [was: linux-next:
+ Tree for Aug 22]
+Date: Wed, 30 Aug 2017 21:30:07 +0900
+Message-ID: <20170830123007.GA6460@jagdpanzerIV.localdomain>
+References: <20170822183816.7925e0f8@canb.auug.org.au>
+ <20170822104708.GA491@jagdpanzerIV.localdomain>
+ <1503438234.2508.27.camel@wdc.com>
+ <20170823000304.GK20323@X58A-UD3R>
+ <20170830052037.GA432@jagdpanzerIV.localdomain>
+ <20170830054334.GF3240@X58A-UD3R>
+ <20170830061511.GA330@jagdpanzerIV.localdomain>
+ <20170830084207.GL32112@worktop.programming.kicks-ass.net>
+ <20170830084746.GC660@worktop.programming.kicks-ass.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20652 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751323AbdH3MVk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 08:21:40 -0400
+Return-path: <linux-next-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAER+mfKPOt03DmPB4FTCjVvQ=2uRSMVbBHP-3CdoG+mQnSiYFw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170830084746.GC660@worktop.programming.kicks-ass.net>
+Sender: linux-next-owner@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Byungchul Park <byungchul.park@lge.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, kernel-team@lge.com
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, shqking <shqking@gmail.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, security@kernel.org
 
-The value of "size" comes from the user.  When we add "start + size"
-it could lead to an integer overflow bug.
+Hello Peter,
 
-It means we vmalloc() a lot more memory than we had intended.  I believe
-that on 64 bit systems vmalloc() can succeed even if we ask it to
-allocate huge 4GB buffers.  So we would get memory corruption and likely
-a crash when we call ha->isp_ops->write_optrom() and ->read_optrom().
+On (08/30/17 10:47), Peter Zijlstra wrote:
+[..]
+> On Wed, Aug 30, 2017 at 10:42:07AM +0200, Peter Zijlstra wrote:
+> > 
+> > So the overhead looks to be spread out over all sorts, which makes it
+> > harder to find and fix.
+> > 
+> > stack unwinding is done lots and is fairly expensive, I've not yet
+> > checked if crossrelease does too much of that.
+> 
+> Aah, we do an unconditional stack unwind for every __lock_acquire() now.
+> It keeps a trace in the xhlocks[].
+> 
+> Does the below cure most of that overhead?
 
-Only root can trigger this bug.
+thanks.
 
-Fixes: b7cc176c9eb3 ("[SCSI] qla2xxx: Allow region-based flash-part accesses.")
-Reported-by: shqking <shqking@gmail.com>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+mostly yes. the kernel is not so dramatically slower now. it's still
+seems to be a bit slower, which is expected I suppose, but over all
+it's much better
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 75c4b312645e..9ce28c4f9812 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -318,6 +318,8 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		return -EINVAL;
- 	if (start > ha->optrom_size)
- 		return -EINVAL;
-+	if (size > ha->optrom_size - start)
-+		size = ha->optrom_size - start;
- 
- 	mutex_lock(&ha->optrom_mutex);
- 	switch (val) {
-@@ -343,8 +345,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		}
- 
- 		ha->optrom_region_start = start;
--		ha->optrom_region_size = start + size > ha->optrom_size ?
--		    ha->optrom_size - start : size;
-+		ha->optrom_region_size = start + size;
- 
- 		ha->optrom_state = QLA_SREADING;
- 		ha->optrom_buffer = vmalloc(ha->optrom_region_size);
-@@ -417,8 +418,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		}
- 
- 		ha->optrom_region_start = start;
--		ha->optrom_region_size = start + size > ha->optrom_size ?
--		    ha->optrom_size - start : size;
-+		ha->optrom_region_size = start + size;
- 
- 		ha->optrom_state = QLA_SWRITING;
- 		ha->optrom_buffer = vmalloc(ha->optrom_region_size);
+	real	1m35.209s
+	user	4m12.467s
+	sys	0m49.457s
+
+// approx 10 seconds slower.
+
+	-ss
