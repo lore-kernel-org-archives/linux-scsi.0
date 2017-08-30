@@ -1,69 +1,29 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 3/3] qla2xxx: Reset the logo flag, after target re-login.
-Date: Wed, 30 Aug 2017 10:16:50 -0700
-Message-ID: <20170830171650.32341-4-himanshu.madhani@cavium.com>
-References: <20170830171650.32341-1-himanshu.madhani@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v2 1/3] Call scsi_initialize_rq() also for filesystem
+ requests
+Date: Wed, 30 Aug 2017 21:13:00 +0000
+Message-ID: <1504127579.2526.58.camel@wdc.com>
+References: <20170830000742.29653-1-bart.vanassche@wdc.com>
+         <20170830000742.29653-2-bart.vanassche@wdc.com>
+         <20170830082928.GA17935@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:40048
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752029AbdH3RRA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Aug 2017 13:17:00 -0400
-In-Reply-To: <20170830171650.32341-1-himanshu.madhani@cavium.com>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:6656 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750851AbdH3VNs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 17:13:48 -0400
+In-Reply-To: <20170830082928.GA17935@lst.de>
+Content-Language: en-US
+Content-ID: <7CC277F7C7C2CE42AE26E1B0D3F8F63E@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
+To: "hch@lst.de" <hch@lst.de>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-From: Quinn Tran <quinn.tran@cavium.com>
-
-After relogin is sucessful, "send_els_logo" flag
-needs to be reinitialized. This will allow next
-re-login to happen successfully.
-
-In target mode, this flag was not reset correctly,
-causing IO's failure during reset recovery and port
-ON/OFF test cases from initiator.
-
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_init.c   | 1 +
- drivers/scsi/qla2xxx/qla_target.c | 2 ++
- 2 files changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 73a6c3abb115..b5b48ddca962 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1464,6 +1464,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 				__func__, __LINE__, ea->fcport->port_name);
- 			ea->fcport->chip_reset = vha->hw->base_qpair->chip_reset;
- 			ea->fcport->logout_on_delete = 1;
-+			ea->fcport->send_els_logo = 0;
- 			qla24xx_post_gpdb_work(vha, ea->fcport, 0);
- 		}
- 		break;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 192554b1536f..f05cfc83c9c8 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -585,11 +585,13 @@ void qla2x00_async_nack_sp_done(void *s, int res)
- 		sp->fcport->fw_login_state = DSC_LS_PLOGI_COMP;
- 		sp->fcport->logout_on_delete = 1;
- 		sp->fcport->plogi_nack_done_deadline = jiffies + HZ;
-+		sp->fcport->send_els_logo = 0;
- 		break;
- 
- 	case SRB_NACK_PRLI:
- 		sp->fcport->fw_login_state = DSC_LS_PRLI_COMP;
- 		sp->fcport->deleted = 0;
-+		sp->fcport->send_els_logo = 0;
- 
- 		if (!sp->fcport->login_succ &&
- 		    !IS_SW_RESV_ADDR(sp->fcport->d_id)) {
--- 
-2.12.0
+T24gV2VkLCAyMDE3LTA4LTMwIGF0IDEwOjI5ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gTG9va3MgZ29vZCBleGNlcHQgZm9yIHRoZSBzdWJqZWN0LCB3aGljaCB3aWxsIG5lZWQg
+YSBsaXR0bGUgdXBkYXRlOg0KDQpIZWxsbyBDaHJpc3RvcGgsDQoNClRoYW5rcyBmb3IgdGhlIHJl
+dmlldy4gU29ycnkgYnV0IEkgZG9uJ3Qgc2VlIHdoYXQncyB3cm9uZyB3aXRoIHRoZSBzdWJqZWN0
+Lg0KQ2FuIHlvdSBjbGFyaWZ5IHlvdXIgY29tbWVudD8NCg0KQmFydC4=
