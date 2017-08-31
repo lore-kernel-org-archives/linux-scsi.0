@@ -1,25 +1,25 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 2/4] Improve requeuing behavior
-Date: Thu, 31 Aug 2017 09:14:13 +0200
-Message-ID: <20170831071413.vgon2baug3vri5xm@linux-x5ow.site>
+Subject: Re: [PATCH v3 3/4] Show .retries and .jiffies_at_alloc in debugfs
+Date: Thu, 31 Aug 2017 09:15:39 +0200
+Message-ID: <20170831071539.3w6jqfileb4msxfx@linux-x5ow.site>
 References: <20170830235842.29725-1-bart.vanassche@wdc.com>
- <20170830235842.29725-3-bart.vanassche@wdc.com>
+ <20170830235842.29725-4-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51755 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51848 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750892AbdHaHOP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Aug 2017 03:14:15 -0400
+        id S1751191AbdHaHPl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 31 Aug 2017 03:15:41 -0400
 Content-Disposition: inline
-In-Reply-To: <20170830235842.29725-3-bart.vanassche@wdc.com>
+In-Reply-To: <20170830235842.29725-4-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Brian King <brking@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>
 
-Thanks,
+
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
