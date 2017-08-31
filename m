@@ -1,91 +1,41 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3 2/4] Improve requeuing behavior
-Date: Wed, 30 Aug 2017 16:58:40 -0700
-Message-ID: <20170830235842.29725-3-bart.vanassche@wdc.com>
-References: <20170830235842.29725-1-bart.vanassche@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:61414 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750828AbdHaAAN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 20:00:13 -0400
-In-Reply-To: <20170830235842.29725-1-bart.vanassche@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] storvsc: fix memory leak on ring buffer busy
+Date: Wed, 30 Aug 2017 21:55:10 -0400
+Message-ID: <yq1y3q0y001.fsf@oracle.com>
+References: <20170829004359.28526-1-longli@exchange.microsoft.com>
+ <yq18ti1265c.fsf@oracle.com>
+ <MWHPR21MB0190F8C50CCF7CFA0EDCA7A6CE9C0@MWHPR21MB0190.namprd21.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <MWHPR21MB0190F8C50CCF7CFA0EDCA7A6CE9C0@MWHPR21MB0190.namprd21.prod.outlook.com>
+ (Long Li's message of "Wed, 30 Aug 2017 03:48:54 +0000")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Brian King <brking@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Requests are unprepared and reprepared when being requeued.
-Avoid that requeuing resets .jiffies_at_alloc and .retries by
-initializing these two member variables from inside
-scsi_initialize_rq() and by preserving both member variables
-when preparing a request. This patch affects the requeuing
-behavior of both the legacy scsi and the scsi-mq code paths.
 
-Reported-by: Brian King <brking@linux.vnet.ibm.com>
-References: https://lkml.org/lkml/2017/8/18/923 ("Re: [BUG][bisected 270065e] linux-next fails to boot on powerpc")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_lib.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+Long,
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4bfe0df35823..6085377643ae 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1112,9 +1112,13 @@ int scsi_init_io(struct scsi_cmnd *cmd)
- EXPORT_SYMBOL(scsi_init_io);
- 
- /**
-- * scsi_initialize_rq - initialize struct scsi_cmnd.req
-+ * scsi_initialize_rq - initialize struct scsi_cmnd partially
-  * @rq: Request associated with the SCSI command to be initialized.
-  *
-+ * This function initializes the members of struct scsi_cmnd that must be
-+ * initialized before request processing starts and that won't be
-+ * reinitialized if a SCSI command is requeued.
-+ *
-  * Called from inside blk_get_request() for pass-through requests and from
-  * inside scsi_init_command() for filesystem requests.
-  */
-@@ -1123,6 +1127,8 @@ void scsi_initialize_rq(struct request *rq)
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
- 
- 	scsi_req_init(&cmd->req);
-+	cmd->jiffies_at_alloc = jiffies;
-+	cmd->retries = 0;
- }
- EXPORT_SYMBOL(scsi_initialize_rq);
- 
-@@ -1162,12 +1168,16 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	void *prot = cmd->prot_sdb;
- 	struct request *rq = blk_mq_rq_from_pdu(cmd);
- 	unsigned int flags = cmd->flags & SCMD_PRESERVED_FLAGS;
-+	unsigned long jiffies_at_alloc;
-+	int retries;
- 
- 	if (!blk_rq_is_scsi(rq) && !(flags & SCMD_INITIALIZED)) {
- 		flags |= SCMD_INITIALIZED;
- 		scsi_initialize_rq(rq);
- 	}
- 
-+	jiffies_at_alloc = cmd->jiffies_at_alloc;
-+	retries = cmd->retries;
- 	/* zero out the cmd, except for the embedded scsi_request */
- 	memset((char *)cmd + sizeof(cmd->req), 0,
- 		sizeof(*cmd) - sizeof(cmd->req) + dev->host->hostt->cmd_size);
-@@ -1177,7 +1187,8 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	cmd->prot_sdb = prot;
- 	cmd->flags = flags;
- 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
--	cmd->jiffies_at_alloc = jiffies;
-+	cmd->jiffies_at_alloc = jiffies_at_alloc;
-+	cmd->retries = retries;
- 
- 	scsi_add_cmd_to_list(cmd);
- }
+>> Which kernel version is this patch aimed at?
+>
+> Martin, thanks for pointing this out. This should also go to stable
+> trees.
+
+The reason I asked is that it didn't apply to neither fixes, nor
+for-next.
+
+I applied it to 4.13/scsi-fixes by hand and added a stable tag.
+
 -- 
-2.14.1
+Martin K. Petersen	Oracle Linux Engineering
