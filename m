@@ -1,92 +1,31 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
-Date: Thu, 31 Aug 2017 10:28:06 +0530
-Message-ID: <CA+RiK67f59U5Ss_Z2=veBRODtBSp1-4VTbosLkHkgaxY9XA6hQ@mail.gmail.com>
-References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <yq1lgmbauxt.fsf@oracle.com> <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
- <yq1a82gxwqm.fsf@oracle.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v3 1/4] Call scsi_initialize_rq() also for filesystem
+ requests
+Date: Thu, 31 Aug 2017 09:13:24 +0200
+Message-ID: <20170831071324.cgjoqpv4cbngbvpz@linux-x5ow.site>
+References: <20170830235842.29725-1-bart.vanassche@wdc.com>
+ <20170830235842.29725-2-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1a82gxwqm.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51686 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750968AbdHaHNc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 31 Aug 2017 03:13:32 -0400
+Content-Disposition: inline
+In-Reply-To: <20170830235842.29725-2-bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Brian King <brking@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>
 
-Hi Martin,
-Replied inline.
-
-Thanks,
-Suganath Prabu S
-
-On Thu, Aug 31, 2017 at 8:35 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> Hi Suganath,
->
->> Theoretically we want to use h/w capability (to translate IEEE to PRP)
->> for smaller IO size to leverage h/w capability.
->
-> Nobody says we have to use the capability just because the hardware has
-> it.
->
-> Unlike some other operating systems, Linux will only submit I/Os to the
-> driver that conform to the reported underlying constraints of the
-> hardware.
-
-<Suganath> In general, h/w constraints are handled. What we missed is
-Fast Path h/w
-which is not exposed to OS.
-
-> I fail to understand how letting the HBA firmware translate an
-> SGL to a PRP for a subset of I/Os could do anything but add latency.
-
-<Suganath> Let me explain - NVME device fast path is possible in two ways.
-IEEE SGL and PRP SGL. Due to h/w constraint we choose IEEE SGL only for
-smaller IO size.
-Both above is true h/w Fast Path and no firmware involvement.
-
-> Plus complexity in the hot path of the driver.
-
-<Suganath> Agree with you. We are planning to see if we can keep only
-simple Fast
-Path using only PRP. It will take some time to finalize as we have to
-engage h/w and f/w team.  BTW - This area is h/w dependent and we do not
-see further changes in this area.
-
->
->> - If the unmap translation in firmware is slow, why don't you translate
->>   WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
->>   applications to do encapsulated passthrough?
->
->> => As of now, current FW supports UNMAP command but not WRITE_SAME for
->> NVME drive. We did some experiment to convert UMAP command in driver,
->> but that is not really giving any performance improvement.
->
-> It is imperative that the common use case, Linux' discard
-> infrastructure, is working correctly and is as performant as any
-> application-driven passthrough workaround.
->
-> Unlike SCSI-to-SATA translation you have the benefit of a 1:1 mapping
-> between UNMAP and DEALLOCATE. I'm not even sure why there would be a
-> significant performance penalty in the firmware?
-
-<Suganath> I agree. Currently there is no performance issue for UNMAP
-translation in
-FW.
-
-
->> We would like to continue with UNMAP (and all other non-read/write
->> commands) to be handled in FW.
->
-> And yet patch 4 circumvents that statement by adding support for
-> encapsulated commands to bypass the FW translation...
-
-<Suganath> This path is not due to performance reason. User wants to
-interact with
-NVME drive in native NVME command for management.
-
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
