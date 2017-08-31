@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/3] fcoe: move fcoe_interface_remove() out of fcoe_interface_cleanup()
-Date: Thu, 31 Aug 2017 11:19:32 +0200
-Message-ID: <1504171174-37989-2-git-send-email-hare@suse.de>
+Subject: [PATCH 2/3] fcoe: separate out fcoe_vport_remove()
+Date: Thu, 31 Aug 2017 11:19:33 +0200
+Message-ID: <1504171174-37989-3-git-send-email-hare@suse.de>
 References: <1504171174-37989-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59686 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59679 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750918AbdHaJT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1750882AbdHaJT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 31 Aug 2017 05:19:58 -0400
 In-Reply-To: <1504171174-37989-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,49 +14,96 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
+Separate out fcoe_vport_remove() from fcoe_destroy_work().
 No functional change.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/fcoe/fcoe.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/fcoe/fcoe.c | 55 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 33 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 85f9a3e..135bdcf 100644
+index 135bdcf..617348f 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -501,11 +501,6 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	struct net_device *netdev = fcoe->netdev;
- 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
- 
--	rtnl_lock();
--	if (!fcoe->removed)
--		fcoe_interface_remove(fcoe);
--	rtnl_unlock();
+@@ -155,7 +155,7 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *,
+ static void fcoe_set_vport_symbolic_name(struct fc_vport *);
+ static void fcoe_set_port_id(struct fc_lport *, u32, struct fc_frame *);
+ static void fcoe_fcf_get_vlan_id(struct fcoe_fcf_device *);
 -
- 	/* Release the self-reference taken during fcoe_interface_create() */
- 	/* tear-down the FCoE controller */
- 	fcoe_ctlr_destroy(fip);
-@@ -2140,6 +2135,11 @@ static void fcoe_destroy_work(struct work_struct *work)
- 	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
++static void fcoe_vport_remove(struct fc_lport *);
  
- 	fcoe_if_destroy(port->lport);
+ static struct fcoe_sysfs_function_template fcoe_sysfs_templ = {
+ 	.set_fcoe_ctlr_mode = fcoe_ctlr_mode,
+@@ -2103,30 +2103,10 @@ static void fcoe_destroy_work(struct work_struct *work)
+ 	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_port *port;
+ 	struct fcoe_interface *fcoe;
+-	struct Scsi_Host *shost;
+-	struct fc_host_attrs *fc_host;
+-	unsigned long flags;
+-	struct fc_vport *vport;
+-	struct fc_vport *next_vport;
+ 
+ 	port = container_of(work, struct fcoe_port, destroy_work);
+-	shost = port->lport->host;
+-	fc_host = shost_to_fc_host(shost);
+-
+-	/* Loop through all the vports and mark them for deletion */
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	list_for_each_entry_safe(vport, next_vport, &fc_host->vports, peers) {
+-		if (vport->flags & (FC_VPORT_DEL | FC_VPORT_CREATING)) {
+-			continue;
+-		} else {
+-			vport->flags |= FC_VPORT_DELETING;
+-			queue_work(fc_host_work_q(shost),
+-				   &vport->vport_delete_work);
+-		}
+-	}
+-	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-	flush_workqueue(fc_host_work_q(shost));
++	fcoe_vport_remove(port->lport);
+ 
+ 	mutex_lock(&fcoe_config_mutex);
+ 
+@@ -2747,6 +2727,37 @@ static int fcoe_vport_destroy(struct fc_vport *vport)
+ }
+ 
+ /**
++ * fcoe_vport_remove() - remove attached vports
++ * @lport: lport for which the vports should be removed
++ */
++static void fcoe_vport_remove(struct fc_lport *lport)
++{
++	struct Scsi_Host *shost;
++	struct fc_host_attrs *fc_host;
++	unsigned long flags;
++	struct fc_vport *vport;
++	struct fc_vport *next_vport;
 +
-+	rtnl_lock();
-+	if (!fcoe->removed)
-+		fcoe_interface_remove(fcoe);
-+	rtnl_unlock();
- 	fcoe_interface_cleanup(fcoe);
- 
- 	mutex_unlock(&fcoe_config_mutex);
-@@ -2254,6 +2254,8 @@ static int _fcoe_create(struct net_device *netdev, enum fip_mode fip_mode,
- 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
- 		       netdev->name);
- 		rc = -EIO;
-+		if (!fcoe->removed)
-+			fcoe_interface_remove(fcoe);
- 		rtnl_unlock();
- 		fcoe_interface_cleanup(fcoe);
- 		mutex_unlock(&fcoe_config_mutex);
++	shost = lport->host;
++	fc_host = shost_to_fc_host(shost);
++
++	/* Loop through all the vports and mark them for deletion */
++	spin_lock_irqsave(shost->host_lock, flags);
++	list_for_each_entry_safe(vport, next_vport, &fc_host->vports, peers) {
++		if (vport->flags & (FC_VPORT_DEL | FC_VPORT_CREATING)) {
++			continue;
++		} else {
++			vport->flags |= FC_VPORT_DELETING;
++			queue_work(fc_host_work_q(shost),
++				   &vport->vport_delete_work);
++		}
++	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
++	flush_workqueue(fc_host_work_q(shost));
++}
++
++/**
+  * fcoe_vport_disable() - change vport state
+  * @vport: vport to bring online/offline
+  * @disable: should the vport be disabled?
 -- 
 1.8.5.6
