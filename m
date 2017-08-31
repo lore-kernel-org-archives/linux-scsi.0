@@ -1,30 +1,37 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 6/9] blk-mq: rename blk_mq_freeze_queue_wait as
- blk_freeze_queue_wait
-Date: Thu, 31 Aug 2017 22:37:46 +0000
-Message-ID: <1504219064.31872.68.camel@wdc.com>
+Subject: Re: [PATCH 8/9] block: allow to allocate req with REQF_PREEMPT when
+ queue is frozen
+Date: Thu, 31 Aug 2017 22:50:25 +0000
+Message-ID: <1504219824.31872.74.camel@wdc.com>
 References: <20170831172728.15817-1-ming.lei@redhat.com>
-         <20170831172728.15817-7-ming.lei@redhat.com>
+         <20170831172728.15817-9-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:62054 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751351AbdHaWif (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2017 18:38:35 -0400
-In-Reply-To: <20170831172728.15817-7-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170831172728.15817-9-ming.lei@redhat.com>
 Content-Language: en-US
-Content-ID: <B128C92BDA2BB044BD35AAF8EF577E4E@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-ID: <C72C391C474E67418BC14ADACAF47A38@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
 To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 Cc: "oleksandr@natalenko.name" <oleksandr@natalenko.name>
+List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE3LTA5LTAxIGF0IDAxOjI3ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gVGhl
-IG9ubHkgY2hhbmdlIG9uIGxlZ2FjeSBpcyB0aGF0IGJsa19kcmFpbl9xdWV1ZSgpIGlzIHJ1bg0K
-PiBmcm9tIGJsa19mcmVlemVfcXVldWUoKSwgd2hpY2ggaXMgY2FsbGVkIGluIGJsa19jbGVhbnVw
-X3F1ZXVlKCkuDQo+IA0KPiBTbyB0aGlzIHBhdGNoIHJlbW92ZXMgdGhlIGV4cGxpY2l0ZSBfX2Js
-a19kcmFpbl9xdWV1ZSgpIGluDQo+IGJsa19jbGVhbnVwX3F1ZXVlKCkuDQoNCkhlbGxvIE1pbmcs
-DQoNClNob3VsZG4ndCB0aGUgcmVuYW1lIGFuZCB0aGUgbW92ZSBvZiB0aGUgX19ibGtfZHJhaW5f
-cXVldWUoKSBiZQ0Kc2VwYXJhdGUgcGF0Y2hlcz8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+T24gRnJpLCAyMDE3LTA5LTAxIGF0IDAxOjI3ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
+LTE0MTMsOSArMTQxNCwxNyBAQCBzdGF0aWMgc3RydWN0IHJlcXVlc3QgKmJsa19vbGRfZ2V0X3Jl
+cXVlc3Qoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsDQo+ICAJLyogY3JlYXRlIGlvYyB1cGZyb250
+ICovDQo+ICAJY3JlYXRlX2lvX2NvbnRleHQoZ2ZwX21hc2ssIHEtPm5vZGUpOw0KPiAgDQo+IC0J
+cmV0ID0gYmxrX3F1ZXVlX2VudGVyKHEsICEoZ2ZwX21hc2sgJiBfX0dGUF9ESVJFQ1RfUkVDTEFJ
+TSkpOw0KPiArCS8qDQo+ICsJICogV2hlbiBxdWV1ZSBpcyBmcm96ZW4sIHdlIHN0aWxsIG5lZWQg
+dG8gYWxsb2NhdGUgcmVxIGZvcg0KPiArCSAqIFJFUUZfUFJFRU1QVC4NCj4gKwkgKi8NCj4gKwlp
+ZiAoKGZsYWdzICYgQkxLX01RX1JFUV9QUkVFTVBUKSAmJiBibGtfcXVldWVfaXNfZnJvemVuKHEp
+KQ0KPiArCQlibGtfcXVldWVfZW50ZXJfbGl2ZShxKTsNCj4gKwllbHNlDQo+ICsJCXJldCA9IGJs
+a19xdWV1ZV9lbnRlcihxLCAhKGdmcF9tYXNrICYgX19HRlBfRElSRUNUX1JFQ0xBSU0pKTsNCg0K
+SGVsbG8gTWluZywNCg0KU29ycnkgYnV0IEkgZG91YnQgdGhhdCBjYWxsaW5nIGJsa19xdWV1ZV9l
+bnRlcl9saXZlKCkgZnJvbSBpbnNpZGUNCmJsa19vbGRfZ2V0X3JlcXVlc3QoKSBpcyBzYWZlLiBD
+YWxsaW5nIGJsa19xdWV1ZV9lbnRlcl9saXZlKCkgaXMgb25seSBzYWZlDQpiZWZvcmUgYSByZXF1
+ZXN0IHF1ZXVlIGhhcyBiZWVuIG1hcmtlZCBkZWFkLiBXaGF0IHByZXZlbnRzIGEga2VybmVsIHRo
+cmVhZA0KdGhhdCBob2xkcyBhIHJlZmVyZW5jZSBvbiBhIHJlcXVlc3QgcXVldWUgYW5kIHRoYXQg
+aXMgcnVubmluZyBjb25jdXJyZW50bHkNCndpdGggYmxrX2NsZWFudXBfcXVldWUoKSB0byBjYWxs
+IGJsa19vbGRfZ2V0X3JlcXVlc3QoKSBhZnRlciBhIHF1ZXVlIGhhcw0KYmVlbiBtYXJrZWQgZGVh
+ZD8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
