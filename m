@@ -1,100 +1,62 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 6/9] blk-mq: rename blk_mq_freeze_queue_wait as blk_freeze_queue_wait
-Date: Fri,  1 Sep 2017 01:27:25 +0800
-Message-ID: <20170831172728.15817-7-ming.lei@redhat.com>
+Subject: [PATCH 5/9] block: introduce blk_drain_queue()
+Date: Fri,  1 Sep 2017 01:27:24 +0800
+Message-ID: <20170831172728.15817-6-ming.lei@redhat.com>
 References: <20170831172728.15817-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35008 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751566AbdHaR3N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Aug 2017 13:29:13 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170831172728.15817-1-ming.lei@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-The only change on legacy is that blk_drain_queue() is run
-from blk_freeze_queue(), which is called in blk_cleanup_queue().
-
-So this patch removes the explicite __blk_drain_queue() in
-blk_cleanup_queue().
+So that we can support legacy version of freezing queue,
+which is required by safe SCSI quiescing.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-core.c         | 2 --
- block/blk-mq.c           | 8 +++++---
- drivers/nvme/host/core.c | 2 +-
- include/linux/blk-mq.h   | 2 +-
- 4 files changed, 7 insertions(+), 7 deletions(-)
+ block/blk-core.c       | 16 ++++++++++++++++
+ include/linux/blkdev.h |  1 +
+ 2 files changed, 17 insertions(+)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 636452f151ea..7a9f93889669 100644
+index d579501f24ba..636452f151ea 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -669,8 +669,6 @@ void blk_cleanup_queue(struct request_queue *q)
- 	 */
- 	blk_freeze_queue(q);
- 	spin_lock_irq(lock);
--	if (!q->mq_ops)
--		__blk_drain_queue(q, true);
- 	queue_flag_set(QUEUE_FLAG_DEAD, q);
- 	spin_unlock_irq(lock);
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4c532d8612e1..24de78afbe9a 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -131,11 +131,13 @@ void blk_freeze_queue_start(struct request_queue *q)
+@@ -530,6 +530,22 @@ static void __blk_drain_queue(struct request_queue *q, bool drain_all)
  }
- EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
  
--void blk_mq_freeze_queue_wait(struct request_queue *q)
-+void blk_freeze_queue_wait(struct request_queue *q)
- {
-+	if (!q->mq_ops)
-+		blk_drain_queue(q);
- 	wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
- }
--EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_wait);
-+EXPORT_SYMBOL_GPL(blk_freeze_queue_wait);
- 
- int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
- 				     unsigned long timeout)
-@@ -160,7 +162,7 @@ void blk_freeze_queue(struct request_queue *q)
- 	 * exported to drivers as the only user for unfreeze is blk_mq.
- 	 */
- 	blk_freeze_queue_start(q);
--	blk_mq_freeze_queue_wait(q);
-+	blk_freeze_queue_wait(q);
- }
- EXPORT_SYMBOL_GPL(blk_freeze_queue);
- 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 986f2b4f9760..d34a9ffaa940 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -2778,7 +2778,7 @@ void nvme_wait_freeze(struct nvme_ctrl *ctrl)
- 
- 	mutex_lock(&ctrl->namespaces_mutex);
- 	list_for_each_entry(ns, &ctrl->namespaces, list)
--		blk_mq_freeze_queue_wait(ns->queue);
-+		blk_freeze_queue_wait(ns->queue);
- 	mutex_unlock(&ctrl->namespaces_mutex);
- }
- EXPORT_SYMBOL_GPL(nvme_wait_freeze);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 8ae77e088c01..f90d78eb85df 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -259,7 +259,7 @@ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
- void blk_freeze_queue(struct request_queue *q);
- void blk_unfreeze_queue(struct request_queue *q);
- void blk_freeze_queue_start(struct request_queue *q);
--void blk_mq_freeze_queue_wait(struct request_queue *q);
-+void blk_freeze_queue_wait(struct request_queue *q);
- int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
- 				     unsigned long timeout);
- int blk_mq_reinit_tagset(struct blk_mq_tag_set *set,
+ /**
++ * blk_drain_queue - drain requests from request_queue
++ * @q: queue to drain
++ *
++ * Drain requests from @q.  All pending requests are drained.
++ * The caller is responsible for ensuring that no new requests
++ * which need to be drained are queued.
++ */
++void blk_drain_queue(struct request_queue *q)
++{
++	spin_lock_irq(q->queue_lock);
++	__blk_drain_queue(q, true);
++	spin_unlock_irq(q->queue_lock);
++}
++EXPORT_SYMBOL(blk_drain_queue);
++
++/**
+  * blk_queue_bypass_start - enter queue bypass mode
+  * @q: queue of interest
+  *
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index f45f157b2910..02959ca03b66 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1146,6 +1146,7 @@ extern struct request_queue *blk_init_queue_node(request_fn_proc *rfn,
+ extern struct request_queue *blk_init_queue(request_fn_proc *, spinlock_t *);
+ extern int blk_init_allocated_queue(struct request_queue *);
+ extern void blk_cleanup_queue(struct request_queue *);
++extern void blk_drain_queue(struct request_queue *);
+ extern void blk_queue_make_request(struct request_queue *, make_request_fn *);
+ extern void blk_queue_bounce_limit(struct request_queue *, u64);
+ extern void blk_queue_max_hw_sectors(struct request_queue *, unsigned int);
 -- 
 2.9.5
