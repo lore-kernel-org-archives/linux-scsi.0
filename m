@@ -1,31 +1,62 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 4/4] scsi-mq: Always unprepare before requeuing a
- request
-Date: Thu, 31 Aug 2017 09:16:11 +0200
-Message-ID: <20170831071611.6r4z3j7lzjc6bktn@linux-x5ow.site>
-References: <20170830235842.29725-1-bart.vanassche@wdc.com>
- <20170830235842.29725-5-bart.vanassche@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/3] fcoe: move fcoe_interface_remove() out of fcoe_interface_cleanup()
+Date: Thu, 31 Aug 2017 11:19:32 +0200
+Message-ID: <1504171174-37989-2-git-send-email-hare@suse.de>
+References: <1504171174-37989-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51902 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59686 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751566AbdHaHQN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Aug 2017 03:16:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20170830235842.29725-5-bart.vanassche@wdc.com>
+        id S1750918AbdHaJT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 31 Aug 2017 05:19:58 -0400
+In-Reply-To: <1504171174-37989-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Damien Le Moal <damien.lemoal@wdc.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
+No functional change.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/fcoe/fcoe.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 85f9a3e..135bdcf 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -501,11 +501,6 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ 	struct net_device *netdev = fcoe->netdev;
+ 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+ 
+-	rtnl_lock();
+-	if (!fcoe->removed)
+-		fcoe_interface_remove(fcoe);
+-	rtnl_unlock();
+-
+ 	/* Release the self-reference taken during fcoe_interface_create() */
+ 	/* tear-down the FCoE controller */
+ 	fcoe_ctlr_destroy(fip);
+@@ -2140,6 +2135,11 @@ static void fcoe_destroy_work(struct work_struct *work)
+ 	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
+ 
+ 	fcoe_if_destroy(port->lport);
++
++	rtnl_lock();
++	if (!fcoe->removed)
++		fcoe_interface_remove(fcoe);
++	rtnl_unlock();
+ 	fcoe_interface_cleanup(fcoe);
+ 
+ 	mutex_unlock(&fcoe_config_mutex);
+@@ -2254,6 +2254,8 @@ static int _fcoe_create(struct net_device *netdev, enum fip_mode fip_mode,
+ 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
+ 		       netdev->name);
+ 		rc = -EIO;
++		if (!fcoe->removed)
++			fcoe_interface_remove(fcoe);
+ 		rtnl_unlock();
+ 		fcoe_interface_cleanup(fcoe);
+ 		mutex_unlock(&fcoe_config_mutex);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.8.5.6
