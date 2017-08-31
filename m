@@ -1,87 +1,33 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RESEND] libsas: Fixup device_del() inversion
-Date: Thu, 31 Aug 2017 11:20:49 +0200
-Message-ID: <1504171249-38053-1-git-send-email-hare@suse.de>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH v2 1/3] Call scsi_initialize_rq() also for filesystem
+        requests
+Date: Thu, 31 Aug 2017 11:50:19 +0200
+Message-ID: <20170831095019.GA21004@lst.de>
+References: <20170830000742.29653-1-bart.vanassche@wdc.com> <20170830000742.29653-2-bart.vanassche@wdc.com> <20170830082928.GA17935@lst.de> <1504127579.2526.58.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59788 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750882AbdHaJVK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Aug 2017 05:21:10 -0400
+Received: from verein.lst.de ([213.95.11.211]:54295 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750884AbdHaJuU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 31 Aug 2017 05:50:20 -0400
+Content-Disposition: inline
+In-Reply-To: <1504127579.2526.58.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "hch@lst.de" <hch@lst.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-(resending to include linux-scsi)
+On Wed, Aug 30, 2017 at 09:13:00PM +0000, Bart Van Assche wrote:
+> On Wed, 2017-08-30 at 10:29 +0200, Christoph Hellwig wrote:
+> > Looks good except for the subject, which will need a little update:
+> 
+> Hello Christoph,
+> 
+> Thanks for the review. Sorry but I don't see what's wrong with the subject.
+> Can you clarify your comment?
 
-When removing the HBA or port there's a device_del() inversion
-in sas_deform_port().
-If there's only one phy it will call sas_unregister_domain_devices(),
-which in turn might remove any phys and end_devices asynchronously
-via the DISCE_DESTRUCT event.
-But then it goes ahead and calls sas_port_delete() before the DISCE_DESTRUCT
-event had a chance to run.
-Consequently the port is removed before the phy, and we're getting
-nasty kernel WARNING like
+Hi Bart,
 
-WARNING: CPU: 14 PID: 1592 at fs/sysfs/group.c:237 device_del+0x61/0x2a0()
-sysfs group ffffffff81eff140 not found for kobject '6:0:0:0'
-
-This patch moves the call to sas_port_delete() into the DISCE_DESTRUCT
-handler to ensure that devices are removed in the correct order.
-
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/libsas/sas_discover.c | 10 +++++++++-
- drivers/scsi/libsas/sas_port.c     |  6 ++----
- 2 files changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 60de662..dc8f789 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -368,6 +368,10 @@ static void sas_destruct_devices(struct work_struct *work)
- 		sas_rphy_delete(dev->rphy);
- 		sas_unregister_common_dev(port, dev);
- 	}
-+	if (!port->port->rphy) {
-+		sas_port_delete(port->port);
-+		port->port = NULL;
-+	}
- }
- 
- void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
-@@ -401,8 +405,12 @@ void sas_unregister_domain_devices(struct asd_sas_port *port, int gone)
- 	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
- 		sas_unregister_dev(port, dev);
- 
-+	/*
-+	 * Add another destruct event (or overload the existing one)
-+	 * to trigger port deletion.
-+	 */
- 	port->port->rphy = NULL;
--
-+	sas_discover_event(port, DISCE_DESTRUCT);
- }
- 
- void sas_device_set_phy(struct domain_device *dev, struct sas_port *port)
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index d3c5297..7ee0c0a 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -217,11 +217,9 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
- 	if (dev)
- 		dev->pathways--;
- 
--	if (port->num_phys == 1) {
-+	if (port->num_phys == 1)
- 		sas_unregister_domain_devices(port, gone);
--		sas_port_delete(port->port);
--		port->port = NULL;
--	} else {
-+	else {
- 		sas_port_delete_phy(port->port, phy->phy);
- 		sas_device_set_phy(dev, port->port);
- 	}
--- 
-1.8.5.6
+I'll take that comment back - I misread scsi_initialize_rq as
+.initialize_rq.
