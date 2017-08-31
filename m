@@ -1,43 +1,57 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] storvsc: fix memory leak on ring buffer busy
-Date: Thu, 31 Aug 2017 02:28:21 +0000
-Message-ID: <CY4PR21MB0182CFFD8C7F455140DC69B2CE9D0@CY4PR21MB0182.namprd21.prod.outlook.com>
-References: <20170829004359.28526-1-longli@exchange.microsoft.com>
- <yq18ti1265c.fsf@oracle.com>
- <MWHPR21MB0190F8C50CCF7CFA0EDCA7A6CE9C0@MWHPR21MB0190.namprd21.prod.outlook.com>
- <yq1y3q0y001.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
+Date: Wed, 30 Aug 2017 23:05:37 -0400
+Message-ID: <yq1a82gxwqm.fsf@oracle.com>
+References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        <yq1lgmbauxt.fsf@oracle.com>
+        <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <yq1y3q0y001.fsf@oracle.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
+        (Suganath Prabu Subramani's message of "Wed, 30 Aug 2017 18:00:26
+        +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-> Long,
-> 
-> >> Which kernel version is this patch aimed at?
-> >
-> > Martin, thanks for pointing this out. This should also go to stable
-> > trees.
-> 
-> The reason I asked is that it didn't apply to neither fixes, nor for-next.
-> 
-> I applied it to 4.13/scsi-fixes by hand and added a stable tag.
 
-Thank you. I'm sorry I misunderstood your question. I just realized I was working on an experimental branch. Sorry about that.
+Hi Suganath,
 
-> 
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+> Theoretically we want to use h/w capability (to translate IEEE to PRP)
+> for smaller IO size to leverage h/w capability.
+
+Nobody says we have to use the capability just because the hardware has
+it.
+
+Unlike some other operating systems, Linux will only submit I/Os to the
+driver that conform to the reported underlying constraints of the
+hardware. I fail to understand how letting the HBA firmware translate an
+SGL to a PRP for a subset of I/Os could do anything but add latency.
+Plus complexity in the hot path of the driver.
+
+> - If the unmap translation in firmware is slow, why don't you translate
+>   WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
+>   applications to do encapsulated passthrough?
+
+> => As of now, current FW supports UNMAP command but not WRITE_SAME for
+> NVME drive. We did some experiment to convert UMAP command in driver,
+> but that is not really giving any performance improvement.
+
+It is imperative that the common use case, Linux' discard
+infrastructure, is working correctly and is as performant as any
+application-driven passthrough workaround.
+
+Unlike SCSI-to-SATA translation you have the benefit of a 1:1 mapping
+between UNMAP and DEALLOCATE. I'm not even sure why there would be a
+significant performance penalty in the firmware?
+
+> We would like to continue with UNMAP (and all other non-read/write
+> commands) to be handled in FW.
+
+And yet patch 4 circumvents that statement by adding support for
+encapsulated commands to bypass the FW translation...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
