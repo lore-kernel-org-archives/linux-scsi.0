@@ -1,41 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] storvsc: fix memory leak on ring buffer busy
-Date: Wed, 30 Aug 2017 21:55:10 -0400
-Message-ID: <yq1y3q0y001.fsf@oracle.com>
-References: <20170829004359.28526-1-longli@exchange.microsoft.com>
- <yq18ti1265c.fsf@oracle.com>
- <MWHPR21MB0190F8C50CCF7CFA0EDCA7A6CE9C0@MWHPR21MB0190.namprd21.prod.outlook.com>
+Subject: Re: [PATCH 3/3] scsi: aacraid: report -ENOMEM to upper layer from aac_convert_sgraw2()
+Date: Wed, 30 Aug 2017 22:03:10 -0400
+Message-ID: <yq1r2vsxzmp.fsf@oracle.com>
+References: <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
+        <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
+        <29ed79bb97060429247eeafc9d6d8f6793a7f6b5.1504007944.git.npajkovsky@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <MWHPR21MB0190F8C50CCF7CFA0EDCA7A6CE9C0@MWHPR21MB0190.namprd21.prod.outlook.com>
- (Long Li's message of "Wed, 30 Aug 2017 03:48:54 +0000")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@microsoft.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42176 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750973AbdHaCDX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 22:03:23 -0400
+In-Reply-To: <29ed79bb97060429247eeafc9d6d8f6793a7f6b5.1504007944.git.npajkovsky@suse.cz>
+        (Nikola Pajkovsky's message of "Tue, 29 Aug 2017 13:59:04 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nikola Pajkovsky <npajkovsky@suse.cz>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Long,
+Nikola,
 
->> Which kernel version is this patch aimed at?
->
-> Martin, thanks for pointing this out. This should also go to stable
-> trees.
+> aac_convert_sgraw2() kmalloc memory and return -1 on error, which
+> should be -ENOMEM. However, nobody is checking return value, so with
+> this change, -ENOMEM is propagated to upper layer.
 
-The reason I asked is that it didn't apply to neither fixes, nor
-for-next.
-
-I applied it to 4.13/scsi-fixes by hand and added a stable tag.
+Applied to 4.14/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
