@@ -1,33 +1,30 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 6/8] scsi: sd_zbc: Limit zone write locking to sequential
- zones
-Date: Fri, 1 Sep 2017 16:25:56 +0000
-Message-ID: <1504283155.14386.35.camel@wdc.com>
+Subject: Re: [PATCH 7/8] scsi: sd_zbc: Disable zone write locking with scsi-mq
+Date: Fri, 1 Sep 2017 16:26:46 +0000
+Message-ID: <1504283205.14386.36.camel@wdc.com>
 References: <20170901113631.12323-1-damien.lemoal@wdc.com>
-         <20170901113631.12323-7-damien.lemoal@wdc.com>
+         <20170901113631.12323-8-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170901113631.12323-7-damien.lemoal@wdc.com>
+In-Reply-To: <20170901113631.12323-8-damien.lemoal@wdc.com>
 Content-Language: en-US
-Content-ID: <8E93BFD59D63854C9D44E035746EA0CD@namprd04.prod.outlook.com>
+Content-ID: <D5073DBFCBDE394D8800AE105392C263@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
 T24gRnJpLCAyMDE3LTA5LTAxIGF0IDIwOjM2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gWm9uZWQgYmxvY2sgZGV2aWNlcyBoYXZlIG5vIHdyaXRlIGNvbnN0cmFpbnRzIGZvciBjb252
-ZW50aW9uYWwgem9uZXMNCj4gc28gd3JpdGUgbG9ja2luZyBvZiBjb252ZW50aW9uYWwgem9uZXMg
-aXMgbm90IG5lY2Vzc2FyeSBhbmQgY2FuIGh1cnQNCj4gcGVyZm9ybWFuY2UuIFRvIGF2b2lkIHRo
-aXMsIGludHJvZHVjZSB0aGUgc2VxX3pvbmVzIGJpdG1hcCB0byBpbmRpY2F0ZQ0KPiBpZiBhIHpv
-bmUgaXMgYSBzZXF1ZW50aWFsIG9uZS4gVXNlIHRoaXMgaW5mb3JtYXRpb24gdG8gYWxsb3cgYW55
-IHdyaXRlDQo+IHRvIGJlIGlzc3VlZCB0byBjb252ZW50aW9uYWwgem9uZXMsIGxvY2tpbmcgb25s
-eSBzZXF1ZW50aWFsIHpvbmVzLg0KPiANCj4gQXMgdGhlIHpvbmUgYml0bWFwIGFsbG9jYXRpb24g
-Zm9yIHNlcV96b25lcyBpcyBpZGVudGljYWwgdG8gdGhlIHpvbmVzDQo+IHdyaXRlIGxvY2sgYml0
-bWFwLCBpbnRyb2R1Y2UgdGhlIGhlbHBlciBzZF96YmNfYWxsb2Nfem9uZV9iaXRtYXAoKS4NCj4g
-VXNpbmcgdGhpcyBoZWxwZXIsIHdhaXQgZm9yIHRoZSBkaXNrIGNhcGFjaXR5IGFuZCBudW1iZXIg
-b2Ygem9uZXMgdG8NCj4gc3RhYmlsaXplIG9uIHRoZSBzZWNvbmQgcmV2YWxpZGF0aW9uIHBhc3Mg
-dG8gYWxsb2NhdGUgYW5kIGluaXRpYWxpemUNCj4gdGhlIGJpdG1hcHMuDQoNClJldmlld2VkLWJ5
-OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdkYy5jb20+
+Cj4gSW4gdGhlIGNhc2Ugb2YgYSBaQkMgZGlzayB1c2VkIHdpdGggc2NzaS1tcSwgem9uZSB3cml0
+ZSBsb2NraW5nIGRvZXMNCj4gbm90IHByZXZlbnQgd3JpdGUgcmVvcmRlcmluZyBpbiBzZXF1ZW50
+aWFsIHpvbmVzLiBVbmxpa2UgdGhlIGxlZ2FjeQ0KPiBjYXNlLCB6b25lIGxvY2tpbmcgY2FuIG9u
+bHkgYmUgZG9uZSBhZnRlciB0aGUgY29tbWFuZCByZXF1ZXN0IGlzDQo+IHJlbW92ZWQgZnJvbSB0
+aGUgc2NoZWR1bGVyIGRpc3BhdGNoIHF1ZXVlLiBUaGF0IGlzLCBhdCB0aGUgdGltZSBvZg0KPiB6
+b25lIGxvY2tpbmcsIHRoZSB3cml0ZSBjb21tYW5kIG1heSBhbHJlYWR5IGJlIG91dCBvZiBvcmRl
+ci4NCj4gDQo+IERpc2FibGUgem9uZSB3cml0ZSBsb2NraW5nIGluIHNkX3piY193cml0ZV9sb2Nr
+X3pvbmUoKSBpZiB0aGUgZGlzayBpcw0KPiB1c2VkIHdpdGggc2NzaS1tcS4gV3JpdGUgb3JkZXIg
+Z3VhcmFudGVlcyBjYW4gYmUgcHJvdmlkZWQgYnkgYW4NCj4gYWRhcHRlZCBJL08gc2NoZWR1bGVy
+Lg0KDQpSZXZpZXdlZC1ieTogQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29t
+Pg0KDQo=
