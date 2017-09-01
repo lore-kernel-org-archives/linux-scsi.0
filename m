@@ -1,49 +1,85 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 0/9] block/scsi: safe SCSI quiescing
-Date: Fri, 1 Sep 2017 14:30:08 +0800
-Message-ID: <20170901063007.GA2424@ming.t460p>
-References: <20170831172728.15817-1-ming.lei@redhat.com>
- <1576539.niWZoWEnd8@natalenko.name>
- <20170831173833.GC5928@ming.t460p>
- <14328863.IIXMb7O2AM@natalenko.name>
- <20170901034532.GD16525@ming.t460p>
- <eeb514d8aab51d4713f18636adb6be03@natalenko.name>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: Buffer overflow in the mptctl_replace_fw() function in linux
+ kernel MPT ioctl driver
+Date: Thu, 31 Aug 2017 23:44:37 -0700
+Message-ID: <CAGXu5j+kg8WXMwW-Sd5GYWxpmwhtRfUnHEVyrNTim2PfKoD67w@mail.gmail.com>
+References: <CAJsXRPFEOoZjHKhJ=1rfXpmFqEdaORtxYUkm3bRJ_v+_oENt3Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54028 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751000AbdIAGaZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Sep 2017 02:30:25 -0400
-Content-Disposition: inline
-In-Reply-To: <eeb514d8aab51d4713f18636adb6be03@natalenko.name>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAJsXRPFEOoZjHKhJ=1rfXpmFqEdaORtxYUkm3bRJ_v+_oENt3Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dison River <pwn2river@gmail.com>
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "security@kernel.org" <security@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: oleksandr@natalenko.name
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 
-On Fri, Sep 01, 2017 at 08:24:46AM +0200, oleksandr@natalenko.name wrote:
-> Hi.
-> 
-> 01.09.2017 05:45, Ming Lei wrote:
-> > Could you try the following patch against this patchset to see
-> > if there is still the warning?
-> 
-> With this patch I wasn't able to trigger per-CPU-related warning.
+On Thu, Aug 31, 2017 at 11:00 PM, Dison River <pwn2river@gmail.com> wrote:
+> Hi:
+> Buffer overflow in the mptctl_replace_fw() function in linux kernel
+> MPT ioctl driver.
+>
+> In mptctl_replace_fw function, kernel didn't check the size of
+> "newFwSize" variable allows attackers to cause a denial of service via
+> unspecified vectors that trigger copy_from_user function calls with
+> improper length arguments.
 
-That is great!
+Is there a specific path you see to trigger this?
 
-> 
-> Also, for 8th patch you've written:
-> 
-> > I have sent one delta patch in list, which will only call
-> > blk_queue_enter_live() iff SCSI device is in QUIESCE.
-> 
-> This refers to the patch I've just tested, right?
+>
+>
+> static int
+> mptctl_replace_fw (unsigned long arg)
+> {
+> ......
+>     if (copy_from_user(&karg, uarg, sizeof(struct mpt_ioctl_replace_fw))) {
+>         printk(KERN_ERR MYNAM "%s@%d::mptctl_replace_fw - "
+>             "Unable to read in mpt_ioctl_replace_fw struct @ %p\n",
+>                 __FILE__, __LINE__, uarg);
+>         return -EFAULT;
+>     }
+>
+> ......
+>
+>     mpt_free_fw_memory(ioc);
 
-Yeah, you are right, thanks again for your test!
+This frees ioc->cached_fw.
 
-I will prepare V2 and send it out soon.
+>
+>     /* Allocate memory for the new FW image
+>      */
+>     newFwSize = ALIGN(karg.newImageSize, 4);
+>
+>     mpt_alloc_fw_memory(ioc, newFwSize);
+
+This allocates ioc->cached_fw to newFwSize.
+
+> ......
+>
+>     if (copy_from_user(ioc->cached_fw, uarg->newImage, newFwSize)) {
+
+This copies newFwSize bytes into a buffer that is allocated to newFwSize bytes.
+
+What am I missing? I see some games getting played in
+mpt_alloc_fw_memory(), but they seem to be covered due to the earlier
+call to mpt_free_fw_memory()...
+
+-Kees
+
+> ///------->newFwSize can control in userspace
+>         printk(MYIOC_s_ERR_FMT "%s@%d::mptctl_replace_fw - "
+>                 "Unable to read in mpt_ioctl_replace_fw image "
+>                 "@ %p\n", ioc->name, __FILE__, __LINE__, uarg);
+>         mpt_free_fw_memory(ioc);
+>         return -EFAULT;
+>     }
+>
+> ......
+>
+>     return 0;
+> }
+
+-Kees
 
 -- 
-Ming
+Kees Cook
+Pixel Security
