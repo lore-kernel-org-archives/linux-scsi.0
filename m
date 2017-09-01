@@ -1,59 +1,33 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 8/9] block: allow to allocate req with REQF_PREEMPT when
- queue is frozen
-Date: Fri, 1 Sep 2017 15:43:39 +0000
-Message-ID: <1504280618.14386.16.camel@wdc.com>
+Subject: Re: [PATCH 1/9] percpu-refcount: introduce percpu_ref_is_dead()
+Date: Fri, 1 Sep 2017 15:44:56 +0000
+Message-ID: <1504280694.14386.18.camel@wdc.com>
 References: <20170831172728.15817-1-ming.lei@redhat.com>
-         <20170831172728.15817-9-ming.lei@redhat.com>
-         <1504219824.31872.74.camel@wdc.com> <20170901035537.GI16525@ming.t460p>
+         <20170831172728.15817-2-ming.lei@redhat.com>
+         <20170901135915.GD1599492@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170901035537.GI16525@ming.t460p>
+In-Reply-To: <20170901135915.GD1599492@devbig577.frc2.facebook.com>
 Content-Language: en-US
-Content-ID: <7DF4B0A7B9C01A4ABD352BD95BA345BA@namprd04.prod.outlook.com>
+Content-ID: <AF69DED1834A2D459F54A4FF0ADDE3AE@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@fb.com" <axboe@fb.com>
+To: "tj@kernel.org" <tj@kernel.org>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE3LTA5LTAxIGF0IDExOjU1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-VGh1LCBBdWcgMzEsIDIwMTcgYXQgMTA6NTA6MjVQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IE9uIEZyaSwgMjAxNy0wOS0wMSBhdCAwMToyNyArMDgwMCwgTWluZyBMZWkgd3Jv
-dGU6DQo+ID4gPiBAQCAtMTQxMyw5ICsxNDE0LDE3IEBAIHN0YXRpYyBzdHJ1Y3QgcmVxdWVzdCAq
-YmxrX29sZF9nZXRfcmVxdWVzdChzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwNCj4gPiA+ICAJLyog
-Y3JlYXRlIGlvYyB1cGZyb250ICovDQo+ID4gPiAgCWNyZWF0ZV9pb19jb250ZXh0KGdmcF9tYXNr
-LCBxLT5ub2RlKTsNCj4gPiA+ICANCj4gPiA+IC0JcmV0ID0gYmxrX3F1ZXVlX2VudGVyKHEsICEo
-Z2ZwX21hc2sgJiBfX0dGUF9ESVJFQ1RfUkVDTEFJTSkpOw0KPiA+ID4gKwkvKg0KPiA+ID4gKwkg
-KiBXaGVuIHF1ZXVlIGlzIGZyb3plbiwgd2Ugc3RpbGwgbmVlZCB0byBhbGxvY2F0ZSByZXEgZm9y
-DQo+ID4gPiArCSAqIFJFUUZfUFJFRU1QVC4NCj4gPiA+ICsJICovDQo+ID4gPiArCWlmICgoZmxh
-Z3MgJiBCTEtfTVFfUkVRX1BSRUVNUFQpICYmIGJsa19xdWV1ZV9pc19mcm96ZW4ocSkpDQo+ID4g
-PiArCQlibGtfcXVldWVfZW50ZXJfbGl2ZShxKTsNCj4gPiA+ICsJZWxzZQ0KPiA+ID4gKwkJcmV0
-ID0gYmxrX3F1ZXVlX2VudGVyKHEsICEoZ2ZwX21hc2sgJiBfX0dGUF9ESVJFQ1RfUkVDTEFJTSkp
-Ow0KPiA+IA0KPiA+IFNvcnJ5IGJ1dCBJIGRvdWJ0IHRoYXQgY2FsbGluZyBibGtfcXVldWVfZW50
-ZXJfbGl2ZSgpIGZyb20gaW5zaWRlDQo+ID4gYmxrX29sZF9nZXRfcmVxdWVzdCgpIGlzIHNhZmUu
-IENhbGxpbmcgYmxrX3F1ZXVlX2VudGVyX2xpdmUoKSBpcyBvbmx5IHNhZmUNCj4gPiBiZWZvcmUg
-YSByZXF1ZXN0IHF1ZXVlIGhhcyBiZWVuIG1hcmtlZCBkZWFkLiBXaGF0IHByZXZlbnRzIGEga2Vy
-bmVsIHRocmVhZA0KPiA+IHRoYXQgaG9sZHMgYSByZWZlcmVuY2Ugb24gYSByZXF1ZXN0IHF1ZXVl
-IGFuZCB0aGF0IGlzIHJ1bm5pbmcgY29uY3VycmVudGx5DQo+ID4gd2l0aCBibGtfY2xlYW51cF9x
-dWV1ZSgpIHRvIGNhbGwgYmxrX29sZF9nZXRfcmVxdWVzdCgpIGFmdGVyIGEgcXVldWUgaGFzDQo+
-ID4gYmVlbiBtYXJrZWQgZGVhZD8NCj4gDQo+IEkgaGF2ZSBzZW50IG9uZSBkZWx0YSBwYXRjaCBp
-biBsaXN0LCB3aGljaCB3aWxsIG9ubHkgY2FsbA0KPiBibGtfcXVldWVfZW50ZXJfbGl2ZSgpIGlm
-ZiBTQ1NJIGRldmljZSBpcyBpbiBRVUlFU0NFLg0KDQpUaGF0IHdvdWxkbid0IG1ha2UgdGhpcyBo
-YWNrIGxlc3MgdWdseS4NCg0KSXQgaXMgcG9zc2libGUgdG8gdHJpZ2dlciB0aGUgcnVubmluZyAt
-PiBxdWllc2NlIHN0YXRlIHRyYW5zaXRpb24gdGhyb3VnaA0KL3N5cy9jbGFzcy9zY3NpX2Rldmlj
-ZS8qL2RldmljZS9zdGF0ZSBhbmQgdGhlIHF1aWVzY2UgLT4gcmVtb3ZlZCB0cmFuc2l0aW9uDQp0
-aHJvdWdoIC9zeXMvY2xhc3Mvc2NzaV9kZXZpY2UvKi9kZXZpY2UvZGVsZXRlLiBBbiBleGFtcGxl
-Og0KDQptb2Rwcm9iZSBzY3NpX2RlYnVnIGRlbGF5PTAgZGV2X3NpemVfbWI9MTYNCmxzc2NzaSB8
-IGdyZXAgc2NzaV9kZWJ1Zw0KY2QgL3N5cy9jbGFzcy9zY3NpX2RldmljZS84OjA6MDowL2Rldmlj
-ZQ0KZWNobyBxdWllc2NlID4gc3RhdGUNCmVjaG8gMSA+IGRlbGV0ZQ0KDQpTbyB0aGUgY29kZSBm
-cm9tIHlvdXIgcGF0Y2ggOC85IGNhbiByYWNlIGFnYWluc3QgZGV2aWNlIHJlbW92YWwuDQoNCkkg
-dGhpbmsgd2UgbmVlZCBhIGJldHRlciBhcHByb2FjaCB0aGFuIHRoZSBSRVFfUFJFRU1QVCBoYWNr
-LiBIb3cgYWJvdXQNCmltcGxlbWVudGluZyByZXN1bWUgYXMgYSBjYWxsYmFjayBieSBhZGRpbmcg
-YW4gYWRkaXRpb25hbCBmdW5jdGlvbiBwb2ludGVyDQp0byBzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAv
-IHN0cnVjdCBibGtfbXFfb3BzIGluc3RlYWQgb2YgaW1wbGVtZW50aW5nIGl0IGFzDQphIHJlcXVl
-c3Q/IEZvciBTQ1NJIGRldmljZXMgcmFjZXMgb2YgcmVzdW1lIGFnYWluc3QgcmVtb3ZhbCBjYW4g
-ZS5nLiBiZQ0KaGFuZGxlZCBieSBjaGVja2luZyB0aGUgc2NzaV9kZXZpY2Vfc2V0X3N0YXRlKCkg
-cmV0dXJuIHZhbHVlLiBUaGF0IGZ1bmN0aW9uDQpuYW1lbHkgZG9lcyBub3QgYWxsb3cgdGhlIHJl
-bW92aW5nL3JlbW92ZWQgdG8gcnVubmluZyBzdGF0ZSB0cmFuc2l0aW9uLg0KDQpCYXJ0Lg==
+T24gRnJpLCAyMDE3LTA5LTAxIGF0IDA2OjU5IC0wNzAwLCBUZWp1biBIZW8gd3JvdGU6DQo+ID4g
+Ky8qKg0KPiA+ICsgKiBwZXJjcHVfcmVmX2lzX2RlYWQgLSB0ZXN0IHdoZXRoZXIgYSBwZXJjcHUg
+cmVmY291bnQgaXMga2lsbGVkDQo+ID4gKyAqIEByZWY6IHBlcmNwdV9yZWYgdG8gdGVzdA0KPiA+
+ICsgKg0KPiA+ICsgKiBSZXR1cm5zICV0cnVlIGlmIEByZWYgaXMgZGVhZA0KPiA+ICsgKg0KPiA+
+ICsgKiBUaGlzIGZ1bmN0aW9uIGlzIHNhZmUgdG8gY2FsbCBhcyBsb25nIGFzIEByZWYgaXMgYmV0
+d2VlbiBpbml0IGFuZCBleGl0Lg0KPiA+ICsgKi8NCj4gPiArc3RhdGljIGlubGluZSBib29sIHBl
+cmNwdV9yZWZfaXNfZGVhZChzdHJ1Y3QgcGVyY3B1X3JlZiAqcmVmKQ0KPiA+ICt7DQo+ID4gKwl1
+bnNpZ25lZCBsb25nIF9fcGVyY3B1ICpwZXJjcHVfY291bnQ7DQo+ID4gKw0KPiA+ICsJaWYgKF9f
+cmVmX2lzX3BlcmNwdShyZWYsICZwZXJjcHVfY291bnQpKQ0KPiA+ICsJCXJldHVybiBmYWxzZTsN
+Cj4gPiArCXJldHVybiByZWYtPnBlcmNwdV9jb3VudF9wdHIgJiBfX1BFUkNQVV9SRUZfREVBRDsN
+Cj4gPiArfQ0KPiANCj4gQ2FuIHlvdSBwbGVhc2UgZXhwbGFpbiB3aHkgcGVyY3B1X3JlZl9pc19k
+eWluZygpIGlzbid0IGVub3VnaCBmb3IgeW91cg0KPiB1c2UgY2FzZT8NCg0KSGVsbG8gVGVqdW4s
+DQoNClRoZSBhcHByb2FjaCBvZiB0aGUgd2hvbGUgc2VyaWVzIGlzIHdyb25nIHNvIEkgdGhpbmsg
+dGhhdCB5b3UgY2FuIGlnbm9yZSB0aGlzIHBhdGNoLg0KDQpCYXJ0Lg==
