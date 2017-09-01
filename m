@@ -1,67 +1,200 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V2 5/8] block: tracking request allocation with q_usage_counter
-Date: Sat,  2 Sep 2017 02:49:55 +0800
-Message-ID: <20170901184958.19452-7-ming.lei@redhat.com>
+Subject: [PATCH V2 6/8] block: allow to allocate req with REQF_PREEMPT when queue is frozen
+Date: Sat,  2 Sep 2017 02:49:56 +0800
+Message-ID: <20170901184958.19452-8-ming.lei@redhat.com>
 References: <20170901184958.19452-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34840 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750955AbdIASvp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 Sep 2017 14:51:45 -0400
 In-Reply-To: <20170901184958.19452-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Ming Lei <ming.lei@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
-This usage is basically same with blk-mq, so that we can
-support to freeze queue easily.
+REQF_PREEMPT is a bit special because it is required to be
+dispatched to lld even when SCSI device is quiesced.
+
+So this patch introduces __blk_get_request() to allow block
+layer to allocate request when queue is frozen, since we
+will freeze queue before quiescing SCSI device in the
+following patch for supporting safe SCSI quiescing.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-core.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ block/blk-core.c       | 25 +++++++++++++++++--------
+ block/blk-mq.c         | 11 +++++++++--
+ block/blk.h            |  5 +++++
+ include/linux/blk-mq.h |  7 ++++---
+ include/linux/blkdev.h | 17 +++++++++++++++--
+ 5 files changed, 50 insertions(+), 15 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index ce2d3b6f6c62..85b15833a7a5 100644
+index 85b15833a7a5..c199910d4fe1 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -1405,16 +1405,21 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 					   unsigned int op, gfp_t gfp_mask)
+@@ -1402,7 +1402,8 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
+ }
+ 
+ static struct request *blk_old_get_request(struct request_queue *q,
+-					   unsigned int op, gfp_t gfp_mask)
++					   unsigned int op, gfp_t gfp_mask,
++					   unsigned int flags)
  {
  	struct request *rq;
-+	int ret = 0;
- 
- 	WARN_ON_ONCE(q->mq_ops);
- 
+ 	int ret = 0;
+@@ -1412,9 +1413,17 @@ static struct request *blk_old_get_request(struct request_queue *q,
  	/* create ioc upfront */
  	create_io_context(gfp_mask, q->node);
  
-+	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
-+	if (ret)
-+		return ERR_PTR(ret);
+-	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
++	/*
++	 * When queue is frozen, we still need to allocate req for
++	 * REQF_PREEMPT.
++	 */
++	if ((flags & BLK_MQ_REQ_PREEMPT) && blk_queue_is_freezing(q))
++		blk_queue_enter_live(q);
++	else
++		ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
+ 	if (ret)
+ 		return ERR_PTR(ret);
++
  	spin_lock_irq(q->queue_lock);
  	rq = get_request(q, op, NULL, gfp_mask);
  	if (IS_ERR(rq)) {
- 		spin_unlock_irq(q->queue_lock);
-+		blk_queue_exit(q);
- 		return rq;
+@@ -1430,26 +1439,26 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 	return rq;
+ }
+ 
+-struct request *blk_get_request(struct request_queue *q, unsigned int op,
+-				gfp_t gfp_mask)
++struct request *__blk_get_request(struct request_queue *q, unsigned int op,
++				  gfp_t gfp_mask, unsigned int flags)
+ {
+ 	struct request *req;
+ 
+ 	if (q->mq_ops) {
+ 		req = blk_mq_alloc_request(q, op,
+-			(gfp_mask & __GFP_DIRECT_RECLAIM) ?
+-				0 : BLK_MQ_REQ_NOWAIT);
++			flags | ((gfp_mask & __GFP_DIRECT_RECLAIM) ?
++				0 : BLK_MQ_REQ_NOWAIT));
+ 		if (!IS_ERR(req) && q->mq_ops->initialize_rq_fn)
+ 			q->mq_ops->initialize_rq_fn(req);
+ 	} else {
+-		req = blk_old_get_request(q, op, gfp_mask);
++		req = blk_old_get_request(q, op, gfp_mask, flags);
+ 		if (!IS_ERR(req) && q->initialize_rq_fn)
+ 			q->initialize_rq_fn(req);
  	}
  
-@@ -1586,6 +1591,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 		blk_free_request(rl, req);
- 		freed_request(rl, sync, rq_flags);
- 		blk_put_rl(rl);
-+		blk_queue_exit(q);
- 	}
+ 	return req;
  }
- EXPORT_SYMBOL_GPL(__blk_put_request);
-@@ -1867,8 +1873,10 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
- 	 * Grab a free request. This is might sleep but can not fail.
- 	 * Returns with the queue unlocked.
- 	 */
-+	blk_queue_enter_live(q);
- 	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
- 	if (IS_ERR(req)) {
-+		blk_queue_exit(q);
- 		__wbt_done(q->rq_wb, wb_acct);
- 		if (PTR_ERR(req) == -ENOMEM)
- 			bio->bi_status = BLK_STS_RESOURCE;
+-EXPORT_SYMBOL(blk_get_request);
++EXPORT_SYMBOL(__blk_get_request);
+ 
+ /**
+  * blk_requeue_request - put a request back on queue
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 24de78afbe9a..695d2eeaf41a 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -382,9 +382,16 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+ {
+ 	struct blk_mq_alloc_data alloc_data = { .flags = flags };
+ 	struct request *rq;
+-	int ret;
++	int ret = 0;
+ 
+-	ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
++	/*
++	 * When queue is frozen, we still need to allocate req for
++	 * REQF_PREEMPT.
++	 */
++	if ((flags & BLK_MQ_REQ_PREEMPT) && blk_queue_is_freezing(q))
++		blk_queue_enter_live(q);
++	else
++		ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+diff --git a/block/blk.h b/block/blk.h
+index 242486e26a81..b71f8cc047aa 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -80,6 +80,11 @@ static inline void blk_queue_enter_live(struct request_queue *q)
+ 	percpu_ref_get(&q->q_usage_counter);
+ }
+ 
++static inline bool blk_queue_is_freezing(struct request_queue *q)
++{
++	return percpu_ref_is_dying(&q->q_usage_counter);
++}
++
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+ void blk_flush_integrity(void);
+ bool __bio_integrity_endio(struct bio *);
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index f90d78eb85df..0ba5cb043172 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -200,9 +200,10 @@ void blk_mq_free_request(struct request *rq);
+ bool blk_mq_can_queue(struct blk_mq_hw_ctx *);
+ 
+ enum {
+-	BLK_MQ_REQ_NOWAIT	= (1 << 0), /* return when out of requests */
+-	BLK_MQ_REQ_RESERVED	= (1 << 1), /* allocate from reserved pool */
+-	BLK_MQ_REQ_INTERNAL	= (1 << 2), /* allocate internal/sched tag */
++	BLK_MQ_REQ_PREEMPT	= BLK_REQ_PREEMPT, /* allocate for RQF_PREEMPT */
++	BLK_MQ_REQ_NOWAIT	= (1 << 8), /* return when out of requests */
++	BLK_MQ_REQ_RESERVED	= (1 << 9), /* allocate from reserved pool */
++	BLK_MQ_REQ_INTERNAL	= (1 << 10), /* allocate internal/sched tag */
+ };
+ 
+ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index f45f157b2910..a43422f5379a 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -858,6 +858,11 @@ enum {
+ 	BLKPREP_INVALID,	/* invalid command, kill, return -EREMOTEIO */
+ };
+ 
++/* passed to __blk_get_request */
++enum {
++	BLK_REQ_PREEMPT	= (1 << 0), /* allocate for RQF_PREEMPT */
++};
++
+ extern unsigned long blk_max_low_pfn, blk_max_pfn;
+ 
+ /*
+@@ -940,8 +945,9 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
+ extern void blk_init_request_from_bio(struct request *req, struct bio *bio);
+ extern void blk_put_request(struct request *);
+ extern void __blk_put_request(struct request_queue *, struct request *);
+-extern struct request *blk_get_request(struct request_queue *, unsigned int op,
+-				       gfp_t gfp_mask);
++extern struct request *__blk_get_request(struct request_queue *,
++					 unsigned int op, gfp_t gfp_mask,
++					 unsigned int flags);
+ extern void blk_requeue_request(struct request_queue *, struct request *);
+ extern int blk_lld_busy(struct request_queue *q);
+ extern int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
+@@ -992,6 +998,13 @@ blk_status_t errno_to_blk_status(int errno);
+ 
+ bool blk_mq_poll(struct request_queue *q, blk_qc_t cookie);
+ 
++static inline struct request *blk_get_request(struct request_queue *q,
++					      unsigned int op,
++					      gfp_t gfp_mask)
++{
++	return __blk_get_request(q, op, gfp_mask, 0);
++}
++
+ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
+ {
+ 	return bdev->bd_disk->queue;	/* this is never NULL */
 -- 
 2.9.5
