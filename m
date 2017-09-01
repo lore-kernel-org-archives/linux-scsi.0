@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 2/8] block: Fix declaration of blk-mq scheduler functions
-Date: Fri,  1 Sep 2017 20:36:25 +0900
-Message-ID: <20170901113631.12323-3-damien.lemoal@wdc.com>
+Subject: [PATCH 1/8] block: Fix declaration of blk-mq debugfs functions
+Date: Fri,  1 Sep 2017 20:36:24 +0900
+Message-ID: <20170901113631.12323-2-damien.lemoal@wdc.com>
 References: <20170901113631.12323-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170901113631.12323-1-damien.lemoal@wdc.com>
@@ -10,59 +10,81 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The functions blk_mq_sched_free_hctx_data(), blk_mq_sched_try_merge(),
-blk_mq_sched_try_insert_merge() and blk_mq_sched_request_inserted() are
-all exported symbols but declared only internally in
-block/blk-mq-sched.h. Move their declaration to include/linux/blk-mq.h
-to make them available to block external scheduler modules.
+__blk_mq_debugfs_rq_show() and blk_mq_debugfs_rq_show() are exported
+symbols but declared in the block internal file block/blk-mq-debugfs.h.
+Move the declaration of these functions to the public linux/blk-mq.h
+file to make these functions available to other modules.
+
+While at it, also move the definition of the blk_mq_debugfs_attr
+strcture to allow scheduler modules outside of block to define debugfs
+attributes.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/blk-mq-sched.h   |  7 -------
- include/linux/blk-mq.h | 10 ++++++++++
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ block/blk-mq-debugfs.h | 14 --------------
+ include/linux/blk-mq.h | 20 ++++++++++++++++++++
+ 2 files changed, 20 insertions(+), 14 deletions(-)
 
-diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
-index 9267d0b7c197..3b725f8fbebe 100644
---- a/block/blk-mq-sched.h
-+++ b/block/blk-mq-sched.h
-@@ -4,16 +4,9 @@
- #include "blk-mq.h"
- #include "blk-mq-tag.h"
+diff --git a/block/blk-mq-debugfs.h b/block/blk-mq-debugfs.h
+index a182e6f97565..85759aef53e1 100644
+--- a/block/blk-mq-debugfs.h
++++ b/block/blk-mq-debugfs.h
+@@ -3,20 +3,6 @@
  
--void blk_mq_sched_free_hctx_data(struct request_queue *q,
--				 void (*exit)(struct blk_mq_hw_ctx *));
+ #ifdef CONFIG_BLK_DEBUG_FS
+ 
+-#include <linux/seq_file.h>
 -
- void blk_mq_sched_assign_ioc(struct request *rq, struct bio *bio);
- 
--void blk_mq_sched_request_inserted(struct request *rq);
--bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
--				struct request **merged_request);
- bool __blk_mq_sched_bio_merge(struct request_queue *q, struct bio *bio);
--bool blk_mq_sched_try_insert_merge(struct request_queue *q, struct request *rq);
- void blk_mq_sched_restart(struct blk_mq_hw_ctx *hctx);
- 
- void blk_mq_sched_insert_request(struct request *rq, bool at_head,
+-struct blk_mq_debugfs_attr {
+-	const char *name;
+-	umode_t mode;
+-	int (*show)(void *, struct seq_file *);
+-	ssize_t (*write)(void *, const char __user *, size_t, loff_t *);
+-	/* Set either .show or .seq_ops. */
+-	const struct seq_operations *seq_ops;
+-};
+-
+-int __blk_mq_debugfs_rq_show(struct seq_file *m, struct request *rq);
+-int blk_mq_debugfs_rq_show(struct seq_file *m, void *v);
+-
+ int blk_mq_debugfs_register(struct request_queue *q);
+ void blk_mq_debugfs_unregister(struct request_queue *q);
+ int blk_mq_debugfs_register_hctx(struct request_queue *q,
 diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index a369174a9679..128742552549 100644
+index 14542308d25b..a369174a9679 100644
 --- a/include/linux/blk-mq.h
 +++ b/include/linux/blk-mq.h
-@@ -284,6 +284,16 @@ void blk_mq_update_nr_hw_queues(struct blk_mq_tag_set *set, int nr_hw_queues);
- void blk_mq_quiesce_queue_nowait(struct request_queue *q);
+@@ -5,6 +5,21 @@
+ #include <linux/sbitmap.h>
+ #include <linux/srcu.h>
  
- /*
-+ * Scheduler helper functions.
-+ */
-+void blk_mq_sched_free_hctx_data(struct request_queue *q,
-+				 void (*exit)(struct blk_mq_hw_ctx *));
-+bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
-+			    struct request **merged_request);
-+bool blk_mq_sched_try_insert_merge(struct request_queue *q, struct request *rq);
-+void blk_mq_sched_request_inserted(struct request *rq);
++#ifdef CONFIG_BLK_DEBUG_FS
 +
-+/*
-  * Driver command data is immediately after the request. So subtract request
-  * size to get back to the original request, add request size to get the PDU.
-  */
++#include <linux/seq_file.h>
++
++struct blk_mq_debugfs_attr {
++	const char *name;
++	umode_t mode;
++	int (*show)(void *, struct seq_file *);
++	ssize_t (*write)(void *, const char __user *, size_t, loff_t *);
++	/* Set either .show or .seq_ops. */
++	const struct seq_operations *seq_ops;
++};
++
++#endif
++
+ struct blk_mq_tags;
+ struct blk_flush_queue;
+ 
+@@ -289,4 +304,9 @@ static inline void *blk_mq_rq_to_pdu(struct request *rq)
+ 	for ((i) = 0; (i) < (hctx)->nr_ctx &&				\
+ 	     ({ ctx = (hctx)->ctxs[(i)]; 1; }); (i)++)
+ 
++#ifdef CONFIG_BLK_DEBUG_FS
++int __blk_mq_debugfs_rq_show(struct seq_file *m, struct request *rq);
++int blk_mq_debugfs_rq_show(struct seq_file *m, void *v);
++#endif
++
+ #endif
 -- 
 2.13.5
