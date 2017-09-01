@@ -1,33 +1,83 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 1/9] percpu-refcount: introduce percpu_ref_is_dead()
-Date: Fri, 1 Sep 2017 15:44:56 +0000
-Message-ID: <1504280694.14386.18.camel@wdc.com>
-References: <20170831172728.15817-1-ming.lei@redhat.com>
-         <20170831172728.15817-2-ming.lei@redhat.com>
-         <20170901135915.GD1599492@devbig577.frc2.facebook.com>
+From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
+Date: Fri, 1 Sep 2017 10:53:19 -0500
+Message-ID: <20170901155319.zk7wdvysqzit7mog@rob-hp-laptop>
+References: <20170829084116.106695-1-liwei213@huawei.com>
+ <20170829084116.106695-3-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170901135915.GD1599492@devbig577.frc2.facebook.com>
-Content-Language: en-US
-Content-ID: <AF69DED1834A2D459F54A4FF0ADDE3AE@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "tj@kernel.org" <tj@kernel.org>, "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20170829084116.106695-3-liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: mark.rutland-5wv7dgnIgG8@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will.deacon-5wv7dgnIgG8@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org, riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guodong.xu-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, fengbaopeng-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE3LTA5LTAxIGF0IDA2OjU5IC0wNzAwLCBUZWp1biBIZW8gd3JvdGU6DQo+ID4g
-Ky8qKg0KPiA+ICsgKiBwZXJjcHVfcmVmX2lzX2RlYWQgLSB0ZXN0IHdoZXRoZXIgYSBwZXJjcHUg
-cmVmY291bnQgaXMga2lsbGVkDQo+ID4gKyAqIEByZWY6IHBlcmNwdV9yZWYgdG8gdGVzdA0KPiA+
-ICsgKg0KPiA+ICsgKiBSZXR1cm5zICV0cnVlIGlmIEByZWYgaXMgZGVhZA0KPiA+ICsgKg0KPiA+
-ICsgKiBUaGlzIGZ1bmN0aW9uIGlzIHNhZmUgdG8gY2FsbCBhcyBsb25nIGFzIEByZWYgaXMgYmV0
-d2VlbiBpbml0IGFuZCBleGl0Lg0KPiA+ICsgKi8NCj4gPiArc3RhdGljIGlubGluZSBib29sIHBl
-cmNwdV9yZWZfaXNfZGVhZChzdHJ1Y3QgcGVyY3B1X3JlZiAqcmVmKQ0KPiA+ICt7DQo+ID4gKwl1
-bnNpZ25lZCBsb25nIF9fcGVyY3B1ICpwZXJjcHVfY291bnQ7DQo+ID4gKw0KPiA+ICsJaWYgKF9f
-cmVmX2lzX3BlcmNwdShyZWYsICZwZXJjcHVfY291bnQpKQ0KPiA+ICsJCXJldHVybiBmYWxzZTsN
-Cj4gPiArCXJldHVybiByZWYtPnBlcmNwdV9jb3VudF9wdHIgJiBfX1BFUkNQVV9SRUZfREVBRDsN
-Cj4gPiArfQ0KPiANCj4gQ2FuIHlvdSBwbGVhc2UgZXhwbGFpbiB3aHkgcGVyY3B1X3JlZl9pc19k
-eWluZygpIGlzbid0IGVub3VnaCBmb3IgeW91cg0KPiB1c2UgY2FzZT8NCg0KSGVsbG8gVGVqdW4s
-DQoNClRoZSBhcHByb2FjaCBvZiB0aGUgd2hvbGUgc2VyaWVzIGlzIHdyb25nIHNvIEkgdGhpbmsg
-dGhhdCB5b3UgY2FuIGlnbm9yZSB0aGlzIHBhdGNoLg0KDQpCYXJ0Lg==
+On Tue, Aug 29, 2017 at 04:41:13PM +0800, Li Wei wrote:
+> add ufs node document for Hisilicon
+> 
+> Signed-off-by: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 35 ++++++++++++++++++++++
+>  1 file changed, 35 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> new file mode 100644
+> index 000000000000..cfc84c821d50
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> @@ -0,0 +1,35 @@
+> +* Hisilicon Universal Flash Storage (UFS) Host Controller
+> +
+> +UFS nodes are defined to describe on-chip UFS hardware macro.
+> +Each UFS Host Controller should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible list, contains one of the following -
+> +			"hisilicon,hi3660-ufs" for hisi ufs host controller
+> +			 present on Hi3660 chipset.
+> +- reg               : should contain UFS register address space & UFS SYS CTRL register address,
+> +- interrupt-parent  : interrupt device
+> +- interrupts        : interrupt number
+> +- clocks	        : List of phandle and clock specifier pairs
+> +- clock-names       : List of clock input name strings sorted in the same
+> +		      order as the clocks property. "clk_ref", "clk_phy" is optional
+> +
+> +Optional properties for board device:
+> +- reset-gpio			: specifies to reset devices
+
+reset-gpios
+
+Really, this is should be in a sub node representing the device. It's 
+fine if this is it, but if we start adding power supplies and other 
+properties it should be a separate node.
+
+> +
+> +Example:
+> +
+> +	ufs: ufs@ff3b0000 {
+> +		compatible = "jedec,ufs-1.1", "hisilicon,hi3660-ufs";
+
+Need to reverse the order here. Most specific first.
+
+> +		/* 0: HCI standard */
+> +		/* 1: UFS SYS CTRL */
+> +		reg = <0x0 0xff3b0000 0x0 0x1000>,
+> +			<0x0 0xff3b1000 0x0 0x1000>;
+> +		interrupt-parent = <&gic>;
+> +		interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
+> +		clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
+> +			<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
+> +		clock-names = "clk_ref", "clk_phy";
+> +		freq-table-hz = <0 0>, <0 0>;
+> +		reset-gpio = <&gpio18 1 0>;
+> +	}
+> -- 
+> 2.11.0
+> 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
