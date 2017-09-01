@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 1/8] block: Fix declaration of blk-mq debugfs functions
-Date: Fri,  1 Sep 2017 20:36:24 +0900
-Message-ID: <20170901113631.12323-2-damien.lemoal@wdc.com>
+Subject: [PATCH 3/8] scsi: sd_zbc: Move ZBC declarations to scsi_proto.h
+Date: Fri,  1 Sep 2017 20:36:26 +0900
+Message-ID: <20170901113631.12323-4-damien.lemoal@wdc.com>
 References: <20170901113631.12323-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170901113631.12323-1-damien.lemoal@wdc.com>
@@ -10,81 +10,105 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-__blk_mq_debugfs_rq_show() and blk_mq_debugfs_rq_show() are exported
-symbols but declared in the block internal file block/blk-mq-debugfs.h.
-Move the declaration of these functions to the public linux/blk-mq.h
-file to make these functions available to other modules.
+Move standard macro definitions for the zone types and zone conditions
+to scsi_proto.h together with the definitions related to the
+REPORT ZONES command.
 
-While at it, also move the definition of the blk_mq_debugfs_attr
-strcture to allow scheduler modules outside of block to define debugfs
-attributes.
+While at it, define all values in the enums to be clear.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/blk-mq-debugfs.h | 14 --------------
- include/linux/blk-mq.h | 20 ++++++++++++++++++++
- 2 files changed, 20 insertions(+), 14 deletions(-)
+ drivers/scsi/sd_zbc.c     | 18 ------------------
+ include/scsi/scsi_proto.h | 46 +++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 35 insertions(+), 29 deletions(-)
 
-diff --git a/block/blk-mq-debugfs.h b/block/blk-mq-debugfs.h
-index a182e6f97565..85759aef53e1 100644
---- a/block/blk-mq-debugfs.h
-+++ b/block/blk-mq-debugfs.h
-@@ -3,20 +3,6 @@
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 8aa54779aac1..d445a57f99bd 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -37,24 +37,6 @@
+ #include "sd.h"
+ #include "scsi_priv.h"
  
- #ifdef CONFIG_BLK_DEBUG_FS
- 
--#include <linux/seq_file.h>
--
--struct blk_mq_debugfs_attr {
--	const char *name;
--	umode_t mode;
--	int (*show)(void *, struct seq_file *);
--	ssize_t (*write)(void *, const char __user *, size_t, loff_t *);
--	/* Set either .show or .seq_ops. */
--	const struct seq_operations *seq_ops;
+-enum zbc_zone_type {
+-	ZBC_ZONE_TYPE_CONV = 0x1,
+-	ZBC_ZONE_TYPE_SEQWRITE_REQ,
+-	ZBC_ZONE_TYPE_SEQWRITE_PREF,
+-	ZBC_ZONE_TYPE_RESERVED,
 -};
 -
--int __blk_mq_debugfs_rq_show(struct seq_file *m, struct request *rq);
--int blk_mq_debugfs_rq_show(struct seq_file *m, void *v);
+-enum zbc_zone_cond {
+-	ZBC_ZONE_COND_NO_WP,
+-	ZBC_ZONE_COND_EMPTY,
+-	ZBC_ZONE_COND_IMP_OPEN,
+-	ZBC_ZONE_COND_EXP_OPEN,
+-	ZBC_ZONE_COND_CLOSED,
+-	ZBC_ZONE_COND_READONLY = 0xd,
+-	ZBC_ZONE_COND_FULL,
+-	ZBC_ZONE_COND_OFFLINE,
+-};
 -
- int blk_mq_debugfs_register(struct request_queue *q);
- void blk_mq_debugfs_unregister(struct request_queue *q);
- int blk_mq_debugfs_register_hctx(struct request_queue *q,
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 14542308d25b..a369174a9679 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -5,6 +5,21 @@
- #include <linux/sbitmap.h>
- #include <linux/srcu.h>
+ /**
+  * Convert a zone descriptor to a zone struct.
+  */
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index 8c285d9a06d8..20d7b3fbc351 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -301,19 +301,43 @@ struct scsi_lun {
  
-+#ifdef CONFIG_BLK_DEBUG_FS
-+
-+#include <linux/seq_file.h>
-+
-+struct blk_mq_debugfs_attr {
-+	const char *name;
-+	umode_t mode;
-+	int (*show)(void *, struct seq_file *);
-+	ssize_t (*write)(void *, const char __user *, size_t, loff_t *);
-+	/* Set either .show or .seq_ops. */
-+	const struct seq_operations *seq_ops;
+ /* Reporting options for REPORT ZONES */
+ enum zbc_zone_reporting_options {
+-	ZBC_ZONE_REPORTING_OPTION_ALL = 0,
+-	ZBC_ZONE_REPORTING_OPTION_EMPTY,
+-	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN,
+-	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN,
+-	ZBC_ZONE_REPORTING_OPTION_CLOSED,
+-	ZBC_ZONE_REPORTING_OPTION_FULL,
+-	ZBC_ZONE_REPORTING_OPTION_READONLY,
+-	ZBC_ZONE_REPORTING_OPTION_OFFLINE,
+-	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP = 0x10,
+-	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE,
+-	ZBC_ZONE_REPORTING_OPTION_NON_WP = 0x3f,
++	ZBC_ZONE_REPORTING_OPTION_ALL		= 0x00,
++	ZBC_ZONE_REPORTING_OPTION_EMPTY		= 0x01,
++	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN	= 0x02,
++	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN	= 0x03,
++	ZBC_ZONE_REPORTING_OPTION_CLOSED	= 0x04,
++	ZBC_ZONE_REPORTING_OPTION_FULL		= 0x05,
++	ZBC_ZONE_REPORTING_OPTION_READONLY	= 0x06,
++	ZBC_ZONE_REPORTING_OPTION_OFFLINE	= 0x07,
++	/* 0x08 to 0x0f are reserved */
++	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP	= 0x10,
++	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE	= 0x11,
++	/* 0x12 to 0x3e are reserved */
++	ZBC_ZONE_REPORTING_OPTION_NON_WP	= 0x3f,
+ };
+ 
+ #define ZBC_REPORT_ZONE_PARTIAL 0x80
+ 
++/* Zone types of REPORT ZONES zone descriptors */
++enum zbc_zone_type {
++	ZBC_ZONE_TYPE_CONV		= 0x1,
++	ZBC_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
++	ZBC_ZONE_TYPE_SEQWRITE_PREF	= 0x3,
++	/* 0x4 to 0xf are reserved */
++	ZBC_ZONE_TYPE_RESERVED		= 0x4,
 +};
 +
-+#endif
++/* Zone conditions of REPORT ZONES zone descriptors */
++enum zbc_zone_cond {
++	ZBC_ZONE_COND_NO_WP		= 0x0,
++	ZBC_ZONE_COND_EMPTY		= 0x1,
++	ZBC_ZONE_COND_IMP_OPEN		= 0x2,
++	ZBC_ZONE_COND_EXP_OPEN		= 0x3,
++	ZBC_ZONE_COND_CLOSED		= 0x4,
++	/* 0x5 to 0xc are reserved */
++	ZBC_ZONE_COND_READONLY		= 0xd,
++	ZBC_ZONE_COND_FULL		= 0xe,
++	ZBC_ZONE_COND_OFFLINE		= 0xf,
++};
 +
- struct blk_mq_tags;
- struct blk_flush_queue;
- 
-@@ -289,4 +304,9 @@ static inline void *blk_mq_rq_to_pdu(struct request *rq)
- 	for ((i) = 0; (i) < (hctx)->nr_ctx &&				\
- 	     ({ ctx = (hctx)->ctxs[(i)]; 1; }); (i)++)
- 
-+#ifdef CONFIG_BLK_DEBUG_FS
-+int __blk_mq_debugfs_rq_show(struct seq_file *m, struct request *rq);
-+int blk_mq_debugfs_rq_show(struct seq_file *m, void *v);
-+#endif
-+
- #endif
+ #endif /* _SCSI_PROTO_H_ */
 -- 
 2.13.5
