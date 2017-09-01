@@ -1,61 +1,39 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH 19/31] timer: Remove open-coded casts for .data and
- .function
-Date: Thu, 31 Aug 2017 17:29:13 -0700
-Message-ID: <35df171b-7a0c-d4bc-b90d-254283232e72@linux.vnet.ibm.com>
-References: <1504222183-61202-1-git-send-email-keescook@chromium.org>
- <1504222183-61202-20-git-send-email-keescook@chromium.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 0/2] sd fixes and cleanup
+Date: Fri,  1 Sep 2017 09:55:45 +0900
+Message-ID: <20170901005547.15120-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44289 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751537AbdIAA3V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Aug 2017 20:29:21 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v810Sw0O051616
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Aug 2017 20:29:21 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2cprakwftj-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Aug 2017 20:29:20 -0400
-Received: from localhost
-        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-        Thu, 31 Aug 2017 18:29:20 -0600
-In-Reply-To: <1504222183-61202-20-git-send-email-keescook@chromium.org>
-Content-Language: en-GB
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:45811 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750880AbdIAA46 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2017 20:56:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Samuel Ortiz <samuel@sortiz.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Paul Mackerras <paulus@samba.org>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
-On 08/31/2017 04:29 PM, Kees Cook wrote:
-> This standardizes the callback and data prototypes in several places that
-> perform casting, in an effort to remove more open-coded .data and
-> .function uses in favor of setup_timer().
-> 
-> Cc: Samuel Ortiz <samuel@sortiz.org>
-> Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: netdev@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  drivers/net/irda/bfin_sir.c      |  5 +++--
->  drivers/scsi/ibmvscsi/ibmvfc.c   | 14 ++++++--------
->  drivers/scsi/ibmvscsi/ibmvscsi.c |  8 ++++----
->  3 files changed, 13 insertions(+), 14 deletions(-)
+A couple of patches in this small series.
 
-Resending from correct email address.
+The first patch addresses a problem with large write same (or zeroout) block
+layer calls being split into commands that are not aligned on the device
+physical block size. This will work on regular disks but is not optimal.
+The commands will however fail with host-managed zoned block device if the
+commands target sequential write required zones. The patch simply makes sure
+that the maximum write same sectors is aligned to physical block sizes.
+This solution can be implemented here in sd_config_write_same() or in the block
+layer (__blkdev_issue_write_same() and __blkdev_issue_write_zeroes()). Please
+let me know if you prefer a block layer solution.
 
-For ibmvfc & ibmvscsi portions:
+The second patch does not introduce functional changes.
 
-Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+As always, comments are welcome !
+
+Damien Le Moal (2):
+  scsi: sd: Fix sd_config_write_same()
+  scsi: sd: Use sectors_to_logical()
+
+ drivers/scsi/sd.c | 40 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 31 insertions(+), 9 deletions(-)
+
+-- 
+2.13.5
