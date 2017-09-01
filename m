@@ -1,47 +1,78 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 8/8] scsi: Introduce ZBC disk I/O scheduler
-Date: Fri, 1 Sep 2017 17:19:33 +0000
-Message-ID: <1504286372.14386.50.camel@wdc.com>
-References: <20170901113631.12323-1-damien.lemoal@wdc.com>
-         <20170901113631.12323-9-damien.lemoal@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:42218 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752180AbdIARUU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2017 13:20:20 -0400
-In-Reply-To: <20170901113631.12323-9-damien.lemoal@wdc.com>
-Content-Language: en-US
-Content-ID: <D916D4F28ED5ED4DA84BEF957EA59915@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V2 0/8] block/scsi: safe SCSI quiescing
+Date: Sat,  2 Sep 2017 02:39:35 +0800
+Message-ID: <20170901183943.27415-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>
 
-T24gRnJpLCAyMDE3LTA5LTAxIGF0IDIwOjM2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gK3N0YXRpYyBzdHJ1Y3Qgc2NzaV9kaXNrICpfX3pvbmVkX3Njc2lfZGlzayhzdHJ1Y3QgcmVx
-dWVzdF9xdWV1ZSAqcSkNCj4gK3sNCj4gKyAgICAgICBzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkcDsN
-Cj4gKyAgICAgICBzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwOw0KPiArDQo+ICsgICAgICAgaWYgKCFi
-bGtfcXVldWVfaXNfem9uZWQocSkpIHsNCj4gKyAgICAgICAgICAgICAgIHByX2Vycigiem9uZWQ6
-IE5vdCBhIHpvbmVkIGJsb2NrIGRldmljZVxuIik7DQo+ICsgICAgICAgICAgICAgICByZXR1cm4g
-TlVMTDsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAgICBzZHAgPSBzY3NpX2RldmljZV9mcm9t
-X3F1ZXVlKHEpOw0KPiArICAgICAgIGlmICghc2RwKSB7DQo+ICsgICAgICAgICAgICAgICBwcl9l
-cnIoInpvbmVkOiBOb3QgYSBTQ1NJIGRldmljZVxuIik7DQo+ICsgICAgICAgICAgICAgICByZXR1
-cm4gTlVMTDsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAgICBzZGtwID0gZGV2X2dldF9kcnZk
-YXRhKCZzZHAtPnNkZXZfZ2VuZGV2KTsNCj4gKyAgICAgICBpZiAoV0FSTl9PTihzZGtwLT5kaXNr
-LT5xdWV1ZSAhPSBxKSkNCj4gKyAgICAgICAgICAgICAgIHJldHVybiBOVUxMOw0KPiArDQo+ICsg
-ICAgICAgcmV0dXJuIHNka3A7DQo+ICt9DQoNCkhlbGxvIERhbWllbiwNCg0KQ2FuIHJlYWRpbmcg
-c2RrcC0+ZGlzay0+cXVldWUgY2F1c2UgYSBrZXJuZWwgY3Jhc2ggaWYgc2RwIGRvZXMgbm90IHBv
-aW50IGF0DQphIFNDU0kgZGV2aWNlIHRoYXQgaXMgYXNzb2NpYXRlZCB3aXRoIGEgU0NTSSBkaXNr
-PyBIb3cgYWJvdXQgdXNpbmcgc29tZXRoaW5nDQpsaWtlIHRoZSBjb2RlIGJlbG93IHRvIGNvbnZl
-cnQgYSByZXF1ZXN0IHF1ZXVlIHBvaW50ZXIgaW50byBhIFNDU0kgZGlzaw0KcG9pbnRlcj8NCg0K
-c3RhdGljIGludCBsb29rdXBfZGlzayhzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpDQp7
-DQoJc3RydWN0IHNjc2lfZGlzayAqKnNka3AgPSBkYXRhOw0KDQoJaWYgKCEqc2RrcCAmJiBkZXYt
-PmNsYXNzID09ICZzZF9kaXNrX2NsYXNzKQ0KCQkqc2RrcCA9IHRvX3Njc2lfZGlzayhkZXYpOw0K
-DQoJcmV0dXJuIDA7DQp9DQoNCnN0YXRpYyBzdHJ1Y3Qgc2NzaV9kaXNrICpxX3RvX3Nka3Aoc3Ry
-dWN0IHJlcXVlc3RfcXVldWUgKnEpDQp7DQoJc3RydWN0IHNjc2lfZGV2aWNlICpzZHAgPSBzY3Np
-X2RldmljZV9mcm9tX3F1ZXVlKHEpOw0KCXN0cnVjdCBzY3NpX2Rpc2sgKnNka3AgPSBOVUxMOw0K
-DQoJaWYgKHNkcCkNCgkJZGV2aWNlX2Zvcl9lYWNoX2NoaWxkKCZzZHAtPnNkZXZfZ2VuZGV2LCAm
-c2RrcCwgbG9va3VwX2Rpc2spOw0KCXJldHVybiBzZGtwOw0KfQ0KDQpUaGFua3MsDQoNCkJhcnQu
+Hi,
+
+The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
+
+Once SCSI device is put into QUIESCE, no new request except for RQF_PREEMPT
+can be dispatched to SCSI successfully, and scsi_device_quiesce() just simply
+waits for completion of I/Os dispatched to SCSI stack. It isn't enough at all.
+
+Because new request still can be allocated, but all the allocated
+requests can't be dispatched successfully, so request pool can be
+consumed up easily.
+
+Then request with RQF_PREEMPT can't be allocated, and system may
+hang forever, such as during system suspend or SCSI domain alidation.
+
+Both IO hang inside system suspend[1] or SCSI domain validation
+were reported before.
+
+This patch tries to solve the issue by freezing block queue during
+SCSI quiescing, and allowing to allocate request of RQF_PREEMPT
+when queue is frozen.
+
+Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
+them all by introducing preempt version of blk_freeze_queue() and
+blk_unfreeze_queue().
+
+V2:
+	- drop the 1st patch in V1 because percpu_ref_is_dying() is
+	enough as pointed by Tejun
+
+	- introduce preempt version of blk_[freeze|unfreeze]_queue
+
+	- sync between preempt freeze and normal freeze
+
+	- fix warning from percpu-refcount as reported by Oleksandr
+
+
+
+[1] https://marc.info/?t=150340250100013&r=3&w=2
+
+
+Ming Lei (8):
+  blk-mq: rename blk_mq_unfreeze_queue as blk_unfreeze_queue
+  blk-mq: rename blk_mq_freeze_queue as blk_freeze_queue
+  blk-mq: only run hw queues for blk-mq
+  blk-mq: rename blk_mq_freeze_queue_wait as blk_freeze_queue_wait
+  block: tracking request allocation with q_usage_counter
+  block: allow to allocate req with REQF_PREEMPT when queue is frozen
+  block: introduce preempt version of blk_[freeze|unfreeze]_queue
+  SCSI: freeze block queue when SCSI device is put into quiesce
+
+ block/bfq-iosched.c      |   2 +-
+ block/blk-cgroup.c       |   8 ++--
+ block/blk-core.c         |  50 ++++++++++++++++----
+ block/blk-mq.c           | 119 ++++++++++++++++++++++++++++++++++++-----------
+ block/blk-mq.h           |   1 -
+ block/blk.h              |   6 +++
+ block/elevator.c         |   4 +-
+ drivers/block/loop.c     |  16 +++----
+ drivers/block/rbd.c      |   2 +-
+ drivers/nvme/host/core.c |   8 ++--
+ drivers/scsi/scsi_lib.c  |  21 ++++++++-
+ include/linux/blk-mq.h   |  15 +++---
+ include/linux/blkdev.h   |  17 ++++++-
+ 13 files changed, 203 insertions(+), 66 deletions(-)
+
+-- 
+2.9.5
