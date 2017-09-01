@@ -1,85 +1,29 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: Buffer overflow in the mptctl_replace_fw() function in linux
- kernel MPT ioctl driver
-Date: Thu, 31 Aug 2017 23:44:37 -0700
-Message-ID: <CAGXu5j+kg8WXMwW-Sd5GYWxpmwhtRfUnHEVyrNTim2PfKoD67w@mail.gmail.com>
-References: <CAJsXRPFEOoZjHKhJ=1rfXpmFqEdaORtxYUkm3bRJ_v+_oENt3Q@mail.gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] Remove Scsi_Host.uspace_req_q
+Date: Fri, 1 Sep 2017 09:14:15 +0200
+Message-ID: <20170901071415.fwsuqzbqebfi4nsp@linux-x5ow.site>
+References: <20170831235906.19451-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJsXRPFEOoZjHKhJ=1rfXpmFqEdaORtxYUkm3bRJ_v+_oENt3Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dison River <pwn2river@gmail.com>
-Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "security@kernel.org" <security@kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:40851 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751330AbdIAHOQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 Sep 2017 03:14:16 -0400
+Content-Disposition: inline
+In-Reply-To: <20170831235906.19451-1-bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 
-On Thu, Aug 31, 2017 at 11:00 PM, Dison River <pwn2river@gmail.com> wrote:
-> Hi:
-> Buffer overflow in the mptctl_replace_fw() function in linux kernel
-> MPT ioctl driver.
->
-> In mptctl_replace_fw function, kernel didn't check the size of
-> "newFwSize" variable allows attackers to cause a denial of service via
-> unspecified vectors that trigger copy_from_user function calls with
-> improper length arguments.
-
-Is there a specific path you see to trigger this?
-
->
->
-> static int
-> mptctl_replace_fw (unsigned long arg)
-> {
-> ......
->     if (copy_from_user(&karg, uarg, sizeof(struct mpt_ioctl_replace_fw))) {
->         printk(KERN_ERR MYNAM "%s@%d::mptctl_replace_fw - "
->             "Unable to read in mpt_ioctl_replace_fw struct @ %p\n",
->                 __FILE__, __LINE__, uarg);
->         return -EFAULT;
->     }
->
-> ......
->
->     mpt_free_fw_memory(ioc);
-
-This frees ioc->cached_fw.
-
->
->     /* Allocate memory for the new FW image
->      */
->     newFwSize = ALIGN(karg.newImageSize, 4);
->
->     mpt_alloc_fw_memory(ioc, newFwSize);
-
-This allocates ioc->cached_fw to newFwSize.
-
-> ......
->
->     if (copy_from_user(ioc->cached_fw, uarg->newImage, newFwSize)) {
-
-This copies newFwSize bytes into a buffer that is allocated to newFwSize bytes.
-
-What am I missing? I see some games getting played in
-mpt_alloc_fw_memory(), but they seem to be covered due to the earlier
-call to mpt_free_fw_memory()...
-
--Kees
-
-> ///------->newFwSize can control in userspace
->         printk(MYIOC_s_ERR_FMT "%s@%d::mptctl_replace_fw - "
->                 "Unable to read in mpt_ioctl_replace_fw image "
->                 "@ %p\n", ioc->name, __FILE__, __LINE__, uarg);
->         mpt_free_fw_memory(ioc);
->         return -EFAULT;
->     }
->
-> ......
->
->     return 0;
-> }
-
--Kees
-
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
-Kees Cook
-Pixel Security
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
