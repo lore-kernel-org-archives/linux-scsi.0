@@ -1,87 +1,47 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 8/9] block: allow to allocate req with REQF_PREEMPT when
- queue is frozen
-Date: Sat, 2 Sep 2017 00:56:42 +0800
-Message-ID: <20170901165641.GC20709@ming.t460p>
-References: <20170831172728.15817-1-ming.lei@redhat.com>
- <20170831172728.15817-9-ming.lei@redhat.com>
- <1504219824.31872.74.camel@wdc.com>
- <20170901035537.GI16525@ming.t460p>
- <1504280618.14386.16.camel@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 8/8] scsi: Introduce ZBC disk I/O scheduler
+Date: Fri, 1 Sep 2017 17:19:33 +0000
+Message-ID: <1504286372.14386.50.camel@wdc.com>
+References: <20170901113631.12323-1-damien.lemoal@wdc.com>
+         <20170901113631.12323-9-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40378 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752093AbdIAQ45 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Sep 2017 12:56:57 -0400
-Content-Disposition: inline
-In-Reply-To: <1504280618.14386.16.camel@wdc.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:42218 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752180AbdIARUU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2017 13:20:20 -0400
+In-Reply-To: <20170901113631.12323-9-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <D916D4F28ED5ED4DA84BEF957EA59915@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@fb.com" <axboe@fb.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 
-On Fri, Sep 01, 2017 at 03:43:39PM +0000, Bart Van Assche wrote:
-> On Fri, 2017-09-01 at 11:55 +0800, Ming Lei wrote:
-> > On Thu, Aug 31, 2017 at 10:50:25PM +0000, Bart Van Assche wrote:
-> > > On Fri, 2017-09-01 at 01:27 +0800, Ming Lei wrote:
-> > > > @@ -1413,9 +1414,17 @@ static struct request *blk_old_get_request(struct request_queue *q,
-> > > >  	/* create ioc upfront */
-> > > >  	create_io_context(gfp_mask, q->node);
-> > > >  
-> > > > -	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
-> > > > +	/*
-> > > > +	 * When queue is frozen, we still need to allocate req for
-> > > > +	 * REQF_PREEMPT.
-> > > > +	 */
-> > > > +	if ((flags & BLK_MQ_REQ_PREEMPT) && blk_queue_is_frozen(q))
-> > > > +		blk_queue_enter_live(q);
-> > > > +	else
-> > > > +		ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
-> > > 
-> > > Sorry but I doubt that calling blk_queue_enter_live() from inside
-> > > blk_old_get_request() is safe. Calling blk_queue_enter_live() is only safe
-> > > before a request queue has been marked dead. What prevents a kernel thread
-> > > that holds a reference on a request queue and that is running concurrently
-> > > with blk_cleanup_queue() to call blk_old_get_request() after a queue has
-> > > been marked dead?
-> > 
-> > I have sent one delta patch in list, which will only call
-> > blk_queue_enter_live() iff SCSI device is in QUIESCE.
-> 
-> That wouldn't make this hack less ugly.
-> 
-> It is possible to trigger the running -> quiesce state transition through
-> /sys/class/scsi_device/*/device/state and the quiesce -> removed transition
-> through /sys/class/scsi_device/*/device/delete. An example:
-> 
-> modprobe scsi_debug delay=0 dev_size_mb=16
-> lsscsi | grep scsi_debug
-> cd /sys/class/scsi_device/8:0:0:0/device
-> echo quiesce > state
-> echo 1 > delete
-> 
-> So the code from your patch 8/9 can race against device removal.
-> 
-> I think we need a better approach than the REQ_PREEMPT hack. How about
-> implementing resume as a callback by adding an additional function pointer
-> to struct request_queue / struct blk_mq_ops instead of implementing it as
-> a request? For SCSI devices races of resume against removal can e.g. be
-> handled by checking the scsi_device_set_state() return value. That function
-> namely does not allow the removing/removed to running state transition.
-
-If there is race between resume vs. removal, that is nothing to do
-this patchset.
-
-We definitely need to prevent new requests from being allocated after
-SCSI device is put into quiesce. I don't see another better way
-than freezing queue, because it is the only available way to 
-prevent new req allocation.
-
-Actually there is race between normal freezing and the preempt freezing
-in this patchset, and it will be fixed in V2.
-
-
--- 
-Ming
+T24gRnJpLCAyMDE3LTA5LTAxIGF0IDIwOjM2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gK3N0YXRpYyBzdHJ1Y3Qgc2NzaV9kaXNrICpfX3pvbmVkX3Njc2lfZGlzayhzdHJ1Y3QgcmVx
+dWVzdF9xdWV1ZSAqcSkNCj4gK3sNCj4gKyAgICAgICBzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkcDsN
+Cj4gKyAgICAgICBzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwOw0KPiArDQo+ICsgICAgICAgaWYgKCFi
+bGtfcXVldWVfaXNfem9uZWQocSkpIHsNCj4gKyAgICAgICAgICAgICAgIHByX2Vycigiem9uZWQ6
+IE5vdCBhIHpvbmVkIGJsb2NrIGRldmljZVxuIik7DQo+ICsgICAgICAgICAgICAgICByZXR1cm4g
+TlVMTDsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAgICBzZHAgPSBzY3NpX2RldmljZV9mcm9t
+X3F1ZXVlKHEpOw0KPiArICAgICAgIGlmICghc2RwKSB7DQo+ICsgICAgICAgICAgICAgICBwcl9l
+cnIoInpvbmVkOiBOb3QgYSBTQ1NJIGRldmljZVxuIik7DQo+ICsgICAgICAgICAgICAgICByZXR1
+cm4gTlVMTDsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAgICBzZGtwID0gZGV2X2dldF9kcnZk
+YXRhKCZzZHAtPnNkZXZfZ2VuZGV2KTsNCj4gKyAgICAgICBpZiAoV0FSTl9PTihzZGtwLT5kaXNr
+LT5xdWV1ZSAhPSBxKSkNCj4gKyAgICAgICAgICAgICAgIHJldHVybiBOVUxMOw0KPiArDQo+ICsg
+ICAgICAgcmV0dXJuIHNka3A7DQo+ICt9DQoNCkhlbGxvIERhbWllbiwNCg0KQ2FuIHJlYWRpbmcg
+c2RrcC0+ZGlzay0+cXVldWUgY2F1c2UgYSBrZXJuZWwgY3Jhc2ggaWYgc2RwIGRvZXMgbm90IHBv
+aW50IGF0DQphIFNDU0kgZGV2aWNlIHRoYXQgaXMgYXNzb2NpYXRlZCB3aXRoIGEgU0NTSSBkaXNr
+PyBIb3cgYWJvdXQgdXNpbmcgc29tZXRoaW5nDQpsaWtlIHRoZSBjb2RlIGJlbG93IHRvIGNvbnZl
+cnQgYSByZXF1ZXN0IHF1ZXVlIHBvaW50ZXIgaW50byBhIFNDU0kgZGlzaw0KcG9pbnRlcj8NCg0K
+c3RhdGljIGludCBsb29rdXBfZGlzayhzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpDQp7
+DQoJc3RydWN0IHNjc2lfZGlzayAqKnNka3AgPSBkYXRhOw0KDQoJaWYgKCEqc2RrcCAmJiBkZXYt
+PmNsYXNzID09ICZzZF9kaXNrX2NsYXNzKQ0KCQkqc2RrcCA9IHRvX3Njc2lfZGlzayhkZXYpOw0K
+DQoJcmV0dXJuIDA7DQp9DQoNCnN0YXRpYyBzdHJ1Y3Qgc2NzaV9kaXNrICpxX3RvX3Nka3Aoc3Ry
+dWN0IHJlcXVlc3RfcXVldWUgKnEpDQp7DQoJc3RydWN0IHNjc2lfZGV2aWNlICpzZHAgPSBzY3Np
+X2RldmljZV9mcm9tX3F1ZXVlKHEpOw0KCXN0cnVjdCBzY3NpX2Rpc2sgKnNka3AgPSBOVUxMOw0K
+DQoJaWYgKHNkcCkNCgkJZGV2aWNlX2Zvcl9lYWNoX2NoaWxkKCZzZHAtPnNkZXZfZ2VuZGV2LCAm
+c2RrcCwgbG9va3VwX2Rpc2spOw0KCXJldHVybiBzZGtwOw0KfQ0KDQpUaGFua3MsDQoNCkJhcnQu
