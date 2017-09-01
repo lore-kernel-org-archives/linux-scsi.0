@@ -1,73 +1,42 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 2/2] scsi: sd: Use sectors_to_logical()
-Date: Fri,  1 Sep 2017 09:55:47 +0900
-Message-ID: <20170901005547.15120-3-damien.lemoal@wdc.com>
-References: <20170901005547.15120-1-damien.lemoal@wdc.com>
+Subject: [PATCH V2 0/2] sd fixes and cleanup
+Date: Fri,  1 Sep 2017 10:07:27 +0900
+Message-ID: <20170901010729.16524-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:41038 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751034AbdIAA5o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2017 20:57:44 -0400
-In-Reply-To: <20170901005547.15120-1-damien.lemoal@wdc.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:47814 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750955AbdIABJC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2017 21:09:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
-Replace open coded conversions.
+A couple of patches in this small series.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- drivers/scsi/sd.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+The first patch addresses a problem with large write same (or zeroout) block
+layer calls being split into commands that are not aligned on the device
+physical block size. This will work on regular disks but is not optimal.
+The commands will however fail with host-managed zoned block device if the
+commands target sequential write required zones. The patch simply makes sure
+that the maximum write same sectors is aligned to physical block sizes.
+This solution can be implemented here in sd_config_write_same() or in the block
+layer (__blkdev_issue_write_same() and __blkdev_issue_write_zeroes()). Please
+let me know if you prefer a block layer solution.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f6c205200c5b..a32bf434cb3d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -738,8 +738,8 @@ static int sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
- {
- 	struct scsi_device *sdp = cmd->device;
- 	struct request *rq = cmd->request;
--	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
--	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u64 sector = sectors_to_logical(sdp, blk_rq_pos(rq));
-+	u32 nr_sectors = sectors_to_logical(sdp, blk_rq_sectors(rq));
- 	unsigned int data_len = 24;
- 	char *buf;
- 
-@@ -772,8 +772,8 @@ static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd, bool unmap)
- {
- 	struct scsi_device *sdp = cmd->device;
- 	struct request *rq = cmd->request;
--	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
--	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u64 sector = sectors_to_logical(sdp, blk_rq_pos(rq));
-+	u32 nr_sectors = sectors_to_logical(sdp, blk_rq_sectors(rq));
- 	u32 data_len = sdp->sector_size;
- 
- 	rq->special_vec.bv_page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
-@@ -802,8 +802,8 @@ static int sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd, bool unmap)
- {
- 	struct scsi_device *sdp = cmd->device;
- 	struct request *rq = cmd->request;
--	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
--	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u64 sector = sectors_to_logical(sdp, blk_rq_pos(rq));
-+	u32 nr_sectors = sectors_to_logical(sdp, blk_rq_sectors(rq));
- 	u32 data_len = sdp->sector_size;
- 
- 	rq->special_vec.bv_page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
-@@ -833,8 +833,8 @@ static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
- 	struct request *rq = cmd->request;
- 	struct scsi_device *sdp = cmd->device;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
--	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
--	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u64 sector = sectors_to_logical(sdp, blk_rq_pos(rq));
-+	u32 nr_sectors = sectors_to_logical(sdp, blk_rq_sectors(rq));
- 	int ret;
- 
- 	if (!(rq->cmd_flags & REQ_NOUNMAP)) {
+The second patch does not introduce functional changes.
+
+As always, comments are welcome !
+
+changes from V1:
+* Removed useless addition of blank line an indentaion change in first patch.
+
+Damien Le Moal (2):
+  scsi: sd: Fix sd_config_write_same()
+  scsi: sd: Use sectors_to_logical()
+
+ drivers/scsi/sd.c | 37 +++++++++++++++++++++++++++++--------
+ 1 file changed, 29 insertions(+), 8 deletions(-)
+
 -- 
 2.13.5
