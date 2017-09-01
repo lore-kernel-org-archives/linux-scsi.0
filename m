@@ -1,200 +1,192 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V2 6/8] block: allow to allocate req with REQF_PREEMPT when queue is frozen
-Date: Sat,  2 Sep 2017 02:49:56 +0800
-Message-ID: <20170901184958.19452-8-ming.lei@redhat.com>
+Subject: [PATCH V2 7/8] block: introduce preempt version of blk_[freeze|unfreeze]_queue
+Date: Sat,  2 Sep 2017 02:49:57 +0800
+Message-ID: <20170901184958.19452-9-ming.lei@redhat.com>
 References: <20170901184958.19452-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34840 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750955AbdIASvp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Sep 2017 14:51:45 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170901184958.19452-1-ming.lei@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Ming Lei <ming.lei@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-REQF_PREEMPT is a bit special because it is required to be
-dispatched to lld even when SCSI device is quiesced.
+The two APIs are required to allow request allocation for
+RQF_PREEMPT when queue is frozen.
 
-So this patch introduces __blk_get_request() to allow block
-layer to allocate request when queue is frozen, since we
-will freeze queue before quiescing SCSI device in the
-following patch for supporting safe SCSI quiescing.
+The following two points have to be guaranteed for one queue:
+
+1) preempt freezing can be started only after all pending
+normal & preempt freezing are completed
+
+2) normal freezing can't be started if there is pending
+preempt freezing.
+
+Because for normal freezing, once blk_mq_freeze_queue_wait()
+is returned, we have to make sure no I/Os are pending.
+
+rwsem should have been perfect for this kind of sync,
+but lockdep will complain in case of nested normal freeze.
+
+So spin_lock with freezing status is used for the sync.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-core.c       | 25 +++++++++++++++++--------
- block/blk-mq.c         | 11 +++++++++--
- block/blk.h            |  5 +++++
- include/linux/blk-mq.h |  7 ++++---
- include/linux/blkdev.h | 17 +++++++++++++++--
- 5 files changed, 50 insertions(+), 15 deletions(-)
+ block/blk-core.c       |  2 ++
+ block/blk-mq.c         | 72 +++++++++++++++++++++++++++++++++++++++++++++++---
+ include/linux/blk-mq.h |  2 ++
+ include/linux/blkdev.h |  3 +++
+ 4 files changed, 76 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 85b15833a7a5..c199910d4fe1 100644
+index c199910d4fe1..bbcea07f17da 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -1402,7 +1402,8 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- }
+@@ -899,6 +899,8 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
+ 	if (blkcg_init_queue(q))
+ 		goto fail_ref;
  
- static struct request *blk_old_get_request(struct request_queue *q,
--					   unsigned int op, gfp_t gfp_mask)
-+					   unsigned int op, gfp_t gfp_mask,
-+					   unsigned int flags)
- {
- 	struct request *rq;
- 	int ret = 0;
-@@ -1412,9 +1413,17 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 	/* create ioc upfront */
- 	create_io_context(gfp_mask, q->node);
- 
--	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
-+	/*
-+	 * When queue is frozen, we still need to allocate req for
-+	 * REQF_PREEMPT.
-+	 */
-+	if ((flags & BLK_MQ_REQ_PREEMPT) && blk_queue_is_freezing(q))
-+		blk_queue_enter_live(q);
-+	else
-+		ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
- 	if (ret)
- 		return ERR_PTR(ret);
++	spin_lock_init(&q->freeze_lock);
 +
- 	spin_lock_irq(q->queue_lock);
- 	rq = get_request(q, op, NULL, gfp_mask);
- 	if (IS_ERR(rq)) {
-@@ -1430,26 +1439,26 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 	return rq;
- }
+ 	return q;
  
--struct request *blk_get_request(struct request_queue *q, unsigned int op,
--				gfp_t gfp_mask)
-+struct request *__blk_get_request(struct request_queue *q, unsigned int op,
-+				  gfp_t gfp_mask, unsigned int flags)
- {
- 	struct request *req;
- 
- 	if (q->mq_ops) {
- 		req = blk_mq_alloc_request(q, op,
--			(gfp_mask & __GFP_DIRECT_RECLAIM) ?
--				0 : BLK_MQ_REQ_NOWAIT);
-+			flags | ((gfp_mask & __GFP_DIRECT_RECLAIM) ?
-+				0 : BLK_MQ_REQ_NOWAIT));
- 		if (!IS_ERR(req) && q->mq_ops->initialize_rq_fn)
- 			q->mq_ops->initialize_rq_fn(req);
- 	} else {
--		req = blk_old_get_request(q, op, gfp_mask);
-+		req = blk_old_get_request(q, op, gfp_mask, flags);
- 		if (!IS_ERR(req) && q->initialize_rq_fn)
- 			q->initialize_rq_fn(req);
- 	}
- 
- 	return req;
- }
--EXPORT_SYMBOL(blk_get_request);
-+EXPORT_SYMBOL(__blk_get_request);
- 
- /**
-  * blk_requeue_request - put a request back on queue
+ fail_ref:
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 24de78afbe9a..695d2eeaf41a 100644
+index 695d2eeaf41a..bf8c057aa50f 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -382,9 +382,16 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
- {
- 	struct blk_mq_alloc_data alloc_data = { .flags = flags };
- 	struct request *rq;
--	int ret;
-+	int ret = 0;
- 
--	ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
-+	/*
-+	 * When queue is frozen, we still need to allocate req for
-+	 * REQF_PREEMPT.
-+	 */
-+	if ((flags & BLK_MQ_REQ_PREEMPT) && blk_queue_is_freezing(q))
-+		blk_queue_enter_live(q);
-+	else
-+		ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
- 	if (ret)
- 		return ERR_PTR(ret);
- 
-diff --git a/block/blk.h b/block/blk.h
-index 242486e26a81..b71f8cc047aa 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -80,6 +80,11 @@ static inline void blk_queue_enter_live(struct request_queue *q)
- 	percpu_ref_get(&q->q_usage_counter);
+@@ -118,16 +118,48 @@ void blk_mq_in_flight(struct request_queue *q, struct hd_struct *part,
+ 	blk_mq_queue_tag_busy_iter(q, blk_mq_check_inflight, &mi);
  }
  
-+static inline bool blk_queue_is_freezing(struct request_queue *q)
-+{
-+	return percpu_ref_is_dying(&q->q_usage_counter);
+-void blk_freeze_queue_start(struct request_queue *q)
++static void __blk_freeze_queue_start(struct request_queue *q, bool preempt)
+ {
+ 	int freeze_depth;
+ 
++	/*
++	 * Wait for completion of another kind of freezing.
++	 *
++	 * We have to sync between normal freeze and preempt
++	 * freeze. preempt freeze can only be started iff all
++	 * pending normal & preempt freezing are completed,
++	 * meantime normal freeze can be started only if there
++	 * isn't pending preempt freezing.
++	 *
++	 * rwsem should have been perfect for this kind of sync,
++	 * but lockdep will complain in case of nested normal freeze.
++	 *
++	 * So we have to use lock to do that manually.
++	 */
++	spin_lock(&q->freeze_lock);
++	wait_event_cmd(q->mq_freeze_wq,
++		       preempt ? !(q->normal_freezing + q->preempt_freezing) : !q->preempt_freezing,
++		       spin_unlock(&q->freeze_lock),
++		       spin_lock(&q->freeze_lock));
++
+ 	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
+ 	if (freeze_depth == 1) {
++		if (preempt)
++			q->preempt_freezing = 1;
++		else
++			q->normal_freezing = 1;
++		spin_unlock(&q->freeze_lock);
++
+ 		percpu_ref_kill(&q->q_usage_counter);
+ 		if (q->mq_ops)
+ 			blk_mq_run_hw_queues(q, false);
+-	}
++	} else
++		spin_unlock(&q->freeze_lock);
 +}
 +
- #ifdef CONFIG_BLK_DEV_INTEGRITY
- void blk_flush_integrity(void);
- bool __bio_integrity_endio(struct bio *);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index f90d78eb85df..0ba5cb043172 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -200,9 +200,10 @@ void blk_mq_free_request(struct request *rq);
- bool blk_mq_can_queue(struct blk_mq_hw_ctx *);
++void blk_freeze_queue_start(struct request_queue *q)
++{
++	__blk_freeze_queue_start(q, false);
+ }
+ EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
  
- enum {
--	BLK_MQ_REQ_NOWAIT	= (1 << 0), /* return when out of requests */
--	BLK_MQ_REQ_RESERVED	= (1 << 1), /* allocate from reserved pool */
--	BLK_MQ_REQ_INTERNAL	= (1 << 2), /* allocate internal/sched tag */
-+	BLK_MQ_REQ_PREEMPT	= BLK_REQ_PREEMPT, /* allocate for RQF_PREEMPT */
-+	BLK_MQ_REQ_NOWAIT	= (1 << 8), /* return when out of requests */
-+	BLK_MQ_REQ_RESERVED	= (1 << 9), /* allocate from reserved pool */
-+	BLK_MQ_REQ_INTERNAL	= (1 << 10), /* allocate internal/sched tag */
- };
+@@ -166,20 +198,54 @@ void blk_freeze_queue(struct request_queue *q)
+ }
+ EXPORT_SYMBOL_GPL(blk_freeze_queue);
  
- struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f45f157b2910..a43422f5379a 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -858,6 +858,11 @@ enum {
- 	BLKPREP_INVALID,	/* invalid command, kill, return -EREMOTEIO */
- };
+-void blk_unfreeze_queue(struct request_queue *q)
++static void __blk_unfreeze_queue(struct request_queue *q, bool preempt)
+ {
+ 	int freeze_depth;
  
-+/* passed to __blk_get_request */
-+enum {
-+	BLK_REQ_PREEMPT	= (1 << 0), /* allocate for RQF_PREEMPT */
-+};
+ 	freeze_depth = atomic_dec_return(&q->mq_freeze_depth);
+ 	WARN_ON_ONCE(freeze_depth < 0);
+ 	if (!freeze_depth) {
++		spin_lock(&q->freeze_lock);
++		if (preempt)
++			q->preempt_freezing = 0;
++		else
++			q->normal_freezing = 0;
++		spin_unlock(&q->freeze_lock);
+ 		percpu_ref_reinit(&q->q_usage_counter);
+ 		wake_up_all(&q->mq_freeze_wq);
+ 	}
+ }
 +
- extern unsigned long blk_max_low_pfn, blk_max_pfn;
++void blk_unfreeze_queue(struct request_queue *q)
++{
++	__blk_unfreeze_queue(q, false);
++}
+ EXPORT_SYMBOL_GPL(blk_unfreeze_queue);
  
  /*
-@@ -940,8 +945,9 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
- extern void blk_init_request_from_bio(struct request *req, struct bio *bio);
- extern void blk_put_request(struct request *);
- extern void __blk_put_request(struct request_queue *, struct request *);
--extern struct request *blk_get_request(struct request_queue *, unsigned int op,
--				       gfp_t gfp_mask);
-+extern struct request *__blk_get_request(struct request_queue *,
-+					 unsigned int op, gfp_t gfp_mask,
-+					 unsigned int flags);
- extern void blk_requeue_request(struct request_queue *, struct request *);
- extern int blk_lld_busy(struct request_queue *q);
- extern int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
-@@ -992,6 +998,13 @@ blk_status_t errno_to_blk_status(int errno);
- 
- bool blk_mq_poll(struct request_queue *q, blk_qc_t cookie);
- 
-+static inline struct request *blk_get_request(struct request_queue *q,
-+					      unsigned int op,
-+					      gfp_t gfp_mask)
++ * Once this function is returned, only allow to get request
++ * for preempt purpose, such as RQF_PREEMPT.
++ *
++ */
++void blk_freeze_queue_preempt(struct request_queue *q)
 +{
-+	return __blk_get_request(q, op, gfp_mask, 0);
++	__blk_freeze_queue_start(q, true);
++	blk_freeze_queue_wait(q);
 +}
++EXPORT_SYMBOL_GPL(blk_freeze_queue_preempt);
 +
- static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
- {
- 	return bdev->bd_disk->queue;	/* this is never NULL */
++/*
++ * It is the caller's responsibility to make sure no new
++ * request can be allocated before calling this function.
++ */
++void blk_unfreeze_queue_preempt(struct request_queue *q)
++{
++	blk_freeze_queue_wait(q);
++	__blk_unfreeze_queue(q, true);
++}
++EXPORT_SYMBOL_GPL(blk_unfreeze_queue_preempt);
++
++/*
+  * FIXME: replace the scsi_internal_device_*block_nowait() calls in the
+  * mpt3sas driver such that this function can be removed.
+  */
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 0ba5cb043172..596f433eb54c 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -259,6 +259,8 @@ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
+ 		busy_tag_iter_fn *fn, void *priv);
+ void blk_freeze_queue(struct request_queue *q);
+ void blk_unfreeze_queue(struct request_queue *q);
++void blk_freeze_queue_preempt(struct request_queue *q);
++void blk_unfreeze_queue_preempt(struct request_queue *q);
+ void blk_freeze_queue_start(struct request_queue *q);
+ void blk_freeze_queue_wait(struct request_queue *q);
+ int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index a43422f5379a..2d62965e91eb 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -565,6 +565,9 @@ struct request_queue {
+ 
+ 	int			bypass_depth;
+ 	atomic_t		mq_freeze_depth;
++	spinlock_t		freeze_lock;
++	unsigned		normal_freezing:1;
++	unsigned		preempt_freezing:1;
+ 
+ #if defined(CONFIG_BLK_DEV_BSG)
+ 	bsg_job_fn		*bsg_job_fn;
 -- 
 2.9.5
