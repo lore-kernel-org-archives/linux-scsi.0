@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V2 7/8] block: introduce preempt version of blk_[freeze|unfreeze]_queue
-Date: Sat,  2 Sep 2017 02:49:57 +0800
-Message-ID: <20170901184958.19452-9-ming.lei@redhat.com>
+Subject: [PATCH V2 8/8] SCSI: freeze block queue when SCSI device is put into quiesce
+Date: Sat,  2 Sep 2017 02:49:58 +0800
+Message-ID: <20170901184958.19452-10-ming.lei@redhat.com>
 References: <20170901184958.19452-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170901184958.19452-1-ming.lei@redhat.com>
@@ -10,183 +10,74 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The two APIs are required to allow request allocation for
-RQF_PREEMPT when queue is frozen.
+Simply quiesing SCSI device and waiting for completeion of IO
+dispatched to SCSI queue isn't safe, it is easy to use up
+requests because all these allocated requests can't be dispatched
+when device is put in QIUESCE. Then no request can be allocated
+for RQF_PREEMPT, and system may hang somewhere, such as
+When sending commands of sync_cache or start_stop during
+system suspend path.
 
-The following two points have to be guaranteed for one queue:
+Before quiesing SCSI, this patch freezes block queue first,
+so no new request can enter queue any more, and all pending
+requests are drained too once blk_freeze_queue is returned.
 
-1) preempt freezing can be started only after all pending
-normal & preempt freezing are completed
-
-2) normal freezing can't be started if there is pending
-preempt freezing.
-
-Because for normal freezing, once blk_mq_freeze_queue_wait()
-is returned, we have to make sure no I/Os are pending.
-
-rwsem should have been perfect for this kind of sync,
-but lockdep will complain in case of nested normal freeze.
-
-So spin_lock with freezing status is used for the sync.
+This patch also uses __blk_get_request() for allocating
+request with RQF_PREEMPT, so that the allocation can
+succeed even though block queue is frozen.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-core.c       |  2 ++
- block/blk-mq.c         | 72 +++++++++++++++++++++++++++++++++++++++++++++++---
- include/linux/blk-mq.h |  2 ++
- include/linux/blkdev.h |  3 +++
- 4 files changed, 76 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_lib.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index c199910d4fe1..bbcea07f17da 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -899,6 +899,8 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
- 	if (blkcg_init_queue(q))
- 		goto fail_ref;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f6097b89d5d3..a59544012b68 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -243,10 +243,12 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	struct request *req;
+ 	struct scsi_request *rq;
+ 	int ret = DRIVER_ERROR << 24;
++	unsigned flag = sdev->sdev_state == SDEV_QUIESCE ? BLK_REQ_PREEMPT : 0;
  
-+	spin_lock_init(&q->freeze_lock);
-+
- 	return q;
- 
- fail_ref:
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 695d2eeaf41a..bf8c057aa50f 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -118,16 +118,48 @@ void blk_mq_in_flight(struct request_queue *q, struct hd_struct *part,
- 	blk_mq_queue_tag_busy_iter(q, blk_mq_check_inflight, &mi);
- }
- 
--void blk_freeze_queue_start(struct request_queue *q)
-+static void __blk_freeze_queue_start(struct request_queue *q, bool preempt)
+-	req = blk_get_request(sdev->request_queue,
++	req = __blk_get_request(sdev->request_queue,
+ 			data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
++			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM,
++			flag);
+ 	if (IS_ERR(req))
+ 		return ret;
+ 	rq = scsi_req(req);
+@@ -2890,6 +2892,19 @@ scsi_device_quiesce(struct scsi_device *sdev)
  {
- 	int freeze_depth;
+ 	int err;
  
 +	/*
-+	 * Wait for completion of another kind of freezing.
++	 * Simply quiesing SCSI device isn't safe, it is easy
++	 * to use up requests because all these allocated requests
++	 * can't be dispatched when device is put in QIUESCE.
++	 * Then no request can be allocated and we may hang
++	 * somewhere, such as system suspend/resume.
 +	 *
-+	 * We have to sync between normal freeze and preempt
-+	 * freeze. preempt freeze can only be started iff all
-+	 * pending normal & preempt freezing are completed,
-+	 * meantime normal freeze can be started only if there
-+	 * isn't pending preempt freezing.
-+	 *
-+	 * rwsem should have been perfect for this kind of sync,
-+	 * but lockdep will complain in case of nested normal freeze.
-+	 *
-+	 * So we have to use lock to do that manually.
++	 * So we freeze block queue first, no new request can
++	 * enter queue any more, and pending requests are drained
++	 * once blk_freeze_queue is returned.
 +	 */
-+	spin_lock(&q->freeze_lock);
-+	wait_event_cmd(q->mq_freeze_wq,
-+		       preempt ? !(q->normal_freezing + q->preempt_freezing) : !q->preempt_freezing,
-+		       spin_unlock(&q->freeze_lock),
-+		       spin_lock(&q->freeze_lock));
++	blk_freeze_queue_preempt(sdev->request_queue);
 +
- 	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
- 	if (freeze_depth == 1) {
-+		if (preempt)
-+			q->preempt_freezing = 1;
-+		else
-+			q->normal_freezing = 1;
-+		spin_unlock(&q->freeze_lock);
+ 	mutex_lock(&sdev->state_mutex);
+ 	err = scsi_device_set_state(sdev, SDEV_QUIESCE);
+ 	mutex_unlock(&sdev->state_mutex);
+@@ -2926,6 +2941,8 @@ void scsi_device_resume(struct scsi_device *sdev)
+ 	    scsi_device_set_state(sdev, SDEV_RUNNING) == 0)
+ 		scsi_run_queue(sdev->request_queue);
+ 	mutex_unlock(&sdev->state_mutex);
 +
- 		percpu_ref_kill(&q->q_usage_counter);
- 		if (q->mq_ops)
- 			blk_mq_run_hw_queues(q, false);
--	}
-+	} else
-+		spin_unlock(&q->freeze_lock);
-+}
-+
-+void blk_freeze_queue_start(struct request_queue *q)
-+{
-+	__blk_freeze_queue_start(q, false);
++	blk_unfreeze_queue_preempt(sdev->request_queue);
  }
- EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
+ EXPORT_SYMBOL(scsi_device_resume);
  
-@@ -166,20 +198,54 @@ void blk_freeze_queue(struct request_queue *q)
- }
- EXPORT_SYMBOL_GPL(blk_freeze_queue);
- 
--void blk_unfreeze_queue(struct request_queue *q)
-+static void __blk_unfreeze_queue(struct request_queue *q, bool preempt)
- {
- 	int freeze_depth;
- 
- 	freeze_depth = atomic_dec_return(&q->mq_freeze_depth);
- 	WARN_ON_ONCE(freeze_depth < 0);
- 	if (!freeze_depth) {
-+		spin_lock(&q->freeze_lock);
-+		if (preempt)
-+			q->preempt_freezing = 0;
-+		else
-+			q->normal_freezing = 0;
-+		spin_unlock(&q->freeze_lock);
- 		percpu_ref_reinit(&q->q_usage_counter);
- 		wake_up_all(&q->mq_freeze_wq);
- 	}
- }
-+
-+void blk_unfreeze_queue(struct request_queue *q)
-+{
-+	__blk_unfreeze_queue(q, false);
-+}
- EXPORT_SYMBOL_GPL(blk_unfreeze_queue);
- 
- /*
-+ * Once this function is returned, only allow to get request
-+ * for preempt purpose, such as RQF_PREEMPT.
-+ *
-+ */
-+void blk_freeze_queue_preempt(struct request_queue *q)
-+{
-+	__blk_freeze_queue_start(q, true);
-+	blk_freeze_queue_wait(q);
-+}
-+EXPORT_SYMBOL_GPL(blk_freeze_queue_preempt);
-+
-+/*
-+ * It is the caller's responsibility to make sure no new
-+ * request can be allocated before calling this function.
-+ */
-+void blk_unfreeze_queue_preempt(struct request_queue *q)
-+{
-+	blk_freeze_queue_wait(q);
-+	__blk_unfreeze_queue(q, true);
-+}
-+EXPORT_SYMBOL_GPL(blk_unfreeze_queue_preempt);
-+
-+/*
-  * FIXME: replace the scsi_internal_device_*block_nowait() calls in the
-  * mpt3sas driver such that this function can be removed.
-  */
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 0ba5cb043172..596f433eb54c 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -259,6 +259,8 @@ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
- 		busy_tag_iter_fn *fn, void *priv);
- void blk_freeze_queue(struct request_queue *q);
- void blk_unfreeze_queue(struct request_queue *q);
-+void blk_freeze_queue_preempt(struct request_queue *q);
-+void blk_unfreeze_queue_preempt(struct request_queue *q);
- void blk_freeze_queue_start(struct request_queue *q);
- void blk_freeze_queue_wait(struct request_queue *q);
- int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a43422f5379a..2d62965e91eb 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -565,6 +565,9 @@ struct request_queue {
- 
- 	int			bypass_depth;
- 	atomic_t		mq_freeze_depth;
-+	spinlock_t		freeze_lock;
-+	unsigned		normal_freezing:1;
-+	unsigned		preempt_freezing:1;
- 
- #if defined(CONFIG_BLK_DEV_BSG)
- 	bsg_job_fn		*bsg_job_fn;
 -- 
 2.9.5
