@@ -1,42 +1,53 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 2/8] block: Fix declaration of blk-mq scheduler functions
-Date: Fri, 1 Sep 2017 16:04:18 +0000
-Message-ID: <1504281856.14386.27.camel@wdc.com>
-References: <20170901113631.12323-1-damien.lemoal@wdc.com>
-         <20170901113631.12323-3-damien.lemoal@wdc.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH 1/9] percpu-refcount: introduce percpu_ref_is_dead()
+Date: Sat, 2 Sep 2017 00:05:20 +0800
+Message-ID: <20170901160519.GB20709@ming.t460p>
+References: <20170831172728.15817-1-ming.lei@redhat.com>
+ <20170831172728.15817-2-ming.lei@redhat.com>
+ <20170901135915.GD1599492@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170901113631.12323-3-damien.lemoal@wdc.com>
-Content-Language: en-US
-Content-ID: <AA40DA1EE9DC35468D074BD8BCE21765@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37472 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751945AbdIAQFi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 Sep 2017 12:05:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20170901135915.GD1599492@devbig577.frc2.facebook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Oleksandr Natalenko <oleksandr@natalenko.name>
 
-T24gRnJpLCAyMDE3LTA5LTAxIGF0IDIwOjM2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gLS0tIGEvaW5jbHVkZS9saW51eC9ibGstbXEuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L2Js
-ay1tcS5oDQo+IEBAIC0yODQsNiArMjg0LDE2IEBAIHZvaWQgYmxrX21xX3VwZGF0ZV9ucl9od19x
-dWV1ZXMoc3RydWN0IGJsa19tcV90YWdfc2V0ICpzZXQsIGludCBucl9od19xdWV1ZXMpOw0KPiAg
-dm9pZCBibGtfbXFfcXVpZXNjZV9xdWV1ZV9ub3dhaXQoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEp
-Ow0KPiAgDQo+ICAvKg0KPiArICogU2NoZWR1bGVyIGhlbHBlciBmdW5jdGlvbnMuDQo+ICsgKi8N
-Cj4gK3ZvaWQgYmxrX21xX3NjaGVkX2ZyZWVfaGN0eF9kYXRhKHN0cnVjdCByZXF1ZXN0X3F1ZXVl
-ICpxLA0KPiArCQkJCSB2b2lkICgqZXhpdCkoc3RydWN0IGJsa19tcV9od19jdHggKikpOw0KPiAr
-Ym9vbCBibGtfbXFfc2NoZWRfdHJ5X21lcmdlKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxLCBzdHJ1
-Y3QgYmlvICpiaW8sDQo+ICsJCQkgICAgc3RydWN0IHJlcXVlc3QgKiptZXJnZWRfcmVxdWVzdCk7
-DQo+ICtib29sIGJsa19tcV9zY2hlZF90cnlfaW5zZXJ0X21lcmdlKHN0cnVjdCByZXF1ZXN0X3F1
-ZXVlICpxLCBzdHJ1Y3QgcmVxdWVzdCAqcnEpOw0KPiArdm9pZCBibGtfbXFfc2NoZWRfcmVxdWVz
-dF9pbnNlcnRlZChzdHJ1Y3QgcmVxdWVzdCAqcnEpOw0KPiArDQo+ICsvKg0KPiAgICogRHJpdmVy
-IGNvbW1hbmQgZGF0YSBpcyBpbW1lZGlhdGVseSBhZnRlciB0aGUgcmVxdWVzdC4gU28gc3VidHJh
-Y3QgcmVxdWVzdA0KPiAgICogc2l6ZSB0byBnZXQgYmFjayB0byB0aGUgb3JpZ2luYWwgcmVxdWVz
-dCwgYWRkIHJlcXVlc3Qgc2l6ZSB0byBnZXQgdGhlIFBEVS4NCj4gICAqLw0KDQpIZWxsbyBEYW1p
-ZW4sDQoNCkEgc2ltaWxhciBjb21tZW50IGFzIGZvciBwYXRjaCAxLzggZm9yIHRoaXMgcGF0Y2g6
-IHNob3VsZCB0aGVzZSBkZWNsYXJhdGlvbnMNCnBlcmhhcHMgYmUgbW92ZWQgdG8gYSBuZXcgaGVh
-ZGVyIGZpbGUsIGUuZy4gaW5jbHVkZS9saW51eC9ibGstbXEtc2NoZWQuaA0KYmVjYXVzZSB0aGVz
-ZSBmdW5jdGlvbnMgYXJlIG9ubHkgdXNlZCBieSBJL08gc2NoZWR1bGVycyBhbmQgbm90IGluIHRo
-ZQ0KaW1wbGVtZW50YXRpb24gb2YgYmxvY2sgZHJpdmVycz8gVGhhdCB3aWxsIGhlbHAgdG8gYXZv
-aWQgdGhhdCBibG9jayBkcml2ZXINCmF1dGhvcnMgc3RhcnQgd29uZGVyaW5nIHdoZXRoZXIgb3Ig
-bm90IHRoZXkgaGF2ZSB0byBjYWxsIHVzZSB0aGVzZSBmdW5jdGlvbnMNCndoaWxlIHRoZXkgYXJl
-IHJlYWRpbmcgaW5jbHVkZS9saW51eC9ibGstbXEuaC4NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+On Fri, Sep 01, 2017 at 06:59:15AM -0700, Tejun Heo wrote:
+> Hello, Ming.
+> 
+> > +/**
+> > + * percpu_ref_is_dead - test whether a percpu refcount is killed
+> > + * @ref: percpu_ref to test
+> > + *
+> > + * Returns %true if @ref is dead
+> > + *
+> > + * This function is safe to call as long as @ref is between init and exit.
+> > + */
+> > +static inline bool percpu_ref_is_dead(struct percpu_ref *ref)
+> > +{
+> > +	unsigned long __percpu *percpu_count;
+> > +
+> > +	if (__ref_is_percpu(ref, &percpu_count))
+> > +		return false;
+> > +	return ref->percpu_count_ptr & __PERCPU_REF_DEAD;
+> > +}
+> 
+> Can you please explain why percpu_ref_is_dying() isn't enough for your
+> use case?
+
+Hi Tejun,
+
+You are right, looks percpu_ref_is_dying() is enough,
+percpu_ref_get_many() works fine no matter the ref is dying or not.
+
+Thanks!
+
+-- 
+Ming
