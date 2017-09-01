@@ -1,83 +1,47 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
-Date: Fri, 1 Sep 2017 10:53:19 -0500
-Message-ID: <20170901155319.zk7wdvysqzit7mog@rob-hp-laptop>
-References: <20170829084116.106695-1-liwei213@huawei.com>
- <20170829084116.106695-3-liwei213@huawei.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 1/8] block: Fix declaration of blk-mq debugfs functions
+Date: Fri, 1 Sep 2017 16:00:30 +0000
+Message-ID: <1504281628.14386.23.camel@wdc.com>
+References: <20170901113631.12323-1-damien.lemoal@wdc.com>
+         <20170901113631.12323-2-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170829084116.106695-3-liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: mark.rutland-5wv7dgnIgG8@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will.deacon-5wv7dgnIgG8@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org, riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guodong.xu-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, fengbaopeng-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:43154 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbdIAQBS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2017 12:01:18 -0400
+In-Reply-To: <20170901113631.12323-2-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <E466AB6A5A168343B1AED5B7940474AD@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 
-On Tue, Aug 29, 2017 at 04:41:13PM +0800, Li Wei wrote:
-> add ufs node document for Hisilicon
-> 
-> Signed-off-by: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 35 ++++++++++++++++++++++
->  1 file changed, 35 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> new file mode 100644
-> index 000000000000..cfc84c821d50
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> @@ -0,0 +1,35 @@
-> +* Hisilicon Universal Flash Storage (UFS) Host Controller
-> +
-> +UFS nodes are defined to describe on-chip UFS hardware macro.
-> +Each UFS Host Controller should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains one of the following -
-> +			"hisilicon,hi3660-ufs" for hisi ufs host controller
-> +			 present on Hi3660 chipset.
-> +- reg               : should contain UFS register address space & UFS SYS CTRL register address,
-> +- interrupt-parent  : interrupt device
-> +- interrupts        : interrupt number
-> +- clocks	        : List of phandle and clock specifier pairs
-> +- clock-names       : List of clock input name strings sorted in the same
-> +		      order as the clocks property. "clk_ref", "clk_phy" is optional
-> +
-> +Optional properties for board device:
-> +- reset-gpio			: specifies to reset devices
-
-reset-gpios
-
-Really, this is should be in a sub node representing the device. It's 
-fine if this is it, but if we start adding power supplies and other 
-properties it should be a separate node.
-
-> +
-> +Example:
-> +
-> +	ufs: ufs@ff3b0000 {
-> +		compatible = "jedec,ufs-1.1", "hisilicon,hi3660-ufs";
-
-Need to reverse the order here. Most specific first.
-
-> +		/* 0: HCI standard */
-> +		/* 1: UFS SYS CTRL */
-> +		reg = <0x0 0xff3b0000 0x0 0x1000>,
-> +			<0x0 0xff3b1000 0x0 0x1000>;
-> +		interrupt-parent = <&gic>;
-> +		interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
-> +		clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
-> +			<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
-> +		clock-names = "clk_ref", "clk_phy";
-> +		freq-table-hz = <0 0>, <0 0>;
-> +		reset-gpio = <&gpio18 1 0>;
-> +	}
-> -- 
-> 2.11.0
-> 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gRnJpLCAyMDE3LTA5LTAxIGF0IDIwOjM2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvYmxrLW1xLmggYi9pbmNsdWRlL2xpbnV4L2Js
+ay1tcS5oDQo+IGluZGV4IDE0NTQyMzA4ZDI1Yi4uYTM2OTE3NGE5Njc5IDEwMDY0NA0KPiAtLS0g
+YS9pbmNsdWRlL2xpbnV4L2Jsay1tcS5oDQo+ICsrKyBiL2luY2x1ZGUvbGludXgvYmxrLW1xLmgN
+Cj4gQEAgLTUsNiArNSwyMSBAQA0KPiAgI2luY2x1ZGUgPGxpbnV4L3NiaXRtYXAuaD4NCj4gICNp
+bmNsdWRlIDxsaW51eC9zcmN1Lmg+DQo+ICANCj4gKyNpZmRlZiBDT05GSUdfQkxLX0RFQlVHX0ZT
+DQo+ICsNCj4gKyNpbmNsdWRlIDxsaW51eC9zZXFfZmlsZS5oPg0KPiArDQo+ICtzdHJ1Y3QgYmxr
+X21xX2RlYnVnZnNfYXR0ciB7DQo+ICsJY29uc3QgY2hhciAqbmFtZTsNCj4gKwl1bW9kZV90IG1v
+ZGU7DQo+ICsJaW50ICgqc2hvdykodm9pZCAqLCBzdHJ1Y3Qgc2VxX2ZpbGUgKik7DQo+ICsJc3Np
+emVfdCAoKndyaXRlKSh2b2lkICosIGNvbnN0IGNoYXIgX191c2VyICosIHNpemVfdCwgbG9mZl90
+ICopOw0KPiArCS8qIFNldCBlaXRoZXIgLnNob3cgb3IgLnNlcV9vcHMuICovDQo+ICsJY29uc3Qg
+c3RydWN0IHNlcV9vcGVyYXRpb25zICpzZXFfb3BzOw0KPiArfTsNCj4gKw0KPiArI2VuZGlmDQo+
+ICsNCj4gIHN0cnVjdCBibGtfbXFfdGFnczsNCj4gIHN0cnVjdCBibGtfZmx1c2hfcXVldWU7DQo+
+ICANCj4gQEAgLTI4OSw0ICszMDQsOSBAQCBzdGF0aWMgaW5saW5lIHZvaWQgKmJsa19tcV9ycV90
+b19wZHUoc3RydWN0IHJlcXVlc3QgKnJxKQ0KPiAgCWZvciAoKGkpID0gMDsgKGkpIDwgKGhjdHgp
+LT5ucl9jdHggJiYJCQkJXA0KPiAgCSAgICAgKHsgY3R4ID0gKGhjdHgpLT5jdHhzWyhpKV07IDE7
+IH0pOyAoaSkrKykNCj4gIA0KPiArI2lmZGVmIENPTkZJR19CTEtfREVCVUdfRlMNCj4gK2ludCBf
+X2Jsa19tcV9kZWJ1Z2ZzX3JxX3Nob3coc3RydWN0IHNlcV9maWxlICptLCBzdHJ1Y3QgcmVxdWVz
+dCAqcnEpOw0KPiAraW50IGJsa19tcV9kZWJ1Z2ZzX3JxX3Nob3coc3RydWN0IHNlcV9maWxlICpt
+LCB2b2lkICp2KTsNCj4gKyNlbmRpZg0KPiArDQo+ICAjZW5kaWYNCg0KSGVsbG8gRGFtaWVuLA0K
+DQpTaG91bGQgdGhlc2UgZGVmaW5pdGlvbnMgcGVyaGFwcyBiZSBtb3ZlZCB0byBhIG5ldyBoZWFk
+ZXIgZmlsZSwgZS5nLg0KaW5jbHVkZS9saW51eC9ibGstbXEtZGVidWdmcy5oLCBzdWNoIHRoYXQg
+dGhlIGludHJvZHVjdGlvbiBvZiBtb3JlICNpZmRlZnMNCmFuZCAjaW5jbHVkZSA8bGludXgvc2Vx
+X2ZpbGUuaD4gaW4gaW5jbHVkZS9saW51eC9ibGstbXEuaCBjYW4gYmUgYXZvaWRlZD8NCg0KVGhh
+bmtzLA0KDQpCYXJ0Lg==
