@@ -1,16 +1,14 @@
 From: Ming Lei <ming.lei@redhat.com>
 Subject: [PATCH V2 0/8] block/scsi: safe SCSI quiescing
-Date: Sat,  2 Sep 2017 02:49:49 +0800
-Message-ID: <20170901184958.19452-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38768 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752213AbdIASuU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Sep 2017 14:50:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Date: Sat,  2 Sep 2017 02:49:50 +0800
+Message-ID: <20170901184958.19452-2-ming.lei@redhat.com>
+References: <20170901184958.19452-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170901184958.19452-1-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Ming Lei <ming.lei@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
 Hi,
 
@@ -47,6 +45,7 @@ V2:
 	- sync between preempt freeze and normal freeze
 
 	- fix warning from percpu-refcount as reported by Oleksandr
+
 
 
 [1] https://marc.info/?t=150340250100013&r=3&w=2
