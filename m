@@ -1,30 +1,57 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: SCST 3.3 pre-release freeze
-Date: Thu, 31 Aug 2017 21:16:29 -0700
-Message-ID: <59A8DF1D.8080704@vlnb.net>
+From: Dison River <pwn2river@gmail.com>
+Subject: Buffer overflow in the mptctl_replace_fw() function in linux kernel
+ MPT ioctl driver
+Date: Fri, 1 Sep 2017 14:00:48 +0800
+Message-ID: <CAJsXRPFEOoZjHKhJ=1rfXpmFqEdaORtxYUkm3bRJ_v+_oENt3Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, security@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All,
+Hi:
+Buffer overflow in the mptctl_replace_fw() function in linux kernel
+MPT ioctl driver.
 
-I'm glad to announce SCST 3.3 pre-release code freeze in the SCST SVN branch 3.3.x.
+In mptctl_replace_fw function, kernel didn't check the size of
+"newFwSize" variable allows attackers to cause a denial of service via
+unspecified vectors that trigger copy_from_user function calls with
+improper length arguments.
 
-You can get it by command:
 
-$ svn co https://scst.svn.sourceforge.net/svnroot/scst/branches/3.3.x
+static int
+mptctl_replace_fw (unsigned long arg)
+{
+......
+    if (copy_from_user(&karg, uarg, sizeof(struct mpt_ioctl_replace_fw))) {
+        printk(KERN_ERR MYNAM "%s@%d::mptctl_replace_fw - "
+            "Unable to read in mpt_ioctl_replace_fw struct @ %p\n",
+                __FILE__, __LINE__, uarg);
+        return -EFAULT;
+    }
 
-It is going to be released after few weeks of testing, if no significant issues found.
+......
 
-SCST is alternative SCSI target stack for Linux. SCST allows creation of sophisticated storage devices, which can provide advanced functionality, like replication, thin provisioning, deduplication, high availability, automatic backup, etc. Many recently developed SAN appliances, especially higher end ones, are SCST based. It might well be that your favorite storage appliance running SCST in the firmware.
+    mpt_free_fw_memory(ioc);
 
-More info about SCST and its modules you can find on: http://scst.sourceforge.net
+    /* Allocate memory for the new FW image
+     */
+    newFwSize = ALIGN(karg.newImageSize, 4);
 
-Thanks to all who made it happen, especially to Bart Van Assche and SanDisk/Western Digital!
+    mpt_alloc_fw_memory(ioc, newFwSize);
+......
 
-Vlad
+    if (copy_from_user(ioc->cached_fw, uarg->newImage, newFwSize)) {
+///------->newFwSize can control in userspace
+        printk(MYIOC_s_ERR_FMT "%s@%d::mptctl_replace_fw - "
+                "Unable to read in mpt_ioctl_replace_fw image "
+                "@ %p\n", ioc->name, __FILE__, __LINE__, uarg);
+        mpt_free_fw_memory(ioc);
+        return -EFAULT;
+    }
+
+......
+
+    return 0;
+}
