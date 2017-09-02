@@ -1,45 +1,88 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2 6/8] block: allow to allocate req with REQF_PREEMPT
- when queue is frozen
-Date: Sat, 2 Sep 2017 10:52:54 +0800
-Message-ID: <20170902025253.GA20047@ming.t460p>
-References: <20170901184958.19452-1-ming.lei@redhat.com>
- <20170901184958.19452-8-ming.lei@redhat.com>
- <1504296423.14386.62.camel@wdc.com>
+From: "liwei (CM)" <liwei213@huawei.com>
+Subject: =?gb2312?B?tPC4tDogW1BBVENIIHYzIDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczog?=
+ =?gb2312?Q?add_document_for_hisi-ufs?=
+Date: Sat, 2 Sep 2017 03:35:41 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA187B7@DGGEMM506-MBX.china.huawei.com>
+References: <20170829084116.106695-1-liwei213@huawei.com>
+ <20170829084116.106695-3-liwei213@huawei.com>
+ <20170901155319.zk7wdvysqzit7mog@rob-hp-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58076 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750892AbdIBCxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Sep 2017 22:53:09 -0400
-Content-Disposition: inline
-In-Reply-To: <1504296423.14386.62.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20170901155319.zk7wdvysqzit7mog@rob-hp-laptop>
+Content-Language: zh-CN
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Rob Herring <robh@kernel.org>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>, "eric@anholt.net" <eric@anholt.net>, "krzk@kernel.org" <krzk@kernel.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "khilman@baylibre.com" <khilman@baylibre.com>, "xuwei (O)" <xuwei5@hisilicon.com>, "treding@nvidia.com" <treding@nvidia.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "Fengbaopeng (kevin,
+ Kirin Solution Dept)" <fengbaopeng@hisilicon.com>, "gregory.clement@free-electrons.com" <gregory.clement@free-electrons.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "thomas.petazzoni@free-electrons.com" <thomas.petaz>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>
 
-On Fri, Sep 01, 2017 at 08:07:04PM +0000, Bart Van Assche wrote:
-> On Sat, 2017-09-02 at 02:49 +0800, Ming Lei wrote:
-> > +	if ((flags & BLK_MQ_REQ_PREEMPT) && blk_queue_is_freezing(q))
-> > +		blk_queue_enter_live(q);
-> > +	else
-> > +		ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
-> 
-> Why did you repost this patch series without trying to reach an agreement
-> about the approach?
-> 
-> Anyway, because of the unsafe blk_queue_enter_live() call introduced by this
-> patch, please add the following to the description of this patch whenever you
-> repost it:
-> 
-> NAK-ed-by: Bart Van Assche <bart.vanassche@wdc.com>
-
-Did you take a look at the patch 7 or cover letter? In that patch,
-if preempt freezing is on-progressing, any other freeze can't be
-started at all, so that is definitely safe to use blk_queue_enter_live()
-here, isn't it?
-
--- 
-Ming
+SGksIFJvYg0KDQpUaGFua3MgZm9yIHlvdXIgYWR2aXNlcywgSSB3aWxsIGZpeCB0aGVtIGluIHRo
+ZSBuZXh0IHBhdGNoLg0KDQpUaGFuayB5b3UuDQoNCi0tLS0t08q8/tStvP4tLS0tLQ0Kt6K8/sjL
+OiBSb2IgSGVycmluZyBbbWFpbHRvOnJvYmhAa2VybmVsLm9yZ10gDQq3osvNyrG85DogMjAxN8Tq
+OdTCMcjVIDIzOjUzDQrK1bz+yMs6IGxpd2VpIChDTSkNCrOty806IG1hcmsucnV0bGFuZEBhcm0u
+Y29tOyB4dXdlaSAoTyk7IGNhdGFsaW4ubWFyaW5hc0Bhcm0uY29tOyB3aWxsLmRlYWNvbkBhcm0u
+Y29tOyB2aW5ob2xpa2F0dGlAZ21haWwuY29tOyBqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbTsgbWFy
+dGluLnBldGVyc2VuQG9yYWNsZS5jb207IGtoaWxtYW5AYmF5bGlicmUuY29tOyBhcm5kQGFybmRi
+LmRlOyBncmVnb3J5LmNsZW1lbnRAZnJlZS1lbGVjdHJvbnMuY29tOyB0aG9tYXMucGV0YXp6b25p
+QGZyZWUtZWxlY3Ryb25zLmNvbTsgeWFtYWRhLm1hc2FoaXJvQHNvY2lvbmV4dC5jb207IHJpa3Uu
+dm9pcGlvQGxpbmFyby5vcmc7IHRyZWRpbmdAbnZpZGlhLmNvbTsga3J6a0BrZXJuZWwub3JnOyBl
+cmljQGFuaG9sdC5uZXQ7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxA
+dmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGxp
+bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBndW9kb25nLnh1QGxpbmFyby5vcmc7IEZlbmdiYW9w
+ZW5nIChrZXZpbiwgS2lyaW4gU29sdXRpb24gRGVwdCkNCtb3zOI6IFJlOiBbUEFUQ0ggdjMgMi81
+XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1lbnQgZm9yIGhpc2ktdWZzDQoNCk9u
+IFR1ZSwgQXVnIDI5LCAyMDE3IGF0IDA0OjQxOjEzUE0gKzA4MDAsIExpIFdlaSB3cm90ZToNCj4g
+YWRkIHVmcyBub2RlIGRvY3VtZW50IGZvciBIaXNpbGljb24NCj4gDQo+IFNpZ25lZC1vZmYtYnk6
+IExpIFdlaSA8bGl3ZWkyMTNAaHVhd2VpLmNvbT4NCj4gLS0tDQo+ICBEb2N1bWVudGF0aW9uL2Rl
+dmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dCB8IDM1IA0KPiArKysrKysrKysrKysr
+KysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMzUgaW5zZXJ0aW9ucygrKQ0KPiAgY3JlYXRl
+IG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhp
+c2kudHh0DQo+IA0KPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3Vmcy91ZnMtaGlzaS50eHQgDQo+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3Vmcy91ZnMtaGlzaS50eHQNCj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gaW5kZXggMDAw
+MDAwMDAwMDAwLi5jZmM4NGM4MjFkNTANCj4gLS0tIC9kZXYvbnVsbA0KPiArKysgYi9Eb2N1bWVu
+dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPiBAQCAtMCwwICsx
+LDM1IEBADQo+ICsqIEhpc2lsaWNvbiBVbml2ZXJzYWwgRmxhc2ggU3RvcmFnZSAoVUZTKSBIb3N0
+IENvbnRyb2xsZXINCj4gKw0KPiArVUZTIG5vZGVzIGFyZSBkZWZpbmVkIHRvIGRlc2NyaWJlIG9u
+LWNoaXAgVUZTIGhhcmR3YXJlIG1hY3JvLg0KPiArRWFjaCBVRlMgSG9zdCBDb250cm9sbGVyIHNo
+b3VsZCBoYXZlIGl0cyBvd24gbm9kZS4NCj4gKw0KPiArUmVxdWlyZWQgcHJvcGVydGllczoNCj4g
+Ky0gY29tcGF0aWJsZSAgICAgICAgOiBjb21wYXRpYmxlIGxpc3QsIGNvbnRhaW5zIG9uZSBvZiB0
+aGUgZm9sbG93aW5nIC0NCj4gKwkJCSJoaXNpbGljb24saGkzNjYwLXVmcyIgZm9yIGhpc2kgdWZz
+IGhvc3QgY29udHJvbGxlcg0KPiArCQkJIHByZXNlbnQgb24gSGkzNjYwIGNoaXBzZXQuDQo+ICst
+IHJlZyAgICAgICAgICAgICAgIDogc2hvdWxkIGNvbnRhaW4gVUZTIHJlZ2lzdGVyIGFkZHJlc3Mg
+c3BhY2UgJiBVRlMgU1lTIENUUkwgcmVnaXN0ZXIgYWRkcmVzcywNCj4gKy0gaW50ZXJydXB0LXBh
+cmVudCAgOiBpbnRlcnJ1cHQgZGV2aWNlDQo+ICstIGludGVycnVwdHMgICAgICAgIDogaW50ZXJy
+dXB0IG51bWJlcg0KPiArLSBjbG9ja3MJICAgICAgICA6IExpc3Qgb2YgcGhhbmRsZSBhbmQgY2xv
+Y2sgc3BlY2lmaWVyIHBhaXJzDQo+ICstIGNsb2NrLW5hbWVzICAgICAgIDogTGlzdCBvZiBjbG9j
+ayBpbnB1dCBuYW1lIHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQo+ICsJCSAgICAgIG9yZGVy
+IGFzIHRoZSBjbG9ja3MgcHJvcGVydHkuICJjbGtfcmVmIiwgImNsa19waHkiIGlzIA0KPiArb3B0
+aW9uYWwNCj4gKw0KPiArT3B0aW9uYWwgcHJvcGVydGllcyBmb3IgYm9hcmQgZGV2aWNlOg0KPiAr
+LSByZXNldC1ncGlvCQkJOiBzcGVjaWZpZXMgdG8gcmVzZXQgZGV2aWNlcw0KDQpyZXNldC1ncGlv
+cw0KDQpSZWFsbHksIHRoaXMgaXMgc2hvdWxkIGJlIGluIGEgc3ViIG5vZGUgcmVwcmVzZW50aW5n
+IHRoZSBkZXZpY2UuIEl0J3MgZmluZSBpZiB0aGlzIGlzIGl0LCBidXQgaWYgd2Ugc3RhcnQgYWRk
+aW5nIHBvd2VyIHN1cHBsaWVzIGFuZCBvdGhlciBwcm9wZXJ0aWVzIGl0IHNob3VsZCBiZSBhIHNl
+cGFyYXRlIG5vZGUuDQoNCj4gKw0KPiArRXhhbXBsZToNCj4gKw0KPiArCXVmczogdWZzQGZmM2Iw
+MDAwIHsNCj4gKwkJY29tcGF0aWJsZSA9ICJqZWRlYyx1ZnMtMS4xIiwgImhpc2lsaWNvbixoaTM2
+NjAtdWZzIjsNCg0KTmVlZCB0byByZXZlcnNlIHRoZSBvcmRlciBoZXJlLiBNb3N0IHNwZWNpZmlj
+IGZpcnN0Lg0KDQo+ICsJCS8qIDA6IEhDSSBzdGFuZGFyZCAqLw0KPiArCQkvKiAxOiBVRlMgU1lT
+IENUUkwgKi8NCj4gKwkJcmVnID0gPDB4MCAweGZmM2IwMDAwIDB4MCAweDEwMDA+LA0KPiArCQkJ
+PDB4MCAweGZmM2IxMDAwIDB4MCAweDEwMDA+Ow0KPiArCQlpbnRlcnJ1cHQtcGFyZW50ID0gPCZn
+aWM+Ow0KPiArCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMjc4IElSUV9UWVBFX0xFVkVMX0hJR0g+
+Ow0KPiArCQljbG9ja3MgPSA8JmNyZ19jdHJsIEhJMzY2MF9DTEtfR0FURV9VRlNJT19SRUY+LA0K
+PiArCQkJPCZjcmdfY3RybCBISTM2NjBfQ0xLX0dBVEVfVUZTUEhZX0NGRz47DQo+ICsJCWNsb2Nr
+LW5hbWVzID0gImNsa19yZWYiLCAiY2xrX3BoeSI7DQo+ICsJCWZyZXEtdGFibGUtaHogPSA8MCAw
+PiwgPDAgMD47DQo+ICsJCXJlc2V0LWdwaW8gPSA8JmdwaW8xOCAxIDA+Ow0KPiArCX0NCj4gLS0N
+Cj4gMi4xMS4wDQo+IA0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0
+cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGlu
+Zm8vbGludXgtYXJtLWtlcm5lbAo=
