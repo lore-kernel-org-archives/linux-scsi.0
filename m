@@ -1,88 +1,89 @@
-From: "liwei (CM)" <liwei213@huawei.com>
-Subject: =?gb2312?B?tPC4tDogW1BBVENIIHYzIDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczog?=
- =?gb2312?Q?add_document_for_hisi-ufs?=
-Date: Sat, 2 Sep 2017 03:35:41 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA187B7@DGGEMM506-MBX.china.huawei.com>
-References: <20170829084116.106695-1-liwei213@huawei.com>
- <20170829084116.106695-3-liwei213@huawei.com>
- <20170901155319.zk7wdvysqzit7mog@rob-hp-laptop>
+From: Oleksandr Natalenko <oleksandr@natalenko.name>
+Subject: Re: [PATCH V2 0/8] block/scsi: safe SCSI quiescing
+Date: Sat, 02 Sep 2017 09:12:25 +0200
+Message-ID: <2212118.DtQQmenjk6@natalenko.name>
+References: <20170901184958.19452-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20170901155319.zk7wdvysqzit7mog@rob-hp-laptop>
-Content-Language: zh-CN
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Rob Herring <robh@kernel.org>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>, "eric@anholt.net" <eric@anholt.net>, "krzk@kernel.org" <krzk@kernel.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "khilman@baylibre.com" <khilman@baylibre.com>, "xuwei (O)" <xuwei5@hisilicon.com>, "treding@nvidia.com" <treding@nvidia.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "Fengbaopeng (kevin,
- Kirin Solution Dept)" <fengbaopeng@hisilicon.com>, "gregory.clement@free-electrons.com" <gregory.clement@free-electrons.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "thomas.petazzoni@free-electrons.com" <thomas.petaz>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170901184958.19452-1-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIFJvYg0KDQpUaGFua3MgZm9yIHlvdXIgYWR2aXNlcywgSSB3aWxsIGZpeCB0aGVtIGluIHRo
-ZSBuZXh0IHBhdGNoLg0KDQpUaGFuayB5b3UuDQoNCi0tLS0t08q8/tStvP4tLS0tLQ0Kt6K8/sjL
-OiBSb2IgSGVycmluZyBbbWFpbHRvOnJvYmhAa2VybmVsLm9yZ10gDQq3osvNyrG85DogMjAxN8Tq
-OdTCMcjVIDIzOjUzDQrK1bz+yMs6IGxpd2VpIChDTSkNCrOty806IG1hcmsucnV0bGFuZEBhcm0u
-Y29tOyB4dXdlaSAoTyk7IGNhdGFsaW4ubWFyaW5hc0Bhcm0uY29tOyB3aWxsLmRlYWNvbkBhcm0u
-Y29tOyB2aW5ob2xpa2F0dGlAZ21haWwuY29tOyBqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbTsgbWFy
-dGluLnBldGVyc2VuQG9yYWNsZS5jb207IGtoaWxtYW5AYmF5bGlicmUuY29tOyBhcm5kQGFybmRi
-LmRlOyBncmVnb3J5LmNsZW1lbnRAZnJlZS1lbGVjdHJvbnMuY29tOyB0aG9tYXMucGV0YXp6b25p
-QGZyZWUtZWxlY3Ryb25zLmNvbTsgeWFtYWRhLm1hc2FoaXJvQHNvY2lvbmV4dC5jb207IHJpa3Uu
-dm9pcGlvQGxpbmFyby5vcmc7IHRyZWRpbmdAbnZpZGlhLmNvbTsga3J6a0BrZXJuZWwub3JnOyBl
-cmljQGFuaG9sdC5uZXQ7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxA
-dmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGxp
-bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBndW9kb25nLnh1QGxpbmFyby5vcmc7IEZlbmdiYW9w
-ZW5nIChrZXZpbiwgS2lyaW4gU29sdXRpb24gRGVwdCkNCtb3zOI6IFJlOiBbUEFUQ0ggdjMgMi81
-XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1lbnQgZm9yIGhpc2ktdWZzDQoNCk9u
-IFR1ZSwgQXVnIDI5LCAyMDE3IGF0IDA0OjQxOjEzUE0gKzA4MDAsIExpIFdlaSB3cm90ZToNCj4g
-YWRkIHVmcyBub2RlIGRvY3VtZW50IGZvciBIaXNpbGljb24NCj4gDQo+IFNpZ25lZC1vZmYtYnk6
-IExpIFdlaSA8bGl3ZWkyMTNAaHVhd2VpLmNvbT4NCj4gLS0tDQo+ICBEb2N1bWVudGF0aW9uL2Rl
-dmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dCB8IDM1IA0KPiArKysrKysrKysrKysr
-KysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMzUgaW5zZXJ0aW9ucygrKQ0KPiAgY3JlYXRl
-IG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhp
-c2kudHh0DQo+IA0KPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3Vmcy91ZnMtaGlzaS50eHQgDQo+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3Vmcy91ZnMtaGlzaS50eHQNCj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gaW5kZXggMDAw
-MDAwMDAwMDAwLi5jZmM4NGM4MjFkNTANCj4gLS0tIC9kZXYvbnVsbA0KPiArKysgYi9Eb2N1bWVu
-dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPiBAQCAtMCwwICsx
-LDM1IEBADQo+ICsqIEhpc2lsaWNvbiBVbml2ZXJzYWwgRmxhc2ggU3RvcmFnZSAoVUZTKSBIb3N0
-IENvbnRyb2xsZXINCj4gKw0KPiArVUZTIG5vZGVzIGFyZSBkZWZpbmVkIHRvIGRlc2NyaWJlIG9u
-LWNoaXAgVUZTIGhhcmR3YXJlIG1hY3JvLg0KPiArRWFjaCBVRlMgSG9zdCBDb250cm9sbGVyIHNo
-b3VsZCBoYXZlIGl0cyBvd24gbm9kZS4NCj4gKw0KPiArUmVxdWlyZWQgcHJvcGVydGllczoNCj4g
-Ky0gY29tcGF0aWJsZSAgICAgICAgOiBjb21wYXRpYmxlIGxpc3QsIGNvbnRhaW5zIG9uZSBvZiB0
-aGUgZm9sbG93aW5nIC0NCj4gKwkJCSJoaXNpbGljb24saGkzNjYwLXVmcyIgZm9yIGhpc2kgdWZz
-IGhvc3QgY29udHJvbGxlcg0KPiArCQkJIHByZXNlbnQgb24gSGkzNjYwIGNoaXBzZXQuDQo+ICst
-IHJlZyAgICAgICAgICAgICAgIDogc2hvdWxkIGNvbnRhaW4gVUZTIHJlZ2lzdGVyIGFkZHJlc3Mg
-c3BhY2UgJiBVRlMgU1lTIENUUkwgcmVnaXN0ZXIgYWRkcmVzcywNCj4gKy0gaW50ZXJydXB0LXBh
-cmVudCAgOiBpbnRlcnJ1cHQgZGV2aWNlDQo+ICstIGludGVycnVwdHMgICAgICAgIDogaW50ZXJy
-dXB0IG51bWJlcg0KPiArLSBjbG9ja3MJICAgICAgICA6IExpc3Qgb2YgcGhhbmRsZSBhbmQgY2xv
-Y2sgc3BlY2lmaWVyIHBhaXJzDQo+ICstIGNsb2NrLW5hbWVzICAgICAgIDogTGlzdCBvZiBjbG9j
-ayBpbnB1dCBuYW1lIHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQo+ICsJCSAgICAgIG9yZGVy
-IGFzIHRoZSBjbG9ja3MgcHJvcGVydHkuICJjbGtfcmVmIiwgImNsa19waHkiIGlzIA0KPiArb3B0
-aW9uYWwNCj4gKw0KPiArT3B0aW9uYWwgcHJvcGVydGllcyBmb3IgYm9hcmQgZGV2aWNlOg0KPiAr
-LSByZXNldC1ncGlvCQkJOiBzcGVjaWZpZXMgdG8gcmVzZXQgZGV2aWNlcw0KDQpyZXNldC1ncGlv
-cw0KDQpSZWFsbHksIHRoaXMgaXMgc2hvdWxkIGJlIGluIGEgc3ViIG5vZGUgcmVwcmVzZW50aW5n
-IHRoZSBkZXZpY2UuIEl0J3MgZmluZSBpZiB0aGlzIGlzIGl0LCBidXQgaWYgd2Ugc3RhcnQgYWRk
-aW5nIHBvd2VyIHN1cHBsaWVzIGFuZCBvdGhlciBwcm9wZXJ0aWVzIGl0IHNob3VsZCBiZSBhIHNl
-cGFyYXRlIG5vZGUuDQoNCj4gKw0KPiArRXhhbXBsZToNCj4gKw0KPiArCXVmczogdWZzQGZmM2Iw
-MDAwIHsNCj4gKwkJY29tcGF0aWJsZSA9ICJqZWRlYyx1ZnMtMS4xIiwgImhpc2lsaWNvbixoaTM2
-NjAtdWZzIjsNCg0KTmVlZCB0byByZXZlcnNlIHRoZSBvcmRlciBoZXJlLiBNb3N0IHNwZWNpZmlj
-IGZpcnN0Lg0KDQo+ICsJCS8qIDA6IEhDSSBzdGFuZGFyZCAqLw0KPiArCQkvKiAxOiBVRlMgU1lT
-IENUUkwgKi8NCj4gKwkJcmVnID0gPDB4MCAweGZmM2IwMDAwIDB4MCAweDEwMDA+LA0KPiArCQkJ
-PDB4MCAweGZmM2IxMDAwIDB4MCAweDEwMDA+Ow0KPiArCQlpbnRlcnJ1cHQtcGFyZW50ID0gPCZn
-aWM+Ow0KPiArCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMjc4IElSUV9UWVBFX0xFVkVMX0hJR0g+
-Ow0KPiArCQljbG9ja3MgPSA8JmNyZ19jdHJsIEhJMzY2MF9DTEtfR0FURV9VRlNJT19SRUY+LA0K
-PiArCQkJPCZjcmdfY3RybCBISTM2NjBfQ0xLX0dBVEVfVUZTUEhZX0NGRz47DQo+ICsJCWNsb2Nr
-LW5hbWVzID0gImNsa19yZWYiLCAiY2xrX3BoeSI7DQo+ICsJCWZyZXEtdGFibGUtaHogPSA8MCAw
-PiwgPDAgMD47DQo+ICsJCXJlc2V0LWdwaW8gPSA8JmdwaW8xOCAxIDA+Ow0KPiArCX0NCj4gLS0N
-Cj4gMi4xMS4wDQo+IA0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0
-cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGlu
-Zm8vbGludXgtYXJtLWtlcm5lbAo=
+With regard to suspend/resume cycle:
+
+Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
+
+On p=C3=A1tek 1. z=C3=A1=C5=99=C3=AD 2017 20:49:49 CEST Ming Lei wrote:
+> Hi,
+>=20
+> The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
+>=20
+> Once SCSI device is put into QUIESCE, no new request except for RQF_PREEM=
+PT
+> can be dispatched to SCSI successfully, and scsi_device_quiesce() just
+> simply waits for completion of I/Os dispatched to SCSI stack. It isn't
+> enough at all.
+>=20
+> Because new request still can be allocated, but all the allocated
+> requests can't be dispatched successfully, so request pool can be
+> consumed up easily.
+>=20
+> Then request with RQF_PREEMPT can't be allocated, and system may
+> hang forever, such as during system suspend or SCSI domain alidation.
+>=20
+> Both IO hang inside system suspend[1] or SCSI domain validation
+> were reported before.
+>=20
+> This patch tries to solve the issue by freezing block queue during
+> SCSI quiescing, and allowing to allocate request of RQF_PREEMPT
+> when queue is frozen.
+>=20
+> Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
+> them all by introducing preempt version of blk_freeze_queue() and
+> blk_unfreeze_queue().
+>=20
+> V2:
+> 	- drop the 1st patch in V1 because percpu_ref_is_dying() is
+> 	enough as pointed by Tejun
+>=20
+> 	- introduce preempt version of blk_[freeze|unfreeze]_queue
+>=20
+> 	- sync between preempt freeze and normal freeze
+>=20
+> 	- fix warning from percpu-refcount as reported by Oleksandr
+>=20
+>=20
+> [1] https://marc.info/?t=3D150340250100013&r=3D3&w=3D2
+>=20
+>=20
+>=20
+> Ming Lei (8):
+>   blk-mq: rename blk_mq_unfreeze_queue as blk_unfreeze_queue
+>   blk-mq: rename blk_mq_freeze_queue as blk_freeze_queue
+>   blk-mq: only run hw queues for blk-mq
+>   blk-mq: rename blk_mq_freeze_queue_wait as blk_freeze_queue_wait
+>   block: tracking request allocation with q_usage_counter
+>   block: allow to allocate req with REQF_PREEMPT when queue is frozen
+>   block: introduce preempt version of blk_[freeze|unfreeze]_queue
+>   SCSI: freeze block queue when SCSI device is put into quiesce
+>=20
+>  block/bfq-iosched.c      |   2 +-
+>  block/blk-cgroup.c       |   8 ++--
+>  block/blk-core.c         |  50 ++++++++++++++++----
+>  block/blk-mq.c           | 119
+> ++++++++++++++++++++++++++++++++++++----------- block/blk-mq.h           =
+|=20
+>  1 -
+>  block/blk.h              |   6 +++
+>  block/elevator.c         |   4 +-
+>  drivers/block/loop.c     |  16 +++----
+>  drivers/block/rbd.c      |   2 +-
+>  drivers/nvme/host/core.c |   8 ++--
+>  drivers/scsi/scsi_lib.c  |  21 ++++++++-
+>  include/linux/blk-mq.h   |  15 +++---
+>  include/linux/blkdev.h   |  20 +++++++-
+>  13 files changed, 206 insertions(+), 66 deletions(-)
