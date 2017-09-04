@@ -1,64 +1,105 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH V3 7/8] block: allow to allocate req with REQF_PREEMPT
  when queue is preempt frozen
-Date: Mon, 4 Sep 2017 15:40:35 +0000
-Message-ID: <1504539634.3189.15.camel@wdc.com>
+Date: Tue, 5 Sep 2017 00:08:19 +0800
+Message-ID: <20170904160813.GA21757@ming.t460p>
 References: <20170902130840.24609-1-ming.lei@redhat.com>
-         <20170902130840.24609-8-ming.lei@redhat.com>
-         <20170902131208.GA10940@ming.t460p> <1504498405.10804.10.camel@wdc.com>
-         <20170904071653.GD7959@ming.t460p>
+ <20170902130840.24609-8-ming.lei@redhat.com>
+ <20170902131208.GA10940@ming.t460p>
+ <1504498405.10804.10.camel@wdc.com>
+ <20170904071653.GD7959@ming.t460p>
+ <1504539634.3189.15.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170904071653.GD7959@ming.t460p>
-Content-Language: en-US
-Content-ID: <9B03FAF166760E4DA66C00DA78C76087@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47992 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753764AbdIDQIi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Sep 2017 12:08:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1504539634.3189.15.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>
 
-T24gTW9uLCAyMDE3LTA5LTA0IGF0IDE1OjE2ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-TW9uLCBTZXAgMDQsIDIwMTcgYXQgMDQ6MTM6MjZBTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IEFsbG93aW5nIGJsa19nZXRfcmVxdWVzdCgpIHRvIHN1Y2NlZWQgYWZ0ZXIgdGhl
-IERZSU5HIGZsYWcgaGFzIGJlZW4gc2V0IGlzDQo+ID4gY29tcGxldGVseSB3cm9uZyBiZWNhdXNl
-IHRoYXQgY291bGQgcmVzdWx0IGluIGEgcmVxdWVzdCBiZWluZyBxdWV1ZWQgYWZ0ZXINCj4gPiB0
-aGUgREVBRCBmbGFnIGhhcyBiZWVuIHNldCwgcmVzdWx0aW5nIGluIGVpdGhlciBhIGhhbmdpbmcg
-cmVxdWVzdCBvciBhIGtlcm5lbA0KPiA+IGNyYXNoLiBUaGlzIGlzIHdoeSBpdCdzIGNvbXBsZXRl
-bHkgd3JvbmcgdG8gYWRkIGEgYmxrX3F1ZXVlX2VudGVyX2xpdmUoKSBjYWxsDQo+ID4gaW4gYmxr
-X29sZF9nZXRfcmVxdWVzdCgpIG9yIGJsa19tcV9hbGxvY19yZXF1ZXN0KCkuIEhlbmNlIG15IE5B
-SyBmb3IgYW55DQo+ID4gcGF0Y2ggdGhhdCBhZGRzIGEgYmxrX3F1ZXVlX2VudGVyX2xpdmUoKSBj
-YWxsIHRvIGFueSBmdW5jdGlvbiBjYWxsZWQgZnJvbQ0KPiA+IGJsa19nZXRfcmVxdWVzdCgpLiBU
-aGF0IGluY2x1ZGVzIHRoZSBwYXRjaCBhdCB0aGUgc3RhcnQgb2YgdGhpcyBlLW1haWwgdGhyZWFk
-Lg0KPg0KPiBTZWUgYWJvdmUsIHRoaXMgcGF0Y2ggY2hhbmdlcyBub3RoaW5nIGFib3V0IHRoaXMg
-ZmFjdCwgcGxlYXNlIGxvb2sgYXQNCj4gdGhlIHBhdGNoIGNhcmVmdWxseSBuZXh0IHRpbWUganVz
-dCBiZWZvcmUgcG9zdGluZyB5b3VyIGxvbmcgY29tbWVudC4NCg0KQXJlIHlvdSByZWFsbHkgc3Vy
-ZSB0aGF0IHlvdXIgcGF0Y2ggZG9lcyBub3QgYWxsb3cgYmxrX2dldF9yZXF1ZXN0KCkgdG8NCnN1
-Y2NlZWQgYWZ0ZXIgdGhlIERZSU5HIGZsYWcgaGFzIGJlZW4gc2V0PyBibGtfbXFfYWxsb2NfcmVx
-dWVzdCgpIGNhbGxzIGJvdGgNCmJsa19xdWV1ZV9pc19wcmVlbXB0X2Zyb3plbigpIGFuZCBibGtf
-cXVldWVfZW50ZXJfbGl2ZSgpIHdpdGhvdXQgaG9sZGluZw0KYW55IGxvY2suIEEgdGhyZWFkIHRo
-YXQgaXMgcnVubmluZyBjb25jdXJyZW50bHkgd2l0aCBibGtfbXFfZ2V0X3JlcXVlc3QoKQ0KY2Fu
-IHVuZnJlZXplIHRoZSBxdWV1ZSBhZnRlciBibGtfcXVldWVfaXNfcHJlZW1wdF9mcm96ZW4oKSBy
-ZXR1cm5lZCBhbmQNCmJlZm9yZSBibGtfcXVldWVfZW50ZXJfbGl2ZSgpIGlzIGNhbGxlZC4gVGhp
-cyBtZWFucyB0aGF0IHdpdGggeW91ciBwYXRjaA0Kc2VyaWVzIGFwcGxpZWQgYmxrX2dldF9yZXF1
-ZXN0KCkgY2FuIHN1Y2NlZWQgYWZ0ZXIgdGhlIERZSU5HIGZsYWcgaGFzIGJlZW4NCnNldCwgd2hp
-Y2ggaXMgc29tZXRoaW5nIHdlIGRvbid0IHdhbnQuIEFkZGl0aW9uYWxseSwgSSBkb24ndCB0aGlu
-ayB3ZSB3YW50DQp0byBpbnRyb2R1Y2UgYW55IGtpbmQgb2YgbG9ja2luZyBpbiBibGtfbXFfZ2V0
-X3JlcXVlc3QoKSBiZWNhdXNlIHRoYXQgd291bGQNCmJlIGEgc2VyaWFsaXphdGlvbiBwb2ludC4N
-Cg0KSGF2ZSB5b3UgY29uc2lkZXJlZCB0byB1c2UgdGhlIGJsay1tcSAicmVzZXJ2ZWQgcmVxdWVz
-dCIgbWVjaGFuaXNtIHRvIGF2b2lkDQpzdGFydmF0aW9uIG9mIHBvd2VyIG1hbmFnZW1lbnQgcmVx
-dWVzdHMgaW5zdGVhZCBvZiBtYWtpbmcgdGhlIGJsb2NrIGxheWVyDQpldmVuIG1vcmUgY29tcGxp
-Y2F0ZWQgdGhhbiBpdCBhbHJlYWR5IGlzPw0KDQpOb3RlOiBleHRlbmRpbmcgYmxrX21xX2ZyZWV6
-ZS91bmZyZWV6ZV9xdWV1ZSgpIHRvIHRoZSBsZWdhY3kgYmxvY2sgbGF5ZXINCmNvdWxkIGJlIHVz
-ZWZ1bCB0byBtYWtlIHNjc2lfd2FpdF9mb3JfcXVldWVjb21tYW5kKCkgbW9yZSBlbGVnYW50LiBI
-b3dldmVyLA0KSSBkb24ndCB0aGluayB3ZSBzaG91bGQgc3BlbmQgb3VyIHRpbWUgb24gbGVnYWN5
-IGJsb2NrIGxheWVyIC8gU0NTSSBjb3JlDQpjaGFuZ2VzLiBUaGUgY29kZSBJJ20gcmVmZXJyaW5n
-IHRvIGlzIHRoZSBmb2xsb3dpbmc6DQoNCi8qKg0KICogc2NzaV93YWl0X2Zvcl9xdWV1ZWNvbW1h
-bmQoKSAtIHdhaXQgZm9yIG9uZ29pbmcgcXVldWVjb21tYW5kKCkgY2FsbHMNCiAqIEBzZGV2OiBT
-Q1NJIGRldmljZSBwb2ludGVyLg0KICoNCiAqIFdhaXQgdW50aWwgdGhlIG9uZ29pbmcgc2hvc3Qt
-Pmhvc3R0LT5xdWV1ZWNvbW1hbmQoKSBjYWxscyB0aGF0IGFyZQ0KICogaW52b2tlZCBmcm9tIHNj
-c2lfcmVxdWVzdF9mbigpIGhhdmUgZmluaXNoZWQuDQogKi8NCnN0YXRpYyB2b2lkIHNjc2lfd2Fp
-dF9mb3JfcXVldWVjb21tYW5kKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldikNCnsNCglXQVJOX09O
-X09OQ0Uoc2Rldi0+aG9zdC0+dXNlX2Jsa19tcSk7DQoNCgl3aGlsZSAoc2NzaV9yZXF1ZXN0X2Zu
-X2FjdGl2ZShzZGV2KSkNCgkJbXNsZWVwKDIwKTsNCn0NCg0KQmFydC4=
+On Mon, Sep 04, 2017 at 03:40:35PM +0000, Bart Van Assche wrote:
+> On Mon, 2017-09-04 at 15:16 +0800, Ming Lei wrote:
+> > On Mon, Sep 04, 2017 at 04:13:26AM +0000, Bart Van Assche wrote:
+> > > Allowing blk_get_request() to succeed after the DYING flag has been set is
+> > > completely wrong because that could result in a request being queued after
+> > > the DEAD flag has been set, resulting in either a hanging request or a kernel
+> > > crash. This is why it's completely wrong to add a blk_queue_enter_live() call
+> > > in blk_old_get_request() or blk_mq_alloc_request(). Hence my NAK for any
+> > > patch that adds a blk_queue_enter_live() call to any function called from
+> > > blk_get_request(). That includes the patch at the start of this e-mail thread.
+> >
+> > See above, this patch changes nothing about this fact, please look at
+> > the patch carefully next time just before posting your long comment.
+> 
+> Are you really sure that your patch does not allow blk_get_request() to
+> succeed after the DYING flag has been set? blk_mq_alloc_request() calls both
+
+Yeah, I am pretty sure.
+
+Firstly blk_queue_freeze_preempt() is exclusive, that means it will wait
+for completion of all pending freezing(both normal and preempt), and other
+freezing can't be started too if there is in-progress preempt
+freezing, actually it is a typical read/write lock use case, but
+we need to support nested normal freezing, so we can't use rwsem.
+
+Also DYNING flag is checked first before starting preempt freezing, the
+API will return and preempt_freezing flag isn't set if DYNING is set.
+
+Secondly after preempt freezing is started:
+
+	- for block legacy path, dying is always tested in the entry of
+	__get_request(), so no new request is allocated after queue is dying.
+
+	- for blk-mq, it is normal for the DYNING flag to be set just
+	between blk_queue_enter() and allocating the request, because
+	we depend on lld to handle the case. Even we can enhance the point
+	by checking dying flag in blk_queue_enter(), but that is just
+	a improvement, not mean V3 isn't correct. 
+
+> blk_queue_is_preempt_frozen() and blk_queue_enter_live() without holding
+> any lock. A thread that is running concurrently with blk_mq_get_request()
+> can unfreeze the queue after blk_queue_is_preempt_frozen() returned and
+> before blk_queue_enter_live() is called. This means that with your patch
+
+preempt freezing is exclusive, so no other freezing can be started at all,
+then no such issue you worried about.
+
+> series applied blk_get_request() can succeed after the DYING flag has been
+> set, which is something we don't want. Additionally, I don't think we want
+> to introduce any kind of locking in blk_mq_get_request() because that would
+> be a serialization point.
+
+That needn't to be worried about, as you saw, we can check
+percpu_ref_is_dying() first, then acquire the lock to check
+flag if queue is freezing.
+
+> 
+> Have you considered to use the blk-mq "reserved request" mechanism to avoid
+> starvation of power management requests instead of making the block layer
+> even more complicated than it already is?
+
+reserved request is really a bad idea, that means the reserved request
+can't be used for normal I/O, we all know the request/tag space is
+precious, and some device has a quite small tag space, such as sata.
+This way will affect performance definitely.
+
+Also I don't think the approach is complicated, and actually the idea
+is simple, and the implementation isn't complicated too.
+
+> 
+> Note: extending blk_mq_freeze/unfreeze_queue() to the legacy block layer
+> could be useful to make scsi_wait_for_queuecommand() more elegant. However,
+> I don't think we should spend our time on legacy block layer / SCSI core
+> changes. The code I'm referring to is the following:
+
+That can be side-product of this approach, but this patchset is just
+focus on fixing I/O hang.
+
+-- 
+Ming
