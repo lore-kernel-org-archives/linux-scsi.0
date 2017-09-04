@@ -1,88 +1,42 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V3 7/8] block: allow to allocate req with REQF_PREEMPT
- when queue is preempt frozen
-Date: Tue, 5 Sep 2017 00:28:25 +0800
-Message-ID: <20170904162824.GC21757@ming.t460p>
-References: <20170902130840.24609-1-ming.lei@redhat.com>
- <20170902130840.24609-8-ming.lei@redhat.com>
- <20170902131208.GA10940@ming.t460p>
- <1504498405.10804.10.camel@wdc.com>
- <20170904071653.GD7959@ming.t460p>
- <1504539634.3189.15.camel@wdc.com>
- <20170904160813.GA21757@ming.t460p>
- <1504541911.3189.18.camel@wdc.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 196707] Adaptec ICP9087MA: aacraid prints "AAC: Host adapter is
+ dead (or got a PCI error) -1" twice times around errors of aacraid and the
+ kernel crashes after starting the "Kernel Device Manager"
+Date: Mon, 04 Sep 2017 21:04:34 +0000
+Message-ID: <bug-196707-11613-SFXUceGuzo@https.bugzilla.kernel.org/>
+References: <bug-196707-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50748 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753847AbdIDQ2p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Sep 2017 12:28:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1504541911.3189.18.camel@wdc.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:40658 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751329AbdIDVEn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2017 17:04:43 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id E05592874B
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2017 21:04:42 +0000 (UTC)
+In-Reply-To: <bug-196707-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>
+To: linux-scsi@kernel.org
 
-On Mon, Sep 04, 2017 at 04:18:32PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-09-05 at 00:08 +0800, Ming Lei wrote:
-> > On Mon, Sep 04, 2017 at 03:40:35PM +0000, Bart Van Assche wrote:
-> > > On Mon, 2017-09-04 at 15:16 +0800, Ming Lei wrote:
-> > > > On Mon, Sep 04, 2017 at 04:13:26AM +0000, Bart Van Assche wrote:
-> > > > > Allowing blk_get_request() to succeed after the DYING flag has been set is
-> > > > > completely wrong because that could result in a request being queued after
-> > > > > the DEAD flag has been set, resulting in either a hanging request or a kernel
-> > > > > crash. This is why it's completely wrong to add a blk_queue_enter_live() call
-> > > > > in blk_old_get_request() or blk_mq_alloc_request(). Hence my NAK for any
-> > > > > patch that adds a blk_queue_enter_live() call to any function called from
-> > > > > blk_get_request(). That includes the patch at the start of this e-mail thread.
-> > > > 
-> > > > See above, this patch changes nothing about this fact, please look at
-> > > > the patch carefully next time just before posting your long comment.
-> > > 
-> > > Are you really sure that your patch does not allow blk_get_request() to
-> > > succeed after the DYING flag has been set? blk_mq_alloc_request() calls both
-> > > blk_queue_is_preempt_frozen() and blk_queue_enter_live() without holding
-> > > any lock. A thread that is running concurrently with blk_mq_get_request()
-> > > can unfreeze the queue after blk_queue_is_preempt_frozen() returned and
-> > > before blk_queue_enter_live() is called. This means that with your patch
-> > > series applied blk_get_request() can succeed after the DYING flag has been
-> > > set, which is something we don't want. Additionally, I don't think we want
-> > > to introduce any kind of locking in blk_mq_get_request() because that would
-> > > be a serialization point.
-> >
-> > Yeah, I am pretty sure.
-> > 
-> > Firstly blk_queue_freeze_preempt() is exclusive, that means it will wait
-> > for completion of all pending freezing(both normal and preempt), and other
-> > freezing can't be started too if there is in-progress preempt
-> > freezing, actually it is a typical read/write lock use case, but
-> > we need to support nested normal freezing, so we can't use rwsem. 
-> 
-> You seem to overlook that blk_get_request() can be called from another thread
-> than the thread that is performing the freezing and unfreezing.
+https://bugzilla.kernel.org/show_bug.cgi?id=196707
 
-The freezing state of queue can be observed in all context, so this
-issue isn't related with context, please see blk_queue_is_preempt_frozen()
-which is called from blk_get_request():
+--- Comment #4 from Andreas Gerlich (kernel.org@yaze-ag.de) ---
+Created attachment 258209
+  --> https://bugzilla.kernel.org/attachment.cgi?id=258209&action=edit
+Kernel_crash_(4.13.0)_with_4_drives_at_the_ICP9087MA
 
-        if (!percpu_ref_is_dying(&q->q_usage_counter))
-                return false;
+Hi,
 
-        spin_lock(&q->freeze_lock);
-        preempt_frozen = q->preempt_freezing;
-        preempt_unfreezing = q->preempt_unfreezing;
-        spin_unlock(&q->freeze_lock);
+i tried the actual Kernel 4.13.0.
+It crashes after errors of aacraid.
+I put the output of the kernel start as a attachment.
 
-        return preempt_frozen && !preempt_unfreezing;
-
-
-If the queue is in preempt freezing, blk_queue_enter_live() is called
-before allocating request, otherwise blk_queue_enter() is called.
-
-BTW, we can add the check of queue dying in this helper as one
-improvement.
+- Andreas Gerlich
 
 -- 
-Ming
+You are receiving this mail because:
+You are watching the assignee of the bug.
+You are watching someone on the CC list of the bug.
