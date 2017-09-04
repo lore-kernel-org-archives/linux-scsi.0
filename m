@@ -1,63 +1,56 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V3 7/8] block: allow to allocate req with REQF_PREEMPT
- when queue is preempt frozen
-Date: Mon, 4 Sep 2017 16:18:32 +0000
-Message-ID: <1504541911.3189.18.camel@wdc.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V3 6/8] block: introduce preempt version of
+ blk_[freeze|unfreeze]_queue
+Date: Tue, 5 Sep 2017 00:20:24 +0800
+Message-ID: <20170904162023.GB21757@ming.t460p>
 References: <20170902130840.24609-1-ming.lei@redhat.com>
-         <20170902130840.24609-8-ming.lei@redhat.com>
-         <20170902131208.GA10940@ming.t460p> <1504498405.10804.10.camel@wdc.com>
-         <20170904071653.GD7959@ming.t460p> <1504539634.3189.15.camel@wdc.com>
-         <20170904160813.GA21757@ming.t460p>
+ <20170902130840.24609-7-ming.lei@redhat.com>
+ <1504538467.3189.2.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170904160813.GA21757@ming.t460p>
-Content-Language: en-US
-Content-ID: <8D0A231B16ABD243AF857852104C25AE@namprd04.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <1504538467.3189.2.camel@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE3LTA5LTA1IGF0IDAwOjA4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-TW9uLCBTZXAgMDQsIDIwMTcgYXQgMDM6NDA6MzVQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IE9uIE1vbiwgMjAxNy0wOS0wNCBhdCAxNToxNiArMDgwMCwgTWluZyBMZWkgd3Jv
-dGU6DQo+ID4gPiBPbiBNb24sIFNlcCAwNCwgMjAxNyBhdCAwNDoxMzoyNkFNICswMDAwLCBCYXJ0
-IFZhbiBBc3NjaGUgd3JvdGU6DQo+ID4gPiA+IEFsbG93aW5nIGJsa19nZXRfcmVxdWVzdCgpIHRv
-IHN1Y2NlZWQgYWZ0ZXIgdGhlIERZSU5HIGZsYWcgaGFzIGJlZW4gc2V0IGlzDQo+ID4gPiA+IGNv
-bXBsZXRlbHkgd3JvbmcgYmVjYXVzZSB0aGF0IGNvdWxkIHJlc3VsdCBpbiBhIHJlcXVlc3QgYmVp
-bmcgcXVldWVkIGFmdGVyDQo+ID4gPiA+IHRoZSBERUFEIGZsYWcgaGFzIGJlZW4gc2V0LCByZXN1
-bHRpbmcgaW4gZWl0aGVyIGEgaGFuZ2luZyByZXF1ZXN0IG9yIGEga2VybmVsDQo+ID4gPiA+IGNy
-YXNoLiBUaGlzIGlzIHdoeSBpdCdzIGNvbXBsZXRlbHkgd3JvbmcgdG8gYWRkIGEgYmxrX3F1ZXVl
-X2VudGVyX2xpdmUoKSBjYWxsDQo+ID4gPiA+IGluIGJsa19vbGRfZ2V0X3JlcXVlc3QoKSBvciBi
-bGtfbXFfYWxsb2NfcmVxdWVzdCgpLiBIZW5jZSBteSBOQUsgZm9yIGFueQ0KPiA+ID4gPiBwYXRj
-aCB0aGF0IGFkZHMgYSBibGtfcXVldWVfZW50ZXJfbGl2ZSgpIGNhbGwgdG8gYW55IGZ1bmN0aW9u
-IGNhbGxlZCBmcm9tDQo+ID4gPiA+IGJsa19nZXRfcmVxdWVzdCgpLiBUaGF0IGluY2x1ZGVzIHRo
-ZSBwYXRjaCBhdCB0aGUgc3RhcnQgb2YgdGhpcyBlLW1haWwgdGhyZWFkLg0KPiA+ID4gDQo+ID4g
-PiBTZWUgYWJvdmUsIHRoaXMgcGF0Y2ggY2hhbmdlcyBub3RoaW5nIGFib3V0IHRoaXMgZmFjdCwg
-cGxlYXNlIGxvb2sgYXQNCj4gPiA+IHRoZSBwYXRjaCBjYXJlZnVsbHkgbmV4dCB0aW1lIGp1c3Qg
-YmVmb3JlIHBvc3RpbmcgeW91ciBsb25nIGNvbW1lbnQuDQo+ID4gDQo+ID4gQXJlIHlvdSByZWFs
-bHkgc3VyZSB0aGF0IHlvdXIgcGF0Y2ggZG9lcyBub3QgYWxsb3cgYmxrX2dldF9yZXF1ZXN0KCkg
-dG8NCj4gPiBzdWNjZWVkIGFmdGVyIHRoZSBEWUlORyBmbGFnIGhhcyBiZWVuIHNldD8gYmxrX21x
-X2FsbG9jX3JlcXVlc3QoKSBjYWxscyBib3RoDQo+ID4gYmxrX3F1ZXVlX2lzX3ByZWVtcHRfZnJv
-emVuKCkgYW5kIGJsa19xdWV1ZV9lbnRlcl9saXZlKCkgd2l0aG91dCBob2xkaW5nDQo+ID4gYW55
-IGxvY2suIEEgdGhyZWFkIHRoYXQgaXMgcnVubmluZyBjb25jdXJyZW50bHkgd2l0aCBibGtfbXFf
-Z2V0X3JlcXVlc3QoKQ0KPiA+IGNhbiB1bmZyZWV6ZSB0aGUgcXVldWUgYWZ0ZXIgYmxrX3F1ZXVl
-X2lzX3ByZWVtcHRfZnJvemVuKCkgcmV0dXJuZWQgYW5kDQo+ID4gYmVmb3JlIGJsa19xdWV1ZV9l
-bnRlcl9saXZlKCkgaXMgY2FsbGVkLiBUaGlzIG1lYW5zIHRoYXQgd2l0aCB5b3VyIHBhdGNoDQo+
-ID4gc2VyaWVzIGFwcGxpZWQgYmxrX2dldF9yZXF1ZXN0KCkgY2FuIHN1Y2NlZWQgYWZ0ZXIgdGhl
-IERZSU5HIGZsYWcgaGFzIGJlZW4NCj4gPiBzZXQsIHdoaWNoIGlzIHNvbWV0aGluZyB3ZSBkb24n
-dCB3YW50LiBBZGRpdGlvbmFsbHksIEkgZG9uJ3QgdGhpbmsgd2Ugd2FudA0KPiA+IHRvIGludHJv
-ZHVjZSBhbnkga2luZCBvZiBsb2NraW5nIGluIGJsa19tcV9nZXRfcmVxdWVzdCgpIGJlY2F1c2Ug
-dGhhdCB3b3VsZA0KPiA+IGJlIGEgc2VyaWFsaXphdGlvbiBwb2ludC4NCj4NCj4gWWVhaCwgSSBh
-bSBwcmV0dHkgc3VyZS4NCj4gDQo+IEZpcnN0bHkgYmxrX3F1ZXVlX2ZyZWV6ZV9wcmVlbXB0KCkg
-aXMgZXhjbHVzaXZlLCB0aGF0IG1lYW5zIGl0IHdpbGwgd2FpdA0KPiBmb3IgY29tcGxldGlvbiBv
-ZiBhbGwgcGVuZGluZyBmcmVlemluZyhib3RoIG5vcm1hbCBhbmQgcHJlZW1wdCksIGFuZCBvdGhl
-cg0KPiBmcmVlemluZyBjYW4ndCBiZSBzdGFydGVkIHRvbyBpZiB0aGVyZSBpcyBpbi1wcm9ncmVz
-cyBwcmVlbXB0DQo+IGZyZWV6aW5nLCBhY3R1YWxseSBpdCBpcyBhIHR5cGljYWwgcmVhZC93cml0
-ZSBsb2NrIHVzZSBjYXNlLCBidXQNCj4gd2UgbmVlZCB0byBzdXBwb3J0IG5lc3RlZCBub3JtYWwg
-ZnJlZXppbmcsIHNvIHdlIGNhbid0IHVzZSByd3NlbS4gDQoNCllvdSBzZWVtIHRvIG92ZXJsb29r
-IHRoYXQgYmxrX2dldF9yZXF1ZXN0KCkgY2FuIGJlIGNhbGxlZCBmcm9tIGFub3RoZXIgdGhyZWFk
-DQp0aGFuIHRoZSB0aHJlYWQgdGhhdCBpcyBwZXJmb3JtaW5nIHRoZSBmcmVlemluZyBhbmQgdW5m
-cmVlemluZy4NCg0KQmFydC4=
+On Mon, Sep 04, 2017 at 03:21:08PM +0000, Bart Van Assche wrote:
+> On Sat, 2017-09-02 at 21:08 +0800, Ming Lei wrote:
+> > --- a/include/linux/blkdev.h
+> > +++ b/include/linux/blkdev.h
+> > @@ -565,6 +565,10 @@ struct request_queue {
+> >  
+> >  	int			bypass_depth;
+> >  	atomic_t		mq_freeze_depth;
+> > +	spinlock_t		freeze_lock;
+> > +	unsigned		normal_freezing:1;
+> > +	unsigned		preempt_freezing:1;
+> > +	unsigned		preempt_unfreezing:1;
+> >  
+> >  #if defined(CONFIG_BLK_DEV_BSG)
+> >  	bsg_job_fn		*bsg_job_fn;
+> 
+> Requests queues already have to many states and you want to make request queues
+> even more complicated by introducing several new state variables? Yikes!
+
+The three flags are used in freeze/unfreeze path only, and I don't think
+they are too complicated to maintain. Actually each state are simply
+enough:
+
+	- normal_freezing means the queue is in normal freezing, it is set
+	before blk_queue_freeze() returns. In this state, no any request
+	can be allocated from the queue, just like current blk queue
+	freezing.
+
+	- preempt_freezing means the queue is in preempt freezing, the flag
+	is set before blk_queue_freeze_preempt() returns successfully. In
+	this state, only RQF_PREEMPT is allowed to be allocated.
+
+	- preempt_unfreezing means the queue is in preempt unfreezing, just
+	set in the entry of blk_queue_unfreeze_preempt(). In this state,
+	no any request can be allocated from the queue.
+
+-- 
+Ming
