@@ -1,44 +1,46 @@
-From: Thomas Meyer <thomas@m3y3r.de>
-Subject: [PATCH 9/10] [SCSI] bfa: Use ARRAY_SIZE macro
-Date: Sun, 03 Sep 2017 14:19:31 +0200
-Message-ID: <1504439110050-1717407502-9-diffsplit-thomas@m3y3r.de>
-References: <1504439110050-939061377-0-diffsplit-thomas@m3y3r.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V3 7/8] block: allow to allocate req with REQF_PREEMPT
+ when queue is preempt frozen
+Date: Mon, 4 Sep 2017 04:13:26 +0000
+Message-ID: <1504498405.10804.10.camel@wdc.com>
+References: <20170902130840.24609-1-ming.lei@redhat.com>
+         <20170902130840.24609-8-ming.lei@redhat.com>
+         <20170902131208.GA10940@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1504439110050-939061377-0-diffsplit-thomas@m3y3r.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:20275 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750703AbdIDEOP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2017 00:14:15 -0400
+In-Reply-To: <20170902131208.GA10940@ming.t460p>
+Content-Language: en-US
+Content-ID: <D87437F73444DA4596860F8AE418D689@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>
 
-Use ARRAY_SIZE macro, rather than explicitly coding some variant of it
-yourself.
-Found with: find -type f -name "*.c" -o -name "*.h" | xargs perl -p -i -e
-'s/\bsizeof\s*\(\s*(\w+)\s*\)\s*\ /\s*sizeof\s*\(\s*\1\s*\[\s*0\s*\]\s*\)
-/ARRAY_SIZE(\1)/g' and manual check/verification.
-
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
----
-
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 3e1caec82554..4a03cd9fa63f 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -16,6 +16,7 @@
-  * General Public License for more details.
-  */
- 
-+#include <linux/kernel.h>
- #include "bfad_drv.h"
- #include "bfa_modules.h"
- #include "bfi_reg.h"
-@@ -1957,7 +1958,7 @@ bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids)
- 		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT_FC},
- 	};
- 
--	*npciids = sizeof(__pciids) / sizeof(__pciids[0]);
-+	*npciids = ARRAY_SIZE(__pciids);
- 	*pciids = __pciids;
- }
- 
+T24gU2F0LCAyMDE3LTA5LTAyIGF0IDIxOjEyICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gUGxl
+YXNlIGxldCB1cyBrbm93IGlmIFYzIGFkZHJlc3NlcyB5b3VyIHByZXZpb3VzIGNvbmNlcm4gYWJv
+dXQgY2FsbGluZw0KPiBibGtfcXVldWVfZW50ZXJfbGl2ZSgpIGR1cmluZyBwcmVlbXB0IGZyZWV6
+aW5nLg0KDQpEbyB5b3UgdW5kZXJzdGFuZCBob3cgcmVxdWVzdCBxdWV1ZSBjbGVhbnVwIHdvcmtz
+PyBUaGUgYWxnb3JpdGhtIHVzZWQgZm9yDQpyZXF1ZXN0IHF1ZXVlIGNsZWFudXAgaXMgYXMgZm9s
+bG93czoNCiogU2V0IHRoZSBEWUlORyBmbGFnLiBUaGlzIGZsYWcgbWFrZXMgYWxsIGxhdGVyIGJs
+a19nZXRfcmVxdWVzdCgpIGNhbGxzDQogIGZhaWwuDQoqIFdhaXQgdW50aWwgYWxsIHBlbmRpbmcg
+cmVxdWVzdHMgaGF2ZSBmaW5pc2hlZC4NCiogU2V0IHRoZSBERUFEIGZsYWcuIEZvciB0aGUgdHJh
+ZGl0aW9uYWwgYmxvY2sgbGF5ZXIsIHRoaXMgZmxhZyBjYXVzZXMNCiAgYmxrX3J1bl9xdWV1ZSgp
+IG5vdCB0byBjYWxsIC5yZXF1ZXN0X2ZuKCkgYW55bW9yZS4gRm9yIGJsay1tcSBpdCBpcw0KICBn
+dWFyYW50ZWVkIGluIGFub3RoZXIgd2F5IHRoYXQgLnF1ZXVlX3JxKCkgd29uJ3QgYmUgY2FsbGVk
+IGFueW1vcmUgYWZ0ZXINCiAgdGhpcyBmbGFnIGhhcyBiZWVuIHNldC4NCg0KQWxsb3dpbmcgYmxr
+X2dldF9yZXF1ZXN0KCkgdG8gc3VjY2VlZCBhZnRlciB0aGUgRFlJTkcgZmxhZyBoYXMgYmVlbiBz
+ZXQgaXMNCmNvbXBsZXRlbHkgd3JvbmcgYmVjYXVzZSB0aGF0IGNvdWxkIHJlc3VsdCBpbiBhIHJl
+cXVlc3QgYmVpbmcgcXVldWVkIGFmdGVyDQp0aGUgREVBRCBmbGFnIGhhcyBiZWVuIHNldCwgcmVz
+dWx0aW5nIGluIGVpdGhlciBhIGhhbmdpbmcgcmVxdWVzdCBvciBhIGtlcm5lbA0KY3Jhc2guIFRo
+aXMgaXMgd2h5IGl0J3MgY29tcGxldGVseSB3cm9uZyB0byBhZGQgYSBibGtfcXVldWVfZW50ZXJf
+bGl2ZSgpIGNhbGwNCmluIGJsa19vbGRfZ2V0X3JlcXVlc3QoKSBvciBibGtfbXFfYWxsb2NfcmVx
+dWVzdCgpLiBIZW5jZSBteSBOQUsgZm9yIGFueQ0KcGF0Y2ggdGhhdCBhZGRzIGEgYmxrX3F1ZXVl
+X2VudGVyX2xpdmUoKSBjYWxsIHRvIGFueSBmdW5jdGlvbiBjYWxsZWQgZnJvbQ0KYmxrX2dldF9y
+ZXF1ZXN0KCkuIFRoYXQgaW5jbHVkZXMgdGhlIHBhdGNoIGF0IHRoZSBzdGFydCBvZiB0aGlzIGUt
+bWFpbCB0aHJlYWQuDQoNCkJhcnQu
