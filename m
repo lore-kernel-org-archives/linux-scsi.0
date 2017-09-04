@@ -1,30 +1,64 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V3 6/8] block: introduce preempt version of
- blk_[freeze|unfreeze]_queue
-Date: Mon, 4 Sep 2017 15:21:08 +0000
-Message-ID: <1504538467.3189.2.camel@wdc.com>
+Subject: Re: [PATCH V3 7/8] block: allow to allocate req with REQF_PREEMPT
+ when queue is preempt frozen
+Date: Mon, 4 Sep 2017 15:40:35 +0000
+Message-ID: <1504539634.3189.15.camel@wdc.com>
 References: <20170902130840.24609-1-ming.lei@redhat.com>
-         <20170902130840.24609-7-ming.lei@redhat.com>
+         <20170902130840.24609-8-ming.lei@redhat.com>
+         <20170902131208.GA10940@ming.t460p> <1504498405.10804.10.camel@wdc.com>
+         <20170904071653.GD7959@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170902130840.24609-7-ming.lei@redhat.com>
+In-Reply-To: <20170904071653.GD7959@ming.t460p>
 Content-Language: en-US
-Content-ID: <00EE4225CEC9714BAFB06591D077FE59@namprd04.prod.outlook.com>
+Content-ID: <9B03FAF166760E4DA66C00DA78C76087@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU2F0LCAyMDE3LTA5LTAyIGF0IDIxOjA4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gLS0t
-IGEvaW5jbHVkZS9saW51eC9ibGtkZXYuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L2Jsa2Rldi5o
-DQo+IEBAIC01NjUsNiArNTY1LDEwIEBAIHN0cnVjdCByZXF1ZXN0X3F1ZXVlIHsNCj4gIA0KPiAg
-CWludAkJCWJ5cGFzc19kZXB0aDsNCj4gIAlhdG9taWNfdAkJbXFfZnJlZXplX2RlcHRoOw0KPiAr
-CXNwaW5sb2NrX3QJCWZyZWV6ZV9sb2NrOw0KPiArCXVuc2lnbmVkCQlub3JtYWxfZnJlZXppbmc6
-MTsNCj4gKwl1bnNpZ25lZAkJcHJlZW1wdF9mcmVlemluZzoxOw0KPiArCXVuc2lnbmVkCQlwcmVl
-bXB0X3VuZnJlZXppbmc6MTsNCj4gIA0KPiAgI2lmIGRlZmluZWQoQ09ORklHX0JMS19ERVZfQlNH
-KQ0KPiAgCWJzZ19qb2JfZm4JCSpic2dfam9iX2ZuOw0KDQpSZXF1ZXN0cyBxdWV1ZXMgYWxyZWFk
-eSBoYXZlIHRvIG1hbnkgc3RhdGVzIGFuZCB5b3Ugd2FudCB0byBtYWtlIHJlcXVlc3QgcXVldWVz
-DQpldmVuIG1vcmUgY29tcGxpY2F0ZWQgYnkgaW50cm9kdWNpbmcgc2V2ZXJhbCBuZXcgc3RhdGUg
-dmFyaWFibGVzPyBZaWtlcyENCg0KQmFydC4=
+T24gTW9uLCAyMDE3LTA5LTA0IGF0IDE1OjE2ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
+TW9uLCBTZXAgMDQsIDIwMTcgYXQgMDQ6MTM6MjZBTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
+b3RlOg0KPiA+IEFsbG93aW5nIGJsa19nZXRfcmVxdWVzdCgpIHRvIHN1Y2NlZWQgYWZ0ZXIgdGhl
+IERZSU5HIGZsYWcgaGFzIGJlZW4gc2V0IGlzDQo+ID4gY29tcGxldGVseSB3cm9uZyBiZWNhdXNl
+IHRoYXQgY291bGQgcmVzdWx0IGluIGEgcmVxdWVzdCBiZWluZyBxdWV1ZWQgYWZ0ZXINCj4gPiB0
+aGUgREVBRCBmbGFnIGhhcyBiZWVuIHNldCwgcmVzdWx0aW5nIGluIGVpdGhlciBhIGhhbmdpbmcg
+cmVxdWVzdCBvciBhIGtlcm5lbA0KPiA+IGNyYXNoLiBUaGlzIGlzIHdoeSBpdCdzIGNvbXBsZXRl
+bHkgd3JvbmcgdG8gYWRkIGEgYmxrX3F1ZXVlX2VudGVyX2xpdmUoKSBjYWxsDQo+ID4gaW4gYmxr
+X29sZF9nZXRfcmVxdWVzdCgpIG9yIGJsa19tcV9hbGxvY19yZXF1ZXN0KCkuIEhlbmNlIG15IE5B
+SyBmb3IgYW55DQo+ID4gcGF0Y2ggdGhhdCBhZGRzIGEgYmxrX3F1ZXVlX2VudGVyX2xpdmUoKSBj
+YWxsIHRvIGFueSBmdW5jdGlvbiBjYWxsZWQgZnJvbQ0KPiA+IGJsa19nZXRfcmVxdWVzdCgpLiBU
+aGF0IGluY2x1ZGVzIHRoZSBwYXRjaCBhdCB0aGUgc3RhcnQgb2YgdGhpcyBlLW1haWwgdGhyZWFk
+Lg0KPg0KPiBTZWUgYWJvdmUsIHRoaXMgcGF0Y2ggY2hhbmdlcyBub3RoaW5nIGFib3V0IHRoaXMg
+ZmFjdCwgcGxlYXNlIGxvb2sgYXQNCj4gdGhlIHBhdGNoIGNhcmVmdWxseSBuZXh0IHRpbWUganVz
+dCBiZWZvcmUgcG9zdGluZyB5b3VyIGxvbmcgY29tbWVudC4NCg0KQXJlIHlvdSByZWFsbHkgc3Vy
+ZSB0aGF0IHlvdXIgcGF0Y2ggZG9lcyBub3QgYWxsb3cgYmxrX2dldF9yZXF1ZXN0KCkgdG8NCnN1
+Y2NlZWQgYWZ0ZXIgdGhlIERZSU5HIGZsYWcgaGFzIGJlZW4gc2V0PyBibGtfbXFfYWxsb2NfcmVx
+dWVzdCgpIGNhbGxzIGJvdGgNCmJsa19xdWV1ZV9pc19wcmVlbXB0X2Zyb3plbigpIGFuZCBibGtf
+cXVldWVfZW50ZXJfbGl2ZSgpIHdpdGhvdXQgaG9sZGluZw0KYW55IGxvY2suIEEgdGhyZWFkIHRo
+YXQgaXMgcnVubmluZyBjb25jdXJyZW50bHkgd2l0aCBibGtfbXFfZ2V0X3JlcXVlc3QoKQ0KY2Fu
+IHVuZnJlZXplIHRoZSBxdWV1ZSBhZnRlciBibGtfcXVldWVfaXNfcHJlZW1wdF9mcm96ZW4oKSBy
+ZXR1cm5lZCBhbmQNCmJlZm9yZSBibGtfcXVldWVfZW50ZXJfbGl2ZSgpIGlzIGNhbGxlZC4gVGhp
+cyBtZWFucyB0aGF0IHdpdGggeW91ciBwYXRjaA0Kc2VyaWVzIGFwcGxpZWQgYmxrX2dldF9yZXF1
+ZXN0KCkgY2FuIHN1Y2NlZWQgYWZ0ZXIgdGhlIERZSU5HIGZsYWcgaGFzIGJlZW4NCnNldCwgd2hp
+Y2ggaXMgc29tZXRoaW5nIHdlIGRvbid0IHdhbnQuIEFkZGl0aW9uYWxseSwgSSBkb24ndCB0aGlu
+ayB3ZSB3YW50DQp0byBpbnRyb2R1Y2UgYW55IGtpbmQgb2YgbG9ja2luZyBpbiBibGtfbXFfZ2V0
+X3JlcXVlc3QoKSBiZWNhdXNlIHRoYXQgd291bGQNCmJlIGEgc2VyaWFsaXphdGlvbiBwb2ludC4N
+Cg0KSGF2ZSB5b3UgY29uc2lkZXJlZCB0byB1c2UgdGhlIGJsay1tcSAicmVzZXJ2ZWQgcmVxdWVz
+dCIgbWVjaGFuaXNtIHRvIGF2b2lkDQpzdGFydmF0aW9uIG9mIHBvd2VyIG1hbmFnZW1lbnQgcmVx
+dWVzdHMgaW5zdGVhZCBvZiBtYWtpbmcgdGhlIGJsb2NrIGxheWVyDQpldmVuIG1vcmUgY29tcGxp
+Y2F0ZWQgdGhhbiBpdCBhbHJlYWR5IGlzPw0KDQpOb3RlOiBleHRlbmRpbmcgYmxrX21xX2ZyZWV6
+ZS91bmZyZWV6ZV9xdWV1ZSgpIHRvIHRoZSBsZWdhY3kgYmxvY2sgbGF5ZXINCmNvdWxkIGJlIHVz
+ZWZ1bCB0byBtYWtlIHNjc2lfd2FpdF9mb3JfcXVldWVjb21tYW5kKCkgbW9yZSBlbGVnYW50LiBI
+b3dldmVyLA0KSSBkb24ndCB0aGluayB3ZSBzaG91bGQgc3BlbmQgb3VyIHRpbWUgb24gbGVnYWN5
+IGJsb2NrIGxheWVyIC8gU0NTSSBjb3JlDQpjaGFuZ2VzLiBUaGUgY29kZSBJJ20gcmVmZXJyaW5n
+IHRvIGlzIHRoZSBmb2xsb3dpbmc6DQoNCi8qKg0KICogc2NzaV93YWl0X2Zvcl9xdWV1ZWNvbW1h
+bmQoKSAtIHdhaXQgZm9yIG9uZ29pbmcgcXVldWVjb21tYW5kKCkgY2FsbHMNCiAqIEBzZGV2OiBT
+Q1NJIGRldmljZSBwb2ludGVyLg0KICoNCiAqIFdhaXQgdW50aWwgdGhlIG9uZ29pbmcgc2hvc3Qt
+Pmhvc3R0LT5xdWV1ZWNvbW1hbmQoKSBjYWxscyB0aGF0IGFyZQ0KICogaW52b2tlZCBmcm9tIHNj
+c2lfcmVxdWVzdF9mbigpIGhhdmUgZmluaXNoZWQuDQogKi8NCnN0YXRpYyB2b2lkIHNjc2lfd2Fp
+dF9mb3JfcXVldWVjb21tYW5kKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldikNCnsNCglXQVJOX09O
+X09OQ0Uoc2Rldi0+aG9zdC0+dXNlX2Jsa19tcSk7DQoNCgl3aGlsZSAoc2NzaV9yZXF1ZXN0X2Zu
+X2FjdGl2ZShzZGV2KSkNCgkJbXNsZWVwKDIwKTsNCn0NCg0KQmFydC4=
