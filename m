@@ -1,59 +1,30 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V3 7/8] block: allow to allocate req with REQF_PREEMPT
- when queue is preempt frozen
-Date: Mon, 4 Sep 2017 15:16:54 +0800
-Message-ID: <20170904071653.GD7959@ming.t460p>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V3 6/8] block: introduce preempt version of
+ blk_[freeze|unfreeze]_queue
+Date: Mon, 4 Sep 2017 15:21:08 +0000
+Message-ID: <1504538467.3189.2.camel@wdc.com>
 References: <20170902130840.24609-1-ming.lei@redhat.com>
- <20170902130840.24609-8-ming.lei@redhat.com>
- <20170902131208.GA10940@ming.t460p>
- <1504498405.10804.10.camel@wdc.com>
+         <20170902130840.24609-7-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43598 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752624AbdIDHRM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Sep 2017 03:17:12 -0400
-Content-Disposition: inline
-In-Reply-To: <1504498405.10804.10.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170902130840.24609-7-ming.lei@redhat.com>
+Content-Language: en-US
+Content-ID: <00EE4225CEC9714BAFB06591D077FE59@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>
 
-On Mon, Sep 04, 2017 at 04:13:26AM +0000, Bart Van Assche wrote:
-> On Sat, 2017-09-02 at 21:12 +0800, Ming Lei wrote:
-> > Please let us know if V3 addresses your previous concern about calling
-> > blk_queue_enter_live() during preempt freezing.
-> 
-> Do you understand how request queue cleanup works? The algorithm used for
-> request queue cleanup is as follows:
-> * Set the DYING flag. This flag makes all later blk_get_request() calls
->   fail.
-
-If you look at the __blk_freeze_queue_start(), you will see that preemp
-freeze will fail after queue is dying, and blk_queue_enter_live() won't
-be called at all if queue is dying, right?
-
-> * Wait until all pending requests have finished.
-> * Set the DEAD flag. For the traditional block layer, this flag causes
->   blk_run_queue() not to call .request_fn() anymore. For blk-mq it is
->   guaranteed in another way that .queue_rq() won't be called anymore after
->   this flag has been set.
-> 
-> Allowing blk_get_request() to succeed after the DYING flag has been set is
-> completely wrong because that could result in a request being queued after
-
-See above, this patch changes nothing about this fact, please look at
-the patch carefully next time just before posting your long comment.
-
-> the DEAD flag has been set, resulting in either a hanging request or a kernel
-> crash. This is why it's completely wrong to add a blk_queue_enter_live() call
-> in blk_old_get_request() or blk_mq_alloc_request(). Hence my NAK for any
-> patch that adds a blk_queue_enter_live() call to any function called from
-> blk_get_request(). That includes the patch at the start of this e-mail thread.
-> 
-> Bart.
-
--- 
-Ming
+T24gU2F0LCAyMDE3LTA5LTAyIGF0IDIxOjA4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gLS0t
+IGEvaW5jbHVkZS9saW51eC9ibGtkZXYuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L2Jsa2Rldi5o
+DQo+IEBAIC01NjUsNiArNTY1LDEwIEBAIHN0cnVjdCByZXF1ZXN0X3F1ZXVlIHsNCj4gIA0KPiAg
+CWludAkJCWJ5cGFzc19kZXB0aDsNCj4gIAlhdG9taWNfdAkJbXFfZnJlZXplX2RlcHRoOw0KPiAr
+CXNwaW5sb2NrX3QJCWZyZWV6ZV9sb2NrOw0KPiArCXVuc2lnbmVkCQlub3JtYWxfZnJlZXppbmc6
+MTsNCj4gKwl1bnNpZ25lZAkJcHJlZW1wdF9mcmVlemluZzoxOw0KPiArCXVuc2lnbmVkCQlwcmVl
+bXB0X3VuZnJlZXppbmc6MTsNCj4gIA0KPiAgI2lmIGRlZmluZWQoQ09ORklHX0JMS19ERVZfQlNH
+KQ0KPiAgCWJzZ19qb2JfZm4JCSpic2dfam9iX2ZuOw0KDQpSZXF1ZXN0cyBxdWV1ZXMgYWxyZWFk
+eSBoYXZlIHRvIG1hbnkgc3RhdGVzIGFuZCB5b3Ugd2FudCB0byBtYWtlIHJlcXVlc3QgcXVldWVz
+DQpldmVuIG1vcmUgY29tcGxpY2F0ZWQgYnkgaW50cm9kdWNpbmcgc2V2ZXJhbCBuZXcgc3RhdGUg
+dmFyaWFibGVzPyBZaWtlcyENCg0KQmFydC4=
