@@ -1,45 +1,65 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V3 0/2] sd fixes and cleanup
-Date: Tue,  5 Sep 2017 20:55:34 +0900
-Message-ID: <20170905115536.2896-1-damien.lemoal@wdc.com>
+Subject: [PATCH V3 1/2] scsi: sd: Fix sd_config_write_same()
+Date: Tue,  5 Sep 2017 20:55:35 +0900
+Message-ID: <20170905115536.2896-2-damien.lemoal@wdc.com>
+References: <20170905115536.2896-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from esa6.hgst.iphmx.com ([216.71.154.45]:29258 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750741AbdIEL4f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2017 07:56:35 -0400
+        with ESMTP id S1750858AbdIEL5F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2017 07:57:05 -0400
+In-Reply-To: <20170905115536.2896-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
-A couple of patches in this small series.
+Reporting a maximum number of blocks that is not aligned on the device
+physical size would cause a large write same request to be split into
+physically unaligned chunks by __blkdev_issue_write_zeroes() and
+__blkdev_issue_write_same(), even if the caller of these functions took
+care to align its request to physical sectors.
 
-The first patch addresses a problem with large write same (or zeroout) block
-layer calls being split into commands that are not aligned on the device
-physical block size. This will work on regular disks but is not optimal.
-The commands will however fail with host-managed zoned block device if the
-commands target sequential write required zones. The patch simply makes sure
-that the maximum write same sectors is aligned to physical block sizes.
-Note that this fix can be implemented either in sd_config_write_same() or in
-the block layer (__blkdev_issue_write_same() and __blkdev_issue_write_zeroes()).
+So make sure the maximum reported is aligned to the device physical
+block size. This is only an optional optimization for regular disks,
+but this is mandatory to avoid failure of large write same requests
+directed at sequential write required zones of host-managed ZBC disks.
 
-The second patch does not introduce functional changes.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/scsi/sd.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Changes from V2:
-* Use round_down() in first patch to align maximum write same sectors to
-  physical sector size.
-
-Changes from V1:
-* Removed useless addition of blank line an indentaion change in first patch.
-
-*** BLURB HERE ***
-
-Damien Le Moal (2):
-  scsi: sd: Fix sd_config_write_same()
-  scsi: sd: Use sectors_to_logical()
-
- drivers/scsi/sd.c | 36 ++++++++++++++++++++++++++++--------
- 1 file changed, 28 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index e2647f2d4430..0a824e9f4d63 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -898,6 +898,26 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ 	else
+ 		sdkp->zeroing_mode = SD_ZERO_WRITE;
+ 
++	if (sdkp->max_ws_blocks &&
++	    sdkp->physical_block_size > logical_block_size) {
++		/*
++		 * Reporting a maximum number of blocks that is not aligned
++		 * on the device physical size would cause a large write same
++		 * request to be split into physically unaligned chunks by
++		 * __blkdev_issue_write_zeroes() and __blkdev_issue_write_same()
++		 * even if the caller of these functions took care to align the
++		 * large request. So make sure the maximum reported is aligned
++		 * to the device physical block size. This is only an optional
++		 * optimization for regular disks, but this is mandatory to
++		 * avoid failure of large write same requests directed at
++		 * sequential write required zones of host-managed ZBC disks.
++		 */
++		sdkp->max_ws_blocks =
++			round_down(sdkp->max_ws_blocks,
++				   bytes_to_logical(sdkp->device,
++						    sdkp->physical_block_size));
++	}
++
+ out:
+ 	blk_queue_max_write_same_sectors(q, sdkp->max_ws_blocks *
+ 					 (logical_block_size >> 9));
 -- 
 2.13.5
