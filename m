@@ -1,7 +1,7 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v4 07/11] libsas: make the event threshold configurable
-Date: Wed, 6 Sep 2017 17:15:10 +0800
-Message-ID: <1504689314-20072-8-git-send-email-yanaijie@huawei.com>
+Subject: [PATCH v4 09/11] libsas: libsas: use flush_workqueue to process disco events synchronously
+Date: Wed, 6 Sep 2017 17:15:12 +0800
+Message-ID: <1504689314-20072-10-git-send-email-yanaijie@huawei.com>
 References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,11 +12,8 @@ To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, yanaijie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add a sysfs attr that LLDD can configure it for every host. We made
-a example in hisi_sas. Other LLDDs using libsas can implement it if
-they want.
+Use flush_workqueue to insure the disco and revalidate events processed synchronously.
 
-Suggested-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 CC: John Garry <john.garry@huawei.com>
 CC: Johannes Thumshirn <jthumshirn@suse.de>
@@ -25,84 +22,30 @@ CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
 CC: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c |  6 ++++++
- drivers/scsi/libsas/sas_init.c        | 27 +++++++++++++++++++++++++++
- include/scsi/libsas.h                 |  1 +
- 3 files changed, 34 insertions(+)
+ drivers/scsi/libsas/sas_port.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 5e47abb..9eceed1 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1470,6 +1470,11 @@ EXPORT_SYMBOL_GPL(hisi_sas_rescan_topology);
- struct scsi_transport_template *hisi_sas_stt;
- EXPORT_SYMBOL_GPL(hisi_sas_stt);
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index 9326628..64722f4 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -192,6 +192,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
+ 		si->dft->lldd_port_formed(phy);
  
-+struct device_attribute *host_attrs[] = {
-+    &dev_attr_phy_event_threshold,
-+    NULL,
-+};
-+
- static struct scsi_host_template _hisi_sas_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -1489,6 +1494,7 @@ static struct scsi_host_template _hisi_sas_sht = {
- 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+	.shost_attrs		= host_attrs,
- };
- struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
- EXPORT_SYMBOL_GPL(hisi_sas_sht);
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index b1e03d5..e2d98a8 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -537,6 +537,33 @@ static struct sas_function_template sft = {
- 	.smp_handler = sas_smp_handler,
- };
+ 	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
++	flush_workqueue(sas_ha->disco_q);
+ }
  
-+static inline ssize_t phy_event_threshold_show(struct device *dev,
-+			struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+
-+	return scnprintf(buf, PAGE_SIZE, "%u\n", sha->event_thres);
-+}
-+
-+static inline ssize_t phy_event_threshold_store(struct device *dev,
-+			struct device_attribute *attr,
-+			const char *buf, size_t count)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+
-+	sha->event_thres = simple_strtol(buf, NULL, 10);
-+
-+	return count;
-+}
-+
-+DEVICE_ATTR(phy_event_threshold,
-+             S_IRUGO|S_IWUSR,
-+             phy_event_threshold_show,
-+             phy_event_threshold_store);
-+EXPORT_SYMBOL_GPL(dev_attr_phy_event_threshold);
-+
- struct scsi_transport_template *
- sas_domain_attach_transport(struct sas_domain_function_template *dft)
- {
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 2fa0b13..08c1c32 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -679,6 +679,7 @@ extern int sas_bios_param(struct scsi_device *,
- 			  sector_t capacity, int *hsc);
- extern struct scsi_transport_template *
- sas_domain_attach_transport(struct sas_domain_function_template *);
-+extern struct device_attribute dev_attr_phy_event_threshold;
+ /**
+@@ -277,6 +278,9 @@ void sas_porte_broadcast_rcvd(struct work_struct *work)
  
- int  sas_discover_root_expander(struct domain_device *);
+ 	SAS_DPRINTK("broadcast received: %d\n", prim);
+ 	sas_discover_event(phy->port, DISCE_REVALIDATE_DOMAIN);
++
++	if (phy->port)
++		flush_workqueue(phy->port->ha->disco_q);
+ }
  
+ void sas_porte_link_reset_err(struct work_struct *work)
 -- 
 2.5.0
