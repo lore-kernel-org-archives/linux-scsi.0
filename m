@@ -1,39 +1,47 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] lpfc: Don't return internal MBXERR_ERROR code from probe
- function
-Date: Wed, 6 Sep 2017 10:52:51 +0200
-Message-ID: <20170906085251.mq24hramagculo5y@linux-x5ow.site>
+From: Stefano Brivio <sbrivio@redhat.com>
+Subject: [PATCH RESEND] lpfc: Don't return internal MBXERR_ERROR code from
+ probe function
+Date: Wed, 6 Sep 2017 11:02:56 +0200
+Message-ID: <20170906110256.4445e353@elisabeth>
 References: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
- <20170906103222.538c07b2@elisabeth>
- <20170906084235.n22ll6z7pnvi6t3q@linux-x5ow.site>
- <20170906104738.50b81cd5@elisabeth>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53345 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752021AbdIFIwx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 Sep 2017 04:52:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20170906104738.50b81cd5@elisabeth>
+Received: from mx1.redhat.com ([209.132.183.28]:38542 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752093AbdIFJDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 6 Sep 2017 05:03:03 -0400
+In-Reply-To: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefano Brivio <sbrivio@redhat.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, QLogic-Storage-Upstream@cavium.com, Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, QLogic-Storage-Upstream@cavium.com
+Cc: Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Wed, Sep 06, 2017 at 10:47:38AM +0200, Stefano Brivio wrote:
-> The original submission is archived at
-> https://marc.info/?l=linux-scsi&m=150392554622786&w=2. Before I cause
-> any confusion... do you want me to re-submit this with the same
-> subject? As v2 with a comment?
+Internal error codes happen to be positive, thus the PCI driver
+core won't treat them as failure, but we do. This would cause a
+crash later on as lpfc_pci_remove_one() is called (e.g. as
+shutdown function).
 
-[PATCH RESEND] should be OK
+Fixes: 6d368e532168 ("[SCSI] lpfc 8.3.24: Add resource extent support")
+Signed-off-by: Stefano Brivio <sbrivio@redhat.com>
+---
+This seems to have been ignored. Re-sending as suggested by Johannes.
 
+ drivers/scsi/lpfc/lpfc_init.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 491aa95eb0f6..38cc2b5bb5a2 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -6118,6 +6118,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 				"Extents and RPI headers enabled.\n");
+ 		}
+ 		mempool_free(mboxq, phba->mbox_mem_pool);
++		rc = -EIO;
+ 		goto out_free_bsmbx;
+ 	}
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.9.4
