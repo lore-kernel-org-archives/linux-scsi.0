@@ -1,195 +1,108 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v4 06/11] libsas: shut down the PHY if events reached the threshold
-Date: Wed, 6 Sep 2017 17:15:09 +0800
-Message-ID: <1504689314-20072-7-git-send-email-yanaijie@huawei.com>
+Subject: [PATCH v4 07/11] libsas: make the event threshold configurable
+Date: Wed, 6 Sep 2017 17:15:10 +0800
+Message-ID: <1504689314-20072-8-git-send-email-yanaijie@huawei.com>
 References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5556 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752436AbdIFJMk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2017 05:12:40 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, yanaijie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-If the PHY burst too many events, we will alloc a lot of events for the
-worker. This may leads to memory exhaustion.
+Add a sysfs attr that LLDD can configure it for every host. We made
+a example in hisi_sas. Other LLDDs using libsas can implement it if
+they want.
 
-Dan Williams suggested to shut down the PHY if the events reached the
-threshold, because in this case the PHY may have gone into some
-erroneous state. Users can re-enable the PHY by sysfs if they want.
-
-We cannot use the fixed memory pool because if we run out of events, the
-shut down event and loss of signal event will lost too. The events still
-need to be allocated and processed in this case.
-
-Suggested-by: Dan Williams <dan.j.williams@intel.com>
+Suggested-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 CC: John Garry <john.garry@huawei.com>
 CC: Johannes Thumshirn <jthumshirn@suse.de>
 CC: Ewan Milne <emilne@redhat.com>
 CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
+CC: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_init.c | 21 ++++++++++++++++++++-
- drivers/scsi/libsas/sas_phy.c  | 31 ++++++++++++++++++++++++++++++-
- include/scsi/libsas.h          |  6 ++++++
- 3 files changed, 56 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c |  6 ++++++
+ drivers/scsi/libsas/sas_init.c        | 27 +++++++++++++++++++++++++++
+ include/scsi/libsas.h                 |  1 +
+ 3 files changed, 34 insertions(+)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 5e47abb..9eceed1 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1470,6 +1470,11 @@ EXPORT_SYMBOL_GPL(hisi_sas_rescan_topology);
+ struct scsi_transport_template *hisi_sas_stt;
+ EXPORT_SYMBOL_GPL(hisi_sas_stt);
+ 
++struct device_attribute *host_attrs[] = {
++    &dev_attr_phy_event_threshold,
++    NULL,
++};
++
+ static struct scsi_host_template _hisi_sas_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -1489,6 +1494,7 @@ static struct scsi_host_template _hisi_sas_sht = {
+ 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++	.shost_attrs		= host_attrs,
+ };
+ struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
+ EXPORT_SYMBOL_GPL(hisi_sas_sht);
 diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 85c278a..b1e03d5 100644
+index b1e03d5..e2d98a8 100644
 --- a/drivers/scsi/libsas/sas_init.c
 +++ b/drivers/scsi/libsas/sas_init.c
-@@ -122,6 +122,8 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
- 	INIT_LIST_HEAD(&sas_ha->defer_q);
- 	INIT_LIST_HEAD(&sas_ha->eh_dev_q);
+@@ -537,6 +537,33 @@ static struct sas_function_template sft = {
+ 	.smp_handler = sas_smp_handler,
+ };
  
-+	sas_ha->event_thres = SAS_PHY_SHUTDOWN_THRES;
-+
- 	error = sas_register_phys(sas_ha);
- 	if (error) {
- 		printk(KERN_NOTICE "couldn't register sas phys:%d\n", error);
-@@ -556,14 +558,31 @@ EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
- 
- struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
- {
-+	struct asd_sas_event *event;
- 	gfp_t flags = in_interrupt() ? GFP_ATOMIC : GFP_KERNEL;
- 
--	return kmem_cache_zalloc(sas_event_cache, flags);
-+	event = kmem_cache_zalloc(sas_event_cache, flags);
-+	if (!event)
-+		return NULL;
-+
-+	atomic_inc(&phy->event_nr);
-+	if (atomic_read(&phy->event_nr) > phy->ha->event_thres &&
-+	    !phy->in_shutdown) {
-+		phy->in_shutdown = 1;
-+		sas_printk("The phy%02d bursting events, shut it down.\n",
-+			   phy->id);
-+		sas_notify_phy_event(phy, PHYE_SHUTDOWN);
-+	}
-+
-+	return event;
- }
- 
- void sas_free_event(struct asd_sas_event *event)
- {
-+	struct asd_sas_phy *phy = event->phy;
-+
- 	kmem_cache_free(sas_event_cache, event);
-+	atomic_dec(&phy->event_nr);
- }
- 
- /* ---------- SAS Class register/unregister ---------- */
-diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index 59f8292..3df1eec 100644
---- a/drivers/scsi/libsas/sas_phy.c
-+++ b/drivers/scsi/libsas/sas_phy.c
-@@ -35,6 +35,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
- 	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
-+	phy->in_shutdown = 0;
- 	phy->error = 0;
- 	sas_deform_port(phy, 1);
- }
-@@ -44,6 +45,7 @@ static void sas_phye_oob_done(struct work_struct *work)
- 	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
-+	phy->in_shutdown = 0;
- 	phy->error = 0;
- }
- 
-@@ -105,6 +107,32 @@ static void sas_phye_resume_timeout(struct work_struct *work)
- }
- 
- 
-+static void sas_phye_shutdown(struct work_struct *work)
++static inline ssize_t phy_event_threshold_show(struct device *dev,
++			struct device_attribute *attr, char *buf)
 +{
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
-+	struct asd_sas_phy *phy = ev->phy;
-+	struct sas_ha_struct *sas_ha = phy->ha;
-+	struct sas_internal *i =
-+		to_sas_internal(sas_ha->core.shost->transportt);
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
 +
-+	if (phy->enabled && i->dft->lldd_control_phy) {
-+		int ret;
-+
-+		phy->error = 0;
-+		phy->enabled = 0;
-+		ret = i->dft->lldd_control_phy(phy, PHY_FUNC_DISABLE, NULL);
-+		if (ret)
-+			sas_printk("lldd disable phy%02d returned %d\n",
-+				phy->id, ret);
-+
-+	} else if (!i->dft->lldd_control_phy)
-+		sas_printk("lldd does not support phy%02d control\n", phy->id);
-+	else
-+		sas_printk("phy%02d is not enabled, cannot shutdown\n",
-+			phy->id);
-+
++	return scnprintf(buf, PAGE_SIZE, "%u\n", sha->event_thres);
 +}
 +
- /* ---------- Phy class registration ---------- */
- 
- int sas_register_phys(struct sas_ha_struct *sas_ha)
-@@ -116,6 +144,7 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
- 		struct asd_sas_phy *phy = sas_ha->sas_phy[i];
- 
- 		phy->error = 0;
-+		atomic_set(&phy->event_nr, 0);
- 		INIT_LIST_HEAD(&phy->port_phy_el);
- 
- 		phy->port = NULL;
-@@ -151,5 +180,5 @@ const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS] = {
- 	[PHYE_OOB_ERROR] = sas_phye_oob_error,
- 	[PHYE_SPINUP_HOLD] = sas_phye_spinup_hold,
- 	[PHYE_RESUME_TIMEOUT] = sas_phye_resume_timeout,
--
-+	[PHYE_SHUTDOWN] = sas_phye_shutdown,
- };
++static inline ssize_t phy_event_threshold_store(struct device *dev,
++			struct device_attribute *attr,
++			const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++
++	sha->event_thres = simple_strtol(buf, NULL, 10);
++
++	return count;
++}
++
++DEVICE_ATTR(phy_event_threshold,
++             S_IRUGO|S_IWUSR,
++             phy_event_threshold_show,
++             phy_event_threshold_store);
++EXPORT_SYMBOL_GPL(dev_attr_phy_event_threshold);
++
+ struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *dft)
+ {
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index c80321b..2fa0b13 100644
+index 2fa0b13..08c1c32 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -75,6 +75,7 @@ enum phy_event {
- 	PHYE_OOB_ERROR,
- 	PHYE_SPINUP_HOLD,             /* hot plug SATA, no COMWAKE sent */
- 	PHYE_RESUME_TIMEOUT,
-+	PHYE_SHUTDOWN,
- 	PHY_NUM_EVENTS,
- };
+@@ -679,6 +679,7 @@ extern int sas_bios_param(struct scsi_device *,
+ 			  sector_t capacity, int *hsc);
+ extern struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *);
++extern struct device_attribute dev_attr_phy_event_threshold;
  
-@@ -310,12 +311,15 @@ static inline void INIT_SAS_EVENT(struct asd_sas_event *ev, void (*fn)(struct wo
- 	ev->event = event;
- }
+ int  sas_discover_root_expander(struct domain_device *);
  
-+#define SAS_PHY_SHUTDOWN_THRES   1024
- 
- /* The phy pretty much is controlled by the LLDD.
-  * The class only reads those fields.
-  */
- struct asd_sas_phy {
- /* private: */
-+	atomic_t event_nr;
-+	int in_shutdown;
- 	int error;
- 	int suspended;
- 
-@@ -403,6 +407,8 @@ struct sas_ha_struct {
- 
- 	struct list_head eh_done_q;  /* complete via scsi_eh_flush_done_q */
- 	struct list_head eh_ata_q; /* scmds to promote from sas to ata eh */
-+
-+	int event_thres;
- };
- 
- #define SHOST_TO_SAS_HA(_shost) (*(struct sas_ha_struct **)(_shost)->hostdata)
 -- 
 2.5.0
