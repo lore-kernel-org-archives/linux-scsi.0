@@ -1,47 +1,50 @@
-From: Stefano Brivio <sbrivio@redhat.com>
-Subject: [PATCH RESEND] lpfc: Don't return internal MBXERR_ERROR code from
- probe function
-Date: Wed, 6 Sep 2017 11:02:56 +0200
-Message-ID: <20170906110256.4445e353@elisabeth>
-References: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v4 03/11] libsas: remove unused port_gone_completion and DISCE_PORT_GONE
+Date: Wed, 6 Sep 2017 17:15:06 +0800
+Message-ID: <1504689314-20072-4-git-send-email-yanaijie@huawei.com>
+References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38542 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752093AbdIFJDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 Sep 2017 05:03:03 -0400
-In-Reply-To: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, yanaijie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, QLogic-Storage-Upstream@cavium.com
-Cc: Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-Internal error codes happen to be positive, thus the PCI driver
-core won't treat them as failure, but we do. This would cause a
-crash later on as lpfc_pci_remove_one() is called (e.g. as
-shutdown function).
+No one uses the port_gone_completion in struct asd_sas_port and
+DISCE_PORT_GONE in enum disover_event, clean them out.
 
-Fixes: 6d368e532168 ("[SCSI] lpfc 8.3.24: Add resource extent support")
-Signed-off-by: Stefano Brivio <sbrivio@redhat.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: Johannes Thumshirn <jthumshirn@suse.de>
+CC: Ewan Milne <emilne@redhat.com>
+CC: Christoph Hellwig <hch@lst.de>
+CC: Tomas Henzl <thenzl@redhat.com>
+CC: Dan Williams <dan.j.williams@intel.com>
 ---
-This seems to have been ignored. Re-sending as suggested by Johannes.
+ include/scsi/libsas.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
- drivers/scsi/lpfc/lpfc_init.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 491aa95eb0f6..38cc2b5bb5a2 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -6118,6 +6118,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 				"Extents and RPI headers enabled.\n");
- 		}
- 		mempool_free(mboxq, phba->mbox_mem_pool);
-+		rc = -EIO;
- 		goto out_free_bsmbx;
- 	}
- 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index ccf3b48..99f32b5 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -81,7 +81,6 @@ enum phy_event {
+ enum discover_event {
+ 	DISCE_DISCOVER_DOMAIN   = 0U,
+ 	DISCE_REVALIDATE_DOMAIN,
+-	DISCE_PORT_GONE,
+ 	DISCE_PROBE,
+ 	DISCE_SUSPEND,
+ 	DISCE_RESUME,
+@@ -256,8 +255,6 @@ struct sas_discovery {
+ /* The port struct is Class:RW, driver:RO */
+ struct asd_sas_port {
+ /* private: */
+-	struct completion port_gone_completion;
+-
+ 	struct sas_discovery disc;
+ 	struct domain_device *port_dev;
+ 	spinlock_t dev_list_lock;
 -- 
-2.9.4
+2.5.0
