@@ -1,230 +1,77 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v4 01/11] libsas: kill useless ha_event and do some cleanup
-Date: Wed, 6 Sep 2017 17:15:04 +0800
-Message-ID: <1504689314-20072-2-git-send-email-yanaijie@huawei.com>
-References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH RESEND] lpfc: Don't return internal MBXERR_ERROR code
+ from probe function
+Date: Wed, 6 Sep 2017 11:30:34 +0200
+Message-ID: <20170906093034.hkyeg3pjxy3nmyig@linux-x5ow.site>
+References: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
+ <20170906110256.4445e353@elisabeth>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5551 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752220AbdIFJMi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2017 05:12:38 -0400
-In-Reply-To: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
+Received: from mx2.suse.de ([195.135.220.15]:56148 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752226AbdIFJak (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 6 Sep 2017 05:30:40 -0400
+Content-Disposition: inline
+In-Reply-To: <20170906110256.4445e353@elisabeth>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, yanaijie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+To: Stefano Brivio <sbrivio@redhat.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, QLogic-Storage-Upstream@cavium.com, Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-The ha_event now has only one event HAE_RESET, and this
-event does nothing. Kill it and do some cleanup.
+On Wed, Sep 06, 2017 at 11:02:56AM +0200, Stefano Brivio wrote:
+> Internal error codes happen to be positive, thus the PCI driver
+> core won't treat them as failure, but we do. This would cause a
+> crash later on as lpfc_pci_remove_one() is called (e.g. as
+> shutdown function).
+> 
+> Fixes: 6d368e532168 ("[SCSI] lpfc 8.3.24: Add resource extent support")
+> Signed-off-by: Stefano Brivio <sbrivio@redhat.com>
+> ---
+> This seems to have been ignored. Re-sending as suggested by Johannes.
+> 
+>  drivers/scsi/lpfc/lpfc_init.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 491aa95eb0f6..38cc2b5bb5a2 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -6118,6 +6118,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+>  				"Extents and RPI headers enabled.\n");
+>  		}
+>  		mempool_free(mboxq, phba->mbox_mem_pool);
+> +		rc = -EIO;
+>  		goto out_free_bsmbx;
+>  	}
+>  
+> -- 
+> 2.9.4
 
-This is a preparation for enhance libsas hotplug feature in the
-next patches.
+The patch looks good, but there are lots of 
+	if (rc) {
+		mempool_free(mboxq, phba->mbox_mem_pool);
+		rc = -EIO;
+		goto out_free_bsmbx;
+	}
 
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
-CC: Johannes Thumshirn <jthumshirn@suse.de>
-CC: Ewan Milne <emilne@redhat.com>
-CC: Christoph Hellwig <hch@lst.de>
-CC: Tomas Henzl <thenzl@redhat.com>
-CC: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/aic94xx/aic94xx_hwi.c    |  3 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c |  1 -
- drivers/scsi/libsas/sas_dump.c        | 10 ----------
- drivers/scsi/libsas/sas_dump.h        |  1 -
- drivers/scsi/libsas/sas_event.c       | 20 --------------------
- drivers/scsi/libsas/sas_init.c        | 12 ------------
- include/scsi/libsas.h                 | 21 ---------------------
- 7 files changed, 68 deletions(-)
+in lpfc_sli4_driver_resource_setup(). Shouldn't out_free_bsmbx take care of it
+all so we only have:
+	if (rc)
+		goto out_free_bsmbx;
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
-index f2671a8..ec09438 100644
---- a/drivers/scsi/aic94xx/aic94xx_hwi.c
-+++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
-@@ -721,11 +721,8 @@ int asd_init_hw(struct asd_ha_struct *asd_ha)
-  */
- static void asd_chip_reset(struct asd_ha_struct *asd_ha)
- {
--	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
--
- 	ASD_DPRINTK("chip reset for %s\n", pci_name(asd_ha->pcidev));
- 	asd_chip_hardrst(asd_ha);
--	sas_ha->notify_ha_event(sas_ha, HAE_RESET);
- }
- 
- /* ---------- Done List Routines ---------- */
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 4022c3f..5e47abb 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -990,7 +990,6 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 		hisi_sas_release_tasks(hisi_hba);
- 		spin_unlock_irqrestore(&hisi_hba->lock, flags);
- 
--		sas_ha->notify_ha_event(sas_ha, HAE_RESET);
- 		dev_dbg(dev, "controller reset successful!\n");
- 	} else
- 		return -1;
-diff --git a/drivers/scsi/libsas/sas_dump.c b/drivers/scsi/libsas/sas_dump.c
-index cd6f99c..7e5d262 100644
---- a/drivers/scsi/libsas/sas_dump.c
-+++ b/drivers/scsi/libsas/sas_dump.c
-@@ -24,10 +24,6 @@
- 
- #include "sas_dump.h"
- 
--static const char *sas_hae_str[] = {
--	[0] = "HAE_RESET",
--};
--
- static const char *sas_porte_str[] = {
- 	[0] = "PORTE_BYTES_DMAED",
- 	[1] = "PORTE_BROADCAST_RCVD",
-@@ -53,12 +49,6 @@ void sas_dprint_phye(int phyid, enum phy_event pe)
- 	SAS_DPRINTK("phy%d: phy event: %s\n", phyid, sas_phye_str[pe]);
- }
- 
--void sas_dprint_hae(struct sas_ha_struct *sas_ha, enum ha_event he)
--{
--	SAS_DPRINTK("ha %s: %s event\n", dev_name(sas_ha->dev),
--		    sas_hae_str[he]);
--}
--
- void sas_dump_port(struct asd_sas_port *port)
- {
- 	SAS_DPRINTK("port%d: class:0x%x\n", port->id, port->class);
-diff --git a/drivers/scsi/libsas/sas_dump.h b/drivers/scsi/libsas/sas_dump.h
-index 800e4c6..6aaee6b 100644
---- a/drivers/scsi/libsas/sas_dump.h
-+++ b/drivers/scsi/libsas/sas_dump.h
-@@ -26,5 +26,4 @@
- 
- void sas_dprint_porte(int phyid, enum port_event pe);
- void sas_dprint_phye(int phyid, enum phy_event pe);
--void sas_dprint_hae(struct sas_ha_struct *sas_ha, enum ha_event he);
- void sas_dump_port(struct asd_sas_port *port);
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index c0d0d97..70c4653 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -124,14 +124,6 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
- 	mutex_unlock(&ha->disco_mutex);
- }
- 
--static int notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
--{
--	BUG_ON(event >= HA_NUM_EVENTS);
--
--	return sas_queue_event(event, &sas_ha->pending,
--			       &sas_ha->ha_events[event].work, sas_ha);
--}
--
- static int notify_port_event(struct asd_sas_phy *phy, enum port_event event)
- {
- 	struct sas_ha_struct *ha = phy->ha;
-@@ -154,18 +146,6 @@ int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
- 
- int sas_init_events(struct sas_ha_struct *sas_ha)
- {
--	static const work_func_t sas_ha_event_fns[HA_NUM_EVENTS] = {
--		[HAE_RESET] = sas_hae_reset,
--	};
--
--	int i;
--
--	for (i = 0; i < HA_NUM_EVENTS; i++) {
--		INIT_SAS_WORK(&sas_ha->ha_events[i].work, sas_ha_event_fns[i]);
--		sas_ha->ha_events[i].ha = sas_ha;
--	}
--
--	sas_ha->notify_ha_event = notify_ha_event;
- 	sas_ha->notify_port_event = notify_port_event;
- 	sas_ha->notify_phy_event = sas_notify_phy_event;
- 
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 64e9cdd..d3f5b57 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -106,17 +106,6 @@ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
-         hashed[2] = r & 0xFF;
- }
- 
--
--/* ---------- HA events ---------- */
--
--void sas_hae_reset(struct work_struct *work)
--{
--	struct sas_ha_event *ev = to_sas_ha_event(work);
--	struct sas_ha_struct *ha = ev->ha;
--
--	clear_bit(HAE_RESET, &ha->pending);
--}
--
- int sas_register_ha(struct sas_ha_struct *sas_ha)
- {
- 	int error = 0;
-@@ -154,7 +143,6 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
- 	INIT_LIST_HEAD(&sas_ha->eh_ata_q);
- 
- 	return 0;
--
- Undo_ports:
- 	sas_unregister_ports(sas_ha);
- Undo_phys:
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index cfaeed2..e536597 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -60,11 +60,6 @@ enum sas_phy_type {
-  * so when updating/adding events here, please also
-  * update the other file too.
-  */
--enum ha_event {
--	HAE_RESET             = 0U,
--	HA_NUM_EVENTS         = 1,
--};
--
- enum port_event {
- 	PORTE_BYTES_DMAED     = 0U,
- 	PORTE_BROADCAST_RCVD  = 1,
-@@ -362,18 +357,6 @@ struct scsi_core {
- 
- };
- 
--struct sas_ha_event {
--	struct sas_work work;
--	struct sas_ha_struct *ha;
--};
--
--static inline struct sas_ha_event *to_sas_ha_event(struct work_struct *work)
--{
--	struct sas_ha_event *ev = container_of(work, typeof(*ev), work.work);
--
--	return ev;
--}
--
- enum sas_ha_state {
- 	SAS_HA_REGISTERED,
- 	SAS_HA_DRAINING,
-@@ -383,9 +366,6 @@ enum sas_ha_state {
- 
- struct sas_ha_struct {
- /* private: */
--	struct sas_ha_event ha_events[HA_NUM_EVENTS];
--	unsigned long	 pending;
--
- 	struct list_head  defer_q; /* work queued while draining */
- 	struct mutex	  drain_mutex;
- 	unsigned long	  state;
-@@ -415,7 +395,6 @@ struct sas_ha_struct {
- 				* their siblings when forming wide ports */
- 
- 	/* LLDD calls these to notify the class of an event. */
--	int (*notify_ha_event)(struct sas_ha_struct *, enum ha_event);
- 	int (*notify_port_event)(struct asd_sas_phy *, enum port_event);
- 	int (*notify_phy_event)(struct asd_sas_phy *, enum phy_event);
- 
+Because as this patch shows there's always a chance to miss an 'rc = -EIO'.
+
+Out of curiosity, do you know what's the value of rc in the failure case?
+
+Anyways:
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 -- 
-2.5.0
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
