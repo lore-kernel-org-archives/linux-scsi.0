@@ -1,19 +1,16 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 03/11] libsas: remove unused port_gone_completion
-        and DISCE_PORT_GONE
-Date: Wed, 6 Sep 2017 15:21:03 +0200
-Message-ID: <20170906132103.GC28049@lst.de>
-References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com> <1504689314-20072-4-git-send-email-yanaijie@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1504689314-20072-4-git-send-email-yanaijie@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+Subject: two small bsg fixes V2
+Date: Wed,  6 Sep 2017 15:44:14 +0200
+Message-ID: <20170906134416.19980-1-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:46325 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754220AbdIFNoV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2017 09:44:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@kernel.dk
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Two fixups for the recent bsg-lib fixes, should go into 4.13 stable as
+well.
