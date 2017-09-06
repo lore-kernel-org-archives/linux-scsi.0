@@ -1,37 +1,63 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] bsg-lib: fix kernel panic resulting from missing
-        allocation of reply-buffer
-Date: Wed, 6 Sep 2017 16:18:04 +0200
-Message-ID: <20170906141804.GA29765@lst.de>
-References: <20170906134416.19980-1-hch@lst.de> <20170906134416.19980-2-hch@lst.de> <42e9ef4d-6981-2b0c-bdc3-afb5b1750666@kernel.dk> <20170906141509.GB8702@bblock-ThinkPad-W530>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 1/5] scsi: ufs: add Hisilicon ufs driver code
+Date: Thu, 7 Sep 2017 00:46:36 +0200
+Message-ID: <CAK8P3a0vV94g=iNLfHXXgR-XFHaaK-mHoQQ45FDYG+FVQhix6Q@mail.gmail.com>
+References: <20170829084116.106695-1-liwei213@huawei.com> <20170829084116.106695-2-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170906141509.GB8702@bblock-ThinkPad-W530>
-Sender: linux-block-owner@vger.kernel.org
-To: Benjamin Block <bblock@linux.vnet.ibm.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, "#4 . 11+" <stable@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170829084116.106695-2-liwei213@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Li Wei <liwei213@huawei.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Wei Xu <xuwei5@hisilicon.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, Eric Anholt <eric@anholt.net>, devicetree@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>Linux
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 06, 2017 at 04:15:09PM +0200, Benjamin Block wrote:
-> On Wed, Sep 06, 2017 at 08:07:43AM -0600, Jens Axboe wrote:
-> > On 09/06/2017 07:44 AM, Christoph Hellwig wrote:
-> > > From: Benjamin Block <bblock@linux.vnet.ibm.com>
-> > > 
-> > > Since we split the scsi_request out of struct request bsg fails to
-> > > provide a reply-buffer for the drivers. This was done via the pointer
-> > > for sense-data, that is not preallocated anymore.
-> > 
-> > Confused, this is already in master, was included before 4.13 was
-> > finalized.
-> > 
-> 
-> I think this is the backport for 4.11 and 4.12 as requested by Greg. I
-> just send a mail as answer that I would do it, but I guess Christoph
-> already had something in the pipe.
-> 
-> Or? I'll take a look.
+On Tue, Aug 29, 2017 at 10:41 AM, Li Wei <liwei213@huawei.com> wrote:
+itel(host, UFS_ARESET, PERRSTDIS3_OFFSET);
+> +
+> +       /* disable lp_reset_n */
+> +       ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_LP_RESET_N, RESET_CTRL_EN);
+> +       mdelay(1);
+> +
+> +       if (gpio_is_valid(host->reset_gpio))
+> +               gpio_direction_output(host->reset_gpio, 1);
+> +
+> +       ufs_sys_ctrl_writel(host, MASK_UFS_DEVICE_RESET | BIT_UFS_DEVICE_RESET,
+> +               UFS_DEVICE_RESET_CTRL);
+> +
+> +       mdelay(20);
 
-No, I sent the wrong patch - this was in my queue before the patches
-I wanted to send.
+Could those mdelay() be turned into msleep() functions?
+
+> +static int ufs_hisi_get_resource(struct ufs_hisi_host *host)
+> +{
+> +       struct resource *mem_res;
+> +       struct device_node *np = NULL;
+> +       struct device *dev = host->hba->dev;
+> +       struct platform_device *pdev = to_platform_device(dev);
+> +
+> +       /* get resource of ufs sys ctrl */
+> +       mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> +       host->ufs_sys_ctrl = devm_ioremap_resource(dev, mem_res);
+> +       if (IS_ERR(host->ufs_sys_ctrl))
+> +               return PTR_ERR(host->ufs_sys_ctrl);
+> +
+> +       np = of_find_compatible_node(NULL, NULL, "hisilicon,hi3660-crgctrl");
+
+It's generally not a good idea to look up one device by its "compatible"
+string. What is the "crgctrl"? Does it have a proper DT binding?
+Maybe there should be a driver for it, or you could make it a "syscon"
+device and look it up by phandle instead.
+
+> diff --git a/drivers/scsi/ufs/ufs-hisi.h b/drivers/scsi/ufs/ufs-hisi.h
+> new file mode 100644
+> index 000000000000..52430a2aca90
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-hisi.h
+
+
+If the header is only used in one file, you don't need it, just move
+the definitions
+into the other file.
+
+      Arnd
