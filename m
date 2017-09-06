@@ -1,20 +1,24 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v4 03/11] libsas: remove unused port_gone_completion and
- DISCE_PORT_GONE
-Date: Wed, 6 Sep 2017 14:43:36 +0200
-Message-ID: <20170906124336.ebefb6m6as4e4lxt@linux-x5ow.site>
+Subject: Re: [PATCH v4 04/11] libsas: rename notify_port_event() for
+ consistency
+Date: Wed, 6 Sep 2017 14:44:22 +0200
+Message-ID: <20170906124422.e7ndiwpu2lqbfqaw@linux-x5ow.site>
 References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
- <1504689314-20072-4-git-send-email-yanaijie@huawei.com>
+ <1504689314-20072-5-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47707 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753842AbdIFMoY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 6 Sep 2017 08:44:24 -0400
 Content-Disposition: inline
-In-Reply-To: <1504689314-20072-4-git-send-email-yanaijie@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1504689314-20072-5-git-send-email-yanaijie@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jason Yan <yanaijie@huawei.com>
 Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
