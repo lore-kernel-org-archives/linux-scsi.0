@@ -1,19 +1,24 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 11/11] libsas: add event to defer list tail instead
-        of head when draining
-Date: Wed, 6 Sep 2017 15:21:50 +0200
-Message-ID: <20170906132150.GE28049@lst.de>
-References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com> <1504689314-20072-12-git-send-email-yanaijie@huawei.com>
+Subject: Re: [PATCH v4 00/11] Enhance libsas hotplug feature
+Date: Wed, 6 Sep 2017 15:22:25 +0200
+Message-ID: <20170906132225.GF28049@lst.de>
+References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com> <57982db9-bfe8-cc7b-8aa7-0c3c83692d56@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1504689314-20072-12-git-send-email-yanaijie@huawei.com>
+In-Reply-To: <57982db9-bfe8-cc7b-8aa7-0c3c83692d56@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+To: John Garry <john.garry@huawei.com>
+Cc: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-Looks fine,
+On Wed, Sep 06, 2017 at 02:07:57PM +0100, John Garry wrote:
+> Regardless of the fate of the rest of the patches in this series, I think 
+> patches 1,2,3,4,11/11 can be taken in isolation (subject to review, of 
+> course). It would save maintaining them out-of-tree.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I did a quick review of those and they all look fine to me.
+
+I'll try to find some time to review the real changes in the next
+days.
