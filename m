@@ -1,51 +1,230 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v4 09/11] libsas: libsas: use flush_workqueue to process disco events synchronously
-Date: Wed, 6 Sep 2017 17:15:12 +0800
-Message-ID: <1504689314-20072-10-git-send-email-yanaijie@huawei.com>
+Subject: [PATCH v4 01/11] libsas: kill useless ha_event and do some cleanup
+Date: Wed, 6 Sep 2017 17:15:04 +0800
+Message-ID: <1504689314-20072-2-git-send-email-yanaijie@huawei.com>
 References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5551 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752220AbdIFJMi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2017 05:12:38 -0400
 In-Reply-To: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, yanaijie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Use flush_workqueue to insure the disco and revalidate events processed synchronously.
+The ha_event now has only one event HAE_RESET, and this
+event does nothing. Kill it and do some cleanup.
+
+This is a preparation for enhance libsas hotplug feature in the
+next patches.
 
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: John Garry <john.garry@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 CC: Johannes Thumshirn <jthumshirn@suse.de>
 CC: Ewan Milne <emilne@redhat.com>
 CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
 CC: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_port.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/aic94xx/aic94xx_hwi.c    |  3 ---
+ drivers/scsi/hisi_sas/hisi_sas_main.c |  1 -
+ drivers/scsi/libsas/sas_dump.c        | 10 ----------
+ drivers/scsi/libsas/sas_dump.h        |  1 -
+ drivers/scsi/libsas/sas_event.c       | 20 --------------------
+ drivers/scsi/libsas/sas_init.c        | 12 ------------
+ include/scsi/libsas.h                 | 21 ---------------------
+ 7 files changed, 68 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 9326628..64722f4 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -192,6 +192,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
- 		si->dft->lldd_port_formed(phy);
- 
- 	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
-+	flush_workqueue(sas_ha->disco_q);
+diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
+index f2671a8..ec09438 100644
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.c
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
+@@ -721,11 +721,8 @@ int asd_init_hw(struct asd_ha_struct *asd_ha)
+  */
+ static void asd_chip_reset(struct asd_ha_struct *asd_ha)
+ {
+-	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
+-
+ 	ASD_DPRINTK("chip reset for %s\n", pci_name(asd_ha->pcidev));
+ 	asd_chip_hardrst(asd_ha);
+-	sas_ha->notify_ha_event(sas_ha, HAE_RESET);
  }
  
- /**
-@@ -277,6 +278,9 @@ void sas_porte_broadcast_rcvd(struct work_struct *work)
+ /* ---------- Done List Routines ---------- */
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 4022c3f..5e47abb 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -990,7 +990,6 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ 		hisi_sas_release_tasks(hisi_hba);
+ 		spin_unlock_irqrestore(&hisi_hba->lock, flags);
  
- 	SAS_DPRINTK("broadcast received: %d\n", prim);
- 	sas_discover_event(phy->port, DISCE_REVALIDATE_DOMAIN);
-+
-+	if (phy->port)
-+		flush_workqueue(phy->port->ha->disco_q);
+-		sas_ha->notify_ha_event(sas_ha, HAE_RESET);
+ 		dev_dbg(dev, "controller reset successful!\n");
+ 	} else
+ 		return -1;
+diff --git a/drivers/scsi/libsas/sas_dump.c b/drivers/scsi/libsas/sas_dump.c
+index cd6f99c..7e5d262 100644
+--- a/drivers/scsi/libsas/sas_dump.c
++++ b/drivers/scsi/libsas/sas_dump.c
+@@ -24,10 +24,6 @@
+ 
+ #include "sas_dump.h"
+ 
+-static const char *sas_hae_str[] = {
+-	[0] = "HAE_RESET",
+-};
+-
+ static const char *sas_porte_str[] = {
+ 	[0] = "PORTE_BYTES_DMAED",
+ 	[1] = "PORTE_BROADCAST_RCVD",
+@@ -53,12 +49,6 @@ void sas_dprint_phye(int phyid, enum phy_event pe)
+ 	SAS_DPRINTK("phy%d: phy event: %s\n", phyid, sas_phye_str[pe]);
  }
  
- void sas_porte_link_reset_err(struct work_struct *work)
+-void sas_dprint_hae(struct sas_ha_struct *sas_ha, enum ha_event he)
+-{
+-	SAS_DPRINTK("ha %s: %s event\n", dev_name(sas_ha->dev),
+-		    sas_hae_str[he]);
+-}
+-
+ void sas_dump_port(struct asd_sas_port *port)
+ {
+ 	SAS_DPRINTK("port%d: class:0x%x\n", port->id, port->class);
+diff --git a/drivers/scsi/libsas/sas_dump.h b/drivers/scsi/libsas/sas_dump.h
+index 800e4c6..6aaee6b 100644
+--- a/drivers/scsi/libsas/sas_dump.h
++++ b/drivers/scsi/libsas/sas_dump.h
+@@ -26,5 +26,4 @@
+ 
+ void sas_dprint_porte(int phyid, enum port_event pe);
+ void sas_dprint_phye(int phyid, enum phy_event pe);
+-void sas_dprint_hae(struct sas_ha_struct *sas_ha, enum ha_event he);
+ void sas_dump_port(struct asd_sas_port *port);
+diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+index c0d0d97..70c4653 100644
+--- a/drivers/scsi/libsas/sas_event.c
++++ b/drivers/scsi/libsas/sas_event.c
+@@ -124,14 +124,6 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
+ 	mutex_unlock(&ha->disco_mutex);
+ }
+ 
+-static int notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
+-{
+-	BUG_ON(event >= HA_NUM_EVENTS);
+-
+-	return sas_queue_event(event, &sas_ha->pending,
+-			       &sas_ha->ha_events[event].work, sas_ha);
+-}
+-
+ static int notify_port_event(struct asd_sas_phy *phy, enum port_event event)
+ {
+ 	struct sas_ha_struct *ha = phy->ha;
+@@ -154,18 +146,6 @@ int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
+ 
+ int sas_init_events(struct sas_ha_struct *sas_ha)
+ {
+-	static const work_func_t sas_ha_event_fns[HA_NUM_EVENTS] = {
+-		[HAE_RESET] = sas_hae_reset,
+-	};
+-
+-	int i;
+-
+-	for (i = 0; i < HA_NUM_EVENTS; i++) {
+-		INIT_SAS_WORK(&sas_ha->ha_events[i].work, sas_ha_event_fns[i]);
+-		sas_ha->ha_events[i].ha = sas_ha;
+-	}
+-
+-	sas_ha->notify_ha_event = notify_ha_event;
+ 	sas_ha->notify_port_event = notify_port_event;
+ 	sas_ha->notify_phy_event = sas_notify_phy_event;
+ 
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 64e9cdd..d3f5b57 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -106,17 +106,6 @@ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
+         hashed[2] = r & 0xFF;
+ }
+ 
+-
+-/* ---------- HA events ---------- */
+-
+-void sas_hae_reset(struct work_struct *work)
+-{
+-	struct sas_ha_event *ev = to_sas_ha_event(work);
+-	struct sas_ha_struct *ha = ev->ha;
+-
+-	clear_bit(HAE_RESET, &ha->pending);
+-}
+-
+ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ {
+ 	int error = 0;
+@@ -154,7 +143,6 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 	INIT_LIST_HEAD(&sas_ha->eh_ata_q);
+ 
+ 	return 0;
+-
+ Undo_ports:
+ 	sas_unregister_ports(sas_ha);
+ Undo_phys:
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index cfaeed2..e536597 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -60,11 +60,6 @@ enum sas_phy_type {
+  * so when updating/adding events here, please also
+  * update the other file too.
+  */
+-enum ha_event {
+-	HAE_RESET             = 0U,
+-	HA_NUM_EVENTS         = 1,
+-};
+-
+ enum port_event {
+ 	PORTE_BYTES_DMAED     = 0U,
+ 	PORTE_BROADCAST_RCVD  = 1,
+@@ -362,18 +357,6 @@ struct scsi_core {
+ 
+ };
+ 
+-struct sas_ha_event {
+-	struct sas_work work;
+-	struct sas_ha_struct *ha;
+-};
+-
+-static inline struct sas_ha_event *to_sas_ha_event(struct work_struct *work)
+-{
+-	struct sas_ha_event *ev = container_of(work, typeof(*ev), work.work);
+-
+-	return ev;
+-}
+-
+ enum sas_ha_state {
+ 	SAS_HA_REGISTERED,
+ 	SAS_HA_DRAINING,
+@@ -383,9 +366,6 @@ enum sas_ha_state {
+ 
+ struct sas_ha_struct {
+ /* private: */
+-	struct sas_ha_event ha_events[HA_NUM_EVENTS];
+-	unsigned long	 pending;
+-
+ 	struct list_head  defer_q; /* work queued while draining */
+ 	struct mutex	  drain_mutex;
+ 	unsigned long	  state;
+@@ -415,7 +395,6 @@ struct sas_ha_struct {
+ 				* their siblings when forming wide ports */
+ 
+ 	/* LLDD calls these to notify the class of an event. */
+-	int (*notify_ha_event)(struct sas_ha_struct *, enum ha_event);
+ 	int (*notify_port_event)(struct asd_sas_phy *, enum port_event);
+ 	int (*notify_phy_event)(struct asd_sas_phy *, enum phy_event);
+ 
 -- 
 2.5.0
