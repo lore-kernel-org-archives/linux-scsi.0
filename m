@@ -1,55 +1,67 @@
-From: kehuanlin <chgokhl@gmail.com>
-Subject: [PATCH] scsi: ufs: fix wrong command type of UTRD for UFSHCI v2.1
-Date: Wed,  6 Sep 2017 17:58:39 +0800
-Message-ID: <1504691919-30832-1-git-send-email-kehuanlin@pinecone.net>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kehuanlin@pinecone.net
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH RESEND] lpfc: Don't return internal MBXERR_ERROR code
+ from probe function
+Date: Wed, 6 Sep 2017 12:02:17 +0200
+Message-ID: <20170906100217.3m6zkolhwt2243cm@linux-x5ow.site>
+References: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
+ <20170906110256.4445e353@elisabeth>
+ <20170906093034.hkyeg3pjxy3nmyig@linux-x5ow.site>
+ <20170906115415.435a1bfb@elisabeth>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59167 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752241AbdIFKCT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 6 Sep 2017 06:02:19 -0400
+Content-Disposition: inline
+In-Reply-To: <20170906115415.435a1bfb@elisabeth>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefano Brivio <sbrivio@redhat.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, QLogic-Storage-Upstream@cavium.com, Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-Since the command type of UTRD in UFS 2.1 specification is the same with
-UFS 2.0. And it assumes the future UFS specification will follow the same
-definition.
+On Wed, Sep 06, 2017 at 11:54:15AM +0200, Stefano Brivio wrote:
+> Thanks for your feedback!
+> 
+> I considered doing something similar, but there are different error
+> coded which are set when we reach the label out_free_mbsx. I checked all
+> of them (and I hope I didn't miss any), but they all looked correct,
+> and in quite a few cases different than -EIO (e.g. -ENODEV).
+> 
+> So I think always returning -EIO in those cases is not what we want.
 
-Signed-off-by: kehuanlin <kehuanlin@pinecone.net>
----
- drivers/scsi/ufs/ufshcd.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+We still could pre-assign the rc value:
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5bc9dc1..c33a2f8 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2195,10 +2195,11 @@ static int ufshcd_comp_devman_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	u32 upiu_flags;
- 	int ret = 0;
- 
--	if (hba->ufs_version == UFSHCI_VERSION_20)
--		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
--	else
-+	if ((hba->ufs_version == UFSHCI_VERSION_10) ||
-+	    (hba->ufs_version == UFSHCI_VERSION_11))
- 		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
-+	else
-+		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
- 
- 	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE);
- 	if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY)
-@@ -2222,10 +2223,11 @@ static int ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	u32 upiu_flags;
- 	int ret = 0;
- 
--	if (hba->ufs_version == UFSHCI_VERSION_20)
--		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
--	else
-+	if ((hba->ufs_version == UFSHCI_VERSION_10) ||
-+	    (hba->ufs_version == UFSHCI_VERSION_11))
- 		lrbp->command_type = UTP_CMD_TYPE_SCSI;
-+	else
-+		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
- 
- 	if (likely(lrbp->cmd)) {
- 		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags,
+	rc = -EIO;
+	rc = foo()
+	if (rc)
+		goto err_handler;
+	rc = bar()
+	if (rc)
+		goto err_handler;
+	rc = -ENODEV;
+	if (rc)
+		goto somewhere_else;
+
+But let's not complicate things and get this one queued up.
+
+> > Because as this patch shows there's always a chance to miss an 'rc = -EIO'.
+> > 
+> > Out of curiosity, do you know what's the value of rc in the failure case?
+> 
+> Yes, MBXERR_ERROR (mentioned in patch subject -- sorry, I could have
+> repeated it in the message perhaps).
+
+Ah ok I somehow missed it, sorry.
+
+Byte,
+	Johannes
 -- 
-2.7.4
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
