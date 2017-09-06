@@ -1,19 +1,64 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v4 04/11] libsas: rename notify_port_event() for consistency
-Date: Wed, 6 Sep 2017 17:15:07 +0800
-Message-ID: <1504689314-20072-5-git-send-email-yanaijie@huawei.com>
+Subject: [PATCH v4 10/11] libsas: direct call probe and destruct
+Date: Wed, 6 Sep 2017 17:15:13 +0800
+Message-ID: <1504689314-20072-11-git-send-email-yanaijie@huawei.com>
 References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5981 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752610AbdIFJMp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2017 05:12:45 -0400
 In-Reply-To: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, yanaijie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Rename function notify_port_event() to sas_notify_port_event(), which
-will be consistent with sas_notify_phy_event().
+In commit 87c8331f ([SCSI] libsas: prevent domain rediscovery competing
+with ata error handling) introduced disco mutex to prevent rediscovery
+competing with ata error handling and put the whole revalidation in the
+mutex. But the rphy add/remove needs to wait for the error handling
+which also grabs the disco mutex. This may leads to dead lock.So the
+probe and destruct event were introduce to do the rphy add/remove
+asynchronously and out of the lock.
+
+The asynchronously processed workers makes the whole discovery process
+not atomic, the other events may interrupt the process. For example,
+if a loss of signal event inserted before the probe event, the
+sas_deform_port() is called and the port will be deleted.
+
+And sas_port_delete() may run before the destruct event, but the
+port-x:x is the top parent of end device or expander. This leads to
+a kernel WARNING such as:
+
+[   82.042979] sysfs group 'power' not found for kobject 'phy-1:0:22'
+[   82.042983] ------------[ cut here ]------------
+[   82.042986] WARNING: CPU: 54 PID: 1714 at fs/sysfs/group.c:237
+sysfs_remove_group+0x94/0xa0
+[   82.043059] Call trace:
+[   82.043082] [<ffff0000082e7624>] sysfs_remove_group+0x94/0xa0
+[   82.043085] [<ffff00000864e320>] dpm_sysfs_remove+0x60/0x70
+[   82.043086] [<ffff00000863ee10>] device_del+0x138/0x308
+[   82.043089] [<ffff00000869a2d0>] sas_phy_delete+0x38/0x60
+[   82.043091] [<ffff00000869a86c>] do_sas_phy_delete+0x6c/0x80
+[   82.043093] [<ffff00000863dc20>] device_for_each_child+0x58/0xa0
+[   82.043095] [<ffff000008696f80>] sas_remove_children+0x40/0x50
+[   82.043100] [<ffff00000869d1bc>] sas_destruct_devices+0x64/0xa0
+[   82.043102] [<ffff0000080e93bc>] process_one_work+0x1fc/0x4b0
+[   82.043104] [<ffff0000080e96c0>] worker_thread+0x50/0x490
+[   82.043105] [<ffff0000080f0364>] kthread+0xfc/0x128
+[   82.043107] [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+
+Make probe and destruct a direct call in the disco and revalidate function,
+but put them outside the lock. The whole discovery or revalidate won't
+be interrupted by other events. And the DISCE_PROBE and DISCE_DESTRUCT
+event are deleted as a result of the direct call.
+
+Introduce a new list to destruct the sas_port and put the port delete after
+the destruct. This makes sure the right order of destroying the sysfs
+kobject and fix the warning above.
 
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 CC: John Garry <john.garry@huawei.com>
@@ -23,30 +68,214 @@ CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
 CC: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_event.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libsas/sas_ata.c      |  1 -
+ drivers/scsi/libsas/sas_discover.c | 34 ++++++++++++++++++++--------------
+ drivers/scsi/libsas/sas_expander.c |  2 +-
+ drivers/scsi/libsas/sas_internal.h |  1 +
+ drivers/scsi/libsas/sas_port.c     |  3 +++
+ include/scsi/libsas.h              |  3 +--
+ include/scsi/scsi_transport_sas.h  |  1 +
+ 7 files changed, 27 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 70c4653..3e225ef 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -124,7 +124,7 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
- 	mutex_unlock(&ha->disco_mutex);
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 87f5e694..dbe8c5e 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -729,7 +729,6 @@ int sas_discover_sata(struct domain_device *dev)
+ 	if (res)
+ 		return res;
+ 
+-	sas_discover_event(dev->port, DISCE_PROBE);
+ 	return 0;
  }
  
--static int notify_port_event(struct asd_sas_phy *phy, enum port_event event)
-+static int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event)
- {
- 	struct sas_ha_struct *ha = phy->ha;
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 14f714d..d5f5b58 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -212,13 +212,9 @@ void sas_notify_lldd_dev_gone(struct domain_device *dev)
+ 	}
+ }
  
-@@ -146,7 +146,7 @@ int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
- 
- int sas_init_events(struct sas_ha_struct *sas_ha)
+-static void sas_probe_devices(struct work_struct *work)
++static void sas_probe_devices(struct asd_sas_port *port)
  {
--	sas_ha->notify_port_event = notify_port_event;
-+	sas_ha->notify_port_event = sas_notify_port_event;
- 	sas_ha->notify_phy_event = sas_notify_phy_event;
+ 	struct domain_device *dev, *n;
+-	struct sas_discovery_event *ev = to_sas_discovery_event(work);
+-	struct asd_sas_port *port = ev->port;
+-
+-	clear_bit(DISCE_PROBE, &port->disc.pending);
+ 
+ 	/* devices must be domain members before link recovery and probe */
+ 	list_for_each_entry(dev, &port->disco_list, disco_list_node) {
+@@ -294,7 +290,6 @@ int sas_discover_end_dev(struct domain_device *dev)
+ 	res = sas_notify_lldd_dev_found(dev);
+ 	if (res)
+ 		return res;
+-	sas_discover_event(dev->port, DISCE_PROBE);
  
  	return 0;
+ }
+@@ -353,13 +348,9 @@ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_d
+ 	sas_put_device(dev);
+ }
+ 
+-static void sas_destruct_devices(struct work_struct *work)
++void sas_destruct_devices(struct asd_sas_port *port)
+ {
+ 	struct domain_device *dev, *n;
+-	struct sas_discovery_event *ev = to_sas_discovery_event(work);
+-	struct asd_sas_port *port = ev->port;
+-
+-	clear_bit(DISCE_DESTRUCT, &port->disc.pending);
+ 
+ 	list_for_each_entry_safe(dev, n, &port->destroy_list, disco_list_node) {
+ 		list_del_init(&dev->disco_list_node);
+@@ -370,6 +361,16 @@ static void sas_destruct_devices(struct work_struct *work)
+ 	}
+ }
+ 
++void sas_destruct_ports(struct asd_sas_port *port)
++{
++	struct sas_port *sas_port, *p;
++
++	list_for_each_entry_safe(sas_port, p, &port->sas_port_del_list, del_list) {
++		list_del_init(&sas_port->del_list);
++		sas_port_delete(sas_port);
++	}
++}
++
+ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
+ {
+ 	if (!test_bit(SAS_DEV_DESTROY, &dev->state) &&
+@@ -384,7 +385,6 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
+ 	if (!test_and_set_bit(SAS_DEV_DESTROY, &dev->state)) {
+ 		sas_rphy_unlink(dev->rphy);
+ 		list_move_tail(&dev->disco_list_node, &port->destroy_list);
+-		sas_discover_event(dev->port, DISCE_DESTRUCT);
+ 	}
+ }
+ 
+@@ -490,6 +490,8 @@ static void sas_discover_domain(struct work_struct *work)
+ 		port->port_dev = NULL;
+ 	}
+ 
++	sas_probe_devices(port);
++
+ 	SAS_DPRINTK("DONE DISCOVERY on port %d, pid:%d, result:%d\n", port->id,
+ 		    task_pid_nr(current), error);
+ }
+@@ -523,6 +525,12 @@ static void sas_revalidate_domain(struct work_struct *work)
+ 		    port->id, task_pid_nr(current), res);
+  out:
+ 	mutex_unlock(&ha->disco_mutex);
++
++	sas_destruct_devices(port);
++	sas_destruct_ports(port);
++
++	sas_probe_devices(port);
++
+ }
+ 
+ /* ---------- Events ---------- */
+@@ -578,10 +586,8 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
+ 	static const work_func_t sas_event_fns[DISC_NUM_EVENTS] = {
+ 		[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
+ 		[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
+-		[DISCE_PROBE] = sas_probe_devices,
+ 		[DISCE_SUSPEND] = sas_suspend_devices,
+ 		[DISCE_RESUME] = sas_resume_devices,
+-		[DISCE_DESTRUCT] = sas_destruct_devices,
+ 	};
+ 
+ 	disc->pending = 0;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 570b2cb..b107a44 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -1903,7 +1903,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+ 		sas_port_delete_phy(phy->port, phy->phy);
+ 		sas_device_set_phy(found, phy->port);
+ 		if (phy->port->num_phys == 0)
+-			sas_port_delete(phy->port);
++			list_add_tail(&phy->port->del_list, &parent->port->sas_port_del_list);
+ 		phy->port = NULL;
+ 	}
+ }
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 29a7a60..dd74ed5 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -99,6 +99,7 @@ int sas_try_ata_reset(struct asd_sas_phy *phy);
+ void sas_hae_reset(struct work_struct *work);
+ 
+ void sas_free_device(struct kref *kref);
++void sas_destruct_devices(struct asd_sas_port *port);
+ 
+ extern const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS];
+ extern const work_func_t sas_port_event_fns[PORT_NUM_EVENTS];
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index 64722f4..f07e55d 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -66,6 +66,7 @@ static void sas_resume_port(struct asd_sas_phy *phy)
+ 		rc = sas_notify_lldd_dev_found(dev);
+ 		if (rc) {
+ 			sas_unregister_dev(port, dev);
++			sas_destruct_devices(port);
+ 			continue;
+ 		}
+ 
+@@ -220,6 +221,7 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
+ 
+ 	if (port->num_phys == 1) {
+ 		sas_unregister_domain_devices(port, gone);
++		sas_destruct_devices(port);
+ 		sas_port_delete(port->port);
+ 		port->port = NULL;
+ 	} else {
+@@ -317,6 +319,7 @@ static void sas_init_port(struct asd_sas_port *port,
+ 	INIT_LIST_HEAD(&port->dev_list);
+ 	INIT_LIST_HEAD(&port->disco_list);
+ 	INIT_LIST_HEAD(&port->destroy_list);
++	INIT_LIST_HEAD(&port->sas_port_del_list);
+ 	spin_lock_init(&port->phy_list_lock);
+ 	INIT_LIST_HEAD(&port->phy_list);
+ 	port->ha = sas_ha;
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index d1ab157..cb3b010 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -82,10 +82,8 @@ enum phy_event {
+ enum discover_event {
+ 	DISCE_DISCOVER_DOMAIN   = 0U,
+ 	DISCE_REVALIDATE_DOMAIN,
+-	DISCE_PROBE,
+ 	DISCE_SUSPEND,
+ 	DISCE_RESUME,
+-	DISCE_DESTRUCT,
+ 	DISC_NUM_EVENTS,
+ };
+ 
+@@ -262,6 +260,7 @@ struct asd_sas_port {
+ 	struct list_head dev_list;
+ 	struct list_head disco_list;
+ 	struct list_head destroy_list;
++	struct list_head sas_port_del_list;
+ 	enum   sas_linkrate linkrate;
+ 
+ 	struct sas_work work;
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 73d8709..2cf88fa 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -154,6 +154,7 @@ struct sas_port {
+ 
+ 	struct mutex		phy_list_mutex;
+ 	struct list_head	phy_list;
++	struct list_head	del_list; /* libsas only */
+ };
+ 
+ #define dev_to_sas_port(d) \
 -- 
 2.5.0
