@@ -1,241 +1,1191 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V2 09/12] scsi: sd_zbc: Limit zone write locking to sequential zones
-Date: Fri,  8 Sep 2017 01:16:37 +0900
-Message-ID: <20170907161640.30465-10-damien.lemoal@wdc.com>
+Subject: [PATCH V2 12/12] scsi: Introduce ZBC disk I/O scheduler
+Date: Fri,  8 Sep 2017 01:16:40 +0900
+Message-ID: <20170907161640.30465-13-damien.lemoal@wdc.com>
 References: <20170907161640.30465-1-damien.lemoal@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:6565 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932351AbdIGQTc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2017 12:19:32 -0400
 In-Reply-To: <20170907161640.30465-1-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Zoned block devices have no write constraints for conventional zones
-so write locking of conventional zones is not necessary and can hurt
-performance. To avoid this, introduce the seq_zones bitmap to indicate
-if a zone is a sequential one. Use this information to allow any write
-to be issued to conventional zones, locking only sequential zones.
+The zoned I/O scheduler is mostly identical to mq-deadline and retains
+the same configuration attributes. The main difference is that the
+zoned scheduler will ensure that at any time at most only one write
+request (command) per sequential zone is in flight (has been issued to
+the disk) in order to protect against sequential write reordering
+potentially resulting from the concurrent execution of request dispatch
+by multiple contexts.
 
-As the zone bitmap allocation for seq_zones is identical to the zones
-write lock bitmap, introduce the helper sd_zbc_alloc_zone_bitmap().
-Using this helper, wait for the disk capacity and number of zones to
-stabilize on the second revalidation pass to allocate and initialize
-the bitmaps.
+This is achieved similarly to the legacy SCSI I/O path by write locking
+zones when a write requests is issued. Subsequent writes to the same
+zone have to wait for the completion of the previously issued write
+before being in turn dispatched to the disk. This ensures that
+sequential writes are processed in the correct order without needing
+any modification to the execution model of blk-mq. In addition, this
+also protects against write reordering at the HBA level (e.g. AHCI).
+
+This zoned scheduler code is added under the drivers/scsi directory so
+that information managed using the scsi_disk structure can be directly
+referenced. Doing so, cluttering the block layer with device type
+specific code is avoided.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
 ---
- drivers/scsi/sd.h     |   1 +
- drivers/scsi/sd_zbc.c | 108 ++++++++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/sd_zbc.h |  12 ++++++
- 3 files changed, 108 insertions(+), 13 deletions(-)
+ Documentation/block/zoned-iosched.txt |  48 ++
+ block/Kconfig.iosched                 |  12 +
+ drivers/scsi/Makefile                 |   1 +
+ drivers/scsi/sd.h                     |   3 +-
+ drivers/scsi/sd_zbc.c                 |  16 +-
+ drivers/scsi/sd_zbc.h                 |   8 +-
+ drivers/scsi/zoned_iosched.c          | 939 ++++++++++++++++++++++++++++++++++
+ 7 files changed, 1015 insertions(+), 12 deletions(-)
+ create mode 100644 Documentation/block/zoned-iosched.txt
+ create mode 100644 drivers/scsi/zoned_iosched.c
 
+diff --git a/Documentation/block/zoned-iosched.txt b/Documentation/block/zoned-iosched.txt
+new file mode 100644
+index 000000000000..b269125bdc61
+--- /dev/null
++++ b/Documentation/block/zoned-iosched.txt
+@@ -0,0 +1,48 @@
++Zoned I/O scheduler
++===================
++
++The Zoned I/O scheduler solves zoned block devices write ordering problems
++inherent to the absence of a global request queue lock in the blk-mq
++infrastructure. Multiple contexts may try to dispatch simultaneously write
++requests to the same sequential zone of a zoned block device, doing so
++potentially breaking the sequential write order imposed by the device.
++
++The Zoned I/O scheduler is based on the mq-deadline scheduler. It shares the
++same tunables and behaves in a comparable manner. The main difference introduced
++with the zoned scheduler is handling of write batches. Whereas mq-deadline will
++keep dispatching write requests to the device as long as the batching size
++allows and reads are not starved, the zoned scheduler introduces additional
++constraints:
++1) At most only one write request can be issued to a sequential zone of the
++device. This ensures that no reordering of sequential writes to a sequential
++zone can happen once the write request leaves the scheduler internal queue (rb
++tree).
++2) The number of sequential zones that can be simultaneously written is limited
++to the device advertized maximum number of open zones. This additional condition
++avoids performance degradation due to excessive open zone resource use at the
++device level.
++
++These conditions do not apply to write requests targeting conventional zones.
++For these, the zoned scheduler behaves exactly like the mq-deadline scheduler.
++
++The zoned I/O scheduler cannot be used with regular block devices. It can only
++be used with host-managed or host-aware zoned block devices.
++Using the zoned I/O scheduler is mandatory with host-managed disks unless the
++disk user tightly controls itself write sequencing to sequential zones. The
++zoned scheduler will treat host-aware disks exactly the same way as host-managed
++devices. That is, eventhough host aware disks can be randomly written, the zoned
++scheduler will still impose the limit to one write per zone so that sequential
++writes sequences are preserved.
++
++For host-managed disks, automating the used of the zoned scheduler can be done
++simply with a udev rule. An example of such rule is shown below.
++
++# Set zoned scheduler for host-managed zoned block devices
++ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/zoned}=="host-managed", \
++	ATTR{queue/scheduler}="zoned"
++
++Zoned I/O scheduler tunables
++============================
++
++Tunables of the Zoned I/O scheduler are identical to those of the deadline
++I/O scheduler. See Documentation/block/deadline-iosched.txt for details.
+diff --git a/block/Kconfig.iosched b/block/Kconfig.iosched
+index fd2cefa47d35..b87c67dbf1f6 100644
+--- a/block/Kconfig.iosched
++++ b/block/Kconfig.iosched
+@@ -70,6 +70,18 @@ config MQ_IOSCHED_DEADLINE
+ 	---help---
+ 	  MQ version of the deadline IO scheduler.
+ 
++config MQ_IOSCHED_ZONED
++	tristate "Zoned I/O scheduler"
++	depends on BLK_DEV_ZONED
++	depends on SCSI_MOD
++	depends on BLK_DEV_SD
++	default y
++	---help---
++	  MQ deadline IO scheduler with support for zoned block devices.
++
++	  This should be set as the default I/O scheduler for host-managed
++	  zoned block devices. It is optional for host-aware block devices.
++
+ config MQ_IOSCHED_KYBER
+ 	tristate "Kyber I/O scheduler"
+ 	default y
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 93dbe58c47c8..740870396a9a 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -176,6 +176,7 @@ hv_storvsc-y			:= storvsc_drv.o
+ sd_mod-objs	:= sd.o
+ sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
+ sd_mod-$(CONFIG_BLK_DEV_ZONED) += sd_zbc.o
++obj-$(CONFIG_MQ_IOSCHED_ZONED) += zoned_iosched.o
+ 
+ sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
+ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
 diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index c9a627e7eebd..3ea82c8cecd5 100644
+index 92113a9e2b20..84f35562aa8c 100644
 --- a/drivers/scsi/sd.h
 +++ b/drivers/scsi/sd.h
-@@ -77,6 +77,7 @@ struct scsi_disk {
+@@ -75,7 +75,8 @@ struct scsi_disk {
+ #ifdef CONFIG_BLK_DEV_ZONED
+ 	unsigned int	nr_zones;
  	unsigned int	zone_blocks;
- 	unsigned int	zone_shift;
+-	unsigned int	zone_shift;
++	unsigned int	zone_sectors;
++	unsigned int	zone_sectors_shift;
  	unsigned long	*zones_wlock;
-+	unsigned long	*seq_zones;
+ 	unsigned long	*seq_zones;
  	unsigned int	zones_optimal_open;
- 	unsigned int	zones_optimal_nonseq;
- 	unsigned int	zones_max_open;
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 8b258254a2bb..bcece82a1d8d 100644
+index 6b1a7f9c1e90..ec34ede9c290 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -252,7 +252,7 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	sector_t sector = blk_rq_pos(rq);
- 	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
--	unsigned int zno = sd_zbc_zone_no(sdkp, sector);
-+	unsigned int zno;
- 
- 	/*
- 	 * Note: Checks of the alignment of the write command on
-@@ -265,13 +265,15 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
+@@ -223,7 +223,7 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
+ 	if (sdkp->device->changed)
  		return BLKPREP_KILL;
  
- 	/*
--	 * Do not issue more than one write at a time per
--	 * zone. This solves write ordering problems due to
--	 * the unlocking of the request queue in the dispatch
--	 * path in the non scsi-mq case.
-+	 * There is no write constraint on conventional zones, but do not issue
-+	 * more than one write at a time per sequential zone. This avoids write
-+	 * ordering problems due to the unlocking of the request queue in the
-+	 * dispatch path of the non scsi-mq (legacy) case.
- 	 */
--	if (sdkp->zones_wlock &&
--	    test_and_set_bit(zno, sdkp->zones_wlock))
-+	zno = sd_zbc_zone_no(sdkp, sector);
-+	if (!test_bit(zno, sdkp->seq_zones))
-+		return BLKPREP_OK;
-+	if (test_and_set_bit(zno, sdkp->zones_wlock))
- 		return BLKPREP_DEFER;
+-	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
++	if (sector & (sdkp->zone_sectors - 1))
+ 		/* Unaligned request */
+ 		return BLKPREP_KILL;
  
- 	WARN_ON_ONCE(cmd->flags & SCMD_ZONE_WRITE_LOCK);
-@@ -289,8 +291,9 @@ void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
+@@ -251,7 +251,7 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
  	struct request *rq = cmd->request;
  	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 	sector_t sector = blk_rq_pos(rq);
+-	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
++	sector_t zone_sectors = sdkp->zone_sectors;
+ 	unsigned int zno;
  
--	if (sdkp->zones_wlock && cmd->flags & SCMD_ZONE_WRITE_LOCK) {
-+	if (cmd->flags & SCMD_ZONE_WRITE_LOCK) {
- 		unsigned int zno = sd_zbc_zone_no(sdkp, blk_rq_pos(rq));
-+
+ 	/*
+@@ -274,7 +274,7 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
+ 	 * ordering problems due to the unlocking of the request queue in the
+ 	 * dispatch path of the non scsi-mq (legacy) case.
+ 	 */
+-	zno = sd_zbc_zone_no(sdkp, sector);
++	zno = sd_zbc_request_zone_no(sdkp, rq);
+ 	if (!test_bit(zno, sdkp->seq_zones))
+ 		return BLKPREP_OK;
+ 	if (test_and_set_bit(zno, sdkp->zones_wlock))
+@@ -296,7 +296,7 @@ void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
+ 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 
+ 	if (cmd->flags & SCMD_ZONE_WRITE_LOCK) {
+-		unsigned int zno = sd_zbc_zone_no(sdkp, blk_rq_pos(rq));
++		unsigned int zno = sd_zbc_request_zone_no(sdkp, rq);
+ 
  		WARN_ON_ONCE(!test_bit(zno, sdkp->zones_wlock));
  		cmd->flags &= ~SCMD_ZONE_WRITE_LOCK;
- 		clear_bit_unlock(zno, sdkp->zones_wlock);
-@@ -507,8 +510,67 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+@@ -509,7 +509,8 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 	}
+ 
+ 	sdkp->zone_blocks = zone_blocks;
+-	sdkp->zone_shift = ilog2(zone_blocks);
++	sdkp->zone_sectors = logical_to_sectors(sdkp->device, zone_blocks);
++	sdkp->zone_sectors_shift = ilog2(sdkp->zone_sectors);
+ 
  	return 0;
  }
+@@ -574,6 +575,7 @@ static int sd_zbc_setup_seq_zones(struct scsi_disk *sdkp)
  
+ static int sd_zbc_setup(struct scsi_disk *sdkp)
+ {
++	sector_t zone_blocks = sdkp->zone_blocks;
+ 	int ret;
+ 
+ 	/* READ16/WRITE16 is mandatory for ZBC disks */
+@@ -582,9 +584,9 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
+ 
+ 	/* chunk_sectors indicates the zone size */
+ 	blk_queue_chunk_sectors(sdkp->disk->queue,
+-			logical_to_sectors(sdkp->device, sdkp->zone_blocks));
++				logical_to_sectors(sdkp->device, zone_blocks));
+ 	sdkp->nr_zones =
+-		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
++		round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
+ 
+ 	/*
+ 	 * Wait for the disk capacity to stabilize before
+diff --git a/drivers/scsi/sd_zbc.h b/drivers/scsi/sd_zbc.h
+index 2b63ee352fa2..7971f05de333 100644
+--- a/drivers/scsi/sd_zbc.h
++++ b/drivers/scsi/sd_zbc.h
+@@ -24,12 +24,12 @@ static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
+ }
+ 
+ /*
+- * Zone number of the specified sector.
++ * Zone number of the specified request.
+  */
+-static inline unsigned int sd_zbc_zone_no(struct scsi_disk *sdkp,
+-					  sector_t sector)
++static inline unsigned int sd_zbc_request_zone_no(struct scsi_disk *sdkp,
++						  struct request *rq)
+ {
+-	return sectors_to_logical(sdkp->device, sector) >> sdkp->zone_shift;
++	return blk_rq_pos(rq) >> sdkp->zone_sectors_shift;
+ }
+ 
+ /*
+diff --git a/drivers/scsi/zoned_iosched.c b/drivers/scsi/zoned_iosched.c
+new file mode 100644
+index 000000000000..e1a57a7a5271
+--- /dev/null
++++ b/drivers/scsi/zoned_iosched.c
+@@ -0,0 +1,939 @@
 +/*
-+ * Initialize the sequential zone bitmap to allow identifying sequential zones.
++ *  Zoned MQ Deadline i/o scheduler - adaptation of the MQ deadline scheduler,
++ *  for zoned block devices used with the blk-mq scheduling framework
++ *
++ *  Copyright (C) 2016 Jens Axboe <axboe@kernel.dk>
++ *  Copyright (C) 2017 Damien Le Moal <damien.lemoal@wdc.com>
 + */
-+static int sd_zbc_setup_seq_zones(struct scsi_disk *sdkp)
-+{
++#include <linux/kernel.h>
++#include <linux/fs.h>
++#include <linux/blkdev.h>
++#include <linux/blk-mq.h>
++#include <linux/blk-mq-sched.h>
++#include <linux/blk-mq-debugfs.h>
++#include <linux/elevator.h>
++#include <linux/bio.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/init.h>
++#include <linux/compiler.h>
++#include <linux/rbtree.h>
++#include <linux/sbitmap.h>
++#include <linux/seq_file.h>
++
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
++
++#include "sd.h"
++#include "sd_zbc.h"
++
++/*
++ * See Documentation/block/deadline-iosched.txt
++ */
++
++/* max time before a read is submitted. */
++static const int read_expire = HZ / 2;
++
++/* ditto for writes, these limits are SOFT! */
++static const int write_expire = 5 * HZ;
++
++/* max times reads can starve a write */
++static const int writes_starved = 2;
++
++/*
++ * Number of sequential requests treated as one by the above parameters.
++ * For throughput.
++ */
++static const int fifo_batch = 16;
++
++/*
++ * Run time data.
++ */
++struct zoned_data {
++	/*
++	 * requests (zoned_rq s) are present on both sort_list and fifo_list
++	 */
++	struct rb_root sort_list[2];
++	struct list_head fifo_list[2];
++
++	/*
++	 * next in sort order. read, write or both are NULL
++	 */
++	struct request *next_rq[2];
++	unsigned int batching;		/* number of sequential requests made */
++	unsigned int starved;		/* times reads have starved writes */
++
++	/*
++	 * settings that change how the i/o scheduler behaves
++	 */
++	int fifo_expire[2];
++	int fifo_batch;
++	int writes_starved;
++	int front_merges;
++
++	spinlock_t lock;
++	struct list_head dispatch;
++
++	struct scsi_disk *sdkp;
++
++	spinlock_t zones_lock;
++	unsigned long *zones_wlock;
 +	unsigned long *seq_zones;
-+	sector_t block = 0;
-+	unsigned char *buf;
-+	unsigned char *rec;
-+	unsigned int buf_len;
-+	unsigned int list_length;
-+	unsigned int n = 0;
-+	int ret = -ENOMEM;
++};
 +
-+	/* Allocate zone type bitmap */
-+	seq_zones = sd_zbc_alloc_zone_bitmap(sdkp);
-+	if (!seq_zones)
-+		return -ENOMEM;
++static inline struct rb_root *
++zoned_rb_root(struct zoned_data *zd, struct request *rq)
++{
++	return &zd->sort_list[rq_data_dir(rq)];
++}
 +
-+	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
-+	if (!buf)
-+		goto out;
++/*
++ * get the request after `rq' in sector-sorted order
++ */
++static inline struct request *
++zoned_latter_request(struct request *rq)
++{
++	struct rb_node *node = rb_next(&rq->rb_node);
 +
-+	while (block < sdkp->capacity) {
++	if (node)
++		return rb_entry_rq(node);
 +
-+		ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, block);
-+		if (ret)
-+			goto out;
++	return NULL;
++}
 +
-+		/* Parse reported zone descriptors */
-+		list_length = get_unaligned_be32(&buf[0]) + 64;
-+		rec = buf + 64;
-+		buf_len = min(list_length, SD_ZBC_BUF_SIZE);
-+		while (rec < buf + buf_len) {
-+			if ((rec[0] & 0x0f) != ZBC_ZONE_TYPE_CONV)
-+				set_bit(n, seq_zones);
-+			block += get_unaligned_be64(&rec[8]);
-+			rec += 64;
-+			n++;
++static void
++zoned_add_rq_rb(struct zoned_data *zd, struct request *rq)
++{
++	struct rb_root *root = zoned_rb_root(zd, rq);
++
++	elv_rb_add(root, rq);
++}
++
++static inline void
++zoned_del_rq_rb(struct zoned_data *zd, struct request *rq)
++{
++	const int data_dir = rq_data_dir(rq);
++
++	if (zd->next_rq[data_dir] == rq)
++		zd->next_rq[data_dir] = zoned_latter_request(rq);
++
++	elv_rb_del(zoned_rb_root(zd, rq), rq);
++}
++
++/*
++ * remove rq from rbtree and fifo.
++ */
++static void zoned_remove_request(struct request_queue *q, struct request *rq)
++{
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	list_del_init(&rq->queuelist);
++
++	/*
++	 * We might not be on the rbtree, if we are doing an insert merge
++	 */
++	if (!RB_EMPTY_NODE(&rq->rb_node))
++		zoned_del_rq_rb(zd, rq);
++
++	elv_rqhash_del(q, rq);
++	if (q->last_merge == rq)
++		q->last_merge = NULL;
++}
++
++static void zd_request_merged(struct request_queue *q, struct request *req,
++			      enum elv_merge type)
++{
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	/*
++	 * if the merge was a front merge, we need to reposition request
++	 */
++	if (type == ELEVATOR_FRONT_MERGE) {
++		elv_rb_del(zoned_rb_root(zd, req), req);
++		zoned_add_rq_rb(zd, req);
++	}
++}
++
++static void zd_merged_requests(struct request_queue *q, struct request *req,
++			       struct request *next)
++{
++	/*
++	 * if next expires before rq, assign its expire time to rq
++	 * and move into next position (next will be deleted) in fifo
++	 */
++	if (!list_empty(&req->queuelist) && !list_empty(&next->queuelist)) {
++		if (time_before((unsigned long)next->fifo_time,
++				(unsigned long)req->fifo_time)) {
++			list_move(&req->queuelist, &next->queuelist);
++			req->fifo_time = next->fifo_time;
 +		}
-+
 +	}
 +
-+	if (n != sdkp->nr_zones)
-+		ret = -EIO;
++	/*
++	 * kill knowledge of next, this one is a goner
++	 */
++	zoned_remove_request(q, next);
++}
 +
-+out:
-+	kfree(buf);
-+	if (ret) {
-+		kfree(seq_zones);
-+		return ret;
++/*
++ * Return true if a request is a write requests that needs zone
++ * write locking.
++ */
++static inline bool zoned_request_needs_wlock(struct zoned_data *zd,
++					     struct request *rq)
++{
++	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
++
++	if (blk_rq_is_passthrough(rq))
++		return false;
++
++	if (!test_bit(zno, zd->seq_zones))
++		return false;
++
++	switch (req_op(rq)) {
++	case REQ_OP_WRITE_ZEROES:
++	case REQ_OP_WRITE_SAME:
++	case REQ_OP_WRITE:
++		return true;
++	default:
++		return false;
 +	}
++}
 +
-+	sdkp->seq_zones = seq_zones;
++/*
++ * Abuse the elv.priv[0] pointer to indicate if a request
++ * has locked its target zone.
++ */
++#define RQ_LOCKED_ZONE		((void *)1UL)
++static inline void zoned_set_request_lock(struct request *rq)
++{
++	rq->elv.priv[0] = RQ_LOCKED_ZONE;
++}
++
++#define RQ_ZONE_NO_LOCK		((void *)0UL)
++static inline void zoned_clear_request_lock(struct request *rq)
++{
++	rq->elv.priv[0] = RQ_ZONE_NO_LOCK;
++}
++
++static inline bool zoned_request_has_lock(struct request *rq)
++{
++	return rq->elv.priv[0] == RQ_LOCKED_ZONE;
++}
++
++/*
++ * Write lock the target zone of a write request.
++ */
++static void zoned_wlock_request_zone(struct zoned_data *zd, struct request *rq)
++{
++	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
++
++	WARN_ON_ONCE(zoned_request_has_lock(rq));
++	WARN_ON_ONCE(test_and_set_bit(zno, zd->zones_wlock));
++	zoned_set_request_lock(rq);
++}
++
++/*
++ * Write unlock the target zone of a write request.
++ */
++static void zoned_wunlock_request_zone(struct zoned_data *zd,
++				       struct request *rq)
++{
++	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
++	unsigned long flags;
++
++	/*
++	 * Dispatch may be running on a different CPU.
++	 * So do not unlock the zone until it is done or
++	 * a write request in the middle of a sequence may end up
++	 * being dispatched.
++	 */
++	spin_lock_irqsave(&zd->zones_lock, flags);
++
++	WARN_ON_ONCE(!test_and_clear_bit(zno, zd->zones_wlock));
++	zoned_clear_request_lock(rq);
++
++	spin_unlock_irqrestore(&zd->zones_lock, flags);
++}
++
++/*
++ * Test the write lock state of the target zone of a write request.
++ */
++static inline bool zoned_request_zone_is_wlocked(struct zoned_data *zd,
++						 struct request *rq)
++{
++	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
++
++	return test_bit(zno, zd->zones_wlock);
++}
++
++/*
++ * move an entry to dispatch queue
++ */
++static void zoned_move_request(struct zoned_data *zd, struct request *rq)
++{
++	const int data_dir = rq_data_dir(rq);
++
++	zd->next_rq[READ] = NULL;
++	zd->next_rq[WRITE] = NULL;
++	zd->next_rq[data_dir] = zoned_latter_request(rq);
++
++	/*
++	 * take it off the sort and fifo list
++	 */
++	zoned_remove_request(rq->q, rq);
++}
++
++/*
++ * zoned_check_fifo returns 0 if there are no expired requests on the fifo,
++ * 1 otherwise. Requires !list_empty(&zd->fifo_list[data_dir])
++ */
++static inline int zoned_check_fifo(struct zoned_data *zd, int ddir)
++{
++	struct request *rq = rq_entry_fifo(zd->fifo_list[ddir].next);
++
++	/*
++	 * rq is expired!
++	 */
++	if (time_after_eq(jiffies, (unsigned long)rq->fifo_time))
++		return 1;
 +
 +	return 0;
 +}
 +
- static int sd_zbc_setup(struct scsi_disk *sdkp)
- {
-+	int ret;
- 
- 	/* READ16/WRITE16 is mandatory for ZBC disks */
- 	sdkp->device->use_16_for_rw = 1;
-@@ -520,17 +582,37 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
- 	sdkp->nr_zones =
- 		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
- 
-+	/*
-+	 * Wait for the disk capacity to stabilize before
-+	 * initializing zone related information.
-+	 */
-+	if (sdkp->first_scan)
-+		return 0;
++/*
++ * Test if a request can be dispatched.
++ */
++static inline bool zoned_can_dispatch_request(struct zoned_data *zd,
++					      struct request *rq)
++{
++	return !zoned_request_needs_wlock(zd, rq) ||
++		!zoned_request_zone_is_wlocked(zd, rq);
++}
 +
- 	if (!sdkp->zones_wlock) {
--		sdkp->zones_wlock = kcalloc(BITS_TO_LONGS(sdkp->nr_zones),
--					    sizeof(unsigned long),
--					    GFP_KERNEL);
-+		sdkp->zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
- 		if (!sdkp->zones_wlock)
- 			return -ENOMEM;
- 	}
- 
-+	if (!sdkp->seq_zones) {
-+		ret = sd_zbc_setup_seq_zones(sdkp);
-+		if (ret)
-+			return ret;
++/*
++ * For the specified data direction, find the next request that can be
++ * dispatched. Search in increasing sector position.
++ */
++static struct request *
++zoned_next_request(struct zoned_data *zd, int data_dir)
++{
++	struct request *rq = zd->next_rq[data_dir];
++	unsigned long flags;
++
++	if (data_dir == READ)
++		return rq;
++
++	spin_lock_irqsave(&zd->zones_lock, flags);
++	while (rq) {
++		if (zoned_can_dispatch_request(zd, rq))
++			break;
++		rq = zoned_latter_request(rq);
++	}
++	spin_unlock_irqrestore(&zd->zones_lock, flags);
++
++	return rq;
++}
++
++/*
++ * For the specified data direction, find the next request that can be
++ * dispatched. Search in arrival order from the oldest request.
++ */
++static struct request *
++zoned_fifo_request(struct zoned_data *zd, int data_dir)
++{
++	struct request *rq;
++	unsigned long flags;
++
++	if (list_empty(&zd->fifo_list[data_dir]))
++		return NULL;
++
++	if (data_dir == READ)
++		return rq_entry_fifo(zd->fifo_list[READ].next);
++
++	spin_lock_irqsave(&zd->zones_lock, flags);
++
++	list_for_each_entry(rq, &zd->fifo_list[WRITE], queuelist) {
++		if (zoned_can_dispatch_request(zd, rq))
++			goto out;
++	}
++	rq = NULL;
++
++out:
++	spin_unlock_irqrestore(&zd->zones_lock, flags);
++
++	return rq;
++}
++
++/*
++ * __zd_dispatch_request selects the best request according to
++ * read/write batch expiration, fifo_batch, target zone lock state, etc
++ */
++static struct request *__zd_dispatch_request(struct blk_mq_hw_ctx *hctx)
++{
++	struct zoned_data *zd = hctx->queue->elevator->elevator_data;
++	struct request *rq = NULL, *next_rq;
++	bool reads, writes;
++	int data_dir;
++
++	if (!list_empty(&zd->dispatch)) {
++		rq = list_first_entry(&zd->dispatch, struct request, queuelist);
++		list_del_init(&rq->queuelist);
++		goto done;
 +	}
 +
- 	return 0;
- }
- 
-+static void sd_zbc_cleanup(struct scsi_disk *sdkp)
-+{
-+	kfree(sdkp->seq_zones);
-+	sdkp->seq_zones = NULL;
++	reads = !list_empty(&zd->fifo_list[READ]);
++	writes = !list_empty(&zd->fifo_list[WRITE]);
 +
-+	kfree(sdkp->zones_wlock);
-+	sdkp->zones_wlock = NULL;
++	/*
++	 * batches are currently reads XOR writes
++	 */
++	rq = zoned_next_request(zd, WRITE);
++	if (!rq)
++		rq = zoned_next_request(zd, READ);
++	if (rq && zd->batching < zd->fifo_batch)
++		/* we have a next request are still entitled to batch */
++		goto dispatch_request;
++
++	/*
++	 * at this point we are not running a batch. select the appropriate
++	 * data direction (read / write)
++	 */
++
++	if (reads) {
++		if (writes && (zd->starved++ >= zd->writes_starved))
++			goto dispatch_writes;
++
++		data_dir = READ;
++
++		goto dispatch_find_request;
++	}
++
++	/*
++	 * there are either no reads or writes have been starved
++	 */
++
++	if (writes) {
++dispatch_writes:
++		zd->starved = 0;
++
++		/* Really select writes if at least one can be dispatched */
++		if (zoned_fifo_request(zd, WRITE))
++			data_dir = WRITE;
++		else
++			data_dir = READ;
++
++		goto dispatch_find_request;
++	}
++
++	return NULL;
++
++dispatch_find_request:
++	/*
++	 * we are not running a batch, find best request for selected data_dir
++	 */
++	next_rq = zoned_next_request(zd, data_dir);
++	if (zoned_check_fifo(zd, data_dir) || !next_rq) {
++		/*
++		 * A deadline has expired, the last request was in the other
++		 * direction, or we have run out of higher-sectored requests.
++		 * Start again from the request with the earliest expiry time.
++		 */
++		rq = zoned_fifo_request(zd, data_dir);
++	} else {
++		/*
++		 * The last req was the same dir and we have a next request in
++		 * sort order. No expired requests so continue on from here.
++		 */
++		rq = next_rq;
++	}
++
++	if (!rq)
++		return NULL;
++
++	zd->batching = 0;
++
++dispatch_request:
++	/*
++	 * rq is the selected appropriate request.
++	 */
++	zd->batching++;
++	zoned_move_request(zd, rq);
++
++done:
++	/*
++	 * If the request needs its target zone locked, do it.
++	 */
++	if (zoned_request_needs_wlock(zd, rq))
++		zoned_wlock_request_zone(zd, rq);
++	rq->rq_flags |= RQF_STARTED;
++	return rq;
 +}
 +
- int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- {
- 	int ret;
-@@ -582,14 +664,14 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 
- err:
- 	sdkp->capacity = 0;
-+	sd_zbc_cleanup(sdkp);
- 
- 	return ret;
- }
- 
- void sd_zbc_remove(struct scsi_disk *sdkp)
- {
--	kfree(sdkp->zones_wlock);
--	sdkp->zones_wlock = NULL;
-+	sd_zbc_cleanup(sdkp);
- }
- 
- void sd_zbc_print_zones(struct scsi_disk *sdkp)
-diff --git a/drivers/scsi/sd_zbc.h b/drivers/scsi/sd_zbc.h
-index b34002f0acbe..2b63ee352fa2 100644
---- a/drivers/scsi/sd_zbc.h
-+++ b/drivers/scsi/sd_zbc.h
-@@ -32,6 +32,18 @@ static inline unsigned int sd_zbc_zone_no(struct scsi_disk *sdkp,
- 	return sectors_to_logical(sdkp->device, sector) >> sdkp->zone_shift;
- }
- 
++static struct request *zd_dispatch_request(struct blk_mq_hw_ctx *hctx)
++{
++	struct zoned_data *zd = hctx->queue->elevator->elevator_data;
++	struct request *rq;
++
++	spin_lock(&zd->lock);
++	rq = __zd_dispatch_request(hctx);
++	spin_unlock(&zd->lock);
++
++	return rq;
++}
++
++static int zd_request_merge(struct request_queue *q, struct request **rq,
++			    struct bio *bio)
++{
++	struct zoned_data *zd = q->elevator->elevator_data;
++	sector_t sector = bio_end_sector(bio);
++	struct request *__rq;
++
++	if (!zd->front_merges)
++		return ELEVATOR_NO_MERGE;
++
++	__rq = elv_rb_find(&zd->sort_list[bio_data_dir(bio)], sector);
++	if (__rq) {
++		if (WARN_ON(sector != blk_rq_pos(__rq)))
++			return ELEVATOR_NO_MERGE;
++
++		if (elv_bio_merge_ok(__rq, bio)) {
++			*rq = __rq;
++			return ELEVATOR_FRONT_MERGE;
++		}
++	}
++
++	return ELEVATOR_NO_MERGE;
++}
++
++static bool zd_bio_merge(struct blk_mq_hw_ctx *hctx, struct bio *bio)
++{
++	struct request_queue *q = hctx->queue;
++	struct zoned_data *zd = q->elevator->elevator_data;
++	struct request *free = NULL;
++	bool ret;
++
++	spin_lock(&zd->lock);
++	ret = blk_mq_sched_try_merge(q, bio, &free);
++	spin_unlock(&zd->lock);
++
++	if (free)
++		blk_mq_free_request(free);
++
++	return ret;
++}
++
 +/*
-+ * Allocate a zone bitmap (one bit per zone).
++ * add rq to rbtree and fifo
 + */
-+static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
++static void __zd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
++				bool at_head)
 +{
-+	struct request_queue *q = sdkp->disk->queue;
++	struct request_queue *q = hctx->queue;
++	struct zoned_data *zd = q->elevator->elevator_data;
++	const int data_dir = rq_data_dir(rq);
 +
-+	return kzalloc_node(BITS_TO_LONGS(sdkp->nr_zones)
-+			    * sizeof(unsigned long),
-+			    GFP_KERNEL, q->node);
++	if (blk_mq_sched_try_insert_merge(q, rq))
++		return;
++
++	blk_mq_sched_request_inserted(rq);
++
++	if (at_head || blk_rq_is_passthrough(rq)) {
++		if (at_head)
++			list_add(&rq->queuelist, &zd->dispatch);
++		else
++			list_add_tail(&rq->queuelist, &zd->dispatch);
++	} else {
++		zoned_add_rq_rb(zd, rq);
++
++		if (rq_mergeable(rq)) {
++			elv_rqhash_add(q, rq);
++			if (!q->last_merge)
++				q->last_merge = rq;
++		}
++
++		/*
++		 * set expire time and add to fifo list
++		 */
++		rq->fifo_time = jiffies + zd->fifo_expire[data_dir];
++		list_add_tail(&rq->queuelist, &zd->fifo_list[data_dir]);
++	}
 +}
 +
- #else /* CONFIG_BLK_DEV_ZONED */
- 
- static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
++static void zd_insert_requests(struct blk_mq_hw_ctx *hctx,
++			       struct list_head *list, bool at_head)
++{
++	struct request_queue *q = hctx->queue;
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	spin_lock(&zd->lock);
++	while (!list_empty(list)) {
++		struct request *rq;
++
++		rq = list_first_entry(list, struct request, queuelist);
++		list_del_init(&rq->queuelist);
++
++		/*
++		 * This may be a requeue of a request that has locked its
++		 * target zone. If this is the case, release the zone lock.
++		 */
++		if (zoned_request_has_lock(rq))
++			zoned_wunlock_request_zone(zd, rq);
++
++		__zd_insert_request(hctx, rq, at_head);
++	}
++	spin_unlock(&zd->lock);
++}
++
++/*
++ * Write unlock the target zone of a completed write request.
++ */
++static void zd_completed_request(struct request *rq)
++{
++
++	if (zoned_request_has_lock(rq)) {
++		struct zoned_data *zd = rq->q->elevator->elevator_data;
++
++		zoned_wunlock_request_zone(zd, rq);
++	}
++}
++
++static bool zd_has_work(struct blk_mq_hw_ctx *hctx)
++{
++	struct zoned_data *zd = hctx->queue->elevator->elevator_data;
++
++	return !list_empty_careful(&zd->dispatch) ||
++		!list_empty_careful(&zd->fifo_list[0]) ||
++		!list_empty_careful(&zd->fifo_list[1]);
++}
++
++static struct scsi_disk *zoned_lookup_disk(struct request_queue *q)
++{
++	struct scsi_disk *sdkp;
++
++	if (!blk_queue_is_zoned(q)) {
++		pr_err("zoned: Not a zoned block device\n");
++		return NULL;
++	}
++
++	sdkp = scsi_disk_from_queue(q);
++	if (!sdkp) {
++		pr_err("zoned: Not a SCSI disk\n");
++		return NULL;
++	}
++
++	/* Paranoia check */
++	if (WARN_ON(sdkp->disk->queue != q))
++		return NULL;
++
++	return sdkp;
++}
++
++/*
++ * Initialize elevator private data (zoned_data).
++ */
++static int zd_init_queue(struct request_queue *q, struct elevator_type *e)
++{
++	struct scsi_disk *sdkp;
++	struct zoned_data *zd;
++	struct elevator_queue *eq;
++	int ret;
++
++	sdkp = zoned_lookup_disk(q);
++	if (!sdkp)
++		return -ENODEV;
++
++	eq = elevator_alloc(q, e);
++	if (!eq)
++		return -ENOMEM;
++
++	zd = kzalloc_node(sizeof(*zd), GFP_KERNEL, q->node);
++	if (!zd) {
++		kobject_put(&eq->kobj);
++		return -ENOMEM;
++	}
++
++	INIT_LIST_HEAD(&zd->fifo_list[READ]);
++	INIT_LIST_HEAD(&zd->fifo_list[WRITE]);
++	zd->sort_list[READ] = RB_ROOT;
++	zd->sort_list[WRITE] = RB_ROOT;
++	zd->fifo_expire[READ] = read_expire;
++	zd->fifo_expire[WRITE] = write_expire;
++	zd->writes_starved = writes_starved;
++	zd->front_merges = 1;
++	zd->fifo_batch = fifo_batch;
++	spin_lock_init(&zd->lock);
++	INIT_LIST_HEAD(&zd->dispatch);
++
++	zd->sdkp = sdkp;
++	spin_lock_init(&zd->zones_lock);
++
++	zd->zones_wlock = sdkp->zones_wlock;
++	zd->seq_zones = sdkp->seq_zones;
++	if (!zd->zones_wlock || !zd->seq_zones) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	eq->elevator_data = zd;
++	q->elevator = eq;
++
++	return 0;
++
++err:
++	kfree(zd);
++	kobject_put(&eq->kobj);
++
++	return ret;
++}
++
++static void zd_exit_queue(struct elevator_queue *e)
++{
++	struct zoned_data *zd = e->elevator_data;
++
++	WARN_ON(!list_empty(&zd->fifo_list[READ]));
++	WARN_ON(!list_empty(&zd->fifo_list[WRITE]));
++
++	kfree(zd);
++}
++
++/*
++ * sysfs parts below
++ */
++static ssize_t
++zoned_var_show(int var, char *page)
++{
++	return sprintf(page, "%d\n", var);
++}
++
++static ssize_t
++zoned_var_store(int *var, const char *page, size_t count)
++{
++	char *p = (char *) page;
++	int ret;
++
++	ret = kstrtoint(p, 10, var);
++	if (ret)
++		return ret;
++
++	return count;
++}
++
++#define SHOW_FUNCTION(__FUNC, __VAR, __CONV)				\
++static ssize_t __FUNC(struct elevator_queue *e, char *page)		\
++{									\
++	struct zoned_data *zd = e->elevator_data;			\
++	int __data = __VAR;						\
++	if (__CONV)							\
++		__data = jiffies_to_msecs(__data);			\
++	return zoned_var_show(__data, (page));			\
++}
++SHOW_FUNCTION(zoned_read_expire_show, zd->fifo_expire[READ], 1);
++SHOW_FUNCTION(zoned_write_expire_show, zd->fifo_expire[WRITE], 1);
++SHOW_FUNCTION(zoned_writes_starved_show, zd->writes_starved, 0);
++SHOW_FUNCTION(zoned_front_merges_show, zd->front_merges, 0);
++SHOW_FUNCTION(zoned_fifo_batch_show, zd->fifo_batch, 0);
++#undef SHOW_FUNCTION
++
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++static ssize_t __FUNC(struct elevator_queue *e,				\
++		      const char *page, size_t count)			\
++{									\
++	struct zoned_data *zd = e->elevator_data;			\
++	int __data;							\
++	int ret = zoned_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
++STORE_FUNCTION(zoned_read_expire_store, &zd->fifo_expire[READ],
++	       0, INT_MAX, 1);
++STORE_FUNCTION(zoned_write_expire_store, &zd->fifo_expire[WRITE],
++	       0, INT_MAX, 1);
++STORE_FUNCTION(zoned_writes_starved_store, &zd->writes_starved,
++	       INT_MIN, INT_MAX, 0);
++STORE_FUNCTION(zoned_front_merges_store, &zd->front_merges,
++	       0, 1, 0);
++STORE_FUNCTION(zoned_fifo_batch_store, &zd->fifo_batch,
++	       0, INT_MAX, 0);
++#undef STORE_FUNCTION
++
++#define DD_ATTR(name) \
++	__ATTR(name, S_IRUGO|S_IWUSR, zoned_##name##_show, \
++				      zoned_##name##_store)
++
++static struct elv_fs_entry zoned_attrs[] = {
++	DD_ATTR(read_expire),
++	DD_ATTR(write_expire),
++	DD_ATTR(writes_starved),
++	DD_ATTR(front_merges),
++	DD_ATTR(fifo_batch),
++	__ATTR_NULL
++};
++
++#ifdef CONFIG_BLK_DEBUG_FS
++#define ZONED_DEBUGFS_DDIR_ATTRS(ddir, name)				\
++static void *zoned_##name##_fifo_start(struct seq_file *m,		\
++					  loff_t *pos)			\
++	__acquires(&zd->lock)						\
++{									\
++	struct request_queue *q = m->private;				\
++	struct zoned_data *zd = q->elevator->elevator_data;		\
++									\
++	spin_lock(&zd->lock);						\
++	return seq_list_start(&zd->fifo_list[ddir], *pos);		\
++}									\
++									\
++static void *zoned_##name##_fifo_next(struct seq_file *m, void *v,	\
++					 loff_t *pos)			\
++{									\
++	struct request_queue *q = m->private;				\
++	struct zoned_data *zd = q->elevator->elevator_data;		\
++									\
++	return seq_list_next(v, &zd->fifo_list[ddir], pos);		\
++}									\
++									\
++static void zoned_##name##_fifo_stop(struct seq_file *m, void *v)	\
++	__releases(&zd->lock)						\
++{									\
++	struct request_queue *q = m->private;				\
++	struct zoned_data *zd = q->elevator->elevator_data;		\
++									\
++	spin_unlock(&zd->lock);						\
++}									\
++									\
++static const struct seq_operations zoned_##name##_fifo_seq_ops = {	\
++	.start	= zoned_##name##_fifo_start,				\
++	.next	= zoned_##name##_fifo_next,				\
++	.stop	= zoned_##name##_fifo_stop,				\
++	.show	= blk_mq_debugfs_rq_show,				\
++};									\
++									\
++static int zoned_##name##_next_rq_show(void *data,			\
++					  struct seq_file *m)		\
++{									\
++	struct request_queue *q = data;					\
++	struct zoned_data *zd = q->elevator->elevator_data;		\
++	struct request *rq = zd->next_rq[ddir];				\
++									\
++	if (rq)								\
++		__blk_mq_debugfs_rq_show(m, rq);			\
++	return 0;							\
++}
++ZONED_DEBUGFS_DDIR_ATTRS(READ, read)
++ZONED_DEBUGFS_DDIR_ATTRS(WRITE, write)
++#undef ZONED_DEBUGFS_DDIR_ATTRS
++
++static int zoned_batching_show(void *data, struct seq_file *m)
++{
++	struct request_queue *q = data;
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	seq_printf(m, "%u\n", zd->batching);
++	return 0;
++}
++
++static int zoned_starved_show(void *data, struct seq_file *m)
++{
++	struct request_queue *q = data;
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	seq_printf(m, "%u\n", zd->starved);
++	return 0;
++}
++
++static void *zoned_dispatch_start(struct seq_file *m, loff_t *pos)
++	__acquires(&zd->lock)
++{
++	struct request_queue *q = m->private;
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	spin_lock(&zd->lock);
++	return seq_list_start(&zd->dispatch, *pos);
++}
++
++static void *zoned_dispatch_next(struct seq_file *m, void *v, loff_t *pos)
++{
++	struct request_queue *q = m->private;
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	return seq_list_next(v, &zd->dispatch, pos);
++}
++
++static void zoned_dispatch_stop(struct seq_file *m, void *v)
++	__releases(&zd->lock)
++{
++	struct request_queue *q = m->private;
++	struct zoned_data *zd = q->elevator->elevator_data;
++
++	spin_unlock(&zd->lock);
++}
++
++static const struct seq_operations zoned_dispatch_seq_ops = {
++	.start	= zoned_dispatch_start,
++	.next	= zoned_dispatch_next,
++	.stop	= zoned_dispatch_stop,
++	.show	= blk_mq_debugfs_rq_show,
++};
++
++#define ZONED_QUEUE_DDIR_ATTRS(name)					     \
++	{#name "_fifo_list", 0400, .seq_ops = &zoned_##name##_fifo_seq_ops}, \
++	{#name "_next_rq", 0400, zoned_##name##_next_rq_show}
++static const struct blk_mq_debugfs_attr zoned_queue_debugfs_attrs[] = {
++	ZONED_QUEUE_DDIR_ATTRS(read),
++	ZONED_QUEUE_DDIR_ATTRS(write),
++	{"batching", 0400, zoned_batching_show},
++	{"starved", 0400, zoned_starved_show},
++	{"dispatch", 0400, .seq_ops = &zoned_dispatch_seq_ops},
++	{},
++};
++#undef ZONED_QUEUE_DDIR_ATTRS
++#endif
++
++static struct elevator_type zoned_elv = {
++	.ops.mq = {
++		.insert_requests	= zd_insert_requests,
++		.dispatch_request	= zd_dispatch_request,
++		.completed_request	= zd_completed_request,
++		.next_request		= elv_rb_latter_request,
++		.former_request		= elv_rb_former_request,
++		.bio_merge		= zd_bio_merge,
++		.request_merge		= zd_request_merge,
++		.requests_merged	= zd_merged_requests,
++		.request_merged		= zd_request_merged,
++		.has_work		= zd_has_work,
++		.init_sched		= zd_init_queue,
++		.exit_sched		= zd_exit_queue,
++	},
++
++	.uses_mq	= true,
++#ifdef CONFIG_BLK_DEBUG_FS
++	.queue_debugfs_attrs = zoned_queue_debugfs_attrs,
++#endif
++	.elevator_attrs = zoned_attrs,
++	.elevator_name = "zoned",
++	.elevator_owner = THIS_MODULE,
++};
++
++static int __init zoned_init(void)
++{
++	return elv_register(&zoned_elv);
++}
++
++static void __exit zoned_exit(void)
++{
++	elv_unregister(&zoned_elv);
++}
++
++module_init(zoned_init);
++module_exit(zoned_exit);
++
++MODULE_AUTHOR("Damien Le Moal");
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Zoned MQ deadline IO scheduler");
 -- 
 2.13.5
