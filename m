@@ -1,1191 +1,695 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V2 12/12] scsi: Introduce ZBC disk I/O scheduler
-Date: Fri,  8 Sep 2017 01:16:40 +0900
-Message-ID: <20170907161640.30465-13-damien.lemoal@wdc.com>
-References: <20170907161640.30465-1-damien.lemoal@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:6565 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932351AbdIGQTc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2017 12:19:32 -0400
-In-Reply-To: <20170907161640.30465-1-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] first round of SCSI updates for the 4.13+ merge window
+Date: Thu, 07 Sep 2017 14:58:27 -0700
+Message-ID: <1504821507.3053.69.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-The zoned I/O scheduler is mostly identical to mq-deadline and retains
-the same configuration attributes. The main difference is that the
-zoned scheduler will ensure that at any time at most only one write
-request (command) per sequential zone is in flight (has been issued to
-the disk) in order to protect against sequential write reordering
-potentially resulting from the concurrent execution of request dispatch
-by multiple contexts.
+This is mostly updates of the usual suspects: lpfc, qla2xxx, hisi_sas,
+megaraid_sas, zfcp and a host of minor updates.
 
-This is achieved similarly to the legacy SCSI I/O path by write locking
-zones when a write requests is issued. Subsequent writes to the same
-zone have to wait for the completion of the previously issued write
-before being in turn dispatched to the disk. This ensures that
-sequential writes are processed in the correct order without needing
-any modification to the execution model of blk-mq. In addition, this
-also protects against write reordering at the HBA level (e.g. AHCI).
+The major driver change here is the elimination of the block based
+cciss driver in favour of the SCSI based hpsa driver (which now drives
+all the legacy cases cciss used to be required for).  Plus a reset
+handler clean up and the redo of the SAS SMP handler to use bsg lib.
 
-This zoned scheduler code is added under the drivers/scsi directory so
-that information managed using the scsi_disk structure can be directly
-referenced. Doing so, cluttering the block layer with device type
-specific code is avoided.
+Note there's a conflict with this and some of the staging updates for
+the vishorba driver which are fairly trivial to resolve.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- Documentation/block/zoned-iosched.txt |  48 ++
- block/Kconfig.iosched                 |  12 +
- drivers/scsi/Makefile                 |   1 +
- drivers/scsi/sd.h                     |   3 +-
- drivers/scsi/sd_zbc.c                 |  16 +-
- drivers/scsi/sd_zbc.h                 |   8 +-
- drivers/scsi/zoned_iosched.c          | 939 ++++++++++++++++++++++++++++++++++
- 7 files changed, 1015 insertions(+), 12 deletions(-)
- create mode 100644 Documentation/block/zoned-iosched.txt
- create mode 100644 drivers/scsi/zoned_iosched.c
+The patch is available here:
 
-diff --git a/Documentation/block/zoned-iosched.txt b/Documentation/block/zoned-iosched.txt
-new file mode 100644
-index 000000000000..b269125bdc61
---- /dev/null
-+++ b/Documentation/block/zoned-iosched.txt
-@@ -0,0 +1,48 @@
-+Zoned I/O scheduler
-+===================
-+
-+The Zoned I/O scheduler solves zoned block devices write ordering problems
-+inherent to the absence of a global request queue lock in the blk-mq
-+infrastructure. Multiple contexts may try to dispatch simultaneously write
-+requests to the same sequential zone of a zoned block device, doing so
-+potentially breaking the sequential write order imposed by the device.
-+
-+The Zoned I/O scheduler is based on the mq-deadline scheduler. It shares the
-+same tunables and behaves in a comparable manner. The main difference introduced
-+with the zoned scheduler is handling of write batches. Whereas mq-deadline will
-+keep dispatching write requests to the device as long as the batching size
-+allows and reads are not starved, the zoned scheduler introduces additional
-+constraints:
-+1) At most only one write request can be issued to a sequential zone of the
-+device. This ensures that no reordering of sequential writes to a sequential
-+zone can happen once the write request leaves the scheduler internal queue (rb
-+tree).
-+2) The number of sequential zones that can be simultaneously written is limited
-+to the device advertized maximum number of open zones. This additional condition
-+avoids performance degradation due to excessive open zone resource use at the
-+device level.
-+
-+These conditions do not apply to write requests targeting conventional zones.
-+For these, the zoned scheduler behaves exactly like the mq-deadline scheduler.
-+
-+The zoned I/O scheduler cannot be used with regular block devices. It can only
-+be used with host-managed or host-aware zoned block devices.
-+Using the zoned I/O scheduler is mandatory with host-managed disks unless the
-+disk user tightly controls itself write sequencing to sequential zones. The
-+zoned scheduler will treat host-aware disks exactly the same way as host-managed
-+devices. That is, eventhough host aware disks can be randomly written, the zoned
-+scheduler will still impose the limit to one write per zone so that sequential
-+writes sequences are preserved.
-+
-+For host-managed disks, automating the used of the zoned scheduler can be done
-+simply with a udev rule. An example of such rule is shown below.
-+
-+# Set zoned scheduler for host-managed zoned block devices
-+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/zoned}=="host-managed", \
-+	ATTR{queue/scheduler}="zoned"
-+
-+Zoned I/O scheduler tunables
-+============================
-+
-+Tunables of the Zoned I/O scheduler are identical to those of the deadline
-+I/O scheduler. See Documentation/block/deadline-iosched.txt for details.
-diff --git a/block/Kconfig.iosched b/block/Kconfig.iosched
-index fd2cefa47d35..b87c67dbf1f6 100644
---- a/block/Kconfig.iosched
-+++ b/block/Kconfig.iosched
-@@ -70,6 +70,18 @@ config MQ_IOSCHED_DEADLINE
- 	---help---
- 	  MQ version of the deadline IO scheduler.
- 
-+config MQ_IOSCHED_ZONED
-+	tristate "Zoned I/O scheduler"
-+	depends on BLK_DEV_ZONED
-+	depends on SCSI_MOD
-+	depends on BLK_DEV_SD
-+	default y
-+	---help---
-+	  MQ deadline IO scheduler with support for zoned block devices.
-+
-+	  This should be set as the default I/O scheduler for host-managed
-+	  zoned block devices. It is optional for host-aware block devices.
-+
- config MQ_IOSCHED_KYBER
- 	tristate "Kyber I/O scheduler"
- 	default y
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 93dbe58c47c8..740870396a9a 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -176,6 +176,7 @@ hv_storvsc-y			:= storvsc_drv.o
- sd_mod-objs	:= sd.o
- sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
- sd_mod-$(CONFIG_BLK_DEV_ZONED) += sd_zbc.o
-+obj-$(CONFIG_MQ_IOSCHED_ZONED) += zoned_iosched.o
- 
- sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
- ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 92113a9e2b20..84f35562aa8c 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -75,7 +75,8 @@ struct scsi_disk {
- #ifdef CONFIG_BLK_DEV_ZONED
- 	unsigned int	nr_zones;
- 	unsigned int	zone_blocks;
--	unsigned int	zone_shift;
-+	unsigned int	zone_sectors;
-+	unsigned int	zone_sectors_shift;
- 	unsigned long	*zones_wlock;
- 	unsigned long	*seq_zones;
- 	unsigned int	zones_optimal_open;
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 6b1a7f9c1e90..ec34ede9c290 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -223,7 +223,7 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
- 	if (sdkp->device->changed)
- 		return BLKPREP_KILL;
- 
--	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
-+	if (sector & (sdkp->zone_sectors - 1))
- 		/* Unaligned request */
- 		return BLKPREP_KILL;
- 
-@@ -251,7 +251,7 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
- 	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	sector_t sector = blk_rq_pos(rq);
--	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
-+	sector_t zone_sectors = sdkp->zone_sectors;
- 	unsigned int zno;
- 
- 	/*
-@@ -274,7 +274,7 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
- 	 * ordering problems due to the unlocking of the request queue in the
- 	 * dispatch path of the non scsi-mq (legacy) case.
- 	 */
--	zno = sd_zbc_zone_no(sdkp, sector);
-+	zno = sd_zbc_request_zone_no(sdkp, rq);
- 	if (!test_bit(zno, sdkp->seq_zones))
- 		return BLKPREP_OK;
- 	if (test_and_set_bit(zno, sdkp->zones_wlock))
-@@ -296,7 +296,7 @@ void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 
- 	if (cmd->flags & SCMD_ZONE_WRITE_LOCK) {
--		unsigned int zno = sd_zbc_zone_no(sdkp, blk_rq_pos(rq));
-+		unsigned int zno = sd_zbc_request_zone_no(sdkp, rq);
- 
- 		WARN_ON_ONCE(!test_bit(zno, sdkp->zones_wlock));
- 		cmd->flags &= ~SCMD_ZONE_WRITE_LOCK;
-@@ -509,7 +509,8 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	}
- 
- 	sdkp->zone_blocks = zone_blocks;
--	sdkp->zone_shift = ilog2(zone_blocks);
-+	sdkp->zone_sectors = logical_to_sectors(sdkp->device, zone_blocks);
-+	sdkp->zone_sectors_shift = ilog2(sdkp->zone_sectors);
- 
- 	return 0;
- }
-@@ -574,6 +575,7 @@ static int sd_zbc_setup_seq_zones(struct scsi_disk *sdkp)
- 
- static int sd_zbc_setup(struct scsi_disk *sdkp)
- {
-+	sector_t zone_blocks = sdkp->zone_blocks;
- 	int ret;
- 
- 	/* READ16/WRITE16 is mandatory for ZBC disks */
-@@ -582,9 +584,9 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
- 
- 	/* chunk_sectors indicates the zone size */
- 	blk_queue_chunk_sectors(sdkp->disk->queue,
--			logical_to_sectors(sdkp->device, sdkp->zone_blocks));
-+				logical_to_sectors(sdkp->device, zone_blocks));
- 	sdkp->nr_zones =
--		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
-+		round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
- 
- 	/*
- 	 * Wait for the disk capacity to stabilize before
-diff --git a/drivers/scsi/sd_zbc.h b/drivers/scsi/sd_zbc.h
-index 2b63ee352fa2..7971f05de333 100644
---- a/drivers/scsi/sd_zbc.h
-+++ b/drivers/scsi/sd_zbc.h
-@@ -24,12 +24,12 @@ static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
- }
- 
- /*
-- * Zone number of the specified sector.
-+ * Zone number of the specified request.
-  */
--static inline unsigned int sd_zbc_zone_no(struct scsi_disk *sdkp,
--					  sector_t sector)
-+static inline unsigned int sd_zbc_request_zone_no(struct scsi_disk *sdkp,
-+						  struct request *rq)
- {
--	return sectors_to_logical(sdkp->device, sector) >> sdkp->zone_shift;
-+	return blk_rq_pos(rq) >> sdkp->zone_sectors_shift;
- }
- 
- /*
-diff --git a/drivers/scsi/zoned_iosched.c b/drivers/scsi/zoned_iosched.c
-new file mode 100644
-index 000000000000..e1a57a7a5271
---- /dev/null
-+++ b/drivers/scsi/zoned_iosched.c
-@@ -0,0 +1,939 @@
-+/*
-+ *  Zoned MQ Deadline i/o scheduler - adaptation of the MQ deadline scheduler,
-+ *  for zoned block devices used with the blk-mq scheduling framework
-+ *
-+ *  Copyright (C) 2016 Jens Axboe <axboe@kernel.dk>
-+ *  Copyright (C) 2017 Damien Le Moal <damien.lemoal@wdc.com>
-+ */
-+#include <linux/kernel.h>
-+#include <linux/fs.h>
-+#include <linux/blkdev.h>
-+#include <linux/blk-mq.h>
-+#include <linux/blk-mq-sched.h>
-+#include <linux/blk-mq-debugfs.h>
-+#include <linux/elevator.h>
-+#include <linux/bio.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/init.h>
-+#include <linux/compiler.h>
-+#include <linux/rbtree.h>
-+#include <linux/sbitmap.h>
-+#include <linux/seq_file.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+
-+#include "sd.h"
-+#include "sd_zbc.h"
-+
-+/*
-+ * See Documentation/block/deadline-iosched.txt
-+ */
-+
-+/* max time before a read is submitted. */
-+static const int read_expire = HZ / 2;
-+
-+/* ditto for writes, these limits are SOFT! */
-+static const int write_expire = 5 * HZ;
-+
-+/* max times reads can starve a write */
-+static const int writes_starved = 2;
-+
-+/*
-+ * Number of sequential requests treated as one by the above parameters.
-+ * For throughput.
-+ */
-+static const int fifo_batch = 16;
-+
-+/*
-+ * Run time data.
-+ */
-+struct zoned_data {
-+	/*
-+	 * requests (zoned_rq s) are present on both sort_list and fifo_list
-+	 */
-+	struct rb_root sort_list[2];
-+	struct list_head fifo_list[2];
-+
-+	/*
-+	 * next in sort order. read, write or both are NULL
-+	 */
-+	struct request *next_rq[2];
-+	unsigned int batching;		/* number of sequential requests made */
-+	unsigned int starved;		/* times reads have starved writes */
-+
-+	/*
-+	 * settings that change how the i/o scheduler behaves
-+	 */
-+	int fifo_expire[2];
-+	int fifo_batch;
-+	int writes_starved;
-+	int front_merges;
-+
-+	spinlock_t lock;
-+	struct list_head dispatch;
-+
-+	struct scsi_disk *sdkp;
-+
-+	spinlock_t zones_lock;
-+	unsigned long *zones_wlock;
-+	unsigned long *seq_zones;
-+};
-+
-+static inline struct rb_root *
-+zoned_rb_root(struct zoned_data *zd, struct request *rq)
-+{
-+	return &zd->sort_list[rq_data_dir(rq)];
-+}
-+
-+/*
-+ * get the request after `rq' in sector-sorted order
-+ */
-+static inline struct request *
-+zoned_latter_request(struct request *rq)
-+{
-+	struct rb_node *node = rb_next(&rq->rb_node);
-+
-+	if (node)
-+		return rb_entry_rq(node);
-+
-+	return NULL;
-+}
-+
-+static void
-+zoned_add_rq_rb(struct zoned_data *zd, struct request *rq)
-+{
-+	struct rb_root *root = zoned_rb_root(zd, rq);
-+
-+	elv_rb_add(root, rq);
-+}
-+
-+static inline void
-+zoned_del_rq_rb(struct zoned_data *zd, struct request *rq)
-+{
-+	const int data_dir = rq_data_dir(rq);
-+
-+	if (zd->next_rq[data_dir] == rq)
-+		zd->next_rq[data_dir] = zoned_latter_request(rq);
-+
-+	elv_rb_del(zoned_rb_root(zd, rq), rq);
-+}
-+
-+/*
-+ * remove rq from rbtree and fifo.
-+ */
-+static void zoned_remove_request(struct request_queue *q, struct request *rq)
-+{
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	list_del_init(&rq->queuelist);
-+
-+	/*
-+	 * We might not be on the rbtree, if we are doing an insert merge
-+	 */
-+	if (!RB_EMPTY_NODE(&rq->rb_node))
-+		zoned_del_rq_rb(zd, rq);
-+
-+	elv_rqhash_del(q, rq);
-+	if (q->last_merge == rq)
-+		q->last_merge = NULL;
-+}
-+
-+static void zd_request_merged(struct request_queue *q, struct request *req,
-+			      enum elv_merge type)
-+{
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	/*
-+	 * if the merge was a front merge, we need to reposition request
-+	 */
-+	if (type == ELEVATOR_FRONT_MERGE) {
-+		elv_rb_del(zoned_rb_root(zd, req), req);
-+		zoned_add_rq_rb(zd, req);
-+	}
-+}
-+
-+static void zd_merged_requests(struct request_queue *q, struct request *req,
-+			       struct request *next)
-+{
-+	/*
-+	 * if next expires before rq, assign its expire time to rq
-+	 * and move into next position (next will be deleted) in fifo
-+	 */
-+	if (!list_empty(&req->queuelist) && !list_empty(&next->queuelist)) {
-+		if (time_before((unsigned long)next->fifo_time,
-+				(unsigned long)req->fifo_time)) {
-+			list_move(&req->queuelist, &next->queuelist);
-+			req->fifo_time = next->fifo_time;
-+		}
-+	}
-+
-+	/*
-+	 * kill knowledge of next, this one is a goner
-+	 */
-+	zoned_remove_request(q, next);
-+}
-+
-+/*
-+ * Return true if a request is a write requests that needs zone
-+ * write locking.
-+ */
-+static inline bool zoned_request_needs_wlock(struct zoned_data *zd,
-+					     struct request *rq)
-+{
-+	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
-+
-+	if (blk_rq_is_passthrough(rq))
-+		return false;
-+
-+	if (!test_bit(zno, zd->seq_zones))
-+		return false;
-+
-+	switch (req_op(rq)) {
-+	case REQ_OP_WRITE_ZEROES:
-+	case REQ_OP_WRITE_SAME:
-+	case REQ_OP_WRITE:
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
-+/*
-+ * Abuse the elv.priv[0] pointer to indicate if a request
-+ * has locked its target zone.
-+ */
-+#define RQ_LOCKED_ZONE		((void *)1UL)
-+static inline void zoned_set_request_lock(struct request *rq)
-+{
-+	rq->elv.priv[0] = RQ_LOCKED_ZONE;
-+}
-+
-+#define RQ_ZONE_NO_LOCK		((void *)0UL)
-+static inline void zoned_clear_request_lock(struct request *rq)
-+{
-+	rq->elv.priv[0] = RQ_ZONE_NO_LOCK;
-+}
-+
-+static inline bool zoned_request_has_lock(struct request *rq)
-+{
-+	return rq->elv.priv[0] == RQ_LOCKED_ZONE;
-+}
-+
-+/*
-+ * Write lock the target zone of a write request.
-+ */
-+static void zoned_wlock_request_zone(struct zoned_data *zd, struct request *rq)
-+{
-+	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
-+
-+	WARN_ON_ONCE(zoned_request_has_lock(rq));
-+	WARN_ON_ONCE(test_and_set_bit(zno, zd->zones_wlock));
-+	zoned_set_request_lock(rq);
-+}
-+
-+/*
-+ * Write unlock the target zone of a write request.
-+ */
-+static void zoned_wunlock_request_zone(struct zoned_data *zd,
-+				       struct request *rq)
-+{
-+	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
-+	unsigned long flags;
-+
-+	/*
-+	 * Dispatch may be running on a different CPU.
-+	 * So do not unlock the zone until it is done or
-+	 * a write request in the middle of a sequence may end up
-+	 * being dispatched.
-+	 */
-+	spin_lock_irqsave(&zd->zones_lock, flags);
-+
-+	WARN_ON_ONCE(!test_and_clear_bit(zno, zd->zones_wlock));
-+	zoned_clear_request_lock(rq);
-+
-+	spin_unlock_irqrestore(&zd->zones_lock, flags);
-+}
-+
-+/*
-+ * Test the write lock state of the target zone of a write request.
-+ */
-+static inline bool zoned_request_zone_is_wlocked(struct zoned_data *zd,
-+						 struct request *rq)
-+{
-+	unsigned int zno = sd_zbc_request_zone_no(zd->sdkp, rq);
-+
-+	return test_bit(zno, zd->zones_wlock);
-+}
-+
-+/*
-+ * move an entry to dispatch queue
-+ */
-+static void zoned_move_request(struct zoned_data *zd, struct request *rq)
-+{
-+	const int data_dir = rq_data_dir(rq);
-+
-+	zd->next_rq[READ] = NULL;
-+	zd->next_rq[WRITE] = NULL;
-+	zd->next_rq[data_dir] = zoned_latter_request(rq);
-+
-+	/*
-+	 * take it off the sort and fifo list
-+	 */
-+	zoned_remove_request(rq->q, rq);
-+}
-+
-+/*
-+ * zoned_check_fifo returns 0 if there are no expired requests on the fifo,
-+ * 1 otherwise. Requires !list_empty(&zd->fifo_list[data_dir])
-+ */
-+static inline int zoned_check_fifo(struct zoned_data *zd, int ddir)
-+{
-+	struct request *rq = rq_entry_fifo(zd->fifo_list[ddir].next);
-+
-+	/*
-+	 * rq is expired!
-+	 */
-+	if (time_after_eq(jiffies, (unsigned long)rq->fifo_time))
-+		return 1;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Test if a request can be dispatched.
-+ */
-+static inline bool zoned_can_dispatch_request(struct zoned_data *zd,
-+					      struct request *rq)
-+{
-+	return !zoned_request_needs_wlock(zd, rq) ||
-+		!zoned_request_zone_is_wlocked(zd, rq);
-+}
-+
-+/*
-+ * For the specified data direction, find the next request that can be
-+ * dispatched. Search in increasing sector position.
-+ */
-+static struct request *
-+zoned_next_request(struct zoned_data *zd, int data_dir)
-+{
-+	struct request *rq = zd->next_rq[data_dir];
-+	unsigned long flags;
-+
-+	if (data_dir == READ)
-+		return rq;
-+
-+	spin_lock_irqsave(&zd->zones_lock, flags);
-+	while (rq) {
-+		if (zoned_can_dispatch_request(zd, rq))
-+			break;
-+		rq = zoned_latter_request(rq);
-+	}
-+	spin_unlock_irqrestore(&zd->zones_lock, flags);
-+
-+	return rq;
-+}
-+
-+/*
-+ * For the specified data direction, find the next request that can be
-+ * dispatched. Search in arrival order from the oldest request.
-+ */
-+static struct request *
-+zoned_fifo_request(struct zoned_data *zd, int data_dir)
-+{
-+	struct request *rq;
-+	unsigned long flags;
-+
-+	if (list_empty(&zd->fifo_list[data_dir]))
-+		return NULL;
-+
-+	if (data_dir == READ)
-+		return rq_entry_fifo(zd->fifo_list[READ].next);
-+
-+	spin_lock_irqsave(&zd->zones_lock, flags);
-+
-+	list_for_each_entry(rq, &zd->fifo_list[WRITE], queuelist) {
-+		if (zoned_can_dispatch_request(zd, rq))
-+			goto out;
-+	}
-+	rq = NULL;
-+
-+out:
-+	spin_unlock_irqrestore(&zd->zones_lock, flags);
-+
-+	return rq;
-+}
-+
-+/*
-+ * __zd_dispatch_request selects the best request according to
-+ * read/write batch expiration, fifo_batch, target zone lock state, etc
-+ */
-+static struct request *__zd_dispatch_request(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct zoned_data *zd = hctx->queue->elevator->elevator_data;
-+	struct request *rq = NULL, *next_rq;
-+	bool reads, writes;
-+	int data_dir;
-+
-+	if (!list_empty(&zd->dispatch)) {
-+		rq = list_first_entry(&zd->dispatch, struct request, queuelist);
-+		list_del_init(&rq->queuelist);
-+		goto done;
-+	}
-+
-+	reads = !list_empty(&zd->fifo_list[READ]);
-+	writes = !list_empty(&zd->fifo_list[WRITE]);
-+
-+	/*
-+	 * batches are currently reads XOR writes
-+	 */
-+	rq = zoned_next_request(zd, WRITE);
-+	if (!rq)
-+		rq = zoned_next_request(zd, READ);
-+	if (rq && zd->batching < zd->fifo_batch)
-+		/* we have a next request are still entitled to batch */
-+		goto dispatch_request;
-+
-+	/*
-+	 * at this point we are not running a batch. select the appropriate
-+	 * data direction (read / write)
-+	 */
-+
-+	if (reads) {
-+		if (writes && (zd->starved++ >= zd->writes_starved))
-+			goto dispatch_writes;
-+
-+		data_dir = READ;
-+
-+		goto dispatch_find_request;
-+	}
-+
-+	/*
-+	 * there are either no reads or writes have been starved
-+	 */
-+
-+	if (writes) {
-+dispatch_writes:
-+		zd->starved = 0;
-+
-+		/* Really select writes if at least one can be dispatched */
-+		if (zoned_fifo_request(zd, WRITE))
-+			data_dir = WRITE;
-+		else
-+			data_dir = READ;
-+
-+		goto dispatch_find_request;
-+	}
-+
-+	return NULL;
-+
-+dispatch_find_request:
-+	/*
-+	 * we are not running a batch, find best request for selected data_dir
-+	 */
-+	next_rq = zoned_next_request(zd, data_dir);
-+	if (zoned_check_fifo(zd, data_dir) || !next_rq) {
-+		/*
-+		 * A deadline has expired, the last request was in the other
-+		 * direction, or we have run out of higher-sectored requests.
-+		 * Start again from the request with the earliest expiry time.
-+		 */
-+		rq = zoned_fifo_request(zd, data_dir);
-+	} else {
-+		/*
-+		 * The last req was the same dir and we have a next request in
-+		 * sort order. No expired requests so continue on from here.
-+		 */
-+		rq = next_rq;
-+	}
-+
-+	if (!rq)
-+		return NULL;
-+
-+	zd->batching = 0;
-+
-+dispatch_request:
-+	/*
-+	 * rq is the selected appropriate request.
-+	 */
-+	zd->batching++;
-+	zoned_move_request(zd, rq);
-+
-+done:
-+	/*
-+	 * If the request needs its target zone locked, do it.
-+	 */
-+	if (zoned_request_needs_wlock(zd, rq))
-+		zoned_wlock_request_zone(zd, rq);
-+	rq->rq_flags |= RQF_STARTED;
-+	return rq;
-+}
-+
-+static struct request *zd_dispatch_request(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct zoned_data *zd = hctx->queue->elevator->elevator_data;
-+	struct request *rq;
-+
-+	spin_lock(&zd->lock);
-+	rq = __zd_dispatch_request(hctx);
-+	spin_unlock(&zd->lock);
-+
-+	return rq;
-+}
-+
-+static int zd_request_merge(struct request_queue *q, struct request **rq,
-+			    struct bio *bio)
-+{
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+	sector_t sector = bio_end_sector(bio);
-+	struct request *__rq;
-+
-+	if (!zd->front_merges)
-+		return ELEVATOR_NO_MERGE;
-+
-+	__rq = elv_rb_find(&zd->sort_list[bio_data_dir(bio)], sector);
-+	if (__rq) {
-+		if (WARN_ON(sector != blk_rq_pos(__rq)))
-+			return ELEVATOR_NO_MERGE;
-+
-+		if (elv_bio_merge_ok(__rq, bio)) {
-+			*rq = __rq;
-+			return ELEVATOR_FRONT_MERGE;
-+		}
-+	}
-+
-+	return ELEVATOR_NO_MERGE;
-+}
-+
-+static bool zd_bio_merge(struct blk_mq_hw_ctx *hctx, struct bio *bio)
-+{
-+	struct request_queue *q = hctx->queue;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+	struct request *free = NULL;
-+	bool ret;
-+
-+	spin_lock(&zd->lock);
-+	ret = blk_mq_sched_try_merge(q, bio, &free);
-+	spin_unlock(&zd->lock);
-+
-+	if (free)
-+		blk_mq_free_request(free);
-+
-+	return ret;
-+}
-+
-+/*
-+ * add rq to rbtree and fifo
-+ */
-+static void __zd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
-+				bool at_head)
-+{
-+	struct request_queue *q = hctx->queue;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+	const int data_dir = rq_data_dir(rq);
-+
-+	if (blk_mq_sched_try_insert_merge(q, rq))
-+		return;
-+
-+	blk_mq_sched_request_inserted(rq);
-+
-+	if (at_head || blk_rq_is_passthrough(rq)) {
-+		if (at_head)
-+			list_add(&rq->queuelist, &zd->dispatch);
-+		else
-+			list_add_tail(&rq->queuelist, &zd->dispatch);
-+	} else {
-+		zoned_add_rq_rb(zd, rq);
-+
-+		if (rq_mergeable(rq)) {
-+			elv_rqhash_add(q, rq);
-+			if (!q->last_merge)
-+				q->last_merge = rq;
-+		}
-+
-+		/*
-+		 * set expire time and add to fifo list
-+		 */
-+		rq->fifo_time = jiffies + zd->fifo_expire[data_dir];
-+		list_add_tail(&rq->queuelist, &zd->fifo_list[data_dir]);
-+	}
-+}
-+
-+static void zd_insert_requests(struct blk_mq_hw_ctx *hctx,
-+			       struct list_head *list, bool at_head)
-+{
-+	struct request_queue *q = hctx->queue;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	spin_lock(&zd->lock);
-+	while (!list_empty(list)) {
-+		struct request *rq;
-+
-+		rq = list_first_entry(list, struct request, queuelist);
-+		list_del_init(&rq->queuelist);
-+
-+		/*
-+		 * This may be a requeue of a request that has locked its
-+		 * target zone. If this is the case, release the zone lock.
-+		 */
-+		if (zoned_request_has_lock(rq))
-+			zoned_wunlock_request_zone(zd, rq);
-+
-+		__zd_insert_request(hctx, rq, at_head);
-+	}
-+	spin_unlock(&zd->lock);
-+}
-+
-+/*
-+ * Write unlock the target zone of a completed write request.
-+ */
-+static void zd_completed_request(struct request *rq)
-+{
-+
-+	if (zoned_request_has_lock(rq)) {
-+		struct zoned_data *zd = rq->q->elevator->elevator_data;
-+
-+		zoned_wunlock_request_zone(zd, rq);
-+	}
-+}
-+
-+static bool zd_has_work(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct zoned_data *zd = hctx->queue->elevator->elevator_data;
-+
-+	return !list_empty_careful(&zd->dispatch) ||
-+		!list_empty_careful(&zd->fifo_list[0]) ||
-+		!list_empty_careful(&zd->fifo_list[1]);
-+}
-+
-+static struct scsi_disk *zoned_lookup_disk(struct request_queue *q)
-+{
-+	struct scsi_disk *sdkp;
-+
-+	if (!blk_queue_is_zoned(q)) {
-+		pr_err("zoned: Not a zoned block device\n");
-+		return NULL;
-+	}
-+
-+	sdkp = scsi_disk_from_queue(q);
-+	if (!sdkp) {
-+		pr_err("zoned: Not a SCSI disk\n");
-+		return NULL;
-+	}
-+
-+	/* Paranoia check */
-+	if (WARN_ON(sdkp->disk->queue != q))
-+		return NULL;
-+
-+	return sdkp;
-+}
-+
-+/*
-+ * Initialize elevator private data (zoned_data).
-+ */
-+static int zd_init_queue(struct request_queue *q, struct elevator_type *e)
-+{
-+	struct scsi_disk *sdkp;
-+	struct zoned_data *zd;
-+	struct elevator_queue *eq;
-+	int ret;
-+
-+	sdkp = zoned_lookup_disk(q);
-+	if (!sdkp)
-+		return -ENODEV;
-+
-+	eq = elevator_alloc(q, e);
-+	if (!eq)
-+		return -ENOMEM;
-+
-+	zd = kzalloc_node(sizeof(*zd), GFP_KERNEL, q->node);
-+	if (!zd) {
-+		kobject_put(&eq->kobj);
-+		return -ENOMEM;
-+	}
-+
-+	INIT_LIST_HEAD(&zd->fifo_list[READ]);
-+	INIT_LIST_HEAD(&zd->fifo_list[WRITE]);
-+	zd->sort_list[READ] = RB_ROOT;
-+	zd->sort_list[WRITE] = RB_ROOT;
-+	zd->fifo_expire[READ] = read_expire;
-+	zd->fifo_expire[WRITE] = write_expire;
-+	zd->writes_starved = writes_starved;
-+	zd->front_merges = 1;
-+	zd->fifo_batch = fifo_batch;
-+	spin_lock_init(&zd->lock);
-+	INIT_LIST_HEAD(&zd->dispatch);
-+
-+	zd->sdkp = sdkp;
-+	spin_lock_init(&zd->zones_lock);
-+
-+	zd->zones_wlock = sdkp->zones_wlock;
-+	zd->seq_zones = sdkp->seq_zones;
-+	if (!zd->zones_wlock || !zd->seq_zones) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	eq->elevator_data = zd;
-+	q->elevator = eq;
-+
-+	return 0;
-+
-+err:
-+	kfree(zd);
-+	kobject_put(&eq->kobj);
-+
-+	return ret;
-+}
-+
-+static void zd_exit_queue(struct elevator_queue *e)
-+{
-+	struct zoned_data *zd = e->elevator_data;
-+
-+	WARN_ON(!list_empty(&zd->fifo_list[READ]));
-+	WARN_ON(!list_empty(&zd->fifo_list[WRITE]));
-+
-+	kfree(zd);
-+}
-+
-+/*
-+ * sysfs parts below
-+ */
-+static ssize_t
-+zoned_var_show(int var, char *page)
-+{
-+	return sprintf(page, "%d\n", var);
-+}
-+
-+static ssize_t
-+zoned_var_store(int *var, const char *page, size_t count)
-+{
-+	char *p = (char *) page;
-+	int ret;
-+
-+	ret = kstrtoint(p, 10, var);
-+	if (ret)
-+		return ret;
-+
-+	return count;
-+}
-+
-+#define SHOW_FUNCTION(__FUNC, __VAR, __CONV)				\
-+static ssize_t __FUNC(struct elevator_queue *e, char *page)		\
-+{									\
-+	struct zoned_data *zd = e->elevator_data;			\
-+	int __data = __VAR;						\
-+	if (__CONV)							\
-+		__data = jiffies_to_msecs(__data);			\
-+	return zoned_var_show(__data, (page));			\
-+}
-+SHOW_FUNCTION(zoned_read_expire_show, zd->fifo_expire[READ], 1);
-+SHOW_FUNCTION(zoned_write_expire_show, zd->fifo_expire[WRITE], 1);
-+SHOW_FUNCTION(zoned_writes_starved_show, zd->writes_starved, 0);
-+SHOW_FUNCTION(zoned_front_merges_show, zd->front_merges, 0);
-+SHOW_FUNCTION(zoned_fifo_batch_show, zd->fifo_batch, 0);
-+#undef SHOW_FUNCTION
-+
-+#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
-+static ssize_t __FUNC(struct elevator_queue *e,				\
-+		      const char *page, size_t count)			\
-+{									\
-+	struct zoned_data *zd = e->elevator_data;			\
-+	int __data;							\
-+	int ret = zoned_var_store(&__data, (page), count);		\
-+	if (__data < (MIN))						\
-+		__data = (MIN);						\
-+	else if (__data > (MAX))					\
-+		__data = (MAX);						\
-+	if (__CONV)							\
-+		*(__PTR) = msecs_to_jiffies(__data);			\
-+	else								\
-+		*(__PTR) = __data;					\
-+	return ret;							\
-+}
-+STORE_FUNCTION(zoned_read_expire_store, &zd->fifo_expire[READ],
-+	       0, INT_MAX, 1);
-+STORE_FUNCTION(zoned_write_expire_store, &zd->fifo_expire[WRITE],
-+	       0, INT_MAX, 1);
-+STORE_FUNCTION(zoned_writes_starved_store, &zd->writes_starved,
-+	       INT_MIN, INT_MAX, 0);
-+STORE_FUNCTION(zoned_front_merges_store, &zd->front_merges,
-+	       0, 1, 0);
-+STORE_FUNCTION(zoned_fifo_batch_store, &zd->fifo_batch,
-+	       0, INT_MAX, 0);
-+#undef STORE_FUNCTION
-+
-+#define DD_ATTR(name) \
-+	__ATTR(name, S_IRUGO|S_IWUSR, zoned_##name##_show, \
-+				      zoned_##name##_store)
-+
-+static struct elv_fs_entry zoned_attrs[] = {
-+	DD_ATTR(read_expire),
-+	DD_ATTR(write_expire),
-+	DD_ATTR(writes_starved),
-+	DD_ATTR(front_merges),
-+	DD_ATTR(fifo_batch),
-+	__ATTR_NULL
-+};
-+
-+#ifdef CONFIG_BLK_DEBUG_FS
-+#define ZONED_DEBUGFS_DDIR_ATTRS(ddir, name)				\
-+static void *zoned_##name##_fifo_start(struct seq_file *m,		\
-+					  loff_t *pos)			\
-+	__acquires(&zd->lock)						\
-+{									\
-+	struct request_queue *q = m->private;				\
-+	struct zoned_data *zd = q->elevator->elevator_data;		\
-+									\
-+	spin_lock(&zd->lock);						\
-+	return seq_list_start(&zd->fifo_list[ddir], *pos);		\
-+}									\
-+									\
-+static void *zoned_##name##_fifo_next(struct seq_file *m, void *v,	\
-+					 loff_t *pos)			\
-+{									\
-+	struct request_queue *q = m->private;				\
-+	struct zoned_data *zd = q->elevator->elevator_data;		\
-+									\
-+	return seq_list_next(v, &zd->fifo_list[ddir], pos);		\
-+}									\
-+									\
-+static void zoned_##name##_fifo_stop(struct seq_file *m, void *v)	\
-+	__releases(&zd->lock)						\
-+{									\
-+	struct request_queue *q = m->private;				\
-+	struct zoned_data *zd = q->elevator->elevator_data;		\
-+									\
-+	spin_unlock(&zd->lock);						\
-+}									\
-+									\
-+static const struct seq_operations zoned_##name##_fifo_seq_ops = {	\
-+	.start	= zoned_##name##_fifo_start,				\
-+	.next	= zoned_##name##_fifo_next,				\
-+	.stop	= zoned_##name##_fifo_stop,				\
-+	.show	= blk_mq_debugfs_rq_show,				\
-+};									\
-+									\
-+static int zoned_##name##_next_rq_show(void *data,			\
-+					  struct seq_file *m)		\
-+{									\
-+	struct request_queue *q = data;					\
-+	struct zoned_data *zd = q->elevator->elevator_data;		\
-+	struct request *rq = zd->next_rq[ddir];				\
-+									\
-+	if (rq)								\
-+		__blk_mq_debugfs_rq_show(m, rq);			\
-+	return 0;							\
-+}
-+ZONED_DEBUGFS_DDIR_ATTRS(READ, read)
-+ZONED_DEBUGFS_DDIR_ATTRS(WRITE, write)
-+#undef ZONED_DEBUGFS_DDIR_ATTRS
-+
-+static int zoned_batching_show(void *data, struct seq_file *m)
-+{
-+	struct request_queue *q = data;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	seq_printf(m, "%u\n", zd->batching);
-+	return 0;
-+}
-+
-+static int zoned_starved_show(void *data, struct seq_file *m)
-+{
-+	struct request_queue *q = data;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	seq_printf(m, "%u\n", zd->starved);
-+	return 0;
-+}
-+
-+static void *zoned_dispatch_start(struct seq_file *m, loff_t *pos)
-+	__acquires(&zd->lock)
-+{
-+	struct request_queue *q = m->private;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	spin_lock(&zd->lock);
-+	return seq_list_start(&zd->dispatch, *pos);
-+}
-+
-+static void *zoned_dispatch_next(struct seq_file *m, void *v, loff_t *pos)
-+{
-+	struct request_queue *q = m->private;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	return seq_list_next(v, &zd->dispatch, pos);
-+}
-+
-+static void zoned_dispatch_stop(struct seq_file *m, void *v)
-+	__releases(&zd->lock)
-+{
-+	struct request_queue *q = m->private;
-+	struct zoned_data *zd = q->elevator->elevator_data;
-+
-+	spin_unlock(&zd->lock);
-+}
-+
-+static const struct seq_operations zoned_dispatch_seq_ops = {
-+	.start	= zoned_dispatch_start,
-+	.next	= zoned_dispatch_next,
-+	.stop	= zoned_dispatch_stop,
-+	.show	= blk_mq_debugfs_rq_show,
-+};
-+
-+#define ZONED_QUEUE_DDIR_ATTRS(name)					     \
-+	{#name "_fifo_list", 0400, .seq_ops = &zoned_##name##_fifo_seq_ops}, \
-+	{#name "_next_rq", 0400, zoned_##name##_next_rq_show}
-+static const struct blk_mq_debugfs_attr zoned_queue_debugfs_attrs[] = {
-+	ZONED_QUEUE_DDIR_ATTRS(read),
-+	ZONED_QUEUE_DDIR_ATTRS(write),
-+	{"batching", 0400, zoned_batching_show},
-+	{"starved", 0400, zoned_starved_show},
-+	{"dispatch", 0400, .seq_ops = &zoned_dispatch_seq_ops},
-+	{},
-+};
-+#undef ZONED_QUEUE_DDIR_ATTRS
-+#endif
-+
-+static struct elevator_type zoned_elv = {
-+	.ops.mq = {
-+		.insert_requests	= zd_insert_requests,
-+		.dispatch_request	= zd_dispatch_request,
-+		.completed_request	= zd_completed_request,
-+		.next_request		= elv_rb_latter_request,
-+		.former_request		= elv_rb_former_request,
-+		.bio_merge		= zd_bio_merge,
-+		.request_merge		= zd_request_merge,
-+		.requests_merged	= zd_merged_requests,
-+		.request_merged		= zd_request_merged,
-+		.has_work		= zd_has_work,
-+		.init_sched		= zd_init_queue,
-+		.exit_sched		= zd_exit_queue,
-+	},
-+
-+	.uses_mq	= true,
-+#ifdef CONFIG_BLK_DEBUG_FS
-+	.queue_debugfs_attrs = zoned_queue_debugfs_attrs,
-+#endif
-+	.elevator_attrs = zoned_attrs,
-+	.elevator_name = "zoned",
-+	.elevator_owner = THIS_MODULE,
-+};
-+
-+static int __init zoned_init(void)
-+{
-+	return elv_register(&zoned_elv);
-+}
-+
-+static void __exit zoned_exit(void)
-+{
-+	elv_unregister(&zoned_elv);
-+}
-+
-+module_init(zoned_init);
-+module_exit(zoned_exit);
-+
-+MODULE_AUTHOR("Damien Le Moal");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Zoned MQ deadline IO scheduler");
--- 
-2.13.5
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+Arnd Bergmann (8):
+      scsi: lpfc: avoid false-positive gcc-8 warning
+      scsi: lpfc: avoid an unused function warning
+      scsi: fusion: fix string overflow warning
+      scsi: gdth: increase the procfs event buffer size
+      scsi: fnic: fix format string overflow warning
+      scsi: gdth: avoid buffer overflow warning
+      scsi: mpt3sas: fix format overflow warning
+      scsi: megaraid: fix format-overflow warning
+
+Arvind Yadav (4):
+      scsi: ibmvfc: ibmvscsi: ibmvscsi_tgt: constify vio_device_id
+      scsi: aha1542: constify pnp_device_id
+      scsi: ncr5380: constify pnp_device_id
+      scsi: esas2r: constify pci_device_id.
+
+Bart Van Assche (24):
+      scsi: scsi-mq: Always unprepare before requeuing a request
+      scsi: Show .retries and .jiffies_at_alloc in debugfs
+      scsi: Improve requeuing behavior
+      scsi: Call scsi_initialize_rq() for filesystem requests
+      scsi: Rework handling of scsi_device.vpd_pg8[03]
+      scsi: Rework the code for caching Vital Product Data (VPD)
+      scsi: rcu: Introduce rcu_swap_protected()
+      scsi: iscsi_tcp: Remove a set-but-not-used variable
+      scsi: scsi_debug: Remove a set-but-not-used variable
+      scsi: scsi_transport_srp: Suppress a W=1 compiler warning
+      scsi: scsi_transport_sas: Check kzalloc() return value
+      scsi: libsas: Annotate fall-through in a switch statement
+      scsi: libsas: Remove a set-but-not-used variable
+      scsi: libiscsi: Fix indentation
+      scsi: sg: Fix type of last blk_trace_setup() argument
+      scsi: sd: Remove a useless comparison
+      scsi: sd: Fix indentation
+      scsi: sd: sr: Convert two assignments into warning statements
+      scsi: Use blk_mq_rq_to_pdu() to convert a request to a SCSI command pointer
+      scsi: Document which queue type a function is intended for
+      scsi: Convert a strncmp() call into a strcmp() call
+      scsi: Suppress gcc 7 fall-through warnings reported with W=1
+      scsi: Avoid sign extension of scsi_device.type
+      scsi: Remove an obsolete function declaration
+
+Benjamin Block (3):
+      scsi: zfcp: add handling for FCP_RESID_OVER to the fcp ingress path
+      scsi: zfcp: convert bool-definitions to use 'true' instead of '1'
+      MAINTAINERS: Add myself to S390 ZFCP DRIVER as a co-maintainer
+
+Bhumika Goyal (2):
+      scsi: make device_type const
+      arcmsr: add const to bin_attribute structures
+
+Bodo Stroesser (1):
+      scsi: st: fix blk_get_queue usage
+
+Brian King (4):
+      scsi: aacraid: Fix command send race condition
+      scsi: ipr: Set no_report_opcodes for RAID arrays
+      scsi: ses: Fix wrong page error
+      scsi: ipr: Fix scsi-mq lockdep issue
+
+Calvin Owens (1):
+      scsi: ses: Fix racy cleanup of /sys in remove_dev()
+
+Chad Dupuis (6):
+      scsi: qedf: Update driver version to 8.20.5.0.
+      scsi: qedf: Fix up modinfo parameter name for 'debug' in modinfo output.
+      scsi: qedf: Covert single-threaded workqueues to regular workqueues.
+      scsi: qedf: Corrent VLAN tag insertion in fallback VLAN case.
+      scsi: qedf: Use granted MAC from the FCF for the FCoE source address if it is available.
+      scsi: qedf: Set WWNN and WWPN based on values from qed.
+
+Christoph Hellwig (5):
+      scsi: scsi_transport_sas: switch to bsg-lib for SMP passthrough
+      scsi: smartpqi: remove the smp_handler stub
+      scsi: hpsa: remove the smp_handler stub
+      scsi: bsg-lib: pass the release callback through bsg_setup_queue
+      Revert "scsi: default to scsi-mq"
+
+Christophe JAILLET (3):
+      scsi: cxlflash: Fix an error handling path in 'cxlflash_disk_attach()'
+      scsi: qedf: Fix a potential NULL pointer dereference
+      scsi: mpt3sas: Fix memory allocation failure test in 'mpt3sas_base_attach()'
+
+Colin Ian King (4):
+      scsi: qla2xxx: fix spelling mistake of variable sfp_additonal_info
+      scsi: osst: add missing indent on a for loop statement
+      scsi: mpt3sas: fix pr_info message continuation
+      scsi: dpt_i2o: remove redundant null check on array device
+
+Corentin Labbe (1):
+      scsi: zfcp: Remove unneeded linux/miscdevice.h include
+
+Damien Le Moal (1):
+      scsi: sd_zbc: Write unlock zone from sd_uninit_cmnd()
+
+Dan Carpenter (6):
+      scsi: qla2xxx: Fix an integer overflow in sysfs code
+      scsi: qedi: off by one in qedi_get_cmd_from_tid()
+      scsi: hpsa: fix the device_id in hpsa_update_device_info()
+      scsi: osst: silence underflow warning in osst_verify_frame()
+      scsi: sg: off by one in sg_ioctl()
+      scsi: aacraid: reading out of bounds
+
+Darren Trap (2):
+      scsi: qla2xxx: Clear fc4f_nvme flag
+      scsi: qla2xxx: Fix WWPN/WWNN in debug message
+
+Dick Kennedy (17):
+      scsi: lpfc: lpfc version bump 11.4.0.3
+      scsi: lpfc: Fix bad sgl reposting after 2nd adapter reset
+      scsi: lpfc: Fix nvme target failure after 2nd adapter reset
+      scsi: lpfc: Fix relative offset error on large nvmet target ios
+      scsi: lpfc: Fix MRQ > 1 context list handling
+      scsi: lpfc: Limit amount of work processed in IRQ
+      scsi: lpfc: Correct issues with FAWWN and FDISCs
+      scsi: lpfc: Fix NVME PRLI handling during RSCN
+      scsi: lpfc: Fix crash in lpfc nvmet when fc port is reset
+      scsi: lpfc: Fix duplicate NVME rport entries and namespaces.
+      scsi: lpfc: Fix handling of FCP and NVME FC4 types in Pt2Pt topology
+      scsi: lpfc: Correct return error codes to align with nvme_fc transport
+      scsi: lpfc: convert info messages to standard messages
+      scsi: lpfc: Fix oops when NVME Target is discovered in a nonNVME environment
+      scsi: lpfc: Fix rediscovery on switch blade pull
+      scsi: lpfc: Fix loop mode target discovery
+      scsi: lpfc: Fix plogi collision that causes illegal state transition
+
+Duane Grigsby (3):
+      scsi: qla2xxx: Fix system panic due to pointer access problem
+      scsi: qla2xxx: Add command completion for error path
+      scsi: qla2xxx: Added change to enable ZIO for FC-NVMe devices
+
+Finn Thain (7):
+      scsi: esp_scsi: Always clear msg_out_len after MESSAGE OUT phase
+      scsi: esp_scsi: Avoid sending ABORT TASK SET messages
+      scsi: esp_scsi: Clean up control flow and dead code
+      scsi: mac_esp: Fix PIO transfers for MESSAGE IN phase
+      scsi: mac_esp: Avoid type warning from sparse
+      scsi: g_NCR5380: Use unambiguous terminology for PDMA send and receive
+      scsi: g_NCR5380: Cleanup comments and whitespace
+
+Giridhar Malavali (1):
+      scsi: qla2xxx: Ability to process multiple SGEs in Command SGL for CT passthrough commands.
+
+Greg Kroah-Hartman (1):
+      scsi: remove DRIVER_ATTR() usage
+
+Gustavo A. R. Silva (2):
+      scsi: lpfc: remove useless code in lpfc_sli4_bsg_link_diag_test
+      scsi: pmcraid: fix duplicated code for different branches
+
+Hannes Reinecke (47):
+      scsi: qlogicpti: fixup qlogicpti_reset() definition
+      scsi: mptsas: Fixup device hotplug for VMWare ESXi
+      scsi: eata: remove 'arg_done' from eata2x_eh_host_reset()
+      scsi: visorhba: sanitze private device data allocation
+      scsi: megaraid_mbox: drop duplicate bus reset and device reset function
+      scsi: bnx2fc: remove obsolete bnx2fc_eh_host_reset() definition
+      scsi: 53c700: move bus reset to host reset
+      scsi: aha152x: drop host reset
+      scsi: nsp32: drop bus reset
+      scsi: qedf: drop bus reset handler
+      scsi: ppa: drop duplicate bus_reset handler
+      scsi: imm: drop duplicate bus_reset handler
+      scsi: qlogicfas: move bus_reset to host_reset
+      scsi: NCR5380: Move bus reset to host reset
+      scsi: acornscsi: move bus reset to host reset
+      scsi: qlogicpti: move bus reset to host reset
+      scsi: rtsx: drop bus reset function
+      scsi: drop bus reset for wd33c93-compatible boards
+      scsi: fdomain: move bus reset to host reset
+      scsi: hptiop: Simplify reset handling
+      scsi: bfa: move bus reset to target reset
+      scsi: libsas: move bus_reset_handler() to target_reset_handler()
+      scsi: uas: move eh_bus_reset_handler to eh_device_reset_handler
+      scsi: fnic: do not call host reset from command abort
+      scsi: fc_fcp: do not call fc_block_scsi_eh() from host reset
+      scsi: ibmvfc: Do not call fc_block_scsi_eh() on host reset
+      scsi: mptfc: Do not call fc_block_scsi_eh() on host reset
+      scsi: fix comment in scsi_device_set_state()
+      scsi: ch: add refcounting
+      scsi: ses: make page2 support optional
+      scsi: ses: Fixup error message 'failed to get diagnostic page 0xffffffea'
+      scsi: ses: check return code from ses_recv_diag()
+      scsi: hpsa: Remove 'hpsa_allow_any' module option
+      scsi: cciss: Drop obsolete driver
+      scsi: hpsa: do not print errors for unsupported report luns format
+      scsi: hpsa: Ignore errors for unsupported LV_DEVICE_ID VPD page
+      scsi: hpsa: disable volume status check for legacy boards
+      scsi: hpsa: add support for legacy boards
+      scsi: make 'state' device attribute pollable
+      scsi: scsi_lib: rework scsi_internal_device_unblock_nowait()
+      scsi: aacraid: complete all commands during bus reset
+      scsi: aacraid: add fib flag to mark scsi command callback
+      scsi: aacraid: enable sending of TMFs from aac_hba_send()
+      scsi: aacraid: use aac_tmf_callback for reset fib
+      scsi: aacraid: split off device, target, and bus reset
+      scsi: aacraid: split off host reset
+      scsi: aacraid: split off functions to generate reset FIB
+
+Helge Deller (1):
+      scsi: sym53c8xx: Avoid undefined behaviour
+
+James Smart (2):
+      scsi: lpfc: Add Buffer to Buffer credit recovery support
+      scsi: lpfc: remove console log clutter
+
+Joe Carnuccio (10):
+      scsi: qla2xxx: Skip zero queue count entry during FW dump capture
+      scsi: qla2xxx: Add LR distance support from nvram bit
+      scsi: qla2xxx: Remove potential macro parameter side-effect in ql_dump_regs()
+      scsi: qla2xxx: Print correct mailbox registers in failed summary
+      scsi: qla2xxx: Allow SNS fabric login to be retried
+      scsi: qla2xxx: Add timeout ability to wait_for_sess_deletion().
+      scsi: qla2xxx: Move logging default mask to execute once only.
+      scsi: qla2xxx: Use sp->free instead of hard coded call.
+      scsi: qla2xxx: Prevent sp->free null/uninitialized pointer dereference.
+      scsi: qla2xxx: Correction to vha->vref_count timeout
+
+Johannes Thumshirn (2):
+      scsi: qla2xxx: add missing includes for qla_isr
+      scsi: sg: only check for dxfer_len greater than 256M
+
+John Garry (4):
+      scsi: hisi_sas: remove driver versioning
+      scsi: hisi_sas: replace kfree with scsi_host_put
+      scsi: hisi_sas: remove phy_down_v3_hw() res variable
+      scsi: hisi_sas: use array for v2 hw ECC errors
+
+Jonathan Corbet (1):
+      scsi: Fix the kerneldoc for scsi_initialize_rq()
+
+Kevin Barnett (7):
+      scsi: smartpqi: change driver version to 1.1.2-125
+      scsi: smartpqi: add in new controller ids
+      scsi: smartpqi: update kexec and power down support
+      scsi: smartpqi: cleanup doorbell register usage.
+      scsi: smartpqi: update pqi passthru ioctl
+      scsi: smartpqi: enhance BMIC cache flush
+      scsi: smartpqi: add pqi reset quiesce support
+
+LABBE Corentin (1):
+      scsi: zfcp: replace zfcp_qdio_sbale_count by sg_nents
+
+Long Li (1):
+      scsi: storvsc: fix memory leak on ring buffer busy
+
+Lukáš Korenčik (1):
+      scsi: zfcp: use setup_timer instead of init_timer
+
+Manish Rangankar (1):
+      scsi: qedi: Limit number for CQ queues.
+
+Martin Peschke (4):
+      scsi: zfcp: early returns for traces disabled via level
+      scsi: zfcp: clean up unnecessary module_param_named() with no_auto_port_rescan
+      scsi: zfcp: clean up a member of struct zfcp_qdio that was assigned but never used
+      scsi: zfcp: clean up redundant code with fall through in link down SRB switch case
+
+Matthew R. Ochs (2):
+      scsi: cxlflash: Avoid double mutex unlock
+      scsi: cxlflash: Remove unnecessary existence check
+
+Maurizio Lombardi (1):
+      scsi: lpfc: fix "integer constant too large" error on 32bit archs
+
+Michael Hernandez (3):
+      scsi: qla2xxx: Increase ql2xmaxqdepth to 64
+      scsi: qla2xxx: Fix target multiqueue configuration
+      scsi: qla2xxx: Fix system crash while triggering FW dump
+
+Michał Mirosław (3):
+      scsi: aic7xxx: regenerate firmware files
+      scsi: aic7xxx: fix firmware build deps
+      scsi: aic7xxx: remove empty function
+
+Nikola Pajkovsky (3):
+      scsi: aacraid: report -ENOMEM to upper layer from aac_convert_sgraw2()
+      scsi: aacraid: get rid of one level of indentation
+      scsi: aacraid: fix indentation errors
+
+Ondrej Zary (4):
+      scsi: g_NCR5380: Two DTC436 PDMA workarounds
+      scsi: g_NCR5380: Re-work PDMA loops
+      scsi: g_NCR5380: End PDMA transfer correctly on target disconnection
+      scsi: g_NCR5380: Fix PDMA transfer size
+
+Pan Bian (3):
+      scsi: qla2xxx: use dma_mapping_error to check map errors
+      scsi: mvsas: replace kfree with scsi_host_put
+      scsi: pm8001: fix double free in pm8001_pci_probe
+
+Prabu Thangamuthu (1):
+      scsi: ufs: changing maintainer
+
+Quinn Tran (10):
+      scsi: qla2xxx: Reset the logo flag, after target re-login.
+      scsi: qla2xxx: Fix slow mem alloc behind lock
+      scsi: qla2xxx: Recheck session state after RSCN
+      scsi: qla2xxx: Cleanup NPIV host in target mode during config teardown
+      scsi: qla2xxx: Fix task mgmt handling for NPIV
+      scsi: qla2xxx: Add ability to autodetect SFP type
+      scsi: qla2xxx: Use fabric name for Get Port Speed command
+      scsi: qla2xxx: Change ha->wq max_active value to default
+      scsi: qla2xxx: Remove extra register read
+      scsi: qla2xxx: Fix NPIV host enable after chip reset
+
+Raghava Aditya Renukunta (1):
+      scsi: aacraid: Fix out of bounds in aac_get_name_resp
+
+Richard W.M. Jones (2):
+      scsi: virtio: virtio_scsi: Set can_queue to the length of the virtqueue.
+      scsi: virtio: Reduce BUG if total_sg > virtqueue size to WARN.
+
+Rob Herring (1):
+      scsi: Convert to using %pOF instead of full_name
+
+Romain Perier (7):
+      scsi: pmcraid: Replace PCI pool old API
+      scsi: mvsas: Replace PCI pool old API
+      scsi: mpt3sas: Replace PCI pool old API
+      scsi: megaraid: Replace PCI pool old API
+      scsi: lpfc: Replace PCI pool old API
+      scsi: csiostor: Replace PCI pool old API
+      scsi: be2iscsi: Replace PCI pool old API
+
+Sawan Chandak (4):
+      scsi: qla2xxx: Do not call abort handler function during chip reset
+      scsi: qla2xxx: Add support for minimum link speed
+      scsi: qla2xxx: Use BIT_6 to acquire FAWWPN from switch
+      scsi: qla2xxx: Handle PCIe error for driver
+
+Shivasharan S (14):
+      scsi: megaraid_sas: driver version upgrade
+      scsi: megaraid_sas: call megasas_dump_frame with correct IO frame size
+      scsi: megaraid_sas: modified few prints in OCR and IOC INIT path
+      scsi: megaraid_sas: replace internal FALSE/TRUE definitions with false/true
+      scsi: megaraid_sas: Return pended IOCTLs with cmd_status MFI_STAT_WRONG_STATE in case adapter is dead
+      scsi: megaraid_sas: use vmalloc for crash dump buffers and driver's local RAID map
+      scsi: megaraid_sas: Use SMID for Task abort case only
+      scsi: megaraid_sas: Check valid aen class range to avoid kernel panic
+      scsi: megaraid_sas: Fix endianness issues in DCMD handling
+      scsi: megaraid_sas: Do not re-fire shutdown DCMD after OCR
+      scsi: megaraid_sas: Call megasas_complete_cmd_dpc_fusion every 1 second while there are pending commands
+      scsi: megaraid_sas: Use synchronize_irq in target reset case
+      scsi: megaraid_sas: set minimum value of resetwaittime to be 1 secs
+      scsi: megaraid_sas: mismatch of allocated MFI frame size and length exposed in MFI MPT pass through command
+
+Steffen Maier (14):
+      scsi: zfcp: clean up no longer existent prototype from zfcp API header
+      scsi: zfcp: fix kernel doc comment typos for struct zfcp_dbf_scsi
+      scsi: zfcp: use endianness conversions with common FC(P) struct fields
+      scsi: zfcp: use common code fcp_cmnd and fcp_resp with union in fsf_qtcb_bottom_io
+      scsi: zfcp: clarify that we don't need "link" test on failed open port
+      scsi: zfcp: more fitting constant for fc_ct_hdr.ct_reason on port scan response
+      scsi: zfcp: trace high part of "new" 64 bit SCSI LUN
+      scsi: zfcp: trace HBA FSF response by default on dismiss or timedout late response
+      scsi: zfcp: fix payload with full FCP_RSP IU in SCSI trace records
+      scsi: zfcp: fix missing trace records for early returns in TMF eh handlers
+      scsi: zfcp: fix passing fsf_req to SCSI trace on TMF to correlate with HBA
+      scsi: zfcp: fix capping of unsuccessful GPN_FT SAN response trace records
+      scsi: zfcp: fix queuecommand for scsi_eh commands when DIX enabled
+      scsi: fc: start decoupling fc_block_scsi_eh from scsi_cmnd
+
+Thomas Bogendoerfer (1):
+      scsi: qedf: Limit number of CQs
+
+Thomas Gleixner (5):
+      scsi: bnx2i: Simplify cpu hotplug code
+      scsi: bnx2fc: Simplify CPU hotplug code
+      scsi: bnx2i: Prevent recursive cpuhotplug locking
+      scsi: bnx2fc: Prevent recursive cpuhotplug locking
+      scsi: bnx2fc: Plug CPU hotplug race
+
+Todd Poynor (2):
+      scsi: sg: protect against races between mmap() and SG_SET_RESERVED_SIZE
+      scsi: sg: recheck MMAP_IO request length with lock held
+
+Uma Krishnan (1):
+      scsi: cxlflash: Fix vlun resize failure in the shrink path
+
+Varun Prakash (3):
+      scsi: cxgb4i: call neigh_event_send() to update MAC address
+      scsi: csiostor: fail probe if fw does not support FCoE
+      scsi: libcxgbi: use ndev->ifindex to find route
+
+Xiang Chen (12):
+      scsi: hisi_sas: add phy_set_linkrate_v3_hw()
+      scsi: hisi_sas: update some v3 register init settings
+      scsi: hisi_sas: add reset handler for v3 hw
+      scsi: hisi_sas: kill tasklet when destroying irq in v3 hw
+      scsi: hisi_sas: fix v3 hw channel interrupt processing
+      scsi: hisi_sas: Modify v3 hw STP_LINK_TIMER setting
+      scsi: hisi_sas: add status and command buffer for internal abort
+      scsi: hisi_sas: service interrupt ITCT_CLR interrupt in v2 hw
+      scsi: hisi_sas: add irq and tasklet cleanup in v2 hw
+      scsi: hisi_sas: remove repeated device config in v2 hw
+      scsi: hisi_sas: fix v2 hw underflow residual value
+      scsi: hisi_sas: avoid potential v2 hw interrupt issue
+
+Xiaofei Tan (3):
+      scsi: hisi_sas: support zone management commands
+      scsi: hisi_sas: add v2 hw DFX feature
+      scsi: hisi_sas: fix reset and port ID refresh issues
+
+Zang Leigang (1):
+      scsi: ufs: reqs and tasks were put in the wrong order
+
+himanshu.madhani@cavium.com (7):
+      scsi: qla2xxx: Update driver version to 10.00.00.01-k
+      scsi: qla2xxx: Enable Async TMF processing
+      scsi: qla2xxx: Update fw_started flags at qpair creation.
+      scsi: qla2xxx: Fix remoteport disconnect for FC-NVMe
+      scsi: qla2xxx: Simpify unregistration of FC-NVMe local/remote ports
+      scsi: qla2xxx: Move function prototype to correct header
+      scsi: qla2xxx: Cleanup FC-NVMe code
+
+weiping (1):
+      scsi: megaraid_sas: fix allocate instance->pd_info twice
+
+weiping zhang (3):
+      scsi: sd: remove duplicated setting of gd->minors
+      scsi: scsi-sysfs: Adjust error returned for adapter reset request
+      scsi: megaraid_sas: fix error handle in megasas_probe_one
+
+And the diffstat:
+
+ Documentation/blockdev/cciss.txt                 |  194 -
+ MAINTAINERS                                      |   14 +-
+ block/bsg-lib.c                                  |    7 +-
+ drivers/block/Kconfig                            |   27 -
+ drivers/block/Makefile                           |    1 -
+ drivers/block/cciss.c                            | 5415 ----------------------
+ drivers/block/cciss.h                            |  433 --
+ drivers/block/cciss_cmd.h                        |  269 --
+ drivers/block/cciss_scsi.c                       | 1653 -------
+ drivers/block/cciss_scsi.h                       |   79 -
+ drivers/message/fusion/mptbase.c                 |    8 +-
+ drivers/message/fusion/mptfc.c                   |   10 +-
+ drivers/message/fusion/mptsas.c                  |   86 +-
+ drivers/s390/scsi/zfcp_aux.c                     |    1 -
+ drivers/s390/scsi/zfcp_dbf.c                     |   95 +-
+ drivers/s390/scsi/zfcp_dbf.h                     |   25 +-
+ drivers/s390/scsi/zfcp_erp.c                     |    5 +-
+ drivers/s390/scsi/zfcp_ext.h                     |    1 -
+ drivers/s390/scsi/zfcp_fc.c                      |   52 +-
+ drivers/s390/scsi/zfcp_fc.h                      |   25 +-
+ drivers/s390/scsi/zfcp_fsf.c                     |   35 +-
+ drivers/s390/scsi/zfcp_fsf.h                     |   12 +-
+ drivers/s390/scsi/zfcp_qdio.c                    |    2 +-
+ drivers/s390/scsi/zfcp_qdio.h                    |   17 -
+ drivers/s390/scsi/zfcp_scsi.c                    |   18 +-
+ drivers/scsi/53c700.c                            |   23 +-
+ drivers/scsi/Kconfig                             |   11 +
+ drivers/scsi/NCR5380.c                           |    4 +-
+ drivers/scsi/a2091.c                             |   17 -
+ drivers/scsi/a3000.c                             |   17 -
+ drivers/scsi/aacraid/aachba.c                    |  341 +-
+ drivers/scsi/aacraid/aacraid.h                   |    3 +-
+ drivers/scsi/aacraid/comminit.c                  |    6 +-
+ drivers/scsi/aacraid/commsup.c                   |    3 +-
+ drivers/scsi/aacraid/linit.c                     |  320 +-
+ drivers/scsi/aha152x.c                           |   13 +-
+ drivers/scsi/aha1542.c                           |    2 +-
+ drivers/scsi/aic7xxx/Makefile                    |    6 +-
+ drivers/scsi/aic7xxx/aic79xx_reg.h_shipped       | 1469 ++----
+ drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped |   34 +-
+ drivers/scsi/aic7xxx/aic7xxx_core.c              |    1 -
+ drivers/scsi/aic7xxx/aic7xxx_osm.c               |    5 -
+ drivers/scsi/aic7xxx/aic7xxx_osm.h               |    1 -
+ drivers/scsi/aic7xxx/aic7xxx_reg.h_shipped       |   44 +-
+ drivers/scsi/aic94xx/aic94xx_init.c              |    6 +-
+ drivers/scsi/arcmsr/arcmsr_attr.c                |    6 +-
+ drivers/scsi/arm/acornscsi.c                     |   11 +-
+ drivers/scsi/arm/cumana_1.c                      |    2 +-
+ drivers/scsi/arm/oak.c                           |    2 +-
+ drivers/scsi/atari_scsi.c                        |    6 +-
+ drivers/scsi/be2iscsi/be_iscsi.c                 |    6 +-
+ drivers/scsi/be2iscsi/be_main.c                  |    6 +-
+ drivers/scsi/be2iscsi/be_main.h                  |    2 +-
+ drivers/scsi/bfa/bfad_im.c                       |   37 +-
+ drivers/scsi/bnx2fc/bnx2fc.h                     |    1 -
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c                |   68 +-
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c                 |   45 +-
+ drivers/scsi/bnx2i/bnx2i_init.c                  |   64 +-
+ drivers/scsi/ch.c                                |   22 +-
+ drivers/scsi/csiostor/csio_hw.c                  |    4 +-
+ drivers/scsi/csiostor/csio_hw.h                  |    2 +-
+ drivers/scsi/csiostor/csio_init.c                |   23 +-
+ drivers/scsi/csiostor/csio_scsi.c                |    6 +-
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c               |    3 +
+ drivers/scsi/cxgbi/libcxgbi.c                    |   27 +-
+ drivers/scsi/cxlflash/main.c                     |    3 +-
+ drivers/scsi/cxlflash/superpipe.c                |   14 +-
+ drivers/scsi/cxlflash/vlun.c                     |    6 +-
+ drivers/scsi/dmx3191d.c                          |    2 +-
+ drivers/scsi/dpt_i2o.c                           |    5 -
+ drivers/scsi/eata.c                              |    9 +-
+ drivers/scsi/esas2r/esas2r_main.c                |    2 +-
+ drivers/scsi/esp_scsi.c                          |   53 +-
+ drivers/scsi/esp_scsi.h                          |    1 -
+ drivers/scsi/fcoe/fcoe_sysfs.c                   |    4 +-
+ drivers/scsi/fdomain.c                           |    6 +-
+ drivers/scsi/fdomain.h                           |    2 +-
+ drivers/scsi/fnic/fnic.h                         |    2 +-
+ drivers/scsi/fnic/fnic_scsi.c                    |    4 -
+ drivers/scsi/g_NCR5380.c                         |  283 +-
+ drivers/scsi/gdth.c                              |    2 +-
+ drivers/scsi/gdth_proc.c                         |    2 +-
+ drivers/scsi/gvp11.c                             |   18 -
+ drivers/scsi/hisi_sas/hisi_sas.h                 |   18 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c            |  198 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c           |  605 +--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c           |  237 +-
+ drivers/scsi/hpsa.c                              |  117 +-
+ drivers/scsi/hpsa.h                              |   81 +-
+ drivers/scsi/hptiop.c                            |   11 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c                   |    8 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c                 |    2 +-
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c         |    2 +-
+ drivers/scsi/imm.c                               |    1 -
+ drivers/scsi/ipr.c                               |   34 +-
+ drivers/scsi/ipr.h                               |    2 +
+ drivers/scsi/isci/init.c                         |    2 +-
+ drivers/scsi/iscsi_tcp.c                         |    2 -
+ drivers/scsi/libfc/fc_fcp.c                      |    2 -
+ drivers/scsi/libiscsi.c                          |    2 +-
+ drivers/scsi/libsas/Kconfig                      |    1 +
+ drivers/scsi/libsas/sas_ata.c                    |    1 +
+ drivers/scsi/libsas/sas_expander.c               |   70 +-
+ drivers/scsi/libsas/sas_host_smp.c               |  106 +-
+ drivers/scsi/libsas/sas_internal.h               |   12 +-
+ drivers/scsi/libsas/sas_scsi_host.c              |   15 +-
+ drivers/scsi/lpfc/lpfc.h                         |   19 +-
+ drivers/scsi/lpfc/lpfc_attr.c                    |   52 +-
+ drivers/scsi/lpfc/lpfc_attr.h                    |   10 +
+ drivers/scsi/lpfc/lpfc_bsg.c                     |    9 +-
+ drivers/scsi/lpfc/lpfc_crtn.h                    |    5 +-
+ drivers/scsi/lpfc/lpfc_ct.c                      |    4 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c                 |   11 +-
+ drivers/scsi/lpfc/lpfc_debugfs.h                 |    6 +-
+ drivers/scsi/lpfc/lpfc_disc.h                    |    1 +
+ drivers/scsi/lpfc/lpfc_els.c                     |   93 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                 |   12 +-
+ drivers/scsi/lpfc/lpfc_hw.h                      |   18 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                     |   23 +-
+ drivers/scsi/lpfc/lpfc_init.c                    |   73 +-
+ drivers/scsi/lpfc/lpfc_mbox.c                    |   35 +-
+ drivers/scsi/lpfc/lpfc_mem.c                     |   90 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c               |   25 +-
+ drivers/scsi/lpfc/lpfc_nvme.c                    |   31 +-
+ drivers/scsi/lpfc/lpfc_nvmet.c                   |  279 +-
+ drivers/scsi/lpfc/lpfc_nvmet.h                   |   14 +
+ drivers/scsi/lpfc/lpfc_scsi.c                    |   12 +-
+ drivers/scsi/lpfc/lpfc_sli.c                     |   62 +-
+ drivers/scsi/lpfc/lpfc_sli4.h                    |   23 +-
+ drivers/scsi/lpfc/lpfc_version.h                 |    2 +-
+ drivers/scsi/mac53c94.c                          |   13 +-
+ drivers/scsi/mac_esp.c                           |   37 +-
+ drivers/scsi/mac_scsi.c                          |    4 +-
+ drivers/scsi/megaraid.c                          |    6 +-
+ drivers/scsi/megaraid/megaraid_mbox.c            |   32 +-
+ drivers/scsi/megaraid/megaraid_mm.c              |   29 +-
+ drivers/scsi/megaraid/megaraid_sas.h             |    5 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c        |  112 +-
+ drivers/scsi/megaraid/megaraid_sas_fp.c          |   40 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c      |  216 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c              |   85 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h              |    2 +-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c         |  230 +-
+ drivers/scsi/mvme147.c                           |   16 -
+ drivers/scsi/mvsas/mv_init.c                     |   12 +-
+ drivers/scsi/mvsas/mv_sas.c                      |    6 +-
+ drivers/scsi/nsp32.c                             |   22 +-
+ drivers/scsi/osst.c                              |    8 +-
+ drivers/scsi/pcmcia/fdomain_stub.c               |    2 +-
+ drivers/scsi/pcmcia/qlogic_stub.c                |    4 +-
+ drivers/scsi/pm8001/pm8001_init.c                |    7 +-
+ drivers/scsi/pmcraid.c                           |   17 +-
+ drivers/scsi/pmcraid.h                           |    2 +-
+ drivers/scsi/ppa.c                               |    1 -
+ drivers/scsi/qedf/qedf.h                         |    5 +-
+ drivers/scsi/qedf/qedf_els.c                     |   14 +-
+ drivers/scsi/qedf/qedf_fip.c                     |   35 +-
+ drivers/scsi/qedf/qedf_main.c                    |  133 +-
+ drivers/scsi/qedf/qedf_version.h                 |    6 +-
+ drivers/scsi/qedi/qedi.h                         |    5 +-
+ drivers/scsi/qedi/qedi_iscsi.c                   |    2 +-
+ drivers/scsi/qedi/qedi_main.c                    |   12 +-
+ drivers/scsi/qla2xxx/qla_attr.c                  |   86 +-
+ drivers/scsi/qla2xxx/qla_dbg.c                   |   10 +-
+ drivers/scsi/qla2xxx/qla_def.h                   |  118 +-
+ drivers/scsi/qla2xxx/qla_fw.h                    |   28 +-
+ drivers/scsi/qla2xxx/qla_gbl.h                   |   22 +-
+ drivers/scsi/qla2xxx/qla_gs.c                    |   18 +-
+ drivers/scsi/qla2xxx/qla_init.c                  |  183 +-
+ drivers/scsi/qla2xxx/qla_iocb.c                  |   55 +-
+ drivers/scsi/qla2xxx/qla_isr.c                   |   78 +-
+ drivers/scsi/qla2xxx/qla_mbx.c                   |  263 +-
+ drivers/scsi/qla2xxx/qla_mid.c                   |   14 +-
+ drivers/scsi/qla2xxx/qla_mr.c                    |    7 +-
+ drivers/scsi/qla2xxx/qla_nvme.c                  |  161 +-
+ drivers/scsi/qla2xxx/qla_nvme.h                  |   17 +
+ drivers/scsi/qla2xxx/qla_os.c                    |  155 +-
+ drivers/scsi/qla2xxx/qla_target.c                |   29 +-
+ drivers/scsi/qla2xxx/qla_target.h                |    2 +
+ drivers/scsi/qla2xxx/qla_tmpl.c                  |   31 +-
+ drivers/scsi/qla2xxx/qla_version.h               |    2 +-
+ drivers/scsi/qlogicfas.c                         |    2 +-
+ drivers/scsi/qlogicfas408.c                      |    6 +-
+ drivers/scsi/qlogicfas408.h                      |    2 +-
+ drivers/scsi/qlogicpti.c                         |    2 +-
+ drivers/scsi/scsi.c                              |  144 +-
+ drivers/scsi/scsi_debug.c                        |    3 +-
+ drivers/scsi/scsi_debugfs.c                      |    4 +-
+ drivers/scsi/scsi_error.c                        |   10 +-
+ drivers/scsi/scsi_ioctl.c                        |    4 +-
+ drivers/scsi/scsi_lib.c                          |  131 +-
+ drivers/scsi/scsi_priv.h                         |    2 +-
+ drivers/scsi/scsi_scan.c                         |    2 +-
+ drivers/scsi/scsi_sysfs.c                        |   33 +-
+ drivers/scsi/scsi_transport_fc.c                 |   37 +-
+ drivers/scsi/scsi_transport_iscsi.c              |    6 +-
+ drivers/scsi/scsi_transport_sas.c                |  121 +-
+ drivers/scsi/scsi_transport_srp.c                |    7 +-
+ drivers/scsi/sd.c                                |   10 +-
+ drivers/scsi/sd_zbc.c                            |    9 +-
+ drivers/scsi/ses.c                               |   64 +-
+ drivers/scsi/sg.c                                |   55 +-
+ drivers/scsi/sgiwd93.c                           |   15 -
+ drivers/scsi/smartpqi/smartpqi.h                 |   44 +-
+ drivers/scsi/smartpqi/smartpqi_init.c            |  145 +-
+ drivers/scsi/smartpqi/smartpqi_sas_transport.c   |    9 -
+ drivers/scsi/smartpqi/smartpqi_sis.c             |  111 +-
+ drivers/scsi/smartpqi/smartpqi_sis.h             |    4 +-
+ drivers/scsi/sr.c                                |    2 +-
+ drivers/scsi/st.c                                |    4 +-
+ drivers/scsi/storvsc_drv.c                       |    2 +
+ drivers/scsi/sun3_scsi.c                         |    4 +-
+ drivers/scsi/sym53c8xx_2/sym_hipd.c              |    2 +-
+ drivers/scsi/ufs/ufshcd.c                        |    2 +-
+ drivers/scsi/virtio_scsi.c                       |    4 +-
+ drivers/scsi/wd33c93.c                           |    2 +
+ drivers/staging/rts5208/rtsx.c                   |   11 -
+ drivers/staging/unisys/visorhba/visorhba_main.c  |  123 +-
+ drivers/usb/storage/uas.c                        |    4 +-
+ drivers/virtio/virtio_ring.c                     |    5 +-
+ include/linux/bsg-lib.h                          |    5 +-
+ include/linux/cpuhotplug.h                       |    2 -
+ include/linux/rcupdate.h                         |   16 +
+ include/scsi/libsas.h                            |    5 +-
+ include/scsi/scsi_cmnd.h                         |    5 +-
+ include/scsi/scsi_device.h                       |   20 +-
+ include/scsi/scsi_tcq.h                          |    2 +-
+ include/scsi/scsi_transport_fc.h                 |    1 +
+ include/scsi/scsi_transport_sas.h                |    4 +-
+ include/scsi/scsi_transport_srp.h                |    2 +-
+ 230 files changed, 5059 insertions(+), 12558 deletions(-)
+ delete mode 100644 Documentation/blockdev/cciss.txt
+ delete mode 100644 drivers/block/cciss.c
+ delete mode 100644 drivers/block/cciss.h
+ delete mode 100644 drivers/block/cciss_cmd.h
+ delete mode 100644 drivers/block/cciss_scsi.c
+ delete mode 100644 drivers/block/cciss_scsi.h
+
+James
