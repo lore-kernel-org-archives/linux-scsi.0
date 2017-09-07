@@ -1,118 +1,185 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V2 03/12] scsi: sd_zbc: Move ZBC declarations to scsi_proto.h
-Date: Fri,  8 Sep 2017 01:16:31 +0900
-Message-ID: <20170907161640.30465-4-damien.lemoal@wdc.com>
+Subject: [PATCH V2 04/12] scsi: sd_zbc: Move zbc disk declarations to sd_zbc.h
+Date: Fri,  8 Sep 2017 01:16:32 +0900
+Message-ID: <20170907161640.30465-5-damien.lemoal@wdc.com>
 References: <20170907161640.30465-1-damien.lemoal@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:6565 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932095AbdIGQSA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2017 12:18:00 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170907161640.30465-1-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Move standard macro definitions for the zone types and zone conditions
-to scsi_proto.h together with the definitions related to the
-REPORT ZONES command.
+Introduce sd_zbc.h to gather ZBC disk related declarations and avoid
+cluttering sd.h.
 
-While at it, define all values in the enums to be clear.
+No functional change is introduced by this patch.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
 ---
- drivers/scsi/sd_zbc.c     | 18 ------------------
- include/scsi/scsi_proto.h | 45 ++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 34 insertions(+), 29 deletions(-)
+ drivers/scsi/sd.c     |  1 +
+ drivers/scsi/sd.h     | 48 ---------------------------------------
+ drivers/scsi/sd_zbc.c |  7 +-----
+ drivers/scsi/sd_zbc.h | 62 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 64 insertions(+), 54 deletions(-)
+ create mode 100644 drivers/scsi/sd_zbc.h
 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index c5d05b1c58a5..1cd113df2d3a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -68,6 +68,7 @@
+ #include <scsi/scsicam.h>
+ 
+ #include "sd.h"
++#include "sd_zbc.h"
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 99c4dde9b6bf..c9a627e7eebd 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -277,52 +277,4 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
+ 	return sdkp->zoned == 1 || sdkp->device->type == TYPE_ZBC;
+ }
+ 
+-#ifdef CONFIG_BLK_DEV_ZONED
+-
+-extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
+-extern void sd_zbc_remove(struct scsi_disk *sdkp);
+-extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
+-extern int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd);
+-extern void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd);
+-extern int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd);
+-extern int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);
+-extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+-			    struct scsi_sense_hdr *sshdr);
+-
+-#else /* CONFIG_BLK_DEV_ZONED */
+-
+-static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
+-				    unsigned char *buf)
+-{
+-	return 0;
+-}
+-
+-static inline void sd_zbc_remove(struct scsi_disk *sdkp) {}
+-
+-static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
+-
+-static inline int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
+-{
+-	/* Let the drive fail requests */
+-	return BLKPREP_OK;
+-}
+-
+-static inline void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd) {}
+-
+-static inline int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd)
+-{
+-	return BLKPREP_INVALID;
+-}
+-
+-static inline int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
+-{
+-	return BLKPREP_INVALID;
+-}
+-
+-static inline void sd_zbc_complete(struct scsi_cmnd *cmd,
+-				   unsigned int good_bytes,
+-				   struct scsi_sense_hdr *sshdr) {}
+-
+-#endif /* CONFIG_BLK_DEV_ZONED */
+-
+ #endif /* _SCSI_DISK_H */
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 8aa54779aac1..d445a57f99bd 100644
+index d445a57f99bd..a62f8e256a26 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -37,24 +37,6 @@
- #include "sd.h"
- #include "scsi_priv.h"
+@@ -28,14 +28,9 @@
  
--enum zbc_zone_type {
--	ZBC_ZONE_TYPE_CONV = 0x1,
--	ZBC_ZONE_TYPE_SEQWRITE_REQ,
--	ZBC_ZONE_TYPE_SEQWRITE_PREF,
--	ZBC_ZONE_TYPE_RESERVED,
--};
--
--enum zbc_zone_cond {
--	ZBC_ZONE_COND_NO_WP,
--	ZBC_ZONE_COND_EMPTY,
--	ZBC_ZONE_COND_IMP_OPEN,
--	ZBC_ZONE_COND_EXP_OPEN,
--	ZBC_ZONE_COND_CLOSED,
--	ZBC_ZONE_COND_READONLY = 0xd,
--	ZBC_ZONE_COND_FULL,
--	ZBC_ZONE_COND_OFFLINE,
--};
--
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_dbg.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_driver.h>
+-#include <scsi/scsi_host.h>
+-#include <scsi/scsi_eh.h>
+ 
+ #include "sd.h"
+-#include "scsi_priv.h"
++#include "sd_zbc.h"
+ 
  /**
   * Convert a zone descriptor to a zone struct.
-  */
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index 8c285d9a06d8..39130a9c05bf 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -301,19 +301,42 @@ struct scsi_lun {
- 
- /* Reporting options for REPORT ZONES */
- enum zbc_zone_reporting_options {
--	ZBC_ZONE_REPORTING_OPTION_ALL = 0,
--	ZBC_ZONE_REPORTING_OPTION_EMPTY,
--	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN,
--	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN,
--	ZBC_ZONE_REPORTING_OPTION_CLOSED,
--	ZBC_ZONE_REPORTING_OPTION_FULL,
--	ZBC_ZONE_REPORTING_OPTION_READONLY,
--	ZBC_ZONE_REPORTING_OPTION_OFFLINE,
--	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP = 0x10,
--	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE,
--	ZBC_ZONE_REPORTING_OPTION_NON_WP = 0x3f,
-+	ZBC_ZONE_REPORTING_OPTION_ALL		= 0x00,
-+	ZBC_ZONE_REPORTING_OPTION_EMPTY		= 0x01,
-+	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN	= 0x02,
-+	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN	= 0x03,
-+	ZBC_ZONE_REPORTING_OPTION_CLOSED	= 0x04,
-+	ZBC_ZONE_REPORTING_OPTION_FULL		= 0x05,
-+	ZBC_ZONE_REPORTING_OPTION_READONLY	= 0x06,
-+	ZBC_ZONE_REPORTING_OPTION_OFFLINE	= 0x07,
-+	/* 0x08 to 0x0f are reserved */
-+	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP	= 0x10,
-+	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE	= 0x11,
-+	/* 0x12 to 0x3e are reserved */
-+	ZBC_ZONE_REPORTING_OPTION_NON_WP	= 0x3f,
- };
- 
- #define ZBC_REPORT_ZONE_PARTIAL 0x80
- 
-+/* Zone types of REPORT ZONES zone descriptors */
-+enum zbc_zone_type {
-+	ZBC_ZONE_TYPE_CONV		= 0x1,
-+	ZBC_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
-+	ZBC_ZONE_TYPE_SEQWRITE_PREF	= 0x3,
-+	/* 0x4 to 0xf are reserved */
-+};
+diff --git a/drivers/scsi/sd_zbc.h b/drivers/scsi/sd_zbc.h
+new file mode 100644
+index 000000000000..5e7ecc9b2966
+--- /dev/null
++++ b/drivers/scsi/sd_zbc.h
+@@ -0,0 +1,62 @@
++#ifndef _SCSI_DISK_ZBC_H
++#define _SCSI_DISK_ZBC_H
 +
-+/* Zone conditions of REPORT ZONES zone descriptors */
-+enum zbc_zone_cond {
-+	ZBC_ZONE_COND_NO_WP		= 0x0,
-+	ZBC_ZONE_COND_EMPTY		= 0x1,
-+	ZBC_ZONE_COND_IMP_OPEN		= 0x2,
-+	ZBC_ZONE_COND_EXP_OPEN		= 0x3,
-+	ZBC_ZONE_COND_CLOSED		= 0x4,
-+	/* 0x5 to 0xc are reserved */
-+	ZBC_ZONE_COND_READONLY		= 0xd,
-+	ZBC_ZONE_COND_FULL		= 0xe,
-+	ZBC_ZONE_COND_OFFLINE		= 0xf,
-+};
++#ifdef CONFIG_BLK_DEV_ZONED
 +
- #endif /* _SCSI_PROTO_H_ */
++int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
++void sd_zbc_remove(struct scsi_disk *sdkp);
++void sd_zbc_print_zones(struct scsi_disk *sdkp);
++
++int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd);
++void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd);
++
++int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd);
++int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);
++void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
++		     struct scsi_sense_hdr *sshdr);
++
++#else /* CONFIG_BLK_DEV_ZONED */
++
++static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
++				    unsigned char *buf)
++{
++	return 0;
++}
++
++static inline void sd_zbc_remove(struct scsi_disk *sdkp)
++{
++}
++
++static inline void sd_zbc_print_zones(struct scsi_disk *sdkp)
++{
++}
++
++static inline int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
++{
++	/* Let the drive fail requests */
++	return BLKPREP_OK;
++}
++
++static inline void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
++{
++}
++
++static inline int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd)
++{
++	return BLKPREP_INVALID;
++}
++
++static inline int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
++{
++	return BLKPREP_INVALID;
++}
++
++static inline void sd_zbc_complete(struct scsi_cmnd *cmd,
++				   unsigned int good_bytes,
++				   struct scsi_sense_hdr *sshdr)
++{
++}
++
++#endif /* CONFIG_BLK_DEV_ZONED */
++
++#endif /* _SCSI_DISK_ZBC_H */
 -- 
 2.13.5
