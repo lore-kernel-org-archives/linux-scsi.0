@@ -1,84 +1,117 @@
-From: "liwei (CM)" <liwei213@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjMgMS81XSBzY3NpOiB1ZnM6IGFkZCBIaXNpbGlj?=
- =?utf-8?Q?on_ufs_driver_code?=
-Date: Thu, 7 Sep 2017 06:34:19 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA18C49@DGGEMM506-MBX.china.huawei.com>
-References: <20170829084116.106695-1-liwei213@huawei.com>
- <20170829084116.106695-2-liwei213@huawei.com>
- <CAK8P3a0vV94g=iNLfHXXgR-XFHaaK-mHoQQ45FDYG+FVQhix6Q@mail.gmail.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH v4 07/11] libsas: make the event threshold configurable
+Date: Thu, 7 Sep 2017 10:15:19 +0200
+Message-ID: <CAD+HZHXpudbdhH4X8TZiKPWpvQxUZ6pwKE2-TdoLCrVH5edSoQ@mail.gmail.com>
+References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com> <1504689314-20072-8-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAK8P3a0vV94g=iNLfHXXgR-XFHaaK-mHoQQ45FDYG+FVQhix6Q@mail.gmail.com>
-Content-Language: zh-CN
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "xuwei (O)" <xuwei5@hisilicon.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, Eric Anholt <eric@anholt.net>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>Linux Kernel Mailing List <l>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:38395 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753130AbdIGIPV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2017 04:15:21 -0400
+In-Reply-To: <1504689314-20072-8-git-send-email-yanaijie@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, Johannes Thumshirn <jthumshirn@suse.de>, Raj Dinesh <Raj.Dinesh@microsemi.com>, Christoph Hellwig <hch@lst.de>, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 
-SGksIEFybmQNCg0KVGhhbmtzIGZvciB5b3VyIHN1Z2dlc3Rpb25zLCBJIGhvcGUgeW91J2xsIHJl
-cGx5IGFnYWluOg0KDQoNCi0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCuWPkeS7tuS6ujogYXJuZGJl
-cmdtYW5uQGdtYWlsLmNvbSBbbWFpbHRvOmFybmRiZXJnbWFubkBnbWFpbC5jb21dIOS7o+ihqCBB
-cm5kIEJlcmdtYW5uDQrlj5HpgIHml7bpl7Q6IDIwMTflubQ55pyIN+aXpSA2OjQ3DQrmlLbku7bk
-uro6IGxpd2VpIChDTSkNCuaKhOmAgTogUm9iIEhlcnJpbmc7IE1hcmsgUnV0bGFuZDsgeHV3ZWkg
-KE8pOyBDYXRhbGluIE1hcmluYXM7IFdpbGwgRGVhY29uOyBWaW5heWFrIEhvbGlrYXR0aTsgSmFt
-ZXMgRS5KLiBCb3R0b21sZXk7IE1hcnRpbiBLLiBQZXRlcnNlbjsgS2V2aW4gSGlsbWFuOyBHcmVn
-b3J5IENMRU1FTlQ7IFRob21hcyBQZXRhenpvbmk7IE1hc2FoaXJvIFlhbWFkYTsgUmlrdSBWb2lw
-aW87IFRoaWVycnkgUmVkaW5nOyBLcnp5c3p0b2YgS296bG93c2tpOyBFcmljIEFuaG9sdDsgZGV2
-aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7IExpbnV4
-IEFSTTsgbGludXgtc2NzaTsgR3VvZG9uZyBYdTsgRmVuZ2Jhb3BlbmcgKGtldmluLCBLaXJpbiBT
-b2x1dGlvbiBEZXB0KQ0K5Li76aKYOiBSZTogW1BBVENIIHYzIDEvNV0gc2NzaTogdWZzOiBhZGQg
-SGlzaWxpY29uIHVmcyBkcml2ZXIgY29kZQ0KDQpPbiBUdWUsIEF1ZyAyOSwgMjAxNyBhdCAxMDo0
-MSBBTSwgTGkgV2VpIDxsaXdlaTIxM0BodWF3ZWkuY29tPiB3cm90ZToNCml0ZWwoaG9zdCwgVUZT
-X0FSRVNFVCwgUEVSUlNURElTM19PRkZTRVQpOw0KPiArDQo+ICsgICAgICAgLyogZGlzYWJsZSBs
-cF9yZXNldF9uICovDQo+ICsgICAgICAgdWZzX3N5c19jdHJsX3NldF9iaXRzKGhvc3QsIEJJVF9T
-WVNDVFJMX0xQX1JFU0VUX04sIFJFU0VUX0NUUkxfRU4pOw0KPiArICAgICAgIG1kZWxheSgxKTsN
-Cj4gKw0KPiArICAgICAgIGlmIChncGlvX2lzX3ZhbGlkKGhvc3QtPnJlc2V0X2dwaW8pKQ0KPiAr
-ICAgICAgICAgICAgICAgZ3Bpb19kaXJlY3Rpb25fb3V0cHV0KGhvc3QtPnJlc2V0X2dwaW8sIDEp
-Ow0KPiArDQo+ICsgICAgICAgdWZzX3N5c19jdHJsX3dyaXRlbChob3N0LCBNQVNLX1VGU19ERVZJ
-Q0VfUkVTRVQgfCBCSVRfVUZTX0RFVklDRV9SRVNFVCwNCj4gKyAgICAgICAgICAgICAgIFVGU19E
-RVZJQ0VfUkVTRVRfQ1RSTCk7DQo+ICsNCj4gKyAgICAgICBtZGVsYXkoMjApOw0KDQpDb3VsZCB0
-aG9zZSBtZGVsYXkoKSBiZSB0dXJuZWQgaW50byBtc2xlZXAoKSBmdW5jdGlvbnM/DQoNCkkgd2ls
-bCBmaXggaXQgaW4gcGF0Y2ggdjQuDQoNCj4gK3N0YXRpYyBpbnQgdWZzX2hpc2lfZ2V0X3Jlc291
-cmNlKHN0cnVjdCB1ZnNfaGlzaV9ob3N0ICpob3N0KSB7DQo+ICsgICAgICAgc3RydWN0IHJlc291
-cmNlICptZW1fcmVzOw0KPiArICAgICAgIHN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAgPSBOVUxMOw0K
-PiArICAgICAgIHN0cnVjdCBkZXZpY2UgKmRldiA9IGhvc3QtPmhiYS0+ZGV2Ow0KPiArICAgICAg
-IHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYgPSB0b19wbGF0Zm9ybV9kZXZpY2UoZGV2KTsN
-Cj4gKw0KPiArICAgICAgIC8qIGdldCByZXNvdXJjZSBvZiB1ZnMgc3lzIGN0cmwgKi8NCj4gKyAg
-ICAgICBtZW1fcmVzID0gcGxhdGZvcm1fZ2V0X3Jlc291cmNlKHBkZXYsIElPUkVTT1VSQ0VfTUVN
-LCAxKTsNCj4gKyAgICAgICBob3N0LT51ZnNfc3lzX2N0cmwgPSBkZXZtX2lvcmVtYXBfcmVzb3Vy
-Y2UoZGV2LCBtZW1fcmVzKTsNCj4gKyAgICAgICBpZiAoSVNfRVJSKGhvc3QtPnVmc19zeXNfY3Ry
-bCkpDQo+ICsgICAgICAgICAgICAgICByZXR1cm4gUFRSX0VSUihob3N0LT51ZnNfc3lzX2N0cmwp
-Ow0KPiArDQo+ICsgICAgICAgbnAgPSBvZl9maW5kX2NvbXBhdGlibGVfbm9kZShOVUxMLCBOVUxM
-LCANCj4gKyAiaGlzaWxpY29uLGhpMzY2MC1jcmdjdHJsIik7DQoNCkl0J3MgZ2VuZXJhbGx5IG5v
-dCBhIGdvb2QgaWRlYSB0byBsb29rIHVwIG9uZSBkZXZpY2UgYnkgaXRzICJjb21wYXRpYmxlIg0K
-c3RyaW5nLiBXaGF0IGlzIHRoZSAiY3JnY3RybCI/IERvZXMgaXQgaGF2ZSBhIHByb3BlciBEVCBi
-aW5kaW5nPw0KTWF5YmUgdGhlcmUgc2hvdWxkIGJlIGEgZHJpdmVyIGZvciBpdCwgb3IgeW91IGNv
-dWxkIG1ha2UgaXQgYSAic3lzY29uIg0KZGV2aWNlIGFuZCBsb29rIGl0IHVwIGJ5IHBoYW5kbGUg
-aW5zdGVhZC4NCg0Kb2ssIGNyZ2N0cmwgaXMgb3VyIGNvbW1vbiByZWdpc3RlciwgaWYgbG9vayB1
-cCBkZXZpY2UgYnkgaXRzICJjb21wYXRpYmxlIiBpcyBub3QgYXBwcm9wcmlhdGUsDQpJIHdpbGwg
-YWRkIGEgcHJvcGVydGllcyBpbiB1ZnMgbm9kZSwgbGlrZSB0aGlzOg0KdWZzOiB1ZnNAZmYzYjAw
-MDAgew0KCQkJY29tcGF0aWJsZSA9ICJqZWRlYyx1ZnMtMS4xIiwgImhpc2lsaWNvbixoaTM2NjAt
-dWZzIjsNCgkJCS8qIDA6IEhDSSBzdGFuZGFyZCAqLw0KCQkJLyogMTogVUZTIFNZUyBDVFJMICov
-DQoJCQlyZWcgPSA8MHgwIDB4ZmYzYjAwMDAgMHgwIDB4MTAwMD4sDQoJCQkJPDB4MCAweGZmM2Ix
-MDAwIDB4MCAweDEwMDA+Ow0KCQkJaW50ZXJydXB0LXBhcmVudCA9IDwmZ2ljPjsNCgkJCWludGVy
-cnVwdHMgPSA8R0lDX1NQSSAyNzggSVJRX1RZUEVfTEVWRUxfSElHSD47DQoJCQljbG9ja3MgPSA8
-JmNyZ19jdHJsIEhJMzY2MF9DTEtfR0FURV9VRlNJT19SRUY+LA0KCQkJCTwmY3JnX2N0cmwgSEkz
-NjYwX0NMS19HQVRFX1VGU1BIWV9DRkc+Ow0KCQkJY2xvY2stbmFtZXMgPSAiY2xrX3JlZiIsICJj
-bGtfcGh5IjsNCgkJCWZyZXEtdGFibGUtaHogPSA8MCAwPiwgPDAgMD47DQorCQkJLyogb2Zmc2V0
-OiAweDg0OyBiaXQ6IDEyICovDQorCQkJLyogb2Zmc2V0OiAweDg0OyBiaXQ6IDcgICovDQorCQkJ
-cmVzZXRzID0gPCZjcmdfcnN0IDB4ODQgMTI+LA0KKwkJCQk8JmNyZ19yc3QgMHg4NCA3PjsNCisJ
-CQlyZXNldC1uYW1lcyA9ICJyc3QiLCAiYXNzZXJ0IjsNCn0NCkFuZCBmaW5kIHRoYXQgYnksIGlz
-IGl0IE9LPw0KKwlob3N0LT5yc3QgPSBkZXZtX3Jlc2V0X2NvbnRyb2xfZ2V0KGRldiwgInJzdCIp
-Ow0KKwlob3N0LT5hc3NlcnQgPSBkZXZtX3Jlc2V0X2NvbnRyb2xfZ2V0KGRldiwgImFzc2VydCIp
-Ow0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1oaXNpLmggYi9kcml2ZXJz
-L3Njc2kvdWZzL3Vmcy1oaXNpLmggDQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0IGluZGV4IDAwMDAw
-MDAwMDAwMC4uNTI0MzBhMmFjYTkwDQo+IC0tLSAvZGV2L251bGwNCj4gKysrIGIvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnMtaGlzaS5oDQoNCg0KSWYgdGhlIGhlYWRlciBpcyBvbmx5IHVzZWQgaW4gb25l
-IGZpbGUsIHlvdSBkb24ndCBuZWVkIGl0LCBqdXN0IG1vdmUNCnRoZSBkZWZpbml0aW9ucw0KaW50
-byB0aGUgb3RoZXIgZmlsZS4NCg0KQ3VycmVudGx5IG9ubHkgb25lIGZpbGUgdXNlIHVmcy1oaXNp
-LmgsIGJ1dCBJIHRoaW5rIHNvIG1hbnkgZGVmaW5pdGlvbnMgYXJlIGRlZmluZWQgaW4gYSAuaCBm
-aWxlIGlzIG1vcmUgY2xlYXJlciwgbGlrZSB1ZnMtcWNvbS5oLg0KSWYgeW91IHRoaW5rIGl0IGlz
-bid0IG5lY2Vzc2FyeSwgSSB3aWxsIG1vdmUgaXQgaW50byB1ZnMtaGlzaS5jPw0KDQoNCiAgICAg
-IEFybmQNCg==
+2017-09-06 11:15 GMT+02:00 Jason Yan <yanaijie@huawei.com>:
+> Add a sysfs attr that LLDD can configure it for every host. We made
+> a example in hisi_sas. Other LLDDs using libsas can implement it if
+> they want.
+>
+> Suggested-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> CC: John Garry <john.garry@huawei.com>
+> CC: Johannes Thumshirn <jthumshirn@suse.de>
+> CC: Ewan Milne <emilne@redhat.com>
+> CC: Christoph Hellwig <hch@lst.de>
+> CC: Tomas Henzl <thenzl@redhat.com>
+> CC: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas_main.c |  6 ++++++
+>  drivers/scsi/libsas/sas_init.c        | 27 +++++++++++++++++++++++++++
+>  include/scsi/libsas.h                 |  1 +
+>  3 files changed, 34 insertions(+)
+>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index 5e47abb..9eceed1 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -1470,6 +1470,11 @@ EXPORT_SYMBOL_GPL(hisi_sas_rescan_topology);
+>  struct scsi_transport_template *hisi_sas_stt;
+>  EXPORT_SYMBOL_GPL(hisi_sas_stt);
+>
+> +struct device_attribute *host_attrs[] = {
+> +    &dev_attr_phy_event_threshold,
+> +    NULL,
+> +};
+> +
+>  static struct scsi_host_template _hisi_sas_sht = {
+>         .module                 = THIS_MODULE,
+>         .name                   = DRV_NAME,
+> @@ -1489,6 +1494,7 @@ static struct scsi_host_template _hisi_sas_sht = {
+>         .eh_bus_reset_handler   = sas_eh_bus_reset_handler,
+>         .target_destroy         = sas_target_destroy,
+>         .ioctl                  = sas_ioctl,
+> +       .shost_attrs            = host_attrs,
+>  };
+>  struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
+>  EXPORT_SYMBOL_GPL(hisi_sas_sht);
+> diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+> index b1e03d5..e2d98a8 100644
+> --- a/drivers/scsi/libsas/sas_init.c
+> +++ b/drivers/scsi/libsas/sas_init.c
+> @@ -537,6 +537,33 @@ static struct sas_function_template sft = {
+>         .smp_handler = sas_smp_handler,
+>  };
+>
+> +static inline ssize_t phy_event_threshold_show(struct device *dev,
+> +                       struct device_attribute *attr, char *buf)
+> +{
+> +       struct Scsi_Host *shost = class_to_shost(dev);
+> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+> +
+> +       return scnprintf(buf, PAGE_SIZE, "%u\n", sha->event_thres);
+> +}
+> +
+> +static inline ssize_t phy_event_threshold_store(struct device *dev,
+> +                       struct device_attribute *attr,
+> +                       const char *buf, size_t count)
+> +{
+> +       struct Scsi_Host *shost = class_to_shost(dev);
+> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+> +
+> +       sha->event_thres = simple_strtol(buf, NULL, 10);
+> +
+> +       return count;
+> +}
+> +
+> +DEVICE_ATTR(phy_event_threshold,
+> +             S_IRUGO|S_IWUSR,
+> +             phy_event_threshold_show,
+> +             phy_event_threshold_store);
+> +EXPORT_SYMBOL_GPL(dev_attr_phy_event_threshold);
+> +
+>  struct scsi_transport_template *
+>  sas_domain_attach_transport(struct sas_domain_function_template *dft)
+>  {
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 2fa0b13..08c1c32 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -679,6 +679,7 @@ extern int sas_bios_param(struct scsi_device *,
+>                           sector_t capacity, int *hsc);
+>  extern struct scsi_transport_template *
+>  sas_domain_attach_transport(struct sas_domain_function_template *);
+> +extern struct device_attribute dev_attr_phy_event_threshold;
+>
+>  int  sas_discover_root_expander(struct domain_device *);
+>
+> --
+> 2.5.0
+>
+
+Looks good, thanks!
+Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
