@@ -1,36 +1,41 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] scsi_transport_fc: fix NULL pointer dereference in fc_bsg_job_timeout
-Date: Thu,  7 Sep 2017 13:54:36 +0200
-Message-ID: <20170907115436.5069-3-hch@lst.de>
-References: <20170907115436.5069-1-hch@lst.de>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170907115436.5069-1-hch@lst.de>
-Sender: stable-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] csi: libcxgbi: remove redundant check and close on csk
+Date: Thu,  7 Sep 2017 14:51:33 +0100
+Message-ID: <20170907135133.16636-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-bsg-lib now embeddeds the job structure into the request, and req->special
-can't be used anymore.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Cc: stable@vger.kernel.org
+csk is always null on the error return path and so the non-null
+check and call to cxgbi_sock_closed on csk is redundant and
+can be removed.
+
+Detected by: CoverityScan CID#114329 ("Logically dead code")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/scsi_transport_fc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/cxgbi/libcxgbi.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 892fbd9800d9..bea06de60827 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3550,7 +3550,7 @@ fc_vport_sched_delete(struct work_struct *work)
- static enum blk_eh_timer_return
- fc_bsg_job_timeout(struct request *req)
- {
--	struct bsg_job *job = (void *) req->special;
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
- 	struct Scsi_Host *shost = fc_bsg_to_shost(job);
- 	struct fc_rport *rport = fc_bsg_to_rport(job);
- 	struct fc_internal *i = to_fc_internal(shost->transportt);
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 512c8f1ea5b0..da36c2de069e 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -688,8 +688,6 @@ cxgbi_check_route(struct sockaddr *dst_addr, int ifindex)
+ 
+ rel_rt:
+ 	ip_rt_put(rt);
+-	if (csk)
+-		cxgbi_sock_closed(csk);
+ err_out:
+ 	return ERR_PTR(err);
+ }
 -- 
-2.11.0
+2.14.1
