@@ -1,63 +1,39 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 1/5] scsi: ufs: add Hisilicon ufs driver code
-Date: Thu, 7 Sep 2017 00:46:36 +0200
-Message-ID: <CAK8P3a0vV94g=iNLfHXXgR-XFHaaK-mHoQQ45FDYG+FVQhix6Q@mail.gmail.com>
-References: <20170829084116.106695-1-liwei213@huawei.com> <20170829084116.106695-2-liwei213@huawei.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH v4 00/11] Enhance libsas hotplug feature
+Date: Thu, 7 Sep 2017 09:15:51 +0800
+Message-ID: <59B09DC7.3010206@huawei.com>
+References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
+ <57982db9-bfe8-cc7b-8aa7-0c3c83692d56@huawei.com>
+ <20170906132225.GF28049@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170829084116.106695-2-liwei213@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Li Wei <liwei213@huawei.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Wei Xu <xuwei5@hisilicon.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, Eric Anholt <eric@anholt.net>, devicetree@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>Linux
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5988 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751267AbdIGBQc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2017 21:16:32 -0400
+In-Reply-To: <20170906132225.GF28049@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Tue, Aug 29, 2017 at 10:41 AM, Li Wei <liwei213@huawei.com> wrote:
-itel(host, UFS_ARESET, PERRSTDIS3_OFFSET);
-> +
-> +       /* disable lp_reset_n */
-> +       ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_LP_RESET_N, RESET_CTRL_EN);
-> +       mdelay(1);
-> +
-> +       if (gpio_is_valid(host->reset_gpio))
-> +               gpio_direction_output(host->reset_gpio, 1);
-> +
-> +       ufs_sys_ctrl_writel(host, MASK_UFS_DEVICE_RESET | BIT_UFS_DEVICE_RESET,
-> +               UFS_DEVICE_RESET_CTRL);
-> +
-> +       mdelay(20);
-
-Could those mdelay() be turned into msleep() functions?
-
-> +static int ufs_hisi_get_resource(struct ufs_hisi_host *host)
-> +{
-> +       struct resource *mem_res;
-> +       struct device_node *np = NULL;
-> +       struct device *dev = host->hba->dev;
-> +       struct platform_device *pdev = to_platform_device(dev);
-> +
-> +       /* get resource of ufs sys ctrl */
-> +       mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> +       host->ufs_sys_ctrl = devm_ioremap_resource(dev, mem_res);
-> +       if (IS_ERR(host->ufs_sys_ctrl))
-> +               return PTR_ERR(host->ufs_sys_ctrl);
-> +
-> +       np = of_find_compatible_node(NULL, NULL, "hisilicon,hi3660-crgctrl");
-
-It's generally not a good idea to look up one device by its "compatible"
-string. What is the "crgctrl"? Does it have a proper DT binding?
-Maybe there should be a driver for it, or you could make it a "syscon"
-device and look it up by phandle instead.
-
-> diff --git a/drivers/scsi/ufs/ufs-hisi.h b/drivers/scsi/ufs/ufs-hisi.h
-> new file mode 100644
-> index 000000000000..52430a2aca90
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs-hisi.h
+To: Christoph Hellwig <hch@lst.de>, John Garry <john.garry@huawei.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, huangdaode@hisilicon.com, chenxiang66@hisilicon.com
 
 
-If the header is only used in one file, you don't need it, just move
-the definitions
-into the other file.
 
-      Arnd
+On 2017/9/6 21:22, Christoph Hellwig wrote:
+> On Wed, Sep 06, 2017 at 02:07:57PM +0100, John Garry wrote:
+>> Regardless of the fate of the rest of the patches in this series, I think
+>> patches 1,2,3,4,11/11 can be taken in isolation (subject to review, of
+>> course). It would save maintaining them out-of-tree.
+>
+> I did a quick review of those and they all look fine to me.
+>
+> I'll try to find some time to review the real changes in the next
+> days.
+>
+> .
+>
+
+Thank you very much and I'm looking forward to your suggestions
+of the real changes.
