@@ -1,45 +1,42 @@
-From: "Ouyangzhaowei (Charles)" <ouyangzhaowei@huawei.com>
-Subject: [PATCH] scsi: shost->async_scan should be protected by mutex_lock
-Date: Fri, 8 Sep 2017 14:54:20 +0800
-Message-ID: <f99d1494-af46-4f0f-5a24-bb88a860d0fe@huawei.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: lpfc: remove redundant null check on eqe
+Date: Fri,  8 Sep 2017 09:02:01 +0100
+Message-ID: <20170908080201.9592-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Suoben <suoben@huawei.com>, "Wulizhen (Pss)" <pss.wulizhen@huawei.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-shost->async_scan should be protected by mutex_lock, otherwise the check
-of "called twice" won't work.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Ouyang Zhaowei <ouyangzhaowei@huawei.com>
+The pointer eqe is always non-null inside the while loop, so the
+check to see if eqe is NULL is redudant and hence can be removed.
+
+Detected by CoverityScan CID#1248693 ("Logically Dead Code")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/scsi_scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index fd88dab..1d1df51 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1722,6 +1722,7 @@ static struct async_scan_data
-*scsi_prep_async_scan(struct Scsi_Host *shost)
-        if (strncmp(scsi_scan_type, "sync", 4) == 0)
-                return NULL;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 8b119f87b51d..80036a9fae7f 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13760,9 +13760,6 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
+ 	 * Process all the event on FCP fast-path EQ
+ 	 */
+ 	while ((eqe = lpfc_sli4_eq_get(fpeq))) {
+-		if (eqe == NULL)
+-			break;
+-
+ 		ccount += lpfc_sli4_hba_handle_eqe(phba, eqe, hba_eqidx);
+ 		if (!(++ecount % fpeq->entry_repost) ||
+ 		    ccount > LPFC_MAX_ISR_CQE)
+-- 
+2.14.1
 
-+       mutex_lock(&shost->scan_mutex);
-        if (shost->async_scan) {
-                shost_printk(KERN_DEBUG, shost, "%s called twice\n",
-__func__);
-                return NULL;
-@@ -1735,7 +1736,6 @@ static struct async_scan_data
-*scsi_prep_async_scan(struct Scsi_Host *shost)
-                goto err;
-        init_completion(&data->prev_finished);
-
--       mutex_lock(&shost->scan_mutex);
-        spin_lock_irqsave(shost->host_lock, flags);
-        shost->async_scan = 1;
-        spin_unlock_irqrestore(shost->host_lock, flags);
