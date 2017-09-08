@@ -1,36 +1,94 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V3 7/8] block: allow to allocate req with REQF_PREEMPT
- when queue is preempt frozen
-Date: Fri, 8 Sep 2017 17:28:16 +0000
-Message-ID: <1504891695.1665.5.camel@wdc.com>
-References: <20170902130840.24609-1-ming.lei@redhat.com>
-         <20170902130840.24609-8-ming.lei@redhat.com>
-         <20170902131208.GA10940@ming.t460p> <1504498405.10804.10.camel@wdc.com>
-         <20170904071653.GD7959@ming.t460p> <1504539634.3189.15.camel@wdc.com>
-         <20170904160813.GA21757@ming.t460p> <1504575610.3360.7.camel@wdc.com>
-         <20170905022325.GC24787@ming.t460p> <20170908030753.GA5627@ming.t460p>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH] aacraid: Fix 2T+ drives on SmartIOC-2000
+Date: Fri, 8 Sep 2017 20:50:54 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A8D5A70EE@avsrvexchmbx2.microsemi.net>
+References: <20170830222241.1560-1-david.carroll@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170908030753.GA5627@ming.t460p>
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0075.outbound.protection.outlook.com ([104.47.34.75]:9854
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932748AbdIHUvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Sep 2017 16:51:06 -0400
+In-Reply-To: <20170830222241.1560-1-david.carroll@microsemi.com>
 Content-Language: en-US
-Content-ID: <BB4196743B8582478E20B767E9E5D2A0@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Dave Carroll <david.carroll@microsemi.com>, linux-scsi <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Brian King <brking@linux.vnet.ibm.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 
-T24gRnJpLCAyMDE3LTA5LTA4IGF0IDExOjA4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gTG9v
-a3MgSSByZXBsaWVkIG9yIGNsYXJpZmllZCBhbGwgeW91ciBxdWVzdGlvbnMvY29tbWVudHMgb24g
-dGhpcw0KPiBwYXRjaHNldC4NCg0KTm8sIHlvdSBoYXZlIG5vdCBhZGRyZXNzZWQgYWxsIG15IGNv
-bW1lbnRzLCB5b3Uga25vdyB0aGF0IHlvdSBoYXZlIG5vdA0KYWRkcmVzc2VkIGFsbCBteSBjb21t
-ZW50cyBzbyB5b3Ugc2hvdWxkIG5vdCBoYXZlIHdyaXR0ZW4gdGhhdCB5b3UgaGF2ZQ0KYWRkcmVz
-c2VkIGFsbCBteSBjb21tZW50cy4gVGhpcyBwYXRjaCBzZXJpZXMgbm90IG9ubHkgaW50cm9kdWNl
-cyB1Z2x5DQpjaGFuZ2VzIGluIHRoZSByZXF1ZXN0IHF1ZXVlIGZyZWV6ZSBtZWNoYW5pc20gYnV0
-IGl0IGFsc28gaW50cm9kdWNlcyBhbg0KdW5hY2NlcHRhYmxlIHJhY2UgY29uZGl0aW9uIGJldHdl
-ZW4gYmxrX2dldF9yZXF1ZXN0KCkgYW5kIHJlcXVlc3QgcXVldWUNCmNsZWFudXAuDQoNCkJUVywg
-eW91IGRvbid0IGhhdmUgdG8gc3BlbmQgbW9yZSB0aW1lIG9uIHRoaXMgcGF0Y2ggc2VyaWVzLiBJ
-IGhhdmUNCmltcGxlbWVudGVkIGFuIGFsdGVybmF0aXZlIGFuZCBtdWNoIGNsZWFuZXIgYXBwcm9h
-Y2ggdG8gZml4IFNDU0kgZGV2aWNlDQpzdXNwZW5kLiBJJ20gY3VycmVudGx5IHRlc3RpbmcgdGhh
-dCBwYXRjaCBzZXJpZXMuDQoNCkJhcnQu
+> -----Original Message-----
+> From: Dave Carroll [mailto:david.carroll@microsemi.com]
+> Sent: Wednesday, August 30, 2017 3:23 PM
+> To: Martin K . Petersen <martin.petersen@oracle.com>; James Bottomley
+> <jejb@linux.vnet.ibm.com>
+> Cc: Dave Carroll <david.carroll@microsemi.com>; linux-scsi <linux-
+> scsi@vger.kernel.org>; dl-esc-Aacraid Linux Driver
+> <aacraid@microsemi.com>; Scott Benesh <scott.benesh@microsemi.com>;
+> Brian King <brking@linux.vnet.ibm.com>; stable@vger.kernel.org
+> Subject: [PATCH] aacraid: Fix 2T+ drives on SmartIOC-2000
+>=20
+> The logic for supporting large drives was previously tied to 4Kn support
+> for SmartIOC-2000. As SmartIOC-2000 does not support volumes using 4Kn
+> drives, use the intended option flag AAC_OPT_NEW_COMM_64 to
+> determine
+> support for volumes greater than 2T.
+>=20
+> cc: stable@vger.kernel.org
+> Signed-off-by: Dave Carroll <david.carroll@microsemi.com>
+>=20
+> ---
+>  drivers/scsi/aacraid/aachba.c  | 12 ++++++------
+>  drivers/scsi/aacraid/aacraid.h |  5 +++++
+>  2 files changed, 11 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.=
+c
+> index 4591113..18a1a1f 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -695,13 +695,13 @@ static void _aac_probe_container1(void * context,
+> struct fib * fibptr)
+>  	int status;
+>=20
+>  	dresp =3D (struct aac_mount *) fib_data(fibptr);
+> -	if (!(fibptr->dev->supplement_adapter_info.supported_options2 &
+> -	    AAC_OPTION_VARIABLE_BLOCK_SIZE))
+> +	if (!aac_supports_2T(fibptr->dev)) {
+>  		dresp->mnt[0].capacityhigh =3D 0;
+> -	if ((le32_to_cpu(dresp->status) !=3D ST_OK) ||
+> -	    (le32_to_cpu(dresp->mnt[0].vol) !=3D CT_NONE)) {
+> -		_aac_probe_container2(context, fibptr);
+> -		return;
+> +		if ((le32_to_cpu(dresp->status) =3D=3D ST_OK) &&
+> +			(le32_to_cpu(dresp->mnt[0].vol) !=3D CT_NONE)) {
+> +			_aac_probe_container2(context, fibptr);
+> +			return;
+> +		}
+>  	}
+>  	scsicmd =3D (struct scsi_cmnd *) context;
+>=20
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacrai=
+d.h
+> index 6981299..998fbad 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -2701,6 +2701,11 @@ static inline int aac_is_src(struct aac_dev *dev)
+>  	return 0;
+>  }
+>=20
+> +static inline int aac_supports_2T(struct aac_dev *dev)
+> +{
+> +	return (dev->adapter_info.options & AAC_OPT_NEW_COMM_64);
+> +}
+> +
+>  char * get_container_type(unsigned type);
+>  extern int numacb;
+>  extern char aac_driver_version[];
+> --
+> 2.8.4
+
+Reviewed-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.co=
+m>
