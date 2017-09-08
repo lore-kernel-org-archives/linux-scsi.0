@@ -1,47 +1,64 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2 10/12] scsi: sd_zbc: Disable zone write locking with
- scsi-mq
-Date: Fri, 8 Sep 2017 20:43:30 +0800
-Message-ID: <20170908124329.GA18932@ming.t460p>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH V2 00/12] scsi-mq support for ZBC disks
+Date: Fri, 8 Sep 2017 09:12:12 -0700
+Message-ID: <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com>
 References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170907161640.30465-11-damien.lemoal@wdc.com>
+ <20170908082040.GA25719@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46366 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755012AbdIHMnj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Sep 2017 08:43:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20170907161640.30465-11-damien.lemoal@wdc.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:55051 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752393AbdIHQM7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2017 12:12:59 -0400
+In-Reply-To: <20170908082040.GA25719@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>, Jens Axboe <axboe@kernel.dk>
 
-Hi Damien,
+Christoph,
 
-On Fri, Sep 08, 2017 at 01:16:38AM +0900, Damien Le Moal wrote:
-> In the case of a ZBC disk used with scsi-mq, zone write locking does
-> not prevent write reordering in sequential zones. Unlike the legacy
-> case, zone locking can only be done after the command request is
-> removed from the scheduler dispatch queue. That is, at the time of
-> zone locking, the write command may already be out of order.
-
-Per my understanding, for legacy case, it can be quite tricky to let
-the existed I/O scheduler guarantee the write order for ZBC disk.
-I guess requeue still might cause write reorder even in legacy path,
-since requeue can happen in both scsi_request_fn() and scsi_io_completion()
-with q->queue_lock released, meantime new rq belonging to the same
-zone can come and be inserted to queue.
-
+On 9/8/17 01:20, Christoph Hellwig wrote:
+> I'm really worried about how this is tied into the sd driver.
 > 
-> Disable zone write locking in sd_zbc_write_lock_zone() if the disk is
-> used with scsi-mq. Write order guarantees can be provided by an
-> adapted I/O scheduler.
+> From a quick look it seems like the only thing you really need in
+> the scheduler that is done through struct scsi_disk is the
+> offset + len -> zone number lookup - I'd much rather expose this
+> from sd upwards and keep the scheduler in the block code.
 
-Sounds a good idea to enhance the order in a new scheduler, will
-look at the following patch.
+The only things that the scheduler needs are:
+1) The zone size and the number of zones of the device (for the bitmaps
+allocation and offset->zone number conversion).
+2) Zone type for the optimization that avoids locking conventional zones.
+
+(2) is optional. We can do without, but still really nice to have from a
+performance perspective as conventional zones tend to be used for
+storing metadata. So a lot of small random writes is more likely and
+high queue depth writing would improve performance significantly.
+
+For (1), the zone size is known through q->limits.chunk_sectors. But the
+disk capacity is not known using request_queue only, so the number of
+zones cannot be calculated... I thought of exporting it through queue
+limits too, but then stacking of device mappers using ZBC drives becomes
+a pain as the number of zones needs to be recalculated.
+
+The best solution would really be to be able to get a disk capacity
+given a request queue. Any idea on how to do this ?
+For optimization (2), there is also the problem that given a request
+queue, the block_device struct is not known, so it is not possible to
+issue report zones (granted, the scheduler could build the request
+directly to do that, but that is really an ugly solution).
+
+I did not find any nice solution for either problem, so ended up tying
+the scheduler to sd since the scsi_disk struct already had all the info
+needed.
+
+> Except for that this looks like a fine approach to me.
+
+Thanks.
 
 -- 
-Ming
+Damien Le Moal,
+Western Digital Research
