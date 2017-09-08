@@ -1,20 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V2 04/12] scsi: sd_zbc: Move zbc disk declarations to
- sd_zbc.h
-Date: Fri, 8 Sep 2017 10:11:42 +0200
-Message-ID: <20170908081142.hwsoltcjpwn3o4h6@linux-x5ow.site>
+Subject: Re: [PATCH V2 05/12] scsi: sd_zbc: Fix comments and indentation
+Date: Fri, 8 Sep 2017 10:12:48 +0200
+Message-ID: <20170908081248.6nmwmh37ytjvndkp@linux-x5ow.site>
 References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170907161640.30465-5-damien.lemoal@wdc.com>
+ <20170907161640.30465-6-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35574 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35621 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932424AbdIHILo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Sep 2017 04:11:44 -0400
+        id S1750850AbdIHIMu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Sep 2017 04:12:50 -0400
 Content-Disposition: inline
-In-Reply-To: <20170907161640.30465-5-damien.lemoal@wdc.com>
+In-Reply-To: <20170907161640.30465-6-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Damien Le Moal <damien.lemoal@wdc.com>
