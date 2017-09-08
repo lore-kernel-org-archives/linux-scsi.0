@@ -1,42 +1,37 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: lpfc: remove redundant null check on eqe
-Date: Fri,  8 Sep 2017 09:02:01 +0100
-Message-ID: <20170908080201.9592-1-colin.king@canonical.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH V2 01/12] block: Fix declaration of blk-mq debugfs
+ functions
+Date: Fri, 8 Sep 2017 10:05:03 +0200
+Message-ID: <20170908080503.caywdsvmpxsvmhwa@linux-x5ow.site>
+References: <20170907161640.30465-1-damien.lemoal@wdc.com>
+ <20170907161640.30465-2-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35153 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754178AbdIHIFI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Sep 2017 04:05:08 -0400
+Content-Disposition: inline
+In-Reply-To: <20170907161640.30465-2-damien.lemoal@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Fri, Sep 08, 2017 at 01:16:29AM +0900, Damien Le Moal wrote:
+> __blk_mq_debugfs_rq_show() and blk_mq_debugfs_rq_show() are exported
+> symbols but ar eonly declared in the block internal file
+             are only
 
-The pointer eqe is always non-null inside the while loop, so the
-check to see if eqe is NULL is redudant and hence can be removed.
+Otherwise this looks good to me,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Detected by CoverityScan CID#1248693 ("Logically Dead Code")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/lpfc/lpfc_sli.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 8b119f87b51d..80036a9fae7f 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -13760,9 +13760,6 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
- 	 * Process all the event on FCP fast-path EQ
- 	 */
- 	while ((eqe = lpfc_sli4_eq_get(fpeq))) {
--		if (eqe == NULL)
--			break;
--
- 		ccount += lpfc_sli4_hba_handle_eqe(phba, eqe, hba_eqidx);
- 		if (!(++ecount % fpeq->entry_repost) ||
- 		    ccount > LPFC_MAX_ISR_CQE)
 -- 
-2.14.1
-
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
