@@ -1,63 +1,85 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH V2 00/12] scsi-mq support for ZBC disks
-Date: Fri, 8 Sep 2017 09:12:12 -0700
-Message-ID: <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com>
+Subject: Re: [PATCH V2 10/12] scsi: sd_zbc: Disable zone write locking with
+ scsi-mq
+Date: Fri, 8 Sep 2017 09:53:53 -0700
+Message-ID: <8c23a8c8-e945-fd4c-ee6c-da9b097de30b@wdc.com>
 References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170908082040.GA25719@lst.de>
+ <20170907161640.30465-11-damien.lemoal@wdc.com>
+ <20170908124329.GA18932@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:55051 "EHLO
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:33753 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752393AbdIHQM7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2017 12:12:59 -0400
-In-Reply-To: <20170908082040.GA25719@lst.de>
+        with ESMTP id S1756216AbdIHQyj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2017 12:54:39 -0400
+In-Reply-To: <20170908124329.GA18932@ming.t460p>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>, Jens Axboe <axboe@kernel.dk>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Christoph,
+Ming,
 
-On 9/8/17 01:20, Christoph Hellwig wrote:
-> I'm really worried about how this is tied into the sd driver.
+On 9/8/17 05:43, Ming Lei wrote:
+> Hi Damien,
 > 
-> From a quick look it seems like the only thing you really need in
-> the scheduler that is done through struct scsi_disk is the
-> offset + len -> zone number lookup - I'd much rather expose this
-> from sd upwards and keep the scheduler in the block code.
+> On Fri, Sep 08, 2017 at 01:16:38AM +0900, Damien Le Moal wrote:
+>> In the case of a ZBC disk used with scsi-mq, zone write locking does
+>> not prevent write reordering in sequential zones. Unlike the legacy
+>> case, zone locking can only be done after the command request is
+>> removed from the scheduler dispatch queue. That is, at the time of
+>> zone locking, the write command may already be out of order.
+> 
+> Per my understanding, for legacy case, it can be quite tricky to let
+> the existed I/O scheduler guarantee the write order for ZBC disk.
+> I guess requeue still might cause write reorder even in legacy path,
+> since requeue can happen in both scsi_request_fn() and scsi_io_completion()
+> with q->queue_lock released, meantime new rq belonging to the same
+> zone can come and be inserted to queue.
 
-The only things that the scheduler needs are:
-1) The zone size and the number of zones of the device (for the bitmaps
-allocation and offset->zone number conversion).
-2) Zone type for the optimization that avoids locking conventional zones.
+Yes, the write ordering will always depend on the scheduler doing the
+right thing. But both cfq, deadline and even noop do the right thing
+there, even considering the aging case. The next write for a zone will
+always be the oldest in the queue for that zone, if it is not, it means
+that the application did not write sequentially. Extensive testing in
+the legacy case never showed a problem due to the scheduler itself.
 
-(2) is optional. We can do without, but still really nice to have from a
-performance perspective as conventional zones tend to be used for
-storing metadata. So a lot of small random writes is more likely and
-high queue depth writing would improve performance significantly.
+scsi_requeue_command() does the unprep (zone unlock) and requeue while
+holding the queue lock. So this is atomic with new write command
+insertion. Requeued commands are added to the dispatch queue head, and
+since a zone will only have a single write in-flight, there is no
+reordering possible. The next write command for a zone to go again is
+the last requeued one or the next in lba order. It works.
 
-For (1), the zone size is known through q->limits.chunk_sectors. But the
-disk capacity is not known using request_queue only, so the number of
-zones cannot be calculated... I thought of exporting it through queue
-limits too, but then stacking of device mappers using ZBC drives becomes
-a pain as the number of zones needs to be recalculated.
+Note that for write commands that failed due to an unaligned write
+error, there is no retry done, so no requeue. The requeue case for
+writes would only happen for other conditions (a dead drive being the
+most likely in this case).
 
-The best solution would really be to be able to get a disk capacity
-given a request queue. Any idea on how to do this ?
-For optimization (2), there is also the problem that given a request
-queue, the block_device struct is not known, so it is not possible to
-issue report zones (granted, the scheduler could build the request
-directly to do that, but that is really an ugly solution).
+>> Disable zone write locking in sd_zbc_write_lock_zone() if the disk is
+>> used with scsi-mq. Write order guarantees can be provided by an
+>> adapted I/O scheduler.
+> 
+> Sounds a good idea to enhance the order in a new scheduler, will
+> look at the following patch.
 
-I did not find any nice solution for either problem, so ended up tying
-the scheduler to sd since the scsi_disk struct already had all the info
-needed.
+For blk-mq, I only tried mq-deadline. The zoned scheduler I posted is
+based on it. There is no fundamental change to the ordering on
+insertion. Only different choices on dispatch (using the zone lock).
 
-> Except for that this looks like a fine approach to me.
+For rotating rust and blk-mq, I think that getting calls to dispatch
+serialized would naturally enhance ordering and also merging to some
+extent. Ordering really gets killed when multiple context try to push
+down requests, which each context ending up each with only a few
+requests in their local dispatch lists. Some initial patch I wrote for
+zbc that attacked the problem from within blk-mq did that serialization.
+That is not mandatory anymore with the zoned scheduler, but I think
+would still be benefitial to both ZBC disks and standard disks too.
 
-Thanks.
+Best regards.
+
 
 -- 
 Damien Le Moal,
