@@ -1,19 +1,23 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V2 06/12] scsi: sd_zbc: Rearrange code
-Date: Fri, 8 Sep 2017 10:13:58 +0200
-Message-ID: <20170908081358.cjlc4qusyjgq32lo@linux-x5ow.site>
+Subject: Re: [PATCH V2 07/12] scsi: sd_zbc.c: Use well defined macros
+Date: Fri, 8 Sep 2017 10:15:42 +0200
+Message-ID: <20170908081542.slghfheier56b643@linux-x5ow.site>
 References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170907161640.30465-7-damien.lemoal@wdc.com>
+ <20170907161640.30465-8-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35879 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753645AbdIHIPo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Sep 2017 04:15:44 -0400
 Content-Disposition: inline
-In-Reply-To: <20170907161640.30465-7-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
+In-Reply-To: <20170907161640.30465-8-damien.lemoal@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Damien Le Moal <damien.lemoal@wdc.com>
 Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
-List-Id: linux-scsi@vger.kernel.org
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
