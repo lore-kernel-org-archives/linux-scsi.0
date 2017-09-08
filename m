@@ -1,20 +1,24 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V2 03/12] scsi: sd_zbc: Move ZBC declarations to
- scsi_proto.h
-Date: Fri, 8 Sep 2017 10:10:21 +0200
-Message-ID: <20170908081021.cku2plahir3ujifa@linux-x5ow.site>
+Subject: Re: [PATCH V2 04/12] scsi: sd_zbc: Move zbc disk declarations to
+ sd_zbc.h
+Date: Fri, 8 Sep 2017 10:11:42 +0200
+Message-ID: <20170908081142.hwsoltcjpwn3o4h6@linux-x5ow.site>
 References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170907161640.30465-4-damien.lemoal@wdc.com>
+ <20170907161640.30465-5-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35574 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932424AbdIHILo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Sep 2017 04:11:44 -0400
 Content-Disposition: inline
-In-Reply-To: <20170907161640.30465-4-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
+In-Reply-To: <20170907161640.30465-5-damien.lemoal@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Damien Le Moal <damien.lemoal@wdc.com>
 Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
-List-Id: linux-scsi@vger.kernel.org
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
