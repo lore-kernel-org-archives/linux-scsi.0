@@ -1,28 +1,27 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2 11/12] scsi: sd: Introduce scsi_disk_from_queue()
-Date: Sun, 10 Sep 2017 13:16:56 +0800
-Message-ID: <20170910051655.GC11628@ming.t460p>
-References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170907161640.30465-12-damien.lemoal@wdc.com>
+From: mackenzie <antoine.touze@univ-tours.fr>
+Subject: [SUSPECTED SPAM] I am a Buyer
+Date: Sun, 10 Sep 2017 13:19:09 +0200 (CEST)
+Message-ID: <407965311.45474009.1505042349493.JavaMail.zimbra__16205.0002407797$1505043013$gmane$org@univ-tours.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170907161640.30465-12-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from angelia.univ-tours.fr ([193.52.209.20]:13304 "EHLO
+        angelia.univ-tours.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750782AbdIJL3q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Sep 2017 07:29:46 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 08, 2017 at 01:16:39AM +0900, Damien Le Moal wrote:
-> Using scsi_device_from_queue(), return the scsi_disk structure
-> associated with a request queue if the device is a disk.
-> Export this function to make it available to modules.
-> 
 
-This approach may be a little over-kill, actually gendisk is the
-parent of request queue in kobject tree(see blk_register_queue()),
-that might be an easy way to retrieve disk attached to the queue.
 
--- 
-Ming
+Dear Sir/Madam,
+
+I am Becca MacKenzie, We are interested in your products and want to make you and your company our major suppliers but first we would like your to send us your best price list and Catalog if possible.
+
+We will be ordering in large quantity so we are looking forward in making a good relationship with you and your company.
+
+For my quick response write only to my contact email: becca.mackenzie100@outlook.com
+
+Regards
+Becca MacKenzie
