@@ -1,77 +1,86 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: Re: [PATCH] scsi: fix the issue that iscsi_if_rx doesn't parse nlmsg
- properly
-Date: Wed, 13 Sep 2017 08:51:34 -0700
-Message-ID: <20170913155134.4orisc4hprvews47@straylight.hirudinean.org>
-References: <0c9fd6fbc0f5fa7b72e6ae5b82d5499a38fd375e.1503836726.git.lucien.xin@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41280 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751145AbdIMPvh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Sep 2017 11:51:37 -0400
-Content-Disposition: inline
-In-Reply-To: <0c9fd6fbc0f5fa7b72e6ae5b82d5499a38fd375e.1503836726.git.lucien.xin@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] bnx2i: Clean up unused pointers in bnx2i_hwi
+Date: Sun, 10 Sep 2017 13:18:54 +0100
+Message-ID: <1505045934-16272-1-git-send-email-chris.gekas@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Xin Long <lucien.xin@gmail.com>, linux-scsi@vger.kernel.org
-Cc: syzkaller@googlegroups.com, chunwang@redhat.com
 
+Pointers bnx2i_cmd are set but never used, so they can be removed.
 
-Acked-by: Chris Leech <cleech@redhat.com>
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+---
+ drivers/scsi/bnx2i/bnx2i_hwi.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-On Sun, Aug 27, 2017 at 08:25:26PM +0800, Xin Long wrote:
-> ChunYu found a kernel crash by syzkaller:
-> 
-> [  651.617875] kasan: CONFIG_KASAN_INLINE enabled
-> [  651.618217] kasan: GPF could be caused by NULL-ptr deref or user memory access
-> [  651.618731] general protection fault: 0000 [#1] SMP KASAN
-> [  651.621543] CPU: 1 PID: 9539 Comm: scsi Not tainted 4.11.0.cov #32
-> [  651.621938] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
-> [  651.622309] task: ffff880117780000 task.stack: ffff8800a3188000
-> [  651.622762] RIP: 0010:skb_release_data+0x26c/0x590
-> [...]
-> [  651.627260] Call Trace:
-> [  651.629156]  skb_release_all+0x4f/0x60
-> [  651.629450]  consume_skb+0x1a5/0x600
-> [  651.630705]  netlink_unicast+0x505/0x720
-> [  651.632345]  netlink_sendmsg+0xab2/0xe70
-> [  651.633704]  sock_sendmsg+0xcf/0x110
-> [  651.633942]  ___sys_sendmsg+0x833/0x980
-> [  651.637117]  __sys_sendmsg+0xf3/0x240
-> [  651.638820]  SyS_sendmsg+0x32/0x50
-> [  651.639048]  entry_SYSCALL_64_fastpath+0x1f/0xc2
-> 
-> It's caused by skb_shared_info at the end of sk_buff was overwritten by
-> ISCSI_KEVENT_IF_ERROR when parsing nlmsg info from skb in iscsi_if_rx.
-> 
-> During the loop if skb->len == nlh->nlmsg_len and both are sizeof(*nlh),
-> ev = nlmsg_data(nlh) will acutally get skb_shinfo(SKB) instead and set a
-> new value to skb_shinfo(SKB)->nr_frags by ev->type.
-> 
-> This patch is to fix it by checking nlh->nlmsg_len properly there to
-> avoid over accessing sk_buff.
-> 
-> Reported-by: ChunYu Wang <chunwang@redhat.com>
-> Signed-off-by: Xin Long <lucien.xin@gmail.com>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index e4b3d8f..bb4ed7b 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -3697,7 +3697,7 @@ iscsi_if_rx(struct sk_buff *skb)
->  		uint32_t group;
->  
->  		nlh = nlmsg_hdr(skb);
-> -		if (nlh->nlmsg_len < sizeof(*nlh) ||
-> +		if (nlh->nlmsg_len < sizeof(*nlh) + sizeof(*ev) ||
->  		    skb->len < nlh->nlmsg_len) {
->  			break;
->  		}
-> -- 
-> 2.1.0
-> 
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 42921db..e3f22cb 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -332,12 +332,10 @@ static void bnx2i_ring_dbell_update_sq_params(struct bnx2i_conn *bnx2i_conn,
+ int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
+ 			   struct iscsi_task *task)
+ {
+-	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_login_request *login_wqe;
+ 	struct iscsi_login_req *login_hdr;
+ 	u32 dword;
+ 
+-	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
+ 	login_hdr = (struct iscsi_login_req *)task->hdr;
+ 	login_wqe = (struct bnx2i_login_request *)
+ 						bnx2i_conn->ep->qp.sq_prod_qe;
+@@ -391,12 +389,10 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
+ 	struct iscsi_tm *tmfabort_hdr;
+ 	struct scsi_cmnd *ref_sc;
+ 	struct iscsi_task *ctask;
+-	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_tmf_request *tmfabort_wqe;
+ 	u32 dword;
+ 	u32 scsi_lun[2];
+ 
+-	bnx2i_cmd = (struct bnx2i_cmd *)mtask->dd_data;
+ 	tmfabort_hdr = (struct iscsi_tm *)mtask->hdr;
+ 	tmfabort_wqe = (struct bnx2i_tmf_request *)
+ 						bnx2i_conn->ep->qp.sq_prod_qe;
+@@ -463,12 +459,10 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
+ int bnx2i_send_iscsi_text(struct bnx2i_conn *bnx2i_conn,
+ 			  struct iscsi_task *mtask)
+ {
+-	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_text_request *text_wqe;
+ 	struct iscsi_text *text_hdr;
+ 	u32 dword;
+ 
+-	bnx2i_cmd = (struct bnx2i_cmd *)mtask->dd_data;
+ 	text_hdr = (struct iscsi_text *)mtask->hdr;
+ 	text_wqe = (struct bnx2i_text_request *) bnx2i_conn->ep->qp.sq_prod_qe;
+ 
+@@ -541,11 +535,9 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn *bnx2i_conn,
+ 			    char *datap, int data_len, int unsol)
+ {
+ 	struct bnx2i_endpoint *ep = bnx2i_conn->ep;
+-	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_nop_out_request *nopout_wqe;
+ 	struct iscsi_nopout *nopout_hdr;
+ 
+-	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
+ 	nopout_hdr = (struct iscsi_nopout *)task->hdr;
+ 	nopout_wqe = (struct bnx2i_nop_out_request *)ep->qp.sq_prod_qe;
+ 
+@@ -602,11 +594,9 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn *bnx2i_conn,
+ int bnx2i_send_iscsi_logout(struct bnx2i_conn *bnx2i_conn,
+ 			    struct iscsi_task *task)
+ {
+-	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_logout_request *logout_wqe;
+ 	struct iscsi_logout *logout_hdr;
+ 
+-	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
+ 	logout_hdr = (struct iscsi_logout *)task->hdr;
+ 
+ 	logout_wqe = (struct bnx2i_logout_request *)
+-- 
+2.7.4
