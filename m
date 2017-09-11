@@ -1,47 +1,69 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [man-pages PATCH] cciss.4, hpsa.4: mention cciss removal in Linux 4.13
-Date: Mon, 11 Sep 2017 16:21:45 +0200
-Message-ID: <CAKgNAkh=f5o+5KJ=5RY=O9pUe4zYJj86KMq8y=vshXvtwS7rMQ@mail.gmail.com>
-References: <20170911025746.GA23341@asgard.redhat.com> <alpine.LRH.2.21.1709110958100.23935@math.ut.ee>
- <CACGkJdvGYZGSF0pSdh416BHWoaxY2KRkfx1th-ZZUX9u+MPzFg@mail.gmail.com>
-Reply-To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V4 08/10] block: allow to allocate req with RQF_PREEMPT
+ when queue is preempt frozen
+Date: Mon, 11 Sep 2017 16:03:55 +0000
+Message-ID: <1505145834.2802.17.camel@wdc.com>
+References: <20170911111021.25810-1-ming.lei@redhat.com>
+         <20170911111021.25810-9-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CACGkJdvGYZGSF0pSdh416BHWoaxY2KRkfx1th-ZZUX9u+MPzFg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Don Brace <don.brace-dzo6w/eZyo2tG0bUXCXiUA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:2001 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750810AbdIKQEl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2017 12:04:41 -0400
+In-Reply-To: <20170911111021.25810-9-ming.lei@redhat.com>
+Content-Language: en-US
+Content-ID: <882C71156A8CD54C9DC3FC175A362963@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "cavery@redhat.com" <cavery@redhat.com>
 
-Hi Eugene,
-
-On 11 September 2017 at 14:36, Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> On Mon, Sep 11, 2017 at 8:58 AM, Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org> wrote:
->> On Mon, 11 Sep 2017, Eugene Syromyatnikov wrote:
->>
->>> During the Linux 4.13 development cycle, cciss driver has been removed
->>> in flavor to hpsa driver that has been amended with some legacy board
->>> support.
->>
->> It's gone in 4.14 - 4.13 works the old way.
->
-> Uhh, my bad, sorry: forgot to add --contain to git describe. I'll
-> resend the patch.
-
-Too late. I'll fix manually.
-
-Cheers,
-
-Michael
-
-
-
--- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
---
-To unsubscribe from this list: send the line "unsubscribe linux-man" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gTW9uLCAyMDE3LTA5LTExIGF0IDE5OjEwICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
+LTc4Nyw2ICs3ODcsMzUgQEAgaW50IGJsa19xdWV1ZV9lbnRlcihzdHJ1Y3QgcmVxdWVzdF9xdWV1
+ZSAqcSwgdW5zaWduZWQgZmxhZ3MpDQo+ICAJCWlmIChwZXJjcHVfcmVmX3RyeWdldF9saXZlKCZx
+LT5xX3VzYWdlX2NvdW50ZXIpKQ0KPiAgCQkJcmV0dXJuIDA7DQo+ICANCj4gKwkJLyoNCj4gKwkJ
+ICogSWYgcXVldWUgaXMgcHJlZW1wdCBmcm96ZW4gYW5kIGNhbGxlciBuZWVkIHRvIGFsbG9jYXRl
+DQo+ICsJCSAqIHJlcXVlc3QgZm9yIFJRRl9QUkVFTVBULCB3ZSBncmFiIHRoZSAucV91c2FnZV9j
+b3VudGVyDQo+ICsJCSAqIHVuY29uZGl0aW9uYWxseSBhbmQgcmV0dXJuIHN1Y2Nlc3NmdWxseS4N
+Cj4gKwkJICoNCj4gKwkJICogVGhlcmUgaXNuJ3QgcmFjZSB3aXRoIHF1ZXVlIGNsZWFudXAgYmVj
+YXVzZToNCj4gKwkJICoNCj4gKwkJICogMSkgaXQgaXMgZ3VhcmFudGVlZCB0aGF0IHByZWVtcHQg
+ZnJlZXplIGNhbid0IGJlDQo+ICsJCSAqIHN0YXJ0ZWQgYWZ0ZXIgcXVldWUgaXMgc2V0IGFzIGR5
+aW5nDQo+ICsJCSAqDQo+ICsJCSAqIDIpIG5vcm1hbCBmcmVlemUgcnVucyBleGNsdXNpdmVseSB3
+aXRoIHByZWVtcHQNCj4gKwkJICogZnJlZXplLCBzbyBldmVuIGFmdGVyIHF1ZXVlIGlzIHNldCBh
+cyBkeWluZw0KPiArCQkgKiBhZnRlcndhcmRzLCBibGtfcXVldWVfY2xlYW51cCgpIHdvbid0IG1v
+dmUgb24NCj4gKwkJICogdW50aWwgcHJlZW1wdCBmcmVlemUgaXMgZG9uZQ0KPiArCQkgKg0KPiAr
+CQkgKiAzKSBibGtfcXVldWVfZHlpbmcoKSBuZWVkbid0IHRvIGJlIGNoZWNrZWQgaGVyZQ0KPiAr
+CQkgKiAJLSBmb3IgbGVnYWN5IHBhdGgsIGl0IHdpbGwgYmUgY2hlY2tlZCBpbg0KPiArCQkgKiAJ
+X19nZXRfcmVxdWVzdCgpDQoNCkZvciB0aGUgbGVnYWN5IGJsb2NrIGxheWVyIGNvcmUsIHdoYXQg
+ZG8geW91IHRoaW5rIHdpbGwgaGFwcGVuIGlmIHRoZQ0KImR5aW5nIiBzdGF0ZSBpcyBzZXQgYnkg
+YW5vdGhlciB0aHJlYWQgYWZ0ZXIgX19nZXRfcmVxdWVzdCgpIGhhcyBwYXNzZWQgdGhlDQpibGtf
+cXVldWVfZHlpbmcoKSBjaGVjaz8NCg0KPiArCQkgKiAJLSBibGstbXEgZGVwZW5kcyBvbiBkcml2
+ZXIgdG8gaGFuZGxlIGR5aW5nIHdlbGwNCj4gKwkJICogCWJlY2F1c2UgaXQgaXMgbm9ybWFsIGZv
+ciBxdWV1ZSB0byBiZSBzZXQgYXMgZHlpbmcNCj4gKwkJICogCWp1c3QgYmV0d2VlbiBibGtfcXVl
+dWVfZW50ZXIoKSBhbmQgYWxsb2NhdGluZyBuZXcNCj4gKwkJICogCXJlcXVlc3QuDQoNClRoZSBh
+Ym92ZSBjb21tZW50IGlzIG5vdCBjb3JyZWN0LiBUaGUgYmxvY2sgbGF5ZXIgY29yZSBoYW5kbGVz
+IHRoZSAiZHlpbmciDQpzdGF0ZS4gQmxvY2sgZHJpdmVycyBvdGhlciB0aGFuIGRtLW1wYXRoIHNo
+b3VsZCBub3QgaGF2ZSB0byBxdWVyeSB0aGlzIHN0YXRlDQpkaXJlY3RseS4NCg0KPiArCQkgKi8N
+Cj4gKwkJaWYgKChmbGFncyAmIEJMS19SRVFfUFJFRU1QVCkgJiYNCj4gKwkJCQlibGtfcXVldWVf
+aXNfcHJlZW1wdF9mcm96ZW4ocSkpIHsNCj4gKwkJCWJsa19xdWV1ZV9lbnRlcl9saXZlKHEpOw0K
+PiArCQkJcmV0dXJuIDA7DQo+ICsJCX0NCj4gKw0KDQpTb3JyeSBidXQgdG8gbWUgaXQgbG9va3Mg
+bGlrZSB0aGUgYWJvdmUgY29kZSBpbnRyb2R1Y2VzIGEgcmFjZSBjb25kaXRpb24NCmJldHdlZW4g
+YmxrX3F1ZXVlX2NsZWFudXAoKSBhbmQgYmxrX2dldF9yZXF1ZXN0KCkgZm9yIGF0IGxlYXN0IGJs
+ay1tcS4NCkNvbnNpZGVyIGUuZy4gdGhlIGZvbGxvd2luZyBzY2VuYXJpbzoNCiogQSBmaXJzdCB0
+aHJlYWQgcHJlZW1wdC1mcmVlemVzIGEgcmVxdWVzdCBxdWV1ZS4NCiogQSBzZWNvbmQgdGhyZWFk
+IGNhbGxzIGJsa19nZXRfcmVxdWVzdCgpIHdpdGggQkxLX1JFUV9QUkVFTVBUIHNldC4gVGhhdA0K
+ICByZXN1bHRzIGluIGEgY2FsbCBvZiBibGtfcXVldWVfaXNfcHJlZW1wdF9mcm96ZW4oKS4NCiog
+QSBjb250ZXh0IHN3aXRjaCBvY2N1cnMgdG8gdGhlIGZpcnN0IHRocmVhZC4NCiogVGhlIGZpcnN0
+IHRocmVhZCBwcmVlbXB0LXVuZnJlZXplcyB0aGUgc2FtZSByZXF1ZXN0IHF1ZXVlIGFuZCBjYWxs
+cw0KICBibGtfcXVldWVfY2xlYW51cCgpLiBUaGF0IGxhc3QgZnVuY3Rpb24gY2hhbmdlcyB0aGUg
+cmVxdWVzdCBxdWV1ZSBzdGF0ZQ0KICBpbnRvIERZSU5HIGFuZCB3YWl0cyB1bnRpbCBhbGwgcGVu
+ZGluZyByZXF1ZXN0cyBoYXZlIGZpbmlzaGVkLg0KKiBUaGUgc2Vjb25kIHRocmVhZCBjb250aW51
+ZXMgYW5kIGNhbGxzIGJsa19xdWV1ZV9lbnRlcl9saXZlKCksIGFsbG9jYXRlcw0KICBhIHJlcXVl
+c3QgYW5kIHN1Ym1pdHMgaXQuDQoNCkluIG90aGVyIHdvcmRzLCBhIHJlcXVlc3QgZ2V0cyBzdWJt
+aXR0ZWQgYWdhaW5zdCBhIGR5aW5nIHF1ZXVlLiBUaGlzIG11c3QNCm5vdCBoYXBwZW4uIFNlZSBh
+bHNvIG15IGV4cGxhbmF0aW9uIG9mIHF1ZXVlIHNodXRkb3duIGZyb20gYSBmZXcgZGF5cyBhZ28N
+CihodHRwczovL21hcmMuaW5mby8/bD1saW51eC1ibG9jayZtPTE1MDQ0OTg0NTgzMTc4OSkuDQoN
+CkJhcnQu
