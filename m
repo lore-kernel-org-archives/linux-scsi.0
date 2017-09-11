@@ -1,106 +1,97 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: Re: [PATCH] bnx2i: Clean up unused pointers in bnx2i_hwi
-Date: Mon, 11 Sep 2017 05:48:24 +0000
-Message-ID: <D5DC2129.3D3F8%manish.rangankar@cavium.com>
-References: <1505045934-16272-1-git-send-email-chris.gekas@gmail.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: [man-pages PATCH] cciss.4, hpsa.4: mention cciss removal in
+ Linux 4.13
+Date: Mon, 11 Sep 2017 09:58:25 +0300 (EEST)
+Message-ID: <alpine.LRH.2.21.1709110958100.23935@math.ut.ee>
+References: <20170911025746.GA23341@asgard.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1505045934-16272-1-git-send-email-chris.gekas@gmail.com>
-Content-Language: en-US
-Content-ID: <AB91E3001CCA2C4BBEFF3678774B1DE1@namprd07.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christos Gkekas <chris.gekas@gmail.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.it.da.ut.ee ([193.40.5.66]:55709 "EHLO smtp1.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750933AbdIKG6a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Sep 2017 02:58:30 -0400
+In-Reply-To: <20170911025746.GA23341@asgard.redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eugene Syromyatnikov <evgsyr@gmail.com>
+Cc: mtk.manpages@gmail.com, linux-man@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org
 
+On Mon, 11 Sep 2017, Eugene Syromyatnikov wrote:
 
-On 10/09/17 5:48 PM, "Christos Gkekas" <chris.gekas@gmail.com> wrote:
+> During the Linux 4.13 development cycle, cciss driver has been removed
+> in flavor to hpsa driver that has been amended with some legacy board
+> support.
 
->Pointers bnx2i_cmd are set but never used, so they can be removed.
->
->Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
->---
-> drivers/scsi/bnx2i/bnx2i_hwi.c | 10 ----------
-> 1 file changed, 10 deletions(-)
->
->diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c
->b/drivers/scsi/bnx2i/bnx2i_hwi.c
->index 42921db..e3f22cb 100644
->--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
->+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
->@@ -332,12 +332,10 @@ static void
->bnx2i_ring_dbell_update_sq_params(struct bnx2i_conn *bnx2i_conn,
-> int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
-> 			   struct iscsi_task *task)
-> {
->-	struct bnx2i_cmd *bnx2i_cmd;
-> 	struct bnx2i_login_request *login_wqe;
-> 	struct iscsi_login_req *login_hdr;
-> 	u32 dword;
->=20
->-	bnx2i_cmd =3D (struct bnx2i_cmd *)task->dd_data;
-> 	login_hdr =3D (struct iscsi_login_req *)task->hdr;
-> 	login_wqe =3D (struct bnx2i_login_request *)
-> 						bnx2i_conn->ep->qp.sq_prod_qe;
->@@ -391,12 +389,10 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn
->*bnx2i_conn,
-> 	struct iscsi_tm *tmfabort_hdr;
-> 	struct scsi_cmnd *ref_sc;
-> 	struct iscsi_task *ctask;
->-	struct bnx2i_cmd *bnx2i_cmd;
-> 	struct bnx2i_tmf_request *tmfabort_wqe;
-> 	u32 dword;
-> 	u32 scsi_lun[2];
->=20
->-	bnx2i_cmd =3D (struct bnx2i_cmd *)mtask->dd_data;
-> 	tmfabort_hdr =3D (struct iscsi_tm *)mtask->hdr;
-> 	tmfabort_wqe =3D (struct bnx2i_tmf_request *)
-> 						bnx2i_conn->ep->qp.sq_prod_qe;
->@@ -463,12 +459,10 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn
->*bnx2i_conn,
-> int bnx2i_send_iscsi_text(struct bnx2i_conn *bnx2i_conn,
-> 			  struct iscsi_task *mtask)
-> {
->-	struct bnx2i_cmd *bnx2i_cmd;
-> 	struct bnx2i_text_request *text_wqe;
-> 	struct iscsi_text *text_hdr;
-> 	u32 dword;
->=20
->-	bnx2i_cmd =3D (struct bnx2i_cmd *)mtask->dd_data;
-> 	text_hdr =3D (struct iscsi_text *)mtask->hdr;
-> 	text_wqe =3D (struct bnx2i_text_request *) bnx2i_conn->ep->qp.sq_prod_qe=
-;
->=20
->@@ -541,11 +535,9 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn
->*bnx2i_conn,
-> 			    char *datap, int data_len, int unsol)
-> {
-> 	struct bnx2i_endpoint *ep =3D bnx2i_conn->ep;
->-	struct bnx2i_cmd *bnx2i_cmd;
-> 	struct bnx2i_nop_out_request *nopout_wqe;
-> 	struct iscsi_nopout *nopout_hdr;
->=20
->-	bnx2i_cmd =3D (struct bnx2i_cmd *)task->dd_data;
-> 	nopout_hdr =3D (struct iscsi_nopout *)task->hdr;
-> 	nopout_wqe =3D (struct bnx2i_nop_out_request *)ep->qp.sq_prod_qe;
->=20
->@@ -602,11 +594,9 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn
->*bnx2i_conn,
-> int bnx2i_send_iscsi_logout(struct bnx2i_conn *bnx2i_conn,
-> 			    struct iscsi_task *task)
-> {
->-	struct bnx2i_cmd *bnx2i_cmd;
-> 	struct bnx2i_logout_request *logout_wqe;
-> 	struct iscsi_logout *logout_hdr;
->=20
->-	bnx2i_cmd =3D (struct bnx2i_cmd *)task->dd_data;
-> 	logout_hdr =3D (struct iscsi_logout *)task->hdr;
->=20
-> 	logout_wqe =3D (struct bnx2i_logout_request *)
->--=20
->2.7.4
+It's gone in 4.14 - 4.13 works the old way.
 
-Thanks,
+> 
+> * man4/cciss.4 (.SH DESCRIPTION): Mention driver removal.
+> * man4/hpsa.4 (.SH DESCRIPTION): Mention list of boards that recognised
+> since Linux 4.13.
+> 
+> Signed-off-by: Eugene Syromyatnikov <evgsyr@gmail.com>
+> ---
+>  man4/cciss.4 |  7 +++++++
+>  man4/hpsa.4  | 26 ++++++++++++++++++++++++++
+>  2 files changed, 33 insertions(+)
+> 
+> diff --git a/man4/cciss.4 b/man4/cciss.4
+> index e6ba93d..ff4c248 100644
+> --- a/man4/cciss.4
+> +++ b/man4/cciss.4
+> @@ -15,6 +15,13 @@ cciss \- HP Smart Array block driver
+>  modprobe cciss [ cciss_allow_hpsa=1 ]
+>  .fi
+>  .SH DESCRIPTION
+> +.\" commit 253d2464df446456c0bba5ed4137a7be0b278aa8
+> +.BR Note :
+> +This obsolete driver was removed from the kernel in version 4.13,
+> +as it is superseded by
+> +.BR hpsa (4)
+> +driver in newer kernels.
+> +.PP
+>  .B cciss
+>  is a block driver for older HP Smart Array RAID controllers.
+>  .SS Options
+> diff --git a/man4/hpsa.4 b/man4/hpsa.4
+> index 63000bf..9b7fd82 100644
+> --- a/man4/hpsa.4
+> +++ b/man4/hpsa.4
+> @@ -52,6 +52,32 @@ driver supports the following Smart Array boards:
+>      Smart Array P711m
+>      StorageWorks P1210m
+>  .fi
+> +.PP
+> +.\" commit 135ae6edeb51979d0998daf1357f149a7d6ebb08
+> +Since Linux 4.13, the following Smart Array boards are also supported:
+> +.PP
+> +.nf
+> +    Smart Array 5300
+> +    Smart Array 5312
+> +    Smart Array 532
+> +    Smart Array 5i
+> +    Smart Array 6400
+> +    Smart Array 6400 EM
+> +    Smart Array 641
+> +    Smart Array 642
+> +    Smart Array 6i
+> +    Smart Array E200
+> +    Smart Array E200i
+> +    Smart Array E200i
+> +    Smart Array E200i
+> +    Smart Array E200i
+> +    Smart Array E500
+> +    Smart Array P400
+> +    Smart Array P400i
+> +    Smart Array P600
+> +    Smart Array P700m
+> +    Smart Array P800
+> +.fi
+>  .SS Configuration details
+>  To configure HP Smart Array controllers,
+>  use the HP Array Configuration Utility (either
+> 
 
-Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
+-- 
+Meelis Roos (mroos@ut.ee)      http://www.cs.ut.ee/~mroos/
