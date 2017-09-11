@@ -1,43 +1,44 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: 4.13+git: undefined references to bsg_setup_queue and
- bsg_job_done
-Date: Mon, 11 Sep 2017 14:04:19 +0200
-Message-ID: <20170911120419.jmtid2244iqwenui@linux-x5ow.site>
-References: <alpine.LRH.2.21.1709111454020.23935@math.ut.ee>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V2 00/12] scsi-mq support for ZBC disks
+Date: Mon, 11 Sep 2017 14:24:11 +0200
+Message-ID: <20170911122411.GA22255@lst.de>
+References: <20170907161640.30465-1-damien.lemoal@wdc.com> <20170908082040.GA25719@lst.de> <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:46125 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751013AbdIKMYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Sep 2017 08:24:12 -0400
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.21.1709111454020.23935@math.ut.ee>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+In-Reply-To: <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>, Jens Axboe <axboe@kernel.dk>
 
-On Mon, Sep 11, 2017 at 02:58:59PM +0300, Meelis Roos wrote:
-> Just went and changed kernel conf to HPSA instead of old CCISS but got a 
-> compilation failure:
+On Fri, Sep 08, 2017 at 09:12:12AM -0700, Damien Le Moal wrote:
+> 1) The zone size and the number of zones of the device (for the bitmaps
+> allocation and offset->zone number conversion).
+> 2) Zone type for the optimization that avoids locking conventional zones.
 > 
-> drivers/scsi/scsi_transport_sas.o: In function `sas_bsg_initialize':
-> scsi_transport_sas.c:(.text+0x12fd): undefined reference to `bsg_setup_queue'
-> scsi_transport_sas.c:(.text+0x13b2): undefined reference to `bsg_setup_queue'
-> drivers/scsi/scsi_transport_sas.o: In function `sas_smp_dispatch':
-> scsi_transport_sas.c:(.text+0x188e): undefined reference to `bsg_job_done'
-> Makefile:1000: recipe for target 'vmlinux' failed
-> make: *** [vmlinux] Error 1
+> (2) is optional. We can do without, but still really nice to have from a
+> performance perspective as conventional zones tend to be used for
+> storing metadata. So a lot of small random writes is more likely and
+> high queue depth writing would improve performance significantly.
+> 
+> For (1), the zone size is known through q->limits.chunk_sectors. But the
+> disk capacity is not known using request_queue only, so the number of
+> zones cannot be calculated... I thought of exporting it through queue
+> limits too, but then stacking of device mappers using ZBC drives becomes
+> a pain as the number of zones needs to be recalculated.
 
-There's a fix from Arnd [1] for this and it is in Martin's queue.
+For 4.14-rc+ you should be able to easily get at the gendisk as the
+whole submission path is now gendisk based, although it might need
+some minor argument reshuffle to pass it instead of the request_queue
+in a few places.  Note that for everything passing the request
+you can get the gendisk from the request as it contains a pointer.
 
-[1] 580b71e9f64e0e6e9063466fce4564c56156695d
-
-Byte,
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+The only annoying issue is that some of our passthrough character
+device callers don't have a gendisk at all, which causes
+problems all over and should probably be fixed at some point.
