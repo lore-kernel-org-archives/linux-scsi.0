@@ -1,19 +1,20 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 2/3] fcoe: separate out fcoe_vport_remove()
-Date: Mon, 11 Sep 2017 10:15:57 +0200
-Message-ID: <20170911081557.wb5mfrkek3mqvew2@linux-x5ow.site>
+Subject: Re: [PATCH 3/3] fcoe: open-code fcoe_destroy_work() for
+ NETDEV_UNREGISTER
+Date: Mon, 11 Sep 2017 10:16:27 +0200
+Message-ID: <20170911081627.leloqoe55qpdi2gl@linux-x5ow.site>
 References: <1504171174-37989-1-git-send-email-hare@suse.de>
- <1504171174-37989-3-git-send-email-hare@suse.de>
+ <1504171174-37989-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49228 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49321 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750949AbdIKIP7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Sep 2017 04:15:59 -0400
+        id S1750962AbdIKIQ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Sep 2017 04:16:29 -0400
 Content-Disposition: inline
-In-Reply-To: <1504171174-37989-3-git-send-email-hare@suse.de>
+In-Reply-To: <1504171174-37989-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
