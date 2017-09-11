@@ -1,90 +1,44 @@
-From: Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [man-pages PATCH v2] cciss.4, hpsa.4: mention cciss removal in Linux
- 4.14
-Date: Mon, 11 Sep 2017 14:47:34 +0200
-Message-ID: <20170911124734.GA31941@asgard.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Don Brace <don.brace-dzo6w/eZyo2tG0bUXCXiUA@public.gmane.org>, Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: remove unnecessary call to memset
+Date: Mon, 11 Sep 2017 18:24:22 +0530
+Message-ID: <1505134462-789-1-git-send-email-himanshujha199640@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: jejb@linux.vnet.ibm.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-During the Linux 4.14 development cycle, cciss driver has been removed
-in flavor to hpsa driver that has been amended with some legacy board
-support.
+call to memset to assign 0 value immediately after allocating
+memory with kzalloc is unnecesaary as kzalloc allocates the memory
+filled with 0 value.
 
-* man4/cciss.4 (.SH DESCRIPTION): Mention driver removal.
-* man4/hpsa.4 (.SH DESCRIPTION): Mention list of boards that recognised
-since Linux 4.14.
+Semantic patch used to resolve this issue:
 
-Signed-off-by: Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+@@
+expression e,e2; constant c;
+statement S;
+@@
+
+  e = kzalloc(e2, c);
+  if(e == NULL) S
+- memset(e, 0, e2);
+
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
 ---
- man4/cciss.4 |  7 +++++++
- man4/hpsa.4  | 26 ++++++++++++++++++++++++++
- 2 files changed, 33 insertions(+)
+ drivers/scsi/qla2xxx/qla_init.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/man4/cciss.4 b/man4/cciss.4
-index e6ba93d..4b543ba 100644
---- a/man4/cciss.4
-+++ b/man4/cciss.4
-@@ -15,6 +15,13 @@ cciss \- HP Smart Array block driver
- modprobe cciss [ cciss_allow_hpsa=1 ]
- .fi
- .SH DESCRIPTION
-+.\" commit 253d2464df446456c0bba5ed4137a7be0b278aa8
-+.BR Note :
-+This obsolete driver was removed from the kernel in version 4.14,
-+as it is superseded by
-+.BR hpsa (4)
-+driver in newer kernels.
-+.PP
- .B cciss
- is a block driver for older HP Smart Array RAID controllers.
- .SS Options
-diff --git a/man4/hpsa.4 b/man4/hpsa.4
-index 63000bf..64f4536 100644
---- a/man4/hpsa.4
-+++ b/man4/hpsa.4
-@@ -52,6 +52,32 @@ driver supports the following Smart Array boards:
-     Smart Array P711m
-     StorageWorks P1210m
- .fi
-+.PP
-+.\" commit 135ae6edeb51979d0998daf1357f149a7d6ebb08
-+Since Linux 4.14, the following Smart Array boards are also supported:
-+.PP
-+.nf
-+    Smart Array 5300
-+    Smart Array 5312
-+    Smart Array 532
-+    Smart Array 5i
-+    Smart Array 6400
-+    Smart Array 6400 EM
-+    Smart Array 641
-+    Smart Array 642
-+    Smart Array 6i
-+    Smart Array E200
-+    Smart Array E200i
-+    Smart Array E200i
-+    Smart Array E200i
-+    Smart Array E200i
-+    Smart Array E500
-+    Smart Array P400
-+    Smart Array P400i
-+    Smart Array P600
-+    Smart Array P700m
-+    Smart Array P800
-+.fi
- .SS Configuration details
- To configure HP Smart Array controllers,
- use the HP Array Configuration Utility (either
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index b5b48dd..54c1d63 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -7917,7 +7917,6 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
+ 			    "Failed to allocate memory for queue pair.\n");
+ 			return NULL;
+ 		}
+-		memset(qpair, 0, sizeof(struct qla_qpair));
+ 
+ 		qpair->hw = vha->hw;
+ 		qpair->vha = vha;
 -- 
-2.1.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-man" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2.7.4
