@@ -1,44 +1,34 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V2 00/12] scsi-mq support for ZBC disks
-Date: Mon, 11 Sep 2017 14:24:11 +0200
-Message-ID: <20170911122411.GA22255@lst.de>
-References: <20170907161640.30465-1-damien.lemoal@wdc.com> <20170908082040.GA25719@lst.de> <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com>
+From: Eugene Syromyatnikov <evgsyr@gmail.com>
+Subject: Re: [man-pages PATCH] cciss.4, hpsa.4: mention cciss removal in Linux 4.13
+Date: Mon, 11 Sep 2017 14:36:44 +0200
+Message-ID: <CACGkJdvGYZGSF0pSdh416BHWoaxY2KRkfx1th-ZZUX9u+MPzFg@mail.gmail.com>
+References: <20170911025746.GA23341@asgard.redhat.com> <alpine.LRH.2.21.1709110958100.23935@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46125 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751013AbdIKMYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Sep 2017 08:24:12 -0400
-Content-Disposition: inline
-In-Reply-To: <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:36200 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750984AbdIKMhF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2017 08:37:05 -0400
+In-Reply-To: <alpine.LRH.2.21.1709110958100.23935@math.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>, Jens Axboe <axboe@kernel.dk>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-man <linux-man@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org
 
-On Fri, Sep 08, 2017 at 09:12:12AM -0700, Damien Le Moal wrote:
-> 1) The zone size and the number of zones of the device (for the bitmaps
-> allocation and offset->zone number conversion).
-> 2) Zone type for the optimization that avoids locking conventional zones.
-> 
-> (2) is optional. We can do without, but still really nice to have from a
-> performance perspective as conventional zones tend to be used for
-> storing metadata. So a lot of small random writes is more likely and
-> high queue depth writing would improve performance significantly.
-> 
-> For (1), the zone size is known through q->limits.chunk_sectors. But the
-> disk capacity is not known using request_queue only, so the number of
-> zones cannot be calculated... I thought of exporting it through queue
-> limits too, but then stacking of device mappers using ZBC drives becomes
-> a pain as the number of zones needs to be recalculated.
+On Mon, Sep 11, 2017 at 8:58 AM, Meelis Roos <mroos@linux.ee> wrote:
+> On Mon, 11 Sep 2017, Eugene Syromyatnikov wrote:
+>
+>> During the Linux 4.13 development cycle, cciss driver has been removed
+>> in flavor to hpsa driver that has been amended with some legacy board
+>> support.
+>
+> It's gone in 4.14 - 4.13 works the old way.
 
-For 4.14-rc+ you should be able to easily get at the gendisk as the
-whole submission path is now gendisk based, although it might need
-some minor argument reshuffle to pass it instead of the request_queue
-in a few places.  Note that for everything passing the request
-you can get the gendisk from the request as it contains a pointer.
+Uhh, my bad, sorry: forgot to add --contain to git describe. I'll
+resend the patch.
 
-The only annoying issue is that some of our passthrough character
-device callers don't have a gendisk at all, which causes
-problems all over and should probably be fixed at some point.
+-- 
+Eugene Syromyatnikov
+mailto:evgsyr@gmail.com
+xmpp:esyr@jabber.{ru|org}
