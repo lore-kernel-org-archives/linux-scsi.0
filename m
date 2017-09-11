@@ -1,56 +1,90 @@
-From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
-Subject: Re: [PATCH] scsi: shost->async_scan should be protected by mutex_lock
-Date: Sun, 10 Sep 2017 18:44:26 -0700
-Message-ID: <8e8d0a1b-f053-6eab-a85a-ec83201b50be@gmail.com>
-References: <f99d1494-af46-4f0f-5a24-bb88a860d0fe@huawei.com>
+From: Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [man-pages PATCH] cciss.4, hpsa.4: mention cciss removal in Linux
+ 4.13
+Date: Mon, 11 Sep 2017 04:57:46 +0200
+Message-ID: <20170911025746.GA23341@asgard.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f99d1494-af46-4f0f-5a24-bb88a860d0fe@huawei.com>
-Content-Language: en-GB
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Ouyangzhaowei (Charles)" <ouyangzhaowei@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Suoben <suoben@huawei.com>, "Wulizhen (Pss)" <pss.wulizhen@huawei.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Don Brace <don.brace-dzo6w/eZyo2tG0bUXCXiUA@public.gmane.org>, Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/07/2017 11:54 PM, Ouyangzhaowei (Charles) wrote:
-> shost->async_scan should be protected by mutex_lock, otherwise the check
-> of "called twice" won't work.
-> 
-> Signed-off-by: Ouyang Zhaowei <ouyangzhaowei@huawei.com>
-> ---
->  drivers/scsi/scsi_scan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index fd88dab..1d1df51 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1722,6 +1722,7 @@ static struct async_scan_data
-> *scsi_prep_async_scan(struct Scsi_Host *shost)
->         if (strncmp(scsi_scan_type, "sync", 4) == 0)
->                 return NULL;
-> 
-> +       mutex_lock(&shost->scan_mutex);
+During the Linux 4.13 development cycle, cciss driver has been removed
+in flavor to hpsa driver that has been amended with some legacy board
+support.
 
-The mutex will not be unlocked in the event that either the host has called
-scsi_prep_async_scan() twice, or a condition is meet the branches to the "err" label prior
-to where the original mutex_lock() was located below.
+* man4/cciss.4 (.SH DESCRIPTION): Mention driver removal.
+* man4/hpsa.4 (.SH DESCRIPTION): Mention list of boards that recognised
+since Linux 4.13.
 
--Tyrel
+Signed-off-by: Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ man4/cciss.4 |  7 +++++++
+ man4/hpsa.4  | 26 ++++++++++++++++++++++++++
+ 2 files changed, 33 insertions(+)
 
->         if (shost->async_scan) {
->                 shost_printk(KERN_DEBUG, shost, "%s called twice\n",
-> __func__);
->                 return NULL;
-> @@ -1735,7 +1736,6 @@ static struct async_scan_data
-> *scsi_prep_async_scan(struct Scsi_Host *shost)
->                 goto err;
->         init_completion(&data->prev_finished);
-> 
-> -       mutex_lock(&shost->scan_mutex);
->         spin_lock_irqsave(shost->host_lock, flags);
->         shost->async_scan = 1;
->         spin_unlock_irqrestore(shost->host_lock, flags);
-> 
+diff --git a/man4/cciss.4 b/man4/cciss.4
+index e6ba93d..ff4c248 100644
+--- a/man4/cciss.4
++++ b/man4/cciss.4
+@@ -15,6 +15,13 @@ cciss \- HP Smart Array block driver
+ modprobe cciss [ cciss_allow_hpsa=1 ]
+ .fi
+ .SH DESCRIPTION
++.\" commit 253d2464df446456c0bba5ed4137a7be0b278aa8
++.BR Note :
++This obsolete driver was removed from the kernel in version 4.13,
++as it is superseded by
++.BR hpsa (4)
++driver in newer kernels.
++.PP
+ .B cciss
+ is a block driver for older HP Smart Array RAID controllers.
+ .SS Options
+diff --git a/man4/hpsa.4 b/man4/hpsa.4
+index 63000bf..9b7fd82 100644
+--- a/man4/hpsa.4
++++ b/man4/hpsa.4
+@@ -52,6 +52,32 @@ driver supports the following Smart Array boards:
+     Smart Array P711m
+     StorageWorks P1210m
+ .fi
++.PP
++.\" commit 135ae6edeb51979d0998daf1357f149a7d6ebb08
++Since Linux 4.13, the following Smart Array boards are also supported:
++.PP
++.nf
++    Smart Array 5300
++    Smart Array 5312
++    Smart Array 532
++    Smart Array 5i
++    Smart Array 6400
++    Smart Array 6400 EM
++    Smart Array 641
++    Smart Array 642
++    Smart Array 6i
++    Smart Array E200
++    Smart Array E200i
++    Smart Array E200i
++    Smart Array E200i
++    Smart Array E200i
++    Smart Array E500
++    Smart Array P400
++    Smart Array P400i
++    Smart Array P600
++    Smart Array P700m
++    Smart Array P800
++.fi
+ .SS Configuration details
+ To configure HP Smart Array controllers,
+ use the HP Array Configuration Utility (either
+-- 
+2.1.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-man" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
