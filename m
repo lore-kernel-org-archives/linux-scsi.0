@@ -1,34 +1,90 @@
-From: Eugene Syromyatnikov <evgsyr@gmail.com>
-Subject: Re: [man-pages PATCH] cciss.4, hpsa.4: mention cciss removal in Linux 4.13
-Date: Mon, 11 Sep 2017 14:36:44 +0200
-Message-ID: <CACGkJdvGYZGSF0pSdh416BHWoaxY2KRkfx1th-ZZUX9u+MPzFg@mail.gmail.com>
-References: <20170911025746.GA23341@asgard.redhat.com> <alpine.LRH.2.21.1709110958100.23935@math.ut.ee>
+From: Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [man-pages PATCH v2] cciss.4, hpsa.4: mention cciss removal in Linux
+ 4.14
+Date: Mon, 11 Sep 2017 14:47:34 +0200
+Message-ID: <20170911124734.GA31941@asgard.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:36200 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750984AbdIKMhF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2017 08:37:05 -0400
-In-Reply-To: <alpine.LRH.2.21.1709110958100.23935@math.ut.ee>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Don Brace <don.brace-dzo6w/eZyo2tG0bUXCXiUA@public.gmane.org>, Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Michael Kerrisk-manpages <mtk.manpages@gmail.com>, linux-man <linux-man@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org
 
-On Mon, Sep 11, 2017 at 8:58 AM, Meelis Roos <mroos@linux.ee> wrote:
-> On Mon, 11 Sep 2017, Eugene Syromyatnikov wrote:
->
->> During the Linux 4.13 development cycle, cciss driver has been removed
->> in flavor to hpsa driver that has been amended with some legacy board
->> support.
->
-> It's gone in 4.14 - 4.13 works the old way.
+During the Linux 4.14 development cycle, cciss driver has been removed
+in flavor to hpsa driver that has been amended with some legacy board
+support.
 
-Uhh, my bad, sorry: forgot to add --contain to git describe. I'll
-resend the patch.
+* man4/cciss.4 (.SH DESCRIPTION): Mention driver removal.
+* man4/hpsa.4 (.SH DESCRIPTION): Mention list of boards that recognised
+since Linux 4.14.
 
+Signed-off-by: Eugene Syromyatnikov <evgsyr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ man4/cciss.4 |  7 +++++++
+ man4/hpsa.4  | 26 ++++++++++++++++++++++++++
+ 2 files changed, 33 insertions(+)
+
+diff --git a/man4/cciss.4 b/man4/cciss.4
+index e6ba93d..4b543ba 100644
+--- a/man4/cciss.4
++++ b/man4/cciss.4
+@@ -15,6 +15,13 @@ cciss \- HP Smart Array block driver
+ modprobe cciss [ cciss_allow_hpsa=1 ]
+ .fi
+ .SH DESCRIPTION
++.\" commit 253d2464df446456c0bba5ed4137a7be0b278aa8
++.BR Note :
++This obsolete driver was removed from the kernel in version 4.14,
++as it is superseded by
++.BR hpsa (4)
++driver in newer kernels.
++.PP
+ .B cciss
+ is a block driver for older HP Smart Array RAID controllers.
+ .SS Options
+diff --git a/man4/hpsa.4 b/man4/hpsa.4
+index 63000bf..64f4536 100644
+--- a/man4/hpsa.4
++++ b/man4/hpsa.4
+@@ -52,6 +52,32 @@ driver supports the following Smart Array boards:
+     Smart Array P711m
+     StorageWorks P1210m
+ .fi
++.PP
++.\" commit 135ae6edeb51979d0998daf1357f149a7d6ebb08
++Since Linux 4.14, the following Smart Array boards are also supported:
++.PP
++.nf
++    Smart Array 5300
++    Smart Array 5312
++    Smart Array 532
++    Smart Array 5i
++    Smart Array 6400
++    Smart Array 6400 EM
++    Smart Array 641
++    Smart Array 642
++    Smart Array 6i
++    Smart Array E200
++    Smart Array E200i
++    Smart Array E200i
++    Smart Array E200i
++    Smart Array E200i
++    Smart Array E500
++    Smart Array P400
++    Smart Array P400i
++    Smart Array P600
++    Smart Array P700m
++    Smart Array P800
++.fi
+ .SS Configuration details
+ To configure HP Smart Array controllers,
+ use the HP Array Configuration Utility (either
 -- 
-Eugene Syromyatnikov
-mailto:evgsyr@gmail.com
-xmpp:esyr@jabber.{ru|org}
+2.1.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-man" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
