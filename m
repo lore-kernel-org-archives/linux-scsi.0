@@ -1,69 +1,121 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V4 08/10] block: allow to allocate req with RQF_PREEMPT
- when queue is preempt frozen
-Date: Mon, 11 Sep 2017 16:03:55 +0000
-Message-ID: <1505145834.2802.17.camel@wdc.com>
+From: Oleksandr Natalenko <oleksandr@natalenko.name>
+Subject: Re: [PATCH V4 0/10] block/scsi: safe SCSI quiescing
+Date: Mon, 11 Sep 2017 23:24:15 +0200
+Message-ID: <2499737.s63AaEEcmZ@natalenko.name>
 References: <20170911111021.25810-1-ming.lei@redhat.com>
-         <20170911111021.25810-9-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:2001 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750810AbdIKQEl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2017 12:04:41 -0400
-In-Reply-To: <20170911111021.25810-9-ming.lei@redhat.com>
-Content-Language: en-US
-Content-ID: <882C71156A8CD54C9DC3FC175A362963@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170911111021.25810-1-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "cavery@redhat.com" <cavery@redhat.com>
 
-T24gTW9uLCAyMDE3LTA5LTExIGF0IDE5OjEwICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
-LTc4Nyw2ICs3ODcsMzUgQEAgaW50IGJsa19xdWV1ZV9lbnRlcihzdHJ1Y3QgcmVxdWVzdF9xdWV1
-ZSAqcSwgdW5zaWduZWQgZmxhZ3MpDQo+ICAJCWlmIChwZXJjcHVfcmVmX3RyeWdldF9saXZlKCZx
-LT5xX3VzYWdlX2NvdW50ZXIpKQ0KPiAgCQkJcmV0dXJuIDA7DQo+ICANCj4gKwkJLyoNCj4gKwkJ
-ICogSWYgcXVldWUgaXMgcHJlZW1wdCBmcm96ZW4gYW5kIGNhbGxlciBuZWVkIHRvIGFsbG9jYXRl
-DQo+ICsJCSAqIHJlcXVlc3QgZm9yIFJRRl9QUkVFTVBULCB3ZSBncmFiIHRoZSAucV91c2FnZV9j
-b3VudGVyDQo+ICsJCSAqIHVuY29uZGl0aW9uYWxseSBhbmQgcmV0dXJuIHN1Y2Nlc3NmdWxseS4N
-Cj4gKwkJICoNCj4gKwkJICogVGhlcmUgaXNuJ3QgcmFjZSB3aXRoIHF1ZXVlIGNsZWFudXAgYmVj
-YXVzZToNCj4gKwkJICoNCj4gKwkJICogMSkgaXQgaXMgZ3VhcmFudGVlZCB0aGF0IHByZWVtcHQg
-ZnJlZXplIGNhbid0IGJlDQo+ICsJCSAqIHN0YXJ0ZWQgYWZ0ZXIgcXVldWUgaXMgc2V0IGFzIGR5
-aW5nDQo+ICsJCSAqDQo+ICsJCSAqIDIpIG5vcm1hbCBmcmVlemUgcnVucyBleGNsdXNpdmVseSB3
-aXRoIHByZWVtcHQNCj4gKwkJICogZnJlZXplLCBzbyBldmVuIGFmdGVyIHF1ZXVlIGlzIHNldCBh
-cyBkeWluZw0KPiArCQkgKiBhZnRlcndhcmRzLCBibGtfcXVldWVfY2xlYW51cCgpIHdvbid0IG1v
-dmUgb24NCj4gKwkJICogdW50aWwgcHJlZW1wdCBmcmVlemUgaXMgZG9uZQ0KPiArCQkgKg0KPiAr
-CQkgKiAzKSBibGtfcXVldWVfZHlpbmcoKSBuZWVkbid0IHRvIGJlIGNoZWNrZWQgaGVyZQ0KPiAr
-CQkgKiAJLSBmb3IgbGVnYWN5IHBhdGgsIGl0IHdpbGwgYmUgY2hlY2tlZCBpbg0KPiArCQkgKiAJ
-X19nZXRfcmVxdWVzdCgpDQoNCkZvciB0aGUgbGVnYWN5IGJsb2NrIGxheWVyIGNvcmUsIHdoYXQg
-ZG8geW91IHRoaW5rIHdpbGwgaGFwcGVuIGlmIHRoZQ0KImR5aW5nIiBzdGF0ZSBpcyBzZXQgYnkg
-YW5vdGhlciB0aHJlYWQgYWZ0ZXIgX19nZXRfcmVxdWVzdCgpIGhhcyBwYXNzZWQgdGhlDQpibGtf
-cXVldWVfZHlpbmcoKSBjaGVjaz8NCg0KPiArCQkgKiAJLSBibGstbXEgZGVwZW5kcyBvbiBkcml2
-ZXIgdG8gaGFuZGxlIGR5aW5nIHdlbGwNCj4gKwkJICogCWJlY2F1c2UgaXQgaXMgbm9ybWFsIGZv
-ciBxdWV1ZSB0byBiZSBzZXQgYXMgZHlpbmcNCj4gKwkJICogCWp1c3QgYmV0d2VlbiBibGtfcXVl
-dWVfZW50ZXIoKSBhbmQgYWxsb2NhdGluZyBuZXcNCj4gKwkJICogCXJlcXVlc3QuDQoNClRoZSBh
-Ym92ZSBjb21tZW50IGlzIG5vdCBjb3JyZWN0LiBUaGUgYmxvY2sgbGF5ZXIgY29yZSBoYW5kbGVz
-IHRoZSAiZHlpbmciDQpzdGF0ZS4gQmxvY2sgZHJpdmVycyBvdGhlciB0aGFuIGRtLW1wYXRoIHNo
-b3VsZCBub3QgaGF2ZSB0byBxdWVyeSB0aGlzIHN0YXRlDQpkaXJlY3RseS4NCg0KPiArCQkgKi8N
-Cj4gKwkJaWYgKChmbGFncyAmIEJMS19SRVFfUFJFRU1QVCkgJiYNCj4gKwkJCQlibGtfcXVldWVf
-aXNfcHJlZW1wdF9mcm96ZW4ocSkpIHsNCj4gKwkJCWJsa19xdWV1ZV9lbnRlcl9saXZlKHEpOw0K
-PiArCQkJcmV0dXJuIDA7DQo+ICsJCX0NCj4gKw0KDQpTb3JyeSBidXQgdG8gbWUgaXQgbG9va3Mg
-bGlrZSB0aGUgYWJvdmUgY29kZSBpbnRyb2R1Y2VzIGEgcmFjZSBjb25kaXRpb24NCmJldHdlZW4g
-YmxrX3F1ZXVlX2NsZWFudXAoKSBhbmQgYmxrX2dldF9yZXF1ZXN0KCkgZm9yIGF0IGxlYXN0IGJs
-ay1tcS4NCkNvbnNpZGVyIGUuZy4gdGhlIGZvbGxvd2luZyBzY2VuYXJpbzoNCiogQSBmaXJzdCB0
-aHJlYWQgcHJlZW1wdC1mcmVlemVzIGEgcmVxdWVzdCBxdWV1ZS4NCiogQSBzZWNvbmQgdGhyZWFk
-IGNhbGxzIGJsa19nZXRfcmVxdWVzdCgpIHdpdGggQkxLX1JFUV9QUkVFTVBUIHNldC4gVGhhdA0K
-ICByZXN1bHRzIGluIGEgY2FsbCBvZiBibGtfcXVldWVfaXNfcHJlZW1wdF9mcm96ZW4oKS4NCiog
-QSBjb250ZXh0IHN3aXRjaCBvY2N1cnMgdG8gdGhlIGZpcnN0IHRocmVhZC4NCiogVGhlIGZpcnN0
-IHRocmVhZCBwcmVlbXB0LXVuZnJlZXplcyB0aGUgc2FtZSByZXF1ZXN0IHF1ZXVlIGFuZCBjYWxs
-cw0KICBibGtfcXVldWVfY2xlYW51cCgpLiBUaGF0IGxhc3QgZnVuY3Rpb24gY2hhbmdlcyB0aGUg
-cmVxdWVzdCBxdWV1ZSBzdGF0ZQ0KICBpbnRvIERZSU5HIGFuZCB3YWl0cyB1bnRpbCBhbGwgcGVu
-ZGluZyByZXF1ZXN0cyBoYXZlIGZpbmlzaGVkLg0KKiBUaGUgc2Vjb25kIHRocmVhZCBjb250aW51
-ZXMgYW5kIGNhbGxzIGJsa19xdWV1ZV9lbnRlcl9saXZlKCksIGFsbG9jYXRlcw0KICBhIHJlcXVl
-c3QgYW5kIHN1Ym1pdHMgaXQuDQoNCkluIG90aGVyIHdvcmRzLCBhIHJlcXVlc3QgZ2V0cyBzdWJt
-aXR0ZWQgYWdhaW5zdCBhIGR5aW5nIHF1ZXVlLiBUaGlzIG11c3QNCm5vdCBoYXBwZW4uIFNlZSBh
-bHNvIG15IGV4cGxhbmF0aW9uIG9mIHF1ZXVlIHNodXRkb3duIGZyb20gYSBmZXcgZGF5cyBhZ28N
-CihodHRwczovL21hcmMuaW5mby8/bD1saW51eC1ibG9jayZtPTE1MDQ0OTg0NTgzMTc4OSkuDQoN
-CkJhcnQu
+=46or v4 with regard to suspend/resume:
+
+Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
+
+On pond=C4=9Bl=C3=AD 11. z=C3=A1=C5=99=C3=AD 2017 13:10:11 CEST Ming Lei wr=
+ote:
+> Hi,
+>=20
+> The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
+>=20
+> Once SCSI device is put into QUIESCE, no new request except for
+> RQF_PREEMPT can be dispatched to SCSI successfully, and
+> scsi_device_quiesce() just simply waits for completion of I/Os
+> dispatched to SCSI stack. It isn't enough at all.
+>=20
+> Because new request still can be comming, but all the allocated
+> requests can't be dispatched successfully, so request pool can be
+> consumed up easily.
+>=20
+> Then request with RQF_PREEMPT can't be allocated and wait forever,
+> meantime scsi_device_resume() waits for completion of RQF_PREEMPT,
+> then system hangs forever, such as during system suspend or
+> sending SCSI domain alidation.
+>=20
+> Both IO hang inside system suspend[1] or SCSI domain validation
+> were reported before.
+>=20
+> This patch introduces preempt freeze, and solves the issue
+> by preempt freezing block queue during SCSI quiesce, and allows
+> to allocate request of RQF_PREEMPT when queue is in this state.
+>=20
+> Oleksandr verified that V3 does fix the hang during suspend/resume,
+> and Cathy verified that revised V3 fixes hang in sending
+> SCSI domain validation.
+>=20
+> Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
+> them all by introducing/unifying blk_freeze_queue_preempt() and
+> blk_unfreeze_queue_preempt(), and cleanup is done together.
+>=20
+> The patchset can be found in the following gitweb:
+>=20
+> 	https://github.com/ming1/linux/tree/blk_safe_scsi_quiesce_V4
+>=20
+> V4:
+> 	- reorganize patch order to make it more reasonable
+> 	- support nested preempt freeze, as required by SCSI transport spi
+> 	- check preempt freezing in slow path of of blk_queue_enter()
+> 	- add "SCSI: transport_spi: resume a quiesced device"
+> 	- wake up freeze queue in setting dying for both blk-mq and legacy
+> 	- rename blk_mq_[freeze|unfreeze]_queue() in one patch
+> 	- rename .mq_freeze_wq and .mq_freeze_depth
+> 	- improve comment
+>=20
+> V3:
+> 	- introduce q->preempt_unfreezing to fix one bug of preempt freeze
+> 	- call blk_queue_enter_live() only when queue is preempt frozen
+> 	- cleanup a bit on the implementation of preempt freeze
+> 	- only patch 6 and 7 are changed
+>=20
+> V2:
+> 	- drop the 1st patch in V1 because percpu_ref_is_dying() is
+> 	enough as pointed by Tejun
+> 	- introduce preempt version of blk_[freeze|unfreeze]_queue
+> 	- sync between preempt freeze and normal freeze
+> 	- fix warning from percpu-refcount as reported by Oleksandr
+>=20
+>=20
+> [1] https://marc.info/?t=3D150340250100013&r=3D3&w=3D2
+>=20
+>=20
+> Thanks,
+> Ming
+>=20
+>=20
+> Ming Lei (10):
+>   blk-mq: only run hw queues for blk-mq
+>   block: tracking request allocation with q_usage_counter
+>   blk-mq: rename blk_mq_[freeze|unfreeze]_queue
+>   blk-mq: rename blk_mq_freeze_queue_wait as blk_freeze_queue_wait
+>   block: rename .mq_freeze_wq and .mq_freeze_depth
+>   block: pass flags to blk_queue_enter()
+>   block: introduce preempt version of blk_[freeze|unfreeze]_queue
+>   block: allow to allocate req with RQF_PREEMPT when queue is preempt
+>     frozen
+>   SCSI: transport_spi: resume a quiesced device
+>   SCSI: preempt freeze block queue when SCSI device is put into quiesce
+>=20
+>  block/bfq-iosched.c               |   2 +-
+>  block/blk-cgroup.c                |   8 +-
+>  block/blk-core.c                  |  95 ++++++++++++++++----
+>  block/blk-mq.c                    | 180
+> ++++++++++++++++++++++++++++---------- block/blk-mq.h                    =
+|=20
+>  1 -
+>  block/blk-timeout.c               |   2 +-
+>  block/blk.h                       |  12 +++
+>  block/elevator.c                  |   4 +-
+>  drivers/block/loop.c              |  24 ++---
+>  drivers/block/rbd.c               |   2 +-
+>  drivers/nvme/host/core.c          |   8 +-
+>  drivers/scsi/scsi_lib.c           |  25 +++++-
+>  drivers/scsi/scsi_transport_spi.c |   3 +
+>  fs/block_dev.c                    |   4 +-
+>  include/linux/blk-mq.h            |  15 ++--
+>  include/linux/blkdev.h            |  32 +++++--
+>  16 files changed, 313 insertions(+), 104 deletions(-)
