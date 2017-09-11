@@ -1,34 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] scsi: Align queue to ARCH_DMA_MINALIGN in
- non-coherent DMA mode
-Date: Mon, 11 Sep 2017 00:39:06 -0700
-Message-ID: <20170911073906.GA7074@infradead.org>
-References: <1504774131-11691-1-git-send-email-chenhc@lemote.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 2/3] fcoe: separate out fcoe_vport_remove()
+Date: Mon, 11 Sep 2017 10:15:57 +0200
+Message-ID: <20170911081557.wb5mfrkek3mqvew2@linux-x5ow.site>
+References: <1504171174-37989-1-git-send-email-hare@suse.de>
+ <1504171174-37989-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49228 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750949AbdIKIP7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Sep 2017 04:15:59 -0400
 Content-Disposition: inline
-In-Reply-To: <1504774131-11691-1-git-send-email-chenhc@lemote.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Huacai Chen <chenhc@lemote.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Fuxin Zhang <zhangfx@lemote.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <1504171174-37989-3-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.com>
 
-> +	if (plat_device_is_coherent(dev))
 
-We can't just call platform device code.  We'll need a proper
-DMA API call for this.
-
-> +		blk_queue_dma_alignment(q, 0x04 - 1);
-> +	else
-> +		blk_queue_dma_alignment(q, dma_get_cache_alignment() - 1);
-
-Which we already have with dma_get_cache_alignment, except that it
-doesn't take a struct device pointer and doesn't call into dma_map
-ops.  So please add a struct device argument to dma_get_cache_alignment,
-and let it call into dma_map_ops where needed.
-
-With that you can replace the above with:
-
-	blk_queue_dma_alignment(q,
-			max(0x04U, dma_get_cache_alignment(dev)) - 1);
+Acked-by: Johannes Thumshirn <jth@kernel.org>
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
