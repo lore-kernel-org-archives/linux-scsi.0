@@ -1,83 +1,35 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: ufs: tc-dwc-g210: make arrays static, reduces object code size
-Date: Tue, 12 Sep 2017 12:32:28 +0100
-Message-ID: <20170912113228.1389-1-colin.king@canonical.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: ufs: tc-dwc-g210: make arrays static, reduces
+ object code size
+Date: Tue, 12 Sep 2017 15:10:54 +0000
+Message-ID: <1505229053.2537.0.camel@wdc.com>
+References: <20170912113228.1389-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Joao Pinto <jpinto@synopsys.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:50907 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751856AbdILPLu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2017 11:11:50 -0400
+In-Reply-To: <20170912113228.1389-1-colin.king@canonical.com>
+Content-Language: en-US
+Content-ID: <5734B7B391F6EC4992B6A69A1AAB5A3D@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "colin.king@canonical.com" <colin.king@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jpinto@synopsys.com" <jpinto@synopsys.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
-
-Don't populate const arrays on the stack, instead make them
-static.  Makes the object code smaller by over 740 bytes.
-
-Before:
-   text	   data	    bss	    dec	    hex	filename
-   3840	    208	      0	   4048	    fd0	drivers/scsi/ufs/tc-dwc-g210.o
-
-After:
-   text	   data	    bss	    dec	    hex	filename
-   2679	    624	      0	   3303	    ce7	drivers/scsi/ufs/tc-dwc-g210.o
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/ufs/tc-dwc-g210.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/ufs/tc-dwc-g210.c b/drivers/scsi/ufs/tc-dwc-g210.c
-index dc03e47f7c58..3a8bc6d9cb5b 100644
---- a/drivers/scsi/ufs/tc-dwc-g210.c
-+++ b/drivers/scsi/ufs/tc-dwc-g210.c
-@@ -26,7 +26,7 @@
-  */
- static int tc_dwc_g210_setup_40bit_rmmi(struct ufs_hba *hba)
- {
--	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+	static const struct ufshcd_dme_attr_val setup_attrs[] = {
- 		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
- 		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
- 		{ UIC_ARG_MIB(CDIRECTCTRL6), 0x80, DME_LOCAL },
-@@ -90,7 +90,7 @@ static int tc_dwc_g210_setup_40bit_rmmi(struct ufs_hba *hba)
-  */
- static int tc_dwc_g210_setup_20bit_rmmi_lane0(struct ufs_hba *hba)
- {
--	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+	static const struct ufshcd_dme_attr_val setup_attrs[] = {
- 		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
- 								DME_LOCAL },
- 		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
-@@ -147,7 +147,7 @@ static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
- 	int connected_tx_lanes = 0;
- 	int ret = 0;
- 
--	const struct ufshcd_dme_attr_val setup_tx_attrs[] = {
-+	static const struct ufshcd_dme_attr_val setup_tx_attrs[] = {
- 		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN1_TX), 0x0d,
- 								DME_LOCAL },
- 		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN1_TX), 0x19,
-@@ -158,7 +158,7 @@ static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
- 								DME_LOCAL },
- 	};
- 
--	const struct ufshcd_dme_attr_val setup_rx_attrs[] = {
-+	static const struct ufshcd_dme_attr_val setup_rx_attrs[] = {
- 		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN1_RX), 0x01,
- 								DME_LOCAL },
- 		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN1_RX), 0x19,
-@@ -222,7 +222,7 @@ static int tc_dwc_g210_setup_20bit_rmmi(struct ufs_hba *hba)
- {
- 	int ret = 0;
- 
--	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+	static const struct ufshcd_dme_attr_val setup_attrs[] = {
- 		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
- 		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
- 		{ UIC_ARG_MIB(CDIRECTCTRL6), 0xc0, DME_LOCAL },
--- 
-2.14.1
-
+T24gVHVlLCAyMDE3LTA5LTEyIGF0IDEyOjMyICswMTAwLCBDb2xpbiBLaW5nIHdyb3RlOg0KPiBG
+cm9tOiBDb2xpbiBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KPiANCj4gRG9u
+J3QgcG9wdWxhdGUgY29uc3QgYXJyYXlzIG9uIHRoZSBzdGFjaywgaW5zdGVhZCBtYWtlIHRoZW0N
+Cj4gc3RhdGljLiAgTWFrZXMgdGhlIG9iamVjdCBjb2RlIHNtYWxsZXIgYnkgb3ZlciA3NDAgYnl0
+ZXMuDQo+IA0KPiBCZWZvcmU6DQo+ICAgIHRleHQJICAgZGF0YQkgICAgYnNzCSAgICBkZWMJICAg
+IGhleAlmaWxlbmFtZQ0KPiAgICAzODQwCSAgICAyMDgJICAgICAgMAkgICA0MDQ4CSAgICBmZDAJ
+ZHJpdmVycy9zY3NpL3Vmcy90Yy1kd2MtZzIxMC5vDQo+IA0KPiBBZnRlcjoNCj4gICAgdGV4dAkg
+ICBkYXRhCSAgICBic3MJICAgIGRlYwkgICAgaGV4CWZpbGVuYW1lDQo+ICAgIDI2NzkJICAgIDYy
+NAkgICAgICAwCSAgIDMzMDMJICAgIGNlNwlkcml2ZXJzL3Njc2kvdWZzL3RjLWR3Yy1nMjEwLm8N
+Cj4gDQo+IFNpZ25lZC1vZmYtYnk6IENvbGluIElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNh
+bC5jb20+DQoNClBsZWFzZSBDQyB0aGUgbW9zdCBhY3RpdmUgY29udHJpYnV0b3JzIG9mIGEgZHJp
+dmVyIHdoZW4gc3VibWl0dGluZyBhIGRyaXZlcg0KcGF0Y2guIEFueXdheToNCg0KUmV2aWV3ZWQt
+Ynk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAd2RjLmNvbT4=
