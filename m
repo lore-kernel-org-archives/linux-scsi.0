@@ -1,25 +1,44 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: acornscsi: fix build error
-Date: Tue, 12 Sep 2017 09:05:19 +0200
-Message-ID: <20170912070519.rkw7g4b5xomg3jcp@linux-x5ow.site>
-References: <20170911200115.3119398-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170911200115.3119398-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@armlinux.org.uk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Huacai Chen <chenhc@lemote.com>
+Subject: [PATCH V2 3/3] scsi: Align queue to ARCH_DMA_MINALIGN in non-coherent DMA mode
+Date: Tue, 12 Sep 2017 15:08:23 +0800
+Message-ID: <1505200104-24667-1-git-send-email-chenhc@lemote.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Fuxin Zhang <zhangfx@lemote.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Huacai Chen <chenhc@lemote.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+In non-coherent DMA mode, kernel uses cache flushing operations to
+maintain I/O coherency, so scsi's block queue should be aligned to
+ARCH_DMA_MINALIGN.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Huacai Chen <chenhc@lemote.com>
+---
+ drivers/scsi/scsi_lib.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9cf6a80..79433ad 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2132,11 +2132,14 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 		q->limits.cluster = 0;
+ 
+ 	/*
+-	 * set a reasonable default alignment on word boundaries: the
+-	 * host and device may alter it using
++	 * set a reasonable default alignment on word/cacheline boundaries:
++	 * the host and device may alter it using
+ 	 * blk_queue_update_dma_alignment() later.
+ 	 */
+-	blk_queue_dma_alignment(q, 0x03);
++	if (plat_device_is_coherent(dev))
++		blk_queue_dma_alignment(q, 0x04 - 1);
++	else
++		blk_queue_dma_alignment(q, dma_get_cache_alignment() - 1);
+ }
+ EXPORT_SYMBOL_GPL(__scsi_init_queue);
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.7.0
