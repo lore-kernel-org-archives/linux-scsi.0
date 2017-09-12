@@ -1,44 +1,39 @@
-From: Huacai Chen <chenhc@lemote.com>
-Subject: [PATCH V2 3/3] scsi: Align queue to ARCH_DMA_MINALIGN in non-coherent DMA mode
-Date: Tue, 12 Sep 2017 15:08:23 +0800
-Message-ID: <1505200104-24667-1-git-send-email-chenhc@lemote.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Fuxin Zhang <zhangfx@lemote.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Huacai Chen <chenhc@lemote.com>, stable@vger.kernel.org
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH V2 11/12] scsi: sd: Introduce scsi_disk_from_queue()
+Date: Tue, 12 Sep 2017 17:05:43 +0900
+Message-ID: <e77762b6-eb91-7759-3d1e-f91657bdcc07@wdc.com>
+References: <20170907161640.30465-1-damien.lemoal@wdc.com>
+ <20170907161640.30465-12-damien.lemoal@wdc.com>
+ <20170910051655.GC11628@ming.t460p>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170910051655.GC11628@ming.t460p>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In non-coherent DMA mode, kernel uses cache flushing operations to
-maintain I/O coherency, so scsi's block queue should be aligned to
-ARCH_DMA_MINALIGN.
+Ming,
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Huacai Chen <chenhc@lemote.com>
----
- drivers/scsi/scsi_lib.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+On 9/10/17 14:16, Ming Lei wrote:
+> On Fri, Sep 08, 2017 at 01:16:39AM +0900, Damien Le Moal wrote:
+>> Using scsi_device_from_queue(), return the scsi_disk structure
+>> associated with a request queue if the device is a disk.
+>> Export this function to make it available to modules.
+>>
+> 
+> This approach may be a little over-kill, actually gendisk is the
+> parent of request queue in kobject tree(see blk_register_queue()),
+> that might be an easy way to retrieve disk attached to the queue.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80..79433ad 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2132,11 +2132,14 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
- 		q->limits.cluster = 0;
- 
- 	/*
--	 * set a reasonable default alignment on word boundaries: the
--	 * host and device may alter it using
-+	 * set a reasonable default alignment on word/cacheline boundaries:
-+	 * the host and device may alter it using
- 	 * blk_queue_update_dma_alignment() later.
- 	 */
--	blk_queue_dma_alignment(q, 0x03);
-+	if (plat_device_is_coherent(dev))
-+		blk_queue_dma_alignment(q, 0x04 - 1);
-+	else
-+		blk_queue_dma_alignment(q, dma_get_cache_alignment() - 1);
- }
- EXPORT_SYMBOL_GPL(__scsi_init_queue);
- 
+Yes. It is a little extreme.
+I am currently preparing a V3 that will have a softer touch.
+
+Best regards.
+
 -- 
-2.7.0
+Damien Le Moal,
+Western Digital
