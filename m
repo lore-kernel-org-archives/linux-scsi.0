@@ -1,120 +1,36 @@
-From: Cathy Avery <cavery@redhat.com>
-Subject: Re: [PATCH V4 0/10] block/scsi: safe SCSI quiescing
-Date: Tue, 12 Sep 2017 15:03:14 -0400
-Message-ID: <59B82F72.6080901@redhat.com>
-References: <20170911111021.25810-1-ming.lei@redhat.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V3 1/2] scsi: sd: Fix sd_config_write_same()
+Date: Tue, 12 Sep 2017 23:13:08 +0000
+Message-ID: <1505257987.2537.37.camel@wdc.com>
+References: <20170905115536.2896-1-damien.lemoal@wdc.com>
+         <20170905115536.2896-2-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170911111021.25810-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:23141 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751678AbdILXN7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2017 19:13:59 -0400
+In-Reply-To: <20170905115536.2896-2-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <3FFB15B1FEB2F8489A9AC3A724A92827@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-On 09/11/2017 07:10 AM, Ming Lei wrote:
-> Hi,
->
-> The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
->
-> Once SCSI device is put into QUIESCE, no new request except for
-> RQF_PREEMPT can be dispatched to SCSI successfully, and
-> scsi_device_quiesce() just simply waits for completion of I/Os
-> dispatched to SCSI stack. It isn't enough at all.
->
-> Because new request still can be comming, but all the allocated
-> requests can't be dispatched successfully, so request pool can be
-> consumed up easily.
->
-> Then request with RQF_PREEMPT can't be allocated and wait forever,
-> meantime scsi_device_resume() waits for completion of RQF_PREEMPT,
-> then system hangs forever, such as during system suspend or
-> sending SCSI domain alidation.
->
-> Both IO hang inside system suspend[1] or SCSI domain validation
-> were reported before.
->
-> This patch introduces preempt freeze, and solves the issue
-> by preempt freezing block queue during SCSI quiesce, and allows
-> to allocate request of RQF_PREEMPT when queue is in this state.
->
-> Oleksandr verified that V3 does fix the hang during suspend/resume,
-> and Cathy verified that revised V3 fixes hang in sending
-> SCSI domain validation.
->
-> Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
-> them all by introducing/unifying blk_freeze_queue_preempt() and
-> blk_unfreeze_queue_preempt(), and cleanup is done together.
->
-> The patchset can be found in the following gitweb:
->
-> 	https://github.com/ming1/linux/tree/blk_safe_scsi_quiesce_V4
->
-> V4:
-> 	- reorganize patch order to make it more reasonable
-> 	- support nested preempt freeze, as required by SCSI transport spi
-> 	- check preempt freezing in slow path of of blk_queue_enter()
-> 	- add "SCSI: transport_spi: resume a quiesced device"
-> 	- wake up freeze queue in setting dying for both blk-mq and legacy
-> 	- rename blk_mq_[freeze|unfreeze]_queue() in one patch
-> 	- rename .mq_freeze_wq and .mq_freeze_depth
-> 	- improve comment
->
-> V3:
-> 	- introduce q->preempt_unfreezing to fix one bug of preempt freeze
-> 	- call blk_queue_enter_live() only when queue is preempt frozen
-> 	- cleanup a bit on the implementation of preempt freeze
-> 	- only patch 6 and 7 are changed
->
-> V2:
-> 	- drop the 1st patch in V1 because percpu_ref_is_dying() is
-> 	enough as pointed by Tejun
-> 	- introduce preempt version of blk_[freeze|unfreeze]_queue
-> 	- sync between preempt freeze and normal freeze
-> 	- fix warning from percpu-refcount as reported by Oleksandr
->
->
-> [1]https://marc.info/?t=150340250100013&r=3&w=2
->
->
-> Thanks,
-> Ming
->
->
-> Ming Lei (10):
->    blk-mq: only run hw queues for blk-mq
->    block: tracking request allocation with q_usage_counter
->    blk-mq: rename blk_mq_[freeze|unfreeze]_queue
->    blk-mq: rename blk_mq_freeze_queue_wait as blk_freeze_queue_wait
->    block: rename .mq_freeze_wq and .mq_freeze_depth
->    block: pass flags to blk_queue_enter()
->    block: introduce preempt version of blk_[freeze|unfreeze]_queue
->    block: allow to allocate req with RQF_PREEMPT when queue is preempt
->      frozen
->    SCSI: transport_spi: resume a quiesced device
->    SCSI: preempt freeze block queue when SCSI device is put into quiesce
->
->   block/bfq-iosched.c               |   2 +-
->   block/blk-cgroup.c                |   8 +-
->   block/blk-core.c                  |  95 ++++++++++++++++----
->   block/blk-mq.c                    | 180 ++++++++++++++++++++++++++++----------
->   block/blk-mq.h                    |   1 -
->   block/blk-timeout.c               |   2 +-
->   block/blk.h                       |  12 +++
->   block/elevator.c                  |   4 +-
->   drivers/block/loop.c              |  24 ++---
->   drivers/block/rbd.c               |   2 +-
->   drivers/nvme/host/core.c          |   8 +-
->   drivers/scsi/scsi_lib.c           |  25 +++++-
->   drivers/scsi/scsi_transport_spi.c |   3 +
->   fs/block_dev.c                    |   4 +-
->   include/linux/blk-mq.h            |  15 ++--
->   include/linux/blkdev.h            |  32 +++++--
->   16 files changed, 313 insertions(+), 104 deletions(-)
->
-
-I've tested this patch set for spi_transport issuing a domain validation 
-under low blk_request conditions.
-
-Tested-by: Cathy Avery <cavery@redhat.com>
+T24gVHVlLCAyMDE3LTA5LTA1IGF0IDIwOjU1ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gUmVwb3J0aW5nIGEgbWF4aW11bSBudW1iZXIgb2YgYmxvY2tzIHRoYXQgaXMgbm90IGFsaWdu
+ZWQgb24gdGhlIGRldmljZQ0KPiBwaHlzaWNhbCBzaXplIHdvdWxkIGNhdXNlIGEgbGFyZ2Ugd3Jp
+dGUgc2FtZSByZXF1ZXN0IHRvIGJlIHNwbGl0IGludG8NCj4gcGh5c2ljYWxseSB1bmFsaWduZWQg
+Y2h1bmtzIGJ5IF9fYmxrZGV2X2lzc3VlX3dyaXRlX3plcm9lcygpIGFuZA0KPiBfX2Jsa2Rldl9p
+c3N1ZV93cml0ZV9zYW1lKCksIGV2ZW4gaWYgdGhlIGNhbGxlciBvZiB0aGVzZSBmdW5jdGlvbnMg
+dG9vaw0KPiBjYXJlIHRvIGFsaWduIGl0cyByZXF1ZXN0IHRvIHBoeXNpY2FsIHNlY3RvcnMuDQo+
+IA0KPiBTbyBtYWtlIHN1cmUgdGhlIG1heGltdW0gcmVwb3J0ZWQgaXMgYWxpZ25lZCB0byB0aGUg
+ZGV2aWNlIHBoeXNpY2FsDQo+IGJsb2NrIHNpemUuIFRoaXMgaXMgb25seSBhbiBvcHRpb25hbCBv
+cHRpbWl6YXRpb24gZm9yIHJlZ3VsYXIgZGlza3MsDQo+IGJ1dCB0aGlzIGlzIG1hbmRhdG9yeSB0
+byBhdm9pZCBmYWlsdXJlIG9mIGxhcmdlIHdyaXRlIHNhbWUgcmVxdWVzdHMNCj4gZGlyZWN0ZWQg
+YXQgc2VxdWVudGlhbCB3cml0ZSByZXF1aXJlZCB6b25lcyBvZiBob3N0LW1hbmFnZWQgWkJDIGRp
+c2tzLg0KDQpSZXZpZXdlZC1ieTogQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMu
+Y29tPg==
