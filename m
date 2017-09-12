@@ -1,92 +1,83 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2 10/12] scsi: sd_zbc: Disable zone write locking with
- scsi-mq
-Date: Tue, 12 Sep 2017 17:26:30 +0800
-Message-ID: <20170912092629.GB15792@ming.t460p>
-References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170907161640.30465-11-damien.lemoal@wdc.com>
- <20170908124329.GA18932@ming.t460p>
- <8c23a8c8-e945-fd4c-ee6c-da9b097de30b@wdc.com>
- <20170910051010.GB11628@ming.t460p>
- <5a10d60d-b18c-0956-59cd-69cb865019df@wdc.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: ufs: tc-dwc-g210: make arrays static, reduces object code size
+Date: Tue, 12 Sep 2017 12:32:28 +0100
+Message-ID: <20170912113228.1389-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39716 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751253AbdILJ0r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Sep 2017 05:26:47 -0400
-Content-Disposition: inline
-In-Reply-To: <5a10d60d-b18c-0956-59cd-69cb865019df@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Joao Pinto <jpinto@synopsys.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-On Tue, Sep 12, 2017 at 05:24:02PM +0900, Damien Le Moal wrote:
-> Ming,
-> 
-> On 9/10/17 14:10, Ming Lei wrote:
-> > On Fri, Sep 08, 2017 at 09:53:53AM -0700, Damien Le Moal wrote:
-> >> Ming,
-> >>
-> >> On 9/8/17 05:43, Ming Lei wrote:
-> >>> Hi Damien,
-> >>>
-> >>> On Fri, Sep 08, 2017 at 01:16:38AM +0900, Damien Le Moal wrote:
-> >>>> In the case of a ZBC disk used with scsi-mq, zone write locking does
-> >>>> not prevent write reordering in sequential zones. Unlike the legacy
-> >>>> case, zone locking can only be done after the command request is
-> >>>> removed from the scheduler dispatch queue. That is, at the time of
-> >>>> zone locking, the write command may already be out of order.
-> >>>
-> >>> Per my understanding, for legacy case, it can be quite tricky to let
-> >>> the existed I/O scheduler guarantee the write order for ZBC disk.
-> >>> I guess requeue still might cause write reorder even in legacy path,
-> >>> since requeue can happen in both scsi_request_fn() and scsi_io_completion()
-> >>> with q->queue_lock released, meantime new rq belonging to the same
-> >>> zone can come and be inserted to queue.
-> >>
-> >> Yes, the write ordering will always depend on the scheduler doing the
-> >> right thing. But both cfq, deadline and even noop do the right thing
-> >> there, even considering the aging case. The next write for a zone will
-> >> always be the oldest in the queue for that zone, if it is not, it means
-> >> that the application did not write sequentially. Extensive testing in
-> >> the legacy case never showed a problem due to the scheduler itself.
-> > 
-> > OK, I suggest to document this guarantee of no write reorder for ZBC
-> > somewhere, so that people will keep it in mind when trying to change
-> > the current code.
-> 
-> Have you looked at the comments in sd_zbc.c ? That is explained there.
-> Granted, this is a little deep in the stack, but this is after all
-> dependent on the implementation of scsi_request_fn(). I can add comments
-> there too if you prefer.
+From: Colin Ian King <colin.king@canonical.com>
 
-Yeah, I looked at that, but seems it is too coarse.
+Don't populate const arrays on the stack, instead make them
+static.  Makes the object code smaller by over 740 bytes.
 
-> 
-> >> scsi_requeue_command() does the unprep (zone unlock) and requeue while
-> >> holding the queue lock. So this is atomic with new write command
-> >> insertion. Requeued commands are added to the dispatch queue head, and
-> >> since a zone will only have a single write in-flight, there is no
-> >> reordering possible. The next write command for a zone to go again is
-> >> the last requeued one or the next in lba order. It works.
-> > 
-> > One special case is write with FLUSH/FUA, which may be added to
-> > front of q->queue_head directly. Suppose one write with FUA is
-> > just comes between requeue and run queue, write reorder may be
-> > triggered.
-> 
-> Zoned disks are recent and all of them support FUA. This means that a
-> write with FUA will be processed like any other write request (if I read
-> the code in blk-flush.c correctly). Well, at least for the mq case,
-> which does a blk_mq_sched_insert_request(), while the direct call to
+Before:
+   text	   data	    bss	    dec	    hex	filename
+   3840	    208	      0	   4048	    fd0	drivers/scsi/ufs/tc-dwc-g210.o
 
-blk_mq_sched_bypass_insert() can be called for flush requests too,
-since requests in flush sequence share one driver tag(rq->tag != -1),
-then the rq can be added to front of hctx->dispatch directly.
+After:
+   text	   data	    bss	    dec	    hex	filename
+   2679	    624	      0	   3303	    ce7	drivers/scsi/ufs/tc-dwc-g210.o
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/ufs/tc-dwc-g210.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.c b/drivers/scsi/ufs/tc-dwc-g210.c
+index dc03e47f7c58..3a8bc6d9cb5b 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210.c
++++ b/drivers/scsi/ufs/tc-dwc-g210.c
+@@ -26,7 +26,7 @@
+  */
+ static int tc_dwc_g210_setup_40bit_rmmi(struct ufs_hba *hba)
+ {
+-	const struct ufshcd_dme_attr_val setup_attrs[] = {
++	static const struct ufshcd_dme_attr_val setup_attrs[] = {
+ 		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
+ 		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
+ 		{ UIC_ARG_MIB(CDIRECTCTRL6), 0x80, DME_LOCAL },
+@@ -90,7 +90,7 @@ static int tc_dwc_g210_setup_40bit_rmmi(struct ufs_hba *hba)
+  */
+ static int tc_dwc_g210_setup_20bit_rmmi_lane0(struct ufs_hba *hba)
+ {
+-	const struct ufshcd_dme_attr_val setup_attrs[] = {
++	static const struct ufshcd_dme_attr_val setup_attrs[] = {
+ 		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN0_TX), 0x01,
+ 								DME_LOCAL },
+ 		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN0_TX), 0x19,
+@@ -147,7 +147,7 @@ static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
+ 	int connected_tx_lanes = 0;
+ 	int ret = 0;
+ 
+-	const struct ufshcd_dme_attr_val setup_tx_attrs[] = {
++	static const struct ufshcd_dme_attr_val setup_tx_attrs[] = {
+ 		{ UIC_ARG_MIB_SEL(TX_REFCLKFREQ, SELIND_LN1_TX), 0x0d,
+ 								DME_LOCAL },
+ 		{ UIC_ARG_MIB_SEL(TX_CFGCLKFREQVAL, SELIND_LN1_TX), 0x19,
+@@ -158,7 +158,7 @@ static int tc_dwc_g210_setup_20bit_rmmi_lane1(struct ufs_hba *hba)
+ 								DME_LOCAL },
+ 	};
+ 
+-	const struct ufshcd_dme_attr_val setup_rx_attrs[] = {
++	static const struct ufshcd_dme_attr_val setup_rx_attrs[] = {
+ 		{ UIC_ARG_MIB_SEL(RX_REFCLKFREQ, SELIND_LN1_RX), 0x01,
+ 								DME_LOCAL },
+ 		{ UIC_ARG_MIB_SEL(RX_CFGCLKFREQVAL, SELIND_LN1_RX), 0x19,
+@@ -222,7 +222,7 @@ static int tc_dwc_g210_setup_20bit_rmmi(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+ 
+-	const struct ufshcd_dme_attr_val setup_attrs[] = {
++	static const struct ufshcd_dme_attr_val setup_attrs[] = {
+ 		{ UIC_ARG_MIB(TX_GLOBALHIBERNATE), 0x00, DME_LOCAL },
+ 		{ UIC_ARG_MIB(REFCLKMODE), 0x01, DME_LOCAL },
+ 		{ UIC_ARG_MIB(CDIRECTCTRL6), 0xc0, DME_LOCAL },
 -- 
-Ming
+2.14.1
+
