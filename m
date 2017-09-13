@@ -1,27 +1,49 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi: Remove unnecessary condition in
- sd_read_block_limits()
-Date: Wed, 13 Sep 2017 17:32:48 +0000
-Message-ID: <1505323966.2654.5.camel@wdc.com>
-References: <1505312986-14777-1-git-send-email-lczerner@redhat.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V4 08/10] block: allow to allocate req with RQF_PREEMPT
+ when queue is preempt frozen
+Date: Thu, 14 Sep 2017 01:48:00 +0800
+Message-ID: <20170913174759.GB24862@ming.t460p>
+References: <20170911111021.25810-1-ming.lei@redhat.com>
+ <20170911111021.25810-9-ming.lei@redhat.com>
+ <1505145834.2802.17.camel@wdc.com>
+ <20170912034057.GC31533@ming.t460p>
+ <20170913164803.GB10407@ming.t460p>
+ <1505323703.2654.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:13654 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751063AbdIMRde (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2017 13:33:34 -0400
-In-Reply-To: <1505312986-14777-1-git-send-email-lczerner@redhat.com>
-Content-Language: en-US
-Content-ID: <83FC569ED11E944EB9B9D3FB4E457519@namprd04.prod.outlook.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47786 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751092AbdIMRsQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Sep 2017 13:48:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1505323703.2654.3.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lczerner@redhat.com" <lczerner@redhat.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "cavery@redhat.com" <cavery@redhat.com>
 
-T24gV2VkLCAyMDE3LTA5LTEzIGF0IDE2OjI5ICswMjAwLCBMdWthcyBDemVybmVyIHdyb3RlOg0K
-PiBBZnRlciBzZXJpZXMgb2YgY2hhbmdlcyBhcm91bmQgV1JJVEVfU0FNRSBhbmQgVU5NQVAgc2V0
-dXAgd2UgZW5kZWQgdXANCj4gd2l0aCBsZWZ0b3ZlciB1bm5lY2Vzc2FyeSBjb25kaXRpb24uIFJl
-bW92ZSBpdC4NCg0KQSBzaW1pbGFyIHBhdGNoIHdhcyBzaXR0aW5nIGluIG15IHRyZWUgYW5kIHdh
-aXRpbmcgdG8gYmUgcG9zdGVkLiBCdXQgc2luY2UgeW91DQpwb3N0ZWQgdGhpcyBmaXJzdDoNCg0K
-UmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAd2RjLmNvbT4NCg0K
+On Wed, Sep 13, 2017 at 05:28:24PM +0000, Bart Van Assche wrote:
+> On Thu, 2017-09-14 at 00:48 +0800, Ming Lei wrote:
+> > Could you please let me know if your concern about race between
+> > preempt freeze and blk_cleanup_queue() is addressed in my last
+> > reply?
+> 
+> Shouldn't we wait until v4.13-rc1 has been released before spending more
+> energy on this? Certain patches that have been sent to Linus, e.g. commit
+
+The discussion should have been done any time, right?
+
+I believe I replied all your comments, if you don't agree any one of
+my follow-up, please point it out.
+
+> 157f377beb71 ("block: directly insert blk-mq request from
+> blk_insert_cloned_request()"), may affect the test results. I have not
+
+No, that patch only changes blk_insert_cloned_request() which is used
+by dm-rq(mpath) only, nothing to do with the reported issue during
+suspend and sending SCSI Domain validation.
+
+
+-- 
+Ming
