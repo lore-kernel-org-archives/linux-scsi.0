@@ -1,57 +1,47 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 01/10] arch:powerpc: return -ENOMEM on failed allocation
-Date: Wed, 13 Sep 2017 07:53:21 -0700
-Message-ID: <1505314401.8969.11.camel@perches.com>
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH 10/10] fs:btrfs: return -ENOMEM on allocation failure.
+Date: Wed, 13 Sep 2017 17:13:08 +0200
+Message-ID: <20170913151308.GL29043@twin.jikos.cz>
 References: <1505287939-14106-1-git-send-email-allen.lkml@gmail.com>
+ <1505287939-14106-10-git-send-email-allen.lkml@gmail.com>
+Reply-To: dsterba@suse.cz
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1505287939-14106-1-git-send-email-allen.lkml@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Allen Pais <allen.lkml@gmail.com>, linux-kernel@vger.kernel.org
-Cc: nouveau@lists.freedesktop.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, megaraidlinux.pdl@broadcom.com, target-devel@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1505287939-14106-10-git-send-email-allen.lkml@gmail.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Allen Pais <allen.lkml@gmail.com>
+Cc: linux-kernel@vger.kernel.org, nouveau@lists.freedesktop.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, megaraidlinux.pdl@broadcom.com, target-devel@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2017-09-13 at 13:02 +0530, Allen Pais wrote:
+On Wed, Sep 13, 2017 at 01:02:19PM +0530, Allen Pais wrote:
 > Signed-off-by: Allen Pais <allen.lkml@gmail.com>
-
-I think the changelog for this series of conversions
-should show that you've validated the change by
-inspecting the return call chain at each modified line.
-
-Also, it seems you've cc'd the same mailing lists for
-all of the patches modified by this series.
-
-It would be better to individually address each patch
-in the series only cc'ing the appropriate maintainers
-and mailing lists.
-
-A cover letter would be good too.
-
 > ---
->  arch/powerpc/platforms/cell/spider-pci.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  fs/btrfs/check-integrity.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/arch/powerpc/platforms/cell/spider-pci.c b/arch/powerpc/platforms/cell/spider-pci.c
-> index d1e61e2..82aa3f7 100644
-> --- a/arch/powerpc/platforms/cell/spider-pci.c
-> +++ b/arch/powerpc/platforms/cell/spider-pci.c
-> @@ -106,7 +106,7 @@ static int __init spiderpci_pci_setup_chip(struct pci_controller *phb,
->  	dummy_page_va = kmalloc(PAGE_SIZE, GFP_KERNEL);
->  	if (!dummy_page_va) {
->  		pr_err("SPIDERPCI-IOWA:Alloc dummy_page_va failed.\n");
+> diff --git a/fs/btrfs/check-integrity.c b/fs/btrfs/check-integrity.c
+> index 7d5a9b5..efa4c23 100644
+> --- a/fs/btrfs/check-integrity.c
+> +++ b/fs/btrfs/check-integrity.c
+> @@ -2913,7 +2913,7 @@ int btrfsic_mount(struct btrfs_fs_info *fs_info,
+>  	state = kvzalloc(sizeof(*state), GFP_KERNEL);
+>  	if (!state) {
+>  		pr_info("btrfs check-integrity: allocation failed!\n");
 > -		return -1;
 > +		return -ENOMEM;
+
+Makes sense, also please fix the -1 a few lines below that also result
+from failed memory allocation, indirectly from btrfsic_dev_state_alloc().
+
 >  	}
 >  
->  	dummy_page_da = dma_map_single(phb->parent, dummy_page_va,
-> @@ -137,7 +137,7 @@ int __init spiderpci_iowa_init(struct iowa_bus *bus, void *data)
->  	if (!priv) {
->  		pr_err("SPIDERPCI-IOWA:"
->  		       "Can't allocate struct spiderpci_iowa_private");
-> -		return -1;
-> +		return -ENOMEM;
->  	}
->  
->  	if (of_address_to_resource(np, 0, &r)) {
+>  	if (!btrfsic_is_initialized) {
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
