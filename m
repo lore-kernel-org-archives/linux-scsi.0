@@ -1,42 +1,57 @@
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH] scsi: Remove unnecessary condition in sd_read_block_limits()
-Date: Wed, 13 Sep 2017 16:29:46 +0200
-Message-ID: <1505312986-14777-1-git-send-email-lczerner@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33786 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751093AbdIMO3y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Sep 2017 10:29:54 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id DD6D65F7A9
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2017 14:29:53 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 01/10] arch:powerpc: return -ENOMEM on failed allocation
+Date: Wed, 13 Sep 2017 07:53:21 -0700
+Message-ID: <1505314401.8969.11.camel@perches.com>
+References: <1505287939-14106-1-git-send-email-allen.lkml@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1505287939-14106-1-git-send-email-allen.lkml@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Allen Pais <allen.lkml@gmail.com>, linux-kernel@vger.kernel.org
+Cc: nouveau@lists.freedesktop.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, megaraidlinux.pdl@broadcom.com, target-devel@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Lukas Czerner <lczerner@redhat.com>
 
-After series of changes around WRITE_SAME and UNMAP setup we ended up
-with leftover unnecessary condition. Remove it.
+On Wed, 2017-09-13 at 13:02 +0530, Allen Pais wrote:
+> Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
- drivers/scsi/sd.c | 2 --
- 1 file changed, 2 deletions(-)
+I think the changelog for this series of conversions
+should show that you've validated the change by
+inspecting the return call chain at each modified line.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 11c1738..fb9f8b5 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2915,8 +2915,6 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 				sd_config_discard(sdkp, SD_LBP_WS16);
- 			else if (sdkp->lbpws10)
- 				sd_config_discard(sdkp, SD_LBP_WS10);
--			else if (sdkp->lbpu && sdkp->max_unmap_blocks)
--				sd_config_discard(sdkp, SD_LBP_UNMAP);
- 			else
- 				sd_config_discard(sdkp, SD_LBP_DISABLE);
- 		}
--- 
-2.7.5
+Also, it seems you've cc'd the same mailing lists for
+all of the patches modified by this series.
+
+It would be better to individually address each patch
+in the series only cc'ing the appropriate maintainers
+and mailing lists.
+
+A cover letter would be good too.
+
+> ---
+>  arch/powerpc/platforms/cell/spider-pci.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/powerpc/platforms/cell/spider-pci.c b/arch/powerpc/platforms/cell/spider-pci.c
+> index d1e61e2..82aa3f7 100644
+> --- a/arch/powerpc/platforms/cell/spider-pci.c
+> +++ b/arch/powerpc/platforms/cell/spider-pci.c
+> @@ -106,7 +106,7 @@ static int __init spiderpci_pci_setup_chip(struct pci_controller *phb,
+>  	dummy_page_va = kmalloc(PAGE_SIZE, GFP_KERNEL);
+>  	if (!dummy_page_va) {
+>  		pr_err("SPIDERPCI-IOWA:Alloc dummy_page_va failed.\n");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+>  
+>  	dummy_page_da = dma_map_single(phb->parent, dummy_page_va,
+> @@ -137,7 +137,7 @@ int __init spiderpci_iowa_init(struct iowa_bus *bus, void *data)
+>  	if (!priv) {
+>  		pr_err("SPIDERPCI-IOWA:"
+>  		       "Can't allocate struct spiderpci_iowa_private");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+>  
+>  	if (of_address_to_resource(np, 0, &r)) {
