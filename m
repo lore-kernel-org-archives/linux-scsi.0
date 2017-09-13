@@ -1,33 +1,36 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V4 08/10] block: allow to allocate req with RQF_PREEMPT
- when queue is preempt frozen
-Date: Wed, 13 Sep 2017 19:07:53 +0000
-Message-ID: <1505329670.2404.10.camel@wdc.com>
-References: <20170911111021.25810-1-ming.lei@redhat.com>
-         <20170911111021.25810-9-ming.lei@redhat.com>
-         <1505145834.2802.17.camel@wdc.com> <20170912034057.GC31533@ming.t460p>
-         <20170913164803.GB10407@ming.t460p> <1505323703.2654.3.camel@wdc.com>
-         <20170913174759.GB24862@ming.t460p>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V2 00/12] scsi-mq support for ZBC disks
+Date: Wed, 13 Sep 2017 22:17:13 +0200
+Message-ID: <20170913201713.GA24926@lst.de>
+References: <20170907161640.30465-1-damien.lemoal@wdc.com> <20170908082040.GA25719@lst.de> <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com> <20170911122411.GA22255@lst.de> <36d21ce8-543a-39ad-c729-30f9dbd383d0@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170913174759.GB24862@ming.t460p>
-Content-Language: en-US
-Content-ID: <38BE3A4C0957F942A0450896A7ECCDEF@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "cavery@redhat.com" <cavery@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:57606 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751920AbdIMURP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Sep 2017 16:17:15 -0400
+Content-Disposition: inline
+In-Reply-To: <36d21ce8-543a-39ad-c729-30f9dbd383d0@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
 
-T24gVGh1LCAyMDE3LTA5LTE0IGF0IDAxOjQ4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gTm8s
-IHRoYXQgcGF0Y2ggb25seSBjaGFuZ2VzIGJsa19pbnNlcnRfY2xvbmVkX3JlcXVlc3QoKSB3aGlj
-aCBpcyB1c2VkDQo+IGJ5IGRtLXJxKG1wYXRoKSBvbmx5LCBub3RoaW5nIHRvIGRvIHdpdGggdGhl
-IHJlcG9ydGVkIGlzc3VlIGR1cmluZw0KPiBzdXNwZW5kIGFuZCBzZW5kaW5nIFNDU0kgRG9tYWlu
-IHZhbGlkYXRpb24uDQoNClRoZXJlIG1heSBiZSBvdGhlciB3YXlzIHRvIGZpeCB0aGUgU0NTSSBk
-b21haW4gdmFsaWRhdGlvbiBjb2RlLg0KDQpSZWdhcmRpbmcgdGhlIGhhbmcgZHVyaW5nIHJlc3Vt
-ZTogSSBoYXZlIG5vdCBiZWVuIGFibGUgdG8gcmVwcm9kdWNlIHRoYXQNCmhhbmcgd2l0aCBKZW5z
-JyBsYXRlc3QgZm9yLW5leHQgYnJhbmNoLiBJZiB0aGF0IGhhbmcgd291bGQgdHVybiBvdXQgbm90
-IHRvDQpiZSByZXByb2R1Y2libGUgd2l0aCB2NC4xMy1yYzEsIHdoeSB0byBjaGFuZ2UgdGhlIGJl
-aGF2aW9yIG9mIHRoZSBibG9jaw0KbGF5ZXIgd2l0aCByZWdhcmQgdG8gUFJFRU1QVCByZXF1ZXN0
-cz8NCg0KQmFydC4=
+On Tue, Sep 12, 2017 at 05:38:05PM +0900, Damien Le Moal wrote:
+> struct blk_zoned {
+> 	unsigned int nr_zones;
+> 	unsigned long *seq_zones;
+> };
+> 
+> struct request_queue {
+> 	...
+> #ifdef CONFIG_BLK_DEV_ZONED
+> 	struct blk_zoned zoned;
+> #endif
+> 	...
+
+Do we even need a new structure for it?  I'd just hang it off
+the gendisk directly.
+
+Except for that the idea looks fine to me.
