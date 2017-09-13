@@ -1,70 +1,35 @@
-From: Alim Akhtar <alim.akhtar@gmail.com>
-Subject: Re: [PATCH] scsi: ufs: Make use of UFS_BIT macro wherever possible
-Date: Mon, 11 Sep 2017 08:14:37 +0530
-Message-ID: <CAGOxZ52N=NLCZndc+sS1ym4zsdutk3keBv31-KNwe1u1bEfreg@mail.gmail.com>
-References: <CGME20170828122625epcas2p33e3e912339c1e29051ad8e28251ea91b@epcas2p3.samsung.com>
- <1503922783-14317-1-git-send-email-alim.akhtar@samsung.com>
- <1503935147.2841.25.camel@wdc.com> <e26087fe-5e1b-c103-668d-43818765d3c9@samsung.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V4 08/10] block: allow to allocate req with RQF_PREEMPT
+ when queue is preempt frozen
+Date: Wed, 13 Sep 2017 17:28:24 +0000
+Message-ID: <1505323703.2654.3.camel@wdc.com>
+References: <20170911111021.25810-1-ming.lei@redhat.com>
+         <20170911111021.25810-9-ming.lei@redhat.com>
+         <1505145834.2802.17.camel@wdc.com> <20170912034057.GC31533@ming.t460p>
+         <20170913164803.GB10407@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:45895 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752029AbdIKCpT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Sep 2017 22:45:19 -0400
-In-Reply-To: <e26087fe-5e1b-c103-668d-43818765d3c9@samsung.com>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:7590 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751238AbdIMR3P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2017 13:29:15 -0400
+In-Reply-To: <20170913164803.GB10407@ming.t460p>
+Content-Language: en-US
+Content-ID: <EFEB4D82EFE9234AA4A91FE711BA792E@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "cavery@redhat.com" <cavery@redhat.com>
 
-Hi,
-
-Ping!!!
-
-Should I drop this patch and send another one which removes UFS_BIT() macro?
-
-On Tue, Aug 29, 2017 at 4:35 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
-> Hi Bart,
-> Thanks for your review.
->
-> On 08/28/2017 09:15 PM, Bart Van Assche wrote:
->> On Mon, 2017-08-28 at 17:49 +0530, Alim Akhtar wrote:
->>> This entire file uses UFS_BIT macro for bits definition, expect for few
->>> places. This patch convert those defines to use UFS_BIT macro to be aligned
->>> with reset of the file.
->>
->> This is the definition of the UFS_BIT() macro I found in
->> drivers/scsi/ufs/ufshci.h:
->>
->> #define UFS_BIT(x)    (1L << (x))
->>
->> Using this macro makes code longer instead of shorter and does not improve
->> code readability. Is this macro really useful? Wouldn't it be better to
->> remove the UFS_BIT() macro instead of introducing more uses of it?
->>
-> Well, the intension of this patch is to make use of already existing
-> UFS_BIT() macro.
->
-> I am not aware of the history why this macro was created at first place.
->
-> Well, it does improve code readability, for me at least, no need for one
-> to do a calculation to see which bit it is, as we pass _bit_ number to
-> UFS_BIT.
->
-> I am totally okay, if you or other reviewers suggests me to change
-> UFS_BIT to actual bit position, something like the original case, which
-> this patch is trying to change.
->
->> Thanks,
->>
->> Bart.
->>
-> Thanks!
-> Alim
-
-
-
--- 
-Regards,
-Alim
+T24gVGh1LCAyMDE3LTA5LTE0IGF0IDAwOjQ4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQ291
+bGQgeW91IHBsZWFzZSBsZXQgbWUga25vdyBpZiB5b3VyIGNvbmNlcm4gYWJvdXQgcmFjZSBiZXR3
+ZWVuDQo+IHByZWVtcHQgZnJlZXplIGFuZCBibGtfY2xlYW51cF9xdWV1ZSgpIGlzIGFkZHJlc3Nl
+ZCBpbiBteSBsYXN0DQo+IHJlcGx5Pw0KDQpTaG91bGRuJ3Qgd2Ugd2FpdCB1bnRpbCB2NC4xMy1y
+YzEgaGFzIGJlZW4gcmVsZWFzZWQgYmVmb3JlIHNwZW5kaW5nIG1vcmUNCmVuZXJneSBvbiB0aGlz
+PyBDZXJ0YWluIHBhdGNoZXMgdGhhdCBoYXZlIGJlZW4gc2VudCB0byBMaW51cywgZS5nLiBjb21t
+aXQNCjE1N2YzNzdiZWI3MSAoImJsb2NrOiBkaXJlY3RseSBpbnNlcnQgYmxrLW1xIHJlcXVlc3Qg
+ZnJvbQ0KYmxrX2luc2VydF9jbG9uZWRfcmVxdWVzdCgpIiksIG1heSBhZmZlY3QgdGhlIHRlc3Qg
+cmVzdWx0cy4gSSBoYXZlIG5vdA0KYmVlbiBhYmxlIHRvIHJlcHJvZHVjZSB0aGUgaGFuZyBkdXJp
+bmcgcmVzdW1lIHdpdGggSmVucycgbGF0ZXN0IGZvci1uZXh0DQpicmFuY2guDQoNCkJhcnQu
