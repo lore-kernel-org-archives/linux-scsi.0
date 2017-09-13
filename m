@@ -1,32 +1,27 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/3] fcoe: move fcoe_interface_remove() out of
- fcoe_interface_cleanup()
-Date: Mon, 11 Sep 2017 10:15:30 +0200
-Message-ID: <20170911081530.exx6jvygofe47mht@linux-x5ow.site>
-References: <1504171174-37989-1-git-send-email-hare@suse.de>
- <1504171174-37989-2-git-send-email-hare@suse.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: Remove unnecessary condition in
+ sd_read_block_limits()
+Date: Wed, 13 Sep 2017 17:32:48 +0000
+Message-ID: <1505323966.2654.5.camel@wdc.com>
+References: <1505312986-14777-1-git-send-email-lczerner@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49210 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750789AbdIKIPc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Sep 2017 04:15:32 -0400
-Content-Disposition: inline
-In-Reply-To: <1504171174-37989-2-git-send-email-hare@suse.de>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:13654 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751063AbdIMRde (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2017 13:33:34 -0400
+In-Reply-To: <1505312986-14777-1-git-send-email-lczerner@redhat.com>
+Content-Language: en-US
+Content-ID: <83FC569ED11E944EB9B9D3FB4E457519@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lczerner@redhat.com" <lczerner@redhat.com>
 
-With an updates patch description (see Lee's mail) 
-
-Acked-by: Johannes Thumshirn <jth@kernel.org>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+T24gV2VkLCAyMDE3LTA5LTEzIGF0IDE2OjI5ICswMjAwLCBMdWthcyBDemVybmVyIHdyb3RlOg0K
+PiBBZnRlciBzZXJpZXMgb2YgY2hhbmdlcyBhcm91bmQgV1JJVEVfU0FNRSBhbmQgVU5NQVAgc2V0
+dXAgd2UgZW5kZWQgdXANCj4gd2l0aCBsZWZ0b3ZlciB1bm5lY2Vzc2FyeSBjb25kaXRpb24uIFJl
+bW92ZSBpdC4NCg0KQSBzaW1pbGFyIHBhdGNoIHdhcyBzaXR0aW5nIGluIG15IHRyZWUgYW5kIHdh
+aXRpbmcgdG8gYmUgcG9zdGVkLiBCdXQgc2luY2UgeW91DQpwb3N0ZWQgdGhpcyBmaXJzdDoNCg0K
+UmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAd2RjLmNvbT4NCg0K
