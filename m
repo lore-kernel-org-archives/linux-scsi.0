@@ -1,25 +1,63 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V3 2/2] scsi: sd: Use sectors_to_logical()
-Date: Tue, 12 Sep 2017 23:15:21 +0000
-Message-ID: <1505258120.2537.38.camel@wdc.com>
-References: <20170905115536.2896-1-damien.lemoal@wdc.com>
-         <20170905115536.2896-3-damien.lemoal@wdc.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH V2 10/12] scsi: sd_zbc: Disable zone write locking with
+ scsi-mq
+Date: Wed, 13 Sep 2017 09:13:12 +0900
+Message-ID: <f1c3b0e2-4943-4be0-a97d-5138bad351cd@wdc.com>
+References: <20170907161640.30465-1-damien.lemoal@wdc.com>
+ <20170907161640.30465-11-damien.lemoal@wdc.com>
+ <20170908124329.GA18932@ming.t460p>
+ <8c23a8c8-e945-fd4c-ee6c-da9b097de30b@wdc.com>
+ <20170910051010.GB11628@ming.t460p>
+ <5a10d60d-b18c-0956-59cd-69cb865019df@wdc.com>
+ <20170912092629.GB15792@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:19279 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751017AbdILXQJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2017 19:16:09 -0400
-In-Reply-To: <20170905115536.2896-3-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170912092629.GB15792@ming.t460p>
 Content-Language: en-US
-Content-ID: <DDC65C524EB3034C9D6F2AA6C3E35AF6@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-T24gVHVlLCAyMDE3LTA5LTA1IGF0IDIwOjU1ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gUmVwbGFjZSBvcGVuIGNvZGVkIGNvbnZlcnNpb25zLg0KDQpSZXZpZXdlZC1ieTogQmFydCBW
-YW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPg==
+Ming,
+
+On 9/12/17 18:26, Ming Lei wrote:
+>>> OK, I suggest to document this guarantee of no write reorder for ZBC
+>>> somewhere, so that people will keep it in mind when trying to change
+>>> the current code.
+>>
+>> Have you looked at the comments in sd_zbc.c ? That is explained there.
+>> Granted, this is a little deep in the stack, but this is after all
+>> dependent on the implementation of scsi_request_fn(). I can add comments
+>> there too if you prefer.
+> 
+> Yeah, I looked at that, but seems it is too coarse.
+
+OK. Will improve that in V3.
+
+>> Zoned disks are recent and all of them support FUA. This means that a
+>> write with FUA will be processed like any other write request (if I read
+>> the code in blk-flush.c correctly). Well, at least for the mq case,
+>> which does a blk_mq_sched_insert_request(), while the direct call to
+> 
+> blk_mq_sched_bypass_insert() can be called for flush requests too,
+> since requests in flush sequence share one driver tag(rq->tag != -1),
+> then the rq can be added to front of hctx->dispatch directly.
+
+For pure flush commands, any order is OK, since these are not actual
+writes. the ZBC/ZAC standards do not modify the behavior of
+flush/synchronize cache commands.
+
+But I will look into more detail at the PREFLUSH/POSTFLUSH mechanic and
+relation to write request ordering to make sure no corner cases are left
+ignored.
+
+Thanks for the comments.
+
+Best regards.
+
+-- 
+Damien Le Moal,
+Western Digital
