@@ -1,56 +1,78 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH V2 00/12] scsi-mq support for ZBC disks
-Date: Thu, 14 Sep 2017 09:04:13 +0900
-Message-ID: <f37599b5-0cb8-175c-226c-a22e078c6f6f@wdc.com>
-References: <20170907161640.30465-1-damien.lemoal@wdc.com>
- <20170908082040.GA25719@lst.de>
- <c3305202-43d3-20e3-825a-ae5fff462d54@wdc.com>
- <20170911122411.GA22255@lst.de>
- <36d21ce8-543a-39ad-c729-30f9dbd383d0@wdc.com>
- <20170913201713.GA24926@lst.de>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [Patch v2 2/2] libiscsi: Remove iscsi_destroy_session
+Date: Wed, 13 Sep 2017 17:09:03 -0700
+Message-ID: <9be07c2e-71ef-cab4-7b04-94d33a191d03@suse.com>
+References: <20170713161122.89375-1-khazhy@google.com>
+ <20170713161122.89375-2-khazhy@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170913201713.GA24926@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:39849 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751173AbdINAJI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Sep 2017 20:09:08 -0400
+In-Reply-To: <20170713161122.89375-2-khazhy@google.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Khazhismel Kumykov <khazhy@google.com>, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com
 
-Christoph,
-
-On 9/14/17 05:17, Christoph Hellwig wrote:
-> On Tue, Sep 12, 2017 at 05:38:05PM +0900, Damien Le Moal wrote:
->> struct blk_zoned {
->> 	unsigned int nr_zones;
->> 	unsigned long *seq_zones;
->> };
->>
->> struct request_queue {
->> 	...
->> #ifdef CONFIG_BLK_DEV_ZONED
->> 	struct blk_zoned zoned;
->> #endif
->> 	...
+On 07/13/2017 09:11 AM, Khazhismel Kumykov wrote:
+> iscsi_session_teardown was the only user of this function. Function
+> currently is just short for iscsi_remove_session + iscsi_free_session.
 > 
-> Do we even need a new structure for it?  I'd just hang it off
-> the gendisk directly.
+> Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
 
-Using a structure just seemed cleaner to me. But it is indeed not really
-necessary. As for attaching this info to the gendisk, that would indeed
-be equivalent. Having the struct on hand in the request queue just makes
-it easier to write small helpers in blkdev.h to access the info. Hence
-this choice. Should I change it ?
+Why is this needed? I dislike changes that don't fix anything.
 
-I have a V3 under test using the blk_zoned struct in the request queue
-under test. I will post shortly.
-
-> Except for that the idea looks fine to me.
-
-Thanks !
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c | 16 ----------------
+>  include/scsi/scsi_transport_iscsi.h |  1 -
+>  2 files changed, 17 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index a424eaeafeb0..924ac408d8a9 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -2210,22 +2210,6 @@ void iscsi_free_session(struct iscsi_cls_session *session)
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_free_session);
+>  
+> -/**
+> - * iscsi_destroy_session - destroy iscsi session
+> - * @session: iscsi_session
+> - *
+> - * Can be called by a LLD or iscsi_transport. There must not be
+> - * any running connections.
+> - */
+> -int iscsi_destroy_session(struct iscsi_cls_session *session)
+> -{
+> -	iscsi_remove_session(session);
+> -	ISCSI_DBG_TRANS_SESSION(session, "Completing session destruction\n");
+> -	iscsi_free_session(session);
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_GPL(iscsi_destroy_session);
+> -
+>  /**
+>   * iscsi_create_conn - create iscsi class connection
+>   * @session: iscsi cls session
+> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+> index 6183d20a01fb..b266d2a3bcb1 100644
+> --- a/include/scsi/scsi_transport_iscsi.h
+> +++ b/include/scsi/scsi_transport_iscsi.h
+> @@ -434,7 +434,6 @@ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
+>  						unsigned int target_id);
+>  extern void iscsi_remove_session(struct iscsi_cls_session *session);
+>  extern void iscsi_free_session(struct iscsi_cls_session *session);
+> -extern int iscsi_destroy_session(struct iscsi_cls_session *session);
+>  extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
+>  						int dd_size, uint32_t cid);
+>  extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
+> 
 
 -- 
-Damien Le Moal,
-Western Digital
+Lee Duncan
+SUSE Labs
