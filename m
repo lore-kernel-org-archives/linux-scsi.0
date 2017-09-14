@@ -1,53 +1,45 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [Patch v2 2/2] libiscsi: Remove iscsi_destroy_session
-Date: Thu, 14 Sep 2017 09:57:52 +0200
-Message-ID: <20170914075752.6v45mlusxylkqckj@linux-x5ow.site>
-References: <20170713161122.89375-1-khazhy@google.com>
- <20170713161122.89375-2-khazhy@google.com>
- <9be07c2e-71ef-cab4-7b04-94d33a191d03@suse.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] megaraid: kmemleak: Track page allocation for fusion
+Date: Thu, 14 Sep 2017 12:47:10 +0000
+Message-ID: <1505393229.2898.3.camel@wdc.com>
+References: <20170914061646.10275-1-shuwang@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBDVNRMMDUUIBBA7N5DGQKGQEMWLLAKA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <9be07c2e-71ef-cab4-7b04-94d33a191d03-IBi9RG/b67k@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
-Cc: Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170914061646.10275-1-shuwang@redhat.com>
+Content-Language: en-US
+Content-ID: <3EC08C019C19CA4DBFAB4D34A21D683E@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "shuwang@redhat.com" <shuwang@redhat.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "shivasharan.srikanteshwara@broadcom.com" <shivasharan.srikanteshwara@broadcom.com>, "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "liwang@redhat.com" <liwang@redhat.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "chuhu@redhat.com" <chuhu@redhat.com>, "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 13, 2017 at 05:09:03PM -0700, Lee Duncan wrote:
-> On 07/13/2017 09:11 AM, Khazhismel Kumykov wrote:
-> > iscsi_session_teardown was the only user of this function. Function
-> > currently is just short for iscsi_remove_session + iscsi_free_session.
-> >=20
-> > Signed-off-by: Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->=20
-> Why is this needed? I dislike changes that don't fix anything.
-
-The function has no more users left after patch 1, so why keep it bitrottin=
-g?
-
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+T24gVGh1LCAyMDE3LTA5LTE0IGF0IDE0OjE2ICswODAwLCBzaHV3YW5nQHJlZGhhdC5jb20gd3Jv
+dGU6DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1
+c2lvbi5jIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYw0KPiBp
+bmRleCAxMWJkMmU2OThiODQuLjYyMTI5OWVkZDhkZSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9z
+Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYw0KPiArKysgYi9kcml2ZXJzL3Njc2kv
+bWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jDQo+IEBAIC00OCw2ICs0OCw3IEBADQo+ICAj
+aW5jbHVkZSA8bGludXgvbXV0ZXguaD4NCj4gICNpbmNsdWRlIDxsaW51eC9wb2xsLmg+DQo+ICAj
+aW5jbHVkZSA8bGludXgvdm1hbGxvYy5oPg0KPiArI2luY2x1ZGUgPGxpbnV4L2ttZW1sZWFrLmg+
+DQo+ICANCj4gICNpbmNsdWRlIDxzY3NpL3Njc2kuaD4NCj4gICNpbmNsdWRlIDxzY3NpL3Njc2lf
+Y21uZC5oPg0KPiBAQCAtNDUxMiw3ICs0NTEzLDkgQEAgbWVnYXNhc19hbGxvY19mdXNpb25fY29u
+dGV4dChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpDQo+ICAJCQlkZXZfZXJyKCZp
+bnN0YW5jZS0+cGRldi0+ZGV2LCAiRmFpbGVkIGZyb20gJXMgJWRcbiIsIF9fZnVuY19fLCBfX0xJ
+TkVfXyk7DQo+ICAJCQlyZXR1cm4gLUVOT01FTTsNCj4gIAkJfQ0KPiAtCX0NCj4gKwl9IGVsc2UN
+Cj4gKwkJa21lbWxlYWtfYWxsb2MoaW5zdGFuY2UtPmN0cmxfY29udGV4dCwNCj4gKwkJCXNpemVv
+ZihzdHJ1Y3QgZnVzaW9uX2NvbnRleHQpLCAxLCBHRlBfS0VSTkVMKTsNCj4gIA0KPiAgCWZ1c2lv
+biA9IGluc3RhbmNlLT5jdHJsX2NvbnRleHQ7DQoNClRoYW5rIHlvdSBmb3IgaGF2aW5nIHRyYWNr
+ZWQgdGhpcyBkb3duIGFuZCBmb3IgaGF2aW5nIHNoYXJlZCB0aGlzIHBhdGNoLiBCdXQNCnBsZWFz
+ZSBrZWVwIGJyYWNlcyBiYWxhbmNlZCB0byBrZWVwIGNoZWNrcGF0Y2ggaGFwcHkgYW5kIHBsZWFz
+ZSBhbHNvIGNvbnNpZGVyDQphZGRpbmcgYSBjb21tZW50IHNpbWlsYXIgdG8gdGhlIGZvbGxvd2lu
+ZyBhYm92ZSB0aGUga21lbWxlYWtfYWxsb2MoKSBjYWxsOg0KDQovKiBBbGxvdyBrbWVtbGVhayB0
+byBzY2FuIHRoZXNlIHBhZ2VzIGFzIHRoZXkgY29udGFpbiBwb2ludGVycyB0byBhZGRpdGlvbmFs
+IGFsbG9jYXRpb25zLiAqLw0KDQo+IEBAIC00NTQ4LDkgKzQ1NTEsMTEgQEAgbWVnYXNhc19mcmVl
+X2Z1c2lvbl9jb250ZXh0KHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSkNCj4gIA0K
+PiAgCQlpZiAoaXNfdm1hbGxvY19hZGRyKGZ1c2lvbikpDQo+ICAJCQl2ZnJlZShmdXNpb24pOw0K
+PiAtCQllbHNlDQo+ICsJCWVsc2Ugew0KPiAgCQkJZnJlZV9wYWdlcygodWxvbmcpZnVzaW9uLA0K
+PiAgCQkJCWluc3RhbmNlLT5jdHJsX2NvbnRleHRfcGFnZXMpOw0KPiArCQkJa21lbWxlYWtfZnJl
+ZShmdXNpb24pOw0KPiArCQl9DQo+ICAJfQ0KDQpQbGVhc2Uga2VlcCBicmFjZXMgYmFsYW5jZWQg
+aW4gdGhlIGFib3ZlIGNvZGUgdG9vLg0KDQpUaGFua3MsDQoNCkJhcnQu
