@@ -1,81 +1,53 @@
-From: shuwang@redhat.com
-Subject: [PATCH] megaraid: kmemleak: Track page allocation for fusion
-Date: Thu, 14 Sep 2017 14:16:46 +0800
-Message-ID: <20170914061646.10275-1-shuwang@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, catalin.marinas@arm.com, liwang@redhat.com, chuhu@redhat.com, Shu Wang <shuwang@redhat.com>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [Patch v2 2/2] libiscsi: Remove iscsi_destroy_session
+Date: Thu, 14 Sep 2017 09:57:52 +0200
+Message-ID: <20170914075752.6v45mlusxylkqckj@linux-x5ow.site>
+References: <20170713161122.89375-1-khazhy@google.com>
+ <20170713161122.89375-2-khazhy@google.com>
+ <9be07c2e-71ef-cab4-7b04-94d33a191d03@suse.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <open-iscsi+bncBDVNRMMDUUIBBA7N5DGQKGQEMWLLAKA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Disposition: inline
+In-Reply-To: <9be07c2e-71ef-cab4-7b04-94d33a191d03-IBi9RG/b67k@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Cc: Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Shu Wang <shuwang@redhat.com>
+On Wed, Sep 13, 2017 at 05:09:03PM -0700, Lee Duncan wrote:
+> On 07/13/2017 09:11 AM, Khazhismel Kumykov wrote:
+> > iscsi_session_teardown was the only user of this function. Function
+> > currently is just short for iscsi_remove_session + iscsi_free_session.
+> >=20
+> > Signed-off-by: Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>=20
+> Why is this needed? I dislike changes that don't fix anything.
 
-Kmemleak reports about a thousand false positives for fusion->
-cmd_list[]. Root casue is the cmd_list objects are allocated from
-slab allocator, and stored its pointer in object allocated by page
-allocator. The fix will tell kmemleak to track and scan fusion
-object.
+The function has no more users left after patch 1, so why keep it bitrottin=
+g?
 
-Before patch:
-kmemleak: 1004 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
 
-unreferenced object 0xffff88042584e000 (size 8192):
-  backtrace:
-     kmemleak_alloc+0x4a/0xa0
-     __kmalloc+0xec/0x220
-     megasas_alloc_cmdlist_fusion+0x3e/0x140 [megaraid_sas]
-     megasas_alloc_cmds_fusion+0x44/0x450 [megaraid_sas]
-     megasas_init_adapter_fusion+0x21d/0x6e0 [megaraid_sas]
-     megasas_init_fw+0x357/0xd30 [megaraid_sas]
-     megasas_probe_one.part.34+0x5be/0x1040 [megaraid_sas]
-     megasas_probe_one+0x46/0xc0 [megaraid_sas]
-     local_pci_probe+0x45/0xa0
-     work_for_cpu_fn+0x14/0x20
-     process_one_work+0x149/0x360
-     worker_thread+0x1d8/0x3c0
-     kthread+0x109/0x140
-     ret_from_fork+0x25/0x30
-
-Signed-off-by: Shu Wang <shuwang@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 11bd2e698b84..621299edd8de 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -48,6 +48,7 @@
- #include <linux/mutex.h>
- #include <linux/poll.h>
- #include <linux/vmalloc.h>
-+#include <linux/kmemleak.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -4512,7 +4513,9 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
- 			dev_err(&instance->pdev->dev, "Failed from %s %d\n", __func__, __LINE__);
- 			return -ENOMEM;
- 		}
--	}
-+	} else
-+		kmemleak_alloc(instance->ctrl_context,
-+			sizeof(struct fusion_context), 1, GFP_KERNEL);
- 
- 	fusion = instance->ctrl_context;
- 
-@@ -4548,9 +4551,11 @@ megasas_free_fusion_context(struct megasas_instance *instance)
- 
- 		if (is_vmalloc_addr(fusion))
- 			vfree(fusion);
--		else
-+		else {
- 			free_pages((ulong)fusion,
- 				instance->ctrl_context_pages);
-+			kmemleak_free(fusion);
-+		}
- 	}
- }
- 
--- 
-2.13.5
+--=20
+You received this message because you are subscribed to the Google Groups "=
+open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
