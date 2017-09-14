@@ -1,78 +1,68 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [Patch v2 2/2] libiscsi: Remove iscsi_destroy_session
-Date: Wed, 13 Sep 2017 17:09:03 -0700
-Message-ID: <9be07c2e-71ef-cab4-7b04-94d33a191d03@suse.com>
-References: <20170713161122.89375-1-khazhy@google.com>
- <20170713161122.89375-2-khazhy@google.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V4 08/10] block: allow to allocate req with RQF_PREEMPT
+ when queue is preempt frozen
+Date: Thu, 14 Sep 2017 09:15:37 +0800
+Message-ID: <20170914011532.GA16105@ming.t460p>
+References: <20170911111021.25810-1-ming.lei@redhat.com>
+ <20170911111021.25810-9-ming.lei@redhat.com>
+ <1505145834.2802.17.camel@wdc.com>
+ <20170912034057.GC31533@ming.t460p>
+ <20170913164803.GB10407@ming.t460p>
+ <1505323703.2654.3.camel@wdc.com>
+ <20170913174759.GB24862@ming.t460p>
+ <1505329670.2404.10.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39849 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751173AbdINAJI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Sep 2017 20:09:08 -0400
-In-Reply-To: <20170713161122.89375-2-khazhy@google.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1505329670.2404.10.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "cavery@redhat.com" <cavery@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Khazhismel Kumykov <khazhy@google.com>, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com
 
-On 07/13/2017 09:11 AM, Khazhismel Kumykov wrote:
-> iscsi_session_teardown was the only user of this function. Function
-> currently is just short for iscsi_remove_session + iscsi_free_session.
+On Wed, Sep 13, 2017 at 07:07:53PM +0000, Bart Van Assche wrote:
+> On Thu, 2017-09-14 at 01:48 +0800, Ming Lei wrote:
+> > No, that patch only changes blk_insert_cloned_request() which is used
+> > by dm-rq(mpath) only, nothing to do with the reported issue during
+> > suspend and sending SCSI Domain validation.
 > 
-> Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+> There may be other ways to fix the SCSI domain validation code.
 
-Why is this needed? I dislike changes that don't fix anything.
+Again the issue isn't in domain validation, it is in quiesce,
+so we need to fix quiesce, instead of working around transport_spi.
 
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 16 ----------------
->  include/scsi/scsi_transport_iscsi.h |  1 -
->  2 files changed, 17 deletions(-)
+Also What is the other way? Why not this patchset?
+
 > 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index a424eaeafeb0..924ac408d8a9 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2210,22 +2210,6 @@ void iscsi_free_session(struct iscsi_cls_session *session)
->  }
->  EXPORT_SYMBOL_GPL(iscsi_free_session);
->  
-> -/**
-> - * iscsi_destroy_session - destroy iscsi session
-> - * @session: iscsi_session
-> - *
-> - * Can be called by a LLD or iscsi_transport. There must not be
-> - * any running connections.
-> - */
-> -int iscsi_destroy_session(struct iscsi_cls_session *session)
-> -{
-> -	iscsi_remove_session(session);
-> -	ISCSI_DBG_TRANS_SESSION(session, "Completing session destruction\n");
-> -	iscsi_free_session(session);
-> -	return 0;
-> -}
-> -EXPORT_SYMBOL_GPL(iscsi_destroy_session);
-> -
->  /**
->   * iscsi_create_conn - create iscsi class connection
->   * @session: iscsi cls session
-> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-> index 6183d20a01fb..b266d2a3bcb1 100644
-> --- a/include/scsi/scsi_transport_iscsi.h
-> +++ b/include/scsi/scsi_transport_iscsi.h
-> @@ -434,7 +434,6 @@ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
->  						unsigned int target_id);
->  extern void iscsi_remove_session(struct iscsi_cls_session *session);
->  extern void iscsi_free_session(struct iscsi_cls_session *session);
-> -extern int iscsi_destroy_session(struct iscsi_cls_session *session);
->  extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
->  						int dd_size, uint32_t cid);
->  extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
-> 
+> Regarding the hang during resume: I have not been able to reproduce that
+> hang with Jens' latest for-next branch. If that hang would turn out not to
+> be reproducible with v4.13-rc1, why to change the behavior of the block
+> layer with regard to PREEMPT requests?
+
+Previously you object this patchset because you mention there
+is race, now you want to change to another reason?
+
+So I suppose there isn't the race you worried about.
+
+PREEMPT is special enough but used widely, not like NVMe,
+traditional SCSI doesn't has a specific queue for
+administration purpose only, then RFQ_PREEMPT need to
+be dispatched to the same queue even normal I/O is not
+allowed at that time.
+
+Because it is a common/generic issue with quiesce, we have to
+avoid I/O hang with quiesce. This way is a generic enough for
+cover all this kind of issue. And no side effect on normal I/O
+of block layer.
+
+Can you make sure that the following two points can't happen
+wrt. I/O hang during suspend/resume?
+
+	- no normal I/O is triggered during suspend
+
+	- all I/O requests in queue will be drained out before
+	entering suspend
 
 -- 
-Lee Duncan
-SUSE Labs
+Ming
