@@ -1,30 +1,34 @@
-From: Allen <allen.lkml@gmail.com>
-Subject: Re: [PATCH 01/10] arch:powerpc: return -ENOMEM on failed allocation
-Date: Thu, 14 Sep 2017 10:13:38 +0530
-Message-ID: <CAOMdWSJvQMNJSnfekmM=N-CCaaJF_3HkP8ypZG+vWgWf0gWgfw@mail.gmail.com>
-References: <1505287939-14106-1-git-send-email-allen.lkml@gmail.com> <1505314401.8969.11.camel@perches.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1505314401.8969.11.camel@perches.com>
-Sender: netdev-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, nouveau@lists.freedesktop.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, megaraidlinux.pdl@broadcom.com, target-devel@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-btrfs@vger.kernel.org
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: libiscsi: Fix an error handling path in 'iscsi_session_setup()'
+Date: Thu, 14 Sep 2017 07:47:40 +0200
+Message-ID: <20170914054740.23129-1-christophe.jaillet@wanadoo.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: lduncan@suse.com, cleech@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-> I think the changelog for this series of conversions
-> should show that you've validated the change by
-> inspecting the return call chain at each modified line.
->
-> Also, it seems you've cc'd the same mailing lists for
-> all of the patches modified by this series.
->
-> It would be better to individually address each patch
-> in the series only cc'ing the appropriate maintainers
-> and mailing lists.
->
-> A cover letter would be good too.
+All error handling paths in this function go through
+'iscsi_host_dec_session_cnt()' except this one.
+Fix it and properly decrement the number of active sessions in such a case.
 
- Point noted. Thanks.
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/libiscsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- Allen
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index bd4605a34f54..5d195375ba75 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2779,7 +2779,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+ 		       "must be a power of 2.\n", total_cmds);
+ 		total_cmds = rounddown_pow_of_two(total_cmds);
+ 		if (total_cmds < ISCSI_TOTAL_CMDS_MIN)
+-			return NULL;
++			goto dec_session_count;
+ 		printk(KERN_INFO "iscsi: Rounding can_queue to %d.\n",
+ 		       total_cmds);
+ 	}
+-- 
+2.11.0
