@@ -1,39 +1,41 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V3 01/12] block: Fix declaration of blk-mq debugfs
+Subject: Re: [PATCH V3 02/12] block: Fix declaration of blk-mq scheduler
  functions
-Date: Fri, 15 Sep 2017 14:33:17 +0000
-Message-ID: <1505485996.2852.4.camel@wdc.com>
+Date: Fri, 15 Sep 2017 14:35:54 +0000
+Message-ID: <1505486153.2852.6.camel@wdc.com>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
-         <20170915100645.17999-2-damien.lemoal@wdc.com>
+         <20170915100645.17999-3-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:48925 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751259AbdIOOeF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 10:34:05 -0400
-In-Reply-To: <20170915100645.17999-2-damien.lemoal@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170915100645.17999-3-damien.lemoal@wdc.com>
 Content-Language: en-US
-Content-ID: <BEEF95C3CF385A45ACF0D456381105E4@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-ID: <EC32C957BC428A47BA1F9EFDC6A57154@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: "hch@lst.de" <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
 T24gRnJpLCAyMDE3LTA5LTE1IGF0IDE5OjA2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gX19ibGtfbXFfZGVidWdmc19ycV9zaG93KCkgYW5kIGJsa19tcV9kZWJ1Z2ZzX3JxX3Nob3co
-KSBhcmUgZXhwb3J0ZWQNCj4gc3ltYm9scyBidXQgYXIgZW9ubHkgZGVjbGFyZWQgaW4gdGhlIGJs
-b2NrIGludGVybmFsIGZpbGUNCiAgICAgICAgICAgICAgXl5eXl5eXl4NCiAgICAgICAgICAgICAg
-YXJlIG9ubHk/DQo+IGJsb2NrL2Jsay1tcS1kZWJ1Z2ZzLmguIHdoaWNoIGlzIG5vdCBjbGVhbmx5
-IGFjY2Vzc2libGUgdG8gZmlsZXMgb3V0c2lkZQ0KPiBvZiB0aGUgYmxvY2sgZGlyZWN0b3J5Lg0K
-PiBNb3ZlIHRoZSBkZWNsYXJhdGlvbiBvZiB0aGVzZSBmdW5jdGlvbnMgdG8gdGhlIG5ldyBmaWxl
-DQo+IGluY2x1ZGUvbGludXgvYmxrLW1xLWRlYnVnZnMuaCBmaWxlIHRvIG1ha2UgdGhlIGRlY2xh
-cmF0aW9ucyBjbGVhbmx5DQo+IGF2YWlsYWJsZSB0byBvdGhlciBtb2R1bGVzLg0KPiANCj4gV2hp
-bGUgYXQgaXQsIGFsc28gbW92ZSB0aGUgZGVmaW5pdGlvbiBvZiB0aGUgYmxrX21xX2RlYnVnZnNf
-YXR0cg0KPiBzdHJ1Y3R1cmUgdG8gYWxsb3cgc2NoZWR1bGVyIG1vZHVsZXMgb3V0c2lkZSBvZiB0
-aGUgYmxvY2sgZGlyZWN0b3J5IHRvDQo+IGRlZmluZSBkZWJ1Z2ZzIGF0dHJpYnV0ZXMuDQoNClRo
-ZSB0aXRsZSBvZiB0aGlzIHBhdGNoIGlzICJGaXggZGVjbGFyYXRpb24gb2YgLi4uIi4gU2hvdWxk
-IHRoZSB0aXRsZSBwZXJoYXBzDQpoYXZlIGJlZW4gIk1vdmUgZGVjbGFyYXRpb25zIG9mIC4uLiI/
-DQoNCkFueXdheToNCg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3Nj
-aGVAd2RjLmNvbT4NCg0K
+Cj4gVGhlIGZ1bmN0aW9ucyBibGtfbXFfc2NoZWRfZnJlZV9oY3R4X2RhdGEoKSwgYmxrX21xX3Nj
+aGVkX3RyeV9tZXJnZSgpLA0KPiBibGtfbXFfc2NoZWRfdHJ5X2luc2VydF9tZXJnZSgpIGFuZCBi
+bGtfbXFfc2NoZWRfcmVxdWVzdF9pbnNlcnRlZCgpIGFyZQ0KPiBhbGwgZXhwb3J0ZWQgc3ltYm9s
+cyBidXQgYXJlIGRlY2xhcmVkIG9ubHkgaW50ZXJuYWxseSBpbg0KPiBibG9jay9ibGstbXEtc2No
+ZWQuaC4gTW92ZSB0aGVzZSBkZWNsYXJhdGlvbnMgdG8gdGhlIG5ldyBmaWxlDQo+IGluY2x1ZGUv
+bGludXgvYmxrLW1xLXNjaGVkLmggdG8gbWFrZSB0aGVtIGF2YWlsYWJsZSB0byBibG9jayBzY2hl
+ZHVsZXINCj4gbW9kdWxlcyBpbXBsZW1lbnRlZCBvdXRzaWRlIG9mIHRoZSBibG9jayBkaXJlY3Rv
+cnkuDQoNClNhbWUgY29tbWVudCBoZXJlOiBzaG91bGQgdGhlIHRpdGxlIG9mIHRoaXMgcGF0Y2gg
+cGVyaGFwcyBoYXZlIGJlZW4gIk1vdmUNCmRlY2xhcmF0aW9ucyBvZiAuLi4iPw0KDQo+ICsjaWZu
+ZGVmIEJMS19NUV9TQ0hFRF9IDQo+ICsjZGVmaW5lIEJMS19NUV9TQ0hFRF9IDQo+ICsNCj4gKy8q
+DQo+ICsgKiBTY2hlZHVsZXIgaGVscGVyIGZ1bmN0aW9ucy4NCj4gKyAqLw0KPiArdm9pZCBibGtf
+bXFfc2NoZWRfZnJlZV9oY3R4X2RhdGEoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsDQo+ICsJCQkJ
+IHZvaWQgKCpleGl0KShzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqKSk7DQo+ICt2b2lkIGJsa19tcV9z
+Y2hlZF9yZXF1ZXN0X2luc2VydGVkKHN0cnVjdCByZXF1ZXN0ICpycSk7DQo+ICtib29sIGJsa19t
+cV9zY2hlZF90cnlfbWVyZ2Uoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0cnVjdCBiaW8gKmJp
+bywNCj4gKwkJCSAgICBzdHJ1Y3QgcmVxdWVzdCAqKm1lcmdlZF9yZXF1ZXN0KTsNCj4gK2Jvb2wg
+YmxrX21xX3NjaGVkX3RyeV9pbnNlcnRfbWVyZ2Uoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0
+cnVjdCByZXF1ZXN0ICpycSk7DQo+ICsNCj4gKyNlbmRpZg0KDQpQbGVhc2UgbWFrZSBzdXJlIHRo
+YXQgdGhlIG9yZGVyIG9mICNpbmNsdWRlIGRpcmVjdGl2ZXMgZG9lcyBub3QgYWZmZWN0IHRoZQ0K
+Y29tcGlsYXRpb24gcmVzdWx0LCBlLmcuIGJ5IGFkZGluZyBmb3J3YXJkIGRlY2xhcmF0aW9ucyBm
+b3IgdGhlIHN0cnVjdHVyZXMNCnVzZWQgYXMgYXJndW1lbnRzLg0KDQpUaGFua3MsDQoNCkJhcnQu
