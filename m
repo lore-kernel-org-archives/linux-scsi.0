@@ -1,23 +1,26 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: two small bsg fixes, take 3
-Date: Fri, 15 Sep 2017 01:05:44 +0200
-Message-ID: <20170914230544.GA12144@lst.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/2] scsi_transport_fc: fix NULL pointer dereference in fc_bsg_job_timeout
+Date: Thu, 14 Sep 2017 20:40:40 -0400
+Message-ID: <yq1bmmcssjb.fsf@oracle.com>
 References: <20170907115436.5069-1-hch@lst.de>
+        <20170907115436.5069-3-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170907115436.5069-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170907115436.5069-3-hch@lst.de> (Christoph Hellwig's message
+        of "Thu, 7 Sep 2017 13:54:36 +0200")
+Sender: stable-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 07, 2017 at 01:54:34PM +0200, Christoph Hellwig wrote:
-> Now fully away, with my fair share of coffee and lunch:
-> 
-> 
-> Two fixups for the recent bsg-lib fixes, should go into 4.13 stable as
-> well.
 
-Jens, can you look at this for Linux 4.14?
+Christoph,
+
+> bsg-lib now embeddeds the job structure into the request, and
+> req->special can't be used anymore.
+
+Applied to 4.14/scsi-fixes.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
