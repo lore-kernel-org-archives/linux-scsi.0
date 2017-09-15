@@ -1,68 +1,51 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V3 06/12] scsi: sd_zbc: Rearrange code
-Date: Fri, 15 Sep 2017 19:06:39 +0900
-Message-ID: <20170915100645.17999-7-damien.lemoal@wdc.com>
+Subject: [PATCH V3 08/12] scsi: sd_zbc: Fix sd_zbc_read_zoned_characteristics()
+Date: Fri, 15 Sep 2017 19:06:41 +0900
+Message-ID: <20170915100645.17999-9-damien.lemoal@wdc.com>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:33744 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751352AbdIOKIb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 06:08:31 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170915100645.17999-1-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, stable@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Rearrange sd_zbc_setup() to include use_16_for_rw and use_10_for_rw
-assignments and move the calculation of sdkp->zone_shift together
-with the assignment of the verified zone_blocks value in
-sd_zbc_check_zone_size().
+The three values starting at byte 8 of the Zoned Block Device
+Characteristics VPD page B6h are 32 bits values, not 64bits. So use
+get_unaligned_be32() to retrieve the values and not get_unaligned_be64()
 
-No functional change is introduced by this patch.
+Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
+Cc: <stable@vger.kernel.org>
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/sd_zbc.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/sd_zbc.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index fd29717b6eab..081bf5a3b10b 100644
+index 37b33adbb2ef..7e30d0c22930 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -532,6 +532,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+@@ -385,15 +385,15 @@ static int sd_zbc_read_zoned_characteristics(struct scsi_disk *sdkp,
+ 	if (sdkp->device->type != TYPE_ZBC) {
+ 		/* Host-aware */
+ 		sdkp->urswrz = 1;
+-		sdkp->zones_optimal_open = get_unaligned_be64(&buf[8]);
+-		sdkp->zones_optimal_nonseq = get_unaligned_be64(&buf[12]);
++		sdkp->zones_optimal_open = get_unaligned_be32(&buf[8]);
++		sdkp->zones_optimal_nonseq = get_unaligned_be32(&buf[12]);
+ 		sdkp->zones_max_open = 0;
+ 	} else {
+ 		/* Host-managed */
+ 		sdkp->urswrz = buf[4] & 1;
+ 		sdkp->zones_optimal_open = 0;
+ 		sdkp->zones_optimal_nonseq = 0;
+-		sdkp->zones_max_open = get_unaligned_be64(&buf[16]);
++		sdkp->zones_max_open = get_unaligned_be32(&buf[16]);
  	}
  
- 	sdkp->zone_blocks = zone_blocks;
-+	sdkp->zone_shift = ilog2(zone_blocks);
- 
  	return 0;
- }
-@@ -539,10 +540,13 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- static int sd_zbc_setup(struct scsi_disk *sdkp)
- {
- 
-+	/* READ16/WRITE16 is mandatory for ZBC disks */
-+	sdkp->device->use_16_for_rw = 1;
-+	sdkp->device->use_10_for_rw = 0;
-+
- 	/* chunk_sectors indicates the zone size */
- 	blk_queue_chunk_sectors(sdkp->disk->queue,
- 			logical_to_sectors(sdkp->device, sdkp->zone_blocks));
--	sdkp->zone_shift = ilog2(sdkp->zone_blocks);
- 	sdkp->nr_zones = sdkp->capacity >> sdkp->zone_shift;
- 	if (sdkp->capacity & (sdkp->zone_blocks - 1))
- 		sdkp->nr_zones++;
-@@ -605,10 +609,6 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 	if (ret)
- 		goto err;
- 
--	/* READ16/WRITE16 is mandatory for ZBC disks */
--	sdkp->device->use_16_for_rw = 1;
--	sdkp->device->use_10_for_rw = 0;
--
- 	return 0;
- 
- err:
 -- 
 2.13.5
