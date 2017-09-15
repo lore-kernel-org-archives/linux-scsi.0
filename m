@@ -1,33 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: acornscsi: fix build error
-Date: Thu, 14 Sep 2017 21:03:31 -0400
-Message-ID: <yq11sn8srh8.fsf@oracle.com>
-References: <20170911200115.3119398-1-arnd@arndb.de>
+Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
+Date: Thu, 14 Sep 2017 21:07:03 -0400
+Message-ID: <yq1wp50rcqw.fsf@oracle.com>
+References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        <yq1lgmbauxt.fsf@oracle.com>
+        <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
+        <yq1a82gxwqm.fsf@oracle.com>
+        <CA+RiK67f59U5Ss_Z2=veBRODtBSp1-4VTbosLkHkgaxY9XA6hQ@mail.gmail.com>
+        <yq13787w1a3.fsf@oracle.com>
+        <CA+RiK667V9nDEr7RywED2_RoSq97m511HZTpGqPbij9-=vADvQ@mail.gmail.com>
+        <CA+RiK64sJZzTcTHODHj0monB2_0xKAkvjrC79rGv2mNUPO87-A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20170911200115.3119398-1-arnd@arndb.de> (Arnd Bergmann's message
- of "Mon, 11 Sep 2017 22:00:57 +0200")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+RiK64sJZzTcTHODHj0monB2_0xKAkvjrC79rGv2mNUPO87-A@mail.gmail.com>
+        (Suganath Prabu Subramani's message of "Wed, 13 Sep 2017 12:45:06
+        +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arnd,
+Suganath,
 
-> A cleanup patch introduced a fatal typo from inbalanced curly braces:
+> Is there any update on the submitted mpt3sas patches.
 
-Applied to 4.14/scsi-fixes. Thanks!
+We are waiting for you to report back your findings on PRP vs. SGL.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
