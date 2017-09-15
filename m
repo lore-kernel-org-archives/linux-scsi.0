@@ -1,32 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
-Date: Thu, 14 Sep 2017 21:07:03 -0400
-Message-ID: <yq1wp50rcqw.fsf@oracle.com>
-References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-        <yq1lgmbauxt.fsf@oracle.com>
-        <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
-        <yq1a82gxwqm.fsf@oracle.com>
-        <CA+RiK67f59U5Ss_Z2=veBRODtBSp1-4VTbosLkHkgaxY9XA6hQ@mail.gmail.com>
-        <yq13787w1a3.fsf@oracle.com>
-        <CA+RiK667V9nDEr7RywED2_RoSq97m511HZTpGqPbij9-=vADvQ@mail.gmail.com>
-        <CA+RiK64sJZzTcTHODHj0monB2_0xKAkvjrC79rGv2mNUPO87-A@mail.gmail.com>
+Subject: Re: [PATCH] scsi: Remove unnecessary condition in sd_read_block_limits()
+Date: Thu, 14 Sep 2017 21:09:36 -0400
+Message-ID: <yq1shforcmn.fsf@oracle.com>
+References: <1505312986-14777-1-git-send-email-lczerner@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+RiK64sJZzTcTHODHj0monB2_0xKAkvjrC79rGv2mNUPO87-A@mail.gmail.com>
-        (Suganath Prabu Subramani's message of "Wed, 13 Sep 2017 12:45:06
-        +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:29182 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751599AbdIOBJm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2017 21:09:42 -0400
+In-Reply-To: <1505312986-14777-1-git-send-email-lczerner@redhat.com> (Lukas
+        Czerner's message of "Wed, 13 Sep 2017 16:29:46 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-Suganath,
+Lukas,
 
-> Is there any update on the submitted mpt3sas patches.
+> After series of changes around WRITE_SAME and UNMAP setup we ended up
+> with leftover unnecessary condition. Remove it.
 
-We are waiting for you to report back your findings on PRP vs. SGL.
+Yeah, lbprz went away and made it redundant. Applied to
+4.14/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
