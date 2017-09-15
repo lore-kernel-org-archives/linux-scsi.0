@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V3 09/12] scsi: sd_zbc: Initialize device queue zoned structure
-Date: Fri, 15 Sep 2017 19:06:42 +0900
-Message-ID: <20170915100645.17999-10-damien.lemoal@wdc.com>
+Subject: [PATCH V3 10/12] scsi: sd_zbc: Limit zone write locking to sequential zones
+Date: Fri, 15 Sep 2017 19:06:43 +0900
+Message-ID: <20170915100645.17999-11-damien.lemoal@wdc.com>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170915100645.17999-1-damien.lemoal@wdc.com>
@@ -10,175 +10,68 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Allocate and initialize the disk request queue zoned structure on disk
-revalidate. As the bitmap allocation for the seq_zones field of the
-zoned structure is identical to the allocation of the zones write lock
-bitmap, introduce the helper sd_zbc_alloc_zone_bitmap().
-Using this helper, wait for the disk capacity and number of zones to
-stabilize on the second revalidation pass to allocate and initialize
-the bitmaps.
+Zoned block devices have no write constraints for conventional zones.
+So write locking of conventional zones is not necessary and can even
+hurt performance by unnecessarily operating the disk under low queue
+depth. To avoid this, use the disk request queue seq_zones bitmap to
+allow any write to be issued to conventional zones, locking only
+sequential zones.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/sd_zbc.c | 119 +++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 114 insertions(+), 5 deletions(-)
+ drivers/scsi/sd_zbc.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 7e30d0c22930..534e747e8bcf 100644
+index 534e747e8bcf..c32a3a3d9138 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -534,8 +534,103 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	return 0;
- }
- 
-+/*
-+ * Allocate a zone bitmap (one bit per zone).
-+ */
-+static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+
-+	return kzalloc_node(BITS_TO_LONGS(sdkp->nr_zones)
-+			    * sizeof(unsigned long),
-+			    GFP_KERNEL, q->node);
-+}
-+
-+/*
-+ * Initialize the seq_zones bitmap to allow identifying sequential zones.
-+ */
-+static int sd_zbc_setup_seq_zones(struct scsi_disk *sdkp)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+	unsigned long *seq_zones;
-+	sector_t block = 0;
-+	unsigned char *buf;
-+	unsigned char *rec;
-+	unsigned int buf_len;
-+	unsigned int list_length;
-+	unsigned int n = 0;
-+	u8 type, cond;
-+	int ret = -ENOMEM;
-+
-+	seq_zones = sd_zbc_alloc_zone_bitmap(sdkp);
-+	if (!seq_zones)
-+		return -ENOMEM;
-+
-+	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
-+	if (!buf)
-+		goto out;
-+
-+	while (block < sdkp->capacity) {
-+
-+		ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, block);
-+		if (ret)
-+			goto out;
-+
-+		/*
-+		 * Parse reported zone descriptors to find sequiential zones.
-+		 * Since read-only and offline zones cannot be written, do not
-+		 * mark them as sequential in the bitmap.
-+		 */
-+		list_length = get_unaligned_be32(&buf[0]) + 64;
-+		rec = buf + 64;
-+		buf_len = min(list_length, SD_ZBC_BUF_SIZE);
-+		while (rec < buf + buf_len) {
-+			type = rec[0] & 0x0f;
-+			cond = (rec[1] >> 4) & 0xf;
-+			if (type != ZBC_ZONE_TYPE_CONV &&
-+			    cond != ZBC_ZONE_COND_READONLY &&
-+			    cond != ZBC_ZONE_COND_OFFLINE)
-+				set_bit(n, seq_zones);
-+			block = get_unaligned_be64(&rec[8]) +
-+				get_unaligned_be64(&rec[16]);
-+			rec += 64;
-+			n++;
-+		}
-+
-+	}
-+
-+	if (n != sdkp->nr_zones) {
-+		/* Something was wrong */
-+		ret = -EIO;
-+	}
-+
-+out:
-+	kfree(buf);
-+	if (ret) {
-+		kfree(seq_zones);
-+		return ret;
-+	}
-+
-+	q->zoned.seq_zones = seq_zones;
-+
-+	return 0;
-+}
-+
-+static void sd_zbc_cleanup(struct scsi_disk *sdkp)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+
-+	kfree(q->zoned.seq_zones);
-+	q->zoned.seq_zones = NULL;
-+
-+	kfree(sdkp->zones_wlock);
-+	sdkp->zones_wlock = NULL;
-+}
-+
- static int sd_zbc_setup(struct scsi_disk *sdkp)
+@@ -275,6 +275,7 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
+ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
  {
-+	struct request_queue *q = sdkp->disk->queue;
-+	int ret;
+ 	struct request *rq = cmd->request;
++	struct request_queue *q = rq->q;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 	sector_t sector = blk_rq_pos(rq);
+ 	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
+@@ -286,18 +287,20 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
+ 	 */
  
- 	/* READ16/WRITE16 is mandatory for ZBC disks */
- 	sdkp->device->use_16_for_rw = 1;
-@@ -547,14 +642,28 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
- 	sdkp->nr_zones =
- 		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
+ 	/* Do not allow zone boundaries crossing on host-managed drives */
+-	if (blk_queue_zoned_model(sdkp->disk->queue) == BLK_ZONED_HM &&
++	if (blk_queue_zoned_model(q) == BLK_ZONED_HM &&
+ 	    (sector & (zone_sectors - 1)) + blk_rq_sectors(rq) > zone_sectors)
+ 		return BLKPREP_KILL;
  
-+	/*
-+	 * Wait for the disk capacity to stabilize before
-+	 * initializing zone related information.
-+	 */
-+	if (sdkp->first_scan)
-+		return 0;
+ 	/*
+-	 * Do not issue more than one write at a time per
+-	 * zone. This solves write ordering problems due to
+-	 * the unlocking of the request queue in the dispatch
+-	 * path in the non scsi-mq case.
++	 * There is no write constraints on conventional zones. So any write
++	 * command can be sent. But do not issue more than one write command
++	 * at a time per sequential zone. This avoids write ordering problems
++	 * due to the unlocking of the request queue in the dispatch path of
++	 * legacy scsi path, as well as at the HBA level (e.g. AHCI).
+ 	 */
+-	if (sdkp->zones_wlock &&
+-	    test_and_set_bit(zno, sdkp->zones_wlock))
++	if (q->zoned.seq_zones && test_bit(zno, q->zoned.seq_zones))
++		return BLKPREP_OK;
++	if (sdkp->zones_wlock && test_and_set_bit(zno, sdkp->zones_wlock))
+ 		return BLKPREP_DEFER;
+ 
+ 	WARN_ON_ONCE(cmd->flags & SCMD_ZONE_WRITE_LOCK);
+@@ -316,8 +319,9 @@ void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
+ 	struct request *rq = cmd->request;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 
+-	if (sdkp->zones_wlock && cmd->flags & SCMD_ZONE_WRITE_LOCK) {
++	if (cmd->flags & SCMD_ZONE_WRITE_LOCK) {
+ 		unsigned int zno = sd_zbc_zone_no(sdkp, blk_rq_pos(rq));
 +
- 	if (!sdkp->zones_wlock) {
--		sdkp->zones_wlock = kcalloc(BITS_TO_LONGS(sdkp->nr_zones),
--					    sizeof(unsigned long),
--					    GFP_KERNEL);
-+		sdkp->zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
- 		if (!sdkp->zones_wlock)
- 			return -ENOMEM;
- 	}
- 
-+	q->zoned.nr_zones = sdkp->nr_zones;
-+	if (!q->zoned.seq_zones) {
-+		ret = sd_zbc_setup_seq_zones(sdkp);
-+		if (ret) {
-+			sd_zbc_cleanup(sdkp);
-+			return ret;
-+		}
-+	}
-+
- 	return 0;
- }
- 
-@@ -609,14 +718,14 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 
- err:
- 	sdkp->capacity = 0;
-+	sd_zbc_cleanup(sdkp);
- 
- 	return ret;
- }
- 
- void sd_zbc_remove(struct scsi_disk *sdkp)
- {
--	kfree(sdkp->zones_wlock);
--	sdkp->zones_wlock = NULL;
-+	sd_zbc_cleanup(sdkp);
- }
- 
- void sd_zbc_print_zones(struct scsi_disk *sdkp)
+ 		WARN_ON_ONCE(!test_bit(zno, sdkp->zones_wlock));
+ 		cmd->flags &= ~SCMD_ZONE_WRITE_LOCK;
+ 		clear_bit_unlock(zno, sdkp->zones_wlock);
 -- 
 2.13.5
