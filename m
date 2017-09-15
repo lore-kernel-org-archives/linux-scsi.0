@@ -1,88 +1,111 @@
-From: shuwang@redhat.com
-Subject: [PATCH V2] megaraid: kmemleak: Track page allocation for fusion
-Date: Fri, 15 Sep 2017 13:21:52 +0800
-Message-ID: <20170915052152.5032-1-shuwang@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuhu@redhat.com, yizhan@redhat.com, catalin.marinas@arm.com, Shu Wang <shuwang@redhat.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH V3 00/12] scsi-mq support for ZBC disks
+Date: Fri, 15 Sep 2017 19:06:33 +0900
+Message-ID: <20170915100645.17999-1-damien.lemoal@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:23903 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751135AbdIOKHd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 06:07:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-From: Shu Wang <shuwang@redhat.com>
+This series implements support for ZBC disks used through the scsi-mq I/O path.
 
-Kmemleak reports about a thousand false positives for fusion->
-cmd_list[]. Root casue is the cmd_list objects are allocated from
-slab allocator, and stored its pointer in object allocated by page
-allocator. The fix will tell kmemleak to track and scan fusion
-object.
+The current scsi level support of ZBC disks guarantees write request ordering
+using a per-zone write lock which prevents issuing simultaneously multiple
+write commands to a zone, doing so avoid reordering of sequential writes to
+sequential zones. This method is however ineffective when scsi-mq is used with
+zoned block devices. This is due to the different execution model of blk-mq
+which passes a request to the scsi layer for dispatching after the request has
+been removed from the I/O scheduler queue. That is, when the scsi layer tries
+to lock the target zone of the request, the request may already be out of
+order and zone write locking fails to prevent that.
 
-V2:
-Add comment, balance braces, move kmemleak_free before free_pages.
-checkpatch passed.
+Various approaches have been tried to solve this problem. All of them had the
+serious disadvantage of cluttering blk-mq code with zoned block device specific
+conditions and processing. As such extensive changes can only turn into a
+maintenance nightmares, a radically different solution is proposed here.
 
-Before patch:
-kmemleak: 1004 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+This series proposes implementing scsi-mq support for zoned block devices in
+the form of a new "zoned" I/O scheduler based. The zoned I/O scheduler is
+based on mq-deadline, with most of the code reused with no modification other
+than name changes. Zoned only differs from mq-deadline from the addition of a
+per zone write locking mechanism similar to that implemented in sd_zbc.c. The
+zoned scheduler zone write locking mechanism is used for the exact same purpose
+as the one in the scsi disk driver, that is, to limit writes per zone to at
+most one request to avoid reordering. The locking context however changes from
+that of scsi-mq and is moved to the dispatch_request method of the scheduler.
+Within this context, under a spin lock guaranteeing atomicity against other
+dispatch contexts, target zones of write requests can be locked before write
+requests removal from the scheduler. In effect, this results in the same
+behavior as the legacy scsi path. Sequential write ordering is preserved.
 
-unreferenced object 0xffff88042584e000 (size 8192):
-  backtrace:
-     kmemleak_alloc+0x4a/0xa0
-     __kmalloc+0xec/0x220
-     megasas_alloc_cmdlist_fusion+0x3e/0x140 [megaraid_sas]
-     megasas_alloc_cmds_fusion+0x44/0x450 [megaraid_sas]
-     megasas_init_adapter_fusion+0x21d/0x6e0 [megaraid_sas]
-     megasas_init_fw+0x357/0xd30 [megaraid_sas]
-     megasas_probe_one.part.34+0x5be/0x1040 [megaraid_sas]
-     megasas_probe_one+0x46/0xc0 [megaraid_sas]
-     local_pci_probe+0x45/0xa0
-     work_for_cpu_fn+0x14/0x20
-     process_one_work+0x149/0x360
-     worker_thread+0x1d8/0x3c0
-     kthread+0x109/0x140
-     ret_from_fork+0x25/0x30
+The zoned scheduler is also optimized to not lock conventional zones. To do so,
+the new data structure blk_zoned is added to the request queue structure so
+that the low level scsi code can pass information such as number of zones and
+zone types to the block layer scheduler. This avoids difficulties in accessing
+this information from the I/O scheduler initialization method (init_queue()
+method) context.
 
-Signed-off-by: Shu Wang <shuwang@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+The series patches are as follows:
+- The first 2 patches fix exported symbols declaration to allow compiling
+  external I/O schedulers as modules. No functional changes are introduced.
+- Patch 3 introduces the new blk_zoned data structure added to request queues
+- Pathes 4 to 7 reorganize and cleanup the scsi ZBC support
+- Path 8 is a bug fix
+- Path 9 implements the initialization of the blk_zoned structure for zoned
+  block devices
+- Patch 10 is an optimization for the legacy scsi path which avoids zone
+  locking if a write request targets a conventional zone. 
+- Path 11 disables zone write locking for disks accessed through scsi-mq.
+- Patch 12 introduces the new zoned blk-mq I/O scheduler.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 11bd2e698b84..161b8e5518c0 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -48,6 +48,7 @@
- #include <linux/mutex.h>
- #include <linux/poll.h>
- #include <linux/vmalloc.h>
-+#include <linux/kmemleak.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -4512,6 +4513,13 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
- 			dev_err(&instance->pdev->dev, "Failed from %s %d\n", __func__, __LINE__);
- 			return -ENOMEM;
- 		}
-+	} else {
-+		/*
-+		 * Allow kmemleak to scan these pages as they contain pointers
-+		 * to additional allocations. fusion->cmd_list[].
-+		 */
-+		kmemleak_alloc(instance->ctrl_context,
-+			sizeof(struct fusion_context), 1, GFP_KERNEL);
- 	}
- 
- 	fusion = instance->ctrl_context;
-@@ -4548,9 +4556,11 @@ megasas_free_fusion_context(struct megasas_instance *instance)
- 
- 		if (is_vmalloc_addr(fusion))
- 			vfree(fusion);
--		else
-+		else {
-+			kmemleak_free(fusion);
- 			free_pages((ulong)fusion,
- 				instance->ctrl_context_pages);
-+		}
- 	}
- }
- 
+Comments are as always very much appreciated.
+
+Changes from v2:
+* Introduced blk_zoned structure
+* Moved I/O scheduler from drivers/scsi to block 
+
+Changes from v1:
+* Addressed Bart's comments for the blk-mq patches (declarations files)
+* Split (former) patch 4 into multiple patches to facilitate review
+* Fixed scsi disk lookup from io scheduler by introducing
+  scsi_disk_from_queue()
+
+Damien Le Moal (12):
+  block: Fix declaration of blk-mq debugfs functions
+  block: Fix declaration of blk-mq scheduler functions
+  block: Add zoned block device information to request queue
+  scsi: sd_zbc: Move ZBC declarations to scsi_proto.h
+  scsi: sd_zbc: Fix comments and indentation
+  scsi: sd_zbc: Rearrange code
+  scsi: sd_zbc: Use well defined macros
+  scsi: sd_zbc: Fix sd_zbc_read_zoned_characteristics()
+  scsi: sd_zbc: Initialize device queue zoned structure
+  scsi: sd_zbc: Limit zone write locking to sequential zones
+  scsi: sd_zbc: Disable zone write locking with scsi-mq
+  block: Introduce zoned I/O scheduler
+
+ Documentation/block/zoned-iosched.txt |  48 ++
+ block/Kconfig.iosched                 |  12 +
+ block/Makefile                        |   1 +
+ block/blk-mq-debugfs.h                |  14 +-
+ block/blk-mq-sched.h                  |  11 +-
+ block/zoned-iosched.c                 | 925 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_lib.c               |   5 +-
+ drivers/scsi/sd_zbc.c                 | 267 +++++++---
+ include/linux/blk-mq-debugfs.h        |  23 +
+ include/linux/blk-mq-sched.h          |  14 +
+ include/linux/blkdev.h                |  24 +
+ include/scsi/scsi_proto.h             |  45 +-
+ 12 files changed, 1283 insertions(+), 106 deletions(-)
+ create mode 100644 Documentation/block/zoned-iosched.txt
+ create mode 100644 block/zoned-iosched.c
+ create mode 100644 include/linux/blk-mq-debugfs.h
+ create mode 100644 include/linux/blk-mq-sched.h
+
 -- 
 2.13.5
