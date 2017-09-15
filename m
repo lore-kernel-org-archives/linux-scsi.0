@@ -1,32 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] sg: fixup infoleak when using SG_GET_REQUEST_TABLE
-Date: Fri, 15 Sep 2017 15:24:48 -0400
-Message-ID: <yq1lglfpxxb.fsf@oracle.com>
-References: <1505477116-75013-1-git-send-email-hare@suse.de>
-        <1505477116-75013-3-git-send-email-hare@suse.de>
+Subject: Re: [PATCH V2 0/9] pm80xx updates
+Date: Fri, 15 Sep 2017 15:35:40 -0400
+Message-ID: <yq1d16rpxf7.fsf@oracle.com>
+References: <20150217233650.9091-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31574 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751612AbdIOTZb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 15:25:31 -0400
-In-Reply-To: <1505477116-75013-3-git-send-email-hare@suse.de> (Hannes
-        Reinecke's message of "Fri, 15 Sep 2017 14:05:16 +0200")
+Received: from aserp1040.oracle.com ([141.146.126.69]:18659 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751388AbdIOTfw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 15:35:52 -0400
+In-Reply-To: <20150217233650.9091-1-Viswas.G@microsemi.com> (Viswas G.'s
+        message of "Wed, 18 Feb 2015 05:06:41 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Alexander Potapenko <glider@google.com>, Ingo Molnar <mingo@redhat.com>, Dmitry Vyukov <dvyukov@google.com>, security@kernel.org, Hannes Reinecke <hare@suse.com>
+To: Viswas G <Viswas.G@microsemi.com>
+Cc: linux-scsi@vger.kernel.org, Vasanthalakshmi.Tharmarajan@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
 
-Hannes,
+Viswas,
 
-> When calling SG_GET_REQUEST_TABLE ioctl that only a half-filled table
-> is returned; the remaining part will then contain stale kernel memory
-> information.  This patch zeroes out the entire table to avoid this
-> issue.
+> This patch set include some bug fixes and enhancement for pm80xx
+> driver.
 
-Applied to 4.14/scsi-fixes. Thank you!
+You are still sending mail from 2015. Please fix your system
+time. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
