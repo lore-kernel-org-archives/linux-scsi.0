@@ -1,27 +1,33 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V2] megaraid: kmemleak: Track page allocation for fusion
-Date: Fri, 15 Sep 2017 16:16:57 +0000
-Message-ID: <1505492215.3420.1.camel@wdc.com>
-References: <20170915052152.5032-1-shuwang@redhat.com>
+Subject: Re: [PATCH V3 10/12] scsi: sd_zbc: Limit zone write locking to
+ sequential zones
+Date: Fri, 15 Sep 2017 16:23:49 +0000
+Message-ID: <1505492627.3420.5.camel@wdc.com>
+References: <20170915100645.17999-1-damien.lemoal@wdc.com>
+         <20170915100645.17999-11-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170915052152.5032-1-shuwang@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170915100645.17999-11-damien.lemoal@wdc.com>
 Content-Language: en-US
-Content-ID: <A82C8C885126F04D979A4C35F8954CDB@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "shuwang@redhat.com" <shuwang@redhat.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "shivasharan.srikanteshwara@broadcom.com" <shivasharan.srikanteshwara@broadcom.com>, "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "chuhu@redhat.com" <chuhu@redhat.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "yizhan@redhat.com" <yizhan@redhat.com>, "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>
+Content-ID: <46F1012DC20E9F49B9135A0CF104C98B@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE3LTA5LTE1IGF0IDEzOjIxICswODAwLCBzaHV3YW5nQHJlZGhhdC5jb20gd3Jv
-dGU6DQo+IEBAIC00NTQ4LDkgKzQ1NTYsMTEgQEAgbWVnYXNhc19mcmVlX2Z1c2lvbl9jb250ZXh0
-KHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSkNCj4gIA0KPiAgCQlpZiAoaXNfdm1h
-bGxvY19hZGRyKGZ1c2lvbikpDQo+ICAJCQl2ZnJlZShmdXNpb24pOw0KPiAtCQllbHNlDQo+ICsJ
-CWVsc2Ugew0KPiArCQkJa21lbWxlYWtfZnJlZShmdXNpb24pOw0KPiAgCQkJZnJlZV9wYWdlcygo
-dWxvbmcpZnVzaW9uLA0KPiAgCQkJCWluc3RhbmNlLT5jdHJsX2NvbnRleHRfcGFnZXMpOw0KPiAr
-CQl9DQo+ICAJfQ0KDQpCcmFjZXMgYXJlIHN0aWxsIG5vdCBiYWxhbmNlZCBpbiB0aGUgYWJvdmUg
-Y29kZS4gVGhpcyBpcyBzb21ldGhpbmcNCmNoZWNrcGF0Y2ggc2hvdWxkIGhhdmUgdG9sZCB5b3Uu
-IEFueXdheToNCg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVA
-d2RjLmNvbT4NCg==
+T24gRnJpLCAyMDE3LTA5LTE1IGF0IDE5OjA2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gKwkgKiBUaGVyZSBpcyBubyB3cml0ZSBjb25zdHJhaW50cyBvbiBjb252ZW50aW9uYWwgem9u
+ZXMuIFNvIGFueSB3cml0ZQ0KICAgICAgICAgICBeXl5eXl5eXl5eXg0KU2hvdWxkIHRoaXMgaGF2
+ZSBiZWVuICJUaGVyZSBhcmUgbm8iPw0KDQo+IC0JaWYgKHNka3AtPnpvbmVzX3dsb2NrICYmDQo+
+IC0JICAgIHRlc3RfYW5kX3NldF9iaXQoem5vLCBzZGtwLT56b25lc193bG9jaykpDQo+ICsJaWYg
+KHEtPnpvbmVkLnNlcV96b25lcyAmJiB0ZXN0X2JpdCh6bm8sIHEtPnpvbmVkLnNlcV96b25lcykp
+DQo+ICsJCXJldHVybiBCTEtQUkVQX09LOw0KPiArCWlmIChzZGtwLT56b25lc193bG9jayAmJiB0
+ZXN0X2FuZF9zZXRfYml0KHpubywgc2RrcC0+em9uZXNfd2xvY2spKQ0KPiAgCQlyZXR1cm4gQkxL
+UFJFUF9ERUZFUjsNCg0KUGxlYXNlIGludHJvZHVjZSBoZWxwZXIgZnVuY3Rpb25zIGluIGluY2x1
+ZGUvbGludXgvYmxrZGV2Lmggb3IgaW4gYSBuZXcNCmhlYWRlciBmaWxlIGZvciB2ZXJpZnlpbmcg
+d2hldGhlciBvciBub3QgYSB6b25lIGlzIGEgc2VxdWVudGlhbCB6b25lIGFuZCBhbHNvDQpmb3Ig
+bG9ja2luZyBhIHpvbmUgZm9yIHdyaXRlcy4gSSBleHBlY3QgdGhhdCB0aGF0IHdpbGwgbWFrZSB0
+aGUgYWJvdmUgY29kZQ0Kc2lnbmlmaWNhbnRseSBlYXNpZXIgdG8gcmVhZC4NCg0KVGhhbmtzLA0K
+DQpCYXJ0Lg==
