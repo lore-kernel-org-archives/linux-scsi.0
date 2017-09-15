@@ -1,52 +1,54 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND] lpfc: Don't return internal MBXERR_ERROR code from probe function
-Date: Thu, 14 Sep 2017 21:19:29 -0400
-Message-ID: <yq1k210rc66.fsf@oracle.com>
-References: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
-        <20170906110256.4445e353@elisabeth>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31572 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751812AbdIOBTn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2017 21:19:43 -0400
-In-Reply-To: <20170906110256.4445e353@elisabeth> (Stefano Brivio's message of
-        "Wed, 6 Sep 2017 11:02:56 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Huacai Chen <chenhc@lemote.com>
+Subject: [PATCH V4 3/3] scsi: Align queue to ARCH_DMA_MINALIGN in non-coherent DMA mode
+Date: Fri, 15 Sep 2017 11:02:49 +0800
+Message-ID: <1505444569-21379-1-git-send-email-chenhc@lemote.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Huacai Chen <chenhc@lemote.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefano Brivio <sbrivio@redhat.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, QLogic-Storage-Upstream@cavium.com, Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
+In non-coherent DMA mode, kernel uses cache flushing operations to
+maintain I/O coherency, so scsi's block queue should be aligned to
+ARCH_DMA_MINALIGN. Otherwise, it will cause data corruption, at least
+on MIPS:
 
-James/Dick,
+        Step 1, dma_map_single
+        Step 2, cache_invalidate (no writeback)
+        Step 3, dma_from_device
+        Step 4, dma_unmap_single
 
-Please review!
+If a DMA buffer and a kernel structure share a same cache line, and if
+the kernel structure has dirty data, cache_invalidate (no writeback)
+will cause data lost.
 
-> Internal error codes happen to be positive, thus the PCI driver
-> core won't treat them as failure, but we do. This would cause a
-> crash later on as lpfc_pci_remove_one() is called (e.g. as
-> shutdown function).
->
-> Fixes: 6d368e532168 ("[SCSI] lpfc 8.3.24: Add resource extent support")
-> Signed-off-by: Stefano Brivio <sbrivio@redhat.com>
-> ---
-> This seems to have been ignored. Re-sending as suggested by Johannes.
->
->  drivers/scsi/lpfc/lpfc_init.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 491aa95eb0f6..38cc2b5bb5a2 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -6118,6 +6118,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
->  				"Extents and RPI headers enabled.\n");
->  		}
->  		mempool_free(mboxq, phba->mbox_mem_pool);
-> +		rc = -EIO;
->  		goto out_free_bsmbx;
->  	}
+Cc: stable@vger.kernel.org
+Signed-off-by: Huacai Chen <chenhc@lemote.com>
+---
+ drivers/scsi/scsi_lib.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9cf6a80..79433ad 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2132,11 +2132,14 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 		q->limits.cluster = 0;
+ 
+ 	/*
+-	 * set a reasonable default alignment on word boundaries: the
+-	 * host and device may alter it using
++	 * set a reasonable default alignment on word/cacheline boundaries:
++	 * the host and device may alter it using
+ 	 * blk_queue_update_dma_alignment() later.
+ 	 */
+-	blk_queue_dma_alignment(q, 0x03);
++	if (plat_device_is_coherent(dev))
++		blk_queue_dma_alignment(q, 0x04 - 1);
++	else
++		blk_queue_dma_alignment(q, dma_get_cache_alignment() - 1);
+ }
+ EXPORT_SYMBOL_GPL(__scsi_init_queue);
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.0
