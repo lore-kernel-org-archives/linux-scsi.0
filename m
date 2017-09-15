@@ -1,54 +1,41 @@
 From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH V3 06/12] scsi: sd_zbc: Rearrange code
-Date: Sat, 16 Sep 2017 07:35:36 +0900
-Message-ID: <4f51ccc7-1239-9505-564c-ec2c97cc626a@wdc.com>
+Subject: Re: [PATCH V3 01/12] block: Fix declaration of blk-mq debugfs
+ functions
+Date: Sat, 16 Sep 2017 07:36:52 +0900
+Message-ID: <fcb88792-aad1-75f0-c936-a539c7f4ac12@wdc.com>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
- <20170915100645.17999-7-damien.lemoal@wdc.com>
- <1505487062.2852.12.camel@wdc.com> <20170915175117.GG8578@lst.de>
- <1505509340.2417.18.camel@wdc.com>
+ <20170915100645.17999-2-damien.lemoal@wdc.com> <20170915174552.GB8578@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:9782 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751211AbdIOWg6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 18:36:58 -0400
-In-Reply-To: <1505509340.2417.18.camel@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170915174552.GB8578@lst.de>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@lst.de" <hch@lst.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-On 9/16/17 06:02, Bart Van Assche wrote:
-> On Fri, 2017-09-15 at 19:51 +0200, hch@lst.de wrote:
->> On Fri, Sep 15, 2017 at 02:51:03PM +0000, Bart Van Assche wrote:
->>> On Fri, 2017-09-15 at 19:06 +0900, Damien Le Moal wrote:
->>>> Rearrange sd_zbc_setup() to include use_16_for_rw and use_10_for_rw
->>>> assignments and move the calculation of sdkp->zone_shift together
->>>> with the assignment of the verified zone_blocks value in
->>>> sd_zbc_check_zone_size().
->>>
->>> Both functions are called from inside block_device_operations.revalidate_disk.
->>> Isn't that too late to set use_1[06]_for_rw? Shouldn't both be set just after
->>> the slave_alloc callback has been called?
+On 9/16/17 02:45, Christoph Hellwig wrote:
+> On Fri, Sep 15, 2017 at 07:06:34PM +0900, Damien Le Moal wrote:
+>> __blk_mq_debugfs_rq_show() and blk_mq_debugfs_rq_show() are exported
+>> symbols but ar eonly declared in the block internal file
+>> block/blk-mq-debugfs.h. which is not cleanly accessible to files outside
+>> of the block directory.
+>> Move the declaration of these functions to the new file
+>> include/linux/blk-mq-debugfs.h file to make the declarations cleanly
+>> available to other modules.
 >>
->> Hmm.  sd_read_capacity already is called from the same path and seems
->> to work..
+>> While at it, also move the definition of the blk_mq_debugfs_attr
+>> structure to allow scheduler modules outside of the block directory to
+>> define debugfs attributes.
 > 
-> Hello Christoph,
-> 
-> My concern is that if both a SCSI LLD and the ZBC code set use_1[06]_for_rw
-> that these settings may conflict. Should the ZBC code e.g. refuse that the sd
-> driver is attached to a ZBC disk controlled by a SCSI LLD that supports
-> use_10_for_rw but not use_16_for_rw?
+> I think we should keep them local to block/ where all I/O schedulers
+> live, so: NAK.
 
-rw16 is mandatory for ZBC drives. So it has to be set to true. If the
-HBA does not support rw16 (why would that happen ?), then the disk
-should not be used.
+OK. I will drop this one and 02/12.
 
-Cheers.
+Thanks.
 
 -- 
 Damien Le Moal
