@@ -1,41 +1,51 @@
 From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH V3 01/12] block: Fix declaration of blk-mq debugfs
- functions
-Date: Sat, 16 Sep 2017 07:36:52 +0900
-Message-ID: <fcb88792-aad1-75f0-c936-a539c7f4ac12@wdc.com>
+Subject: Re: [PATCH V3 05/12] scsi: sd_zbc: Fix comments and indentation
+Date: Sat, 16 Sep 2017 07:48:44 +0900
+Message-ID: <e1d986ca-80f9-725f-5b51-b788f52c582b@wdc.com>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
- <20170915100645.17999-2-damien.lemoal@wdc.com> <20170915174552.GB8578@lst.de>
+ <20170915100645.17999-6-damien.lemoal@wdc.com>
+ <fc5f811e-423a-3cf9-4f96-63acae37264d@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170915174552.GB8578@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:49692 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750871AbdIOWth (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 18:49:37 -0400
+In-Reply-To: <fc5f811e-423a-3cf9-4f96-63acae37264d@suse.de>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-On 9/16/17 02:45, Christoph Hellwig wrote:
-> On Fri, Sep 15, 2017 at 07:06:34PM +0900, Damien Le Moal wrote:
->> __blk_mq_debugfs_rq_show() and blk_mq_debugfs_rq_show() are exported
->> symbols but ar eonly declared in the block internal file
->> block/blk-mq-debugfs.h. which is not cleanly accessible to files outside
->> of the block directory.
->> Move the declaration of these functions to the new file
->> include/linux/blk-mq-debugfs.h file to make the declarations cleanly
->> available to other modules.
+On 9/15/17 19:44, Hannes Reinecke wrote:
+> On 09/15/2017 12:06 PM, Damien Le Moal wrote:
+>> Fix comments style (do not use documented comment style) and add some
+>> comments to clarify some functions. Also fix some functions signature
+>> indentation and remove a useless blank line in sd_zbc_read_zones().
 >>
->> While at it, also move the definition of the blk_mq_debugfs_attr
->> structure to allow scheduler modules outside of the block directory to
->> define debugfs attributes.
-> 
-> I think we should keep them local to block/ where all I/O schedulers
-> live, so: NAK.
+>> No functional change is introduced by this patch.
+>>
+>> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+>> ---
+>>  drivers/scsi/scsi_lib.c |  5 +++-
+>>  drivers/scsi/sd_zbc.c   | 67 ++++++++++++++++++++++++++++++++++++-------------
+>>  2 files changed, 53 insertions(+), 19 deletions(-)
+>>
+> Actually you should've used kernel-doc style to format the comments;
+> just to keep the 0-day bot happy....
 
-OK. I will drop this one and 02/12.
+I thought that comments to functions with the kernel-doc format was only
+if you want the function to be documented. That generally includes at
+least all the exported functions.
+In this case, the functions are mostly local to sd_zbc.c... I thought
+the documentation of those was not very useful.
 
-Thanks.
+I can revert though. No problem at all.
+
+Thanks !
 
 -- 
 Damien Le Moal
