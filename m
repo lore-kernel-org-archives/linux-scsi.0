@@ -1,40 +1,101 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 0/3] fcoe: fixup device_del() inversion
-Date: Fri, 15 Sep 2017 13:12:11 +0200
-Message-ID: <1505473934-123915-1-git-send-email-hare@suse.de>
+Subject: [PATCH 3/3] fcoe: open-code fcoe_destroy_work() for NETDEV_UNREGISTER
+Date: Fri, 15 Sep 2017 13:12:14 +0200
+Message-ID: <1505473934-123915-4-git-send-email-hare@suse.de>
+References: <1505473934-123915-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43539 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43541 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751213AbdIOLMX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751229AbdIOLMX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 15 Sep 2017 07:12:23 -0400
+In-Reply-To: <1505473934-123915-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi all,
+When a NETDEV_UNREGISTER notification is received the network
+device is _deleted_ after the callback returns.
+So we cannot use a workqueue here, as this would cause an
+inversion when removing the device as the netdev is already gone.
+This manifests with a nasty warning during shutdown:
 
-when shutting down an FCoE target system one is greeted with a flood
-of kernel warnings about
+sysfs group ffffffff81eff0e0 not found for kobject 'fc_host7'
 
-sysfs group ffffffff81eff0e0 not found for kobject 'XXX'
+So open-code fcoe_destroy_work() when receiving the notification
+to avoid this inversion.
 
-Reason here is that the fcoe driver tries to remove devices from
-a workqueue, but the NETDEV_UNREGISTER notification expects any
-calls to be synchronous as it will tear down the device once
-the notifications return.
-With this patch device removals are done synchronously, so the
-correct ordering is respected and the warnings are gone.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
+---
+ drivers/scsi/fcoe/fcoe.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-As usual, comments and reviews are welcome.
-
-Hannes Reinecke (3):
-  fcoe: move fcoe_interface_remove() out of fcoe_interface_cleanup()
-  fcoe: separate out fcoe_vport_remove()
-  fcoe: open-code fcoe_destroy_work() for NETDEV_UNREGISTER
-
- drivers/scsi/fcoe/fcoe.c | 81 ++++++++++++++++++++++++++++++------------------
- 1 file changed, 51 insertions(+), 30 deletions(-)
-
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 617348f..77adced 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1009,6 +1009,8 @@ static inline int fcoe_em_config(struct fc_lport *lport)
+  * fcoe_if_destroy() - Tear down a SW FCoE instance
+  * @lport: The local port to be destroyed
+  *
++ * Locking: Must be called with the RTNL mutex held.
++ *
+  */
+ static void fcoe_if_destroy(struct fc_lport *lport)
+ {
+@@ -1030,14 +1032,12 @@ static void fcoe_if_destroy(struct fc_lport *lport)
+ 	/* Free existing transmit skbs */
+ 	fcoe_clean_pending_queue(lport);
+ 
+-	rtnl_lock();
+ 	if (!is_zero_ether_addr(port->data_src_addr))
+ 		dev_uc_del(netdev, port->data_src_addr);
+ 	if (lport->vport)
+ 		synchronize_net();
+ 	else
+ 		fcoe_interface_remove(fcoe);
+-	rtnl_unlock();
+ 
+ 	/* Free queued packets for the per-CPU receive threads */
+ 	fcoe_percpu_clean(lport);
+@@ -1898,7 +1898,14 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 	case NETDEV_UNREGISTER:
+ 		list_del(&fcoe->list);
+ 		port = lport_priv(ctlr->lp);
+-		queue_work(fcoe_wq, &port->destroy_work);
++		fcoe_vport_remove(lport);
++		mutex_lock(&fcoe_config_mutex);
++		fcoe_if_destroy(lport);
++		if (!fcoe->removed)
++			fcoe_interface_remove(fcoe);
++		fcoe_interface_cleanup(fcoe);
++		mutex_unlock(&fcoe_config_mutex);
++		fcoe_ctlr_device_delete(fcoe_ctlr_to_ctlr_dev(ctlr));
+ 		goto out;
+ 		break;
+ 	case NETDEV_FEAT_CHANGE:
+@@ -2114,9 +2121,8 @@ static void fcoe_destroy_work(struct work_struct *work)
+ 	ctlr = fcoe_to_ctlr(fcoe);
+ 	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
+ 
+-	fcoe_if_destroy(port->lport);
+-
+ 	rtnl_lock();
++	fcoe_if_destroy(port->lport);
+ 	if (!fcoe->removed)
+ 		fcoe_interface_remove(fcoe);
+ 	rtnl_unlock();
+@@ -2720,7 +2726,9 @@ static int fcoe_vport_destroy(struct fc_vport *vport)
+ 	mutex_unlock(&n_port->lp_mutex);
+ 
+ 	mutex_lock(&fcoe_config_mutex);
++	rtnl_lock();
+ 	fcoe_if_destroy(vn_port);
++	rtnl_unlock();
+ 	mutex_unlock(&fcoe_config_mutex);
+ 
+ 	return 0;
 -- 
 1.8.5.6
