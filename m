@@ -1,26 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] scsi_transport_fc: fix NULL pointer dereference in fc_bsg_job_timeout
-Date: Thu, 14 Sep 2017 20:40:40 -0400
-Message-ID: <yq1bmmcssjb.fsf@oracle.com>
-References: <20170907115436.5069-1-hch@lst.de>
-        <20170907115436.5069-3-hch@lst.de>
+Subject: Re: [PATCH] aacraid: Fix 2T+ drives on SmartIOC-2000
+Date: Thu, 14 Sep 2017 20:57:48 -0400
+Message-ID: <yq17ex0srqr.fsf@oracle.com>
+References: <20170830222241.1560-1-david.carroll@microsemi.com>
+        <4D8E82A446BF54499747901DBDEB737A8D5A70EE@avsrvexchmbx2.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170907115436.5069-3-hch@lst.de> (Christoph Hellwig's message
-        of "Thu, 7 Sep 2017 13:54:36 +0200")
+In-Reply-To: <4D8E82A446BF54499747901DBDEB737A8D5A70EE@avsrvexchmbx2.microsemi.net>
+        (Raghava Aditya Renukunta's message of "Fri, 8 Sep 2017 20:50:54
+        +0000")
 Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+To: Dave Carroll <david.carroll@microsemi.com>
+Cc: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Brian King <brking@linux.vnet.ibm.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Christoph,
+Dave,
 
-> bsg-lib now embeddeds the job structure into the request, and
-> req->special can't be used anymore.
+Not sure what happened. I do not have the original patch submission that
+Raghava replied to. Nor does patchwork or marc.info.
 
-Applied to 4.14/scsi-fixes.
+Please resubmit. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
