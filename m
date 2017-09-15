@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V3 01/12] block: Fix declaration of blk-mq debugfs functions
-Date: Fri, 15 Sep 2017 19:06:34 +0900
-Message-ID: <20170915100645.17999-2-damien.lemoal@wdc.com>
+Subject: [PATCH V3 03/12] block: Add zoned block device information to request queue
+Date: Fri, 15 Sep 2017 19:06:36 +0900
+Message-ID: <20170915100645.17999-4-damien.lemoal@wdc.com>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170915100645.17999-1-damien.lemoal@wdc.com>
@@ -10,79 +10,76 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-__blk_mq_debugfs_rq_show() and blk_mq_debugfs_rq_show() are exported
-symbols but ar eonly declared in the block internal file
-block/blk-mq-debugfs.h. which is not cleanly accessible to files outside
-of the block directory.
-Move the declaration of these functions to the new file
-include/linux/blk-mq-debugfs.h file to make the declarations cleanly
-available to other modules.
+Components relying only on the requeuest_queue structure for managing
+and controlling block devices (e.g. I/O schedulers) have a limited
+view/knowledged of the device being controlled. For instance, the device
+capacity cannot be known easily, which for a zoned block device also
+result in the inability to know the number of zones of the device.
 
-While at it, also move the definition of the blk_mq_debugfs_attr
-structure to allow scheduler modules outside of the block directory to
-define debugfs attributes.
+Define the structure blk_zoned and include it as the zoned field of a
+request queue to allow low level drivers to provide more information
+on the device.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- block/blk-mq-debugfs.h         | 14 +-------------
- include/linux/blk-mq-debugfs.h | 23 +++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 13 deletions(-)
- create mode 100644 include/linux/blk-mq-debugfs.h
+ include/linux/blkdev.h | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/block/blk-mq-debugfs.h b/block/blk-mq-debugfs.h
-index a182e6f97565..4ffeae84b83a 100644
---- a/block/blk-mq-debugfs.h
-+++ b/block/blk-mq-debugfs.h
-@@ -3,19 +3,7 @@
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 460294bb0fa5..297e0a2fee31 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -349,6 +349,11 @@ struct queue_limits {
  
- #ifdef CONFIG_BLK_DEBUG_FS
+ #ifdef CONFIG_BLK_DEV_ZONED
  
--#include <linux/seq_file.h>
--
--struct blk_mq_debugfs_attr {
--	const char *name;
--	umode_t mode;
--	int (*show)(void *, struct seq_file *);
--	ssize_t (*write)(void *, const char __user *, size_t, loff_t *);
--	/* Set either .show or .seq_ops. */
--	const struct seq_operations *seq_ops;
--};
--
--int __blk_mq_debugfs_rq_show(struct seq_file *m, struct request *rq);
--int blk_mq_debugfs_rq_show(struct seq_file *m, void *v);
-+#include <linux/blk-mq-debugfs.h>
- 
- int blk_mq_debugfs_register(struct request_queue *q);
- void blk_mq_debugfs_unregister(struct request_queue *q);
-diff --git a/include/linux/blk-mq-debugfs.h b/include/linux/blk-mq-debugfs.h
-new file mode 100644
-index 000000000000..211537f61dce
---- /dev/null
-+++ b/include/linux/blk-mq-debugfs.h
-@@ -0,0 +1,23 @@
-+#ifndef BLK_MQ_DEBUGFS_H
-+#define BLK_MQ_DEBUGFS_H
-+
-+#ifdef CONFIG_BLK_DEBUG_FS
-+
-+#include <linux/blkdev.h>
-+#include <linux/seq_file.h>
-+
-+struct blk_mq_debugfs_attr {
-+	const char *name;
-+	umode_t mode;
-+	int (*show)(void *, struct seq_file *);
-+	ssize_t (*write)(void *, const char __user *, size_t, loff_t *);
-+	/* Set either .show or .seq_ops. */
-+	const struct seq_operations *seq_ops;
++struct blk_zoned {
++	unsigned int	nr_zones;
++	unsigned long	*seq_zones;
 +};
 +
-+int __blk_mq_debugfs_rq_show(struct seq_file *m, struct request *rq);
-+int blk_mq_debugfs_rq_show(struct seq_file *m, void *v);
-+
+ struct blk_zone_report_hdr {
+ 	unsigned int	nr_zones;
+ 	u8		padding[60];
+@@ -492,6 +497,10 @@ struct request_queue {
+ 	struct blk_integrity integrity;
+ #endif	/* CONFIG_BLK_DEV_INTEGRITY */
+ 
++#ifdef CONFIG_BLK_DEV_ZONED
++	struct blk_zoned	zoned;
 +#endif
 +
-+#endif
+ #ifdef CONFIG_PM
+ 	struct device		*dev;
+ 	int			rpm_status;
+@@ -785,6 +794,11 @@ static inline unsigned int blk_queue_zone_sectors(struct request_queue *q)
+ 	return blk_queue_is_zoned(q) ? q->limits.chunk_sectors : 0;
+ }
+ 
++static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
++{
++	return blk_queue_is_zoned(q) ? q->zoned.nr_zones : 0;
++}
++
+ static inline bool rq_is_sync(struct request *rq)
+ {
+ 	return op_is_sync(rq->cmd_flags);
+@@ -1582,6 +1596,16 @@ static inline unsigned int bdev_zone_sectors(struct block_device *bdev)
+ 	return 0;
+ }
+ 
++static inline unsigned int bdev_nr_zones(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (q)
++		return blk_queue_nr_zones(q);
++
++	return 0;
++}
++
+ static inline int queue_dma_alignment(struct request_queue *q)
+ {
+ 	return q ? q->dma_alignment : 511;
 -- 
 2.13.5
