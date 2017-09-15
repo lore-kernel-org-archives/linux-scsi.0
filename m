@@ -1,41 +1,35 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V3 02/12] block: Fix declaration of blk-mq scheduler
- functions
-Date: Fri, 15 Sep 2017 14:35:54 +0000
-Message-ID: <1505486153.2852.6.camel@wdc.com>
+Subject: Re: [PATCH V3 03/12] block: Add zoned block device information to
+ request queue
+Date: Fri, 15 Sep 2017 14:38:56 +0000
+Message-ID: <1505486334.2852.8.camel@wdc.com>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
-         <20170915100645.17999-3-damien.lemoal@wdc.com>
+         <20170915100645.17999-4-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170915100645.17999-3-damien.lemoal@wdc.com>
+In-Reply-To: <20170915100645.17999-4-damien.lemoal@wdc.com>
 Content-Language: en-US
-Content-ID: <EC32C957BC428A47BA1F9EFDC6A57154@namprd04.prod.outlook.com>
+Content-ID: <94574B3ACA6EEE4CA39480AF40B3D5E0@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
 T24gRnJpLCAyMDE3LTA5LTE1IGF0IDE5OjA2ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gVGhlIGZ1bmN0aW9ucyBibGtfbXFfc2NoZWRfZnJlZV9oY3R4X2RhdGEoKSwgYmxrX21xX3Nj
-aGVkX3RyeV9tZXJnZSgpLA0KPiBibGtfbXFfc2NoZWRfdHJ5X2luc2VydF9tZXJnZSgpIGFuZCBi
-bGtfbXFfc2NoZWRfcmVxdWVzdF9pbnNlcnRlZCgpIGFyZQ0KPiBhbGwgZXhwb3J0ZWQgc3ltYm9s
-cyBidXQgYXJlIGRlY2xhcmVkIG9ubHkgaW50ZXJuYWxseSBpbg0KPiBibG9jay9ibGstbXEtc2No
-ZWQuaC4gTW92ZSB0aGVzZSBkZWNsYXJhdGlvbnMgdG8gdGhlIG5ldyBmaWxlDQo+IGluY2x1ZGUv
-bGludXgvYmxrLW1xLXNjaGVkLmggdG8gbWFrZSB0aGVtIGF2YWlsYWJsZSB0byBibG9jayBzY2hl
-ZHVsZXINCj4gbW9kdWxlcyBpbXBsZW1lbnRlZCBvdXRzaWRlIG9mIHRoZSBibG9jayBkaXJlY3Rv
-cnkuDQoNClNhbWUgY29tbWVudCBoZXJlOiBzaG91bGQgdGhlIHRpdGxlIG9mIHRoaXMgcGF0Y2gg
-cGVyaGFwcyBoYXZlIGJlZW4gIk1vdmUNCmRlY2xhcmF0aW9ucyBvZiAuLi4iPw0KDQo+ICsjaWZu
-ZGVmIEJMS19NUV9TQ0hFRF9IDQo+ICsjZGVmaW5lIEJMS19NUV9TQ0hFRF9IDQo+ICsNCj4gKy8q
-DQo+ICsgKiBTY2hlZHVsZXIgaGVscGVyIGZ1bmN0aW9ucy4NCj4gKyAqLw0KPiArdm9pZCBibGtf
-bXFfc2NoZWRfZnJlZV9oY3R4X2RhdGEoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsDQo+ICsJCQkJ
-IHZvaWQgKCpleGl0KShzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqKSk7DQo+ICt2b2lkIGJsa19tcV9z
-Y2hlZF9yZXF1ZXN0X2luc2VydGVkKHN0cnVjdCByZXF1ZXN0ICpycSk7DQo+ICtib29sIGJsa19t
-cV9zY2hlZF90cnlfbWVyZ2Uoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0cnVjdCBiaW8gKmJp
-bywNCj4gKwkJCSAgICBzdHJ1Y3QgcmVxdWVzdCAqKm1lcmdlZF9yZXF1ZXN0KTsNCj4gK2Jvb2wg
-YmxrX21xX3NjaGVkX3RyeV9pbnNlcnRfbWVyZ2Uoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0
-cnVjdCByZXF1ZXN0ICpycSk7DQo+ICsNCj4gKyNlbmRpZg0KDQpQbGVhc2UgbWFrZSBzdXJlIHRo
-YXQgdGhlIG9yZGVyIG9mICNpbmNsdWRlIGRpcmVjdGl2ZXMgZG9lcyBub3QgYWZmZWN0IHRoZQ0K
-Y29tcGlsYXRpb24gcmVzdWx0LCBlLmcuIGJ5IGFkZGluZyBmb3J3YXJkIGRlY2xhcmF0aW9ucyBm
-b3IgdGhlIHN0cnVjdHVyZXMNCnVzZWQgYXMgYXJndW1lbnRzLg0KDQpUaGFua3MsDQoNCkJhcnQu
+Cj4gQEAgLTQ5Miw2ICs0OTcsMTAgQEAgc3RydWN0IHJlcXVlc3RfcXVldWUgew0KPiAgCXN0cnVj
+dCBibGtfaW50ZWdyaXR5IGludGVncml0eTsNCj4gICNlbmRpZgkvKiBDT05GSUdfQkxLX0RFVl9J
+TlRFR1JJVFkgKi8NCj4gIA0KPiArI2lmZGVmIENPTkZJR19CTEtfREVWX1pPTkVEDQo+ICsJc3Ry
+dWN0IGJsa196b25lZAl6b25lZDsNCj4gKyNlbmRpZg0KPiArDQo+ICAjaWZkZWYgQ09ORklHX1BN
+DQo+ICAJc3RydWN0IGRldmljZQkJKmRldjsNCj4gIAlpbnQJCQlycG1fc3RhdHVzOw0KPiBAQCAt
+Nzg1LDYgKzc5NCwxMSBAQCBzdGF0aWMgaW5saW5lIHVuc2lnbmVkIGludCBibGtfcXVldWVfem9u
+ZV9zZWN0b3JzKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxKQ0KPiAgCXJldHVybiBibGtfcXVldWVf
+aXNfem9uZWQocSkgPyBxLT5saW1pdHMuY2h1bmtfc2VjdG9ycyA6IDA7DQo+ICB9DQo+ICANCj4g
+K3N0YXRpYyBpbmxpbmUgdW5zaWduZWQgaW50IGJsa19xdWV1ZV9ucl96b25lcyhzdHJ1Y3QgcmVx
+dWVzdF9xdWV1ZSAqcSkNCj4gK3sNCj4gKwlyZXR1cm4gYmxrX3F1ZXVlX2lzX3pvbmVkKHEpID8g
+cS0+em9uZWQubnJfem9uZXMgOiAwOw0KPiArfQ0KDQpEb2VzIHRoaXMgY29kZSBjb21waWxlIGNv
+cnJlY3RseSBpZiBDT05GSUdfQkxLX0RFVl9aT05FRCBpcyBkaXNhYmxlZD8gU2hvdWxkDQp0aGUg
+ZGVmaW5pdGlvbiBvZiBibGtfcXVldWVfbnJfem9uZXMoKSBwZXJoYXBzIGJlIHN1cnJvdW5kZWQg
+YnkgI2lmZGVmDQpDT05GSUdfQkxLX0RFVl9aT05FRCAvICNlbmRpZj8NCg0KVGhhbmtzLA0KDQpC
+YXJ0Lg==
