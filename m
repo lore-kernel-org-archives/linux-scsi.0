@@ -1,56 +1,32 @@
-From: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [PATCH V2] megaraid: kmemleak: Track page allocation for fusion
-Date: Fri, 15 Sep 2017 14:12:18 +0100
-Message-ID: <20170915131218.lu5ca4j3d6idl3hq@localhost>
-References: <20170915052152.5032-1-shuwang@redhat.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH RESEND] lpfc: Don't return internal MBXERR_ERROR code from
+ probe function
+Date: Fri, 15 Sep 2017 07:18:10 -0700
+Message-ID: <6dd52a46-b35f-9dff-09ba-64469823c333@broadcom.com>
+References: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
+ <20170906110256.4445e353@elisabeth> <yq1k210rc66.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170915052152.5032-1-shuwang@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: shuwang@redhat.com
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuhu@redhat.com, yizhan@redhat.com
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:46574 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751524AbdIOOSO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 10:18:14 -0400
+Received: by mail-qk0-f181.google.com with SMTP id z143so2206343qkb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2017 07:18:14 -0700 (PDT)
+In-Reply-To: <yq1k210rc66.fsf@oracle.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Stefano Brivio <sbrivio@redhat.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, QLogic-Storage-Upstream@cavium.com, Maurizio Lombardi <mlombard@redhat.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Fri, Sep 15, 2017 at 01:21:52PM +0800, shuwang@redhat.com wrote:
-> From: Shu Wang <shuwang@redhat.com>
-> 
-> Kmemleak reports about a thousand false positives for fusion->
-> cmd_list[]. Root casue is the cmd_list objects are allocated from
-> slab allocator, and stored its pointer in object allocated by page
-> allocator. The fix will tell kmemleak to track and scan fusion
-> object.
-> 
-> V2:
-> Add comment, balance braces, move kmemleak_free before free_pages.
-> checkpatch passed.
-> 
-> Before patch:
-> kmemleak: 1004 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-> 
-> unreferenced object 0xffff88042584e000 (size 8192):
->   backtrace:
->      kmemleak_alloc+0x4a/0xa0
->      __kmalloc+0xec/0x220
->      megasas_alloc_cmdlist_fusion+0x3e/0x140 [megaraid_sas]
->      megasas_alloc_cmds_fusion+0x44/0x450 [megaraid_sas]
->      megasas_init_adapter_fusion+0x21d/0x6e0 [megaraid_sas]
->      megasas_init_fw+0x357/0xd30 [megaraid_sas]
->      megasas_probe_one.part.34+0x5be/0x1040 [megaraid_sas]
->      megasas_probe_one+0x46/0xc0 [megaraid_sas]
->      local_pci_probe+0x45/0xa0
->      work_for_cpu_fn+0x14/0x20
->      process_one_work+0x149/0x360
->      worker_thread+0x1d8/0x3c0
->      kthread+0x109/0x140
->      ret_from_fork+0x25/0x30
-> 
-> Signed-off-by: Shu Wang <shuwang@redhat.com>
+On 9/14/2017 6:19 PM, Martin K. Petersen wrote:
+> James/Dick,
+>
+> Please review!
 
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+It seemed to be changing so I was waiting for the final posting...
 
-Thanks.
-
--- 
-Catalin
+-- james
