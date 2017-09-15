@@ -1,21 +1,30 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] megaraid: kmemleak: Track page allocation for fusion
-Date: Fri, 15 Sep 2017 11:00:07 -0700
-Message-ID: <20170915180007.GA24045@infradead.org>
-References: <20170915052152.5032-1-shuwang@redhat.com>
+Subject: Re: [PATCH RESEND] aacraid: Fix 2T+ drives on SmartIOC-2000
+Date: Fri, 15 Sep 2017 11:01:15 -0700
+Message-ID: <20170915180115.GB24045@infradead.org>
+References: <20170915170428.15237-1-david.carroll@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:41284 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751599AbdIOSBS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2017 14:01:18 -0400
 Content-Disposition: inline
-In-Reply-To: <20170915052152.5032-1-shuwang@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: shuwang@redhat.com
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuhu@redhat.com, yizhan@redhat.com, catalin.marinas@arm.com
+In-Reply-To: <20170915170428.15237-1-david.carroll@microsemi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Carroll <david.carroll@microsemi.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, aacraid@microsemi.com, Scott Benesh <scott.benesh@microsemi.com>, Brian King <brking@linux.vnet.ibm.com>, stable@vger.kernel.org
 
-I think the megaraid fusion code has a deeper problem here.
+> +		if ((le32_to_cpu(dresp->status) == ST_OK) &&
+> +			(le32_to_cpu(dresp->mnt[0].vol) != CT_NONE)) {
+> +			_aac_probe_container2(context, fibptr);
+> +			return;
 
-Instead of playing weird games with get_free_pages and vmalloc
-the structure just needs to shrink by moving all the arrays
-of MAX_MSIX_QUEUES_FUSION size into a separate allocation for each,
-and then we have normall, small kmalloc allocations.
+		if (dresp->status == cpu_to_le32(ST_OK) &&
+		    dresp->mnt[0].vol != cpu_to_le32(CT_NONE)) {
+
+Otherwise looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
