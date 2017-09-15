@@ -1,27 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND] aacraid: Fix 2T+ drives on SmartIOC-2000
-Date: Fri, 15 Sep 2017 15:50:19 -0400
-Message-ID: <yq1r2v7oi6c.fsf@oracle.com>
-References: <20170915170428.15237-1-david.carroll@microsemi.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170915170428.15237-1-david.carroll@microsemi.com> (Dave
-        Carroll's message of "Fri, 15 Sep 2017 11:04:28 -0600")
-Sender: stable-owner@vger.kernel.org
-To: Dave Carroll <david.carroll@microsemi.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, aacraid@microsemi.com, Scott Benesh <scott.benesh@microsemi.com>, Brian King <brking@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: fdomain: Fix a resource leak in an error handling path in '__fdomain_16x0_detect()'
+Date: Fri, 15 Sep 2017 21:56:08 +0200
+Message-ID: <20170915195608.26865-1-christophe.jaillet@wanadoo.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: faith@cs.unc.edu, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
 
+All error handling paths 'goto fail' in this function.
+If 'scsi_register()' fails, we should also go there, otherwise a
+'pci_dev_put(pdev)' will be missing.
 
-Dave,
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+In order to keep consistance with the rest of the file, I've ignored
+checkpatch warnings about spaces vs tabs and indent.
+---
+ drivers/scsi/fdomain.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-> The logic for supporting large drives was previously tied to 4Kn
-> support for SmartIOC-2000. As SmartIOC-2000 does not support volumes
-> using 4Kn drives, use the intended option flag AAC_OPT_NEW_COMM_64 to
-> determine support for volumes greater than 2T.
-
-Applied to 4.14/scsi-fixes. Thanks!
-
+diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
+index ebbe5a3e665d..0dac03a9c6ed 100644
+--- a/drivers/scsi/fdomain.c
++++ b/drivers/scsi/fdomain.c
+@@ -960,10 +960,9 @@ struct Scsi_Host *__fdomain_16x0_detect(struct scsi_host_template *tpnt )
+    get resources.  */
+ 
+    shpnt = scsi_register( tpnt, 0 );
+-   if(shpnt == NULL) {
+-	release_region(port_base, 0x10);
+-   	return NULL;
+-   }
++   if (shpnt == NULL)
++      goto fail;
++
+    shpnt->irq = interrupt_level;
+    shpnt->io_port = port_base;
+    shpnt->n_io_port = 0x10;
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.11.0
