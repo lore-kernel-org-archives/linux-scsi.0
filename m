@@ -1,38 +1,39 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V3 09/12] scsi: sd_zbc: Initialize device queue zoned
- structure
-Date: Fri, 15 Sep 2017 12:49:15 +0200
-Message-ID: <0cb4a5e4-9b3b-9b98-119c-e04119ded4eb@suse.de>
+Subject: Re: [PATCH V3 10/12] scsi: sd_zbc: Limit zone write locking to
+ sequential zones
+Date: Fri, 15 Sep 2017 12:52:07 +0200
+Message-ID: <4446858a-6fb3-23b9-5772-db1c32ccbeb3@suse.de>
 References: <20170915100645.17999-1-damien.lemoal@wdc.com>
- <20170915100645.17999-10-damien.lemoal@wdc.com>
+ <20170915100645.17999-11-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170915100645.17999-10-damien.lemoal@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:40303 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751157AbdIOKwL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Sep 2017 06:52:11 -0400
+In-Reply-To: <20170915100645.17999-11-damien.lemoal@wdc.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
-List-Id: linux-scsi@vger.kernel.org
 
 On 09/15/2017 12:06 PM, Damien Le Moal wrote:
-> Allocate and initialize the disk request queue zoned structure on disk
-> revalidate. As the bitmap allocation for the seq_zones field of the
-> zoned structure is identical to the allocation of the zones write lock
-> bitmap, introduce the helper sd_zbc_alloc_zone_bitmap().
-> Using this helper, wait for the disk capacity and number of zones to
-> stabilize on the second revalidation pass to allocate and initialize
-> the bitmaps.
+> Zoned block devices have no write constraints for conventional zones.
+> So write locking of conventional zones is not necessary and can even
+> hurt performance by unnecessarily operating the disk under low queue
+> depth. To avoid this, use the disk request queue seq_zones bitmap to
+> allow any write to be issued to conventional zones, locking only
+> sequential zones.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  drivers/scsi/sd_zbc.c | 119 +++++++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 114 insertions(+), 5 deletions(-)
+>  drivers/scsi/sd_zbc.c | 20 ++++++++++++--------
+>  1 file changed, 12 insertions(+), 8 deletions(-)
 > 
-I would've been slightly worried about locking; these things tend to be
-reset during revalidate, which happens quite frequently for ATA drives.
-You sure you don't need it here?
+Reviwed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
