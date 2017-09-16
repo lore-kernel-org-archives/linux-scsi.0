@@ -1,25 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] csi: libcxgbi: remove redundant check and close on csk
-Date: Fri, 15 Sep 2017 21:45:15 -0400
-Message-ID: <yq1vakjs9g4.fsf@oracle.com>
-References: <20170907135133.16636-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: aacraid: error: testing array offset 'bus' after use
+Date: Fri, 15 Sep 2017 21:46:34 -0400
+Message-ID: <yq1r2v7s9dx.fsf@oracle.com>
+References: <abd8be3220061294f53ed45a7487f9ea95f7aaac.1505292255.git.npajkovsky@suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170907135133.16636-1-colin.king@canonical.com> (Colin King's
-        message of "Thu, 7 Sep 2017 14:51:33 +0100")
+In-Reply-To: <abd8be3220061294f53ed45a7487f9ea95f7aaac.1505292255.git.npajkovsky@suse.cz>
+        (Nikola Pajkovsky's message of "Wed, 13 Sep 2017 10:46:17 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Nikola Pajkovsky <npajkovsky@suse.cz>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Nikola,
 
-> csk is always null on the error return path and so the non-null check
-> and call to cxgbi_sock_closed on csk is redundant and can be removed.
+> Fix possible indexing array of bound for &aac->hba_map[bus][cid],
+> where bus and cid boundary check happens later.
 
-Applied to 4.15/scsi-queue.
+Applied to 4.14/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
