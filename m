@@ -1,50 +1,46 @@
 From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: scsi_transport_spi:  make const arrays static to shink object code size
-Date: Sat, 16 Sep 2017 16:44:59 +0100
-Message-ID: <20170916154459.28614-1-colin.king@canonical.com>
+Subject: [PATCH] ufs: make const array setup_attrs static to shink object code size
+Date: Sat, 16 Sep 2017 17:14:11 +0100
+Message-ID: <20170916161411.29464-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Joao Pinto <jpinto@synopsys.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-Don't populate const arrays on the stack, instead make them static.
-Makes the object code smaller by over 530 bytes:
+Don't populate const array setup_attrs on the stack, instead make it
+static.  Makes the object code smaller by over 120 bytes:
 
 Before:
-  37010	  14144	    128	  51282	   c852	drivers/scsi/scsi_transport_spi.o
+   text	   data	    bss	    dec	    hex	filename
+   1588	    208	      0	   1796	    704	drivers/scsi/ufs/ufshcd-dwc.o
 
 After:
    text	   data	    bss	    dec	    hex	filename
-  36312	  14304	    128	  50744	   c638	drivers/scsi/scsi_transport_spi.o
+   1371	    304	      0	   1675	    68b	drivers/scsi/ufs/ufshcd-dwc.o
 
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/scsi_transport_spi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd-dwc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index d0219e36080c..3f7ad400fb8d 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -819,11 +819,11 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
- 	 * fails, the device won't let us write to the echo buffer
- 	 * so just return failure */
- 	
--	const char spi_test_unit_ready[] = {
-+	static const char spi_test_unit_ready[] = {
- 		TEST_UNIT_READY, 0, 0, 0, 0, 0
- 	};
- 
--	const char spi_read_buffer_descriptor[] = {
-+	static const char spi_read_buffer_descriptor[] = {
- 		READ_BUFFER, 0x0b, 0, 0, 0, 0, 0, 0, 4, 0
- 	};
- 
+diff --git a/drivers/scsi/ufs/ufshcd-dwc.c b/drivers/scsi/ufs/ufshcd-dwc.c
+index 5fd16c72207f..f061609c424d 100644
+--- a/drivers/scsi/ufs/ufshcd-dwc.c
++++ b/drivers/scsi/ufs/ufshcd-dwc.c
+@@ -83,7 +83,7 @@ static int ufshcd_dwc_link_is_up(struct ufs_hba *hba)
+  */
+ static int ufshcd_dwc_connection_setup(struct ufs_hba *hba)
+ {
+-	const struct ufshcd_dme_attr_val setup_attrs[] = {
++	static const struct ufshcd_dme_attr_val setup_attrs[] = {
+ 		{ UIC_ARG_MIB(T_CONNECTIONSTATE), 0, DME_LOCAL },
+ 		{ UIC_ARG_MIB(N_DEVICEID), 0, DME_LOCAL },
+ 		{ UIC_ARG_MIB(N_DEVICEID_VALID), 0, DME_LOCAL },
 -- 
 2.14.1
