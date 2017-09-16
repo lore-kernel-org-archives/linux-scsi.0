@@ -1,83 +1,50 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: system hung up when offlining CPUs
-Date: Sat, 16 Sep 2017 17:02:34 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1709161630580.2105@nanos>
-References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com> <20170809124213.0d9518bb@why.wild-wind.fr.eu.org> <cd524af7-1f20-1956-1e44-92a451053387@gmail.com> <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com> <20170821131809.GA17564@lst.de>
- <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com> <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com> <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com> <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de> <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com>
- <alpine.DEB.2.20.1709131529400.1874@nanos> <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com> <alpine.DEB.2.20.1709161212160.2105@nanos>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: scsi_transport_spi:  make const arrays static to shink object code size
+Date: Sat, 16 Sep 2017 16:44:59 +0100
+Message-ID: <20170916154459.28614-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1709161212160.2105@nanos>
 Sender: linux-kernel-owner@vger.kernel.org
-To: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 16 Sep 2017, Thomas Gleixner wrote:
-> On Thu, 14 Sep 2017, YASUAKI ISHIMATSU wrote:
-> > Here are one irq's info of megasas:
-> > 
-> > - Before offline CPU
-> > /proc/irq/70/smp_affinity_list
-> > 24-29
-> > 
-> > /proc/irq/70/effective_affinity
-> > 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,3f000000
-> > 
-> > /sys/kernel/debug/irq/irqs/70
-> > handler:  handle_edge_irq
-> > status:   0x00004000
-> > istate:   0x00000000
-> > ddepth:   0
-> > wdepth:   0
-> > dstate:   0x00609200
-> >             IRQD_ACTIVATED
-> >             IRQD_IRQ_STARTED
-> >             IRQD_MOVE_PCNTXT
-> >             IRQD_AFFINITY_SET
-> >             IRQD_AFFINITY_MANAGED
-> 
-> So this uses managed affinity, which means that once the last CPU in the
-> affinity mask goes offline, the interrupt is shut down by the irq core
-> code, which is the case:
-> 
-> > dstate:   0x00a39000
-> >             IRQD_IRQ_DISABLED
-> >             IRQD_IRQ_MASKED
-> >             IRQD_MOVE_PCNTXT
-> >             IRQD_AFFINITY_SET
-> >             IRQD_AFFINITY_MANAGED
-> >             IRQD_MANAGED_SHUTDOWN  <---------------
-> 
-> So the irq core code works as expected, but something in the
-> driver/scsi/block stack seems to fiddle with that shut down queue.
-> 
-> I only can tell about the inner workings of the irq code, but I have no
-> clue about the rest.
+From: Colin Ian King <colin.king@canonical.com>
 
-Though there is something wrong here:
+Don't populate const arrays on the stack, instead make them static.
+Makes the object code smaller by over 530 bytes:
 
-> affinity: 24-29
-> effectiv: 24-29
+Before:
+  37010	  14144	    128	  51282	   c852	drivers/scsi/scsi_transport_spi.o
 
-and after offlining:
+After:
+   text	   data	    bss	    dec	    hex	filename
+  36312	  14304	    128	  50744	   c638	drivers/scsi/scsi_transport_spi.o
 
-> affinity: 29
-> effectiv: 29
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/scsi_transport_spi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-But that should be:
-
-affinity: 24-29
-effectiv: 29
-
-because the irq core code preserves 'affinity'. It merily updates
-'effective', which is where your interrupts are routed to.
-
-Is the driver issuing any set_affinity() calls? If so, that's wrong.
-
-Which driver are we talking about?
-
-Thanks,
-
-	tglx
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index d0219e36080c..3f7ad400fb8d 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -819,11 +819,11 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
+ 	 * fails, the device won't let us write to the echo buffer
+ 	 * so just return failure */
+ 	
+-	const char spi_test_unit_ready[] = {
++	static const char spi_test_unit_ready[] = {
+ 		TEST_UNIT_READY, 0, 0, 0, 0, 0
+ 	};
+ 
+-	const char spi_read_buffer_descriptor[] = {
++	static const char spi_read_buffer_descriptor[] = {
+ 		READ_BUFFER, 0x0b, 0, 0, 0, 0, 0, 0, 4, 0
+ 	};
+ 
+-- 
+2.14.1
