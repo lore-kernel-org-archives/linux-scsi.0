@@ -1,52 +1,76 @@
-From: Viswas G <viswas.g@microsemi.com>
-Subject: RE: [PATCH V2 0/9] pm80xx updates
-Date: Sat, 16 Sep 2017 05:22:06 +0000
-Message-ID: <E96847475729F24299853D257F7211218CD8B088@avsrvexchmbx2.microsemi.net>
-References: <20150217233650.9091-1-Viswas.G@microsemi.com>
- <yq1d16rpxf7.fsf@oracle.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: system hung up when offlining CPUs
+Date: Sat, 16 Sep 2017 12:15:56 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1709161212160.2105@nanos>
+References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com> <20170809124213.0d9518bb@why.wild-wind.fr.eu.org> <cd524af7-1f20-1956-1e44-92a451053387@gmail.com> <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com> <20170821131809.GA17564@lst.de>
+ <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com> <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com> <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com> <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de> <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com>
+ <alpine.DEB.2.20.1709131529400.1874@nanos> <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0048.outbound.protection.outlook.com ([104.47.34.48]:2508
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751215AbdIPFWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Sep 2017 01:22:12 -0400
-In-Reply-To: <yq1d16rpxf7.fsf@oracle.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi Tharmarajan <vasanthalakshmi.thar@microsemi.com>, Deepak Ukey <deepak.ukey@microsemi.com>, Raj Dinesh <Raj.Dinesh@microsemi.com>, "jinpu.wang@profitbricks.com" <jinpu.wang@profitbricks.com>
 
-Thanks Martin.
+On Thu, 14 Sep 2017, YASUAKI ISHIMATSU wrote:
+> On 09/13/2017 09:33 AM, Thomas Gleixner wrote:
+> >> Question - "what happens once __cpu_disable is called and some of the queued
+> >> interrupt has affinity to that particular CPU ?"
+> >> I assume ideally those pending/queued Interrupt should be migrated to
+> >> remaining online CPUs. It should not be unhandled if we want to avoid such
+> >> IO timeout.
+> > 
+> > Can you please provide the following information, before and after
+> > offlining the last CPU in the affinity set:
+> > 
+> > # cat /proc/irq/$IRQNUM/smp_affinity_list
+> > # cat /proc/irq/$IRQNUM/effective_affinity
+> > # cat /sys/kernel/debug/irq/irqs/$IRQNUM
+> > 
+> > The last one requires: CONFIG_GENERIC_IRQ_DEBUGFS=y
+> 
+> Here are one irq's info of megasas:
+> 
+> - Before offline CPU
+> /proc/irq/70/smp_affinity_list
+> 24-29
+> 
+> /proc/irq/70/effective_affinity
+> 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,3f000000
+> 
+> /sys/kernel/debug/irq/irqs/70
+> handler:  handle_edge_irq
+> status:   0x00004000
+> istate:   0x00000000
+> ddepth:   0
+> wdepth:   0
+> dstate:   0x00609200
+>             IRQD_ACTIVATED
+>             IRQD_IRQ_STARTED
+>             IRQD_MOVE_PCNTXT
+>             IRQD_AFFINITY_SET
+>             IRQD_AFFINITY_MANAGED
 
-Do we need to send V3 patch set with corrected date ?=20
+So this uses managed affinity, which means that once the last CPU in the
+affinity mask goes offline, the interrupt is shut down by the irq core
+code, which is the case:
 
-Regards,
-Viswas G
+> dstate:   0x00a39000
+>             IRQD_IRQ_DISABLED
+>             IRQD_IRQ_MASKED
+>             IRQD_MOVE_PCNTXT
+>             IRQD_AFFINITY_SET
+>             IRQD_AFFINITY_MANAGED
+>             IRQD_MANAGED_SHUTDOWN  <---------------
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Saturday, September 16, 2017 1:06 AM
-> To: Viswas G <viswas.g@microsemi.com>
-> Cc: linux-scsi@vger.kernel.org; Vasanthalakshmi Tharmarajan
-> <vasanthalakshmi.thar@microsemi.com>; Deepak Ukey
-> <deepak.ukey@microsemi.com>; Raj Dinesh <Raj.Dinesh@microsemi.com>;
-> jinpu.wang@profitbricks.com; martin.petersen@oracle.com
-> Subject: Re: [PATCH V2 0/9] pm80xx updates
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> Viswas,
->=20
-> > This patch set include some bug fixes and enhancement for pm80xx
-> > driver.
->=20
-> You are still sending mail from 2015. Please fix your system
-> time. Thanks!
->=20
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+So the irq core code works as expected, but something in the
+driver/scsi/block stack seems to fiddle with that shut down queue.
+
+I only can tell about the inner workings of the irq code, but I have no
+clue about the rest.
+
+Thanks,
+
+	tglx
