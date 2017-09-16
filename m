@@ -1,27 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 00/11] Enhance libsas hotplug feature
-Date: Fri, 15 Sep 2017 21:43:45 -0400
-Message-ID: <yq1zi9vs9im.fsf@oracle.com>
-References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
+Subject: Re: [PATCH] csi: libcxgbi: remove redundant check and close on csk
+Date: Fri, 15 Sep 2017 21:45:15 -0400
+Message-ID: <yq1vakjs9g4.fsf@oracle.com>
+References: <20170907135133.16636-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1504689314-20072-1-git-send-email-yanaijie@huawei.com> (Jason
-        Yan's message of "Wed, 6 Sep 2017 17:15:03 +0800")
+In-Reply-To: <20170907135133.16636-1-colin.king@canonical.com> (Colin King's
+        message of "Thu, 7 Sep 2017 14:51:33 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com
+To: Colin King <colin.king@canonical.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Jason,
+Colin,
 
-> Yijing Wang handed over this topic to me. We are working on it the
-> last two months. We have tested the patchset for a long time. Here is
-> the new version.
+> csk is always null on the error return path and so the non-null check
+> and call to cxgbi_sock_closed on csk is redundant and can be removed.
 
-Applied patches 1-4 and 11 to 4.15/scsi-queue. I suggest you resubmit
-the rest to get them back on people's radar.
+Applied to 4.15/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
