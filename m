@@ -1,46 +1,50 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] ufs: make const array setup_attrs static to shink object code size
-Date: Sat, 16 Sep 2017 17:14:11 +0100
-Message-ID: <20170916161411.29464-1-colin.king@canonical.com>
+From: Dave Carroll <david.carroll@microsemi.com>
+Subject: RE: [PATCH RESEND] aacraid: Fix 2T+ drives on SmartIOC-2000
+Date: Sun, 17 Sep 2017 01:23:35 +0000
+Message-ID: <423FD6710FB8FB4F8728F93591889F9A5B8C4355@avsrvexchmbx2.microsemi.net>
+References: <20170915170428.15237-1-david.carroll@microsemi.com>
+        <20170915180115.GB24045@infradead.org>
+        <423FD6710FB8FB4F8728F93591889F9A5B8BDE73@avsrvexchmbx1.microsemi.net>
+ <yq1d16rtpmd.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joao Pinto <jpinto@synopsys.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1d16rtpmd.fsf@oracle.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Brian King <brking@linux.vnet.ibm.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
-
-Don't populate const array setup_attrs on the stack, instead make it
-static.  Makes the object code smaller by over 120 bytes:
-
-Before:
-   text	   data	    bss	    dec	    hex	filename
-   1588	    208	      0	   1796	    704	drivers/scsi/ufs/ufshcd-dwc.o
-
-After:
-   text	   data	    bss	    dec	    hex	filename
-   1371	    304	      0	   1675	    68b	drivers/scsi/ufs/ufshcd-dwc.o
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/ufs/ufshcd-dwc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd-dwc.c b/drivers/scsi/ufs/ufshcd-dwc.c
-index 5fd16c72207f..f061609c424d 100644
---- a/drivers/scsi/ufs/ufshcd-dwc.c
-+++ b/drivers/scsi/ufs/ufshcd-dwc.c
-@@ -83,7 +83,7 @@ static int ufshcd_dwc_link_is_up(struct ufs_hba *hba)
-  */
- static int ufshcd_dwc_connection_setup(struct ufs_hba *hba)
+> Dave,
+>=20
+> > Hi Christoph,
+> >
+> >> > +             if ((le32_to_cpu(dresp->status) =3D=3D ST_OK) &&
+> >> > +                     (le32_to_cpu(dresp->mnt[0].vol) !=3D CT_NONE))=
  {
--	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+	static const struct ufshcd_dme_attr_val setup_attrs[] = {
- 		{ UIC_ARG_MIB(T_CONNECTIONSTATE), 0, DME_LOCAL },
- 		{ UIC_ARG_MIB(N_DEVICEID), 0, DME_LOCAL },
- 		{ UIC_ARG_MIB(N_DEVICEID_VALID), 0, DME_LOCAL },
--- 
-2.14.1
+> >> > +                     _aac_probe_container2(context, fibptr);
+> >> > +                     return;
+> >>
+> >>                 if (dresp->status =3D=3D cpu_to_le32(ST_OK) &&
+> >>                     dresp->mnt[0].vol !=3D cpu_to_le32(CT_NONE)) {
+> >>
+> >
+> > I've contemplated this all day, and it looked like sematics, but I
+> > assume you were Indicating that the cpu_to_le32() of a constant is a
+> > compiler issue, vs le32_to_cpu() is a runtime issue. If so, thanks! If
+> > not could you elaborate ...
+>=20
+> FWIW, I applied your patch as-is for consistency with the rest of the dri=
+ver. I do
+> prefer Christoph's version, though, but that can be a follow-on patch.
+>=20
+
+Hi Martin,
+
+If I'm right regarding Christph's intentions, and you seem to imply, which =
+since I've been an LE person most of my life,  I will instill in my develop=
+ment team, and propose another patch to fix that ...
+
+Thanks, -Dave
