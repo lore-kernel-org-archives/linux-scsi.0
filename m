@@ -1,87 +1,118 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: qla2xxx UBSAN warning in 4.14-rc1
-Date: Mon, 18 Sep 2017 13:49:47 +0300 (EEST)
-Message-ID: <alpine.LRH.2.21.1709181335450.628@math.ut.ee>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v4 00/11] Enhance libsas hotplug feature
+Date: Mon, 18 Sep 2017 13:54:47 +0100
+Message-ID: <f1698b1a-8d80-8ea2-868b-dd4c9b50ea61@huawei.com>
+References: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:57205 "EHLO smtp2.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751706AbdIRKtw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Sep 2017 06:49:52 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1504689314-20072-1-git-send-email-yanaijie@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, jack.wang@profitbricks.com, lindar_liu@usish.com
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
 
-Hello, I decided to widen the coverage of my kernel testbed and put some 
-FC cards into servers. This one is a PCI-X QLA2340 in HP Proliant DL 380 
-G4 (first 64-bit generation of Proliants). I got a UBSAN warning from 
-qla2xxx before probing for the firmware.
+On 06/09/2017 10:15, Jason Yan wrote:
+> Hello all, Yijing Wang handed over this topic to me. We are working
+> on it the last two months. We have tested the patchset for a long
+> time. Here is the new version.
+>
+> Now the libsas hotplug has some issues, Dan Williams report
+> a similar bug here before
+> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
+>
+> The issues we have found
+> 1. if LLDD burst reports lots of phy-up/phy-down sas events, some events
+>    may lost because a same sas events is pending now, finally libsas topo
+>    may different the hardware.
+> 2. receive a phy down sas event, libsas call sas_deform_port to remove
+>    devices, it would first delete the sas port, then put a destruction
+>    discovery event in a new work, and queue it at the tail of workqueue,
+>    once the sas port be deleted, its children device will be deleted too,
+>    when the destruction work start, it will found the target device has
+>    been removed, and report a sysfs warnning.
+> 3. since a hotplug process will be divided into several works, if a phy up
+>    sas event insert into phydown works, like
+>    destruction work  ---> PORTE_BYTES_DMAED (sas_form_port) ---->PHYE_LOSS_OF_SIGNAL
+>    the hot remove flow would broken by PORTE_BYTES_DMAED event, it's not
+>    we expected, and issues would occur.
+>
 
-This is reproducible with or without firmware being available.
+I have tried to verify PM suspend/resume feature with this patchset to 
+ensure that it is not broken.
 
-[    3.905570] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.01-k.
-[    3.905977] qla2xxx 0000:06:02.0: PCI IRQ 78 -> rerouted to legacy IRQ 18
-[    3.906172] qla2xxx [0000:06:02.0]-001d: : Found an ISP2312 irq 18 iobase 0xffffc90000139000.
-[...]
-[    4.180117] ================================================================================
-[    4.180300] UBSAN: Undefined behaviour in drivers/scsi/qla2xxx/qla_isr.c:275:14
-[    4.180464] shift exponent 32 is too large for 32-bit type 'int'
-[    4.180576] CPU: 0 PID: 138 Comm: systemd-udevd Not tainted 4.14.0-rc1-00009-g0666f560b71b #27
-[    4.180741] Hardware name: HP ProLiant DL380 G4, BIOS P51 07/19/2007
-[    4.180849] Call Trace:
-[    4.180961]  dump_stack+0x4e/0x6c
-[    4.181072]  ubsan_epilogue+0xd/0x3b
-[    4.181179]  __ubsan_handle_shift_out_of_bounds+0x112/0x14c
-[    4.181290]  ? try_to_del_timer_sync+0x44/0x68
-[    4.181440]  qla2x00_mbx_completion+0x1c5/0x25d [qla2xxx]
-[    4.182683]  qla2300_intr_handler+0x1ea/0x3bb [qla2xxx]
-[    4.182827]  qla2x00_mailbox_command+0x77b/0x139a [qla2xxx]
-[    4.182935]  ? __const_udelay+0x3c/0x3e
-[    4.183073]  qla2x00_mbx_reg_test+0x83/0x114 [qla2xxx]
-[    4.183213]  ? qla2x00_read_nvram_data+0x5c/0xe1 [qla2xxx]
-[    4.183349]  qla2x00_chip_diag+0x354/0x45f [qla2xxx]
-[    4.183489]  ? qla25xx_read_optrom_data+0x401/0x401 [qla2xxx]
-[    4.183628]  qla2x00_initialize_adapter+0x2c2/0xa4e [qla2xxx]
-[    4.183767]  qla2x00_probe_one+0x1681/0x392e [qla2xxx]
-[    4.183883]  ? kernfs_add_one+0x11c/0x1ca
-[    4.183990]  pci_device_probe+0x10b/0x1f1
-[    4.184102]  driver_probe_device+0x21f/0x3a4
-[    4.184210]  __driver_attach+0xa9/0xe1
-[    4.184317]  ? driver_probe_device+0x3a4/0x3a4
-[    4.184424]  bus_for_each_dev+0x6e/0xb5
-[    4.184530]  driver_attach+0x22/0x3c
-[    4.184638]  bus_add_driver+0x1d1/0x2ae
-[    4.184745]  driver_register+0x78/0x130
-[    4.184851]  __pci_register_driver+0x75/0xa8
-[    4.184953]  ? 0xffffffffa0227000
-[    4.185099]  qla2x00_module_init+0x21b/0x267 [qla2xxx]
-[    4.185211]  do_one_initcall+0x5a/0x1e2
-[    4.185323]  ? kfree+0x164/0x27a
-[    4.185435]  do_init_module+0x9d/0x285
-[    4.185545]  load_module+0x20db/0x38e3
-[    4.185654]  ? disable_ro_nx+0x8f/0x8f
-[    4.185765]  ? kernel_read+0x60/0xe5
-[    4.185875]  ? kernel_read_file_from_fd+0x44/0x6d
-[    4.185988]  SYSC_finit_module+0xa8/0xbc
-[    4.186104]  SyS_finit_module+0x9/0xb
-[    4.186216]  do_syscall_64+0x77/0x271
-[    4.186331]  entry_SYSCALL64_slow_path+0x25/0x25
-[    4.186444] RIP: 0033:0x7f29e6783219
-[    4.186552] RSP: 002b:00007ffc8cb7c858 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
-[    4.186723] RAX: ffffffffffffffda RBX: 0000561d18660bd0 RCX: 00007f29e6783219
-[    4.186837] RDX: 0000000000000000 RSI: 00007f29e64992d5 RDI: 0000000000000007
-[    4.186944] RBP: 00007f29e64992d5 R08: 0000000000000000 R09: 00007ffc8cb7cdd0
-[    4.187055] R10: 0000000000000007 R11: 0000000000000246 R12: 0000000000000000
-[    4.187170] R13: 0000561d18666140 R14: 0000000000020000 R15: 00007ffc8cb7c970
-[    4.187284] ================================================================================
-[...]
-[    4.489060] scsi host4: qla2xxx
-[    4.489875] qla2xxx [0000:06:02.0]-00fb:4: QLogic QLA2340 - .
-[    4.489976] qla2xxx [0000:06:02.0]-00fc:4: ISP2312: PCI-X (100 MHz) @ 0000:06:02.0 hdma+ host#=4 fw=3.03.28 IPX.
+Since our hisi_sas driver does not support PM yet, I have got my hands 
+on an adaptec card which uses pm8001 driver (it's vendor 9065, device 
+8088) to test.
 
+So in the PM resume, sometimes I find the console locks up with and 
+without this patchset. In these cases, I find this log:
+[   59.344266] pm80xx pm80xx_chip_init 1098:Firmware is not ready!
 
+Is this a known issue? Should we have a chip reset in all cases in the 
+resume code, marked ***:
+static int pm8001_pci_resume(struct pci_dev *pdev)
+{
+...	
 
--- 
-Meelis Roos (mroos@linux.ee)
+	rc = pci_go_44(pdev);
+	if (rc)
+		goto err_out_disable;
+
+	/* chip soft rst only for spc */
+	if (pm8001_ha->chip_id == chip_8001) { **** HERE
+		PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
+		PM8001_INIT_DBG(pm8001_ha,
+			pm8001_printk("chip soft reset successful\n"));
+	}
+	rc = PM8001_CHIP_DISP->chip_init(pm8001_ha);
+	if (rc)
+		goto err_out_disable;
+
+...
+}
+
+John
+
+> v3->v4: -get rid of unused ha event and do some cleanup
+>         -use dynamic alloced work and support shutting down the phy if active event reached the threshold
+> 		-use flush_workqueue instead of wait-completion to process discover events synchronously
+> 		-direct call probe and destruct function
+> 		-other small code improvements
+> v2->v3: some code improvements suggested by Johannes and John,
+> 	    split v2 patch 2 into several small patches.
+> v1->v2: some code improvements suggested by John Garry
+>
+> Jason Yan (10):
+>   libsas: kill useless ha_event and do some cleanup
+>   libsas: remove the numbering for each event enum
+>   libsas: remove unused port_gone_completion and DISCE_PORT_GONE
+>   libsas: rename notify_port_event() for consistency
+>   libsas: Use dynamic alloced work to avoid sas event lost
+>   libsas: shut down the PHY if events reached the threshold
+>   libsas: make the event threshold configurable
+>   libsas: Use new workqueue to run sas event and disco event
+>   libsas: libsas: use flush_workqueue to process disco events
+>     synchronously
+>   libsas: direct call probe and destruct
+>
+> chenxiang (1):
+>   libsas: add event to defer list tail instead of head when draining
+>
+>  drivers/scsi/aic94xx/aic94xx_hwi.c    |   3 -
+>  drivers/scsi/hisi_sas/hisi_sas_main.c |   7 ++-
+>  drivers/scsi/libsas/sas_ata.c         |   1 -
+>  drivers/scsi/libsas/sas_discover.c    |  36 +++++++-----
+>  drivers/scsi/libsas/sas_dump.c        |  10 ----
+>  drivers/scsi/libsas/sas_dump.h        |   1 -
+>  drivers/scsi/libsas/sas_event.c       |  97 +++++++++++++++++++-------------
+>  drivers/scsi/libsas/sas_expander.c    |   2 +-
+>  drivers/scsi/libsas/sas_init.c        | 101 +++++++++++++++++++++++++++++-----
+>  drivers/scsi/libsas/sas_internal.h    |   7 +++
+>  drivers/scsi/libsas/sas_phy.c         |  73 ++++++++++++------------
+>  drivers/scsi/libsas/sas_port.c        |  25 +++++----
+>  include/scsi/libsas.h                 |  81 ++++++++++++---------------
+>  include/scsi/scsi_transport_sas.h     |   1 +
+>  14 files changed, 270 insertions(+), 175 deletions(-)
+>
