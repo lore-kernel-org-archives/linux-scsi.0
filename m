@@ -1,27 +1,22 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 1/3] nvme_fc: create fc class and transport device
-Date: Mon, 18 Sep 2017 09:13:30 -0700
-Message-ID: <20170918161330.GC310@infradead.org>
-References: <20170914173843.3195-1-jsmart2021@gmail.com>
- <20170914173843.3195-2-jsmart2021@gmail.com>
+Subject: Re: [PATCH V2] megaraid: kmemleak: Track page allocation for fusion
+Date: Mon, 18 Sep 2017 09:21:35 -0700
+Message-ID: <20170918162135.GA20366@infradead.org>
+References: <20170915052152.5032-1-shuwang@redhat.com>
+ <20170915180007.GA24045@infradead.org>
+ <f582abfe99a5a00f876d5bbefdb306fe@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47106 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755847AbdIRQNb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2017 12:13:31 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170914173843.3195-2-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <f582abfe99a5a00f876d5bbefdb306fe@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
+Cc: Christoph Hellwig <hch@infradead.org>, shuwang@redhat.com, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuhu@redhat.com, yizhan@redhat.com, catalin.marinas@arm.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-nvme@lists.infradead.org, James Smart <james.smart@broadcom.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org
 
-Looks ok,
+Oh, I missed log_to_span.  Well, in that case log_to_span is
+_the_ candidate for moving into a separate allocation.
 
-although I really wish we could come up with some common FC code,
-including making the existing FC drivers use more infrastructure
-from libfc..
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+And in fact you're probably better off by using a sensible data
+structure for it, e.g. a radix tree.
