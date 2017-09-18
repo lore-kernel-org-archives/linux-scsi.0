@@ -1,67 +1,66 @@
-From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-Subject: Re: [PATCH V5 3/3] scsi: Align queue to ARCH_DMA_MINALIGN innon-coherent DMA mode
-Date: Mon, 18 Sep 2017 15:03:30 +0800
-Message-ID: <tencent_60D582B525876E48323D6E48@qq.com>
-References: <1505708574-5281-1-git-send-email-chenhc@lemote.com>
-        <20170918052051.GA29118@infradead.org>
+From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
+Date: Mon, 18 Sep 2017 16:09:09 +0530
+Message-ID: <CA+RiK65GPnfqpQAuUWEs_NdW9crumkGparCqynN_dBti8BPXqQ@mail.gmail.com>
+References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <yq1lgmbauxt.fsf@oracle.com> <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
+ <yq1a82gxwqm.fsf@oracle.com> <CA+RiK67f59U5Ss_Z2=veBRODtBSp1-4VTbosLkHkgaxY9XA6hQ@mail.gmail.com>
+ <yq13787w1a3.fsf@oracle.com> <CA+RiK667V9nDEr7RywED2_RoSq97m511HZTpGqPbij9-=vADvQ@mail.gmail.com>
+ <CA+RiK64sJZzTcTHODHj0monB2_0xKAkvjrC79rGv2mNUPO87-A@mail.gmail.com> <yq1wp50rcqw.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpbgbr2.qq.com ([54.207.22.56]:42918 "EHLO smtpbgbr2.qq.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751648AbdIRHDm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Sep 2017 03:03:42 -0400
-In-Reply-To: <20170918052051.GA29118@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1wp50rcqw.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?= <hch@infradead.org>
-Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?QW5kcmV3IE1vcnRvbg==?= <akpm@linux-foundation.org>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 
-SGksIENocmlzdG9waCwNCg0KSSBkb24ndCB0aGluayBkbWFfZ2V0X2NhY2hlX2FsaWdubWVu
-dCBpcyB0aGUgImFic29sdXRlIG1pbmltdW0gYWxpZ25tZW50IiBpbiBhbGwgY2FzZXMuIEF0
-IGxlYXN0IG9uIE1JUFMvTG9vbmdzb24sIGlmIHdlIHVzZSBJL08gY29oZXJlbnQgbW9kZSAo
-Q2FjaGVkIERNQSBtb2RlKSwgYWxpZ24gYmxvY2sgcXVldWUgdG8gNEJ5dGVzIGlzIGVub3Vn
-aC4gSWYgd2UgYWxpZ24gYmxvY2sgcXVldWUgIHRvIGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50
-IGluIEkvTyBjb2hlcmVudCBtb2RlLCB0aGVyZSBhcmUgcGVmb3JtYW5jZSBsb3N0IGJlY2F1
-c2Ugd2UgY2Fubm90IHVzZSB6ZXJvLWNvcHkgaW4gbW9zdCBjYXNlcyAodXNlciBidWZmZXJz
-IGFyZSB1c3VhbGx5IG5vdCBhbGlnbmVkKS4NCg0KSHVhY2FpDQogDQotLS0tLS0tLS0tLS0t
-LS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIkNocmlzdG9waCBI
-ZWxsd2lnIjxoY2hAaW5mcmFkZWFkLm9yZz47DQpEYXRlOiAgTW9uLCBTZXAgMTgsIDIwMTcg
-MDE6MjAgUE0NClRvOiAgIkh1YWNhaSBDaGVuIjxjaGVuaGNAbGVtb3RlLmNvbT47DQpDYzog
-ICJKYW1lcyBFIC4gSiAuIEJvdHRvbWxleSI8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyAi
-TWFydGluIEsgLiBQZXRlcnNlbiI8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyAiQW5k
-cmV3IE1vcnRvbiI8YWtwbUBsaW51eC1mb3VuZGF0aW9uLm9yZz47ICJGdXhpbiBaaGFuZyI8
-emhhbmdmeEBsZW1vdGUuY29tPjsgImxpbnV4LXNjc2kiPGxpbnV4LXNjc2lAdmdlci5rZXJu
-ZWwub3JnPjsgImxpbnV4LWtlcm5lbCI8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZz47
-ICJzdGFibGUiPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+Ow0KU3ViamVjdDogIFJlOiBbUEFU
-Q0ggVjUgMy8zXSBzY3NpOiBBbGlnbiBxdWV1ZSB0byBBUkNIX0RNQV9NSU5BTElHTiBpbm5v
-bi1jb2hlcmVudCBETUEgbW9kZQ0KIA0KUGxlYXNlIHNlbmQgYWxsIHBhdGNoZXMgaW4gdGhl
-IHNlcmllcyB0byB0aGUgc2FtZSB0byBhbmQgY2MgbGlzdHMuDQoNCk9uIE1vbiwgU2VwIDE4
-LCAyMDE3IGF0IDEyOjIyOjU0UE0gKzA4MDAsIEh1YWNhaSBDaGVuIHdyb3RlOg0KPiBJbiBu
-b24tY29oZXJlbnQgRE1BIG1vZGUsIGtlcm5lbCB1c2VzIGNhY2hlIGZsdXNoaW5nIG9wZXJh
-dGlvbnMgdG8NCj4gbWFpbnRhaW4gSS9PIGNvaGVyZW5jeSwgc28gc2NzaSdzIGJsb2NrIHF1
-ZXVlIHNob3VsZCBiZSBhbGlnbmVkIHRvDQo+IEFSQ0hfRE1BX01JTkFMSUdOLiBPdGhlcndp
-c2UsIGl0IHdpbGwgY2F1c2UgZGF0YSBjb3JydXB0aW9uLCBhdCBsZWFzdA0KPiBvbiBNSVBT
-Og0KPiANCj4gICAgICAgICBTdGVwIDEsIGRtYV9tYXBfc2luZ2xlDQo+ICAgICAgICAgU3Rl
-cCAyLCBjYWNoZV9pbnZhbGlkYXRlIChubyB3cml0ZWJhY2spDQo+ICAgICAgICAgU3RlcCAz
-LCBkbWFfZnJvbV9kZXZpY2UNCj4gICAgICAgICBTdGVwIDQsIGRtYV91bm1hcF9zaW5nbGUN
-Cj4gDQo+IElmIGEgRE1BIGJ1ZmZlciBhbmQgYSBrZXJuZWwgc3RydWN0dXJlIHNoYXJlIGEg
-c2FtZSBjYWNoZSBsaW5lLCBhbmQgaWYNCj4gdGhlIGtlcm5lbCBzdHJ1Y3R1cmUgaGFzIGRp
-cnR5IGRhdGEsIGNhY2hlX2ludmFsaWRhdGUgKG5vIHdyaXRlYmFjaykNCj4gd2lsbCBjYXVz
-ZSBkYXRhIGxvc3QuDQoNCkFuZCBhcyBzYWlkIGJlZm9yZSB3ZSBtdXN0IF9hbHdheXNfIGFs
-aWduIHRvIGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50Lg0KVGhpcyBpcyBldmVuIGRvY3VtZW50
-ZWQgaW4gRG9jdW1lbnRhdGlvbi9ETUEtQVBJLnR4dDoNCg0KLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tIHNuaXAgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCiAg
-ICAgICAgaW50DQogICAgICAgIGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50KHZvaWQpDQoNClJl
-dHVybnMgdGhlIHByb2Nlc3NvciBjYWNoZSBhbGlnbm1lbnQuICBUaGlzIGlzIHRoZSBhYnNv
-bHV0ZSBtaW5pbXVtDQphbGlnbm1lbnQgKmFuZCogd2lkdGggdGhhdCB5b3UgbXVzdCBvYnNl
-cnZlIHdoZW4gZWl0aGVyIG1hcHBpbmcNCm1lbW9yeSBvciBkb2luZyBwYXJ0aWFsIGZsdXNo
-ZXMuDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSBzbmlwIC0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQ0KDQo+ICsJaWYgKGRldmljZV9pc19jb2hlcmVudChkZXYp
-KQ0KPiArCWJsa19xdWV1ZV9kbWFfYWxpZ25tZW50KHEsIDB4MDQgLSAxKTsNCj4gKwllbHNl
-DQo+ICsJYmxrX3F1ZXVlX2RtYV9hbGlnbm1lbnQocSwgZG1hX2dldF9jYWNoZV9hbGlnbm1l
-bnQoKSAtIDEpOw0KDQpTbyBhcyBzYWlkIGJlZm9yZSB0aGlzIHNob3VsZCBiZWNvbWUgc29t
-ZXRoaW5nIGxpa2U6DQoNCmJsa19xdWV1ZV9kbWFfYWxpZ25tZW50KHEsIG1heCgweDA0LCBk
-bWFfZ2V0X2NhY2hlX2FsaWdubWVudCgpKSAtIDEpOw==
+Hi Martin,
+
+On Fri, Sep 15, 2017 at 6:37 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> Suganath,
+>
+>> Is there any update on the submitted mpt3sas patches.
+>
+> We are waiting for you to report back your findings on PRP vs. SGL.
+
+We are working on this, since there is h/w dependent, we are in
+discussion with H/W & F/W team and doing experiments. If there is no
+impact, and if SGL translation has to be removed, this change has to
+go through some phase of testing, before we post it to upstream, since
+that is not inline with H/W requirement.
+
+The hardware translation of IEEE SGL to NVMe PRPs has limitation.
+
+We have added the below comment in patch 3 as well:
+
+if a command cannot be translated by hardware then it will go
+to firmware and the firmware needs to translate it. And this will
+have a performance reduction. To avoid that driver proactively
+checks whether the translation will be done in hardware or not,
+if not then driver try to translate inside the driver
+
+Current code posted to upstream is inline with hardware requirements
+and well tested internally.
+
+SGL vs NVMe PRP building in driver is small sanity check for decision making
+and it is not going to change in long run.
+
+Also, Making all PRP buffer may or may not need FW changes (assuming
+it is possible.),
+we may end up into multiple FW version check.
+
+Since this is main IO path and current driver is following H/W limitation,
+we should avoid any changes in this area until and unless change is
+universal acceptable in FW (for all type of work load).
+
+Hope this clarifies.
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
+
+Thanks,
+Suganath Prabu S
