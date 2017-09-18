@@ -1,71 +1,54 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in
- case of BLK_STS_RESOURCE
-Date: Sun, 17 Sep 2017 20:40:01 +0800
-Message-ID: <20170917124000.GB6289@ming.t460p>
-References: <20170915164456.9803-1-ming.lei@redhat.com>
- <20170915164456.9803-2-ming.lei@redhat.com>
- <1505498249.3420.15.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47056 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750861AbdIQMkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 17 Sep 2017 08:40:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1505498249.3420.15.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Huacai Chen <chenhc@lemote.com>
+Subject: [PATCH V5 3/3] scsi: Align queue to ARCH_DMA_MINALIGN in non-coherent DMA mode
+Date: Mon, 18 Sep 2017 12:22:54 +0800
+Message-ID: <1505708574-5281-1-git-send-email-chenhc@lemote.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Huacai Chen <chenhc@lemote.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "axboe@fb.com" <axboe@fb.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "sagi@grimberg.me" <sagi@grimberg.me>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>
 
-On Fri, Sep 15, 2017 at 05:57:31PM +0000, Bart Van Assche wrote:
-> On Sat, 2017-09-16 at 00:44 +0800, Ming Lei wrote:
-> > If .queue_rq() returns BLK_STS_RESOURCE, blk-mq will rerun
-> > the queue in the three situations:
-> > 
-> > 1) if BLK_MQ_S_SCHED_RESTART is set
-> > - queue is rerun after one rq is completed, see blk_mq_sched_restart()
-> > which is run from blk_mq_free_request()
-> > 
-> > 2) BLK_MQ_S_TAG_WAITING is set
-> > - queue is rerun after one tag is freed
-> > 
-> > 3) otherwise
-> > - queue is run immediately in blk_mq_dispatch_rq_list()
-> > 
-> > So calling blk_mq_delay_run_hw_queue() inside .queue_rq() doesn't make
-> > sense because no matter it is called or not, the queue still will be
-> > rerun soon in above three situations, and the busy req can be dispatched
-> > again.
-> 
-> NAK
-> 
-> Block drivers call blk_mq_delay_run_hw_queue() if it is known that the queue
-> has to be rerun later even if no request has completed before the delay has
-> expired. This patch breaks at least the SCSI core and the dm-mpath drivers.
+In non-coherent DMA mode, kernel uses cache flushing operations to
+maintain I/O coherency, so scsi's block queue should be aligned to
+ARCH_DMA_MINALIGN. Otherwise, it will cause data corruption, at least
+on MIPS:
 
-"if no request has completed before the delay has expired" can't be a
-reason to rerun the queue, because the queue can still be busy.
+        Step 1, dma_map_single
+        Step 2, cache_invalidate (no writeback)
+        Step 3, dma_from_device
+        Step 4, dma_unmap_single
 
-The only reason is that there isn't any requests in-flight and
-queue is still busy, but I'd rather understand what the exact
-situation is, instead of using this kind of workaround. If no
-such situation, we should remove that.
+If a DMA buffer and a kernel structure share a same cache line, and if
+the kernel structure has dirty data, cache_invalidate (no writeback)
+will cause data lost.
 
-For SCSI, it might be reasonable to run the hw queue after
-a random time when atomic_read(&sdev->device_busy) is zero,
-that means the queue may be busy even when there isn't any
-requests in-flight in this queue. Could you or someone share
-what the case is? Then we can avoid to use this workaround.
+Cc: stable@vger.kernel.org
+Signed-off-by: Huacai Chen <chenhc@lemote.com>
+---
+ drivers/scsi/scsi_lib.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-For dm-mpath, it might be related with path, but I have to say
-it is still a workaround.
-
-I suggest to understand the root cause, instead of keeping this
-ugly random delay because run hw queue after 100ms may be useless
-in 99.99% times.
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9cf6a80..d5059b9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2132,11 +2132,14 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 		q->limits.cluster = 0;
+ 
+ 	/*
+-	 * set a reasonable default alignment on word boundaries: the
+-	 * host and device may alter it using
++	 * set a reasonable default alignment on word/cacheline boundaries:
++	 * the host and device may alter it using
+ 	 * blk_queue_update_dma_alignment() later.
+ 	 */
+-	blk_queue_dma_alignment(q, 0x03);
++	if (device_is_coherent(dev))
++		blk_queue_dma_alignment(q, 0x04 - 1);
++	else
++		blk_queue_dma_alignment(q, dma_get_cache_alignment() - 1);
+ }
+ EXPORT_SYMBOL_GPL(__scsi_init_queue);
+ 
 -- 
-Ming
+2.7.0
