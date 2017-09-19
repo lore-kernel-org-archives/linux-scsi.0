@@ -1,88 +1,48 @@
 From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH V3 4/9] pm80xx : tag allocation for phy control request.
-Date: Tue, 19 Sep 2017 22:39:59 +0530
-Message-ID: <20170919171004.10331-5-Viswas.G@microsemi.com>
+Subject: [PATCH V3 6/9] pm80xx : modified port reset timer value for PM8006 card
+Date: Tue, 19 Sep 2017 22:40:01 +0530
+Message-ID: <20170919171004.10331-7-Viswas.G@microsemi.com>
 References: <20170919171004.10331-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0077.outbound.protection.outlook.com ([104.47.41.77]:35872
+Received: from mail-dm3nam03on0061.outbound.protection.outlook.com ([104.47.41.61]:32425
         "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751016AbdISRKh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Sep 2017 13:10:37 -0400
+        id S1751396AbdISRKi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Sep 2017 13:10:38 -0400
 In-Reply-To: <20170919171004.10331-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-tag is taken from the tag pool instead of using the hardcoded
-tag value(1).
+Added port reset timer value as 2000ms for PM8006 sata controller.
 
 Signed-off-by: Deepak Ukey <deepak.ukey@microsemi.com>
 Signed-off-by: Viswas G <Viswas.G@microsemi.com>
 
 Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |  3 +++
- drivers/scsi/pm8001/pm80xx_hwi.c | 10 +++++++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 10546faac58c..bc4a6f649ec9 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3198,11 +3198,13 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 
- int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
-+	u32 tag;
- 	struct local_phy_ctl_resp *pPayload =
- 		(struct local_phy_ctl_resp *)(piomb + 4);
- 	u32 status = le32_to_cpu(pPayload->status);
- 	u32 phy_id = le32_to_cpu(pPayload->phyop_phyid) & ID_BITS;
- 	u32 phy_op = le32_to_cpu(pPayload->phyop_phyid) & OP_BITS;
-+	tag = le32_to_cpu(pPayload->tag);
- 	if (status != 0) {
- 		PM8001_MSG_DBG(pm8001_ha,
- 			pm8001_printk("%x phy execute %x phy op failed!\n",
-@@ -3211,6 +3213,7 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		PM8001_MSG_DBG(pm8001_ha,
- 			pm8001_printk("%x phy execute %x phy op success!\n",
- 			phy_id, phy_op));
-+	pm8001_tag_free(pm8001_ha, tag);
- 	return 0;
- }
- 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 2b26445d1b97..baab8a19c78e 100644
+index baab8a19c78e..8f1f5dc77d71 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4500,17 +4500,21 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- static int pm80xx_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
- 	u32 phyId, u32 phy_op)
- {
-+	u32 tag;
-+	int rc;
- 	struct local_phy_ctl_req payload;
- 	struct inbound_queue_table *circularQ;
- 	int ret;
- 	u32 opc = OPC_INB_LOCAL_PHY_CONTROL;
- 	memset(&payload, 0, sizeof(payload));
-+	rc = pm8001_tag_alloc(pm8001_ha, &tag);
-+	if (rc)
-+		return rc;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
--	payload.tag = cpu_to_le32(1);
-+	payload.tag = cpu_to_le32(tag);
- 	payload.phyop_phyid =
- 		cpu_to_le32(((phy_op & 0xFF) << 8) | (phyId & 0xFF));
--	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
--	return ret;
-+	return pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
+@@ -597,6 +597,12 @@ static void update_main_config_table(struct pm8001_hba_info *pm8001_ha)
+ 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer &= 0xffff0000;
+ 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer |=
+ 							PORT_RECOVERY_TIMEOUT;
++	if (pm8001_ha->chip_id == chip_8006) {
++		pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer &=
++					0x0000ffff;
++		pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer |=
++					0x140000;
++	}
+ 	pm8001_mw32(address, MAIN_PORT_RECOVERY_TIMER,
+ 			pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer);
  }
- 
- static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
 -- 
 2.12.3
