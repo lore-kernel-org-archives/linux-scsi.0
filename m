@@ -1,86 +1,115 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: Another UBSAN warning from aic7xxx
-Date: Mon, 18 Sep 2017 22:23:07 +0300 (EEST)
-Message-ID: <alpine.LRH.2.21.1709182218590.15407@math.ut.ee>
-References: <alpine.LRH.2.20.1605171856430.9286@math.ut.ee> <alpine.LRH.2.21.1709181553400.628@math.ut.ee>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.21.1709181553400.628@math.ut.ee>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V5 0/10] block/scsi: safe SCSI quiescing
+Date: Tue, 19 Sep 2017 11:49:15 +0800
+Message-ID: <20170919034925.9894-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> Fixing this reveals another UBSAN warning from the same driver, will fix 
-> that too.
+Hi,
 
-This is the warning - devinfo->target_offset is unsigned but 
-ahc_reset_channel() calls it with signed -1 for the parameter.
+The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
 
-The patch below silences it but is it a good way? 
+Once SCSI device is put into QUIESCE, no new request except for
+RQF_PREEMPT can be dispatched to SCSI successfully, and
+scsi_device_quiesce() just simply waits for completion of I/Os
+dispatched to SCSI stack. It isn't enough at all.
 
-[    0.394215] ================================================================================
-[    0.394405] UBSAN: Undefined behaviour in drivers/scsi/aic7xxx/aic7xxx_core.c:2833:32
-[    0.394593] shift exponent -1 is negative
-[    0.394712] CPU: 0 PID: 1 Comm: swapper Not tainted 4.14.0-rc1-00009-g0666f560b71b-dirty #80
-[    0.394900] Hardware name: IBM -[867313X]-/-[M51SL]-, BIOS -[PLE168AUS-1.68]- 06/25/04
-[    0.395086] Call Trace:
-[    0.395214]  dump_stack+0x16/0x18
-[    0.395335]  ubsan_epilogue+0xe/0x2f
-[    0.395455]  __ubsan_handle_shift_out_of_bounds+0xef/0x131
-[    0.395577]  ? vprintk_emit+0x251/0x39c
-[    0.395694]  ? vprintk_default+0x32/0x34
-[    0.395815]  ahc_compile_devinfo+0x92/0xb8
-[    0.395933]  ahc_reset_channel+0x5a/0x2c3
-[    0.396005]  ? __alloc_workqueue_key+0x222/0x537
-[    0.396005]  ahc_linux_initialize_scsi_bus+0x44/0x298
-[    0.396005]  ? vsnprintf+0x3a0/0x629
-[    0.396005]  ahc_linux_register_host+0x1a3/0x2b3
-[    0.396005]  ahc_linux_pci_dev_probe+0x179/0x36e
-[    0.396005]  ? kernfs_add_one+0x10c/0x1d5
-[    0.396005]  pci_device_probe+0xaa/0x163
-[    0.396005]  driver_probe_device+0x1c9/0x34c
-[    0.396005]  __driver_attach+0x87/0xba
-[    0.396005]  ? driver_probe_device+0x34c/0x34c
-[    0.396005]  bus_for_each_dev+0x48/0x89
-[    0.396005]  driver_attach+0x1d/0x33
-[    0.396005]  ? driver_probe_device+0x34c/0x34c
-[    0.396005]  bus_add_driver+0x184/0x275
-[    0.396005]  driver_register+0x66/0x115
-[    0.396005]  __pci_register_driver+0x44/0x6e
-[    0.396005]  ahc_linux_pci_init+0x14/0x16
-[    0.396005]  ahc_linux_init+0x87/0x95
-[    0.396005]  ? spi_transport_init+0x1a4/0x1a4
-[    0.396005]  do_one_initcall+0x4f/0x1da
-[    0.396005]  ? next_arg+0xee/0x1e2
-[    0.396005]  ? parameq+0x12/0xab
-[    0.396005]  ? parse_args+0x177/0x390
-[    0.396005]  kernel_init_freeable+0x1c4/0x247
-[    0.396005]  ? rest_init+0x70/0x70
-[    0.396005]  kernel_init+0xc/0x107
-[    0.396005]  ? schedule_tail_wrapper+0x9/0xc
-[    0.396005]  ? rest_init+0x70/0x70
-[    0.396005]  ret_from_fork+0x19/0x24
-[    0.396005] ================================================================================
+Because new request still can be comming, but all the allocated
+requests can't be dispatched successfully, so request pool can be
+consumed up easily.
+
+Then request with RQF_PREEMPT can't be allocated and wait forever,
+meantime scsi_device_resume() waits for completion of RQF_PREEMPT,
+then system hangs forever, such as during system suspend or
+sending SCSI domain alidation.
+
+Both IO hang inside system suspend[1] or SCSI domain validation
+were reported before.
+
+This patch introduces preempt freeze, and solves the issue
+by preempt freezing block queue during SCSI quiesce, and allows
+to allocate request of RQF_PREEMPT when queue is in this state.
+
+Oleksandr verified that V4 does fix the hang during suspend/resume,
+and Cathy verified that V4 fixes hang in sending SCSI domain validation
+wrt. transport_spi.
+
+Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
+them all by introducing/unifying blk_freeze_queue_preempt() and
+blk_unfreeze_queue_preempt(), and cleanup is done together.
+
+The patchset can be found in the following gitweb:
+
+	https://github.com/ming1/linux/tree/blk_safe_scsi_quiesce_V5
+
+V5:
+	- fix one tiny race by introducing blk_queue_enter_preempt_freeze()
+	given this change is small enough compared with V4, I added
+	tested-by directly
+
+V4:
+	- reorganize patch order to make it more reasonable
+	- support nested preempt freeze, as required by SCSI transport spi
+	- check preempt freezing in slow path of of blk_queue_enter()
+	- add "SCSI: transport_spi: resume a quiesced device"
+	- wake up freeze queue in setting dying for both blk-mq and legacy
+	- rename blk_mq_[freeze|unfreeze]_queue() in one patch
+	- rename .mq_freeze_wq and .mq_freeze_depth
+	- improve comment
+
+V3:
+	- introduce q->preempt_unfreezing to fix one bug of preempt freeze
+	- call blk_queue_enter_live() only when queue is preempt frozen
+	- cleanup a bit on the implementation of preempt freeze
+	- only patch 6 and 7 are changed
+
+V2:
+	- drop the 1st patch in V1 because percpu_ref_is_dying() is
+	enough as pointed by Tejun
+	- introduce preempt version of blk_[freeze|unfreeze]_queue
+	- sync between preempt freeze and normal freeze
+	- fix warning from percpu-refcount as reported by Oleksandr
 
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-index 381846164003..7c692336c18d 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -2828,7 +2828,11 @@ ahc_compile_devinfo(struct ahc_devinfo *devinfo, u_int our_id, u_int target,
- 	devinfo->role = role;
- 	if (channel == 'B')
- 		devinfo->target_offset += 8;
--	devinfo->target_mask = (0x01 << devinfo->target_offset);
-+	if (target < AHC_NUM_TARGETS + 8) {
-+		devinfo->target_mask = (0x01 << devinfo->target_offset);
-+	} else {
-+		devinfo->target_mask = 0;
-+	}
- }
- 
- void
+[1] https://marc.info/?t=150340250100013&r=3&w=2
+
+
+Thanks,
+Ming
+
+Ming Lei (10):
+  blk-mq: only run hw queues for blk-mq
+  block: tracking request allocation with q_usage_counter
+  blk-mq: rename blk_mq_[freeze|unfreeze]_queue
+  blk-mq: rename blk_mq_freeze_queue_wait as blk_freeze_queue_wait
+  block: rename .mq_freeze_wq and .mq_freeze_depth
+  block: pass flags to blk_queue_enter()
+  block: introduce preempt version of blk_[freeze|unfreeze]_queue
+  block: allow to allocate req with RQF_PREEMPT when queue is preempt
+    frozen
+  SCSI: transport_spi: resume a quiesced device
+  SCSI: preempt freeze block queue when SCSI device is put into quiesce
+
+ block/bfq-iosched.c               |   2 +-
+ block/blk-cgroup.c                |   8 +-
+ block/blk-core.c                  |  80 +++++++++++++----
+ block/blk-mq.c                    | 180 ++++++++++++++++++++++++++++----------
+ block/blk-mq.h                    |   1 -
+ block/blk-timeout.c               |   2 +-
+ block/blk.h                       |  25 ++++++
+ block/elevator.c                  |   4 +-
+ drivers/block/loop.c              |  24 ++---
+ drivers/block/rbd.c               |   2 +-
+ drivers/nvme/host/core.c          |   8 +-
+ drivers/scsi/scsi_lib.c           |  25 +++++-
+ drivers/scsi/scsi_transport_spi.c |   3 +
+ fs/block_dev.c                    |   4 +-
+ include/linux/blk-mq.h            |  15 ++--
+ include/linux/blkdev.h            |  32 +++++--
+ 16 files changed, 311 insertions(+), 104 deletions(-)
 
 -- 
-Meelis Roos (mroos@linux.ee)
+2.9.5
