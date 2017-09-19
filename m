@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 05/10] block: rename .mq_freeze_wq and .mq_freeze_depth
-Date: Tue, 19 Sep 2017 11:49:20 +0800
-Message-ID: <20170919034925.9894-6-ming.lei@redhat.com>
+Subject: [PATCH V5 06/10] block: pass flags to blk_queue_enter()
+Date: Tue, 19 Sep 2017 11:49:21 +0800
+Message-ID: <20170919034925.9894-7-ming.lei@redhat.com>
 References: <20170919034925.9894-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170919034925.9894-1-ming.lei@redhat.com>
@@ -10,144 +10,145 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Both two are used for legacy and blk-mq, so rename them
-as .freeze_wq and .freeze_depth for avoiding to confuse
-people.
-
-No functional change.
+We need to pass PREEMPT flags to blk_queue_enter()
+for allocating request with RQF_PREEMPT in the
+following patch.
 
 Tested-by: Cathy Avery <cavery@redhat.com>
 Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-core.c       | 12 ++++++------
- block/blk-mq.c         | 12 ++++++------
- include/linux/blkdev.h |  4 ++--
- 3 files changed, 14 insertions(+), 14 deletions(-)
+ block/blk-core.c       | 10 ++++++----
+ block/blk-mq.c         |  5 +++--
+ block/blk-timeout.c    |  2 +-
+ fs/block_dev.c         |  4 ++--
+ include/linux/blkdev.h |  7 ++++++-
+ 5 files changed, 18 insertions(+), 10 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 97837a5bf838..8889920567d2 100644
+index 8889920567d2..16131ea0f3b0 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -630,7 +630,7 @@ void blk_set_queue_dying(struct request_queue *q)
- 	 * We need to ensure that processes currently waiting on
- 	 * the queue are notified as well.
- 	 */
--	wake_up_all(&q->mq_freeze_wq);
-+	wake_up_all(&q->freeze_wq);
+@@ -779,7 +779,7 @@ struct request_queue *blk_alloc_queue(gfp_t gfp_mask)
  }
- EXPORT_SYMBOL_GPL(blk_set_queue_dying);
+ EXPORT_SYMBOL(blk_alloc_queue);
  
-@@ -793,14 +793,14 @@ int blk_queue_enter(struct request_queue *q, bool nowait)
+-int blk_queue_enter(struct request_queue *q, bool nowait)
++int blk_queue_enter(struct request_queue *q, unsigned flags)
+ {
+ 	while (true) {
+ 		int ret;
+@@ -787,7 +787,7 @@ int blk_queue_enter(struct request_queue *q, bool nowait)
+ 		if (percpu_ref_tryget_live(&q->q_usage_counter))
+ 			return 0;
+ 
+-		if (nowait)
++		if (flags & BLK_REQ_NOWAIT)
+ 			return -EBUSY;
+ 
  		/*
- 		 * read pair of barrier in blk_freeze_queue_start(),
- 		 * we need to order reading __PERCPU_REF_DEAD flag of
--		 * .q_usage_counter and reading .mq_freeze_depth or
-+		 * .q_usage_counter and reading .freeze_depth or
- 		 * queue dying flag, otherwise the following wait may
- 		 * never return if the two reads are reordered.
- 		 */
- 		smp_rmb();
+@@ -1418,7 +1418,8 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 	/* create ioc upfront */
+ 	create_io_context(gfp_mask, q->node);
  
--		ret = wait_event_interruptible(q->mq_freeze_wq,
--				!atomic_read(&q->mq_freeze_depth) ||
-+		ret = wait_event_interruptible(q->freeze_wq,
-+				!atomic_read(&q->freeze_depth) ||
- 				blk_queue_dying(q));
- 		if (blk_queue_dying(q))
- 			return -ENODEV;
-@@ -819,7 +819,7 @@ static void blk_queue_usage_counter_release(struct percpu_ref *ref)
- 	struct request_queue *q =
- 		container_of(ref, struct request_queue, q_usage_counter);
+-	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
++	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ?
++			BLK_REQ_NOWAIT : 0);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 	spin_lock_irq(q->queue_lock);
+@@ -2225,7 +2226,8 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	do {
+ 		struct request_queue *q = bio->bi_disk->queue;
  
--	wake_up_all(&q->mq_freeze_wq);
-+	wake_up_all(&q->freeze_wq);
- }
+-		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
++		if (likely(blk_queue_enter(q, (bio->bi_opf & REQ_NOWAIT) ?
++						BLK_REQ_NOWAIT : 0) == 0)) {
+ 			struct bio_list lower, same;
  
- static void blk_rq_timed_out_timer(unsigned long data)
-@@ -891,7 +891,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
- 	q->bypass_depth = 1;
- 	__set_bit(QUEUE_FLAG_BYPASS, &q->queue_flags);
- 
--	init_waitqueue_head(&q->mq_freeze_wq);
-+	init_waitqueue_head(&q->freeze_wq);
- 
- 	/*
- 	 * Init percpu_ref in atomic mode so that it's faster to shutdown.
+ 			/* Create a fresh bio_list for all subordinate requests */
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 1e9bf2b987a1..988da93d85a4 100644
+index 988da93d85a4..0c472f5a9176 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -122,7 +122,7 @@ void blk_freeze_queue_start(struct request_queue *q)
- {
- 	int freeze_depth;
+@@ -377,7 +377,8 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+ 	struct request *rq;
+ 	int ret;
  
--	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
-+	freeze_depth = atomic_inc_return(&q->freeze_depth);
- 	if (freeze_depth == 1) {
- 		percpu_ref_kill(&q->q_usage_counter);
- 		if (q->mq_ops)
-@@ -135,14 +135,14 @@ void blk_freeze_queue_wait(struct request_queue *q)
- {
- 	if (!q->mq_ops)
- 		blk_drain_queue(q);
--	wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
-+	wait_event(q->freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
- }
- EXPORT_SYMBOL_GPL(blk_freeze_queue_wait);
+-	ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
++	ret = blk_queue_enter(q, (flags & BLK_MQ_REQ_NOWAIT) ?
++			BLK_REQ_NOWAIT : 0);
+ 	if (ret)
+ 		return ERR_PTR(ret);
  
- int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
- 				     unsigned long timeout)
- {
--	return wait_event_timeout(q->mq_freeze_wq,
-+	return wait_event_timeout(q->freeze_wq,
- 					percpu_ref_is_zero(&q->q_usage_counter),
- 					timeout);
- }
-@@ -170,11 +170,11 @@ void blk_unfreeze_queue(struct request_queue *q)
- {
- 	int freeze_depth;
+@@ -416,7 +417,7 @@ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
+ 	if (hctx_idx >= q->nr_hw_queues)
+ 		return ERR_PTR(-EIO);
  
--	freeze_depth = atomic_dec_return(&q->mq_freeze_depth);
-+	freeze_depth = atomic_dec_return(&q->freeze_depth);
- 	WARN_ON_ONCE(freeze_depth < 0);
- 	if (!freeze_depth) {
- 		percpu_ref_reinit(&q->q_usage_counter);
--		wake_up_all(&q->mq_freeze_wq);
-+		wake_up_all(&q->freeze_wq);
- 	}
- }
- EXPORT_SYMBOL_GPL(blk_unfreeze_queue);
-@@ -2440,7 +2440,7 @@ void blk_mq_free_queue(struct request_queue *q)
- /* Basically redo blk_mq_init_queue with queue frozen */
- static void blk_mq_queue_reinit(struct request_queue *q)
- {
--	WARN_ON_ONCE(!atomic_read(&q->mq_freeze_depth));
-+	WARN_ON_ONCE(!atomic_read(&q->freeze_depth));
+-	ret = blk_queue_enter(q, true);
++	ret = blk_queue_enter(q, BLK_REQ_NOWAIT);
+ 	if (ret)
+ 		return ERR_PTR(ret);
  
- 	blk_mq_debugfs_unregister_hctxs(q);
- 	blk_mq_sysfs_unregister(q);
+diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+index 17ec83bb0900..e803106a5e5b 100644
+--- a/block/blk-timeout.c
++++ b/block/blk-timeout.c
+@@ -134,7 +134,7 @@ void blk_timeout_work(struct work_struct *work)
+ 	struct request *rq, *tmp;
+ 	int next_set = 0;
+ 
+-	if (blk_queue_enter(q, true))
++	if (blk_queue_enter(q, BLK_REQ_NOWAIT))
+ 		return;
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 93d088ffc05c..98cf2d7ee9d3 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -674,7 +674,7 @@ int bdev_read_page(struct block_device *bdev, sector_t sector,
+ 	if (!ops->rw_page || bdev_get_integrity(bdev))
+ 		return result;
+ 
+-	result = blk_queue_enter(bdev->bd_queue, false);
++	result = blk_queue_enter(bdev->bd_queue, 0);
+ 	if (result)
+ 		return result;
+ 	result = ops->rw_page(bdev, sector + get_start_sect(bdev), page, false);
+@@ -710,7 +710,7 @@ int bdev_write_page(struct block_device *bdev, sector_t sector,
+ 
+ 	if (!ops->rw_page || bdev_get_integrity(bdev))
+ 		return -EOPNOTSUPP;
+-	result = blk_queue_enter(bdev->bd_queue, false);
++	result = blk_queue_enter(bdev->bd_queue, 0);
+ 	if (result)
+ 		return result;
+ 
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 460294bb0fa5..b8053bcc6b5f 100644
+index b8053bcc6b5f..54450715915b 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -564,7 +564,7 @@ struct request_queue {
- 	struct mutex		sysfs_lock;
+@@ -857,6 +857,11 @@ enum {
+ 	BLKPREP_INVALID,	/* invalid command, kill, return -EREMOTEIO */
+ };
  
- 	int			bypass_depth;
--	atomic_t		mq_freeze_depth;
-+	atomic_t		freeze_depth;
++/* passed to blk_queue_enter */
++enum {
++	BLK_REQ_NOWAIT = (1 << 0),
++};
++
+ extern unsigned long blk_max_low_pfn, blk_max_pfn;
  
- #if defined(CONFIG_BLK_DEV_BSG)
- 	bsg_job_fn		*bsg_job_fn;
-@@ -576,7 +576,7 @@ struct request_queue {
- 	struct throtl_data *td;
- #endif
- 	struct rcu_head		rcu_head;
--	wait_queue_head_t	mq_freeze_wq;
-+	wait_queue_head_t	freeze_wq;
- 	struct percpu_ref	q_usage_counter;
- 	struct list_head	all_q_node;
+ /*
+@@ -962,7 +967,7 @@ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			 struct scsi_ioctl_command __user *);
  
+-extern int blk_queue_enter(struct request_queue *q, bool nowait);
++extern int blk_queue_enter(struct request_queue *q, unsigned flags);
+ extern void blk_queue_exit(struct request_queue *q);
+ extern void blk_start_queue(struct request_queue *q);
+ extern void blk_start_queue_async(struct request_queue *q);
 -- 
 2.9.5
