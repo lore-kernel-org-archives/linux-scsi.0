@@ -1,41 +1,49 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in case
- of BLK_STS_RESOURCE
-Date: Wed, 20 Sep 2017 00:55:37 +0800
-Message-ID: <CACVXFVNvGna59hYG+gF7O41tKNURdbb+gm0sW-FGemnJi0RrRg@mail.gmail.com>
-References: <20170915164456.9803-1-ming.lei@redhat.com> <20170915164456.9803-2-ming.lei@redhat.com>
- <1505498249.3420.15.camel@wdc.com> <20170917124000.GB6289@ming.t460p>
- <1505747894.2685.6.camel@wdc.com> <20170919054308.GA2517@ming.t460p>
- <1505835394.2671.18.camel@wdc.com> <20170919155603.GB22809@redhat.com>
- <20170919160401.GC19830@ming.t460p> <1505839754.2671.42.camel@wdc.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: aacraid: Add a small delay after IOP reset
+Date: Tue, 19 Sep 2017 10:05:36 -0700
+Message-ID: <1505840736.2971.12.camel@HansenPartnership.com>
+References: <20170919151156.29412-1-gpiccoli@linux.vnet.ibm.com>
+         <20170919153712.GA15496@infradead.org>
+         <6958d5da-8f9a-ff6b-ccea-16c335b24530@linux.vnet.ibm.com>
+         <20170919155222.GA24688@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f179.google.com ([209.85.128.179]:47871 "EHLO
-        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750733AbdISQzj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2017 12:55:39 -0400
-In-Reply-To: <1505839754.2671.42.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170919155222.GA24688@infradead.org>
+Sender: stable-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: aacraid@microsemi.com, linux-scsi@vger.kernel.org, RaghavaAditya.Renukunta@microsemi.com, david.carroll@microsemi.com, brking@linux.vnet.ibm.com, dougmill@linux.vnet.ibm.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "ming.lei@redhat.com" <ming.lei@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "sagi@grimberg.me" <sagi@grimberg.me>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On Wed, Sep 20, 2017 at 12:49 AM, Bart Van Assche
-<Bart.VanAssche@wdc.com> wrote:
-> On Wed, 2017-09-20 at 00:04 +0800, Ming Lei wrote:
->> Run queue at end_io is definitely wrong, because blk-mq has SCHED_RESTART
->> to do that already.
->
-> Sorry but I disagree. If SCHED_RESTART is set that causes the blk-mq core to
-> reexamine the software queues and the hctx dispatch list but not the requeue
-> list. If a block driver returns BLK_STS_RESOURCE then requests end up on the
-> requeue list. Hence the following code in scsi_end_request():
+On Tue, 2017-09-19 at 08:52 -0700, Christoph Hellwig wrote:
+> On Tue, Sep 19, 2017 at 12:49:21PM -0300, Guilherme G. Piccoli wrote:
+> > 
+> > On 09/19/2017 12:37 PM, Christoph Hellwig wrote:
+> > > 
+> > > On Tue, Sep 19, 2017 at 12:11:55PM -0300, Guilherme G. Piccoli
+> > > wrote:
+> > > > 
+> > > >  	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
+> > > > +
+> > > > +	msleep(5000);
+> > > 
+> > > src_writel is a writel, and thus a posted MMIO write.  You'll
+> > > need
+> > > to have to a read first to make it a reliable timing base.
+> > > 
+> > 
+> > Just for my full understanding - you're saying a readl BEFORE
+> > src_writel() or AFTER src_writel() ?
+> 
+> AFTER.
 
-That doesn't need SCHED_RESTART, because it is requeue's
-responsibility to do that,
-see blk_mq_requeue_work(), which will run hw queue at the end of this func.
+Actually, the whole problem sounds like a posted write.  Likely the
+write that causes the reset doesn't get flushed until the read checking
+if the reset has succeeded, which might explain the 100% initial
+failure.  Why not throw away that first value if it's a failure and
+then do your polled wait and timeout on the reset success.  We should
+anyway be waiting some time for a reset to be issued, so even on non-
+posted write systems we could see this problem intermittently.
 
-
--- 
-Ming Lei
+James
