@@ -1,57 +1,119 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] fcoe-utils: Fix get_ctlr_num() for large ctlr_* indices
-Date: Tue, 19 Sep 2017 11:50:26 +0200
-Message-ID: <093d8f91-43e0-792b-2741-c1250000b805@suse.de>
-References: <20170918143508.4659-1-Andrey.Grafin@acronis.com>
+From: Bill Kuzeja <William.Kuzeja@stratus.com>
+Subject: [PATCH] scsi: SSDs can timeout during FS init because of too many unmaps
+Date: Tue, 19 Sep 2017 09:02:17 -0400
+Message-ID: <1505826137-35001-1-git-send-email-William.Kuzeja@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47745 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751001AbdISJu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Sep 2017 05:50:29 -0400
-In-Reply-To: <20170918143508.4659-1-Andrey.Grafin@acronis.com>
-Content-Language: en-US
+Received: from us-smtp-delivery-131.mimecast.com ([216.205.24.131]:60597 "EHLO
+        us-smtp-delivery-131.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751451AbdISNRf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Sep 2017 09:17:35 -0400
+Received: from EXHQ1.corp.stratus.com (exhq1.corp.stratus.com [134.111.200.125])
+        by mailhub4.stratus.com (8.12.11/8.12.11) with ESMTP id v8JD2H4O009961
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Sep 2017 09:02:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrey Grafin <Andrey.Grafin@acronis.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 09/18/2017 04:35 PM, Andrey Grafin wrote:
-> Each creation of a FCoE device increases counter which is used as a suffix
-> in a FCoE device name in sysfs (i.e. /sys/bus/fcoe/devices/ctlr_1).
-> Once this counter reaches the value of two digits (10 and larger),
-> get_ctlr_num() stopped working properly and a command like `fcoeadm -i`
-> which depends on get_ctlr_num() call doesn't show anything.
-> This patch solves this problem.
-> 
-> Signed-off-by: Andrey Grafin <Andrey.Grafin@acronis.com>
-> ---
->  lib/sysfs_hba.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/lib/sysfs_hba.c b/lib/sysfs_hba.c
-> index 5cb7fd3fa5d..786215440ba 100644
-> --- a/lib/sysfs_hba.c
-> +++ b/lib/sysfs_hba.c
-> @@ -606,7 +606,7 @@ static int get_ctlr_num(const char *netdev)
->  		if (!ctlr)
->  			continue;
->  
-> -		ctlr_num = atoi(&ctlr[strlen(ctlr) - 1]);
-> +		ctlr_num = atoi(&ctlr[sizeof("ctlr_") - 1]);
->  		break;
->  	}
->  
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+I encountered this issue putting XFS on several brands of SSDs on my
+system. During initialization, I would see a bunch of timeouts on
+WRITE_SAME_16 commands, which would get aborted, reissued, and complete.
+The logs look like this:
 
-Cheers,
+kernel: sd 2:0:1:0: attempting task abort! scmd(ffff88086ca0c8c0)
+kernel: sd 1:0:1:0: attempting task abort! scmd(ffff88086c7f2bc0)
+kernel: sd 1:0:1:0: [sds] CDB: Write same(16) 93 08 00 00 00 00 24 04
+07 b8 00 7f ff ff 00 00
+kernel: sd 2:0:1:0: [sdt] CDB: Write same(16) 93 08 00 00 00 00 24 04
+07 b8 00 7f ff ff 00 00
 
-Hannes
+And so on (there are many, many more of these)...
+
+The interesting thing to note as that these are WS16 commands with the
+unmap bit set (this drive's version of UNMAP) with length 0x7fffff.
+This is over 8.3 million blocks to be unmapped at once. Since there are
+many concurrent "unmaps", the drive can get overwhelmed and time out.
+
+----
+
+Why does this happen? Initializing the device with a filesystem (in my
+experience XFS) creates one huge discard for the SSD. This gets
+broken apart into smaller unmap seqments, which get sent down to the
+drive. For the SSDs that I've been working with (lbpws is always set), 
+UNMAPs always gettranslated to WS16 with the unmap bit set.
+
+The size of these segments is determined when the drive is set up
+initially. Early on, in the routine sd_read_block_limits, we read the
+Block Limits VPD page (page 0xb0). Among other things, this page gives
+us the drive's MAX UNMAP LBA count as well as the MAX WRITE SAME LENGTH.
+In my experience, every SSD returns zero for MAX WRITE SAME length but
+does have a real value for MAX_UNMAP LBA count.
+
+The way the code is structured, because we read in zero for
+MAX WRITE SAME, we assume there is no limit for write same commands.
+This *may* be true, but unmap/discard commands translate into write
+same commands with the unmap bit set. Technically, this makes them
+no longer write same commands.
+
+Currently, the max discard size is actually based off of max_ws_blocks.
+When configuring max discard size later, we default to
+SD_MAX_WS16_BLOCKS (0x7fffff) because max_ws_blocks is currently
+always zero:
+
+             max_blocks = min_not_zero(sdkp->max_ws_blocks,
+                                          (u32)SD_MAX_WS16_BLOCKS);
+
+A reasonable fix for this would be to use the MAX UNMAP LBA count
+(stored as max_unmap_blocks) instead of max_ws_blocks in the case where
+we're defaulting to WS16 for unmaps.
+
+After discussing this issue with an SSD vendor's firmware team, they
+confirmed that this was a good way to proceed. That is, it made sense to
+use the max_unmap_blocks count instead of the default SD_MAX_WS16_BLOCKS
+value because 1) max_ws_blocks is always zero, 2) these are really
+unmap commands we're issuing, and 3) the SSD can handle a few unmaps
+the size of SD_MAX_WS16_BLOCKS but not necessarily a barrage of them.
+
+The largest max unmap size I've seen from returned from a drive (from
+the Block Limits VPD page) is 0x270000 or about 30% of SD_MAX_WS16_BLOCKS. 
+Other sizes are much smaller, typically 0x80000 or about 6% of the 
+previous max value.
+
+I've also done performance testing for this change. The only impact I've
+seen on SSDs is during filesystem initialization time, which would be 
+expected since that's most likely the only time we'd be doing really large 
+unmaps. Even so, the impact on FS init is fairly minimal, 10% for some 
+models of SSDs, others no noticeable difference at all.
+
+----
+
+Signed-off-by: Bill Kuzeja <william.kuzeja@stratus.com>
+---
+ drivers/scsi/sd.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 11c1738..f24c4f2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -715,8 +715,13 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 		break;
+ 
+ 	case SD_LBP_WS16:
+-		max_blocks = min_not_zero(sdkp->max_ws_blocks,
+-					  (u32)SD_MAX_WS16_BLOCKS);
++		/* If no value given, use unmap limit - WS16 default too large */
++		if (!sdkp->max_ws_blocks)
++			max_blocks = min_not_zero(sdkp->max_unmap_blocks,
++						  (u32)SD_MAX_WS16_BLOCKS);
++		else
++			max_blocks = min_not_zero(sdkp->max_ws_blocks,
++						  (u32)SD_MAX_WS16_BLOCKS);
+ 		break;
+ 
+ 	case SD_LBP_WS10:
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.3.1
