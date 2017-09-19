@@ -1,15 +1,15 @@
 From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH V3 9/9] pm80xx : corrected linkrate value.
-Date: Tue, 19 Sep 2017 22:40:04 +0530
-Message-ID: <20170919171004.10331-10-Viswas.G@microsemi.com>
+Subject: [PATCH V3 7/9] pm80xx : corrected SATA abort handling sequence.
+Date: Tue, 19 Sep 2017 22:40:02 +0530
+Message-ID: <20170919171004.10331-8-Viswas.G@microsemi.com>
 References: <20170919171004.10331-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0046.outbound.protection.outlook.com ([104.47.34.46]:23749
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0074.outbound.protection.outlook.com ([104.47.38.74]:32154
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751457AbdISRKk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751411AbdISRKk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 19 Sep 2017 13:10:40 -0400
 In-Reply-To: <20170919171004.10331-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,28 +17,283 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-Corrected the value defined for LINKRATE_60 (6 Gig).
+Modified SATA abort handling with following steps:
+1) Set device state as recovery.
+2) Send phy reset.
+3) Wait for reset completion.
+4) After successful reset, abort all IO's to the device.
+5) After aborting all IO's to device, set device state as operational.
 
-Signed-off-by: Raj Dinesh <Raj.Dinesh@microsemi.com>
-Signed-off-by: Viswas G <viswas.g@microsemi.com>
+Signed-off-by: Deepak Ukey <deepak.ukey@microsemi.com>
+Signed-off-by: Viswas G <Viswas.G@microsemi.com>
 
 Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_hwi.c |  8 ++++-
+ drivers/scsi/pm8001/pm8001_sas.c | 71 ++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/pm8001/pm8001_sas.h |  8 +++++
+ drivers/scsi/pm8001/pm80xx_hwi.c | 36 ++++++++++++++++----
+ 4 files changed, 113 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index e36c5176f9a9..889e69ce3689 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -167,7 +167,7 @@
- #define LINKMODE_AUTO			(0x03 << 12)
- #define LINKRATE_15			(0x01 << 8)
- #define LINKRATE_30			(0x02 << 8)
--#define LINKRATE_60			(0x06 << 8)
-+#define LINKRATE_60			(0x04 << 8)
- #define LINKRATE_120			(0x08 << 8)
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index bc4a6f649ec9..db88a8e7ee0e 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3209,10 +3209,16 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("%x phy execute %x phy op failed!\n",
+ 			phy_id, phy_op));
+-	} else
++	} else {
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("%x phy execute %x phy op success!\n",
+ 			phy_id, phy_op));
++		pm8001_ha->phy[phy_id].reset_success = true;
++	}
++	if (pm8001_ha->phy[phy_id].enable_completion) {
++		complete(pm8001_ha->phy[phy_id].enable_completion);
++		pm8001_ha->phy[phy_id].enable_completion = NULL;
++	}
+ 	pm8001_tag_free(pm8001_ha, tag);
+ 	return 0;
+ }
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index e80b0542a67f..60d5bec5c45e 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -1167,13 +1167,16 @@ int pm8001_abort_task(struct sas_task *task)
+ 	struct scsi_lun lun;
+ 	struct pm8001_device *pm8001_dev;
+ 	struct pm8001_tmf_task tmf_task;
+-	int rc = TMF_RESP_FUNC_FAILED;
++	int rc = TMF_RESP_FUNC_FAILED, ret;
++	u32 phy_id;
++	struct sas_task_slow slow_task;
+ 	if (unlikely(!task || !task->lldd_task || !task->dev))
+ 		return TMF_RESP_FUNC_FAILED;
+ 	dev = task->dev;
+ 	pm8001_dev = dev->lldd_dev;
+ 	pm8001_ha = pm8001_find_ha_by_dev(dev);
+ 	device_id = pm8001_dev->device_id;
++	phy_id = pm8001_dev->attached_phy;
+ 	rc = pm8001_find_tag(task, &tag);
+ 	if (rc == 0) {
+ 		pm8001_printk("no tag for task:%p\n", task);
+@@ -1184,6 +1187,11 @@ int pm8001_abort_task(struct sas_task *task)
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 		return TMF_RESP_FUNC_COMPLETE;
+ 	}
++	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
++	if (task->slow_task == NULL) {
++		init_completion(&slow_task.completion);
++		task->slow_task = &slow_task;
++	}
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 	if (task->task_proto & SAS_PROTOCOL_SSP) {
+ 		struct scsi_cmnd *cmnd = task->uldd_task;
+@@ -1195,8 +1203,61 @@ int pm8001_abort_task(struct sas_task *task)
+ 			pm8001_dev->sas_device, 0, tag);
+ 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
+ 		task->task_proto & SAS_PROTOCOL_STP) {
+-		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
+-			pm8001_dev->sas_device, 0, tag);
++		if (pm8001_ha->chip_id == chip_8006) {
++			DECLARE_COMPLETION_ONSTACK(completion_reset);
++			DECLARE_COMPLETION_ONSTACK(completion);
++			struct pm8001_phy *phy = pm8001_ha->phy + phy_id;
++			/* 1. Set Device state as Recovery*/
++			pm8001_dev->setds_completion = &completion;
++			PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
++				pm8001_dev, 0x03);
++			wait_for_completion(&completion);
++			/* 2. Send Phy Control Hard Reset */
++			reinit_completion(&completion);
++			phy->reset_success = false;
++			phy->enable_completion = &completion;
++			phy->reset_completion = &completion_reset;
++			ret = PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
++				PHY_HARD_RESET);
++			if (ret)
++				goto out;
++			PM8001_MSG_DBG(pm8001_ha,
++				pm8001_printk("Waiting for local phy ctl\n"));
++			wait_for_completion(&completion);
++			if (!phy->reset_success)
++				goto out;
++			/* 3. Wait for Port Reset complete / Port reset TMO*/
++			PM8001_MSG_DBG(pm8001_ha,
++				pm8001_printk("Waiting for Port reset\n"));
++			wait_for_completion(&completion_reset);
++			if (phy->port_reset_status)
++				goto out;
++			/* 4. SATA Abort ALL
++			 * we wait for the task to be aborted so that the task
++			 * is removed from the ccb. on success the caller is
++			 * going to free the task.
++			 */
++			ret = pm8001_exec_internal_task_abort(pm8001_ha,
++				pm8001_dev, pm8001_dev->sas_device, 1, tag);
++			if (ret)
++				goto out;
++			ret = wait_for_completion_timeout(
++				&task->slow_task->completion,
++				PM8001_TASK_TIMEOUT * HZ);
++			if (!ret)
++				goto out;
++
++			/* 5. Set Device State as Operational */
++			reinit_completion(&completion);
++			pm8001_dev->setds_completion = &completion;
++			PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
++				pm8001_dev, 0x01);
++			wait_for_completion(&completion);
++		} else {
++			rc = pm8001_exec_internal_task_abort(pm8001_ha,
++				pm8001_dev, pm8001_dev->sas_device, 0, tag);
++		}
++		rc = TMF_RESP_FUNC_COMPLETE;
+ 	} else if (task->task_proto & SAS_PROTOCOL_SMP) {
+ 		/* SMP */
+ 		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
+@@ -1204,6 +1265,10 @@ int pm8001_abort_task(struct sas_task *task)
  
- /* phy_profile */
+ 	}
+ out:
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (task->slow_task == &slow_task)
++		task->slow_task = NULL;
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 	if (rc != TMF_RESP_FUNC_COMPLETE)
+ 		pm8001_printk("rc= %d\n", rc);
+ 	return rc;
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index c75de413e062..80b4dd6df0c2 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -263,8 +263,15 @@ struct pm8001_phy {
+ 	u8			phy_state;
+ 	enum sas_linkrate	minimum_linkrate;
+ 	enum sas_linkrate	maximum_linkrate;
++	struct completion	*reset_completion;
++	bool			port_reset_status;
++	bool			reset_success;
+ };
+ 
++/* port reset status */
++#define PORT_RESET_SUCCESS	0x00
++#define PORT_RESET_TMO		0x01
++
+ struct pm8001_device {
+ 	enum sas_device_type	dev_type;
+ 	struct domain_device	*sas_device;
+@@ -533,6 +540,7 @@ struct pm8001_hba_info {
+ 	u32			smp_exp_mode;
+ 	const struct firmware 	*fw_image;
+ 	struct isr_param irq_vector[PM8001_MAX_MSIX_VEC];
++	u32			reset_in_progress;
+ };
+ 
+ struct pm8001_work {
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 8f1f5dc77d71..92d2045dea68 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -1781,6 +1781,8 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
+ 			"task 0x%p done with io_status 0x%x resp 0x%x "
+ 			"stat 0x%x but aborted by upper layer!\n",
+ 			t, status, ts->resp, ts->stat));
++		if (t->slow_task)
++			complete(&t->slow_task->completion);
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 	} else {
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);
+@@ -3044,6 +3046,7 @@ hw_event_phy_down(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 
+ 	struct pm8001_port *port = &pm8001_ha->port[port_id];
+ 	struct pm8001_phy *phy = &pm8001_ha->phy[phy_id];
++	u32 port_sata = (phy->phy_type & PORT_TYPE_SATA);
+ 	port->port_state = portstate;
+ 	phy->identify.device_type = 0;
+ 	phy->phy_attached = 0;
+@@ -3055,7 +3058,7 @@ hw_event_phy_down(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 			pm8001_printk(" PortInvalid portID %d\n", port_id));
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk(" Last phy Down and port invalid\n"));
+-		if (phy->phy_type & PORT_TYPE_SATA) {
++		if (port_sata) {
+ 			phy->phy_type = 0;
+ 			port->port_attached = 0;
+ 			pm80xx_hw_event_ack_req(pm8001_ha, 0, HW_EVENT_PHY_DOWN,
+@@ -3077,7 +3080,7 @@ hw_event_phy_down(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 			pm8001_printk(" Phy Down and PORT_LOSTCOMM\n"));
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk(" Last phy Down and port invalid\n"));
+-		if (phy->phy_type & PORT_TYPE_SATA) {
++		if (port_sata) {
+ 			port->port_attached = 0;
+ 			phy->phy_type = 0;
+ 			pm80xx_hw_event_ack_req(pm8001_ha, 0, HW_EVENT_PHY_DOWN,
+@@ -3093,6 +3096,11 @@ hw_event_phy_down(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		break;
+ 
+ 	}
++	if (port_sata && (portstate != PORT_IN_RESET)) {
++		struct sas_ha_struct *sas_ha = pm8001_ha->sas;
++
++		sas_ha->notify_phy_event(&phy->sas_phy, PHYE_LOSS_OF_SIGNAL);
++	}
+ }
+ 
+ static int mpi_phy_start_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -3195,12 +3203,14 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	case HW_EVENT_PHY_DOWN:
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("HW_EVENT_PHY_DOWN\n"));
+-		if (phy->phy_type & PORT_TYPE_SATA)
+-			sas_ha->notify_phy_event(&phy->sas_phy,
+-				PHYE_LOSS_OF_SIGNAL);
++		hw_event_phy_down(pm8001_ha, piomb);
++		if (pm8001_ha->reset_in_progress) {
++			PM8001_MSG_DBG(pm8001_ha,
++				pm8001_printk("Reset in progress\n"));
++			return 0;
++		}
+ 		phy->phy_attached = 0;
+ 		phy->phy_state = 0;
+-		hw_event_phy_down(pm8001_ha, piomb);
+ 		break;
+ 	case HW_EVENT_PORT_INVALID:
+ 		PM8001_MSG_DBG(pm8001_ha,
+@@ -3307,9 +3317,17 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	case HW_EVENT_PORT_RESET_TIMER_TMO:
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("HW_EVENT_PORT_RESET_TIMER_TMO\n"));
++		pm80xx_hw_event_ack_req(pm8001_ha, 0, HW_EVENT_PHY_DOWN,
++			port_id, phy_id, 0, 0);
+ 		sas_phy_disconnected(sas_phy);
+ 		phy->phy_attached = 0;
+ 		sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ERR);
++		if (pm8001_ha->phy[phy_id].reset_completion) {
++			pm8001_ha->phy[phy_id].port_reset_status =
++					PORT_RESET_TMO;
++			complete(pm8001_ha->phy[phy_id].reset_completion);
++			pm8001_ha->phy[phy_id].reset_completion = NULL;
++		}
+ 		break;
+ 	case HW_EVENT_PORT_RECOVERY_TIMER_TMO:
+ 		PM8001_MSG_DBG(pm8001_ha,
+@@ -3334,6 +3352,12 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	case HW_EVENT_PORT_RESET_COMPLETE:
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("HW_EVENT_PORT_RESET_COMPLETE\n"));
++		if (pm8001_ha->phy[phy_id].reset_completion) {
++			pm8001_ha->phy[phy_id].port_reset_status =
++					PORT_RESET_SUCCESS;
++			complete(pm8001_ha->phy[phy_id].reset_completion);
++			pm8001_ha->phy[phy_id].reset_completion = NULL;
++		}
+ 		break;
+ 	case EVENT_BROADCAST_ASYNCH_EVENT:
+ 		PM8001_MSG_DBG(pm8001_ha,
 -- 
 2.12.3
