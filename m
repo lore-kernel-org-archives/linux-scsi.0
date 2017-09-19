@@ -1,91 +1,52 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Is the possible cross-talking between unrelated file-descriptors
- on bsg-device by design?
-Date: Tue, 19 Sep 2017 14:16:26 -0400
-Message-ID: <68979092-baeb-58e7-0cbc-c6c7bc986908@interlog.com>
-References: <20170919145632.GB28979@bblock-ThinkPad-W530>
-Reply-To: dgilbert@interlog.com
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in case
+ of BLK_STS_RESOURCE
+Date: Tue, 19 Sep 2017 18:42:30 +0000
+Message-ID: <1505846549.2671.52.camel@wdc.com>
+References: <20170915164456.9803-1-ming.lei@redhat.com>
+         <20170915164456.9803-2-ming.lei@redhat.com>
+         <1505498249.3420.15.camel@wdc.com> <20170917124000.GB6289@ming.t460p>
+         <1505747894.2685.6.camel@wdc.com> <20170919054308.GA2517@ming.t460p>
+         <1505835394.2671.18.camel@wdc.com> <20170919155603.GB22809@redhat.com>
+         <20170919160401.GC19830@ming.t460p> <1505839754.2671.42.camel@wdc.com>
+         <CACVXFVNvGna59hYG+gF7O41tKNURdbb+gm0sW-FGemnJi0RrRg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:55868 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751370AbdISSQi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Sep 2017 14:16:38 -0400
-In-Reply-To: <20170919145632.GB28979@bblock-ThinkPad-W530>
-Content-Language: en-CA
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:25711 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751227AbdISSme (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2017 14:42:34 -0400
+In-Reply-To: <CACVXFVNvGna59hYG+gF7O41tKNURdbb+gm0sW-FGemnJi0RrRg@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <DD54F743DF8E2C4FB60BB499026AF9CC@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Block <bblock@linux.vnet.ibm.com>, linux-block@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Rob Lester <Robert.Lester@hgst.com>
+To: "tom.leiming@gmail.com" <tom.leiming@gmail.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "sagi@grimberg.me" <sagi@grimberg.me>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On 2017-09-19 10:56 AM, Benjamin Block wrote:
-> Hello linux-block,
-> 
-> I wrote some tests recently to test patches against bsg.c and bsg-lib.c,
-> and while writing those I noticed something strange:
-> 
-> When you use the write() and read() call on multiple file-descriptors
-> for a single bsg-device (FC or SCSI), it is possible that you get
-> cross-talk between those different file-descriptors.
-> 
-> E.g.: You have two independent processes open a FD on /dev/bsg/fc_host0
-> and you send commands via write() in both processes, when they both do
-> read() later on - to read the response for the commands they send before
-> -, it is possible that process A gets the response (Sense-Data,
-> FC-Protocol-Data, ...) for a command that process B wrote and vis-a-vis.
-> 
-> I noticed this because in my tests I 'tag' each command I send with
-> write() via a value I write into the usr_ptr field of sg_io_v4. When I
-> later user read() to receive responses I check for this tag in a
-> hash-table and so can look up the original command. When I used this and
-> spawned multiple processes with the same target bsg-device, I got
-> responses for commands I don't have tags for in my hash-table, so they
-> were written by an other process. This never happend when I only spawn
-> one test-process.
-> 
-> This seems awfully contra-productive.. so much that I don't see any
-> point in allowing users to open more than one FD per bsg-device, because
-> that would inevitably lead to very hard to debug 'bugs'. And I wonder if
-> this is really by design or some regression that happend over time.
-> 
-> I looked at the code in bsg.c and yes, it seems this is what is coded
-> right now. We have a hash-table which manages all 'struct bsg_device's
-> who are indexed by device-minors, so one hash-table entry per
-> device-node.
-> 
-> So eh, long talk short question, is that intended?
-
-Hi,
-About once a year I point out that major misfeature in the bsg driver
-and no-one seems to care. Most recently I pointed it out in a
-discussion about SCSI SG CVE-2017-0794 6 days ago:
-   " ... Last time I looked at the bsg driver, a SCSI command
-     could be issued on one file descriptor and its data-in block
-     and SCSI status delivered to another file descriptor to the
-     same block device (potentially in another process). IOW chaos"
-
-It is hard to imagine any sane application relying on this bizarre
-behaviour so fixing it should not break any applications. My guess
-is that it would require a non-trivial patch set to fix. Would you
-like to volunteer?
-
-
-In the same post I asked (thinking it was cc-ed to this list):
-"BTW Is there a NVMe pass-through?"
-
-And the answer is: yes there is in include/uapi/linux/nvme_ioctl.h
-which has struct nvme_user_io and struct nvme_passthru_cmd plus
-several ioctl constants. See the smartmontool repository for
-examples of how to use them. I also discovered there is a SCSI
-to NVMe translation layer (SNTL) hiding in some kernels. Hence
-commands like this:
-    sg_inq /dev/nvme0    ## that's a 'char' device, and ...
-    sg_vpd /dev/nvme0n1  ## that's a block device "namespace 1"
-
-work as expected. Ah, I spoke too soon ... in another post I have
-been informed that the SNTL has now been removed from the kernel.
-Just goes to show the human stupidity is still infinite :-)
-
-Doug Gilbert
+T24gV2VkLCAyMDE3LTA5LTIwIGF0IDAwOjU1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
+V2VkLCBTZXAgMjAsIDIwMTcgYXQgMTI6NDkgQU0sIEJhcnQgVmFuIEFzc2NoZQ0KPiA8QmFydC5W
+YW5Bc3NjaGVAd2RjLmNvbT4gd3JvdGU6DQo+ID4gT24gV2VkLCAyMDE3LTA5LTIwIGF0IDAwOjA0
+ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gPiA+IFJ1biBxdWV1ZSBhdCBlbmRfaW8gaXMgZGVm
+aW5pdGVseSB3cm9uZywgYmVjYXVzZSBibGstbXEgaGFzIFNDSEVEX1JFU1RBUlQNCj4gPiA+IHRv
+IGRvIHRoYXQgYWxyZWFkeS4NCj4gPiANCj4gPiBTb3JyeSBidXQgSSBkaXNhZ3JlZS4gSWYgU0NI
+RURfUkVTVEFSVCBpcyBzZXQgdGhhdCBjYXVzZXMgdGhlIGJsay1tcSBjb3JlIHRvDQo+ID4gcmVl
+eGFtaW5lIHRoZSBzb2Z0d2FyZSBxdWV1ZXMgYW5kIHRoZSBoY3R4IGRpc3BhdGNoIGxpc3QgYnV0
+IG5vdCB0aGUgcmVxdWV1ZQ0KPiA+IGxpc3QuIElmIGEgYmxvY2sgZHJpdmVyIHJldHVybnMgQkxL
+X1NUU19SRVNPVVJDRSB0aGVuIHJlcXVlc3RzIGVuZCB1cCBvbiB0aGUNCj4gPiByZXF1ZXVlIGxp
+c3QuIEhlbmNlIHRoZSBmb2xsb3dpbmcgY29kZSBpbiBzY3NpX2VuZF9yZXF1ZXN0KCk6DQo+IA0K
+PiBUaGF0IGRvZXNuJ3QgbmVlZCBTQ0hFRF9SRVNUQVJULCBiZWNhdXNlIGl0IGlzIHJlcXVldWUn
+cw0KPiByZXNwb25zaWJpbGl0eSB0byBkbyB0aGF0LA0KPiBzZWUgYmxrX21xX3JlcXVldWVfd29y
+aygpLCB3aGljaCB3aWxsIHJ1biBodyBxdWV1ZSBhdCB0aGUgZW5kIG9mIHRoaXMgZnVuYy4NCg0K
+VGhhdCdzIG5vdCB3aGF0IEkgd2FzIHRyeWluZyB0byBleHBsYWluLiBXaGF0IEkgd2FzIHRyeWlu
+ZyB0byBleHBsYWluIGlzIHRoYXQNCmV2ZXJ5IGJsb2NrIGRyaXZlciB0aGF0IGNhbiBjYXVzZSBh
+IHJlcXVlc3QgdG8gZW5kIHVwIG9uIHRoZSByZXF1ZXVlIGxpc3QgaXMNCnJlc3BvbnNpYmxlIGZv
+ciBraWNraW5nIHRoZSByZXF1ZXVlIGxpc3QgYXQgYSBsYXRlciB0aW1lLiBIZW5jZSB0aGUNCmti
+bG9ja2Rfc2NoZWR1bGVfd29yaygmc2Rldi0+cmVxdWV1ZV93b3JrKSBjYWxsIGluIHRoZSBTQ1NJ
+IGNvcmUgYW5kIHRoZQ0KYmxrX21xX2tpY2tfcmVxdWV1ZV9saXN0KCkgYW5kIGJsa19tcV9kZWxh
+eV9raWNrX3JlcXVldWVfbGlzdCgpIGNhbGxzIGluIHRoZQ0KZG0gY29kZS4gV2hhdCBJIHdvdWxk
+IGxpa2UgdG8gc2VlIGlzIG1lYXN1cmVtZW50IHJlc3VsdHMgZm9yIGRtLW1wYXRoIHdpdGhvdXQN
+CnRoaXMgcGF0Y2ggc2VyaWVzIGFuZCBhIGNhbGwgdG8ga2ljayB0aGUgcmVxdWV1ZSBsaXN0IGFk
+ZGVkIHRvIHRoZSBkbS1tcGF0aA0KZW5kX2lvIGNvZGUuDQoNCkJhcnQu
