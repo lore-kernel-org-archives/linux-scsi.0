@@ -1,60 +1,23 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: Is the possible cross-talking between unrelated file-descriptors on
- bsg-device by design?
-Date: Tue, 19 Sep 2017 16:56:32 +0200
-Message-ID: <20170919145632.GB28979@bblock-ThinkPad-W530>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V6 2/3] dma-mapping: Rework dma_get_cache_alignment()
+        function
+Date: Tue, 19 Sep 2017 17:02:52 +0200
+Message-ID: <20170919150252.GA23540@lst.de>
+References: <1505811161-25246-1-git-send-email-chenhc@lemote.com> <1505811161-25246-2-git-send-email-chenhc@lemote.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-block-owner@vger.kernel.org
-To: linux-block@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+In-Reply-To: <1505811161-25246-2-git-send-email-chenhc@lemote.com>
+Sender: stable-owner@vger.kernel.org
+To: Huacai Chen <chenhc@lemote.com>
+Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello linux-block,
+>  	mdev->limits.reserved_mtts = ALIGN(mdev->limits.reserved_mtts * mdev->limits.mtt_seg_size,
+> -					   dma_get_cache_alignment()) / mdev->limits.mtt_seg_size;
+> +					   dma_get_cache_alignment(NULL)) / mdev->limits.mtt_seg_size;
+>  
+>  	mdev->mr_table.mtt_table = mthca_alloc_icm_table(mdev, init_hca->mtt_base,
 
-I wrote some tests recently to test patches against bsg.c and bsg-lib.c,
-and while writing those I noticed something strange:
-
-When you use the write() and read() call on multiple file-descriptors
-for a single bsg-device (FC or SCSI), it is possible that you get
-cross-talk between those different file-descriptors.
-
-E.g.: You have two independent processes open a FD on /dev/bsg/fc_host0
-and you send commands via write() in both processes, when they both do
-read() later on - to read the response for the commands they send before
--, it is possible that process A gets the response (Sense-Data,
-FC-Protocol-Data, ...) for a command that process B wrote and vis-a-vis.
-
-I noticed this because in my tests I 'tag' each command I send with
-write() via a value I write into the usr_ptr field of sg_io_v4. When I
-later user read() to receive responses I check for this tag in a
-hash-table and so can look up the original command. When I used this and
-spawned multiple processes with the same target bsg-device, I got
-responses for commands I don't have tags for in my hash-table, so they
-were written by an other process. This never happend when I only spawn
-one test-process.
-
-This seems awfully contra-productive.. so much that I don't see any
-point in allowing users to open more than one FD per bsg-device, because
-that would inevitably lead to very hard to debug 'bugs'. And I wonder if
-this is really by design or some regression that happend over time.
-
-I looked at the code in bsg.c and yes, it seems this is what is coded
-right now. We have a hash-table which manages all 'struct bsg_device's
-who are indexed by device-minors, so one hash-table entry per
-device-node.
-
-So eh, long talk short question, is that intended?
-
-
-
-                                                    Beste Grüße / Best regards,
-                                                      - Benjamin Block
--- 
-Linux on z Systems Development         /         IBM Systems & Technology Group
-		  IBM Deutschland Research & Development GmbH 
-Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+Please pass the actually relevant struct device for each call.
