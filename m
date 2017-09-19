@@ -1,7 +1,7 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [RESEND PATCH v4 4/6] libsas: Use new workqueue to run sas event and disco event
-Date: Tue, 19 Sep 2017 15:09:04 +0800
-Message-ID: <1505804946-39266-5-git-send-email-yanaijie@huawei.com>
+Subject: [RESEND PATCH v4 3/6] libsas: make the event threshold configurable
+Date: Tue, 19 Sep 2017 15:09:03 +0800
+Message-ID: <1505804946-39266-4-git-send-email-yanaijie@huawei.com>
 References: <1505804946-39266-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,138 +9,100 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1505804946-39266-1-git-send-email-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, Jason Yan <yanaijie@huawei.com>, Yijing Wang <wangyijing@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenweilong@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, Jason Yan <yanaijie@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Now all libsas works are queued to scsi host workqueue,
-include sas event work post by LLDD and sas discovery
-work, and a sas hotplug flow may be divided into several
-works, e.g libsas receive a PORTE_BYTES_DMAED event,
-currently we process it as following steps:
-sas_form_port  --- run in work in shost workq
-	sas_discover_domain  --- run in another work in shost workq
-		...
-		sas_probe_devices  --- run in new work in shost workq
-We found during hot-add a device, libsas may need run several
-works in same workqueue to add device in system, the process is
-not atomic, it may interrupt by other sas event works, like
-PHYE_LOSS_OF_SIGNAL.
+Add a sysfs attr that LLDD can configure it for every host. We made
+a example in hisi_sas. Other LLDDs using libsas can implement it if
+they want.
 
-This patch is preparation of execute libsas sas event in sync. We need
-to use different workqueue to run sas event and disco event. Otherwise
-the work will be blocked for waiting another chained work in the same
-workqueue.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Suggested-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
 CC: John Garry <john.garry@huawei.com>
 CC: Johannes Thumshirn <jthumshirn@suse.de>
 CC: Ewan Milne <emilne@redhat.com>
 CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
 CC: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/scsi/libsas/sas_discover.c |  2 +-
- drivers/scsi/libsas/sas_event.c    |  4 ++--
- drivers/scsi/libsas/sas_init.c     | 18 ++++++++++++++++++
- include/scsi/libsas.h              |  3 +++
- 4 files changed, 24 insertions(+), 3 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c |  6 ++++++
+ drivers/scsi/libsas/sas_init.c        | 27 +++++++++++++++++++++++++++
+ include/scsi/libsas.h                 |  1 +
+ 3 files changed, 34 insertions(+)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 60de662..14f714d 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -534,7 +534,7 @@ static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
- 	 * workqueue, or known to be submitted from a context that is
- 	 * not racing against draining
- 	 */
--	scsi_queue_work(ha->core.shost, &sw->work);
-+	queue_work(ha->disco_q, &sw->work);
- }
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 5e47abb..9eceed1 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1470,6 +1470,11 @@ EXPORT_SYMBOL_GPL(hisi_sas_rescan_topology);
+ struct scsi_transport_template *hisi_sas_stt;
+ EXPORT_SYMBOL_GPL(hisi_sas_stt);
  
- static void sas_chain_event(int event, unsigned long *pending,
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 6db941d..b124198 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -40,7 +40,7 @@ int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
- 		if (list_empty(&sw->drain_node))
- 			list_add_tail(&sw->drain_node, &ha->defer_q);
- 	} else
--		rc = scsi_queue_work(ha->core.shost, &sw->work);
-+		rc = queue_work(ha->event_q, &sw->work);
- 
- 	return rc;
- }
-@@ -61,7 +61,7 @@ static int sas_queue_event(int event, struct sas_work *work,
- 
- void __sas_drain_work(struct sas_ha_struct *ha)
- {
--	struct workqueue_struct *wq = ha->core.shost->work_q;
-+	struct workqueue_struct *wq = ha->event_q;
- 	struct sas_work *sw, *_sw;
- 	int ret;
- 
++struct device_attribute *host_attrs[] = {
++    &dev_attr_phy_event_threshold,
++    NULL,
++};
++
+ static struct scsi_host_template _hisi_sas_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -1489,6 +1494,7 @@ static struct scsi_host_template _hisi_sas_sht = {
+ 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++	.shost_attrs		= host_attrs,
+ };
+ struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
+ EXPORT_SYMBOL_GPL(hisi_sas_sht);
 diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index e2d98a8..b49c46f 100644
+index b1e03d5..e2d98a8 100644
 --- a/drivers/scsi/libsas/sas_init.c
 +++ b/drivers/scsi/libsas/sas_init.c
-@@ -109,6 +109,7 @@ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
+@@ -537,6 +537,33 @@ static struct sas_function_template sft = {
+ 	.smp_handler = sas_smp_handler,
+ };
  
- int sas_register_ha(struct sas_ha_struct *sas_ha)
++static inline ssize_t phy_event_threshold_show(struct device *dev,
++			struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++
++	return scnprintf(buf, PAGE_SIZE, "%u\n", sha->event_thres);
++}
++
++static inline ssize_t phy_event_threshold_store(struct device *dev,
++			struct device_attribute *attr,
++			const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++
++	sha->event_thres = simple_strtol(buf, NULL, 10);
++
++	return count;
++}
++
++DEVICE_ATTR(phy_event_threshold,
++             S_IRUGO|S_IWUSR,
++             phy_event_threshold_show,
++             phy_event_threshold_store);
++EXPORT_SYMBOL_GPL(dev_attr_phy_event_threshold);
++
+ struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *dft)
  {
-+	char name[64];
- 	int error = 0;
- 
- 	mutex_init(&sas_ha->disco_mutex);
-@@ -142,10 +143,24 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
- 		goto Undo_ports;
- 	}
- 
-+	error = -ENOMEM;
-+	snprintf(name, sizeof(name), "%s_event_q", dev_name(sas_ha->dev));
-+	sas_ha->event_q = create_singlethread_workqueue(name);
-+	if (!sas_ha->event_q)
-+		goto Undo_ports;
-+
-+	snprintf(name, sizeof(name), "%s_disco_q", dev_name(sas_ha->dev));
-+	sas_ha->disco_q = create_singlethread_workqueue(name);
-+	if (!sas_ha->disco_q)
-+		goto Undo_event_q;
-+
- 	INIT_LIST_HEAD(&sas_ha->eh_done_q);
- 	INIT_LIST_HEAD(&sas_ha->eh_ata_q);
- 
- 	return 0;
-+
-+Undo_event_q:
-+	destroy_workqueue(sas_ha->event_q);
- Undo_ports:
- 	sas_unregister_ports(sas_ha);
- Undo_phys:
-@@ -176,6 +191,9 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
- 	__sas_drain_work(sas_ha);
- 	mutex_unlock(&sas_ha->drain_mutex);
- 
-+	destroy_workqueue(sas_ha->disco_q);
-+	destroy_workqueue(sas_ha->event_q);
-+
- 	return 0;
- }
- 
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 08c1c32..d1ab157 100644
+index 2fa0b13..08c1c32 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -388,6 +388,9 @@ struct sas_ha_struct {
- 	struct device *dev;	  /* should be set */
- 	struct module *lldd_module; /* should be set */
+@@ -679,6 +679,7 @@ extern int sas_bios_param(struct scsi_device *,
+ 			  sector_t capacity, int *hsc);
+ extern struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *);
++extern struct device_attribute dev_attr_phy_event_threshold;
  
-+	struct workqueue_struct *event_q;
-+	struct workqueue_struct *disco_q;
-+
- 	u8 *sas_addr;		  /* must be set */
- 	u8 hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
+ int  sas_discover_root_expander(struct domain_device *);
  
 -- 
 2.5.0
