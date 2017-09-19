@@ -1,49 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: aacraid: Add a small delay after IOP reset
-Date: Tue, 19 Sep 2017 10:05:36 -0700
-Message-ID: <1505840736.2971.12.camel@HansenPartnership.com>
-References: <20170919151156.29412-1-gpiccoli@linux.vnet.ibm.com>
-         <20170919153712.GA15496@infradead.org>
-         <6958d5da-8f9a-ff6b-ccea-16c335b24530@linux.vnet.ibm.com>
-         <20170919155222.GA24688@infradead.org>
+From: Viswas G <Viswas.G@microsemi.com>
+Subject: [PATCH V3 0/9] pm80xx updates
+Date: Tue, 19 Sep 2017 22:39:55 +0530
+Message-ID: <20170919171004.10331-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170919155222.GA24688@infradead.org>
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: aacraid@microsemi.com, linux-scsi@vger.kernel.org, RaghavaAditya.Renukunta@microsemi.com, david.carroll@microsemi.com, brking@linux.vnet.ibm.com, dougmill@linux.vnet.ibm.com, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0088.outbound.protection.outlook.com ([104.47.41.88]:35283
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751001AbdISRKe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Sep 2017 13:10:34 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-On Tue, 2017-09-19 at 08:52 -0700, Christoph Hellwig wrote:
-> On Tue, Sep 19, 2017 at 12:49:21PM -0300, Guilherme G. Piccoli wrote:
-> > 
-> > On 09/19/2017 12:37 PM, Christoph Hellwig wrote:
-> > > 
-> > > On Tue, Sep 19, 2017 at 12:11:55PM -0300, Guilherme G. Piccoli
-> > > wrote:
-> > > > 
-> > > >  	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
-> > > > +
-> > > > +	msleep(5000);
-> > > 
-> > > src_writel is a writel, and thus a posted MMIO write.  You'll
-> > > need
-> > > to have to a read first to make it a reliable timing base.
-> > > 
-> > 
-> > Just for my full understanding - you're saying a readl BEFORE
-> > src_writel() or AFTER src_writel() ?
-> 
-> AFTER.
+This patch set include some bug fixes and enhancement for pm80xx driver.
 
-Actually, the whole problem sounds like a posted write.  Likely the
-write that causes the reset doesn't get flushed until the read checking
-if the reset has succeeded, which might explain the 100% initial
-failure.  Why not throw away that first value if it's a failure and
-then do your polled wait and timeout on the reset success.  We should
-anyway be waiting some time for a reset to be issued, so even on non-
-posted write systems we could see this problem intermittently.
+Changes from V2:
+	- Corrected date.
 
-James
+Changes from V1:
+        - sas_identify_frame_local structure moved to pm80xx_hwi.h
+        - sata abort handling patch split to four patches.
+                - tag allocation for phy control request.
+                - cleanup in pm8001_abort_task function.
+                - modified port reset timer value for PM8006 card
+                - corrected SATA abort handling sequence.
+
+
+Viswas G (9):
+  pm80xx : redefine sas_identify_frame structure
+  pm80xx : ILA and inactive firmware version through sysfs
+  pm80xx : Different SAS addresses for phys.
+  pm80xx : tag allocation for phy control request.
+  pm80xx : cleanup in pm8001_abort_task function.
+  pm80xx : modified port reset timer value for PM8006 card
+  pm80xx : corrected SATA abort handling sequence.
+  pm80xx : panic on ncq error cleaning up the read log.
+  pm80xx : corrected linkrate value.
+
+ drivers/scsi/pm8001/pm8001_ctl.c  |  54 +++++++++++++++++
+ drivers/scsi/pm8001/pm8001_hwi.c  |  11 +++-
+ drivers/scsi/pm8001/pm8001_init.c |  13 +++--
+ drivers/scsi/pm8001/pm8001_sas.c  | 118 ++++++++++++++++++++++++++------------
+ drivers/scsi/pm8001/pm8001_sas.h  |  10 ++++
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  61 ++++++++++++++++----
+ drivers/scsi/pm8001/pm80xx_hwi.h  | 102 +++++++++++++++++++++++++++++++-
+ 7 files changed, 313 insertions(+), 56 deletions(-)
+
+-- 
+2.12.3
