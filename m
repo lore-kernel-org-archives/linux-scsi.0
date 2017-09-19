@@ -1,187 +1,75 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.14-rc1
-Date: Tue, 19 Sep 2017 16:37:19 -0700
-Message-ID: <1505864239.2971.42.camel@HansenPartnership.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in
+ case of BLK_STS_RESOURCE
+Date: Tue, 19 Sep 2017 19:50:06 -0400
+Message-ID: <20170919235006.GB23864@redhat.com>
+References: <1505747894.2685.6.camel@wdc.com>
+ <20170919054308.GA2517@ming.t460p>
+ <1505835394.2671.18.camel@wdc.com>
+ <20170919155603.GB22809@redhat.com>
+ <20170919160401.GC19830@ming.t460p>
+ <1505839754.2671.42.camel@wdc.com>
+ <CACVXFVNvGna59hYG+gF7O41tKNURdbb+gm0sW-FGemnJi0RrRg@mail.gmail.com>
+ <1505846549.2671.52.camel@wdc.com>
+ <20170919224410.GA21829@ming.t460p>
+ <1505863546.2671.55.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:9079 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751227AbdISXuN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Sep 2017 19:50:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1505863546.2671.55.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "tom.leiming@gmail.com" <tom.leiming@gmail.com>, "sagi@grimberg.me" <sagi@grimberg.me>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-This is a set of five small fixes: one is a null deref fix which is
-pretty critical for the fc transport class and one fixes a potential
-security issue of sg leaking kernel information.
+On Tue, Sep 19 2017 at  7:25pm -0400,
+Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
 
-The patch is available here:
+> On Wed, 2017-09-20 at 06:44 +0800, Ming Lei wrote:
+> > For this issue, it isn't same between SCSI and dm-rq.
+> > 
+> > We don't need to run queue in .end_io of dm, and the theory is
+> > simple, otherwise it isn't performance issue, and should be I/O hang.
+> > 
+> > 1) every dm-rq's request is 1:1 mapped to SCSI's request
+> > 
+> > 2) if there is any mapped SCSI request not finished, either
+> > in-flight or in requeue list or whatever, there will be one
+> > corresponding dm-rq's request in-flight
+> > 
+> > 3) once the mapped SCSI request is completed, dm-rq's completion
+> > path will be triggered and dm-rq's queue will be rerun because of
+> > SCHED_RESTART in dm-rq
+> > 
+> > So the hw queue of dm-rq has been run in dm-rq's completion path
+> > already, right? Why do we need to do it again in the hot path?
+> 
+> The measurement data in the description of patch 5/5 shows a significant
+> performance regression for an important workload, namely random I/O.
+> Additionally, the performance improvement for sequential I/O was achieved
+> for an unrealistically low queue depth.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+So you've ignored Ming's question entirely and instead decided to focus
+on previous questions you raised to Ming that he ignored.  This is
+getting tedious.
 
-The short changelog is:
+Especially given that Ming said the first patch that all this fighting
+has been over isn't even required to attain the improvements.
 
-Arnd Bergmann (1):
-      scsi: acornscsi: fix build error
+Ming, please retest both your baseline and patched setup with a
+queue_depth of >= 32.  Also, please do 3 - 5 runs to get a avg and std
+dev across the runs.
 
-Christoph Hellwig (1):
-      scsi: scsi_transport_fc: fix NULL pointer dereference in fc_bsg_job_timeout
+> Sorry but given these measurement results I don't see why I should
+> spend more time on this patch series. 
 
-Hannes Reinecke (2):
-      scsi: sg: fixup infoleak when using SG_GET_REQUEST_TABLE
-      scsi: sg: factor out sg_fill_request_table()
+Bart, I've historically genuinely always appreciated your review and
+insight.  But if your future "review" on this patchset would take the
+form shown in this thread then please don't spend more time on it.
 
-Lukas Czerner (1):
-      scsi: sd: Remove unnecessary condition in sd_read_block_limits()
-
-and the diffstat:
-
- drivers/scsi/arm/acornscsi.c     |  6 ++--
- drivers/scsi/scsi_transport_fc.c |  2 +-
- drivers/scsi/sd.c                |  2 --
- drivers/scsi/sg.c                | 64 ++++++++++++++++++++++------------------
- 4 files changed, 40 insertions(+), 34 deletions(-)
-
-With full diff below
-
-James
-
----
-
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index 690816f3c6af..421fe869a11e 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -2725,9 +2725,9 @@ int acornscsi_abort(struct scsi_cmnd *SCpnt)
-  * Params   : SCpnt  - command causing reset
-  * Returns  : one of SCSI_RESET_ macros
-  */
--int acornscsi_host_reset(struct Scsi_Host *shpnt)
-+int acornscsi_host_reset(struct scsi_cmnd *SCpnt)
- {
--	AS_Host *host = (AS_Host *)shpnt->hostdata;
-+	AS_Host *host = (AS_Host *)SCpnt->device->host->hostdata;
- 	struct scsi_cmnd *SCptr;
-     
-     host->stats.resets += 1;
-@@ -2741,7 +2741,7 @@ int acornscsi_host_reset(struct Scsi_Host *shpnt)
- 
- 	printk(KERN_WARNING "acornscsi_reset: ");
- 	print_sbic_status(asr, ssr, host->scsi.phase);
--	for (devidx = 0; devidx < 9; devidx ++) {
-+	for (devidx = 0; devidx < 9; devidx++)
- 	    acornscsi_dumplog(host, devidx);
-     }
- #endif
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 3c6bc0081fcb..ba9d70f8a6a1 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3571,7 +3571,7 @@ fc_vport_sched_delete(struct work_struct *work)
- static enum blk_eh_timer_return
- fc_bsg_job_timeout(struct request *req)
- {
--	struct bsg_job *job = (void *) req->special;
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
- 	struct Scsi_Host *shost = fc_bsg_to_shost(job);
- 	struct fc_rport *rport = fc_bsg_to_rport(job);
- 	struct fc_internal *i = to_fc_internal(shost->transportt);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 11c1738c2100..fb9f8b5f4673 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2915,8 +2915,6 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 				sd_config_discard(sdkp, SD_LBP_WS16);
- 			else if (sdkp->lbpws10)
- 				sd_config_discard(sdkp, SD_LBP_WS10);
--			else if (sdkp->lbpu && sdkp->max_unmap_blocks)
--				sd_config_discard(sdkp, SD_LBP_UNMAP);
- 			else
- 				sd_config_discard(sdkp, SD_LBP_DISABLE);
- 		}
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index cf0e71db9e51..0419c2298eab 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -828,6 +828,39 @@ static int max_sectors_bytes(struct request_queue *q)
- 	return max_sectors << 9;
- }
- 
-+static void
-+sg_fill_request_table(Sg_fd *sfp, sg_req_info_t *rinfo)
-+{
-+	Sg_request *srp;
-+	int val;
-+	unsigned int ms;
-+
-+	val = 0;
-+	list_for_each_entry(srp, &sfp->rq_list, entry) {
-+		if (val > SG_MAX_QUEUE)
-+			break;
-+		rinfo[val].req_state = srp->done + 1;
-+		rinfo[val].problem =
-+			srp->header.masked_status &
-+			srp->header.host_status &
-+			srp->header.driver_status;
-+		if (srp->done)
-+			rinfo[val].duration =
-+				srp->header.duration;
-+		else {
-+			ms = jiffies_to_msecs(jiffies);
-+			rinfo[val].duration =
-+				(ms > srp->header.duration) ?
-+				(ms - srp->header.duration) : 0;
-+		}
-+		rinfo[val].orphan = srp->orphan;
-+		rinfo[val].sg_io_owned = srp->sg_io_owned;
-+		rinfo[val].pack_id = srp->header.pack_id;
-+		rinfo[val].usr_ptr = srp->header.usr_ptr;
-+		val++;
-+	}
-+}
-+
- static long
- sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- {
-@@ -1012,38 +1045,13 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 			return -EFAULT;
- 		else {
- 			sg_req_info_t *rinfo;
--			unsigned int ms;
- 
--			rinfo = kmalloc(SZ_SG_REQ_INFO * SG_MAX_QUEUE,
--								GFP_KERNEL);
-+			rinfo = kzalloc(SZ_SG_REQ_INFO * SG_MAX_QUEUE,
-+					GFP_KERNEL);
- 			if (!rinfo)
- 				return -ENOMEM;
- 			read_lock_irqsave(&sfp->rq_list_lock, iflags);
--			val = 0;
--			list_for_each_entry(srp, &sfp->rq_list, entry) {
--				if (val >= SG_MAX_QUEUE)
--					break;
--				memset(&rinfo[val], 0, SZ_SG_REQ_INFO);
--				rinfo[val].req_state = srp->done + 1;
--				rinfo[val].problem =
--					srp->header.masked_status &
--					srp->header.host_status &
--					srp->header.driver_status;
--				if (srp->done)
--					rinfo[val].duration =
--						srp->header.duration;
--				else {
--					ms = jiffies_to_msecs(jiffies);
--					rinfo[val].duration =
--						(ms > srp->header.duration) ?
--						(ms - srp->header.duration) : 0;
--				}
--				rinfo[val].orphan = srp->orphan;
--				rinfo[val].sg_io_owned = srp->sg_io_owned;
--				rinfo[val].pack_id = srp->header.pack_id;
--				rinfo[val].usr_ptr = srp->header.usr_ptr;
--				val++;
--			}
-+			sg_fill_request_table(sfp, rinfo);
- 			read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 			result = __copy_to_user(p, rinfo,
- 						SZ_SG_REQ_INFO * SG_MAX_QUEUE);
+Mike
