@@ -1,95 +1,65 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 10/10] SCSI: preempt freeze block queue when SCSI device is put into quiesce
-Date: Tue, 19 Sep 2017 11:49:25 +0800
-Message-ID: <20170919034925.9894-11-ming.lei@redhat.com>
-References: <20170919034925.9894-1-ming.lei@redhat.com>
+Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in
+ case of BLK_STS_RESOURCE
+Date: Tue, 19 Sep 2017 13:43:13 +0800
+Message-ID: <20170919054308.GA2517@ming.t460p>
+References: <20170915164456.9803-1-ming.lei@redhat.com>
+ <20170915164456.9803-2-ming.lei@redhat.com>
+ <1505498249.3420.15.camel@wdc.com>
+ <20170917124000.GB6289@ming.t460p>
+ <1505747894.2685.6.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51142 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38920 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751284AbdISDvj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Sep 2017 23:51:39 -0400
-In-Reply-To: <20170919034925.9894-1-ming.lei@redhat.com>
+        id S1750910AbdISFne (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Sep 2017 01:43:34 -0400
+Content-Disposition: inline
+In-Reply-To: <1505747894.2685.6.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Ming Lei <ming.lei@redhat.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "sagi@grimberg.me" <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "loberman@redhat.com" <loberman@redhat.com>
 
-Simply quiesing SCSI device and waiting for completeion of IO
-dispatched to SCSI queue isn't safe, it is easy to use up
-request pool because all allocated requests before can't
-be dispatched when device is put in QIUESCE. Then no request
-can be allocated for RQF_PREEMPT, and system may hang somewhere,
-such as When sending commands of sync_cache or start_stop during
-system suspend path.
+On Mon, Sep 18, 2017 at 03:18:16PM +0000, Bart Van Assche wrote:
+> On Sun, 2017-09-17 at 20:40 +0800, Ming Lei wrote:
+> > "if no request has completed before the delay has expired" can't be a
+> > reason to rerun the queue, because the queue can still be busy.
+> 
+> That statement of you shows that there are important aspects of the SCSI
+> core and dm-mpath driver that you don't understand.
 
-Before quiesing SCSI, this patch freezes block queue in preempt
-mode first, so no new normal request can enter queue any more,
-and all pending requests are drained too once blk_freeze_queue_preempt
-is returned. Then RQF_PREEMPT can be allocated successfully duirng
-preempt freeze.
+Then can you tell me why blk-mq's SCHED_RESTART can't cover
+the rerun when there are in-flight requests? What is the case
+in which dm-rq can return BUSY and there aren't any in-flight
+requests meantime?
 
-Tested-by: Cathy Avery <cavery@redhat.com>
-Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+Also you are the author of adding 'blk_mq_delay_run_hw_queue(
+hctx, 100/*ms*/)' in dm-rq, you never explain in commit
+6077c2d706097c0(dm rq: Avoid that request processing stalls
+sporadically) what the root cause is for your request stall
+and why this patch fixes your issue. Even you don't explain
+why is the delay 100ms?
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80fe297..751a956b7b2b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -252,9 +252,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	struct scsi_request *rq;
- 	int ret = DRIVER_ERROR << 24;
- 
--	req = blk_get_request(sdev->request_queue,
-+	req = __blk_get_request(sdev->request_queue,
- 			data_direction == DMA_TO_DEVICE ?
--			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
-+			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM,
-+			BLK_REQ_PREEMPT);
- 	if (IS_ERR(req))
- 		return ret;
- 	rq = scsi_req(req);
-@@ -2928,12 +2929,28 @@ scsi_device_quiesce(struct scsi_device *sdev)
- {
- 	int err;
- 
-+	/*
-+	 * Simply quiesing SCSI device isn't safe, it is easy
-+	 * to use up requests because all these allocated requests
-+	 * can't be dispatched when device is put in QIUESCE.
-+	 * Then no request can be allocated and we may hang
-+	 * somewhere, such as system suspend/resume.
-+	 *
-+	 * So we freeze block queue in preempt mode first, no new
-+	 * normal request can enter queue any more, and all pending
-+	 * requests are drained once blk_freeze_queue_preempt()
-+	 * is returned. Only RQF_PREEMPT is allowed in preempt freeze.
-+	 */
-+	blk_freeze_queue_preempt(sdev->request_queue);
-+
- 	mutex_lock(&sdev->state_mutex);
- 	err = scsi_device_set_state(sdev, SDEV_QUIESCE);
- 	mutex_unlock(&sdev->state_mutex);
- 
--	if (err)
-+	if (err) {
-+		blk_unfreeze_queue_preempt(sdev->request_queue);
- 		return err;
-+	}
- 
- 	scsi_run_queue(sdev->request_queue);
- 	while (atomic_read(&sdev->device_busy)) {
-@@ -2964,6 +2981,8 @@ void scsi_device_resume(struct scsi_device *sdev)
- 	    scsi_device_set_state(sdev, SDEV_RUNNING) == 0)
- 		scsi_run_queue(sdev->request_queue);
- 	mutex_unlock(&sdev->state_mutex);
-+
-+	blk_unfreeze_queue_preempt(sdev->request_queue);
- }
- EXPORT_SYMBOL(scsi_device_resume);
- 
+So it is a workaound, isn't it?
+
+My concern is that it isn't good to add blk_mq_delay_run_hw_queue(hctx, 100/*ms*/)
+in the hot path since it should been covered by SCHED_RESTART
+if there are in-flight requests.
+
+> 
+> > I suggest to understand the root cause, instead of keeping this
+> > ugly random delay because run hw queue after 100ms may be useless
+> > in 99.99% times.
+> 
+> If you are still looking at removing the blk_mq_delay_run_hw_queue() calls
+> then I think you are looking in the wrong direction. What kind of problem
+> are you trying to solve? Is it perhaps that there can be a delay between
+
+Actually the improvement on dm-rq IO schedule(the patch 2 ~ 5) doesn't
+need this patch.
+
+
 -- 
-2.9.5
+Ming
