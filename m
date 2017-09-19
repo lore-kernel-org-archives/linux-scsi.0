@@ -1,39 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: aacraid: Add a small delay after IOP reset
-Date: Tue, 19 Sep 2017 08:52:22 -0700
-Message-ID: <20170919155222.GA24688@infradead.org>
-References: <20170919151156.29412-1-gpiccoli@linux.vnet.ibm.com>
- <20170919153712.GA15496@infradead.org>
- <6958d5da-8f9a-ff6b-ccea-16c335b24530@linux.vnet.ibm.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in case
+ of BLK_STS_RESOURCE
+Date: Tue, 19 Sep 2017 15:52:37 +0000
+Message-ID: <1505836356.2671.21.camel@wdc.com>
+References: <20170915164456.9803-1-ming.lei@redhat.com>
+         <20170915164456.9803-2-ming.lei@redhat.com>
+         <1505498249.3420.15.camel@wdc.com> <20170917124000.GB6289@ming.t460p>
+         <1505747894.2685.6.camel@wdc.com> <20170919054308.GA2517@ming.t460p>
+         <20170919154823.GA22809@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <6958d5da-8f9a-ff6b-ccea-16c335b24530@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, aacraid@microsemi.com, linux-scsi@vger.kernel.org, RaghavaAditya.Renukunta@microsemi.com, david.carroll@microsemi.com, brking@linux.vnet.ibm.com, dougmill@linux.vnet.ibm.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:15346 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751097AbdISPwm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2017 11:52:42 -0400
+In-Reply-To: <20170919154823.GA22809@redhat.com>
+Content-Language: en-US
+Content-ID: <25B5CE69171FD7468AA8059F64742797@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "snitzer@redhat.com" <snitzer@redhat.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "sagi@grimberg.me" <sagi@grimberg.me>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On Tue, Sep 19, 2017 at 12:49:21PM -0300, Guilherme G. Piccoli wrote:
-> On 09/19/2017 12:37 PM, Christoph Hellwig wrote:
-> > On Tue, Sep 19, 2017 at 12:11:55PM -0300, Guilherme G. Piccoli wrote:
-> >>  	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
-> >> +
-> >> +	msleep(5000);
-> > 
-> > src_writel is a writel, and thus a posted MMIO write.  You'll need
-> > to have to a read first to make it a reliable timing base.
-> > 
-> 
-> Just for my full understanding - you're saying a readl BEFORE
-> src_writel() or AFTER src_writel() ?
-
-AFTER.
-
-> I could add a read to some dummy register, but notice it was a sequence
-> of readl's on aac_is_ctrl_up_and_running() that caused the failure of
-> reset...
-
-Oh, ouch.  I guess in that case we'll need to do the writel and pray,
-but that would need a big comment explaining what's going on there.
+T24gVHVlLCAyMDE3LTA5LTE5IGF0IDExOjQ4IC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
+IFRoaXMgdGhyZWFkIHByb3ZlcyB0aGF0IGl0IGlzIGRlZmluaXRlbHkgYnJpdHRsZSB0byBiZSBy
+ZWx5aW5nIG9uIGZpeGVkDQo+IGRlbGF5cyBsaWtlIHRoaXM6DQo+IGh0dHBzOi8vcGF0Y2h3b3Jr
+Lmtlcm5lbC5vcmcvcGF0Y2gvOTcwMzI0OS8NCg0KSGVsbG8gTWlrZSwNCg0KU29ycnkgYnV0IEkg
+dGhpbmsgdGhhdCdzIGEgbWlzaW50ZXJwcmV0YXRpb24gb2YgbXkgcGF0Y2guIEkgY2FtZSB1cCB3
+aXRoIHRoYXQNCnBhdGNoIGJlZm9yZSBJIGhhZCBmb3VuZCBhbmQgZml4ZWQgdGhlIHJvb3QgY2F1
+c2Ugb2YgdGhlIGhpZ2ggc3lzdGVtIGxvYWQuDQpUaGVzZSBmaXhlcyBhcmUgdXBzdHJlYW0gKGtl
+cm5lbCB2NC4xMykgd2hpY2ggbWVhbnMgdGhhdCB0aGF0IHBhdGNoIGlzIG5vdw0Kb2Jzb2xldGUu
+DQoNCkJhcnQu
