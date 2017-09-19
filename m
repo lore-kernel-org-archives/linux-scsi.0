@@ -1,83 +1,38 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH] sd: Limit WRITE SAME / WRITE SAME(16) w/UNMAP length for certain devices
-Date: Tue, 19 Sep 2017 12:14:21 -0400
-Message-ID: <1505837661-2280-1-git-send-email-emilne@redhat.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in case
+ of BLK_STS_RESOURCE
+Date: Tue, 19 Sep 2017 16:49:15 +0000
+Message-ID: <1505839754.2671.42.camel@wdc.com>
+References: <20170915164456.9803-1-ming.lei@redhat.com>
+         <20170915164456.9803-2-ming.lei@redhat.com>
+         <1505498249.3420.15.camel@wdc.com> <20170917124000.GB6289@ming.t460p>
+         <1505747894.2685.6.camel@wdc.com> <20170919054308.GA2517@ming.t460p>
+         <1505835394.2671.18.camel@wdc.com> <20170919155603.GB22809@redhat.com>
+         <20170919160401.GC19830@ming.t460p>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48609 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750972AbdISQOY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Sep 2017 12:14:24 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7999F267C0
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Sep 2017 16:14:24 +0000 (UTC)
-Received: from emilne.com (unknown [10.18.25.104])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 34AA25D984
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Sep 2017 16:14:24 +0000 (UTC)
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:47117 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750872AbdISQtT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2017 12:49:19 -0400
+In-Reply-To: <20170919160401.GC19830@ming.t460p>
+Content-Language: en-US
+Content-ID: <65E0B0232B112440949EED09200096F6@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "sagi@grimberg.me" <sagi@grimberg.me>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-From: "Ewan D. Milne" <emilne@redhat.com>
-
-Some devices do not support a WRITE SAME / WRITE SAME(16) with the UNMAP
-bit set up to the length specified in the MAXIMUM WRITE SAME LENGTH field
-in the block limits VPD page (or, the field is zero, indicating there is
-no limit).  Limit the length by the MAXIMUM UNMAP LBA COUNT value.
-Otherwise the command might be rejected.
-
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/sd.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6549e5c..fa07ac2 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -693,6 +693,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	struct request_queue *q = sdkp->disk->queue;
- 	unsigned int logical_block_size = sdkp->device->sector_size;
- 	unsigned int max_blocks = 0;
-+	u32 max_ws_blocks = sdkp->max_ws_blocks;
- 
- 	q->limits.discard_alignment =
- 		sdkp->unmap_alignment * logical_block_size;
-@@ -701,6 +702,13 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 		    sdkp->unmap_granularity * logical_block_size);
- 	sdkp->provisioning_mode = mode;
- 
-+	/*
-+	 * Some devices limit WRITE SAME / WRITE SAME(16) w/UNMAP
-+	 * by MAXIMUM UNMAP LBA COUNT instead of MAXIMUM WRITE SAME LENGTH.
-+	 * Use the smaller of the two values to avoid ILLEGAL REQUEST errors.
-+	 */
-+	max_ws_blocks = min_not_zero(max_ws_blocks, sdkp->max_unmap_blocks);
-+
- 	switch (mode) {
- 
- 	case SD_LBP_FULL:
-@@ -715,17 +723,17 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 		break;
- 
- 	case SD_LBP_WS16:
--		max_blocks = min_not_zero(sdkp->max_ws_blocks,
-+		max_blocks = min_not_zero(max_ws_blocks,
- 					  (u32)SD_MAX_WS16_BLOCKS);
- 		break;
- 
- 	case SD_LBP_WS10:
--		max_blocks = min_not_zero(sdkp->max_ws_blocks,
-+		max_blocks = min_not_zero(max_ws_blocks,
- 					  (u32)SD_MAX_WS10_BLOCKS);
- 		break;
- 
- 	case SD_LBP_ZERO:
--		max_blocks = min_not_zero(sdkp->max_ws_blocks,
-+		max_blocks = min_not_zero(max_ws_blocks,
- 					  (u32)SD_MAX_WS10_BLOCKS);
- 		break;
- 	}
--- 
-2.1.0
+T24gV2VkLCAyMDE3LTA5LTIwIGF0IDAwOjA0ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gUnVu
+IHF1ZXVlIGF0IGVuZF9pbyBpcyBkZWZpbml0ZWx5IHdyb25nLCBiZWNhdXNlIGJsay1tcSBoYXMg
+U0NIRURfUkVTVEFSVA0KPiB0byBkbyB0aGF0IGFscmVhZHkuDQoNClNvcnJ5IGJ1dCBJIGRpc2Fn
+cmVlLiBJZiBTQ0hFRF9SRVNUQVJUIGlzIHNldCB0aGF0IGNhdXNlcyB0aGUgYmxrLW1xIGNvcmUg
+dG8NCnJlZXhhbWluZSB0aGUgc29mdHdhcmUgcXVldWVzIGFuZCB0aGUgaGN0eCBkaXNwYXRjaCBs
+aXN0IGJ1dCBub3QgdGhlIHJlcXVldWUNCmxpc3QuIElmIGEgYmxvY2sgZHJpdmVyIHJldHVybnMg
+QkxLX1NUU19SRVNPVVJDRSB0aGVuIHJlcXVlc3RzIGVuZCB1cCBvbiB0aGUNCnJlcXVldWUgbGlz
+dC4gSGVuY2UgdGhlIGZvbGxvd2luZyBjb2RlIGluIHNjc2lfZW5kX3JlcXVlc3QoKToNCg0KCWlm
+IChzY3NpX3RhcmdldChzZGV2KS0+c2luZ2xlX2x1biB8fCAhbGlzdF9lbXB0eSgmc2Rldi0+aG9z
+dC0+c3RhcnZlZF9saXN0KSkNCgkJa2Jsb2NrZF9zY2hlZHVsZV93b3JrKCZzZGV2LT5yZXF1ZXVl
+X3dvcmspOw0KCWVsc2UNCgkJYmxrX21xX3J1bl9od19xdWV1ZXMocSwgdHJ1ZSk7DQoNCkJhcnQu
