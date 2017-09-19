@@ -1,102 +1,152 @@
 From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH V3 3/9] pm80xx : Different SAS addresses for phys.
-Date: Tue, 19 Sep 2017 22:39:58 +0530
-Message-ID: <20170919171004.10331-4-Viswas.G@microsemi.com>
+Subject: [PATCH V3 1/9] pm80xx : redefine sas_identify_frame structure
+Date: Tue, 19 Sep 2017 22:39:56 +0530
+Message-ID: <20170919171004.10331-2-Viswas.G@microsemi.com>
 References: <20170919171004.10331-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0051.outbound.protection.outlook.com ([104.47.32.51]:13350
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0046.outbound.protection.outlook.com ([104.47.41.46]:48729
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751370AbdISRKf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Sep 2017 13:10:35 -0400
+        id S1751016AbdISRKe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Sep 2017 13:10:34 -0400
 In-Reply-To: <20170919171004.10331-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-Different SAS addresses are assigned for each set of phys.
+sas_identify structure defined by pm80xx doesn't have CRC field.
+So added a new sas_identify structure without CRC.
 
+v2:
+        - Since the structure changes is applicable for only pm80xx,
+          sas_identify_frame_local structure moved to pm80xx_hwi.h.
+
+Signed-off-by: Raj Dinesh <Raj.Dinesh@microsemi.com>
 Signed-off-by: Viswas G <Viswas.G@microsemi.com>
 
 Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 13 +++++++++----
- drivers/scsi/pm8001/pm80xx_hwi.c  |  3 +--
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.h | 98 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 97 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 0e013f76b582..7a697ca68501 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -132,7 +132,7 @@ static void pm8001_phy_init(struct pm8001_hba_info *pm8001_ha, int phy_id)
- 	sas_phy->oob_mode = OOB_NOT_CONNECTED;
- 	sas_phy->linkrate = SAS_LINK_RATE_UNKNOWN;
- 	sas_phy->id = phy_id;
--	sas_phy->sas_addr = &pm8001_ha->sas_addr[0];
-+	sas_phy->sas_addr = (u8 *)&phy->dev_sas_addr;
- 	sas_phy->frame_rcvd = &phy->frame_rcvd[0];
- 	sas_phy->ha = (struct sas_ha_struct *)pm8001_ha->shost->hostdata;
- 	sas_phy->lldd_phy = phy;
-@@ -591,10 +591,12 @@ static void  pm8001_post_sas_ha_init(struct Scsi_Host *shost,
- 	for (i = 0; i < chip_info->n_phy; i++) {
- 		sha->sas_phy[i] = &pm8001_ha->phy[i].sas_phy;
- 		sha->sas_port[i] = &pm8001_ha->port[i].sas_port;
-+		sha->sas_phy[i]->sas_addr =
-+			(u8 *)&pm8001_ha->phy[i].dev_sas_addr;
- 	}
- 	sha->sas_ha_name = DRV_NAME;
- 	sha->dev = pm8001_ha->dev;
--
-+	sha->strict_wide_ports = 1;
- 	sha->lldd_module = THIS_MODULE;
- 	sha->sas_addr = &pm8001_ha->sas_addr[0];
- 	sha->num_phys = chip_info->n_phy;
-@@ -611,6 +613,7 @@ static void  pm8001_post_sas_ha_init(struct Scsi_Host *shost,
- static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
- {
- 	u8 i, j;
-+	u8 sas_add[8];
- #ifdef PM8001_READ_VPD
- 	/* For new SPC controllers WWN is stored in flash vpd
- 	*  For SPC/SPCve controllers WWN is stored in EEPROM
-@@ -672,10 +675,12 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
- 			pm8001_ha->sas_addr[j] =
- 					payload.func_specific[0x804 + i];
- 	}
--
-+	memcpy(sas_add, pm8001_ha->sas_addr, SAS_ADDR_SIZE);
- 	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
-+		if (i && ((i % 4) == 0))
-+			sas_add[7] = sas_add[7] + 4;
- 		memcpy(&pm8001_ha->phy[i].dev_sas_addr,
--			pm8001_ha->sas_addr, SAS_ADDR_SIZE);
-+			sas_add, SAS_ADDR_SIZE);
- 		PM8001_INIT_DBG(pm8001_ha,
- 			pm8001_printk("phy %d sas_addr = %016llx\n", i,
- 			pm8001_ha->phy[i].dev_sas_addr));
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 8fb5ddf08cc4..2b26445d1b97 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3041,7 +3041,6 @@ hw_event_phy_down(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	port->port_state = portstate;
- 	phy->identify.device_type = 0;
- 	phy->phy_attached = 0;
--	memset(&phy->dev_sas_addr, 0, SAS_ADDR_SIZE);
- 	switch (portstate) {
- 	case PORT_VALID:
- 		break;
-@@ -4394,7 +4393,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
- 	payload.sas_identify.dev_type = SAS_END_DEVICE;
- 	payload.sas_identify.initiator_bits = SAS_PROTOCOL_ALL;
- 	memcpy(payload.sas_identify.sas_addr,
--		pm8001_ha->sas_addr, SAS_ADDR_SIZE);
-+	  &pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
- 	payload.sas_identify.phy_id = phy_id;
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opcode, &payload, 0);
- 	return ret;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 7a443bad6163..82b8cf581da9 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -229,6 +229,102 @@
+ #define IT_NEXUS_TIMEOUT       0x7D0
+ #define PORT_RECOVERY_TIMEOUT  ((IT_NEXUS_TIMEOUT/100) + 30)
+ 
++#ifdef __LITTLE_ENDIAN_BITFIELD
++struct sas_identify_frame_local {
++	/* Byte 0 */
++	u8  frame_type:4;
++	u8  dev_type:3;
++	u8  _un0:1;
++
++	/* Byte 1 */
++	u8  _un1;
++
++	/* Byte 2 */
++	union {
++		struct {
++			u8  _un20:1;
++			u8  smp_iport:1;
++			u8  stp_iport:1;
++			u8  ssp_iport:1;
++			u8  _un247:4;
++		};
++		u8 initiator_bits;
++	};
++
++	/* Byte 3 */
++	union {
++		struct {
++			u8  _un30:1;
++			u8 smp_tport:1;
++			u8 stp_tport:1;
++			u8 ssp_tport:1;
++			u8 _un347:4;
++		};
++		u8 target_bits;
++	};
++
++	/* Byte 4 - 11 */
++	u8 _un4_11[8];
++
++	/* Byte 12 - 19 */
++	u8 sas_addr[SAS_ADDR_SIZE];
++
++	/* Byte 20 */
++	u8 phy_id;
++
++	u8 _un21_27[7];
++
++} __packed;
++
++#elif defined(__BIG_ENDIAN_BITFIELD)
++struct sas_identify_frame_local {
++	/* Byte 0 */
++	u8  _un0:1;
++	u8  dev_type:3;
++	u8  frame_type:4;
++
++	/* Byte 1 */
++	u8  _un1;
++
++	/* Byte 2 */
++	union {
++		struct {
++			u8  _un247:4;
++			u8  ssp_iport:1;
++			u8  stp_iport:1;
++			u8  smp_iport:1;
++			u8  _un20:1;
++		};
++		u8 initiator_bits;
++	};
++
++	/* Byte 3 */
++	union {
++		struct {
++			u8 _un347:4;
++			u8 ssp_tport:1;
++			u8 stp_tport:1;
++			u8 smp_tport:1;
++			u8 _un30:1;
++		};
++		u8 target_bits;
++	};
++
++	/* Byte 4 - 11 */
++	u8 _un4_11[8];
++
++	/* Byte 12 - 19 */
++	u8 sas_addr[SAS_ADDR_SIZE];
++
++	/* Byte 20 */
++	u8 phy_id;
++
++	u8 _un21_27[7];
++} __packed;
++#else
++#error "Bitfield order not defined!"
++#endif
++
+ struct mpi_msg_hdr {
+ 	__le32	header;	/* Bits [11:0] - Message operation code */
+ 	/* Bits [15:12] - Message Category */
+@@ -248,7 +344,7 @@ struct mpi_msg_hdr {
+ struct phy_start_req {
+ 	__le32	tag;
+ 	__le32	ase_sh_lm_slr_phyid;
+-	struct sas_identify_frame sas_identify; /* 28 Bytes */
++	struct sas_identify_frame_local sas_identify; /* 28 Bytes */
+ 	__le32 spasti;
+ 	u32	reserved[21];
+ } __attribute__((packed, aligned(4)));
 -- 
 2.12.3
