@@ -1,64 +1,59 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 1/5] block: don't call blk_mq_delay_run_hw_queue() in
- case of BLK_STS_RESOURCE
-Date: Tue, 19 Sep 2017 11:56:03 -0400
-Message-ID: <20170919155603.GB22809@redhat.com>
-References: <20170915164456.9803-1-ming.lei@redhat.com>
- <20170915164456.9803-2-ming.lei@redhat.com>
- <1505498249.3420.15.camel@wdc.com>
- <20170917124000.GB6289@ming.t460p>
- <1505747894.2685.6.camel@wdc.com>
- <20170919054308.GA2517@ming.t460p>
- <1505835394.2671.18.camel@wdc.com>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: aacraid: Add a small delay after IOP reset
+Date: Tue, 19 Sep 2017 12:58:18 -0300
+Message-ID: <8aff6bb1-3cb0-8dd2-02f5-947d04bedd57@linux.vnet.ibm.com>
+References: <20170919151156.29412-1-gpiccoli@linux.vnet.ibm.com>
+ <20170919153712.GA15496@infradead.org>
+ <6958d5da-8f9a-ff6b-ccea-16c335b24530@linux.vnet.ibm.com>
+ <20170919155222.GA24688@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1505835394.2671.18.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "sagi@grimberg.me" <sagi@grimberg.me>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170919155222.GA24688@infradead.org>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aacraid@microsemi.com, linux-scsi@vger.kernel.org, RaghavaAditya.Renukunta@microsemi.com, david.carroll@microsemi.com, brking@linux.vnet.ibm.com, dougmill@linux.vnet.ibm.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 19 2017 at 11:36am -0400,
-Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-
-> On Tue, 2017-09-19 at 13:43 +0800, Ming Lei wrote:
-> > On Mon, Sep 18, 2017 at 03:18:16PM +0000, Bart Van Assche wrote:
-> > > If you are still looking at removing the blk_mq_delay_run_hw_queue() calls
-> > > then I think you are looking in the wrong direction. What kind of problem
-> > > are you trying to solve? Is it perhaps that there can be a delay between
-> > 
-> > Actually the improvement on dm-rq IO schedule(the patch 2 ~ 5) doesn't
-> > need this patch.
+On 09/19/2017 12:52 PM, Christoph Hellwig wrote:
+> On Tue, Sep 19, 2017 at 12:49:21PM -0300, Guilherme G. Piccoli wrote:
+>> On 09/19/2017 12:37 PM, Christoph Hellwig wrote:
+>>> On Tue, Sep 19, 2017 at 12:11:55PM -0300, Guilherme G. Piccoli wrote:
+>>>>  	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
+>>>> +
+>>>> +	msleep(5000);
+>>>
+>>> src_writel is a writel, and thus a posted MMIO write.  You'll need
+>>> to have to a read first to make it a reliable timing base.
+>>>
+>>
+>> Just for my full understanding - you're saying a readl BEFORE
+>> src_writel() or AFTER src_writel() ?
 > 
-> The approach of this patch series looks wrong to me and patch 5/5 is an ugly
-> hack in my opinion. That's why I asked you to drop the entire patch series and
-> to test whether inserting a queue run call into the dm-mpath end_io callback
-> yields a similar performance improvement to the patches you posted. Please do
-> not expect me to spend more time on this patch series if you do not come up
-> with measurement results for the proposed alternative.
+> AFTER.
 
-Bart, asserting that Ming's work is a hack doesn't help your apparent
-goal of deligitimizing Ming's work.
+Thanks!
 
-Nor does it take away from the fact that your indecision on appropriate
-timeouts (let alone ability to defend and/or explain them) validates
-Ming calling them into question (which you are now dodging regularly).
+> 
+>> I could add a read to some dummy register, but notice it was a sequence
+>> of readl's on aac_is_ctrl_up_and_running() that caused the failure of
+>> reset...
+> 
+> Oh, ouch.  I guess in that case we'll need to do the writel and pray,
+> but that would need a big comment explaining what's going on there.
+> 
 
-But please don't take this feedback and shut-down.  Instead please work
-together more constructively.  This doesn't need to be adversarial!  I
-am at a loss for why there is such animosity from your end Bart.
+Heheh you're right!
 
-Please dial it back.  It is just a distraction that fosters needless
-in-fighting.
+But do you remember that quirk added on nvme? Basically, it was a
+similar scenario in which some adapters weren't happy in poll a register
+in nvme_wait_ready() right after we wrote in the Controller Config
+register when disabling a controller.
 
-Believe it or not: Ming is just trying to improve the code because he
-has a testbed that is showing fairly abysmal performance with dm-mq
-multipath (on lpfc with scsi-mq).
+Seems the same thing here, the controller is not being able to handle a
+read right after some internal procedure (reset) were initiated.
 
-Ming, if you can: please see if what Bart has proposed (instead: run
-queue at end_io) helps.  Though I don't yet see why that should be
-needed.
-
-Mike
+If you have suggestion to improve the commit msg, let me know :)
+Thanks!
