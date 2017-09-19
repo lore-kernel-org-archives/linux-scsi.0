@@ -1,48 +1,100 @@
-From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH V3 8/9] pm80xx : panic on ncq error cleaning up the read log.
-Date: Tue, 19 Sep 2017 22:40:03 +0530
-Message-ID: <20170919171004.10331-9-Viswas.G@microsemi.com>
-References: <20170919171004.10331-1-Viswas.G@microsemi.com>
+From: "Kuzeja, William" <william.kuzeja@stratus.com>
+Subject: RE: [PATCH] sd: Limit WRITE SAME / WRITE SAME(16) w/UNMAP length for
+ certain devices
+Date: Tue, 19 Sep 2017 17:32:48 +0000
+Message-ID: <BY1PR0801MB09670B86B85E3FFAB06C17618C600@BY1PR0801MB0967.namprd08.prod.outlook.com>
+References: <1505837661-2280-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0079.outbound.protection.outlook.com ([104.47.34.79]:19520
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751001AbdISRKk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Sep 2017 13:10:40 -0400
-In-Reply-To: <20170919171004.10331-1-Viswas.G@microsemi.com>
+Received: from us-smtp-delivery-131.mimecast.com ([216.205.24.131]:55502 "EHLO
+        us-smtp-delivery-131.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750919AbdISRcy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Sep 2017 13:32:54 -0400
+In-Reply-To: <1505837661-2280-1-git-send-email-emilne@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
+To: "Ewan D. Milne" <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-when there's an error in 'ncq mode' the host has to read the ncq
-error log (10h) to clear the error state. however, the ccb that
-is setup for doing this doesn't setup the ccb so that the
-previous state is cleared. if the ccb was previously used for an IO
-n_elems is set and pm8001_ccb_task_free() treats this as the signal
-to go free a scatter-gather list (that's already been free-ed).
+Ewan,
 
-Signed-off-by: Deepak Ukey <deepak.ukey@microsemi.com>
-Signed-off-by: Viswas G <Viswas.G@microsemi.com>
+I like it, more generic than my patch. I never saw the other cases, so I li=
+mited my=20
+patch to WS16.
 
-Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
----
- drivers/scsi/pm8001/pm80xx_hwi.c | 1 +
- 1 file changed, 1 insertion(+)
+Acked-by: Bill Kuzeja <William.Kuzeja@stratus.com>
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 92d2045dea68..f2c0839afbe3 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1489,6 +1489,7 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
- 	ccb->device = pm8001_ha_dev;
- 	ccb->ccb_tag = ccb_tag;
- 	ccb->task = task;
-+	ccb->n_elem = 0;
- 	pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
- 	pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
- 
--- 
-2.12.3
+On Tue-09-19 at 12:14 Ewan D. Milne wrote:=20
+> Some devices do not support a WRITE SAME / WRITE SAME(16) with the
+> UNMAP
+> bit set up to the length specified in the MAXIMUM WRITE SAME LENGTH
+> field
+> in the block limits VPD page (or, the field is zero, indicating there is
+> no limit).  Limit the length by the MAXIMUM UNMAP LBA COUNT value.
+> Otherwise the command might be rejected.
+>=20
+> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> ---
+>  drivers/scsi/sd.c | 14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 6549e5c..fa07ac2 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -693,6 +693,7 @@ static void sd_config_discard(struct scsi_disk *sdkp,
+> unsigned int mode)
+>  =09struct request_queue *q =3D sdkp->disk->queue;
+>  =09unsigned int logical_block_size =3D sdkp->device->sector_size;
+>  =09unsigned int max_blocks =3D 0;
+> +=09u32 max_ws_blocks =3D sdkp->max_ws_blocks;
+>=20
+>  =09q->limits.discard_alignment =3D
+>  =09=09sdkp->unmap_alignment * logical_block_size;
+> @@ -701,6 +702,13 @@ static void sd_config_discard(struct scsi_disk *sdkp=
+,
+> unsigned int mode)
+>  =09=09    sdkp->unmap_granularity * logical_block_size);
+>  =09sdkp->provisioning_mode =3D mode;
+>=20
+> +=09/*
+> +=09 * Some devices limit WRITE SAME / WRITE SAME(16) w/UNMAP
+> +=09 * by MAXIMUM UNMAP LBA COUNT instead of MAXIMUM WRITE
+> SAME LENGTH.
+> +=09 * Use the smaller of the two values to avoid ILLEGAL REQUEST
+> errors.
+> +=09 */
+> +=09max_ws_blocks =3D min_not_zero(max_ws_blocks, sdkp-
+> >max_unmap_blocks);
+> +
+>  =09switch (mode) {
+>=20
+>  =09case SD_LBP_FULL:
+> @@ -715,17 +723,17 @@ static void sd_config_discard(struct scsi_disk *sdk=
+p,
+> unsigned int mode)
+>  =09=09break;
+>=20
+>  =09case SD_LBP_WS16:
+> -=09=09max_blocks =3D min_not_zero(sdkp->max_ws_blocks,
+> +=09=09max_blocks =3D min_not_zero(max_ws_blocks,
+>  =09=09=09=09=09  (u32)SD_MAX_WS16_BLOCKS);
+>  =09=09break;
+>=20
+>  =09case SD_LBP_WS10:
+> -=09=09max_blocks =3D min_not_zero(sdkp->max_ws_blocks,
+> +=09=09max_blocks =3D min_not_zero(max_ws_blocks,
+>  =09=09=09=09=09  (u32)SD_MAX_WS10_BLOCKS);
+>  =09=09break;
+>=20
+>  =09case SD_LBP_ZERO:
+> -=09=09max_blocks =3D min_not_zero(sdkp->max_ws_blocks,
+> +=09=09max_blocks =3D min_not_zero(max_ws_blocks,
+>  =09=09=09=09=09  (u32)SD_MAX_WS10_BLOCKS);
+>  =09=09break;
+>  =09}
+> --
+> 2.1.0
