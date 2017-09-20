@@ -1,38 +1,43 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH] scsi_transport_fc: set scsi_target_id upon rescan
-Date: Wed, 20 Sep 2017 09:12:52 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1709200911300.817@administrators-MacBook-Pro.local>
-References: <1505890733-48870-1-git-send-email-hare@suse.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: libfc: fix potential null lport dereference
+Date: Wed, 20 Sep 2017 14:25:41 +0100
+Message-ID: <20170920132541.13691-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0074.outbound.protection.outlook.com ([104.47.42.74]:22848
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751009AbdITNNN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Sep 2017 09:13:13 -0400
-In-Reply-To: <1505890733-48870-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jth@kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Smart <james.smart@broadcom.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
+From: Colin Ian King <colin.king@canonical.com>
 
-On Wed, 20 Sep 2017, 2:58am, Hannes Reinecke wrote:
+Don't pass a null lport to FC_LPORT_DBG as this causes a null pointer
+dereference when accessing lport->host and lport->port_id. Instead
+use the FC_CHECK_LOGGING macro to print the kernel message via pr_info.
 
-> From: Hannes Reinecke <hare@suse.com>
-> 
-> When an rport is found in the bindings array there is no guarantee that
-> it had been a target port, so we need to call fc_remote_port_rolechg()
-> here to ensure the scsi_target_id is set correctly.
-> Otherwise the port will never be scanned.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/scsi_transport_fc.c | 11 +----------
->  1 file changed, 1 insertion(+), 10 deletions(-)
-> 
+Detected by CoverityScan, CID#113198 ("Dereference after null check")
 
-Verified that port is scanned after applying this patch.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/libfc/fc_exch.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Tested-by: Chad Dupuis <chad.dupuis@cavium.com>
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 42bcf7f3a0f9..46d842d238f1 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -2603,8 +2603,8 @@ void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
+ 
+ 	/* lport lock ? */
+ 	if (!lport || lport->state == LPORT_ST_DISABLED) {
+-		FC_LPORT_DBG(lport, "Receiving frames for an lport that "
+-			     "has not been initialized correctly\n");
++		FC_CHECK_LOGGING(FC_LPORT_LOGGING,
++				 pr_info("Receiving frames for an lport that has not been initialized correctly\n"));
+ 		fc_frame_free(fp);
+ 		return;
+ 	}
+-- 
+2.14.1
