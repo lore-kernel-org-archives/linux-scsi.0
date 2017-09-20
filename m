@@ -1,148 +1,139 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH v2 19/31] timer: Remove open-coded casts for .data and .function
-Date: Wed, 20 Sep 2017 16:27:43 -0700
-Message-ID: <1505950075-50223-20-git-send-email-keescook@chromium.org>
+Subject: [PATCH v2 18/31] scsi/aic7xxx: Clean up timer usage
+Date: Wed, 20 Sep 2017 16:27:42 -0700
+Message-ID: <1505950075-50223-19-git-send-email-keescook@chromium.org>
 References: <1505950075-50223-1-git-send-email-keescook@chromium.org>
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1505950075-50223-1-git-send-email-keescook@chromium.org>
-Sender: netdev-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>, Samuel Ortiz <samuel@sortiz.org>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This standardizes the callback and data prototypes in several places that
-perform casting, in an effort to remove more open-coded .data and
-.function uses in favor of setup_timer().
+stat_timer only ever assigns the same function and data, so consolidate to
+a setup_timer() call and drop everything else used to pass things around.
 
-Cc: Samuel Ortiz <samuel@sortiz.org>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
+reset_timer is unused; remove it.
+
+Cc: Hannes Reinecke <hare@suse.com>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: netdev@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
-Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com> # for ibmvscsi
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c          | 14 ++++++--------
- drivers/scsi/ibmvscsi/ibmvscsi.c        |  8 ++++----
- drivers/staging/irda/drivers/bfin_sir.c |  5 +++--
- 3 files changed, 13 insertions(+), 14 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.h      |  5 +----
+ drivers/scsi/aic7xxx/aic79xx_core.c | 29 ++++++++---------------------
+ 2 files changed, 9 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index b491af31a5f8..66d51052caa1 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1393,8 +1393,9 @@ static int ibmvfc_map_sg_data(struct scsi_cmnd *scmd,
-  *
-  * Called when an internally generated command times out
-  **/
--static void ibmvfc_timeout(struct ibmvfc_event *evt)
-+static void ibmvfc_timeout(unsigned long data)
+diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
+index d47b527b25dd..31f2bb9d7146 100644
+--- a/drivers/scsi/aic7xxx/aic79xx.h
++++ b/drivers/scsi/aic7xxx/aic79xx.h
+@@ -1046,8 +1046,6 @@ typedef enum {
+ 
+ typedef uint8_t ahd_mode_state;
+ 
+-typedef void ahd_callback_t (void *);
+-
+ struct ahd_completion
  {
-+	struct ibmvfc_event *evt = (struct ibmvfc_event *)data;
- 	struct ibmvfc_host *vhost = evt->vhost;
- 	dev_err(vhost->dev, "Command timed out (%p). Resetting connection\n", evt);
- 	ibmvfc_reset_host(vhost);
-@@ -1424,12 +1425,10 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
- 		BUG();
- 
- 	list_add_tail(&evt->queue, &vhost->sent);
--	init_timer(&evt->timer);
-+	setup_timer(&evt->timer, ibmvfc_timeout, (unsigned long)evt);
- 
- 	if (timeout) {
--		evt->timer.data = (unsigned long) evt;
- 		evt->timer.expires = jiffies + (timeout * HZ);
--		evt->timer.function = (void (*)(unsigned long))ibmvfc_timeout;
- 		add_timer(&evt->timer);
- 	}
- 
-@@ -3692,8 +3691,9 @@ static void ibmvfc_tgt_adisc_cancel_done(struct ibmvfc_event *evt)
-  * out, reset the CRQ. When the ADISC comes back as cancelled,
-  * log back into the target.
-  **/
--static void ibmvfc_adisc_timeout(struct ibmvfc_target *tgt)
-+static void ibmvfc_adisc_timeout(unsigned long data)
- {
-+	struct ibmvfc_target *tgt = (struct ibmvfc_target *)data;
- 	struct ibmvfc_host *vhost = tgt->vhost;
- 	struct ibmvfc_event *evt;
- 	struct ibmvfc_tmf *tmf;
-@@ -3778,9 +3778,7 @@ static void ibmvfc_tgt_adisc(struct ibmvfc_target *tgt)
- 	if (timer_pending(&tgt->timer))
- 		mod_timer(&tgt->timer, jiffies + (IBMVFC_ADISC_TIMEOUT * HZ));
- 	else {
--		tgt->timer.data = (unsigned long) tgt;
- 		tgt->timer.expires = jiffies + (IBMVFC_ADISC_TIMEOUT * HZ);
--		tgt->timer.function = (void (*)(unsigned long))ibmvfc_adisc_timeout;
- 		add_timer(&tgt->timer);
- 	}
- 
-@@ -3912,7 +3910,7 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *vhost, u64 scsi_id)
- 	tgt->vhost = vhost;
- 	tgt->need_login = 1;
- 	tgt->cancel_key = vhost->task_set++;
--	init_timer(&tgt->timer);
-+	setup_timer(&tgt->timer, ibmvfc_adisc_timeout, (unsigned long)tgt);
- 	kref_init(&tgt->kref);
- 	ibmvfc_init_tgt(tgt, ibmvfc_tgt_implicit_logout);
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 7d156b161482..ffe917f02695 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -837,8 +837,9 @@ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
-  *
-  * Called when an internally generated command times out
- */
--static void ibmvscsi_timeout(struct srp_event_struct *evt_struct)
-+static void ibmvscsi_timeout(unsigned long data)
- {
-+	struct srp_event_struct *evt_struct = (struct srp_event_struct *)data;
- 	struct ibmvscsi_host_data *hostdata = evt_struct->hostdata;
- 
- 	dev_err(hostdata->dev, "Command timed out (%x). Resetting connection\n",
-@@ -927,11 +928,10 @@ static int ibmvscsi_send_srp_event(struct srp_event_struct *evt_struct,
+ 	uint16_t	tag;
+@@ -1122,8 +1120,7 @@ struct ahd_softc {
+ 	/*
+ 	 * Timer handles for timer driven callbacks.
  	 */
- 	list_add_tail(&evt_struct->list, &hostdata->sent);
+-	ahd_timer_t		  reset_timer;
+-	ahd_timer_t		  stat_timer;
++	struct timer_list	stat_timer;
  
--	init_timer(&evt_struct->timer);
-+	setup_timer(&evt_struct->timer, ibmvscsi_timeout,
-+		    (unsigned long)evt_struct);
- 	if (timeout) {
--		evt_struct->timer.data = (unsigned long) evt_struct;
- 		evt_struct->timer.expires = jiffies + (timeout * HZ);
--		evt_struct->timer.function = (void (*)(unsigned long))ibmvscsi_timeout;
- 		add_timer(&evt_struct->timer);
- 	}
+ 	/*
+ 	 * Statistics.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 95d8f25cbcca..a9fcc40eabcc 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -207,7 +207,7 @@ static void		ahd_add_scb_to_free_list(struct ahd_softc *ahd,
+ static u_int		ahd_rem_wscb(struct ahd_softc *ahd, u_int scbid,
+ 				     u_int prev, u_int next, u_int tid);
+ static void		ahd_reset_current_bus(struct ahd_softc *ahd);
+-static ahd_callback_t	ahd_stat_timer;
++static void		ahd_stat_timer(unsigned long data);
+ #ifdef AHD_DUMP_SEQ
+ static void		ahd_dumpseq(struct ahd_softc *ahd);
+ #endif
+@@ -6104,8 +6104,7 @@ ahd_alloc(void *platform_arg, char *name)
+ 	ahd->bugs = AHD_BUGNONE;
+ 	ahd->flags = AHD_SPCHK_ENB_A|AHD_RESET_BUS_A|AHD_TERM_ENB_A
+ 		   | AHD_EXTENDED_TRANS_A|AHD_STPWLEVEL_A;
+-	ahd_timer_init(&ahd->reset_timer);
+-	ahd_timer_init(&ahd->stat_timer);
++	setup_timer(&ahd->stat_timer, ahd_stat_timer, (unsigned long)ahd);
+ 	ahd->int_coalescing_timer = AHD_INT_COALESCING_TIMER_DEFAULT;
+ 	ahd->int_coalescing_maxcmds = AHD_INT_COALESCING_MAXCMDS_DEFAULT;
+ 	ahd->int_coalescing_mincmds = AHD_INT_COALESCING_MINCMDS_DEFAULT;
+@@ -6235,8 +6234,7 @@ ahd_shutdown(void *arg)
+ 	/*
+ 	 * Stop periodic timer callbacks.
+ 	 */
+-	ahd_timer_stop(&ahd->reset_timer);
+-	ahd_timer_stop(&ahd->stat_timer);
++	del_timer_sync(&ahd->stat_timer);
  
-diff --git a/drivers/staging/irda/drivers/bfin_sir.c b/drivers/staging/irda/drivers/bfin_sir.c
-index 3151b580dbd6..c9413bd580a7 100644
---- a/drivers/staging/irda/drivers/bfin_sir.c
-+++ b/drivers/staging/irda/drivers/bfin_sir.c
-@@ -317,8 +317,9 @@ static void bfin_sir_dma_rx_chars(struct net_device *dev)
- 		async_unwrap_char(dev, &self->stats, &self->rx_buff, port->rx_dma_buf.buf[i]);
+ 	/* This will reset most registers to 0, but not all */
+ 	ahd_reset(ahd, /*reinit*/FALSE);
+@@ -7039,20 +7037,11 @@ static const char *termstat_strings[] = {
+ };
+ 
+ /***************************** Timer Facilities *******************************/
+-#define ahd_timer_init init_timer
+-#define ahd_timer_stop del_timer_sync
+-typedef void ahd_linux_callback_t (u_long);
+-
+ static void
+-ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
++ahd_timer_reset(ahd_timer_t *timer, int usec)
+ {
+-	struct ahd_softc *ahd;
+-
+-	ahd = (struct ahd_softc *)arg;
+ 	del_timer(timer);
+-	timer->data = (u_long)arg;
+ 	timer->expires = jiffies + (usec * HZ)/1000000;
+-	timer->function = (ahd_linux_callback_t*)func;
+ 	add_timer(timer);
  }
  
--void bfin_sir_rx_dma_timeout(struct net_device *dev)
-+void bfin_sir_rx_dma_timeout(unsigned long data)
+@@ -7279,8 +7268,7 @@ ahd_init(struct ahd_softc *ahd)
+ 	}
+ init_done:
+ 	ahd_restart(ahd);
+-	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
+-			ahd_stat_timer, ahd);
++	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
+ 	return (0);
+ }
+ 
+@@ -8878,9 +8866,9 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
+ 
+ /**************************** Statistics Processing ***************************/
+ static void
+-ahd_stat_timer(void *arg)
++ahd_stat_timer(unsigned long data)
  {
-+	struct net_device *dev = (struct net_device *)data;
- 	struct bfin_sir_self *self = netdev_priv(dev);
- 	struct bfin_sir_port *port = self->sir_port;
- 	int x_pos, pos;
-@@ -406,7 +407,7 @@ static int bfin_sir_startup(struct bfin_sir_port *port, struct net_device *dev)
- 	enable_dma(port->rx_dma_channel);
- 
- 	port->rx_dma_timer.data = (unsigned long)(dev);
--	port->rx_dma_timer.function = (void *)bfin_sir_rx_dma_timeout;
-+	port->rx_dma_timer.function = bfin_sir_rx_dma_timeout;
- 
- #else
+-	struct	ahd_softc *ahd = arg;
++	struct	ahd_softc *ahd = (struct ahd_softc *)data;
+ 	u_long	s;
+ 	int	enint_coal;
+ 	
+@@ -8907,8 +8895,7 @@ ahd_stat_timer(void *arg)
+ 	ahd->cmdcmplt_bucket = (ahd->cmdcmplt_bucket+1) & (AHD_STAT_BUCKETS-1);
+ 	ahd->cmdcmplt_total -= ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket];
+ 	ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket] = 0;
+-	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
+-			ahd_stat_timer, ahd);
++	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
+ 	ahd_unlock(ahd, &s);
+ }
  
 -- 
 2.7.4
