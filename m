@@ -1,58 +1,42 @@
-From: Thomas Meyer <thomas@m3y3r.de>
-Subject: [PATCH 1/1] [SCSI] fnic: Cocci spatch "simple_open"
-Date: Thu, 21 Sep 2017 00:56:48 +0200
-Message-ID: <1505948185999-1088654362-1-diffsplit-thomas@m3y3r.de>
-References: <1505948185999-939794353-0-diffsplit-thomas@m3y3r.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH v2 29/31] scsi/bnx2i: Initialize timer
+Date: Wed, 20 Sep 2017 16:27:53 -0700
+Message-ID: <1505950075-50223-30-git-send-email-keescook@chromium.org>
+References: <1505950075-50223-1-git-send-email-keescook@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1505948185999-939794353-0-diffsplit-thomas@m3y3r.de>
+In-Reply-To: <1505950075-50223-1-git-send-email-keescook@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This removes an open coded simple_open() function and replaces file operations
-references to the function with simple_open() instead.
-Found by coccinelle spatch "api/simple_open.cocci"
+There was a seemingly missing call to setup_timer() in one handler,
+so add setup_timer() here to remove the open-coded initialization.
 
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+Cc: QLogic-Storage-Upstream@qlogic.com
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
+ drivers/scsi/bnx2i/bnx2i_iscsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -u -p a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -108,24 +108,6 @@ void fnic_debugfs_terminate(void)
- }
- 
- /*
-- * fnic_trace_ctrl_open - Open the trace_enable file for fnic_trace
-- *               Or Open fc_trace_enable file for fc_trace
-- * @inode: The inode pointer.
-- * @file: The file pointer to attach the trace enable/disable flag.
-- *
-- * Description:
-- * This routine opens a debugsfs file trace_enable or fc_trace_enable.
-- *
-- * Returns:
-- * This function returns zero if successful.
-- */
--static int fnic_trace_ctrl_open(struct inode *inode, struct file *filp)
--{
--	filp->private_data = inode->i_private;
--	return 0;
--}
--
--/*
-  * fnic_trace_ctrl_read -
-  *          Read  trace_enable ,fc_trace_enable
-  *              or fc_trace_clear debugfs file
-@@ -220,7 +202,7 @@ static ssize_t fnic_trace_ctrl_write(str
- 
- static const struct file_operations fnic_trace_ctrl_fops = {
- 	.owner = THIS_MODULE,
--	.open = fnic_trace_ctrl_open,
-+	.open = simple_open,
- 	.read = fnic_trace_ctrl_read,
- 	.write = fnic_trace_ctrl_write,
- };
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index bffc7e91b7e5..337139dadad0 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1611,9 +1611,9 @@ static int bnx2i_conn_start(struct iscsi_cls_conn *cls_conn)
+ 	 * this should normally not sleep for a long time so it should
+ 	 * not disrupt the caller.
+ 	 */
++	setup_timer(&bnx2i_conn->ep->ofld_timer, bnx2i_ep_ofld_timer,
++		    (unsigned long) bnx2i_conn->ep);
+ 	bnx2i_conn->ep->ofld_timer.expires = 1 * HZ + jiffies;
+-	bnx2i_conn->ep->ofld_timer.function = bnx2i_ep_ofld_timer;
+-	bnx2i_conn->ep->ofld_timer.data = (unsigned long) bnx2i_conn->ep;
+ 	add_timer(&bnx2i_conn->ep->ofld_timer);
+ 	/* update iSCSI context for this conn, wait for CNIC to complete */
+ 	wait_event_interruptible(bnx2i_conn->ep->ofld_wait,
+-- 
+2.7.4
