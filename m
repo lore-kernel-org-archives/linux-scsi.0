@@ -1,43 +1,20 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: libfc: fix potential null lport dereference
-Date: Wed, 20 Sep 2017 14:25:41 +0100
-Message-ID: <20170920132541.13691-1-colin.king@canonical.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] mpt3sas: downgrade full copy_from_user to access_ok check
+Date: Wed, 20 Sep 2017 08:04:00 -0700
+Message-ID: <20170920150400.GA18201@infradead.org>
+References: <1505877071-76996-1-git-send-email-mengxu.gatech@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1505877071-76996-1-git-send-email-mengxu.gatech@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Meng Xu <mengxu.gatech@gmail.com>
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, meng.xu@gatech.edu, sanidhya@gatech.edu, taesoo@gatech.edu
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, Sep 19, 2017 at 11:11:11PM -0400, Meng Xu wrote:
+> Since right after the user copy, we are going to
+> memset(&karg, 0, sizeof(karg)), I guess an access_ok check is enough?
 
-Don't pass a null lport to FC_LPORT_DBG as this causes a null pointer
-dereference when accessing lport->host and lport->port_id. Instead
-use the FC_CHECK_LOGGING macro to print the kernel message via pr_info.
-
-Detected by CoverityScan, CID#113198 ("Dereference after null check")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/libfc/fc_exch.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 42bcf7f3a0f9..46d842d238f1 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -2603,8 +2603,8 @@ void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
- 
- 	/* lport lock ? */
- 	if (!lport || lport->state == LPORT_ST_DISABLED) {
--		FC_LPORT_DBG(lport, "Receiving frames for an lport that "
--			     "has not been initialized correctly\n");
-+		FC_CHECK_LOGGING(FC_LPORT_LOGGING,
-+				 pr_info("Receiving frames for an lport that has not been initialized correctly\n"));
- 		fc_frame_free(fp);
- 		return;
- 	}
--- 
-2.14.1
+The right thing is to remove it entirely.
