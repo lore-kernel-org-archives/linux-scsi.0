@@ -1,33 +1,60 @@
 From: Meng Xu <mengxu.gatech@gmail.com>
-Subject: [PATCH] mpt3sas: downgrade full copy_from_user to access_ok check
-Date: Tue, 19 Sep 2017 23:11:11 -0400
-Message-ID: <1505877071-76996-1-git-send-email-mengxu.gatech@gmail.com>
+Subject: [PATCH] aacraid: fix potential double-fetch issue
+Date: Wed, 20 Sep 2017 00:08:52 -0400
+Message-ID: <1505880532-25847-1-git-send-email-mengxu.gatech@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: meng.xu@gatech.edu, sanidhya@gatech.edu, taesoo@gatech.edu, Meng Xu <mengxu.gatech@gmail.com>
+To: aacraid@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Meng Xu <mengxu.gatech@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Since right after the user copy, we are going to
-memset(&karg, 0, sizeof(karg)), I guess an access_ok check is enough?
+While examining the kernel source code, I found a dangerous operation
+that could turn into a double-fetch situation (a race condition bug)
+where the same userspace memory region are fetched twice into kernel
+with sanity checks after the first fetch while missing checks after the
+second fetch.
+
+1. The first userspace fetch happens in
+copy_from_user(&fibsize, &user_srb->count,sizeof(u32))
+
+2. Subsequently fibsize undergoes a few sanity checks and is then
+used to allocate user_srbcmd = kmalloc(fibsize, GFP_KERNEL).
+
+3. The second userspace fetch happens in
+copy_from_user(user_srbcmd, user_srb,fibsize)
+
+4. Given that the memory region pointed by user_srb can be fully
+controlled in userspace, an attacker can race to override the
+user_srb->count to arbitrary value (say 0XFFFFFFFF) after the first
+fetch but before the second. The changed value will be copied to
+user_srbcmd.
+
+The patch explicitly overrides user_srbcmd->count after the second
+userspace fetch with the value fibsize from the first userspace fetch.
+In this way, it is assured that the relation, user_srbcmd->count stores
+the size of the user_srbcmd buffer, still holds after the second fetch.
 
 Signed-off-by: Meng Xu <mengxu.gatech@gmail.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/commctrl.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index bdffb69..b363d2d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1065,7 +1065,7 @@ _ctl_getiocinfo(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- {
- 	struct mpt3_ioctl_iocinfo karg;
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 9ab0fa9..734bf11 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -540,6 +540,12 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 		goto cleanup;
+ 	}
  
--	if (copy_from_user(&karg, arg, sizeof(karg))) {
-+	if (!access_ok(VERIFY_READ, arg, sizeof(karg))) {
- 		pr_err("failure at %s:%d/%s()!\n",
- 		    __FILE__, __LINE__, __func__);
- 		return -EFAULT;
++	/* 
++	 * re-establish the relation that user_srbcmd->count holds the 
++	 * size of user_srbcmd 
++	 */
++	user_srbcmd->count = fibsize;
++
+ 	flags = user_srbcmd->flags; /* from user in cpu order */
+ 	switch (flags & (SRB_DataIn | SRB_DataOut)) {
+ 	case SRB_DataOut:
 -- 
 2.7.4
