@@ -1,45 +1,69 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 1/3] nvme_fc: create fc class and transport device
-Date: Wed, 20 Sep 2017 12:30:41 +0200
-Message-ID: <20170920103041.idkzk5kerewgv5yk@linux-x5ow.site>
-References: <20170914173843.3195-1-jsmart2021@gmail.com>
- <20170914173843.3195-2-jsmart2021@gmail.com>
- <20170918161330.GC310@infradead.org>
+From: Zang Leigang <zangleigang@hisilicon.com>
+Subject: [PATCH] scsi: ufs: add ufs a command complete time stamp
+Date: Wed, 20 Sep 2017 18:30:40 +0800
+Message-ID: <20170920103040.20613-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50464 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751693AbdITKao (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Sep 2017 06:30:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20170918161330.GC310@infradead.org>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:6526 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751697AbdITKaz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2017 06:30:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 09:13:30AM -0700, Christoph Hellwig wrote:
-> Looks ok,
-> 
-> although I really wish we could come up with some common FC code,
-> including making the existing FC drivers use more infrastructure
-> from libfc..
+Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
 
-the problem with libfc currently is it is made for fcoe, despite being named
-libfc. The other hand it is hard-wired to FCP so bringing NVMe into it is a
-bit challanging, BTDT.
-
-It's not that it is impossible, it's just not something that can be done in a
-day or two of hacking.
-
-Anyways,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 794a4600e952..2984f33095be 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -385,6 +385,8 @@ void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
+ 
+ 		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
+ 				tag, ktime_to_us(lrbp->issue_time_stamp));
++		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
++				tag, ktime_to_us(lrbp->complete_time_stamp));
+ 		dev_err(hba->dev,
+ 			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+ 			tag, (u64)lrbp->utrd_dma_addr);
+@@ -1746,6 +1748,7 @@ static inline
+ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ {
+ 	hba->lrb[task_tag].issue_time_stamp = ktime_get();
++	hba->lrb[task_tag].complete_time_stamp.tv64 = 0UL;
+ 	ufshcd_clk_scaling_start_busy(hba);
+ 	__set_bit(task_tag, &hba->outstanding_reqs);
+ 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+@@ -4627,6 +4630,8 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 		}
+ 		if (ufshcd_is_clkscaling_supported(hba))
+ 			hba->clk_scaling.active_reqs--;
++
++		lrbp->complete_time_stamp = ktime_get();
+ 	}
+ 
+ 	/* clear corresponding bits of completed commands */
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index cdc8bd05f7df..67a8f8ef1b06 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -166,6 +166,7 @@ struct ufs_pm_lvl_states {
+  * @lun: LUN of the command
+  * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
+  * @issue_time_stamp: time stamp for debug purposes
++ * @complete_time_stamp: time stamp for statistics
+  * @req_abort_skip: skip request abort task flag
+  */
+ struct ufshcd_lrb {
+@@ -189,6 +190,7 @@ struct ufshcd_lrb {
+ 	u8 lun; /* UPIU LUN id field is only 8-bit wide */
+ 	bool intr_cmd;
+ 	ktime_t issue_time_stamp;
++	ktime_t complete_time_stamp;
+ 
+ 	bool req_abort_skip;
+ };
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.14.1
