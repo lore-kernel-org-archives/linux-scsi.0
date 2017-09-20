@@ -1,203 +1,38 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/2] scsi_dh: Return SCSI_DH_XX error code from ->attach()
-Date: Wed, 20 Sep 2017 09:18:51 +0200
-Message-ID: <1505891932-49215-2-git-send-email-hare@suse.de>
-References: <1505891932-49215-1-git-send-email-hare@suse.de>
+Subject: [PATCH 0/2] scsi_dh: suppress errors from unsupported devices
+Date: Wed, 20 Sep 2017 09:18:50 +0200
+Message-ID: <1505891932-49215-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56015 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56016 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751524AbdITHS6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751575AbdITHS6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 20 Sep 2017 03:18:58 -0400
-In-Reply-To: <1505891932-49215-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Rather than having each device handler implementing their own
-error mapping have the ->attach() call return a SCSI_DH_XXX
-error code and implement the mapping in scsi_dh_handler_attach().
+From: Hannes Reinecke <hare@suse.com>
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c  | 10 ++++------
- drivers/scsi/device_handler/scsi_dh_emc.c   |  6 +++---
- drivers/scsi/device_handler/scsi_dh_hp_sw.c | 12 ++++++++----
- drivers/scsi/device_handler/scsi_dh_rdac.c  |  6 +++---
- drivers/scsi/scsi_dh.c                      | 17 ++++++++++++++---
- 5 files changed, 32 insertions(+), 19 deletions(-)
+Hi all,
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 0962fd544401..fd22dc6ab5d9 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1085,11 +1085,11 @@ static void alua_rescan(struct scsi_device *sdev)
- static int alua_bus_attach(struct scsi_device *sdev)
- {
- 	struct alua_dh_data *h;
--	int err, ret = -EINVAL;
-+	int err;
- 
- 	h = kzalloc(sizeof(*h) , GFP_KERNEL);
- 	if (!h)
--		return -ENOMEM;
-+		return SCSI_DH_NOMEM;
- 	spin_lock_init(&h->pg_lock);
- 	rcu_assign_pointer(h->pg, NULL);
- 	h->init_error = SCSI_DH_OK;
-@@ -1098,16 +1098,14 @@ static int alua_bus_attach(struct scsi_device *sdev)
- 
- 	mutex_init(&h->init_mutex);
- 	err = alua_initialize(sdev, h);
--	if (err == SCSI_DH_NOMEM)
--		ret = -ENOMEM;
- 	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
- 		goto failed;
- 
- 	sdev->handler_data = h;
--	return 0;
-+	return SCSI_DH_OK;
- failed:
- 	kfree(h);
--	return ret;
-+	return err;
- }
- 
- /*
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 8654e940e1a8..6a2792f3a37e 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -490,7 +490,7 @@ static int clariion_bus_attach(struct scsi_device *sdev)
- 
- 	h = kzalloc(sizeof(*h) , GFP_KERNEL);
- 	if (!h)
--		return -ENOMEM;
-+		return SCSI_DH_NOMEM;
- 	h->lun_state = CLARIION_LUN_UNINITIALIZED;
- 	h->default_sp = CLARIION_UNBOUND_LU;
- 	h->current_sp = CLARIION_UNBOUND_LU;
-@@ -510,11 +510,11 @@ static int clariion_bus_attach(struct scsi_device *sdev)
- 		    h->default_sp + 'A');
- 
- 	sdev->handler_data = h;
--	return 0;
-+	return SCSI_DH_OK;
- 
- failed:
- 	kfree(h);
--	return -EINVAL;
-+	return err;
- }
- 
- static void clariion_bus_detach(struct scsi_device *sdev)
-diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-index 62d314e07d11..e65a0ebb4b54 100644
---- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -218,24 +218,28 @@ static int hp_sw_bus_attach(struct scsi_device *sdev)
- 
- 	h = kzalloc(sizeof(*h), GFP_KERNEL);
- 	if (!h)
--		return -ENOMEM;
-+		return SCSI_DH_NOMEM;
- 	h->path_state = HP_SW_PATH_UNINITIALIZED;
- 	h->retries = HP_SW_RETRIES;
- 	h->sdev = sdev;
- 
- 	ret = hp_sw_tur(sdev, h);
--	if (ret != SCSI_DH_OK || h->path_state == HP_SW_PATH_UNINITIALIZED)
-+	if (ret != SCSI_DH_OK)
- 		goto failed;
-+	if (h->path_state == HP_SW_PATH_UNINITIALIZED) {
-+		ret = SCSI_DH_NOSYS;
-+		goto failed;
-+	}
- 
- 	sdev_printk(KERN_INFO, sdev, "%s: attached to %s path\n",
- 		    HP_SW_NAME, h->path_state == HP_SW_PATH_ACTIVE?
- 		    "active":"passive");
- 
- 	sdev->handler_data = h;
--	return 0;
-+	return SCSI_DH_OK;
- failed:
- 	kfree(h);
--	return -EINVAL;
-+	return ret;
- }
- 
- static void hp_sw_bus_detach( struct scsi_device *sdev )
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 2ceff585f189..7af31a1247ee 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -729,7 +729,7 @@ static int rdac_bus_attach(struct scsi_device *sdev)
- 
- 	h = kzalloc(sizeof(*h) , GFP_KERNEL);
- 	if (!h)
--		return -ENOMEM;
-+		return SCSI_DH_NOMEM;
- 	h->lun = UNINITIALIZED_LUN;
- 	h->state = RDAC_STATE_ACTIVE;
- 
-@@ -755,7 +755,7 @@ static int rdac_bus_attach(struct scsi_device *sdev)
- 		    lun_state[(int)h->lun_state]);
- 
- 	sdev->handler_data = h;
--	return 0;
-+	return SCSI_DH_OK;
- 
- clean_ctlr:
- 	spin_lock(&list_lock);
-@@ -764,7 +764,7 @@ static int rdac_bus_attach(struct scsi_device *sdev)
- 
- failed:
- 	kfree(h);
--	return -EINVAL;
-+	return err;
- }
- 
- static void rdac_bus_detach( struct scsi_device *sdev )
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 84addee05be6..ac798d284a7e 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -126,20 +126,31 @@ static struct scsi_device_handler *scsi_dh_lookup(const char *name)
- static int scsi_dh_handler_attach(struct scsi_device *sdev,
- 				  struct scsi_device_handler *scsi_dh)
- {
--	int error;
-+	int error, ret = 0;
- 
- 	if (!try_module_get(scsi_dh->module))
- 		return -EINVAL;
- 
- 	error = scsi_dh->attach(sdev);
--	if (error) {
-+	if (error != SCSI_DH_OK) {
-+		switch (error) {
-+		case SCSI_DH_NOMEM:
-+			ret = -ENOMEM;
-+			break;
-+		case SCSI_DH_RES_TEMP_UNAVAIL:
-+			ret = -EAGAIN;
-+			break;
-+		default:
-+			ret = -EINVAL;
-+			break;
-+		}
- 		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
- 			    scsi_dh->name, error);
- 		module_put(scsi_dh->module);
- 	} else
- 		sdev->handler = scsi_dh;
- 
--	return error;
-+	return ret;
- }
- 
- /*
+here's a small patchset to suppress errors from scsi_dh_attach() for
+unsupported devices.
+
+As usual, comments and reviews are welcome.
+
+Hannes Reinecke (2):
+  scsi_dh: Return SCSI_DH_XX error code from ->attach()
+  scsi_dh: suppress errors from unsupported devices
+
+ drivers/scsi/device_handler/scsi_dh_alua.c  | 10 ++++----
+ drivers/scsi/device_handler/scsi_dh_emc.c   |  6 ++---
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c | 12 ++++++----
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |  6 ++---
+ drivers/scsi/scsi_dh.c                      | 36 +++++++++++++++++++++--------
+ drivers/scsi/scsi_priv.h                    |  4 ++--
+ drivers/scsi/scsi_sysfs.c                   |  8 +------
+ 7 files changed, 48 insertions(+), 34 deletions(-)
+
 -- 
 2.12.3
