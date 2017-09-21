@@ -1,42 +1,49 @@
-From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-Subject: Re: [PATCH V6 2/3] dma-mapping: Rework dma_get_cache_alignment()function
-Date: Thu, 21 Sep 2017 12:28:25 +0800
-Message-ID: <tencent_0C366F4D229840FF7D683E10@qq.com>
-References: <1505811161-25246-1-git-send-email-chenhc@lemote.com>
-        <1505811161-25246-2-git-send-email-chenhc@lemote.com>
-        <20170919150252.GA23540@lst.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v3 1/3] nvme_fc: create fc class and transport device
+Date: Thu, 21 Sep 2017 07:16:15 +0200
+Message-ID: <20170921051615.6fnmqktvuoi4smyr@linux-x5ow.site>
+References: <20170914173843.3195-1-jsmart2021@gmail.com>
+ <20170914173843.3195-2-jsmart2021@gmail.com>
+ <20170918161330.GC310@infradead.org>
+ <20170920103041.idkzk5kerewgv5yk@linux-x5ow.site>
+ <20170920175018.GA8962@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170919150252.GA23540@lst.de>
-Sender: stable-owner@vger.kernel.org
-Cc: =?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?= <hch@lst.de>, =?utf-8?B?TWFyZWsgU3p5cHJvd3NraQ==?= <m.szyprowski@samsung.com>, =?utf-8?B?Um9iaW4gTXVycGh5?= <robin.murphy@arm.com>, =?utf-8?B?QW5kcmV3IE1vcnRvbg==?= <akpm@linux-foundation.org>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:36029 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750912AbdIUFQR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Sep 2017 01:16:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20170920175018.GA8962@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-SGksIENocmlzdG9waCwNCg0KSSBoYXZlIGNoYW5nZWQgZG1hX2dldF9jYWNoZV9hbGlnbm1l
-bnQncyByZXR1cm4gdmFsdWUsIGFuZCBJIGRvbid0IGtub3cgd2hldGhlciB0aG9zZSBkcml2
-ZXJzIHdhbnQgdG8gcmV0dXJuIEFSQ0hfRE1BX01JTkFMSUdOIHVuY29uZGl0aW9uYWxseS4g
-U28gSSBwYXNzIGEgTlVMTCBmb3IgdGhvc2UgZHJpdmVycywgaW4gb3JkZXIgdG8ga2VlcCB0
-aGVpciBvbGQgYmVoYXZpb3IuDQogDQpIdWFjYWkNCiANCi0tLS0tLS0tLS0tLS0tLS0tLSBP
-cmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCkZyb206ICAiQ2hyaXN0b3BoIEhlbGx3aWci
-PGhjaEBsc3QuZGU+Ow0KRGF0ZTogIFR1ZSwgU2VwIDE5LCAyMDE3IDExOjAyIFBNDQpUbzog
-ICJIdWFjYWkgQ2hlbiI8Y2hlbmhjQGxlbW90ZS5jb20+OyANCkNjOiAgIkNocmlzdG9waCBI
-ZWxsd2lnIjxoY2hAbHN0LmRlPjsgIk1hcmVrIFN6eXByb3dza2kiPG0uc3p5cHJvd3NraUBz
-YW1zdW5nLmNvbT47ICJSb2JpbiBNdXJwaHkiPHJvYmluLm11cnBoeUBhcm0uY29tPjsgIkFu
-ZHJldyBNb3J0b24iPGFrcG1AbGludXgtZm91bmRhdGlvbi5vcmc+OyAiRnV4aW4gWmhhbmci
-PHpoYW5nZnhAbGVtb3RlLmNvbT47ICJsaW51eC1rZXJuZWwiPGxpbnV4LWtlcm5lbEB2Z2Vy
-Lmtlcm5lbC5vcmc+OyAiSmFtZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5l
-dC5pYm0uY29tPjsgIk1hcnRpbiBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFj
-bGUuY29tPjsgImxpbnV4LXNjc2kiPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgInN0
-YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47IA0KU3ViamVjdDogIFJlOiBbUEFUQ0gg
-VjYgMi8zXSBkbWEtbWFwcGluZzogUmV3b3JrIGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50KClm
-dW5jdGlvbg0KDQogDQo+ICAJbWRldi0+bGltaXRzLnJlc2VydmVkX210dHMgPSBBTElHTiht
-ZGV2LT5saW1pdHMucmVzZXJ2ZWRfbXR0cyAqIG1kZXYtPmxpbWl0cy5tdHRfc2VnX3NpemUs
-DQo+IC0JCQkJCSAgIGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50KCkpIC8gbWRldi0+bGltaXRz
-Lm10dF9zZWdfc2l6ZTsNCj4gKwkJCQkJICAgZG1hX2dldF9jYWNoZV9hbGlnbm1lbnQoTlVM
-TCkpIC8gbWRldi0+bGltaXRzLm10dF9zZWdfc2l6ZTsNCj4gIA0KPiAgCW1kZXYtPm1yX3Rh
-YmxlLm10dF90YWJsZSA9IG10aGNhX2FsbG9jX2ljbV90YWJsZShtZGV2LCBpbml0X2hjYS0+
-bXR0X2Jhc2UsDQoNClBsZWFzZSBwYXNzIHRoZSBhY3R1YWxseSByZWxldmFudCBzdHJ1Y3Qg
-ZGV2aWNlIGZvciBlYWNoIGNhbGwu
+On Wed, Sep 20, 2017 at 10:50:18AM -0700, Christoph Hellwig wrote:
+> On Wed, Sep 20, 2017 at 12:30:41PM +0200, Johannes Thumshirn wrote:
+> > the problem with libfc currently is it is made for fcoe, despite being named
+> > libfc.
+> 
+> Well, that's my point - we should be able to use more bits in a common
+> FC layer.  I don't really care about the exact name.
+
+Yes, that's on my long term TODO list, getting rid of the SKBs used internally
+so ibmvfc can be switched over, allow the setting of the NVMe Type code (or
+even arbitrary typecodes) yada, yada.  It'll benefit fnic, bnx2fc and qedfc as
+well, but I haven't been able to do much in this regard. Hannes and I have
+internal patchsets flying around solving the fist little bits for it but
+they're far from completion.
+
+Byte,
+	Johannes
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
