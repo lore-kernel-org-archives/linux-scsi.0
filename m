@@ -1,55 +1,48 @@
-From: Thomas Meyer <thomas@m3y3r.de>
-Subject: [PATCH 6/6] scsi: Cocci spatch "pool_zalloc-simple"
-Date: Thu, 21 Sep 2017 08:15:26 +0200
-Message-ID: <1505974468536-246250875-6-diffsplit-thomas@m3y3r.de>
-References: <1505974468535-2047238743-0-diffsplit-thomas@m3y3r.de>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH v2 18/31] scsi/aic7xxx: Clean up timer usage
+Date: Thu, 21 Sep 2017 09:35:17 +0200
+Message-ID: <a7be1d3a-fd4b-4b85-7308-1e33db2713e5@suse.com>
+References: <1505950075-50223-1-git-send-email-keescook@chromium.org>
+ <1505950075-50223-19-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1505974468535-2047238743-0-diffsplit-thomas@m3y3r.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.nue.novell.com ([195.135.221.5]:33068 "EHLO
+        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbdIUHff (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Thu, 21 Sep 2017 03:35:35 -0400
+In-Reply-To: <1505950075-50223-19-git-send-email-keescook@chromium.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, Thomas Gleixner <tglx@linutronix.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0.
-Found by coccinelle spatch "api/alloc/pool_zalloc-simple.cocci"
+On 09/21/2017 01:27 AM, Kees Cook wrote:
+> stat_timer only ever assigns the same function and data, so consolidate to
+> a setup_timer() call and drop everything else used to pass things around.
+> 
+> reset_timer is unused; remove it.
+> 
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/scsi/aic7xxx/aic79xx.h      |  5 +----
+>  drivers/scsi/aic7xxx/aic79xx_core.c | 29 ++++++++---------------------
+>  2 files changed, 9 insertions(+), 25 deletions(-)
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
----
+Cheers,
 
-diff -u -p a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1651,13 +1651,12 @@ int qla4xxx_set_chap(struct scsi_qla_hos
- 	uint32_t chap_size = 0;
- 	dma_addr_t chap_dma;
- 
--	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
-+	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
- 	if (chap_table == NULL) {
- 		ret =  -ENOMEM;
- 		goto exit_set_chap;
- 	}
- 
--	memset(chap_table, 0, sizeof(struct ql4_chap_table));
- 	if (bidi)
- 		chap_table->flags |= BIT_6; /* peer */
- 	else
-diff -u -p a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -825,12 +825,10 @@ static int qla4xxx_delete_chap(struct Sc
- 	uint32_t chap_size;
- 	int ret = 0;
- 
--	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
-+	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
- 	if (chap_table == NULL)
- 		return -ENOMEM;
- 
--	memset(chap_table, 0, sizeof(struct ql4_chap_table));
--
- 	if (is_qla80XX(ha))
- 		max_chap_entries = (ha->hw.flt_chap_size / 2) /
- 				   sizeof(struct ql4_chap_table);
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
