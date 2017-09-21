@@ -1,88 +1,137 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: Re: Is the possible cross-talking between unrelated file-descriptors
- on bsg-device by design?
-Date: Thu, 21 Sep 2017 20:54:56 +0200
-Message-ID: <20170921185456.GE28979@bblock-ThinkPad-W530>
-References: <20170919145632.GB28979@bblock-ThinkPad-W530>
- <68979092-baeb-58e7-0cbc-c6c7bc986908@interlog.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: usb/storage/uas: slab-out-of-bounds in uas_probe
+Date: Thu, 21 Sep 2017 15:04:05 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1709211456370.1294-100000@iolanthe.rowland.org>
+References: <CAAeHK+yVXYJrVKW++kE+cXp=TMoDRCzPVd7G1X4YCueMbJF4HA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <68979092-baeb-58e7-0cbc-c6c7bc986908@interlog.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Rob Lester <Robert.Lester@hgst.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAAeHK+yVXYJrVKW++kE+cXp=TMoDRCzPVd7G1X4YCueMbJF4HA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrey Konovalov <andreyknvl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kostya Serebryany <kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, syzkaller <syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 19, 2017 at 02:16:26PM -0400, Douglas Gilbert wrote:
-> On 2017-09-19 10:56 AM, Benjamin Block wrote:
-> > Hello linux-block,
-> > 
-> > I wrote some tests recently to test patches against bsg.c and bsg-lib.c,
-> > and while writing those I noticed something strange:
-> > 
-> > When you use the write() and read() call on multiple file-descriptors
-> > for a single bsg-device (FC or SCSI), it is possible that you get
-> > cross-talk between those different file-descriptors.
-> > 
-> > E.g.: You have two independent processes open a FD on /dev/bsg/fc_host0
-> > and you send commands via write() in both processes, when they both do
-> > read() later on - to read the response for the commands they send before
-> > -, it is possible that process A gets the response (Sense-Data,
-> > FC-Protocol-Data, ...) for a command that process B wrote and vis-a-vis.
-> > 
-> > I noticed this because in my tests I 'tag' each command I send with
-> > write() via a value I write into the usr_ptr field of sg_io_v4. When I
-> > later user read() to receive responses I check for this tag in a
-> > hash-table and so can look up the original command. When I used this and
-> > spawned multiple processes with the same target bsg-device, I got
-> > responses for commands I don't have tags for in my hash-table, so they
-> > were written by an other process. This never happend when I only spawn
-> > one test-process.
-> > 
-> > This seems awfully contra-productive.. so much that I don't see any
-> > point in allowing users to open more than one FD per bsg-device, because
-> > that would inevitably lead to very hard to debug 'bugs'. And I wonder if
-> > this is really by design or some regression that happend over time.
-> > 
-> > I looked at the code in bsg.c and yes, it seems this is what is coded
-> > right now. We have a hash-table which manages all 'struct bsg_device's
-> > who are indexed by device-minors, so one hash-table entry per
-> > device-node.
-> > 
-> > So eh, long talk short question, is that intended?
+On Thu, 21 Sep 2017, Andrey Konovalov wrote:
+
+> On Thu, Sep 21, 2017 at 6:10 PM, Greg Kroah-Hartman
+> <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org> wrote:
+> > On Thu, Sep 21, 2017 at 05:39:05PM +0200, Andrey Konovalov wrote:
+> >> Hi!
+> >>
+> >> I've got the following report while fuzzing the kernel with syzkaller.
+> >>
+> >> On commit ebb2c2437d8008d46796902ff390653822af6cc4 (Sep 18).
+> >>
+> >> The issue occurs when we iterate over interface altsettings, but I
+> >> don't see the driver doing anything wrong. I might be missing
+> >> something, or this might be an issue in USB core altsettings parsing.
+> >
+> >
+> > Any chance you happen to have the descriptors that you were feeding into
+> > the kernel at this crash?  That might help in figuring out what "went
+> > wrong".
 > 
-> Hi,
-> About once a year I point out that major misfeature in the bsg driver
-> and no-one seems to care. Most recently I pointed it out in a
-> discussion about SCSI SG CVE-2017-0794 6 days ago:
->   " ... Last time I looked at the bsg driver, a SCSI command
->     could be issued on one file descriptor and its data-in block
->     and SCSI status delivered to another file descriptor to the
->     same block device (potentially in another process). IOW chaos"
+> Here's the data that I feed into dummy_udc:
 > 
-> It is hard to imagine any sane application relying on this bizarre
-> behaviour so fixing it should not break any applications. My guess
-> is that it would require a non-trivial patch set to fix. Would you
-> like to volunteer?
+> 00 00 00 00 09 02 12 00 01 34 05 80 07 09 04 6e
+> 09 00 08 06 62 00 12 01 05 00 cb f7 71 83 04 00
+> 05 00 ab f6 07 81 08 01
 > 
+> Also attaching a C reproducer (requires dummy_hcd and gadgetfs) and my .config.
 
-Interesting. So this is not a regression then.
+Why do your reproducers use an mmap'ed array for their data instead of 
+a plain old statically allocated array?
 
-Well, personally I am intrigued to try to fix this, but professionally
-it is not really up to me to choose to work on this. Especially because
-as you say, this looks not trivial - at least if you want to let
-multiple applications open a FD for a single BSG device node. Lets see.
+Anyway, this turns out to be a genuine (and subtle!) bug in the uas
+driver.  The uas_find_uas_alt_setting() routine in uas-detect.h returns
+a bAlternateSetting value, but then the uas_use_uas_driver() routine
+uses this value as an index to the altsetting array -- which it isn't.  
 
-But thank you for elaborating on this!
+Normally this doesn't cause any problems because the the entries in the
+array have bAlternateSetting values 0, 1, etc., so the value is equal
+to the index.  But in your fuzzed case, that wasn't true.
+
+The patch below fixes this bug, by returning a pointer to the 
+alt-setting entry instead of either the value or the index.  Pointers 
+are less subject to misinterpretation.
+
+Alan Stern
 
 
-                                                    Beste Grüße / Best regards,
-                                                      - Benjamin Block
--- 
-Linux on z Systems Development         /         IBM Systems & Technology Group
-		  IBM Deutschland Research & Development GmbH 
-Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+
+Index: usb-4.x/drivers/usb/storage/uas-detect.h
+===================================================================
+--- usb-4.x.orig/drivers/usb/storage/uas-detect.h
++++ usb-4.x/drivers/usb/storage/uas-detect.h
+@@ -9,7 +9,8 @@ static int uas_is_interface(struct usb_h
+ 		intf->desc.bInterfaceProtocol == USB_PR_UAS);
+ }
+ 
+-static int uas_find_uas_alt_setting(struct usb_interface *intf)
++static struct usb_host_interface *uas_find_uas_alt_setting(
++		struct usb_interface *intf)
+ {
+ 	int i;
+ 
+@@ -17,10 +18,10 @@ static int uas_find_uas_alt_setting(stru
+ 		struct usb_host_interface *alt = &intf->altsetting[i];
+ 
+ 		if (uas_is_interface(alt))
+-			return alt->desc.bAlternateSetting;
++			return alt;
+ 	}
+ 
+-	return -ENODEV;
++	return NULL;
+ }
+ 
+ static int uas_find_endpoints(struct usb_host_interface *alt,
+@@ -58,14 +59,14 @@ static int uas_use_uas_driver(struct usb
+ 	struct usb_device *udev = interface_to_usbdev(intf);
+ 	struct usb_hcd *hcd = bus_to_hcd(udev->bus);
+ 	unsigned long flags = id->driver_info;
+-	int r, alt;
+-
++	struct usb_host_interface *alt;
++	int r;
+ 
+ 	alt = uas_find_uas_alt_setting(intf);
+-	if (alt < 0)
++	if (!alt)
+ 		return 0;
+ 
+-	r = uas_find_endpoints(&intf->altsetting[alt], eps);
++	r = uas_find_endpoints(alt, eps);
+ 	if (r < 0)
+ 		return 0;
+ 
+Index: usb-4.x/drivers/usb/storage/uas.c
+===================================================================
+--- usb-4.x.orig/drivers/usb/storage/uas.c
++++ usb-4.x/drivers/usb/storage/uas.c
+@@ -873,14 +873,14 @@ MODULE_DEVICE_TABLE(usb, uas_usb_ids);
+ static int uas_switch_interface(struct usb_device *udev,
+ 				struct usb_interface *intf)
+ {
+-	int alt;
++	struct usb_host_interface *alt;
+ 
+ 	alt = uas_find_uas_alt_setting(intf);
+-	if (alt < 0)
+-		return alt;
++	if (!alt)
++		return -ENODEV;
+ 
+-	return usb_set_interface(udev,
+-			intf->altsetting[0].desc.bInterfaceNumber, alt);
++	return usb_set_interface(udev, alt->desc.bInterfaceNumber,
++			alt->desc.bAlternateSetting);
+ }
+ 
+ static int uas_configure_endpoints(struct uas_dev_info *devinfo)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
