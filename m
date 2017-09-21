@@ -1,38 +1,25 @@
-From: Allen Pais <allen.lkml@gmail.com>
-Subject: [PATCH 1/1] scsi: bnx: use setup_timer
-Date: Thu, 21 Sep 2017 17:17:44 +0530
-Message-ID: <1505994464-11465-1-git-send-email-allen.lkml@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, Allen Pais <allen.lkml@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V6 2/3] dma-mapping: Rework
+        dma_get_cache_alignment()function
+Date: Thu, 21 Sep 2017 16:36:27 +0200
+Message-ID: <20170921143627.GA18424@lst.de>
+References: <1505811161-25246-1-git-send-email-chenhc@lemote.com> <1505811161-25246-2-git-send-email-chenhc@lemote.com> <20170919150252.GA23540@lst.de> <tencent_0C366F4D229840FF7D683E10@qq.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <tencent_0C366F4D229840FF7D683E10@qq.com>
+Sender: stable-owner@vger.kernel.org
+To: =?utf-8?B?6ZmI5Y2O5omN?= <chenhc@lemote.com>
+Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel <linux-kernel@vger.kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, stable <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-    Use setup_timer function instead of initializing timer with the
-    function and data fields.
+On Thu, Sep 21, 2017 at 12:28:25PM +0800, 陈华才 wrote:
+> Hi, Christoph,
+> 
+> I have changed dma_get_cache_alignment's return value, and I don't know whether those drivers want to return ARCH_DMA_MINALIGN unconditionally. So I pass a NULL for those drivers, in order to keep their old behavior.
 
-Signed-off-by: Allen Pais <allen.lkml@gmail.com>
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 6844ba3..a056211 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -1946,11 +1946,10 @@ static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
- {
- 	if (test_and_clear_bit(BNX2FC_FLAG_FW_INIT_DONE, &hba->flags)) {
- 		if (bnx2fc_send_fw_fcoe_destroy_msg(hba) == 0) {
--			init_timer(&hba->destroy_timer);
-+			setup_timer(&hba->destroy_timer, bnx2fc_destroy_timer,
-+				    (unsigned long)hba);
- 			hba->destroy_timer.expires = BNX2FC_FW_TIMEOUT +
- 								jiffies;
--			hba->destroy_timer.function = bnx2fc_destroy_timer;
--			hba->destroy_timer.data = (unsigned long)hba;
- 			add_timer(&hba->destroy_timer);
- 			wait_event_interruptible(hba->destroy_wait,
- 					test_bit(BNX2FC_FLAG_DESTROY_CMPL,
--- 
-2.7.4
+Per our documentation yes, they do want ARCH_DMA_MINALIGN.  Please
+Cc all the driver maintainers on your updated patch so that they can
+review it, though.
