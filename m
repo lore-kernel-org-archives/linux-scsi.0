@@ -1,41 +1,42 @@
-From: Meng Xu <mengxu.gatech@gmail.com>
-Subject: Re: [PATCH] mpt3sas: downgrade full copy_from_user to access_ok check
-Date: Wed, 20 Sep 2017 23:32:33 -0400
-Message-ID: <F6EA0E6E-A5EB-4096-B80E-6EAA546EFAA0@gmail.com>
-References: <1505877071-76996-1-git-send-email-mengxu.gatech@gmail.com>
- <20170921032604.GF32076@ZenIV.linux.org.uk>
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170921032604.GF32076@ZenIV.linux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, meng.xu@gatech.edu, sanidhya@gatech.edu, taesoo@gatech.edu
+From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
+Subject: Re: [PATCH V6 2/3] dma-mapping: Rework dma_get_cache_alignment()function
+Date: Thu, 21 Sep 2017 12:28:25 +0800
+Message-ID: <tencent_0C366F4D229840FF7D683E10@qq.com>
+References: <1505811161-25246-1-git-send-email-chenhc@lemote.com>
+        <1505811161-25246-2-git-send-email-chenhc@lemote.com>
+        <20170919150252.GA23540@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170919150252.GA23540@lst.de>
+Sender: stable-owner@vger.kernel.org
+Cc: =?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?= <hch@lst.de>, =?utf-8?B?TWFyZWsgU3p5cHJvd3NraQ==?= <m.szyprowski@samsung.com>, =?utf-8?B?Um9iaW4gTXVycGh5?= <robin.murphy@arm.com>, =?utf-8?B?QW5kcmV3IE1vcnRvbg==?= <akpm@linux-foundation.org>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-> On Sep 20, 2017, at 11:26 PM, Al Viro <viro@ZenIV.linux.org.uk> wrote:
-> 
-> On Tue, Sep 19, 2017 at 11:11:11PM -0400, Meng Xu wrote:
->> Since right after the user copy, we are going to
->> memset(&karg, 0, sizeof(karg)), I guess an access_ok check is enough?
-> 
-> access_ok() is *NOT* "will copy_from_user() succeed?"  Not even close.
-> On a bunch of architectures (sparc64, for one) access_ok() is always
-> true.
-> 
-> All it does is checking that address is not a kernel one - e.g. on
-> i386 anything in range 0..3Gb qualifies.  Whether anything's mapped
-> at that address or not.
-> 
-> Why bother with that copy_from_user() at all?  The same ioctl()
-> proceeds to copy_to_user() on exact same range; all you get from
-> it is "if the area passed by caller is writable, but not readable,
-> fail with -EFAULT".  Who cares?
-> 
-> Just drop that copy_from_user() completely.  Anything access_ok()
-> might've caught will be caught by copy_to_user() anyway.
-
-Yes, Christoph has suggested the same thing and I have submitted 
-another patch with copy_from_user removed entirely.
+SGksIENocmlzdG9waCwNCg0KSSBoYXZlIGNoYW5nZWQgZG1hX2dldF9jYWNoZV9hbGlnbm1l
+bnQncyByZXR1cm4gdmFsdWUsIGFuZCBJIGRvbid0IGtub3cgd2hldGhlciB0aG9zZSBkcml2
+ZXJzIHdhbnQgdG8gcmV0dXJuIEFSQ0hfRE1BX01JTkFMSUdOIHVuY29uZGl0aW9uYWxseS4g
+U28gSSBwYXNzIGEgTlVMTCBmb3IgdGhvc2UgZHJpdmVycywgaW4gb3JkZXIgdG8ga2VlcCB0
+aGVpciBvbGQgYmVoYXZpb3IuDQogDQpIdWFjYWkNCiANCi0tLS0tLS0tLS0tLS0tLS0tLSBP
+cmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCkZyb206ICAiQ2hyaXN0b3BoIEhlbGx3aWci
+PGhjaEBsc3QuZGU+Ow0KRGF0ZTogIFR1ZSwgU2VwIDE5LCAyMDE3IDExOjAyIFBNDQpUbzog
+ICJIdWFjYWkgQ2hlbiI8Y2hlbmhjQGxlbW90ZS5jb20+OyANCkNjOiAgIkNocmlzdG9waCBI
+ZWxsd2lnIjxoY2hAbHN0LmRlPjsgIk1hcmVrIFN6eXByb3dza2kiPG0uc3p5cHJvd3NraUBz
+YW1zdW5nLmNvbT47ICJSb2JpbiBNdXJwaHkiPHJvYmluLm11cnBoeUBhcm0uY29tPjsgIkFu
+ZHJldyBNb3J0b24iPGFrcG1AbGludXgtZm91bmRhdGlvbi5vcmc+OyAiRnV4aW4gWmhhbmci
+PHpoYW5nZnhAbGVtb3RlLmNvbT47ICJsaW51eC1rZXJuZWwiPGxpbnV4LWtlcm5lbEB2Z2Vy
+Lmtlcm5lbC5vcmc+OyAiSmFtZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5l
+dC5pYm0uY29tPjsgIk1hcnRpbiBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFj
+bGUuY29tPjsgImxpbnV4LXNjc2kiPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgInN0
+YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47IA0KU3ViamVjdDogIFJlOiBbUEFUQ0gg
+VjYgMi8zXSBkbWEtbWFwcGluZzogUmV3b3JrIGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50KClm
+dW5jdGlvbg0KDQogDQo+ICAJbWRldi0+bGltaXRzLnJlc2VydmVkX210dHMgPSBBTElHTiht
+ZGV2LT5saW1pdHMucmVzZXJ2ZWRfbXR0cyAqIG1kZXYtPmxpbWl0cy5tdHRfc2VnX3NpemUs
+DQo+IC0JCQkJCSAgIGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50KCkpIC8gbWRldi0+bGltaXRz
+Lm10dF9zZWdfc2l6ZTsNCj4gKwkJCQkJICAgZG1hX2dldF9jYWNoZV9hbGlnbm1lbnQoTlVM
+TCkpIC8gbWRldi0+bGltaXRzLm10dF9zZWdfc2l6ZTsNCj4gIA0KPiAgCW1kZXYtPm1yX3Rh
+YmxlLm10dF90YWJsZSA9IG10aGNhX2FsbG9jX2ljbV90YWJsZShtZGV2LCBpbml0X2hjYS0+
+bXR0X2Jhc2UsDQoNClBsZWFzZSBwYXNzIHRoZSBhY3R1YWxseSByZWxldmFudCBzdHJ1Y3Qg
+ZGV2aWNlIGZvciBlYWNoIGNhbGwu
