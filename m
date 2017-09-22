@@ -1,49 +1,62 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH 1/1] scsi: bnx: use setup_timer
-Date: Thu, 21 Sep 2017 16:02:53 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1709211601330.2123@flash12.qlogic.org>
-References: <1505994464-11465-1-git-send-email-allen.lkml@gmail.com>
+From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
+Subject: Re: [PATCH V6 1/3] dma-mapping: Introduce device_is_coherent() as ahelper
+Date: Fri, 22 Sep 2017 10:13:50 +0800
+Message-ID: <tencent_6FDFA013608B41F6241AD9D7@qq.com>
+References: <1505811161-25246-1-git-send-email-chenhc@lemote.com>
+        <5e792b21-1d63-9200-b36a-c423385e2a2e@arm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1505994464-11465-1-git-send-email-allen.lkml@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Allen Pais <allen.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <5e792b21-1d63-9200-b36a-c423385e2a2e@arm.com>
+Sender: stable-owner@vger.kernel.org
+To: =?utf-8?B?Um9iaW4gTXVycGh5?= <robin.murphy@arm.com>, =?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?= <hch@lst.de>
+Cc: =?utf-8?B?TWFyZWsgU3p5cHJvd3NraQ==?= <m.szyprowski@samsung.com>, =?utf-8?B?QW5kcmV3IE1vcnRvbg==?= <akpm@linux-foundation.org>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-On Thu, 21 Sep 2017, 7:47am, Allen Pais wrote:
-
->     Use setup_timer function instead of initializing timer with the
->     function and data fields.
-> 
-> Signed-off-by: Allen Pais <allen.lkml@gmail.com>
-> ---
->  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index 6844ba3..a056211 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -1946,11 +1946,10 @@ static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
->  {
->  	if (test_and_clear_bit(BNX2FC_FLAG_FW_INIT_DONE, &hba->flags)) {
->  		if (bnx2fc_send_fw_fcoe_destroy_msg(hba) == 0) {
-> -			init_timer(&hba->destroy_timer);
-> +			setup_timer(&hba->destroy_timer, bnx2fc_destroy_timer,
-> +				    (unsigned long)hba);
->  			hba->destroy_timer.expires = BNX2FC_FW_TIMEOUT +
->  								jiffies;
-> -			hba->destroy_timer.function = bnx2fc_destroy_timer;
-> -			hba->destroy_timer.data = (unsigned long)hba;
->  			add_timer(&hba->destroy_timer);
->  			wait_event_interruptible(hba->destroy_wait,
->  					test_bit(BNX2FC_FLAG_DESTROY_CMPL,
-> 
-
-The title of the patch should be fixed up since the driver is 'bnx2fc'.  
-But besides that nit the patch looks good.
-
-Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
+SGksIFJvYmluLA0KDQpCZWZvcmUgMi42LjM2IGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50IGlz
+IGFyY2gtZGVwZW5kZW50LCBhbmQgaXQgaXMgdW5pZmllZCBpbiBjb21taXQgNDU2NWYwMTcw
+ZGZjODQ5YjM2MjljMjdkNyAoImRtYS1tYXBwaW5nOiB1bmlmeSBkbWFfZ2V0X2NhY2hlX2Fs
+aWdubWVudCBpbXBsZW1lbnRhdGlvbnMiKS4gU2hvdWxkIHdlIHJldmVydCB0byB0aGUgb2xk
+IGltcGxlbWVudGF0aW9uPw0KIA0KSHVhY2FpDQogDQotLS0tLS0tLS0tLS0tLS0tLS0gT3Jp
+Z2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIlJvYmluIE11cnBoeSI8cm9iaW4u
+bXVycGh5QGFybS5jb20+Ow0KRGF0ZTogIFRodSwgU2VwIDIxLCAyMDE3IDA2OjQ3IFBNDQpU
+bzogICJIdWFjYWkgQ2hlbiI8Y2hlbmhjQGxlbW90ZS5jb20+OyAiQ2hyaXN0b3BoIEhlbGx3
+aWciPGhjaEBsc3QuZGU+OyANCkNjOiAgIk1hcmVrIFN6eXByb3dza2kiPG0uc3p5cHJvd3Nr
+aUBzYW1zdW5nLmNvbT47ICJBbmRyZXcgTW9ydG9uIjxha3BtQGxpbnV4LWZvdW5kYXRpb24u
+b3JnPjsgIkZ1eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgta2VybmVs
+IjxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgIkphbWVzIEUgLiBKIC4gQm90dG9t
+bGV5IjxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT47ICJNYXJ0aW4gSyAuIFBldGVyc2VuIjxt
+YXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47ICJsaW51eC1zY3NpIjxsaW51eC1zY3NpQHZn
+ZXIua2VybmVsLm9yZz47ICJzdGFibGUiPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+OyANClN1
+YmplY3Q6ICBSZTogW1BBVENIIFY2IDEvM10gZG1hLW1hcHBpbmc6IEludHJvZHVjZSBkZXZp
+Y2VfaXNfY29oZXJlbnQoKSBhcyBhaGVscGVyDQoNCiANCk9uIDE5LzA5LzE3IDA5OjUyLCBI
+dWFjYWkgQ2hlbiB3cm90ZToNCj4gV2Ugd2lsbCB1c2UgZGV2aWNlX2lzX2NvaGVyZW50KCkg
+YXMgYSBoZWxwZXIgZnVuY3Rpb24sIHdoaWNoIHdpbGwgYmUNCj4gdXNlZCBpbiB0aGUgbmV4
+dCBwYXRjaC4NCj4gDQo+IFRoZXJlIGlzIGEgTUlQUy1zcGVjaWZpYyBwbGF0X2RldmljZV9p
+c19jb2hlcmVudCgpLCBidXQgd2UgbmVlZCBhIG1vcmUNCj4gZ2VuZXJpYyBzb2x1dGlvbiwg
+c28gYWRkIGFuZCB1c2UgYSBuZXcgZnVuY3Rpb24gcG9pbnRlciBpbiBkbWFfbWFwX29wcy4N
+Cg0KSSB0aGluayB3ZSdyZSBoZWFkaW5nIGluIHRoZSByaWdodCBkaXJlY3Rpb24gd2l0aCB0
+aGUgc2VyaWVzLCBidXQgSQ0Kc3RpbGwgZG9uJ3QgbGlrZSB0aGlzIHBhdGNoLiBJIGNhbiBw
+cmV0dHkgbXVjaCBndWFyYW50ZWUgdGhhdCBkcml2ZXINCmF1dGhvcnMgKndpbGwqIGFidXNl
+IGEgZ2VuZXJpYyBkZXZpY2VfaXNfY29oZXJlbnQoKSBBUEkgdG8gbWVhbiAiSSBjYW4NCnNr
+aXAgb3RoZXIgRE1BIEFQSSBjYWxscyBhbmQganVzdCB1c2UgdmlydF90b19waHlzKCkiLg0K
+DQpJIHRoaW5rIGl0IHdvdWxkIGJlIGZhciBiZXR0ZXIgdG8gYWxsb3cgYXJjaGl0ZWN0dXJl
+cyB0byBwcm92aWRlIHRoZWlyDQpvd24gb3ZlcnJpZGUgb2YgZG1hX2dldF9jYWNoZV9hbGln
+bm1lbnQoKSwgYW5kIGxldCB0aGUgY29oZXJlbmN5IGRldGFpbA0KcmVtYWluIGludGVybmFs
+IHRvIHRoZSByZWxldmFudCBhcmNoIGltcGxlbWVudGF0aW9ucy4NCg0KWy4uLl0NCj4gQEAg
+LTY5Nyw2ICs2OTgsMTUgQEAgc3RhdGljIGlubGluZSB2b2lkICpkbWFfemFsbG9jX2NvaGVy
+ZW50KHN0cnVjdCBkZXZpY2UgKmRldiwgc2l6ZV90IHNpemUsDQo+ICB9DQo+ICANCj4gICNp
+ZmRlZiBDT05GSUdfSEFTX0RNQQ0KPiArc3RhdGljIGlubGluZSBpbnQgZGV2aWNlX2lzX2Nv
+aGVyZW50KHN0cnVjdCBkZXZpY2UgKmRldikNCj4gK3sNCj4gKwljb25zdCBzdHJ1Y3QgZG1h
+X21hcF9vcHMgKm9wcyA9IGdldF9kbWFfb3BzKGRldik7DQo+ICsJaWYgKG9wcyAmJiBvcHMt
+PmRldmljZV9pc19jb2hlcmVudCkNCj4gKwkJcmV0dXJuIG9wcy0+ZGV2aWNlX2lzX2NvaGVy
+ZW50KGRldik7DQo+ICsJZWxzZQ0KPiArCQlyZXR1cm4gMTsgICAgLyogY29tcGF0aWJsZSBi
+ZWhhdmlvciAqLw0KDQpUaGF0IGlzIGFsc28gcXVpdGUgc2NhcnkgLSBpZiBzb21lb25lIG5v
+dyBhZGRzIGEgbmV3DQpkbWFfZ2V0X2NhY2hlX2FsaWduZW1udCgpIGNhbGwgYW5kIGR1dGlm
+dWxseSBwYXNzZXMgYSBub24tTlVMTCBkZXZpY2UsDQp0aGV5IHdpbGwgbm93IGdldCBiYWNr
+IGFuIGFsaWdubWVudCBvZiAxIG9uIGFsbCBub24tY29oZXJlbnQgcGxhdGZvcm1zDQpleGNl
+cHQgTUlQUzogaGVsbG8gZGF0YSBjb3JydXB0aW9uLg0KDQpSb2Jpbi4NCg0KPiArfQ0KPiAr
+DQo+ICBzdGF0aWMgaW5saW5lIGludCBkbWFfZ2V0X2NhY2hlX2FsaWdubWVudCh2b2lkKQ0K
+PiAgew0KPiAgI2lmZGVmIEFSQ0hfRE1BX01JTkFMSUdODQo+
