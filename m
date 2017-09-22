@@ -1,40 +1,64 @@
-From: Allen Pais <allen.lkml@gmail.com>
-Subject: [PATCH 5/5] iscsi-target: use setup_timer() helper.
-Date: Fri, 22 Sep 2017 15:38:54 +0530
-Message-ID: <1506074934-15062-6-git-send-email-allen.lkml@gmail.com>
-References: <1506074934-15062-1-git-send-email-allen.lkml@gmail.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1506074934-15062-1-git-send-email-allen.lkml@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: nab@linux-iscsi.org, target-devel@vger.kernel.org, Allen Pais <allen.lkml@gmail.com>
+From: Huanlin Ke <chgokhl@gmail.com>
+Subject: [PATCH] scsi: ufs: continue to boot even with Boot LUN is disabled
+Date: Fri, 22 Sep 2017 18:31:47 +0800
+Message-ID: <1506076307-8462-1-git-send-email-kehuanlin@pinecone.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinholikatti@gmail.com
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kehuanlin@pinecone.net
 List-Id: linux-scsi@vger.kernel.org
 
-   Use setup_timer function instead of initializing timer with the
-   function and data fields.
+Several configurable fields of the Device Descriptor and the Unit
+Descriptors determine the Boot LUN status. The bBootEnable field and
+the bBootLunEn attribute is set to zero by default, so the Boot LUN is
+disabled by default.
 
-Signed-off-by: Allen Pais <allen.lkml@gmail.com>
+At which point the scsi device add for Boot LUN will fail, but we can
+continue to use the ufs device in fact. This failure shouldn't abort the
+device boot.
+
+Signed-off-by: Huanlin Ke <kehuanlin@pinecone.net>
 ---
- drivers/target/iscsi/iscsi_target_util.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index 1e36f83..97697a9 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -949,11 +949,10 @@ void iscsit_start_nopin_response_timer(struct iscsi_conn *conn)
- 		return;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 794a460..bff84be 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5998,25 +5998,22 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
  	}
+ 	scsi_device_put(hba->sdev_ufs_device);
  
--	init_timer(&conn->nopin_response_timer);
-+	setup_timer(&conn->nopin_response_timer,
-+		    iscsit_handle_nopin_response_timeout, (unsigned long)conn);
- 	conn->nopin_response_timer.expires =
- 		(get_jiffies_64() + na->nopin_response_timeout * HZ);
--	conn->nopin_response_timer.data = (unsigned long)conn;
--	conn->nopin_response_timer.function = iscsit_handle_nopin_response_timeout;
- 	conn->nopin_response_timer_flags &= ~ISCSI_TF_STOP;
- 	conn->nopin_response_timer_flags |= ISCSI_TF_RUNNING;
- 	add_timer(&conn->nopin_response_timer);
+-	sdev_boot = __scsi_add_device(hba->host, 0, 0,
+-		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
+-	if (IS_ERR(sdev_boot)) {
+-		ret = PTR_ERR(sdev_boot);
+-		goto remove_sdev_ufs_device;
+-	}
+-	scsi_device_put(sdev_boot);
+-
+ 	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
+ 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
+ 	if (IS_ERR(sdev_rpmb)) {
+ 		ret = PTR_ERR(sdev_rpmb);
+-		goto remove_sdev_boot;
++		goto remove_sdev_ufs_device;
+ 	}
+ 	scsi_device_put(sdev_rpmb);
++
++	sdev_boot = __scsi_add_device(hba->host, 0, 0,
++		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
++	if (IS_ERR(sdev_boot))
++		dev_err(hba->dev, "%s: BOOT WLUN not found\n", __func__);
++	else
++		scsi_device_put(sdev_boot);
+ 	goto out;
+ 
+-remove_sdev_boot:
+-	scsi_remove_device(sdev_boot);
+ remove_sdev_ufs_device:
+ 	scsi_remove_device(hba->sdev_ufs_device);
+ out:
 -- 
 2.7.4
