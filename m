@@ -1,64 +1,148 @@
-From: Huanlin Ke <chgokhl@gmail.com>
-Subject: [PATCH] scsi: ufs: continue to boot even with Boot LUN is disabled
-Date: Fri, 22 Sep 2017 18:31:47 +0800
-Message-ID: <1506076307-8462-1-git-send-email-kehuanlin@pinecone.net>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kehuanlin@pinecone.net
+From: Andrey Konovalov <andreyknvl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: usb/storage/uas: slab-out-of-bounds in uas_probe
+Date: Fri, 22 Sep 2017 13:37:38 +0200
+Message-ID: <CAAeHK+xyGsAseF924f5fO+S1VJBfBvXy9wsfxVxf2A1Y=8p9Rg@mail.gmail.com>
+References: <CAAeHK+yVXYJrVKW++kE+cXp=TMoDRCzPVd7G1X4YCueMbJF4HA@mail.gmail.com>
+ <Pine.LNX.4.44L0.1709211456370.1294-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1709211456370.1294-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kostya Serebryany <kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, syzkaller <syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Several configurable fields of the Device Descriptor and the Unit
-Descriptors determine the Boot LUN status. The bBootEnable field and
-the bBootLunEn attribute is set to zero by default, so the Boot LUN is
-disabled by default.
+On Thu, Sep 21, 2017 at 9:04 PM, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
+> On Thu, 21 Sep 2017, Andrey Konovalov wrote:
+>
+>> On Thu, Sep 21, 2017 at 6:10 PM, Greg Kroah-Hartman
+>> <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org> wrote:
+>> > On Thu, Sep 21, 2017 at 05:39:05PM +0200, Andrey Konovalov wrote:
+>> >> Hi!
+>> >>
+>> >> I've got the following report while fuzzing the kernel with syzkaller.
+>> >>
+>> >> On commit ebb2c2437d8008d46796902ff390653822af6cc4 (Sep 18).
+>> >>
+>> >> The issue occurs when we iterate over interface altsettings, but I
+>> >> don't see the driver doing anything wrong. I might be missing
+>> >> something, or this might be an issue in USB core altsettings parsing.
+>> >
+>> >
+>> > Any chance you happen to have the descriptors that you were feeding into
+>> > the kernel at this crash?  That might help in figuring out what "went
+>> > wrong".
+>>
+>> Here's the data that I feed into dummy_udc:
+>>
+>> 00 00 00 00 09 02 12 00 01 34 05 80 07 09 04 6e
+>> 09 00 08 06 62 00 12 01 05 00 cb f7 71 83 04 00
+>> 05 00 ab f6 07 81 08 01
+>>
+>> Also attaching a C reproducer (requires dummy_hcd and gadgetfs) and my .config.
+>
+> Why do your reproducers use an mmap'ed array for their data instead of
+> a plain old statically allocated array?
 
-At which point the scsi device add for Boot LUN will fail, but we can
-continue to use the ufs device in fact. This failure shouldn't abort the
-device boot.
+That's just the way syzkaller generates reproducers, it uses mmap() to
+allocate memory to feed into syscalls.
 
-Signed-off-by: Huanlin Ke <kehuanlin@pinecone.net>
----
- drivers/scsi/ufs/ufshcd.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+>
+> Anyway, this turns out to be a genuine (and subtle!) bug in the uas
+> driver.  The uas_find_uas_alt_setting() routine in uas-detect.h returns
+> a bAlternateSetting value, but then the uas_use_uas_driver() routine
+> uses this value as an index to the altsetting array -- which it isn't.
+>
+> Normally this doesn't cause any problems because the the entries in the
+> array have bAlternateSetting values 0, 1, etc., so the value is equal
+> to the index.  But in your fuzzed case, that wasn't true.
+>
+> The patch below fixes this bug, by returning a pointer to the
+> alt-setting entry instead of either the value or the index.  Pointers
+> are less subject to misinterpretation.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 794a460..bff84be 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5998,25 +5998,22 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- 	}
- 	scsi_device_put(hba->sdev_ufs_device);
- 
--	sdev_boot = __scsi_add_device(hba->host, 0, 0,
--		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
--	if (IS_ERR(sdev_boot)) {
--		ret = PTR_ERR(sdev_boot);
--		goto remove_sdev_ufs_device;
--	}
--	scsi_device_put(sdev_boot);
--
- 	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
- 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
- 	if (IS_ERR(sdev_rpmb)) {
- 		ret = PTR_ERR(sdev_rpmb);
--		goto remove_sdev_boot;
-+		goto remove_sdev_ufs_device;
- 	}
- 	scsi_device_put(sdev_rpmb);
-+
-+	sdev_boot = __scsi_add_device(hba->host, 0, 0,
-+		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
-+	if (IS_ERR(sdev_boot))
-+		dev_err(hba->dev, "%s: BOOT WLUN not found\n", __func__);
-+	else
-+		scsi_device_put(sdev_boot);
- 	goto out;
- 
--remove_sdev_boot:
--	scsi_remove_device(sdev_boot);
- remove_sdev_ufs_device:
- 	scsi_remove_device(hba->sdev_ufs_device);
- out:
--- 
-2.7.4
+The patch helps, thanks!
+
+Tested-by: Andrey Konovalov <andreyknvl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+>
+> Alan Stern
+>
+>
+>
+> Index: usb-4.x/drivers/usb/storage/uas-detect.h
+> ===================================================================
+> --- usb-4.x.orig/drivers/usb/storage/uas-detect.h
+> +++ usb-4.x/drivers/usb/storage/uas-detect.h
+> @@ -9,7 +9,8 @@ static int uas_is_interface(struct usb_h
+>                 intf->desc.bInterfaceProtocol == USB_PR_UAS);
+>  }
+>
+> -static int uas_find_uas_alt_setting(struct usb_interface *intf)
+> +static struct usb_host_interface *uas_find_uas_alt_setting(
+> +               struct usb_interface *intf)
+>  {
+>         int i;
+>
+> @@ -17,10 +18,10 @@ static int uas_find_uas_alt_setting(stru
+>                 struct usb_host_interface *alt = &intf->altsetting[i];
+>
+>                 if (uas_is_interface(alt))
+> -                       return alt->desc.bAlternateSetting;
+> +                       return alt;
+>         }
+>
+> -       return -ENODEV;
+> +       return NULL;
+>  }
+>
+>  static int uas_find_endpoints(struct usb_host_interface *alt,
+> @@ -58,14 +59,14 @@ static int uas_use_uas_driver(struct usb
+>         struct usb_device *udev = interface_to_usbdev(intf);
+>         struct usb_hcd *hcd = bus_to_hcd(udev->bus);
+>         unsigned long flags = id->driver_info;
+> -       int r, alt;
+> -
+> +       struct usb_host_interface *alt;
+> +       int r;
+>
+>         alt = uas_find_uas_alt_setting(intf);
+> -       if (alt < 0)
+> +       if (!alt)
+>                 return 0;
+>
+> -       r = uas_find_endpoints(&intf->altsetting[alt], eps);
+> +       r = uas_find_endpoints(alt, eps);
+>         if (r < 0)
+>                 return 0;
+>
+> Index: usb-4.x/drivers/usb/storage/uas.c
+> ===================================================================
+> --- usb-4.x.orig/drivers/usb/storage/uas.c
+> +++ usb-4.x/drivers/usb/storage/uas.c
+> @@ -873,14 +873,14 @@ MODULE_DEVICE_TABLE(usb, uas_usb_ids);
+>  static int uas_switch_interface(struct usb_device *udev,
+>                                 struct usb_interface *intf)
+>  {
+> -       int alt;
+> +       struct usb_host_interface *alt;
+>
+>         alt = uas_find_uas_alt_setting(intf);
+> -       if (alt < 0)
+> -               return alt;
+> +       if (!alt)
+> +               return -ENODEV;
+>
+> -       return usb_set_interface(udev,
+> -                       intf->altsetting[0].desc.bInterfaceNumber, alt);
+> +       return usb_set_interface(udev, alt->desc.bInterfaceNumber,
+> +                       alt->desc.bAlternateSetting);
+>  }
+>
+>  static int uas_configure_endpoints(struct uas_dev_info *devinfo)
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
