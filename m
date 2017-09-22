@@ -1,81 +1,89 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: ibmvfc oddities
-Date: Fri, 22 Sep 2017 07:59:27 +0200
-Message-ID: <ca659cce-b6f2-4283-94b9-a523f1b80dad@suse.de>
-References: <a0969601-e06a-7b90-36f0-357c54bfbfe7@suse.de>
- <4b11b1f6-cc46-5f40-2810-02f8ae9792cb@linux.vnet.ibm.com>
- <41162a79-9bf8-97c2-7282-e8cde619cd27@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCHv5 5/5] scsi_devinfo: fixup string compare
+Date: Fri, 22 Sep 2017 08:04:47 +0200
+Message-ID: <1506060287-87031-6-git-send-email-hare@suse.de>
+References: <1506060287-87031-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41821 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42568 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751637AbdIVF73 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Sep 2017 01:59:29 -0400
-In-Reply-To: <41162a79-9bf8-97c2-7282-e8cde619cd27@gmail.com>
-Content-Language: en-US
+        id S1751637AbdIVGFA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Sep 2017 02:05:00 -0400
+In-Reply-To: <1506060287-87031-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>, Brian King <brking@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 09/21/2017 08:29 PM, Tyrel Datwyler wrote:
-> On 09/21/2017 08:13 AM, Brian King wrote:
->> On 09/21/2017 05:02 AM, Hannes Reinecke wrote:
->>> Hi Brian,
->>>
->>> I was looking at the ibmvfc code (trying to hook up libfc), and have
->>> found this definition:
->>>
->>> struct ibmvfc_fcp_rsp_info {
->>> 	__be16 reserved;
->>> 	u8 rsp_code;
->>> 	u8 reserved2[4];
->>> }__attribute__((packed, aligned (2)));
->>>
->>> in comparison, libfc has this:
->>>
->>> struct fcp_resp_rsp_info {
->>>     __u8      _fr_resvd[3];       /* reserved */
->>>     __u8      rsp_code;           /* Response Info Code */
->>>     __u8      _fr_resvd2[4];      /* reserved */
->>> };
->>>
->>> So both look _nearly_ identical, except the missing byte at the start.
->>> It might be inserted due to some compile alignment magic, but I'd rather
->>> not rely on this.
->>> Could you clarify if the two structures really are different, or if this
->>> is a simple oversight?
->>
->> Looks like a bug to me. We should probably just have ibmvfc use the
->> libfc definition.
-> 
-> Yes, after looking at the FC spec we most definitely have it defined wrong, and I'm pretty
-> certain that we aren't getting saved by any compiler magic.
-> 
->>
->> Tyrel - can you do this conversion and run a bit of regression testing?
->> Looking at the possible values of rsp_code, the most likely place where
->> this might cause us some issues is in TMF handling. I'm a little
->> worried this could result in a potential double completion in error
->> handling in some rare cases.... Tyrel - are you aware of any issues
->> like that, which this might explain?
-> 
-> I certainly can. I recollect something like a double completion issue, but its been so
-> long I can't remember if we were seeing it in the vfc driver or the vscsi driver. Anyhow,
-> I do feel like from what I recall it seems like rsp_code is always zero in reported error
-> messages.
-> 
-Sure it would, given that the ibmvfc driver would always use the
-reserved bytes as rsp_code :-)
+When checking the model and vendor string we need to use the
+minimum value of either string, otherwise we'll miss out on
+wildcard matches.
+And we should take card when matching with zero size strings;
+results might be unpredictable.
+With this patch the rules for matching devinfo strings are
+as follows:
+- Vendor strings must match exactly
+- Empty Model strings will only match if the devinfo model
+  is also empty
+- Model strings shorter than the devinfo model string will
+  not match
 
-Cheers,
+Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+---
+ drivers/scsi/scsi_devinfo.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 6858ad87dac1..d39b27cf8ed9 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -399,8 +399,8 @@ EXPORT_SYMBOL(scsi_dev_info_list_add_keyed);
+ 
+ /**
+  * scsi_dev_info_list_find - find a matching dev_info list entry.
+- * @vendor:	vendor string
+- * @model:	model (product) string
++ * @vendor:	full vendor string
++ * @model:	full model (product) string
+  * @key:	specify list to use
+  *
+  * Description:
+@@ -415,7 +415,7 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 	struct scsi_dev_info_list *devinfo;
+ 	struct scsi_dev_info_list_table *devinfo_table =
+ 		scsi_devinfo_lookup_by_key(key);
+-	size_t vmax, mmax;
++	size_t vmax, mmax, mlen;
+ 	const char *vskip, *mskip;
+ 
+ 	if (IS_ERR(devinfo_table))
+@@ -454,15 +454,18 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 			    dev_info_list) {
+ 		if (devinfo->compatible) {
+ 			/*
+-			 * Behave like the older version of get_device_flags.
++			 * vendor strings must be an exact match
+ 			 */
+-			if (memcmp(devinfo->vendor, vskip, vmax) ||
+-					(vmax < sizeof(devinfo->vendor) &&
+-						devinfo->vendor[vmax]))
++			if (vmax != strlen(devinfo->vendor) ||
++			    memcmp(devinfo->vendor, vskip, vmax))
+ 				continue;
+-			if (memcmp(devinfo->model, mskip, mmax) ||
+-					(mmax < sizeof(devinfo->model) &&
+-						devinfo->model[mmax]))
++
++			/*
++			 * @model specifies the full string, and
++			 * must be larger or equal to devinfo->model
++			 */
++			mlen = strlen(devinfo->model);
++			if (mmax < mlen || memcmp(devinfo->model, mskip, mlen))
+ 				continue;
+ 			return devinfo;
+ 		} else {
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.12.3
