@@ -1,148 +1,85 @@
-From: Andrey Konovalov <andreyknvl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: usb/storage/uas: slab-out-of-bounds in uas_probe
-Date: Fri, 22 Sep 2017 13:37:38 +0200
-Message-ID: <CAAeHK+xyGsAseF924f5fO+S1VJBfBvXy9wsfxVxf2A1Y=8p9Rg@mail.gmail.com>
-References: <CAAeHK+yVXYJrVKW++kE+cXp=TMoDRCzPVd7G1X4YCueMbJF4HA@mail.gmail.com>
- <Pine.LNX.4.44L0.1709211456370.1294-100000@iolanthe.rowland.org>
+From: Robin Murphy <robin.murphy@arm.com>
+Subject: Re: [PATCH V6 1/3] dma-mapping: Introduce device_is_coherent() as
+ ahelper
+Date: Fri, 22 Sep 2017 14:44:51 +0100
+Message-ID: <9213ab49-b6e6-d513-6d35-1fe2294aad68@arm.com>
+References: <1505811161-25246-1-git-send-email-chenhc@lemote.com>
+ <5e792b21-1d63-9200-b36a-c423385e2a2e@arm.com>
+ <tencent_6FDFA013608B41F6241AD9D7@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1709211456370.1294-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kostya Serebryany <kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, syzkaller <syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <tencent_6FDFA013608B41F6241AD9D7@qq.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: =?UTF-8?B?6ZmI5Y2O5omN?= <chenhc@lemote.com>, Christoph Hellwig <hch@lst.de>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel <linux-kernel@vger.kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, stable <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 21, 2017 at 9:04 PM, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
-> On Thu, 21 Sep 2017, Andrey Konovalov wrote:
->
->> On Thu, Sep 21, 2017 at 6:10 PM, Greg Kroah-Hartman
->> <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org> wrote:
->> > On Thu, Sep 21, 2017 at 05:39:05PM +0200, Andrey Konovalov wrote:
->> >> Hi!
->> >>
->> >> I've got the following report while fuzzing the kernel with syzkaller.
->> >>
->> >> On commit ebb2c2437d8008d46796902ff390653822af6cc4 (Sep 18).
->> >>
->> >> The issue occurs when we iterate over interface altsettings, but I
->> >> don't see the driver doing anything wrong. I might be missing
->> >> something, or this might be an issue in USB core altsettings parsing.
->> >
->> >
->> > Any chance you happen to have the descriptors that you were feeding into
->> > the kernel at this crash?  That might help in figuring out what "went
->> > wrong".
+On 22/09/17 03:13, 陈华才 wrote:
+> Hi, Robin,
+> 
+> Before 2.6.36 dma_get_cache_alignment is arch-dependent, and it is unified in commit 4565f0170dfc849b3629c27d7 ("dma-mapping: unify dma_get_cache_alignment implementations"). Should we revert to the old implementation?
+
+Not quite - I mean instead of adding an ops->device_is_coherent callback
+(which cannot really have a safe fallback value either way) and trying
+to enforce that dma_get_cache_alignment() should be the only valid
+caller, just add an ops->get_cache_alignment callback directly.
+
+Robin.
+
+>  
+> Huacai
+>  
+> ------------------ Original ------------------
+> From:  "Robin Murphy"<robin.murphy@arm.com>;
+> Date:  Thu, Sep 21, 2017 06:47 PM
+> To:  "Huacai Chen"<chenhc@lemote.com>; "Christoph Hellwig"<hch@lst.de>; 
+> Cc:  "Marek Szyprowski"<m.szyprowski@samsung.com>; "Andrew Morton"<akpm@linux-foundation.org>; "Fuxin Zhang"<zhangfx@lemote.com>; "linux-kernel"<linux-kernel@vger.kernel.org>; "James E . J . Bottomley"<jejb@linux.vnet.ibm.com>; "Martin K . Petersen"<martin.petersen@oracle.com>; "linux-scsi"<linux-scsi@vger.kernel.org>; "stable"<stable@vger.kernel.org>; 
+> Subject:  Re: [PATCH V6 1/3] dma-mapping: Introduce device_is_coherent() as ahelper
+> 
+>  
+> On 19/09/17 09:52, Huacai Chen wrote:
+>> We will use device_is_coherent() as a helper function, which will be
+>> used in the next patch.
 >>
->> Here's the data that I feed into dummy_udc:
+>> There is a MIPS-specific plat_device_is_coherent(), but we need a more
+>> generic solution, so add and use a new function pointer in dma_map_ops.
+> 
+> I think we're heading in the right direction with the series, but I
+> still don't like this patch. I can pretty much guarantee that driver
+> authors *will* abuse a generic device_is_coherent() API to mean "I can
+> skip other DMA API calls and just use virt_to_phys()".
+> 
+> I think it would be far better to allow architectures to provide their
+> own override of dma_get_cache_alignment(), and let the coherency detail
+> remain internal to the relevant arch implementations.
+> 
+> [...]
+>> @@ -697,6 +698,15 @@ static inline void *dma_zalloc_coherent(struct device *dev, size_t size,
+>>  }
+>>  
+>>  #ifdef CONFIG_HAS_DMA
+>> +static inline int device_is_coherent(struct device *dev)
+>> +{
+>> +	const struct dma_map_ops *ops = get_dma_ops(dev);
+>> +	if (ops && ops->device_is_coherent)
+>> +		return ops->device_is_coherent(dev);
+>> +	else
+>> +		return 1;    /* compatible behavior */
+> 
+> That is also quite scary - if someone now adds a new
+> dma_get_cache_alignemnt() call and dutifully passes a non-NULL device,
+> they will now get back an alignment of 1 on all non-coherent platforms
+> except MIPS: hello data corruption.
+> 
+> Robin.
+> 
+>> +}
+>> +
+>>  static inline int dma_get_cache_alignment(void)
+>>  {
+>>  #ifdef ARCH_DMA_MINALIGN
 >>
->> 00 00 00 00 09 02 12 00 01 34 05 80 07 09 04 6e
->> 09 00 08 06 62 00 12 01 05 00 cb f7 71 83 04 00
->> 05 00 ab f6 07 81 08 01
->>
->> Also attaching a C reproducer (requires dummy_hcd and gadgetfs) and my .config.
->
-> Why do your reproducers use an mmap'ed array for their data instead of
-> a plain old statically allocated array?
-
-That's just the way syzkaller generates reproducers, it uses mmap() to
-allocate memory to feed into syscalls.
-
->
-> Anyway, this turns out to be a genuine (and subtle!) bug in the uas
-> driver.  The uas_find_uas_alt_setting() routine in uas-detect.h returns
-> a bAlternateSetting value, but then the uas_use_uas_driver() routine
-> uses this value as an index to the altsetting array -- which it isn't.
->
-> Normally this doesn't cause any problems because the the entries in the
-> array have bAlternateSetting values 0, 1, etc., so the value is equal
-> to the index.  But in your fuzzed case, that wasn't true.
->
-> The patch below fixes this bug, by returning a pointer to the
-> alt-setting entry instead of either the value or the index.  Pointers
-> are less subject to misinterpretation.
-
-The patch helps, thanks!
-
-Tested-by: Andrey Konovalov <andreyknvl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-
->
-> Alan Stern
->
->
->
-> Index: usb-4.x/drivers/usb/storage/uas-detect.h
-> ===================================================================
-> --- usb-4.x.orig/drivers/usb/storage/uas-detect.h
-> +++ usb-4.x/drivers/usb/storage/uas-detect.h
-> @@ -9,7 +9,8 @@ static int uas_is_interface(struct usb_h
->                 intf->desc.bInterfaceProtocol == USB_PR_UAS);
->  }
->
-> -static int uas_find_uas_alt_setting(struct usb_interface *intf)
-> +static struct usb_host_interface *uas_find_uas_alt_setting(
-> +               struct usb_interface *intf)
->  {
->         int i;
->
-> @@ -17,10 +18,10 @@ static int uas_find_uas_alt_setting(stru
->                 struct usb_host_interface *alt = &intf->altsetting[i];
->
->                 if (uas_is_interface(alt))
-> -                       return alt->desc.bAlternateSetting;
-> +                       return alt;
->         }
->
-> -       return -ENODEV;
-> +       return NULL;
->  }
->
->  static int uas_find_endpoints(struct usb_host_interface *alt,
-> @@ -58,14 +59,14 @@ static int uas_use_uas_driver(struct usb
->         struct usb_device *udev = interface_to_usbdev(intf);
->         struct usb_hcd *hcd = bus_to_hcd(udev->bus);
->         unsigned long flags = id->driver_info;
-> -       int r, alt;
-> -
-> +       struct usb_host_interface *alt;
-> +       int r;
->
->         alt = uas_find_uas_alt_setting(intf);
-> -       if (alt < 0)
-> +       if (!alt)
->                 return 0;
->
-> -       r = uas_find_endpoints(&intf->altsetting[alt], eps);
-> +       r = uas_find_endpoints(alt, eps);
->         if (r < 0)
->                 return 0;
->
-> Index: usb-4.x/drivers/usb/storage/uas.c
-> ===================================================================
-> --- usb-4.x.orig/drivers/usb/storage/uas.c
-> +++ usb-4.x/drivers/usb/storage/uas.c
-> @@ -873,14 +873,14 @@ MODULE_DEVICE_TABLE(usb, uas_usb_ids);
->  static int uas_switch_interface(struct usb_device *udev,
->                                 struct usb_interface *intf)
->  {
-> -       int alt;
-> +       struct usb_host_interface *alt;
->
->         alt = uas_find_uas_alt_setting(intf);
-> -       if (alt < 0)
-> -               return alt;
-> +       if (!alt)
-> +               return -ENODEV;
->
-> -       return usb_set_interface(udev,
-> -                       intf->altsetting[0].desc.bInterfaceNumber, alt);
-> +       return usb_set_interface(udev, alt->desc.bInterfaceNumber,
-> +                       alt->desc.bAlternateSetting);
->  }
->
->  static int uas_configure_endpoints(struct uas_dev_info *devinfo)
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
