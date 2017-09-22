@@ -1,15 +1,15 @@
 From: Allen Pais <allen.lkml@gmail.com>
-Subject: [PATCH 13/13] scsi: bfa: use setup_timer() helper.
-Date: Fri, 22 Sep 2017 15:21:45 +0530
-Message-ID: <1506073905-12985-14-git-send-email-allen.lkml@gmail.com>
+Subject: [PATCH 09/13] scsi: arm: fas216: use setup_timer() helper.
+Date: Fri, 22 Sep 2017 15:21:41 +0530
+Message-ID: <1506073905-12985-10-git-send-email-allen.lkml@gmail.com>
 References: <1506073905-12985-1-git-send-email-allen.lkml@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:37928 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752022AbdIVJw4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2017 05:52:56 -0400
-Received: by mail-pg0-f65.google.com with SMTP id m30so360341pgn.5
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2017 02:52:56 -0700 (PDT)
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34189 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752108AbdIVJwh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2017 05:52:37 -0400
+Received: by mail-pf0-f195.google.com with SMTP id g65so270622pfe.1
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2017 02:52:37 -0700 (PDT)
 In-Reply-To: <1506073905-12985-1-git-send-email-allen.lkml@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,23 +21,23 @@ Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux@armlinux.org.uk, 
 
 Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 ---
- drivers/scsi/bfa/bfad.c | 4 +---
+ drivers/scsi/arm/fas216.c | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 5caf5f3..d10826a 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -719,9 +719,7 @@ bfad_bfa_tmo(unsigned long data)
- void
- bfad_init_timer(struct bfad_s *bfad)
- {
--	init_timer(&bfad->hal_tmo);
--	bfad->hal_tmo.function = bfad_bfa_tmo;
--	bfad->hal_tmo.data = (unsigned long)bfad;
-+	setup_timer(&bfad->hal_tmo, bfad_bfa_tmo, (unsigned long)bfad);
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 2438879..7304d5a 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2849,9 +2849,7 @@ int fas216_init(struct Scsi_Host *host)
+ 	info->rst_dev_status = -1;
+ 	info->rst_bus_status = -1;
+ 	init_waitqueue_head(&info->eh_wait);
+-	init_timer(&info->eh_timer);
+-	info->eh_timer.data  = (unsigned long)info;
+-	info->eh_timer.function = fas216_eh_timer;
++	setup_timer(&info->eh_timer, fas216_eh_timer, (unsigned long)info);
+ 	
+ 	spin_lock_init(&info->host_lock);
  
- 	mod_timer(&bfad->hal_tmo,
- 		  jiffies + msecs_to_jiffies(BFA_TIMER_FREQ));
 -- 
 2.7.4
