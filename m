@@ -1,24 +1,81 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V6 1/3] dma-mapping: Introduce device_is_coherent() as
-        ahelper
-Date: Fri, 22 Sep 2017 15:49:16 +0200
-Message-ID: <20170922134916.GA20335@lst.de>
-References: <1505811161-25246-1-git-send-email-chenhc@lemote.com> <5e792b21-1d63-9200-b36a-c423385e2a2e@arm.com> <tencent_6FDFA013608B41F6241AD9D7@qq.com> <9213ab49-b6e6-d513-6d35-1fe2294aad68@arm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: usb/storage/uas: slab-out-of-bounds in uas_probe
+Date: Fri, 22 Sep 2017 10:58:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1709221055260.1873-100000@iolanthe.rowland.org>
+References: <20170922080927.GA12795@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <9213ab49-b6e6-d513-6d35-1fe2294aad68@arm.com>
+In-Reply-To: <20170922080927.GA12795@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: =?utf-8?B?6ZmI5Y2O5omN?= <chenhc@lemote.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel <linux-kernel@vger.kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, stable <stable@vger.kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Andrey Konovalov <andreyknvl@google.com>, Oliver Neukum <oneukum@suse.com>, USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, LKML <linux-kernel@vger.kernel.org>, Dmitry Vyukov <dvyukov@google.com>, Kostya Serebryany <kcc@google.com>, syzkaller <syzkaller@googlegroups.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 22, 2017 at 02:44:51PM +0100, Robin Murphy wrote:
-> Not quite - I mean instead of adding an ops->device_is_coherent callback
-> (which cannot really have a safe fallback value either way) and trying
-> to enforce that dma_get_cache_alignment() should be the only valid
-> caller, just add an ops->get_cache_alignment callback directly.
+On Fri, 22 Sep 2017, Greg Kroah-Hartman wrote:
 
-Exactly - and then fall back to ARCH_DMA_MINALIGN/1 if the ops vector
-is not provided, to keep the existing behavior.
+> On Fri, Sep 22, 2017 at 09:58:15AM +0200, Greg Kroah-Hartman wrote:
+> > On Thu, Sep 21, 2017 at 03:04:05PM -0400, Alan Stern wrote:
+> > > On Thu, 21 Sep 2017, Andrey Konovalov wrote:
+> > > 
+> > > > On Thu, Sep 21, 2017 at 6:10 PM, Greg Kroah-Hartman
+> > > > <gregkh@linuxfoundation.org> wrote:
+> > > > > On Thu, Sep 21, 2017 at 05:39:05PM +0200, Andrey Konovalov wrote:
+> > > > >> Hi!
+> > > > >>
+> > > > >> I've got the following report while fuzzing the kernel with syzkaller.
+> > > > >>
+> > > > >> On commit ebb2c2437d8008d46796902ff390653822af6cc4 (Sep 18).
+> > > > >>
+> > > > >> The issue occurs when we iterate over interface altsettings, but I
+> > > > >> don't see the driver doing anything wrong. I might be missing
+> > > > >> something, or this might be an issue in USB core altsettings parsing.
+> > > > >
+> > > > >
+> > > > > Any chance you happen to have the descriptors that you were feeding into
+> > > > > the kernel at this crash?  That might help in figuring out what "went
+> > > > > wrong".
+> > > > 
+> > > > Here's the data that I feed into dummy_udc:
+> > > > 
+> > > > 00 00 00 00 09 02 12 00 01 34 05 80 07 09 04 6e
+> > > > 09 00 08 06 62 00 12 01 05 00 cb f7 71 83 04 00
+> > > > 05 00 ab f6 07 81 08 01
+> > > > 
+> > > > Also attaching a C reproducer (requires dummy_hcd and gadgetfs) and my .config.
+> > > 
+> > > Why do your reproducers use an mmap'ed array for their data instead of 
+> > > a plain old statically allocated array?
+> > > 
+> > > Anyway, this turns out to be a genuine (and subtle!) bug in the uas
+> > > driver.  The uas_find_uas_alt_setting() routine in uas-detect.h returns
+> > > a bAlternateSetting value, but then the uas_use_uas_driver() routine
+> > > uses this value as an index to the altsetting array -- which it isn't.  
+> > > 
+> > > Normally this doesn't cause any problems because the the entries in the
+> > > array have bAlternateSetting values 0, 1, etc., so the value is equal
+> > > to the index.  But in your fuzzed case, that wasn't true.
+> > > 
+> > > The patch below fixes this bug, by returning a pointer to the 
+> > > alt-setting entry instead of either the value or the index.  Pointers 
+> > > are less subject to misinterpretation.
+> > 
+> > Ugh, messy, nice catch and fix, I'll go queue it up now, thanks for
+> > resolving this.
+> 
+> Oops, no, you didn't send this as a "real" patch yet, I'll wait :)
+
+I was waiting for Andrey to verify that the problem was really gone.  
+I'll submit it officially later today.
+
+On Fri, 22 Sep 2017, Felipe Balbi wrote:
+
+> > Felipe, any objection for me taking this, and the other gadget driver
+> > fixes that Alan just sent out, directly in my tree?
+>
+> none whatsoever, for all of them:
+
+There's still more to come.  I've got four patches for dummy-hcd just 
+about ready to send.  :-)
+
+Alan Stern
