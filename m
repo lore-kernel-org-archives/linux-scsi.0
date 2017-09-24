@@ -1,37 +1,41 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCHv5 2/5] scsi: Export blacklist flags to sysfs
-Date: Sun, 24 Sep 2017 07:22:48 +0800
-Message-ID: <201709240727.2xFHlSF8%fengguang.wu@intel.com>
-References: <1506060287-87031-3-git-send-email-hare@suse.de>
+From: Mr Soumaila Sorgho <nicolemarois7410@gmail.com>
+Subject: Greetings From Mr. Soumaila Sorgho
+Date: Sun, 24 Sep 2017 00:28:45 +0000
+Message-ID: <CAEPXuGP_S1nzOuCb92T8n+CdQLo_m87=bkNTKma0apv7oMyY3w__45787.3096726418$1506212944$gmane$org@mail.gmail.com>
+Reply-To: soumailasorgho@yandex.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7230 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750839AbdIWXXP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 23 Sep 2017 19:23:15 -0400
-Content-Disposition: inline
-In-Reply-To: <1506060287-87031-3-git-send-email-hare@suse.de>
+Received: from mail-vk0-f67.google.com ([209.85.213.67]:37382 "EHLO
+        mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751797AbdIXA2q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Sep 2017 20:28:46 -0400
+Received: by mail-vk0-f67.google.com with SMTP id q75so50406vkf.4
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Sep 2017 17:28:46 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi Hannes,
+-- 
+Greetings From Mr. Soumaila Sorgho
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on v4.14-rc1 next-20170922]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+	I have a Mutual/Beneficial Business Project that would be beneficial
+to you. I only have two questions to ask of you, if you are
+interested.
 
-url:    https://github.com/0day-ci/linux/commits/Hannes-Reinecke/scsi-Fixup-blacklist-handling/20170923-213041
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+1. Can you handle this project?
+2. Can I give you this trust?
 
+Please note that the deal requires high level of maturity, honesty and
+secrecy. This will involve moving some money from my office, on trust
+to your hands or bank account. Also note that i will do everything to
+make sure that the money is moved as a purely legitimate fund, so you
+will not be exposed to any risk.
 
-sparse warnings: (new ones prefixed by >>)
+I request for your full co-operation. I will give you details and
+procedure when I receive your reply, to commence this transaction, I
+require you to immediately indicate your interest by a return reply. I
+will be waiting for your response in a timely manner.
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Contact  Email: soumailasorgho@yandex.com
+Best Regard,
+Mr. Soumaila Sorgho
