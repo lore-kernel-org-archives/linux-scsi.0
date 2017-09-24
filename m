@@ -1,78 +1,33 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V4 10/16] block: mq-deadline: Add zoned block device
-        data
-Date: Sun, 24 Sep 2017 17:14:52 +0200
-Message-ID: <20170924151452.GG14806@lst.de>
-References: <20170924070247.25560-1-damien.lemoal@wdc.com> <20170924070247.25560-11-damien.lemoal@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170924070247.25560-11-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Meng Xu <mengxu.gatech@gmail.com>
+Subject: mptfusion: holding wrong mutex due to iocnum mismatch
+Date: Sun, 24 Sep 2017 11:14:50 -0400
+Message-ID: <1506266090-22958-1-git-send-email-mengxu.gatech@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: meng.xu@gatech.edu, sanidhya@gatech.edu, taesoo@gatech.edu, Meng Xu <mengxu.gatech@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> +
-> +	struct request_queue *q;
+In __mptctl_ioctl() of file drivers/message/fusion/mptctl.c, there seems
+to be a way to cause a confused deputy attack by racing condition in 
+userspace.
 
-Do you really need the queue backpointer?  At least as far as this
-patch is concerned we could just pass the queue on to
-deadline_enable_zones_wlock and be fine.  And in general we should
-always passing the q, as we can trivial go from queue to deadline_data
-using queue->elevator->elevator_data.
+1. In the first userspace fetch, copy_from_user(&khdr, uhdr, sizeof(khdr),
+a user process can put, say, 01, in uhdr->iocnum which will be fetched
+into khdr.iocnum and later used to get the MPT_ADAPTER iocp.
 
-> +static int deadline_zoned_init_queue(struct request_queue *q,
-> +				     struct deadline_data *dd)
-> +{
-> +	if (!blk_queue_is_zoned(q) ||
-> +	    !blk_queue_nr_zones(q)) {
+2. Later the mutex lock of iocp (01) is held before the operations like
+mptctl_fw_download(), mptctl_mpt_command(), etc.
 
-Shouldn't !blk_queue_nr_zones(q) be enough?  If not both conditionals
-could easily fit into the same line, and I'd be tempted to move them
-to the caller and call deadline_enable_zones_wlock straight from there.
+3. With these function, say, mptctl_fw_download(), the same userspace (ufwdl) 
+memory is fetched again and put into kfwdl. However, at this time, a user
+process can put a different value, say, 02, in kfwdl.iocnum.
 
-> @@ -341,6 +387,15 @@ static int dd_init_queue(struct request_queue *q, struct elevator_type *e)
->  	spin_lock_init(&dd->lock);
->  	INIT_LIST_HEAD(&dd->dispatch);
->  
-> +	dd->q = q;
-> +	spin_lock_init(&dd->zone_lock);
-> +	ret = deadline_zoned_init_queue(q, dd);
-> +	if (ret) {
-> +		kfree(dd);
-> +		kobject_put(&eq->kobj);
-> +		return ret;
-> +	}
-> +
->  	q->elevator = eq;
->  	return 0;
+4. In my understanding, this means that we are holding iocp(01)'s lock 
+while iocp(02) is actually doing the work (be it download, command, etc).
 
-This should probably grow goto based unwinding, e.g.
-
-	int ret = -ENOMEM;
-
-	...
-
-	dd = kzalloc_node(sizeof(*dd), GFP_KERNEL, q->node);
-	if (!dd)
-		goto out_put_object;
-
-	...
-
-	if (blk_queue_nr_zones(q))) {
-		ret = deadline_enable_zones_wlock(...);
-		if (ret)
-			goto out_free_dd;
-	}
-	
-  	q->elevator = eq;
-  	return 0;
-
-out_free_dd:
-	kfree(dd);
-out_put_object
-	kobject_put(&eq->kobj);
-	return ret;
-	
+I'd like to seek your opinion on this matter and what do you think should
+be the way to patch it. I cannot come with with an easy fix (within 10 LoC)
+as once we are in mptctl_fw_download(), etc, we lose the context to know
+which iocp's lock is actually held. One possible way is to add an argument
+to these functions (either iocnum or iocp) to inform this context.
