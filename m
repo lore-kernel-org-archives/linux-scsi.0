@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 18/19] lpfc: Fix oops of nvme host during driver unload.
-Date: Mon, 25 Sep 2017 12:31:37 +0200
-Message-ID: <20170925103137.q3tszyxvcdv4gxty@linux-x5ow.site>
+Subject: Re: [PATCH 19/19] lpfc: change version to 11.4.0.4
+Date: Mon, 25 Sep 2017 12:31:50 +0200
+Message-ID: <20170925103150.pshchpzj7odrtewm@linux-x5ow.site>
 References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-19-jsmart2021@gmail.com>
+ <20170922061741.12347-20-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35330 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35345 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933128AbdIYKbj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:31:39 -0400
+        id S933128AbdIYKbw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:31:52 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-19-jsmart2021@gmail.com>
+In-Reply-To: <20170922061741.12347-20-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
@@ -21,8 +21,6 @@ Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James 
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
-But again, this should be considered for inclusion into stable
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
