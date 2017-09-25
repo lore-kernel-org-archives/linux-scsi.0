@@ -1,40 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fix the issue that iscsi_if_rx doesn't parse nlmsg properly
-Date: Mon, 25 Sep 2017 15:28:19 -0400
-Message-ID: <yq1a81ih92k.fsf@oracle.com>
-References: <0c9fd6fbc0f5fa7b72e6ae5b82d5499a38fd375e.1503836726.git.lucien.xin@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: Make use of UFS_BIT macro wherever possible
+Date: Mon, 25 Sep 2017 15:31:16 -0400
+Message-ID: <yq160c6h8xn.fsf@oracle.com>
+References: <CGME20170828122625epcas2p33e3e912339c1e29051ad8e28251ea91b@epcas2p3.samsung.com>
+        <1503922783-14317-1-git-send-email-alim.akhtar@samsung.com>
+        <1503935147.2841.25.camel@wdc.com>
+        <e26087fe-5e1b-c103-668d-43818765d3c9@samsung.com>
+        <CAGOxZ52N=NLCZndc+sS1ym4zsdutk3keBv31-KNwe1u1bEfreg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31808 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934880AbdIYT2o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 15:28:44 -0400
-In-Reply-To: <0c9fd6fbc0f5fa7b72e6ae5b82d5499a38fd375e.1503836726.git.lucien.xin@gmail.com>
-        (Xin Long's message of "Sun, 27 Aug 2017 20:25:26 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGOxZ52N=NLCZndc+sS1ym4zsdutk3keBv31-KNwe1u1bEfreg@mail.gmail.com>
+        (Alim Akhtar's message of "Mon, 11 Sep 2017 08:14:37 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alim Akhtar <alim.akhtar@gmail.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Xin Long <lucien.xin@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, syzkaller@googlegroups.com, chunwang@redhat.com
 
 
-Xin,
+Alim,
 
-> ChunYu found a kernel crash by syzkaller:
+> Should I drop this patch and send another one which removes UFS_BIT()
+> macro?
 
-[...]
+I fail to see the point of UFS_BIT(). So yes.
 
-> It's caused by skb_shared_info at the end of sk_buff was overwritten by
-> ISCSI_KEVENT_IF_ERROR when parsing nlmsg info from skb in iscsi_if_rx.
->
-> During the loop if skb->len == nlh->nlmsg_len and both are sizeof(*nlh),
-> ev = nlmsg_data(nlh) will acutally get skb_shinfo(SKB) instead and set a
-> new value to skb_shinfo(SKB)->nr_frags by ev->type.
->
-> This patch is to fix it by checking nlh->nlmsg_len properly there to
-> avoid over accessing sk_buff.
-
-Applied to 4.14/scsi-fixes. Thank you!
+Please make sure to CC: Subhash on ufs changes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
