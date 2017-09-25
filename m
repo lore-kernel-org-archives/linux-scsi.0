@@ -1,39 +1,30 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] scsi: fc: check for rport presence in fc_block_scsi_eh
-Date: Mon, 25 Sep 2017 14:00:49 +0200
-Message-ID: <20170925120049.19689-1-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi_transport_fc: Also check for NOTPRESENT in
+ fc_remote_port_add()
+Date: Mon, 25 Sep 2017 14:01:19 +0200
+Message-ID: <20170925120119.r5k4lj5tvvycoy6s@linux-x5ow.site>
+References: <1506340043-67444-1-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:42979 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933685AbdIYMBU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 08:01:20 -0400
+Content-Disposition: inline
+In-Reply-To: <1506340043-67444-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Coverity-scan recently found a possible NULL pointer dereference in
-fc_block_scsi_eh() as starget_to_rport() either returns the rport for
-the startget or NULL.
-
-While it is rather unlikely to have fc_block_scsi_eh() called without
-an rport associated it's a good idea to catch potential misuses of the
-API gracefully.
-
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_transport_fc.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index ba9d70f8a6a1..830ce53f30fb 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3328,6 +3328,9 @@ int fc_block_scsi_eh(struct scsi_cmnd *cmnd)
- {
- 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
- 
-+	if (WARN_ON(!rport))
-+		return 0;
-+
- 	return fc_block_rport(rport);
- }
- EXPORT_SYMBOL(fc_block_scsi_eh);
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
-2.13.5
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
