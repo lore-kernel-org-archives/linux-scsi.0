@@ -1,49 +1,39 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: aacraid: Add a small delay after IOP reset
-Date: Mon, 25 Sep 2017 18:09:08 -0300
-Message-ID: <b15b69e2-0d41-56cd-2952-a214d7ad7973@linux.vnet.ibm.com>
-References: <20170919151156.29412-1-gpiccoli@linux.vnet.ibm.com>
- <423FD6710FB8FB4F8728F93591889F9A5B8CD1FA@avsrvexchmbx2.microsemi.net>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V5 07/14] scsi: sd_zbc: Initialize device request queue
+ zoned data
+Date: Mon, 25 Sep 2017 21:17:22 +0000
+Message-ID: <1506374241.2641.20.camel@wdc.com>
+References: <20170925061454.5533-1-damien.lemoal@wdc.com>
+         <20170925061454.5533-8-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36994 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752028AbdIYVJi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 17:09:38 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8PL9ZAj104904
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Sep 2017 17:09:37 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2d77dr61q9-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Sep 2017 17:09:36 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Mon, 25 Sep 2017 17:09:15 -0400
-In-Reply-To: <423FD6710FB8FB4F8728F93591889F9A5B8CD1FA@avsrvexchmbx2.microsemi.net>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:62170 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932182AbdIYVRZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 17:17:25 -0400
+In-Reply-To: <20170925061454.5533-8-damien.lemoal@wdc.com>
 Content-Language: en-US
+Content-ID: <9961A106ACE57D438C19E6F7117C5192@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Dave Carroll <david.carroll@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, "dougmill@linux.vnet.ibm.com" <dougmill@linux.vnet.ibm.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, James.Bottomley@HansenPartnership.com, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 
-On 09/21/2017 01:19 PM, Dave Carroll wrote:
->> [...]
->> ---
-> Acked-by: Dave Carroll <david.carroll@microsemi.com>
-> 
-
-Thanks Dave!
-
-James/Martin, am I expected to send a v2 with some change? Perhaps with
-Dave's ack?
-Sorry to annoy, thanks in advance for any advice!
-
-Cheers,
-
-
-Guilherme
+T24gTW9uLCAyMDE3LTA5LTI1IGF0IDE1OjE0ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gKwlyZXR1cm4ga3phbGxvY19ub2RlKEJJVFNfVE9fTE9OR1Moc2RrcC0+bnJfem9uZXMpDQo+
+ICsJCQkgICAgKiBzaXplb2YodW5zaWduZWQgbG9uZyksDQoNCkRvZXMgdGhpcyBwZXJoYXBzIGZp
+dCBvbiBvbmUgbGluZT8NCg0KPiArLyoqDQo+ICsgKiBzZF96YmNfZ2V0X3NlcV96b25lcyAtIFBh
+cnNlIHJlcG9ydCB6b25lcyByZXBseSB0byBpZGVudGlmeSBzZXF1ZW50aWFsIHpvbmVzDQo+ICsg
+KiBAc2RrcDogZGlzayB1c2VkDQo+ICsgKiBAYnVmOiByZXBvcnQgcmVwbHkgYnVmZmVyDQo+ICsg
+KiBAc2VxX3pvbmVfYml0YW1wOiBiaXRtYXAgb2Ygc2VxdWVudGlhbCB6b25lcyB0byBzZXQNCj4g
+KyAqIEB6bm86IFpvbmUgbnVtYmVyIG9mIHRoZSBmaXJzdCB6b25lIGluIHRoZSByZXBvcnQNCg0K
+J3pubycgaXMgYW4gaW5wdXQgYW5kIG91dHB1dCBwYXJhbWV0ZXIgYnV0IHRoZSBhYm92ZSBsaW5l
+IG9ubHkgZGVzY3JpYmVzIHdoYXQNCmhhcHBlbnMgd2l0aCB0aGUgdmFsdWUgcGFzc2VkIHRvIHNk
+X3piY19nZXRfc2VxX3pvbmVzKCkuIEkgdGhpbmsgd2UgYWxzbyBuZWVkIGENCmRlc2NyaXB0aW9u
+IGZvciB0aGUgdmFsdWUgb2YgJ3pubycgdXBvbiByZXR1cm4uDQoNCj4gKyAqIFBhcnNlIHJlcG9y
+dGVkIHpvbmUgZGVzY3JpcHRvcnMgdG8gZmluZCBzZXF1aWVudGlhbCB6b25lcy4NCiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeXl5eXl5eXl5eXg0KICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHNlcXVlbnRpYWw/DQoNCk90
+aGVyd2lzZSB0aGlzIHBhdGNoIGxvb2tzIGZpbmUgdG8gbWUuDQoNCkJhcnQu
