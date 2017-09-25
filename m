@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 15/19] lpfc: Fix secure firmware updates
-Date: Mon, 25 Sep 2017 12:28:23 +0200
-Message-ID: <20170925102823.bkgxqr2jazkvk2sr@linux-x5ow.site>
+Subject: Re: [PATCH 16/19] lpfc: Ensure io aborts interlocked with the target.
+Date: Mon, 25 Sep 2017 12:30:04 +0200
+Message-ID: <20170925103004.b2a2ciodt2ewkjwr@linux-x5ow.site>
 References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-16-jsmart2021@gmail.com>
+ <20170922061741.12347-17-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35103 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35261 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932716AbdIYK2Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:28:24 -0400
+        id S932107AbdIYKaF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:30:05 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-16-jsmart2021@gmail.com>
+In-Reply-To: <20170922061741.12347-17-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
