@@ -1,29 +1,87 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V5 11/14] blokc: mq-deadline: Introduce dispatch helpers
-Date: Mon, 25 Sep 2017 21:44:47 +0000
-Message-ID: <1506375884.2641.27.camel@wdc.com>
-References: <20170925061454.5533-1-damien.lemoal@wdc.com>
-         <20170925061454.5533-12-damien.lemoal@wdc.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [RFC] apparently broken error recovery in vhost_scsi_iov_to_sgl()
+Date: Tue, 26 Sep 2017 00:53:56 +0300
+Message-ID: <20170926005313-mutt-send-email-mst@kernel.org>
+References: <20170924223633.GV32076@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:50977 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964926AbdIYVou (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 17:44:50 -0400
-In-Reply-To: <20170925061454.5533-12-damien.lemoal@wdc.com>
-Content-Language: en-US
-Content-ID: <36008434D189CE4092FEAF4FDADCD999@namprd04.prod.outlook.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41266 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965180AbdIYVx6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 17:53:58 -0400
+Content-Disposition: inline
+In-Reply-To: <20170924223633.GV32076@ZenIV.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-scsi@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>
 
-T24gTW9uLCAyMDE3LTA5LTI1IGF0IDE1OjE0ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gQXZvaWQgZGlyZWN0bHkgcmVmZXJlbmNpbmcgdGhlIG5leHRfcnEgYW5kIGZpZm9fbGlzdCBh
-cnJheXMgdXNpbmcgdGhlDQo+IGhlbHBlciBmdW5jdGlvbnMgZGVhZGxpbmVfbmV4dF9yZXF1ZXN0
-KCkgYW5kIGRlYWRsaW5lX2ZpZm9fcmVxdWVzdCgpIHRvDQo+IGZhY2lsaXRhdGUgY2hhbmdlcyBp
-biB0aGUgZGlzcGF0Y2ggcmVxdWVzdCBzZWxlY3Rpb24gaW4NCj4gX19kZF9kaXNwYXRjaF9yZXF1
-ZXN0KCkuDQoNClJldmlld2VkLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPEJhcnQuVmFuQXNzY2hlQHdk
-Yy5jb20+DQo=
+On Sun, Sep 24, 2017 at 11:36:33PM +0100, Al Viro wrote:
+> Suppose vhost_scsi_iov_to_sgl() got a two-iovec array, mapped
+> e.g. 20 pages from the first one just fine and failed on the
+> second.
+> 
+> static int
+> vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
+>                       struct iov_iter *iter,
+>                       struct scatterlist *sg, int sg_count)
+> {
+>         size_t off = iter->iov_offset;
+>         int i, ret;
+> 
+>         for (i = 0; i < iter->nr_segs; i++) {
+>                 void __user *base = iter->iov[i].iov_base + off;
+>                 size_t len = iter->iov[i].iov_len - off;
+> 
+>                 ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
+>                 if (ret < 0) {
+>                         for (i = 0; i < sg_count; i++) {
+>                                 struct page *page = sg_page(&sg[i]);
+>                                 if (page)
+>                                         put_page(page);
+>                         }
+>                         return ret;
+>                 }
+>                 sg += ret;
+>                 off = 0;
+>         }
+>         return 0;
+> }
+> 
+> What are we trying to drop in the if (ret < 0) in there?  In the case
+> above we step into it on the second pass through the loop.  The first
+> 20 entries of sg had been filled... and sg had been increased by 20,
+> so whatever we find and feed to put_page(), it won't be those 20 pages.
+> Moreover, the caller will reset cmd->tvc_{prot_,}sgl_count to zero,
+> so vhost_scsi_release_cmd() won't find them either.
+>
+> Am I missing something subtle here, or should that thing be doing
+> something like
+
+Looks right to me. I think Nicholas wrote this, CC him.
+
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index 046f6d280af5..e47c5bc3ddca 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -688,6 +688,7 @@ vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
+>  		      struct scatterlist *sg, int sg_count)
+>  {
+>  	size_t off = iter->iov_offset;
+> +	struct scatterlist *p = sg;
+>  	int i, ret;
+>  
+>  	for (i = 0; i < iter->nr_segs; i++) {
+> @@ -696,8 +697,8 @@ vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
+>  
+>  		ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
+>  		if (ret < 0) {
+> -			for (i = 0; i < sg_count; i++) {
+> -				struct page *page = sg_page(&sg[i]);
+> +			while (p < sg) {
+> +				struct page *page = sg_page(p++);
+>  				if (page)
+>  					put_page(page);
+>  			}
