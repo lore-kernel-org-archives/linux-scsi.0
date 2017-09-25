@@ -1,29 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 08/19] lpfc: Fix FCP hba_wqidx assignment
-Date: Mon, 25 Sep 2017 12:21:30 +0200
-Message-ID: <20170925102130.mcd4xmontu4kniqd@linux-x5ow.site>
+Subject: Re: [PATCH 09/19] lpfc: Reduce log spew on controller reconnects
+Date: Mon, 25 Sep 2017 12:22:17 +0200
+Message-ID: <20170925102217.hexs3xd5xhn4qqqz@linux-x5ow.site>
 References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-9-jsmart2021@gmail.com>
+ <20170922061741.12347-10-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34478 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34531 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932716AbdIYKVb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:21:31 -0400
+        id S932716AbdIYKWT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:22:19 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-9-jsmart2021@gmail.com>
+In-Reply-To: <20170922061741.12347-10-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Again, if this is fixing an oops it should be tagged for inclusion
-into stable.
-
-Byte,
-	Johannes
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
