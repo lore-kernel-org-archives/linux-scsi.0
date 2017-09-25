@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V5 11/14] blokc: mq-deadline: Introduce dispatch helpers
-Date: Mon, 25 Sep 2017 15:14:51 +0900
-Message-ID: <20170925061454.5533-12-damien.lemoal@wdc.com>
+Subject: [PATCH V5 14/14] block: do not set mq default scheduler
+Date: Mon, 25 Sep 2017 15:14:54 +0900
+Message-ID: <20170925061454.5533-15-damien.lemoal@wdc.com>
 References: <20170925061454.5533-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170925061454.5533-1-damien.lemoal@wdc.com>
@@ -10,101 +10,50 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid directly referencing the next_rq and fifo_list arrays using the
-helper functions deadline_next_request() and deadline_fifo_request() to
-facilitate changes in the dispatch request selection in
-__dd_dispatch_request().
+For blk-mq disks with a single hardware queue, setting by default the
+disk scheduler to mq-deadline early during the queue initialization
+prevents properly setting zone write locking for host managed zoned
+block device as the disk type is not yet known.
+
+Fix this by simply not setting the default scheduler to mq-deadline for
+single hardware queue disks. A udev rule can be used to easily do the
+same later in the system initialization sequence, when the device
+characteristics are known.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/mq-deadline.c | 45 +++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 8 deletions(-)
+ block/elevator.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index af2eb9b3936e..296880e2471f 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -195,13 +195,42 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
- }
+diff --git a/block/elevator.c b/block/elevator.c
+index 153926a90901..8b65a757f726 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -222,19 +222,14 @@ int elevator_init(struct request_queue *q, char *name)
  
- /*
-+ * For the specified data direction, return the next request to
-+ * dispatch using arrival ordered lists.
-+ */
-+static struct request *
-+deadline_fifo_request(struct deadline_data *dd, int data_dir)
-+{
-+	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
-+		return NULL;
-+
-+	if (list_empty(&dd->fifo_list[data_dir]))
-+		return NULL;
-+
-+	return rq_entry_fifo(dd->fifo_list[data_dir].next);
-+}
-+
-+/*
-+ * For the specified data direction, return the next request to
-+ * dispatch using sector position sorted lists.
-+ */
-+static struct request *
-+deadline_next_request(struct deadline_data *dd, int data_dir)
-+{
-+	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
-+		return NULL;
-+
-+	return dd->next_rq[data_dir];
-+}
-+
-+/*
-  * deadline_dispatch_requests selects the best request according to
-  * read/write expire, fifo_batch, etc
-  */
- static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
--	struct request *rq;
-+	struct request *rq, *next_rq;
- 	bool reads, writes;
- 	int data_dir;
- 
-@@ -217,10 +246,9 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	/*
- 	 * batches are currently reads XOR writes
- 	 */
--	if (dd->next_rq[WRITE])
--		rq = dd->next_rq[WRITE];
--	else
--		rq = dd->next_rq[READ];
-+	rq = deadline_next_request(dd, WRITE);
-+	if (!rq)
-+		rq = deadline_next_request(dd, READ);
- 
- 	if (rq && dd->batching < dd->fifo_batch)
- 		/* we have a next request are still entitled to batch */
-@@ -263,19 +291,20 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	/*
- 	 * we are not running a batch, find best request for selected data_dir
- 	 */
--	if (deadline_check_fifo(dd, data_dir) || !dd->next_rq[data_dir]) {
-+	next_rq = deadline_next_request(dd, data_dir);
-+	if (deadline_check_fifo(dd, data_dir) || !next_rq) {
+ 	if (!e) {
  		/*
- 		 * A deadline has expired, the last request was in the other
- 		 * direction, or we have run out of higher-sectored requests.
- 		 * Start again from the request with the earliest expiry time.
+-		 * For blk-mq devices, we default to using mq-deadline,
+-		 * if available, for single queue devices. If deadline
+-		 * isn't available OR we have multiple queues, default
+-		 * to "none".
++		 * For blk-mq devices, default to "none". udev can later set
++		 * an appropriate default scheduler based on the disk
++		 * characteristics which we do not yet have here.
  		 */
--		rq = rq_entry_fifo(dd->fifo_list[data_dir].next);
-+		rq = deadline_fifo_request(dd, data_dir);
- 	} else {
- 		/*
- 		 * The last req was the same dir and we have a next request in
- 		 * sort order. No expired requests so continue on from here.
- 		 */
--		rq = dd->next_rq[data_dir];
-+		rq = next_rq;
- 	}
+-		if (q->mq_ops) {
+-			if (q->nr_hw_queues == 1)
+-				e = elevator_get("mq-deadline", false);
+-			if (!e)
+-				return 0;
+-		} else
+-			e = elevator_get(CONFIG_DEFAULT_IOSCHED, false);
++		if (q->mq_ops)
++			return 0;
  
- 	dd->batching = 0;
++		e = elevator_get(CONFIG_DEFAULT_IOSCHED, false);
+ 		if (!e) {
+ 			printk(KERN_ERR
+ 				"Default I/O scheduler not found. " \
 -- 
 2.13.5
