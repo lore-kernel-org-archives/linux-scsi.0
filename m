@@ -1,19 +1,20 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 10/19] lpfc: Set missing abort context
-Date: Mon, 25 Sep 2017 12:22:39 +0200
-Message-ID: <20170925102239.2iltin75fnqu4rzd@linux-x5ow.site>
+Subject: Re: [PATCH 11/19] lpfc: Revise NVME module parameter descriptions
+ for better clarity
+Date: Mon, 25 Sep 2017 12:23:00 +0200
+Message-ID: <20170925102300.zfe2kjtif7kjoztb@linux-x5ow.site>
 References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-11-jsmart2021@gmail.com>
+ <20170922061741.12347-12-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34580 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34607 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932716AbdIYKWk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:22:40 -0400
+        id S932716AbdIYKXB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:23:01 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-11-jsmart2021@gmail.com>
+In-Reply-To: <20170922061741.12347-12-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
