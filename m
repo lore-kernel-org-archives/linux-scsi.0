@@ -1,22 +1,36 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V4 03/16] scsi: sd_zbc: Rearrange code
-Date: Mon, 25 Sep 2017 11:17:02 +0200
-Message-ID: <20170925091702.jyx6zov2zau27p5v@linux-x5ow.site>
+Subject: Re: [PATCH V4 07/16] scsi: sd_zbc: Initialize device request queue
+ zoned data
+Date: Mon, 25 Sep 2017 11:36:21 +0200
+Message-ID: <20170925093621.42xue3qnvdvlzik3@linux-x5ow.site>
 References: <20170924070247.25560-1-damien.lemoal@wdc.com>
- <20170924070247.25560-4-damien.lemoal@wdc.com>
+ <20170924070247.25560-8-damien.lemoal@wdc.com>
+ <20170924150701.GF14806@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170924070247.25560-4-damien.lemoal@wdc.com>
+In-Reply-To: <20170924150701.GF14806@lst.de>
 Sender: linux-block-owner@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+On Sun, Sep 24, 2017 at 05:07:01PM +0200, Christoph Hellwig wrote:
+> > +static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
+> > +{
+> > +	struct request_queue *q = sdkp->disk->queue;
+> > +
+> > +	return kzalloc_node(BITS_TO_LONGS(sdkp->nr_zones)
+> > +			    * sizeof(unsigned long),
+> > +			    GFP_KERNEL, q->node);
+> 
+> This really screams for kcalloc_node and friends that I think Johannes
+> volunteered to add.
+
+Thanks for the reminder, I'll send out the series today.
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
