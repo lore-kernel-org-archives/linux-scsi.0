@@ -1,32 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V2 0/9] pm80xx updates
-Date: Mon, 25 Sep 2017 19:20:12 -0400
-Message-ID: <yq1a81ie577.fsf@oracle.com>
-References: <20150217233650.9091-1-Viswas.G@microsemi.com>
-        <yq1d16rpxf7.fsf@oracle.com>
-        <E96847475729F24299853D257F7211218CD8B088@avsrvexchmbx2.microsemi.net>
+Subject: Re: [PATCH] mpt3sas: remove redundant copy_from_user in _ctl_getiocinfo
+Date: Mon, 25 Sep 2017 19:22:35 -0400
+Message-ID: <yq160c6e538.fsf@oracle.com>
+References: <1505920431-13173-1-git-send-email-mengxu.gatech@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46703 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965659AbdIYXUZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 19:20:25 -0400
-In-Reply-To: <E96847475729F24299853D257F7211218CD8B088@avsrvexchmbx2.microsemi.net>
-        (Viswas G.'s message of "Sat, 16 Sep 2017 05:22:06 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1505920431-13173-1-git-send-email-mengxu.gatech@gmail.com> (Meng
+        Xu's message of "Wed, 20 Sep 2017 11:13:51 -0400")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Meng Xu <mengxu.gatech@gmail.com>
+Cc: hch@infradead.org, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, meng.xu@gatech.edu, sanidhya@gatech.edu, taesoo@gatech.edu
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <viswas.g@microsemi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi Tharmarajan <vasanthalakshmi.thar@microsemi.com>, Deepak Ukey <deepak.ukey@microsemi.com>, Raj Dinesh <Raj.Dinesh@microsemi.com>, "jinpu.wang@profitbricks.com" <jinpu.wang@profitbricks.com>
 
 
-Viswas,
+Meng,
 
-> Do we need to send V3 patch set with corrected date ? 
+> Since right after the user copy, we are going to
+> memset(&karg, 0, sizeof(karg)), the copy_from_user is redundant
 
-Yes, please. And address Jack's/kbuild robot's comments.
-
-Thanks!
+Applied to 4.15/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
