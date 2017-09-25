@@ -1,30 +1,29 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: aacraid: Add a small delay after IOP reset
-Date: Mon, 25 Sep 2017 17:34:09 -0400
-Message-ID: <yq1fubafooe.fsf@oracle.com>
-References: <20170919151156.29412-1-gpiccoli@linux.vnet.ibm.com>
-        <423FD6710FB8FB4F8728F93591889F9A5B8CD1FA@avsrvexchmbx2.microsemi.net>
-        <b15b69e2-0d41-56cd-2952-a214d7ad7973@linux.vnet.ibm.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V5 11/14] blokc: mq-deadline: Introduce dispatch helpers
+Date: Mon, 25 Sep 2017 21:44:47 +0000
+Message-ID: <1506375884.2641.27.camel@wdc.com>
+References: <20170925061454.5533-1-damien.lemoal@wdc.com>
+         <20170925061454.5533-12-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <b15b69e2-0d41-56cd-2952-a214d7ad7973@linux.vnet.ibm.com>
-        (Guilherme G. Piccoli's message of "Mon, 25 Sep 2017 18:09:08 -0300")
-Sender: stable-owner@vger.kernel.org
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dave Carroll <david.carroll@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, "dougmill@linux.vnet.ibm.com" <dougmill@linux.vnet.ibm.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, James.Bottomley@HansenPartnership.com, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:50977 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964926AbdIYVou (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 17:44:50 -0400
+In-Reply-To: <20170925061454.5533-12-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <36008434D189CE4092FEAF4FDADCD999@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 
-
-Guilherme,
-
-> James/Martin, am I expected to send a v2 with some change? Perhaps
-> with Dave's ack?  Sorry to annoy, thanks in advance for any advice!
-
-I was just about to mail Dave and ask for confirmation that your
-interpretation of the controller behavior is correct.
-
-Dave?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+T24gTW9uLCAyMDE3LTA5LTI1IGF0IDE1OjE0ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gQXZvaWQgZGlyZWN0bHkgcmVmZXJlbmNpbmcgdGhlIG5leHRfcnEgYW5kIGZpZm9fbGlzdCBh
+cnJheXMgdXNpbmcgdGhlDQo+IGhlbHBlciBmdW5jdGlvbnMgZGVhZGxpbmVfbmV4dF9yZXF1ZXN0
+KCkgYW5kIGRlYWRsaW5lX2ZpZm9fcmVxdWVzdCgpIHRvDQo+IGZhY2lsaXRhdGUgY2hhbmdlcyBp
+biB0aGUgZGlzcGF0Y2ggcmVxdWVzdCBzZWxlY3Rpb24gaW4NCj4gX19kZF9kaXNwYXRjaF9yZXF1
+ZXN0KCkuDQoNClJldmlld2VkLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPEJhcnQuVmFuQXNzY2hlQHdk
+Yy5jb20+DQo=
