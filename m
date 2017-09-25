@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 05/19] lpfc: PLOGI failures during NPIV testing
-Date: Mon, 25 Sep 2017 12:13:07 +0200
-Message-ID: <20170925101307.svwkydnlbtj7pleq@linux-x5ow.site>
+Subject: Re: [PATCH 07/19] lpfc: Move CQ processing to a soft IRQ
+Date: Mon, 25 Sep 2017 12:20:03 +0200
+Message-ID: <20170925102002.qnmqfe2ch5o5vknu@linux-x5ow.site>
 References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-6-jsmart2021@gmail.com>
+ <20170922061741.12347-8-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33944 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34378 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933440AbdIYKNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:13:09 -0400
+        id S1753860AbdIYKUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:20:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-6-jsmart2021@gmail.com>
+In-Reply-To: <20170922061741.12347-8-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
@@ -21,12 +21,6 @@ Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James 
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
-But maybe worth adding a:
-Fixes: 4042629e426d ("[SCSI] lpfc 8.3.20: Updates to FC discovery commands")
-
-Byte,
-	Johannes
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
