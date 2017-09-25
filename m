@@ -1,87 +1,74 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [RFC] apparently broken error recovery in vhost_scsi_iov_to_sgl()
-Date: Tue, 26 Sep 2017 00:53:56 +0300
-Message-ID: <20170926005313-mutt-send-email-mst@kernel.org>
-References: <20170924223633.GV32076@ZenIV.linux.org.uk>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V5 12/14] block: mq-deadline: Introduce zone locking
+ support
+Date: Mon, 25 Sep 2017 22:00:36 +0000
+Message-ID: <1506376835.2641.34.camel@wdc.com>
+References: <20170925061454.5533-1-damien.lemoal@wdc.com>
+         <20170925061454.5533-13-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41266 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965180AbdIYVx6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 17:53:58 -0400
-Content-Disposition: inline
-In-Reply-To: <20170924223633.GV32076@ZenIV.linux.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170925061454.5533-13-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <04D045BFEB18CC45999635B717CC0663@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-scsi@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Sun, Sep 24, 2017 at 11:36:33PM +0100, Al Viro wrote:
-> Suppose vhost_scsi_iov_to_sgl() got a two-iovec array, mapped
-> e.g. 20 pages from the first one just fine and failed on the
-> second.
-> 
-> static int
-> vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
->                       struct iov_iter *iter,
->                       struct scatterlist *sg, int sg_count)
-> {
->         size_t off = iter->iov_offset;
->         int i, ret;
-> 
->         for (i = 0; i < iter->nr_segs; i++) {
->                 void __user *base = iter->iov[i].iov_base + off;
->                 size_t len = iter->iov[i].iov_len - off;
-> 
->                 ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
->                 if (ret < 0) {
->                         for (i = 0; i < sg_count; i++) {
->                                 struct page *page = sg_page(&sg[i]);
->                                 if (page)
->                                         put_page(page);
->                         }
->                         return ret;
->                 }
->                 sg += ret;
->                 off = 0;
->         }
->         return 0;
-> }
-> 
-> What are we trying to drop in the if (ret < 0) in there?  In the case
-> above we step into it on the second pass through the loop.  The first
-> 20 entries of sg had been filled... and sg had been increased by 20,
-> so whatever we find and feed to put_page(), it won't be those 20 pages.
-> Moreover, the caller will reset cmd->tvc_{prot_,}sgl_count to zero,
-> so vhost_scsi_release_cmd() won't find them either.
->
-> Am I missing something subtle here, or should that thing be doing
-> something like
-
-Looks right to me. I think Nicholas wrote this, CC him.
-
-> 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index 046f6d280af5..e47c5bc3ddca 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -688,6 +688,7 @@ vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
->  		      struct scatterlist *sg, int sg_count)
->  {
->  	size_t off = iter->iov_offset;
-> +	struct scatterlist *p = sg;
->  	int i, ret;
->  
->  	for (i = 0; i < iter->nr_segs; i++) {
-> @@ -696,8 +697,8 @@ vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
->  
->  		ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
->  		if (ret < 0) {
-> -			for (i = 0; i < sg_count; i++) {
-> -				struct page *page = sg_page(&sg[i]);
-> +			while (p < sg) {
-> +				struct page *page = sg_page(p++);
->  				if (page)
->  					put_page(page);
->  			}
+T24gTW9uLCAyMDE3LTA5LTI1IGF0IDE1OjE0ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gK3N0YXRpYyBpbmxpbmUgYm9vbCBkZWFkbGluZV9yZXF1ZXN0X25lZWRzX3pvbmVfd2xvY2so
+c3RydWN0IGRlYWRsaW5lX2RhdGEgKmRkLA0KPiArCQkJCQkJICAgICBzdHJ1Y3QgcmVxdWVzdCAq
+cnEpDQo+ICt7DQo+ICsNCj4gKwlpZiAoIWRkLT56b25lc193bG9jaykNCj4gKwkJcmV0dXJuIGZh
+bHNlOw0KPiArDQo+ICsJaWYgKGJsa19ycV9pc19wYXNzdGhyb3VnaChycSkpDQo+ICsJCXJldHVy
+biBmYWxzZTsNCj4gKw0KPiArCXN3aXRjaCAocmVxX29wKHJxKSkgew0KPiArCWNhc2UgUkVRX09Q
+X1dSSVRFX1pFUk9FUzoNCj4gKwljYXNlIFJFUV9PUF9XUklURV9TQU1FOg0KPiArCWNhc2UgUkVR
+X09QX1dSSVRFOg0KPiArCQlyZXR1cm4gYmxrX3JxX3pvbmVfaXNfc2VxKHJxKTsNCj4gKwlkZWZh
+dWx0Og0KPiArCQlyZXR1cm4gZmFsc2U7DQo+ICsJfQ0KDQpJZiBhbnlvbmUgZXZlciBhZGRzIGEg
+bmV3IHdyaXRlIHJlcXVlc3QgdHlwZSBpdCB3aWxsIGJlIGVhc3kgdG8gb3Zlcmxvb2sgdGhpcw0K
+ZnVuY3Rpb24uIFNob3VsZCB0aGUgJ2RlZmF1bHQnIGNhc2UgYmUgbGVmdCBvdXQgYW5kIHNob3Vs
+ZCBhbGwgcmVxdWVzdCB0eXBlcw0KYmUgbWVudGlvbmVkIGluIHRoZSBzd2l0Y2gvY2FzZSBzdGF0
+ZW1lbnQgc3VjaCB0aGF0IHRoZSBjb21waWxlciB3aWxsIGlzc3VlIGENCndhcm5pbmcgaWYgYSBu
+ZXcgcmVxdWVzdCBvcGVyYXRpb24gdHlwZSBpcyBhZGRlZCB0byBlbnVtIHJlcV9vcGY/DQoNCj4g
+Ky8qDQo+ICsgKiBBYnVzZSB0aGUgZWx2LnByaXZbMF0gcG9pbnRlciB0byBpbmRpY2F0ZSBpZiBh
+IHJlcXVlc3QgaGFzIHdyaXRlDQo+ICsgKiBsb2NrZWQgaXRzIHRhcmdldCB6b25lLiBPbmx5IHdy
+aXRlIHJlcXVlc3QgdG8gYSB6b25lZCBibG9jayBkZXZpY2UNCj4gKyAqIGNhbiBvd24gYSB6b25l
+IHdyaXRlIGxvY2suDQo+ICsgKi8NCj4gKyNkZWZpbmUgUlFfWk9ORV9XTE9DS0VECQkoKHZvaWQg
+KikxVUwpDQo+ICtzdGF0aWMgaW5saW5lIHZvaWQgZGVhZGxpbmVfc2V0X3JlcXVlc3Rfem9uZV93
+bG9jayhzdHJ1Y3QgcmVxdWVzdCAqcnEpDQo+ICt7DQo+ICsJcnEtPmVsdi5wcml2WzBdID0gUlFf
+Wk9ORV9XTE9DS0VEOw0KPiArfQ0KPiArDQo+ICsjZGVmaW5lIFJRX1pPTkVfTk9fV0xPQ0sJKCh2
+b2lkICopMFVMKQ0KPiArc3RhdGljIGlubGluZSB2b2lkIGRlYWRsaW5lX2NsZWFyX3JlcXVlc3Rf
+em9uZV93bG9jayhzdHJ1Y3QgcmVxdWVzdCAqcnEpDQo+ICt7DQo+ICsJcnEtPmVsdi5wcml2WzBd
+ID0gUlFfWk9ORV9OT19XTE9DSzsNCj4gK30NCg0KU2hvdWxkIGFuIGVudW1lcmF0aW9uIHR5cGUg
+YmUgaW50cm9kdWNlZCBmb3IgUlFfWk9ORV9XTE9DS0VEIGFuZCBSUV9aT05FX05PX1dMT0NLPw0K
+DQo+ICsvKg0KPiArICogV3JpdGUgbG9jayB0aGUgdGFyZ2V0IHpvbmUgb2YgYSB3cml0ZSByZXF1
+ZXN0Lg0KPiArICovDQo+ICtzdGF0aWMgdm9pZCBkZWFkbGluZV93bG9ja196b25lKHN0cnVjdCBk
+ZWFkbGluZV9kYXRhICpkZCwNCj4gKwkJCQlzdHJ1Y3QgcmVxdWVzdCAqcnEpDQo+ICt7DQo+ICsJ
+dW5zaWduZWQgaW50IHpubyA9IGJsa19ycV96b25lX25vKHJxKTsNCj4gKw0KPiArCVdBUk5fT05f
+T05DRShkZWFkbGluZV9yZXF1ZXN0X2hhc196b25lX3dsb2NrKHJxKSk7DQo+ICsJV0FSTl9PTl9P
+TkNFKHRlc3RfYW5kX3NldF9iaXQoem5vLCBkZC0+em9uZXNfd2xvY2spKTsNCj4gKwlkZWFkbGlu
+ZV9zZXRfcmVxdWVzdF96b25lX3dsb2NrKHJxKTsNCj4gK30NCj4gKw0KPiArLyoNCj4gKyAqIFdy
+aXRlIHVubG9jayB0aGUgdGFyZ2V0IHpvbmUgb2YgYSB3cml0ZSByZXF1ZXN0Lg0KPiArICovDQo+
+ICtzdGF0aWMgdm9pZCBkZWFkbGluZV93dW5sb2NrX3pvbmUoc3RydWN0IGRlYWRsaW5lX2RhdGEg
+KmRkLA0KPiArCQkJCSAgc3RydWN0IHJlcXVlc3QgKnJxKQ0KPiArew0KPiArCXVuc2lnbmVkIGlu
+dCB6bm8gPSBibGtfcnFfem9uZV9ubyhycSk7DQo+ICsJdW5zaWduZWQgbG9uZyBmbGFnczsNCj4g
+Kw0KPiArCXNwaW5fbG9ja19pcnFzYXZlKCZkZC0+em9uZV9sb2NrLCBmbGFncyk7DQo+ICsNCj4g
+KwlXQVJOX09OX09OQ0UoIXRlc3RfYW5kX2NsZWFyX2JpdCh6bm8sIGRkLT56b25lc193bG9jaykp
+Ow0KPiArCWRlYWRsaW5lX2NsZWFyX3JlcXVlc3Rfem9uZV93bG9jayhycSk7DQo+ICsNCj4gKwlz
+cGluX3VubG9ja19pcnFyZXN0b3JlKCZkZC0+em9uZV9sb2NrLCBmbGFncyk7DQo+ICt9DQoNCldo
+eSBkb2VzIGRlYWRsaW5lX3d1bmxvY2tfem9uZSgpIHByb3RlY3QgbW9kaWZpY2F0aW9ucyB3aXRo
+IGRkLT56b25lX2xvY2sgYnV0DQpkZWFkbGluZV93bG9ja196b25lKCkgbm90PyBJZiB0aGlzIGNv
+ZGUgaXMgY29ycmVjdCwgcGxlYXNlIGFkZCBhDQpsb2NrZGVwX2Fzc2VydF9oZWxkKCkgc3RhdGVt
+ZW50IGluIHRoZSBmaXJzdCBmdW5jdGlvbi4NCg0KPiArLyoNCj4gKyAqIFRlc3QgdGhlIHdyaXRl
+IGxvY2sgc3RhdGUgb2YgdGhlIHRhcmdldCB6b25lIG9mIGEgd3JpdGUgcmVxdWVzdC4NCj4gKyAq
+Lw0KPiArc3RhdGljIGlubGluZSBib29sIGRlYWRsaW5lX3pvbmVfaXNfd2xvY2tlZChzdHJ1Y3Qg
+ZGVhZGxpbmVfZGF0YSAqZGQsDQo+ICsJCQkJCSAgICBzdHJ1Y3QgcmVxdWVzdCAqcnEpDQo+ICt7
+DQo+ICsJdW5zaWduZWQgaW50IHpubyA9IGJsa19ycV96b25lX25vKHJxKTsNCj4gKw0KPiArCXJl
+dHVybiB0ZXN0X2JpdCh6bm8sIGRkLT56b25lc193bG9jayk7DQo+ICt9DQoNCkRvIHdlIHJlYWxs
+eSBuZWVkIHRoZSBsb2NhbCB2YXJpYWJsZSAnem5vJz8NCg0KPiArLyoNCj4gKyAqIEZvciB6b25l
+ZCBibG9jayBkZXZpY2VzLCB3cml0ZSB1bmxvY2sgdGhlIHRhcmdldCB6b25lIG9mDQo+ICsgKiBj
+b21wbGV0ZWQgd3JpdGUgcmVxdWVzdHMuDQo+ICsgKi8NCj4gK3N0YXRpYyB2b2lkIGRkX2NvbXBs
+ZXRlZF9yZXF1ZXN0KHN0cnVjdCByZXF1ZXN0ICpycSkNCj4gK3sNCj4gKw0KDQpQbGVhc2UgbGVh
+dmUgb3V0IHRoZSBibGFuayBsaW5lIGF0IHRoZSBzdGFydCBvZiB0aGlzIGZ1bmN0aW9uLg0KDQpU
+aGFua3MsDQoNCkJhcnQu
