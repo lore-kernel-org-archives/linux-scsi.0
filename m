@@ -1,32 +1,44 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 01/19] lpfc: Fix crash in pci hot plug situations
-Date: Mon, 25 Sep 2017 12:05:39 +0200
-Message-ID: <20170925100539.zev56gnhe2jdaod7@linux-x5ow.site>
-References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-2-jsmart2021@gmail.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V5 06/14] block: Add zoned block device information to
+ request queue
+Date: Mon, 25 Sep 2017 18:05:50 +0800
+Message-ID: <20170925100549.GA13400@ming.t460p>
+References: <20170925061454.5533-1-damien.lemoal@wdc.com>
+ <20170925061454.5533-7-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33265 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932627AbdIYKFl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:05:41 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:39562 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932627AbdIYKGA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:06:00 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-2-jsmart2021@gmail.com>
+In-Reply-To: <20170925061454.5533-7-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-This probably should be two patches and both CCed to stable.
+On Mon, Sep 25, 2017 at 03:14:46PM +0900, Damien Le Moal wrote:
+> Components relying only on the requeuest_queue structure for accessing
+> block devices (e.g. I/O schedulers) have a limited knowledged of the
+> device characteristics. In particular, the device capacity cannot be
+> easily discovered, which for a zoned block device also result in the
+> inability to easily know the number of zones of the device (the zone
+> size is indicated by the chunk_sectors field of the queue limits).
+> 
+> Introduce the nr_zones field to the request_queue sturcture to simplify
+> access to this information. Also, add the bitmap seq_zone_bitmap which
+> indicates which zones of the device are sequential zones (write
+> preferred or write required). These two fields are initialized by the
+> low level block device driver (sd.c for ZBC/ZAC disks). They are not
+> initialized by stacking drivers (device mappers) handling zoned block
+> devices (e.g. dm-linear).
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Byte,
-	Johannes
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Ming
