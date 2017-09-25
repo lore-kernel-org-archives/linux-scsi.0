@@ -1,57 +1,31 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
-Date: Mon, 25 Sep 2017 16:22:21 -0400
-Message-ID: <yq1o9pyfs02.fsf@oracle.com>
-References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-        <yq1lgmbauxt.fsf@oracle.com>
-        <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
-        <yq1a82gxwqm.fsf@oracle.com>
-        <CA+RiK67f59U5Ss_Z2=veBRODtBSp1-4VTbosLkHkgaxY9XA6hQ@mail.gmail.com>
-        <yq13787w1a3.fsf@oracle.com>
-        <CA+RiK667V9nDEr7RywED2_RoSq97m511HZTpGqPbij9-=vADvQ@mail.gmail.com>
-        <CA+RiK64sJZzTcTHODHj0monB2_0xKAkvjrC79rGv2mNUPO87-A@mail.gmail.com>
-        <yq1wp50rcqw.fsf@oracle.com>
-        <CA+RiK65GPnfqpQAuUWEs_NdW9crumkGparCqynN_dBti8BPXqQ@mail.gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V5 03/14] scsi: sd_zbc: Rearrange code
+Date: Mon, 25 Sep 2017 21:02:28 +0000
+Message-ID: <1506373347.2641.15.camel@wdc.com>
+References: <20170925061454.5533-1-damien.lemoal@wdc.com>
+         <20170925061454.5533-4-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+RiK65GPnfqpQAuUWEs_NdW9crumkGparCqynN_dBti8BPXqQ@mail.gmail.com>
-        (Suganath Prabu Subramani's message of "Mon, 18 Sep 2017 16:09:09
-        +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org, Jayant Daftardar <jayant.daftardar@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:54852 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934095AbdIYVCb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 17:02:31 -0400
+In-Reply-To: <20170925061454.5533-4-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <4BB455498874F342B79946FA1ED6B267@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 
-
-Hi Suganath,
-
-> Also, Making all PRP buffer may or may not need FW changes (assuming
-> it is possible.), we may end up into multiple FW version check.
-
-I don't understand how submitting an I/O that is guaranteed to honor the
-constraints of the target NVMe drive could possibly cause problems for
-the controller firmware. Quite the contrary, it's the best case
-scenario.
-
-> Since this is main IO path and current driver is following H/W
-> limitation, we should avoid any changes in this area until and unless
-> change is universal acceptable in FW (for all type of work load).
-
-This is why you need to involve the Linux community early in the design
-process and not when your implementation is complete.
-
-We could have told you right away what the correct approach would be for
-your Linux driver. And that said approach works for products from other
-vendors so we see no compelling reason to deviate from it.
-
-As evidenced by Broadcom disowning the legacy mpt and megaraid drivers,
-I will be stuck maintaining this mpt3sas code for a decade or more. Long
-after Broadcom has ended official support and moved on to different
-ASICs and programming interfaces. Consequently, I am very heavily biased
-towards solutions that leverage the shared interfaces provided by the
-kernel and that don't have special cases and workarounds inside the
-driver.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+T24gTW9uLCAyMDE3LTA5LTI1IGF0IDE1OjE0ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gUmVhcnJhbmdlIHNkX3piY19zZXR1cCgpIHRvIGluY2x1ZGUgdXNlXzE2X2Zvcl9ydyBhbmQg
+dXNlXzEwX2Zvcl9ydw0KPiBhc3NpZ25tZW50cyBhbmQgbW92ZSB0aGUgY2FsY3VsYXRpb24gb2Yg
+c2RrcC0+em9uZV9zaGlmdCB0b2dldGhlcg0KPiB3aXRoIHRoZSBhc3NpZ25tZW50IG9mIHRoZSB2
+ZXJpZmllZCB6b25lX2Jsb2NrcyB2YWx1ZSBpbg0KPiBzZF96YmNfY2hlY2tfem9uZV9zaXplKCku
+DQo+IA0KPiBObyBmdW5jdGlvbmFsIGNoYW5nZSBpcyBpbnRyb2R1Y2VkIGJ5IHRoaXMgcGF0Y2gu
+DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBEYW1pZW4gTGUgTW9hbCA8ZGFtaWVuLmxlbW9hbEB3ZGMu
+Y29tPg0KPiBSZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQoNClJl
+dmlld2VkLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPEJhcnQuVmFuQXNzY2hlQHdkYy5jb20+DQoNCg==
