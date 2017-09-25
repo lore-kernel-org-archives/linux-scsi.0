@@ -1,33 +1,57 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V3 1/2] scsi: sd: Fix sd_config_write_same()
-Date: Mon, 25 Sep 2017 15:39:51 -0400
-Message-ID: <yq1wp4mftyw.fsf@oracle.com>
-References: <20170905115536.2896-1-damien.lemoal@wdc.com>
-        <20170905115536.2896-2-damien.lemoal@wdc.com>
+Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
+Date: Mon, 25 Sep 2017 16:22:21 -0400
+Message-ID: <yq1o9pyfs02.fsf@oracle.com>
+References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        <yq1lgmbauxt.fsf@oracle.com>
+        <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
+        <yq1a82gxwqm.fsf@oracle.com>
+        <CA+RiK67f59U5Ss_Z2=veBRODtBSp1-4VTbosLkHkgaxY9XA6hQ@mail.gmail.com>
+        <yq13787w1a3.fsf@oracle.com>
+        <CA+RiK667V9nDEr7RywED2_RoSq97m511HZTpGqPbij9-=vADvQ@mail.gmail.com>
+        <CA+RiK64sJZzTcTHODHj0monB2_0xKAkvjrC79rGv2mNUPO87-A@mail.gmail.com>
+        <yq1wp50rcqw.fsf@oracle.com>
+        <CA+RiK65GPnfqpQAuUWEs_NdW9crumkGparCqynN_dBti8BPXqQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50720 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965176AbdIYTkE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 15:40:04 -0400
-In-Reply-To: <20170905115536.2896-2-damien.lemoal@wdc.com> (Damien Le Moal's
-        message of "Tue, 5 Sep 2017 20:55:35 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+RiK65GPnfqpQAuUWEs_NdW9crumkGparCqynN_dBti8BPXqQ@mail.gmail.com>
+        (Suganath Prabu Subramani's message of "Mon, 18 Sep 2017 16:09:09
+        +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org, Jayant Daftardar <jayant.daftardar@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
 
-Damien,
+Hi Suganath,
 
-> Reporting a maximum number of blocks that is not aligned on the device
-> physical size would cause a large write same request to be split into
-> physically unaligned chunks by __blkdev_issue_write_zeroes() and
-> __blkdev_issue_write_same(), even if the caller of these functions
-> took care to align its request to physical sectors.
+> Also, Making all PRP buffer may or may not need FW changes (assuming
+> it is possible.), we may end up into multiple FW version check.
 
-Applied to 4.15/scsi-queue. Thanks!
+I don't understand how submitting an I/O that is guaranteed to honor the
+constraints of the target NVMe drive could possibly cause problems for
+the controller firmware. Quite the contrary, it's the best case
+scenario.
+
+> Since this is main IO path and current driver is following H/W
+> limitation, we should avoid any changes in this area until and unless
+> change is universal acceptable in FW (for all type of work load).
+
+This is why you need to involve the Linux community early in the design
+process and not when your implementation is complete.
+
+We could have told you right away what the correct approach would be for
+your Linux driver. And that said approach works for products from other
+vendors so we see no compelling reason to deviate from it.
+
+As evidenced by Broadcom disowning the legacy mpt and megaraid drivers,
+I will be stuck maintaining this mpt3sas code for a decade or more. Long
+after Broadcom has ended official support and moved on to different
+ASICs and programming interfaces. Consequently, I am very heavily biased
+towards solutions that leverage the shared interfaces provided by the
+kernel and that don't have special cases and workarounds inside the
+driver.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
