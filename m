@@ -1,29 +1,30 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 12/19] lpfc: Fix oops if nvmet_fc_register_targetport
- fails
-Date: Mon, 25 Sep 2017 12:23:55 +0200
-Message-ID: <20170925102355.5icrudn6abkuo6sq@linux-x5ow.site>
+Subject: Re: [PATCH 13/19] lpfc: Disable NPIV support if NVME is enabled
+Date: Mon, 25 Sep 2017 12:26:08 +0200
+Message-ID: <20170925102608.llefluct2sedakre@linux-x5ow.site>
 References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-13-jsmart2021@gmail.com>
+ <20170922061741.12347-14-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34733 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34862 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753860AbdIYKX5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:23:57 -0400
+        id S933162AbdIYK0L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:26:11 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-13-jsmart2021@gmail.com>
+In-Reply-To: <20170922061741.12347-14-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-CC: stable?
+On Thu, Sep 21, 2017 at 11:17:35PM -0700, James Smart wrote:
+> Support for NPIV with NVME will be added in the near future.
 
-Anyways,
+Sounds like the future is bright,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
