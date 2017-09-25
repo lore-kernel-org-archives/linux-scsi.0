@@ -1,81 +1,131 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [RFC] apparently broken error recovery in vhost_scsi_iov_to_sgl()
-Date: Sun, 24 Sep 2017 23:36:33 +0100
-Message-ID: <20170924223633.GV32076@ZenIV.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH V5 01/14] scsi: sd_zbc: Move ZBC declarations to scsi_proto.h
+Date: Mon, 25 Sep 2017 15:14:41 +0900
+Message-ID: <20170925061454.5533-2-damien.lemoal@wdc.com>
+References: <20170925061454.5533-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:48108 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753122AbdIXWgf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2017 18:36:35 -0400
-Content-Disposition: inline
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:18498 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932272AbdIYGO5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 02:14:57 -0400
+In-Reply-To: <20170925061454.5533-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Suppose vhost_scsi_iov_to_sgl() got a two-iovec array, mapped
-e.g. 20 pages from the first one just fine and failed on the
-second.
+Move standard macro definitions for the zone types and zone conditions
+to scsi_proto.h together with the definitions related to the
+REPORT ZONES command. While at it, define all values in the enums to
+be clear.
 
-static int
-vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
-                      struct iov_iter *iter,
-                      struct scatterlist *sg, int sg_count)
-{
-        size_t off = iter->iov_offset;
-        int i, ret;
+Also remove unnecessary includes in sd_zbc.c.
 
-        for (i = 0; i < iter->nr_segs; i++) {
-                void __user *base = iter->iov[i].iov_base + off;
-                size_t len = iter->iov[i].iov_len - off;
+No functional change is introduced by this patch.
 
-                ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
-                if (ret < 0) {
-                        for (i = 0; i < sg_count; i++) {
-                                struct page *page = sg_page(&sg[i]);
-                                if (page)
-                                        put_page(page);
-                        }
-                        return ret;
-                }
-                sg += ret;
-                off = 0;
-        }
-        return 0;
-}
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/sd_zbc.c     | 24 ------------------------
+ include/scsi/scsi_proto.h | 45 ++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 34 insertions(+), 35 deletions(-)
 
-What are we trying to drop in the if (ret < 0) in there?  In the case
-above we step into it on the second pass through the loop.  The first
-20 entries of sg had been filled... and sg had been increased by 20,
-so whatever we find and feed to put_page(), it won't be those 20 pages.
-Moreover, the caller will reset cmd->tvc_{prot_,}sgl_count to zero,
-so vhost_scsi_release_cmd() won't find them either.
-
-Am I missing something subtle here, or should that thing be doing
-something like
-
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 046f6d280af5..e47c5bc3ddca 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -688,6 +688,7 @@ vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
- 		      struct scatterlist *sg, int sg_count)
- {
- 	size_t off = iter->iov_offset;
-+	struct scatterlist *p = sg;
- 	int i, ret;
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 8aa54779aac1..692c8cbc7ed8 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -28,32 +28,8 @@
  
- 	for (i = 0; i < iter->nr_segs; i++) {
-@@ -696,8 +697,8 @@ vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_dbg.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_driver.h>
+-#include <scsi/scsi_host.h>
+-#include <scsi/scsi_eh.h>
  
- 		ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
- 		if (ret < 0) {
--			for (i = 0; i < sg_count; i++) {
--				struct page *page = sg_page(&sg[i]);
-+			while (p < sg) {
-+				struct page *page = sg_page(p++);
- 				if (page)
- 					put_page(page);
- 			}
+ #include "sd.h"
+-#include "scsi_priv.h"
+-
+-enum zbc_zone_type {
+-	ZBC_ZONE_TYPE_CONV = 0x1,
+-	ZBC_ZONE_TYPE_SEQWRITE_REQ,
+-	ZBC_ZONE_TYPE_SEQWRITE_PREF,
+-	ZBC_ZONE_TYPE_RESERVED,
+-};
+-
+-enum zbc_zone_cond {
+-	ZBC_ZONE_COND_NO_WP,
+-	ZBC_ZONE_COND_EMPTY,
+-	ZBC_ZONE_COND_IMP_OPEN,
+-	ZBC_ZONE_COND_EXP_OPEN,
+-	ZBC_ZONE_COND_CLOSED,
+-	ZBC_ZONE_COND_READONLY = 0xd,
+-	ZBC_ZONE_COND_FULL,
+-	ZBC_ZONE_COND_OFFLINE,
+-};
+ 
+ /**
+  * Convert a zone descriptor to a zone struct.
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index 8c285d9a06d8..39130a9c05bf 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -301,19 +301,42 @@ struct scsi_lun {
+ 
+ /* Reporting options for REPORT ZONES */
+ enum zbc_zone_reporting_options {
+-	ZBC_ZONE_REPORTING_OPTION_ALL = 0,
+-	ZBC_ZONE_REPORTING_OPTION_EMPTY,
+-	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN,
+-	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN,
+-	ZBC_ZONE_REPORTING_OPTION_CLOSED,
+-	ZBC_ZONE_REPORTING_OPTION_FULL,
+-	ZBC_ZONE_REPORTING_OPTION_READONLY,
+-	ZBC_ZONE_REPORTING_OPTION_OFFLINE,
+-	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP = 0x10,
+-	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE,
+-	ZBC_ZONE_REPORTING_OPTION_NON_WP = 0x3f,
++	ZBC_ZONE_REPORTING_OPTION_ALL		= 0x00,
++	ZBC_ZONE_REPORTING_OPTION_EMPTY		= 0x01,
++	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN	= 0x02,
++	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN	= 0x03,
++	ZBC_ZONE_REPORTING_OPTION_CLOSED	= 0x04,
++	ZBC_ZONE_REPORTING_OPTION_FULL		= 0x05,
++	ZBC_ZONE_REPORTING_OPTION_READONLY	= 0x06,
++	ZBC_ZONE_REPORTING_OPTION_OFFLINE	= 0x07,
++	/* 0x08 to 0x0f are reserved */
++	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP	= 0x10,
++	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE	= 0x11,
++	/* 0x12 to 0x3e are reserved */
++	ZBC_ZONE_REPORTING_OPTION_NON_WP	= 0x3f,
+ };
+ 
+ #define ZBC_REPORT_ZONE_PARTIAL 0x80
+ 
++/* Zone types of REPORT ZONES zone descriptors */
++enum zbc_zone_type {
++	ZBC_ZONE_TYPE_CONV		= 0x1,
++	ZBC_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
++	ZBC_ZONE_TYPE_SEQWRITE_PREF	= 0x3,
++	/* 0x4 to 0xf are reserved */
++};
++
++/* Zone conditions of REPORT ZONES zone descriptors */
++enum zbc_zone_cond {
++	ZBC_ZONE_COND_NO_WP		= 0x0,
++	ZBC_ZONE_COND_EMPTY		= 0x1,
++	ZBC_ZONE_COND_IMP_OPEN		= 0x2,
++	ZBC_ZONE_COND_EXP_OPEN		= 0x3,
++	ZBC_ZONE_COND_CLOSED		= 0x4,
++	/* 0x5 to 0xc are reserved */
++	ZBC_ZONE_COND_READONLY		= 0xd,
++	ZBC_ZONE_COND_FULL		= 0xe,
++	ZBC_ZONE_COND_OFFLINE		= 0xf,
++};
++
+ #endif /* _SCSI_PROTO_H_ */
+-- 
+2.13.5
