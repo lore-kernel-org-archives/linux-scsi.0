@@ -1,20 +1,20 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 02/19] lpfc: Fix crash receiving ELS while detaching
- driver
-Date: Mon, 25 Sep 2017 12:07:20 +0200
-Message-ID: <20170925100720.frgpiidibu2bvrmd@linux-x5ow.site>
+Subject: Re: [PATCH 03/19] lpfc: Fix lpfc nvme host rejecting IO with Not
+ Ready message
+Date: Mon, 25 Sep 2017 12:08:52 +0200
+Message-ID: <20170925100852.3ra5vth2uc3usa57@linux-x5ow.site>
 References: <20170922061741.12347-1-jsmart2021@gmail.com>
- <20170922061741.12347-3-jsmart2021@gmail.com>
+ <20170922061741.12347-4-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33437 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33561 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932627AbdIYKHV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Sep 2017 06:07:21 -0400
+        id S933052AbdIYKIy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 06:08:54 -0400
 Content-Disposition: inline
-In-Reply-To: <20170922061741.12347-3-jsmart2021@gmail.com>
+In-Reply-To: <20170922061741.12347-4-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
@@ -22,8 +22,6 @@ Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James 
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
-But should probably go into stable as well.
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
