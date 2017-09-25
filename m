@@ -1,41 +1,49 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V5 06/14] block: Add zoned block device information to
- request queue
-Date: Mon, 25 Sep 2017 21:06:11 +0000
-Message-ID: <1506373570.2641.16.camel@wdc.com>
-References: <20170925061454.5533-1-damien.lemoal@wdc.com>
-         <20170925061454.5533-7-damien.lemoal@wdc.com>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: aacraid: Add a small delay after IOP reset
+Date: Mon, 25 Sep 2017 18:09:08 -0300
+Message-ID: <b15b69e2-0d41-56cd-2952-a214d7ad7973@linux.vnet.ibm.com>
+References: <20170919151156.29412-1-gpiccoli@linux.vnet.ibm.com>
+ <423FD6710FB8FB4F8728F93591889F9A5B8CD1FA@avsrvexchmbx2.microsemi.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:57094 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753950AbdIYVGO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2017 17:06:14 -0400
-In-Reply-To: <20170925061454.5533-7-damien.lemoal@wdc.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36994 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752028AbdIYVJi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Sep 2017 17:09:38 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8PL9ZAj104904
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Sep 2017 17:09:37 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2d77dr61q9-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Sep 2017 17:09:36 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Mon, 25 Sep 2017 17:09:15 -0400
+In-Reply-To: <423FD6710FB8FB4F8728F93591889F9A5B8CD1FA@avsrvexchmbx2.microsemi.net>
 Content-Language: en-US
-Content-ID: <BCA7D5CCA1E27C49AEE2A94EC048C8C4@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Dave Carroll <david.carroll@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, "dougmill@linux.vnet.ibm.com" <dougmill@linux.vnet.ibm.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, James.Bottomley@HansenPartnership.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-T24gTW9uLCAyMDE3LTA5LTI1IGF0IDE1OjE0ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gQ29tcG9uZW50cyByZWx5aW5nIG9ubHkgb24gdGhlIHJlcXVldWVzdF9xdWV1ZSBzdHJ1Y3R1
-cmUgZm9yIGFjY2Vzc2luZw0KPiBibG9jayBkZXZpY2VzIChlLmcuIEkvTyBzY2hlZHVsZXJzKSBo
-YXZlIGEgbGltaXRlZCBrbm93bGVkZ2VkIG9mIHRoZQ0KPiBkZXZpY2UgY2hhcmFjdGVyaXN0aWNz
-LiBJbiBwYXJ0aWN1bGFyLCB0aGUgZGV2aWNlIGNhcGFjaXR5IGNhbm5vdCBiZQ0KPiBlYXNpbHkg
-ZGlzY292ZXJlZCwgd2hpY2ggZm9yIGEgem9uZWQgYmxvY2sgZGV2aWNlIGFsc28gcmVzdWx0IGlu
-IHRoZQ0KPiBpbmFiaWxpdHkgdG8gZWFzaWx5IGtub3cgdGhlIG51bWJlciBvZiB6b25lcyBvZiB0
-aGUgZGV2aWNlICh0aGUgem9uZQ0KPiBzaXplIGlzIGluZGljYXRlZCBieSB0aGUgY2h1bmtfc2Vj
-dG9ycyBmaWVsZCBvZiB0aGUgcXVldWUgbGltaXRzKS4NCj4gDQo+IEludHJvZHVjZSB0aGUgbnJf
-em9uZXMgZmllbGQgdG8gdGhlIHJlcXVlc3RfcXVldWUgc3R1cmN0dXJlIHRvIHNpbXBsaWZ5DQo+
-IGFjY2VzcyB0byB0aGlzIGluZm9ybWF0aW9uLiBBbHNvLCBhZGQgdGhlIGJpdG1hcCBzZXFfem9u
-ZV9iaXRtYXAgd2hpY2gNCj4gaW5kaWNhdGVzIHdoaWNoIHpvbmVzIG9mIHRoZSBkZXZpY2UgYXJl
-IHNlcXVlbnRpYWwgem9uZXMgKHdyaXRlDQo+IHByZWZlcnJlZCBvciB3cml0ZSByZXF1aXJlZCku
-IFRoZXNlIHR3byBmaWVsZHMgYXJlIGluaXRpYWxpemVkIGJ5IHRoZQ0KPiBsb3cgbGV2ZWwgYmxv
-Y2sgZGV2aWNlIGRyaXZlciAoc2QuYyBmb3IgWkJDL1pBQyBkaXNrcykuIFRoZXkgYXJlIG5vdA0K
-PiBpbml0aWFsaXplZCBieSBzdGFja2luZyBkcml2ZXJzIChkZXZpY2UgbWFwcGVycykgaGFuZGxp
-bmcgem9uZWQgYmxvY2sNCj4gZGV2aWNlcyAoZS5nLiBkbS1saW5lYXIpLg0KDQpSZXZpZXdlZC1i
-eTogQmFydCBWYW4gQXNzY2hlIDxCYXJ0LlZhbkFzc2NoZUB3ZGMuY29tPg0KDQo=
+On 09/21/2017 01:19 PM, Dave Carroll wrote:
+>> [...]
+>> ---
+> Acked-by: Dave Carroll <david.carroll@microsemi.com>
+> 
+
+Thanks Dave!
+
+James/Martin, am I expected to send a v2 with some change? Perhaps with
+Dave's ack?
+Sorry to annoy, thanks in advance for any advice!
+
+Cheers,
+
+
+Guilherme
