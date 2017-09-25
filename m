@@ -1,15 +1,15 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V4 02/16] scsi: sd_zbc: Fix comments and indentation
-Date: Mon, 25 Sep 2017 11:14:41 +0200
-Message-ID: <20170925091440.xihyhq7fq5wdk2pc@linux-x5ow.site>
+Subject: Re: [PATCH V4 03/16] scsi: sd_zbc: Rearrange code
+Date: Mon, 25 Sep 2017 11:17:02 +0200
+Message-ID: <20170925091702.jyx6zov2zau27p5v@linux-x5ow.site>
 References: <20170924070247.25560-1-damien.lemoal@wdc.com>
- <20170924070247.25560-3-damien.lemoal@wdc.com>
+ <20170924070247.25560-4-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170924070247.25560-3-damien.lemoal@wdc.com>
+In-Reply-To: <20170924070247.25560-4-damien.lemoal@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Damien Le Moal <damien.lemoal@wdc.com>
 Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
