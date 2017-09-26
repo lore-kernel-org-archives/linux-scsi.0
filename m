@@ -1,94 +1,89 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: qla2xxx UBSAN warning in 4.14-rc1
-Date: Tue, 26 Sep 2017 21:36:35 +0000
-Message-ID: <79E0683A-42C7-4784-9B6A-1F7C120CA69A@cavium.com>
-References: <alpine.LRH.2.21.1709181335450.628@math.ut.ee>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: add ufs a command complete time stamp
+Date: Tue, 26 Sep 2017 14:39:06 -0700
+Message-ID: <f65f3ffadb595304b6610fa24ed9ada4@codeaurora.org>
+References: <20170920103040.20613-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:38546
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966606AbdIZVgh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Sep 2017 17:36:37 -0400
-In-Reply-To: <alpine.LRH.2.21.1709181335450.628@math.ut.ee>
-Content-Language: en-US
-Content-ID: <AE6A0D82EEA92B45A1E1BB0A8508C712@namprd07.prod.outlook.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48972 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031033AbdIZVjK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2017 17:39:10 -0400
+In-Reply-To: <20170920103040.20613-1-zangleigang@hisilicon.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Zang Leigang <zangleigang@hisilicon.com>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-DQo+IE9uIFNlcCAxOCwgMjAxNywgYXQgMzo0OSBBTSwgTWVlbGlzIFJvb3MgPG1yb29zQGxpbnV4
-LmVlPiB3cm90ZToNCj4gDQo+IEhlbGxvLCBJIGRlY2lkZWQgdG8gd2lkZW4gdGhlIGNvdmVyYWdl
-IG9mIG15IGtlcm5lbCB0ZXN0YmVkIGFuZCBwdXQgc29tZSANCj4gRkMgY2FyZHMgaW50byBzZXJ2
-ZXJzLiBUaGlzIG9uZSBpcyBhIFBDSS1YIFFMQTIzNDAgaW4gSFAgUHJvbGlhbnQgREwgMzgwIA0K
-PiBHNCAoZmlyc3QgNjQtYml0IGdlbmVyYXRpb24gb2YgUHJvbGlhbnRzKS4gSSBnb3QgYSBVQlNB
-TiB3YXJuaW5nIGZyb20gDQo+IHFsYTJ4eHggYmVmb3JlIHByb2JpbmcgZm9yIHRoZSBmaXJtd2Fy
-ZS4NCj4gDQo+IFRoaXMgaXMgcmVwcm9kdWNpYmxlIHdpdGggb3Igd2l0aG91dCBmaXJtd2FyZSBi
-ZWluZyBhdmFpbGFibGUuDQo+IA0KPiBbICAgIDMuOTA1NTcwXSBxbGEyeHh4IFswMDAwOjAwOjAw
-LjBdLTAwMDU6IDogUUxvZ2ljIEZpYnJlIENoYW5uZWwgSEJBIERyaXZlcjogMTAuMDAuMDAuMDEt
-ay4NCj4gWyAgICAzLjkwNTk3N10gcWxhMnh4eCAwMDAwOjA2OjAyLjA6IFBDSSBJUlEgNzggLT4g
-cmVyb3V0ZWQgdG8gbGVnYWN5IElSUSAxOA0KPiBbICAgIDMuOTA2MTcyXSBxbGEyeHh4IFswMDAw
-OjA2OjAyLjBdLTAwMWQ6IDogRm91bmQgYW4gSVNQMjMxMiBpcnEgMTggaW9iYXNlIDB4ZmZmZmM5
-MDAwMDEzOTAwMC4NCj4gWy4uLl0NCj4gWyAgICA0LjE4MDExN10gPT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT0NCj4gWyAgICA0LjE4MDMwMF0gVUJTQU46IFVuZGVmaW5lZCBiZWhhdmlvdXIgaW4gZHJp
-dmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jOjI3NToxNA0KPiBbICAgIDQuMTgwNDY0XSBzaGlm
-dCBleHBvbmVudCAzMiBpcyB0b28gbGFyZ2UgZm9yIDMyLWJpdCB0eXBlICdpbnQnDQo+IFsgICAg
-NC4xODA1NzZdIENQVTogMCBQSUQ6IDEzOCBDb21tOiBzeXN0ZW1kLXVkZXZkIE5vdCB0YWludGVk
-IDQuMTQuMC1yYzEtMDAwMDktZzA2NjZmNTYwYjcxYiAjMjcNCj4gWyAgICA0LjE4MDc0MV0gSGFy
-ZHdhcmUgbmFtZTogSFAgUHJvTGlhbnQgREwzODAgRzQsIEJJT1MgUDUxIDA3LzE5LzIwMDcNCj4g
-WyAgICA0LjE4MDg0OV0gQ2FsbCBUcmFjZToNCj4gWyAgICA0LjE4MDk2MV0gIGR1bXBfc3RhY2sr
-MHg0ZS8weDZjDQo+IFsgICAgNC4xODEwNzJdICB1YnNhbl9lcGlsb2d1ZSsweGQvMHgzYg0KPiBb
-ICAgIDQuMTgxMTc5XSAgX191YnNhbl9oYW5kbGVfc2hpZnRfb3V0X29mX2JvdW5kcysweDExMi8w
-eDE0Yw0KPiBbICAgIDQuMTgxMjkwXSAgPyB0cnlfdG9fZGVsX3RpbWVyX3N5bmMrMHg0NC8weDY4
-DQo+IFsgICAgNC4xODE0NDBdICBxbGEyeDAwX21ieF9jb21wbGV0aW9uKzB4MWM1LzB4MjVkIFtx
-bGEyeHh4XQ0KPiBbICAgIDQuMTgyNjgzXSAgcWxhMjMwMF9pbnRyX2hhbmRsZXIrMHgxZWEvMHgz
-YmIgW3FsYTJ4eHhdDQo+IFsgICAgNC4xODI4MjddICBxbGEyeDAwX21haWxib3hfY29tbWFuZCsw
-eDc3Yi8weDEzOWEgW3FsYTJ4eHhdDQo+IFsgICAgNC4xODI5MzVdICA/IF9fY29uc3RfdWRlbGF5
-KzB4M2MvMHgzZQ0KPiBbICAgIDQuMTgzMDczXSAgcWxhMngwMF9tYnhfcmVnX3Rlc3QrMHg4My8w
-eDExNCBbcWxhMnh4eF0NCj4gWyAgICA0LjE4MzIxM10gID8gcWxhMngwMF9yZWFkX252cmFtX2Rh
-dGErMHg1Yy8weGUxIFtxbGEyeHh4XQ0KPiBbICAgIDQuMTgzMzQ5XSAgcWxhMngwMF9jaGlwX2Rp
-YWcrMHgzNTQvMHg0NWYgW3FsYTJ4eHhdDQo+IFsgICAgNC4xODM0ODldICA/IHFsYTI1eHhfcmVh
-ZF9vcHRyb21fZGF0YSsweDQwMS8weDQwMSBbcWxhMnh4eF0NCj4gWyAgICA0LjE4MzYyOF0gIHFs
-YTJ4MDBfaW5pdGlhbGl6ZV9hZGFwdGVyKzB4MmMyLzB4YTRlIFtxbGEyeHh4XQ0KPiBbICAgIDQu
-MTgzNzY3XSAgcWxhMngwMF9wcm9iZV9vbmUrMHgxNjgxLzB4MzkyZSBbcWxhMnh4eF0NCj4gWyAg
-ICA0LjE4Mzg4M10gID8ga2VybmZzX2FkZF9vbmUrMHgxMWMvMHgxY2ENCj4gWyAgICA0LjE4Mzk5
-MF0gIHBjaV9kZXZpY2VfcHJvYmUrMHgxMGIvMHgxZjENCj4gWyAgICA0LjE4NDEwMl0gIGRyaXZl
-cl9wcm9iZV9kZXZpY2UrMHgyMWYvMHgzYTQNCj4gWyAgICA0LjE4NDIxMF0gIF9fZHJpdmVyX2F0
-dGFjaCsweGE5LzB4ZTENCj4gWyAgICA0LjE4NDMxN10gID8gZHJpdmVyX3Byb2JlX2RldmljZSsw
-eDNhNC8weDNhNA0KPiBbICAgIDQuMTg0NDI0XSAgYnVzX2Zvcl9lYWNoX2RldisweDZlLzB4YjUN
-Cj4gWyAgICA0LjE4NDUzMF0gIGRyaXZlcl9hdHRhY2grMHgyMi8weDNjDQo+IFsgICAgNC4xODQ2
-MzhdICBidXNfYWRkX2RyaXZlcisweDFkMS8weDJhZQ0KPiBbICAgIDQuMTg0NzQ1XSAgZHJpdmVy
-X3JlZ2lzdGVyKzB4NzgvMHgxMzANCj4gWyAgICA0LjE4NDg1MV0gIF9fcGNpX3JlZ2lzdGVyX2Ry
-aXZlcisweDc1LzB4YTgNCj4gWyAgICA0LjE4NDk1M10gID8gMHhmZmZmZmZmZmEwMjI3MDAwDQo+
-IFsgICAgNC4xODUwOTldICBxbGEyeDAwX21vZHVsZV9pbml0KzB4MjFiLzB4MjY3IFtxbGEyeHh4
-XQ0KPiBbICAgIDQuMTg1MjExXSAgZG9fb25lX2luaXRjYWxsKzB4NWEvMHgxZTINCj4gWyAgICA0
-LjE4NTMyM10gID8ga2ZyZWUrMHgxNjQvMHgyN2ENCj4gWyAgICA0LjE4NTQzNV0gIGRvX2luaXRf
-bW9kdWxlKzB4OWQvMHgyODUNCj4gWyAgICA0LjE4NTU0NV0gIGxvYWRfbW9kdWxlKzB4MjBkYi8w
-eDM4ZTMNCj4gWyAgICA0LjE4NTY1NF0gID8gZGlzYWJsZV9yb19ueCsweDhmLzB4OGYNCj4gWyAg
-ICA0LjE4NTc2NV0gID8ga2VybmVsX3JlYWQrMHg2MC8weGU1DQo+IFsgICAgNC4xODU4NzVdICA/
-IGtlcm5lbF9yZWFkX2ZpbGVfZnJvbV9mZCsweDQ0LzB4NmQNCj4gWyAgICA0LjE4NTk4OF0gIFNZ
-U0NfZmluaXRfbW9kdWxlKzB4YTgvMHhiYw0KPiBbICAgIDQuMTg2MTA0XSAgU3lTX2Zpbml0X21v
-ZHVsZSsweDkvMHhiDQo+IFsgICAgNC4xODYyMTZdICBkb19zeXNjYWxsXzY0KzB4NzcvMHgyNzEN
-Cj4gWyAgICA0LjE4NjMzMV0gIGVudHJ5X1NZU0NBTEw2NF9zbG93X3BhdGgrMHgyNS8weDI1DQo+
-IFsgICAgNC4xODY0NDRdIFJJUDogMDAzMzoweDdmMjllNjc4MzIxOQ0KPiBbICAgIDQuMTg2NTUy
-XSBSU1A6IDAwMmI6MDAwMDdmZmM4Y2I3Yzg1OCBFRkxBR1M6IDAwMDAwMjQ2IE9SSUdfUkFYOiAw
-MDAwMDAwMDAwMDAwMTM5DQo+IFsgICAgNC4xODY3MjNdIFJBWDogZmZmZmZmZmZmZmZmZmZkYSBS
-Qlg6IDAwMDA1NjFkMTg2NjBiZDAgUkNYOiAwMDAwN2YyOWU2NzgzMjE5DQo+IFsgICAgNC4xODY4
-MzddIFJEWDogMDAwMDAwMDAwMDAwMDAwMCBSU0k6IDAwMDA3ZjI5ZTY0OTkyZDUgUkRJOiAwMDAw
-MDAwMDAwMDAwMDA3DQo+IFsgICAgNC4xODY5NDRdIFJCUDogMDAwMDdmMjllNjQ5OTJkNSBSMDg6
-IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwN2ZmYzhjYjdjZGQwDQo+IFsgICAgNC4xODcwNTVd
-IFIxMDogMDAwMDAwMDAwMDAwMDAwNyBSMTE6IDAwMDAwMDAwMDAwMDAyNDYgUjEyOiAwMDAwMDAw
-MDAwMDAwMDAwDQo+IFsgICAgNC4xODcxNzBdIFIxMzogMDAwMDU2MWQxODY2NjE0MCBSMTQ6IDAw
-MDAwMDAwMDAwMjAwMDAgUjE1OiAwMDAwN2ZmYzhjYjdjOTcwDQo+IFsgICAgNC4xODcyODRdID09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09DQo+IFsuLi5dDQo+IFsgICAgNC40ODkwNjBdIHNjc2kgaG9z
-dDQ6IHFsYTJ4eHgNCj4gWyAgICA0LjQ4OTg3NV0gcWxhMnh4eCBbMDAwMDowNjowMi4wXS0wMGZi
-OjQ6IFFMb2dpYyBRTEEyMzQwIC0gLg0KPiBbICAgIDQuNDg5OTc2XSBxbGEyeHh4IFswMDAwOjA2
-OjAyLjBdLTAwZmM6NDogSVNQMjMxMjogUENJLVggKDEwMCBNSHopIEAgMDAwMDowNjowMi4wIGhk
-bWErIGhvc3QjPTQgZnc9My4wMy4yOCBJUFguDQo+IA0KPiANCj4gDQo+IC0tIA0KPiBNZWVsaXMg
-Um9vcyAobXJvb3NAbGludXguZWUpDQoNCndl4oCZbGwgdGFrZSBhIGxvb2sgYXQgdGhpcw0KDQpU
-aGFua3MsDQotIEhpbWFuc2h1DQoNCg==
+On 2017-09-20 03:30, Zang Leigang wrote:
+> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 794a4600e952..2984f33095be 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -385,6 +385,8 @@ void ufshcd_print_trs(struct ufs_hba *hba,
+> unsigned long bitmap, bool pr_prdt)
+> 
+>  		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
+>  				tag, ktime_to_us(lrbp->issue_time_stamp));
+> +		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
+> +				tag, ktime_to_us(lrbp->complete_time_stamp));
+>  		dev_err(hba->dev,
+>  			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+>  			tag, (u64)lrbp->utrd_dma_addr);
+> @@ -1746,6 +1748,7 @@ static inline
+>  void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+>  {
+>  	hba->lrb[task_tag].issue_time_stamp = ktime_get();
+> +	hba->lrb[task_tag].complete_time_stamp.tv64 = 0UL;
+
+can we use ktime_set(0, 0)?
+complete_time_stamp = ktime_set(0, 0);
+
+
+>  	ufshcd_clk_scaling_start_busy(hba);
+>  	__set_bit(task_tag, &hba->outstanding_reqs);
+>  	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> @@ -4627,6 +4630,8 @@ static void __ufshcd_transfer_req_compl(struct
+> ufs_hba *hba,
+>  		}
+>  		if (ufshcd_is_clkscaling_supported(hba))
+>  			hba->clk_scaling.active_reqs--;
+> +
+> +		lrbp->complete_time_stamp = ktime_get();
+>  	}
+> 
+>  	/* clear corresponding bits of completed commands */
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index cdc8bd05f7df..67a8f8ef1b06 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -166,6 +166,7 @@ struct ufs_pm_lvl_states {
+>   * @lun: LUN of the command
+>   * @intr_cmd: Interrupt command (doesn't participate in interrupt 
+> aggregation)
+>   * @issue_time_stamp: time stamp for debug purposes
+> + * @complete_time_stamp: time stamp for statistics
+>   * @req_abort_skip: skip request abort task flag
+>   */
+>  struct ufshcd_lrb {
+> @@ -189,6 +190,7 @@ struct ufshcd_lrb {
+>  	u8 lun; /* UPIU LUN id field is only 8-bit wide */
+>  	bool intr_cmd;
+>  	ktime_t issue_time_stamp;
+> +	ktime_t complete_time_stamp;
+
+Just a suggestion for short name, s/complete/compl ? or s/complete/cmpl 
+?
+
+> 
+>  	bool req_abort_skip;
+>  };
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
