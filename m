@@ -1,83 +1,94 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: continue to boot even with Boot LUN is
- disabled
-Date: Tue, 26 Sep 2017 14:33:00 -0700
-Message-ID: <0a25b85dc02e33bc2f33661ddb2a9629@codeaurora.org>
-References: <1506076307-8462-1-git-send-email-kehuanlin@pinecone.net>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: qla2xxx UBSAN warning in 4.14-rc1
+Date: Tue, 26 Sep 2017 21:36:35 +0000
+Message-ID: <79E0683A-42C7-4784-9B6A-1F7C120CA69A@cavium.com>
+References: <alpine.LRH.2.21.1709181335450.628@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39420 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967113AbdIZVdB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2017 17:33:01 -0400
-In-Reply-To: <1506076307-8462-1-git-send-email-kehuanlin@pinecone.net>
+Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:38546
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966606AbdIZVgh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Sep 2017 17:36:37 -0400
+In-Reply-To: <alpine.LRH.2.21.1709181335450.628@math.ut.ee>
+Content-Language: en-US
+Content-ID: <AE6A0D82EEA92B45A1E1BB0A8508C712@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Huanlin Ke <chgokhl@gmail.com>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kehuanlin@pinecone.net, linux-scsi-owner@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 2017-09-22 03:31, Huanlin Ke wrote:
-> Several configurable fields of the Device Descriptor and the Unit
-> Descriptors determine the Boot LUN status. The bBootEnable field and
-> the bBootLunEn attribute is set to zero by default, so the Boot LUN is
-> disabled by default.
-> 
-> At which point the scsi device add for Boot LUN will fail, but we can
-> continue to use the ufs device in fact. This failure shouldn't abort 
-> the
-> device boot.
-> 
-> Signed-off-by: Huanlin Ke <kehuanlin@pinecone.net>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 19 ++++++++-----------
->  1 file changed, 8 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 794a460..bff84be 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5998,25 +5998,22 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba 
-> *hba)
->  	}
->  	scsi_device_put(hba->sdev_ufs_device);
-> 
-> -	sdev_boot = __scsi_add_device(hba->host, 0, 0,
-> -		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
-> -	if (IS_ERR(sdev_boot)) {
-> -		ret = PTR_ERR(sdev_boot);
-> -		goto remove_sdev_ufs_device;
-> -	}
-> -	scsi_device_put(sdev_boot);
-> -
->  	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
->  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
->  	if (IS_ERR(sdev_rpmb)) {
->  		ret = PTR_ERR(sdev_rpmb);
-> -		goto remove_sdev_boot;
-> +		goto remove_sdev_ufs_device;
->  	}
->  	scsi_device_put(sdev_rpmb);
-> +
-> +	sdev_boot = __scsi_add_device(hba->host, 0, 0,
-> +		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
-> +	if (IS_ERR(sdev_boot))
-> +		dev_err(hba->dev, "%s: BOOT WLUN not found\n", __func__);
-> +	else
-> +		scsi_device_put(sdev_boot);
->  	goto out;
-> 
-> -remove_sdev_boot:
-> -	scsi_remove_device(sdev_boot);
->  remove_sdev_ufs_device:
->  	scsi_remove_device(hba->sdev_ufs_device);
->  out:
-
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+DQo+IE9uIFNlcCAxOCwgMjAxNywgYXQgMzo0OSBBTSwgTWVlbGlzIFJvb3MgPG1yb29zQGxpbnV4
+LmVlPiB3cm90ZToNCj4gDQo+IEhlbGxvLCBJIGRlY2lkZWQgdG8gd2lkZW4gdGhlIGNvdmVyYWdl
+IG9mIG15IGtlcm5lbCB0ZXN0YmVkIGFuZCBwdXQgc29tZSANCj4gRkMgY2FyZHMgaW50byBzZXJ2
+ZXJzLiBUaGlzIG9uZSBpcyBhIFBDSS1YIFFMQTIzNDAgaW4gSFAgUHJvbGlhbnQgREwgMzgwIA0K
+PiBHNCAoZmlyc3QgNjQtYml0IGdlbmVyYXRpb24gb2YgUHJvbGlhbnRzKS4gSSBnb3QgYSBVQlNB
+TiB3YXJuaW5nIGZyb20gDQo+IHFsYTJ4eHggYmVmb3JlIHByb2JpbmcgZm9yIHRoZSBmaXJtd2Fy
+ZS4NCj4gDQo+IFRoaXMgaXMgcmVwcm9kdWNpYmxlIHdpdGggb3Igd2l0aG91dCBmaXJtd2FyZSBi
+ZWluZyBhdmFpbGFibGUuDQo+IA0KPiBbICAgIDMuOTA1NTcwXSBxbGEyeHh4IFswMDAwOjAwOjAw
+LjBdLTAwMDU6IDogUUxvZ2ljIEZpYnJlIENoYW5uZWwgSEJBIERyaXZlcjogMTAuMDAuMDAuMDEt
+ay4NCj4gWyAgICAzLjkwNTk3N10gcWxhMnh4eCAwMDAwOjA2OjAyLjA6IFBDSSBJUlEgNzggLT4g
+cmVyb3V0ZWQgdG8gbGVnYWN5IElSUSAxOA0KPiBbICAgIDMuOTA2MTcyXSBxbGEyeHh4IFswMDAw
+OjA2OjAyLjBdLTAwMWQ6IDogRm91bmQgYW4gSVNQMjMxMiBpcnEgMTggaW9iYXNlIDB4ZmZmZmM5
+MDAwMDEzOTAwMC4NCj4gWy4uLl0NCj4gWyAgICA0LjE4MDExN10gPT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT0NCj4gWyAgICA0LjE4MDMwMF0gVUJTQU46IFVuZGVmaW5lZCBiZWhhdmlvdXIgaW4gZHJp
+dmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jOjI3NToxNA0KPiBbICAgIDQuMTgwNDY0XSBzaGlm
+dCBleHBvbmVudCAzMiBpcyB0b28gbGFyZ2UgZm9yIDMyLWJpdCB0eXBlICdpbnQnDQo+IFsgICAg
+NC4xODA1NzZdIENQVTogMCBQSUQ6IDEzOCBDb21tOiBzeXN0ZW1kLXVkZXZkIE5vdCB0YWludGVk
+IDQuMTQuMC1yYzEtMDAwMDktZzA2NjZmNTYwYjcxYiAjMjcNCj4gWyAgICA0LjE4MDc0MV0gSGFy
+ZHdhcmUgbmFtZTogSFAgUHJvTGlhbnQgREwzODAgRzQsIEJJT1MgUDUxIDA3LzE5LzIwMDcNCj4g
+WyAgICA0LjE4MDg0OV0gQ2FsbCBUcmFjZToNCj4gWyAgICA0LjE4MDk2MV0gIGR1bXBfc3RhY2sr
+MHg0ZS8weDZjDQo+IFsgICAgNC4xODEwNzJdICB1YnNhbl9lcGlsb2d1ZSsweGQvMHgzYg0KPiBb
+ICAgIDQuMTgxMTc5XSAgX191YnNhbl9oYW5kbGVfc2hpZnRfb3V0X29mX2JvdW5kcysweDExMi8w
+eDE0Yw0KPiBbICAgIDQuMTgxMjkwXSAgPyB0cnlfdG9fZGVsX3RpbWVyX3N5bmMrMHg0NC8weDY4
+DQo+IFsgICAgNC4xODE0NDBdICBxbGEyeDAwX21ieF9jb21wbGV0aW9uKzB4MWM1LzB4MjVkIFtx
+bGEyeHh4XQ0KPiBbICAgIDQuMTgyNjgzXSAgcWxhMjMwMF9pbnRyX2hhbmRsZXIrMHgxZWEvMHgz
+YmIgW3FsYTJ4eHhdDQo+IFsgICAgNC4xODI4MjddICBxbGEyeDAwX21haWxib3hfY29tbWFuZCsw
+eDc3Yi8weDEzOWEgW3FsYTJ4eHhdDQo+IFsgICAgNC4xODI5MzVdICA/IF9fY29uc3RfdWRlbGF5
+KzB4M2MvMHgzZQ0KPiBbICAgIDQuMTgzMDczXSAgcWxhMngwMF9tYnhfcmVnX3Rlc3QrMHg4My8w
+eDExNCBbcWxhMnh4eF0NCj4gWyAgICA0LjE4MzIxM10gID8gcWxhMngwMF9yZWFkX252cmFtX2Rh
+dGErMHg1Yy8weGUxIFtxbGEyeHh4XQ0KPiBbICAgIDQuMTgzMzQ5XSAgcWxhMngwMF9jaGlwX2Rp
+YWcrMHgzNTQvMHg0NWYgW3FsYTJ4eHhdDQo+IFsgICAgNC4xODM0ODldICA/IHFsYTI1eHhfcmVh
+ZF9vcHRyb21fZGF0YSsweDQwMS8weDQwMSBbcWxhMnh4eF0NCj4gWyAgICA0LjE4MzYyOF0gIHFs
+YTJ4MDBfaW5pdGlhbGl6ZV9hZGFwdGVyKzB4MmMyLzB4YTRlIFtxbGEyeHh4XQ0KPiBbICAgIDQu
+MTgzNzY3XSAgcWxhMngwMF9wcm9iZV9vbmUrMHgxNjgxLzB4MzkyZSBbcWxhMnh4eF0NCj4gWyAg
+ICA0LjE4Mzg4M10gID8ga2VybmZzX2FkZF9vbmUrMHgxMWMvMHgxY2ENCj4gWyAgICA0LjE4Mzk5
+MF0gIHBjaV9kZXZpY2VfcHJvYmUrMHgxMGIvMHgxZjENCj4gWyAgICA0LjE4NDEwMl0gIGRyaXZl
+cl9wcm9iZV9kZXZpY2UrMHgyMWYvMHgzYTQNCj4gWyAgICA0LjE4NDIxMF0gIF9fZHJpdmVyX2F0
+dGFjaCsweGE5LzB4ZTENCj4gWyAgICA0LjE4NDMxN10gID8gZHJpdmVyX3Byb2JlX2RldmljZSsw
+eDNhNC8weDNhNA0KPiBbICAgIDQuMTg0NDI0XSAgYnVzX2Zvcl9lYWNoX2RldisweDZlLzB4YjUN
+Cj4gWyAgICA0LjE4NDUzMF0gIGRyaXZlcl9hdHRhY2grMHgyMi8weDNjDQo+IFsgICAgNC4xODQ2
+MzhdICBidXNfYWRkX2RyaXZlcisweDFkMS8weDJhZQ0KPiBbICAgIDQuMTg0NzQ1XSAgZHJpdmVy
+X3JlZ2lzdGVyKzB4NzgvMHgxMzANCj4gWyAgICA0LjE4NDg1MV0gIF9fcGNpX3JlZ2lzdGVyX2Ry
+aXZlcisweDc1LzB4YTgNCj4gWyAgICA0LjE4NDk1M10gID8gMHhmZmZmZmZmZmEwMjI3MDAwDQo+
+IFsgICAgNC4xODUwOTldICBxbGEyeDAwX21vZHVsZV9pbml0KzB4MjFiLzB4MjY3IFtxbGEyeHh4
+XQ0KPiBbICAgIDQuMTg1MjExXSAgZG9fb25lX2luaXRjYWxsKzB4NWEvMHgxZTINCj4gWyAgICA0
+LjE4NTMyM10gID8ga2ZyZWUrMHgxNjQvMHgyN2ENCj4gWyAgICA0LjE4NTQzNV0gIGRvX2luaXRf
+bW9kdWxlKzB4OWQvMHgyODUNCj4gWyAgICA0LjE4NTU0NV0gIGxvYWRfbW9kdWxlKzB4MjBkYi8w
+eDM4ZTMNCj4gWyAgICA0LjE4NTY1NF0gID8gZGlzYWJsZV9yb19ueCsweDhmLzB4OGYNCj4gWyAg
+ICA0LjE4NTc2NV0gID8ga2VybmVsX3JlYWQrMHg2MC8weGU1DQo+IFsgICAgNC4xODU4NzVdICA/
+IGtlcm5lbF9yZWFkX2ZpbGVfZnJvbV9mZCsweDQ0LzB4NmQNCj4gWyAgICA0LjE4NTk4OF0gIFNZ
+U0NfZmluaXRfbW9kdWxlKzB4YTgvMHhiYw0KPiBbICAgIDQuMTg2MTA0XSAgU3lTX2Zpbml0X21v
+ZHVsZSsweDkvMHhiDQo+IFsgICAgNC4xODYyMTZdICBkb19zeXNjYWxsXzY0KzB4NzcvMHgyNzEN
+Cj4gWyAgICA0LjE4NjMzMV0gIGVudHJ5X1NZU0NBTEw2NF9zbG93X3BhdGgrMHgyNS8weDI1DQo+
+IFsgICAgNC4xODY0NDRdIFJJUDogMDAzMzoweDdmMjllNjc4MzIxOQ0KPiBbICAgIDQuMTg2NTUy
+XSBSU1A6IDAwMmI6MDAwMDdmZmM4Y2I3Yzg1OCBFRkxBR1M6IDAwMDAwMjQ2IE9SSUdfUkFYOiAw
+MDAwMDAwMDAwMDAwMTM5DQo+IFsgICAgNC4xODY3MjNdIFJBWDogZmZmZmZmZmZmZmZmZmZkYSBS
+Qlg6IDAwMDA1NjFkMTg2NjBiZDAgUkNYOiAwMDAwN2YyOWU2NzgzMjE5DQo+IFsgICAgNC4xODY4
+MzddIFJEWDogMDAwMDAwMDAwMDAwMDAwMCBSU0k6IDAwMDA3ZjI5ZTY0OTkyZDUgUkRJOiAwMDAw
+MDAwMDAwMDAwMDA3DQo+IFsgICAgNC4xODY5NDRdIFJCUDogMDAwMDdmMjllNjQ5OTJkNSBSMDg6
+IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwN2ZmYzhjYjdjZGQwDQo+IFsgICAgNC4xODcwNTVd
+IFIxMDogMDAwMDAwMDAwMDAwMDAwNyBSMTE6IDAwMDAwMDAwMDAwMDAyNDYgUjEyOiAwMDAwMDAw
+MDAwMDAwMDAwDQo+IFsgICAgNC4xODcxNzBdIFIxMzogMDAwMDU2MWQxODY2NjE0MCBSMTQ6IDAw
+MDAwMDAwMDAwMjAwMDAgUjE1OiAwMDAwN2ZmYzhjYjdjOTcwDQo+IFsgICAgNC4xODcyODRdID09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09DQo+IFsuLi5dDQo+IFsgICAgNC40ODkwNjBdIHNjc2kgaG9z
+dDQ6IHFsYTJ4eHgNCj4gWyAgICA0LjQ4OTg3NV0gcWxhMnh4eCBbMDAwMDowNjowMi4wXS0wMGZi
+OjQ6IFFMb2dpYyBRTEEyMzQwIC0gLg0KPiBbICAgIDQuNDg5OTc2XSBxbGEyeHh4IFswMDAwOjA2
+OjAyLjBdLTAwZmM6NDogSVNQMjMxMjogUENJLVggKDEwMCBNSHopIEAgMDAwMDowNjowMi4wIGhk
+bWErIGhvc3QjPTQgZnc9My4wMy4yOCBJUFguDQo+IA0KPiANCj4gDQo+IC0tIA0KPiBNZWVsaXMg
+Um9vcyAobXJvb3NAbGludXguZWUpDQoNCndl4oCZbGwgdGFrZSBhIGxvb2sgYXQgdGhpcw0KDQpU
+aGFua3MsDQotIEhpbWFuc2h1DQoNCg==
