@@ -1,43 +1,83 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: libsas: remove unused variable sas_ha
-Date: Tue, 26 Sep 2017 20:17:50 +0100
-Message-ID: <20170926191750.25444-1-colin.king@canonical.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: continue to boot even with Boot LUN is
+ disabled
+Date: Tue, 26 Sep 2017 14:33:00 -0700
+Message-ID: <0a25b85dc02e33bc2f33661ddb2a9629@codeaurora.org>
+References: <1506076307-8462-1-git-send-email-kehuanlin@pinecone.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:46627 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030327AbdIZTSA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2017 15:18:00 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:39420 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967113AbdIZVdB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2017 17:33:01 -0400
+In-Reply-To: <1506076307-8462-1-git-send-email-kehuanlin@pinecone.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Huanlin Ke <chgokhl@gmail.com>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kehuanlin@pinecone.net, linux-scsi-owner@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On 2017-09-22 03:31, Huanlin Ke wrote:
+> Several configurable fields of the Device Descriptor and the Unit
+> Descriptors determine the Boot LUN status. The bBootEnable field and
+> the bBootLunEn attribute is set to zero by default, so the Boot LUN is
+> disabled by default.
+> 
+> At which point the scsi device add for Boot LUN will fail, but we can
+> continue to use the ufs device in fact. This failure shouldn't abort 
+> the
+> device boot.
+> 
+> Signed-off-by: Huanlin Ke <kehuanlin@pinecone.net>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 19 ++++++++-----------
+>  1 file changed, 8 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 794a460..bff84be 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5998,25 +5998,22 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba 
+> *hba)
+>  	}
+>  	scsi_device_put(hba->sdev_ufs_device);
+> 
+> -	sdev_boot = __scsi_add_device(hba->host, 0, 0,
+> -		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
+> -	if (IS_ERR(sdev_boot)) {
+> -		ret = PTR_ERR(sdev_boot);
+> -		goto remove_sdev_ufs_device;
+> -	}
+> -	scsi_device_put(sdev_boot);
+> -
+>  	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
+>  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
+>  	if (IS_ERR(sdev_rpmb)) {
+>  		ret = PTR_ERR(sdev_rpmb);
+> -		goto remove_sdev_boot;
+> +		goto remove_sdev_ufs_device;
+>  	}
+>  	scsi_device_put(sdev_rpmb);
+> +
+> +	sdev_boot = __scsi_add_device(hba->host, 0, 0,
+> +		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
+> +	if (IS_ERR(sdev_boot))
+> +		dev_err(hba->dev, "%s: BOOT WLUN not found\n", __func__);
+> +	else
+> +		scsi_device_put(sdev_boot);
+>  	goto out;
+> 
+> -remove_sdev_boot:
+> -	scsi_remove_device(sdev_boot);
+>  remove_sdev_ufs_device:
+>  	scsi_remove_device(hba->sdev_ufs_device);
+>  out:
 
-Remove unused variable sas_ha to clean up build warning
-"unused variable ‘sas_ha’ [-Wunused-variable]"
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
-Fixes: 042ebd293b86 ("scsi: libsas: kill useless ha_event and do some cleanup")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 29d6cb39299c..9e2990268f00 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1046,7 +1046,6 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
- 
- static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- {
--	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
- 	struct device *dev = hisi_hba->dev;
- 	struct Scsi_Host *shost = hisi_hba->shost;
- 	u32 old_state, state;
 -- 
-2.14.1
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
