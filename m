@@ -1,88 +1,44 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: add ufs a command complete time stamp
-Date: Tue, 26 Sep 2017 14:39:06 -0700
-Message-ID: <f65f3ffadb595304b6610fa24ed9ada4@codeaurora.org>
-References: <20170920103040.20613-1-zangleigang@hisilicon.com>
+Subject: Re: [PATCH] scsi: ufs: fix a pclint warning
+Date: Tue, 26 Sep 2017 14:42:37 -0700
+Message-ID: <ae6a32f2cfd473fd29475717a9c6901f@codeaurora.org>
+References: <20170919085030.125435-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48972 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54018 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031033AbdIZVjK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2017 17:39:10 -0400
-In-Reply-To: <20170920103040.20613-1-zangleigang@hisilicon.com>
+        with ESMTP id S1032282AbdIZVmi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2017 17:42:38 -0400
+In-Reply-To: <20170919085030.125435-1-zangleigang@hisilicon.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Zang Leigang <zangleigang@hisilicon.com>
 Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-On 2017-09-20 03:30, Zang Leigang wrote:
+On 2017-09-19 01:50, Zang Leigang wrote:
 > Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 794a4600e952..2984f33095be 100644
+> index 794a4600e952..deb77535b8c9 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -385,6 +385,8 @@ void ufshcd_print_trs(struct ufs_hba *hba,
-> unsigned long bitmap, bool pr_prdt)
-> 
->  		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
->  				tag, ktime_to_us(lrbp->issue_time_stamp));
-> +		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
-> +				tag, ktime_to_us(lrbp->complete_time_stamp));
+> @@ -3586,7 +3586,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba
+> *hba, struct uic_command *cmd)
+>  	status = ufshcd_get_upmcrs(hba);
+>  	if (status != PWR_LOCAL) {
 >  		dev_err(hba->dev,
->  			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
->  			tag, (u64)lrbp->utrd_dma_addr);
-> @@ -1746,6 +1748,7 @@ static inline
->  void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
->  {
->  	hba->lrb[task_tag].issue_time_stamp = ktime_get();
-> +	hba->lrb[task_tag].complete_time_stamp.tv64 = 0UL;
-
-can we use ktime_set(0, 0)?
-complete_time_stamp = ktime_set(0, 0);
-
-
->  	ufshcd_clk_scaling_start_busy(hba);
->  	__set_bit(task_tag, &hba->outstanding_reqs);
->  	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> @@ -4627,6 +4630,8 @@ static void __ufshcd_transfer_req_compl(struct
-> ufs_hba *hba,
->  		}
->  		if (ufshcd_is_clkscaling_supported(hba))
->  			hba->clk_scaling.active_reqs--;
-> +
-> +		lrbp->complete_time_stamp = ktime_get();
+> -			"pwr ctrl cmd 0x%0x failed, host upmcrs:0x%x\n",
+> +			"pwr ctrl cmd 0x%x failed, host upmcrs:0x%x\n",
+>  			cmd->command, status);
+>  		ret = (status != PWR_OK) ? status : -1;
 >  	}
-> 
->  	/* clear corresponding bits of completed commands */
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index cdc8bd05f7df..67a8f8ef1b06 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -166,6 +166,7 @@ struct ufs_pm_lvl_states {
->   * @lun: LUN of the command
->   * @intr_cmd: Interrupt command (doesn't participate in interrupt 
-> aggregation)
->   * @issue_time_stamp: time stamp for debug purposes
-> + * @complete_time_stamp: time stamp for statistics
->   * @req_abort_skip: skip request abort task flag
->   */
->  struct ufshcd_lrb {
-> @@ -189,6 +190,7 @@ struct ufshcd_lrb {
->  	u8 lun; /* UPIU LUN id field is only 8-bit wide */
->  	bool intr_cmd;
->  	ktime_t issue_time_stamp;
-> +	ktime_t complete_time_stamp;
 
-Just a suggestion for short name, s/complete/compl ? or s/complete/cmpl 
-?
 
-> 
->  	bool req_abort_skip;
->  };
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
