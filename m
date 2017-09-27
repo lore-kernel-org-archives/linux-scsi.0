@@ -1,50 +1,47 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 2/3] smartpqi: cleanup raid map warning message
-Date: Wed, 27 Sep 2017 16:30:05 -0500
-Message-ID: <150654780575.11494.9545979297048993619.stgit@brunhilda>
+Subject: [PATCH 3/3] smartpqi: update driver version to 1.1.2-126
+Date: Wed, 27 Sep 2017 16:30:11 -0500
+Message-ID: <150654781171.11494.5262947088292549405.stgit@brunhilda>
 References: <150654770573.11494.168365142464423047.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0068.outbound.protection.outlook.com ([104.47.37.68]:19872
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0048.outbound.protection.outlook.com ([104.47.38.48]:49129
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751801AbdI0VaZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Sep 2017 17:30:25 -0400
+        id S1751801AbdI0Vaf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Sep 2017 17:30:35 -0400
 In-Reply-To: <150654770573.11494.168365142464423047.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microsemi.com>
-
-Fix a small cosmetic bug in a very rarely encountered
-error message that can occur when a LD has a corrupted
-raid map.
-
+Reviewed-by: Gerry Morong <gerry.morong@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 677b88e..be83d92 100644
+index be83d92..8fe9183 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1078,9 +1078,9 @@ static int pqi_validate_raid_map(struct pqi_ctrl_info *ctrl_info,
+@@ -40,11 +40,11 @@
+ #define BUILD_TIMESTAMP
+ #endif
  
- bad_raid_map:
- 	dev_warn(&ctrl_info->pci_dev->dev,
--		"scsi %d:%d:%d:%d %s\n",
--		ctrl_info->scsi_host->host_no,
--		device->bus, device->target, device->lun, err_msg);
-+		"logical device %08x%08x %s\n",
-+		*((u32 *)&device->scsi3addr),
-+		*((u32 *)&device->scsi3addr[4]), err_msg);
+-#define DRIVER_VERSION		"1.1.2-125"
++#define DRIVER_VERSION		"1.1.2-126"
+ #define DRIVER_MAJOR		1
+ #define DRIVER_MINOR		1
+ #define DRIVER_RELEASE		2
+-#define DRIVER_REVISION		125
++#define DRIVER_REVISION		126
  
- 	return -EINVAL;
- }
+ #define DRIVER_NAME		"Microsemi PQI Driver (v" \
+ 				DRIVER_VERSION BUILD_TIMESTAMP ")"
