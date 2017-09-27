@@ -1,57 +1,70 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] sd: Limit WRITE SAME / WRITE SAME(16) w/UNMAP length
- for certain devices
-Date: Wed, 27 Sep 2017 12:27:57 -0400
-Message-ID: <1506529677.4100.452.camel@localhost.localdomain>
+From: "Knight, Frederick" <Frederick.Knight@netapp.com>
+Subject: RE: [PATCH] sd: Limit WRITE SAME / WRITE SAME(16) w/UNMAP length for
+ certain devices
+Date: Wed, 27 Sep 2017 16:42:48 +0000
+Message-ID: <BN3PR0601MB1250947FF3659EEAC28C3BFBF1780@BN3PR0601MB1250.namprd06.prod.outlook.com>
 References: <1505837661-2280-1-git-send-email-emilne@redhat.com>
          <yq1wp4mcjvi.fsf@oracle.com>
-Reply-To: emilne@redhat.com
+ <1506529677.4100.452.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43674 "EHLO mx1.redhat.com"
+Received: from mx141.netapp.com ([216.240.21.12]:44942 "EHLO mx141.netapp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752201AbdI0Q17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Sep 2017 12:27:59 -0400
-In-Reply-To: <yq1wp4mcjvi.fsf@oracle.com>
+        id S1751798AbdI0Qmx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Sep 2017 12:42:53 -0400
+In-Reply-To: <1506529677.4100.452.camel@localhost.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Frederick.Knight@netapp.com
+To: "emilne@redhat.com" <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2017-09-25 at 21:46 -0400, Martin K. Petersen wrote:
-> Ewan,
-> 
-> > Some devices do not support a WRITE SAME / WRITE SAME(16) with the
-> > UNMAP bit set up to the length specified in the MAXIMUM WRITE SAME
-> > LENGTH field in the block limits VPD page (or, the field is zero,
-> > indicating there is no limit).  Limit the length by the MAXIMUM UNMAP
-> > LBA COUNT value.  Otherwise the command might be rejected.
-> 
-> From SBC4:
-> 
->   "A MAXIMUM UNMAP LBA COUNT field set to a non-zero value indicates the
->   maximum number of LBAs that may be unmapped by an UNMAP command"
-> 
-> Note that it explicitly states "UNMAP command" and not "unmap
-> operation".
-> 
->   "A MAXIMUM WRITE SAME LENGTH field set to a non-zero value indicates
->   the maximum number of contiguous logical blocks that the device server
->   allows to be unmapped or written in a single WRITE SAME command."
-> 
-> It says "unmapped or written" and "WRITE SAME command".
-> 
-> The spec is crystal clear. The device needs to be fixed. We can
-> blacklist older firmware revs.
-> 
-
-Yes, I know that is what SBC-4 says, and I agree that the devices
-are not conforming.  Unfortunately, I've come across 3 different
-arrays now from 3 different manufacturers that exhibit this behavior.
-
-cc: Fred Knight for his opinion on this (NetApp was not one of the
-arrays that I've run into, though).
-
--Ewan
+SSBhZ3JlZSB0aGF0IGl0IGlzIGRpc2FwcG9pbnRpbmcgdGhhdCBzbyBtYW55IHZlbmRvcnMgc2Vl
+bSB0byBoYXZlIHRyb3VibGUgcmVhZGluZyB0aGUgc3BlYy4gIFRoaXMgY2FzZSBpcyBwcmV0dHkg
+Y2xlYXIuDQoNClRoZSBiZXN0IHRoZSBUMTAgY29tbWl0dGVlIGNvdWxkIGRvIGlzIGFkZCBhIGJp
+dCB0byBpbmRpY2F0ZSB0aGF0IHRoZSBkZXZpY2UgdXNlcyB0aGUgbGVuZ3RoIGZyb20gTUFYSU1V
+TSBVTk1BUCBMQkEgQ09VTlQgZmllbGQgZm9yIHRoZSBsZW5ndGggb2YgdW5tYXBzIHZpYSB0aGUg
+V1JJVEUgU0FNRSB3L1VOTUFQPTEgcmF0aGVyIHRoYW4gdGhlIE1BWElNVU0gV1JJVEUgU0FNRSBM
+RU5HVEggZmllbGQuICBCVVQsIEknbGwgYmUgdmVyeSBjbGVhciB0aGF0IHRoZSBzZXR0aW5nIG9m
+IGFueSBzdWNoIG5ldyBiaXQgd2lsbCBiZSBiaXQ9MCBpcyBiYWNrd2FyZCBjb21wYXRpYmxlIGZv
+ciBDT01QTElBTlQgZGV2aWNlcywgYW5kIGJpdD0xIHdpbGwgYmUgdGhlIG5ldyBzZXR0aW5nIGZv
+ciAiYmFja3dhcmRzIiBkZXZpY2VzIC0gd2hpY2ggbWVhbnMgdGhleSB3b3VsZCBTVElMTCByZXF1
+aXJlIGEgZmlybXdhcmUgY2hhbmdlIHRvIHRlbGwgeW91IHRoZXkgYXJlIGJhY2t3YXJkcywgYW5k
+IHlvdSdkIFNUSUxMIG5lZWQgYSBibGFja2xpc3QgZm9yIHRoZWlyIG9sZGVyIHJldmlzaW9ucy4g
+IEFuZCB0aGlzIHdvdWxkIGp1c3QgbWFrZXMgdGhlIGhvc3RzIGpvYiBhbGwgdGhhdCBtdWNoIGhh
+cmRlciENCg0KT25jZSBhIGRldmljZSBpcyBicm9rZW4gKHZpb2xhdGVzIHRoZSBzcGVjKSwgdGhl
+cmUgaXMgbm90IHZlcnkgbXVjaCB3ZSBjYW4gZG8gaW4gdGhlIHNwZWMgdG8gZml4IGl0ICh0aGV5
+IGhhdmUgdG8gZml4IHRoZWlyIGJyb2tlbiBkZXZpY2UpLg0KDQoJRnJlZA0KDQotLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogRXdhbiBELiBNaWxuZSBbbWFpbHRvOmVtaWxuZUByZWRo
+YXQuY29tXSANClNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDI3LCAyMDE3IDEyOjI4IFBNDQpU
+bzogTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4NCkNjOiBs
+aW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgS25pZ2h0LCBGcmVkZXJpY2sgPEZyZWRlcmljay5L
+bmlnaHRAbmV0YXBwLmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0hdIHNkOiBMaW1pdCBXUklURSBT
+QU1FIC8gV1JJVEUgU0FNRSgxNikgdy9VTk1BUCBsZW5ndGggZm9yIGNlcnRhaW4gZGV2aWNlcw0K
+DQpPbiBNb24sIDIwMTctMDktMjUgYXQgMjE6NDYgLTA0MDAsIE1hcnRpbiBLLiBQZXRlcnNlbiB3
+cm90ZToNCj4gRXdhbiwNCj4gDQo+ID4gU29tZSBkZXZpY2VzIGRvIG5vdCBzdXBwb3J0IGEgV1JJ
+VEUgU0FNRSAvIFdSSVRFIFNBTUUoMTYpIHdpdGggdGhlDQo+ID4gVU5NQVAgYml0IHNldCB1cCB0
+byB0aGUgbGVuZ3RoIHNwZWNpZmllZCBpbiB0aGUgTUFYSU1VTSBXUklURSBTQU1FDQo+ID4gTEVO
+R1RIIGZpZWxkIGluIHRoZSBibG9jayBsaW1pdHMgVlBEIHBhZ2UgKG9yLCB0aGUgZmllbGQgaXMg
+emVybywNCj4gPiBpbmRpY2F0aW5nIHRoZXJlIGlzIG5vIGxpbWl0KS4gIExpbWl0IHRoZSBsZW5n
+dGggYnkgdGhlIE1BWElNVU0gVU5NQVANCj4gPiBMQkEgQ09VTlQgdmFsdWUuICBPdGhlcndpc2Ug
+dGhlIGNvbW1hbmQgbWlnaHQgYmUgcmVqZWN0ZWQuDQo+IA0KPiBGcm9tIFNCQzQ6DQo+IA0KPiAg
+ICJBIE1BWElNVU0gVU5NQVAgTEJBIENPVU5UIGZpZWxkIHNldCB0byBhIG5vbi16ZXJvIHZhbHVl
+IGluZGljYXRlcyB0aGUNCj4gICBtYXhpbXVtIG51bWJlciBvZiBMQkFzIHRoYXQgbWF5IGJlIHVu
+bWFwcGVkIGJ5IGFuIFVOTUFQIGNvbW1hbmQiDQo+IA0KPiBOb3RlIHRoYXQgaXQgZXhwbGljaXRs
+eSBzdGF0ZXMgIlVOTUFQIGNvbW1hbmQiIGFuZCBub3QgInVubWFwDQo+IG9wZXJhdGlvbiIuDQo+
+IA0KPiAgICJBIE1BWElNVU0gV1JJVEUgU0FNRSBMRU5HVEggZmllbGQgc2V0IHRvIGEgbm9uLXpl
+cm8gdmFsdWUgaW5kaWNhdGVzDQo+ICAgdGhlIG1heGltdW0gbnVtYmVyIG9mIGNvbnRpZ3VvdXMg
+bG9naWNhbCBibG9ja3MgdGhhdCB0aGUgZGV2aWNlIHNlcnZlcg0KPiAgIGFsbG93cyB0byBiZSB1
+bm1hcHBlZCBvciB3cml0dGVuIGluIGEgc2luZ2xlIFdSSVRFIFNBTUUgY29tbWFuZC4iDQo+IA0K
+PiBJdCBzYXlzICJ1bm1hcHBlZCBvciB3cml0dGVuIiBhbmQgIldSSVRFIFNBTUUgY29tbWFuZCIu
+DQo+IA0KPiBUaGUgc3BlYyBpcyBjcnlzdGFsIGNsZWFyLiBUaGUgZGV2aWNlIG5lZWRzIHRvIGJl
+IGZpeGVkLiBXZSBjYW4NCj4gYmxhY2tsaXN0IG9sZGVyIGZpcm13YXJlIHJldnMuDQo+IA0KDQpZ
+ZXMsIEkga25vdyB0aGF0IGlzIHdoYXQgU0JDLTQgc2F5cywgYW5kIEkgYWdyZWUgdGhhdCB0aGUg
+ZGV2aWNlcw0KYXJlIG5vdCBjb25mb3JtaW5nLiAgVW5mb3J0dW5hdGVseSwgSSd2ZSBjb21lIGFj
+cm9zcyAzIGRpZmZlcmVudA0KYXJyYXlzIG5vdyBmcm9tIDMgZGlmZmVyZW50IG1hbnVmYWN0dXJl
+cnMgdGhhdCBleGhpYml0IHRoaXMgYmVoYXZpb3IuDQoNCmNjOiBGcmVkIEtuaWdodCBmb3IgaGlz
+IG9waW5pb24gb24gdGhpcyAoTmV0QXBwIHdhcyBub3Qgb25lIG9mIHRoZQ0KYXJyYXlzIHRoYXQg
+SSd2ZSBydW4gaW50bywgdGhvdWdoKS4NCg0KLUV3YW4NCg0KDQoNCg0K
