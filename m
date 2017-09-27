@@ -1,108 +1,101 @@
-From: Zang Leigang <zangleigang@hisilicon.com>
-Subject: Re: [PATCH] scsi: ufs: add ufs a command complete time stamp
-Date: Wed, 27 Sep 2017 11:21:35 +0800
-Message-ID: <20170927032135.GA34139@hisi.inhuawei.com>
-References: <20170920103040.20613-1-zangleigang@hisilicon.com>
- <f65f3ffadb595304b6610fa24ed9ada4@codeaurora.org>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V6 0/6] block/scsi: safe SCSI quiescing
+Date: Wed, 27 Sep 2017 13:48:47 +0800
+Message-ID: <20170927054853.6647-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:7444 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031618AbdI0DVn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2017 23:21:43 -0400
-Content-Disposition: inline
-In-Reply-To: <f65f3ffadb595304b6610fa24ed9ada4@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-Hi, Subhash
+Hi,
 
-I send a new patch, forget tag a "PATCH V2", pls check.
+The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
 
-On Tue, Sep 26, 2017 at 02:39:06PM -0700, Subhash Jadavani wrote:
-> On 2017-09-20 03:30, Zang Leigang wrote:
-> >Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
-> >
-> >diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> >index 794a4600e952..2984f33095be 100644
-> >--- a/drivers/scsi/ufs/ufshcd.c
-> >+++ b/drivers/scsi/ufs/ufshcd.c
-> >@@ -385,6 +385,8 @@ void ufshcd_print_trs(struct ufs_hba *hba,
-> >unsigned long bitmap, bool pr_prdt)
-> >
-> > 		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
-> > 				tag, ktime_to_us(lrbp->issue_time_stamp));
-> >+		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
-> >+				tag, ktime_to_us(lrbp->complete_time_stamp));
-> > 		dev_err(hba->dev,
-> > 			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
-> > 			tag, (u64)lrbp->utrd_dma_addr);
-> >@@ -1746,6 +1748,7 @@ static inline
-> > void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
-> > {
-> > 	hba->lrb[task_tag].issue_time_stamp = ktime_get();
-> >+	hba->lrb[task_tag].complete_time_stamp.tv64 = 0UL;
-> 
-> can we use ktime_set(0, 0)?
-> complete_time_stamp = ktime_set(0, 0);
+Once SCSI device is put into QUIESCE, no new request except for
+RQF_PREEMPT can be dispatched to SCSI successfully, and
+scsi_device_quiesce() just simply waits for completion of I/Os
+dispatched to SCSI stack. It isn't enough at all.
 
-Sure.
+Because new request still can be comming, but all the allocated
+requests can't be dispatched successfully, so request pool can be
+consumed up easily.
 
-> 
-> 
-> > 	ufshcd_clk_scaling_start_busy(hba);
-> > 	__set_bit(task_tag, &hba->outstanding_reqs);
-> > 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> >@@ -4627,6 +4630,8 @@ static void __ufshcd_transfer_req_compl(struct
-> >ufs_hba *hba,
-> > 		}
-> > 		if (ufshcd_is_clkscaling_supported(hba))
-> > 			hba->clk_scaling.active_reqs--;
-> >+
-> >+		lrbp->complete_time_stamp = ktime_get();
-> > 	}
-> >
-> > 	/* clear corresponding bits of completed commands */
-> >diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> >index cdc8bd05f7df..67a8f8ef1b06 100644
-> >--- a/drivers/scsi/ufs/ufshcd.h
-> >+++ b/drivers/scsi/ufs/ufshcd.h
-> >@@ -166,6 +166,7 @@ struct ufs_pm_lvl_states {
-> >  * @lun: LUN of the command
-> >  * @intr_cmd: Interrupt command (doesn't participate in interrupt
-> >aggregation)
-> >  * @issue_time_stamp: time stamp for debug purposes
-> >+ * @complete_time_stamp: time stamp for statistics
-> >  * @req_abort_skip: skip request abort task flag
-> >  */
-> > struct ufshcd_lrb {
-> >@@ -189,6 +190,7 @@ struct ufshcd_lrb {
-> > 	u8 lun; /* UPIU LUN id field is only 8-bit wide */
-> > 	bool intr_cmd;
-> > 	ktime_t issue_time_stamp;
-> >+	ktime_t complete_time_stamp;
-> 
-> Just a suggestion for short name, s/complete/compl ? or s/complete/cmpl ?
+Then request with RQF_PREEMPT can't be allocated and wait forever,
+meantime scsi_device_resume() waits for completion of RQF_PREEMPT,
+then system hangs forever, such as during system suspend or
+sending SCSI domain alidation.
 
-Accept. compl look better.
+Both IO hang inside system suspend[1] or SCSI domain validation
+were reported before.
 
-> 
-> >
-> > 	bool req_abort_skip;
-> > };
-> 
-> -- 
-> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-> a Linux Foundation Collaborative Project
+This patch introduces preempt only mode, and solves the issue
+by allowing RQF_PREEMP only during SCSI quiesce.
+
+Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
+them all.
+
+V6:
+	- borrow Bart's idea of preempt only, with clean
+	  implementation(patch 5/patch 6)
+	- needn't any external driver's dependency, such as MD's
+	change
+
+V5:
+	- fix one tiny race by introducing blk_queue_enter_preempt_freeze()
+	given this change is small enough compared with V4, I added
+	tested-by directly
+
+V4:
+	- reorganize patch order to make it more reasonable
+	- support nested preempt freeze, as required by SCSI transport spi
+	- check preempt freezing in slow path of of blk_queue_enter()
+	- add "SCSI: transport_spi: resume a quiesced device"
+	- wake up freeze queue in setting dying for both blk-mq and legacy
+	- rename blk_mq_[freeze|unfreeze]_queue() in one patch
+	- rename .mq_freeze_wq and .mq_freeze_depth
+	- improve comment
+
+V3:
+	- introduce q->preempt_unfreezing to fix one bug of preempt freeze
+	- call blk_queue_enter_live() only when queue is preempt frozen
+	- cleanup a bit on the implementation of preempt freeze
+	- only patch 6 and 7 are changed
+
+V2:
+	- drop the 1st patch in V1 because percpu_ref_is_dying() is
+	enough as pointed by Tejun
+	- introduce preempt version of blk_[freeze|unfreeze]_queue
+	- sync between preempt freeze and normal freeze
+	- fix warning from percpu-refcount as reported by Oleksandr
+
+
+[1] https://marc.info/?t=150340250100013&r=3&w=2
+
+
+Thanks,
+Ming
+
+Ming Lei (6):
+  blk-mq: only run hw queues for blk-mq
+  block: tracking request allocation with q_usage_counter
+  block: pass flags to blk_queue_enter()
+  block: prepare for passing RQF_PREEMPT to request allocation
+  block: support PREEMPT_ONLY
+  SCSI: set block queue at preempt only when SCSI device is put into
+    quiesce
+
+ block/blk-core.c        | 62 ++++++++++++++++++++++++++++++++++++++-----------
+ block/blk-mq.c          | 14 ++++-------
+ block/blk-timeout.c     |  2 +-
+ drivers/scsi/scsi_lib.c | 25 +++++++++++++++++---
+ fs/block_dev.c          |  4 ++--
+ include/linux/blk-mq.h  |  7 +++---
+ include/linux/blkdev.h  | 27 ++++++++++++++++++---
+ 7 files changed, 106 insertions(+), 35 deletions(-)
 
 -- 
-Thanks,
-Zang Leigang
-
-________________________________________________________________________________
-本邮件及其附件含有华为公司的保密信息，仅限于发送给上面地址中列出的个人或群组。禁止任何其他人以任何形式使用（包括但不限于全部或部分地泄露、复制、或散发）本邮件中的信息。如果您错收了本邮件，请您立即电话或邮件通知发件人并删除本邮件！
-This e-mail and its attachments contain confidential information from HUAWEI, which is intended only for the person or entity whose address is listed above. Any use of the information contained herein in any way (including, but not limited to, total or partial disclosure, reproduction, or dissemination) by persons other than the intended recipient(s) is prohibited. If you receive this e-mail in error, please notify the sender by phone or email immediately and delete it!
+2.9.5
