@@ -1,81 +1,50 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V6 0/6] block/scsi: safe SCSI quiescing
-Date: Wed, 27 Sep 2017 16:52:41 +0800
-Message-ID: <20170927085235.GA14921@ming.t460p>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V6 6/6] SCSI: set block queue at preempt only when SCSI
+ device is put into quiesce
+Date: Wed, 27 Sep 2017 09:54:09 +0000
+Message-ID: <1506506047.2654.3.camel@wdc.com>
 References: <20170927054853.6647-1-ming.lei@redhat.com>
- <2609507.GN6GkCGlmM@merkaba>
- <20170927082751.GA7464@ming.t460p>
+         <20170927054853.6647-7-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45012 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751730AbdI0Iw5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Sep 2017 04:52:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20170927082751.GA7464@ming.t460p>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170927054853.6647-7-ming.lei@redhat.com>
+Content-Language: en-US
+Content-ID: <F28B43EA4161B947A473564CBC749879@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "cavery@redhat.com" <cavery@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Steigerwald <martin@lichtvoll.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>
 
-On Wed, Sep 27, 2017 at 04:27:51PM +0800, Ming Lei wrote:
-> On Wed, Sep 27, 2017 at 09:57:37AM +0200, Martin Steigerwald wrote:
-> > Hi Ming.
-> > 
-> > Ming Lei - 27.09.17, 13:48:
-> > > Hi,
-> > > 
-> > > The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
-> > > 
-> > > Once SCSI device is put into QUIESCE, no new request except for
-> > > RQF_PREEMPT can be dispatched to SCSI successfully, and
-> > > scsi_device_quiesce() just simply waits for completion of I/Os
-> > > dispatched to SCSI stack. It isn't enough at all.
-> > > 
-> > > Because new request still can be comming, but all the allocated
-> > > requests can't be dispatched successfully, so request pool can be
-> > > consumed up easily.
-> > > 
-> > > Then request with RQF_PREEMPT can't be allocated and wait forever,
-> > > meantime scsi_device_resume() waits for completion of RQF_PREEMPT,
-> > > then system hangs forever, such as during system suspend or
-> > > sending SCSI domain alidation.
-> > > 
-> > > Both IO hang inside system suspend[1] or SCSI domain validation
-> > > were reported before.
-> > > 
-> > > This patch introduces preempt only mode, and solves the issue
-> > > by allowing RQF_PREEMP only during SCSI quiesce.
-> > > 
-> > > Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
-> > > them all.
-> > > 
-> > > V6:
-> > > 	- borrow Bart's idea of preempt only, with clean
-> > > 	  implementation(patch 5/patch 6)
-> > > 	- needn't any external driver's dependency, such as MD's
-> > > 	change
-> > 
-> > Do you want me to test with v6 of the patch set? If so, it would be nice if 
-> > you´d make a v6 branch in your git repo.
-> 
-> Hi Martin,
-> 
-> I appreciate much if you may run V6 and provide your test result,
-> follows the branch:
-> 
-> https://github.com/ming1/linux/tree/blk_safe_scsi_quiesce_V6
-> 
-> https://github.com/ming1/linux.git #blk_safe_scsi_quiesce_V6
-> 
-
-Also follows the branch against V4.13:
-
-https://github.com/ming1/linux/tree/v4.13-safe-scsi-quiesce_V6_for_test
-
-https://github.com/ming1/linux.git #v4.13-safe-scsi-quiesce_V6_for_test
-
--- 
-Ming
+T24gV2VkLCAyMDE3LTA5LTI3IGF0IDEzOjQ4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
+LTI5MjgsMTIgKzI5MjksMjggQEAgc2NzaV9kZXZpY2VfcXVpZXNjZShzdHJ1Y3Qgc2NzaV9kZXZp
+Y2UgKnNkZXYpDQo+ICB7DQo+ICAJaW50IGVycjsNCj4gIA0KPiArCS8qDQo+ICsJICogU2ltcGx5
+IHF1aWVzaW5nIFNDU0kgZGV2aWNlIGlzbid0IHNhZmUsIGl0IGlzIGVhc3kNCj4gKwkgKiB0byB1
+c2UgdXAgcmVxdWVzdHMgYmVjYXVzZSBhbGwgdGhlc2UgYWxsb2NhdGVkIHJlcXVlc3RzDQo+ICsJ
+ICogY2FuJ3QgYmUgZGlzcGF0Y2hlZCB3aGVuIGRldmljZSBpcyBwdXQgaW4gUUlVRVNDRS4NCj4g
+KwkgKiBUaGVuIG5vIHJlcXVlc3QgY2FuIGJlIGFsbG9jYXRlZCBhbmQgd2UgbWF5IGhhbmcNCj4g
+KwkgKiBzb21ld2hlcmUsIHN1Y2ggYXMgc3lzdGVtIHN1c3BlbmQvcmVzdW1lLg0KPiArCSAqDQo+
+ICsJICogU28gd2Ugc2V0IGJsb2NrIHF1ZXVlIGluIHByZWVtcHQgb25seSBmaXJzdCwgbm8gbmV3
+DQo+ICsJICogbm9ybWFsIHJlcXVlc3QgY2FuIGVudGVyIHF1ZXVlIGFueSBtb3JlLCBhbmQgYWxs
+IHBlbmRpbmcNCj4gKwkgKiByZXF1ZXN0cyBhcmUgZHJhaW5lZCBvbmNlIGJsa19zZXRfcHJlZW1w
+dF9vbmx5KCkNCj4gKwkgKiByZXR1cm5zLiBPbmx5IFJRRl9QUkVFTVBUIGlzIGFsbG93ZWQgaW4g
+cHJlZW1wdCBvbmx5IG1vZGUuDQo+ICsJICovDQo+ICsJYmxrX3NldF9wcmVlbXB0X29ubHkoc2Rl
+di0+cmVxdWVzdF9xdWV1ZSwgdHJ1ZSk7DQo+ICsNCj4gIAltdXRleF9sb2NrKCZzZGV2LT5zdGF0
+ZV9tdXRleCk7DQo+ICAJZXJyID0gc2NzaV9kZXZpY2Vfc2V0X3N0YXRlKHNkZXYsIFNERVZfUVVJ
+RVNDRSk7DQo+ICAJbXV0ZXhfdW5sb2NrKCZzZGV2LT5zdGF0ZV9tdXRleCk7DQo+ICANCj4gLQlp
+ZiAoZXJyKQ0KPiArCWlmIChlcnIpIHsNCj4gKwkJYmxrX3NldF9wcmVlbXB0X29ubHkoc2Rldi0+
+cmVxdWVzdF9xdWV1ZSwgZmFsc2UpOw0KPiAgCQlyZXR1cm4gZXJyOw0KPiArCX0NCj4gIA0KPiAg
+CXNjc2lfcnVuX3F1ZXVlKHNkZXYtPnJlcXVlc3RfcXVldWUpOw0KPiAgCXdoaWxlIChhdG9taWNf
+cmVhZCgmc2Rldi0+ZGV2aWNlX2J1c3kpKSB7DQo+IEBAIC0yOTY0LDYgKzI5ODEsOCBAQCB2b2lk
+IHNjc2lfZGV2aWNlX3Jlc3VtZShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpDQo+ICAJICAgIHNj
+c2lfZGV2aWNlX3NldF9zdGF0ZShzZGV2LCBTREVWX1JVTk5JTkcpID09IDApDQo+ICAJCXNjc2lf
+cnVuX3F1ZXVlKHNkZXYtPnJlcXVlc3RfcXVldWUpOw0KPiAgCW11dGV4X3VubG9jaygmc2Rldi0+
+c3RhdGVfbXV0ZXgpOw0KPiArDQo+ICsJYmxrX3NldF9wcmVlbXB0X29ubHkoc2Rldi0+cmVxdWVz
+dF9xdWV1ZSwgZmFsc2UpOw0KDQpZb3Ugc2hvdWxkIGhhdmUgcmVhbGl6ZWQgeW91cnNlbGYgdGhh
+dCB0aGlzIGNvZGUgaXMgcmFjeS4gSWYgYSByZXF1ZXN0IGlzDQphbGxvY2F0ZWQganVzdCBiZWZv
+cmUgc2NzaV9kZXZpY2VfcXVpZXNjZSgpIGlzIGNhbGxlZCBhbmQgZGlzcGF0Y2hlZCBqdXN0DQph
+ZnRlciB0aGUgZGV2aWNlIHN0YXRlIGhhcyBiZWVuIGNoYW5nZWQgaW50byBTREVWX1FVSUVTQ0Ug
+dGhlbiB0aGUgbG9vcCB0aGF0DQp3YWl0cyBmb3IgYWxsIGNvbW1hbmRzIHRvIGNvbXBsZXRlIHdp
+bGwgd2FpdCBmb3JldmVyIGR1ZSB0byB0aGUgU0NTSSBwcmVwDQpmdW5jdGlvbiByZXR1cm5pbmcg
+QkxLUFJFUF9ERUZFUi4NCg0KQmFydC4=
