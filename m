@@ -1,70 +1,55 @@
-From: "Knight, Frederick" <Frederick.Knight@netapp.com>
-Subject: RE: [PATCH] sd: Limit WRITE SAME / WRITE SAME(16) w/UNMAP length for
- certain devices
-Date: Wed, 27 Sep 2017 16:42:48 +0000
-Message-ID: <BN3PR0601MB1250947FF3659EEAC28C3BFBF1780@BN3PR0601MB1250.namprd06.prod.outlook.com>
-References: <1505837661-2280-1-git-send-email-emilne@redhat.com>
-         <yq1wp4mcjvi.fsf@oracle.com>
- <1506529677.4100.452.camel@localhost.localdomain>
+From: weiping zhang <zhangweiping@didichuxing.com>
+Subject: [PATCH] scsi: sd: add check for changing allow_restart
+Date: Thu, 28 Sep 2017 00:53:18 +0800
+Message-ID: <20170927165313.GA36250@localhost.didichuxing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx141.netapp.com ([216.240.21.12]:44942 "EHLO mx141.netapp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751798AbdI0Qmx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Sep 2017 12:42:53 -0400
-In-Reply-To: <1506529677.4100.452.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from 22.17.110.36.static.bjtelecom.net ([36.110.17.22]:29247 "EHLO
+        BJEXCAS002.didichuxing.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751163AbdI0Qxb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Sep 2017 12:53:31 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-SSBhZ3JlZSB0aGF0IGl0IGlzIGRpc2FwcG9pbnRpbmcgdGhhdCBzbyBtYW55IHZlbmRvcnMgc2Vl
-bSB0byBoYXZlIHRyb3VibGUgcmVhZGluZyB0aGUgc3BlYy4gIFRoaXMgY2FzZSBpcyBwcmV0dHkg
-Y2xlYXIuDQoNClRoZSBiZXN0IHRoZSBUMTAgY29tbWl0dGVlIGNvdWxkIGRvIGlzIGFkZCBhIGJp
-dCB0byBpbmRpY2F0ZSB0aGF0IHRoZSBkZXZpY2UgdXNlcyB0aGUgbGVuZ3RoIGZyb20gTUFYSU1V
-TSBVTk1BUCBMQkEgQ09VTlQgZmllbGQgZm9yIHRoZSBsZW5ndGggb2YgdW5tYXBzIHZpYSB0aGUg
-V1JJVEUgU0FNRSB3L1VOTUFQPTEgcmF0aGVyIHRoYW4gdGhlIE1BWElNVU0gV1JJVEUgU0FNRSBM
-RU5HVEggZmllbGQuICBCVVQsIEknbGwgYmUgdmVyeSBjbGVhciB0aGF0IHRoZSBzZXR0aW5nIG9m
-IGFueSBzdWNoIG5ldyBiaXQgd2lsbCBiZSBiaXQ9MCBpcyBiYWNrd2FyZCBjb21wYXRpYmxlIGZv
-ciBDT01QTElBTlQgZGV2aWNlcywgYW5kIGJpdD0xIHdpbGwgYmUgdGhlIG5ldyBzZXR0aW5nIGZv
-ciAiYmFja3dhcmRzIiBkZXZpY2VzIC0gd2hpY2ggbWVhbnMgdGhleSB3b3VsZCBTVElMTCByZXF1
-aXJlIGEgZmlybXdhcmUgY2hhbmdlIHRvIHRlbGwgeW91IHRoZXkgYXJlIGJhY2t3YXJkcywgYW5k
-IHlvdSdkIFNUSUxMIG5lZWQgYSBibGFja2xpc3QgZm9yIHRoZWlyIG9sZGVyIHJldmlzaW9ucy4g
-IEFuZCB0aGlzIHdvdWxkIGp1c3QgbWFrZXMgdGhlIGhvc3RzIGpvYiBhbGwgdGhhdCBtdWNoIGhh
-cmRlciENCg0KT25jZSBhIGRldmljZSBpcyBicm9rZW4gKHZpb2xhdGVzIHRoZSBzcGVjKSwgdGhl
-cmUgaXMgbm90IHZlcnkgbXVjaCB3ZSBjYW4gZG8gaW4gdGhlIHNwZWMgdG8gZml4IGl0ICh0aGV5
-IGhhdmUgdG8gZml4IHRoZWlyIGJyb2tlbiBkZXZpY2UpLg0KDQoJRnJlZA0KDQotLS0tLU9yaWdp
-bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogRXdhbiBELiBNaWxuZSBbbWFpbHRvOmVtaWxuZUByZWRo
-YXQuY29tXSANClNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDI3LCAyMDE3IDEyOjI4IFBNDQpU
-bzogTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4NCkNjOiBs
-aW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgS25pZ2h0LCBGcmVkZXJpY2sgPEZyZWRlcmljay5L
-bmlnaHRAbmV0YXBwLmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0hdIHNkOiBMaW1pdCBXUklURSBT
-QU1FIC8gV1JJVEUgU0FNRSgxNikgdy9VTk1BUCBsZW5ndGggZm9yIGNlcnRhaW4gZGV2aWNlcw0K
-DQpPbiBNb24sIDIwMTctMDktMjUgYXQgMjE6NDYgLTA0MDAsIE1hcnRpbiBLLiBQZXRlcnNlbiB3
-cm90ZToNCj4gRXdhbiwNCj4gDQo+ID4gU29tZSBkZXZpY2VzIGRvIG5vdCBzdXBwb3J0IGEgV1JJ
-VEUgU0FNRSAvIFdSSVRFIFNBTUUoMTYpIHdpdGggdGhlDQo+ID4gVU5NQVAgYml0IHNldCB1cCB0
-byB0aGUgbGVuZ3RoIHNwZWNpZmllZCBpbiB0aGUgTUFYSU1VTSBXUklURSBTQU1FDQo+ID4gTEVO
-R1RIIGZpZWxkIGluIHRoZSBibG9jayBsaW1pdHMgVlBEIHBhZ2UgKG9yLCB0aGUgZmllbGQgaXMg
-emVybywNCj4gPiBpbmRpY2F0aW5nIHRoZXJlIGlzIG5vIGxpbWl0KS4gIExpbWl0IHRoZSBsZW5n
-dGggYnkgdGhlIE1BWElNVU0gVU5NQVANCj4gPiBMQkEgQ09VTlQgdmFsdWUuICBPdGhlcndpc2Ug
-dGhlIGNvbW1hbmQgbWlnaHQgYmUgcmVqZWN0ZWQuDQo+IA0KPiBGcm9tIFNCQzQ6DQo+IA0KPiAg
-ICJBIE1BWElNVU0gVU5NQVAgTEJBIENPVU5UIGZpZWxkIHNldCB0byBhIG5vbi16ZXJvIHZhbHVl
-IGluZGljYXRlcyB0aGUNCj4gICBtYXhpbXVtIG51bWJlciBvZiBMQkFzIHRoYXQgbWF5IGJlIHVu
-bWFwcGVkIGJ5IGFuIFVOTUFQIGNvbW1hbmQiDQo+IA0KPiBOb3RlIHRoYXQgaXQgZXhwbGljaXRs
-eSBzdGF0ZXMgIlVOTUFQIGNvbW1hbmQiIGFuZCBub3QgInVubWFwDQo+IG9wZXJhdGlvbiIuDQo+
-IA0KPiAgICJBIE1BWElNVU0gV1JJVEUgU0FNRSBMRU5HVEggZmllbGQgc2V0IHRvIGEgbm9uLXpl
-cm8gdmFsdWUgaW5kaWNhdGVzDQo+ICAgdGhlIG1heGltdW0gbnVtYmVyIG9mIGNvbnRpZ3VvdXMg
-bG9naWNhbCBibG9ja3MgdGhhdCB0aGUgZGV2aWNlIHNlcnZlcg0KPiAgIGFsbG93cyB0byBiZSB1
-bm1hcHBlZCBvciB3cml0dGVuIGluIGEgc2luZ2xlIFdSSVRFIFNBTUUgY29tbWFuZC4iDQo+IA0K
-PiBJdCBzYXlzICJ1bm1hcHBlZCBvciB3cml0dGVuIiBhbmQgIldSSVRFIFNBTUUgY29tbWFuZCIu
-DQo+IA0KPiBUaGUgc3BlYyBpcyBjcnlzdGFsIGNsZWFyLiBUaGUgZGV2aWNlIG5lZWRzIHRvIGJl
-IGZpeGVkLiBXZSBjYW4NCj4gYmxhY2tsaXN0IG9sZGVyIGZpcm13YXJlIHJldnMuDQo+IA0KDQpZ
-ZXMsIEkga25vdyB0aGF0IGlzIHdoYXQgU0JDLTQgc2F5cywgYW5kIEkgYWdyZWUgdGhhdCB0aGUg
-ZGV2aWNlcw0KYXJlIG5vdCBjb25mb3JtaW5nLiAgVW5mb3J0dW5hdGVseSwgSSd2ZSBjb21lIGFj
-cm9zcyAzIGRpZmZlcmVudA0KYXJyYXlzIG5vdyBmcm9tIDMgZGlmZmVyZW50IG1hbnVmYWN0dXJl
-cnMgdGhhdCBleGhpYml0IHRoaXMgYmVoYXZpb3IuDQoNCmNjOiBGcmVkIEtuaWdodCBmb3IgaGlz
-IG9waW5pb24gb24gdGhpcyAoTmV0QXBwIHdhcyBub3Qgb25lIG9mIHRoZQ0KYXJyYXlzIHRoYXQg
-SSd2ZSBydW4gaW50bywgdGhvdWdoKS4NCg0KLUV3YW4NCg0KDQoNCg0K
+/sys/class/scsi_disk/0:2:0:0/allow_restart can be changed to 0 unexpectly by
+writing invalid string, like following:
+
+echo asdf > /sys/class/scsi_disk/0:2:0:0/allow_restart
+
+Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
+---
+ drivers/scsi/sd.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3ef2214..d18639f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -253,6 +253,7 @@ static ssize_t
+ allow_restart_store(struct device *dev, struct device_attribute *attr,
+ 		    const char *buf, size_t count)
+ {
++	int err, v;
+ 	struct scsi_disk *sdkp = to_scsi_disk(dev);
+ 	struct scsi_device *sdp = sdkp->device;
+ 
+@@ -262,7 +263,11 @@ allow_restart_store(struct device *dev, struct device_attribute *attr,
+ 	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
+ 		return -EINVAL;
+ 
+-	sdp->allow_restart = simple_strtoul(buf, NULL, 10);
++	err = kstrtoint(buf, 10, &v);
++	if (err || (v != 0 && v != 1))
++		return -EINVAL;
++
++	sdp->allow_restart = v;
+ 
+ 	return count;
+ }
+-- 
+2.9.4
