@@ -1,50 +1,93 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH V6 6/6] SCSI: set block queue at preempt only when SCSI
  device is put into quiesce
-Date: Wed, 27 Sep 2017 09:54:09 +0000
-Message-ID: <1506506047.2654.3.camel@wdc.com>
+Date: Wed, 27 Sep 2017 18:14:55 +0800
+Message-ID: <20170927101447.GA1994@ming.t460p>
 References: <20170927054853.6647-1-ming.lei@redhat.com>
-         <20170927054853.6647-7-ming.lei@redhat.com>
+ <20170927054853.6647-7-ming.lei@redhat.com>
+ <1506506047.2654.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170927054853.6647-7-ming.lei@redhat.com>
-Content-Language: en-US
-Content-ID: <F28B43EA4161B947A473564CBC749879@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "cavery@redhat.com" <cavery@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55938 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751808AbdI0KPN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Sep 2017 06:15:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1506506047.2654.3.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "cavery@redhat.com" <cavery@redhat.com>
 
-T24gV2VkLCAyMDE3LTA5LTI3IGF0IDEzOjQ4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
-LTI5MjgsMTIgKzI5MjksMjggQEAgc2NzaV9kZXZpY2VfcXVpZXNjZShzdHJ1Y3Qgc2NzaV9kZXZp
-Y2UgKnNkZXYpDQo+ICB7DQo+ICAJaW50IGVycjsNCj4gIA0KPiArCS8qDQo+ICsJICogU2ltcGx5
-IHF1aWVzaW5nIFNDU0kgZGV2aWNlIGlzbid0IHNhZmUsIGl0IGlzIGVhc3kNCj4gKwkgKiB0byB1
-c2UgdXAgcmVxdWVzdHMgYmVjYXVzZSBhbGwgdGhlc2UgYWxsb2NhdGVkIHJlcXVlc3RzDQo+ICsJ
-ICogY2FuJ3QgYmUgZGlzcGF0Y2hlZCB3aGVuIGRldmljZSBpcyBwdXQgaW4gUUlVRVNDRS4NCj4g
-KwkgKiBUaGVuIG5vIHJlcXVlc3QgY2FuIGJlIGFsbG9jYXRlZCBhbmQgd2UgbWF5IGhhbmcNCj4g
-KwkgKiBzb21ld2hlcmUsIHN1Y2ggYXMgc3lzdGVtIHN1c3BlbmQvcmVzdW1lLg0KPiArCSAqDQo+
-ICsJICogU28gd2Ugc2V0IGJsb2NrIHF1ZXVlIGluIHByZWVtcHQgb25seSBmaXJzdCwgbm8gbmV3
-DQo+ICsJICogbm9ybWFsIHJlcXVlc3QgY2FuIGVudGVyIHF1ZXVlIGFueSBtb3JlLCBhbmQgYWxs
-IHBlbmRpbmcNCj4gKwkgKiByZXF1ZXN0cyBhcmUgZHJhaW5lZCBvbmNlIGJsa19zZXRfcHJlZW1w
-dF9vbmx5KCkNCj4gKwkgKiByZXR1cm5zLiBPbmx5IFJRRl9QUkVFTVBUIGlzIGFsbG93ZWQgaW4g
-cHJlZW1wdCBvbmx5IG1vZGUuDQo+ICsJICovDQo+ICsJYmxrX3NldF9wcmVlbXB0X29ubHkoc2Rl
-di0+cmVxdWVzdF9xdWV1ZSwgdHJ1ZSk7DQo+ICsNCj4gIAltdXRleF9sb2NrKCZzZGV2LT5zdGF0
-ZV9tdXRleCk7DQo+ICAJZXJyID0gc2NzaV9kZXZpY2Vfc2V0X3N0YXRlKHNkZXYsIFNERVZfUVVJ
-RVNDRSk7DQo+ICAJbXV0ZXhfdW5sb2NrKCZzZGV2LT5zdGF0ZV9tdXRleCk7DQo+ICANCj4gLQlp
-ZiAoZXJyKQ0KPiArCWlmIChlcnIpIHsNCj4gKwkJYmxrX3NldF9wcmVlbXB0X29ubHkoc2Rldi0+
-cmVxdWVzdF9xdWV1ZSwgZmFsc2UpOw0KPiAgCQlyZXR1cm4gZXJyOw0KPiArCX0NCj4gIA0KPiAg
-CXNjc2lfcnVuX3F1ZXVlKHNkZXYtPnJlcXVlc3RfcXVldWUpOw0KPiAgCXdoaWxlIChhdG9taWNf
-cmVhZCgmc2Rldi0+ZGV2aWNlX2J1c3kpKSB7DQo+IEBAIC0yOTY0LDYgKzI5ODEsOCBAQCB2b2lk
-IHNjc2lfZGV2aWNlX3Jlc3VtZShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpDQo+ICAJICAgIHNj
-c2lfZGV2aWNlX3NldF9zdGF0ZShzZGV2LCBTREVWX1JVTk5JTkcpID09IDApDQo+ICAJCXNjc2lf
-cnVuX3F1ZXVlKHNkZXYtPnJlcXVlc3RfcXVldWUpOw0KPiAgCW11dGV4X3VubG9jaygmc2Rldi0+
-c3RhdGVfbXV0ZXgpOw0KPiArDQo+ICsJYmxrX3NldF9wcmVlbXB0X29ubHkoc2Rldi0+cmVxdWVz
-dF9xdWV1ZSwgZmFsc2UpOw0KDQpZb3Ugc2hvdWxkIGhhdmUgcmVhbGl6ZWQgeW91cnNlbGYgdGhh
-dCB0aGlzIGNvZGUgaXMgcmFjeS4gSWYgYSByZXF1ZXN0IGlzDQphbGxvY2F0ZWQganVzdCBiZWZv
-cmUgc2NzaV9kZXZpY2VfcXVpZXNjZSgpIGlzIGNhbGxlZCBhbmQgZGlzcGF0Y2hlZCBqdXN0DQph
-ZnRlciB0aGUgZGV2aWNlIHN0YXRlIGhhcyBiZWVuIGNoYW5nZWQgaW50byBTREVWX1FVSUVTQ0Ug
-dGhlbiB0aGUgbG9vcCB0aGF0DQp3YWl0cyBmb3IgYWxsIGNvbW1hbmRzIHRvIGNvbXBsZXRlIHdp
-bGwgd2FpdCBmb3JldmVyIGR1ZSB0byB0aGUgU0NTSSBwcmVwDQpmdW5jdGlvbiByZXR1cm5pbmcg
-QkxLUFJFUF9ERUZFUi4NCg0KQmFydC4=
+On Wed, Sep 27, 2017 at 09:54:09AM +0000, Bart Van Assche wrote:
+> On Wed, 2017-09-27 at 13:48 +0800, Ming Lei wrote:
+> > @@ -2928,12 +2929,28 @@ scsi_device_quiesce(struct scsi_device *sdev)
+> >  {
+> >  	int err;
+> >  
+> > +	/*
+> > +	 * Simply quiesing SCSI device isn't safe, it is easy
+> > +	 * to use up requests because all these allocated requests
+> > +	 * can't be dispatched when device is put in QIUESCE.
+> > +	 * Then no request can be allocated and we may hang
+> > +	 * somewhere, such as system suspend/resume.
+> > +	 *
+> > +	 * So we set block queue in preempt only first, no new
+> > +	 * normal request can enter queue any more, and all pending
+> > +	 * requests are drained once blk_set_preempt_only()
+> > +	 * returns. Only RQF_PREEMPT is allowed in preempt only mode.
+> > +	 */
+> > +	blk_set_preempt_only(sdev->request_queue, true);
+> > +
+> >  	mutex_lock(&sdev->state_mutex);
+> >  	err = scsi_device_set_state(sdev, SDEV_QUIESCE);
+> >  	mutex_unlock(&sdev->state_mutex);
+> >  
+> > -	if (err)
+> > +	if (err) {
+> > +		blk_set_preempt_only(sdev->request_queue, false);
+> >  		return err;
+> > +	}
+> >  
+> >  	scsi_run_queue(sdev->request_queue);
+> >  	while (atomic_read(&sdev->device_busy)) {
+> > @@ -2964,6 +2981,8 @@ void scsi_device_resume(struct scsi_device *sdev)
+> >  	    scsi_device_set_state(sdev, SDEV_RUNNING) == 0)
+> >  		scsi_run_queue(sdev->request_queue);
+> >  	mutex_unlock(&sdev->state_mutex);
+> > +
+> > +	blk_set_preempt_only(sdev->request_queue, false);
+> 
+> You should have realized yourself that this code is racy. If a request is
+> allocated just before scsi_device_quiesce() is called and dispatched just
+> after the device state has been changed into SDEV_QUIESCE then the loop that
+
+That won't happen, any requests allocated before blk_set_preempt_only(true)
+will be drained. Any normal requests are prevented from being entering
+queue after blk_set_preempt_only(true) returns.
+
+Please look at blk_set_preempt_only():
+
+	+void blk_set_preempt_only(struct request_queue *q, bool preempt_only)
+	+{
+	+       blk_mq_freeze_queue(q);
+	+       if (preempt_only)
+	+               queue_flag_set_unlocked(QUEUE_FLAG_PREEMPT_ONLY, q);
+	+       else
+	+               queue_flag_clear_unlocked(QUEUE_FLAG_PREEMPT_ONLY, q);
+	+       blk_mq_unfreeze_queue(q);
+	+}
+	+EXPORT_SYMBOL(blk_set_preempt_only);
+
+blk_set_preempt_only(true) is called before scsi_device_set_state(sdev, SDEV_QUIESCE),
+then any requests will be drained by blk_mq_freeze_queue() inside
+blk_set_preempt_only(), meantime new normal requests are prevented from
+being entering queue.
+
+Once blk_set_preempt_only() returns, only RQF_PREEMPT is allowed to
+enter queue.
+
+
+-- 
+Ming
