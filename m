@@ -1,55 +1,57 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH] scsi: ILLEGAL REQUEST + ASC==27 => target failure
-Date: Wed, 27 Sep 2017 09:11:38 -0700
-Message-ID: <fe2e2c69-68d5-6f9c-c4e4-2b03f4dc8556@suse.com>
-References: <20170927124419.23637-1-mwilck@suse.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] sd: Limit WRITE SAME / WRITE SAME(16) w/UNMAP length
+ for certain devices
+Date: Wed, 27 Sep 2017 12:27:57 -0400
+Message-ID: <1506529677.4100.452.camel@localhost.localdomain>
+References: <1505837661-2280-1-git-send-email-emilne@redhat.com>
+         <yq1wp4mcjvi.fsf@oracle.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59960 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750799AbdI0QLn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Sep 2017 12:11:43 -0400
-In-Reply-To: <20170927124419.23637-1-mwilck@suse.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:43674 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752201AbdI0Q17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Sep 2017 12:27:59 -0400
+In-Reply-To: <yq1wp4mcjvi.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Frederick.Knight@netapp.com
 
-On 09/27/2017 05:44 AM, Martin Wilck wrote:
-> ASC 0x27 is "WRITE PROTECTED". This error code is returned e.g.
-> by Fujitsu ETERNUS systems under certain conditions for
-> WRITE SAME 16 commands with UNMAP bit set. It should not be
-> treated as a path error. In general, it makes sense to assume
-> that being write protected is a target rather than a path
-> property.
+On Mon, 2017-09-25 at 21:46 -0400, Martin K. Petersen wrote:
+> Ewan,
 > 
-> Signed-off-by: Martin Wilck <mwilck@suse.com>
-> ---
->  drivers/scsi/scsi_error.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+> > Some devices do not support a WRITE SAME / WRITE SAME(16) with the
+> > UNMAP bit set up to the length specified in the MAXIMUM WRITE SAME
+> > LENGTH field in the block limits VPD page (or, the field is zero,
+> > indicating there is no limit).  Limit the length by the MAXIMUM UNMAP
+> > LBA COUNT value.  Otherwise the command might be rejected.
 > 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 38942050b265..dab876c65473 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -580,7 +580,8 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
->  		if (sshdr.asc == 0x20 || /* Invalid command operation code */
->  		    sshdr.asc == 0x21 || /* Logical block address out of range */
->  		    sshdr.asc == 0x24 || /* Invalid field in cdb */
-> -		    sshdr.asc == 0x26) { /* Parameter value invalid */
-> +		    sshdr.asc == 0x26 || /* Parameter value invalid */
-> +		    sshdr.asc == 0x27) { /* Write protected */
->  			set_host_byte(scmd, DID_TARGET_FAILURE);
->  		}
->  		return SUCCESS;
+> From SBC4:
+> 
+>   "A MAXIMUM UNMAP LBA COUNT field set to a non-zero value indicates the
+>   maximum number of LBAs that may be unmapped by an UNMAP command"
+> 
+> Note that it explicitly states "UNMAP command" and not "unmap
+> operation".
+> 
+>   "A MAXIMUM WRITE SAME LENGTH field set to a non-zero value indicates
+>   the maximum number of contiguous logical blocks that the device server
+>   allows to be unmapped or written in a single WRITE SAME command."
+> 
+> It says "unmapped or written" and "WRITE SAME command".
+> 
+> The spec is crystal clear. The device needs to be fixed. We can
+> blacklist older firmware revs.
 > 
 
-Looks good to me.
+Yes, I know that is what SBC-4 says, and I agree that the devices
+are not conforming.  Unfortunately, I've come across 3 different
+arrays now from 3 different manufacturers that exhibit this behavior.
 
-Acked-by: Lee Duncan <lduncan@suse.com>
+cc: Fred Knight for his opinion on this (NetApp was not one of the
+arrays that I've run into, though).
 
--- 
-Lee-Man
+-Ewan
