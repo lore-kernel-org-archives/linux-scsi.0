@@ -1,122 +1,50 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: sd: Implement blacklist option for WRITE SAME w/ UNMAP
-Date: Wed, 27 Sep 2017 21:35:12 -0400
-Message-ID: <20170928013512.1058-1-martin.petersen@oracle.com>
-References: <1506529677.4100.452.camel@localhost.localdomain>
+Subject: Re: [PATCH] sd: preserve sysfs updates to max_sectors_kb
+Date: Wed, 27 Sep 2017 21:37:37 -0400
+Message-ID: <yq1bmlva9i6.fsf@oracle.com>
+References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
+        <1503090353.2622.15.camel@wdc.com>
+        <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
+        <1503092817.2622.19.camel@wdc.com>
+        <4993A297653ECB4581FA5C3C31323D195B8DBDE4@avsrvexchmbx2.microsemi.net>
+        <1503345191.2571.13.camel@wdc.com>
+        <4993A297653ECB4581FA5C3C31323D195B8DBE34@avsrvexchmbx2.microsemi.net>
+        <4993A297653ECB4581FA5C3C31323D195B8E9103@avsrvexchmbx1.microsemi.net>
+        <1504030401.2653.43.camel@wdc.com>
+        <4993A297653ECB4581FA5C3C31323D195B8E9143@avsrvexchmbx1.microsemi.net>
+        <4993A297653ECB4581FA5C3C31323D195B8E9191@avsrvexchmbx1.microsemi.net>
+        <1504045532.2653.68.camel@wdc.com>
+        <4993A297653ECB4581FA5C3C31323D195B8E9288@avsrvexchmbx1.microsemi.net>
+        <1504047619.2653.75.camel@wdc.com> <yq1d17d26gz.fsf@oracle.com>
+        <1504953142.5442.1.camel@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39561 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:40262 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752101AbdI1BfZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2017 21:35:25 -0400
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v8S1ZO5a025179
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Sep 2017 01:35:24 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v8S1ZNqe032349
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Sep 2017 01:35:23 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v8S1ZNf3004004
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Sep 2017 01:35:23 GMT
-In-Reply-To: <1506529677.4100.452.camel@localhost.localdomain>
+        with ESMTP id S1751881AbdI1Bi4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2017 21:38:56 -0400
+In-Reply-To: <1504953142.5442.1.camel@suse.com> (Martin Wilck's message of
+        "Sat, 09 Sep 2017 12:32:22 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Martin Wilck <mwilck@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, "viswas.g@microsemi.com" <viswas.g@microsemi.com>, "gerry.morong@microsemi.com" <gerry.morong@microsemi.com>, "mahesh.rajashekhara@microsemi.com" <mahesh.rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "scott.benesh@microsemi.com" <scott.benesh@microsemi.com>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "bader.alisaleh@microsemi.com" <bader.alisaleh@microsemi.com>, "kevin.barnett@microsemi.com" <kevin.barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, "scott.teel@microsemi.com" <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, justin.li
 
-SBC-4 states:
 
-  "A MAXIMUM UNMAP LBA COUNT field set to a non-zero value indicates the
-   maximum number of LBAs that may be unmapped by an UNMAP command"
+Martin,
 
-  "A MAXIMUM WRITE SAME LENGTH field set to a non-zero value indicates
-   the maximum number of contiguous logical blocks that the device server
-   allows to be unmapped or written in a single WRITE SAME command."
+> Could you please explain why you think Don's patch is wrong? User
+> settings being discarded because of a BLKRRPART ioctl violates the
+> principle of least surprise. With Don's patch, that won't happen any
+> more. If hardware limits change, whether they increase or decrease, the
+> patch will also do the Right Thing, AFAICS. Increasing hw limits will
+> not automatically increase the sw limit, but IMO that's actually
+> expected.
 
-Despite the spec being clear on the topic, some devices incorrectly
-expect WRITE SAME commands with the UNMAP bit set to be limited to the
-value reported in MAXIMUM UNMAP LBA COUNT in the Block Limits VPD.
+I have been mulling over this for a while.
 
-Implement a blacklist option that can be used to accommodate devices
-with this behavior.
+I suggest the following...
 
-Reported-by: Bill Kuzeja <William.Kuzeja@stratus.com>
-Reported-by: Ewan D. Milne <emilne@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/scsi/scsi_scan.c    |  3 +++
- drivers/scsi/sd.c           | 16 ++++++++++++----
- include/scsi/scsi_device.h  |  1 +
- include/scsi/scsi_devinfo.h |  1 +
- 4 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e7818afeda2b..15590a063ad9 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -956,6 +956,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (*bflags & BLIST_NO_DIF)
- 		sdev->no_dif = 1;
- 
-+	if (*bflags & BLIST_UNMAP_LIMIT_WS)
-+		sdev->unmap_limit_for_ws = 1;
-+
- 	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
- 
- 	if (*bflags & BLIST_TRY_VPD_PAGES)
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b18ba3235900..347be7580181 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -715,13 +715,21 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 		break;
- 
- 	case SD_LBP_WS16:
--		max_blocks = min_not_zero(sdkp->max_ws_blocks,
--					  (u32)SD_MAX_WS16_BLOCKS);
-+		if (sdkp->device->unmap_limit_for_ws)
-+			max_blocks = sdkp->max_unmap_blocks;
-+		else
-+			max_blocks = sdkp->max_ws_blocks;
-+
-+		max_blocks = min_not_zero(max_blocks, (u32)SD_MAX_WS16_BLOCKS);
- 		break;
- 
- 	case SD_LBP_WS10:
--		max_blocks = min_not_zero(sdkp->max_ws_blocks,
--					  (u32)SD_MAX_WS10_BLOCKS);
-+		if (sdkp->device->unmap_limit_for_ws)
-+			max_blocks = sdkp->max_unmap_blocks;
-+		else
-+			max_blocks = sdkp->max_ws_blocks;
-+
-+		max_blocks = min_not_zero(max_blocks, (u32)SD_MAX_WS10_BLOCKS);
- 		break;
- 
- 	case SD_LBP_ZERO:
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 82e93ee94708..67c5a9f223f7 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -192,6 +192,7 @@ struct scsi_device {
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 	unsigned broken_fua:1;		/* Don't set FUA bit */
- 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
-+	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
- 
- 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
- 
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 9592570e092a..36b03013d629 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -29,5 +29,6 @@
- #define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
- #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
- #define BLIST_MAX_1024		0x40000000 /* maximum 1024 sector cdb length */
-+#define BLIST_UNMAP_LIMIT_WS	0x80000000 /* Use UNMAP limit for WRITE SAME */
- 
- #endif
 -- 
-2.14.1
+Martin K. Petersen	Oracle Linux Engineering
