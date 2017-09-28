@@ -1,47 +1,83 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 3/3] smartpqi: update driver version to 1.1.2-126
-Date: Wed, 27 Sep 2017 16:30:11 -0500
-Message-ID: <150654781171.11494.5262947088292549405.stgit@brunhilda>
-References: <150654770573.11494.168365142464423047.stgit@brunhilda>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: add ufs a command complete time stamp
+Date: Wed, 27 Sep 2017 17:42:59 -0700
+Message-ID: <2061f5bb37d8a194daaca79bff3b94d3@codeaurora.org>
+References: <20170927020606.12151-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0048.outbound.protection.outlook.com ([104.47.38.48]:49129
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751801AbdI0Vaf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Sep 2017 17:30:35 -0400
-In-Reply-To: <150654770573.11494.168365142464423047.stgit@brunhilda>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36300 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752402AbdI1AnB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2017 20:43:01 -0400
+In-Reply-To: <20170927020606.12151-1-zangleigang@hisilicon.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
+To: Zang Leigang <zangleigang@hisilicon.com>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-Reviewed-by: Gerry Morong <gerry.morong@microsemi.com>
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On 2017-09-26 19:06, Zang Leigang wrote:
+> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 794a460..7e8d583 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -385,6 +385,8 @@ void ufshcd_print_trs(struct ufs_hba *hba,
+> unsigned long bitmap, bool pr_prdt)
+> 
+>  		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
+>  				tag, ktime_to_us(lrbp->issue_time_stamp));
+> +		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
+> +				tag, ktime_to_us(lrbp->compl_time_stamp));
+>  		dev_err(hba->dev,
+>  			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+>  			tag, (u64)lrbp->utrd_dma_addr);
+> @@ -1746,6 +1748,7 @@ static inline
+>  void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+>  {
+>  	hba->lrb[task_tag].issue_time_stamp = ktime_get();
+> +	hba->lrb[task_tag].compl_time_stamp = ktime_set(0, 0);
+>  	ufshcd_clk_scaling_start_busy(hba);
+>  	__set_bit(task_tag, &hba->outstanding_reqs);
+>  	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> @@ -4627,6 +4630,8 @@ static void __ufshcd_transfer_req_compl(struct
+> ufs_hba *hba,
+>  		}
+>  		if (ufshcd_is_clkscaling_supported(hba))
+>  			hba->clk_scaling.active_reqs--;
+> +
+> +		lrbp->compl_time_stamp = ktime_get();
+>  	}
+> 
+>  	/* clear corresponding bits of completed commands */
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index cdc8bd0..40ea475 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -166,6 +166,7 @@ struct ufs_pm_lvl_states {
+>   * @lun: LUN of the command
+>   * @intr_cmd: Interrupt command (doesn't participate in interrupt 
+> aggregation)
+>   * @issue_time_stamp: time stamp for debug purposes
+> + * @compl_time_stamp: time stamp for statistics
+>   * @req_abort_skip: skip request abort task flag
+>   */
+>  struct ufshcd_lrb {
+> @@ -189,6 +190,7 @@ struct ufshcd_lrb {
+>  	u8 lun; /* UPIU LUN id field is only 8-bit wide */
+>  	bool intr_cmd;
+>  	ktime_t issue_time_stamp;
+> +	ktime_t compl_time_stamp;
+> 
+>  	bool req_abort_skip;
+>  };
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index be83d92..8fe9183 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -40,11 +40,11 @@
- #define BUILD_TIMESTAMP
- #endif
- 
--#define DRIVER_VERSION		"1.1.2-125"
-+#define DRIVER_VERSION		"1.1.2-126"
- #define DRIVER_MAJOR		1
- #define DRIVER_MINOR		1
- #define DRIVER_RELEASE		2
--#define DRIVER_REVISION		125
-+#define DRIVER_REVISION		126
- 
- #define DRIVER_NAME		"Microsemi PQI Driver (v" \
- 				DRIVER_VERSION BUILD_TIMESTAMP ")"
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
