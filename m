@@ -1,83 +1,38 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: add ufs a command complete time stamp
-Date: Wed, 27 Sep 2017 17:42:59 -0700
-Message-ID: <2061f5bb37d8a194daaca79bff3b94d3@codeaurora.org>
-References: <20170927020606.12151-1-zangleigang@hisilicon.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: Limit WRITE SAME / WRITE SAME(16) w/UNMAP length for certain devices
+Date: Wed, 27 Sep 2017 21:34:25 -0400
+Message-ID: <yq1fub7a9ni.fsf@oracle.com>
+References: <1505837661-2280-1-git-send-email-emilne@redhat.com>
+        <yq1wp4mcjvi.fsf@oracle.com>
+        <1506529677.4100.452.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36300 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752402AbdI1AnB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2017 20:43:01 -0400
-In-Reply-To: <20170927020606.12151-1-zangleigang@hisilicon.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:51048 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751881AbdI1Bed (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2017 21:34:33 -0400
+In-Reply-To: <1506529677.4100.452.camel@localhost.localdomain> (Ewan
+        D. Milne's message of "Wed, 27 Sep 2017 12:27:57 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zang Leigang <zangleigang@hisilicon.com>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Frederick.Knight@netapp.com
 
-On 2017-09-26 19:06, Zang Leigang wrote:
-> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 794a460..7e8d583 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -385,6 +385,8 @@ void ufshcd_print_trs(struct ufs_hba *hba,
-> unsigned long bitmap, bool pr_prdt)
-> 
->  		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
->  				tag, ktime_to_us(lrbp->issue_time_stamp));
-> +		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
-> +				tag, ktime_to_us(lrbp->compl_time_stamp));
->  		dev_err(hba->dev,
->  			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
->  			tag, (u64)lrbp->utrd_dma_addr);
-> @@ -1746,6 +1748,7 @@ static inline
->  void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
->  {
->  	hba->lrb[task_tag].issue_time_stamp = ktime_get();
-> +	hba->lrb[task_tag].compl_time_stamp = ktime_set(0, 0);
->  	ufshcd_clk_scaling_start_busy(hba);
->  	__set_bit(task_tag, &hba->outstanding_reqs);
->  	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> @@ -4627,6 +4630,8 @@ static void __ufshcd_transfer_req_compl(struct
-> ufs_hba *hba,
->  		}
->  		if (ufshcd_is_clkscaling_supported(hba))
->  			hba->clk_scaling.active_reqs--;
-> +
-> +		lrbp->compl_time_stamp = ktime_get();
->  	}
-> 
->  	/* clear corresponding bits of completed commands */
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index cdc8bd0..40ea475 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -166,6 +166,7 @@ struct ufs_pm_lvl_states {
->   * @lun: LUN of the command
->   * @intr_cmd: Interrupt command (doesn't participate in interrupt 
-> aggregation)
->   * @issue_time_stamp: time stamp for debug purposes
-> + * @compl_time_stamp: time stamp for statistics
->   * @req_abort_skip: skip request abort task flag
->   */
->  struct ufshcd_lrb {
-> @@ -189,6 +190,7 @@ struct ufshcd_lrb {
->  	u8 lun; /* UPIU LUN id field is only 8-bit wide */
->  	bool intr_cmd;
->  	ktime_t issue_time_stamp;
-> +	ktime_t compl_time_stamp;
-> 
->  	bool req_abort_skip;
->  };
 
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+Ewan,
+
+>> The spec is crystal clear. The device needs to be fixed. We can
+>> blacklist older firmware revs.
+>
+> Yes, I know that is what SBC-4 says, and I agree that the devices
+> are not conforming.  Unfortunately, I've come across 3 different
+> arrays now from 3 different manufacturers that exhibit this behavior.
+
+My main beef with your approach is that it penalizes devices that
+actually implement the spec correctly.
+
+I'll send a proposed patch.
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Martin K. Petersen	Oracle Linux Engineering
