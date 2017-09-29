@@ -1,46 +1,46 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: Re: [PATCH] scsi: sd: Do not override max_sectors_kb sysfs setting
-Date: Fri, 29 Sep 2017 14:26:31 +0200
-Message-ID: <1506687991.20850.7.camel@suse.com>
-References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
-         <20170928013859.1214-1-martin.petersen@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: sd: Implement blacklist option for WRITE SAME w/ UNMAP
+Date: Fri, 29 Sep 2017 09:21:48 -0400
+Message-ID: <yq1lgkx63o3.fsf@oracle.com>
+References: <1506529677.4100.452.camel@localhost.localdomain>
+        <20170928013512.1058-1-martin.petersen@oracle.com>
+        <1506679376.11960.1.camel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:58534 "EHLO
-        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751176AbdI2M0i (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Fri, 29 Sep 2017 08:26:38 -0400
-In-Reply-To: <20170928013859.1214-1-martin.petersen@oracle.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47662 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751176AbdI2NVy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 09:21:54 -0400
+In-Reply-To: <1506679376.11960.1.camel@redhat.com> (Laurence Oberman's message
+        of "Fri, 29 Sep 2017 06:02:56 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: don.brace@microsemi.com
+To: Laurence Oberman <loberman@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2017-09-27 at 21:38 -0400, Martin K. Petersen wrote:
-> A user may lower the max_sectors_kb setting in sysfs to accommodate
-> certain workloads. Previously we would always set the max I/O size to
-> either the block layer default or the optional preferred I/O size
-> reported by the device.
-> 
-> Keep the current heuristics for the initial setting of
-> max_sectors_kb.
-> For subsequent invocations, only update the current queue limit if it
-> exceeds the capabilities of the hardware.
-> 
-> Reported-by: Don Brace <don.brace@microsemi.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
- 
-This looks good to me. I agree that it's superior to the original
-suggestion, because it sets the soft limit to the hard limit when the
-device is scanned for the first time.
 
-Regards
-Martin
+Laurence,
+
+> I am testing this but its not being picked up so I want to know if I
+> have the kernel command line wrong here.
+>
+> scsi_dev_flags=LIO-ORG:thin2:0x80000000
+>
+> What am I doing wrong to pass the BLIST flags.
+
+This worked for me:
+
+[root@kvm ~]# echo "Linux:scsi_debug:0x80000000" > /proc/scsi/device_info
+[root@kvm ~]# grep Linux /proc/scsi/device_info 
+'Linux   ' 'scsi_debug      ' 0x80000000
+[root@kvm ~]# modprobe scsi_debug unmap_max_blocks=10 unmap_max_desc=1 write_same_length=20 lbpws=1
+[root@kvm ~]# lsblk -D
+NAME DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
+sda         0      512B       5K         0
+
+(With the caveat that I tweaked scsi_debug to report the UNMAP
+parameters despite lbpu being 0).
 
 -- 
-Dr. Martin Wilck <mwilck@suse.com>, Tel. +49 (0)911 74053 2107
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
+Martin K. Petersen	Oracle Linux Engineering
