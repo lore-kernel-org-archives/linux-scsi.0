@@ -1,44 +1,52 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: fix the issue that iscsi_if_rx doesn't parse
- nlmsg properly
-Date: Fri, 29 Sep 2017 09:33:34 -0400
-Message-ID: <1506692014.4100.543.camel@localhost.localdomain>
-References: <0c9fd6fbc0f5fa7b72e6ae5b82d5499a38fd375e.1503836726.git.lucien.xin@gmail.com>
-         <yq1a81ih92k.fsf@oracle.com>
-Reply-To: emilne@redhat.com
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH] scsi: sd: Do not override max_sectors_kb sysfs setting
+Date: Fri, 29 Sep 2017 13:46:03 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D195BDADA97@avsrvexchmbx2.microsemi.net>
+References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
+ <20170928013859.1214-1-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49336 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751667AbdI2Ndf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 29 Sep 2017 09:33:35 -0400
-In-Reply-To: <yq1a81ih92k.fsf@oracle.com>
+Received: from mail-cys01nam02on0080.outbound.protection.outlook.com ([104.47.37.80]:38432
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751975AbdI2NqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 29 Sep 2017 09:46:08 -0400
+In-Reply-To: <20170928013859.1214-1-martin.petersen@oracle.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Xin Long <lucien.xin@gmail.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, syzkaller@googlegroups.com, chunwang@redhat.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2017-09-25 at 15:28 -0400, Martin K. Petersen wrote:
-> Xin,
-> 
-> > ChunYu found a kernel crash by syzkaller:
-> 
-> [...]
-> 
-> > It's caused by skb_shared_info at the end of sk_buff was overwritten by
-> > ISCSI_KEVENT_IF_ERROR when parsing nlmsg info from skb in iscsi_if_rx.
-> >
-> > During the loop if skb->len == nlh->nlmsg_len and both are sizeof(*nlh),
-> > ev = nlmsg_data(nlh) will acutally get skb_shinfo(SKB) instead and set a
-> > new value to skb_shinfo(SKB)->nr_frags by ev->type.
-> >
-> > This patch is to fix it by checking nlh->nlmsg_len properly there to
-> > avoid over accessing sk_buff.
-> 
-> Applied to 4.14/scsi-fixes. Thank you!
-> 
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Martin K. Petersen
+> Sent: Wednesday, September 27, 2017 8:39 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Subject: [PATCH] scsi: sd: Do not override max_sectors_kb sysfs setting
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> A user may lower the max_sectors_kb setting in sysfs to accommodate
+> certain workloads. Previously we would always set the max I/O size to
+> either the block layer default or the optional preferred I/O size
+> reported by the device.
+>=20
+> Keep the current heuristics for the initial setting of max_sectors_kb.
+> For subsequent invocations, only update the current queue limit if it
+> exceeds the capabilities of the hardware.
+>=20
+> Reported-by: Don Brace <don.brace@microsemi.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Should this be considered for -stable?  (Despite not being reproduced
-after 7f564528a4).
+Tested-by: Don Brace <don.brace@microsemi.com>
+
+Really appreciate your attention to this matter.
+
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
