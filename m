@@ -1,71 +1,87 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 13/21] lpfc: Fix oops if nvmet_fc_register_targetport fails
-Date: Fri, 29 Sep 2017 17:34:39 -0700
-Message-ID: <20170930003447.10747-14-jsmart2021@gmail.com>
+Subject: [PATCH v2 18/21] lpfc: Extend RDP support
+Date: Fri, 29 Sep 2017 17:34:44 -0700
+Message-ID: <20170930003447.10747-19-jsmart2021@gmail.com>
 References: <20170930003447.10747-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:38533 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752630AbdI3AfI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:08 -0400
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:47190 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752595AbdI3AfN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:13 -0400
+Received: by mail-qt0-f195.google.com with SMTP id b1so1606905qtc.4
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:35:13 -0700 (PDT)
 In-Reply-To: <20170930003447.10747-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, stable@vger.kernel.org, James Smart <james.smart@broadcom.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-if nvmet targetport registration fails, the driver encounters a
-NULL pointer oops in lpfc_hb_timeout_handler.
+Support RDP and Multiple Frames
 
-To fix: if registration fails, ensure nvmet_support is cleared
-on the port structure.
+If the remote Nport is not logged in, the driver would not populate
+all the descriptors in the RDP response payload. Doing so would create
+a payload length that requires multiple frames due to exceeding the
+default rx buffer size without an explicit login. Currently FC-LS
+explicitly states the RDP response must be a single frame sequence.
+Thus we did not violate the standard.
 
-Also enhanced the log message on failure.
+Recently, a modification to FC-LS was accepted which allows
+multi-frame sequences and all vendors have indicated they are
+interoperable with the change. As such, extend RDP support with the
+additional fields and send a multi-frame sequence.
 
-Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index e410a6f1e2c2..1746c888beac 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1153,9 +1153,14 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
- #endif
- 	if (error) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_DISC,
--				"6025 Cannot register NVME targetport "
--				"x%x\n", error);
-+				"6025 Cannot register NVME targetport x%x: "
-+				"portnm %llx nodenm %llx segs %d qs %d\n",
-+				error,
-+				pinfo.port_name, pinfo.node_name,
-+				lpfc_tgttemplate.max_sgl_segments,
-+				lpfc_tgttemplate.max_hw_queues);
- 		phba->targetport = NULL;
-+		phba->nvmet_support = 0;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 3ebf6ccba6e6..b14f7c5653cd 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5394,10 +5394,6 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
+ 					(len + pcmd), vport, ndlp);
+ 	len += lpfc_rdp_res_fec_desc((struct fc_fec_rdp_desc *)(len + pcmd),
+ 			&rdp_context->link_stat);
+-	/* Check if nport is logged, BZ190632 */
+-	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED))
+-		goto lpfc_skip_descriptor;
+-
+ 	len += lpfc_rdp_res_bbc_desc((struct fc_rdp_bbc_desc *)(len + pcmd),
+ 				     &rdp_context->link_stat, vport);
+ 	len += lpfc_rdp_res_oed_temp_desc(phba,
+@@ -5418,7 +5414,6 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
+ 	len += lpfc_rdp_res_opd_desc((struct fc_rdp_opd_sfp_desc *)(len + pcmd),
+ 				     rdp_context->page_a0, vport);
  
- 		lpfc_nvmet_cleanup_io_context(phba);
+-lpfc_skip_descriptor:
+ 	rdp_res->length = cpu_to_be32(len - 8);
+ 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
  
-@@ -1167,9 +1172,11 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_NVME_DISC,
- 				"6026 Registered NVME "
- 				"targetport: %p, private %p "
--				"portnm %llx nodenm %llx\n",
-+				"portnm %llx nodenm %llx segs %d qs %d\n",
- 				phba->targetport, tgtp,
--				pinfo.port_name, pinfo.node_name);
-+				pinfo.port_name, pinfo.node_name,
-+				lpfc_tgttemplate.max_sgl_segments,
-+				lpfc_tgttemplate.max_hw_queues);
+@@ -5540,7 +5535,6 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
+ 	rdp_req = (struct fc_rdp_req_frame *) pcmd->virt;
  
- 		atomic_set(&tgtp->rcv_ls_req_in, 0);
- 		atomic_set(&tgtp->rcv_ls_req_out, 0);
+-
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "2422 ELS RDP Request "
+ 			 "dec len %d tag x%x port_id %d len %d\n",
+@@ -5549,12 +5543,6 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 			 be32_to_cpu(rdp_req->nport_id_desc.nport_id),
+ 			 be32_to_cpu(rdp_req->nport_id_desc.length));
+ 
+-	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED) &&
+-	    !phba->cfg_enable_SmartSAN) {
+-		rjt_err = LSRJT_UNABLE_TPC;
+-		rjt_expl = LSEXP_PORT_LOGIN_REQ;
+-		goto error;
+-	}
+ 	if (sizeof(struct fc_rdp_nport_desc) !=
+ 			be32_to_cpu(rdp_req->rdp_des_length))
+ 		goto rjt_logerr;
 -- 
 2.13.1
