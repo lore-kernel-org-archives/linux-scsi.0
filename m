@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 4/7] blk-mq: introduce blk_mq_dequeue_from_ctx()
-Date: Sat, 30 Sep 2017 18:27:17 +0800
-Message-ID: <20170930102720.30219-5-ming.lei@redhat.com>
+Subject: [PATCH V5 5/7] blk-mq-sched: move actual dispatching into one helper
+Date: Sat, 30 Sep 2017 18:27:18 +0800
+Message-ID: <20170930102720.30219-6-ming.lei@redhat.com>
 References: <20170930102720.30219-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170930102720.30219-1-ming.lei@redhat.com>
@@ -10,88 +10,66 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This function is introduced for dequeuing request
-from sw queue so that we can dispatch it in
-scheduler's way.
+So that it becomes easy to support to dispatch from
+sw queue in the following patch.
 
-More importantly, some SCSI devices may set
-q->queue_depth, which is a per-request_queue limit,
-and applied on pending I/O from all hctxs. This
-function is introduced for avoiding to dequeue too
-many requests from sw queue when ->dispatch isn't
-flushed completely.
+No functional change.
 
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
 Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
 Tested-by: Tom Nguyen <tom81094@gmail.com>
 Tested-by: Paolo Valente <paolo.valente@linaro.org>
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq.c | 38 ++++++++++++++++++++++++++++++++++++++
- block/blk-mq.h |  2 ++
- 2 files changed, 40 insertions(+)
+ block/blk-mq-sched.c | 28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index d1b9fb539eba..8b49af1ade7f 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -882,6 +882,44 @@ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list)
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index eca011fdfa0e..538f363f39ca 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -89,6 +89,22 @@ static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
+ 	return false;
  }
- EXPORT_SYMBOL_GPL(blk_mq_flush_busy_ctxs);
  
-+struct dispatch_rq_data {
-+	struct blk_mq_hw_ctx *hctx;
-+	struct request *rq;
-+};
-+
-+static bool dispatch_rq_from_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
++static void blk_mq_do_dispatch_sched(struct request_queue *q,
++				     struct elevator_queue *e,
++				     struct blk_mq_hw_ctx *hctx)
 +{
-+	struct dispatch_rq_data *dispatch_data = data;
-+	struct blk_mq_hw_ctx *hctx = dispatch_data->hctx;
-+	struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
++	LIST_HEAD(rq_list);
 +
-+	spin_lock(&ctx->lock);
-+	if (unlikely(!list_empty(&ctx->rq_list))) {
-+		dispatch_data->rq = list_entry_rq(ctx->rq_list.next);
-+		list_del_init(&dispatch_data->rq->queuelist);
-+		if (list_empty(&ctx->rq_list))
-+			sbitmap_clear_bit(sb, bitnr);
-+	}
-+	spin_unlock(&ctx->lock);
++	do {
++		struct request *rq;
 +
-+	return !dispatch_data->rq;
++		rq = e->type->ops.mq.dispatch_request(hctx);
++		if (!rq)
++			break;
++		list_add(&rq->queuelist, &rq_list);
++	} while (blk_mq_dispatch_rq_list(q, &rq_list));
 +}
 +
-+struct request *blk_mq_dequeue_from_ctx(struct blk_mq_hw_ctx *hctx,
-+					struct blk_mq_ctx *start)
-+{
-+	unsigned off = start ? start->index_hw : 0;
-+	struct dispatch_rq_data data = {
-+		.hctx = hctx,
-+		.rq   = NULL,
-+	};
-+
-+	__sbitmap_for_each_set(&hctx->ctx_map, off,
-+			       dispatch_rq_from_ctx, &data);
-+
-+	return data.rq;
-+}
-+
- static inline unsigned int queued_to_index(unsigned int queued)
+ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
  {
- 	if (!queued)
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 61aecf398a4b..915de58572e7 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -35,6 +35,8 @@ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list);
- bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx);
- bool blk_mq_get_driver_tag(struct request *rq, struct blk_mq_hw_ctx **hctx,
- 				bool wait);
-+struct request *blk_mq_dequeue_from_ctx(struct blk_mq_hw_ctx *hctx,
-+					struct blk_mq_ctx *start);
+ 	struct request_queue *q = hctx->queue;
+@@ -136,16 +152,8 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 * on the dispatch list or we were able to dispatch from the
+ 	 * dispatch list.
+ 	 */
+-	if (do_sched_dispatch && has_sched_dispatch) {
+-		do {
+-			struct request *rq;
+-
+-			rq = e->type->ops.mq.dispatch_request(hctx);
+-			if (!rq)
+-				break;
+-			list_add(&rq->queuelist, &rq_list);
+-		} while (blk_mq_dispatch_rq_list(q, &rq_list));
+-	}
++	if (do_sched_dispatch && has_sched_dispatch)
++		blk_mq_do_dispatch_sched(q, e, hctx);
+ }
  
- /*
-  * Internal helpers for allocating/freeing the request map
+ bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
 -- 
 2.9.5
