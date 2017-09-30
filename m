@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 18/21] lpfc: Extend RDP support
-Date: Fri, 29 Sep 2017 17:34:44 -0700
-Message-ID: <20170930003447.10747-19-jsmart2021@gmail.com>
+Subject: [PATCH v2 14/21] lpfc: Disable NPIV support if NVME is enabled
+Date: Fri, 29 Sep 2017 17:34:40 -0700
+Message-ID: <20170930003447.10747-15-jsmart2021@gmail.com>
 References: <20170930003447.10747-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:47190 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752595AbdI3AfN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:13 -0400
-Received: by mail-qt0-f195.google.com with SMTP id b1so1606905qtc.4
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:35:13 -0700 (PDT)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:35960 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752601AbdI3AfJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:09 -0400
+Received: by mail-qk0-f193.google.com with SMTP id z14so776434qkg.3
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:35:09 -0700 (PDT)
 In-Reply-To: <20170930003447.10747-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,70 +18,38 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Support RDP and Multiple Frames
+The initial implementation of NVME didn't merge with NPIV support.
+As such, there are several issues if NPIV is used with NVME. For now,
+ensure that if NVME is enabled then NPIV is not enabled.
 
-If the remote Nport is not logged in, the driver would not populate
-all the descriptors in the RDP response payload. Doing so would create
-a payload length that requires multiple frames due to exceeding the
-default rx buffer size without an explicit login. Currently FC-LS
-explicitly states the RDP response must be a single frame sequence.
-Thus we did not violate the standard.
-
-Recently, a modification to FC-LS was accepted which allows
-multi-frame sequences and all vendors have indicated they are
-interoperable with the change. As such, extend RDP support with the
-additional fields and send a multi-frame sequence.
+Support for NPIV with NVME will be added in the near future.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 12 ------------
- 1 file changed, 12 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 3ebf6ccba6e6..b14f7c5653cd 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5394,10 +5394,6 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
- 					(len + pcmd), vport, ndlp);
- 	len += lpfc_rdp_res_fec_desc((struct fc_fec_rdp_desc *)(len + pcmd),
- 			&rdp_context->link_stat);
--	/* Check if nport is logged, BZ190632 */
--	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED))
--		goto lpfc_skip_descriptor;
--
- 	len += lpfc_rdp_res_bbc_desc((struct fc_rdp_bbc_desc *)(len + pcmd),
- 				     &rdp_context->link_stat, vport);
- 	len += lpfc_rdp_res_oed_temp_desc(phba,
-@@ -5418,7 +5414,6 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
- 	len += lpfc_rdp_res_opd_desc((struct fc_rdp_opd_sfp_desc *)(len + pcmd),
- 				     rdp_context->page_a0, vport);
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index c714482bf4c5..c9d33b1268cb 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -313,6 +313,15 @@ lpfc_vport_create(struct fc_vport *fc_vport, bool disable)
+ 		goto error_out;
+ 	}
  
--lpfc_skip_descriptor:
- 	rdp_res->length = cpu_to_be32(len - 8);
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
- 
-@@ -5540,7 +5535,6 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
- 	rdp_req = (struct fc_rdp_req_frame *) pcmd->virt;
- 
--
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "2422 ELS RDP Request "
- 			 "dec len %d tag x%x port_id %d len %d\n",
-@@ -5549,12 +5543,6 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 			 be32_to_cpu(rdp_req->nport_id_desc.nport_id),
- 			 be32_to_cpu(rdp_req->nport_id_desc.length));
- 
--	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED) &&
--	    !phba->cfg_enable_SmartSAN) {
--		rjt_err = LSRJT_UNABLE_TPC;
--		rjt_expl = LSEXP_PORT_LOGIN_REQ;
--		goto error;
--	}
- 	if (sizeof(struct fc_rdp_nport_desc) !=
- 			be32_to_cpu(rdp_req->rdp_des_length))
- 		goto rjt_logerr;
++	/* NPIV is not supported if HBA has NVME enabled */
++	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_VPORT,
++				"3189 Create VPORT failed: "
++				"NPIV is not supported on NVME\n");
++		rc = VPORT_INVAL;
++		goto error_out;
++	}
++
+ 	vpi = lpfc_alloc_vpi(phba);
+ 	if (vpi == 0) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_VPORT,
 -- 
 2.13.1
