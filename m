@@ -1,111 +1,49 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V5 00/14] blk-mq-sched: improve sequential I/O
- performance(part 1)
-Date: Sat, 30 Sep 2017 18:32:12 +0800
-Message-ID: <20170930103211.GA29093@ming.t460p>
-References: <20170930102720.30219-1-ming.lei@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170930102720.30219-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>
+From: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] scsi: esas2r: make bin_attr_default_nvram const
+Date: Sat, 30 Sep 2017 22:27:35 +0530
+Message-ID: <1506790655-13287-1-git-send-email-bhumirks@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: julia.lawall@lip6.fr, linuxdrivers@attotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Sep 30, 2017 at 06:27:13PM +0800, Ming Lei wrote:
-> Hi Jens,
-> 
-> In Red Hat internal storage test wrt. blk-mq scheduler, we
-> found that I/O performance is much bad with mq-deadline, especially
-> about sequential I/O on some multi-queue SCSI devcies(lpfc, qla2xxx,
-> SRP...)
-> 
-> Turns out one big issue causes the performance regression: requests
-> are still dequeued from sw queue/scheduler queue even when ldd's
-> queue is busy, so I/O merge becomes quite difficult to make, then
-> sequential IO degrades a lot.
-> 
-> This issue becomes one of mains reasons for reverting default SCSI_MQ
-> in V4.13.
-> 
-> The 1st patch takes direct issue in blk_mq_request_bypass_insert(),
-> then we can improve dm-mpath's performance in part 2, which will
-> be posted out soon.
-> 
-> The 2nd six patches improve this situation, and brings back
-> some performance loss.
-> 
-> With this change, SCSI-MQ sequential I/O performance is
-> improved much, Paolo reported that mq-deadline performance
-> improved much[2] in his dbench test wrt V2. Also performanc
-> improvement on lpfc/qla2xx was observed with V1.[1]
-> 
-> Please consider it for V4.15.
-> 
-> [1] http://marc.info/?l=linux-block&m=150151989915776&w=2
-> [2] https://marc.info/?l=linux-block&m=150217980602843&w=2
-> 
-> V5:
-> 	- address some comments from Omar
-> 	- add Tested-by & Reveiewed-by tag
-> 	- use direct issue for blk_mq_request_bypass_insert(), and
-> 	start to consider to improve sequential I/O for dm-mpath
-> 	- only include part 1(the original patch 1 ~ 6), as suggested
-> 	by Omar
-> 
-> V4:
-> 	- add Reviewed-by tag
-> 	- some trival change: typo fix in commit log or comment,
-> 	variable name, no actual functional change
-> 
-> V3:
-> 	- totally round robin for picking req from ctx, as suggested
-> 	by Bart
-> 	- remove one local variable in __sbitmap_for_each_set()
-> 	- drop patches of single dispatch list, which can improve
-> 	performance on mq-deadline, but cause a bit degrade on
-> 	none because all hctxs need to be checked after ->dispatch
-> 	is flushed. Will post it again once it is mature.
-> 	- rebase on v4.13-rc6 with block for-next
-> 
-> V2:
-> 	- dequeue request from sw queues in round roubin's style
-> 	as suggested by Bart, and introduces one helper in sbitmap
-> 	for this purpose
-> 	- improve bio merge via hash table from sw queue
-> 	- add comments about using DISPATCH_BUSY state in lockless way,
-> 	simplifying handling on busy state,
-> 	- hold ctx->lock when clearing ctx busy bit as suggested
-> 	by Bart
-> 
-> 
-> Ming Lei (7):
->   blk-mq: issue rq directly in blk_mq_request_bypass_insert()
->   blk-mq-sched: fix scheduler bad performance
->   sbitmap: introduce __sbitmap_for_each_set()
->   blk-mq: introduce blk_mq_dequeue_from_ctx()
->   blk-mq-sched: move actual dispatching into one helper
->   blk-mq-sched: improve dispatching from sw queue
->   blk-mq-sched: don't dequeue request until all in ->dispatch are
->     flushed
-> 
->  block/blk-core.c        |   3 +-
->  block/blk-mq-debugfs.c  |   1 +
->  block/blk-mq-sched.c    | 104 ++++++++++++++++++++++++++++++++++++-------
->  block/blk-mq.c          | 114 +++++++++++++++++++++++++++++++++++++++---------
->  block/blk-mq.h          |   4 +-
->  drivers/md/dm-rq.c      |   2 +-
->  include/linux/blk-mq.h  |   3 ++
->  include/linux/sbitmap.h |  64 +++++++++++++++++++--------
->  8 files changed, 238 insertions(+), 57 deletions(-)
+Make this const as it is only passed to the const arguments of the
+functions sysfs_remove_bin_file and sysfs_create_bin_file. Make the
+declaration const too.
 
-Oops, the title should have been:
+Structure found using Coccinelle and changes done by hand.
 
-[PATCH V5 0/7] blk-mq-sched: improve sequential I/O performance(part 1)
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+ drivers/scsi/esas2r/esas2r.h      | 2 +-
+ drivers/scsi/esas2r/esas2r_main.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Sorry for that.
-
+diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
+index 1da6407..f9acf54 100644
+--- a/drivers/scsi/esas2r/esas2r.h
++++ b/drivers/scsi/esas2r/esas2r.h
+@@ -1421,6 +1421,6 @@ static inline void esas2r_comp_list_drain(struct esas2r_adapter *a,
+ extern struct bin_attribute bin_attr_vda;
+ extern struct bin_attribute bin_attr_hw;
+ extern struct bin_attribute bin_attr_live_nvram;
+-extern struct bin_attribute bin_attr_default_nvram;
++extern const struct bin_attribute bin_attr_default_nvram;
+ 
+ #endif /* ESAS2R_H */
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index 81f226b..9291768 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -224,7 +224,7 @@ static ssize_t write_hw(struct file *file, struct kobject *kobj,
+ ESAS2R_RW_BIN_ATTR(hw);
+ ESAS2R_RW_BIN_ATTR(live_nvram);
+ 
+-struct bin_attribute bin_attr_default_nvram = {
++const struct bin_attribute bin_attr_default_nvram = {
+ 	.attr	= { .name = "default_nvram", .mode = S_IRUGO },
+ 	.size	= 0,
+ 	.read	= read_default_nvram,
 -- 
-Ming
+1.9.1
