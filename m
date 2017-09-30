@@ -1,228 +1,73 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 03/21] lpfc: Fix crash receiving ELS while detaching driver
-Date: Fri, 29 Sep 2017 17:34:29 -0700
-Message-ID: <20170930003447.10747-4-jsmart2021@gmail.com>
-References: <20170930003447.10747-1-jsmart2021@gmail.com>
+Subject: [PATCH v2 00/21] lpfc updates for 11.4.0.4
+Date: Fri, 29 Sep 2017 17:34:26 -0700
+Message-ID: <20170930003447.10747-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:48464 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752594AbdI3Ae7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:34:59 -0400
-In-Reply-To: <20170930003447.10747-1-jsmart2021@gmail.com>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:44242 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752571AbdI3Ae4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:34:56 -0400
+Received: by mail-qt0-f196.google.com with SMTP id o13so1637784qtf.1
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:34:55 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, stable@vger.kernel.org, James Smart <james.smart@broadcom.com>
+Cc: James Smart <jsmart2021@gmail.com>
 
-From: Dick Kennedy <dick.kennedy@broadcom.com>
+This patch set provides a number of bug fixes and additions to
+the driver.
 
-The driver crashes when attempting to use a freed ndpl pointer.
+The patches were cut against the Martin's 4.14/scsi-queue tree.
+There are no outside dependencies.
 
-The pci_remove_one handler runs on a separate kernel thread. The order
-of the removal is starting by freeing all of the ndlps and then
-disabling interrupts. In between these two events the driver can still
-receive an ELS and process it. When it tries to use the ndlp pointer
-will be NULL
+v2:
+  Split patch 1 into separate patches
+  Added stable cc's where requested
+  "Fix oops of nvme host during driver unload" revised to only
+    block submit routines due to bug. abort routines must
+    function to cleanup.
+  Add "correct nvme sg segment count check" patch
 
-Change the order of the pci_remove_one vs disable interrupts so that
-interrupts are disabled before the ndlp's are freed.
+Dick Kennedy (18):
+  lpfc: fix pci hot plug crash in timer management routines
+  lpfc: fix pci hot plug crash in list_add call
+  lpfc: Fix crash receiving ELS while detaching driver
+  lpfc: Fix lpfc nvme host rejecting IO with Not Ready message
+  lpfc: Fix warning messages when NVME_TARGET_FC not defined
+  lpfc: PLOGI failures during NPIV testing
+  lpfc: Make ktime sampling more accurate
+  lpfc: Move CQ processing to a soft IRQ
+  lpfc: Fix FCP hba_wqidx assignment
+  lpfc: Revise NVME module parameter descriptions for better clarity
+  lpfc: Fix oops if nvmet_fc_register_targetport fails
+  lpfc: Disable NPIV support if NVME is enabled
+  lpfc: Fix crash in lpfc_nvme_fcp_io_submit during LIP
+  lpfc: Fix secure firmware updates
+  lpfc: Ensure io aborts interlocked with the target.
+  lpfc: Extend RDP support
+  lpfc: Fix oops of nvme host during driver unload.
+  lpfc: change version to 11.4.0.4
 
-Cc: <stable@vger.kernel.org> # 4.12+
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/lpfc/lpfc_attr.c      |  6 ++++--
- drivers/scsi/lpfc/lpfc_bsg.c       |  4 +++-
- drivers/scsi/lpfc/lpfc_els.c       |  7 ++++++-
- drivers/scsi/lpfc/lpfc_hbadisc.c   |  5 ++++-
- drivers/scsi/lpfc/lpfc_init.c      | 14 +++++++-------
- drivers/scsi/lpfc/lpfc_nportdisc.c |  2 +-
- drivers/scsi/lpfc/lpfc_sli.c       | 12 ++++++++++++
- 7 files changed, 37 insertions(+), 13 deletions(-)
+James Smart (3):
+  lpfc: Reduce log spew on controller reconnects
+  lpfc: Set missing abort context
+  lpfc: correct nvme sg segment count check
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 0806323829e6..f02269b46049 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3132,7 +3132,8 @@ lpfc_txq_hw_show(struct device *dev, struct device_attribute *attr, char *buf)
- 	struct lpfc_hba   *phba = ((struct lpfc_vport *) shost->hostdata)->phba;
- 	struct lpfc_sli_ring *pring = lpfc_phba_elsring(phba);
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", pring->txq_max);
-+	return snprintf(buf, PAGE_SIZE, "%d\n",
-+			pring ? pring->txq_max : 0);
- }
- 
- static DEVICE_ATTR(txq_hw, S_IRUGO,
-@@ -3145,7 +3146,8 @@ lpfc_txcmplq_hw_show(struct device *dev, struct device_attribute *attr,
- 	struct lpfc_hba   *phba = ((struct lpfc_vport *) shost->hostdata)->phba;
- 	struct lpfc_sli_ring *pring = lpfc_phba_elsring(phba);
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", pring->txcmplq_max);
-+	return snprintf(buf, PAGE_SIZE, "%d\n",
-+			pring ? pring->txcmplq_max : 0);
- }
- 
- static DEVICE_ATTR(txcmplq_hw, S_IRUGO,
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index fe9e1c079c20..d89816222b23 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -2911,7 +2911,7 @@ static int lpfcdiag_loop_post_rxbufs(struct lpfc_hba *phba, uint16_t rxxri,
- 		}
- 	}
- 
--	if (!cmdiocbq || !rxbmp || !rxbpl || !rxbuffer) {
-+	if (!cmdiocbq || !rxbmp || !rxbpl || !rxbuffer || !pring) {
- 		ret_val = -ENOMEM;
- 		goto err_post_rxbufs_exit;
- 	}
-@@ -5421,6 +5421,8 @@ lpfc_bsg_timeout(struct bsg_job *job)
- 	struct lpfc_iocbq *check_iocb, *next_iocb;
- 
- 	pring = lpfc_phba_elsring(phba);
-+	if (unlikely(!pring))
-+		return -EIO;
- 
- 	/* if job's driver data is NULL, the command completed or is in the
- 	 * the process of completing.  In this case, return status to request
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 468a66371de9..3ebf6ccba6e6 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -7430,6 +7430,8 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
- 	timeout = (uint32_t)(phba->fc_ratov << 1);
- 
- 	pring = lpfc_phba_elsring(phba);
-+	if (unlikely(!pring))
-+		return;
- 
- 	if ((phba->pport->load_flag & FC_UNLOADING))
- 		return;
-@@ -9310,6 +9312,9 @@ void lpfc_fabric_abort_nport(struct lpfc_nodelist *ndlp)
- 
- 	pring = lpfc_phba_elsring(phba);
- 
-+	if (unlikely(!pring))
-+		return;
-+
- 	spin_lock_irq(&phba->hbalock);
- 	list_for_each_entry_safe(piocb, tmp_iocb, &phba->fabric_iocb_list,
- 				 list) {
-@@ -9416,7 +9421,7 @@ lpfc_sli4_els_xri_aborted(struct lpfc_hba *phba,
- 				rxid, 1);
- 
- 			/* Check if TXQ queue needs to be serviced */
--			if (!(list_empty(&pring->txq)))
-+			if (pring && !list_empty(&pring->txq))
- 				lpfc_worker_wake_up(phba);
- 			return;
- 		}
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 20808349a80e..499df9d17339 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -3324,7 +3324,8 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 
- 	/* Unblock ELS traffic */
- 	pring = lpfc_phba_elsring(phba);
--	pring->flag &= ~LPFC_STOP_IOCB_EVENT;
-+	if (pring)
-+		pring->flag &= ~LPFC_STOP_IOCB_EVENT;
- 
- 	/* Check for error */
- 	if (mb->mbxStatus) {
-@@ -5430,6 +5431,8 @@ lpfc_free_tx(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
- 
- 	psli = &phba->sli;
- 	pring = lpfc_phba_elsring(phba);
-+	if (unlikely(!pring))
-+		return;
- 
- 	/* Error matching iocb on txq or txcmplq
- 	 * First check the txq.
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 1773b9ce3149..b50c3b559a7a 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -11403,6 +11403,13 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
- 	/* Remove FC host and then SCSI host with the physical port */
- 	fc_remove_host(shost);
- 	scsi_remove_host(shost);
-+	/*
-+	 * Bring down the SLI Layer. This step disables all interrupts,
-+	 * clears the rings, discards all mailbox commands, and resets
-+	 * the HBA FCoE function.
-+	 */
-+	lpfc_debugfs_terminate(vport);
-+	lpfc_sli4_hba_unset(phba);
- 
- 	/* Perform ndlp cleanup on the physical port.  The nvme and nvmet
- 	 * localports are destroyed after to cleanup all transport memory.
-@@ -11411,13 +11418,6 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
- 	lpfc_nvmet_destroy_targetport(phba);
- 	lpfc_nvme_destroy_localport(vport);
- 
--	/*
--	 * Bring down the SLI Layer. This step disables all interrupts,
--	 * clears the rings, discards all mailbox commands, and resets
--	 * the HBA FCoE function.
--	 */
--	lpfc_debugfs_terminate(vport);
--	lpfc_sli4_hba_unset(phba);
- 
- 	lpfc_stop_hba_timers(phba);
- 	spin_lock_irq(&phba->hbalock);
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index f3ad7cac355d..b6957d944b9a 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -216,7 +216,7 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
- 	pring = lpfc_phba_elsring(phba);
- 
- 	/* In case of error recovery path, we might have a NULL pring here */
--	if (!pring)
-+	if (unlikely(!pring))
- 		return;
- 
- 	/* Abort outstanding I/O on NPort <nlp_DID> */
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index b8513c1adcef..9024521b97c7 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -10632,6 +10632,14 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	    (cmdiocb->iocb_flag & LPFC_DRIVER_ABORTED) != 0)
- 		return 0;
- 
-+	if (!pring) {
-+		if (cmdiocb->iocb_flag & LPFC_IO_FABRIC)
-+			cmdiocb->fabric_iocb_cmpl = lpfc_ignore_els_cmpl;
-+		else
-+			cmdiocb->iocb_cmpl = lpfc_ignore_els_cmpl;
-+		goto abort_iotag_exit;
-+	}
-+
- 	/*
- 	 * If we're unloading, don't abort iocb on the ELS ring, but change
- 	 * the callback so that nothing happens when it finishes.
-@@ -12500,6 +12508,8 @@ lpfc_sli4_els_wcqe_to_rspiocbq(struct lpfc_hba *phba,
- 	unsigned long iflags;
- 
- 	pring = lpfc_phba_elsring(phba);
-+	if (unlikely(!pring))
-+		return NULL;
- 
- 	wcqe = &irspiocbq->cq_event.cqe.wcqe_cmpl;
- 	spin_lock_irqsave(&pring->ring_lock, iflags);
-@@ -18694,6 +18704,8 @@ lpfc_drain_txq(struct lpfc_hba *phba)
- 	uint32_t txq_cnt = 0;
- 
- 	pring = lpfc_phba_elsring(phba);
-+	if (unlikely(!pring))
-+		return 0;
- 
- 	spin_lock_irqsave(&pring->ring_lock, iflags);
- 	list_for_each_entry(piocbq, &pring->txq, list) {
+ drivers/scsi/lpfc/lpfc.h           |   3 +
+ drivers/scsi/lpfc/lpfc_attr.c      |  10 +-
+ drivers/scsi/lpfc/lpfc_bsg.c       |   4 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  19 ++--
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |   8 +-
+ drivers/scsi/lpfc/lpfc_hw4.h       |   2 +-
+ drivers/scsi/lpfc/lpfc_init.c      |  30 ++++--
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   2 +-
+ drivers/scsi/lpfc/lpfc_nvme.c      | 167 ++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_nvmet.c     | 148 +++++++++++++++++--------
+ drivers/scsi/lpfc/lpfc_sli.c       | 216 +++++++++++++++++++++++--------------
+ drivers/scsi/lpfc/lpfc_sli4.h      |   4 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |   9 ++
+ 14 files changed, 405 insertions(+), 219 deletions(-)
+
 -- 
 2.13.1
