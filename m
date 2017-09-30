@@ -1,96 +1,215 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V7 6/6] SCSI: set block queue at preempt only when SCSI device is put into quiesce
-Date: Sat, 30 Sep 2017 14:12:14 +0800
-Message-ID: <20170930061214.10622-7-ming.lei@redhat.com>
-References: <20170930061214.10622-1-ming.lei@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170930061214.10622-1-ming.lei@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, stable@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH 1/3] scsi: ufs: Change HCI marco to actual bit position
+Date: Sat, 30 Sep 2017 11:52:04 +0530
+Message-ID: <1506752526-27014-1-git-send-email-alim.akhtar@samsung.com>
+References: <CGME20170930062956epcas1p1461ea07e21a275a9e5733b3b90b5896a@epcas1p1.samsung.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:31384 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751214AbdI3GaB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Sep 2017 02:30:01 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: vinholikatti@gmail.com, martin.petersen@oracle.com, subhashj@codeaurora.org, Bart.VanAssche@wdc.com
 
-Simply quiesing SCSI device and waiting for completeion of IO
-dispatched to SCSI queue isn't safe, it is easy to use up
-request pool because all allocated requests before can't
-be dispatched when device is put in QIUESCE. Then no request
-can be allocated for RQF_PREEMPT, and system may hang somewhere,
-such as When sending commands of sync_cache or start_stop during
-system suspend path.
+Currently UFS HCI uses UFS_BIT() macro to get various bit
+position for the hardware registers status bits. Which makes
+code longer instead of shorter. This macro does not improve
+code readability as well.
+Lets re-write these macro definition with the actual bit position.
 
-Before quiesing SCSI, this patch sets block queue in preempt
-mode first, so no new normal request can enter queue any more,
-and all pending requests are drained too once blk_set_preempt_only(true)
-is returned. Then RQF_PREEMPT can be allocated successfully duirng
-SCSI quiescing.
-
-This patch fixes one long term issue of IO hang, in either block legacy
-and blk-mq.
-
-Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
-Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Cc: stable@vger.kernel.org
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Suggested-by: Bart Van Assche <Bart.VanAssche@wdc.com>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/scsi_lib.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+ This patch is only complied tested, appreciate testing on actual h/w.
+ Please see https://lkml.org/lkml/2017/8/28/786  discussion.
+ 
+ drivers/scsi/ufs/ufshcd.h | 14 +++++-----
+ drivers/scsi/ufs/ufshci.h | 69 ++++++++++++++++++++++++-----------------------
+ 2 files changed, 43 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80fe297..82c51619f1b7 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -252,9 +252,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	struct scsi_request *rq;
- 	int ret = DRIVER_ERROR << 24;
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index cdc8bd0..ce2920b 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -544,13 +544,13 @@ struct ufs_hba {
+ 	bool is_irq_enabled;
  
--	req = blk_get_request(sdev->request_queue,
-+	req = __blk_get_request(sdev->request_queue,
- 			data_direction == DMA_TO_DEVICE ?
--			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
-+			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM,
-+			BLK_REQ_PREEMPT);
- 	if (IS_ERR(req))
- 		return ret;
- 	rq = scsi_req(req);
-@@ -2928,12 +2929,28 @@ scsi_device_quiesce(struct scsi_device *sdev)
- {
- 	int err;
+ 	/* Interrupt aggregation support is broken */
+-	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			UFS_BIT(0)
++	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
  
-+	/*
-+	 * Simply quiesing SCSI device isn't safe, it is easy
-+	 * to use up requests because all these allocated requests
-+	 * can't be dispatched when device is put in QIUESCE.
-+	 * Then no request can be allocated and we may hang
-+	 * somewhere, such as system suspend/resume.
-+	 *
-+	 * So we set block queue in preempt only first, no new
-+	 * normal request can enter queue any more, and all pending
-+	 * requests are drained once blk_set_preempt_only()
-+	 * returns. Only RQF_PREEMPT is allowed in preempt only mode.
-+	 */
-+	blk_set_preempt_only(sdev->request_queue, true);
-+
- 	mutex_lock(&sdev->state_mutex);
- 	err = scsi_device_set_state(sdev, SDEV_QUIESCE);
- 	mutex_unlock(&sdev->state_mutex);
+ 	/*
+ 	 * delay before each dme command is required as the unipro
+ 	 * layer has shown instabilities
+ 	 */
+-	#define UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS		UFS_BIT(1)
++	#define UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS		0x2
  
--	if (err)
-+	if (err) {
-+		blk_set_preempt_only(sdev->request_queue, false);
- 		return err;
-+	}
+ 	/*
+ 	 * If UFS host controller is having issue in processing LCC (Line
+@@ -559,21 +559,21 @@ struct ufs_hba {
+ 	 * the LCC transmission on UFS device (by clearing TX_LCC_ENABLE
+ 	 * attribute of device to 0).
+ 	 */
+-	#define UFSHCD_QUIRK_BROKEN_LCC				UFS_BIT(2)
++	#define UFSHCD_QUIRK_BROKEN_LCC				0x4
  
- 	scsi_run_queue(sdev->request_queue);
- 	while (atomic_read(&sdev->device_busy)) {
-@@ -2964,6 +2981,8 @@ void scsi_device_resume(struct scsi_device *sdev)
- 	    scsi_device_set_state(sdev, SDEV_RUNNING) == 0)
- 		scsi_run_queue(sdev->request_queue);
- 	mutex_unlock(&sdev->state_mutex);
-+
-+	blk_set_preempt_only(sdev->request_queue, false);
- }
- EXPORT_SYMBOL(scsi_device_resume);
+ 	/*
+ 	 * The attribute PA_RXHSUNTERMCAP specifies whether or not the
+ 	 * inbound Link supports unterminated line in HS mode. Setting this
+ 	 * attribute to 1 fixes moving to HS gear.
+ 	 */
+-	#define UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP		UFS_BIT(3)
++	#define UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP		0x8
  
+ 	/*
+ 	 * This quirk needs to be enabled if the host contoller only allows
+ 	 * accessing the peer dme attributes in AUTO mode (FAST AUTO or
+ 	 * SLOW AUTO).
+ 	 */
+-	#define UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE		UFS_BIT(4)
++	#define UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE		0x10
+ 
+ 	/*
+ 	 * This quirk needs to be enabled if the host contoller doesn't
+@@ -581,13 +581,13 @@ struct ufs_hba {
+ 	 * is enabled, standard UFS host driver will call the vendor specific
+ 	 * ops (get_ufs_hci_version) to get the correct version.
+ 	 */
+-	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
++	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		0x20
+ 
+ 	/*
+ 	 * This quirk needs to be enabled if the host contoller regards
+ 	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
+ 	 */
+-	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
++	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			0x80
+ 
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+ 
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index f60145d..5a60a8f 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -119,22 +119,24 @@ enum {
+ #define MANUFACTURE_ID_MASK	UFS_MASK(0xFFFF, 0)
+ #define PRODUCT_ID_MASK		UFS_MASK(0xFFFF, 16)
+ 
+-#define UFS_BIT(x)	(1L << (x))
+-
+-#define UTP_TRANSFER_REQ_COMPL			UFS_BIT(0)
+-#define UIC_DME_END_PT_RESET			UFS_BIT(1)
+-#define UIC_ERROR				UFS_BIT(2)
+-#define UIC_TEST_MODE				UFS_BIT(3)
+-#define UIC_POWER_MODE				UFS_BIT(4)
+-#define UIC_HIBERNATE_EXIT			UFS_BIT(5)
+-#define UIC_HIBERNATE_ENTER			UFS_BIT(6)
+-#define UIC_LINK_LOST				UFS_BIT(7)
+-#define UIC_LINK_STARTUP			UFS_BIT(8)
+-#define UTP_TASK_REQ_COMPL			UFS_BIT(9)
+-#define UIC_COMMAND_COMPL			UFS_BIT(10)
+-#define DEVICE_FATAL_ERROR			UFS_BIT(11)
+-#define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
+-#define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
++#define UFS_BIT(x)     (1L << (x))
++/*
++ * IS - Interrupt Status - 20h
++ */
++#define UTP_TRANSFER_REQ_COMPL			0x1
++#define UIC_DME_END_PT_RESET			0x2
++#define UIC_ERROR				0x4
++#define UIC_TEST_MODE				0x8
++#define UIC_POWER_MODE				0x10
++#define UIC_HIBERNATE_EXIT			0x20
++#define UIC_HIBERNATE_ENTER			0x40
++#define UIC_LINK_LOST				0x80
++#define UIC_LINK_STARTUP			0x100
++#define UTP_TASK_REQ_COMPL			0x200
++#define UIC_COMMAND_COMPL			0x400
++#define DEVICE_FATAL_ERROR			0x800
++#define CONTROLLER_FATAL_ERROR			0x10000
++#define SYSTEM_BUS_FATAL_ERROR			0x20000
+ 
+ #define UFSHCD_UIC_PWR_MASK	(UIC_HIBERNATE_ENTER |\
+ 				UIC_HIBERNATE_EXIT |\
+@@ -152,10 +154,10 @@ enum {
+ 				SYSTEM_BUS_FATAL_ERROR)
+ 
+ /* HCS - Host Controller Status 30h */
+-#define DEVICE_PRESENT				UFS_BIT(0)
+-#define UTP_TRANSFER_REQ_LIST_READY		UFS_BIT(1)
+-#define UTP_TASK_REQ_LIST_READY			UFS_BIT(2)
+-#define UIC_COMMAND_READY			UFS_BIT(3)
++#define DEVICE_PRESENT				0x1
++#define UTP_TRANSFER_REQ_LIST_READY		0x2
++#define UTP_TASK_REQ_LIST_READY			0x4
++#define UIC_COMMAND_READY			0x8
+ #define HOST_ERROR_INDICATOR			UFS_BIT(4)
+ #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
+ #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
+@@ -174,46 +176,47 @@ enum {
+ };
+ 
+ /* HCE - Host Controller Enable 34h */
+-#define CONTROLLER_ENABLE	UFS_BIT(0)
++#define CONTROLLER_ENABLE	0x1
+ #define CONTROLLER_DISABLE	0x0
+-#define CRYPTO_GENERAL_ENABLE	UFS_BIT(1)
++#define CRYPTO_GENERAL_ENABLE	0x2
+ 
+ /* UECPA - Host UIC Error Code PHY Adapter Layer 38h */
+-#define UIC_PHY_ADAPTER_LAYER_ERROR			UFS_BIT(31)
++#define UIC_PHY_ADAPTER_LAYER_ERROR			0x80000000
+ #define UIC_PHY_ADAPTER_LAYER_ERROR_CODE_MASK		0x1F
+ #define UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK		0xF
+ 
+ /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
+-#define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
++#define UIC_DATA_LINK_LAYER_ERROR		0x80000000
+ #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
+ #define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
+ #define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
+ #define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
+ 
+ /* UECN - Host UIC Error Code Network Layer 40h */
+-#define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
++#define UIC_NETWORK_LAYER_ERROR			0x80000000
+ #define UIC_NETWORK_LAYER_ERROR_CODE_MASK	0x7
+ 
+ /* UECT - Host UIC Error Code Transport Layer 44h */
+-#define UIC_TRANSPORT_LAYER_ERROR		UFS_BIT(31)
++#define UIC_TRANSPORT_LAYER_ERROR		0x80000000
+ #define UIC_TRANSPORT_LAYER_ERROR_CODE_MASK	0x7F
+ 
+ /* UECDME - Host UIC Error Code DME 48h */
+-#define UIC_DME_ERROR			UFS_BIT(31)
++#define UIC_DME_ERROR			0x80000000
+ #define UIC_DME_ERROR_CODE_MASK		0x1
+ 
++/* UTRIACR - Interrupt Aggregation control register - 0x4Ch */
+ #define INT_AGGR_TIMEOUT_VAL_MASK		0xFF
+ #define INT_AGGR_COUNTER_THRESHOLD_MASK		UFS_MASK(0x1F, 8)
+-#define INT_AGGR_COUNTER_AND_TIMER_RESET	UFS_BIT(16)
+-#define INT_AGGR_STATUS_BIT			UFS_BIT(20)
+-#define INT_AGGR_PARAM_WRITE			UFS_BIT(24)
+-#define INT_AGGR_ENABLE				UFS_BIT(31)
++#define INT_AGGR_COUNTER_AND_TIMER_RESET	0x10000
++#define INT_AGGR_STATUS_BIT			0x100000
++#define INT_AGGR_PARAM_WRITE			0x1000000
++#define INT_AGGR_ENABLE				0x80000000
+ 
+ /* UTRLRSR - UTP Transfer Request Run-Stop Register 60h */
+-#define UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT	UFS_BIT(0)
++#define UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT	0x1
+ 
+ /* UTMRLRSR - UTP Task Management Request Run-Stop Register 80h */
+-#define UTP_TASK_REQ_LIST_RUN_STOP_BIT		UFS_BIT(0)
++#define UTP_TASK_REQ_LIST_RUN_STOP_BIT		0x1
+ 
+ /* UICCMD - UIC Command */
+ #define COMMAND_OPCODE_MASK		0xFF
 -- 
-2.9.5
+2.7.4
