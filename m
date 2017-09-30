@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 6/7] blk-mq-sched: improve dispatching from sw queue
-Date: Sat, 30 Sep 2017 18:27:19 +0800
-Message-ID: <20170930102720.30219-7-ming.lei@redhat.com>
+Subject: [PATCH V5 7/7] blk-mq-sched: don't dequeue request until all in ->dispatch are flushed
+Date: Sat, 30 Sep 2017 18:27:20 +0800
+Message-ID: <20170930102720.30219-8-ming.lei@redhat.com>
 References: <20170930102720.30219-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170930102720.30219-1-ming.lei@redhat.com>
@@ -10,129 +10,156 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-SCSI devices use host-wide tagset, and the shared
-driver tag space is often quite big. Meantime
-there is also queue depth for each lun(.cmd_per_lun),
-which is often small.
+During dispatching, we moved all requests from hctx->dispatch to
+one temporary list, then dispatch them one by one from this list.
+Unfortunately during this period, run queue from other contexts
+may think the queue is idle, then start to dequeue from sw/scheduler
+queue and still try to dispatch because ->dispatch is empty. This way
+hurts sequential I/O performance because requests are dequeued when
+lld queue is busy.
 
-So lots of requests may stay in sw queue, and we
-always flush all belonging to same hw queue and
-dispatch them all to driver, unfortunately it is
-easy to cause queue busy because of the small
-per-lun queue depth. Once these requests are flushed
-out, they have to stay in hctx->dispatch, and no bio
-merge can participate into these requests, and
-sequential IO performance is hurted.
+This patch introduces the state of BLK_MQ_S_DISPATCH_BUSY to
+make sure that request isn't dequeued until ->dispatch is
+flushed.
 
-This patch improves dispatching from sw queue when
-there is per-request-queue queue depth by taking
-request one by one from sw queue, just like the way
-of IO scheduler.
-
-Reviewed-by: Omar Sandoval <osandov@fb.com>
 Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
 Tested-by: Tom Nguyen <tom81094@gmail.com>
 Tested-by: Paolo Valente <paolo.valente@linaro.org>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-sched.c   | 53 ++++++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/blk-mq.h |  2 ++
- 2 files changed, 53 insertions(+), 2 deletions(-)
+ block/blk-mq-debugfs.c |  1 +
+ block/blk-mq-sched.c   | 53 +++++++++++++++++++++++++++++++++-----------------
+ block/blk-mq.c         |  6 ++++++
+ include/linux/blk-mq.h |  1 +
+ 4 files changed, 43 insertions(+), 18 deletions(-)
 
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index 813ca3bbbefc..f1a62c0d1acc 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -182,6 +182,7 @@ static const char *const hctx_state_name[] = {
+ 	HCTX_STATE_NAME(SCHED_RESTART),
+ 	HCTX_STATE_NAME(TAG_WAITING),
+ 	HCTX_STATE_NAME(START_ON_RUN),
++	HCTX_STATE_NAME(DISPATCH_BUSY),
+ };
+ #undef HCTX_STATE_NAME
+ 
 diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 538f363f39ca..3ba112d9dc15 100644
+index 3ba112d9dc15..c5eac1eee442 100644
 --- a/block/blk-mq-sched.c
 +++ b/block/blk-mq-sched.c
-@@ -105,6 +105,42 @@ static void blk_mq_do_dispatch_sched(struct request_queue *q,
- 	} while (blk_mq_dispatch_rq_list(q, &rq_list));
- }
- 
-+static struct blk_mq_ctx *blk_mq_next_ctx(struct blk_mq_hw_ctx *hctx,
-+					  struct blk_mq_ctx *ctx)
-+{
-+	unsigned idx = ctx->index_hw;
-+
-+	if (++idx == hctx->nr_ctx)
-+		idx = 0;
-+
-+	return hctx->ctxs[idx];
-+}
-+
-+static void blk_mq_do_dispatch_ctx(struct request_queue *q,
-+				   struct blk_mq_hw_ctx *hctx)
-+{
-+	LIST_HEAD(rq_list);
-+	struct blk_mq_ctx *ctx = READ_ONCE(hctx->dispatch_from);
-+	bool dispatched;
-+
-+	do {
-+		struct request *rq;
-+
-+		rq = blk_mq_dequeue_from_ctx(hctx, ctx);
-+		if (!rq)
-+			break;
-+		list_add(&rq->queuelist, &rq_list);
-+
-+		/* round robin for fair dispatch */
-+		ctx = blk_mq_next_ctx(hctx, rq->mq_ctx);
-+
-+		dispatched = blk_mq_dispatch_rq_list(q, &rq_list);
-+	} while (dispatched);
-+
-+	if (!dispatched)
-+		WRITE_ONCE(hctx->dispatch_from, ctx);
-+}
-+
- void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- {
+@@ -146,7 +146,6 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
  	struct request_queue *q = hctx->queue;
-@@ -142,18 +178,31 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	struct elevator_queue *e = q->elevator;
+ 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
+-	bool do_sched_dispatch = true;
+ 	LIST_HEAD(rq_list);
+ 
+ 	/* RCU or SRCU read lock is needed before checking quiesced flag */
+@@ -177,8 +176,33 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 */
  	if (!list_empty(&rq_list)) {
  		blk_mq_sched_mark_restart_hctx(hctx);
- 		do_sched_dispatch = blk_mq_dispatch_rq_list(q, &rq_list);
--	} else if (!has_sched_dispatch) {
-+	} else if (!has_sched_dispatch && !q->queue_depth) {
+-		do_sched_dispatch = blk_mq_dispatch_rq_list(q, &rq_list);
+-	} else if (!has_sched_dispatch && !q->queue_depth) {
++		blk_mq_dispatch_rq_list(q, &rq_list);
++
 +		/*
-+		 * If there is no per-request_queue depth, we
-+		 * flush all requests in this hw queue, otherwise
-+		 * pick up request one by one from sw queue for
-+		 * avoiding to mess up I/O merge when dispatch
-+		 * run out of resource, which can be triggered
-+		 * easily by per-request_queue queue depth
++		 * We may clear DISPATCH_BUSY just after it
++		 * is set from another context, the only cost
++		 * is that one request is dequeued a bit early,
++		 * we can survive that. Given the window is
++		 * small enough, no need to worry about performance
++		 * effect.
 +		 */
- 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
- 		blk_mq_dispatch_rq_list(q, &rq_list);
- 	}
- 
-+	if (!do_sched_dispatch)
++		if (list_empty_careful(&hctx->dispatch))
++			clear_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
++	}
++
++	/*
++	 * If DISPATCH_BUSY is set, that means hw queue is busy
++	 * and requests in the list of hctx->dispatch need to
++	 * be flushed first, so return early.
++	 *
++	 * Wherever DISPATCH_BUSY is set, blk_mq_run_hw_queue()
++	 * will be run to try to make progress, so it is always
++	 * safe to check the state here.
++	 */
++	if (test_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state))
 +		return;
 +
- 	/*
- 	 * We want to dispatch from the scheduler if there was nothing
- 	 * on the dispatch list or we were able to dispatch from the
- 	 * dispatch list.
- 	 */
--	if (do_sched_dispatch && has_sched_dispatch)
-+	if (has_sched_dispatch)
++	if (!has_sched_dispatch) {
+ 		/*
+ 		 * If there is no per-request_queue depth, we
+ 		 * flush all requests in this hw queue, otherwise
+@@ -187,22 +211,15 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 		 * run out of resource, which can be triggered
+ 		 * easily by per-request_queue queue depth
+ 		 */
+-		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+-		blk_mq_dispatch_rq_list(q, &rq_list);
+-	}
+-
+-	if (!do_sched_dispatch)
+-		return;
+-
+-	/*
+-	 * We want to dispatch from the scheduler if there was nothing
+-	 * on the dispatch list or we were able to dispatch from the
+-	 * dispatch list.
+-	 */
+-	if (has_sched_dispatch)
++		if (!q->queue_depth) {
++			blk_mq_flush_busy_ctxs(hctx, &rq_list);
++			blk_mq_dispatch_rq_list(q, &rq_list);
++		} else {
++			blk_mq_do_dispatch_ctx(q, hctx);
++		}
++	} else {
  		blk_mq_do_dispatch_sched(q, e, hctx);
-+	else
-+		blk_mq_do_dispatch_ctx(q, hctx);
+-	else
+-		blk_mq_do_dispatch_ctx(q, hctx);
++	}
  }
  
  bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 8b49af1ade7f..7cb3f87334c0 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1142,6 +1142,11 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
+ 
+ 		spin_lock(&hctx->lock);
+ 		list_splice_init(list, &hctx->dispatch);
++		/*
++		 * DISPATCH_BUSY won't be cleared until all requests
++		 * in hctx->dispatch are dispatched successfully
++		 */
++		set_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
+ 		spin_unlock(&hctx->lock);
+ 
+ 		/*
+@@ -1446,6 +1451,7 @@ static void blk_mq_request_direct_insert(struct blk_mq_hw_ctx *hctx,
+ {
+ 	spin_lock(&hctx->lock);
+ 	list_add_tail(&rq->queuelist, &hctx->dispatch);
++	set_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
+ 	spin_unlock(&hctx->lock);
+ 
+ 	blk_mq_run_hw_queue(hctx, false);
 diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 2747469cedaf..fccabe00fb55 100644
+index fccabe00fb55..aa9853ada8b8 100644
 --- a/include/linux/blk-mq.h
 +++ b/include/linux/blk-mq.h
-@@ -30,6 +30,8 @@ struct blk_mq_hw_ctx {
+@@ -172,6 +172,7 @@ enum {
+ 	BLK_MQ_S_SCHED_RESTART	= 2,
+ 	BLK_MQ_S_TAG_WAITING	= 3,
+ 	BLK_MQ_S_START_ON_RUN	= 4,
++	BLK_MQ_S_DISPATCH_BUSY	= 5,
  
- 	struct sbitmap		ctx_map;
- 
-+	struct blk_mq_ctx	*dispatch_from;
-+
- 	struct blk_mq_ctx	**ctxs;
- 	unsigned int		nr_ctx;
+ 	BLK_MQ_MAX_DEPTH	= 10240,
  
 -- 
 2.9.5
