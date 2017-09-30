@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V7 1/6] blk-mq: only run hw queues for blk-mq
-Date: Sat, 30 Sep 2017 14:12:09 +0800
-Message-ID: <20170930061214.10622-2-ming.lei@redhat.com>
+Subject: [PATCH V7 2/6] block: tracking request allocation with q_usage_counter
+Date: Sat, 30 Sep 2017 14:12:10 +0800
+Message-ID: <20170930061214.10622-3-ming.lei@redhat.com>
 References: <20170930061214.10622-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170930061214.10622-1-ming.lei@redhat.com>
@@ -10,30 +10,98 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch just makes it explicitely.
+This usage is basically same with blk-mq, so that we can
+support to freeze legacy queue easily.
+
+Also 'wake_up_all(&q->mq_freeze_wq)' has to be moved
+into blk_set_queue_dying() since both legacy and blk-mq
+may wait on the wait queue of .mq_freeze_wq.
 
 Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
 Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ block/blk-core.c | 14 ++++++++++++++
+ block/blk-mq.c   |  7 -------
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 98a18609755e..6fd9f86fc86d 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -125,7 +125,8 @@ void blk_freeze_queue_start(struct request_queue *q)
- 	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
- 	if (freeze_depth == 1) {
- 		percpu_ref_kill(&q->q_usage_counter);
--		blk_mq_run_hw_queues(q, false);
-+		if (q->mq_ops)
-+			blk_mq_run_hw_queues(q, false);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 048be4aa6024..a5011c824ac6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -610,6 +610,12 @@ void blk_set_queue_dying(struct request_queue *q)
+ 		}
+ 		spin_unlock_irq(q->queue_lock);
+ 	}
++
++	/*
++	 * We need to ensure that processes currently waiting on
++	 * the queue are notified as well.
++	 */
++	wake_up_all(&q->mq_freeze_wq);
+ }
+ EXPORT_SYMBOL_GPL(blk_set_queue_dying);
+ 
+@@ -1395,16 +1401,21 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 					   unsigned int op, gfp_t gfp_mask)
+ {
+ 	struct request *rq;
++	int ret = 0;
+ 
+ 	WARN_ON_ONCE(q->mq_ops);
+ 
+ 	/* create ioc upfront */
+ 	create_io_context(gfp_mask, q->node);
+ 
++	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM));
++	if (ret)
++		return ERR_PTR(ret);
+ 	spin_lock_irq(q->queue_lock);
+ 	rq = get_request(q, op, NULL, gfp_mask);
+ 	if (IS_ERR(rq)) {
+ 		spin_unlock_irq(q->queue_lock);
++		blk_queue_exit(q);
+ 		return rq;
+ 	}
+ 
+@@ -1576,6 +1587,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 		blk_free_request(rl, req);
+ 		freed_request(rl, sync, rq_flags);
+ 		blk_put_rl(rl);
++		blk_queue_exit(q);
  	}
  }
- EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
+ EXPORT_SYMBOL_GPL(__blk_put_request);
+@@ -1857,8 +1869,10 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
+ 	 * Grab a free request. This is might sleep but can not fail.
+ 	 * Returns with the queue unlocked.
+ 	 */
++	blk_queue_enter_live(q);
+ 	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
+ 	if (IS_ERR(req)) {
++		blk_queue_exit(q);
+ 		__wbt_done(q->rq_wb, wb_acct);
+ 		if (PTR_ERR(req) == -ENOMEM)
+ 			bio->bi_status = BLK_STS_RESOURCE;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 6fd9f86fc86d..10c1f49f663d 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -256,13 +256,6 @@ void blk_mq_wake_waiters(struct request_queue *q)
+ 	queue_for_each_hw_ctx(q, hctx, i)
+ 		if (blk_mq_hw_queue_mapped(hctx))
+ 			blk_mq_tag_wakeup_all(hctx->tags, true);
+-
+-	/*
+-	 * If we are called because the queue has now been marked as
+-	 * dying, we need to ensure that processes currently waiting on
+-	 * the queue are notified as well.
+-	 */
+-	wake_up_all(&q->mq_freeze_wq);
+ }
+ 
+ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
 -- 
 2.9.5
