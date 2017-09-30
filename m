@@ -1,165 +1,111 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 7/7] blk-mq-sched: don't dequeue request until all in ->dispatch are flushed
-Date: Sat, 30 Sep 2017 18:27:20 +0800
-Message-ID: <20170930102720.30219-8-ming.lei@redhat.com>
+Subject: Re: [PATCH V5 00/14] blk-mq-sched: improve sequential I/O
+ performance(part 1)
+Date: Sat, 30 Sep 2017 18:32:12 +0800
+Message-ID: <20170930103211.GA29093@ming.t460p>
 References: <20170930102720.30219-1-ming.lei@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20170930102720.30219-1-ming.lei@redhat.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-During dispatching, we moved all requests from hctx->dispatch to
-one temporary list, then dispatch them one by one from this list.
-Unfortunately during this period, run queue from other contexts
-may think the queue is idle, then start to dequeue from sw/scheduler
-queue and still try to dispatch because ->dispatch is empty. This way
-hurts sequential I/O performance because requests are dequeued when
-lld queue is busy.
+On Sat, Sep 30, 2017 at 06:27:13PM +0800, Ming Lei wrote:
+> Hi Jens,
+> 
+> In Red Hat internal storage test wrt. blk-mq scheduler, we
+> found that I/O performance is much bad with mq-deadline, especially
+> about sequential I/O on some multi-queue SCSI devcies(lpfc, qla2xxx,
+> SRP...)
+> 
+> Turns out one big issue causes the performance regression: requests
+> are still dequeued from sw queue/scheduler queue even when ldd's
+> queue is busy, so I/O merge becomes quite difficult to make, then
+> sequential IO degrades a lot.
+> 
+> This issue becomes one of mains reasons for reverting default SCSI_MQ
+> in V4.13.
+> 
+> The 1st patch takes direct issue in blk_mq_request_bypass_insert(),
+> then we can improve dm-mpath's performance in part 2, which will
+> be posted out soon.
+> 
+> The 2nd six patches improve this situation, and brings back
+> some performance loss.
+> 
+> With this change, SCSI-MQ sequential I/O performance is
+> improved much, Paolo reported that mq-deadline performance
+> improved much[2] in his dbench test wrt V2. Also performanc
+> improvement on lpfc/qla2xx was observed with V1.[1]
+> 
+> Please consider it for V4.15.
+> 
+> [1] http://marc.info/?l=linux-block&m=150151989915776&w=2
+> [2] https://marc.info/?l=linux-block&m=150217980602843&w=2
+> 
+> V5:
+> 	- address some comments from Omar
+> 	- add Tested-by & Reveiewed-by tag
+> 	- use direct issue for blk_mq_request_bypass_insert(), and
+> 	start to consider to improve sequential I/O for dm-mpath
+> 	- only include part 1(the original patch 1 ~ 6), as suggested
+> 	by Omar
+> 
+> V4:
+> 	- add Reviewed-by tag
+> 	- some trival change: typo fix in commit log or comment,
+> 	variable name, no actual functional change
+> 
+> V3:
+> 	- totally round robin for picking req from ctx, as suggested
+> 	by Bart
+> 	- remove one local variable in __sbitmap_for_each_set()
+> 	- drop patches of single dispatch list, which can improve
+> 	performance on mq-deadline, but cause a bit degrade on
+> 	none because all hctxs need to be checked after ->dispatch
+> 	is flushed. Will post it again once it is mature.
+> 	- rebase on v4.13-rc6 with block for-next
+> 
+> V2:
+> 	- dequeue request from sw queues in round roubin's style
+> 	as suggested by Bart, and introduces one helper in sbitmap
+> 	for this purpose
+> 	- improve bio merge via hash table from sw queue
+> 	- add comments about using DISPATCH_BUSY state in lockless way,
+> 	simplifying handling on busy state,
+> 	- hold ctx->lock when clearing ctx busy bit as suggested
+> 	by Bart
+> 
+> 
+> Ming Lei (7):
+>   blk-mq: issue rq directly in blk_mq_request_bypass_insert()
+>   blk-mq-sched: fix scheduler bad performance
+>   sbitmap: introduce __sbitmap_for_each_set()
+>   blk-mq: introduce blk_mq_dequeue_from_ctx()
+>   blk-mq-sched: move actual dispatching into one helper
+>   blk-mq-sched: improve dispatching from sw queue
+>   blk-mq-sched: don't dequeue request until all in ->dispatch are
+>     flushed
+> 
+>  block/blk-core.c        |   3 +-
+>  block/blk-mq-debugfs.c  |   1 +
+>  block/blk-mq-sched.c    | 104 ++++++++++++++++++++++++++++++++++++-------
+>  block/blk-mq.c          | 114 +++++++++++++++++++++++++++++++++++++++---------
+>  block/blk-mq.h          |   4 +-
+>  drivers/md/dm-rq.c      |   2 +-
+>  include/linux/blk-mq.h  |   3 ++
+>  include/linux/sbitmap.h |  64 +++++++++++++++++++--------
+>  8 files changed, 238 insertions(+), 57 deletions(-)
 
-This patch introduces the state of BLK_MQ_S_DISPATCH_BUSY to
-make sure that request isn't dequeued until ->dispatch is
-flushed.
+Oops, the title should have been:
 
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
-Tested-by: Tom Nguyen <tom81094@gmail.com>
-Tested-by: Paolo Valente <paolo.valente@linaro.org>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/blk-mq-debugfs.c |  1 +
- block/blk-mq-sched.c   | 53 +++++++++++++++++++++++++++++++++-----------------
- block/blk-mq.c         |  6 ++++++
- include/linux/blk-mq.h |  1 +
- 4 files changed, 43 insertions(+), 18 deletions(-)
+[PATCH V5 0/7] blk-mq-sched: improve sequential I/O performance(part 1)
 
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 813ca3bbbefc..f1a62c0d1acc 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -182,6 +182,7 @@ static const char *const hctx_state_name[] = {
- 	HCTX_STATE_NAME(SCHED_RESTART),
- 	HCTX_STATE_NAME(TAG_WAITING),
- 	HCTX_STATE_NAME(START_ON_RUN),
-+	HCTX_STATE_NAME(DISPATCH_BUSY),
- };
- #undef HCTX_STATE_NAME
- 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 3ba112d9dc15..c5eac1eee442 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -146,7 +146,6 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	struct request_queue *q = hctx->queue;
- 	struct elevator_queue *e = q->elevator;
- 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
--	bool do_sched_dispatch = true;
- 	LIST_HEAD(rq_list);
- 
- 	/* RCU or SRCU read lock is needed before checking quiesced flag */
-@@ -177,8 +176,33 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	 */
- 	if (!list_empty(&rq_list)) {
- 		blk_mq_sched_mark_restart_hctx(hctx);
--		do_sched_dispatch = blk_mq_dispatch_rq_list(q, &rq_list);
--	} else if (!has_sched_dispatch && !q->queue_depth) {
-+		blk_mq_dispatch_rq_list(q, &rq_list);
-+
-+		/*
-+		 * We may clear DISPATCH_BUSY just after it
-+		 * is set from another context, the only cost
-+		 * is that one request is dequeued a bit early,
-+		 * we can survive that. Given the window is
-+		 * small enough, no need to worry about performance
-+		 * effect.
-+		 */
-+		if (list_empty_careful(&hctx->dispatch))
-+			clear_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
-+	}
-+
-+	/*
-+	 * If DISPATCH_BUSY is set, that means hw queue is busy
-+	 * and requests in the list of hctx->dispatch need to
-+	 * be flushed first, so return early.
-+	 *
-+	 * Wherever DISPATCH_BUSY is set, blk_mq_run_hw_queue()
-+	 * will be run to try to make progress, so it is always
-+	 * safe to check the state here.
-+	 */
-+	if (test_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state))
-+		return;
-+
-+	if (!has_sched_dispatch) {
- 		/*
- 		 * If there is no per-request_queue depth, we
- 		 * flush all requests in this hw queue, otherwise
-@@ -187,22 +211,15 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 		 * run out of resource, which can be triggered
- 		 * easily by per-request_queue queue depth
- 		 */
--		blk_mq_flush_busy_ctxs(hctx, &rq_list);
--		blk_mq_dispatch_rq_list(q, &rq_list);
--	}
--
--	if (!do_sched_dispatch)
--		return;
--
--	/*
--	 * We want to dispatch from the scheduler if there was nothing
--	 * on the dispatch list or we were able to dispatch from the
--	 * dispatch list.
--	 */
--	if (has_sched_dispatch)
-+		if (!q->queue_depth) {
-+			blk_mq_flush_busy_ctxs(hctx, &rq_list);
-+			blk_mq_dispatch_rq_list(q, &rq_list);
-+		} else {
-+			blk_mq_do_dispatch_ctx(q, hctx);
-+		}
-+	} else {
- 		blk_mq_do_dispatch_sched(q, e, hctx);
--	else
--		blk_mq_do_dispatch_ctx(q, hctx);
-+	}
- }
- 
- bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 8b49af1ade7f..7cb3f87334c0 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1142,6 +1142,11 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
- 
- 		spin_lock(&hctx->lock);
- 		list_splice_init(list, &hctx->dispatch);
-+		/*
-+		 * DISPATCH_BUSY won't be cleared until all requests
-+		 * in hctx->dispatch are dispatched successfully
-+		 */
-+		set_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
- 		spin_unlock(&hctx->lock);
- 
- 		/*
-@@ -1446,6 +1451,7 @@ static void blk_mq_request_direct_insert(struct blk_mq_hw_ctx *hctx,
- {
- 	spin_lock(&hctx->lock);
- 	list_add_tail(&rq->queuelist, &hctx->dispatch);
-+	set_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
- 	spin_unlock(&hctx->lock);
- 
- 	blk_mq_run_hw_queue(hctx, false);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index fccabe00fb55..aa9853ada8b8 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -172,6 +172,7 @@ enum {
- 	BLK_MQ_S_SCHED_RESTART	= 2,
- 	BLK_MQ_S_TAG_WAITING	= 3,
- 	BLK_MQ_S_START_ON_RUN	= 4,
-+	BLK_MQ_S_DISPATCH_BUSY	= 5,
- 
- 	BLK_MQ_MAX_DEPTH	= 10240,
- 
+Sorry for that.
+
 -- 
-2.9.5
+Ming
