@@ -1,73 +1,389 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 00/21] lpfc updates for 11.4.0.4
-Date: Fri, 29 Sep 2017 17:34:26 -0700
-Message-ID: <20170930003447.10747-1-jsmart2021@gmail.com>
+Subject: [PATCH v2 07/21] lpfc: Make ktime sampling more accurate
+Date: Fri, 29 Sep 2017 17:34:33 -0700
+Message-ID: <20170930003447.10747-8-jsmart2021@gmail.com>
+References: <20170930003447.10747-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:44242 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752571AbdI3Ae4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:34:56 -0400
-Received: by mail-qt0-f196.google.com with SMTP id o13so1637784qtf.1
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:34:55 -0700 (PDT)
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:38509 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752578AbdI3AfC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:02 -0400
+Received: by mail-qk0-f194.google.com with SMTP id q8so770025qkl.5
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:35:02 -0700 (PDT)
+In-Reply-To: <20170930003447.10747-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-This patch set provides a number of bug fixes and additions to
-the driver.
+From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-The patches were cut against the Martin's 4.14/scsi-queue tree.
-There are no outside dependencies.
+Need to make ktime samples more accurate
 
-v2:
-  Split patch 1 into separate patches
-  Added stable cc's where requested
-  "Fix oops of nvme host during driver unload" revised to only
-    block submit routines due to bug. abort routines must
-    function to cleanup.
-  Add "correct nvme sg segment count check" patch
+If ktime is turned on in the middle of an IO, the max calculation
+could be misleading. Base sampling on the start time of the IO
+as opposed to ktime_on.
 
-Dick Kennedy (18):
-  lpfc: fix pci hot plug crash in timer management routines
-  lpfc: fix pci hot plug crash in list_add call
-  lpfc: Fix crash receiving ELS while detaching driver
-  lpfc: Fix lpfc nvme host rejecting IO with Not Ready message
-  lpfc: Fix warning messages when NVME_TARGET_FC not defined
-  lpfc: PLOGI failures during NPIV testing
-  lpfc: Make ktime sampling more accurate
-  lpfc: Move CQ processing to a soft IRQ
-  lpfc: Fix FCP hba_wqidx assignment
-  lpfc: Revise NVME module parameter descriptions for better clarity
-  lpfc: Fix oops if nvmet_fc_register_targetport fails
-  lpfc: Disable NPIV support if NVME is enabled
-  lpfc: Fix crash in lpfc_nvme_fcp_io_submit during LIP
-  lpfc: Fix secure firmware updates
-  lpfc: Ensure io aborts interlocked with the target.
-  lpfc: Extend RDP support
-  lpfc: Fix oops of nvme host during driver unload.
-  lpfc: change version to 11.4.0.4
+Make ISR ktime timestamps be from when CQE is read instead of EQE.
+Added additional sanity checks when deciding whether to accept an
+IO sample or not.
 
-James Smart (3):
-  lpfc: Reduce log spew on controller reconnects
-  lpfc: Set missing abort context
-  lpfc: correct nvme sg segment count check
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_nvme.c  | 34 ++++++++++-----
+ drivers/scsi/lpfc/lpfc_nvmet.c | 99 ++++++++++++++++++++++++++++--------------
+ drivers/scsi/lpfc/lpfc_sli.c   | 34 +++++++++------
+ 3 files changed, 109 insertions(+), 58 deletions(-)
 
- drivers/scsi/lpfc/lpfc.h           |   3 +
- drivers/scsi/lpfc/lpfc_attr.c      |  10 +-
- drivers/scsi/lpfc/lpfc_bsg.c       |   4 +-
- drivers/scsi/lpfc/lpfc_els.c       |  19 ++--
- drivers/scsi/lpfc/lpfc_hbadisc.c   |   8 +-
- drivers/scsi/lpfc/lpfc_hw4.h       |   2 +-
- drivers/scsi/lpfc/lpfc_init.c      |  30 ++++--
- drivers/scsi/lpfc/lpfc_nportdisc.c |   2 +-
- drivers/scsi/lpfc/lpfc_nvme.c      | 167 ++++++++++++++++++----------
- drivers/scsi/lpfc/lpfc_nvmet.c     | 148 +++++++++++++++++--------
- drivers/scsi/lpfc/lpfc_sli.c       | 216 +++++++++++++++++++++++--------------
- drivers/scsi/lpfc/lpfc_sli4.h      |   4 +-
- drivers/scsi/lpfc/lpfc_version.h   |   2 +-
- drivers/scsi/lpfc/lpfc_vport.c     |   9 ++
- 14 files changed, 405 insertions(+), 219 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 2ad23b356bfe..a83b57254de6 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -667,15 +667,17 @@ lpfc_nvme_ktime(struct lpfc_hba *phba,
+ 		struct lpfc_nvme_buf *lpfc_ncmd)
+ {
+ 	uint64_t seg1, seg2, seg3, seg4;
++	uint64_t segsum;
+ 
+-	if (!phba->ktime_on)
+-		return;
+ 	if (!lpfc_ncmd->ts_last_cmd ||
+ 	    !lpfc_ncmd->ts_cmd_start ||
+ 	    !lpfc_ncmd->ts_cmd_wqput ||
+ 	    !lpfc_ncmd->ts_isr_cmpl ||
+ 	    !lpfc_ncmd->ts_data_nvme)
+ 		return;
++
++	if (lpfc_ncmd->ts_data_nvme < lpfc_ncmd->ts_cmd_start)
++		return;
+ 	if (lpfc_ncmd->ts_cmd_start < lpfc_ncmd->ts_last_cmd)
+ 		return;
+ 	if (lpfc_ncmd->ts_cmd_wqput < lpfc_ncmd->ts_cmd_start)
+@@ -695,15 +697,23 @@ lpfc_nvme_ktime(struct lpfc_hba *phba,
+ 	 * cmpl is handled off to the NVME Layer.
+ 	 */
+ 	seg1 = lpfc_ncmd->ts_cmd_start - lpfc_ncmd->ts_last_cmd;
+-	if (seg1 > 5000000)  /* 5 ms - for sequential IOs */
+-		return;
++	if (seg1 > 5000000)  /* 5 ms - for sequential IOs only */
++		seg1 = 0;
+ 
+ 	/* Calculate times relative to start of IO */
+ 	seg2 = (lpfc_ncmd->ts_cmd_wqput - lpfc_ncmd->ts_cmd_start);
+-	seg3 = (lpfc_ncmd->ts_isr_cmpl -
+-		lpfc_ncmd->ts_cmd_start) - seg2;
+-	seg4 = (lpfc_ncmd->ts_data_nvme -
+-		lpfc_ncmd->ts_cmd_start) - seg2 - seg3;
++	segsum = seg2;
++	seg3 = lpfc_ncmd->ts_isr_cmpl - lpfc_ncmd->ts_cmd_start;
++	if (segsum > seg3)
++		return;
++	seg3 -= segsum;
++	segsum += seg3;
++
++	seg4 = lpfc_ncmd->ts_data_nvme - lpfc_ncmd->ts_cmd_start;
++	if (segsum > seg4)
++		return;
++	seg4 -= segsum;
++
+ 	phba->ktime_data_samples++;
+ 	phba->ktime_seg1_total += seg1;
+ 	if (seg1 < phba->ktime_seg1_min)
+@@ -902,7 +912,7 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 	 * owns the dma address.
+ 	 */
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-	if (phba->ktime_on) {
++	if (lpfc_ncmd->ts_cmd_start) {
+ 		lpfc_ncmd->ts_isr_cmpl = pwqeIn->isr_timestamp;
+ 		lpfc_ncmd->ts_data_nvme = ktime_get_ns();
+ 		phba->ktime_last_cmd = lpfc_ncmd->ts_data_nvme;
+@@ -1283,9 +1293,11 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 		goto out_fail;
+ 	}
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-	if (phba->ktime_on) {
++	if (start) {
+ 		lpfc_ncmd->ts_cmd_start = start;
+ 		lpfc_ncmd->ts_last_cmd = phba->ktime_last_cmd;
++	} else {
++		lpfc_ncmd->ts_cmd_start = 0;
+ 	}
+ #endif
+ 
+@@ -1336,7 +1348,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 	}
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-	if (phba->ktime_on)
++	if (lpfc_ncmd->ts_cmd_start)
+ 		lpfc_ncmd->ts_cmd_wqput = ktime_get_ns();
+ 
+ 	if (phba->cpucheck_on & LPFC_CHECK_NVME_IO) {
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index b6cd213567ac..cee88f3c0779 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -221,9 +221,8 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
+ 		spin_lock_init(&ctxp->ctxlock);
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-		if (phba->ktime_on) {
++		if (ctxp->ts_cmd_nvme) {
+ 			ctxp->ts_cmd_nvme = ktime_get_ns();
+-			ctxp->ts_isr_cmd = ctxp->ts_cmd_nvme;
+ 			ctxp->ts_nvme_data = 0;
+ 			ctxp->ts_data_wqput = 0;
+ 			ctxp->ts_isr_data = 0;
+@@ -289,9 +288,7 @@ lpfc_nvmet_ktime(struct lpfc_hba *phba,
+ {
+ 	uint64_t seg1, seg2, seg3, seg4, seg5;
+ 	uint64_t seg6, seg7, seg8, seg9, seg10;
+-
+-	if (!phba->ktime_on)
+-		return;
++	uint64_t segsum;
+ 
+ 	if (!ctxp->ts_isr_cmd || !ctxp->ts_cmd_nvme ||
+ 	    !ctxp->ts_nvme_data || !ctxp->ts_data_wqput ||
+@@ -300,6 +297,8 @@ lpfc_nvmet_ktime(struct lpfc_hba *phba,
+ 	    !ctxp->ts_isr_status || !ctxp->ts_status_nvme)
+ 		return;
+ 
++	if (ctxp->ts_status_nvme < ctxp->ts_isr_cmd)
++		return;
+ 	if (ctxp->ts_isr_cmd  > ctxp->ts_cmd_nvme)
+ 		return;
+ 	if (ctxp->ts_cmd_nvme > ctxp->ts_nvme_data)
+@@ -344,34 +343,66 @@ lpfc_nvmet_ktime(struct lpfc_hba *phba,
+ 	 * (Segments 1 thru 4) for READDATA_RSP
+ 	 */
+ 	seg1 = ctxp->ts_cmd_nvme - ctxp->ts_isr_cmd;
+-	seg2 = (ctxp->ts_nvme_data - ctxp->ts_isr_cmd) - seg1;
+-	seg3 = (ctxp->ts_data_wqput - ctxp->ts_isr_cmd) -
+-		seg1 - seg2;
+-	seg4 = (ctxp->ts_isr_data - ctxp->ts_isr_cmd) -
+-		seg1 - seg2 - seg3;
+-	seg5 = (ctxp->ts_data_nvme - ctxp->ts_isr_cmd) -
+-		seg1 - seg2 - seg3 - seg4;
++	segsum = seg1;
++
++	seg2 = ctxp->ts_nvme_data - ctxp->ts_isr_cmd;
++	if (segsum > seg2)
++		return;
++	seg2 -= segsum;
++	segsum += seg2;
++
++	seg3 = ctxp->ts_data_wqput - ctxp->ts_isr_cmd;
++	if (segsum > seg3)
++		return;
++	seg3 -= segsum;
++	segsum += seg3;
++
++	seg4 = ctxp->ts_isr_data - ctxp->ts_isr_cmd;
++	if (segsum > seg4)
++		return;
++	seg4 -= segsum;
++	segsum += seg4;
++
++	seg5 = ctxp->ts_data_nvme - ctxp->ts_isr_cmd;
++	if (segsum > seg5)
++		return;
++	seg5 -= segsum;
++	segsum += seg5;
++
+ 
+ 	/* For auto rsp commands seg6 thru seg10 will be 0 */
+ 	if (ctxp->ts_nvme_status > ctxp->ts_data_nvme) {
+-		seg6 = (ctxp->ts_nvme_status -
+-			ctxp->ts_isr_cmd) -
+-			seg1 - seg2 - seg3 - seg4 - seg5;
+-		seg7 = (ctxp->ts_status_wqput -
+-			ctxp->ts_isr_cmd) -
+-			seg1 - seg2 - seg3 -
+-			seg4 - seg5 - seg6;
+-		seg8 = (ctxp->ts_isr_status -
+-			ctxp->ts_isr_cmd) -
+-			seg1 - seg2 - seg3 - seg4 -
+-			seg5 - seg6 - seg7;
+-		seg9 = (ctxp->ts_status_nvme -
+-			ctxp->ts_isr_cmd) -
+-			seg1 - seg2 - seg3 - seg4 -
+-			seg5 - seg6 - seg7 - seg8;
++		seg6 = ctxp->ts_nvme_status - ctxp->ts_isr_cmd;
++		if (segsum > seg6)
++			return;
++		seg6 -= segsum;
++		segsum += seg6;
++
++		seg7 = ctxp->ts_status_wqput - ctxp->ts_isr_cmd;
++		if (segsum > seg7)
++			return;
++		seg7 -= segsum;
++		segsum += seg7;
++
++		seg8 = ctxp->ts_isr_status - ctxp->ts_isr_cmd;
++		if (segsum > seg8)
++			return;
++		seg8 -= segsum;
++		segsum += seg8;
++
++		seg9 = ctxp->ts_status_nvme - ctxp->ts_isr_cmd;
++		if (segsum > seg9)
++			return;
++		seg9 -= segsum;
++		segsum += seg9;
++
++		if (ctxp->ts_isr_status < ctxp->ts_isr_cmd)
++			return;
+ 		seg10 = (ctxp->ts_isr_status -
+ 			ctxp->ts_isr_cmd);
+ 	} else {
++		if (ctxp->ts_isr_data < ctxp->ts_isr_cmd)
++			return;
+ 		seg6 =  0;
+ 		seg7 =  0;
+ 		seg8 =  0;
+@@ -519,7 +550,7 @@ lpfc_nvmet_xmt_fcp_op_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 		ctxp->entry_cnt++;
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-		if (phba->ktime_on) {
++		if (ctxp->ts_cmd_nvme) {
+ 			if (rsp->op == NVMET_FCOP_READDATA_RSP) {
+ 				ctxp->ts_isr_data =
+ 					cmdwqe->isr_timestamp;
+@@ -553,7 +584,7 @@ lpfc_nvmet_xmt_fcp_op_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ #endif
+ 		rsp->done(rsp);
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-		if (phba->ktime_on)
++		if (ctxp->ts_cmd_nvme)
+ 			lpfc_nvmet_ktime(phba, ctxp);
+ #endif
+ 		/* lpfc_nvmet_xmt_fcp_release() will recycle the context */
+@@ -563,7 +594,7 @@ lpfc_nvmet_xmt_fcp_op_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 		memset(((char *)cmdwqe) + start_clean, 0,
+ 		       (sizeof(struct lpfc_iocbq) - start_clean));
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-		if (phba->ktime_on) {
++		if (ctxp->ts_cmd_nvme) {
+ 			ctxp->ts_isr_data = cmdwqe->isr_timestamp;
+ 			ctxp->ts_data_nvme = ktime_get_ns();
+ 		}
+@@ -679,7 +710,7 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 	int rc;
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-	if (phba->ktime_on) {
++	if (ctxp->ts_cmd_nvme) {
+ 		if (rsp->op == NVMET_FCOP_RSP)
+ 			ctxp->ts_nvme_status = ktime_get_ns();
+ 		else
+@@ -734,7 +765,7 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, nvmewqeq);
+ 	if (rc == WQE_SUCCESS) {
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-		if (!phba->ktime_on)
++		if (!ctxp->ts_cmd_nvme)
+ 			return 0;
+ 		if (rsp->op == NVMET_FCOP_RSP)
+ 			ctxp->ts_status_wqput = ktime_get_ns();
+@@ -1614,7 +1645,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 	spin_lock_init(&ctxp->ctxlock);
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-	if (phba->ktime_on) {
++	if (isr_timestamp) {
+ 		ctxp->ts_isr_cmd = isr_timestamp;
+ 		ctxp->ts_cmd_nvme = ktime_get_ns();
+ 		ctxp->ts_nvme_data = 0;
+@@ -1625,6 +1656,8 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 		ctxp->ts_status_wqput = 0;
+ 		ctxp->ts_isr_status = 0;
+ 		ctxp->ts_status_nvme = 0;
++	} else {
++		ctxp->ts_cmd_nvme = 0;
+ 	}
+ #endif
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 9024521b97c7..3ace438d8f2e 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13064,13 +13064,20 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 		break;
+ 	case LPFC_WCQ:
+ 		while ((cqe = lpfc_sli4_cq_get(cq))) {
+-			if ((cq->subtype == LPFC_FCP) ||
+-			    (cq->subtype == LPFC_NVME))
++			if (cq->subtype == LPFC_FCP ||
++			    cq->subtype == LPFC_NVME) {
++#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
++				if (phba->ktime_on)
++					cq->isr_timestamp = ktime_get_ns();
++				else
++					cq->isr_timestamp = 0;
++#endif
+ 				workposted |= lpfc_sli4_fp_handle_cqe(phba, cq,
+ 								       cqe);
+-			else
++			} else {
+ 				workposted |= lpfc_sli4_sp_handle_cqe(phba, cq,
+ 								      cqe);
++			}
+ 			if (!(++ecount % cq->entry_repost))
+ 				break;
+ 		}
+@@ -13155,11 +13162,9 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 				bf_get(lpfc_wcqe_c_request_tag, wcqe));
+ 		return;
+ 	}
+-
+-	if (cq->assoc_qp)
+-		cmdiocbq->isr_timestamp =
+-			cq->assoc_qp->isr_timestamp;
+-
++#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
++	cmdiocbq->isr_timestamp = cq->isr_timestamp;
++#endif
+ 	if (cmdiocbq->iocb_cmpl == NULL) {
+ 		if (cmdiocbq->wqe_cmpl) {
+ 			if (cmdiocbq->iocb_flag & LPFC_DRIVER_ABORTED) {
+@@ -13304,7 +13309,7 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 			dma_buf->bytes_recv = bf_get(lpfc_rcqe_length,  rcqe);
+ 			lpfc_nvmet_unsol_fcp_event(
+ 				phba, idx, dma_buf,
+-				cq->assoc_qp->isr_timestamp);
++				cq->isr_timestamp);
+ 			return false;
+ 		}
+ drop:
+@@ -13479,6 +13484,12 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 
+ 	/* Process all the entries to the CQ */
+ 	while ((cqe = lpfc_sli4_cq_get(cq))) {
++#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
++		if (phba->ktime_on)
++			cq->isr_timestamp = ktime_get_ns();
++		else
++			cq->isr_timestamp = 0;
++#endif
+ 		workposted |= lpfc_sli4_fp_handle_cqe(phba, cq, cqe);
+ 		if (!(++ecount % cq->entry_repost))
+ 			break;
+@@ -13741,11 +13752,6 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
+ 	if (unlikely(!fpeq))
+ 		return IRQ_NONE;
+ 
+-#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+-	if (phba->ktime_on)
+-		fpeq->isr_timestamp = ktime_get_ns();
+-#endif
+-
+ 	if (lpfc_fcp_look_ahead) {
+ 		if (atomic_dec_and_test(&hba_eq_hdl->hba_eq_in_use))
+ 			lpfc_sli4_eq_clr_intr(fpeq);
 -- 
 2.13.1
