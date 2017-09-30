@@ -1,98 +1,238 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 00/14] blk-mq-sched: improve sequential I/O performance(part 1)
-Date: Sat, 30 Sep 2017 18:27:13 +0800
-Message-ID: <20170930102720.30219-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+Subject: [PATCH V5 1/7] blk-mq: issue rq directly in blk_mq_request_bypass_insert()
+Date: Sat, 30 Sep 2017 18:27:14 +0800
+Message-ID: <20170930102720.30219-2-ming.lei@redhat.com>
+References: <20170930102720.30219-1-ming.lei@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170930102720.30219-1-ming.lei@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jens,
+With issuing rq directly in blk_mq_request_bypass_insert(),
+we can:
 
-In Red Hat internal storage test wrt. blk-mq scheduler, we
-found that I/O performance is much bad with mq-deadline, especially
-about sequential I/O on some multi-queue SCSI devcies(lpfc, qla2xxx,
-SRP...)
+1) avoid to acquire hctx->lock.
 
-Turns out one big issue causes the performance regression: requests
-are still dequeued from sw queue/scheduler queue even when ldd's
-queue is busy, so I/O merge becomes quite difficult to make, then
-sequential IO degrades a lot.
+2) the dispatch result can be returned to dm-rq, so that dm-rq
+can use this information for improving I/O performance, and
+part2 of this patchset will do that.
 
-This issue becomes one of mains reasons for reverting default SCSI_MQ
-in V4.13.
+3) Also the following patch for improving sequential I/O performance
+uses hctx->dispatch to decide if hctx is busy, so we need to avoid
+to add rq into hctx->dispatch direclty.
 
-The 1st patch takes direct issue in blk_mq_request_bypass_insert(),
-then we can improve dm-mpath's performance in part 2, which will
-be posted out soon.
+There will be another patch in which we move blk_mq_request_direct_insert()
+out since it is better for dm-rq to deal with this situation, and
+the IO scheduler is actually in dm-rq side.
 
-The 2nd six patches improve this situation, and brings back
-some performance loss.
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-core.c   |  3 +--
+ block/blk-mq.c     | 70 ++++++++++++++++++++++++++++++++++++++----------------
+ block/blk-mq.h     |  2 +-
+ drivers/md/dm-rq.c |  2 +-
+ 4 files changed, 52 insertions(+), 25 deletions(-)
 
-With this change, SCSI-MQ sequential I/O performance is
-improved much, Paolo reported that mq-deadline performance
-improved much[2] in his dbench test wrt V2. Also performanc
-improvement on lpfc/qla2xx was observed with V1.[1]
-
-Please consider it for V4.15.
-
-[1] http://marc.info/?l=linux-block&m=150151989915776&w=2
-[2] https://marc.info/?l=linux-block&m=150217980602843&w=2
-
-V5:
-	- address some comments from Omar
-	- add Tested-by & Reveiewed-by tag
-	- use direct issue for blk_mq_request_bypass_insert(), and
-	start to consider to improve sequential I/O for dm-mpath
-	- only include part 1(the original patch 1 ~ 6), as suggested
-	by Omar
-
-V4:
-	- add Reviewed-by tag
-	- some trival change: typo fix in commit log or comment,
-	variable name, no actual functional change
-
-V3:
-	- totally round robin for picking req from ctx, as suggested
-	by Bart
-	- remove one local variable in __sbitmap_for_each_set()
-	- drop patches of single dispatch list, which can improve
-	performance on mq-deadline, but cause a bit degrade on
-	none because all hctxs need to be checked after ->dispatch
-	is flushed. Will post it again once it is mature.
-	- rebase on v4.13-rc6 with block for-next
-
-V2:
-	- dequeue request from sw queues in round roubin's style
-	as suggested by Bart, and introduces one helper in sbitmap
-	for this purpose
-	- improve bio merge via hash table from sw queue
-	- add comments about using DISPATCH_BUSY state in lockless way,
-	simplifying handling on busy state,
-	- hold ctx->lock when clearing ctx busy bit as suggested
-	by Bart
-
-
-Ming Lei (7):
-  blk-mq: issue rq directly in blk_mq_request_bypass_insert()
-  blk-mq-sched: fix scheduler bad performance
-  sbitmap: introduce __sbitmap_for_each_set()
-  blk-mq: introduce blk_mq_dequeue_from_ctx()
-  blk-mq-sched: move actual dispatching into one helper
-  blk-mq-sched: improve dispatching from sw queue
-  blk-mq-sched: don't dequeue request until all in ->dispatch are
-    flushed
-
- block/blk-core.c        |   3 +-
- block/blk-mq-debugfs.c  |   1 +
- block/blk-mq-sched.c    | 104 ++++++++++++++++++++++++++++++++++++-------
- block/blk-mq.c          | 114 +++++++++++++++++++++++++++++++++++++++---------
- block/blk-mq.h          |   4 +-
- drivers/md/dm-rq.c      |   2 +-
- include/linux/blk-mq.h  |   3 ++
- include/linux/sbitmap.h |  64 +++++++++++++++++++--------
- 8 files changed, 238 insertions(+), 57 deletions(-)
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 048be4aa6024..4c7fd2231145 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2350,8 +2350,7 @@ blk_status_t blk_insert_cloned_request(struct request_queue *q, struct request *
+ 		 * bypass a potential scheduler on the bottom device for
+ 		 * insert.
+ 		 */
+-		blk_mq_request_bypass_insert(rq);
+-		return BLK_STS_OK;
++		return blk_mq_request_bypass_insert(rq);
+ 	}
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 98a18609755e..d1b9fb539eba 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -39,6 +39,8 @@
+ 
+ static void blk_mq_poll_stats_start(struct request_queue *q);
+ static void blk_mq_poll_stats_fn(struct blk_stat_callback *cb);
++static blk_status_t blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
++		struct request *rq, blk_qc_t *cookie, bool dispatch_only);
+ 
+ static int blk_mq_poll_stats_bkt(const struct request *rq)
+ {
+@@ -1401,20 +1403,31 @@ void __blk_mq_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
+ 	blk_mq_hctx_mark_pending(hctx, ctx);
+ }
+ 
++static void blk_mq_request_direct_insert(struct blk_mq_hw_ctx *hctx,
++					 struct request *rq)
++{
++	spin_lock(&hctx->lock);
++	list_add_tail(&rq->queuelist, &hctx->dispatch);
++	spin_unlock(&hctx->lock);
++
++	blk_mq_run_hw_queue(hctx, false);
++}
++
+ /*
+  * Should only be used carefully, when the caller knows we want to
+  * bypass a potential IO scheduler on the target device.
+  */
+-void blk_mq_request_bypass_insert(struct request *rq)
++blk_status_t blk_mq_request_bypass_insert(struct request *rq)
+ {
+ 	struct blk_mq_ctx *ctx = rq->mq_ctx;
+ 	struct blk_mq_hw_ctx *hctx = blk_mq_map_queue(rq->q, ctx->cpu);
++	blk_qc_t cookie;
++	blk_status_t ret;
+ 
+-	spin_lock(&hctx->lock);
+-	list_add_tail(&rq->queuelist, &hctx->dispatch);
+-	spin_unlock(&hctx->lock);
+-
+-	blk_mq_run_hw_queue(hctx, false);
++	ret = blk_mq_try_issue_directly(hctx, rq, &cookie, true);
++	if (ret == BLK_STS_RESOURCE)
++		blk_mq_request_direct_insert(hctx, rq);
++	return ret;
+ }
+ 
+ void blk_mq_insert_requests(struct blk_mq_hw_ctx *hctx, struct blk_mq_ctx *ctx,
+@@ -1527,9 +1540,14 @@ static blk_qc_t request_to_qc_t(struct blk_mq_hw_ctx *hctx, struct request *rq)
+ 	return blk_tag_to_qc_t(rq->internal_tag, hctx->queue_num, true);
+ }
+ 
+-static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+-					struct request *rq,
+-					blk_qc_t *cookie, bool may_sleep)
++/*
++ * 'dispatch_only' means we only try to dispatch it out, and
++ * don't deal with dispatch failure if BLK_STS_RESOURCE or
++ * BLK_STS_IOERR happens.
++ */
++static blk_status_t __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
++		struct request *rq, blk_qc_t *cookie, bool may_sleep,
++		bool dispatch_only)
+ {
+ 	struct request_queue *q = rq->q;
+ 	struct blk_mq_queue_data bd = {
+@@ -1537,7 +1555,7 @@ static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 		.last = true,
+ 	};
+ 	blk_qc_t new_cookie;
+-	blk_status_t ret;
++	blk_status_t ret = BLK_STS_OK;
+ 	bool run_queue = true;
+ 
+ 	/* RCU or SRCU read lock is needed before checking quiesced flag */
+@@ -1546,9 +1564,10 @@ static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 		goto insert;
+ 	}
+ 
+-	if (q->elevator)
++	if (q->elevator && !dispatch_only)
+ 		goto insert;
+ 
++	ret = BLK_STS_RESOURCE;
+ 	if (!blk_mq_get_driver_tag(rq, NULL, false))
+ 		goto insert;
+ 
+@@ -1563,26 +1582,32 @@ static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 	switch (ret) {
+ 	case BLK_STS_OK:
+ 		*cookie = new_cookie;
+-		return;
++		return ret;
+ 	case BLK_STS_RESOURCE:
+ 		__blk_mq_requeue_request(rq);
+ 		goto insert;
+ 	default:
+ 		*cookie = BLK_QC_T_NONE;
+-		blk_mq_end_request(rq, ret);
+-		return;
++		if (!dispatch_only)
++			blk_mq_end_request(rq, ret);
++		return ret;
+ 	}
+ 
+ insert:
+-	blk_mq_sched_insert_request(rq, false, run_queue, false, may_sleep);
++	if (!dispatch_only)
++		blk_mq_sched_insert_request(rq, false, run_queue, false, may_sleep);
++	return ret;
+ }
+ 
+-static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+-		struct request *rq, blk_qc_t *cookie)
++static blk_status_t blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
++		struct request *rq, blk_qc_t *cookie, bool dispatch_only)
+ {
++	blk_status_t ret;
++
+ 	if (!(hctx->flags & BLK_MQ_F_BLOCKING)) {
+ 		rcu_read_lock();
+-		__blk_mq_try_issue_directly(hctx, rq, cookie, false);
++		ret = __blk_mq_try_issue_directly(hctx, rq, cookie, false,
++				dispatch_only);
+ 		rcu_read_unlock();
+ 	} else {
+ 		unsigned int srcu_idx;
+@@ -1590,9 +1615,12 @@ static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 		might_sleep();
+ 
+ 		srcu_idx = srcu_read_lock(hctx->queue_rq_srcu);
+-		__blk_mq_try_issue_directly(hctx, rq, cookie, true);
++		ret = __blk_mq_try_issue_directly(hctx, rq, cookie, true,
++				dispatch_only);
+ 		srcu_read_unlock(hctx->queue_rq_srcu, srcu_idx);
+ 	}
++
++	return ret;
+ }
+ 
+ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+@@ -1697,12 +1725,12 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 			data.hctx = blk_mq_map_queue(q,
+ 					same_queue_rq->mq_ctx->cpu);
+ 			blk_mq_try_issue_directly(data.hctx, same_queue_rq,
+-					&cookie);
++					&cookie, false);
+ 		}
+ 	} else if (q->nr_hw_queues > 1 && is_sync) {
+ 		blk_mq_put_ctx(data.ctx);
+ 		blk_mq_bio_to_request(rq, bio);
+-		blk_mq_try_issue_directly(data.hctx, rq, &cookie);
++		blk_mq_try_issue_directly(data.hctx, rq, &cookie, false);
+ 	} else if (q->elevator) {
+ 		blk_mq_put_ctx(data.ctx);
+ 		blk_mq_bio_to_request(rq, bio);
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index ef15b3414da5..61aecf398a4b 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -54,7 +54,7 @@ int blk_mq_alloc_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+  */
+ void __blk_mq_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
+ 				bool at_head);
+-void blk_mq_request_bypass_insert(struct request *rq);
++blk_status_t blk_mq_request_bypass_insert(struct request *rq);
+ void blk_mq_insert_requests(struct blk_mq_hw_ctx *hctx, struct blk_mq_ctx *ctx,
+ 				struct list_head *list);
+ 
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 29b237dcc39d..f5e2b6967357 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -404,7 +404,7 @@ static void dm_dispatch_clone_request(struct request *clone, struct request *rq)
+ 
+ 	clone->start_time = jiffies;
+ 	r = blk_insert_cloned_request(clone->q, clone);
+-	if (r)
++	if (r != BLK_STS_OK && r != BLK_STS_RESOURCE)
+ 		/* must complete clone in terms of original request */
+ 		dm_complete_request(rq, r);
+ }
 -- 
 2.9.5
