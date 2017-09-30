@@ -1,48 +1,48 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 16/21] lpfc: Fix secure firmware updates
-Date: Fri, 29 Sep 2017 17:34:42 -0700
-Message-ID: <20170930003447.10747-17-jsmart2021@gmail.com>
+Subject: [PATCH v2 09/21] lpfc: Fix FCP hba_wqidx assignment
+Date: Fri, 29 Sep 2017 17:34:35 -0700
+Message-ID: <20170930003447.10747-10-jsmart2021@gmail.com>
 References: <20170930003447.10747-1-jsmart2021@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:49542 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdI3AfL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:11 -0400
-Received: by mail-qt0-f196.google.com with SMTP id o3so1613026qte.6
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:35:11 -0700 (PDT)
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20170930003447.10747-1-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, stable@vger.kernel.org, James Smart <james.smart@broadcom.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Firmware update fails with: status x17 add_status x56 on the final write
+The driver is encountering  oops in lpfc_sli_calc_ring.
 
-If multiple DMA buffers are used for the download, some firmware revs
-have difficulty with signatures and crcs split across the dma buffer
-boundaries.  Resolve by making all writes be a single 4k page in length.
+The driver is setting hba_wqidx for FCP based on the
+policy in use for NVME. The two may not be the same.
+Change to set the wqidx based on the FCP policy.
 
+Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 1db0a38683f4..2b145966c73f 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -3636,7 +3636,7 @@ struct lpfc_mbx_get_port_name {
- #define MB_CEQ_STATUS_QUEUE_FLUSHING		0x4
- #define MB_CQE_STATUS_DMA_FAILED		0x5
- 
--#define LPFC_MBX_WR_CONFIG_MAX_BDE		8
-+#define LPFC_MBX_WR_CONFIG_MAX_BDE		1
- struct lpfc_mbx_wr_object {
- 	struct mbox_header header;
- 	union {
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index a69332f0abcd..e50f1c1e484d 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -9396,10 +9396,13 @@ lpfc_sli4_calc_ring(struct lpfc_hba *phba, struct lpfc_iocbq *piocb)
+ 			 * for abort iocb hba_wqidx should already
+ 			 * be setup based on what work queue we used.
+ 			 */
+-			if (!(piocb->iocb_flag & LPFC_USE_FCPWQIDX))
++			if (!(piocb->iocb_flag & LPFC_USE_FCPWQIDX)) {
+ 				piocb->hba_wqidx =
+ 					lpfc_sli4_scmd_to_wqidx_distr(phba,
+ 							      piocb->context1);
++				piocb->hba_wqidx = piocb->hba_wqidx %
++					phba->cfg_fcp_io_channel;
++			}
+ 			return phba->sli4_hba.fcp_wq[piocb->hba_wqidx]->pring;
+ 		} else {
+ 			if (unlikely(!phba->sli4_hba.oas_wq))
 -- 
 2.13.1
