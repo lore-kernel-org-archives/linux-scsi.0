@@ -1,234 +1,124 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.14-rc2
-Date: Sat, 30 Sep 2017 11:28:23 +0200
-Message-ID: <1506763703.3565.4.camel@HansenPartnership.com>
+From: Martin Steigerwald <martin@lichtvoll.de>
+Subject: Re: [PATCH V7 0/6] block/scsi: safe SCSI quiescing
+Date: Sat, 30 Sep 2017 11:47:10 +0200
+Message-ID: <8017332.HWsC7yeG6s@merkaba>
+References: <20170930061214.10622-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mondschein.lichtvoll.de ([194.150.191.11]:60915 "EHLO
+        mail.lichtvoll.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750991AbdI3JrM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Sep 2017 05:47:12 -0400
+In-Reply-To: <20170930061214.10622-1-ming.lei@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Eight mostly minor fixes for recently discovered issues in drivers.
+Hi Ming.
 
-The patch is available here:
+Ming Lei - 30.09.17, 14:12:
+> Please consider this patchset for V4.15, and it fixes one
+> kind of long-term I/O hang issue in either block legacy path
+> or blk-mq.
+>
+> The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Isn´t that material for -stable as well?
 
-The short changelog is:
+I´d love to see this go into 4.14. Especially as its an LTS release.
 
-Dave Carroll (1):
-      scsi: aacraid: Fix 2T+ drives on SmartIOC-2000
+Thanks,
+Martin
 
-Guilherme G. Piccoli (1):
-      scsi: aacraid: Add a small delay after IOP reset
+> Once SCSI device is put into QUIESCE, no new request except for
+> RQF_PREEMPT can be dispatched to SCSI successfully, and
+> scsi_device_quiesce() just simply waits for completion of I/Os
+> dispatched to SCSI stack. It isn't enough at all.
+> 
+> Because new request still can be comming, but all the allocated
+> requests can't be dispatched successfully, so request pool can be
+> consumed up easily.
+> 
+> Then request with RQF_PREEMPT can't be allocated and wait forever,
+> then system hangs forever, such as during system suspend or
+> sending SCSI domain alidation in case of transport_spi.
+> 
+> Both IO hang inside system suspend[1] or SCSI domain validation
+> were reported before.
+> 
+> This patch introduces preempt only mode, and solves the issue
+> by allowing RQF_PREEMP only during SCSI quiesce.
+> 
+> Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
+> them all.
+> 
+> V7:
+> 	- add Reviewed-by & Tested-by
+> 	- one line change in patch 5 for checking preempt request
+> 
+> V6:
+> 	- borrow Bart's idea of preempt only, with clean
+> 	  implementation(patch 5/patch 6)
+> 	- needn't any external driver's dependency, such as MD's
+> 	change
+> 
+> V5:
+> 	- fix one tiny race by introducing blk_queue_enter_preempt_freeze()
+> 	given this change is small enough compared with V4, I added
+> 	tested-by directly
+> 
+> V4:
+> 	- reorganize patch order to make it more reasonable
+> 	- support nested preempt freeze, as required by SCSI transport spi
+> 	- check preempt freezing in slow path of of blk_queue_enter()
+> 	- add "SCSI: transport_spi: resume a quiesced device"
+> 	- wake up freeze queue in setting dying for both blk-mq and legacy
+> 	- rename blk_mq_[freeze|unfreeze]_queue() in one patch
+> 	- rename .mq_freeze_wq and .mq_freeze_depth
+> 	- improve comment
+> 
+> V3:
+> 	- introduce q->preempt_unfreezing to fix one bug of preempt freeze
+> 	- call blk_queue_enter_live() only when queue is preempt frozen
+> 	- cleanup a bit on the implementation of preempt freeze
+> 	- only patch 6 and 7 are changed
+> 
+> V2:
+> 	- drop the 1st patch in V1 because percpu_ref_is_dying() is
+> 	enough as pointed by Tejun
+> 	- introduce preempt version of blk_[freeze|unfreeze]_queue
+> 	- sync between preempt freeze and normal freeze
+> 	- fix warning from percpu-refcount as reported by Oleksandr
+> 
+> 
+> [1] https://marc.info/?t=150340250100013&r=3&w=2
+> 
+> 
+> Thanks,
+> Ming
+> 
+> Ming Lei (6):
+>   blk-mq: only run hw queues for blk-mq
+>   block: tracking request allocation with q_usage_counter
+>   block: pass flags to blk_queue_enter()
+>   block: prepare for passing RQF_PREEMPT to request allocation
+>   block: support PREEMPT_ONLY
+>   SCSI: set block queue at preempt only when SCSI device is put into
+>     quiesce
+> 
+>  block/blk-core.c        | 63
+> +++++++++++++++++++++++++++++++++++++++---------- block/blk-mq.c          |
+> 14 ++++-------
+>  block/blk-timeout.c     |  2 +-
+>  drivers/scsi/scsi_lib.c | 25 +++++++++++++++++---
+>  fs/block_dev.c          |  4 ++--
+>  include/linux/blk-mq.h  |  7 +++---
+>  include/linux/blkdev.h  | 27 ++++++++++++++++++---
+>  7 files changed, 107 insertions(+), 35 deletions(-)
 
-Hannes Reinecke (2):
-      scsi: scsi_transport_fc: Also check for NOTPRESENT in fc_remote_port_add()
-      scsi: scsi_transport_fc: set scsi_target_id upon rescan
 
-Martin Wilck (1):
-      scsi: ILLEGAL REQUEST + ASC==27 => target failure
-
-Nikola Pajkovsky (1):
-      scsi: aacraid: error: testing array offset 'bus' after use
-
-Stefano Brivio (1):
-      scsi: lpfc: Don't return internal MBXERR_ERROR code from probe function
-
-Xin Long (1):
-      scsi: scsi_transport_iscsi: fix the issue that iscsi_if_rx doesn't parse nlmsg properly
-
-And the diffstat:
-
-drivers/scsi/aacraid/aachba.c       | 12 ++++++------
- drivers/scsi/aacraid/aacraid.h      |  5 +++++
- drivers/scsi/aacraid/linit.c        | 20 ++++++++++++--------
- drivers/scsi/aacraid/src.c          |  2 ++
- drivers/scsi/lpfc/lpfc_init.c       |  1 +
- drivers/scsi/scsi_error.c           |  3 ++-
- drivers/scsi/scsi_transport_fc.c    | 14 +++-----------
- drivers/scsi/scsi_transport_iscsi.c |  2 +-
- 8 files changed, 32 insertions(+), 27 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index a64285ab0728..af3e4d3f9735 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -699,13 +699,13 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
- 	int status;
- 
- 	dresp = (struct aac_mount *) fib_data(fibptr);
--	if (!(fibptr->dev->supplement_adapter_info.supported_options2 &
--	    AAC_OPTION_VARIABLE_BLOCK_SIZE))
-+	if (!aac_supports_2T(fibptr->dev)) {
- 		dresp->mnt[0].capacityhigh = 0;
--	if ((le32_to_cpu(dresp->status) != ST_OK) ||
--	    (le32_to_cpu(dresp->mnt[0].vol) != CT_NONE)) {
--		_aac_probe_container2(context, fibptr);
--		return;
-+		if ((le32_to_cpu(dresp->status) == ST_OK) &&
-+			(le32_to_cpu(dresp->mnt[0].vol) != CT_NONE)) {
-+			_aac_probe_container2(context, fibptr);
-+			return;
-+		}
- 	}
- 	scsicmd = (struct scsi_cmnd *) context;
- 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 92fabf2b0c24..403a639574e5 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2701,6 +2701,11 @@ static inline int aac_is_src(struct aac_dev *dev)
- 	return 0;
- }
- 
-+static inline int aac_supports_2T(struct aac_dev *dev)
-+{
-+	return (dev->adapter_info.options & AAC_OPT_NEW_COMM_64);
-+}
-+
- char * get_container_type(unsigned type);
- extern int numacb;
- extern char aac_driver_version[];
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 87cc4a93e637..62beb2596466 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -906,12 +906,14 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
- 
- 	bus = aac_logical_to_phys(scmd_channel(cmd));
- 	cid = scmd_id(cmd);
--	info = &aac->hba_map[bus][cid];
--	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
--	    info->devtype != AAC_DEVTYPE_NATIVE_RAW)
-+
-+	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS)
- 		return FAILED;
- 
--	if (info->reset_state > 0)
-+	info = &aac->hba_map[bus][cid];
-+
-+	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
-+	    info->reset_state > 0)
- 		return FAILED;
- 
- 	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
-@@ -962,12 +964,14 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
- 
- 	bus = aac_logical_to_phys(scmd_channel(cmd));
- 	cid = scmd_id(cmd);
--	info = &aac->hba_map[bus][cid];
--	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
--	    info->devtype != AAC_DEVTYPE_NATIVE_RAW)
-+
-+	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS)
- 		return FAILED;
- 
--	if (info->reset_state > 0)
-+	info = &aac->hba_map[bus][cid];
-+
-+	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
-+	    info->reset_state > 0)
- 		return FAILED;
- 
- 	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 48c2b2b34b72..0c9361c87ec8 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -740,6 +740,8 @@ static void aac_send_iop_reset(struct aac_dev *dev)
- 	aac_set_intx_mode(dev);
- 
- 	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
-+
-+	msleep(5000);
- }
- 
- static void aac_send_hardware_soft_reset(struct aac_dev *dev)
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7e7ae786121b..100bc4c8798d 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -6131,6 +6131,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 				"Extents and RPI headers enabled.\n");
- 		}
- 		mempool_free(mboxq, phba->mbox_mem_pool);
-+		rc = -EIO;
- 		goto out_free_bsmbx;
- 	}
- 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 38942050b265..dab876c65473 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -580,7 +580,8 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (sshdr.asc == 0x20 || /* Invalid command operation code */
- 		    sshdr.asc == 0x21 || /* Logical block address out of range */
- 		    sshdr.asc == 0x24 || /* Invalid field in cdb */
--		    sshdr.asc == 0x26) { /* Parameter value invalid */
-+		    sshdr.asc == 0x26 || /* Parameter value invalid */
-+		    sshdr.asc == 0x27) { /* Write protected */
- 			set_host_byte(scmd, DID_TARGET_FAILURE);
- 		}
- 		return SUCCESS;
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index ba9d70f8a6a1..cbd4495d0ff9 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -2739,7 +2739,8 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
- 
- 	list_for_each_entry(rport, &fc_host->rports, peers) {
- 
--		if ((rport->port_state == FC_PORTSTATE_BLOCKED) &&
-+		if ((rport->port_state == FC_PORTSTATE_BLOCKED ||
-+		     rport->port_state == FC_PORTSTATE_NOTPRESENT) &&
- 			(rport->channel == channel)) {
- 
- 			switch (fc_host->tgtid_bind_type) {
-@@ -2876,7 +2877,6 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
- 			memcpy(&rport->port_name, &ids->port_name,
- 				sizeof(rport->port_name));
- 			rport->port_id = ids->port_id;
--			rport->roles = ids->roles;
- 			rport->port_state = FC_PORTSTATE_ONLINE;
- 			rport->flags &= ~FC_RPORT_FAST_FAIL_TIMEDOUT;
- 
-@@ -2885,15 +2885,7 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
- 						fci->f->dd_fcrport_size);
- 			spin_unlock_irqrestore(shost->host_lock, flags);
- 
--			if (ids->roles & FC_PORT_ROLE_FCP_TARGET) {
--				scsi_target_unblock(&rport->dev, SDEV_RUNNING);
--
--				/* initiate a scan of the target */
--				spin_lock_irqsave(shost->host_lock, flags);
--				rport->flags |= FC_RPORT_SCAN_PENDING;
--				scsi_queue_work(shost, &rport->scan_work);
--				spin_unlock_irqrestore(shost->host_lock, flags);
--			}
-+			fc_remote_port_rolechg(rport, ids->roles);
- 			return rport;
- 		}
- 	}
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 8934f19bce8e..0190aeff5f7f 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -3689,7 +3689,7 @@ iscsi_if_rx(struct sk_buff *skb)
- 		uint32_t group;
- 
- 		nlh = nlmsg_hdr(skb);
--		if (nlh->nlmsg_len < sizeof(*nlh) ||
-+		if (nlh->nlmsg_len < sizeof(*nlh) + sizeof(*ev) ||
- 		    skb->len < nlh->nlmsg_len) {
- 			break;
- 		}
+-- 
+Martin
