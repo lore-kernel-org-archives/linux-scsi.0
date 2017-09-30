@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 15/21] lpfc: Fix crash in lpfc_nvme_fcp_io_submit during LIP
-Date: Fri, 29 Sep 2017 17:34:41 -0700
-Message-ID: <20170930003447.10747-16-jsmart2021@gmail.com>
+Subject: [PATCH v2 06/21] lpfc: PLOGI failures during NPIV testing
+Date: Fri, 29 Sep 2017 17:34:32 -0700
+Message-ID: <20170930003447.10747-7-jsmart2021@gmail.com>
 References: <20170930003447.10747-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35964 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752595AbdI3AfK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:10 -0400
-Received: by mail-qk0-f195.google.com with SMTP id z14so776452qkg.3
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:35:10 -0700 (PDT)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33262 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752605AbdI3AfB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2017 20:35:01 -0400
+Received: by mail-qk0-f193.google.com with SMTP id b82so392119qkc.0
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2017 17:35:01 -0700 (PDT)
 In-Reply-To: <20170930003447.10747-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,40 +18,33 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-The driver is seeing a NULL pointer in lpfc_nvme_fcp_io_submit.
-This was ultimately due to a transport AER being sent on a terminated
-controller, thus some of the values were not set. In case we're in a
-system without a corrected transport and in case a race condition
-occurs where we enter the routine as the teardown is happening in a
-separate thread, validate the parameters before starting the io.
+Local Reject/Invalid RPI errors seen during discovery.
+
+Temporary RPI cleanup was occurring regardless of SLI rev. It's
+only necessary on SLI-4.
+
+Adjust the test for whether cleanup is necessary.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index e6948945a2f2..02ba06f364c4 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -1235,6 +1235,16 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 	vport = lport->vport;
- 	phba = vport->phba;
- 
-+	/* Validate pointers. */
-+	if (!pnvme_lport || !pnvme_rport || !freqpriv) {
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR | LOG_NODE,
-+				 "6117 No Send:IO submit ptrs NULL, lport %p, "
-+				 "rport %p fcreq_priv %p\n",
-+				 pnvme_lport, pnvme_rport, freqpriv);
-+		ret = -ENODEV;
-+		goto out_fail;
-+	}
-+
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	if (phba->ktime_on)
- 		start = ktime_get_ns();
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 499df9d17339..d9a03beb76a4 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -4983,7 +4983,8 @@ lpfc_nlp_remove(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	lpfc_cancel_retry_delay_tmo(vport, ndlp);
+ 	if ((ndlp->nlp_flag & NLP_DEFER_RM) &&
+ 	    !(ndlp->nlp_flag & NLP_REG_LOGIN_SEND) &&
+-	    !(ndlp->nlp_flag & NLP_RPI_REGISTERED)) {
++	    !(ndlp->nlp_flag & NLP_RPI_REGISTERED) &&
++	    phba->sli_rev != LPFC_SLI_REV4) {
+ 		/* For this case we need to cleanup the default rpi
+ 		 * allocated by the firmware.
+ 		 */
 -- 
 2.13.1
