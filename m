@@ -1,76 +1,71 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V5 5/7] blk-mq-sched: move actual dispatching into one
- helper
-Date: Mon, 2 Oct 2017 07:19:56 -0700
-Message-ID: <20171002141956.GB16855@infradead.org>
-References: <20170930102720.30219-1-ming.lei@redhat.com>
- <20170930102720.30219-6-ming.lei@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: mptsas driver cannot detect hotplugging disk with the LSI SCSI
+ SAS1068 controller in Ubuntu guest on VMware
+Date: Mon, 2 Oct 2017 16:32:47 +0200
+Message-ID: <1ad520f6-a1d8-5ce7-ee74-83edfdbfd39b@suse.de>
+References: <CA+eFSM1aJRYs__pwtz+8E0TFOeKuKpHoiOkX6Wmm_2HMT1ut5A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51778 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751067AbdJBOT6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 10:19:58 -0400
-Content-Disposition: inline
-In-Reply-To: <20170930102720.30219-6-ming.lei@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+eFSM1aJRYs__pwtz+8E0TFOeKuKpHoiOkX6Wmm_2HMT1ut5A@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gavin Guo <gavin.guo@canonical.com>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>
 
-Can you move this to the beginning of your series, just after
-the other edits to blk_mq_sched_dispatch_requests?
+On 09/27/2017 09:33 AM, Gavin Guo wrote:
+> There is a problem in the latest upstream kernel with the device:
+> 
+> $ grep -i lsi lspci
+> 03:00.0 Serial Attached SCSI controller [0107]: LSI Logic / Symbios
+> Logic SAS1068 PCI-X Fusion-MPT SAS [1000:0054] (rev 01)
+> 
+> The device is simulated by the VMware ESXi 5.5
+> 
+> When hotplugging a new disk to the Guest Ubuntu OS, the latest kernel
+> cannot automatically probe the disk. However, on the v3.19.0-80.88
+> kernel, the disk can be dynamically probed and show the following
+> info message:
+> 
+> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
+> sas_addr 0x5000c29a6bdae0f5
+> scsi 2:0:1:0: Direct-Access     VMware   Virtual disk     1.0  PQ: 0
+> ANSI: 2
+> sd 2:0:1:0: Attached scsi generic sg2 type 0
+> sd 2:0:1:0: [sdb] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
+> sd 2:0:1:0: [sdb] Write Protect is off
+> sd 2:0:1:0: [sdb] Mode Sense: 61 00 00 00
+> sd 2:0:1:0: [sdb] Cache data unavailable
+> sd 2:0:1:0: [sdb] Assuming drive cache: write through
+>  sdb: unknown partition table
+> sd 2:0:1:0: [sdb] Attached SCSI disk
+> 
+> After looking up the message:
+> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
+> sas_addr 0x5000c29a6bdae0f5
+> 
+> I found it comes from the path:
+> mptsas_firmware_event_work -> mptsas_send_sas_event ->
+> mptsas_hotplug_work -> mptsas_add_end_device
+> 
+> I'll appreciate if anyone can give the idea: If it's possible that the
+> irq from the simulated LSI SAS controller didn't come in to trigger
+> the event? However, it can work on the v3.19 kernel so if there is
+> any driver implementation issue in the latest kernel.
+> 
+This is an issue with the mptsas driver, who originally assumed that no
+system will have direct-attached SAS devices.
+VMWare chose to implement exactly that, so the hotplug detection logic
+is flawed here.
+I'll be sending a patch.
 
-> +static void blk_mq_do_dispatch_sched(struct request_queue *q,
-> +				     struct elevator_queue *e,
-> +				     struct blk_mq_hw_ctx *hctx)
+Cheers,
 
-No need to pass anything but the hctx here, the other two can
-be trivially derived from it.
-
-> +{
-> +	LIST_HEAD(rq_list);
-> +
-> +	do {
-> +		struct request *rq;
-> +
-> +		rq = e->type->ops.mq.dispatch_request(hctx);
-
-how about shortening this to:
-
-	struct request *rq = e->type->ops.mq.dispatch_request(hctx);
-
->  void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
->  {
->  	struct request_queue *q = hctx->queue;
-> @@ -136,16 +152,8 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
->  	 * on the dispatch list or we were able to dispatch from the
->  	 * dispatch list.
->  	 */
-> -	if (do_sched_dispatch && has_sched_dispatch) {
-> -		do {
-> -			struct request *rq;
-> -
-> -			rq = e->type->ops.mq.dispatch_request(hctx);
-> -			if (!rq)
-> -				break;
-> -			list_add(&rq->queuelist, &rq_list);
-> -		} while (blk_mq_dispatch_rq_list(q, &rq_list));
-> -	}
-> +	if (do_sched_dispatch && has_sched_dispatch)
-> +		blk_mq_do_dispatch_sched(q, e, hctx);
->  }
-
-Please use this new helper to simplify the logic. E.g.:
-
-	if (!list_empty(&rq_list)) {
-		blk_mq_sched_mark_restart_hctx(hctx);
-		if (blk_mq_dispatch_rq_list(q, &rq_list) && has_sched_dispatch)
-			blk_mq_do_dispatch_sched(hctx);
-	} else if (has_sched_dispatch) {
-		blk_mq_do_dispatch_sched(hctx);
-	} else {
-		blk_mq_flush_busy_ctxs(hctx, &rq_list);
-		blk_mq_dispatch_rq_list(q, &rq_list);
-	}
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
