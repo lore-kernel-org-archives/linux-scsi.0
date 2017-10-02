@@ -1,131 +1,69 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V6 01/14] scsi: sd_zbc: Move ZBC declarations to scsi_proto.h
-Date: Mon,  2 Oct 2017 16:15:22 +0900
-Message-ID: <20171002071535.8007-2-damien.lemoal@wdc.com>
+Subject: [PATCH V6 04/14] scsi: sd_zbc: Use well defined macros
+Date: Mon,  2 Oct 2017 16:15:25 +0900
+Message-ID: <20171002071535.8007-5-damien.lemoal@wdc.com>
 References: <20171002071535.8007-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:9029 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750891AbdJBHPi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 03:15:38 -0400
+        with ESMTP id S1751162AbdJBHPm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 03:15:42 -0400
 In-Reply-To: <20171002071535.8007-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Move standard macro definitions for the zone types and zone conditions
-to scsi_proto.h together with the definitions related to the
-REPORT ZONES command. While at it, define all values in the enums to
-be clear.
-
-Also remove unnecessary includes in sd_zbc.c.
+instead of open coding, use the min() macro to calculate a report zones
+reply buffer length in sd_zbc_check_zone_size() and the round_up()
+macro for calculating the number of zones in sd_zbc_setup().
 
 No functional change is introduced by this patch.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd_zbc.c     | 24 ------------------------
- include/scsi/scsi_proto.h | 45 ++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 34 insertions(+), 35 deletions(-)
+ drivers/scsi/sd_zbc.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 8aa54779aac1..692c8cbc7ed8 100644
+index 7dbaf920679e..bbad851c1789 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -28,32 +28,8 @@
+@@ -475,7 +475,7 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf)
+ 	return 0;
+ }
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
--#include <scsi/scsi_dbg.h>
--#include <scsi/scsi_device.h>
--#include <scsi/scsi_driver.h>
--#include <scsi/scsi_host.h>
--#include <scsi/scsi_eh.h>
- 
- #include "sd.h"
--#include "scsi_priv.h"
--
--enum zbc_zone_type {
--	ZBC_ZONE_TYPE_CONV = 0x1,
--	ZBC_ZONE_TYPE_SEQWRITE_REQ,
--	ZBC_ZONE_TYPE_SEQWRITE_PREF,
--	ZBC_ZONE_TYPE_RESERVED,
--};
--
--enum zbc_zone_cond {
--	ZBC_ZONE_COND_NO_WP,
--	ZBC_ZONE_COND_EMPTY,
--	ZBC_ZONE_COND_IMP_OPEN,
--	ZBC_ZONE_COND_EXP_OPEN,
--	ZBC_ZONE_COND_CLOSED,
--	ZBC_ZONE_COND_READONLY = 0xd,
--	ZBC_ZONE_COND_FULL,
--	ZBC_ZONE_COND_OFFLINE,
--};
+-#define SD_ZBC_BUF_SIZE 131072
++#define SD_ZBC_BUF_SIZE 131072U
  
  /**
-  * Convert a zone descriptor to a zone struct.
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index 8c285d9a06d8..39130a9c05bf 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -301,19 +301,42 @@ struct scsi_lun {
+  * sd_zbc_check_zone_size - Check the device zone sizes
+@@ -526,10 +526,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 		/* Parse REPORT ZONES header */
+ 		list_length = get_unaligned_be32(&buf[0]) + 64;
+ 		rec = buf + 64;
+-		if (list_length < SD_ZBC_BUF_SIZE)
+-			buf_len = list_length;
+-		else
+-			buf_len = SD_ZBC_BUF_SIZE;
++		buf_len = min(list_length, SD_ZBC_BUF_SIZE);
  
- /* Reporting options for REPORT ZONES */
- enum zbc_zone_reporting_options {
--	ZBC_ZONE_REPORTING_OPTION_ALL = 0,
--	ZBC_ZONE_REPORTING_OPTION_EMPTY,
--	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN,
--	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN,
--	ZBC_ZONE_REPORTING_OPTION_CLOSED,
--	ZBC_ZONE_REPORTING_OPTION_FULL,
--	ZBC_ZONE_REPORTING_OPTION_READONLY,
--	ZBC_ZONE_REPORTING_OPTION_OFFLINE,
--	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP = 0x10,
--	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE,
--	ZBC_ZONE_REPORTING_OPTION_NON_WP = 0x3f,
-+	ZBC_ZONE_REPORTING_OPTION_ALL		= 0x00,
-+	ZBC_ZONE_REPORTING_OPTION_EMPTY		= 0x01,
-+	ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN	= 0x02,
-+	ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN	= 0x03,
-+	ZBC_ZONE_REPORTING_OPTION_CLOSED	= 0x04,
-+	ZBC_ZONE_REPORTING_OPTION_FULL		= 0x05,
-+	ZBC_ZONE_REPORTING_OPTION_READONLY	= 0x06,
-+	ZBC_ZONE_REPORTING_OPTION_OFFLINE	= 0x07,
-+	/* 0x08 to 0x0f are reserved */
-+	ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP	= 0x10,
-+	ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE	= 0x11,
-+	/* 0x12 to 0x3e are reserved */
-+	ZBC_ZONE_REPORTING_OPTION_NON_WP	= 0x3f,
- };
+ 		/* Parse zone descriptors */
+ 		while (rec < buf + buf_len) {
+@@ -599,9 +596,8 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
+ 	/* chunk_sectors indicates the zone size */
+ 	blk_queue_chunk_sectors(sdkp->disk->queue,
+ 			logical_to_sectors(sdkp->device, sdkp->zone_blocks));
+-	sdkp->nr_zones = sdkp->capacity >> sdkp->zone_shift;
+-	if (sdkp->capacity & (sdkp->zone_blocks - 1))
+-		sdkp->nr_zones++;
++	sdkp->nr_zones =
++		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
  
- #define ZBC_REPORT_ZONE_PARTIAL 0x80
- 
-+/* Zone types of REPORT ZONES zone descriptors */
-+enum zbc_zone_type {
-+	ZBC_ZONE_TYPE_CONV		= 0x1,
-+	ZBC_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
-+	ZBC_ZONE_TYPE_SEQWRITE_PREF	= 0x3,
-+	/* 0x4 to 0xf are reserved */
-+};
-+
-+/* Zone conditions of REPORT ZONES zone descriptors */
-+enum zbc_zone_cond {
-+	ZBC_ZONE_COND_NO_WP		= 0x0,
-+	ZBC_ZONE_COND_EMPTY		= 0x1,
-+	ZBC_ZONE_COND_IMP_OPEN		= 0x2,
-+	ZBC_ZONE_COND_EXP_OPEN		= 0x3,
-+	ZBC_ZONE_COND_CLOSED		= 0x4,
-+	/* 0x5 to 0xc are reserved */
-+	ZBC_ZONE_COND_READONLY		= 0xd,
-+	ZBC_ZONE_COND_FULL		= 0xe,
-+	ZBC_ZONE_COND_OFFLINE		= 0xf,
-+};
-+
- #endif /* _SCSI_PROTO_H_ */
+ 	if (!sdkp->zones_wlock) {
+ 		sdkp->zones_wlock = kcalloc(BITS_TO_LONGS(sdkp->nr_zones),
 -- 
 2.13.6
