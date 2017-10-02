@@ -1,183 +1,125 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V6 12/14] block: mq-deadline: Introduce zone locking support
-Date: Mon,  2 Oct 2017 16:15:33 +0900
-Message-ID: <20171002071535.8007-13-damien.lemoal@wdc.com>
+Subject: [PATCH V6 06/14] block: Add zoned block device information to request queue
+Date: Mon,  2 Oct 2017 16:15:27 +0900
+Message-ID: <20171002071535.8007-7-damien.lemoal@wdc.com>
 References: <20171002071535.8007-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:22502 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751251AbdJBHPv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 03:15:51 -0400
+        with ESMTP id S1751084AbdJBHPo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 03:15:44 -0400
 In-Reply-To: <20171002071535.8007-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-For a write request to a zoned block device, lock the request target
-zone upon request displatch. The zone is unlocked either when the
-request completes or when the request is requeued (inserted).
+Components relying only on the requeuest_queue structure for accessing
+block devices (e.g. I/O schedulers) have a limited knowledged of the
+device characteristics. In particular, the device capacity cannot be
+easily discovered, which for a zoned block device also result in the
+inability to easily know the number of zones of the device (the zone
+size is indicated by the chunk_sectors field of the queue limits).
 
-To indicate that a request has locked its target zone, use the first
-pointer of the request elevator private data to store the value
-RQ_ZONE_WLOCKED. Testing for this value allows quick decision in
-dd_insert_request() and dd_completed_request() regarding the need for
-unlocking the target zone of a request.
+Introduce the nr_zones field to the request_queue sturcture to simplify
+access to this information. Also, add the bitmap seq_zone_bitmap which
+indicates which zones of the device are sequential zones (write
+preferred or write required). These two fields are initialized by the
+low level block device driver (sd.c for ZBC/ZAC disks). They are not
+initialized by stacking drivers (device mappers) handling zoned block
+devices (e.g. dm-linear).
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
 ---
- block/mq-deadline.c | 111 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 111 insertions(+)
+ include/linux/blkdev.h | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index 6b7b84ee8f82..93a1aede5dd0 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -177,6 +177,91 @@ deadline_move_request(struct deadline_data *dd, struct request *rq)
- }
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 02fa42d24b52..a44807c502f0 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -544,6 +544,18 @@ struct request_queue {
+ 	struct queue_limits	limits;
  
- /*
-+ * Return true if a request is a write requests that needs zone
-+ * write locking.
-+ */
-+static inline bool deadline_request_needs_zone_wlock(struct deadline_data *dd,
-+						     struct request *rq)
-+{
-+
-+	if (!dd->zones_wlock)
-+		return false;
-+
-+	if (blk_rq_is_passthrough(rq))
-+		return false;
+ 	/*
++	 * Zoned block device information for mq I/O schedulers.
++	 * nr_zones is the total number of zones of the device. This is always
++	 * 0 for regular block devices. seq_zone_bitmap is a bitmap of nr_zones
++	 * bits which indicates if a zone is conventional (bit clear) or
++	 * sequential (bit set). Both nr_zones and seq_zone_bitmap are set
++	 * by the low level device driver. Stacking drivers (device mappers)
++	 * may or may not initialize these fields.
++	 */
++	unsigned int	nr_zones;
++	unsigned long	*seq_zone_bitmap;
 +
 +	/*
-+	 * REQ_OP_SCSI_* and REQ_OP_DRV_* are already handled with
-+	 * the previous check. Add them again here so that all request
-+	 * operations defined by enum req_off are handled (so that a compiler
-+	 * warning shows up if/when request operation definitions change.
-+	 */
-+	switch (req_op(rq)) {
-+	case REQ_OP_WRITE_ZEROES:
-+	case REQ_OP_WRITE_SAME:
-+	case REQ_OP_WRITE:
-+		return blk_rq_zone_is_seq(rq);
-+	default:
+ 	 * sg stuff
+ 	 */
+ 	unsigned int		sg_timeout;
+@@ -786,6 +798,27 @@ static inline unsigned int blk_queue_zone_sectors(struct request_queue *q)
+ 	return blk_queue_is_zoned(q) ? q->limits.chunk_sectors : 0;
+ }
+ 
++static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
++{
++	return q->nr_zones;
++}
++
++static inline unsigned int blk_queue_zone_no(struct request_queue *q,
++					     sector_t sector)
++{
++	if (!blk_queue_is_zoned(q))
++		return 0;
++	return sector >> ilog2(q->limits.chunk_sectors);
++}
++
++static inline bool blk_queue_zone_is_seq(struct request_queue *q,
++					 sector_t sector)
++{
++	if (!blk_queue_is_zoned(q) || !q->seq_zone_bitmap)
 +		return false;
-+	}
++	return test_bit(blk_queue_zone_no(q, sector), q->seq_zone_bitmap);
 +}
 +
-+/*
-+ * Abuse the elv.priv[0] pointer to indicate if a request has write
-+ * locked its target zone. Only write request to a zoned block device
-+ * can own a zone write lock.
-+ */
-+enum rq_zone_lock {
-+	RQ_ZONE_NO_WLOCK = 0UL,
-+	RQ_ZONE_WLOCKED  = 1UL,
-+};
-+
-+static inline void deadline_set_request_zone_wlock(struct request *rq)
-+{
-+	rq->elv.priv[0] = (void *)RQ_ZONE_WLOCKED;
-+}
-+
-+static inline void deadline_clear_request_zone_wlock(struct request *rq)
-+{
-+	rq->elv.priv[0] = (void *)RQ_ZONE_NO_WLOCK;
-+}
-+
-+static inline bool deadline_request_has_zone_wlock(struct request *rq)
-+{
-+	return rq->elv.priv[0] == (void *)RQ_ZONE_WLOCKED;
-+}
-+
-+/*
-+ * Write lock the target zone of a write request.
-+ */
-+static void deadline_wlock_zone(struct deadline_data *dd,
-+				struct request *rq)
-+{
-+	WARN_ON_ONCE(deadline_request_has_zone_wlock(rq));
-+	WARN_ON_ONCE(test_and_set_bit(blk_rq_zone_no(rq), dd->zones_wlock));
-+	deadline_set_request_zone_wlock(rq);
-+}
-+
-+/*
-+ * Write unlock the target zone of a write request.
-+ */
-+static void deadline_wunlock_zone(struct deadline_data *dd,
-+				  struct request *rq)
-+{
-+	WARN_ON_ONCE(!test_and_clear_bit(blk_rq_zone_no(rq), dd->zones_wlock));
-+	deadline_clear_request_zone_wlock(rq);
-+}
-+
-+/*
-+ * Test the write lock state of the target zone of a write request.
-+ */
-+static inline bool deadline_zone_is_wlocked(struct deadline_data *dd,
-+					    struct request *rq)
-+{
-+	return test_bit(blk_rq_zone_no(rq), dd->zones_wlock);
-+}
-+
-+/*
-  * deadline_check_fifo returns 0 if there are no expired requests on the fifo,
-  * 1 otherwise. Requires !list_empty(&dd->fifo_list[data_dir])
-  */
-@@ -315,6 +400,11 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	dd->batching++;
- 	deadline_move_request(dd, rq);
- done:
-+	/*
-+	 * If the request needs its target zone locked, do it.
-+	 */
-+	if (deadline_request_needs_zone_wlock(dd, rq))
-+		deadline_wlock_zone(dd, rq);
- 	rq->rq_flags |= RQF_STARTED;
- 	return rq;
- }
-@@ -464,6 +554,13 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	const int data_dir = rq_data_dir(rq);
- 
-+	/*
-+	 * This may be a requeue of a write request that has locked its
-+	 * target zone. If this is the case, release the zone lock.
-+	 */
-+	if (deadline_request_has_zone_wlock(rq))
-+		deadline_wunlock_zone(dd, rq);
-+
- 	if (blk_mq_sched_try_insert_merge(q, rq))
- 		return;
- 
-@@ -508,6 +605,19 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 	spin_unlock(&dd->lock);
- }
- 
-+/*
-+ * For zoned block devices, write unlock the target zone of
-+ * completed write requests.
-+ */
-+static void dd_completed_request(struct request *rq)
-+{
-+	if (deadline_request_has_zone_wlock(rq)) {
-+		struct deadline_data *dd = rq->q->elevator->elevator_data;
-+
-+		deadline_wunlock_zone(dd, rq);
-+	}
-+}
-+
- static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
+ static inline bool rq_is_sync(struct request *rq)
  {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
-@@ -709,6 +819,7 @@ static struct elevator_type mq_deadline = {
- 	.ops.mq = {
- 		.insert_requests	= dd_insert_requests,
- 		.dispatch_request	= dd_dispatch_request,
-+		.completed_request	= dd_completed_request,
- 		.next_request		= elv_rb_latter_request,
- 		.former_request		= elv_rb_former_request,
- 		.bio_merge		= dd_bio_merge,
+ 	return op_is_sync(rq->cmd_flags);
+@@ -1032,6 +1065,16 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+ 	return blk_rq_cur_bytes(rq) >> 9;
+ }
+ 
++static inline unsigned int blk_rq_zone_no(struct request *rq)
++{
++	return blk_queue_zone_no(rq->q, blk_rq_pos(rq));
++}
++
++static inline unsigned int blk_rq_zone_is_seq(struct request *rq)
++{
++	return blk_queue_zone_is_seq(rq->q, blk_rq_pos(rq));
++}
++
+ /*
+  * Some commands like WRITE SAME have a payload or data transfer size which
+  * is different from the size of the request.  Any driver that supports such
+@@ -1583,6 +1626,16 @@ static inline unsigned int bdev_zone_sectors(struct block_device *bdev)
+ 	return 0;
+ }
+ 
++static inline unsigned int bdev_nr_zones(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (q)
++		return blk_queue_nr_zones(q);
++
++	return 0;
++}
++
+ static inline int queue_dma_alignment(struct request_queue *q)
+ {
+ 	return q ? q->dma_alignment : 511;
 -- 
 2.13.6
