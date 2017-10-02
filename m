@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv6 5/5] scsi_devinfo: fixup string compare
-Date: Mon,  2 Oct 2017 16:26:37 +0200
-Message-ID: <1506954397-2237-6-git-send-email-hare@suse.de>
+Subject: [PATCHv6 2/5] scsi: Export blacklist flags to sysfs
+Date: Mon,  2 Oct 2017 16:26:34 +0200
+Message-ID: <1506954397-2237-3-git-send-email-hare@suse.de>
 References: <1506954397-2237-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59156 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59166 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751084AbdJBOix (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751444AbdJBOix (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Oct 2017 10:38:53 -0400
 In-Reply-To: <1506954397-2237-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,76 +14,112 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When checking the model and vendor string we need to use the
-minimum value of either string, otherwise we'll miss out on
-wildcard matches.
-And we should take card when matching with zero size strings;
-results might be unpredictable.
-With this patch the rules for matching devinfo strings are
-as follows:
-- Vendor strings must match exactly
-- Empty Model strings will only match if the devinfo model
-  is also empty
-- Model strings shorter than the devinfo model string will
-  not match
+Each scsi device is scanned according to the found blacklist flags,
+but this information is never presented to sysfs.
+This makes it quite hard to figure out if blacklisting worked as
+expected.
+With this patch we're exporting an additional attribute 'blacklist'
+containing the blacklist flags for this device.
 
-Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
 Signed-off-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 ---
- drivers/scsi/scsi_devinfo.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ drivers/scsi/Makefile     |  8 ++++++++
+ drivers/scsi/scsi_scan.c  |  1 +
+ drivers/scsi/scsi_sysfs.c | 37 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 46 insertions(+)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 6858ad8..d39b27c 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -399,8 +399,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 93dbe58..c4298c7 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -191,6 +191,14 @@ clean-files :=	53c700_d.h 53c700_u.h
  
- /**
-  * scsi_dev_info_list_find - find a matching dev_info list entry.
-- * @vendor:	vendor string
-- * @model:	model (product) string
-+ * @vendor:	full vendor string
-+ * @model:	full model (product) string
-  * @key:	specify list to use
-  *
-  * Description:
-@@ -415,7 +415,7 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
- 	struct scsi_dev_info_list *devinfo;
- 	struct scsi_dev_info_list_table *devinfo_table =
- 		scsi_devinfo_lookup_by_key(key);
--	size_t vmax, mmax;
-+	size_t vmax, mmax, mlen;
- 	const char *vskip, *mskip;
+ $(obj)/53c700.o $(MODVERDIR)/$(obj)/53c700.ver: $(obj)/53c700_d.h
  
- 	if (IS_ERR(devinfo_table))
-@@ -454,15 +454,18 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
- 			    dev_info_list) {
- 		if (devinfo->compatible) {
- 			/*
--			 * Behave like the older version of get_device_flags.
-+			 * vendor strings must be an exact match
- 			 */
--			if (memcmp(devinfo->vendor, vskip, vmax) ||
--					(vmax < sizeof(devinfo->vendor) &&
--						devinfo->vendor[vmax]))
-+			if (vmax != strlen(devinfo->vendor) ||
-+			    memcmp(devinfo->vendor, vskip, vmax))
- 				continue;
--			if (memcmp(devinfo->model, mskip, mmax) ||
--					(mmax < sizeof(devinfo->model) &&
--						devinfo->model[mmax]))
++$(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
 +
-+			/*
-+			 * @model specifies the full string, and
-+			 * must be larger or equal to devinfo->model
-+			 */
-+			mlen = strlen(devinfo->model);
-+			if (mmax < mlen || memcmp(devinfo->model, mskip, mlen))
- 				continue;
- 			return devinfo;
- 		} else {
++quiet_cmd_bflags = GEN     $@
++	cmd_bflags = sed -n 's/.*BLIST_\([A-Z0-9_]*\) *.*/BLIST_FLAG_NAME(\1),/p' $< > $@
++
++$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h
++	$(call if_changed,bflags)
++
+ # If you want to play with the firmware, uncomment
+ # GENERATE_FIRMWARE := 1
+ 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index e7818af..26edd61 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -984,6 +984,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		scsi_attach_vpd(sdev);
+ 
+ 	sdev->max_queue_depth = sdev->queue_depth;
++	sdev->sdev_bflags = *bflags;
+ 
+ 	/*
+ 	 * Ok, the device is now all set up, we can
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index bf53356..fde3f44 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -20,6 +20,7 @@
+ #include <scsi/scsi_dh.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_driver.h>
++#include <scsi/scsi_devinfo.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -966,6 +967,41 @@ static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
+ }
+ static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+ 
++#define BLIST_FLAG_NAME(name) [ilog2(BLIST_##name)] = #name
++static const char *const sdev_bflags_name[] = {
++#include "scsi_devinfo_tbl.c"
++};
++#undef BLIST_FLAG_NAME
++
++static ssize_t
++sdev_show_blacklist(struct device *dev, struct device_attribute *attr,
++		    char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int i;
++	ssize_t len = 0;
++
++	for (i = 0; i < sizeof(sdev->sdev_bflags) * BITS_PER_BYTE; i++) {
++		const char *name = NULL;
++
++		if (!(sdev->sdev_bflags & BIT(i)))
++			continue;
++		if (i < ARRAY_SIZE(sdev_bflags_name) && sdev_bflags_name[i])
++			name = sdev_bflags_name[i];
++
++		if (name)
++			len += snprintf(buf + len, PAGE_SIZE - len,
++					"%s%s", len ? " " : "", name);
++		else
++			len += snprintf(buf + len, PAGE_SIZE - len,
++					"%sINVALID_BIT(%d)", len ? " " : "", i);
++	}
++	if (len)
++		len += snprintf(buf + len, PAGE_SIZE - len, "\n");
++	return len;
++}
++static DEVICE_ATTR(blacklist, S_IRUGO, sdev_show_blacklist, NULL);
++
+ #ifdef CONFIG_SCSI_DH
+ static ssize_t
+ sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
+@@ -1151,6 +1187,7 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
+ 	&dev_attr_queue_depth.attr,
+ 	&dev_attr_queue_type.attr,
+ 	&dev_attr_wwid.attr,
++	&dev_attr_blacklist.attr,
+ #ifdef CONFIG_SCSI_DH
+ 	&dev_attr_dh_state.attr,
+ 	&dev_attr_access_state.attr,
 -- 
 1.8.5.6
