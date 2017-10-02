@@ -1,41 +1,47 @@
 From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH V5 07/14] scsi: sd_zbc: Initialize device request queue
- zoned data
-Date: Mon, 2 Oct 2017 04:29:43 +0000
-Message-ID: <1506918581.24488.0.camel@wdc.com>
+Subject: Re: [PATCH V5 10/14] block: mq-deadline: Add zoned block device data
+Date: Mon, 2 Oct 2017 04:32:01 +0000
+Message-ID: <1506918719.24488.3.camel@wdc.com>
 References: <20170925061454.5533-1-damien.lemoal@wdc.com>
-         <20170925061454.5533-8-damien.lemoal@wdc.com>
-         <1506374241.2641.20.camel@wdc.com>
+         <20170925061454.5533-11-damien.lemoal@wdc.com>
+         <1506375254.2641.26.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:6604 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750929AbdJBE3t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 00:29:49 -0400
-In-Reply-To: <1506374241.2641.20.camel@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1506375254.2641.26.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <9AC19408D0C75842A79ABF4568E3AAE3@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-ID: <F114D02D949417438CFF9EC72340B57B@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: "hch@lst.de" <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE3LTA5LTI1IGF0IDIxOjE3ICswMDAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IE9uIE1vbiwgMjAxNy0wOS0yNSBhdCAxNToxNCArMDkwMCwgRGFtaWVuIExlIE1vYWwgd3Jv
-dGU6DQo+ID4gKwlyZXR1cm4ga3phbGxvY19ub2RlKEJJVFNfVE9fTE9OR1Moc2RrcC0+bnJfem9u
-ZXMpDQo+ID4gKwkJCSAgICAqIHNpemVvZih1bnNpZ25lZCBsb25nKSwNCj4gDQo+IERvZXMgdGhp
-cyBwZXJoYXBzIGZpdCBvbiBvbmUgbGluZT8NCj4gDQo+ID4gKy8qKg0KPiA+ICsgKiBzZF96YmNf
-Z2V0X3NlcV96b25lcyAtIFBhcnNlIHJlcG9ydCB6b25lcyByZXBseSB0byBpZGVudGlmeSBzZXF1
-ZW50aWFsDQo+ID4gem9uZXMNCj4gPiArICogQHNka3A6IGRpc2sgdXNlZA0KPiA+ICsgKiBAYnVm
-OiByZXBvcnQgcmVwbHkgYnVmZmVyDQo+ID4gKyAqIEBzZXFfem9uZV9iaXRhbXA6IGJpdG1hcCBv
-ZiBzZXF1ZW50aWFsIHpvbmVzIHRvIHNldA0KPiA+ICsgKiBAem5vOiBab25lIG51bWJlciBvZiB0
-aGUgZmlyc3Qgem9uZSBpbiB0aGUgcmVwb3J0DQo+IA0KPiAnem5vJyBpcyBhbiBpbnB1dCBhbmQg
-b3V0cHV0IHBhcmFtZXRlciBidXQgdGhlIGFib3ZlIGxpbmUgb25seSBkZXNjcmliZXMNCj4gd2hh
-dA0KPiBoYXBwZW5zIHdpdGggdGhlIHZhbHVlIHBhc3NlZCB0byBzZF96YmNfZ2V0X3NlcV96b25l
-cygpLiBJIHRoaW5rIHdlIGFsc28NCj4gbmVlZCBhDQo+IGRlc2NyaXB0aW9uIGZvciB0aGUgdmFs
-dWUgb2YgJ3pubycgdXBvbiByZXR1cm4uDQoNCnpubyBpcyBub3QgbmVjZXNzYXJ5IHNpbmNlIGl0
-IGNhbiBiZSBjYWxjdWxhdGVkIGZyb20gdGhlIHJlcG9ydGVkIHpvbmUgc3RhcnQNCkxCQS4gU28g
-SSByZW1vdmVkIGl0IGluIFY2IHRvIHNpbXBsaWZ5Lg0KDQotLSANCkRhbWllbiBMZSBNb2FsDQpX
-ZXN0ZXJuIERpZ2l0YWw=
+QmFydCwNCg0KT24gTW9uLCAyMDE3LTA5LTI1IGF0IDIxOjM0ICswMDAwLCBCYXJ0IFZhbiBBc3Nj
+aGUgd3JvdGU6DQo+IE9uIE1vbiwgMjAxNy0wOS0yNSBhdCAxNToxNCArMDkwMCwgRGFtaWVuIExl
+IE1vYWwgd3JvdGU6DQo+ID4gTW9kaWZ5IG1xLWRlYWxpbmUgaW5pdF9xdWV1ZSBhbmQgZXhpdF9x
+dWV1ZSBlbGV2YXRvciBtZXRob2RzIHRvIGhhbmRsZQ0KPiANCj4gICAgICAgICAgXl5eXl5eXl5e
+Xg0KPiAgICAgICAgICBtcS1kZWFkbGluZSA/DQo+IA0KPiA+ICtzdGF0aWMgaW50IGRlYWRsaW5l
+X2luaXRfem9uZXNfd2xvY2soc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsDQo+ID4gKwkJCQkgICAg
+IHN0cnVjdCBkZWFkbGluZV9kYXRhICpkZCkNCj4gPiArew0KPiA+ICsJLyoNCj4gPiArCSAqIEZv
+ciByZWd1bGFyIGRyaXZlcyBvciBub24tY29uZm9ybWluZyB6b25lZCBibG9jayBkZXZpY2UsDQo+
+ID4gKwkgKiBkbyBub3QgdXNlIHpvbmUgd3JpdGUgbG9ja2luZy4NCj4gPiArCSAqLw0KPiA+ICsJ
+aWYgKCFibGtfcXVldWVfbnJfem9uZXMocSkpDQo+ID4gKwkJcmV0dXJuIDA7DQo+ID4gKw0KPiA+
+ICsJLyoNCj4gPiArCSAqIFRyZWF0IGhvc3QgYXdhcmUgZHJpdmVzIGFzIHJlZ3VsYXIgZGlza3Mu
+DQo+ID4gKwkgKi8NCj4gPiArCWlmIChibGtfcXVldWVfem9uZWRfbW9kZWwocSkgIT0gQkxLX1pP
+TkVEX0hNKQ0KPiA+ICsJCXJldHVybiAwOw0KPiA+ICsNCj4gPiArCWRkLT56b25lc193bG9jayA9
+DQo+ID4ga3phbGxvY19ub2RlKEJJVFNfVE9fTE9OR1MoYmxrX3F1ZXVlX25yX3pvbmVzKHEpKQ0K
+PiA+ICsJCQkJICAgICAgICogc2l6ZW9mKHVuc2lnbmVkIGxvbmcpLA0KPiA+ICsJCQkJICAgICAg
+IEdGUF9LRVJORUwsIHEtPm5vZGUpOw0KPiANCj4gQSByZXF1ZXN0IHF1ZXVlIGlzIGNyZWF0ZWQg
+YmVmb3JlIGRpc2sgdmFsaWRhdGlvbiBvY2N1cnMgYW5kIGJlZm9yZSB0aGUNCj4gbnVtYmVyIG9m
+IHpvbmVzIGlzIGluaXRpYWxpemVkIChzZF9wcm9iZV9hc3luYygpKS4gSWYgYSBzY2hlZHVsZXIg
+aXMNCj4gYXNzaWduZWQgdG8gYSBaQkMgZHJpdmUgdGhyb3VnaCBhIHVkZXYgcnVsZSwgY2FuIGl0
+IGhhcHBlbiB0aGF0DQo+IGRlYWRsaW5lX2luaXRfem9uZXNfd2xvY2soKSBpcyBjYWxsZWQgYmVm
+b3JlIHRoZSBudW1iZXIgb2Ygem9uZXMgaGFzIGJlZW4NCj4gaW5pdGlhbGl6ZWQ/DQoNClllcyBp
+bmRlZWQuIEkgYW0gYXdhcmUgb2YgdGhpcywgaGVuY2UgdGhlIGxhc3QgcGF0Y2ggb2YgdGhlIHNl
+cmllcyB3aGljaA0KZGlzYWJsZXMgc2V0dGluZyBhIGRlZmF1bHQgc2NoZWR1bGVyIGZvciBibGst
+bXEgZGV2aWNlcy4NCg0KVGhhdCBpcyBob3dldmVyIGEgbGl0dGxlIGV4dHJlbWUuIFNvIGZvciBW
+NiwgSSBhbSBsb29raW5nIGF0IGRpZmVycmluZyB0aGUNCmRlZmF1bHQgZWxldmF0b3Igc2V0dXAg
+YWZ0ZXIgZGV2aWNlIGluZm9ybWF0aW9uIGlzIGdhdGhlcmVkLiBOb3Qgc3VyZSB3aGVyZQ0KdGhl
+IHJpZ2h0IHBsYWNlIHRvIGRvIHNvIGlzIHRob3VnaC4gTG9va2luZy4NCg0KQmVzdCByZWdhcmRz
+Lg0KDQotLSANCkRhbWllbiBMZSBNb2FsDQpXZXN0ZXJuIERpZ2l0YWw=
