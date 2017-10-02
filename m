@@ -1,106 +1,27 @@
-From: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>
-Subject: Re: system hung up when offlining CPUs
-Date: Mon, 2 Oct 2017 12:36:52 -0400
-Message-ID: <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com>
-References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com>
- <20170809124213.0d9518bb@why.wild-wind.fr.eu.org>
- <cd524af7-1f20-1956-1e44-92a451053387@gmail.com>
- <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com>
- <20170821131809.GA17564@lst.de>
- <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com>
- <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com>
- <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com>
- <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de>
- <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com>
- <alpine.DEB.2.20.1709131529400.1874@nanos>
- <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com>
- <alpine.DEB.2.20.1709161212160.2105@nanos>
- <alpine.DEB.2.20.1709161630580.2105@nanos>
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
+Date: Mon, 2 Oct 2017 13:37:34 -0300
+Message-ID: <20171002133734.6ac10ded@recife.lan>
+References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+        <20171001220131.GA11812@eros>
+        <20171001205220.10b78086@blatinox-laptop.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1709161630580.2105@nanos>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-media-owner@vger.kernel.org>
+In-Reply-To: <20171001205220.10b78086@blatinox-laptop.localdomain>
+Sender: linux-media-owner@vger.kernel.org
+To: =?UTF-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
+Cc: "Tobin C. Harding" <me@tobin.cc>, alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, dm-devel@redhat.com, brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz, intel-wired-lan@lists.osuosl.org, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gvt-dev@lists.freedesktop.org, devel@acpica.org, brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vge
 List-Id: linux-scsi@vger.kernel.org
 
+Em Sun, 1 Oct 2017 20:52:20 -0400
+Jérémy Lefaure <jeremy.lefaure@lse.epita.fr> escreveu:
 
+> Anyway, I can tell to each maintainer that they can apply the patches
+> they're concerned about and next time I may send individual patches.
 
-On 09/16/2017 11:02 AM, Thomas Gleixner wrote:
-> On Sat, 16 Sep 2017, Thomas Gleixner wrote:
->> On Thu, 14 Sep 2017, YASUAKI ISHIMATSU wrote:
->>> Here are one irq's info of megasas:
->>>
->>> - Before offline CPU
->>> /proc/irq/70/smp_affinity_list
->>> 24-29
->>>
->>> /proc/irq/70/effective_affinity
->>> 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,3f000000
->>>
->>> /sys/kernel/debug/irq/irqs/70
->>> handler:  handle_edge_irq
->>> status:   0x00004000
->>> istate:   0x00000000
->>> ddepth:   0
->>> wdepth:   0
->>> dstate:   0x00609200
->>>             IRQD_ACTIVATED
->>>             IRQD_IRQ_STARTED
->>>             IRQD_MOVE_PCNTXT
->>>             IRQD_AFFINITY_SET
->>>             IRQD_AFFINITY_MANAGED
->>
->> So this uses managed affinity, which means that once the last CPU in the
->> affinity mask goes offline, the interrupt is shut down by the irq core
->> code, which is the case:
->>
->>> dstate:   0x00a39000
->>>             IRQD_IRQ_DISABLED
->>>             IRQD_IRQ_MASKED
->>>             IRQD_MOVE_PCNTXT
->>>             IRQD_AFFINITY_SET
->>>             IRQD_AFFINITY_MANAGED
->>>             IRQD_MANAGED_SHUTDOWN  <---------------
->>
->> So the irq core code works as expected, but something in the
->> driver/scsi/block stack seems to fiddle with that shut down queue.
->>
->> I only can tell about the inner workings of the irq code, but I have no
->> clue about the rest.
-> 
-> Though there is something wrong here:
-> 
->> affinity: 24-29
->> effectiv: 24-29
-> 
-> and after offlining:
-> 
->> affinity: 29
->> effectiv: 29
-> 
-> But that should be:
-> 
-> affinity: 24-29
-> effectiv: 29
-> 
-> because the irq core code preserves 'affinity'. It merily updates
-> 'effective', which is where your interrupts are routed to.
-> 
-> Is the driver issuing any set_affinity() calls? If so, that's wrong.
-> 
-> Which driver are we talking about?
-
-We are talking about megasas driver.
-So I added linux-scsi and maintainers of megasas into the thread.
+In the case of media, we'll handle it as if they were individual ones.
 
 Thanks,
-Yasuaki Ishimatsu
-
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Mauro
