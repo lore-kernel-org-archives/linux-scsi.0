@@ -1,124 +1,111 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V6 10/14] block: mq-deadline: Add zoned block device data
-Date: Mon,  2 Oct 2017 16:15:31 +0900
-Message-ID: <20171002071535.8007-11-damien.lemoal@wdc.com>
+Subject: [PATCH V6 11/14] blokc: mq-deadline: Introduce dispatch helpers
+Date: Mon,  2 Oct 2017 16:15:32 +0900
+Message-ID: <20171002071535.8007-12-damien.lemoal@wdc.com>
 References: <20171002071535.8007-1-damien.lemoal@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:22502 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751241AbdJBHPt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 03:15:49 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171002071535.8007-1-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Introduce a zone bitmap field in mq-deadline private data to support
-zoned block devices. The zone bitmap is used to implement per zone
-write locking. Modify mq-deadline init_queue() and exit_queue()
-elevator methods to handle initialization and cleanup of the zone write
-lock bitmap.
+Avoid directly referencing the next_rq and fifo_list arrays using the
+helper functions deadline_next_request() and deadline_fifo_request() to
+facilitate changes in the dispatch request selection in
+__dd_dispatch_request().
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
 ---
- block/mq-deadline.c | 48 ++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 44 insertions(+), 4 deletions(-)
+ block/mq-deadline.c | 45 +++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 37 insertions(+), 8 deletions(-)
 
 diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index a1cad4331edd..f0c01ef934b4 100644
+index f0c01ef934b4..6b7b84ee8f82 100644
 --- a/block/mq-deadline.c
 +++ b/block/mq-deadline.c
-@@ -60,6 +60,8 @@ struct deadline_data {
- 
- 	spinlock_t lock;
- 	struct list_head dispatch;
-+
-+	unsigned long *zones_wlock;
- };
- 
- static inline struct rb_root *
-@@ -300,6 +302,34 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	return rq;
+@@ -194,13 +194,42 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
  }
  
-+static int deadline_init_zones_wlock(struct request_queue *q,
-+				     struct deadline_data *dd)
+ /*
++ * For the specified data direction, return the next request to
++ * dispatch using arrival ordered lists.
++ */
++static struct request *
++deadline_fifo_request(struct deadline_data *dd, int data_dir)
 +{
-+	/*
-+	 * For regular drives or non-conforming zoned block device,
-+	 * do not use zone write locking.
-+	 */
-+	if (!blk_queue_nr_zones(q))
-+		return 0;
++	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
++		return NULL;
 +
-+	/*
-+	 * Treat host aware drives as regular disks.
-+	 */
-+	if (blk_queue_zoned_model(q) != BLK_ZONED_HM)
-+		return 0;
++	if (list_empty(&dd->fifo_list[data_dir]))
++		return NULL;
 +
-+	dd->zones_wlock = kzalloc_node(BITS_TO_LONGS(blk_queue_nr_zones(q))
-+				       * sizeof(unsigned long),
-+				       GFP_KERNEL, q->node);
-+	if (!dd->zones_wlock)
-+		return -ENOMEM;
-+
-+	pr_info("mq-deadline: %s: zones write locking enabled\n",
-+		dev_name(q->backing_dev_info->dev));
-+
-+	return 0;
++	return rq_entry_fifo(dd->fifo_list[data_dir].next);
 +}
 +
- static void dd_exit_queue(struct elevator_queue *e)
- {
- 	struct deadline_data *dd = e->elevator_data;
-@@ -307,6 +337,7 @@ static void dd_exit_queue(struct elevator_queue *e)
- 	BUG_ON(!list_empty(&dd->fifo_list[READ]));
- 	BUG_ON(!list_empty(&dd->fifo_list[WRITE]));
- 
-+	kfree(dd->zones_wlock);
- 	kfree(dd);
- }
- 
-@@ -317,16 +348,15 @@ static int dd_init_queue(struct request_queue *q, struct elevator_type *e)
- {
- 	struct deadline_data *dd;
- 	struct elevator_queue *eq;
-+	int ret = -ENOMEM;
- 
- 	eq = elevator_alloc(q, e);
- 	if (!eq)
- 		return -ENOMEM;
- 
- 	dd = kzalloc_node(sizeof(*dd), GFP_KERNEL, q->node);
--	if (!dd) {
--		kobject_put(&eq->kobj);
--		return -ENOMEM;
--	}
-+	if (!dd)
-+		goto out_put_elv;
- 	eq->elevator_data = dd;
- 
- 	INIT_LIST_HEAD(&dd->fifo_list[READ]);
-@@ -341,8 +371,18 @@ static int dd_init_queue(struct request_queue *q, struct elevator_type *e)
- 	spin_lock_init(&dd->lock);
- 	INIT_LIST_HEAD(&dd->dispatch);
- 
-+	ret = deadline_init_zones_wlock(q, dd);
-+	if (ret)
-+		goto out_free_dd;
++/*
++ * For the specified data direction, return the next request to
++ * dispatch using sector position sorted lists.
++ */
++static struct request *
++deadline_next_request(struct deadline_data *dd, int data_dir)
++{
++	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
++		return NULL;
 +
- 	q->elevator = eq;
- 	return 0;
++	return dd->next_rq[data_dir];
++}
 +
-+out_free_dd:
-+	kfree(dd);
-+out_put_elv:
-+	kobject_put(&eq->kobj);
-+	return ret;
- }
++/*
+  * deadline_dispatch_requests selects the best request according to
+  * read/write expire, fifo_batch, etc
+  */
+ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
+-	struct request *rq;
++	struct request *rq, *next_rq;
+ 	bool reads, writes;
+ 	int data_dir;
  
- static int dd_request_merge(struct request_queue *q, struct request **rq,
+@@ -216,10 +245,9 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+ 	/*
+ 	 * batches are currently reads XOR writes
+ 	 */
+-	if (dd->next_rq[WRITE])
+-		rq = dd->next_rq[WRITE];
+-	else
+-		rq = dd->next_rq[READ];
++	rq = deadline_next_request(dd, WRITE);
++	if (!rq)
++		rq = deadline_next_request(dd, READ);
+ 
+ 	if (rq && dd->batching < dd->fifo_batch)
+ 		/* we have a next request are still entitled to batch */
+@@ -262,19 +290,20 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+ 	/*
+ 	 * we are not running a batch, find best request for selected data_dir
+ 	 */
+-	if (deadline_check_fifo(dd, data_dir) || !dd->next_rq[data_dir]) {
++	next_rq = deadline_next_request(dd, data_dir);
++	if (deadline_check_fifo(dd, data_dir) || !next_rq) {
+ 		/*
+ 		 * A deadline has expired, the last request was in the other
+ 		 * direction, or we have run out of higher-sectored requests.
+ 		 * Start again from the request with the earliest expiry time.
+ 		 */
+-		rq = rq_entry_fifo(dd->fifo_list[data_dir].next);
++		rq = deadline_fifo_request(dd, data_dir);
+ 	} else {
+ 		/*
+ 		 * The last req was the same dir and we have a next request in
+ 		 * sort order. No expired requests so continue on from here.
+ 		 */
+-		rq = dd->next_rq[data_dir];
++		rq = next_rq;
+ 	}
+ 
+ 	dd->batching = 0;
 -- 
 2.13.6
