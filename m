@@ -1,70 +1,31 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V6 03/14] scsi: sd_zbc: Rearrange code
-Date: Mon,  2 Oct 2017 16:15:24 +0900
-Message-ID: <20171002071535.8007-4-damien.lemoal@wdc.com>
-References: <20171002071535.8007-1-damien.lemoal@wdc.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2 01/21] lpfc: fix pci hot plug crash in timer management routines
+Date: Mon, 02 Oct 2017 10:05:27 +0200
+Message-ID: <mqd8tgu9dq0.fsf@linux-x5ow.site>
+References: <20170930003447.10747-1-jsmart2021@gmail.com>
+        <20170930003447.10747-2-jsmart2021@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:3420 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbdJBHPl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 03:15:41 -0400
-In-Reply-To: <20171002071535.8007-1-damien.lemoal@wdc.com>
+Received: from mx2.suse.de ([195.135.220.15]:34413 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750891AbdJBIFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Oct 2017 04:05:33 -0400
+In-Reply-To: <20170930003447.10747-2-jsmart2021@gmail.com> (James Smart's
+        message of "Fri, 29 Sep 2017 17:34:27 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, stable@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
-Rearrange sd_zbc_setup() to include use_16_for_rw and use_10_for_rw
-assignments and move the calculation of sdkp->zone_shift together
-with the assignment of the verified zone_blocks value in
-sd_zbc_check_zone_size().
 
-No functional change is introduced by this patch.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
----
- drivers/scsi/sd_zbc.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 023f705ae235..7dbaf920679e 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -584,6 +584,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	}
- 
- 	sdkp->zone_blocks = zone_blocks;
-+	sdkp->zone_shift = ilog2(zone_blocks);
- 
- 	return 0;
- }
-@@ -591,10 +592,13 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- static int sd_zbc_setup(struct scsi_disk *sdkp)
- {
- 
-+	/* READ16/WRITE16 is mandatory for ZBC disks */
-+	sdkp->device->use_16_for_rw = 1;
-+	sdkp->device->use_10_for_rw = 0;
-+
- 	/* chunk_sectors indicates the zone size */
- 	blk_queue_chunk_sectors(sdkp->disk->queue,
- 			logical_to_sectors(sdkp->device, sdkp->zone_blocks));
--	sdkp->zone_shift = ilog2(sdkp->zone_blocks);
- 	sdkp->nr_zones = sdkp->capacity >> sdkp->zone_shift;
- 	if (sdkp->capacity & (sdkp->zone_blocks - 1))
- 		sdkp->nr_zones++;
-@@ -657,10 +661,6 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 	if (ret)
- 		goto err;
- 
--	/* READ16/WRITE16 is mandatory for ZBC disks */
--	sdkp->device->use_16_for_rw = 1;
--	sdkp->device->use_10_for_rw = 0;
--
- 	return 0;
- 
- err:
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
-2.13.6
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
