@@ -1,99 +1,47 @@
-From: Tim Hansen <devtimhansen@gmail.com>
-Subject: [PATCH] bsg: update bsg_device_list to utilize static hash table
- implementation.
-Date: Mon, 2 Oct 2017 12:10:01 -0400
-Message-ID: <20171002161001.GA49685@debian>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V7 5/6] block: support PREEMPT_ONLY
+Date: Mon, 2 Oct 2017 16:27:59 +0000
+Message-ID: <1506961678.3368.29.camel@wdc.com>
+References: <20170930061214.10622-1-ming.lei@redhat.com>
+         <20170930061214.10622-6-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20170930061214.10622-6-ming.lei@redhat.com>
+Content-Language: en-US
+Content-ID: <C00816CEA75758439BE7130C8AFDAD9F@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: fujita.tomonori@lab.ntt.co.jp
-Cc: axboe@kernel.dk, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, alexander.levin@one.verizon.com, devtimhansen@gmail.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "cavery@redhat.com" <cavery@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Updates bsg_device_list to utilize static hashtable implementation.
-
-This is done in an effort to standarize the hashtables used across the
-kernel.
-
-Signed-off-by: Tim Hansen <devtimhansen@gmail.com>
----
- block/bsg.c | 20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index ee1335c68de7..ecb93d733b56 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -66,8 +66,8 @@ enum {
- static DEFINE_MUTEX(bsg_mutex);
- static DEFINE_IDR(bsg_minor_idr);
- 
--#define BSG_LIST_ARRAY_SIZE	8
--static struct hlist_head bsg_device_list[BSG_LIST_ARRAY_SIZE];
-+#define BSG_HASHTABLE_BIT_SIZE		3
-+static DEFINE_HASHTABLE(bsg_device_list, BSG_HASHTABLE_BIT_SIZE);
- 
- static struct class *bsg_class;
- static int bsg_major;
-@@ -130,11 +130,6 @@ static struct bsg_command *bsg_alloc_command(struct bsg_device *bd)
- 	return bc;
- }
- 
--static inline struct hlist_head *bsg_dev_idx_hash(int index)
--{
--	return &bsg_device_list[index & (BSG_LIST_ARRAY_SIZE - 1)];
--}
--
- static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
- 				struct sg_io_v4 *hdr, struct bsg_device *bd,
- 				fmode_t has_write_perm)
-@@ -716,7 +711,7 @@ static int bsg_put_device(struct bsg_device *bd)
- 		goto out;
- 	}
- 
--	hlist_del(&bd->dev_list);
-+	hash_del(&bd->dev_list);
- 	mutex_unlock(&bsg_mutex);
- 
- 	dprintk("%s: tearing down\n", bd->name);
-@@ -770,7 +765,7 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
- 
- 	atomic_set(&bd->ref_count, 1);
- 	mutex_lock(&bsg_mutex);
--	hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(iminor(inode)));
-+	hash_add(bsg_device_list, &bd->dev_list, iminor(inode));
- 
- 	strncpy(bd->name, dev_name(rq->bsg_dev.class_dev), sizeof(bd->name) - 1);
- 	dprintk("bound to <%s>, max queue %d\n",
-@@ -786,7 +781,7 @@ static struct bsg_device *__bsg_get_device(int minor, struct request_queue *q)
- 
- 	mutex_lock(&bsg_mutex);
- 
--	hlist_for_each_entry(bd, bsg_dev_idx_hash(minor), dev_list) {
-+	hash_for_each_possible(bsg_device_list, bd, dev_list, minor) {
- 		if (bd->queue == q) {
- 			atomic_inc(&bd->ref_count);
- 			goto found;
-@@ -1042,7 +1037,7 @@ static char *bsg_devnode(struct device *dev, umode_t *mode)
- 
- static int __init bsg_init(void)
- {
--	int ret, i;
-+	int ret;
- 	dev_t devid;
- 
- 	bsg_cmd_cachep = kmem_cache_create("bsg_cmd",
-@@ -1052,9 +1047,6 @@ static int __init bsg_init(void)
- 		return -ENOMEM;
- 	}
- 
--	for (i = 0; i < BSG_LIST_ARRAY_SIZE; i++)
--		INIT_HLIST_HEAD(&bsg_device_list[i]);
--
- 	bsg_class = class_create(THIS_MODULE, "bsg");
- 	if (IS_ERR(bsg_class)) {
- 		ret = PTR_ERR(bsg_class);
--- 
-2.14.2
+T24gU2F0LCAyMDE3LTA5LTMwIGF0IDE0OjEyICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gK3Zv
+aWQgYmxrX3NldF9wcmVlbXB0X29ubHkoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIGJvb2wgcHJl
+ZW1wdF9vbmx5KQ0KPiArew0KPiArCWJsa19tcV9mcmVlemVfcXVldWUocSk7DQo+ICsJaWYgKHBy
+ZWVtcHRfb25seSkNCj4gKwkJcXVldWVfZmxhZ19zZXRfdW5sb2NrZWQoUVVFVUVfRkxBR19QUkVF
+TVBUX09OTFksIHEpOw0KPiArCWVsc2UNCj4gKwkJcXVldWVfZmxhZ19jbGVhcl91bmxvY2tlZChR
+VUVVRV9GTEFHX1BSRUVNUFRfT05MWSwgcSk7DQo+ICsJYmxrX21xX3VuZnJlZXplX3F1ZXVlKHEp
+Ow0KPiArfQ0KPiArRVhQT1JUX1NZTUJPTChibGtfc2V0X3ByZWVtcHRfb25seSk7DQo+ICsNCj4g
+IC8qKg0KPiAgICogX19ibGtfcnVuX3F1ZXVlX3VuY29uZCAtIHJ1biBhIHF1ZXVlIHdoZXRoZXIg
+b3Igbm90IGl0IGhhcyBiZWVuIHN0b3BwZWQNCj4gICAqIEBxOglUaGUgcXVldWUgdG8gcnVuDQo+
+IEBAIC03NzEsOSArNzgyLDE4IEBAIGludCBibGtfcXVldWVfZW50ZXIoc3RydWN0IHJlcXVlc3Rf
+cXVldWUgKnEsIHVuc2lnbmVkIGZsYWdzKQ0KPiAgCXdoaWxlICh0cnVlKSB7DQo+ICAJCWludCBy
+ZXQ7DQo+ICANCj4gKwkJLyoNCj4gKwkJICogcHJlZW1wdF9vbmx5IGZsYWcgaGFzIHRvIGJlIHNl
+dCBhZnRlciBxdWV1ZSBpcyBmcm96ZW4sDQo+ICsJCSAqIHNvIGl0IGNhbiBiZSBjaGVja2VkIGhl
+cmUgbG9ja2xlc3MgYW5kIHNhZmVseQ0KPiArCQkgKi8NCj4gKwkJaWYgKGJsa19xdWV1ZV9wcmVl
+bXB0X29ubHkocSkpIHsNCj4gKwkJCWlmICghKGZsYWdzICYgQkxLX1JFUV9QUkVFTVBUKSkNCj4g
+KwkJCQlnb3RvIHNsb3dfcGF0aDsNCj4gKwkJfQ0KPiArDQo+ICAJCWlmIChwZXJjcHVfcmVmX3Ry
+eWdldF9saXZlKCZxLT5xX3VzYWdlX2NvdW50ZXIpKQ0KPiAgCQkJcmV0dXJuIDA7DQoNClNvcnJ5
+IGJ1dCBJIGRvbid0IHRoaW5rIHRoYXQgaXQgaXMgcG9zc2libGUgd2l0aCB0aGVzZSBjaGFuZ2Vz
+IHRvIHByZXZlbnQNCnRoYXQgYSBub24tcHJlZW1wdCByZXF1ZXN0IGdldHMgYWxsb2NhdGVkIGFm
+dGVyIGEgKFNDU0kpIHF1ZXVlIGhhcyBiZWVuDQpxdWllc2NlZC4gSWYgdGhlIENQVSB0aGF0IGNh
+bGxzIGJsa19xdWV1ZV9lbnRlcigpIG9ic2VydmVzIHRoZSBzZXQgb2YgdGhlDQpQUkVFTVBUX09O
+TFkgZmxhZyBhZnRlciB0aGUgcXVldWUgaGFzIGJlZW4gdW5mcm96ZW4gYW5kIGFmdGVyIHRoZSBT
+Q1NJDQpkZXZpY2Ugc3RhdGUgaGFzIGJlZW4gY2hhbmdlZCBpbnRvIFFVSUVTQ0VEIHRoZW4gYmxr
+X3F1ZXVlX2VudGVyKCkgY2FuDQpzdWNjZWVkIGZvciBhIG5vbi1wcmVlbXB0IHJlcXVlc3QuIEkg
+dGhpbmsgdGhpcyBpcyBleGFjdGx5IHRoZSBzY2VuYXJpbw0Kd2Ugd2FudCB0byBhdm9pZC4gVGhp
+cyBpcyB3aHkgYSBzeW5jaHJvbml6ZV9yY3UoKSBjYWxsIGlzIHByZXNlbnQgaW4gbXkNCnBhdGNo
+IGJlZm9yZSB0aGUgcXVldWUgaXMgdW5mcm96ZW4gYW5kIGFsc28gd2h5IGluIG15IHBhdGNoIHRo
+ZQ0KcGVyY3B1X3JlZl90cnlnZXRfbGl2ZSgpIGNhbGwgb2NjdXJzIGJlZm9yZSB0aGUgdGVzdCBv
+ZiB0aGUgUFJFRU1QVF9PTkxZDQpmbGFnLg0KDQpCYXJ0Lg==
