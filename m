@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V6 11/14] blokc: mq-deadline: Introduce dispatch helpers
-Date: Mon,  2 Oct 2017 16:15:32 +0900
-Message-ID: <20171002071535.8007-12-damien.lemoal@wdc.com>
+Subject: [PATCH V6 09/14] scsi: sd_zbc: Disable zone write locking with scsi-mq
+Date: Mon,  2 Oct 2017 16:15:30 +0900
+Message-ID: <20171002071535.8007-10-damien.lemoal@wdc.com>
 References: <20171002071535.8007-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171002071535.8007-1-damien.lemoal@wdc.com>
@@ -10,102 +10,62 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid directly referencing the next_rq and fifo_list arrays using the
-helper functions deadline_next_request() and deadline_fifo_request() to
-facilitate changes in the dispatch request selection in
-__dd_dispatch_request().
+In the case of a ZBC disk used with scsi-mq, zone write locking does
+not prevent write reordering in sequential zones. Unlike the legacy
+case, zone locking is done after the command request is removed from
+the scheduler dispatch queue. That is, at the time of zone locking,
+the write command may already be out of order, making locking
+ineffective. Write order guarantees can only be provided by an
+adapted I/O scheduler.
+
+Disable zone write locking in sd_zbc_write_lock_zone() if the disk is
+used with scsi-mq. As the disk zones_wlock bitmap is not necessry,
+do not allocate it.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/mq-deadline.c | 45 +++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 8 deletions(-)
+ drivers/scsi/sd_zbc.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index f0c01ef934b4..6b7b84ee8f82 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -194,13 +194,42 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
- }
- 
- /*
-+ * For the specified data direction, return the next request to
-+ * dispatch using arrival ordered lists.
-+ */
-+static struct request *
-+deadline_fifo_request(struct deadline_data *dd, int data_dir)
-+{
-+	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
-+		return NULL;
-+
-+	if (list_empty(&dd->fifo_list[data_dir]))
-+		return NULL;
-+
-+	return rq_entry_fifo(dd->fifo_list[data_dir].next);
-+}
-+
-+/*
-+ * For the specified data direction, return the next request to
-+ * dispatch using sector position sorted lists.
-+ */
-+static struct request *
-+deadline_next_request(struct deadline_data *dd, int data_dir)
-+{
-+	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
-+		return NULL;
-+
-+	return dd->next_rq[data_dir];
-+}
-+
-+/*
-  * deadline_dispatch_requests selects the best request according to
-  * read/write expire, fifo_batch, etc
-  */
- static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 4cb271619fc6..f56ed1bc3eaa 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -287,6 +287,7 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
+ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
  {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
--	struct request *rq;
-+	struct request *rq, *next_rq;
- 	bool reads, writes;
- 	int data_dir;
- 
-@@ -216,10 +245,9 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	/*
- 	 * batches are currently reads XOR writes
+ 	struct request *rq = cmd->request;
++	struct request_queue *q = rq->q;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 	sector_t sector = blk_rq_pos(rq);
+ 	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
+@@ -297,10 +298,14 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
  	 */
--	if (dd->next_rq[WRITE])
--		rq = dd->next_rq[WRITE];
--	else
--		rq = dd->next_rq[READ];
-+	rq = deadline_next_request(dd, WRITE);
-+	if (!rq)
-+		rq = deadline_next_request(dd, READ);
  
- 	if (rq && dd->batching < dd->fifo_batch)
- 		/* we have a next request are still entitled to batch */
-@@ -262,19 +290,20 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+ 	/* Do not allow zone boundaries crossing on host-managed drives */
+-	if (blk_queue_zoned_model(rq->q) == BLK_ZONED_HM &&
++	if (blk_queue_zoned_model(q) == BLK_ZONED_HM &&
+ 	    (sector & (zone_sectors - 1)) + blk_rq_sectors(rq) > zone_sectors)
+ 		return BLKPREP_KILL;
+ 
++	/* No write locking with scsi-mq */
++	if (q->mq_ops)
++		return BLKPREP_OK;
++
  	/*
- 	 * we are not running a batch, find best request for selected data_dir
- 	 */
--	if (deadline_check_fifo(dd, data_dir) || !dd->next_rq[data_dir]) {
-+	next_rq = deadline_next_request(dd, data_dir);
-+	if (deadline_check_fifo(dd, data_dir) || !next_rq) {
- 		/*
- 		 * A deadline has expired, the last request was in the other
- 		 * direction, or we have run out of higher-sectored requests.
- 		 * Start again from the request with the earliest expiry time.
- 		 */
--		rq = rq_entry_fifo(dd->fifo_list[data_dir].next);
-+		rq = deadline_fifo_request(dd, data_dir);
- 	} else {
- 		/*
- 		 * The last req was the same dir and we have a next request in
- 		 * sort order. No expired requests so continue on from here.
- 		 */
--		rq = dd->next_rq[data_dir];
-+		rq = next_rq;
- 	}
+ 	 * There is no write constraints on conventional zones. So any write
+ 	 * command can be sent. But do not issue more than one write command
+@@ -711,7 +716,7 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
+ 	if (sdkp->first_scan)
+ 		return 0;
  
- 	dd->batching = 0;
+-	if (!sdkp->zones_wlock) {
++	if (!q->mq_ops && !sdkp->zones_wlock) {
+ 		sdkp->zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
+ 		if (!sdkp->zones_wlock)
+ 			return -ENOMEM;
 -- 
 2.13.6
