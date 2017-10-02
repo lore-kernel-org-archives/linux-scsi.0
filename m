@@ -1,71 +1,89 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: mptsas driver cannot detect hotplugging disk with the LSI SCSI
- SAS1068 controller in Ubuntu guest on VMware
-Date: Mon, 2 Oct 2017 16:32:47 +0200
-Message-ID: <1ad520f6-a1d8-5ce7-ee74-83edfdbfd39b@suse.de>
-References: <CA+eFSM1aJRYs__pwtz+8E0TFOeKuKpHoiOkX6Wmm_2HMT1ut5A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+eFSM1aJRYs__pwtz+8E0TFOeKuKpHoiOkX6Wmm_2HMT1ut5A@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gavin Guo <gavin.guo@canonical.com>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Subject: [PATCHv6 5/5] scsi_devinfo: fixup string compare
+Date: Mon,  2 Oct 2017 16:26:37 +0200
+Message-ID: <1506954397-2237-6-git-send-email-hare@suse.de>
+References: <1506954397-2237-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59156 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751084AbdJBOix (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Oct 2017 10:38:53 -0400
+In-Reply-To: <1506954397-2237-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 09/27/2017 09:33 AM, Gavin Guo wrote:
-> There is a problem in the latest upstream kernel with the device:
-> 
-> $ grep -i lsi lspci
-> 03:00.0 Serial Attached SCSI controller [0107]: LSI Logic / Symbios
-> Logic SAS1068 PCI-X Fusion-MPT SAS [1000:0054] (rev 01)
-> 
-> The device is simulated by the VMware ESXi 5.5
-> 
-> When hotplugging a new disk to the Guest Ubuntu OS, the latest kernel
-> cannot automatically probe the disk. However, on the v3.19.0-80.88
-> kernel, the disk can be dynamically probed and show the following
-> info message:
-> 
-> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
-> sas_addr 0x5000c29a6bdae0f5
-> scsi 2:0:1:0: Direct-Access     VMware   Virtual disk     1.0  PQ: 0
-> ANSI: 2
-> sd 2:0:1:0: Attached scsi generic sg2 type 0
-> sd 2:0:1:0: [sdb] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
-> sd 2:0:1:0: [sdb] Write Protect is off
-> sd 2:0:1:0: [sdb] Mode Sense: 61 00 00 00
-> sd 2:0:1:0: [sdb] Cache data unavailable
-> sd 2:0:1:0: [sdb] Assuming drive cache: write through
->  sdb: unknown partition table
-> sd 2:0:1:0: [sdb] Attached SCSI disk
-> 
-> After looking up the message:
-> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
-> sas_addr 0x5000c29a6bdae0f5
-> 
-> I found it comes from the path:
-> mptsas_firmware_event_work -> mptsas_send_sas_event ->
-> mptsas_hotplug_work -> mptsas_add_end_device
-> 
-> I'll appreciate if anyone can give the idea: If it's possible that the
-> irq from the simulated LSI SAS controller didn't come in to trigger
-> the event? However, it can work on the v3.19 kernel so if there is
-> any driver implementation issue in the latest kernel.
-> 
-This is an issue with the mptsas driver, who originally assumed that no
-system will have direct-attached SAS devices.
-VMWare chose to implement exactly that, so the hotplug detection logic
-is flawed here.
-I'll be sending a patch.
+When checking the model and vendor string we need to use the
+minimum value of either string, otherwise we'll miss out on
+wildcard matches.
+And we should take card when matching with zero size strings;
+results might be unpredictable.
+With this patch the rules for matching devinfo strings are
+as follows:
+- Vendor strings must match exactly
+- Empty Model strings will only match if the devinfo model
+  is also empty
+- Model strings shorter than the devinfo model string will
+  not match
 
-Cheers,
+Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+---
+ drivers/scsi/scsi_devinfo.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 6858ad8..d39b27c 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -399,8 +399,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+ 
+ /**
+  * scsi_dev_info_list_find - find a matching dev_info list entry.
+- * @vendor:	vendor string
+- * @model:	model (product) string
++ * @vendor:	full vendor string
++ * @model:	full model (product) string
+  * @key:	specify list to use
+  *
+  * Description:
+@@ -415,7 +415,7 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 	struct scsi_dev_info_list *devinfo;
+ 	struct scsi_dev_info_list_table *devinfo_table =
+ 		scsi_devinfo_lookup_by_key(key);
+-	size_t vmax, mmax;
++	size_t vmax, mmax, mlen;
+ 	const char *vskip, *mskip;
+ 
+ 	if (IS_ERR(devinfo_table))
+@@ -454,15 +454,18 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 			    dev_info_list) {
+ 		if (devinfo->compatible) {
+ 			/*
+-			 * Behave like the older version of get_device_flags.
++			 * vendor strings must be an exact match
+ 			 */
+-			if (memcmp(devinfo->vendor, vskip, vmax) ||
+-					(vmax < sizeof(devinfo->vendor) &&
+-						devinfo->vendor[vmax]))
++			if (vmax != strlen(devinfo->vendor) ||
++			    memcmp(devinfo->vendor, vskip, vmax))
+ 				continue;
+-			if (memcmp(devinfo->model, mskip, mmax) ||
+-					(mmax < sizeof(devinfo->model) &&
+-						devinfo->model[mmax]))
++
++			/*
++			 * @model specifies the full string, and
++			 * must be larger or equal to devinfo->model
++			 */
++			mlen = strlen(devinfo->model);
++			if (mmax < mlen || memcmp(devinfo->model, mskip, mlen))
+ 				continue;
+ 			return devinfo;
+ 		} else {
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
