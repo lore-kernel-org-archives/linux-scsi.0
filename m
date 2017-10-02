@@ -1,24 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 01/21] lpfc: fix pci hot plug crash in timer management routines
-Date: Mon, 02 Oct 2017 10:05:27 +0200
-Message-ID: <mqd8tgu9dq0.fsf@linux-x5ow.site>
+Subject: Re: [PATCH v2 02/21] lpfc: fix pci hot plug crash in list_add call
+Date: Mon, 02 Oct 2017 10:06:09 +0200
+Message-ID: <mqd37729dou.fsf@linux-x5ow.site>
 References: <20170930003447.10747-1-jsmart2021@gmail.com>
-        <20170930003447.10747-2-jsmart2021@gmail.com>
+        <20170930003447.10747-3-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34413 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750891AbdJBIFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 2 Oct 2017 04:05:33 -0400
-In-Reply-To: <20170930003447.10747-2-jsmart2021@gmail.com> (James Smart's
-        message of "Fri, 29 Sep 2017 17:34:27 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170930003447.10747-3-jsmart2021@gmail.com> (James Smart's
+        message of "Fri, 29 Sep 2017 17:34:28 -0700")
+Sender: stable-owner@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, stable@vger.kernel.org, James Smart <james.smart@broadcom.com>
-
+List-Id: linux-scsi@vger.kernel.org
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
