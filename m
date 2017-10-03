@@ -1,110 +1,123 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/9] bsg-lib: fix use-after-free under memory-pressure
-Date: Tue,  3 Oct 2017 12:48:37 +0200
-Message-ID: <20171003104845.10417-2-hch@lst.de>
+Subject: [PATCH 4/9] qla2xxx: don't break the bsg-lib abstractions
+Date: Tue,  3 Oct 2017 12:48:40 +0200
+Message-ID: <20171003104845.10417-5-hch@lst.de>
 References: <20171003104845.10417-1-hch@lst.de>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:49452 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751277AbdJCKs7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 06:48:59 -0400
 In-Reply-To: <20171003104845.10417-1-hch@lst.de>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, stable@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Always use bsg_job->reply instead of scsi_req(bsg_job->req)->sense), as
+they always point to the same memory.
 
-When under memory-pressure it is possible that the mempool which backs
-the 'struct request_queue' will make use of up to BLKDEV_MIN_RQ count
-emergency buffers - in case it can't get a regular allocation. These
-buffers are preallocated and once they are also used, they are
-re-supplied with old finished requests from the same request_queue (see
-mempool_free()).
+Never set scsi_req(bsg_job->req)->result and we'll set that value through
+bsg_job_done.
 
-The bug is, when re-supplying the emergency pool, the old requests are
-not again ran through the callback mempool_t->alloc(), and thus also not
-through the callback bsg_init_rq(). Thus we skip initialization, and
-while the sense-buffer still should be good, scsi_request->cmd might
-have become to be an invalid pointer in the meantime. When the request
-is initialized in bsg.c, and the user's CDB is larger than BLK_MAX_CDB,
-bsg will replace it with a custom allocated buffer, which is freed when
-the user's command is finished, thus it dangles afterwards. When next a
-command is sent by the user that has a smaller/similar CDB as
-BLK_MAX_CDB, bsg will assume that scsi_request->cmd is backed by
-scsi_request->__cmd, will not make a custom allocation, and write into
-undefined memory.
-
-Fix this by splitting bsg_init_rq() into two functions:
- - bsg_init_rq() is changed to only do the allocation of the
-   sense-buffer, which is used to back the bsg job's reply buffer. This
-   pointer should never change during the lifetime of a scsi_request, so
-   it doesn't need re-initialization.
- - bsg_initialize_rq() is a new function that makes use of
-   'struct request_queue's initialize_rq_fn callback (which was
-   introduced in v4.12). This is always called before the request is
-   given out via blk_get_request(). This function does the remaining
-   initialization that was previously done in bsg_init_rq(), and will
-   also do it when the request is taken from the emergency-pool of the
-   backing mempool.
-
-Fixes: 50b4d485528d ("bsg-lib: fix kernel panic resulting from missing allocation of reply-buffer")
-Cc: <stable@vger.kernel.org> # 4.11+
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bsg-lib.c | 27 +++++++++++++++++++++------
- 1 file changed, 21 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_bsg.c | 10 ++++------
+ drivers/scsi/qla2xxx/qla_isr.c | 12 +++---------
+ drivers/scsi/qla2xxx/qla_mr.c  |  3 +--
+ 3 files changed, 8 insertions(+), 17 deletions(-)
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index dbddff8174e5..15d25ccd51a5 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -207,20 +207,34 @@ static int bsg_init_rq(struct request_queue *q, struct request *req, gfp_t gfp)
- 	struct bsg_job *job = blk_mq_rq_to_pdu(req);
- 	struct scsi_request *sreq = &job->sreq;
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 2ea0ef93f5cb..92a951fcd076 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -919,9 +919,9 @@ qla2x00_process_loopback(struct bsg_job *bsg_job)
  
-+	/* called right after the request is allocated for the request_queue */
-+
-+	sreq->sense = kzalloc(SCSI_SENSE_BUFFERSIZE, gfp);
-+	if (!sreq->sense)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+static void bsg_initialize_rq(struct request *req)
-+{
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
-+	struct scsi_request *sreq = &job->sreq;
-+	void *sense = sreq->sense;
-+
-+	/* called right before the request is given to the request_queue user */
-+
- 	memset(job, 0, sizeof(*job));
+ 	bsg_job->reply_len = sizeof(struct fc_bsg_reply) +
+ 	    sizeof(response) + sizeof(uint8_t);
+-	fw_sts_ptr = ((uint8_t *)scsi_req(bsg_job->req)->sense) +
+-	    sizeof(struct fc_bsg_reply);
+-	memcpy(fw_sts_ptr, response, sizeof(response));
++	fw_sts_ptr = bsg_job->reply + sizeof(struct fc_bsg_reply);
++	memcpy(bsg_job->reply + sizeof(struct fc_bsg_reply), response,
++			sizeof(response));
+ 	fw_sts_ptr += sizeof(response);
+ 	*fw_sts_ptr = command_sent;
  
- 	scsi_req_init(sreq);
-+
-+	sreq->sense = sense;
- 	sreq->sense_len = SCSI_SENSE_BUFFERSIZE;
--	sreq->sense = kzalloc(sreq->sense_len, gfp);
--	if (!sreq->sense)
--		return -ENOMEM;
+@@ -2554,13 +2554,11 @@ qla24xx_bsg_timeout(struct bsg_job *bsg_job)
+ 						ql_log(ql_log_warn, vha, 0x7089,
+ 						    "mbx abort_command "
+ 						    "failed.\n");
+-						scsi_req(bsg_job->req)->result =
+ 						bsg_reply->result = -EIO;
+ 					} else {
+ 						ql_dbg(ql_dbg_user, vha, 0x708a,
+ 						    "mbx abort_command "
+ 						    "success.\n");
+-						scsi_req(bsg_job->req)->result =
+ 						bsg_reply->result = 0;
+ 					}
+ 					spin_lock_irqsave(&ha->hardware_lock, flags);
+@@ -2571,7 +2569,7 @@ qla24xx_bsg_timeout(struct bsg_job *bsg_job)
+ 	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	ql_log(ql_log_info, vha, 0x708b, "SRB not found to abort.\n");
+-	scsi_req(bsg_job->req)->result = bsg_reply->result = -ENXIO;
++	 bsg_reply->result = -ENXIO;
+ 	return 0;
  
- 	job->req = req;
--	job->reply = sreq->sense;
-+	job->reply = sense;
- 	job->reply_len = sreq->sense_len;
- 	job->dd_data = job + 1;
--
--	return 0;
- }
+ done:
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 9d9668aac6f6..886c7085fada 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1543,7 +1543,6 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	struct fc_bsg_reply *bsg_reply;
+ 	uint16_t comp_status;
+ 	uint32_t fw_status[3];
+-	uint8_t* fw_sts_ptr;
+ 	int res;
  
- static void bsg_exit_rq(struct request_queue *q, struct request *req)
-@@ -251,6 +265,7 @@ struct request_queue *bsg_setup_queue(struct device *dev, const char *name,
- 	q->cmd_size = sizeof(struct bsg_job) + dd_job_size;
- 	q->init_rq_fn = bsg_init_rq;
- 	q->exit_rq_fn = bsg_exit_rq;
-+	q->initialize_rq_fn = bsg_initialize_rq;
- 	q->request_fn = bsg_request_fn;
+ 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
+@@ -1604,11 +1603,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 			    type, sp->handle, comp_status, fw_status[1], fw_status[2],
+ 			    le16_to_cpu(((struct els_sts_entry_24xx *)
+ 				pkt)->total_byte_count));
+-			fw_sts_ptr = ((uint8_t*)scsi_req(bsg_job->req)->sense) +
+-				sizeof(struct fc_bsg_reply);
+-			memcpy( fw_sts_ptr, fw_status, sizeof(fw_status));
+-		}
+-		else {
++		} else {
+ 			ql_dbg(ql_dbg_user, vha, 0x5040,
+ 			    "ELS-CT pass-through-%s error hdl=%x comp_status-status=0x%x "
+ 			    "error subcode 1=0x%x error subcode 2=0x%x.\n",
+@@ -1619,10 +1614,9 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 				    pkt)->error_subcode_2));
+ 			res = DID_ERROR << 16;
+ 			bsg_reply->reply_payload_rcv_len = 0;
+-			fw_sts_ptr = ((uint8_t*)scsi_req(bsg_job->req)->sense) +
+-					sizeof(struct fc_bsg_reply);
+-			memcpy( fw_sts_ptr, fw_status, sizeof(fw_status));
+ 		}
++		memcpy(bsg_job->reply + sizeof(struct fc_bsg_reply),
++				fw_status, sizeof(fw_status));
+ 		ql_dump_buffer(ql_dbg_user + ql_dbg_buffer, vha, 0x5056,
+ 				(uint8_t *)pkt, sizeof(*pkt));
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index e23a3d4c36f3..d5da3981cefe 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -2245,8 +2245,7 @@ qlafx00_ioctl_iosb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		memcpy(fstatus.reserved_3,
+ 		    pkt->reserved_2, 20 * sizeof(uint8_t));
  
- 	ret = blk_init_allocated_queue(q);
+-		fw_sts_ptr = ((uint8_t *)scsi_req(bsg_job->req)->sense) +
+-		    sizeof(struct fc_bsg_reply);
++		fw_sts_ptr = bsg_job->reply + sizeof(struct fc_bsg_reply);
+ 
+ 		memcpy(fw_sts_ptr, (uint8_t *)&fstatus,
+ 		    sizeof(struct qla_mt_iocb_rsp_fx00));
 -- 
 2.14.1
