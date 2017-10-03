@@ -1,183 +1,141 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V8 3/8] block: Convert RQF_PREEMPT into REQ_PREEMPT
-Date: Tue,  3 Oct 2017 22:04:01 +0800
-Message-ID: <20171003140406.26060-4-ming.lei@redhat.com>
+Subject: [PATCH V8 4/8] block: pass 'op' to blk_queue_enter()
+Date: Tue,  3 Oct 2017 22:04:02 +0800
+Message-ID: <20171003140406.26060-5-ming.lei@redhat.com>
 References: <20171003140406.26060-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171003140406.26060-1-ming.lei@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Bart Van Assche <bart.vanassche@wdc.com>, Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bart.vanassche@wdc.com>
+We need to check if the request to be allocated is PREEMPT_ONLY,
+and have to pass REQ_PREEEMPT flag to blk_queue_eneter(), so pass
+'op' to blk_queue_enter() directly.
 
-This patch does not change any functionality but makes the
-REQ_PREEMPT flag available to blk_get_request(). A later patch
-will add code to blk_get_request() that checks the REQ_PREEMPT
-flag. Note: the IDE sense_rq request is allocated statically so
-there is no blk_get_request() call that corresponds to this
-request.
-
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-debugfs.c    |  2 +-
- drivers/ide/ide-atapi.c   |  3 +--
- drivers/ide/ide-io.c      |  2 +-
- drivers/ide/ide-pm.c      |  4 ++--
- drivers/scsi/scsi_lib.c   | 11 ++++++-----
- include/linux/blk_types.h |  6 ++++++
- include/linux/blkdev.h    |  3 ---
- 7 files changed, 17 insertions(+), 14 deletions(-)
+ block/blk-core.c       | 11 ++++++-----
+ block/blk-mq.c         |  3 ++-
+ block/blk-timeout.c    |  2 +-
+ fs/block_dev.c         |  4 ++--
+ include/linux/blkdev.h |  2 +-
+ 5 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 980e73095643..62ac248a4984 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -266,6 +266,7 @@ static const char *const cmd_flag_name[] = {
- 	CMD_FLAG_NAME(BACKGROUND),
- 	CMD_FLAG_NAME(NOUNMAP),
- 	CMD_FLAG_NAME(NOWAIT),
-+	CMD_FLAG_NAME(PREEMPT),
- };
- #undef CMD_FLAG_NAME
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 900eaa8eefa6..1bb566245d37 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -766,7 +766,7 @@ struct request_queue *blk_alloc_queue(gfp_t gfp_mask)
+ }
+ EXPORT_SYMBOL(blk_alloc_queue);
  
-@@ -279,7 +280,6 @@ static const char *const rqf_name[] = {
- 	RQF_NAME(MIXED_MERGE),
- 	RQF_NAME(MQ_INFLIGHT),
- 	RQF_NAME(DONTPREP),
--	RQF_NAME(PREEMPT),
- 	RQF_NAME(COPY_USER),
- 	RQF_NAME(FAILED),
- 	RQF_NAME(QUIET),
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 14d1e7d9a1d6..1258739d5fa1 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -211,9 +211,8 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
- 	}
+-int blk_queue_enter(struct request_queue *q, bool nowait)
++int blk_queue_enter(struct request_queue *q, unsigned int op)
+ {
+ 	while (true) {
+ 		int ret;
+@@ -774,7 +774,7 @@ int blk_queue_enter(struct request_queue *q, bool nowait)
+ 		if (percpu_ref_tryget_live(&q->q_usage_counter))
+ 			return 0;
  
- 	sense_rq->rq_disk = rq->rq_disk;
--	sense_rq->cmd_flags = REQ_OP_DRV_IN;
-+	sense_rq->cmd_flags = REQ_OP_DRV_IN | REQ_PREEMPT;
- 	ide_req(sense_rq)->type = ATA_PRIV_SENSE;
--	sense_rq->rq_flags |= RQF_PREEMPT;
+-		if (nowait)
++		if (op & REQ_NOWAIT)
+ 			return -EBUSY;
  
- 	req->cmd[0] = GPCMD_REQUEST_SENSE;
- 	req->cmd[4] = cmd_len;
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 3a234701d92c..06ffccd0fb10 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -539,7 +539,7 @@ void do_ide_request(struct request_queue *q)
- 		 */
- 		if ((drive->dev_flags & IDE_DFLAG_BLOCKED) &&
- 		    ata_pm_request(rq) == 0 &&
--		    (rq->rq_flags & RQF_PREEMPT) == 0) {
-+		    (rq->cmd_flags & REQ_PREEMPT) == 0) {
- 			/* there should be no pending command at this point */
- 			ide_unlock_port(hwif);
- 			goto plug_device;
-diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
-index 544f02d673ca..f8d2709dcd56 100644
---- a/drivers/ide/ide-pm.c
-+++ b/drivers/ide/ide-pm.c
-@@ -89,9 +89,9 @@ int generic_ide_resume(struct device *dev)
- 	}
+ 		/*
+@@ -1408,8 +1408,8 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 	/* create ioc upfront */
+ 	create_io_context(gfp_mask, q->node);
  
- 	memset(&rqpm, 0, sizeof(rqpm));
--	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, __GFP_RECLAIM);
-+	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN | REQ_PREEMPT,
-+			     __GFP_RECLAIM);
- 	ide_req(rq)->type = ATA_PRIV_PM_RESUME;
--	rq->rq_flags |= RQF_PREEMPT;
- 	rq->special = &rqpm;
- 	rqpm.pm_step = IDE_PM_START_RESUME;
- 	rqpm.pm_state = PM_EVENT_ON;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80fe297..62f905b22821 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -253,8 +253,9 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	int ret = DRIVER_ERROR << 24;
+-	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ||
+-			(op & REQ_NOWAIT));
++	ret = blk_queue_enter(q, (gfp_mask & __GFP_DIRECT_RECLAIM) ? op :
++			op | REQ_NOWAIT);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 	spin_lock_irq(q->queue_lock);
+@@ -1436,6 +1436,7 @@ struct request *blk_get_request(struct request_queue *q, unsigned int op,
+ 		req = blk_mq_alloc_request(q, op,
+ 			(gfp_mask & __GFP_DIRECT_RECLAIM) ?
+ 				0 : BLK_MQ_REQ_NOWAIT);
++
+ 		if (!IS_ERR(req) && q->mq_ops->initialize_rq_fn)
+ 			q->mq_ops->initialize_rq_fn(req);
+ 	} else {
+@@ -2216,7 +2217,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	do {
+ 		struct request_queue *q = bio->bi_disk->queue;
  
- 	req = blk_get_request(sdev->request_queue,
--			data_direction == DMA_TO_DEVICE ?
--			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
-+			      (data_direction == DMA_TO_DEVICE ?
-+			       REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN) | REQ_PREEMPT,
-+			      __GFP_RECLAIM);
- 	if (IS_ERR(req))
- 		return ret;
- 	rq = scsi_req(req);
-@@ -268,7 +269,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	rq->retries = retries;
- 	req->timeout = timeout;
- 	req->cmd_flags |= flags;
--	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
-+	req->rq_flags |= rq_flags | RQF_QUIET;
+-		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
++		if (likely(blk_queue_enter(q, bio->bi_opf) == 0)) {
+ 			struct bio_list lower, same;
  
- 	/*
- 	 * head injection *required* here otherwise quiesce won't work
-@@ -1301,7 +1302,7 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 			/*
- 			 * If the devices is blocked we defer normal commands.
- 			 */
--			if (!(req->rq_flags & RQF_PREEMPT))
-+			if (!(req->cmd_flags & REQ_PREEMPT))
- 				ret = BLKPREP_DEFER;
- 			break;
- 		default:
-@@ -1310,7 +1311,7 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 			 * special commands.  In particular any user initiated
- 			 * command is not allowed.
- 			 */
--			if (!(req->rq_flags & RQF_PREEMPT))
-+			if (!(req->cmd_flags & REQ_PREEMPT))
- 				ret = BLKPREP_KILL;
- 			break;
- 		}
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index a2d2aa709cef..b6b6bf44e462 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -229,6 +229,11 @@ enum req_flag_bits {
- 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
+ 			/* Create a fresh bio_list for all subordinate requests */
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 10c1f49f663d..bf89549074bb 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -384,7 +384,8 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+ 	struct request *rq;
+ 	int ret;
  
- 	__REQ_NOWAIT,           /* Don't wait if request will block */
-+	/*
-+	 * set for "ide_preempt" requests and also for requests for which the
-+	 * SCSI "quiesce" state must be ignored.
-+	 */
-+	__REQ_PREEMPT,
- 	__REQ_NR_BITS,		/* stops here */
- };
+-	ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
++	ret = blk_queue_enter(q, !(flags & BLK_MQ_REQ_NOWAIT) ? op :
++			op | REQ_NOWAIT);
+ 	if (ret)
+ 		return ERR_PTR(ret);
  
-@@ -248,6 +253,7 @@ enum req_flag_bits {
+diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+index 17ec83bb0900..071c6de9154d 100644
+--- a/block/blk-timeout.c
++++ b/block/blk-timeout.c
+@@ -134,7 +134,7 @@ void blk_timeout_work(struct work_struct *work)
+ 	struct request *rq, *tmp;
+ 	int next_set = 0;
  
- #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
- #define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
-+#define REQ_PREEMPT		(1ULL << __REQ_PREEMPT)
+-	if (blk_queue_enter(q, true))
++	if (blk_queue_enter(q, REQ_NOWAIT))
+ 		return;
+ 	spin_lock_irqsave(q->queue_lock, flags);
  
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 93d088ffc05c..98cf2d7ee9d3 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -674,7 +674,7 @@ int bdev_read_page(struct block_device *bdev, sector_t sector,
+ 	if (!ops->rw_page || bdev_get_integrity(bdev))
+ 		return result;
+ 
+-	result = blk_queue_enter(bdev->bd_queue, false);
++	result = blk_queue_enter(bdev->bd_queue, 0);
+ 	if (result)
+ 		return result;
+ 	result = ops->rw_page(bdev, sector + get_start_sect(bdev), page, false);
+@@ -710,7 +710,7 @@ int bdev_write_page(struct block_device *bdev, sector_t sector,
+ 
+ 	if (!ops->rw_page || bdev_get_integrity(bdev))
+ 		return -EOPNOTSUPP;
+-	result = blk_queue_enter(bdev->bd_queue, false);
++	result = blk_queue_enter(bdev->bd_queue, 0);
+ 	if (result)
+ 		return result;
+ 
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 02fa42d24b52..ab6b6c0392c2 100644
+index ab6b6c0392c2..4c688385d866 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -96,9 +96,6 @@ typedef __u32 __bitwise req_flags_t;
- #define RQF_MQ_INFLIGHT		((__force req_flags_t)(1 << 6))
- /* don't call prep for this one */
- #define RQF_DONTPREP		((__force req_flags_t)(1 << 7))
--/* set for "ide_preempt" requests and also for requests for which the SCSI
--   "quiesce" state must be ignored. */
--#define RQF_PREEMPT		((__force req_flags_t)(1 << 8))
- /* contains copies of user pages */
- #define RQF_COPY_USER		((__force req_flags_t)(1 << 9))
- /* vaguely specified driver internal error.  Ignored by the block layer */
+@@ -960,7 +960,7 @@ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			 struct scsi_ioctl_command __user *);
+ 
+-extern int blk_queue_enter(struct request_queue *q, bool nowait);
++extern int blk_queue_enter(struct request_queue *q, unsigned int op);
+ extern void blk_queue_exit(struct request_queue *q);
+ extern void blk_start_queue(struct request_queue *q);
+ extern void blk_start_queue_async(struct request_queue *q);
 -- 
 2.9.5
