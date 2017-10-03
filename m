@@ -1,64 +1,63 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V6 13/14] block: mq-deadline: Limit write request dispatch
- for zoned block devices
-Date: Tue, 3 Oct 2017 20:56:09 +0000
-Message-ID: <1507064168.2567.33.camel@wdc.com>
-References: <20171002071535.8007-1-damien.lemoal@wdc.com>
-         <20171002071535.8007-14-damien.lemoal@wdc.com>
-         <1506987846.3368.69.camel@wdc.com>
-         <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: system hung up when offlining CPUs
+Date: Tue, 3 Oct 2017 23:44:33 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1710032328280.2278@nanos>
+References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com> <20170809124213.0d9518bb@why.wild-wind.fr.eu.org> <cd524af7-1f20-1956-1e44-92a451053387@gmail.com> <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com> <20170821131809.GA17564@lst.de>
+ <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com> <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com> <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com> <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de> <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com>
+ <alpine.DEB.2.20.1709131529400.1874@nanos> <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com> <alpine.DEB.2.20.1709161212160.2105@nanos> <alpine.DEB.2.20.1709161630580.2105@nanos> <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
-Content-Language: en-US
-Content-ID: <00B588C30A3EE04A955BD795EF1E552A@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:54951 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751117AbdJCVoz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 17:44:55 -0400
+In-Reply-To: <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
 
-T24gVHVlLCAyMDE3LTEwLTAzIGF0IDA5OjE5ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gT24gMTAvMy8xNyAwODo0NCwgQmFydCBWYW4gQXNzY2hlIHdyb3RlOg0KPiA+IE9uIE1vbiwg
-MjAxNy0xMC0wMiBhdCAxNjoxNSArMDkwMCwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+ID4gPiAg
-c3RhdGljIHZvaWQgZGVhZGxpbmVfd3VubG9ja196b25lKHN0cnVjdCBkZWFkbGluZV9kYXRhICpk
-ZCwNCj4gPiA+ICAJCQkJICBzdHJ1Y3QgcmVxdWVzdCAqcnEpDQo+ID4gPiAgew0KPiA+ID4gKwl1
-bnNpZ25lZCBsb25nIGZsYWdzOw0KPiA+ID4gKw0KPiA+ID4gKwlzcGluX2xvY2tfaXJxc2F2ZSgm
-ZGQtPnpvbmVfbG9jaywgZmxhZ3MpOw0KPiA+ID4gKw0KPiA+ID4gIAlXQVJOX09OX09OQ0UoIXRl
-c3RfYW5kX2NsZWFyX2JpdChibGtfcnFfem9uZV9ubyhycSksIGRkLT56b25lc193bG9jaykpOw0K
-PiA+ID4gIAlkZWFkbGluZV9jbGVhcl9yZXF1ZXN0X3pvbmVfd2xvY2socnEpOw0KPiA+ID4gKw0K
-PiA+ID4gKwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZkZC0+em9uZV9sb2NrLCBmbGFncyk7DQo+
-ID4gPiAgfQ0KPiA+IA0KPiA+IElzIGEgcmVxdWVzdCByZW1vdmVkIGZyb20gdGhlIHNvcnQgYW5k
-IGZpZm8gbGlzdHMgYmVmb3JlIGJlaW5nIGRpc3BhdGNoZWQ/IElmIHNvLA0KPiA+IGRvZXMgdGhh
-dCBtZWFuIHRoYXQgb2J0YWluaW5nIHpvbmVfbG9jayBpbiB0aGUgYWJvdmUgZnVuY3Rpb24gaXMg
-bm90IG5lY2Vzc2FyeT8NCj4gDQo+IFllcywgYSByZXF1ZXN0IGlzIHJlbW92ZWQgZnJvbSB0aGUg
-c29ydCB0cmVlIGFuZCBmaWZvIGxpc3QgYmVmb3JlDQo+IGRpc3BhdGNoaW5nLiBCdXQgdGhlIGRk
-LT56b25lX2xvY2sgc3BpbmxvY2sgaXMgbm90IHRoZXJlIHRvIHByb3RlY3QNCj4gdGhhdCwgZGQt
-PmxvY2sgcHJvdGVjdHMgdGhlIHNvcnQgdHJlZSBhbmQgZmlmbyBsaXN0LiBkZC0+em9uZV9sb2Nr
-IHdhcw0KPiBhZGRlZCB0byBwcmV2ZW50IHRoZSBjb21wbGV0ZWRfcmVxdWVzdCgpIG1ldGhvZCBm
-cm9tIGNoYW5naW5nIGEgem9uZQ0KPiBsb2NrIHN0YXRlIHdoaWxlIGRlYWRsaW5lX2ZpZm9fcmVx
-dWVzdHMoKSBvciBkZWFkbGluZV9uZXh0X3JlcXVlc3QoKSBhcmUNCj4gcnVubmluZy4gRXg6DQo+
-IA0KPiBJbWFnaW5lIHRoaXMgY2FzZTogd3JpdGUgcmVxdWVzdCBBIGZvciBhIHpvbmUgWiBpcyBi
-ZWluZyBleGVjdXRlZCAoaXQNCj4gd2FzIGRpc3BhdGNoZWQpIHNvIFogaXMgbG9ja2VkLiBEaXNw
-YXRjaCBydW5zIGFuZCBpbnNwZWN0cyB0aGUgbmV4dA0KPiByZXF1ZXN0cyBpbiBzb3J0IG9yZGVy
-LiBMZXQgc2F5IHdlIGhhdmUgdGhlIHNlcXVlbnRpYWwgd3JpdGVzIEIsIEMsIEQsIEUNCj4gcXVl
-dWVkIGZvciB0aGUgc2FtZSB6b25lIFouIEZpcnN0IEIgaXMgaW5zcGVjdGVkIGFuZCBjYW5ub3Qg
-YmUNCj4gZGlzcGF0Y2hlZCAoem9uZSBsb2NrZWQpLiBJbnNwZWN0aW9uIG1vdmUgb24gdG8gQywg
-YnV0IGJlZm9yZSB0aGUgdGhhdCwNCj4gQSBjb21wbGV0ZXMgYW5kIFogaXMgdW5sb2NrZWQuIFRo
-ZW4gQyB3aWxsIGJlIE9LIHRvIGdvIGFzIHRoZSB6b25lIGlzDQo+IG5vdyB1bmxvY2tlZC4gQnV0
-IGl0IGlzIHRoZSB3cm9uZyBjaG9pY2UgYXMgaXQgd2lsbCByZXN1bHQgaW4gb3V0IG9mDQo+IG9y
-ZGVyIHdyaXRlLiBCIG11c3QgYmUgdGhlIG5leHQgcmVxdWVzdCBkaXNwYXRjaGVkIGFmdGVyIEEu
-DQo+IA0KPiBkZC0+em9uZV9sb2NrIHByZXZlbnRzIHRoaXMgZnJvbSBoYXBwZW5pbmcuIFdpdGhv
-dXQgdGhpcyBzcGlubG9jaywgdGhlDQo+IGJhZCBleGFtcGxlIGNhc2UgYWJvdmUgaGFwcGVucyB2
-ZXJ5IGVhc2lseS4NCg0KSGVsbG8gRGFtaWVuLA0KDQpUaGFua3MgZm9yIHRoZSBkZXRhaWxlZCBh
-bmQgcmVhbGx5IGNsZWFyIHJlcGx5LiBJIGhvcGUgeW91IGRvIG5vdCBtaW5kIHRoYXQgSQ0KaGF2
-ZSBhIGZldyBmdXJ0aGVyIHF1ZXN0aW9ucyBhYm91dCB0aGlzIHBhdGNoPw0KLSBEb2VzIHRoZSB6
-b25lX2xvY2sgc3BpbmxvY2sgaGF2ZSB0byBiZSBhY3F1aXJlZCBieSBib3RoIGRlYWRsaW5lX3d1
-bmxvY2tfem9uZSgpDQogIGNhbGxlcnMgb3Igb25seSBieSB0aGUgY2FsbCBmcm9tIHRoZSByZXF1
-ZXN0IGNvbXBsZXRpb24gcGF0aD8NCi0gV2h5IGRvIGJvdGggdGhlIG1xLWRlYWRsaW5lIGFuZCB0
-aGUgc2QgZHJpdmVyIGVhY2ggaGF2ZSB0aGVpciBvd24gaW5zdGFuY2Ugb2YNCiAgdGhlIHpvbmVz
-X3dsb2NrIGJpdG1hcD8gSGFzIGl0IGJlZW4gY29uc2lkZXJlZCB0byBjb252ZXJ0IGJvdGggYml0
-bWFwcyBpbnRvIGENCiAgc2luZ2xlIGJpdG1hcCB0aGF0IGlzIHNoYXJlZCBieSBib3RoIGtlcm5l
-bCBjb21wb25lbnRzIGFuZCB0aGF0IGV4aXN0cyBlLmcuIGF0DQogIHRoZSByZXF1ZXN0IHF1ZXVl
-IGxldmVsPw0KDQpUaGFua3MsDQoNCkJhcnQu
+On Mon, 2 Oct 2017, YASUAKI ISHIMATSU wrote:
+> On 09/16/2017 11:02 AM, Thomas Gleixner wrote:
+> > Which driver are we talking about?
+> 
+> We are talking about megasas driver.
+
+Can you please apply the debug patch below.
+
+After booting enable stack traces for the tracer:
+
+# echo 1 >/sys/kernel/debug/tracing/options/stacktrace
+
+Then offline CPUs 24-29. After that do
+
+# cat /sys/kernel/debug/tracing/trace >somefile
+
+Please compress the file and upload it to some place or if you have no place
+to upload it then send it to me in private mail.
+
+Thanks,
+
+	tglx
+
+8<------------
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -171,11 +171,16 @@ void irq_set_thread_affinity(struct irq_
+ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			bool force)
+ {
++	const struct cpumask *eff = irq_data_get_effective_affinity_mask(data);
+ 	struct irq_desc *desc = irq_data_to_desc(data);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+ 	int ret;
+ 
+ 	ret = chip->irq_set_affinity(data, mask, force);
++
++	trace_printk("irq: %u ret %d mask: %*pbl eff: %*pbl\n", data->irq, ret,
++		     cpumask_pr_args(mask), cpumask_pr_args(eff));
++
+ 	switch (ret) {
+ 	case IRQ_SET_MASK_OK:
+ 	case IRQ_SET_MASK_OK_DONE:
