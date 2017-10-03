@@ -1,44 +1,110 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/9] bfa: don't reset max_segments for every bsg request
-Date: Tue,  3 Oct 2017 12:48:38 +0200
-Message-ID: <20171003104845.10417-3-hch@lst.de>
+Subject: [PATCH 1/9] bsg-lib: fix use-after-free under memory-pressure
+Date: Tue,  3 Oct 2017 12:48:37 +0200
+Message-ID: <20171003104845.10417-2-hch@lst.de>
 References: <20171003104845.10417-1-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20171003104845.10417-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We already support 256 or more segments as long as the architecture
-supports SG chaining (all the ones that matter do), so removed the
-weird playing with limits from the job handler.
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+When under memory-pressure it is possible that the mempool which backs
+the 'struct request_queue' will make use of up to BLKDEV_MIN_RQ count
+emergency buffers - in case it can't get a regular allocation. These
+buffers are preallocated and once they are also used, they are
+re-supplied with old finished requests from the same request_queue (see
+mempool_free()).
+
+The bug is, when re-supplying the emergency pool, the old requests are
+not again ran through the callback mempool_t->alloc(), and thus also not
+through the callback bsg_init_rq(). Thus we skip initialization, and
+while the sense-buffer still should be good, scsi_request->cmd might
+have become to be an invalid pointer in the meantime. When the request
+is initialized in bsg.c, and the user's CDB is larger than BLK_MAX_CDB,
+bsg will replace it with a custom allocated buffer, which is freed when
+the user's command is finished, thus it dangles afterwards. When next a
+command is sent by the user that has a smaller/similar CDB as
+BLK_MAX_CDB, bsg will assume that scsi_request->cmd is backed by
+scsi_request->__cmd, will not make a custom allocation, and write into
+undefined memory.
+
+Fix this by splitting bsg_init_rq() into two functions:
+ - bsg_init_rq() is changed to only do the allocation of the
+   sense-buffer, which is used to back the bsg job's reply buffer. This
+   pointer should never change during the lifetime of a scsi_request, so
+   it doesn't need re-initialization.
+ - bsg_initialize_rq() is a new function that makes use of
+   'struct request_queue's initialize_rq_fn callback (which was
+   introduced in v4.12). This is always called before the request is
+   given out via blk_get_request(). This function does the remaining
+   initialization that was previously done in bsg_init_rq(), and will
+   also do it when the request is taken from the emergency-pool of the
+   backing mempool.
+
+Fixes: 50b4d485528d ("bsg-lib: fix kernel panic resulting from missing allocation of reply-buffer")
+Cc: <stable@vger.kernel.org> # 4.11+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c | 7 -------
- 1 file changed, 7 deletions(-)
+ block/bsg-lib.c | 27 +++++++++++++++++++++------
+ 1 file changed, 21 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index b2e8c0dfc79c..72ca2a2e08e2 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -3137,16 +3137,9 @@ bfad_im_bsg_vendor_request(struct bsg_job *job)
- 	uint32_t vendor_cmd = bsg_request->rqst_data.h_vendor.vendor_cmd[0];
- 	struct bfad_im_port_s *im_port = shost_priv(fc_bsg_to_shost(job));
- 	struct bfad_s *bfad = im_port->bfad;
--	struct request_queue *request_q = job->req->q;
- 	void *payload_kbuf;
- 	int rc = -EINVAL;
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+index dbddff8174e5..15d25ccd51a5 100644
+--- a/block/bsg-lib.c
++++ b/block/bsg-lib.c
+@@ -207,20 +207,34 @@ static int bsg_init_rq(struct request_queue *q, struct request *req, gfp_t gfp)
+ 	struct bsg_job *job = blk_mq_rq_to_pdu(req);
+ 	struct scsi_request *sreq = &job->sreq;
  
--	/*
--	 * Set the BSG device request_queue size to 256 to support
--	 * payloads larger than 512*1024K bytes.
--	 */
--	blk_queue_max_segments(request_q, 256);
++	/* called right after the request is allocated for the request_queue */
++
++	sreq->sense = kzalloc(SCSI_SENSE_BUFFERSIZE, gfp);
++	if (!sreq->sense)
++		return -ENOMEM;
++
++	return 0;
++}
++
++static void bsg_initialize_rq(struct request *req)
++{
++	struct bsg_job *job = blk_mq_rq_to_pdu(req);
++	struct scsi_request *sreq = &job->sreq;
++	void *sense = sreq->sense;
++
++	/* called right before the request is given to the request_queue user */
++
+ 	memset(job, 0, sizeof(*job));
+ 
+ 	scsi_req_init(sreq);
++
++	sreq->sense = sense;
+ 	sreq->sense_len = SCSI_SENSE_BUFFERSIZE;
+-	sreq->sense = kzalloc(sreq->sense_len, gfp);
+-	if (!sreq->sense)
+-		return -ENOMEM;
+ 
+ 	job->req = req;
+-	job->reply = sreq->sense;
++	job->reply = sense;
+ 	job->reply_len = sreq->sense_len;
+ 	job->dd_data = job + 1;
 -
- 	/* Allocate a temp buffer to hold the passed in user space command */
- 	payload_kbuf = kzalloc(job->request_payload.payload_len, GFP_KERNEL);
- 	if (!payload_kbuf) {
+-	return 0;
+ }
+ 
+ static void bsg_exit_rq(struct request_queue *q, struct request *req)
+@@ -251,6 +265,7 @@ struct request_queue *bsg_setup_queue(struct device *dev, const char *name,
+ 	q->cmd_size = sizeof(struct bsg_job) + dd_job_size;
+ 	q->init_rq_fn = bsg_init_rq;
+ 	q->exit_rq_fn = bsg_exit_rq;
++	q->initialize_rq_fn = bsg_initialize_rq;
+ 	q->request_fn = bsg_request_fn;
+ 
+ 	ret = blk_init_allocated_queue(q);
 -- 
 2.14.1
