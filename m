@@ -1,24 +1,43 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v2 4/4] scsi: ufs: Remove unused UFS_BIT() macro
-Date: Tue, 3 Oct 2017 15:40:31 +0000
-Message-ID: <1507045230.2702.8.camel@wdc.com>
-References: <1507044085-16905-1-git-send-email-alim.akhtar@samsung.com>
-         <CGME20171003152912epcas1p442acf97496d1473907d6d73b7c51aa82@epcas1p4.samsung.com>
-         <1507044085-16905-4-git-send-email-alim.akhtar@samsung.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH v2 00/21] lpfc updates for 11.4.0.4
+Date: Tue, 3 Oct 2017 11:13:44 -0700
+Message-ID: <ed6758d7-9237-a556-4fac-df81d6e9c19f@broadcom.com>
+References: <20170930003447.10747-1-jsmart2021@gmail.com>
+ <yq1o9pp0x0e.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507044085-16905-4-git-send-email-alim.akhtar@samsung.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:53811 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751111AbdJCSNp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 14:13:45 -0400
+Received: by mail-pf0-f177.google.com with SMTP id y24so1717146pfa.10
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2017 11:13:45 -0700 (PDT)
+In-Reply-To: <yq1o9pp0x0e.fsf@oracle.com>
 Content-Language: en-US
-Content-ID: <72091EFD17F4754CA9E54AF3B32232E0@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE3LTEwLTAzIGF0IDIwOjUxICswNTMwLCBBbGltIEFraHRhciB3cm90ZToNCj4g
-U2luY2Ugd2UgaGF2ZSBjb252ZXJ0ZWQgYWxsIHRoZSB1c2VyIG9mIFVGU19CSVQoKSBtYWNybw0K
-PiB3aXRoIHRoZSBhY3R1YWwgYml0IHBvc2l0aW9uLCBsZXQgcmVtb3ZlIHVudXNlZCBVRlNfQklU
-KCltYWNyby4NCg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVA
-d2RjLmNvbT4NCg==
+Martin,
+
+Contents of 4.15/scsi-queue look good.
+
+-- james
+
+
+On 10/2/2017 7:45 PM, Martin K. Petersen wrote:
+> James,
+>
+>> This patch set provides a number of bug fixes and additions to
+>> the driver.
+>>
+>> The patches were cut against the Martin's 4.14/scsi-queue tree.
+>> There are no outside dependencies.
+> Applied to 4.15/scsi-queue.
+>
+> I got a conflict in patch 8 in the "Process all the event on FCP
+> fast-path EQ" hunk. Please verify.
+>
