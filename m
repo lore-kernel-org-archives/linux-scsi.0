@@ -1,132 +1,44 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH V6 13/14] block: mq-deadline: Limit write request dispatch
- for zoned block devices
-Date: Tue, 3 Oct 2017 09:19:25 +0900
-Message-ID: <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
-References: <20171002071535.8007-1-damien.lemoal@wdc.com>
- <20171002071535.8007-14-damien.lemoal@wdc.com>
- <1506987846.3368.69.camel@wdc.com>
+From: =?UTF-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
+Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
+Date: Mon, 2 Oct 2017 21:33:12 -0400
+Message-ID: <20171002213312.3f904290@blatinox-laptop.localdomain>
+References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+ <20171001220131.GA11812@eros>
+ <20171001205220.10b78086@blatinox-laptop.localdomain>
+ <20171002053554.GA28743@kroah.com>
+ <20171002192224.GD1903@fieldses.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1506987846.3368.69.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <openipmi-developer-bounces@lists.sourceforge.net>
+In-Reply-To: <20171002192224.GD1903@fieldses.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/openipmi-developer>,
+ <mailto:openipmi-developer-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=openipmi-developer>
+List-Post: <mailto:openipmi-developer@lists.sourceforge.net>
+List-Help: <mailto:openipmi-developer-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/openipmi-developer>,
+ <mailto:openipmi-developer-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: openipmi-developer-bounces@lists.sourceforge.net
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, dm-devel@redhat.com, brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz, intel-wired-lan@lists.osuosl.org, Greg KH <greg@kroah.com>, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com, linux-raid@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gvt-dev@lists.freedesktop.org, devel@acpica.org, linux-nfs@vger.kernel.org, jlayton@redhat.com, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Bart,
-
-On 10/3/17 08:44, Bart Van Assche wrote:
-> On Mon, 2017-10-02 at 16:15 +0900, Damien Le Moal wrote:
->> When dispatching write requests to a zoned block device, only allow
->> requests targeting an unlocked zone. Requests targeting a locked zone
->> are left in the scheduler queue to preserve the initial write order.
->> If no write request can be dispatched, allow reads to be dispatched
->> even if the write batch is not done.
->>
->> To ensure that the search for an appropriate write request is atomic
->> in deadline_fifo_request() and deadline_next_request() with reagrd to
->                                                               ^^^^^^
->                                                               regard?
-
-Will fix.
-
->> write requests zone lock state, introduce the spinlock zone_lock.
->> Holding this lock while doing the search in these functions as well as
->> when unlocking the target zone of a completed write request in
->> dd_completed_request() ensure that the search does not pickup a write
->> request in the middle of a zone queued write sequence.
-> 
-> Since there is already a spinlock in the mq-deadline scheduler that serializes
-> most operations, do we really need a new spinlock?
-
-The dd->lock spinlock is used without IRQ disabling. So it does not
-protect against request completion method calls. That spinlock being a
-"big lock", I did not want to use it with IRQ disabled.
-
->>  /*
->>   * Write unlock the target zone of a write request.
->> + * Clearing the target zone write lock bit is done with the scheduler zone_lock
->> + * spinlock held so that deadline_next_request() and deadline_fifo_request()
->> + * cannot see the lock state of a zone change due to a request completion during
->> + * their eventual search for an appropriate write request. Otherwise, for a zone
->> + * with multiple write requests queued, a non sequential write request
->> + * can be chosen.
->>   */
->>  static void deadline_wunlock_zone(struct deadline_data *dd,
->>  				  struct request *rq)
->>  {
->> +	unsigned long flags;
->> +
->> +	spin_lock_irqsave(&dd->zone_lock, flags);
->> +
->>  	WARN_ON_ONCE(!test_and_clear_bit(blk_rq_zone_no(rq), dd->zones_wlock));
->>  	deadline_clear_request_zone_wlock(rq);
->> +
->> +	spin_unlock_irqrestore(&dd->zone_lock, flags);
->>  }
-> 
-> Is a request removed from the sort and fifo lists before being dispatched? If so,
-> does that mean that obtaining zone_lock in the above function is not necessary?
-
-Yes, a request is removed from the sort tree and fifo list before
-dispatching. But the dd->zone_lock spinlock is not there to protect
-that, dd->lock protects the sort tree and fifo list. dd->zone_lock was
-added to prevent the completed_request() method from changing a zone
-lock state while deadline_fifo_requests() or deadline_next_request() are
-running. Ex:
-
-Imagine this case: write request A for a zone Z is being executed (it
-was dispatched) so Z is locked. Dispatch runs and inspects the next
-requests in sort order. Let say we have the sequential writes B, C, D, E
-queued for the same zone Z. First B is inspected and cannot be
-dispatched (zone locked). Inspection move on to C, but before the that,
-A completes and Z is unlocked. Then C will be OK to go as the zone is
-now unlocked. But it is the wrong choice as it will result in out of
-order write. B must be the next request dispatched after A.
-
-dd->zone_lock prevents this from happening. Without this spinlock, the
-bad example case above happens very easily.
-
->>  static struct request *
->>  deadline_fifo_request(struct deadline_data *dd, int data_dir)
->>  {
->> +	struct request *rq;
->> +	unsigned long flags;
->> +
->>  	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
->>  		return NULL;
->>  
->>  	if (list_empty(&dd->fifo_list[data_dir]))
->>  		return NULL;
->>  
->> -	return rq_entry_fifo(dd->fifo_list[data_dir].next);
->> +	if (!dd->zones_wlock || data_dir == READ)
->> +		return rq_entry_fifo(dd->fifo_list[data_dir].next);
->> +
->> +	spin_lock_irqsave(&dd->zone_lock, flags);
->> +
->> +	list_for_each_entry(rq, &dd->fifo_list[WRITE], queuelist) {
->> +		if (deadline_can_dispatch_request(dd, rq))
->> +			goto out;
->> +	}
->> +	rq = NULL;
->> +
->> +out:
->> +	spin_unlock_irqrestore(&dd->zone_lock, flags);
->> +
->> +	return rq;
->>  }
-> 
-> Same question here: is it really necessary to obtain zone_lock?
-
-See above. Same comment.
-
-Best regards.
-
--- 
-Damien Le Moal,
-Western Digital
+T24gTW9uLCAyIE9jdCAyMDE3IDE1OjIyOjI0IC0wNDAwCmJmaWVsZHNAZmllbGRzZXMub3JnIChK
+LiBCcnVjZSBGaWVsZHMpIHdyb3RlOgoKPiBNYWlubHkgSSdkIGp1c3QgbGlrZSB0byBrbm93IHdo
+aWNoIHlvdSdyZSBhc2tpbmcgZm9yLiAgRG8geW91IHdhbnQgbWUgdG8KPiBhcHBseSB0aGlzLCBv
+ciB0byBBQ0sgaXQgc28gc29tZW9uZSBlbHNlIGNhbj8gIElmIGl0J3Mgc2VudCBhcyBhIHNlcmll
+cwo+IEkgdGVuZCB0byBhc3N1bWUgdGhlIGxhdHRlci4KPiAKPiBCdXQgaW4gdGhpcyBjYXNlIEkn
+bSBhc3N1bWluZyBpdCdzIHRoZSBmb3JtZXIsIHNvIEknbGwgcGljayB1cCB0aGUgbmZzZAo+IG9u
+ZS4uLi4KQ291bGQgeW91IHRvIGFwcGx5IHRoZSBORlNEIHBhdGNoICgibmZzZDogdXNlIEFSUkFZ
+X1NJWkUiKSB3aXRoIHRoZQpSZXZpZXdlZC1ieTogSmVmZiBMYXl0b24gPGpsYXl0b25AcmVkaGF0
+LmNvbT4pIHRhZyBwbGVhc2UgPwoKVGhpcyBwYXRjaCBpcyBhbiBpbmRpdmlkdWFsIHBhdGNoIGFu
+ZCBpdCBzaG91bGQgbm90IGhhdmUgYmVlbiBzZW50IGluIGEKc2VyaWVzIChzb3JyeSBhYm91dCB0
+aGF0KS4KClRoYW5rIHlvdSwKSsOpcsOpbXkKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpDaGVjayBv
+dXQgdGhlIHZpYnJhbnQgdGVjaCBjb21tdW5pdHkgb24gb25lIG9mIHRoZSB3b3JsZCdzIG1vc3QK
+ZW5nYWdpbmcgdGVjaCBzaXRlcywgU2xhc2hkb3Qub3JnISBodHRwOi8vc2RtLmxpbmsvc2xhc2hk
+b3QKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KT3Blbmlw
+bWktZGV2ZWxvcGVyIG1haWxpbmcgbGlzdApPcGVuaXBtaS1kZXZlbG9wZXJAbGlzdHMuc291cmNl
+Zm9yZ2UubmV0Cmh0dHBzOi8vbGlzdHMuc291cmNlZm9yZ2UubmV0L2xpc3RzL2xpc3RpbmZvL29w
+ZW5pcG1pLWRldmVsb3Blcgo=
