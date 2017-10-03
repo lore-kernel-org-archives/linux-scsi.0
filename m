@@ -1,63 +1,101 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: system hung up when offlining CPUs
-Date: Tue, 3 Oct 2017 23:44:33 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1710032328280.2278@nanos>
-References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com> <20170809124213.0d9518bb@why.wild-wind.fr.eu.org> <cd524af7-1f20-1956-1e44-92a451053387@gmail.com> <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com> <20170821131809.GA17564@lst.de>
- <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com> <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com> <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com> <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de> <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com>
- <alpine.DEB.2.20.1709131529400.1874@nanos> <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com> <alpine.DEB.2.20.1709161212160.2105@nanos> <alpine.DEB.2.20.1709161630580.2105@nanos> <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH V6 13/14] block: mq-deadline: Limit write request dispatch
+ for zoned block devices
+Date: Wed, 4 Oct 2017 08:03:34 +0900
+Message-ID: <dd8953a0-b28c-3a0f-cc9c-2ce207cf4063@wdc.com>
+References: <20171002071535.8007-1-damien.lemoal@wdc.com>
+ <20171002071535.8007-14-damien.lemoal@wdc.com>
+ <1506987846.3368.69.camel@wdc.com>
+ <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
+ <1507064168.2567.33.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:54951 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751117AbdJCVoz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 17:44:55 -0400
-In-Reply-To: <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:43716 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751199AbdJCXDm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 19:03:42 -0400
+In-Reply-To: <1507064168.2567.33.camel@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 
-On Mon, 2 Oct 2017, YASUAKI ISHIMATSU wrote:
-> On 09/16/2017 11:02 AM, Thomas Gleixner wrote:
-> > Which driver are we talking about?
+Bart,
+
+On 10/4/17 05:56, Bart Van Assche wrote:
+> On Tue, 2017-10-03 at 09:19 +0900, Damien Le Moal wrote:
+>> On 10/3/17 08:44, Bart Van Assche wrote:
+>>> On Mon, 2017-10-02 at 16:15 +0900, Damien Le Moal wrote:
+>>>>  static void deadline_wunlock_zone(struct deadline_data *dd,
+>>>>  				  struct request *rq)
+>>>>  {
+>>>> +	unsigned long flags;
+>>>> +
+>>>> +	spin_lock_irqsave(&dd->zone_lock, flags);
+>>>> +
+>>>>  	WARN_ON_ONCE(!test_and_clear_bit(blk_rq_zone_no(rq), dd->zones_wlock));
+>>>>  	deadline_clear_request_zone_wlock(rq);
+>>>> +
+>>>> +	spin_unlock_irqrestore(&dd->zone_lock, flags);
+>>>>  }
+>>>
+>>> Is a request removed from the sort and fifo lists before being dispatched? If so,
+>>> does that mean that obtaining zone_lock in the above function is not necessary?
+>>
+>> Yes, a request is removed from the sort tree and fifo list before
+>> dispatching. But the dd->zone_lock spinlock is not there to protect
+>> that, dd->lock protects the sort tree and fifo list. dd->zone_lock was
+>> added to prevent the completed_request() method from changing a zone
+>> lock state while deadline_fifo_requests() or deadline_next_request() are
+>> running. Ex:
+>>
+>> Imagine this case: write request A for a zone Z is being executed (it
+>> was dispatched) so Z is locked. Dispatch runs and inspects the next
+>> requests in sort order. Let say we have the sequential writes B, C, D, E
+>> queued for the same zone Z. First B is inspected and cannot be
+>> dispatched (zone locked). Inspection move on to C, but before the that,
+>> A completes and Z is unlocked. Then C will be OK to go as the zone is
+>> now unlocked. But it is the wrong choice as it will result in out of
+>> order write. B must be the next request dispatched after A.
+>>
+>> dd->zone_lock prevents this from happening. Without this spinlock, the
+>> bad example case above happens very easily.
 > 
-> We are talking about megasas driver.
+> Hello Damien,
+> 
+> Thanks for the detailed and really clear reply. I hope you do not mind that I
+> have a few further questions about this patch?
+> - Does the zone_lock spinlock have to be acquired by both deadline_wunlock_zone()
+>   callers or only by the call from the request completion path?
 
-Can you please apply the debug patch below.
+Not really. Only the completion path is strongly needed as the insert
+path unlock is under dd->lock, which prevents concurrent execution of
+the sort or fifo request search. So the zone_lock lock/unlock could be
+moved out of deadline_wunlock_zone() and done directly in
+dd_completed_request().
 
-After booting enable stack traces for the tracer:
+> - Why do both the mq-deadline and the sd driver each have their own instance of
+>   the zones_wlock bitmap? Has it been considered to convert both bitmaps into a
+>   single bitmap that is shared by both kernel components and that exists e.g. at
+>   the request queue level?
 
-# echo 1 >/sys/kernel/debug/tracing/options/stacktrace
+The sd driver level zone locking handles only the legacy path. Hence the
+zone lock bitmap attached to the scsi disk struct. For scsi-mq/blk-mq,
+mq-deadline does the zone locking. Both bitmaps do not exist at the same
+time.
 
-Then offline CPUs 24-29. After that do
+Indeed we could move the zone lock bitmap in the request queue so that
+it is common between legacy and mq cases. Christoph has a series doing
+that, and going further by doing the zone locking directly within the
+block layer dispatch code for both legacy and mq path. So the scsi level
+locking and mq-deadline locking become unnecessary. Working on that new
+series right now.
 
-# cat /sys/kernel/debug/tracing/trace >somefile
+Best regards.
 
-Please compress the file and upload it to some place or if you have no place
-to upload it then send it to me in private mail.
-
-Thanks,
-
-	tglx
-
-8<------------
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -171,11 +171,16 @@ void irq_set_thread_affinity(struct irq_
- int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			bool force)
- {
-+	const struct cpumask *eff = irq_data_get_effective_affinity_mask(data);
- 	struct irq_desc *desc = irq_data_to_desc(data);
- 	struct irq_chip *chip = irq_data_get_irq_chip(data);
- 	int ret;
- 
- 	ret = chip->irq_set_affinity(data, mask, force);
-+
-+	trace_printk("irq: %u ret %d mask: %*pbl eff: %*pbl\n", data->irq, ret,
-+		     cpumask_pr_args(mask), cpumask_pr_args(eff));
-+
- 	switch (ret) {
- 	case IRQ_SET_MASK_OK:
- 	case IRQ_SET_MASK_OK_DONE:
+-- 
+Damien Le Moal,
+Western Digital
