@@ -1,54 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V8 5/8] percpu-refcount: introduce
- __percpu_ref_tryget_live
-Date: Tue, 3 Oct 2017 12:31:05 -0700
-Message-ID: <20171003193105.GL3301751@devbig577.frc2.facebook.com>
-References: <20171003140406.26060-1-ming.lei@redhat.com>
- <20171003140406.26060-6-ming.lei@redhat.com>
- <20171003141459.GI3301751@devbig577.frc2.facebook.com>
- <20171003192039.GB5362@ming.t460p>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V6 13/14] block: mq-deadline: Limit write request dispatch
+ for zoned block devices
+Date: Tue, 3 Oct 2017 20:56:09 +0000
+Message-ID: <1507064168.2567.33.camel@wdc.com>
+References: <20171002071535.8007-1-damien.lemoal@wdc.com>
+         <20171002071535.8007-14-damien.lemoal@wdc.com>
+         <1506987846.3368.69.camel@wdc.com>
+         <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:55264 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750812AbdJCTbJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 15:31:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20171003192039.GB5362@ming.t460p>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
+Content-Language: en-US
+Content-ID: <00B588C30A3EE04A955BD795EF1E552A@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Hello,
-
-On Wed, Oct 04, 2017 at 03:20:40AM +0800, Ming Lei wrote:
-> On Tue, Oct 03, 2017 at 07:14:59AM -0700, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Tue, Oct 03, 2017 at 10:04:03PM +0800, Ming Lei wrote:
-> > > Block layer need to call this function after holding
-> > > rcu lock in a real hot path, so introduce this helper.
-> > 
-> > The patch description is too anemic.  It doesn't even describe what
-> > changes are being made, let alone justifying them.
-> 
-> Sorry for Cc you, and this change is needed by the following
-> patch:
-> 
-> 	https://marc.info/?l=linux-scsi&m=150703956929333&w=2
-> 
-> Block layer need to call percpu_ref_tryget_live()
-> with holding RCU read lock, given it is a hot I/O
-> path, that is why I make this patch so that we can
-> avoid nested RCU read lock and save a bit cost.
-
-I'm not necessarily against it but please name it sth like
-percpu_ref_tryget_live_locked(), add lockdep assertions in the inner
-function and document properly.
-
-Thanks.
-
--- 
-tejun
+T24gVHVlLCAyMDE3LTEwLTAzIGF0IDA5OjE5ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gT24gMTAvMy8xNyAwODo0NCwgQmFydCBWYW4gQXNzY2hlIHdyb3RlOg0KPiA+IE9uIE1vbiwg
+MjAxNy0xMC0wMiBhdCAxNjoxNSArMDkwMCwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+ID4gPiAg
+c3RhdGljIHZvaWQgZGVhZGxpbmVfd3VubG9ja196b25lKHN0cnVjdCBkZWFkbGluZV9kYXRhICpk
+ZCwNCj4gPiA+ICAJCQkJICBzdHJ1Y3QgcmVxdWVzdCAqcnEpDQo+ID4gPiAgew0KPiA+ID4gKwl1
+bnNpZ25lZCBsb25nIGZsYWdzOw0KPiA+ID4gKw0KPiA+ID4gKwlzcGluX2xvY2tfaXJxc2F2ZSgm
+ZGQtPnpvbmVfbG9jaywgZmxhZ3MpOw0KPiA+ID4gKw0KPiA+ID4gIAlXQVJOX09OX09OQ0UoIXRl
+c3RfYW5kX2NsZWFyX2JpdChibGtfcnFfem9uZV9ubyhycSksIGRkLT56b25lc193bG9jaykpOw0K
+PiA+ID4gIAlkZWFkbGluZV9jbGVhcl9yZXF1ZXN0X3pvbmVfd2xvY2socnEpOw0KPiA+ID4gKw0K
+PiA+ID4gKwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZkZC0+em9uZV9sb2NrLCBmbGFncyk7DQo+
+ID4gPiAgfQ0KPiA+IA0KPiA+IElzIGEgcmVxdWVzdCByZW1vdmVkIGZyb20gdGhlIHNvcnQgYW5k
+IGZpZm8gbGlzdHMgYmVmb3JlIGJlaW5nIGRpc3BhdGNoZWQ/IElmIHNvLA0KPiA+IGRvZXMgdGhh
+dCBtZWFuIHRoYXQgb2J0YWluaW5nIHpvbmVfbG9jayBpbiB0aGUgYWJvdmUgZnVuY3Rpb24gaXMg
+bm90IG5lY2Vzc2FyeT8NCj4gDQo+IFllcywgYSByZXF1ZXN0IGlzIHJlbW92ZWQgZnJvbSB0aGUg
+c29ydCB0cmVlIGFuZCBmaWZvIGxpc3QgYmVmb3JlDQo+IGRpc3BhdGNoaW5nLiBCdXQgdGhlIGRk
+LT56b25lX2xvY2sgc3BpbmxvY2sgaXMgbm90IHRoZXJlIHRvIHByb3RlY3QNCj4gdGhhdCwgZGQt
+PmxvY2sgcHJvdGVjdHMgdGhlIHNvcnQgdHJlZSBhbmQgZmlmbyBsaXN0LiBkZC0+em9uZV9sb2Nr
+IHdhcw0KPiBhZGRlZCB0byBwcmV2ZW50IHRoZSBjb21wbGV0ZWRfcmVxdWVzdCgpIG1ldGhvZCBm
+cm9tIGNoYW5naW5nIGEgem9uZQ0KPiBsb2NrIHN0YXRlIHdoaWxlIGRlYWRsaW5lX2ZpZm9fcmVx
+dWVzdHMoKSBvciBkZWFkbGluZV9uZXh0X3JlcXVlc3QoKSBhcmUNCj4gcnVubmluZy4gRXg6DQo+
+IA0KPiBJbWFnaW5lIHRoaXMgY2FzZTogd3JpdGUgcmVxdWVzdCBBIGZvciBhIHpvbmUgWiBpcyBi
+ZWluZyBleGVjdXRlZCAoaXQNCj4gd2FzIGRpc3BhdGNoZWQpIHNvIFogaXMgbG9ja2VkLiBEaXNw
+YXRjaCBydW5zIGFuZCBpbnNwZWN0cyB0aGUgbmV4dA0KPiByZXF1ZXN0cyBpbiBzb3J0IG9yZGVy
+LiBMZXQgc2F5IHdlIGhhdmUgdGhlIHNlcXVlbnRpYWwgd3JpdGVzIEIsIEMsIEQsIEUNCj4gcXVl
+dWVkIGZvciB0aGUgc2FtZSB6b25lIFouIEZpcnN0IEIgaXMgaW5zcGVjdGVkIGFuZCBjYW5ub3Qg
+YmUNCj4gZGlzcGF0Y2hlZCAoem9uZSBsb2NrZWQpLiBJbnNwZWN0aW9uIG1vdmUgb24gdG8gQywg
+YnV0IGJlZm9yZSB0aGUgdGhhdCwNCj4gQSBjb21wbGV0ZXMgYW5kIFogaXMgdW5sb2NrZWQuIFRo
+ZW4gQyB3aWxsIGJlIE9LIHRvIGdvIGFzIHRoZSB6b25lIGlzDQo+IG5vdyB1bmxvY2tlZC4gQnV0
+IGl0IGlzIHRoZSB3cm9uZyBjaG9pY2UgYXMgaXQgd2lsbCByZXN1bHQgaW4gb3V0IG9mDQo+IG9y
+ZGVyIHdyaXRlLiBCIG11c3QgYmUgdGhlIG5leHQgcmVxdWVzdCBkaXNwYXRjaGVkIGFmdGVyIEEu
+DQo+IA0KPiBkZC0+em9uZV9sb2NrIHByZXZlbnRzIHRoaXMgZnJvbSBoYXBwZW5pbmcuIFdpdGhv
+dXQgdGhpcyBzcGlubG9jaywgdGhlDQo+IGJhZCBleGFtcGxlIGNhc2UgYWJvdmUgaGFwcGVucyB2
+ZXJ5IGVhc2lseS4NCg0KSGVsbG8gRGFtaWVuLA0KDQpUaGFua3MgZm9yIHRoZSBkZXRhaWxlZCBh
+bmQgcmVhbGx5IGNsZWFyIHJlcGx5LiBJIGhvcGUgeW91IGRvIG5vdCBtaW5kIHRoYXQgSQ0KaGF2
+ZSBhIGZldyBmdXJ0aGVyIHF1ZXN0aW9ucyBhYm91dCB0aGlzIHBhdGNoPw0KLSBEb2VzIHRoZSB6
+b25lX2xvY2sgc3BpbmxvY2sgaGF2ZSB0byBiZSBhY3F1aXJlZCBieSBib3RoIGRlYWRsaW5lX3d1
+bmxvY2tfem9uZSgpDQogIGNhbGxlcnMgb3Igb25seSBieSB0aGUgY2FsbCBmcm9tIHRoZSByZXF1
+ZXN0IGNvbXBsZXRpb24gcGF0aD8NCi0gV2h5IGRvIGJvdGggdGhlIG1xLWRlYWRsaW5lIGFuZCB0
+aGUgc2QgZHJpdmVyIGVhY2ggaGF2ZSB0aGVpciBvd24gaW5zdGFuY2Ugb2YNCiAgdGhlIHpvbmVz
+X3dsb2NrIGJpdG1hcD8gSGFzIGl0IGJlZW4gY29uc2lkZXJlZCB0byBjb252ZXJ0IGJvdGggYml0
+bWFwcyBpbnRvIGENCiAgc2luZ2xlIGJpdG1hcCB0aGF0IGlzIHNoYXJlZCBieSBib3RoIGtlcm5l
+bCBjb21wb25lbnRzIGFuZCB0aGF0IGV4aXN0cyBlLmcuIGF0DQogIHRoZSByZXF1ZXN0IHF1ZXVl
+IGxldmVsPw0KDQpUaGFua3MsDQoNCkJhcnQu
