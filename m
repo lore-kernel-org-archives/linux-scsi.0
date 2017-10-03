@@ -1,39 +1,172 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/9] scsi_transport_sas: check reply payload length instead of bidi request
-Date: Tue,  3 Oct 2017 12:48:41 +0200
-Message-ID: <20171003104845.10417-6-hch@lst.de>
+Subject: [PATCH 8/9] block: pass full fmode_t to blk_verify_command
+Date: Tue,  3 Oct 2017 12:48:44 +0200
+Message-ID: <20171003104845.10417-9-hch@lst.de>
 References: <20171003104845.10417-1-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58863 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:40924 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751172AbdJCKtC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 06:49:02 -0400
+        with ESMTP id S1751710AbdJCKtL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 06:49:11 -0400
 In-Reply-To: <20171003104845.10417-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-As a user of bsg-lib the SAS transport should not poke into request
-internals but use the bsg_job fields instead.
+Use the obvious calling convention.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_transport_sas.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/bsg.c            | 18 ++++++++----------
+ block/scsi_ioctl.c     |  8 ++++----
+ drivers/scsi/sg.c      |  2 +-
+ include/linux/blkdev.h |  2 +-
+ 4 files changed, 14 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 319dff970237..736a1f4f9676 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -177,7 +177,7 @@ static int sas_smp_dispatch(struct bsg_job *job)
- 	if (!scsi_is_host_device(job->dev))
- 		rphy = dev_to_rphy(job->dev);
+diff --git a/block/bsg.c b/block/bsg.c
+index ee1335c68de7..452f94f1c5d4 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -137,7 +137,7 @@ static inline struct hlist_head *bsg_dev_idx_hash(int index)
  
--	if (!job->req->next_rq) {
-+	if (!job->reply_payload.payload_len) {
- 		dev_warn(job->dev, "space for a smp response is missing\n");
- 		bsg_job_done(job, -EINVAL, 0);
+ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+ 				struct sg_io_v4 *hdr, struct bsg_device *bd,
+-				fmode_t has_write_perm)
++				fmode_t mode)
+ {
+ 	struct scsi_request *req = scsi_req(rq);
+ 
+@@ -152,7 +152,7 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+ 		return -EFAULT;
+ 
+ 	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
+-		if (blk_verify_command(req->cmd, has_write_perm))
++		if (blk_verify_command(req->cmd, mode))
+ 			return -EPERM;
+ 	} else if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+@@ -206,7 +206,7 @@ bsg_validate_sgv4_hdr(struct sg_io_v4 *hdr, int *op)
+  * map sg_io_v4 to a request.
+  */
+ static struct request *
+-bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
++bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t mode)
+ {
+ 	struct request_queue *q = bd->queue;
+ 	struct request *rq, *next_rq = NULL;
+@@ -237,7 +237,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm)
+ 	if (IS_ERR(rq))
+ 		return rq;
+ 
+-	ret = blk_fill_sgv4_hdr_rq(q, rq, hdr, bd, has_write_perm);
++	ret = blk_fill_sgv4_hdr_rq(q, rq, hdr, bd, mode);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -587,8 +587,7 @@ bsg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+ }
+ 
+ static int __bsg_write(struct bsg_device *bd, const char __user *buf,
+-		       size_t count, ssize_t *bytes_written,
+-		       fmode_t has_write_perm)
++		       size_t count, ssize_t *bytes_written, fmode_t mode)
+ {
+ 	struct bsg_command *bc;
+ 	struct request *rq;
+@@ -619,7 +618,7 @@ static int __bsg_write(struct bsg_device *bd, const char __user *buf,
+ 		/*
+ 		 * get a request, fill in the blanks, and add to request queue
+ 		 */
+-		rq = bsg_map_hdr(bd, &bc->hdr, has_write_perm);
++		rq = bsg_map_hdr(bd, &bc->hdr, mode);
+ 		if (IS_ERR(rq)) {
+ 			ret = PTR_ERR(rq);
+ 			rq = NULL;
+@@ -655,8 +654,7 @@ bsg_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+ 	bsg_set_block(bd, file);
+ 
+ 	bytes_written = 0;
+-	ret = __bsg_write(bd, buf, count, &bytes_written,
+-			  file->f_mode & FMODE_WRITE);
++	ret = __bsg_write(bd, buf, count, &bytes_written, file->f_mode);
+ 
+ 	*ppos = bytes_written;
+ 
+@@ -915,7 +913,7 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
+ 			return -EFAULT;
+ 
+-		rq = bsg_map_hdr(bd, &hdr, file->f_mode & FMODE_WRITE);
++		rq = bsg_map_hdr(bd, &hdr, file->f_mode);
+ 		if (IS_ERR(rq))
+ 			return PTR_ERR(rq);
+ 
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 7440de44dd85..edcfff974527 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -207,7 +207,7 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
+ }
+ 
+-int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm)
++int blk_verify_command(unsigned char *cmd, fmode_t mode)
+ {
+ 	struct blk_cmd_filter *filter = &blk_default_cmd_filter;
+ 
+@@ -220,7 +220,7 @@ int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm)
  		return 0;
+ 
+ 	/* Write-safe commands require a writable open */
+-	if (test_bit(cmd[0], filter->write_ok) && has_write_perm)
++	if (test_bit(cmd[0], filter->write_ok) && (mode & FMODE_WRITE))
+ 		return 0;
+ 
+ 	return -EPERM;
+@@ -234,7 +234,7 @@ static int blk_fill_sghdr_rq(struct request_queue *q, struct request *rq,
+ 
+ 	if (copy_from_user(req->cmd, hdr->cmdp, hdr->cmd_len))
+ 		return -EFAULT;
+-	if (blk_verify_command(req->cmd, mode & FMODE_WRITE))
++	if (blk_verify_command(req->cmd, mode))
+ 		return -EPERM;
+ 
+ 	/*
+@@ -469,7 +469,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 	if (in_len && copy_from_user(buffer, sic->data + cmdlen, in_len))
+ 		goto error;
+ 
+-	err = blk_verify_command(req->cmd, mode & FMODE_WRITE);
++	err = blk_verify_command(req->cmd, mode);
+ 	if (err)
+ 		goto error;
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 0419c2298eab..92fd870e1315 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -217,7 +217,7 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ 	if (sfp->parentdp->device->type == TYPE_SCANNER)
+ 		return 0;
+ 
+-	return blk_verify_command(cmd, filp->f_mode & FMODE_WRITE);
++	return blk_verify_command(cmd, filp->f_mode);
+ }
+ 
+ static int
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 02fa42d24b52..75fe9d45ead1 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1371,7 +1371,7 @@ static inline int sb_issue_zeroout(struct super_block *sb, sector_t block,
+ 				    gfp_mask, 0);
+ }
+ 
+-extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
++extern int blk_verify_command(unsigned char *cmd, fmode_t mode);
+ 
+ enum blk_default_limits {
+ 	BLK_MAX_SEGMENTS	= 128,
 -- 
 2.14.1
