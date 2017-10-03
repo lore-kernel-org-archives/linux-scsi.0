@@ -1,32 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ibmvscsis: Fix write_pending failure path
-Date: Mon, 02 Oct 2017 22:51:51 -0400
-Message-ID: <yq1k20d0wqg.fsf@oracle.com>
-References: <20171002175938.11764-1-bryantly@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43386 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751148AbdJCCv7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2017 22:51:59 -0400
-In-Reply-To: <20171002175938.11764-1-bryantly@linux.vnet.ibm.com> (Bryant
-        G. Ly's message of "Mon, 2 Oct 2017 12:59:38 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jia-Ju Bai <baijiaju1990@163.com>
+Subject: [PATCH] scsi/fnic: Fix a sleep-in-atomic bug in fnic_handle_event
+Date: Tue,  3 Oct 2017 10:53:15 +0800
+Message-ID: <1506999195-27236-1-git-send-email-baijiaju1990@163.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: satishkh@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: nab@linux-iscsi.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bgly@us.ibm.com>
 
+The driver may sleep under a spinlock, and the function call path is:
+fnic_handle_event (acquire the spinlock)
+  fnic_fcoe_start_fcf_disc
+    fcoe_ctlr_link_up
+      mutec_lock --> may sleep
 
-Bryant,
+To fix it, the spinlock can be released before fnic_fcoe_start_fcf_disc, 
+and acquired again after this function.
 
-> For write_pending if the queue is down or client failed then return
-> -EIO so that LIO can properly process the completed command. Prior we
-> returned 0 since LIO could not handle it properly. Now with: target:
-> Fix unknown fabric callback queue-full errors that patch addresses
-> LIO's ability to handle things right.
+This bug is found by my static analysis tool and my code review.
 
-Applied to 4.14/scsi-fixes. thanks!
+Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+---
+ drivers/scsi/fnic/fnic_fcs.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 999fc75..4c99c96 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -265,7 +265,9 @@ void fnic_handle_event(struct work_struct *work)
+ 		case FNIC_EVT_START_FCF_DISC:
+ 			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+ 				  "Start FCF Discovery\n");
++			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+ 			fnic_fcoe_start_fcf_disc(fnic);
++			spin_lock_irqsave(&fnic->fnic_lock, flags);
+ 			break;
+ 		default:
+ 			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.7.9.5
