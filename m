@@ -1,42 +1,36 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ibmvscsis: Fix write_pending failure path
-Date: Tue, 3 Oct 2017 10:13:25 -0500
-Message-ID: <a7ec59e1-b8d7-b591-01ef-afb4c1e25c0e@linux.vnet.ibm.com>
-References: <20171002175938.11764-1-bryantly@linux.vnet.ibm.com>
- <yq1k20d0wqg.fsf@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <yq1k20d0wqg.fsf@oracle.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: nab@linux-iscsi.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bgly@us.ibm.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v2 4/4] scsi: ufs: Remove unused UFS_BIT() macro
+Date: Tue, 03 Oct 2017 20:51:25 +0530
+Message-ID: <1507044085-16905-4-git-send-email-alim.akhtar@samsung.com>
+References: <1507044085-16905-1-git-send-email-alim.akhtar@samsung.com>
+        <CGME20171003152912epcas1p442acf97496d1473907d6d73b7c51aa82@epcas1p4.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1507044085-16905-1-git-send-email-alim.akhtar@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: vinholikatti@gmail.com, martin.petersen@oracle.com, subhashj@codeaurora.org, Bart.VanAssche@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
+Since we have converted all the user of UFS_BIT() macro
+with the actual bit position, let remove unused UFS_BIT()macro.
 
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+---
+ drivers/scsi/ufs/ufshci.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-On 10/2/17 9:51 PM, Martin K. Petersen wrote:
-> Bryant,
->
->> For write_pending if the queue is down or client failed then return
->> -EIO so that LIO can properly process the completed command. Prior we
->> returned 0 since LIO could not handle it properly. Now with: target:
->> Fix unknown fabric callback queue-full errors that patch addresses
->> LIO's ability to handle things right.
-> Applied to 4.14/scsi-fixes. thanks!
->
-Thanks! I forgot to add the stable tag for 4.11+, but I guess we can 
-wait for
-Nick to reply since we had discussed making the dependent patch series 
-stable.
-
-[PATCH 0/3] target: Fix queue-full callback error signaling
-
-fa7e25cf13a6d0b82b5ed1008246f44d42e8422c
-a4467018c2a7228f4ef58051f0511bd037bff264
-025def92dd6b5b84b0d6d9069e2bb24e51e48c17
-
-
--Bryant
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index dec0420..277752b 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -119,8 +119,6 @@ enum {
+ #define MANUFACTURE_ID_MASK	UFS_MASK(0xFFFF, 0)
+ #define PRODUCT_ID_MASK		UFS_MASK(0xFFFF, 16)
+ 
+-#define UFS_BIT(x)	(1L << (x))
+-
+ /*
+  * IS - Interrupt Status - 20h
+  */
+-- 
+2.7.4
