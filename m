@@ -1,73 +1,132 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
 Subject: Re: [PATCH V6 13/14] block: mq-deadline: Limit write request dispatch
  for zoned block devices
-Date: Mon, 2 Oct 2017 23:44:07 +0000
-Message-ID: <1506987846.3368.69.camel@wdc.com>
+Date: Tue, 3 Oct 2017 09:19:25 +0900
+Message-ID: <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
 References: <20171002071535.8007-1-damien.lemoal@wdc.com>
-         <20171002071535.8007-14-damien.lemoal@wdc.com>
+ <20171002071535.8007-14-damien.lemoal@wdc.com>
+ <1506987846.3368.69.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171002071535.8007-14-damien.lemoal@wdc.com>
+In-Reply-To: <1506987846.3368.69.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <F924BA4305194C479355BDF893D34A78@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE3LTEwLTAyIGF0IDE2OjE1ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gV2hlbiBkaXNwYXRjaGluZyB3cml0ZSByZXF1ZXN0cyB0byBhIHpvbmVkIGJsb2NrIGRldmlj
-ZSwgb25seSBhbGxvdw0KPiByZXF1ZXN0cyB0YXJnZXRpbmcgYW4gdW5sb2NrZWQgem9uZS4gUmVx
-dWVzdHMgdGFyZ2V0aW5nIGEgbG9ja2VkIHpvbmUNCj4gYXJlIGxlZnQgaW4gdGhlIHNjaGVkdWxl
-ciBxdWV1ZSB0byBwcmVzZXJ2ZSB0aGUgaW5pdGlhbCB3cml0ZSBvcmRlci4NCj4gSWYgbm8gd3Jp
-dGUgcmVxdWVzdCBjYW4gYmUgZGlzcGF0Y2hlZCwgYWxsb3cgcmVhZHMgdG8gYmUgZGlzcGF0Y2hl
-ZA0KPiBldmVuIGlmIHRoZSB3cml0ZSBiYXRjaCBpcyBub3QgZG9uZS4NCj4NCj4gVG8gZW5zdXJl
-IHRoYXQgdGhlIHNlYXJjaCBmb3IgYW4gYXBwcm9wcmlhdGUgd3JpdGUgcmVxdWVzdCBpcyBhdG9t
-aWMNCj4gaW4gZGVhZGxpbmVfZmlmb19yZXF1ZXN0KCkgYW5kIGRlYWRsaW5lX25leHRfcmVxdWVz
-dCgpIHdpdGggcmVhZ3JkIHRvDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIF5eXl5eXg0KICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICByZWdhcmQ/DQo+IHdyaXRlIHJl
-cXVlc3RzIHpvbmUgbG9jayBzdGF0ZSwgaW50cm9kdWNlIHRoZSBzcGlubG9jayB6b25lX2xvY2su
-DQo+IEhvbGRpbmcgdGhpcyBsb2NrIHdoaWxlIGRvaW5nIHRoZSBzZWFyY2ggaW4gdGhlc2UgZnVu
-Y3Rpb25zIGFzIHdlbGwgYXMNCj4gd2hlbiB1bmxvY2tpbmcgdGhlIHRhcmdldCB6b25lIG9mIGEg
-Y29tcGxldGVkIHdyaXRlIHJlcXVlc3QgaW4NCj4gZGRfY29tcGxldGVkX3JlcXVlc3QoKSBlbnN1
-cmUgdGhhdCB0aGUgc2VhcmNoIGRvZXMgbm90IHBpY2t1cCBhIHdyaXRlDQo+IHJlcXVlc3QgaW4g
-dGhlIG1pZGRsZSBvZiBhIHpvbmUgcXVldWVkIHdyaXRlIHNlcXVlbmNlLg0KDQpTaW5jZSB0aGVy
-ZSBpcyBhbHJlYWR5IGEgc3BpbmxvY2sgaW4gdGhlIG1xLWRlYWRsaW5lIHNjaGVkdWxlciB0aGF0
-IHNlcmlhbGl6ZXMNCm1vc3Qgb3BlcmF0aW9ucywgZG8gd2UgcmVhbGx5IG5lZWQgYSBuZXcgc3Bp
-bmxvY2s/DQoNCj4gIC8qDQo+ICAgKiBXcml0ZSB1bmxvY2sgdGhlIHRhcmdldCB6b25lIG9mIGEg
-d3JpdGUgcmVxdWVzdC4NCj4gKyAqIENsZWFyaW5nIHRoZSB0YXJnZXQgem9uZSB3cml0ZSBsb2Nr
-IGJpdCBpcyBkb25lIHdpdGggdGhlIHNjaGVkdWxlciB6b25lX2xvY2sNCj4gKyAqIHNwaW5sb2Nr
-IGhlbGQgc28gdGhhdCBkZWFkbGluZV9uZXh0X3JlcXVlc3QoKSBhbmQgZGVhZGxpbmVfZmlmb19y
-ZXF1ZXN0KCkNCj4gKyAqIGNhbm5vdCBzZWUgdGhlIGxvY2sgc3RhdGUgb2YgYSB6b25lIGNoYW5n
-ZSBkdWUgdG8gYSByZXF1ZXN0IGNvbXBsZXRpb24gZHVyaW5nDQo+ICsgKiB0aGVpciBldmVudHVh
-bCBzZWFyY2ggZm9yIGFuIGFwcHJvcHJpYXRlIHdyaXRlIHJlcXVlc3QuIE90aGVyd2lzZSwgZm9y
-IGEgem9uZQ0KPiArICogd2l0aCBtdWx0aXBsZSB3cml0ZSByZXF1ZXN0cyBxdWV1ZWQsIGEgbm9u
-IHNlcXVlbnRpYWwgd3JpdGUgcmVxdWVzdA0KPiArICogY2FuIGJlIGNob3Nlbi4NCj4gICAqLw0K
-PiAgc3RhdGljIHZvaWQgZGVhZGxpbmVfd3VubG9ja196b25lKHN0cnVjdCBkZWFkbGluZV9kYXRh
-ICpkZCwNCj4gIAkJCQkgIHN0cnVjdCByZXF1ZXN0ICpycSkNCj4gIHsNCj4gKwl1bnNpZ25lZCBs
-b25nIGZsYWdzOw0KPiArDQo+ICsJc3Bpbl9sb2NrX2lycXNhdmUoJmRkLT56b25lX2xvY2ssIGZs
-YWdzKTsNCj4gKw0KPiAgCVdBUk5fT05fT05DRSghdGVzdF9hbmRfY2xlYXJfYml0KGJsa19ycV96
-b25lX25vKHJxKSwgZGQtPnpvbmVzX3dsb2NrKSk7DQo+ICAJZGVhZGxpbmVfY2xlYXJfcmVxdWVz
-dF96b25lX3dsb2NrKHJxKTsNCj4gKw0KPiArCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmRkLT56
-b25lX2xvY2ssIGZsYWdzKTsNCj4gIH0NCg0KSXMgYSByZXF1ZXN0IHJlbW92ZWQgZnJvbSB0aGUg
-c29ydCBhbmQgZmlmbyBsaXN0cyBiZWZvcmUgYmVpbmcgZGlzcGF0Y2hlZD8gSWYgc28sDQpkb2Vz
-IHRoYXQgbWVhbiB0aGF0IG9idGFpbmluZyB6b25lX2xvY2sgaW4gdGhlIGFib3ZlIGZ1bmN0aW9u
-IGlzIG5vdCBuZWNlc3Nhcnk/DQoNCj4gIHN0YXRpYyBzdHJ1Y3QgcmVxdWVzdCAqDQo+ICBkZWFk
-bGluZV9maWZvX3JlcXVlc3Qoc3RydWN0IGRlYWRsaW5lX2RhdGEgKmRkLCBpbnQgZGF0YV9kaXIp
-DQo+ICB7DQo+ICsJc3RydWN0IHJlcXVlc3QgKnJxOw0KPiArCXVuc2lnbmVkIGxvbmcgZmxhZ3M7
-DQo+ICsNCj4gIAlpZiAoV0FSTl9PTl9PTkNFKGRhdGFfZGlyICE9IFJFQUQgJiYgZGF0YV9kaXIg
-IT0gV1JJVEUpKQ0KPiAgCQlyZXR1cm4gTlVMTDsNCj4gIA0KPiAgCWlmIChsaXN0X2VtcHR5KCZk
-ZC0+Zmlmb19saXN0W2RhdGFfZGlyXSkpDQo+ICAJCXJldHVybiBOVUxMOw0KPiAgDQo+IC0JcmV0
-dXJuIHJxX2VudHJ5X2ZpZm8oZGQtPmZpZm9fbGlzdFtkYXRhX2Rpcl0ubmV4dCk7DQo+ICsJaWYg
-KCFkZC0+em9uZXNfd2xvY2sgfHwgZGF0YV9kaXIgPT0gUkVBRCkNCj4gKwkJcmV0dXJuIHJxX2Vu
-dHJ5X2ZpZm8oZGQtPmZpZm9fbGlzdFtkYXRhX2Rpcl0ubmV4dCk7DQo+ICsNCj4gKwlzcGluX2xv
-Y2tfaXJxc2F2ZSgmZGQtPnpvbmVfbG9jaywgZmxhZ3MpOw0KPiArDQo+ICsJbGlzdF9mb3JfZWFj
-aF9lbnRyeShycSwgJmRkLT5maWZvX2xpc3RbV1JJVEVdLCBxdWV1ZWxpc3QpIHsNCj4gKwkJaWYg
-KGRlYWRsaW5lX2Nhbl9kaXNwYXRjaF9yZXF1ZXN0KGRkLCBycSkpDQo+ICsJCQlnb3RvIG91dDsN
-Cj4gKwl9DQo+ICsJcnEgPSBOVUxMOw0KPiArDQo+ICtvdXQ6DQo+ICsJc3Bpbl91bmxvY2tfaXJx
-cmVzdG9yZSgmZGQtPnpvbmVfbG9jaywgZmxhZ3MpOw0KPiArDQo+ICsJcmV0dXJuIHJxOw0KPiAg
-fQ0KDQpTYW1lIHF1ZXN0aW9uIGhlcmU6IGlzIGl0IHJlYWxseSBuZWNlc3NhcnkgdG8gb2J0YWlu
-IHpvbmVfbG9jaz8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+Bart,
+
+On 10/3/17 08:44, Bart Van Assche wrote:
+> On Mon, 2017-10-02 at 16:15 +0900, Damien Le Moal wrote:
+>> When dispatching write requests to a zoned block device, only allow
+>> requests targeting an unlocked zone. Requests targeting a locked zone
+>> are left in the scheduler queue to preserve the initial write order.
+>> If no write request can be dispatched, allow reads to be dispatched
+>> even if the write batch is not done.
+>>
+>> To ensure that the search for an appropriate write request is atomic
+>> in deadline_fifo_request() and deadline_next_request() with reagrd to
+>                                                               ^^^^^^
+>                                                               regard?
+
+Will fix.
+
+>> write requests zone lock state, introduce the spinlock zone_lock.
+>> Holding this lock while doing the search in these functions as well as
+>> when unlocking the target zone of a completed write request in
+>> dd_completed_request() ensure that the search does not pickup a write
+>> request in the middle of a zone queued write sequence.
+> 
+> Since there is already a spinlock in the mq-deadline scheduler that serializes
+> most operations, do we really need a new spinlock?
+
+The dd->lock spinlock is used without IRQ disabling. So it does not
+protect against request completion method calls. That spinlock being a
+"big lock", I did not want to use it with IRQ disabled.
+
+>>  /*
+>>   * Write unlock the target zone of a write request.
+>> + * Clearing the target zone write lock bit is done with the scheduler zone_lock
+>> + * spinlock held so that deadline_next_request() and deadline_fifo_request()
+>> + * cannot see the lock state of a zone change due to a request completion during
+>> + * their eventual search for an appropriate write request. Otherwise, for a zone
+>> + * with multiple write requests queued, a non sequential write request
+>> + * can be chosen.
+>>   */
+>>  static void deadline_wunlock_zone(struct deadline_data *dd,
+>>  				  struct request *rq)
+>>  {
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&dd->zone_lock, flags);
+>> +
+>>  	WARN_ON_ONCE(!test_and_clear_bit(blk_rq_zone_no(rq), dd->zones_wlock));
+>>  	deadline_clear_request_zone_wlock(rq);
+>> +
+>> +	spin_unlock_irqrestore(&dd->zone_lock, flags);
+>>  }
+> 
+> Is a request removed from the sort and fifo lists before being dispatched? If so,
+> does that mean that obtaining zone_lock in the above function is not necessary?
+
+Yes, a request is removed from the sort tree and fifo list before
+dispatching. But the dd->zone_lock spinlock is not there to protect
+that, dd->lock protects the sort tree and fifo list. dd->zone_lock was
+added to prevent the completed_request() method from changing a zone
+lock state while deadline_fifo_requests() or deadline_next_request() are
+running. Ex:
+
+Imagine this case: write request A for a zone Z is being executed (it
+was dispatched) so Z is locked. Dispatch runs and inspects the next
+requests in sort order. Let say we have the sequential writes B, C, D, E
+queued for the same zone Z. First B is inspected and cannot be
+dispatched (zone locked). Inspection move on to C, but before the that,
+A completes and Z is unlocked. Then C will be OK to go as the zone is
+now unlocked. But it is the wrong choice as it will result in out of
+order write. B must be the next request dispatched after A.
+
+dd->zone_lock prevents this from happening. Without this spinlock, the
+bad example case above happens very easily.
+
+>>  static struct request *
+>>  deadline_fifo_request(struct deadline_data *dd, int data_dir)
+>>  {
+>> +	struct request *rq;
+>> +	unsigned long flags;
+>> +
+>>  	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
+>>  		return NULL;
+>>  
+>>  	if (list_empty(&dd->fifo_list[data_dir]))
+>>  		return NULL;
+>>  
+>> -	return rq_entry_fifo(dd->fifo_list[data_dir].next);
+>> +	if (!dd->zones_wlock || data_dir == READ)
+>> +		return rq_entry_fifo(dd->fifo_list[data_dir].next);
+>> +
+>> +	spin_lock_irqsave(&dd->zone_lock, flags);
+>> +
+>> +	list_for_each_entry(rq, &dd->fifo_list[WRITE], queuelist) {
+>> +		if (deadline_can_dispatch_request(dd, rq))
+>> +			goto out;
+>> +	}
+>> +	rq = NULL;
+>> +
+>> +out:
+>> +	spin_unlock_irqrestore(&dd->zone_lock, flags);
+>> +
+>> +	return rq;
+>>  }
+> 
+> Same question here: is it really necessary to obtain zone_lock?
+
+See above. Same comment.
+
+Best regards.
+
+-- 
+Damien Le Moal,
+Western Digital
