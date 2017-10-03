@@ -1,34 +1,54 @@
-From: Ming Lei <ming.lei@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH V8 5/8] percpu-refcount: introduce
  __percpu_ref_tryget_live
-Date: Wed, 4 Oct 2017 03:24:13 +0800
-Message-ID: <20171003192412.GC5362@ming.t460p>
+Date: Tue, 3 Oct 2017 12:31:05 -0700
+Message-ID: <20171003193105.GL3301751@devbig577.frc2.facebook.com>
 References: <20171003140406.26060-1-ming.lei@redhat.com>
  <20171003140406.26060-6-ming.lei@redhat.com>
- <1507056023.2567.1.camel@wdc.com>
+ <20171003141459.GI3301751@devbig577.frc2.facebook.com>
+ <20171003192039.GB5362@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f67.google.com ([209.85.214.67]:55264 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750812AbdJCTbJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 15:31:09 -0400
 Content-Disposition: inline
-In-Reply-To: <1507056023.2567.1.camel@wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "tj@kernel.org" <tj@kernel.org>, "cavery@redhat.com" <cavery@redhat.com>
+In-Reply-To: <20171003192039.GB5362@ming.t460p>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-On Tue, Oct 03, 2017 at 06:40:24PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-10-03 at 22:04 +0800, Ming Lei wrote:
-> > Block layer need to call this function after holding
-> > rcu lock in a real hot path, so introduce this helper.
+Hello,
+
+On Wed, Oct 04, 2017 at 03:20:40AM +0800, Ming Lei wrote:
+> On Tue, Oct 03, 2017 at 07:14:59AM -0700, Tejun Heo wrote:
+> > Hello,
+> > 
+> > On Tue, Oct 03, 2017 at 10:04:03PM +0800, Ming Lei wrote:
+> > > Block layer need to call this function after holding
+> > > rcu lock in a real hot path, so introduce this helper.
+> > 
+> > The patch description is too anemic.  It doesn't even describe what
+> > changes are being made, let alone justifying them.
 > 
-> Since it is allowed to nest rcu_read_lock_sched() calls I don't think
-> that this patch is necessary.
+> Sorry for Cc you, and this change is needed by the following
+> patch:
+> 
+> 	https://marc.info/?l=linux-scsi&m=150703956929333&w=2
+> 
+> Block layer need to call percpu_ref_tryget_live()
+> with holding RCU read lock, given it is a hot I/O
+> path, that is why I make this patch so that we can
+> avoid nested RCU read lock and save a bit cost.
 
-Yeah, I know that, with this patch, we can avoid the nest RCU lock.
-As I mentioned, it is a real hot path, so maybe better to not
-introduce the extra RCU read lock/unlock.
+I'm not necessarily against it but please name it sth like
+percpu_ref_tryget_live_locked(), add lockdep assertions in the inner
+function and document properly.
 
-If you guys doesn't care the little cost, I can remove that.
+Thanks.
 
 -- 
-Ming
+tejun
