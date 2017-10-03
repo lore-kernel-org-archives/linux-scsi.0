@@ -1,30 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V8 5/8] percpu-refcount: introduce
- __percpu_ref_tryget_live
-Date: Tue, 3 Oct 2017 07:14:59 -0700
-Message-ID: <20171003141459.GI3301751@devbig577.frc2.facebook.com>
-References: <20171003140406.26060-1-ming.lei@redhat.com>
- <20171003140406.26060-6-ming.lei@redhat.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsis: Fix write_pending failure path
+Date: Tue, 3 Oct 2017 10:13:25 -0500
+Message-ID: <a7ec59e1-b8d7-b591-01ef-afb4c1e25c0e@linux.vnet.ibm.com>
+References: <20171002175938.11764-1-bryantly@linux.vnet.ibm.com>
+ <yq1k20d0wqg.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171003140406.26060-6-ming.lei@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <yq1k20d0wqg.fsf@oracle.com>
+Content-Language: en-US
+Sender: target-devel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: nab@linux-iscsi.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bgly@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
 
-On Tue, Oct 03, 2017 at 10:04:03PM +0800, Ming Lei wrote:
-> Block layer need to call this function after holding
-> rcu lock in a real hot path, so introduce this helper.
 
-The patch description is too anemic.  It doesn't even describe what
-changes are being made, let alone justifying them.
+On 10/2/17 9:51 PM, Martin K. Petersen wrote:
+> Bryant,
+>
+>> For write_pending if the queue is down or client failed then return
+>> -EIO so that LIO can properly process the completed command. Prior we
+>> returned 0 since LIO could not handle it properly. Now with: target:
+>> Fix unknown fabric callback queue-full errors that patch addresses
+>> LIO's ability to handle things right.
+> Applied to 4.14/scsi-fixes. thanks!
+>
+Thanks! I forgot to add the stable tag for 4.11+, but I guess we can 
+wait for
+Nick to reply since we had discussed making the dependent patch series 
+stable.
 
-Thanks.
+[PATCH 0/3] target: Fix queue-full callback error signaling
 
--- 
-tejun
+fa7e25cf13a6d0b82b5ed1008246f44d42e8422c
+a4467018c2a7228f4ef58051f0511bd037bff264
+025def92dd6b5b84b0d6d9069e2bb24e51e48c17
+
+
+-Bryant
