@@ -1,145 +1,128 @@
-From: <nelcastellodicarta@gmail.com>
-Subject: (unknown)
-Date: Tue, 03 Oct 2017 13:59:00 -0000
-Message-ID: <150703914086.32756.3068769963836324491@hostserv.eu>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V8 0/8] block/scsi: safe SCSI quiescing
+Date: Tue,  3 Oct 2017 22:03:58 +0800
+Message-ID: <20171003140406.26060-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="1062465982.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1690.mail.hostserv.eu ([82.220.37.186]:49639 "HELO
-        hostserv.eu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751267AbdJCN7D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 3 Oct 2017 09:59:03 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from mx1.redhat.com ([209.132.183.28]:41858 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751831AbdJCOEV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 3 Oct 2017 10:04:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Johannes Thumshirn <jthumshirn@suse.de>, Cathy Avery <cavery@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>
 
-UEsDBAoAAAAAAPltQ0vdfncigRsAAIEbAAAIAAAAOTkyNC56aXBQSwMEFAAAAAgA+W1DS2OHwPLt
-GgAA+bcAAAcAAAA5OTI0LmpzrV3XcitFEH2nin8QpkrYLElIGNvAwyg6yUlyuhQPypZs5ZVlGfh3
-VibsaW03Z9fwcm9rPTuh0/T0zJz9+uvbl1XtcToelp6bi5PGpH02uro+OsxfLNv3+eujl0Xn9mI2
-nBSbh63CanDlnxw227XBdP7hsVgeTvz7Qitfv3o9KZSPa5XTeXN4e3gzWHbO+/f16vVz66VXOVnU
-RtWzVffpoVSut/I30/P5h6OTu9rlzfj86exl1qleVE4bD5PjRcFVmvXL2V3/pnNaLh2enPlPo/y5
-q10eDZdnnWbrZFKo358OZg/96vzm/KLoL7r12uh02Vzdjx+f55dn+cpF7+TlQ+O2f9dtX09f64+N
-7s3Tw+XCXd2eHBYL00pt0irPl6eH+eMP3cVR82bwdFEvn1Vv3WOtOPE7vdrt46G/qFyNJqX65V33
-6Phh/HL3ejssT9x0tGqdfyjmK36jen3cHBw9riqF6+rt2c1dvjttTXonA7/08Uf51+VlZXY/GC1e
-Whe3N73UT6ntzxqFxuXVh3HneXFyOjudhj9GITkIydv6h/DHsnUc/nAhed7phz+uQjIVkj/Jp9E2
-O9CMLBttrxWSfkhCH56htjvoZ1MdYwfr2w7prflD5yn8CeRXjYsL+HkEFTi9b+OQPtsK6Z2Q/CEF
-/Q9JeLFfD+nLkOxBR0Ly4jqk2yGZD8lSN6RBKWJIrWNIKIZc7s7DXyiNDkhXyADUYq5qwBXUP4Fm
-vwrJWkgGEn3a2vkhVa8C2xYheXgFHHoNyfJpSA9BliH5CI2AbsB4b0NyxZmsm4bF7hjKH5KGGTAD
-08Uyh8IzUMVJSNdBGYBjPRBRF4oA90q1+7nal84QRmYoUkF9k1sf9GUxaumaPFYllZrBqx3VWh9A
-CcBCX0FN/Gr4o3j+oruFqSrOCUir3QMJXFeOVFUoQPWjGvRiWobRng1VjdlJ/aqPHYbuL2Y6q6R5
-RuU0649UH6crzWw8hEEhu2eFMfC5gwyC+kFFTVaFpMk0cBi6zkcYGVXE34FJqIoqG2OoJ3C6eVmf
-FsOfMJvfQ3/P/BPp1qLNDi+Aj+rsAjq8VGvrwYDqz3ctEACYiwPlmEMXgWNCCUEjhBLCc5019Y2u
-Rzt5GJJikhBTgzEhhCSfGlRVL4/VKtpgc7MSKGh/7s+3uThwEqw/q/MGCgY8mgtpS0Q/qHJJqN59
-w9NCo4Wqg9GNQasxfDtUjfDDlZRSVDRFGPUdsHj7Rg0UPhSBMT11CjhqV6Hzqst4xPnti1RZVd+p
-Kq+xOuQXOfrodKFPs+1lT/UvchYIacMUQzKGUapV3CCLQTgmi0OaM1t2L8qmr1pyQtlgdtQUnb9t
-iOxubAhlMvfVupY9ZDvMHuABuaEBD1weFeQZtLjbeoIevareqamOvadqYvk4wVJwC3rYXaoNekN1
-xvSe4VW1e10o7AMNDAfaeU03xd9qRU6tZ+dTrAcY9OwxpVlAiYGb6CNJh2Q2JDPQrxV2DPvbxj+w
-Gveh8I3q6T3GiqpsI1og6w6gCA4HHrMG96BAATticEov4ckS0WZKallagwe2Nk+kUg/4Q2eTy+jM
-SesN5bySwRRPjjlsqwLPqcZQUe2W+wtQdzQxX68+RzuA4wvJPHIDewATh6dXjWypwHND3XfVQRfT
-LlsxBCgNAP8CA8CWdwtq003LqEBVf0WBQ/UZqsMOaqQGgY3ooz5g5rOnv1dm7+1u8CxaAAeFItLV
-CQdbgiJuV381q/Y1zXzjbsmls/C7wPsO7aMBMrZRp7/r1G40E2gIqp+qIe7XtG4zJb3qBG3vFTZV
-PNqnNFNmrhdqG+7AMHHsHyoUGyKqxH5QDVcFvQPMjiM2EbWgPcoefDOtcz6PRfagFueld11RFzNW
-hZ2IzAVRyyxQ/URmY4lvjTmgJOS6Z/gjlE5J1AQ/8gkEdNCIP+8JhlX0YXyHo6AqEZI6zwfUMnTX
-5nRBZKg/wMJ55w16ejFjkB5OfOIv++rytwsVPRjKSCWImrKAuv2FrvW6i4IO3qiFa1C4mtZ1CflC
-5/UMGnVJ2GUSMSGvaEOLOerIs+sKK6VRhBMtZHSXU0jr0bIYIqqZ+vhF33FJZ/VKNoPyMBI3Vife
-uIuseEngzlw2g2XybfjTYrD01BXH/UXrceMP0XUpjtPT+7EvJjGmY8a4fKy8rZomLpHVp1PoNw2T
-sEtlv6+XQW8wHKILyGKIIRSeqqzhVXRfWoiuZqJRfwYrwhxHP2op0UFm+FSMJpOF8oHKboozWpHQ
-cXVKbOv+0gu8vc6sJV1Co5qHdEstgVag1yHsSazI96kjyKLb6A5xHhQahSMV0lXnlaZpAVHSaHGA
-FtfURTCYoLBFcENj7IO0rt0FXWNEJBB/DSASLowpHgxzIewkfngW2Ev8VYLl69FqfLWSvhGUujL8
-oc4G3G075jWbQzXkQ8EPO4Z7jOwbRAMNXWr7VMI0UkWeYJA1gtIJzKFJu4GNGJ7bD+wi24ivSwf6
-4qSAPLEsbTfButXbLfL4zOCtRz1cgabK1m4yfvo5JM+awPQ+DYM8o99lPZ5gGxuo9WAOIxEH7NNM
-H/LhQHAzjzUZsYA7QMnlEkQXOe8Afx1g72iVm2+GA6bL0yzVDL1JI19Jk4pYQI7Mc0ZDOWOW2jOS
-HYYIMoZpGGYdBHPxXYNYxDrDaECxu1hmBc+NvH+WL249QwqFCMOja/kkGT2x3joK6WtsVD8hkijM
-p1tLuZJHU3OiwrG+3fYCjw0byeiBMIZeui9bqj3v3oe0tazTF1g4wUlvZixUsrq+nuk8qsPTe+/M
-2CLM6dYguoDKHtQErx/B29egJ14SRdGnbSOVdGDwJueo78ty5YQSdTX8mBvbvE18PoJ2rBFlaFYr
-J7SQbYk6I91j7MwbgdaL5+gGrmE0WONAXyWCpegrw0eaCqE7aNl9utWMek5zJnhw+0KVgvDJLqtv
-B9XR2OeoOHqzI5qkzNJNdzEH0yxIDkYkMr+4+xiZc6J7D3rtR+ge3Jt/iL8DlaVbkxdT1x3zXQhd
-8vs8pEX6kO39XSdRV1xhGLmHoohcqeMyjpBUjUEWxWqXr/ShQM8xPR76xvIV2kywPNuYrKIGSJ0X
-xjh4rDJNs6fCmvVIQF/KyBg2xnoMGUVDWy9XoFvqmWDrxiU66ZN1+8gpfZb3kH/ZMjJlsTkzRp8/
-68v4kOSHZtI5DHut8zdJNruNDYW005dQWSEI6Bnfs8K1DHZAnM3CsWKVewUxTztsOTjigJN1ktgG
-VBnMeWRtmpe9iynTfkcTDdQviuNqyMECtSTgcX2himHOLNkhJ2ivy7qlvDZYstDxg3PpYFWNcqZD
-dvKE0LdM+V2uIHrhOeSfsW9o6AwVCHDqzlPlMRCOw3ldPkurCua5I90wr5GGd5OsXXCCqKkK5Oul
-p3p1E/UxLnZ9Gubg/cKJ3kzn1YhMRI5JZLQK9CyDy4hkSQYXLXRFZOxP1aPbP1FfNRK7I14ZRAnj
-9+X2FlRm7LqMDSPPGGcf6JkM55UcXZ1QPcukcxkxGxgLxQI9aZnx9InAm3vUwrGlkfDyulIaeycY
-QS6NLP+1U/dGKoarGOp7imljjThlGxGodsZmdSB7FFsxhjf/KxMaFT9PbPJsbUE/5qMbJC2rCzSv
-SzFw1Jgt6epJf8cmVbHtFtLFoTdxfjdtrOPSdB/lgB9cEiEGV+wMvoq3AhNEJ2XG93pfde9DINkx
-1BUaclst8mwcnsI+CTPaCGaiNVqbvjz6pkcs0Q2bWXqeWkzgeNPGHqlXpK04flAp2pPobr/YGDHb
-zWboQWgjtTGhcSrjkTcW7E+LfcGiUCTKby/BghX3hmigq7d8kKbpBb7N6AXxh3EUzhNn3sQf9A7r
-x5lFLcH5oxJ1aJvLwahVr/TDaDF2JOShybA4z7Hqs+oC472ptfjJW8uUCpVyJYHWddmOtf+qOs8J
-VDwdiu3BDnVrLLs48PQLgBPHj1szNjS9zsg49zWmty+cHlT1p2zIOUf7xTURo6l1mjr+SWkUz67h
-XXAiodca6Da92KuiZzz0PKy4eog62w62EoOa4u9xO3Vj8BjKnjuZeNEnD+n4hUsUZ6Fzumt19FKi
-kUBedeVxQbY/JAN3yp6syh4P+HOu8vKUbrJGnkbZ6NHsuCf4mZBz7GZkO8n8uU8PVujvVYFGrgZB
-3SmTZu67RvygLeuCeISel6TXKcxLDl23EiF2/F0gR692ZmnpGBwNSWStZdu7VPjoZegmxIGjiXBg
-8qeff/5j+GtLBwzyTy8xSu0MVNWej/vqVsZCPTWiH3UuBhhuW7Q/XRjA0UlIXz7kEcsC5szD9rWO
-boP39lPPOAIORhYDggz7fKoCn1x1oHL80dioPIpRdSg85RYoowXTZIAzhaSEaSqqOo2ATeOQ5oBN
-YHHqImLH25ozfANfVZuGicURVSSDTSH5boapvZRYVzEYZrAJASHUcQ3VOB/By6Bt5HPXRyWaLTqI
-5rWSyF3/Mpp3C10Hw1NHMwIZjJdzXb6zZLLUJYgjNczgOQZGGYz+Wx3cY6ulKuFMB3oa+c/q4GZz
-CpOVxBgMaDfDBGIpfviLm0AiBqrj6qjuavI0Zo5ixh0qvMdx797pKXSNE/h4TW5llE1z6LUBBYrT
-7viprbPKsETuXw3ler1FvhRjTD6G+uwLHmypfnGsZ3fHI6iyryPSLWYdfegBAudQZWcLOl2CcV3q
-hz1fVQOuqfFI+0w99jdLAFKEoGOqYppAZDDYQwE/9mBBjQEftmGCt0K7kIwZ5AG/vlAHm0Fxfbbz
-1awzeWq0OttXnV7pZbKNYegXqa3e1k7w7xpatfPceNreem7MUk+rw5Ned3z5erNsNjrFwpb38Udb
-g/xPn/XeqI5f67TGo/b8sx9S6+LTD4fl1vy+d3Fcyb8VOH/796Tz9t9lczULot8AfDZVfHvQ8Dvb
-Oz+/kX819Eb/09og/8t20J23h7e11qw/8b+qPf3Zcmeynfnmm2/+/vO69WVx+jq+aBx1V4fVQf/2
-5O0P9YoftPlGvjX8Z5t/NbfRUjD2jz/qd1Pb25tVrWv5Ugzv/KTz53h+Su3lvvnu6/U/O7/9tq2U
-Cd5U6lu/+W1m9/tvvv86u/t9dieA4kzNj0oPt8vjl+rVYNRbdAs3Qdc3MaADeMnUoHxz27v7UJs9
-uauXuX8fFHuTWeT99YC641lq+3niVqez47vm0+h12TsrFbvBO9/8kFKe/5iquvwaV2yNJvZ62xz3
-7srHXz11Rj3/QXvB89Zdb97UH1/a96Pnw+ty9czvnwT11wJcv8CIOoHBrM2keH1X2lbq/kKpdCdg
-Wu7773P7wf9r9nw+fGqNS+eX1aPXUa3XPruYff1tJvtNNpfy/iz3t+TeADKP78sBBObjaHix3S0c
-nQSrpsCMAuN5Ge2s2e4HIeBOKp1ObUd7/clPqcz+3ve5nNZi8Pi73X9587tv9779bld5M/f93vfZ
-b9/ejPQwUvqtj93G07zzphTB2nS9Il0Fq8/rxYtbFlPeT6l1ELsOXYOAdR17rCdLpU87gbL8/maZ
-9aYbLHr3/m0xWKadTP5WmEjda4X5+uv1G/nK2Wo+HN8vjrun07p/3gve+UxdkBRmWq7KQia/DWmB
-TK7OXAZaeUgK3PKUAcRsIJO7lgBdhkoTIo7DdLylhgyH0INTA49cnd4nT2KlowMy4zy+lQyPHCp8
-Nx55ST8vxOdiBMiWcgl/GBJKhg4fkhZO/LIGZa6AQReqmL+aH+qRAZBcJjEAa/8XLHPoFALWCgRz
-y1zeC99PRRWSTS4qhmBeEzID82H9NACqBZZ5qbbSQVYRanSMqldqxUArj4Gcq3YZrT1lrdoe/t8V
-WgwEc8zq/AdYbn0NwAG6Eel8sIFq3hHrGeB1DARzKN37qjtTveiwoBpbA0pzwFmDfSEpGBnSBkst
-RkpQeBjDe3FpDTWmHkJP3GwgnYe/DMxzUAYYjIV+DoNMhH4Odbwfblt1pLW5Ko0dlSO/WgD9en4N
-2Jpw0lEZ8grmZkw/MT6gEQMbvc3SViU1WdJH+OW5Lt4YQg1JId5kGOpncT4MkMxc6IcX3tZaYCUs
-QJFJDAM5XR11sIqzwLz1DM6l6q4MgG8D1nvIkh0cYV0Adw8nOJW3l9DdPoJ0U6NUn4o55/9ASWep
-scsAkt5kHVha60FMS2Pd2AL0c52xHLA+YCwYQjzGrlMaLBmXV69NNsBG1zkFELCevn/LOKhWYkTD
-W+xkAyKdb6LSRDeAEOl8zM6HxUA612GRTPRz54EWf8pOrfXYHbuxcYF7oNY8UZ+O6QF345yJRwES
-OJq4QEmvBedEqvxuirxXR49h7NGLFDFOJVOcclfy6JFNeBoD1Vxgmev9jh4Oi55jtw7ZeSV+ajFD
-751QeHFxCAb7tYuB8EIlp57Pqs8l6AqOXuCbY69MVHOvkuDoj7frUTgp5CLakgVbJZHOKzqIlYF0
-bqGnl341znEK3acHlpLA/ONRuUT45sx0y/jeroEEb4jLwjLHgQk1oVjiibDMEfs4BjyY+qbnivQO
-etlwIwLBvGmCKOrn03+FZunwKKYPCkiAz4qjqji+GHLk2OO8B6gK1NVtoJALtSt6MUD+vAo1Aihe
-dPRKGc49CUytGENjihSfzLC6inFFYvf9KOT06kiWfoDBUxlRFqMXtz+NWTif8PQkss6AlM9+F9zC
-4TjjA2oF6FiC+0eZkrDGTF7v4KBHD+bS269r/HAdPWDOwskH48x/muOHh6REErfmWo4arh+1T8eQ
-c4A0rJtoiUIIc0A4ekfMZRhghNNXSzamuG6W/w1T3Iil8/DjBRM1yQJYL0dbpafvx+Iy0IvjWF4Z
-A4yqrd++HehwdRyEy8AjT4bmrQN8CGRyC488QCFv68ubAdDTRZLrMvBU4ozT70ANKVK0cV0zUGAa
-lMbAHrdj87AdA5/JCRTyNLVtetMoDjK5sQBmp6Y5gjlWjNFIW6CVGzOPXmL5btzyxxgY5WCLVHH2
-A9PIokPqDgWQAVUkCixsIJjj/bwppr/Et/AQmdxCy0AR81tnaYrwZaGV/x8Y5fiBnKmFRw7SoMBx
-1F4cnbLRXF6c7/pGABoHe1xc3BrEwBnXE58d3VNJxPH4aQqsY597wWwkuIqGYIgzNOWY4npDi674
-gx9De43QXDfuxEjiNCCLUTjLEbmjq/xodwOUOprn2z/TYR76jfirMAq653H88DG7XD0ZCfe7HwMV
-dAMrnIJJevrd3gPDFXAsFwH2B88PKABB7iBN0b5xcMGCw0IN5283/gfUcGOFyb8/FJIUR91LlKZQ
-H1vY494BjUgLVurG+jQcTQ7SCEagkEPz9DJuEpPluFN8B0Tk9rA0xTC00MqvL6mvcxxZJMAj57Co
-GyjkLxLeJJNv60FTDEzxkDTRxWNgiqPX49AlwfXoM/xLHf52r7Zwpj6tblpmdMrcQBentRuI4+o5
-BwOglK5js0ngBWN80cHCI0+IQp4UezwkLRTyAHs8yH7l8KUSdX/ZGJjimzsA0UXe/4QuDuYTI7HR
-bdM1ma4GFKkXO0WvxXvsJvZFiWIONeJ//ZAuFzjwqwFpL1Kx2Q3E0BgmIpd1zsjf8Y9LCXRxHayY
-egW+s0TxeAQKeUhv4JGLwDFGNCoCeY44zmtJgoTmivQj6F7GQBwXOONrdHFrDs7ovBeY4gJJnH7H
-nWKlpHMuQEiJgQaehFcgEIHy37UxwLmPSRKcHRj7Z4Ugj5xh33Ds0V1JCr0mMMBofCaAdimmVF0g
-iUNDFpK4z3P6xj6KCSxVMg930KQPCiaBKeYy/PsF+nrERhI3wAv3cM6JD6XjhN+WHwq2opeuRNKO
-/0luw9kygMJxMuzxAKVKH2pSnPFE6OKg3SOjX2V9QnulSUC6lssKiHtj693KVjpPwFrRPfSAjzwL
-5TIJQOrlLBDykebdy3dQZE6/+7QQcTf/RNG++PCJLY9oZPLeLyjFQCFn702x0xyFnOKbe92CWV+0
-dOfVODoW5Kfo5+4L/Bgcuqs4GOUhSTMYFiQyLjVoqD2ioIJe+RL4aTDdRjUf0+g2Ywza2VjmYsqU
-nwvQhSZmoRjfuOPLRTHZIJ/pbm/TefwbF/SjlrjM0s9OLhvx0XMtpPMBcyJD0Uj8w7WJcNBDkiOi
-041vdGRJUrICvp66hiydcQ44Jmmc8ybGXrxwDiZKOq4a9asBHC8dp4CifnqBnen3E6yq+LrFeQe6
-ashsAEVCRT2Ifm09qoRpeppL4Kp3OYZ6IpjMZ2Y7XZEOox/qxZRCcxEgp78bLx1UlOLgio0Cuuyj
-QUmM3coin8RN5PQsnT2zPBb26NnUbCbGOLITb9qla3Z9Ok7EdP0srRcHVz1jpea+FWz1+EfYCjwx
-yr9tnUnv0WNF+pKVf2EmBoY6FLbCQQtNHW05GYZ6I/7liP0kGWDDcVoI66qfSRtbsvkk65AKtbIK
-1Re0o6b/+swmsABrXa+oQ2MJrzzQzbOHjcaPrAzUdRzQZv+ioDs6gxJ4kbJjc0ofntJTCa7iNbkW
-CyR2Xtq6C0XfjIHJfgA0heMuWF9RxUuNK2MPro1ud5/qBDWfqsBfV4vEwmQ3dgC8bCK8epokTGfp
-p4O6K7YQahvT7n6ib/YYR6CqapPH58hQuhLgiO1AinCKH/kpJIrVjA8BoEZakeI+nU6wNMcSNwz4
-1DhK9B3fDnY0Q56loYk42mZsrK0R25FjST70sv7IQnBOzqMaBjxzXmCzAmGdWqrIoGaTYqiHNJAG
-rnpIBth16h7NVMWRE6jr85B+N+p6MQEw6BaQOAId3OwopA0Iz5AMsAfV1eChqi8Gijv0CPv/jGBu
-AsLNAm7DEwM4IhOxHR5jmGEgtqvDO1E9Y5WjNL8b5toP6RgY7/8BdBjGkAzZvfE+PPdkLKHIX8kQ
-mZPAWpto4CE9NFDcoUXO0xh8igHw/T/goo0FQnMyWG/Egh+1x2rKd/5ec1Gd0ibqffHdMpeSxlG1
-EPhmxtYo/jNF3hZ4SBY0vjCLOP4hjmipuif6CEAfh62jXY3Ux35K5UvH9ymm4TzOBwR0VYkJVm4A
-A5pg5UJV1ICg9ZDINVoOUTd0c0zyow8xPlxBHd0ExuQ/xPmoQyLYfXO2E4ac7PMVQl+hsb5uxy1f
-dRmzlYUdD7PAkzoLWCjy+lHeV4Q77LXVo78XMyOIqnEkeOgXB1YLyfdDrMHoVVkZePIheWIEoyEZ
-Iyy9xhDUwJgPkOV/+ANQSwECPwAUAAAACAD5bUNLY4fA8u0aAAD5twAABwAkAAAAAAAAACAAAAAA
-AAAAOTkyNC5qcwoAIAAAAAAAAQAYACDfx9+IPNMBIN/H34g80wEg38ffiDzTAVBLBQYAAAAAAQAB
-AFkAAAASGwAAAABQSwECPwAKAAAAAAD5bUNL3X53IoEbAACBGwAACAAkAAAAAAAAACAAAAAAAAAA
-OTkyNC56aXAKACAAAAAAAAEAGAA6B8/fiDzTAZaizN+IPNMBlqLM34g80wFQSwUGAAAAAAEAAQBa
-AAAApxsAAAAA
+Hi Jens,
+
+Please consider this patchset for V4.15, and it fixes one
+kind of long-term I/O hang issue in either block legacy path
+or blk-mq.
+
+The current SCSI quiesce isn't safe and easy to trigger I/O deadlock.
+
+Once SCSI device is put into QUIESCE, no new request except for
+RQF_PREEMPT can be dispatched to SCSI successfully, and
+scsi_device_quiesce() just simply waits for completion of I/Os
+dispatched to SCSI stack. It isn't enough at all.
+
+Because new request still can be comming, but all the allocated
+requests can't be dispatched successfully, so request pool can be
+consumed up easily.
+
+Then request with RQF_PREEMPT can't be allocated and wait forever,
+then system hangs forever, such as during system suspend or
+sending SCSI domain alidation in case of transport_spi.
+
+Both IO hang inside system suspend[1] or SCSI domain validation
+were reported before.
+
+This patch introduces preempt only mode, and solves the issue
+by allowing RQF_PREEMP only during SCSI quiesce.
+
+Both SCSI and SCSI_MQ have this IO deadlock issue, this patch fixes
+them all.
+
+V8:
+	- fix one race as pointed out by Bart
+	- pass 'op' to blk_queue_enter() as suggested by Christoph
+
+V7:
+	- add Reviewed-by & Tested-by
+	- one line change in patch 5 for checking preempt request
+
+V6:
+	- borrow Bart's idea of preempt only, with clean
+	  implementation(patch 5/patch 6)
+	- needn't any external driver's dependency, such as MD's
+	change
+
+V5:
+	- fix one tiny race by introducing blk_queue_enter_preempt_freeze()
+	given this change is small enough compared with V4, I added
+	tested-by directly
+
+V4:
+	- reorganize patch order to make it more reasonable
+	- support nested preempt freeze, as required by SCSI transport spi
+	- check preempt freezing in slow path of of blk_queue_enter()
+	- add "SCSI: transport_spi: resume a quiesced device"
+	- wake up freeze queue in setting dying for both blk-mq and legacy
+	- rename blk_mq_[freeze|unfreeze]_queue() in one patch
+	- rename .mq_freeze_wq and .mq_freeze_depth
+	- improve comment
+
+V3:
+	- introduce q->preempt_unfreezing to fix one bug of preempt freeze
+	- call blk_queue_enter_live() only when queue is preempt frozen
+	- cleanup a bit on the implementation of preempt freeze
+	- only patch 6 and 7 are changed
+
+V2:
+	- drop the 1st patch in V1 because percpu_ref_is_dying() is
+	enough as pointed by Tejun
+	- introduce preempt version of blk_[freeze|unfreeze]_queue
+	- sync between preempt freeze and normal freeze
+	- fix warning from percpu-refcount as reported by Oleksandr
+
+
+[1] https://marc.info/?t=150340250100013&r=3&w=2
+
+
+Thanks,
+Ming
+
+Bart Van Assche (1):
+  block: Convert RQF_PREEMPT into REQ_PREEMPT
+
+Ming Lei (7):
+  blk-mq: only run hw queues for blk-mq
+  block: tracking request allocation with q_usage_counter
+  block: pass 'op' to blk_queue_enter()
+  percpu-refcount: introduce __percpu_ref_tryget_live
+  blk-mq: return if queue is frozen via current blk_freeze_queue_start
+  block: support PREEMPT_ONLY
+  SCSI: set block queue at preempt only when SCSI device is put into
+    quiesce
+
+ block/blk-core.c                | 66 +++++++++++++++++++++++++++++++++++++----
+ block/blk-mq-debugfs.c          |  2 +-
+ block/blk-mq.c                  | 26 ++++++++--------
+ block/blk-mq.h                  |  1 -
+ block/blk-timeout.c             |  2 +-
+ block/blk.h                     |  2 +-
+ drivers/ide/ide-atapi.c         |  3 +-
+ drivers/ide/ide-io.c            |  2 +-
+ drivers/ide/ide-pm.c            |  4 +--
+ drivers/scsi/scsi_lib.c         | 31 +++++++++++++++----
+ fs/block_dev.c                  |  4 +--
+ include/linux/blk-mq.h          |  4 +--
+ include/linux/blk_types.h       |  6 ++++
+ include/linux/blkdev.h          | 10 ++++---
+ include/linux/percpu-refcount.h | 27 ++++++++++-------
+ 15 files changed, 137 insertions(+), 53 deletions(-)
+
+-- 
+2.9.5
