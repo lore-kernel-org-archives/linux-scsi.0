@@ -1,40 +1,57 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [RFC] bsg-lib interface cleanup
-Date: Wed, 4 Oct 2017 08:35:44 -0600
-Message-ID: <4c1113f7-64f0-98a2-9997-9f6a8666acdb@kernel.dk>
-References: <20171003104845.10417-1-hch@lst.de>
+From: Jim Gill <jgill@vmware.com>
+Subject: [PATCH] vmw_pvscsi: Don't call free_irq twice on remove adapter
+Date: Wed, 4 Oct 2017 12:03:31 -0700
+Message-ID: <20171004190331.icpl7ku5tcwe4igm@petr-dev3.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:45111 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752085AbdJDOfr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2017 10:35:47 -0400
-Received: by mail-it0-f41.google.com with SMTP id x15so16484242itb.0
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Oct 2017 07:35:46 -0700 (PDT)
-In-Reply-To: <20171003104845.10417-1-hch@lst.de>
-Content-Language: en-US
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:52702 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751169AbdJDTSf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2017 15:18:35 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
+To: jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-On 10/03/2017 04:48 AM, Christoph Hellwig wrote:
-> Hi all,
-> 
-> this series cleans up various abuses of the bsg interfaces, and then
-> splits bsg for SCSI passthrough from bsg for arbitrary transport
-> passthrough.  This removes the scsi_request abuse in bsg-lib that is
-> very confusing, and also makes sure we can sanity check the requests
-> we get.  The current code will happily execute scsi commands against
-> bsg-lib queues, and transport pass through against scsi nodes, without
-> any indication to the driver that we are doing the wrong thing.
-> 
-> The series includes the fix from Bejamin as the first patch as I
-> rebased on top of it, but that one really needs to got into 4.14 ASAP.
+Remove redundant call to pvscsi_shutdown_intr from
+pvscsi_remove_resources.  Add calls to pvscsi_shutdown_intr
+in the failure cases for pvscsi_probe.
 
-I added patch 1 for 4.14.
+Signed-off-by: Jim Gill <jgill@vmware.com>
+---
+ drivers/scsi/vmw_pvscsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index c374e3b..c7e74ac 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1197,8 +1197,6 @@ static void pvscsi_shutdown_intr(struct pvscsi_adapter *adapter)
+ 
+ static void pvscsi_release_resources(struct pvscsi_adapter *adapter)
+ {
+-	pvscsi_shutdown_intr(adapter);
+-
+ 	if (adapter->workqueue)
+ 		destroy_workqueue(adapter->workqueue);
+ 
+@@ -1530,6 +1528,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ out_reset_adapter:
+ 	ll_adapter_reset(adapter);
+ out_release_resources:
++	pvscsi_shutdown_intr(adapter);
+ 	pvscsi_release_resources(adapter);
+ 	scsi_host_put(host);
+ out_disable_device:
+@@ -1538,6 +1537,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return error;
+ 
+ out_release_resources_and_disable:
++	pvscsi_shutdown_intr(adapter);
+ 	pvscsi_release_resources(adapter);
+ 	goto out_disable_device;
+ }
 -- 
-Jens Axboe
+2.7.4
