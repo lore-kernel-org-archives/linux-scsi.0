@@ -1,22 +1,47 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/9] bsg-lib: fix use-after-free under memory-pressure
-Date: Wed, 4 Oct 2017 10:54:50 +0200
-Message-ID: <20171004085450.2rhexkd66tjcfnwz@linux-x5ow.site>
-References: <20171003104845.10417-1-hch@lst.de>
- <20171003104845.10417-2-hch@lst.de>
+Subject: Re: [BUG] scsi/fcoe: Sleep-in-atomic bugs in fcoe driver
+Date: Wed, 4 Oct 2017 12:06:37 +0200
+Message-ID: <20171004100637.pucskthcimhhen4k@linux-x5ow.site>
+References: <a19f782f-b3f2-c954-f982-35574b36d605@163.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20171003104845.10417-2-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>, stable@vger.kernel.org
+In-Reply-To: <a19f782f-b3f2-c954-f982-35574b36d605@163.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: jth@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, Oct 03, 2017 at 11:02:33AM +0800, Jia-Ju Bai wrote:
+> According to fcoe_ctlr.c, the driver may sleep under a RCU lock,
+> and the function call paths are:
+> fcoe_ctlr_disc_stop_locked (acquire the RCU lock)
+>   fc_rport_logoff
+>     mutex_lock --> may sleep
+> 
+> fcoe_ctlr_vn_disc
+>   fc_rport_login
+>     mutex_lock --> may sleep
+> 
+> fcoe_ctlr_vn_age
+>   fc_rport_logoff
+>     mutex_lock --> may sleep
+> 
+> These bugs are found by my static analysis tool and my code review.
+> 
+> Thanks,
+> Jia-Ju Bai
+> 
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Thanks for the report, coincidentally I have a bug report for this as well (in
+a real setup not just static analysis) and gave the reporter a patch to test.
+Once it's verified I'll post it here.
+
+Thanks,
+	Johannes
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
