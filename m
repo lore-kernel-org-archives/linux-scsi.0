@@ -1,75 +1,76 @@
-From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: [PATCH 11/13] timer: Remove expires argument from __TIMER_INITIALIZER()
-Date: Wed,  4 Oct 2017 16:27:05 -0700
-Message-ID: <1507159627-127660-12-git-send-email-keescook@chromium.org>
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH 04/13] timer: Remove init_timer_pinned() in favor of timer_setup()
+Date: Wed,  4 Oct 2017 16:26:58 -0700
+Message-ID: <1507159627-127660-5-git-send-email-keescook@chromium.org>
 References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1507159627-127660-1-git-send-email-keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Chris Metcalf <cmetcalf-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, Harish Patil <harish.patil-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Heiko Carstens <heiko.carstens-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Julian Wiedmann <jwi-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, Lai Jiangshan <jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Manish Chopra <manish.chopra-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Mark Gross <mark.gross-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>"Martin K. Petersen" <ma>
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>, Chris Metcalf <cmetcalf@mellanox.com>, netdev@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Guenter Roeck <linux@roeck-us.net>, Harish Patil <harish.patil@cavium.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, John Stultz <john.stultz@linaro.org>, Julian Wiedmann <jwi@linux.vnet.ibm.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Lai Jiangshan <jiangshanlai@gmail.com>, Len Brown <len.brown@intel.com>, Manish Chopra <manish.chopra@cavium.com>, Mark Gross <mark.gross@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The expires field is normally initialized during the first mod_timer()
-call. It was unused by all callers, so remove it from the macro.
+This refactors the only users of init_timer_pinned() to use
+the new timer_setup() and from_timer(). Drops the definition of
+init_timer_pinned().
 
-Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Chris Metcalf <cmetcalf@mellanox.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/linux/kthread.h   | 2 +-
- include/linux/timer.h     | 5 ++---
- include/linux/workqueue.h | 2 +-
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/ethernet/tile/tilepro.c | 9 ++++-----
+ include/linux/timer.h               | 2 --
+ 2 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/kthread.h b/include/linux/kthread.h
-index 82e197eeac91..0d622b350d3f 100644
---- a/include/linux/kthread.h
-+++ b/include/linux/kthread.h
-@@ -117,7 +117,7 @@ struct kthread_delayed_work {
- #define KTHREAD_DELAYED_WORK_INIT(dwork, fn) {				\
- 	.work = KTHREAD_WORK_INIT((dwork).work, (fn)),			\
- 	.timer = __TIMER_INITIALIZER(kthread_delayed_work_timer_fn,	\
--				     0, (unsigned long)&(dwork),	\
-+				     (unsigned long)&(dwork),		\
- 				     TIMER_IRQSAFE),			\
- 	}
+diff --git a/drivers/net/ethernet/tile/tilepro.c b/drivers/net/ethernet/tile/tilepro.c
+index 49ccee4b9aec..56d06282fbde 100644
+--- a/drivers/net/ethernet/tile/tilepro.c
++++ b/drivers/net/ethernet/tile/tilepro.c
+@@ -608,9 +608,9 @@ static void tile_net_schedule_egress_timer(struct tile_net_cpu *info)
+  * ISSUE: Maybe instead track number of expected completions, and free
+  * only that many, resetting to zero if "pending" is ever false.
+  */
+-static void tile_net_handle_egress_timer(unsigned long arg)
++static void tile_net_handle_egress_timer(struct timer_list *t)
+ {
+-	struct tile_net_cpu *info = (struct tile_net_cpu *)arg;
++	struct tile_net_cpu *info = from_timer(info, t, egress_timer);
+ 	struct net_device *dev = info->napi.dev;
+ 
+ 	/* The timer is no longer scheduled. */
+@@ -1004,9 +1004,8 @@ static void tile_net_register(void *dev_ptr)
+ 		BUG();
+ 
+ 	/* Initialize the egress timer. */
+-	init_timer_pinned(&info->egress_timer);
+-	info->egress_timer.data = (long)info;
+-	info->egress_timer.function = tile_net_handle_egress_timer;
++	timer_setup(&info->egress_timer, tile_net_handle_egress_timer,
++		    TIMER_PINNED);
+ 
+ 	u64_stats_init(&info->stats.syncp);
  
 diff --git a/include/linux/timer.h b/include/linux/timer.h
-index 91e5a2cc81b5..10685c33e679 100644
+index b10c4bdc6fbd..9da903562ed4 100644
 --- a/include/linux/timer.h
 +++ b/include/linux/timer.h
-@@ -63,10 +63,9 @@ struct timer_list {
+@@ -128,8 +128,6 @@ static inline void init_timer_on_stack_key(struct timer_list *timer,
  
- #define TIMER_TRACE_FLAGMASK	(TIMER_MIGRATING | TIMER_DEFERRABLE | TIMER_PINNED | TIMER_IRQSAFE)
- 
--#define __TIMER_INITIALIZER(_function, _expires, _data, _flags) { \
-+#define __TIMER_INITIALIZER(_function, _data, _flags) {		\
- 		.entry = { .next = TIMER_ENTRY_STATIC },	\
- 		.function = (_function),			\
--		.expires = (_expires),				\
- 		.data = (_data),				\
- 		.flags = (_flags),				\
- 		__TIMER_LOCKDEP_MAP_INITIALIZER(		\
-@@ -75,7 +74,7 @@ struct timer_list {
- 
- #define DEFINE_TIMER(_name, _function)				\
- 	struct timer_list _name =				\
--		__TIMER_INITIALIZER(_function, 0, 0, 0)
-+		__TIMER_INITIALIZER(_function, 0, 0)
- 
- void init_timer_key(struct timer_list *timer, unsigned int flags,
- 		    const char *name, struct lock_class_key *key);
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index 1c49431f3121..f4960260feaf 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -176,7 +176,7 @@ struct execute_work {
- #define __DELAYED_WORK_INITIALIZER(n, f, tflags) {			\
- 	.work = __WORK_INITIALIZER((n).work, (f)),			\
- 	.timer = __TIMER_INITIALIZER(delayed_work_timer_fn,		\
--				     0, (unsigned long)&(n),		\
-+				     (unsigned long)&(n),		\
- 				     (tflags) | TIMER_IRQSAFE),		\
- 	}
+ #define init_timer(timer)						\
+ 	__init_timer((timer), 0)
+-#define init_timer_pinned(timer)					\
+-	__init_timer((timer), TIMER_PINNED)
+ #define init_timer_deferrable(timer)					\
+ 	__init_timer((timer), TIMER_DEFERRABLE)
  
 -- 
 2.7.4
