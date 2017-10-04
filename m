@@ -1,51 +1,61 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] [SCSI] bfa: integer overflow in debugfs
-Date: Wed, 4 Oct 2017 10:50:37 +0300
-Message-ID: <20171004075037.j7pkdqqcegvba44e@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: fixup kernel warning during rmmod()
+Date: Wed,  4 Oct 2017 10:28:56 +0200
+Message-ID: <1507105736-19148-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42729 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751297AbdJDHux (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2017 03:50:53 -0400
-Content-Disposition: inline
+Received: from mx2.suse.de ([195.135.220.15]:56520 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751819AbdJDI27 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Oct 2017 04:28:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Jing Huang <huangj@brocade.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-We could allocate less memory than intended because we do:
+Calling rmmod() on a FC driver will results in warnings like
 
-	bfad->regdata = kzalloc(len << 2, GFP_KERNEL);
+WARNING: CPU: 60 PID: 14640 at fs/sysfs/group.c:237 device_del+0x54/0x240()
+sysfs group ffffffff81eff140 not found for kobject '3:0:0:3'
 
-The shift can overflow leading to a crash.  This is debugfs code so the
-impact is very small.  I fixed the network version of this in March with
-commit 13e2d5187f6b ("bna: integer overflow bug in debugfs").
+The problem here is that during scsi_remove_target() we will iterate
+over all devices, but fail to remove any of those as the call to
+scsi_device_get() fails the check to module_is_live().
+Hence the devices will not be removed at this point, but all
+intermediate structures like fc rport etc. will be.
+Later on during scsi_forget_host() the devices are removed for
+real, but the device parent is already removed and causes
+this warning.
 
-Fixes: ab2a9ba189e8 ("[SCSI] bfa: add debugfs support")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_sysfs.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
-index 8dcd8c70c7ee..05f523971348 100644
---- a/drivers/scsi/bfa/bfad_debugfs.c
-+++ b/drivers/scsi/bfa/bfad_debugfs.c
-@@ -255,7 +255,8 @@ bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
- 	struct bfad_s *bfad = port->bfad;
- 	struct bfa_s *bfa = &bfad->bfa;
- 	struct bfa_ioc_s *ioc = &bfa->ioc;
--	int addr, len, rc, i;
-+	int addr, rc, i;
-+	u32 len;
- 	u32 *regbuf;
- 	void __iomem *rb, *reg_addr;
- 	unsigned long flags;
-@@ -266,7 +267,7 @@ bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
- 		return PTR_ERR(kern_buf);
- 
- 	rc = sscanf(kern_buf, "%x:%x", &addr, &len);
--	if (rc < 2) {
-+	if (rc < 2 || len > (UINT_MAX >> 2)) {
- 		printk(KERN_INFO
- 			"bfad[%d]: %s failed to read user buf\n",
- 			bfad->inst_no, __func__);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 1889761..995539f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1336,13 +1336,19 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ 	spin_lock_irqsave(shost->host_lock, flags);
+  restart:
+ 	list_for_each_entry(sdev, &shost->__devices, siblings) {
++		/*
++		 * We cannot call scsi_device_get() here, as
++		 * we might've been called from rmmod() causing
++		 * scsi_device_get() to fail the module_is_live()
++		 * check.
++		 */
+ 		if (sdev->channel != starget->channel ||
+ 		    sdev->id != starget->id ||
+-		    scsi_device_get(sdev))
++		    !get_device(&sdev->sdev_gendev))
+ 			continue;
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		scsi_remove_device(sdev);
+-		scsi_device_put(sdev);
++		put_device(&sdev->sdev_gendev);
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		goto restart;
+ 	}
+-- 
+1.8.5.6
