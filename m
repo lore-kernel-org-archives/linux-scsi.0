@@ -1,132 +1,42 @@
-From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-Subject: Re: [PATCH] scsi/eh: fix hang adding ehandler wakeups after
- decrementing host_busy
-Date: Wed, 4 Oct 2017 10:18:17 +0300
-Message-ID: <6d2ebf68-4fcf-6584-4351-262d75a95fa2@virtuozzo.com>
-References: <20170905125424.15412-1-ptikhomirov@virtuozzo.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 9/9] bsg: split handling of SCSI CDBs vs transport requeues
+Date: Wed, 04 Oct 2017 09:18:11 +0200
+Message-ID: <mqd7ewbidos.fsf@linux-x5ow.site>
+References: <20171003104845.10417-1-hch@lst.de>
+        <20171003104845.10417-10-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-he1eur01on0127.outbound.protection.outlook.com ([104.47.0.127]:61243
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+Received: from mx2.suse.de ([195.135.220.15]:49722 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751156AbdJDHS1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Oct 2017 03:18:27 -0400
-In-Reply-To: <20170905125424.15412-1-ptikhomirov@virtuozzo.com>
-Content-Language: en-US
+        id S1751331AbdJDHS3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Oct 2017 03:18:29 -0400
+In-Reply-To: <20171003104845.10417-10-hch@lst.de> (Christoph Hellwig's message
+        of "Tue, 3 Oct 2017 12:48:45 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, devel@openvz.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-Hi. Please tell if there is something I can do to help the patch get 
-processed? It is on the list without reply for almost a month.
+Christoph Hellwig <hch@lst.de> writes:
+[...]
+> @@ -965,7 +932,8 @@ void bsg_unregister_queue(struct request_queue *q)
+>  EXPORT_SYMBOL_GPL(bsg_unregister_queue);
+>  
+>  int bsg_register_queue(struct request_queue *q, struct device *parent,
+> -		       const char *name, void (*release)(struct device *))
+> +		const char *name, const struct bsg_ops *ops,
+> +		void (*release)(struct device *))
 
-On 09/05/2017 03:54 PM, Pavel Tikhomirov wrote:
-> We have a problem on several our nodes with scsi EH. Imagine such an
-> order of execution of two threads:
-> 
-> CPU1 scsi_eh_scmd_add		CPU2 scsi_host_queue_ready
-> /* shost->host_busy == 1 initialy */
-> 
-> 				if (shost->shost_state == SHOST_RECOVERY)
-> 					/* does not get here */
-> 					return 0;
-> 
-> lock(shost->host_lock);
-> shost->shost_state = SHOST_RECOVERY;
-> 
-> 				busy = shost->host_busy++;
-> 				/* host->can_queue == 1 initialy, busy == 1
-> 				 * - go to starved label */
-> 				lock(shost->host_lock) /* wait */
-> 
-> shost->host_failed++;
-> /* shost->host_busy == 2, shost->host_failed == 1 */
-> call scsi_eh_wakeup(shost) {
-> 	if (host_busy == host_failed) {
-> 		/* does not get here */
-> 		wake_up_process(shost->ehandler)
-> 	}
-> }
-> unlock(shost->host_lock)
-> 
-> 				/* acquire lock */
-> 				shost->host_busy--;
-> 
-> Finaly we do not wakeup scsi_error_handler and all other commands
-> coming will hang as we are in never ending recovery state as there
-> is no one left to wakeup handler.
-> 
-> So scsi disc in these host becomes unresponsive and all bio on node
-> hangs. (We trigger these problem when scsi cmnds to DVD drive timeout.)
-> 
-> Main idea of the fix is to try to do wake up every time we decrement
-> host_busy or increment host_failed(the latter is already OK).
-> 
-> Now the very *last* one of busy threads getting host_lock after
-> decrementing host_busy will see all write operations on host's
-> shost_state, host_busy and host_failed completed thanks to implied
-> memory barriers on spin_lock/unlock, so at the time of busy==failed
-> we will trigger wakeup in at least one thread. (Thats why putting
-> recovery and failed checks under lock)
-> 
-> Signed-off-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-> ---
->   drivers/scsi/scsi_lib.c | 21 +++++++++++++++++----
->   1 file changed, 17 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index f6097b89d5d3..6c99221d60aa 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -320,12 +320,11 @@ void scsi_device_unbusy(struct scsi_device *sdev)
->   	if (starget->can_queue > 0)
->   		atomic_dec(&starget->target_busy);
->   
-> +	spin_lock_irqsave(shost->host_lock, flags);
->   	if (unlikely(scsi_host_in_recovery(shost) &&
-> -		     (shost->host_failed || shost->host_eh_scheduled))) {
-> -		spin_lock_irqsave(shost->host_lock, flags);
-> +		     (shost->host_failed || shost->host_eh_scheduled)))
->   		scsi_eh_wakeup(shost);
-> -		spin_unlock_irqrestore(shost->host_lock, flags);
-> -	}
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
->   
->   	atomic_dec(&sdev->device_busy);
->   }
-> @@ -1503,6 +1502,13 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
->   	spin_unlock_irq(shost->host_lock);
->   out_dec:
->   	atomic_dec(&shost->host_busy);
-> +
-> +	spin_lock_irq(shost->host_lock);
-> +	if (unlikely(scsi_host_in_recovery(shost) &&
-> +		     (shost->host_failed || shost->host_eh_scheduled)))
-> +		scsi_eh_wakeup(shost);
-> +	spin_unlock_irq(shost->host_lock);
-> +
->   	return 0;
->   }
->   
-> @@ -1964,6 +1970,13 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->   
->   out_dec_host_busy:
->   	atomic_dec(&shost->host_busy);
-> +
-> +	spin_lock_irq(shost->host_lock);
-> +	if (unlikely(scsi_host_in_recovery(shost) &&
-> +		     (shost->host_failed || shost->host_eh_scheduled)))
-> +		scsi_eh_wakeup(shost);
-> +	spin_unlock_irq(shost->host_lock);
-> +
->   out_dec_target_busy:
->   	if (scsi_target(sdev)->can_queue > 0)
->   		atomic_dec(&scsi_target(sdev)->target_busy);
-> 
+Wouldn't it make sense to put the ->release() method into bsg_ops as
+well? The current prototype of bsg_register_queue isn't exactly what I
+would call a sane API.
 
 -- 
-Best regards, Tikhomirov Pavel
-Software Developer, Virtuozzo.
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
