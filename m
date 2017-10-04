@@ -1,15 +1,15 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 3/9] libfc: don't assign resid_len in fc_lport_bsg_request
-Date: Wed, 4 Oct 2017 10:54:28 +0200
-Message-ID: <20171004085428.vvbrwcphe5cpsvwf@linux-x5ow.site>
+Subject: Re: [PATCH 2/9] bfa: don't reset max_segments for every bsg request
+Date: Wed, 4 Oct 2017 10:54:38 +0200
+Message-ID: <20171004085438.ecff62vsdstbdyfo@linux-x5ow.site>
 References: <20171003104845.10417-1-hch@lst.de>
- <20171003104845.10417-4-hch@lst.de>
+ <20171003104845.10417-3-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20171003104845.10417-4-hch@lst.de>
+In-Reply-To: <20171003104845.10417-3-hch@lst.de>
 Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
