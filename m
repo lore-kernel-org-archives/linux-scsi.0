@@ -1,101 +1,72 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH V6 13/14] block: mq-deadline: Limit write request dispatch
- for zoned block devices
-Date: Wed, 4 Oct 2017 08:03:34 +0900
-Message-ID: <dd8953a0-b28c-3a0f-cc9c-2ce207cf4063@wdc.com>
-References: <20171002071535.8007-1-damien.lemoal@wdc.com>
- <20171002071535.8007-14-damien.lemoal@wdc.com>
- <1506987846.3368.69.camel@wdc.com>
- <c506126b-a491-30bc-11f1-cd1df29f78c3@wdc.com>
- <1507064168.2567.33.camel@wdc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/9] bsg-lib: fix use-after-free under memory-pressure
+Date: Wed, 4 Oct 2017 08:16:11 +0200
+Message-ID: <c87d75ff-9b6c-df5a-e2b3-b6e747a15679@suse.de>
+References: <20171003104845.10417-1-hch@lst.de>
+ <20171003104845.10417-2-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:43716 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751199AbdJCXDm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2017 19:03:42 -0400
-In-Reply-To: <1507064168.2567.33.camel@wdc.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171003104845.10417-2-hch@lst.de>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>
 
-Bart,
-
-On 10/4/17 05:56, Bart Van Assche wrote:
-> On Tue, 2017-10-03 at 09:19 +0900, Damien Le Moal wrote:
->> On 10/3/17 08:44, Bart Van Assche wrote:
->>> On Mon, 2017-10-02 at 16:15 +0900, Damien Le Moal wrote:
->>>>  static void deadline_wunlock_zone(struct deadline_data *dd,
->>>>  				  struct request *rq)
->>>>  {
->>>> +	unsigned long flags;
->>>> +
->>>> +	spin_lock_irqsave(&dd->zone_lock, flags);
->>>> +
->>>>  	WARN_ON_ONCE(!test_and_clear_bit(blk_rq_zone_no(rq), dd->zones_wlock));
->>>>  	deadline_clear_request_zone_wlock(rq);
->>>> +
->>>> +	spin_unlock_irqrestore(&dd->zone_lock, flags);
->>>>  }
->>>
->>> Is a request removed from the sort and fifo lists before being dispatched? If so,
->>> does that mean that obtaining zone_lock in the above function is not necessary?
->>
->> Yes, a request is removed from the sort tree and fifo list before
->> dispatching. But the dd->zone_lock spinlock is not there to protect
->> that, dd->lock protects the sort tree and fifo list. dd->zone_lock was
->> added to prevent the completed_request() method from changing a zone
->> lock state while deadline_fifo_requests() or deadline_next_request() are
->> running. Ex:
->>
->> Imagine this case: write request A for a zone Z is being executed (it
->> was dispatched) so Z is locked. Dispatch runs and inspects the next
->> requests in sort order. Let say we have the sequential writes B, C, D, E
->> queued for the same zone Z. First B is inspected and cannot be
->> dispatched (zone locked). Inspection move on to C, but before the that,
->> A completes and Z is unlocked. Then C will be OK to go as the zone is
->> now unlocked. But it is the wrong choice as it will result in out of
->> order write. B must be the next request dispatched after A.
->>
->> dd->zone_lock prevents this from happening. Without this spinlock, the
->> bad example case above happens very easily.
+On 10/03/2017 12:48 PM, Christoph Hellwig wrote:
+> From: Benjamin Block <bblock@linux.vnet.ibm.com>
 > 
-> Hello Damien,
+> When under memory-pressure it is possible that the mempool which backs
+> the 'struct request_queue' will make use of up to BLKDEV_MIN_RQ count
+> emergency buffers - in case it can't get a regular allocation. These
+> buffers are preallocated and once they are also used, they are
+> re-supplied with old finished requests from the same request_queue (see
+> mempool_free()).
 > 
-> Thanks for the detailed and really clear reply. I hope you do not mind that I
-> have a few further questions about this patch?
-> - Does the zone_lock spinlock have to be acquired by both deadline_wunlock_zone()
->   callers or only by the call from the request completion path?
+> The bug is, when re-supplying the emergency pool, the old requests are
+> not again ran through the callback mempool_t->alloc(), and thus also not
+> through the callback bsg_init_rq(). Thus we skip initialization, and
+> while the sense-buffer still should be good, scsi_request->cmd might
+> have become to be an invalid pointer in the meantime. When the request
+> is initialized in bsg.c, and the user's CDB is larger than BLK_MAX_CDB,
+> bsg will replace it with a custom allocated buffer, which is freed when
+> the user's command is finished, thus it dangles afterwards. When next a
+> command is sent by the user that has a smaller/similar CDB as
+> BLK_MAX_CDB, bsg will assume that scsi_request->cmd is backed by
+> scsi_request->__cmd, will not make a custom allocation, and write into
+> undefined memory.
+> 
+> Fix this by splitting bsg_init_rq() into two functions:
+>  - bsg_init_rq() is changed to only do the allocation of the
+>    sense-buffer, which is used to back the bsg job's reply buffer. This
+>    pointer should never change during the lifetime of a scsi_request, so
+>    it doesn't need re-initialization.
+>  - bsg_initialize_rq() is a new function that makes use of
+>    'struct request_queue's initialize_rq_fn callback (which was
+>    introduced in v4.12). This is always called before the request is
+>    given out via blk_get_request(). This function does the remaining
+>    initialization that was previously done in bsg_init_rq(), and will
+>    also do it when the request is taken from the emergency-pool of the
+>    backing mempool.
+> 
+> Fixes: 50b4d485528d ("bsg-lib: fix kernel panic resulting from missing allocation of reply-buffer")
+> Cc: <stable@vger.kernel.org> # 4.11+
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+> ---
+>  block/bsg-lib.c | 27 +++++++++++++++++++++------
+>  1 file changed, 21 insertions(+), 6 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Not really. Only the completion path is strongly needed as the insert
-path unlock is under dd->lock, which prevents concurrent execution of
-the sort or fifo request search. So the zone_lock lock/unlock could be
-moved out of deadline_wunlock_zone() and done directly in
-dd_completed_request().
+Cheers,
 
-> - Why do both the mq-deadline and the sd driver each have their own instance of
->   the zones_wlock bitmap? Has it been considered to convert both bitmaps into a
->   single bitmap that is shared by both kernel components and that exists e.g. at
->   the request queue level?
-
-The sd driver level zone locking handles only the legacy path. Hence the
-zone lock bitmap attached to the scsi disk struct. For scsi-mq/blk-mq,
-mq-deadline does the zone locking. Both bitmaps do not exist at the same
-time.
-
-Indeed we could move the zone lock bitmap in the request queue so that
-it is common between legacy and mq cases. Christoph has a series doing
-that, and going further by doing the zone locking directly within the
-block layer dispatch code for both legacy and mq path. So the scsi level
-locking and mq-deadline locking become unnecessary. Working on that new
-series right now.
-
-Best regards.
-
+Hannes
 -- 
-Damien Le Moal,
-Western Digital
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
