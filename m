@@ -1,14 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/9] bfa: don't reset max_segments for every bsg request
-Date: Wed, 4 Oct 2017 08:16:44 +0200
-Message-ID: <b74a1bab-a457-e0af-3c9d-b8e3fa25b3ad@suse.de>
+Subject: Re: [PATCH 3/9] libfc: don't assign resid_len in fc_lport_bsg_request
+Date: Wed, 4 Oct 2017 08:17:14 +0200
+Message-ID: <341172a3-1444-b368-9f5c-1c94b8f413f0@suse.de>
 References: <20171003104845.10417-1-hch@lst.de>
- <20171003104845.10417-3-hch@lst.de>
+ <20171003104845.10417-4-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171003104845.10417-3-hch@lst.de>
+In-Reply-To: <20171003104845.10417-4-hch@lst.de>
 Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
@@ -16,14 +16,12 @@ Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.i
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/03/2017 12:48 PM, Christoph Hellwig wrote:
-> We already support 256 or more segments as long as the architecture
-> supports SG chaining (all the ones that matter do), so removed the
-> weird playing with limits from the job handler.
+> bsg_job_done takes care of updating the scsi_request structure fields.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/scsi/bfa/bfad_bsg.c | 7 -------
->  1 file changed, 7 deletions(-)
+>  drivers/scsi/libfc/fc_lport.c | 3 ---
+>  1 file changed, 3 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
