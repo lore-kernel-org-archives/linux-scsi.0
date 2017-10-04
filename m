@@ -1,25 +1,32 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: fixup kernel warning during rmmod()
-Date: Wed, 4 Oct 2017 10:36:40 +0200
-Message-ID: <20171004083640.ogyq2pmwx44jnzlg@linux-x5ow.site>
-References: <1507105736-19148-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 9/9] bsg: split handling of SCSI CDBs vs transport
+ requeues
+Date: Wed, 4 Oct 2017 10:52:36 +0200
+Message-ID: <20171004085236.bz7x4gb5g3b3sbpt@linux-x5ow.site>
+References: <20171003104845.10417-1-hch@lst.de>
+ <20171003104845.10417-10-hch@lst.de>
+ <mqd7ewbidos.fsf@linux-x5ow.site>
+ <20171004072059.GA21411@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57643 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751354AbdJDIgm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Oct 2017 04:36:42 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1507105736-19148-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20171004072059.GA21411@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Looks good,
+On Wed, Oct 04, 2017 at 09:20:59AM +0200, Christoph Hellwig wrote:
+> It's a different level of callback - ops are the type of request
+> passed through (scsi vs transport) and ->release is s whacky
+> implementation detail of the SAS passthrough.  If at all ->release
+> should go away eventually by cleaning that mess up.
+
+OK then,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
