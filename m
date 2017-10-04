@@ -1,23 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 4/9] qla2xxx: don't break the bsg-lib abstractions
-Date: Wed, 4 Oct 2017 10:54:17 +0200
-Message-ID: <20171004085417.kkgy2zpqow5qv6pl@linux-x5ow.site>
+Subject: Re: [PATCH 3/9] libfc: don't assign resid_len in fc_lport_bsg_request
+Date: Wed, 4 Oct 2017 10:54:28 +0200
+Message-ID: <20171004085428.vvbrwcphe5cpsvwf@linux-x5ow.site>
 References: <20171003104845.10417-1-hch@lst.de>
- <20171003104845.10417-5-hch@lst.de>
+ <20171003104845.10417-4-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34572 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751746AbdJDIyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Oct 2017 04:54:19 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20171003104845.10417-5-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <20171003104845.10417-4-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
 
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
