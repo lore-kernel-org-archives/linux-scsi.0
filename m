@@ -1,15 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 5/9] scsi_transport_sas: check reply payload length
- instead of bidi request
-Date: Wed, 4 Oct 2017 08:21:03 +0200
-Message-ID: <a8397313-43ed-279c-2cb1-a8880d949c4d@suse.de>
+Subject: Re: [PATCH 6/9] bsg-lib: introduce a timeout field in struct bsg_job
+Date: Wed, 4 Oct 2017 08:21:57 +0200
+Message-ID: <4d7df23e-2da2-635e-e7bb-4802cef79fe9@suse.de>
 References: <20171003104845.10417-1-hch@lst.de>
- <20171003104845.10417-6-hch@lst.de>
+ <20171003104845.10417-7-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171003104845.10417-6-hch@lst.de>
+In-Reply-To: <20171003104845.10417-7-hch@lst.de>
 Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
@@ -17,15 +16,17 @@ Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.i
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/03/2017 12:48 PM, Christoph Hellwig wrote:
-> As a user of bsg-lib the SAS transport should not poke into request
-> internals but use the bsg_job fields instead.
+> The zfcp driver wants to know the timeout for a bsg job, so add a field
+> to struct bsg_job for it in preparation of not exposing the request
+> to the bsg-lib users.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/scsi/scsi_transport_sas.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+>  block/bsg-lib.c             | 1 +
+>  drivers/s390/scsi/zfcp_fc.c | 4 ++--
+>  include/linux/bsg-lib.h     | 2 ++
+>  3 files changed, 5 insertions(+), 2 deletions(-)
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
