@@ -1,93 +1,149 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH] scsi: fixup kernel warning during rmmod()
-Date: Thu, 5 Oct 2017 15:29:13 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D1967204804@avsrvexchmbx1.microsemi.net>
-References: <1507105736-19148-1-git-send-email-hare@suse.de>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 4/9] qla2xxx: don't break the bsg-lib abstractions
+Date: Thu, 5 Oct 2017 16:58:48 +0000
+Message-ID: <A918CA8B-A8C6-4CC5-8619-8649810ADEAE@cavium.com>
+References: <20171003104845.10417-1-hch@lst.de>
+ <20171003104845.10417-5-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0077.outbound.protection.outlook.com ([104.47.41.77]:27280
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0060.outbound.protection.outlook.com ([104.47.33.60]:38857
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751323AbdJEP3x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Oct 2017 11:29:53 -0400
-In-Reply-To: <1507105736-19148-1-git-send-email-hare@suse.de>
+        id S1751335AbdJEQ6v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Oct 2017 12:58:51 -0400
+In-Reply-To: <20171003104845.10417-5-hch@lst.de>
 Content-Language: en-US
+Content-ID: <EE1D822B205529449EEC2280F96C801D@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Wednesday, October 04, 2017 3:29 AM
-> To: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@lst.de>; James Bottomley
-> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
-> Hannes Reinecke <hare@suse.de>; Hannes Reinecke <hare@suse.com>
-> Subject: [PATCH] scsi: fixup kernel warning during rmmod()
+
+> On Oct 3, 2017, at 3:48 AM, Christoph Hellwig <hch@lst.de> wrote:
 >=20
-> EXTERNAL EMAIL
+> Always use bsg_job->reply instead of scsi_req(bsg_job->req)->sense), as
+> they always point to the same memory.
 >=20
+> Never set scsi_req(bsg_job->req)->result and we'll set that value through
+> bsg_job_done.
 >=20
-> Calling rmmod() on a FC driver will results in warnings like
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+> drivers/scsi/qla2xxx/qla_bsg.c | 10 ++++------
+> drivers/scsi/qla2xxx/qla_isr.c | 12 +++---------
+> drivers/scsi/qla2xxx/qla_mr.c  |  3 +--
+> 3 files changed, 8 insertions(+), 17 deletions(-)
 >=20
-> WARNING: CPU: 60 PID: 14640 at fs/sysfs/group.c:237
-> device_del+0x54/0x240()
-> sysfs group ffffffff81eff140 not found for kobject '3:0:0:3'
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index 2ea0ef93f5cb..92a951fcd076 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -919,9 +919,9 @@ qla2x00_process_loopback(struct bsg_job *bsg_job)
 >=20
-> The problem here is that during scsi_remove_target() we will iterate
-> over all devices, but fail to remove any of those as the call to
-> scsi_device_get() fails the check to module_is_live().
-> Hence the devices will not be removed at this point, but all
-> intermediate structures like fc rport etc. will be.
-> Later on during scsi_forget_host() the devices are removed for
-> real, but the device parent is already removed and causes
-> this warning.
+> 	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply) +
+> 	    sizeof(response) + sizeof(uint8_t);
+> -	fw_sts_ptr =3D ((uint8_t *)scsi_req(bsg_job->req)->sense) +
+> -	    sizeof(struct fc_bsg_reply);
+> -	memcpy(fw_sts_ptr, response, sizeof(response));
+> +	fw_sts_ptr =3D bsg_job->reply + sizeof(struct fc_bsg_reply);
+> +	memcpy(bsg_job->reply + sizeof(struct fc_bsg_reply), response,
+> +			sizeof(response));
+> 	fw_sts_ptr +=3D sizeof(response);
+> 	*fw_sts_ptr =3D command_sent;
 >=20
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Don Brace <don.brace@microsemi.com>=20
-Using the smartpqi driver.
-Thanks for your effort.
+> @@ -2554,13 +2554,11 @@ qla24xx_bsg_timeout(struct bsg_job *bsg_job)
+> 						ql_log(ql_log_warn, vha, 0x7089,
+> 						    "mbx abort_command "
+> 						    "failed.\n");
+> -						scsi_req(bsg_job->req)->result =3D
+> 						bsg_reply->result =3D -EIO;
+> 					} else {
+> 						ql_dbg(ql_dbg_user, vha, 0x708a,
+> 						    "mbx abort_command "
+> 						    "success.\n");
+> -						scsi_req(bsg_job->req)->result =3D
+> 						bsg_reply->result =3D 0;
+> 					}
+> 					spin_lock_irqsave(&ha->hardware_lock, flags);
+> @@ -2571,7 +2569,7 @@ qla24xx_bsg_timeout(struct bsg_job *bsg_job)
+> 	}
+> 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+> 	ql_log(ql_log_info, vha, 0x708b, "SRB not found to abort.\n");
+> -	scsi_req(bsg_job->req)->result =3D bsg_reply->result =3D -ENXIO;
+> +	 bsg_reply->result =3D -ENXIO;
+> 	return 0;
+>=20
+> done:
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
+r.c
+> index 9d9668aac6f6..886c7085fada 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -1543,7 +1543,6 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct r=
+eq_que *req,
+> 	struct fc_bsg_reply *bsg_reply;
+> 	uint16_t comp_status;
+> 	uint32_t fw_status[3];
+> -	uint8_t* fw_sts_ptr;
+> 	int res;
+>=20
+> 	sp =3D qla2x00_get_sp_from_handle(vha, func, req, pkt);
+> @@ -1604,11 +1603,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct =
+req_que *req,
+> 			    type, sp->handle, comp_status, fw_status[1], fw_status[2],
+> 			    le16_to_cpu(((struct els_sts_entry_24xx *)
+> 				pkt)->total_byte_count));
+> -			fw_sts_ptr =3D ((uint8_t*)scsi_req(bsg_job->req)->sense) +
+> -				sizeof(struct fc_bsg_reply);
+> -			memcpy( fw_sts_ptr, fw_status, sizeof(fw_status));
+> -		}
+> -		else {
+> +		} else {
+> 			ql_dbg(ql_dbg_user, vha, 0x5040,
+> 			    "ELS-CT pass-through-%s error hdl=3D%x comp_status-status=3D0x%x "
+> 			    "error subcode 1=3D0x%x error subcode 2=3D0x%x.\n",
+> @@ -1619,10 +1614,9 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct =
+req_que *req,
+> 				    pkt)->error_subcode_2));
+> 			res =3D DID_ERROR << 16;
+> 			bsg_reply->reply_payload_rcv_len =3D 0;
+> -			fw_sts_ptr =3D ((uint8_t*)scsi_req(bsg_job->req)->sense) +
+> -					sizeof(struct fc_bsg_reply);
+> -			memcpy( fw_sts_ptr, fw_status, sizeof(fw_status));
+> 		}
+> +		memcpy(bsg_job->reply + sizeof(struct fc_bsg_reply),
+> +				fw_status, sizeof(fw_status));
+> 		ql_dump_buffer(ql_dbg_user + ql_dbg_buffer, vha, 0x5056,
+> 				(uint8_t *)pkt, sizeof(*pkt));
+> 	}
+> diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.=
+c
+> index e23a3d4c36f3..d5da3981cefe 100644
+> --- a/drivers/scsi/qla2xxx/qla_mr.c
+> +++ b/drivers/scsi/qla2xxx/qla_mr.c
+> @@ -2245,8 +2245,7 @@ qlafx00_ioctl_iosb_entry(scsi_qla_host_t *vha, stru=
+ct req_que *req,
+> 		memcpy(fstatus.reserved_3,
+> 		    pkt->reserved_2, 20 * sizeof(uint8_t));
+>=20
+> -		fw_sts_ptr =3D ((uint8_t *)scsi_req(bsg_job->req)->sense) +
+> -		    sizeof(struct fc_bsg_reply);
+> +		fw_sts_ptr =3D bsg_job->reply + sizeof(struct fc_bsg_reply);
+>=20
+> 		memcpy(fw_sts_ptr, (uint8_t *)&fstatus,
+> 		    sizeof(struct qla_mt_iocb_rsp_fx00));
+> --=20
+> 2.14.1
+>=20
+
+Looks Good.
+
+Reviewed-By: Himanshu Madhani <himanshu.madhani@cavium.com>
+Tested-By: Himanshu Madhani <himanshu.madhani@cavium.com>
 
 Thanks,
-Don Brace
-ESC - Smart Storage
-Microsemi Corporation
-
-
-> ---
->  drivers/scsi/scsi_sysfs.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 1889761..995539f 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1336,13 +1336,19 @@ static void __scsi_remove_target(struct
-> scsi_target *starget)
->         spin_lock_irqsave(shost->host_lock, flags);
->   restart:
->         list_for_each_entry(sdev, &shost->__devices, siblings) {
-> +               /*
-> +                * We cannot call scsi_device_get() here, as
-> +                * we might've been called from rmmod() causing
-> +                * scsi_device_get() to fail the module_is_live()
-> +                * check.
-> +                */
->                 if (sdev->channel !=3D starget->channel ||
->                     sdev->id !=3D starget->id ||
-> -                   scsi_device_get(sdev))
-> +                   !get_device(&sdev->sdev_gendev))
->                         continue;
->                 spin_unlock_irqrestore(shost->host_lock, flags);
->                 scsi_remove_device(sdev);
-> -               scsi_device_put(sdev);
-> +               put_device(&sdev->sdev_gendev);
->                 spin_lock_irqsave(shost->host_lock, flags);
->                 goto restart;
->         }
-> --
-> 1.8.5.6
+- Himanshu
