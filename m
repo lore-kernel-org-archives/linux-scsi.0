@@ -1,59 +1,77 @@
-From: Sebastian Reichel <sre@kernel.org>
-Subject: Re: [PATCH 05/13] timer: Remove init_timer_deferrable() in favor of
- timer_setup()
-Date: Thu, 5 Oct 2017 03:02:18 +0200
-Message-ID: <20171005010218.v3aw4d3y66jn3bbo@earth>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH 10/13] timer: Remove expires and data arguments from
+ DEFINE_TIMER
+Date: Thu, 5 Oct 2017 07:28:28 +0200
+Message-ID: <20171005052828.GA14470@kroah.com>
 References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
- <1507159627-127660-6-git-send-email-keescook@chromium.org>
+ <1507159627-127660-11-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="ioctv6qfrc7mty7c"
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1507159627-127660-6-git-send-email-keescook@chromium.org>
-Sender: netdev-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Michael Ellerman <mpe@ellerman.id.au>, Harish Patil <harish.patil@cavium.com>, Manish Chopra <manish.chopra@cavium.com>, Kalle Valo <kvalo@qca.qualcomm.com>, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, Chris Metcalf <cmetcalf@mellanox.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Guenter Roeck <linux@roeck-us.net>, Heiko Carstens <heiko.carstens@de.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, John Stultz <john.stultz@linaro.org>, Julian Wiedmann <jwi@linux.vnet.ibm.com>, Lai
+In-Reply-To: <1507159627-127660-11-git-send-email-keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Chris Metcalf <cmetcalf-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, Harish Patil <harish.patil-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Heiko Carstens <heiko.carstens-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Julian Wiedmann <jwi-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, Lai Jiangshan <jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Manish Chopra <manish.chopra-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Mark Gross <mark.gross-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>Martin
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, Oct 04, 2017 at 04:27:04PM -0700, Kees Cook wrote:
+> Drop the arguments from the macro and adjust all callers with the
+> following script:
+> 
+>   perl -pi -e 's/DEFINE_TIMER\((.*), 0, 0\);/DEFINE_TIMER($1);/g;' \
+>     $(git grep DEFINE_TIMER | cut -d: -f1 | sort -u | grep -v timer.h)
+> 
+> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> Acked-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> # for m68k parts
+> ---
+>  arch/arm/mach-ixp4xx/dsmg600-setup.c      | 2 +-
+>  arch/arm/mach-ixp4xx/nas100d-setup.c      | 2 +-
+>  arch/m68k/amiga/amisound.c                | 2 +-
+>  arch/m68k/mac/macboing.c                  | 2 +-
+>  arch/mips/mti-malta/malta-display.c       | 2 +-
+>  arch/parisc/kernel/pdc_cons.c             | 2 +-
+>  arch/s390/mm/cmm.c                        | 2 +-
+>  drivers/atm/idt77105.c                    | 4 ++--
+>  drivers/atm/iphase.c                      | 2 +-
+>  drivers/block/ataflop.c                   | 8 ++++----
+>  drivers/char/dtlk.c                       | 2 +-
+>  drivers/char/hangcheck-timer.c            | 2 +-
+>  drivers/char/nwbutton.c                   | 2 +-
+>  drivers/char/rtc.c                        | 2 +-
+>  drivers/input/touchscreen/s3c2410_ts.c    | 2 +-
+>  drivers/net/cris/eth_v10.c                | 6 +++---
+>  drivers/net/hamradio/yam.c                | 2 +-
+>  drivers/net/wireless/atmel/at76c50x-usb.c | 2 +-
+>  drivers/staging/speakup/main.c            | 2 +-
+>  drivers/staging/speakup/synth.c           | 2 +-
+>  drivers/tty/cyclades.c                    | 2 +-
+>  drivers/tty/isicom.c                      | 2 +-
+>  drivers/tty/moxa.c                        | 2 +-
+>  drivers/tty/rocket.c                      | 2 +-
+>  drivers/tty/vt/keyboard.c                 | 2 +-
+>  drivers/tty/vt/vt.c                       | 2 +-
+>  drivers/watchdog/alim7101_wdt.c           | 2 +-
+>  drivers/watchdog/machzwd.c                | 2 +-
+>  drivers/watchdog/mixcomwd.c               | 2 +-
+>  drivers/watchdog/sbc60xxwdt.c             | 2 +-
+>  drivers/watchdog/sc520_wdt.c              | 2 +-
+>  drivers/watchdog/via_wdt.c                | 2 +-
+>  drivers/watchdog/w83877f_wdt.c            | 2 +-
+>  drivers/xen/grant-table.c                 | 2 +-
+>  fs/pstore/platform.c                      | 2 +-
+>  include/linux/timer.h                     | 4 ++--
+>  kernel/irq/spurious.c                     | 2 +-
+>  lib/random32.c                            | 2 +-
+>  net/atm/mpc.c                             | 2 +-
+>  net/decnet/dn_route.c                     | 2 +-
+>  net/ipv6/ip6_flowlabel.c                  | 2 +-
+>  net/netrom/nr_loopback.c                  | 2 +-
+>  security/keys/gc.c                        | 2 +-
+>  sound/oss/midibuf.c                       | 2 +-
+>  sound/oss/soundcard.c                     | 2 +-
+>  sound/oss/sys_timer.c                     | 2 +-
+>  sound/oss/uart6850.c                      | 2 +-
+>  47 files changed, 54 insertions(+), 54 deletions(-)
 
---ioctv6qfrc7mty7c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi,
-
-On Wed, Oct 04, 2017 at 04:26:59PM -0700, Kees Cook wrote:
-> This refactors the only users of init_timer_deferrable() to use
-> the new timer_setup() and from_timer(). Removes definition of
-> init_timer_deferrable().
-
-[...]
-
->  drivers/hsi/clients/ssi_protocol.c           | 32 ++++++++++++++++------------
-
-Acked-by: Sebastian Reichel <sre@kernel.org>
-
--- Sebastian
-
---ioctv6qfrc7mty7c
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlnVhJQACgkQ2O7X88g7
-+poqtw/+NVd8QRs2QuA6PAGWHUwxaYVABpFWmmT6auUlvyFDZ3dfZJID5IF3k1iT
-na5dX3a4nAKolDTmc7NOxWF7vEH/L/ONlRhfTt69PFg9oAk5KNjS1RdEx1bdxGRU
-rUBXQwOc2zi9LqxB2Hd8GQXOOhxbw0gICl4wrLCoUdkGNJs5fPpR6zVG8PGbntpq
-WWjDPDja6L+D6+pMhGADYfYj7Xtkfm0GWn3bycnHFKvFB61feCjknnH33QHR2Ayt
-O7gqcCR5aaYf6EadcVT4wR+ZRYl/7sZt102ziwKAsy2eztiOIsj4N8aRV2oR8riz
-CGwIx8ANBkrdn6OG8XFy6BfPzSZcBXqg6L/WreDPHJa2xZAzOds566XysTlDVnS2
-mmPZzXYhzdSJT5SgWxOwzPE3LH6wgG3id80kaCHFqive8gfGI6rh6Y8zQUk3umvg
-ksAklh+tTffWw6oBVT5P2GdyJUHx53Mbb3msk6NyH/G5DmGE0ikcWNcSHg8gcjVt
-KKArZaKBako7TLOE9Xklfx43wLM7GM5RtR6oDCeUfKKG8sF1PLaANmp0SnJeWP2X
-FjPA+SlOO9G/qT++PIkxsB2T6sFZrF/TNXi5exM7V6mYdTxvwJ8OVsKNMQKyxOKq
-rFI2Ntch9Trc5vcvXqlrW84i2bzA1b0jfzO1nkKoKm0XF8UHUKo=
-=6loN
------END PGP SIGNATURE-----
-
---ioctv6qfrc7mty7c--
+Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
