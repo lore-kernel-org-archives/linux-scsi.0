@@ -1,25 +1,26 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: lpfc: Convert timers to use timer_setup()
-Date: Wed, 4 Oct 2017 17:48:19 -0700
-Message-ID: <20171005004819.GA22968@beast>
+Subject: [PATCH] scsi: fcoe: Convert timers to use timer_setup()
+Date: Wed, 4 Oct 2017 17:48:26 -0700
+Message-ID: <20171005004826.GA22983@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
 to pass the timer pointer explicitly.
 
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: QLogic-Storage-Upstream@qlogic.com
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Johannes Thumshirn <jth@kernel.org>
 Cc: linux-scsi@vger.kernel.org
+Cc: fcoe-devel@open-fcoe.org
 Cc: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
@@ -27,323 +28,94 @@ This requires commit 686fef928bba ("timer: Prepare to change timer
 callback argument type") in v4.14-rc3, but should be otherwise
 stand-alone.
 ---
- drivers/scsi/lpfc/lpfc_crtn.h    | 16 ++++++++--------
- drivers/scsi/lpfc/lpfc_ct.c      |  4 ++--
- drivers/scsi/lpfc/lpfc_els.c     | 12 ++++++------
- drivers/scsi/lpfc/lpfc_hbadisc.c |  7 +++----
- drivers/scsi/lpfc/lpfc_init.c    | 39 ++++++++++++++++-----------------------
- drivers/scsi/lpfc/lpfc_scsi.c    |  4 ++--
- drivers/scsi/lpfc/lpfc_sli.c     |  8 ++++----
- 7 files changed, 41 insertions(+), 49 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 11 +++++------
+ drivers/scsi/fcoe/fcoe.c           |  2 +-
+ drivers/scsi/fcoe/fcoe_transport.c |  6 ++++--
+ include/scsi/libfcoe.h             |  2 +-
+ 4 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 7e300734b345..4e858b38529a 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -113,7 +113,7 @@ void lpfc_disc_list_loopmap(struct lpfc_vport *);
- void lpfc_disc_start(struct lpfc_vport *);
- void lpfc_cleanup_discovery_resources(struct lpfc_vport *);
- void lpfc_cleanup(struct lpfc_vport *);
--void lpfc_disc_timeout(unsigned long);
-+void lpfc_disc_timeout(struct timer_list *);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 6844ba361616..e6b9de7d41ac 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -823,7 +823,7 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
  
- int lpfc_unregister_fcf_prep(struct lpfc_hba *);
- struct lpfc_nodelist *__lpfc_findnode_rpi(struct lpfc_vport *, uint16_t);
-@@ -154,7 +154,7 @@ int lpfc_els_rsp_adisc_acc(struct lpfc_vport *, struct lpfc_iocbq *,
- int lpfc_els_rsp_prli_acc(struct lpfc_vport *, struct lpfc_iocbq *,
- 			  struct lpfc_nodelist *);
- void lpfc_cancel_retry_delay_tmo(struct lpfc_vport *, struct lpfc_nodelist *);
--void lpfc_els_retry_delay(unsigned long);
-+void lpfc_els_retry_delay(struct timer_list *);
- void lpfc_els_retry_delay_handler(struct lpfc_nodelist *);
- void lpfc_els_unsol_event(struct lpfc_hba *, struct lpfc_sli_ring *,
- 			  struct lpfc_iocbq *);
-@@ -165,7 +165,7 @@ void lpfc_els_flush_all_cmd(struct lpfc_hba *);
- void lpfc_els_flush_cmd(struct lpfc_vport *);
- int lpfc_els_disc_adisc(struct lpfc_vport *);
- int lpfc_els_disc_plogi(struct lpfc_vport *);
--void lpfc_els_timeout(unsigned long);
-+void lpfc_els_timeout(struct timer_list *);
- void lpfc_els_timeout_handler(struct lpfc_vport *);
- struct lpfc_iocbq *lpfc_prep_els_iocb(struct lpfc_vport *, uint8_t, uint16_t,
- 				      uint8_t, struct lpfc_nodelist *,
-@@ -180,7 +180,7 @@ int lpfc_get_gidft_type(struct lpfc_vport *vport, struct lpfc_iocbq *iocbq);
- int lpfc_ns_cmd(struct lpfc_vport *, int, uint8_t, uint32_t);
- int lpfc_fdmi_cmd(struct lpfc_vport *, struct lpfc_nodelist *, int, uint32_t);
- void lpfc_fdmi_num_disc_check(struct lpfc_vport *);
--void lpfc_delayed_disc_tmo(unsigned long);
-+void lpfc_delayed_disc_tmo(struct timer_list *);
- void lpfc_delayed_disc_timeout_handler(struct lpfc_vport *);
+ 	skb_queue_head_init(&port->fcoe_pending_queue);
+ 	port->fcoe_pending_queue_active = 0;
+-	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long) lport);
++	timer_setup(&port->timer, fcoe_queue_timer, 0);
  
- int lpfc_config_port_prep(struct lpfc_hba *);
-@@ -279,9 +279,9 @@ void lpfc_mem_free(struct lpfc_hba *);
- void lpfc_mem_free_all(struct lpfc_hba *);
- void lpfc_stop_vport_timers(struct lpfc_vport *);
+ 	fcoe_link_speed_update(lport);
  
--void lpfc_poll_timeout(unsigned long ptr);
-+void lpfc_poll_timeout(struct timer_list *t);
- void lpfc_poll_start_timer(struct lpfc_hba *);
--void lpfc_poll_eratt(unsigned long);
-+void lpfc_poll_eratt(struct timer_list *);
- int
- lpfc_sli_handle_fast_ring_event(struct lpfc_hba *,
- 			struct lpfc_sli_ring *, uint32_t);
-@@ -351,7 +351,7 @@ int
- lpfc_sli_abort_taskmgmt(struct lpfc_vport *, struct lpfc_sli_ring *,
- 			uint16_t, uint64_t, lpfc_ctx_cmd);
- 
--void lpfc_mbox_timeout(unsigned long);
-+void lpfc_mbox_timeout(struct timer_list *t);
- void lpfc_mbox_timeout_handler(struct lpfc_hba *);
- 
- struct lpfc_nodelist *lpfc_findnode_did(struct lpfc_vport *, uint32_t);
-@@ -445,7 +445,7 @@ extern unsigned int lpfc_fcp_look_ahead;
- /* Interface exported by fabric iocb scheduler */
- void lpfc_fabric_abort_nport(struct lpfc_nodelist *);
- void lpfc_fabric_abort_hba(struct lpfc_hba *);
--void lpfc_fabric_block_timeout(unsigned long);
-+void lpfc_fabric_block_timeout(struct timer_list *);
- void lpfc_unblock_fabric_iocbs(struct lpfc_hba *);
- void lpfc_rampdown_queue_depth(struct lpfc_hba *);
- void lpfc_ramp_down_queue_handler(struct lpfc_hba *);
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 33417681f5d4..f77673ab4a84 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -2884,9 +2884,9 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
-  * the worker thread.
-  **/
- void
--lpfc_delayed_disc_tmo(unsigned long ptr)
-+lpfc_delayed_disc_tmo(struct timer_list *t)
- {
--	struct lpfc_vport *vport = (struct lpfc_vport *)ptr;
-+	struct lpfc_vport *vport = from_timer(vport, t, delayed_disc_tmo);
- 	struct lpfc_hba   *phba = vport->phba;
- 	uint32_t tmo_posted;
- 	unsigned long iflag;
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 468a66371de9..0dd6c21433fe 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3131,9 +3131,9 @@ lpfc_cancel_retry_delay_tmo(struct lpfc_vport *vport, struct lpfc_nodelist *nlp)
-  * to the event associated with the ndlp.
-  **/
- void
--lpfc_els_retry_delay(unsigned long ptr)
-+lpfc_els_retry_delay(struct timer_list *t)
- {
--	struct lpfc_nodelist *ndlp = (struct lpfc_nodelist *) ptr;
-+	struct lpfc_nodelist *ndlp = from_timer(ndlp, t, nlp_delayfunc);
- 	struct lpfc_vport *vport = ndlp->vport;
- 	struct lpfc_hba   *phba = vport->phba;
- 	unsigned long flags;
-@@ -7385,9 +7385,9 @@ lpfc_els_rcv_fan(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
-  * lpfc_els_timeout_handler() to work on the posted event WORKER_ELS_TMO.
-  **/
- void
--lpfc_els_timeout(unsigned long ptr)
-+lpfc_els_timeout(struct timer_list *t)
- {
--	struct lpfc_vport *vport = (struct lpfc_vport *) ptr;
-+	struct lpfc_vport *vport = from_timer(vport, t, els_tmofunc);
- 	struct lpfc_hba   *phba = vport->phba;
- 	uint32_t tmo_posted;
- 	unsigned long iflag;
-@@ -9017,9 +9017,9 @@ lpfc_issue_els_npiv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
-  * posted event WORKER_FABRIC_BLOCK_TMO.
-  **/
- void
--lpfc_fabric_block_timeout(unsigned long ptr)
-+lpfc_fabric_block_timeout(struct timer_list *t)
- {
--	struct lpfc_hba  *phba = (struct lpfc_hba *) ptr;
-+	struct lpfc_hba  *phba = from_timer(phba, t, fabric_block_timer);
- 	unsigned long iflags;
- 	uint32_t tmo_posted;
- 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 20808349a80e..8d491084eb5d 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -4370,8 +4370,7 @@ lpfc_initialize_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- {
- 	INIT_LIST_HEAD(&ndlp->els_retry_evt.evt_listp);
- 	INIT_LIST_HEAD(&ndlp->dev_loss_evt.evt_listp);
--	setup_timer(&ndlp->nlp_delayfunc, lpfc_els_retry_delay,
--			(unsigned long)ndlp);
-+	timer_setup(&ndlp->nlp_delayfunc, lpfc_els_retry_delay, 0);
- 	ndlp->nlp_DID = did;
- 	ndlp->vport = vport;
- 	ndlp->phba = vport->phba;
-@@ -5508,9 +5507,9 @@ lpfc_cleanup_discovery_resources(struct lpfc_vport *vport)
-  */
- /*****************************************************************************/
- void
--lpfc_disc_timeout(unsigned long ptr)
-+lpfc_disc_timeout(struct timer_list *t)
- {
--	struct lpfc_vport *vport = (struct lpfc_vport *) ptr;
-+	struct lpfc_vport *vport = from_timer(vport, t, fc_disctmo);
- 	struct lpfc_hba   *phba = vport->phba;
- 	uint32_t tmo_posted;
- 	unsigned long flags = 0;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 100bc4c8798d..6a1e28ba9258 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -1138,13 +1138,13 @@ lpfc_hba_down_post(struct lpfc_hba *phba)
-  * be cleared by the worker thread after it has taken the event bitmap out.
-  **/
- static void
--lpfc_hb_timeout(unsigned long ptr)
-+lpfc_hb_timeout(struct timer_list *t)
- {
- 	struct lpfc_hba *phba;
- 	uint32_t tmo_posted;
- 	unsigned long iflag;
- 
--	phba = (struct lpfc_hba *)ptr;
-+	phba = from_timer(phba, t, hb_tmofunc);
- 
- 	/* Check for heart beat timeout conditions */
- 	spin_lock_irqsave(&phba->pport->work_port_lock, iflag);
-@@ -1172,12 +1172,12 @@ lpfc_hb_timeout(unsigned long ptr)
-  * be cleared by the worker thread after it has taken the event bitmap out.
-  **/
- static void
--lpfc_rrq_timeout(unsigned long ptr)
-+lpfc_rrq_timeout(struct timer_list *t)
- {
- 	struct lpfc_hba *phba;
- 	unsigned long iflag;
- 
--	phba = (struct lpfc_hba *)ptr;
-+	phba = from_timer(phba, t, rrq_tmr);
- 	spin_lock_irqsave(&phba->pport->work_port_lock, iflag);
- 	if (!(phba->pport->load_flag & FC_UNLOADING))
- 		phba->hba_flag |= HBA_RRQ_ACTIVE;
-@@ -3937,14 +3937,11 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 	INIT_LIST_HEAD(&vport->rcv_buffer_list);
- 	spin_lock_init(&vport->work_port_lock);
- 
--	setup_timer(&vport->fc_disctmo, lpfc_disc_timeout,
--			(unsigned long)vport);
-+	timer_setup(&vport->fc_disctmo, lpfc_disc_timeout, 0);
- 
--	setup_timer(&vport->els_tmofunc, lpfc_els_timeout,
--			(unsigned long)vport);
-+	timer_setup(&vport->els_tmofunc, lpfc_els_timeout, 0);
- 
--	setup_timer(&vport->delayed_disc_tmo, lpfc_delayed_disc_tmo,
--			(unsigned long)vport);
-+	timer_setup(&vport->delayed_disc_tmo, lpfc_delayed_disc_tmo, 0);
- 
- 	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
- 	if (error)
-@@ -4210,9 +4207,9 @@ lpfc_fcf_redisc_wait_start_timer(struct lpfc_hba *phba)
-  * worker thread context.
-  **/
- static void
--lpfc_sli4_fcf_redisc_wait_tmo(unsigned long ptr)
-+lpfc_sli4_fcf_redisc_wait_tmo(struct timer_list *t)
- {
--	struct lpfc_hba *phba = (struct lpfc_hba *)ptr;
-+	struct lpfc_hba *phba = from_timer(phba, t, fcf.redisc_wait);
- 
- 	/* Don't send FCF rediscovery event if timer cancelled */
- 	spin_lock_irq(&phba->hbalock);
-@@ -5624,15 +5621,13 @@ lpfc_setup_driver_resource_phase1(struct lpfc_hba *phba)
- 	INIT_LIST_HEAD(&phba->luns);
- 
- 	/* MBOX heartbeat timer */
--	setup_timer(&psli->mbox_tmo, lpfc_mbox_timeout, (unsigned long)phba);
-+	timer_setup(&psli->mbox_tmo, lpfc_mbox_timeout, 0);
- 	/* Fabric block timer */
--	setup_timer(&phba->fabric_block_timer, lpfc_fabric_block_timeout,
--			(unsigned long)phba);
-+	timer_setup(&phba->fabric_block_timer, lpfc_fabric_block_timeout, 0);
- 	/* EA polling mode timer */
--	setup_timer(&phba->eratt_poll, lpfc_poll_eratt,
--			(unsigned long)phba);
-+	timer_setup(&phba->eratt_poll, lpfc_poll_eratt, 0);
- 	/* Heartbeat timer */
--	setup_timer(&phba->hb_tmofunc, lpfc_hb_timeout, (unsigned long)phba);
-+	timer_setup(&phba->hb_tmofunc, lpfc_hb_timeout, 0);
- 
+@@ -845,9 +845,9 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
  	return 0;
  }
-@@ -5658,8 +5653,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
- 	 */
  
- 	/* FCP polling mode timer */
--	setup_timer(&phba->fcp_poll_timer, lpfc_poll_timeout,
--			(unsigned long)phba);
-+	timer_setup(&phba->fcp_poll_timer, lpfc_poll_timeout, 0);
- 
- 	/* Host attention work mask setup */
- 	phba->work_ha_mask = (HA_ERATT | HA_MBATT | HA_LATT);
-@@ -5829,11 +5823,10 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 	 * Initialize timers used by driver
- 	 */
- 
--	setup_timer(&phba->rrq_tmr, lpfc_rrq_timeout, (unsigned long)phba);
-+	timer_setup(&phba->rrq_tmr, lpfc_rrq_timeout, 0);
- 
- 	/* FCF rediscover timer */
--	setup_timer(&phba->fcf.redisc_wait, lpfc_sli4_fcf_redisc_wait_tmo,
--			(unsigned long)phba);
-+	timer_setup(&phba->fcf.redisc_wait, lpfc_sli4_fcf_redisc_wait_tmo, 0);
- 
- 	/*
- 	 * Control structure for handling external multi-buffer mailbox
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 1a6f122bb25d..c0cdaef4db24 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4501,9 +4501,9 @@ void lpfc_poll_start_timer(struct lpfc_hba * phba)
-  * and FCP Ring interrupt is disable.
-  **/
- 
--void lpfc_poll_timeout(unsigned long ptr)
-+void lpfc_poll_timeout(struct timer_list *t)
+-static void bnx2fc_destroy_timer(unsigned long data)
++static void bnx2fc_destroy_timer(struct timer_list *t)
  {
--	struct lpfc_hba *phba = (struct lpfc_hba *) ptr;
-+	struct lpfc_hba *phba = from_timer(phba, t, fcp_poll_timer);
+-	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)data;
++	struct bnx2fc_hba *hba = from_timer(hba, t, destroy_timer);
  
- 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
- 		lpfc_sli_handle_fast_ring_event(phba,
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 8b119f87b51d..4edb81073409 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -3004,13 +3004,13 @@ lpfc_sli_rsp_pointers_error(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
-  * and wake up worker thread to process it. Otherwise, it will set up the
-  * Error Attention polling timer for the next poll.
-  **/
--void lpfc_poll_eratt(unsigned long ptr)
-+void lpfc_poll_eratt(struct timer_list *t)
+ 	printk(KERN_ERR PFX "ERROR:bnx2fc_destroy_timer - "
+ 	       "Destroy compl not received!!\n");
+@@ -1946,11 +1946,10 @@ static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
  {
- 	struct lpfc_hba *phba;
- 	uint32_t eratt = 0;
- 	uint64_t sli_intr, cnt;
+ 	if (test_and_clear_bit(BNX2FC_FLAG_FW_INIT_DONE, &hba->flags)) {
+ 		if (bnx2fc_send_fw_fcoe_destroy_msg(hba) == 0) {
+-			init_timer(&hba->destroy_timer);
++			timer_setup(&hba->destroy_timer, bnx2fc_destroy_timer,
++				    0);
+ 			hba->destroy_timer.expires = BNX2FC_FW_TIMEOUT +
+ 								jiffies;
+-			hba->destroy_timer.function = bnx2fc_destroy_timer;
+-			hba->destroy_timer.data = (unsigned long)hba;
+ 			add_timer(&hba->destroy_timer);
+ 			wait_event_interruptible(hba->destroy_wait,
+ 					test_bit(BNX2FC_FLAG_DESTROY_CMPL,
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 85f9a3eba387..5cc09dce4d25 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -754,7 +754,7 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
  
--	phba = (struct lpfc_hba *)ptr;
-+	phba = from_timer(phba, t, eratt_poll);
+ 	skb_queue_head_init(&port->fcoe_pending_queue);
+ 	port->fcoe_pending_queue_active = 0;
+-	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lport);
++	timer_setup(&port->timer, fcoe_queue_timer, 0);
  
- 	/* Here we will also keep track of interrupts per sec of the hba */
- 	sli_intr = phba->sli.slistat.sli_intr;
-@@ -7167,9 +7167,9 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
-  * done by the worker thread function lpfc_mbox_timeout_handler.
-  **/
- void
--lpfc_mbox_timeout(unsigned long ptr)
-+lpfc_mbox_timeout(struct timer_list *t)
+ 	fcoe_link_speed_update(lport);
+ 
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index 375c536cbc68..1ba5f51713a3 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -455,9 +455,11 @@ EXPORT_SYMBOL_GPL(fcoe_check_wait_queue);
+  *
+  * Calls fcoe_check_wait_queue on timeout
+  */
+-void fcoe_queue_timer(ulong lport)
++void fcoe_queue_timer(struct timer_list *t)
  {
--	struct lpfc_hba  *phba = (struct lpfc_hba *) ptr;
-+	struct lpfc_hba  *phba = from_timer(phba, t, sli.mbox_tmo);
- 	unsigned long iflag;
- 	uint32_t tmo_posted;
+-	fcoe_check_wait_queue((struct fc_lport *)lport, NULL);
++	struct fcoe_port *port = from_timer(port, t, timer);
++
++	fcoe_check_wait_queue(port->lport, NULL);
+ }
+ EXPORT_SYMBOL_GPL(fcoe_queue_timer);
+ 
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 722d3264d3bf..cb8a273732cf 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -382,7 +382,7 @@ static inline struct net_device *fcoe_get_netdev(const struct fc_lport *lport)
+ 
+ void fcoe_clean_pending_queue(struct fc_lport *);
+ void fcoe_check_wait_queue(struct fc_lport *lport, struct sk_buff *skb);
+-void fcoe_queue_timer(ulong lport);
++void fcoe_queue_timer(struct timer_list *t);
+ int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen,
+ 			   struct fcoe_percpu_s *fps);
  
 -- 
 2.7.4
