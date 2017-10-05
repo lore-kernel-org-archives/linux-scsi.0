@@ -1,38 +1,77 @@
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
-Date: Thu, 5 Oct 2017 13:57:15 -0400
-Message-ID: <20171005175715.GA19093@fieldses.org>
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
- <20171001220131.GA11812@eros>
- <20171001205220.10b78086@blatinox-laptop.localdomain>
- <20171002053554.GA28743@kroah.com>
- <20171002192224.GD1903@fieldses.org>
- <20171002213312.3f904290@blatinox-laptop.localdomain>
-Mime-Version: 1.0
+From: Kyle Fortin <kyle.fortin@oracle.com>
+Subject: Re: [PATCH] vmw_pvscsi: Don't call free_irq twice on remove adapter
+Date: Thu, 5 Oct 2017 14:03:20 -0400
+Message-ID: <37861CA0-6F2C-40BC-9E85-F7C07BB60B8C@oracle.com>
+References: <20171004190331.icpl7ku5tcwe4igm@petr-dev3.eng.vmware.com> <CA9FE5EA-7E53-436D-AF3A-4F21A1457A43@oracle.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171002213312.3f904290@blatinox-laptop.localdomain>
-Sender: netdev-owner@vger.kernel.org
-To: =?utf-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
-Cc: Greg KH <greg@kroah.com>, "Tobin C. Harding" <me@tobin.cc>, alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, dm-devel@redhat.com, brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz, intel-wired-lan@lists.osuosl.org, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gvt-dev@lists.freedesktop.org, devel@acpica.org, brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org, linux-usb@v
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43654 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751649AbdJESDX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2017 14:03:23 -0400
+In-Reply-To: <CA9FE5EA-7E53-436D-AF3A-4F21A1457A43@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jim Gill <jgill@vmware.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-On Mon, Oct 02, 2017 at 09:33:12PM -0400, Jérémy Lefaure wrote:
-> On Mon, 2 Oct 2017 15:22:24 -0400
-> bfields@fieldses.org (J. Bruce Fields) wrote:
-> 
-> > Mainly I'd just like to know which you're asking for.  Do you want me to
-> > apply this, or to ACK it so someone else can?  If it's sent as a series
-> > I tend to assume the latter.
-> > 
-> > But in this case I'm assuming it's the former, so I'll pick up the nfsd
-> > one....
-> Could you to apply the NFSD patch ("nfsd: use ARRAY_SIZE") with the
-> Reviewed-by: Jeff Layton <jlayton@redhat.com>) tag please ?
-> 
-> This patch is an individual patch and it should not have been sent in a
-> series (sorry about that).
+Correction.
 
-Applying for 4.15, thanks.--b.
+On Oct 5, 2017, at 1:55 PM, Kyle Fortin <kyle.fortin@oracle.com> wrote:
+> 
+> Hi Jim,
+> 
+> On Oct 4, 2017, at 3:03 PM, Jim Gill <jgill@vmware.com> wrote:
+>> 
+>> Remove redundant call to pvscsi_shutdown_intr from
+>> pvscsi_remove_resources.  Add calls to pvscsi_shutdown_intr
+>> in the failure cases for pvscsi_probe.
+>> 
+>> Signed-off-by: Jim Gill <jgill@vmware.com>
+>> ---
+>> drivers/scsi/vmw_pvscsi.c | 4 ++--
+>> 1 file changed, 2 insertions(+), 2 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+>> index c374e3b..c7e74ac 100644
+>> --- a/drivers/scsi/vmw_pvscsi.c
+>> +++ b/drivers/scsi/vmw_pvscsi.c
+>> @@ -1197,8 +1197,6 @@ static void pvscsi_shutdown_intr(struct pvscsi_adapter *adapter)
+>> 
+>> static void pvscsi_release_resources(struct pvscsi_adapter *adapter)
+>> {
+>> -	pvscsi_shutdown_intr(adapter);
+>> -
+>> 	if (adapter->workqueue)
+>> 		destroy_workqueue(adapter->workqueue);
+>> 
+>> @@ -1530,6 +1528,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>> out_reset_adapter:
+> 
+> From what I understand the irq(s) are not allocated until the pci_alloc_irq_vectors call.  After, all breakout jumps are to out_reset_adapter.
+> 
+> Could it be simplified to just adding pvscsi_shutdown_intr before ll_adapter_reset() here?  Then you don’t need the other two pvscsi_shutdown_intr() calls below.
+
+Add pvscsi_shutdown_intr after adapter reset instead.
+
+>> 	ll_adapter_reset(adapter);
+>> out_release_resources:
+>> +	pvscsi_shutdown_intr(adapter);
+>> 	pvscsi_release_resources(adapter);
+>> 	scsi_host_put(host);
+>> out_disable_device:
+>> @@ -1538,6 +1537,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>> 	return error;
+>> 
+>> out_release_resources_and_disable:
+>> +	pvscsi_shutdown_intr(adapter);
+>> 	pvscsi_release_resources(adapter);
+>> 	goto out_disable_device;
+>> }
+>> -- 
+>> 2.7.4
+> 
+> --
+> Kyle Fortin - Oracle Linux Engineering
