@@ -1,32 +1,155 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 04/13] timer: Remove init_timer_pinned() in favor of
- timer_setup()
-Date: Wed, 04 Oct 2017 17:41:34 -0700 (PDT)
-Message-ID: <20171004.174134.1260012045520624727.davem@davemloft.net>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-        <1507159627-127660-5-git-send-email-keescook@chromium.org>
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH] scsi/ipr: Convert timers to use timer_setup()
+Date: Wed, 4 Oct 2017 17:47:44 -0700
+Message-ID: <20171005004744.GA22884@beast>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1507159627-127660-5-git-send-email-keescook@chromium.org>
-Sender: netdev-owner@vger.kernel.org
-To: keescook@chromium.org
-Cc: tglx@linutronix.de, cmetcalf@mellanox.com, netdev@vger.kernel.org, akpm@linux-foundation.org, arnd@arndb.de, benh@kernel.crashing.org, geert@linux-m68k.org, gregkh@linuxfoundation.org, linux@roeck-us.net, harish.patil@cavium.com, heiko.carstens@de.ibm.com, jejb@linux.vnet.ibm.com, john.stultz@linaro.org, jwi@linux.vnet.ibm.com, kvalo@qca.qualcomm.com, jiangshanlai@gmail.com, len.brown@intel.com, manish.chopra@cavium.com, mark.gross@intel.com, martin.petersen@oracle.com, schwidefsky@de.ibm.com, mpe@ellerman.id.au, mdr@sgi.com, oleg@redhat.com, paulus@samba.org, pavel@ucw.cz, pmladek@suse.com, rjw@rjwysocki.net, ralf@linux-mips.org, sre@kernel.org, stefanr@s5r6.in-berlin.de, sboyd@codeaurora.org, sudipm.mukherjee@gmail.com, tj@kernel.org, ubraun@linux.vnet.ibm.com, viresh.kum
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Kees Cook <keescook@chromium.org>
-Date: Wed,  4 Oct 2017 16:26:58 -0700
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-> This refactors the only users of init_timer_pinned() to use
-> the new timer_setup() and from_timer(). Drops the definition of
-> init_timer_pinned().
-> 
-> Cc: Chris Metcalf <cmetcalf@mellanox.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+Cc: Brian King <brking@us.ibm.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+This requires commit 686fef928bba ("timer: Prepare to change timer
+callback argument type") in v4.14-rc3, but should be otherwise
+stand-alone.
+---
+ drivers/scsi/ipr.c | 30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-For networking:
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index f838bd73befa..d53429371127 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -694,7 +694,7 @@ static void ipr_init_ipr_cmnd(struct ipr_cmnd *ipr_cmd,
+ 	ipr_cmd->sibling = NULL;
+ 	ipr_cmd->eh_comp = NULL;
+ 	ipr_cmd->fast_done = fast_done;
+-	init_timer(&ipr_cmd->timer);
++	timer_setup(&ipr_cmd->timer, NULL, 0);
+ }
+ 
+ /**
+@@ -990,15 +990,14 @@ static void ipr_send_command(struct ipr_cmnd *ipr_cmd)
+  **/
+ static void ipr_do_req(struct ipr_cmnd *ipr_cmd,
+ 		       void (*done) (struct ipr_cmnd *),
+-		       void (*timeout_func) (struct ipr_cmnd *), u32 timeout)
++		       void (*timeout_func) (struct timer_list *), u32 timeout)
+ {
+ 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
+ 
+ 	ipr_cmd->done = done;
+ 
+-	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
+ 	ipr_cmd->timer.expires = jiffies + timeout;
+-	ipr_cmd->timer.function = (void (*)(unsigned long))timeout_func;
++	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)timeout_func;
+ 
+ 	add_timer(&ipr_cmd->timer);
+ 
+@@ -1080,7 +1079,7 @@ static void ipr_init_ioadl(struct ipr_cmnd *ipr_cmd, dma_addr_t dma_addr,
+  * 	none
+  **/
+ static void ipr_send_blocking_cmd(struct ipr_cmnd *ipr_cmd,
+-				  void (*timeout_func) (struct ipr_cmnd *ipr_cmd),
++				  void (*timeout_func) (struct timer_list *),
+ 				  u32 timeout)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+@@ -2664,8 +2663,9 @@ static void ipr_process_error(struct ipr_cmnd *ipr_cmd)
+  * Return value:
+  * 	none
+  **/
+-static void ipr_timeout(struct ipr_cmnd *ipr_cmd)
++static void ipr_timeout(struct timer_list *t)
+ {
++	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
+ 	unsigned long lock_flags = 0;
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 
+@@ -2696,8 +2696,9 @@ static void ipr_timeout(struct ipr_cmnd *ipr_cmd)
+  * Return value:
+  * 	none
+  **/
+-static void ipr_oper_timeout(struct ipr_cmnd *ipr_cmd)
++static void ipr_oper_timeout(struct timer_list *t)
+ {
++	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
+ 	unsigned long lock_flags = 0;
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 
+@@ -5449,8 +5450,9 @@ static void ipr_bus_reset_done(struct ipr_cmnd *ipr_cmd)
+  * Return value:
+  *	none
+  **/
+-static void ipr_abort_timeout(struct ipr_cmnd *ipr_cmd)
++static void ipr_abort_timeout(struct timer_list *t)
+ {
++	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
+ 	struct ipr_cmnd *reset_cmd;
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct ipr_cmd_pkt *cmd_pkt;
+@@ -8271,8 +8273,9 @@ static int ipr_ioafp_identify_hrrq(struct ipr_cmnd *ipr_cmd)
+  * Return value:
+  * 	none
+  **/
+-static void ipr_reset_timer_done(struct ipr_cmnd *ipr_cmd)
++static void ipr_reset_timer_done(struct timer_list *t)
+ {
++	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	unsigned long lock_flags = 0;
+ 
+@@ -8308,9 +8311,8 @@ static void ipr_reset_start_timer(struct ipr_cmnd *ipr_cmd,
+ 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
+ 	ipr_cmd->done = ipr_reset_ioa_job;
+ 
+-	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
+ 	ipr_cmd->timer.expires = jiffies + timeout;
+-	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_reset_timer_done;
++	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_reset_timer_done;
+ 	add_timer(&ipr_cmd->timer);
+ }
+ 
+@@ -8394,9 +8396,8 @@ static int ipr_reset_next_stage(struct ipr_cmnd *ipr_cmd)
+ 		}
+ 	}
+ 
+-	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
+ 	ipr_cmd->timer.expires = jiffies + stage_time * HZ;
+-	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
++	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_oper_timeout;
+ 	ipr_cmd->done = ipr_reset_ioa_job;
+ 	add_timer(&ipr_cmd->timer);
+ 
+@@ -8466,9 +8467,8 @@ static int ipr_reset_enable_ioa(struct ipr_cmnd *ipr_cmd)
+ 		return IPR_RC_JOB_CONTINUE;
+ 	}
+ 
+-	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
+ 	ipr_cmd->timer.expires = jiffies + (ioa_cfg->transop_timeout * HZ);
+-	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
++	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_oper_timeout;
+ 	ipr_cmd->done = ipr_reset_ioa_job;
+ 	add_timer(&ipr_cmd->timer);
+ 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
+-- 
+2.7.4
 
-Acked-by: David S. Miller <davem@davemloft.net>
+
+-- 
+Kees Cook
+Pixel Security
