@@ -1,21 +1,20 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi/ipr: Convert timers to use timer_setup()
-Date: Wed, 4 Oct 2017 17:47:44 -0700
-Message-ID: <20171005004744.GA22884@beast>
+Subject: [PATCH] scsi/pmcraid: Convert timers to use timer_setup()
+Date: Wed, 4 Oct 2017 17:47:49 -0700
+Message-ID: <20171005004749.GA22898@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
 to pass the timer pointer explicitly.
 
-Cc: Brian King <brking@us.ibm.com>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
@@ -26,126 +25,132 @@ This requires commit 686fef928bba ("timer: Prepare to change timer
 callback argument type") in v4.14-rc3, but should be otherwise
 stand-alone.
 ---
- drivers/scsi/ipr.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/pmcraid.c | 33 +++++++++++++--------------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index f838bd73befa..d53429371127 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -694,7 +694,7 @@ static void ipr_init_ipr_cmnd(struct ipr_cmnd *ipr_cmd,
- 	ipr_cmd->sibling = NULL;
- 	ipr_cmd->eh_comp = NULL;
- 	ipr_cmd->fast_done = fast_done;
--	init_timer(&ipr_cmd->timer);
-+	timer_setup(&ipr_cmd->timer, NULL, 0);
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index b4d6cd8cd1ad..4f9f115fb6a0 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -348,7 +348,7 @@ static void pmcraid_init_cmdblk(struct pmcraid_cmd *cmd, int index)
+ 	cmd->sense_buffer = NULL;
+ 	cmd->sense_buffer_dma = 0;
+ 	cmd->dma_handle = 0;
+-	init_timer(&cmd->timer);
++	timer_setup(&cmd->timer, NULL, 0);
  }
  
  /**
-@@ -990,15 +990,14 @@ static void ipr_send_command(struct ipr_cmnd *ipr_cmd)
-  **/
- static void ipr_do_req(struct ipr_cmnd *ipr_cmd,
- 		       void (*done) (struct ipr_cmnd *),
--		       void (*timeout_func) (struct ipr_cmnd *), u32 timeout)
-+		       void (*timeout_func) (struct timer_list *), u32 timeout)
+@@ -557,8 +557,9 @@ static void pmcraid_reset_type(struct pmcraid_instance *pinstance)
+ 
+ static void pmcraid_ioa_reset(struct pmcraid_cmd *);
+ 
+-static void pmcraid_bist_done(struct pmcraid_cmd *cmd)
++static void pmcraid_bist_done(struct timer_list *t)
  {
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
++	struct pmcraid_cmd *cmd = from_timer(cmd, t, timer);
+ 	struct pmcraid_instance *pinstance = cmd->drv_inst;
+ 	unsigned long lock_flags;
+ 	int rc;
+@@ -572,9 +573,6 @@ static void pmcraid_bist_done(struct pmcraid_cmd *cmd)
+ 		pmcraid_info("BIST not complete, waiting another 2 secs\n");
+ 		cmd->timer.expires = jiffies + cmd->time_left;
+ 		cmd->time_left = 0;
+-		cmd->timer.data = (unsigned long)cmd;
+-		cmd->timer.function =
+-			(void (*)(unsigned long))pmcraid_bist_done;
+ 		add_timer(&cmd->timer);
+ 	} else {
+ 		cmd->time_left = 0;
+@@ -605,9 +603,8 @@ static void pmcraid_start_bist(struct pmcraid_cmd *cmd)
+ 		      doorbells, intrs);
  
- 	ipr_cmd->done = done;
- 
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + timeout;
--	ipr_cmd->timer.function = (void (*)(unsigned long))timeout_func;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)timeout_func;
- 
- 	add_timer(&ipr_cmd->timer);
- 
-@@ -1080,7 +1079,7 @@ static void ipr_init_ioadl(struct ipr_cmnd *ipr_cmd, dma_addr_t dma_addr,
-  * 	none
-  **/
- static void ipr_send_blocking_cmd(struct ipr_cmnd *ipr_cmd,
--				  void (*timeout_func) (struct ipr_cmnd *ipr_cmd),
-+				  void (*timeout_func) (struct timer_list *),
- 				  u32 timeout)
- {
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-@@ -2664,8 +2663,9 @@ static void ipr_process_error(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  * 	none
-  **/
--static void ipr_timeout(struct ipr_cmnd *ipr_cmd)
-+static void ipr_timeout(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	unsigned long lock_flags = 0;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 
-@@ -2696,8 +2696,9 @@ static void ipr_timeout(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  * 	none
-  **/
--static void ipr_oper_timeout(struct ipr_cmnd *ipr_cmd)
-+static void ipr_oper_timeout(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	unsigned long lock_flags = 0;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 
-@@ -5449,8 +5450,9 @@ static void ipr_bus_reset_done(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  *	none
-  **/
--static void ipr_abort_timeout(struct ipr_cmnd *ipr_cmd)
-+static void ipr_abort_timeout(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	struct ipr_cmnd *reset_cmd;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	struct ipr_cmd_pkt *cmd_pkt;
-@@ -8271,8 +8273,9 @@ static int ipr_ioafp_identify_hrrq(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  * 	none
-  **/
--static void ipr_reset_timer_done(struct ipr_cmnd *ipr_cmd)
-+static void ipr_reset_timer_done(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	unsigned long lock_flags = 0;
- 
-@@ -8308,9 +8311,8 @@ static void ipr_reset_start_timer(struct ipr_cmnd *ipr_cmd,
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
- 	ipr_cmd->done = ipr_reset_ioa_job;
- 
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + timeout;
--	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_reset_timer_done;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_reset_timer_done;
- 	add_timer(&ipr_cmd->timer);
+ 	cmd->time_left = msecs_to_jiffies(PMCRAID_BIST_TIMEOUT);
+-	cmd->timer.data = (unsigned long)cmd;
+ 	cmd->timer.expires = jiffies + msecs_to_jiffies(PMCRAID_BIST_TIMEOUT);
+-	cmd->timer.function = (void (*)(unsigned long))pmcraid_bist_done;
++	cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_bist_done;
+ 	add_timer(&cmd->timer);
  }
  
-@@ -8394,9 +8396,8 @@ static int ipr_reset_next_stage(struct ipr_cmnd *ipr_cmd)
- 		}
+@@ -617,8 +614,9 @@ static void pmcraid_start_bist(struct pmcraid_cmd *cmd)
+  * Return value
+  *  None
+  */
+-static void pmcraid_reset_alert_done(struct pmcraid_cmd *cmd)
++static void pmcraid_reset_alert_done(struct timer_list *t)
+ {
++	struct pmcraid_cmd *cmd = from_timer(cmd, t, timer);
+ 	struct pmcraid_instance *pinstance = cmd->drv_inst;
+ 	u32 status = ioread32(pinstance->ioa_status);
+ 	unsigned long lock_flags;
+@@ -637,10 +635,8 @@ static void pmcraid_reset_alert_done(struct pmcraid_cmd *cmd)
+ 		pmcraid_info("critical op is not yet reset waiting again\n");
+ 		/* restart timer if some more time is available to wait */
+ 		cmd->time_left -= PMCRAID_CHECK_FOR_RESET_TIMEOUT;
+-		cmd->timer.data = (unsigned long)cmd;
+ 		cmd->timer.expires = jiffies + PMCRAID_CHECK_FOR_RESET_TIMEOUT;
+-		cmd->timer.function =
+-			(void (*)(unsigned long))pmcraid_reset_alert_done;
++		cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_reset_alert_done;
+ 		add_timer(&cmd->timer);
+ 	}
+ }
+@@ -676,10 +672,8 @@ static void pmcraid_reset_alert(struct pmcraid_cmd *cmd)
+ 		 * bit to be reset.
+ 		 */
+ 		cmd->time_left = PMCRAID_RESET_TIMEOUT;
+-		cmd->timer.data = (unsigned long)cmd;
+ 		cmd->timer.expires = jiffies + PMCRAID_CHECK_FOR_RESET_TIMEOUT;
+-		cmd->timer.function =
+-			(void (*)(unsigned long))pmcraid_reset_alert_done;
++		cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_reset_alert_done;
+ 		add_timer(&cmd->timer);
+ 
+ 		iowrite32(DOORBELL_IOA_RESET_ALERT,
+@@ -704,8 +698,9 @@ static void pmcraid_reset_alert(struct pmcraid_cmd *cmd)
+  * Return value:
+  *   None
+  */
+-static void pmcraid_timeout_handler(struct pmcraid_cmd *cmd)
++static void pmcraid_timeout_handler(struct timer_list *t)
+ {
++	struct pmcraid_cmd *cmd = from_timer(cmd, t, timer);
+ 	struct pmcraid_instance *pinstance = cmd->drv_inst;
+ 	unsigned long lock_flags;
+ 
+@@ -919,7 +914,7 @@ static void pmcraid_send_cmd(
+ 	struct pmcraid_cmd *cmd,
+ 	void (*cmd_done) (struct pmcraid_cmd *),
+ 	unsigned long timeout,
+-	void (*timeout_func) (struct pmcraid_cmd *)
++	void (*timeout_func) (struct timer_list *)
+ )
+ {
+ 	/* initialize done function */
+@@ -927,9 +922,8 @@ static void pmcraid_send_cmd(
+ 
+ 	if (timeout_func) {
+ 		/* setup timeout handler */
+-		cmd->timer.data = (unsigned long)cmd;
+ 		cmd->timer.expires = jiffies + timeout;
+-		cmd->timer.function = (void (*)(unsigned long))timeout_func;
++		cmd->timer.function = (TIMER_FUNC_TYPE)timeout_func;
+ 		add_timer(&cmd->timer);
  	}
  
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + stage_time * HZ;
--	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_oper_timeout;
- 	ipr_cmd->done = ipr_reset_ioa_job;
- 	add_timer(&ipr_cmd->timer);
+@@ -1955,10 +1949,9 @@ static void pmcraid_soft_reset(struct pmcraid_cmd *cmd)
+ 	 * would re-initiate a reset
+ 	 */
+ 	cmd->cmd_done = pmcraid_ioa_reset;
+-	cmd->timer.data = (unsigned long)cmd;
+ 	cmd->timer.expires = jiffies +
+ 			     msecs_to_jiffies(PMCRAID_TRANSOP_TIMEOUT);
+-	cmd->timer.function = (void (*)(unsigned long))pmcraid_timeout_handler;
++	cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_timeout_handler;
  
-@@ -8466,9 +8467,8 @@ static int ipr_reset_enable_ioa(struct ipr_cmnd *ipr_cmd)
- 		return IPR_RC_JOB_CONTINUE;
- 	}
- 
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + (ioa_cfg->transop_timeout * HZ);
--	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_oper_timeout;
- 	ipr_cmd->done = ipr_reset_ioa_job;
- 	add_timer(&ipr_cmd->timer);
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
+ 	if (!timer_pending(&cmd->timer))
+ 		add_timer(&cmd->timer);
 -- 
 2.7.4
 
