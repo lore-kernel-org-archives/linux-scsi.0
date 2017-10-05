@@ -1,126 +1,59 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: fcoe: Convert timers to use timer_setup()
-Date: Wed, 4 Oct 2017 17:48:26 -0700
-Message-ID: <20171005004826.GA22983@beast>
+From: Sebastian Reichel <sre@kernel.org>
+Subject: Re: [PATCH 05/13] timer: Remove init_timer_deferrable() in favor of
+ timer_setup()
+Date: Thu, 5 Oct 2017 03:02:18 +0200
+Message-ID: <20171005010218.v3aw4d3y66jn3bbo@earth>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+ <1507159627-127660-6-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="ioctv6qfrc7mty7c"
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, Thomas Gleixner <tglx@linutronix.de>
+In-Reply-To: <1507159627-127660-6-git-send-email-keescook@chromium.org>
+Sender: netdev-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Michael Ellerman <mpe@ellerman.id.au>, Harish Patil <harish.patil@cavium.com>, Manish Chopra <manish.chopra@cavium.com>, Kalle Valo <kvalo@qca.qualcomm.com>, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, Chris Metcalf <cmetcalf@mellanox.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Guenter Roeck <linux@roeck-us.net>, Heiko Carstens <heiko.carstens@de.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, John Stultz <john.stultz@linaro.org>, Julian Wiedmann <jwi@linux.vnet.ibm.com>, Lai
 List-Id: linux-scsi@vger.kernel.org
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
 
-Cc: QLogic-Storage-Upstream@qlogic.com
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <jth@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-Cc: fcoe-devel@open-fcoe.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-This requires commit 686fef928bba ("timer: Prepare to change timer
-callback argument type") in v4.14-rc3, but should be otherwise
-stand-alone.
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 11 +++++------
- drivers/scsi/fcoe/fcoe.c           |  2 +-
- drivers/scsi/fcoe/fcoe_transport.c |  6 ++++--
- include/scsi/libfcoe.h             |  2 +-
- 4 files changed, 11 insertions(+), 10 deletions(-)
+--ioctv6qfrc7mty7c
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 6844ba361616..e6b9de7d41ac 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -823,7 +823,7 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
- 
- 	skb_queue_head_init(&port->fcoe_pending_queue);
- 	port->fcoe_pending_queue_active = 0;
--	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long) lport);
-+	timer_setup(&port->timer, fcoe_queue_timer, 0);
- 
- 	fcoe_link_speed_update(lport);
- 
-@@ -845,9 +845,9 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
- 	return 0;
- }
- 
--static void bnx2fc_destroy_timer(unsigned long data)
-+static void bnx2fc_destroy_timer(struct timer_list *t)
- {
--	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)data;
-+	struct bnx2fc_hba *hba = from_timer(hba, t, destroy_timer);
- 
- 	printk(KERN_ERR PFX "ERROR:bnx2fc_destroy_timer - "
- 	       "Destroy compl not received!!\n");
-@@ -1946,11 +1946,10 @@ static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
- {
- 	if (test_and_clear_bit(BNX2FC_FLAG_FW_INIT_DONE, &hba->flags)) {
- 		if (bnx2fc_send_fw_fcoe_destroy_msg(hba) == 0) {
--			init_timer(&hba->destroy_timer);
-+			timer_setup(&hba->destroy_timer, bnx2fc_destroy_timer,
-+				    0);
- 			hba->destroy_timer.expires = BNX2FC_FW_TIMEOUT +
- 								jiffies;
--			hba->destroy_timer.function = bnx2fc_destroy_timer;
--			hba->destroy_timer.data = (unsigned long)hba;
- 			add_timer(&hba->destroy_timer);
- 			wait_event_interruptible(hba->destroy_wait,
- 					test_bit(BNX2FC_FLAG_DESTROY_CMPL,
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 85f9a3eba387..5cc09dce4d25 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -754,7 +754,7 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
- 
- 	skb_queue_head_init(&port->fcoe_pending_queue);
- 	port->fcoe_pending_queue_active = 0;
--	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lport);
-+	timer_setup(&port->timer, fcoe_queue_timer, 0);
- 
- 	fcoe_link_speed_update(lport);
- 
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index 375c536cbc68..1ba5f51713a3 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -455,9 +455,11 @@ EXPORT_SYMBOL_GPL(fcoe_check_wait_queue);
-  *
-  * Calls fcoe_check_wait_queue on timeout
-  */
--void fcoe_queue_timer(ulong lport)
-+void fcoe_queue_timer(struct timer_list *t)
- {
--	fcoe_check_wait_queue((struct fc_lport *)lport, NULL);
-+	struct fcoe_port *port = from_timer(port, t, timer);
-+
-+	fcoe_check_wait_queue(port->lport, NULL);
- }
- EXPORT_SYMBOL_GPL(fcoe_queue_timer);
- 
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 722d3264d3bf..cb8a273732cf 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -382,7 +382,7 @@ static inline struct net_device *fcoe_get_netdev(const struct fc_lport *lport)
- 
- void fcoe_clean_pending_queue(struct fc_lport *);
- void fcoe_check_wait_queue(struct fc_lport *lport, struct sk_buff *skb);
--void fcoe_queue_timer(ulong lport);
-+void fcoe_queue_timer(struct timer_list *t);
- int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen,
- 			   struct fcoe_percpu_s *fps);
- 
--- 
-2.7.4
+Hi,
 
+On Wed, Oct 04, 2017 at 04:26:59PM -0700, Kees Cook wrote:
+> This refactors the only users of init_timer_deferrable() to use
+> the new timer_setup() and from_timer(). Removes definition of
+> init_timer_deferrable().
 
--- 
-Kees Cook
-Pixel Security
+[...]
+
+>  drivers/hsi/clients/ssi_protocol.c           | 32 ++++++++++++++++------------
+
+Acked-by: Sebastian Reichel <sre@kernel.org>
+
+-- Sebastian
+
+--ioctv6qfrc7mty7c
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlnVhJQACgkQ2O7X88g7
++poqtw/+NVd8QRs2QuA6PAGWHUwxaYVABpFWmmT6auUlvyFDZ3dfZJID5IF3k1iT
+na5dX3a4nAKolDTmc7NOxWF7vEH/L/ONlRhfTt69PFg9oAk5KNjS1RdEx1bdxGRU
+rUBXQwOc2zi9LqxB2Hd8GQXOOhxbw0gICl4wrLCoUdkGNJs5fPpR6zVG8PGbntpq
+WWjDPDja6L+D6+pMhGADYfYj7Xtkfm0GWn3bycnHFKvFB61feCjknnH33QHR2Ayt
+O7gqcCR5aaYf6EadcVT4wR+ZRYl/7sZt102ziwKAsy2eztiOIsj4N8aRV2oR8riz
+CGwIx8ANBkrdn6OG8XFy6BfPzSZcBXqg6L/WreDPHJa2xZAzOds566XysTlDVnS2
+mmPZzXYhzdSJT5SgWxOwzPE3LH6wgG3id80kaCHFqive8gfGI6rh6Y8zQUk3umvg
+ksAklh+tTffWw6oBVT5P2GdyJUHx53Mbb3msk6NyH/G5DmGE0ikcWNcSHg8gcjVt
+KKArZaKBako7TLOE9Xklfx43wLM7GM5RtR6oDCeUfKKG8sF1PLaANmp0SnJeWP2X
+FjPA+SlOO9G/qT++PIkxsB2T6sFZrF/TNXi5exM7V6mYdTxvwJ8OVsKNMQKyxOKq
+rFI2Ntch9Trc5vcvXqlrW84i2bzA1b0jfzO1nkKoKm0XF8UHUKo=
+=6loN
+-----END PGP SIGNATURE-----
+
+--ioctv6qfrc7mty7c--
