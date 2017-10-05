@@ -1,28 +1,22 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: isci: Convert timers to use timer_setup()
-Date: Wed, 4 Oct 2017 17:48:14 -0700
-Message-ID: <20171005004814.GA22954@beast>
+Subject: [PATCH] scsi: lpfc: Convert timers to use timer_setup()
+Date: Wed, 4 Oct 2017 17:48:19 -0700
+Message-ID: <20171005004819.GA22968@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:48134 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751942AbdJEAsR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2017 20:48:17 -0400
-Received: by mail-pf0-f182.google.com with SMTP id n24so7120216pfk.5
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Oct 2017 17:48:16 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+List-Id: linux-scsi@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
 to pass the timer pointer explicitly.
 
-Cc: Intel SCU Linux support <intel-linux-scu@intel.com>
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
@@ -33,134 +27,324 @@ This requires commit 686fef928bba ("timer: Prepare to change timer
 callback argument type") in v4.14-rc3, but should be otherwise
 stand-alone.
 ---
- drivers/scsi/isci/host.c        | 12 ++++++------
- drivers/scsi/isci/isci.h        |  6 ++----
- drivers/scsi/isci/phy.c         |  4 ++--
- drivers/scsi/isci/port.c        |  4 ++--
- drivers/scsi/isci/port_config.c |  8 ++++----
- 5 files changed, 16 insertions(+), 18 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h    | 16 ++++++++--------
+ drivers/scsi/lpfc/lpfc_ct.c      |  4 ++--
+ drivers/scsi/lpfc/lpfc_els.c     | 12 ++++++------
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  7 +++----
+ drivers/scsi/lpfc/lpfc_init.c    | 39 ++++++++++++++++-----------------------
+ drivers/scsi/lpfc/lpfc_scsi.c    |  4 ++--
+ drivers/scsi/lpfc/lpfc_sli.c     |  8 ++++----
+ 7 files changed, 41 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 609dafd661d1..13b37cdffa8e 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -958,9 +958,9 @@ static enum sci_status sci_controller_start_next_phy(struct isci_host *ihost)
- 	return status;
- }
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 7e300734b345..4e858b38529a 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -113,7 +113,7 @@ void lpfc_disc_list_loopmap(struct lpfc_vport *);
+ void lpfc_disc_start(struct lpfc_vport *);
+ void lpfc_cleanup_discovery_resources(struct lpfc_vport *);
+ void lpfc_cleanup(struct lpfc_vport *);
+-void lpfc_disc_timeout(unsigned long);
++void lpfc_disc_timeout(struct timer_list *);
  
--static void phy_startup_timeout(unsigned long data)
-+static void phy_startup_timeout(struct timer_list *t)
+ int lpfc_unregister_fcf_prep(struct lpfc_hba *);
+ struct lpfc_nodelist *__lpfc_findnode_rpi(struct lpfc_vport *, uint16_t);
+@@ -154,7 +154,7 @@ int lpfc_els_rsp_adisc_acc(struct lpfc_vport *, struct lpfc_iocbq *,
+ int lpfc_els_rsp_prli_acc(struct lpfc_vport *, struct lpfc_iocbq *,
+ 			  struct lpfc_nodelist *);
+ void lpfc_cancel_retry_delay_tmo(struct lpfc_vport *, struct lpfc_nodelist *);
+-void lpfc_els_retry_delay(unsigned long);
++void lpfc_els_retry_delay(struct timer_list *);
+ void lpfc_els_retry_delay_handler(struct lpfc_nodelist *);
+ void lpfc_els_unsol_event(struct lpfc_hba *, struct lpfc_sli_ring *,
+ 			  struct lpfc_iocbq *);
+@@ -165,7 +165,7 @@ void lpfc_els_flush_all_cmd(struct lpfc_hba *);
+ void lpfc_els_flush_cmd(struct lpfc_vport *);
+ int lpfc_els_disc_adisc(struct lpfc_vport *);
+ int lpfc_els_disc_plogi(struct lpfc_vport *);
+-void lpfc_els_timeout(unsigned long);
++void lpfc_els_timeout(struct timer_list *);
+ void lpfc_els_timeout_handler(struct lpfc_vport *);
+ struct lpfc_iocbq *lpfc_prep_els_iocb(struct lpfc_vport *, uint8_t, uint16_t,
+ 				      uint8_t, struct lpfc_nodelist *,
+@@ -180,7 +180,7 @@ int lpfc_get_gidft_type(struct lpfc_vport *vport, struct lpfc_iocbq *iocbq);
+ int lpfc_ns_cmd(struct lpfc_vport *, int, uint8_t, uint32_t);
+ int lpfc_fdmi_cmd(struct lpfc_vport *, struct lpfc_nodelist *, int, uint32_t);
+ void lpfc_fdmi_num_disc_check(struct lpfc_vport *);
+-void lpfc_delayed_disc_tmo(unsigned long);
++void lpfc_delayed_disc_tmo(struct timer_list *);
+ void lpfc_delayed_disc_timeout_handler(struct lpfc_vport *);
+ 
+ int lpfc_config_port_prep(struct lpfc_hba *);
+@@ -279,9 +279,9 @@ void lpfc_mem_free(struct lpfc_hba *);
+ void lpfc_mem_free_all(struct lpfc_hba *);
+ void lpfc_stop_vport_timers(struct lpfc_vport *);
+ 
+-void lpfc_poll_timeout(unsigned long ptr);
++void lpfc_poll_timeout(struct timer_list *t);
+ void lpfc_poll_start_timer(struct lpfc_hba *);
+-void lpfc_poll_eratt(unsigned long);
++void lpfc_poll_eratt(struct timer_list *);
+ int
+ lpfc_sli_handle_fast_ring_event(struct lpfc_hba *,
+ 			struct lpfc_sli_ring *, uint32_t);
+@@ -351,7 +351,7 @@ int
+ lpfc_sli_abort_taskmgmt(struct lpfc_vport *, struct lpfc_sli_ring *,
+ 			uint16_t, uint64_t, lpfc_ctx_cmd);
+ 
+-void lpfc_mbox_timeout(unsigned long);
++void lpfc_mbox_timeout(struct timer_list *t);
+ void lpfc_mbox_timeout_handler(struct lpfc_hba *);
+ 
+ struct lpfc_nodelist *lpfc_findnode_did(struct lpfc_vport *, uint32_t);
+@@ -445,7 +445,7 @@ extern unsigned int lpfc_fcp_look_ahead;
+ /* Interface exported by fabric iocb scheduler */
+ void lpfc_fabric_abort_nport(struct lpfc_nodelist *);
+ void lpfc_fabric_abort_hba(struct lpfc_hba *);
+-void lpfc_fabric_block_timeout(unsigned long);
++void lpfc_fabric_block_timeout(struct timer_list *);
+ void lpfc_unblock_fabric_iocbs(struct lpfc_hba *);
+ void lpfc_rampdown_queue_depth(struct lpfc_hba *);
+ void lpfc_ramp_down_queue_handler(struct lpfc_hba *);
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 33417681f5d4..f77673ab4a84 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -2884,9 +2884,9 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+  * the worker thread.
+  **/
+ void
+-lpfc_delayed_disc_tmo(unsigned long ptr)
++lpfc_delayed_disc_tmo(struct timer_list *t)
  {
--	struct sci_timer *tmr = (struct sci_timer *)data;
-+	struct sci_timer *tmr = from_timer(tmr, t, timer);
- 	struct isci_host *ihost = container_of(tmr, typeof(*ihost), phy_timer);
+-	struct lpfc_vport *vport = (struct lpfc_vport *)ptr;
++	struct lpfc_vport *vport = from_timer(vport, t, delayed_disc_tmo);
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	uint32_t tmo_posted;
+ 	unsigned long iflag;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 468a66371de9..0dd6c21433fe 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3131,9 +3131,9 @@ lpfc_cancel_retry_delay_tmo(struct lpfc_vport *vport, struct lpfc_nodelist *nlp)
+  * to the event associated with the ndlp.
+  **/
+ void
+-lpfc_els_retry_delay(unsigned long ptr)
++lpfc_els_retry_delay(struct timer_list *t)
+ {
+-	struct lpfc_nodelist *ndlp = (struct lpfc_nodelist *) ptr;
++	struct lpfc_nodelist *ndlp = from_timer(ndlp, t, nlp_delayfunc);
+ 	struct lpfc_vport *vport = ndlp->vport;
+ 	struct lpfc_hba   *phba = vport->phba;
  	unsigned long flags;
- 	enum sci_status status;
-@@ -1592,9 +1592,9 @@ static const struct sci_base_state sci_controller_state_table[] = {
- 	[SCIC_FAILED] = {}
- };
- 
--static void controller_timeout(unsigned long data)
-+static void controller_timeout(struct timer_list *t)
+@@ -7385,9 +7385,9 @@ lpfc_els_rcv_fan(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+  * lpfc_els_timeout_handler() to work on the posted event WORKER_ELS_TMO.
+  **/
+ void
+-lpfc_els_timeout(unsigned long ptr)
++lpfc_els_timeout(struct timer_list *t)
  {
--	struct sci_timer *tmr = (struct sci_timer *)data;
-+	struct sci_timer *tmr = from_timer(tmr, t, timer);
- 	struct isci_host *ihost = container_of(tmr, typeof(*ihost), timer);
- 	struct sci_base_state_machine *sm = &ihost->sm;
- 	unsigned long flags;
-@@ -1737,9 +1737,9 @@ static u8 max_spin_up(struct isci_host *ihost)
- 			     MAX_CONCURRENT_DEVICE_SPIN_UP_COUNT);
+-	struct lpfc_vport *vport = (struct lpfc_vport *) ptr;
++	struct lpfc_vport *vport = from_timer(vport, t, els_tmofunc);
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	uint32_t tmo_posted;
+ 	unsigned long iflag;
+@@ -9017,9 +9017,9 @@ lpfc_issue_els_npiv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+  * posted event WORKER_FABRIC_BLOCK_TMO.
+  **/
+ void
+-lpfc_fabric_block_timeout(unsigned long ptr)
++lpfc_fabric_block_timeout(struct timer_list *t)
+ {
+-	struct lpfc_hba  *phba = (struct lpfc_hba *) ptr;
++	struct lpfc_hba  *phba = from_timer(phba, t, fabric_block_timer);
+ 	unsigned long iflags;
+ 	uint32_t tmo_posted;
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 20808349a80e..8d491084eb5d 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -4370,8 +4370,7 @@ lpfc_initialize_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ {
+ 	INIT_LIST_HEAD(&ndlp->els_retry_evt.evt_listp);
+ 	INIT_LIST_HEAD(&ndlp->dev_loss_evt.evt_listp);
+-	setup_timer(&ndlp->nlp_delayfunc, lpfc_els_retry_delay,
+-			(unsigned long)ndlp);
++	timer_setup(&ndlp->nlp_delayfunc, lpfc_els_retry_delay, 0);
+ 	ndlp->nlp_DID = did;
+ 	ndlp->vport = vport;
+ 	ndlp->phba = vport->phba;
+@@ -5508,9 +5507,9 @@ lpfc_cleanup_discovery_resources(struct lpfc_vport *vport)
+  */
+ /*****************************************************************************/
+ void
+-lpfc_disc_timeout(unsigned long ptr)
++lpfc_disc_timeout(struct timer_list *t)
+ {
+-	struct lpfc_vport *vport = (struct lpfc_vport *) ptr;
++	struct lpfc_vport *vport = from_timer(vport, t, fc_disctmo);
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	uint32_t tmo_posted;
+ 	unsigned long flags = 0;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 100bc4c8798d..6a1e28ba9258 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1138,13 +1138,13 @@ lpfc_hba_down_post(struct lpfc_hba *phba)
+  * be cleared by the worker thread after it has taken the event bitmap out.
+  **/
+ static void
+-lpfc_hb_timeout(unsigned long ptr)
++lpfc_hb_timeout(struct timer_list *t)
+ {
+ 	struct lpfc_hba *phba;
+ 	uint32_t tmo_posted;
+ 	unsigned long iflag;
+ 
+-	phba = (struct lpfc_hba *)ptr;
++	phba = from_timer(phba, t, hb_tmofunc);
+ 
+ 	/* Check for heart beat timeout conditions */
+ 	spin_lock_irqsave(&phba->pport->work_port_lock, iflag);
+@@ -1172,12 +1172,12 @@ lpfc_hb_timeout(unsigned long ptr)
+  * be cleared by the worker thread after it has taken the event bitmap out.
+  **/
+ static void
+-lpfc_rrq_timeout(unsigned long ptr)
++lpfc_rrq_timeout(struct timer_list *t)
+ {
+ 	struct lpfc_hba *phba;
+ 	unsigned long iflag;
+ 
+-	phba = (struct lpfc_hba *)ptr;
++	phba = from_timer(phba, t, rrq_tmr);
+ 	spin_lock_irqsave(&phba->pport->work_port_lock, iflag);
+ 	if (!(phba->pport->load_flag & FC_UNLOADING))
+ 		phba->hba_flag |= HBA_RRQ_ACTIVE;
+@@ -3937,14 +3937,11 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	INIT_LIST_HEAD(&vport->rcv_buffer_list);
+ 	spin_lock_init(&vport->work_port_lock);
+ 
+-	setup_timer(&vport->fc_disctmo, lpfc_disc_timeout,
+-			(unsigned long)vport);
++	timer_setup(&vport->fc_disctmo, lpfc_disc_timeout, 0);
+ 
+-	setup_timer(&vport->els_tmofunc, lpfc_els_timeout,
+-			(unsigned long)vport);
++	timer_setup(&vport->els_tmofunc, lpfc_els_timeout, 0);
+ 
+-	setup_timer(&vport->delayed_disc_tmo, lpfc_delayed_disc_tmo,
+-			(unsigned long)vport);
++	timer_setup(&vport->delayed_disc_tmo, lpfc_delayed_disc_tmo, 0);
+ 
+ 	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
+ 	if (error)
+@@ -4210,9 +4207,9 @@ lpfc_fcf_redisc_wait_start_timer(struct lpfc_hba *phba)
+  * worker thread context.
+  **/
+ static void
+-lpfc_sli4_fcf_redisc_wait_tmo(unsigned long ptr)
++lpfc_sli4_fcf_redisc_wait_tmo(struct timer_list *t)
+ {
+-	struct lpfc_hba *phba = (struct lpfc_hba *)ptr;
++	struct lpfc_hba *phba = from_timer(phba, t, fcf.redisc_wait);
+ 
+ 	/* Don't send FCF rediscovery event if timer cancelled */
+ 	spin_lock_irq(&phba->hbalock);
+@@ -5624,15 +5621,13 @@ lpfc_setup_driver_resource_phase1(struct lpfc_hba *phba)
+ 	INIT_LIST_HEAD(&phba->luns);
+ 
+ 	/* MBOX heartbeat timer */
+-	setup_timer(&psli->mbox_tmo, lpfc_mbox_timeout, (unsigned long)phba);
++	timer_setup(&psli->mbox_tmo, lpfc_mbox_timeout, 0);
+ 	/* Fabric block timer */
+-	setup_timer(&phba->fabric_block_timer, lpfc_fabric_block_timeout,
+-			(unsigned long)phba);
++	timer_setup(&phba->fabric_block_timer, lpfc_fabric_block_timeout, 0);
+ 	/* EA polling mode timer */
+-	setup_timer(&phba->eratt_poll, lpfc_poll_eratt,
+-			(unsigned long)phba);
++	timer_setup(&phba->eratt_poll, lpfc_poll_eratt, 0);
+ 	/* Heartbeat timer */
+-	setup_timer(&phba->hb_tmofunc, lpfc_hb_timeout, (unsigned long)phba);
++	timer_setup(&phba->hb_tmofunc, lpfc_hb_timeout, 0);
+ 
+ 	return 0;
  }
+@@ -5658,8 +5653,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+ 	 */
  
--static void power_control_timeout(unsigned long data)
-+static void power_control_timeout(struct timer_list *t)
+ 	/* FCP polling mode timer */
+-	setup_timer(&phba->fcp_poll_timer, lpfc_poll_timeout,
+-			(unsigned long)phba);
++	timer_setup(&phba->fcp_poll_timer, lpfc_poll_timeout, 0);
+ 
+ 	/* Host attention work mask setup */
+ 	phba->work_ha_mask = (HA_ERATT | HA_MBATT | HA_LATT);
+@@ -5829,11 +5823,10 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	 * Initialize timers used by driver
+ 	 */
+ 
+-	setup_timer(&phba->rrq_tmr, lpfc_rrq_timeout, (unsigned long)phba);
++	timer_setup(&phba->rrq_tmr, lpfc_rrq_timeout, 0);
+ 
+ 	/* FCF rediscover timer */
+-	setup_timer(&phba->fcf.redisc_wait, lpfc_sli4_fcf_redisc_wait_tmo,
+-			(unsigned long)phba);
++	timer_setup(&phba->fcf.redisc_wait, lpfc_sli4_fcf_redisc_wait_tmo, 0);
+ 
+ 	/*
+ 	 * Control structure for handling external multi-buffer mailbox
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 1a6f122bb25d..c0cdaef4db24 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4501,9 +4501,9 @@ void lpfc_poll_start_timer(struct lpfc_hba * phba)
+  * and FCP Ring interrupt is disable.
+  **/
+ 
+-void lpfc_poll_timeout(unsigned long ptr)
++void lpfc_poll_timeout(struct timer_list *t)
  {
--	struct sci_timer *tmr = (struct sci_timer *)data;
-+	struct sci_timer *tmr = from_timer(tmr, t, timer);
- 	struct isci_host *ihost = container_of(tmr, typeof(*ihost), power_control.timer);
- 	struct isci_phy *iphy;
- 	unsigned long flags;
-diff --git a/drivers/scsi/isci/isci.h b/drivers/scsi/isci/isci.h
-index 234ab46fce33..680e30947671 100644
---- a/drivers/scsi/isci/isci.h
-+++ b/drivers/scsi/isci/isci.h
-@@ -498,12 +498,10 @@ struct sci_timer {
- };
+-	struct lpfc_hba *phba = (struct lpfc_hba *) ptr;
++	struct lpfc_hba *phba = from_timer(phba, t, fcp_poll_timer);
  
- static inline
--void sci_init_timer(struct sci_timer *tmr, void (*fn)(unsigned long))
-+void sci_init_timer(struct sci_timer *tmr, void (*fn)(struct timer_list *t))
+ 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
+ 		lpfc_sli_handle_fast_ring_event(phba,
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 8b119f87b51d..4edb81073409 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -3004,13 +3004,13 @@ lpfc_sli_rsp_pointers_error(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+  * and wake up worker thread to process it. Otherwise, it will set up the
+  * Error Attention polling timer for the next poll.
+  **/
+-void lpfc_poll_eratt(unsigned long ptr)
++void lpfc_poll_eratt(struct timer_list *t)
  {
--	tmr->timer.function = fn;
--	tmr->timer.data = (unsigned long) tmr;
- 	tmr->cancel = 0;
--	init_timer(&tmr->timer);
-+	timer_setup(&tmr->timer, fn, 0);
- }
+ 	struct lpfc_hba *phba;
+ 	uint32_t eratt = 0;
+ 	uint64_t sli_intr, cnt;
  
- static inline void sci_mod_timer(struct sci_timer *tmr, unsigned long msec)
-diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-index cb87b2ef7c92..1deca8c5a94f 100644
---- a/drivers/scsi/isci/phy.c
-+++ b/drivers/scsi/isci/phy.c
-@@ -315,9 +315,9 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 	return SCI_SUCCESS;
- }
+-	phba = (struct lpfc_hba *)ptr;
++	phba = from_timer(phba, t, eratt_poll);
  
--static void phy_sata_timeout(unsigned long data)
-+static void phy_sata_timeout(struct timer_list *t)
+ 	/* Here we will also keep track of interrupts per sec of the hba */
+ 	sli_intr = phba->sli.slistat.sli_intr;
+@@ -7167,9 +7167,9 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+  * done by the worker thread function lpfc_mbox_timeout_handler.
+  **/
+ void
+-lpfc_mbox_timeout(unsigned long ptr)
++lpfc_mbox_timeout(struct timer_list *t)
  {
--	struct sci_timer *tmr = (struct sci_timer *)data;
-+	struct sci_timer *tmr = from_timer(tmr, t, timer);
- 	struct isci_phy *iphy = container_of(tmr, typeof(*iphy), sata_timer);
- 	struct isci_host *ihost = iphy->owning_port->owning_controller;
- 	unsigned long flags;
-diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index a4dd5c91508c..1df45f028ea7 100644
---- a/drivers/scsi/isci/port.c
-+++ b/drivers/scsi/isci/port.c
-@@ -769,9 +769,9 @@ bool sci_port_link_detected(struct isci_port *iport, struct isci_phy *iphy)
- 	return true;
- }
+-	struct lpfc_hba  *phba = (struct lpfc_hba *) ptr;
++	struct lpfc_hba  *phba = from_timer(phba, t, sli.mbox_tmo);
+ 	unsigned long iflag;
+ 	uint32_t tmo_posted;
  
--static void port_timeout(unsigned long data)
-+static void port_timeout(struct timer_list *t)
- {
--	struct sci_timer *tmr = (struct sci_timer *)data;
-+	struct sci_timer *tmr = from_timer(tmr, t, timer);
- 	struct isci_port *iport = container_of(tmr, typeof(*iport), timer);
- 	struct isci_host *ihost = iport->owning_controller;
- 	unsigned long flags;
-diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
-index ac879745ef80..edb7be786c65 100644
---- a/drivers/scsi/isci/port_config.c
-+++ b/drivers/scsi/isci/port_config.c
-@@ -319,10 +319,10 @@ sci_mpc_agent_validate_phy_configuration(struct isci_host *ihost,
- 	return sci_port_configuration_agent_validate_ports(ihost, port_agent);
- }
- 
--static void mpc_agent_timeout(unsigned long data)
-+static void mpc_agent_timeout(struct timer_list *t)
- {
- 	u8 index;
--	struct sci_timer *tmr = (struct sci_timer *)data;
-+	struct sci_timer *tmr = from_timer(tmr, t, timer);
- 	struct sci_port_configuration_agent *port_agent;
- 	struct isci_host *ihost;
- 	unsigned long flags;
-@@ -654,10 +654,10 @@ static void sci_apc_agent_link_down(
- }
- 
- /* configure the phys into ports when the timer fires */
--static void apc_agent_timeout(unsigned long data)
-+static void apc_agent_timeout(struct timer_list *t)
- {
- 	u32 index;
--	struct sci_timer *tmr = (struct sci_timer *)data;
-+	struct sci_timer *tmr = from_timer(tmr, t, timer);
- 	struct sci_port_configuration_agent *port_agent;
- 	struct isci_host *ihost;
- 	unsigned long flags;
 -- 
 2.7.4
 
