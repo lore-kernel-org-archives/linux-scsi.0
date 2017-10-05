@@ -1,94 +1,93 @@
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH 03/13] timer: Remove init_timer_on_stack() in favor of timer_setup_on_stack()
-Date: Thu, 5 Oct 2017 15:18:32 +0200
-Message-ID: <CAJZ5v0iMxSDj0gR0n3YF+zRvR3e2XHpiMR9hKjjon_EXSbB89w@mail.gmail.com>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org> <1507159627-127660-4-git-send-email-keescook@chromium.org>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH] scsi: fixup kernel warning during rmmod()
+Date: Thu, 5 Oct 2017 15:29:13 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1967204804@avsrvexchmbx1.microsemi.net>
+References: <1507105736-19148-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <1507159627-127660-4-git-send-email-keescook@chromium.org>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Kees Cook <keescook@chromium.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Sudip Mukherjee <sudipm.mukherjee@gmail.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Julian Wiedmann <jwi@linux.vnet.ibm.com>, Ursula Braun <ubraun@linux.vnet.ibm.com>, Michael Reed <mdr@sgi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux PM <linux-pm@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, linux-s390@vger.kernel.org, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@lin>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0077.outbound.protection.outlook.com ([104.47.41.77]:27280
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751323AbdJEP3x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Oct 2017 11:29:53 -0400
+In-Reply-To: <1507105736-19148-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 
-On Thu, Oct 5, 2017 at 1:26 AM, Kees Cook <keescook@chromium.org> wrote:
-> Remove uses of init_timer_on_stack() with open-coded function and data
-> assignments that could be expressed using timer_setup_on_stack(). Several
-> were removed from the stack entirely since there was a one-to-one mapping
-> of parent structure to timer, those are switched to using timer_setup()
-> instead. All related callbacks were adjusted to use from_timer().
->
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> Cc: Pavel Machek <pavel@ucw.cz>
-> Cc: Len Brown <len.brown@intel.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-> Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-> Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-> Cc: Julian Wiedmann <jwi@linux.vnet.ibm.com>
-> Cc: Ursula Braun <ubraun@linux.vnet.ibm.com>
-> Cc: Michael Reed <mdr@sgi.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: linux-pm@vger.kernel.org
-> Cc: linux1394-devel@lists.sourceforge.net
-> Cc: linux-s390@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
+> Sent: Wednesday, October 04, 2017 3:29 AM
+> To: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>; James Bottomley
+> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
+> Hannes Reinecke <hare@suse.de>; Hannes Reinecke <hare@suse.com>
+> Subject: [PATCH] scsi: fixup kernel warning during rmmod()
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> Calling rmmod() on a FC driver will results in warnings like
+>=20
+> WARNING: CPU: 60 PID: 14640 at fs/sysfs/group.c:237
+> device_del+0x54/0x240()
+> sysfs group ffffffff81eff140 not found for kobject '3:0:0:3'
+>=20
+> The problem here is that during scsi_remove_target() we will iterate
+> over all devices, but fail to remove any of those as the call to
+> scsi_device_get() fails the check to module_is_live().
+> Hence the devices will not be removed at this point, but all
+> intermediate structures like fc rport etc. will be.
+> Later on during scsi_forget_host() the devices are removed for
+> real, but the device parent is already removed and causes
+> this warning.
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Don Brace <don.brace@microsemi.com>=20
+Using the smartpqi driver.
+Thanks for your effort.
+
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
+
+
 > ---
->  drivers/base/power/main.c           |  8 +++-----
->  drivers/firewire/core-transaction.c | 10 +++++-----
->  drivers/parport/ieee1284.c          | 21 +++++++--------------
->  drivers/s390/char/tape.h            |  1 +
->  drivers/s390/char/tape_std.c        | 18 ++++++------------
->  drivers/s390/net/lcs.c              | 16 ++++++----------
->  drivers/s390/net/lcs.h              |  1 +
->  drivers/scsi/qla1280.c              | 14 +++++---------
->  drivers/scsi/qla1280.h              |  1 +
->  include/linux/parport.h             |  1 +
->  include/linux/timer.h               |  2 --
->  11 files changed, 36 insertions(+), 57 deletions(-)
->
-> diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
-> index 770b1539a083..ae47b2ec84b4 100644
-> --- a/drivers/base/power/main.c
-> +++ b/drivers/base/power/main.c
-> @@ -478,9 +478,9 @@ struct dpm_watchdog {
->   * There's not much we can do here to recover so panic() to
->   * capture a crash-dump in pstore.
->   */
-> -static void dpm_watchdog_handler(unsigned long data)
-> +static void dpm_watchdog_handler(struct timer_list *t)
->  {
-> -       struct dpm_watchdog *wd = (void *)data;
-> +       struct dpm_watchdog *wd = from_timer(wd, t, timer);
->
->         dev_emerg(wd->dev, "**** DPM device timeout ****\n");
->         show_stack(wd->tsk, NULL);
-> @@ -500,11 +500,9 @@ static void dpm_watchdog_set(struct dpm_watchdog *wd, struct device *dev)
->         wd->dev = dev;
->         wd->tsk = current;
->
-> -       init_timer_on_stack(timer);
-> +       timer_setup_on_stack(timer, dpm_watchdog_handler, 0);
->         /* use same timeout value for both suspend and resume */
->         timer->expires = jiffies + HZ * CONFIG_DPM_WATCHDOG_TIMEOUT;
-> -       timer->function = dpm_watchdog_handler;
-> -       timer->data = (unsigned long)wd;
->         add_timer(timer);
->  }
-
-For the above:
-
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>  drivers/scsi/scsi_sysfs.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 1889761..995539f 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1336,13 +1336,19 @@ static void __scsi_remove_target(struct
+> scsi_target *starget)
+>         spin_lock_irqsave(shost->host_lock, flags);
+>   restart:
+>         list_for_each_entry(sdev, &shost->__devices, siblings) {
+> +               /*
+> +                * We cannot call scsi_device_get() here, as
+> +                * we might've been called from rmmod() causing
+> +                * scsi_device_get() to fail the module_is_live()
+> +                * check.
+> +                */
+>                 if (sdev->channel !=3D starget->channel ||
+>                     sdev->id !=3D starget->id ||
+> -                   scsi_device_get(sdev))
+> +                   !get_device(&sdev->sdev_gendev))
+>                         continue;
+>                 spin_unlock_irqrestore(shost->host_lock, flags);
+>                 scsi_remove_device(sdev);
+> -               scsi_device_put(sdev);
+> +               put_device(&sdev->sdev_gendev);
+>                 spin_lock_irqsave(shost->host_lock, flags);
+>                 goto restart;
+>         }
+> --
+> 1.8.5.6
