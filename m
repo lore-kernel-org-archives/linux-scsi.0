@@ -1,29 +1,30 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/1] scsi/libfc: fix a deadlock in fc_rport_work
-Date: Fri, 6 Oct 2017 09:45:44 +0200
-Message-ID: <20171006074544.2kb6ds73zugyxehv@linux-x5ow.site>
-References: <1507246881-20508-1-git-send-email-satishkh@cisco.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH] scsi: isci: Convert timers to use timer_setup()
+Date: Fri, 6 Oct 2017 16:11:18 +0200
+Message-ID: <90afd55d-8f48-70de-fb75-9ebf8a3c9b9e@intel.com>
+References: <c9188a9dc5494ed18a5026ca9f961693@fmsmsx104.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55307 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750815AbdJFHpt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Oct 2017 03:45:49 -0400
-Content-Disposition: inline
-In-Reply-To: <1507246881-20508-1-git-send-email-satishkh@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <c9188a9dc5494ed18a5026ca9f961693@fmsmsx104.amr.corp.intel.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: intel-linux-scu <intel-linux-scu@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: satishkh@cisco.com
-Cc: linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+On 10/05/2017 02:48 AM, Kees Cook wrote:
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly.
+> 
+> Cc: Intel SCU Linux support <intel-linux-scu@intel.com>
+> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
