@@ -1,47 +1,76 @@
-From: satishkh@cisco.com
-Subject: [PATCH 1/1] scsi/libfc: fix a deadlock in fc_rport_work
-Date: Thu,  5 Oct 2017 16:41:21 -0700
-Message-ID: <1507246881-20508-1-git-send-email-satishkh@cisco.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-4.cisco.com ([173.37.142.91]:46555 "EHLO
-        alln-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751083AbdJEXvL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2017 19:51:11 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Gavin Guo <gavin.guo@canonical.com>
+Subject: Re: mptsas driver cannot detect hotplugging disk with the LSI SCSI
+ SAS1068 controller in Ubuntu guest on VMware
+Date: Fri, 6 Oct 2017 09:08:05 +0800
+Message-ID: <CA+eFSM24pwY0ViCiUqvzNDJa-Q0h0+XnEFF-gesKfBcEVKyLgQ@mail.gmail.com>
+References: <CA+eFSM1aJRYs__pwtz+8E0TFOeKuKpHoiOkX6Wmm_2HMT1ut5A@mail.gmail.com>
+ <1ad520f6-a1d8-5ce7-ee74-83edfdbfd39b@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1ad520f6-a1d8-5ce7-ee74-83edfdbfd39b@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: satishkh@cisco.com
 
-From: Satish Kharat <satishkh@cisco.com>
+On Mon, Oct 2, 2017 at 10:32 PM, Hannes Reinecke <hare@suse.de> wrote:
+> On 09/27/2017 09:33 AM, Gavin Guo wrote:
+>> There is a problem in the latest upstream kernel with the device:
+>>
+>> $ grep -i lsi lspci
+>> 03:00.0 Serial Attached SCSI controller [0107]: LSI Logic / Symbios
+>> Logic SAS1068 PCI-X Fusion-MPT SAS [1000:0054] (rev 01)
+>>
+>> The device is simulated by the VMware ESXi 5.5
+>>
+>> When hotplugging a new disk to the Guest Ubuntu OS, the latest kernel
+>> cannot automatically probe the disk. However, on the v3.19.0-80.88
+>> kernel, the disk can be dynamically probed and show the following
+>> info message:
+>>
+>> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
+>> sas_addr 0x5000c29a6bdae0f5
+>> scsi 2:0:1:0: Direct-Access     VMware   Virtual disk     1.0  PQ: 0
+>> ANSI: 2
+>> sd 2:0:1:0: Attached scsi generic sg2 type 0
+>> sd 2:0:1:0: [sdb] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
+>> sd 2:0:1:0: [sdb] Write Protect is off
+>> sd 2:0:1:0: [sdb] Mode Sense: 61 00 00 00
+>> sd 2:0:1:0: [sdb] Cache data unavailable
+>> sd 2:0:1:0: [sdb] Assuming drive cache: write through
+>>  sdb: unknown partition table
+>> sd 2:0:1:0: [sdb] Attached SCSI disk
+>>
+>> After looking up the message:
+>> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
+>> sas_addr 0x5000c29a6bdae0f5
+>>
+>> I found it comes from the path:
+>> mptsas_firmware_event_work -> mptsas_send_sas_event ->
+>> mptsas_hotplug_work -> mptsas_add_end_device
+>>
+>> I'll appreciate if anyone can give the idea: If it's possible that the
+>> irq from the simulated LSI SAS controller didn't come in to trigger
+>> the event? However, it can work on the v3.19 kernel so if there is
+>> any driver implementation issue in the latest kernel.
+>>
+> This is an issue with the mptsas driver, who originally assumed that no
+> system will have direct-attached SAS devices.
+> VMWare chose to implement exactly that, so the hotplug detection logic
+> is flawed here.
+> I'll be sending a patch.
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                Teamlead Storage & Networking
+> hare@suse.de                                   +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+> GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+> HRB 21284 (AG Nürnberg)
 
-In places like fc_rport_recv_plogi_req and fcoe_ctlr_vn_add we
-always take the lport disc_mutex lock before the rports mutex
-(rp_mutex) lock. Gaurding list_del_rcu(&rdata->peers) with
-disc.disc_mutex in fc_rport_work is correct but the rp_mutex lock
-can and should to be dropped before taking that lock else results
-in a deadlock.
-
-Signed-off-by: Satish Kharat <satishkh@cisco.com>
----
- drivers/scsi/libfc/fc_rport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 5203258..31d31aa 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -383,11 +383,11 @@ static void fc_rport_work(struct work_struct *work)
- 				fc_rport_enter_flogi(rdata);
- 				mutex_unlock(&rdata->rp_mutex);
- 			} else {
-+				mutex_unlock(&rdata->rp_mutex);
- 				FC_RPORT_DBG(rdata, "work delete\n");
- 				mutex_lock(&lport->disc.disc_mutex);
- 				list_del_rcu(&rdata->peers);
- 				mutex_unlock(&lport->disc.disc_mutex);
--				mutex_unlock(&rdata->rp_mutex);
- 				kref_put(&rdata->kref, fc_rport_destroy);
- 			}
- 		} else {
--- 
-2.5.5
+Thank you in advance. Please add me to the CC list when you send out
+the patch and I can help to verify that.
