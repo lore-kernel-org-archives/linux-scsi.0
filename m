@@ -1,101 +1,43 @@
-From: Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] arcmsr: Fix possible sleep-in-atomic bugs in arcmsr_queue_command
-Date: Sun,  8 Oct 2017 20:51:49 +0800
-Message-ID: <1507467109-23640-1-git-send-email-baijiaju1990@163.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, ching2048@areca.com.tw, bhumirks@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
+From: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] scsi: eata: Remove unnecessary cpp_index check
+Date: Sun,  8 Oct 2017 22:47:46 +0100
+Message-ID: <1507499266-10410-1-git-send-email-chris.gekas@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:38131 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751214AbdJHVrv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2017 17:47:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dario Ballabio <ballabio_dario@emc.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
 
-The driver may sleep under a spinlock, and the function call paths are:
-arcmsr_queue_command(acquire the spinlock)
-  arcmsr_queue_command_lck
-    arcmsr_handle_virtual_command
-      arcmsr_iop_message_xfer
-        arcmsr_iop_parking
-          arcmsr_stop_adapter_bgrb
-            arcmsr_hbaA_stop_bgrb
-              arcmsr_hbaA_wait_msgint_ready
-                msleep --> may sleep
+Variable spp->cpp_index is unsigned so checking whether it is less than
+zero is redundant.
 
-arcmsr_queue_command(acquire the spinlock)
-  arcmsr_queue_command_lck
-    arcmsr_handle_virtual_command
-      arcmsr_iop_message_xfer
-        arcmsr_iop_parking
-          arcmsr_stop_adapter_bgrb
-            arcmsr_hbaB_stop_bgrb
-              arcmsr_hbaB_wait_msgint_ready
-                msleep --> may sleep
-
-arcmsr_queue_command(acquire the spinlock)
-  arcmsr_queue_command_lck
-    arcmsr_handle_virtual_command
-      arcmsr_iop_message_xfer
-        arcmsr_iop_parking
-          arcmsr_stop_adapter_bgrb
-            arcmsr_hbaC_stop_bgrb
-              arcmsr_hbaC_wait_msgint_ready
-                msleep --> may sleep
-
-arcmsr_queue_command(acquire the spinlock)
-  arcmsr_queue_command_lck
-    arcmsr_handle_virtual_command
-      arcmsr_iop_message_xfer
-        arcmsr_iop_parking
-          arcmsr_stop_adapter_bgrb
-            arcmsr_hbaD_stop_bgrb
-              arcmsr_hbaD_wait_msgint_ready
-                msleep --> may sleep
-
-To fix them, msleep is replaced with mdelay.
-These bugs are found by my static analysis tool and my code review.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/eata.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index af032c4..31d94bd 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -347,7 +347,7 @@ static uint8_t arcmsr_hbaA_wait_msgint_ready(struct AdapterControlBlock *acb)
- 				&reg->outbound_intstatus);
- 			return true;
- 		}
--		msleep(10);
-+		mdelay(10);
- 	} /* max 20 seconds */
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index 6501c33..53a8fcd 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -2332,12 +2332,11 @@ static irqreturn_t ihdlr(struct Scsi_Host *shost)
+ 		printk
+ 		    ("%s: ihdlr, spp->eoc == 0, irq %d, reg 0x%x, count %d.\n",
+ 		     ha->board_name, irq, reg, ha->iocount);
+-	if (spp->cpp_index < 0 || spp->cpp_index >= shost->can_queue)
++	if (spp->cpp_index >= shost->can_queue)
+ 		printk
+ 		    ("%s: ihdlr, bad spp->cpp_index %d, irq %d, reg 0x%x, count %d.\n",
+ 		     ha->board_name, spp->cpp_index, irq, reg, ha->iocount);
+-	if (spp->eoc == 0 || spp->cpp_index < 0
+-	    || spp->cpp_index >= shost->can_queue)
++	if (spp->eoc == 0 || spp->cpp_index >= shost->can_queue)
+ 		goto handled;
  
- 	return false;
-@@ -367,7 +367,7 @@ static uint8_t arcmsr_hbaB_wait_msgint_ready(struct AdapterControlBlock *acb)
- 					reg->drv2iop_doorbell);
- 			return true;
- 		}
--		msleep(10);
-+		mdelay(10);
- 	} /* max 20 seconds */
- 
- 	return false;
-@@ -385,7 +385,7 @@ static uint8_t arcmsr_hbaC_wait_msgint_ready(struct AdapterControlBlock *pACB)
- 				&phbcmu->outbound_doorbell_clear); /*clear interrupt*/
- 			return true;
- 		}
--		msleep(10);
-+		mdelay(10);
- 	} /* max 20 seconds */
- 
- 	return false;
-@@ -403,7 +403,7 @@ static bool arcmsr_hbaD_wait_msgint_ready(struct AdapterControlBlock *pACB)
- 				reg->outbound_doorbell);
- 			return true;
- 		}
--		msleep(10);
-+		mdelay(10);
- 	} /* max 20 seconds */
- 	return false;
- }
+ 	/* Find the mailbox to be serviced on this board */
 -- 
-1.7.9.5
+2.7.4
