@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V6 3/5] sbitmap: introduce __sbitmap_for_each_set()
-Date: Mon,  9 Oct 2017 19:24:22 +0800
-Message-ID: <20171009112424.30524-4-ming.lei@redhat.com>
+Subject: [PATCH V6 5/5] blk-mq-sched: don't dequeue request until all in ->dispatch are flushed
+Date: Mon,  9 Oct 2017 19:24:24 +0800
+Message-ID: <20171009112424.30524-6-ming.lei@redhat.com>
 References: <20171009112424.30524-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171009112424.30524-1-ming.lei@redhat.com>
@@ -10,112 +10,130 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-We need to iterate ctx starting from any ctx in round robin
-way, so introduce this helper.
+During dispatching, we moved all requests from hctx->dispatch to
+one temporary list, then dispatch them one by one from this list.
+Unfortunately during this period, run queue from other contexts
+may think the queue is idle, then start to dequeue from sw/scheduler
+queue and still try to dispatch because ->dispatch is empty. This way
+hurts sequential I/O performance because requests are dequeued when
+lld queue is busy.
 
-Cc: Omar Sandoval <osandov@fb.com>
+This patch introduces the state of BLK_MQ_S_DISPATCH_BUSY to
+make sure that request isn't dequeued until ->dispatch is
+flushed.
+
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- include/linux/sbitmap.h | 64 ++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 47 insertions(+), 17 deletions(-)
+ block/blk-mq-debugfs.c |  1 +
+ block/blk-mq-sched.c   | 38 ++++++++++++++++++++++++++++++++------
+ block/blk-mq.c         |  5 +++++
+ include/linux/blk-mq.h |  1 +
+ 4 files changed, 39 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
-index a1904aadbc45..0dcc60e820de 100644
---- a/include/linux/sbitmap.h
-+++ b/include/linux/sbitmap.h
-@@ -211,10 +211,14 @@ bool sbitmap_any_bit_set(const struct sbitmap *sb);
-  */
- bool sbitmap_any_bit_clear(const struct sbitmap *sb);
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index e5dccc9f6f1d..6c15487bc3ff 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -181,6 +181,7 @@ static const char *const hctx_state_name[] = {
+ 	HCTX_STATE_NAME(SCHED_RESTART),
+ 	HCTX_STATE_NAME(TAG_WAITING),
+ 	HCTX_STATE_NAME(START_ON_RUN),
++	HCTX_STATE_NAME(DISPATCH_BUSY),
+ };
+ #undef HCTX_STATE_NAME
  
-+#define SB_NR_TO_INDEX(sb, bitnr) ((bitnr) >> (sb)->shift)
-+#define SB_NR_TO_BIT(sb, bitnr) ((bitnr) & ((1U << (sb)->shift) - 1U))
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 14b354f617e5..9f549711da84 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -95,6 +95,18 @@ static void blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+ 	struct elevator_queue *e = q->elevator;
+ 	LIST_HEAD(rq_list);
+ 
++	/*
++	 * If DISPATCH_BUSY is set, that means hw queue is busy
++	 * and requests in the list of hctx->dispatch need to
++	 * be flushed first, so return early.
++	 *
++	 * Wherever DISPATCH_BUSY is set, blk_mq_run_hw_queue()
++	 * will be run to try to make progress, so it is always
++	 * safe to check the state here.
++	 */
++	if (test_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state))
++		return;
 +
- typedef bool (*sb_for_each_fn)(struct sbitmap *, unsigned int, void *);
+ 	do {
+ 		struct request *rq = e->type->ops.mq.dispatch_request(hctx);
  
- /**
-- * sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
-+ * __sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
-+ * @start: Where to start the iteration.
-  * @sb: Bitmap to iterate over.
-  * @fn: Callback. Should return true to continue or false to break early.
-  * @data: Pointer to pass to callback.
-@@ -222,35 +226,61 @@ typedef bool (*sb_for_each_fn)(struct sbitmap *, unsigned int, void *);
-  * This is inline even though it's non-trivial so that the function calls to the
-  * callback will hopefully get optimized away.
-  */
--static inline void sbitmap_for_each_set(struct sbitmap *sb, sb_for_each_fn fn,
--					void *data)
-+static inline void __sbitmap_for_each_set(struct sbitmap *sb,
-+					  unsigned int start,
-+					  sb_for_each_fn fn, void *data)
- {
--	unsigned int i;
-+	unsigned int index;
-+	unsigned int nr;
-+	unsigned int scanned = 0;
+@@ -121,6 +133,10 @@ static void blk_mq_do_dispatch_ctx(struct blk_mq_hw_ctx *hctx)
+ 	LIST_HEAD(rq_list);
+ 	struct blk_mq_ctx *ctx = READ_ONCE(hctx->dispatch_from);
  
--	for (i = 0; i < sb->map_nr; i++) {
--		struct sbitmap_word *word = &sb->map[i];
--		unsigned int off, nr;
-+	if (start >= sb->depth)
-+		start = 0;
-+	index = SB_NR_TO_INDEX(sb, start);
-+	nr = SB_NR_TO_BIT(sb, start);
++	/* See same comment in blk_mq_do_dispatch_sched() */
++	if (test_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state))
++		return;
++
+ 	do {
+ 		struct request *rq;
  
--		if (!word->word)
--			continue;
-+	while (scanned < sb->depth) {
-+		struct sbitmap_word *word = &sb->map[index];
-+		unsigned int depth = min_t(unsigned int, word->depth - nr,
-+					   sb->depth - scanned);
- 
--		nr = 0;
--		off = i << sb->shift;
-+		scanned += depth;
-+		if (!word->word)
-+			goto next;
+@@ -176,12 +192,22 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 */
+ 	if (!list_empty(&rq_list)) {
+ 		blk_mq_sched_mark_restart_hctx(hctx);
+-		if (blk_mq_dispatch_rq_list(q, &rq_list)) {
+-			if (has_sched_dispatch)
+-				blk_mq_do_dispatch_sched(hctx);
+-			else
+-				blk_mq_do_dispatch_ctx(hctx);
+-		}
++		blk_mq_dispatch_rq_list(q, &rq_list);
 +
 +		/*
-+		 * On the first iteration of the outer loop, we need to add the
-+		 * bit offset back to the size of the word for find_next_bit().
-+		 * On all other iterations, nr is zero, so this is a noop.
++		 * We may clear DISPATCH_BUSY just after it is set from
++		 * another context, the only cost is that one request is
++		 * dequeued a bit early, we can survive that. Given the
++		 * window is small enough, no need to worry about performance
++		 * effect.
 +		 */
-+		depth += nr;
- 		while (1) {
--			nr = find_next_bit(&word->word, word->depth, nr);
--			if (nr >= word->depth)
-+			nr = find_next_bit(&word->word, depth, nr);
-+			if (nr >= depth)
- 				break;
--
--			if (!fn(sb, off + nr, data))
-+			if (!fn(sb, (index << sb->shift) + nr, data))
- 				return;
++		if (list_empty_careful(&hctx->dispatch))
++			clear_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
++
++		if (has_sched_dispatch)
++			blk_mq_do_dispatch_sched(hctx);
++		else
++			blk_mq_do_dispatch_ctx(hctx);
+ 	} else if (has_sched_dispatch) {
+ 		blk_mq_do_dispatch_sched(hctx);
+ 	} else if (q->queue_depth) {
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 394cb75d66fa..06dda6182b7a 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1172,6 +1172,11 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
  
- 			nr++;
- 		}
-+next:
-+		nr = 0;
-+		if (++index >= sb->map_nr)
-+			index = 0;
- 	}
- }
+ 		spin_lock(&hctx->lock);
+ 		list_splice_init(list, &hctx->dispatch);
++		/*
++		 * DISPATCH_BUSY won't be cleared until all requests
++		 * in hctx->dispatch are dispatched successfully
++		 */
++		set_bit(BLK_MQ_S_DISPATCH_BUSY, &hctx->state);
+ 		spin_unlock(&hctx->lock);
  
--#define SB_NR_TO_INDEX(sb, bitnr) ((bitnr) >> (sb)->shift)
--#define SB_NR_TO_BIT(sb, bitnr) ((bitnr) & ((1U << (sb)->shift) - 1U))
-+/**
-+ * sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
-+ * @sb: Bitmap to iterate over.
-+ * @fn: Callback. Should return true to continue or false to break early.
-+ * @data: Pointer to pass to callback.
-+ */
-+static inline void sbitmap_for_each_set(struct sbitmap *sb, sb_for_each_fn fn,
-+					void *data)
-+{
-+	__sbitmap_for_each_set(sb, 0, fn, data);
-+}
+ 		/*
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 7b7a366a97f3..13f6c25fa461 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -172,6 +172,7 @@ enum {
+ 	BLK_MQ_S_SCHED_RESTART	= 2,
+ 	BLK_MQ_S_TAG_WAITING	= 3,
+ 	BLK_MQ_S_START_ON_RUN	= 4,
++	BLK_MQ_S_DISPATCH_BUSY	= 5,
  
- static inline unsigned long *__sbitmap_word(struct sbitmap *sb,
- 					    unsigned int bitnr)
+ 	BLK_MQ_MAX_DEPTH	= 10240,
+ 
 -- 
 2.9.5
