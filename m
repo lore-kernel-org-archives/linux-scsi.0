@@ -1,111 +1,193 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v7 3/9] md: Neither resync nor reshape while the system is frozen
-Date: Mon,  9 Oct 2017 16:13:54 -0700
-Message-ID: <20171009231400.562-4-bart.vanassche@wdc.com>
+Subject: [PATCH v7 5/9] block: Introduce blk_get_request_flags()
+Date: Mon,  9 Oct 2017 16:13:56 -0700
+Message-ID: <20171009231400.562-6-bart.vanassche@wdc.com>
 References: <20171009231400.562-1-bart.vanassche@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:54488 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755612AbdJIXOI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2017 19:14:08 -0400
 In-Reply-To: <20171009231400.562-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, "Luis R . Rodriguez" <mcgrof@kernel.org>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, "Luis R . Rodriguez" <mcgrof@kernel.org>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Some people use the md driver on laptops and use the suspend and
-resume functionality. Since it is essential that submitting of
-new I/O requests stops before a hibernation image is created,
-interrupt the md resync and reshape actions if the system is
-being frozen. Note: the resync and reshape will restart after
-the system is resumed and a message similar to the following
-will appear in the system log:
-
-md: md0: data-check interrupted.
+A side effect of this patch is that the GFP mask that is passed to
+several allocation functions in the legacy block layer is changed
+from GFP_KERNEL into __GFP_DIRECT_RECLAIM.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/md/md.c | 30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
+ block/blk-core.c       | 50 +++++++++++++++++++++++++++++++++++---------------
+ include/linux/blkdev.h |  3 +++
+ 2 files changed, 38 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b99584e5d6b1..d712d3320c1d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -66,6 +66,8 @@
- #include <linux/raid/md_u.h>
- #include <linux/slab.h>
- #include <linux/percpu-refcount.h>
-+#include <linux/freezer.h>
-+#include <linux/suspend.h>
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 265a69511c47..03156d9ede94 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1157,7 +1157,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
+  * @rl: request list to allocate from
+  * @op: operation and flags
+  * @bio: bio to allocate request for (can be %NULL)
+- * @gfp_mask: allocation mask
++ * @flags: BLQ_MQ_REQ_* flags
+  *
+  * Get a free request from @q.  This function may fail under memory
+  * pressure or if @q is dead.
+@@ -1167,7 +1167,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
+  * Returns request pointer on success, with @q->queue_lock *not held*.
+  */
+ static struct request *__get_request(struct request_list *rl, unsigned int op,
+-		struct bio *bio, gfp_t gfp_mask)
++				     struct bio *bio, unsigned int flags)
+ {
+ 	struct request_queue *q = rl->q;
+ 	struct request *rq;
+@@ -1176,6 +1176,8 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
+ 	struct io_cq *icq = NULL;
+ 	const bool is_sync = op_is_sync(op);
+ 	int may_queue;
++	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
++			 __GFP_DIRECT_RECLAIM;
+ 	req_flags_t rq_flags = RQF_ALLOCED;
  
- #include <trace/events/block.h>
- #include "md.h"
-@@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
- 	 */
+ 	lockdep_assert_held(q->queue_lock);
+@@ -1336,7 +1338,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
+  * @q: request_queue to allocate request from
+  * @op: operation and flags
+  * @bio: bio to allocate request for (can be %NULL)
+- * @gfp_mask: allocation mask
++ * @flags: BLK_MQ_REQ_* flags.
+  *
+  * Get a free request from @q.  If %__GFP_DIRECT_RECLAIM is set in @gfp_mask,
+  * this function keeps retrying under memory pressure and fails iff @q is dead.
+@@ -1346,7 +1348,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
+  * Returns request pointer on success, with @q->queue_lock *not held*.
+  */
+ static struct request *get_request(struct request_queue *q, unsigned int op,
+-		struct bio *bio, gfp_t gfp_mask)
++				   struct bio *bio, unsigned int flags)
+ {
+ 	const bool is_sync = op_is_sync(op);
+ 	DEFINE_WAIT(wait);
+@@ -1358,7 +1360,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
  
- 	allow_signal(SIGKILL);
-+	set_freezable();
- 	while (!kthread_should_stop()) {
+ 	rl = blk_get_rl(q, bio);	/* transferred to @rq on success */
+ retry:
+-	rq = __get_request(rl, op, bio, gfp_mask);
++	rq = __get_request(rl, op, bio, flags);
+ 	if (!IS_ERR(rq))
+ 		return rq;
  
- 		/* We need to wait INTERRUPTIBLE so that
-@@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
- 		if (signal_pending(current))
- 			flush_signals(current);
+@@ -1367,7 +1369,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
+ 		return ERR_PTR(-EAGAIN);
+ 	}
  
--		wait_event_interruptible_timeout
-+		wait_event_freezable_timeout
- 			(thread->wqueue,
- 			 test_bit(THREAD_WAKEUP, &thread->flags)
- 			 || kthread_should_stop() || kthread_should_park(),
-@@ -8963,6 +8966,29 @@ static void md_stop_all_writes(void)
- 		mdelay(1000*1);
+-	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
++	if ((flags & BLK_MQ_REQ_NOWAIT) || unlikely(blk_queue_dying(q))) {
+ 		blk_put_rl(rl);
+ 		return rq;
+ 	}
+@@ -1394,10 +1396,13 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
+ 	goto retry;
  }
  
-+/*
-+ * Ensure that neither resyncing nor reshaping occurs while the system is
-+ * frozen.
-+ */
-+static int md_notify_pm(struct notifier_block *bl, unsigned long state,
-+			void *unused)
-+{
-+	pr_debug("%s: state = %ld\n", __func__, state);
-+
-+	switch (state) {
-+	case PM_HIBERNATION_PREPARE:
-+	case PM_SUSPEND_PREPARE:
-+	case PM_RESTORE_PREPARE:
-+		md_stop_all_writes();
-+		break;
-+	}
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block md_pm_notifier = {
-+	.notifier_call	= md_notify_pm,
-+};
-+
- static int md_notify_reboot(struct notifier_block *this,
- 			    unsigned long code, void *x)
++/* flags: BLK_MQ_REQ_PREEMPT and/or BLK_MQ_REQ_NOWAIT. */
+ static struct request *blk_old_get_request(struct request_queue *q,
+-					   unsigned int op, gfp_t gfp_mask)
++					   unsigned int op, unsigned int flags)
  {
-@@ -9009,6 +9035,7 @@ static int __init md_init(void)
- 			    md_probe, NULL, NULL);
+ 	struct request *rq;
++	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
++			 __GFP_DIRECT_RECLAIM;
+ 	int ret = 0;
  
- 	register_reboot_notifier(&md_reboot_notifier);
-+	register_pm_notifier(&md_pm_notifier);
- 	raid_table_header = register_sysctl_table(raid_root_table);
+ 	WARN_ON_ONCE(q->mq_ops);
+@@ -1410,7 +1415,7 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 	spin_lock_irq(q->queue_lock);
+-	rq = get_request(q, op, NULL, gfp_mask);
++	rq = get_request(q, op, NULL, flags);
+ 	if (IS_ERR(rq)) {
+ 		spin_unlock_irq(q->queue_lock);
+ 		blk_queue_exit(q);
+@@ -1424,25 +1429,40 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 	return rq;
+ }
  
- 	md_geninit();
-@@ -9248,6 +9275,7 @@ static __exit void md_exit(void)
+-struct request *blk_get_request(struct request_queue *q, unsigned int op,
+-				gfp_t gfp_mask)
++/**
++ * blk_get_request_flags - allocate a request
++ * @q: request queue to allocate a request for
++ * @op: operation (REQ_OP_*) and REQ_* flags, e.g. REQ_SYNC.
++ * @flags: BLK_MQ_REQ_* flags, e.g. BLK_MQ_REQ_NOWAIT.
++ */
++struct request *blk_get_request_flags(struct request_queue *q, unsigned int op,
++				      unsigned int flags)
+ {
+ 	struct request *req;
  
- 	unregister_blkdev(MD_MAJOR,"md");
- 	unregister_blkdev(mdp_major, "mdp");
-+	unregister_pm_notifier(&md_pm_notifier);
- 	unregister_reboot_notifier(&md_reboot_notifier);
- 	unregister_sysctl_table(raid_table_header);
++	WARN_ON_ONCE(op & REQ_NOWAIT);
++	WARN_ON_ONCE(flags & ~BLK_MQ_REQ_NOWAIT);
++
+ 	if (q->mq_ops) {
+-		req = blk_mq_alloc_request(q, op,
+-			(gfp_mask & __GFP_DIRECT_RECLAIM) ?
+-				0 : BLK_MQ_REQ_NOWAIT);
++		req = blk_mq_alloc_request(q, op, flags);
+ 		if (!IS_ERR(req) && q->mq_ops->initialize_rq_fn)
+ 			q->mq_ops->initialize_rq_fn(req);
+ 	} else {
+-		req = blk_old_get_request(q, op, gfp_mask);
++		req = blk_old_get_request(q, op, flags);
+ 		if (!IS_ERR(req) && q->initialize_rq_fn)
+ 			q->initialize_rq_fn(req);
+ 	}
  
+ 	return req;
+ }
++EXPORT_SYMBOL(blk_get_request_flags);
++
++struct request *blk_get_request(struct request_queue *q, unsigned int op,
++				gfp_t gfp_mask)
++{
++	return blk_get_request_flags(q, op, gfp_mask & __GFP_DIRECT_RECLAIM ?
++				     0 : BLK_MQ_REQ_NOWAIT);
++}
+ EXPORT_SYMBOL(blk_get_request);
+ 
+ /**
+@@ -1868,7 +1888,7 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
+ 	 * Returns with the queue unlocked.
+ 	 */
+ 	blk_queue_enter_live(q);
+-	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
++	req = get_request(q, bio->bi_opf, bio, 0);
+ 	if (IS_ERR(req)) {
+ 		blk_queue_exit(q);
+ 		__wbt_done(q->rq_wb, wb_acct);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 9fb71fc7d0e8..3f7b08a9b9ae 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -935,6 +935,9 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
+ extern void blk_init_request_from_bio(struct request *req, struct bio *bio);
+ extern void blk_put_request(struct request *);
+ extern void __blk_put_request(struct request_queue *, struct request *);
++extern struct request *blk_get_request_flags(struct request_queue *,
++					     unsigned int op,
++					     unsigned int flags);
+ extern struct request *blk_get_request(struct request_queue *, unsigned int op,
+ 				       gfp_t gfp_mask);
+ extern void blk_requeue_request(struct request_queue *, struct request *);
 -- 
 2.14.2
