@@ -1,40 +1,55 @@
-From: Adam Borowski <kilobyte@angband.pl>
-Subject: [PATCH] scsi: aic7xxx: explain a mysterious build failure message
-Date: Mon,  9 Oct 2017 22:11:02 +0200
-Message-ID: <20171009201102.5752-1-kilobyte@angband.pl>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tartarus.angband.pl ([89.206.35.136]:33829 "EHLO
-        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752528AbdJIULV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2017 16:11:21 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH] scsi: libiscsi: fix shifting of DID_REQUEUE host byte
+Date: Mon, 9 Oct 2017 14:26:02 -0700
+Message-ID: <80ee964c-5e48-9059-12fa-7aa61d6b893d@suse.com>
+References: <20171009113319.9505-1-jthumshirn@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171009113319.9505-1-jthumshirn@suse.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Chris Leech <cleech@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Adam Borowski <kilobyte@angband.pl>
 
-"*** Install db development libraries" doesn't ring a bell that it's talking
-about libdb (Berkeley DB).  Because of BDB's relicensing to Affero,
-incompatible with many users including Linux, most if not all distributions
-can be expected to keep version 5.3 for the foreseable future, thus we can
-point the user directly to libdb5.3-dev as the package to install.
 
-Signed-off-by: Adam Borowski <kilobyte@angband.pl>
----
- drivers/scsi/aic7xxx/aicasm/Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aic7xxx/aicasm/Makefile b/drivers/scsi/aic7xxx/aicasm/Makefile
-index 45e2d49c1fff..e69ceb71beb7 100644
---- a/drivers/scsi/aic7xxx/aicasm/Makefile
-+++ b/drivers/scsi/aic7xxx/aicasm/Makefile
-@@ -54,7 +54,7 @@ $(OUTDIR)/aicdb.h:
- 	 elif [ -e "/usr/include/db_185.h" ]; then		\
- 		echo "#include <db_185.h>" > $@;		\
- 	 else							\
--		echo "*** Install db development libraries";	\
-+		echo "*** Install libdb development libraries (usually libdb5.3-dev)";\
- 	 fi
- 
- clean:
+On 10/09/2017 04:33 AM, Johannes Thumshirn wrote:
+> The SCSI host byte should be shifted left by 16 in order to have
+> scsi_decide_disposition() do the right thing (.i.e. requeue the command).
+> 
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Fixes: 661134ad3765 ("[SCSI] libiscsi, bnx2i: make bound ep check common")
+> Cc: Lee Duncan <lduncan@suse.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>
+> Cc: Chris Leech <cleech@redhat.com>
+> ---
+>  drivers/scsi/libiscsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index bd4605a34f54..9cba4913b43c 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -1728,7 +1728,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>  
+>  	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+>  		reason = FAILURE_SESSION_IN_RECOVERY;
+> -		sc->result = DID_REQUEUE;
+> +		sc->result = DID_REQUEUE << 16;
+>  		goto fault;
+>  	}
+>  
+> 
+Good catch.
+
+I know you're working on fixing all drivers to use the correct macros
+rather than rolling there own.
+
+Acked-by: Lee Duncan <lduncan@suse.com>
 -- 
-2.14.2
+Lee Duncan
+SUSE Labs
