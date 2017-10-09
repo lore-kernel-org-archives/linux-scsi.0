@@ -1,75 +1,117 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v7 7/9] ide, scsi: Tell the block layer at request allocation time about preempt requests
-Date: Mon,  9 Oct 2017 16:13:58 -0700
-Message-ID: <20171009231400.562-8-bart.vanassche@wdc.com>
+Subject: [PATCH v7 4/9] block: Make q_usage_counter also track legacy requests
+Date: Mon,  9 Oct 2017 16:13:55 -0700
+Message-ID: <20171009231400.562-5-bart.vanassche@wdc.com>
 References: <20171009231400.562-1-bart.vanassche@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:47759 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755476AbdJIXOJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2017 19:14:09 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171009231400.562-1-bart.vanassche@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, "Luis R . Rodriguez" <mcgrof@kernel.org>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+List-Id: linux-scsi@vger.kernel.org
 
-Convert blk_get_request(q, op, __GFP_RECLAIM) into
-blk_get_request_flags(q, op, BLK_MQ_PREEMPT). This patch does not
-change any functionality.
+From: Ming Lei <ming.lei@redhat.com>
 
+This patch makes it possible to pause request allocation for
+the legacy block layer by calling blk_mq_freeze_queue() and
+blk_mq_unfreeze_queue().
+
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+[ bvanassche: Combined two patches into one, edited a comment and made sure
+  REQ_NOWAIT is handled properly in blk_old_get_request() ]
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Acked-by: David S. Miller <davem@davemloft.net> [ for IDE ]
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/ide/ide-pm.c    | 4 ++--
- drivers/scsi/scsi_lib.c | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ block/blk-core.c | 12 ++++++++++++
+ block/blk-mq.c   | 10 ++--------
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
-index 544f02d673ca..f56d742908df 100644
---- a/drivers/ide/ide-pm.c
-+++ b/drivers/ide/ide-pm.c
-@@ -89,9 +89,9 @@ int generic_ide_resume(struct device *dev)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 14f7674fa0b1..265a69511c47 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -610,6 +610,9 @@ void blk_set_queue_dying(struct request_queue *q)
+ 		}
+ 		spin_unlock_irq(q->queue_lock);
+ 	}
++
++	/* Make blk_queue_enter() reexamine the DYING flag. */
++	wake_up_all(&q->mq_freeze_wq);
+ }
+ EXPORT_SYMBOL_GPL(blk_set_queue_dying);
+ 
+@@ -1395,16 +1398,22 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 					   unsigned int op, gfp_t gfp_mask)
+ {
+ 	struct request *rq;
++	int ret = 0;
+ 
+ 	WARN_ON_ONCE(q->mq_ops);
+ 
+ 	/* create ioc upfront */
+ 	create_io_context(gfp_mask, q->node);
+ 
++	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ||
++			      (op & REQ_NOWAIT));
++	if (ret)
++		return ERR_PTR(ret);
+ 	spin_lock_irq(q->queue_lock);
+ 	rq = get_request(q, op, NULL, gfp_mask);
+ 	if (IS_ERR(rq)) {
+ 		spin_unlock_irq(q->queue_lock);
++		blk_queue_exit(q);
+ 		return rq;
  	}
  
- 	memset(&rqpm, 0, sizeof(rqpm));
--	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, __GFP_RECLAIM);
-+	rq = blk_get_request_flags(drive->queue, REQ_OP_DRV_IN,
-+				   BLK_MQ_REQ_PREEMPT);
- 	ide_req(rq)->type = ATA_PRIV_PM_RESUME;
--	rq->rq_flags |= RQF_PREEMPT;
- 	rq->special = &rqpm;
- 	rqpm.pm_step = IDE_PM_START_RESUME;
- 	rqpm.pm_state = PM_EVENT_ON;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80fe297..1c16a247fae6 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -252,9 +252,9 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	struct scsi_request *rq;
- 	int ret = DRIVER_ERROR << 24;
+@@ -1576,6 +1585,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 		blk_free_request(rl, req);
+ 		freed_request(rl, sync, rq_flags);
+ 		blk_put_rl(rl);
++		blk_queue_exit(q);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(__blk_put_request);
+@@ -1857,8 +1867,10 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
+ 	 * Grab a free request. This is might sleep but can not fail.
+ 	 * Returns with the queue unlocked.
+ 	 */
++	blk_queue_enter_live(q);
+ 	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
+ 	if (IS_ERR(req)) {
++		blk_queue_exit(q);
+ 		__wbt_done(q->rq_wb, wb_acct);
+ 		if (PTR_ERR(req) == -ENOMEM)
+ 			bio->bi_status = BLK_STS_RESOURCE;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 076cbab9c3e0..8766587ae8b8 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -125,7 +125,8 @@ void blk_freeze_queue_start(struct request_queue *q)
+ 	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
+ 	if (freeze_depth == 1) {
+ 		percpu_ref_kill(&q->q_usage_counter);
+-		blk_mq_run_hw_queues(q, false);
++		if (q->mq_ops)
++			blk_mq_run_hw_queues(q, false);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
+@@ -255,13 +256,6 @@ void blk_mq_wake_waiters(struct request_queue *q)
+ 	queue_for_each_hw_ctx(q, hctx, i)
+ 		if (blk_mq_hw_queue_mapped(hctx))
+ 			blk_mq_tag_wakeup_all(hctx->tags, true);
+-
+-	/*
+-	 * If we are called because the queue has now been marked as
+-	 * dying, we need to ensure that processes currently waiting on
+-	 * the queue are notified as well.
+-	 */
+-	wake_up_all(&q->mq_freeze_wq);
+ }
  
--	req = blk_get_request(sdev->request_queue,
-+	req = blk_get_request_flags(sdev->request_queue,
- 			data_direction == DMA_TO_DEVICE ?
--			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
-+			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
- 	if (IS_ERR(req))
- 		return ret;
- 	rq = scsi_req(req);
-@@ -268,7 +268,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	rq->retries = retries;
- 	req->timeout = timeout;
- 	req->cmd_flags |= flags;
--	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
-+	req->rq_flags |= rq_flags | RQF_QUIET;
- 
- 	/*
- 	 * head injection *required* here otherwise quiesce won't work
+ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
 -- 
 2.14.2
