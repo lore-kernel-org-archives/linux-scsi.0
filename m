@@ -1,34 +1,44 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: libiscsi: fix shifting of DID_REQUEUE host byte
-Date: Mon, 9 Oct 2017 14:46:03 +0200
-Message-ID: <20171009124603.hfqvz6lugoi5qor3@linux-x5ow.site>
-References: <20171009113319.9505-1-jthumshirn@suse.de>
- <9105c7ef-0255-520c-3c90-e52a16fa5509@linux.vnet.ibm.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 09/13] timer: Remove users of expire and data arguments
+ to DEFINE_TIMER
+Date: Mon, 9 Oct 2017 15:23:05 +0200
+Message-ID: <20171009132305.GH20977@linux-mips.org>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+ <1507159627-127660-10-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <9105c7ef-0255-520c-3c90-e52a16fa5509@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Chris Leech <cleech@redhat.com>
+In-Reply-To: <1507159627-127660-10-git-send-email-keescook@chromium.org>
+Sender: netdev-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Wim Van Sebroeck <wim@iguana.be>, Guenter Roeck <linux@roeck-us.net>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-mips@linux-mips.org, linux-watchdog@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Chris Metcalf <cmetcalf@mellanox.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Harish Patil <harish.patil@cavium.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, John Stultz <john.stultz@linaro.org>, Julian Wiedmann <jwi@linux.vnet.ibm.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Lai Jiangshan <jiangshanlai@gmail.com>, Len Brown <len.brown@intel.com>, Manis
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 02:35:06PM +0200, Steffen Maier wrote:
-> Use wrapper functions to advertize their use in an attempt to avoid wrong
-> shifting in the future?
+On Wed, Oct 04, 2017 at 04:27:03PM -0700, Kees Cook wrote:
 
-Not sure, converting all the users would be a lot of churn for relatively low
-benefit:
+> Subject: [PATCH 09/13] timer: Remove users of expire and data arguments to
+>  DEFINE_TIMER
+> 
+> The expire and data arguments of DEFINE_TIMER are only used in two places
+> and are ignored by the code (malta-display.c only uses mod_timer(),
+> never add_timer(), so the preset expires value is ignored). Set both
+> sets of arguments to zero.
+> 
+> Cc: Ralf Baechle <ralf@linux-mips.org>
+> Cc: Wim Van Sebroeck <wim@iguana.be>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: linux-mips@linux-mips.org
+> Cc: linux-watchdog@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  arch/mips/mti-malta/malta-display.c | 6 +++---
+>  drivers/watchdog/alim7101_wdt.c     | 4 ++--
+>  2 files changed, 5 insertions(+), 5 deletions(-)
 
-linux (master)$ git grep "result = DID_" drivers/scsi/ | wc -l
-419
+For malta-display:
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Acked-by: Ralf Baechle <ralf@linux-mips.org>
+
+  Ralf
