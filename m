@@ -1,110 +1,75 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v7 8/9] block: Add the QUEUE_FLAG_PREEMPT_ONLY request queue flag
-Date: Mon,  9 Oct 2017 16:13:59 -0700
-Message-ID: <20171009231400.562-9-bart.vanassche@wdc.com>
+Subject: [PATCH v7 7/9] ide, scsi: Tell the block layer at request allocation time about preempt requests
+Date: Mon,  9 Oct 2017 16:13:58 -0700
+Message-ID: <20171009231400.562-8-bart.vanassche@wdc.com>
 References: <20171009231400.562-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:54488 "EHLO
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:47759 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755648AbdJIXOK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2017 19:14:10 -0400
+        with ESMTP id S1755476AbdJIXOJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2017 19:14:09 -0400
 In-Reply-To: <20171009231400.562-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, "Luis R . Rodriguez" <mcgrof@kernel.org>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-This flag will be used in the next patch to let the block layer
-core know whether or not a SCSI request queue has been quiesced.
-A quiesced SCSI queue namely only processes RQF_PREEMPT requests.
+Convert blk_get_request(q, op, __GFP_RECLAIM) into
+blk_get_request_flags(q, op, BLK_MQ_PREEMPT). This patch does not
+change any functionality.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Acked-by: David S. Miller <davem@davemloft.net> [ for IDE ]
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- block/blk-core.c       | 30 ++++++++++++++++++++++++++++++
- block/blk-mq-debugfs.c |  1 +
- include/linux/blkdev.h |  6 ++++++
- 3 files changed, 37 insertions(+)
+ drivers/ide/ide-pm.c    | 4 ++--
+ drivers/scsi/scsi_lib.c | 6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 842e67e0b7ab..ed992cbd107f 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -346,6 +346,36 @@ void blk_sync_queue(struct request_queue *q)
- }
- EXPORT_SYMBOL(blk_sync_queue);
+diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
+index 544f02d673ca..f56d742908df 100644
+--- a/drivers/ide/ide-pm.c
++++ b/drivers/ide/ide-pm.c
+@@ -89,9 +89,9 @@ int generic_ide_resume(struct device *dev)
+ 	}
  
-+/**
-+ * blk_set_preempt_only - set QUEUE_FLAG_PREEMPT_ONLY
-+ * @q: request queue pointer
-+ *
-+ * Returns the previous value of the PREEMPT_ONLY flag - 0 if the flag was not
-+ * set and 1 if the flag was already set.
-+ */
-+int blk_set_preempt_only(struct request_queue *q)
-+{
-+	unsigned long flags;
-+	int res;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	res = queue_flag_test_and_set(QUEUE_FLAG_PREEMPT_ONLY, q);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	return res;
-+}
-+EXPORT_SYMBOL_GPL(blk_set_preempt_only);
-+
-+void blk_clear_preempt_only(struct request_queue *q)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	queue_flag_clear(QUEUE_FLAG_PREEMPT_ONLY, q);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(blk_clear_preempt_only);
-+
- /**
-  * __blk_run_queue_uncond - run a queue whether or not it has been stopped
-  * @q:	The queue to run
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 7f4a1ba532af..75f31535f280 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -74,6 +74,7 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(REGISTERED),
- 	QUEUE_FLAG_NAME(SCSI_PASSTHROUGH),
- 	QUEUE_FLAG_NAME(QUIESCED),
-+	QUEUE_FLAG_NAME(PREEMPT_ONLY),
- };
- #undef QUEUE_FLAG_NAME
+ 	memset(&rqpm, 0, sizeof(rqpm));
+-	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, __GFP_RECLAIM);
++	rq = blk_get_request_flags(drive->queue, REQ_OP_DRV_IN,
++				   BLK_MQ_REQ_PREEMPT);
+ 	ide_req(rq)->type = ATA_PRIV_PM_RESUME;
+-	rq->rq_flags |= RQF_PREEMPT;
+ 	rq->special = &rqpm;
+ 	rqpm.pm_step = IDE_PM_START_RESUME;
+ 	rqpm.pm_state = PM_EVENT_ON;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9cf6a80fe297..1c16a247fae6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -252,9 +252,9 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	struct scsi_request *rq;
+ 	int ret = DRIVER_ERROR << 24;
  
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3f7b08a9b9ae..89555eea742b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -630,6 +630,7 @@ struct request_queue {
- #define QUEUE_FLAG_REGISTERED  26	/* queue has been registered to a disk */
- #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
-+#define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
+-	req = blk_get_request(sdev->request_queue,
++	req = blk_get_request_flags(sdev->request_queue,
+ 			data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
++			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
+ 	if (IS_ERR(req))
+ 		return ret;
+ 	rq = scsi_req(req);
+@@ -268,7 +268,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	rq->retries = retries;
+ 	req->timeout = timeout;
+ 	req->cmd_flags |= flags;
+-	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
++	req->rq_flags |= rq_flags | RQF_QUIET;
  
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
-@@ -730,6 +731,11 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
- 			     REQ_FAILFAST_DRIVER))
- #define blk_queue_quiesced(q)	test_bit(QUEUE_FLAG_QUIESCED, &(q)->queue_flags)
-+#define blk_queue_preempt_only(q)				\
-+	test_bit(QUEUE_FLAG_PREEMPT_ONLY, &(q)->queue_flags)
-+
-+extern int blk_set_preempt_only(struct request_queue *q);
-+extern void blk_clear_preempt_only(struct request_queue *q);
- 
- static inline bool blk_account_rq(struct request *rq)
- {
+ 	/*
+ 	 * head injection *required* here otherwise quiesce won't work
 -- 
 2.14.2
