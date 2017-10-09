@@ -1,76 +1,110 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V5 7/7] blk-mq-sched: don't dequeue request until all in
- ->dispatch are flushed
-Date: Mon, 9 Oct 2017 18:40:20 +0800
-Message-ID: <20171009104019.GC22168@ming.t460p>
-References: <20170930102720.30219-1-ming.lei@redhat.com>
- <20170930102720.30219-8-ming.lei@redhat.com>
- <20171003091128.GD21184@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171003091128.GD21184@infradead.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>
+Subject: [PATCH V6 0/5] blk-mq-sched: improve sequential I/O performance
+Date: Mon,  9 Oct 2017 19:24:19 +0800
+Message-ID: <20171009112424.30524-1-ming.lei@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 03, 2017 at 02:11:28AM -0700, Christoph Hellwig wrote:
-> This looks good in general:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Minor nitpicks below:
-> 
-> >  	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
-> 
-> This is now only tested once, so you can remove the local variable
-> for it.
+Hi Jens,
 
-There are still two users of the local variable, so I suggest to
-keep it.
+In Red Hat internal storage test wrt. blk-mq scheduler, we
+found that I/O performance is much bad with mq-deadline, especially
+about sequential I/O on some multi-queue SCSI devcies(lpfc, qla2xxx,
+SRP...)
 
-> 
-> > +		/*
-> > +		 * We may clear DISPATCH_BUSY just after it
-> > +		 * is set from another context, the only cost
-> > +		 * is that one request is dequeued a bit early,
-> > +		 * we can survive that. Given the window is
-> > +		 * small enough, no need to worry about performance
-> > +		 * effect.
-> > +		 */
-> 
-> Use your 80 line real estate for comments please.
+Turns out one big issue causes the performance regression: requests
+are still dequeued from sw queue/scheduler queue even when ldd's
+queue is busy, so I/O merge becomes quite difficult to make, then
+sequential IO degrades a lot.
 
-OK.
+This issue becomes one of mains reasons for reverting default SCSI_MQ
+in V4.13.
 
-> 
-> >  	if (!has_sched_dispatch)
-> > +		if (!q->queue_depth) {
-> > +			blk_mq_flush_busy_ctxs(hctx, &rq_list);
-> > +			blk_mq_dispatch_rq_list(q, &rq_list);
-> > +		} else {
-> > +			blk_mq_do_dispatch_ctx(q, hctx);
-> > +		}
-> > +	} else {
-> >  		blk_mq_do_dispatch_sched(q, e, hctx);
-> > +	}
-> 
-> Maybe flatten this out to:
-> 
-> 	if (e && e->type->ops.mq.dispatch_request) {
-> 		blk_mq_do_dispatch_sched(q, e, hctx);
-> 	} else if (q->queue_depth) {
-> 		blk_mq_do_dispatch_ctx(q, hctx);
-> 	} else {
-> 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
-> 		blk_mq_dispatch_rq_list(q, &rq_list);
-> 	}
-> 
+The 1st patch takes direct issue in blk_mq_request_bypass_insert(),
+then we can improve dm-mpath's performance in part 2, which will
+be posted out soon.
 
-OK.
+The 2nd six patches improve this situation, and brings back
+some performance loss.
 
+With this change, SCSI-MQ sequential I/O performance is
+improved much, Paolo reported that mq-deadline performance
+improved much[2] in his dbench test wrt V2. Also performanc
+improvement on lpfc/qla2xx was observed with V1.[1]
+
+Please consider it for V4.15.
+
+[1] http://marc.info/?l=linux-block&m=150151989915776&w=2
+[2] https://marc.info/?l=linux-block&m=150217980602843&w=2
+
+gitweb:
+	https://github.com/ming1/linux/commits/blk_mq_improve_scsi_mpath_perf_V6_part1	
+
+git & branch:
+	https://github.com/ming1/linux.git	#blk_mq_improve_scsi_mpath_perf_V6_part1
+
+V6:
+	- address comments from Christoph
+	- drop the 1st patch which changes blk_mq_request_bypass_insert(),
+	which should belong to dm-mpath's improvement
+	- move ' blk-mq-sched: move actual dispatching into one helper'
+	as 2nd patch, and use the introduced helper to simplify dispatch
+	logic
+	- merge two previous patches into one for improving dispatch from sw queue
+	- make comment/commit log line width as ~70, as suggested by
+	  Christoph
+
+V5:
+	- address some comments from Omar
+	- add Tested-by & Reveiewed-by tag
+	- use direct issue for blk_mq_request_bypass_insert(), and
+	start to consider to improve sequential I/O for dm-mpath
+	- only include part 1(the original patch 1 ~ 6), as suggested
+	by Omar
+
+V4:
+	- add Reviewed-by tag
+	- some trival change: typo fix in commit log or comment,
+	variable name, no actual functional change
+
+V3:
+	- totally round robin for picking req from ctx, as suggested
+	by Bart
+	- remove one local variable in __sbitmap_for_each_set()
+	- drop patches of single dispatch list, which can improve
+	performance on mq-deadline, but cause a bit degrade on
+	none because all hctxs need to be checked after ->dispatch
+	is flushed. Will post it again once it is mature.
+	- rebase on v4.13-rc6 with block for-next
+
+V2:
+	- dequeue request from sw queues in round roubin's style
+	as suggested by Bart, and introduces one helper in sbitmap
+	for this purpose
+	- improve bio merge via hash table from sw queue
+	- add comments about using DISPATCH_BUSY state in lockless way,
+	simplifying handling on busy state,
+	- hold ctx->lock when clearing ctx busy bit as suggested
+	by Bart
+
+Ming Lei (5):
+  blk-mq-sched: fix scheduler bad performance
+  blk-mq-sched: move actual dispatching into one helper
+  sbitmap: introduce __sbitmap_for_each_set()
+  blk-mq-sched: improve dispatching from sw queue
+  blk-mq-sched: don't dequeue request until all in ->dispatch are
+    flushed
+
+ block/blk-mq-debugfs.c  |   1 +
+ block/blk-mq-sched.c    | 115 ++++++++++++++++++++++++++++++++++++++++--------
+ block/blk-mq.c          |  44 ++++++++++++++++++
+ block/blk-mq.h          |   2 +
+ include/linux/blk-mq.h  |   3 ++
+ include/linux/sbitmap.h |  64 ++++++++++++++++++++-------
+ 6 files changed, 193 insertions(+), 36 deletions(-)
 
 -- 
-Ming
+2.9.5
