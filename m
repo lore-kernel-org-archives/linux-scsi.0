@@ -1,50 +1,51 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v3] scsi: fc: check for rport presence in fc_block_scsi_eh
-Date: Tue, 10 Oct 2017 17:31:38 +0200
-Message-ID: <20171010153138.21542-1-jthumshirn@suse.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: use set_host_byte instead of open-coding it
+Date: Tue, 10 Oct 2017 16:02:04 +0000
+Message-ID: <1507651323.2815.18.camel@wdc.com>
+References: <20171010152939.21353-1-jthumshirn@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171010152939.21353-1-jthumshirn@suse.de>
+Content-Language: en-US
+Content-ID: <526C5EC07306D440B411A4CEA7D25BB2@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+To: "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "maier@linux.vnet.ibm.com" <maier@linux.vnet.ibm.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>, "oneukum@suse.com" <oneukum@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Coverity-scan recently found a possible NULL pointer dereference in
-fc_block_scsi_eh() as starget_to_rport() either returns the rport for
-the startget or NULL.
-
-While it is rather unlikely to have fc_block_scsi_eh() called without
-an rport associated it's a good idea to catch potential misuses of the
-API gracefully.
-
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
-Martin, I'm not sure if I have already sent it out or not if I already did
-send this v3 please ignore it.
-
-Changes since v2:
-- return FAST_IO_FAIL instead of 0 (Steffen)
-
-Changes since v1:
-- s/WARN_ON/WARN_ON_ONCE/ (Bart)
----
- drivers/scsi/scsi_transport_fc.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index ba9d70f8a6a1..18f56a124b6c 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3328,6 +3328,9 @@ int fc_block_scsi_eh(struct scsi_cmnd *cmnd)
- {
- 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
- 
-+	if (WARN_ON_ONCE(!rport))
-+		return FAST_IO_FAIL;
-+
- 	return fc_block_rport(rport);
- }
- EXPORT_SYMBOL(fc_block_scsi_eh);
--- 
-2.13.5
+T24gVHVlLCAyMDE3LTEwLTEwIGF0IDE3OjI5ICswMjAwLCBKb2hhbm5lcyBUaHVtc2hpcm4gd3Jv
+dGU6DQo+IENhbGwgc2V0X2hvc3RfYnl0ZSgpIGluc3RlYWQgb2Ygb3Blbi1jb2RpbmcgaXQuDQo+
+IA0KPiBDb252ZXJ0ZWQgdXNpbmcgdGhpcyBzaW1wbGUgQ29jY2luZWxsZSBzcGF0Y2gNCj4gDQo+
+IDxTbVBMPg0KPiBAQA0KPiBsb2NhbCBpZGV4cHJlc3Npb24gc3RydWN0IHNjc2lfY21uZCAqYzsN
+Cj4gZXhwcmVzc2lvbiBFMTsNCj4gQEANCj4gDQo+IC0gYy0+cmVzdWx0ID0gRTEgPDwgMTY7DQo+
+ICsgc2V0X2hvc3RfYnl0ZShjLCBFMSk7DQo+IDwvU21QTD4NCg0KVGhpcyBpcyB1c2VmdWwgYnV0
+IEkgdGhpbmsgd2Ugc2hvdWxkIHRha2UgdGhpcyBhIHN0ZXAgZnVydGhlci4gSG93DQphYm91dCB0
+aGUgZm9sbG93aW5nIGFwcHJvYWNoOg0KLSBJbnRyb2R1Y2UgZm91ciBlbnVtZXJhdGlvbiB0eXBl
+cyAtIG9uZSBmb3IgdGhlIG1zZyBieXRlIGNvZGVzLCBvbmUNCiAgZm9yIHRoZSBob3N0IGJ5dGUg
+Y29kZXMsIG9uZSBmb3IgdGhlIGRyaXZlciBieXRlIGNvZGVzIGFuZCBvbmUgZm9yDQogIFNDU0kg
+c2Vuc2UgY29kZXMuDQotIFVwZGF0ZSB0aGUgc2lnbmF0dXJlcyBvZiBmdW5jdGlvbnMgdGhhdCBz
+dG9yZSBvciBleHRyYWN0IHRoZXNlIGZvdXINCiAgYnl0ZXMuDQotIENoYW5nZSB0aGUgZGF0YSB0
+eXBlIG9mIHNjc2lfY21uZC5yZXN1bHQgaW50byBzb21ldGhpbmcgdGhhdCBtYWtlcw0KICByZWd1
+bGFyIGFzc2lnbm1lbnRzIHRyaWdnZXIgYSBjb21waWxlciBlcnJvci4NCg0KSSdtIHByb3Bvc2lu
+ZyB0aGlzIGJlY2F1c2UgdGhlcmUgYXJlIHNldmVyYWwgZHJpdmVycyB0aGF0IGRvIG5vdCBhc3Np
+Z24gdGhlDQpTQ1NJIGhvc3QgYnl0ZSBjb3JyZWN0bHk6DQokIGdpdCBncmVwIC1uSCAnPnJlc3Vs
+dCA9IERJRF8nIHwgZ3JlcCAtdiAnPDwgKjE2JyB8IGdyZXAgLXYgJzogXConDQpkcml2ZXJzL3Nj
+c2kvaXBzLmM6OTUzOgkJCXNjc2lfY21kLT5yZXN1bHQgPSBESURfRVJST1I7DQpkcml2ZXJzL3Nj
+c2kvaXBzLmM6MjY1NzoJCVNDLT5yZXN1bHQgPSBESURfT0s7DQpkcml2ZXJzL3Njc2kvbGliaXNj
+c2kuYzoxNzMxOgkJc2MtPnJlc3VsdCA9IERJRF9SRVFVRVVFOw0KZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvcWxhX2JzZy5jOjE1MjoJCQlic2dfcmVwbHktPnJlc3VsdCA9IERJRF9PSzsNCmRyaXZlcnMv
+c2NzaS9xbGEyeHh4L3FsYV9ic2cuYzoxNjc6CQkJCWJzZ19yZXBseS0+cmVzdWx0ID0gRElEX09L
+Ow0KZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JzZy5jOjE4NDoJCWJzZ19yZXBseS0+cmVzdWx0
+ID0gRElEX09LOw0KZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JzZy5jOjIzNjoJCWJzZ19yZXBs
+eS0+cmVzdWx0ID0gRElEX09LOw0KZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JzZy5jOjk3NjoJ
+CWJzZ19yZXBseS0+cmVzdWx0ID0gRElEX09LOw0KZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2Jz
+Zy5jOjEwNzg6CQlic2dfcmVwbHktPnJlc3VsdCA9IERJRF9PSzsNCmRyaXZlcnMvc2NzaS9xbGEy
+eHh4L3FsYV9ic2cuYzoxMjYxOgkJYnNnX3JlcGx5LT5yZXN1bHQgPSBESURfT0s7DQpkcml2ZXJz
+L3Njc2kvcWxhMnh4eC9xbGFfYnNnLmM6MTM3NToJCWJzZ19yZXBseS0+cmVzdWx0ID0gRElEX09L
+Ow0KZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JzZy5jOjE0ODA6CWJzZ19yZXBseS0+cmVzdWx0
+ID0gRElEX09LOw0KZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JzZy5jOjE1MTY6CWJzZ19yZXBs
+eS0+cmVzdWx0ID0gRElEX09LOw0KZHJpdmVycy9zY3NpL3Fsb2dpY3B0aS5jOjEwNDk6CUNtbmQt
+PnJlc3VsdCA9IERJRF9CVVNfQlVTWTsNCmRyaXZlcnMvc2NzaS9zdGV4LmM6NjE1OgkJY21kLT5y
+ZXN1bHQgPSBESURfTk9fQ09OTkVDVDsNCg0KQmFydC4=
