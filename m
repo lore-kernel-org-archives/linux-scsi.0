@@ -1,56 +1,111 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 5/5] scsi: sd_zbc: Fix sd_zbc_read_zoned_characteristics()
-Date: Wed, 11 Oct 2017 05:54:25 +0900
-Message-ID: <20171010205425.7376-6-damien.lemoal@wdc.com>
-References: <20171010205425.7376-1-damien.lemoal@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:54828 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933367AbdJJUyc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2017 16:54:32 -0400
-In-Reply-To: <20171010205425.7376-1-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH v8 03/10] md: Neither resync nor reshape while the system is frozen
+Date: Tue, 10 Oct 2017 14:03:39 -0700
+Message-ID: <20171010210346.14574-4-bart.vanassche@wdc.com>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171010210346.14574-1-bart.vanassche@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, stable@vger.kernel.org
 
-The three values starting at byte 8 of the Zoned Block Device
-Characteristics VPD page B6h are 32 bits values, not 64bits. So use
-get_unaligned_be32() to retrieve the values and not get_unaligned_be64()
+Some people use the md driver on laptops and use the suspend and
+resume functionality. Since it is essential that submitting of
+new I/O requests stops before a hibernation image is created,
+interrupt the md resync and reshape actions if the system is
+being frozen. Note: the resync and reshape will restart after
+the system is resumed and a message similar to the following
+will appear in the system log:
 
-Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
-Cc: <stable@vger.kernel.org>
+md: md0: data-check interrupted.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/sd_zbc.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/md.c | 30 +++++++++++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index bbad851c1789..27793b9f54c0 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -423,15 +423,15 @@ static int sd_zbc_read_zoned_characteristics(struct scsi_disk *sdkp,
- 	if (sdkp->device->type != TYPE_ZBC) {
- 		/* Host-aware */
- 		sdkp->urswrz = 1;
--		sdkp->zones_optimal_open = get_unaligned_be64(&buf[8]);
--		sdkp->zones_optimal_nonseq = get_unaligned_be64(&buf[12]);
-+		sdkp->zones_optimal_open = get_unaligned_be32(&buf[8]);
-+		sdkp->zones_optimal_nonseq = get_unaligned_be32(&buf[12]);
- 		sdkp->zones_max_open = 0;
- 	} else {
- 		/* Host-managed */
- 		sdkp->urswrz = buf[4] & 1;
- 		sdkp->zones_optimal_open = 0;
- 		sdkp->zones_optimal_nonseq = 0;
--		sdkp->zones_max_open = get_unaligned_be64(&buf[16]);
-+		sdkp->zones_max_open = get_unaligned_be32(&buf[16]);
- 	}
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index b99584e5d6b1..d712d3320c1d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -66,6 +66,8 @@
+ #include <linux/raid/md_u.h>
+ #include <linux/slab.h>
+ #include <linux/percpu-refcount.h>
++#include <linux/freezer.h>
++#include <linux/suspend.h>
  
- 	return 0;
+ #include <trace/events/block.h>
+ #include "md.h"
+@@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
+ 	 */
+ 
+ 	allow_signal(SIGKILL);
++	set_freezable();
+ 	while (!kthread_should_stop()) {
+ 
+ 		/* We need to wait INTERRUPTIBLE so that
+@@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
+ 		if (signal_pending(current))
+ 			flush_signals(current);
+ 
+-		wait_event_interruptible_timeout
++		wait_event_freezable_timeout
+ 			(thread->wqueue,
+ 			 test_bit(THREAD_WAKEUP, &thread->flags)
+ 			 || kthread_should_stop() || kthread_should_park(),
+@@ -8963,6 +8966,29 @@ static void md_stop_all_writes(void)
+ 		mdelay(1000*1);
+ }
+ 
++/*
++ * Ensure that neither resyncing nor reshaping occurs while the system is
++ * frozen.
++ */
++static int md_notify_pm(struct notifier_block *bl, unsigned long state,
++			void *unused)
++{
++	pr_debug("%s: state = %ld\n", __func__, state);
++
++	switch (state) {
++	case PM_HIBERNATION_PREPARE:
++	case PM_SUSPEND_PREPARE:
++	case PM_RESTORE_PREPARE:
++		md_stop_all_writes();
++		break;
++	}
++	return NOTIFY_DONE;
++}
++
++static struct notifier_block md_pm_notifier = {
++	.notifier_call	= md_notify_pm,
++};
++
+ static int md_notify_reboot(struct notifier_block *this,
+ 			    unsigned long code, void *x)
+ {
+@@ -9009,6 +9035,7 @@ static int __init md_init(void)
+ 			    md_probe, NULL, NULL);
+ 
+ 	register_reboot_notifier(&md_reboot_notifier);
++	register_pm_notifier(&md_pm_notifier);
+ 	raid_table_header = register_sysctl_table(raid_root_table);
+ 
+ 	md_geninit();
+@@ -9248,6 +9275,7 @@ static __exit void md_exit(void)
+ 
+ 	unregister_blkdev(MD_MAJOR,"md");
+ 	unregister_blkdev(mdp_major, "mdp");
++	unregister_pm_notifier(&md_pm_notifier);
+ 	unregister_reboot_notifier(&md_reboot_notifier);
+ 	unregister_sysctl_table(raid_table_header);
+ 
 -- 
-2.13.6
+2.14.2
