@@ -1,54 +1,40 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH V5 00/14] blk-mq-sched: improve sequential I/O performance(part 1)
-Date: Tue, 10 Oct 2017 14:37:46 +0200
-Message-ID: <ABF5B287-B957-425D-A395-BA42A2D8421D@linaro.org>
-References: <20170930102720.30219-1-ming.lei@redhat.com> <1e56f7e1-2a2f-26c9-9c74-97e0d22bc98b@huawei.com> <20171009150439.GA30189@ming.t460p> <20171010014653.GA3247@ming.t460p> <cb622a02-5187-5ee0-bccd-e867e8e7ee7d@huawei.com> <20171010123439.7lzndy5qcjtmd56y@linux-x5ow.site>
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171010123439.7lzndy5qcjtmd56y@linux-x5ow.site>
-Sender: linux-block-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Linuxarm <linuxarm@huawei.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH 00/10] [SCSI] mpt3sas: Phase15 driver enhancements and fixes
+Date: Tue, 10 Oct 2017 18:41:13 +0530
+Message-ID: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, JBottomley@Parallels.com, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Phase15 driver enhancements and fixes.
 
-> Il giorno 10 ott 2017, alle ore 14:34, Johannes Thumshirn =
-<jthumshirn@suse.de> ha scritto:
->=20
-> Hi John,
->=20
-> On Tue, Oct 10, 2017 at 01:24:52PM +0100, John Garry wrote:
->> It's using cfq (for non-mq) and mq-deadline (obviously for mq).
->=20
-> Please be aware that cfq and mq-deadline are _not_ comparable, for a =
-realistic
-> comparasion please use deadline and mq-deadline or cfq and bfq.
->=20
+Sreekanth Reddy (10):
+  mpt3sas: Processing of Cable Exception events
+  mpt3sas: Fixed memory leaks in driver
+  mpt3sas: Reduce memory footprints in kdump kernel
+  mpt3sas: Fix removal and addition of vSES device during host reset
+  mpt3sas: Fix IO error occurs on pulling out a drive from RAID1 volume
+    created on two SATA drive
+  mpt3sas: Updated MPI headers to v2.00.48
+  mpt3sas: Display chassis slot information of the drive
+  mpt3sas: Fix possibility of using invalid Enclosure Handles for SAS
+    device after host reset
+  mpt3sas: Adding support for SAS3616 HBA device
+  mpt3sas: Bump mpt3sas driver version to v16.100.00.00
 
-Please set low_latency=3D0 for bfq if yours is just a maximum-throughput =
-test.
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |  43 ++-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 564 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h |  11 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  | 282 +++++++++++++++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_pci.h  | 112 +++++++
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h |  14 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  19 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  10 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 383 ++++++++++++++----------
+ 9 files changed, 1241 insertions(+), 197 deletions(-)
+ create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
 
-Thanks,
-Paolo
-
->> root@(none)$ pwd
->> =
-/sys/devices/platform/HISI0162:01/host0/port-0:0/expander-0:0/port-0:0:7/e=
-nd_device-0:0:7
->> root@(none)$ more ./target0:0:3/0:0:3:0/block/sdd/queue/scheduler
->> noop [cfq]
->=20
-> Maybe missing CONFIG_IOSCHED_DEADLINE?
->=20
-> Thanks,
-> 	Johannes
->=20
-> --=20
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=FCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+-- 
+2.4.3
