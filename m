@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 02/10] mpt3sas: Fixed memory leaks in driver
-Date: Tue, 10 Oct 2017 18:41:15 +0530
-Message-ID: <1507641083-20207-3-git-send-email-Sreekanth.Reddy@broadcom.com>
+Subject: [PATCH 01/10] mpt3sas: Processing of Cable Exception events
+Date: Tue, 10 Oct 2017 18:41:14 +0530
+Message-ID: <1507641083-20207-2-git-send-email-Sreekanth.Reddy@broadcom.com>
 References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
@@ -10,68 +10,78 @@ To: linux-scsi@vger.kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, JBottomley@Parallels.com, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Fixed below memory leak in driver,
+Earlier Active Cable Exception event with reason code
+"Cable Degraded (0x02))" was added only for Active Cable,
+Now this event is extended to Passive cable too.
+So re-arranged display message accordingly.
 
-* While removing Expander devices - we are removing expander
- device entry from the list before freeing it's child devices,
- so while freeing child device we are finding its parent device
- node as NULL and so we are not freeing the child device's
- allocated data structures.
- Updated the driver to remove the expander device from the list
- only after freeing all its child devices.
+Also added Cable Exception Event even for SAS3008 & SAS3108 HBAs
+(i.e. MPI 2.5 spec supporting HBAs) earlier this event was
+enabled only for MPI 2.6 spec supporting HBA devices.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  5 ++---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 20 +++++++++++---------
+ 2 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 9594166..600e8ef 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5274,8 +5274,6 @@ mpt3sas_expander_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address)
- 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
- 	sas_expander = mpt3sas_scsih_expander_find_by_sas_address(ioc,
- 	    sas_address);
--	if (sas_expander)
--		list_del(&sas_expander->list);
- 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
- 	if (sas_expander)
- 		_scsih_expander_node_remove(ioc, sas_expander);
-@@ -7476,7 +7474,6 @@ _scsih_remove_unresponding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
- 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
- 	list_for_each_entry_safe(sas_expander, sas_expander_next, &tmp_list,
- 	    list) {
--		list_del(&sas_expander->list);
- 		_scsih_expander_node_remove(ioc, sas_expander);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 8799990..844e29c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -655,7 +655,7 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
+ 		desc = "Temperature Threshold";
+ 		break;
+ 	case MPI2_EVENT_ACTIVE_CABLE_EXCEPTION:
+-		desc = "Active cable exception";
++		desc = "Cable Event";
+ 		break;
  	}
  
-@@ -8102,7 +8099,6 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
-  * _scsih_expander_node_remove - removing expander device from list.
-  * @ioc: per adapter object
-  * @sas_expander: the sas_device object
-- * Context: Calling function should acquire ioc->sas_node_lock.
-  *
-  * Removing object and freeing associated memory from the
-  * ioc->sas_expander_list.
-@@ -8114,6 +8110,7 @@ _scsih_expander_node_remove(struct MPT3SAS_ADAPTER *ioc,
- 	struct _sas_node *sas_expander)
- {
- 	struct _sas_port *mpt3sas_port, *next;
-+	unsigned long flags;
+@@ -5517,8 +5517,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	_base_unmask_events(ioc, MPI2_EVENT_IR_OPERATION_STATUS);
+ 	_base_unmask_events(ioc, MPI2_EVENT_LOG_ENTRY_ADDED);
+ 	_base_unmask_events(ioc, MPI2_EVENT_TEMP_THRESHOLD);
+-	if (ioc->hba_mpi_version_belonged == MPI26_VERSION)
+-		_base_unmask_events(ioc, MPI2_EVENT_ACTIVE_CABLE_EXCEPTION);
++	_base_unmask_events(ioc, MPI2_EVENT_ACTIVE_CABLE_EXCEPTION);
  
- 	/* remove sibling ports attached to this expander */
- 	list_for_each_entry_safe(mpt3sas_port, next,
-@@ -8141,6 +8138,10 @@ _scsih_expander_node_remove(struct MPT3SAS_ADAPTER *ioc,
- 	    sas_expander->handle, (unsigned long long)
- 	    sas_expander->sas_address);
+ 	r = _base_make_ioc_operational(ioc);
+ 	if (r)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 22998cb..9594166 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -8056,19 +8056,21 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 		    (Mpi26EventDataActiveCableExcept_t *) mpi_reply->EventData;
+ 		switch (ActiveCableEventData->ReasonCode) {
+ 		case MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER:
+-			pr_notice(MPT3SAS_FMT "Receptacle ID %d: This active cable"
+-				  " requires %d mW of power\n", ioc->name,
+-			     ActiveCableEventData->ReceptacleID,
++			pr_notice(MPT3SAS_FMT
++			    "Currently an active cable with ReceptacleID %d\n",
++			    ioc->name, ActiveCableEventData->ReceptacleID);
++			pr_notice("cannot be powered and devices connected\n");
++			pr_notice("to this active cable will not be seen\n");
++			pr_notice("This active cable require %d mW of power\n",
+ 			     ActiveCableEventData->ActiveCablePowerRequirement);
+-			pr_notice(MPT3SAS_FMT "Receptacle ID %d: Devices connected"
+-				  " to this active cable will not be seen\n",
+-			     ioc->name, ActiveCableEventData->ReceptacleID);
+ 			break;
  
-+	spin_lock_irqsave(&ioc->sas_node_lock, flags);
-+	list_del(&sas_expander->list);
-+	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
-+
- 	kfree(sas_expander->phy);
- 	kfree(sas_expander);
- }
+ 		case MPI26_EVENT_ACTIVE_CABLE_DEGRADED:
+-			pr_notice(MPT3SAS_FMT "ReceptacleID %d: This cable",
+-				ioc->name, ActiveCableEventData->ReceptacleID);
+-			pr_notice(" is not running at an optimal speed(12 Gb/s)\n");
++			pr_notice(MPT3SAS_FMT
++			    "Currently a cable with ReceptacleID %d\n",
++			    ioc->name, ActiveCableEventData->ReceptacleID);
++			pr_notice(
++			    "is not running at optimal speed(12 Gb/s rate)\n");
+ 			break;
+ 		}
+ 
 -- 
 2.4.3
