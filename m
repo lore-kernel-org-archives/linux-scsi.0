@@ -1,55 +1,39 @@
-From: Kyle Fortin <kyle.fortin@oracle.com>
-Subject: Re: [PATCH] scsi: logging_level: update bits description
-Date: Tue, 10 Oct 2017 15:32:00 -0400
-Message-ID: <216D3DB1-C329-4B75-8210-822FF889C344@oracle.com>
-References: <7d747a9b-e0a0-0f64-f1f3-66338ec7bbea@infradead.org>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 0/5] ZBC support clenaup and fixes
+Date: Wed, 11 Oct 2017 05:54:20 +0900
+Message-ID: <20171010205425.7376-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34560 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751626AbdJJTcg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2017 15:32:36 -0400
-In-Reply-To: <7d747a9b-e0a0-0f64-f1f3-66338ec7bbea@infradead.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:55567 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933196AbdJJUy0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2017 16:54:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
-Hi Randy,
+Martin,
 
-On Oct 10, 2017, at 3:05 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
-> 
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Update the description of 'scsi_logging_level' from 8 4-bit nibbles
-> to the (pre-git) reality of 10 3-bit 'nibbles'.
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> ---
-> drivers/scsi/scsi_logging.h |    8 ++++----
-> 1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> --- lnx-414-rc3.orig/drivers/scsi/scsi_logging.h
-> +++ lnx-414-rc3/drivers/scsi/scsi_logging.h
-> @@ -3,10 +3,10 @@
-> 
-> 
-> /*
-> - * This defines the scsi logging feature.  It is a means by which the user
-> - * can select how much information they get about various goings on, and it
-> - * can be really useful for fault tracing.  The logging word is divided into
-> - * 8 nibbles, each of which describes a loglevel.  The division of things is
-> + * This defines the scsi logging feature.  It is a means by which the user can
-> + * select how much information they get about various goings on, and it can be
-> + * really useful for fault tracing.  The logging word is divided into 10 3-bit
-> + * 'nibbles', each of which describes a loglevel.  The division of things is
+First part of the "scsi-mq support for ZBC disks" series that is only scsi
+specific. These patches are just cleanups with only one bug fix (last pacth)
+and do not functionally change anything.
 
-I think ‘bitfields' is more appropriate than ‘nibbles’ (a 4-bit construct in compute).
+The remaining rework of the zone locking including scsi-mq support is still
+ongoing and will be sent later.
 
->  * somewhat arbitrary, and the division of the word could be changed if it
->  * were really needed for any reason.  The numbers below are the only place
->  * where these are specified.  For a first go-around, 3 bits is more than
+Please consider these for addition to 4.15.
 
-Reviewed-by: Kyle Fortin <kyle.fortin@oracle.com>
+Damien Le Moal (5):
+  scsi: sd_zbc: Move ZBC declarations to scsi_proto.h
+  scsi: sd_zbc: Fix comments and indentation
+  scsi: sd_zbc: Rearrange code
+  scsi: sd_zbc: Use well defined macros
+  scsi: sd_zbc: Fix sd_zbc_read_zoned_characteristics()
+
+ drivers/scsi/scsi_lib.c   |   5 +-
+ drivers/scsi/sd_zbc.c     | 169 ++++++++++++++++++++++++++++++----------------
+ include/scsi/scsi_proto.h |  45 +++++++++---
+ 3 files changed, 150 insertions(+), 69 deletions(-)
+
+-- 
+2.13.6
