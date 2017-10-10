@@ -1,239 +1,114 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v7 9/9] block, scsi: Make SCSI quiesce and resume work
- reliably
-Date: Tue, 10 Oct 2017 18:56:28 +0800
-Message-ID: <20171010105626.GB18664@ming.t460p>
-References: <20171009231400.562-1-bart.vanassche@wdc.com>
- <20171009231400.562-10-bart.vanassche@wdc.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH V5 00/14] blk-mq-sched: improve sequential I/O
+ performance(part 1)
+Date: Tue, 10 Oct 2017 13:24:52 +0100
+Message-ID: <cb622a02-5187-5ee0-bccd-e867e8e7ee7d@huawei.com>
+References: <20170930102720.30219-1-ming.lei@redhat.com>
+ <1e56f7e1-2a2f-26c9-9c74-97e0d22bc98b@huawei.com>
+ <20171009150439.GA30189@ming.t460p> <20171010014653.GA3247@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171009231400.562-10-bart.vanassche@wdc.com>
+In-Reply-To: <20171010014653.GA3247@ming.t460p>
 Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, "Luis R . Rodriguez" <mcgrof@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 09, 2017 at 04:14:00PM -0700, Bart Van Assche wrote:
-> The contexts from which a SCSI device can be quiesced or resumed are:
-> * Writing into /sys/class/scsi_device/*/device/state.
-> * SCSI parallel (SPI) domain validation.
-> * The SCSI device power management methods. See also scsi_bus_pm_ops.
-> 
-> It is essential during suspend and resume that neither the filesystem
-> state nor the filesystem metadata in RAM changes. This is why while
-> the hibernation image is being written or restored that SCSI devices
-> are quiesced. The SCSI core quiesces devices through scsi_device_quiesce()
-> and scsi_device_resume(). In the SDEV_QUIESCE state execution of
-> non-preempt requests is deferred. This is realized by returning
-> BLKPREP_DEFER from inside scsi_prep_state_check() for quiesced SCSI
-> devices. Avoid that a full queue prevents power management requests
-> to be submitted by deferring allocation of non-preempt requests for
-> devices in the quiesced state. This patch has been tested by running
-> the following commands and by verifying that after resume the fio job
-> is still running:
-> 
-> for d in /sys/class/block/sd*[a-z]; do
->   hcil=$(readlink "$d/device")
->   hcil=${hcil#../../../}
->   echo 4 > "$d/queue/nr_requests"
->   echo 1 > "/sys/class/scsi_device/$hcil/device/queue_depth"
-> done
-> bdev=$(readlink /dev/disk/by-uuid/5217d83f-213e-4b42-b86e-20013325ba6c)
-> bdev=${bdev#../../}
-> hcil=$(readlink "/sys/block/$bdev/device")
-> hcil=${hcil#../../../}
-> fio --name="$bdev" --filename="/dev/$bdev" --buffered=0 --bs=512 --rw=randread \
->   --ioengine=libaio --numjobs=4 --iodepth=16 --iodepth_batch=1 --thread \
->   --loops=$((2**31)) &
-> pid=$!
-> sleep 1
-> systemctl hibernate
-> sleep 10
-> kill $pid
-> 
-> Reported-by: Oleksandr Natalenko <oleksandr@natalenko.name>
-> References: "I/O hangs after resuming from suspend-to-ram" (https://marc.info/?l=linux-block&m=150340235201348).
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  block/blk-core.c        | 42 +++++++++++++++++++++++++++++++++++-------
->  block/blk-mq.c          |  4 ++--
->  block/blk-timeout.c     |  2 +-
->  drivers/scsi/scsi_lib.c | 28 ++++++++++++++++++----------
->  fs/block_dev.c          |  4 ++--
->  include/linux/blkdev.h  |  2 +-
->  6 files changed, 59 insertions(+), 23 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index ed992cbd107f..3847ea42e341 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -372,6 +372,7 @@ void blk_clear_preempt_only(struct request_queue *q)
->  
->  	spin_lock_irqsave(q->queue_lock, flags);
->  	queue_flag_clear(QUEUE_FLAG_PREEMPT_ONLY, q);
-> +	wake_up_all(&q->mq_freeze_wq);
->  	spin_unlock_irqrestore(q->queue_lock, flags);
->  }
->  EXPORT_SYMBOL_GPL(blk_clear_preempt_only);
-> @@ -793,15 +794,40 @@ struct request_queue *blk_alloc_queue(gfp_t gfp_mask)
->  }
->  EXPORT_SYMBOL(blk_alloc_queue);
->  
-> -int blk_queue_enter(struct request_queue *q, bool nowait)
-> +/**
-> + * blk_queue_enter() - try to increase q->q_usage_counter
-> + * @q: request queue pointer
-> + * @flags: BLK_MQ_REQ_NOWAIT and/or BLK_MQ_REQ_PREEMPT
-> + */
-> +int blk_queue_enter(struct request_queue *q, unsigned int flags)
->  {
-> +	const bool preempt = flags & BLK_MQ_REQ_PREEMPT;
-> +
->  	while (true) {
-> +		bool success = false;
->  		int ret;
->  
-> -		if (percpu_ref_tryget_live(&q->q_usage_counter))
-> +		rcu_read_lock_sched();
-> +		if (percpu_ref_tryget_live(&q->q_usage_counter)) {
-> +			/*
-> +			 * The code that sets the PREEMPT_ONLY flag is
-> +			 * responsible for ensuring that that flag is globally
-> +			 * visible before the queue is unfrozen.
-> +			 */
-> +			if (preempt || !blk_queue_preempt_only(q)) {
-> +				success = true;
-> +			} else {
-> +				percpu_ref_put(&q->q_usage_counter);
-> +				WARN_ONCE("%s: Attempt to allocate non-preempt request in preempt-only mode.\n",
-> +					  kobject_name(q->kobj.parent));
-> +			}
-> +		}
-> +		rcu_read_unlock_sched();
-> +
-> +		if (success)
->  			return 0;
->  
-> -		if (nowait)
-> +		if (flags & BLK_MQ_REQ_NOWAIT)
->  			return -EBUSY;
->  
->  		/*
-> @@ -814,7 +840,8 @@ int blk_queue_enter(struct request_queue *q, bool nowait)
->  		smp_rmb();
->  
->  		ret = wait_event_interruptible(q->mq_freeze_wq,
-> -				!atomic_read(&q->mq_freeze_depth) ||
-> +				(atomic_read(&q->mq_freeze_depth) == 0 &&
-> +				 (preempt || !blk_queue_preempt_only(q))) ||
->  				blk_queue_dying(q));
->  		if (blk_queue_dying(q))
->  			return -ENODEV;
-> @@ -1442,8 +1469,7 @@ static struct request *blk_old_get_request(struct request_queue *q,
->  	/* create ioc upfront */
->  	create_io_context(gfp_mask, q->node);
->  
-> -	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ||
-> -			      (op & REQ_NOWAIT));
-> +	ret = blk_queue_enter(q, flags);
->  	if (ret)
->  		return ERR_PTR(ret);
->  	spin_lock_irq(q->queue_lock);
-> @@ -2264,8 +2290,10 @@ blk_qc_t generic_make_request(struct bio *bio)
->  	current->bio_list = bio_list_on_stack;
->  	do {
->  		struct request_queue *q = bio->bi_disk->queue;
-> +		unsigned int flags = bio->bi_opf & REQ_NOWAIT ?
-> +			BLK_MQ_REQ_NOWAIT : 0;
->  
-> -		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
-> +		if (likely(blk_queue_enter(q, flags) == 0)) {
->  			struct bio_list lower, same;
->  
->  			/* Create a fresh bio_list for all subordinate requests */
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index bdbfe760bda0..44a06e8541f2 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -386,7 +386,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
->  	struct request *rq;
->  	int ret;
->  
-> -	ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
-> +	ret = blk_queue_enter(q, flags);
->  	if (ret)
->  		return ERR_PTR(ret);
->  
-> @@ -425,7 +425,7 @@ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
->  	if (hctx_idx >= q->nr_hw_queues)
->  		return ERR_PTR(-EIO);
->  
-> -	ret = blk_queue_enter(q, true);
-> +	ret = blk_queue_enter(q, flags);
->  	if (ret)
->  		return ERR_PTR(ret);
->  
-> diff --git a/block/blk-timeout.c b/block/blk-timeout.c
-> index e3e9c9771d36..1eba71486716 100644
-> --- a/block/blk-timeout.c
-> +++ b/block/blk-timeout.c
-> @@ -134,7 +134,7 @@ void blk_timeout_work(struct work_struct *work)
->  	struct request *rq, *tmp;
->  	int next_set = 0;
->  
-> -	if (blk_queue_enter(q, true))
-> +	if (blk_queue_enter(q, BLK_MQ_REQ_NOWAIT | BLK_MQ_REQ_PREEMPT))
->  		return;
->  	spin_lock_irqsave(q->queue_lock, flags);
->  
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 1c16a247fae6..a3cf36c8079b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2926,21 +2926,29 @@ static void scsi_wait_for_queuecommand(struct scsi_device *sdev)
->  int
->  scsi_device_quiesce(struct scsi_device *sdev)
->  {
-> +	struct request_queue *q = sdev->request_queue;
->  	int err;
->  
-> +	/* If the SCSI device already has been quiesced, do nothing. */
-> +	if (blk_set_preempt_only(q))
-> +		return 0;
+On 10/10/2017 02:46, Ming Lei wrote:
+>>> > > I tested this series for the SAS controller on HiSilicon hip07 platform as I
+>>> > > am interested in enabling MQ for this driver. Driver is
+>>> > > ./drivers/scsi/hisi_sas/.
+>>> > >
+>>> > > So I found that that performance is improved when enabling default SCSI_MQ
+>>> > > with this series vs baseline. However, it is still not as a good as when
+>>> > > default SCSI_MQ is disabled.
+>>> > >
+>>> > > Here are some figures I got with fio:
+>>> > > 4.14-rc2 without default SCSI_MQ
+>>> > > read, rw, write IOPS	
+>>> > > 952K, 133K/133K, 800K
+>>> > >
+>>> > > 4.14-rc2 with default SCSI_MQ
+>>> > > read, rw, write IOPS	
+>>> > > 311K, 117K/117K, 320K
+>>> > >
+>>> > > This series* without default SCSI_MQ
+>>> > > read, rw, write IOPS	
+>>> > > 975K, 132K/132K, 790K
+>>> > >
+>>> > > This series* with default SCSI_MQ
+>>> > > read, rw, write IOPS	
+>>> > > 770K, 164K/164K, 594K
+>> >
+>> > Thanks for testing this patchset!
+>> >
+>> > Looks there is big improvement, but the gap compared with
+>> > block legacy is not small too.
+>> >
+>>> > >
+>>> > > Please note that hisi_sas driver does not enable mq by exposing multiple
+>>> > > queues to upper layer (even though it has multiple queues). I have been
+>>> > > playing with enabling it, but my performance is always worse...
+>>> > >
+>>> > > * I'm using
+>>> > > https://github.com/ming1/linux/commits/blk_mq_improve_scsi_mpath_perf_V5.1,
+>>> > > as advised by Ming Lei.
+>> >
+>> > Could you test on the following branch and see if it makes a
+>> > difference?
+>> >
+>> > 	https://github.com/ming1/linux/commits/blk_mq_improve_scsi_mpath_perf_V6.1_test
+> Hi John,
+>
+> Please test the following branch directly:
+>
+> https://github.com/ming1/linux/tree/blk_mq_improve_scsi_mpath_perf_V6.2_test
+>
+> And code is simplified and cleaned up much in V6.2, then only two extra
+> patches(top 2) are needed against V6 which was posted yesterday.
+>
+> Please test SCSI_MQ with mq-deadline, which should be the default
+> mq scheduler on your HiSilicon SAS.
 
-This way isn't safe:
+Hi Ming Lei,
 
-1) suppose path1 sets the flag, and blk_mq_freeze_queue() isn't
-finished, or even not started;
+It's using cfq (for non-mq) and mq-deadline (obviously for mq).
 
-2) path2 sees the flag set at the exact time, and returns immediately,
-and unfortunately SCSI QUIESCE isn't respected in this context.
+root@(none)$ pwd
+/sys/devices/platform/HISI0162:01/host0/port-0:0/expander-0:0/port-0:0:7/end_device-0:0:7
+root@(none)$ more ./target0:0:3/0:0:3:0/block/sdd/queue/scheduler
+noop [cfq]
 
-> +
-> +	/*
-> +	 * Since blk_mq_freeze_queue() calls synchronize_rcu() indirectly the
-> +	 * effect of blk_set_preempt_only() will be visible for
-> +	 * percpu_ref_tryget() callers that occur after the queue
-> +	 * unfreeze. See also https://lwn.net/Articles/573497/.
-> +	 */
-> +	blk_mq_freeze_queue(q);
-> +	blk_mq_unfreeze_queue(q);
+and
 
-This way isn't safe too, because queue may has been frozen before
-scsi_device_quiesce() is run, then there isn't synchronize_rcu()
-implicated in blk_mq_freeze_queue().
+root@(none)$ more ./target0:0:3/0:0:3:0/block/sdd/queue/scheduler
+[mq-deadline] kyber none
 
-Please take a look at my previous post in the following link:
+Unfortunately my setup has changed since yeterday, and the absolute 
+figures are not the exact same (I retested 4.14-rc2). However, we still 
+see that drop when mq is enabled.
 
-	https://marc.info/?l=linux-block&m=150703957529335&w=2
-	https://marc.info/?l=linux-kernel&m=150703956929333&w=2
+Here's the results:
+4.14-rc4 without default SCSI_MQ
+read, rw, write IOPS	
+860K, 112K/112K, 800K
 
--- 
-Ming
+4.14-rc2 without default SCSI_MQ
+read, rw, write IOPS	
+880K, 113K/113K, 808K
+
+V6.2 series without default SCSI_MQ
+read, rw, write IOPS	
+820K, 114/114K, 790K
+
+V6.2 series with default SCSI_MQ
+read, rw, write IOPS	
+700K, 130K/128K, 640K
+
+Cheers,
+John
+
+>
+> -- Ming .
