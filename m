@@ -1,221 +1,42 @@
 From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 08/10] mpt3sas: Fix possibility of using invalid Enclosure Handles for SAS device after host reset
-Date: Tue, 10 Oct 2017 18:41:21 +0530
-Message-ID: <1507641083-20207-9-git-send-email-Sreekanth.Reddy@broadcom.com>
+Subject: [PATCH 10/10] mpt3sas: Bump mpt3sas driver version to v16.100.00.00
+Date: Tue, 10 Oct 2017 18:41:23 +0530
+Message-ID: <1507641083-20207-11-git-send-email-Sreekanth.Reddy@broadcom.com>
 References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:47309 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932210AbdJJNMk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2017 09:12:40 -0400
+Received: by mail-qt0-f172.google.com with SMTP id z50so45910849qtj.4
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2017 06:12:39 -0700 (PDT)
 In-Reply-To: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, JBottomley@Parallels.com, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Enclosure handles are not updated after host reset.
-As a result, driver device structure is holding previously
- assigned enclosure handle which is different from the
- enclosure handle populated in the corresponding device page.
-
-Modified the driver to update devices enclosure handles after
- host reset to current value, by referring the enclosure handles
- from corresponding device pages
+Bump mpt3sas driver version to v16.100.00.00
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 117 ++++++++++++++++++++++++-----------
- 1 file changed, 81 insertions(+), 36 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 17b934b..b819914 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5383,6 +5383,52 @@ _scsih_check_access_status(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- }
- 
- /**
-+ * _scsih_get_enclosure_logicalid_chassis_slot - get device's
-+ *			EnclosureLogicalID and ChassisSlot information.
-+ * @ioc: per adapter object
-+ * @sas_device_pg0: SAS device page0
-+ * @sas_device: per sas device object
-+ *
-+ * Returns nothing.
-+ */
-+static void
-+_scsih_get_enclosure_logicalid_chassis_slot(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi2SasDevicePage0_t *sas_device_pg0, struct _sas_device *sas_device)
-+{
-+	Mpi2ConfigReply_t mpi_reply;
-+	Mpi2SasEnclosurePage0_t enclosure_pg0;
-+
-+	if (!sas_device_pg0 || !sas_device)
-+		return;
-+
-+	sas_device->enclosure_handle =
-+	    le16_to_cpu(sas_device_pg0->EnclosureHandle);
-+	sas_device->is_chassis_slot_valid = 0;
-+
-+	if (!le16_to_cpu(sas_device_pg0->EnclosureHandle))
-+		return;
-+
-+	if (mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
-+	    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
-+	    le16_to_cpu(sas_device_pg0->EnclosureHandle))) {
-+		pr_err(MPT3SAS_FMT
-+		    "Enclosure Pg0 read failed for handle(0x%04x)\n",
-+		    ioc->name, le16_to_cpu(sas_device_pg0->EnclosureHandle));
-+		return;
-+	}
-+
-+	sas_device->enclosure_logical_id =
-+	    le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
-+
-+	if (le16_to_cpu(enclosure_pg0.Flags) &
-+	    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
-+		sas_device->is_chassis_slot_valid = 1;
-+		sas_device->chassis_slot = enclosure_pg0.ChassisSlot;
-+	}
-+}
-+
-+
-+/**
-  * _scsih_check_device - checking device responsiveness
-  * @ioc: per adapter object
-  * @parent_sas_address: sas address of parent expander or sas host
-@@ -5398,7 +5444,6 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- {
- 	Mpi2ConfigReply_t mpi_reply;
- 	Mpi2SasDevicePage0_t sas_device_pg0;
--	Mpi2SasEnclosurePage0_t enclosure_pg0;
- 	struct _sas_device *sas_device;
- 	u32 ioc_status;
- 	unsigned long flags;
-@@ -5407,7 +5452,6 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
- 	u32 device_info;
- 
--
- 	if ((mpt3sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
- 	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle)))
- 		return;
-@@ -5454,18 +5498,9 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 			sas_device->enclosure_level = 0;
- 			sas_device->connector_name[0] = '\0';
- 		}
--		sas_device->is_chassis_slot_valid = 0;
--		if (sas_device->enclosure_handle &&
--		    !(mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
--		    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
--		    sas_device->enclosure_handle))) {
--			if (le16_to_cpu(enclosure_pg0.Flags) &
--			    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
--				sas_device->is_chassis_slot_valid = 1;
--				sas_device->chassis_slot =
--				    enclosure_pg0.ChassisSlot;
--			}
--		}
-+
-+		_scsih_get_enclosure_logicalid_chassis_slot(ioc,
-+		    &sas_device_pg0, sas_device);
- 	}
- 
- 	/* check if device is present */
-@@ -7088,10 +7123,8 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
- {
- 	struct MPT3SAS_TARGET *sas_target_priv_data = NULL;
- 	struct scsi_target *starget;
--	struct _sas_device *sas_device;
-+	struct _sas_device *sas_device = NULL;
- 	unsigned long flags;
--	Mpi2SasEnclosurePage0_t enclosure_pg0;
--	Mpi2ConfigReply_t mpi_reply;
- 
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
-@@ -7131,18 +7164,8 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
- 				sas_device->connector_name[0] = '\0';
- 			}
- 
--			sas_device->is_chassis_slot_valid = 0;
--			if (sas_device->enclosure_handle &&
--			    !(mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
--			    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
--			    sas_device->enclosure_handle))) {
--				if (le16_to_cpu(enclosure_pg0.Flags) &
--				    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
--					sas_device->is_chassis_slot_valid = 1;
--					sas_device->chassis_slot =
--					    enclosure_pg0.ChassisSlot;
--				}
--			}
-+			_scsih_get_enclosure_logicalid_chassis_slot(ioc,
-+			    sas_device_pg0, sas_device);
- 
- 			if (sas_device->handle == sas_device_pg0->DevHandle)
- 				goto out;
-@@ -7340,8 +7363,7 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
- /**
-  * _scsih_mark_responding_expander - mark a expander as responding
-  * @ioc: per adapter object
-- * @sas_address: sas address
-- * @handle:
-+ * @expander_pg0:SAS Expander Config Page0
-  *
-  * After host reset, find out whether devices are still responding.
-  * Used in _scsih_remove_unresponsive_expanders.
-@@ -7349,18 +7371,41 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
-  * Return nothing.
-  */
- static void
--_scsih_mark_responding_expander(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
--	u16 handle)
-+_scsih_mark_responding_expander(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi2ExpanderPage0_t *expander_pg0)
- {
--	struct _sas_node *sas_expander;
-+	struct _sas_node *sas_expander = NULL;
- 	unsigned long flags;
--	int i;
-+	int i, encl_pg0_rc = -1;
-+	Mpi2ConfigReply_t mpi_reply;
-+	Mpi2SasEnclosurePage0_t enclosure_pg0;
-+	u16 handle = le16_to_cpu(expander_pg0->DevHandle);
-+	u64 sas_address = le64_to_cpu(expander_pg0->SASAddress);
-+
-+	if (le16_to_cpu(expander_pg0->EnclosureHandle)) {
-+		encl_pg0_rc = mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
-+		    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
-+		    le16_to_cpu(expander_pg0->EnclosureHandle));
-+		if (encl_pg0_rc)
-+			pr_info(MPT3SAS_FMT
-+			    "Enclosure Pg0 read failed for handle(0x%04x)\n",
-+			    ioc->name,
-+			    le16_to_cpu(expander_pg0->EnclosureHandle));
-+	}
- 
- 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
- 	list_for_each_entry(sas_expander, &ioc->sas_expander_list, list) {
- 		if (sas_expander->sas_address != sas_address)
- 			continue;
- 		sas_expander->responding = 1;
-+
-+		if (!encl_pg0_rc)
-+			sas_expander->enclosure_logical_id =
-+			    le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
-+
-+		sas_expander->enclosure_handle =
-+		    le16_to_cpu(expander_pg0->EnclosureHandle);
-+
- 		if (sas_expander->handle == handle)
- 			goto out;
- 		pr_info("\texpander(0x%016llx): handle changed" \
-@@ -7413,7 +7458,7 @@ _scsih_search_responding_expanders(struct MPT3SAS_ADAPTER *ioc)
- 		pr_info("\texpander present: handle(0x%04x), sas_addr(0x%016llx)\n",
- 			handle,
- 		    (unsigned long long)sas_address);
--		_scsih_mark_responding_expander(ioc, sas_address, handle);
-+		_scsih_mark_responding_expander(ioc, &expander_pg0);
- 	}
- 
-  out:
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 75d90f2..0fe3969 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -73,8 +73,8 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"15.100.00.00"
+-#define MPT3SAS_MAJOR_VERSION		15
++#define MPT3SAS_DRIVER_VERSION		"16.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		16
+ #define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
 -- 
 2.4.3
