@@ -1,124 +1,100 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
- is frozen
-Date: Tue, 10 Oct 2017 15:30:25 -0700
-Message-ID: <20171010223025.tda3lx64rdmugm54@kernel.org>
-References: <20171010210346.14574-1-bart.vanassche@wdc.com>
- <20171010210346.14574-4-bart.vanassche@wdc.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 2/2] hpsa: destroy sas transport properties before
+ scsi_host
+Date: Tue, 10 Oct 2017 23:04:50 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1967210680@avsrvexchmbx2.microsemi.net>
+References: <20161121140429.12788-1-mwilck@suse.de>
+ <20161121140429.12788-3-mwilck@suse.de>
+ <20161121141441.rljdubw2rcmrl43v@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51266 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756347AbdJJWa2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Oct 2017 18:30:28 -0400
-Content-Disposition: inline
-In-Reply-To: <20171010210346.14574-4-bart.vanassche@wdc.com>
+Received: from mail-sn1nam01on0073.outbound.protection.outlook.com ([104.47.32.73]:8016
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751402AbdJJXFC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Oct 2017 19:05:02 -0400
+In-Reply-To: <20161121141441.rljdubw2rcmrl43v@linux-x5ow.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Johannes Thumshirn <jthumshirn@suse.de>, Martin Wilck <mwilck@suse.de>
+Cc: dl-esc-Team ESD Storage Dev Support <esc-TeamESDStorageDevSupport@microsemi.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@odin.com" <JBottomley@odin.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
-On Tue, Oct 10, 2017 at 02:03:39PM -0700, Bart Van Assche wrote:
-> Some people use the md driver on laptops and use the suspend and
-> resume functionality. Since it is essential that submitting of
-> new I/O requests stops before a hibernation image is created,
-> interrupt the md resync and reshape actions if the system is
-> being frozen. Note: the resync and reshape will restart after
-> the system is resumed and a message similar to the following
-> will appear in the system log:
-> 
-> md: md0: data-check interrupted.
+> -----Original Message-----
+> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> Sent: Monday, November 21, 2016 8:15 AM
+> To: Martin Wilck <mwilck@suse.de>
+> Cc: Don Brace <don.brace@microsemi.com>; dl-esc-Team ESD Storage Dev
+> Support <esc-TeamESDStorageDevSupport@microsemi.com>;
+> iss_storagedev@hp.com; linux-scsi@vger.kernel.org; JBottomley@odin.com;
+> hch@lst.de; hare@suse.de
+> Subject: Re: [PATCH 2/2] hpsa: destroy sas transport properties before
+> scsi_host
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> On Mon, Nov 21, 2016 at 03:04:29PM +0100, Martin Wilck wrote:
+> > Unloading the hpsa driver causes warnings
+> >
+> > [ 1063.793652] WARNING: CPU: 1 PID: 4850 at ../fs/sysfs/group.c:237
+> device_del+0x54/0x240()
+> > [ 1063.793659] sysfs group ffffffff81cf21a0 not found for kobject 'port=
+-2:0'
+> >
+> > with two different stacks:
+> > 1)
+> > [ 1063.793774]  [<ffffffff81448af4>] device_del+0x54/0x240
+> > [ 1063.793780]  [<ffffffff8145178a>]
+> transport_remove_classdev+0x4a/0x60
+> > [ 1063.793784]  [<ffffffff81451216>]
+> attribute_container_device_trigger+0xa6/0xb0
+> > [ 1063.793802]  [<ffffffffa0105d46>] sas_port_delete+0x126/0x160
+> [scsi_transport_sas]
+> > [ 1063.793819]  [<ffffffffa036ebcc>] hpsa_free_sas_port+0x3c/0x70 [hpsa=
+]
+> >
+> > 2)
+> > [ 1063.797103]  [<ffffffff81448af4>] device_del+0x54/0x240
+> > [ 1063.797118]  [<ffffffffa0105d4e>] sas_port_delete+0x12e/0x160
+> [scsi_transport_sas]
+> > [ 1063.797134]  [<ffffffffa036ebcc>] hpsa_free_sas_port+0x3c/0x70 [hpsa=
+]
+> >
+> > This is caused by the fact that host device hostX is deleted before the
+> > SAS transport devices hostX/port-a:b.
+> >
+> > This patch fixes this by reverting the order of device deletions.
+> >
+> > References: bsc#1010946
+> > Signed-off-by: Martin Wilck <mwilck@suse.de>
+> > ---
+>=20
+> With the References changed to the bug link like in patch 1/2
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Where do we restart resync and reshape?
- 
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/md/md.c | 30 +++++++++++++++++++++++++++++-
->  1 file changed, 29 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index b99584e5d6b1..d712d3320c1d 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -66,6 +66,8 @@
->  #include <linux/raid/md_u.h>
->  #include <linux/slab.h>
->  #include <linux/percpu-refcount.h>
-> +#include <linux/freezer.h>
-> +#include <linux/suspend.h>
->  
->  #include <trace/events/block.h>
->  #include "md.h"
-> @@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
->  	 */
->  
->  	allow_signal(SIGKILL);
-> +	set_freezable();
->  	while (!kthread_should_stop()) {
->  
->  		/* We need to wait INTERRUPTIBLE so that
-> @@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
->  		if (signal_pending(current))
->  			flush_signals(current);
->  
-> -		wait_event_interruptible_timeout
-> +		wait_event_freezable_timeout
->  			(thread->wqueue,
->  			 test_bit(THREAD_WAKEUP, &thread->flags)
->  			 || kthread_should_stop() || kthread_should_park(),
-> @@ -8963,6 +8966,29 @@ static void md_stop_all_writes(void)
->  		mdelay(1000*1);
->  }
->  
-> +/*
-> + * Ensure that neither resyncing nor reshaping occurs while the system is
-> + * frozen.
-> + */
-> +static int md_notify_pm(struct notifier_block *bl, unsigned long state,
-> +			void *unused)
-> +{
-> +	pr_debug("%s: state = %ld\n", __func__, state);
-> +
-> +	switch (state) {
-> +	case PM_HIBERNATION_PREPARE:
-> +	case PM_SUSPEND_PREPARE:
-> +	case PM_RESTORE_PREPARE:
-> +		md_stop_all_writes();
-> +		break;
-> +	}
-> +	return NOTIFY_DONE;
-> +}
-> +
-> +static struct notifier_block md_pm_notifier = {
-> +	.notifier_call	= md_notify_pm,
-> +};
-> +
->  static int md_notify_reboot(struct notifier_block *this,
->  			    unsigned long code, void *x)
->  {
-> @@ -9009,6 +9035,7 @@ static int __init md_init(void)
->  			    md_probe, NULL, NULL);
->  
->  	register_reboot_notifier(&md_reboot_notifier);
-> +	register_pm_notifier(&md_pm_notifier);
->  	raid_table_header = register_sysctl_table(raid_root_table);
->  
->  	md_geninit();
-> @@ -9248,6 +9275,7 @@ static __exit void md_exit(void)
->  
->  	unregister_blkdev(MD_MAJOR,"md");
->  	unregister_blkdev(mdp_major, "mdp");
-> +	unregister_pm_notifier(&md_pm_notifier);
->  	unregister_reboot_notifier(&md_reboot_notifier);
->  	unregister_sysctl_table(raid_table_header);
->  
-> -- 
-> 2.14.2
-> 
+Now that Hannes's patch  9441284fbc39610c0f9ec0ed118ff85d78352906
+has been applied, this patch corrects the stack trace issue.
+
+Would you like to re-submit this patch or would you like me to send it up?
+I'll run some quick tests if you do decide to send it up.=20
+If you want me to send it up, you will get the credit anyway.
+
+Thanks for your help and attention to this issue.
+And thanks again to Hannes.
+
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
+
+
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
