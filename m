@@ -1,370 +1,100 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 08/10] be2iscsi: Fix misc static analysis errors
-Date: Tue, 10 Oct 2017 16:18:18 +0530
-Message-ID: <1507632500-26445-9-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH 06/10] be2iscsi: Modify IOCTL to fetch user configured IQN
+Date: Tue, 10 Oct 2017 16:18:16 +0530
+Message-ID: <1507632500-26445-7-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1507632500-26445-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:52079 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755799AbdJJKtA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2017 06:49:00 -0400
-Received: by mail-pf0-f172.google.com with SMTP id n14so14905160pfh.8
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2017 03:49:00 -0700 (PDT)
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:53178 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755723AbdJJKsz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2017 06:48:55 -0400
+Received: by mail-pf0-f178.google.com with SMTP id a1so13571687pfj.9
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2017 03:48:55 -0700 (PDT)
 In-Reply-To: <1507632500-26445-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: cleech@redhat.com, lduncan@suse.com
 Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-The patch fixes errors reported by tools like smatch:
- - removes unused structure fields
- - removes dead code
- - fixes code identation
+Add version 1 of GET_HBA_NAME to fetch port specific IQN first.
+If it fails use version 0 to get the IQN.
+
+To use this old IQN names of interfaces needs to be cleared from
+the iscsiadm database.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 ---
- drivers/scsi/be2iscsi/be.h      | 17 ++++++++--------
- drivers/scsi/be2iscsi/be_cmds.c |  1 -
- drivers/scsi/be2iscsi/be_cmds.h | 14 ++-----------
- drivers/scsi/be2iscsi/be_main.c | 40 ++++++++++++++++--------------------
- drivers/scsi/be2iscsi/be_main.h | 45 ++---------------------------------------
- drivers/scsi/be2iscsi/be_mgmt.h |  6 ------
- 6 files changed, 29 insertions(+), 94 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c | 12 ++++++++----
+ drivers/scsi/be2iscsi/be_mgmt.c  |  7 ++++++-
+ drivers/scsi/be2iscsi/be_mgmt.h  |  2 +-
+ 3 files changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index 55e3f8b..1310fbf 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -81,12 +81,12 @@ static inline void queue_tail_inc(struct be_queue_info *q)
- /*ISCSI */
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 512c52a..aef9764 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -762,11 +762,15 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
+ 		}
+ 		break;
+ 	case ISCSI_HOST_PARAM_INITIATOR_NAME:
+-		status = beiscsi_get_initiator_name(phba, buf);
++		/* try fetching user configured name first */
++		status = beiscsi_get_initiator_name(phba, buf, true);
+ 		if (status < 0) {
+-			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-				    "BS_%d : Retreiving Initiator Name Failed\n");
+-			return 0;
++			status = beiscsi_get_initiator_name(phba, buf, false);
++			if (status < 0) {
++				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
++					    "BS_%d : Retreiving Initiator Name Failed\n");
++				status = 0;
++			}
+ 		}
+ 		break;
+ 	case ISCSI_HOST_PARAM_PORT_STATE:
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 0c25c10..713c7de 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -339,12 +339,14 @@ int beiscsi_modify_eq_delay(struct beiscsi_hba *phba,
+  * beiscsi_get_initiator_name - read initiator name from flash
+  * @phba: device priv structure
+  * @name: buffer pointer
++ * @cfg: fetch user configured
+  *
+  */
+-int beiscsi_get_initiator_name(struct beiscsi_hba *phba, char *name)
++int beiscsi_get_initiator_name(struct beiscsi_hba *phba, char *name, bool cfg)
+ {
+ 	struct be_dma_mem nonemb_cmd;
+ 	struct be_cmd_hba_name resp;
++	struct be_cmd_hba_name *req;
+ 	int rc;
  
- struct be_aic_obj {		/* Adaptive interrupt coalescing (AIC) info */
--	u32 min_eqd;		/* in usecs */
--	u32 max_eqd;		/* in usecs */
--	u32 prev_eqd;		/* in usecs */
--	u32 et_eqd;		/* configured val when aic is off */
--	ulong jiffies;
--	u64 eq_prev;		/* Used to calculate eqe */
-+	unsigned long jiffies;
-+	u32 eq_prev;		/* Used to calculate eqe */
-+	u32 prev_eqd;
-+#define BEISCSI_EQ_DELAY_MIN	0
-+#define BEISCSI_EQ_DELAY_DEF	32
-+#define BEISCSI_EQ_DELAY_MAX	128
- };
+ 	rc = beiscsi_prep_nemb_cmd(phba, &nonemb_cmd, CMD_SUBSYSTEM_ISCSI_INI,
+@@ -352,6 +354,9 @@ int beiscsi_get_initiator_name(struct beiscsi_hba *phba, char *name)
+ 	if (rc)
+ 		return rc;
  
- struct be_eq_obj {
-@@ -148,9 +148,8 @@ struct be_ctrl_info {
- /* TAG is from 1...MAX_MCC_CMD, MASK includes MAX_MCC_CMD */
- #define MCC_Q_CMD_TAG_MASK	((MAX_MCC_CMD << 1) - 1)
- 
--#define PAGE_SHIFT_4K 12
--#define PAGE_SIZE_4K (1 << PAGE_SHIFT_4K)
--#define mcc_timeout		120000 /* 12s timeout */
-+#define PAGE_SHIFT_4K		12
-+#define PAGE_SIZE_4K		(1 << PAGE_SHIFT_4K)
- 
- /* Returns number of pages spanned by the data starting at the given addr */
- #define PAGES_4K_SPANNED(_address, size)				\
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 0499666..7d633dd 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -947,7 +947,6 @@ int beiscsi_cmd_q_destroy(struct be_ctrl_info *ctrl, struct be_queue_info *q,
- 	default:
- 		mutex_unlock(&ctrl->mbox_lock);
- 		BUG();
--		return -ENXIO;
- 	}
- 	be_cmd_hdr_prepare(&req->hdr, subsys, opcode, sizeof(*req));
- 	if (queue_type != QTYPE_SGL)
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 5d5e8fb..fc252de 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -1298,19 +1298,9 @@ struct be_cmd_get_port_name {
- 						 * a read command
- 						 */
- #define TGT_CTX_UPDT_CMD		7	/* Target context update */
--#define TGT_STS_CMD			8	/* Target R2T and other BHS
--						 * where only the status number
--						 * need to be updated
--						 */
--#define TGT_DATAIN_CMD			9	/* Target Data-Ins in response
--						 * to read command
--						 */
--#define TGT_SOS_PDU			10	/* Target:standalone status
--						 * response
--						 */
- #define TGT_DM_CMD			11	/* Indicates that the bhs
--						 *  preparedby
--						 * driver should not be touched
-+						 * prepared by driver should not
-+						 * be touched.
- 						 */
- 
- /* Returns the number of items in the field array. */
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 02144c5..f8123ad5 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -455,14 +455,12 @@ static int beiscsi_map_pci_bars(struct beiscsi_hba *phba,
- 		return -ENOMEM;
- 	phba->ctrl.csr = addr;
- 	phba->csr_va = addr;
--	phba->csr_pa.u.a64.address = pci_resource_start(pcidev, 2);
- 
- 	addr = ioremap_nocache(pci_resource_start(pcidev, 4), 128 * 1024);
- 	if (addr == NULL)
- 		goto pci_map_err;
- 	phba->ctrl.db = addr;
- 	phba->db_va = addr;
--	phba->db_pa.u.a64.address =  pci_resource_start(pcidev, 4);
- 
- 	if (phba->generation == BE_GEN2)
- 		pcicfg_reg = 1;
-@@ -476,7 +474,6 @@ static int beiscsi_map_pci_bars(struct beiscsi_hba *phba,
- 		goto pci_map_err;
- 	phba->ctrl.pcicfg = addr;
- 	phba->pci_va = addr;
--	phba->pci_pa.u.a64.address = pci_resource_start(pcidev, pcicfg_reg);
- 	return 0;
- 
- pci_map_err:
-@@ -942,12 +939,11 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 		 * this can happen if clean_task is called on a task that
- 		 * failed in xmit_task or alloc_pdu.
- 		 */
--		 beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
--			     "BM_%d : Double Free in IO SGL io_sgl_free_index=%d,"
--			     "value there=%p\n", phba->io_sgl_free_index,
--			     phba->io_sgl_hndl_base
--			     [phba->io_sgl_free_index]);
--		 spin_unlock_irqrestore(&phba->io_sgl_lock, flags);
-+		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
-+			    "BM_%d : Double Free in IO SGL io_sgl_free_index=%d, value there=%p\n",
-+			    phba->io_sgl_free_index,
-+			    phba->io_sgl_hndl_base[phba->io_sgl_free_index]);
-+		spin_unlock_irqrestore(&phba->io_sgl_lock, flags);
- 		return;
- 	}
- 	phba->io_sgl_hndl_base[phba->io_sgl_free_index] = psgl_handle;
-@@ -1882,8 +1878,8 @@ unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget)
- 
- 		be_dws_le_to_cpu(sol, sizeof(struct sol_cqe));
- 
--		 code = (sol->dw[offsetof(struct amap_sol_cqe, code) /
--			 32] & CQE_CODE_MASK);
-+		code = (sol->dw[offsetof(struct amap_sol_cqe, code) / 32] &
-+				CQE_CODE_MASK);
- 
- 		 /* Get the CID */
- 		if (is_chip_be2_be3r(phba)) {
-@@ -3042,7 +3038,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
- 
- 		mem->dma = paddr;
- 		ret = beiscsi_cmd_eq_create(&phba->ctrl, eq,
--					    phwi_context->cur_eqd);
-+					    BEISCSI_EQ_DELAY_DEF);
- 		if (ret) {
- 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 				    "BM_%d : beiscsi_cmd_eq_create"
-@@ -3526,13 +3522,14 @@ static int be_mcc_queues_create(struct beiscsi_hba *phba,
- 		goto err;
- 	/* Ask BE to create MCC compl queue; */
- 	if (phba->pcidev->msix_enabled) {
--		if (beiscsi_cmd_cq_create(ctrl, cq, &phwi_context->be_eq
--					 [phba->num_cpus].q, false, true, 0))
--		goto mcc_cq_free;
-+		if (beiscsi_cmd_cq_create(ctrl, cq,
-+					&phwi_context->be_eq[phba->num_cpus].q,
-+					false, true, 0))
-+			goto mcc_cq_free;
- 	} else {
- 		if (beiscsi_cmd_cq_create(ctrl, cq, &phwi_context->be_eq[0].q,
- 					  false, true, 0))
--		goto mcc_cq_free;
-+			goto mcc_cq_free;
- 	}
- 
- 	/* Alloc MCC queue */
-@@ -3707,9 +3704,6 @@ static int hwi_init_port(struct beiscsi_hba *phba)
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
--	phwi_context->max_eqd = 128;
--	phwi_context->min_eqd = 0;
--	phwi_context->cur_eqd = 32;
- 	/* set port optic state to unknown */
- 	phba->optic_state = 0xff;
- 
-@@ -4810,10 +4804,10 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
- 	sg = scsi_sglist(sc);
- 	if (sc->sc_data_direction == DMA_TO_DEVICE)
- 		writedir = 1;
--	 else
-+	else
- 		writedir = 0;
- 
--	 return phba->iotask_fn(task, sg, num_sg, xferlen, writedir);
-+	return phba->iotask_fn(task, sg, num_sg, xferlen, writedir);
- }
- 
- /**
-@@ -5234,8 +5228,8 @@ static void beiscsi_eqd_update_work(struct work_struct *work)
- 
- 		if (eqd < 8)
- 			eqd = 0;
--		eqd = min_t(u32, eqd, phwi_context->max_eqd);
--		eqd = max_t(u32, eqd, phwi_context->min_eqd);
-+		eqd = min_t(u32, eqd, BEISCSI_EQ_DELAY_MAX);
-+		eqd = max_t(u32, eqd, BEISCSI_EQ_DELAY_MIN);
- 
- 		aic->jiffies = now;
- 		aic->eq_prev = pbe_eq->cq_count;
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 81ce3ff..6d8f819 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -59,7 +59,7 @@
- #define BE2_DEFPDU_DATA_SZ	8192
- #define BE2_MAX_NUM_CQ_PROC	512
- 
--#define MAX_CPUS		64
-+#define MAX_CPUS		64U
- #define BEISCSI_MAX_NUM_CPUS	7
- 
- #define BEISCSI_VER_STRLEN 32
-@@ -77,9 +77,7 @@
- 
- #define BEISCSI_MAX_CMD_LEN	16	/* scsi_host->max_cmd_len */
- #define BEISCSI_NUM_MAX_LUN	256	/* scsi_host->max_lun */
--#define BEISCSI_NUM_DEVICES_SUPPORTED	0x01
- #define BEISCSI_MAX_FRAGS_INIT	192
--#define BE_NUM_MSIX_ENTRIES	1
- 
- #define BE_SENSE_INFO_SIZE		258
- #define BE_ISCSI_PDU_HEADER_SIZE	64
-@@ -209,13 +207,8 @@ struct mem_array {
- };
- 
- struct be_mem_descriptor {
--	unsigned int index;	/* Index of this memory parameter */
--	unsigned int category;	/* type indicates cached/non-cached */
--	unsigned int num_elements;	/* number of elements in this
--					 * descriptor
--					 */
--	unsigned int alignment_mask;	/* Alignment mask for this block */
- 	unsigned int size_in_bytes;	/* Size required by memory block */
-+	unsigned int num_elements;
- 	struct mem_array *mem_array;
- };
- 
-@@ -238,32 +231,12 @@ struct hba_parameters {
- 	unsigned int num_eq_entries;
- 	unsigned int wrbs_per_cxn;
- 	unsigned int hwi_ws_sz;
--	/**
--	 * These are calculated from other params. They're here
--	 * for debug purposes
--	 */
--	unsigned int num_mcc_pages;
--	unsigned int num_mcc_cq_pages;
--	unsigned int num_cq_pages;
--	unsigned int num_eq_pages;
--
--	unsigned int num_async_pdu_buf_pages;
--	unsigned int num_async_pdu_buf_sgl_pages;
--	unsigned int num_async_pdu_buf_cq_pages;
--
--	unsigned int num_async_pdu_hdr_pages;
--	unsigned int num_async_pdu_hdr_sgl_pages;
--	unsigned int num_async_pdu_hdr_cq_pages;
--
--	unsigned int num_sge;
- };
- 
- #define BEISCSI_GET_ULP_FROM_CRI(phwi_ctrlr, cri) \
- 	(phwi_ctrlr->wrb_context[cri].ulp_num)
- struct hwi_wrb_context {
- 	spinlock_t wrb_lock;
--	struct list_head wrb_handle_list;
--	struct list_head wrb_handle_drvr_list;
- 	struct wrb_handle **pwrb_handle_base;
- 	struct wrb_handle **pwrb_handle_basestd;
- 	struct iscsi_wrb *plast_wrb;
-@@ -272,8 +245,6 @@ struct hwi_wrb_context {
- 	unsigned short wrb_handles_available;
- 	unsigned short cid;
- 	uint8_t ulp_num;	/* ULP to which CID binded */
--	uint16_t register_set;
--	uint16_t doorbell_format;
- 	uint32_t doorbell_offset;
- };
- 
-@@ -310,9 +281,6 @@ struct beiscsi_hba {
- 	u8 __iomem *csr_va;	/* CSR */
- 	u8 __iomem *db_va;	/* Door  Bell  */
- 	u8 __iomem *pci_va;	/* PCI Config */
--	struct be_bus_address csr_pa;	/* CSR */
--	struct be_bus_address db_pa;	/* CSR */
--	struct be_bus_address pci_pa;	/* CSR */
- 	/* PCI representation of our HBA */
- 	struct pci_dev *pcidev;
- 	unsigned int num_cpus;
-@@ -324,7 +292,6 @@ struct beiscsi_hba {
- 	unsigned short io_sgl_free_index;
- 	unsigned short io_sgl_hndl_avbl;
- 	struct sgl_handle **io_sgl_hndl_base;
--	struct sgl_handle **sgl_hndl_array;
- 
- 	unsigned short eh_sgl_alloc_index;
- 	unsigned short eh_sgl_free_index;
-@@ -1009,10 +976,6 @@ struct be_ring {
- };
- 
- struct hwi_controller {
--	struct list_head io_sgl_list;
--	struct list_head eh_sgl_list;
--	struct sgl_handle *psgl_handle_base;
--
- 	struct hwi_wrb_context *wrb_context;
- 	struct be_ring default_pdu_hdr[BEISCSI_ULP_COUNT];
- 	struct be_ring default_pdu_data[BEISCSI_ULP_COUNT];
-@@ -1036,10 +999,6 @@ struct wrb_handle {
- };
- 
- struct hwi_context_memory {
--	/* Adaptive interrupt coalescing (AIC) info */
--	u16 min_eqd;		/* in usecs */
--	u16 max_eqd;		/* in usecs */
--	u16 cur_eqd;		/* in usecs */
- 	struct be_eq_obj be_eq[MAX_CPUS];
- 	struct be_queue_info be_cq[MAX_CPUS - 1];
- 
++	req = nonemb_cmd.va;
++	if (cfg)
++		req->hdr.version = 1;
+ 	rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL,
+ 				   &resp, sizeof(resp));
+ 	if (rc) {
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 8d886f8..b310c24 100644
+index 665fd89..8d886f8 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.h
 +++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -157,7 +157,6 @@ struct be_bsg_vendor_cmd {
- 
- struct beiscsi_endpoint {
- 	struct beiscsi_hba *phba;
--	struct beiscsi_sess *sess;
- 	struct beiscsi_conn *conn;
- 	struct iscsi_endpoint *openiscsi_ep;
- 	unsigned short ip_type;
-@@ -169,11 +168,6 @@ struct beiscsi_endpoint {
- 	u16 cid_vld;
- };
- 
--unsigned int mgmt_invalidate_connection(struct beiscsi_hba *phba,
--					 struct beiscsi_endpoint *beiscsi_ep,
--					 unsigned short cid,
--					 unsigned short issue_reset,
--					 unsigned short savecfg_flag);
- int beiscsi_mgmt_invalidate_icds(struct beiscsi_hba *phba,
+@@ -178,7 +178,7 @@ int beiscsi_mgmt_invalidate_icds(struct beiscsi_hba *phba,
  				 struct invldt_cmd_tbl *inv_tbl,
  				 unsigned int nents);
+ 
+-int beiscsi_get_initiator_name(struct beiscsi_hba *phba, char *name);
++int beiscsi_get_initiator_name(struct beiscsi_hba *phba, char *name, bool cfg);
+ 
+ int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type);
+ 
 -- 
 2.7.4
