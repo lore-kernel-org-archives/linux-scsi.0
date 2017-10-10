@@ -1,72 +1,129 @@
-From: Kyle Fortin <kyle.fortin@oracle.com>
-Subject: Re: [PATCH] scsi: be2iscsi: Use kasprintf
-Date: Tue, 10 Oct 2017 17:54:15 -0400
-Message-ID: <5B8406DF-E1DB-48B1-8872-29C10B1509C4@oracle.com>
-References: <1507316265-9672-1-git-send-email-himanshujha199640@gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH] scsi: ibmvscsi: Convert timers to use timer_setup()
+Date: Tue, 10 Oct 2017 15:06:00 -0700
+Message-ID: <20171010220600.GA97572@beast>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507316265-9672-1-git-send-email-himanshujha199640@gmail.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Himanshu,
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-On Oct 6, 2017, at 2:57 PM, Himanshu Jha <himanshujha199640@gmail.com> wrote:
-> 
-> Use kasprintf instead of combination of kmalloc and sprintf.
-> 
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> ---
-> drivers/scsi/be2iscsi/be_main.c | 12 +++++-------
-> 1 file changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index b4542e7..6a9ee0e 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -803,15 +803,14 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
-> 
-> 	if (pcidev->msix_enabled) {
-> 		for (i = 0; i < phba->num_cpus; i++) {
-> -			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
-> -						    GFP_KERNEL);
-> +			phba->msi_name[i] = kasprintf(GFP_KERNEL,
-> +						      "beiscsi_%02x_%02x",
-> +						      phba->shost->host_no, i);
-> 			if (!phba->msi_name[i]) {
-> 				ret = -ENOMEM;
-> 				goto free_msix_irqs;
-> 			}
-> 
-> -			sprintf(phba->msi_name[i], "beiscsi_%02x_%02x",
-> -				phba->shost->host_no, i);
-> 			ret = request_irq(pci_irq_vector(pcidev, i),
-> 					  be_isr_msix, 0, phba->msi_name[i],
-> 					  &phwi_context->be_eq[i]);
-> @@ -824,13 +823,12 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
-> 				goto free_msix_irqs;
-> 			}
-> 		}
-> -		phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME, GFP_KERNEL);
-> +		phba->msi_name[i] = kasprintf(GFP_KERNEL, "beiscsi_mcc_%02x",
-> +					      phba->shost->host_no);
-> 		if (!phba->msi_name[i]) {
-> 			ret = -ENOMEM;
-> 			goto free_msix_irqs;
-> 		}
-> -		sprintf(phba->msi_name[i], "beiscsi_mcc_%02x",
-> -			phba->shost->host_no);
-> 		ret = request_irq(pci_irq_vector(pcidev, i), be_isr_mcc, 0,
-> 				  phba->msi_name[i], &phwi_context->be_eq[i]);
-> 		if (ret) {
-> -- 
-> 2.7.4
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+This requires commit 686fef928bba ("timer: Prepare to change timer
+callback argument type") in v4.14-rc3, but should be otherwise
+stand-alone.
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c   | 14 ++++++--------
+ drivers/scsi/ibmvscsi/ibmvscsi.c |  7 +++----
+ 2 files changed, 9 insertions(+), 12 deletions(-)
 
-Since you are getting rid of the only use for BEISCSI_MSI_NAME within drivers/scsi/be2iscsi/be_main.h, that should be removed too.
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index b491af31a5f8..0d2f7eb3acb6 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1393,8 +1393,9 @@ static int ibmvfc_map_sg_data(struct scsi_cmnd *scmd,
+  *
+  * Called when an internally generated command times out
+  **/
+-static void ibmvfc_timeout(struct ibmvfc_event *evt)
++static void ibmvfc_timeout(struct timer_list *t)
+ {
++	struct ibmvfc_event *evt = from_timer(evt, t, timer);
+ 	struct ibmvfc_host *vhost = evt->vhost;
+ 	dev_err(vhost->dev, "Command timed out (%p). Resetting connection\n", evt);
+ 	ibmvfc_reset_host(vhost);
+@@ -1424,12 +1425,10 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+ 		BUG();
+ 
+ 	list_add_tail(&evt->queue, &vhost->sent);
+-	init_timer(&evt->timer);
++	timer_setup(&evt->timer, ibmvfc_timeout, 0);
+ 
+ 	if (timeout) {
+-		evt->timer.data = (unsigned long) evt;
+ 		evt->timer.expires = jiffies + (timeout * HZ);
+-		evt->timer.function = (void (*)(unsigned long))ibmvfc_timeout;
+ 		add_timer(&evt->timer);
+ 	}
+ 
+@@ -3692,8 +3691,9 @@ static void ibmvfc_tgt_adisc_cancel_done(struct ibmvfc_event *evt)
+  * out, reset the CRQ. When the ADISC comes back as cancelled,
+  * log back into the target.
+  **/
+-static void ibmvfc_adisc_timeout(struct ibmvfc_target *tgt)
++static void ibmvfc_adisc_timeout(struct timer_list *t)
+ {
++	struct ibmvfc_target *tgt = from_timer(tgt, t, timer);
+ 	struct ibmvfc_host *vhost = tgt->vhost;
+ 	struct ibmvfc_event *evt;
+ 	struct ibmvfc_tmf *tmf;
+@@ -3778,9 +3778,7 @@ static void ibmvfc_tgt_adisc(struct ibmvfc_target *tgt)
+ 	if (timer_pending(&tgt->timer))
+ 		mod_timer(&tgt->timer, jiffies + (IBMVFC_ADISC_TIMEOUT * HZ));
+ 	else {
+-		tgt->timer.data = (unsigned long) tgt;
+ 		tgt->timer.expires = jiffies + (IBMVFC_ADISC_TIMEOUT * HZ);
+-		tgt->timer.function = (void (*)(unsigned long))ibmvfc_adisc_timeout;
+ 		add_timer(&tgt->timer);
+ 	}
+ 
+@@ -3912,7 +3910,7 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *vhost, u64 scsi_id)
+ 	tgt->vhost = vhost;
+ 	tgt->need_login = 1;
+ 	tgt->cancel_key = vhost->task_set++;
+-	init_timer(&tgt->timer);
++	timer_setup(&tgt->timer, ibmvfc_adisc_timeout, 0);
+ 	kref_init(&tgt->kref);
+ 	ibmvfc_init_tgt(tgt, ibmvfc_tgt_implicit_logout);
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 7d156b161482..17df76f0be3c 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -837,8 +837,9 @@ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
+  *
+  * Called when an internally generated command times out
+ */
+-static void ibmvscsi_timeout(struct srp_event_struct *evt_struct)
++static void ibmvscsi_timeout(struct timer_list *t)
+ {
++	struct srp_event_struct *evt_struct = from_timer(evt_struct, t, timer);
+ 	struct ibmvscsi_host_data *hostdata = evt_struct->hostdata;
+ 
+ 	dev_err(hostdata->dev, "Command timed out (%x). Resetting connection\n",
+@@ -927,11 +928,9 @@ static int ibmvscsi_send_srp_event(struct srp_event_struct *evt_struct,
+ 	 */
+ 	list_add_tail(&evt_struct->list, &hostdata->sent);
+ 
+-	init_timer(&evt_struct->timer);
++	timer_setup(&evt_struct->timer, ibmvscsi_timeout, 0);
+ 	if (timeout) {
+-		evt_struct->timer.data = (unsigned long) evt_struct;
+ 		evt_struct->timer.expires = jiffies + (timeout * HZ);
+-		evt_struct->timer.function = (void (*)(unsigned long))ibmvscsi_timeout;
+ 		add_timer(&evt_struct->timer);
+ 	}
+ 
+-- 
+2.7.4
 
---
-Kyle Fortin - Oracle Linux Engineering
+
+-- 
+Kees Cook
+Pixel Security
