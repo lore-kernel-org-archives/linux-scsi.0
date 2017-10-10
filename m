@@ -1,44 +1,44 @@
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V6 5/5] blk-mq-sched: don't dequeue request until all in
- ->dispatch are flushed
-Date: Tue, 10 Oct 2017 11:26:48 -0700
-Message-ID: <20171010182648.GE30738@vader.DHCP.thefacebook.com>
-References: <20171009112424.30524-1-ming.lei@redhat.com>
- <20171009112424.30524-6-ming.lei@redhat.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] scsi: logging_level: update bits description
+Date: Tue, 10 Oct 2017 12:05:54 -0700
+Message-ID: <7d747a9b-e0a0-0f64-f1f3-66338ec7bbea@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171009112424.30524-6-ming.lei@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from merlin.infradead.org ([205.233.59.134]:59112 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932087AbdJJTF5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2017 15:05:57 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
-On Mon, Oct 09, 2017 at 07:24:24PM +0800, Ming Lei wrote:
-> During dispatching, we moved all requests from hctx->dispatch to
-> one temporary list, then dispatch them one by one from this list.
-> Unfortunately during this period, run queue from other contexts
-> may think the queue is idle, then start to dequeue from sw/scheduler
-> queue and still try to dispatch because ->dispatch is empty. This way
-> hurts sequential I/O performance because requests are dequeued when
-> lld queue is busy.
-> 
-> This patch introduces the state of BLK_MQ_S_DISPATCH_BUSY to
-> make sure that request isn't dequeued until ->dispatch is
-> flushed.
-> 
-> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+From: Randy Dunlap <rdunlap@infradead.org>
 
-I think this will do for now.
+Update the description of 'scsi_logging_level' from 8 4-bit nibbles
+to the (pre-git) reality of 10 3-bit 'nibbles'.
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+---
+ drivers/scsi/scsi_logging.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  block/blk-mq-debugfs.c |  1 +
->  block/blk-mq-sched.c   | 38 ++++++++++++++++++++++++++++++++------
->  block/blk-mq.c         |  5 +++++
->  include/linux/blk-mq.h |  1 +
->  4 files changed, 39 insertions(+), 6 deletions(-)
+--- lnx-414-rc3.orig/drivers/scsi/scsi_logging.h
++++ lnx-414-rc3/drivers/scsi/scsi_logging.h
+@@ -3,10 +3,10 @@
+ 
+ 
+ /*
+- * This defines the scsi logging feature.  It is a means by which the user
+- * can select how much information they get about various goings on, and it
+- * can be really useful for fault tracing.  The logging word is divided into
+- * 8 nibbles, each of which describes a loglevel.  The division of things is
++ * This defines the scsi logging feature.  It is a means by which the user can
++ * select how much information they get about various goings on, and it can be
++ * really useful for fault tracing.  The logging word is divided into 10 3-bit
++ * 'nibbles', each of which describes a loglevel.  The division of things is
+  * somewhat arbitrary, and the division of the word could be changed if it
+  * were really needed for any reason.  The numbers below are the only place
+  * where these are specified.  For a first go-around, 3 bits is more than
