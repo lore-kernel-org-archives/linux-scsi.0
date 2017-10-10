@@ -1,52 +1,75 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v7 9/9] block, scsi: Make SCSI quiesce and resume work
- reliably
-Date: Tue, 10 Oct 2017 17:16:58 +0000
-Message-ID: <1507655817.2815.46.camel@wdc.com>
-References: <20171009231400.562-1-bart.vanassche@wdc.com>
-         <20171009231400.562-10-bart.vanassche@wdc.com>
-         <20171010105626.GB18664@ming.t460p>
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V6 1/5] blk-mq-sched: fix scheduler bad performance
+Date: Tue, 10 Oct 2017 11:10:22 -0700
+Message-ID: <20171010181022.GB30738@vader.DHCP.thefacebook.com>
+References: <20171009112424.30524-1-ming.lei@redhat.com>
+ <20171009112424.30524-2-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171010105626.GB18664@ming.t460p>
-Content-Language: en-US
-Content-ID: <5E735375FD613F4C8030F79DFEC4A2D2@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "mcgrof@kernel.org" <mcgrof@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171009112424.30524-2-ming.lei@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE3LTEwLTEwIGF0IDE4OjU2ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-TW9uLCBPY3QgMDksIDIwMTcgYXQgMDQ6MTQ6MDBQTSAtMDcwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IFsgLi4uIF0NCj4gPiAgaW50DQo+ID4gIHNjc2lfZGV2aWNlX3F1aWVzY2Uoc3Ry
-dWN0IHNjc2lfZGV2aWNlICpzZGV2KQ0KPiA+ICB7DQo+ID4gKwlzdHJ1Y3QgcmVxdWVzdF9xdWV1
-ZSAqcSA9IHNkZXYtPnJlcXVlc3RfcXVldWU7DQo+ID4gIAlpbnQgZXJyOw0KPiA+ICANCj4gPiAr
-CS8qIElmIHRoZSBTQ1NJIGRldmljZSBhbHJlYWR5IGhhcyBiZWVuIHF1aWVzY2VkLCBkbyBub3Ro
-aW5nLiAqLw0KPiA+ICsJaWYgKGJsa19zZXRfcHJlZW1wdF9vbmx5KHEpKQ0KPiA+ICsJCXJldHVy
-biAwOw0KPiANCj4gVGhpcyB3YXkgaXNuJ3Qgc2FmZToNCj4gDQo+IDEpIHN1cHBvc2UgcGF0aDEg
-c2V0cyB0aGUgZmxhZywgYW5kIGJsa19tcV9mcmVlemVfcXVldWUoKSBpc24ndA0KPiBmaW5pc2hl
-ZCwgb3IgZXZlbiBub3Qgc3RhcnRlZDsNCj4gDQo+IDIpIHBhdGgyIHNlZXMgdGhlIGZsYWcgc2V0
-IGF0IHRoZSBleGFjdCB0aW1lLCBhbmQgcmV0dXJucyBpbW1lZGlhdGVseSwNCj4gYW5kIHVuZm9y
-dHVuYXRlbHkgU0NTSSBRVUlFU0NFIGlzbid0IHJlc3BlY3RlZCBpbiB0aGlzIGNvbnRleHQuDQoN
-ClRoYXQgY29tbWVudCBhcHBsaWVzIHRvIGNvbmN1cnJlbnQgaW52b2NhdGlvbnMgb2Ygc2NzaV9k
-ZXZpY2VfcXVpZXNjZSgpIG9ubHkuDQpJIHRoaW5rIGNvbmN1cnJlbnQgY2FsbHMgb2Ygc2NzaV9k
-ZXZpY2VfcXVpZXNjZSgpIGNhbiBvbmx5IG9jY3VyIHdoZW4gcG93ZXINCm1hbmFnZW1lbnQgc3Vz
-cGVuZHMgb3INCmhpYmVybmF0ZXMgYSBzeXN0ZW0gdGhhdCBpcyBlcXVpcHBlZCB3aXRoIGEgcGFy
-YWxsZWwNCnBvcnQgYW5kIG9uIHdoaWNoIFNDU0kgcGFyYWxsZWwgZG9tYWluIHZhbGlkYXRpb24g
-b2NjdXJzLiBJIHRoaW5rIHRoYXQncyBhDQp2ZXJ5IHVubGlrZWx5IGNvbWJpbmF0aW9uLiBBbmQg
-aWYgd2UgaGF2ZSB0bw0KYWRkcmVzcyB0aGlzLCBJIHByb3Bvc2UgdG8NCmRpc2FibGUgcG93ZXIg
-bWFuYWdlbWVudCBkdXJpbmcgU0NTSSBwYXJhbGxlbCBkb21haW4gdmFsaWRhdGlvbiwgZS5nLiBi
-eQ0KbG9ja2luZyBwbV9tdXRleCBiZWZvcmUgU1BJIERWIHN0YXJ0cyBhbmQgYnkgdW5sb2NraW5n
-IHRoYXQgbXV0ZXggYWZ0ZXIgU1BJDQpEVg0KaGFzIGZpbmlzaGVkLiBJIHRoaW5rIHRoYXQgd2ls
-bCByZXN1bHQgaW4gY29kZSB0aGF0IGlzIGVhc2llciB0byByZXZpZXcNCnRoYW4gdGhlIGFwcHJv
-YWNoIHlvdSBwcm9wb3NlZC4NCg0KPiA+ICsJYmxrX21xX2ZyZWV6ZV9xdWV1ZShxKTsNCj4gPiAr
-CWJsa19tcV91bmZyZWV6ZV9xdWV1ZShxKTsNCj4gDQo+IFRoaXMgd2F5IGlzbid0IHNhZmUgdG9v
-LCBiZWNhdXNlIHF1ZXVlIG1heSBoYXMgYmVlbiBmcm96ZW4gYmVmb3JlDQo+IHNjc2lfZGV2aWNl
-X3F1aWVzY2UoKSBpcyBydW4sIHRoZW4gdGhlcmUgaXNuJ3Qgc3luY2hyb25pemVfcmN1KCkNCj4g
-aW1wbGljYXRlZCBpbiBibGtfbXFfZnJlZXplX3F1ZXVlKCkuDQoNCkl0J3MgdmVyeSB1bmxpa2Vs
-eSB0aGF0IHRoaXMgd2lsbCBjYXVzZSB0cm91YmxlIGluIHByYWN0aWNlLiBBbnl3YXksIHRoZQ0K
-cHJldmlvdXMgdmVyc2lvbiBvZiB0aGlzIGNvZGUgZGlkIG5vdCBzaG93IHRoaXMgcmFjZSBzbyBJ
-IHdpbGwgY2hhbmdlIHRoaXMNCmNvZGUgZnJhZ21lbnQgYmFjayB0byB3aGF0IEkgaGFkIGluIHRo
-ZSBwcmV2aW91cyB2ZXJzaW9uLg0KDQpCYXJ0Lg==
+On Mon, Oct 09, 2017 at 07:24:20PM +0800, Ming Lei wrote:
+> When hw queue is busy, we shouldn't take requests from
+> scheduler queue any more, otherwise it is difficult to do
+> IO merge.
+> 
+> This patch fixes the awful IO performance on some
+> SCSI devices(lpfc, qla2xxx, ...) when mq-deadline/kyber
+> is used by not taking requests if hw queue is busy.
+> 
+> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  block/blk-mq-sched.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+> index 4ab69435708c..eca011fdfa0e 100644
+> --- a/block/blk-mq-sched.c
+> +++ b/block/blk-mq-sched.c
+> @@ -94,7 +94,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+>  	struct request_queue *q = hctx->queue;
+>  	struct elevator_queue *e = q->elevator;
+>  	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
+> -	bool did_work = false;
+> +	bool do_sched_dispatch = true;
+>  	LIST_HEAD(rq_list);
+>  
+>  	/* RCU or SRCU read lock is needed before checking quiesced flag */
+> @@ -125,18 +125,18 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+>  	 */
+>  	if (!list_empty(&rq_list)) {
+>  		blk_mq_sched_mark_restart_hctx(hctx);
+> -		did_work = blk_mq_dispatch_rq_list(q, &rq_list);
+> +		do_sched_dispatch = blk_mq_dispatch_rq_list(q, &rq_list);
+>  	} else if (!has_sched_dispatch) {
+>  		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+>  		blk_mq_dispatch_rq_list(q, &rq_list);
+>  	}
+>  
+>  	/*
+> -	 * We want to dispatch from the scheduler if we had no work left
+> -	 * on the dispatch list, OR if we did have work but weren't able
+> -	 * to make progress.
+> +	 * We want to dispatch from the scheduler if there was nothing
+> +	 * on the dispatch list or we were able to dispatch from the
+> +	 * dispatch list.
+>  	 */
+> -	if (!did_work && has_sched_dispatch) {
+> +	if (do_sched_dispatch && has_sched_dispatch) {
+>  		do {
+>  			struct request *rq;
+>  
+> -- 
+> 2.9.5
+> 
