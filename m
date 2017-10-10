@@ -1,176 +1,114 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi/aic7xxx: Convert timers to use timer_setup()
-Date: Mon, 9 Oct 2017 17:15:46 -0700
-Message-ID: <20171010001546.GA120288@beast>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V5 00/14] blk-mq-sched: improve sequential I/O
+ performance(part 1)
+Date: Tue, 10 Oct 2017 09:46:58 +0800
+Message-ID: <20171010014653.GA3247@ming.t460p>
+References: <20170930102720.30219-1-ming.lei@redhat.com>
+ <1e56f7e1-2a2f-26c9-9c74-97e0d22bc98b@huawei.com>
+ <20171009150439.GA30189@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20171009150439.GA30189@ming.t460p>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+To: John Garry <john.garry@huawei.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-stat_timer only ever assigns the same function and data, so consolidate
-to using timer_setup(), adjust callback, drop everything else used
-to pass things around, and remove needless typedefs.
+On Mon, Oct 09, 2017 at 11:04:39PM +0800, Ming Lei wrote:
+> Hi John,
+> 
+> On Mon, Oct 09, 2017 at 01:09:22PM +0100, John Garry wrote:
+> > On 30/09/2017 11:27, Ming Lei wrote:
+> > > Hi Jens,
+> > > 
+> > > In Red Hat internal storage test wrt. blk-mq scheduler, we
+> > > found that I/O performance is much bad with mq-deadline, especially
+> > > about sequential I/O on some multi-queue SCSI devcies(lpfc, qla2xxx,
+> > > SRP...)
+> > > 
+> > > Turns out one big issue causes the performance regression: requests
+> > > are still dequeued from sw queue/scheduler queue even when ldd's
+> > > queue is busy, so I/O merge becomes quite difficult to make, then
+> > > sequential IO degrades a lot.
+> > > 
+> > > This issue becomes one of mains reasons for reverting default SCSI_MQ
+> > > in V4.13.
+> > > 
+> > > The 1st patch takes direct issue in blk_mq_request_bypass_insert(),
+> > > then we can improve dm-mpath's performance in part 2, which will
+> > > be posted out soon.
+> > > 
+> > > The 2nd six patches improve this situation, and brings back
+> > > some performance loss.
+> > > 
+> > > With this change, SCSI-MQ sequential I/O performance is
+> > > improved much, Paolo reported that mq-deadline performance
+> > > improved much[2] in his dbench test wrt V2. Also performanc
+> > > improvement on lpfc/qla2xx was observed with V1.[1]
+> > > 
+> > > Please consider it for V4.15.
+> > > 
+> > > [1] http://marc.info/?l=linux-block&m=150151989915776&w=2
+> > > [2] https://marc.info/?l=linux-block&m=150217980602843&w=2
+> > > 
+> > 
+> > I tested this series for the SAS controller on HiSilicon hip07 platform as I
+> > am interested in enabling MQ for this driver. Driver is
+> > ./drivers/scsi/hisi_sas/.
+> > 
+> > So I found that that performance is improved when enabling default SCSI_MQ
+> > with this series vs baseline. However, it is still not as a good as when
+> > default SCSI_MQ is disabled.
+> > 
+> > Here are some figures I got with fio:
+> > 4.14-rc2 without default SCSI_MQ
+> > read, rw, write IOPS	
+> > 952K, 133K/133K, 800K
+> > 
+> > 4.14-rc2 with default SCSI_MQ
+> > read, rw, write IOPS	
+> > 311K, 117K/117K, 320K
+> > 
+> > This series* without default SCSI_MQ
+> > read, rw, write IOPS	
+> > 975K, 132K/132K, 790K
+> > 
+> > This series* with default SCSI_MQ
+> > read, rw, write IOPS	
+> > 770K, 164K/164K, 594K
+> 
+> Thanks for testing this patchset!
+> 
+> Looks there is big improvement, but the gap compared with
+> block legacy is not small too.
+> 
+> > 
+> > Please note that hisi_sas driver does not enable mq by exposing multiple
+> > queues to upper layer (even though it has multiple queues). I have been
+> > playing with enabling it, but my performance is always worse...
+> > 
+> > * I'm using
+> > https://github.com/ming1/linux/commits/blk_mq_improve_scsi_mpath_perf_V5.1,
+> > as advised by Ming Lei.
+> 
+> Could you test on the following branch and see if it makes a
+> difference?
+> 
+> 	https://github.com/ming1/linux/commits/blk_mq_improve_scsi_mpath_perf_V6.1_test
 
-reset_timer is unused; remove it.
+Hi John,
 
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-This requires commit 686fef928bba ("timer: Prepare to change timer
-callback argument type") in v4.14-rc3, but should be otherwise
-stand-alone.
----
- drivers/scsi/aic7xxx/aic79xx.h      |  5 +----
- drivers/scsi/aic7xxx/aic79xx_core.c | 29 ++++++++---------------------
- drivers/scsi/aic7xxx/aic79xx_osm.h  |  7 -------
- 3 files changed, 9 insertions(+), 32 deletions(-)
+Please test the following branch directly:
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
-index d47b527b25dd..31f2bb9d7146 100644
---- a/drivers/scsi/aic7xxx/aic79xx.h
-+++ b/drivers/scsi/aic7xxx/aic79xx.h
-@@ -1046,8 +1046,6 @@ typedef enum {
- 
- typedef uint8_t ahd_mode_state;
- 
--typedef void ahd_callback_t (void *);
--
- struct ahd_completion
- {
- 	uint16_t	tag;
-@@ -1122,8 +1120,7 @@ struct ahd_softc {
- 	/*
- 	 * Timer handles for timer driven callbacks.
- 	 */
--	ahd_timer_t		  reset_timer;
--	ahd_timer_t		  stat_timer;
-+	struct timer_list	stat_timer;
- 
- 	/*
- 	 * Statistics.
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 95d8f25cbcca..b560f396ee99 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -207,7 +207,7 @@ static void		ahd_add_scb_to_free_list(struct ahd_softc *ahd,
- static u_int		ahd_rem_wscb(struct ahd_softc *ahd, u_int scbid,
- 				     u_int prev, u_int next, u_int tid);
- static void		ahd_reset_current_bus(struct ahd_softc *ahd);
--static ahd_callback_t	ahd_stat_timer;
-+static void		ahd_stat_timer(struct timer_list *t);
- #ifdef AHD_DUMP_SEQ
- static void		ahd_dumpseq(struct ahd_softc *ahd);
- #endif
-@@ -6104,8 +6104,7 @@ ahd_alloc(void *platform_arg, char *name)
- 	ahd->bugs = AHD_BUGNONE;
- 	ahd->flags = AHD_SPCHK_ENB_A|AHD_RESET_BUS_A|AHD_TERM_ENB_A
- 		   | AHD_EXTENDED_TRANS_A|AHD_STPWLEVEL_A;
--	ahd_timer_init(&ahd->reset_timer);
--	ahd_timer_init(&ahd->stat_timer);
-+	timer_setup(&ahd->stat_timer, ahd_stat_timer, 0);
- 	ahd->int_coalescing_timer = AHD_INT_COALESCING_TIMER_DEFAULT;
- 	ahd->int_coalescing_maxcmds = AHD_INT_COALESCING_MAXCMDS_DEFAULT;
- 	ahd->int_coalescing_mincmds = AHD_INT_COALESCING_MINCMDS_DEFAULT;
-@@ -6235,8 +6234,7 @@ ahd_shutdown(void *arg)
- 	/*
- 	 * Stop periodic timer callbacks.
- 	 */
--	ahd_timer_stop(&ahd->reset_timer);
--	ahd_timer_stop(&ahd->stat_timer);
-+	del_timer_sync(&ahd->stat_timer);
- 
- 	/* This will reset most registers to 0, but not all */
- 	ahd_reset(ahd, /*reinit*/FALSE);
-@@ -7039,20 +7037,11 @@ static const char *termstat_strings[] = {
- };
- 
- /***************************** Timer Facilities *******************************/
--#define ahd_timer_init init_timer
--#define ahd_timer_stop del_timer_sync
--typedef void ahd_linux_callback_t (u_long);
--
- static void
--ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
-+ahd_timer_reset(struct timer_list *timer, int usec)
- {
--	struct ahd_softc *ahd;
--
--	ahd = (struct ahd_softc *)arg;
- 	del_timer(timer);
--	timer->data = (u_long)arg;
- 	timer->expires = jiffies + (usec * HZ)/1000000;
--	timer->function = (ahd_linux_callback_t*)func;
- 	add_timer(timer);
- }
- 
-@@ -7279,8 +7268,7 @@ ahd_init(struct ahd_softc *ahd)
- 	}
- init_done:
- 	ahd_restart(ahd);
--	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
--			ahd_stat_timer, ahd);
-+	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
- 	return (0);
- }
- 
-@@ -8878,9 +8866,9 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
- 
- /**************************** Statistics Processing ***************************/
- static void
--ahd_stat_timer(void *arg)
-+ahd_stat_timer(struct timer_list *t)
- {
--	struct	ahd_softc *ahd = arg;
-+	struct	ahd_softc *ahd = from_timer(ahd, t, stat_timer);
- 	u_long	s;
- 	int	enint_coal;
- 	
-@@ -8907,8 +8895,7 @@ ahd_stat_timer(void *arg)
- 	ahd->cmdcmplt_bucket = (ahd->cmdcmplt_bucket+1) & (AHD_STAT_BUCKETS-1);
- 	ahd->cmdcmplt_total -= ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket];
- 	ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket] = 0;
--	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
--			ahd_stat_timer, ahd);
-+	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
- 	ahd_unlock(ahd, &s);
- }
- 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
-index 728193a42e6e..8a8b7ae7aed3 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.h
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
-@@ -203,9 +203,6 @@ int	ahd_dmamap_unload(struct ahd_softc *, bus_dma_tag_t, bus_dmamap_t);
-  */
- #define ahd_dmamap_sync(ahd, dma_tag, dmamap, offset, len, op)
- 
--/************************** Timer DataStructures ******************************/
--typedef struct timer_list ahd_timer_t;
--
- /********************************** Includes **********************************/
- #ifdef CONFIG_AIC79XX_REG_PRETTY_PRINT
- #define AIC_DEBUG_REGISTERS 1
-@@ -214,10 +211,6 @@ typedef struct timer_list ahd_timer_t;
- #endif
- #include "aic79xx.h"
- 
--/***************************** Timer Facilities *******************************/
--#define ahd_timer_init init_timer
--#define ahd_timer_stop del_timer_sync
--
- /***************************** SMP support ************************************/
- #include <linux/spinlock.h>
- 
--- 
-2.7.4
+https://github.com/ming1/linux/tree/blk_mq_improve_scsi_mpath_perf_V6.2_test
 
+And code is simplified and cleaned up much in V6.2, then only two extra
+patches(top 2) are needed against V6 which was posted yesterday.
+
+Please test SCSI_MQ with mq-deadline, which should be the default
+mq scheduler on your HiSilicon SAS.
 
 -- 
-Kees Cook
-Pixel Security
+Ming
