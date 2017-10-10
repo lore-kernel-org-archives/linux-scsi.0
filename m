@@ -1,129 +1,124 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: ibmvscsi: Convert timers to use timer_setup()
-Date: Tue, 10 Oct 2017 15:06:00 -0700
-Message-ID: <20171010220600.GA97572@beast>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
+ is frozen
+Date: Tue, 10 Oct 2017 15:30:25 -0700
+Message-ID: <20171010223025.tda3lx64rdmugm54@kernel.org>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+ <20171010210346.14574-4-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51266 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756347AbdJJWa2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Oct 2017 18:30:28 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20171010210346.14574-4-bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+On Tue, Oct 10, 2017 at 02:03:39PM -0700, Bart Van Assche wrote:
+> Some people use the md driver on laptops and use the suspend and
+> resume functionality. Since it is essential that submitting of
+> new I/O requests stops before a hibernation image is created,
+> interrupt the md resync and reshape actions if the system is
+> being frozen. Note: the resync and reshape will restart after
+> the system is resumed and a message similar to the following
+> will appear in the system log:
+> 
+> md: md0: data-check interrupted.
 
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-This requires commit 686fef928bba ("timer: Prepare to change timer
-callback argument type") in v4.14-rc3, but should be otherwise
-stand-alone.
----
- drivers/scsi/ibmvscsi/ibmvfc.c   | 14 ++++++--------
- drivers/scsi/ibmvscsi/ibmvscsi.c |  7 +++----
- 2 files changed, 9 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index b491af31a5f8..0d2f7eb3acb6 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1393,8 +1393,9 @@ static int ibmvfc_map_sg_data(struct scsi_cmnd *scmd,
-  *
-  * Called when an internally generated command times out
-  **/
--static void ibmvfc_timeout(struct ibmvfc_event *evt)
-+static void ibmvfc_timeout(struct timer_list *t)
- {
-+	struct ibmvfc_event *evt = from_timer(evt, t, timer);
- 	struct ibmvfc_host *vhost = evt->vhost;
- 	dev_err(vhost->dev, "Command timed out (%p). Resetting connection\n", evt);
- 	ibmvfc_reset_host(vhost);
-@@ -1424,12 +1425,10 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
- 		BUG();
+Where do we restart resync and reshape?
  
- 	list_add_tail(&evt->queue, &vhost->sent);
--	init_timer(&evt->timer);
-+	timer_setup(&evt->timer, ibmvfc_timeout, 0);
- 
- 	if (timeout) {
--		evt->timer.data = (unsigned long) evt;
- 		evt->timer.expires = jiffies + (timeout * HZ);
--		evt->timer.function = (void (*)(unsigned long))ibmvfc_timeout;
- 		add_timer(&evt->timer);
- 	}
- 
-@@ -3692,8 +3691,9 @@ static void ibmvfc_tgt_adisc_cancel_done(struct ibmvfc_event *evt)
-  * out, reset the CRQ. When the ADISC comes back as cancelled,
-  * log back into the target.
-  **/
--static void ibmvfc_adisc_timeout(struct ibmvfc_target *tgt)
-+static void ibmvfc_adisc_timeout(struct timer_list *t)
- {
-+	struct ibmvfc_target *tgt = from_timer(tgt, t, timer);
- 	struct ibmvfc_host *vhost = tgt->vhost;
- 	struct ibmvfc_event *evt;
- 	struct ibmvfc_tmf *tmf;
-@@ -3778,9 +3778,7 @@ static void ibmvfc_tgt_adisc(struct ibmvfc_target *tgt)
- 	if (timer_pending(&tgt->timer))
- 		mod_timer(&tgt->timer, jiffies + (IBMVFC_ADISC_TIMEOUT * HZ));
- 	else {
--		tgt->timer.data = (unsigned long) tgt;
- 		tgt->timer.expires = jiffies + (IBMVFC_ADISC_TIMEOUT * HZ);
--		tgt->timer.function = (void (*)(unsigned long))ibmvfc_adisc_timeout;
- 		add_timer(&tgt->timer);
- 	}
- 
-@@ -3912,7 +3910,7 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *vhost, u64 scsi_id)
- 	tgt->vhost = vhost;
- 	tgt->need_login = 1;
- 	tgt->cancel_key = vhost->task_set++;
--	init_timer(&tgt->timer);
-+	timer_setup(&tgt->timer, ibmvfc_adisc_timeout, 0);
- 	kref_init(&tgt->kref);
- 	ibmvfc_init_tgt(tgt, ibmvfc_tgt_implicit_logout);
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 7d156b161482..17df76f0be3c 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -837,8 +837,9 @@ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
-  *
-  * Called when an internally generated command times out
- */
--static void ibmvscsi_timeout(struct srp_event_struct *evt_struct)
-+static void ibmvscsi_timeout(struct timer_list *t)
- {
-+	struct srp_event_struct *evt_struct = from_timer(evt_struct, t, timer);
- 	struct ibmvscsi_host_data *hostdata = evt_struct->hostdata;
- 
- 	dev_err(hostdata->dev, "Command timed out (%x). Resetting connection\n",
-@@ -927,11 +928,9 @@ static int ibmvscsi_send_srp_event(struct srp_event_struct *evt_struct,
- 	 */
- 	list_add_tail(&evt_struct->list, &hostdata->sent);
- 
--	init_timer(&evt_struct->timer);
-+	timer_setup(&evt_struct->timer, ibmvscsi_timeout, 0);
- 	if (timeout) {
--		evt_struct->timer.data = (unsigned long) evt_struct;
- 		evt_struct->timer.expires = jiffies + (timeout * HZ);
--		evt_struct->timer.function = (void (*)(unsigned long))ibmvscsi_timeout;
- 		add_timer(&evt_struct->timer);
- 	}
- 
--- 
-2.7.4
-
-
--- 
-Kees Cook
-Pixel Security
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Shaohua Li <shli@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/md/md.c | 30 +++++++++++++++++++++++++++++-
+>  1 file changed, 29 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index b99584e5d6b1..d712d3320c1d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -66,6 +66,8 @@
+>  #include <linux/raid/md_u.h>
+>  #include <linux/slab.h>
+>  #include <linux/percpu-refcount.h>
+> +#include <linux/freezer.h>
+> +#include <linux/suspend.h>
+>  
+>  #include <trace/events/block.h>
+>  #include "md.h"
+> @@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
+>  	 */
+>  
+>  	allow_signal(SIGKILL);
+> +	set_freezable();
+>  	while (!kthread_should_stop()) {
+>  
+>  		/* We need to wait INTERRUPTIBLE so that
+> @@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
+>  		if (signal_pending(current))
+>  			flush_signals(current);
+>  
+> -		wait_event_interruptible_timeout
+> +		wait_event_freezable_timeout
+>  			(thread->wqueue,
+>  			 test_bit(THREAD_WAKEUP, &thread->flags)
+>  			 || kthread_should_stop() || kthread_should_park(),
+> @@ -8963,6 +8966,29 @@ static void md_stop_all_writes(void)
+>  		mdelay(1000*1);
+>  }
+>  
+> +/*
+> + * Ensure that neither resyncing nor reshaping occurs while the system is
+> + * frozen.
+> + */
+> +static int md_notify_pm(struct notifier_block *bl, unsigned long state,
+> +			void *unused)
+> +{
+> +	pr_debug("%s: state = %ld\n", __func__, state);
+> +
+> +	switch (state) {
+> +	case PM_HIBERNATION_PREPARE:
+> +	case PM_SUSPEND_PREPARE:
+> +	case PM_RESTORE_PREPARE:
+> +		md_stop_all_writes();
+> +		break;
+> +	}
+> +	return NOTIFY_DONE;
+> +}
+> +
+> +static struct notifier_block md_pm_notifier = {
+> +	.notifier_call	= md_notify_pm,
+> +};
+> +
+>  static int md_notify_reboot(struct notifier_block *this,
+>  			    unsigned long code, void *x)
+>  {
+> @@ -9009,6 +9035,7 @@ static int __init md_init(void)
+>  			    md_probe, NULL, NULL);
+>  
+>  	register_reboot_notifier(&md_reboot_notifier);
+> +	register_pm_notifier(&md_pm_notifier);
+>  	raid_table_header = register_sysctl_table(raid_root_table);
+>  
+>  	md_geninit();
+> @@ -9248,6 +9275,7 @@ static __exit void md_exit(void)
+>  
+>  	unregister_blkdev(MD_MAJOR,"md");
+>  	unregister_blkdev(mdp_major, "mdp");
+> +	unregister_pm_notifier(&md_pm_notifier);
+>  	unregister_reboot_notifier(&md_reboot_notifier);
+>  	unregister_sysctl_table(raid_table_header);
+>  
+> -- 
+> 2.14.2
+> 
