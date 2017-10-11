@@ -1,68 +1,60 @@
-From: <nelcastellodicarta@gmail.com>
-Subject: (unknown)
-Date: Wed, 11 Oct 2017 11:49:34 -0000
-Message-ID: <150772257429.32756.9098647502949612684@charter.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: use set_host_byte instead of open-coding it
+Date: Wed, 11 Oct 2017 15:05:40 +0200
+Message-ID: <ceff38de-c8f7-9279-4769-5fcaa239ec7a@linux.vnet.ibm.com>
+References: <20171010152939.21353-1-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="559072852.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 97-87-133-108.dhcp.stls.mo.charter.com ([97.87.133.108]:60628
-        "HELO charter.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1751147AbdJKLtg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2017 07:49:36 -0400
-Subject: 
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171010152939.21353-1-jthumshirn@suse.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-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
-X4rXwELTAVBLBQYAAAAAAQABAFsAAACVCgAAAAA=
+
+On 10/10/2017 05:29 PM, Johannes Thumshirn wrote:
+> Call set_host_byte() instead of open-coding it.
+> 
+> Converted using this simple Coccinelle spatch
+> 
+> <SmPL>
+> @@
+> local idexpression struct scsi_cmnd *c;
+> expression E1;
+> @@
+> 
+> - c->result = E1 << 16;
+> + set_host_byte(c, E1);
+
+Maybe I misunderstand, but doesn't set_host_byte only set the host byte 
+but leave the other 3 parts untouched in c->result?
+
+static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
+{
+	cmd->result = (cmd->result & 0xff00ffff) | (status << 16);
+}
+
+In contrast, assigning something to c->result resets all parts.
+If so, the semantic patch would introduce a subtle semantic change.
+Unless it's guaranteed that in all the touched cases, c->result always 
+has 0 for status, message, and driver byte before calling set_host_byte().
+
+Bart's suggestion also sounds nice.
+
+FYI: Originally, I only thought about using set_host_byte in that one 
+place fix of yours; I did not expect a full framework rework.
+
+-- 
+Mit freundlichen Grüßen / Kind regards
+Steffen Maier
+
+Linux on z Systems Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
