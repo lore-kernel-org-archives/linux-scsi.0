@@ -1,37 +1,39 @@
-From: Martin Wilck <mwilck@suse.de>
-Subject: Re: [PATCH 2/2] hpsa: destroy sas transport properties before
- scsi_host
-Date: Wed, 11 Oct 2017 11:15:08 +0200
-Message-ID: <1507713308.3223.9.camel@suse.de>
-References: <20161121140429.12788-1-mwilck@suse.de>
-         <20161121140429.12788-3-mwilck@suse.de>
-         <20161121141441.rljdubw2rcmrl43v@linux-x5ow.site>
-         <4993A297653ECB4581FA5C3C31323D1967210680@avsrvexchmbx2.microsemi.net>
+From: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 11/13] timer: Remove expires argument from
+ __TIMER_INITIALIZER()
+Date: Wed, 11 Oct 2017 12:15:14 +0200
+Message-ID: <20171011101514.GA2882@pathway.suse.cz>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+ <1507159627-127660-12-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49334 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752011AbdJKJPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Oct 2017 05:15:12 -0400
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D1967210680@avsrvexchmbx2.microsemi.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-watchdog-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1507159627-127660-12-git-send-email-keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Sender: linux-watchdog-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Chris Metcalf <cmetcalf-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, Harish Patil <harish.patil-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Heiko Carstens <heiko.carstens-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Julian Wiedmann <jwi-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, Lai Jiangshan <jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Manish Chopra <manish.chopra-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Mark Gross <mark.gross-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Martin K. Petersen
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>
-Cc: dl-esc-Team ESD Storage Dev Support <esc-TeamESDStorageDevSupport@microsemi.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@odin.com" <JBottomley@odin.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
-On Tue, 2017-10-10 at 23:04 +0000, Don Brace wrote:
-> Now that Hannes's patch  9441284fbc39610c0f9ec0ed118ff85d78352906
-> has been applied, this patch corrects the stack trace issue.
+On Wed 2017-10-04 16:27:05, Kees Cook wrote:
+> The expires field is normally initialized during the first mod_timer()
+> call. It was unused by all callers, so remove it from the macro.
 > 
-> Would you like to re-submit this patch or would you like me to send
-> it up?
-> I'll run some quick tests if you do decide to send it up. 
-> If you want me to send it up, you will get the credit anyway.
+> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> ---
+>  include/linux/kthread.h   | 2 +-
+>  include/linux/timer.h     | 5 ++---
+>  include/linux/workqueue.h | 2 +-
+>  3 files changed, 4 insertions(+), 5 deletions(-)
 
->From my PoV, just go ahead and re-submit. It'll be faster than me
-diving into this again.
+I was primary interested into the change in kthread.h. But the entire
+patch is simple and looks fine:
 
-Thanks,
-Martin
+Reviewed-by: Petr Mladek <pmladek-AlSwsSmVLrQ@public.gmane.org>
+
+Best Regards,
+Petr
+--
+To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
