@@ -1,30 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: Fix uninitialize work element
-Date: Wed, 11 Oct 2017 14:30:43 -0400
-Message-ID: <yq11sm9fsfg.fsf@oracle.com>
-References: <20171010190822.26976-1-himanshu.madhani@cavium.com>
+Subject: Re: [PATCH v3] scsi: fc: check for rport presence in fc_block_scsi_eh
+Date: Wed, 11 Oct 2017 14:33:46 -0400
+Message-ID: <yq1wp41edpx.fsf@oracle.com>
+References: <20171010153138.21542-1-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37296 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752029AbdJKSaw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2017 14:30:52 -0400
-In-Reply-To: <20171010190822.26976-1-himanshu.madhani@cavium.com> (Himanshu
-        Madhani's message of "Tue, 10 Oct 2017 12:08:22 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171010153138.21542-1-jthumshirn@suse.de> (Johannes Thumshirn's
+        message of "Tue, 10 Oct 2017 17:31:38 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Himanshu,
+Johannes,
 
-> From: Quinn Tran <quinn.tran@cavium.com>
+> Coverity-scan recently found a possible NULL pointer dereference in
+> fc_block_scsi_eh() as starget_to_rport() either returns the rport for
+> the startget or NULL.
 >
-> Fixes following stack trace
+> While it is rather unlikely to have fc_block_scsi_eh() called without
+> an rport associated it's a good idea to catch potential misuses of the
+> API gracefully.
 
-Applied to 4.14/scsi-fixes. Thank you!
+Applied to 4.14/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
