@@ -1,37 +1,32 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH] scsi: cxgb4i: fix Tx skb leak
-Date: Wed, 11 Oct 2017 19:33:07 +0530
-Message-ID: <1507730587-6655-1-git-send-email-varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:52934 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753574AbdJKODU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2017 10:03:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 01/10] mpt3sas: Processing of Cable Exception events
+Date: Wed, 11 Oct 2017 17:17:06 +0200
+Message-ID: <83a5efbd-88f4-01bc-13eb-1bf0a638ed58@redhat.com>
+References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
+ <1507641083-20207-2-git-send-email-Sreekanth.Reddy@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1507641083-20207-2-git-send-email-Sreekanth.Reddy@broadcom.com>
+Content-Language: en-MW
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, JBottomley@Parallels.com, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, varun@chelsio.com
 
-In case of connection reset Tx skb queue can have some
-skbs which are not transmitted so purge Tx skb queue in
-release_offload_resources() to avoid skb leak.
+On 10/10/2017 03:11 PM, Sreekanth Reddy wrote:
+> Earlier Active Cable Exception event with reason code
+> "Cable Degraded (0x02))" was added only for Active Cable,
+> Now this event is extended to Passive cable too.
+> So re-arranged display message accordingly.
+>
+> Also added Cable Exception Event even for SAS3008 & SAS3108 HBAs
+> (i.e. MPI 2.5 spec supporting HBAs) earlier this event was
+> enabled only for MPI 2.6 spec supporting HBA devices.
+>
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 1 +
- 1 file changed, 1 insertion(+)
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 1d02cf9..30d5f0e 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1575,6 +1575,7 @@ static void release_offload_resources(struct cxgbi_sock *csk)
- 		csk, csk->state, csk->flags, csk->tid);
- 
- 	cxgbi_sock_free_cpl_skbs(csk);
-+	cxgbi_sock_purge_write_queue(csk);
- 	if (csk->wr_cred != csk->wr_max_cred) {
- 		cxgbi_sock_purge_wr_queue(csk);
- 		cxgbi_sock_reset_wr_list(csk);
--- 
-2.0.2
+Tomas
