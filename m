@@ -1,8 +1,8 @@
 From: Tomas Henzl <thenzl@redhat.com>
 Subject: Re: [PATCH 08/10] mpt3sas: Fix possibility of using invalid Enclosure
  Handles for SAS device after host reset
-Date: Wed, 11 Oct 2017 18:07:02 +0200
-Message-ID: <d5327db8-527b-5174-c2e4-6a7c269d0d14@redhat.com>
+Date: Wed, 11 Oct 2017 18:09:22 +0200
+Message-ID: <a6522b4a-0bb4-1351-bc52-5c1e83f44b31@redhat.com>
 References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
  <1507641083-20207-9-git-send-email-Sreekanth.Reddy@broadcom.com>
 Mime-Version: 1.0
@@ -27,37 +27,5 @@ On 10/10/2017 03:11 PM, Sreekanth Reddy wrote:
 >  from corresponding device pages
 >
 > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 117 ++++++++++++++++++++++++-----------
->  1 file changed, 81 insertions(+), 36 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 17b934b..b819914 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -5383,6 +5383,52 @@ _scsih_check_access_status(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
->  }
->  
->  /**
-> + * _scsih_get_enclosure_logicalid_chassis_slot - get device's
-> + *			EnclosureLogicalID and ChassisSlot information.
-> + * @ioc: per adapter object
-> + * @sas_device_pg0: SAS device page0
-> + * @sas_device: per sas device object
-> + *
-> + * Returns nothing.
-> + */
-> +static void
-> +_scsih_get_enclosure_logicalid_chassis_slot(struct MPT3SAS_ADAPTER *ioc,
-> +	Mpi2SasDevicePage0_t *sas_device_pg0, struct _sas_device *sas_device)
-> +{
-> +	Mpi2ConfigReply_t mpi_reply;
-> +	Mpi2SasEnclosurePage0_t enclosure_pg0;
-> +
-> +	if (!sas_device_pg0 || !sas_device)
-> +		return;
 
-This test^ implies that  sas_device_pg0 or  sas_device can be null,
-is that true?
-
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
