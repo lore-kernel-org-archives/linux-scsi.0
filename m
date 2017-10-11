@@ -1,77 +1,33 @@
-From: Himanshu Jha <himanshujha199640@gmail.com>
-Subject: [PATCH v2] scsi: be2iscsi: Use kasprintf
-Date: Wed, 11 Oct 2017 21:06:14 +0530
-Message-ID: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 05/10] mpt3sas: Fix IO error occurs on pulling out a drive
+ from RAID1 volume created on two SATA drive
+Date: Wed, 11 Oct 2017 17:37:42 +0200
+Message-ID: <80dc6c6d-1d8a-8c60-b2e8-637a8cd997db@redhat.com>
+References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
+ <1507641083-20207-6-git-send-email-Sreekanth.Reddy@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1507641083-20207-6-git-send-email-Sreekanth.Reddy@broadcom.com>
+Content-Language: en-MW
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com, Himanshu Jha <himanshujha199640@gmail.com>
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use kasprintf instead of combination of kmalloc and sprintf.
-Also, remove BEISCSI_MSI_NAME macro used to specify size of string as
-kasprintf handles size computations.
+On 10/10/2017 03:11 PM, Sreekanth Reddy wrote:
+> Whenever IO for raid volume fails with IOCStatus
+>  "MPI2_IOCSTATUS_SCSI_IOC_TERMINATED"and SCSIStatus equal to
+>  "(MPI2_SCSI_STATE_TERMINATED | MPI2_SCSI_STATE_NO_SCSI_STATUS)"
+>  then return the IO to SML with "DID_RESET"
+>  (i.e. retry the IO infinite times) host bytes.
+>
+> Earlier driver is returning the IO with "DID_SOFT_ERROR"
+>  that reties the IO quickly for five times but still
+>  firmware needed some more time and hence IOs were failing.
+>
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
----
-v2:
-   -remove the unnecessary macro BEISCSI_MSI_NAME. 
-
- drivers/scsi/be2iscsi/be_main.c | 12 +++++-------
- drivers/scsi/be2iscsi/be_main.h |  2 --
- 2 files changed, 5 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index b4542e7..6a9ee0e 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -803,15 +803,14 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 
- 	if (pcidev->msix_enabled) {
- 		for (i = 0; i < phba->num_cpus; i++) {
--			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
--						    GFP_KERNEL);
-+			phba->msi_name[i] = kasprintf(GFP_KERNEL,
-+						      "beiscsi_%02x_%02x",
-+						      phba->shost->host_no, i);
- 			if (!phba->msi_name[i]) {
- 				ret = -ENOMEM;
- 				goto free_msix_irqs;
- 			}
- 
--			sprintf(phba->msi_name[i], "beiscsi_%02x_%02x",
--				phba->shost->host_no, i);
- 			ret = request_irq(pci_irq_vector(pcidev, i),
- 					  be_isr_msix, 0, phba->msi_name[i],
- 					  &phwi_context->be_eq[i]);
-@@ -824,13 +823,12 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 				goto free_msix_irqs;
- 			}
- 		}
--		phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME, GFP_KERNEL);
-+		phba->msi_name[i] = kasprintf(GFP_KERNEL, "beiscsi_mcc_%02x",
-+					      phba->shost->host_no);
- 		if (!phba->msi_name[i]) {
- 			ret = -ENOMEM;
- 			goto free_msix_irqs;
- 		}
--		sprintf(phba->msi_name[i], "beiscsi_mcc_%02x",
--			phba->shost->host_no);
- 		ret = request_irq(pci_irq_vector(pcidev, i), be_isr_mcc, 0,
- 				  phba->msi_name[i], &phwi_context->be_eq[i]);
- 		if (ret) {
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 81ce3ff..8166de5 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -155,8 +155,6 @@
- #define PAGES_REQUIRED(x) \
- 	((x < PAGE_SIZE) ? 1 :  ((x + PAGE_SIZE - 1) / PAGE_SIZE))
- 
--#define BEISCSI_MSI_NAME 20 /* size of msi_name string */
--
- #define MEM_DESCR_OFFSET 8
- #define BEISCSI_DEFQ_HDR 1
- #define BEISCSI_DEFQ_DATA 0
--- 
-2.7.4
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Tomas
