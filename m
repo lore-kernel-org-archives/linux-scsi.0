@@ -1,14 +1,15 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 09/10] mpt3sas: Adding support for SAS3616 HBA device
-Date: Wed, 11 Oct 2017 18:12:43 +0200
-Message-ID: <2dfe520b-4fc9-494e-1eec-3de8515d72e5@redhat.com>
+Subject: Re: [PATCH 10/10] mpt3sas: Bump mpt3sas driver version to
+ v16.100.00.00
+Date: Wed, 11 Oct 2017 18:13:20 +0200
+Message-ID: <bb55cd65-f2b1-bcfc-0137-d2c7297eae26@redhat.com>
 References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
- <1507641083-20207-10-git-send-email-Sreekanth.Reddy@broadcom.com>
+ <1507641083-20207-11-git-send-email-Sreekanth.Reddy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507641083-20207-10-git-send-email-Sreekanth.Reddy@broadcom.com>
+In-Reply-To: <1507641083-20207-11-git-send-email-Sreekanth.Reddy@broadcom.com>
 Content-Language: en-MW
 Sender: linux-kernel-owner@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org, hch@infradead.org
@@ -16,8 +17,7 @@ Cc: martin.petersen@oracle.com, Sathya.Prakash@broadcom.com, linux-kernel@vger.k
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/10/2017 03:11 PM, Sreekanth Reddy wrote:
-> Adding PNP ID of Mercator i.e. SAS3616 HBA device.
-> Its device ID is 0xD1 and vendor ID is 0x1000.
+> Bump mpt3sas driver version to v16.100.00.00
 >
 > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
