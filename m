@@ -1,41 +1,55 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
- is frozen
-Date: Wed, 11 Oct 2017 17:17:56 +0000
-Message-ID: <1507742275.2477.20.camel@wdc.com>
-References: <20171010210346.14574-1-bart.vanassche@wdc.com>
-         <20171010210346.14574-4-bart.vanassche@wdc.com>
-         <20171010223025.tda3lx64rdmugm54@kernel.org>
-         <1507678384.2815.80.camel@wdc.com>
-         <20171011014830.ps3v3yxny27wv7mc@kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 04/10] mpt3sas: Fix removal and addition of vSES device
+ during host reset
+Date: Wed, 11 Oct 2017 10:19:51 -0700
+Message-ID: <1507742391.3168.7.camel@HansenPartnership.com>
+References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
+         <1507641083-20207-5-git-send-email-Sreekanth.Reddy@broadcom.com>
+         <49c623ab-899f-92c1-9c23-86ac703e2648@redhat.com>
+         <1507737377.3168.4.camel@HansenPartnership.com>
+         <a8d71636-b9cd-b40c-369c-d2d54416c053@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171011014830.ps3v3yxny27wv7mc@kernel.org>
-Content-Language: en-US
-Content-ID: <347DA52F3C7B1C4792D780206E349584@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "shli@kernel.org" <shli@kernel.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48968 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751423AbdJKRTx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Oct 2017 13:19:53 -0400
+In-Reply-To: <a8d71636-b9cd-b40c-369c-d2d54416c053@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org, hch@infradead.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org
 
-T24gVHVlLCAyMDE3LTEwLTEwIGF0IDE4OjQ4IC0wNzAwLCBTaGFvaHVhIExpIHdyb3RlOg0KPiBU
-aGUgcHJvYmxlbSBpcyBfX21kX3N0b3Bfd3JpdGVzIHNldCBzb21lIGJpdCBsaWtlIE1EX1JFQ09W
-RVJZX0ZST1pFTiwgd2hpY2gNCj4gd2lsbCBwcmV2ZW50IG1kX2NoZWNrX3JlY292ZXJ5IHJlc3Rh
-cnRpbmcgcmVzeW5jL3Jlc2hhcGUuIEkgdGhpbmsgd2UgbmVlZA0KPiBwcmVzZXJ2ZSBtZGRldi0+
-cmVjb3ZlcnkgaW4gc3VzcGVuZCBwcmVwYXJlIGFuZCByZXN0b3JlIGFmdGVyIHJlc3VtZQ0KDQpI
-ZWxsbyBTaGFvaHVhLA0KDQpBcyBmYXIgYXMgSSBjYW4gc2VlIF9fbWRfc3RvcF93cml0ZXMoKSBz
-ZXRzIE1EX1JFQ09WRVJZX0ZST1pFTiBhbmQgY2FuIHNldA0KTURfUkVDT1ZFUllfSU5UUi4gU2lu
-Y2UgbWRfY2hlY2tfcmVjb3ZlcnkoKSBjbGVhcnMgTURfUkVDT1ZFUllfSU5UUiBJIHRoaW5rDQpp
-dCBzaG91bGQgYmUgc3VmZmljaWVudCB0byBzYXZlIGFuZCByZXN0b3JlIHRoZSBzdGF0ZSBvZiB0
-aGUNCk1EX1JFQ09WRVJZX0ZST1pFTiBmbGFnLiBIb3dldmVyLCB3aGVuIEkgcmFuIHRoZSBmb2xs
-b3dpbmcgdGVzdDoNCiogZWNobyBmcm96ZW4gPiAvc3lzL2Jsb2NrL21kMC9tZC9zeW5jX2FjdGlv
-bg0KKiBjYXQgL3N5cy9ibG9jay9tZDAvbWQvc3luY19hY3Rpb24NCiogc3lzdGVtY3RsIGhpYmVy
-bmF0ZQ0KKiAocG93ZXIgb24gc3lzdGVtIGFnYWluKQ0KKiBjYXQgL3N5cy9ibG9jay9tZDAvbWQv
-c3luY19hY3Rpb24NCg0KdGhlIG91dHB1dCB0aGF0IGFwcGVhcmVkIHdhcyBhcyBmb2xsb3dzOg0K
-DQpmcm96ZW4NCmlkbGUNCg0KRG9lcyB0aGF0IG1lYW4gdGhhdCBhIGhpYmVybmF0ZSBvciBzdXNw
-ZW5kIGZvbGxvd2VkIGJ5IGEgcmVzdW1lIGlzIHN1ZmZpY2llbnQNCnRvIGNsZWFyIHRoZSBNRF9S
-RUNPVkVSWV9GUk9aRU4gZmxhZyBmb3IgdGhlIG1kIGRyaXZlcnMgYW5kIGhlbmNlIHRoYXQgdGhl
-DQpwYXRjaCBhdCB0aGUgc3RhcnQgb2YgdGhpcyBlLW1haWwgdGhyZWFkIGRvZXMgbm90IG5lZWQg
-YW55IGZ1cnRoZXINCm1vZGlmaWNhdGlvbnM/DQoNClRoYW5rcywNCg0KQmFydC4=
+On Wed, 2017-10-11 at 18:12 +0200, Tomas Henzl wrote:
+> On 10/11/2017 05:56 PM, James Bottomley wrote:
+> > 
+> > On Wed, 2017-10-11 at 17:35 +0200, Tomas Henzl wrote:
+> > > 
+> > > On 10/10/2017 03:11 PM, Sreekanth Reddy wrote:
+> > > > 
+> > > > For Dev Handles who value is less than hba's phys count number
+> > > >  driver will return HBA sas address value as a sas address.
+> > > > So for Virtual SES device also driver was returning HBA sas
+> > > > address
+> > > > instead
+> > > >  of Virtual SES sas address. So now updated the driver to
+> > > > return
+> > > >  Virtual SES's sas address for Virtual SES device instead of
+> > > >  HBA's sas address.
+> > > > 
+> > > > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+> > > Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> > You mean Reviewed-by: I think?
+> 
+> Sure, sorry for that, corrected too late in 8/10
+> should I resend with  "Reviewed-by" ?
+
+It's probably OK, but please do so if there's another resend.
+ Patchwork blindly captures what it sees, so the application has to be
+hand modified to change Signed-off-by to Reviewed-by even if you resend
+with Reviewed-by.
+
+James
