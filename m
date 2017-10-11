@@ -1,15 +1,17 @@
 From: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
-Subject: [PATCH 0/5] qla2xxx: Patches for scsi-misc
-Date: Wed, 11 Oct 2017 13:36:45 -0700
-Message-ID: <20171011203650.23629-1-himanshu.madhani@cavium.com>
+Subject: [PATCH 1/5] qla2xxx: Add module param ql2xenablemsix
+Date: Wed, 11 Oct 2017 13:36:46 -0700
+Message-ID: <20171011203650.23629-2-himanshu.madhani@cavium.com>
+References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0077.outbound.protection.outlook.com ([104.47.40.77]:55663
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0070.outbound.protection.outlook.com ([104.47.37.70]:23949
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751657AbdJKUgz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Oct 2017 16:36:55 -0400
+        id S1751866AbdJKUg5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Oct 2017 16:36:57 -0400
+In-Reply-To: <20171011203650.23629-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
@@ -17,36 +19,66 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
 
-Hi Martin, 
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_gbl.h | 1 +
+ drivers/scsi/qla2xxx/qla_isr.c | 9 ++++++---
+ drivers/scsi/qla2xxx/qla_os.c  | 9 +++++++++
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-This series adds support for INTx mode for qla2xxx driver. Also,
-adds support for N2N login for FC-NVMe. 
-
-Please apply to 4.15/scsi-queue at your earliest convenience.
-
-Thanks,
-Himanshu
-
-Duane Grigsby (2):
-  qla2xxx: Allow MBC_GET_PORT_DATABASE to query and save the port states
-  qla2xxx: Changes to support N2N logins
-
-Himanshu Madhani (3):
-  qla2xxx: Add module param ql2xenablemsix
-  qla2xxx: Add ATIO-Q processing for INTx mode
-  qla2xxx: Update driver version to 10.00.00.02-k
-
- drivers/scsi/qla2xxx/qla_def.h     |  29 ++++++
- drivers/scsi/qla2xxx/qla_fw.h      |   4 +-
- drivers/scsi/qla2xxx/qla_gbl.h     |   5 +
- drivers/scsi/qla2xxx/qla_init.c    | 135 ++++++++++++++++++++++++-
- drivers/scsi/qla2xxx/qla_iocb.c    | 195 +++++++++++++++++++++++++++++++++++--
- drivers/scsi/qla2xxx/qla_isr.c     |  59 +++++++++--
- drivers/scsi/qla2xxx/qla_mbx.c     | 105 ++++++++++++++++++--
- drivers/scsi/qla2xxx/qla_os.c      |   9 ++
- drivers/scsi/qla2xxx/qla_target.c  |  12 ++-
- drivers/scsi/qla2xxx/qla_version.h |   2 +-
- 10 files changed, 518 insertions(+), 37 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index f852ca60c49f..46c7822c20fc 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -145,6 +145,7 @@ extern int ql2xmvasynctoatio;
+ extern int ql2xuctrlirq;
+ extern int ql2xnvmeenable;
+ extern int ql2xautodetectsfp;
++extern int ql2xenablemsix;
+ 
+ extern int qla2x00_loop_reset(scsi_qla_host_t *);
+ extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 9d9668aac6f6..ef7afd5eefe3 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3486,11 +3486,14 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+ 
+ 	/* If possible, enable MSI-X. */
+-	if (!IS_QLA2432(ha) && !IS_QLA2532(ha) && !IS_QLA8432(ha) &&
+-	    !IS_CNA_CAPABLE(ha) && !IS_QLA2031(ha) && !IS_QLAFX00(ha) &&
+-	    !IS_QLA27XX(ha))
++	if (ql2xenablemsix == 0 || (!IS_QLA2432(ha) && !IS_QLA2532(ha) &&
++	    !IS_QLA8432(ha) && !IS_CNA_CAPABLE(ha) && !IS_QLA2031(ha) &&
++	    !IS_QLAFX00(ha) && !IS_QLA27XX(ha)))
+ 		goto skip_msi;
+ 
++	if (ql2xenablemsix == 2)
++		goto skip_msix;
++
+ 	if (ha->pdev->subsystem_vendor == PCI_VENDOR_ID_HP &&
+ 		(ha->pdev->subsystem_device == 0x7040 ||
+ 		ha->pdev->subsystem_device == 0x7041 ||
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 5b2437a5ea44..e69329cb3608 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -268,6 +268,15 @@ MODULE_PARM_DESC(ql2xautodetectsfp,
+ 		 "Detect SFP range and set appropriate distance.\n"
+ 		 "1 (Default): Enable\n");
+ 
++int ql2xenablemsix = 1;
++module_param(ql2xenablemsix, int, 0444);
++MODULE_PARM_DESC(ql2xenablemsix,
++    "Set to enable MSI or MSI-X interrupt mechanism.\n"
++    " Default is 1, enable MSI-X interrupt mechanism.\n"
++    " 0 -- enable traditional pin-based mechanism.\n"
++    " 1 -- enable MSI-X interrupt mechanism.\n"
++    " 2 -- enable MSI interrupt mechanism.\n");
++
+ /*
+  * SCSI host template entry points
+  */
 -- 
 2.12.0
