@@ -1,14 +1,15 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 03/10] mpt3sas: Reduce memory footprints in kdump kernel
-Date: Wed, 11 Oct 2017 17:33:37 +0200
-Message-ID: <c29a8e75-81a4-f0ff-9d47-d59730b873f3@redhat.com>
+Subject: Re: [PATCH 04/10] mpt3sas: Fix removal and addition of vSES device
+ during host reset
+Date: Wed, 11 Oct 2017 17:35:17 +0200
+Message-ID: <49c623ab-899f-92c1-9c23-86ac703e2648@redhat.com>
 References: <1507641083-20207-1-git-send-email-Sreekanth.Reddy@broadcom.com>
- <1507641083-20207-4-git-send-email-Sreekanth.Reddy@broadcom.com>
+ <1507641083-20207-5-git-send-email-Sreekanth.Reddy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507641083-20207-4-git-send-email-Sreekanth.Reddy@broadcom.com>
+In-Reply-To: <1507641083-20207-5-git-send-email-Sreekanth.Reddy@broadcom.com>
 Content-Language: en-MW
 Sender: linux-kernel-owner@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org, hch@infradead.org
@@ -16,17 +17,13 @@ Cc: martin.petersen@oracle.com, JBottomley@Parallels.com, Sathya.Prakash@broadco
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/10/2017 03:11 PM, Sreekanth Reddy wrote:
-> To reduce the memory footprints of the driver in kdump kernel,
->  we have made below driver setting when system boots in to kdump kernel,
->
-> 1. Used single MSI-x vector.
-> 2. Disable RDPQ mode.
-> 3. Set sg_table_size to 32 by default.
-> 4) Set SCSI IO Queue depth to 200.
+> For Dev Handles who value is less than hba's phys count number
+>  driver will return HBA sas address value as a sas address.
+> So for Virtual SES device also driver was returning HBA sas address instead
+>  of Virtual SES sas address. So now updated the driver to return
+>  Virtual SES's sas address for Virtual SES device instead of
+>  HBA's sas address.
 >
 > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-
-I think that preferred is (though not much used yet) instead of 'reset_devices'
-to use a 'is_kdump_kernel()' function. 
 
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
