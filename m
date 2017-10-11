@@ -1,53 +1,54 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: Re: [PATCH 00/10] be2iscsi: driver update 11.4.0.1
-Date: Wed, 11 Oct 2017 11:56:23 -0700
-Message-ID: <20171011185623.GB18827@straylight.hirudinean.org>
-References: <1507632500-26445-1-git-send-email-jitendra.bhivare@broadcom.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
+ is frozen
+Date: Wed, 11 Oct 2017 12:32:21 -0700
+Message-ID: <20171011193221.hkwvcysv6hahsncd@kernel.org>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+ <20171010210346.14574-4-bart.vanassche@wdc.com>
+ <20171010223025.tda3lx64rdmugm54@kernel.org>
+ <1507678384.2815.80.camel@wdc.com>
+ <20171011014830.ps3v3yxny27wv7mc@kernel.org>
+ <1507742275.2477.20.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49768 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751946AbdJKS40 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Oct 2017 14:56:26 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1507632500-26445-1-git-send-email-jitendra.bhivare@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1507742275.2477.20.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Cc: lduncan@suse.com, linux-scsi@vger.kernel.org
 
+On Wed, Oct 11, 2017 at 05:17:56PM +0000, Bart Van Assche wrote:
+> On Tue, 2017-10-10 at 18:48 -0700, Shaohua Li wrote:
+> > The problem is __md_stop_writes set some bit like MD_RECOVERY_FROZEN, which
+> > will prevent md_check_recovery restarting resync/reshape. I think we need
+> > preserve mddev->recovery in suspend prepare and restore after resume
+> 
+> Hello Shaohua,
+> 
+> As far as I can see __md_stop_writes() sets MD_RECOVERY_FROZEN and can set
+> MD_RECOVERY_INTR. Since md_check_recovery() clears MD_RECOVERY_INTR I think
+> it should be sufficient to save and restore the state of the
+> MD_RECOVERY_FROZEN flag. However, when I ran the following test:
+> * echo frozen > /sys/block/md0/md/sync_action
+> * cat /sys/block/md0/md/sync_action
+> * systemctl hibernate
+> * (power on system again)
+> * cat /sys/block/md0/md/sync_action
+> 
+> the output that appeared was as follows:
+> 
+> frozen
+> idle 
+> Does that mean that a hibernate or suspend followed by a resume is sufficient
+> to clear the MD_RECOVERY_FROZEN flag for the md drivers and hence that the
+> patch at the start of this e-mail thread does not need any further
+> modifications?
 
-These all look good to me.
+Have no idea why it shows 'idle'. From my understanding, after resume, previous
+memory is stored and MD_RECOVERY_FROZEN bit should be set. Was trying to
+understand what happens.
 
-Acked-by: Chris Leech <cleech@redhat.com>
-
-On Tue, Oct 10, 2017 at 04:18:10PM +0530, Jitendra Bhivare wrote:
-> This patch is generated against for-next branch.
-> 
-> Jitendra Bhivare (10):
->   be2iscsi: Fix boot flags in sysfs
->   be2iscsi: Fix return value in mgmt_open_connection
->   be2iscsi: Free msi_name and disable HW intr
->   be2iscsi: Fix _modify_eq_delay buffer overflow
->   be2iscsi: Fix _get_initname buffer overflow
->   be2iscsi: Modify IOCTL to fetch user configured IQN
->   be2iscsi: Add cmd to set host data
->   be2iscsi: Fix misc static analysis errors
->   be2iscsi: Remove A-circumflex character in copyright marking
->   scsi: be2iscsi: Update driver version
-> 
->  drivers/scsi/be2iscsi/be.h       |  19 ++-
->  drivers/scsi/be2iscsi/be_cmds.c  |  55 +++++++-
->  drivers/scsi/be2iscsi/be_cmds.h  |  48 ++++---
->  drivers/scsi/be2iscsi/be_iscsi.c |  54 ++------
->  drivers/scsi/be2iscsi/be_iscsi.h |   2 +-
->  drivers/scsi/be2iscsi/be_main.c  | 102 ++++++++------
->  drivers/scsi/be2iscsi/be_main.h  |  49 +------
->  drivers/scsi/be2iscsi/be_mgmt.c  | 278 ++++++++++++++++++++++-----------------
->  drivers/scsi/be2iscsi/be_mgmt.h  |  10 +-
->  9 files changed, 323 insertions(+), 294 deletions(-)
-> 
-> -- 
-> 2.7.4
-> 
+Thanks,
+Shaohua
