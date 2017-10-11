@@ -1,27 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: logging: update description of logging_level bits
-Date: Wed, 11 Oct 2017 14:22:46 -0400
-Message-ID: <yq1inflfssp.fsf@oracle.com>
-References: <405824b6-5dd7-dc34-55a9-c11f69e2fabd@infradead.org>
+Subject: Re: [PATCH] scsi: libcxgbi: in case of vlan pass 0 as ifindex to find route
+Date: Wed, 11 Oct 2017 14:27:59 -0400
+Message-ID: <yq1efq9fsk0.fsf@oracle.com>
+References: <1507643730-5236-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29431 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752254AbdJKSXQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2017 14:23:16 -0400
-In-Reply-To: <405824b6-5dd7-dc34-55a9-c11f69e2fabd@infradead.org> (Randy
-        Dunlap's message of "Wed, 11 Oct 2017 10:09:23 -0700")
+Received: from aserp1040.oracle.com ([141.146.126.69]:34949 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752483AbdJKS2F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2017 14:28:05 -0400
+In-Reply-To: <1507643730-5236-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Tue, 10 Oct 2017 19:25:30 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Kyle Fortin <kyle.fortin@oracle.com>, Steffen Maier <maier@linux.vnet.ibm.com>
+To: Varun Prakash <varun@chelsio.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
 
 
-Randy,
+Varun,
 
-> Update the description of 'scsi_logging_level' from 8 4-bit nibbles
-> to the (pre-git) reality of 10 3-bit bitfields.
+> In case of vlan pass 0 as ifindex to find route instead of passing
+> real_dev ifindex, if we pass real_dev ifindex then
+> ip_route_output_ports() and ip6_route_output() will check for route
+> through real_dev not through vlan interface.
 
 Applied to 4.15/scsi-queue. Thank you!
 
