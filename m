@@ -1,88 +1,59 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: logging_level: update bits description
-Date: Wed, 11 Oct 2017 15:18:27 +0200
-Message-ID: <ccfbbfed-b1e4-2db8-12a4-76d083f0a474@linux.vnet.ibm.com>
-References: <7d747a9b-e0a0-0f64-f1f3-66338ec7bbea@infradead.org>
- <216D3DB1-C329-4B75-8210-822FF889C344@oracle.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: use set_host_byte instead of open-coding it
+Date: Wed, 11 Oct 2017 15:25:52 +0200
+Message-ID: <20171011132552.tqfrg6ccqny2bzn2@linux-x5ow.site>
+References: <20171010152939.21353-1-jthumshirn@suse.de>
+ <ceff38de-c8f7-9279-4769-5fcaa239ec7a@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54838 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752029AbdJKNSg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Oct 2017 09:18:36 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9BDFYMA100552
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2017 09:18:35 -0400
-Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2dhgmkpgxr-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2017 09:18:32 -0400
-Received: from localhost
-        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-        Wed, 11 Oct 2017 14:18:31 +0100
-In-Reply-To: <216D3DB1-C329-4B75-8210-822FF889C344@oracle.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ceff38de-c8f7-9279-4769-5fcaa239ec7a@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Kyle Fortin <kyle.fortin@oracle.com>, Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
-
-On 10/10/2017 09:32 PM, Kyle Fortin wrote:
-> On Oct 10, 2017, at 3:05 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
->> From: Randy Dunlap <rdunlap@infradead.org>
->>
->> Update the description of 'scsi_logging_level' from 8 4-bit nibbles
->> to the (pre-git) reality of 10 3-bit 'nibbles'.
->>
->> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
->> ---
->> drivers/scsi/scsi_logging.h |    8 ++++----
->> 1 file changed, 4 insertions(+), 4 deletions(-)
->>
->> --- lnx-414-rc3.orig/drivers/scsi/scsi_logging.h
->> +++ lnx-414-rc3/drivers/scsi/scsi_logging.h
->> @@ -3,10 +3,10 @@
->>
->>
->> /*
->> - * This defines the scsi logging feature.  It is a means by which the user
->> - * can select how much information they get about various goings on, and it
->> - * can be really useful for fault tracing.  The logging word is divided into
-
-nit pick: Why reflow and thus "change" these 3 lines even though the 
-content is the same?
-
->> - * 8 nibbles, each of which describes a loglevel.  The division of things is
->> + * This defines the scsi logging feature.  It is a means by which the user can
->> + * select how much information they get about various goings on, and it can be
->> + * really useful for fault tracing.  The logging word is divided into 10 3-bit
->> + * 'nibbles', each of which describes a loglevel.  The division of things is
+On Wed, Oct 11, 2017 at 03:05:40PM +0200, Steffen Maier wrote:
+> Maybe I misunderstand, but doesn't set_host_byte only set the host byte but
+> leave the other 3 parts untouched in c->result?
 > 
-> I think â€˜bitfields' is more appropriate than â€˜nibblesâ€™ (a 4-bit construct in compute).
-
-+1
-
->>   * somewhat arbitrary, and the division of the word could be changed if it
->>   * were really needed for any reason.  The numbers below are the only place
->>   * where these are specified.  For a first go-around, 3 bits is more than
+> static inline void set_host_byte(struct scsi_cmnd *cmd, char status)
+> {
+> 	cmd->result = (cmd->result & 0xff00ffff) | (status << 16);
+> }
 > 
-> Reviewed-by: Kyle Fortin <kyle.fortin@oracle.com>
+> In contrast, assigning something to c->result resets all parts.
+> If so, the semantic patch would introduce a subtle semantic change.
+> Unless it's guaranteed that in all the touched cases, c->result always has 0
+> for status, message, and driver byte before calling set_host_byte().
 
-Reviewed-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Yes it does, another case I'll have to add to my coccinelle spatch, thanks for
+reminding me (and I'm also doing it for set_msg_byte() and set_driver_byte(),
+the status byte will be done manually probably).
+
+> 
+> Bart's suggestion also sounds nice.
+
+Yes I'm working on implementing it currently.
+
+> 
+> FYI: Originally, I only thought about using set_host_byte in that one place
+> fix of yours; I did not expect a full framework rework.
+
+Oh well:
+$ git diff --stat master..
+[..]
+ 80 files changed, 589 insertions(+), 540 deletions(-)
+
+Byte,
+	Johannes
 
 -- 
-Mit freundlichen GrÃ¼ÃŸen / Kind regards
-Steffen Maier
-
-Linux on z Systems Development
-
-IBM Deutschland Research & Development GmbH
-Vorsitzende des Aufsichtsrats: Martina Koederitz
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
