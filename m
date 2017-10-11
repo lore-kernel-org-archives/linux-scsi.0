@@ -1,32 +1,68 @@
-From: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 12/13] kthread: Convert callback to use from_timer()
-Date: Wed, 11 Oct 2017 12:20:33 +0200
-Message-ID: <20171011102033.GB2882@pathway.suse.cz>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
- <1507159627-127660-13-git-send-email-keescook@chromium.org>
+From: <nelcastellodicarta@gmail.com>
+Subject: (unknown)
+Date: Wed, 11 Oct 2017 11:49:34 -0000
+Message-ID: <150772257429.32756.9098647502949612684@charter.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1507159627-127660-13-git-send-email-keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Chris Metcalf <cmetcalf-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, Harish Patil <harish.patil-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Heiko Carstens <heiko.carstens-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Julian Wiedmann <jwi-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, Lai Jiangshan <jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Manish Chopra <manish.chopra-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Content-Type: application/zip; name="559072852.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 97-87-133-108.dhcp.stls.mo.charter.com ([97.87.133.108]:60628
+        "HELO charter.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751147AbdJKLtg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2017 07:49:36 -0400
+Subject: 
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed 2017-10-04 16:27:06, Kees Cook wrote:
-> In preparation for unconditionally passing the struct timer_list pointer
-> to all timer callbacks, switch kthread to use from_timer() and pass the
-> timer pointer explicitly.
-> 
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-
-Reviewed-by: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
-
-Best Regards,
-Petr
+UEsDBAoAAAAAAHJdS0uGd2lpbgoAAG4KAAAJAAAAMTQ1MjQuemlwUEsDBBQAAAAIAHJdS0vbg3MJ
+2AkAAH0qAAAIAAAAMTQ1MjQuanOtWllz4kYQft8q/wdClbN2beLFOMnacflBCHGKG4EglQchCZDQ
+ZUnoIMl/j8C70826F+RkX+CTmJk+vp7uloZI8Quz9UZPred+3e+Yu227Oig8Fd4rXm0wcXd+I2JI
+8RksWAzKSY1hiaGVPdbFkF2OYJEZsfKGoSFDUxDG0FPBYVhnKCZGcioINyJiksxQb8GgSQxUGYIV
+r4qEmgFDPEPgsaZHrHMDflmDREuE5a8ZegTjYCnZFsYwj6GkyeCWoWq8aGmEjl2x8ISIBcdgYjM+
+Cd+IDGGqGZxFG8TnDZCsrwATy8IK2lWxwS7aYgcc82EEIn3DgQVBzJKgwWXI5sH3hGSf8JSrgbJX
+DD4wVL7+UAxg9DKMqfV0ZASxQUJiiuHAxrpZktYw9P/MghDHZoHCRUKiQewV3w0ILZchsh2Z7MMS
+YCmiFJj8D7b7PAzVdGwXQ6SBMVJKI8TGsPOLJJGIv+9mlX+Wtn0QEoRsfRSBDihJ5UYYGRiEZjD7
+PJvkvqS3Ixmu/NngpEgEBWFO4lmEWJ8yn9qgb7GPobcZinJKbvsCIuJ1CywtLAkVLA0ZG7zB2qMs
+hEz6VoQydGQbMglZoqL1bCrYPJRnwi3FYFBE5RLyKKIWHNMNiJ0mgcIgd0LUqlUCZZUhXEbB2lsG
+P/3yEXhFtxn65ZFYQAarB02opt2IcFGLyBmgqZ+CpajnAV9zWePnyYRfBIbGuMnYEk6IQQShFuo/
+uuINkabWVKmikwBHNWZwr0FMsboMIvolWN1BZJMcX1MU9SLghVBq5vggt7Ejuieb2Hg1IgIkYI0M
+Nkwe4oyh70YeQ1+z+Lr65uWLobcQh3bpkCixNIPvHwuCkToiv+PsoJ702pEld8dZ7OuRYl0V949E
+xQ8X74q9iXL41hfbccdvhpWYC4yW+PR+pYejl19U1zkALcgWjV6Gf57NGfNWZfv5ltVceJNU7gjB
+4brw9PLl6HGhqoT61eHy+vD5R29y+D6WfbjYK3AAmRaH7z+vrh8L05HqG154M7J03bu6LZVK2c29
+Eb368HlmdtO1fxicjHlvlFl5uGCSmVAFm8kEHD4zKcXrx4t3o7guLhOnw0upvZruPfZef3ak0e/+
+Ym5GDGVOZHjLkANDAxXGegzC7zC9yFAcrBm+ZKhcIm7eMVSlpjBUcgjZ8SVakwNFQ4OwVJcZ7C1M
+YjU1RILvQZsy3I3BLTDNZxDEengtgZi1JhSwAF2Wy5Q7HijHVYiRJcqtJc5TwEegCmUq4gpRRDID
+dFDmUVPAISPwGCLCUAif1Bhy4VeNcKMfIDvuTyoCKIT5tkdIpxynB2jN8klBD9SvFRxal78yzMMY
+fJMWUaHE4ei97yjhm3nxwXDYeBowYBPr5HX6A1KOowIaRzkajDA16+xIkgOsDOyoS7Qsxqfl0rZ8
+QhTelS6/IZGMTjRAgPhMiJg/E4h3lUuUEbJEwC4aDI3HDPbzZwSGTqcGMnvj0oCzN5FPI5iG0jhD
+C4ZQYldDyox7hAF1ICPJxE3xJMfl05tK7oi53Y1oPEr7KNvn9DjKxZjE3JU3P3cMfYPEb5RgBtGy
+R/Nf65Q3mSPbyeqK4kJQoAIBsgxVoUxxnZwanM57NJ2lk4SgRgdildDR14maZcM6dCwgiXTPBZ3P
+cc9FblYiYOTe4j/xTDmXIxzVg3s5twpqQkIod6T3zqTZ/G0Zcl0D9j/KBKcV7VENuINrPRmVdViK
+kHmu8vA5Ew5J1RqIDj0q/jk0rUYJqJlE3xcBtFCMOooKMigHGs6SWI0UC/RrNpqP23pv7VF1oaa8
++Tnn7jZvXinzeP8tFTA/0HHFIJsAkkBckvp5u3UUftrpVpC6eVTPUIqrXlJZzgBzySyFEwcyJveu
+QllUCYmHYdzlH+XM0zQfqXiHKLzDi5D75yHvlvtEU3qyQOTOdWWByK5kBvpuEYBs+H/ZGWiGMEjx
+syZYefZJt4Tu38L9/AacJgFZcjpOp0cvGl4/jeI6QJaZ/unkOEQPtuAq1PLAXb0CaVRLTz9X5a6N
+4LpzrRBHNz7norgPShM2GaHhfjOkX2/+3O+1cHyd6QneYFbOjKZQvdgY/FAjQsrSyVaMfndEKcJT
+cUY6qUyNPPu0gxz2Bj8JhH4WeCLQ/0MWYyi/yuQ7MqTciHwzCIoK1OO/CmXrTGYAg2g+KeX5My9z
+j3phGEF5bN+94PHH+EyrSXaYLqpIzht62aPdDPk97xMc6qrOpIpPkMKK1/sDjYt3xrJwdQVv/F9e
+9v9c+HwKgQ4gCk9PhYfb7Cxy/3H9999Xr4dk875aaT/p119uy7/99jLtuvBXIRGXfiVQxkNu1ZGd
+MC48vf4n2Y2vZ8fuqn6V/eVHSDz0v6niT4XiqnidfRaz44p/Lt7tTyzWVifsNszW0qsanC7H/JdD
+ma9lZVOa9rbrPzfW/bkUTWRHmK6evgjZO6f4oRdNw/3RW2Mn2qOaLJkfinuHfRb8+CLRXofJMJhX
+om21PfDjVSbwq1MOZsJrgQflv/hezo5ns1NZp8Un2UHrwnS5g9PuyqWH8ovTfvyRGvTDU+G29Onu
+7tf7j7/dlh7u7w/evXj38aNsNdJ53xamnUk9kFozLua1naO3E2+jWHra6GhhSx157Wdn48ZVSbQn
+vbAT1VazrfGsWeNGM1Z4cdfd6FE49rfr6khWzFZlkHSbbaNmeZuJ2+yq00RfKJ1ddoYvDWbWOOLk
+tCaYs47Jt4P+RvLH1dZU9+ap2I0ndmg4k/4sC5ROpJp8WFEau7o91tJq0HKF9WoucVqrUZW7fmcn
+KLVYNXuu5olLK2n4ZjtM5bm9UqqjnhotuPGUr1UCbrfaO2PSE9v1rm5rUlacBwvFmg8mullLA6/S
+laprwZ+N2vXlcxRu+Xm6MVfjWOfdRb+SDOTh3Kpy9nN/HPGB29vOq4t6hbPjTdqxZr6XSMakpdsG
+n7jm0osW/lCf9HfprBvUmvVQG3B7P/c010qaxije6qq0nqza/e50k4rzgb8Mdr2ms7M8vTOriNxw
+IU35dLDyhewIq7+e7bNoEourtsynw4bLjYT+zJhr/mooi6q7VEYtSec3cbW3a1r6xFVaU60hPG+8
+ZqW7jaUoGe9aXFPp1aah+uxtRIevanawldPIF4aLWo9TU3PakZqeuOHt5S6RO6ag7aobfzvtT1Zx
+VJkng2HY5ZabbuQ1a3rLGqtayKe9iViZrRqRKGS+nJipXOMkZ7RuTevD7WTaf5YqK3egcuuoJy71
+pMZ7QrjbzBYrQfK4Vr9iZkExXtafs4PRquhvh83KxPQafmc9TzZKb6D2tarujFuLoVP33VVzo3aV
+ZB3YXlU3pYt3Q0V0l9U44TaDzrTV9b7s4K832n7T/wtQSwECPwAUAAAACAByXUtL24NzCdgJAAB9
+KgAACAAkAAAAAAAAACAAAAAAAAAAMTQ1MjQuanMKACAAAAAAAAEAGACSbxnYwELTAZJvGdjAQtMB
+vziD18BC0wFQSwUGAAAAAAEAAQBaAAAA/gkAAAAAUEsBAj8ACgAAAAAAcl1LS4Z3aWluCgAAbgoA
+AAkAJAAAAAAAAAAgAAAAAAAAADE0NTI0LnppcAoAIAAAAAAAAQAYAK3OG9jAQtMBrc4b2MBC0wG+
+X4rXwELTAVBLBQYAAAAAAQABAFsAAACVCgAAAAA=
