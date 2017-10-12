@@ -1,112 +1,125 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 5/8] target: Use sgl_alloc_order() and sgl_free()
-Date: Thu, 12 Oct 2017 15:45:47 -0700
-Message-ID: <20171012224550.25440-6-bart.vanassche@wdc.com>
+Subject: [PATCH 2/8] crypto: scompress - use sgl_alloc() and sgl_free()
+Date: Thu, 12 Oct 2017 15:45:44 -0700
+Message-ID: <20171012224550.25440-3-bart.vanassche@wdc.com>
 References: <20171012224550.25440-1-bart.vanassche@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:37809 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753405AbdJLWrO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2017 18:47:14 -0400
 In-Reply-To: <20171012224550.25440-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, "Nicholas A . Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>
 
-Use the sgl_alloc_order() and sgl_free() functions instead of open
-coding these functions.
+Use the sgl_alloc() and sgl_free() functions instead of open coding
+these functions.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Nicholas A. Bellinger <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
 ---
- drivers/target/Kconfig                 |  1 +
- drivers/target/target_core_transport.c | 47 ++++------------------------------
- 2 files changed, 6 insertions(+), 42 deletions(-)
+ crypto/Kconfig     |  1 +
+ crypto/scompress.c | 52 +++-------------------------------------------------
+ 2 files changed, 4 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-index e2bc99980f75..4c44d7bed01a 100644
---- a/drivers/target/Kconfig
-+++ b/drivers/target/Kconfig
-@@ -5,6 +5,7 @@ menuconfig TARGET_CORE
- 	select CONFIGFS_FS
- 	select CRC_T10DIF
- 	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
+diff --git a/crypto/Kconfig b/crypto/Kconfig
+index 0a121f9ddf8e..a0667dd284ff 100644
+--- a/crypto/Kconfig
++++ b/crypto/Kconfig
+@@ -105,6 +105,7 @@ config CRYPTO_KPP
+ config CRYPTO_ACOMP2
+ 	tristate
+ 	select CRYPTO_ALGAPI2
 +	select SGL_ALLOC
- 	default n
- 	help
- 	Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 836d552b0385..e8f0eabd25ab 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -34,6 +34,7 @@
- #include <linux/cdrom.h>
- #include <linux/module.h>
- #include <linux/ratelimit.h>
-+#include <linux/sgl_alloc.h>
- #include <linux/vmalloc.h>
- #include <asm/unaligned.h>
- #include <net/sock.h>
-@@ -2293,13 +2294,7 @@ static void target_complete_ok_work(struct work_struct *work)
  
- void target_free_sgl(struct scatterlist *sgl, int nents)
- {
--	struct scatterlist *sg;
--	int count;
+ config CRYPTO_ACOMP
+ 	tristate
+diff --git a/crypto/scompress.c b/crypto/scompress.c
+index 2075e2c4e7df..ea4d5a3e01d1 100644
+--- a/crypto/scompress.c
++++ b/crypto/scompress.c
+@@ -24,6 +24,7 @@
+ #include <linux/cryptouser.h>
+ #include <net/netlink.h>
+ #include <linux/scatterlist.h>
++#include <linux/sgl_alloc.h>
+ #include <crypto/scatterwalk.h>
+ #include <crypto/internal/acompress.h>
+ #include <crypto/internal/scompress.h>
+@@ -140,53 +141,6 @@ static int crypto_scomp_init_tfm(struct crypto_tfm *tfm)
+ 	return ret;
+ }
+ 
+-static void crypto_scomp_sg_free(struct scatterlist *sgl)
+-{
+-	int i, n;
+-	struct page *page;
 -
--	for_each_sg(sgl, sg, nents, count)
--		__free_page(sg_page(sg));
+-	if (!sgl)
+-		return;
+-
+-	n = sg_nents(sgl);
+-	for_each_sg(sgl, sgl, n, i) {
+-		page = sg_page(sgl);
+-		if (page)
+-			__free_page(page);
+-	}
 -
 -	kfree(sgl);
-+	sgl_free(sgl);
- }
- EXPORT_SYMBOL(target_free_sgl);
- 
-@@ -2423,42 +2418,10 @@ int
- target_alloc_sgl(struct scatterlist **sgl, unsigned int *nents, u32 length,
- 		 bool zero_page, bool chainable)
- {
--	struct scatterlist *sg;
+-}
+-
+-static struct scatterlist *crypto_scomp_sg_alloc(size_t size, gfp_t gfp)
+-{
+-	struct scatterlist *sgl;
 -	struct page *page;
--	gfp_t zero_flag = (zero_page) ? __GFP_ZERO : 0;
--	unsigned int nalloc, nent;
--	int i = 0;
+-	int i, n;
 -
--	nalloc = nent = DIV_ROUND_UP(length, PAGE_SIZE);
--	if (chainable)
--		nalloc++;
--	sg = kmalloc_array(nalloc, sizeof(struct scatterlist), GFP_KERNEL);
--	if (!sg)
--		return -ENOMEM;
-+	gfp_t gfp = GFP_KERNEL | (zero_page ? __GFP_ZERO : 0);
- 
--	sg_init_table(sg, nalloc);
+-	n = ((size - 1) >> PAGE_SHIFT) + 1;
 -
--	while (length) {
--		u32 page_len = min_t(u32, length, PAGE_SIZE);
--		page = alloc_page(GFP_KERNEL | zero_flag);
+-	sgl = kmalloc_array(n, sizeof(struct scatterlist), gfp);
+-	if (!sgl)
+-		return NULL;
+-
+-	sg_init_table(sgl, n);
+-
+-	for (i = 0; i < n; i++) {
+-		page = alloc_page(gfp);
 -		if (!page)
--			goto out;
--
--		sg_set_page(&sg[i], page, page_len, 0);
--		length -= page_len;
--		i++;
+-			goto err;
+-		sg_set_page(sgl + i, page, PAGE_SIZE, 0);
 -	}
--	*sgl = sg;
--	*nents = nent;
--	return 0;
 -
--out:
--	while (i > 0) {
--		i--;
--		__free_page(sg_page(&sg[i]));
--	}
--	kfree(sg);
--	return -ENOMEM;
-+	*sgl = sgl_alloc_order(length, 0, nents, gfp, chainable);
-+	return *sgl ? 0 : -ENOMEM;
- }
- EXPORT_SYMBOL(target_alloc_sgl);
+-	return sgl;
+-
+-err:
+-	sg_mark_end(sgl + i);
+-	crypto_scomp_sg_free(sgl);
+-	return NULL;
+-}
+-
+ static int scomp_acomp_comp_decomp(struct acomp_req *req, int dir)
+ {
+ 	struct crypto_acomp *tfm = crypto_acomp_reqtfm(req);
+@@ -220,7 +174,7 @@ static int scomp_acomp_comp_decomp(struct acomp_req *req, int dir)
+ 					      scratch_dst, &req->dlen, *ctx);
+ 	if (!ret) {
+ 		if (!req->dst) {
+-			req->dst = crypto_scomp_sg_alloc(req->dlen, GFP_ATOMIC);
++			req->dst = sgl_alloc(req->dlen, NULL, GFP_ATOMIC);
+ 			if (!req->dst)
+ 				goto out;
+ 		}
+@@ -274,7 +228,7 @@ int crypto_init_scomp_ops_async(struct crypto_tfm *tfm)
  
+ 	crt->compress = scomp_acomp_compress;
+ 	crt->decompress = scomp_acomp_decompress;
+-	crt->dst_free = crypto_scomp_sg_free;
++	crt->dst_free = sgl_free;
+ 	crt->reqsize = sizeof(void *);
+ 
+ 	return 0;
 -- 
 2.14.2
