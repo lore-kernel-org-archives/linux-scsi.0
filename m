@@ -1,99 +1,56 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V7 6/6] SCSI: implement .get_budget and .put_budget for blk-mq
-Date: Fri, 13 Oct 2017 02:37:04 +0800
-Message-ID: <20171012183704.22326-7-ming.lei@redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH V7 4/6] blk-mq: introduce .get_budget and .put_budget in
+ blk_mq_ops
+Date: Thu, 12 Oct 2017 12:46:24 -0600
+Message-ID: <9a741c03-90a3-e583-ddde-0ed71c8570a2@kernel.dk>
 References: <20171012183704.22326-1-ming.lei@redhat.com>
+ <20171012183704.22326-5-ming.lei@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171012183704.22326-1-ming.lei@redhat.com>
+In-Reply-To: <20171012183704.22326-5-ming.lei@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
+To: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-We need to tell blk-mq to reserve resource before queuing
-one request, so implement these two callbacks. Then blk-mq
-can avoid to dequeue request earlier, and IO merge can
-be improved a lot.
+On 10/12/2017 12:37 PM, Ming Lei wrote:
+> For SCSI devices, there is often per-request-queue depth, which need
+> to be respected before queuing one request.
+> 
+> The current blk-mq always dequeues one request first, then calls .queue_rq()
+> to dispatch the request to lld. One obvious issue of this way is that I/O
+> merge may not be good, because when the per-request-queue depth can't be
+> respected,  .queue_rq() has to return BLK_STS_RESOURCE, then this request
+> has to staty in hctx->dispatch list, and never got chance to participate
+> into I/O merge.
+> 
+> This patch introduces .get_budget and .put_budget callback in blk_mq_ops,
+> then we can try to get reserved budget first before dequeuing request.
+> Once we can't get budget for queueing I/O, we don't need to dequeue request
+> at all, then I/O merge can get improved a lot.
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 42 ++++++++++++++++++++++++++++++++----------
- 1 file changed, 32 insertions(+), 10 deletions(-)
+I can't help but think that it would be cleaner to just be able to
+reinsert the request into the scheduler properly, if we fail to
+dispatch it. Bart hinted at that earlier as well.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80fe297..d6273954a3b4 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1946,6 +1946,33 @@ static void scsi_mq_done(struct scsi_cmnd *cmd)
- 	blk_mq_complete_request(cmd->request);
- }
- 
-+static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct request_queue *q = hctx->queue;
-+	struct scsi_device *sdev = q->queuedata;
-+
-+	atomic_dec(&sdev->device_busy);
-+	put_device(&sdev->sdev_gendev);
-+}
-+
-+static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct request_queue *q = hctx->queue;
-+	struct scsi_device *sdev = q->queuedata;
-+
-+	if (!get_device(&sdev->sdev_gendev))
-+		goto out;
-+	if (!scsi_dev_queue_ready(q, sdev))
-+		goto out_put_device;
-+
-+	return true;
-+
-+out_put_device:
-+	put_device(&sdev->sdev_gendev);
-+out:
-+	return false;
-+}
-+
- static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 			 const struct blk_mq_queue_data *bd)
- {
-@@ -1962,13 +1989,8 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		goto out;
- 
- 	ret = BLK_STS_RESOURCE;
--	if (!get_device(&sdev->sdev_gendev))
--		goto out;
--
--	if (!scsi_dev_queue_ready(q, sdev))
--		goto out_put_device;
- 	if (!scsi_target_queue_ready(shost, sdev))
--		goto out_dec_device_busy;
-+		goto out_put_budget;
- 	if (!scsi_host_queue_ready(q, shost, sdev))
- 		goto out_dec_target_busy;
- 
-@@ -2003,10 +2025,8 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- out_dec_target_busy:
- 	if (scsi_target(sdev)->can_queue > 0)
- 		atomic_dec(&scsi_target(sdev)->target_busy);
--out_dec_device_busy:
--	atomic_dec(&sdev->device_busy);
--out_put_device:
--	put_device(&sdev->sdev_gendev);
-+out_put_budget:
-+	scsi_mq_put_budget(hctx);
- out:
- 	switch (ret) {
- 	case BLK_STS_OK:
-@@ -2211,6 +2231,8 @@ struct request_queue *scsi_old_alloc_queue(struct scsi_device *sdev)
- }
- 
- static const struct blk_mq_ops scsi_mq_ops = {
-+	.get_budget	= scsi_mq_get_budget,
-+	.put_budget	= scsi_mq_put_budget,
- 	.queue_rq	= scsi_queue_rq,
- 	.complete	= scsi_softirq_done,
- 	.timeout	= scsi_timeout,
+With that, you would not need budget functions.
+
+I don't feel _that_ strongly about it, though, and it is something
+we can do down the line as well. I'd just hate having to introduce
+budget ops only to kill them a little later.
+
+If we stick with the budget, then add a parallel blk_mq_get_budget()
+like you have a blk_mq_put_budget(), so we don't have to litter the code
+with things like:
+
+> +		if (q->mq_ops->get_budget && !q->mq_ops->get_budget(hctx))
+> +			return true;
+
+all over the place. There are also a few places where you don't use
+blk_mq_put_budget() but open-code it instead, you should be consistent.
+
 -- 
-2.9.5
+Jens Axboe
