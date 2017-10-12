@@ -1,40 +1,56 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH V7 5/6] blk-mq-sched: improve dispatching from sw queue
-Date: Thu, 12 Oct 2017 11:48:22 -0700
-Message-ID: <2852603f-ce98-9f8e-8d86-1d601445a1ff@wdc.com>
-References: <20171012183704.22326-1-ming.lei@redhat.com>
- <20171012183704.22326-6-ming.lei@redhat.com>
+From: Martin Steigerwald <martin@lichtvoll.de>
+Subject: Re: [PATCH v7 9/9] block, scsi: Make SCSI quiesce and resume work reliably
+Date: Thu, 12 Oct 2017 21:53:57 +0200
+Message-ID: <3970766.W9abtXnTZN@merkaba>
+References: <20171009231400.562-1-bart.vanassche@wdc.com> <2538545.nE4DvSpPT1@merkaba> <1507649241.2815.9.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171012183704.22326-6-ming.lei@redhat.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mondschein.lichtvoll.de ([194.150.191.11]:44833 "EHLO
+        mail.lichtvoll.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753136AbdJLTx7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2017 15:53:59 -0400
+In-Reply-To: <1507649241.2815.9.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "mcgrof@kernel.org" <mcgrof@kernel.org>
 
-On 10/12/17 11:37, Ming Lei wrote:
-> [ ... ]
+Bart Van Assche - 10.10.17, 15:27:
+> On Tue, 2017-10-10 at 09:57 +0200, Martin Steigerwald wrote:
 > 
-> This patch improves dispatching from sw queue by using the callback of
-> .get_budget and .put_budget
-> 
-> Reviewed-by: Omar Sandoval <osandov@fb.com>
-> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
-> 
-> Jens/Omar, once .get_budget is introduced, it can be unusual to
-> return busy from .queue_rq, so we can't use the approach discussed
-> to decide to take one by one or flush all. Then this patch
-> simply checks if .get_budget is implemented, looks it is reasonable,
-> and in future it is even possible to take more requests by getting
-> enough budget first.
-> [ ... ]
+> > Bart Van Assche - 09.10.17, 16:14:
+> > 
+> > > The contexts from which a SCSI device can be quiesced or resumed are:
+> > > [ ... ]
+> > 
+> > 
+> > Does this as reliably fix the issue as the patches from Ming? I mean in
+> > *real world* scenarios? Or is it just about the same approach as Ming
+> > has taken. 
+> > I ask cause I don´t see any Tested-By:´s here? I know I tested Ming´s
+> > patch series and I know it fixes the hang after resume from suspend
+> > with blk-mq + BFQ issue for me. I have an uptime of 7 days and I didn´t
+> > see any uptime even remotely like that in a long time (before that issue
+> > Intel gfx drivers caused hangs, but thankfully that seems fixed
+> > meanwhile).
+> > 
+> > I´d be willing to test. Do you have a 4.14.x tree available with these
+> > patches applied I can just add as a remote and fetch from?
 
-Version 7 of this patch differs significantly from the version I 
-reviewed so I think you should remove my Reviewed-by tag.
+> A previous version of this patch series passed Oleksandr's tests. This
+> series is close to that previous version so I think it is safe to assume
+> that this version will also pass Oleksandr's tests. Anyway, more testing is
+> definitely welcome so if you want to verify this series please start from
+> the following tree (Jens' for-next branch + this series):
+> https://github.com/bvanassche/linux/tree/blk-mq-pm-v7 
 
-Bart.
+Several suspend to ram and resume, and suspend to disk and resume cycles 
+without issues. So I think this is good.
+
+Tested-By: Martin Steigerwald <martin@lichtvoll.de>
+
+Thanks,
+-- 
+Martin
