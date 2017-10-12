@@ -1,52 +1,41 @@
-From: weiping zhang <zhangweiping@didichuxing.com>
-Subject: [PATCH v2 2/2] scsi: sd: change manage_start_stop to bool in sysfs
- interface
-Date: Thu, 12 Oct 2017 14:57:06 +0800
-Message-ID: <316f6176f9269aa0782fd64e7d0e69f52985692c.1507791207.git.zhangweiping@didichuxing.com>
-References: <cover.1507791207.git.zhangweiping@didichuxing.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/5] qla2xxx: Add module param ql2xenablemsix
+Date: Thu, 12 Oct 2017 09:19:57 +0200
+Message-ID: <20171012071957.gb2zobb7jqsuv4cq@linux-x5ow.site>
+References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
+ <20171011203650.23629-2-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 22.17.110.36.static.bjtelecom.net ([36.110.17.22]:18580 "EHLO
-        BJEXCAS002.didichuxing.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752416AbdJLG5Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Oct 2017 02:57:16 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37772 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751302AbdJLHT7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Oct 2017 03:19:59 -0400
 Content-Disposition: inline
-In-Reply-To: <cover.1507791207.git.zhangweiping@didichuxing.com>
+In-Reply-To: <20171011203650.23629-2-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-/sys/class/scsi_disk/0:2:0:0/manage_start_stop can be changed to 0
-unexpectly by writing invalid string.
+On Wed, Oct 11, 2017 at 01:36:46PM -0700, Madhani, Himanshu wrote:
+[...]
+> +int ql2xenablemsix = 1;
+> +module_param(ql2xenablemsix, int, 0444);
+> +MODULE_PARM_DESC(ql2xenablemsix,
+> +    "Set to enable MSI or MSI-X interrupt mechanism.\n"
+> +    " Default is 1, enable MSI-X interrupt mechanism.\n"
+> +    " 0 -- enable traditional pin-based mechanism.\n"
+> +    " 1 -- enable MSI-X interrupt mechanism.\n"
+> +    " 2 -- enable MSI interrupt mechanism.\n");
 
-Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
----
- drivers/scsi/sd.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Maybe qla2xirqmode is a more appropriate name?
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index e653dc5..00c9837 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -231,11 +231,15 @@ manage_start_stop_store(struct device *dev, struct device_attribute *attr,
- {
- 	struct scsi_disk *sdkp = to_scsi_disk(dev);
- 	struct scsi_device *sdp = sdkp->device;
-+	bool v;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	sdp->manage_start_stop = simple_strtoul(buf, NULL, 10);
-+	if (kstrtobool(buf, &v))
-+		return -EINVAL;
-+
-+	sdp->manage_start_stop = v ? 1 : 0;
- 
- 	return count;
- }
 -- 
-2.9.4
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
