@@ -1,36 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/5] qla2xxx: Add module param ql2xenablemsix
-Date: Thu, 12 Oct 2017 09:19:57 +0200
-Message-ID: <20171012071957.gb2zobb7jqsuv4cq@linux-x5ow.site>
+Subject: Re: [PATCH 2/5] qla2xxx: Add ATIO-Q processing for INTx mode
+Date: Thu, 12 Oct 2017 09:25:40 +0200
+Message-ID: <20171012072540.th42w5oxg47pbfic@linux-x5ow.site>
 References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
- <20171011203650.23629-2-himanshu.madhani@cavium.com>
+ <20171011203650.23629-3-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37772 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38129 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751302AbdJLHT7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Oct 2017 03:19:59 -0400
+        id S1752537AbdJLHZm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Oct 2017 03:25:42 -0400
 Content-Disposition: inline
-In-Reply-To: <20171011203650.23629-2-himanshu.madhani@cavium.com>
+In-Reply-To: <20171011203650.23629-3-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
 Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On Wed, Oct 11, 2017 at 01:36:46PM -0700, Madhani, Himanshu wrote:
-[...]
-> +int ql2xenablemsix = 1;
-> +module_param(ql2xenablemsix, int, 0444);
-> +MODULE_PARM_DESC(ql2xenablemsix,
-> +    "Set to enable MSI or MSI-X interrupt mechanism.\n"
-> +    " Default is 1, enable MSI-X interrupt mechanism.\n"
-> +    " 0 -- enable traditional pin-based mechanism.\n"
-> +    " 1 -- enable MSI-X interrupt mechanism.\n"
-> +    " 2 -- enable MSI interrupt mechanism.\n");
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Maybe qla2xirqmode is a more appropriate name?
+Although I'd love to have a more descriptive changelog.
 
 -- 
 Johannes Thumshirn                                          Storage
