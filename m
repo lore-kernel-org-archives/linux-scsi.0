@@ -1,89 +1,92 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 4/8] nvmet/rdma: Use sgl_alloc() and sgl_free()
-Date: Thu, 12 Oct 2017 15:45:46 -0700
-Message-ID: <20171012224550.25440-5-bart.vanassche@wdc.com>
+Subject: [PATCH 5/8] target: Use sgl_alloc_order() and sgl_free()
+Date: Thu, 12 Oct 2017 15:45:47 -0700
+Message-ID: <20171012224550.25440-6-bart.vanassche@wdc.com>
 References: <20171012224550.25440-1-bart.vanassche@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171012224550.25440-1-bart.vanassche@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, Keith Busch <keith.busch@intel.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, "Nicholas A . Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>
 List-Id: linux-scsi@vger.kernel.org
 
-Use the sgl_alloc() and sgl_free() functions instead of open coding
-these functions.
+Use the sgl_alloc_order() and sgl_free() functions instead of open
+coding these functions.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Keith Busch <keith.busch@intel.com>
+Cc: Nicholas A. Bellinger <nab@linux-iscsi.org>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
 Cc: Sagi Grimberg <sagi@grimberg.me>
 ---
- drivers/nvme/target/Kconfig |  1 +
- drivers/nvme/target/rdma.c  | 64 ++++-----------------------------------------
- 2 files changed, 6 insertions(+), 59 deletions(-)
+ drivers/target/Kconfig                 |  1 +
+ drivers/target/target_core_transport.c | 47 ++++------------------------------
+ 2 files changed, 6 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/nvme/target/Kconfig b/drivers/nvme/target/Kconfig
-index 4d9715630e21..5f4f8b16685f 100644
---- a/drivers/nvme/target/Kconfig
-+++ b/drivers/nvme/target/Kconfig
-@@ -29,6 +29,7 @@ config NVME_TARGET_RDMA
- 	tristate "NVMe over Fabrics RDMA target support"
- 	depends on INFINIBAND
- 	depends on NVME_TARGET
+diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+index e2bc99980f75..4c44d7bed01a 100644
+--- a/drivers/target/Kconfig
++++ b/drivers/target/Kconfig
+@@ -5,6 +5,7 @@ menuconfig TARGET_CORE
+ 	select CONFIGFS_FS
+ 	select CRC_T10DIF
+ 	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
 +	select SGL_ALLOC
+ 	default n
  	help
- 	  This enables the NVMe RDMA target support, which allows exporting NVMe
- 	  devices over RDMA.
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 76d2bb793afe..bec0c8421b69 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -23,6 +23,7 @@
- #include <linux/string.h>
- #include <linux/wait.h>
- #include <linux/inet.h>
+ 	Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 836d552b0385..e8f0eabd25ab 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -34,6 +34,7 @@
+ #include <linux/cdrom.h>
+ #include <linux/module.h>
+ #include <linux/ratelimit.h>
 +#include <linux/sgl_alloc.h>
+ #include <linux/vmalloc.h>
  #include <asm/unaligned.h>
+ #include <net/sock.h>
+@@ -2293,13 +2294,7 @@ static void target_complete_ok_work(struct work_struct *work)
  
- #include <rdma/ib_verbs.h>
-@@ -185,59 +186,6 @@ nvmet_rdma_put_rsp(struct nvmet_rdma_rsp *rsp)
- 	spin_unlock_irqrestore(&rsp->queue->rsps_lock, flags);
- }
- 
--static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents)
--{
+ void target_free_sgl(struct scatterlist *sgl, int nents)
+ {
 -	struct scatterlist *sg;
 -	int count;
 -
--	if (!sgl || !nents)
--		return;
--
 -	for_each_sg(sgl, sg, nents, count)
 -		__free_page(sg_page(sg));
--	kfree(sgl);
--}
 -
--static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
--		u32 length)
--{
+-	kfree(sgl);
++	sgl_free(sgl);
+ }
+ EXPORT_SYMBOL(target_free_sgl);
+ 
+@@ -2423,42 +2418,10 @@ int
+ target_alloc_sgl(struct scatterlist **sgl, unsigned int *nents, u32 length,
+ 		 bool zero_page, bool chainable)
+ {
 -	struct scatterlist *sg;
 -	struct page *page;
--	unsigned int nent;
+-	gfp_t zero_flag = (zero_page) ? __GFP_ZERO : 0;
+-	unsigned int nalloc, nent;
 -	int i = 0;
 -
--	nent = DIV_ROUND_UP(length, PAGE_SIZE);
--	sg = kmalloc_array(nent, sizeof(struct scatterlist), GFP_KERNEL);
+-	nalloc = nent = DIV_ROUND_UP(length, PAGE_SIZE);
+-	if (chainable)
+-		nalloc++;
+-	sg = kmalloc_array(nalloc, sizeof(struct scatterlist), GFP_KERNEL);
 -	if (!sg)
--		goto out;
--
--	sg_init_table(sg, nent);
+-		return -ENOMEM;
++	gfp_t gfp = GFP_KERNEL | (zero_page ? __GFP_ZERO : 0);
+ 
+-	sg_init_table(sg, nalloc);
 -
 -	while (length) {
 -		u32 page_len = min_t(u32, length, PAGE_SIZE);
--
--		page = alloc_page(GFP_KERNEL);
+-		page = alloc_page(GFP_KERNEL | zero_flag);
 -		if (!page)
--			goto out_free_pages;
+-			goto out;
 -
 -		sg_set_page(&sg[i], page, page_len, 0);
 -		length -= page_len;
@@ -93,47 +96,17 @@ index 76d2bb793afe..bec0c8421b69 100644
 -	*nents = nent;
 -	return 0;
 -
--out_free_pages:
+-out:
 -	while (i > 0) {
 -		i--;
 -		__free_page(sg_page(&sg[i]));
 -	}
 -	kfree(sg);
--out:
--	return NVME_SC_INTERNAL;
--}
--
- static int nvmet_rdma_alloc_cmd(struct nvmet_rdma_device *ndev,
- 			struct nvmet_rdma_cmd *c, bool admin)
- {
-@@ -484,7 +432,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
- 	}
+-	return -ENOMEM;
++	*sgl = sgl_alloc_order(length, 0, nents, gfp, chainable);
++	return *sgl ? 0 : -ENOMEM;
+ }
+ EXPORT_SYMBOL(target_alloc_sgl);
  
- 	if (rsp->req.sg != &rsp->cmd->inline_sg)
--		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt);
-+		sgl_free(rsp->req.sg);
- 
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -620,16 +568,14 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	u32 len = get_unaligned_le24(sgl->length);
- 	u32 key = get_unaligned_le32(sgl->key);
- 	int ret;
--	u16 status;
- 
- 	/* no data command? */
- 	if (!len)
- 		return 0;
- 
--	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
--			len);
--	if (status)
--		return status;
-+	rsp->req.sg = sgl_alloc(len, &rsp->req.sg_cnt, GFP_KERNEL);
-+	if (!rsp->req.sg)
-+		return NVME_SC_INTERNAL;
- 
- 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
- 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
 -- 
 2.14.2
