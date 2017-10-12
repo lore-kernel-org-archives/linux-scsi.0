@@ -1,145 +1,67 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 6/8] scsi/ipr: Use sgl_alloc_order() and sgl_free_order()
-Date: Thu, 12 Oct 2017 15:45:48 -0700
-Message-ID: <20171012224550.25440-7-bart.vanassche@wdc.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 1/8] lib: Introduce sgl_alloc() and sgl_free()
+Date: Thu, 12 Oct 2017 16:52:51 -0600
+Message-ID: <ee12eeaf-9848-478d-4ebe-9d3497e248e0@kernel.dk>
 References: <20171012224550.25440-1-bart.vanassche@wdc.com>
+ <20171012224550.25440-2-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:30937 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753774AbdJLWrP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2017 18:47:15 -0400
-In-Reply-To: <20171012224550.25440-1-bart.vanassche@wdc.com>
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:43259 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757419AbdJLWwz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2017 18:52:55 -0400
+Received: by mail-pf0-f179.google.com with SMTP id a8so6569040pfc.0
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2017 15:52:55 -0700 (PDT)
+In-Reply-To: <20171012224550.25440-2-bart.vanassche@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Brian King <brking@linux.vnet.ibm.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 
-Use the sgl_alloc_order() and sgl_free_order() functions instead
-of open coding these functions.
+On 10/12/2017 04:45 PM, Bart Van Assche wrote:
+> Many kernel drivers contain code that allocate and free both a
+> scatterlist and the pages that populate that scatterlist.
+> Introduce functions under lib/ that perform these tasks instead
+> of duplicating this functionality in multiple drivers.
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> ---
+>  include/linux/sgl_alloc.h |  16 ++++++++
+>  lib/Kconfig               |   4 ++
+>  lib/Makefile              |   1 +
+>  lib/sgl_alloc.c           | 102 ++++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 123 insertions(+)
+>  create mode 100644 include/linux/sgl_alloc.h
+>  create mode 100644 lib/sgl_alloc.c
+> 
+> diff --git a/include/linux/sgl_alloc.h b/include/linux/sgl_alloc.h
+> new file mode 100644
+> index 000000000000..a0f719690c9e
+> --- /dev/null
+> +++ b/include/linux/sgl_alloc.h
+> @@ -0,0 +1,16 @@
+> +#ifndef _SGL_ALLOC_H_
+> +#define _SGL_ALLOC_H_
+> +
+> +#include <linux/types.h> /* bool, gfp_t */
+> +
+> +struct scatterlist;
+> +
+> +struct scatterlist *sgl_alloc_order(unsigned long long length,
+> +				    unsigned int order, unsigned int *nent_p,
+> +				    gfp_t gfp, bool chainable);
+> +struct scatterlist *sgl_alloc(unsigned long long length, unsigned int *nent_p,
+> +			      gfp_t gfp);
+> +void sgl_free_order(struct scatterlist *sgl, int order);
+> +void sgl_free(struct scatterlist *sgl);
+> +
+> +#endif /* _SGL_ALLOC_H_ */
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/Kconfig |  1 +
- drivers/scsi/ipr.c   | 50 +++++++++-----------------------------------------
- drivers/scsi/ipr.h   |  2 +-
- 3 files changed, 11 insertions(+), 42 deletions(-)
+Should this just go into linux/scatterlist.h instead of creating a new header
+file?
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 41366339b950..d11e75e76195 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1058,6 +1058,7 @@ config SCSI_IPR
- 	depends on PCI && SCSI && ATA
- 	select FW_LOADER
- 	select IRQ_POLL
-+	select SGL_ALLOC
- 	---help---
- 	  This driver supports the IBM Power Linux family RAID adapters.
- 	  This includes IBM pSeries 5712, 5703, 5709, and 570A, as well
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index f838bd73befa..b197995a6f34 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -76,6 +76,7 @@
- #include <linux/hdreg.h>
- #include <linux/reboot.h>
- #include <linux/stringify.h>
-+#include <linux/sgl_alloc.h>
- #include <asm/io.h>
- #include <asm/irq.h>
- #include <asm/processor.h>
-@@ -3815,10 +3816,8 @@ static struct device_attribute ipr_iopoll_weight_attr = {
-  **/
- static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
- {
--	int sg_size, order, bsize_elem, num_elem, i, j;
-+	int sg_size, order;
- 	struct ipr_sglist *sglist;
--	struct scatterlist *scatterlist;
--	struct page *page;
- 
- 	/* Get the minimum size per scatter/gather element */
- 	sg_size = buf_len / (IPR_MAX_SGLIST - 1);
-@@ -3826,45 +3825,18 @@ static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
- 	/* Get the actual size per element */
- 	order = get_order(sg_size);
- 
--	/* Determine the actual number of bytes per element */
--	bsize_elem = PAGE_SIZE * (1 << order);
--
--	/* Determine the actual number of sg entries needed */
--	if (buf_len % bsize_elem)
--		num_elem = (buf_len / bsize_elem) + 1;
--	else
--		num_elem = buf_len / bsize_elem;
--
- 	/* Allocate a scatter/gather list for the DMA */
--	sglist = kzalloc(sizeof(struct ipr_sglist) +
--			 (sizeof(struct scatterlist) * (num_elem - 1)),
--			 GFP_KERNEL);
--
-+	sglist = kzalloc(sizeof(struct ipr_sglist), GFP_KERNEL);
- 	if (sglist == NULL) {
- 		ipr_trace;
- 		return NULL;
- 	}
--
--	scatterlist = sglist->scatterlist;
--	sg_init_table(scatterlist, num_elem);
--
- 	sglist->order = order;
--	sglist->num_sg = num_elem;
--
--	/* Allocate a bunch of sg elements */
--	for (i = 0; i < num_elem; i++) {
--		page = alloc_pages(GFP_KERNEL, order);
--		if (!page) {
--			ipr_trace;
--
--			/* Free up what we already allocated */
--			for (j = i - 1; j >= 0; j--)
--				__free_pages(sg_page(&scatterlist[j]), order);
--			kfree(sglist);
--			return NULL;
--		}
--
--		sg_set_page(&scatterlist[i], page, 0, 0);
-+	sglist->scatterlist = sgl_alloc_order(buf_len, order, &sglist->num_sg,
-+					      GFP_KERNEL, false);
-+	if (!sglist->scatterlist) {
-+		kfree(sglist);
-+		return NULL;
- 	}
- 
- 	return sglist;
-@@ -3882,11 +3854,7 @@ static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
-  **/
- static void ipr_free_ucode_buffer(struct ipr_sglist *sglist)
- {
--	int i;
--
--	for (i = 0; i < sglist->num_sg; i++)
--		__free_pages(sg_page(&sglist->scatterlist[i]), sglist->order);
--
-+	sgl_free_order(sglist->scatterlist, sglist->order);
- 	kfree(sglist);
- }
- 
-diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index c7f0e9e3cd7d..93570734cbfb 100644
---- a/drivers/scsi/ipr.h
-+++ b/drivers/scsi/ipr.h
-@@ -1454,7 +1454,7 @@ struct ipr_sglist {
- 	u32 num_sg;
- 	u32 num_dma_sg;
- 	u32 buffer_len;
--	struct scatterlist scatterlist[1];
-+	struct scatterlist *scatterlist;
- };
- 
- enum ipr_sdt_state {
 -- 
-2.14.2
+Jens Axboe
