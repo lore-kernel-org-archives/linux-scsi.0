@@ -1,7 +1,7 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v2 1/5] dt-bindings: phy: Add PHY_TYPE_UFS definition
-Date: Thu, 12 Oct 2017 11:49:32 +0530
-Message-ID: <1507789176-2760-2-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v2 2/5] phy: Add UFS PHY modes
+Date: Thu, 12 Oct 2017 11:49:33 +0530
+Message-ID: <1507789176-2760-3-git-send-email-vivek.gautam@codeaurora.org>
 References: <1507789176-2760-1-git-send-email-vivek.gautam@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1507789176-2760-1-git-send-email-vivek.gautam@codeaurora.org>
@@ -10,28 +10,33 @@ To: kishon@ti.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux
 Cc: subhashj@codeaurora.org, robh+dt@kernel.org, bjorn.andersson@linaro.org, devicetree@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add definition for UFS phy type.
+UFS phy has two modes for each High speed generation.
+These modes are identified by two rates of operations -
+Rate A, and Rate B.
+Add these UFS phy modes to phy framework.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 ---
 
 Changes since v1:
- - none.
+ - Rebased on linux-phy/next.
 
- include/dt-bindings/phy/phy.h | 1 +
- 1 file changed, 1 insertion(+)
+ include/linux/phy/phy.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/dt-bindings/phy/phy.h b/include/dt-bindings/phy/phy.h
-index 6c901930eb3e..d16e8755f6a9 100644
---- a/include/dt-bindings/phy/phy.h
-+++ b/include/dt-bindings/phy/phy.h
-@@ -15,5 +15,6 @@
- #define PHY_TYPE_PCIE		2
- #define PHY_TYPE_USB2		3
- #define PHY_TYPE_USB3		4
-+#define PHY_TYPE_UFS		5
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index e694d4008c4a..79c341da1b8c 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -29,6 +29,8 @@ enum phy_mode {
+ 	PHY_MODE_USB_OTG,
+ 	PHY_MODE_SGMII,
+ 	PHY_MODE_10GKR,
++	PHY_MODE_UFS_HS_A,
++	PHY_MODE_UFS_HS_B,
+ };
  
- #endif /* _DT_BINDINGS_PHY */
+ /**
 -- 
 QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
