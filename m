@@ -1,170 +1,68 @@
-From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH] target: make config_item_type const
-Date: Thu, 12 Oct 2017 11:11:20 +0200
-Message-ID: <1507799480-25286-1-git-send-email-bhumirks@gmail.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V6 4/5] blk-mq-sched: improve dispatching from sw queue
+Date: Thu, 12 Oct 2017 18:01:08 +0800
+Message-ID: <20171012100107.GA28224@ming.t460p>
+References: <20171009112424.30524-1-ming.lei@redhat.com>
+ <20171009112424.30524-5-ming.lei@redhat.com>
+ <20171010182345.GD30738@vader.DHCP.thefacebook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171010182345.GD30738@vader.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: julia.lawall@lip6.fr, nab@linux-iscsi.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
+To: Omar Sandoval <osandov@osandov.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This is a followup patch for: https://lkml.org/lkml/2017/10/11/375 and
-https://patchwork.kernel.org/patch/9999649/
+On Tue, Oct 10, 2017 at 11:23:45AM -0700, Omar Sandoval wrote:
+> On Mon, Oct 09, 2017 at 07:24:23PM +0800, Ming Lei wrote:
+> > SCSI devices use host-wide tagset, and the shared driver tag space is
+> > often quite big. Meantime there is also queue depth for each lun(
+> > .cmd_per_lun), which is often small, for example, on both lpfc and
+> > qla2xxx, .cmd_per_lun is just 3.
+> > 
+> > So lots of requests may stay in sw queue, and we always flush all
+> > belonging to same hw queue and dispatch them all to driver, unfortunately
+> > it is easy to cause queue busy because of the small .cmd_per_lun.
+> > Once these requests are flushed out, they have to stay in hctx->dispatch,
+> > and no bio merge can participate into these requests, and sequential IO
+> > performance is hurt a lot.
+> > 
+> > This patch introduces blk_mq_dequeue_from_ctx for dequeuing request from
+> > sw queue so that we can dispatch them in scheduler's way, then we can
+> > avoid to dequeue too many requests from sw queue when ->dispatch isn't
+> > flushed completely.
+> > 
+> > This patch improves dispatching from sw queue when there is per-request-queue
+> > queue depth by taking request one by one from sw queue, just like the way
+> > of IO scheduler.
+> 
+> This still didn't address Jens' concern about using q->queue_depth as
+> the heuristic for whether to do the full sw queue flush or one-by-one
+> dispatch. The EWMA approach is a bit too complex for now, can you please
+> try the heuristic of whether the driver ever returned BLK_STS_RESOURCE?
 
-Make these structures const as they are either passed to the functions
-having the argument as const or stored as a reference in the "ci_type"
-const field of a config_item structure.
+That can be done easily, but I am not sure if it is good.
 
-Done using Coccinelle.
+For example, inside queue rq path of NVMe, kmalloc(GFP_ATOMIC) is
+often used, if kmalloc() returns NULL just once, BLK_STS_RESOURCE
+will be returned to blk-mq, then blk-mq will never do full sw
+queue flush even when kmalloc() always succeed from that time
+on.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/target/target_core_configfs.c | 14 +++++++-------
- drivers/target/target_core_stat.c     | 16 ++++++++--------
- 2 files changed, 15 insertions(+), 15 deletions(-)
+Even EWMA approach isn't good on SCSI-MQ too, because
+some SCSI's .cmd_per_lun is very small, such as 3 on
+lpfc and qla2xxx, and one full flush will trigger
+BLK_STS_RESOURCE easily.
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 7e87d95..bd87cc2 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -307,7 +307,7 @@ static void target_core_deregister_fabric(
- /*
-  * Provides Fabrics Groups and Item Attributes for /sys/kernel/config/target/
-  */
--static struct config_item_type target_core_fabrics_item = {
-+static const struct config_item_type target_core_fabrics_item = {
- 	.ct_group_ops	= &target_core_fabric_group_ops,
- 	.ct_attrs	= target_core_fabric_item_attrs,
- 	.ct_owner	= THIS_MODULE,
-@@ -2376,7 +2376,7 @@ static void target_core_alua_lu_gp_release(struct config_item *item)
- 	.release		= target_core_alua_lu_gp_release,
- };
- 
--static struct config_item_type target_core_alua_lu_gp_cit = {
-+static const struct config_item_type target_core_alua_lu_gp_cit = {
- 	.ct_item_ops		= &target_core_alua_lu_gp_ops,
- 	.ct_attrs		= target_core_alua_lu_gp_attrs,
- 	.ct_owner		= THIS_MODULE,
-@@ -2434,7 +2434,7 @@ static void target_core_alua_drop_lu_gp(
- 	.drop_item		= &target_core_alua_drop_lu_gp,
- };
- 
--static struct config_item_type target_core_alua_lu_gps_cit = {
-+static const struct config_item_type target_core_alua_lu_gps_cit = {
- 	.ct_item_ops		= NULL,
- 	.ct_group_ops		= &target_core_alua_lu_gps_group_ops,
- 	.ct_owner		= THIS_MODULE,
-@@ -2813,7 +2813,7 @@ static void target_core_alua_tg_pt_gp_release(struct config_item *item)
- 	.release		= target_core_alua_tg_pt_gp_release,
- };
- 
--static struct config_item_type target_core_alua_tg_pt_gp_cit = {
-+static const struct config_item_type target_core_alua_tg_pt_gp_cit = {
- 	.ct_item_ops		= &target_core_alua_tg_pt_gp_ops,
- 	.ct_attrs		= target_core_alua_tg_pt_gp_attrs,
- 	.ct_owner		= THIS_MODULE,
-@@ -2884,7 +2884,7 @@ static void target_core_alua_drop_tg_pt_gp(
-  * core/alua/lu_gps and core/alua/tg_pt_gps that are attached to
-  * target_core_alua_cit in target_core_init_configfs() below.
-  */
--static struct config_item_type target_core_alua_cit = {
-+static const struct config_item_type target_core_alua_cit = {
- 	.ct_item_ops		= NULL,
- 	.ct_attrs		= NULL,
- 	.ct_owner		= THIS_MODULE,
-@@ -3105,7 +3105,7 @@ static void target_core_hba_release(struct config_item *item)
- 	.release		= target_core_hba_release,
- };
- 
--static struct config_item_type target_core_hba_cit = {
-+static const struct config_item_type target_core_hba_cit = {
- 	.ct_item_ops		= &target_core_hba_item_ops,
- 	.ct_group_ops		= &target_core_hba_group_ops,
- 	.ct_attrs		= target_core_hba_attrs,
-@@ -3188,7 +3188,7 @@ static void target_core_call_delhbafromtarget(
- 	.drop_item	= target_core_call_delhbafromtarget,
- };
- 
--static struct config_item_type target_core_cit = {
-+static const struct config_item_type target_core_cit = {
- 	.ct_item_ops	= NULL,
- 	.ct_group_ops	= &target_core_group_ops,
- 	.ct_attrs	= NULL,
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-index 8038255..f0db91e 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -96,7 +96,7 @@ static ssize_t target_stat_ports_show(struct config_item *item, char *page)
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_dev_cit = {
-+static const struct config_item_type target_stat_scsi_dev_cit = {
- 	.ct_attrs		= target_stat_scsi_dev_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -193,7 +193,7 @@ static ssize_t target_stat_tgt_aborts_no_task_show(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_tgt_dev_cit = {
-+static const struct config_item_type target_stat_scsi_tgt_dev_cit = {
- 	.ct_attrs		= target_stat_scsi_tgt_dev_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -414,7 +414,7 @@ static ssize_t target_stat_lu_creation_time_show(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_lu_cit = {
-+static const struct config_item_type target_stat_scsi_lu_cit = {
- 	.ct_attrs		= target_stat_scsi_lu_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -540,7 +540,7 @@ static ssize_t target_stat_port_busy_count_show(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_port_cit = {
-+static const struct config_item_type target_stat_scsi_port_cit = {
- 	.ct_attrs		= target_stat_scsi_port_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -724,7 +724,7 @@ static ssize_t target_stat_tgt_port_hs_in_cmds_show(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_tgt_port_cit = {
-+static const struct config_item_type target_stat_scsi_tgt_port_cit = {
- 	.ct_attrs		= target_stat_scsi_tgt_port_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -844,7 +844,7 @@ static ssize_t target_stat_transport_proto_id_show(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_transport_cit = {
-+static const struct config_item_type target_stat_scsi_transport_cit = {
- 	.ct_attrs		= target_stat_scsi_transport_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -1206,7 +1206,7 @@ static ssize_t target_stat_auth_row_status_show(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_auth_intr_cit = {
-+static const struct config_item_type target_stat_scsi_auth_intr_cit = {
- 	.ct_attrs		= target_stat_scsi_auth_intr_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -1378,7 +1378,7 @@ static ssize_t target_stat_iport_port_ident_show(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type target_stat_scsi_att_intr_port_cit = {
-+static const struct config_item_type target_stat_scsi_att_intr_port_cit = {
- 	.ct_attrs		= target_stat_scsi_ath_intr_port_attrs,
- 	.ct_owner		= THIS_MODULE,
- };
+So I suggest to use the way of q->queue_depth first, since we
+don't get performance degrade report on other devices(!q->queue_depth)
+with blk-mq. We can improve this way in the future if we
+have better approach.
+
+What do you think about it?
+
+
 -- 
-1.9.1
+Ming
