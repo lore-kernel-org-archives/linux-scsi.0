@@ -1,238 +1,146 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v8 09/10] block, scsi: Make SCSI quiesce and resume work
- reliably
-Date: Fri, 13 Oct 2017 00:02:39 +0800
-Message-ID: <20171012160238.GC9275@ming.t460p>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
+ is frozen
+Date: Thu, 12 Oct 2017 16:59:01 +0000
+Message-ID: <1507827540.2448.29.camel@wdc.com>
 References: <20171010210346.14574-1-bart.vanassche@wdc.com>
- <20171010210346.14574-10-bart.vanassche@wdc.com>
+         <20171010210346.14574-4-bart.vanassche@wdc.com>
+         <20171010223025.tda3lx64rdmugm54@kernel.org>
+         <1507678384.2815.80.camel@wdc.com>
+         <20171011014830.ps3v3yxny27wv7mc@kernel.org>
+         <1507742275.2477.20.camel@wdc.com>
+         <20171011193221.hkwvcysv6hahsncd@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49552 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751600AbdJLQDL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Oct 2017 12:03:11 -0400
-Content-Disposition: inline
-In-Reply-To: <20171010210346.14574-10-bart.vanassche@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20171011193221.hkwvcysv6hahsncd@kernel.org>
+Content-Language: en-US
+Content-ID: <8F400BE7C5D23B4E89FB4899F05A07DB@namprd04.prod.outlook.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Tue, Oct 10, 2017 at 02:03:45PM -0700, Bart Van Assche wrote:
-> The contexts from which a SCSI device can be quiesced or resumed are:
-> * Writing into /sys/class/scsi_device/*/device/state.
-> * SCSI parallel (SPI) domain validation.
-> * The SCSI device power management methods. See also scsi_bus_pm_ops.
-> 
-> It is essential during suspend and resume that neither the filesystem
-> state nor the filesystem metadata in RAM changes. This is why while
-> the hibernation image is being written or restored that SCSI devices
-> are quiesced. The SCSI core quiesces devices through scsi_device_quiesce()
-> and scsi_device_resume(). In the SDEV_QUIESCE state execution of
-> non-preempt requests is deferred. This is realized by returning
-> BLKPREP_DEFER from inside scsi_prep_state_check() for quiesced SCSI
-> devices. Avoid that a full queue prevents power management requests
-> to be submitted by deferring allocation of non-preempt requests for
-> devices in the quiesced state. This patch has been tested by running
-> the following commands and by verifying that after resume the fio job
-> is still running:
-> 
-> for d in /sys/class/block/sd*[a-z]; do
->   hcil=$(readlink "$d/device")
->   hcil=${hcil#../../../}
->   echo 4 > "$d/queue/nr_requests"
->   echo 1 > "/sys/class/scsi_device/$hcil/device/queue_depth"
-> done
-> bdev=$(readlink /dev/disk/by-uuid/5217d83f-213e-4b42-b86e-20013325ba6c)
-> bdev=${bdev#../../}
-> hcil=$(readlink "/sys/block/$bdev/device")
-> hcil=${hcil#../../../}
-> fio --name="$bdev" --filename="/dev/$bdev" --buffered=0 --bs=512 --rw=randread \
->   --ioengine=libaio --numjobs=4 --iodepth=16 --iodepth_batch=1 --thread \
->   --loops=$((2**31)) &
-> pid=$!
-> sleep 1
-> systemctl hibernate
-> sleep 10
-> kill $pid
-> 
-> Reported-by: Oleksandr Natalenko <oleksandr@natalenko.name>
-> References: "I/O hangs after resuming from suspend-to-ram" (https://marc.info/?l=linux-block&m=150340235201348).
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  block/blk-core.c        | 42 +++++++++++++++++++++++++++++++++++-------
->  block/blk-mq.c          |  4 ++--
->  block/blk-timeout.c     |  2 +-
->  drivers/scsi/scsi_lib.c | 29 +++++++++++++++++++----------
->  fs/block_dev.c          |  4 ++--
->  include/linux/blkdev.h  |  2 +-
->  6 files changed, 60 insertions(+), 23 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index ed992cbd107f..3847ea42e341 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -372,6 +372,7 @@ void blk_clear_preempt_only(struct request_queue *q)
->  
->  	spin_lock_irqsave(q->queue_lock, flags);
->  	queue_flag_clear(QUEUE_FLAG_PREEMPT_ONLY, q);
-> +	wake_up_all(&q->mq_freeze_wq);
->  	spin_unlock_irqrestore(q->queue_lock, flags);
->  }
->  EXPORT_SYMBOL_GPL(blk_clear_preempt_only);
-> @@ -793,15 +794,40 @@ struct request_queue *blk_alloc_queue(gfp_t gfp_mask)
->  }
->  EXPORT_SYMBOL(blk_alloc_queue);
->  
-> -int blk_queue_enter(struct request_queue *q, bool nowait)
-> +/**
-> + * blk_queue_enter() - try to increase q->q_usage_counter
-> + * @q: request queue pointer
-> + * @flags: BLK_MQ_REQ_NOWAIT and/or BLK_MQ_REQ_PREEMPT
-> + */
-> +int blk_queue_enter(struct request_queue *q, unsigned int flags)
->  {
-> +	const bool preempt = flags & BLK_MQ_REQ_PREEMPT;
-> +
->  	while (true) {
-> +		bool success = false;
->  		int ret;
->  
-> -		if (percpu_ref_tryget_live(&q->q_usage_counter))
-> +		rcu_read_lock_sched();
-> +		if (percpu_ref_tryget_live(&q->q_usage_counter)) {
-> +			/*
-> +			 * The code that sets the PREEMPT_ONLY flag is
-> +			 * responsible for ensuring that that flag is globally
-> +			 * visible before the queue is unfrozen.
-> +			 */
-> +			if (preempt || !blk_queue_preempt_only(q)) {
-> +				success = true;
-> +			} else {
-> +				percpu_ref_put(&q->q_usage_counter);
-> +				WARN_ONCE("%s: Attempt to allocate non-preempt request in preempt-only mode.\n",
-> +					  kobject_name(q->kobj.parent));
-> +			}
-> +		}
-> +		rcu_read_unlock_sched();
-> +
-> +		if (success)
->  			return 0;
->  
-> -		if (nowait)
-> +		if (flags & BLK_MQ_REQ_NOWAIT)
->  			return -EBUSY;
->  
->  		/*
-> @@ -814,7 +840,8 @@ int blk_queue_enter(struct request_queue *q, bool nowait)
->  		smp_rmb();
->  
->  		ret = wait_event_interruptible(q->mq_freeze_wq,
-> -				!atomic_read(&q->mq_freeze_depth) ||
-> +				(atomic_read(&q->mq_freeze_depth) == 0 &&
-> +				 (preempt || !blk_queue_preempt_only(q))) ||
->  				blk_queue_dying(q));
->  		if (blk_queue_dying(q))
->  			return -ENODEV;
-> @@ -1442,8 +1469,7 @@ static struct request *blk_old_get_request(struct request_queue *q,
->  	/* create ioc upfront */
->  	create_io_context(gfp_mask, q->node);
->  
-> -	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ||
-> -			      (op & REQ_NOWAIT));
-> +	ret = blk_queue_enter(q, flags);
->  	if (ret)
->  		return ERR_PTR(ret);
->  	spin_lock_irq(q->queue_lock);
-> @@ -2264,8 +2290,10 @@ blk_qc_t generic_make_request(struct bio *bio)
->  	current->bio_list = bio_list_on_stack;
->  	do {
->  		struct request_queue *q = bio->bi_disk->queue;
-> +		unsigned int flags = bio->bi_opf & REQ_NOWAIT ?
-> +			BLK_MQ_REQ_NOWAIT : 0;
->  
-> -		if (likely(blk_queue_enter(q, bio->bi_opf & REQ_NOWAIT) == 0)) {
-> +		if (likely(blk_queue_enter(q, flags) == 0)) {
->  			struct bio_list lower, same;
->  
->  			/* Create a fresh bio_list for all subordinate requests */
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index bdbfe760bda0..44a06e8541f2 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -386,7 +386,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
->  	struct request *rq;
->  	int ret;
->  
-> -	ret = blk_queue_enter(q, flags & BLK_MQ_REQ_NOWAIT);
-> +	ret = blk_queue_enter(q, flags);
->  	if (ret)
->  		return ERR_PTR(ret);
->  
-> @@ -425,7 +425,7 @@ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
->  	if (hctx_idx >= q->nr_hw_queues)
->  		return ERR_PTR(-EIO);
->  
-> -	ret = blk_queue_enter(q, true);
-> +	ret = blk_queue_enter(q, flags);
->  	if (ret)
->  		return ERR_PTR(ret);
->  
-> diff --git a/block/blk-timeout.c b/block/blk-timeout.c
-> index e3e9c9771d36..1eba71486716 100644
-> --- a/block/blk-timeout.c
-> +++ b/block/blk-timeout.c
-> @@ -134,7 +134,7 @@ void blk_timeout_work(struct work_struct *work)
->  	struct request *rq, *tmp;
->  	int next_set = 0;
->  
-> -	if (blk_queue_enter(q, true))
-> +	if (blk_queue_enter(q, BLK_MQ_REQ_NOWAIT | BLK_MQ_REQ_PREEMPT))
->  		return;
->  	spin_lock_irqsave(q->queue_lock, flags);
->  
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 1c16a247fae6..462e3fe385db 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2926,21 +2926,30 @@ static void scsi_wait_for_queuecommand(struct scsi_device *sdev)
->  int
->  scsi_device_quiesce(struct scsi_device *sdev)
->  {
-> +	struct request_queue *q = sdev->request_queue;
->  	int err;
->  
-> +	/* If the SCSI device has already been quiesced, do nothing. */
-> +	if (blk_set_preempt_only(q))
-> +		return 0;
-
-Last time, I have mentioned that this way isn't safe, especially
-the SCSI domain command can be sent concurrently, also there might
-be issue wrt. runtime PM vs. system suspend.
-
-The issue should have been avoided simply by setting the flag
-and continue to freeze queue.
-
-> +
-> +	blk_mq_freeze_queue(q);
-> +	/*
-> +	 * Ensure that the effect of blk_set_preempt_only() will be visible
-> +	 * for percpu_ref_tryget() callers that occur after the queue
-> +	 * unfreeze even if the queue was already frozen before this function
-> +	 * was called. See also https://lwn.net/Articles/573497/.
-> +	 */
-> +	synchronize_rcu();
-
-No, it is a bad idea to do two synchronize_rcu() which can
-be very slow, especially in big machine, this way may slow down
-suspend much.
-
-
--- 
-Ming
+T24gV2VkLCAyMDE3LTEwLTExIGF0IDEyOjMyIC0wNzAwLCBTaGFvaHVhIExpIHdyb3RlOg0KPiBP
+biBXZWQsIE9jdCAxMSwgMjAxNyBhdCAwNToxNzo1NlBNICswMDAwLCBCYXJ0IFZhbiBBc3NjaGUg
+d3JvdGU6DQo+ID4gT24gVHVlLCAyMDE3LTEwLTEwIGF0IDE4OjQ4IC0wNzAwLCBTaGFvaHVhIExp
+IHdyb3RlOg0KPiA+ID4gVGhlIHByb2JsZW0gaXMgX19tZF9zdG9wX3dyaXRlcyBzZXQgc29tZSBi
+aXQgbGlrZSBNRF9SRUNPVkVSWV9GUk9aRU4sIHdoaWNoDQo+ID4gPiB3aWxsIHByZXZlbnQgbWRf
+Y2hlY2tfcmVjb3ZlcnkgcmVzdGFydGluZyByZXN5bmMvcmVzaGFwZS4gSSB0aGluayB3ZSBuZWVk
+DQo+ID4gPiBwcmVzZXJ2ZSBtZGRldi0+cmVjb3ZlcnkgaW4gc3VzcGVuZCBwcmVwYXJlIGFuZCBy
+ZXN0b3JlIGFmdGVyIHJlc3VtZQ0KPiA+IA0KPiA+IEhlbGxvIFNoYW9odWEsDQo+ID4gDQo+ID4g
+QXMgZmFyIGFzIEkgY2FuIHNlZSBfX21kX3N0b3Bfd3JpdGVzKCkgc2V0cyBNRF9SRUNPVkVSWV9G
+Uk9aRU4gYW5kIGNhbiBzZXQNCj4gPiBNRF9SRUNPVkVSWV9JTlRSLiBTaW5jZSBtZF9jaGVja19y
+ZWNvdmVyeSgpIGNsZWFycyBNRF9SRUNPVkVSWV9JTlRSIEkgdGhpbmsNCj4gPiBpdCBzaG91bGQg
+YmUgc3VmZmljaWVudCB0byBzYXZlIGFuZCByZXN0b3JlIHRoZSBzdGF0ZSBvZiB0aGUNCj4gPiBN
+RF9SRUNPVkVSWV9GUk9aRU4gZmxhZy4gSG93ZXZlciwgd2hlbiBJIHJhbiB0aGUgZm9sbG93aW5n
+IHRlc3Q6DQo+ID4gKiBlY2hvIGZyb3plbiA+IC9zeXMvYmxvY2svbWQwL21kL3N5bmNfYWN0aW9u
+DQo+ID4gKiBjYXQgL3N5cy9ibG9jay9tZDAvbWQvc3luY19hY3Rpb24NCj4gPiAqIHN5c3RlbWN0
+bCBoaWJlcm5hdGUNCj4gPiAqIChwb3dlciBvbiBzeXN0ZW0gYWdhaW4pDQo+ID4gKiBjYXQgL3N5
+cy9ibG9jay9tZDAvbWQvc3luY19hY3Rpb24NCj4gPiANCj4gPiB0aGUgb3V0cHV0IHRoYXQgYXBw
+ZWFyZWQgd2FzIGFzIGZvbGxvd3M6DQo+ID4gDQo+ID4gZnJvemVuDQo+ID4gaWRsZSANCj4gPiBE
+b2VzIHRoYXQgbWVhbiB0aGF0IGEgaGliZXJuYXRlIG9yIHN1c3BlbmQgZm9sbG93ZWQgYnkgYSBy
+ZXN1bWUgaXMgc3VmZmljaWVudA0KPiA+IHRvIGNsZWFyIHRoZSBNRF9SRUNPVkVSWV9GUk9aRU4g
+ZmxhZyBmb3IgdGhlIG1kIGRyaXZlcnMgYW5kIGhlbmNlIHRoYXQgdGhlDQo+ID4gcGF0Y2ggYXQg
+dGhlIHN0YXJ0IG9mIHRoaXMgZS1tYWlsIHRocmVhZCBkb2VzIG5vdCBuZWVkIGFueSBmdXJ0aGVy
+DQo+ID4gbW9kaWZpY2F0aW9ucz8NCj4gDQo+IEhhdmUgbm8gaWRlYSB3aHkgaXQgc2hvd3MgJ2lk
+bGUnLiBGcm9tIG15IHVuZGVyc3RhbmRpbmcsIGFmdGVyIHJlc3VtZSwgcHJldmlvdXMNCj4gbWVt
+b3J5IGlzIHN0b3JlZCBhbmQgTURfUkVDT1ZFUllfRlJPWkVOIGJpdCBzaG91bGQgYmUgc2V0LiBX
+YXMgdHJ5aW5nIHRvDQo+IHVuZGVyc3RhbmQgd2hhdCBoYXBwZW5zLg0KDQpIZWxsbyBTaGFvaHVh
+LA0KDQpJIHRoaW5rIGEgdXNlciBzcGFjZSBhY3Rpb24gY2F1c2VzIHRoZSBNRF9SRUNPVkVSWV9G
+Uk9aRU4gYml0IHRvIGJlIGNsZWFyZWQuDQpBZnRlciBJIGhhZCBhZGRlZCBhIGZldyBkZWJ1ZyBz
+dGF0ZW1lbnRzIGluIHRoZSBtZCBkcml2ZXIgdGhpcyBpcyB3aGF0IEkNCmZvdW5kIGluIHRoZSBz
+eXN0ZW0gbG9nOg0KDQpPY3QgMTIgMDk6Mzg6Mzkga2VybmVsOiBhY3Rpb25fc3RvcmU6IHN0b3Jp
+bmcgYWN0aW9uIGNoZWNrDQpPY3QgMTIgMDk6Mzg6Mzkga2VybmVsOiBtZDogZGF0YS1jaGVjayBv
+ZiBSQUlEIGFycmF5IG1kMA0KT2N0IDEyIDA5OjM4OjQwIHN5c3RlbWRbMV06IFN0YXJ0aW5nIEhp
+YmVybmF0ZS4uLg0KT2N0IDEyIDA5OjM4OjQwIGtlcm5lbDogbWQ6IG1kMDogZGF0YS1jaGVjayBp
+bnRlcnJ1cHRlZC4NClsgcG93ZXJlZCBvbiBzeXN0ZW0gbWFudWFsbHkgXQ0KT2N0IDEyIDA5OjM5
+OjA1IGtlcm5lbDogYWN0aW9uX3N0b3JlOiBzdG9yaW5nIGFjdGlvbiBjaGVjaw0KT2N0IDEyIDA5
+OjM5OjA1IGtlcm5lbDogbWQ6IGRhdGEtY2hlY2sgb2YgUkFJRCBhcnJheSBtZDANCk9jdCAxMiAw
+OTozOToxMSBrZXJuZWw6IGFjdGlvbl9zdG9yZTogc3RvcmluZyBhY3Rpb24gaWRsZQ0KT2N0IDEy
+IDA5OjM5OjExIGtlcm5lbDogbWQ6IG1kMDogZGF0YS1jaGVjayBpbnRlcnJ1cHRlZC4NCg0KQW55
+d2F5LCBob3cgYWJvdXQgdGhlIHBhdGNoIGJlbG93PyBJIGhhdmUgdmVyaWZpZWQgYnkgYWRkaW5n
+IGEgZGVidWcgcHJfaW5mbygpDQpzdGF0ZW1lbnQgdGhhdCB0aGUgbmV3bHkgYWRkZWQgY29kZSBy
+ZWFsbHkgY2xlYXJzIHRoZSBNRF9SRUNPVkVSWV9GUk9aRU4gYml0Lg0KDQpUaGFua3MsDQoNCkJh
+cnQuDQoNCg0KU3ViamVjdDogW1BBVENIXSBtZDogTmVpdGhlciByZXN5bmMgbm9yIHJlc2hhcGUg
+d2hpbGUgdGhlIHN5c3RlbSBpcyBmcm96ZW4NCg0KU29tZSBwZW9wbGUgdXNlIHRoZSBtZCBkcml2
+ZXIgb24gbGFwdG9wcyBhbmQgdXNlIHRoZSBzdXNwZW5kIGFuZA0KcmVzdW1lIGZ1bmN0aW9uYWxp
+dHkuIFNpbmNlIGl0IGlzIGVzc2VudGlhbCB0aGF0IHN1Ym1pdHRpbmcgb2YNCm5ldyBJL08gcmVx
+dWVzdHMgc3RvcHMgYmVmb3JlIGEgaGliZXJuYXRpb24gaW1hZ2UgaXMgY3JlYXRlZCwNCmludGVy
+cnVwdCB0aGUgbWQgcmVzeW5jIGFuZCByZXNoYXBlIGFjdGlvbnMgaWYgdGhlIHN5c3RlbSBpcw0K
+YmVpbmcgZnJvemVuLiBOb3RlOiB0aGUgcmVzeW5jIGFuZCByZXNoYXBlIHdpbGwgcmVzdGFydCBh
+ZnRlcg0KdGhlIHN5c3RlbSBpcyByZXN1bWVkIGFuZCBhIG1lc3NhZ2Ugc2ltaWxhciB0byB0aGUg
+Zm9sbG93aW5nDQp3aWxsIGFwcGVhciBpbiB0aGUgc3lzdGVtIGxvZzoNCg0KbWQ6IG1kMDogZGF0
+YS1jaGVjayBpbnRlcnJ1cHRlZC4NCg0KU2lnbmVkLW9mZi1ieTogQmFydCBWYW4gQXNzY2hlIDxi
+YXJ0LnZhbmFzc2NoZUB3ZGMuY29tPg0KQ2M6IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4N
+CkNjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KQ2M6IE1pbmcgTGVpIDxtaW5nLmxlaUBy
+ZWRoYXQuY29tPg0KQ2M6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KQ2M6IEhhbm5l
+cyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4NCkNjOiBKb2hhbm5lcyBUaHVtc2hpcm4gPGp0aHVt
+c2hpcm5Ac3VzZS5kZT4NCi0tLQ0KIGRyaXZlcnMvbWQvbWQuYyB8IDUwICsrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystDQogZHJpdmVycy9tZC9tZC5oIHwg
+IDggKysrKysrKysNCiAyIGZpbGVzIGNoYW5nZWQsIDU3IGluc2VydGlvbnMoKyksIDEgZGVsZXRp
+b24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2RyaXZlcnMvbWQvbWQuYw0K
+aW5kZXggYjk5NTg0ZTVkNmIxLi44YjJmYzc1MGY5N2YgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21k
+L21kLmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAgLTY2LDYgKzY2LDggQEANCiAjaW5jbHVk
+ZSA8bGludXgvcmFpZC9tZF91Lmg+DQogI2luY2x1ZGUgPGxpbnV4L3NsYWIuaD4NCiAjaW5jbHVk
+ZSA8bGludXgvcGVyY3B1LXJlZmNvdW50Lmg+DQorI2luY2x1ZGUgPGxpbnV4L2ZyZWV6ZXIuaD4N
+CisjaW5jbHVkZSA8bGludXgvc3VzcGVuZC5oPg0KIA0KICNpbmNsdWRlIDx0cmFjZS9ldmVudHMv
+YmxvY2suaD4NCiAjaW5jbHVkZSAibWQuaCINCkBAIC03NDM5LDYgKzc0NDEsNyBAQCBzdGF0aWMg
+aW50IG1kX3RocmVhZCh2b2lkICphcmcpDQogCSAqLw0KIA0KIAlhbGxvd19zaWduYWwoU0lHS0lM
+TCk7DQorCXNldF9mcmVlemFibGUoKTsNCiAJd2hpbGUgKCFrdGhyZWFkX3Nob3VsZF9zdG9wKCkp
+IHsNCiANCiAJCS8qIFdlIG5lZWQgdG8gd2FpdCBJTlRFUlJVUFRJQkxFIHNvIHRoYXQNCkBAIC03
+NDQ5LDcgKzc0NTIsNyBAQCBzdGF0aWMgaW50IG1kX3RocmVhZCh2b2lkICphcmcpDQogCQlpZiAo
+c2lnbmFsX3BlbmRpbmcoY3VycmVudCkpDQogCQkJZmx1c2hfc2lnbmFscyhjdXJyZW50KTsNCiAN
+Ci0JCXdhaXRfZXZlbnRfaW50ZXJydXB0aWJsZV90aW1lb3V0DQorCQl3YWl0X2V2ZW50X2ZyZWV6
+YWJsZV90aW1lb3V0DQogCQkJKHRocmVhZC0+d3F1ZXVlLA0KIAkJCSB0ZXN0X2JpdChUSFJFQURf
+V0FLRVVQLCAmdGhyZWFkLT5mbGFncykNCiAJCQkgfHwga3RocmVhZF9zaG91bGRfc3RvcCgpIHx8
+IGt0aHJlYWRfc2hvdWxkX3BhcmsoKSwNCkBAIC04OTQ0LDYgKzg5NDcsOCBAQCBzdGF0aWMgdm9p
+ZCBtZF9zdG9wX2FsbF93cml0ZXModm9pZCkNCiAJaW50IG5lZWRfZGVsYXkgPSAwOw0KIA0KIAlm
+b3JfZWFjaF9tZGRldihtZGRldiwgdG1wKSB7DQorCQltZGRldi0+ZnJvemVuX2JlZm9yZV9zdXNw
+ZW5kID0NCisJCQl0ZXN0X2JpdChNRF9SRUNPVkVSWV9GUk9aRU4sICZtZGRldi0+cmVjb3Zlcnkp
+Ow0KIAkJaWYgKG1kZGV2X3RyeWxvY2sobWRkZXYpKSB7DQogCQkJaWYgKG1kZGV2LT5wZXJzKQ0K
+IAkJCQlfX21kX3N0b3Bfd3JpdGVzKG1kZGV2KTsNCkBAIC04OTYzLDYgKzg5NjgsNDcgQEAgc3Rh
+dGljIHZvaWQgbWRfc3RvcF9hbGxfd3JpdGVzKHZvaWQpDQogCQltZGVsYXkoMTAwMCoxKTsNCiB9
+DQogDQorc3RhdGljIHZvaWQgbWRfcmVzdG9yZV9mcm96ZW5fZmxhZyh2b2lkKQ0KK3sNCisJc3Ry
+dWN0IGxpc3RfaGVhZCAqdG1wOw0KKwlzdHJ1Y3QgbWRkZXYgKm1kZGV2Ow0KKw0KKwlmb3JfZWFj
+aF9tZGRldihtZGRldiwgdG1wKSB7DQorCQlpZiAobWRkZXYtPmZyb3plbl9iZWZvcmVfc3VzcGVu
+ZCkNCisJCQlzZXRfYml0KE1EX1JFQ09WRVJZX0ZST1pFTiwgJm1kZGV2LT5yZWNvdmVyeSk7DQor
+CQllbHNlDQorCQkJY2xlYXJfYml0KE1EX1JFQ09WRVJZX0ZST1pFTiwgJm1kZGV2LT5yZWNvdmVy
+eSk7DQorCX0NCit9DQorDQorLyoNCisgKiBFbnN1cmUgdGhhdCBuZWl0aGVyIHJlc3luY2luZyBu
+b3IgcmVzaGFwaW5nIG9jY3VycyB3aGlsZSB0aGUgc3lzdGVtIGlzDQorICogZnJvemVuLg0KKyAq
+Lw0KK3N0YXRpYyBpbnQgbWRfbm90aWZ5X3BtKHN0cnVjdCBub3RpZmllcl9ibG9jayAqYmwsIHVu
+c2lnbmVkIGxvbmcgc3RhdGUsDQorCQkJdm9pZCAqdW51c2VkKQ0KK3sNCisJcHJfZGVidWcoIiVz
+OiBzdGF0ZSA9ICVsZFxuIiwgX19mdW5jX18sIHN0YXRlKTsNCisNCisJc3dpdGNoIChzdGF0ZSkg
+ew0KKwljYXNlIFBNX0hJQkVSTkFUSU9OX1BSRVBBUkU6DQorCWNhc2UgUE1fU1VTUEVORF9QUkVQ
+QVJFOg0KKwljYXNlIFBNX1JFU1RPUkVfUFJFUEFSRToNCisJCW1kX3N0b3BfYWxsX3dyaXRlcygp
+Ow0KKwkJYnJlYWs7DQorCWNhc2UgUE1fUE9TVF9ISUJFUk5BVElPTjoNCisJY2FzZSBQTV9QT1NU
+X1NVU1BFTkQ6DQorCWNhc2UgUE1fUE9TVF9SRVNUT1JFOg0KKwkJbWRfcmVzdG9yZV9mcm96ZW5f
+ZmxhZygpOw0KKwkJYnJlYWs7DQorCX0NCisJcmV0dXJuIE5PVElGWV9ET05FOw0KK30NCisNCitz
+dGF0aWMgc3RydWN0IG5vdGlmaWVyX2Jsb2NrIG1kX3BtX25vdGlmaWVyID0gew0KKwkubm90aWZp
+ZXJfY2FsbAk9IG1kX25vdGlmeV9wbSwNCit9Ow0KKw0KIHN0YXRpYyBpbnQgbWRfbm90aWZ5X3Jl
+Ym9vdChzdHJ1Y3Qgbm90aWZpZXJfYmxvY2sgKnRoaXMsDQogCQkJICAgIHVuc2lnbmVkIGxvbmcg
+Y29kZSwgdm9pZCAqeCkNCiB7DQpAQCAtOTAwOSw2ICs5MDU1LDcgQEAgc3RhdGljIGludCBfX2lu
+aXQgbWRfaW5pdCh2b2lkKQ0KIAkJCSAgICBtZF9wcm9iZSwgTlVMTCwgTlVMTCk7DQogDQogCXJl
+Z2lzdGVyX3JlYm9vdF9ub3RpZmllcigmbWRfcmVib290X25vdGlmaWVyKTsNCisJcmVnaXN0ZXJf
+cG1fbm90aWZpZXIoJm1kX3BtX25vdGlmaWVyKTsNCiAJcmFpZF90YWJsZV9oZWFkZXIgPSByZWdp
+c3Rlcl9zeXNjdGxfdGFibGUocmFpZF9yb290X3RhYmxlKTsNCiANCiAJbWRfZ2VuaW5pdCgpOw0K
+QEAgLTkyNDgsNiArOTI5NSw3IEBAIHN0YXRpYyBfX2V4aXQgdm9pZCBtZF9leGl0KHZvaWQpDQog
+DQogCXVucmVnaXN0ZXJfYmxrZGV2KE1EX01BSk9SLCJtZCIpOw0KIAl1bnJlZ2lzdGVyX2Jsa2Rl
+dihtZHBfbWFqb3IsICJtZHAiKTsNCisJdW5yZWdpc3Rlcl9wbV9ub3RpZmllcigmbWRfcG1fbm90
+aWZpZXIpOw0KIAl1bnJlZ2lzdGVyX3JlYm9vdF9ub3RpZmllcigmbWRfcmVib290X25vdGlmaWVy
+KTsNCiAJdW5yZWdpc3Rlcl9zeXNjdGxfdGFibGUocmFpZF90YWJsZV9oZWFkZXIpOw0KIA0KZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuaCBiL2RyaXZlcnMvbWQvbWQuaA0KaW5kZXggZDgyODdk
+M2NkMWJmLi43MjdiM2FlZjRkMjYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL21kLmgNCisrKyBi
+L2RyaXZlcnMvbWQvbWQuaA0KQEAgLTM1Niw2ICszNTYsMTQgQEAgc3RydWN0IG1kZGV2IHsNCiAJ
+ICovDQogCWludAkJCQlyZWNvdmVyeV9kaXNhYmxlZDsNCiANCisJLyogV3JpdGVzIGFyZSBzdG9w
+cGVkIGJlZm9yZSBoaWJlcm5hdGlvbiwgc3VzcGVuZCBhbmQgcmVzdG9yZSBieQ0KKwkgKiBjYWxs
+aW5nIG1kX3N0b3BfYWxsX3dyaXRlcygpLiBUaGF0IGZ1bmN0aW9uIHNldHMgdGhlDQorCSAqIE1E
+X1JFQ09WRVJZX0ZST1pFTiBmbGFnLiBUaGUgdmFsdWUgb2YgdGhhdCBmbGFnIGlzIHNhdmVkIGJl
+Zm9yZQ0KKwkgKiB3cml0ZXMgYXJlIHN0b3BwZWQgc3VjaCB0aGF0IGl0IGNhbiBiZSByZXN0b3Jl
+ZCBhZnRlciBoaWJlcm5hdGlvbiwNCisJICogc3VzcGVuZCBvciByZXN0b3JlIGhhdmUgZmluaXNo
+ZWQuDQorCSAqLw0KKwlib29sCQkJCWZyb3plbl9iZWZvcmVfc3VzcGVuZDsNCisNCiAJaW50CQkJ
+CWluX3N5bmM7CS8qIGtub3cgdG8gbm90IG5lZWQgcmVzeW5jICovDQogCS8qICdvcGVuX211dGV4
+JyBhdm9pZHMgcmFjZXMgYmV0d2VlbiAnbWRfb3BlbicgYW5kICdkb19tZF9zdG9wJywgc28NCiAJ
+ICogdGhhdCB3ZSBhcmUgbmV2ZXIgc3RvcHBpbmcgYW4gYXJyYXkgd2hpbGUgaXQgaXMgb3Blbi4N
+Cg==
