@@ -1,41 +1,59 @@
-From: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
-Subject: [PATCH 5/5] qla2xxx: Update driver version to 10.00.00.02-k
-Date: Wed, 11 Oct 2017 13:36:50 -0700
-Message-ID: <20171011203650.23629-6-himanshu.madhani@cavium.com>
-References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0051.outbound.protection.outlook.com ([104.47.36.51]:2368
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752525AbdJKUhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Oct 2017 16:37:09 -0400
-In-Reply-To: <20171011203650.23629-1-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: [PATCH v2 0/5] qcom-ufs: phy/hcd: Refactor phy initialization code
+Date: Thu, 12 Oct 2017 11:49:31 +0530
+Message-ID: <1507789176-2760-1-git-send-email-vivek.gautam@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kishon@ti.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: subhashj@codeaurora.org, robh+dt@kernel.org, bjorn.andersson@linaro.org, devicetree@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Refactoring the qcom-ufs phy and host controller code to move
+further towards the generic phy usage. Right now the qcom-ufs exports
+a bunch of APIs that are used by the host controller to initialize
+the phy.
+With this patch series, we populate the phy_init() which was a no-op
+earlier. The host controller then calls the phy_init() at the designated
+place rather than doing it invariably in ufs_hcd_init().
 
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+As part of this series, we introduce phy modes for ufs phy.
+The M-PHY has two data rates defined for each generations (Gears) -
+Rate A and Rate B. These can serve as the two modes of ufs HS phy.
+Host controller can direct the phy to set the respective configurations
+based on the phy modes.
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 8c4b505c9f66..b6ec02b96d3d 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,7 +7,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.00.00.01-k"
-+#define QLA2XXX_VERSION      "10.00.00.02-k"
- 
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	0
+The patch-series has been tested with necessary dt patches on db820c.
+
+
+Hi Kishon,
+
+I shall be on vacation for the next week. Can you kindly consider
+picking this series for 4.15. Martin was good with last version
+of the patches[1], and Subhash has reviewed the patches of which
+he has given 'Reviewed-by' for [PATCH 4/5] , and I have addressed
+his comments for the last patch. I hope it's not too late for 4.15.
+Subhash, can you please consider giving your 'Reviewed-by' for
+the last patch if you find it good.
+
+[1] https://lkml.org/lkml/2017/8/10/958
+
+Vivek Gautam (5):
+  dt-bindings: phy: Add PHY_TYPE_UFS definition
+  phy: Add UFS PHY modes
+  phy: qcom-ufs: Add support to set phy mode
+  scsi/ufs: qcom: Set phy mode based on the controllers HS MODE
+  ufs/phy: qcom: Refactor to use phy_init call
+
+ drivers/phy/qualcomm/phy-qcom-ufs-i.h        |  5 ++--
+ drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c | 29 +++++++++++++++++--
+ drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c | 29 +++++++++++++++++--
+ drivers/phy/qualcomm/phy-qcom-ufs.c          | 42 ++++++++++------------------
+ drivers/scsi/ufs/ufs-qcom.c                  | 39 +++++++++++---------------
+ include/dt-bindings/phy/phy.h                |  1 +
+ include/linux/phy/phy-qcom-ufs.h             |  3 --
+ include/linux/phy/phy.h                      |  2 ++
+ 8 files changed, 91 insertions(+), 59 deletions(-)
+
 -- 
-2.12.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
