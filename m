@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 4/5] qla2xxx: Changes to support N2N logins
-Date: Thu, 12 Oct 2017 09:29:00 +0200
-Message-ID: <20171012072900.ip5war3isfed366v@linux-x5ow.site>
+Subject: Re: [PATCH 5/5] qla2xxx: Update driver version to 10.00.00.02-k
+Date: Thu, 12 Oct 2017 09:29:22 +0200
+Message-ID: <20171012072921.h4nlauif4pz7ihbu@linux-x5ow.site>
 References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
- <20171011203650.23629-5-himanshu.madhani@cavium.com>
+ <20171011203650.23629-6-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38251 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38268 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750716AbdJLH3C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Oct 2017 03:29:02 -0400
+        id S1752045AbdJLH3X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Oct 2017 03:29:23 -0400
 Content-Disposition: inline
-In-Reply-To: <20171011203650.23629-5-himanshu.madhani@cavium.com>
+In-Reply-To: <20171011203650.23629-6-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
