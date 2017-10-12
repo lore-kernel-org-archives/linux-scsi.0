@@ -1,20 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 3/5] qla2xxx: Allow MBC_GET_PORT_DATABASE to query and
- save the port states
-Date: Thu, 12 Oct 2017 09:26:34 +0200
-Message-ID: <20171012072634.cj6lgat6qfgqnwk4@linux-x5ow.site>
+Subject: Re: [PATCH 4/5] qla2xxx: Changes to support N2N logins
+Date: Thu, 12 Oct 2017 09:29:00 +0200
+Message-ID: <20171012072900.ip5war3isfed366v@linux-x5ow.site>
 References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
- <20171011203650.23629-4-himanshu.madhani@cavium.com>
+ <20171011203650.23629-5-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38167 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38251 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750774AbdJLH0g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Oct 2017 03:26:36 -0400
+        id S1750716AbdJLH3C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Oct 2017 03:29:02 -0400
 Content-Disposition: inline
-In-Reply-To: <20171011203650.23629-4-himanshu.madhani@cavium.com>
+In-Reply-To: <20171011203650.23629-5-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
