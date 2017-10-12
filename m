@@ -1,136 +1,190 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 8/8] scsi/pmcraid: Use sgl_alloc_order() and sgl_free_order()
-Date: Thu, 12 Oct 2017 15:45:50 -0700
-Message-ID: <20171012224550.25440-9-bart.vanassche@wdc.com>
+Subject: [PATCH 1/8] lib: Introduce sgl_alloc() and sgl_free()
+Date: Thu, 12 Oct 2017 15:45:43 -0700
+Message-ID: <20171012224550.25440-2-bart.vanassche@wdc.com>
 References: <20171012224550.25440-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:32148 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753203AbdJLWrP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2017 18:47:15 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:37809 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753464AbdJLWrN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2017 18:47:13 -0400
 In-Reply-To: <20171012224550.25440-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-Use the sgl_alloc_order() and sgl_free_order() functions instead
-of open coding these functions.
+Many kernel drivers contain code that allocate and free both a
+scatterlist and the pages that populate that scatterlist.
+Introduce functions under lib/ that perform these tasks instead
+of duplicating this functionality in multiple drivers.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 ---
- drivers/scsi/Kconfig   |  1 +
- drivers/scsi/pmcraid.c | 44 +++++---------------------------------------
- drivers/scsi/pmcraid.h |  2 +-
- 3 files changed, 7 insertions(+), 40 deletions(-)
+ include/linux/sgl_alloc.h |  16 ++++++++
+ lib/Kconfig               |   4 ++
+ lib/Makefile              |   1 +
+ lib/sgl_alloc.c           | 102 ++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 123 insertions(+)
+ create mode 100644 include/linux/sgl_alloc.h
+ create mode 100644 lib/sgl_alloc.c
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index d11e75e76195..632200ec36a6 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1576,6 +1576,7 @@ config ZFCP
- config SCSI_PMCRAID
- 	tristate "PMC SIERRA Linux MaxRAID adapter support"
- 	depends on PCI && SCSI && NET
-+	select SGL_ALLOC
- 	---help---
- 	  This driver supports the PMC SIERRA MaxRAID adapters.
+diff --git a/include/linux/sgl_alloc.h b/include/linux/sgl_alloc.h
+new file mode 100644
+index 000000000000..a0f719690c9e
+--- /dev/null
++++ b/include/linux/sgl_alloc.h
+@@ -0,0 +1,16 @@
++#ifndef _SGL_ALLOC_H_
++#define _SGL_ALLOC_H_
++
++#include <linux/types.h> /* bool, gfp_t */
++
++struct scatterlist;
++
++struct scatterlist *sgl_alloc_order(unsigned long long length,
++				    unsigned int order, unsigned int *nent_p,
++				    gfp_t gfp, bool chainable);
++struct scatterlist *sgl_alloc(unsigned long long length, unsigned int *nent_p,
++			      gfp_t gfp);
++void sgl_free_order(struct scatterlist *sgl, int order);
++void sgl_free(struct scatterlist *sgl);
++
++#endif /* _SGL_ALLOC_H_ */
+diff --git a/lib/Kconfig b/lib/Kconfig
+index b1445b22a6de..8396c4cfa1ab 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -413,6 +413,10 @@ config HAS_DMA
+ 	depends on !NO_DMA
+ 	default y
  
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index b4d6cd8cd1ad..5f3ea3f3dc64 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -46,6 +46,7 @@
- #include <linux/libata.h>
- #include <linux/mutex.h>
- #include <linux/ktime.h>
++config SGL_ALLOC
++	bool
++	default n
++
+ config DMA_NOOP_OPS
+ 	bool
+ 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
+diff --git a/lib/Makefile b/lib/Makefile
+index dafa79613fb4..4a0e9caf3c0e 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -27,6 +27,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
+ 
+ lib-$(CONFIG_MMU) += ioremap.o
+ lib-$(CONFIG_SMP) += cpumask.o
++lib-$(CONFIG_SGL_ALLOC) += sgl_alloc.o
+ lib-$(CONFIG_DMA_NOOP_OPS) += dma-noop.o
+ lib-$(CONFIG_DMA_VIRT_OPS) += dma-virt.o
+ 
+diff --git a/lib/sgl_alloc.c b/lib/sgl_alloc.c
+new file mode 100644
+index 000000000000..d96b395dd5c8
+--- /dev/null
++++ b/lib/sgl_alloc.c
+@@ -0,0 +1,102 @@
++#include <linux/kernel.h>
++#include <linux/scatterlist.h>
 +#include <linux/sgl_alloc.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
-@@ -3232,12 +3233,7 @@ static int pmcraid_build_ioadl(
-  */
- static void pmcraid_free_sglist(struct pmcraid_sglist *sglist)
- {
--	int i;
--
--	for (i = 0; i < sglist->num_sg; i++)
--		__free_pages(sg_page(&(sglist->scatterlist[i])),
--			     sglist->order);
--
-+	sgl_free_order(sglist->scatterlist, sglist->order);
- 	kfree(sglist);
- }
- 
-@@ -3254,50 +3250,20 @@ static void pmcraid_free_sglist(struct pmcraid_sglist *sglist)
- static struct pmcraid_sglist *pmcraid_alloc_sglist(int buflen)
- {
- 	struct pmcraid_sglist *sglist;
--	struct scatterlist *scatterlist;
--	struct page *page;
--	int num_elem, i, j;
- 	int sg_size;
- 	int order;
--	int bsize_elem;
- 
- 	sg_size = buflen / (PMCRAID_MAX_IOADLS - 1);
- 	order = (sg_size > 0) ? get_order(sg_size) : 0;
--	bsize_elem = PAGE_SIZE * (1 << order);
--
--	/* Determine the actual number of sg entries needed */
--	if (buflen % bsize_elem)
--		num_elem = (buflen / bsize_elem) + 1;
--	else
--		num_elem = buflen / bsize_elem;
- 
- 	/* Allocate a scatter/gather list for the DMA */
--	sglist = kzalloc(sizeof(struct pmcraid_sglist) +
--			 (sizeof(struct scatterlist) * (num_elem - 1)),
--			 GFP_KERNEL);
--
-+	sglist = kzalloc(sizeof(struct pmcraid_sglist), GFP_KERNEL);
- 	if (sglist == NULL)
- 		return NULL;
- 
--	scatterlist = sglist->scatterlist;
--	sg_init_table(scatterlist, num_elem);
- 	sglist->order = order;
--	sglist->num_sg = num_elem;
--	sg_size = buflen;
--
--	for (i = 0; i < num_elem; i++) {
--		page = alloc_pages(GFP_KERNEL|GFP_DMA|__GFP_ZERO, order);
--		if (!page) {
--			for (j = i - 1; j >= 0; j--)
--				__free_pages(sg_page(&scatterlist[j]), order);
--			kfree(sglist);
--			return NULL;
--		}
--
--		sg_set_page(&scatterlist[i], page,
--			sg_size < bsize_elem ? sg_size : bsize_elem, 0);
--		sg_size -= bsize_elem;
--	}
-+	sgl_alloc_order(buflen, order, &sglist->num_sg,
-+			GFP_KERNEL | GFP_DMA | __GFP_ZERO, false);
- 
- 	return sglist;
- }
-diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
-index 44da91712115..754ef30927e2 100644
---- a/drivers/scsi/pmcraid.h
-+++ b/drivers/scsi/pmcraid.h
-@@ -542,7 +542,7 @@ struct pmcraid_sglist {
- 	u32 order;
- 	u32 num_sg;
- 	u32 num_dma_sg;
--	struct scatterlist scatterlist[1];
-+	struct scatterlist *scatterlist;
- };
- 
- /* page D0 inquiry data of focal point resource */
++#include <linux/slab.h>
++#include <linux/types.h>
++#include <asm/page.h>
++
++/**
++ * sgl_alloc_order - allocate a scatterlist and its pages
++ * @length: Length in bytes of the scatterlist. Must be at least one
++ * @order: Second argument for alloc_pages()
++ * @nent_p: [out] Number of entries in the scatterlist that have pages
++ * @gfp: Memory allocation flags
++ * @chainable: Whether or not to allocate an extra element in the scatterlist
++ *	for scatterlist chaining purposes
++ *
++ * Returns: %NULL upon failure or a pointer to an initialized scatterlist.
++ */
++struct scatterlist *sgl_alloc_order(unsigned long long length,
++				    unsigned int order, unsigned int *nent_p,
++				    gfp_t gfp, bool chainable)
++{
++	struct scatterlist *sgl, *sg;
++	struct page *page;
++	unsigned int nent, nalloc;
++	u32 elem_len;
++
++	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
++	nalloc = nent;
++	if (chainable) {
++		/* Check for integer overflow */
++		if (nalloc + 1 < nalloc)
++			return NULL;
++		nalloc++;
++	}
++	sgl = kmalloc_array(nalloc, sizeof(struct scatterlist),
++			    (gfp & ~GFP_DMA) | __GFP_ZERO);
++	if (!sgl)
++		return NULL;
++
++	sg_init_table(sgl, nent);
++	sg = sgl;
++	while (length) {
++		elem_len = min_t(u64, length, PAGE_SIZE << order);
++		page = alloc_pages(gfp, order);
++		if (!page) {
++			sgl_free(sgl);
++			return NULL;
++		}
++
++		sg_set_page(sg, page, elem_len, 0);
++		length -= elem_len;
++		sg = sg_next(sg);
++	}
++	WARN_ON_ONCE(sg);
++	if (nent_p)
++		*nent_p = nent;
++	return sgl;
++}
++EXPORT_SYMBOL(sgl_alloc_order);
++
++/**
++ * sgl_alloc - allocate a scatterlist and its pages
++ * @length: Length in bytes of the scatterlist
++ * @nent_p: [out] Number of entries in the scatterlist
++ * @gfp: Memory allocation flags
++ */
++struct scatterlist *sgl_alloc(unsigned long long length, unsigned int *nent_p,
++			      gfp_t gfp)
++{
++	return sgl_alloc_order(length, 0, nent_p, gfp, false);
++}
++EXPORT_SYMBOL(sgl_alloc);
++
++/**
++ * sgl_free_order - free a scatterlist and its pages
++ * @sg: Scatterlist with one or more elements
++ * @order: Second argument for __free_pages()
++ */
++void sgl_free_order(struct scatterlist *sgl, int order)
++{
++	struct scatterlist *sg;
++	struct page *page;
++
++	for (sg = sgl; sg; sg = sg_next(sg)) {
++		page = sg_page(sg);
++		if (page)
++			__free_pages(page, order);
++	}
++	kfree(sgl);
++}
++EXPORT_SYMBOL(sgl_free_order);
++
++/**
++ * sgl_free - free a scatterlist and its pages
++ * @sg: Scatterlist with one or more elements
++ */
++void sgl_free(struct scatterlist *sgl)
++{
++	sgl_free_order(sgl, 0);
++}
++EXPORT_SYMBOL(sgl_free);
 -- 
 2.14.2
