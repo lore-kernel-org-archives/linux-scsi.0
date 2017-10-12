@@ -1,108 +1,212 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V7 0/6] blk-mq-sched: improve sequential I/O performance
-Date: Fri, 13 Oct 2017 02:36:58 +0800
-Message-ID: <20171012183704.22326-1-ming.lei@redhat.com>
+Subject: [PATCH V7 5/6] blk-mq-sched: improve dispatching from sw queue
+Date: Fri, 13 Oct 2017 02:37:03 +0800
+Message-ID: <20171012183704.22326-6-ming.lei@redhat.com>
+References: <20171012183704.22326-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171012183704.22326-1-ming.lei@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jens,
+SCSI devices use host-wide tagset, and the shared driver tag space is
+often quite big. Meantime there is also queue depth for each lun(
+.cmd_per_lun), which is often small, for example, on both lpfc and
+qla2xxx, .cmd_per_lun is just 3.
 
-In Red Hat internal storage test wrt. blk-mq scheduler, we
-found that I/O performance is much bad with mq-deadline, especially
-about sequential I/O on some multi-queue SCSI devcies(lpfc, qla2xxx,
-SRP...)
+So lots of requests may stay in sw queue, and we always flush all
+belonging to same hw queue and dispatch them all to driver, unfortunately
+it is easy to cause queue busy because of the small .cmd_per_lun.
+Once these requests are flushed out, they have to stay in hctx->dispatch,
+and no bio merge can participate into these requests, and sequential IO
+performance is hurt a lot.
 
-Turns out one big issue causes the performance regression: requests
-are still dequeued from sw queue/scheduler queue even when ldd's
-queue is busy, so I/O merge becomes quite difficult to make, then
-sequential IO degrades a lot.
+This patch introduces blk_mq_dequeue_from_ctx for dequeuing request from
+sw queue so that we can dispatch them in scheduler's way, then we can
+avoid to dequeue too many requests from sw queue when ->dispatch isn't
+flushed completely.
 
-This issue becomes one of mains reasons for reverting default SCSI_MQ
-in V4.13.
+This patch improves dispatching from sw queue by using the callback of
+.get_budget and .put_budget
 
-This six patches improve this situation, and brings back
-performance loss.
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
 
-With this change, SCSI-MQ sequential I/O performance is
-improved much, Paolo reported that mq-deadline performance
-improved much[2] in his dbench test wrt V2. Also performance
-improvement on lpfc/qla2xx was observed with V1.[1]
+Jens/Omar, once .get_budget is introduced, it can be unusual to
+return busy from .queue_rq, so we can't use the approach discussed
+to decide to take one by one or flush all. Then this patch
+simply checks if .get_budget is implemented, looks it is reasonable,
+and in future it is even possible to take more requests by getting
+enough budget first.
 
-[1] http://marc.info/?l=linux-block&m=150151989915776&w=2
-[2] https://marc.info/?l=linux-block&m=150217980602843&w=2
 
-gitweb:
-	https://github.com/ming1/linux/commits/blk_mq_improve_scsi_mpath_perf_V7_part1
+ block/blk-mq-sched.c   | 63 +++++++++++++++++++++++++++++++++++++++++++++++---
+ block/blk-mq.c         | 39 +++++++++++++++++++++++++++++++
+ block/blk-mq.h         |  2 ++
+ include/linux/blk-mq.h |  2 ++
+ 4 files changed, 103 insertions(+), 3 deletions(-)
 
-V7:
-	- introduce .get_budget/.put_budget, and IO merge gets improved
-	compared with V6, and in theory this approach is better than the way
-	taken in block legacy
-
-	- drop patch of 'blk-mq-sched: don't dequeue request until all in ->dispatch are flushed'
-
-V6:
-	- address comments from Christoph
-	- drop the 1st patch which changes blk_mq_request_bypass_insert(),
-	which should belong to dm-mpath's improvement
-	- move ' blk-mq-sched: move actual dispatching into one helper'
-	as 2nd patch, and use the introduced helper to simplify dispatch
-	logic
-	- merge two previous patches into one for improving dispatch from sw queue
-	- make comment/commit log line width as ~70, as suggested by
-	  Christoph
-
-V5:
-	- address some comments from Omar
-	- add Tested-by & Reveiewed-by tag
-	- use direct issue for blk_mq_request_bypass_insert(), and
-	start to consider to improve sequential I/O for dm-mpath
-	- only include part 1(the original patch 1 ~ 6), as suggested
-	by Omar
-
-V4:
-	- add Reviewed-by tag
-	- some trival change: typo fix in commit log or comment,
-	variable name, no actual functional change
-
-V3:
-	- totally round robin for picking req from ctx, as suggested
-	by Bart
-	- remove one local variable in __sbitmap_for_each_set()
-	- drop patches of single dispatch list, which can improve
-	performance on mq-deadline, but cause a bit degrade on
-	none because all hctxs need to be checked after ->dispatch
-	is flushed. Will post it again once it is mature.
-	- rebase on v4.13-rc6 with block for-next
-
-V2:
-	- dequeue request from sw queues in round roubin's style
-	as suggested by Bart, and introduces one helper in sbitmap
-	for this purpose
-	- improve bio merge via hash table from sw queue
-	- add comments about using DISPATCH_BUSY state in lockless way,
-	simplifying handling on busy state,
-	- hold ctx->lock when clearing ctx busy bit as suggested
-	by Bart
-
-Ming Lei (6):
-  blk-mq-sched: fix scheduler bad performance
-  blk-mq-sched: move actual dispatching into one helper
-  sbitmap: introduce __sbitmap_for_each_set()
-  blk-mq: introduce .get_budget and .put_budget in blk_mq_ops
-  blk-mq-sched: improve dispatching from sw queue
-  SCSI: implement .get_budget and .put_budget for blk-mq
-
- block/blk-mq-sched.c    | 121 +++++++++++++++++++++++++++++++++++++++++-------
- block/blk-mq.c          |  74 +++++++++++++++++++++++++++--
- block/blk-mq.h          |   4 +-
- drivers/scsi/scsi_lib.c |  42 +++++++++++++----
- include/linux/blk-mq.h  |  12 +++++
- include/linux/sbitmap.h |  64 ++++++++++++++++++-------
- 6 files changed, 268 insertions(+), 49 deletions(-)
-
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index bcf4773ee1ca..ccbbc7e108ea 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -117,6 +117,50 @@ static bool blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+ 	return false;
+ }
+ 
++static struct blk_mq_ctx *blk_mq_next_ctx(struct blk_mq_hw_ctx *hctx,
++					  struct blk_mq_ctx *ctx)
++{
++	unsigned idx = ctx->index_hw;
++
++	if (++idx == hctx->nr_ctx)
++		idx = 0;
++
++	return hctx->ctxs[idx];
++}
++
++static bool blk_mq_do_dispatch_ctx(struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
++	LIST_HEAD(rq_list);
++	struct blk_mq_ctx *ctx = READ_ONCE(hctx->dispatch_from);
++
++	do {
++		struct request *rq;
++
++		if (!sbitmap_any_bit_set(&hctx->ctx_map))
++			break;
++
++		if (q->mq_ops->get_budget && !q->mq_ops->get_budget(hctx))
++			return true;
++
++		rq = blk_mq_dequeue_from_ctx(hctx, ctx);
++		if (!rq) {
++			if (q->mq_ops->put_budget)
++				q->mq_ops->put_budget(hctx);
++			break;
++		}
++		list_add(&rq->queuelist, &rq_list);
++
++		/* round robin for fair dispatch */
++		ctx = blk_mq_next_ctx(hctx, rq->mq_ctx);
++
++	} while (blk_mq_dispatch_rq_list(q, &rq_list, true));
++
++	WRITE_ONCE(hctx->dispatch_from, ctx);
++
++	return false;
++}
++
+ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct request_queue *q = hctx->queue;
+@@ -157,11 +201,24 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 */
+ 	if (!list_empty(&rq_list)) {
+ 		blk_mq_sched_mark_restart_hctx(hctx);
+-		if (blk_mq_dispatch_rq_list(q, &rq_list, false) &&
+-				has_sched_dispatch)
+-			run_queue = blk_mq_do_dispatch_sched(hctx);
++		if (blk_mq_dispatch_rq_list(q, &rq_list, false)) {
++			if (has_sched_dispatch)
++				run_queue = blk_mq_do_dispatch_sched(hctx);
++			else
++				run_queue = blk_mq_do_dispatch_ctx(hctx);
++		}
+ 	} else if (has_sched_dispatch) {
+ 		run_queue = blk_mq_do_dispatch_sched(hctx);
++	} else if (q->mq_ops->get_budget) {
++		/*
++		 * If we need to get budget before queuing request, we
++		 * dequeue request one by one from sw queue for avoiding
++		 * to mess up I/O merge when dispatch runs out of resource.
++		 *
++		 * TODO: get more budgets, and dequeue more requests in
++		 * one time.
++		 */
++		run_queue = blk_mq_do_dispatch_ctx(hctx);
+ 	} else {
+ 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+ 		blk_mq_dispatch_rq_list(q, &rq_list, false);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index e6e50a91f170..9e2fc26a9018 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -911,6 +911,45 @@ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list)
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_flush_busy_ctxs);
+ 
++struct dispatch_rq_data {
++	struct blk_mq_hw_ctx *hctx;
++	struct request *rq;
++};
++
++static bool dispatch_rq_from_ctx(struct sbitmap *sb, unsigned int bitnr,
++		void *data)
++{
++	struct dispatch_rq_data *dispatch_data = data;
++	struct blk_mq_hw_ctx *hctx = dispatch_data->hctx;
++	struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
++
++	spin_lock(&ctx->lock);
++	if (unlikely(!list_empty(&ctx->rq_list))) {
++		dispatch_data->rq = list_entry_rq(ctx->rq_list.next);
++		list_del_init(&dispatch_data->rq->queuelist);
++		if (list_empty(&ctx->rq_list))
++			sbitmap_clear_bit(sb, bitnr);
++	}
++	spin_unlock(&ctx->lock);
++
++	return !dispatch_data->rq;
++}
++
++struct request *blk_mq_dequeue_from_ctx(struct blk_mq_hw_ctx *hctx,
++					struct blk_mq_ctx *start)
++{
++	unsigned off = start ? start->index_hw : 0;
++	struct dispatch_rq_data data = {
++		.hctx = hctx,
++		.rq   = NULL,
++	};
++
++	__sbitmap_for_each_set(&hctx->ctx_map, off,
++			       dispatch_rq_from_ctx, &data);
++
++	return data.rq;
++}
++
+ static inline unsigned int queued_to_index(unsigned int queued)
+ {
+ 	if (!queued)
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index d1bfce3e69ad..4d12ef08b0a9 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -35,6 +35,8 @@ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list);
+ bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx);
+ bool blk_mq_get_driver_tag(struct request *rq, struct blk_mq_hw_ctx **hctx,
+ 				bool wait);
++struct request *blk_mq_dequeue_from_ctx(struct blk_mq_hw_ctx *hctx,
++					struct blk_mq_ctx *start);
+ 
+ /*
+  * Internal helpers for allocating/freeing the request map
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index f8c4ba2682ec..cc757dcc49e1 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -30,6 +30,8 @@ struct blk_mq_hw_ctx {
+ 
+ 	struct sbitmap		ctx_map;
+ 
++	struct blk_mq_ctx	*dispatch_from;
++
+ 	struct blk_mq_ctx	**ctxs;
+ 	unsigned int		nr_ctx;
+ 
 -- 
 2.9.5
