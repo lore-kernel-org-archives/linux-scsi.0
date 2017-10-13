@@ -1,59 +1,77 @@
-From: "Ouyangzhaowei (Charles)" <ouyangzhaowei@huawei.com>
-Subject: [RESEND PATCH] scsi: shost->async_scan should be protected by
- mutex_lock
-Date: Fri, 13 Oct 2017 14:55:18 +0800
-Message-ID: <aae2bdef-2c21-d97d-43f5-5aff2934e8a9@huawei.com>
+From: Li Wei <liwei213@huawei.com>
+Subject: [PATCH v4 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
+Date: Fri, 13 Oct 2017 15:49:33 +0800
+Message-ID: <20171013074936.97284-3-liwei213@huawei.com>
+References: <20171013074936.97284-1-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20171013074936.97284-1-liwei213@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Suoben <suoben@huawei.com>, "Wulizhen (Pss)" <pss.wulizhen@huawei.com>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc: guodong.xu@linaro.org, liwei213@huawei.com, fengbaopeng@hisilicon.com, lihuan41@hisilicon.com, wangyupeng4@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-shost->async_scan should be protected by mutex_lock, otherwise the check
-of "called twice" won't work.
+add ufs node document for Hisilicon.
 
-Signed-off-by: Ouyang Zhaowei <ouyangzhaowei@huawei.com>
+Signed-off-by: Li Wei <liwei213@huawei.com>
 ---
- drivers/scsi/scsi_scan.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 47 ++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index fd88dab..20d539b 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1722,9 +1722,10 @@ static struct async_scan_data
-*scsi_prep_async_scan(struct Scsi_Host *shost)
-        if (strncmp(scsi_scan_type, "sync", 4) == 0)
-                return NULL;
-
-+       mutex_lock(&shost->scan_mutex);
-        if (shost->async_scan) {
-                shost_printk(KERN_DEBUG, shost, "%s called twice\n",
-__func__);
--               return NULL;
-+               goto unlock;
-        }
-
-        data = kmalloc(sizeof(*data), GFP_KERNEL);
-@@ -1735,7 +1736,6 @@ static struct async_scan_data
-*scsi_prep_async_scan(struct Scsi_Host *shost)
-                goto err;
-        init_completion(&data->prev_finished);
-
--       mutex_lock(&shost->scan_mutex);
-        spin_lock_irqsave(shost->host_lock, flags);
-        shost->async_scan = 1;
-        spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -1751,6 +1751,8 @@ static struct async_scan_data
-*scsi_prep_async_scan(struct Scsi_Host *shost)
-
-  err:
-        kfree(data);
-+ unlock:
-+       mutex_unlock(&shost->scan_mutex);
-        return NULL;
- }
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+new file mode 100644
+index 000000000000..ee114a65143d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+@@ -0,0 +1,47 @@
++* Hisilicon Universal Flash Storage (UFS) Host Controller
++
++UFS nodes are defined to describe on-chip UFS hardware macro.
++Each UFS Host Controller should have its own node.
++
++Required properties:
++- compatible        : compatible list, contains one of the following -
++			"hisilicon,hi3660-ufs" for hisi ufs host controller
++			 present on Hi3660 chipset.
++- reg               : should contain UFS register address space & UFS SYS CTRL register address,
++- interrupt-parent  : interrupt device
++- interrupts        : interrupt number
++- clocks	        : List of phandle and clock specifier pairs
++- clock-names       : List of clock input name strings sorted in the same
++		      order as the clocks property. "clk_ref", "clk_phy" is optional
++- resets            : reset node register, one reset the clk and the other reset the controller
++- reset-names       : describe reset node register
++
++Optional properties for board device:
++- reset-gpio			: specifies to reset devices
++
++Example:
++
++	ufs: ufs@ff3b0000 {
++		compatible = "hisilicon,hi3660-ufs", "jedec,ufs-1.1";
++		/* 0: HCI standard */
++		/* 1: UFS SYS CTRL */
++		reg = <0x0 0xff3b0000 0x0 0x1000>,
++			<0x0 0xff3b1000 0x0 0x1000>;
++		interrupt-parent = <&gic>;
++		interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
++			<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
++		clock-names = "clk_ref", "clk_phy";
++		freq-table-hz = <0 0>, <0 0>;
++		/* offset: 0x84; bit: 12 */
++		/* offset: 0x84; bit: 7  */
++		resets = <&crg_rst 0x84 12>,
++			<&crg_rst 0x84 7>;
++		reset-names = "rst", "assert";
++	};
++
++	&ufs {
++		reset-gpio = <&gpio18 1 0>;
++		status = "okay";
++	};
++
+-- 
+2.11.0
