@@ -1,146 +1,69 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V8 7/7] SCSI: implement .get_budget and .put_budget for blk-mq
-Date: Sat, 14 Oct 2017 01:24:59 +0800
-Message-ID: <20171013172459.1376-8-ming.lei@redhat.com>
-References: <20171013172459.1376-1-ming.lei@redhat.com>
+Subject: Re: [PATCH V7 4/6] blk-mq: introduce .get_budget and .put_budget in
+ blk_mq_ops
+Date: Sat, 14 Oct 2017 01:29:55 +0800
+Message-ID: <20171013172950.GA32319@ming.t460p>
+References: <20171012183704.22326-1-ming.lei@redhat.com>
+ <20171012183704.22326-5-ming.lei@redhat.com>
+ <9a741c03-90a3-e583-ddde-0ed71c8570a2@kernel.dk>
+ <20171013001919.GA24715@ming.t460p>
+ <6efdb459-8746-562d-06dc-5b3e172076e1@kernel.dk>
+ <20171013160731.GA30899@ming.t460p>
+ <1507912260.13345.0.camel@wdc.com>
+ <20171013164519.GF30899@ming.t460p>
+ <1507914527.13345.17.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171013172459.1376-1-ming.lei@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1507914527.13345.17.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "tom81094@gmail.com" <tom81094@gmail.com>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "john.garry@huawei.com" <john.garry@huawei.com>, "osandov@fb.com" <osandov@fb.com>, "loberman@redhat.com" <loberman@redhat.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-We need to tell blk-mq for reserving resource before queuing
-one request, so implement these two callbacks. Then blk-mq
-can avoid to dequeue request earlier, and IO merge can
-be improved a lot.
+On Fri, Oct 13, 2017 at 05:08:52PM +0000, Bart Van Assche wrote:
+> On Sat, 2017-10-14 at 00:45 +0800, Ming Lei wrote:
+> > On Fri, Oct 13, 2017 at 04:31:04PM +0000, Bart Van Assche wrote:
+> > > On Sat, 2017-10-14 at 00:07 +0800, Ming Lei wrote:
+> > > > Actually it is in hot path, for example, lpfc and qla2xx's queue depth is 3,
+> > > 
+> > > Sorry but I doubt whether that is correct. More in general, I don't know any modern
+> > > storage HBA for which the default queue depth is so low.
+> > 
+> > You can grep:
+> > 
+> > [ming@ming linux]$ git grep -n cmd_per_lun ./drivers/scsi/ | grep -E "qla2xxx|lpfc"
+> 
+> Such a low queue depth will result in suboptimal performance for adapters
+> that communicate over a storage network. I think that's a bug and that both
+> adapters support much higher cmd_per_lun values.
+> 
+> (+James Smart)
+> 
+> James, can you explain us why commit 445cf4f4d2aa decreased LPFC_CMD_PER_LUN
+> from 30 to 3? Was that perhaps a workaround for a bug in a specific target
+> implementation?
+> 
+> (+Himanshu Madhani)
+> 
+> Himanshu, do you perhaps know whether it is safe to increase cmd_per_lun for
+> the qla2xxx initiator driver to the scsi_host->can_queue value?
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 75 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 52 insertions(+), 23 deletions(-)
+->can_queue is size of the whole tag space shared by all LUNs, looks it isn't
+reasonable to increase cmd_per_lun to .can_queue.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d159bb085714..6f10afaca25b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1946,25 +1946,32 @@ static void scsi_mq_done(struct scsi_cmnd *cmd)
- 	blk_mq_complete_request(cmd->request);
- }
- 
--static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
--			 const struct blk_mq_queue_data *bd)
-+static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
- {
--	struct request *req = bd->rq;
--	struct request_queue *q = req->q;
-+	struct request_queue *q = hctx->queue;
-+	struct scsi_device *sdev = q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
-+
-+	atomic_dec(&shost->host_busy);
-+	if (scsi_target(sdev)->can_queue > 0)
-+		atomic_dec(&scsi_target(sdev)->target_busy);
-+	atomic_dec(&sdev->device_busy);
-+	put_device(&sdev->sdev_gendev);
-+}
-+
-+static blk_status_t scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct request_queue *q = hctx->queue;
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost = sdev->host;
--	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 	blk_status_t ret;
--	int reason;
- 
--	ret = prep_to_mq(scsi_prep_state_check(sdev, req));
--	if (ret != BLK_STS_OK)
--		goto out;
-+	ret = prep_to_mq(scsi_prep_state_check(sdev, NULL));
-+	if (ret == BLK_STS_RESOURCE || ret != BLK_STS_OK)
-+		return ret;
- 
--	ret = BLK_STS_RESOURCE;
- 	if (!get_device(&sdev->sdev_gendev))
- 		goto out;
--
- 	if (!scsi_dev_queue_ready(q, sdev))
- 		goto out_put_device;
- 	if (!scsi_target_queue_ready(shost, sdev))
-@@ -1972,10 +1979,38 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (!scsi_host_queue_ready(q, shost, sdev))
- 		goto out_dec_target_busy;
- 
-+	return BLK_STS_OK;
-+
-+out_dec_target_busy:
-+	if (scsi_target(sdev)->can_queue > 0)
-+		atomic_dec(&scsi_target(sdev)->target_busy);
-+out_dec_device_busy:
-+	atomic_dec(&sdev->device_busy);
-+out_put_device:
-+	put_device(&sdev->sdev_gendev);
-+out:
-+	return BLK_STS_RESOURCE;
-+}
-+
-+static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
-+			 const struct blk_mq_queue_data *bd)
-+{
-+	struct request *req = bd->rq;
-+	struct request_queue *q = req->q;
-+	struct scsi_device *sdev = q->queuedata;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+	blk_status_t ret;
-+	int reason;
-+
-+	ret = prep_to_mq(scsi_prep_state_check(sdev, req));
-+	if (ret != BLK_STS_OK)
-+		goto out_put_budget;
-+
-+	ret = BLK_STS_RESOURCE;
- 	if (!(req->rq_flags & RQF_DONTPREP)) {
- 		ret = prep_to_mq(scsi_mq_prep_fn(req));
- 		if (ret != BLK_STS_OK)
--			goto out_dec_host_busy;
-+			goto out_put_budget;
- 		req->rq_flags |= RQF_DONTPREP;
- 	} else {
- 		blk_mq_start_request(req);
-@@ -1993,21 +2028,13 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (reason) {
- 		scsi_set_blocked(cmd, reason);
- 		ret = BLK_STS_RESOURCE;
--		goto out_dec_host_busy;
-+		goto out_put_budget;
- 	}
- 
- 	return BLK_STS_OK;
- 
--out_dec_host_busy:
--	atomic_dec(&shost->host_busy);
--out_dec_target_busy:
--	if (scsi_target(sdev)->can_queue > 0)
--		atomic_dec(&scsi_target(sdev)->target_busy);
--out_dec_device_busy:
--	atomic_dec(&sdev->device_busy);
--out_put_device:
--	put_device(&sdev->sdev_gendev);
--out:
-+out_put_budget:
-+	scsi_mq_put_budget(hctx);
- 	switch (ret) {
- 	case BLK_STS_OK:
- 		break;
-@@ -2211,6 +2238,8 @@ struct request_queue *scsi_old_alloc_queue(struct scsi_device *sdev)
- }
- 
- static const struct blk_mq_ops scsi_mq_ops = {
-+	.get_budget	= scsi_mq_get_budget,
-+	.put_budget	= scsi_mq_put_budget,
- 	.queue_rq	= scsi_queue_rq,
- 	.complete	= scsi_softirq_done,
- 	.timeout	= scsi_timeout,
+> 
+> > Even SRP/IB isn't big too, just 32.
+> 
+> The default value for ib_srp for cmd_per_lun is 62 but that value can be
+> overridden by selecting another value in /etc/default/srp_daemon.conf. Note:
+> a lower value is selected if after SRP login it becomes clear that the target
+> queue depth is lower than the cmd_per_lun value requested by the user. This
+> is a performance optimization and avoids that the SRP target system has to
+> send back BUSY responses to the initiator.
+
+OK, thanks for sharing, I just read it as 32 in Laurence's machine.
+
 -- 
-2.9.5
+Ming
