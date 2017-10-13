@@ -1,77 +1,54 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V7 4/6] blk-mq: introduce .get_budget and .put_budget in
- blk_mq_ops
-Date: Fri, 13 Oct 2017 08:44:23 -0600
-Message-ID: <6efdb459-8746-562d-06dc-5b3e172076e1@kernel.dk>
-References: <20171012183704.22326-1-ming.lei@redhat.com>
- <20171012183704.22326-5-ming.lei@redhat.com>
- <9a741c03-90a3-e583-ddde-0ed71c8570a2@kernel.dk>
- <20171013001919.GA24715@ming.t460p>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] scsi: scsi_transport_fc: make the function argument as const
+Date: Fri, 13 Oct 2017 17:00:34 +0200
+Message-ID: <1507906834-31150-1-git-send-email-bhumirks@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171013001919.GA24715@ming.t460p>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+To: julia.lawall@lip6.fr, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/12/2017 06:19 PM, Ming Lei wrote:
-> On Thu, Oct 12, 2017 at 12:46:24PM -0600, Jens Axboe wrote:
->> On 10/12/2017 12:37 PM, Ming Lei wrote:
->>> For SCSI devices, there is often per-request-queue depth, which need
->>> to be respected before queuing one request.
->>>
->>> The current blk-mq always dequeues one request first, then calls .queue_rq()
->>> to dispatch the request to lld. One obvious issue of this way is that I/O
->>> merge may not be good, because when the per-request-queue depth can't be
->>> respected,  .queue_rq() has to return BLK_STS_RESOURCE, then this request
->>> has to staty in hctx->dispatch list, and never got chance to participate
->>> into I/O merge.
->>>
->>> This patch introduces .get_budget and .put_budget callback in blk_mq_ops,
->>> then we can try to get reserved budget first before dequeuing request.
->>> Once we can't get budget for queueing I/O, we don't need to dequeue request
->>> at all, then I/O merge can get improved a lot.
->>
->> I can't help but think that it would be cleaner to just be able to
->> reinsert the request into the scheduler properly, if we fail to
->> dispatch it. Bart hinted at that earlier as well.
-> 
-> Actually when I start to investigate the issue, the 1st thing I tried
-> is to reinsert, but that way is even worse on qla2xxx.
-> 
-> Once request is dequeued, the IO merge chance is decreased a lot.
-> With none scheduler, it becomes not possible to merge because
-> we only try to merge over the last 8 requests. With mq-deadline,
-> when one request is reinserted, another request may be dequeued
-> at the same time.
+This is a followup patch for: https://lkml.org/lkml/2017/10/13/476
 
-I don't care too much about 'none'. If perfect merging is crucial for
-getting to the performance level you want on the hardware you are using,
-you should not be using 'none'. 'none' will work perfectly fine for NVMe
-etc style devices, where we are not dependent on merging to the same
-extent that we are on other devices.
+Make the function argument of fc_attach_transport as const as it is
+only stored in the const field 'f' (made const in the patch in the link)
+of a fc_internal structure.
 
-mq-deadline reinsertion will be expensive, that's in the nature of that
-beast. It's basically the same as a normal request inserition.  So for
-that, we'd have to be a bit careful not to run into this too much. Even
-with a dumb approach, it should only happen 1 out of N times, where N is
-the typical point at which the device will return STS_RESOURCE. The
-reinsertion vs dequeue should be serialized with your patch to do that,
-at least for the single queue mq-deadline setup. In fact, I think your
-approach suffers from that same basic race, in that the budget isn't a
-hard allocation, it's just a hint. It can change from the time you check
-it, and when you go and dispatch the IO, if you don't serialize that
-part. So really should be no different in that regard.
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+This change allows some fc_function_template structures to be const.
+I will send the patches for structure constification after this gets 
+applied.
 
-> Not mention the cost of acquiring/releasing lock, that work
-> is just doing useless work and wasting CPU.
+ drivers/scsi/scsi_transport_fc.c | 2 +-
+ include/scsi/scsi_transport_fc.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Sure, my point is that if it doesn't happen too often, it doesn't really
-matter. It's not THAT expensive.
-
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 8c46a6d..fb30ede 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2162,7 +2162,7 @@ enum blk_eh_timer_return
+ }
+ 
+ struct scsi_transport_template *
+-fc_attach_transport(struct fc_function_template *ft)
++fc_attach_transport(const struct fc_function_template *ft)
+ {
+ 	int count;
+ 	struct fc_internal *i = kzalloc(sizeof(struct fc_internal),
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index e8644ee..60fff05 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -784,7 +784,7 @@ static inline void u64_to_wwn(u64 inm, u8 *wwn)
+ }
+ 
+ struct scsi_transport_template *fc_attach_transport(
+-			struct fc_function_template *);
++			const struct fc_function_template *);
+ void fc_release_transport(struct scsi_transport_template *);
+ void fc_remove_host(struct Scsi_Host *);
+ struct fc_rport *fc_remote_port_add(struct Scsi_Host *shost,
 -- 
-Jens Axboe
+1.9.1
