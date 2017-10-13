@@ -1,65 +1,59 @@
-From: "Madhani, Madhani" <himanshu.madhani@cavium.com>
-Subject: [PATCH 1/1] qla2xxx: Fix sparse warnings for N2N
-Date: Thu, 12 Oct 2017 23:08:21 -0700
-Message-ID: <20171013060821.28237-1-himanshu.madhani@cavium.com>
+From: "Ouyangzhaowei (Charles)" <ouyangzhaowei@huawei.com>
+Subject: [RESEND PATCH] scsi: shost->async_scan should be protected by
+ mutex_lock
+Date: Fri, 13 Oct 2017 14:55:18 +0800
+Message-ID: <aae2bdef-2c21-d97d-43f5-5aff2934e8a9@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0040.outbound.protection.outlook.com ([104.47.40.40]:47568
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751373AbdJMGI2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Oct 2017 02:08:28 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Suoben <suoben@huawei.com>, "Wulizhen (Pss)" <pss.wulizhen@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
+shost->async_scan should be protected by mutex_lock, otherwise the check
+of "called twice" won't work.
 
-Fixes following warning reported by 0-day kernel test build
-
-drivers/scsi/qla2xxx/qla_iocb.c: In function 'qla2x00_els_dcmd2_iocb_timeout':
-drivers/scsi/qla2xxx/qla_iocb.c:2611:50: warning: format '%x' expects a matching
-'unsigned int' argument [-Wformat=]
-         "%s %d ELS Timeout, %8phC hdl=%x, portid=%06x\n",
-
-drivers/scsi/qla2xxx/qla_iocb.c: In function 'qla2x00_els_dcmd2_sp_done':
-drivers/scsi/qla2xxx/qla_iocb.c:2634:11: warning: format '%s' expects argument of type 'char *', but argument 6 has type 'uint32_t {aka unsigned int}' [-Wformat=]
-         "%s %s ELS hdl=%x, portid=%06x done %8pC\n",
-	               ^
-drivers/scsi/qla2xxx/qla_iocb.c:2634:35: warning: format '%x' expects argument of type 'unsigned int', but argument 8 has type 'uint8_t * {aka unsigned char *}' [-Wformat=]
-         "%s %s ELS hdl=%x, portid=%06x done %8pC\n",
-                                     ^
-drivers/scsi/qla2xxx/qla_iocb.c:2634:44: warning: format '%p' expects a matching 'void *' argument [-Wformat=]
-         "%s %s %ELS %hdl=%x, %portid=%06x %done %8pC\n",
-	                                           ^
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Ouyang Zhaowei <ouyangzhaowei@huawei.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_scan.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 6e57c48f8d95..0502ed7ee14e 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2608,7 +2608,7 @@ qla2x00_els_dcmd2_iocb_timeout(void *data)
- 	int res;
- 
- 	ql_dbg(ql_dbg_io + ql_dbg_disc, vha, 0x3069,
--	    "%s %d ELS Timeout, %8phC hdl=%x, portid=%06x\n",
-+	    "%s hdl=%x ELS Timeout, %8phC portid=%06x\n",
- 	    sp->name, sp->handle, fcport->port_name, fcport->d_id.b24);
- 
- 	/* Abort the exchange */
-@@ -2631,7 +2631,7 @@ qla2x00_els_dcmd2_sp_done(void *ptr, int res)
- 	struct scsi_qla_host *vha = sp->vha;
- 
- 	ql_dbg(ql_dbg_io + ql_dbg_disc, vha, 0x3072,
--	    "%s %s ELS hdl=%x, portid=%06x done %8pC\n",
-+	    "%s ELS hdl=%x, portid=%06x done %8pC\n",
- 	    sp->name, sp->handle, fcport->d_id.b24, fcport->port_name);
- 
- 	complete(&lio->u.els_plogi.comp);
--- 
-2.12.0
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index fd88dab..20d539b 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1722,9 +1722,10 @@ static struct async_scan_data
+*scsi_prep_async_scan(struct Scsi_Host *shost)
+        if (strncmp(scsi_scan_type, "sync", 4) == 0)
+                return NULL;
+
++       mutex_lock(&shost->scan_mutex);
+        if (shost->async_scan) {
+                shost_printk(KERN_DEBUG, shost, "%s called twice\n",
+__func__);
+-               return NULL;
++               goto unlock;
+        }
+
+        data = kmalloc(sizeof(*data), GFP_KERNEL);
+@@ -1735,7 +1736,6 @@ static struct async_scan_data
+*scsi_prep_async_scan(struct Scsi_Host *shost)
+                goto err;
+        init_completion(&data->prev_finished);
+
+-       mutex_lock(&shost->scan_mutex);
+        spin_lock_irqsave(shost->host_lock, flags);
+        shost->async_scan = 1;
+        spin_unlock_irqrestore(shost->host_lock, flags);
+@@ -1751,6 +1751,8 @@ static struct async_scan_data
+*scsi_prep_async_scan(struct Scsi_Host *shost)
+
+  err:
+        kfree(data);
++ unlock:
++       mutex_unlock(&shost->scan_mutex);
+        return NULL;
+ }
