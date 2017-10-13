@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V8 1/7] blk-mq-sched: fix scheduler bad performance
-Date: Sat, 14 Oct 2017 01:24:53 +0800
-Message-ID: <20171013172459.1376-2-ming.lei@redhat.com>
+Subject: [PATCH V8 3/7] sbitmap: introduce __sbitmap_for_each_set()
+Date: Sat, 14 Oct 2017 01:24:55 +0800
+Message-ID: <20171013172459.1376-4-ming.lei@redhat.com>
 References: <20171013172459.1376-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171013172459.1376-1-ming.lei@redhat.com>
@@ -10,58 +10,113 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When hw queue is busy, we shouldn't take requests from
-scheduler queue any more, otherwise it is difficult to do
-IO merge.
-
-This patch fixes the awful IO performance on some
-SCSI devices(lpfc, qla2xxx, ...) when mq-deadline/kyber
-is used by not taking requests if hw queue is busy.
+We need to iterate ctx starting from any ctx in round robin
+way, so introduce this helper.
 
 Reviewed-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Omar Sandoval <osandov@fb.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-sched.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ include/linux/sbitmap.h | 64 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 47 insertions(+), 17 deletions(-)
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 4ab69435708c..eca011fdfa0e 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -94,7 +94,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	struct request_queue *q = hctx->queue;
- 	struct elevator_queue *e = q->elevator;
- 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
--	bool did_work = false;
-+	bool do_sched_dispatch = true;
- 	LIST_HEAD(rq_list);
+diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
+index a1904aadbc45..0dcc60e820de 100644
+--- a/include/linux/sbitmap.h
++++ b/include/linux/sbitmap.h
+@@ -211,10 +211,14 @@ bool sbitmap_any_bit_set(const struct sbitmap *sb);
+  */
+ bool sbitmap_any_bit_clear(const struct sbitmap *sb);
  
- 	/* RCU or SRCU read lock is needed before checking quiesced flag */
-@@ -125,18 +125,18 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	 */
- 	if (!list_empty(&rq_list)) {
- 		blk_mq_sched_mark_restart_hctx(hctx);
--		did_work = blk_mq_dispatch_rq_list(q, &rq_list);
-+		do_sched_dispatch = blk_mq_dispatch_rq_list(q, &rq_list);
- 	} else if (!has_sched_dispatch) {
- 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
- 		blk_mq_dispatch_rq_list(q, &rq_list);
++#define SB_NR_TO_INDEX(sb, bitnr) ((bitnr) >> (sb)->shift)
++#define SB_NR_TO_BIT(sb, bitnr) ((bitnr) & ((1U << (sb)->shift) - 1U))
++
+ typedef bool (*sb_for_each_fn)(struct sbitmap *, unsigned int, void *);
+ 
+ /**
+- * sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
++ * __sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
++ * @start: Where to start the iteration.
+  * @sb: Bitmap to iterate over.
+  * @fn: Callback. Should return true to continue or false to break early.
+  * @data: Pointer to pass to callback.
+@@ -222,35 +226,61 @@ typedef bool (*sb_for_each_fn)(struct sbitmap *, unsigned int, void *);
+  * This is inline even though it's non-trivial so that the function calls to the
+  * callback will hopefully get optimized away.
+  */
+-static inline void sbitmap_for_each_set(struct sbitmap *sb, sb_for_each_fn fn,
+-					void *data)
++static inline void __sbitmap_for_each_set(struct sbitmap *sb,
++					  unsigned int start,
++					  sb_for_each_fn fn, void *data)
+ {
+-	unsigned int i;
++	unsigned int index;
++	unsigned int nr;
++	unsigned int scanned = 0;
+ 
+-	for (i = 0; i < sb->map_nr; i++) {
+-		struct sbitmap_word *word = &sb->map[i];
+-		unsigned int off, nr;
++	if (start >= sb->depth)
++		start = 0;
++	index = SB_NR_TO_INDEX(sb, start);
++	nr = SB_NR_TO_BIT(sb, start);
+ 
+-		if (!word->word)
+-			continue;
++	while (scanned < sb->depth) {
++		struct sbitmap_word *word = &sb->map[index];
++		unsigned int depth = min_t(unsigned int, word->depth - nr,
++					   sb->depth - scanned);
+ 
+-		nr = 0;
+-		off = i << sb->shift;
++		scanned += depth;
++		if (!word->word)
++			goto next;
++
++		/*
++		 * On the first iteration of the outer loop, we need to add the
++		 * bit offset back to the size of the word for find_next_bit().
++		 * On all other iterations, nr is zero, so this is a noop.
++		 */
++		depth += nr;
+ 		while (1) {
+-			nr = find_next_bit(&word->word, word->depth, nr);
+-			if (nr >= word->depth)
++			nr = find_next_bit(&word->word, depth, nr);
++			if (nr >= depth)
+ 				break;
+-
+-			if (!fn(sb, off + nr, data))
++			if (!fn(sb, (index << sb->shift) + nr, data))
+ 				return;
+ 
+ 			nr++;
+ 		}
++next:
++		nr = 0;
++		if (++index >= sb->map_nr)
++			index = 0;
  	}
+ }
  
- 	/*
--	 * We want to dispatch from the scheduler if we had no work left
--	 * on the dispatch list, OR if we did have work but weren't able
--	 * to make progress.
-+	 * We want to dispatch from the scheduler if there was nothing
-+	 * on the dispatch list or we were able to dispatch from the
-+	 * dispatch list.
- 	 */
--	if (!did_work && has_sched_dispatch) {
-+	if (do_sched_dispatch && has_sched_dispatch) {
- 		do {
- 			struct request *rq;
+-#define SB_NR_TO_INDEX(sb, bitnr) ((bitnr) >> (sb)->shift)
+-#define SB_NR_TO_BIT(sb, bitnr) ((bitnr) & ((1U << (sb)->shift) - 1U))
++/**
++ * sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
++ * @sb: Bitmap to iterate over.
++ * @fn: Callback. Should return true to continue or false to break early.
++ * @data: Pointer to pass to callback.
++ */
++static inline void sbitmap_for_each_set(struct sbitmap *sb, sb_for_each_fn fn,
++					void *data)
++{
++	__sbitmap_for_each_set(sb, 0, fn, data);
++}
  
+ static inline unsigned long *__sbitmap_word(struct sbitmap *sb,
+ 					    unsigned int bitnr)
 -- 
 2.9.5
