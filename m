@@ -1,8 +1,8 @@
 From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH V7 4/6] blk-mq: introduce .get_budget and .put_budget in
  blk_mq_ops
-Date: Sat, 14 Oct 2017 00:07:37 +0800
-Message-ID: <20171013160731.GA30899@ming.t460p>
+Date: Sat, 14 Oct 2017 00:17:40 +0800
+Message-ID: <20171013161739.GB30899@ming.t460p>
 References: <20171012183704.22326-1-ming.lei@redhat.com>
  <20171012183704.22326-5-ming.lei@redhat.com>
  <9a741c03-90a3-e583-ddde-0ed71c8570a2@kernel.dk>
@@ -55,33 +55,11 @@ On Fri, Oct 13, 2017 at 08:44:23AM -0600, Jens Axboe wrote:
 > you should not be using 'none'. 'none' will work perfectly fine for NVMe
 > etc style devices, where we are not dependent on merging to the same
 > extent that we are on other devices.
-> 
-> mq-deadline reinsertion will be expensive, that's in the nature of that
-> beast. It's basically the same as a normal request inserition.  So for
-> that, we'd have to be a bit careful not to run into this too much. Even
-> with a dumb approach, it should only happen 1 out of N times, where N is
-> the typical point at which the device will return STS_RESOURCE. The
-> reinsertion vs dequeue should be serialized with your patch to do that,
-> at least for the single queue mq-deadline setup. In fact, I think your
-> approach suffers from that same basic race, in that the budget isn't a
-> hard allocation, it's just a hint. It can change from the time you check
-> it, and when you go and dispatch the IO, if you don't serialize that
-> part. So really should be no different in that regard.
 
-In case of SCSI, the .get_buget is done as atomic counting,
-and it is completely effective to avoid unnecessary dequeue, please take
-a look at patch 6.
-
-> 
-> > Not mention the cost of acquiring/releasing lock, that work
-> > is just doing useless work and wasting CPU.
-> 
-> Sure, my point is that if it doesn't happen too often, it doesn't really
-> matter. It's not THAT expensive.
-
-Actually it is in hot path, for example, lpfc and qla2xx's queue depth is 3,
-it is quite easy to trigger STS_RESOURCE.
-
+We still have some SCSI device, such as qla2xxx, which is 1:1 multi-queue
+device, like NVMe, in my test, the big lock of mq-deadline has been
+an issue for this kind of device, and none actually is better than
+mq-deadline, even though its merge isn't good.
 
 Thanks,
 Ming
