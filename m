@@ -1,25 +1,24 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCHv6 3/5] scsi_devinfo: Reformat blacklist flags
-Date: Fri, 13 Oct 2017 12:08:47 +0200
-Message-ID: <20171013100847.sk3oyqjvdw2vtkod@linux-x5ow.site>
+Subject: Re: [PATCHv6 4/5] scsi_devinfo: Whitespace fixes
+Date: Fri, 13 Oct 2017 12:09:09 +0200
+Message-ID: <20171013100909.4wd3a4xqbla76dtd@linux-x5ow.site>
 References: <1506954397-2237-1-git-send-email-hare@suse.de>
- <1506954397-2237-4-git-send-email-hare@suse.de>
+ <1506954397-2237-5-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36960 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36975 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751033AbdJMKIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Oct 2017 06:08:49 -0400
+        id S1751033AbdJMKJL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Oct 2017 06:09:11 -0400
 Content-Disposition: inline
-In-Reply-To: <1506954397-2237-4-git-send-email-hare@suse.de>
+In-Reply-To: <1506954397-2237-5-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
