@@ -1,72 +1,175 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH 1/1] qla2xxx: Fix sparse warnings for N2N
-Date: Fri, 13 Oct 2017 08:25:22 -0400
-Message-ID: <1507897522.24441.87.camel@localhost.localdomain>
-References: <20171013060821.28237-1-himanshu.madhani@cavium.com>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42022 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753342AbdJMMZb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Oct 2017 08:25:31 -0400
-In-Reply-To: <20171013060821.28237-1-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: [PATCH] zfcp: fix erp_action use-before-initialize in REC action trace
+Date: Fri, 13 Oct 2017 15:40:07 +0200
+Message-ID: <20171013134007.54534-1-maier@linux.vnet.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Madhani, Madhani" <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On Thu, 2017-10-12 at 23:08 -0700, Madhani, Madhani wrote:
-> From: Himanshu Madhani <himanshu.madhani@cavium.com>
-> 
-> Fixes following warning reported by 0-day kernel test build
-> 
-> drivers/scsi/qla2xxx/qla_iocb.c: In function 'qla2x00_els_dcmd2_iocb_timeout':
-> drivers/scsi/qla2xxx/qla_iocb.c:2611:50: warning: format '%x' expects a matching
-> 'unsigned int' argument [-Wformat=]
->          "%s %d ELS Timeout, %8phC hdl=%x, portid=%06x\n",
-> 
-> drivers/scsi/qla2xxx/qla_iocb.c: In function 'qla2x00_els_dcmd2_sp_done':
-> drivers/scsi/qla2xxx/qla_iocb.c:2634:11: warning: format '%s' expects argument of type 'char *', but argument 6 has type 'uint32_t {aka unsigned int}' [-Wformat=]
->          "%s %s ELS hdl=%x, portid=%06x done %8pC\n",
-> 	               ^
-> drivers/scsi/qla2xxx/qla_iocb.c:2634:35: warning: format '%x' expects argument of type 'unsigned int', but argument 8 has type 'uint8_t * {aka unsigned char *}' [-Wformat=]
->          "%s %s ELS hdl=%x, portid=%06x done %8pC\n",
->                                      ^
-> drivers/scsi/qla2xxx/qla_iocb.c:2634:44: warning: format '%p' expects a matching 'void *' argument [-Wformat=]
->          "%s %s %ELS %hdl=%x, %portid=%06x %done %8pC\n",
-> 	                                           ^
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-> ---
->  drivers/scsi/qla2xxx/qla_iocb.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-> index 6e57c48f8d95..0502ed7ee14e 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -2608,7 +2608,7 @@ qla2x00_els_dcmd2_iocb_timeout(void *data)
->  	int res;
->  
->  	ql_dbg(ql_dbg_io + ql_dbg_disc, vha, 0x3069,
-> -	    "%s %d ELS Timeout, %8phC hdl=%x, portid=%06x\n",
-> +	    "%s hdl=%x ELS Timeout, %8phC portid=%06x\n",
->  	    sp->name, sp->handle, fcport->port_name, fcport->d_id.b24);
->  
->  	/* Abort the exchange */
-> @@ -2631,7 +2631,7 @@ qla2x00_els_dcmd2_sp_done(void *ptr, int res)
->  	struct scsi_qla_host *vha = sp->vha;
->  
->  	ql_dbg(ql_dbg_io + ql_dbg_disc, vha, 0x3072,
-> -	    "%s %s ELS hdl=%x, portid=%06x done %8pC\n",
-> +	    "%s ELS hdl=%x, portid=%06x done %8pC\n",
->  	    sp->name, sp->handle, fcport->d_id.b24, fcport->port_name);
->  
->  	complete(&lio->u.els_plogi.comp);
+v4.10 commit 6f2ce1c6af37 ("scsi: zfcp: fix rport unblock race with LUN
+recovery") extended accessing parent pointer fields of
+struct zfcp_erp_action for tracing.
+If an erp_action has never been enqueued before, these parent pointer
+fields are uninitialized and NULL. Examples are zfcp objects freshly added
+to the parent object's children list, before enqueueing their first
+recovery subsequently. In zfcp_erp_try_rport_unblock(), we iterate such
+list. Accessing erp_action fields can cause a NULL pointer dereference.
+Since the kernel can read from lowcore on s390, it does not immediately
+cause a kernel page fault. Instead it can cause hangs on trying to acquire
+the wrong erp_action->adapter->dbf->rec_lock in zfcp_dbf_rec_action_lvl()
+                      ^bogus^
+while holding already other locks with IRQs disabled.
 
-Can you please just submit a corrected v2 of your earlier patch instead
-of this one?
+Real life example from attaching lots of LUNs in parallel on many CPUs:
 
--Ewan
+crash> bt 17723
+PID: 17723  TASK: ...               CPU: 25  COMMAND: "zfcperp0.0.1800"
+ LOWCORE INFO:
+  -psw      : 0x0404300180000000 0x000000000038e424
+  -function : _raw_spin_lock_wait_flags at 38e424
+...
+ #0 [fdde8fc90] zfcp_dbf_rec_action_lvl at 3e0004e9862 [zfcp]
+ #1 [fdde8fce8] zfcp_erp_try_rport_unblock at 3e0004dfddc [zfcp]
+ #2 [fdde8fd38] zfcp_erp_strategy at 3e0004e0234 [zfcp]
+ #3 [fdde8fda8] zfcp_erp_thread at 3e0004e0a12 [zfcp]
+ #4 [fdde8fe60] kthread at 173550
+ #5 [fdde8feb8] kernel_thread_starter at 10add2
+
+zfcp_adapter
+ zfcp_port
+  zfcp_unit <address>, 0x404040d600000000
+  scsi_device NULL, returning early!
+zfcp_scsi_dev.status = 0x40000000
+0x40000000 ZFCP_STATUS_COMMON_RUNNING
+
+crash> zfcp_unit <address>
+struct zfcp_unit {
+  erp_action = {
+    adapter = 0x0,
+    port = 0x0,
+    unit = 0x0,
+  },
+}
+
+zfcp_erp_action is always fully embedded into its container object. Such
+container object is never moved in its object tree (only add or delete).
+Hence, erp_action parent pointers can never change.
+
+To fix the issue, initialize the erp_action parent pointers
+before adding the erp_action container to any list and thus before it
+becomes accessible from outside of its initializing function.
+
+In order to also close the time window between zfcp_erp_setup_act()
+memsetting the entire erp_action to zero and setting the parent pointers
+again, drop the memset and instead explicitly initialize individually all
+erp_action fields except for parent pointers. To be extra careful not to
+introduce any other unintended side effect, even keep zeroing the
+erp_action fields for list and timer. Also double-check with WARN_ON_ONCE
+that erp_action parent pointers never change, so we get to know when
+we would deviate from previous behavior.
+
+Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Fixes: 6f2ce1c6af37 ("scsi: zfcp: fix rport unblock race with LUN recovery")
+Cc: <stable@vger.kernel.org> #2.6.32+
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+---
+
+James, Martin,
+
+it's an important bugfix cut against James' scsi.git fixes branch,
+and would be nice if it could make it into 4.14 via rc.
+
+ drivers/s390/scsi/zfcp_aux.c  |    5 +++++
+ drivers/s390/scsi/zfcp_erp.c  |   18 +++++++++++-------
+ drivers/s390/scsi/zfcp_scsi.c |    5 +++++
+ 3 files changed, 21 insertions(+), 7 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -357,6 +357,8 @@ struct zfcp_adapter *zfcp_adapter_enqueu
+ 
+ 	adapter->next_port_scan = jiffies;
+ 
++	adapter->erp_action.adapter = adapter;
++
+ 	if (zfcp_qdio_setup(adapter))
+ 		goto failed;
+ 
+@@ -513,6 +515,9 @@ struct zfcp_port *zfcp_port_enqueue(stru
+ 	port->dev.groups = zfcp_port_attr_groups;
+ 	port->dev.release = zfcp_port_release;
+ 
++	port->erp_action.adapter = adapter;
++	port->erp_action.port = port;
++
+ 	if (dev_set_name(&port->dev, "0x%016llx", (unsigned long long)wwpn)) {
+ 		kfree(port);
+ 		goto err_out;
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
+@@ -193,9 +193,8 @@ static struct zfcp_erp_action *zfcp_erp_
+ 		atomic_or(ZFCP_STATUS_COMMON_ERP_INUSE,
+ 				&zfcp_sdev->status);
+ 		erp_action = &zfcp_sdev->erp_action;
+-		memset(erp_action, 0, sizeof(struct zfcp_erp_action));
+-		erp_action->port = port;
+-		erp_action->sdev = sdev;
++		WARN_ON_ONCE(erp_action->port != port);
++		WARN_ON_ONCE(erp_action->sdev != sdev);
+ 		if (!(atomic_read(&zfcp_sdev->status) &
+ 		      ZFCP_STATUS_COMMON_RUNNING))
+ 			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
+@@ -208,8 +207,8 @@ static struct zfcp_erp_action *zfcp_erp_
+ 		zfcp_erp_action_dismiss_port(port);
+ 		atomic_or(ZFCP_STATUS_COMMON_ERP_INUSE, &port->status);
+ 		erp_action = &port->erp_action;
+-		memset(erp_action, 0, sizeof(struct zfcp_erp_action));
+-		erp_action->port = port;
++		WARN_ON_ONCE(erp_action->port != port);
++		WARN_ON_ONCE(erp_action->sdev != NULL);
+ 		if (!(atomic_read(&port->status) & ZFCP_STATUS_COMMON_RUNNING))
+ 			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
+ 		break;
+@@ -219,7 +218,8 @@ static struct zfcp_erp_action *zfcp_erp_
+ 		zfcp_erp_action_dismiss_adapter(adapter);
+ 		atomic_or(ZFCP_STATUS_COMMON_ERP_INUSE, &adapter->status);
+ 		erp_action = &adapter->erp_action;
+-		memset(erp_action, 0, sizeof(struct zfcp_erp_action));
++		WARN_ON_ONCE(erp_action->port != NULL);
++		WARN_ON_ONCE(erp_action->sdev != NULL);
+ 		if (!(atomic_read(&adapter->status) &
+ 		      ZFCP_STATUS_COMMON_RUNNING))
+ 			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
+@@ -229,7 +229,11 @@ static struct zfcp_erp_action *zfcp_erp_
+ 		return NULL;
+ 	}
+ 
+-	erp_action->adapter = adapter;
++	WARN_ON_ONCE(erp_action->adapter != adapter);
++	memset(&erp_action->list, 0, sizeof(erp_action->list));
++	memset(&erp_action->timer, 0, sizeof(erp_action->timer));
++	erp_action->step = ZFCP_ERP_STEP_UNINITIALIZED;
++	erp_action->fsf_req_id = 0;
+ 	erp_action->action = need;
+ 	erp_action->status = act_status;
+ 
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -115,10 +115,15 @@ static int zfcp_scsi_slave_alloc(struct
+ 	struct zfcp_unit *unit;
+ 	int npiv = adapter->connection_features & FSF_FEATURE_NPIV_MODE;
+ 
++	zfcp_sdev->erp_action.adapter = adapter;
++	zfcp_sdev->erp_action.sdev = sdev;
++
+ 	port = zfcp_get_port_by_wwpn(adapter, rport->port_name);
+ 	if (!port)
+ 		return -ENXIO;
+ 
++	zfcp_sdev->erp_action.port = port;
++
+ 	unit = zfcp_unit_find(port, zfcp_scsi_dev_lun(sdev));
+ 	if (unit)
+ 		put_device(&unit->dev);
