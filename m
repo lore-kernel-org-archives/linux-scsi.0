@@ -1,36 +1,65 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V9 6/7] SCSI: allow to pass null rq to
- scsi_prep_state_check()
-Date: Fri, 13 Oct 2017 23:16:12 +0000
-Message-ID: <1507936571.13345.51.camel@wdc.com>
+Subject: Re: [PATCH V9 4/7] blk-mq: introduce .get_budget and .put_budget in
+ blk_mq_ops
+Date: Fri, 13 Oct 2017 23:43:44 +0000
+Message-ID: <1507938223.13345.66.camel@wdc.com>
 References: <20171013180532.29304-1-ming.lei@redhat.com>
-         <20171013180532.29304-7-ming.lei@redhat.com>
+         <20171013180532.29304-5-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:8062 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751081AbdJMXQP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2017 19:16:15 -0400
-In-Reply-To: <20171013180532.29304-7-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171013180532.29304-5-ming.lei@redhat.com>
 Content-Language: en-US
-Content-ID: <7EAD39FA101A304C96E059B7641BE44E@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-ID: <456E36D9432ABA41ACD454825453806B@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
 To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tom81094@gmail.com" <tom81094@gmail.com>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "john.garry@huawei.com" <john.garry@huawei.com>, "osandov@fb.com" <osandov@fb.com>, "loberman@redhat.com" <loberman@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-T24gU2F0LCAyMDE3LTEwLTE0IGF0IDAyOjA1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gSW4g
-dGhlIGZvbGxvd2luZyBwYXRjaCwgd2Ugd2lsbCBpbXBsZW1lbnQgc2NzaV9nZXRfYnVkZ2V0KCkN
-Cj4gd2hpY2ggbmVlZCB0byBjYWxsIHNjc2lfcHJlcF9zdGF0ZV9jaGVjaygpIHdoZW4gcnEgaXNu
-J3QNCj4gZGVxdWV1ZWQgeWV0Lg0KDQpNeSB1bmRlcnN0YW5kaW5nIGlzIHRoYXQgdGhpcyBjaGFu
-Z2UgaXMgb25seSBuZWVkZWQgYmVjYXVzZSBzY3NpX21xX2dldF9idWRnZXQoKQ0KY2FsbHMgc2Nz
-aV9wcmVwX3N0YXRlX2NoZWNrKCkgd2l0aCB0aGUgcmVxIGFyZ3VtZW50IHNldCB0byBOVUxMLiBT
-aW5jZQ0Kc2NzaV9wcmVwX3N0YXRlX2NoZWNrKCkgdGVzdHMgZm9yIHNkZXYgc3RhdGVzIG90aGVy
-IHRoYW4gU0RFVl9SVU5OSU5HIGFuZCBzaW5jZQ0KdGhlIHB1cnBvc2Ugb2YgdGhpcyBzZXJpZXMg
-aXMgdG8gb3B0aW1pemUgcGVyZm9ybWFuY2UgZm9yIHRoZSBjYXNlIFNERVZfUlVOTklORw0KSSdt
-IG5vdCBzdXJlIGl0J3MgYSBnb29kIGlkZWEgdG8gbWFrZSBzY3NpX21xX2dldF9idWRnZXQoKSBj
-YWxsDQpzY3NpX3ByZXBfc3RhdGVfY2hlY2soKS4gQW5kIGlmIHNjc2lfbXFfZ2V0X2J1ZGdldCgp
-IHdvdWxkbid0IGNhbGwNCnNjc2lfcHJlcF9zdGF0ZV9jaGVjaygpIHRoZW4gdGhpcyBwYXRjaCBp
-cyBub3QgbmVjZXNzYXJ5Lg0KDQpCYXJ0Lg==
+T24gU2F0LCAyMDE3LTEwLTE0IGF0IDAyOjA1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
+LTg5LDE5ICs4OSwzNiBAQCBzdGF0aWMgYm9vbCBibGtfbXFfc2NoZWRfcmVzdGFydF9oY3R4KHN0
+cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4KQ0KPiAgCXJldHVybiBmYWxzZTsNCj4gIH0NCj4gIA0K
+PiAtc3RhdGljIHZvaWQgYmxrX21xX2RvX2Rpc3BhdGNoX3NjaGVkKHN0cnVjdCBibGtfbXFfaHdf
+Y3R4ICpoY3R4KQ0KPiArc3RhdGljIGJvb2wgYmxrX21xX2RvX2Rpc3BhdGNoX3NjaGVkKHN0cnVj
+dCBibGtfbXFfaHdfY3R4ICpoY3R4KQ0KDQpTaG91bGRuJ3QgdGhlIG1lYW5pbmcgb2YgdGhlIHJl
+dHVybiB2YWx1ZSBvZiB0aGlzIGZ1bmN0aW9uIGJlIGRvY3VtZW50ZWQ/DQoNCj4gIHsNCj4gIAlz
+dHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSA9IGhjdHgtPnF1ZXVlOw0KPiAgCXN0cnVjdCBlbGV2YXRv
+cl9xdWV1ZSAqZSA9IHEtPmVsZXZhdG9yOw0KPiAgCUxJU1RfSEVBRChycV9saXN0KTsNCj4gIA0K
+PiAgCWRvIHsNCj4gLQkJc3RydWN0IHJlcXVlc3QgKnJxID0gZS0+dHlwZS0+b3BzLm1xLmRpc3Bh
+dGNoX3JlcXVlc3QoaGN0eCk7DQo+ICsJCXN0cnVjdCByZXF1ZXN0ICpycTsNCj4gKwkJYmxrX3N0
+YXR1c190IHJldDsNCj4gIA0KPiAtCQlpZiAoIXJxKQ0KPiArCQlpZiAoZS0+dHlwZS0+b3BzLm1x
+Lmhhc193b3JrICYmDQo+ICsJCQkJIWUtPnR5cGUtPm9wcy5tcS5oYXNfd29yayhoY3R4KSkNCj4g
+IAkJCWJyZWFrOw0KPiArDQo+ICsJCXJldCA9IGJsa19tcV9nZXRfZGlzcGF0Y2hfYnVkZ2V0KGhj
+dHgpOw0KPiArCQlpZiAocmV0ID09IEJMS19TVFNfUkVTT1VSQ0UpDQo+ICsJCQlyZXR1cm4gdHJ1
+ZTsNCj4gKw0KPiArCQlycSA9IGUtPnR5cGUtPm9wcy5tcS5kaXNwYXRjaF9yZXF1ZXN0KGhjdHgp
+Ow0KPiArCQlpZiAoIXJxKSB7DQo+ICsJCQlibGtfbXFfcHV0X2Rpc3BhdGNoX2J1ZGdldChoY3R4
+LCB0cnVlKTsNCj4gKwkJCWJyZWFrOw0KPiArCQl9IGVsc2UgaWYgKHJldCAhPSBCTEtfU1RTX09L
+KSB7DQo+ICsJCQlibGtfbXFfZW5kX3JlcXVlc3QocnEsIHJldCk7DQo+ICsJCQljb250aW51ZTsN
+Cj4gKwkJfQ0KPiAgCQlsaXN0X2FkZCgmcnEtPnF1ZXVlbGlzdCwgJnJxX2xpc3QpOw0KPiAtCX0g
+d2hpbGUgKGJsa19tcV9kaXNwYXRjaF9ycV9saXN0KHEsICZycV9saXN0KSk7DQo+ICsJfSB3aGls
+ZSAoYmxrX21xX2Rpc3BhdGNoX3JxX2xpc3QocSwgJnJxX2xpc3QsIHRydWUpKTsNCj4gKw0KPiAr
+CXJldHVybiBmYWxzZTsNCj4gIH0NCg0KVGhpcyBtZWFucyB0aGF0IHRoZSByZXF1ZXN0IGluIHJx
+X2xpc3QgYmVjb21lcyB0aGUgb3duZXIgb2YgdGhlIGJ1ZGdldCBhbGxvY2F0ZWQNCmJ5IGJsa19t
+cV9nZXRfZGlzcGF0Y2hfYnVkZ2V0KCkuIFNob3VsZG4ndCB0aGF0IGJlIG1lbnRpb25lZCBhcyBh
+IGNvbW1lbnQgYWJvdmUNCmJsa19tcV9kaXNwYXRjaF9ycV9saXN0KCk/DQoNCj4gKwlpZiAocnVu
+X3F1ZXVlKSB7DQo+ICsJCWlmICghYmxrX21xX3NjaGVkX25lZWRzX3Jlc3RhcnQoaGN0eCkgJiYN
+Cj4gKwkJICAgICF0ZXN0X2JpdChCTEtfTVFfU19UQUdfV0FJVElORywgJmhjdHgtPnN0YXRlKSkg
+ew0KPiArCQkJYmxrX21xX3NjaGVkX21hcmtfcmVzdGFydF9oY3R4KGhjdHgpOw0KPiArCQkJYmxr
+X21xX3J1bl9od19xdWV1ZShoY3R4LCB0cnVlKTsNCj4gKwkJfQ0KPiAgCX0NCj4gIH0NCg0KVGhl
+IGFib3ZlIGlmLXN0YXRlbWVudCBjYW4gYmUgY2hhbmdlZCBmcm9tIGEgbmVzdGVkIGlmIGludG8g
+YSBzaW5nbGUNCmlmLXN0YXRlbWVudC4NCiANCkFkZGl0aW9uYWxseSwgd2h5IGhhcyB0aGUgY29k
+ZSBiZWVuIGFkZGVkIHRvIGJsa19tcV9zY2hlZF9kaXNwYXRjaF9yZXF1ZXN0cygpDQp0aGF0IHJl
+cnVucyB0aGUgcXVldWUgaWYgYmxrX21xX2dldF9kaXNwYXRjaF9idWRnZXQoKSByZXR1cm5lZCBC
+TEtfU1RTX1JFU09VUkNFPw0KSXMgdGhhdCBjb2RlIG5lY2Vzc2FyeSBvciBjYW4gaXQgYmUgbGVm
+dCBvdXQ/DQoNCj4gK3N0YXRpYyBpbmxpbmUgdm9pZCBibGtfbXFfcHV0X2Rpc3BhdGNoX2J1ZGdl
+dChzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwNCj4gKwkJYm9vbCBnb3RfYnVkZ2V0KQ0KPiAr
+ew0KPiArCXN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxID0gaGN0eC0+cXVldWU7DQo+ICsNCj4gKwlp
+ZiAocS0+bXFfb3BzLT5wdXRfYnVkZ2V0ICYmIGdvdF9idWRnZXQpDQo+ICsJCXEtPm1xX29wcy0+
+cHV0X2J1ZGdldChoY3R4KTsNCj4gK30NCg0KU28gdGhlIGFib3ZlIGZ1bmN0aW9uIGlzIHBhc3Nl
+ZCBhIGJvb2xlYW4gYXMgc2Vjb25kIGFyZ3VtZW50IGFuZCBhbGwgd2hhdA0KdGhhdCBib29sZWFu
+IGlzIHVzZWQgZm9yIGlzIHRvIGRlY2lkZSB3aGV0aGVyIG9yIG5vdCB0aGUgZnVuY3Rpb24gaXMg
+ZXhlY3V0ZWQ/DQpTb3JyeSBidXQgSSB0aGluayB0aGF0J3Mgd3JvbmcgYW5kIHRoYXQgdGhlIHNl
+Y29uZCBhcmd1bWVudCBzaG91bGQgYmUgcmVtb3ZlZA0KYW5kIHRoYXQgaXQgc2hvdWxkIGJlIGV2
+YWx1YXRlZCBieSB0aGUgY2FsbGVyIGluc3RlYWQgb2YgaW5zaWRlDQpibGtfbXFfcHV0X2Rpc3Bh
+dGNoX2J1ZGdldCgpLg0KDQpCYXJ0Lg==
