@@ -1,73 +1,44 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V7 4/6] blk-mq: introduce .get_budget and .put_budget in
- blk_mq_ops
-Date: Fri, 13 Oct 2017 08:19:24 +0800
-Message-ID: <20171013001919.GA24715@ming.t460p>
+Subject: Re: [PATCH V7 5/6] blk-mq-sched: improve dispatching from sw queue
+Date: Fri, 13 Oct 2017 08:20:37 +0800
+Message-ID: <20171013002036.GB24715@ming.t460p>
 References: <20171012183704.22326-1-ming.lei@redhat.com>
- <20171012183704.22326-5-ming.lei@redhat.com>
- <9a741c03-90a3-e583-ddde-0ed71c8570a2@kernel.dk>
+ <20171012183704.22326-6-ming.lei@redhat.com>
+ <2852603f-ce98-9f8e-8d86-1d601445a1ff@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <9a741c03-90a3-e583-ddde-0ed71c8570a2@kernel.dk>
+In-Reply-To: <2852603f-ce98-9f8e-8d86-1d601445a1ff@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 12, 2017 at 12:46:24PM -0600, Jens Axboe wrote:
-> On 10/12/2017 12:37 PM, Ming Lei wrote:
-> > For SCSI devices, there is often per-request-queue depth, which need
-> > to be respected before queuing one request.
+On Thu, Oct 12, 2017 at 11:48:22AM -0700, Bart Van Assche wrote:
+> On 10/12/17 11:37, Ming Lei wrote:
+> > [ ... ]
 > > 
-> > The current blk-mq always dequeues one request first, then calls .queue_rq()
-> > to dispatch the request to lld. One obvious issue of this way is that I/O
-> > merge may not be good, because when the per-request-queue depth can't be
-> > respected,  .queue_rq() has to return BLK_STS_RESOURCE, then this request
-> > has to staty in hctx->dispatch list, and never got chance to participate
-> > into I/O merge.
+> > This patch improves dispatching from sw queue by using the callback of
+> > .get_budget and .put_budget
 > > 
-> > This patch introduces .get_budget and .put_budget callback in blk_mq_ops,
-> > then we can try to get reserved budget first before dequeuing request.
-> > Once we can't get budget for queueing I/O, we don't need to dequeue request
-> > at all, then I/O merge can get improved a lot.
+> > Reviewed-by: Omar Sandoval <osandov@fb.com>
+> > Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> > 
+> > Jens/Omar, once .get_budget is introduced, it can be unusual to
+> > return busy from .queue_rq, so we can't use the approach discussed
+> > to decide to take one by one or flush all. Then this patch
+> > simply checks if .get_budget is implemented, looks it is reasonable,
+> > and in future it is even possible to take more requests by getting
+> > enough budget first.
+> > [ ... ]
 > 
-> I can't help but think that it would be cleaner to just be able to
-> reinsert the request into the scheduler properly, if we fail to
-> dispatch it. Bart hinted at that earlier as well.
+> Version 7 of this patch differs significantly from the version I reviewed so
+> I think you should remove my Reviewed-by tag.
 
-Actually when I start to investigate the issue, the 1st thing I tried
-is to reinsert, but that way is even worse on qla2xxx.
-
-Once request is dequeued, the IO merge chance is decreased a lot.
-With none scheduler, it becomes not possible to merge because
-we only try to merge over the last 8 requests. With mq-deadline,
-when one request is reinserted, another request may be dequeued
-at the same time.
-
-Not mention the cost of acquiring/releasing lock, that work
-is just doing useless work and wasting CPU.
-
-> 
-> With that, you would not need budget functions.
-> 
-> I don't feel _that_ strongly about it, though, and it is something
-> we can do down the line as well. I'd just hate having to introduce
-> budget ops only to kill them a little later.
-> 
-> If we stick with the budget, then add a parallel blk_mq_get_budget()
-> like you have a blk_mq_put_budget(), so we don't have to litter the code
-> with things like:
-> 
-> > +		if (q->mq_ops->get_budget && !q->mq_ops->get_budget(hctx))
-> > +			return true;
-> 
-> all over the place. There are also a few places where you don't use
-> blk_mq_put_budget() but open-code it instead, you should be consistent.
-
-OK.
-
+OK, no problem, the only difference is on the introduced .get_budget().
 
 -- 
 Ming
