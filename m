@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V9 6/7] SCSI: allow to pass null rq to scsi_prep_state_check()
-Date: Sat, 14 Oct 2017 02:05:31 +0800
-Message-ID: <20171013180532.29304-7-ming.lei@redhat.com>
+Subject: [PATCH V9 7/7] SCSI: implement .get_budget and .put_budget for blk-mq
+Date: Sat, 14 Oct 2017 02:05:32 +0800
+Message-ID: <20171013180532.29304-8-ming.lei@redhat.com>
 References: <20171013180532.29304-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171013180532.29304-1-ming.lei@redhat.com>
@@ -10,36 +10,137 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In the following patch, we will implement scsi_get_budget()
-which need to call scsi_prep_state_check() when rq isn't
-dequeued yet.
+We need to tell blk-mq for reserving resource before queuing
+one request, so implement these two callbacks. Then blk-mq
+can avoid to dequeue request earlier, and IO merge can
+be improved a lot.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/scsi_lib.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_lib.c | 75 ++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 52 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80fe297..d159bb085714 100644
+index d159bb085714..6f10afaca25b 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1301,7 +1301,7 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 			/*
- 			 * If the devices is blocked we defer normal commands.
- 			 */
--			if (!(req->rq_flags & RQF_PREEMPT))
-+			if (req && !(req->rq_flags & RQF_PREEMPT))
- 				ret = BLKPREP_DEFER;
- 			break;
- 		default:
-@@ -1310,7 +1310,7 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 			 * special commands.  In particular any user initiated
- 			 * command is not allowed.
- 			 */
--			if (!(req->rq_flags & RQF_PREEMPT))
-+			if (req && !(req->rq_flags & RQF_PREEMPT))
- 				ret = BLKPREP_KILL;
- 			break;
- 		}
+@@ -1946,25 +1946,32 @@ static void scsi_mq_done(struct scsi_cmnd *cmd)
+ 	blk_mq_complete_request(cmd->request);
+ }
+ 
+-static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+-			 const struct blk_mq_queue_data *bd)
++static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
+ {
+-	struct request *req = bd->rq;
+-	struct request_queue *q = req->q;
++	struct request_queue *q = hctx->queue;
++	struct scsi_device *sdev = q->queuedata;
++	struct Scsi_Host *shost = sdev->host;
++
++	atomic_dec(&shost->host_busy);
++	if (scsi_target(sdev)->can_queue > 0)
++		atomic_dec(&scsi_target(sdev)->target_busy);
++	atomic_dec(&sdev->device_busy);
++	put_device(&sdev->sdev_gendev);
++}
++
++static blk_status_t scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
+ 	struct scsi_device *sdev = q->queuedata;
+ 	struct Scsi_Host *shost = sdev->host;
+-	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+ 	blk_status_t ret;
+-	int reason;
+ 
+-	ret = prep_to_mq(scsi_prep_state_check(sdev, req));
+-	if (ret != BLK_STS_OK)
+-		goto out;
++	ret = prep_to_mq(scsi_prep_state_check(sdev, NULL));
++	if (ret == BLK_STS_RESOURCE || ret != BLK_STS_OK)
++		return ret;
+ 
+-	ret = BLK_STS_RESOURCE;
+ 	if (!get_device(&sdev->sdev_gendev))
+ 		goto out;
+-
+ 	if (!scsi_dev_queue_ready(q, sdev))
+ 		goto out_put_device;
+ 	if (!scsi_target_queue_ready(shost, sdev))
+@@ -1972,10 +1979,38 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	if (!scsi_host_queue_ready(q, shost, sdev))
+ 		goto out_dec_target_busy;
+ 
++	return BLK_STS_OK;
++
++out_dec_target_busy:
++	if (scsi_target(sdev)->can_queue > 0)
++		atomic_dec(&scsi_target(sdev)->target_busy);
++out_dec_device_busy:
++	atomic_dec(&sdev->device_busy);
++out_put_device:
++	put_device(&sdev->sdev_gendev);
++out:
++	return BLK_STS_RESOURCE;
++}
++
++static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
++			 const struct blk_mq_queue_data *bd)
++{
++	struct request *req = bd->rq;
++	struct request_queue *q = req->q;
++	struct scsi_device *sdev = q->queuedata;
++	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
++	blk_status_t ret;
++	int reason;
++
++	ret = prep_to_mq(scsi_prep_state_check(sdev, req));
++	if (ret != BLK_STS_OK)
++		goto out_put_budget;
++
++	ret = BLK_STS_RESOURCE;
+ 	if (!(req->rq_flags & RQF_DONTPREP)) {
+ 		ret = prep_to_mq(scsi_mq_prep_fn(req));
+ 		if (ret != BLK_STS_OK)
+-			goto out_dec_host_busy;
++			goto out_put_budget;
+ 		req->rq_flags |= RQF_DONTPREP;
+ 	} else {
+ 		blk_mq_start_request(req);
+@@ -1993,21 +2028,13 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	if (reason) {
+ 		scsi_set_blocked(cmd, reason);
+ 		ret = BLK_STS_RESOURCE;
+-		goto out_dec_host_busy;
++		goto out_put_budget;
+ 	}
+ 
+ 	return BLK_STS_OK;
+ 
+-out_dec_host_busy:
+-	atomic_dec(&shost->host_busy);
+-out_dec_target_busy:
+-	if (scsi_target(sdev)->can_queue > 0)
+-		atomic_dec(&scsi_target(sdev)->target_busy);
+-out_dec_device_busy:
+-	atomic_dec(&sdev->device_busy);
+-out_put_device:
+-	put_device(&sdev->sdev_gendev);
+-out:
++out_put_budget:
++	scsi_mq_put_budget(hctx);
+ 	switch (ret) {
+ 	case BLK_STS_OK:
+ 		break;
+@@ -2211,6 +2238,8 @@ struct request_queue *scsi_old_alloc_queue(struct scsi_device *sdev)
+ }
+ 
+ static const struct blk_mq_ops scsi_mq_ops = {
++	.get_budget	= scsi_mq_get_budget,
++	.put_budget	= scsi_mq_put_budget,
+ 	.queue_rq	= scsi_queue_rq,
+ 	.complete	= scsi_softirq_done,
+ 	.timeout	= scsi_timeout,
 -- 
 2.9.5
