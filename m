@@ -1,7 +1,7 @@
 From: Li Wei <liwei213@huawei.com>
-Subject: [PATCH v4 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
-Date: Fri, 13 Oct 2017 15:49:33 +0800
-Message-ID: <20171013074936.97284-3-liwei213@huawei.com>
+Subject: [PATCH v4 5/5] arm64: defconfig: enable f2fs and squashfs
+Date: Fri, 13 Oct 2017 15:49:36 +0800
+Message-ID: <20171013074936.97284-6-liwei213@huawei.com>
 References: <20171013074936.97284-1-liwei213@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,66 +12,42 @@ To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.mari
 Cc: guodong.xu@linaro.org, liwei213@huawei.com, fengbaopeng@hisilicon.com, lihuan41@hisilicon.com, wangyupeng4@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-add ufs node document for Hisilicon.
+Partitions in HiKey960 are formatted as f2fs and squashfs.
+f2fs is for userdata; squashfs is for system. Both partitions are required
+by Android.
 
 Signed-off-by: Li Wei <liwei213@huawei.com>
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
 ---
- Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 47 ++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+ arch/arm64/configs/defconfig | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-new file mode 100644
-index 000000000000..ee114a65143d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-@@ -0,0 +1,47 @@
-+* Hisilicon Universal Flash Storage (UFS) Host Controller
-+
-+UFS nodes are defined to describe on-chip UFS hardware macro.
-+Each UFS Host Controller should have its own node.
-+
-+Required properties:
-+- compatible        : compatible list, contains one of the following -
-+			"hisilicon,hi3660-ufs" for hisi ufs host controller
-+			 present on Hi3660 chipset.
-+- reg               : should contain UFS register address space & UFS SYS CTRL register address,
-+- interrupt-parent  : interrupt device
-+- interrupts        : interrupt number
-+- clocks	        : List of phandle and clock specifier pairs
-+- clock-names       : List of clock input name strings sorted in the same
-+		      order as the clocks property. "clk_ref", "clk_phy" is optional
-+- resets            : reset node register, one reset the clk and the other reset the controller
-+- reset-names       : describe reset node register
-+
-+Optional properties for board device:
-+- reset-gpio			: specifies to reset devices
-+
-+Example:
-+
-+	ufs: ufs@ff3b0000 {
-+		compatible = "hisilicon,hi3660-ufs", "jedec,ufs-1.1";
-+		/* 0: HCI standard */
-+		/* 1: UFS SYS CTRL */
-+		reg = <0x0 0xff3b0000 0x0 0x1000>,
-+			<0x0 0xff3b1000 0x0 0x1000>;
-+		interrupt-parent = <&gic>;
-+		interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
-+			<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
-+		clock-names = "clk_ref", "clk_phy";
-+		freq-table-hz = <0 0>, <0 0>;
-+		/* offset: 0x84; bit: 12 */
-+		/* offset: 0x84; bit: 7  */
-+		resets = <&crg_rst 0x84 12>,
-+			<&crg_rst 0x84 7>;
-+		reset-names = "rst", "assert";
-+	};
-+
-+	&ufs {
-+		reset-gpio = <&gpio18 1 0>;
-+		status = "okay";
-+	};
-+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 8aff981915f5..0a8a843cd0be 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -555,6 +555,7 @@ CONFIG_ACPI_APEI_GHES=y
+ CONFIG_ACPI_APEI_PCIEAER=y
+ CONFIG_EXT2_FS=y
+ CONFIG_EXT3_FS=y
++CONFIG_F2FS_FS=y
+ CONFIG_EXT4_FS_POSIX_ACL=y
+ CONFIG_BTRFS_FS=m
+ CONFIG_BTRFS_FS_POSIX_ACL=y
+@@ -570,6 +571,13 @@ CONFIG_HUGETLBFS=y
+ CONFIG_CONFIGFS_FS=y
+ CONFIG_EFIVAR_FS=y
+ CONFIG_SQUASHFS=y
++CONFIG_SQUASHFS_FILE_DIRECT=y
++CONFIG_SQUASHFS_DECOMP_MULTI_PERCPU=y
++CONFIG_SQUASHFS_XATTR=y
++CONFIG_SQUASHFS_LZ4=y
++CONFIG_SQUASHFS_LZO=y
++CONFIG_SQUASHFS_XZ=y
++CONFIG_SQUASHFS_4K_DEVBLK_SIZE=y
+ CONFIG_NFS_FS=y
+ CONFIG_NFS_V4=y
+ CONFIG_NFS_V4_1=y
 -- 
 2.11.0
