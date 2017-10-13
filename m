@@ -1,110 +1,99 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V8 0/7] blk-mq-sched: improve sequential I/O performance
-Date: Sat, 14 Oct 2017 01:24:52 +0800
-Message-ID: <20171013172459.1376-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+Subject: [PATCH V8 2/7] blk-mq-sched: move actual dispatching into one helper
+Date: Sat, 14 Oct 2017 01:24:54 +0800
+Message-ID: <20171013172459.1376-3-ming.lei@redhat.com>
+References: <20171013172459.1376-1-ming.lei@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171013172459.1376-1-ming.lei@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jens,
+So that it becomes easy to support to dispatch from sw queue in the
+following patch.
 
-In Red Hat internal storage test wrt. blk-mq scheduler, we found that I/O
-performance is much bad with mq-deadline, especially about sequential I/O
-on some multi-queue SCSI devcies(lpfc, qla2xxx, SRP...)
+No functional change.
 
-Turns out one big issue causes the performance regression: requests are
-still dequeued from sw queue/scheduler queue even when ldd's queue is
-busy, so I/O merge becomes quite difficult to make, then sequential IO
-performance degrades a lot.
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Suggested-by: Christoph Hellwig <hch@lst.de> # for simplifying dispatch logic
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-mq-sched.c | 43 ++++++++++++++++++++++++-------------------
+ 1 file changed, 24 insertions(+), 19 deletions(-)
 
-This issue becomes one of mains reasons for reverting default SCSI_MQ
-in V4.13.
-
-This 8 patches improve this situation, and brings back performance loss.
-
-With this change, SCSI-MQ sequential I/O performance is improved much, Paolo
-reported that mq-deadline performance improved much[2] in his dbench test
-wrt V2. Also performance improvement on lpfc/qla2xx was observed with V1.[1]
-
-[1] http://marc.info/?l=linux-block&m=150151989915776&w=2
-[2] https://marc.info/?l=linux-block&m=150217980602843&w=2
-
-gitweb:
-	https://github.com/ming1/linux/commits/blk_mq_improve_scsi_mpath_perf_V8_part1
-
-V8:
-	- introduce helper of blk_mq_get_budget
-	- handle failure path of get_budget
-
-V7:
-	- introduce .get_budget/.put_budget, and IO merge gets improved
-	compared with V6, and in theory this approach is better than the way
-	taken in block legacy
-
-	- drop patch of 'blk-mq-sched: don't dequeue request until all in ->dispatch are flushed'
-
-V6:
-	- address comments from Christoph
-	- drop the 1st patch which changes blk_mq_request_bypass_insert(),
-	which should belong to dm-mpath's improvement
-	- move ' blk-mq-sched: move actual dispatching into one helper'
-	as 2nd patch, and use the introduced helper to simplify dispatch
-	logic
-	- merge two previous patches into one for improving dispatch from sw queue
-	- make comment/commit log line width as ~70, as suggested by
-	  Christoph
-
-V5:
-	- address some comments from Omar
-	- add Tested-by & Reveiewed-by tag
-	- use direct issue for blk_mq_request_bypass_insert(), and
-	start to consider to improve sequential I/O for dm-mpath
-	- only include part 1(the original patch 1 ~ 6), as suggested
-	by Omar
-
-V4:
-	- add Reviewed-by tag
-	- some trival change: typo fix in commit log or comment,
-	variable name, no actual functional change
-
-V3:
-	- totally round robin for picking req from ctx, as suggested
-	by Bart
-	- remove one local variable in __sbitmap_for_each_set()
-	- drop patches of single dispatch list, which can improve
-	performance on mq-deadline, but cause a bit degrade on
-	none because all hctxs need to be checked after ->dispatch
-	is flushed. Will post it again once it is mature.
-	- rebase on v4.13-rc6 with block for-next
-
-V2:
-	- dequeue request from sw queues in round roubin's style
-	as suggested by Bart, and introduces one helper in sbitmap
-	for this purpose
-	- improve bio merge via hash table from sw queue
-	- add comments about using DISPATCH_BUSY state in lockless way,
-	simplifying handling on busy state,
-	- hold ctx->lock when clearing ctx busy bit as suggested
-	by Bart
-
-Ming Lei (7):
-  blk-mq-sched: fix scheduler bad performance
-  blk-mq-sched: move actual dispatching into one helper
-  sbitmap: introduce __sbitmap_for_each_set()
-  blk-mq: introduce .get_budget and .put_budget in blk_mq_ops
-  blk-mq-sched: improve dispatching from sw queue
-  SCSI: allow to pass null rq to scsi_prep_state_check()
-  SCSI: implement .get_budget and .put_budget for blk-mq
-
- block/blk-mq-sched.c    | 130 +++++++++++++++++++++++++++++++++++++++++-------
- block/blk-mq.c          |  72 +++++++++++++++++++++++++--
- block/blk-mq.h          |  22 +++++++-
- drivers/scsi/scsi_lib.c |  79 +++++++++++++++++++----------
- include/linux/blk-mq.h  |  13 +++++
- include/linux/sbitmap.h |  64 +++++++++++++++++-------
- 6 files changed, 316 insertions(+), 64 deletions(-)
-
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index eca011fdfa0e..be29ba849408 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -89,12 +89,26 @@ static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
+ 	return false;
+ }
+ 
++static void blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
++	struct elevator_queue *e = q->elevator;
++	LIST_HEAD(rq_list);
++
++	do {
++		struct request *rq = e->type->ops.mq.dispatch_request(hctx);
++
++		if (!rq)
++			break;
++		list_add(&rq->queuelist, &rq_list);
++	} while (blk_mq_dispatch_rq_list(q, &rq_list));
++}
++
+ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct request_queue *q = hctx->queue;
+ 	struct elevator_queue *e = q->elevator;
+ 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
+-	bool do_sched_dispatch = true;
+ 	LIST_HEAD(rq_list);
+ 
+ 	/* RCU or SRCU read lock is needed before checking quiesced flag */
+@@ -122,30 +136,21 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 * scheduler, we can no longer merge or sort them. So it's best to
+ 	 * leave them there for as long as we can. Mark the hw queue as
+ 	 * needing a restart in that case.
++	 *
++	 * We want to dispatch from the scheduler if there was nothing
++	 * on the dispatch list or we were able to dispatch from the
++	 * dispatch list.
+ 	 */
+ 	if (!list_empty(&rq_list)) {
+ 		blk_mq_sched_mark_restart_hctx(hctx);
+-		do_sched_dispatch = blk_mq_dispatch_rq_list(q, &rq_list);
+-	} else if (!has_sched_dispatch) {
++		if (blk_mq_dispatch_rq_list(q, &rq_list) && has_sched_dispatch)
++			blk_mq_do_dispatch_sched(hctx);
++	} else if (has_sched_dispatch) {
++		blk_mq_do_dispatch_sched(hctx);
++	} else {
+ 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+ 		blk_mq_dispatch_rq_list(q, &rq_list);
+ 	}
+-
+-	/*
+-	 * We want to dispatch from the scheduler if there was nothing
+-	 * on the dispatch list or we were able to dispatch from the
+-	 * dispatch list.
+-	 */
+-	if (do_sched_dispatch && has_sched_dispatch) {
+-		do {
+-			struct request *rq;
+-
+-			rq = e->type->ops.mq.dispatch_request(hctx);
+-			if (!rq)
+-				break;
+-			list_add(&rq->queuelist, &rq_list);
+-		} while (blk_mq_dispatch_rq_list(q, &rq_list));
+-	}
+ }
+ 
+ bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
 -- 
 2.9.5
