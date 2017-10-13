@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCHv6 2/5] scsi: Export blacklist flags to sysfs
-Date: Fri, 13 Oct 2017 12:08:34 +0200
-Message-ID: <20171013100833.ktcufc2qmyow4ug4@linux-x5ow.site>
+Subject: Re: [PATCHv6 3/5] scsi_devinfo: Reformat blacklist flags
+Date: Fri, 13 Oct 2017 12:08:47 +0200
+Message-ID: <20171013100847.sk3oyqjvdw2vtkod@linux-x5ow.site>
 References: <1506954397-2237-1-git-send-email-hare@suse.de>
- <1506954397-2237-3-git-send-email-hare@suse.de>
+ <1506954397-2237-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36940 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36960 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751033AbdJMKIf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Oct 2017 06:08:35 -0400
+        id S1751033AbdJMKIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Oct 2017 06:08:49 -0400
 Content-Disposition: inline
-In-Reply-To: <1506954397-2237-3-git-send-email-hare@suse.de>
+In-Reply-To: <1506954397-2237-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
