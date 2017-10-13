@@ -1,35 +1,56 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V7 4/6] blk-mq: introduce .get_budget and .put_budget in
- blk_mq_ops
-Date: Fri, 13 Oct 2017 10:33:40 -0600
-Message-ID: <f2a74e2c-31ac-e366-83d1-9837531daddf@kernel.dk>
-References: <20171012183704.22326-1-ming.lei@redhat.com>
- <20171012183704.22326-5-ming.lei@redhat.com>
- <9a741c03-90a3-e583-ddde-0ed71c8570a2@kernel.dk>
- <20171013001919.GA24715@ming.t460p>
- <6efdb459-8746-562d-06dc-5b3e172076e1@kernel.dk>
- <20171013160731.GA30899@ming.t460p> <1507912260.13345.0.camel@wdc.com>
+From: "Madhani, Madhani" <himanshu.madhani@cavium.com>
+Subject: [PATCH v2 0/5] qla2xxx: Patches for scsi-misc
+Date: Fri, 13 Oct 2017 09:34:02 -0700
+Message-ID: <20171013163407.8038-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507912260.13345.0.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "tom81094@gmail.com" <tom81094@gmail.com>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "john.garry@huawei.com" <john.garry@huawei.com>, "osandov@fb.com" <osandov@fb.com>, "loberman@redhat.com" <loberman@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0045.outbound.protection.outlook.com ([104.47.34.45]:22634
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751964AbdJMQeM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Oct 2017 12:34:12 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-On 10/13/2017 10:31 AM, Bart Van Assche wrote:
-> On Sat, 2017-10-14 at 00:07 +0800, Ming Lei wrote:
->> Actually it is in hot path, for example, lpfc and qla2xx's queue depth is 3,
-> 
-> Sorry but I doubt whether that is correct. More in general, I don't know any modern
-> storage HBA for which the default queue depth is so low.
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
 
-That does seem insanely low. BTW, even a low depth isn't an issue, as long as
-we know what it roughly is.
+Hi Martin,
 
+This series adds support for INTx mode for qla2xxx driver. Also,
+adds support for N2N login for FC-NVMe.
+
+Please apply to 4.15/scsi-queue at your earliest convenience.
+
+Changes from v1 -> v2
+
+o Fixed warnings reported by 0-day kernel build.
+
+Thanks,
+Himanshu
+
+Duane Grigsby (2):
+  qla2xxx: Allow MBC_GET_PORT_DATABASE to query and save the port states
+  qla2xxx: Changes to support N2N logins
+
+Himanshu Madhani (3):
+  qla2xxx: Add module param ql2xenablemsix
+  qla2xxx: Add ATIO-Q processing for INTx mode
+  qla2xxx: Update driver version to 10.00.00.02-k
+
+ drivers/scsi/qla2xxx/qla_def.h     |  29 ++++++
+ drivers/scsi/qla2xxx/qla_fw.h      |   4 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   5 +
+ drivers/scsi/qla2xxx/qla_init.c    | 135 ++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_iocb.c    | 195 +++++++++++++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_isr.c     |  59 +++++++++--
+ drivers/scsi/qla2xxx/qla_mbx.c     | 105 ++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_os.c      |   9 ++
+ drivers/scsi/qla2xxx/qla_target.c  |  12 ++-
+ drivers/scsi/qla2xxx/qla_version.h |   2 +-
+ 10 files changed, 518 insertions(+), 37 deletions(-)
 
 -- 
-Jens Axboe
+2.12.0
