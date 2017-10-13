@@ -1,61 +1,46 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 1/5] qla2xxx: Add module param ql2xenablemsix
-Date: Fri, 13 Oct 2017 18:52:31 +0000
-Message-ID: <EE884809-2674-4801-A74A-2784467F4B09@cavium.com>
-References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
- <20171011203650.23629-2-himanshu.madhani@cavium.com>
- <20171012071957.gb2zobb7jqsuv4cq@linux-x5ow.site>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH V9 0/7] blk-mq-sched: improve sequential I/O performance
+Date: Fri, 13 Oct 2017 13:08:46 -0600
+Message-ID: <03fc0b94-8463-3f3d-9d75-be3e05d88987@kernel.dk>
+References: <20171013180532.29304-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0061.outbound.protection.outlook.com ([104.47.41.61]:3526
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751279AbdJMSwe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Oct 2017 14:52:34 -0400
-In-Reply-To: <20171012071957.gb2zobb7jqsuv4cq@linux-x5ow.site>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171013180532.29304-1-ming.lei@redhat.com>
 Content-Language: en-US
-Content-ID: <264DD88788B7B1418BC8191A626C850A@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Johannes,=20
+On 10/13/2017 12:05 PM, Ming Lei wrote:
+> Hi Jens,
+> 
+> In Red Hat internal storage test wrt. blk-mq scheduler, we found that I/O
+> performance is much bad with mq-deadline, especially about sequential I/O
+> on some multi-queue SCSI devcies(lpfc, qla2xxx, SRP...)
+> 
+> Turns out one big issue causes the performance regression: requests are
+> still dequeued from sw queue/scheduler queue even when ldd's queue is
+> busy, so I/O merge becomes quite difficult to make, then sequential IO
+> performance degrades a lot.
+> 
+> This issue becomes one of mains reasons for reverting default SCSI_MQ
+> in V4.13.
+> 
+> This 8 patches improve this situation, and brings back performance loss.
+> 
+> With this change, SCSI-MQ sequential I/O performance is improved much, Paolo
+> reported that mq-deadline performance improved much[2] in his dbench test
+> wrt V2. Also performance improvement on lpfc/qla2xx was observed with V1.[1]
+> 
+> [1] http://marc.info/?l=linux-block&m=150151989915776&w=2
+> [2] https://marc.info/?l=linux-block&m=150217980602843&w=2
 
-> On Oct 12, 2017, at 12:19 AM, Johannes Thumshirn <jthumshirn@suse.de> wro=
-te:
->=20
-> On Wed, Oct 11, 2017 at 01:36:46PM -0700, Madhani, Himanshu wrote:
-> [...]
->> +int ql2xenablemsix =3D 1;
->> +module_param(ql2xenablemsix, int, 0444);
->> +MODULE_PARM_DESC(ql2xenablemsix,
->> +    "Set to enable MSI or MSI-X interrupt mechanism.\n"
->> +    " Default is 1, enable MSI-X interrupt mechanism.\n"
->> +    " 0 -- enable traditional pin-based mechanism.\n"
->> +    " 1 -- enable MSI-X interrupt mechanism.\n"
->> +    " 2 -- enable MSI interrupt mechanism.\n");
->=20
-> Maybe qla2xirqmode is a more appropriate name?
->=20
+I wanted to run some sanity testing on this series before committing it,
+and unfortunately it doesn't even boot for me. Just hangs after loading
+the kernel. Maybe an error slipped in for v8/9?
 
-Sorry this one slipped out of my sight. The reason I used "ql2xenablemsix" =
-was because driver already
-had this parameter in code until few versions back where we removed it. Sin=
-ce existing user are familiar
-with this module parameter name, it would be easy to keep that same.=20
-
-Let me know if you are okay with the name or prefer new name instead?=20
-
-> --=20
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=FCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
-
-Thanks,
-- Himanshu
+-- 
+Jens Axboe
