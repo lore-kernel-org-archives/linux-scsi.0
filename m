@@ -1,146 +1,61 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V9 7/7] SCSI: implement .get_budget and .put_budget for blk-mq
-Date: Sat, 14 Oct 2017 02:05:32 +0800
-Message-ID: <20171013180532.29304-8-ming.lei@redhat.com>
-References: <20171013180532.29304-1-ming.lei@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171013180532.29304-1-ming.lei@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 1/5] qla2xxx: Add module param ql2xenablemsix
+Date: Fri, 13 Oct 2017 18:52:31 +0000
+Message-ID: <EE884809-2674-4801-A74A-2784467F4B09@cavium.com>
+References: <20171011203650.23629-1-himanshu.madhani@cavium.com>
+ <20171011203650.23629-2-himanshu.madhani@cavium.com>
+ <20171012071957.gb2zobb7jqsuv4cq@linux-x5ow.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0061.outbound.protection.outlook.com ([104.47.41.61]:3526
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751279AbdJMSwe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Oct 2017 14:52:34 -0400
+In-Reply-To: <20171012071957.gb2zobb7jqsuv4cq@linux-x5ow.site>
+Content-Language: en-US
+Content-ID: <264DD88788B7B1418BC8191A626C850A@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-We need to tell blk-mq for reserving resource before queuing
-one request, so implement these two callbacks. Then blk-mq
-can avoid to dequeue request earlier, and IO merge can
-be improved a lot.
+Hi Johannes,=20
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 75 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 52 insertions(+), 23 deletions(-)
+> On Oct 12, 2017, at 12:19 AM, Johannes Thumshirn <jthumshirn@suse.de> wro=
+te:
+>=20
+> On Wed, Oct 11, 2017 at 01:36:46PM -0700, Madhani, Himanshu wrote:
+> [...]
+>> +int ql2xenablemsix =3D 1;
+>> +module_param(ql2xenablemsix, int, 0444);
+>> +MODULE_PARM_DESC(ql2xenablemsix,
+>> +    "Set to enable MSI or MSI-X interrupt mechanism.\n"
+>> +    " Default is 1, enable MSI-X interrupt mechanism.\n"
+>> +    " 0 -- enable traditional pin-based mechanism.\n"
+>> +    " 1 -- enable MSI-X interrupt mechanism.\n"
+>> +    " 2 -- enable MSI interrupt mechanism.\n");
+>=20
+> Maybe qla2xirqmode is a more appropriate name?
+>=20
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d159bb085714..6f10afaca25b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1946,25 +1946,32 @@ static void scsi_mq_done(struct scsi_cmnd *cmd)
- 	blk_mq_complete_request(cmd->request);
- }
- 
--static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
--			 const struct blk_mq_queue_data *bd)
-+static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
- {
--	struct request *req = bd->rq;
--	struct request_queue *q = req->q;
-+	struct request_queue *q = hctx->queue;
-+	struct scsi_device *sdev = q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
-+
-+	atomic_dec(&shost->host_busy);
-+	if (scsi_target(sdev)->can_queue > 0)
-+		atomic_dec(&scsi_target(sdev)->target_busy);
-+	atomic_dec(&sdev->device_busy);
-+	put_device(&sdev->sdev_gendev);
-+}
-+
-+static blk_status_t scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct request_queue *q = hctx->queue;
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost = sdev->host;
--	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 	blk_status_t ret;
--	int reason;
- 
--	ret = prep_to_mq(scsi_prep_state_check(sdev, req));
--	if (ret != BLK_STS_OK)
--		goto out;
-+	ret = prep_to_mq(scsi_prep_state_check(sdev, NULL));
-+	if (ret == BLK_STS_RESOURCE || ret != BLK_STS_OK)
-+		return ret;
- 
--	ret = BLK_STS_RESOURCE;
- 	if (!get_device(&sdev->sdev_gendev))
- 		goto out;
--
- 	if (!scsi_dev_queue_ready(q, sdev))
- 		goto out_put_device;
- 	if (!scsi_target_queue_ready(shost, sdev))
-@@ -1972,10 +1979,38 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (!scsi_host_queue_ready(q, shost, sdev))
- 		goto out_dec_target_busy;
- 
-+	return BLK_STS_OK;
-+
-+out_dec_target_busy:
-+	if (scsi_target(sdev)->can_queue > 0)
-+		atomic_dec(&scsi_target(sdev)->target_busy);
-+out_dec_device_busy:
-+	atomic_dec(&sdev->device_busy);
-+out_put_device:
-+	put_device(&sdev->sdev_gendev);
-+out:
-+	return BLK_STS_RESOURCE;
-+}
-+
-+static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
-+			 const struct blk_mq_queue_data *bd)
-+{
-+	struct request *req = bd->rq;
-+	struct request_queue *q = req->q;
-+	struct scsi_device *sdev = q->queuedata;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+	blk_status_t ret;
-+	int reason;
-+
-+	ret = prep_to_mq(scsi_prep_state_check(sdev, req));
-+	if (ret != BLK_STS_OK)
-+		goto out_put_budget;
-+
-+	ret = BLK_STS_RESOURCE;
- 	if (!(req->rq_flags & RQF_DONTPREP)) {
- 		ret = prep_to_mq(scsi_mq_prep_fn(req));
- 		if (ret != BLK_STS_OK)
--			goto out_dec_host_busy;
-+			goto out_put_budget;
- 		req->rq_flags |= RQF_DONTPREP;
- 	} else {
- 		blk_mq_start_request(req);
-@@ -1993,21 +2028,13 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (reason) {
- 		scsi_set_blocked(cmd, reason);
- 		ret = BLK_STS_RESOURCE;
--		goto out_dec_host_busy;
-+		goto out_put_budget;
- 	}
- 
- 	return BLK_STS_OK;
- 
--out_dec_host_busy:
--	atomic_dec(&shost->host_busy);
--out_dec_target_busy:
--	if (scsi_target(sdev)->can_queue > 0)
--		atomic_dec(&scsi_target(sdev)->target_busy);
--out_dec_device_busy:
--	atomic_dec(&sdev->device_busy);
--out_put_device:
--	put_device(&sdev->sdev_gendev);
--out:
-+out_put_budget:
-+	scsi_mq_put_budget(hctx);
- 	switch (ret) {
- 	case BLK_STS_OK:
- 		break;
-@@ -2211,6 +2238,8 @@ struct request_queue *scsi_old_alloc_queue(struct scsi_device *sdev)
- }
- 
- static const struct blk_mq_ops scsi_mq_ops = {
-+	.get_budget	= scsi_mq_get_budget,
-+	.put_budget	= scsi_mq_put_budget,
- 	.queue_rq	= scsi_queue_rq,
- 	.complete	= scsi_softirq_done,
- 	.timeout	= scsi_timeout,
--- 
-2.9.5
+Sorry this one slipped out of my sight. The reason I used "ql2xenablemsix" =
+was because driver already
+had this parameter in code until few versions back where we removed it. Sin=
+ce existing user are familiar
+with this module parameter name, it would be easy to keep that same.=20
+
+Let me know if you are okay with the name or prefer new name instead?=20
+
+> --=20
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+
+Thanks,
+- Himanshu
