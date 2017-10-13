@@ -1,51 +1,65 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V8 4/7] blk-mq: introduce .get_budget and .put_budget in
- blk_mq_ops
-Date: Fri, 13 Oct 2017 11:32:41 -0600
-Message-ID: <cbeb8016-4f0d-3054-a161-aa48bb63b5a5@kernel.dk>
-References: <20171013172459.1376-1-ming.lei@redhat.com>
- <20171013172459.1376-5-ming.lei@redhat.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH 1/8] lib: Introduce sgl_alloc() and sgl_free()
+Date: Fri, 13 Oct 2017 10:43:43 -0700
+Message-ID: <a249d319-83fa-d2c3-5723-21de238787d5@infradead.org>
+References: <20171012224550.25440-1-bart.vanassche@wdc.com>
+ <20171012224550.25440-2-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171013172459.1376-5-ming.lei@redhat.com>
+In-Reply-To: <20171012224550.25440-2-bart.vanassche@wdc.com>
 Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/13/2017 11:24 AM, Ming Lei wrote:
-> For SCSI devices, there is often per-request-queue depth, which need
-> to be respected before queuing one request.
+On 10/12/17 15:45, Bart Van Assche wrote:
+
+> diff --git a/lib/sgl_alloc.c b/lib/sgl_alloc.c
+> new file mode 100644
+> index 000000000000..d96b395dd5c8
+> --- /dev/null
+> +++ b/lib/sgl_alloc.c
+> @@ -0,0 +1,102 @@
+
+> +/**
+> + * sgl_free_order - free a scatterlist and its pages
+> + * @sg: Scatterlist with one or more elements
+
+      @sgl:
+
+> + * @order: Second argument for __free_pages()
+> + */
+> +void sgl_free_order(struct scatterlist *sgl, int order)
+> +{
+> +	struct scatterlist *sg;
+> +	struct page *page;
+> +
+> +	for (sg = sgl; sg; sg = sg_next(sg)) {
+> +		page = sg_page(sg);
+> +		if (page)
+> +			__free_pages(page, order);
+> +	}
+> +	kfree(sgl);
+> +}
+> +EXPORT_SYMBOL(sgl_free_order);
+> +
+> +/**
+> + * sgl_free - free a scatterlist and its pages
+> + * @sg: Scatterlist with one or more elements
+
+      @sgl:
+
+> + */
+> +void sgl_free(struct scatterlist *sgl)
+> +{
+> +	sgl_free_order(sgl, 0);
+> +}
+> +EXPORT_SYMBOL(sgl_free);
 > 
-> The current blk-mq always dequeues request first, then calls .queue_rq()
-> to dispatch the request to lld. One obvious issue of this way is that I/O
-> merge may not be good, because when the per-request-queue depth can't be
-> respected, .queue_rq() has to return BLK_STS_RESOURCE, then this request
-> has to stay in hctx->dispatch list, and never got chance to participate
-> into I/O merge.
-> 
-> This patch introduces .get_budget and .put_budget callback in blk_mq_ops,
-> then we can try to get reserved budget first before dequeuing request.
-> Once the budget for queueing I/O can't be satisfied, we don't need to
-> dequeue request at all, then I/O merge can get improved a lot.
 
-Still think this should be blk_mq_get_dispatch_budget(), like in the
-incremental I sent out. That way you actually know what it is doing,
-get_budget() could be anything.
-
-> @@ -2582,6 +2606,9 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
->  	if (!set->ops->queue_rq)
->  		return -EINVAL;
->  
-> +	if ((!!set->ops->get_budget) != (!!set->ops->put_budget))
-> +		return -EINVAL;
-
-	if (!set->ops->get_budget ^ !set->ops->put_budget)
-
-is cleaner, imho.
-
+ta.
 -- 
-Jens Axboe
+~Randy
