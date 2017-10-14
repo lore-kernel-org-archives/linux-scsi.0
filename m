@@ -1,45 +1,156 @@
 From: Christos Gkekas <chris.gekas@gmail.com>
-Subject: [PATCH] [SCSI] sym53c8xx: Remove pointers scriptb0
-Date: Sat, 14 Oct 2017 13:03:08 +0100
-Message-ID: <1507982588-19955-1-git-send-email-chris.gekas@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] scsi: qedi: Delete redundant variables
+Date: Sat, 14 Oct 2017 13:17:58 +0100
+Message-ID: <1507983478-23083-1-git-send-email-chris.gekas@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:54671 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751401AbdJNMSE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Oct 2017 08:18:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
 
-Pointers 'scriptb0' are set but never used, so need to be deleted.
+Remove redundant variables in quedi_fw.c that are set but not used.
 
 Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
 ---
- drivers/scsi/sym53c8xx_2/sym_fw.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/qedi/qedi_fw.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_fw.c b/drivers/scsi/sym53c8xx_2/sym_fw.c
-index 190770b..91db177 100644
---- a/drivers/scsi/sym53c8xx_2/sym_fw.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_fw.c
-@@ -295,10 +295,8 @@ static void
- sym_fw1_setup(struct sym_hcb *np, struct sym_fw *fw)
- {
- 	struct sym_fw1a_scr *scripta0;
--	struct sym_fw1b_scr *scriptb0;
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 93d54ac..bd302d3 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -92,7 +92,6 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
+ 	struct iscsi_text_response_hdr *cqe_text_response;
+ 	struct qedi_cmd *cmd;
+ 	int pld_len;
+-	u32 *tmp;
  
- 	scripta0 = (struct sym_fw1a_scr *) np->scripta0;
--	scriptb0 = (struct sym_fw1b_scr *) np->scriptb0;
+ 	cmd = (struct qedi_cmd *)task->dd_data;
+ 	task_ctx = qedi_get_task_mem(&qedi->tasks, cmd->task_id);
+@@ -108,7 +107,6 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
+ 	hton24(resp_hdr_ptr->dlength,
+ 	       (cqe_text_response->hdr_second_dword &
+ 		ISCSI_TEXT_RESPONSE_HDR_DATA_SEG_LEN_MASK));
+-	tmp = (u32 *)resp_hdr_ptr->dlength;
  
- 	/*
- 	 *  Fill variable parts in scripts.
-@@ -319,10 +317,8 @@ static void
- sym_fw2_setup(struct sym_hcb *np, struct sym_fw *fw)
- {
- 	struct sym_fw2a_scr *scripta0;
--	struct sym_fw2b_scr *scriptb0;
+ 	resp_hdr_ptr->itt = build_itt(cqe->cqe_solicited.itid,
+ 				      conn->session->age);
+@@ -196,7 +194,6 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
+ 	struct iscsi_tm_rsp *resp_hdr_ptr;
+ 	struct iscsi_tm *tmf_hdr;
+ 	struct qedi_cmd *qedi_cmd = NULL;
+-	u32 *tmp;
  
- 	scripta0 = (struct sym_fw2a_scr *) np->scripta0;
--	scriptb0 = (struct sym_fw2b_scr *) np->scriptb0;
+ 	cqe_tmp_response = &cqe->cqe_common.iscsi_hdr.tmf_response;
  
- 	/*
- 	 *  Fill variable parts in scripts.
+@@ -222,7 +219,6 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
+ 	hton24(resp_hdr_ptr->dlength,
+ 	       (cqe_tmp_response->hdr_second_dword &
+ 		ISCSI_TMF_RESPONSE_HDR_DATA_SEG_LEN_MASK));
+-	tmp = (u32 *)resp_hdr_ptr->dlength;
+ 	resp_hdr_ptr->itt = build_itt(cqe->cqe_solicited.itid,
+ 				      conn->session->age);
+ 	resp_hdr_ptr->statsn = cpu_to_be32(cqe_tmp_response->stat_sn);
+@@ -269,7 +265,6 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
+ 	struct iscsi_login_response_hdr *cqe_login_response;
+ 	struct qedi_cmd *cmd;
+ 	int pld_len;
+-	u32 *tmp;
+ 
+ 	cmd = (struct qedi_cmd *)task->dd_data;
+ 
+@@ -286,7 +281,6 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
+ 	hton24(resp_hdr_ptr->dlength,
+ 	       (cqe_login_response->hdr_second_dword &
+ 		ISCSI_LOGIN_RESPONSE_HDR_DATA_SEG_LEN_MASK));
+-	tmp = (u32 *)resp_hdr_ptr->dlength;
+ 	resp_hdr_ptr->itt = build_itt(cqe->cqe_solicited.itid,
+ 				      conn->session->age);
+ 	resp_hdr_ptr->tsih = cqe_login_response->tsih;
+@@ -590,7 +584,6 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
+ 	int datalen = 0;
+ 	struct qedi_conn *qedi_conn;
+ 	u32 iscsi_cid;
+-	bool mark_cmd_node_deleted = false;
+ 	u8 cqe_err_bits = 0;
+ 
+ 	iscsi_cid  = cqe->cqe_common.conn_id;
+@@ -674,7 +667,6 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
+ 		cmd->io_cmd_in_list = false;
+ 		list_del_init(&cmd->io_cmd);
+ 		qedi_conn->active_cmd_count--;
+-		mark_cmd_node_deleted = true;
+ 	}
+ 	spin_unlock(&qedi_conn->list_lock);
+ 
+@@ -763,7 +755,7 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 	u32 rtid = 0;
+ 	u32 iscsi_cid;
+ 	struct qedi_conn *qedi_conn;
+-	struct qedi_cmd *cmd_new, *dbg_cmd;
++	struct qedi_cmd *dbg_cmd;
+ 	struct iscsi_task *mtask;
+ 	struct iscsi_tm *tmf_hdr = NULL;
+ 
+@@ -856,7 +848,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 		}
+ 		qedi_conn->cmd_cleanup_cmpl++;
+ 		wake_up(&qedi_conn->wait_queue);
+-		cmd_new = task->dd_data;
+ 
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
+ 			  "Freeing tid=0x%x for cid=0x%x\n",
+@@ -1029,7 +1020,6 @@ int qedi_send_iscsi_login(struct qedi_conn *qedi_conn,
+ 	struct iscsi_task_context *fw_task_ctx;
+ 	struct qedi_ctx *qedi = qedi_conn->qedi;
+ 	struct iscsi_login_req *login_hdr;
+-	struct scsi_sge *req_sge = NULL;
+ 	struct scsi_sge *resp_sge = NULL;
+ 	struct qedi_cmd *qedi_cmd;
+ 	struct qedi_endpoint *ep;
+@@ -1037,7 +1027,6 @@ int qedi_send_iscsi_login(struct qedi_conn *qedi_conn,
+ 	u16 sq_idx = 0;
+ 	int rval = 0;
+ 
+-	req_sge = (struct scsi_sge *)qedi_conn->gen_pdu.req_bd_tbl;
+ 	resp_sge = (struct scsi_sge *)qedi_conn->gen_pdu.resp_bd_tbl;
+ 	qedi_cmd = (struct qedi_cmd *)task->dd_data;
+ 	ep = qedi_conn->ep;
+@@ -1718,7 +1707,6 @@ int qedi_send_iscsi_nopout(struct qedi_conn *qedi_conn,
+ 	struct qedi_ctx *qedi = qedi_conn->qedi;
+ 	struct iscsi_task_context *fw_task_ctx;
+ 	struct iscsi_nopout *nopout_hdr;
+-	struct scsi_sge *req_sge = NULL;
+ 	struct scsi_sge *resp_sge = NULL;
+ 	struct qedi_cmd *qedi_cmd;
+ 	struct qedi_endpoint *ep;
+@@ -1727,7 +1715,6 @@ int qedi_send_iscsi_nopout(struct qedi_conn *qedi_conn,
+ 	u16 sq_idx = 0;
+ 	int rval = 0;
+ 
+-	req_sge = (struct scsi_sge *)qedi_conn->gen_pdu.req_bd_tbl;
+ 	resp_sge = (struct scsi_sge *)qedi_conn->gen_pdu.resp_bd_tbl;
+ 	qedi_cmd = (struct qedi_cmd *)task->dd_data;
+ 	nopout_hdr = (struct iscsi_nopout *)task->hdr;
+@@ -1995,7 +1982,6 @@ void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
+ 	struct qedi_conn *qedi_conn = conn->dd_data;
+ 	struct scsi_cmnd *sc_cmd = task->sc;
+ 	unsigned long flags;
+-	u8 op;
+ 
+ 	spin_lock_irqsave(&qedi->io_trace_lock, flags);
+ 
+@@ -2005,7 +1991,6 @@ void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
+ 	io_log->cid = qedi_conn->iscsi_conn_id;
+ 	io_log->lun = sc_cmd->device->lun;
+ 	io_log->op = sc_cmd->cmnd[0];
+-	op = sc_cmd->cmnd[0];
+ 	io_log->lba[0] = sc_cmd->cmnd[2];
+ 	io_log->lba[1] = sc_cmd->cmnd[3];
+ 	io_log->lba[2] = sc_cmd->cmnd[4];
 -- 
 2.7.4
