@@ -1,78 +1,123 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V9 0/7] blk-mq-sched: improve sequential I/O performance
-Date: Sat, 14 Oct 2017 15:10:48 +0800
-Message-ID: <20171014071047.GA31154@ming.t460p>
+Subject: Re: [PATCH V9 4/7] blk-mq: introduce .get_budget and .put_budget in
+ blk_mq_ops
+Date: Sat, 14 Oct 2017 15:34:24 +0800
+Message-ID: <20171014073423.GA31235@ming.t460p>
 References: <20171013180532.29304-1-ming.lei@redhat.com>
- <03fc0b94-8463-3f3d-9d75-be3e05d88987@kernel.dk>
- <95fe2831-12a9-3346-5fc7-9259ff988669@kernel.dk>
- <3598a2f6-6305-372c-36a3-7813cbe04a77@kernel.dk>
+ <20171013180532.29304-5-ming.lei@redhat.com>
+ <1507938223.13345.66.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3598a2f6-6305-372c-36a3-7813cbe04a77@kernel.dk>
+In-Reply-To: <1507938223.13345.66.camel@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tom81094@gmail.com" <tom81094@gmail.com>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "john.garry@huawei.com" <john.garry@huawei.com>, "osandov@fb.com" <osandov@fb.com>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 13, 2017 at 02:23:07PM -0600, Jens Axboe wrote:
-> On 10/13/2017 01:21 PM, Jens Axboe wrote:
-> > On 10/13/2017 01:08 PM, Jens Axboe wrote:
-> >> On 10/13/2017 12:05 PM, Ming Lei wrote:
-> >>> Hi Jens,
-> >>>
-> >>> In Red Hat internal storage test wrt. blk-mq scheduler, we found that I/O
-> >>> performance is much bad with mq-deadline, especially about sequential I/O
-> >>> on some multi-queue SCSI devcies(lpfc, qla2xxx, SRP...)
-> >>>
-> >>> Turns out one big issue causes the performance regression: requests are
-> >>> still dequeued from sw queue/scheduler queue even when ldd's queue is
-> >>> busy, so I/O merge becomes quite difficult to make, then sequential IO
-> >>> performance degrades a lot.
-> >>>
-> >>> This issue becomes one of mains reasons for reverting default SCSI_MQ
-> >>> in V4.13.
-> >>>
-> >>> This 8 patches improve this situation, and brings back performance loss.
-> >>>
-> >>> With this change, SCSI-MQ sequential I/O performance is improved much, Paolo
-> >>> reported that mq-deadline performance improved much[2] in his dbench test
-> >>> wrt V2. Also performance improvement on lpfc/qla2xx was observed with V1.[1]
-> >>>
-> >>> [1] http://marc.info/?l=linux-block&m=150151989915776&w=2
-> >>> [2] https://marc.info/?l=linux-block&m=150217980602843&w=2
-> >>
-> >> I wanted to run some sanity testing on this series before committing it,
-> >> and unfortunately it doesn't even boot for me. Just hangs after loading
-> >> the kernel. Maybe an error slipped in for v8/9?
-> > 
-> > Or it might be something with kyber, my laptop defaults to that. Test
-> > box seems to boot (which is SCSI), and nvme loads fine by default,
-> > but not with kyber.
-> > 
-> > I don't have time to look into this more today, but the above might
-> > help you figure out what is going on.
+On Fri, Oct 13, 2017 at 11:43:44PM +0000, Bart Van Assche wrote:
+> On Sat, 2017-10-14 at 02:05 +0800, Ming Lei wrote:
+> > @@ -89,19 +89,36 @@ static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
+> >  	return false;
+> >  }
+> >  
+> > -static void blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+> > +static bool blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
 > 
-> Verified that the laptop boots just fine if I remove the kyber udev
-> rule.
+> Shouldn't the meaning of the return value of this function be documented?
 
-This issue can be fixed by the following one line change:
+OK, will do it in V10.
 
----
-diff --git a/block/kyber-iosched.c b/block/kyber-iosched.c
-index f58cab82105b..94df3ce99f2f 100644
---- a/block/kyber-iosched.c
-+++ b/block/kyber-iosched.c
-@@ -641,7 +641,7 @@ static bool kyber_has_work(struct blk_mq_hw_ctx *hctx)
- 		if (!list_empty_careful(&khd->rqs[i]))
- 			return true;
- 	}
--	return false;
-+	return sbitmap_any_bit_set(&hctx->ctx_map);
- }
- 
- #define KYBER_LAT_SHOW_STORE(op)					\
+> 
+> >  {
+> >  	struct request_queue *q = hctx->queue;
+> >  	struct elevator_queue *e = q->elevator;
+> >  	LIST_HEAD(rq_list);
+> >  
+> >  	do {
+> > -		struct request *rq = e->type->ops.mq.dispatch_request(hctx);
+> > +		struct request *rq;
+> > +		blk_status_t ret;
+> >  
+> > -		if (!rq)
+> > +		if (e->type->ops.mq.has_work &&
+> > +				!e->type->ops.mq.has_work(hctx))
+> >  			break;
+> > +
+> > +		ret = blk_mq_get_dispatch_budget(hctx);
+> > +		if (ret == BLK_STS_RESOURCE)
+> > +			return true;
+> > +
+> > +		rq = e->type->ops.mq.dispatch_request(hctx);
+> > +		if (!rq) {
+> > +			blk_mq_put_dispatch_budget(hctx, true);
+> > +			break;
+> > +		} else if (ret != BLK_STS_OK) {
+> > +			blk_mq_end_request(rq, ret);
+> > +			continue;
+> > +		}
+> >  		list_add(&rq->queuelist, &rq_list);
+> > -	} while (blk_mq_dispatch_rq_list(q, &rq_list));
+> > +	} while (blk_mq_dispatch_rq_list(q, &rq_list, true));
+> > +
+> > +	return false;
+> >  }
+> 
+> This means that the request in rq_list becomes the owner of the budget allocated
+> by blk_mq_get_dispatch_budget(). Shouldn't that be mentioned as a comment above
+> blk_mq_dispatch_rq_list()?
+
+OK.
+
+> 
+> > +	if (run_queue) {
+> > +		if (!blk_mq_sched_needs_restart(hctx) &&
+> > +		    !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state)) {
+> > +			blk_mq_sched_mark_restart_hctx(hctx);
+> > +			blk_mq_run_hw_queue(hctx, true);
+> > +		}
+> >  	}
+> >  }
+> 
+> The above if-statement can be changed from a nested if into a single
+> if-statement.
+
+OK
+
+>  
+> Additionally, why has the code been added to blk_mq_sched_dispatch_requests()
+> that reruns the queue if blk_mq_get_dispatch_budget() returned BLK_STS_RESOURCE?
+
+That is because it is the place where we get return of BLK_STS_RESOURCE,
+and it can be moved to __blk_mq_run_hw_queue(), but looks no big
+difference.
+
+> Is that code necessary or can it be left out?
+
+It is necessary.
+
+Without dispatch budget obtained, we don't dequeue now, and actually
+do nothing, so we have to rerun the hw queue.
+
+> 
+> > +static inline void blk_mq_put_dispatch_budget(struct blk_mq_hw_ctx *hctx,
+> > +		bool got_budget)
+> > +{
+> > +	struct request_queue *q = hctx->queue;
+> > +
+> > +	if (q->mq_ops->put_budget && got_budget)
+> > +		q->mq_ops->put_budget(hctx);
+> > +}
+> 
+> So the above function is passed a boolean as second argument and all what
+> that boolean is used for is to decide whether or not the function is executed?
+> Sorry but I think that's wrong and that the second argument should be removed
+> and that it should be evaluated by the caller instead of inside
+> blk_mq_put_dispatch_budget().
+
+This way makes code clean. And not a big deal, I may change back to the
+way you suggested.
 
 -- 
 Ming
