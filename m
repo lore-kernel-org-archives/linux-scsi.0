@@ -1,344 +1,68 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2 5/5] ufs/phy: qcom: Refactor to use phy_init call
-Date: Fri, 13 Oct 2017 18:02:39 -0700
-Message-ID: <23ef4100c01b05c8fa4ad6734cd48fbc@codeaurora.org>
-References: <1507789176-2760-1-git-send-email-vivek.gautam@codeaurora.org>
- <1507789176-2760-6-git-send-email-vivek.gautam@codeaurora.org>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V9 0/7] blk-mq-sched: improve sequential I/O performance
+Date: Sat, 14 Oct 2017 13:23:27 +0800
+Message-ID: <20171014052321.GA21519@ming.t460p>
+References: <20171013180532.29304-1-ming.lei@redhat.com>
+ <03fc0b94-8463-3f3d-9d75-be3e05d88987@kernel.dk>
+ <95fe2831-12a9-3346-5fc7-9259ff988669@kernel.dk>
+ <3598a2f6-6305-372c-36a3-7813cbe04a77@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507789176-2760-6-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: kishon@ti.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, robh+dt@kernel.org, bjorn.andersson@linaro.org, devicetree@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38610 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751678AbdJNFXo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 14 Oct 2017 01:23:44 -0400
+Content-Disposition: inline
+In-Reply-To: <3598a2f6-6305-372c-36a3-7813cbe04a77@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
 
-On 2017-10-11 23:19, Vivek Gautam wrote:
-> Refactor ufs_qcom_power_up_sequence() to get rid of ugly
-> exported phy APIs and use the phy_init() and phy_power_on()
-> to do the phy initialization.
+On Fri, Oct 13, 2017 at 02:23:07PM -0600, Jens Axboe wrote:
+> On 10/13/2017 01:21 PM, Jens Axboe wrote:
+> > On 10/13/2017 01:08 PM, Jens Axboe wrote:
+> >> On 10/13/2017 12:05 PM, Ming Lei wrote:
+> >>> Hi Jens,
+> >>>
+> >>> In Red Hat internal storage test wrt. blk-mq scheduler, we found that I/O
+> >>> performance is much bad with mq-deadline, especially about sequential I/O
+> >>> on some multi-queue SCSI devcies(lpfc, qla2xxx, SRP...)
+> >>>
+> >>> Turns out one big issue causes the performance regression: requests are
+> >>> still dequeued from sw queue/scheduler queue even when ldd's queue is
+> >>> busy, so I/O merge becomes quite difficult to make, then sequential IO
+> >>> performance degrades a lot.
+> >>>
+> >>> This issue becomes one of mains reasons for reverting default SCSI_MQ
+> >>> in V4.13.
+> >>>
+> >>> This 8 patches improve this situation, and brings back performance loss.
+> >>>
+> >>> With this change, SCSI-MQ sequential I/O performance is improved much, Paolo
+> >>> reported that mq-deadline performance improved much[2] in his dbench test
+> >>> wrt V2. Also performance improvement on lpfc/qla2xx was observed with V1.[1]
+> >>>
+> >>> [1] http://marc.info/?l=linux-block&m=150151989915776&w=2
+> >>> [2] https://marc.info/?l=linux-block&m=150217980602843&w=2
+> >>
+> >> I wanted to run some sanity testing on this series before committing it,
+> >> and unfortunately it doesn't even boot for me. Just hangs after loading
+> >> the kernel. Maybe an error slipped in for v8/9?
+> > 
+> > Or it might be something with kyber, my laptop defaults to that. Test
+> > box seems to boot (which is SCSI), and nvme loads fine by default,
+> > but not with kyber.
+> > 
+> > I don't have time to look into this more today, but the above might
+> > help you figure out what is going on.
 > 
-> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-> ---
-> 
-> Changes since v1:
->  - The UFS phy retain state in low power mode. The phy can
->    enter the low power state and come up without starting the
->    serdes again, unless we reprogram the phy.
->    So, added a check to start the serdes only once after phy
->    initialization.
-> 
->  drivers/phy/qualcomm/phy-qcom-ufs-i.h        |  3 +-
->  drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c | 15 ++++++++--
->  drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c | 15 ++++++++--
->  drivers/phy/qualcomm/phy-qcom-ufs.c          | 42 
-> ++++++++++------------------
->  drivers/scsi/ufs/ufs-qcom.c                  | 36 
-> ++++++++++--------------
->  include/linux/phy/phy-qcom-ufs.h             |  3 --
->  6 files changed, 55 insertions(+), 59 deletions(-)
-> 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-i.h
-> b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
-> index 94326ed107c3..822c83b8efcd 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-ufs-i.h
-> +++ b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
-> @@ -114,6 +114,7 @@ struct ufs_qcom_phy {
->  	struct ufs_qcom_phy_calibration *cached_regs;
->  	int cached_regs_table_size;
->  	bool is_powered_on;
-> +	bool is_started;
->  	struct ufs_qcom_phy_specific_ops *phy_spec_ops;
-> 
->  	enum phy_mode mode;
-> @@ -123,7 +124,6 @@ struct ufs_qcom_phy {
->   * struct ufs_qcom_phy_specific_ops - set of pointers to functions 
-> which have a
->   * specific implementation per phy. Each UFS phy, should implement
->   * those functions according to its spec and requirements
-> - * @calibrate_phy: pointer to a function that calibrate the phy
->   * @start_serdes: pointer to a function that starts the serdes
->   * @is_physical_coding_sublayer_ready: pointer to a function that
->   * checks pcs readiness. returns 0 for success and non-zero for error.
-> @@ -132,7 +132,6 @@ struct ufs_qcom_phy {
->   * and writes to QSERDES_RX_SIGDET_CNTRL attribute
->   */
->  struct ufs_qcom_phy_specific_ops {
-> -	int (*calibrate_phy)(struct ufs_qcom_phy *phy, bool is_rate_B);
->  	void (*start_serdes)(struct ufs_qcom_phy *phy);
->  	int (*is_physical_coding_sublayer_ready)(struct ufs_qcom_phy *phy);
->  	void (*set_tx_lane_enable)(struct ufs_qcom_phy *phy, u32 val);
-> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
-> b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
-> index af65785230b5..ba1895b76a5d 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
-> @@ -44,7 +44,19 @@ void ufs_qcom_phy_qmp_14nm_advertise_quirks(struct
-> ufs_qcom_phy *phy_common)
-> 
->  static int ufs_qcom_phy_qmp_14nm_init(struct phy *generic_phy)
->  {
-> -	return 0;
-> +	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
-> +	bool is_rate_B = false;
-> +	int ret;
-> +
-> +	if (phy_common->mode == PHY_MODE_UFS_HS_B)
-> +		is_rate_B = true;
-> +
-> +	ret = ufs_qcom_phy_qmp_14nm_phy_calibrate(phy_common, is_rate_B);
-> +	if (!ret)
-> +		/* phy calibrated, but yet to be started */
-> +		phy_common->is_started = false;
-> +
-> +	return ret;
->  }
-> 
->  static int ufs_qcom_phy_qmp_14nm_exit(struct phy *generic_phy)
-> @@ -120,7 +132,6 @@ static int
-> ufs_qcom_phy_qmp_14nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
->  };
-> 
->  static struct ufs_qcom_phy_specific_ops phy_14nm_ops = {
-> -	.calibrate_phy		= ufs_qcom_phy_qmp_14nm_phy_calibrate,
->  	.start_serdes		= ufs_qcom_phy_qmp_14nm_start_serdes,
->  	.is_physical_coding_sublayer_ready = 
-> ufs_qcom_phy_qmp_14nm_is_pcs_ready,
->  	.set_tx_lane_enable	= ufs_qcom_phy_qmp_14nm_set_tx_lane_enable,
-> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-> b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-> index 5c18c41dbdb4..49f435c71147 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-> @@ -63,7 +63,19 @@ void ufs_qcom_phy_qmp_20nm_advertise_quirks(struct
-> ufs_qcom_phy *phy_common)
-> 
->  static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
->  {
-> -	return 0;
-> +	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
-> +	bool is_rate_B = false;
-> +	int ret;
-> +
-> +	if (phy_common->mode == PHY_MODE_UFS_HS_B)
-> +		is_rate_B = true;
-> +
-> +	ret = ufs_qcom_phy_qmp_20nm_phy_calibrate(phy_common, is_rate_B);
-> +	if (!ret)
-> +		/* phy calibrated, but yet to be started */
-> +		phy_common->is_started = false;
-> +
-> +	return ret;
->  }
-> 
->  static int ufs_qcom_phy_qmp_20nm_exit(struct phy *generic_phy)
-> @@ -178,7 +190,6 @@ static int
-> ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
->  };
-> 
->  static struct ufs_qcom_phy_specific_ops phy_20nm_ops = {
-> -	.calibrate_phy		= ufs_qcom_phy_qmp_20nm_phy_calibrate,
->  	.start_serdes		= ufs_qcom_phy_qmp_20nm_start_serdes,
->  	.is_physical_coding_sublayer_ready = 
-> ufs_qcom_phy_qmp_20nm_is_pcs_ready,
->  	.set_tx_lane_enable	= ufs_qcom_phy_qmp_20nm_set_tx_lane_enable,
-> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs.c
-> b/drivers/phy/qualcomm/phy-qcom-ufs.c
-> index 43865ef340e2..c5ff4525edef 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-ufs.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-ufs.c
-> @@ -518,9 +518,8 @@ void ufs_qcom_phy_disable_iface_clk(struct
-> ufs_qcom_phy *phy)
->  	}
->  }
-> 
-> -int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
-> +static int ufs_qcom_phy_start_serdes(struct ufs_qcom_phy 
-> *ufs_qcom_phy)
->  {
-> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
->  	int ret = 0;
-> 
->  	if (!ufs_qcom_phy->phy_spec_ops->start_serdes) {
-> @@ -533,7 +532,6 @@ int ufs_qcom_phy_start_serdes(struct phy 
-> *generic_phy)
-> 
->  	return ret;
->  }
-> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_start_serdes);
-> 
->  int ufs_qcom_phy_set_tx_lane_enable(struct phy *generic_phy, u32 
-> tx_lanes)
->  {
-> @@ -564,31 +562,8 @@ void ufs_qcom_phy_save_controller_version(struct
-> phy *generic_phy,
->  }
->  EXPORT_SYMBOL_GPL(ufs_qcom_phy_save_controller_version);
-> 
-> -int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool 
-> is_rate_B)
-> -{
-> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
-> -	int ret = 0;
-> -
-> -	if (!ufs_qcom_phy->phy_spec_ops->calibrate_phy) {
-> -		dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy() callback is not 
-> supported\n",
-> -			__func__);
-> -		ret = -ENOTSUPP;
-> -	} else {
-> -		ret = ufs_qcom_phy->phy_spec_ops->
-> -				calibrate_phy(ufs_qcom_phy, is_rate_B);
-> -		if (ret)
-> -			dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy() failed %d\n",
-> -				__func__, ret);
-> -	}
-> -
-> -	return ret;
-> -}
-> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
-> -
-> -int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
-> +static int ufs_qcom_phy_is_pcs_ready(struct ufs_qcom_phy 
-> *ufs_qcom_phy)
->  {
-> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
-> -
->  	if (!ufs_qcom_phy->phy_spec_ops->is_physical_coding_sublayer_ready) {
->  		dev_err(ufs_qcom_phy->dev, "%s: is_physical_coding_sublayer_ready()
-> callback is not supported\n",
->  			__func__);
-> @@ -598,7 +573,6 @@ int ufs_qcom_phy_is_pcs_ready(struct phy 
-> *generic_phy)
->  	return ufs_qcom_phy->phy_spec_ops->
->  			is_physical_coding_sublayer_ready(ufs_qcom_phy);
->  }
-> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_is_pcs_ready);
-> 
->  int ufs_qcom_phy_power_on(struct phy *generic_phy)
->  {
-> @@ -609,6 +583,18 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
->  	if (phy_common->is_powered_on)
->  		return 0;
-> 
-> +	if (!phy_common->is_started) {
-> +		err = ufs_qcom_phy_start_serdes(phy_common);
-> +		if (err)
-> +			return err;
-> +
-> +		err = ufs_qcom_phy_is_pcs_ready(phy_common);
-> +		if (err)
-> +			return err;
-> +
-> +		phy_common->is_started = true;
-> +	}
-> +
->  	err = ufs_qcom_phy_enable_vreg(dev, &phy_common->vdda_phy);
->  	if (err) {
->  		dev_err(dev, "%s enable vdda_phy failed, err=%d\n",
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 942e40c9eaf7..2b38db2eeafa 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -281,10 +281,10 @@ static int ufs_qcom_power_up_sequence(struct 
-> ufs_hba *hba)
->  	/* provide 1ms delay to let the reset pulse propagate */
->  	usleep_range(1000, 1100);
-> 
-> -	ret = ufs_qcom_phy_calibrate_phy(phy, is_rate_B);
-> -
-> +	/* phy initialization - calibrate the phy */
-> +	ret = phy_init(phy);
->  	if (ret) {
-> -		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = 
-> %d\n",
-> +		dev_err(hba->dev, "%s: phy init failed, ret = %d\n",
->  			__func__, ret);
->  		goto out;
->  	}
-> @@ -297,21 +297,22 @@ static int ufs_qcom_power_up_sequence(struct 
-> ufs_hba *hba)
->  	 * voltage, current to settle down before starting serdes.
->  	 */
->  	usleep_range(1000, 1100);
-> -	ret = ufs_qcom_phy_start_serdes(phy);
-> +
-> +	/* power on phy - start serdes and phy's power and clocks */
-> +	ret = phy_power_on(phy);
->  	if (ret) {
-> -		dev_err(hba->dev, "%s: ufs_qcom_phy_start_serdes() failed, ret = 
-> %d\n",
-> +		dev_err(hba->dev, "%s: phy power on failed, ret = %d\n",
->  			__func__, ret);
-> -		goto out;
-> +		goto out_disable_phy;
->  	}
-> 
-> -	ret = ufs_qcom_phy_is_pcs_ready(phy);
-> -	if (ret)
-> -		dev_err(hba->dev,
-> -			"%s: is_physical_coding_sublayer_ready() failed, ret = %d\n",
-> -			__func__, ret);
-> -
->  	ufs_qcom_select_unipro_mode(host);
-> 
-> +	return 0;
-> +
-> +out_disable_phy:
-> +	ufs_qcom_assert_reset(hba);
-> +	phy_exit(phy);
->  out:
->  	return ret;
->  }
-> @@ -1276,14 +1277,9 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  	ufs_qcom_phy_save_controller_version(host->generic_phy,
->  		host->hw_ver.major, host->hw_ver.minor, host->hw_ver.step);
-> 
-> -	phy_init(host->generic_phy);
-> -	err = phy_power_on(host->generic_phy);
-> -	if (err)
-> -		goto out_unregister_bus;
-> -
->  	err = ufs_qcom_init_lane_clks(host);
->  	if (err)
-> -		goto out_disable_phy;
-> +		goto out_variant_clear;
-> 
->  	ufs_qcom_set_caps(hba);
->  	ufs_qcom_advertise_quirks(hba);
-> @@ -1304,10 +1300,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
-> 
->  	goto out;
-> 
-> -out_disable_phy:
-> -	phy_power_off(host->generic_phy);
-> -out_unregister_bus:
-> -	phy_exit(host->generic_phy);
->  out_variant_clear:
->  	ufshcd_set_variant(hba, NULL);
->  out:
-> diff --git a/include/linux/phy/phy-qcom-ufs.h 
-> b/include/linux/phy/phy-qcom-ufs.h
-> index 35c070ea6ea3..0a2c18a9771d 100644
-> --- a/include/linux/phy/phy-qcom-ufs.h
-> +++ b/include/linux/phy/phy-qcom-ufs.h
-> @@ -31,10 +31,7 @@
->   */
->  void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
-> 
-> -int ufs_qcom_phy_start_serdes(struct phy *phy);
->  int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
-> -int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
-> -int ufs_qcom_phy_is_pcs_ready(struct phy *phy);
->  void ufs_qcom_phy_save_controller_version(struct phy *phy,
->  			u8 major, u16 minor, u16 step);
+> Verified that the laptop boots just fine if I remove the kyber udev
+> rule.
 
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-
+I can reproduce this issue with kyber switched to, and will figure out
+it soon.
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Ming
