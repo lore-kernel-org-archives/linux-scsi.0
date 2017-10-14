@@ -1,156 +1,123 @@
 From: Christos Gkekas <chris.gekas@gmail.com>
-Subject: [PATCH] scsi: qedi: Delete redundant variables
-Date: Sat, 14 Oct 2017 13:17:58 +0100
-Message-ID: <1507983478-23083-1-git-send-email-chris.gekas@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:54671 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751401AbdJNMSE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Oct 2017 08:18:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: fnic: Clean up redundant variables
+Date: Sat, 14 Oct 2017 13:52:55 +0100
+Message-ID: <1507985575-25516-1-git-send-email-chris.gekas@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Christos Gkekas <chris.gekas@gmail.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Remove redundant variables in quedi_fw.c that are set but not used.
+Remove variables that are set but not used.
 
 Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
 ---
- drivers/scsi/qedi/qedi_fw.c | 17 +----------------
- 1 file changed, 1 insertion(+), 16 deletions(-)
+ drivers/scsi/fnic/fnic_fcs.c | 9 ---------
+ drivers/scsi/fnic/vnic_rq.c  | 3 ---
+ drivers/scsi/fnic/vnic_wq.c  | 3 ---
+ 3 files changed, 15 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 93d54ac..bd302d3 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -92,7 +92,6 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
- 	struct iscsi_text_response_hdr *cqe_text_response;
- 	struct qedi_cmd *cmd;
- 	int pld_len;
--	u32 *tmp;
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 999fc75..bc1fcce 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -293,12 +293,10 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
+ 	struct fc_frame_header *fh = NULL;
+ 	struct fip_desc *desc;
+ 	struct fip_encaps *els;
+-	enum fip_desc_type els_dtype = 0;
+ 	u16 op;
+ 	u8 els_op;
+ 	u8 sub;
  
- 	cmd = (struct qedi_cmd *)task->dd_data;
- 	task_ctx = qedi_get_task_mem(&qedi->tasks, cmd->task_id);
-@@ -108,7 +107,6 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
- 	hton24(resp_hdr_ptr->dlength,
- 	       (cqe_text_response->hdr_second_dword &
- 		ISCSI_TEXT_RESPONSE_HDR_DATA_SEG_LEN_MASK));
--	tmp = (u32 *)resp_hdr_ptr->dlength;
+-	size_t els_len = 0;
+ 	size_t rlen;
+ 	size_t dlen = 0;
  
- 	resp_hdr_ptr->itt = build_itt(cqe->cqe_solicited.itid,
- 				      conn->session->age);
-@@ -196,7 +194,6 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
- 	struct iscsi_tm_rsp *resp_hdr_ptr;
- 	struct iscsi_tm *tmf_hdr;
- 	struct qedi_cmd *qedi_cmd = NULL;
--	u32 *tmp;
+@@ -330,10 +328,8 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
+ 		if (dlen < sizeof(*els) + sizeof(*fh) + 1)
+ 			return 0;
  
- 	cqe_tmp_response = &cqe->cqe_common.iscsi_hdr.tmf_response;
+-		els_len = dlen - sizeof(*els);
+ 		els = (struct fip_encaps *)desc;
+ 		fh = (struct fc_frame_header *)(els + 1);
+-		els_dtype = desc->fip_dtype;
  
-@@ -222,7 +219,6 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
- 	hton24(resp_hdr_ptr->dlength,
- 	       (cqe_tmp_response->hdr_second_dword &
- 		ISCSI_TMF_RESPONSE_HDR_DATA_SEG_LEN_MASK));
--	tmp = (u32 *)resp_hdr_ptr->dlength;
- 	resp_hdr_ptr->itt = build_itt(cqe->cqe_solicited.itid,
- 				      conn->session->age);
- 	resp_hdr_ptr->statsn = cpu_to_be32(cqe_tmp_response->stat_sn);
-@@ -269,7 +265,6 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
- 	struct iscsi_login_response_hdr *cqe_login_response;
- 	struct qedi_cmd *cmd;
- 	int pld_len;
--	u32 *tmp;
+ 		if (!fh)
+ 			return 0;
+@@ -360,7 +356,6 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
+ 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+ 	struct sk_buff *skb;
+ 	char *eth_fr;
+-	int fr_len;
+ 	struct fip_vlan *vlan;
+ 	u64 vlan_tov;
  
- 	cmd = (struct qedi_cmd *)task->dd_data;
+@@ -375,7 +370,6 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
+ 	if (!skb)
+ 		return;
  
-@@ -286,7 +281,6 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
- 	hton24(resp_hdr_ptr->dlength,
- 	       (cqe_login_response->hdr_second_dword &
- 		ISCSI_LOGIN_RESPONSE_HDR_DATA_SEG_LEN_MASK));
--	tmp = (u32 *)resp_hdr_ptr->dlength;
- 	resp_hdr_ptr->itt = build_itt(cqe->cqe_solicited.itid,
- 				      conn->session->age);
- 	resp_hdr_ptr->tsih = cqe_login_response->tsih;
-@@ -590,7 +584,6 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
- 	int datalen = 0;
- 	struct qedi_conn *qedi_conn;
- 	u32 iscsi_cid;
--	bool mark_cmd_node_deleted = false;
- 	u8 cqe_err_bits = 0;
+-	fr_len = sizeof(*vlan);
+ 	eth_fr = (char *)skb->data;
+ 	vlan = (struct fip_vlan *)eth_fr;
  
- 	iscsi_cid  = cqe->cqe_common.conn_id;
-@@ -674,7 +667,6 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
- 		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
--		mark_cmd_node_deleted = true;
- 	}
- 	spin_unlock(&qedi_conn->list_lock);
+@@ -823,7 +817,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
+ 	struct sk_buff *skb;
+ 	struct fc_frame *fp;
+ 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+-	unsigned int eth_hdrs_stripped;
+ 	u8 type, color, eop, sop, ingress_port, vlan_stripped;
+ 	u8 fcoe = 0, fcoe_sof, fcoe_eof;
+ 	u8 fcoe_fc_crc_ok = 1, fcoe_enc_error = 0;
+@@ -853,7 +846,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
+ 				   &ingress_port, &packet_error,
+ 				   &fcoe_enc_error, &fcs_ok, &vlan_stripped,
+ 				   &vlan);
+-		eth_hdrs_stripped = 1;
+ 		skb_trim(skb, fcp_bytes_written);
+ 		fr_sof(fp) = sof;
+ 		fr_eof(fp) = eof;
+@@ -870,7 +862,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
+ 				    &tcp_udp_csum_ok, &udp, &tcp,
+ 				    &ipv4_csum_ok, &ipv6, &ipv4,
+ 				    &ipv4_fragment, &fcs_ok);
+-		eth_hdrs_stripped = 0;
+ 		skb_trim(skb, bytes_written);
+ 		if (!fcs_ok) {
+ 			atomic64_inc(&fnic_stats->misc_stats.frame_errors);
+diff --git a/drivers/scsi/fnic/vnic_rq.c b/drivers/scsi/fnic/vnic_rq.c
+index fd2068f..ae8b78c 100644
+--- a/drivers/scsi/fnic/vnic_rq.c
++++ b/drivers/scsi/fnic/vnic_rq.c
+@@ -27,12 +27,9 @@
+ static int vnic_rq_alloc_bufs(struct vnic_rq *rq)
+ {
+ 	struct vnic_rq_buf *buf;
+-	struct vnic_dev *vdev;
+ 	unsigned int i, j, count = rq->ring.desc_count;
+ 	unsigned int blks = VNIC_RQ_BUF_BLKS_NEEDED(count);
  
-@@ -763,7 +755,7 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
- 	u32 rtid = 0;
- 	u32 iscsi_cid;
- 	struct qedi_conn *qedi_conn;
--	struct qedi_cmd *cmd_new, *dbg_cmd;
-+	struct qedi_cmd *dbg_cmd;
- 	struct iscsi_task *mtask;
- 	struct iscsi_tm *tmf_hdr = NULL;
+-	vdev = rq->vdev;
+-
+ 	for (i = 0; i < blks; i++) {
+ 		rq->bufs[i] = kzalloc(VNIC_RQ_BUF_BLK_SZ, GFP_ATOMIC);
+ 		if (!rq->bufs[i]) {
+diff --git a/drivers/scsi/fnic/vnic_wq.c b/drivers/scsi/fnic/vnic_wq.c
+index a414135..5f57809 100644
+--- a/drivers/scsi/fnic/vnic_wq.c
++++ b/drivers/scsi/fnic/vnic_wq.c
+@@ -27,12 +27,9 @@
+ static int vnic_wq_alloc_bufs(struct vnic_wq *wq)
+ {
+ 	struct vnic_wq_buf *buf;
+-	struct vnic_dev *vdev;
+ 	unsigned int i, j, count = wq->ring.desc_count;
+ 	unsigned int blks = VNIC_WQ_BUF_BLKS_NEEDED(count);
  
-@@ -856,7 +848,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
- 		}
- 		qedi_conn->cmd_cleanup_cmpl++;
- 		wake_up(&qedi_conn->wait_queue);
--		cmd_new = task->dd_data;
- 
- 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
- 			  "Freeing tid=0x%x for cid=0x%x\n",
-@@ -1029,7 +1020,6 @@ int qedi_send_iscsi_login(struct qedi_conn *qedi_conn,
- 	struct iscsi_task_context *fw_task_ctx;
- 	struct qedi_ctx *qedi = qedi_conn->qedi;
- 	struct iscsi_login_req *login_hdr;
--	struct scsi_sge *req_sge = NULL;
- 	struct scsi_sge *resp_sge = NULL;
- 	struct qedi_cmd *qedi_cmd;
- 	struct qedi_endpoint *ep;
-@@ -1037,7 +1027,6 @@ int qedi_send_iscsi_login(struct qedi_conn *qedi_conn,
- 	u16 sq_idx = 0;
- 	int rval = 0;
- 
--	req_sge = (struct scsi_sge *)qedi_conn->gen_pdu.req_bd_tbl;
- 	resp_sge = (struct scsi_sge *)qedi_conn->gen_pdu.resp_bd_tbl;
- 	qedi_cmd = (struct qedi_cmd *)task->dd_data;
- 	ep = qedi_conn->ep;
-@@ -1718,7 +1707,6 @@ int qedi_send_iscsi_nopout(struct qedi_conn *qedi_conn,
- 	struct qedi_ctx *qedi = qedi_conn->qedi;
- 	struct iscsi_task_context *fw_task_ctx;
- 	struct iscsi_nopout *nopout_hdr;
--	struct scsi_sge *req_sge = NULL;
- 	struct scsi_sge *resp_sge = NULL;
- 	struct qedi_cmd *qedi_cmd;
- 	struct qedi_endpoint *ep;
-@@ -1727,7 +1715,6 @@ int qedi_send_iscsi_nopout(struct qedi_conn *qedi_conn,
- 	u16 sq_idx = 0;
- 	int rval = 0;
- 
--	req_sge = (struct scsi_sge *)qedi_conn->gen_pdu.req_bd_tbl;
- 	resp_sge = (struct scsi_sge *)qedi_conn->gen_pdu.resp_bd_tbl;
- 	qedi_cmd = (struct qedi_cmd *)task->dd_data;
- 	nopout_hdr = (struct iscsi_nopout *)task->hdr;
-@@ -1995,7 +1982,6 @@ void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
- 	struct qedi_conn *qedi_conn = conn->dd_data;
- 	struct scsi_cmnd *sc_cmd = task->sc;
- 	unsigned long flags;
--	u8 op;
- 
- 	spin_lock_irqsave(&qedi->io_trace_lock, flags);
- 
-@@ -2005,7 +1991,6 @@ void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
- 	io_log->cid = qedi_conn->iscsi_conn_id;
- 	io_log->lun = sc_cmd->device->lun;
- 	io_log->op = sc_cmd->cmnd[0];
--	op = sc_cmd->cmnd[0];
- 	io_log->lba[0] = sc_cmd->cmnd[2];
- 	io_log->lba[1] = sc_cmd->cmnd[3];
- 	io_log->lba[2] = sc_cmd->cmnd[4];
+-	vdev = wq->vdev;
+-
+ 	for (i = 0; i < blks; i++) {
+ 		wq->bufs[i] = kzalloc(VNIC_WQ_BUF_BLK_SZ, GFP_ATOMIC);
+ 		if (!wq->bufs[i]) {
 -- 
 2.7.4
