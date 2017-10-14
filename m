@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 2/8] blk-mq-sched: move actual dispatching into one helper
-Date: Sat, 14 Oct 2017 17:22:26 +0800
-Message-ID: <20171014092232.13943-3-ming.lei@redhat.com>
+Subject: [PATCH V10 4/8] block: kyber: check if there is request in ctx in kyber_has_work()
+Date: Sat, 14 Oct 2017 17:22:28 +0800
+Message-ID: <20171014092232.13943-5-ming.lei@redhat.com>
 References: <20171014092232.13943-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171014092232.13943-1-ming.lei@redhat.com>
@@ -10,90 +10,26 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-So that it becomes easy to support to dispatch from sw queue in the
-following patch.
+There may be request in sw queue, and not fetched to domain queue
+yet, so check it in kyber_has_work().
 
-No functional change.
-
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Suggested-by: Christoph Hellwig <hch@lst.de> # for simplifying dispatch logic
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-sched.c | 43 ++++++++++++++++++++++++-------------------
- 1 file changed, 24 insertions(+), 19 deletions(-)
+ block/kyber-iosched.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index eca011fdfa0e..be29ba849408 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -89,12 +89,26 @@ static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
- 	return false;
- }
- 
-+static void blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
-+{
-+	struct request_queue *q = hctx->queue;
-+	struct elevator_queue *e = q->elevator;
-+	LIST_HEAD(rq_list);
-+
-+	do {
-+		struct request *rq = e->type->ops.mq.dispatch_request(hctx);
-+
-+		if (!rq)
-+			break;
-+		list_add(&rq->queuelist, &rq_list);
-+	} while (blk_mq_dispatch_rq_list(q, &rq_list));
-+}
-+
- void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- {
- 	struct request_queue *q = hctx->queue;
- 	struct elevator_queue *e = q->elevator;
- 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
--	bool do_sched_dispatch = true;
- 	LIST_HEAD(rq_list);
- 
- 	/* RCU or SRCU read lock is needed before checking quiesced flag */
-@@ -122,30 +136,21 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	 * scheduler, we can no longer merge or sort them. So it's best to
- 	 * leave them there for as long as we can. Mark the hw queue as
- 	 * needing a restart in that case.
-+	 *
-+	 * We want to dispatch from the scheduler if there was nothing
-+	 * on the dispatch list or we were able to dispatch from the
-+	 * dispatch list.
- 	 */
- 	if (!list_empty(&rq_list)) {
- 		blk_mq_sched_mark_restart_hctx(hctx);
--		do_sched_dispatch = blk_mq_dispatch_rq_list(q, &rq_list);
--	} else if (!has_sched_dispatch) {
-+		if (blk_mq_dispatch_rq_list(q, &rq_list) && has_sched_dispatch)
-+			blk_mq_do_dispatch_sched(hctx);
-+	} else if (has_sched_dispatch) {
-+		blk_mq_do_dispatch_sched(hctx);
-+	} else {
- 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
- 		blk_mq_dispatch_rq_list(q, &rq_list);
+diff --git a/block/kyber-iosched.c b/block/kyber-iosched.c
+index f58cab82105b..94df3ce99f2f 100644
+--- a/block/kyber-iosched.c
++++ b/block/kyber-iosched.c
+@@ -641,7 +641,7 @@ static bool kyber_has_work(struct blk_mq_hw_ctx *hctx)
+ 		if (!list_empty_careful(&khd->rqs[i]))
+ 			return true;
  	}
--
--	/*
--	 * We want to dispatch from the scheduler if there was nothing
--	 * on the dispatch list or we were able to dispatch from the
--	 * dispatch list.
--	 */
--	if (do_sched_dispatch && has_sched_dispatch) {
--		do {
--			struct request *rq;
--
--			rq = e->type->ops.mq.dispatch_request(hctx);
--			if (!rq)
--				break;
--			list_add(&rq->queuelist, &rq_list);
--		} while (blk_mq_dispatch_rq_list(q, &rq_list));
--	}
+-	return false;
++	return sbitmap_any_bit_set(&hctx->ctx_map);
  }
  
- bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
+ #define KYBER_LAT_SHOW_STORE(op)					\
 -- 
 2.9.5
