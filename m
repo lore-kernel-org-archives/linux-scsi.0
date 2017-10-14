@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 3/8] sbitmap: introduce __sbitmap_for_each_set()
-Date: Sat, 14 Oct 2017 17:22:27 +0800
-Message-ID: <20171014092232.13943-4-ming.lei@redhat.com>
+Subject: [PATCH V10 5/8] blk-mq: introduce .get_budget and .put_budget in blk_mq_ops
+Date: Sat, 14 Oct 2017 17:22:29 +0800
+Message-ID: <20171014092232.13943-6-ming.lei@redhat.com>
 References: <20171014092232.13943-1-ming.lei@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171014092232.13943-1-ming.lei@redhat.com>
@@ -10,113 +10,328 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-We need to iterate ctx starting from any ctx in round robin
-way, so introduce this helper.
+For SCSI devices, there is often per-request-queue depth, which need
+to be respected before queuing one request.
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Cc: Omar Sandoval <osandov@fb.com>
+The current blk-mq always dequeues request first, then calls .queue_rq()
+to dispatch the request to lld. One obvious issue of this way is that I/O
+merge may not be good, because when the per-request-queue depth can't be
+respected, .queue_rq() has to return BLK_STS_RESOURCE, then this request
+has to stay in hctx->dispatch list, and never got chance to participate
+into I/O merge.
+
+This patch introduces .get_budget and .put_budget callback in blk_mq_ops,
+then we can try to get reserved budget first before dequeuing request.
+Once the budget for queueing I/O can't be satisfied, we don't need to
+dequeue request at all, then I/O merge can get improved a lot.
+
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- include/linux/sbitmap.h | 64 ++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 47 insertions(+), 17 deletions(-)
+ block/blk-mq-sched.c   | 55 +++++++++++++++++++++++++++++++++++++++++---------
+ block/blk-mq-sched.h   |  2 +-
+ block/blk-mq.c         | 43 ++++++++++++++++++++++++++++++++++-----
+ block/blk-mq.h         | 20 +++++++++++++++++-
+ include/linux/blk-mq.h | 11 ++++++++++
+ 5 files changed, 114 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
-index a1904aadbc45..0dcc60e820de 100644
---- a/include/linux/sbitmap.h
-+++ b/include/linux/sbitmap.h
-@@ -211,10 +211,14 @@ bool sbitmap_any_bit_set(const struct sbitmap *sb);
-  */
- bool sbitmap_any_bit_clear(const struct sbitmap *sb);
- 
-+#define SB_NR_TO_INDEX(sb, bitnr) ((bitnr) >> (sb)->shift)
-+#define SB_NR_TO_BIT(sb, bitnr) ((bitnr) & ((1U << (sb)->shift) - 1U))
-+
- typedef bool (*sb_for_each_fn)(struct sbitmap *, unsigned int, void *);
- 
- /**
-- * sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
-+ * __sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
-+ * @start: Where to start the iteration.
-  * @sb: Bitmap to iterate over.
-  * @fn: Callback. Should return true to continue or false to break early.
-  * @data: Pointer to pass to callback.
-@@ -222,35 +226,61 @@ typedef bool (*sb_for_each_fn)(struct sbitmap *, unsigned int, void *);
-  * This is inline even though it's non-trivial so that the function calls to the
-  * callback will hopefully get optimized away.
-  */
--static inline void sbitmap_for_each_set(struct sbitmap *sb, sb_for_each_fn fn,
--					void *data)
-+static inline void __sbitmap_for_each_set(struct sbitmap *sb,
-+					  unsigned int start,
-+					  sb_for_each_fn fn, void *data)
- {
--	unsigned int i;
-+	unsigned int index;
-+	unsigned int nr;
-+	unsigned int scanned = 0;
- 
--	for (i = 0; i < sb->map_nr; i++) {
--		struct sbitmap_word *word = &sb->map[i];
--		unsigned int off, nr;
-+	if (start >= sb->depth)
-+		start = 0;
-+	index = SB_NR_TO_INDEX(sb, start);
-+	nr = SB_NR_TO_BIT(sb, start);
- 
--		if (!word->word)
--			continue;
-+	while (scanned < sb->depth) {
-+		struct sbitmap_word *word = &sb->map[index];
-+		unsigned int depth = min_t(unsigned int, word->depth - nr,
-+					   sb->depth - scanned);
- 
--		nr = 0;
--		off = i << sb->shift;
-+		scanned += depth;
-+		if (!word->word)
-+			goto next;
-+
-+		/*
-+		 * On the first iteration of the outer loop, we need to add the
-+		 * bit offset back to the size of the word for find_next_bit().
-+		 * On all other iterations, nr is zero, so this is a noop.
-+		 */
-+		depth += nr;
- 		while (1) {
--			nr = find_next_bit(&word->word, word->depth, nr);
--			if (nr >= word->depth)
-+			nr = find_next_bit(&word->word, depth, nr);
-+			if (nr >= depth)
- 				break;
--
--			if (!fn(sb, off + nr, data))
-+			if (!fn(sb, (index << sb->shift) + nr, data))
- 				return;
- 
- 			nr++;
- 		}
-+next:
-+		nr = 0;
-+		if (++index >= sb->map_nr)
-+			index = 0;
- 	}
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index be29ba849408..8e525e66a0d9 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -89,31 +89,57 @@ static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
+ 	return false;
  }
  
--#define SB_NR_TO_INDEX(sb, bitnr) ((bitnr) >> (sb)->shift)
--#define SB_NR_TO_BIT(sb, bitnr) ((bitnr) & ((1U << (sb)->shift) - 1U))
-+/**
-+ * sbitmap_for_each_set() - Iterate over each set bit in a &struct sbitmap.
-+ * @sb: Bitmap to iterate over.
-+ * @fn: Callback. Should return true to continue or false to break early.
-+ * @data: Pointer to pass to callback.
-+ */
-+static inline void sbitmap_for_each_set(struct sbitmap *sb, sb_for_each_fn fn,
-+					void *data)
-+{
-+	__sbitmap_for_each_set(sb, 0, fn, data);
-+}
+-static void blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
++/* return true if hctx need to run again */
++static bool blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct request_queue *q = hctx->queue;
+ 	struct elevator_queue *e = q->elevator;
+ 	LIST_HEAD(rq_list);
  
- static inline unsigned long *__sbitmap_word(struct sbitmap *sb,
- 					    unsigned int bitnr)
+ 	do {
+-		struct request *rq = e->type->ops.mq.dispatch_request(hctx);
++		struct request *rq;
++		blk_status_t ret;
+ 
+-		if (!rq)
++		if (e->type->ops.mq.has_work &&
++				!e->type->ops.mq.has_work(hctx))
+ 			break;
++
++		ret = blk_mq_get_dispatch_budget(hctx);
++		if (ret == BLK_STS_RESOURCE)
++			return true;
++
++		rq = e->type->ops.mq.dispatch_request(hctx);
++		if (!rq) {
++			blk_mq_put_dispatch_budget(hctx);
++			break;
++		} else if (ret != BLK_STS_OK) {
++			blk_mq_end_request(rq, ret);
++			continue;
++		}
++
++		/*
++		 * Now this rq owns the budget which has to be released
++		 * if this rq won't be queued to driver via .queue_rq()
++		 * in blk_mq_dispatch_rq_list().
++		 */
+ 		list_add(&rq->queuelist, &rq_list);
+-	} while (blk_mq_dispatch_rq_list(q, &rq_list));
++	} while (blk_mq_dispatch_rq_list(q, &rq_list, true));
++
++	return false;
+ }
+ 
+-void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
++/* return true if hw queue need to be run again */
++bool blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct request_queue *q = hctx->queue;
+ 	struct elevator_queue *e = q->elevator;
+ 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
+ 	LIST_HEAD(rq_list);
++	bool run_queue = false;
+ 
+ 	/* RCU or SRCU read lock is needed before checking quiesced flag */
+ 	if (unlikely(blk_mq_hctx_stopped(hctx) || blk_queue_quiesced(q)))
+-		return;
++		return false;
+ 
+ 	hctx->run++;
+ 
+@@ -143,14 +169,23 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 */
+ 	if (!list_empty(&rq_list)) {
+ 		blk_mq_sched_mark_restart_hctx(hctx);
+-		if (blk_mq_dispatch_rq_list(q, &rq_list) && has_sched_dispatch)
+-			blk_mq_do_dispatch_sched(hctx);
++		if (blk_mq_dispatch_rq_list(q, &rq_list, false) &&
++				has_sched_dispatch)
++			run_queue = blk_mq_do_dispatch_sched(hctx);
+ 	} else if (has_sched_dispatch) {
+-		blk_mq_do_dispatch_sched(hctx);
++		run_queue = blk_mq_do_dispatch_sched(hctx);
+ 	} else {
+ 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+-		blk_mq_dispatch_rq_list(q, &rq_list);
++		blk_mq_dispatch_rq_list(q, &rq_list, false);
+ 	}
++
++	if (run_queue && !blk_mq_sched_needs_restart(hctx) &&
++			!test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state)) {
++		blk_mq_sched_mark_restart_hctx(hctx);
++		return true;
++	}
++
++	return false;
+ }
+ 
+ bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
+diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
+index 9267d0b7c197..2434061cc5b7 100644
+--- a/block/blk-mq-sched.h
++++ b/block/blk-mq-sched.h
+@@ -22,7 +22,7 @@ void blk_mq_sched_insert_requests(struct request_queue *q,
+ 				  struct blk_mq_ctx *ctx,
+ 				  struct list_head *list, bool run_queue_async);
+ 
+-void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx);
++bool blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx);
+ 
+ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e);
+ void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 40cba1b1978f..dcb467369999 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1048,7 +1048,8 @@ static bool blk_mq_dispatch_wait_add(struct blk_mq_hw_ctx *hctx)
+ 	return true;
+ }
+ 
+-bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
++bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
++		bool got_budget)
+ {
+ 	struct blk_mq_hw_ctx *hctx;
+ 	struct request *rq;
+@@ -1057,6 +1058,8 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
+ 	if (list_empty(list))
+ 		return false;
+ 
++	WARN_ON(!list_is_singular(list) && got_budget);
++
+ 	/*
+ 	 * Now process all the entries, sending them to the driver.
+ 	 */
+@@ -1074,16 +1077,30 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
+ 			 * The initial allocation attempt failed, so we need to
+ 			 * rerun the hardware queue when a tag is freed.
+ 			 */
+-			if (!blk_mq_dispatch_wait_add(hctx))
++			if (!blk_mq_dispatch_wait_add(hctx)) {
++				if (got_budget)
++					blk_mq_put_dispatch_budget(hctx);
+ 				break;
++			}
+ 
+ 			/*
+ 			 * It's possible that a tag was freed in the window
+ 			 * between the allocation failure and adding the
+ 			 * hardware queue to the wait queue.
+ 			 */
+-			if (!blk_mq_get_driver_tag(rq, &hctx, false))
++			if (!blk_mq_get_driver_tag(rq, &hctx, false)) {
++				if (got_budget)
++					blk_mq_put_dispatch_budget(hctx);
++				break;
++			}
++		}
++
++		if (!got_budget) {
++			ret = blk_mq_get_dispatch_budget(hctx);
++			if (ret == BLK_STS_RESOURCE)
+ 				break;
++			if (ret != BLK_STS_OK)
++				goto fail_rq;
+ 		}
+ 
+ 		list_del_init(&rq->queuelist);
+@@ -1111,6 +1128,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
+ 			break;
+ 		}
+ 
++ fail_rq:
+ 		if (unlikely(ret != BLK_STS_OK)) {
+ 			errors++;
+ 			blk_mq_end_request(rq, BLK_STS_IOERR);
+@@ -1169,6 +1187,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
+ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+ {
+ 	int srcu_idx;
++	bool run_queue;
+ 
+ 	/*
+ 	 * We should be running this queue from one of the CPUs that
+@@ -1185,15 +1204,18 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+ 
+ 	if (!(hctx->flags & BLK_MQ_F_BLOCKING)) {
+ 		rcu_read_lock();
+-		blk_mq_sched_dispatch_requests(hctx);
++		run_queue = blk_mq_sched_dispatch_requests(hctx);
+ 		rcu_read_unlock();
+ 	} else {
+ 		might_sleep();
+ 
+ 		srcu_idx = srcu_read_lock(hctx->queue_rq_srcu);
+-		blk_mq_sched_dispatch_requests(hctx);
++		run_queue = blk_mq_sched_dispatch_requests(hctx);
+ 		srcu_read_unlock(hctx->queue_rq_srcu, srcu_idx);
+ 	}
++
++	if (run_queue)
++		blk_mq_run_hw_queue(hctx, true);
+ }
+ 
+ /*
+@@ -1582,6 +1604,13 @@ static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 	if (!blk_mq_get_driver_tag(rq, NULL, false))
+ 		goto insert;
+ 
++	ret = blk_mq_get_dispatch_budget(hctx);
++	if (ret == BLK_STS_RESOURCE) {
++		blk_mq_put_driver_tag(rq);
++		goto insert;
++	} else if (ret != BLK_STS_OK)
++		goto fail_rq;
++
+ 	new_cookie = request_to_qc_t(hctx, rq);
+ 
+ 	/*
+@@ -1598,6 +1627,7 @@ static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 		__blk_mq_requeue_request(rq);
+ 		goto insert;
+ 	default:
++ fail_rq:
+ 		*cookie = BLK_QC_T_NONE;
+ 		blk_mq_end_request(rq, ret);
+ 		return;
+@@ -2582,6 +2612,9 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
+ 	if (!set->ops->queue_rq)
+ 		return -EINVAL;
+ 
++	if (!set->ops->get_budget ^ !set->ops->put_budget)
++		return -EINVAL;
++
+ 	if (set->queue_depth > BLK_MQ_MAX_DEPTH) {
+ 		pr_info("blk-mq: reduced tag depth to %u\n",
+ 			BLK_MQ_MAX_DEPTH);
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index ef15b3414da5..e413b732374e 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -30,7 +30,7 @@ void blk_mq_freeze_queue(struct request_queue *q);
+ void blk_mq_free_queue(struct request_queue *q);
+ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr);
+ void blk_mq_wake_waiters(struct request_queue *q);
+-bool blk_mq_dispatch_rq_list(struct request_queue *, struct list_head *);
++bool blk_mq_dispatch_rq_list(struct request_queue *, struct list_head *, bool);
+ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list);
+ bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx);
+ bool blk_mq_get_driver_tag(struct request *rq, struct blk_mq_hw_ctx **hctx,
+@@ -137,4 +137,22 @@ static inline bool blk_mq_hw_queue_mapped(struct blk_mq_hw_ctx *hctx)
+ void blk_mq_in_flight(struct request_queue *q, struct hd_struct *part,
+ 			unsigned int inflight[2]);
+ 
++static inline void blk_mq_put_dispatch_budget(struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
++
++	if (q->mq_ops->put_budget)
++		q->mq_ops->put_budget(hctx);
++}
++
++static inline blk_status_t blk_mq_get_dispatch_budget(
++		struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
++
++	if (q->mq_ops->get_budget)
++		return q->mq_ops->get_budget(hctx);
++	return BLK_STS_OK;
++}
++
+ #endif
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 50c6485cb04f..901457df3d64 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -90,6 +90,8 @@ struct blk_mq_queue_data {
+ 
+ typedef blk_status_t (queue_rq_fn)(struct blk_mq_hw_ctx *,
+ 		const struct blk_mq_queue_data *);
++typedef blk_status_t (get_budget_fn)(struct blk_mq_hw_ctx *);
++typedef void (put_budget_fn)(struct blk_mq_hw_ctx *);
+ typedef enum blk_eh_timer_return (timeout_fn)(struct request *, bool);
+ typedef int (init_hctx_fn)(struct blk_mq_hw_ctx *, void *, unsigned int);
+ typedef void (exit_hctx_fn)(struct blk_mq_hw_ctx *, unsigned int);
+@@ -112,6 +114,15 @@ struct blk_mq_ops {
+ 	queue_rq_fn		*queue_rq;
+ 
+ 	/*
++	 * Reserve budget before queue request, once .queue_rq is
++	 * run, it is driver's responsibility to release the
++	 * reserved budget. Also we have to handle failure case
++	 * of .get_budget for avoiding I/O deadlock.
++	 */
++	get_budget_fn		*get_budget;
++	put_budget_fn		*put_budget;
++
++	/*
+ 	 * Called on request timeout
+ 	 */
+ 	timeout_fn		*timeout;
 -- 
 2.9.5
