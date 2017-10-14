@@ -1,24 +1,20 @@
 From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH V9 0/7] blk-mq-sched: improve sequential I/O performance
-Date: Sat, 14 Oct 2017 13:23:27 +0800
-Message-ID: <20171014052321.GA21519@ming.t460p>
+Date: Sat, 14 Oct 2017 15:10:48 +0800
+Message-ID: <20171014071047.GA31154@ming.t460p>
 References: <20171013180532.29304-1-ming.lei@redhat.com>
  <03fc0b94-8463-3f3d-9d75-be3e05d88987@kernel.dk>
  <95fe2831-12a9-3346-5fc7-9259ff988669@kernel.dk>
  <3598a2f6-6305-372c-36a3-7813cbe04a77@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38610 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751678AbdJNFXo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 14 Oct 2017 01:23:44 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <3598a2f6-6305-372c-36a3-7813cbe04a77@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 On Fri, Oct 13, 2017 at 02:23:07PM -0600, Jens Axboe wrote:
 > On 10/13/2017 01:21 PM, Jens Axboe wrote:
@@ -61,8 +57,22 @@ On Fri, Oct 13, 2017 at 02:23:07PM -0600, Jens Axboe wrote:
 > Verified that the laptop boots just fine if I remove the kyber udev
 > rule.
 
-I can reproduce this issue with kyber switched to, and will figure out
-it soon.
+This issue can be fixed by the following one line change:
+
+---
+diff --git a/block/kyber-iosched.c b/block/kyber-iosched.c
+index f58cab82105b..94df3ce99f2f 100644
+--- a/block/kyber-iosched.c
++++ b/block/kyber-iosched.c
+@@ -641,7 +641,7 @@ static bool kyber_has_work(struct blk_mq_hw_ctx *hctx)
+ 		if (!list_empty_careful(&khd->rqs[i]))
+ 			return true;
+ 	}
+-	return false;
++	return sbitmap_any_bit_set(&hctx->ctx_map);
+ }
+ 
+ #define KYBER_LAT_SHOW_STORE(op)					\
 
 -- 
 Ming
