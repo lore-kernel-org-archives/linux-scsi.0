@@ -1,65 +1,344 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V9 4/7] blk-mq: introduce .get_budget and .put_budget in
- blk_mq_ops
-Date: Fri, 13 Oct 2017 23:43:44 +0000
-Message-ID: <1507938223.13345.66.camel@wdc.com>
-References: <20171013180532.29304-1-ming.lei@redhat.com>
-         <20171013180532.29304-5-ming.lei@redhat.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH v2 5/5] ufs/phy: qcom: Refactor to use phy_init call
+Date: Fri, 13 Oct 2017 18:02:39 -0700
+Message-ID: <23ef4100c01b05c8fa4ad6734cd48fbc@codeaurora.org>
+References: <1507789176-2760-1-git-send-email-vivek.gautam@codeaurora.org>
+ <1507789176-2760-6-git-send-email-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171013180532.29304-5-ming.lei@redhat.com>
-Content-Language: en-US
-Content-ID: <456E36D9432ABA41ACD454825453806B@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tom81094@gmail.com" <tom81094@gmail.com>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "john.garry@huawei.com" <john.garry@huawei.com>, "osandov@fb.com" <osandov@fb.com>, "loberman@redhat.com" <loberman@redhat.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1507789176-2760-6-git-send-email-vivek.gautam@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: kishon@ti.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, robh+dt@kernel.org, bjorn.andersson@linaro.org, devicetree@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU2F0LCAyMDE3LTEwLTE0IGF0IDAyOjA1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
-LTg5LDE5ICs4OSwzNiBAQCBzdGF0aWMgYm9vbCBibGtfbXFfc2NoZWRfcmVzdGFydF9oY3R4KHN0
-cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4KQ0KPiAgCXJldHVybiBmYWxzZTsNCj4gIH0NCj4gIA0K
-PiAtc3RhdGljIHZvaWQgYmxrX21xX2RvX2Rpc3BhdGNoX3NjaGVkKHN0cnVjdCBibGtfbXFfaHdf
-Y3R4ICpoY3R4KQ0KPiArc3RhdGljIGJvb2wgYmxrX21xX2RvX2Rpc3BhdGNoX3NjaGVkKHN0cnVj
-dCBibGtfbXFfaHdfY3R4ICpoY3R4KQ0KDQpTaG91bGRuJ3QgdGhlIG1lYW5pbmcgb2YgdGhlIHJl
-dHVybiB2YWx1ZSBvZiB0aGlzIGZ1bmN0aW9uIGJlIGRvY3VtZW50ZWQ/DQoNCj4gIHsNCj4gIAlz
-dHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSA9IGhjdHgtPnF1ZXVlOw0KPiAgCXN0cnVjdCBlbGV2YXRv
-cl9xdWV1ZSAqZSA9IHEtPmVsZXZhdG9yOw0KPiAgCUxJU1RfSEVBRChycV9saXN0KTsNCj4gIA0K
-PiAgCWRvIHsNCj4gLQkJc3RydWN0IHJlcXVlc3QgKnJxID0gZS0+dHlwZS0+b3BzLm1xLmRpc3Bh
-dGNoX3JlcXVlc3QoaGN0eCk7DQo+ICsJCXN0cnVjdCByZXF1ZXN0ICpycTsNCj4gKwkJYmxrX3N0
-YXR1c190IHJldDsNCj4gIA0KPiAtCQlpZiAoIXJxKQ0KPiArCQlpZiAoZS0+dHlwZS0+b3BzLm1x
-Lmhhc193b3JrICYmDQo+ICsJCQkJIWUtPnR5cGUtPm9wcy5tcS5oYXNfd29yayhoY3R4KSkNCj4g
-IAkJCWJyZWFrOw0KPiArDQo+ICsJCXJldCA9IGJsa19tcV9nZXRfZGlzcGF0Y2hfYnVkZ2V0KGhj
-dHgpOw0KPiArCQlpZiAocmV0ID09IEJMS19TVFNfUkVTT1VSQ0UpDQo+ICsJCQlyZXR1cm4gdHJ1
-ZTsNCj4gKw0KPiArCQlycSA9IGUtPnR5cGUtPm9wcy5tcS5kaXNwYXRjaF9yZXF1ZXN0KGhjdHgp
-Ow0KPiArCQlpZiAoIXJxKSB7DQo+ICsJCQlibGtfbXFfcHV0X2Rpc3BhdGNoX2J1ZGdldChoY3R4
-LCB0cnVlKTsNCj4gKwkJCWJyZWFrOw0KPiArCQl9IGVsc2UgaWYgKHJldCAhPSBCTEtfU1RTX09L
-KSB7DQo+ICsJCQlibGtfbXFfZW5kX3JlcXVlc3QocnEsIHJldCk7DQo+ICsJCQljb250aW51ZTsN
-Cj4gKwkJfQ0KPiAgCQlsaXN0X2FkZCgmcnEtPnF1ZXVlbGlzdCwgJnJxX2xpc3QpOw0KPiAtCX0g
-d2hpbGUgKGJsa19tcV9kaXNwYXRjaF9ycV9saXN0KHEsICZycV9saXN0KSk7DQo+ICsJfSB3aGls
-ZSAoYmxrX21xX2Rpc3BhdGNoX3JxX2xpc3QocSwgJnJxX2xpc3QsIHRydWUpKTsNCj4gKw0KPiAr
-CXJldHVybiBmYWxzZTsNCj4gIH0NCg0KVGhpcyBtZWFucyB0aGF0IHRoZSByZXF1ZXN0IGluIHJx
-X2xpc3QgYmVjb21lcyB0aGUgb3duZXIgb2YgdGhlIGJ1ZGdldCBhbGxvY2F0ZWQNCmJ5IGJsa19t
-cV9nZXRfZGlzcGF0Y2hfYnVkZ2V0KCkuIFNob3VsZG4ndCB0aGF0IGJlIG1lbnRpb25lZCBhcyBh
-IGNvbW1lbnQgYWJvdmUNCmJsa19tcV9kaXNwYXRjaF9ycV9saXN0KCk/DQoNCj4gKwlpZiAocnVu
-X3F1ZXVlKSB7DQo+ICsJCWlmICghYmxrX21xX3NjaGVkX25lZWRzX3Jlc3RhcnQoaGN0eCkgJiYN
-Cj4gKwkJICAgICF0ZXN0X2JpdChCTEtfTVFfU19UQUdfV0FJVElORywgJmhjdHgtPnN0YXRlKSkg
-ew0KPiArCQkJYmxrX21xX3NjaGVkX21hcmtfcmVzdGFydF9oY3R4KGhjdHgpOw0KPiArCQkJYmxr
-X21xX3J1bl9od19xdWV1ZShoY3R4LCB0cnVlKTsNCj4gKwkJfQ0KPiAgCX0NCj4gIH0NCg0KVGhl
-IGFib3ZlIGlmLXN0YXRlbWVudCBjYW4gYmUgY2hhbmdlZCBmcm9tIGEgbmVzdGVkIGlmIGludG8g
-YSBzaW5nbGUNCmlmLXN0YXRlbWVudC4NCiANCkFkZGl0aW9uYWxseSwgd2h5IGhhcyB0aGUgY29k
-ZSBiZWVuIGFkZGVkIHRvIGJsa19tcV9zY2hlZF9kaXNwYXRjaF9yZXF1ZXN0cygpDQp0aGF0IHJl
-cnVucyB0aGUgcXVldWUgaWYgYmxrX21xX2dldF9kaXNwYXRjaF9idWRnZXQoKSByZXR1cm5lZCBC
-TEtfU1RTX1JFU09VUkNFPw0KSXMgdGhhdCBjb2RlIG5lY2Vzc2FyeSBvciBjYW4gaXQgYmUgbGVm
-dCBvdXQ/DQoNCj4gK3N0YXRpYyBpbmxpbmUgdm9pZCBibGtfbXFfcHV0X2Rpc3BhdGNoX2J1ZGdl
-dChzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwNCj4gKwkJYm9vbCBnb3RfYnVkZ2V0KQ0KPiAr
-ew0KPiArCXN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxID0gaGN0eC0+cXVldWU7DQo+ICsNCj4gKwlp
-ZiAocS0+bXFfb3BzLT5wdXRfYnVkZ2V0ICYmIGdvdF9idWRnZXQpDQo+ICsJCXEtPm1xX29wcy0+
-cHV0X2J1ZGdldChoY3R4KTsNCj4gK30NCg0KU28gdGhlIGFib3ZlIGZ1bmN0aW9uIGlzIHBhc3Nl
-ZCBhIGJvb2xlYW4gYXMgc2Vjb25kIGFyZ3VtZW50IGFuZCBhbGwgd2hhdA0KdGhhdCBib29sZWFu
-IGlzIHVzZWQgZm9yIGlzIHRvIGRlY2lkZSB3aGV0aGVyIG9yIG5vdCB0aGUgZnVuY3Rpb24gaXMg
-ZXhlY3V0ZWQ/DQpTb3JyeSBidXQgSSB0aGluayB0aGF0J3Mgd3JvbmcgYW5kIHRoYXQgdGhlIHNl
-Y29uZCBhcmd1bWVudCBzaG91bGQgYmUgcmVtb3ZlZA0KYW5kIHRoYXQgaXQgc2hvdWxkIGJlIGV2
-YWx1YXRlZCBieSB0aGUgY2FsbGVyIGluc3RlYWQgb2YgaW5zaWRlDQpibGtfbXFfcHV0X2Rpc3Bh
-dGNoX2J1ZGdldCgpLg0KDQpCYXJ0Lg==
+On 2017-10-11 23:19, Vivek Gautam wrote:
+> Refactor ufs_qcom_power_up_sequence() to get rid of ugly
+> exported phy APIs and use the phy_init() and phy_power_on()
+> to do the phy initialization.
+> 
+> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> ---
+> 
+> Changes since v1:
+>  - The UFS phy retain state in low power mode. The phy can
+>    enter the low power state and come up without starting the
+>    serdes again, unless we reprogram the phy.
+>    So, added a check to start the serdes only once after phy
+>    initialization.
+> 
+>  drivers/phy/qualcomm/phy-qcom-ufs-i.h        |  3 +-
+>  drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c | 15 ++++++++--
+>  drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c | 15 ++++++++--
+>  drivers/phy/qualcomm/phy-qcom-ufs.c          | 42 
+> ++++++++++------------------
+>  drivers/scsi/ufs/ufs-qcom.c                  | 36 
+> ++++++++++--------------
+>  include/linux/phy/phy-qcom-ufs.h             |  3 --
+>  6 files changed, 55 insertions(+), 59 deletions(-)
+> 
+> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-i.h
+> b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
+> index 94326ed107c3..822c83b8efcd 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-ufs-i.h
+> +++ b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
+> @@ -114,6 +114,7 @@ struct ufs_qcom_phy {
+>  	struct ufs_qcom_phy_calibration *cached_regs;
+>  	int cached_regs_table_size;
+>  	bool is_powered_on;
+> +	bool is_started;
+>  	struct ufs_qcom_phy_specific_ops *phy_spec_ops;
+> 
+>  	enum phy_mode mode;
+> @@ -123,7 +124,6 @@ struct ufs_qcom_phy {
+>   * struct ufs_qcom_phy_specific_ops - set of pointers to functions 
+> which have a
+>   * specific implementation per phy. Each UFS phy, should implement
+>   * those functions according to its spec and requirements
+> - * @calibrate_phy: pointer to a function that calibrate the phy
+>   * @start_serdes: pointer to a function that starts the serdes
+>   * @is_physical_coding_sublayer_ready: pointer to a function that
+>   * checks pcs readiness. returns 0 for success and non-zero for error.
+> @@ -132,7 +132,6 @@ struct ufs_qcom_phy {
+>   * and writes to QSERDES_RX_SIGDET_CNTRL attribute
+>   */
+>  struct ufs_qcom_phy_specific_ops {
+> -	int (*calibrate_phy)(struct ufs_qcom_phy *phy, bool is_rate_B);
+>  	void (*start_serdes)(struct ufs_qcom_phy *phy);
+>  	int (*is_physical_coding_sublayer_ready)(struct ufs_qcom_phy *phy);
+>  	void (*set_tx_lane_enable)(struct ufs_qcom_phy *phy, u32 val);
+> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
+> b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
+> index af65785230b5..ba1895b76a5d 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
+> @@ -44,7 +44,19 @@ void ufs_qcom_phy_qmp_14nm_advertise_quirks(struct
+> ufs_qcom_phy *phy_common)
+> 
+>  static int ufs_qcom_phy_qmp_14nm_init(struct phy *generic_phy)
+>  {
+> -	return 0;
+> +	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
+> +	bool is_rate_B = false;
+> +	int ret;
+> +
+> +	if (phy_common->mode == PHY_MODE_UFS_HS_B)
+> +		is_rate_B = true;
+> +
+> +	ret = ufs_qcom_phy_qmp_14nm_phy_calibrate(phy_common, is_rate_B);
+> +	if (!ret)
+> +		/* phy calibrated, but yet to be started */
+> +		phy_common->is_started = false;
+> +
+> +	return ret;
+>  }
+> 
+>  static int ufs_qcom_phy_qmp_14nm_exit(struct phy *generic_phy)
+> @@ -120,7 +132,6 @@ static int
+> ufs_qcom_phy_qmp_14nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
+>  };
+> 
+>  static struct ufs_qcom_phy_specific_ops phy_14nm_ops = {
+> -	.calibrate_phy		= ufs_qcom_phy_qmp_14nm_phy_calibrate,
+>  	.start_serdes		= ufs_qcom_phy_qmp_14nm_start_serdes,
+>  	.is_physical_coding_sublayer_ready = 
+> ufs_qcom_phy_qmp_14nm_is_pcs_ready,
+>  	.set_tx_lane_enable	= ufs_qcom_phy_qmp_14nm_set_tx_lane_enable,
+> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+> b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+> index 5c18c41dbdb4..49f435c71147 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+> @@ -63,7 +63,19 @@ void ufs_qcom_phy_qmp_20nm_advertise_quirks(struct
+> ufs_qcom_phy *phy_common)
+> 
+>  static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
+>  {
+> -	return 0;
+> +	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
+> +	bool is_rate_B = false;
+> +	int ret;
+> +
+> +	if (phy_common->mode == PHY_MODE_UFS_HS_B)
+> +		is_rate_B = true;
+> +
+> +	ret = ufs_qcom_phy_qmp_20nm_phy_calibrate(phy_common, is_rate_B);
+> +	if (!ret)
+> +		/* phy calibrated, but yet to be started */
+> +		phy_common->is_started = false;
+> +
+> +	return ret;
+>  }
+> 
+>  static int ufs_qcom_phy_qmp_20nm_exit(struct phy *generic_phy)
+> @@ -178,7 +190,6 @@ static int
+> ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
+>  };
+> 
+>  static struct ufs_qcom_phy_specific_ops phy_20nm_ops = {
+> -	.calibrate_phy		= ufs_qcom_phy_qmp_20nm_phy_calibrate,
+>  	.start_serdes		= ufs_qcom_phy_qmp_20nm_start_serdes,
+>  	.is_physical_coding_sublayer_ready = 
+> ufs_qcom_phy_qmp_20nm_is_pcs_ready,
+>  	.set_tx_lane_enable	= ufs_qcom_phy_qmp_20nm_set_tx_lane_enable,
+> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs.c
+> b/drivers/phy/qualcomm/phy-qcom-ufs.c
+> index 43865ef340e2..c5ff4525edef 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-ufs.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-ufs.c
+> @@ -518,9 +518,8 @@ void ufs_qcom_phy_disable_iface_clk(struct
+> ufs_qcom_phy *phy)
+>  	}
+>  }
+> 
+> -int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
+> +static int ufs_qcom_phy_start_serdes(struct ufs_qcom_phy 
+> *ufs_qcom_phy)
+>  {
+> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+>  	int ret = 0;
+> 
+>  	if (!ufs_qcom_phy->phy_spec_ops->start_serdes) {
+> @@ -533,7 +532,6 @@ int ufs_qcom_phy_start_serdes(struct phy 
+> *generic_phy)
+> 
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_start_serdes);
+> 
+>  int ufs_qcom_phy_set_tx_lane_enable(struct phy *generic_phy, u32 
+> tx_lanes)
+>  {
+> @@ -564,31 +562,8 @@ void ufs_qcom_phy_save_controller_version(struct
+> phy *generic_phy,
+>  }
+>  EXPORT_SYMBOL_GPL(ufs_qcom_phy_save_controller_version);
+> 
+> -int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool 
+> is_rate_B)
+> -{
+> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+> -	int ret = 0;
+> -
+> -	if (!ufs_qcom_phy->phy_spec_ops->calibrate_phy) {
+> -		dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy() callback is not 
+> supported\n",
+> -			__func__);
+> -		ret = -ENOTSUPP;
+> -	} else {
+> -		ret = ufs_qcom_phy->phy_spec_ops->
+> -				calibrate_phy(ufs_qcom_phy, is_rate_B);
+> -		if (ret)
+> -			dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy() failed %d\n",
+> -				__func__, ret);
+> -	}
+> -
+> -	return ret;
+> -}
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
+> -
+> -int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
+> +static int ufs_qcom_phy_is_pcs_ready(struct ufs_qcom_phy 
+> *ufs_qcom_phy)
+>  {
+> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+> -
+>  	if (!ufs_qcom_phy->phy_spec_ops->is_physical_coding_sublayer_ready) {
+>  		dev_err(ufs_qcom_phy->dev, "%s: is_physical_coding_sublayer_ready()
+> callback is not supported\n",
+>  			__func__);
+> @@ -598,7 +573,6 @@ int ufs_qcom_phy_is_pcs_ready(struct phy 
+> *generic_phy)
+>  	return ufs_qcom_phy->phy_spec_ops->
+>  			is_physical_coding_sublayer_ready(ufs_qcom_phy);
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_is_pcs_ready);
+> 
+>  int ufs_qcom_phy_power_on(struct phy *generic_phy)
+>  {
+> @@ -609,6 +583,18 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+>  	if (phy_common->is_powered_on)
+>  		return 0;
+> 
+> +	if (!phy_common->is_started) {
+> +		err = ufs_qcom_phy_start_serdes(phy_common);
+> +		if (err)
+> +			return err;
+> +
+> +		err = ufs_qcom_phy_is_pcs_ready(phy_common);
+> +		if (err)
+> +			return err;
+> +
+> +		phy_common->is_started = true;
+> +	}
+> +
+>  	err = ufs_qcom_phy_enable_vreg(dev, &phy_common->vdda_phy);
+>  	if (err) {
+>  		dev_err(dev, "%s enable vdda_phy failed, err=%d\n",
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 942e40c9eaf7..2b38db2eeafa 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -281,10 +281,10 @@ static int ufs_qcom_power_up_sequence(struct 
+> ufs_hba *hba)
+>  	/* provide 1ms delay to let the reset pulse propagate */
+>  	usleep_range(1000, 1100);
+> 
+> -	ret = ufs_qcom_phy_calibrate_phy(phy, is_rate_B);
+> -
+> +	/* phy initialization - calibrate the phy */
+> +	ret = phy_init(phy);
+>  	if (ret) {
+> -		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = 
+> %d\n",
+> +		dev_err(hba->dev, "%s: phy init failed, ret = %d\n",
+>  			__func__, ret);
+>  		goto out;
+>  	}
+> @@ -297,21 +297,22 @@ static int ufs_qcom_power_up_sequence(struct 
+> ufs_hba *hba)
+>  	 * voltage, current to settle down before starting serdes.
+>  	 */
+>  	usleep_range(1000, 1100);
+> -	ret = ufs_qcom_phy_start_serdes(phy);
+> +
+> +	/* power on phy - start serdes and phy's power and clocks */
+> +	ret = phy_power_on(phy);
+>  	if (ret) {
+> -		dev_err(hba->dev, "%s: ufs_qcom_phy_start_serdes() failed, ret = 
+> %d\n",
+> +		dev_err(hba->dev, "%s: phy power on failed, ret = %d\n",
+>  			__func__, ret);
+> -		goto out;
+> +		goto out_disable_phy;
+>  	}
+> 
+> -	ret = ufs_qcom_phy_is_pcs_ready(phy);
+> -	if (ret)
+> -		dev_err(hba->dev,
+> -			"%s: is_physical_coding_sublayer_ready() failed, ret = %d\n",
+> -			__func__, ret);
+> -
+>  	ufs_qcom_select_unipro_mode(host);
+> 
+> +	return 0;
+> +
+> +out_disable_phy:
+> +	ufs_qcom_assert_reset(hba);
+> +	phy_exit(phy);
+>  out:
+>  	return ret;
+>  }
+> @@ -1276,14 +1277,9 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	ufs_qcom_phy_save_controller_version(host->generic_phy,
+>  		host->hw_ver.major, host->hw_ver.minor, host->hw_ver.step);
+> 
+> -	phy_init(host->generic_phy);
+> -	err = phy_power_on(host->generic_phy);
+> -	if (err)
+> -		goto out_unregister_bus;
+> -
+>  	err = ufs_qcom_init_lane_clks(host);
+>  	if (err)
+> -		goto out_disable_phy;
+> +		goto out_variant_clear;
+> 
+>  	ufs_qcom_set_caps(hba);
+>  	ufs_qcom_advertise_quirks(hba);
+> @@ -1304,10 +1300,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+> 
+>  	goto out;
+> 
+> -out_disable_phy:
+> -	phy_power_off(host->generic_phy);
+> -out_unregister_bus:
+> -	phy_exit(host->generic_phy);
+>  out_variant_clear:
+>  	ufshcd_set_variant(hba, NULL);
+>  out:
+> diff --git a/include/linux/phy/phy-qcom-ufs.h 
+> b/include/linux/phy/phy-qcom-ufs.h
+> index 35c070ea6ea3..0a2c18a9771d 100644
+> --- a/include/linux/phy/phy-qcom-ufs.h
+> +++ b/include/linux/phy/phy-qcom-ufs.h
+> @@ -31,10 +31,7 @@
+>   */
+>  void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
+> 
+> -int ufs_qcom_phy_start_serdes(struct phy *phy);
+>  int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
+> -int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
+> -int ufs_qcom_phy_is_pcs_ready(struct phy *phy);
+>  void ufs_qcom_phy_save_controller_version(struct phy *phy,
+>  			u8 major, u16 minor, u16 step);
+
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
