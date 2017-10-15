@@ -1,43 +1,40 @@
-From: Ben Hutchings <ben.hutchings@codethink.co.uk>
-Subject: [PATCH] scsi: sg: Re-fix off by one in sg_fill_request_table()
-Date: Sun, 15 Oct 2017 18:16:33 +0100
-Message-ID: <20171015171633.rphqeyc46uy4l5tx@xylophone.i.decadent.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Dan Carpenter <dan.carpenter@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+From: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] scsi: hpsa: simplify hpsa_set_local_logical_count()
+Date: Sun, 15 Oct 2017 20:35:03 +0100
+Message-ID: <1508096103-6751-1-git-send-email-chris.gekas@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 109bade9c625 ("scsi: sg: use standard lists for sg_requests")
-introduced an off-by-one error in sg_ioctl(), which was fixed by
-commit bd46fc406b30 ("scsi: sg: off by one in sg_ioctl()").
+Variable configured_logical_drive_count is defined as u8 and thus the
+nested if statement always evaluates to true. Remove it and simplify.
 
-Unfortunately commit 4759df905a47 ("scsi: sg: factor out
-sg_fill_request_table()") moved that code, and reintroduced the
-bug (perhaps due to a botched rebase).  Fix it again.
-
-Fixes: 4759df905a47 ("scsi: sg: factor out sg_fill_request_table()")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
 ---
- drivers/scsi/sg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 0419c2298eab..aa28874e8fb9 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -837,7 +837,7 @@ sg_fill_request_table(Sg_fd *sfp, sg_req_info_t *rinfo)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 9abe810..7d4f139 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4090,14 +4090,7 @@ static int hpsa_set_local_logical_count(struct ctlr_info *h,
+ 	}
+ 	memset(id_ctlr, 0, sizeof(*id_ctlr));
+ 	rc = hpsa_bmic_id_controller(h, id_ctlr, sizeof(*id_ctlr));
+-	if (!rc)
+-		if (id_ctlr->configured_logical_drive_count < 256)
+-			*nlocals = id_ctlr->configured_logical_drive_count;
+-		else
+-			*nlocals = le16_to_cpu(
+-					id_ctlr->extended_logical_unit_count);
+-	else
+-		*nlocals = -1;
++	*nlocals = rc ? -1 : id_ctlr->configured_logical_drive_count;
+ 	return rc;
+ }
  
- 	val = 0;
- 	list_for_each_entry(srp, &sfp->rq_list, entry) {
--		if (val > SG_MAX_QUEUE)
-+		if (val >= SG_MAX_QUEUE)
- 			break;
- 		rinfo[val].req_state = srp->done + 1;
- 		rinfo[val].problem =
 -- 
-2.15.0.rc0
+2.7.4
