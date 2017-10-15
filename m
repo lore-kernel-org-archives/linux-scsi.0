@@ -1,45 +1,68 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V10 0/8] blk-mq-sched: improve sequential I/O performance
-Date: Sun, 15 Oct 2017 07:17:46 +0800
-Message-ID: <20171014231744.GB17485@ming.t460p>
-References: <20171014092232.13943-1-ming.lei@redhat.com>
- <1c643ef1-26d8-3fa4-2b65-7e299e6a5ceb@kernel.dk>
+From: <nelcastellodicarta@gmail.com>
+Subject: (unknown)
+Date: Sun, 15 Oct 2017 15:13:14 -0000
+Message-ID: <150808039443.32756.10995687038560346905@myrepublic.com.sg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1c643ef1-26d8-3fa4-2b65-7e299e6a5ceb@kernel.dk>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tom Nguyen <tom81094@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+Content-Type: application/zip; name="4412770469.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 159-130-140-158.myrepublic.com.sg ([158.140.130.159]:46178 "HELO
+        myrepublic.com.sg" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751245AbdJOPNT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Oct 2017 11:13:19 -0400
+Subject: 
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Oct 14, 2017 at 09:39:21AM -0600, Jens Axboe wrote:
-> On 10/14/2017 03:22 AM, Ming Lei wrote:
-> > Hi Jens,
-> > 
-> > In Red Hat internal storage test wrt. blk-mq scheduler, we found that I/O
-> > performance is much bad with mq-deadline, especially about sequential I/O
-> > on some multi-queue SCSI devcies(lpfc, qla2xxx, SRP...)
-> > 
-> > Turns out one big issue causes the performance regression: requests are
-> > still dequeued from sw queue/scheduler queue even when ldd's queue is
-> > busy, so I/O merge becomes quite difficult to make, then sequential IO
-> > performance degrades a lot.
-> > 
-> > This issue becomes one of mains reasons for reverting default SCSI_MQ
-> > in V4.13.
-> > 
-> > This 8 patches improve this situation, and brings back performance loss.
-> > 
-> > With this change, SCSI-MQ sequential I/O performance is improved much, Paolo
-> > reported that mq-deadline performance improved much[2] in his dbench test
-> > wrt V2. Also performance improvement on lpfc/qla2xx was observed with V1.[1]
-> 
-> Looks good to me, and the kyber fix looks obviously correct to me. I have
-> applied this series for 4.15. Thanks Ming.
-
-That is great, thanks for making this patchset in!
-
--- 
-Ming
+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
+CgAAAAA=
