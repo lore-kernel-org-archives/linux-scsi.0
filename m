@@ -1,106 +1,56 @@
-From: Tim Hansen <devtimhansen@gmail.com>
-Subject: Re: [PATCH] bsg: update bsg_device_list to utilize static hash table
- implementation.
-Date: Sun, 15 Oct 2017 17:30:10 -0400
-Message-ID: <20171015213010.pw7tbxnndalmuoni@debian>
-References: <20171002161001.GA49685@debian>
+From: Masanori Goto <gotom@debian.or.jp>
+Subject: Re: [PATCH] scsi: nsp32: fix logic bug in error handling
+Date: Mon, 16 Oct 2017 08:51:22 +0900
+Message-ID: <CALZLnaF=ih9nC7dYusxwOKeYhGHa_mRy8k8gGOHpaUvyBkD2kA@mail.gmail.com>
+References: <20170905075139.518406-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171002161001.GA49685@debian>
-Sender: linux-block-owner@vger.kernel.org
-To: fujita.tomonori@lab.ntt.co.jp
-Cc: axboe@kernel.dk, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, alexander.levin@one.verizon.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170905075139.518406-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Mon, Oct 02, 2017 at 12:10:01PM -0400, Tim Hansen wrote:
-> Updates bsg_device_list to utilize static hashtable implementation.
-> 
-> This is done in an effort to standarize the hashtables used across the
-> kernel.
-> 
-> Signed-off-by: Tim Hansen <devtimhansen@gmail.com>
+2017-09-05 16:51 GMT+09:00 Arnd Bergmann <arnd@arndb.de>:
+> gcc-8 points out a logic error that has existed since the start
+> of the git history:
+>
+> drivers/scsi/nsp32.c: In function 'nsp32_selection_autoscsi':
+> drivers/scsi/nsp32.c:607:27: error: bitwise comparison always evaluates to false [-Werror=tautological-compare]
+>   if(((phase & BUSMON_BSY) == 1) || (phase & BUSMON_SEL) == 1) {
+>                            ^~
+>
+> Presumably the author intended to check if one of two bits was
+> set, so that's what I'm changing the code to. This will obviously
+> change the behavior of the code, hopefully to do the right thing,
+> but I have not tested this or checked if the new "(phase & BUSMON_BSY)
+> || (phase & BUSMON_SEL)" condition should indeed be treated as a
+> fatal error.
+>
+
+This is what I originally intended to, thank you!
+
+Signed-off-by: GOTO Masanori <gotom@debian.or.jp>
+
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 > ---
->  block/bsg.c | 20 ++++++--------------
->  1 file changed, 6 insertions(+), 14 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index ee1335c68de7..ecb93d733b56 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -66,8 +66,8 @@ enum {
->  static DEFINE_MUTEX(bsg_mutex);
->  static DEFINE_IDR(bsg_minor_idr);
->  
-> -#define BSG_LIST_ARRAY_SIZE	8
-> -static struct hlist_head bsg_device_list[BSG_LIST_ARRAY_SIZE];
-> +#define BSG_HASHTABLE_BIT_SIZE		3
-> +static DEFINE_HASHTABLE(bsg_device_list, BSG_HASHTABLE_BIT_SIZE);
->  
->  static struct class *bsg_class;
->  static int bsg_major;
-> @@ -130,11 +130,6 @@ static struct bsg_command *bsg_alloc_command(struct bsg_device *bd)
->  	return bc;
->  }
->  
-> -static inline struct hlist_head *bsg_dev_idx_hash(int index)
-> -{
-> -	return &bsg_device_list[index & (BSG_LIST_ARRAY_SIZE - 1)];
-> -}
-> -
->  static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
->  				struct sg_io_v4 *hdr, struct bsg_device *bd,
->  				fmode_t has_write_perm)
-> @@ -716,7 +711,7 @@ static int bsg_put_device(struct bsg_device *bd)
->  		goto out;
->  	}
->  
-> -	hlist_del(&bd->dev_list);
-> +	hash_del(&bd->dev_list);
->  	mutex_unlock(&bsg_mutex);
->  
->  	dprintk("%s: tearing down\n", bd->name);
-> @@ -770,7 +765,7 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
->  
->  	atomic_set(&bd->ref_count, 1);
->  	mutex_lock(&bsg_mutex);
-> -	hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(iminor(inode)));
-> +	hash_add(bsg_device_list, &bd->dev_list, iminor(inode));
->  
->  	strncpy(bd->name, dev_name(rq->bsg_dev.class_dev), sizeof(bd->name) - 1);
->  	dprintk("bound to <%s>, max queue %d\n",
-> @@ -786,7 +781,7 @@ static struct bsg_device *__bsg_get_device(int minor, struct request_queue *q)
->  
->  	mutex_lock(&bsg_mutex);
->  
-> -	hlist_for_each_entry(bd, bsg_dev_idx_hash(minor), dev_list) {
-> +	hash_for_each_possible(bsg_device_list, bd, dev_list, minor) {
->  		if (bd->queue == q) {
->  			atomic_inc(&bd->ref_count);
->  			goto found;
-> @@ -1042,7 +1037,7 @@ static char *bsg_devnode(struct device *dev, umode_t *mode)
->  
->  static int __init bsg_init(void)
->  {
-> -	int ret, i;
-> +	int ret;
->  	dev_t devid;
->  
->  	bsg_cmd_cachep = kmem_cache_create("bsg_cmd",
-> @@ -1052,9 +1047,6 @@ static int __init bsg_init(void)
->  		return -ENOMEM;
->  	}
->  
-> -	for (i = 0; i < BSG_LIST_ARRAY_SIZE; i++)
-> -		INIT_HLIST_HEAD(&bsg_device_list[i]);
-> -
->  	bsg_class = class_create(THIS_MODULE, "bsg");
->  	if (IS_ERR(bsg_class)) {
->  		ret = PTR_ERR(bsg_class);
-> -- 
-> 2.14.2
-
-Pinging folks again kindly for review of this patch.
-
-Thank you
+>  drivers/scsi/nsp32.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+> index 107e191bf023..8620ac5d6e41 100644
+> --- a/drivers/scsi/nsp32.c
+> +++ b/drivers/scsi/nsp32.c
+> @@ -604,7 +604,7 @@ static int nsp32_selection_autoscsi(struct scsi_cmnd *SCpnt)
+>          * check bus line
+>          */
+>         phase = nsp32_read1(base, SCSI_BUS_MONITOR);
+> -       if(((phase & BUSMON_BSY) == 1) || (phase & BUSMON_SEL) == 1) {
+> +       if ((phase & BUSMON_BSY) || (phase & BUSMON_SEL)) {
+>                 nsp32_msg(KERN_WARNING, "bus busy");
+>                 SCpnt->result = DID_BUS_BUSY << 16;
+>                 status = 1;
+> --
+> 2.9.0
+>
