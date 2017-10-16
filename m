@@ -1,63 +1,108 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 0/8] Introduce sgl_alloc() and sgl_free()
-Date: Mon, 16 Oct 2017 15:49:32 -0700
-Message-ID: <20171016224940.1332-1-bart.vanassche@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-crypto@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH v2 5/8] target: Use sgl_alloc_order() and sgl_free()
+Date: Mon, 16 Oct 2017 15:49:37 -0700
+Message-ID: <20171016224940.1332-6-bart.vanassche@wdc.com>
+References: <20171016224940.1332-1-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:63940 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755836AbdJPWto (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 18:49:44 -0400
+In-Reply-To: <20171016224940.1332-1-bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-crypto@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, "Nicholas A . Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>
 
-Hello Jens,
+Use the sgl_alloc_order() and sgl_free() functions instead of open
+coding these functions.
 
-As you know there are multiple drivers that both allocate a scatter/gather
-list and populate that list with pages. This patch series moves the code for
-allocating and freeing such scatterlists from these drivers into
-lib/scatterlist.c. Please consider this patch series for kernel v4.15.
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+---
+ drivers/target/Kconfig                 |  1 +
+ drivers/target/target_core_transport.c | 46 +++-------------------------------
+ 2 files changed, 5 insertions(+), 42 deletions(-)
 
-Notes:
-- Only the ib_srpt driver changes have been tested but none of the other
-  drivers have been retested.
-- The next step is to introduce a caching mechanism for these scatterlists
-  and make the nvmet/rdma and SCSI target drivers use that caching mechanism
-  since for these drivers sgl allocation occurs in the hot path.
-
-Changes compared to v1:
-- Moved the sgl_alloc*() and sgl_free() functions from a new source file into
-  lib/scatterlist.c.
-- Changed the argument order for the sgl_alloc*() functions such that the
-  (pointer to) the output argument comes last.
-
-Thanks,
-
-Bart.
-
-Bart Van Assche (8):
-  lib/scatterlist: Introduce sgl_alloc() and sgl_free()
-  crypto: scompress - use sgl_alloc() and sgl_free()
-  nvmet/fc: Use sgl_alloc() and sgl_free()
-  nvmet/rdma: Use sgl_alloc() and sgl_free()
-  target: Use sgl_alloc_order() and sgl_free()
-  scsi/ipr: Use sgl_alloc_order() and sgl_free_order()
-  scsi/pmcraid: Remove an unused structure member
-  scsi/pmcraid: Use sgl_alloc_order() and sgl_free_order()
-
- crypto/Kconfig                         |   1 +
- crypto/scompress.c                     |  51 +---------------
- drivers/nvme/target/Kconfig            |   2 +
- drivers/nvme/target/fc.c               |  36 +----------
- drivers/nvme/target/rdma.c             |  63 ++------------------
- drivers/scsi/Kconfig                   |   2 +
- drivers/scsi/ipr.c                     |  49 +++------------
- drivers/scsi/ipr.h                     |   2 +-
- drivers/scsi/pmcraid.c                 |  43 ++------------
- drivers/scsi/pmcraid.h                 |   3 +-
- drivers/target/Kconfig                 |   1 +
- drivers/target/target_core_transport.c |  46 ++-------------
- include/linux/scatterlist.h            |  10 ++++
- lib/Kconfig                            |   4 ++
- lib/scatterlist.c                      | 105 +++++++++++++++++++++++++++++++++
- 15 files changed, 151 insertions(+), 267 deletions(-)
-
+diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+index e2bc99980f75..4c44d7bed01a 100644
+--- a/drivers/target/Kconfig
++++ b/drivers/target/Kconfig
+@@ -5,6 +5,7 @@ menuconfig TARGET_CORE
+ 	select CONFIGFS_FS
+ 	select CRC_T10DIF
+ 	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
++	select SGL_ALLOC
+ 	default n
+ 	help
+ 	Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 836d552b0385..9bbd08be9d60 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2293,13 +2293,7 @@ static void target_complete_ok_work(struct work_struct *work)
+ 
+ void target_free_sgl(struct scatterlist *sgl, int nents)
+ {
+-	struct scatterlist *sg;
+-	int count;
+-
+-	for_each_sg(sgl, sg, nents, count)
+-		__free_page(sg_page(sg));
+-
+-	kfree(sgl);
++	sgl_free(sgl);
+ }
+ EXPORT_SYMBOL(target_free_sgl);
+ 
+@@ -2423,42 +2417,10 @@ int
+ target_alloc_sgl(struct scatterlist **sgl, unsigned int *nents, u32 length,
+ 		 bool zero_page, bool chainable)
+ {
+-	struct scatterlist *sg;
+-	struct page *page;
+-	gfp_t zero_flag = (zero_page) ? __GFP_ZERO : 0;
+-	unsigned int nalloc, nent;
+-	int i = 0;
+-
+-	nalloc = nent = DIV_ROUND_UP(length, PAGE_SIZE);
+-	if (chainable)
+-		nalloc++;
+-	sg = kmalloc_array(nalloc, sizeof(struct scatterlist), GFP_KERNEL);
+-	if (!sg)
+-		return -ENOMEM;
++	gfp_t gfp = GFP_KERNEL | (zero_page ? __GFP_ZERO : 0);
+ 
+-	sg_init_table(sg, nalloc);
+-
+-	while (length) {
+-		u32 page_len = min_t(u32, length, PAGE_SIZE);
+-		page = alloc_page(GFP_KERNEL | zero_flag);
+-		if (!page)
+-			goto out;
+-
+-		sg_set_page(&sg[i], page, page_len, 0);
+-		length -= page_len;
+-		i++;
+-	}
+-	*sgl = sg;
+-	*nents = nent;
+-	return 0;
+-
+-out:
+-	while (i > 0) {
+-		i--;
+-		__free_page(sg_page(&sg[i]));
+-	}
+-	kfree(sg);
+-	return -ENOMEM;
++	*sgl = sgl_alloc_order(length, 0, chainable, gfp, nents);
++	return *sgl ? 0 : -ENOMEM;
+ }
+ EXPORT_SYMBOL(target_alloc_sgl);
+ 
 -- 
 2.14.2
