@@ -1,132 +1,134 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 4/8] nvmet/rdma: Use sgl_alloc() and sgl_free()
-Date: Mon, 16 Oct 2017 15:49:36 -0700
-Message-ID: <20171016224940.1332-5-bart.vanassche@wdc.com>
+Subject: [PATCH v2 6/8] scsi/ipr: Use sgl_alloc_order() and sgl_free_order()
+Date: Mon, 16 Oct 2017 15:49:38 -0700
+Message-ID: <20171016224940.1332-7-bart.vanassche@wdc.com>
 References: <20171016224940.1332-1-bart.vanassche@wdc.com>
-Return-path: <linux-crypto-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171016224940.1332-1-bart.vanassche@wdc.com>
-Sender: linux-crypto-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-crypto@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Keith Busch <keith.busch@intel.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-crypto@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Brian King <brking@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use the sgl_alloc() and sgl_free() functions instead of open coding
-these functions.
+Use the sgl_alloc_order() and sgl_free_order() functions instead
+of open coding these functions.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: linux-scsi@vger.kernel.org
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/nvme/target/Kconfig |  1 +
- drivers/nvme/target/rdma.c  | 63 +++------------------------------------------
- 2 files changed, 5 insertions(+), 59 deletions(-)
+ drivers/scsi/Kconfig |  1 +
+ drivers/scsi/ipr.c   | 49 ++++++++-----------------------------------------
+ drivers/scsi/ipr.h   |  2 +-
+ 3 files changed, 10 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/nvme/target/Kconfig b/drivers/nvme/target/Kconfig
-index 4d9715630e21..5f4f8b16685f 100644
---- a/drivers/nvme/target/Kconfig
-+++ b/drivers/nvme/target/Kconfig
-@@ -29,6 +29,7 @@ config NVME_TARGET_RDMA
- 	tristate "NVMe over Fabrics RDMA target support"
- 	depends on INFINIBAND
- 	depends on NVME_TARGET
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 41366339b950..d11e75e76195 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1058,6 +1058,7 @@ config SCSI_IPR
+ 	depends on PCI && SCSI && ATA
+ 	select FW_LOADER
+ 	select IRQ_POLL
 +	select SGL_ALLOC
- 	help
- 	  This enables the NVMe RDMA target support, which allows exporting NVMe
- 	  devices over RDMA.
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 76d2bb793afe..363d44c10b68 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -185,59 +185,6 @@ nvmet_rdma_put_rsp(struct nvmet_rdma_rsp *rsp)
- 	spin_unlock_irqrestore(&rsp->queue->rsps_lock, flags);
- }
- 
--static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents)
--{
--	struct scatterlist *sg;
--	int count;
--
--	if (!sgl || !nents)
--		return;
--
--	for_each_sg(sgl, sg, nents, count)
--		__free_page(sg_page(sg));
--	kfree(sgl);
--}
--
--static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
--		u32 length)
--{
--	struct scatterlist *sg;
--	struct page *page;
--	unsigned int nent;
--	int i = 0;
--
--	nent = DIV_ROUND_UP(length, PAGE_SIZE);
--	sg = kmalloc_array(nent, sizeof(struct scatterlist), GFP_KERNEL);
--	if (!sg)
--		goto out;
--
--	sg_init_table(sg, nent);
--
--	while (length) {
--		u32 page_len = min_t(u32, length, PAGE_SIZE);
--
--		page = alloc_page(GFP_KERNEL);
--		if (!page)
--			goto out_free_pages;
--
--		sg_set_page(&sg[i], page, page_len, 0);
--		length -= page_len;
--		i++;
--	}
--	*sgl = sg;
--	*nents = nent;
--	return 0;
--
--out_free_pages:
--	while (i > 0) {
--		i--;
--		__free_page(sg_page(&sg[i]));
--	}
--	kfree(sg);
--out:
--	return NVME_SC_INTERNAL;
--}
--
- static int nvmet_rdma_alloc_cmd(struct nvmet_rdma_device *ndev,
- 			struct nvmet_rdma_cmd *c, bool admin)
+ 	---help---
+ 	  This driver supports the IBM Power Linux family RAID adapters.
+ 	  This includes IBM pSeries 5712, 5703, 5709, and 570A, as well
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index f838bd73befa..6fed5db6255e 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3815,10 +3815,8 @@ static struct device_attribute ipr_iopoll_weight_attr = {
+  **/
+ static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
  {
-@@ -484,7 +431,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
+-	int sg_size, order, bsize_elem, num_elem, i, j;
++	int sg_size, order;
+ 	struct ipr_sglist *sglist;
+-	struct scatterlist *scatterlist;
+-	struct page *page;
+ 
+ 	/* Get the minimum size per scatter/gather element */
+ 	sg_size = buf_len / (IPR_MAX_SGLIST - 1);
+@@ -3826,45 +3824,18 @@ static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
+ 	/* Get the actual size per element */
+ 	order = get_order(sg_size);
+ 
+-	/* Determine the actual number of bytes per element */
+-	bsize_elem = PAGE_SIZE * (1 << order);
+-
+-	/* Determine the actual number of sg entries needed */
+-	if (buf_len % bsize_elem)
+-		num_elem = (buf_len / bsize_elem) + 1;
+-	else
+-		num_elem = buf_len / bsize_elem;
+-
+ 	/* Allocate a scatter/gather list for the DMA */
+-	sglist = kzalloc(sizeof(struct ipr_sglist) +
+-			 (sizeof(struct scatterlist) * (num_elem - 1)),
+-			 GFP_KERNEL);
+-
++	sglist = kzalloc(sizeof(struct ipr_sglist), GFP_KERNEL);
+ 	if (sglist == NULL) {
+ 		ipr_trace;
+ 		return NULL;
+ 	}
+-
+-	scatterlist = sglist->scatterlist;
+-	sg_init_table(scatterlist, num_elem);
+-
+ 	sglist->order = order;
+-	sglist->num_sg = num_elem;
+-
+-	/* Allocate a bunch of sg elements */
+-	for (i = 0; i < num_elem; i++) {
+-		page = alloc_pages(GFP_KERNEL, order);
+-		if (!page) {
+-			ipr_trace;
+-
+-			/* Free up what we already allocated */
+-			for (j = i - 1; j >= 0; j--)
+-				__free_pages(sg_page(&scatterlist[j]), order);
+-			kfree(sglist);
+-			return NULL;
+-		}
+-
+-		sg_set_page(&scatterlist[i], page, 0, 0);
++	sglist->scatterlist = sgl_alloc_order(buf_len, order, false, GFP_KERNEL,
++					      &sglist->num_sg);
++	if (!sglist->scatterlist) {
++		kfree(sglist);
++		return NULL;
  	}
  
- 	if (rsp->req.sg != &rsp->cmd->inline_sg)
--		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt);
-+		sgl_free(rsp->req.sg);
+ 	return sglist;
+@@ -3882,11 +3853,7 @@ static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
+  **/
+ static void ipr_free_ucode_buffer(struct ipr_sglist *sglist)
+ {
+-	int i;
+-
+-	for (i = 0; i < sglist->num_sg; i++)
+-		__free_pages(sg_page(&sglist->scatterlist[i]), sglist->order);
+-
++	sgl_free_order(sglist->scatterlist, sglist->order);
+ 	kfree(sglist);
+ }
  
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -620,16 +567,14 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	u32 len = get_unaligned_le24(sgl->length);
- 	u32 key = get_unaligned_le32(sgl->key);
- 	int ret;
--	u16 status;
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index c7f0e9e3cd7d..93570734cbfb 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -1454,7 +1454,7 @@ struct ipr_sglist {
+ 	u32 num_sg;
+ 	u32 num_dma_sg;
+ 	u32 buffer_len;
+-	struct scatterlist scatterlist[1];
++	struct scatterlist *scatterlist;
+ };
  
- 	/* no data command? */
- 	if (!len)
- 		return 0;
- 
--	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
--			len);
--	if (status)
--		return status;
-+	rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
-+	if (!rsp->req.sg)
-+		return NVME_SC_INTERNAL;
- 
- 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
- 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
+ enum ipr_sdt_state {
 -- 
 2.14.2
