@@ -1,75 +1,134 @@
-From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 12/15] RDMA/cma: make config_item_type
-	const
-Date: Mon, 16 Oct 2017 17:18:51 +0200
-Message-ID: <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Return-path: <cluster-devel-bounces@redhat.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/cluster-devel>
-List-Post: <mailto:cluster-devel@redhat.com>
-List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
-Sender: cluster-devel-bounces@redhat.com
-Errors-To: cluster-devel-bounces@redhat.com
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org, laurent.pinchart@ideasonboard.com, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH] linux/types.h: Restore the ability to disable sparse
+ endianness checks
+Date: Mon, 16 Oct 2017 18:27:52 +0300
+Message-ID: <20171016181159-mutt-send-email-mst@kernel.org>
+References: <20171006172353.16758-1-bart.vanassche@wdc.com>
+ <20171009162008-mutt-send-email-mst@kernel.org>
+ <1507561661.2674.3.camel@wdc.com>
+ <20171009204139-mutt-send-email-mst@kernel.org>
+ <1507653494.2815.27.camel@wdc.com>
+ <20171016160316-mutt-send-email-mst@kernel.org>
+ <1508162253.2728.1.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1508162253.2728.1.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Make these structures const as they are either passed to the functions
-having the argument as const or stored as a reference in the "ci_type"
-const field of a config_item structure.
+On Mon, Oct 16, 2017 at 01:57:35PM +0000, Bart Van Assche wrote:
+> On Mon, 2017-10-16 at 16:34 +0300, Michael S. Tsirkin wrote:
+> > I don't see how it'll help make things better. OTOH if the specific
+> > drivers are tagged in the makefile, they can be gradually moved out to
+> > staging or something to help trigger action.
+> 
+> Do you really want to move drivers like qla2xxx to staging? That driver is
+> important to multiple enterprise distro's.
+> 
+> Bart.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+Frankly I'm surprised this one has sparse issues.
+Really e.g. drivers/scsi/qla2xxx/qla_nvme.h is new from June 2017.
 
- drivers/infiniband/core/cma_configfs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+It's not some ancient piece of code that no one understands so
+we are afraid to touch it.
 
-diff --git a/drivers/infiniband/core/cma_configfs.c b/drivers/infiniband/core/cma_configfs.c
-index 54076a3..31dfee0 100644
---- a/drivers/infiniband/core/cma_configfs.c
-+++ b/drivers/infiniband/core/cma_configfs.c
-@@ -186,7 +186,7 @@ static ssize_t default_roce_tos_store(struct config_item *item,
- 	NULL,
+So if you care, why don't you just fix it up?  I suspect it's a question
+of just tagging structure fields properly.
+
+Here's a patch fixing up one of the files in that driver.
+
+--->
+
+qla2xxx: make qla_nvme sparse clean
+
+Without looking into what it actually does, just add annotations so
+sparse does not complain. Separately, the handle field in cmd_nvme which
+isn't tagged as LE should be examined for endian-ness by someone who
+understands this hardware.  If it actually needs to be native endian, a
+comment explaining why would be a good idea.
+
+Similarly for cur_dsd which seems to mix LE and native data.
+
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index f3710a7..05ab549 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -442,7 +442,7 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
+ 				req->ring_ptr++;
+ 			}
+ 			cont_pkt = (cont_a64_entry_t *)req->ring_ptr;
+-			*((uint32_t *)(&cont_pkt->entry_type)) =
++			*((__le32 *)(&cont_pkt->entry_type)) =
+ 			    cpu_to_le32(CONTINUE_A64_TYPE);
+ 
+ 			cur_dsd = (uint32_t *)cont_pkt->dseg_0_address;
+@@ -450,9 +450,9 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
+ 		}
+ 
+ 		sle_dma = sg_dma_address(sg);
+-		*cur_dsd++ = cpu_to_le32(LSD(sle_dma));
+-		*cur_dsd++ = cpu_to_le32(MSD(sle_dma));
+-		*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
++		*(__le32 __force *)cur_dsd++ = cpu_to_le32(LSD(sle_dma));
++		*(__le32 __force *)cur_dsd++ = cpu_to_le32(MSD(sle_dma));
++		*(__le32 __force *)cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
+ 		avail_dsds--;
+ 	}
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.h b/drivers/scsi/qla2xxx/qla_nvme.h
+index dfe56f2..da58bd1 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.h
++++ b/drivers/scsi/qla2xxx/qla_nvme.h
+@@ -39,32 +39,32 @@ struct cmd_nvme {
+ 	uint8_t entry_status;           /* Entry Status. */
+ 
+ 	uint32_t handle;                /* System handle. */
+-	uint16_t nport_handle;          /* N_PORT handle. */
+-	uint16_t timeout;               /* Command timeout. */
++	__le16 nport_handle;          /* N_PORT handle. */
++	__le16 timeout;               /* Command timeout. */
+ 
+-	uint16_t dseg_count;            /* Data segment count. */
+-	uint16_t nvme_rsp_dsd_len;      /* NVMe RSP DSD length */
++	__le16 dseg_count;            /* Data segment count. */
++	__le16 nvme_rsp_dsd_len;      /* NVMe RSP DSD length */
+ 
+ 	uint64_t rsvd;
+ 
+-	uint16_t control_flags;         /* Control Flags */
++	__le16 control_flags;         /* Control Flags */
+ #define CF_NVME_ENABLE                  BIT_9
+ #define CF_DIF_SEG_DESCR_ENABLE         BIT_3
+ #define CF_DATA_SEG_DESCR_ENABLE        BIT_2
+ #define CF_READ_DATA                    BIT_1
+ #define CF_WRITE_DATA                   BIT_0
+ 
+-	uint16_t nvme_cmnd_dseg_len;             /* Data segment length. */
+-	uint32_t nvme_cmnd_dseg_address[2];      /* Data segment address. */
+-	uint32_t nvme_rsp_dseg_address[2];       /* Data segment address. */
++	__le16 nvme_cmnd_dseg_len;             /* Data segment length. */
++	__le32 nvme_cmnd_dseg_address[2];      /* Data segment address. */
++	__le32 nvme_rsp_dseg_address[2];       /* Data segment address. */
+ 
+-	uint32_t byte_count;            /* Total byte count. */
++	__le32 byte_count;            /* Total byte count. */
+ 
+ 	uint8_t port_id[3];             /* PortID of destination port. */
+ 	uint8_t vp_index;
+ 
+-	uint32_t nvme_data_dseg_address[2];      /* Data segment address. */
+-	uint32_t nvme_data_dseg_len;             /* Data segment length. */
++	__le32 nvme_data_dseg_address[2];      /* Data segment address. */
++	__le32 nvme_data_dseg_len;             /* Data segment length. */
  };
  
--static struct config_item_type cma_port_group_type = {
-+static const struct config_item_type cma_port_group_type = {
- 	.ct_attrs	= cma_configfs_attributes,
- 	.ct_owner	= THIS_MODULE
- };
-@@ -263,7 +263,7 @@ static void release_cma_ports_group(struct config_item  *item)
- 	.release = release_cma_ports_group
- };
- 
--static struct config_item_type cma_ports_group_type = {
-+static const struct config_item_type cma_ports_group_type = {
- 	.ct_item_ops	= &cma_ports_item_ops,
- 	.ct_owner	= THIS_MODULE
- };
-@@ -272,7 +272,7 @@ static void release_cma_ports_group(struct config_item  *item)
- 	.release = release_cma_dev
- };
- 
--static struct config_item_type cma_device_group_type = {
-+static const struct config_item_type cma_device_group_type = {
- 	.ct_item_ops	= &cma_device_item_ops,
- 	.ct_owner	= THIS_MODULE
- };
-@@ -323,7 +323,7 @@ static struct config_group *make_cma_dev(struct config_group *group,
- 	.make_group	= make_cma_dev,
- };
- 
--static struct config_item_type cma_subsys_type = {
-+static const struct config_item_type cma_subsys_type = {
- 	.ct_group_ops	= &cma_subsys_group_ops,
- 	.ct_owner	= THIS_MODULE,
- };
+ #define PT_LS4_REQUEST 0x89	/* Link Service pass-through IOCB (request) */
 -- 
-1.9.1
+MST
