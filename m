@@ -1,90 +1,65 @@
-From: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v2 06/15] PCI: endpoint: make config_item_type const
-Date: Mon, 16 Oct 2017 13:24:37 -0500
-Message-ID: <20171016182437.GG25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
- <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
+From: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
+Subject: [PATCH 1/1] qla2xxx: Initialize Work element before requesting IRQs
+Date: Mon, 16 Oct 2017 11:26:05 -0700
+Message-ID: <20171016182605.22174-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org, laurent.pinchart@ideasonboard.com, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, cluster-devel@redh
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0078.outbound.protection.outlook.com ([104.47.34.78]:59520
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754947AbdJPS0N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Oct 2017 14:26:13 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-On Mon, Oct 16, 2017 at 05:18:45PM +0200, Bhumika Goyal wrote:
-> Make config_item_type structures const as they are either passed to a
-> function having the argument as const or stored in the const "ci_type"
-> field of a config_item structure.
-> 
-> Done using Coccinelle.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+commit a9e170e28636 ("scsi: qla2xxx: Fix uninitialized work element")
+moved initialziation of work element earlier in the probe to fix call
+stack. However, it still leaves a window where interrupt can be generated
+before work element is initialized. Fix that window by Initializing work
+element before we are requesting IRQs.
 
-Please apply this along with the rest of the series, since it depends
-on an earlier patch in the series.
+Fixes: a9e170e28636 ("scsi: qla2xxx: Fix uninitialized work element")
+Cc: <stable@vger.kernel.org> # 4.13
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+---
+Hi Martin,
 
-> ---
-> * Changes in v2- Combine all the followup patches and the constification
-> patches into a series.
-> 
->  drivers/pci/endpoint/pci-ep-cfs.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-> index 424fdd6..4f74386 100644
-> --- a/drivers/pci/endpoint/pci-ep-cfs.c
-> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
-> @@ -150,7 +150,7 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
->  	.drop_link	= pci_epc_epf_unlink,
->  };
->  
-> -static struct config_item_type pci_epc_type = {
-> +static const struct config_item_type pci_epc_type = {
->  	.ct_item_ops	= &pci_epc_item_ops,
->  	.ct_attrs	= pci_epc_attrs,
->  	.ct_owner	= THIS_MODULE,
-> @@ -361,7 +361,7 @@ static void pci_epf_release(struct config_item *item)
->  	.release		= pci_epf_release,
->  };
->  
-> -static struct config_item_type pci_epf_type = {
-> +static const struct config_item_type pci_epf_type = {
->  	.ct_item_ops	= &pci_epf_ops,
->  	.ct_attrs	= pci_epf_attrs,
->  	.ct_owner	= THIS_MODULE,
-> @@ -400,7 +400,7 @@ static void pci_epf_drop(struct config_group *group, struct config_item *item)
->  	.drop_item      = &pci_epf_drop,
->  };
->  
-> -static struct config_item_type pci_epf_group_type = {
-> +static const struct config_item_type pci_epf_group_type = {
->  	.ct_group_ops	= &pci_epf_group_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -428,15 +428,15 @@ void pci_ep_cfs_remove_epf_group(struct config_group *group)
->  }
->  EXPORT_SYMBOL(pci_ep_cfs_remove_epf_group);
->  
-> -static struct config_item_type pci_functions_type = {
-> +static const struct config_item_type pci_functions_type = {
->  	.ct_owner	= THIS_MODULE,
->  };
->  
-> -static struct config_item_type pci_controllers_type = {
-> +static const struct config_item_type pci_controllers_type = {
->  	.ct_owner	= THIS_MODULE,
->  };
->  
-> -static struct config_item_type pci_ep_type = {
-> +static const struct config_item_type pci_ep_type = {
->  	.ct_owner	= THIS_MODULE,
->  };
->  
-> -- 
-> 1.9.1
-> 
+Please apply this patch to 4.14.0-rc6. This patch fixes a small window where 
+user will see call stack with qla2xxx driver. 
+
+Thanks,
+Himanshu
+
+ drivers/scsi/qla2xxx/qla_os.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 937209805baf..3bd956d3bc5d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3061,6 +3061,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	    host->max_cmd_len, host->max_channel, host->max_lun,
+ 	    host->transportt, sht->vendor_id);
+ 
++	INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
++
+ 	/* Set up the irqs */
+ 	ret = qla2x00_request_irqs(ha, rsp);
+ 	if (ret)
+@@ -3175,8 +3177,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	    host->can_queue, base_vha->req,
+ 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
+ 
+-	INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
+-
+ 	if (ha->mqenable) {
+ 		bool mq = false;
+ 		bool startit = false;
+-- 
+2.12.0
