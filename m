@@ -1,171 +1,118 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.13 41/53] genirq/cpuhotplug: Enforce affinity setting on startup of managed irqs
-Date: Mon, 16 Oct 2017 18:16:38 +0200
-Message-ID: <20171016161443.962836398@linuxfoundation.org>
-References: <20171016161442.263947886@linuxfoundation.org>
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Re: [PATCH 6/9] bsg-lib: introduce a timeout field in struct bsg_job
+Date: Mon, 16 Oct 2017 18:30:24 +0200
+Message-ID: <20171016163024.GB26185@bblock-ThinkPad-W530>
+References: <20171003104845.10417-1-hch@lst.de>
+ <20171003104845.10417-7-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171016161442.263947886@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, axboe@kernel.dk, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, Marc Zyngier <marc.zyngier@arm.com>, mpe@ellerman.id.au, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, keith.busch@intel.com, peterz@infradead.org, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60568 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755217AbdJPQaa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Oct 2017 12:30:30 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9GGTfSX068415
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2017 12:30:30 -0400
+Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2dmy82keg9-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2017 12:30:29 -0400
+Received: from localhost
+        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Mon, 16 Oct 2017 17:30:27 +0100
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v9GGUPIZ23789576
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2017 16:30:25 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9733CA4051
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2017 17:25:51 +0100 (BST)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7D532A4040
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2017 17:25:51 +0100 (BST)
+Received: from bblock-ThinkPad-W530 (unknown [9.152.212.38])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2017 17:25:51 +0100 (BST)
+Content-Disposition: inline
+In-Reply-To: <20171003104845.10417-7-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-4.13-stable review patch.  If anyone has any objections, please let me know.
+On Tue, Oct 03, 2017 at 12:48:42PM +0200, Christoph Hellwig wrote:
+> The zfcp driver wants to know the timeout for a bsg job, so add a field
+> to struct bsg_job for it in preparation of not exposing the request
+> to the bsg-lib users.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/bsg-lib.c             | 1 +
+>  drivers/s390/scsi/zfcp_fc.c | 4 ++--
+>  include/linux/bsg-lib.h     | 2 ++
+>  3 files changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+> index 15d25ccd51a5..0d5bbf6a2ddd 100644
+> --- a/block/bsg-lib.c
+> +++ b/block/bsg-lib.c
+> @@ -132,6 +132,7 @@ static int bsg_prepare_job(struct device *dev, struct request *req)
+>  	struct bsg_job *job = blk_mq_rq_to_pdu(req);
+>  	int ret;
+> 
+> +	job->timeout = req->timeout;
+>  	job->request = rq->cmd;
+>  	job->request_len = rq->cmd_len;
+> 
+> diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+> index 8210645c2111..9d6f69b92c81 100644
+> --- a/drivers/s390/scsi/zfcp_fc.c
+> +++ b/drivers/s390/scsi/zfcp_fc.c
+> @@ -960,7 +960,7 @@ static int zfcp_fc_exec_els_job(struct bsg_job *job,
+>  		d_id = ntoh24(bsg_request->rqst_data.h_els.port_id);
+> 
+>  	els->handler = zfcp_fc_ct_els_job_handler;
+> -	return zfcp_fsf_send_els(adapter, d_id, els, job->req->timeout / HZ);
+> +	return zfcp_fsf_send_els(adapter, d_id, els, job->timeout / HZ);
+>  }
+> 
+>  static int zfcp_fc_exec_ct_job(struct bsg_job *job,
+> @@ -979,7 +979,7 @@ static int zfcp_fc_exec_ct_job(struct bsg_job *job,
+>  		return ret;
+> 
+>  	ct->handler = zfcp_fc_ct_job_handler;
+> -	ret = zfcp_fsf_send_ct(wka_port, ct, NULL, job->req->timeout / HZ);
+> +	ret = zfcp_fsf_send_ct(wka_port, ct, NULL, job->timeout / HZ);
+>  	if (ret)
+>  		zfcp_fc_wka_port_put(wka_port);
+> 
+> diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+> index b1be0233ce35..402223c95ce1 100644
+> --- a/include/linux/bsg-lib.h
+> +++ b/include/linux/bsg-lib.h
+> @@ -44,6 +44,8 @@ struct bsg_job {
+> 
+>  	struct kref kref;
+> 
+> +	unsigned int timeout;
+> +
+>  	/* Transport/driver specific request/reply structs */
+>  	void *request;
+>  	void *reply;
+> -- 
+> 2.14.1
+> 
 
-------------------
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 
-From: Thomas Gleixner <tglx@linutronix.de>
 
-commit e43b3b58548051f8809391eb7bec7a27ed3003ea upstream.
-
-Managed interrupts can end up in a stale state on CPU hotplug. If the
-interrupt is not targeting a single CPU, i.e. the affinity mask spawns
-multiple CPUs then the following can happen:
-
-After boot:
-
-dstate:   0x01601200
-            IRQD_ACTIVATED
-            IRQD_IRQ_STARTED
-            IRQD_SINGLE_TARGET
-            IRQD_AFFINITY_SET
-            IRQD_AFFINITY_MANAGED
-node:     0
-affinity: 24-31
-effectiv: 24
-pending:  0
-
-After offlining CPU 31 - 24
-
-dstate:   0x01a31000
-            IRQD_IRQ_DISABLED
-            IRQD_IRQ_MASKED
-            IRQD_SINGLE_TARGET
-            IRQD_AFFINITY_SET
-            IRQD_AFFINITY_MANAGED
-            IRQD_MANAGED_SHUTDOWN
-node:     0
-affinity: 24-31
-effectiv: 24
-pending:  0
-
-Now CPU 25 gets onlined again, so it should get the effective interrupt
-affinity for this interruopt, but due to the x86 interrupt affinity setter
-restrictions this ends up after restarting the interrupt with:
-
-dstate:   0x01601300
-            IRQD_ACTIVATED
-            IRQD_IRQ_STARTED
-            IRQD_SINGLE_TARGET
-            IRQD_AFFINITY_SET
-            IRQD_SETAFFINITY_PENDING
-            IRQD_AFFINITY_MANAGED
-node:     0
-affinity: 24-31
-effectiv: 24
-pending:  24-31
-
-So the interrupt is still affine to CPU 24, which was the last CPU to go
-offline of that affinity set and the move to an online CPU within 24-31,
-in this case 25, is pending. This mechanism is x86/ia64 specific as those
-architectures cannot move interrupts from thread context and do this when
-an interrupt is actually handled. So the move is set to pending.
-
-Whats worse is that offlining CPU 25 again results in:
-
-dstate:   0x01601300
-            IRQD_ACTIVATED
-            IRQD_IRQ_STARTED
-            IRQD_SINGLE_TARGET
-            IRQD_AFFINITY_SET
-            IRQD_SETAFFINITY_PENDING
-            IRQD_AFFINITY_MANAGED
-node:     0
-affinity: 24-31
-effectiv: 24
-pending:  24-31
-
-This means the interrupt has not been shut down, because the outgoing CPU
-is not in the effective affinity mask, but of course nothing notices that
-the effective affinity mask is pointing at an offline CPU.
-
-In the case of restarting a managed interrupt the move restriction does not
-apply, so the affinity setting can be made unconditional. This needs to be
-done _before_ the interrupt is started up as otherwise the condition for
-moving it from thread context would not longer be fulfilled.
-
-With that change applied onlining CPU 25 after offlining 31-24 results in:
-
-dstate:   0x01600200
-            IRQD_ACTIVATED
-            IRQD_IRQ_STARTED
-            IRQD_SINGLE_TARGET
-            IRQD_AFFINITY_MANAGED
-node:     0
-affinity: 24-31
-effectiv: 25
-pending:
-
-And after offlining CPU 25:
-
-dstate:   0x01a30000
-            IRQD_IRQ_DISABLED
-            IRQD_IRQ_MASKED
-            IRQD_SINGLE_TARGET
-            IRQD_AFFINITY_MANAGED
-            IRQD_MANAGED_SHUTDOWN
-node:     0
-affinity: 24-31
-effectiv: 25
-pending:
-
-which is the correct and expected result.
-
-Fixes: 761ea388e8c4 ("genirq: Handle managed irqs gracefully in irq_startup()")
-Reported-by: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: axboe@kernel.dk
-Cc: linux-scsi@vger.kernel.org
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
-Cc: mpe@ellerman.id.au
-Cc: Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: keith.busch@intel.com
-Cc: peterz@infradead.org
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Link: https://lkml.kernel.org/r/alpine.DEB.2.20.1710042208400.2406@nanos
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- kernel/irq/chip.c   |    2 +-
- kernel/irq/manage.c |    3 +++
- 2 files changed, 4 insertions(+), 1 deletion(-)
-
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -265,8 +265,8 @@ int irq_startup(struct irq_desc *desc, b
- 			irq_setup_affinity(desc);
- 			break;
- 		case IRQ_STARTUP_MANAGED:
-+			irq_do_set_affinity(d, aff, false);
- 			ret = __irq_startup(desc);
--			irq_set_affinity_locked(d, aff, false);
- 			break;
- 		case IRQ_STARTUP_ABORT:
- 			return 0;
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -175,6 +175,9 @@ int irq_do_set_affinity(struct irq_data
- 	struct irq_chip *chip = irq_data_get_irq_chip(data);
- 	int ret;
- 
-+	if (!chip || !chip->irq_set_affinity)
-+		return -EINVAL;
-+
- 	ret = chip->irq_set_affinity(data, mask, force);
- 	switch (ret) {
- 	case IRQ_SET_MASK_OK:
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
+-- 
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH 
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
