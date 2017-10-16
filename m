@@ -1,92 +1,113 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: be2iscsi: Convert timers to use timer_setup()
-Date: Mon, 16 Oct 2017 16:54:21 -0700
-Message-ID: <20171016235421.GA102535@beast>
+Subject: [PATCH] scsi/bnx2i: Convert timers to use timer_setup()
+Date: Mon, 16 Oct 2017 16:54:16 -0700
+Message-ID: <20171016235416.GA102521@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
 to pass the timer pointer explicitly.
 
-Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>
-Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>
-Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+There was a seemingly missing call to initialize the timer in one handler,
+so this was added to remove the open-coded initialization.
+
+Cc: QLogic-Storage-Upstream@qlogic.com
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/be2iscsi/be_main.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
+ drivers/scsi/bnx2i/bnx2i.h       |  2 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c   |  4 ++--
+ drivers/scsi/bnx2i/bnx2i_iscsi.c | 15 ++++-----------
+ 3 files changed, 7 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 7561e1332257..1013987db49b 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5249,12 +5249,11 @@ static void beiscsi_eqd_update_work(struct work_struct *work)
- 			      msecs_to_jiffies(BEISCSI_EQD_UPDATE_INTERVAL));
- }
- 
--static void beiscsi_hw_tpe_check(unsigned long ptr)
-+static void beiscsi_hw_tpe_check(struct timer_list *t)
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index 89ef1a1678d1..663a63d4dae4 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -858,7 +858,7 @@ extern int bnx2i_alloc_qp_resc(struct bnx2i_hba *hba,
+ 			       struct bnx2i_endpoint *ep);
+ extern void bnx2i_free_qp_resc(struct bnx2i_hba *hba,
+ 			       struct bnx2i_endpoint *ep);
+-extern void bnx2i_ep_ofld_timer(unsigned long data);
++extern void bnx2i_ep_ofld_timer(struct timer_list *t);
+ extern struct bnx2i_endpoint *bnx2i_find_ep_in_ofld_list(
+ 		struct bnx2i_hba *hba, u32 iscsi_cid);
+ extern struct bnx2i_endpoint *bnx2i_find_ep_in_destroy_list(
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index e3f22cb4f7fa..e0640e0f259f 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -688,9 +688,9 @@ void bnx2i_update_iscsi_conn(struct iscsi_conn *conn)
+  *
+  * routine to handle connection offload/destroy request timeout
+  */
+-void bnx2i_ep_ofld_timer(unsigned long data)
++void bnx2i_ep_ofld_timer(struct timer_list *t)
  {
--	struct beiscsi_hba *phba;
-+	struct beiscsi_hba *phba = from_timer(phba, t, hw_check);
- 	u32 wait;
+-	struct bnx2i_endpoint *ep = (struct bnx2i_endpoint *) data;
++	struct bnx2i_endpoint *ep = from_timer(ep, t, ofld_timer);
  
--	phba = (struct beiscsi_hba *)ptr;
- 	/* if not TPE, do nothing */
- 	if (!beiscsi_detect_tpe(phba))
- 		return;
-@@ -5267,11 +5266,10 @@ static void beiscsi_hw_tpe_check(unsigned long ptr)
- 			   msecs_to_jiffies(wait));
- }
- 
--static void beiscsi_hw_health_check(unsigned long ptr)
-+static void beiscsi_hw_health_check(struct timer_list *t)
- {
--	struct beiscsi_hba *phba;
-+	struct beiscsi_hba *phba = from_timer(phba, t, hw_check);
- 
--	phba = (struct beiscsi_hba *)ptr;
- 	beiscsi_detect_ue(phba);
- 	if (beiscsi_detect_ue(phba)) {
- 		__beiscsi_log(phba, KERN_ERR,
-@@ -5283,7 +5281,7 @@ static void beiscsi_hw_health_check(unsigned long ptr)
- 		if (!test_bit(BEISCSI_HBA_UER_SUPP, &phba->state))
- 			return;
- 		/* modify this timer to check TPE */
--		phba->hw_check.function = beiscsi_hw_tpe_check;
-+		phba->hw_check.function = (TIMER_FUNC_TYPE)beiscsi_hw_tpe_check;
+ 	if (ep->state == EP_STATE_OFLD_START) {
+ 		printk(KERN_ALERT "ofld_timer: CONN_OFLD timeout\n");
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 03c104b47f31..de0a507577ef 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1611,9 +1611,8 @@ static int bnx2i_conn_start(struct iscsi_cls_conn *cls_conn)
+ 	 * this should normally not sleep for a long time so it should
+ 	 * not disrupt the caller.
+ 	 */
++	timer_setup(&bnx2i_conn->ep->ofld_timer, bnx2i_ep_ofld_timer, 0);
+ 	bnx2i_conn->ep->ofld_timer.expires = 1 * HZ + jiffies;
+-	bnx2i_conn->ep->ofld_timer.function = bnx2i_ep_ofld_timer;
+-	bnx2i_conn->ep->ofld_timer.data = (unsigned long) bnx2i_conn->ep;
+ 	add_timer(&bnx2i_conn->ep->ofld_timer);
+ 	/* update iSCSI context for this conn, wait for CNIC to complete */
+ 	wait_event_interruptible(bnx2i_conn->ep->ofld_wait,
+@@ -1729,10 +1728,8 @@ static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
  	}
  
- 	mod_timer(&phba->hw_check,
-@@ -5371,7 +5369,7 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
- 	 * Timer function gets modified for TPE detection.
- 	 * Always reinit to do health check first.
- 	 */
--	phba->hw_check.function = beiscsi_hw_health_check;
-+	phba->hw_check.function = (TIMER_FUNC_TYPE)beiscsi_hw_health_check;
- 	mod_timer(&phba->hw_check,
- 		  jiffies + msecs_to_jiffies(BEISCSI_UE_DETECT_INTERVAL));
- 	return 0;
-@@ -5721,9 +5719,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	 * Start UE detection here. UE before this will cause stall in probe
- 	 * and eventually fail the probe.
- 	 */
--	init_timer(&phba->hw_check);
--	phba->hw_check.function = beiscsi_hw_health_check;
--	phba->hw_check.data = (unsigned long)phba;
-+	timer_setup(&phba->hw_check, beiscsi_hw_health_check, 0);
- 	mod_timer(&phba->hw_check,
- 		  jiffies + msecs_to_jiffies(BEISCSI_UE_DETECT_INTERVAL));
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+ 	ep->state = EP_STATE_CLEANUP_START;
+-	init_timer(&ep->ofld_timer);
++	timer_setup(&ep->ofld_timer, bnx2i_ep_ofld_timer, 0);
+ 	ep->ofld_timer.expires = hba->conn_ctx_destroy_tmo + jiffies;
+-	ep->ofld_timer.function = bnx2i_ep_ofld_timer;
+-	ep->ofld_timer.data = (unsigned long) ep;
+ 	add_timer(&ep->ofld_timer);
+ 
+ 	bnx2i_ep_destroy_list_add(hba, ep);
+@@ -1835,10 +1832,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 	bnx2i_ep->state = EP_STATE_OFLD_START;
+ 	bnx2i_ep_ofld_list_add(hba, bnx2i_ep);
+ 
+-	init_timer(&bnx2i_ep->ofld_timer);
++	timer_setup(&bnx2i_ep->ofld_timer, bnx2i_ep_ofld_timer, 0);
+ 	bnx2i_ep->ofld_timer.expires = 2 * HZ + jiffies;
+-	bnx2i_ep->ofld_timer.function = bnx2i_ep_ofld_timer;
+-	bnx2i_ep->ofld_timer.data = (unsigned long) bnx2i_ep;
+ 	add_timer(&bnx2i_ep->ofld_timer);
+ 
+ 	if (bnx2i_send_conn_ofld_req(hba, bnx2i_ep)) {
+@@ -2054,10 +2049,8 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ 		session = conn->session;
+ 	}
+ 
+-	init_timer(&bnx2i_ep->ofld_timer);
++	timer_setup(&bnx2i_ep->ofld_timer, bnx2i_ep_ofld_timer, 0);
+ 	bnx2i_ep->ofld_timer.expires = hba->conn_teardown_tmo + jiffies;
+-	bnx2i_ep->ofld_timer.function = bnx2i_ep_ofld_timer;
+-	bnx2i_ep->ofld_timer.data = (unsigned long) bnx2i_ep;
+ 	add_timer(&bnx2i_ep->ofld_timer);
+ 
+ 	if (!test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic))
 -- 
 2.7.4
 
