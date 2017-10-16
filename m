@@ -1,72 +1,60 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v9 07/10] ide, scsi: Tell the block layer at request allocation time about preempt requests
-Date: Mon, 16 Oct 2017 16:29:02 -0700
-Message-ID: <20171016232905.5047-8-bart.vanassche@wdc.com>
+Subject: [PATCH v9 01/10] md: Rename md_notifier into md_reboot_notifier
+Date: Mon, 16 Oct 2017 16:28:56 -0700
+Message-ID: <20171016232905.5047-2-bart.vanassche@wdc.com>
 References: <20171016232905.5047-1-bart.vanassche@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171016232905.5047-1-bart.vanassche@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Convert blk_get_request(q, op, __GFP_RECLAIM) into
-blk_get_request_flags(q, op, BLK_MQ_PREEMPT). This patch does not
-change any functionality.
+This avoids confusion with the pm notifier that will be added
+through a later patch.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Shaohua Li <shli@kernel.org>
 Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Acked-by: David S. Miller <davem@davemloft.net> [ for IDE ]
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: linux-raid@vger.kernel.org
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/ide/ide-pm.c    | 4 ++--
- drivers/scsi/scsi_lib.c | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/md/md.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
-index 544f02d673ca..f56d742908df 100644
---- a/drivers/ide/ide-pm.c
-+++ b/drivers/ide/ide-pm.c
-@@ -89,9 +89,9 @@ int generic_ide_resume(struct device *dev)
- 	}
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5d61049e7417..8933cafc212d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8966,7 +8966,7 @@ static int md_notify_reboot(struct notifier_block *this,
+ 	return NOTIFY_DONE;
+ }
  
- 	memset(&rqpm, 0, sizeof(rqpm));
--	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, __GFP_RECLAIM);
-+	rq = blk_get_request_flags(drive->queue, REQ_OP_DRV_IN,
-+				   BLK_MQ_REQ_PREEMPT);
- 	ide_req(rq)->type = ATA_PRIV_PM_RESUME;
--	rq->rq_flags |= RQF_PREEMPT;
- 	rq->special = &rqpm;
- 	rqpm.pm_step = IDE_PM_START_RESUME;
- 	rqpm.pm_state = PM_EVENT_ON;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6f10afaca25b..7c119696402c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -252,9 +252,9 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	struct scsi_request *rq;
- 	int ret = DRIVER_ERROR << 24;
+-static struct notifier_block md_notifier = {
++static struct notifier_block md_reboot_notifier = {
+ 	.notifier_call	= md_notify_reboot,
+ 	.next		= NULL,
+ 	.priority	= INT_MAX, /* before any real devices */
+@@ -9003,7 +9003,7 @@ static int __init md_init(void)
+ 	blk_register_region(MKDEV(mdp_major, 0), 1UL<<MINORBITS, THIS_MODULE,
+ 			    md_probe, NULL, NULL);
  
--	req = blk_get_request(sdev->request_queue,
-+	req = blk_get_request_flags(sdev->request_queue,
- 			data_direction == DMA_TO_DEVICE ?
--			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
-+			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
- 	if (IS_ERR(req))
- 		return ret;
- 	rq = scsi_req(req);
-@@ -268,7 +268,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	rq->retries = retries;
- 	req->timeout = timeout;
- 	req->cmd_flags |= flags;
--	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
-+	req->rq_flags |= rq_flags | RQF_QUIET;
+-	register_reboot_notifier(&md_notifier);
++	register_reboot_notifier(&md_reboot_notifier);
+ 	raid_table_header = register_sysctl_table(raid_root_table);
  
- 	/*
- 	 * head injection *required* here otherwise quiesce won't work
+ 	md_geninit();
+@@ -9243,7 +9243,7 @@ static __exit void md_exit(void)
+ 
+ 	unregister_blkdev(MD_MAJOR,"md");
+ 	unregister_blkdev(mdp_major, "mdp");
+-	unregister_reboot_notifier(&md_notifier);
++	unregister_reboot_notifier(&md_reboot_notifier);
+ 	unregister_sysctl_table(raid_table_header);
+ 
+ 	/* We cannot unload the modules while some process is
 -- 
 2.14.2
