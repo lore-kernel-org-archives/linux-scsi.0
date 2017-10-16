@@ -1,45 +1,90 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] linux/types.h: Restore the ability to disable sparse
- endianness checks
-Date: Mon, 16 Oct 2017 17:36:31 +0000
-Message-ID: <1508175390.2493.24.camel@wdc.com>
-References: <20171006172353.16758-1-bart.vanassche@wdc.com>
-         <20171009162008-mutt-send-email-mst@kernel.org>
-         <1507561661.2674.3.camel@wdc.com>
-         <20171009204139-mutt-send-email-mst@kernel.org>
-         <1507653494.2815.27.camel@wdc.com>
-         <20171016160316-mutt-send-email-mst@kernel.org>
-         <1508162253.2728.1.camel@wdc.com>
-         <20171016181159-mutt-send-email-mst@kernel.org>
-         <1508168209.2493.13.camel@wdc.com>
-         <20171016193921-mutt-send-email-mst@kernel.org>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v2 06/15] PCI: endpoint: make config_item_type const
+Date: Mon, 16 Oct 2017 13:24:37 -0500
+Message-ID: <20171016182437.GG25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+ <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:36146 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753865AbdJPRgg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 13:36:36 -0400
-In-Reply-To: <20171016193921-mutt-send-email-mst@kernel.org>
-Content-Language: en-US
-Content-ID: <8F138DC060118344BF7A7A28DFDF5018@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org, laurent.pinchart@ideasonboard.com, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, cluster-devel@redh
 List-Id: linux-scsi@vger.kernel.org
-To: "mst@redhat.com" <mst@redhat.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>
 
-T24gTW9uLCAyMDE3LTEwLTE2IGF0IDE5OjUwICswMzAwLCBNaWNoYWVsIFMuIFRzaXJraW4gd3Jv
-dGU6DQo+IFJpZ2h0IGJ1dCBxbGFfbnZtZSBhbHNvIHRyaWdnZXJzIHRoZXNlIHdhcm5pbmdzLiBU
-aGF0J3MgdGhlIHByb2JsZW0gd2l0aA0KPiBkaXNhYmxpbmcgdGhlbSB0cmVlLXdpZGUuIFRvIG1l
-IGl0IGxvb2tzIGxpa2UgdGhlIHRpbWUgd2UgYXJlIHNwZW5kaW5nDQo+IGFyZ3VpbmcgYWJvdXQg
-d29yay1hcm91bmRzIHdvdWxkIGJlIGJldHRlciBzcGVudCBqdXN0IGZpeGluZyB0aGUNCj4gbWFq
-b3JpdHkgb2YgdGhlIGNvZGUuIElmIGEgY291cGxlIG9mIHBsYWNlcyBhcmVuJ3QgY2xlYW4gYW5k
-DQo+IG5lZWQgbW9yZSB0aG91Z2h0LCB0aGF0J3Mgbm90IGEgYmlnIGRlYWwuDQoNCk1ha2luZyB0
-aGUgZHJpdmVycyB0aGF0IGFyZSBub3QgZW5kaWFubmVzcyBjbGVhbiBtb3N0bHkgY2xlYW4gaXMg
-cmlza3kuIFN1Y2gNCmNoYW5nZXMgd291bGQgbW9zdCBsaWtlbHkgYmUgZG9uZSBieSBzb21lb25l
-IHdobyBpcyBub3QgdGhlIGRyaXZlciBhdXRob3IuDQpBbnlvbmUgd2hvIHRyaWVzIHRvIGZpeCBl
-bmRpYW5uZXNzIGFubm90YXRpb25zIHdpdGhvdXQgaGF2aW5nIGEgZmlybXdhcmUNCm1hbnVhbCBh
-dmFpbGFibGUgcmlza3MgdG8gaW50cm9kdWNlIGluY29ycmVjdCBlbmRpYW5uZXNzIGFubm90YXRp
-b25zLiBTdWNoDQphbm5vdGF0aW9ucyBjYW4gbWFrZSBjb2RlIG1vcmUgY29uZnVzaW5nIGluc3Rl
-YWQgb2YgbGVzcy4NCg0KQmFydC4=
+On Mon, Oct 16, 2017 at 05:18:45PM +0200, Bhumika Goyal wrote:
+> Make config_item_type structures const as they are either passed to a
+> function having the argument as const or stored in the const "ci_type"
+> field of a config_item structure.
+> 
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Please apply this along with the rest of the series, since it depends
+on an earlier patch in the series.
+
+> ---
+> * Changes in v2- Combine all the followup patches and the constification
+> patches into a series.
+> 
+>  drivers/pci/endpoint/pci-ep-cfs.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index 424fdd6..4f74386 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -150,7 +150,7 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
+>  	.drop_link	= pci_epc_epf_unlink,
+>  };
+>  
+> -static struct config_item_type pci_epc_type = {
+> +static const struct config_item_type pci_epc_type = {
+>  	.ct_item_ops	= &pci_epc_item_ops,
+>  	.ct_attrs	= pci_epc_attrs,
+>  	.ct_owner	= THIS_MODULE,
+> @@ -361,7 +361,7 @@ static void pci_epf_release(struct config_item *item)
+>  	.release		= pci_epf_release,
+>  };
+>  
+> -static struct config_item_type pci_epf_type = {
+> +static const struct config_item_type pci_epf_type = {
+>  	.ct_item_ops	= &pci_epf_ops,
+>  	.ct_attrs	= pci_epf_attrs,
+>  	.ct_owner	= THIS_MODULE,
+> @@ -400,7 +400,7 @@ static void pci_epf_drop(struct config_group *group, struct config_item *item)
+>  	.drop_item      = &pci_epf_drop,
+>  };
+>  
+> -static struct config_item_type pci_epf_group_type = {
+> +static const struct config_item_type pci_epf_group_type = {
+>  	.ct_group_ops	= &pci_epf_group_ops,
+>  	.ct_owner	= THIS_MODULE,
+>  };
+> @@ -428,15 +428,15 @@ void pci_ep_cfs_remove_epf_group(struct config_group *group)
+>  }
+>  EXPORT_SYMBOL(pci_ep_cfs_remove_epf_group);
+>  
+> -static struct config_item_type pci_functions_type = {
+> +static const struct config_item_type pci_functions_type = {
+>  	.ct_owner	= THIS_MODULE,
+>  };
+>  
+> -static struct config_item_type pci_controllers_type = {
+> +static const struct config_item_type pci_controllers_type = {
+>  	.ct_owner	= THIS_MODULE,
+>  };
+>  
+> -static struct config_item_type pci_ep_type = {
+> +static const struct config_item_type pci_ep_type = {
+>  	.ct_owner	= THIS_MODULE,
+>  };
+>  
+> -- 
+> 1.9.1
+> 
