@@ -1,66 +1,63 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v2] linux/types.h: Restore the ability to disable sparse
- endianness checks
-Date: Mon, 16 Oct 2017 21:26:36 +0000
-Message-ID: <1508189195.2493.55.camel@wdc.com>
-References: <20171016172633.29290-1-bart.vanassche@wdc.com>
-         <20171016224241-mutt-send-email-mst@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171016224241-mutt-send-email-mst@kernel.org>
-Content-Language: en-US
-Content-ID: <B97B8B485AACBC47AF830694CEA8BC3E@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "mst@redhat.com" <mst@redhat.com>
-Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "leon@kernel.org" <leon@kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH v2 0/8] Introduce sgl_alloc() and sgl_free()
+Date: Mon, 16 Oct 2017 15:49:32 -0700
+Message-ID: <20171016224940.1332-1-bart.vanassche@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-crypto@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE3LTEwLTE2IGF0IDIyOjU3ICswMzAwLCBNaWNoYWVsIFMuIFRzaXJraW4gd3Jv
-dGU6DQo+IE9uIE1vbiwgT2N0IDE2LCAyMDE3IGF0IDEwOjI2OjMzQU0gLTA3MDAsIEJhcnQgVmFu
-IEFzc2NoZSB3cm90ZToNCj4gPiBJIHRoaW5rIHRoYXQgdGhpcyBzaG93cyB0aGF0IHRoZSBmb2xs
-b3dlZCBhcHByb2FjaCBkb2VzIG5vdCB3b3JrLA0KPiA+IHByb2JhYmx5IGJlY2F1c2Ugc2V2ZXJh
-bCBkcml2ZXIgYXV0aG9ycyBkbyBub3QgdXNlIHNwYXJzZS4gRm9yDQo+ID4gZGV2ZWxvcGVycyB3
-aG8gYXJlIG5vdCB0aGUgYXV0aG9ycyBvZiB0aGVzZSBkcml2ZXJzIGl0IHdvdWxkIHRha2UNCj4g
-PiBhIHZlcnkgc2lnbmlmaWNhbnQgZWZmb3J0IHRvIG1ha2UgdGhlc2UgZHJpdmVycyBlbmRpYW5u
-ZXNzIGNsZWFuLg0KPiANCj4gSSdtIGFmcmFpZCBJIHN0aWxsIGRvbid0IHNlZSBpdC4gIEZvciBk
-ZXZlbG9wZXJzIGVuZGlhbi1uZXNzIGlzIHJlYWxseQ0KPiBlYXN5LiAgTG9vayBhdCBoYXJkd2Fy
-ZSBzcGVjIG1ha2Ugc3VyZSBjb2RlIG1hdGNoZXMuICBZb3UgY2FuIG9mdGVuIGRvDQo+IHdpdGhv
-dXQgbG9va2luZyBhdCB0aGUgc3BlYyB0b28sIGlmIGEgZ2l2ZW4gZmllbGQgaXMgYWx3YXlzIHVz
-ZWQgd2l0aA0KPiBjcHVfdG9fbGUsIG1hcmsgaXQgX19sZS4gIElmIHlvdSBkb24ndCB3YW50IHRv
-IGNoYW5nZSBkcml2ZXIgY29kZSwgeW91DQo+IGRvbid0IHJlYWxseSBuZWVkIHRvIHJ1biBzcGFy
-c2Ugb24gaXQuDQoNCllvdSBzZWVtIHRvIGFzc3VtZSB0aGF0IGFsbCBkcml2ZXJzIHRoYXQgYXJl
-IG5vdCB5ZXQgZW5kaWFubmVzcyBjbGVhbiBkbw0Kbm90IGNvbnRhaW4gYW55IGVuZGlhbm5lc3Mg
-Y29udmVyc2lvbiBidWdzLiBJIHNldmVyZWx5IGRvdWJ0IHRoYXQgdGhhdA0KYXNzdW1wdGlvbiBp
-cyBjb3JyZWN0LiBJdCBpcyBsaWtlbHkgdGhhdCBpdCBpcyBub3QgcG9zc2libGUgdG8gbWFrZSBz
-ZXZlcmFsDQprZXJuZWwgZHJpdmVycyBlbmRpYW5uZXNzIGNsZWFuIGR1ZSB0byBlbmRpYW5uZXNz
-IGNvbnZlcnNpb24gYnVncyBpbiBzdWNoDQpkcml2ZXJzLg0KDQo+ID4gRXhhbXBsZXMgYXJlIGRy
-aXZlcnMvc2NzaS9xbGEyeHh4IGFuZCBkcml2ZXJzL2luZmluaWJhbmQvaHcvbmVzLg0KPiANCj4g
-VGhlc2Ugc2VlbSB0byBiZSBhY3RpdmVseSBtYWludGFpbmVkLiBTbyBwb3N0IGEgcGF0Y2gsIG1h
-aW50YWluZXJzDQo+IGNhbiBsb29rIGF0IHRoZSBzcGVjIHRvIGhlbHAgbWFrZSBzdXJlIGFubm90
-YXRpb25zIGFyZSByaWdodC4NCg0KSSBkb24ndCBoYXZlIHRoZSB0aW1lIHRvIGRlbHZlIGRlZXAg
-aW4gdGhlc2UgdHdvIGFuZCB0aGUgbWFueSBvdGhlciBrZXJuZWwNCmRyaXZlcnMgdGhhdCBhcmUg
-bm90IGVuZGlhbm5lc3MgY2xlYW4uIFNvIHBsZWFzZSBzdG9wIHRlbGxpbmcgKm1lKiB0aGF0ICpJ
-Kg0KaGF2ZSB0byBmaXggdGhlIGVuZGlhbm5lc3MgYW5ub3RhdGlvbnMgaW4gdGhlc2UgZHJpdmVy
-cy4NCg0KQlRXLCBJIHRoaW5rIGl0IHNob3VsZCBiZSBtZW50aW9uZWQgaGVyZSB0aGF0IHlvdSBo
-YXZlIHRyaWVkIHRvIGZpeCB0aGUNCmVuZGlhbm5lc3MgYW5ub3RhdGlvbnMgaW4gdGhlIHFsYTJ4
-eHggZHJpdmVyIGJ1dCBvbmNlIHlvdSBub3RpY2VkIGhvdyANCmNvbXBsaWNhdGVkIHRoYXQgdGFz
-ayB3YXMgdGhhdCB5b3UgZ2F2ZSB1cCBoYWxmLXdheS4gU2VlIGFsc28gTWljaGFlbA0KVHNpcmtp
-biwgW1BBVENIXSBzY3NpL3FsYTJ4eHg6IGxhYmVsIGVuZGlhbi1uZXNzIGZvciBtYW55IGZpZWxk
-cywgOSBEZWMNCjIwMTYgKGh0dHBzOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXNjc2kv
-bXNnMTAyNzM5Lmh0bWwpLg0KDQo+ID4gSGVuY2UgcmVzdG9yZSB0aGUgYWJpbGl0eSB0byBkaXNh
-YmxlIHNwYXJzZSBlbmRpYW5uZXNzIGNoZWNrcyBzdWNoDQo+ID4gdGhhdCBpdCBiZWNvbWVzIGFn
-YWluIGVhc3kgdG8gcmV2aWV3IG90aGVyIHNwYXJzZSBkaWFnbm9zdGljcyBmb3INCj4gPiBwZW9w
-bGUgd2hvIHdhbnQgdG8gYW5hbHl6ZSBkcml2ZXJzIHRoZXkgYXJlIG5vdCB0aGUgYXV0aG9yIG9m
-Lg0KPiANCj4gV2hhdCBhcmUgdGhlc2UgZGlhZ25vc3RpY3MgdGhhdCBhcmUgaW1wb3J0YW50IHRv
-IGFuYWx5emU/DQoNCkUuZy4gYSBzcGluX3VubG9jaygpIHRoYXQgaXMgbWlzc2luZyBmcm9tIGFu
-IGVycm9yIHBhdGguIFNwYXJzZSBjYW4gZGV0ZWN0DQpzdWNoIGVycm9ycy4NCg0KPiBXaGl0ZS1s
-aXN0aW5nIHRoZXNlIGFzIG9wcG9zZWQgdG8gYmxhY2stbGlzdGluZyBlbmRpYW4tbmVzcyBtaWdo
-dCBiZSBhDQo+IGJldHRlciBpZGVhLg0KDQpBcyBleHBsYWluZWQgaW4gYSBwcmV2aW91cyBlLW1h
-aWwsIGFueSBhcHByb2FjaCB0aGF0IHN1cHByZXNzZXMgZW5kaWFubmVzcw0KZXJyb3IgbWVzc2Fn
-ZXMgYXV0b21hdGljYWxseSBtYWtlcyBpdCBlYXNpZXIgZm9yIGRyaXZlciBhdXRob3JzIHRvIGln
-bm9yZQ0KZW5kaWFubmVzcyBlcnJvciBtZXNzYWdlcy4gVGhpcyBpcyB3aHkgSSBwcmVmZXIgdGhh
-dCBpZiBlbmRpYW5uZXNzIGVycm9yDQptZXNzYWdlcyBhcmUgc3VwcHJlc3NlZCB0aGF0IHRoaXMg
-aGFwcGVucyBtYW51YWxseS4gSGVuY2UgdGhlIHBhdGNoIGF0IHRoZQ0Kc3RhcnQgb2YgdGhpcyBl
-LW1haWwgdGhyZWFkIHRoYXQgcmVzdG9yZXMgX19DSEVDS19FTkRJQU5fXy4NCg0KQmFydC4=
+Hello Jens,
+
+As you know there are multiple drivers that both allocate a scatter/gather
+list and populate that list with pages. This patch series moves the code for
+allocating and freeing such scatterlists from these drivers into
+lib/scatterlist.c. Please consider this patch series for kernel v4.15.
+
+Notes:
+- Only the ib_srpt driver changes have been tested but none of the other
+  drivers have been retested.
+- The next step is to introduce a caching mechanism for these scatterlists
+  and make the nvmet/rdma and SCSI target drivers use that caching mechanism
+  since for these drivers sgl allocation occurs in the hot path.
+
+Changes compared to v1:
+- Moved the sgl_alloc*() and sgl_free() functions from a new source file into
+  lib/scatterlist.c.
+- Changed the argument order for the sgl_alloc*() functions such that the
+  (pointer to) the output argument comes last.
+
+Thanks,
+
+Bart.
+
+Bart Van Assche (8):
+  lib/scatterlist: Introduce sgl_alloc() and sgl_free()
+  crypto: scompress - use sgl_alloc() and sgl_free()
+  nvmet/fc: Use sgl_alloc() and sgl_free()
+  nvmet/rdma: Use sgl_alloc() and sgl_free()
+  target: Use sgl_alloc_order() and sgl_free()
+  scsi/ipr: Use sgl_alloc_order() and sgl_free_order()
+  scsi/pmcraid: Remove an unused structure member
+  scsi/pmcraid: Use sgl_alloc_order() and sgl_free_order()
+
+ crypto/Kconfig                         |   1 +
+ crypto/scompress.c                     |  51 +---------------
+ drivers/nvme/target/Kconfig            |   2 +
+ drivers/nvme/target/fc.c               |  36 +----------
+ drivers/nvme/target/rdma.c             |  63 ++------------------
+ drivers/scsi/Kconfig                   |   2 +
+ drivers/scsi/ipr.c                     |  49 +++------------
+ drivers/scsi/ipr.h                     |   2 +-
+ drivers/scsi/pmcraid.c                 |  43 ++------------
+ drivers/scsi/pmcraid.h                 |   3 +-
+ drivers/target/Kconfig                 |   1 +
+ drivers/target/target_core_transport.c |  46 ++-------------
+ include/linux/scatterlist.h            |  10 ++++
+ lib/Kconfig                            |   4 ++
+ lib/scatterlist.c                      | 105 +++++++++++++++++++++++++++++++++
+ 15 files changed, 151 insertions(+), 267 deletions(-)
+
+-- 
+2.14.2
