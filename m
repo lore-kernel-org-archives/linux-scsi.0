@@ -1,159 +1,246 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v9 03/10] md: Neither resync nor reshape while the system is frozen
-Date: Mon, 16 Oct 2017 16:28:58 -0700
-Message-ID: <20171016232905.5047-4-bart.vanassche@wdc.com>
+Subject: [PATCH v9 10/10] block, nvme: Introduce blk_mq_req_flags_t
+Date: Mon, 16 Oct 2017 16:29:05 -0700
+Message-ID: <20171016232905.5047-11-bart.vanassche@wdc.com>
 References: <20171016232905.5047-1-bart.vanassche@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:27972 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932630AbdJPX3Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 19:29:25 -0400
 In-Reply-To: <20171016232905.5047-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-nvme@lists.infradead.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Some people use the md driver on laptops and use the suspend and
-resume functionality. Since it is essential that submitting of
-new I/O requests stops before a hibernation image is created,
-interrupt the md resync and reshape actions if the system is
-being frozen. Note: the resync and reshape will restart after
-the system is resumed and a message similar to the following
-will appear in the system log:
-
-md: md0: data-check interrupted.
+Several block layer and NVMe core functions accept a combination
+of BLK_MQ_REQ_* flags through the 'flags' argument but there is
+no verification at compile time whether the right type of block
+layer flags is passed. Make it possible for sparse to verify this.
+This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Shaohua Li <shli@kernel.org>
-Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Cc: linux-raid@vger.kernel.org
-Cc: Ming Lei <ming.lei@redhat.com>
+Cc: linux-nvme@lists.infradead.org
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/md/md.c | 50 +++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/md.h |  8 ++++++++
- 2 files changed, 57 insertions(+), 1 deletion(-)
+ block/blk-core.c          | 12 ++++++------
+ block/blk-mq.c            |  4 ++--
+ block/blk-mq.h            |  2 +-
+ drivers/nvme/host/core.c  |  5 +++--
+ drivers/nvme/host/nvme.h  |  5 +++--
+ include/linux/blk-mq.h    | 17 +++++++++++------
+ include/linux/blk_types.h |  2 ++
+ include/linux/blkdev.h    |  4 ++--
+ 8 files changed, 30 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b99584e5d6b1..8b2fc750f97f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -66,6 +66,8 @@
- #include <linux/raid/md_u.h>
- #include <linux/slab.h>
- #include <linux/percpu-refcount.h>
-+#include <linux/freezer.h>
-+#include <linux/suspend.h>
+diff --git a/block/blk-core.c b/block/blk-core.c
+index abb5095bcef6..d1f1694f2e1f 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -799,7 +799,7 @@ EXPORT_SYMBOL(blk_alloc_queue);
+  * @q: request queue pointer
+  * @flags: BLK_MQ_REQ_NOWAIT and/or BLK_MQ_REQ_PREEMPT
+  */
+-int blk_queue_enter(struct request_queue *q, unsigned int flags)
++int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+ {
+ 	const bool preempt = flags & BLK_MQ_REQ_PREEMPT;
  
- #include <trace/events/block.h>
- #include "md.h"
-@@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
- 	 */
+@@ -1224,7 +1224,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
+  * Returns request pointer on success, with @q->queue_lock *not held*.
+  */
+ static struct request *__get_request(struct request_list *rl, unsigned int op,
+-				     struct bio *bio, unsigned int flags)
++				     struct bio *bio, blk_mq_req_flags_t flags)
+ {
+ 	struct request_queue *q = rl->q;
+ 	struct request *rq;
+@@ -1407,7 +1407,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
+  * Returns request pointer on success, with @q->queue_lock *not held*.
+  */
+ static struct request *get_request(struct request_queue *q, unsigned int op,
+-				   struct bio *bio, unsigned int flags)
++				   struct bio *bio, blk_mq_req_flags_t flags)
+ {
+ 	const bool is_sync = op_is_sync(op);
+ 	DEFINE_WAIT(wait);
+@@ -1457,7 +1457,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
  
- 	allow_signal(SIGKILL);
-+	set_freezable();
- 	while (!kthread_should_stop()) {
+ /* flags: BLK_MQ_REQ_PREEMPT and/or BLK_MQ_REQ_NOWAIT. */
+ static struct request *blk_old_get_request(struct request_queue *q,
+-					   unsigned int op, unsigned int flags)
++				unsigned int op, blk_mq_req_flags_t flags)
+ {
+ 	struct request *rq;
+ 	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
+@@ -1494,7 +1494,7 @@ static struct request *blk_old_get_request(struct request_queue *q,
+  * @flags: BLK_MQ_REQ_* flags, e.g. BLK_MQ_REQ_NOWAIT.
+  */
+ struct request *blk_get_request_flags(struct request_queue *q, unsigned int op,
+-				      unsigned int flags)
++				      blk_mq_req_flags_t flags)
+ {
+ 	struct request *req;
  
- 		/* We need to wait INTERRUPTIBLE so that
-@@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
- 		if (signal_pending(current))
- 			flush_signals(current);
+@@ -2290,7 +2290,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	current->bio_list = bio_list_on_stack;
+ 	do {
+ 		struct request_queue *q = bio->bi_disk->queue;
+-		unsigned int flags = bio->bi_opf & REQ_NOWAIT ?
++		blk_mq_req_flags_t flags = bio->bi_opf & REQ_NOWAIT ?
+ 			BLK_MQ_REQ_NOWAIT : 0;
  
--		wait_event_interruptible_timeout
-+		wait_event_freezable_timeout
- 			(thread->wqueue,
- 			 test_bit(THREAD_WAKEUP, &thread->flags)
- 			 || kthread_should_stop() || kthread_should_park(),
-@@ -8944,6 +8947,8 @@ static void md_stop_all_writes(void)
- 	int need_delay = 0;
- 
- 	for_each_mddev(mddev, tmp) {
-+		mddev->frozen_before_suspend =
-+			test_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		if (mddev_trylock(mddev)) {
- 			if (mddev->pers)
- 				__md_stop_writes(mddev);
-@@ -8963,6 +8968,47 @@ static void md_stop_all_writes(void)
- 		mdelay(1000*1);
+ 		if (likely(blk_queue_enter(q, flags) == 0)) {
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index c6bff60e6b8b..c037b1ad64a7 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -380,7 +380,7 @@ static struct request *blk_mq_get_request(struct request_queue *q,
  }
  
-+static void md_restore_frozen_flag(void)
-+{
-+	struct list_head *tmp;
-+	struct mddev *mddev;
-+
-+	for_each_mddev(mddev, tmp) {
-+		if (mddev->frozen_before_suspend)
-+			set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+		else
-+			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	}
-+}
-+
-+/*
-+ * Ensure that neither resyncing nor reshaping occurs while the system is
-+ * frozen.
-+ */
-+static int md_notify_pm(struct notifier_block *bl, unsigned long state,
-+			void *unused)
-+{
-+	pr_debug("%s: state = %ld\n", __func__, state);
-+
-+	switch (state) {
-+	case PM_HIBERNATION_PREPARE:
-+	case PM_SUSPEND_PREPARE:
-+	case PM_RESTORE_PREPARE:
-+		md_stop_all_writes();
-+		break;
-+	case PM_POST_HIBERNATION:
-+	case PM_POST_SUSPEND:
-+	case PM_POST_RESTORE:
-+		md_restore_frozen_flag();
-+		break;
-+	}
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block md_pm_notifier = {
-+	.notifier_call	= md_notify_pm,
-+};
-+
- static int md_notify_reboot(struct notifier_block *this,
- 			    unsigned long code, void *x)
+ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+-		unsigned int flags)
++		blk_mq_req_flags_t flags)
  {
-@@ -9009,6 +9055,7 @@ static int __init md_init(void)
- 			    md_probe, NULL, NULL);
+ 	struct blk_mq_alloc_data alloc_data = { .flags = flags };
+ 	struct request *rq;
+@@ -406,7 +406,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+ EXPORT_SYMBOL(blk_mq_alloc_request);
  
- 	register_reboot_notifier(&md_reboot_notifier);
-+	register_pm_notifier(&md_pm_notifier);
- 	raid_table_header = register_sysctl_table(raid_root_table);
+ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
+-		unsigned int op, unsigned int flags, unsigned int hctx_idx)
++	unsigned int op, blk_mq_req_flags_t flags, unsigned int hctx_idx)
+ {
+ 	struct blk_mq_alloc_data alloc_data = { .flags = flags };
+ 	struct request *rq;
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 522b420dedc0..5dcfe4fa5e0d 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -110,7 +110,7 @@ static inline void blk_mq_put_ctx(struct blk_mq_ctx *ctx)
+ struct blk_mq_alloc_data {
+ 	/* input parameter */
+ 	struct request_queue *q;
+-	unsigned int flags;
++	blk_mq_req_flags_t flags;
+ 	unsigned int shallow_depth;
  
- 	md_geninit();
-@@ -9248,6 +9295,7 @@ static __exit void md_exit(void)
+ 	/* input & output parameter */
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index bb2aad078637..01947cd82b5a 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -292,7 +292,7 @@ static struct nvme_ns *nvme_get_ns_from_disk(struct gendisk *disk)
+ }
  
- 	unregister_blkdev(MD_MAJOR,"md");
- 	unregister_blkdev(mdp_major, "mdp");
-+	unregister_pm_notifier(&md_pm_notifier);
- 	unregister_reboot_notifier(&md_reboot_notifier);
- 	unregister_sysctl_table(raid_table_header);
+ struct request *nvme_alloc_request(struct request_queue *q,
+-		struct nvme_command *cmd, unsigned int flags, int qid)
++		struct nvme_command *cmd, blk_mq_req_flags_t flags, int qid)
+ {
+ 	unsigned op = nvme_is_write(cmd) ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN;
+ 	struct request *req;
+@@ -560,7 +560,8 @@ EXPORT_SYMBOL_GPL(nvme_setup_cmd);
+  */
+ int __nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
+ 		union nvme_result *result, void *buffer, unsigned bufflen,
+-		unsigned timeout, int qid, int at_head, int flags)
++		unsigned timeout, int qid, int at_head,
++		blk_mq_req_flags_t flags)
+ {
+ 	struct request *req;
+ 	int ret;
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index d3f3c4447515..61b25e8c222c 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -314,14 +314,15 @@ void nvme_start_freeze(struct nvme_ctrl *ctrl);
  
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d8287d3cd1bf..727b3aef4d26 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -356,6 +356,14 @@ struct mddev {
- 	 */
- 	int				recovery_disabled;
+ #define NVME_QID_ANY -1
+ struct request *nvme_alloc_request(struct request_queue *q,
+-		struct nvme_command *cmd, unsigned int flags, int qid);
++		struct nvme_command *cmd, blk_mq_req_flags_t flags, int qid);
+ blk_status_t nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
+ 		struct nvme_command *cmd);
+ int nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
+ 		void *buf, unsigned bufflen);
+ int __nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
+ 		union nvme_result *result, void *buffer, unsigned bufflen,
+-		unsigned timeout, int qid, int at_head, int flags);
++		unsigned timeout, int qid, int at_head,
++		blk_mq_req_flags_t flags);
+ int nvme_set_queue_count(struct nvme_ctrl *ctrl, int *count);
+ void nvme_start_keep_alive(struct nvme_ctrl *ctrl);
+ void nvme_stop_keep_alive(struct nvme_ctrl *ctrl);
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 22c7f36745fc..38ecf1340266 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -210,16 +210,21 @@ void blk_mq_free_request(struct request *rq);
+ bool blk_mq_can_queue(struct blk_mq_hw_ctx *);
  
-+	/* Writes are stopped before hibernation, suspend and restore by
-+	 * calling md_stop_all_writes(). That function sets the
-+	 * MD_RECOVERY_FROZEN flag. The value of that flag is saved before
-+	 * writes are stopped such that it can be restored after hibernation,
-+	 * suspend or restore have finished.
-+	 */
-+	bool				frozen_before_suspend;
+ enum {
+-	BLK_MQ_REQ_NOWAIT	= (1 << 0), /* return when out of requests */
+-	BLK_MQ_REQ_RESERVED	= (1 << 1), /* allocate from reserved pool */
+-	BLK_MQ_REQ_INTERNAL	= (1 << 2), /* allocate internal/sched tag */
+-	BLK_MQ_REQ_PREEMPT	= (1 << 3), /* set RQF_PREEMPT */
++	/* return when out of requests */
++	BLK_MQ_REQ_NOWAIT	= (__force blk_mq_req_flags_t)(1 << 0),
++	/* allocate from reserved pool */
++	BLK_MQ_REQ_RESERVED	= (__force blk_mq_req_flags_t)(1 << 1),
++	/* allocate internal/sched tag */
++	BLK_MQ_REQ_INTERNAL	= (__force blk_mq_req_flags_t)(1 << 2),
++	/* set RQF_PREEMPT */
++	BLK_MQ_REQ_PREEMPT	= (__force blk_mq_req_flags_t)(1 << 3),
+ };
+ 
+ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+-		unsigned int flags);
++		blk_mq_req_flags_t flags);
+ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
+-		unsigned int op, unsigned int flags, unsigned int hctx_idx);
++		unsigned int op, blk_mq_req_flags_t flags,
++		unsigned int hctx_idx);
+ struct request *blk_mq_tag_to_rq(struct blk_mq_tags *tags, unsigned int tag);
+ 
+ enum {
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 3385c89f402e..cbd908478140 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -162,6 +162,8 @@ struct bio {
+  */
+ #define BIO_RESET_BITS	BVEC_POOL_OFFSET
+ 
++typedef __u32 __bitwise blk_mq_req_flags_t;
 +
- 	int				in_sync;	/* know to not need resync */
- 	/* 'open_mutex' avoids races between 'md_open' and 'do_md_stop', so
- 	 * that we are never stopping an array while it is open.
+ /*
+  * Operations and flags common to the bio and request structures.
+  * We use 8 bits for encoding the operation, and the remaining 24 for flags.
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 4f91c6462752..9a7d7e775cd0 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -932,7 +932,7 @@ extern void blk_put_request(struct request *);
+ extern void __blk_put_request(struct request_queue *, struct request *);
+ extern struct request *blk_get_request_flags(struct request_queue *,
+ 					     unsigned int op,
+-					     unsigned int flags);
++					     blk_mq_req_flags_t flags);
+ extern struct request *blk_get_request(struct request_queue *, unsigned int op,
+ 				       gfp_t gfp_mask);
+ extern void blk_requeue_request(struct request_queue *, struct request *);
+@@ -956,7 +956,7 @@ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			 struct scsi_ioctl_command __user *);
+ 
+-extern int blk_queue_enter(struct request_queue *q, unsigned int flags);
++extern int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags);
+ extern void blk_queue_exit(struct request_queue *q);
+ extern void blk_start_queue(struct request_queue *q);
+ extern void blk_start_queue_async(struct request_queue *q);
 -- 
 2.14.2
