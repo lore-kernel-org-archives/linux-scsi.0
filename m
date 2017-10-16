@@ -1,7 +1,7 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v9 05/10] block: Introduce blk_get_request_flags()
-Date: Mon, 16 Oct 2017 16:29:00 -0700
-Message-ID: <20171016232905.5047-6-bart.vanassche@wdc.com>
+Subject: [PATCH v9 07/10] ide, scsi: Tell the block layer at request allocation time about preempt requests
+Date: Mon, 16 Oct 2017 16:29:02 -0700
+Message-ID: <20171016232905.5047-8-bart.vanassche@wdc.com>
 References: <20171016232905.5047-1-bart.vanassche@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171016232905.5047-1-bart.vanassche@wdc.com>
@@ -10,181 +10,63 @@ To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-A side effect of this patch is that the GFP mask that is passed to
-several allocation functions in the legacy block layer is changed
-from GFP_KERNEL into __GFP_DIRECT_RECLAIM.
+Convert blk_get_request(q, op, __GFP_RECLAIM) into
+blk_get_request_flags(q, op, BLK_MQ_PREEMPT). This patch does not
+change any functionality.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Cc: Christoph Hellwig <hch@lst.de>
+Acked-by: David S. Miller <davem@davemloft.net> [ for IDE ]
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- block/blk-core.c       | 50 +++++++++++++++++++++++++++++++++++---------------
- include/linux/blkdev.h |  3 +++
- 2 files changed, 38 insertions(+), 15 deletions(-)
+ drivers/ide/ide-pm.c    | 4 ++--
+ drivers/scsi/scsi_lib.c | 6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 23a0110fc62b..559818be8e02 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1157,7 +1157,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
-  * @rl: request list to allocate from
-  * @op: operation and flags
-  * @bio: bio to allocate request for (can be %NULL)
-- * @gfp_mask: allocation mask
-+ * @flags: BLQ_MQ_REQ_* flags
-  *
-  * Get a free request from @q.  This function may fail under memory
-  * pressure or if @q is dead.
-@@ -1167,7 +1167,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
- static struct request *__get_request(struct request_list *rl, unsigned int op,
--		struct bio *bio, gfp_t gfp_mask)
-+				     struct bio *bio, unsigned int flags)
- {
- 	struct request_queue *q = rl->q;
- 	struct request *rq;
-@@ -1176,6 +1176,8 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
- 	struct io_cq *icq = NULL;
- 	const bool is_sync = op_is_sync(op);
- 	int may_queue;
-+	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
-+			 __GFP_DIRECT_RECLAIM;
- 	req_flags_t rq_flags = RQF_ALLOCED;
- 
- 	lockdep_assert_held(q->queue_lock);
-@@ -1336,7 +1338,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
-  * @q: request_queue to allocate request from
-  * @op: operation and flags
-  * @bio: bio to allocate request for (can be %NULL)
-- * @gfp_mask: allocation mask
-+ * @flags: BLK_MQ_REQ_* flags.
-  *
-  * Get a free request from @q.  If %__GFP_DIRECT_RECLAIM is set in @gfp_mask,
-  * this function keeps retrying under memory pressure and fails iff @q is dead.
-@@ -1346,7 +1348,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
- static struct request *get_request(struct request_queue *q, unsigned int op,
--		struct bio *bio, gfp_t gfp_mask)
-+				   struct bio *bio, unsigned int flags)
- {
- 	const bool is_sync = op_is_sync(op);
- 	DEFINE_WAIT(wait);
-@@ -1358,7 +1360,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 
- 	rl = blk_get_rl(q, bio);	/* transferred to @rq on success */
- retry:
--	rq = __get_request(rl, op, bio, gfp_mask);
-+	rq = __get_request(rl, op, bio, flags);
- 	if (!IS_ERR(rq))
- 		return rq;
- 
-@@ -1367,7 +1369,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 		return ERR_PTR(-EAGAIN);
+diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
+index 544f02d673ca..f56d742908df 100644
+--- a/drivers/ide/ide-pm.c
++++ b/drivers/ide/ide-pm.c
+@@ -89,9 +89,9 @@ int generic_ide_resume(struct device *dev)
  	}
  
--	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
-+	if ((flags & BLK_MQ_REQ_NOWAIT) || unlikely(blk_queue_dying(q))) {
- 		blk_put_rl(rl);
- 		return rq;
- 	}
-@@ -1394,10 +1396,13 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 	goto retry;
- }
+ 	memset(&rqpm, 0, sizeof(rqpm));
+-	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, __GFP_RECLAIM);
++	rq = blk_get_request_flags(drive->queue, REQ_OP_DRV_IN,
++				   BLK_MQ_REQ_PREEMPT);
+ 	ide_req(rq)->type = ATA_PRIV_PM_RESUME;
+-	rq->rq_flags |= RQF_PREEMPT;
+ 	rq->special = &rqpm;
+ 	rqpm.pm_step = IDE_PM_START_RESUME;
+ 	rqpm.pm_state = PM_EVENT_ON;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6f10afaca25b..7c119696402c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -252,9 +252,9 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	struct scsi_request *rq;
+ 	int ret = DRIVER_ERROR << 24;
  
-+/* flags: BLK_MQ_REQ_PREEMPT and/or BLK_MQ_REQ_NOWAIT. */
- static struct request *blk_old_get_request(struct request_queue *q,
--					   unsigned int op, gfp_t gfp_mask)
-+					   unsigned int op, unsigned int flags)
- {
- 	struct request *rq;
-+	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
-+			 __GFP_DIRECT_RECLAIM;
- 	int ret = 0;
+-	req = blk_get_request(sdev->request_queue,
++	req = blk_get_request_flags(sdev->request_queue,
+ 			data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
++			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
+ 	if (IS_ERR(req))
+ 		return ret;
+ 	rq = scsi_req(req);
+@@ -268,7 +268,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	rq->retries = retries;
+ 	req->timeout = timeout;
+ 	req->cmd_flags |= flags;
+-	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
++	req->rq_flags |= rq_flags | RQF_QUIET;
  
- 	WARN_ON_ONCE(q->mq_ops);
-@@ -1410,7 +1415,7 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 	if (ret)
- 		return ERR_PTR(ret);
- 	spin_lock_irq(q->queue_lock);
--	rq = get_request(q, op, NULL, gfp_mask);
-+	rq = get_request(q, op, NULL, flags);
- 	if (IS_ERR(rq)) {
- 		spin_unlock_irq(q->queue_lock);
- 		blk_queue_exit(q);
-@@ -1424,25 +1429,40 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 	return rq;
- }
- 
--struct request *blk_get_request(struct request_queue *q, unsigned int op,
--				gfp_t gfp_mask)
-+/**
-+ * blk_get_request_flags - allocate a request
-+ * @q: request queue to allocate a request for
-+ * @op: operation (REQ_OP_*) and REQ_* flags, e.g. REQ_SYNC.
-+ * @flags: BLK_MQ_REQ_* flags, e.g. BLK_MQ_REQ_NOWAIT.
-+ */
-+struct request *blk_get_request_flags(struct request_queue *q, unsigned int op,
-+				      unsigned int flags)
- {
- 	struct request *req;
- 
-+	WARN_ON_ONCE(op & REQ_NOWAIT);
-+	WARN_ON_ONCE(flags & ~BLK_MQ_REQ_NOWAIT);
-+
- 	if (q->mq_ops) {
--		req = blk_mq_alloc_request(q, op,
--			(gfp_mask & __GFP_DIRECT_RECLAIM) ?
--				0 : BLK_MQ_REQ_NOWAIT);
-+		req = blk_mq_alloc_request(q, op, flags);
- 		if (!IS_ERR(req) && q->mq_ops->initialize_rq_fn)
- 			q->mq_ops->initialize_rq_fn(req);
- 	} else {
--		req = blk_old_get_request(q, op, gfp_mask);
-+		req = blk_old_get_request(q, op, flags);
- 		if (!IS_ERR(req) && q->initialize_rq_fn)
- 			q->initialize_rq_fn(req);
- 	}
- 
- 	return req;
- }
-+EXPORT_SYMBOL(blk_get_request_flags);
-+
-+struct request *blk_get_request(struct request_queue *q, unsigned int op,
-+				gfp_t gfp_mask)
-+{
-+	return blk_get_request_flags(q, op, gfp_mask & __GFP_DIRECT_RECLAIM ?
-+				     0 : BLK_MQ_REQ_NOWAIT);
-+}
- EXPORT_SYMBOL(blk_get_request);
- 
- /**
-@@ -1868,7 +1888,7 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
- 	 * Returns with the queue unlocked.
- 	 */
- 	blk_queue_enter_live(q);
--	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
-+	req = get_request(q, bio->bi_opf, bio, 0);
- 	if (IS_ERR(req)) {
- 		blk_queue_exit(q);
- 		__wbt_done(q->rq_wb, wb_acct);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 72637028f3c9..05203175eb9c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -924,6 +924,9 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
- extern void blk_init_request_from_bio(struct request *req, struct bio *bio);
- extern void blk_put_request(struct request *);
- extern void __blk_put_request(struct request_queue *, struct request *);
-+extern struct request *blk_get_request_flags(struct request_queue *,
-+					     unsigned int op,
-+					     unsigned int flags);
- extern struct request *blk_get_request(struct request_queue *, unsigned int op,
- 				       gfp_t gfp_mask);
- extern void blk_requeue_request(struct request_queue *, struct request *);
+ 	/*
+ 	 * head injection *required* here otherwise quiesce won't work
 -- 
 2.14.2
