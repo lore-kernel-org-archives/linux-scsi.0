@@ -1,12 +1,16 @@
 From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH] scsi: storvsc: Allow only one remove lun work item to be issued per lun
-Date: Tue, 17 Oct 2017 13:32:45 -0400
-Message-ID: <1508261565-23846-1-git-send-email-cavery@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH V2] scsi: storvsc: Allow only one remove lun work item to be issued per lun
+Date: Tue, 17 Oct 2017 13:35:21 -0400
+Message-ID: <1508261721-24144-1-git-send-email-cavery@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754794AbdJQRf1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Oct 2017 13:35:27 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dan.carpenter@oracle.com
 Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 When running multipath on a VM if all available paths go down
 the driver can schedule large amounts of storvsc_remove_lun
