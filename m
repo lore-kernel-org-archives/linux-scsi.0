@@ -1,280 +1,108 @@
 From: Huacai Chen <chenhc@lemote.com>
-Subject: [PATCH V8 4/5] libsas: Align SMP req/resp to dma_get_cache_alignment()
-Date: Tue, 17 Oct 2017 16:05:41 +0800
-Message-ID: <1508227542-13165-4-git-send-email-chenhc@lemote.com>
+Subject: [PATCH V8 2/5] MIPS: Implement dma_map_ops::get_cache_alignment()
+Date: Tue, 17 Oct 2017 16:05:39 +0800
+Message-ID: <1508227542-13165-2-git-send-email-chenhc@lemote.com>
 References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Huacai Chen <chenhc@lemote.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In non-coherent DMA mode, kernel uses cache flushing operations to
-maintain I/O coherency, so libsas's SMP request/response should be
-aligned to ARCH_DMA_MINALIGN. Otherwise, If a DMA buffer and a kernel
-structure share a same cache line, and if the kernel structure has
-dirty data, cache_invalidate (no writeback) will cause data corruption.
+Currently, MIPS is an architecture which support coherent & noncoherent
+devices co-exist. So implement get_cache_alignment() function pointer
+in 'struct dma_map_ops' to return different dma alignments.
 
 Cc: stable@vger.kernel.org
 Signed-off-by: Huacai Chen <chenhc@lemote.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 93 +++++++++++++++++++++++---------------
- 1 file changed, 57 insertions(+), 36 deletions(-)
+ arch/mips/cavium-octeon/dma-octeon.c      |  3 ++-
+ arch/mips/include/asm/dma-coherence.h     |  2 ++
+ arch/mips/loongson64/common/dma-swiotlb.c |  1 +
+ arch/mips/mm/dma-default.c                | 11 ++++++++++-
+ arch/mips/netlogic/common/nlm-dma.c       |  3 ++-
+ 5 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 6b4fd23..124a44b 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -164,17 +164,17 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
+diff --git a/arch/mips/cavium-octeon/dma-octeon.c b/arch/mips/cavium-octeon/dma-octeon.c
+index c64bd87..41c29a85 100644
+--- a/arch/mips/cavium-octeon/dma-octeon.c
++++ b/arch/mips/cavium-octeon/dma-octeon.c
+@@ -324,7 +324,8 @@ static struct octeon_dma_map_ops _octeon_pci_dma_map_ops = {
+ 		.sync_sg_for_cpu = swiotlb_sync_sg_for_cpu,
+ 		.sync_sg_for_device = octeon_dma_sync_sg_for_device,
+ 		.mapping_error = swiotlb_dma_mapping_error,
+-		.dma_supported = swiotlb_dma_supported
++		.dma_supported = swiotlb_dma_supported,
++		.get_cache_alignment = mips_dma_get_cache_alignment
+ 	},
+ };
  
- /* ---------- Allocations ---------- */
+diff --git a/arch/mips/include/asm/dma-coherence.h b/arch/mips/include/asm/dma-coherence.h
+index 72d0eab..5f7a9fc 100644
+--- a/arch/mips/include/asm/dma-coherence.h
++++ b/arch/mips/include/asm/dma-coherence.h
+@@ -29,4 +29,6 @@ extern int hw_coherentio;
+ #define hw_coherentio	0
+ #endif /* CONFIG_DMA_MAYBE_COHERENT */
  
--static inline void *alloc_smp_req(int size)
-+static inline void *alloc_smp_req(int size, int align)
- {
--	u8 *p = kzalloc(size, GFP_KERNEL);
-+	u8 *p = kzalloc(ALIGN(size, align), GFP_KERNEL);
- 	if (p)
- 		p[0] = SMP_REQUEST;
- 	return p;
- }
- 
--static inline void *alloc_smp_resp(int size)
-+static inline void *alloc_smp_resp(int size, int align)
- {
--	return kzalloc(size, GFP_KERNEL);
-+	return kzalloc(ALIGN(size, align), GFP_KERNEL);
- }
- 
- static char sas_route_char(struct domain_device *dev, struct ex_phy *phy)
-@@ -403,15 +403,17 @@ static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 *disc_req,
- int sas_ex_phy_discover(struct domain_device *dev, int single)
- {
- 	struct expander_device *ex = &dev->ex_dev;
--	int  res = 0;
-+	int  res = 0, align;
- 	u8   *disc_req;
- 	u8   *disc_resp;
- 
--	disc_req = alloc_smp_req(DISCOVER_REQ_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
++int mips_dma_get_cache_alignment(struct device *dev);
 +
-+	disc_req = alloc_smp_req(DISCOVER_REQ_SIZE, align);
- 	if (!disc_req)
- 		return -ENOMEM;
+ #endif
+diff --git a/arch/mips/loongson64/common/dma-swiotlb.c b/arch/mips/loongson64/common/dma-swiotlb.c
+index 34486c1..17b9897 100644
+--- a/arch/mips/loongson64/common/dma-swiotlb.c
++++ b/arch/mips/loongson64/common/dma-swiotlb.c
+@@ -119,6 +119,7 @@ static const struct dma_map_ops loongson_dma_map_ops = {
+ 	.sync_sg_for_device = loongson_dma_sync_sg_for_device,
+ 	.mapping_error = swiotlb_dma_mapping_error,
+ 	.dma_supported = loongson_dma_supported,
++	.get_cache_alignment = mips_dma_get_cache_alignment
+ };
  
--	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE);
-+	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE, align);
- 	if (!disc_resp) {
- 		kfree(disc_req);
- 		return -ENOMEM;
-@@ -480,14 +482,15 @@ static int sas_ex_general(struct domain_device *dev)
- {
- 	u8 *rg_req;
- 	struct smp_resp *rg_resp;
--	int res;
--	int i;
-+	int i, res, align;
+ void __init plat_swiotlb_setup(void)
+diff --git a/arch/mips/mm/dma-default.c b/arch/mips/mm/dma-default.c
+index c01bd20..e8f0659 100644
+--- a/arch/mips/mm/dma-default.c
++++ b/arch/mips/mm/dma-default.c
+@@ -394,6 +394,14 @@ void dma_cache_sync(struct device *dev, void *vaddr, size_t size,
  
--	rg_req = alloc_smp_req(RG_REQ_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
+ EXPORT_SYMBOL(dma_cache_sync);
+ 
++int mips_dma_get_cache_alignment(struct device *dev)
++{
++	if (plat_device_is_coherent(dev))
++		return 1;
++	else
++		return ARCH_DMA_MINALIGN;
++}
 +
-+	rg_req = alloc_smp_req(RG_REQ_SIZE, align);
- 	if (!rg_req)
- 		return -ENOMEM;
+ static const struct dma_map_ops mips_default_dma_map_ops = {
+ 	.alloc = mips_dma_alloc_coherent,
+ 	.free = mips_dma_free_coherent,
+@@ -407,7 +415,8 @@ static const struct dma_map_ops mips_default_dma_map_ops = {
+ 	.sync_sg_for_cpu = mips_dma_sync_sg_for_cpu,
+ 	.sync_sg_for_device = mips_dma_sync_sg_for_device,
+ 	.mapping_error = mips_dma_mapping_error,
+-	.dma_supported = mips_dma_supported
++	.dma_supported = mips_dma_supported,
++	.get_cache_alignment = mips_dma_get_cache_alignment
+ };
  
--	rg_resp = alloc_smp_resp(RG_RESP_SIZE);
-+	rg_resp = alloc_smp_resp(RG_RESP_SIZE, align);
- 	if (!rg_resp) {
- 		kfree(rg_req);
- 		return -ENOMEM;
-@@ -552,13 +555,15 @@ static int sas_ex_manuf_info(struct domain_device *dev)
- {
- 	u8 *mi_req;
- 	u8 *mi_resp;
--	int res;
-+	int res, align;
+ const struct dma_map_ops *mips_dma_map_ops = &mips_default_dma_map_ops;
+diff --git a/arch/mips/netlogic/common/nlm-dma.c b/arch/mips/netlogic/common/nlm-dma.c
+index 0ec9d9d..e9a9ddc 100644
+--- a/arch/mips/netlogic/common/nlm-dma.c
++++ b/arch/mips/netlogic/common/nlm-dma.c
+@@ -79,7 +79,8 @@ const struct dma_map_ops nlm_swiotlb_dma_ops = {
+ 	.sync_sg_for_cpu = swiotlb_sync_sg_for_cpu,
+ 	.sync_sg_for_device = swiotlb_sync_sg_for_device,
+ 	.mapping_error = swiotlb_dma_mapping_error,
+-	.dma_supported = swiotlb_dma_supported
++	.dma_supported = swiotlb_dma_supported,
++	.get_cache_alignment = mips_dma_get_cache_alignment
+ };
  
--	mi_req = alloc_smp_req(MI_REQ_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
-+
-+	mi_req = alloc_smp_req(MI_REQ_SIZE, align);
- 	if (!mi_req)
- 		return -ENOMEM;
- 
--	mi_resp = alloc_smp_resp(MI_RESP_SIZE);
-+	mi_resp = alloc_smp_resp(MI_RESP_SIZE, align);
- 	if (!mi_resp) {
- 		kfree(mi_req);
- 		return -ENOMEM;
-@@ -593,13 +598,15 @@ int sas_smp_phy_control(struct domain_device *dev, int phy_id,
- {
- 	u8 *pc_req;
- 	u8 *pc_resp;
--	int res;
-+	int res, align;
-+
-+	align = dma_get_cache_alignment(&dev->phy->dev);
- 
--	pc_req = alloc_smp_req(PC_REQ_SIZE);
-+	pc_req = alloc_smp_req(PC_REQ_SIZE, align);
- 	if (!pc_req)
- 		return -ENOMEM;
- 
--	pc_resp = alloc_smp_resp(PC_RESP_SIZE);
-+	pc_resp = alloc_smp_resp(PC_RESP_SIZE, align);
- 	if (!pc_resp) {
- 		kfree(pc_req);
- 		return -ENOMEM;
-@@ -664,17 +671,19 @@ static int sas_dev_present_in_domain(struct asd_sas_port *port,
- #define RPEL_RESP_SIZE	32
- int sas_smp_get_phy_events(struct sas_phy *phy)
- {
--	int res;
-+	int res, align;
- 	u8 *req;
- 	u8 *resp;
- 	struct sas_rphy *rphy = dev_to_rphy(phy->dev.parent);
- 	struct domain_device *dev = sas_find_dev_by_rphy(rphy);
- 
--	req = alloc_smp_req(RPEL_REQ_SIZE);
-+	align = dma_get_cache_alignment(&phy->dev);
-+
-+	req = alloc_smp_req(RPEL_REQ_SIZE, align);
- 	if (!req)
- 		return -ENOMEM;
- 
--	resp = alloc_smp_resp(RPEL_RESP_SIZE);
-+	resp = alloc_smp_resp(RPEL_RESP_SIZE, align);
- 	if (!resp) {
- 		kfree(req);
- 		return -ENOMEM;
-@@ -709,7 +718,8 @@ int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
- 			    struct smp_resp *rps_resp)
- {
- 	int res;
--	u8 *rps_req = alloc_smp_req(RPS_REQ_SIZE);
-+	int align = dma_get_cache_alignment(&dev->phy->dev);
-+	u8 *rps_req = alloc_smp_req(RPS_REQ_SIZE, align);
- 	u8 *resp = (u8 *)rps_resp;
- 
- 	if (!rps_req)
-@@ -1398,7 +1408,7 @@ static int sas_check_parent_topology(struct domain_device *child)
- static int sas_configure_present(struct domain_device *dev, int phy_id,
- 				 u8 *sas_addr, int *index, int *present)
- {
--	int i, res = 0;
-+	int i, res = 0, align;
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct ex_phy *phy = &ex->ex_phy[phy_id];
- 	u8 *rri_req;
-@@ -1406,12 +1416,13 @@ static int sas_configure_present(struct domain_device *dev, int phy_id,
- 
- 	*present = 0;
- 	*index = 0;
-+	align = dma_get_cache_alignment(&dev->phy->dev);
- 
--	rri_req = alloc_smp_req(RRI_REQ_SIZE);
-+	rri_req = alloc_smp_req(RRI_REQ_SIZE, align);
- 	if (!rri_req)
- 		return -ENOMEM;
- 
--	rri_resp = alloc_smp_resp(RRI_RESP_SIZE);
-+	rri_resp = alloc_smp_resp(RRI_RESP_SIZE, align);
- 	if (!rri_resp) {
- 		kfree(rri_req);
- 		return -ENOMEM;
-@@ -1472,15 +1483,17 @@ static int sas_configure_present(struct domain_device *dev, int phy_id,
- static int sas_configure_set(struct domain_device *dev, int phy_id,
- 			     u8 *sas_addr, int index, int include)
- {
--	int res;
-+	int res, align;
- 	u8 *cri_req;
- 	u8 *cri_resp;
- 
--	cri_req = alloc_smp_req(CRI_REQ_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
-+
-+	cri_req = alloc_smp_req(CRI_REQ_SIZE, align);
- 	if (!cri_req)
- 		return -ENOMEM;
- 
--	cri_resp = alloc_smp_resp(CRI_RESP_SIZE);
-+	cri_resp = alloc_smp_resp(CRI_RESP_SIZE, align);
- 	if (!cri_resp) {
- 		kfree(cri_req);
- 		return -ENOMEM;
-@@ -1689,10 +1702,12 @@ int sas_discover_root_expander(struct domain_device *dev)
- static int sas_get_phy_discover(struct domain_device *dev,
- 				int phy_id, struct smp_resp *disc_resp)
- {
--	int res;
-+	int res, align;
- 	u8 *disc_req;
- 
--	disc_req = alloc_smp_req(DISCOVER_REQ_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
-+
-+	disc_req = alloc_smp_req(DISCOVER_REQ_SIZE, align);
- 	if (!disc_req)
- 		return -ENOMEM;
- 
-@@ -1715,10 +1730,12 @@ static int sas_get_phy_discover(struct domain_device *dev,
- static int sas_get_phy_change_count(struct domain_device *dev,
- 				    int phy_id, int *pcc)
- {
--	int res;
-+	int res, align;
- 	struct smp_resp *disc_resp;
- 
--	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
-+
-+	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE, align);
- 	if (!disc_resp)
- 		return -ENOMEM;
- 
-@@ -1733,11 +1750,13 @@ static int sas_get_phy_change_count(struct domain_device *dev,
- static int sas_get_phy_attached_dev(struct domain_device *dev, int phy_id,
- 				    u8 *sas_addr, enum sas_device_type *type)
- {
--	int res;
-+	int res, align;
- 	struct smp_resp *disc_resp;
- 	struct discover_resp *dr;
- 
--	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
-+
-+	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE, align);
- 	if (!disc_resp)
- 		return -ENOMEM;
- 	dr = &disc_resp->disc;
-@@ -1787,15 +1806,17 @@ static int sas_find_bcast_phy(struct domain_device *dev, int *phy_id,
- 
- static int sas_get_ex_change_count(struct domain_device *dev, int *ecc)
- {
--	int res;
-+	int res, align;
- 	u8  *rg_req;
- 	struct smp_resp  *rg_resp;
- 
--	rg_req = alloc_smp_req(RG_REQ_SIZE);
-+	align = dma_get_cache_alignment(&dev->phy->dev);
-+
-+	rg_req = alloc_smp_req(RG_REQ_SIZE, align);
- 	if (!rg_req)
- 		return -ENOMEM;
- 
--	rg_resp = alloc_smp_resp(RG_RESP_SIZE);
-+	rg_resp = alloc_smp_resp(RG_RESP_SIZE, align);
- 	if (!rg_resp) {
- 		kfree(rg_req);
- 		return -ENOMEM;
+ void __init plat_swiotlb_setup(void)
 -- 
 2.7.0
-
-
-
