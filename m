@@ -1,41 +1,30 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 0/2] block/SCSI MQ: two RESTART related patches
-Date: Tue, 17 Oct 2017 13:12:10 +0800
-Message-ID: <20171017051209.GF15996@ming.t460p>
-References: <20171017050418.22555-1-ming.lei@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 0/2] change allow_restart, manage_start_stop to bool in sysfs
+Date: Tue, 17 Oct 2017 01:27:16 -0400
+Message-ID: <yq1sheiwdhn.fsf@oracle.com>
+References: <cover.1507791207.git.zhangweiping@didichuxing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171017050418.22555-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27956 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932475AbdJQF1c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 01:27:32 -0400
+In-Reply-To: <cover.1507791207.git.zhangweiping@didichuxing.com> (weiping
+        zhang's message of "Thu, 12 Oct 2017 14:56:15 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: weiping zhang <zhangweiping@didichuxing.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-On Tue, Oct 17, 2017 at 01:04:16PM +0800, Ming Lei wrote:
-> Hi Jens,
-> 
-> The 1st patch runs idle hctx after dealy in scsi_mq_get_budget(),
-> so that we can keep same behaviour with before, and it can be
-> thought as a fix.
-> 
-> The 2nd patch cleans up RESTART, and removes handling for TAG_SHARED
-> from current blk-mq's RESTART mechanism because SCSI_MQ can covers its
-> restart by itself, so that no need to handle TAG_SHARED in blk-mq
-> RESTART. And >20% IOPS boost is observed in my rand read test over
-> scsi_debug.
-> 
-> John, please test this two patches and see if it may improve your SAS
-> IO performance, and you can find the two patches in the following branch:
-> 
-> 	https://github.com/ming1/linux/commits/blk_mq_improve_restart_V1
 
-Forget to mention, you need to either pull the above branch directly
-or apply the two patches against for-next branch of Jens' block
-tree:
+weiping,
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git #for-next
+> weiping zhang (2):
+>   scsi: sd: change allow_restart to bool in sysfs interface
+>   scsi: sd: change manage_start_stop to bool in sysfs interface
+
+Applied to 4.15/scsi-queue. Thank you!
 
 -- 
-Ming
+Martin K. Petersen	Oracle Linux Engineering
