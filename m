@@ -1,152 +1,32 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 2/2] blk-mq: don't handle TAG_SHARED in restart
-Date: Tue, 17 Oct 2017 13:04:18 +0800
-Message-ID: <20171017050418.22555-3-ming.lei@redhat.com>
-References: <20171017050418.22555-1-ming.lei@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171017050418.22555-1-ming.lei@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCHv6 0/5] scsi: Fixup blacklist handling
+Date: Tue, 17 Oct 2017 01:06:06 -0400
+Message-ID: <yq1wp3uwegx.fsf@oracle.com>
+References: <1506954397-2237-1-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20852 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753252AbdJQFGU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 01:06:20 -0400
+In-Reply-To: <1506954397-2237-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Mon, 2 Oct 2017 16:26:32 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-Now restart is used in the following cases, and TAG_SHARED is for
-SCSI only.
 
-1) .get_budget() returns BLK_STS_RESOURCE
-- if resource in target/host level isn't satistifed, this SCSI device
-will be added in shost->starved_list, and the whole queue will be rerun
-(via SCSI's built-in RESTART) in scsi_end_request() after any request
-initiated from this host/targe is completed. Forget to mention, host level
-resource is always respected by blk-mq before running .queue_rq().
+Hannes,
 
-- the same is true if resource in the queue level isn't satisfied.
+> The SCSI blacklist handling seems to be rather tricky issue; everytime
+> a fix is included it tends to break other devices.  This patchset
+> attempt to simplify the devlist handling yet again, but this time
+> implementing the framework for regression testing, too.  A patch
+> adding a regression test to the blktest suite will follow.
 
-- if there isn't outstanding request on this queue, then SCSI's RESTART
-can't work(blk-mq's can't work too), and the queue will be run after
-SCSI_QUEUE_DELAY, and finally all starved sdevs will be handled by SCSI's
-RESTART when this request is finished
+Applied to 4.15/scsi-queue. Thanks for working on this!
 
-2) scsi_dispatch_cmd() returns BLK_STS_RESOURCE
-- if there isn't onprogressing request on this queue, the queue
-will be run after SCSI_QUEUE_DELAY
-
-- otherwise, SCSI's RESTART covers the rerun.
-
-3) blk_mq_get_driver_tag() failed
-- BLK_MQ_S_TAG_WAITING covers the cross-queue RESTART for driver
-allocation.
-
-In one word, SCSI's built-in RESTART is enough to cover itself.
-So we don't need to pay special attention to TAG_SHARED wrt. restart.
-
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/blk-mq-sched.c | 78 +++-------------------------------------------------
- 1 file changed, 4 insertions(+), 74 deletions(-)
-
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index df8581bb0a37..daab27feb653 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -68,25 +68,17 @@ static void blk_mq_sched_mark_restart_hctx(struct blk_mq_hw_ctx *hctx)
- 		set_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state);
- }
- 
--static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
-+void blk_mq_sched_restart(struct blk_mq_hw_ctx *hctx)
- {
- 	if (!test_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state))
--		return false;
--
--	if (hctx->flags & BLK_MQ_F_TAG_SHARED) {
--		struct request_queue *q = hctx->queue;
-+		return;
- 
--		if (test_and_clear_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state))
--			atomic_dec(&q->shared_hctx_restart);
--	} else
--		clear_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state);
-+	clear_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state);
- 
- 	if (blk_mq_hctx_has_pending(hctx)) {
- 		blk_mq_run_hw_queue(hctx, true);
--		return true;
-+		return;
- 	}
--
--	return false;
- }
- 
- /* return true if hctx need to run again */
-@@ -385,68 +377,6 @@ static bool blk_mq_sched_bypass_insert(struct blk_mq_hw_ctx *hctx,
- 	return true;
- }
- 
--/**
-- * list_for_each_entry_rcu_rr - iterate in a round-robin fashion over rcu list
-- * @pos:    loop cursor.
-- * @skip:   the list element that will not be examined. Iteration starts at
-- *          @skip->next.
-- * @head:   head of the list to examine. This list must have at least one
-- *          element, namely @skip.
-- * @member: name of the list_head structure within typeof(*pos).
-- */
--#define list_for_each_entry_rcu_rr(pos, skip, head, member)		\
--	for ((pos) = (skip);						\
--	     (pos = (pos)->member.next != (head) ? list_entry_rcu(	\
--			(pos)->member.next, typeof(*pos), member) :	\
--	      list_entry_rcu((pos)->member.next->next, typeof(*pos), member)), \
--	     (pos) != (skip); )
--
--/*
-- * Called after a driver tag has been freed to check whether a hctx needs to
-- * be restarted. Restarts @hctx if its tag set is not shared. Restarts hardware
-- * queues in a round-robin fashion if the tag set of @hctx is shared with other
-- * hardware queues.
-- */
--void blk_mq_sched_restart(struct blk_mq_hw_ctx *const hctx)
--{
--	struct blk_mq_tags *const tags = hctx->tags;
--	struct blk_mq_tag_set *const set = hctx->queue->tag_set;
--	struct request_queue *const queue = hctx->queue, *q;
--	struct blk_mq_hw_ctx *hctx2;
--	unsigned int i, j;
--
--	if (set->flags & BLK_MQ_F_TAG_SHARED) {
--		/*
--		 * If this is 0, then we know that no hardware queues
--		 * have RESTART marked. We're done.
--		 */
--		if (!atomic_read(&queue->shared_hctx_restart))
--			return;
--
--		rcu_read_lock();
--		list_for_each_entry_rcu_rr(q, queue, &set->tag_list,
--					   tag_set_list) {
--			queue_for_each_hw_ctx(q, hctx2, i)
--				if (hctx2->tags == tags &&
--				    blk_mq_sched_restart_hctx(hctx2))
--					goto done;
--		}
--		j = hctx->queue_num + 1;
--		for (i = 0; i < queue->nr_hw_queues; i++, j++) {
--			if (j == queue->nr_hw_queues)
--				j = 0;
--			hctx2 = queue->queue_hw_ctx[j];
--			if (hctx2->tags == tags &&
--			    blk_mq_sched_restart_hctx(hctx2))
--				break;
--		}
--done:
--		rcu_read_unlock();
--	} else {
--		blk_mq_sched_restart_hctx(hctx);
--	}
--}
--
- /*
-  * Add flush/fua to the queue. If we fail getting a driver tag, then
-  * punt to the requeue list. Requeue will re-invoke us from a context
 -- 
-2.9.5
+Martin K. Petersen	Oracle Linux Engineering
