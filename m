@@ -1,163 +1,125 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v10 03/10] md: Neither resync nor reshape while the system is frozen
-Date: Tue, 17 Oct 2017 16:26:23 -0700
-Message-ID: <20171017232630.4264-4-bart.vanassche@wdc.com>
-References: <20171017232630.4264-1-bart.vanassche@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:47593 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761434AbdJQX0c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 19:26:32 -0400
-In-Reply-To: <20171017232630.4264-1-bart.vanassche@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH v10 00/10] block, scsi, md: Improve suspend and resume
+Date: Tue, 17 Oct 2017 16:26:20 -0700
+Message-ID: <20171017232630.4264-1-bart.vanassche@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-raid@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Some people use the md driver on laptops and use the suspend and
-resume functionality. Since it is essential that submitting of
-new I/O requests stops before a hibernation image is created,
-interrupt the md resync and reshape actions if the system is
-being frozen. Note: the resync and reshape will restart after
-the system is resumed and a message similar to the following
-will appear in the system log:
+Hello Jens,
 
-md: md0: data-check interrupted.
+It is known that during the resume following a hibernate, especially when
+using an md RAID1 array created on top of SCSI devices, sometimes the system
+hangs instead of coming up properly. This patch series fixes that
+problem. These patches have been tested on top of the block layer for-next
+branch. Please consider these changes for kernel v4.15.
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Shaohua Li <shli@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Cc: linux-raid@vger.kernel.org
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/md/md.c | 50 +++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/md.h |  8 ++++++++
- 2 files changed, 57 insertions(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b99584e5d6b1..8b2fc750f97f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -66,6 +66,8 @@
- #include <linux/raid/md_u.h>
- #include <linux/slab.h>
- #include <linux/percpu-refcount.h>
-+#include <linux/freezer.h>
-+#include <linux/suspend.h>
- 
- #include <trace/events/block.h>
- #include "md.h"
-@@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
- 	 */
- 
- 	allow_signal(SIGKILL);
-+	set_freezable();
- 	while (!kthread_should_stop()) {
- 
- 		/* We need to wait INTERRUPTIBLE so that
-@@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
- 		if (signal_pending(current))
- 			flush_signals(current);
- 
--		wait_event_interruptible_timeout
-+		wait_event_freezable_timeout
- 			(thread->wqueue,
- 			 test_bit(THREAD_WAKEUP, &thread->flags)
- 			 || kthread_should_stop() || kthread_should_park(),
-@@ -8944,6 +8947,8 @@ static void md_stop_all_writes(void)
- 	int need_delay = 0;
- 
- 	for_each_mddev(mddev, tmp) {
-+		mddev->frozen_before_suspend =
-+			test_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		if (mddev_trylock(mddev)) {
- 			if (mddev->pers)
- 				__md_stop_writes(mddev);
-@@ -8963,6 +8968,47 @@ static void md_stop_all_writes(void)
- 		mdelay(1000*1);
- }
- 
-+static void md_restore_frozen_flag(void)
-+{
-+	struct list_head *tmp;
-+	struct mddev *mddev;
-+
-+	for_each_mddev(mddev, tmp) {
-+		if (mddev->frozen_before_suspend)
-+			set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+		else
-+			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	}
-+}
-+
-+/*
-+ * Ensure that neither resyncing nor reshaping occurs while the system is
-+ * frozen.
-+ */
-+static int md_notify_pm(struct notifier_block *bl, unsigned long state,
-+			void *unused)
-+{
-+	pr_debug("%s: state = %ld\n", __func__, state);
-+
-+	switch (state) {
-+	case PM_HIBERNATION_PREPARE:
-+	case PM_SUSPEND_PREPARE:
-+	case PM_RESTORE_PREPARE:
-+		md_stop_all_writes();
-+		break;
-+	case PM_POST_HIBERNATION:
-+	case PM_POST_SUSPEND:
-+	case PM_POST_RESTORE:
-+		md_restore_frozen_flag();
-+		break;
-+	}
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block md_pm_notifier = {
-+	.notifier_call	= md_notify_pm,
-+};
-+
- static int md_notify_reboot(struct notifier_block *this,
- 			    unsigned long code, void *x)
- {
-@@ -9009,6 +9055,7 @@ static int __init md_init(void)
- 			    md_probe, NULL, NULL);
- 
- 	register_reboot_notifier(&md_reboot_notifier);
-+	register_pm_notifier(&md_pm_notifier);
- 	raid_table_header = register_sysctl_table(raid_root_table);
- 
- 	md_geninit();
-@@ -9248,6 +9295,7 @@ static __exit void md_exit(void)
- 
- 	unregister_blkdev(MD_MAJOR,"md");
- 	unregister_blkdev(mdp_major, "mdp");
-+	unregister_pm_notifier(&md_pm_notifier);
- 	unregister_reboot_notifier(&md_reboot_notifier);
- 	unregister_sysctl_table(raid_table_header);
- 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d8287d3cd1bf..727b3aef4d26 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -356,6 +356,14 @@ struct mddev {
- 	 */
- 	int				recovery_disabled;
- 
-+	/* Writes are stopped before hibernation, suspend and restore by
-+	 * calling md_stop_all_writes(). That function sets the
-+	 * MD_RECOVERY_FROZEN flag. The value of that flag is saved before
-+	 * writes are stopped such that it can be restored after hibernation,
-+	 * suspend or restore have finished.
-+	 */
-+	bool				frozen_before_suspend;
-+
- 	int				in_sync;	/* know to not need resync */
- 	/* 'open_mutex' avoids races between 'md_open' and 'do_md_stop', so
- 	 * that we are never stopping an array while it is open.
+Bart.
+
+Changes between v9 and v10:
+- Made sure that scsi_device_resume() handles SCSI devices that are in an
+  error state correctly. Unlike other SCSI transport protocols, during an
+  ATA device resume the ATA controller is reset. This should fix the
+  blk_queue_enter WARNING reported by the kernel test robot.
+
+Changes between v8 and v9:
+- Modified the third patch such that the MD_RECOVERY_FROZEN flag is restored
+  properly after a resume.
+- Modified the ninth patch such that a kernel warning is reported if it is
+  attempted to call scsi_device_quiesce() from multiple contexts concurrently.
+- Added Reviewed-by / Tested-by tags as appropriate.
+  
+Changes between v7 and v8:
+- Fixed a (theoretical?) race identified by Ming Lei.
+- Added a tenth patch that checks whether the proper type of flags has been
+  passed to a range of block layer functions.
+
+Changes between v6 and v7:
+- Added support for the PREEMPT_ONLY flag in blk-mq-debugfs.c.
+- Fixed kerneldoc header of blk_queue_enter().
+- Added a rcu_read_lock_sched() / rcu_read_unlock_sched() pair in
+  blk_set_preempt_only().
+- Removed a synchronize_rcu() call from scsi_device_quiesce().
+- Modified the description of patch 9/9 in this series.
+- Removed scsi_run_queue() call from scsi_device_resume().
+
+Changes between v5 and v6:
+- Split an md patch into two patches to make it easier to review the changes.
+- For the md patch that suspends I/O while the system is frozen, switched back
+  to the freezer mechanism because this makes the code shorter and easier to
+  review.
+- Changed blk_set/clear_preempt_only() from EXPORT_SYMBOL() into
+  EXPORT_SYMBOL_GPL().
+- Made blk_set_preempt_only() behave as a test-and-set operation.
+- Introduced blk_get_request_flags() and BLK_MQ_REQ_PREEMPT as requested by
+  Christoph and reduced the number of arguments of blk_queue_enter() back from
+  three to two.
+- In scsi_device_quiesce(), moved the blk_mq_freeze_queue() call out of a
+  critical section. Made the explanation of why the synchronize_rcu() call
+  is necessary more detailed.
+
+Changes between v4 and v5:
+- Split blk_set_preempt_only() into two functions as requested by Christoph.
+- Made blk_get_request() trigger WARN_ONCE() if it is attempted to allocate
+  a request while the system is frozen. This is a big help to identify drivers
+  that submit I/O while the system is frozen.
+- Since kernel thread freezing is on its way out, reworked the approach for
+  avoiding that the md driver submits I/O while the system is frozen such that
+  the approach no longer depends on the kernel thread freeze mechanism.
+- Fixed the (theoretical) deadlock in scsi_device_quiesce() that was identified
+  by Ming.
+
+Changes between v3 and v4:
+- Made sure that this patch series not only works for scsi-mq but also for
+  the legacy SCSI stack.
+- Removed an smp_rmb()/smp_wmb() pair from the hot path and added a comment
+  that explains why that is safe.
+- Reordered the patches in this patch series.
+
+Changes between v2 and v3:
+- Made md kernel threads freezable.
+- Changed the approach for quiescing SCSI devices again.
+- Addressed Ming's review comments.
+
+Changes compared to v1 of this patch series:
+- Changed the approach and rewrote the patch series.
+
+Bart Van Assche (9):
+  md: Rename md_notifier into md_reboot_notifier
+  md: Introduce md_stop_all_writes()
+  md: Neither resync nor reshape while the system is frozen
+  block: Introduce blk_get_request_flags()
+  block: Introduce BLK_MQ_REQ_PREEMPT
+  ide, scsi: Tell the block layer at request allocation time about
+    preempt requests
+  block: Add the QUEUE_FLAG_PREEMPT_ONLY request queue flag
+  block, scsi: Make SCSI quiesce and resume work reliably
+  block, nvme: Introduce blk_mq_req_flags_t
+
+Ming Lei (1):
+  block: Make q_usage_counter also track legacy requests
+
+ block/blk-core.c           | 133 ++++++++++++++++++++++++++++++++++++++-------
+ block/blk-mq-debugfs.c     |   1 +
+ block/blk-mq.c             |  20 +++----
+ block/blk-mq.h             |   2 +-
+ block/blk-timeout.c        |   2 +-
+ drivers/ide/ide-pm.c       |   4 +-
+ drivers/md/md.c            |  65 ++++++++++++++++++++--
+ drivers/md/md.h            |   8 +++
+ drivers/nvme/host/core.c   |   5 +-
+ drivers/nvme/host/nvme.h   |   5 +-
+ drivers/scsi/scsi_lib.c    |  48 +++++++++++-----
+ fs/block_dev.c             |   4 +-
+ include/linux/blk-mq.h     |  16 ++++--
+ include/linux/blk_types.h  |   2 +
+ include/linux/blkdev.h     |  11 +++-
+ include/scsi/scsi_device.h |   1 +
+ 16 files changed, 258 insertions(+), 69 deletions(-)
+
 -- 
 2.14.2
