@@ -1,68 +1,116 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 0/2] block/SCSI MQ: two RESTART related patches
-Date: Tue, 17 Oct 2017 16:47:23 +0100
-Message-ID: <8e604f28-dd20-7818-a25b-985ab537bf70@huawei.com>
-References: <20171017050418.22555-1-ming.lei@redhat.com>
- <20171017051209.GF15996@ming.t460p>
+From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] scsi: libiscsi: Convert timers to use timer_setup()
+Date: Tue, 17 Oct 2017 13:11:49 -0400 (EDT)
+Message-ID: <1214209844.17041093.1508260309165.JavaMail.zimbra@redhat.com>
+References: <20171016235424.GA102550@beast>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171017051209.GF15996@ming.t460p>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Linuxarm <linuxarm@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBCYMVIPVXQMBBV7TTDHQKGQEBNK7WJA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20171016235424.GA102550@beast>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 17/10/2017 06:12, Ming Lei wrote:
-> On Tue, Oct 17, 2017 at 01:04:16PM +0800, Ming Lei wrote:
->> Hi Jens,
->>
->> The 1st patch runs idle hctx after dealy in scsi_mq_get_budget(),
->> so that we can keep same behaviour with before, and it can be
->> thought as a fix.
->>
->> The 2nd patch cleans up RESTART, and removes handling for TAG_SHARED
->> from current blk-mq's RESTART mechanism because SCSI_MQ can covers its
->> restart by itself, so that no need to handle TAG_SHARED in blk-mq
->> RESTART. And >20% IOPS boost is observed in my rand read test over
->> scsi_debug.
->>
->> John, please test this two patches and see if it may improve your SAS
->> IO performance, and you can find the two patches in the following branch:
->>
->> 	https://github.com/ming1/linux/commits/blk_mq_improve_restart_V1
->
 
-Hi Ming,
+Reviewed-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-As requested, here's my figures for blk_mq_improve_restart_V1:
-without default SCSI_MQ, deadline scheduler, CONFIG PREEMPT off
-read, rw, write IOPS	
-989K, 113K/113K, 835K
+----- Original Message -----
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly.
+> 
+> Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+> Cc: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+> Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> ---
+>  drivers/scsi/libiscsi.c | 16 ++++++----------
+>  1 file changed, 6 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index f8dc1601efd5..9c50d2d9f27c 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -1805,9 +1805,9 @@ int iscsi_target_alloc(struct scsi_target *starget)
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_target_alloc);
+>  
+> -static void iscsi_tmf_timedout(unsigned long data)
+> +static void iscsi_tmf_timedout(struct timer_list *t)
+>  {
+> -	struct iscsi_conn *conn = (struct iscsi_conn *)data;
+> +	struct iscsi_conn *conn = from_timer(conn, t, tmf_timer);
+>  	struct iscsi_session *session = conn->session;
+>  
+>  	spin_lock(&session->frwd_lock);
+> @@ -1838,8 +1838,6 @@ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn
+> *conn,
+>  	}
+>  	conn->tmfcmd_pdus_cnt++;
+>  	conn->tmf_timer.expires = timeout * HZ + jiffies;
+> -	conn->tmf_timer.function = iscsi_tmf_timedout;
+> -	conn->tmf_timer.data = (unsigned long)conn;
+>  	add_timer(&conn->tmf_timer);
+>  	ISCSI_DBG_EH(session, "tmf set timeout\n");
+>  
+> @@ -2089,9 +2087,9 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct
+> scsi_cmnd *sc)
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_eh_cmd_timed_out);
+>  
+> -static void iscsi_check_transport_timeouts(unsigned long data)
+> +static void iscsi_check_transport_timeouts(struct timer_list *t)
+>  {
+> -	struct iscsi_conn *conn = (struct iscsi_conn *)data;
+> +	struct iscsi_conn *conn = from_timer(conn, t, transport_timer);
+>  	struct iscsi_session *session = conn->session;
+>  	unsigned long recv_timeout, next_timeout = 0, last_recv;
+>  
+> @@ -2913,9 +2911,7 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session,
+> int dd_size,
+>  	conn->exp_statsn = 0;
+>  	conn->tmf_state = TMF_INITIAL;
+>  
+> -	init_timer(&conn->transport_timer);
+> -	conn->transport_timer.data = (unsigned long)conn;
+> -	conn->transport_timer.function = iscsi_check_transport_timeouts;
+> +	timer_setup(&conn->transport_timer, iscsi_check_transport_timeouts, 0);
+>  
+>  	INIT_LIST_HEAD(&conn->mgmtqueue);
+>  	INIT_LIST_HEAD(&conn->cmdqueue);
+> @@ -2939,7 +2935,7 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session,
+> int dd_size,
+>  		goto login_task_data_alloc_fail;
+>  	conn->login_task->data = conn->data = data;
+>  
+> -	init_timer(&conn->tmf_timer);
+> +	timer_setup(&conn->tmf_timer, iscsi_tmf_timedout, 0);
+>  	init_waitqueue_head(&conn->ehwait);
+>  
+>  	return cls_conn;
+> --
+> 2.7.4
+> 
+> 
+> --
+> Kees Cook
+> Pixel Security
+> 
 
-with default SCSI_MQ, mq-deadline scheduler, CONFIG PREEMPT off
-read, rw, write IOPS	
-738K, 130K/130K, 686K
-
-For axboe for-next tip (21ed538):
-without default SCSI_MQ, deadline scheduler, CONFIG PREEMPT off
-read, rw, write IOPS	
-977K, 117K/117K, 821K
-
-with default SCSI_MQ, mq-deadline scheduler, CONFIG PREEMPT off
-read, rw, write IOPS	
-733K, 128K/128K, 676K
-
-All cases do not have LLDD mq exposed/enabled. So unfortunately not much 
-difference with your branch.
-
-cheers,
-John
-
-> Forget to mention, you need to either pull the above branch directly
-> or apply the two patches against for-next branch of Jens' block
-> tree:
->
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git #for-next
->
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
