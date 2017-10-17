@@ -1,67 +1,220 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: integer overflow in aic7xxx (was [bug report] Linux-2.6.12-rc2)
-Date: Wed, 18 Oct 2017 00:58:05 +0300
-Message-ID: <20171017215805.f77s7ahesjga3w2z@mwanda>
-References: <20171017215249.nker3qoexzim4q45@mwanda>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] sd: Micro-optimize READ / WRITE CDB encoding
+Date: Tue, 17 Oct 2017 18:17:05 -0400
+Message-ID: <cb08e66f-c5a4-6eab-2306-8bcb3aeffb3b@interlog.com>
+References: <20171017210352.19580-1-bart.vanassche@wdc.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20654 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935002AbdJQV6P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 17:58:15 -0400
-Content-Disposition: inline
-In-Reply-To: <20171017215249.nker3qoexzim4q45@mwanda>
+Received: from smtp.infotech.no ([82.134.31.41]:54433 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751058AbdJQWRT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Oct 2017 18:17:19 -0400
+In-Reply-To: <20171017210352.19580-1-bart.vanassche@wdc.com>
+Content-Language: en-CA
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Argh...  My script chose a stupid subject.  Sorry for not catching that.
+On 2017-10-17 05:03 PM, Bart Van Assche wrote:
+> Only compute 'threshold' if .last_sector_bug has been set. Reduce
+> the number of branches that has to be taken to check the starting
+> LBA and transfer length alignment. Optimize the encoding of the
+> READ(10), WRITE(10), READ(16), WRITE(16), READ(32) and WRITE(32)
+> CDB encoding.
 
-regards,
-dan carpenter
+Great!
 
-On Wed, Oct 18, 2017 at 12:52:49AM +0300, Dan Carpenter wrote:
-> Hey,
+Some suggestions, see inline below.
+
+And showing us the improved version of sd_setup_read_write_cmnd()
+as well as the diff could help us (or at least me) see the bigger
+picture.
+
+Doug Gilbert
+
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>   drivers/scsi/sd.c | 102 +++++++++++++++---------------------------------------
+>   1 file changed, 28 insertions(+), 74 deletions(-)
 > 
-> This code is older than git is so it probably doesn't matter.  But just
-> for laughs does anyone know what this should be?
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 67b50baa943c..83284a8fa2cd 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1025,7 +1025,6 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+>   	struct gendisk *disk = rq->rq_disk;
+>   	struct scsi_disk *sdkp = scsi_disk(disk);
+>   	sector_t block = blk_rq_pos(rq);
+
+s/block/lba/		# use the well understood SCSI abbreviation
+
+> -	sector_t threshold;
+>   	unsigned int this_count = blk_rq_sectors(rq);
+>   	unsigned int dif, dix;
+>   	bool zoned_write = sd_is_zoned(sdkp) && rq_data_dir(rq) == WRITE;
+> @@ -1071,20 +1070,22 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+>   		goto out;
+>   	}
+>   
+> -	/*
+> -	 * Some SD card readers can't handle multi-sector accesses which touch
+> -	 * the last one or two hardware sectors.  Split accesses as needed.
+> -	 */
+> -	threshold = get_capacity(disk) - SD_LAST_BUGGY_SECTORS *
+> -		(sdp->sector_size / 512);
+> +	if (unlikely(sdp->last_sector_bug)) {
+> +		sector_t threshold;
+
+s/threshold/threshold_lba/	# a bit long but more precise
+
+>   
+> -	if (unlikely(sdp->last_sector_bug && block + this_count > threshold)) {
+> -		if (block < threshold) {
+> -			/* Access up to the threshold but not beyond */
+> -			this_count = threshold - block;
+> -		} else {
+> +		/*
+> +		 * Some SD card readers can't handle multi-sector accesses
+> +		 * which touch the last one or two hardware sectors.  Split
+> +		 * accesses as needed.
+> +		 */
+> +		threshold = get_capacity(disk) - SD_LAST_BUGGY_SECTORS *
+> +			(sdp->sector_size / 512);
+> +		if (block >= threshold) {
+>   			/* Access only a single hardware sector */
+>   			this_count = sdp->sector_size / 512;
+> +		} else if (block + this_count > threshold) {
+> +			/* Access up to the threshold but not beyond */
+> +			this_count = threshold - block;
+>   		}
+>   	}
+>   
+> @@ -1102,34 +1103,17 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+>   	 * and not force the scsi disk driver to use bounce buffers
+>   	 * for this.
+>   	 */
+> -	if (sdp->sector_size == 1024) {
+> -		if ((block & 1) || (blk_rq_sectors(rq) & 1)) {
+> +	if (sdp->sector_size != 512) {
+> +		if ((block | this_count) & (sdp->sector_size / 512 - 1)) {
+>   			scmd_printk(KERN_ERR, SCpnt,
+> -				    "Bad block number requested\n");
+> +				    "Bad block number requested: block number = %llu, sector count = %u, sector size = %u bytes\n",
+> +				    block + 0ULL, this_count, sdp->sector_size);
+>   			goto out;
+>   		} else {
+> -			block = block >> 1;
+> -			this_count = this_count >> 1;
+> -		}
+> -	}
+> -	if (sdp->sector_size == 2048) {
+> -		if ((block & 3) || (blk_rq_sectors(rq) & 3)) {
+> -			scmd_printk(KERN_ERR, SCpnt,
+> -				    "Bad block number requested\n");
+> -			goto out;
+> -		} else {
+> -			block = block >> 2;
+> -			this_count = this_count >> 2;
+> -		}
+> -	}
+> -	if (sdp->sector_size == 4096) {
+> -		if ((block & 7) || (blk_rq_sectors(rq) & 7)) {
+> -			scmd_printk(KERN_ERR, SCpnt,
+> -				    "Bad block number requested\n");
+> -			goto out;
+> -		} else {
+> -			block = block >> 3;
+> -			this_count = this_count >> 3;
+> +			int shift = ilog2(sdp->sector_size / 512);
+> +
+> +			block = block >> shift;
+
+			lba >>= shift;	/* scale down LBA */
+
+> +			this_count = this_count >> shift;
+
+likewise
+
+>   		}
+>   	}
+>   	if (rq_data_dir(rq) == WRITE) {
+> @@ -1173,56 +1157,26 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+>   		SCpnt->cmnd[7] = 0x18;
+>   		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
+
+Perhaps rq_data_dir(rq) could be placed in a local variable
+
+>   		SCpnt->cmnd[10] = protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 : 0);
+
+		SCpnt->cmnd[10] = protect;
+		if (unlikely(rq->cmd_flags & REQ_FUA))
+			SCpnt->cmnd[10] |= 0x8;
+
+> -
+>   		/* LBA */
+> -		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+> -		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+> -		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+> -		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
+> -		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
+> -		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
+> -		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
+> -		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
+> -
+> +		put_unaligned_be64(block, &SCpnt->cmnd[12]);
+>   		/* Expected Indirect LBA */
+> -		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
+> -		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
+> -		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
+> -		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
+> -
+> +		put_unaligned_be32(block, &SCpnt->cmnd[20]);
+>   		/* Transfer length */
+> -		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
+> -		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
+> -		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
+> -		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
+> +		put_unaligned_be32(this_count, &SCpnt->cmnd[28]);
+>   	} else if (sdp->use_16_for_rw || (this_count > 0xffff)) {
+>   		SCpnt->cmnd[0] += READ_16 - READ_6;
+>   		SCpnt->cmnd[1] = protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 : 0);
+> -		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+> -		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+> -		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+> -		SCpnt->cmnd[5] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
+> -		SCpnt->cmnd[6] = (unsigned char) (block >> 24) & 0xff;
+> -		SCpnt->cmnd[7] = (unsigned char) (block >> 16) & 0xff;
+> -		SCpnt->cmnd[8] = (unsigned char) (block >> 8) & 0xff;
+> -		SCpnt->cmnd[9] = (unsigned char) block & 0xff;
+> -		SCpnt->cmnd[10] = (unsigned char) (this_count >> 24) & 0xff;
+> -		SCpnt->cmnd[11] = (unsigned char) (this_count >> 16) & 0xff;
+> -		SCpnt->cmnd[12] = (unsigned char) (this_count >> 8) & 0xff;
+> -		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
+> +		put_unaligned_be64(block, &SCpnt->cmnd[2]);
+> +		put_unaligned_be32(this_count, &SCpnt->cmnd[10]);
+>   		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
+>   	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
+>   		   scsi_device_protection(SCpnt->device) ||
+>   		   SCpnt->device->use_10_for_rw) {
+>   		SCpnt->cmnd[0] += READ_10 - READ_6;
+>   		SCpnt->cmnd[1] = protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 : 0);
+> -		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
+> -		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+> -		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+> -		SCpnt->cmnd[5] = (unsigned char) block & 0xff;
+> +		put_unaligned_be32(block, &SCpnt->cmnd[2]);
+>   		SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
+> -		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
+> -		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
+> +		put_unaligned_be16(this_count, &SCpnt->cmnd[7]);
+>   	} else {
+>   		if (unlikely(rq->cmd_flags & REQ_FUA)) {
+>   			/*
 > 
-> 	drivers/scsi/aic7xxx/aic7xxx_core.c:4807 ahc_init_scbdata()
-> 	warn: integer overflow (literal): u32max + 1
-> 
-> drivers/scsi/aic7xxx/aic7xxx_core.c
->   4794  
->   4795          /*
->   4796           * Create our DMA tags.  These tags define the kinds of device
->   4797           * accessible memory allocations and memory mappings we will
->   4798           * need to perform during normal operation.
->   4799           *
->   4800           * Unless we need to further restrict the allocation, we rely
->   4801           * on the restrictions of the parent dmat, hence the common
->   4802           * use of MAXADDR and MAXSIZE.
->   4803           */
->   4804  
->   4805          /* DMA tag for our hardware scb structures */
->   4806          if (ahc_dma_tag_create(ahc, ahc->parent_dmat, /*alignment*/1,
->   4807                                 /*boundary*/BUS_SPACE_MAXADDR_32BIT + 1,
->                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> This is "0xffffffff + 1" which has an integer overflow so it's a
-> complicated way to say zero.
-> 
->   4808                                 /*lowaddr*/BUS_SPACE_MAXADDR_32BIT,
->   4809                                 /*highaddr*/BUS_SPACE_MAXADDR,
->   4810                                 /*filter*/NULL, /*filterarg*/NULL,
->   4811                                 AHC_SCB_MAX_ALLOC * sizeof(struct hardware_scb),
->   4812                                 /*nsegments*/1,
->   4813                                 /*maxsegsz*/BUS_SPACE_MAXSIZE_32BIT,
->   4814                                 /*flags*/0, &scb_data->hscb_dmat) != 0) {
->   4815                  goto error_exit;
->   4816          }
->   4817  
->   4818          scb_data->init_level++;
->   4819  
-> 
-> regards,
-> dan carpenter
