@@ -1,32 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: Fix controller initialization failure
-Date: Mon, 16 Oct 2017 23:18:26 -0400
-Message-ID: <yq1tvyyzcl9.fsf@oracle.com>
-References: <150819975151.22574.15488858870979477962.stgit@rslab209.pmc-sierra.bc.ca>
+Subject: Re: [PATCH] scsi: qedi: Delete redundant variables
+Date: Mon, 16 Oct 2017 23:25:48 -0400
+Message-ID: <yq1mv4qzc8z.fsf@oracle.com>
+References: <1507983478-23083-1-git-send-email-chris.gekas@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23424 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753664AbdJQDSe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 23:18:34 -0400
-In-Reply-To: <150819975151.22574.15488858870979477962.stgit@rslab209.pmc-sierra.bc.ca>
-        (Raghava Aditya Renukunta's message of "Mon, 16 Oct 2017 17:22:31
-        -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1507983478-23083-1-git-send-email-chris.gekas@gmail.com>
+        (Christos Gkekas's message of "Sat, 14 Oct 2017 13:17:58 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christos Gkekas <chris.gekas@gmail.com>
+Cc: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Scott.Benesh@microsemi.com
 
 
-Raghava,
+Christos,
 
-> This is a fix to an issue where the driver sends its periodic WELLNESS
-> command to the controller after the driver shut it down.This causes
-> the controller to crash. The window where this can happen is small,
-> but it can be hit at around 4 hours of constant resets.
+> Remove redundant variables in quedi_fw.c that are set but not used.
 
-Applied to 4.14/scsi-fixes. Thank you!
+Applied to 4.15/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
