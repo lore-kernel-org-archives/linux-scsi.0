@@ -1,146 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.14-rc5
-Date: Tue, 17 Oct 2017 08:22:10 -0700
-Message-ID: <1508253730.3129.19.camel@HansenPartnership.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/2] block/SCSI MQ: two RESTART related patches
+Date: Tue, 17 Oct 2017 16:47:23 +0100
+Message-ID: <8e604f28-dd20-7818-a25b-985ab537bf70@huawei.com>
+References: <20171017050418.22555-1-ming.lei@redhat.com>
+ <20171017051209.GF15996@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51348 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933923AbdJQPWL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Oct 2017 11:22:11 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171017051209.GF15996@ming.t460p>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Four mostly error leg fixes and one more important regression in a
-prior commit (the qla2xxx one).
+On 17/10/2017 06:12, Ming Lei wrote:
+> On Tue, Oct 17, 2017 at 01:04:16PM +0800, Ming Lei wrote:
+>> Hi Jens,
+>>
+>> The 1st patch runs idle hctx after dealy in scsi_mq_get_budget(),
+>> so that we can keep same behaviour with before, and it can be
+>> thought as a fix.
+>>
+>> The 2nd patch cleans up RESTART, and removes handling for TAG_SHARED
+>> from current blk-mq's RESTART mechanism because SCSI_MQ can covers its
+>> restart by itself, so that no need to handle TAG_SHARED in blk-mq
+>> RESTART. And >20% IOPS boost is observed in my rand read test over
+>> scsi_debug.
+>>
+>> John, please test this two patches and see if it may improve your SAS
+>> IO performance, and you can find the two patches in the following branch:
+>>
+>> 	https://github.com/ming1/linux/commits/blk_mq_improve_restart_V1
+>
 
-The patch is available here:
+Hi Ming,
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+As requested, here's my figures for blk_mq_improve_restart_V1:
+without default SCSI_MQ, deadline scheduler, CONFIG PREEMPT off
+read, rw, write IOPS	
+989K, 113K/113K, 835K
 
-The short changelog is:
+with default SCSI_MQ, mq-deadline scheduler, CONFIG PREEMPT off
+read, rw, write IOPS	
+738K, 130K/130K, 686K
 
-Hannes Reinecke (1):
-      scsi: fixup kernel warning during rmmod()
+For axboe for-next tip (21ed538):
+without default SCSI_MQ, deadline scheduler, CONFIG PREEMPT off
+read, rw, write IOPS	
+977K, 117K/117K, 821K
 
-Johannes Thumshirn (2):
-      scsi: fc: check for rport presence in fc_block_scsi_eh
-      scsi: libiscsi: fix shifting of DID_REQUEUE host byte
+with default SCSI_MQ, mq-deadline scheduler, CONFIG PREEMPT off
+read, rw, write IOPS	
+733K, 128K/128K, 676K
 
-Quinn Tran (1):
-      scsi: qla2xxx: Fix uninitialized work element
+All cases do not have LLDD mq exposed/enabled. So unfortunately not much 
+difference with your branch.
 
-Satish Kharat (1):
-      scsi: libfc: fix a deadlock in fc_rport_work
+cheers,
+John
 
-And the diffstat:
-
- drivers/scsi/libfc/fc_rport.c    |  2 +-
- drivers/scsi/libiscsi.c          |  2 +-
- drivers/scsi/qla2xxx/qla_os.c    |  3 ++-
- drivers/scsi/scsi_sysfs.c        | 10 ++++++++--
- drivers/scsi/scsi_transport_fc.c |  3 +++
- 5 files changed, 15 insertions(+), 5 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 520325867e2b..31d31aad3de1 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -383,11 +383,11 @@ static void fc_rport_work(struct work_struct *work)
- 				fc_rport_enter_flogi(rdata);
- 				mutex_unlock(&rdata->rp_mutex);
- 			} else {
-+				mutex_unlock(&rdata->rp_mutex);
- 				FC_RPORT_DBG(rdata, "work delete\n");
- 				mutex_lock(&lport->disc.disc_mutex);
- 				list_del_rcu(&rdata->peers);
- 				mutex_unlock(&lport->disc.disc_mutex);
--				mutex_unlock(&rdata->rp_mutex);
- 				kref_put(&rdata->kref, fc_rport_destroy);
- 			}
- 		} else {
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index c62e8d111fd9..f8dc1601efd5 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1728,7 +1728,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 
- 	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
- 		reason = FAILURE_SESSION_IN_RECOVERY;
--		sc->result = DID_REQUEUE;
-+		sc->result = DID_REQUEUE << 16;
- 		goto fault;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5b2437a5ea44..937209805baf 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3175,6 +3175,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    host->can_queue, base_vha->req,
- 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
- 
-+	INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
-+
- 	if (ha->mqenable) {
- 		bool mq = false;
- 		bool startit = false;
-@@ -3223,7 +3225,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	 */
- 	qla2xxx_wake_dpc(base_vha);
- 
--	INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
- 	INIT_WORK(&ha->board_disable, qla2x00_disable_board_on_pci_error);
- 
- 	if (IS_QLA8031(ha) || IS_MCTP_CAPABLE(ha)) {
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index bf53356f41f0..f796bd61f3f0 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1376,13 +1376,19 @@ static void __scsi_remove_target(struct scsi_target *starget)
- 	spin_lock_irqsave(shost->host_lock, flags);
-  restart:
- 	list_for_each_entry(sdev, &shost->__devices, siblings) {
-+		/*
-+		 * We cannot call scsi_device_get() here, as
-+		 * we might've been called from rmmod() causing
-+		 * scsi_device_get() to fail the module_is_live()
-+		 * check.
-+		 */
- 		if (sdev->channel != starget->channel ||
- 		    sdev->id != starget->id ||
--		    scsi_device_get(sdev))
-+		    !get_device(&sdev->sdev_gendev))
- 			continue;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		scsi_remove_device(sdev);
--		scsi_device_put(sdev);
-+		put_device(&sdev->sdev_gendev);
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		goto restart;
- 	}
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index cbd4495d0ff9..8c46a6d536af 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3320,6 +3320,9 @@ int fc_block_scsi_eh(struct scsi_cmnd *cmnd)
- {
- 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
- 
-+	if (WARN_ON_ONCE(!rport))
-+		return FAST_IO_FAIL;
-+
- 	return fc_block_rport(rport);
- }
- EXPORT_SYMBOL(fc_block_scsi_eh);
+> Forget to mention, you need to either pull the above branch directly
+> or apply the two patches against for-next branch of Jens' block
+> tree:
+>
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git #for-next
+>
