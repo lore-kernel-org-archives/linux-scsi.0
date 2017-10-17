@@ -1,187 +1,47 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] scsi: sd: Implement blacklist option for WRITE SAME w/
- UNMAP
-Date: Tue, 17 Oct 2017 10:26:10 -0400
-Message-ID: <1508250370.6492.2.camel@redhat.com>
-References: <1506529677.4100.452.camel@localhost.localdomain>
-         <20170928013512.1058-1-martin.petersen@oracle.com>
-         <1506679376.11960.1.camel@redhat.com> <yq1lgkx63o3.fsf@oracle.com>
-         <1506693712.28112.1.camel@redhat.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v2 7/8] scsi/pmcraid: Remove an unused structure member
+Date: Tue, 17 Oct 2017 14:28:29 +0000
+Message-ID: <1508250508.3596.0.camel@wdc.com>
+References: <20171016224940.1332-1-bart.vanassche@wdc.com>
+         <20171016224940.1332-8-bart.vanassche@wdc.com>
+         <5ea64c10-aa3e-f0ee-cfba-e93b3d8e1428@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:54780 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761926AbdJQO0N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 10:26:13 -0400
-Received: by mail-qk0-f174.google.com with SMTP id n5so2222537qke.11
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2017 07:26:12 -0700 (PDT)
-In-Reply-To: <1506693712.28112.1.camel@redhat.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:11067 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752629AbdJQO2c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 10:28:32 -0400
+In-Reply-To: <5ea64c10-aa3e-f0ee-cfba-e93b3d8e1428@suse.de>
+Content-Language: en-US
+Content-ID: <E4CCECF6DB6A6F45A4582B095B95CBF0@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "anil_ravindranath@pmc-sierra.com" <anil_ravindranath@pmc-sierra.com>
 
-On Fri, 2017-09-29 at 10:01 -0400, Laurence Oberman wrote:
-> On Fri, 2017-09-29 at 09:21 -0400, Martin K. Petersen wrote:
-> > Laurence,
-> > 
-> > > I am testing this but its not being picked up so I want to know
-> > > if
-> > > I
-> > > have the kernel command line wrong here.
-> > > 
-> > > scsi_dev_flags=LIO-ORG:thin2:0x80000000
-> > > 
-> > > What am I doing wrong to pass the BLIST flags.
-> > 
-> > This worked for me:
-> > 
-> > [root@kvm ~]# echo "Linux:scsi_debug:0x80000000" >
-> > /proc/scsi/device_info
-> > [root@kvm ~]# grep Linux /proc/scsi/device_info 
-> > 'Linux   ' 'scsi_debug      ' 0x80000000
-> > [root@kvm ~]# modprobe scsi_debug unmap_max_blocks=10
-> > unmap_max_desc=1 write_same_length=20 lbpws=1
-> > [root@kvm ~]# lsblk -D
-> > NAME DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
-> > sda         0      512B       5K         0
-> > 
-> > (With the caveat that I tweaked scsi_debug to report the UNMAP
-> > parameters despite lbpu being 0).
-> > 
-> 
-> OK, Thanks, that is working now and I pick up the correct size now.
-> Its going to be very useful for these corner case array
-> inconsistencies.
-> 
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> 
-> Sep 29 09:56:11 localhost kernel: scsi 1:0:0:50: Direct-
-> Access     LIO-
-> ORG  thin2            4.0  PQ: 0 ANSI: 5
-> Sep 29 09:56:11 localhost kernel: scsi 1:0:0:50: alua: supports
-> implicit and explicit TPGS
-> Sep 29 09:56:11 localhost kernel: scsi 1:0:0:50: alua: device
-> naa.6001405f7aa27ca453f4381a00f22ea6 port group 0 rel port 2
-> Sep 29 09:56:11 localhost kernel: sd 1:0:0:50: Attached scsi generic
-> sg64 type 0
-> Sep 29 09:56:11 localhost kernel: RHDEBUG: unmap_limit_for_ws set by
-> kernel flag for case SD_LBP_WS16
-> Sep 29 09:56:11 localhost kernel: sd 1:0:0:50: [sdbl] 81920000 512-
-> byte 
-> logical blocks: (41.9 GB/39.1 GiB)
-> Sep 29 09:56:11 localhost kernel: sd 1:0:0:50: [sdbl] Write Protect
-> is
-> off
-> Sep 29 09:56:11 localhost kernel: sd 1:0:0:50: [sdbl] Write cache:
-> enabled, read cache: enabled, supports DPO and FUA
-> Sep 29 09:56:11 localhost kernel: sd 1:0:0:50: alua: transition
-> timeout
-> set to 60 seconds
-
-
-Hi Martin
-
-We have the code accepted for the patch above and its working fine with
-echo after boot as you already know.
-
-However I am still fighting with trying to pass this on the kernel
-command line. We need to be able to do this as a dynamic method for
-adding devices to the list so that the list is populated prior to the
-device scan.
-
-Using scsi_dev_flags=LIO-ORG:thin2:0x80000000 on the kernel line is
-ignored and not filled in.
-Its apparent to me that we have no longer have code to actually copy
-the string from the kernel line after boot.
-
-I ran some tests and added a couple of printk;s to see if we have any
-capture and its NULL.
-
-So when did this stop working, is what I am now chasing
-
-[    1.524595] RHDEBUG:In scsi_init_devinfo scsi_dev_flags=
-[    1.524705] RHDEBUG: In scsi_init_devinfo error=0
-
-We have this in  drivers/scsi/scsi_devinfo.c
-
-module_param_string(dev_flags, scsi_dev_flags, sizeof(scsi_dev_flags),
-0);
-MODULE_PARM_DESC(dev_flags,
-
-         "Given scsi_dev_flags=vendor:model:flags[,v:m:f] add
-black/white"
-         " list entries for vendor and model with an integer value of
-flags"
-         " to the scsi device info list");
-
-and we have:
-
-/**
- * scsi_init_devinfo - set up the dynamic device list.
- *
- * Description:
- *      Add command line entries from scsi_dev_flags, then add
- *      scsi_static_device_list entries to the scsi device info list.
- */
-int __init scsi_init_devinfo(void)
-{
-#ifdef CONFIG_SCSI_PROC_FS
-        struct proc_dir_entry *p;
-#endif
-        int error, i;
-
-        printk("RHDEBUG:In scsi_init_devinfo
-scsi_dev_flags=%s\n",scsi_dev_flags);
-
-        error = scsi_dev_info_add_list(SCSI_DEVINFO_GLOBAL, NULL);
-        printk("RHDEBUG: In scsi_init_devinfo error=%d\n",error);
-        if (error) {
-                printk("RHDEBUG: In scsi_init_devinfo, calling
-scsi_dev_info_add_list returning with error=%d\n",error);
-                return error;
-        }
-
-        error = scsi_dev_info_list_add_str(scsi_dev_flags);
-        if (error) {
-                printk("RHDEBUG: In scsi_init_devinfo, calling
-scsi_info_list_add returning with error=%d\n",error);
-                goto out;
-        }
-
-        for (i = 0; scsi_static_device_list[i].vendor; i++) {
-                error = scsi_dev_info_list_add(1 /* compatibile */,
-                                scsi_static_device_list[i].vendor,
-                                scsi_static_device_list[i].model,
-                                NULL,
-                                scsi_static_device_list[i].flags);
-                if (error)
-                        goto out;
-        }
-
-#ifdef CONFIG_SCSI_PROC_FS
-        p = proc_create("scsi/device_info", 0, NULL,
-&scsi_devinfo_proc_fops);
-        if (!p) {
-                error = -ENOMEM;
-                goto out;
-        }
-#endif /* CONFIG_SCSI_PROC_FS */
-
- out:
-        if (error)
-                scsi_exit_devinfo();
-        return error;
-}
-
-
-But I fail to see where we actually copy the string off the kernel
-line.
-
-I intend to add code and test and submit a patch but first wanted to
-know if its me simply missing something here.
-
-Thanks
-Laurence
+T24gVHVlLCAyMDE3LTEwLTE3IGF0IDA4OjIxICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIDEwLzE3LzIwMTcgMTI6NDkgQU0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBT
+aWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdkYy5jb20+DQo+
+ID4gUmV2aWV3ZWQtYnk6IEpvaGFubmVzIFRodW1zaGlybiA8anRodW1zaGlybkBzdXNlLmRlPg0K
+PiA+IENjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+IENjOiBNYXJ0aW4gSy4gUGV0
+ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPg0KPiA+IENjOiBBbmlsIFJhdmluZHJh
+bmF0aCA8YW5pbF9yYXZpbmRyYW5hdGhAcG1jLXNpZXJyYS5jb20+DQo+ID4gLS0tDQo+ID4gIGRy
+aXZlcnMvc2NzaS9wbWNyYWlkLmggfCAxIC0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDEgZGVsZXRp
+b24oLSkNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3BtY3JhaWQuaCBiL2Ry
+aXZlcnMvc2NzaS9wbWNyYWlkLmgNCj4gPiBpbmRleCA4YmZhYzcyYTI0MmIuLjQ0ZGE5MTcxMjEx
+NSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvcG1jcmFpZC5oDQo+ID4gKysrIGIvZHJp
+dmVycy9zY3NpL3BtY3JhaWQuaA0KPiA+IEBAIC01NDIsNyArNTQyLDYgQEAgc3RydWN0IHBtY3Jh
+aWRfc2dsaXN0IHsNCj4gPiAgCXUzMiBvcmRlcjsNCj4gPiAgCXUzMiBudW1fc2c7DQo+ID4gIAl1
+MzIgbnVtX2RtYV9zZzsNCj4gPiAtCXUzMiBidWZmZXJfbGVuOw0KPiA+ICAJc3RydWN0IHNjYXR0
+ZXJsaXN0IHNjYXR0ZXJsaXN0WzFdOw0KPiA+ICB9Ow0KPiA+ICANCj4gPiANCj4gDQo+IFRoaXMg
+YWN0dWFsbHkgaXMgdGhlIHNhbWUgc3RvcnkgdGhhdCB3ZSd2ZSBoYWQgd2l0aCBpcHIgKGFuZCwg
+bG9va2luZyBhdA0KPiB0aGUgY29kZSwgdGhvc2UgdHdvIGRyaXZlcnMgbG9vayBhd2Z1bGx5IHNp
+bWlsYXIgLi4uKS4NCj4gcG1jcmFpZF9zZ2xpc3QgbG9va3MgYXMgaWYgaXQncyBhIGhhcmR3YXJl
+LWRlcGVuZGVudCBzdHJ1Y3R1cmUsIHNvIGp1c3QNCj4gcmVtb3Zpbmcgb25lIGVudHJ5IGZyb20g
+dGhlIG1pZGRsZSBvZiBhIHN0cnVjdHVyZSBtaWdodCBub3QgYmUgYSBnb29kIGlkZWEuDQo+IEJ1
+dCB0aGlzIGlzIHNvbWV0aGluZyBmb3IgdGhlIHBtY3JhaWQgZm9sa3MgdG8gY2xhcmlmeS4NCg0K
+SGVsbG8gSGFubmVzLA0KDQpTb3JyeSBidXQgSSBkb24ndCBzZWUgaG93IGEgc3RydWN0dXJlIHRo
+YXQgY29udGFpbnMgYSBzdHJ1Y3Qgc2NhdHRlcmxpc3QNCmNvdWxkIGJlIGhhcmR3YXJlLWRlcGVu
+ZGVudD8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
