@@ -1,33 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/5] ZBC support clenaup and fixes
-Date: Mon, 16 Oct 2017 23:57:07 -0400
-Message-ID: <yq18tgazass.fsf@oracle.com>
-References: <20171010205425.7376-1-damien.lemoal@wdc.com>
+Subject: Re: [PATCH] scsi: libfc: Convert timers to use timer_setup()
+Date: Tue, 17 Oct 2017 00:08:00 -0400
+Message-ID: <yq14lqyzaan.fsf@oracle.com>
+References: <20171016235410.GA102502@beast>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34253 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753254AbdJQD5Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 23:57:16 -0400
-In-Reply-To: <20171010205425.7376-1-damien.lemoal@wdc.com> (Damien Le Moal's
-        message of "Wed, 11 Oct 2017 05:54:20 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171016235410.GA102502@beast> (Kees Cook's message of "Mon, 16
+        Oct 2017 16:54:10 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
 
-Damien,
+Kees,
 
-> First part of the "scsi-mq support for ZBC disks" series that is only
-> scsi specific. These patches are just cleanups with only one bug fix
-> (last pacth) and do not functionally change anything.
->
-> The remaining rework of the zone locking including scsi-mq support is
-> still ongoing and will be sent later.
+> In preparation for unconditionally passing the struct timer_list
+> pointer to all timer callbacks, switch to using the new timer_setup()
+> and from_timer() to pass the timer pointer explicitly. This removes
+> several redundant setup calls in favor of just changing the timer
+> function directly.
 
-Applied to 4.15/scsi-queue. Thanks!
+Looks OK to me.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
