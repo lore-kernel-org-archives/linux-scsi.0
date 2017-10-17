@@ -1,30 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: nsp32: fix logic bug in error handling
-Date: Mon, 16 Oct 2017 22:39:34 -0400
-Message-ID: <yq1wp3u1ord.fsf@oracle.com>
-References: <20170905075139.518406-1-arnd@arndb.de>
-        <CALZLnaF=ih9nC7dYusxwOKeYhGHa_mRy8k8gGOHpaUvyBkD2kA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: aic7xxx: make a couple of functions static
+Date: Mon, 16 Oct 2017 22:41:20 -0400
+Message-ID: <yq1shei1oof.fsf@oracle.com>
+References: <20171005120153.32383-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALZLnaF=ih9nC7dYusxwOKeYhGHa_mRy8k8gGOHpaUvyBkD2kA@mail.gmail.com>
-        (Masanori Goto's message of "Mon, 16 Oct 2017 08:51:22 +0900")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Masanori Goto <gotom@debian.or.jp>
-Cc: Arnd Bergmann <arnd@arndb.de>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48325 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752949AbdJQCmC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 22:42:02 -0400
+In-Reply-To: <20171005120153.32383-1-colin.king@canonical.com> (Colin King's
+        message of "Thu, 5 Oct 2017 13:01:53 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Hannes Reinecke <hare@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Masanori,
+Colin,
 
->> gcc-8 points out a logic error that has existed since the start
->> of the git history:
->>
->> drivers/scsi/nsp32.c: In function 'nsp32_selection_autoscsi':
->> drivers/scsi/nsp32.c:607:27: error: bitwise comparison always evaluates to false [-Werror=tautological-compare]
->>   if(((phase & BUSMON_BSY) == 1) || (phase & BUSMON_SEL) == 1) {
+> Functions ahc_devlimited_syncrate and ahc_linux_initialize_scsi_bus
+> are declared static in their prototypes but are missing in their
+> definitions, so add the missing static.
 
-Applied to 4.15/scsi-queue. Thanks, Arnd!
+Applied to 4.15/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
