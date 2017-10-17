@@ -1,67 +1,64 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v9 09/10] block, scsi: Make SCSI quiesce and resume work
- reliably
-Date: Tue, 17 Oct 2017 18:43:22 +0800
-Message-ID: <20171017104321.GC17898@ming.t460p>
-References: <20171016232905.5047-1-bart.vanassche@wdc.com>
- <20171016232905.5047-10-bart.vanassche@wdc.com>
- <df8b960d-e65d-3e5e-9de7-4423aa65ad92@suse.de>
+From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 12/15] RDMA/cma: make config_item_type const
+Date: Tue, 17 Oct 2017 13:56:41 +0300
+Message-ID: <20171017105641.GN2106@mtr-leonro.local>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+ <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43450 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757684AbdJQKnu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Oct 2017 06:43:50 -0400
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="qhD8kUEc5MK9MdKG"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <df8b960d-e65d-3e5e-9de7-4423aa65ad92@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1508167134-6243-13-git-send-email-bhumirks-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bhumika Goyal <bhumirks-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: julia.lawall-L2FTfq7BK8M@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, jic23-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, knaack.h-Mmb7MZpHnFY@public.gmane.org, lars-Qo5EllUWu/uELgA04lAiVw@public.gmane.org, pmeerw-jW+XmwGofnusTnJN9+BGXg@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, laurent.pinchart-ryLnwIuWjnjg/C1BVhZhaw@public.gmane.org, jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org, ccaulfie-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, teigland-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mfasheh-rOS7oXVqrJRBDgjK7y7TUQ@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cluster-devel@redh
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
-
-On Tue, Oct 17, 2017 at 08:33:36AM +0200, Hannes Reinecke wrote:
-> On 10/17/2017 01:29 AM, Bart Van Assche wrote:
-> > The contexts from which a SCSI device can be quiesced or resumed are:
-> > * Writing into /sys/class/scsi_device/*/device/state.
-> > * SCSI parallel (SPI) domain validation.
-> > * The SCSI device power management methods. See also scsi_bus_pm_ops.
-> > 
-> > It is essential during suspend and resume that neither the filesystem
-> > state nor the filesystem metadata in RAM changes. This is why while
-> > the hibernation image is being written or restored that SCSI devices
-> > are quiesced. The SCSI core quiesces devices through scsi_device_quiesce()
-> > and scsi_device_resume(). In the SDEV_QUIESCE state execution of
-> > non-preempt requests is deferred. This is realized by returning
-> > BLKPREP_DEFER from inside scsi_prep_state_check() for quiesced SCSI
-> > devices. Avoid that a full queue prevents power management requests
-> > to be submitted by deferring allocation of non-preempt requests for
-> > devices in the quiesced state. This patch has been tested by running
-> > the following commands and by verifying that after resume the fio job
-> > is still running:
-> > 
-> (We've discussed this at ALPSS already:)
-> 
-> How do you ensure that PREEMPT requests are not stuck in the queue
-> _behind_ non-PREEMPT requests?
-
-Once the PREEMP_ONLY flag is set, blk_mq_freeze_queue() is called for
-draining up all requests in queue first, and new requests are prevented
-from being allocated meantime.
-
-So looks no such issue?
-
-> Once they are in the queue the request are already allocated, so your
-> deferred allocation won't work.
-> _And_ deferred requests will be re-inserted at the head of the queue.
-> Consequently the PREEMPT request will never ever scheduled during quiesce.
-> How do you avoid such a scenario?
-
->From the implementation, no any PREEMPT request can be allocated once
-scsi_device_quiesce() returns.
-
-Also not see deferred requests in this patch, could you explain it a bit?
 
 
--- 
-Ming
+--qhD8kUEc5MK9MdKG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Mon, Oct 16, 2017 at 05:18:51PM +0200, Bhumika Goyal wrote:
+> Make these structures const as they are either passed to the functions
+> having the argument as const or stored as a reference in the "ci_type"
+> const field of a config_item structure.
+>
+> Signed-off-by: Bhumika Goyal <bhumirks-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> ---
+> * Changes in v2- Combine all the followup patches and the constification
+> patches into a series.
+>
+>  drivers/infiniband/core/cma_configfs.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+
+Thanks,
+Reviewed-by: Leon Romanovsky <leonro-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+
+--qhD8kUEc5MK9MdKG
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlnl4ekACgkQ5GN7iDZy
+WKeXjhAAianTJjpS3Q7Amt68dVak+Zy2iyjm1IkgvBu0u2FdrPHb15D8sEr4jOg+
+NxfJ4zH+C2fgBYvEXa9+aEIb72WSQHQoA1G8EKdfP+D6ci1eHZ60yG7sxmMi2Bsr
+4hCGCe/KiiftWsk47Y7KBrHj92HusNRTcM48a1wYNUoAmHq4fRjLyhL8uIVsXl3o
+Af/DvQP4d37U9UHMFiekaFgT2K0TfHK1uKUSB7AMvxVb9U+FZFKEXnq6Vcp45uZY
+1FzTXYbSC0ckAFd+iYDxly3lsSAekPa5rUV+MLSwKOATP3vksOh+tQ1prJMnT1Kf
+QVsN6lRqTTLMmrM1QgRvkT6PjhAQo6qcNgAfkCQjK4V6s9FQdJg95japfefDz6rq
+BTwez0ekKroiVtO/8bcJNyDXCpRKNH9EZuQzRL9gqddhe8/xaqc9VrJHDuH93p1q
+NimWkby6EiDvXhnGuEaO7P5gmubTbgx+D26n+g9XDPML5orUX2DZ1H6DBD4YR6/h
+4BjPfk2eL92oXLLM88PPFf60ctQ8VIgiVq7oUEfBL3QLwFv0NQoZsOTilPrucJiW
+lHe1J1t8FO/mDMb4jFXsbeQi8mmKX5ICCwwMKt8Fw9NRzN/mXqRpnC4jzQ13qbKT
+viWVz2ZixqgMKLCGUfstRliyiIFmBZhoBNMf2SYEGS+yAOUYca8=
+=kyDA
+-----END PGP SIGNATURE-----
+
+--qhD8kUEc5MK9MdKG--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
