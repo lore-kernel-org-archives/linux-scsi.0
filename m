@@ -1,61 +1,78 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v2 09/15] ACPI: configfs: make config_item_type const
-Date: Tue, 17 Oct 2017 02:10:57 +0200
-Message-ID: <3026721.pYNdH8r6C9@aspire.rjw.lan>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH] aacraid: Fix controller initialization failure
+Date: Mon, 16 Oct 2017 17:22:31 -0700
+Message-ID: <150819975151.22574.15488858870979477962.stgit@rslab209.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org, laurent.pinchart@ideasonboard.com, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, cluster-devel@redhat.com, ocfs2-devel
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0066.outbound.protection.outlook.com ([104.47.41.66]:64416
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755198AbdJQAWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Oct 2017 20:22:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: David.Carroll@microsemi.com, Scott.Benesh@microsemi.com
 
-On Monday, October 16, 2017 5:18:48 PM CEST Bhumika Goyal wrote:
-> Make these structures const as they are either passed to the functions
-> having the argument as const or stored as a reference in the "ci_type"
-> const field of a config_item structure.
-> 
-> Done using Coccienlle.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-> ---
-> * Changes in v2- Combine all the followup patches and the constification
-> patches into a series.
-> 
->  drivers/acpi/acpi_configfs.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/acpi_configfs.c b/drivers/acpi/acpi_configfs.c
-> index 853bc7f..b588503 100644
-> --- a/drivers/acpi/acpi_configfs.c
-> +++ b/drivers/acpi/acpi_configfs.c
-> @@ -204,7 +204,7 @@ struct configfs_attribute *acpi_table_attrs[] = {
->  	NULL,
->  };
->  
-> -static struct config_item_type acpi_table_type = {
-> +static const struct config_item_type acpi_table_type = {
->  	.ct_owner = THIS_MODULE,
->  	.ct_bin_attrs = acpi_table_bin_attrs,
->  	.ct_attrs = acpi_table_attrs,
-> @@ -237,12 +237,12 @@ struct configfs_group_operations acpi_table_group_ops = {
->  	.drop_item = acpi_table_drop_item,
->  };
->  
-> -static struct config_item_type acpi_tables_type = {
-> +static const struct config_item_type acpi_tables_type = {
->  	.ct_owner = THIS_MODULE,
->  	.ct_group_ops = &acpi_table_group_ops,
->  };
->  
-> -static struct config_item_type acpi_root_group_type = {
-> +static const struct config_item_type acpi_root_group_type = {
->  	.ct_owner = THIS_MODULE,
->  };
->  
-> 
+This is a fix to an issue where the driver sends its periodic WELLNESS
+command to the controller after the driver shut it down.This causes the
+controller to crash. The window where this can happen is small, but it
+can be hit at around 4 hours of constant resets.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: <stable@vger.kernel.org>
+Fixes: fbd185986eba (aacraid: Fix AIF triggered IOP_RESET)
+Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+---
+ drivers/scsi/aacraid/comminit.c |    8 +++++---
+ drivers/scsi/aacraid/linit.c    |    7 ++++++-
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 97d269f..1bc623a 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -302,9 +302,11 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 		return -ENOMEM;
+ 	aac_fib_init(fibctx);
+ 
+-	mutex_lock(&dev->ioctl_mutex);
+-	dev->adapter_shutdown = 1;
+-	mutex_unlock(&dev->ioctl_mutex);
++	if (!dev->adapter_shutdown) {
++		mutex_lock(&dev->ioctl_mutex);
++		dev->adapter_shutdown = 1;
++		mutex_unlock(&dev->ioctl_mutex);
++	}
+ 
+ 	cmd = (struct aac_close *) fib_data(fibctx);
+ 	cmd->command = cpu_to_le32(VM_CloseAll);
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 87cc4a9..710ace6 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1547,8 +1547,9 @@ static void __aac_shutdown(struct aac_dev * aac)
+ {
+ 	int i;
+ 
++	mutex_lock(&aac->ioctl_mutex);
+ 	aac->adapter_shutdown = 1;
+-	aac_send_shutdown(aac);
++	mutex_unlock(&aac->ioctl_mutex);
+ 
+ 	if (aac->aif_thread) {
+ 		int i;
+@@ -1561,7 +1562,11 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 		}
+ 		kthread_stop(aac->thread);
+ 	}
++
++	aac_send_shutdown(aac);
++
+ 	aac_adapter_disable_int(aac);
++
+ 	if (aac_is_src(aac)) {
+ 		if (aac->max_msix > 1) {
+ 			for (i = 0; i < aac->max_msix; i++) {
