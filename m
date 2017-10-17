@@ -1,49 +1,49 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v9 09/10] block, scsi: Make SCSI quiesce and resume work
- reliably
-Date: Tue, 17 Oct 2017 08:33:36 +0200
-Message-ID: <df8b960d-e65d-3e5e-9de7-4423aa65ad92@suse.de>
+Subject: Re: [PATCH v9 10/10] block, nvme: Introduce blk_mq_req_flags_t
+Date: Tue, 17 Oct 2017 08:34:19 +0200
+Message-ID: <56950f16-7c51-3e58-edd8-2cdf9049f686@suse.de>
 References: <20171016232905.5047-1-bart.vanassche@wdc.com>
- <20171016232905.5047-10-bart.vanassche@wdc.com>
+ <20171016232905.5047-11-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171016232905.5047-10-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:58254 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933642AbdJQGeV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Oct 2017 02:34:21 -0400
+In-Reply-To: <20171016232905.5047-11-bart.vanassche@wdc.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 On 10/17/2017 01:29 AM, Bart Van Assche wrote:
-> The contexts from which a SCSI device can be quiesced or resumed are:
-> * Writing into /sys/class/scsi_device/*/device/state.
-> * SCSI parallel (SPI) domain validation.
-> * The SCSI device power management methods. See also scsi_bus_pm_ops.
+> Several block layer and NVMe core functions accept a combination
+> of BLK_MQ_REQ_* flags through the 'flags' argument but there is
+> no verification at compile time whether the right type of block
+> layer flags is passed. Make it possible for sparse to verify this.
+> This patch does not change any functionality.
 > 
-> It is essential during suspend and resume that neither the filesystem
-> state nor the filesystem metadata in RAM changes. This is why while
-> the hibernation image is being written or restored that SCSI devices
-> are quiesced. The SCSI core quiesces devices through scsi_device_quiesce()
-> and scsi_device_resume(). In the SDEV_QUIESCE state execution of
-> non-preempt requests is deferred. This is realized by returning
-> BLKPREP_DEFER from inside scsi_prep_state_check() for quiesced SCSI
-> devices. Avoid that a full queue prevents power management requests
-> to be submitted by deferring allocation of non-preempt requests for
-> devices in the quiesced state. This patch has been tested by running
-> the following commands and by verifying that after resume the fio job
-> is still running:
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: linux-nvme@lists.infradead.org
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> ---
+>  block/blk-core.c          | 12 ++++++------
+>  block/blk-mq.c            |  4 ++--
+>  block/blk-mq.h            |  2 +-
+>  drivers/nvme/host/core.c  |  5 +++--
+>  drivers/nvme/host/nvme.h  |  5 +++--
+>  include/linux/blk-mq.h    | 17 +++++++++++------
+>  include/linux/blk_types.h |  2 ++
+>  include/linux/blkdev.h    |  4 ++--
+>  8 files changed, 30 insertions(+), 21 deletions(-)
 > 
-(We've discussed this at ALPSS already:)
-
-How do you ensure that PREEMPT requests are not stuck in the queue
-_behind_ non-PREEMPT requests?
-Once they are in the queue the request are already allocated, so your
-deferred allocation won't work.
-_And_ deferred requests will be re-inserted at the head of the queue.
-Consequently the PREEMPT request will never ever scheduled during quiesce.
-How do you avoid such a scenario?
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
