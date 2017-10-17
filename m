@@ -1,220 +1,53 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] sd: Micro-optimize READ / WRITE CDB encoding
-Date: Tue, 17 Oct 2017 18:17:05 -0400
-Message-ID: <cb08e66f-c5a4-6eab-2306-8bcb3aeffb3b@interlog.com>
+Date: Tue, 17 Oct 2017 22:41:20 +0000
+Message-ID: <1508280078.3457.20.camel@wdc.com>
 References: <20171017210352.19580-1-bart.vanassche@wdc.com>
-Reply-To: dgilbert@interlog.com
+         <cb08e66f-c5a4-6eab-2306-8bcb3aeffb3b@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:54433 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751058AbdJQWRT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Oct 2017 18:17:19 -0400
-In-Reply-To: <20171017210352.19580-1-bart.vanassche@wdc.com>
-Content-Language: en-CA
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:52336 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752788AbdJQWlX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 18:41:23 -0400
+In-Reply-To: <cb08e66f-c5a4-6eab-2306-8bcb3aeffb3b@interlog.com>
+Content-Language: en-US
+Content-ID: <06EB8C10AF735F459AD949EA52F9D800@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>
 
-On 2017-10-17 05:03 PM, Bart Van Assche wrote:
-> Only compute 'threshold' if .last_sector_bug has been set. Reduce
-> the number of branches that has to be taken to check the starting
-> LBA and transfer length alignment. Optimize the encoding of the
-> READ(10), WRITE(10), READ(16), WRITE(16), READ(32) and WRITE(32)
-> CDB encoding.
-
-Great!
-
-Some suggestions, see inline below.
-
-And showing us the improved version of sd_setup_read_write_cmnd()
-as well as the diff could help us (or at least me) see the bigger
-picture.
-
-Doug Gilbert
-
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/sd.c | 102 +++++++++++++++---------------------------------------
->   1 file changed, 28 insertions(+), 74 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 67b50baa943c..83284a8fa2cd 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1025,7 +1025,6 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
->   	struct gendisk *disk = rq->rq_disk;
->   	struct scsi_disk *sdkp = scsi_disk(disk);
->   	sector_t block = blk_rq_pos(rq);
-
-s/block/lba/		# use the well understood SCSI abbreviation
-
-> -	sector_t threshold;
->   	unsigned int this_count = blk_rq_sectors(rq);
->   	unsigned int dif, dix;
->   	bool zoned_write = sd_is_zoned(sdkp) && rq_data_dir(rq) == WRITE;
-> @@ -1071,20 +1070,22 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
->   		goto out;
->   	}
->   
-> -	/*
-> -	 * Some SD card readers can't handle multi-sector accesses which touch
-> -	 * the last one or two hardware sectors.  Split accesses as needed.
-> -	 */
-> -	threshold = get_capacity(disk) - SD_LAST_BUGGY_SECTORS *
-> -		(sdp->sector_size / 512);
-> +	if (unlikely(sdp->last_sector_bug)) {
-> +		sector_t threshold;
-
-s/threshold/threshold_lba/	# a bit long but more precise
-
->   
-> -	if (unlikely(sdp->last_sector_bug && block + this_count > threshold)) {
-> -		if (block < threshold) {
-> -			/* Access up to the threshold but not beyond */
-> -			this_count = threshold - block;
-> -		} else {
-> +		/*
-> +		 * Some SD card readers can't handle multi-sector accesses
-> +		 * which touch the last one or two hardware sectors.  Split
-> +		 * accesses as needed.
-> +		 */
-> +		threshold = get_capacity(disk) - SD_LAST_BUGGY_SECTORS *
-> +			(sdp->sector_size / 512);
-> +		if (block >= threshold) {
->   			/* Access only a single hardware sector */
->   			this_count = sdp->sector_size / 512;
-> +		} else if (block + this_count > threshold) {
-> +			/* Access up to the threshold but not beyond */
-> +			this_count = threshold - block;
->   		}
->   	}
->   
-> @@ -1102,34 +1103,17 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
->   	 * and not force the scsi disk driver to use bounce buffers
->   	 * for this.
->   	 */
-> -	if (sdp->sector_size == 1024) {
-> -		if ((block & 1) || (blk_rq_sectors(rq) & 1)) {
-> +	if (sdp->sector_size != 512) {
-> +		if ((block | this_count) & (sdp->sector_size / 512 - 1)) {
->   			scmd_printk(KERN_ERR, SCpnt,
-> -				    "Bad block number requested\n");
-> +				    "Bad block number requested: block number = %llu, sector count = %u, sector size = %u bytes\n",
-> +				    block + 0ULL, this_count, sdp->sector_size);
->   			goto out;
->   		} else {
-> -			block = block >> 1;
-> -			this_count = this_count >> 1;
-> -		}
-> -	}
-> -	if (sdp->sector_size == 2048) {
-> -		if ((block & 3) || (blk_rq_sectors(rq) & 3)) {
-> -			scmd_printk(KERN_ERR, SCpnt,
-> -				    "Bad block number requested\n");
-> -			goto out;
-> -		} else {
-> -			block = block >> 2;
-> -			this_count = this_count >> 2;
-> -		}
-> -	}
-> -	if (sdp->sector_size == 4096) {
-> -		if ((block & 7) || (blk_rq_sectors(rq) & 7)) {
-> -			scmd_printk(KERN_ERR, SCpnt,
-> -				    "Bad block number requested\n");
-> -			goto out;
-> -		} else {
-> -			block = block >> 3;
-> -			this_count = this_count >> 3;
-> +			int shift = ilog2(sdp->sector_size / 512);
-> +
-> +			block = block >> shift;
-
-			lba >>= shift;	/* scale down LBA */
-
-> +			this_count = this_count >> shift;
-
-likewise
-
->   		}
->   	}
->   	if (rq_data_dir(rq) == WRITE) {
-> @@ -1173,56 +1157,26 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
->   		SCpnt->cmnd[7] = 0x18;
->   		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
-
-Perhaps rq_data_dir(rq) could be placed in a local variable
-
->   		SCpnt->cmnd[10] = protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 : 0);
-
-		SCpnt->cmnd[10] = protect;
-		if (unlikely(rq->cmd_flags & REQ_FUA))
-			SCpnt->cmnd[10] |= 0x8;
-
-> -
->   		/* LBA */
-> -		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
-> -		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
-> -		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-> -		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
-> -		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
-> -		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
-> -		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
-> -		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
-> -
-> +		put_unaligned_be64(block, &SCpnt->cmnd[12]);
->   		/* Expected Indirect LBA */
-> -		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
-> -		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
-> -		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
-> -		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
-> -
-> +		put_unaligned_be32(block, &SCpnt->cmnd[20]);
->   		/* Transfer length */
-> -		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
-> -		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
-> -		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
-> -		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
-> +		put_unaligned_be32(this_count, &SCpnt->cmnd[28]);
->   	} else if (sdp->use_16_for_rw || (this_count > 0xffff)) {
->   		SCpnt->cmnd[0] += READ_16 - READ_6;
->   		SCpnt->cmnd[1] = protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 : 0);
-> -		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
-> -		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
-> -		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-> -		SCpnt->cmnd[5] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
-> -		SCpnt->cmnd[6] = (unsigned char) (block >> 24) & 0xff;
-> -		SCpnt->cmnd[7] = (unsigned char) (block >> 16) & 0xff;
-> -		SCpnt->cmnd[8] = (unsigned char) (block >> 8) & 0xff;
-> -		SCpnt->cmnd[9] = (unsigned char) block & 0xff;
-> -		SCpnt->cmnd[10] = (unsigned char) (this_count >> 24) & 0xff;
-> -		SCpnt->cmnd[11] = (unsigned char) (this_count >> 16) & 0xff;
-> -		SCpnt->cmnd[12] = (unsigned char) (this_count >> 8) & 0xff;
-> -		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
-> +		put_unaligned_be64(block, &SCpnt->cmnd[2]);
-> +		put_unaligned_be32(this_count, &SCpnt->cmnd[10]);
->   		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
->   	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
->   		   scsi_device_protection(SCpnt->device) ||
->   		   SCpnt->device->use_10_for_rw) {
->   		SCpnt->cmnd[0] += READ_10 - READ_6;
->   		SCpnt->cmnd[1] = protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 : 0);
-> -		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
-> -		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
-> -		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
-> -		SCpnt->cmnd[5] = (unsigned char) block & 0xff;
-> +		put_unaligned_be32(block, &SCpnt->cmnd[2]);
->   		SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
-> -		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
-> -		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
-> +		put_unaligned_be16(this_count, &SCpnt->cmnd[7]);
->   	} else {
->   		if (unlikely(rq->cmd_flags & REQ_FUA)) {
->   			/*
-> 
+T24gVHVlLCAyMDE3LTEwLTE3IGF0IDE4OjE3IC0wNDAwLCBEb3VnbGFzIEdpbGJlcnQgd3JvdGU6
+DQo+IE9uIDIwMTctMTAtMTcgMDU6MDMgUE0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBA
+QCAtMTAyNSw3ICsxMDI1LDYgQEAgc3RhdGljIGludCBzZF9zZXR1cF9yZWFkX3dyaXRlX2NtbmQo
+c3RydWN0IHNjc2lfY21uZCAqU0NwbnQpDQo+ID4gICAJc3RydWN0IGdlbmRpc2sgKmRpc2sgPSBy
+cS0+cnFfZGlzazsNCj4gPiAgIAlzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwID0gc2NzaV9kaXNrKGRp
+c2spOw0KPiA+ICAgCXNlY3Rvcl90IGJsb2NrID0gYmxrX3JxX3BvcyhycSk7DQo+IA0KPiBzL2Js
+b2NrL2xiYS8JCSMgdXNlIHRoZSB3ZWxsIHVuZGVyc3Rvb2QgU0NTSSBhYmJyZXZpYXRpb24NCg0K
+U2luY2UgYmxrX3JxX3BvcygpIHJldHVybnMgdGhlIG9mZnNldCBpbiB1bml0cyBvZiA1MTIgYnl0
+ZXMsIGhvdyBhYm91dCByZW5hbWluZw0KJ2Jsb2NrJyBpbnRvICdzZWN0b3InIGFuZCB1c2luZyB0
+aGUgbmFtZSAnbGJhJyBmb3IgdGhlIG51bWJlciBvYnRhaW5lZCBhZnRlciB0aGUNCnNoaWZ0IG9w
+ZXJhdGlvbj8NCg0KPiANCj4gPiAtCXNlY3Rvcl90IHRocmVzaG9sZDsNCj4gPiAgIAl1bnNpZ25l
+ZCBpbnQgdGhpc19jb3VudCA9IGJsa19ycV9zZWN0b3JzKHJxKTsNCj4gPiAgIAl1bnNpZ25lZCBp
+bnQgZGlmLCBkaXg7DQo+ID4gICAJYm9vbCB6b25lZF93cml0ZSA9IHNkX2lzX3pvbmVkKHNka3Ap
+ICYmIHJxX2RhdGFfZGlyKHJxKSA9PSBXUklURTsNCj4gPiBAQCAtMTA3MSwyMCArMTA3MCwyMiBA
+QCBzdGF0aWMgaW50IHNkX3NldHVwX3JlYWRfd3JpdGVfY21uZChzdHJ1Y3Qgc2NzaV9jbW5kICpT
+Q3BudCkNCj4gPiAgIAkJZ290byBvdXQ7DQo+ID4gICAJfQ0KPiA+ICAgDQo+ID4gLQkvKg0KPiA+
+IC0JICogU29tZSBTRCBjYXJkIHJlYWRlcnMgY2FuJ3QgaGFuZGxlIG11bHRpLXNlY3RvciBhY2Nl
+c3NlcyB3aGljaCB0b3VjaA0KPiA+IC0JICogdGhlIGxhc3Qgb25lIG9yIHR3byBoYXJkd2FyZSBz
+ZWN0b3JzLiAgU3BsaXQgYWNjZXNzZXMgYXMgbmVlZGVkLg0KPiA+IC0JICovDQo+ID4gLQl0aHJl
+c2hvbGQgPSBnZXRfY2FwYWNpdHkoZGlzaykgLSBTRF9MQVNUX0JVR0dZX1NFQ1RPUlMgKg0KPiA+
+IC0JCShzZHAtPnNlY3Rvcl9zaXplIC8gNTEyKTsNCj4gPiArCWlmICh1bmxpa2VseShzZHAtPmxh
+c3Rfc2VjdG9yX2J1ZykpIHsNCj4gPiArCQlzZWN0b3JfdCB0aHJlc2hvbGQ7DQo+IA0KPiBzL3Ro
+cmVzaG9sZC90aHJlc2hvbGRfbGJhLwkjIGEgYml0IGxvbmcgYnV0IG1vcmUgcHJlY2lzZQ0KDQpB
+IHNpbWlsYXIgY29tbWVudCBhcHBsaWVzIGhlcmUgLSBzaG91bGRuJ3QgdGhpcyBiZSBjYWxsZWQg
+J3RocmVzaG9sZF9zZWN0b3InPw0KDQo+ID4gICAJCX0NCj4gPiAgIAl9DQo+ID4gICAJaWYgKHJx
+X2RhdGFfZGlyKHJxKSA9PSBXUklURSkgew0KPiA+IEBAIC0xMTczLDU2ICsxMTU3LDI2IEBAIHN0
+YXRpYyBpbnQgc2Rfc2V0dXBfcmVhZF93cml0ZV9jbW5kKHN0cnVjdCBzY3NpX2NtbmQgKlNDcG50
+KQ0KPiA+ICAgCQlTQ3BudC0+Y21uZFs3XSA9IDB4MTg7DQo+ID4gICAJCVNDcG50LT5jbW5kWzld
+ID0gKHJxX2RhdGFfZGlyKHJxKSA9PSBSRUFEKSA/IFJFQURfMzIgOiBXUklURV8zMjsNCj4gDQo+
+IFBlcmhhcHMgcnFfZGF0YV9kaXIocnEpIGNvdWxkIGJlIHBsYWNlZCBpbiBhIGxvY2FsIHZhcmlh
+YmxlDQoNCkkgd2lsbCBrZWVwIHRoYXQgZm9yIGEgc2VwYXJhdGUgcGF0Y2guDQoNCkJhcnQu
