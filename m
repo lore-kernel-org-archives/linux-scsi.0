@@ -1,41 +1,39 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v9 04/10] block: Make q_usage_counter also track legacy
- requests
-Date: Tue, 17 Oct 2017 08:25:12 +0200
-Message-ID: <f37f1b4b-6dff-6b36-d012-241bdabc1228@suse.de>
+Subject: Re: [PATCH v9 05/10] block: Introduce blk_get_request_flags()
+Date: Tue, 17 Oct 2017 08:26:06 +0200
+Message-ID: <fa39b2c1-bb46-4d43-0cf1-5b5e833dbccc@suse.de>
 References: <20171016232905.5047-1-bart.vanassche@wdc.com>
- <20171016232905.5047-5-bart.vanassche@wdc.com>
+ <20171016232905.5047-6-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171016232905.5047-5-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:57788 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756394AbdJQG0H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Oct 2017 02:26:07 -0400
+In-Reply-To: <20171016232905.5047-6-bart.vanassche@wdc.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On 10/17/2017 01:28 AM, Bart Van Assche wrote:
-> From: Ming Lei <ming.lei@redhat.com>
+On 10/17/2017 01:29 AM, Bart Van Assche wrote:
+> A side effect of this patch is that the GFP mask that is passed to
+> several allocation functions in the legacy block layer is changed
+> from GFP_KERNEL into __GFP_DIRECT_RECLAIM.
 > 
-> This patch makes it possible to pause request allocation for
-> the legacy block layer by calling blk_mq_freeze_queue() and
-> blk_mq_unfreeze_queue().
-> 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> [ bvanassche: Combined two patches into one, edited a comment and made sure
->   REQ_NOWAIT is handled properly in blk_old_get_request() ]
 > Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 > Tested-by: Martin Steigerwald <martin@lichtvoll.de>
+> Cc: Christoph Hellwig <hch@lst.de>
 > Cc: Ming Lei <ming.lei@redhat.com>
 > Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
->  block/blk-core.c | 12 ++++++++++++
->  block/blk-mq.c   | 10 ++--------
->  2 files changed, 14 insertions(+), 8 deletions(-)
+>  block/blk-core.c       | 50 +++++++++++++++++++++++++++++++++++---------------
+>  include/linux/blkdev.h |  3 +++
+>  2 files changed, 38 insertions(+), 15 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
