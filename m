@@ -1,26 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] zfcp: fix erp_action use-before-initialize in REC action trace
-Date: Mon, 16 Oct 2017 22:46:08 -0400
-Message-ID: <yq1k1zu1ogf.fsf@oracle.com>
-References: <20171013134007.54534-1-maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 0/5] qla2xxx: Patches for scsi-misc
+Date: Mon, 16 Oct 2017 23:08:17 -0400
+Message-ID: <yq1fuai1nfi.fsf@oracle.com>
+References: <20171013163407.8038-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20171013134007.54534-1-maier@linux.vnet.ibm.com> (Steffen
-        Maier's message of "Fri, 13 Oct 2017 15:40:07 +0200")
-Sender: stable-owner@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20208 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754825AbdJQDIY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 23:08:24 -0400
+In-Reply-To: <20171013163407.8038-1-himanshu.madhani@cavium.com> (Madhani
+        Madhani's message of "Fri, 13 Oct 2017 09:34:02 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Madhani, Madhani" <himanshu.madhani@cavium.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Steffen,
+Madhani,
 
-> v4.10 commit 6f2ce1c6af37 ("scsi: zfcp: fix rport unblock race with LUN
-> recovery") extended accessing parent pointer fields of
-> struct zfcp_erp_action for tracing.
+> This series adds support for INTx mode for qla2xxx driver. Also, adds
+> support for N2N login for FC-NVMe.
+>
+> Please apply to 4.15/scsi-queue at your earliest convenience.
 
-Applied to 4.14/scsi-fixes. Thank you!
+Several of the patches had bad whitespace. Please run checkpatch before
+submitting. Also, you did not apply the review tags you got from
+Johannes for v1.
+
+I fixed those things up. Applied to 4.15/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
