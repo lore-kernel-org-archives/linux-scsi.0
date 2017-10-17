@@ -1,47 +1,40 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v2 7/8] scsi/pmcraid: Remove an unused structure member
-Date: Tue, 17 Oct 2017 14:28:29 +0000
-Message-ID: <1508250508.3596.0.camel@wdc.com>
+Subject: Re: [PATCH v2 5/8] target: Use sgl_alloc_order() and sgl_free()
+Date: Tue, 17 Oct 2017 14:31:11 +0000
+Message-ID: <1508250670.3596.2.camel@wdc.com>
 References: <20171016224940.1332-1-bart.vanassche@wdc.com>
-         <20171016224940.1332-8-bart.vanassche@wdc.com>
-         <5ea64c10-aa3e-f0ee-cfba-e93b3d8e1428@suse.de>
+         <20171016224940.1332-6-bart.vanassche@wdc.com>
+         <c5e05f84-2602-5c3f-521e-6f35601011cf@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:11067 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752629AbdJQO2c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 10:28:32 -0400
-In-Reply-To: <5ea64c10-aa3e-f0ee-cfba-e93b3d8e1428@suse.de>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <c5e05f84-2602-5c3f-521e-6f35601011cf@suse.de>
 Content-Language: en-US
-Content-ID: <E4CCECF6DB6A6F45A4582B095B95CBF0@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-ID: <0A526A2A2C450348B2ACC36910B4F3D2@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
 To: "hare@suse.de" <hare@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "anil_ravindranath@pmc-sierra.com" <anil_ravindranath@pmc-sierra.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "sagi@grimberg.me" <sagi@grimberg.me>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE3LTEwLTE3IGF0IDA4OjIxICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IE9uIDEwLzE3LzIwMTcgMTI6NDkgQU0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBT
-aWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdkYy5jb20+DQo+
-ID4gUmV2aWV3ZWQtYnk6IEpvaGFubmVzIFRodW1zaGlybiA8anRodW1zaGlybkBzdXNlLmRlPg0K
-PiA+IENjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+IENjOiBNYXJ0aW4gSy4gUGV0
-ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPg0KPiA+IENjOiBBbmlsIFJhdmluZHJh
-bmF0aCA8YW5pbF9yYXZpbmRyYW5hdGhAcG1jLXNpZXJyYS5jb20+DQo+ID4gLS0tDQo+ID4gIGRy
-aXZlcnMvc2NzaS9wbWNyYWlkLmggfCAxIC0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDEgZGVsZXRp
-b24oLSkNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3BtY3JhaWQuaCBiL2Ry
-aXZlcnMvc2NzaS9wbWNyYWlkLmgNCj4gPiBpbmRleCA4YmZhYzcyYTI0MmIuLjQ0ZGE5MTcxMjEx
-NSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvcG1jcmFpZC5oDQo+ID4gKysrIGIvZHJp
-dmVycy9zY3NpL3BtY3JhaWQuaA0KPiA+IEBAIC01NDIsNyArNTQyLDYgQEAgc3RydWN0IHBtY3Jh
-aWRfc2dsaXN0IHsNCj4gPiAgCXUzMiBvcmRlcjsNCj4gPiAgCXUzMiBudW1fc2c7DQo+ID4gIAl1
-MzIgbnVtX2RtYV9zZzsNCj4gPiAtCXUzMiBidWZmZXJfbGVuOw0KPiA+ICAJc3RydWN0IHNjYXR0
-ZXJsaXN0IHNjYXR0ZXJsaXN0WzFdOw0KPiA+ICB9Ow0KPiA+ICANCj4gPiANCj4gDQo+IFRoaXMg
-YWN0dWFsbHkgaXMgdGhlIHNhbWUgc3RvcnkgdGhhdCB3ZSd2ZSBoYWQgd2l0aCBpcHIgKGFuZCwg
-bG9va2luZyBhdA0KPiB0aGUgY29kZSwgdGhvc2UgdHdvIGRyaXZlcnMgbG9vayBhd2Z1bGx5IHNp
-bWlsYXIgLi4uKS4NCj4gcG1jcmFpZF9zZ2xpc3QgbG9va3MgYXMgaWYgaXQncyBhIGhhcmR3YXJl
-LWRlcGVuZGVudCBzdHJ1Y3R1cmUsIHNvIGp1c3QNCj4gcmVtb3Zpbmcgb25lIGVudHJ5IGZyb20g
-dGhlIG1pZGRsZSBvZiBhIHN0cnVjdHVyZSBtaWdodCBub3QgYmUgYSBnb29kIGlkZWEuDQo+IEJ1
-dCB0aGlzIGlzIHNvbWV0aGluZyBmb3IgdGhlIHBtY3JhaWQgZm9sa3MgdG8gY2xhcmlmeS4NCg0K
-SGVsbG8gSGFubmVzLA0KDQpTb3JyeSBidXQgSSBkb24ndCBzZWUgaG93IGEgc3RydWN0dXJlIHRo
-YXQgY29udGFpbnMgYSBzdHJ1Y3Qgc2NhdHRlcmxpc3QNCmNvdWxkIGJlIGhhcmR3YXJlLWRlcGVu
-ZGVudD8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+T24gVHVlLCAyMDE3LTEwLTE3IGF0IDA4OjE0ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIDEwLzE3LzIwMTcgMTI6NDkgQU0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBb
+IC4uLiBdDQo+ID4gIHZvaWQgdGFyZ2V0X2ZyZWVfc2dsKHN0cnVjdCBzY2F0dGVybGlzdCAqc2ds
+LCBpbnQgbmVudHMpDQo+ID4gIHsNCj4gPiAtCXN0cnVjdCBzY2F0dGVybGlzdCAqc2c7DQo+ID4g
+LQlpbnQgY291bnQ7DQo+ID4gLQ0KPiA+IC0JZm9yX2VhY2hfc2coc2dsLCBzZywgbmVudHMsIGNv
+dW50KQ0KPiA+IC0JCV9fZnJlZV9wYWdlKHNnX3BhZ2Uoc2cpKTsNCj4gPiAtDQo+ID4gLQlrZnJl
+ZShzZ2wpOw0KPiA+ICsJc2dsX2ZyZWUoc2dsKTsNCj4gPiAgfQ0KPiA+ICBFWFBPUlRfU1lNQk9M
+KHRhcmdldF9mcmVlX3NnbCk7DQo+ID4gIA0KPiA+IEBAIC0yNDIzLDQyICsyNDE3LDEwIEBAIGlu
+dA0KPiA+ICB0YXJnZXRfYWxsb2Nfc2dsKHN0cnVjdCBzY2F0dGVybGlzdCAqKnNnbCwgdW5zaWdu
+ZWQgaW50ICpuZW50cywgdTMyIGxlbmd0aCwNCj4gPiAgCQkgYm9vbCB6ZXJvX3BhZ2UsIGJvb2wg
+Y2hhaW5hYmxlKQ0KPiA+ICB7DQo+ID4gLQlbIC4uLiBdDQo+ID4gKwkqc2dsID0gc2dsX2FsbG9j
+X29yZGVyKGxlbmd0aCwgMCwgY2hhaW5hYmxlLCBnZnAsIG5lbnRzKTsNCj4gPiArCXJldHVybiAq
+c2dsID8gMCA6IC1FTk9NRU07DQo+ID4gIH0NCj4gPiAgRVhQT1JUX1NZTUJPTCh0YXJnZXRfYWxs
+b2Nfc2dsKTsNCj4gPiAgDQo+ID4gVGhlIGNhbGxpbmcgY29udmVudGlvbiBmcm9tIHRhcmdldF9h
+bGxvY19zZ2woKSBpcyBkZWNpZGVkbHkgZG9kZ3kuDQo+IA0KPiBDYW4ndCB3ZSBjb252ZXJ0IGl0
+IGludG8gcmV0dXJuaW5nIHRoZSBzZ2wsIGFuZCByZW1vdmUgdGhlIGZpcnN0IHBhcmFtZXRlcj8N
+Cg0KSGVsbG8gSGFubmVzLA0KDQpBbm90aGVyIG9wdGlvbiBpcyB0byByZW1vdmUgdGhlIHRhcmdl
+dF9hbGxvY19zZ2woKSBhbmQgdGFyZ2V0X2ZyZWVfc2dsKCkgZnVuY3Rpb25zDQphbmQgdG8gbWFr
+ZSBMSU8gdGFyZ2V0IGRyaXZlcnMgY2FsbCBzZ2xfYWxsb2Nfb3JkZXIoKSBhbmQgc2dsX2ZyZWVf
+b3JkZXIoKSBkaXJlY3RseS4NCkRvIHlvdSBwZXJoYXBzIGhhdmUgYSBwcmVmZXJlbmNlIGZvciBv
+bmUgb2YgdGhlc2UgdHdvIGFwcHJvYWNoZXM/DQoNClRoYW5rcywNCg0KQmFydC4=
