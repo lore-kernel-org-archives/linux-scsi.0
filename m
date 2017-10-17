@@ -1,61 +1,30 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH V8 5/5] libata: Align DMA buffer to
- dma_get_cache_alignment()
-Date: Tue, 17 Oct 2017 12:43:22 +0300
-Message-ID: <94f55c1e-7553-0fc8-124e-ac6df5ac10ce@cogentembedded.com>
-References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
- <1508227542-13165-5-git-send-email-chenhc@lemote.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 00/15] make structure field, function arguments and
+ structures const
+Date: Tue, 17 Oct 2017 12:12:45 +0200
+Message-ID: <20171017101245.GA4646@kroah.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1508227542-13165-5-git-send-email-chenhc@lemote.com>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: Huacai Chen <chenhc@lemote.com>, Christoph Hellwig <hch@lst.de>
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, laurent.pinchart@ideasonboard.com, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, cluster-devel@redhat.com, ocfs2-devel@oss.orac
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/17/2017 11:05 AM, Huacai Chen wrote:
-
-> In non-coherent DMA mode, kernel uses cache flushing operations to
-> maintain I/O coherency, so in ata_do_dev_read_id() the DMA buffer
-> should be aligned to ARCH_DMA_MINALIGN. Otherwise, If a DMA buffer
-> and a kernel structure share a same cache line, and if the kernel
-> structure has dirty data, cache_invalidate (no writeback) will cause
-> data corruption.
+On Mon, Oct 16, 2017 at 05:18:39PM +0200, Bhumika Goyal wrote:
+> Make the ci_type field and some function arguments as const. After this
+> change, make config_item_type structures as const.
 > 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Huacai Chen <chenhc@lemote.com>
-> ---
->   drivers/ata/libata-core.c | 15 +++++++++++++--
->   1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index ee4c1ec..e134955 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1833,8 +1833,19 @@ static u32 ata_pio_mask_no_iordy(const struct ata_device *adev)
->   unsigned int ata_do_dev_read_id(struct ata_device *dev,
->   					struct ata_taskfile *tf, u16 *id)
->   {
-> -	return ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE,
-> -				     id, sizeof(id[0]) * ATA_ID_WORDS, 0);
-> +	u16 *devid;
-> +	int res, size = sizeof(u16) * ATA_ID_WORDS;
-> +
-> +	if (IS_ALIGNED((unsigned long)id, dma_get_cache_alignment(&dev->tdev)))
-> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, id, size, 0);
-> +	else {
-> +		devid = kmalloc(size, GFP_KERNEL);
-> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, devid, size, 0);
-> +		memcpy(id, devid, size);
-> +		kfree(devid);
-> +	}
-> +
-> +	return res;
+> * Changes in v2- Combine all the followup patches and the constification
+> patches into a series.
 
-    This function is called only for the PIO mode commands, so I doubt this is 
-necessary...
+Who do you want to take these patches?  If you want, I can take them
+through my driver-core tree, which has done other configfs stuff like
+this in the past.
 
-MBR, Sergei
+thanks,
+
+greg k-h
