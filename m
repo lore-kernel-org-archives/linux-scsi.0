@@ -1,30 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] bsg-lib interface cleanup
-Date: Mon, 16 Oct 2017 23:50:49 -0400
-Message-ID: <yq1d15mzb3a.fsf@oracle.com>
-References: <20171003104845.10417-1-hch@lst.de>
+Subject: Re: [PATCH 0/5] ZBC support clenaup and fixes
+Date: Mon, 16 Oct 2017 23:57:07 -0400
+Message-ID: <yq18tgazass.fsf@oracle.com>
+References: <20171010205425.7376-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171003104845.10417-1-hch@lst.de> (Christoph Hellwig's message
-        of "Tue, 3 Oct 2017 12:48:36 +0200")
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34253 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753254AbdJQD5Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2017 23:57:16 -0400
+In-Reply-To: <20171010205425.7376-1-damien.lemoal@wdc.com> (Damien Le Moal's
+        message of "Wed, 11 Oct 2017 05:54:20 +0900")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
 
-Christoph,
+Damien,
 
-> this series cleans up various abuses of the bsg interfaces, and then
-> splits bsg for SCSI passthrough from bsg for arbitrary transport
-> passthrough.  This removes the scsi_request abuse in bsg-lib that is
-> very confusing, and also makes sure we can sanity check the requests
-> we get.  The current code will happily execute scsi commands against
-> bsg-lib queues, and transport pass through against scsi nodes, without
-> any indication to the driver that we are doing the wrong thing.
+> First part of the "scsi-mq support for ZBC disks" series that is only
+> scsi specific. These patches are just cleanups with only one bug fix
+> (last pacth) and do not functionally change anything.
+>
+> The remaining rework of the zone locking including scsi-mq support is
+> still ongoing and will be sent later.
 
-I applied patches 2-5 to 4.15/scsi-queue.
+Applied to 4.15/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
