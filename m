@@ -1,43 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sd: always retry READ CAPACITY for ALUA state transition
-Date: Wed, 18 Oct 2017 07:54:44 +0200
-Message-ID: <57c5e714-251a-a67c-5ce9-46205315704b@suse.de>
-References: <1508224276-130348-1-git-send-email-hare@suse.de>
- <1508248652.3129.2.camel@HansenPartnership.com>
+Subject: Re: [PATCH v9 09/10] block, scsi: Make SCSI quiesce and resume work
+ reliably
+Date: Wed, 18 Oct 2017 07:58:44 +0200
+Message-ID: <5d307b6d-a4dd-1681-5149-86e88849d835@suse.de>
+References: <20171016232905.5047-1-bart.vanassche@wdc.com>
+ <20171016232905.5047-10-bart.vanassche@wdc.com>
+ <df8b960d-e65d-3e5e-9de7-4423aa65ad92@suse.de>
+ <1508271483.3457.15.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46779 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752090AbdJRFys (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Oct 2017 01:54:48 -0400
-In-Reply-To: <1508248652.3129.2.camel@HansenPartnership.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1508271483.3457.15.camel@wdc.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 10/17/2017 03:57 PM, James Bottomley wrote:
-> On Tue, 2017-10-17 at 09:11 +0200, Hannes Reinecke wrote:
->> During ALUA state transitions the device might return
->> a sense code 02/04/0a (Logical unit not accessible, asymmetric
->> access state transition). As this is a transient error
->> we should just retry the READ CAPACITY call until
->> the state transition finishes and the correct
->> capacity can be returned.
+On 10/17/2017 10:18 PM, Bart Van Assche wrote:
+> On Tue, 2017-10-17 at 08:33 +0200, Hannes Reinecke wrote:
+>> How do you ensure that PREEMPT requests are not stuck in the queue
+>> _behind_ non-PREEMPT requests?
+>> Once they are in the queue the request are already allocated, so your
+>> deferred allocation won't work.
+>> _And_ deferred requests will be re-inserted at the head of the queue.
+>> Consequently the PREEMPT request will never ever scheduled during quiesce.
+>> How do you avoid such a scenario?
 > 
-> This will lock up the system if some ALUA initiator gets into a state
-> where it always returns transitioning and never completes, which
-> doesn't look like the best way to handle problem devices.
+> Hello Hannes,
 > 
-> I thought after the ALUA transition the LUN gives a unit attention ...
-> can't you use that some way to trigger the capacity re-read, so do
-> asynchronous event notification instead of polling forever.
+> The blk_mq_freeze_queue() / blk_mq_unfreeze_queue() calls that have been
+> added through patch 9/10 to scsi_device_quiesce() will only succeed after all
+> outstanding requests have finished. That includes non-preempt requests and
+> requests that are about to be requeued. The changes in scsi_device_quiesce()
+> are such that blk_queue_enter() will fail for non-preempt requests after the
+> queue has been unfrozen. In other words, if a scsi_device_quiesce() call
+> succeeds, it is guaranteed that there are no non-preempt requests in the queue
+> and also that no new non-preempt requests will enter the queue until
+> scsi_device_resume() is called.
 > 
-Hmm.
-Will give it a try.
+Ah. Right.
+
+That was the explanation I was after.
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
