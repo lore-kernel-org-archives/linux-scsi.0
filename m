@@ -1,44 +1,50 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Patch: add to Documentation/scsi for scsi_dev_flags and command
- line passing
-Date: Wed, 18 Oct 2017 13:13:09 -0400
-Message-ID: <1508346789.13599.2.camel@redhat.com>
+From: Mark Greer <mgreer@animalcreek.com>
+Subject: Re: [PATCH V8 1/5] dma-mapping: Rework dma_get_cache_alignment()
+Date: Wed, 18 Oct 2017 10:23:36 -0700
+Message-ID: <20171018172336.GA29358@animalcreek.com>
+References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:55280 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750853AbdJRRNL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2017 13:13:11 -0400
-Received: by mail-qt0-f196.google.com with SMTP id z19so11146016qtg.11
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2017 10:13:10 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Huacai Chen <chenhc@lemote.com>
+Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stable@vger.kernel.org, "Michael S . Tsirkin" <mst@mellanox.co.il>, Pawel Osciak <pawel@osciak.com>, Kyungmin Park <kyungmin.park@samsung.com>, Michael Chan <michael.chan@broadcom.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ivan
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Tired of forgetting about this so documented it for others so they also
-don't spend unnecessary time figuring this out.
+On Tue, Oct 17, 2017 at 04:05:38PM +0800, Huacai Chen wrote:
+> Make dma_get_cache_alignment() to accept a 'dev' argument. As a result,
+> it can return different alignments due to different devices' I/O cache
+> coherency.
+> 
+> Currently, ARM/ARM64 and MIPS support coherent & noncoherent devices
+> co-exist. This may be extended in the future, so add a new function
+> pointer (i.e, get_cache_alignment) in 'struct dma_map_ops' as a generic
+> solution.
 
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
+Hi Huacai.
 
-diff --git a/Documentation/scsi/scsi-parameters.txt
-b/Documentation/scsi/scsi-parameters.txt
-index 8477655..c9e9ce8 100644
---- a/Documentation/scsi/scsi-parameters.txt
-+++ b/Documentation/scsi/scsi-parameters.txt
-@@ -116,3 +116,9 @@ parameters may be changed at runtime by the command
- 
- 	wd33c93=	[HW,SCSI]
- 			See header of drivers/scsi/wd33c93.c.
-+
-+Additional notes on passing parameters on the command line.
-+Its not intuitively obvious how to pass certain parameters on the boot
-line.
-+For parameters such as scsi_dev_flags, you need to pass to the
-scsi_mod as follows
-+scsi_mod.dev_flags=LIO-ORG:thin2:0x80000000
-+
--- 
-1.8.3.1
+> diff --git a/drivers/tty/serial/mpsc.c b/drivers/tty/serial/mpsc.c
+> index 67ffecc..c708457 100644
+> --- a/drivers/tty/serial/mpsc.c
+> +++ b/drivers/tty/serial/mpsc.c
+> @@ -81,19 +81,19 @@
+>   * Number of Tx & Rx descriptors must be powers of 2.
+>   */
+>  #define	MPSC_RXR_ENTRIES	32
+> -#define	MPSC_RXRE_SIZE		dma_get_cache_alignment()
+> +#define	MPSC_RXRE_SIZE		dma_get_cache_alignment(dma_dev)
+
+I would much prefer that you add a parameter to the macro to avoid forcing
+a non-flexible and non-obvious variable definition wherever it is used.
+What I mean is something like:
+
+#define MPSC_RXRE_SIZE(d)		dma_get_cache_alignment(d)
+
+Similarly for all of the other macros and where they're used.
+
+Thanks,
+
+Mark
+--
