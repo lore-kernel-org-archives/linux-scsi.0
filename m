@@ -1,102 +1,31 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: Patch: add to Documentation/scsi for scsi_dev_flags and command
- line passing
-Date: Wed, 18 Oct 2017 13:51:03 -0400
-Message-ID: <CAFfF4qu+K8kSq6f7vQhhdXsYCxikWJa51Lw3U9kVtvcoKenKkA@mail.gmail.com>
-References: <1508346789.13599.2.camel@redhat.com> <3d702bd5-b96e-3f5b-482b-b2c36278c219@infradead.org>
- <CAFfF4qua-gutNTT+s+HuxrgS_B8sV5J+8x0-VbrYwObd5mN4bQ@mail.gmail.com> <4717328f-24b2-9273-c41c-a02f27e8b921@infradead.org>
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH V8 5/5] libata: Align DMA buffer to
+ dma_get_cache_alignment()
+Date: Wed, 18 Oct 2017 20:54:22 +0100
+Message-ID: <20171018205422.7fc8cbce@alans-desktop>
+References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
+        <1508227542-13165-5-git-send-email-chenhc@lemote.com>
+        <94f55c1e-7553-0fc8-124e-ac6df5ac10ce@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:48332 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750775AbdJRRvE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2017 13:51:04 -0400
-Received: by mail-qt0-f196.google.com with SMTP id f8so11304999qta.5
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2017 10:51:04 -0700 (PDT)
-In-Reply-To: <4717328f-24b2-9273-c41c-a02f27e8b921@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <94f55c1e-7553-0fc8-124e-ac6df5ac10ce@cogentembedded.com>
+Sender: stable-owner@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Huacai Chen <chenhc@lemote.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Indeed it was Evolution and then linux-scsi rejected my fix.
+>     This function is called only for the PIO mode commands, so I doubt this is 
+> necessary...
 
-Trying again, for some reason it thought I had html
+That is true but there are platforms out there that issue disk level PIO
+commands via DMA (or can do so). Indeed the Cyrix MediaGX could do that
+in the 1990s but I never add support 8)
 
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
+So I think it makes sense to allocate the buffers DMA aligned, but it
+doesn't seem to explain the situation in this case and I think it would
+be helpful to know what platform and ATA driver is tripping this and wny
+they are the only people in the universe to have the problem.
 
---- a/Documentation/scsi/scsi-parameters.txt
-+++ b/Documentation/scsi/scsi-parameters.txt
-@@ -116,3 +116,11 @@ parameters may be changed at runtime by the command
-
-  wd33c93= [HW,SCSI]
-  See header of drivers/scsi/wd33c93.c.
-+
-+Additional notes on passing parameters on the command line:
-+
-+It's not intuitively obvious how to pass certain parameters on the boot line.
-+For parameters such as scsi_dev_flags, you need to pass to the scsi_mod as
-+follows.
-+On kernel line add scsi_mod.dev_flags=LIO-ORG:thin2:0x8000000
-+
-
-On Wed, Oct 18, 2017 at 1:46 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
-> On 10/18/17 10:28, Laurence Oberman wrote:
->> I just noticed that
->> Was taken straight out of git after changing the Doc file.
->> Let me see why git did that
->>
->
-> It's more likely that Evolution did it.
->
->>
->> On Wed, Oct 18, 2017 at 1:25 PM, Randy Dunlap <rdunlap@infradead.org <mailto:rdunlap@infradead.org>> wrote:
->>
->>     On 10/18/17 10:13, Laurence Oberman wrote:
->>     > Tired of forgetting about this so documented it for others so they also
->>     > don't spend unnecessary time figuring this out.
->>     >
->>     > Signed-off-by: Laurence Oberman <loberman@redhat.com <mailto:loberman@redhat.com>>
->>     >
->>     > diff --git a/Documentation/scsi/scsi-parameters.txt
->>     > b/Documentation/scsi/scsi-parameters.txt
->>     > index 8477655..c9e9ce8 100644
->>     > --- a/Documentation/scsi/scsi-parameters.txt
->>     > +++ b/Documentation/scsi/scsi-parameters.txt
->>     > @@ -116,3 +116,9 @@ parameters may be changed at runtime by the command
->>     >
->>     >       wd33c93=        [HW,SCSI]
->>     >                       See header of drivers/scsi/wd33c93.c.
->>     > +
->>     > +Additional notes on passing parameters on the command line.
->>
->>                                                              line:
->>
->>     > +Its not intuitively obvious how to pass certain parameters on the boot
->>
->>        It's
->>
->>     > line.
->>     > +For parameters such as scsi_dev_flags, you need to pass to the
->>     > scsi_mod as follows
->>
->>                as follows:
->>
->>     > +scsi_mod.dev_flags=LIO-ORG:thin2:0x80000000
->>     > +
->>     > --
->>     > 1.8.3.1
->>
->>
->>     Also the patch has some weird line breaks.
->>
->>
->>     --
->>     ~Randy
->>
->>
->
->
-> --
-> ~Randy
+Alan
