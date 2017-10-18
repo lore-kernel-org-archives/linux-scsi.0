@@ -1,69 +1,65 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v2 0/5] qcom-ufs: phy/hcd: Refactor phy initialization
- code
-Date: Wed, 18 Oct 2017 18:01:49 +0530
-Message-ID: <238f7e71-c878-2851-c5b8-9ef4a835cf23@ti.com>
-References: <1507789176-2760-1-git-send-email-vivek.gautam@codeaurora.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V8 5/5] libata: Align DMA buffer to
+ dma_get_cache_alignment()
+Date: Wed, 18 Oct 2017 06:03:53 -0700
+Message-ID: <20171018130353.GA1302522@devbig577.frc2.facebook.com>
+References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
+ <1508227542-13165-5-git-send-email-chenhc@lemote.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507789176-2760-1-git-send-email-vivek.gautam@codeaurora.org>
+Content-Disposition: inline
+In-Reply-To: <1508227542-13165-5-git-send-email-chenhc@lemote.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: subhashj@codeaurora.org, robh+dt@kernel.org, bjorn.andersson@linaro.org, devicetree@vger.kernel.org
+To: Huacai Chen <chenhc@lemote.com>
+Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, Oct 17, 2017 at 04:05:42PM +0800, Huacai Chen wrote:
+> In non-coherent DMA mode, kernel uses cache flushing operations to
+> maintain I/O coherency, so in ata_do_dev_read_id() the DMA buffer
+> should be aligned to ARCH_DMA_MINALIGN. Otherwise, If a DMA buffer
+> and a kernel structure share a same cache line, and if the kernel
+> structure has dirty data, cache_invalidate (no writeback) will cause
+> data corruption.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Huacai Chen <chenhc@lemote.com>
+> ---
+>  drivers/ata/libata-core.c | 15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index ee4c1ec..e134955 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1833,8 +1833,19 @@ static u32 ata_pio_mask_no_iordy(const struct ata_device *adev)
+>  unsigned int ata_do_dev_read_id(struct ata_device *dev,
+>  					struct ata_taskfile *tf, u16 *id)
+>  {
+> -	return ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE,
+> -				     id, sizeof(id[0]) * ATA_ID_WORDS, 0);
+> +	u16 *devid;
+> +	int res, size = sizeof(u16) * ATA_ID_WORDS;
+> +
+> +	if (IS_ALIGNED((unsigned long)id, dma_get_cache_alignment(&dev->tdev)))
+> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, id, size, 0);
+> +	else {
+> +		devid = kmalloc(size, GFP_KERNEL);
+> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, devid, size, 0);
+> +		memcpy(id, devid, size);
+> +		kfree(devid);
+> +	}
+> +
+> +	return res;
 
+Hmm... I think it'd be a lot better to ensure that the buffers are
+aligned properly to begin with.  There are only two buffers which are
+used for id reading - ata_port->sector_buf and ata_device->id.  Both
+are embedded arrays but making them separately allocated aligned
+buffers shouldn't be difficult.
 
-On Thursday 12 October 2017 11:49 AM, Vivek Gautam wrote:
-> Refactoring the qcom-ufs phy and host controller code to move
-> further towards the generic phy usage. Right now the qcom-ufs exports
-> a bunch of APIs that are used by the host controller to initialize
-> the phy.
-> With this patch series, we populate the phy_init() which was a no-op
-> earlier. The host controller then calls the phy_init() at the designated
-> place rather than doing it invariably in ufs_hcd_init().
-> 
-> As part of this series, we introduce phy modes for ufs phy.
-> The M-PHY has two data rates defined for each generations (Gears) -
-> Rate A and Rate B. These can serve as the two modes of ufs HS phy.
-> Host controller can direct the phy to set the respective configurations
-> based on the phy modes.
-> 
-> The patch-series has been tested with necessary dt patches on db820c.
-> 
-> 
-> Hi Kishon,
-> 
-> I shall be on vacation for the next week. Can you kindly consider
-> picking this series for 4.15. Martin was good with last version
-> of the patches[1], and Subhash has reviewed the patches of which
-> he has given 'Reviewed-by' for [PATCH 4/5] , and I have addressed
-> his comments for the last patch. I hope it's not too late for 4.15.
-> Subhash, can you please consider giving your 'Reviewed-by' for
-> the last patch if you find it good.
+Thanks.
 
-merged to phy -next, thanks!
-
--Kishon
-> 
-> [1] https://lkml.org/lkml/2017/8/10/958
-> 
-> Vivek Gautam (5):
->   dt-bindings: phy: Add PHY_TYPE_UFS definition
->   phy: Add UFS PHY modes
->   phy: qcom-ufs: Add support to set phy mode
->   scsi/ufs: qcom: Set phy mode based on the controllers HS MODE
->   ufs/phy: qcom: Refactor to use phy_init call
-> 
->  drivers/phy/qualcomm/phy-qcom-ufs-i.h        |  5 ++--
->  drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c | 29 +++++++++++++++++--
->  drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c | 29 +++++++++++++++++--
->  drivers/phy/qualcomm/phy-qcom-ufs.c          | 42 ++++++++++------------------
->  drivers/scsi/ufs/ufs-qcom.c                  | 39 +++++++++++---------------
->  include/dt-bindings/phy/phy.h                |  1 +
->  include/linux/phy/phy-qcom-ufs.h             |  3 --
->  include/linux/phy/phy.h                      |  2 ++
->  8 files changed, 91 insertions(+), 59 deletions(-)
-> 
+-- 
+tejun
