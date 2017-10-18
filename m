@@ -1,48 +1,44 @@
 From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH V4 6/9] pm80xx : modified port reset timer value for PM8006  card
-Date: Wed, 18 Oct 2017 11:39:12 +0530
-Message-ID: <20171018060915.8549-7-Viswas.G@microsemi.com>
+Subject: [PATCH V4 9/9] pm80xx : corrected linkrate value.
+Date: Wed, 18 Oct 2017 11:39:15 +0530
+Message-ID: <20171018060915.8549-10-Viswas.G@microsemi.com>
 References: <20171018060915.8549-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:36672
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0040.outbound.protection.outlook.com ([104.47.42.40]:35072
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933542AbdJRGJf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Oct 2017 02:09:35 -0400
+        id S933437AbdJRGJl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Oct 2017 02:09:41 -0400
 In-Reply-To: <20171018060915.8549-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-Added port reset timer value as 2000ms for PM8006 sata controller.
+Corrected the value defined for LINKRATE_60 (6 Gig).
 
-Signed-off-by: Deepak Ukey <deepak.ukey@microsemi.com>
-Signed-off-by: Viswas G <Viswas.G@microsemi.com>
+Signed-off-by: Raj Dinesh <Raj.Dinesh@microsemi.com>
+Signed-off-by: Viswas G <viswas.g@microsemi.com>
 
 Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/pm8001/pm80xx_hwi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 097096bf4bb0..5d2a4a38bf73 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -597,6 +597,12 @@ static void update_main_config_table(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer &= 0xffff0000;
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer |=
- 							PORT_RECOVERY_TIMEOUT;
-+	if (pm8001_ha->chip_id == chip_8006) {
-+		pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer &=
-+					0x0000ffff;
-+		pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer |=
-+					0x140000;
-+	}
- 	pm8001_mw32(address, MAIN_PORT_RECOVERY_TIMER,
- 			pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer);
- }
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index e36c5176f9a9..889e69ce3689 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -167,7 +167,7 @@
+ #define LINKMODE_AUTO			(0x03 << 12)
+ #define LINKRATE_15			(0x01 << 8)
+ #define LINKRATE_30			(0x02 << 8)
+-#define LINKRATE_60			(0x06 << 8)
++#define LINKRATE_60			(0x04 << 8)
+ #define LINKRATE_120			(0x08 << 8)
+ 
+ /* phy_profile */
 -- 
 2.12.3
