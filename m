@@ -1,50 +1,65 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: Always retry internal target error
-Date: Wed, 18 Oct 2017 09:27:57 +0200
-Message-ID: <95501c64-247c-4392-1771-19d5bacb6c15@suse.de>
-References: <1508224263-130302-1-git-send-email-hare@suse.de>
- <yq18tg9upqf.fsf@oracle.com> <51f905cd-6907-438e-396f-a6efe610370f@suse.de>
- <20171018063439.GA11109@lst.de>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [PATCH V4 0/9] pm80xx updates
+Date: Wed, 18 Oct 2017 10:10:34 +0200
+Message-ID: <CAMGffEnsADXG-Q_4GyPhJ7aCxfFTggu-8QBeKJ7WtCoEd1-+BA@mail.gmail.com>
+References: <20171018060915.8549-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52402 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966537AbdJRH2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Oct 2017 03:28:00 -0400
-In-Reply-To: <20171018063439.GA11109@lst.de>
-Content-Language: en-US
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:52426 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762692AbdJRIKz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2017 04:10:55 -0400
+Received: by mail-qk0-f172.google.com with SMTP id b15so5200857qkg.9
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2017 01:10:55 -0700 (PDT)
+In-Reply-To: <20171018060915.8549-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Viswas G <Viswas.G@microsemi.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Vasanthalakshmi.Tharmarajan@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 10/18/2017 08:34 AM, Christoph Hellwig wrote:
-> On Wed, Oct 18, 2017 at 08:15:46AM +0200, Hannes Reinecke wrote:
->>> It's decidedly awful to have vendor/model-specific triggers in
->>> scsi_error.
->>>
->>> What are the drawbacks of just always refiring on AC/0x44/ITF?
->>>
->> Hmm. 'Internal target failure' is not very descriptive, so it could mean
->> anything. Hence the rather awkward approach.
->> But I just checked with the qemu code, and that returns 0x44/0x00 only
->> if some (internal) call returned with -ENOMEM.
->> So I guess we're safe to always retry here.
-> 
-> And even if not we should add a quirk so that we can just check a
-> bit instead of doing two string compares in the I/O completion path..
-> 
-Yeah, you are right.
-Will be adding a blacklist entry for this.
+On Wed, Oct 18, 2017 at 8:09 AM, Viswas G <Viswas.G@microsemi.com> wrote:
+>
+> This patch set include some bug fixes and enhancement for pm80xx driver.
+>
+> Changes from V3:
+>         - Fixed kbuild warnings for patch 4 and 5.
+>
+> Changes from V2:
+>         - Corrected date.
+>
+> Changes from V1:
+>         - sas_identify_frame_local structure moved to pm80xx_hwi.h
+>         - sata abort handling patch split to four patches.
+>                 - tag allocation for phy control request.
+>                 - cleanup in pm8001_abort_task function.
+>                 - modified port reset timer value for PM8006 card
+>                 - corrected SATA abort handling sequence.
+>
+>
+> Viswas G (9):
+>   pm80xx : redefine sas_identify_frame structure
+>   pm80xx : ILA and inactive firmware version through sysfs
+>   pm80xx : Different SAS addresses for phys.
+>   pm80xx : tag allocation for phy control request.
+>   pm80xx : cleanup in pm8001_abort_task function.
+>   pm80xx : modified port reset timer value for PM8006  card
+>   pm80xx : corrected SATA abort handling sequence.
+>   pm80xx : panic on ncq error cleaning up the read log.
+>   pm80xx : corrected linkrate value.
+>
+>  drivers/scsi/pm8001/pm8001_ctl.c  |  54 +++++++++++++++++
+>  drivers/scsi/pm8001/pm8001_hwi.c  |  11 +++-
+>  drivers/scsi/pm8001/pm8001_init.c |  13 +++--
+>  drivers/scsi/pm8001/pm8001_sas.c  | 119 +++++++++++++++++++++++++-------------
+>  drivers/scsi/pm8001/pm8001_sas.h  |  10 ++++
+>  drivers/scsi/pm8001/pm80xx_hwi.c  |  62 ++++++++++++++++----
+>  drivers/scsi/pm8001/pm80xx_hwi.h  | 102 +++++++++++++++++++++++++++++++-
+>  7 files changed, 313 insertions(+), 58 deletions(-)
+>
+> --
+> 2.12.3
+>
+Thanks Viswas for the effort. I think it's good to go.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Jack Wang
