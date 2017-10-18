@@ -1,65 +1,91 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [PATCH V4 0/9] pm80xx updates
-Date: Wed, 18 Oct 2017 10:10:34 +0200
-Message-ID: <CAMGffEnsADXG-Q_4GyPhJ7aCxfFTggu-8QBeKJ7WtCoEd1-+BA@mail.gmail.com>
-References: <20171018060915.8549-1-Viswas.G@microsemi.com>
+From: "liwei (CM)" <liwei213@huawei.com>
+Subject: =?gb2312?B?tPC4tDogW1BBVENIIHY0IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczog?=
+ =?gb2312?Q?add_document_for_hisi-ufs?=
+Date: Wed, 18 Oct 2017 10:23:11 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA2FC5D@DGGEMM506-MBX.china.huawei.com>
+References: <20171013074936.97284-1-liwei213@huawei.com>
+ <20171013074936.97284-3-liwei213@huawei.com>
+ <20171017211739.tg7jm2hggega4sfy@rob-hp-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:52426 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762692AbdJRIKz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2017 04:10:55 -0400
-Received: by mail-qk0-f172.google.com with SMTP id b15so5200857qkg.9
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2017 01:10:55 -0700 (PDT)
-In-Reply-To: <20171018060915.8549-1-Viswas.G@microsemi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20171017211739.tg7jm2hggega4sfy@rob-hp-laptop>
+Content-Language: zh-CN
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Rob Herring <robh@kernel.org>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>, "eric@anholt.net" <eric@anholt.net>, "krzk@kernel.org" <krzk@kernel.org>, "lihuan (Z)" <lihuan41@hisilicon.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "khilman@baylibre.com" <khilman@baylibre.com>, "xuwei (O)" <xuwei5@hisilicon.com>, "treding@nvidia.com" <treding@nvidia.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "Fengbaopeng (kevin,
+ Kirin Solution Dept)" <fengbaopeng@hisilicon.com>, "gregory.clement@free-electrons.com" <gregory.clement@free-electrons.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, wangyupe
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <Viswas.G@microsemi.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Vasanthalakshmi.Tharmarajan@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Wed, Oct 18, 2017 at 8:09 AM, Viswas G <Viswas.G@microsemi.com> wrote:
->
-> This patch set include some bug fixes and enhancement for pm80xx driver.
->
-> Changes from V3:
->         - Fixed kbuild warnings for patch 4 and 5.
->
-> Changes from V2:
->         - Corrected date.
->
-> Changes from V1:
->         - sas_identify_frame_local structure moved to pm80xx_hwi.h
->         - sata abort handling patch split to four patches.
->                 - tag allocation for phy control request.
->                 - cleanup in pm8001_abort_task function.
->                 - modified port reset timer value for PM8006 card
->                 - corrected SATA abort handling sequence.
->
->
-> Viswas G (9):
->   pm80xx : redefine sas_identify_frame structure
->   pm80xx : ILA and inactive firmware version through sysfs
->   pm80xx : Different SAS addresses for phys.
->   pm80xx : tag allocation for phy control request.
->   pm80xx : cleanup in pm8001_abort_task function.
->   pm80xx : modified port reset timer value for PM8006  card
->   pm80xx : corrected SATA abort handling sequence.
->   pm80xx : panic on ncq error cleaning up the read log.
->   pm80xx : corrected linkrate value.
->
->  drivers/scsi/pm8001/pm8001_ctl.c  |  54 +++++++++++++++++
->  drivers/scsi/pm8001/pm8001_hwi.c  |  11 +++-
->  drivers/scsi/pm8001/pm8001_init.c |  13 +++--
->  drivers/scsi/pm8001/pm8001_sas.c  | 119 +++++++++++++++++++++++++-------------
->  drivers/scsi/pm8001/pm8001_sas.h  |  10 ++++
->  drivers/scsi/pm8001/pm80xx_hwi.c  |  62 ++++++++++++++++----
->  drivers/scsi/pm8001/pm80xx_hwi.h  | 102 +++++++++++++++++++++++++++++++-
->  7 files changed, 313 insertions(+), 58 deletions(-)
->
-> --
-> 2.12.3
->
-Thanks Viswas for the effort. I think it's good to go.
-
-Jack Wang
+SGksIFJvYg0KDQpUaGFua3MgZm9yIHlvdXIgcmV2aWV3LCBJIHdpbGwgZml4IHRoZW0gaW4gcGF0
+Y2ggdjUuDQoNCg0KLS0tLS3Tyrz+1K28/i0tLS0tDQq3orz+yMs6IFJvYiBIZXJyaW5nIFttYWls
+dG86cm9iaEBrZXJuZWwub3JnXSANCreiy83KsbzkOiAyMDE3xOoxMNTCMTjI1SA1OjE4DQrK1bz+
+yMs6IGxpd2VpIChDTSkNCrOty806IG1hcmsucnV0bGFuZEBhcm0uY29tOyB4dXdlaSAoTyk7IGNh
+dGFsaW4ubWFyaW5hc0Bhcm0uY29tOyB3aWxsLmRlYWNvbkBhcm0uY29tOyB2aW5ob2xpa2F0dGlA
+Z21haWwuY29tOyBqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbTsgbWFydGluLnBldGVyc2VuQG9yYWNs
+ZS5jb207IGtoaWxtYW5AYmF5bGlicmUuY29tOyBhcm5kQGFybmRiLmRlOyBncmVnb3J5LmNsZW1l
+bnRAZnJlZS1lbGVjdHJvbnMuY29tOyB0aG9tYXMucGV0YXp6b25pQGZyZWUtZWxlY3Ryb25zLmNv
+bTsgeWFtYWRhLm1hc2FoaXJvQHNvY2lvbmV4dC5jb207IHJpa3Uudm9pcGlvQGxpbmFyby5vcmc7
+IHRyZWRpbmdAbnZpZGlhLmNvbTsga3J6a0BrZXJuZWwub3JnOyBlcmljQGFuaG9sdC5uZXQ7IGRl
+dmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBs
+aW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LXNjc2lAdmdlci5rZXJu
+ZWwub3JnOyBndW9kb25nLnh1QGxpbmFyby5vcmc7IEZlbmdiYW9wZW5nIChrZXZpbiwgS2lyaW4g
+U29sdXRpb24gRGVwdCk7IGxpaHVhbiAoWik7IHdhbmd5dXBlbmcgKEEpDQrW98ziOiBSZTogW1BB
+VENIIHY0IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYWRkIGRvY3VtZW50IGZvciBoaXNp
+LXVmcw0KDQpPbiBGcmksIE9jdCAxMywgMjAxNyBhdCAwMzo0OTozM1BNICswODAwLCBMaSBXZWkg
+d3JvdGU6DQo+IGFkZCB1ZnMgbm9kZSBkb2N1bWVudCBmb3IgSGlzaWxpY29uLg0KPiANCj4gU2ln
+bmVkLW9mZi1ieTogTGkgV2VpIDxsaXdlaTIxM0BodWF3ZWkuY29tPg0KPiAtLS0NCj4gIERvY3Vt
+ZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0IHwgNDcgKysrKysr
+KysrKysrKysrKysrKysrKw0KPiAgMSBmaWxlIGNoYW5nZWQsIDQ3IGluc2VydGlvbnMoKykNCj4g
+IGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZz
+L3Vmcy1oaXNpLnR4dA0KPiANCj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJl
+ZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2Jp
+bmRpbmdzL3Vmcy91ZnMtaGlzaS50eHQNCj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gaW5kZXgg
+MDAwMDAwMDAwMDAwLi5lZTExNGE2NTE0M2QNCj4gLS0tIC9kZXYvbnVsbA0KPiArKysgYi9Eb2N1
+bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPiBAQCAtMCww
+ICsxLDQ3IEBADQo+ICsqIEhpc2lsaWNvbiBVbml2ZXJzYWwgRmxhc2ggU3RvcmFnZSAoVUZTKSBI
+b3N0IENvbnRyb2xsZXINCj4gKw0KPiArVUZTIG5vZGVzIGFyZSBkZWZpbmVkIHRvIGRlc2NyaWJl
+IG9uLWNoaXAgVUZTIGhhcmR3YXJlIG1hY3JvLg0KPiArRWFjaCBVRlMgSG9zdCBDb250cm9sbGVy
+IHNob3VsZCBoYXZlIGl0cyBvd24gbm9kZS4NCj4gKw0KPiArUmVxdWlyZWQgcHJvcGVydGllczoN
+Cj4gKy0gY29tcGF0aWJsZSAgICAgICAgOiBjb21wYXRpYmxlIGxpc3QsIGNvbnRhaW5zIG9uZSBv
+ZiB0aGUgZm9sbG93aW5nIC0NCj4gKwkJCSJoaXNpbGljb24saGkzNjYwLXVmcyIgZm9yIGhpc2kg
+dWZzIGhvc3QgY29udHJvbGxlcg0KPiArCQkJIHByZXNlbnQgb24gSGkzNjYwIGNoaXBzZXQuDQo+
+ICstIHJlZyAgICAgICAgICAgICAgIDogc2hvdWxkIGNvbnRhaW4gVUZTIHJlZ2lzdGVyIGFkZHJl
+c3Mgc3BhY2UgJiBVRlMgU1lTIENUUkwgcmVnaXN0ZXIgYWRkcmVzcywNCj4gKy0gaW50ZXJydXB0
+LXBhcmVudCAgOiBpbnRlcnJ1cHQgZGV2aWNlDQo+ICstIGludGVycnVwdHMgICAgICAgIDogaW50
+ZXJydXB0IG51bWJlcg0KPiArLSBjbG9ja3MJICAgICAgICA6IExpc3Qgb2YgcGhhbmRsZSBhbmQg
+Y2xvY2sgc3BlY2lmaWVyIHBhaXJzDQo+ICstIGNsb2NrLW5hbWVzICAgICAgIDogTGlzdCBvZiBj
+bG9jayBpbnB1dCBuYW1lIHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQo+ICsJCSAgICAgIG9y
+ZGVyIGFzIHRoZSBjbG9ja3MgcHJvcGVydHkuICJjbGtfcmVmIiwgImNsa19waHkiIGlzIG9wdGlv
+bmFsDQo+ICstIHJlc2V0cyAgICAgICAgICAgIDogcmVzZXQgbm9kZSByZWdpc3Rlciwgb25lIHJl
+c2V0IHRoZSBjbGsgYW5kIHRoZSBvdGhlciByZXNldCB0aGUgY29udHJvbGxlcg0KPiArLSByZXNl
+dC1uYW1lcyAgICAgICA6IGRlc2NyaWJlIHJlc2V0IG5vZGUgcmVnaXN0ZXINCj4gKw0KPiArT3B0
+aW9uYWwgcHJvcGVydGllcyBmb3IgYm9hcmQgZGV2aWNlOg0KPiArLSByZXNldC1ncGlvCQkJOiBz
+cGVjaWZpZXMgdG8gcmVzZXQgZGV2aWNlcw0KDQpTaG91bGQgYmUgInJlc2V0LWdwaW9zIi4NCg0K
+PiArDQo+ICtFeGFtcGxlOg0KPiArDQo+ICsJdWZzOiB1ZnNAZmYzYjAwMDAgew0KPiArCQljb21w
+YXRpYmxlID0gImhpc2lsaWNvbixoaTM2NjAtdWZzIiwgImplZGVjLHVmcy0xLjEiOw0KPiArCQkv
+KiAwOiBIQ0kgc3RhbmRhcmQgKi8NCj4gKwkJLyogMTogVUZTIFNZUyBDVFJMICovDQo+ICsJCXJl
+ZyA9IDwweDAgMHhmZjNiMDAwMCAweDAgMHgxMDAwPiwNCj4gKwkJCTwweDAgMHhmZjNiMTAwMCAw
+eDAgMHgxMDAwPjsNCj4gKwkJaW50ZXJydXB0LXBhcmVudCA9IDwmZ2ljPjsNCj4gKwkJaW50ZXJy
+dXB0cyA9IDxHSUNfU1BJIDI3OCBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCj4gKwkJY2xvY2tzID0g
+PCZjcmdfY3RybCBISTM2NjBfQ0xLX0dBVEVfVUZTSU9fUkVGPiwNCj4gKwkJCTwmY3JnX2N0cmwg
+SEkzNjYwX0NMS19HQVRFX1VGU1BIWV9DRkc+Ow0KPiArCQljbG9jay1uYW1lcyA9ICJjbGtfcmVm
+IiwgImNsa19waHkiOw0KPiArCQlmcmVxLXRhYmxlLWh6ID0gPDAgMD4sIDwwIDA+Ow0KPiArCQkv
+KiBvZmZzZXQ6IDB4ODQ7IGJpdDogMTIgKi8NCj4gKwkJLyogb2Zmc2V0OiAweDg0OyBiaXQ6IDcg
+ICovDQo+ICsJCXJlc2V0cyA9IDwmY3JnX3JzdCAweDg0IDEyPiwNCj4gKwkJCTwmY3JnX3JzdCAw
+eDg0IDc+Ow0KPiArCQlyZXNldC1uYW1lcyA9ICJyc3QiLCAiYXNzZXJ0IjsNCj4gKwl9Ow0KPiAr
+DQo+ICsJJnVmcyB7DQo+ICsJCXJlc2V0LWdwaW8gPSA8JmdwaW8xOCAxIDA+Ow0KPiArCQlzdGF0
+dXMgPSAib2theSI7DQoNCkRvbid0IHNob3cgc3RhdHVzIG9yIHRoZSBjaGlwL2JvYXJkIHNwbGl0
+IGluIGV4YW1wbGVzLg0KDQo+ICsJfTsNCj4gKw0KPiAtLSANCj4gMi4xMS4wDQo+IA0KX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5l
+bCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6
+Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
