@@ -1,34 +1,31 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH v2 12/15] RDMA/cma: make config_item_type const
-Date: Wed, 18 Oct 2017 10:33:31 -0400
-Message-ID: <1508337211.46071.67.camel@redhat.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-         <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v10 00/10] block, scsi, md: Improve suspend and resume
+Date: Wed, 18 Oct 2017 15:27:14 +0000
+Message-ID: <1508340432.2540.4.camel@wdc.com>
+References: <20171017232630.4264-1-bart.vanassche@wdc.com>
+         <9c33db06-39e7-fd61-f146-4ae6df4302b5@kernel.dk>
+         <11010777.WJQNYl18e6@natalenko.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48642 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751243AbdJROdo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Oct 2017 10:33:44 -0400
-In-Reply-To: <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <11010777.WJQNYl18e6@natalenko.name>
+Content-Language: en-US
+Content-ID: <ED7308DE3283C34B9405284DE6896234@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org, laurent.pinchart@ideasonboard.com, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, clu
 
-On Mon, 2017-10-16 at 17:18 +0200, Bhumika Goyal wrote:
-> Make these structures const as they are either passed to the
-> functions
-> having the argument as const or stored as a reference in the
-> "ci_type"
-> const field of a config_item structure.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-
-Acked-by: Doug Ledford <dledford@redhat.com>
-
--- 
-Doug Ledford <dledford@redhat.com>
-    GPG KeyID: B826A3330E572FDD
-    Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
+T24gV2VkLCAyMDE3LTEwLTE4IGF0IDA3OjAyICswMjAwLCBPbGVrc2FuZHIgTmF0YWxlbmtvIHdy
+b3RlOg0KPiBJJ3ZlIGluZGVlZCB0ZXN0ZWQgc29tZSBwcmV2aW91cyB2ZXJzaW9ucyBvZiB0aGlz
+IHBhdGNoc2V0LCBidXQgc3RpbGwgdXNlIA0KPiBNaW5nJ3Mgc29sdXRpb24uDQo+IA0KPiBDYW4g
+aXQgYmUgY2xhcmlmaWVkIHdoaWNoIG9uZSAoQmFydCdzIG9yIE1pbmcncykgaXMgYSBjb3JyZWN0
+IGFwcHJvYWNoPw0KDQpIZWxsbyBPbGVrc2FuZHIsDQoNCkkgdGhpbmsgdGhpcyB2ZXJzaW9uICh2
+MTApIGhhcyBzaWduaWZpY2FudCBhZHZhbnRhZ2VzIG92ZXIgdGhlIG1vc3QgcmVjZW50DQpwYXRj
+aCBzZXJpZXMgcG9zdGVkIGJ5IE1pbmcgTGVpIHRvIGFkZHJlc3Mgc3VzcGVuZCwgcmVzdW1lIGFu
+ZCBTUEkgZG9tYWluDQp2YWxpZGF0aW9uLiBTbyBpdCB3b3VsZCBiZSBhcHByZWNpYXRlZCBpZiB5
+b3UgY291bGQgc3dpdGNoIHRvIHRoaXMgc2VyaWVzIGZvcg0KdGVzdGluZyBzdXNwZW5kIGFuZCBy
+ZXN1bWUuIEEgZ2l0IGJyYW5jaCB3aXRoIHRoaXMgcGF0Y2ggc2VyaWVzIGlzIGF2YWlsYWJsZQ0K
+YXQgaHR0cHM6Ly9naXRodWIuY29tL2J2YW5hc3NjaGUvbGludXgvdHJlZS9ibGstbXEtcG0tMjAx
+Ny0xMC0xOC12MTAuDQoNClRoYW5rcywNCg0KQmFydC4=
