@@ -1,29 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: gdth: Convert timers to use timer_setup()
-Date: Tue, 17 Oct 2017 23:06:28 -0400
-Message-ID: <yq1zi8ptarv.fsf@oracle.com>
-References: <20171016235502.GA102608@beast> <yq1a80qxvn6.fsf@oracle.com>
-        <CAGXu5jLgOxkUmMuN97er4rzZfD3CSUNy=TXA15WhVA14NHV75Q@mail.gmail.com>
+Subject: Re: [PATCH] sd: Micro-optimize READ / WRITE CDB encoding
+Date: Tue, 17 Oct 2017 23:10:42 -0400
+Message-ID: <yq1vajdtakt.fsf@oracle.com>
+References: <20171017210352.19580-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jLgOxkUmMuN97er4rzZfD3CSUNy=TXA15WhVA14NHV75Q@mail.gmail.com>
-        (Kees Cook's message of "Tue, 17 Oct 2017 07:53:05 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Achim Leubner <achim_leubner@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31367 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758810AbdJRDKz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2017 23:10:55 -0400
+In-Reply-To: <20171017210352.19580-1-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Tue, 17 Oct 2017 14:03:52 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 
-Kees,
+Bart,
 
-> Thanks for the reviews! Do you want the timer tree to carry these
-> patches, or can you pick them up in the scsi tree?
+> Only compute 'threshold' if .last_sector_bug has been set. Reduce
+> the number of branches that has to be taken to check the starting
+> LBA and transfer length alignment. Optimize the encoding of the
+> READ(10), WRITE(10), READ(16), WRITE(16), READ(32) and WRITE(32)
+> CDB encoding.
 
-Up to you. I'm not going to rebase my 4.15 queue this late in the cycle
-so the patches would end up going in at the end of the merge window. If
-you prefer to have them hit the first pull you should queue them up in
-the timer tree.
+Please take a look at this. It missed 4.15 because I've been fighting a
+hardware bug the last several weeks. However, I'd still like to get it
+in shape for 4.16:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git/log/?h=scsi-work
+
+Feel free to beat me to it.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
