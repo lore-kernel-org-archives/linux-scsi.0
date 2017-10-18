@@ -1,74 +1,45 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 0/2] block/SCSI MQ: two RESTART related patches
-Date: Wed, 18 Oct 2017 09:30:00 +0800
-Message-ID: <20171018012954.GB3026@ming.t460p>
-References: <20171017050418.22555-1-ming.lei@redhat.com>
- <20171017051209.GF15996@ming.t460p>
- <8e604f28-dd20-7818-a25b-985ab537bf70@huawei.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v10 00/10] block, scsi, md: Improve suspend and resume
+Date: Tue, 17 Oct 2017 19:47:26 -0600
+Message-ID: <94c627b3-fd59-a669-5ea0-0c4afdc7b2d3@kernel.dk>
+References: <20171017232630.4264-1-bart.vanassche@wdc.com>
+ <9c33db06-39e7-fd61-f146-4ae6df4302b5@kernel.dk>
+ <1508283619.3457.24.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8e604f28-dd20-7818-a25b-985ab537bf70@huawei.com>
+In-Reply-To: <1508283619.3457.24.camel@wdc.com>
+Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, Linuxarm <linuxarm@huawei.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 17, 2017 at 04:47:23PM +0100, John Garry wrote:
-> On 17/10/2017 06:12, Ming Lei wrote:
-> > On Tue, Oct 17, 2017 at 01:04:16PM +0800, Ming Lei wrote:
-> > > Hi Jens,
-> > > 
-> > > The 1st patch runs idle hctx after dealy in scsi_mq_get_budget(),
-> > > so that we can keep same behaviour with before, and it can be
-> > > thought as a fix.
-> > > 
-> > > The 2nd patch cleans up RESTART, and removes handling for TAG_SHARED
-> > > from current blk-mq's RESTART mechanism because SCSI_MQ can covers its
-> > > restart by itself, so that no need to handle TAG_SHARED in blk-mq
-> > > RESTART. And >20% IOPS boost is observed in my rand read test over
-> > > scsi_debug.
-> > > 
-> > > John, please test this two patches and see if it may improve your SAS
-> > > IO performance, and you can find the two patches in the following branch:
-> > > 
-> > > 	https://github.com/ming1/linux/commits/blk_mq_improve_restart_V1
-> > 
+On 10/17/2017 05:40 PM, Bart Van Assche wrote:
+> On Tue, 2017-10-17 at 17:28 -0600, Jens Axboe wrote:
+>> On 10/17/2017 05:26 PM, Bart Van Assche wrote:
+>>> It is known that during the resume following a hibernate, especially when
+>>> using an md RAID1 array created on top of SCSI devices, sometimes the system
+>>> hangs instead of coming up properly. This patch series fixes that
+>>> problem. These patches have been tested on top of the block layer for-next
+>>> branch. Please consider these changes for kernel v4.15.
+>>
+>> The folks that had trouble with this issue, have they tested the
+>> patchset? I'd like to get a solution queued up for this sooner rather
+>> than later, but I'd greatly prefer if we had some folks that have
+>> tested and verified it.
 > 
-> Hi Ming,
+> Hello Jens,
 > 
-> As requested, here's my figures for blk_mq_improve_restart_V1:
-> without default SCSI_MQ, deadline scheduler, CONFIG PREEMPT off
-> read, rw, write IOPS	
-> 989K, 113K/113K, 835K
-> 
-> with default SCSI_MQ, mq-deadline scheduler, CONFIG PREEMPT off
-> read, rw, write IOPS	
-> 738K, 130K/130K, 686K
-> 
-> For axboe for-next tip (21ed538):
-> without default SCSI_MQ, deadline scheduler, CONFIG PREEMPT off
-> read, rw, write IOPS	
-> 977K, 117K/117K, 821K
-> 
-> with default SCSI_MQ, mq-deadline scheduler, CONFIG PREEMPT off
-> read, rw, write IOPS	
-> 733K, 128K/128K, 676K
-> 
-> All cases do not have LLDD mq exposed/enabled. So unfortunately not much
-> difference with your branch.
+> Previous versions of this series have been tested by the two reporters of
+> this issue (Oleksandr Natalenko and Martin Steigerwald). I think this version
+> is close enough to what has been tested by Oleksandr and Martin for their
+> test results still to be valid. See also:
+> * https://www.mail-archive.com/linux-block@vger.kernel.org/msg13930.html
+> * https://www.mail-archive.com/linux-block@vger.kernel.org/msg14389.html
 
-That looks a bit strange, this patchset should cut half of
-blk_mq_run_hw_queues() since SCSI-MQ does it by itself in
-scsi_end_request().
+OK good. Can we add their tested-by then?
 
-So looks your issue is related with neither IO merge nor RESTART.
-just wondering what the possible reason is?
-
-But this patchset is still correct thing to do, even though your
-issue can't be addressed.
-
-
-Thanks,
-Ming
+-- 
+Jens Axboe
