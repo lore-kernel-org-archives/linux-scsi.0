@@ -1,57 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v9 09/10] block, scsi: Make SCSI quiesce and resume work
- reliably
-Date: Wed, 18 Oct 2017 07:58:44 +0200
-Message-ID: <5d307b6d-a4dd-1681-5149-86e88849d835@suse.de>
-References: <20171016232905.5047-1-bart.vanassche@wdc.com>
- <20171016232905.5047-10-bart.vanassche@wdc.com>
- <df8b960d-e65d-3e5e-9de7-4423aa65ad92@suse.de>
- <1508271483.3457.15.camel@wdc.com>
+From: Viswas G <Viswas.G@microsemi.com>
+Subject: [PATCH V4 0/9] pm80xx updates
+Date: Wed, 18 Oct 2017 11:39:06 +0530
+Message-ID: <20171018060915.8549-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1508271483.3457.15.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0089.outbound.protection.outlook.com ([104.47.32.89]:2662
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933199AbdJRGJW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Oct 2017 02:09:22 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-On 10/17/2017 10:18 PM, Bart Van Assche wrote:
-> On Tue, 2017-10-17 at 08:33 +0200, Hannes Reinecke wrote:
->> How do you ensure that PREEMPT requests are not stuck in the queue
->> _behind_ non-PREEMPT requests?
->> Once they are in the queue the request are already allocated, so your
->> deferred allocation won't work.
->> _And_ deferred requests will be re-inserted at the head of the queue.
->> Consequently the PREEMPT request will never ever scheduled during quiesce.
->> How do you avoid such a scenario?
-> 
-> Hello Hannes,
-> 
-> The blk_mq_freeze_queue() / blk_mq_unfreeze_queue() calls that have been
-> added through patch 9/10 to scsi_device_quiesce() will only succeed after all
-> outstanding requests have finished. That includes non-preempt requests and
-> requests that are about to be requeued. The changes in scsi_device_quiesce()
-> are such that blk_queue_enter() will fail for non-preempt requests after the
-> queue has been unfrozen. In other words, if a scsi_device_quiesce() call
-> succeeds, it is guaranteed that there are no non-preempt requests in the queue
-> and also that no new non-preempt requests will enter the queue until
-> scsi_device_resume() is called.
-> 
-Ah. Right.
 
-That was the explanation I was after.
+This patch set include some bug fixes and enhancement for pm80xx driver.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Changes from V3:
+	- Fixed kbuild warnings for patch 4 and 5.  
 
-Cheers,
+Changes from V2:
+	- Corrected date.
 
-Hannes
+Changes from V1:
+        - sas_identify_frame_local structure moved to pm80xx_hwi.h
+        - sata abort handling patch split to four patches.
+                - tag allocation for phy control request.
+                - cleanup in pm8001_abort_task function.
+                - modified port reset timer value for PM8006 card
+                - corrected SATA abort handling sequence.
+
+
+Viswas G (9):
+  pm80xx : redefine sas_identify_frame structure
+  pm80xx : ILA and inactive firmware version through sysfs
+  pm80xx : Different SAS addresses for phys.
+  pm80xx : tag allocation for phy control request.
+  pm80xx : cleanup in pm8001_abort_task function.
+  pm80xx : modified port reset timer value for PM8006  card
+  pm80xx : corrected SATA abort handling sequence.
+  pm80xx : panic on ncq error cleaning up the read log.
+  pm80xx : corrected linkrate value.
+
+ drivers/scsi/pm8001/pm8001_ctl.c  |  54 +++++++++++++++++
+ drivers/scsi/pm8001/pm8001_hwi.c  |  11 +++-
+ drivers/scsi/pm8001/pm8001_init.c |  13 +++--
+ drivers/scsi/pm8001/pm8001_sas.c  | 119 +++++++++++++++++++++++++-------------
+ drivers/scsi/pm8001/pm8001_sas.h  |  10 ++++
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  62 ++++++++++++++++----
+ drivers/scsi/pm8001/pm80xx_hwi.h  | 102 +++++++++++++++++++++++++++++++-
+ 7 files changed, 313 insertions(+), 58 deletions(-)
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.12.3
