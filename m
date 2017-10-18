@@ -1,36 +1,82 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 195285] qla2xxx FW immediatly crashing after target start
-Date: Wed, 18 Oct 2017 03:26:59 +0000
-Message-ID: <bug-195285-11613-79VUKFKmm0@https.bugzilla.kernel.org/>
-References: <bug-195285-11613@https.bugzilla.kernel.org/>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 1/1] qla2xxx: Initialize Work element before requesting
+ IRQs
+Date: Wed, 18 Oct 2017 04:12:58 +0000
+Message-ID: <1508299976.3666.3.camel@wdc.com>
+References: <20171016182605.22174-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:46426 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933296AbdJRD1F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Oct 2017 23:27:05 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 878FE28A92
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2017 03:27:05 +0000 (UTC)
-In-Reply-To: <bug-195285-11613@https.bugzilla.kernel.org/>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:12305 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753499AbdJRENB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2017 00:13:01 -0400
+In-Reply-To: <20171016182605.22174-1-himanshu.madhani@cavium.com>
+Content-Language: en-US
+Content-ID: <ED80578463F70C4095A5187B77EAB46D@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=195285
-
---- Comment #14 from Himanshu.Madhani@cavium.com ---
-I am OOO. I will respond to your message when i am back at work.
-
-
-
-Thanks,
-
-Himanshu
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+T24gTW9uLCAyMDE3LTEwLTE2IGF0IDExOjI2IC0wNzAwLCBNYWRoYW5pLCBIaW1hbnNodSB3cm90
+ZToNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jIGIvZHJpdmVy
+cy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMNCj4gaW5kZXggOTM3MjA5ODA1YmFmLi4zYmQ5NTZkM2Jj
+NWQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jDQo+ICsrKyBi
+L2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jDQo+IEBAIC0zMDYxLDYgKzMwNjEsOCBAQCBx
+bGEyeDAwX3Byb2JlX29uZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29uc3Qgc3RydWN0IHBjaV9k
+ZXZpY2VfaWQgKmlkKQ0KPiAgCSAgICBob3N0LT5tYXhfY21kX2xlbiwgaG9zdC0+bWF4X2NoYW5u
+ZWwsIGhvc3QtPm1heF9sdW4sDQo+ICAJICAgIGhvc3QtPnRyYW5zcG9ydHQsIHNodC0+dmVuZG9y
+X2lkKTsNCj4gIA0KPiArCUlOSVRfV09SSygmYmFzZV92aGEtPmlvY2Jfd29yaywgcWxhMngwMF9p
+b2NiX3dvcmtfZm4pOw0KPiArDQo+ICAJLyogU2V0IHVwIHRoZSBpcnFzICovDQo+ICAJcmV0ID0g
+cWxhMngwMF9yZXF1ZXN0X2lycXMoaGEsIHJzcCk7DQo+ICAJaWYgKHJldCkNCj4gQEAgLTMxNzUs
+OCArMzE3Nyw2IEBAIHFsYTJ4MDBfcHJvYmVfb25lKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCBjb25z
+dCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpDQo+ICAJICAgIGhvc3QtPmNhbl9xdWV1ZSwgYmFz
+ZV92aGEtPnJlcSwNCj4gIAkgICAgYmFzZV92aGEtPm1nbXRfc3ZyX2xvb3BfaWQsIGhvc3QtPnNn
+X3RhYmxlc2l6ZSk7DQo+ICANCj4gLQlJTklUX1dPUksoJmJhc2VfdmhhLT5pb2NiX3dvcmssIHFs
+YTJ4MDBfaW9jYl93b3JrX2ZuKTsNCj4gLQ0KPiAgCWlmIChoYS0+bXFlbmFibGUpIHsNCj4gIAkJ
+Ym9vbCBtcSA9IGZhbHNlOw0KPiAgCQlib29sIHN0YXJ0aXQgPSBmYWxzZTsNCg0KSGVsbG8gSGlt
+YW5zaHUsDQoNClRoYXQgcGF0Y2ggaW5kZWVkIGZpeGVzIHRoZSBidWcgZGVzY3JpYmVkIGluIHRo
+ZSBwYXRjaCBkZXNjcmlwdGlvbiB3aGVuDQphcHBsaWVkIG9uIHRvcCBvZiBrZXJuZWwgdjQuMTMu
+Ny4gSG93ZXZlciwgd2l0aCB0aGF0IHBhdGNoIGFwcGxpZWQgSSByYW4NCmludG8gYW5vdGhlciBi
+dWcuIENhbiB5b3UgaGF2ZSBhIGxvb2s/DQoNCkJVRzogdW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwg
+TlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAwMDAwMDAwMDAxOTANCklQOiBxbHRfZnJl
+ZV9zZXNzaW9uX2RvbmUrMHgxNzIvMHg1NzAgW3FsYTJ4eHhdDQpQR0QgMCANClA0RCAwIA0KT29w
+czogMDAwMCBbIzFdIFNNUA0KQ1BVOiAwIFBJRDogNDcgQ29tbToga3dvcmtlci8wOjEgTm90IHRh
+aW50ZWQgNC4xMy43KyAjMQ0KSGFyZHdhcmUgbmFtZTogR2lnYWJ5dGUgVGVjaG5vbG9neSBDby4s
+IEx0ZC4gWjk3WC1VRDVIL1o5N1gtVUQ1SCwgQklPUyBGMTAgMDgvMDMvMjAxNQ0KV29ya3F1ZXVl
+OiBldmVudHMgcWx0X2ZyZWVfc2Vzc2lvbl9kb25lIFtxbGEyeHh4XQ0KdGFzazogZmZmZjljNGJj
+ZWU5NDMwMCB0YXNrLnN0YWNrOiBmZmZmYmE5OWMwMWQ0MDAwDQpSSVA6IDAwMTA6cWx0X2ZyZWVf
+c2Vzc2lvbl9kb25lKzB4MTcyLzB4NTcwIFtxbGEyeHh4XQ0KUlNQOiAwMDE4OmZmZmZiYTk5YzAx
+ZDdkYzggRUZMQUdTOiAwMDAxMDA0Ng0KUkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogZmZmZjlj
+NGJiNWM5NTcyMCBSQ1g6IGZmZmZmZmZmYzA5MTc0YzgNClJEWDogMDAwMDAwMDAwMDAwMDAwMSBS
+U0k6IGZmZmY5YzRiYjVjOTU3MjAgUkRJOiBmZmZmOWM0YmFmN2U1Y2U0DQpSQlA6IGZmZmZiYTk5
+YzAxZDdlNTAgUjA4OiBmZmZmZmZmZmMwOTAzNjIwIFIwOTogZmZmZjljNGJjODQwZTQwMA0KUjEw
+OiBmZmZmYmE5OWMwMWQ3ZGIwIFIxMTogMDAwMDAwMDAwMDAwMDAwMCBSMTI6IGZmZmY5YzRiYzg0
+MGU0MDANClIxMzogMDAwMDAwMDAwMDAwMDAwMCBSMTQ6IGZmZmY5YzRiYWY3ZTUwMDAgUjE1OiBm
+ZmZmOWM0YmM4NDBlNGMwDQpGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjljNGJk
+ZmEwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQpDUzogIDAwMTAgRFM6IDAwMDAg
+RVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQpDUjI6IDAwMDAwMDAwMDAwMDAxOTAgQ1Iz
+OiAwMDAwMDAwNDBjNjI0MDAwIENSNDogMDAwMDAwMDAwMDE0MjZmMA0KQ2FsbCBUcmFjZToNCiA/
+IHFsdF91bnJlZ19zZXNzKzB4ZmUvMHgxMTAgW3FsYTJ4eHhdDQogPyBxbGEyNHh4X2RlbGV0ZV9z
+ZXNzX2ZuKzB4NjkvMHg4MCBbcWxhMnh4eF0NCiBwcm9jZXNzX29uZV93b3JrKzB4MWQ2LzB4M2Qw
+DQogd29ya2VyX3RocmVhZCsweDQyLzB4M2UwDQoga3RocmVhZCsweDExZi8weDE0MA0KID8gdHJh
+Y2VfZXZlbnRfcmF3X2V2ZW50X3dvcmtxdWV1ZV9leGVjdXRlX3N0YXJ0KzB4OTAvMHg5MA0KID8g
+a3RocmVhZF9jcmVhdGVfb25fbm9kZSsweDQwLzB4NDANCiByZXRfZnJvbV9mb3JrKzB4MjIvMHgz
+MA0KQ29kZTogMDAgMDAgMDAgMDAgNDEgYzcgODcgYWMgMDAgMDAgMDAgMDcgMDAgMDAgMDAgODMg
+ZTAgZjkgODMgYzggMDQgNDEgZjYgODcgNzEgZmYgZmYgZmYgMDIgNDEgODggODcgNzAgZmYgZmYg
+ZmYgNDggOGIgODMgNDAgMDQgMDAgMDAgPDhiPiA4MCA5MCAwMSAwMCAwMCA0MSA4OSA0NyA0YyA3
+NCAyMiA0MSA4YiA4NyA2OCBmZiBmZiBmZiAyNSAwMCANClJJUDogcWx0X2ZyZWVfc2Vzc2lvbl9k
+b25lKzB4MTcyLzB4NTcwIFtxbGEyeHh4XSBSU1A6IGZmZmZiYTk5YzAxZDdkYzgNCkNSMjogMDAw
+MDAwMDAwMDAwMDE5MA0KLS0tWyBlbmQgdHJhY2UgODlkZWU3NGY1MWEwNTI1OCBdLS0tDQoNCihn
+ZGIpIGxpc3QgKihxbHRfZnJlZV9zZXNzaW9uX2RvbmUrMHgxNzIpDQoweDY2MWMyIGlzIGluIHFs
+dF9mcmVlX3Nlc3Npb25fZG9uZSAoZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3RhcmdldC5jOjEw
+MjcpLg0KMTAyMiAgICAgICAgICAgIH0NCjEwMjMNCjEwMjQgICAgICAgICAgICBzZXNzLT5kaXNj
+X3N0YXRlID0gRFNDX0RFTEVURUQ7DQoxMDI1ICAgICAgICAgICAgc2Vzcy0+ZndfbG9naW5fc3Rh
+dGUgPSBEU0NfTFNfUE9SVF9VTkFWQUlMOw0KMTAyNiAgICAgICAgICAgIHNlc3MtPmRlbGV0ZWQg
+PSBRTEFfU0VTU19ERUxFVEVEOw0KMTAyNyAgICAgICAgICAgIHNlc3MtPmxvZ2luX3JldHJ5ID0g
+dmhhLT5ody0+bG9naW5fcmV0cnlfY291bnQ7DQoxMDI4DQoxMDI5ICAgICAgICAgICAgaWYgKHNl
+c3MtPmxvZ2luX3N1Y2MgJiYgIUlTX1NXX1JFU1ZfQUREUihzZXNzLT5kX2lkKSkgew0KMTAzMCAg
+ICAgICAgICAgICAgICAgICAgdmhhLT5mY3BvcnRfY291bnQtLTsNCjEwMzEgICAgICAgICAgICAg
+ICAgICAgIHNlc3MtPmxvZ2luX3N1Y2MgPSAwOw0K
