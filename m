@@ -1,51 +1,25 @@
-From: Salif Mohammed <teju.ade@gmail.com>
-Subject: Hello
-Date: Thu, 19 Oct 2017 13:56:59 +0100
-Message-ID: <CABOo2_o4T3v61cJNE8eb9OgfTd5X7sN_N_U_zfjPkdNsQvjd_Q@mail.gmail.com>
-Reply-To: slfmhmmd@yahoo.com
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures
+        const
+Date: Thu, 19 Oct 2017 16:06:57 +0200
+Message-ID: <20171019140657.GA22233@lst.de>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-3-git-send-email-bhumirks@gmail.com> <1985905.z83BJQzMUS@avalon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:54970 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753324AbdJSM5A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 08:57:00 -0400
-Received: by mail-oi0-f68.google.com with SMTP id a132so14462432oih.11
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 05:56:59 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1985905.z83BJQzMUS@avalon>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, cluster-devel@red
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+> 
+> Now we have 9 const instances of the config_item_type structure that are 
+> identical, with only the .ct_owner field set. Should they be all merged into a 
+> single structure ?
 
-I need your partnership in this project that requires trust and confidentiality.
+I think that's a good idea.
 
-An American, Mr. Charles Balassi who worked with the Egyptian General
-Petroleum Corporation (EGPC), made a fixed deposit of Twenty Two
-Million United States Dollars($22,000,000) for 17 Years in my
-bank(Dubai Islamic Bank) branch, upon maturity our department sent a
-routine notification to his forwarding address but got no response.
-
-After a month, we sent a reminder and finally we discovered from his
-employer, the (EGPC) that he died with his wife in a plane crash on
-October 31, 1999, with other passengers on board.
-
-Meanwhile, I just discovered that all his records has no next of kin,
-so the funds must be claimed immediately by somebody who would stand
-as his Next of Kin. According to the financial laws of United Arab
-Emirates, the fund should be reverted to the Government treasury
-accounts if nobody applies to claim it.
-
-Please note that I have worked out the perfect modality on how to
-claim the fund and I shall provide the relevant information and
-documents for the successful claim and transfer of the funds into your
-account that you will provide. I assure you that this project is 100%
-risk free. Kindly provide your phone number for easy communication.
-
-Awaiting your quick response.
-
-Thanks,
-Salif Mohammed
-Customer Relations Manager
-Dubai Islamic Bank
-Abu Dhabi
-U.A.E.
+But I'm about to slurp up this whole series into my tree, how about making
+that an incremental patch?  
