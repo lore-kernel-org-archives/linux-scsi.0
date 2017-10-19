@@ -1,375 +1,200 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 09/19] megaraid_sas: Pre-allocate frequently used DMA buffers
-Date: Thu, 19 Oct 2017 02:48:56 -0700
-Message-ID: <1508406546-25944-10-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 07/19] megaraid_sas: Create separate functions to allocate ctrl memory
+Date: Thu, 19 Oct 2017 02:48:54 -0700
+Message-ID: <1508406546-25944-8-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:51498 "EHLO
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:44715 "EHLO
         mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752595AbdJSJuW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:22 -0400
-Received: by mail-pg0-f65.google.com with SMTP id p9so6755100pgc.8
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:22 -0700 (PDT)
+        with ESMTP id S1752512AbdJSJuR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:17 -0400
+Received: by mail-pg0-f65.google.com with SMTP id j3so6769643pga.1
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:16 -0700 (PDT)
 In-Reply-To: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Pre-allocate few of the frequently used DMA buffers during load time.
+No functional change. Code refactoring to improve readability.
+Move the code to allocate and free controller memory into
+separate functions.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  13 +++
- drivers/scsi/megaraid/megaraid_sas_base.c   | 147 ++++++++++++++++++----------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  19 +---
- drivers/scsi/megaraid/megaraid_sas_fusion.h |   3 +
- 4 files changed, 116 insertions(+), 66 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 122 +++++++++++++++++++-----------
+ 1 file changed, 76 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 1f34577d8982..80ba77b4b9e2 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2122,6 +2122,19 @@ struct megasas_instance {
- 
- 	u32 *crash_dump_buf;
- 	dma_addr_t crash_dump_h;
-+
-+	struct MR_PD_LIST *pd_list_buf;
-+	dma_addr_t pd_list_buf_h;
-+
-+	struct megasas_ctrl_info *ctrl_info_buf;
-+	dma_addr_t ctrl_info_buf_h;
-+
-+	struct MR_LD_LIST *ld_list_buf;
-+	dma_addr_t ld_list_buf_h;
-+
-+	struct MR_LD_TARGETID_LIST *ld_targetid_list_buf;
-+	dma_addr_t ld_targetid_list_buf_h;
-+
- 	void *crash_buf[MAX_CRASH_DUMP_SIZE];
- 	unsigned int    fw_crash_buffer_size;
- 	unsigned int    fw_crash_state;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 443819747c5d..16a91ce2b2cb 100644
+index 5691e031112e..53f01729c6a8 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4211,6 +4211,9 @@ megasas_get_pd_list(struct megasas_instance *instance)
- 		return ret;
+@@ -6023,6 +6023,75 @@ static inline void megasas_set_adapter_type(struct megasas_instance *instance)
  	}
+ }
  
-+	ci = instance->pd_list_buf;
-+	ci_h = instance->pd_list_buf_h;
++static inline int megasas_alloc_mfi_ctrl_mem(struct megasas_instance *instance)
++{
++	instance->producer = pci_alloc_consistent(instance->pdev, sizeof(u32),
++						  &instance->producer_h);
++	instance->consumer = pci_alloc_consistent(instance->pdev, sizeof(u32),
++						  &instance->consumer_h);
 +
- 	cmd = megasas_get_cmd(instance);
- 
- 	if (!cmd) {
-@@ -4220,15 +4223,6 @@ megasas_get_pd_list(struct megasas_instance *instance)
- 
- 	dcmd = &cmd->frame->dcmd;
- 
--	ci = pci_alloc_consistent(instance->pdev,
--		  MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST), &ci_h);
--
--	if (!ci) {
--		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Failed to alloc mem for pd_list\n");
--		megasas_return_cmd(instance, cmd);
--		return -ENOMEM;
--	}
--
- 	memset(ci, 0, sizeof(*ci));
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
- 
-@@ -4314,10 +4308,6 @@ megasas_get_pd_list(struct megasas_instance *instance)
- 
- 	}
- 
--	pci_free_consistent(instance->pdev,
--				MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
--				ci, ci_h);
--
- 	if (ret != DCMD_TIMEOUT)
- 		megasas_return_cmd(instance, cmd);
- 
-@@ -4343,6 +4333,9 @@ megasas_get_ld_list(struct megasas_instance *instance)
- 	dma_addr_t ci_h = 0;
- 	u32 ld_count;
- 
-+	ci = instance->ld_list_buf;
-+	ci_h = instance->ld_list_buf_h;
++	if (!instance->producer || !instance->consumer) {
++		dev_err(&instance->pdev->dev,
++			"Failed to allocate memory for producer, consumer\n");
++		return -1;
++	}
 +
- 	cmd = megasas_get_cmd(instance);
- 
- 	if (!cmd) {
-@@ -4352,16 +4345,6 @@ megasas_get_ld_list(struct megasas_instance *instance)
- 
- 	dcmd = &cmd->frame->dcmd;
- 
--	ci = pci_alloc_consistent(instance->pdev,
--				sizeof(struct MR_LD_LIST),
--				&ci_h);
--
--	if (!ci) {
--		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Failed to alloc mem in get_ld_list\n");
--		megasas_return_cmd(instance, cmd);
--		return -ENOMEM;
--	}
--
- 	memset(ci, 0, sizeof(*ci));
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
- 
-@@ -4433,8 +4416,6 @@ megasas_get_ld_list(struct megasas_instance *instance)
- 		break;
- 	}
- 
--	pci_free_consistent(instance->pdev, sizeof(struct MR_LD_LIST), ci, ci_h);
--
- 	if (ret != DCMD_TIMEOUT)
- 		megasas_return_cmd(instance, cmd);
- 
-@@ -4460,6 +4441,9 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
- 	dma_addr_t ci_h = 0;
- 	u32 tgtid_count;
- 
-+	ci = instance->ld_targetid_list_buf;
-+	ci_h = instance->ld_targetid_list_buf_h;
++	*instance->producer = 0;
++	*instance->consumer = 0;
++	return 0;
++}
 +
- 	cmd = megasas_get_cmd(instance);
- 
- 	if (!cmd) {
-@@ -4470,16 +4454,6 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
- 
- 	dcmd = &cmd->frame->dcmd;
- 
--	ci = pci_alloc_consistent(instance->pdev,
--				  sizeof(struct MR_LD_TARGETID_LIST), &ci_h);
--
--	if (!ci) {
--		dev_warn(&instance->pdev->dev,
--		         "Failed to alloc mem for ld_list_query\n");
--		megasas_return_cmd(instance, cmd);
--		return -ENOMEM;
--	}
--
- 	memset(ci, 0, sizeof(*ci));
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
- 
-@@ -4550,9 +4524,6 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
- 		break;
- 	}
- 
--	pci_free_consistent(instance->pdev, sizeof(struct MR_LD_TARGETID_LIST),
--		    ci, ci_h);
--
- 	if (ret != DCMD_TIMEOUT)
- 		megasas_return_cmd(instance, cmd);
- 
-@@ -4639,6 +4610,9 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
- 
- 	ctrl_info = instance->ctrl_info;
- 
-+	ci = instance->ctrl_info_buf;
-+	ci_h = instance->ctrl_info_buf_h;
-+
- 	cmd = megasas_get_cmd(instance);
- 
- 	if (!cmd) {
-@@ -4648,15 +4622,6 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
- 
- 	dcmd = &cmd->frame->dcmd;
- 
--	ci = pci_alloc_consistent(instance->pdev,
--				  sizeof(struct megasas_ctrl_info), &ci_h);
--
--	if (!ci) {
--		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Failed to alloc mem for ctrl info\n");
--		megasas_return_cmd(instance, cmd);
--		return -ENOMEM;
--	}
--
- 	memset(ci, 0, sizeof(*ci));
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
- 
-@@ -4738,9 +4703,6 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
- 
- 	}
- 
--	pci_free_consistent(instance->pdev, sizeof(struct megasas_ctrl_info),
--			    ci, ci_h);
--
- 	megasas_return_cmd(instance, cmd);
- 
- 
-@@ -6103,6 +6065,7 @@ static inline
- int megasas_alloc_ctrl_dma_buffers(struct megasas_instance *instance)
- {
- 	struct pci_dev *pdev = instance->pdev;
-+	struct fusion_context *fusion = instance->ctrl_context;
- 
- 	instance->evt_detail =
- 		pci_alloc_consistent(pdev,
-@@ -6115,6 +6078,62 @@ int megasas_alloc_ctrl_dma_buffers(struct megasas_instance *instance)
- 		return -ENOMEM;
- 	}
- 
-+	if (fusion) {
-+		fusion->ioc_init_request =
-+			dma_alloc_coherent(&pdev->dev,
-+					   sizeof(struct MPI2_IOC_INIT_REQUEST),
-+					   &fusion->ioc_init_request_phys,
-+					   GFP_KERNEL);
-+
-+		if (!fusion->ioc_init_request) {
-+			dev_err(&pdev->dev,
-+				"Failed to allocate PD list buffer\n");
++/**
++ * megasas_alloc_ctrl_mem -	Allocate per controller memory for core data
++ *				structures which are not common across MFI
++ *				adapters and fusion adapters.
++ *				For MFI based adapters, allocate producer and
++ *				consumer buffers. For fusion adapters, allocate
++ *				memory for fusion context.
++ * @instance:			Adapter soft state
++ * return:			0 for SUCCESS
++ */
++static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
++{
++	switch (instance->adapter_type) {
++	case MFI_SERIES:
++		if (megasas_alloc_mfi_ctrl_mem(instance))
 +			return -ENOMEM;
-+		}
++		break;
++	case VENTURA_SERIES:
++	case THUNDERBOLT_SERIES:
++	case INVADER_SERIES:
++		if (megasas_alloc_fusion_context(instance))
++			return -ENOMEM;
++		break;
 +	}
 +
-+	instance->pd_list_buf =
-+		pci_alloc_consistent(pdev,
-+				     MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
-+				     &instance->pd_list_buf_h);
++	return 0;
++}
 +
-+	if (!instance->pd_list_buf) {
-+		dev_err(&pdev->dev, "Failed to allocate PD list buffer\n");
-+		return -ENOMEM;
++/*
++ * megasas_free_ctrl_mem -	Free fusion context for fusion adapters and
++ *				producer, consumer buffers for MFI adapters
++ *
++ * @instance -			Adapter soft instance
++ *
++ */
++static inline void megasas_free_ctrl_mem(struct megasas_instance *instance)
++{
++	if (instance->adapter_type == MFI_SERIES) {
++		if (instance->producer)
++			pci_free_consistent(instance->pdev, sizeof(u32),
++					    instance->producer,
++					    instance->producer_h);
++		if (instance->consumer)
++			pci_free_consistent(instance->pdev, sizeof(u32),
++					    instance->consumer,
++					    instance->consumer_h);
++	} else {
++		megasas_free_fusion_context(instance);
 +	}
++}
 +
-+	instance->ctrl_info_buf =
-+		pci_alloc_consistent(pdev,
-+				     sizeof(struct megasas_ctrl_info),
-+				     &instance->ctrl_info_buf_h);
-+
-+	if (!instance->ctrl_info_buf) {
-+		dev_err(&pdev->dev,
-+			"Failed to allocate controller info buffer\n");
-+		return -ENOMEM;
-+	}
-+
-+	instance->ld_list_buf =
-+		pci_alloc_consistent(pdev,
-+				     sizeof(struct MR_LD_LIST),
-+				     &instance->ld_list_buf_h);
-+
-+	if (!instance->ld_list_buf) {
-+		dev_err(&pdev->dev, "Failed to allocate LD list buffer\n");
-+		return -ENOMEM;
-+	}
-+
-+	instance->ld_targetid_list_buf =
-+		pci_alloc_consistent(pdev,
-+				     sizeof(struct MR_LD_TARGETID_LIST),
-+				     &instance->ld_targetid_list_buf_h);
-+
-+	if (!instance->ld_targetid_list_buf) {
-+		dev_err(&pdev->dev,
-+			"Failed to allocate LD targetid list buffer\n");
-+		return -ENOMEM;
-+	}
-+
- 	if (!reset_devices) {
- 		instance->system_info_buf =
- 			pci_alloc_consistent(pdev,
-@@ -6164,12 +6183,40 @@ static inline
- void megasas_free_ctrl_dma_buffers(struct megasas_instance *instance)
- {
- 	struct pci_dev *pdev = instance->pdev;
-+	struct fusion_context *fusion = instance->ctrl_context;
+ /**
+  * megasas_probe_one -	PCI hotplug entry point
+  * @pdev:		PCI device structure
+@@ -6081,33 +6150,8 @@ static int megasas_probe_one(struct pci_dev *pdev,
  
- 	if (instance->evt_detail)
- 		pci_free_consistent(pdev, sizeof(struct megasas_evt_detail),
- 				    instance->evt_detail,
- 				    instance->evt_detail_h);
+ 	megasas_set_adapter_type(instance);
  
-+	if (fusion && fusion->ioc_init_request)
-+		dma_free_coherent(&pdev->dev,
-+				  sizeof(struct MPI2_IOC_INIT_REQUEST),
-+				  fusion->ioc_init_request,
-+				  fusion->ioc_init_request_phys);
-+
-+	if (instance->pd_list_buf)
-+		pci_free_consistent(pdev,
-+				    MEGASAS_MAX_PD * sizeof(struct MR_PD_LIST),
-+				    instance->pd_list_buf,
-+				    instance->pd_list_buf_h);
-+
-+	if (instance->ld_list_buf)
-+		pci_free_consistent(pdev, sizeof(struct MR_LD_LIST),
-+				    instance->ld_list_buf,
-+				    instance->ld_list_buf_h);
-+
-+	if (instance->ld_targetid_list_buf)
-+		pci_free_consistent(pdev, sizeof(struct MR_LD_TARGETID_LIST),
-+				    instance->ld_targetid_list_buf,
-+				    instance->ld_targetid_list_buf_h);
-+
-+	if (instance->ctrl_info_buf)
-+		pci_free_consistent(pdev, sizeof(struct megasas_ctrl_info),
-+				    instance->ctrl_info_buf,
-+				    instance->ctrl_info_buf_h);
-+
- 	if (instance->system_info_buf)
- 		pci_free_consistent(pdev, sizeof(struct MR_DRV_SYSTEM_INFO),
- 				    instance->system_info_buf,
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index a8055341e875..a630a31aecf8 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -776,6 +776,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 
- 	fusion = instance->ctrl_context;
- 
-+	ioc_init_handle = fusion->ioc_init_request_phys;
-+	IOCInitMessage = fusion->ioc_init_request;
-+
- 	cmd = megasas_get_cmd(instance);
- 
- 	if (!cmd) {
-@@ -801,18 +804,6 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	dev_info(&instance->pdev->dev, "FW supports sync cache\t: %s\n",
- 		 instance->fw_sync_cache_support ? "Yes" : "No");
- 
--	IOCInitMessage =
--	  dma_alloc_coherent(&instance->pdev->dev,
--			     sizeof(struct MPI2_IOC_INIT_REQUEST),
--			     &ioc_init_handle, GFP_KERNEL);
+-	switch (instance->adapter_type) {
+-	case MFI_SERIES:
+-		instance->producer =
+-			pci_alloc_consistent(pdev, sizeof(u32),
+-					     &instance->producer_h);
+-		instance->consumer =
+-			pci_alloc_consistent(pdev, sizeof(u32),
+-					     &instance->consumer_h);
 -
--	if (!IOCInitMessage) {
--		dev_err(&instance->pdev->dev, "Could not allocate memory for "
--		       "IOCInitMessage\n");
--		ret = 1;
--		goto fail_fw_init;
+-		if (!instance->producer || !instance->consumer) {
+-			dev_printk(KERN_DEBUG, &pdev->dev, "Failed to allocate "
+-			       "memory for producer, consumer\n");
+-			goto fail_alloc_dma_buf;
+-		}
+-
+-		*instance->producer = 0;
+-		*instance->consumer = 0;
+-
+-		break;
+-	case VENTURA_SERIES:
+-	case THUNDERBOLT_SERIES:
+-	case INVADER_SERIES:
+-		if (megasas_alloc_fusion_context(instance)) {
+-			megasas_free_fusion_context(instance);
+-			goto fail_alloc_dma_buf;
+-		}
 -	}
--
- 	memset(IOCInitMessage, 0, sizeof(struct MPI2_IOC_INIT_REQUEST));
++	if (megasas_alloc_ctrl_mem(instance))
++		goto fail_alloc_dma_buf;
  
- 	IOCInitMessage->Function = MPI2_FUNCTION_IOC_INIT;
-@@ -921,10 +912,6 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 	/* Crash dump feature related initialisation*/
+ 	instance->drv_buf_index = 0;
+@@ -6303,12 +6347,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 		pci_free_consistent(pdev, sizeof(struct MR_TARGET_PROPERTIES),
+ 					instance->tgt_prop,
+ 					instance->tgt_prop_h);
+-	if (instance->producer)
+-		pci_free_consistent(pdev, sizeof(u32), instance->producer,
+-				    instance->producer_h);
+-	if (instance->consumer)
+-		pci_free_consistent(pdev, sizeof(u32), instance->consumer,
+-				    instance->consumer_h);
++	megasas_free_ctrl_mem(instance);
+ 	scsi_host_put(host);
  
- fail_fw_init:
- 	megasas_return_cmd(instance, cmd);
--	if (IOCInitMessage)
--		dma_free_coherent(&instance->pdev->dev,
--				  sizeof(struct MPI2_IOC_INIT_REQUEST),
--				  IOCInitMessage, ioc_init_handle);
- fail_get_cmd:
- 	dev_err(&instance->pdev->dev,
- 		"Init cmd return status %s for SCSI host %d\n",
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index a2b56913f382..5b3f1dba1ab2 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -1315,6 +1315,9 @@ struct fusion_context {
- 	LD_SPAN_INFO *log_to_span;
- 	u32 log_to_span_pages;
- 	struct LD_STREAM_DETECT **stream_detect_by_ld;
-+	dma_addr_t ioc_init_request_phys;
-+	struct MPI2_IOC_INIT_REQUEST *ioc_init_request;
+ fail_alloc_instance:
+@@ -6579,12 +6618,8 @@ megasas_resume(struct pci_dev *pdev)
+ 		pci_free_consistent(pdev, sizeof(struct MR_TARGET_PROPERTIES),
+ 					instance->tgt_prop,
+ 					instance->tgt_prop_h);
+-	if (instance->producer)
+-		pci_free_consistent(pdev, sizeof(u32), instance->producer,
+-				instance->producer_h);
+-	if (instance->consumer)
+-		pci_free_consistent(pdev, sizeof(u32), instance->consumer,
+-				instance->consumer_h);
 +
- };
++	megasas_free_ctrl_mem(instance);
+ 	scsi_host_put(host);
  
- union desc_value {
+ fail_set_dma_mask:
+@@ -6725,15 +6760,8 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 					fusion->pd_seq_sync[i],
+ 					fusion->pd_seq_phys[i]);
+ 		}
+-		megasas_free_fusion_context(instance);
+ 	} else {
+ 		megasas_release_mfi(instance);
+-		pci_free_consistent(pdev, sizeof(u32),
+-				    instance->producer,
+-				    instance->producer_h);
+-		pci_free_consistent(pdev, sizeof(u32),
+-				    instance->consumer,
+-				    instance->consumer_h);
+ 	}
+ 
+ 	kfree(instance->ctrl_info);
+@@ -6774,6 +6802,8 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 		pci_free_consistent(pdev, sizeof(struct MR_DRV_SYSTEM_INFO),
+ 				    instance->system_info_buf, instance->system_info_h);
+ 
++	megasas_free_ctrl_mem(instance);
++
+ 	scsi_host_put(host);
+ 
+ 	pci_disable_device(pdev);
 -- 
 2.14.1.dirty
