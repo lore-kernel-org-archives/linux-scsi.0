@@ -1,35 +1,29 @@
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures const
-Date: Thu, 19 Oct 2017 18:05:29 +0300
-Message-ID: <6348630.r2z9ev4yl2@avalon>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1985905.z83BJQzMUS@avalon> <20171019140657.GA22233@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V8 1/5] dma-mapping: Rework dma_get_cache_alignment()
+Date: Thu, 19 Oct 2017 17:09:21 +0200
+Message-ID: <20171019150921.GB24204@lst.de>
+References: <1508227542-13165-1-git-send-email-chenhc@lemote.com> <20171018172336.GA29358@animalcreek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20171019140657.GA22233@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org, alexander.shishkin@linux.intel.com, jic23@kernel.org, knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org, jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-usb@vger.kernel.org, cluster-devel@redhat.com, ocf
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171018172336.GA29358@animalcreek.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: Huacai Chen <chenhc@lemote.com>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stable@vger.kernel.org, "Michael S . Tsirkin" <mst@mellanox.co.il>, Pawel Osciak <pawel@osciak.com>, Kyungmin Park <kyungmin.park@samsung.com>, Michael Chan <michael.chan@broadcom.com>, Benjamin Herrenschmidt <benh@kernel.cras>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Christoph,
-
-On Thursday, 19 October 2017 17:06:57 EEST Christoph Hellwig wrote:
-> > Now we have 9 const instances of the config_item_type structure that are
-> > identical, with only the .ct_owner field set. Should they be all merged
-> > into a single structure ?
+On Wed, Oct 18, 2017 at 10:23:36AM -0700, Mark Greer wrote:
+> >  #define	MPSC_RXR_ENTRIES	32
+> > -#define	MPSC_RXRE_SIZE		dma_get_cache_alignment()
+> > +#define	MPSC_RXRE_SIZE		dma_get_cache_alignment(dma_dev)
 > 
-> I think that's a good idea.
+> I would much prefer that you add a parameter to the macro to avoid forcing
+> a non-flexible and non-obvious variable definition wherever it is used.
+> What I mean is something like:
 > 
-> But I'm about to slurp up this whole series into my tree, how about making
-> that an incremental patch?
+> #define MPSC_RXRE_SIZE(d)		dma_get_cache_alignment(d)
+> 
+> Similarly for all of the other macros and where they're used.
 
-I'm fine with that.
-
-Bhumika, would you like to submit an incremental patch, or should I do it ?
-
--- 
-Regards,
-
-Laurent Pinchart
+Agreed.  Except for that the patch looks fine to me, though.
