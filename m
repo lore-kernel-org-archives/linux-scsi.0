@@ -1,173 +1,176 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 10/19] megaraid_sas: remove instance->ctrl_info
-Date: Thu, 19 Oct 2017 02:48:57 -0700
-Message-ID: <1508406546-25944-11-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 11/19] megaraid_sas: Move initialization of instance parameters inside newly created function megasas_init_ctrl_params
+Date: Thu, 19 Oct 2017 02:48:58 -0700
+Message-ID: <1508406546-25944-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:45779 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752313AbdJSJuZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:25 -0400
-Received: by mail-pf0-f193.google.com with SMTP id d28so6205606pfe.2
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:24 -0700 (PDT)
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:56203 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752643AbdJSJu2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:28 -0400
+Received: by mail-pf0-f194.google.com with SMTP id 17so6189409pfn.12
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:27 -0700 (PDT)
 In-Reply-To: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Re-use the pre-allocated ctrl_info DMA buffer.
+Code refactoring, no functional change - Create new function to initialize
+all the controller parameters during load time.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |  1 -
- drivers/scsi/megaraid/megaraid_sas_base.c | 43 ++++++++++---------------------
- 2 files changed, 14 insertions(+), 30 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 119 +++++++++++++++---------------
+ 1 file changed, 61 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 80ba77b4b9e2..83427b541629 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2231,7 +2231,6 @@ struct megasas_instance {
- 
- 	/* Ptr to hba specific information */
- 	void *ctrl_context;
--	struct megasas_ctrl_info *ctrl_info;
- 	unsigned int msix_vectors;
- 	struct megasas_irq_context irq_context[MEGASAS_MAX_MSIX_QUEUES];
- 	u64 map_id;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 16a91ce2b2cb..2a68c75b7c4e 100644
+index 2a68c75b7c4e..86cceb48ba84 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4545,9 +4545,9 @@ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
- 		return;
+@@ -6225,6 +6225,59 @@ void megasas_free_ctrl_dma_buffers(struct megasas_instance *instance)
+ 				    instance->crash_dump_h);
+ }
  
- 	instance->supportmax256vd =
--		instance->ctrl_info->adapterOperations3.supportMaxExtLDs;
-+		instance->ctrl_info_buf->adapterOperations3.supportMaxExtLDs;
- 	/* Below is additional check to address future FW enhancement */
--	if (instance->ctrl_info->max_lds > 64)
-+	if (instance->ctrl_info_buf->max_lds > 64)
- 		instance->supportmax256vd = 1;
- 
- 	instance->drv_supported_vd_count = MEGASAS_MAX_LD_CHANNELS
-@@ -4605,11 +4605,8 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
- 	struct megasas_cmd *cmd;
- 	struct megasas_dcmd_frame *dcmd;
- 	struct megasas_ctrl_info *ci;
--	struct megasas_ctrl_info *ctrl_info;
- 	dma_addr_t ci_h = 0;
- 
--	ctrl_info = instance->ctrl_info;
++/*
++ * megasas_init_ctrl_params -		Initialize controller's instance
++ *					parameters before FW init
++ * @instance -				Adapter soft instance
++ * @return -				void
++ */
++static inline void megasas_init_ctrl_params(struct megasas_instance *instance)
++{
++	instance->fw_crash_state = UNAVAILABLE;
++
++	megasas_poll_wait_aen = 0;
++	instance->issuepend_done = 1;
++	atomic_set(&instance->adprecovery, MEGASAS_HBA_OPERATIONAL);
++
++	/*
++	 * Initialize locks and queues
++	 */
++	INIT_LIST_HEAD(&instance->cmd_pool);
++	INIT_LIST_HEAD(&instance->internal_reset_pending_q);
++
++	atomic_set(&instance->fw_outstanding, 0);
++
++	init_waitqueue_head(&instance->int_cmd_wait_q);
++	init_waitqueue_head(&instance->abort_cmd_wait_q);
++
++	spin_lock_init(&instance->crashdump_lock);
++	spin_lock_init(&instance->mfi_pool_lock);
++	spin_lock_init(&instance->hba_lock);
++	spin_lock_init(&instance->stream_lock);
++	spin_lock_init(&instance->completion_lock);
++
++	mutex_init(&instance->hba_mutex);
++	mutex_init(&instance->reset_mutex);
++
++	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
++	    (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY))
++		instance->flag_ieee = 1;
++
++	megasas_dbg_lvl = 0;
++	instance->flag = 0;
++	instance->unload = 1;
++	instance->last_time = 0;
++	instance->disableOnlineCtrlReset = 1;
++	instance->UnevenSpanSupport = 0;
++
++	if (instance->adapter_type != MFI_SERIES) {
++		INIT_WORK(&instance->work_init, megasas_fusion_ocr_wq);
++		INIT_WORK(&instance->crash_init, megasas_fusion_crash_dump_wq);
++	} else {
++		INIT_WORK(&instance->work_init, process_fw_state_change_wq);
++	}
++}
++
+ /**
+  * megasas_probe_one -	PCI hotplug entry point
+  * @pdev:		PCI device structure
+@@ -6279,74 +6332,24 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	instance = (struct megasas_instance *)host->hostdata;
+ 	memset(instance, 0, sizeof(*instance));
+ 	atomic_set(&instance->fw_reset_no_pci_access, 0);
+-	instance->pdev = pdev;
 -
- 	ci = instance->ctrl_info_buf;
- 	ci_h = instance->ctrl_info_buf_h;
- 
-@@ -4645,14 +4642,13 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
- 
- 	switch (ret) {
- 	case DCMD_SUCCESS:
--		memcpy(ctrl_info, ci, sizeof(struct megasas_ctrl_info));
- 		/* Save required controller information in
- 		 * CPU endianness format.
- 		 */
--		le32_to_cpus((u32 *)&ctrl_info->properties.OnOffProperties);
--		le32_to_cpus((u32 *)&ctrl_info->adapterOperations2);
--		le32_to_cpus((u32 *)&ctrl_info->adapterOperations3);
--		le16_to_cpus((u16 *)&ctrl_info->adapter_operations4);
-+		le32_to_cpus((u32 *)&ci->properties.OnOffProperties);
-+		le32_to_cpus((u32 *)&ci->adapterOperations2);
-+		le32_to_cpus((u32 *)&ci->adapterOperations3);
-+		le16_to_cpus((u16 *)&ci->adapter_operations4);
- 
- 		/* Update the latest Ext VD info.
- 		 * From Init path, store current firmware details.
-@@ -4661,21 +4657,21 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
- 		 */
- 		megasas_update_ext_vd_details(instance);
- 		instance->use_seqnum_jbod_fp =
--			ctrl_info->adapterOperations3.useSeqNumJbodFP;
-+			ci->adapterOperations3.useSeqNumJbodFP;
- 		instance->support_morethan256jbod =
--			ctrl_info->adapter_operations4.support_pd_map_target_id;
-+			ci->adapter_operations4.support_pd_map_target_id;
- 
- 		/*Check whether controller is iMR or MR */
--		instance->is_imr = (ctrl_info->memory_size ? 0 : 1);
-+		instance->is_imr = (ci->memory_size ? 0 : 1);
- 		dev_info(&instance->pdev->dev,
- 			"controller type\t: %s(%dMB)\n",
- 			instance->is_imr ? "iMR" : "MR",
--			le16_to_cpu(ctrl_info->memory_size));
-+			le16_to_cpu(ci->memory_size));
- 
- 		instance->disableOnlineCtrlReset =
--			ctrl_info->properties.OnOffProperties.disableOnlineCtrlReset;
-+			ci->properties.OnOffProperties.disableOnlineCtrlReset;
- 		instance->secure_jbod_support =
--			ctrl_info->adapterOperations3.supportSecurityonJBOD;
-+			ci->adapterOperations3.supportSecurityonJBOD;
- 		dev_info(&instance->pdev->dev, "Online Controller Reset(OCR)\t: %s\n",
- 			instance->disableOnlineCtrlReset ? "Disabled" : "Enabled");
- 		dev_info(&instance->pdev->dev, "Secure JBOD support\t: %s\n",
-@@ -5063,7 +5059,7 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
- 		(sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1));
- 
- 	if (reset_devices || !fusion ||
--		!instance->ctrl_info->adapterOperations3.useSeqNumJbodFP) {
-+		!instance->ctrl_info_buf->adapterOperations3.useSeqNumJbodFP) {
- 		dev_info(&instance->pdev->dev,
- 			"Jbod map is not supported %s %d\n",
- 			__func__, __LINE__);
-@@ -5277,11 +5273,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
- 		(unsigned long)instance);
- 
--	instance->ctrl_info = kzalloc(sizeof(struct megasas_ctrl_info),
--				GFP_KERNEL);
--	if (instance->ctrl_info == NULL)
--		goto fail_init_adapter;
+-	megasas_set_adapter_type(instance);
 -
+-	if (megasas_alloc_ctrl_mem(instance))
+-		goto fail_alloc_dma_buf;
+-
+-	if (megasas_alloc_ctrl_dma_buffers(instance))
+-		goto fail_alloc_dma_buf;
+-
+-	/* Crash dump feature related initialisation*/
+-	instance->drv_buf_index = 0;
+-	instance->drv_buf_alloc = 0;
+-	instance->crash_dump_fw_support = 0;
+-	instance->crash_dump_app_support = 0;
+-	instance->fw_crash_state = UNAVAILABLE;
+-	spin_lock_init(&instance->crashdump_lock);
+-	instance->crash_dump_buf = NULL;
+-
+-	megasas_poll_wait_aen = 0;
+-	instance->flag_ieee = 0;
+-	instance->ev = NULL;
+-	instance->issuepend_done = 1;
+-	atomic_set(&instance->adprecovery, MEGASAS_HBA_OPERATIONAL);
+-	instance->is_imr = 0;
+-
+-	/*
+-	 * Initialize locks and queues
+-	 */
+-	INIT_LIST_HEAD(&instance->cmd_pool);
+-	INIT_LIST_HEAD(&instance->internal_reset_pending_q);
+-
+-	atomic_set(&instance->fw_outstanding,0);
+-
+-	init_waitqueue_head(&instance->int_cmd_wait_q);
+-	init_waitqueue_head(&instance->abort_cmd_wait_q);
+-
+-	spin_lock_init(&instance->mfi_pool_lock);
+-	spin_lock_init(&instance->hba_lock);
+-	spin_lock_init(&instance->stream_lock);
+-	spin_lock_init(&instance->completion_lock);
+-
+-	mutex_init(&instance->reset_mutex);
+-	mutex_init(&instance->hba_mutex);
+ 
  	/*
- 	 * Below are default value for legacy Firmware.
- 	 * non-fusion based controllers
-@@ -5370,7 +5361,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	 * to calculate max_sectors_1. So the number ended up as zero always.
+ 	 * Initialize PCI related and misc parameters
  	 */
- 	tmp_sectors = 0;
--	ctrl_info = instance->ctrl_info;
-+	ctrl_info = instance->ctrl_info_buf;
- 
- 	max_sectors_1 = (1 << ctrl_info->stripe_sz_ops.min) *
- 		le16_to_cpu(ctrl_info->max_strips_per_io);
-@@ -5485,8 +5476,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		pci_free_irq_vectors(instance->pdev);
- 	instance->msix_vectors = 0;
- fail_ready_state:
--	kfree(instance->ctrl_info);
--	instance->ctrl_info = NULL;
- 	iounmap(instance->reg_set);
- 
- fail_ioremap:
-@@ -6341,8 +6330,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
++	instance->pdev = pdev;
  	instance->host = host;
  	instance->unique_id = pdev->bus->number << 8 | pdev->devfn;
  	instance->init_id = MEGASAS_DEFAULT_INIT_ID;
--	instance->ctrl_info = NULL;
--
  
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
- 		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY))
-@@ -6848,8 +6835,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 		megasas_release_mfi(instance);
- 	}
+-	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+-		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY))
+-		instance->flag_ieee = 1;
++	megasas_set_adapter_type(instance);
  
--	kfree(instance->ctrl_info);
--
- 	if (instance->vf_affiliation)
- 		pci_free_consistent(pdev, (MAX_LOGICAL_DRIVES + 1) *
- 				    sizeof(struct MR_LD_VF_AFFILIATION),
+-	megasas_dbg_lvl = 0;
+-	instance->flag = 0;
+-	instance->unload = 1;
+-	instance->last_time = 0;
+-	instance->disableOnlineCtrlReset = 1;
+-	instance->UnevenSpanSupport = 0;
++	megasas_init_ctrl_params(instance);
+ 
+-	if (instance->adapter_type != MFI_SERIES) {
+-		INIT_WORK(&instance->work_init, megasas_fusion_ocr_wq);
+-		INIT_WORK(&instance->crash_init, megasas_fusion_crash_dump_wq);
+-	} else
+-		INIT_WORK(&instance->work_init, process_fw_state_change_wq);
++	if (megasas_alloc_ctrl_mem(instance))
++		goto fail_alloc_dma_buf;
++
++	if (megasas_alloc_ctrl_dma_buffers(instance))
++		goto fail_alloc_dma_buf;
+ 
+ 	/*
+ 	 * Initialize MFI Firmware
 -- 
 2.14.1.dirty
