@@ -1,32 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Patch: add to Documentation/scsi for scsi_dev_flags and command line passing
-Date: Wed, 18 Oct 2017 20:52:56 -0400
-Message-ID: <yq1infcq7pz.fsf@oracle.com>
-References: <1508346789.13599.2.camel@redhat.com>
-        <3d702bd5-b96e-3f5b-482b-b2c36278c219@infradead.org>
-        <CAFfF4qua-gutNTT+s+HuxrgS_B8sV5J+8x0-VbrYwObd5mN4bQ@mail.gmail.com>
-        <4717328f-24b2-9273-c41c-a02f27e8b921@infradead.org>
-        <CAFfF4qu+K8kSq6f7vQhhdXsYCxikWJa51Lw3U9kVtvcoKenKkA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: Handle power-on reset unit attention
+Date: Wed, 18 Oct 2017 22:12:03 -0400
+Message-ID: <yq1efpzrimk.fsf@oracle.com>
+References: <1508224284-130390-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21077 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:38715 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbdJSAx2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2017 20:53:28 -0400
-In-Reply-To: <CAFfF4qu+K8kSq6f7vQhhdXsYCxikWJa51Lw3U9kVtvcoKenKkA@mail.gmail.com>
-        (Laurence Oberman's message of "Wed, 18 Oct 2017 13:51:03 -0400")
+        with ESMTP id S1751091AbdJSCMO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2017 22:12:14 -0400
+In-Reply-To: <1508224284-130390-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Tue, 17 Oct 2017 09:11:24 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
 
-Laurence,
+Hannes,
 
-> Indeed it was Evolution and then linux-scsi rejected my fix.
+> As per SAM there is a status precedence, with any sense code 29/XX
+> taking second place just after an ACA ACTIVE status.  Additionally,
+> each target might prefer to not queue any unit attention conditions,
+> but just report one.  Due to the above this will be that one with the
+> highest precedence.  This results in the sense code 29/XX effectively
+> overwriting any other unit attention.  Hence we should report the
+> power-on reset to userland so that it can take appropriate action.
 
-Please use git send-email for patch submissions.
+Applied to 4.15/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
