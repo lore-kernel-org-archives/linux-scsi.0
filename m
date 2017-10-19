@@ -1,47 +1,51 @@
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 17/19] megaraid_sas: Do not limit queue_depth to 1k in non-RDPQ mode
-Date: Thu, 19 Oct 2017 02:49:04 -0700
-Message-ID: <1508406546-25944-18-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-References: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Salif Mohammed <teju.ade@gmail.com>
+Subject: Hello
+Date: Thu, 19 Oct 2017 13:56:59 +0100
+Message-ID: <CABOo2_o4T3v61cJNE8eb9OgfTd5X7sN_N_U_zfjPkdNsQvjd_Q@mail.gmail.com>
+Reply-To: slfmhmmd@yahoo.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:44834 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752621AbdJSJun (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:43 -0400
-Received: by mail-pg0-f67.google.com with SMTP id j3so6770679pga.1
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:43 -0700 (PDT)
-In-Reply-To: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:54970 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753324AbdJSM5A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 08:57:00 -0400
+Received: by mail-oi0-f68.google.com with SMTP id a132so14462432oih.11
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 05:56:59 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Earlier, driver load fails if memory allocation for request frame pool
-fails due to the higher queue_depth requirement. Patch 0016 in this
-series allows dynamically reducing queue_depth if memory allocations
-fail rather than failing load.
-With this, there is no need to limit queue_depth to 1k now.
+Hello,
 
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 4 ----
- 1 file changed, 4 deletions(-)
+I need your partnership in this project that requires trust and confidentiality.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 8b7a08af275e..745da54c11aa 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -272,10 +272,6 @@ megasas_fusion_update_can_queue(struct megasas_instance *instance, int fw_boot_c
- 		instance->max_fw_cmds = cur_max_fw_cmds;
- 		instance->ldio_threshold = ldio_threshold;
- 
--		if (!instance->is_rdpq)
--			instance->max_fw_cmds =
--				min_t(u16, instance->max_fw_cmds, 1024);
--
- 		if (reset_devices)
- 			instance->max_fw_cmds = min(instance->max_fw_cmds,
- 						(u16)MEGASAS_KDUMP_QUEUE_DEPTH);
--- 
-2.14.1.dirty
+An American, Mr. Charles Balassi who worked with the Egyptian General
+Petroleum Corporation (EGPC), made a fixed deposit of Twenty Two
+Million United States Dollars($22,000,000) for 17 Years in my
+bank(Dubai Islamic Bank) branch, upon maturity our department sent a
+routine notification to his forwarding address but got no response.
+
+After a month, we sent a reminder and finally we discovered from his
+employer, the (EGPC) that he died with his wife in a plane crash on
+October 31, 1999, with other passengers on board.
+
+Meanwhile, I just discovered that all his records has no next of kin,
+so the funds must be claimed immediately by somebody who would stand
+as his Next of Kin. According to the financial laws of United Arab
+Emirates, the fund should be reverted to the Government treasury
+accounts if nobody applies to claim it.
+
+Please note that I have worked out the perfect modality on how to
+claim the fund and I shall provide the relevant information and
+documents for the successful claim and transfer of the funds into your
+account that you will provide. I assure you that this project is 100%
+risk free. Kindly provide your phone number for easy communication.
+
+Awaiting your quick response.
+
+Thanks,
+Salif Mohammed
+Customer Relations Manager
+Dubai Islamic Bank
+Abu Dhabi
+U.A.E.
