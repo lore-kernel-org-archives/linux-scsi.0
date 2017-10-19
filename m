@@ -1,261 +1,166 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 05/19] megaraid_sas: replace is_ventura with adapter_type checks
-Date: Thu, 19 Oct 2017 02:48:52 -0700
-Message-ID: <1508406546-25944-6-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 14/19] megaraid_sas: Resize MFA frame used for IOC INIT to 4k
+Date: Thu, 19 Oct 2017 02:49:01 -0700
+Message-ID: <1508406546-25944-15-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:49176 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752445AbdJSJuL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:11 -0400
-Received: by mail-pf0-f193.google.com with SMTP id i5so6193330pfe.6
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:11 -0700 (PDT)
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:47738 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752650AbdJSJuf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:35 -0400
+Received: by mail-pg0-f66.google.com with SMTP id r25so6765730pgn.4
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:35 -0700 (PDT)
 In-Reply-To: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, stable@vger.kernel.org
 
-No functional change.
+Older firmware version unconditionally pulls 4k frame for
+IOC INIT MFA frame.
+But driver allocates 1k or 4k max_chain_frame_sz based on FW capability.
+During boot time, this results in DMA read errors.
+Workaround fix in driver by allocating separate ioc_init frame of 4k size
+to support older firmware.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  1 -
- drivers/scsi/megaraid/megaraid_sas_base.c   |  9 ++++-----
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 10 +++++-----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 26 +++++++++++++-------------
- 4 files changed, 22 insertions(+), 24 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 65 +++++++++++++++++++++++++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +
+ 2 files changed, 58 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 3f20273b115b..5b36a0103895 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2244,7 +2244,6 @@ struct megasas_instance {
- 	bool dev_handle;
- 	bool fw_sync_cache_support;
- 	u32 mfi_frame_size;
--	bool is_ventura;
- 	bool msix_combined;
- 	u16 max_raid_mapsize;
- 	/* preffered count to send as LDIO irrspective of FP capable.*/
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 001b075d0dd6..5691e031112e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5221,7 +5221,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			goto fail_ready_state;
- 	}
- 
--	if (instance->is_ventura) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		scratch_pad_3 =
- 			readl(&instance->reg_set->outbound_scratch_pad_3);
- 		instance->max_raid_mapsize = ((scratch_pad_3 >>
-@@ -5330,7 +5330,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	if (instance->instancet->init_adapter(instance))
- 		goto fail_init_adapter;
- 
--	if (instance->is_ventura) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		scratch_pad_4 =
- 			readl(&instance->reg_set->outbound_scratch_pad_4);
- 		if ((scratch_pad_4 & MR_NVME_PAGE_SIZE_MASK) >=
-@@ -5366,7 +5366,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
- 
- 	/* stream detection initialization */
--	if (instance->is_ventura && fusion) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		fusion->stream_detect_by_ld =
- 			kzalloc(sizeof(struct LD_STREAM_DETECT *)
- 			* MAX_LOGICAL_DRIVES_EXT,
-@@ -6101,7 +6101,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 
- 		break;
- 	case VENTURA_SERIES:
--		instance->is_ventura = 1;
- 	case THUNDERBOLT_SERIES:
- 	case INVADER_SERIES:
- 		if (megasas_alloc_fusion_context(instance)) {
-@@ -6693,7 +6692,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	if (instance->msix_vectors)
- 		pci_free_irq_vectors(instance->pdev);
- 
--	if (instance->is_ventura) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		for (i = 0; i < MAX_LOGICAL_DRIVES_EXT; ++i)
- 			kfree(fusion->stream_detect_by_ld[i]);
- 		kfree(fusion->stream_detect_by_ld);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 47af0e13b97a..bfad9bfc313f 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -737,7 +737,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 		*pDevHandle = MR_PdDevHandleGet(pd, map);
- 		*pPdInterface = MR_PdInterfaceTypeGet(pd, map);
- 		/* get second pd also for raid 1/10 fast path writes*/
--		if (instance->is_ventura &&
-+		if ((instance->adapter_type == VENTURA_SERIES) &&
- 		    (raid->level == 1) &&
- 		    !io_info->isRead) {
- 			r1_alt_pd = MR_ArPdGet(arRef, physArm + 1, map);
-@@ -762,7 +762,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 	}
- 
- 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
--	if (instance->is_ventura) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		((struct RAID_CONTEXT_G35 *)pRAID_Context)->span_arm =
- 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm =
-@@ -853,7 +853,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 		*pDevHandle = MR_PdDevHandleGet(pd, map);
- 		*pPdInterface = MR_PdInterfaceTypeGet(pd, map);
- 		/* get second pd also for raid 1/10 fast path writes*/
--		if (instance->is_ventura &&
-+		if ((instance->adapter_type == VENTURA_SERIES) &&
- 		    (raid->level == 1) &&
- 		    !io_info->isRead) {
- 			r1_alt_pd = MR_ArPdGet(arRef, physArm + 1, map);
-@@ -880,7 +880,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	}
- 
- 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
--	if (instance->is_ventura) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		((struct RAID_CONTEXT_G35 *)pRAID_Context)->span_arm =
- 				(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm =
-@@ -1091,7 +1091,7 @@ MR_BuildRaidContext(struct megasas_instance *instance,
- 	if (instance->adapter_type == INVADER_SERIES)
- 		pRAID_Context->reg_lock_flags = (isRead) ?
- 			raid->regTypeReqOnRead : raid->regTypeReqOnWrite;
--	else if (!instance->is_ventura)
-+	else if (instance->adapter_type == THUNDERBOLT_SERIES)
- 		pRAID_Context->reg_lock_flags = (isRead) ?
- 			REGION_TYPE_SHARED_READ : raid->regTypeReqOnWrite;
- 	pRAID_Context->virtual_disk_tgt_id = raid->targetId;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 340079d0bff0..01d42eb6486b 100644
+index 277fd16305ee..857bdbb0f79d 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -200,7 +200,7 @@ static void
- megasas_fire_cmd_fusion(struct megasas_instance *instance,
- 		union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc)
+@@ -780,13 +780,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 	ioc_init_handle = fusion->ioc_init_request_phys;
+ 	IOCInitMessage = fusion->ioc_init_request;
+ 
+-	cmd = megasas_get_cmd(instance);
+-
+-	if (!cmd) {
+-		dev_err(&instance->pdev->dev, "Could not allocate cmd for INIT Frame\n");
+-		ret = 1;
+-		goto fail_get_cmd;
+-	}
++	cmd = fusion->ioc_init_cmd;
+ 
+ 	scratch_pad_2 = readl
+ 		(&instance->reg_set->outbound_scratch_pad_2);
+@@ -918,8 +912,6 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 	ret = 0;
+ 
+ fail_fw_init:
+-	megasas_return_cmd(instance, cmd);
+-fail_get_cmd:
+ 	dev_err(&instance->pdev->dev,
+ 		"Init cmd return status %s for SCSI host %d\n",
+ 		ret ? "FAILED" : "SUCCESS", instance->host->host_no);
+@@ -1333,6 +1325,56 @@ static inline int megasas_allocate_raid_maps(struct megasas_instance *instance)
+ 	return -ENOMEM;
+ }
+ 
++static int megasas_alloc_ioc_init_frame(struct megasas_instance *instance)
++{
++	struct fusion_context *fusion;
++	struct megasas_cmd *cmd;
++
++	fusion = instance->ctrl_context;
++
++	cmd = kmalloc(sizeof(struct megasas_cmd), GFP_KERNEL);
++
++	if (!cmd) {
++		dev_err(&instance->pdev->dev, "Failed from func: %s line: %d\n",
++			__func__, __LINE__);
++		return -ENOMEM;
++	}
++
++	cmd->frame = dma_alloc_coherent(&instance->pdev->dev,
++					IOC_INIT_FRAME_SIZE,
++					&cmd->frame_phys_addr, GFP_KERNEL);
++
++	if (!cmd->frame) {
++		dev_err(&instance->pdev->dev, "Failed from func: %s line: %d\n",
++			__func__, __LINE__);
++		kfree(cmd);
++		return -ENOMEM;
++	}
++
++	fusion->ioc_init_cmd = cmd;
++	return 0;
++}
++
++/**
++ * megasas_free_ioc_init_cmd -	Free IOC INIT command frame
++ * @instance:		Adapter soft state
++ */
++static inline void megasas_free_ioc_init_cmd(struct megasas_instance *instance)
++{
++	struct fusion_context *fusion;
++
++	fusion = instance->ctrl_context;
++
++	if (fusion->ioc_init_cmd && fusion->ioc_init_cmd->frame)
++		dma_free_coherent(&instance->pdev->dev,
++				  IOC_INIT_FRAME_SIZE,
++				  fusion->ioc_init_cmd->frame,
++				  fusion->ioc_init_cmd->frame_phys_addr);
++
++	if (fusion->ioc_init_cmd)
++		kfree(fusion->ioc_init_cmd);
++}
++
+ /**
+  * megasas_init_adapter_fusion -	Initializes the FW
+  * @instance:		Adapter soft state
+@@ -1428,6 +1470,9 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 				MEGASAS_FUSION_IOCTL_CMDS);
+ 	sema_init(&instance->ioctl_sem, MEGASAS_FUSION_IOCTL_CMDS);
+ 
++	if (megasas_alloc_ioc_init_frame(instance))
++		return 1;
++
+ 	/*
+ 	 * Allocate memory for descriptors
+ 	 * Create a pool of commands
+@@ -1465,6 +1510,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ fail_alloc_cmds:
+ 	megasas_free_cmds(instance);
+ fail_alloc_mfi_cmds:
++	megasas_free_ioc_init_cmd(instance);
+ 	return 1;
+ }
+ 
+@@ -3383,6 +3429,7 @@ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
+ void
+ megasas_release_fusion(struct megasas_instance *instance)
  {
--	if (instance->is_ventura)
-+	if (instance->adapter_type == VENTURA_SERIES)
- 		writel(le32_to_cpu(req_desc->u.low),
- 			&instance->reg_set->inbound_single_queue_port);
- 	else {
-@@ -243,7 +243,7 @@ megasas_fusion_update_can_queue(struct megasas_instance *instance, int fw_boot_c
- 	reg_set = instance->reg_set;
++	megasas_free_ioc_init_cmd(instance);
+ 	megasas_free_cmds(instance);
+ 	megasas_free_cmds_fusion(instance);
  
- 	/* ventura FW does not fill outbound_scratch_pad_3 with queue depth */
--	if (!instance->is_ventura)
-+	if (instance->adapter_type < VENTURA_SERIES)
- 		cur_max_fw_cmds =
- 		readl(&instance->reg_set->outbound_scratch_pad_3) & 0x00FFFF;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 5b3f1dba1ab2..549f86b2e871 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -103,6 +103,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
+ #define THRESHOLD_REPLY_COUNT 50
+ #define RAID_1_PEER_CMDS 2
+ #define JBOD_MAPS_COUNT	2
++#define IOC_INIT_FRAME_SIZE 4096
  
-@@ -291,7 +291,7 @@ megasas_fusion_update_can_queue(struct megasas_instance *instance, int fw_boot_c
- 		instance->host->can_queue = instance->cur_can_queue;
- 	}
+ /*
+  * Raid Context structure which describes MegaRAID specific IO Parameters
+@@ -1317,6 +1318,7 @@ struct fusion_context {
+ 	struct LD_STREAM_DETECT **stream_detect_by_ld;
+ 	dma_addr_t ioc_init_request_phys;
+ 	struct MPI2_IOC_INIT_REQUEST *ioc_init_request;
++	struct megasas_cmd *ioc_init_cmd;
  
--	if (instance->is_ventura)
-+	if (instance->adapter_type == VENTURA_SERIES)
- 		instance->max_mpt_cmds =
- 		instance->max_fw_cmds * RAID_1_PEER_CMDS;
- 	else
-@@ -2363,7 +2363,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ };
  
- 	praid_context = &io_request->RaidContext;
- 
--	if (instance->is_ventura) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		spin_lock_irqsave(&instance->stream_lock, spinlock_flags);
- 		megasas_stream_detect(instance, cmd, &io_info);
- 		spin_unlock_irqrestore(&instance->stream_lock, spinlock_flags);
-@@ -2429,7 +2429,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 			io_request->RaidContext.raid_context.reg_lock_flags |=
- 			  (MR_RL_FLAGS_GRANT_DESTINATION_CUDA |
- 			   MR_RL_FLAGS_SEQ_NUM_ENABLE);
--		} else if (instance->is_ventura) {
-+		} else if (instance->adapter_type == VENTURA_SERIES) {
- 			io_request->RaidContext.raid_context_g35.nseg_type |=
- 						(1 << RAID_CONTEXT_NSEG_SHIFT);
- 			io_request->RaidContext.raid_context_g35.nseg_type |=
-@@ -2448,7 +2448,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 					&io_info, local_map_ptr);
- 			scp->SCp.Status |= MEGASAS_LOAD_BALANCE_FLAG;
- 			cmd->pd_r1_lb = io_info.pd_after_lb;
--			if (instance->is_ventura)
-+			if (instance->adapter_type == VENTURA_SERIES)
- 				io_request->RaidContext.raid_context_g35.span_arm
- 					= io_info.span_arm;
- 			else
-@@ -2458,7 +2458,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		} else
- 			scp->SCp.Status &= ~MEGASAS_LOAD_BALANCE_FLAG;
- 
--		if (instance->is_ventura)
-+		if (instance->adapter_type == VENTURA_SERIES)
- 			cmd->r1_alt_dev_handle = io_info.r1_alt_dev_handle;
- 		else
- 			cmd->r1_alt_dev_handle = MR_DEVHANDLE_INVALID;
-@@ -2494,7 +2494,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				(MR_RL_FLAGS_GRANT_DESTINATION_CPU0 |
- 				 MR_RL_FLAGS_SEQ_NUM_ENABLE);
- 			io_request->RaidContext.raid_context.nseg = 0x1;
--		} else if (instance->is_ventura) {
-+		} else if (instance->adapter_type == VENTURA_SERIES) {
- 			io_request->RaidContext.raid_context_g35.routing_flags |=
- 					(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
- 			io_request->RaidContext.raid_context_g35.nseg_type |=
-@@ -2569,7 +2569,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 
- 		/* set RAID context values */
- 		pRAID_Context->config_seq_num = raid->seqNum;
--		if (!instance->is_ventura)
-+		if (instance->adapter_type != VENTURA_SERIES)
- 			pRAID_Context->reg_lock_flags = REGION_TYPE_SHARED_READ;
- 		pRAID_Context->timeout_value =
- 			cpu_to_le16(raid->fpIoTimeoutForLd);
-@@ -2654,7 +2654,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 				cpu_to_le16(device_id + (MAX_PHYSICAL_DEVICES - 1));
- 		pRAID_Context->config_seq_num = pd_sync->seq[pd_index].seqNum;
- 		io_request->DevHandle = pd_sync->seq[pd_index].devHandle;
--		if (instance->is_ventura) {
-+		if (instance->adapter_type == VENTURA_SERIES) {
- 			io_request->RaidContext.raid_context_g35.routing_flags |=
- 				(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
- 			io_request->RaidContext.raid_context_g35.nseg_type |=
-@@ -2785,7 +2785,7 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 		return 1;
- 	}
- 
--	if (instance->is_ventura) {
-+	if (instance->adapter_type == VENTURA_SERIES) {
- 		set_num_sge(&io_request->RaidContext.raid_context_g35, sge_count);
- 		cpu_to_le16s(&io_request->RaidContext.raid_context_g35.routing_flags);
- 		cpu_to_le16s(&io_request->RaidContext.raid_context_g35.nseg_type);
-@@ -4247,7 +4247,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
- 		for (i = 0 ; i < instance->max_scsi_cmds; i++) {
- 			cmd_fusion = fusion->cmd_list[i];
- 			/*check for extra commands issued by driver*/
--			if (instance->is_ventura) {
-+			if (instance->adapter_type == VENTURA_SERIES) {
- 				r1_cmd = fusion->cmd_list[i + instance->max_fw_cmds];
- 				megasas_return_cmd_fusion(instance, r1_cmd);
- 			}
-@@ -4348,7 +4348,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
- 				megasas_set_dynamic_target_properties(sdev);
- 
- 			/* reset stream detection array */
--			if (instance->is_ventura) {
-+			if (instance->adapter_type == VENTURA_SERIES) {
- 				for (j = 0; j < MAX_LOGICAL_DRIVES_EXT; ++j) {
- 					memset(fusion->stream_detect_by_ld[j],
- 					0, sizeof(struct LD_STREAM_DETECT));
 -- 
 2.14.1.dirty
