@@ -1,113 +1,133 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 02/19] megaraid_sas: Add support for Crusader controllers
-Date: Thu, 19 Oct 2017 02:48:49 -0700
-Message-ID: <1508406546-25944-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 06/19] megaraid_sas: reduce size of fusion_context and use kmalloc for allocation
+Date: Thu, 19 Oct 2017 02:48:53 -0700
+Message-ID: <1508406546-25944-7-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:44856 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752212AbdJSJuD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:03 -0400
-Received: by mail-pf0-f195.google.com with SMTP id x7so6205014pfa.1
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:03 -0700 (PDT)
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:51416 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752445AbdJSJuO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:14 -0400
+Received: by mail-pf0-f194.google.com with SMTP id n14so6186893pfh.8
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:14 -0700 (PDT)
 In-Reply-To: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Add support for PCI VID/DID 0x1000/0x0015 based MegaRAID controllers.
-Since the DID 0x0015 conflicts with DELL PERC5 controllers,
-add vendor ID based check specific for DELL PERC5.
+fusion_context structure is very large around 180kB
+and most of the size is contributed by log_to_span
+array. Move log_to_span out of fusion context and have
+separate allocation for log_to_span. And use kmalloc
+to allocate fusion_context.
+Currently kmemleak reports 1000s of false positives for
+fusion->cmd_list[]. kmemleak does not track page allocation
+for fusion_context. This change will also fix the false positives
+reported by kmemleak.
 
+Ref: https://marc.info/?l=linux-scsi&m=150545293900917
+
+Reported-by: Shu Wang <shuwang@redhat.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |  1 +
- drivers/scsi/megaraid/megaraid_sas_base.c | 51 ++++++++++++++++++-------------
- 2 files changed, 30 insertions(+), 22 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |  1 -
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 43 +++++++++++++++++++----------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  3 +-
+ 3 files changed, 31 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 90b9b5d7f0f8..3f20273b115b 100644
+index 5b36a0103895..1f34577d8982 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -57,6 +57,7 @@
- #define PCI_DEVICE_ID_LSI_CUTLASS_52		0x0052
- #define PCI_DEVICE_ID_LSI_CUTLASS_53		0x0053
- #define PCI_DEVICE_ID_LSI_VENTURA		    0x0014
-+#define PCI_DEVICE_ID_LSI_CRUSADER		    0x0015
- #define PCI_DEVICE_ID_LSI_HARPOON		    0x0016
- #define PCI_DEVICE_ID_LSI_TOMCAT		    0x0017
- #define PCI_DEVICE_ID_LSI_VENTURA_4PORT		0x001B
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 2f9955c6c2af..eba627ccd041 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -161,6 +161,7 @@ static struct pci_device_id megasas_pci_table[] = {
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_CUTLASS_53)},
- 	/* VENTURA */
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_VENTURA)},
-+	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_CRUSADER)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_HARPOON)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_TOMCAT)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_VENTURA_4PORT)},
-@@ -5980,29 +5981,35 @@ megasas_set_dma_mask(struct pci_dev *pdev)
-  */
- static inline void megasas_set_adapter_type(struct megasas_instance *instance)
+@@ -2218,7 +2218,6 @@ struct megasas_instance {
+ 
+ 	/* Ptr to hba specific information */
+ 	void *ctrl_context;
+-	u32 ctrl_context_pages;
+ 	struct megasas_ctrl_info *ctrl_info;
+ 	unsigned int msix_vectors;
+ 	struct megasas_irq_context irq_context[MEGASAS_MAX_MSIX_QUEUES];
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 01d42eb6486b..a8055341e875 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -4502,20 +4502,31 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
  {
--	switch (instance->pdev->device) {
--	case PCI_DEVICE_ID_LSI_VENTURA:
--	case PCI_DEVICE_ID_LSI_HARPOON:
--	case PCI_DEVICE_ID_LSI_TOMCAT:
--	case PCI_DEVICE_ID_LSI_VENTURA_4PORT:
--	case PCI_DEVICE_ID_LSI_CRUSADER_4PORT:
--		instance->adapter_type = VENTURA_SERIES;
--		break;
--	case PCI_DEVICE_ID_LSI_FUSION:
--	case PCI_DEVICE_ID_LSI_PLASMA:
--		instance->adapter_type = THUNDERBOLT_SERIES;
--		break;
--	case PCI_DEVICE_ID_LSI_INVADER:
--	case PCI_DEVICE_ID_LSI_INTRUDER:
--	case PCI_DEVICE_ID_LSI_INTRUDER_24:
--	case PCI_DEVICE_ID_LSI_CUTLASS_52:
--	case PCI_DEVICE_ID_LSI_CUTLASS_53:
--	case PCI_DEVICE_ID_LSI_FURY:
--		instance->adapter_type = INVADER_SERIES;
--		break;
--	default: /* For all other supported controllers */
-+	if ((instance->pdev->vendor == PCI_VENDOR_ID_DELL) &&
-+	    (instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5)) {
- 		instance->adapter_type = MFI_SERIES;
--		break;
-+	} else {
-+		switch (instance->pdev->device) {
-+		case PCI_DEVICE_ID_LSI_VENTURA:
-+		case PCI_DEVICE_ID_LSI_CRUSADER:
-+		case PCI_DEVICE_ID_LSI_HARPOON:
-+		case PCI_DEVICE_ID_LSI_TOMCAT:
-+		case PCI_DEVICE_ID_LSI_VENTURA_4PORT:
-+		case PCI_DEVICE_ID_LSI_CRUSADER_4PORT:
-+			instance->adapter_type = VENTURA_SERIES;
-+			break;
-+		case PCI_DEVICE_ID_LSI_FUSION:
-+		case PCI_DEVICE_ID_LSI_PLASMA:
-+			instance->adapter_type = THUNDERBOLT_SERIES;
-+			break;
-+		case PCI_DEVICE_ID_LSI_INVADER:
-+		case PCI_DEVICE_ID_LSI_INTRUDER:
-+		case PCI_DEVICE_ID_LSI_INTRUDER_24:
-+		case PCI_DEVICE_ID_LSI_CUTLASS_52:
-+		case PCI_DEVICE_ID_LSI_CUTLASS_53:
-+		case PCI_DEVICE_ID_LSI_FURY:
-+			instance->adapter_type = INVADER_SERIES;
-+			break;
-+		default: /* For all other supported controllers */
-+			instance->adapter_type = MFI_SERIES;
-+			break;
+ 	struct fusion_context *fusion;
+ 
+-	instance->ctrl_context_pages = get_order(sizeof(struct fusion_context));
+-	instance->ctrl_context = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
+-		instance->ctrl_context_pages);
++	instance->ctrl_context = kzalloc(sizeof(struct fusion_context),
++					 GFP_KERNEL);
+ 	if (!instance->ctrl_context) {
+-		/* fall back to using vmalloc for fusion_context */
+-		instance->ctrl_context = vzalloc(sizeof(struct fusion_context));
+-		if (!instance->ctrl_context) {
+-			dev_err(&instance->pdev->dev, "Failed from %s %d\n", __func__, __LINE__);
+-			return -ENOMEM;
+-		}
++		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++			__func__, __LINE__);
++		return -ENOMEM;
+ 	}
+ 
+ 	fusion = instance->ctrl_context;
+ 
++	fusion->log_to_span_pages = get_order(MAX_LOGICAL_DRIVES_EXT *
++					      sizeof(LD_SPAN_INFO));
++	fusion->log_to_span =
++		(PLD_SPAN_INFO)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
++						fusion->log_to_span_pages);
++	if (!fusion->log_to_span) {
++		fusion->log_to_span = vzalloc(MAX_LOGICAL_DRIVES_EXT *
++					      sizeof(LD_SPAN_INFO));
++		if (!fusion->log_to_span) {
++			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++				__func__, __LINE__);
++			return -ENOMEM;
 +		}
++	}
++
+ 	fusion->load_balance_info_pages = get_order(MAX_LOGICAL_DRIVES_EXT *
+ 		sizeof(struct LD_LOAD_BALANCE_INFO));
+ 	fusion->load_balance_info =
+@@ -4546,11 +4557,15 @@ megasas_free_fusion_context(struct megasas_instance *instance)
+ 					fusion->load_balance_info_pages);
+ 		}
+ 
+-		if (is_vmalloc_addr(fusion))
+-			vfree(fusion);
+-		else
+-			free_pages((ulong)fusion,
+-				instance->ctrl_context_pages);
++		if (fusion->log_to_span) {
++			if (is_vmalloc_addr(fusion->log_to_span))
++				vfree(fusion->log_to_span);
++			else
++				free_pages((ulong)fusion->log_to_span,
++					   fusion->log_to_span_pages);
++		}
++
++		kfree(fusion);
  	}
  }
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 7c1f7ccf031d..a2b56913f382 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -1312,7 +1312,8 @@ struct fusion_context {
+ 	u8 fast_path_io;
+ 	struct LD_LOAD_BALANCE_INFO *load_balance_info;
+ 	u32 load_balance_info_pages;
+-	LD_SPAN_INFO log_to_span[MAX_LOGICAL_DRIVES_EXT];
++	LD_SPAN_INFO *log_to_span;
++	u32 log_to_span_pages;
+ 	struct LD_STREAM_DETECT **stream_detect_by_ld;
+ };
  
 -- 
 2.14.1.dirty
