@@ -1,135 +1,173 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 15/19] megaraid_sas: Incorrect processing of IOCTL frames for SMP/STP commands
-Date: Thu, 19 Oct 2017 02:49:02 -0700
-Message-ID: <1508406546-25944-16-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 10/19] megaraid_sas: remove instance->ctrl_info
+Date: Thu, 19 Oct 2017 02:48:57 -0700
+Message-ID: <1508406546-25944-11-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:48165 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752621AbdJSJui (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:38 -0400
-Received: by mail-pg0-f65.google.com with SMTP id v78so6761644pgb.5
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:38 -0700 (PDT)
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:45779 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752313AbdJSJuZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2017 05:50:25 -0400
+Received: by mail-pf0-f193.google.com with SMTP id d28so6205606pfe.2
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2017 02:50:24 -0700 (PDT)
 In-Reply-To: <1508406546-25944-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Code fix - cmd->frame->dcmd.opcode will be valid only for MFI_CMD_DCMD
-IOCTL frames. Currently driver check for cmd->frame->dcmd.opcode without
-checking cmd type. Ensure we check dcmd opcode only for MFI_CMD_DCMD
-commands. Separate handling of MFI_CMD_SMP/STP commands from
-MFI_CMD_DCMD in completion path.
+Re-use the pre-allocated ctrl_info DMA buffer.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      | 23 +++++++++++++----------
- drivers/scsi/megaraid/megaraid_sas_base.c | 22 ++++++++++++++++++----
- 2 files changed, 31 insertions(+), 14 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h      |  1 -
+ drivers/scsi/megaraid/megaraid_sas_base.c | 43 ++++++++++---------------------
+ 2 files changed, 14 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 83427b541629..85ef8415640c 100644
+index 80ba77b4b9e2..83427b541629 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -187,16 +187,19 @@
- /*
-  * MFI command opcodes
-  */
--#define MFI_CMD_INIT				0x00
--#define MFI_CMD_LD_READ				0x01
--#define MFI_CMD_LD_WRITE			0x02
--#define MFI_CMD_LD_SCSI_IO			0x03
--#define MFI_CMD_PD_SCSI_IO			0x04
--#define MFI_CMD_DCMD				0x05
--#define MFI_CMD_ABORT				0x06
--#define MFI_CMD_SMP				0x07
--#define MFI_CMD_STP				0x08
--#define MFI_CMD_INVALID				0xff
-+enum MFI_CMD_OP {
-+	MFI_CMD_INIT		= 0x0,
-+	MFI_CMD_LD_READ		= 0x1,
-+	MFI_CMD_LD_WRITE	= 0x2,
-+	MFI_CMD_LD_SCSI_IO	= 0x3,
-+	MFI_CMD_PD_SCSI_IO	= 0x4,
-+	MFI_CMD_DCMD		= 0x5,
-+	MFI_CMD_ABORT		= 0x6,
-+	MFI_CMD_SMP		= 0x7,
-+	MFI_CMD_STP		= 0x8,
-+	MFI_CMD_OP_COUNT,
-+	MFI_CMD_INVALID		= 0xff
-+};
+@@ -2231,7 +2231,6 @@ struct megasas_instance {
  
- #define MR_DCMD_CTRL_GET_INFO			0x01010000
- #define MR_DCMD_LD_GET_LIST			0x03010000
+ 	/* Ptr to hba specific information */
+ 	void *ctrl_context;
+-	struct megasas_ctrl_info *ctrl_info;
+ 	unsigned int msix_vectors;
+ 	struct megasas_irq_context irq_context[MEGASAS_MAX_MSIX_QUEUES];
+ 	u64 map_id;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3a179c3fabc0..995d70a06cb7 100644
+index 16a91ce2b2cb..2a68c75b7c4e 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3298,6 +3298,9 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+@@ -4545,9 +4545,9 @@ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
+ 		return;
  
- 	case MFI_CMD_SMP:
- 	case MFI_CMD_STP:
-+		megasas_complete_int_cmd(instance, cmd);
-+		break;
-+
- 	case MFI_CMD_DCMD:
- 		opcode = le32_to_cpu(cmd->frame->dcmd.opcode);
- 		/* Check for LD map update */
-@@ -3384,6 +3387,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 	default:
- 		dev_info(&instance->pdev->dev, "Unknown command completed! [0x%X]\n",
- 		       hdr->cmd);
-+		megasas_complete_int_cmd(instance, cmd);
- 		break;
+ 	instance->supportmax256vd =
+-		instance->ctrl_info->adapterOperations3.supportMaxExtLDs;
++		instance->ctrl_info_buf->adapterOperations3.supportMaxExtLDs;
+ 	/* Below is additional check to address future FW enhancement */
+-	if (instance->ctrl_info->max_lds > 64)
++	if (instance->ctrl_info_buf->max_lds > 64)
+ 		instance->supportmax256vd = 1;
+ 
+ 	instance->drv_supported_vd_count = MEGASAS_MAX_LD_CHANNELS
+@@ -4605,11 +4605,8 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_dcmd_frame *dcmd;
+ 	struct megasas_ctrl_info *ci;
+-	struct megasas_ctrl_info *ctrl_info;
+ 	dma_addr_t ci_h = 0;
+ 
+-	ctrl_info = instance->ctrl_info;
+-
+ 	ci = instance->ctrl_info_buf;
+ 	ci_h = instance->ctrl_info_buf_h;
+ 
+@@ -4645,14 +4642,13 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
+ 
+ 	switch (ret) {
+ 	case DCMD_SUCCESS:
+-		memcpy(ctrl_info, ci, sizeof(struct megasas_ctrl_info));
+ 		/* Save required controller information in
+ 		 * CPU endianness format.
+ 		 */
+-		le32_to_cpus((u32 *)&ctrl_info->properties.OnOffProperties);
+-		le32_to_cpus((u32 *)&ctrl_info->adapterOperations2);
+-		le32_to_cpus((u32 *)&ctrl_info->adapterOperations3);
+-		le16_to_cpus((u16 *)&ctrl_info->adapter_operations4);
++		le32_to_cpus((u32 *)&ci->properties.OnOffProperties);
++		le32_to_cpus((u32 *)&ci->adapterOperations2);
++		le32_to_cpus((u32 *)&ci->adapterOperations3);
++		le16_to_cpus((u16 *)&ci->adapter_operations4);
+ 
+ 		/* Update the latest Ext VD info.
+ 		 * From Init path, store current firmware details.
+@@ -4661,21 +4657,21 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
+ 		 */
+ 		megasas_update_ext_vd_details(instance);
+ 		instance->use_seqnum_jbod_fp =
+-			ctrl_info->adapterOperations3.useSeqNumJbodFP;
++			ci->adapterOperations3.useSeqNumJbodFP;
+ 		instance->support_morethan256jbod =
+-			ctrl_info->adapter_operations4.support_pd_map_target_id;
++			ci->adapter_operations4.support_pd_map_target_id;
+ 
+ 		/*Check whether controller is iMR or MR */
+-		instance->is_imr = (ctrl_info->memory_size ? 0 : 1);
++		instance->is_imr = (ci->memory_size ? 0 : 1);
+ 		dev_info(&instance->pdev->dev,
+ 			"controller type\t: %s(%dMB)\n",
+ 			instance->is_imr ? "iMR" : "MR",
+-			le16_to_cpu(ctrl_info->memory_size));
++			le16_to_cpu(ci->memory_size));
+ 
+ 		instance->disableOnlineCtrlReset =
+-			ctrl_info->properties.OnOffProperties.disableOnlineCtrlReset;
++			ci->properties.OnOffProperties.disableOnlineCtrlReset;
+ 		instance->secure_jbod_support =
+-			ctrl_info->adapterOperations3.supportSecurityonJBOD;
++			ci->adapterOperations3.supportSecurityonJBOD;
+ 		dev_info(&instance->pdev->dev, "Online Controller Reset(OCR)\t: %s\n",
+ 			instance->disableOnlineCtrlReset ? "Disabled" : "Enabled");
+ 		dev_info(&instance->pdev->dev, "Secure JBOD support\t: %s\n",
+@@ -5063,7 +5059,7 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
+ 		(sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1));
+ 
+ 	if (reset_devices || !fusion ||
+-		!instance->ctrl_info->adapterOperations3.useSeqNumJbodFP) {
++		!instance->ctrl_info_buf->adapterOperations3.useSeqNumJbodFP) {
+ 		dev_info(&instance->pdev->dev,
+ 			"Jbod map is not supported %s %d\n",
+ 			__func__, __LINE__);
+@@ -5277,11 +5273,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+ 		(unsigned long)instance);
+ 
+-	instance->ctrl_info = kzalloc(sizeof(struct megasas_ctrl_info),
+-				GFP_KERNEL);
+-	if (instance->ctrl_info == NULL)
+-		goto fail_init_adapter;
+-
+ 	/*
+ 	 * Below are default value for legacy Firmware.
+ 	 * non-fusion based controllers
+@@ -5370,7 +5361,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	 * to calculate max_sectors_1. So the number ended up as zero always.
+ 	 */
+ 	tmp_sectors = 0;
+-	ctrl_info = instance->ctrl_info;
++	ctrl_info = instance->ctrl_info_buf;
+ 
+ 	max_sectors_1 = (1 << ctrl_info->stripe_sz_ops.min) *
+ 		le16_to_cpu(ctrl_info->max_strips_per_io);
+@@ -5485,8 +5476,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		pci_free_irq_vectors(instance->pdev);
+ 	instance->msix_vectors = 0;
+ fail_ready_state:
+-	kfree(instance->ctrl_info);
+-	instance->ctrl_info = NULL;
+ 	iounmap(instance->reg_set);
+ 
+ fail_ioremap:
+@@ -6341,8 +6330,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	instance->host = host;
+ 	instance->unique_id = pdev->bus->number << 8 | pdev->devfn;
+ 	instance->init_id = MEGASAS_DEFAULT_INIT_ID;
+-	instance->ctrl_info = NULL;
+-
+ 
+ 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+ 		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY))
+@@ -6848,8 +6835,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 		megasas_release_mfi(instance);
  	}
- }
-@@ -7017,7 +7021,7 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 	void *sense = NULL;
- 	dma_addr_t sense_handle;
- 	unsigned long *sense_ptr;
--	u32 opcode;
-+	u32 opcode = 0;
  
- 	memset(kbuff_arr, 0, sizeof(kbuff_arr));
- 
-@@ -7027,6 +7031,13 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 		return -EINVAL;
- 	}
- 
-+	if (ioc->frame.hdr.cmd >= MFI_CMD_OP_COUNT) {
-+		dev_err(&instance->pdev->dev,
-+			"Received invalid ioctl command 0x%x\n",
-+			ioc->frame.hdr.cmd);
-+		return -ENOTSUPP;
-+	}
-+
- 	cmd = megasas_get_cmd(instance);
- 	if (!cmd) {
- 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Failed to get a cmd packet\n");
-@@ -7045,7 +7056,9 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 	cmd->frame->hdr.flags &= cpu_to_le16(~(MFI_FRAME_IEEE |
- 					       MFI_FRAME_SGL64 |
- 					       MFI_FRAME_SENSE64));
--	opcode = le32_to_cpu(cmd->frame->dcmd.opcode);
-+
-+	if (cmd->frame->hdr.cmd == MFI_CMD_DCMD)
-+		opcode = le32_to_cpu(cmd->frame->dcmd.opcode);
- 
- 	if (opcode == MR_DCMD_CTRL_SHUTDOWN) {
- 		if (megasas_get_ctrl_info(instance) != DCMD_SUCCESS) {
-@@ -7127,8 +7140,9 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 	if (megasas_issue_blocked_cmd(instance, cmd, 0) == DCMD_NOT_FIRED) {
- 		cmd->sync_cmd = 0;
- 		dev_err(&instance->pdev->dev,
--			"return -EBUSY from %s %d opcode 0x%x cmd->cmd_status_drv 0x%x\n",
--			__func__, __LINE__, opcode,	cmd->cmd_status_drv);
-+			"return -EBUSY from %s %d cmd 0x%x opcode 0x%x cmd->cmd_status_drv 0x%x\n",
-+			__func__, __LINE__, cmd->frame->hdr.cmd, opcode,
-+			cmd->cmd_status_drv);
- 		return -EBUSY;
- 	}
- 
+-	kfree(instance->ctrl_info);
+-
+ 	if (instance->vf_affiliation)
+ 		pci_free_consistent(pdev, (MAX_LOGICAL_DRIVES + 1) *
+ 				    sizeof(struct MR_LD_VF_AFFILIATION),
 -- 
 2.14.1.dirty
