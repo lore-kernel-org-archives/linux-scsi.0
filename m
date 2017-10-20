@@ -1,95 +1,126 @@
-From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-Subject: Re: [PATCH V8 5/5] libata: Align DMA buffer todma_get_cache_alignment()
-Date: Fri, 20 Oct 2017 12:25:17 +0800
-Message-ID: <tencent_4202295473ED4E0D74F7E27C@qq.com>
-References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
-        <1508227542-13165-5-git-send-email-chenhc@lemote.com>
-        <20171018130353.GA1302522@devbig577.frc2.facebook.com>
-        <0ba3dc38-9020-1062-57de-0ada2cfd43a9@mips.com>
+From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Subject: Re: [PATCH] scsi/eh: fix hang adding ehandler wakeups after
+ decrementing host_busy
+Date: Fri, 20 Oct 2017 10:48:34 +0300
+Message-ID: <8b9d9fd4-86f9-6763-8add-60ed44ddf3f8@virtuozzo.com>
+References: <20170905125424.15412-1-ptikhomirov@virtuozzo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpbgau1.qq.com ([54.206.16.166]:54386 "EHLO smtpbgau1.qq.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750737AbdJTEZZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Oct 2017 00:25:25 -0400
-In-Reply-To: <0ba3dc38-9020-1062-57de-0ada2cfd43a9@mips.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170905125424.15412-1-ptikhomirov@virtuozzo.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, devel@openvz.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?TWF0dCBSZWRmZWFybg==?= <matt.redfearn@mips.com>, =?utf-8?B?VGVqdW4gSGVv?= <tj@kernel.org>
-Cc: =?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?= <hch@lst.de>, =?utf-8?B?TWFyZWsgU3p5cHJvd3NraQ==?= <m.szyprowski@samsung.com>, =?utf-8?B?Um9iaW4gTXVycGh5?= <robin.murphy@arm.com>, =?utf-8?B?QW5kcmV3TW9ydG9u?= <akpm@linux-foundation.org>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?UmFsZiBCYWVjaGxl?= <ralf@linux-mips.org>, =?utf-8?B?SmFtZXNIb2dhbg==?= <james.hogan@imgtec.com>, =?utf-8?B?bGludXgtbWlwcw==?= <linux-mips@linux-mips.org>, =?utf-8?B?SmFtZXMgRSAuIEogLkJvdHRvbWxleQ==?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?bGludXgtaWRl?= <linux-ide@vger.kernel.or>
 
-SGksIE1hdHQsDQoNCkkgZm91bmQgdGhhdCA0ZWUzNGVhM2ExMjM5NmYzNWIyNmQ5MGEwOTRj
-NzVkYiAoImxpYmF0YTogQWxpZ24gYXRhX2RldmljZSdzIGlkIG9uIGEgY2FjaGVsaW5lIikg
-Y2FuIHJlc29sdmUgZXZlcnl0aGluZy4gQmVjYXVzZSB0aGUgc2l6ZSBvZiBpZFtBVEFfSURf
-V09SRFNdIGlzIGFscmVhZHkgYWxpZ25lZCBhbmQgZGV2c2xwX3RpbWluZyBuZWVkbid0IHRv
-IGJlIGFsaWduZWQuIFNvLCBJbiBWOSBvZiB0aGlzIHNlcmllcyBJIHdpbGwgZHJvcCB0aGlz
-IHBhdGNoLiBXaHkgSSBoYWQgcHJvYmxlbXMgYmVmb3JlPyBiZWNhdXNlIEkgdXNlZCBsaW51
-eC00LjQuDQoNCkh1YWNhaQ0KIA0KIA0KLS0tLS0tLS0tLS0tLS0tLS0tIE9yaWdpbmFsIC0t
-LS0tLS0tLS0tLS0tLS0tLQ0KRnJvbTogICJNYXR0IFJlZGZlYXJuIjxtYXR0LnJlZGZlYXJu
-QG1pcHMuY29tPjsNCkRhdGU6ICBUaHUsIE9jdCAxOSwgMjAxNyAwMzo1MiBQTQ0KVG86ICAi
-VGVqdW4gSGVvIjx0akBrZXJuZWwub3JnPjsgIkh1YWNhaSBDaGVuIjxjaGVuaGNAbGVtb3Rl
-LmNvbT47IA0KQ2M6ICAiQ2hyaXN0b3BoIEhlbGx3aWciPGhjaEBsc3QuZGU+OyAiTWFyZWsg
-U3p5cHJvd3NraSI8bS5zenlwcm93c2tpQHNhbXN1bmcuY29tPjsgIlJvYmluIE11cnBoeSI8
-cm9iaW4ubXVycGh5QGFybS5jb20+OyAiQW5kcmV3TW9ydG9uIjxha3BtQGxpbnV4LWZvdW5k
-YXRpb24ub3JnPjsgIkZ1eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgt
-a2VybmVsIjxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgIlJhbGYgQmFlY2hsZSI8
-cmFsZkBsaW51eC1taXBzLm9yZz47ICJKYW1lc0hvZ2FuIjxqYW1lcy5ob2dhbkBpbWd0ZWMu
-Y29tPjsgImxpbnV4LW1pcHMiPGxpbnV4LW1pcHNAbGludXgtbWlwcy5vcmc+OyAiSmFtZXMg
-RSAuIEogLkJvdHRvbWxleSI8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyAiTWFydGluIEsg
-LiBQZXRlcnNlbiI8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyAibGludXgtc2NzaSI8
-bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+OyAibGludXgtaWRlIjxsaW51eC1pZGVAdmdl
-ci5rZXJuZWwub3JnPjsgInN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47IA0KU3Vi
-amVjdDogIFJlOiBbUEFUQ0ggVjggNS81XSBsaWJhdGE6IEFsaWduIERNQSBidWZmZXIgdG9k
-bWFfZ2V0X2NhY2hlX2FsaWdubWVudCgpDQoNCiANCg0KDQpPbiAxOC8xMC8xNyAxNDowMywg
-VGVqdW4gSGVvIHdyb3RlOg0KPiBPbiBUdWUsIE9jdCAxNywgMjAxNyBhdCAwNDowNTo0MlBN
-ICswODAwLCBIdWFjYWkgQ2hlbiB3cm90ZToNCj4+IEluIG5vbi1jb2hlcmVudCBETUEgbW9k
-ZSwga2VybmVsIHVzZXMgY2FjaGUgZmx1c2hpbmcgb3BlcmF0aW9ucyB0bw0KPj4gbWFpbnRh
-aW4gSS9PIGNvaGVyZW5jeSwgc28gaW4gYXRhX2RvX2Rldl9yZWFkX2lkKCkgdGhlIERNQSBi
-dWZmZXINCj4+IHNob3VsZCBiZSBhbGlnbmVkIHRvIEFSQ0hfRE1BX01JTkFMSUdOLiBPdGhl
-cndpc2UsIElmIGEgRE1BIGJ1ZmZlcg0KPj4gYW5kIGEga2VybmVsIHN0cnVjdHVyZSBzaGFy
-ZSBhIHNhbWUgY2FjaGUgbGluZSwgYW5kIGlmIHRoZSBrZXJuZWwNCj4+IHN0cnVjdHVyZSBo
-YXMgZGlydHkgZGF0YSwgY2FjaGVfaW52YWxpZGF0ZSAobm8gd3JpdGViYWNrKSB3aWxsIGNh
-dXNlDQo+PiBkYXRhIGNvcnJ1cHRpb24uDQo+Pg0KPj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5l
-bC5vcmcNCj4+IFNpZ25lZC1vZmYtYnk6IEh1YWNhaSBDaGVuIDxjaGVuaGNAbGVtb3RlLmNv
-bT4NCj4+IC0tLQ0KPj4gICBkcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jIHwgMTUgKysrKysr
-KysrKysrKy0tDQo+PiAgIDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAyIGRl
-bGV0aW9ucygtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9saWJhdGEtY29y
-ZS5jIGIvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYw0KPj4gaW5kZXggZWU0YzFlYy4uZTEz
-NDk1NSAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMNCj4+ICsr
-KyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMNCj4+IEBAIC0xODMzLDggKzE4MzMsMTkg
-QEAgc3RhdGljIHUzMiBhdGFfcGlvX21hc2tfbm9faW9yZHkoY29uc3Qgc3RydWN0IGF0YV9k
-ZXZpY2UgKmFkZXYpDQo+PiAgIHVuc2lnbmVkIGludCBhdGFfZG9fZGV2X3JlYWRfaWQoc3Ry
-dWN0IGF0YV9kZXZpY2UgKmRldiwNCj4+ICAgCQkJCQlzdHJ1Y3QgYXRhX3Rhc2tmaWxlICp0
-ZiwgdTE2ICppZCkNCj4+ICAgew0KPj4gLQlyZXR1cm4gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2
-LCB0ZiwgTlVMTCwgRE1BX0ZST01fREVWSUNFLA0KPj4gLQkJCQkgICAgIGlkLCBzaXplb2Yo
-aWRbMF0pICogQVRBX0lEX1dPUkRTLCAwKTsNCj4+ICsJdTE2ICpkZXZpZDsNCj4+ICsJaW50
-IHJlcywgc2l6ZSA9IHNpemVvZih1MTYpICogQVRBX0lEX1dPUkRTOw0KPj4gKw0KPj4gKwlp
-ZiAoSVNfQUxJR05FRCgodW5zaWduZWQgbG9uZylpZCwgZG1hX2dldF9jYWNoZV9hbGlnbm1l
-bnQoJmRldi0+dGRldikpKQ0KPj4gKwkJcmVzID0gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCB0
-ZiwgTlVMTCwgRE1BX0ZST01fREVWSUNFLCBpZCwgc2l6ZSwgMCk7DQo+PiArCWVsc2Ugew0K
-Pj4gKwkJZGV2aWQgPSBrbWFsbG9jKHNpemUsIEdGUF9LRVJORUwpOw0KPj4gKwkJcmVzID0g
-YXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCB0ZiwgTlVMTCwgRE1BX0ZST01fREVWSUNFLCBkZXZp
-ZCwgc2l6ZSwgMCk7DQo+PiArCQltZW1jcHkoaWQsIGRldmlkLCBzaXplKTsNCj4+ICsJCWtm
-cmVlKGRldmlkKTsNCj4+ICsJfQ0KPj4gKw0KPj4gKwlyZXR1cm4gcmVzOw0KPiBIbW0uLi4g
-SSB0aGluayBpdCdkIGJlIGEgbG90IGJldHRlciB0byBlbnN1cmUgdGhhdCB0aGUgYnVmZmVy
-cyBhcmUNCj4gYWxpZ25lZCBwcm9wZXJseSB0byBiZWdpbiB3aXRoLiAgVGhlcmUgYXJlIG9u
-bHkgdHdvIGJ1ZmZlcnMgd2hpY2ggYXJlDQo+IHVzZWQgZm9yIGlkIHJlYWRpbmcgLSBhdGFf
-cG9ydC0+c2VjdG9yX2J1ZiBhbmQgYXRhX2RldmljZS0+aWQuICBCb3RoDQo+IGFyZSBlbWJl
-ZGRlZCBhcnJheXMgYnV0IG1ha2luZyB0aGVtIHNlcGFyYXRlbHkgYWxsb2NhdGVkIGFsaWdu
-ZWQNCj4gYnVmZmVycyBzaG91bGRuJ3QgYmUgZGlmZmljdWx0Lg0KPg0KPiBUaGFua3MuDQoN
-CkZXSVcsIEkgYWdyZWUgdGhhdCB0aGUgYnVmZmVycyB1c2VkIGZvciBETUEgc2hvdWxkIGJl
-IHNwbGl0IG91dCBmcm9tIHRoZSANCnN0cnVjdHVyZS4gV2UgcmFuIGludG8gdGhpcyBwcm9i
-bGVtIG9uIE1JUFMgbGFzdCB5ZWFyLCANCjRlZTM0ZWEzYTEyMzk2ZjM1YjI2ZDkwYTA5NGM3
-NWRiOTUwODBiYWEgKCJsaWJhdGE6IEFsaWduIGF0YV9kZXZpY2UncyBpZCANCm9uIGEgY2Fj
-aGVsaW5lIikgcGFydGlhbGx5IGZpeGVkIGl0LCBidXQgbGlrZWx5IHNob3VsZCBoYXZlIGFs
-c28gDQpjYWNoZWxpbmUgYWxpZ25lZCB0aGUgZm9sbG93aW5nIGRldnNscF90aW1pbmcgaW4g
-dGhlIHN0cnVjdCBzdWNoIHRoYXQgd2UgDQpndWFyYW50ZWUgdGhhdCBtZW1iZXJzIG9mIHRo
-ZSBzdHJ1Y3Qgbm90IHVzZWQgZm9yIERNQSBkbyBub3Qgc2hhcmUgdGhlIA0Kc2FtZSBjYWNo
-ZWxpbmUgYXMgdGhlIERNQSBidWZmZXIuIE5vdCBoYXZpbmcgdGhpcyBtZWFucyB0aGF0IA0K
-YXJjaGl0ZWN0dXJlcywgc3VjaCBhcyBNSVBTLCB3aGljaCBpbiBzb21lIGNhc2VzIGhhdmUg
-dG8gcGVyZm9ybSBtYW51YWwgDQppbnZhbGlkYXRpb24gb2YgRE1BIGJ1ZmZlciBjYW4gY2xv
-YmJlciB2YWxpZCBhZGphY2VudCBkYXRhIGlmIGl0IGlzIGluIA0KdGhlIHNhbWUgY2FjaGVs
-aW5lLg0KDQpUaGFua3MsDQpNYXR0
+ping
+
+On 09/05/2017 03:54 PM, Pavel Tikhomirov wrote:
+> We have a problem on several our nodes with scsi EH. Imagine such an
+> order of execution of two threads:
+> 
+> CPU1 scsi_eh_scmd_add		CPU2 scsi_host_queue_ready
+> /* shost->host_busy == 1 initialy */
+> 
+> 				if (shost->shost_state == SHOST_RECOVERY)
+> 					/* does not get here */
+> 					return 0;
+> 
+> lock(shost->host_lock);
+> shost->shost_state = SHOST_RECOVERY;
+> 
+> 				busy = shost->host_busy++;
+> 				/* host->can_queue == 1 initialy, busy == 1
+> 				 * - go to starved label */
+> 				lock(shost->host_lock) /* wait */
+> 
+> shost->host_failed++;
+> /* shost->host_busy == 2, shost->host_failed == 1 */
+> call scsi_eh_wakeup(shost) {
+> 	if (host_busy == host_failed) {
+> 		/* does not get here */
+> 		wake_up_process(shost->ehandler)
+> 	}
+> }
+> unlock(shost->host_lock)
+> 
+> 				/* acquire lock */
+> 				shost->host_busy--;
+> 
+> Finaly we do not wakeup scsi_error_handler and all other commands
+> coming will hang as we are in never ending recovery state as there
+> is no one left to wakeup handler.
+> 
+> So scsi disc in these host becomes unresponsive and all bio on node
+> hangs. (We trigger these problem when scsi cmnds to DVD drive timeout.)
+> 
+> Main idea of the fix is to try to do wake up every time we decrement
+> host_busy or increment host_failed(the latter is already OK).
+> 
+> Now the very *last* one of busy threads getting host_lock after
+> decrementing host_busy will see all write operations on host's
+> shost_state, host_busy and host_failed completed thanks to implied
+> memory barriers on spin_lock/unlock, so at the time of busy==failed
+> we will trigger wakeup in at least one thread. (Thats why putting
+> recovery and failed checks under lock)
+> 
+> Signed-off-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+> ---
+>   drivers/scsi/scsi_lib.c | 21 +++++++++++++++++----
+>   1 file changed, 17 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index f6097b89d5d3..6c99221d60aa 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -320,12 +320,11 @@ void scsi_device_unbusy(struct scsi_device *sdev)
+>   	if (starget->can_queue > 0)
+>   		atomic_dec(&starget->target_busy);
+>   
+> +	spin_lock_irqsave(shost->host_lock, flags);
+>   	if (unlikely(scsi_host_in_recovery(shost) &&
+> -		     (shost->host_failed || shost->host_eh_scheduled))) {
+> -		spin_lock_irqsave(shost->host_lock, flags);
+> +		     (shost->host_failed || shost->host_eh_scheduled)))
+>   		scsi_eh_wakeup(shost);
+> -		spin_unlock_irqrestore(shost->host_lock, flags);
+> -	}
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+>   
+>   	atomic_dec(&sdev->device_busy);
+>   }
+> @@ -1503,6 +1502,13 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+>   	spin_unlock_irq(shost->host_lock);
+>   out_dec:
+>   	atomic_dec(&shost->host_busy);
+> +
+> +	spin_lock_irq(shost->host_lock);
+> +	if (unlikely(scsi_host_in_recovery(shost) &&
+> +		     (shost->host_failed || shost->host_eh_scheduled)))
+> +		scsi_eh_wakeup(shost);
+> +	spin_unlock_irq(shost->host_lock);
+> +
+>   	return 0;
+>   }
+>   
+> @@ -1964,6 +1970,13 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>   
+>   out_dec_host_busy:
+>   	atomic_dec(&shost->host_busy);
+> +
+> +	spin_lock_irq(shost->host_lock);
+> +	if (unlikely(scsi_host_in_recovery(shost) &&
+> +		     (shost->host_failed || shost->host_eh_scheduled)))
+> +		scsi_eh_wakeup(shost);
+> +	spin_unlock_irq(shost->host_lock);
+> +
+>   out_dec_target_busy:
+>   	if (scsi_target(sdev)->can_queue > 0)
+>   		atomic_dec(&scsi_target(sdev)->target_busy);
+> 
+
+-- 
+Best regards, Tikhomirov Pavel
+Software Developer, Virtuozzo.
