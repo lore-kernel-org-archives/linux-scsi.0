@@ -1,42 +1,36 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 0/6] v4 block refcount conversion patches
-Date: Fri, 20 Oct 2017 10:43:03 +0200
-Message-ID: <mqdr2typ5uw.fsf@linux-x5ow.site>
-References: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
+From: Li Wei <liwei213@huawei.com>
+Subject: [PATCH v4 0/5] scsi: ufs: add ufs driver code for Hisilicon Hi3660 SoC
+Date: Fri, 20 Oct 2017 16:50:40 +0800
+Message-ID: <20171020085045.7737-1-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
-        (Elena Reshetova's message of "Fri, 20 Oct 2017 11:15:56 +0300")
-Sender: linux-block-owner@vger.kernel.org
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: axboe@kernel.dk, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, fujita.tomonori@lab.ntt.co.jp, mingo@redhat.com, clm@fb.com, jbacik@fb.com, dsterba@suse.com, keescook@chromium.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc: guodong.xu@linaro.org, liwei213@huawei.com, fengbaopeng@hisilicon.com, lihuan41@hisilicon.com, wangyupeng4@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-Elena Reshetova <elena.reshetova@intel.com> writes:
-> Elena Reshetova (6):
->   block: convert bio.__bi_cnt from atomic_t to refcount_t
->   block: convert blk_queue_tag.refcnt from atomic_t to refcount_t
->   block: convert blkcg_gq.refcnt from atomic_t to refcount_t
->   block: convert io_context.active_ref from atomic_t to refcount_t
->   block: convert bsg_device.ref_count from atomic_t to refcount_t
->   drivers, block: convert xen_blkif.refcnt from atomic_t to refcount_t
+This patchset adds driver support for UFS for Hi3660 SoC. It is verified on HiKey960 board.
 
-Hi Elena,
+Li Wei (5):
+  scsi: ufs: add Hisilicon ufs driver code
+  dt-bindings: scsi: ufs: add document for hisi-ufs
+  arm64: dts: add ufs dts node
+  arm64: defconfig: enable configs for Hisilicon ufs
+  arm64: defconfig: enable f2fs and squashfs
 
-While the bsg ref_count is cheap, do you have any numbers how the other
-conversions compare in performance (throughput and latency) vs atomics?
-
-It should be quite easy to measure against a null_blk device.
-
-Thanks a lot,
-       Johannes
+ Documentation/devicetree/bindings/ufs/ufs-hisi.txt |  47 ++
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts  |   5 +
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  19 +
+ arch/arm64/configs/defconfig                       |  11 +
+ drivers/scsi/ufs/Kconfig                           |   9 +
+ drivers/scsi/ufs/Makefile                          |   1 +
+ drivers/scsi/ufs/ufs-hisi.c                        | 625 +++++++++++++++++++++
+ drivers/scsi/ufs/ufs-hisi.h                        | 161 ++++++
+ 8 files changed, 878 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+ create mode 100644 drivers/scsi/ufs/ufs-hisi.c
+ create mode 100644 drivers/scsi/ufs/ufs-hisi.h
 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.11.0
