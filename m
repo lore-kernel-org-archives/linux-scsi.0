@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 3/6] block: convert blkcg_gq.refcnt from atomic_t to refcount_t
-Date: Fri, 20 Oct 2017 11:15:59 +0300
-Message-ID: <1508487362-26663-4-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 1/6] block: convert bio.__bi_cnt from atomic_t to refcount_t
+Date: Fri, 20 Oct 2017 11:15:57 +0300
+Message-ID: <1508487362-26663-2-git-send-email-elena.reshetova@intel.com>
 References: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
@@ -24,7 +24,7 @@ refcount_t type and API that prevents accidental counter overflows
 and underflows. This is important since overflows and underflows
 can lead to use-after-free situation and be exploitable.
 
-The variable blkcg_gq.refcnt is used as pure reference counter.
+The variable bio.__bi_cnt is used as pure reference counter.
 Convert it to refcount_t and fix up the operations.
 
 Suggested-by: Kees Cook <keescook@chromium.org>
@@ -32,65 +32,95 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- block/blk-cgroup.c         |  2 +-
- include/linux/blk-cgroup.h | 11 ++++++-----
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ block/bio.c               | 6 +++---
+ fs/btrfs/volumes.c        | 2 +-
+ include/linux/bio.h       | 4 ++--
+ include/linux/blk_types.h | 3 ++-
+ 4 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index d3f56ba..1e7cedc 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -107,7 +107,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 	blkg->q = q;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
--	atomic_set(&blkg->refcnt, 1);
-+	refcount_set(&blkg->refcnt, 1);
+diff --git a/block/bio.c b/block/bio.c
+index 101c2a9..58edc1b 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -279,7 +279,7 @@ void bio_init(struct bio *bio, struct bio_vec *table,
+ {
+ 	memset(bio, 0, sizeof(*bio));
+ 	atomic_set(&bio->__bi_remaining, 1);
+-	atomic_set(&bio->__bi_cnt, 1);
++	refcount_set(&bio->__bi_cnt, 1);
  
- 	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
- 	if (blkcg != &blkcg_root) {
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 9d92153..c95d29d 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -19,6 +19,7 @@
- #include <linux/radix-tree.h>
- #include <linux/blkdev.h>
- #include <linux/atomic.h>
+ 	bio->bi_io_vec = table;
+ 	bio->bi_max_vecs = max_vecs;
+@@ -557,12 +557,12 @@ void bio_put(struct bio *bio)
+ 	if (!bio_flagged(bio, BIO_REFFED))
+ 		bio_free(bio);
+ 	else {
+-		BIO_BUG_ON(!atomic_read(&bio->__bi_cnt));
++		BIO_BUG_ON(!refcount_read(&bio->__bi_cnt));
+ 
+ 		/*
+ 		 * last put frees it
+ 		 */
+-		if (atomic_dec_and_test(&bio->__bi_cnt))
++		if (refcount_dec_and_test(&bio->__bi_cnt))
+ 			bio_free(bio);
+ 	}
+ }
+diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
+index b397375..11812ee 100644
+--- a/fs/btrfs/volumes.c
++++ b/fs/btrfs/volumes.c
+@@ -450,7 +450,7 @@ static noinline void run_scheduled_bios(struct btrfs_device *device)
+ 		    waitqueue_active(&fs_info->async_submit_wait))
+ 			wake_up(&fs_info->async_submit_wait);
+ 
+-		BUG_ON(atomic_read(&cur->__bi_cnt) == 0);
++		BUG_ON(refcount_read(&cur->__bi_cnt) == 0);
+ 
+ 		/*
+ 		 * if we're doing the sync list, record that our
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 275c91c..0fa4dd2 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -253,7 +253,7 @@ static inline void bio_get(struct bio *bio)
+ {
+ 	bio->bi_flags |= (1 << BIO_REFFED);
+ 	smp_mb__before_atomic();
+-	atomic_inc(&bio->__bi_cnt);
++	refcount_inc(&bio->__bi_cnt);
+ }
+ 
+ static inline void bio_cnt_set(struct bio *bio, unsigned int count)
+@@ -262,7 +262,7 @@ static inline void bio_cnt_set(struct bio *bio, unsigned int count)
+ 		bio->bi_flags |= (1 << BIO_REFFED);
+ 		smp_mb__before_atomic();
+ 	}
+-	atomic_set(&bio->__bi_cnt, count);
++	refcount_set(&bio->__bi_cnt, count);
+ }
+ 
+ static inline bool bio_flagged(struct bio *bio, unsigned int bit)
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index a2d2aa7..1ec370e 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/types.h>
+ #include <linux/bvec.h>
 +#include <linux/refcount.h>
  
- /* percpu_counter batch for blkg_[rw]stats, per-cpu drift doesn't matter */
- #define BLKG_STAT_CPU_BATCH	(INT_MAX / 2)
-@@ -122,7 +123,7 @@ struct blkcg_gq {
- 	struct request_list		rl;
+ struct bio_set;
+ struct bio;
+@@ -104,7 +105,7 @@ struct bio {
  
- 	/* reference count */
--	atomic_t			refcnt;
-+	refcount_t			refcnt;
+ 	unsigned short		bi_max_vecs;	/* max bvl_vecs we can hold */
  
- 	/* is this blkg online? protected by both blkcg and q locks */
- 	bool				online;
-@@ -354,8 +355,8 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
-  */
- static inline void blkg_get(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	atomic_inc(&blkg->refcnt);
-+	WARN_ON_ONCE(refcount_read(&blkg->refcnt) == 0);
-+	refcount_inc(&blkg->refcnt);
- }
+-	atomic_t		__bi_cnt;	/* pin count */
++	refcount_t		__bi_cnt;	/* pin count */
  
- void __blkg_release_rcu(struct rcu_head *rcu);
-@@ -366,8 +367,8 @@ void __blkg_release_rcu(struct rcu_head *rcu);
-  */
- static inline void blkg_put(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	if (atomic_dec_and_test(&blkg->refcnt))
-+	WARN_ON_ONCE(refcount_read(&blkg->refcnt) == 0);
-+	if (refcount_dec_and_test(&blkg->refcnt))
- 		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
- }
+ 	struct bio_vec		*bi_io_vec;	/* the actual vec list */
  
 -- 
 2.7.4
