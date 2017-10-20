@@ -1,123 +1,39 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] Suppress a kernel warning in case the prep function returns BLKPREP_DEFER
-Date: Fri, 20 Oct 2017 11:46:45 -0700
-Message-ID: <20171020184645.4327-1-bart.vanassche@wdc.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH] smartpqi: correct spelling error in documentation
+Date: Fri, 20 Oct 2017 14:11:51 -0500
+Message-ID: <150852671119.23841.12331497913880291072.stgit@brunhilda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:32307 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752498AbdJTSqp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2017 14:46:45 -0400
+Received: from mail-cys01nam02on0071.outbound.protection.outlook.com ([104.47.37.71]:41711
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752356AbdJTTL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Oct 2017 15:11:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-The legacy block layer handles requests as follows:
-- If the prep function returns BLKPREP_OK, let blk_peek_request()
-  return the pointer to that request.
-- If the prep function returns BLKPREP_DEFER, keep the RQF_STARTED
-  flag and retry calling the prep function later.
-- If the prep function returns BLKPREP_KILL or BLKPREP_INVALID, end
-  the request.
+Correct spelling error.
 
-In none of these cases it is correct to clear the SCMD_INITIALIZED
-flag from inside scsi_prep_fn(). Since scsi_prep_fn() already
-guarantees that scsi_init_command() will be called once even if
-scsi_prep_fn() is called multiple times, remove the code that clears
-SCMD_INITIALIZED from scsi_prep_fn().
-
-The scsi-mq code handles requests as follows:
-- If scsi_mq_prep_fn() returns BLKPREP_OK, set the RQF_DONTPREP flag
-  and submit the request to the SCSI LLD.
-- If scsi_mq_prep_fn() returns BLKPREP_DEFER, call
-  blk_mq_delay_run_hw_queue() and return BLK_STS_RESOURCE.
-- If the prep function returns BLKPREP_KILL or BLKPREP_INVALID, call
-  scsi_mq_uninit_cmd() and let the blk-mq core end the request.
-
-In none of these cases scsi_mq_prep_fn() should clear the
-SCMD_INITIALIZED flag. Hence remove the code from scsi_mq_prep_fn()
-function that clears that flag.
-
-This patch avoids that the following warning is triggered when using
-the legacy block layer:
-
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 4198 at drivers/scsi/scsi_lib.c:654 scsi_end_request+0x1de/0x220
-CPU: 1 PID: 4198 Comm: mkfs.f2fs Not tainted 4.14.0-rc5+ #1
-task: ffff91c147a4b800 task.stack: ffffb282c37b8000
-RIP: 0010:scsi_end_request+0x1de/0x220
-Call Trace:
-<IRQ>
-scsi_io_completion+0x204/0x5e0
-scsi_finish_command+0xce/0xe0
-scsi_softirq_done+0x126/0x130
-blk_done_softirq+0x6e/0x80
-__do_softirq+0xcf/0x2a8
-irq_exit+0xab/0xb0
-do_IRQ+0x7b/0xc0
-common_interrupt+0x90/0x90
-</IRQ>
-RIP: 0010:_raw_spin_unlock_irqrestore+0x9/0x10
-__test_set_page_writeback+0xc7/0x2c0
-__block_write_full_page+0x158/0x3b0
-block_write_full_page+0xc4/0xd0
-blkdev_writepage+0x13/0x20
-__writepage+0x12/0x40
-write_cache_pages+0x204/0x500
-generic_writepages+0x48/0x70
-blkdev_writepages+0x9/0x10
-do_writepages+0x34/0xc0
-__filemap_fdatawrite_range+0x6c/0x90
-file_write_and_wait_range+0x31/0x90
-blkdev_fsync+0x16/0x40
-vfs_fsync_range+0x44/0xa0
-do_fsync+0x38/0x60
-SyS_fsync+0xb/0x10
-entry_SYSCALL_64_fastpath+0x13/0x94
----[ end trace 86e8ef85a4a6c1d1 ]---
-
-Fixes: commit 64104f703212 ("scsi: Call scsi_initialize_rq() for filesystem requests")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/scsi_lib.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ Documentation/scsi/smartpqi.txt |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1779c8e91d09..5745af3e81bd 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1378,8 +1378,6 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+diff --git a/Documentation/scsi/smartpqi.txt b/Documentation/scsi/smartpqi.txt
+index ab377d9..201f80c 100644
+--- a/Documentation/scsi/smartpqi.txt
++++ b/Documentation/scsi/smartpqi.txt
+@@ -21,7 +21,7 @@ http://www.t10.org/members/w_pqi2.htm
  
- 	ret = scsi_setup_cmnd(sdev, req);
- out:
--	if (ret != BLKPREP_OK)
--		cmd->flags &= ~SCMD_INITIALIZED;
- 	return scsi_prep_return(q, req, ret);
- }
+ Supported devices:
+ ------------------
+-<Controller names to be added as they become publically available.>
++<Controller names to be added as they become publicly available.>
  
-@@ -1899,7 +1897,6 @@ static int scsi_mq_prep_fn(struct request *req)
- 	struct scsi_device *sdev = req->q->queuedata;
- 	struct Scsi_Host *shost = sdev->host;
- 	struct scatterlist *sg;
--	int ret;
- 
- 	scsi_init_command(sdev, cmd);
- 
-@@ -1933,10 +1930,7 @@ static int scsi_mq_prep_fn(struct request *req)
- 
- 	blk_mq_start_request(req);
- 
--	ret = scsi_setup_cmnd(sdev, req);
--	if (ret != BLK_STS_OK)
--		cmd->flags &= ~SCMD_INITIALIZED;
--	return ret;
-+	return scsi_setup_cmnd(sdev, req);
- }
- 
- static void scsi_mq_done(struct scsi_cmnd *cmd)
--- 
-2.14.2
+ smartpqi specific entries in /sys
+ -----------------------------
