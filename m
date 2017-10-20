@@ -1,66 +1,65 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v5 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
-Date: Fri, 20 Oct 2017 11:15:55 +0200
-Message-ID: <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com>
-References: <20171020085259.8093-1-liwei213@huawei.com> <20171020085259.8093-3-liwei213@huawei.com>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+Subject: RE: [PATCH 0/6] v4 block refcount conversion patches
+Date: Fri, 20 Oct 2017 10:25:37 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B802B37B3@IRSMSX102.ger.corp.intel.com>
+References: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
+ <mqdr2typ5uw.fsf@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20171020085259.8093-3-liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Wei Xu <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <mqdr2typ5uw.fsf@linux-x5ow.site>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>, "keescook@chromium.org" <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 20, 2017 at 10:52 AM, Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> @@ -0,0 +1,46 @@
-> +* Hisilicon Universal Flash Storage (UFS) Host Controller
-> +
-> +UFS nodes are defined to describe on-chip UFS hardware macro.
-> +Each UFS Host Controller should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains one of the following -
-> +                       "hisilicon,hi3660-ufs" for hisi ufs host controller
-> +                        present on Hi3660 chipset.
-> +- reg               : should contain UFS register address space & UFS SYS CTRL register address,
-> +- interrupt-parent  : interrupt device
-> +- interrupts        : interrupt number
-> +- clocks               : List of phandle and clock specifier pairs
-> +- clock-names       : List of clock input name strings sorted in the same
-> +                     order as the clocks property. "clk_ref", "clk_phy" is optional
-> +- resets            : reset node register, one reset the clk and the other reset the controller
-> +- reset-names       : describe reset node register
-
-I think I've asked about this before, but I think this should be done more
-consistently with the other UFS bindings.
-
-In particular, I wonder if what you describe as the "UFS SYS CTRL"
-area corresponds to what Qualcomm have described as their PHY
-implementation. It certainly seems to driver some of the properties
-that would normally be associated with a PHY.
-
-For the "clock-names" property, you specify "clk_ref", which I
-assume is the same as what Qualcomm call "ref_clk". I'd
-suggest you use the existing name and add that as the
-default name in the ufshcd-pltfrm.txt binding document.
-
-The "clk_phy" property appears to be related to the PHY, so
-it might be better to have a separate phy node with either just
-the clk, or with the clk plus the "UFS SYS CTRL" register area,
-whichever matches your hardware better, and then use teh
-"phys/phy-names" property to refer to that.
-
-The reset handling you describe here (both resets and reset-gpios)
-appears to be completely generic, so I'd suggest adding those to
-ufshcd-pltfrm.txt instead of your own binding, to ensure that future
-drivers use the same identifiers.
-
-
-      Arnd
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQo+IEVsZW5hIFJlc2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4gd3JpdGVzOg0K
+PiA+IEVsZW5hIFJlc2hldG92YSAoNik6DQo+ID4gICBibG9jazogY29udmVydCBiaW8uX19iaV9j
+bnQgZnJvbSBhdG9taWNfdCB0byByZWZjb3VudF90DQo+ID4gICBibG9jazogY29udmVydCBibGtf
+cXVldWVfdGFnLnJlZmNudCBmcm9tIGF0b21pY190IHRvIHJlZmNvdW50X3QNCj4gPiAgIGJsb2Nr
+OiBjb252ZXJ0IGJsa2NnX2dxLnJlZmNudCBmcm9tIGF0b21pY190IHRvIHJlZmNvdW50X3QNCj4g
+PiAgIGJsb2NrOiBjb252ZXJ0IGlvX2NvbnRleHQuYWN0aXZlX3JlZiBmcm9tIGF0b21pY190IHRv
+IHJlZmNvdW50X3QNCj4gPiAgIGJsb2NrOiBjb252ZXJ0IGJzZ19kZXZpY2UucmVmX2NvdW50IGZy
+b20gYXRvbWljX3QgdG8gcmVmY291bnRfdA0KPiA+ICAgZHJpdmVycywgYmxvY2s6IGNvbnZlcnQg
+eGVuX2Jsa2lmLnJlZmNudCBmcm9tIGF0b21pY190IHRvIHJlZmNvdW50X3QNCj4gDQo+IEhpIEVs
+ZW5hLA0KPiANCj4gV2hpbGUgdGhlIGJzZyByZWZfY291bnQgaXMgY2hlYXAsIGRvIHlvdSBoYXZl
+IGFueSBudW1iZXJzIGhvdyB0aGUgb3RoZXINCj4gY29udmVyc2lvbnMgY29tcGFyZSBpbiBwZXJm
+b3JtYW5jZSAodGhyb3VnaHB1dCBhbmQgbGF0ZW5jeSkgdnMgYXRvbWljcz8NCkhpIEpvaGFubmVz
+LA0KDQpUaGUgcGVyZm9ybWFuY2Ugd291bGQgZGVwZW5kIG9uIHdoaWNoICJicmVlZCIgb2YgcmVm
+Y291bnRfdCBpcyB1c2VkIHVuZGVybmVhdGguIA0KV2UgY3VycmVudGx5IGhhdmUgMyB2ZXJzaW9u
+czoNCg0KLSByZWZjb3VudF90IGRlZmF1bHRzIHRvIGF0b21pY190IChubyBDT05GSUdfUkVGQ09V
+TlRfRlVMTCBlbmFibGVkLCBubyBhcmNoLiBzdXBwb3J0KQ0KICBJbXBhY3QgaXMgemVybyBpbiB0
+aGlzIGNhc2Ugc2luY2UgaXQgaXMganVzdCBhdG9taWMgZnVuY3Rpb25zIGFyZSB1c2VkLiANCi0g
+cmVmY291bnRfdCB1c2VzIGFyY2guIHNwZWNpZmljIGltcGxlbWVudGF0aW9uIChhcmNoLiBlbmFi
+bGVzIEFSQ0hfSEFTX1JFRkNPVU5UKQ0KIEltcGFjdCBkZXBlbmRzIG9uIGFyY2guIGltcGxlbWVu
+dGF0aW9uLiBDdXJyZW50bHkgb25seSB4ODYgcHJvdmlkZXMgb25lLiANCi0gcmVmY291bnRfdCB1
+c2VzICJmdWxsIiBhcmNoLiBpbmRlcGVuZGVudCBpbXBsZW1lbnRhdGlvbi4NCg0KSGVyZSBhcmUg
+Y3ljbGUgbnVtYmVycyBmb3IgY29tcGFyaW5nIHRoZXNlIDMgKGh0dHBzOi8vbHduLm5ldC9BcnRp
+Y2xlcy83Mjg2MjYvKToNCkp1c3QgY29weSBwYXN0aW5nIGZvciBjb252ZW5pZW5jZToNCg0KIj5U
+aGVzZSBhcmUgdGhlIGN5Y2xlIGNvdW50cyBjb21wYXJpbmcgYSBsb29wIG9mIHJlZmNvdW50X2lu
+YygpIGZyb20gMQ0KPnRvIElOVF9NQVggYW5kIGJhY2sgZG93biB0byAwICh2aWEgcmVmY291bnRf
+ZGVjX2FuZF90ZXN0KCkpLCBiZXR3ZWVuDQo+dW5wcm90ZWN0ZWQgcmVmY291bnRfdCAoYXRvbWlj
+X3QpLCBmdWxseSBwcm90ZWN0ZWQgUkVGQ09VTlRfRlVMTA0KPihyZWZjb3VudF90LWZ1bGwpLCBh
+bmQgdGhpcyBvdmVyZmxvdy1wcm90ZWN0ZWQgcmVmY291bnQgKHJlZmNvdW50X3QtZmFzdCk6DQoN
+Cj4yMTQ3NDgzNjQ2IHJlZmNvdW50X2luYygpcyBhbmQgMjE0NzQ4MzY0NyByZWZjb3VudF9kZWNf
+YW5kX3Rlc3QoKXM6DQoJCQljeWNsZXMJcHJvdGVjdGlvbnMNCj5hdG9taWNfdAkgICA4MjI0OTI2
+NzM4Nwlub25lDQo+cmVmY291bnRfdC1mYXN0ICAgIDgyMjExNDQ2ODkyCW92ZXJmbG93LCB1bnRl
+c3RlZCBkZWMtdG8temVybw0KPnJlZmNvdW50X3QtZnVsbCAgIDE0NDgxNDczNTE5MwlvdmVyZmxv
+dywgdW50ZXN0ZWQgZGVjLXRvLXplcm8sIGluYy1mcm9tLXplcm8iDQoNClNvLCB0aGUgbWlkZGxl
+IG9wdGlvbiAoY2FsbGVkIGhlcmUgcmVmY291bnRfdC1mYXN0KSB3aXRoIGFyY2guIHNwZWNpZmlj
+DQppbXBsZW1lbnRhdGlvbiBnaXZlcyBhIG5lZ2xpZ2libGUgaW1wYWN0LiBUaGUgImZ1bGwiIG9u
+ZSBpcyBtb3JlIHByaWNleSwgYnV0IGl0IGlzDQpkaXNhYmxlZCBieSBkZWZhdWx0IGFueXdheSwg
+c28gb25seSBwZW9wbGUgd2hvIHdhbnQgc3RyaWN0IHNlY3VyaXR5IGVuYWJsZSBpdC4gIA0KDQpB
+cmUgdGhlc2UgbnVtYmVycyBjb252aW5jaW5nIGVub3VnaCB0aGF0IHdlIGRvbid0IGhhdmUgdG8g
+bWVhc3VyZQ0KdGhlIGJsb2NrIGRldmljZXM/IDopDQoNCkJlc3QgUmVnYXJkcywNCkVsZW5hLg0K
+DQoNCj4gDQo+IEl0IHNob3VsZCBiZSBxdWl0ZSBlYXN5IHRvIG1lYXN1cmUgYWdhaW5zdCBhIG51
+bGxfYmxrIGRldmljZS4NCj4gDQo+IFRoYW5rcyBhIGxvdCwNCj4gICAgICAgIEpvaGFubmVzDQo+
+IA0KPiAtLQ0KPiBKb2hhbm5lcyBUaHVtc2hpcm4gICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBTdG9yYWdlDQo+IGp0aHVtc2hpcm5Ac3VzZS5kZSAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODkNCj4gU1VTRSBMSU5VWCBHbWJILCBN
+YXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcNCj4gR0Y6IEZlbGl4IEltZW5kw7ZyZmZlciwg
+SmFuZSBTbWl0aGFyZCwgR3JhaGFtIE5vcnRvbg0KPiBIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykN
+Cj4gS2V5IGZpbmdlcnByaW50ID0gRUMzOCA5Q0FCIEMyQzQgRjI1RCA4NjAwIEQwRDAgMDM5MyA5
+NjlEIDJENzYgMDg1MA0K
