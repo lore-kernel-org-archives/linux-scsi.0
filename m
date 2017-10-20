@@ -1,124 +1,59 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 05/12] hpsa: update discovery polling
-Date: Fri, 20 Oct 2017 16:51:32 -0500
-Message-ID: <150853629251.28275.9986342028544381369.stgit@brunhilda>
+Subject: [PATCH 04/12] hpsa: add controller checkpoint
+Date: Fri, 20 Oct 2017 16:51:26 -0500
+Message-ID: <150853628650.28275.7433236747576438555.stgit@brunhilda>
 References: <150853443786.28275.17878578984391668998.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0088.outbound.protection.outlook.com ([104.47.40.88]:2846
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0058.outbound.protection.outlook.com ([104.47.33.58]:43149
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752816AbdJTVwQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Oct 2017 17:52:16 -0400
+        id S1752816AbdJTVwN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Oct 2017 17:52:13 -0400
 In-Reply-To: <150853443786.28275.17878578984391668998.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Bader Ali Saleh <bader.alisaleh@microsemi.com>
-
-Correct a corner case where newly created volumes are not
-detected automatically on an external RAID controller that has
-no configured volumes during initial device discovery.
-
-The fix is to set the discovery_polling flag when an external
-RAID controller is detected. This causes a device rescan
-every 20-30 seconds, so that newly created volumes will
-be detected automatically.
+tell hpsa controller to generate a checkpoint for rare lockup
+conditions.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c     |   39 ++++++++++++++++++++++++++-------------
- drivers/scsi/hpsa_cmd.h |    2 ++
- 2 files changed, 28 insertions(+), 13 deletions(-)
+ drivers/scsi/hpsa.c     |    4 ++++
+ drivers/scsi/hpsa_cmd.h |    1 +
+ 2 files changed, 5 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9c491c5..6056bbd 100644
+index 0330f17..9c491c5 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3472,6 +3472,30 @@ static void hpsa_get_sas_address(struct ctlr_info *h, unsigned char *scsi3addr,
- 	dev->sas_address = sa;
- }
- 
-+static void hpsa_ext_ctrl_present(struct ctlr_info *h,
-+	struct ReportExtendedLUNdata *physdev)
-+{
-+	u32 nphysicals;
-+	int i;
-+
-+	if (h->discovery_polling)
-+		return;
-+
-+	nphysicals = (get_unaligned_be32(physdev->LUNListLength) / 24) + 1;
-+
-+	for (i = 0; i < nphysicals; i++) {
-+		if (physdev->LUN[i].device_type ==
-+			BMIC_DEVICE_TYPE_CONTROLLER
-+			&& !is_hba_lunid(physdev->LUN[i].lunid)) {
-+			dev_info(&h->pdev->dev,
-+				"External controller present, activate discovery polling and disable rld caching\n");
-+			hpsa_disable_rld_caching(h);
-+			h->discovery_polling = 1;
-+			break;
-+		}
+@@ -8009,6 +8009,10 @@ static void controller_lockup_detected(struct ctlr_info *h)
+ 	spin_unlock_irqrestore(&h->lock, flags);
+ 	dev_warn(&h->pdev->dev, "Controller lockup detected: 0x%08x after %d\n",
+ 			lockup_detected, h->heartbeat_sample_interval / HZ);
++	if (lockup_detected == 0xffff0000) {
++		dev_warn(&h->pdev->dev, "Telling controller to do a CHKPT\n");
++		writel(DOORBELL_GENERATE_CHKPT, h->vaddr + SA5_DOORBELL);
 +	}
-+}
-+
- /* Get a device id from inquiry page 0x83 */
- static bool hpsa_vpd_page_supported(struct ctlr_info *h,
- 	unsigned char scsi3addr[], u8 page)
-@@ -4228,6 +4252,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 	 */
- 	ndevs_to_allocate = nphysicals + nlogicals + MAX_EXT_TARGETS + 1;
- 
-+	hpsa_ext_ctrl_present(h, physdev_list);
-+
- 	/* Allocate the per device structures */
- 	for (i = 0; i < ndevs_to_allocate; i++) {
- 		if (i >= HPSA_MAX_DEVICES) {
-@@ -4298,18 +4324,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 		figure_bus_target_lun(h, lunaddrbytes, tmpdevice);
- 		this_device = currentsd[ncurrent];
- 
--		/* Turn on discovery_polling if there are ext target devices.
--		 * Event-based change notification is unreliable for those.
--		 */
--		if (!h->discovery_polling) {
--			if (tmpdevice->external) {
--				h->discovery_polling = 1;
--				dev_info(&h->pdev->dev,
--					"External target, activate discovery polling.\n");
--			}
--		}
--
--
- 		*this_device = *tmpdevice;
- 		this_device->physical_device = physical_device;
- 
-@@ -8247,7 +8261,6 @@ static void hpsa_rescan_ctlr_worker(struct work_struct *work)
- 	if (h->drv_req_rescan || hpsa_offline_devices_ready(h)) {
- 		hpsa_perform_rescan(h);
- 	} else if (h->discovery_polling) {
--		hpsa_disable_rld_caching(h);
- 		if (hpsa_luns_changed(h)) {
- 			dev_info(&h->pdev->dev,
- 				"driver discovery polling rescan.\n");
+ 	pci_disable_device(h->pdev);
+ 	fail_all_outstanding_cmds(h);
+ }
 diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 78c3b64..21a726e 100644
+index 078afe4..78c3b64 100644
 --- a/drivers/scsi/hpsa_cmd.h
 +++ b/drivers/scsi/hpsa_cmd.h
-@@ -780,6 +780,8 @@ struct bmic_identify_physical_device {
- 	u8     phys_bay_in_box;  /* phys drv bay this drive resides */
- 	__le32 rpm;              /* Drive rotational speed in rpm */
- 	u8     device_type;       /* type of drive */
-+#define BMIC_DEVICE_TYPE_CONTROLLER	0x07
-+
- 	u8     sata_version;     /* only valid when drive_type is SATA */
- 	__le64 big_total_block_count;
- 	__le64 ris_starting_lba;
+@@ -142,6 +142,7 @@
+ #define DOORBELL_CTLR_RESET	0x00000004l
+ #define DOORBELL_CTLR_RESET2	0x00000020l
+ #define DOORBELL_CLEAR_EVENTS	0x00000040l
++#define DOORBELL_GENERATE_CHKPT	0x00000080l
+ 
+ #define CFGTBL_Trans_Simple     0x00000002l
+ #define CFGTBL_Trans_Performant 0x00000004l
