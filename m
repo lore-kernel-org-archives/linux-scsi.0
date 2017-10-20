@@ -1,7 +1,7 @@
 From: Li Wei <liwei213@huawei.com>
-Subject: [PATCH v4 3/5] arm64: dts: add ufs dts node
-Date: Fri, 20 Oct 2017 16:50:43 +0800
-Message-ID: <20171020085045.7737-4-liwei213@huawei.com>
+Subject: [PATCH v4 5/5] arm64: defconfig: enable f2fs and squashfs
+Date: Fri, 20 Oct 2017 16:50:45 +0800
+Message-ID: <20171020085045.7737-6-liwei213@huawei.com>
 References: <20171020085045.7737-1-liwei213@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,55 +12,42 @@ To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.mari
 Cc: guodong.xu@linaro.org, liwei213@huawei.com, fengbaopeng@hisilicon.com, lihuan41@hisilicon.com, wangyupeng4@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-arm64: dts: add ufs node for Hisilicon.
+Partitions in HiKey960 are formatted as f2fs and squashfs.
+f2fs is for userdata; squashfs is for system. Both partitions are required
+by Android.
 
 Signed-off-by: Li Wei <liwei213@huawei.com>
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
 ---
- arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts |  5 +++++
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi         | 19 +++++++++++++++++++
- 2 files changed, 24 insertions(+)
+ arch/arm64/configs/defconfig | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-index fd4705c451e2..457645a2b53f 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-@@ -276,3 +276,8 @@
- 		interrupts = <3 IRQ_TYPE_EDGE_RISING>;
- 	};
- };
-+
-+&ufs {
-+	reset-gpio = <&gpio18 1 0>;
-+	status = "okay";
-+};
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-index b7a90d632959..a24ab8472347 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-@@ -978,5 +978,24 @@
- 			clocks = <&crg_ctrl HI3660_OSC32K>;
- 			clock-names = "apb_pclk";
- 		};
-+
-+		ufs: ufs@ff3b0000 {
-+			compatible = "hisilicon,hi3660-ufs", "jedec,ufs-1.1";
-+			/* 0: HCI standard */
-+			/* 1: UFS SYS CTRL */
-+			reg = <0x0 0xff3b0000 0x0 0x1000>,
-+				<0x0 0xff3b1000 0x0 0x1000>;
-+			interrupt-parent = <&gic>;
-+			interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
-+				<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
-+			clock-names = "clk_ref", "clk_phy";
-+			freq-table-hz = <0 0>, <0 0>;
-+			/* offset: 0x84; bit: 12 */
-+			/* offset: 0x84; bit: 7  */
-+			resets = <&crg_rst 0x84 12>,
-+				<&crg_rst 0x84 7>;
-+			reset-names = "rst", "assert";
-+		};
- 	};
- };
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 8aff981915f5..0a8a843cd0be 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -555,6 +555,7 @@ CONFIG_ACPI_APEI_GHES=y
+ CONFIG_ACPI_APEI_PCIEAER=y
+ CONFIG_EXT2_FS=y
+ CONFIG_EXT3_FS=y
++CONFIG_F2FS_FS=y
+ CONFIG_EXT4_FS_POSIX_ACL=y
+ CONFIG_BTRFS_FS=m
+ CONFIG_BTRFS_FS_POSIX_ACL=y
+@@ -570,6 +571,13 @@ CONFIG_HUGETLBFS=y
+ CONFIG_CONFIGFS_FS=y
+ CONFIG_EFIVAR_FS=y
+ CONFIG_SQUASHFS=y
++CONFIG_SQUASHFS_FILE_DIRECT=y
++CONFIG_SQUASHFS_DECOMP_MULTI_PERCPU=y
++CONFIG_SQUASHFS_XATTR=y
++CONFIG_SQUASHFS_LZ4=y
++CONFIG_SQUASHFS_LZO=y
++CONFIG_SQUASHFS_XZ=y
++CONFIG_SQUASHFS_4K_DEVBLK_SIZE=y
+ CONFIG_NFS_FS=y
+ CONFIG_NFS_V4=y
+ CONFIG_NFS_V4_1=y
 -- 
 2.11.0
