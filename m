@@ -1,39 +1,36 @@
 From: Li Wei <liwei213@huawei.com>
-Subject: [PATCH v4 4/5] arm64: defconfig: enable configs for Hisilicon ufs
-Date: Fri, 20 Oct 2017 16:50:44 +0800
-Message-ID: <20171020085045.7737-5-liwei213@huawei.com>
-References: <20171020085045.7737-1-liwei213@huawei.com>
+Subject: [PATCH v5 0/5] scsi: ufs: add ufs driver code for Hisilicon Hi3660 SoC
+Date: Fri, 20 Oct 2017 16:52:54 +0800
+Message-ID: <20171020085259.8093-1-liwei213@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171020085045.7737-1-liwei213@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
 Cc: guodong.xu@linaro.org, liwei213@huawei.com, fengbaopeng@hisilicon.com, lihuan41@hisilicon.com, wangyupeng4@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-This enable configs for Hisilicon Hixxxx UFS driver.
+This patchset adds driver support for UFS for Hi3660 SoC. It is verified on HiKey960 board.
 
-Signed-off-by: Li Wei <liwei213@huawei.com>
-Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
----
- arch/arm64/configs/defconfig | 3 +++
- 1 file changed, 3 insertions(+)
+Li Wei (5):
+  scsi: ufs: add Hisilicon ufs driver code
+  dt-bindings: scsi: ufs: add document for hisi-ufs
+  arm64: dts: add ufs dts node
+  arm64: defconfig: enable configs for Hisilicon ufs
+  arm64: defconfig: enable f2fs and squashfs
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 34480e9af2e7..8aff981915f5 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -168,6 +168,9 @@ CONFIG_BLK_DEV_SD=y
- CONFIG_SCSI_SAS_ATA=y
- CONFIG_SCSI_HISI_SAS=y
- CONFIG_SCSI_HISI_SAS_PCI=y
-+CONFIG_SCSI_UFSHCD=y
-+CONFIG_SCSI_UFSHCD_PLATFORM=y
-+CONFIG_SCSI_UFS_HISI=y
- CONFIG_ATA=y
- CONFIG_SATA_AHCI=y
- CONFIG_SATA_AHCI_PLATFORM=y
+ Documentation/devicetree/bindings/ufs/ufs-hisi.txt |  46 ++
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts  |   5 +
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  19 +
+ arch/arm64/configs/defconfig                       |  11 +
+ drivers/scsi/ufs/Kconfig                           |   9 +
+ drivers/scsi/ufs/Makefile                          |   1 +
+ drivers/scsi/ufs/ufs-hisi.c                        | 625 +++++++++++++++++++++
+ drivers/scsi/ufs/ufs-hisi.h                        | 161 ++++++
+ 8 files changed, 877 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+ create mode 100644 drivers/scsi/ufs/ufs-hisi.c
+ create mode 100644 drivers/scsi/ufs/ufs-hisi.h
+
 -- 
 2.11.0
