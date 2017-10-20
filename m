@@ -1,73 +1,123 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: Re: [PATCH 9/9] bsg: split handling of SCSI CDBs vs transport
- requeues
-Date: Fri, 20 Oct 2017 18:47:27 +0200
-Message-ID: <20171020164727.GA26380@bblock-ThinkPad-W530>
-References: <20171003104845.10417-1-hch@lst.de>
- <20171003104845.10417-10-hch@lst.de>
- <20171019155933.GE26185@bblock-ThinkPad-W530>
- <20171020162630.GA14277@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171020162630.GA14277@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH] Suppress a kernel warning in case the prep function returns BLKPREP_DEFER
+Date: Fri, 20 Oct 2017 11:46:45 -0700
+Message-ID: <20171020184645.4327-1-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:32307 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752498AbdJTSqp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2017 14:46:45 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Fri, Oct 20, 2017 at 06:26:30PM +0200, Christoph Hellwig wrote:
-> On Thu, Oct 19, 2017 at 05:59:33PM +0200, Benjamin Block wrote:
-> > > +#define ptr64(val) ((void __user *)(uintptr_t)(val))
-> > 
-> > Better to reflect the special property, that it is a user pointer, in
-> > the name of the macro. Maybe something like user_ptr(64). The same
-> > comment for the same macro in bsg.c.
-> 
-> Not sure it's worth it especially now that Martin has merged the patch.
+The legacy block layer handles requests as follows:
+- If the prep function returns BLKPREP_OK, let blk_peek_request()
+  return the pointer to that request.
+- If the prep function returns BLKPREP_DEFER, keep the RQF_STARTED
+  flag and retry calling the prep function later.
+- If the prep function returns BLKPREP_KILL or BLKPREP_INVALID, end
+  the request.
 
-He did? I only saw a mail that he picked patches 2-5. So all the bsg
-changes are still open I think.
+In none of these cases it is correct to clear the SCMD_INITIALIZED
+flag from inside scsi_prep_fn(). Since scsi_prep_fn() already
+guarantees that scsi_init_command() will be called once even if
+scsi_prep_fn() is called multiple times, remove the code that clears
+SCMD_INITIALIZED from scsi_prep_fn().
 
-(Maybe I just missed that, I haven't exactly followed the list very
-closely as of late)
+The scsi-mq code handles requests as follows:
+- If scsi_mq_prep_fn() returns BLKPREP_OK, set the RQF_DONTPREP flag
+  and submit the request to the SCSI LLD.
+- If scsi_mq_prep_fn() returns BLKPREP_DEFER, call
+  blk_mq_delay_run_hw_queue() and return BLK_STS_RESOURCE.
+- If the prep function returns BLKPREP_KILL or BLKPREP_INVALID, call
+  scsi_mq_uninit_cmd() and let the blk-mq core end the request.
 
-> But given how many interface we have all over the kernel that use a u64
-> to store a user pointer in ioctls and similar it might make sense to
-> lift a helper like this to a generic header.  In that case we'll need
-> a more descriptive name for sure.
-> 
-> > > +static int bsg_transport_check_proto(struct sg_io_v4 *hdr)
-> > > +{
-> > > +	if (hdr->protocol != BSG_PROTOCOL_SCSI  ||
-> > > +	    hdr->subprotocol != BSG_SUB_PROTOCOL_SCSI_TRANSPORT)
-> > > +		return -EINVAL;
-> > > +	if (!capable(CAP_SYS_RAWIO))
-> > > +		return -EPERM;
-> > 
-> > Any particular reason why this is not symmetric with bsg_scsi? IOW
-> > permission checking done in bsg_transport_fill_hdr(), like it is done in
-> > bsg_scsi_fill_hdr()?
-> > 
-> > We might save some time copying memory with this (we also only talk
-> > about ~20 bytes here), but on the other hand the interface would be more
-> > clean otherwise IMO (if we already do restructure the interface) -
-> > similar callbacks have similar responsibilities.
-> 
-> I could move the capable check around, no sure why I had done it that
-> way, it's been a while.  Probably because blk_verify_command needs the
-> CDB while a simple capable() check does not.
+In none of these cases scsi_mq_prep_fn() should clear the
+SCMD_INITIALIZED flag. Hence remove the code from scsi_mq_prep_fn()
+function that clears that flag.
 
-That was my guess, too. I just though it would be more consistent otherwise.
-Its not a big thing, really.
+This patch avoids that the following warning is triggered when using
+the legacy block layer:
 
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 4198 at drivers/scsi/scsi_lib.c:654 scsi_end_request+0x1de/0x220
+CPU: 1 PID: 4198 Comm: mkfs.f2fs Not tainted 4.14.0-rc5+ #1
+task: ffff91c147a4b800 task.stack: ffffb282c37b8000
+RIP: 0010:scsi_end_request+0x1de/0x220
+Call Trace:
+<IRQ>
+scsi_io_completion+0x204/0x5e0
+scsi_finish_command+0xce/0xe0
+scsi_softirq_done+0x126/0x130
+blk_done_softirq+0x6e/0x80
+__do_softirq+0xcf/0x2a8
+irq_exit+0xab/0xb0
+do_IRQ+0x7b/0xc0
+common_interrupt+0x90/0x90
+</IRQ>
+RIP: 0010:_raw_spin_unlock_irqrestore+0x9/0x10
+__test_set_page_writeback+0xc7/0x2c0
+__block_write_full_page+0x158/0x3b0
+block_write_full_page+0xc4/0xd0
+blkdev_writepage+0x13/0x20
+__writepage+0x12/0x40
+write_cache_pages+0x204/0x500
+generic_writepages+0x48/0x70
+blkdev_writepages+0x9/0x10
+do_writepages+0x34/0xc0
+__filemap_fdatawrite_range+0x6c/0x90
+file_write_and_wait_range+0x31/0x90
+blkdev_fsync+0x16/0x40
+vfs_fsync_range+0x44/0xa0
+do_fsync+0x38/0x60
+SyS_fsync+0xb/0x10
+entry_SYSCALL_64_fastpath+0x13/0x94
+---[ end trace 86e8ef85a4a6c1d1 ]---
 
-                                                    Beste Grüße / Best regards,
-                                                      - Benjamin Block
+Fixes: commit 64104f703212 ("scsi: Call scsi_initialize_rq() for filesystem requests")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/scsi_lib.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1779c8e91d09..5745af3e81bd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1378,8 +1378,6 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 
+ 	ret = scsi_setup_cmnd(sdev, req);
+ out:
+-	if (ret != BLKPREP_OK)
+-		cmd->flags &= ~SCMD_INITIALIZED;
+ 	return scsi_prep_return(q, req, ret);
+ }
+ 
+@@ -1899,7 +1897,6 @@ static int scsi_mq_prep_fn(struct request *req)
+ 	struct scsi_device *sdev = req->q->queuedata;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct scatterlist *sg;
+-	int ret;
+ 
+ 	scsi_init_command(sdev, cmd);
+ 
+@@ -1933,10 +1930,7 @@ static int scsi_mq_prep_fn(struct request *req)
+ 
+ 	blk_mq_start_request(req);
+ 
+-	ret = scsi_setup_cmnd(sdev, req);
+-	if (ret != BLK_STS_OK)
+-		cmd->flags &= ~SCMD_INITIALIZED;
+-	return ret;
++	return scsi_setup_cmnd(sdev, req);
+ }
+ 
+ static void scsi_mq_done(struct scsi_cmnd *cmd)
 -- 
-Linux on z Systems Development         /         IBM Systems & Technology Group
-		  IBM Deutschland Research & Development GmbH 
-Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+2.14.2
