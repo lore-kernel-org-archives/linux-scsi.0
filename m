@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 5/6] block: convert bsg_device.ref_count from atomic_t to refcount_t
-Date: Fri, 20 Oct 2017 11:16:01 +0300
-Message-ID: <1508487362-26663-6-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 4/6] block: convert io_context.active_ref from atomic_t to refcount_t
+Date: Fri, 20 Oct 2017 11:16:00 +0300
+Message-ID: <1508487362-26663-5-git-send-email-elena.reshetova@intel.com>
 References: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
@@ -24,7 +24,7 @@ refcount_t type and API that prevents accidental counter overflows
 and underflows. This is important since overflows and underflows
 can lead to use-after-free situation and be exploitable.
 
-The variable bsg_device.ref_count is used as pure reference counter.
+The variable io_context.active_ref is used as pure reference counter.
 Convert it to refcount_t and fix up the operations.
 
 Suggested-by: Kees Cook <keescook@chromium.org>
@@ -32,56 +32,101 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- block/bsg.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ block/bfq-iosched.c       | 2 +-
+ block/blk-ioc.c           | 4 ++--
+ block/cfq-iosched.c       | 4 ++--
+ include/linux/iocontext.h | 7 ++++---
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/block/bsg.c b/block/bsg.c
-index ee1335c..6c98422 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -21,6 +21,7 @@
- #include <linux/idr.h>
- #include <linux/bsg.h>
- #include <linux/slab.h>
-+#include <linux/refcount.h>
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index a4783da..1ec9b22 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -4030,7 +4030,7 @@ static void bfq_update_has_short_ttime(struct bfq_data *bfqd,
+ 	 * bfqq. Otherwise check average think time to
+ 	 * decide whether to mark as has_short_ttime
+ 	 */
+-	if (atomic_read(&bic->icq.ioc->active_ref) == 0 ||
++	if (refcount_read(&bic->icq.ioc->active_ref) == 0 ||
+ 	    (bfq_sample_valid(bfqq->ttime.ttime_samples) &&
+ 	     bfqq->ttime.ttime_mean > bfqd->bfq_slice_idle))
+ 		has_short_ttime = false;
+diff --git a/block/blk-ioc.c b/block/blk-ioc.c
+index 63898d2..69704d2 100644
+--- a/block/blk-ioc.c
++++ b/block/blk-ioc.c
+@@ -176,7 +176,7 @@ void put_io_context_active(struct io_context *ioc)
+ 	unsigned long flags;
+ 	struct io_cq *icq;
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_ioctl.h>
-@@ -38,7 +39,7 @@ struct bsg_device {
- 	struct list_head busy_list;
- 	struct list_head done_list;
- 	struct hlist_node dev_list;
--	atomic_t ref_count;
-+	refcount_t ref_count;
- 	int queued_cmds;
- 	int done_cmds;
- 	wait_queue_head_t wq_done;
-@@ -710,7 +711,7 @@ static int bsg_put_device(struct bsg_device *bd)
- 
- 	mutex_lock(&bsg_mutex);
- 
--	do_free = atomic_dec_and_test(&bd->ref_count);
-+	do_free = refcount_dec_and_test(&bd->ref_count);
- 	if (!do_free) {
- 		mutex_unlock(&bsg_mutex);
- 		goto out;
-@@ -768,7 +769,7 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
- 
- 	bsg_set_block(bd, file);
- 
--	atomic_set(&bd->ref_count, 1);
-+	refcount_set(&bd->ref_count, 1);
- 	mutex_lock(&bsg_mutex);
- 	hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(iminor(inode)));
- 
-@@ -788,7 +789,7 @@ static struct bsg_device *__bsg_get_device(int minor, struct request_queue *q)
- 
- 	hlist_for_each_entry(bd, bsg_dev_idx_hash(minor), dev_list) {
- 		if (bd->queue == q) {
--			atomic_inc(&bd->ref_count);
-+			refcount_inc(&bd->ref_count);
- 			goto found;
- 		}
+-	if (!atomic_dec_and_test(&ioc->active_ref)) {
++	if (!refcount_dec_and_test(&ioc->active_ref)) {
+ 		put_io_context(ioc);
+ 		return;
  	}
+@@ -275,7 +275,7 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_flags, int node)
+ 	/* initialize */
+ 	atomic_long_set(&ioc->refcount, 1);
+ 	atomic_set(&ioc->nr_tasks, 1);
+-	atomic_set(&ioc->active_ref, 1);
++	refcount_set(&ioc->active_ref, 1);
+ 	spin_lock_init(&ioc->lock);
+ 	INIT_RADIX_TREE(&ioc->icq_tree, GFP_ATOMIC | __GFP_HIGH);
+ 	INIT_HLIST_HEAD(&ioc->icq_list);
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 9f342ef..e6d5d6d 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -2941,7 +2941,7 @@ static void cfq_arm_slice_timer(struct cfq_data *cfqd)
+ 	 * task has exited, don't wait
+ 	 */
+ 	cic = cfqd->active_cic;
+-	if (!cic || !atomic_read(&cic->icq.ioc->active_ref))
++	if (!cic || !refcount_read(&cic->icq.ioc->active_ref))
+ 		return;
+ 
+ 	/*
+@@ -3933,7 +3933,7 @@ cfq_update_idle_window(struct cfq_data *cfqd, struct cfq_queue *cfqq,
+ 
+ 	if (cfqq->next_rq && req_noidle(cfqq->next_rq))
+ 		enable_idle = 0;
+-	else if (!atomic_read(&cic->icq.ioc->active_ref) ||
++	else if (!refcount_read(&cic->icq.ioc->active_ref) ||
+ 		 !cfqd->cfq_slice_idle ||
+ 		 (!cfq_cfqq_deep(cfqq) && CFQQ_SEEKY(cfqq)))
+ 		enable_idle = 0;
+diff --git a/include/linux/iocontext.h b/include/linux/iocontext.h
+index df38db2..a1e28c3 100644
+--- a/include/linux/iocontext.h
++++ b/include/linux/iocontext.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/radix-tree.h>
+ #include <linux/rcupdate.h>
++#include <linux/refcount.h>
+ #include <linux/workqueue.h>
+ 
+ enum {
+@@ -96,7 +97,7 @@ struct io_cq {
+  */
+ struct io_context {
+ 	atomic_long_t refcount;
+-	atomic_t active_ref;
++	refcount_t active_ref;
+ 	atomic_t nr_tasks;
+ 
+ 	/* all the fields below are protected by this lock */
+@@ -128,9 +129,9 @@ struct io_context {
+ static inline void get_io_context_active(struct io_context *ioc)
+ {
+ 	WARN_ON_ONCE(atomic_long_read(&ioc->refcount) <= 0);
+-	WARN_ON_ONCE(atomic_read(&ioc->active_ref) <= 0);
++	WARN_ON_ONCE(refcount_read(&ioc->active_ref) == 0);
+ 	atomic_long_inc(&ioc->refcount);
+-	atomic_inc(&ioc->active_ref);
++	refcount_inc(&ioc->active_ref);
+ }
+ 
+ static inline void ioc_task_link(struct io_context *ioc)
 -- 
 2.7.4
