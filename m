@@ -1,39 +1,97 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH] smartpqi: correct spelling error in documentation
-Date: Fri, 20 Oct 2017 14:11:51 -0500
-Message-ID: <150852671119.23841.12331497913880291072.stgit@brunhilda>
+Subject: [PATCH 01/12] hpsa: destroy sas transport properties before
+ scsi_host
+Date: Fri, 20 Oct 2017 16:51:08 -0500
+Message-ID: <150853626812.28275.3467395264226426125.stgit@brunhilda>
+References: <150853443786.28275.17878578984391668998.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0071.outbound.protection.outlook.com ([104.47.37.71]:41711
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0065.outbound.protection.outlook.com ([104.47.36.65]:43328
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752356AbdJTTL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Oct 2017 15:11:59 -0400
+        id S1753448AbdJTVvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Oct 2017 17:51:13 -0400
+In-Reply-To: <150853443786.28275.17878578984391668998.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-Correct spelling error.
+From: Martin Wilck <mwilck@suse.de>
 
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+This patch cleans up a lot of warnings when unloading the
+driver.
+
+A current example of the stack trace starts with:
+    [  142.570715] sysfs group 'power' not found for kobject 'port-5:0'
+There can be hundreds of these messages during a driver unload.
+
+I am resubmitting this patch on behalf of Martin Wilck with his
+permission.
+
+His original patch can be found here:
+https://www.spinics.net/lists/linux-scsi/msg102085.html
+
+This patch did not help until Hannes's
+commit 9441284fbc39 ("scsi-fixup-kernel-warning-during-rmmod")
+was applied to the kernel.
+
+---------------------------
+Original patch description:
+---------------------------
+
+Unloading the hpsa driver causes warnings
+
+[ 1063.793652] WARNING: CPU: 1 PID: 4850 at ../fs/sysfs/group.c:237 device_del+0x54/0x240()
+[ 1063.793659] sysfs group ffffffff81cf21a0 not found for kobject 'port-2:0'
+
+with two different stacks:
+1)
+[ 1063.793774]  [<ffffffff81448af4>] device_del+0x54/0x240
+[ 1063.793780]  [<ffffffff8145178a>] transport_remove_classdev+0x4a/0x60
+[ 1063.793784]  [<ffffffff81451216>] attribute_container_device_trigger+0xa6/0xb0
+[ 1063.793802]  [<ffffffffa0105d46>] sas_port_delete+0x126/0x160 [scsi_transport_sas]
+[ 1063.793819]  [<ffffffffa036ebcc>] hpsa_free_sas_port+0x3c/0x70 [hpsa]
+
+2)
+[ 1063.797103]  [<ffffffff81448af4>] device_del+0x54/0x240
+[ 1063.797118]  [<ffffffffa0105d4e>] sas_port_delete+0x12e/0x160 [scsi_transport_sas]
+[ 1063.797134]  [<ffffffffa036ebcc>] hpsa_free_sas_port+0x3c/0x70 [hpsa]
+
+This is caused by the fact that host device hostX is deleted before the
+SAS transport devices hostX/port-a:b.
+
+This patch fixes this by reverting the order of device deletions.
+
+Tested-by: Don Brace <don.brace@microsemi.com>
+Reviewed-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Martin Wilck <mwilck@xxxxxxx>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- Documentation/scsi/smartpqi.txt |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/scsi/smartpqi.txt b/Documentation/scsi/smartpqi.txt
-index ab377d9..201f80c 100644
---- a/Documentation/scsi/smartpqi.txt
-+++ b/Documentation/scsi/smartpqi.txt
-@@ -21,7 +21,7 @@ http://www.t10.org/members/w_pqi2.htm
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 9abe810..aff4a4f 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8684,6 +8684,8 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	destroy_workqueue(h->rescan_ctlr_wq);
+ 	destroy_workqueue(h->resubmit_wq);
  
- Supported devices:
- ------------------
--<Controller names to be added as they become publically available.>
-+<Controller names to be added as they become publicly available.>
++	hpsa_delete_sas_host(h);
++
+ 	/*
+ 	 * Call before disabling interrupts.
+ 	 * scsi_remove_host can trigger I/O operations especially
+@@ -8718,8 +8720,6 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	h->lockup_detected = NULL;			/* init_one 2 */
+ 	/* (void) pci_disable_pcie_error_reporting(pdev); */	/* init_one 1 */
  
- smartpqi specific entries in /sys
- -----------------------------
+-	hpsa_delete_sas_host(h);
+-
+ 	kfree(h);					/* init_one 1 */
+ }
+ 
