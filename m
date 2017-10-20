@@ -1,65 +1,58 @@
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 0/6] v4 block refcount conversion patches
-Date: Fri, 20 Oct 2017 10:25:37 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B802B37B3@IRSMSX102.ger.corp.intel.com>
-References: <1508487362-26663-1-git-send-email-elena.reshetova@intel.com>
- <mqdr2typ5uw.fsf@linux-x5ow.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <mqdr2typ5uw.fsf@linux-x5ow.site>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>, "keescook@chromium.org" <keescook@chromium.org>
+From: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] qla2xxx: Fix oops in qla2x00_probe_one error path
+Date: Fri, 20 Oct 2017 08:17:22 -0500
+Message-ID: <1508505442-30352-2-git-send-email-dougmill@linux.vnet.ibm.com>
+References: <1508505442-30352-1-git-send-email-dougmill@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:45282 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751750AbdJTNR3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Oct 2017 09:17:29 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9KDAQGS033437
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2017 09:17:29 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2dqfwq6d4u-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2017 09:17:29 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <dougmill@linux.vnet.ibm.com>;
+        Fri, 20 Oct 2017 09:17:28 -0400
+In-Reply-To: <1508505442-30352-1-git-send-email-dougmill@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: qla2xxx-upstream@qlogic.com
 
-DQo+IEVsZW5hIFJlc2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4gd3JpdGVzOg0K
-PiA+IEVsZW5hIFJlc2hldG92YSAoNik6DQo+ID4gICBibG9jazogY29udmVydCBiaW8uX19iaV9j
-bnQgZnJvbSBhdG9taWNfdCB0byByZWZjb3VudF90DQo+ID4gICBibG9jazogY29udmVydCBibGtf
-cXVldWVfdGFnLnJlZmNudCBmcm9tIGF0b21pY190IHRvIHJlZmNvdW50X3QNCj4gPiAgIGJsb2Nr
-OiBjb252ZXJ0IGJsa2NnX2dxLnJlZmNudCBmcm9tIGF0b21pY190IHRvIHJlZmNvdW50X3QNCj4g
-PiAgIGJsb2NrOiBjb252ZXJ0IGlvX2NvbnRleHQuYWN0aXZlX3JlZiBmcm9tIGF0b21pY190IHRv
-IHJlZmNvdW50X3QNCj4gPiAgIGJsb2NrOiBjb252ZXJ0IGJzZ19kZXZpY2UucmVmX2NvdW50IGZy
-b20gYXRvbWljX3QgdG8gcmVmY291bnRfdA0KPiA+ICAgZHJpdmVycywgYmxvY2s6IGNvbnZlcnQg
-eGVuX2Jsa2lmLnJlZmNudCBmcm9tIGF0b21pY190IHRvIHJlZmNvdW50X3QNCj4gDQo+IEhpIEVs
-ZW5hLA0KPiANCj4gV2hpbGUgdGhlIGJzZyByZWZfY291bnQgaXMgY2hlYXAsIGRvIHlvdSBoYXZl
-IGFueSBudW1iZXJzIGhvdyB0aGUgb3RoZXINCj4gY29udmVyc2lvbnMgY29tcGFyZSBpbiBwZXJm
-b3JtYW5jZSAodGhyb3VnaHB1dCBhbmQgbGF0ZW5jeSkgdnMgYXRvbWljcz8NCkhpIEpvaGFubmVz
-LA0KDQpUaGUgcGVyZm9ybWFuY2Ugd291bGQgZGVwZW5kIG9uIHdoaWNoICJicmVlZCIgb2YgcmVm
-Y291bnRfdCBpcyB1c2VkIHVuZGVybmVhdGguIA0KV2UgY3VycmVudGx5IGhhdmUgMyB2ZXJzaW9u
-czoNCg0KLSByZWZjb3VudF90IGRlZmF1bHRzIHRvIGF0b21pY190IChubyBDT05GSUdfUkVGQ09V
-TlRfRlVMTCBlbmFibGVkLCBubyBhcmNoLiBzdXBwb3J0KQ0KICBJbXBhY3QgaXMgemVybyBpbiB0
-aGlzIGNhc2Ugc2luY2UgaXQgaXMganVzdCBhdG9taWMgZnVuY3Rpb25zIGFyZSB1c2VkLiANCi0g
-cmVmY291bnRfdCB1c2VzIGFyY2guIHNwZWNpZmljIGltcGxlbWVudGF0aW9uIChhcmNoLiBlbmFi
-bGVzIEFSQ0hfSEFTX1JFRkNPVU5UKQ0KIEltcGFjdCBkZXBlbmRzIG9uIGFyY2guIGltcGxlbWVu
-dGF0aW9uLiBDdXJyZW50bHkgb25seSB4ODYgcHJvdmlkZXMgb25lLiANCi0gcmVmY291bnRfdCB1
-c2VzICJmdWxsIiBhcmNoLiBpbmRlcGVuZGVudCBpbXBsZW1lbnRhdGlvbi4NCg0KSGVyZSBhcmUg
-Y3ljbGUgbnVtYmVycyBmb3IgY29tcGFyaW5nIHRoZXNlIDMgKGh0dHBzOi8vbHduLm5ldC9BcnRp
-Y2xlcy83Mjg2MjYvKToNCkp1c3QgY29weSBwYXN0aW5nIGZvciBjb252ZW5pZW5jZToNCg0KIj5U
-aGVzZSBhcmUgdGhlIGN5Y2xlIGNvdW50cyBjb21wYXJpbmcgYSBsb29wIG9mIHJlZmNvdW50X2lu
-YygpIGZyb20gMQ0KPnRvIElOVF9NQVggYW5kIGJhY2sgZG93biB0byAwICh2aWEgcmVmY291bnRf
-ZGVjX2FuZF90ZXN0KCkpLCBiZXR3ZWVuDQo+dW5wcm90ZWN0ZWQgcmVmY291bnRfdCAoYXRvbWlj
-X3QpLCBmdWxseSBwcm90ZWN0ZWQgUkVGQ09VTlRfRlVMTA0KPihyZWZjb3VudF90LWZ1bGwpLCBh
-bmQgdGhpcyBvdmVyZmxvdy1wcm90ZWN0ZWQgcmVmY291bnQgKHJlZmNvdW50X3QtZmFzdCk6DQoN
-Cj4yMTQ3NDgzNjQ2IHJlZmNvdW50X2luYygpcyBhbmQgMjE0NzQ4MzY0NyByZWZjb3VudF9kZWNf
-YW5kX3Rlc3QoKXM6DQoJCQljeWNsZXMJcHJvdGVjdGlvbnMNCj5hdG9taWNfdAkgICA4MjI0OTI2
-NzM4Nwlub25lDQo+cmVmY291bnRfdC1mYXN0ICAgIDgyMjExNDQ2ODkyCW92ZXJmbG93LCB1bnRl
-c3RlZCBkZWMtdG8temVybw0KPnJlZmNvdW50X3QtZnVsbCAgIDE0NDgxNDczNTE5MwlvdmVyZmxv
-dywgdW50ZXN0ZWQgZGVjLXRvLXplcm8sIGluYy1mcm9tLXplcm8iDQoNClNvLCB0aGUgbWlkZGxl
-IG9wdGlvbiAoY2FsbGVkIGhlcmUgcmVmY291bnRfdC1mYXN0KSB3aXRoIGFyY2guIHNwZWNpZmlj
-DQppbXBsZW1lbnRhdGlvbiBnaXZlcyBhIG5lZ2xpZ2libGUgaW1wYWN0LiBUaGUgImZ1bGwiIG9u
-ZSBpcyBtb3JlIHByaWNleSwgYnV0IGl0IGlzDQpkaXNhYmxlZCBieSBkZWZhdWx0IGFueXdheSwg
-c28gb25seSBwZW9wbGUgd2hvIHdhbnQgc3RyaWN0IHNlY3VyaXR5IGVuYWJsZSBpdC4gIA0KDQpB
-cmUgdGhlc2UgbnVtYmVycyBjb252aW5jaW5nIGVub3VnaCB0aGF0IHdlIGRvbid0IGhhdmUgdG8g
-bWVhc3VyZQ0KdGhlIGJsb2NrIGRldmljZXM/IDopDQoNCkJlc3QgUmVnYXJkcywNCkVsZW5hLg0K
-DQoNCj4gDQo+IEl0IHNob3VsZCBiZSBxdWl0ZSBlYXN5IHRvIG1lYXN1cmUgYWdhaW5zdCBhIG51
-bGxfYmxrIGRldmljZS4NCj4gDQo+IFRoYW5rcyBhIGxvdCwNCj4gICAgICAgIEpvaGFubmVzDQo+
-IA0KPiAtLQ0KPiBKb2hhbm5lcyBUaHVtc2hpcm4gICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBTdG9yYWdlDQo+IGp0aHVtc2hpcm5Ac3VzZS5kZSAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODkNCj4gU1VTRSBMSU5VWCBHbWJILCBN
-YXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcNCj4gR0Y6IEZlbGl4IEltZW5kw7ZyZmZlciwg
-SmFuZSBTbWl0aGFyZCwgR3JhaGFtIE5vcnRvbg0KPiBIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykN
-Cj4gS2V5IGZpbmdlcnByaW50ID0gRUMzOCA5Q0FCIEMyQzQgRjI1RCA4NjAwIEQwRDAgMDM5MyA5
-NjlEIDJENzYgMDg1MA0K
+On error, kthread_create() returns an errno-encoded pointer, not NULL.
+The routine qla2x00_probe_one() detects the error case and jumps
+to probe_failed, but has already assigned the return value from
+kthread_create() to ha->dpc_thread.  Then probe_failed checks to see
+if ha->dpc_thread is not NULL before doing cleanup on it. Since in the
+error case this is also not NULL, it ends up trying to access an invalid
+task pointer.
+
+Solution is to assign NULL to ha->dpc_thread in the error path to avoid
+kthread cleanup in that case.
+
+Signed-off-by: Douglas Miller <dougmill@linux.vnet.ibm.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 9372098..bd39bf2 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3212,6 +3212,7 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
+ 		ql_log(ql_log_fatal, base_vha, 0x00ed,
+ 		    "Failed to start DPC thread.\n");
+ 		ret = PTR_ERR(ha->dpc_thread);
++		ha->dpc_thread = NULL;
+ 		goto probe_failed;
+ 	}
+ 	ql_dbg(ql_dbg_init, base_vha, 0x00ee,
+-- 
+1.7.1
