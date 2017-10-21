@@ -1,138 +1,97 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 11/12] hpsa: add enclosure logical identifier
-Date: Fri, 20 Oct 2017 16:52:10 -0500
-Message-ID: <150853633028.28275.7539993197075273144.stgit@brunhilda>
-References: <150853443786.28275.17878578984391668998.stgit@brunhilda>
+From: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjUgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZz?=
+ =?utf-8?Q?:_add_document_for_hisi-ufs?=
+Date: Sat, 21 Oct 2017 09:59:14 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA31F18@DGGEMM506-MBX.china.huawei.com>
+References: <20171020085259.8093-1-liwei213@huawei.com>
+ <20171020085259.8093-3-liwei213@huawei.com>
+ <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0082.outbound.protection.outlook.com ([104.47.38.82]:61225
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753533AbdJTVws (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Oct 2017 17:52:48 -0400
-In-Reply-To: <150853443786.28275.17878578984391668998.stgit@brunhilda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: zh-CN
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "xuwei (O)" <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TZNg+MwTxZMZA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
 
-add support for enclosure logical identifier
-
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/hpsa.c |   69 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 67 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a536ed6..5428a4c 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2965,6 +2965,57 @@ static void hpsa_scsi_interpret_error(struct ctlr_info *h,
- 	}
- }
- 
-+static int hpsa_do_receive_diagnostic(struct ctlr_info *h, u8 *scsi3addr,
-+					u8 page, u8 *buf, size_t bufsize)
-+{
-+	int rc = IO_OK;
-+	struct CommandList *c;
-+	struct ErrorInfo *ei;
-+
-+	c = cmd_alloc(h);
-+	if (fill_cmd(c, RECEIVE_DIAGNOSTIC, h, buf, bufsize,
-+			page, scsi3addr, TYPE_CMD)) {
-+		rc = -1;
-+		goto out;
-+	}
-+	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
-+		PCI_DMA_FROMDEVICE, NO_TIMEOUT);
-+	if (rc)
-+		goto out;
-+	ei = c->err_info;
-+	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
-+		hpsa_scsi_interpret_error(h, c);
-+		rc = -1;
-+	}
-+out:
-+	cmd_free(h, c);
-+	return rc;
-+}
-+
-+static u64 hpsa_get_enclosure_logical_identifier(struct ctlr_info *h,
-+						u8 *scsi3addr)
-+{
-+	u8 *buf;
-+	u64 sa = 0;
-+	int rc = 0;
-+
-+	buf = kzalloc(1024, GFP_KERNEL);
-+	if (!buf)
-+		return 0;
-+
-+	rc = hpsa_do_receive_diagnostic(h, scsi3addr, RECEIVE_DIAGNOSTIC,
-+					buf, 1024);
-+
-+	if (rc)
-+		goto out;
-+
-+	sa = get_unaligned_be64(buf+12);
-+
-+out:
-+	kfree(buf);
-+	return sa;
-+}
-+
- static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
- 			u16 page, unsigned char *buf,
- 			unsigned char bufsize)
-@@ -3400,6 +3451,9 @@ static void hpsa_get_enclosure_info(struct ctlr_info *h,
- 
- 	bmic_device_index = GET_BMIC_DRIVE_NUMBER(&rle->lunid[0]);
- 
-+	encl_dev->sas_address =
-+		hpsa_get_enclosure_logical_identifier(h, scsi3addr);
-+
- 	if (encl_dev->target == -1 || encl_dev->lun == -1) {
- 		rc = IO_OK;
- 		goto out;
-@@ -6571,6 +6625,17 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 			c->Request.CDB[0] = HPSA_INQUIRY;
- 			c->Request.CDB[4] = size & 0xFF;
- 			break;
-+		case RECEIVE_DIAGNOSTIC:
-+			c->Request.CDBLen = 6;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
-+			c->Request.Timeout = 0;
-+			c->Request.CDB[0] = cmd;
-+			c->Request.CDB[1] = 1;
-+			c->Request.CDB[2] = 1;
-+			c->Request.CDB[3] = (size >> 8) & 0xFF;
-+			c->Request.CDB[4] = size & 0xFF;
-+			break;
- 		case HPSA_REPORT_LOG:
- 		case HPSA_REPORT_PHYS:
- 			/* Talking to controller so It's a physical command
-@@ -9508,7 +9573,7 @@ static int hpsa_add_sas_host(struct ctlr_info *h)
- 	struct hpsa_sas_port *hpsa_sas_port;
- 	struct hpsa_sas_phy *hpsa_sas_phy;
- 
--	parent_dev = &h->scsi_host->shost_gendev;
-+	parent_dev = &h->scsi_host->shost_dev;
- 
- 	hpsa_sas_node = hpsa_alloc_sas_node(parent_dev);
- 	if (!hpsa_sas_node)
-@@ -9599,7 +9664,7 @@ hpsa_sas_get_linkerrors(struct sas_phy *phy)
- static int
- hpsa_sas_get_enclosure_identifier(struct sas_rphy *rphy, u64 *identifier)
- {
--	*identifier = 0;
-+	*identifier = rphy->identify.sas_address;
- 	return 0;
- }
- 
+SGksIEJlcmdtYW5uDQpTb3JyeSBsYXRlIGZvciB0aGUgcmVwbHksYW5kIHRoYW5rIHlvdSB2ZXJ5
+IG11Y2ggZm9yIHlvdXIgcGF0aWVuY2UuDQpNeSByZXBseSBpcyBhcyBmb2xsb3dzLiBJIGxvb2sg
+Zm9yd2FyZCB0byB5b3VyIGZ1cnRoZXIgcmVwbHkuDQoNCg0KLS0tLS3pgq7ku7bljp/ku7YtLS0t
+LQ0K5Y+R5Lu25Lq6OiBhcm5kYmVyZ21hbm5AZ21haWwuY29tIFttYWlsdG86YXJuZGJlcmdtYW5u
+QGdtYWlsLmNvbV0g5Luj6KGoIEFybmQgQmVyZ21hbm4NCuWPkemAgeaXtumXtDogMjAxN+W5tDEw
+5pyIMjDml6UgMTc6MTYNCuaUtuS7tuS6ujogbGl3ZWkgKENNKQ0K5oqE6YCBOiBSb2IgSGVycmlu
+ZzsgTWFyayBSdXRsYW5kOyB4dXdlaSAoTyk7IENhdGFsaW4gTWFyaW5hczsgV2lsbCBEZWFjb247
+IFZpbmF5YWsgSG9saWthdHRpOyBKYW1lcyBFLkouIEJvdHRvbWxleTsgTWFydGluIEsuIFBldGVy
+c2VuOyBLZXZpbiBIaWxtYW47IEdyZWdvcnkgQ0xFTUVOVDsgVGhvbWFzIFBldGF6em9uaTsgTWFz
+YWhpcm8gWWFtYWRhOyBSaWt1IFZvaXBpbzsgVGhpZXJyeSBSZWRpbmc7IEtyenlzenRvZiBLb3ps
+b3dza2k7IEVyaWMgQW5ob2x0OyBEVE1MOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyBMaW51
+eCBBUk07IGxpbnV4LXNjc2k7IEd1b2RvbmcgWHU7IEZlbmdiYW9wZW5nIChrZXZpbiwgS2lyaW4g
+U29sdXRpb24gRGVwdCk7IGxpaHVhbiAoWik7IHdhbmd5dXBlbmcgKEEpDQrkuLvpopg6IFJlOiBb
+UEFUQ0ggdjUgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1lbnQgZm9yIGhp
+c2ktdWZzDQoNCk9uIEZyaSwgT2N0IDIwLCAyMDE3IGF0IDEwOjUyIEFNLCBMaSBXZWkgPGxpd2Vp
+MjEzQGh1YXdlaS5jb20+IHdyb3RlOg0KPiAtLS0gL2Rldi9udWxsDQo+ICsrKyBiL0RvY3VtZW50
+YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0DQo+IEBAIC0wLDAgKzEs
+NDYgQEANCj4gKyogSGlzaWxpY29uIFVuaXZlcnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhvc3Qg
+Q29udHJvbGxlcg0KPiArDQo+ICtVRlMgbm9kZXMgYXJlIGRlZmluZWQgdG8gZGVzY3JpYmUgb24t
+Y2hpcCBVRlMgaGFyZHdhcmUgbWFjcm8uDQo+ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xsZXIgc2hv
+dWxkIGhhdmUgaXRzIG93biBub2RlLg0KPiArDQo+ICtSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiAr
+LSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBhdGlibGUgbGlzdCwgY29udGFpbnMgb25lIG9mIHRo
+ZSBmb2xsb3dpbmcgLQ0KPiArICAgICAgICAgICAgICAgICAgICAgICAiaGlzaWxpY29uLGhpMzY2
+MC11ZnMiIGZvciBoaXNpIHVmcyBob3N0IGNvbnRyb2xsZXINCj4gKyAgICAgICAgICAgICAgICAg
+ICAgICAgIHByZXNlbnQgb24gSGkzNjYwIGNoaXBzZXQuDQo+ICstIHJlZyAgICAgICAgICAgICAg
+IDogc2hvdWxkIGNvbnRhaW4gVUZTIHJlZ2lzdGVyIGFkZHJlc3Mgc3BhY2UgJiBVRlMgU1lTIENU
+UkwgcmVnaXN0ZXIgYWRkcmVzcywNCj4gKy0gaW50ZXJydXB0LXBhcmVudCAgOiBpbnRlcnJ1cHQg
+ZGV2aWNlDQo+ICstIGludGVycnVwdHMgICAgICAgIDogaW50ZXJydXB0IG51bWJlcg0KPiArLSBj
+bG9ja3MgICAgICAgICAgICAgICA6IExpc3Qgb2YgcGhhbmRsZSBhbmQgY2xvY2sgc3BlY2lmaWVy
+IHBhaXJzDQo+ICstIGNsb2NrLW5hbWVzICAgICAgIDogTGlzdCBvZiBjbG9jayBpbnB1dCBuYW1l
+IHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQo+ICsgICAgICAgICAgICAgICAgICAgICBvcmRl
+ciBhcyB0aGUgY2xvY2tzIHByb3BlcnR5LiAiY2xrX3JlZiIsICJjbGtfcGh5IiBpcyBvcHRpb25h
+bA0KPiArLSByZXNldHMgICAgICAgICAgICA6IHJlc2V0IG5vZGUgcmVnaXN0ZXIsIG9uZSByZXNl
+dCB0aGUgY2xrIGFuZCB0aGUgb3RoZXIgcmVzZXQgdGhlIGNvbnRyb2xsZXINCj4gKy0gcmVzZXQt
+bmFtZXMgICAgICAgOiBkZXNjcmliZSByZXNldCBub2RlIHJlZ2lzdGVyDQoNCkkgdGhpbmsgSSd2
+ZSBhc2tlZCBhYm91dCB0aGlzIGJlZm9yZSwgYnV0IEkgdGhpbmsgdGhpcyBzaG91bGQgYmUgZG9u
+ZSBtb3JlIGNvbnNpc3RlbnRseSB3aXRoIHRoZSBvdGhlciBVRlMgYmluZGluZ3MuDQoNCkluIHBh
+cnRpY3VsYXIsIEkgd29uZGVyIGlmIHdoYXQgeW91IGRlc2NyaWJlIGFzIHRoZSAiVUZTIFNZUyBD
+VFJMIg0KYXJlYSBjb3JyZXNwb25kcyB0byB3aGF0IFF1YWxjb21tIGhhdmUgZGVzY3JpYmVkIGFz
+IHRoZWlyIFBIWSBpbXBsZW1lbnRhdGlvbi4gSXQgY2VydGFpbmx5IHNlZW1zIHRvIGRyaXZlciBz
+b21lIG9mIHRoZSBwcm9wZXJ0aWVzIHRoYXQgd291bGQgbm9ybWFsbHkgYmUgYXNzb2NpYXRlZCB3
+aXRoIGEgUEhZLg0KDQpMaXdlaTpZZXMsIGEgcGFydCBvZiAiVUZTIFNZUyBDVFJMIiBpcyBhc3Nv
+Y2lhdGVkIHdpdGggYSBQSFksIGJ1dCBmcm9tIG91ciBjaGlwIGNvbGxlYWd1ZSB0aGF0IHdlIGFz
+c3VyZSAiVUZTIFNZUyBDVFJMIiBpcyBhc3NvY2lhdGVkIHdpdGggY2xrL3Jlc2V0L3Bvd2VyIG9u
+L3Bvd2VyIG9mZiBhbmQgc28gb24uIA0KSW4gZmFjdCwgaW4gYWRkaXRpb24gdG8gdGhlIGNvbnRy
+b2xsZXIgaXRzZWxmLCB0aGUgY29udHJvbGxlciByZWxhdGVkIHBlcmlwaGVyeSBhcmUgYWxsIGlu
+IHRoaXMgYXJlYS4gU28gaXQncyBub3QgYXBwcm9wcmlhdGUgdG8gcHV0IHRoaXMgaW50byBhIHNl
+cGFyYXRlIHBoeSBub2RlLg0KDQpGb3IgdGhlICJjbG9jay1uYW1lcyIgcHJvcGVydHksIHlvdSBz
+cGVjaWZ5ICJjbGtfcmVmIiwgd2hpY2ggSSBhc3N1bWUgaXMgdGhlIHNhbWUgYXMgd2hhdCBRdWFs
+Y29tbSBjYWxsICJyZWZfY2xrIi4gSSdkIHN1Z2dlc3QgeW91IHVzZSB0aGUgZXhpc3RpbmcgbmFt
+ZSBhbmQgYWRkIHRoYXQgYXMgdGhlIGRlZmF1bHQgbmFtZSBpbiB0aGUgdWZzaGNkLXBsdGZybS50
+eHQgYmluZGluZyBkb2N1bWVudC4NCg0KTGl3ZWk6IiByZWZfY2xrICIgaXMgYWxyZWFkeSBpbiB0
+aGUgdWZzaGNkLXBsdGZybS50eHQgYmluZGluZyBkb2N1bWVudCwgYW5kIHBhcnNlIGluIHVmc2hj
+ZC5jLCBzbyB3ZSB3aWxsIHJlcGxhY2UgImNsa19yZWYiIHdpdGggInJlZl9jbGsiLiBJIHdpbGwg
+Zml4IGl0IGluIHBhdGNoIHY2Ow0KDQpUaGUgImNsa19waHkiIHByb3BlcnR5IGFwcGVhcnMgdG8g
+YmUgcmVsYXRlZCB0byB0aGUgUEhZLCBzbyBpdCBtaWdodCBiZSBiZXR0ZXIgdG8gaGF2ZSBhIHNl
+cGFyYXRlIHBoeSBub2RlIHdpdGggZWl0aGVyIGp1c3QgdGhlIGNsaywgb3Igd2l0aCB0aGUgY2xr
+IHBsdXMgdGhlICJVRlMgU1lTIENUUkwiIHJlZ2lzdGVyIGFyZWEsIHdoaWNoZXZlciBtYXRjaGVz
+IHlvdXIgaGFyZHdhcmUgYmV0dGVyLCBhbmQgdGhlbiB1c2UgdGVoICJwaHlzL3BoeS1uYW1lcyIg
+cHJvcGVydHkgdG8gcmVmZXIgdG8gdGhhdC4NCg0KTGl3ZWk6IE9LLCBJIHdpbGwgYWRkIGEgc2Vw
+YXJhdGUgcGh5IG5vZGUgYW5kIGZpeCBpdCBpbiBwYXRjaCB2NjsNCg0KVGhlIHJlc2V0IGhhbmRs
+aW5nIHlvdSBkZXNjcmliZSBoZXJlIChib3RoIHJlc2V0cyBhbmQgcmVzZXQtZ3Bpb3MpIGFwcGVh
+cnMgdG8gYmUgY29tcGxldGVseSBnZW5lcmljLCBzbyBJJ2Qgc3VnZ2VzdCBhZGRpbmcgdGhvc2Ug
+dG8gdWZzaGNkLXBsdGZybS50eHQgaW5zdGVhZCBvZiB5b3VyIG93biBiaW5kaW5nLCB0byBlbnN1
+cmUgdGhhdCBmdXR1cmUgZHJpdmVycyB1c2UgdGhlIHNhbWUgaWRlbnRpZmllcnMuDQoNCkxpd2Vp
+OiBGcm9tIG91ciBzb2MgY2hpcCBjb2xsZWFndWUsIHJlc2V0IGluY2x1ZGUgInJzdCIsICJhc3Nl
+cnQiIGlzIG5vdCBnZW5lcmljIGFuZCByZWxhdGVkIHdpdGggb3VyIHNvYyBpbXBsZW1lbnRhdGlv
+biwgeW91IGNhbiBzZWUgdWZzX2hpc2lfc29jX2luaXQoKSBpbiBkcml2ZXJzL3Njc2kvdWZzL3Vm
+cy1oaXNpLmMsIHRoZSBwb3NpdGlvbiBvZiByc3QgYW5kIGFzc2VydCBpcyB2ZXJ5IHNwZWNpYWws
+IGl0J3MgaGFyZCB0byBwdXQgaXQgaW4gYSBnZW5lcmljIHByb2Nlc3M7DQpyZXNldC1ncGlvcyBp
+cyB1c2VkIHRvIHNvbHZlIGEgZGVmZWN0IG9mIHRoZSBTT0MgY2hpcCByZXNldCBmdW5jdGlvbiBh
+bmQgaXQgaXMgbm90IGdlbmVyaWMgLCBidXQgb3VyIGNoaXAgaGFzIGJlZW4gdXBkYXRlZCwgc28g
+dGhpcyBpcyBubyBsb25nZXIgbmVlZGVkLCBhbmQgSSB3aWxsIHJlbW92ZSBpdCBpbiB0aGUgcGF0
+Y2ggdjY7DQoNClRoYW5rcyENCg0KICAgICAgQXJuZA0K
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
