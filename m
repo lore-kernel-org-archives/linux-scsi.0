@@ -1,97 +1,45 @@
-From: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjUgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZz?=
- =?utf-8?Q?:_add_document_for_hisi-ufs?=
-Date: Sat, 21 Oct 2017 09:59:14 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA31F18@DGGEMM506-MBX.china.huawei.com>
-References: <20171020085259.8093-1-liwei213@huawei.com>
- <20171020085259.8093-3-liwei213@huawei.com>
- <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V2] scsi: storvsc: Allow only one remove lun work item to
+ be issued per lun
+Date: Sat, 21 Oct 2017 08:44:44 -0700
+Message-ID: <20171021154444.GK1302522@devbig577.frc2.facebook.com>
+References: <1508261721-24144-1-git-send-email-cavery@redhat.com>
+ <20171019153510.GA7633@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: zh-CN
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "xuwei (O)" <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TZNg+MwTxZMZA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171019153510.GA7633@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Cathy Avery <cavery@redhat.com>, kys@microsoft.com, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dan.carpenter@oracle.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIEJlcmdtYW5uDQpTb3JyeSBsYXRlIGZvciB0aGUgcmVwbHksYW5kIHRoYW5rIHlvdSB2ZXJ5
-IG11Y2ggZm9yIHlvdXIgcGF0aWVuY2UuDQpNeSByZXBseSBpcyBhcyBmb2xsb3dzLiBJIGxvb2sg
-Zm9yd2FyZCB0byB5b3VyIGZ1cnRoZXIgcmVwbHkuDQoNCg0KLS0tLS3pgq7ku7bljp/ku7YtLS0t
-LQ0K5Y+R5Lu25Lq6OiBhcm5kYmVyZ21hbm5AZ21haWwuY29tIFttYWlsdG86YXJuZGJlcmdtYW5u
-QGdtYWlsLmNvbV0g5Luj6KGoIEFybmQgQmVyZ21hbm4NCuWPkemAgeaXtumXtDogMjAxN+W5tDEw
-5pyIMjDml6UgMTc6MTYNCuaUtuS7tuS6ujogbGl3ZWkgKENNKQ0K5oqE6YCBOiBSb2IgSGVycmlu
-ZzsgTWFyayBSdXRsYW5kOyB4dXdlaSAoTyk7IENhdGFsaW4gTWFyaW5hczsgV2lsbCBEZWFjb247
-IFZpbmF5YWsgSG9saWthdHRpOyBKYW1lcyBFLkouIEJvdHRvbWxleTsgTWFydGluIEsuIFBldGVy
-c2VuOyBLZXZpbiBIaWxtYW47IEdyZWdvcnkgQ0xFTUVOVDsgVGhvbWFzIFBldGF6em9uaTsgTWFz
-YWhpcm8gWWFtYWRhOyBSaWt1IFZvaXBpbzsgVGhpZXJyeSBSZWRpbmc7IEtyenlzenRvZiBLb3ps
-b3dza2k7IEVyaWMgQW5ob2x0OyBEVE1MOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyBMaW51
-eCBBUk07IGxpbnV4LXNjc2k7IEd1b2RvbmcgWHU7IEZlbmdiYW9wZW5nIChrZXZpbiwgS2lyaW4g
-U29sdXRpb24gRGVwdCk7IGxpaHVhbiAoWik7IHdhbmd5dXBlbmcgKEEpDQrkuLvpopg6IFJlOiBb
-UEFUQ0ggdjUgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1lbnQgZm9yIGhp
-c2ktdWZzDQoNCk9uIEZyaSwgT2N0IDIwLCAyMDE3IGF0IDEwOjUyIEFNLCBMaSBXZWkgPGxpd2Vp
-MjEzQGh1YXdlaS5jb20+IHdyb3RlOg0KPiAtLS0gL2Rldi9udWxsDQo+ICsrKyBiL0RvY3VtZW50
-YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0DQo+IEBAIC0wLDAgKzEs
-NDYgQEANCj4gKyogSGlzaWxpY29uIFVuaXZlcnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhvc3Qg
-Q29udHJvbGxlcg0KPiArDQo+ICtVRlMgbm9kZXMgYXJlIGRlZmluZWQgdG8gZGVzY3JpYmUgb24t
-Y2hpcCBVRlMgaGFyZHdhcmUgbWFjcm8uDQo+ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xsZXIgc2hv
-dWxkIGhhdmUgaXRzIG93biBub2RlLg0KPiArDQo+ICtSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiAr
-LSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBhdGlibGUgbGlzdCwgY29udGFpbnMgb25lIG9mIHRo
-ZSBmb2xsb3dpbmcgLQ0KPiArICAgICAgICAgICAgICAgICAgICAgICAiaGlzaWxpY29uLGhpMzY2
-MC11ZnMiIGZvciBoaXNpIHVmcyBob3N0IGNvbnRyb2xsZXINCj4gKyAgICAgICAgICAgICAgICAg
-ICAgICAgIHByZXNlbnQgb24gSGkzNjYwIGNoaXBzZXQuDQo+ICstIHJlZyAgICAgICAgICAgICAg
-IDogc2hvdWxkIGNvbnRhaW4gVUZTIHJlZ2lzdGVyIGFkZHJlc3Mgc3BhY2UgJiBVRlMgU1lTIENU
-UkwgcmVnaXN0ZXIgYWRkcmVzcywNCj4gKy0gaW50ZXJydXB0LXBhcmVudCAgOiBpbnRlcnJ1cHQg
-ZGV2aWNlDQo+ICstIGludGVycnVwdHMgICAgICAgIDogaW50ZXJydXB0IG51bWJlcg0KPiArLSBj
-bG9ja3MgICAgICAgICAgICAgICA6IExpc3Qgb2YgcGhhbmRsZSBhbmQgY2xvY2sgc3BlY2lmaWVy
-IHBhaXJzDQo+ICstIGNsb2NrLW5hbWVzICAgICAgIDogTGlzdCBvZiBjbG9jayBpbnB1dCBuYW1l
-IHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQo+ICsgICAgICAgICAgICAgICAgICAgICBvcmRl
-ciBhcyB0aGUgY2xvY2tzIHByb3BlcnR5LiAiY2xrX3JlZiIsICJjbGtfcGh5IiBpcyBvcHRpb25h
-bA0KPiArLSByZXNldHMgICAgICAgICAgICA6IHJlc2V0IG5vZGUgcmVnaXN0ZXIsIG9uZSByZXNl
-dCB0aGUgY2xrIGFuZCB0aGUgb3RoZXIgcmVzZXQgdGhlIGNvbnRyb2xsZXINCj4gKy0gcmVzZXQt
-bmFtZXMgICAgICAgOiBkZXNjcmliZSByZXNldCBub2RlIHJlZ2lzdGVyDQoNCkkgdGhpbmsgSSd2
-ZSBhc2tlZCBhYm91dCB0aGlzIGJlZm9yZSwgYnV0IEkgdGhpbmsgdGhpcyBzaG91bGQgYmUgZG9u
-ZSBtb3JlIGNvbnNpc3RlbnRseSB3aXRoIHRoZSBvdGhlciBVRlMgYmluZGluZ3MuDQoNCkluIHBh
-cnRpY3VsYXIsIEkgd29uZGVyIGlmIHdoYXQgeW91IGRlc2NyaWJlIGFzIHRoZSAiVUZTIFNZUyBD
-VFJMIg0KYXJlYSBjb3JyZXNwb25kcyB0byB3aGF0IFF1YWxjb21tIGhhdmUgZGVzY3JpYmVkIGFz
-IHRoZWlyIFBIWSBpbXBsZW1lbnRhdGlvbi4gSXQgY2VydGFpbmx5IHNlZW1zIHRvIGRyaXZlciBz
-b21lIG9mIHRoZSBwcm9wZXJ0aWVzIHRoYXQgd291bGQgbm9ybWFsbHkgYmUgYXNzb2NpYXRlZCB3
-aXRoIGEgUEhZLg0KDQpMaXdlaTpZZXMsIGEgcGFydCBvZiAiVUZTIFNZUyBDVFJMIiBpcyBhc3Nv
-Y2lhdGVkIHdpdGggYSBQSFksIGJ1dCBmcm9tIG91ciBjaGlwIGNvbGxlYWd1ZSB0aGF0IHdlIGFz
-c3VyZSAiVUZTIFNZUyBDVFJMIiBpcyBhc3NvY2lhdGVkIHdpdGggY2xrL3Jlc2V0L3Bvd2VyIG9u
-L3Bvd2VyIG9mZiBhbmQgc28gb24uIA0KSW4gZmFjdCwgaW4gYWRkaXRpb24gdG8gdGhlIGNvbnRy
-b2xsZXIgaXRzZWxmLCB0aGUgY29udHJvbGxlciByZWxhdGVkIHBlcmlwaGVyeSBhcmUgYWxsIGlu
-IHRoaXMgYXJlYS4gU28gaXQncyBub3QgYXBwcm9wcmlhdGUgdG8gcHV0IHRoaXMgaW50byBhIHNl
-cGFyYXRlIHBoeSBub2RlLg0KDQpGb3IgdGhlICJjbG9jay1uYW1lcyIgcHJvcGVydHksIHlvdSBz
-cGVjaWZ5ICJjbGtfcmVmIiwgd2hpY2ggSSBhc3N1bWUgaXMgdGhlIHNhbWUgYXMgd2hhdCBRdWFs
-Y29tbSBjYWxsICJyZWZfY2xrIi4gSSdkIHN1Z2dlc3QgeW91IHVzZSB0aGUgZXhpc3RpbmcgbmFt
-ZSBhbmQgYWRkIHRoYXQgYXMgdGhlIGRlZmF1bHQgbmFtZSBpbiB0aGUgdWZzaGNkLXBsdGZybS50
-eHQgYmluZGluZyBkb2N1bWVudC4NCg0KTGl3ZWk6IiByZWZfY2xrICIgaXMgYWxyZWFkeSBpbiB0
-aGUgdWZzaGNkLXBsdGZybS50eHQgYmluZGluZyBkb2N1bWVudCwgYW5kIHBhcnNlIGluIHVmc2hj
-ZC5jLCBzbyB3ZSB3aWxsIHJlcGxhY2UgImNsa19yZWYiIHdpdGggInJlZl9jbGsiLiBJIHdpbGwg
-Zml4IGl0IGluIHBhdGNoIHY2Ow0KDQpUaGUgImNsa19waHkiIHByb3BlcnR5IGFwcGVhcnMgdG8g
-YmUgcmVsYXRlZCB0byB0aGUgUEhZLCBzbyBpdCBtaWdodCBiZSBiZXR0ZXIgdG8gaGF2ZSBhIHNl
-cGFyYXRlIHBoeSBub2RlIHdpdGggZWl0aGVyIGp1c3QgdGhlIGNsaywgb3Igd2l0aCB0aGUgY2xr
-IHBsdXMgdGhlICJVRlMgU1lTIENUUkwiIHJlZ2lzdGVyIGFyZWEsIHdoaWNoZXZlciBtYXRjaGVz
-IHlvdXIgaGFyZHdhcmUgYmV0dGVyLCBhbmQgdGhlbiB1c2UgdGVoICJwaHlzL3BoeS1uYW1lcyIg
-cHJvcGVydHkgdG8gcmVmZXIgdG8gdGhhdC4NCg0KTGl3ZWk6IE9LLCBJIHdpbGwgYWRkIGEgc2Vw
-YXJhdGUgcGh5IG5vZGUgYW5kIGZpeCBpdCBpbiBwYXRjaCB2NjsNCg0KVGhlIHJlc2V0IGhhbmRs
-aW5nIHlvdSBkZXNjcmliZSBoZXJlIChib3RoIHJlc2V0cyBhbmQgcmVzZXQtZ3Bpb3MpIGFwcGVh
-cnMgdG8gYmUgY29tcGxldGVseSBnZW5lcmljLCBzbyBJJ2Qgc3VnZ2VzdCBhZGRpbmcgdGhvc2Ug
-dG8gdWZzaGNkLXBsdGZybS50eHQgaW5zdGVhZCBvZiB5b3VyIG93biBiaW5kaW5nLCB0byBlbnN1
-cmUgdGhhdCBmdXR1cmUgZHJpdmVycyB1c2UgdGhlIHNhbWUgaWRlbnRpZmllcnMuDQoNCkxpd2Vp
-OiBGcm9tIG91ciBzb2MgY2hpcCBjb2xsZWFndWUsIHJlc2V0IGluY2x1ZGUgInJzdCIsICJhc3Nl
-cnQiIGlzIG5vdCBnZW5lcmljIGFuZCByZWxhdGVkIHdpdGggb3VyIHNvYyBpbXBsZW1lbnRhdGlv
-biwgeW91IGNhbiBzZWUgdWZzX2hpc2lfc29jX2luaXQoKSBpbiBkcml2ZXJzL3Njc2kvdWZzL3Vm
-cy1oaXNpLmMsIHRoZSBwb3NpdGlvbiBvZiByc3QgYW5kIGFzc2VydCBpcyB2ZXJ5IHNwZWNpYWws
-IGl0J3MgaGFyZCB0byBwdXQgaXQgaW4gYSBnZW5lcmljIHByb2Nlc3M7DQpyZXNldC1ncGlvcyBp
-cyB1c2VkIHRvIHNvbHZlIGEgZGVmZWN0IG9mIHRoZSBTT0MgY2hpcCByZXNldCBmdW5jdGlvbiBh
-bmQgaXQgaXMgbm90IGdlbmVyaWMgLCBidXQgb3VyIGNoaXAgaGFzIGJlZW4gdXBkYXRlZCwgc28g
-dGhpcyBpcyBubyBsb25nZXIgbmVlZGVkLCBhbmQgSSB3aWxsIHJlbW92ZSBpdCBpbiB0aGUgcGF0
-Y2ggdjY7DQoNClRoYW5rcyENCg0KICAgICAgQXJuZA0K
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hello,
+
+On Thu, Oct 19, 2017 at 08:35:10AM -0700, Christoph Hellwig wrote:
+> On Tue, Oct 17, 2017 at 01:35:21PM -0400, Cathy Avery wrote:
+> > +	/*
+> > +	 * Set the error handler work queue.
+> > +	 */
+> > +	snprintf(host_dev->work_q_name, sizeof(host_dev->work_q_name),
+> > +		 "storvsc_error_wq_%d", host->host_no);
+> > +	host_dev->handle_error_wq =
+> > +			create_singlethread_workqueue(host_dev->work_q_name);
+> 
+> If you use alloc_ordered_workqueue directly instead of
+> create_singlethread_workqueue you can pass a format string and don't
+> need the separate allocation.
+> 
+> But I'm not sure if Tejun is fine with using __WQ_LEGACY directly..
+
+The only thing that flag does is exempting the workqueue from possible
+flush deadlock check as we don't know whether WQ_MEM_RECLAIM on a
+legacy workqueue is intentional.  There's no reason to add it when
+converting to alloc_ordered_workqueue().  Just decide whether it needs
+forward progress guarantee and use WQ_MEM_RECLAIM if so.
+
+Thanks.
+
+-- 
+tejun
