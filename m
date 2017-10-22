@@ -1,57 +1,36 @@
-From: Mrs Aicha Mohamed <mrchkoffice@gmail.com>
-Subject: MY LAST WISHES
-Date: Sun, 22 Oct 2017 08:25:18 +0000
-Message-ID: <CAOLXmCvAN6ZExgPEthxkNaO-ofxQ3FVh44+Uu84e4h1huFAi1Q@mail.gmail.com>
-Reply-To: aichamohamed35@yahoo.com
+From: Eugen Hagler <f.eugen@protonmail.com>
+Subject: Only for Business Expertise
+Date: Mon, 23 Oct 2017 00:56:14 +0200
+Message-ID: <ff293e39f8b0581898d1e455bea7bb3d__44373.5695248053$1508726316$gmane$org@protonmail.com>
+Reply-To: eugenhaglermail@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:50825 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751234AbdJVIZT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Oct 2017 04:25:19 -0400
-Received: by mail-qk0-f193.google.com with SMTP id o187so18749446qke.7
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Oct 2017 01:25:19 -0700 (PDT)
+Received: from hformer.com ([77.244.219.14]:44118 "EHLO mail-01.hformer.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751096AbdJWCiS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 22 Oct 2017 22:38:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
---=20
-Dear Friend,
 
-I am writing this mail to you with heavy tears In my eyes and great
-sorrow in my heart, My Name is Mrs Aicha Mohamed  and I am contacting
-you from my country Tunisia I want to tell you this because i don't
-have any other option than to tell you as I was touched to open up to
-you, I married to Mr.John Mack who worked with Tunisia Embassy in
-Benin Republic Cotonou=E2=80=8E for nine years before he died in the year
-2005.We were married for eleven years without a child.
 
-He died after a brief illness that lasted for only five days. Since
-his death I decided not to remarry, When my late husband was alive he
-deposited the sum of US$5.5m (Five Million Five hundred Thousand
-Dollars) in a bank in COTONOU the capital city of BENIN REPULIC in
-west Africa Presently this money is still in bank. He made this money
-available for exportation of Gold from Benin Republic Cotonou=E2=80=8E mini=
-ng.
+My sincere apology if this email will cause any inconvenience. I have a
+proposal which I think might be of interest to you, I have a client who
+is searching for Good Business Owners that have got lucrative
+projects/business ideas he can invest his funds on. My client has great
+interest to invest in worthy creative start ups that has good
+potentials. He is not concerned about the type of project or the
+location of the investment rather his interest is that the Project
+should be one that will be able to yield a high return on investment.
+The investment range should be within the range of US$ One million-US$
+Two Hundred million. His plan is to invest in a long term (maybe a
+period of 10 - 15 years) and after that, will withdraw his original
+capital and at the end of every financial year both of you will be
+sharing the interest generated on any percentage you both agree on.
+send me your Tel. Number or send mailto: info@ibreach.org
 
-Recently, My Doctor told me that I would not last for the period of
-seven months due to cancer problem. The one that disturbs me most is
-my stroke sickness .Having known my condition I decided to hand you
-over this money to take care of the less-privileged people, you will
-utilize this money the way I am going to instruct here.
-
-I want you to take 40 Percent of the total money for your personal use
-While 60% of the money will go to charity" people in the street and
-helping the orphanage. I grew up as an Orphan and I don't have any
-body as my family member, just to endeavor that the house of God is
-maintained. Am doing this so that God will forgive my sins and accept
-my soul because these sicknesses have suffered me so much.
-
-As soon a s I receive your reply I shall give you the contact of the
-bank in Benin Republic Cotonou=E2=80=8E,if you assure me that you will act
-accordingly as I Stated here in.
-
-May Our Lord Almigthy be with you
-
-Mrs.Aicha Mohamed
+Regards
+Mr Eugen Hagler
