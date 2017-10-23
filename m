@@ -1,30 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Suppress a kernel warning in case the prep function returns BLKPREP_DEFER
-Date: Mon, 23 Oct 2017 02:15:12 -0400
-Message-ID: <yq1fuaamlu7.fsf@oracle.com>
-References: <20171020184645.4327-1-bart.vanassche@wdc.com>
-        <1510de1e-3f52-fa51-8a88-b5e9fc73b15e@wdc.com>
-        <1508738411.2634.1.camel@wdc.com>
+Subject: Re: [PATCH 9/9] bsg: split handling of SCSI CDBs vs transport requeues
+Date: Mon, 23 Oct 2017 02:16:03 -0400
+Message-ID: <yq1bmkymlss.fsf@oracle.com>
+References: <20171003104845.10417-1-hch@lst.de>
+        <20171003104845.10417-10-hch@lst.de>
+        <20171019155933.GE26185@bblock-ThinkPad-W530>
+        <20171020162630.GA14277@lst.de>
+        <20171020164727.GA26380@bblock-ThinkPad-W530>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24207 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:24390 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751083AbdJWGP7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2017 02:15:59 -0400
-In-Reply-To: <1508738411.2634.1.camel@wdc.com> (Bart Van Assche's message of
-        "Mon, 23 Oct 2017 06:00:13 +0000")
+        with ESMTP id S1751083AbdJWGQM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2017 02:16:12 -0400
+In-Reply-To: <20171020164727.GA26380@bblock-ThinkPad-W530> (Benjamin Block's
+        message of "Fri, 20 Oct 2017 18:47:27 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>
+To: Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 
-Bart,
+Benjamin,
 
-> if others agree with this patch, can it be queued for kernel v4.14?
+>> Not sure it's worth it especially now that Martin has merged the patch.
+>
+> He did? I only saw a mail that he picked patches 2-5. So all the bsg
+> changes are still open I think.
 
-Yep, I'll take a look later.
+Yes, I expected the bsg bits to go through Jens' tree.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
