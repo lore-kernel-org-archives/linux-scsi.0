@@ -1,64 +1,63 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH 02/12] hpsa: cleanup sas_phy structures in sysfs when
- unloading
-Date: Mon, 23 Oct 2017 16:44:53 -0700
-Message-ID: <1508802293.3209.3.camel@linux.vnet.ibm.com>
-References: <150853443786.28275.17878578984391668998.stgit@brunhilda>
-         <150853627417.28275.14954285884974003997.stgit@brunhilda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58850 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751116AbdJWXpD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Oct 2017 19:45:03 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9NNi40j047215
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2017 19:45:03 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2dskcm9p0m-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2017 19:45:03 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Mon, 23 Oct 2017 17:45:02 -0600
-In-Reply-To: <150853627417.28275.14954285884974003997.stgit@brunhilda>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH V2] scsi: aacraid: Fix some error code
+Date: Tue, 24 Oct 2017 04:29:46 +0200
+Message-ID: <20171024022946.30223-1-christophe.jaillet@wanadoo.fr>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: aacraid@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2017-10-20 at 16:51 -0500, Don Brace wrote:
-> From: Martin Wilck <mwilck@suse.de>
-> 
-> I am resubmitting this patch on behalf of Martin Wilck
-> with his permission.
-> 
-> The original patch can be found here:
-> https://www.spinics.net/lists/linux-scsi/msg102083.html
-> 
-> This patch did not help until Hannes's
-> commit 9441284fbc39 ("scsi-fixup-kernel-warning-during-rmmod")
-> was applied to the kernel.
-> 
-> --------------------------------------
-> Original patch description from Martin:
-> --------------------------------------
-> 
-> When the hpsa module is unloaded using rmmod, dangling
-> symlinks remain under /sys/class/sas_phy. Fix this by
-> calling sas_phy_delete() rather than sas_phy_free (which,
-> according to comments, should not be called for PHYs that
-> have been set up successfully, anyway).
-> 
-> Tested-by: Don Brace <don.brace@microsemi.com>
-> Reviewed-by: Don Brace <don.brace@microsemi.com>
-> Signed-off-by: Martin Wilck <mwilck@xxxxxxx>
+If 'scsi_host_alloc', 'kzalloc' or '(*aac_drivers[index].init)' fail, the
+function will return 0, because 'error' is known to be 0 at this point.
 
-Hey, what's this for a signoff?  The original patch had the correct
-email address; how did it get mangled like this?
+Return -ENOMEM in the 2 first cases and -ENODEV in the third one.
 
-James
+This patch also removes a useless 'error = -ENODEV'.
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+V2: rebase against latest -next (20171019)
+---
+ drivers/scsi/aacraid/linit.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index c9252b138c1f..7e7d9bfd2b9e 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1628,7 +1628,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	error = pci_enable_device(pdev);
+ 	if (error)
+ 		goto out;
+-	error = -ENODEV;
+ 
+ 	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
+ 		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+@@ -1660,6 +1659,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	pci_set_master(pdev);
+ 
+ 	shost = scsi_host_alloc(&aac_driver_template, sizeof(struct aac_dev));
++	error = -ENOMEM;
+ 	if (!shost)
+ 		goto out_disable_pdev;
+ 
+@@ -1681,6 +1681,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_LIST_HEAD(&aac->entry);
+ 
+ 	aac->fibs = kzalloc(sizeof(struct fib) * (shost->can_queue + AAC_NUM_MGT_FIB), GFP_KERNEL);
++	error = -ENOMEM;
+ 	if (!aac->fibs)
+ 		goto out_free_host;
+ 	spin_lock_init(&aac->fib_lock);
+@@ -1690,6 +1691,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	 *	Map in the registers from the adapter.
+ 	 */
+ 	aac->base_size = AAC_MIN_FOOTPRINT_SIZE;
++	error = -ENODEV;
+ 	if ((*aac_drivers[index].init)(aac))
+ 		goto out_unmap;
+ 
+-- 
+2.14.1
+
