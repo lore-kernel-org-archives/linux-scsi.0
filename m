@@ -1,15 +1,15 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 03/19] scsi: hisi_sas: use spin_lock_irqsave() for hisi_hba.lock
-Date: Tue, 24 Oct 2017 23:51:33 +0800
-Message-ID: <1508860309-212397-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 08/19] scsi: hisi_sas: fix the risk of freeing slot twice
+Date: Tue, 24 Oct 2017 23:51:38 +0800
+Message-ID: <1508860309-212397-9-git-send-email-john.garry@huawei.com>
 References: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:50580 "EHLO huawei.com"
+Received: from szxga06-in.huawei.com ([45.249.212.32]:50508 "EHLO huawei.com"
         rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751705AbdJXPF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Oct 2017 11:05:29 -0400
+        id S1751398AbdJXPF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:05:28 -0400
 In-Reply-To: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,67 +18,63 @@ Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.or
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-We used spin_lock() to grab hisi_hba.lock in two places
-where spin_lock_irqsave() should be used, as
-hisi_hba.lock can be taken in interrupt context.
+The function hisi_sas_slot_task_free() is used to free
+the slot and do tidy-up of LLDD resources. The LLDD
+generally should know the state of a slot and decide when
+to free it, and it should only be done once.
 
-This patch is to fix this.
+For some scenarios, we really don't know the state, like
+when TMF timeout. In this case, we check task->lldd_task
+before calling hisi_sas_slot_task_free().
+
+However, we may miss some scenarios when we should also
+check task->lldd_task, and it is not SMP safe to check
+task->lldd_task as we don't protect it within spin lock.
+
+This patch is to fix this risk of freeing slot twice, as
+follows:
+1. Check task->lldd_task in the hisi_sas_slot_task_free(),
+and give up freeing of this time if task->lldd_task is NULL.
+2. Set slot->buf to NULL after it is freed.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 5 +++--
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 0eb9174..e038bdf 100644
+index 2a209e1..6b4dabde 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -505,9 +505,10 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
- {
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct hisi_sas_device *sas_dev = NULL;
-+	unsigned long flags;
- 	int i;
+@@ -185,13 +185,16 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 		struct domain_device *device = task->dev;
+ 		struct hisi_sas_device *sas_dev = device->lldd_dev;
  
--	spin_lock(&hisi_hba->lock);
-+	spin_lock_irqsave(&hisi_hba->lock, flags);
- 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
- 		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
- 			int queue = i % hisi_hba->queue_count;
-@@ -524,7 +525,7 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
- 			break;
- 		}
++		if (!task->lldd_task)
++			return;
++
++		task->lldd_task = NULL;
++
+ 		if (!sas_protocol_ata(task->task_proto))
+ 			if (slot->n_elem)
+ 				dma_unmap_sg(dev, task->scatter, slot->n_elem,
+ 					     task->data_dir);
+ 
+-		task->lldd_task = NULL;
+-
+ 		if (sas_dev)
+ 			atomic64_dec(&sas_dev->running_req);
  	}
--	spin_unlock(&hisi_hba->lock);
-+	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+@@ -199,8 +202,8 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 	if (slot->buf)
+ 		dma_pool_free(hisi_hba->buffer_pool, slot->buf, slot->buf_dma);
  
- 	return sas_dev;
- }
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 779af97..73d12ff 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -843,8 +843,9 @@ hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
- 	struct hisi_sas_device *sas_dev = NULL;
- 	int i, sata_dev = dev_is_sata(device);
- 	int sata_idx = -1;
-+	unsigned long flags;
- 
--	spin_lock(&hisi_hba->lock);
-+	spin_lock_irqsave(&hisi_hba->lock, flags);
- 
- 	if (sata_dev)
- 		if (!sata_index_alloc_v2_hw(hisi_hba, &sata_idx))
-@@ -874,7 +875,7 @@ hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
- 	}
- 
- out:
--	spin_unlock(&hisi_hba->lock);
-+	spin_unlock_irqrestore(&hisi_hba->lock, flags);
- 
- 	return sas_dev;
- }
+-
+ 	list_del_init(&slot->entry);
++	slot->buf = NULL;
+ 	slot->task = NULL;
+ 	slot->port = NULL;
+ 	hisi_sas_slot_index_free(hisi_hba, slot->idx);
 -- 
 1.9.1
