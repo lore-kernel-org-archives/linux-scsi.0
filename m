@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 16/19] scsi: hisi_sas: fix a bug when free device for v3 hw
-Date: Tue, 24 Oct 2017 23:51:46 +0800
-Message-ID: <1508860309-212397-17-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 14/19] scsi: hisi_sas: add v3 hw DFX feature
+Date: Tue, 24 Oct 2017 23:51:44 +0800
+Message-ID: <1508860309-212397-15-git-send-email-john.garry@huawei.com>
 References: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,77 +9,78 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-Use completion to wait on ITCT CLR interrupt finishing before
-processing other things when freeing a device.
+Realise get_events() to add DFX feature for v3 hw. Just
+like v2 hw, We support the following errors:
+- loss_of_dword_sync_count
+- invalid_dword_count
+- phy_reset_problem_count
+- running_disparity_error_count
 
-This is safer than the pre-existing process of polling the
-register.
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 25 +++++++------------------
- 1 file changed, 7 insertions(+), 18 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 1f8995b..243fa1d 100644
+index 5fbd121..818bd575 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -393,7 +393,7 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, 0xffffffff);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0xfefefefe);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0xfefefefe);
--	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xfffe20ff);
- 	hisi_sas_write32(hisi_hba, CHNL_PHYUPDOWN_INT_MSK, 0x0);
- 	hisi_sas_write32(hisi_hba, CHNL_ENT_INT_MSK, 0x0);
- 	hisi_sas_write32(hisi_hba, HGC_COM_INT_MSK, 0x0);
-@@ -582,35 +582,24 @@ static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
- static void free_device_v3_hw(struct hisi_hba *hisi_hba,
- 			      struct hisi_sas_device *sas_dev)
- {
-+	DECLARE_COMPLETION_ONSTACK(completion);
- 	u64 dev_id = sas_dev->device_id;
--	struct device *dev = hisi_hba->dev;
- 	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
- 	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
+@@ -172,6 +172,10 @@
+ #define DMA_RX_STATUS			(PORT_BASE + 0x2e8)
+ #define DMA_RX_STATUS_BUSY_OFF		0
+ #define DMA_RX_STATUS_BUSY_MSK		(0x1 << DMA_RX_STATUS_BUSY_OFF)
++#define ERR_CNT_DWS_LOST		(PORT_BASE + 0x380)
++#define ERR_CNT_RESET_PROB		(PORT_BASE + 0x384)
++#define ERR_CNT_INVLD_DW		(PORT_BASE + 0x390)
++#define ERR_CNT_DISP_ERR		(PORT_BASE + 0x398)
  
-+	sas_dev->completion = &completion;
-+
- 	/* clear the itct interrupt state */
- 	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
- 		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
- 				 ENT_INT_SRC3_ITC_INT_MSK);
- 
- 	/* clear the itct table*/
--	reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
--	reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
-+	reg_val = ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
- 	hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
- 
--	udelay(10);
--	reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
--	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
--		dev_dbg(dev, "got clear ITCT done interrupt\n");
--
--		/* invalid the itct state*/
--		memset(itct, 0, sizeof(struct hisi_sas_itct));
--		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
--				 ENT_INT_SRC3_ITC_INT_MSK);
--
--		/* clear the itct */
--		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
--		dev_dbg(dev, "clear ITCT ok\n");
--	}
-+	wait_for_completion(sas_dev->completion);
-+	memset(itct, 0, sizeof(struct hisi_sas_itct));
+ #define DEFAULT_ITCT_HW		2048 /* reset value, not reprogrammed */
+ #if (HISI_SAS_MAX_DEVICES > DEFAULT_ITCT_HW)
+@@ -1742,6 +1746,31 @@ static u32 get_phys_state_v3_hw(struct hisi_hba *hisi_hba)
+ 	return hisi_sas_read32(hisi_hba, PHY_STATE);
  }
  
- static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
++static void phy_get_events_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct sas_phy *sphy = sas_phy->phy;
++	u32 reg_value;
++
++	/* loss dword sync */
++	reg_value = hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DWS_LOST);
++	sphy->loss_of_dword_sync_count += reg_value;
++
++	/* phy reset problem */
++	reg_value = hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_RESET_PROB);
++	sphy->phy_reset_problem_count += reg_value;
++
++	/* invalid dword */
++	reg_value = hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
++	sphy->invalid_dword_count += reg_value;
++
++	/* disparity err */
++	reg_value = hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DISP_ERR);
++	sphy->running_disparity_error_count += reg_value;
++
++}
++
+ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = hisi_hba->dev;
+@@ -1794,6 +1823,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
+ 	.dereg_device = dereg_device_v3_hw,
+ 	.soft_reset = soft_reset_v3_hw,
+ 	.get_phys_state = get_phys_state_v3_hw,
++	.get_events = phy_get_events_v3_hw,
+ };
+ 
+ static struct Scsi_Host *
 -- 
 1.9.1
