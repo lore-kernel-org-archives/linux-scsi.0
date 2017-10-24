@@ -1,193 +1,35 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 18/19] scsi: hisi_sas: add v3 hw support for AXI fatal error
-Date: Tue, 24 Oct 2017 23:51:48 +0800
-Message-ID: <1508860309-212397-19-git-send-email-john.garry@huawei.com>
-References: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 02/12] hpsa: cleanup sas_phy structures in sysfs when unloading
+Date: Tue, 24 Oct 2017 11:14:25 -0400
+Message-ID: <yq1d15ck27i.fsf@oracle.com>
+References: <150853443786.28275.17878578984391668998.stgit@brunhilda>
+        <150853627417.28275.14954285884974003997.stgit@brunhilda>
+        <1508802293.3209.3.camel@linux.vnet.ibm.com>
+        <4993A297653ECB4581FA5C3C31323D196721EBE0@avsrvexchmbx2.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41598 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751738AbdJXPPl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2017 11:15:41 -0400
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D196721EBE0@avsrvexchmbx2.microsemi.net>
+        (Don Brace's message of "Tue, 24 Oct 2017 15:08:37 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-Add support for processing AXI bus fatal errors.
+Don,
 
-If AXI bus fatal error happen, do controller reset to
-recover.
+> Unsure. I do not see the mangled e-mail anywhere in the e-mail
+> chain. I did not type the e-mail in like that. But it originated from
+> me.  I may have pulled the patch from an archive that mangled it.
+>
+> Do you want me to re-post the two patches?
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 125 +++++++++++++++++++++++++++++++++
- 1 file changed, 125 insertions(+)
+I'll fix them up. But it's a bad time to have to rebase...
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 18cc3b4..f700482 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -53,6 +53,11 @@
- #define HGC_IOMB_PROC1_STATUS	0x104
- #define CFG_1US_TIMER_TRSH		0xcc
- #define CHNL_INT_STATUS			0x148
-+#define HGC_AXI_FIFO_ERR_INFO  0x154
-+#define AXI_ERR_INFO_OFF               0
-+#define AXI_ERR_INFO_MSK               (0xff << AXI_ERR_INFO_OFF)
-+#define FIFO_ERR_INFO_OFF              8
-+#define FIFO_ERR_INFO_MSK              (0xff << FIFO_ERR_INFO_OFF)
- #define INT_COAL_EN			0x19c
- #define OQ_INT_COAL_TIME		0x1a0
- #define OQ_INT_COAL_CNT			0x1a4
-@@ -1315,6 +1320,114 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
- 	return IRQ_HANDLED;
- }
- 
-+static const struct hisi_sas_hw_error axi_error[] = {
-+	{ .msk = BIT(0), .msg = "IOST_AXI_W_ERR" },
-+	{ .msk = BIT(1), .msg = "IOST_AXI_R_ERR" },
-+	{ .msk = BIT(2), .msg = "ITCT_AXI_W_ERR" },
-+	{ .msk = BIT(3), .msg = "ITCT_AXI_R_ERR" },
-+	{ .msk = BIT(4), .msg = "SATA_AXI_W_ERR" },
-+	{ .msk = BIT(5), .msg = "SATA_AXI_R_ERR" },
-+	{ .msk = BIT(6), .msg = "DQE_AXI_R_ERR" },
-+	{ .msk = BIT(7), .msg = "CQE_AXI_W_ERR" },
-+	{},
-+};
-+
-+static const struct hisi_sas_hw_error fifo_error[] = {
-+	{ .msk = BIT(8),  .msg = "CQE_WINFO_FIFO" },
-+	{ .msk = BIT(9),  .msg = "CQE_MSG_FIFIO" },
-+	{ .msk = BIT(10), .msg = "GETDQE_FIFO" },
-+	{ .msk = BIT(11), .msg = "CMDP_FIFO" },
-+	{ .msk = BIT(12), .msg = "AWTCTRL_FIFO" },
-+	{},
-+};
-+
-+static const struct hisi_sas_hw_error fatal_axi_error[] = {
-+	{
-+		.irq_msk = BIT(ENT_INT_SRC3_WP_DEPTH_OFF),
-+		.msg = "write pointer and depth",
-+	},
-+	{
-+		.irq_msk = BIT(ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF),
-+		.msg = "iptt no match slot",
-+	},
-+	{
-+		.irq_msk = BIT(ENT_INT_SRC3_RP_DEPTH_OFF),
-+		.msg = "read pointer and depth",
-+	},
-+	{
-+		.irq_msk = BIT(ENT_INT_SRC3_AXI_OFF),
-+		.reg = HGC_AXI_FIFO_ERR_INFO,
-+		.sub = axi_error,
-+	},
-+	{
-+		.irq_msk = BIT(ENT_INT_SRC3_FIFO_OFF),
-+		.reg = HGC_AXI_FIFO_ERR_INFO,
-+		.sub = fifo_error,
-+	},
-+	{
-+		.irq_msk = BIT(ENT_INT_SRC3_LM_OFF),
-+		.msg = "LM add/fetch list",
-+	},
-+	{
-+		.irq_msk = BIT(ENT_INT_SRC3_ABT_OFF),
-+		.msg = "SAS_HGC_ABT fetch LM list",
-+	},
-+};
-+
-+static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
-+{
-+	u32 irq_value, irq_msk;
-+	struct hisi_hba *hisi_hba = p;
-+	struct device *dev = hisi_hba->dev;
-+	int i;
-+
-+	irq_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK3);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk | 0x1df00);
-+
-+	irq_value = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+
-+	for (i = 0; i < ARRAY_SIZE(fatal_axi_error); i++) {
-+		const struct hisi_sas_hw_error *error = &fatal_axi_error[i];
-+
-+		if (!(irq_value & error->irq_msk))
-+			continue;
-+
-+		if (error->sub) {
-+			const struct hisi_sas_hw_error *sub = error->sub;
-+			u32 err_value = hisi_sas_read32(hisi_hba, error->reg);
-+
-+			for (; sub->msk || sub->msg; sub++) {
-+				if (!(err_value & sub->msk))
-+					continue;
-+
-+				dev_warn(dev, "%s error (0x%x) found!\n",
-+					sub->msg, irq_value);
-+				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
-+			}
-+		} else {
-+			dev_warn(dev, "%s error (0x%x) found!\n",
-+				error->msg, irq_value);
-+			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
-+		}
-+	}
-+
-+	if (irq_value & BIT(ENT_INT_SRC3_ITC_INT_OFF)) {
-+		u32 reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
-+		u32 dev_id = reg_val & ITCT_DEV_MSK;
-+		struct hisi_sas_device *sas_dev =
-+				&hisi_hba->devices[dev_id];
-+
-+		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
-+		dev_dbg(dev, "clear ITCT ok\n");
-+		complete(sas_dev->completion);
-+	}
-+
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, irq_value & 0x1df00);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static void
- slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
- 	       struct hisi_sas_slot *slot)
-@@ -1615,6 +1728,15 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- 		goto free_phy_irq;
- 	}
- 
-+	rc = devm_request_irq(dev, pci_irq_vector(pdev, 11),
-+			      fatal_axi_int_v3_hw, 0,
-+			      DRV_NAME " fatal", hisi_hba);
-+	if (rc) {
-+		dev_err(dev, "could not request fatal interrupt, rc=%d\n", rc);
-+		rc = -ENOENT;
-+		goto free_chnl_interrupt;
-+	}
-+
- 	/* Init tasklets for cq only */
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
- 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
-@@ -1642,6 +1764,8 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- 
- 		free_irq(pci_irq_vector(pdev, k+16), cq);
- 	}
-+	free_irq(pci_irq_vector(pdev, 11), hisi_hba);
-+free_chnl_interrupt:
- 	free_irq(pci_irq_vector(pdev, 2), hisi_hba);
- free_phy_irq:
- 	free_irq(pci_irq_vector(pdev, 1), hisi_hba);
-@@ -1974,6 +2098,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- 
- 	free_irq(pci_irq_vector(pdev, 1), hisi_hba);
- 	free_irq(pci_irq_vector(pdev, 2), hisi_hba);
-+	free_irq(pci_irq_vector(pdev, 11), hisi_hba);
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
- 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
- 
 -- 
-1.9.1
+Martin K. Petersen	Oracle Linux Engineering
