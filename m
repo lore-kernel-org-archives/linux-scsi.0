@@ -1,72 +1,51 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 15/19] scsi: hisi_sas: add hisi_hba.rst_work init for v3 hw
-Date: Tue, 24 Oct 2017 23:51:45 +0800
-Message-ID: <1508860309-212397-16-git-send-email-john.garry@huawei.com>
-References: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 02/12] hpsa: cleanup sas_phy structures in sysfs when
+ unloading
+Date: Tue, 24 Oct 2017 15:08:37 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D196721EBE0@avsrvexchmbx2.microsemi.net>
+References: <150853443786.28275.17878578984391668998.stgit@brunhilda>
+         <150853627417.28275.14954285884974003997.stgit@brunhilda>
+ <1508802293.3209.3.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam03on0058.outbound.protection.outlook.com ([104.47.42.58]:52256
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751743AbdJXPIu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:08:50 -0400
+In-Reply-To: <1508802293.3209.3.camel@linux.vnet.ibm.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
-
-Add init code of hisi_hba->rst_work for v3 hw. Because v3
-hw also need it to recover controller when some hw errors
-occurs.
-
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h       | 1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 3 ++-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
- 3 files changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 58bc69e..00fefea 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -434,4 +434,5 @@ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
- 				    struct sas_task *task,
- 				    struct hisi_sas_slot *slot);
- extern void hisi_sas_init_mem(struct hisi_hba *hisi_hba);
-+extern void hisi_sas_rst_work_handler(struct work_struct *work);
- #endif
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 6b4dabde..1d417a4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1785,13 +1785,14 @@ void hisi_sas_free(struct hisi_hba *hisi_hba)
- }
- EXPORT_SYMBOL_GPL(hisi_sas_free);
- 
--static void hisi_sas_rst_work_handler(struct work_struct *work)
-+void hisi_sas_rst_work_handler(struct work_struct *work)
- {
- 	struct hisi_hba *hisi_hba =
- 		container_of(work, struct hisi_hba, rst_work);
- 
- 	hisi_sas_controller_reset(hisi_hba);
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_rst_work_handler);
- 
- int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
- {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 818bd575..1f8995b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1840,6 +1840,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- 	}
- 	hisi_hba = shost_priv(shost);
- 
-+	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
- 	hisi_hba->hw = &hisi_sas_v3_hw;
- 	hisi_hba->pci_dev = pdev;
- 	hisi_hba->dev = dev;
--- 
-1.9.1
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBPbiBGcmksIDIwMTctMTAtMjAgYXQgMTY6
+NTEgLTA1MDAsIERvbiBCcmFjZSB3cm90ZToNCj4gPiBGcm9tOiBNYXJ0aW4gV2lsY2sgPG13aWxj
+a0BzdXNlLmRlPg0KPiA+DQo+ID4gSSBhbSByZXN1Ym1pdHRpbmcgdGhpcyBwYXRjaCBvbiBiZWhh
+bGYgb2YgTWFydGluIFdpbGNrDQo+ID4gd2l0aCBoaXMgcGVybWlzc2lvbi4NCj4gPg0KPiA+IFRo
+ZSBvcmlnaW5hbCBwYXRjaCBjYW4gYmUgZm91bmQgaGVyZToNCj4gPiBodHRwczovL3d3dy5zcGlu
+aWNzLm5ldC9saXN0cy9saW51eC1zY3NpL21zZzEwMjA4My5odG1sDQo+ID4NCj4gPiBUaGlzIHBh
+dGNoIGRpZCBub3QgaGVscCB1bnRpbCBIYW5uZXMncw0KPiA+IGNvbW1pdCA5NDQxMjg0ZmJjMzkg
+KCJzY3NpLWZpeHVwLWtlcm5lbC13YXJuaW5nLWR1cmluZy1ybW1vZCIpDQo+ID4gd2FzIGFwcGxp
+ZWQgdG8gdGhlIGtlcm5lbC4NCj4gPg0KPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tDQo+ID4gT3JpZ2luYWwgcGF0Y2ggZGVzY3JpcHRpb24gZnJvbSBNYXJ0aW46DQo+
+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gPg0KPiA+IFdoZW4g
+dGhlIGhwc2EgbW9kdWxlIGlzIHVubG9hZGVkIHVzaW5nIHJtbW9kLCBkYW5nbGluZw0KPiA+IHN5
+bWxpbmtzIHJlbWFpbiB1bmRlciAvc3lzL2NsYXNzL3Nhc19waHkuIEZpeCB0aGlzIGJ5DQo+ID4g
+Y2FsbGluZyBzYXNfcGh5X2RlbGV0ZSgpIHJhdGhlciB0aGFuIHNhc19waHlfZnJlZSAod2hpY2gs
+DQo+ID4gYWNjb3JkaW5nIHRvIGNvbW1lbnRzLCBzaG91bGQgbm90IGJlIGNhbGxlZCBmb3IgUEhZ
+cyB0aGF0DQo+ID4gaGF2ZSBiZWVuIHNldCB1cCBzdWNjZXNzZnVsbHksIGFueXdheSkuDQo+ID4N
+Cj4gPiBUZXN0ZWQtYnk6IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+DQo+ID4g
+UmV2aWV3ZWQtYnk6IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+DQo+ID4gU2ln
+bmVkLW9mZi1ieTogTWFydGluIFdpbGNrIDxtd2lsY2tAeHh4eHh4eD4NCj4gDQo+IEhleSwgd2hh
+dCdzIHRoaXMgZm9yIGEgc2lnbm9mZj8gIFRoZSBvcmlnaW5hbCBwYXRjaCBoYWQgdGhlIGNvcnJl
+Y3QNCj4gZW1haWwgYWRkcmVzczsgaG93IGRpZCBpdCBnZXQgbWFuZ2xlZCBsaWtlIHRoaXM/DQo+
+IA0KPiBKYW1lcw0KDQpVbnN1cmUuIEkgZG8gbm90IHNlZSB0aGUgbWFuZ2xlZCBlLW1haWwgYW55
+d2hlcmUgaW4gdGhlIGUtbWFpbA0KY2hhaW4uIEkgZGlkIG5vdCB0eXBlIHRoZSBlLW1haWwgaW4g
+bGlrZSB0aGF0LiBCdXQgaXQgb3JpZ2luYXRlZCBmcm9tIG1lLg0KSSBtYXkgaGF2ZSBwdWxsZWQg
+dGhlIHBhdGNoIGZyb20gYW4gYXJjaGl2ZSB0aGF0IG1hbmdsZWQgaXQuDQoNCkRvIHlvdSB3YW50
+IG1lIHRvIHJlLXBvc3QgdGhlIHR3byBwYXRjaGVzPyANCg0KVGhhbmtzLA0KRG9uIEJyYWNlDQpF
+U0MgLSBTbWFydCBTdG9yYWdlDQpNaWNyb3NlbWkgQ29ycG9yYXRpb24NCg0KDQoNCg==
