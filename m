@@ -1,40 +1,440 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 02/19] scsi: hisi_sas: fix internal abort slot timeout bug
-Date: Tue, 24 Oct 2017 23:51:32 +0800
-Message-ID: <1508860309-212397-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 09/19] scsi: hisi_sas: use array for v2 hw AXI errors
+Date: Tue, 24 Oct 2017 23:51:39 +0800
+Message-ID: <1508860309-212397-10-git-send-email-john.garry@huawei.com>
 References: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga06-in.huawei.com ([45.249.212.32]:50575 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751670AbdJXPFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:05:30 -0400
 In-Reply-To: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Shiju Jose <shiju.jose@huawei.com>, John Garry <john.garry@huawei.com>
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Shiju Jose <shiju.jose@huawei.com>
 
-When an internal abort times out in
-hisi_sas_internal_task_abort(), goto the exit label in
-and not go through the other task status checks.
+The code to print AXI errors in v2 hw driver is
+repetitive.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+This patch condenses the code by looping an array of
+errors.
+
+Also, a formatting error in one_bit_ecc_errors[] and
+multi_bit_ecc_errors[] is fixed.
+
+Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |   1 +
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 236 ++++++++++++++-------------------
+ 2 files changed, 100 insertions(+), 137 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9e29902..0eb9174 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1469,6 +1469,7 @@ static int hisi_sas_query_task(struct sas_task *task)
- 			if (slot)
- 				slot->task = NULL;
- 			dev_err(dev, "internal task abort: timeout.\n");
-+			goto exit;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index ea4b5d6..d2d384b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -96,6 +96,7 @@ struct hisi_sas_hw_error {
+ 	int shift;
+ 	const char *msg;
+ 	int reg;
++	const struct hisi_sas_hw_error *sub;
+ };
+ 
+ struct hisi_sas_phy {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 50a0fc8..ee34f2e 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -406,80 +406,70 @@ struct hisi_sas_err_record_v2 {
+ 		.irq_msk = BIT(SAS_ECC_INTR_DQE_ECC_1B_OFF),
+ 		.msk = HGC_DQE_ECC_1B_ADDR_MSK,
+ 		.shift = HGC_DQE_ECC_1B_ADDR_OFF,
+-		.msg = "hgc_dqe_acc1b_intr found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_dqe_acc1b_intr found: Ram address is 0x%08X\n",
+ 		.reg = HGC_DQE_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_IOST_ECC_1B_OFF),
+ 		.msk = HGC_IOST_ECC_1B_ADDR_MSK,
+ 		.shift = HGC_IOST_ECC_1B_ADDR_OFF,
+-		.msg = "hgc_iost_acc1b_intr found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_iost_acc1b_intr found: Ram address is 0x%08X\n",
+ 		.reg = HGC_IOST_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_ITCT_ECC_1B_OFF),
+ 		.msk = HGC_ITCT_ECC_1B_ADDR_MSK,
+ 		.shift = HGC_ITCT_ECC_1B_ADDR_OFF,
+-		.msg = "hgc_itct_acc1b_intr found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_itct_acc1b_intr found: am address is 0x%08X\n",
+ 		.reg = HGC_ITCT_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_IOSTLIST_ECC_1B_OFF),
+ 		.msk = HGC_LM_DFX_STATUS2_IOSTLIST_MSK,
+ 		.shift = HGC_LM_DFX_STATUS2_IOSTLIST_OFF,
+-		.msg = "hgc_iostl_acc1b_intr found:  \
+-				memory address is 0x%08X\n",
++		.msg = "hgc_iostl_acc1b_intr found: memory address is 0x%08X\n",
+ 		.reg = HGC_LM_DFX_STATUS2,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_ITCTLIST_ECC_1B_OFF),
+ 		.msk = HGC_LM_DFX_STATUS2_ITCTLIST_MSK,
+ 		.shift = HGC_LM_DFX_STATUS2_ITCTLIST_OFF,
+-		.msg = "hgc_itctl_acc1b_intr found: \
+-				memory address is 0x%08X\n",
++		.msg = "hgc_itctl_acc1b_intr found: memory address is 0x%08X\n",
+ 		.reg = HGC_LM_DFX_STATUS2,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_CQE_ECC_1B_OFF),
+ 		.msk = HGC_CQE_ECC_1B_ADDR_MSK,
+ 		.shift = HGC_CQE_ECC_1B_ADDR_OFF,
+-		.msg = "hgc_cqe_acc1b_intr found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_cqe_acc1b_intr found: Ram address is 0x%08X\n",
+ 		.reg = HGC_CQE_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM0_ECC_1B_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS14_MEM0_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS14_MEM0_OFF,
+-		.msg = "rxm_mem0_acc1b_intr found: \
+-				memory address is 0x%08X\n",
++		.msg = "rxm_mem0_acc1b_intr found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS14,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM1_ECC_1B_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS14_MEM1_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS14_MEM1_OFF,
+-		.msg = "rxm_mem1_acc1b_intr found: \
+-				memory address is 0x%08X\n",
++		.msg = "rxm_mem1_acc1b_intr found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS14,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM2_ECC_1B_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS14_MEM2_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS14_MEM2_OFF,
+-		.msg = "rxm_mem2_acc1b_intr found: \
+-				memory address is 0x%08X\n",
++		.msg = "rxm_mem2_acc1b_intr found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS14,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM3_ECC_1B_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS15_MEM3_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS15_MEM3_OFF,
+-		.msg = "rxm_mem3_acc1b_intr found: \
+-				memory address is 0x%08X\n",
++		.msg = "rxm_mem3_acc1b_intr found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS15,
+ 	},
+ };
+@@ -489,80 +479,70 @@ struct hisi_sas_err_record_v2 {
+ 		.irq_msk = BIT(SAS_ECC_INTR_DQE_ECC_MB_OFF),
+ 		.msk = HGC_DQE_ECC_MB_ADDR_MSK,
+ 		.shift = HGC_DQE_ECC_MB_ADDR_OFF,
+-		.msg = "hgc_dqe_accbad_intr (0x%x) found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_dqe_accbad_intr (0x%x) found: Ram address is 0x%08X\n",
+ 		.reg = HGC_DQE_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_IOST_ECC_MB_OFF),
+ 		.msk = HGC_IOST_ECC_MB_ADDR_MSK,
+ 		.shift = HGC_IOST_ECC_MB_ADDR_OFF,
+-		.msg = "hgc_iost_accbad_intr (0x%x) found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_iost_accbad_intr (0x%x) found: Ram address is 0x%08X\n",
+ 		.reg = HGC_IOST_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_ITCT_ECC_MB_OFF),
+ 		.msk = HGC_ITCT_ECC_MB_ADDR_MSK,
+ 		.shift = HGC_ITCT_ECC_MB_ADDR_OFF,
+-		.msg = "hgc_itct_accbad_intr (0x%x) found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_itct_accbad_intr (0x%x) found: Ram address is 0x%08X\n",
+ 		.reg = HGC_ITCT_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_IOSTLIST_ECC_MB_OFF),
+ 		.msk = HGC_LM_DFX_STATUS2_IOSTLIST_MSK,
+ 		.shift = HGC_LM_DFX_STATUS2_IOSTLIST_OFF,
+-		.msg = "hgc_iostl_accbad_intr (0x%x) found: \
+-				memory address is 0x%08X\n",
++		.msg = "hgc_iostl_accbad_intr (0x%x) found: memory address is 0x%08X\n",
+ 		.reg = HGC_LM_DFX_STATUS2,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_ITCTLIST_ECC_MB_OFF),
+ 		.msk = HGC_LM_DFX_STATUS2_ITCTLIST_MSK,
+ 		.shift = HGC_LM_DFX_STATUS2_ITCTLIST_OFF,
+-		.msg = "hgc_itctl_accbad_intr (0x%x) found: \
+-				memory address is 0x%08X\n",
++		.msg = "hgc_itctl_accbad_intr (0x%x) found: memory address is 0x%08X\n",
+ 		.reg = HGC_LM_DFX_STATUS2,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_CQE_ECC_MB_OFF),
+ 		.msk = HGC_CQE_ECC_MB_ADDR_MSK,
+ 		.shift = HGC_CQE_ECC_MB_ADDR_OFF,
+-		.msg = "hgc_cqe_accbad_intr (0x%x) found: \
+-				Ram address is 0x%08X\n",
++		.msg = "hgc_cqe_accbad_intr (0x%x) found: Ram address is 0x%08X\n",
+ 		.reg = HGC_CQE_ECC_ADDR,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM0_ECC_MB_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS14_MEM0_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS14_MEM0_OFF,
+-		.msg = "rxm_mem0_accbad_intr (0x%x) found: \
+-			memory address is 0x%08X\n",
++		.msg = "rxm_mem0_accbad_intr (0x%x) found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS14,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM1_ECC_MB_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS14_MEM1_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS14_MEM1_OFF,
+-		.msg = "rxm_mem1_accbad_intr (0x%x) found: \
+-			memory address is 0x%08X\n",
++		.msg = "rxm_mem1_accbad_intr (0x%x) found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS14,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM2_ECC_MB_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS14_MEM2_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS14_MEM2_OFF,
+-		.msg = "rxm_mem2_accbad_intr (0x%x) found: \
+-				memory address is 0x%08X\n",
++		.msg = "rxm_mem2_accbad_intr (0x%x) found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS14,
+ 	},
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_NCQ_MEM3_ECC_MB_OFF),
+ 		.msk = HGC_RXM_DFX_STATUS15_MEM3_MSK,
+ 		.shift = HGC_RXM_DFX_STATUS15_MEM3_OFF,
+-		.msg = "rxm_mem3_accbad_intr (0x%x) found: \
+-				memory address is 0x%08X\n",
++		.msg = "rxm_mem3_accbad_intr (0x%x) found: memory address is 0x%08X\n",
+ 		.reg = HGC_RXM_DFX_STATUS15,
+ 	},
+ };
+@@ -2956,25 +2936,58 @@ static irqreturn_t fatal_ecc_int_v2_hw(int irq_no, void *p)
+ 	return IRQ_HANDLED;
+ }
+ 
+-#define AXI_ERR_NR	8
+-static const char axi_err_info[AXI_ERR_NR][32] = {
+-	"IOST_AXI_W_ERR",
+-	"IOST_AXI_R_ERR",
+-	"ITCT_AXI_W_ERR",
+-	"ITCT_AXI_R_ERR",
+-	"SATA_AXI_W_ERR",
+-	"SATA_AXI_R_ERR",
+-	"DQE_AXI_R_ERR",
+-	"CQE_AXI_W_ERR"
++static const struct hisi_sas_hw_error axi_error[] = {
++	{ .msk = BIT(0), .msg = "IOST_AXI_W_ERR" },
++	{ .msk = BIT(1), .msg = "IOST_AXI_R_ERR" },
++	{ .msk = BIT(2), .msg = "ITCT_AXI_W_ERR" },
++	{ .msk = BIT(3), .msg = "ITCT_AXI_R_ERR" },
++	{ .msk = BIT(4), .msg = "SATA_AXI_W_ERR" },
++	{ .msk = BIT(5), .msg = "SATA_AXI_R_ERR" },
++	{ .msk = BIT(6), .msg = "DQE_AXI_R_ERR" },
++	{ .msk = BIT(7), .msg = "CQE_AXI_W_ERR" },
++	{},
++};
++
++static const struct hisi_sas_hw_error fifo_error[] = {
++	{ .msk = BIT(8),  .msg = "CQE_WINFO_FIFO" },
++	{ .msk = BIT(9),  .msg = "CQE_MSG_FIFIO" },
++	{ .msk = BIT(10), .msg = "GETDQE_FIFO" },
++	{ .msk = BIT(11), .msg = "CMDP_FIFO" },
++	{ .msk = BIT(12), .msg = "AWTCTRL_FIFO" },
++	{},
+ };
+ 
+-#define FIFO_ERR_NR	5
+-static const char fifo_err_info[FIFO_ERR_NR][32] = {
+-	"CQE_WINFO_FIFO",
+-	"CQE_MSG_FIFIO",
+-	"GETDQE_FIFO",
+-	"CMDP_FIFO",
+-	"AWTCTRL_FIFO"
++static const struct hisi_sas_hw_error fatal_axi_errors[] = {
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_WP_DEPTH_OFF),
++		.msg = "write pointer and depth",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF),
++		.msg = "iptt no match slot",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_RP_DEPTH_OFF),
++		.msg = "read pointer and depth",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_AXI_OFF),
++		.reg = HGC_AXI_FIFO_ERR_INFO,
++		.sub = axi_error,
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_FIFO_OFF),
++		.reg = HGC_AXI_FIFO_ERR_INFO,
++		.sub = fifo_error,
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_LM_OFF),
++		.msg = "LM add/fetch list",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_ABT_OFF),
++		.msg = "SAS_HGC_ABT fetch LM list",
++	},
+ };
+ 
+ static irqreturn_t fatal_axi_int_v2_hw(int irq_no, void *p)
+@@ -2982,98 +2995,47 @@ static irqreturn_t fatal_axi_int_v2_hw(int irq_no, void *p)
+ 	struct hisi_hba *hisi_hba = p;
+ 	u32 irq_value, irq_msk, err_value;
+ 	struct device *dev = hisi_hba->dev;
++	const struct hisi_sas_hw_error *axi_error;
++	int i;
+ 
+ 	irq_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK3);
+ 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk | 0xfffffffe);
+ 
+ 	irq_value = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
+-	if (irq_value) {
+-		if (irq_value & BIT(ENT_INT_SRC3_WP_DEPTH_OFF)) {
+-			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
+-					1 << ENT_INT_SRC3_WP_DEPTH_OFF);
+-			dev_warn(dev, "write pointer and depth error (0x%x) \
+-			       found!\n",
+-			       irq_value);
+-			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+-		}
+ 
+-		if (irq_value & BIT(ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF)) {
+-			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
+-					 1 <<
+-					 ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF);
+-			dev_warn(dev, "iptt no match slot error (0x%x) found!\n",
+-			      irq_value);
+-			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+-		}
+-
+-		if (irq_value & BIT(ENT_INT_SRC3_RP_DEPTH_OFF)) {
+-			dev_warn(dev, "read pointer and depth error (0x%x) \
+-			       found!\n",
+-			       irq_value);
+-			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+-		}
+-
+-		if (irq_value & BIT(ENT_INT_SRC3_AXI_OFF)) {
+-			int i;
+-
+-			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
+-					1 << ENT_INT_SRC3_AXI_OFF);
+-			err_value = hisi_sas_read32(hisi_hba,
+-						    HGC_AXI_FIFO_ERR_INFO);
+-
+-			for (i = 0; i < AXI_ERR_NR; i++) {
+-				if (err_value & BIT(i)) {
+-					dev_warn(dev, "%s (0x%x) found!\n",
+-					      axi_err_info[i], irq_value);
+-					queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+-				}
+-			}
+-		}
+-
+-		if (irq_value & BIT(ENT_INT_SRC3_FIFO_OFF)) {
+-			int i;
+-
+-			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
+-					1 << ENT_INT_SRC3_FIFO_OFF);
+-			err_value = hisi_sas_read32(hisi_hba,
+-						    HGC_AXI_FIFO_ERR_INFO);
++	for (i = 0; i < ARRAY_SIZE(fatal_axi_errors); i++) {
++		axi_error = &fatal_axi_errors[i];
++		if (!(irq_value & axi_error->irq_msk))
++			continue;
+ 
+-			for (i = 0; i < FIFO_ERR_NR; i++) {
+-				if (err_value & BIT(AXI_ERR_NR + i)) {
+-					dev_warn(dev, "%s (0x%x) found!\n",
+-					      fifo_err_info[i], irq_value);
+-					queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+-				}
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
++				 1 << axi_error->shift);
++		if (axi_error->sub) {
++			const struct hisi_sas_hw_error *sub = axi_error->sub;
++
++			err_value = hisi_sas_read32(hisi_hba, axi_error->reg);
++			for (; sub->msk || sub->msg; sub++) {
++				if (!(err_value & sub->msk))
++					continue;
++				dev_warn(dev, "%s (0x%x) found!\n",
++					 sub->msg, irq_value);
++				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+ 			}
+-
+-		}
+-
+-		if (irq_value & BIT(ENT_INT_SRC3_LM_OFF)) {
+-			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
+-					1 << ENT_INT_SRC3_LM_OFF);
+-			dev_warn(dev, "LM add/fetch list error (0x%x) found!\n",
+-			      irq_value);
+-			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+-		}
+-
+-		if (irq_value & BIT(ENT_INT_SRC3_ABT_OFF)) {
+-			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
+-					1 << ENT_INT_SRC3_ABT_OFF);
+-			dev_warn(dev, "SAS_HGC_ABT fetch LM list error (0x%x) found!\n",
+-			      irq_value);
++		} else {
++			dev_warn(dev, "%s (0x%x) found!\n",
++				 axi_error->msg, irq_value);
+ 			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
  		}
++	}
+ 
+-		if (irq_value & BIT(ENT_INT_SRC3_ITC_INT_OFF)) {
+-			u32 reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
+-			u32 dev_id = reg_val & ITCT_DEV_MSK;
+-			struct hisi_sas_device *sas_dev =
+-					&hisi_hba->devices[dev_id];
++	if (irq_value & BIT(ENT_INT_SRC3_ITC_INT_OFF)) {
++		u32 reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
++		u32 dev_id = reg_val & ITCT_DEV_MSK;
++		struct hisi_sas_device *sas_dev = &hisi_hba->devices[dev_id];
+ 
+-			hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
+-			dev_dbg(dev, "clear ITCT ok\n");
+-			complete(sas_dev->completion);
+-		}
++		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
++		dev_dbg(dev, "clear ITCT ok\n");
++		complete(sas_dev->completion);
  	}
  
+ 	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, irq_value);
 -- 
 1.9.1
