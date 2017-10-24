@@ -1,62 +1,123 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 01/19] scsi: hisi_sas: delete get_ncq_tag_v3_hw()
-Date: Tue, 24 Oct 2017 23:51:31 +0800
-Message-ID: <1508860309-212397-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 05/19] scsi: hisi_sas: fix SATA breakpoint memory size
+Date: Tue, 24 Oct 2017 23:51:35 +0800
+Message-ID: <1508860309-212397-6-git-send-email-john.garry@huawei.com>
 References: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga06-in.huawei.com ([45.249.212.32]:50534 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751412AbdJXPF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Oct 2017 11:05:28 -0400
 In-Reply-To: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-We already relocated hisi_sas_get_ncq_tag() into common
-file main.c, so delete get_ncq_tag_v3_hw() and use
-hisi_sas_get_ncq_tag() instead.
+Currently the size of memory we allocate for SATA
+breakpoint buffer is incorrect.
+
+The breakpoint memory size should be as follows:
+32 (NCQ tags) * 128 * 2048 (max #devs) = 8MB
+
+Currently we only allocate 0.5MB, but get away with it
+as we never have SATA device index > 128 typically.
+
+To conserve precious DMA memory (8MB may not be even
+available), limit the number of devices per HBA to 1024,
+which means 4MB of memory required for SATA breakpoint.
+
+The 1024 device limit applied to all HW versions. For v3
+hw, we need to configure this value.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       | 8 ++++++--
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 6 +++---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
+ 3 files changed, 10 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 07f4a4c..07538cf 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -29,7 +29,7 @@
+ #define HISI_SAS_MAX_PHYS	9
+ #define HISI_SAS_MAX_QUEUES	32
+ #define HISI_SAS_QUEUE_SLOTS 512
+-#define HISI_SAS_MAX_ITCT_ENTRIES 2048
++#define HISI_SAS_MAX_ITCT_ENTRIES 1024
+ #define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
+ #define HISI_SAS_RESET_BIT	0
+ #define HISI_SAS_REJECT_CMD_BIT	1
+@@ -342,7 +342,11 @@ struct hisi_sas_initial_fis {
+ };
+ 
+ struct hisi_sas_breakpoint {
+-	u8	data[128];	/*io128 byte*/
++	u8	data[128];
++};
++
++struct hisi_sas_sata_breakpoint {
++	struct hisi_sas_breakpoint tag[32];
+ };
+ 
+ struct hisi_sas_sge {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 254af67..f49a131 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1613,7 +1613,7 @@ void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
+ 	s = max_command_entries * sizeof(struct hisi_sas_breakpoint);
+ 	memset(hisi_hba->breakpoint, 0, s);
+ 
+-	s = max_command_entries * sizeof(struct hisi_sas_breakpoint) * 2;
++	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_sata_breakpoint);
+ 	memset(hisi_hba->sata_breakpoint, 0, s);
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_init_mem);
+@@ -1706,7 +1706,7 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 	if (!hisi_hba->initial_fis)
+ 		goto err_out;
+ 
+-	s = max_command_entries * sizeof(struct hisi_sas_breakpoint) * 2;
++	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_sata_breakpoint);
+ 	hisi_hba->sata_breakpoint = dma_alloc_coherent(dev, s,
+ 				&hisi_hba->sata_breakpoint_dma, GFP_KERNEL);
+ 	if (!hisi_hba->sata_breakpoint)
+@@ -1771,7 +1771,7 @@ void hisi_sas_free(struct hisi_hba *hisi_hba)
+ 				  hisi_hba->initial_fis,
+ 				  hisi_hba->initial_fis_dma);
+ 
+-	s = max_command_entries * sizeof(struct hisi_sas_breakpoint) * 2;
++	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_sata_breakpoint);
+ 	if (hisi_hba->sata_breakpoint)
+ 		dma_free_coherent(dev, s,
+ 				  hisi_hba->sata_breakpoint,
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 2e5fa97..d60501f 100644
+index 38eeba9..ac499e9 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -988,20 +988,6 @@ static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
- 	return rc;
- }
+@@ -172,7 +172,6 @@
+ #define DMA_RX_STATUS_BUSY_OFF		0
+ #define DMA_RX_STATUS_BUSY_MSK		(0x1 << DMA_RX_STATUS_BUSY_OFF)
  
--static int get_ncq_tag_v3_hw(struct sas_task *task, u32 *tag)
--{
--	struct ata_queued_cmd *qc = task->uldd_task;
--
--	if (qc) {
--		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--			qc->tf.command == ATA_CMD_FPDMA_READ) {
--			*tag = qc->tag;
--			return 1;
--		}
--	}
--	return 0;
--}
--
- static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 			  struct hisi_sas_slot *slot)
- {
-@@ -1050,7 +1036,7 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 	hdr->dw1 = cpu_to_le32(dw1);
- 
- 	/* dw2 */
--	if (task->ata_task.use_ncq && get_ncq_tag_v3_hw(task, &hdr_tag)) {
-+	if (task->ata_task.use_ncq && hisi_sas_get_ncq_tag(task, &hdr_tag)) {
- 		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
- 		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
- 	}
+-#define MAX_ITCT_HW			4096 /* max the hw can support */
+ #define DEFAULT_ITCT_HW		2048 /* reset value, not reprogrammed */
+ #if (HISI_SAS_MAX_DEVICES > DEFAULT_ITCT_HW)
+ #error Max ITCT exceeded
+@@ -377,6 +376,7 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 	/* Global registers init */
+ 	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE,
+ 			 (u32)((1ULL << hisi_hba->queue_count) - 1));
++	hisi_sas_write32(hisi_hba, CFG_MAX_TAG, 0xfff0400);
+ 	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
+ 	hisi_sas_write32(hisi_hba, CFG_1US_TIMER_TRSH, 0xd);
+ 	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
 -- 
 1.9.1
