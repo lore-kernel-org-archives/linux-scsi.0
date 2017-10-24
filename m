@@ -1,63 +1,109 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH V2] scsi: aacraid: Fix some error code
-Date: Tue, 24 Oct 2017 04:29:46 +0200
-Message-ID: <20171024022946.30223-1-christophe.jaillet@wanadoo.fr>
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: aacraid@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjUgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZz?=
+ =?utf-8?Q?:_add_document_for_hisi-ufs?=
+Date: Tue, 24 Oct 2017 09:06:11 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA321D1@DGGEMM506-MBX.china.huawei.com>
+References: <20171020085259.8093-1-liwei213@huawei.com>
+ <20171020085259.8093-3-liwei213@huawei.com>
+ <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: zh-CN
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "xuwei (O)" <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TZNg+MwTxZMZA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-If 'scsi_host_alloc', 'kzalloc' or '(*aac_drivers[index].init)' fail, the
-function will return 0, because 'error' is known to be 0 at this point.
-
-Return -ENOMEM in the 2 first cases and -ENODEV in the third one.
-
-This patch also removes a useless 'error = -ENODEV'.
-
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-V2: rebase against latest -next (20171019)
----
- drivers/scsi/aacraid/linit.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index c9252b138c1f..7e7d9bfd2b9e 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1628,7 +1628,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	error = pci_enable_device(pdev);
- 	if (error)
- 		goto out;
--	error = -ENODEV;
- 
- 	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
- 		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-@@ -1660,6 +1659,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	pci_set_master(pdev);
- 
- 	shost = scsi_host_alloc(&aac_driver_template, sizeof(struct aac_dev));
-+	error = -ENOMEM;
- 	if (!shost)
- 		goto out_disable_pdev;
- 
-@@ -1681,6 +1681,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_LIST_HEAD(&aac->entry);
- 
- 	aac->fibs = kzalloc(sizeof(struct fib) * (shost->can_queue + AAC_NUM_MGT_FIB), GFP_KERNEL);
-+	error = -ENOMEM;
- 	if (!aac->fibs)
- 		goto out_free_host;
- 	spin_lock_init(&aac->fib_lock);
-@@ -1690,6 +1691,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	 *	Map in the registers from the adapter.
- 	 */
- 	aac->base_size = AAC_MIN_FOOTPRINT_SIZE;
-+	error = -ENODEV;
- 	if ((*aac_drivers[index].init)(aac))
- 		goto out_unmap;
- 
--- 
-2.14.1
-
+SGksIEFybmQNClNvcnJ5IHRvIGJvdGhlciB5b3UsIHdoYXQncyB5b3VyIG9waW5pb24gYWJvdXQg
+bXkgZXhwbGFuYXRpb24gYW5kIHJldmlzaW9uIG1ldGhvZD8NCkkgYW0gbG9va2luZyBmb3J3YXJk
+IHRvIHlvdXIgcmVwbHksIHRoYW5rcyENCg0KDQotLS0tLemCruS7tuWOn+S7ti0tLS0tDQrlj5Hk
+u7bkuro6IGxpd2VpIChDTSkgDQrlj5HpgIHml7bpl7Q6IDIwMTflubQxMOaciDIx5pelIDE3OjU5
+DQrmlLbku7bkuro6ICdBcm5kIEJlcmdtYW5uJw0K5oqE6YCBOiBSb2IgSGVycmluZzsgTWFyayBS
+dXRsYW5kOyB4dXdlaSAoTyk7IENhdGFsaW4gTWFyaW5hczsgV2lsbCBEZWFjb247IFZpbmF5YWsg
+SG9saWthdHRpOyBKYW1lcyBFLkouIEJvdHRvbWxleTsgTWFydGluIEsuIFBldGVyc2VuOyBLZXZp
+biBIaWxtYW47IEdyZWdvcnkgQ0xFTUVOVDsgVGhvbWFzIFBldGF6em9uaTsgTWFzYWhpcm8gWWFt
+YWRhOyBSaWt1IFZvaXBpbzsgVGhpZXJyeSBSZWRpbmc7IEtyenlzenRvZiBLb3psb3dza2k7IEVy
+aWMgQW5ob2x0OyBEVE1MOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyBMaW51eCBBUk07IGxp
+bnV4LXNjc2k7IEd1b2RvbmcgWHU7IEZlbmdiYW9wZW5nIChrZXZpbiwgS2lyaW4gU29sdXRpb24g
+RGVwdCk7IGxpaHVhbiAoWik7IHdhbmd5dXBlbmcgKEEpDQrkuLvpopg6IOetlOWkjTogW1BBVENI
+IHY1IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYWRkIGRvY3VtZW50IGZvciBoaXNpLXVm
+cw0KDQpIaSwgQmVyZ21hbm4NClNvcnJ5IGxhdGUgZm9yIHRoZSByZXBseSxhbmQgdGhhbmsgeW91
+IHZlcnkgbXVjaCBmb3IgeW91ciBwYXRpZW5jZS4NCk15IHJlcGx5IGlzIGFzIGZvbGxvd3MuIEkg
+bG9vayBmb3J3YXJkIHRvIHlvdXIgZnVydGhlciByZXBseS4NCg0KDQotLS0tLemCruS7tuWOn+S7
+ti0tLS0tDQrlj5Hku7bkuro6IGFybmRiZXJnbWFubkBnbWFpbC5jb20gW21haWx0bzphcm5kYmVy
+Z21hbm5AZ21haWwuY29tXSDku6PooaggQXJuZCBCZXJnbWFubg0K5Y+R6YCB5pe26Ze0OiAyMDE3
+5bm0MTDmnIgyMOaXpSAxNzoxNg0K5pS25Lu25Lq6OiBsaXdlaSAoQ00pDQrmioTpgIE6IFJvYiBI
+ZXJyaW5nOyBNYXJrIFJ1dGxhbmQ7IHh1d2VpIChPKTsgQ2F0YWxpbiBNYXJpbmFzOyBXaWxsIERl
+YWNvbjsgVmluYXlhayBIb2xpa2F0dGk7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBNYXJ0aW4gSy4g
+UGV0ZXJzZW47IEtldmluIEhpbG1hbjsgR3JlZ29yeSBDTEVNRU5UOyBUaG9tYXMgUGV0YXp6b25p
+OyBNYXNhaGlybyBZYW1hZGE7IFJpa3UgVm9pcGlvOyBUaGllcnJ5IFJlZGluZzsgS3J6eXN6dG9m
+IEtvemxvd3NraTsgRXJpYyBBbmhvbHQ7IERUTUw7IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7
+IExpbnV4IEFSTTsgbGludXgtc2NzaTsgR3VvZG9uZyBYdTsgRmVuZ2Jhb3BlbmcgKGtldmluLCBL
+aXJpbiBTb2x1dGlvbiBEZXB0KTsgbGlodWFuIChaKTsgd2FuZ3l1cGVuZyAoQSkNCuS4u+mimDog
+UmU6IFtQQVRDSCB2NSAyLzVdIGR0LWJpbmRpbmdzOiBzY3NpOiB1ZnM6IGFkZCBkb2N1bWVudCBm
+b3IgaGlzaS11ZnMNCg0KT24gRnJpLCBPY3QgMjAsIDIwMTcgYXQgMTA6NTIgQU0sIExpIFdlaSA8
+bGl3ZWkyMTNAaHVhd2VpLmNvbT4gd3JvdGU6DQo+IC0tLSAvZGV2L251bGwNCj4gKysrIGIvRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlzaS50eHQNCj4gQEAgLTAs
+MCArMSw0NiBAQA0KPiArKiBIaXNpbGljb24gVW5pdmVyc2FsIEZsYXNoIFN0b3JhZ2UgKFVGUykg
+SG9zdCBDb250cm9sbGVyDQo+ICsNCj4gK1VGUyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmli
+ZSBvbi1jaGlwIFVGUyBoYXJkd2FyZSBtYWNyby4NCj4gK0VhY2ggVUZTIEhvc3QgQ29udHJvbGxl
+ciBzaG91bGQgaGF2ZSBpdHMgb3duIG5vZGUuDQo+ICsNCj4gK1JlcXVpcmVkIHByb3BlcnRpZXM6
+DQo+ICstIGNvbXBhdGlibGUgICAgICAgIDogY29tcGF0aWJsZSBsaXN0LCBjb250YWlucyBvbmUg
+b2YgdGhlIGZvbGxvd2luZyAtDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICJoaXNpbGljb24s
+aGkzNjYwLXVmcyIgZm9yIGhpc2kgdWZzIGhvc3QgY29udHJvbGxlcg0KPiArICAgICAgICAgICAg
+ICAgICAgICAgICAgcHJlc2VudCBvbiBIaTM2NjAgY2hpcHNldC4NCj4gKy0gcmVnICAgICAgICAg
+ICAgICAgOiBzaG91bGQgY29udGFpbiBVRlMgcmVnaXN0ZXIgYWRkcmVzcyBzcGFjZSAmIFVGUyBT
+WVMgQ1RSTCByZWdpc3RlciBhZGRyZXNzLA0KPiArLSBpbnRlcnJ1cHQtcGFyZW50ICA6IGludGVy
+cnVwdCBkZXZpY2UNCj4gKy0gaW50ZXJydXB0cyAgICAgICAgOiBpbnRlcnJ1cHQgbnVtYmVyDQo+
+ICstIGNsb2NrcyAgICAgICAgICAgICAgIDogTGlzdCBvZiBwaGFuZGxlIGFuZCBjbG9jayBzcGVj
+aWZpZXIgcGFpcnMNCj4gKy0gY2xvY2stbmFtZXMgICAgICAgOiBMaXN0IG9mIGNsb2NrIGlucHV0
+IG5hbWUgc3RyaW5ncyBzb3J0ZWQgaW4gdGhlIHNhbWUNCj4gKyAgICAgICAgICAgICAgICAgICAg
+IG9yZGVyIGFzIHRoZSBjbG9ja3MgcHJvcGVydHkuICJjbGtfcmVmIiwgImNsa19waHkiIGlzIG9w
+dGlvbmFsDQo+ICstIHJlc2V0cyAgICAgICAgICAgIDogcmVzZXQgbm9kZSByZWdpc3Rlciwgb25l
+IHJlc2V0IHRoZSBjbGsgYW5kIHRoZSBvdGhlciByZXNldCB0aGUgY29udHJvbGxlcg0KPiArLSBy
+ZXNldC1uYW1lcyAgICAgICA6IGRlc2NyaWJlIHJlc2V0IG5vZGUgcmVnaXN0ZXINCg0KSSB0aGlu
+ayBJJ3ZlIGFza2VkIGFib3V0IHRoaXMgYmVmb3JlLCBidXQgSSB0aGluayB0aGlzIHNob3VsZCBi
+ZSBkb25lIG1vcmUgY29uc2lzdGVudGx5IHdpdGggdGhlIG90aGVyIFVGUyBiaW5kaW5ncy4NCg0K
+SW4gcGFydGljdWxhciwgSSB3b25kZXIgaWYgd2hhdCB5b3UgZGVzY3JpYmUgYXMgdGhlICJVRlMg
+U1lTIENUUkwiDQphcmVhIGNvcnJlc3BvbmRzIHRvIHdoYXQgUXVhbGNvbW0gaGF2ZSBkZXNjcmli
+ZWQgYXMgdGhlaXIgUEhZIGltcGxlbWVudGF0aW9uLiBJdCBjZXJ0YWlubHkgc2VlbXMgdG8gZHJp
+dmVyIHNvbWUgb2YgdGhlIHByb3BlcnRpZXMgdGhhdCB3b3VsZCBub3JtYWxseSBiZSBhc3NvY2lh
+dGVkIHdpdGggYSBQSFkuDQoNCkxpd2VpOlllcywgYSBwYXJ0IG9mICJVRlMgU1lTIENUUkwiIGlz
+IGFzc29jaWF0ZWQgd2l0aCBhIFBIWSwgYnV0IGZyb20gb3VyIGNoaXAgY29sbGVhZ3VlIHRoYXQg
+d2UgYXNzdXJlICJVRlMgU1lTIENUUkwiIGlzIGFzc29jaWF0ZWQgd2l0aCBjbGsvcmVzZXQvcG93
+ZXIgb24vcG93ZXIgb2ZmIGFuZCBzbyBvbi4gDQpJbiBmYWN0LCBpbiBhZGRpdGlvbiB0byB0aGUg
+Y29udHJvbGxlciBpdHNlbGYsIHRoZSBjb250cm9sbGVyIHJlbGF0ZWQgcGVyaXBoZXJ5IGFyZSBh
+bGwgaW4gdGhpcyBhcmVhLiBTbyBpdCdzIG5vdCBhcHByb3ByaWF0ZSB0byBwdXQgdGhpcyBpbnRv
+IGEgc2VwYXJhdGUgcGh5IG5vZGUuDQoNCkZvciB0aGUgImNsb2NrLW5hbWVzIiBwcm9wZXJ0eSwg
+eW91IHNwZWNpZnkgImNsa19yZWYiLCB3aGljaCBJIGFzc3VtZSBpcyB0aGUgc2FtZSBhcyB3aGF0
+IFF1YWxjb21tIGNhbGwgInJlZl9jbGsiLiBJJ2Qgc3VnZ2VzdCB5b3UgdXNlIHRoZSBleGlzdGlu
+ZyBuYW1lIGFuZCBhZGQgdGhhdCBhcyB0aGUgZGVmYXVsdCBuYW1lIGluIHRoZSB1ZnNoY2QtcGx0
+ZnJtLnR4dCBiaW5kaW5nIGRvY3VtZW50Lg0KDQpMaXdlaToiIHJlZl9jbGsgIiBpcyBhbHJlYWR5
+IGluIHRoZSB1ZnNoY2QtcGx0ZnJtLnR4dCBiaW5kaW5nIGRvY3VtZW50LCBhbmQgcGFyc2UgaW4g
+dWZzaGNkLmMsIHNvIHdlIHdpbGwgcmVwbGFjZSAiY2xrX3JlZiIgd2l0aCAicmVmX2NsayIuIEkg
+d2lsbCBmaXggaXQgaW4gcGF0Y2ggdjY7DQoNClRoZSAiY2xrX3BoeSIgcHJvcGVydHkgYXBwZWFy
+cyB0byBiZSByZWxhdGVkIHRvIHRoZSBQSFksIHNvIGl0IG1pZ2h0IGJlIGJldHRlciB0byBoYXZl
+IGEgc2VwYXJhdGUgcGh5IG5vZGUgd2l0aCBlaXRoZXIganVzdCB0aGUgY2xrLCBvciB3aXRoIHRo
+ZSBjbGsgcGx1cyB0aGUgIlVGUyBTWVMgQ1RSTCIgcmVnaXN0ZXIgYXJlYSwgd2hpY2hldmVyIG1h
+dGNoZXMgeW91ciBoYXJkd2FyZSBiZXR0ZXIsIGFuZCB0aGVuIHVzZSB0ZWggInBoeXMvcGh5LW5h
+bWVzIiBwcm9wZXJ0eSB0byByZWZlciB0byB0aGF0Lg0KDQpMaXdlaTogT0ssIEkgd2lsbCBhZGQg
+YSBzZXBhcmF0ZSBwaHkgbm9kZSBhbmQgZml4IGl0IGluIHBhdGNoIHY2Ow0KDQpUaGUgcmVzZXQg
+aGFuZGxpbmcgeW91IGRlc2NyaWJlIGhlcmUgKGJvdGggcmVzZXRzIGFuZCByZXNldC1ncGlvcykg
+YXBwZWFycyB0byBiZSBjb21wbGV0ZWx5IGdlbmVyaWMsIHNvIEknZCBzdWdnZXN0IGFkZGluZyB0
+aG9zZSB0byB1ZnNoY2QtcGx0ZnJtLnR4dCBpbnN0ZWFkIG9mIHlvdXIgb3duIGJpbmRpbmcsIHRv
+IGVuc3VyZSB0aGF0IGZ1dHVyZSBkcml2ZXJzIHVzZSB0aGUgc2FtZSBpZGVudGlmaWVycy4NCg0K
+TGl3ZWk6IEZyb20gb3VyIHNvYyBjaGlwIGNvbGxlYWd1ZSwgcmVzZXQgaW5jbHVkZSAicnN0Iiwg
+ImFzc2VydCIgaXMgbm90IGdlbmVyaWMgYW5kIHJlbGF0ZWQgd2l0aCBvdXIgc29jIGltcGxlbWVu
+dGF0aW9uLCB5b3UgY2FuIHNlZSB1ZnNfaGlzaV9zb2NfaW5pdCgpIGluIGRyaXZlcnMvc2NzaS91
+ZnMvdWZzLWhpc2kuYywgdGhlIHBvc2l0aW9uIG9mIHJzdCBhbmQgYXNzZXJ0IGlzIHZlcnkgc3Bl
+Y2lhbCwgaXQncyBoYXJkIHRvIHB1dCBpdCBpbiBhIGdlbmVyaWMgcHJvY2VzczsgcmVzZXQtZ3Bp
+b3MgaXMgdXNlZCB0byBzb2x2ZSBhIGRlZmVjdCBvZiB0aGUgU09DIGNoaXAgcmVzZXQgZnVuY3Rp
+b24gYW5kIGl0IGlzIG5vdCBnZW5lcmljICwgYnV0IG91ciBjaGlwIGhhcyBiZWVuIHVwZGF0ZWQs
+IHNvIHRoaXMgaXMgbm8gbG9uZ2VyIG5lZWRlZCwgYW5kIEkgd2lsbCByZW1vdmUgaXQgaW4gdGhl
+IHBhdGNoIHY2Ow0KDQpUaGFua3MhDQoNCiAgICAgIEFybmQNCg==
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
