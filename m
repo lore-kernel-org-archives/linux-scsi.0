@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 12/19] scsi: hisi_sas: check PHY state in get_wideport_bitmap_v3_hw()
-Date: Tue, 24 Oct 2017 23:51:42 +0800
-Message-ID: <1508860309-212397-13-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 18/19] scsi: hisi_sas: add v3 hw support for AXI fatal error
+Date: Tue, 24 Oct 2017 23:51:48 +0800
+Message-ID: <1508860309-212397-19-git-send-email-john.garry@huawei.com>
 References: <1508860309-212397-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,36 +14,180 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-We should check register PHY_STATE when getting the bitmap
-of a wideport, as, if the PHY is not ready, the value of
-register PHY_PORT_NUM_MA is not valid.
+Add support for processing AXI bus fatal errors.
 
-V2 hw has done this check, and v3 hw should do this check too.
+If AXI bus fatal error happen, do controller reset to
+recover.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 125 +++++++++++++++++++++++++++++++++
+ 1 file changed, 125 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 67ebd8f..c88e787 100644
+index 18cc3b4..f700482 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -755,10 +755,12 @@ static int get_wideport_bitmap_v3_hw(struct hisi_hba *hisi_hba, int port_id)
- {
- 	int i, bitmap = 0;
- 	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
-+	u32 phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
- 
- 	for (i = 0; i < hisi_hba->n_phy; i++)
--		if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
--			bitmap |= 1 << i;
-+		if (phy_state & BIT(i))
-+			if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
-+				bitmap |= BIT(i);
- 
- 	return bitmap;
+@@ -53,6 +53,11 @@
+ #define HGC_IOMB_PROC1_STATUS	0x104
+ #define CFG_1US_TIMER_TRSH		0xcc
+ #define CHNL_INT_STATUS			0x148
++#define HGC_AXI_FIFO_ERR_INFO  0x154
++#define AXI_ERR_INFO_OFF               0
++#define AXI_ERR_INFO_MSK               (0xff << AXI_ERR_INFO_OFF)
++#define FIFO_ERR_INFO_OFF              8
++#define FIFO_ERR_INFO_MSK              (0xff << FIFO_ERR_INFO_OFF)
+ #define INT_COAL_EN			0x19c
+ #define OQ_INT_COAL_TIME		0x1a0
+ #define OQ_INT_COAL_CNT			0x1a4
+@@ -1315,6 +1320,114 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 	return IRQ_HANDLED;
  }
+ 
++static const struct hisi_sas_hw_error axi_error[] = {
++	{ .msk = BIT(0), .msg = "IOST_AXI_W_ERR" },
++	{ .msk = BIT(1), .msg = "IOST_AXI_R_ERR" },
++	{ .msk = BIT(2), .msg = "ITCT_AXI_W_ERR" },
++	{ .msk = BIT(3), .msg = "ITCT_AXI_R_ERR" },
++	{ .msk = BIT(4), .msg = "SATA_AXI_W_ERR" },
++	{ .msk = BIT(5), .msg = "SATA_AXI_R_ERR" },
++	{ .msk = BIT(6), .msg = "DQE_AXI_R_ERR" },
++	{ .msk = BIT(7), .msg = "CQE_AXI_W_ERR" },
++	{},
++};
++
++static const struct hisi_sas_hw_error fifo_error[] = {
++	{ .msk = BIT(8),  .msg = "CQE_WINFO_FIFO" },
++	{ .msk = BIT(9),  .msg = "CQE_MSG_FIFIO" },
++	{ .msk = BIT(10), .msg = "GETDQE_FIFO" },
++	{ .msk = BIT(11), .msg = "CMDP_FIFO" },
++	{ .msk = BIT(12), .msg = "AWTCTRL_FIFO" },
++	{},
++};
++
++static const struct hisi_sas_hw_error fatal_axi_error[] = {
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_WP_DEPTH_OFF),
++		.msg = "write pointer and depth",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF),
++		.msg = "iptt no match slot",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_RP_DEPTH_OFF),
++		.msg = "read pointer and depth",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_AXI_OFF),
++		.reg = HGC_AXI_FIFO_ERR_INFO,
++		.sub = axi_error,
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_FIFO_OFF),
++		.reg = HGC_AXI_FIFO_ERR_INFO,
++		.sub = fifo_error,
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_LM_OFF),
++		.msg = "LM add/fetch list",
++	},
++	{
++		.irq_msk = BIT(ENT_INT_SRC3_ABT_OFF),
++		.msg = "SAS_HGC_ABT fetch LM list",
++	},
++};
++
++static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
++{
++	u32 irq_value, irq_msk;
++	struct hisi_hba *hisi_hba = p;
++	struct device *dev = hisi_hba->dev;
++	int i;
++
++	irq_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK3);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk | 0x1df00);
++
++	irq_value = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++
++	for (i = 0; i < ARRAY_SIZE(fatal_axi_error); i++) {
++		const struct hisi_sas_hw_error *error = &fatal_axi_error[i];
++
++		if (!(irq_value & error->irq_msk))
++			continue;
++
++		if (error->sub) {
++			const struct hisi_sas_hw_error *sub = error->sub;
++			u32 err_value = hisi_sas_read32(hisi_hba, error->reg);
++
++			for (; sub->msk || sub->msg; sub++) {
++				if (!(err_value & sub->msk))
++					continue;
++
++				dev_warn(dev, "%s error (0x%x) found!\n",
++					sub->msg, irq_value);
++				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
++			}
++		} else {
++			dev_warn(dev, "%s error (0x%x) found!\n",
++				error->msg, irq_value);
++			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
++		}
++	}
++
++	if (irq_value & BIT(ENT_INT_SRC3_ITC_INT_OFF)) {
++		u32 reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
++		u32 dev_id = reg_val & ITCT_DEV_MSK;
++		struct hisi_sas_device *sas_dev =
++				&hisi_hba->devices[dev_id];
++
++		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
++		dev_dbg(dev, "clear ITCT ok\n");
++		complete(sas_dev->completion);
++	}
++
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, irq_value & 0x1df00);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk);
++
++	return IRQ_HANDLED;
++}
++
+ static void
+ slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 	       struct hisi_sas_slot *slot)
+@@ -1615,6 +1728,15 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 		goto free_phy_irq;
+ 	}
+ 
++	rc = devm_request_irq(dev, pci_irq_vector(pdev, 11),
++			      fatal_axi_int_v3_hw, 0,
++			      DRV_NAME " fatal", hisi_hba);
++	if (rc) {
++		dev_err(dev, "could not request fatal interrupt, rc=%d\n", rc);
++		rc = -ENOENT;
++		goto free_chnl_interrupt;
++	}
++
+ 	/* Init tasklets for cq only */
+ 	for (i = 0; i < hisi_hba->queue_count; i++) {
+ 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
+@@ -1642,6 +1764,8 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 
+ 		free_irq(pci_irq_vector(pdev, k+16), cq);
+ 	}
++	free_irq(pci_irq_vector(pdev, 11), hisi_hba);
++free_chnl_interrupt:
+ 	free_irq(pci_irq_vector(pdev, 2), hisi_hba);
+ free_phy_irq:
+ 	free_irq(pci_irq_vector(pdev, 1), hisi_hba);
+@@ -1974,6 +2098,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
+ 
+ 	free_irq(pci_irq_vector(pdev, 1), hisi_hba);
+ 	free_irq(pci_irq_vector(pdev, 2), hisi_hba);
++	free_irq(pci_irq_vector(pdev, 11), hisi_hba);
+ 	for (i = 0; i < hisi_hba->queue_count; i++) {
+ 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
+ 
 -- 
 1.9.1
