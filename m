@@ -1,73 +1,151 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: qla4xxx: Convert timers to use timer_setup()
-Date: Wed, 25 Oct 2017 03:07:43 -0700
-Message-ID: <20171025100743.GA145111@beast>
+Subject: [PATCH] scsi: pmcraid: Convert timers to use timer_setup()
+Date: Wed, 25 Oct 2017 03:07:29 -0700
+Message-ID: <20171025100729.GA145083@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
 to pass the timer pointer explicitly.
 
-Cc: QLogic-Storage-Upstream@qlogic.com
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/pmcraid.c | 33 +++++++++++++--------------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 64c6fa563fdb..2b8a8ce2a431 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3955,16 +3955,15 @@ void qla4xxx_update_session_conn_param(struct scsi_qla_host *ha,
- /*
-  * Timer routines
-  */
-+static void qla4xxx_timer(struct timer_list *t);
- 
--static void qla4xxx_start_timer(struct scsi_qla_host *ha, void *func,
-+static void qla4xxx_start_timer(struct scsi_qla_host *ha,
- 				unsigned long interval)
- {
- 	DEBUG(printk("scsi: %s: Starting timer thread for adapter %d\n",
- 		     __func__, ha->host->host_no));
--	init_timer(&ha->timer);
-+	timer_setup(&ha->timer, qla4xxx_timer, 0);
- 	ha->timer.expires = jiffies + interval * HZ;
--	ha->timer.data = (unsigned long)ha;
--	ha->timer.function = (void (*)(unsigned long))func;
- 	add_timer(&ha->timer);
- 	ha->timer_active = 1;
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index b4d6cd8cd1ad..4f9f115fb6a0 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -348,7 +348,7 @@ static void pmcraid_init_cmdblk(struct pmcraid_cmd *cmd, int index)
+ 	cmd->sense_buffer = NULL;
+ 	cmd->sense_buffer_dma = 0;
+ 	cmd->dma_handle = 0;
+-	init_timer(&cmd->timer);
++	timer_setup(&cmd->timer, NULL, 0);
  }
-@@ -4508,8 +4507,9 @@ static void qla4xxx_check_relogin_flash_ddb(struct iscsi_cls_session *cls_sess)
-  * qla4xxx_timer - checks every second for work to do.
-  * @ha: Pointer to host adapter structure.
-  **/
--static void qla4xxx_timer(struct scsi_qla_host *ha)
-+static void qla4xxx_timer(struct timer_list *t)
+ 
+ /**
+@@ -557,8 +557,9 @@ static void pmcraid_reset_type(struct pmcraid_instance *pinstance)
+ 
+ static void pmcraid_ioa_reset(struct pmcraid_cmd *);
+ 
+-static void pmcraid_bist_done(struct pmcraid_cmd *cmd)
++static void pmcraid_bist_done(struct timer_list *t)
  {
-+	struct scsi_qla_host *ha = from_timer(ha, t, timer);
- 	int start_dpc = 0;
- 	uint16_t w;
++	struct pmcraid_cmd *cmd = from_timer(cmd, t, timer);
+ 	struct pmcraid_instance *pinstance = cmd->drv_inst;
+ 	unsigned long lock_flags;
+ 	int rc;
+@@ -572,9 +573,6 @@ static void pmcraid_bist_done(struct pmcraid_cmd *cmd)
+ 		pmcraid_info("BIST not complete, waiting another 2 secs\n");
+ 		cmd->timer.expires = jiffies + cmd->time_left;
+ 		cmd->time_left = 0;
+-		cmd->timer.data = (unsigned long)cmd;
+-		cmd->timer.function =
+-			(void (*)(unsigned long))pmcraid_bist_done;
+ 		add_timer(&cmd->timer);
+ 	} else {
+ 		cmd->time_left = 0;
+@@ -605,9 +603,8 @@ static void pmcraid_start_bist(struct pmcraid_cmd *cmd)
+ 		      doorbells, intrs);
  
-@@ -8805,7 +8805,7 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	ha->isp_ops->enable_intrs(ha);
+ 	cmd->time_left = msecs_to_jiffies(PMCRAID_BIST_TIMEOUT);
+-	cmd->timer.data = (unsigned long)cmd;
+ 	cmd->timer.expires = jiffies + msecs_to_jiffies(PMCRAID_BIST_TIMEOUT);
+-	cmd->timer.function = (void (*)(unsigned long))pmcraid_bist_done;
++	cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_bist_done;
+ 	add_timer(&cmd->timer);
+ }
  
- 	/* Start timer thread. */
--	qla4xxx_start_timer(ha, qla4xxx_timer, 1);
-+	qla4xxx_start_timer(ha, 1);
+@@ -617,8 +614,9 @@ static void pmcraid_start_bist(struct pmcraid_cmd *cmd)
+  * Return value
+  *  None
+  */
+-static void pmcraid_reset_alert_done(struct pmcraid_cmd *cmd)
++static void pmcraid_reset_alert_done(struct timer_list *t)
+ {
++	struct pmcraid_cmd *cmd = from_timer(cmd, t, timer);
+ 	struct pmcraid_instance *pinstance = cmd->drv_inst;
+ 	u32 status = ioread32(pinstance->ioa_status);
+ 	unsigned long lock_flags;
+@@ -637,10 +635,8 @@ static void pmcraid_reset_alert_done(struct pmcraid_cmd *cmd)
+ 		pmcraid_info("critical op is not yet reset waiting again\n");
+ 		/* restart timer if some more time is available to wait */
+ 		cmd->time_left -= PMCRAID_CHECK_FOR_RESET_TIMEOUT;
+-		cmd->timer.data = (unsigned long)cmd;
+ 		cmd->timer.expires = jiffies + PMCRAID_CHECK_FOR_RESET_TIMEOUT;
+-		cmd->timer.function =
+-			(void (*)(unsigned long))pmcraid_reset_alert_done;
++		cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_reset_alert_done;
+ 		add_timer(&cmd->timer);
+ 	}
+ }
+@@ -676,10 +672,8 @@ static void pmcraid_reset_alert(struct pmcraid_cmd *cmd)
+ 		 * bit to be reset.
+ 		 */
+ 		cmd->time_left = PMCRAID_RESET_TIMEOUT;
+-		cmd->timer.data = (unsigned long)cmd;
+ 		cmd->timer.expires = jiffies + PMCRAID_CHECK_FOR_RESET_TIMEOUT;
+-		cmd->timer.function =
+-			(void (*)(unsigned long))pmcraid_reset_alert_done;
++		cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_reset_alert_done;
+ 		add_timer(&cmd->timer);
  
- 	set_bit(AF_INIT_DONE, &ha->flags);
+ 		iowrite32(DOORBELL_IOA_RESET_ALERT,
+@@ -704,8 +698,9 @@ static void pmcraid_reset_alert(struct pmcraid_cmd *cmd)
+  * Return value:
+  *   None
+  */
+-static void pmcraid_timeout_handler(struct pmcraid_cmd *cmd)
++static void pmcraid_timeout_handler(struct timer_list *t)
+ {
++	struct pmcraid_cmd *cmd = from_timer(cmd, t, timer);
+ 	struct pmcraid_instance *pinstance = cmd->drv_inst;
+ 	unsigned long lock_flags;
  
+@@ -919,7 +914,7 @@ static void pmcraid_send_cmd(
+ 	struct pmcraid_cmd *cmd,
+ 	void (*cmd_done) (struct pmcraid_cmd *),
+ 	unsigned long timeout,
+-	void (*timeout_func) (struct pmcraid_cmd *)
++	void (*timeout_func) (struct timer_list *)
+ )
+ {
+ 	/* initialize done function */
+@@ -927,9 +922,8 @@ static void pmcraid_send_cmd(
+ 
+ 	if (timeout_func) {
+ 		/* setup timeout handler */
+-		cmd->timer.data = (unsigned long)cmd;
+ 		cmd->timer.expires = jiffies + timeout;
+-		cmd->timer.function = (void (*)(unsigned long))timeout_func;
++		cmd->timer.function = (TIMER_FUNC_TYPE)timeout_func;
+ 		add_timer(&cmd->timer);
+ 	}
+ 
+@@ -1955,10 +1949,9 @@ static void pmcraid_soft_reset(struct pmcraid_cmd *cmd)
+ 	 * would re-initiate a reset
+ 	 */
+ 	cmd->cmd_done = pmcraid_ioa_reset;
+-	cmd->timer.data = (unsigned long)cmd;
+ 	cmd->timer.expires = jiffies +
+ 			     msecs_to_jiffies(PMCRAID_TRANSOP_TIMEOUT);
+-	cmd->timer.function = (void (*)(unsigned long))pmcraid_timeout_handler;
++	cmd->timer.function = (TIMER_FUNC_TYPE)pmcraid_timeout_handler;
+ 
+ 	if (!timer_pending(&cmd->timer))
+ 		add_timer(&cmd->timer);
 -- 
 2.7.4
 
