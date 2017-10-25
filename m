@@ -1,116 +1,168 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: csiostor: Convert timers to use timer_setup()
-Date: Wed, 25 Oct 2017 03:05:36 -0700
-Message-ID: <20171025100536.GA144984@beast>
+Subject: [PATCH] scsi: aic7xxx: Convert timers to use timer_setup()
+Date: Wed, 25 Oct 2017 03:05:26 -0700
+Message-ID: <20171025100526.GA144967@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Varun Prakash <varun@chelsio.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+stat_timer only ever assigns the same function and data, so consolidate
+to using timer_setup(), adjust callback, drop everything else used
+to pass things around, and remove needless typedefs.
 
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+reset_timer is unused; remove it.
+
+Cc: Hannes Reinecke <hare@suse.com>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Varun Prakash <varun@chelsio.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/csiostor/csio_hw.c | 15 ++++++---------
- drivers/scsi/csiostor/csio_mb.c |  9 +++------
- drivers/scsi/csiostor/csio_mb.h |  3 ++-
- 3 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.h      |  5 +----
+ drivers/scsi/aic7xxx/aic79xx_core.c | 29 ++++++++---------------------
+ drivers/scsi/aic7xxx/aic79xx_osm.h  |  7 -------
+ 3 files changed, 9 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index 5be0086142ca..0bd1131b6cc9 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -3347,9 +3347,10 @@ csio_mberr_worker(void *data)
-  *
-  **/
- static void
--csio_hw_mb_timer(uintptr_t data)
-+csio_hw_mb_timer(struct timer_list *t)
- {
--	struct csio_hw *hw = (struct csio_hw *)data;
-+	struct csio_mbm *mbm = from_timer(mbm, t, timer);
-+	struct csio_hw *hw = mbm->hw;
- 	struct csio_mb *mbp = NULL;
+diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
+index d47b527b25dd..31f2bb9d7146 100644
+--- a/drivers/scsi/aic7xxx/aic79xx.h
++++ b/drivers/scsi/aic7xxx/aic79xx.h
+@@ -1046,8 +1046,6 @@ typedef enum {
  
- 	spin_lock_irq(&hw->lock);
-@@ -3715,9 +3716,9 @@ csio_mgmt_req_lookup(struct csio_mgmtm *mgmtm, struct csio_ioreq *io_req)
-  * Return - none.
-  */
- static void
--csio_mgmt_tmo_handler(uintptr_t data)
-+csio_mgmt_tmo_handler(struct timer_list *t)
- {
--	struct csio_mgmtm *mgmtm = (struct csio_mgmtm *) data;
-+	struct csio_mgmtm *mgmtm = from_timer(mgmtm, t, mgmt_timer);
- 	struct list_head *tmp;
- 	struct csio_ioreq *io_req;
+ typedef uint8_t ahd_mode_state;
  
-@@ -3797,11 +3798,7 @@ csio_mgmtm_cleanup(struct csio_mgmtm *mgmtm)
- static int
- csio_mgmtm_init(struct csio_mgmtm *mgmtm, struct csio_hw *hw)
- {
--	struct timer_list *timer = &mgmtm->mgmt_timer;
+-typedef void ahd_callback_t (void *);
 -
--	init_timer(timer);
--	timer->function = csio_mgmt_tmo_handler;
--	timer->data = (unsigned long)mgmtm;
-+	timer_setup(&mgmtm->mgmt_timer, csio_mgmt_tmo_handler, 0);
- 
- 	INIT_LIST_HEAD(&mgmtm->active_q);
- 	INIT_LIST_HEAD(&mgmtm->cbfn_q);
-diff --git a/drivers/scsi/csiostor/csio_mb.c b/drivers/scsi/csiostor/csio_mb.c
-index 7e74ec859228..931b1d8f9f3e 100644
---- a/drivers/scsi/csiostor/csio_mb.c
-+++ b/drivers/scsi/csiostor/csio_mb.c
-@@ -1647,13 +1647,10 @@ csio_mb_cancel_all(struct csio_hw *hw, struct list_head *cbfn_q)
-  */
- int
- csio_mbm_init(struct csio_mbm *mbm, struct csio_hw *hw,
--	      void (*timer_fn)(uintptr_t))
-+	      void (*timer_fn)(struct timer_list *))
+ struct ahd_completion
  {
--	struct timer_list *timer = &mbm->timer;
+ 	uint16_t	tag;
+@@ -1122,8 +1120,7 @@ struct ahd_softc {
+ 	/*
+ 	 * Timer handles for timer driven callbacks.
+ 	 */
+-	ahd_timer_t		  reset_timer;
+-	ahd_timer_t		  stat_timer;
++	struct timer_list	stat_timer;
+ 
+ 	/*
+ 	 * Statistics.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 95d8f25cbcca..b560f396ee99 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -207,7 +207,7 @@ static void		ahd_add_scb_to_free_list(struct ahd_softc *ahd,
+ static u_int		ahd_rem_wscb(struct ahd_softc *ahd, u_int scbid,
+ 				     u_int prev, u_int next, u_int tid);
+ static void		ahd_reset_current_bus(struct ahd_softc *ahd);
+-static ahd_callback_t	ahd_stat_timer;
++static void		ahd_stat_timer(struct timer_list *t);
+ #ifdef AHD_DUMP_SEQ
+ static void		ahd_dumpseq(struct ahd_softc *ahd);
+ #endif
+@@ -6104,8 +6104,7 @@ ahd_alloc(void *platform_arg, char *name)
+ 	ahd->bugs = AHD_BUGNONE;
+ 	ahd->flags = AHD_SPCHK_ENB_A|AHD_RESET_BUS_A|AHD_TERM_ENB_A
+ 		   | AHD_EXTENDED_TRANS_A|AHD_STPWLEVEL_A;
+-	ahd_timer_init(&ahd->reset_timer);
+-	ahd_timer_init(&ahd->stat_timer);
++	timer_setup(&ahd->stat_timer, ahd_stat_timer, 0);
+ 	ahd->int_coalescing_timer = AHD_INT_COALESCING_TIMER_DEFAULT;
+ 	ahd->int_coalescing_maxcmds = AHD_INT_COALESCING_MAXCMDS_DEFAULT;
+ 	ahd->int_coalescing_mincmds = AHD_INT_COALESCING_MINCMDS_DEFAULT;
+@@ -6235,8 +6234,7 @@ ahd_shutdown(void *arg)
+ 	/*
+ 	 * Stop periodic timer callbacks.
+ 	 */
+-	ahd_timer_stop(&ahd->reset_timer);
+-	ahd_timer_stop(&ahd->stat_timer);
++	del_timer_sync(&ahd->stat_timer);
+ 
+ 	/* This will reset most registers to 0, but not all */
+ 	ahd_reset(ahd, /*reinit*/FALSE);
+@@ -7039,20 +7037,11 @@ static const char *termstat_strings[] = {
+ };
+ 
+ /***************************** Timer Facilities *******************************/
+-#define ahd_timer_init init_timer
+-#define ahd_timer_stop del_timer_sync
+-typedef void ahd_linux_callback_t (u_long);
 -
--	init_timer(timer);
--	timer->function = timer_fn;
--	timer->data = (unsigned long)hw;
-+	mbm->hw = hw;
-+	timer_setup(&mbm->timer, timer_fn, 0);
+ static void
+-ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
++ahd_timer_reset(struct timer_list *timer, int usec)
+ {
+-	struct ahd_softc *ahd;
+-
+-	ahd = (struct ahd_softc *)arg;
+ 	del_timer(timer);
+-	timer->data = (u_long)arg;
+ 	timer->expires = jiffies + (usec * HZ)/1000000;
+-	timer->function = (ahd_linux_callback_t*)func;
+ 	add_timer(timer);
+ }
  
- 	INIT_LIST_HEAD(&mbm->req_q);
- 	INIT_LIST_HEAD(&mbm->cbfn_q);
-diff --git a/drivers/scsi/csiostor/csio_mb.h b/drivers/scsi/csiostor/csio_mb.h
-index 1bc82d0bc260..a6823df73015 100644
---- a/drivers/scsi/csiostor/csio_mb.h
-+++ b/drivers/scsi/csiostor/csio_mb.h
-@@ -137,6 +137,7 @@ struct csio_mbm {
- 	uint32_t		a_mbox;			/* Async mbox num */
- 	uint32_t		intr_idx;		/* Interrupt index */
- 	struct timer_list	timer;			/* Mbox timer */
-+	struct csio_hw		*hw;			/* Hardware pointer */
- 	struct list_head	req_q;			/* Mbox request queue */
- 	struct list_head	cbfn_q;			/* Mbox completion q */
- 	struct csio_mb		*mcurrent;		/* Current mailbox */
-@@ -252,7 +253,7 @@ void csio_mb_process_portparams_rsp(struct csio_hw *hw, struct csio_mb *mbp,
+@@ -7279,8 +7268,7 @@ ahd_init(struct ahd_softc *ahd)
+ 	}
+ init_done:
+ 	ahd_restart(ahd);
+-	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
+-			ahd_stat_timer, ahd);
++	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
+ 	return (0);
+ }
  
- /* MB module functions */
- int csio_mbm_init(struct csio_mbm *, struct csio_hw *,
--			    void (*)(uintptr_t));
-+			    void (*)(struct timer_list *));
- void csio_mbm_exit(struct csio_mbm *);
- void csio_mb_intr_enable(struct csio_hw *);
- void csio_mb_intr_disable(struct csio_hw *);
+@@ -8878,9 +8866,9 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
+ 
+ /**************************** Statistics Processing ***************************/
+ static void
+-ahd_stat_timer(void *arg)
++ahd_stat_timer(struct timer_list *t)
+ {
+-	struct	ahd_softc *ahd = arg;
++	struct	ahd_softc *ahd = from_timer(ahd, t, stat_timer);
+ 	u_long	s;
+ 	int	enint_coal;
+ 	
+@@ -8907,8 +8895,7 @@ ahd_stat_timer(void *arg)
+ 	ahd->cmdcmplt_bucket = (ahd->cmdcmplt_bucket+1) & (AHD_STAT_BUCKETS-1);
+ 	ahd->cmdcmplt_total -= ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket];
+ 	ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket] = 0;
+-	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
+-			ahd_stat_timer, ahd);
++	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
+ 	ahd_unlock(ahd, &s);
+ }
+ 
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+index 728193a42e6e..8a8b7ae7aed3 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -203,9 +203,6 @@ int	ahd_dmamap_unload(struct ahd_softc *, bus_dma_tag_t, bus_dmamap_t);
+  */
+ #define ahd_dmamap_sync(ahd, dma_tag, dmamap, offset, len, op)
+ 
+-/************************** Timer DataStructures ******************************/
+-typedef struct timer_list ahd_timer_t;
+-
+ /********************************** Includes **********************************/
+ #ifdef CONFIG_AIC79XX_REG_PRETTY_PRINT
+ #define AIC_DEBUG_REGISTERS 1
+@@ -214,10 +211,6 @@ typedef struct timer_list ahd_timer_t;
+ #endif
+ #include "aic79xx.h"
+ 
+-/***************************** Timer Facilities *******************************/
+-#define ahd_timer_init init_timer
+-#define ahd_timer_stop del_timer_sync
+-
+ /***************************** SMP support ************************************/
+ #include <linux/spinlock.h>
+ 
 -- 
 2.7.4
 
