@@ -1,56 +1,39 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] iscsi-target: Convert timers to use timer_setup()
-Date: Wed, 25 Oct 2017 16:10:41 +0200
-Message-ID: <CAGXu5jKNDM8NjgtgBp-XapHEiaY_ryk3pBXdaryux6spX++zmQ@mail.gmail.com>
-References: <20171025100145.GA144703@beast> <CAHmME9pJRRhWg3=eorVkkSXhpsPgeCfRJFJp2i1-kdXr_E0PCA@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: fixes kernel crash while tracing
+ ata_eh_link_autopsy event
+Date: Wed, 25 Oct 2017 07:54:50 -0700
+Message-ID: <20171025145450.GA59538@devbig577.frc2.facebook.com>
+References: <1508926976-11467-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAHmME9pJRRhWg3=eorVkkSXhpsPgeCfRJFJp2i1-kdXr_E0PCA@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Jiang Yi <jiangyilism@gmail.com>, Varun Prakash <varun@chelsio.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:55522 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751820AbdJYOyy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2017 10:54:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1508926976-11467-1-git-send-email-rsahu@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rameshwar Prasad Sahu <rsahu@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 
-On Wed, Oct 25, 2017 at 2:41 PM, Jason A. Donenfeld <Jason@zx2c4.com> wrote:
-> On Wed, Oct 25, 2017 at 12:01 PM, Kees Cook <keescook@chromium.org> wrote:
->>         sess->time2retain_timer.expires =
->>                 (get_jiffies_64() + sess->sess_ops->DefaultTime2Retain * HZ);
->>         add_timer(&sess->time2retain_timer);
->>         cmd->dataout_timer.expires = (get_jiffies_64() + na->dataout_timeout * HZ);
->>         add_timer(&cmd->dataout_timer);
->>         np->np_login_timer.expires = (get_jiffies_64() + TA_LOGIN_TIMEOUT * HZ);
->>         add_timer(&np->np_login_timer);
->> +       timeout.timer.expires = (get_jiffies_64() + TA_LOGIN_TIMEOUT * HZ);
->> +       add_timer(&timeout.timer);
->>         conn->nopin_response_timer.expires =
->>                 (get_jiffies_64() + na->nopin_response_timeout * HZ);
->>         add_timer(&conn->nopin_response_timer);
->>         conn->nopin_timer.expires = (get_jiffies_64() + na->nopin_timeout * HZ);
->>         add_timer(&conn->nopin_timer);
->>         conn->nopin_timer.expires = (get_jiffies_64() + na->nopin_timeout * HZ);
->>         add_timer(&conn->nopin_timer);
->
-> I assume you're trying to keep these diffs as small as possible, but I
-> imagine at some point the above can also be combined into a single
-> mod_timer.
+Hello,
 
-Yeah, I've resisted making those changes for this set of conversions.
+On Wed, Oct 25, 2017 at 03:52:56PM +0530, Rameshwar Prasad Sahu wrote:
+> @@ -288,8 +289,8 @@
+>  	),
+> 
+>  	TP_fast_assign(
+> -		__entry->ata_port	= dev->link->ap->print_id;
+> -		__entry->ata_dev	= dev->link->pmp + dev->devno;
+> +		__entry->ata_port	= link->ap->print_id;
+> +		__entry->ata_dev	= link->pmp + link->device->devno;
 
-> Also, all the goofiness with the flags stuff seems like an antique
-> replacement for timer_pending:
->
->>        conn->nopin_response_timer_flags &= ~ISCSI_TF_STOP;
->>        conn->nopin_response_timer_flags |= ISCSI_TF_RUNNING;
+The above is wrong if there are multiple devices on the link.  It
+probably should take both link and dev and use dev iff it's not NULL.
 
-Those appear to be separate flags not from struct timer_list.
-
-However, maintainers: sorry to send this one -- it can't be merged
-yet, this uses timer_setup_on_stack() which is only in -next right
-now. If it looks okay, though, I can carry this in the timer tree.
-
--Kees
+Thanks.
 
 -- 
-Kees Cook
-Pixel Security
+tejun
