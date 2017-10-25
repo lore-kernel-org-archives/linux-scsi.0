@@ -1,146 +1,322 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: ipr: Convert timers to use timer_setup()
-Date: Wed, 25 Oct 2017 03:06:15 -0700
-Message-ID: <20171025100615.GA145041@beast>
+Subject: [PATCH] scsi: megaraid: Convert timers to use timer_setup()
+Date: Wed, 25 Oct 2017 03:07:20 -0700
+Message-ID: <20171025100720.GA145069@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:53480 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932477AbdJYKHX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2017 06:07:23 -0400
+Received: by mail-pf0-f194.google.com with SMTP id t188so21873387pfd.10
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2017 03:07:22 -0700 (PDT)
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+to pass the timer pointer explicitly. Also consolidates the timer setup
+functions arguments, which are all identical, and corrects on-stack timer
+usage.
 
-Cc: Brian King <brking@us.ibm.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: megaraidlinux.pdl@broadcom.com
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/ipr.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/megaraid/megaraid_ioctl.h      |  6 +++++
+ drivers/scsi/megaraid/megaraid_mbox.c       | 26 ++++++++++-----------
+ drivers/scsi/megaraid/megaraid_mm.c         | 27 +++++++++++-----------
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 35 +++++++++++------------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 15 +++----------
+ 5 files changed, 47 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index f838bd73befa..d53429371127 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -694,7 +694,7 @@ static void ipr_init_ipr_cmnd(struct ipr_cmnd *ipr_cmd,
- 	ipr_cmd->sibling = NULL;
- 	ipr_cmd->eh_comp = NULL;
- 	ipr_cmd->fast_done = fast_done;
--	init_timer(&ipr_cmd->timer);
-+	timer_setup(&ipr_cmd->timer, NULL, 0);
- }
+diff --git a/drivers/scsi/megaraid/megaraid_ioctl.h b/drivers/scsi/megaraid/megaraid_ioctl.h
+index 05f6e4ec3453..eedcbde46459 100644
+--- a/drivers/scsi/megaraid/megaraid_ioctl.h
++++ b/drivers/scsi/megaraid/megaraid_ioctl.h
+@@ -19,6 +19,7 @@
+ 
+ #include <linux/types.h>
+ #include <linux/semaphore.h>
++#include <linux/timer.h>
+ 
+ #include "mbox_defs.h"
+ 
+@@ -153,6 +154,11 @@ typedef struct uioc {
+ 
+ } __attribute__ ((aligned(1024),packed)) uioc_t;
+ 
++/* For on-stack uioc timers. */
++struct uioc_timeout {
++	struct timer_list timer;
++	uioc_t		  *uioc;
++};
  
  /**
-@@ -990,15 +990,14 @@ static void ipr_send_command(struct ipr_cmnd *ipr_cmd)
-  **/
- static void ipr_do_req(struct ipr_cmnd *ipr_cmd,
- 		       void (*done) (struct ipr_cmnd *),
--		       void (*timeout_func) (struct ipr_cmnd *), u32 timeout)
-+		       void (*timeout_func) (struct timer_list *), u32 timeout)
- {
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
- 
- 	ipr_cmd->done = done;
- 
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + timeout;
--	ipr_cmd->timer.function = (void (*)(unsigned long))timeout_func;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)timeout_func;
- 
- 	add_timer(&ipr_cmd->timer);
- 
-@@ -1080,7 +1079,7 @@ static void ipr_init_ioadl(struct ipr_cmnd *ipr_cmd, dma_addr_t dma_addr,
-  * 	none
-  **/
- static void ipr_send_blocking_cmd(struct ipr_cmnd *ipr_cmd,
--				  void (*timeout_func) (struct ipr_cmnd *ipr_cmd),
-+				  void (*timeout_func) (struct timer_list *),
- 				  u32 timeout)
- {
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-@@ -2664,8 +2663,9 @@ static void ipr_process_error(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  * 	none
-  **/
--static void ipr_timeout(struct ipr_cmnd *ipr_cmd)
-+static void ipr_timeout(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	unsigned long lock_flags = 0;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 
-@@ -2696,8 +2696,9 @@ static void ipr_timeout(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  * 	none
-  **/
--static void ipr_oper_timeout(struct ipr_cmnd *ipr_cmd)
-+static void ipr_oper_timeout(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	unsigned long lock_flags = 0;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 
-@@ -5449,8 +5450,9 @@ static void ipr_bus_reset_done(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  *	none
-  **/
--static void ipr_abort_timeout(struct ipr_cmnd *ipr_cmd)
-+static void ipr_abort_timeout(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	struct ipr_cmnd *reset_cmd;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	struct ipr_cmd_pkt *cmd_pkt;
-@@ -8271,8 +8273,9 @@ static int ipr_ioafp_identify_hrrq(struct ipr_cmnd *ipr_cmd)
-  * Return value:
-  * 	none
-  **/
--static void ipr_reset_timer_done(struct ipr_cmnd *ipr_cmd)
-+static void ipr_reset_timer_done(struct timer_list *t)
- {
-+	struct ipr_cmnd *ipr_cmd = from_timer(ipr_cmd, t, timer);
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	unsigned long lock_flags = 0;
- 
-@@ -8308,9 +8311,8 @@ static void ipr_reset_start_timer(struct ipr_cmnd *ipr_cmd,
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
- 	ipr_cmd->done = ipr_reset_ioa_job;
- 
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + timeout;
--	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_reset_timer_done;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_reset_timer_done;
- 	add_timer(&ipr_cmd->timer);
+  * struct mraid_hba_info - information about the controller
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index ec3c43854978..530358cdcb39 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3904,19 +3904,19 @@ megaraid_sysfs_get_ldmap_done(uioc_t *uioc)
+ 	wake_up(&raid_dev->sysfs_wait_q);
  }
  
-@@ -8394,9 +8396,8 @@ static int ipr_reset_next_stage(struct ipr_cmnd *ipr_cmd)
+-
+ /**
+  * megaraid_sysfs_get_ldmap_timeout - timeout handling for get ldmap
+- * @data	: timed out packet
++ * @t	: timed out timer
+  *
+  * Timeout routine to recover and return to application, in case the adapter
+  * has stopped responding. A timeout of 60 seconds for this command seems like
+  * a good value.
+  */
+ static void
+-megaraid_sysfs_get_ldmap_timeout(unsigned long data)
++megaraid_sysfs_get_ldmap_timeout(struct timer_list *t)
+ {
+-	uioc_t		*uioc = (uioc_t *)data;
++	struct uioc_timeout *timeout = from_timer(timeout, t, timer);
++	uioc_t		*uioc = timeout->uioc;
+ 	adapter_t	*adapter = (adapter_t *)uioc->buf_vaddr;
+ 	mraid_device_t	*raid_dev = ADAP2RAIDDEV(adapter);
+ 
+@@ -3951,8 +3951,7 @@ megaraid_sysfs_get_ldmap(adapter_t *adapter)
+ 	mbox64_t		*mbox64;
+ 	mbox_t			*mbox;
+ 	char			*raw_mbox;
+-	struct timer_list	sysfs_timer;
+-	struct timer_list	*timerp;
++	struct uioc_timeout	timeout;
+ 	caddr_t			ldmap;
+ 	int			rval = 0;
+ 
+@@ -3988,14 +3987,12 @@ megaraid_sysfs_get_ldmap(adapter_t *adapter)
+ 	/*
+ 	 * Setup a timer to recover from a non-responding controller
+ 	 */
+-	timerp	= &sysfs_timer;
+-	init_timer(timerp);
+-
+-	timerp->function	= megaraid_sysfs_get_ldmap_timeout;
+-	timerp->data		= (unsigned long)uioc;
+-	timerp->expires		= jiffies + 60 * HZ;
++	timeout.uioc = uioc;
++	timer_setup_on_stack(&timeout.timer,
++			     megaraid_sysfs_get_ldmap_timeout, 0);
+ 
+-	add_timer(timerp);
++	timeout.timer.expires		= jiffies + 60 * HZ;
++	add_timer(&timeout.timer);
+ 
+ 	/*
+ 	 * Send the command to the firmware
+@@ -4033,7 +4030,8 @@ megaraid_sysfs_get_ldmap(adapter_t *adapter)
+ 	}
+ 
+ 
+-	del_timer_sync(timerp);
++	del_timer_sync(&timeout.timer);
++	destroy_timer_on_stack(&timeout.timer);
+ 
+ 	mutex_unlock(&raid_dev->sysfs_mtx);
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index 65b6f6ace3a5..bb802b0c12b8 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -35,7 +35,7 @@ static int kioc_to_mimd(uioc_t *, mimd_t __user *);
+ static int handle_drvrcmd(void __user *, uint8_t, int *);
+ static int lld_ioctl(mraid_mmadp_t *, uioc_t *);
+ static void ioctl_done(uioc_t *);
+-static void lld_timedout(unsigned long);
++static void lld_timedout(struct timer_list *);
+ static void hinfo_to_cinfo(mraid_hba_info_t *, mcontroller_t *);
+ static mraid_mmadp_t *mraid_mm_get_adapter(mimd_t __user *, int *);
+ static uioc_t *mraid_mm_alloc_kioc(mraid_mmadp_t *);
+@@ -686,8 +686,7 @@ static int
+ lld_ioctl(mraid_mmadp_t *adp, uioc_t *kioc)
+ {
+ 	int			rval;
+-	struct timer_list	timer;
+-	struct timer_list	*tp = NULL;
++	struct uioc_timeout	timeout = { };
+ 
+ 	kioc->status	= -ENODATA;
+ 	rval		= adp->issue_uioc(adp->drvr_data, kioc, IOCTL_ISSUE);
+@@ -698,14 +697,12 @@ lld_ioctl(mraid_mmadp_t *adp, uioc_t *kioc)
+ 	 * Start the timer
+ 	 */
+ 	if (adp->timeout > 0) {
+-		tp		= &timer;
+-		init_timer(tp);
++		timeout.uioc = kioc;
++		timer_setup_on_stack(&timeout.timer, lld_timedout, 0);
+ 
+-		tp->function	= lld_timedout;
+-		tp->data	= (unsigned long)kioc;
+-		tp->expires	= jiffies + adp->timeout * HZ;
++		timeout.timer.expires	= jiffies + adp->timeout * HZ;
+ 
+-		add_timer(tp);
++		add_timer(&timeout.timer);
+ 	}
+ 
+ 	/*
+@@ -713,8 +710,9 @@ lld_ioctl(mraid_mmadp_t *adp, uioc_t *kioc)
+ 	 * call, the ioctl either completed successfully or timedout.
+ 	 */
+ 	wait_event(wait_q, (kioc->status != -ENODATA));
+-	if (tp) {
+-		del_timer_sync(tp);
++	if (timeout.timer.function) {
++		del_timer_sync(&timeout.timer);
++		destroy_timer_on_stack(&timeout.timer);
+ 	}
+ 
+ 	/*
+@@ -783,12 +781,13 @@ ioctl_done(uioc_t *kioc)
+ 
+ /**
+  * lld_timedout	- callback from the expired timer
+- * @ptr		: ioctl packet that timed out
++ * @t		: timer that timed out
+  */
+ static void
+-lld_timedout(unsigned long ptr)
++lld_timedout(struct timer_list *t)
+ {
+-	uioc_t *kioc	= (uioc_t *)ptr;
++	struct uioc_timeout *timeout = from_timer(timeout, t, timer);
++	uioc_t *kioc	= timeout->uioc;
+ 
+ 	kioc->status 	= -ETIME;
+ 	kioc->timedout	= 1;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e518dadc8161..a36e18156e49 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -2114,22 +2114,19 @@ static void megasas_complete_cmd_dpc(unsigned long instance_addr)
+ 	megasas_check_and_restore_queue_depth(instance);
+ }
+ 
++static void megasas_sriov_heartbeat_handler(struct timer_list *t);
++
+ /**
+- * megasas_start_timer - Initializes a timer object
++ * megasas_start_timer - Initializes sriov heartbeat timer object
+  * @instance:		Adapter soft state
+- * @timer:		timer object to be initialized
+- * @fn:			timer function
+- * @interval:		time interval between timer function call
+  *
+  */
+-void megasas_start_timer(struct megasas_instance *instance,
+-			struct timer_list *timer,
+-			void *fn, unsigned long interval)
+-{
+-	init_timer(timer);
+-	timer->expires = jiffies + interval;
+-	timer->data = (unsigned long)instance;
+-	timer->function = fn;
++void megasas_start_timer(struct megasas_instance *instance)
++{
++	struct timer_list *timer = &instance->sriov_heartbeat_timer;
++
++	timer_setup(timer, megasas_sriov_heartbeat_handler, 0);
++	timer->expires = jiffies + MEGASAS_SRIOV_HEARTBEAT_INTERVAL_VF;
+ 	add_timer(timer);
+ }
+ 
+@@ -2515,10 +2512,10 @@ int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+ }
+ 
+ /* Handler for SR-IOV heartbeat */
+-void megasas_sriov_heartbeat_handler(unsigned long instance_addr)
++static void megasas_sriov_heartbeat_handler(struct timer_list *t)
+ {
+ 	struct megasas_instance *instance =
+-		(struct megasas_instance *)instance_addr;
++		from_timer(instance, t, sriov_heartbeat_timer);
+ 
+ 	if (instance->hb_host_mem->HB.fwCounter !=
+ 	    instance->hb_host_mem->HB.driverCounter) {
+@@ -5493,10 +5490,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	/* Launch SR-IOV heartbeat timer */
+ 	if (instance->requestorId) {
+ 		if (!megasas_sriov_start_heartbeat(instance, 1))
+-			megasas_start_timer(instance,
+-					    &instance->sriov_heartbeat_timer,
+-					    megasas_sriov_heartbeat_handler,
+-					    MEGASAS_SRIOV_HEARTBEAT_INTERVAL_VF);
++			megasas_start_timer(instance);
+ 		else
+ 			instance->skip_heartbeat_timer_del = 1;
+ 	}
+@@ -6507,10 +6501,7 @@ megasas_resume(struct pci_dev *pdev)
+ 	/* Re-launch SR-IOV heartbeat timer */
+ 	if (instance->requestorId) {
+ 		if (!megasas_sriov_start_heartbeat(instance, 0))
+-			megasas_start_timer(instance,
+-					    &instance->sriov_heartbeat_timer,
+-					    megasas_sriov_heartbeat_handler,
+-					    MEGASAS_SRIOV_HEARTBEAT_INTERVAL_VF);
++			megasas_start_timer(instance);
+ 		else {
+ 			instance->skip_heartbeat_timer_del = 1;
+ 			goto fail_init_mfi;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 11bd2e698b84..3c399e7b3fe1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -85,12 +85,9 @@ int megasas_transition_to_ready(struct megasas_instance *instance, int ocr);
+ void megaraid_sas_kill_hba(struct megasas_instance *instance);
+ 
+ extern u32 megasas_dbg_lvl;
+-void megasas_sriov_heartbeat_handler(unsigned long instance_addr);
+ int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+ 				  int initial);
+-void megasas_start_timer(struct megasas_instance *instance,
+-			struct timer_list *timer,
+-			 void *fn, unsigned long interval);
++void megasas_start_timer(struct megasas_instance *instance);
+ extern struct megasas_mgmt_info megasas_mgmt_info;
+ extern unsigned int resetwaittime;
+ extern unsigned int dual_qdepth_disable;
+@@ -4369,10 +4366,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 			/* Restart SR-IOV heartbeat */
+ 			if (instance->requestorId) {
+ 				if (!megasas_sriov_start_heartbeat(instance, 0))
+-					megasas_start_timer(instance,
+-							    &instance->sriov_heartbeat_timer,
+-							    megasas_sriov_heartbeat_handler,
+-							    MEGASAS_SRIOV_HEARTBEAT_INTERVAL_VF);
++					megasas_start_timer(instance);
+ 				else
+ 					instance->skip_heartbeat_timer_del = 1;
+ 			}
+@@ -4404,10 +4398,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 	} else {
+ 		/* For VF: Restart HB timer if we didn't OCR */
+ 		if (instance->requestorId) {
+-			megasas_start_timer(instance,
+-					    &instance->sriov_heartbeat_timer,
+-					    megasas_sriov_heartbeat_handler,
+-					    MEGASAS_SRIOV_HEARTBEAT_INTERVAL_VF);
++			megasas_start_timer(instance);
  		}
- 	}
- 
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + stage_time * HZ;
--	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_oper_timeout;
- 	ipr_cmd->done = ipr_reset_ioa_job;
- 	add_timer(&ipr_cmd->timer);
- 
-@@ -8466,9 +8467,8 @@ static int ipr_reset_enable_ioa(struct ipr_cmnd *ipr_cmd)
- 		return IPR_RC_JOB_CONTINUE;
- 	}
- 
--	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + (ioa_cfg->transop_timeout * HZ);
--	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
-+	ipr_cmd->timer.function = (TIMER_FUNC_TYPE)ipr_oper_timeout;
- 	ipr_cmd->done = ipr_reset_ioa_job;
- 	add_timer(&ipr_cmd->timer);
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
+ 		clear_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
+ 		instance->instancet->enable_intr(instance);
 -- 
 2.7.4
 
