@@ -1,36 +1,120 @@
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Subject: [PATCH 1/2] scsi: megaraid: Remove redundant code in megasas_alloc_cmds
-Date: Wed, 25 Oct 2017 17:57:07 +0800
-Message-ID: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH] scsi: csiostor: Convert timers to use timer_setup()
+Date: Wed, 25 Oct 2017 03:05:36 -0700
+Message-ID: <20171025100536.GA144984@beast>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Yisheng Xie <xieyisheng1@huawei.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Varun Prakash <varun@chelsio.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-megasas_alloc_cmds is to alloc cmd_list of instance instead of fusion,
-and fusion is useless in this function. Just remove it.
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Varun Prakash <varun@chelsio.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/csiostor/csio_hw.c | 15 ++++++---------
+ drivers/scsi/csiostor/csio_mb.c |  9 +++------
+ drivers/scsi/csiostor/csio_mb.h |  3 ++-
+ 3 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e518dad..0640168 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4033,9 +4033,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
- 	int j;
- 	u16 max_cmd;
- 	struct megasas_cmd *cmd;
--	struct fusion_context *fusion;
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 5be0086142ca..0bd1131b6cc9 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -3347,9 +3347,10 @@ csio_mberr_worker(void *data)
+  *
+  **/
+ static void
+-csio_hw_mb_timer(uintptr_t data)
++csio_hw_mb_timer(struct timer_list *t)
+ {
+-	struct csio_hw *hw = (struct csio_hw *)data;
++	struct csio_mbm *mbm = from_timer(mbm, t, timer);
++	struct csio_hw *hw = mbm->hw;
+ 	struct csio_mb *mbp = NULL;
  
--	fusion = instance->ctrl_context;
- 	max_cmd = instance->max_mfi_cmds;
+ 	spin_lock_irq(&hw->lock);
+@@ -3715,9 +3716,9 @@ csio_mgmt_req_lookup(struct csio_mgmtm *mgmtm, struct csio_ioreq *io_req)
+  * Return - none.
+  */
+ static void
+-csio_mgmt_tmo_handler(uintptr_t data)
++csio_mgmt_tmo_handler(struct timer_list *t)
+ {
+-	struct csio_mgmtm *mgmtm = (struct csio_mgmtm *) data;
++	struct csio_mgmtm *mgmtm = from_timer(mgmtm, t, mgmt_timer);
+ 	struct list_head *tmp;
+ 	struct csio_ioreq *io_req;
  
- 	/*
+@@ -3797,11 +3798,7 @@ csio_mgmtm_cleanup(struct csio_mgmtm *mgmtm)
+ static int
+ csio_mgmtm_init(struct csio_mgmtm *mgmtm, struct csio_hw *hw)
+ {
+-	struct timer_list *timer = &mgmtm->mgmt_timer;
+-
+-	init_timer(timer);
+-	timer->function = csio_mgmt_tmo_handler;
+-	timer->data = (unsigned long)mgmtm;
++	timer_setup(&mgmtm->mgmt_timer, csio_mgmt_tmo_handler, 0);
+ 
+ 	INIT_LIST_HEAD(&mgmtm->active_q);
+ 	INIT_LIST_HEAD(&mgmtm->cbfn_q);
+diff --git a/drivers/scsi/csiostor/csio_mb.c b/drivers/scsi/csiostor/csio_mb.c
+index 7e74ec859228..931b1d8f9f3e 100644
+--- a/drivers/scsi/csiostor/csio_mb.c
++++ b/drivers/scsi/csiostor/csio_mb.c
+@@ -1647,13 +1647,10 @@ csio_mb_cancel_all(struct csio_hw *hw, struct list_head *cbfn_q)
+  */
+ int
+ csio_mbm_init(struct csio_mbm *mbm, struct csio_hw *hw,
+-	      void (*timer_fn)(uintptr_t))
++	      void (*timer_fn)(struct timer_list *))
+ {
+-	struct timer_list *timer = &mbm->timer;
+-
+-	init_timer(timer);
+-	timer->function = timer_fn;
+-	timer->data = (unsigned long)hw;
++	mbm->hw = hw;
++	timer_setup(&mbm->timer, timer_fn, 0);
+ 
+ 	INIT_LIST_HEAD(&mbm->req_q);
+ 	INIT_LIST_HEAD(&mbm->cbfn_q);
+diff --git a/drivers/scsi/csiostor/csio_mb.h b/drivers/scsi/csiostor/csio_mb.h
+index 1bc82d0bc260..a6823df73015 100644
+--- a/drivers/scsi/csiostor/csio_mb.h
++++ b/drivers/scsi/csiostor/csio_mb.h
+@@ -137,6 +137,7 @@ struct csio_mbm {
+ 	uint32_t		a_mbox;			/* Async mbox num */
+ 	uint32_t		intr_idx;		/* Interrupt index */
+ 	struct timer_list	timer;			/* Mbox timer */
++	struct csio_hw		*hw;			/* Hardware pointer */
+ 	struct list_head	req_q;			/* Mbox request queue */
+ 	struct list_head	cbfn_q;			/* Mbox completion q */
+ 	struct csio_mb		*mcurrent;		/* Current mailbox */
+@@ -252,7 +253,7 @@ void csio_mb_process_portparams_rsp(struct csio_hw *hw, struct csio_mb *mbp,
+ 
+ /* MB module functions */
+ int csio_mbm_init(struct csio_mbm *, struct csio_hw *,
+-			    void (*)(uintptr_t));
++			    void (*)(struct timer_list *));
+ void csio_mbm_exit(struct csio_mbm *);
+ void csio_mb_intr_enable(struct csio_hw *);
+ void csio_mb_intr_disable(struct csio_hw *);
 -- 
-1.7.12.4
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
