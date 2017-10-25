@@ -1,123 +1,126 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: fcoe: Convert timers to use timer_setup()
-Date: Wed, 25 Oct 2017 03:05:57 -0700
-Message-ID: <20171025100557.GA145012@beast>
+Subject: [PATCH] scsi: ibmvscsi: Convert timers to use timer_setup()
+Date: Wed, 25 Oct 2017 03:06:07 -0700
+Message-ID: <20171025100607.GA145026@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:57007 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932403AbdJYKF7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2017 06:05:59 -0400
-Received: by mail-pf0-f193.google.com with SMTP id b85so21847416pfj.13
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2017 03:05:59 -0700 (PDT)
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:56763 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932577AbdJYKGJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2017 06:06:09 -0400
+Received: by mail-pg0-f65.google.com with SMTP id m18so16912841pgd.13
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2017 03:06:09 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, linux-kernel@vger.kernel.org
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
 to pass the timer pointer explicitly.
 
-Cc: QLogic-Storage-Upstream@qlogic.com
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <jth@kernel.org>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-Cc: fcoe-devel@open-fcoe.org
+Cc: linuxppc-dev@lists.ozlabs.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
-Acked-by: Johannes Thumshirn <jth@kernel.org>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 11 +++++------
- drivers/scsi/fcoe/fcoe.c           |  2 +-
- drivers/scsi/fcoe/fcoe_transport.c |  6 ++++--
- include/scsi/libfcoe.h             |  2 +-
- 4 files changed, 11 insertions(+), 10 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c   | 14 ++++++--------
+ drivers/scsi/ibmvscsi/ibmvscsi.c |  7 +++----
+ 2 files changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 6844ba361616..e6b9de7d41ac 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -823,7 +823,7 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
- 
- 	skb_queue_head_init(&port->fcoe_pending_queue);
- 	port->fcoe_pending_queue_active = 0;
--	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long) lport);
-+	timer_setup(&port->timer, fcoe_queue_timer, 0);
- 
- 	fcoe_link_speed_update(lport);
- 
-@@ -845,9 +845,9 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
- 	return 0;
- }
- 
--static void bnx2fc_destroy_timer(unsigned long data)
-+static void bnx2fc_destroy_timer(struct timer_list *t)
- {
--	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)data;
-+	struct bnx2fc_hba *hba = from_timer(hba, t, destroy_timer);
- 
- 	printk(KERN_ERR PFX "ERROR:bnx2fc_destroy_timer - "
- 	       "Destroy compl not received!!\n");
-@@ -1946,11 +1946,10 @@ static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
- {
- 	if (test_and_clear_bit(BNX2FC_FLAG_FW_INIT_DONE, &hba->flags)) {
- 		if (bnx2fc_send_fw_fcoe_destroy_msg(hba) == 0) {
--			init_timer(&hba->destroy_timer);
-+			timer_setup(&hba->destroy_timer, bnx2fc_destroy_timer,
-+				    0);
- 			hba->destroy_timer.expires = BNX2FC_FW_TIMEOUT +
- 								jiffies;
--			hba->destroy_timer.function = bnx2fc_destroy_timer;
--			hba->destroy_timer.data = (unsigned long)hba;
- 			add_timer(&hba->destroy_timer);
- 			wait_event_interruptible(hba->destroy_wait,
- 					test_bit(BNX2FC_FLAG_DESTROY_CMPL,
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 77adced58ebf..f46b312d04bc 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -749,7 +749,7 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
- 
- 	skb_queue_head_init(&port->fcoe_pending_queue);
- 	port->fcoe_pending_queue_active = 0;
--	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lport);
-+	timer_setup(&port->timer, fcoe_queue_timer, 0);
- 
- 	fcoe_link_speed_update(lport);
- 
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index 375c536cbc68..1ba5f51713a3 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -455,9 +455,11 @@ EXPORT_SYMBOL_GPL(fcoe_check_wait_queue);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index b491af31a5f8..0d2f7eb3acb6 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1393,8 +1393,9 @@ static int ibmvfc_map_sg_data(struct scsi_cmnd *scmd,
   *
-  * Calls fcoe_check_wait_queue on timeout
-  */
--void fcoe_queue_timer(ulong lport)
-+void fcoe_queue_timer(struct timer_list *t)
+  * Called when an internally generated command times out
+  **/
+-static void ibmvfc_timeout(struct ibmvfc_event *evt)
++static void ibmvfc_timeout(struct timer_list *t)
  {
--	fcoe_check_wait_queue((struct fc_lport *)lport, NULL);
-+	struct fcoe_port *port = from_timer(port, t, timer);
-+
-+	fcoe_check_wait_queue(port->lport, NULL);
- }
- EXPORT_SYMBOL_GPL(fcoe_queue_timer);
++	struct ibmvfc_event *evt = from_timer(evt, t, timer);
+ 	struct ibmvfc_host *vhost = evt->vhost;
+ 	dev_err(vhost->dev, "Command timed out (%p). Resetting connection\n", evt);
+ 	ibmvfc_reset_host(vhost);
+@@ -1424,12 +1425,10 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+ 		BUG();
  
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 722d3264d3bf..cb8a273732cf 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -382,7 +382,7 @@ static inline struct net_device *fcoe_get_netdev(const struct fc_lport *lport)
+ 	list_add_tail(&evt->queue, &vhost->sent);
+-	init_timer(&evt->timer);
++	timer_setup(&evt->timer, ibmvfc_timeout, 0);
  
- void fcoe_clean_pending_queue(struct fc_lport *);
- void fcoe_check_wait_queue(struct fc_lport *lport, struct sk_buff *skb);
--void fcoe_queue_timer(ulong lport);
-+void fcoe_queue_timer(struct timer_list *t);
- int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen,
- 			   struct fcoe_percpu_s *fps);
+ 	if (timeout) {
+-		evt->timer.data = (unsigned long) evt;
+ 		evt->timer.expires = jiffies + (timeout * HZ);
+-		evt->timer.function = (void (*)(unsigned long))ibmvfc_timeout;
+ 		add_timer(&evt->timer);
+ 	}
+ 
+@@ -3692,8 +3691,9 @@ static void ibmvfc_tgt_adisc_cancel_done(struct ibmvfc_event *evt)
+  * out, reset the CRQ. When the ADISC comes back as cancelled,
+  * log back into the target.
+  **/
+-static void ibmvfc_adisc_timeout(struct ibmvfc_target *tgt)
++static void ibmvfc_adisc_timeout(struct timer_list *t)
+ {
++	struct ibmvfc_target *tgt = from_timer(tgt, t, timer);
+ 	struct ibmvfc_host *vhost = tgt->vhost;
+ 	struct ibmvfc_event *evt;
+ 	struct ibmvfc_tmf *tmf;
+@@ -3778,9 +3778,7 @@ static void ibmvfc_tgt_adisc(struct ibmvfc_target *tgt)
+ 	if (timer_pending(&tgt->timer))
+ 		mod_timer(&tgt->timer, jiffies + (IBMVFC_ADISC_TIMEOUT * HZ));
+ 	else {
+-		tgt->timer.data = (unsigned long) tgt;
+ 		tgt->timer.expires = jiffies + (IBMVFC_ADISC_TIMEOUT * HZ);
+-		tgt->timer.function = (void (*)(unsigned long))ibmvfc_adisc_timeout;
+ 		add_timer(&tgt->timer);
+ 	}
+ 
+@@ -3912,7 +3910,7 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *vhost, u64 scsi_id)
+ 	tgt->vhost = vhost;
+ 	tgt->need_login = 1;
+ 	tgt->cancel_key = vhost->task_set++;
+-	init_timer(&tgt->timer);
++	timer_setup(&tgt->timer, ibmvfc_adisc_timeout, 0);
+ 	kref_init(&tgt->kref);
+ 	ibmvfc_init_tgt(tgt, ibmvfc_tgt_implicit_logout);
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 7d156b161482..17df76f0be3c 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -837,8 +837,9 @@ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
+  *
+  * Called when an internally generated command times out
+ */
+-static void ibmvscsi_timeout(struct srp_event_struct *evt_struct)
++static void ibmvscsi_timeout(struct timer_list *t)
+ {
++	struct srp_event_struct *evt_struct = from_timer(evt_struct, t, timer);
+ 	struct ibmvscsi_host_data *hostdata = evt_struct->hostdata;
+ 
+ 	dev_err(hostdata->dev, "Command timed out (%x). Resetting connection\n",
+@@ -927,11 +928,9 @@ static int ibmvscsi_send_srp_event(struct srp_event_struct *evt_struct,
+ 	 */
+ 	list_add_tail(&evt_struct->list, &hostdata->sent);
+ 
+-	init_timer(&evt_struct->timer);
++	timer_setup(&evt_struct->timer, ibmvscsi_timeout, 0);
+ 	if (timeout) {
+-		evt_struct->timer.data = (unsigned long) evt_struct;
+ 		evt_struct->timer.expires = jiffies + (timeout * HZ);
+-		evt_struct->timer.function = (void (*)(unsigned long))ibmvscsi_timeout;
+ 		add_timer(&evt_struct->timer);
+ 	}
  
 -- 
 2.7.4
