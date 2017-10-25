@@ -1,27 +1,37 @@
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: [PATCH] scsi: .gitignore: Add scsi_devinfo_tbl.c
-Date: Wed, 25 Oct 2017 15:39:10 +0800
-Message-ID: <20171025073910.1735-1-jeffy.chen@rock-chips.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, hare@suse.de, bart.vanassche@wdc.com, jthumshirn@suse.de, martin.petersen@oracle.com
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+From: jeffy <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCHv6,2/5] scsi: Export blacklist flags to sysfs
+Date: Wed, 25 Oct 2017 15:40:23 +0800
+Message-ID: <59F03FE7.30803@rock-chips.com>
+References: <1506954397-2237-3-git-send-email-hare@suse.de> <59EFED5A.5050209@rock-chips.com> <312e3d67-add5-17ae-1aa7-fd0a17cc5c40@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.132]:38758 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751686AbdJYHkb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2017 03:40:31 -0400
+In-Reply-To: <312e3d67-add5-17ae-1aa7-fd0a17cc5c40@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Add generated scsi_devinfo_tbl.c into .gitignore.
+Hi Hannes,
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+On 10/25/2017 03:22 PM, Hannes Reinecke wrote:
+> On 10/25/2017 03:48 AM, jeffy wrote:
+>> Hi guys,
+>>
+>> maybe we need to add the generated scsi_devinfo_tbl.c into
+>> drivers/scsi/.gitignore :)
+>>
+> Indeed, maybe.
+> So here's your chance to get a patch upstream :-)
+>
+Ok, will do that :)
 
- drivers/scsi/.gitignore | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/.gitignore b/drivers/scsi/.gitignore
-index c89ae9a04399..e2956741fbd1 100644
---- a/drivers/scsi/.gitignore
-+++ b/drivers/scsi/.gitignore
-@@ -1 +1,2 @@
- 53c700_d.h
-+scsi_devinfo_tbl.c
--- 
-2.11.0
+> Cheers,
+>
+> Hannes
+>
