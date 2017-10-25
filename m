@@ -1,167 +1,123 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: aic7xxx: Convert timers to use timer_setup()
-Date: Wed, 25 Oct 2017 03:05:26 -0700
-Message-ID: <20171025100526.GA144967@beast>
+Subject: [PATCH] scsi: fcoe: Convert timers to use timer_setup()
+Date: Wed, 25 Oct 2017 03:05:57 -0700
+Message-ID: <20171025100557.GA145012@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:57007 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932403AbdJYKF7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2017 06:05:59 -0400
+Received: by mail-pf0-f193.google.com with SMTP id b85so21847416pfj.13
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2017 03:05:59 -0700 (PDT)
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, linux-kernel@vger.kernel.org
 
-stat_timer only ever assigns the same function and data, so consolidate
-to using timer_setup(), adjust callback, drop everything else used
-to pass things around, and remove needless typedefs.
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-reset_timer is unused; remove it.
-
-Cc: Hannes Reinecke <hare@suse.com>
+Cc: QLogic-Storage-Upstream@qlogic.com
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Johannes Thumshirn <jth@kernel.org>
 Cc: linux-scsi@vger.kernel.org
+Cc: fcoe-devel@open-fcoe.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 ---
- drivers/scsi/aic7xxx/aic79xx.h      |  5 +----
- drivers/scsi/aic7xxx/aic79xx_core.c | 29 ++++++++---------------------
- drivers/scsi/aic7xxx/aic79xx_osm.h  |  7 -------
- 3 files changed, 9 insertions(+), 32 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 11 +++++------
+ drivers/scsi/fcoe/fcoe.c           |  2 +-
+ drivers/scsi/fcoe/fcoe_transport.c |  6 ++++--
+ include/scsi/libfcoe.h             |  2 +-
+ 4 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
-index d47b527b25dd..31f2bb9d7146 100644
---- a/drivers/scsi/aic7xxx/aic79xx.h
-+++ b/drivers/scsi/aic7xxx/aic79xx.h
-@@ -1046,8 +1046,6 @@ typedef enum {
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 6844ba361616..e6b9de7d41ac 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -823,7 +823,7 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
  
- typedef uint8_t ahd_mode_state;
+ 	skb_queue_head_init(&port->fcoe_pending_queue);
+ 	port->fcoe_pending_queue_active = 0;
+-	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long) lport);
++	timer_setup(&port->timer, fcoe_queue_timer, 0);
  
--typedef void ahd_callback_t (void *);
--
- struct ahd_completion
- {
- 	uint16_t	tag;
-@@ -1122,8 +1120,7 @@ struct ahd_softc {
- 	/*
- 	 * Timer handles for timer driven callbacks.
- 	 */
--	ahd_timer_t		  reset_timer;
--	ahd_timer_t		  stat_timer;
-+	struct timer_list	stat_timer;
+ 	fcoe_link_speed_update(lport);
  
- 	/*
- 	 * Statistics.
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 95d8f25cbcca..b560f396ee99 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -207,7 +207,7 @@ static void		ahd_add_scb_to_free_list(struct ahd_softc *ahd,
- static u_int		ahd_rem_wscb(struct ahd_softc *ahd, u_int scbid,
- 				     u_int prev, u_int next, u_int tid);
- static void		ahd_reset_current_bus(struct ahd_softc *ahd);
--static ahd_callback_t	ahd_stat_timer;
-+static void		ahd_stat_timer(struct timer_list *t);
- #ifdef AHD_DUMP_SEQ
- static void		ahd_dumpseq(struct ahd_softc *ahd);
- #endif
-@@ -6104,8 +6104,7 @@ ahd_alloc(void *platform_arg, char *name)
- 	ahd->bugs = AHD_BUGNONE;
- 	ahd->flags = AHD_SPCHK_ENB_A|AHD_RESET_BUS_A|AHD_TERM_ENB_A
- 		   | AHD_EXTENDED_TRANS_A|AHD_STPWLEVEL_A;
--	ahd_timer_init(&ahd->reset_timer);
--	ahd_timer_init(&ahd->stat_timer);
-+	timer_setup(&ahd->stat_timer, ahd_stat_timer, 0);
- 	ahd->int_coalescing_timer = AHD_INT_COALESCING_TIMER_DEFAULT;
- 	ahd->int_coalescing_maxcmds = AHD_INT_COALESCING_MAXCMDS_DEFAULT;
- 	ahd->int_coalescing_mincmds = AHD_INT_COALESCING_MINCMDS_DEFAULT;
-@@ -6235,8 +6234,7 @@ ahd_shutdown(void *arg)
- 	/*
- 	 * Stop periodic timer callbacks.
- 	 */
--	ahd_timer_stop(&ahd->reset_timer);
--	ahd_timer_stop(&ahd->stat_timer);
-+	del_timer_sync(&ahd->stat_timer);
- 
- 	/* This will reset most registers to 0, but not all */
- 	ahd_reset(ahd, /*reinit*/FALSE);
-@@ -7039,20 +7037,11 @@ static const char *termstat_strings[] = {
- };
- 
- /***************************** Timer Facilities *******************************/
--#define ahd_timer_init init_timer
--#define ahd_timer_stop del_timer_sync
--typedef void ahd_linux_callback_t (u_long);
--
- static void
--ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
-+ahd_timer_reset(struct timer_list *timer, int usec)
- {
--	struct ahd_softc *ahd;
--
--	ahd = (struct ahd_softc *)arg;
- 	del_timer(timer);
--	timer->data = (u_long)arg;
- 	timer->expires = jiffies + (usec * HZ)/1000000;
--	timer->function = (ahd_linux_callback_t*)func;
- 	add_timer(timer);
+@@ -845,9 +845,9 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
+ 	return 0;
  }
  
-@@ -7279,8 +7268,7 @@ ahd_init(struct ahd_softc *ahd)
- 	}
- init_done:
- 	ahd_restart(ahd);
--	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
--			ahd_stat_timer, ahd);
-+	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
- 	return (0);
- }
- 
-@@ -8878,9 +8866,9 @@ ahd_reset_channel(struct ahd_softc *ahd, char channel, int initiate_reset)
- 
- /**************************** Statistics Processing ***************************/
- static void
--ahd_stat_timer(void *arg)
-+ahd_stat_timer(struct timer_list *t)
+-static void bnx2fc_destroy_timer(unsigned long data)
++static void bnx2fc_destroy_timer(struct timer_list *t)
  {
--	struct	ahd_softc *ahd = arg;
-+	struct	ahd_softc *ahd = from_timer(ahd, t, stat_timer);
- 	u_long	s;
- 	int	enint_coal;
- 	
-@@ -8907,8 +8895,7 @@ ahd_stat_timer(void *arg)
- 	ahd->cmdcmplt_bucket = (ahd->cmdcmplt_bucket+1) & (AHD_STAT_BUCKETS-1);
- 	ahd->cmdcmplt_total -= ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket];
- 	ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket] = 0;
--	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US,
--			ahd_stat_timer, ahd);
-+	ahd_timer_reset(&ahd->stat_timer, AHD_STAT_UPDATE_US);
- 	ahd_unlock(ahd, &s);
- }
+-	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)data;
++	struct bnx2fc_hba *hba = from_timer(hba, t, destroy_timer);
  
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
-index 728193a42e6e..8a8b7ae7aed3 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.h
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
-@@ -203,9 +203,6 @@ int	ahd_dmamap_unload(struct ahd_softc *, bus_dma_tag_t, bus_dmamap_t);
+ 	printk(KERN_ERR PFX "ERROR:bnx2fc_destroy_timer - "
+ 	       "Destroy compl not received!!\n");
+@@ -1946,11 +1946,10 @@ static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
+ {
+ 	if (test_and_clear_bit(BNX2FC_FLAG_FW_INIT_DONE, &hba->flags)) {
+ 		if (bnx2fc_send_fw_fcoe_destroy_msg(hba) == 0) {
+-			init_timer(&hba->destroy_timer);
++			timer_setup(&hba->destroy_timer, bnx2fc_destroy_timer,
++				    0);
+ 			hba->destroy_timer.expires = BNX2FC_FW_TIMEOUT +
+ 								jiffies;
+-			hba->destroy_timer.function = bnx2fc_destroy_timer;
+-			hba->destroy_timer.data = (unsigned long)hba;
+ 			add_timer(&hba->destroy_timer);
+ 			wait_event_interruptible(hba->destroy_wait,
+ 					test_bit(BNX2FC_FLAG_DESTROY_CMPL,
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 77adced58ebf..f46b312d04bc 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -749,7 +749,7 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
+ 
+ 	skb_queue_head_init(&port->fcoe_pending_queue);
+ 	port->fcoe_pending_queue_active = 0;
+-	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lport);
++	timer_setup(&port->timer, fcoe_queue_timer, 0);
+ 
+ 	fcoe_link_speed_update(lport);
+ 
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index 375c536cbc68..1ba5f51713a3 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -455,9 +455,11 @@ EXPORT_SYMBOL_GPL(fcoe_check_wait_queue);
+  *
+  * Calls fcoe_check_wait_queue on timeout
   */
- #define ahd_dmamap_sync(ahd, dma_tag, dmamap, offset, len, op)
+-void fcoe_queue_timer(ulong lport)
++void fcoe_queue_timer(struct timer_list *t)
+ {
+-	fcoe_check_wait_queue((struct fc_lport *)lport, NULL);
++	struct fcoe_port *port = from_timer(port, t, timer);
++
++	fcoe_check_wait_queue(port->lport, NULL);
+ }
+ EXPORT_SYMBOL_GPL(fcoe_queue_timer);
  
--/************************** Timer DataStructures ******************************/
--typedef struct timer_list ahd_timer_t;
--
- /********************************** Includes **********************************/
- #ifdef CONFIG_AIC79XX_REG_PRETTY_PRINT
- #define AIC_DEBUG_REGISTERS 1
-@@ -214,10 +211,6 @@ typedef struct timer_list ahd_timer_t;
- #endif
- #include "aic79xx.h"
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 722d3264d3bf..cb8a273732cf 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -382,7 +382,7 @@ static inline struct net_device *fcoe_get_netdev(const struct fc_lport *lport)
  
--/***************************** Timer Facilities *******************************/
--#define ahd_timer_init init_timer
--#define ahd_timer_stop del_timer_sync
--
- /***************************** SMP support ************************************/
- #include <linux/spinlock.h>
+ void fcoe_clean_pending_queue(struct fc_lport *);
+ void fcoe_check_wait_queue(struct fc_lport *lport, struct sk_buff *skb);
+-void fcoe_queue_timer(ulong lport);
++void fcoe_queue_timer(struct timer_list *t);
+ int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen,
+ 			   struct fcoe_percpu_s *fps);
  
 -- 
 2.7.4
