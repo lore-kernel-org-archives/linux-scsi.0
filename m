@@ -1,82 +1,279 @@
-From: Gavin Guo <gavin.guo@canonical.com>
-Subject: Re: mptsas driver cannot detect hotplugging disk with the LSI SCSI
- SAS1068 controller in Ubuntu guest on VMware
-Date: Fri, 27 Oct 2017 22:02:45 +0800
-Message-ID: <CA+eFSM3z=LdO78seoZtpAc7U7ec=Gzrm5ej76TafoM6Ea1Ektw@mail.gmail.com>
-References: <CA+eFSM1aJRYs__pwtz+8E0TFOeKuKpHoiOkX6Wmm_2HMT1ut5A@mail.gmail.com>
- <1ad520f6-a1d8-5ce7-ee74-83edfdbfd39b@suse.de> <CA+eFSM24pwY0ViCiUqvzNDJa-Q0h0+XnEFF-gesKfBcEVKyLgQ@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.14-rc6
+Date: Fri, 27 Oct 2017 16:02:52 +0200
+Message-ID: <1509112972.3315.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+eFSM24pwY0ViCiUqvzNDJa-Q0h0+XnEFF-gesKfBcEVKyLgQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Hannes,
+Six fixes for mostly minor issues, most of which have small race
+windows for occurring.
 
-Thank you for looking into the issue. If there is anything I can help
-to test the patch? I appreciate your help. Thank you.
+The patch is available here:
 
-On Fri, Oct 6, 2017 at 9:08 AM, Gavin Guo <gavin.guo@canonical.com> wrote:
-> On Mon, Oct 2, 2017 at 10:32 PM, Hannes Reinecke <hare@suse.de> wrote:
->> On 09/27/2017 09:33 AM, Gavin Guo wrote:
->>> There is a problem in the latest upstream kernel with the device:
->>>
->>> $ grep -i lsi lspci
->>> 03:00.0 Serial Attached SCSI controller [0107]: LSI Logic / Symbios
->>> Logic SAS1068 PCI-X Fusion-MPT SAS [1000:0054] (rev 01)
->>>
->>> The device is simulated by the VMware ESXi 5.5
->>>
->>> When hotplugging a new disk to the Guest Ubuntu OS, the latest kernel
->>> cannot automatically probe the disk. However, on the v3.19.0-80.88
->>> kernel, the disk can be dynamically probed and show the following
->>> info message:
->>>
->>> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
->>> sas_addr 0x5000c29a6bdae0f5
->>> scsi 2:0:1:0: Direct-Access     VMware   Virtual disk     1.0  PQ: 0
->>> ANSI: 2
->>> sd 2:0:1:0: Attached scsi generic sg2 type 0
->>> sd 2:0:1:0: [sdb] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
->>> sd 2:0:1:0: [sdb] Write Protect is off
->>> sd 2:0:1:0: [sdb] Mode Sense: 61 00 00 00
->>> sd 2:0:1:0: [sdb] Cache data unavailable
->>> sd 2:0:1:0: [sdb] Assuming drive cache: write through
->>>  sdb: unknown partition table
->>> sd 2:0:1:0: [sdb] Attached SCSI disk
->>>
->>> After looking up the message:
->>> mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1,
->>> sas_addr 0x5000c29a6bdae0f5
->>>
->>> I found it comes from the path:
->>> mptsas_firmware_event_work -> mptsas_send_sas_event ->
->>> mptsas_hotplug_work -> mptsas_add_end_device
->>>
->>> I'll appreciate if anyone can give the idea: If it's possible that the
->>> irq from the simulated LSI SAS controller didn't come in to trigger
->>> the event? However, it can work on the v3.19 kernel so if there is
->>> any driver implementation issue in the latest kernel.
->>>
->> This is an issue with the mptsas driver, who originally assumed that no
->> system will have direct-attached SAS devices.
->> VMWare chose to implement exactly that, so the hotplug detection logic
->> is flawed here.
->> I'll be sending a patch.
->>
->> Cheers,
->>
->> Hannes
->> --
->> Dr. Hannes Reinecke                Teamlead Storage & Networking
->> hare@suse.de                                   +49 911 74053 688
->> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
->> GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
->> HRB 21284 (AG Nürnberg)
->
-> Thank you in advance. Please add me to the CC list when you send out
-> the patch and I can help to verify that.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Bart Van Assche (1):
+      scsi: Suppress a kernel warning in case the prep function returns BLKPREP_DEFER
+
+Ben Hutchings (1):
+      scsi: sg: Re-fix off by one in sg_fill_request_table()
+
+Christos Gkekas (1):
+      scsi: hpsa: Fix configured_logical_drive_count·check
+
+Himanshu Madhani (1):
+      scsi: qla2xxx: Initialize Work element before requesting IRQs
+
+Raghava Aditya Renukunta (1):
+      scsi: aacraid: Fix controller initialization failure
+
+Steffen Maier (1):
+      scsi: zfcp: fix erp_action use-before-initialize in REC action trace
+
+And the diffstat:
+
+ drivers/s390/scsi/zfcp_aux.c    |  5 +++++
+ drivers/s390/scsi/zfcp_erp.c    | 18 +++++++++++-------
+ drivers/s390/scsi/zfcp_scsi.c   |  5 +++++
+ drivers/scsi/aacraid/comminit.c |  8 +++++---
+ drivers/scsi/aacraid/linit.c    |  7 ++++++-
+ drivers/scsi/hpsa.c             |  2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |  4 ++--
+ drivers/scsi/scsi_lib.c         |  8 +-------
+ drivers/scsi/sg.c               |  2 +-
+ 9 files changed, 37 insertions(+), 22 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+index 82ac331d9125..84752152d41f 100644
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -357,6 +357,8 @@ struct zfcp_adapter *zfcp_adapter_enqueue(struct ccw_device *ccw_device)
+ 
+ 	adapter->next_port_scan = jiffies;
+ 
++	adapter->erp_action.adapter = adapter;
++
+ 	if (zfcp_qdio_setup(adapter))
+ 		goto failed;
+ 
+@@ -513,6 +515,9 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
+ 	port->dev.groups = zfcp_port_attr_groups;
+ 	port->dev.release = zfcp_port_release;
+ 
++	port->erp_action.adapter = adapter;
++	port->erp_action.port = port;
++
+ 	if (dev_set_name(&port->dev, "0x%016llx", (unsigned long long)wwpn)) {
+ 		kfree(port);
+ 		goto err_out;
+diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
+index 37408f5f81ce..ec2532ee1822 100644
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
+@@ -193,9 +193,8 @@ static struct zfcp_erp_action *zfcp_erp_setup_act(int need, u32 act_status,
+ 		atomic_or(ZFCP_STATUS_COMMON_ERP_INUSE,
+ 				&zfcp_sdev->status);
+ 		erp_action = &zfcp_sdev->erp_action;
+-		memset(erp_action, 0, sizeof(struct zfcp_erp_action));
+-		erp_action->port = port;
+-		erp_action->sdev = sdev;
++		WARN_ON_ONCE(erp_action->port != port);
++		WARN_ON_ONCE(erp_action->sdev != sdev);
+ 		if (!(atomic_read(&zfcp_sdev->status) &
+ 		      ZFCP_STATUS_COMMON_RUNNING))
+ 			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
+@@ -208,8 +207,8 @@ static struct zfcp_erp_action *zfcp_erp_setup_act(int need, u32 act_status,
+ 		zfcp_erp_action_dismiss_port(port);
+ 		atomic_or(ZFCP_STATUS_COMMON_ERP_INUSE, &port->status);
+ 		erp_action = &port->erp_action;
+-		memset(erp_action, 0, sizeof(struct zfcp_erp_action));
+-		erp_action->port = port;
++		WARN_ON_ONCE(erp_action->port != port);
++		WARN_ON_ONCE(erp_action->sdev != NULL);
+ 		if (!(atomic_read(&port->status) & ZFCP_STATUS_COMMON_RUNNING))
+ 			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
+ 		break;
+@@ -219,7 +218,8 @@ static struct zfcp_erp_action *zfcp_erp_setup_act(int need, u32 act_status,
+ 		zfcp_erp_action_dismiss_adapter(adapter);
+ 		atomic_or(ZFCP_STATUS_COMMON_ERP_INUSE, &adapter->status);
+ 		erp_action = &adapter->erp_action;
+-		memset(erp_action, 0, sizeof(struct zfcp_erp_action));
++		WARN_ON_ONCE(erp_action->port != NULL);
++		WARN_ON_ONCE(erp_action->sdev != NULL);
+ 		if (!(atomic_read(&adapter->status) &
+ 		      ZFCP_STATUS_COMMON_RUNNING))
+ 			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
+@@ -229,7 +229,11 @@ static struct zfcp_erp_action *zfcp_erp_setup_act(int need, u32 act_status,
+ 		return NULL;
+ 	}
+ 
+-	erp_action->adapter = adapter;
++	WARN_ON_ONCE(erp_action->adapter != adapter);
++	memset(&erp_action->list, 0, sizeof(erp_action->list));
++	memset(&erp_action->timer, 0, sizeof(erp_action->timer));
++	erp_action->step = ZFCP_ERP_STEP_UNINITIALIZED;
++	erp_action->fsf_req_id = 0;
+ 	erp_action->action = need;
+ 	erp_action->status = act_status;
+ 
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index ec3ddd1d31d5..6cf8732627e0 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -115,10 +115,15 @@ static int zfcp_scsi_slave_alloc(struct scsi_device *sdev)
+ 	struct zfcp_unit *unit;
+ 	int npiv = adapter->connection_features & FSF_FEATURE_NPIV_MODE;
+ 
++	zfcp_sdev->erp_action.adapter = adapter;
++	zfcp_sdev->erp_action.sdev = sdev;
++
+ 	port = zfcp_get_port_by_wwpn(adapter, rport->port_name);
+ 	if (!port)
+ 		return -ENXIO;
+ 
++	zfcp_sdev->erp_action.port = port;
++
+ 	unit = zfcp_unit_find(port, zfcp_scsi_dev_lun(sdev));
+ 	if (unit)
+ 		put_device(&unit->dev);
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 97d269f16888..1bc623ad3faf 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -302,9 +302,11 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 		return -ENOMEM;
+ 	aac_fib_init(fibctx);
+ 
+-	mutex_lock(&dev->ioctl_mutex);
+-	dev->adapter_shutdown = 1;
+-	mutex_unlock(&dev->ioctl_mutex);
++	if (!dev->adapter_shutdown) {
++		mutex_lock(&dev->ioctl_mutex);
++		dev->adapter_shutdown = 1;
++		mutex_unlock(&dev->ioctl_mutex);
++	}
+ 
+ 	cmd = (struct aac_close *) fib_data(fibctx);
+ 	cmd->command = cpu_to_le32(VM_CloseAll);
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 62beb2596466..c9252b138c1f 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1551,8 +1551,9 @@ static void __aac_shutdown(struct aac_dev * aac)
+ {
+ 	int i;
+ 
++	mutex_lock(&aac->ioctl_mutex);
+ 	aac->adapter_shutdown = 1;
+-	aac_send_shutdown(aac);
++	mutex_unlock(&aac->ioctl_mutex);
+ 
+ 	if (aac->aif_thread) {
+ 		int i;
+@@ -1565,7 +1566,11 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 		}
+ 		kthread_stop(aac->thread);
+ 	}
++
++	aac_send_shutdown(aac);
++
+ 	aac_adapter_disable_int(aac);
++
+ 	if (aac_is_src(aac)) {
+ 		if (aac->max_msix > 1) {
+ 			for (i = 0; i < aac->max_msix; i++) {
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 9abe81021484..4ed3d26ffdde 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4091,7 +4091,7 @@ static int hpsa_set_local_logical_count(struct ctlr_info *h,
+ 	memset(id_ctlr, 0, sizeof(*id_ctlr));
+ 	rc = hpsa_bmic_id_controller(h, id_ctlr, sizeof(*id_ctlr));
+ 	if (!rc)
+-		if (id_ctlr->configured_logical_drive_count < 256)
++		if (id_ctlr->configured_logical_drive_count < 255)
+ 			*nlocals = id_ctlr->configured_logical_drive_count;
+ 		else
+ 			*nlocals = le16_to_cpu(
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 937209805baf..3bd956d3bc5d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3061,6 +3061,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	    host->max_cmd_len, host->max_channel, host->max_lun,
+ 	    host->transportt, sht->vendor_id);
+ 
++	INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
++
+ 	/* Set up the irqs */
+ 	ret = qla2x00_request_irqs(ha, rsp);
+ 	if (ret)
+@@ -3175,8 +3177,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	    host->can_queue, base_vha->req,
+ 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
+ 
+-	INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
+-
+ 	if (ha->mqenable) {
+ 		bool mq = false;
+ 		bool startit = false;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9cf6a80fe297..ad3ea24f0885 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1379,8 +1379,6 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 
+ 	ret = scsi_setup_cmnd(sdev, req);
+ out:
+-	if (ret != BLKPREP_OK)
+-		cmd->flags &= ~SCMD_INITIALIZED;
+ 	return scsi_prep_return(q, req, ret);
+ }
+ 
+@@ -1900,7 +1898,6 @@ static int scsi_mq_prep_fn(struct request *req)
+ 	struct scsi_device *sdev = req->q->queuedata;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct scatterlist *sg;
+-	int ret;
+ 
+ 	scsi_init_command(sdev, cmd);
+ 
+@@ -1934,10 +1931,7 @@ static int scsi_mq_prep_fn(struct request *req)
+ 
+ 	blk_mq_start_request(req);
+ 
+-	ret = scsi_setup_cmnd(sdev, req);
+-	if (ret != BLK_STS_OK)
+-		cmd->flags &= ~SCMD_INITIALIZED;
+-	return ret;
++	return scsi_setup_cmnd(sdev, req);
+ }
+ 
+ static void scsi_mq_done(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 0419c2298eab..aa28874e8fb9 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -837,7 +837,7 @@ sg_fill_request_table(Sg_fd *sfp, sg_req_info_t *rinfo)
+ 
+ 	val = 0;
+ 	list_for_each_entry(srp, &sfp->rq_list, entry) {
+-		if (val > SG_MAX_QUEUE)
++		if (val >= SG_MAX_QUEUE)
+ 			break;
+ 		rinfo[val].req_state = srp->done + 1;
+ 		rinfo[val].problem =
