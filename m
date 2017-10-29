@@ -1,46 +1,40 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] scsi_debug: write_same: fix error report
-Date: Sun, 29 Oct 2017 10:47:19 -0400
-Message-ID: <20171029144719.32591-1-dgilbert@interlog.com>
+From: Pan Bian <bianpan2016@163.com>
+Subject: scsi: advansys: fix improper function call to kfree
+Date: Sun, 29 Oct 2017 23:00:54 +0800
+Message-ID: <1509289254-15924-1-git-send-email-bianpan2016@163.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:44778 "EHLO smtp.infotech.no"
+Received: from m12-15.163.com ([220.181.12.15]:43143 "EHLO m12-15.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751676AbdJ2OsH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 29 Oct 2017 10:48:07 -0400
+        id S1751324AbdJ2PC6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 29 Oct 2017 11:02:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, hare@suse.de
+To: Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 
-The scsi_debug driver incorrectly suggests there is an error with
-the SCSI WRITE SAME command when the number_of_logical_blocks is
-greater than 1. It will also suggest there is an error when NDOB
-(no data-out buffer) is set and the number_of_logical_blocks is
-greater than 0. Both are valid, fix. 
+In function advansys_eisa_probe(), data->host[i] holds the return value
+of scsi_host_alloc(). The memory allocated by scsi_host_alloc() should
+be deallocated with scsi_host_put(), not kfree().
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Pan Bian <bianpan2016@163.com>
 ---
- drivers/scsi/scsi_debug.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/advansys.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 09ba494f8896..92bc5b2d24ae 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3001,11 +3001,11 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 	if (-1 == ret) {
- 		write_unlock_irqrestore(&atomic_rw, iflags);
- 		return DID_ERROR << 16;
--	} else if (sdebug_verbose && (ret < (num * sdebug_sector_size)))
-+	} else if (sdebug_verbose && !ndob && (ret < sdebug_sector_size))
- 		sdev_printk(KERN_INFO, scp->device,
--			    "%s: %s: cdb indicated=%u, IO sent=%d bytes\n",
-+			    "%s: %s: lb size=%u, IO sent=%d bytes\n",
- 			    my_name, "write same",
--			    num * sdebug_sector_size, ret);
-+			    sdebug_sector_size, ret);
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 24e57e7..1f56a6d 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -11678,8 +11678,8 @@ static int advansys_eisa_probe(struct device *dev)
+ 	return 0;
  
- 	/* Copy first sector to remaining blocks */
- 	for (i = 1 ; i < num ; i++)
+  free_data:
+-	kfree(data->host[0]);
+-	kfree(data->host[1]);
++	scsi_host_put(data->host[0]);
++	scsi_host_put(data->host[1]);
+ 	kfree(data);
+  fail:
+ 	return err;
 -- 
-2.14.1
+1.9.1
