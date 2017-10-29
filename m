@@ -1,133 +1,166 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 5/5] lpfc: Add sysfs interface to post NVME RSCN
-Date: Sat, 28 Oct 2017 18:14:56 -0700
-Message-ID: <20171029011456.12885-6-jsmart2021@gmail.com>
+Subject: [PATCH 4/5] lpfc: Add NVME rescan support via RSCNs
+Date: Sat, 28 Oct 2017 18:14:55 -0700
+Message-ID: <20171029011456.12885-5-jsmart2021@gmail.com>
 References: <20171029011456.12885-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:44480 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751755AbdJ2BPI (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:56803 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751582AbdJ2BPI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Oct 2017 21:15:08 -0400
-Received: by mail-pf0-f196.google.com with SMTP id x7so7805131pfa.1
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Oct 2017 18:15:08 -0700 (PDT)
+Received: by mail-pg0-f68.google.com with SMTP id m18so8227016pgd.13
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Oct 2017 18:15:07 -0700 (PDT)
 In-Reply-To: <20171029011456.12885-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-From: Dick Kennedy <dick.kennedy@broadcom.com>
+This patch adds NVME rescan support via RSCNs
 
-To support scenarios which aren't bound to nvmetcli add port scenarios,
-which is currently where the transport invokes the nvme_subsystem_changed
-callback, add a syfs attribute to lpfc which can be written to cause
-an RSCN to be generated for the nport.
+NVME Target:
+  Adds support for the new nvme_subsystem_change callback. The
+  callback can be invoked by the nvmet_fc transport when it detects
+  conditions that would like to have nvme discovery invoked again.
+  Typically this is upon the addition of new subsystems added to
+  the nvmet configuration (thus the transport tying the callback
+  being invoked to port add calls).
+  The callback routine will generate an RSCN to the fabric in
+  order to cause RSCN events to all initiators with view of the
+  nport.
+
+NVME Host:
+  Upon reception of an RSCN event for an nport which supports
+  NVME initiator and which is currently logged in and PRLI'd,
+  the initiator will call the nvme_fc transport
+  nvme_fc_rescan_remoteport() routine to request nvme discovery
+  to be performed again on the port pair.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |  1 +
- drivers/scsi/lpfc/lpfc_attr.c | 62 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 63 insertions(+)
+ drivers/scsi/lpfc/lpfc_crtn.h  |  2 ++
+ drivers/scsi/lpfc/lpfc_els.c   |  4 ++++
+ drivers/scsi/lpfc/lpfc_nvme.c  | 42 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.c | 18 ++++++++++++++++++
+ 4 files changed, 66 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 157788f0bc10..52d403548a3a 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -781,6 +781,7 @@ struct lpfc_hba {
- 	uint32_t cfg_use_msi;
- 	uint32_t cfg_auto_imax;
- 	uint32_t cfg_fcp_imax;
-+	uint32_t cfg_force_rscn;
- 	uint32_t cfg_fcp_cpu_map;
- 	uint32_t cfg_fcp_io_channel;
- 	uint32_t cfg_suppress_rsp;
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index c17677f494af..6e8e54e65e25 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -4469,6 +4469,66 @@ static DEVICE_ATTR(lpfc_req_fw_upgrade, S_IRUGO | S_IWUSR,
- 		   lpfc_request_firmware_upgrade_store);
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 6657b71d5a57..86f034fefa46 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -546,6 +546,8 @@ int lpfc_sli4_dump_page_a0(struct lpfc_hba *phba, struct lpfcMboxq *mbox);
+ void lpfc_mbx_cmpl_rdp_page_a0(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb);
  
- /**
-+ * lpfc_force_rscn_store
-+ *
-+ * @dev: class device that is converted into a Scsi_host.
-+ * @attr: device attribute, not used.
-+ * @buf: unused string
-+ * @count: unused variable.
-+ *
-+ * Description:
-+ * Force the switch to send a RSCN to all other NPorts in our zone
-+ * If we are direct connect pt2pt, build the RSCN command ourself
-+ * and send to the other NPort. Not supported for private loop.
-+ *
-+ * Returns:
-+ * 0      - on success
-+ * -EIO   - if command is not sent
-+ **/
-+static ssize_t
-+lpfc_force_rscn_store(struct device *dev, struct device_attribute *attr,
-+		      const char *buf, size_t count)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
-+	int i;
+ /* NVME interfaces. */
++void lpfc_nvme_rescan_port(struct lpfc_vport *vport,
++			   struct lpfc_nodelist *ndlp);
+ void lpfc_nvme_unregister_port(struct lpfc_vport *vport,
+ 			struct lpfc_nodelist *ndlp);
+ int lpfc_nvme_register_port(struct lpfc_vport *vport,
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 936fc22dfcae..b02684113c75 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -6071,6 +6071,10 @@ lpfc_rscn_recovery_check(struct lpfc_vport *vport)
+ 		if (vport->phba->nvmet_support)
+ 			continue;
+ 
++		/* Check to see if we need to NVME rescan this remoteport. */
++		if (ndlp->nlp_fc4_type & NLP_FC4_NVME)
++			lpfc_nvme_rescan_port(vport, ndlp);
 +
-+	i = lpfc_issue_els_rscn(vport, 0);
-+	if (i)
-+		return -EIO;
-+	return strlen(buf);
-+}
-+
-+/*
-+ * lpfc_force_rscn: Force an RSCN to be sent to all remote NPorts
-+ * connected to  the HBA.
+ 		lpfc_disc_state_machine(vport, ndlp, NULL,
+ 					NLP_EVT_DEVICE_RECOVERY);
+ 		lpfc_cancel_retry_delay_tmo(vport, ndlp);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 23bdb1ca106e..b372da3672eb 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2375,6 +2375,48 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ #endif
+ }
+ 
++/* lpfc_nvme_rescan_port - Check to see if we should rescan this remoteport
 + *
-+ * Value range is any ascii value
++ * If the ndlp represents an NVME Target, that we are logged into,
++ * ping the NVME FC Transport layer to initiate a device rescan
++ * on this remote NPort.
 + */
-+static int lpfc_force_rscn;
-+module_param(lpfc_force_rscn, int, 0644);
-+MODULE_PARM_DESC(lpfc_force_rscn,
-+		 "Force an RSCN to be sent to all remote NPorts");
-+lpfc_param_show(force_rscn)
-+
-+/**
-+ * lpfc_force_rscn_init - Force an RSCN to be sent to all remote NPorts
-+ * @phba: lpfc_hba pointer.
-+ * @val: unused value.
-+ *
-+ * Returns:
-+ * zero if val saved.
-+ **/
-+static int
-+lpfc_force_rscn_init(struct lpfc_hba *phba, int val)
++void
++lpfc_nvme_rescan_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
 +{
-+	return 0;
++#if (IS_ENABLED(CONFIG_NVME_FC))
++	struct lpfc_nvme_rport *rport;
++	struct nvme_fc_remote_port *remoteport;
++
++	rport = ndlp->nrport;
++
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
++			 "6170 Rescan NPort DID x%06x type x%x state x%x rport %p\n",
++			 ndlp->nlp_DID, ndlp->nlp_type, ndlp->nlp_state, rport);
++	if (!rport)
++		goto input_err;
++	remoteport = rport->remoteport;
++	if (!remoteport)
++		goto input_err;
++
++	/* Only rescan if we are an NVME target in the MAPPED state */
++	if (remoteport->port_role & FC_PORT_ROLE_NVME_TARGET &&
++	    ndlp->nlp_state == NLP_STE_MAPPED_NODE) {
++		nvme_fc_rescan_remoteport(remoteport);
++
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
++				 "6172 NVME rescanned DID x%06x "
++				 "port_state x%x\n",
++				 ndlp->nlp_DID, remoteport->port_state);
++	}
++input_err:
++	return;
++#endif
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
++			 "6169 State error: lport %p, rport%p FCID x%06x\n",
++			 vport->localport, ndlp->rport, ndlp->nlp_DID);
 +}
 +
-+static DEVICE_ATTR(lpfc_force_rscn, 0644,
-+		   lpfc_force_rscn_show, lpfc_force_rscn_store);
-+
-+/**
-  * lpfc_fcp_imax_store
+ /* lpfc_nvme_unregister_port - unbind the DID and port_role from this rport.
   *
-  * @dev: class device that is converted into a Scsi_host.
-@@ -5218,6 +5278,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_lpfc_nvme_oas,
- 	&dev_attr_lpfc_auto_imax,
- 	&dev_attr_lpfc_fcp_imax,
-+	&dev_attr_lpfc_force_rscn,
- 	&dev_attr_lpfc_fcp_cpu_map,
- 	&dev_attr_lpfc_fcp_io_channel,
- 	&dev_attr_lpfc_suppress_rsp,
-@@ -6238,6 +6299,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	lpfc_nvme_oas_init(phba, lpfc_nvme_oas);
- 	lpfc_auto_imax_init(phba, lpfc_auto_imax);
- 	lpfc_fcp_imax_init(phba, lpfc_fcp_imax);
-+	lpfc_force_rscn_init(phba, lpfc_force_rscn);
- 	lpfc_fcp_cpu_map_init(phba, lpfc_fcp_cpu_map);
- 	lpfc_enable_hba_reset_init(phba, lpfc_enable_hba_reset);
- 	lpfc_enable_hba_heartbeat_init(phba, lpfc_enable_hba_heartbeat);
+  * There is no notion of Devloss or rport recovery from the current
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 0b7c1a49e203..51888192eed7 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -866,6 +866,23 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
+ 	lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
+ }
+ 
++static void
++lpfc_nvmet_subsystem_change(struct nvmet_fc_target_port *tgtport)
++{
++	struct lpfc_nvmet_tgtport *tgtp;
++	struct lpfc_hba *phba;
++	uint32_t rc;
++
++	tgtp = tgtport->private;
++	phba = tgtp->phba;
++
++	rc = lpfc_issue_els_rscn(phba->pport, 0);
++	lpfc_printf_log(phba, KERN_ERR, LOG_NVME,
++			"6420 NVMET subsystem change: "
++			"Notification %s\n",
++			(rc) ? "Failed" : "Sent");
++}
++
+ static struct nvmet_fc_target_template lpfc_tgttemplate = {
+ 	.targetport_delete = lpfc_nvmet_targetport_delete,
+ 	.xmt_ls_rsp     = lpfc_nvmet_xmt_ls_rsp,
+@@ -873,6 +890,7 @@ static struct nvmet_fc_target_template lpfc_tgttemplate = {
+ 	.fcp_abort      = lpfc_nvmet_xmt_fcp_abort,
+ 	.fcp_req_release = lpfc_nvmet_xmt_fcp_release,
+ 	.defer_rcv	= lpfc_nvmet_defer_rcv,
++	.nvme_subsystem_change = lpfc_nvmet_subsystem_change,
+ 
+ 	.max_hw_queues  = 1,
+ 	.max_sgl_segments = LPFC_NVMET_DEFAULT_SEGS,
 -- 
 2.13.1
