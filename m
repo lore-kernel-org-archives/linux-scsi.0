@@ -1,192 +1,124 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v11 2/7] block: Introduce blk_get_request_flags()
-Date: Mon, 30 Oct 2017 15:42:00 -0700
-Message-ID: <20171030224205.25212-3-bart.vanassche@wdc.com>
+Subject: [PATCH v11 1/7] block: Make q_usage_counter also track legacy requests
+Date: Mon, 30 Oct 2017 15:41:59 -0700
+Message-ID: <20171030224205.25212-2-bart.vanassche@wdc.com>
 References: <20171030224205.25212-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:25300 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752492AbdJ3WmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2017 18:42:09 -0400
 In-Reply-To: <20171030224205.25212-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>
 
-A side effect of this patch is that the GFP mask that is passed to
-several allocation functions in the legacy block layer is changed
-from GFP_KERNEL into __GFP_DIRECT_RECLAIM.
+From: Ming Lei <ming.lei@redhat.com>
 
+This patch makes it possible to pause request allocation for
+the legacy block layer by calling blk_mq_freeze_queue() and
+blk_mq_unfreeze_queue().
+
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+[ bvanassche: Combined two patches into one, edited a comment and made sure
+  REQ_NOWAIT is handled properly in blk_old_get_request() ]
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Cc: Christoph Hellwig <hch@lst.de>
 Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- block/blk-core.c       | 50 +++++++++++++++++++++++++++++++++++---------------
- include/linux/blkdev.h |  3 +++
- 2 files changed, 38 insertions(+), 15 deletions(-)
+ block/blk-core.c | 12 ++++++++++++
+ block/blk-mq.c   | 10 ++--------
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index ec4eafb5af9f..396104c05b38 100644
+index bb4fce694a60..ec4eafb5af9f 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -1159,7 +1159,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
-  * @rl: request list to allocate from
-  * @op: operation and flags
-  * @bio: bio to allocate request for (can be %NULL)
-- * @gfp_mask: allocation mask
-+ * @flags: BLQ_MQ_REQ_* flags
-  *
-  * Get a free request from @q.  This function may fail under memory
-  * pressure or if @q is dead.
-@@ -1169,7 +1169,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
- static struct request *__get_request(struct request_list *rl, unsigned int op,
--		struct bio *bio, gfp_t gfp_mask)
-+				     struct bio *bio, unsigned int flags)
- {
- 	struct request_queue *q = rl->q;
- 	struct request *rq;
-@@ -1178,6 +1178,8 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
- 	struct io_cq *icq = NULL;
- 	const bool is_sync = op_is_sync(op);
- 	int may_queue;
-+	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
-+			 __GFP_DIRECT_RECLAIM;
- 	req_flags_t rq_flags = RQF_ALLOCED;
- 
- 	lockdep_assert_held(q->queue_lock);
-@@ -1338,7 +1340,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
-  * @q: request_queue to allocate request from
-  * @op: operation and flags
-  * @bio: bio to allocate request for (can be %NULL)
-- * @gfp_mask: allocation mask
-+ * @flags: BLK_MQ_REQ_* flags.
-  *
-  * Get a free request from @q.  If %__GFP_DIRECT_RECLAIM is set in @gfp_mask,
-  * this function keeps retrying under memory pressure and fails iff @q is dead.
-@@ -1348,7 +1350,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
- static struct request *get_request(struct request_queue *q, unsigned int op,
--		struct bio *bio, gfp_t gfp_mask)
-+				   struct bio *bio, unsigned int flags)
- {
- 	const bool is_sync = op_is_sync(op);
- 	DEFINE_WAIT(wait);
-@@ -1360,7 +1362,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 
- 	rl = blk_get_rl(q, bio);	/* transferred to @rq on success */
- retry:
--	rq = __get_request(rl, op, bio, gfp_mask);
-+	rq = __get_request(rl, op, bio, flags);
- 	if (!IS_ERR(rq))
- 		return rq;
- 
-@@ -1369,7 +1371,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 		return ERR_PTR(-EAGAIN);
+@@ -611,6 +611,9 @@ void blk_set_queue_dying(struct request_queue *q)
+ 		}
+ 		spin_unlock_irq(q->queue_lock);
  	}
- 
--	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
-+	if ((flags & BLK_MQ_REQ_NOWAIT) || unlikely(blk_queue_dying(q))) {
- 		blk_put_rl(rl);
- 		return rq;
- 	}
-@@ -1396,10 +1398,13 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 	goto retry;
++
++	/* Make blk_queue_enter() reexamine the DYING flag. */
++	wake_up_all(&q->mq_freeze_wq);
  }
+ EXPORT_SYMBOL_GPL(blk_set_queue_dying);
  
-+/* flags: BLK_MQ_REQ_PREEMPT and/or BLK_MQ_REQ_NOWAIT. */
- static struct request *blk_old_get_request(struct request_queue *q,
--					   unsigned int op, gfp_t gfp_mask)
-+					   unsigned int op, unsigned int flags)
+@@ -1397,16 +1400,22 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 					   unsigned int op, gfp_t gfp_mask)
  {
  	struct request *rq;
-+	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
-+			 __GFP_DIRECT_RECLAIM;
- 	int ret = 0;
++	int ret = 0;
  
  	WARN_ON_ONCE(q->mq_ops);
-@@ -1412,7 +1417,7 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 	if (ret)
- 		return ERR_PTR(ret);
+ 
+ 	/* create ioc upfront */
+ 	create_io_context(gfp_mask, q->node);
+ 
++	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ||
++			      (op & REQ_NOWAIT));
++	if (ret)
++		return ERR_PTR(ret);
  	spin_lock_irq(q->queue_lock);
--	rq = get_request(q, op, NULL, gfp_mask);
-+	rq = get_request(q, op, NULL, flags);
+ 	rq = get_request(q, op, NULL, gfp_mask);
  	if (IS_ERR(rq)) {
  		spin_unlock_irq(q->queue_lock);
- 		blk_queue_exit(q);
-@@ -1426,25 +1431,40 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 	return rq;
- }
- 
--struct request *blk_get_request(struct request_queue *q, unsigned int op,
--				gfp_t gfp_mask)
-+/**
-+ * blk_get_request_flags - allocate a request
-+ * @q: request queue to allocate a request for
-+ * @op: operation (REQ_OP_*) and REQ_* flags, e.g. REQ_SYNC.
-+ * @flags: BLK_MQ_REQ_* flags, e.g. BLK_MQ_REQ_NOWAIT.
-+ */
-+struct request *blk_get_request_flags(struct request_queue *q, unsigned int op,
-+				      unsigned int flags)
- {
- 	struct request *req;
- 
-+	WARN_ON_ONCE(op & REQ_NOWAIT);
-+	WARN_ON_ONCE(flags & ~BLK_MQ_REQ_NOWAIT);
-+
- 	if (q->mq_ops) {
--		req = blk_mq_alloc_request(q, op,
--			(gfp_mask & __GFP_DIRECT_RECLAIM) ?
--				0 : BLK_MQ_REQ_NOWAIT);
-+		req = blk_mq_alloc_request(q, op, flags);
- 		if (!IS_ERR(req) && q->mq_ops->initialize_rq_fn)
- 			q->mq_ops->initialize_rq_fn(req);
- 	} else {
--		req = blk_old_get_request(q, op, gfp_mask);
-+		req = blk_old_get_request(q, op, flags);
- 		if (!IS_ERR(req) && q->initialize_rq_fn)
- 			q->initialize_rq_fn(req);
++		blk_queue_exit(q);
+ 		return rq;
  	}
  
- 	return req;
+@@ -1578,6 +1587,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 		blk_free_request(rl, req);
+ 		freed_request(rl, sync, rq_flags);
+ 		blk_put_rl(rl);
++		blk_queue_exit(q);
+ 	}
  }
-+EXPORT_SYMBOL(blk_get_request_flags);
-+
-+struct request *blk_get_request(struct request_queue *q, unsigned int op,
-+				gfp_t gfp_mask)
-+{
-+	return blk_get_request_flags(q, op, gfp_mask & __GFP_DIRECT_RECLAIM ?
-+				     0 : BLK_MQ_REQ_NOWAIT);
-+}
- EXPORT_SYMBOL(blk_get_request);
- 
- /**
-@@ -1870,7 +1890,7 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
+ EXPORT_SYMBOL_GPL(__blk_put_request);
+@@ -1859,8 +1869,10 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
+ 	 * Grab a free request. This is might sleep but can not fail.
  	 * Returns with the queue unlocked.
  	 */
- 	blk_queue_enter_live(q);
--	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
-+	req = get_request(q, bio->bi_opf, bio, 0);
++	blk_queue_enter_live(q);
+ 	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
  	if (IS_ERR(req)) {
- 		blk_queue_exit(q);
++		blk_queue_exit(q);
  		__wbt_done(q->rq_wb, wb_acct);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 72637028f3c9..05203175eb9c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -924,6 +924,9 @@ extern void blk_rq_init(struct request_queue *q, struct request *rq);
- extern void blk_init_request_from_bio(struct request *req, struct bio *bio);
- extern void blk_put_request(struct request *);
- extern void __blk_put_request(struct request_queue *, struct request *);
-+extern struct request *blk_get_request_flags(struct request_queue *,
-+					     unsigned int op,
-+					     unsigned int flags);
- extern struct request *blk_get_request(struct request_queue *, unsigned int op,
- 				       gfp_t gfp_mask);
- extern void blk_requeue_request(struct request_queue *, struct request *);
+ 		if (PTR_ERR(req) == -ENOMEM)
+ 			bio->bi_status = BLK_STS_RESOURCE;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 097ca3ece716..59b7de6b616b 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -125,7 +125,8 @@ void blk_freeze_queue_start(struct request_queue *q)
+ 	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
+ 	if (freeze_depth == 1) {
+ 		percpu_ref_kill(&q->q_usage_counter);
+-		blk_mq_run_hw_queues(q, false);
++		if (q->mq_ops)
++			blk_mq_run_hw_queues(q, false);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
+@@ -255,13 +256,6 @@ void blk_mq_wake_waiters(struct request_queue *q)
+ 	queue_for_each_hw_ctx(q, hctx, i)
+ 		if (blk_mq_hw_queue_mapped(hctx))
+ 			blk_mq_tag_wakeup_all(hctx->tags, true);
+-
+-	/*
+-	 * If we are called because the queue has now been marked as
+-	 * dying, we need to ensure that processes currently waiting on
+-	 * the queue are notified as well.
+-	 */
+-	wake_up_all(&q->mq_freeze_wq);
+ }
+ 
+ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
 -- 
 2.14.2
