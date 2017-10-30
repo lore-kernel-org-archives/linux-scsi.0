@@ -1,163 +1,70 @@
 From: Mike Christie <mchristi@redhat.com>
-Subject: [PATCH 02/19] tcmu: Add netlink command reply supported option for each device
-Date: Sun, 29 Oct 2017 22:44:22 -0500
-Message-ID: <1509335079-5276-3-git-send-email-mchristi@redhat.com>
-References: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 00/19] target/target_core_user: changes for 4.16
+Date: Sun, 29 Oct 2017 22:44:20 -0500
+Message-ID: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org
-Cc: Kenjiro Nakayama <nakayamakenjiro@gmail.com>, Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Kenjiro Nakayama <nakayamakenjiro@gmail.com>
+The following patches made over linus's tree, and also apply over
+Nicks target-pending master branch, and Martin and James's for-next branches,
+fix several bugs and add features to the target_core_user module for
+LIO.
 
-Currently netlink command reply support option
-(TCMU_ATTR_SUPP_KERN_CMD_REPLY) can be enabled only on module
-scope. Because of that, once an application enables the netlink
-command reply support, all applications using target_core_user.ko
-would be expected to support the netlink reply. To make matters worse,
-users will not be able to add a device via configfs manually.
+- Patches 1 -3 are target_core_user fixes/changes that have been sitting
+on the list for a while and have been reviewed.
 
-To fix these issues, this patch adds an option to make netlink command
-reply disabled on each device through configfs. Original
-TCMU_ATTR_SUPP_KERN_CMD_REPLY is still enabled on module scope to keep
-backward-compatibility and used by default, however once users set
-nl_reply_supported=<NAGATIVE_VALUE> via configfs for a particular
-device, the device disables the netlink command reply support.
+- Patches 4 - 18 are changes to target_core_user that fixes bugs in
+the ring buffer (buffer used to pass commands and responses between
+user/kernel space) and allow the user to config the ring size and how
+long we wait for memory to free up.
 
-Signed-off-by: Kenjiro Nakayama <nakayamakenjiro@gmail.com>
-[use kstrtoint]
-Signed-off-by: Mike Christie <mchristi@redhat.com>
+- Patch 19 is a change to the core target code that allows backend modules
+like target_core_user to return SAM STAT TASK SET FULL when a condition
+like the ring buffer is full temporarily.
 
----
- drivers/target/target_core_user.c | 58 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 57 insertions(+), 1 deletion(-)
+I know it is already rc7 and I am not pushing these for 4.15, so
+that is why the subject mentions the next next kernel.
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 8b9ec0f..fa251d3 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -150,6 +150,8 @@ struct tcmu_dev {
- 	wait_queue_head_t nl_cmd_wq;
- 
- 	char dev_config[TCMU_CONFIG_LEN];
-+
-+	int nl_reply_supported;
- };
- 
- #define TCMU_DEV(_se_dev) container_of(_se_dev, struct tcmu_dev, se_dev)
-@@ -1352,6 +1354,10 @@ static void tcmu_init_genl_cmd_reply(struct tcmu_dev *udev, int cmd)
- 
- 	if (!tcmu_kern_cmd_reply_supported)
- 		return;
-+
-+	if (udev->nl_reply_supported <= 0)
-+		return;
-+
- relock:
- 	spin_lock(&udev->nl_cmd_lock);
- 
-@@ -1378,6 +1384,9 @@ static int tcmu_wait_genl_cmd_reply(struct tcmu_dev *udev)
- 	if (!tcmu_kern_cmd_reply_supported)
- 		return 0;
- 
-+	if (udev->nl_reply_supported <= 0)
-+		return 0;
-+
- 	pr_debug("sleeping for nl reply\n");
- 	wait_for_completion(&nl_cmd->complete);
- 
-@@ -1550,6 +1559,12 @@ static int tcmu_configure_device(struct se_device *dev)
- 		dev->dev_attrib.emulate_write_cache = 0;
- 	dev->dev_attrib.hw_queue_depth = 128;
- 
-+	/* If user didn't explicitly disable netlink reply support, use
-+	 * module scope setting.
-+	 */
-+	if (udev->nl_reply_supported >= 0)
-+		udev->nl_reply_supported = tcmu_kern_cmd_reply_supported;
-+
- 	/*
- 	 * Get a ref incase userspace does a close on the uio device before
- 	 * LIO has initiated tcmu_free_device.
-@@ -1612,7 +1627,7 @@ static void tcmu_destroy_device(struct se_device *dev)
- 
- enum {
- 	Opt_dev_config, Opt_dev_size, Opt_hw_block_size, Opt_hw_max_sectors,
--	Opt_err,
-+	Opt_nl_reply_supported, Opt_err,
- };
- 
- static match_table_t tokens = {
-@@ -1620,6 +1635,7 @@ enum {
- 	{Opt_dev_size, "dev_size=%u"},
- 	{Opt_hw_block_size, "hw_block_size=%u"},
- 	{Opt_hw_max_sectors, "hw_max_sectors=%u"},
-+	{Opt_nl_reply_supported, "nl_reply_supported=%d"},
- 	{Opt_err, NULL}
- };
- 
-@@ -1694,6 +1710,17 @@ static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
- 			ret = tcmu_set_dev_attrib(&args[0],
- 					&(dev->dev_attrib.hw_max_sectors));
- 			break;
-+		case Opt_nl_reply_supported:
-+			arg_p = match_strdup(&args[0]);
-+			if (!arg_p) {
-+				ret = -ENOMEM;
-+				break;
-+			}
-+			ret = kstrtoint(arg_p, 0, &udev->nl_reply_supported);
-+			kfree(arg_p);
-+			if (ret < 0)
-+				pr_err("kstrtoint() failed for nl_reply_supported=\n");
-+			break;
- 		default:
- 			break;
- 		}
-@@ -1844,6 +1871,34 @@ static ssize_t tcmu_dev_size_store(struct config_item *item, const char *page,
- }
- CONFIGFS_ATTR(tcmu_, dev_size);
- 
-+static ssize_t tcmu_nl_reply_supported_show(struct config_item *item,
-+		char *page)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+
-+	return snprintf(page, PAGE_SIZE, "%d\n", udev->nl_reply_supported);
-+}
-+
-+static ssize_t tcmu_nl_reply_supported_store(struct config_item *item,
-+		const char *page, size_t count)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+	s8 val;
-+	int ret;
-+
-+	ret = kstrtos8(page, 0, &val);
-+	if (ret < 0)
-+		return ret;
-+
-+	udev->nl_reply_supported = val;
-+	return count;
-+}
-+CONFIGFS_ATTR(tcmu_, nl_reply_supported);
-+
- static ssize_t tcmu_emulate_write_cache_show(struct config_item *item,
- 					     char *page)
- {
-@@ -1886,6 +1941,7 @@ static ssize_t tcmu_emulate_write_cache_store(struct config_item *item,
- 	&tcmu_attr_dev_config,
- 	&tcmu_attr_dev_size,
- 	&tcmu_attr_emulate_write_cache,
-+	&tcmu_attr_nl_reply_supported,
- 	NULL,
- };
- 
--- 
-1.8.3.1
+Note:
+
+These patches have conflicts with Nicks's for next branch. Nick's
+for next has 3 patches which are not needed with my patchset.
+
+This patch:
+
+commit b8501553476c2eabbd15da79e152a84a9a67dc5a
+Author: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Date:   Wed Jul 12 15:16:07 2017 +0800
+
+    tcmu: Add fifo type waiter list support to avoid starvation
+
+is bad and can just be dropped/reverted. My patch fixes the same
+issue and fixes regressions/bugs that that patch has.
+
+This patch
+
+commit 04229774f69250e0f7e63b4d1b50ba8371c9d165
+Author: Dan Carpenter <dan.carpenter@oracle.com>
+Date:   Tue Aug 1 23:09:17 2017 +0300
+
+    tcmu: Oops in unmap_thread_fn()
+
+fixes a bug with the above patch and can just be dropped if the above
+patch is also dropped.
+
+And I included:
+
+commit 1b0a5fda1cd7e9001d4c16cbb6dfc5e963f08bd7
+Author: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Date:   Thu Jul 13 14:33:50 2017 +0800
+
+    tcmu: clean up the scatter helper
+
+this patch in my set.
+
+Nick, I am assuming, if you come back soon'ish you can just drop the
+those patches or revert them like you have done in the past. Or,
+if someone else picks up these patches then they do not need to worry
+about what was sitting in your branches.
