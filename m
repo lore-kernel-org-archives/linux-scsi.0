@@ -1,7 +1,7 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v11 7/7] block, nvme: Introduce blk_mq_req_flags_t
-Date: Mon, 30 Oct 2017 15:42:05 -0700
-Message-ID: <20171030224205.25212-8-bart.vanassche@wdc.com>
+Subject: [PATCH v11 5/7] block: Add the QUEUE_FLAG_PREEMPT_ONLY request queue flag
+Date: Mon, 30 Oct 2017 15:42:03 -0700
+Message-ID: <20171030224205.25212-6-bart.vanassche@wdc.com>
 References: <20171030224205.25212-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,236 +9,101 @@ Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171030224205.25212-1-bart.vanassche@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>, linux-nvme@lists.infradead.org, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Several block layer and NVMe core functions accept a combination
-of BLK_MQ_REQ_* flags through the 'flags' argument but there is
-no verification at compile time whether the right type of block
-layer flags is passed. Make it possible for sparse to verify this.
-This patch does not change any functionality.
+This flag will be used in the next patch to let the block layer
+core know whether or not a SCSI request queue has been quiesced.
+A quiesced SCSI queue namely only processes RQF_PREEMPT requests.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Cc: linux-nvme@lists.infradead.org
+Tested-by: Martin Steigerwald <martin@lichtvoll.de>
+Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-core.c          | 12 ++++++------
- block/blk-mq.c            |  4 ++--
- block/blk-mq.h            |  2 +-
- drivers/nvme/host/core.c  |  5 +++--
- drivers/nvme/host/nvme.h  |  5 +++--
- include/linux/blk-mq.h    | 17 +++++++++++------
- include/linux/blk_types.h |  2 ++
- include/linux/blkdev.h    |  4 ++--
- 8 files changed, 30 insertions(+), 21 deletions(-)
+ block/blk-core.c       | 30 ++++++++++++++++++++++++++++++
+ block/blk-mq-debugfs.c |  1 +
+ include/linux/blkdev.h |  6 ++++++
+ 3 files changed, 37 insertions(+)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index d4dc10bb01e3..0a0fdaa474e3 100644
+index 48f18f5e2e16..16ddd52e6408 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -800,7 +800,7 @@ EXPORT_SYMBOL(blk_alloc_queue);
-  * @q: request queue pointer
-  * @flags: BLK_MQ_REQ_NOWAIT and/or BLK_MQ_REQ_PREEMPT
-  */
--int blk_queue_enter(struct request_queue *q, unsigned int flags)
-+int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
- {
- 	const bool preempt = flags & BLK_MQ_REQ_PREEMPT;
- 
-@@ -1227,7 +1227,7 @@ int blk_update_nr_requests(struct request_queue *q, unsigned int nr)
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
- static struct request *__get_request(struct request_list *rl, unsigned int op,
--				     struct bio *bio, unsigned int flags)
-+				     struct bio *bio, blk_mq_req_flags_t flags)
- {
- 	struct request_queue *q = rl->q;
- 	struct request *rq;
-@@ -1410,7 +1410,7 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
-  * Returns request pointer on success, with @q->queue_lock *not held*.
-  */
- static struct request *get_request(struct request_queue *q, unsigned int op,
--				   struct bio *bio, unsigned int flags)
-+				   struct bio *bio, blk_mq_req_flags_t flags)
- {
- 	const bool is_sync = op_is_sync(op);
- 	DEFINE_WAIT(wait);
-@@ -1460,7 +1460,7 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 
- /* flags: BLK_MQ_REQ_PREEMPT and/or BLK_MQ_REQ_NOWAIT. */
- static struct request *blk_old_get_request(struct request_queue *q,
--					   unsigned int op, unsigned int flags)
-+				unsigned int op, blk_mq_req_flags_t flags)
- {
- 	struct request *rq;
- 	gfp_t gfp_mask = flags & BLK_MQ_REQ_NOWAIT ? GFP_ATOMIC :
-@@ -1497,7 +1497,7 @@ static struct request *blk_old_get_request(struct request_queue *q,
-  * @flags: BLK_MQ_REQ_* flags, e.g. BLK_MQ_REQ_NOWAIT.
-  */
- struct request *blk_get_request_flags(struct request_queue *q, unsigned int op,
--				      unsigned int flags)
-+				      blk_mq_req_flags_t flags)
- {
- 	struct request *req;
- 
-@@ -2293,7 +2293,7 @@ blk_qc_t generic_make_request(struct bio *bio)
- 	current->bio_list = bio_list_on_stack;
- 	do {
- 		struct request_queue *q = bio->bi_disk->queue;
--		unsigned int flags = bio->bi_opf & REQ_NOWAIT ?
-+		blk_mq_req_flags_t flags = bio->bi_opf & REQ_NOWAIT ?
- 			BLK_MQ_REQ_NOWAIT : 0;
- 
- 		if (likely(blk_queue_enter(q, flags) == 0)) {
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index c6bff60e6b8b..c037b1ad64a7 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -380,7 +380,7 @@ static struct request *blk_mq_get_request(struct request_queue *q,
+@@ -347,6 +347,36 @@ void blk_sync_queue(struct request_queue *q)
  }
+ EXPORT_SYMBOL(blk_sync_queue);
  
- struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
--		unsigned int flags)
-+		blk_mq_req_flags_t flags)
- {
- 	struct blk_mq_alloc_data alloc_data = { .flags = flags };
- 	struct request *rq;
-@@ -406,7 +406,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
- EXPORT_SYMBOL(blk_mq_alloc_request);
- 
- struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
--		unsigned int op, unsigned int flags, unsigned int hctx_idx)
-+	unsigned int op, blk_mq_req_flags_t flags, unsigned int hctx_idx)
- {
- 	struct blk_mq_alloc_data alloc_data = { .flags = flags };
- 	struct request *rq;
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 522b420dedc0..5dcfe4fa5e0d 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -110,7 +110,7 @@ static inline void blk_mq_put_ctx(struct blk_mq_ctx *ctx)
- struct blk_mq_alloc_data {
- 	/* input parameter */
- 	struct request_queue *q;
--	unsigned int flags;
-+	blk_mq_req_flags_t flags;
- 	unsigned int shallow_depth;
- 
- 	/* input & output parameter */
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index bb2aad078637..01947cd82b5a 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -292,7 +292,7 @@ static struct nvme_ns *nvme_get_ns_from_disk(struct gendisk *disk)
- }
- 
- struct request *nvme_alloc_request(struct request_queue *q,
--		struct nvme_command *cmd, unsigned int flags, int qid)
-+		struct nvme_command *cmd, blk_mq_req_flags_t flags, int qid)
- {
- 	unsigned op = nvme_is_write(cmd) ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN;
- 	struct request *req;
-@@ -560,7 +560,8 @@ EXPORT_SYMBOL_GPL(nvme_setup_cmd);
-  */
- int __nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
- 		union nvme_result *result, void *buffer, unsigned bufflen,
--		unsigned timeout, int qid, int at_head, int flags)
-+		unsigned timeout, int qid, int at_head,
-+		blk_mq_req_flags_t flags)
- {
- 	struct request *req;
- 	int ret;
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index d3f3c4447515..61b25e8c222c 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -314,14 +314,15 @@ void nvme_start_freeze(struct nvme_ctrl *ctrl);
- 
- #define NVME_QID_ANY -1
- struct request *nvme_alloc_request(struct request_queue *q,
--		struct nvme_command *cmd, unsigned int flags, int qid);
-+		struct nvme_command *cmd, blk_mq_req_flags_t flags, int qid);
- blk_status_t nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
- 		struct nvme_command *cmd);
- int nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
- 		void *buf, unsigned bufflen);
- int __nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
- 		union nvme_result *result, void *buffer, unsigned bufflen,
--		unsigned timeout, int qid, int at_head, int flags);
-+		unsigned timeout, int qid, int at_head,
-+		blk_mq_req_flags_t flags);
- int nvme_set_queue_count(struct nvme_ctrl *ctrl, int *count);
- void nvme_start_keep_alive(struct nvme_ctrl *ctrl);
- void nvme_stop_keep_alive(struct nvme_ctrl *ctrl);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 22c7f36745fc..38ecf1340266 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -210,16 +210,21 @@ void blk_mq_free_request(struct request *rq);
- bool blk_mq_can_queue(struct blk_mq_hw_ctx *);
- 
- enum {
--	BLK_MQ_REQ_NOWAIT	= (1 << 0), /* return when out of requests */
--	BLK_MQ_REQ_RESERVED	= (1 << 1), /* allocate from reserved pool */
--	BLK_MQ_REQ_INTERNAL	= (1 << 2), /* allocate internal/sched tag */
--	BLK_MQ_REQ_PREEMPT	= (1 << 3), /* set RQF_PREEMPT */
-+	/* return when out of requests */
-+	BLK_MQ_REQ_NOWAIT	= (__force blk_mq_req_flags_t)(1 << 0),
-+	/* allocate from reserved pool */
-+	BLK_MQ_REQ_RESERVED	= (__force blk_mq_req_flags_t)(1 << 1),
-+	/* allocate internal/sched tag */
-+	BLK_MQ_REQ_INTERNAL	= (__force blk_mq_req_flags_t)(1 << 2),
-+	/* set RQF_PREEMPT */
-+	BLK_MQ_REQ_PREEMPT	= (__force blk_mq_req_flags_t)(1 << 3),
- };
- 
- struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
--		unsigned int flags);
-+		blk_mq_req_flags_t flags);
- struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
--		unsigned int op, unsigned int flags, unsigned int hctx_idx);
-+		unsigned int op, blk_mq_req_flags_t flags,
-+		unsigned int hctx_idx);
- struct request *blk_mq_tag_to_rq(struct blk_mq_tags *tags, unsigned int tag);
- 
- enum {
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 3385c89f402e..cbd908478140 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -162,6 +162,8 @@ struct bio {
-  */
- #define BIO_RESET_BITS	BVEC_POOL_OFFSET
- 
-+typedef __u32 __bitwise blk_mq_req_flags_t;
++/**
++ * blk_set_preempt_only - set QUEUE_FLAG_PREEMPT_ONLY
++ * @q: request queue pointer
++ *
++ * Returns the previous value of the PREEMPT_ONLY flag - 0 if the flag was not
++ * set and 1 if the flag was already set.
++ */
++int blk_set_preempt_only(struct request_queue *q)
++{
++	unsigned long flags;
++	int res;
 +
- /*
-  * Operations and flags common to the bio and request structures.
-  * We use 8 bits for encoding the operation, and the remaining 24 for flags.
++	spin_lock_irqsave(q->queue_lock, flags);
++	res = queue_flag_test_and_set(QUEUE_FLAG_PREEMPT_ONLY, q);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL_GPL(blk_set_preempt_only);
++
++void blk_clear_preempt_only(struct request_queue *q)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(q->queue_lock, flags);
++	queue_flag_clear(QUEUE_FLAG_PREEMPT_ONLY, q);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++}
++EXPORT_SYMBOL_GPL(blk_clear_preempt_only);
++
+ /**
+  * __blk_run_queue_uncond - run a queue whether or not it has been stopped
+  * @q:	The queue to run
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index 7f4a1ba532af..75f31535f280 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -74,6 +74,7 @@ static const char *const blk_queue_flag_name[] = {
+ 	QUEUE_FLAG_NAME(REGISTERED),
+ 	QUEUE_FLAG_NAME(SCSI_PASSTHROUGH),
+ 	QUEUE_FLAG_NAME(QUIESCED),
++	QUEUE_FLAG_NAME(PREEMPT_ONLY),
+ };
+ #undef QUEUE_FLAG_NAME
+ 
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4f91c6462752..9a7d7e775cd0 100644
+index 05203175eb9c..864ad2e4a58c 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -932,7 +932,7 @@ extern void blk_put_request(struct request *);
- extern void __blk_put_request(struct request_queue *, struct request *);
- extern struct request *blk_get_request_flags(struct request_queue *,
- 					     unsigned int op,
--					     unsigned int flags);
-+					     blk_mq_req_flags_t flags);
- extern struct request *blk_get_request(struct request_queue *, unsigned int op,
- 				       gfp_t gfp_mask);
- extern void blk_requeue_request(struct request_queue *, struct request *);
-@@ -956,7 +956,7 @@ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
- extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
- 			 struct scsi_ioctl_command __user *);
+@@ -630,6 +630,7 @@ struct request_queue {
+ #define QUEUE_FLAG_REGISTERED  26	/* queue has been registered to a disk */
+ #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
+ #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
++#define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
  
--extern int blk_queue_enter(struct request_queue *q, unsigned int flags);
-+extern int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags);
- extern void blk_queue_exit(struct request_queue *q);
- extern void blk_start_queue(struct request_queue *q);
- extern void blk_start_queue_async(struct request_queue *q);
+ #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
+@@ -730,6 +731,11 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
+ 			     REQ_FAILFAST_DRIVER))
+ #define blk_queue_quiesced(q)	test_bit(QUEUE_FLAG_QUIESCED, &(q)->queue_flags)
++#define blk_queue_preempt_only(q)				\
++	test_bit(QUEUE_FLAG_PREEMPT_ONLY, &(q)->queue_flags)
++
++extern int blk_set_preempt_only(struct request_queue *q);
++extern void blk_clear_preempt_only(struct request_queue *q);
+ 
+ static inline bool blk_account_rq(struct request *rq)
+ {
 -- 
 2.14.2
