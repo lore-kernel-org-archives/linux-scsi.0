@@ -1,292 +1,114 @@
-From: Shivasharan Srikanteshwara
-        <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: system hung up when offlining CPUs
-Date: Mon, 30 Oct 2017 14:38:27 +0530
-Message-ID: <817f0d359fca6830ece5b1fcf207ce65@mail.gmail.com>
-References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com>
- <20170809124213.0d9518bb@why.wild-wind.fr.eu.org> <cd524af7-1f20-1956-1e44-92a451053387@gmail.com>
- <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com> <20170821131809.GA17564@lst.de>
- <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com> <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com>
- <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com> <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de>
- <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com> <alpine.DEB.2.20.1709131529400.1874@nanos>
- <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com> <alpine.DEB.2.20.1709161212160.2105@nanos>
- <alpine.DEB.2.20.1709161630580.2105@nanos> <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com>
- <alpine.DEB.2.20.1710032328280.2278@nanos> <alpine.DEB.2.20.1710042208400.2406@nanos>
- <3d93387d-30eb-0434-2216-0e6435c633f8@gmail.com> <857c813c-29cd-6e9f-5cde-52421d4d8429@gmail.com>
- <alpine.DEB.2.20.1710162106400.2037@nanos>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: =?UTF-8?B?UmU6IOetlOWkjTogW1BBVENIIHY1IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYQ==?=
+        =?UTF-8?B?ZGQgZG9jdW1lbnQgZm9yIGhpc2ktdWZz?=
+Date: Mon, 30 Oct 2017 16:21:55 +0100
+Message-ID: <CAK8P3a37yYDQZpZxmunCdSO83qkqywTME5Xo0k56nWEs2k+=dg@mail.gmail.com>
+References: <20171020085259.8093-1-liwei213@huawei.com> <20171020085259.8093-3-liwei213@huawei.com>
+ <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com> <1699CE87DE933F49876AD744B5DC140FA321D1@DGGEMM506-MBX.china.huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1710162106400.2037@nanos>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>, YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1699CE87DE933F49876AD744B5DC140FA321D1-0LhPdUyVHB9548jd+VSckwK1hpo4iccwjNknBlVQO8k@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "xuwei (O)" <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TaqPxH82wqD4g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Thomas Gleixner [mailto:tglx@linutronix.de]
-> Sent: Tuesday, October 17, 2017 1:57 AM
-> To: YASUAKI ISHIMATSU
-> Cc: Kashyap Desai; Hannes Reinecke; Marc Zyngier; Christoph Hellwig;
-> axboe@kernel.dk; mpe@ellerman.id.au; keith.busch@intel.com;
-> peterz@infradead.org; LKML; linux-scsi@vger.kernel.org; Sumit Saxena;
-> Shivasharan Srikanteshwara
-> Subject: Re: system hung up when offlining CPUs
->
-> Yasuaki,
->
-> On Mon, 16 Oct 2017, YASUAKI ISHIMATSU wrote:
->
-> > Hi Thomas,
-> >
-> > > Can you please apply the patch below on top of Linus tree and
-retest?
-> > >
-> > > Please send me the outputs I asked you to provide last time in any
-> > > case (success or fail).
-> >
-> > The issue still occurs even if I applied your patch to linux
-4.14.0-rc4.
->
-> Thanks for testing.
->
-> > ---
-> > [ ...] INFO: task setroubleshootd:4972 blocked for more than 120
-seconds.
-> > [ ...]       Not tainted 4.14.0-rc4.thomas.with.irqdebug+ #6
-> > [ ...] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-this
-> message.
-> > [ ...] setroubleshootd D    0  4972      1 0x00000080
-> > [ ...] Call Trace:
-> > [ ...]  __schedule+0x28d/0x890
-> > [ ...]  ? release_pages+0x16f/0x3f0
-> > [ ...]  schedule+0x36/0x80
-> > [ ...]  io_schedule+0x16/0x40
-> > [ ...]  wait_on_page_bit+0x107/0x150
-> > [ ...]  ? page_cache_tree_insert+0xb0/0xb0 [ ...]
-> > truncate_inode_pages_range+0x3dd/0x7d0
-> > [ ...]  ? schedule_hrtimeout_range_clock+0xad/0x140
-> > [ ...]  ? remove_wait_queue+0x59/0x60
-> > [ ...]  ? down_write+0x12/0x40
-> > [ ...]  ? unmap_mapping_range+0x75/0x130 [ ...]
-> > truncate_pagecache+0x47/0x60 [ ...]  truncate_setsize+0x32/0x40 [ ...]
-> > xfs_setattr_size+0x100/0x300 [xfs] [ ...]
-> > xfs_vn_setattr_size+0x40/0x90 [xfs] [ ...]  xfs_vn_setattr+0x87/0xa0
-> > [xfs] [ ...]  notify_change+0x266/0x440 [ ...]  do_truncate+0x75/0xc0
-> > [ ...]  path_openat+0xaba/0x13b0 [ ...]  ?
-> > mem_cgroup_commit_charge+0x31/0x130
-> > [ ...]  do_filp_open+0x91/0x100
-> > [ ...]  ? __alloc_fd+0x46/0x170
-> > [ ...]  do_sys_open+0x124/0x210
-> > [ ...]  SyS_open+0x1e/0x20
-> > [ ...]  do_syscall_64+0x67/0x1b0
-> > [ ...]  entry_SYSCALL64_slow_path+0x25/0x25
->
-> This is definitely a driver issue. The driver requests an affinity
-managed
-> interrupt. Affinity managed interrupts are different from non managed
-> interrupts in several ways:
->
-> Non-Managed interrupts:
->
->  1) At setup time the default interrupt affinity is assigned to each
->     interrupt. The effective affinity is usually a subset of the online
->     CPUs.
->
->  2) User space can modify the affinity of the interrupt
->
->  3) If a CPU in the affinity mask goes offline and there are still
-online
->     CPUs in the affinity mask then the effective affinity is moved to a
->     subset of the online CPUs in the affinity mask.
->
->     If the last CPU in the affinity mask of an interrupt goes offline
-then
->     the hotplug code breaks the affinity and makes it affine to the
-online
->     CPUs. The effective affinity is a subset of the new affinity
-setting,
->
-> Managed interrupts:
->
->  1) At setup time the interrupts of a multiqueue device are evenly
-spread
->     over the possible CPUs. If all CPUs in the affinity mask of a given
->     interrupt are offline at request_irq() time, the interrupt stays
-shut
->     down. If the first CPU in the affinity mask comes online later the
->     interrupt is started up.
->
->  2) User space cannot modify the affinity of the interrupt
->
->  3) If a CPU in the affinity mask goes offline and there are still
-online
->     CPUs in the affinity mask then the effective affinity is moved a
-subset
->     of the online CPUs in the affinity mask. I.e. the same as with
->     Non-Managed interrupts.
->
->     If the last CPU in the affinity mask of a managed interrupt goes
->     offline then the interrupt is shutdown. If the first CPU in the
->     affinity mask becomes online again then the interrupt is started up
->     again.
->
-Hi Thomas,
-Thanks for the detailed explanation about the behavior of managed
-interrupts.
-This helped me to understand the issue better. This is first time I am
-checking CPU hotplug system,
-so my input is very preliminary. Please bear with my understanding and
-correct me where required.
+On Tue, Oct 24, 2017 at 11:06 AM, liwei (CM) <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> what's your opinion about my explanation and revision method?
+> I am looking forward to your reply, thanks!
 
-This issue is reproducible on our local setup as well, with managed
-interrupts.
-I have few queries on the requirements for device driver that you have
-mentioned.
+Sorry for the delay, I was travelling last week.
+> =E5=8F=91=E4=BB=B6=E4=BA=BA: arndbergmann-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org [mailto:arndbergmann@=
+gmail.com] =E4=BB=A3=E8=A1=A8 Arnd Bergmann
+> On Fri, Oct 20, 2017 at 10:52 AM, Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+>> @@ -0,0 +1,46 @@
+>> +* Hisilicon Universal Flash Storage (UFS) Host Controller
+>> +
+>> +UFS nodes are defined to describe on-chip UFS hardware macro.
+>> +Each UFS Host Controller should have its own node.
+>> +
+>> +Required properties:
+>> +- compatible        : compatible list, contains one of the following -
+>> +                       "hisilicon,hi3660-ufs" for hisi ufs host control=
+ler
+>> +                        present on Hi3660 chipset.
 
-In managed-interrupts case, interrupts which were affine to the offlined
-CPU is not getting migrated
-to another available CPU. But the documentation at below link says that
-"all interrupts" are migrated
-to a new CPU. So not all interrupts are getting migrated to a new CPU
-then.
-https://www.kernel.org/doc/html/v4.11/core-api/cpu_hotplug.html#the-offlin
-e-case
-"- All interrupts targeted to this CPU are migrated to a new CPU"
+One more thing I just noticed: you don't describe the device as compatible =
+with
+the ufshcd spec as defined in the generic binding. Shouldn't we have
+both compatible
+strings listed here?
 
+> In particular, I wonder if what you describe as the "UFS SYS CTRL"
+> area corresponds to what Qualcomm have described as their PHY implementat=
+ion. It certainly seems to driver some of the properties that would normall=
+y be associated with a PHY.
+>
+> Liwei:Yes, a part of "UFS SYS CTRL" is associated with a PHY, but from ou=
+r chip colleague that we assure "UFS SYS CTRL" is associated with clk/reset=
+/power on/power off and so on.
+> In fact, in addition to the controller itself, the controller related per=
+iphery are all in this area. So it's not appropriate to put this into a sep=
+arate phy node.
 
-> So this has consequences:
->
->  1) The device driver has to make sure that no requests are targeted at
-a
->     queue whose interrupt is affine to offline CPUs and therefor shut
->     down. If the driver ignores that then this queue will not deliver an
->     interrupt simply because that interrupt is shut down.
->
->  2) When the last CPU in the affinity mask of a queue interrupt goes
->     offline the device driver has to make sure, that all outstanding
->     requests in the queue which have not yet delivered their interrupt
-are
->     completed. This is required because when the CPU is finally offline
-the
->     interrupt is shut down and wont deliver any more interrupts.
->
->     If that does not happen then the not yet completed request will try
-to
->     send the completion interrupt which obviously gets not delivered
->     because it is shut down.
->
-Once the last CPU in the affinity mask is offlined and a particular IRQ is
-shutdown, is there a way
-currently for the device driver to get callback to complete all
-outstanding requests on that queue?
->From the ftrace that I captured,  below were the various functions being
-called once the irq shutdown was initiated.
-There were no callbacks being called from the irq core that I could see.
+I'm not sure I understand here. Do you mean the reset handle is for
+resetting the PHY rather than the UFS HCD?
 
-           <...>-16    [001] d..1  9915.744040: irq_shutdown
-<-irq_migrate_all_off_this_cpu
-					 ^^^^^^^^^^^
-           <...>-16    [001] d..1  9915.744040: __irq_disable
-<-irq_shutdown
-           <...>-16    [001] d..1  9915.744041: mask_irq.part.30
-<-__irq_disable
-           <...>-16    [001] d..1  9915.744041: pci_msi_mask_irq
-<-mask_irq.part.30
-           <...>-16    [001] d..1  9915.744041: msi_set_mask_bit
-<-pci_msi_mask_irq
-           <...>-16    [001] d..1  9915.744042: irq_domain_deactivate_irq
-<-irq_shutdown
-           <...>-16    [001] d..1  9915.744043:
-__irq_domain_deactivate_irq <-irq_domain_deactivate_irq
-           <...>-16    [001] d..1  9915.744043: msi_domain_deactivate
-<-__irq_domain_deactivate_irq
-           <...>-16    [001] d..1  9915.744044: pci_msi_domain_write_msg
-<-msi_domain_deactivate
-           <...>-16    [001] d..1  9915.744044: __pci_write_msi_msg
-<-pci_msi_domain_write_msg
-           <...>-16    [001] d..1  9915.744044:
-__irq_domain_deactivate_irq <-__irq_domain_deactivate_irq
-           <...>-16    [001] d..1  9915.744045:
-intel_irq_remapping_deactivate <-__irq_domain_deactivate_irq
-           <...>-16    [001] d..1  9915.744045: modify_irte
-<-intel_irq_remapping_deactivate
-           <...>-16    [001] d..1  9915.744045: _raw_spin_lock_irqsave
-<-modify_irte
-           <...>-16    [001] d..1  9915.744045: qi_submit_sync
-<-modify_irte
-           <...>-16    [001] d..1  9915.744046: _raw_spin_lock_irqsave
-<-qi_submit_sync
-           <...>-16    [001] d..1  9915.744046: _raw_spin_lock
-<-qi_submit_sync
-           <...>-16    [001] d..1  9915.744047:
-_raw_spin_unlock_irqrestore <-qi_submit_sync
-           <...>-16    [001] d..1  9915.744047:
-_raw_spin_unlock_irqrestore <-modify_irte
-           <...>-16    [001] d..1  9915.744047:
-__irq_domain_deactivate_irq <-__irq_domain_deactivate_irq
-
-In my knowledge many device drivers in the kernel tree pass
-PCI_IRQ_AFFINITY flag to
-pci_alloc_irq_vectors and it is widely used feature (not limited to
-megaraid_sas driver).
-But I could not see any of the drivers working as per the constraints
-mentioned.
-Can you please point me to any existing driver to understand how above
-constraints can
-be implemented?
-
-Below is simple grep I ran on drivers passing PCI_IRQ_AFFINITY flag to
-pci_alloc_irq_vectors.
-
-# grep -R "PCI_IRQ_AFFINITY" drivers/*
-drivers/nvme/host/pci.c:                        PCI_IRQ_ALL_TYPES |
-PCI_IRQ_AFFINITY);
-drivers/pci/host/vmd.c:                                 PCI_IRQ_MSIX |
-PCI_IRQ_AFFINITY);
-drivers/pci/msi.c:      if (flags & PCI_IRQ_AFFINITY) {
-drivers/scsi/aacraid/comminit.c:
-PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
-drivers/scsi/be2iscsi/be_main.c:
-PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc) < 0) {
-drivers/scsi/csiostor/csio_isr.c:                       PCI_IRQ_MSIX |
-PCI_IRQ_AFFINITY, &desc);
-drivers/scsi/hpsa.c:                            PCI_IRQ_MSIX |
-PCI_IRQ_AFFINITY);
-drivers/scsi/lpfc/lpfc_init.c:                          vectors,
-PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
-drivers/scsi/megaraid/megaraid_sas_base.c:                      irq_flags
-|= PCI_IRQ_AFFINITY;
-drivers/scsi/megaraid/megaraid_sas_base.c:                      irq_flags
-|= PCI_IRQ_AFFINITY;
-drivers/scsi/mpt3sas/mpt3sas_base.c:            irq_flags |=
-PCI_IRQ_AFFINITY;
-drivers/scsi/qla2xxx/qla_isr.c:             ha->msix_count, PCI_IRQ_MSIX |
-PCI_IRQ_AFFINITY,
-drivers/scsi/smartpqi/smartpqi_init.c:                  PCI_IRQ_MSIX |
-PCI_IRQ_AFFINITY);
-drivers/virtio/virtio_pci_common.c:
-(desc ? PCI_IRQ_AFFINITY : 0),
-
-Thanks,
-Shivasharan
-
-> It's hard to tell from the debug information which of the constraints
-(#1 or #2
-> or both) has been violated by the driver (or the device hardware /
-> firmware) but the effect that the task which submitted the I/O operation
-is
-> hung after an offline operation points clearly into that direction.
+> > For the "clock-names" property, you specify "clk_ref", which I assume i=
+s the same as what Qualcomm call "ref_clk". I'd suggest you use the existin=
+g name and add that as the default name in the ufshcd-pltfrm.txt binding do=
+cument.
 >
-> The irq core code is doing what is expected and I have no clue about
-that
-> megasas driver/hardware so I have to punt and redirect you to the SCSI
-and
-> megasas people.
+> Liwei:" ref_clk " is already in the ufshcd-pltfrm.txt binding document, a=
+nd parse in ufshcd.c, so we will replace "clk_ref" with "ref_clk". I will f=
+ix it in patch v6;
+
+ok
+
+> > The "clk_phy" property appears to be related to the PHY, so it might be=
+ better to have a separate phy node with either just the clk, or with the c=
+lk plus the "UFS SYS CTRL" register area, whichever matches your hardware b=
+etter, and then use teh "phys/phy-names" property to refer to that.
 >
-> Thanks,
+> Liwei: OK, I will add a separate phy node and fix it in patch v6;
+
+Thanks.
+
+>> The reset handling you describe here (both resets and reset-gpios) appea=
+rs to be completely generic, so I'd suggest adding those to ufshcd-pltfrm.t=
+xt instead of your own binding, to ensure that future drivers use the same =
+identifiers.
 >
-> 	tglx
->
->
+> Liwei: From our soc chip colleague, reset include "rst", "assert" is not =
+generic and related with our soc
+> implementation, you can see ufs_hisi_soc_init() in drivers/scsi/ufs/ufs-h=
+isi.c, the position of rst and assert
+> is very special, it's hard to put it in a generic process;
+
+It seems odd that the ability to reset a device is specific to your
+implementation. What I meant is
+that other implementations may also require a reset, so describing the
+way you refer to this
+into the generic binding would be helpful, to prevent others from
+adding another incompatible
+way to do the same thing.
+
+A lot of generic bindings have a reference to a reset controller that
+if present needs to
+be used before first accessing the device itself.
+
+> reset-gpios is used to solve a defect of the SOC chip reset function and =
+it is not generic , but our chip has been updated, so this is no longer nee=
+ded, and I will remove it in the patch v6;
+
+Ok.
+
+      Arnd
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
