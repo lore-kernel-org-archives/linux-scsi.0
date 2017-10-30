@@ -1,97 +1,51 @@
 From: Mike Christie <mchristi@redhat.com>
-Subject: [PATCH 13/19] tcmu: clean up the scatter helper
-Date: Sun, 29 Oct 2017 22:44:33 -0500
-Message-ID: <1509335079-5276-14-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 12/19] tcmu: fix free block calculation
+Date: Sun, 29 Oct 2017 22:44:32 -0500
+Message-ID: <1509335079-5276-13-git-send-email-mchristi@redhat.com>
 References: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org
-Cc: Xiubo Li <lixiubo@cmss.chinamobile.com>, Mike Christie <mchristi@redhat.com>
+Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+The blocks_left calculation does not account for free blocks
+between 0 and thresh, so we could be queueing/waiting when
+there are enough blocks free.
 
-Add some comments to make the scatter code to be more readable,
-and drop unused arg to new_iov.
+This has us add in the blocks between 0 and thresh as well as
+at the end from thresh to DATA_BLOCK_BITS.
 
-Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Reviewed-by: Mike Christie <mchristi@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/target/target_core_user.c | 30 +++++++++++++++++++++++++-----
- 1 file changed, 25 insertions(+), 5 deletions(-)
+ drivers/target/target_core_user.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index b7eeb25..91e0601 100644
+index 76f0e5a..b7eeb25 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
-@@ -491,8 +491,7 @@ static inline size_t head_to_end(size_t head, size_t size)
- 	return size - head;
- }
+@@ -636,7 +636,7 @@ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
  
--static inline void new_iov(struct iovec **iov, int *iov_cnt,
--			   struct tcmu_dev *udev)
-+static inline void new_iov(struct iovec **iov, int *iov_cnt)
+ static inline size_t spc_bitmap_free(unsigned long *bitmap, uint32_t thresh)
  {
- 	struct iovec *iovec;
- 
-@@ -545,19 +544,38 @@ static void scatter_data_area(struct tcmu_dev *udev,
- 				to = kmap_atomic(page);
- 			}
- 
--			copy_bytes = min_t(size_t, sg_remaining,
--					block_remaining);
-+			/*
-+			 * Covert to virtual offset of the ring data area.
-+			 */
- 			to_offset = get_block_offset_user(udev, dbi,
- 					block_remaining);
- 
-+			/*
-+			 * The following code will gather and map the blocks
-+			 * to the same iovec when the blocks are all next to
-+			 * each other.
-+			 */
-+			copy_bytes = min_t(size_t, sg_remaining,
-+					block_remaining);
- 			if (*iov_cnt != 0 &&
- 			    to_offset == iov_tail(*iov)) {
-+				/*
-+				 * Will append to the current iovec, because
-+				 * the current block page is next to the
-+				 * previous one.
-+				 */
- 				(*iov)->iov_len += copy_bytes;
- 			} else {
--				new_iov(iov, iov_cnt, udev);
-+				/*
-+				 * Will allocate a new iovec because we are
-+				 * first time here or the current block page
-+				 * is not next to the previous one.
-+				 */
-+				new_iov(iov, iov_cnt);
- 				(*iov)->iov_base = (void __user *)to_offset;
- 				(*iov)->iov_len = copy_bytes;
- 			}
-+
- 			if (copy_data) {
- 				offset = DATA_BLOCK_SIZE - block_remaining;
- 				memcpy(to + offset,
-@@ -565,11 +583,13 @@ static void scatter_data_area(struct tcmu_dev *udev,
- 				       copy_bytes);
- 				tcmu_flush_dcache_range(to, copy_bytes);
- 			}
-+
- 			sg_remaining -= copy_bytes;
- 			block_remaining -= copy_bytes;
- 		}
- 		kunmap_atomic(from - sg->offset);
- 	}
-+
- 	if (to)
- 		kunmap_atomic(to);
+-	return DATA_BLOCK_SIZE * (thresh - bitmap_weight(bitmap, thresh));
++	return thresh - bitmap_weight(bitmap, thresh);
  }
+ 
+ /*
+@@ -676,8 +676,9 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+ 
+ 	/* try to check and get the data blocks as needed */
+ 	space = spc_bitmap_free(udev->data_bitmap, udev->dbi_thresh);
+-	if (space < data_needed) {
+-		unsigned long blocks_left = DATA_BLOCK_BITS - udev->dbi_thresh;
++	if ((space * DATA_BLOCK_SIZE) < data_needed) {
++		unsigned long blocks_left = DATA_BLOCK_BITS - udev->dbi_thresh +
++						space;
+ 		unsigned long grow;
+ 
+ 		if (blocks_left < blocks_needed) {
 -- 
 1.8.3.1
