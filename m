@@ -1,140 +1,129 @@
 From: Mike Christie <mchristi@redhat.com>
-Subject: [PATCH 07/19] tcmu: fix unmap thread race
-Date: Sun, 29 Oct 2017 22:44:27 -0500
-Message-ID: <1509335079-5276-8-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 14/19] tcmu: prep queue_cmd_ring to be used by unmap wq
+Date: Sun, 29 Oct 2017 22:44:34 -0500
+Message-ID: <1509335079-5276-15-git-send-email-mchristi@redhat.com>
 References: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38000 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56070 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752200AbdJ3Dou (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 29 Oct 2017 23:44:50 -0400
+        id S1752250AbdJ3DpC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 29 Oct 2017 23:45:02 -0400
 In-Reply-To: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: Mike Christie <mchristi@redhat.com>
 
-If the unmap thread has already run find_free_blocks
-but not yet run prepare_to_wait when a wake_up(&unmap_wait)
-call is done, the unmap thread is going to miss the wake
-call. Instead of adding checks for if new waiters were added
-this just has use a work queue which will run us again
-in this type of case.
+In the next patch we will call queue_cmd_ring from the submitting
+context and also the unmap wq when blocks free. This changes
+the queue_cmd_ring return code so in the next patch we can
+return a sense_reason_t and also tell the caller if the cmd
+was internally queued.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/target/target_core_user.c | 43 +++++++++------------------------------
- 1 file changed, 10 insertions(+), 33 deletions(-)
+ drivers/target/target_core_user.c | 41 +++++++++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 15b54fd..14d9b79 100644
+index 91e0601..68668a8 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
-@@ -32,7 +32,7 @@
- #include <linux/highmem.h>
- #include <linux/configfs.h>
- #include <linux/mutex.h>
--#include <linux/kthread.h>
-+#include <linux/workqueue.h>
- #include <net/genetlink.h>
- #include <scsi/scsi_common.h>
- #include <scsi/scsi_proto.h>
-@@ -176,12 +176,11 @@ struct tcmu_cmd {
- 	unsigned long flags;
- };
- 
--static struct task_struct *unmap_thread;
--static wait_queue_head_t unmap_wait;
- static DEFINE_MUTEX(root_udev_mutex);
- static LIST_HEAD(root_udev);
- 
- static atomic_t global_db_count = ATOMIC_INIT(0);
-+static struct work_struct tcmu_unmap_work;
- 
- static struct kmem_cache *tcmu_cmd_cache;
- 
-@@ -389,8 +388,7 @@ static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
- 
- err:
- 	udev->waiting_global = true;
--	/* Try to wake up the unmap thread */
--	wake_up(&unmap_wait);
-+	schedule_work(&tcmu_unmap_work);
- 	return false;
+@@ -775,8 +775,16 @@ static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
+ 	return 0;
  }
  
-@@ -1063,8 +1061,7 @@ static void tcmu_device_timedout(unsigned long data)
- 	idr_for_each(&udev->commands, tcmu_check_expired_cmd, NULL);
- 	spin_unlock_irqrestore(&udev->commands_lock, flags);
+-static sense_reason_t
+-tcmu_queue_cmd_ring(struct tcmu_cmd *tcmu_cmd)
++/**
++ * queue_cmd_ring - queue cmd to ring or internally
++ * @tcmu_cmd: cmd to queue
++ * @scsi_err: TCM error code if failure (-1) returned.
++ *
++ * Returns:
++ * -1 we cannot queue internally or to the ring.
++ *  0 success
++ */
++static sense_reason_t queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, int *scsi_err)
+ {
+ 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+ 	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+@@ -790,8 +798,12 @@ static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
+ 	bool copy_to_data_area;
+ 	size_t data_length = tcmu_cmd_get_data_length(tcmu_cmd);
  
--	/* Try to wake up the ummap thread */
--	wake_up(&unmap_wait);
-+	schedule_work(&tcmu_unmap_work);
+-	if (test_bit(TCMU_DEV_BIT_BROKEN, &udev->flags))
+-		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++	*scsi_err = TCM_NO_SENSE;
++
++	if (test_bit(TCMU_DEV_BIT_BROKEN, &udev->flags)) {
++		*scsi_err = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++		return -1;
++	}
  
  	/*
- 	 * We don't need to wakeup threads on wait_cmdr since they have their
-@@ -2042,23 +2039,10 @@ static void run_cmdr_queues(void)
- 	mutex_unlock(&root_udev_mutex);
+ 	 * Must be a certain minimum size for response sense info, but
+@@ -818,7 +830,8 @@ static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
+ 			"cmd ring/data area\n", command_size, data_length,
+ 			udev->cmdr_size, udev->data_size);
+ 		mutex_unlock(&udev->cmdr_lock);
+-		return TCM_INVALID_CDB_FIELD;
++		*scsi_err = TCM_INVALID_CDB_FIELD;
++		return -1;
+ 	}
+ 
+ 	while (!is_ring_space_avail(udev, tcmu_cmd, command_size, data_length)) {
+@@ -844,7 +857,8 @@ static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
+ 		finish_wait(&udev->wait_cmdr, &__wait);
+ 		if (!ret) {
+ 			pr_warn("tcmu: command timed out\n");
+-			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++			*scsi_err = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++			return -1;
+ 		}
+ 
+ 		mutex_lock(&udev->cmdr_lock);
+@@ -900,7 +914,8 @@ static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
+ 	ret = tcmu_setup_cmd_timer(tcmu_cmd);
+ 	if (ret) {
+ 		tcmu_cmd_free_data(tcmu_cmd, tcmu_cmd->dbi_cnt);
+-		return TCM_OUT_OF_RESOURCES;
++		*scsi_err = TCM_OUT_OF_RESOURCES;
++		return -1;
+ 	}
+ 	entry->hdr.cmd_id = tcmu_cmd->cmd_id;
+ 
+@@ -931,27 +946,23 @@ static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
+ 		mod_timer(&udev->timeout, round_jiffies_up(jiffies +
+ 			  msecs_to_jiffies(udev->cmd_time_out)));
+ 
+-	return TCM_NO_SENSE;
++	return 0;
  }
  
--static int unmap_thread_fn(void *data)
-+static void tcmu_unmap_work_fn(struct work_struct *work)
+ static sense_reason_t
+ tcmu_queue_cmd(struct se_cmd *se_cmd)
  {
--	while (!kthread_should_stop()) {
--		DEFINE_WAIT(__wait);
+ 	struct tcmu_cmd *tcmu_cmd;
+-	sense_reason_t ret;
++	sense_reason_t scsi_ret;
+ 
+ 	tcmu_cmd = tcmu_alloc_cmd(se_cmd);
+ 	if (!tcmu_cmd)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-	ret = tcmu_queue_cmd_ring(tcmu_cmd);
+-	if (ret != TCM_NO_SENSE) {
+-		pr_err("TCMU: Could not queue command\n");
 -
--		prepare_to_wait(&unmap_wait, &__wait, TASK_INTERRUPTIBLE);
--		schedule();
--		finish_wait(&unmap_wait, &__wait);
--
--		if (kthread_should_stop())
--			break;
--
--		find_free_blocks();
--		run_cmdr_queues();
++	if (queue_cmd_ring(tcmu_cmd, &scsi_ret) < 0)
+ 		tcmu_free_cmd(tcmu_cmd);
 -	}
--
--	return 0;
-+	find_free_blocks();
-+	run_cmdr_queues();
+ 
+-	return ret;
++	return scsi_ret;
  }
  
- static int __init tcmu_module_init(void)
-@@ -2067,6 +2051,8 @@ static int __init tcmu_module_init(void)
- 
- 	BUILD_BUG_ON((sizeof(struct tcmu_cmd_entry) % TCMU_OP_ALIGN_SIZE) != 0);
- 
-+	INIT_WORK(&tcmu_unmap_work, tcmu_unmap_work_fn);
-+
- 	tcmu_cmd_cache = kmem_cache_create("tcmu_cmd_cache",
- 				sizeof(struct tcmu_cmd),
- 				__alignof__(struct tcmu_cmd),
-@@ -2112,17 +2098,8 @@ static int __init tcmu_module_init(void)
- 	if (ret)
- 		goto out_attrs;
- 
--	init_waitqueue_head(&unmap_wait);
--	unmap_thread = kthread_run(unmap_thread_fn, NULL, "tcmu_unmap");
--	if (IS_ERR(unmap_thread)) {
--		ret = PTR_ERR(unmap_thread);
--		goto out_unreg_transport;
--	}
--
- 	return 0;
- 
--out_unreg_transport:
--	target_backend_unregister(&tcmu_ops);
- out_attrs:
- 	kfree(tcmu_attrs);
- out_unreg_genl:
-@@ -2137,7 +2114,7 @@ static int __init tcmu_module_init(void)
- 
- static void __exit tcmu_module_exit(void)
- {
--	kthread_stop(unmap_thread);
-+	cancel_work_sync(&tcmu_unmap_work);
- 	target_backend_unregister(&tcmu_ops);
- 	kfree(tcmu_attrs);
- 	genl_unregister_family(&tcmu_genl_family);
+ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *entry)
 -- 
 1.8.3.1
