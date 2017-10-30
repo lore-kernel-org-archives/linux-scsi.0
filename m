@@ -1,7 +1,7 @@
 From: Mike Christie <mchristi@redhat.com>
-Subject: [PATCH 12/19] tcmu: fix free block calculation
-Date: Sun, 29 Oct 2017 22:44:32 -0500
-Message-ID: <1509335079-5276-13-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 17/19] tcmu: make ring buffer timer configurable
+Date: Sun, 29 Oct 2017 22:44:37 -0500
+Message-ID: <1509335079-5276-18-git-send-email-mchristi@redhat.com>
 References: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1509335079-5276-1-git-send-email-mchristi@redhat.com>
@@ -10,42 +10,271 @@ To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The blocks_left calculation does not account for free blocks
-between 0 and thresh, so we could be queueing/waiting when
-there are enough blocks free.
-
-This has us add in the blocks between 0 and thresh as well as
-at the end from thresh to DATA_BLOCK_BITS.
+This adds a timer, qfull_time_out, that controls how long a
+device will wait for ring buffer space to open before
+failing the commands in the queue. It is useful to separate
+this timer from the cmd_time_out and default 30 sec one,
+because for HA setups cmd_time_out may be disbled and 30
+seconds is too long to wait when some OSs like ESX will
+timeout commands after as little as 8 - 15 seconds.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/target/target_core_user.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/target/target_core_user.c | 131 +++++++++++++++++++++++++++++---------
+ 1 file changed, 101 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 76f0e5a..b7eeb25 100644
+index 80dd17a..92eb918 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
-@@ -636,7 +636,7 @@ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+@@ -142,8 +142,12 @@ struct tcmu_dev {
  
- static inline size_t spc_bitmap_free(unsigned long *bitmap, uint32_t thresh)
- {
--	return DATA_BLOCK_SIZE * (thresh - bitmap_weight(bitmap, thresh));
-+	return thresh - bitmap_weight(bitmap, thresh);
+ 	struct idr commands;
+ 
+-	struct timer_list timeout;
++	struct timer_list cmd_timer;
+ 	unsigned int cmd_time_out;
++
++	struct timer_list qfull_timer;
++	int qfull_time_out;
++
+ 	struct list_head timedout_entry;
+ 
+ 	spinlock_t nl_cmd_lock;
+@@ -740,18 +744,14 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
+ 	return command_size;
  }
  
- /*
-@@ -676,8 +676,9 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+-static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
++static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd, unsigned int tmo,
++				struct timer_list *timer)
+ {
+ 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+-	unsigned long tmo = udev->cmd_time_out;
+ 	int cmd_id;
  
- 	/* try to check and get the data blocks as needed */
- 	space = spc_bitmap_free(udev->data_bitmap, udev->dbi_thresh);
--	if (space < data_needed) {
--		unsigned long blocks_left = DATA_BLOCK_BITS - udev->dbi_thresh;
-+	if ((space * DATA_BLOCK_SIZE) < data_needed) {
-+		unsigned long blocks_left = DATA_BLOCK_BITS - udev->dbi_thresh +
-+						space;
- 		unsigned long grow;
+-	/*
+-	 * If it was on the cmdr queue waiting we do not reset the timer
+-	 * for requeues and when it is finally sent to userspace.
+-	 */
+ 	if (tcmu_cmd->cmd_id)
+-		return 0;
++		goto setup_timer;
  
- 		if (blocks_left < blocks_needed) {
+ 	cmd_id = idr_alloc(&udev->commands, tcmu_cmd, 1, USHRT_MAX, GFP_NOWAIT);
+ 	if (cmd_id < 0) {
+@@ -760,23 +760,38 @@ static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd)
+ 	}
+ 	tcmu_cmd->cmd_id = cmd_id;
+ 
+-	if (!tmo)
+-		tmo = TCMU_TIME_OUT;
+-
+ 	pr_debug("allocated cmd %u for dev %s tmo %lu\n", tcmu_cmd->cmd_id,
+ 		 udev->name, tmo / MSEC_PER_SEC);
+ 
++setup_timer:
++	if (!tmo)
++		return 0;
++
+ 	tcmu_cmd->deadline = round_jiffies_up(jiffies + msecs_to_jiffies(tmo));
+-	mod_timer(&udev->timeout, tcmu_cmd->deadline);
++	mod_timer(timer, tcmu_cmd->deadline);
+ 	return 0;
+ }
+ 
+ static int add_to_cmdr_queue(struct tcmu_cmd *tcmu_cmd)
+ {
+ 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
++	unsigned int tmo;
+ 	int ret;
+ 
+-	ret = tcmu_setup_cmd_timer(tcmu_cmd);
++	/*
++	 * For backwards compat if qfull_time_out is not set use
++	 * cmd_time_out and if that's not set use the default time out.
++	 */
++	if (!udev->qfull_time_out)
++		return -ETIMEDOUT;
++	else if (udev->qfull_time_out > 0)
++		tmo = udev->qfull_time_out;
++	else if (udev->cmd_time_out)
++		tmo = udev->cmd_time_out;
++	else
++		tmo = TCMU_TIME_OUT;
++
++	ret = tcmu_setup_cmd_timer(tcmu_cmd, tmo, &udev->qfull_timer);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -900,7 +915,8 @@ static sense_reason_t queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, int *scsi_err)
+ 	}
+ 	entry->req.iov_bidi_cnt = iov_cnt;
+ 
+-	ret = tcmu_setup_cmd_timer(tcmu_cmd);
++	ret = tcmu_setup_cmd_timer(tcmu_cmd, udev->cmd_time_out,
++				   &udev->cmd_timer);
+ 	if (ret) {
+ 		tcmu_cmd_free_data(tcmu_cmd, tcmu_cmd->dbi_cnt);
+ 		*scsi_err = TCM_OUT_OF_RESOURCES;
+@@ -1046,14 +1062,19 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+ 		handled++;
+ 	}
+ 
+-	if (mb->cmd_tail == mb->cmd_head && list_empty(&udev->cmdr_queue)) {
+-		del_timer(&udev->timeout);
+-		/*
+-		 * not more pending or waiting commands so try to reclaim
+-		 * blocks if needed.
+-		 */
+-		if (atomic_read(&global_db_count) > TCMU_GLOBAL_MAX_BLOCKS)
+-			schedule_delayed_work(&tcmu_unmap_work, 0);
++	if (mb->cmd_tail == mb->cmd_head) {
++		/* no more pending commands */
++		del_timer(&udev->cmd_timer);
++
++		if (list_empty(&udev->cmdr_queue)) {
++			/*
++			 * no more pending or waiting commands so try to
++			 * reclaim blocks if needed.
++			 */
++			if (atomic_read(&global_db_count) >
++			    TCMU_GLOBAL_MAX_BLOCKS)
++				schedule_delayed_work(&tcmu_unmap_work, 0);
++		}
+ 	}
+ 
+ 	return handled;
+@@ -1074,13 +1095,15 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+ 		return 0;
+ 
+ 	is_running = list_empty(&cmd->cmdr_queue_entry);
+-	pr_debug("Timing out cmd %u on dev %s that is %s.\n",
+-		 id, udev->name, is_running ? "inflight" : "queued");
+-
+-	se_cmd = cmd->se_cmd;
+-	cmd->se_cmd = NULL;
+ 
+ 	if (is_running) {
++		/*
++		 * If cmd_time_out is disabled but qfull is set deadline
++		 * will only reflect the qfull timeout. Ignore it.
++		 */
++		if (!udev->cmd_time_out)
++			return 0;
++
+ 		set_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
+ 		/*
+ 		 * target_complete_cmd will translate this to LUN COMM FAILURE
+@@ -1093,6 +1116,12 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+ 		tcmu_free_cmd(cmd);
+ 		scsi_status = SAM_STAT_TASK_SET_FULL;
+ 	}
++
++	pr_debug("Timing out cmd %u on dev %s that is %s.\n",
++		 id, udev->name, is_running ? "inflight" : "queued");
++
++	se_cmd = cmd->se_cmd;
++	cmd->se_cmd = NULL;
+ 	target_complete_cmd(se_cmd, scsi_status);
+ 	return 0;
+ }
+@@ -1101,7 +1130,7 @@ static void tcmu_device_timedout(unsigned long data)
+ {
+ 	struct tcmu_dev *udev = (struct tcmu_dev *)data;
+ 
+-	pr_debug("%s cmd timeout has expired\n", udev->name);
++	pr_debug("%s cmd/qfull timeout has expired\n", udev->name);
+ 
+ 	spin_lock(&timed_out_udevs_lock);
+ 	if (list_empty(&udev->timedout_entry))
+@@ -1148,6 +1177,7 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ 
+ 	udev->hba = hba;
+ 	udev->cmd_time_out = TCMU_TIME_OUT;
++	udev->qfull_time_out = -1;
+ 
+ 	mutex_init(&udev->cmdr_lock);
+ 
+@@ -1155,7 +1185,10 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ 	INIT_LIST_HEAD(&udev->cmdr_queue);
+ 	idr_init(&udev->commands);
+ 
+-	setup_timer(&udev->timeout, tcmu_device_timedout,
++	setup_timer(&udev->qfull_timer, tcmu_device_timedout,
++		(unsigned long)udev);
++
++	setup_timer(&udev->cmd_timer, tcmu_device_timedout,
+ 		(unsigned long)udev);
+ 
+ 	init_waitqueue_head(&udev->nl_cmd_wq);
+@@ -1211,6 +1244,8 @@ static bool run_cmdr_queue(struct tcmu_dev *udev)
+ 			goto done;
+ 		}
+ 	}
++	if (list_empty(&udev->cmdr_queue))
++		del_timer(&udev->qfull_timer);
+ done:
+ 	return drained;
+ }
+@@ -1710,7 +1745,8 @@ static void tcmu_destroy_device(struct se_device *dev)
+ {
+ 	struct tcmu_dev *udev = TCMU_DEV(dev);
+ 
+-	del_timer_sync(&udev->timeout);
++	del_timer_sync(&udev->cmd_timer);
++	del_timer_sync(&udev->qfull_timer);
+ 
+ 	mutex_lock(&root_udev_mutex);
+ 	list_del(&udev->node);
+@@ -1890,6 +1926,40 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
+ }
+ CONFIGFS_ATTR(tcmu_, cmd_time_out);
+ 
++static ssize_t tcmu_qfull_time_out_show(struct config_item *item, char *page)
++{
++	struct se_dev_attrib *da = container_of(to_config_group(item),
++						struct se_dev_attrib, da_group);
++	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
++
++	return snprintf(page, PAGE_SIZE, "%ld\n", udev->qfull_time_out <= 0 ?
++			udev->qfull_time_out :
++			udev->qfull_time_out / MSEC_PER_SEC);
++}
++
++static ssize_t tcmu_qfull_time_out_store(struct config_item *item,
++					 const char *page, size_t count)
++{
++	struct se_dev_attrib *da = container_of(to_config_group(item),
++					struct se_dev_attrib, da_group);
++	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
++	s32 val;
++	int ret;
++
++	ret = kstrtos32(page, 0, &val);
++	if (ret < 0)
++		return ret;
++
++	if (val >= 0) {
++		udev->qfull_time_out = val * MSEC_PER_SEC;
++	} else {
++		printk(KERN_ERR "Invalid qfull timeout value %d\n", val);
++		return -EINVAL;
++	}
++	return count;
++}
++CONFIGFS_ATTR(tcmu_, qfull_time_out);
++
+ static ssize_t tcmu_dev_config_show(struct config_item *item, char *page)
+ {
+ 	struct se_dev_attrib *da = container_of(to_config_group(item),
+@@ -2035,6 +2105,7 @@ static ssize_t tcmu_emulate_write_cache_store(struct config_item *item,
+ 
+ static struct configfs_attribute *tcmu_attrib_attrs[] = {
+ 	&tcmu_attr_cmd_time_out,
++	&tcmu_attr_qfull_time_out,
+ 	&tcmu_attr_dev_config,
+ 	&tcmu_attr_dev_size,
+ 	&tcmu_attr_emulate_write_cache,
 -- 
 1.8.3.1
