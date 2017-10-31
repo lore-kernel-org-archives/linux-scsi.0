@@ -1,130 +1,52 @@
-From: Christos Gkekas <chris.gekas@gmail.com>
-Subject: [PATCH RESEND] scsi: fnic: Clean up redundant variables
-Date: Tue, 31 Oct 2017 21:01:53 +0000
-Message-ID: <20171031210153.GA19945@inspiron>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: ibmvscsi: Convert timers to use timer_setup()
+Date: Tue, 31 Oct 2017 14:46:40 -0700
+Message-ID: <8db42ced-307e-15f1-817a-5c4e76c5df58@linux.vnet.ibm.com>
+References: <20171025100607.GA145026@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:54996 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbdJaVB5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 17:01:57 -0400
-Content-Disposition: inline
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54932 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753962AbdJaVqs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 31 Oct 2017 17:46:48 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9VLhgpM185605
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2017 17:46:47 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2dxxk7rdmy-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2017 17:46:47 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+        Tue, 31 Oct 2017 17:46:47 -0400
+In-Reply-To: <20171025100607.GA145026@beast>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Christos Gkekas <chris.gekas@gmail.com>
+To: Kees Cook <keescook@chromium.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 
-Remove variables that are set but not used.
+On 10/25/2017 03:06 AM, Kees Cook wrote:
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly.
+> 
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linuxppc-dev@lists.ozlabs.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/scsi/ibmvscsi/ibmvfc.c   | 14 ++++++--------
+>  drivers/scsi/ibmvscsi/ibmvscsi.c |  7 +++----
+>  2 files changed, 9 insertions(+), 12 deletions(-)
 
-Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
----
- drivers/scsi/fnic/fnic_fcs.c | 9 ---------
- drivers/scsi/fnic/vnic_rq.c  | 3 ---
- drivers/scsi/fnic/vnic_wq.c  | 3 ---
- 3 files changed, 15 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 999fc75..bc1fcce 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -293,12 +293,10 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
- 	struct fc_frame_header *fh = NULL;
- 	struct fip_desc *desc;
- 	struct fip_encaps *els;
--	enum fip_desc_type els_dtype = 0;
- 	u16 op;
- 	u8 els_op;
- 	u8 sub;
- 
--	size_t els_len = 0;
- 	size_t rlen;
- 	size_t dlen = 0;
- 
-@@ -330,10 +328,8 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
- 		if (dlen < sizeof(*els) + sizeof(*fh) + 1)
- 			return 0;
- 
--		els_len = dlen - sizeof(*els);
- 		els = (struct fip_encaps *)desc;
- 		fh = (struct fc_frame_header *)(els + 1);
--		els_dtype = desc->fip_dtype;
- 
- 		if (!fh)
- 			return 0;
-@@ -360,7 +356,6 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
- 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 	struct sk_buff *skb;
- 	char *eth_fr;
--	int fr_len;
- 	struct fip_vlan *vlan;
- 	u64 vlan_tov;
- 
-@@ -375,7 +370,6 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
- 	if (!skb)
- 		return;
- 
--	fr_len = sizeof(*vlan);
- 	eth_fr = (char *)skb->data;
- 	vlan = (struct fip_vlan *)eth_fr;
- 
-@@ -823,7 +817,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
- 	struct sk_buff *skb;
- 	struct fc_frame *fp;
- 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
--	unsigned int eth_hdrs_stripped;
- 	u8 type, color, eop, sop, ingress_port, vlan_stripped;
- 	u8 fcoe = 0, fcoe_sof, fcoe_eof;
- 	u8 fcoe_fc_crc_ok = 1, fcoe_enc_error = 0;
-@@ -853,7 +846,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
- 				   &ingress_port, &packet_error,
- 				   &fcoe_enc_error, &fcs_ok, &vlan_stripped,
- 				   &vlan);
--		eth_hdrs_stripped = 1;
- 		skb_trim(skb, fcp_bytes_written);
- 		fr_sof(fp) = sof;
- 		fr_eof(fp) = eof;
-@@ -870,7 +862,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
- 				    &tcp_udp_csum_ok, &udp, &tcp,
- 				    &ipv4_csum_ok, &ipv6, &ipv4,
- 				    &ipv4_fragment, &fcs_ok);
--		eth_hdrs_stripped = 0;
- 		skb_trim(skb, bytes_written);
- 		if (!fcs_ok) {
- 			atomic64_inc(&fnic_stats->misc_stats.frame_errors);
-diff --git a/drivers/scsi/fnic/vnic_rq.c b/drivers/scsi/fnic/vnic_rq.c
-index fd2068f..ae8b78c 100644
---- a/drivers/scsi/fnic/vnic_rq.c
-+++ b/drivers/scsi/fnic/vnic_rq.c
-@@ -27,12 +27,9 @@
- static int vnic_rq_alloc_bufs(struct vnic_rq *rq)
- {
- 	struct vnic_rq_buf *buf;
--	struct vnic_dev *vdev;
- 	unsigned int i, j, count = rq->ring.desc_count;
- 	unsigned int blks = VNIC_RQ_BUF_BLKS_NEEDED(count);
- 
--	vdev = rq->vdev;
--
- 	for (i = 0; i < blks; i++) {
- 		rq->bufs[i] = kzalloc(VNIC_RQ_BUF_BLK_SZ, GFP_ATOMIC);
- 		if (!rq->bufs[i]) {
-diff --git a/drivers/scsi/fnic/vnic_wq.c b/drivers/scsi/fnic/vnic_wq.c
-index a414135..5f57809 100644
---- a/drivers/scsi/fnic/vnic_wq.c
-+++ b/drivers/scsi/fnic/vnic_wq.c
-@@ -27,12 +27,9 @@
- static int vnic_wq_alloc_bufs(struct vnic_wq *wq)
- {
- 	struct vnic_wq_buf *buf;
--	struct vnic_dev *vdev;
- 	unsigned int i, j, count = wq->ring.desc_count;
- 	unsigned int blks = VNIC_WQ_BUF_BLKS_NEEDED(count);
- 
--	vdev = wq->vdev;
--
- 	for (i = 0; i < blks; i++) {
- 		wq->bufs[i] = kzalloc(VNIC_WQ_BUF_BLK_SZ, GFP_ATOMIC);
- 		if (!wq->bufs[i]) {
--- 
-2.7.4
+Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
