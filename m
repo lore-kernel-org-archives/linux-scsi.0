@@ -1,109 +1,70 @@
-From: Long Li <longli@exchange.microsoft.com>
-Subject: [PATCH] storvsc: Avoid excessive host scan on controller change
-Date: Tue, 31 Oct 2017 14:58:08 -0700
-Message-ID: <20171031215808.11629-1-longli@exchange.microsoft.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>
+From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 0/9] use network namespace for iSCSI control interfaces
+Date: Tue, 31 Oct 2017 15:40:55 -0700
+Message-ID: <20171031224104.17735-1-cleech@redhat.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBCYMVIPVXQMBBGXY4PHQKGQE3ACVN5Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>
+This series of changes makes the iSCSI netlink and sysfs control
+interfaces filtered by network namespace.  This is required to run
+iscsid in any network namespace other than the initial default one.
 
-When there are multiple disks attached to the same SCSI controller,
-the host may send several VSTOR_OPERATION_REMOVE_DEVICE or
-VSTOR_OPERATION_ENUMERATE_BUS messages in a row, to indicate there is a
-change on the SCSI controller. In response, storvsc rescans the SCSI host.
+Currently the netlink communication will fail if iscsid is started in a
+non-default network namespace, as there is no kernel side socket.  After
+fixing that, the rest of these changes are to filter visibility of the
+iSCSI transport objects by netns.  This allows for multiple iscsid
+instances to be run, one per netns, each controlling it's own set of
+iSCSI sessions.
 
-There is no need to do multiple scans on the same host. Fix the code to do
-only one scan.
+The iSCSI transport objects are filtered, but not the SCSI or block
+layer devices.  So while iSCSI hosts and sessions become limited to a
+network namespace, any attached devices remain visible system wide.
 
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 26 +++++++++++---------------
- 1 file changed, 11 insertions(+), 15 deletions(-)
+This currently only supports iscsi_tcp running in a new namespace, as it
+creates a virtual host per session.  Support could be added later to
+allow assignment of iSCSI HBAs to network namespace, much as is done for
+network interfaces.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 6febcdb..b602f52 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -488,6 +488,8 @@ struct hv_host_device {
- 	unsigned char target;
- 	struct workqueue_struct *handle_error_wq;
- 	char work_q_name[20];
-+	struct work_struct host_scan_work;
-+	struct Scsi_Host *host;
- };
- 
- struct storvsc_scan_work {
-@@ -516,13 +518,12 @@ static void storvsc_device_scan(struct work_struct *work)
- 
- static void storvsc_host_scan(struct work_struct *work)
- {
--	struct storvsc_scan_work *wrk;
- 	struct Scsi_Host *host;
- 	struct scsi_device *sdev;
-+	struct hv_host_device *host_device =
-+		container_of(work, struct hv_host_device, host_scan_work);
- 
--	wrk = container_of(work, struct storvsc_scan_work, work);
--	host = wrk->host;
--
-+	host = host_device->host;
- 	/*
- 	 * Before scanning the host, first check to see if any of the
- 	 * currrently known devices have been hot removed. We issue a
-@@ -542,8 +543,6 @@ static void storvsc_host_scan(struct work_struct *work)
- 	 * Now scan the host to discover LUNs that may have been added.
- 	 */
- 	scsi_scan_host(host);
--
--	kfree(wrk);
- }
- 
- static void storvsc_remove_lun(struct work_struct *work)
-@@ -1119,8 +1118,7 @@ static void storvsc_on_receive(struct storvsc_device *stor_device,
- 			     struct vstor_packet *vstor_packet,
- 			     struct storvsc_cmd_request *request)
- {
--	struct storvsc_scan_work *work;
--
-+	struct hv_host_device *host_dev;
- 	switch (vstor_packet->operation) {
- 	case VSTOR_OPERATION_COMPLETE_IO:
- 		storvsc_on_io_completion(stor_device, vstor_packet, request);
-@@ -1128,13 +1126,9 @@ static void storvsc_on_receive(struct storvsc_device *stor_device,
- 
- 	case VSTOR_OPERATION_REMOVE_DEVICE:
- 	case VSTOR_OPERATION_ENUMERATE_BUS:
--		work = kmalloc(sizeof(struct storvsc_scan_work), GFP_ATOMIC);
--		if (!work)
--			return;
--
--		INIT_WORK(&work->work, storvsc_host_scan);
--		work->host = stor_device->host;
--		schedule_work(&work->work);
-+		host_dev = shost_priv(stor_device->host);
-+		queue_work(
-+			host_dev->handle_error_wq, &host_dev->host_scan_work);
- 		break;
- 
- 	case VSTOR_OPERATION_FCHBA_DATA:
-@@ -1747,6 +1741,7 @@ static int storvsc_probe(struct hv_device *device,
- 
- 	host_dev->port = host->host_no;
- 	host_dev->dev = device;
-+	host_dev->host = host;
- 
- 
- 	stor_device = kzalloc(sizeof(struct storvsc_device), GFP_KERNEL);
-@@ -1815,6 +1810,7 @@ static int storvsc_probe(struct hv_device *device,
- 			create_singlethread_workqueue(host_dev->work_q_name);
- 	if (!host_dev->handle_error_wq)
- 		goto err_out2;
-+	INIT_WORK(&host_dev->host_scan_work, storvsc_host_scan);
- 	/* Register the HBA and start the scsi bus scan */
- 	ret = scsi_add_host(host, &device->device);
- 	if (ret != 0)
+Chris Leech (9):
+  iscsi: create per-net iscsi netlink kernel sockets
+  iscsi: associate endpoints with a host
+  iscsi: sysfs filtering by network namespace
+  iscsi: make all iSCSI netlink multicast namespace aware
+  iscsi: set netns for iscsi_tcp hosts
+  iscsi: check net namespace for all iscsi lookups
+  iscsi: convert flashnode devices from bus to class
+  iscsi: rename iscsi_bus_flash_* to iscsi_flash_*
+  iscsi: filter flashnode sysfs by net namespace
+
+ drivers/infiniband/ulp/iser/iscsi_iser.c |   7 +-
+ drivers/scsi/be2iscsi/be_iscsi.c         |   6 +-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c         |   6 +-
+ drivers/scsi/cxgbi/libcxgbi.c            |   6 +-
+ drivers/scsi/iscsi_tcp.c                 |   7 +
+ drivers/scsi/qedi/qedi_iscsi.c           |   6 +-
+ drivers/scsi/qla4xxx/ql4_os.c            |  62 +--
+ drivers/scsi/scsi_transport_iscsi.c      | 625 ++++++++++++++++++++++---------
+ include/scsi/scsi_transport_iscsi.h      |  63 ++--
+ 9 files changed, 538 insertions(+), 250 deletions(-)
+
 -- 
-2.7.4
+2.9.5
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
