@@ -1,74 +1,130 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH 4/4] scsi: qla2xxx: Convert qla2x00_sp_timeout() to use timer_setup()
-Date: Tue, 31 Oct 2017 12:13:49 -0700
-Message-ID: <1509477229-62141-5-git-send-email-keescook@chromium.org>
-References: <1509477229-62141-1-git-send-email-keescook@chromium.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1509477229-62141-1-git-send-email-keescook@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu Madhani <Himanshu.Madhani@cavium.com>
-Cc: Kees Cook <keescook@chromium.org>, Bart Van Assche <bart.vanassche@wdc.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH RESEND] scsi: fnic: Clean up redundant variables
+Date: Tue, 31 Oct 2017 21:01:53 +0000
+Message-ID: <20171031210153.GA19945@inspiron>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:54996 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750928AbdJaVB5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 17:01:57 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
 
-In preparation for unconditionally passing the struct timer_list pointer
-to all timer callbacks, switch to using the new timer_setup() and
-from_timer() to pass the timer pointer explicitly for the
-qla2x00_sp_timeout() callback and associated timer.
+Remove variables that are set but not used.
 
-Cc: Himanshu Madhani <Himanshu.Madhani@cavium.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h    | 2 +-
- drivers/scsi/qla2xxx/qla_init.c   | 4 ++--
- drivers/scsi/qla2xxx/qla_inline.h | 3 +--
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/fnic/fnic_fcs.c | 9 ---------
+ drivers/scsi/fnic/vnic_rq.c  | 3 ---
+ drivers/scsi/fnic/vnic_wq.c  | 3 ---
+ 3 files changed, 15 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index ab5b88203886..3ad375f85b59 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -753,7 +753,7 @@ extern int qla82xx_restart_isp(scsi_qla_host_t *);
- /* IOCB related functions */
- extern int qla82xx_start_scsi(srb_t *);
- extern void qla2x00_sp_free(void *);
--extern void qla2x00_sp_timeout(unsigned long);
-+extern void qla2x00_sp_timeout(struct timer_list *);
- extern void qla2x00_bsg_job_done(void *, int);
- extern void qla2x00_bsg_sp_free(void *);
- extern void qla2x00_start_iocbs(struct scsi_qla_host *, struct req_que *);
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index b5b48ddca962..44cf875a484a 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -45,9 +45,9 @@ static void qla24xx_handle_prli_done_event(struct scsi_qla_host *,
- /* SRB Extensions ---------------------------------------------------------- */
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 999fc75..bc1fcce 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -293,12 +293,10 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
+ 	struct fc_frame_header *fh = NULL;
+ 	struct fip_desc *desc;
+ 	struct fip_encaps *els;
+-	enum fip_desc_type els_dtype = 0;
+ 	u16 op;
+ 	u8 els_op;
+ 	u8 sub;
  
- void
--qla2x00_sp_timeout(unsigned long __data)
-+qla2x00_sp_timeout(struct timer_list *t)
+-	size_t els_len = 0;
+ 	size_t rlen;
+ 	size_t dlen = 0;
+ 
+@@ -330,10 +328,8 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
+ 		if (dlen < sizeof(*els) + sizeof(*fh) + 1)
+ 			return 0;
+ 
+-		els_len = dlen - sizeof(*els);
+ 		els = (struct fip_encaps *)desc;
+ 		fh = (struct fc_frame_header *)(els + 1);
+-		els_dtype = desc->fip_dtype;
+ 
+ 		if (!fh)
+ 			return 0;
+@@ -360,7 +356,6 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
+ 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+ 	struct sk_buff *skb;
+ 	char *eth_fr;
+-	int fr_len;
+ 	struct fip_vlan *vlan;
+ 	u64 vlan_tov;
+ 
+@@ -375,7 +370,6 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
+ 	if (!skb)
+ 		return;
+ 
+-	fr_len = sizeof(*vlan);
+ 	eth_fr = (char *)skb->data;
+ 	vlan = (struct fip_vlan *)eth_fr;
+ 
+@@ -823,7 +817,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
+ 	struct sk_buff *skb;
+ 	struct fc_frame *fp;
+ 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+-	unsigned int eth_hdrs_stripped;
+ 	u8 type, color, eop, sop, ingress_port, vlan_stripped;
+ 	u8 fcoe = 0, fcoe_sof, fcoe_eof;
+ 	u8 fcoe_fc_crc_ok = 1, fcoe_enc_error = 0;
+@@ -853,7 +846,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
+ 				   &ingress_port, &packet_error,
+ 				   &fcoe_enc_error, &fcs_ok, &vlan_stripped,
+ 				   &vlan);
+-		eth_hdrs_stripped = 1;
+ 		skb_trim(skb, fcp_bytes_written);
+ 		fr_sof(fp) = sof;
+ 		fr_eof(fp) = eof;
+@@ -870,7 +862,6 @@ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
+ 				    &tcp_udp_csum_ok, &udp, &tcp,
+ 				    &ipv4_csum_ok, &ipv6, &ipv4,
+ 				    &ipv4_fragment, &fcs_ok);
+-		eth_hdrs_stripped = 0;
+ 		skb_trim(skb, bytes_written);
+ 		if (!fcs_ok) {
+ 			atomic64_inc(&fnic_stats->misc_stats.frame_errors);
+diff --git a/drivers/scsi/fnic/vnic_rq.c b/drivers/scsi/fnic/vnic_rq.c
+index fd2068f..ae8b78c 100644
+--- a/drivers/scsi/fnic/vnic_rq.c
++++ b/drivers/scsi/fnic/vnic_rq.c
+@@ -27,12 +27,9 @@
+ static int vnic_rq_alloc_bufs(struct vnic_rq *rq)
  {
--	srb_t *sp = (srb_t *)__data;
-+	srb_t *sp = from_timer(sp, t, u.iocb_cmd.timer);
- 	struct srb_iocb *iocb;
- 	scsi_qla_host_t *vha = sp->vha;
- 	struct req_que *req;
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 34cdb5d9c87c..17d2c20f1f75 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -269,8 +269,7 @@ qla2x00_rel_sp(srb_t *sp)
- static inline void
- qla2x00_init_timer(srb_t *sp, unsigned long tmo)
+ 	struct vnic_rq_buf *buf;
+-	struct vnic_dev *vdev;
+ 	unsigned int i, j, count = rq->ring.desc_count;
+ 	unsigned int blks = VNIC_RQ_BUF_BLKS_NEEDED(count);
+ 
+-	vdev = rq->vdev;
+-
+ 	for (i = 0; i < blks; i++) {
+ 		rq->bufs[i] = kzalloc(VNIC_RQ_BUF_BLK_SZ, GFP_ATOMIC);
+ 		if (!rq->bufs[i]) {
+diff --git a/drivers/scsi/fnic/vnic_wq.c b/drivers/scsi/fnic/vnic_wq.c
+index a414135..5f57809 100644
+--- a/drivers/scsi/fnic/vnic_wq.c
++++ b/drivers/scsi/fnic/vnic_wq.c
+@@ -27,12 +27,9 @@
+ static int vnic_wq_alloc_bufs(struct vnic_wq *wq)
  {
--	setup_timer(&sp->u.iocb_cmd.timer, qla2x00_sp_timeout,
--		    (unsigned long)sp);
-+	timer_setup(&sp->u.iocb_cmd.timer, qla2x00_sp_timeout, 0);
- 	sp->u.iocb_cmd.timer.expires = jiffies + tmo * HZ;
- 	add_timer(&sp->u.iocb_cmd.timer);
- 	sp->free = qla2x00_sp_free;
+ 	struct vnic_wq_buf *buf;
+-	struct vnic_dev *vdev;
+ 	unsigned int i, j, count = wq->ring.desc_count;
+ 	unsigned int blks = VNIC_WQ_BUF_BLKS_NEEDED(count);
+ 
+-	vdev = wq->vdev;
+-
+ 	for (i = 0; i < blks; i++) {
+ 		wq->bufs[i] = kzalloc(VNIC_WQ_BUF_BLK_SZ, GFP_ATOMIC);
+ 		if (!wq->bufs[i]) {
 -- 
 2.7.4
