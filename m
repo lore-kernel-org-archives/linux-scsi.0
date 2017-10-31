@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 08/13] mpt3sas: scan and add nvme device after controller  reset
-Date: Tue, 31 Oct 2017 18:02:34 +0530
-Message-ID: <1509453159-7028-9-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 11/13] mpt3sas: Fix nvme drives checking for tlr.
+Date: Tue, 31 Oct 2017 18:02:37 +0530
+Message-ID: <1509453159-7028-12-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,269 +10,68 @@ To: linux-scsi@vger.kernel.org
 Cc: Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-After Controller reset, Scan and add nvme device back to the topology.
+Check for NVMe drives before enabling or checking tlr.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 194 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 190 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 9006a60..81f4d2d 100644
+index dc1fdad..72dd57f 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -4887,6 +4887,7 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	char *desc_scsi_state = ioc->tmp_string;
- 	u32 log_info = le32_to_cpu(mpi_reply->IOCLogInfo);
- 	struct _sas_device *sas_device = NULL;
-+	struct _pcie_device *pcie_device = NULL;
- 	struct scsi_target *starget = scmd->device->sdev_target;
- 	struct MPT3SAS_TARGET *priv_target = starget->hostdata;
- 	char *device_str = NULL;
-@@ -5019,6 +5020,28 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	if (priv_target->flags & MPT_TARGET_FLAGS_VOLUME) {
- 		pr_warn(MPT3SAS_FMT "\t%s wwid(0x%016llx)\n", ioc->name,
- 		    device_str, (unsigned long long)priv_target->sas_address);
-+	} else if (priv_target->flags & MPT_TARGET_FLAGS_PCIE_DEVICE) {
-+		pcie_device = mpt3sas_get_pdev_from_target(ioc, priv_target);
-+		if (pcie_device) {
-+			pr_info(MPT3SAS_FMT "\twwid(0x%016llx), port(%d)\n",
-+			    ioc->name,
-+			    (unsigned long long)pcie_device->wwid,
-+			    pcie_device->port_num);
-+			if (pcie_device->enclosure_handle != 0)
-+				pr_info(MPT3SAS_FMT
-+				    "\tenclosure logical id(0x%016llx), "
-+				    "slot(%d)\n", ioc->name,
-+				    (unsigned long long)
-+				    pcie_device->enclosure_logical_id,
-+				    pcie_device->slot);
-+			if (pcie_device->connector_name[0])
-+				pr_info(MPT3SAS_FMT
-+				    "\tenclosure level(0x%04x),"
-+				    "connector name( %s)\n",
-+				    ioc->name, pcie_device->enclosure_level,
-+				    pcie_device->connector_name);
-+			pcie_device_put(pcie_device);
-+		}
- 	} else {
- 		sas_device = mpt3sas_get_sdev_from_target(ioc, priv_target);
- 		if (sas_device) {
-@@ -5055,11 +5078,10 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 		struct sense_info data;
- 		_scsih_normalize_sense(scmd->sense_buffer, &data);
- 		pr_warn(MPT3SAS_FMT
--			"\t[sense_key,asc,ascq]: [0x%02x,0x%02x,0x%02x], count(%d)\n",
--			ioc->name, data.skey,
--		    data.asc, data.ascq, le32_to_cpu(mpi_reply->SenseCount));
-+		  "\t[sense_key,asc,ascq]: [0x%02x,0x%02x,0x%02x], count(%d)\n",
-+		  ioc->name, data.skey,
-+		  data.asc, data.ascq, le32_to_cpu(mpi_reply->SenseCount));
- 	}
--
- 	if (scsi_state & MPI2_SCSI_STATE_RESPONSE_INFO_VALID) {
- 		response_info = le32_to_cpu(mpi_reply->ResponseInfo);
- 		response_bytes = (u8 *)&response_info;
-@@ -8559,6 +8581,130 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
+@@ -2048,6 +2048,14 @@ scsih_is_raid(struct device *dev)
+ 	return (sdev->channel == RAID_CHANNEL) ? 1 : 0;
  }
  
++static int
++scsih_is_nvme(struct device *dev)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	return (sdev->channel == PCIE_CHANNEL) ? 1 : 0;
++}
++
  /**
-+ * _scsih_mark_responding_pcie_device - mark a pcie_device as responding
-+ * @ioc: per adapter object
-+ * @pcie_device_pg0: PCIe Device page 0
-+ *
-+ * After host reset, find out whether devices are still responding.
-+ * Used in _scsih_remove_unresponding_devices.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_mark_responding_pcie_device(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi26PCIeDevicePage0_t *pcie_device_pg0)
-+{
-+	struct MPT3SAS_TARGET *sas_target_priv_data = NULL;
-+	struct scsi_target *starget;
-+	struct _pcie_device *pcie_device;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list) {
-+		if ((pcie_device->wwid == pcie_device_pg0->WWID) &&
-+		    (pcie_device->slot == pcie_device_pg0->Slot)) {
-+			pcie_device->responding = 1;
-+			starget = pcie_device->starget;
-+			if (starget && starget->hostdata) {
-+				sas_target_priv_data = starget->hostdata;
-+				sas_target_priv_data->tm_busy = 0;
-+				sas_target_priv_data->deleted = 0;
-+			} else
-+				sas_target_priv_data = NULL;
-+			if (starget) {
-+				starget_printk(KERN_INFO, starget,
-+				    "handle(0x%04x), wwid(0x%016llx) ",
-+				    pcie_device->handle,
-+				    (unsigned long long)pcie_device->wwid);
-+				if (pcie_device->enclosure_handle != 0)
-+					starget_printk(KERN_INFO, starget,
-+					    "enclosure logical id(0x%016llx), "
-+					    "slot(%d)\n",
-+					    (unsigned long long)
-+					    pcie_device->enclosure_logical_id,
-+					    pcie_device->slot);
-+			}
-+
-+			if (((le32_to_cpu(pcie_device_pg0->Flags)) &
-+			    MPI26_PCIEDEV0_FLAGS_ENCL_LEVEL_VALID) &&
-+			    (ioc->hba_mpi_version_belonged != MPI2_VERSION)) {
-+				pcie_device->enclosure_level =
-+				    pcie_device_pg0->EnclosureLevel;
-+				memcpy(&pcie_device->connector_name[0],
-+				    &pcie_device_pg0->ConnectorName[0], 4);
-+			} else {
-+				pcie_device->enclosure_level = 0;
-+				pcie_device->connector_name[0] = '\0';
-+			}
-+
-+			if (pcie_device->handle == pcie_device_pg0->DevHandle)
-+				goto out;
-+			pr_info(KERN_INFO "\thandle changed from(0x%04x)!!!\n",
-+			    pcie_device->handle);
-+			pcie_device->handle = pcie_device_pg0->DevHandle;
-+			if (sas_target_priv_data)
-+				sas_target_priv_data->handle =
-+				    pcie_device_pg0->DevHandle;
-+			goto out;
-+		}
-+	}
-+
-+ out:
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+}
-+
-+/**
-+ * _scsih_search_responding_pcie_devices -
-+ * @ioc: per adapter object
-+ *
-+ * After host reset, find out whether devices are still responding.
-+ * If not remove.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_search_responding_pcie_devices(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	Mpi26PCIeDevicePage0_t pcie_device_pg0;
-+	Mpi2ConfigReply_t mpi_reply;
-+	u16 ioc_status;
-+	u16 handle;
-+	u32 device_info;
-+
-+	pr_info(MPT3SAS_FMT "search for end-devices: start\n", ioc->name);
-+
-+	if (list_empty(&ioc->pcie_device_list))
-+		goto out;
-+
-+	handle = 0xFFFF;
-+	while (!(mpt3sas_config_get_pcie_device_pg0(ioc, &mpi_reply,
-+		&pcie_device_pg0, MPI26_PCIE_DEVICE_PGAD_FORM_GET_NEXT_HANDLE,
-+		handle))) {
-+		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
-+		    MPI2_IOCSTATUS_MASK;
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
-+			pr_info(MPT3SAS_FMT "\tbreak from %s: "
-+			    "ioc_status(0x%04x), loginfo(0x%08x)\n", ioc->name,
-+			    __func__, ioc_status,
-+			    le32_to_cpu(mpi_reply.IOCLogInfo));
-+			break;
-+		}
-+		handle = le16_to_cpu(pcie_device_pg0.DevHandle);
-+		device_info = le32_to_cpu(pcie_device_pg0.DeviceInfo);
-+		if (!(_scsih_is_nvme_device(device_info)))
-+			continue;
-+		pcie_device_pg0.WWID = le64_to_cpu(pcie_device_pg0.WWID),
-+		pcie_device_pg0.Slot = le16_to_cpu(pcie_device_pg0.Slot);
-+		pcie_device_pg0.Flags = le32_to_cpu(pcie_device_pg0.Flags);
-+		pcie_device_pg0.DevHandle = handle;
-+		_scsih_mark_responding_pcie_device(ioc, &pcie_device_pg0);
-+	}
-+out:
-+	pr_info(MPT3SAS_FMT "search for PCIe end-devices: complete\n",
-+	    ioc->name);
-+}
-+
-+/**
-  * _scsih_mark_responding_raid_device - mark a raid_device as responding
-  * @ioc: per adapter object
-  * @wwid: world wide identifier for raid volume
-@@ -8931,6 +9077,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- {
- 	Mpi2ExpanderPage0_t expander_pg0;
- 	Mpi2SasDevicePage0_t sas_device_pg0;
-+	Mpi26PCIeDevicePage0_t pcie_device_pg0;
- 	Mpi2RaidVolPage1_t volume_pg1;
- 	Mpi2RaidVolPage0_t volume_pg0;
- 	Mpi2RaidPhysDiskPage0_t pd_pg0;
-@@ -8941,6 +9088,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	u16 handle, parent_handle;
- 	u64 sas_address;
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	struct _sas_node *expander_device;
- 	static struct _raid_device *raid_device;
- 	u8 retry_count;
-@@ -9166,7 +9314,44 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 	pr_info(MPT3SAS_FMT "\tscan devices: end devices complete\n",
- 	    ioc->name);
-+	pr_info(MPT3SAS_FMT "\tscan devices: pcie end devices start\n",
-+	    ioc->name);
-+
-+	/* pcie devices */
-+	handle = 0xFFFF;
-+	while (!(mpt3sas_config_get_pcie_device_pg0(ioc, &mpi_reply,
-+		&pcie_device_pg0, MPI26_PCIE_DEVICE_PGAD_FORM_GET_NEXT_HANDLE,
-+		handle))) {
-+		ioc_status = le16_to_cpu(mpi_reply.IOCStatus)
-+				& MPI2_IOCSTATUS_MASK;
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
-+			pr_info(MPT3SAS_FMT "\tbreak from pcie end device"
-+				" scan: ioc_status(0x%04x), loginfo(0x%08x)\n",
-+				ioc->name, ioc_status,
-+				le32_to_cpu(mpi_reply.IOCLogInfo));
-+			break;
-+		}
-+		handle = le16_to_cpu(pcie_device_pg0.DevHandle);
-+		if (!(_scsih_is_nvme_device(
-+			le32_to_cpu(pcie_device_pg0.DeviceInfo))))
-+			continue;
-+		pcie_device = mpt3sas_get_pdev_by_wwid(ioc,
-+				le64_to_cpu(pcie_device_pg0.WWID));
-+		if (pcie_device) {
-+			pcie_device_put(pcie_device);
-+			continue;
-+		}
-+		retry_count = 0;
-+		parent_handle = le16_to_cpu(pcie_device_pg0.ParentDevHandle);
-+		_scsih_pcie_add_device(ioc, handle);
+  * scsih_get_resync - get raid volume resync percent complete
+  * @dev the device struct object
+@@ -4834,8 +4842,9 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	/* Make sure Device is not raid volume.
+ 	 * We do not expose raid functionality to upper layer for warpdrive.
+ 	 */
+-	if (!ioc->is_warpdrive && !scsih_is_raid(&scmd->device->sdev_gendev)
+-	    && sas_is_tlr_enabled(scmd->device) && scmd->cmd_len != 32)
++	if (((!ioc->is_warpdrive && !scsih_is_raid(&scmd->device->sdev_gendev))
++		&& !scsih_is_nvme(&scmd->device->sdev_gendev))
++		&& sas_is_tlr_enabled(scmd->device) && scmd->cmd_len != 32)
+ 		mpi_control |= MPI2_SCSIIO_CONTROL_TLR_ON;
  
-+		pr_info(MPT3SAS_FMT "\tAFTER adding pcie end device: "
-+			"handle (0x%04x), wwid(0x%016llx)\n", ioc->name,
-+			handle,
-+			(unsigned long long) le64_to_cpu(pcie_device_pg0.WWID));
-+	}
-+	pr_info(MPT3SAS_FMT "\tpcie devices: pcie end devices complete\n",
-+		ioc->name);
- 	pr_info(MPT3SAS_FMT "scan devices: complete\n", ioc->name);
- }
- /**
-@@ -9216,6 +9401,7 @@ mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
- 		    !ioc->sas_hba.num_phys)) {
- 			_scsih_prep_device_scan(ioc);
- 			_scsih_search_responding_sas_devices(ioc);
-+			_scsih_search_responding_pcie_devices(ioc);
- 			_scsih_search_responding_raid_devices(ioc);
- 			_scsih_search_responding_expanders(ioc);
- 			_scsih_error_recovery_delete_devices(ioc);
+ 	smid = mpt3sas_base_get_smid_scsiio(ioc, ioc->scsi_io_cb_idx, scmd);
+@@ -4880,8 +4889,8 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 
+ 	raid_device = sas_target_priv_data->raid_device;
+ 	if (raid_device && raid_device->direct_io_enabled)
+-		mpt3sas_setup_direct_io(ioc, scmd, raid_device, mpi_request,
+-		    smid);
++		mpt3sas_setup_direct_io(ioc, scmd,
++			raid_device, mpi_request, smid);
+ 
+ 	if (likely(mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST)) {
+ 		if (sas_target_priv_data->flags & MPT_TARGET_FASTPATH_IO) {
+@@ -5411,9 +5420,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		    le32_to_cpu(mpi_reply->ResponseInfo) & 0xFF;
+ 	if (!sas_device_priv_data->tlr_snoop_check) {
+ 		sas_device_priv_data->tlr_snoop_check++;
+-		if (!ioc->is_warpdrive &&
++		if ((!ioc->is_warpdrive &&
+ 		    !scsih_is_raid(&scmd->device->sdev_gendev) &&
+-		    sas_is_tlr_enabled(scmd->device) &&
++		    !scsih_is_nvme(&scmd->device->sdev_gendev))
++		    && sas_is_tlr_enabled(scmd->device) &&
+ 		    response_code == MPI2_SCSITASKMGMT_RSP_INVALID_FRAME) {
+ 			sas_disable_tlr(scmd->device);
+ 			sdev_printk(KERN_INFO, scmd->device, "TLR disabled\n");
 -- 
 2.5.5
