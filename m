@@ -1,109 +1,39 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v11 5/7] block: Add the QUEUE_FLAG_PREEMPT_ONLY request queue flag
-Date: Mon, 30 Oct 2017 15:42:03 -0700
-Message-ID: <20171030224205.25212-6-bart.vanassche@wdc.com>
-References: <20171030224205.25212-1-bart.vanassche@wdc.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2] target/iscsi: Convert timers to use timer_setup()
+Date: Mon, 30 Oct 2017 17:04:48 -0700
+Message-ID: <CAGXu5j+z9t28n33e6r9hxRNX1hpkzF4Z5sy308sWYh84whkRfQ@mail.gmail.com>
+References: <20171027091930.GA14728@beast> <1509109031.3135.1.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171030224205.25212-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1509109031.3135.1.camel@wdc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "varun@chelsio.com" <varun@chelsio.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "jiangyilism@gmail.com" <jiangyilism@gmail.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This flag will be used in the next patch to let the block layer
-core know whether or not a SCSI request queue has been quiesced.
-A quiesced SCSI queue namely only processes RQF_PREEMPT requests.
+On Fri, Oct 27, 2017 at 5:57 AM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+> On Fri, 2017-10-27 at 02:19 -0700, Kees Cook wrote:
+>> In preparation for unconditionally passing the struct timer_list pointer to
+>> all timer callbacks, switch to using the new timer_setup() and from_timer()
+>> to pass the timer pointer explicitly. Includes a fix for correcting an
+>> on-stack timer usage.
+>
+> Hello Kees,
+>
+> These changes look good to me but I would like to test this patch. Is there
+> a tree available somewhere that includes this patch?
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Martin Steigerwald <martin@lichtvoll.de>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- block/blk-core.c       | 30 ++++++++++++++++++++++++++++++
- block/blk-mq-debugfs.c |  1 +
- include/linux/blkdev.h |  6 ++++++
- 3 files changed, 37 insertions(+)
+I didn't, but in case it's easier to test, I have put it up here,
+which is just tip/timers/core with the two target timer patches on
+top:
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 48f18f5e2e16..16ddd52e6408 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -347,6 +347,36 @@ void blk_sync_queue(struct request_queue *q)
- }
- EXPORT_SYMBOL(blk_sync_queue);
- 
-+/**
-+ * blk_set_preempt_only - set QUEUE_FLAG_PREEMPT_ONLY
-+ * @q: request queue pointer
-+ *
-+ * Returns the previous value of the PREEMPT_ONLY flag - 0 if the flag was not
-+ * set and 1 if the flag was already set.
-+ */
-+int blk_set_preempt_only(struct request_queue *q)
-+{
-+	unsigned long flags;
-+	int res;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	res = queue_flag_test_and_set(QUEUE_FLAG_PREEMPT_ONLY, q);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	return res;
-+}
-+EXPORT_SYMBOL_GPL(blk_set_preempt_only);
-+
-+void blk_clear_preempt_only(struct request_queue *q)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	queue_flag_clear(QUEUE_FLAG_PREEMPT_ONLY, q);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(blk_clear_preempt_only);
-+
- /**
-  * __blk_run_queue_uncond - run a queue whether or not it has been stopped
-  * @q:	The queue to run
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 7f4a1ba532af..75f31535f280 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -74,6 +74,7 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(REGISTERED),
- 	QUEUE_FLAG_NAME(SCSI_PASSTHROUGH),
- 	QUEUE_FLAG_NAME(QUIESCED),
-+	QUEUE_FLAG_NAME(PREEMPT_ONLY),
- };
- #undef QUEUE_FLAG_NAME
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 05203175eb9c..864ad2e4a58c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -630,6 +630,7 @@ struct request_queue {
- #define QUEUE_FLAG_REGISTERED  26	/* queue has been registered to a disk */
- #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
-+#define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
- 
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
-@@ -730,6 +731,11 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
- 			     REQ_FAILFAST_DRIVER))
- #define blk_queue_quiesced(q)	test_bit(QUEUE_FLAG_QUIESCED, &(q)->queue_flags)
-+#define blk_queue_preempt_only(q)				\
-+	test_bit(QUEUE_FLAG_PREEMPT_ONLY, &(q)->queue_flags)
-+
-+extern int blk_set_preempt_only(struct request_queue *q);
-+extern void blk_clear_preempt_only(struct request_queue *q);
- 
- static inline bool blk_account_rq(struct request *rq)
- {
+https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/log/?h=kspp/timer/tip/target
+
+Thanks!
+
+-Kees
+
 -- 
-2.14.2
+Kees Cook
+Pixel Security
