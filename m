@@ -1,31 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] cxlflash: Miscellaneous fixes
-Date: Tue, 31 Oct 2017 08:13:40 -0400
-Message-ID: <yq1a807ecqz.fsf@oracle.com>
-References: <1508967302-54403-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/2] scsi: megaraid: Track the page allocations for struct fusion_context
+Date: Tue, 31 Oct 2017 08:15:32 -0400
+Message-ID: <yq160avecnv.fsf@oracle.com>
+References: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
+        <1508925428-51660-2-git-send-email-xieyisheng1@huawei.com>
+        <yq17evjieug.fsf@oracle.com>
+        <25c40edd-7c4a-5e6a-2079-6ffd356da7e8@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34408 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751095AbdJaMNx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 08:13:53 -0400
-In-Reply-To: <1508967302-54403-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-        (Uma Krishnan's message of "Wed, 25 Oct 2017 16:35:02 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <25c40edd-7c4a-5e6a-2079-6ffd356da7e8@huawei.com> (Yisheng Xie's
+        message of "Sat, 28 Oct 2017 08:28:12 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Shu Wang <shuwang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
 
-Uma,
+Yisheng,
 
-> This patch series contains miscellaneous fixes. All three patches resolve
-> minor issues.
+>> Do you still see leaks reported with the megaraid driver update recently
+>> merged into 4.15/scsi-queue?
+>> 
+> No, the related code have been optimized and __get_free_pages is not used
+> to allocate fusion_context anymore. So, please ignore this one, and sorry
+> for disturbing.
 >
-> This series is intended for 4.15 and is bisectable.
+> BTW, what about the Patch 1/2, which is just a minor clean up?
 
-Applied to 4.15/scsi-queue. Thank you!
+Kashyap? Shivasharan? Sumit?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
