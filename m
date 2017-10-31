@@ -1,122 +1,151 @@
-From: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2NSAyLzVdIGR0LWJpbmRpbmdzOiBz?=
- =?utf-8?Q?csi:_ufs:_add_document_for_hisi-ufs?=
-Date: Tue, 31 Oct 2017 12:35:14 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA38352@DGGEMM506-MBS.china.huawei.com>
-References: <20171020085259.8093-1-liwei213@huawei.com>
- <20171020085259.8093-3-liwei213@huawei.com>
- <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com>
- <1699CE87DE933F49876AD744B5DC140FA321D1@DGGEMM506-MBX.china.huawei.com>
- <CAK8P3a37yYDQZpZxmunCdSO83qkqywTME5Xo0k56nWEs2k+=dg@mail.gmail.com>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH V3] scsi: storvsc: Allow only one remove lun work item to be
+ issued per lun
+Date: Tue, 31 Oct 2017 08:52:06 -0400
+Message-ID: <1509454326-11118-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAK8P3a37yYDQZpZxmunCdSO83qkqywTME5Xo0k56nWEs2k+=dg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: zh-CN
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "xuwei (O)" <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TZNg+MwTxZMZA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: sthemmin@microsoft.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, devel@linuxdriverproject.org, dan.carpenter@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIEFybmQNClRoYW5rIHlvdSBmb3IgeW91ciByZXBseS4NCi0tLS0t6YKu5Lu25Y6f5Lu2LS0t
-LS0NCuWPkeS7tuS6ujogYXJuZGJlcmdtYW5uQGdtYWlsLmNvbSBbbWFpbHRvOmFybmRiZXJnbWFu
-bkBnbWFpbC5jb21dIOS7o+ihqCBBcm5kIEJlcmdtYW5uDQrlj5HpgIHml7bpl7Q6IDIwMTflubQx
-MOaciDMw5pelIDIzOjIyDQrmlLbku7bkuro6IGxpd2VpIChDTSkNCuaKhOmAgTogUm9iIEhlcnJp
-bmc7IE1hcmsgUnV0bGFuZDsgeHV3ZWkgKE8pOyBDYXRhbGluIE1hcmluYXM7IFdpbGwgRGVhY29u
-OyBWaW5heWFrIEhvbGlrYXR0aTsgSmFtZXMgRS5KLiBCb3R0b21sZXk7IE1hcnRpbiBLLiBQZXRl
-cnNlbjsgS2V2aW4gSGlsbWFuOyBHcmVnb3J5IENMRU1FTlQ7IFRob21hcyBQZXRhenpvbmk7IE1h
-c2FoaXJvIFlhbWFkYTsgUmlrdSBWb2lwaW87IFRoaWVycnkgUmVkaW5nOyBLcnp5c3p0b2YgS296
-bG93c2tpOyBFcmljIEFuaG9sdDsgRFRNTDsgTGludXggS2VybmVsIE1haWxpbmcgTGlzdDsgTGlu
-dXggQVJNOyBsaW51eC1zY3NpOyBHdW9kb25nIFh1OyBGZW5nYmFvcGVuZyAoa2V2aW4sIEtpcmlu
-IFNvbHV0aW9uIERlcHQpOyBsaWh1YW4gKFopOyB3YW5neXVwZW5nIChBKQ0K5Li76aKYOiBSZTog
-562U5aSNOiBbUEFUQ0ggdjUgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1l
-bnQgZm9yIGhpc2ktdWZzDQoNCk9uIFR1ZSwgT2N0IDI0LCAyMDE3IGF0IDExOjA2IEFNLCBsaXdl
-aSAoQ00pIDxsaXdlaTIxM0BodWF3ZWkuY29tPiB3cm90ZToNCj4gd2hhdCdzIHlvdXIgb3Bpbmlv
-biBhYm91dCBteSBleHBsYW5hdGlvbiBhbmQgcmV2aXNpb24gbWV0aG9kPw0KPiBJIGFtIGxvb2tp
-bmcgZm9yd2FyZCB0byB5b3VyIHJlcGx5LCB0aGFua3MhDQoNClNvcnJ5IGZvciB0aGUgZGVsYXks
-IEkgd2FzIHRyYXZlbGxpbmcgbGFzdCB3ZWVrLg0KPiDlj5Hku7bkuro6IGFybmRiZXJnbWFubkBn
-bWFpbC5jb20gW21haWx0bzphcm5kYmVyZ21hbm5AZ21haWwuY29tXSDku6PooaggQXJuZCANCj4g
-QmVyZ21hbm4gT24gRnJpLCBPY3QgMjAsIDIwMTcgYXQgMTA6NTIgQU0sIExpIFdlaSA8bGl3ZWky
-MTNAaHVhd2VpLmNvbT4gd3JvdGU6DQo+PiAtLS0gL2Rldi9udWxsDQo+PiArKysgYi9Eb2N1bWVu
-dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPj4gQEAgLTAsMCAr
-MSw0NiBAQA0KPj4gKyogSGlzaWxpY29uIFVuaXZlcnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhv
-c3QgQ29udHJvbGxlcg0KPj4gKw0KPj4gK1VGUyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmli
-ZSBvbi1jaGlwIFVGUyBoYXJkd2FyZSBtYWNyby4NCj4+ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xs
-ZXIgc2hvdWxkIGhhdmUgaXRzIG93biBub2RlLg0KPj4gKw0KPj4gK1JlcXVpcmVkIHByb3BlcnRp
-ZXM6DQo+PiArLSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBhdGlibGUgbGlzdCwgY29udGFpbnMg
-b25lIG9mIHRoZSBmb2xsb3dpbmcgLQ0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgImhpc2ls
-aWNvbixoaTM2NjAtdWZzIiBmb3IgaGlzaSB1ZnMgaG9zdCBjb250cm9sbGVyDQo+PiArICAgICAg
-ICAgICAgICAgICAgICAgICAgcHJlc2VudCBvbiBIaTM2NjAgY2hpcHNldC4NCg0KT25lIG1vcmUg
-dGhpbmcgSSBqdXN0IG5vdGljZWQ6IHlvdSBkb24ndCBkZXNjcmliZSB0aGUgZGV2aWNlIGFzIGNv
-bXBhdGlibGUgd2l0aCB0aGUgdWZzaGNkIHNwZWMgYXMgZGVmaW5lZCBpbiB0aGUgZ2VuZXJpYyBi
-aW5kaW5nLiBTaG91bGRuJ3Qgd2UgaGF2ZSBib3RoIGNvbXBhdGlibGUgc3RyaW5ncyBsaXN0ZWQg
-aGVyZT8NCg0KT2ssIEkgd2lsbCBmaXggaXQgaW4gcGF0Y2ggdjY7DQoNCj4gSW4gcGFydGljdWxh
-ciwgSSB3b25kZXIgaWYgd2hhdCB5b3UgZGVzY3JpYmUgYXMgdGhlICJVRlMgU1lTIENUUkwiDQo+
-IGFyZWEgY29ycmVzcG9uZHMgdG8gd2hhdCBRdWFsY29tbSBoYXZlIGRlc2NyaWJlZCBhcyB0aGVp
-ciBQSFkgaW1wbGVtZW50YXRpb24uIEl0IGNlcnRhaW5seSBzZWVtcyB0byBkcml2ZXIgc29tZSBv
-ZiB0aGUgcHJvcGVydGllcyB0aGF0IHdvdWxkIG5vcm1hbGx5IGJlIGFzc29jaWF0ZWQgd2l0aCBh
-IFBIWS4NCj4NCj4gTGl3ZWk6WWVzLCBhIHBhcnQgb2YgIlVGUyBTWVMgQ1RSTCIgaXMgYXNzb2Np
-YXRlZCB3aXRoIGEgUEhZLCBidXQgZnJvbSBvdXIgY2hpcCBjb2xsZWFndWUgdGhhdCB3ZSBhc3N1
-cmUgIlVGUyBTWVMgQ1RSTCIgaXMgYXNzb2NpYXRlZCB3aXRoIGNsay9yZXNldC9wb3dlciBvbi9w
-b3dlciBvZmYgYW5kIHNvIG9uLg0KPiBJbiBmYWN0LCBpbiBhZGRpdGlvbiB0byB0aGUgY29udHJv
-bGxlciBpdHNlbGYsIHRoZSBjb250cm9sbGVyIHJlbGF0ZWQgcGVyaXBoZXJ5IGFyZSBhbGwgaW4g
-dGhpcyBhcmVhLiBTbyBpdCdzIG5vdCBhcHByb3ByaWF0ZSB0byBwdXQgdGhpcyBpbnRvIGEgc2Vw
-YXJhdGUgcGh5IG5vZGUuDQoNCkknbSBub3Qgc3VyZSBJIHVuZGVyc3RhbmQgaGVyZS4gRG8geW91
-IG1lYW4gdGhlIHJlc2V0IGhhbmRsZSBpcyBmb3IgcmVzZXR0aW5nIHRoZSBQSFkgcmF0aGVyIHRo
-YW4gdGhlIFVGUyBIQ0Q/DQoNCk1heWJlIG15IGRlc2NyaXB0aW9uIGlzIG5vdCBjbGVhciBlbm91
-Z2gsIG91ciBVRlMgaG9zdCBzb2MgaW1wbGVtZW50YXRpb24gY2FuIGJlIGRpdmlkZWQgaW50byB0
-d28gcGFydHM6IFVGUyBjb250cm9sbGVyIGFuZCByZWxhdGVkIHBlcmlwaGVyYWwgY2lyY3VpdCwg
-dGhhdCAiSENJIHN0YW5kYXJkIjwtPiBVRlMgY29udHJvbGxlciwNCiAiVUZTIFNZUyBDVFJMIjwt
-PiByZWxhdGVkIHBlcmlwaGVyYWwgY2lyY3VpdCwgYW5kIFBIWSBpcyBwYXJ0IG9mIHRoZSBwZXJp
-cGhlcmFsIGNpcmN1aXQuIFNvIHRoZSAiVUZTIFNZUyBDVFJMIiBhcmVhIGRvZXMgbm90IGNvcnJl
-c3BvbmQgY29tcGxldGVseSB0byB3aGF0IFF1YWxjb21tIGhhdmUgZGVzY3JpYmVkIGFzIHRoZWly
-IFBIWSBpbXBsZW1lbnRhdGlvbi4NClRoZSByb290IHJlYXNvbiBpcyB0aGF0IG91ciBVRlMgaG9z
-dCBoYWQgbm90IGRpdmlkZWQgaW50byBVRlMgY29udHJvbGxlciBhbmQgUEhZ77ybDQoNCg0KPiA+
-IEZvciB0aGUgImNsb2NrLW5hbWVzIiBwcm9wZXJ0eSwgeW91IHNwZWNpZnkgImNsa19yZWYiLCB3
-aGljaCBJIGFzc3VtZSBpcyB0aGUgc2FtZSBhcyB3aGF0IFF1YWxjb21tIGNhbGwgInJlZl9jbGsi
-LiBJJ2Qgc3VnZ2VzdCB5b3UgdXNlIHRoZSBleGlzdGluZyBuYW1lIGFuZCBhZGQgdGhhdCBhcyB0
-aGUgZGVmYXVsdCBuYW1lIGluIHRoZSB1ZnNoY2QtcGx0ZnJtLnR4dCBiaW5kaW5nIGRvY3VtZW50
-Lg0KPg0KPiBMaXdlaToiIHJlZl9jbGsgIiBpcyBhbHJlYWR5IGluIHRoZSB1ZnNoY2QtcGx0ZnJt
-LnR4dCBiaW5kaW5nIA0KPiBkb2N1bWVudCwgYW5kIHBhcnNlIGluIHVmc2hjZC5jLCBzbyB3ZSB3
-aWxsIHJlcGxhY2UgImNsa19yZWYiIHdpdGggDQo+ICJyZWZfY2xrIi4gSSB3aWxsIGZpeCBpdCBp
-biBwYXRjaCB2NjsNCg0Kb2sNCg0KPiA+IFRoZSAiY2xrX3BoeSIgcHJvcGVydHkgYXBwZWFycyB0
-byBiZSByZWxhdGVkIHRvIHRoZSBQSFksIHNvIGl0IG1pZ2h0IGJlIGJldHRlciB0byBoYXZlIGEg
-c2VwYXJhdGUgcGh5IG5vZGUgd2l0aCBlaXRoZXIganVzdCB0aGUgY2xrLCBvciB3aXRoIHRoZSBj
-bGsgcGx1cyB0aGUgIlVGUyBTWVMgQ1RSTCIgcmVnaXN0ZXIgYXJlYSwgd2hpY2hldmVyIG1hdGNo
-ZXMgeW91ciBoYXJkd2FyZSBiZXR0ZXIsIGFuZCB0aGVuIHVzZSB0ZWggInBoeXMvcGh5LW5hbWVz
-IiBwcm9wZXJ0eSB0byByZWZlciB0byB0aGF0Lg0KPg0KPiBMaXdlaTogT0ssIEkgd2lsbCBhZGQg
-YSBzZXBhcmF0ZSBwaHkgbm9kZSBhbmQgZml4IGl0IGluIHBhdGNoIHY2Ow0KDQpUaGFua3MuDQoN
-Cj4+IFRoZSByZXNldCBoYW5kbGluZyB5b3UgZGVzY3JpYmUgaGVyZSAoYm90aCByZXNldHMgYW5k
-IHJlc2V0LWdwaW9zKSBhcHBlYXJzIHRvIGJlIGNvbXBsZXRlbHkgZ2VuZXJpYywgc28gSSdkIHN1
-Z2dlc3QgYWRkaW5nIHRob3NlIHRvIHVmc2hjZC1wbHRmcm0udHh0IGluc3RlYWQgb2YgeW91ciBv
-d24gYmluZGluZywgdG8gZW5zdXJlIHRoYXQgZnV0dXJlIGRyaXZlcnMgdXNlIHRoZSBzYW1lIGlk
-ZW50aWZpZXJzLg0KPg0KPiBMaXdlaTogRnJvbSBvdXIgc29jIGNoaXAgY29sbGVhZ3VlLCByZXNl
-dCBpbmNsdWRlICJyc3QiLCAiYXNzZXJ0IiBpcyANCj4gbm90IGdlbmVyaWMgYW5kIHJlbGF0ZWQg
-d2l0aCBvdXIgc29jIGltcGxlbWVudGF0aW9uLCB5b3UgY2FuIHNlZSANCj4gdWZzX2hpc2lfc29j
-X2luaXQoKSBpbiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1oaXNpLmMsIHRoZSBwb3NpdGlvbiBvZiAN
-Cj4gcnN0IGFuZCBhc3NlcnQgaXMgdmVyeSBzcGVjaWFsLCBpdCdzIGhhcmQgdG8gcHV0IGl0IGlu
-IGEgZ2VuZXJpYyANCj4gcHJvY2VzczsNCg0KSXQgc2VlbXMgb2RkIHRoYXQgdGhlIGFiaWxpdHkg
-dG8gcmVzZXQgYSBkZXZpY2UgaXMgc3BlY2lmaWMgdG8geW91ciBpbXBsZW1lbnRhdGlvbi4gV2hh
-dCBJIG1lYW50IGlzIHRoYXQgb3RoZXIgaW1wbGVtZW50YXRpb25zIG1heSBhbHNvIHJlcXVpcmUg
-YSByZXNldCwgc28gZGVzY3JpYmluZyB0aGUgd2F5IHlvdSByZWZlciB0byB0aGlzIGludG8gdGhl
-IGdlbmVyaWMgYmluZGluZyB3b3VsZCBiZSBoZWxwZnVsLCB0byBwcmV2ZW50IG90aGVycyBmcm9t
-IGFkZGluZyBhbm90aGVyIGluY29tcGF0aWJsZSB3YXkgdG8gZG8gdGhlIHNhbWUgdGhpbmcuDQoN
-CkEgbG90IG9mIGdlbmVyaWMgYmluZGluZ3MgaGF2ZSBhIHJlZmVyZW5jZSB0byBhIHJlc2V0IGNv
-bnRyb2xsZXIgdGhhdCBpZiBwcmVzZW50IG5lZWRzIHRvIGJlIHVzZWQgYmVmb3JlIGZpcnN0IGFj
-Y2Vzc2luZyB0aGUgZGV2aWNlIGl0c2VsZi4NCg0KSSBtZWFuIG91ciByZXNldCBwcm9jZXNzIGlz
-IHJlYWxseSBzcGVjaWFsLCBidXQgdGhlcmUgaXMgbm8gcGFyc2Ugb2YgdGhpcyAicmVzZXQiIGlu
-IGdlbmVyaWMgZHJpdmVyIGNvZGUgbGlrZSB1ZnNoY2QuYyBvciB1ZnNoY2QtcGx0ZnJtLmM7IEV2
-ZW4gaWYgSSBhZGQgdGhvc2UgdG8gdWZzaGNkLXBsdGZybS50eHQgYW5kIGltcGxlbWVudCB0aGUg
-Y29tbW9uIHBhcnNpbmcgY29kZSwgYnV0IG91ciBzcGVjaWFsIHJlcXVpcmVtZW50cyBhcmUgZGlm
-ZmljdWx0IHRvIHNhdGlzZnk7DQpXaGF0IGRvIHlvdSB0aGluayBhYm91dCBpZiBJIHB1dCBhbGwg
-dGhlIGltcGxlbWVudGF0aW9ucyBvZiByZXNldCBpbiBvdXIgZHJpdmVyIGNvZGUsIGFuZCByZW1v
-dmUgInJlc2V0IiBwcm9wZXJ0eSBoZXJlPw0KDQo+IHJlc2V0LWdwaW9zIGlzIHVzZWQgdG8gc29s
-dmUgYSBkZWZlY3Qgb2YgdGhlIFNPQyBjaGlwIHJlc2V0IGZ1bmN0aW9uIA0KPiBhbmQgaXQgaXMg
-bm90IGdlbmVyaWMgLCBidXQgb3VyIGNoaXAgaGFzIGJlZW4gdXBkYXRlZCwgc28gdGhpcyBpcyBu
-byANCj4gbG9uZ2VyIG5lZWRlZCwgYW5kIEkgd2lsbCByZW1vdmUgaXQgaW4gdGhlIHBhdGNoIHY2
-Ow0KDQpPay4NCg0KICAgICAgQXJuZA0K
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When running multipath on a VM if all available paths go down
+the driver can schedule large amounts of storvsc_remove_lun
+work items to the same lun. In response to the failing paths
+typically storvsc responds by taking host->scan_mutex and issuing
+a TUR per lun. If there has been heavy IO to the failed device
+all the failed IOs are returned from the host. A remove lun work
+item is issued per failed IO. If the outstanding TURs have not been
+completed in a timely manner the scan_mutex is never released or
+released too late. Consequently the many remove lun work items are
+not completed as scsi_remove_device also tries to take host->scan_mutex.
+This results in dragging the VM down and sometimes completely.
+
+This patch only allows one remove lun to be issued to a particular
+lun while it is an instantiated member of the scsi stack.
+
+Changes since v1:
+Use single threaded workqueue to serialize work in
+storvsc_handle_error [Christoph Hellwig]
+
+Changes since v2:
+Replaced create_singlethread_workqueue with
+alloc_ordered_workqueue [Christoph Hellwig]
+
+Added reviewed by's.
+
+Signed-off-by: Cathy Avery <cavery@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 5e7200f..7e3cd12 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -486,6 +486,7 @@ struct hv_host_device {
+ 	unsigned int port;
+ 	unsigned char path;
+ 	unsigned char target;
++	struct workqueue_struct *handle_error_wq;
+ };
+ 
+ struct storvsc_scan_work {
+@@ -922,6 +923,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ {
+ 	struct storvsc_scan_work *wrk;
+ 	void (*process_err_fn)(struct work_struct *work);
++	struct hv_host_device *host_dev = shost_priv(host);
+ 	bool do_work = false;
+ 
+ 	switch (SRB_STATUS(vm_srb->srb_status)) {
+@@ -988,7 +990,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 	wrk->lun = vm_srb->lun;
+ 	wrk->tgt_id = vm_srb->target_id;
+ 	INIT_WORK(&wrk->work, process_err_fn);
+-	schedule_work(&wrk->work);
++	queue_work(host_dev->handle_error_wq, &wrk->work);
+ }
+ 
+ 
+@@ -1803,10 +1805,19 @@ static int storvsc_probe(struct hv_device *device,
+ 	if (stor_device->num_sc != 0)
+ 		host->nr_hw_queues = stor_device->num_sc + 1;
+ 
++	/*
++	 * Set the error handler work queue.
++	 */
++	host_dev->handle_error_wq =
++			alloc_ordered_workqueue("storvsc_error_wq_%d",
++						WQ_MEM_RECLAIM,
++						host->host_no);
++	if (!host_dev->handle_error_wq)
++		goto err_out2;
+ 	/* Register the HBA and start the scsi bus scan */
+ 	ret = scsi_add_host(host, &device->device);
+ 	if (ret != 0)
+-		goto err_out2;
++		goto err_out3;
+ 
+ 	if (!dev_is_ide) {
+ 		scsi_scan_host(host);
+@@ -1815,7 +1826,7 @@ static int storvsc_probe(struct hv_device *device,
+ 			 device->dev_instance.b[4]);
+ 		ret = scsi_add_device(host, 0, target, 0);
+ 		if (ret)
+-			goto err_out3;
++			goto err_out4;
+ 	}
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+ 	if (host->transportt == fc_transport_template) {
+@@ -1827,14 +1838,17 @@ static int storvsc_probe(struct hv_device *device,
+ 		fc_host_port_name(host) = stor_device->port_name;
+ 		stor_device->rport = fc_remote_port_add(host, 0, &ids);
+ 		if (!stor_device->rport)
+-			goto err_out3;
++			goto err_out4;
+ 	}
+ #endif
+ 	return 0;
+ 
+-err_out3:
++err_out4:
+ 	scsi_remove_host(host);
+ 
++err_out3:
++	destroy_workqueue(host_dev->handle_error_wq);
++
+ err_out2:
+ 	/*
+ 	 * Once we have connected with the host, we would need to
+@@ -1858,6 +1872,7 @@ static int storvsc_remove(struct hv_device *dev)
+ {
+ 	struct storvsc_device *stor_device = hv_get_drvdata(dev);
+ 	struct Scsi_Host *host = stor_device->host;
++	struct hv_host_device *host_dev = shost_priv(host);
+ 
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+ 	if (host->transportt == fc_transport_template) {
+@@ -1865,6 +1880,7 @@ static int storvsc_remove(struct hv_device *dev)
+ 		fc_remove_host(host);
+ 	}
+ #endif
++	destroy_workqueue(host_dev->handle_error_wq);
+ 	scsi_remove_host(host);
+ 	storvsc_dev_remove(dev);
+ 	scsi_host_put(host);
+-- 
+2.5.0
