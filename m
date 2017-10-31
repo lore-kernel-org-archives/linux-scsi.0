@@ -1,38 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] qla2xxx: Fix oops in qla2x00_probe_one error path
-Date: Tue, 31 Oct 2017 08:07:36 -0400
-Message-ID: <yq1efpjed13.fsf@oracle.com>
-References: <1508505442-30352-1-git-send-email-dougmill@linux.vnet.ibm.com>
-        <1508505442-30352-2-git-send-email-dougmill@linux.vnet.ibm.com>
+Subject: Re: [PATCH 0/3] cxlflash: Miscellaneous fixes
+Date: Tue, 31 Oct 2017 08:13:40 -0400
+Message-ID: <yq1a807ecqz.fsf@oracle.com>
+References: <1508967302-54403-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31442 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:34408 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751050AbdJaMHq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 08:07:46 -0400
-In-Reply-To: <1508505442-30352-2-git-send-email-dougmill@linux.vnet.ibm.com>
-        (Douglas Miller's message of "Fri, 20 Oct 2017 08:17:22 -0500")
+        with ESMTP id S1751095AbdJaMNx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 08:13:53 -0400
+In-Reply-To: <1508967302-54403-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+        (Uma Krishnan's message of "Wed, 25 Oct 2017 16:35:02 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Miller <dougmill@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
 
-Douglas,
+Uma,
 
-> On error, kthread_create() returns an errno-encoded pointer, not NULL.
-> The routine qla2x00_probe_one() detects the error case and jumps
-> to probe_failed, but has already assigned the return value from
-> kthread_create() to ha->dpc_thread.  Then probe_failed checks to see
-> if ha->dpc_thread is not NULL before doing cleanup on it. Since in the
-> error case this is also not NULL, it ends up trying to access an invalid
-> task pointer.
+> This patch series contains miscellaneous fixes. All three patches resolve
+> minor issues.
 >
-> Solution is to assign NULL to ha->dpc_thread in the error path to avoid
-> kthread cleanup in that case.
+> This series is intended for 4.15 and is bisectable.
 
-Applied to 4.14/scsi-fixes. Thank you!
+Applied to 4.15/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
