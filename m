@@ -1,43 +1,158 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 13/13] mpt3sas: Update mpt3sas driver version.
-Date: Tue, 31 Oct 2017 18:02:39 +0530
-Message-ID: <1509453159-7028-14-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 09/13] mpt3as: Add-Task-management-debug-info-for-NVMe-drives.
+Date: Tue, 31 Oct 2017 18:02:35 +0530
+Message-ID: <1509453159-7028-10-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:50105 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932742AbdJaMeD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 08:34:03 -0400
-Received: by mail-qt0-f194.google.com with SMTP id k31so20439758qta.6
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2017 05:34:02 -0700 (PDT)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:44786 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932632AbdJaMdt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 08:33:49 -0400
+Received: by mail-qt0-f195.google.com with SMTP id 8so20467139qtv.1
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2017 05:33:49 -0700 (PDT)
 In-Reply-To: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>
 
-Updated mpt3sas driver version to 17.100.00.00
+Added debug information for NVMe/PCIe drives in target rest path
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 80 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 71 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 2d005af..ef7d001 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -74,8 +74,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"16.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		16
-+#define MPT3SAS_DRIVER_VERSION		"17.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		17
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 81f4d2d..dc1fdad 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2929,6 +2929,7 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
+ 	struct scsi_target *starget = scmd->device->sdev_target;
+ 	struct MPT3SAS_TARGET *priv_target = starget->hostdata;
+ 	struct _sas_device *sas_device = NULL;
++	struct _pcie_device *pcie_device = NULL;
+ 	unsigned long flags;
+ 	char *device_str = NULL;
+ 
+@@ -2945,6 +2946,31 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
+ 			"%s handle(0x%04x), %s wwid(0x%016llx)\n",
+ 			device_str, priv_target->handle,
+ 		    device_str, (unsigned long long)priv_target->sas_address);
++
++	} else if (priv_target->flags & MPT_TARGET_FLAGS_PCIE_DEVICE) {
++		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
++		pcie_device = __mpt3sas_get_pdev_from_target(ioc, priv_target);
++		if (pcie_device) {
++			starget_printk(KERN_INFO, starget,
++				"handle(0x%04x), wwid(0x%016llx), port(%d)\n",
++				pcie_device->handle,
++				(unsigned long long)pcie_device->wwid,
++				pcie_device->port_num);
++			if (pcie_device->enclosure_handle != 0)
++				starget_printk(KERN_INFO, starget,
++					"enclosure logical id(0x%016llx), slot(%d)\n",
++					(unsigned long long)
++					pcie_device->enclosure_logical_id,
++					pcie_device->slot);
++			if (pcie_device->connector_name[0] != '\0')
++				starget_printk(KERN_INFO, starget,
++					"enclosure level(0x%04x), connector name( %s)\n",
++					pcie_device->enclosure_level,
++					pcie_device->connector_name);
++			pcie_device_put(pcie_device);
++		}
++		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
++
+ 	} else {
+ 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 		sas_device = __mpt3sas_get_sdev_from_target(ioc, priv_target);
+@@ -3680,18 +3706,14 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	Mpi2SCSITaskManagementRequest_t *mpi_request;
+ 	u16 smid;
+ 	struct _sas_device *sas_device = NULL;
++	struct _pcie_device *pcie_device = NULL;
+ 	struct MPT3SAS_TARGET *sas_target_priv_data = NULL;
+ 	u64 sas_address = 0;
+ 	unsigned long flags;
+ 	struct _tr_list *delayed_tr;
+ 	u32 ioc_state;
+ 
+-	if (ioc->remove_host) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			"%s: host has been removed: handle(0x%04x)\n",
+-			__func__, ioc->name, handle));
+-		return;
+-	} else if (ioc->pci_error_recovery) {
++	if (ioc->pci_error_recovery) {
+ 		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+ 			"%s: host in pci error recovery: handle(0x%04x)\n",
+ 			__func__, ioc->name,
+@@ -3722,14 +3744,52 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 		sas_address = sas_device->sas_address;
+ 	}
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-
++	if (!sas_device) {
++		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
++		pcie_device = __mpt3sas_get_pdev_by_handle(ioc, handle);
++		if (pcie_device && pcie_device->starget &&
++			pcie_device->starget->hostdata) {
++			sas_target_priv_data = pcie_device->starget->hostdata;
++			sas_target_priv_data->deleted = 1;
++			sas_address = pcie_device->wwid;
++		}
++		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
++	}
+ 	if (sas_target_priv_data) {
+ 		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+ 			"setting delete flag: handle(0x%04x), sas_addr(0x%016llx)\n",
+ 			ioc->name, handle,
+ 		    (unsigned long long)sas_address));
+-		dewtprintk(ioc, _scsih_display_enclosure_chassis_info(ioc,
+-		    sas_device, NULL, NULL));
++		if (sas_device) {
++			if (sas_device->enclosure_handle != 0)
++				dewtprintk(ioc, pr_info(MPT3SAS_FMT
++				    "setting delete flag:enclosure logical "
++				    "id(0x%016llx), slot(%d)\n", ioc->name,
++				    (unsigned long long)
++				    sas_device->enclosure_logical_id,
++				    sas_device->slot));
++			if (sas_device->connector_name[0] != '\0')
++				dewtprintk(ioc, pr_info(MPT3SAS_FMT
++				    "setting delete flag: enclosure "
++				    "level(0x%04x), connector name( %s)\n",
++				    ioc->name, sas_device->enclosure_level,
++				    sas_device->connector_name));
++		} else if (pcie_device) {
++			if (pcie_device->enclosure_handle != 0)
++				dewtprintk(ioc, pr_info(MPT3SAS_FMT
++				    "setting delete flag: logical "
++				    "id(0x%016llx), slot(%d)\n", ioc->name,
++				    (unsigned long long)
++				    pcie_device->enclosure_logical_id,
++				    pcie_device->slot));
++			if (pcie_device->connector_name[0] != '\0')
++				dewtprintk(ioc, pr_info(MPT3SAS_FMT
++				    "setting delete flag:, enclosure "
++				    "level(0x%04x), "
++				    "connector name( %s)\n", ioc->name,
++				    pcie_device->enclosure_level,
++				    pcie_device->connector_name));
++		}
+ 		_scsih_ublock_io_device(ioc, sas_address);
+ 		sas_target_priv_data->handle = MPT3SAS_INVALID_DEVICE_HANDLE;
+ 	}
+@@ -3764,6 +3824,8 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ out:
+ 	if (sas_device)
+ 		sas_device_put(sas_device);
++	if (pcie_device)
++		pcie_device_put(pcie_device);
+ }
+ 
+ /**
 -- 
 2.5.5
