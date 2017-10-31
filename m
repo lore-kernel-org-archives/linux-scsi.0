@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 05/13] mpt3sas: API's to remove nvme drive from sml
-Date: Tue, 31 Oct 2017 18:02:31 +0530
-Message-ID: <1509453159-7028-6-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 06/13] mpt3sas: Handle NVMe PCIe device related events  generated from firmware.
+Date: Tue, 31 Oct 2017 18:02:32 +0530
+Message-ID: <1509453159-7028-7-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,232 +10,636 @@ To: linux-scsi@vger.kernel.org
 Cc: Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Below API's are included in nvme drive remove path.
-_scsih_pcie_device_remove_by_handle
-_scsih_pcie_device_remove_from_sml
+* The controller firmware sends separate events for NVMe devices and
+PCIe switches similar to existing SAS events.
+
+* NVMe device detection, addition and removal are reported by the
+firmware through PCIe Topology Change list events.
+
+* The PCIe device state change events are sent when the firmware
+detects any abnormal conditions with a NVMe device or switch.
+
+* The enumeration event are sent when the firmware starts PCIe device
+enumeration and stops.
+
+* This patch has the code change to handle the events and add/remove
+NVMe devices in driver's inventory.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 148 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 145 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  30 ++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 471 ++++++++++++++++++++++++++++++++++-
+ 2 files changed, 495 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index b0a75c6..0da639d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -663,6 +663,26 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
+ 	case MPI2_EVENT_ACTIVE_CABLE_EXCEPTION:
+ 		desc = "Cable Event";
+ 		break;
++	case MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE:
++		desc = "PCIE Device Status Change";
++		break;
++	case MPI2_EVENT_PCIE_ENUMERATION:
++	{
++		Mpi26EventDataPCIeEnumeration_t *event_data =
++			(Mpi26EventDataPCIeEnumeration_t *)mpi_reply->EventData;
++		pr_info(MPT3SAS_FMT "PCIE Enumeration: (%s)", ioc->name,
++			   (event_data->ReasonCode ==
++				MPI26_EVENT_PCIE_ENUM_RC_STARTED) ?
++				"start" : "stop");
++		if (event_data->EnumerationStatus)
++			pr_info("enumeration_status(0x%08x)",
++				   le32_to_cpu(event_data->EnumerationStatus));
++		pr_info("\n");
++		return;
++	}
++	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
++		desc = "PCIE Topology Change List";
++		break;
+ 	}
+ 
+ 	if (!desc)
+@@ -6125,7 +6145,15 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	_base_unmask_events(ioc, MPI2_EVENT_LOG_ENTRY_ADDED);
+ 	_base_unmask_events(ioc, MPI2_EVENT_TEMP_THRESHOLD);
+ 	_base_unmask_events(ioc, MPI2_EVENT_ACTIVE_CABLE_EXCEPTION);
+-
++	if (ioc->hba_mpi_version_belonged == MPI26_VERSION) {
++		if (ioc->is_gen35_ioc) {
++			_base_unmask_events(ioc,
++				MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE);
++			_base_unmask_events(ioc, MPI2_EVENT_PCIE_ENUMERATION);
++			_base_unmask_events(ioc,
++				MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
++		}
++	}
+ 	r = _base_make_ioc_operational(ioc);
+ 	if (r)
+ 		goto out_free_resources;
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index d3f8a10..d83560c 100644
+index d83560c..21260bd 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -73,6 +73,8 @@ static void _scsih_remove_device(struct MPT3SAS_ADAPTER *ioc,
- static int _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 	u8 retry_count, u8 is_pd);
+@@ -75,6 +75,8 @@ static int _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle,
  static int _scsih_pcie_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle);
-+static void _scsih_pcie_device_remove_from_sml(struct MPT3SAS_ADAPTER *ioc,
-+	struct _pcie_device *pcie_device);
+ static void _scsih_pcie_device_remove_from_sml(struct MPT3SAS_ADAPTER *ioc,
+ 	struct _pcie_device *pcie_device);
++static void
++_scsih_pcie_check_device(struct MPT3SAS_ADAPTER *ioc, u16 handle);
  static u8 _scsih_check_for_pending_tm(struct MPT3SAS_ADAPTER *ioc, u16 smid);
  
  /* global parameters */
-@@ -1126,6 +1128,41 @@ _scsih_pcie_device_remove(struct MPT3SAS_ADAPTER *ioc,
- 		pcie_device_put(pcie_device);
+@@ -3476,8 +3478,6 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	struct _sas_device *sas_device;
+ 
+ 	sas_device = mpt3sas_get_sdev_by_handle(ioc, handle);
+-	if (!sas_device)
+-		return;
+ 
+ 	shost_for_each_device(sdev, ioc->shost) {
+ 		sas_device_priv_data = sdev->hostdata;
+@@ -3487,7 +3487,7 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 			continue;
+ 		if (sas_device_priv_data->block)
+ 			continue;
+-		if (sas_device->pend_sas_rphy_add)
++		if (sas_device && sas_device->pend_sas_rphy_add)
+ 			continue;
+ 		if (sas_device_priv_data->ignore_delay_remove) {
+ 			sdev_printk(KERN_INFO, sdev,
+@@ -3498,7 +3498,8 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 		_scsih_internal_device_block(sdev, sas_device_priv_data);
  	}
+ 
+-	sas_device_put(sas_device);
++	if (sas_device)
++		sas_device_put(sas_device);
  }
-+
-+
-+/**
-+ * _scsih_pcie_device_remove_by_handle - removing pcie device object by handle
+ 
+ /**
+@@ -3582,6 +3583,33 @@ _scsih_block_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
+ }
+ 
+ /**
++ * _scsih_block_io_to_pcie_children_attached_directly
 + * @ioc: per adapter object
-+ * @handle: device handle
++ * @event_data: topology change event data
++ *
++ * This routine set sdev state to SDEV_BLOCK for all devices
++ * direct attached during device pull/reconnect.
++ */
++static void
++_scsih_block_io_to_pcie_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
++		Mpi26EventDataPCIeTopologyChangeList_t *event_data)
++{
++	int i;
++	u16 handle;
++	u16 reason_code;
++
++	for (i = 0; i < event_data->NumEntries; i++) {
++		handle =
++			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
++		if (!handle)
++			continue;
++		reason_code = event_data->PortEntry[i].PortStatus;
++		if (reason_code ==
++				MPI26_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING)
++			_scsih_block_io_device(ioc, handle);
++	}
++}
++/**
+  * _scsih_tm_tr_send - send task management request
+  * @ioc: per adapter object
+  * @handle: device handle
+@@ -4190,6 +4218,81 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
+ }
+ 
+ /**
++ * _scsih_check_pcie_topo_remove_events - sanity check on topo
++ * events
++ * @ioc: per adapter object
++ * @event_data: the event data payload
++ *
++ * This handles the case where driver receives multiple switch
++ * or device add and delete events in a single shot.  When there
++ * is a delete event the routine will void any pending add
++ * events waiting in the event queue.
 + *
 + * Return nothing.
 + */
 +static void
-+_scsih_pcie_device_remove_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
++_scsih_check_pcie_topo_remove_events(struct MPT3SAS_ADAPTER *ioc,
++	Mpi26EventDataPCIeTopologyChangeList_t *event_data)
 +{
-+	struct _pcie_device *pcie_device;
++	struct fw_event_work *fw_event;
++	Mpi26EventDataPCIeTopologyChangeList_t *local_event_data;
 +	unsigned long flags;
-+	int was_on_pcie_device_list = 0;
++	int i, reason_code;
++	u16 handle, switch_handle;
 +
-+	if (ioc->shost_recovery)
++	for (i = 0; i < event_data->NumEntries; i++) {
++		handle =
++			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
++		if (!handle)
++			continue;
++		reason_code = event_data->PortEntry[i].PortStatus;
++		if (reason_code == MPI26_EVENT_PCIE_TOPO_PS_NOT_RESPONDING)
++			_scsih_tm_tr_send(ioc, handle);
++	}
++
++	switch_handle = le16_to_cpu(event_data->SwitchDevHandle);
++	if (!switch_handle) {
++		_scsih_block_io_to_pcie_children_attached_directly(
++							ioc, event_data);
++		return;
++	}
++    /* TODO We are not supporting cascaded PCIe Switch removal yet*/
++	if ((event_data->SwitchStatus
++		== MPI26_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING) ||
++		(event_data->SwitchStatus ==
++					MPI26_EVENT_PCIE_TOPO_SS_RESPONDING))
++		_scsih_block_io_to_pcie_children_attached_directly(
++							ioc, event_data);
++
++	if (event_data->SwitchStatus != MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING)
++		return;
++
++	/* mark ignore flag for pending events */
++	spin_lock_irqsave(&ioc->fw_event_lock, flags);
++	list_for_each_entry(fw_event, &ioc->fw_event_list, list) {
++		if (fw_event->event != MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST ||
++			fw_event->ignore)
++			continue;
++		local_event_data =
++			(Mpi26EventDataPCIeTopologyChangeList_t *)
++			fw_event->event_data;
++		if (local_event_data->SwitchStatus ==
++		    MPI2_EVENT_SAS_TOPO_ES_ADDED ||
++		    local_event_data->SwitchStatus ==
++		    MPI2_EVENT_SAS_TOPO_ES_RESPONDING) {
++			if (le16_to_cpu(local_event_data->SwitchDevHandle) ==
++				switch_handle) {
++				dewtprintk(ioc, pr_info(MPT3SAS_FMT
++					"setting ignoring flag for switch event\n",
++					ioc->name));
++				fw_event->ignore = 1;
++			}
++		}
++	}
++	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
++}
++
++/**
+  * _scsih_set_volume_delete_flag - setting volume delete flag
+  * @ioc: per adapter object
+  * @handle: device handle
+@@ -6515,9 +6618,9 @@ out:
+ 		sas_device_put(sas_device);
+ 
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-
+ }
+ 
++
+ /**
+  * _scsih_check_pcie_access_status - check access flags
+  * @ioc: per adapter object
+@@ -6903,6 +7006,319 @@ _scsih_pcie_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	pcie_device_put(pcie_device);
+ 	return 0;
+ }
++
++/**
++ * _scsih_pcie_topology_change_event_debug - debug for topology
++ * event
++ * @ioc: per adapter object
++ * @event_data: event data payload
++ * Context: user.
++ */
++static void
++_scsih_pcie_topology_change_event_debug(struct MPT3SAS_ADAPTER *ioc,
++	Mpi26EventDataPCIeTopologyChangeList_t *event_data)
++{
++	int i;
++	u16 handle;
++	u16 reason_code;
++	u8 port_number;
++	char *status_str = NULL;
++	u8 link_rate, prev_link_rate;
++
++	switch (event_data->SwitchStatus) {
++	case MPI26_EVENT_PCIE_TOPO_SS_ADDED:
++		status_str = "add";
++		break;
++	case MPI26_EVENT_PCIE_TOPO_SS_NOT_RESPONDING:
++		status_str = "remove";
++		break;
++	case MPI26_EVENT_PCIE_TOPO_SS_RESPONDING:
++	case 0:
++		status_str =  "responding";
++		break;
++	case MPI26_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING:
++		status_str = "remove delay";
++		break;
++	default:
++		status_str = "unknown status";
++		break;
++	}
++	pr_info(MPT3SAS_FMT "pcie topology change: (%s)\n",
++		ioc->name, status_str);
++	pr_info("\tswitch_handle(0x%04x), enclosure_handle(0x%04x)"
++		"start_port(%02d), count(%d)\n",
++		le16_to_cpu(event_data->SwitchDevHandle),
++		le16_to_cpu(event_data->EnclosureHandle),
++		event_data->StartPortNum, event_data->NumEntries);
++	for (i = 0; i < event_data->NumEntries; i++) {
++		handle =
++			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
++		if (!handle)
++			continue;
++		port_number = event_data->StartPortNum + i;
++		reason_code = event_data->PortEntry[i].PortStatus;
++		switch (reason_code) {
++		case MPI26_EVENT_PCIE_TOPO_PS_DEV_ADDED:
++			status_str = "target add";
++			break;
++		case MPI26_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
++			status_str = "target remove";
++			break;
++		case MPI26_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING:
++			status_str = "delay target remove";
++			break;
++		case MPI26_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
++			status_str = "link rate change";
++			break;
++		case MPI26_EVENT_PCIE_TOPO_PS_NO_CHANGE:
++			status_str = "target responding";
++			break;
++		default:
++			status_str = "unknown";
++			break;
++		}
++		link_rate = event_data->PortEntry[i].CurrentPortInfo &
++			MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
++		prev_link_rate = event_data->PortEntry[i].PreviousPortInfo &
++			MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
++		pr_info("\tport(%02d), attached_handle(0x%04x): %s:"
++			" link rate: new(0x%02x), old(0x%02x)\n", port_number,
++			handle, status_str, link_rate, prev_link_rate);
++	}
++}
++
++/**
++ * _scsih_pcie_topology_change_event - handle PCIe topology
++ *  changes
++ * @ioc: per adapter object
++ * @fw_event: The fw_event_work object
++ * Context: user.
++ *
++ */
++static int
++_scsih_pcie_topology_change_event(struct MPT3SAS_ADAPTER *ioc,
++	struct fw_event_work *fw_event)
++{
++	int i;
++	u16 handle;
++	u16 reason_code;
++	u8 link_rate, prev_link_rate;
++	unsigned long flags;
++	int rc;
++	int requeue_event;
++	Mpi26EventDataPCIeTopologyChangeList_t *event_data =
++		(Mpi26EventDataPCIeTopologyChangeList_t *) fw_event->event_data;
++	struct _pcie_device *pcie_device;
++
++	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
++		_scsih_pcie_topology_change_event_debug(ioc, event_data);
++
++	if (ioc->shost_recovery || ioc->remove_host ||
++		ioc->pci_error_recovery)
++		return 0;
++
++	if (fw_event->ignore) {
++		dewtprintk(ioc, pr_info(MPT3SAS_FMT "ignoring switch event\n",
++			ioc->name));
++		return 0;
++	}
++
++	/* handle siblings events */
++	for (i = 0; i < event_data->NumEntries; i++) {
++		if (fw_event->ignore) {
++			dewtprintk(ioc, pr_info(MPT3SAS_FMT
++				"ignoring switch event\n", ioc->name));
++			return 0;
++		}
++		if (ioc->remove_host || ioc->pci_error_recovery)
++			return 0;
++		reason_code = event_data->PortEntry[i].PortStatus;
++		handle =
++			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
++		if (!handle)
++			continue;
++
++		link_rate = event_data->PortEntry[i].CurrentPortInfo
++			& MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
++		prev_link_rate = event_data->PortEntry[i].PreviousPortInfo
++			& MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
++
++		switch (reason_code) {
++		case MPI26_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
++			if (ioc->shost_recovery)
++				break;
++			if (link_rate == prev_link_rate)
++				break;
++			if (link_rate < MPI26_EVENT_PCIE_TOPO_PI_RATE_2_5)
++				break;
++
++			_scsih_pcie_check_device(ioc, handle);
++
++			/* This code after this point handles the test case
++			 * where a device has been added, however its returning
++			 * BUSY for sometime.  Then before the Device Missing
++			 * Delay expires and the device becomes READY, the
++			 * device is removed and added back.
++			 */
++			spin_lock_irqsave(&ioc->pcie_device_lock, flags);
++			pcie_device = __mpt3sas_get_pdev_by_handle(ioc, handle);
++			spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
++
++			if (pcie_device) {
++				pcie_device_put(pcie_device);
++				break;
++			}
++
++			if (!test_bit(handle, ioc->pend_os_device_add))
++				break;
++
++			dewtprintk(ioc, pr_info(MPT3SAS_FMT
++				"handle(0x%04x) device not found: convert "
++				"event to a device add\n", ioc->name, handle));
++			event_data->PortEntry[i].PortStatus &= 0xF0;
++			event_data->PortEntry[i].PortStatus |=
++				MPI26_EVENT_PCIE_TOPO_PS_DEV_ADDED;
++		case MPI26_EVENT_PCIE_TOPO_PS_DEV_ADDED:
++			if (ioc->shost_recovery)
++				break;
++			if (link_rate < MPI26_EVENT_PCIE_TOPO_PI_RATE_2_5)
++				break;
++
++			rc = _scsih_pcie_add_device(ioc, handle);
++			if (!rc) {
++				/* mark entry vacant */
++				/* TODO This needs to be reviewed and fixed,
++				 * we dont have an entry
++				 * to make an event void like vacant
++				 */
++				event_data->PortEntry[i].PortStatus |=
++					MPI26_EVENT_PCIE_TOPO_PS_NO_CHANGE;
++			}
++			break;
++		case MPI26_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
++			_scsih_pcie_device_remove_by_handle(ioc, handle);
++			break;
++		}
++	}
++	return requeue_event;
++}
++
++/**
++ * _scsih_pcie_device_status_change_event_debug - debug for
++ * device event
++ * @event_data: event data payload
++ * Context: user.
++ *
++ * Return nothing.
++ */
++static void
++_scsih_pcie_device_status_change_event_debug(struct MPT3SAS_ADAPTER *ioc,
++	Mpi26EventDataPCIeDeviceStatusChange_t *event_data)
++{
++	char *reason_str = NULL;
++
++	switch (event_data->ReasonCode) {
++	case MPI26_EVENT_PCIDEV_STAT_RC_SMART_DATA:
++		reason_str = "smart data";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_UNSUPPORTED:
++		reason_str = "unsupported device discovered";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_INTERNAL_DEVICE_RESET:
++		reason_str = "internal device reset";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_TASK_ABORT_INTERNAL:
++		reason_str = "internal task abort";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_ABORT_TASK_SET_INTERNAL:
++		reason_str = "internal task abort set";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_CLEAR_TASK_SET_INTERNAL:
++		reason_str = "internal clear task set";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_QUERY_TASK_INTERNAL:
++		reason_str = "internal query task";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_DEV_INIT_FAILURE:
++		reason_str = "device init failure";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_CMP_INTERNAL_DEV_RESET:
++		reason_str = "internal device reset complete";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_CMP_TASK_ABORT_INTERNAL:
++		reason_str = "internal task abort complete";
++		break;
++	case MPI26_EVENT_PCIDEV_STAT_RC_ASYNC_NOTIFICATION:
++		reason_str = "internal async notification";
++		break;
++	default:
++		reason_str = "unknown reason";
++		break;
++	}
++
++	pr_info(MPT3SAS_FMT "PCIE device status change: (%s)\n"
++		"\thandle(0x%04x), WWID(0x%016llx), tag(%d)",
++		ioc->name, reason_str, le16_to_cpu(event_data->DevHandle),
++		(unsigned long long)le64_to_cpu(event_data->WWID),
++		le16_to_cpu(event_data->TaskTag));
++	if (event_data->ReasonCode == MPI26_EVENT_PCIDEV_STAT_RC_SMART_DATA)
++		pr_info(MPT3SAS_FMT ", ASC(0x%x), ASCQ(0x%x)\n", ioc->name,
++			event_data->ASC, event_data->ASCQ);
++	pr_info("\n");
++}
++
++/**
++ * _scsih_pcie_device_status_change_event - handle device status
++ * change
++ * @ioc: per adapter object
++ * @fw_event: The fw_event_work object
++ * Context: user.
++ *
++ * Return nothing.
++ */
++static void
++_scsih_pcie_device_status_change_event(struct MPT3SAS_ADAPTER *ioc,
++	struct fw_event_work *fw_event)
++{
++	struct MPT3SAS_TARGET *target_priv_data;
++	struct _pcie_device *pcie_device;
++	u64 wwid;
++	unsigned long flags;
++	Mpi26EventDataPCIeDeviceStatusChange_t *event_data =
++		(Mpi26EventDataPCIeDeviceStatusChange_t *)fw_event->event_data;
++	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
++		_scsih_pcie_device_status_change_event_debug(ioc,
++			event_data);
++
++	if (event_data->ReasonCode !=
++		MPI26_EVENT_PCIDEV_STAT_RC_INTERNAL_DEVICE_RESET &&
++		event_data->ReasonCode !=
++		MPI26_EVENT_PCIDEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
 +		return;
 +
 +	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	pcie_device = __mpt3sas_get_pdev_by_handle(ioc, handle);
-+	if (pcie_device) {
-+		if (!list_empty(&pcie_device->list)) {
-+			list_del_init(&pcie_device->list);
-+			was_on_pcie_device_list = 1;
-+			pcie_device_put(pcie_device);
-+		}
-+	}
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+	if (was_on_pcie_device_list) {
-+		_scsih_pcie_device_remove_from_sml(ioc, pcie_device);
++	wwid = le64_to_cpu(event_data->WWID);
++	pcie_device = __mpt3sas_get_pdev_by_wwid(ioc, wwid);
++
++	if (!pcie_device || !pcie_device->starget)
++		goto out;
++
++	target_priv_data = pcie_device->starget->hostdata;
++	if (!target_priv_data)
++		goto out;
++
++	if (event_data->ReasonCode ==
++		MPI26_EVENT_PCIDEV_STAT_RC_INTERNAL_DEVICE_RESET)
++		target_priv_data->tm_busy = 1;
++	else
++		target_priv_data->tm_busy = 0;
++out:
++	if (pcie_device)
 +		pcie_device_put(pcie_device);
-+	}
++
++	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
 +}
 +
  /**
-  * _scsih_pcie_device_add - add pcie_device object
-  * @ioc: per adapter object
-@@ -6567,6 +6604,83 @@ _scsih_check_pcie_access_status(struct MPT3SAS_ADAPTER *ioc, u64 wwid,
- 			(unsigned long long)wwid, handle);
- 	return rc;
+  * _scsih_sas_enclosure_dev_status_change_event_debug - debug for enclosure
+  * event
+@@ -7154,6 +7570,34 @@ _scsih_sas_discovery_event(struct MPT3SAS_ADAPTER *ioc,
  }
-+
-+/**
-+ * _scsih_pcie_device_remove_from_sml -  removing pcie device
-+ * from SML and free up associated memory
+ 
+ /**
++ * _scsih_pcie_enumeration_event - handle enumeration events
 + * @ioc: per adapter object
-+ * @pcie_device: the pcie_device object
++ * @fw_event: The fw_event_work object
++ * Context: user.
 + *
 + * Return nothing.
 + */
 +static void
-+_scsih_pcie_device_remove_from_sml(struct MPT3SAS_ADAPTER *ioc,
-+	struct _pcie_device *pcie_device)
++_scsih_pcie_enumeration_event(struct MPT3SAS_ADAPTER *ioc,
++	struct fw_event_work *fw_event)
 +{
-+	struct MPT3SAS_TARGET *sas_target_priv_data;
++	Mpi26EventDataPCIeEnumeration_t *event_data =
++		(Mpi26EventDataPCIeEnumeration_t *)fw_event->event_data;
 +
-+	dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+	    "%s: enter: handle(0x%04x), wwid(0x%016llx)\n", ioc->name, __func__,
-+	    pcie_device->handle, (unsigned long long)
-+	    pcie_device->wwid));
-+	if (pcie_device->enclosure_handle != 0)
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: enter: enclosure logical id(0x%016llx), slot(%d)\n",
-+		    ioc->name, __func__,
-+		    (unsigned long long)pcie_device->enclosure_logical_id,
-+		    pcie_device->slot));
-+	if (pcie_device->connector_name[0] != '\0')
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: enter: enclosure level(0x%04x), connector name( %s)\n",
-+		    ioc->name, __func__,
-+		    pcie_device->enclosure_level,
-+		    pcie_device->connector_name));
-+
-+	if (pcie_device->starget && pcie_device->starget->hostdata) {
-+		sas_target_priv_data = pcie_device->starget->hostdata;
-+		sas_target_priv_data->deleted = 1;
-+		_scsih_ublock_io_device(ioc, pcie_device->wwid);
-+		sas_target_priv_data->handle = MPT3SAS_INVALID_DEVICE_HANDLE;
++	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK) {
++		pr_info(MPT3SAS_FMT "pcie enumeration event: (%s) Flag 0x%02x",
++			ioc->name,
++			((event_data->ReasonCode ==
++			MPI26_EVENT_PCIE_ENUM_RC_STARTED) ?
++			"started" : "completed"), event_data->Flags);
++	if (event_data->EnumerationStatus)
++		pr_info("enumeration_status(0x%08x)",
++		    le32_to_cpu(event_data->EnumerationStatus));
++	pr_info("\n");
 +	}
-+
-+	pr_info(MPT3SAS_FMT
-+		"removing handle(0x%04x), wwid (0x%016llx)\n",
-+		ioc->name, pcie_device->handle,
-+		(unsigned long long) pcie_device->wwid);
-+	if (pcie_device->enclosure_handle != 0)
-+		pr_info(MPT3SAS_FMT
-+		    "removing : enclosure logical id(0x%016llx), slot(%d)\n",
-+		    ioc->name,
-+		    (unsigned long long)pcie_device->enclosure_logical_id,
-+		    pcie_device->slot);
-+	if (pcie_device->connector_name[0] != '\0')
-+		pr_info(MPT3SAS_FMT
-+		    "removing: enclosure level(0x%04x), connector name( %s)\n",
-+		    ioc->name, pcie_device->enclosure_level,
-+		    pcie_device->connector_name);
-+
-+	if (pcie_device->starget)
-+		scsi_remove_target(&pcie_device->starget->dev);
-+	dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+	    "%s: exit: handle(0x%04x), wwid(0x%016llx)\n", ioc->name, __func__,
-+	    pcie_device->handle, (unsigned long long)
-+	    pcie_device->wwid));
-+	if (pcie_device->enclosure_handle != 0)
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+			"%s: exit: enclosure logical id(0x%016llx), slot(%d)\n",
-+			ioc->name, __func__,
-+			(unsigned long long)pcie_device->enclosure_logical_id,
-+			pcie_device->slot));
-+	if (pcie_device->connector_name[0] != '\0')
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: exit: enclosure level(0x%04x), connector name( %s)\n",
-+		    ioc->name, __func__, pcie_device->enclosure_level,
-+		    pcie_device->connector_name));
-+
-+	kfree(pcie_device->serial_number);
 +}
 +
-+
- /**
-  * _scsih_pcie_check_device - checking device responsiveness
++/**
+  * _scsih_ir_fastpath - turn on fastpath for IR physdisk
   * @ioc: per adapter object
-@@ -8186,17 +8300,18 @@ _scsih_search_responding_expanders(struct MPT3SAS_ADAPTER *ioc)
- }
- 
- /**
-- * _scsih_remove_unresponding_sas_devices - removing unresponding devices
-+ * _scsih_remove_unresponding_devices - removing unresponding devices
-  * @ioc: per adapter object
-  *
-  * Return nothing.
-  */
- static void
--_scsih_remove_unresponding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
-+_scsih_remove_unresponding_devices(struct MPT3SAS_ADAPTER *ioc)
- {
- 	struct _sas_device *sas_device, *sas_device_next;
- 	struct _sas_node *sas_expander, *sas_expander_next;
- 	struct _raid_device *raid_device, *raid_device_next;
-+	struct _pcie_device *pcie_device, *pcie_device_next;
- 	struct list_head tmp_list;
- 	unsigned long flags;
- 	LIST_HEAD(head);
-@@ -8230,6 +8345,26 @@ _scsih_remove_unresponding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
- 		sas_device_put(sas_device);
- 	}
- 
-+	pr_info(MPT3SAS_FMT
-+		" Removing unresponding devices: pcie end-devices\n"
-+		, ioc->name);
-+	INIT_LIST_HEAD(&head);
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	list_for_each_entry_safe(pcie_device, pcie_device_next,
-+	    &ioc->pcie_device_list, list) {
-+		if (!pcie_device->responding)
-+			list_move_tail(&pcie_device->list, &head);
-+		else
-+			pcie_device->responding = 0;
-+	}
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	list_for_each_entry_safe(pcie_device, pcie_device_next, &head, list) {
-+		_scsih_pcie_device_remove_from_sml(ioc, pcie_device);
-+		list_del_init(&pcie_device->list);
-+		pcie_device_put(pcie_device);
-+	}
-+
- 	/* removing unresponding volumes */
- 	if (ioc->ir_firmware) {
- 		pr_info(MPT3SAS_FMT "removing unresponding devices: volumes\n",
-@@ -8631,7 +8766,7 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 				goto out;
- 			ssleep(1);
- 		}
--		_scsih_remove_unresponding_sas_devices(ioc);
-+		_scsih_remove_unresponding_devices(ioc);
- 		_scsih_scan_for_devices_after_reset(ioc);
+  * @handle: device handle for physical disk
+@@ -8809,6 +9253,16 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 	case MPI2_EVENT_IR_OPERATION_STATUS:
+ 		_scsih_sas_ir_operation_status_event(ioc, fw_event);
  		break;
- 	case MPT3SAS_PORT_ENABLE_COMPLETE:
-@@ -9019,6 +9154,7 @@ static void scsih_remove(struct pci_dev *pdev)
- 	struct _sas_port *mpt3sas_port, *next_port;
- 	struct _raid_device *raid_device, *next;
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
-+	struct _pcie_device *pcie_device, *pcienext;
- 	struct workqueue_struct	*wq;
- 	unsigned long flags;
- 
-@@ -9047,6 +9183,12 @@ static void scsih_remove(struct pci_dev *pdev)
- 		    (unsigned long long) raid_device->wwid);
- 		_scsih_raid_device_remove(ioc, raid_device);
++	case MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE:
++		_scsih_pcie_device_status_change_event(ioc, fw_event);
++		break;
++	case MPI2_EVENT_PCIE_ENUMERATION:
++		_scsih_pcie_enumeration_event(ioc, fw_event);
++		break;
++	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
++		_scsih_pcie_topology_change_event(ioc, fw_event);
++			return;
++	break;
  	}
-+	list_for_each_entry_safe(pcie_device, pcienext, &ioc->pcie_device_list,
-+		list) {
-+		_scsih_pcie_device_remove_from_sml(ioc, pcie_device);
-+		list_del_init(&pcie_device->list);
-+		pcie_device_put(pcie_device);
-+	}
+ out:
+ 	fw_event_work_put(fw_event);
+@@ -8899,6 +9353,11 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 		    (Mpi2EventDataSasTopologyChangeList_t *)
+ 		    mpi_reply->EventData);
+ 		break;
++	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
++	_scsih_check_pcie_topo_remove_events(ioc,
++		    (Mpi26EventDataPCIeTopologyChangeList_t *)
++		    mpi_reply->EventData);
++		break;
+ 	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
+ 		_scsih_check_ir_config_unhide_events(ioc,
+ 		    (Mpi2EventDataIrConfigChangeList_t *)
+@@ -8961,6 +9420,8 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 	case MPI2_EVENT_SAS_DISCOVERY:
+ 	case MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE:
+ 	case MPI2_EVENT_IR_PHYSICAL_DISK:
++	case MPI2_EVENT_PCIE_ENUMERATION:
++	case MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE:
+ 		break;
  
- 	/* free ports attached to the sas_host */
- 	list_for_each_entry_safe(mpt3sas_port, next_port,
+ 	case MPI2_EVENT_TEMP_THRESHOLD:
 -- 
 2.5.5
