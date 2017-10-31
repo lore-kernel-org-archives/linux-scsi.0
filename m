@@ -1,28 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: scsi/NCR5380: Suppress SDTR and WDTR message logging
-Date: Tue, 31 Oct 2017 08:17:23 -0400
-Message-ID: <yq11sljecks.fsf@oracle.com>
-References: <alpine.LNX.2.00.1710261632460.3@nippy.intranet>
+Subject: Re: [PATCH 0/5] nvmet/nvmet_fc: add events for discovery controller rescan
+Date: Tue, 31 Oct 2017 08:22:25 -0400
+Message-ID: <yq1wp3bcxry.fsf@oracle.com>
+References: <20171029011456.12885-1-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1710261632460.3@nippy.intranet> (Finn Thain's
-        message of "Thu, 26 Oct 2017 16:51:50 +1100 (AEDT)")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:49291 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750872AbdJaMWy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 08:22:54 -0400
+In-Reply-To: <20171029011456.12885-1-jsmart2021@gmail.com> (James Smart's
+        message of "Sat, 28 Oct 2017 18:14:51 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 
 
-Finn,
+James,
 
-> The 5380 drivers only support asynchronous transfers and the 5380
-> controllers only have narrow busses. Hence, the core driver will reject 
-> any SDTR and WDTR messages from target devices. Don't log this, it's 
-> expected behaviour. Also, fix the off-by-one array indices in the 
-> arguments to scmd_printk().
+> Note: These patches were posted to the nvme list this morning. I should
+> have cc'd the scsi list as well - so I'm not posting to the scsi list.
+> I fully expect all patches to be pulled via the nvme-4.15 tree then the
+> block tree.
 
-Applied to 4.15/scsi-queue. Thanks.
+The SCSI pieces look OK to me.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
