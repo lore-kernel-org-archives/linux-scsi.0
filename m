@@ -1,33 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: hisi_sas: fix for the build error log_non_standard_event undefined
-Date: Tue, 31 Oct 2017 12:33:02 -0400
-Message-ID: <yq1zi879t1d.fsf@oracle.com>
-References: <3f14f745-6fdf-4948-85bb-d21d565dbcab@huawei.com>
+Subject: Re: [PATCH] scsi: aic7xxx: Convert timers to use timer_setup()
+Date: Tue, 31 Oct 2017 12:35:12 -0400
+Message-ID: <yq1vaiv9sxr.fsf@oracle.com>
+References: <20171025100526.GA144967@beast>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30878 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751446AbdJaQdW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 12:33:22 -0400
-In-Reply-To: <3f14f745-6fdf-4948-85bb-d21d565dbcab@huawei.com> (shiju jose's
-        message of "Tue, 31 Oct 2017 12:25:51 +0000")
+Received: from userp1040.oracle.com ([156.151.31.81]:42578 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932342AbdJaQfW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2017 12:35:22 -0400
+In-Reply-To: <20171025100526.GA144967@beast> (Kees Cook's message of "Wed, 25
+        Oct 2017 03:05:26 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: shiju.jose@huawei.com
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, xuwei5@hisilicon.com
+To: Kees Cook <keescook@chromium.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Shiju,
+Kees,
 
-> This patch fix the build error log_non_standard_event undefined
-> for the i386 build for COMPILE_TEST.
+> stat_timer only ever assigns the same function and data, so
+> consolidate to using timer_setup(), adjust callback, drop everything
+> else used to pass things around, and remove needless typedefs.
 
-This is messy. You have one patch addressing build problems in two
-different patches. This breaks our ability to bisect.
-
-I combined the ECC and AXI patches into one and then added the build fix
-on top. Really hope that works.
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
