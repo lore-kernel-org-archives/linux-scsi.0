@@ -1,883 +1,122 @@
-From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 01/13] mpt3sas: Add nvme device support in slave alloc,  target  alloc and probe
-Date: Tue, 31 Oct 2017 18:02:27 +0530
-Message-ID: <1509453159-7028-2-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1509453159-7028-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>
+From: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2NSAyLzVdIGR0LWJpbmRpbmdzOiBz?=
+ =?utf-8?Q?csi:_ufs:_add_document_for_hisi-ufs?=
+Date: Tue, 31 Oct 2017 12:35:14 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA38352@DGGEMM506-MBS.china.huawei.com>
+References: <20171020085259.8093-1-liwei213@huawei.com>
+ <20171020085259.8093-3-liwei213@huawei.com>
+ <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com>
+ <1699CE87DE933F49876AD744B5DC140FA321D1@DGGEMM506-MBX.china.huawei.com>
+ <CAK8P3a37yYDQZpZxmunCdSO83qkqywTME5Xo0k56nWEs2k+=dg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAK8P3a37yYDQZpZxmunCdSO83qkqywTME5Xo0k56nWEs2k+=dg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: zh-CN
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "xuwei (O)" <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TZNg+MwTxZMZA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-1) Added support for probing pcie device and adding NVMe drives to
-SML and driver's internal list pcie_device_list.
-
-2) Added support for determing NVMe as boot device.
-
-3) Added nvme device support for call back functions scan_finished
-target_alloc,slave_alloc,target destroy and slave destroy.
-
- a) During scan, pcie devices are probed and added to SML to drivers
-internal list.
-
- b) target_alloc & slave alloc API's allocates resources for
-(MPT3SAS_TARGET & MPT3SAS_DEVICE) private datas and holds
-information like handle, target_id etc.
-
- c) slave_destroy & target_destroy are called when driver unregisters
-or removes device. Also frees allocated resources and info.
-
-Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h      | 110 +++++++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 431 +++++++++++++++++++++++++++++--
- 3 files changed, 647 insertions(+), 124 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 0fe3969..dd04a28 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -161,6 +161,7 @@
- #define MPT_TARGET_FLAGS_VOLUME		0x02
- #define MPT_TARGET_FLAGS_DELETED	0x04
- #define MPT_TARGET_FASTPATH_IO		0x08
-+#define MPT_TARGET_FLAGS_PCIE_DEVICE	0x10
- 
- #define SAS2_PCI_DEVICE_B0_REVISION	(0x01)
- #define SAS3_PCI_DEVICE_C0_REVISION	(0x02)
-@@ -359,7 +360,8 @@ struct Mpi2ManufacturingPage11_t {
-  * @flags: MPT_TARGET_FLAGS_XXX flags
-  * @deleted: target flaged for deletion
-  * @tm_busy: target is busy with TM request.
-- * @sdev: The sas_device associated with this target
-+ * @sas_dev: The sas_device associated with this target
-+ * @pcie_dev: The pcie device associated with this target
-  */
- struct MPT3SAS_TARGET {
- 	struct scsi_target *starget;
-@@ -370,7 +372,8 @@ struct MPT3SAS_TARGET {
- 	u32	flags;
- 	u8	deleted;
- 	u8	tm_busy;
--	struct _sas_device *sdev;
-+	struct _sas_device *sas_dev;
-+	struct _pcie_device *pcie_dev;
- };
- 
- 
-@@ -514,6 +517,89 @@ static inline void sas_device_put(struct _sas_device *s)
- 	kref_put(&s->refcount, sas_device_free);
- }
- 
-+/*
-+ * struct _pcie_device - attached PCIe device information
-+ * @list: pcie device list
-+ * @starget: starget object
-+ * @wwid: device WWID
-+ * @handle: device handle
-+ * @device_info: bitfield provides detailed info about the device
-+ * @id: target id
-+ * @channel: target channel
-+ * @slot: slot number
-+ * @port_num: port number
-+ * @responding: used in _scsih_pcie_device_mark_responding
-+ * @fast_path: fast path feature enable bit
-+ * @nvme_mdts: MaximumDataTransferSize from PCIe Device Page 2 for
-+ *		NVMe device only
-+ * @enclosure_handle: enclosure handle
-+ * @enclosure_logical_id: enclosure logical identifier
-+ * @enclosure_level: The level of device's enclosure from the controller
-+ * @connector_name: ASCII value of the Connector's name
-+ * @serial_number: pointer of serial number string allocated runtime
-+ * @refcount: reference count for deletion
-+ */
-+struct _pcie_device {
-+	struct list_head list;
-+	struct scsi_target *starget;
-+	u64	wwid;
-+	u16	handle;
-+	u32	device_info;
-+	int	id;
-+	int	channel;
-+	u16	slot;
-+	u8	port_num;
-+	u8	responding;
-+	u8	fast_path;
-+	u32	nvme_mdts;
-+	u16	enclosure_handle;
-+	u64	enclosure_logical_id;
-+	u8	enclosure_level;
-+	u8	connector_name[4];
-+	u8	*serial_number;
-+	struct kref refcount;
-+};
-+/**
-+ * pcie_device_get - Increment the pcie device reference count
-+ *
-+ * @p: pcie_device object
-+ *
-+ * When ever this function called it will increment the
-+ * reference count of the pcie device for which this function called.
-+ *
-+ */
-+static inline void pcie_device_get(struct _pcie_device *p)
-+{
-+	kref_get(&p->refcount);
-+}
-+
-+/**
-+ * pcie_device_free - Release the pcie device object
-+ * @r - kref object
-+ *
-+ * Free's the pcie device object. It will be called when reference count
-+ * reaches to zero.
-+ */
-+static inline void pcie_device_free(struct kref *r)
-+{
-+	kfree(container_of(r, struct _pcie_device, refcount));
-+}
-+
-+/**
-+ * pcie_device_put - Decrement the pcie device reference count
-+ *
-+ * @p: pcie_device object
-+ *
-+ * When ever this function called it will decrement the
-+ * reference count of the pcie device for which this function called.
-+ *
-+ * When refernce count reaches to Zero, this will call pcie_device_free to the
-+ * pcie_device object.
-+ */
-+static inline void pcie_device_put(struct _pcie_device *p)
-+{
-+	kref_put(&p->refcount, pcie_device_free);
-+}
- /**
-  * struct _raid_device - raid volume link list
-  * @list: sas device list
-@@ -562,12 +648,13 @@ struct _raid_device {
- 
- /**
-  * struct _boot_device - boot device info
-- * @is_raid: flag to indicate whether this is volume
-- * @device: holds pointer for either struct _sas_device or
-- *     struct _raid_device
-+ *
-+ * @channel: sas, raid, or pcie channel
-+ * @device: holds pointer for struct _sas_device, struct _raid_device or
-+ *     struct _pcie_device
-  */
- struct _boot_device {
--	u8 is_raid;
-+	int channel;
- 	void *device;
- };
- 
-@@ -831,6 +918,8 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @bars: bitmask of BAR's that must be configured
-  * @mask_interrupts: ignore interrupt
-  * @dma_mask: used to set the consistent dma mask
-+ * @pci_access_mutex: Mutex to synchronize ioctl,sysfs show path and
-+ *			pci resource handling
-  * @fault_reset_work_q_name: fw fault work queue
-  * @fault_reset_work_q: ""
-  * @fault_reset_work: ""
-@@ -894,9 +983,13 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @sas_device_list: sas device object list
-  * @sas_device_init_list: sas device object list (used only at init time)
-  * @sas_device_lock:
-+ * @pcie_device_list: pcie device object list
-+ * @pcie_device_init_list: pcie device object list (used only at init time)
-+ * @pcie_device_lock:
-  * @io_missing_delay: time for IO completed by fw when PDR enabled
-  * @device_missing_delay: time for device missing by fw when PDR enabled
-  * @sas_id : used for setting volume target IDs
-+ * @pcie_target_id: used for setting pcie target IDs
-  * @blocking_handles: bitmask used to identify which devices need blocking
-  * @pd_handles : bitmask for PD handles
-  * @pd_handles_sz : size of pd_handle bitmask
-@@ -1092,11 +1185,16 @@ struct MPT3SAS_ADAPTER {
- 	struct list_head sas_device_list;
- 	struct list_head sas_device_init_list;
- 	spinlock_t	sas_device_lock;
-+	struct list_head pcie_device_list;
-+	struct list_head pcie_device_init_list;
-+	spinlock_t      pcie_device_lock;
-+
- 	struct list_head raid_device_list;
- 	spinlock_t	raid_device_lock;
- 	u8		io_missing_delay;
- 	u16		device_missing_delay;
- 	int		sas_id;
-+	int		pcie_target_id;
- 
- 	void		*blocking_handles;
- 	void		*pd_handles;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index dee8308..4c9b63e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -60,6 +60,9 @@
- #include "mpt3sas_base.h"
- 
- #define RAID_CHANNEL 1
-+
-+#define PCIE_CHANNEL 2
-+
- /* forward proto's */
- static void _scsih_expander_node_remove(struct MPT3SAS_ADAPTER *ioc,
- 	struct _sas_node *sas_expander);
-@@ -442,21 +445,22 @@ _scsih_get_sas_address(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- /**
-  * _scsih_determine_boot_device - determine boot device.
-  * @ioc: per adapter object
-- * @device: either sas_device or raid_device object
-- * @is_raid: [flag] 1 = raid object, 0 = sas object
-+ * @device: sas_device or pcie_device object
-+ * @channel: SAS or PCIe channel
-  *
-  * Determines whether this device should be first reported device to
-  * to scsi-ml or sas transport, this purpose is for persistent boot device.
-  * There are primary, alternate, and current entries in bios page 2. The order
-  * priority is primary, alternate, then current.  This routine saves
-- * the corresponding device object and is_raid flag in the ioc object.
-+ * the corresponding device object.
-  * The saved data to be used later in _scsih_probe_boot_devices().
-  */
- static void
--_scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
--	void *device, u8 is_raid)
-+_scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc, void *device,
-+	u32 channel)
- {
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	struct _raid_device *raid_device;
- 	u64 sas_address;
- 	u64 device_name;
-@@ -471,18 +475,24 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 	if (!ioc->bios_pg3.BiosVersion)
- 		return;
- 
--	if (!is_raid) {
--		sas_device = device;
--		sas_address = sas_device->sas_address;
--		device_name = sas_device->device_name;
--		enclosure_logical_id = sas_device->enclosure_logical_id;
--		slot = sas_device->slot;
--	} else {
-+	if (channel == RAID_CHANNEL) {
- 		raid_device = device;
- 		sas_address = raid_device->wwid;
- 		device_name = 0;
- 		enclosure_logical_id = 0;
- 		slot = 0;
-+	} else if (channel == PCIE_CHANNEL) {
-+		pcie_device = device;
-+		sas_address = pcie_device->wwid;
-+		device_name = 0;
-+		enclosure_logical_id = 0;
-+		slot = 0;
-+	} else {
-+		sas_device = device;
-+		sas_address = sas_device->sas_address;
-+		device_name = sas_device->device_name;
-+		enclosure_logical_id = sas_device->enclosure_logical_id;
-+		slot = sas_device->slot;
- 	}
- 
- 	if (!ioc->req_boot_device.device) {
-@@ -496,7 +506,7 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 			    ioc->name, __func__,
- 			    (unsigned long long)sas_address));
- 			ioc->req_boot_device.device = device;
--			ioc->req_boot_device.is_raid = is_raid;
-+			ioc->req_boot_device.channel = channel;
- 		}
- 	}
- 
-@@ -511,7 +521,7 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 			    ioc->name, __func__,
- 			    (unsigned long long)sas_address));
- 			ioc->req_alt_boot_device.device = device;
--			ioc->req_alt_boot_device.is_raid = is_raid;
-+			ioc->req_alt_boot_device.channel = channel;
- 		}
- 	}
- 
-@@ -526,7 +536,7 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 			    ioc->name, __func__,
- 			    (unsigned long long)sas_address));
- 			ioc->current_boot_device.device = device;
--			ioc->current_boot_device.is_raid = is_raid;
-+			ioc->current_boot_device.channel = channel;
- 		}
- 	}
- }
-@@ -539,7 +549,7 @@ __mpt3sas_get_sdev_from_target(struct MPT3SAS_ADAPTER *ioc,
- 
- 	assert_spin_locked(&ioc->sas_device_lock);
- 
--	ret = tgt_priv->sdev;
-+	ret = tgt_priv->sas_dev;
- 	if (ret)
- 		sas_device_get(ret);
- 
-@@ -560,6 +570,44 @@ mpt3sas_get_sdev_from_target(struct MPT3SAS_ADAPTER *ioc,
- 	return ret;
- }
- 
-+static struct _pcie_device *
-+__mpt3sas_get_pdev_from_target(struct MPT3SAS_ADAPTER *ioc,
-+	struct MPT3SAS_TARGET *tgt_priv)
-+{
-+	struct _pcie_device *ret;
-+
-+	assert_spin_locked(&ioc->pcie_device_lock);
-+
-+	ret = tgt_priv->pcie_dev;
-+	if (ret)
-+		pcie_device_get(ret);
-+
-+	return ret;
-+}
-+
-+/**
-+ * mpt3sas_get_pdev_from_target - pcie device search
-+ * @ioc: per adapter object
-+ * @tgt_priv: starget private object
-+ *
-+ * Context: This function will acquire ioc->pcie_device_lock and will release
-+ * before returning the pcie_device object.
-+ *
-+ * This searches for pcie_device from target, then return pcie_device object.
-+ */
-+struct _pcie_device *
-+mpt3sas_get_pdev_from_target(struct MPT3SAS_ADAPTER *ioc,
-+	struct MPT3SAS_TARGET *tgt_priv)
-+{
-+	struct _pcie_device *ret;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	ret = __mpt3sas_get_pdev_from_target(ioc, tgt_priv);
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return ret;
-+}
- 
- struct _sas_device *
- __mpt3sas_get_sdev_by_addr(struct MPT3SAS_ADAPTER *ioc,
-@@ -889,6 +937,146 @@ _scsih_sas_device_init_add(struct MPT3SAS_ADAPTER *ioc,
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- }
- 
-+
-+struct _pcie_device *
-+__mpt3sas_get_pdev_by_wwid(struct MPT3SAS_ADAPTER *ioc, u64 wwid)
-+{
-+	struct _pcie_device *pcie_device;
-+
-+	assert_spin_locked(&ioc->pcie_device_lock);
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list)
-+		if (pcie_device->wwid == wwid)
-+			goto found_device;
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_init_list, list)
-+		if (pcie_device->wwid == wwid)
-+			goto found_device;
-+
-+	return NULL;
-+
-+found_device:
-+	pcie_device_get(pcie_device);
-+	return pcie_device;
-+}
-+
-+
-+/**
-+ * mpt3sas_get_pdev_by_wwid - pcie device search
-+ * @ioc: per adapter object
-+ * @wwid: wwid
-+ *
-+ * Context: This function will acquire ioc->pcie_device_lock and will release
-+ * before returning the pcie_device object.
-+ *
-+ * This searches for pcie_device based on wwid, then return pcie_device object.
-+ */
-+struct _pcie_device *
-+mpt3sas_get_pdev_by_wwid(struct MPT3SAS_ADAPTER *ioc, u64 wwid)
-+{
-+	struct _pcie_device *pcie_device;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	pcie_device = __mpt3sas_get_pdev_by_wwid(ioc, wwid);
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return pcie_device;
-+}
-+
-+
-+struct _pcie_device *
-+__mpt3sas_get_pdev_by_idchannel(struct MPT3SAS_ADAPTER *ioc, int id,
-+	int channel)
-+{
-+	struct _pcie_device *pcie_device;
-+
-+	assert_spin_locked(&ioc->pcie_device_lock);
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list)
-+		if (pcie_device->id == id && pcie_device->channel == channel)
-+			goto found_device;
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_init_list, list)
-+		if (pcie_device->id == id && pcie_device->channel == channel)
-+			goto found_device;
-+
-+	return NULL;
-+
-+found_device:
-+	pcie_device_get(pcie_device);
-+	return pcie_device;
-+}
-+
-+
-+/**
-+ * mpt3sas_get_pdev_by_idchannel - pcie device search
-+ * @ioc: per adapter object
-+ * @id: Target ID
-+ * @channel: Channel ID
-+ *
-+ * Context: This function will acquire ioc->pcie_device_lock and will release
-+ * before returning the pcie_device object.
-+ *
-+ * This searches for pcie_device based on id and channel, then return
-+ * pcie_device object.
-+ */
-+struct _pcie_device *
-+mpt3sas_get_pdev_by_idchannel(struct MPT3SAS_ADAPTER *ioc, int id, int channel)
-+{
-+	struct _pcie_device *pcie_device;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	pcie_device = __mpt3sas_get_pdev_by_idchannel(ioc, id, channel);
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return pcie_device;
-+}
-+/**
-+ * _scsih_pcie_device_remove - remove pcie_device from list.
-+ * @ioc: per adapter object
-+ * @pcie_device: the pcie_device object
-+ * Context: This function will acquire ioc->pcie_device_lock.
-+ *
-+ * If pcie_device is on the list, remove it and decrement its reference count.
-+ */
-+static void
-+_scsih_pcie_device_remove(struct MPT3SAS_ADAPTER *ioc,
-+	struct _pcie_device *pcie_device)
-+{
-+	unsigned long flags;
-+	int was_on_pcie_device_list = 0;
-+
-+	if (!pcie_device)
-+		return;
-+	pr_info(MPT3SAS_FMT
-+		"removing handle(0x%04x), wwid(0x%016llx)\n",
-+		ioc->name, pcie_device->handle,
-+		(unsigned long long) pcie_device->wwid);
-+	if (pcie_device->enclosure_handle != 0)
-+		pr_info(MPT3SAS_FMT
-+			"removing enclosure logical id(0x%016llx), slot(%d)\n",
-+			ioc->name,
-+			(unsigned long long)pcie_device->enclosure_logical_id,
-+		pcie_device->slot);
-+	if (pcie_device->connector_name[0] != '\0')
-+		pr_info(MPT3SAS_FMT
-+			"removing enclosure level(0x%04x), connector name( %s)\n",
-+			ioc->name, pcie_device->enclosure_level,
-+			pcie_device->connector_name);
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	if (!list_empty(&pcie_device->list)) {
-+		list_del_init(&pcie_device->list);
-+		was_on_pcie_device_list = 1;
-+	}
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+	if (was_on_pcie_device_list) {
-+		kfree(pcie_device->serial_number);
-+		pcie_device_put(pcie_device);
-+	}
-+}
- /**
-  * _scsih_raid_device_find_by_id - raid device search
-  * @ioc: per adapter object
-@@ -1316,6 +1504,7 @@ scsih_target_alloc(struct scsi_target *starget)
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
- 	struct _sas_device *sas_device;
- 	struct _raid_device *raid_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
- 	struct sas_rphy *rphy;
- 
-@@ -1345,6 +1534,28 @@ scsih_target_alloc(struct scsi_target *starget)
- 		return 0;
- 	}
- 
-+	/* PCIe devices */
-+	if (starget->channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_by_idchannel(ioc, starget->id,
-+			starget->channel);
-+		if (pcie_device) {
-+			sas_target_priv_data->handle = pcie_device->handle;
-+			sas_target_priv_data->sas_address = pcie_device->wwid;
-+			sas_target_priv_data->pcie_dev = pcie_device;
-+			pcie_device->starget = starget;
-+			pcie_device->id = starget->id;
-+			pcie_device->channel = starget->channel;
-+			sas_target_priv_data->flags |=
-+				MPT_TARGET_FLAGS_PCIE_DEVICE;
-+			if (pcie_device->fast_path)
-+				sas_target_priv_data->flags |=
-+					MPT_TARGET_FASTPATH_IO;
-+		}
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+		return 0;
-+	}
-+
- 	/* sas/sata devices */
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	rphy = dev_to_rphy(starget->dev.parent);
-@@ -1354,7 +1565,7 @@ scsih_target_alloc(struct scsi_target *starget)
- 	if (sas_device) {
- 		sas_target_priv_data->handle = sas_device->handle;
- 		sas_target_priv_data->sas_address = sas_device->sas_address;
--		sas_target_priv_data->sdev = sas_device;
-+		sas_target_priv_data->sas_dev = sas_device;
- 		sas_device->starget = starget;
- 		sas_device->id = starget->id;
- 		sas_device->channel = starget->channel;
-@@ -1362,7 +1573,8 @@ scsih_target_alloc(struct scsi_target *starget)
- 			sas_target_priv_data->flags |=
- 			    MPT_TARGET_FLAGS_RAID_COMPONENT;
- 		if (sas_device->fast_path)
--			sas_target_priv_data->flags |= MPT_TARGET_FASTPATH_IO;
-+			sas_target_priv_data->flags |=
-+					MPT_TARGET_FASTPATH_IO;
- 	}
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 
-@@ -1383,7 +1595,9 @@ scsih_target_destroy(struct scsi_target *starget)
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
- 	struct _sas_device *sas_device;
- 	struct _raid_device *raid_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
-+	struct sas_rphy *rphy;
- 
- 	sas_target_priv_data = starget->hostdata;
- 	if (!sas_target_priv_data)
-@@ -1401,7 +1615,29 @@ scsih_target_destroy(struct scsi_target *starget)
- 		goto out;
- 	}
- 
-+	if (starget->channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_from_target(ioc,
-+							sas_target_priv_data);
-+		if (pcie_device && (pcie_device->starget == starget) &&
-+			(pcie_device->id == starget->id) &&
-+			(pcie_device->channel == starget->channel))
-+			pcie_device->starget = NULL;
-+
-+		if (pcie_device) {
-+			/*
-+			 * Corresponding get() is in _scsih_target_alloc()
-+			 */
-+			sas_target_priv_data->pcie_dev = NULL;
-+			pcie_device_put(pcie_device);
-+			pcie_device_put(pcie_device);
-+		}
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+		goto out;
-+	}
-+
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+	rphy = dev_to_rphy(starget->dev.parent);
- 	sas_device = __mpt3sas_get_sdev_from_target(ioc, sas_target_priv_data);
- 	if (sas_device && (sas_device->starget == starget) &&
- 	    (sas_device->id == starget->id) &&
-@@ -1412,7 +1648,7 @@ scsih_target_destroy(struct scsi_target *starget)
- 		/*
- 		 * Corresponding get() is in _scsih_target_alloc()
- 		 */
--		sas_target_priv_data->sdev = NULL;
-+		sas_target_priv_data->sas_dev = NULL;
- 		sas_device_put(sas_device);
- 
- 		sas_device_put(sas_device);
-@@ -1441,6 +1677,7 @@ scsih_slave_alloc(struct scsi_device *sdev)
- 	struct scsi_target *starget;
- 	struct _raid_device *raid_device;
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
- 
- 	sas_device_priv_data = kzalloc(sizeof(*sas_device_priv_data),
-@@ -1469,8 +1706,22 @@ scsih_slave_alloc(struct scsi_device *sdev)
- 			raid_device->sdev = sdev; /* raid is single lun */
- 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
- 	}
-+	if (starget->channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_by_wwid(ioc,
-+				sas_target_priv_data->sas_address);
-+		if (pcie_device && (pcie_device->starget == NULL)) {
-+			sdev_printk(KERN_INFO, sdev,
-+			    "%s : pcie_device->starget set to starget @ %d\n",
-+			    __func__, __LINE__);
-+			pcie_device->starget = starget;
-+		}
-+
-+		if (pcie_device)
-+			pcie_device_put(pcie_device);
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
- 
--	if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
-+	} else  if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
- 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 		sas_device = __mpt3sas_get_sdev_by_addr(ioc,
- 					sas_target_priv_data->sas_address);
-@@ -1504,6 +1755,7 @@ scsih_slave_destroy(struct scsi_device *sdev)
- 	struct Scsi_Host *shost;
- 	struct MPT3SAS_ADAPTER *ioc;
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
- 
- 	if (!sdev->hostdata)
-@@ -1516,7 +1768,19 @@ scsih_slave_destroy(struct scsi_device *sdev)
- 	shost = dev_to_shost(&starget->dev);
- 	ioc = shost_priv(shost);
- 
--	if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
-+	if (sas_target_priv_data->flags & MPT_TARGET_FLAGS_PCIE_DEVICE) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_from_target(ioc,
-+				sas_target_priv_data);
-+		if (pcie_device && !sas_target_priv_data->num_luns)
-+			pcie_device->starget = NULL;
-+
-+		if (pcie_device)
-+			pcie_device_put(pcie_device);
-+
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	} else if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
- 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 		sas_device = __mpt3sas_get_sdev_from_target(ioc,
- 				sas_target_priv_data);
-@@ -1619,6 +1883,7 @@ scsih_get_resync(struct device *dev)
- 
- 	percent_complete = 0;
- 	handle = 0;
-+
- 	if (ioc->is_warpdrive)
- 		goto out;
- 
-@@ -8398,42 +8663,52 @@ scsih_shutdown(struct pci_dev *pdev)
- static void
- _scsih_probe_boot_devices(struct MPT3SAS_ADAPTER *ioc)
- {
--	u8 is_raid;
-+	u32 channel;
- 	void *device;
- 	struct _sas_device *sas_device;
- 	struct _raid_device *raid_device;
-+	struct _pcie_device *pcie_device;
- 	u16 handle;
- 	u64 sas_address_parent;
- 	u64 sas_address;
- 	unsigned long flags;
- 	int rc;
-+	int tid;
- 
- 	 /* no Bios, return immediately */
- 	if (!ioc->bios_pg3.BiosVersion)
- 		return;
- 
- 	device = NULL;
--	is_raid = 0;
- 	if (ioc->req_boot_device.device) {
- 		device =  ioc->req_boot_device.device;
--		is_raid = ioc->req_boot_device.is_raid;
-+		channel = ioc->req_boot_device.channel;
- 	} else if (ioc->req_alt_boot_device.device) {
- 		device =  ioc->req_alt_boot_device.device;
--		is_raid = ioc->req_alt_boot_device.is_raid;
-+		channel = ioc->req_alt_boot_device.channel;
- 	} else if (ioc->current_boot_device.device) {
- 		device =  ioc->current_boot_device.device;
--		is_raid = ioc->current_boot_device.is_raid;
-+		channel = ioc->current_boot_device.channel;
- 	}
- 
- 	if (!device)
- 		return;
- 
--	if (is_raid) {
-+	if (channel == RAID_CHANNEL) {
- 		raid_device = device;
- 		rc = scsi_add_device(ioc->shost, RAID_CHANNEL,
- 		    raid_device->id, 0);
- 		if (rc)
- 			_scsih_raid_device_remove(ioc, raid_device);
-+	} else if (channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = device;
-+		tid = pcie_device->id;
-+		list_move_tail(&pcie_device->list, &ioc->pcie_device_list);
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+		rc = scsi_add_device(ioc->shost, PCIE_CHANNEL, tid, 0);
-+		if (rc)
-+			_scsih_pcie_device_remove(ioc, pcie_device);
- 	} else {
- 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 		sas_device = device;
-@@ -8566,6 +8841,101 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
- }
- 
- /**
-+ * get_next_pcie_device - Get the next pcie device
-+ * @ioc: per adapter object
-+ *
-+ * Get the next pcie device from pcie_device_init_list list.
-+ *
-+ * Returns pcie device structure if pcie_device_init_list list is not empty
-+ * otherwise returns NULL
-+ */
-+static struct _pcie_device *get_next_pcie_device(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct _pcie_device *pcie_device = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	if (!list_empty(&ioc->pcie_device_init_list)) {
-+		pcie_device = list_first_entry(&ioc->pcie_device_init_list,
-+				struct _pcie_device, list);
-+		pcie_device_get(pcie_device);
-+	}
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return pcie_device;
-+}
-+
-+/**
-+ * pcie_device_make_active - Add pcie device to pcie_device_list list
-+ * @ioc: per adapter object
-+ * @pcie_device: pcie device object
-+ *
-+ * Add the pcie device which has registered with SCSI Transport Later to
-+ * pcie_device_list list
-+ */
-+static void pcie_device_make_active(struct MPT3SAS_ADAPTER *ioc,
-+		struct _pcie_device *pcie_device)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+
-+	if (!list_empty(&pcie_device->list)) {
-+		list_del_init(&pcie_device->list);
-+		pcie_device_put(pcie_device);
-+	}
-+	pcie_device_get(pcie_device);
-+	list_add_tail(&pcie_device->list, &ioc->pcie_device_list);
-+
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+}
-+
-+/**
-+ * _scsih_probe_pcie - reporting PCIe devices to scsi-ml
-+ * @ioc: per adapter object
-+ *
-+ * Called during initial loading of the driver.
-+ */
-+static void
-+_scsih_probe_pcie(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct _pcie_device *pcie_device;
-+	int rc;
-+
-+	/* PCIe Device List */
-+	while ((pcie_device = get_next_pcie_device(ioc))) {
-+		if (pcie_device->starget) {
-+			pcie_device_put(pcie_device);
-+			continue;
-+		}
-+		rc = scsi_add_device(ioc->shost, PCIE_CHANNEL,
-+			pcie_device->id, 0);
-+		if (rc) {
-+			_scsih_pcie_device_remove(ioc, pcie_device);
-+			pcie_device_put(pcie_device);
-+			continue;
-+		} else if (!pcie_device->starget) {
-+			/* CQ 206770:
-+			 * When asyn scanning is enabled, its not possible to
-+			 * remove devices while scanning is turned on due to an
-+			 * oops in scsi_sysfs_add_sdev()->add_device()->
-+			 * sysfs_addrm_start()
-+			 */
-+			if (!ioc->is_driver_loading) {
-+			/* TODO-- Need to find out whether this condition will
-+			 * occur or not
-+			 */
-+				_scsih_pcie_device_remove(ioc, pcie_device);
-+				pcie_device_put(pcie_device);
-+				continue;
-+			}
-+		}
-+		pcie_device_make_active(ioc, pcie_device);
-+		pcie_device_put(pcie_device);
-+	}
-+}
-+
-+/**
-  * _scsih_probe_devices - probing for devices
-  * @ioc: per adapter object
-  *
-@@ -8593,8 +8963,10 @@ _scsih_probe_devices(struct MPT3SAS_ADAPTER *ioc)
- 			_scsih_probe_sas(ioc);
- 			_scsih_probe_raid(ioc);
- 		}
--	} else
-+	} else {
- 		_scsih_probe_sas(ioc);
-+		_scsih_probe_pcie(ioc);
-+	}
- }
- 
- /**
-@@ -8937,11 +9309,14 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	spin_lock_init(&ioc->sas_node_lock);
- 	spin_lock_init(&ioc->fw_event_lock);
- 	spin_lock_init(&ioc->raid_device_lock);
-+	spin_lock_init(&ioc->pcie_device_lock);
- 	spin_lock_init(&ioc->diag_trigger_lock);
- 
- 	INIT_LIST_HEAD(&ioc->sas_device_list);
- 	INIT_LIST_HEAD(&ioc->sas_device_init_list);
- 	INIT_LIST_HEAD(&ioc->sas_expander_list);
-+	INIT_LIST_HEAD(&ioc->pcie_device_list);
-+	INIT_LIST_HEAD(&ioc->pcie_device_init_list);
- 	INIT_LIST_HEAD(&ioc->fw_event_list);
- 	INIT_LIST_HEAD(&ioc->raid_device_list);
- 	INIT_LIST_HEAD(&ioc->sas_hba.sas_port_list);
--- 
-2.5.5
+SGksIEFybmQNClRoYW5rIHlvdSBmb3IgeW91ciByZXBseS4NCi0tLS0t6YKu5Lu25Y6f5Lu2LS0t
+LS0NCuWPkeS7tuS6ujogYXJuZGJlcmdtYW5uQGdtYWlsLmNvbSBbbWFpbHRvOmFybmRiZXJnbWFu
+bkBnbWFpbC5jb21dIOS7o+ihqCBBcm5kIEJlcmdtYW5uDQrlj5HpgIHml7bpl7Q6IDIwMTflubQx
+MOaciDMw5pelIDIzOjIyDQrmlLbku7bkuro6IGxpd2VpIChDTSkNCuaKhOmAgTogUm9iIEhlcnJp
+bmc7IE1hcmsgUnV0bGFuZDsgeHV3ZWkgKE8pOyBDYXRhbGluIE1hcmluYXM7IFdpbGwgRGVhY29u
+OyBWaW5heWFrIEhvbGlrYXR0aTsgSmFtZXMgRS5KLiBCb3R0b21sZXk7IE1hcnRpbiBLLiBQZXRl
+cnNlbjsgS2V2aW4gSGlsbWFuOyBHcmVnb3J5IENMRU1FTlQ7IFRob21hcyBQZXRhenpvbmk7IE1h
+c2FoaXJvIFlhbWFkYTsgUmlrdSBWb2lwaW87IFRoaWVycnkgUmVkaW5nOyBLcnp5c3p0b2YgS296
+bG93c2tpOyBFcmljIEFuaG9sdDsgRFRNTDsgTGludXggS2VybmVsIE1haWxpbmcgTGlzdDsgTGlu
+dXggQVJNOyBsaW51eC1zY3NpOyBHdW9kb25nIFh1OyBGZW5nYmFvcGVuZyAoa2V2aW4sIEtpcmlu
+IFNvbHV0aW9uIERlcHQpOyBsaWh1YW4gKFopOyB3YW5neXVwZW5nIChBKQ0K5Li76aKYOiBSZTog
+562U5aSNOiBbUEFUQ0ggdjUgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1l
+bnQgZm9yIGhpc2ktdWZzDQoNCk9uIFR1ZSwgT2N0IDI0LCAyMDE3IGF0IDExOjA2IEFNLCBsaXdl
+aSAoQ00pIDxsaXdlaTIxM0BodWF3ZWkuY29tPiB3cm90ZToNCj4gd2hhdCdzIHlvdXIgb3Bpbmlv
+biBhYm91dCBteSBleHBsYW5hdGlvbiBhbmQgcmV2aXNpb24gbWV0aG9kPw0KPiBJIGFtIGxvb2tp
+bmcgZm9yd2FyZCB0byB5b3VyIHJlcGx5LCB0aGFua3MhDQoNClNvcnJ5IGZvciB0aGUgZGVsYXks
+IEkgd2FzIHRyYXZlbGxpbmcgbGFzdCB3ZWVrLg0KPiDlj5Hku7bkuro6IGFybmRiZXJnbWFubkBn
+bWFpbC5jb20gW21haWx0bzphcm5kYmVyZ21hbm5AZ21haWwuY29tXSDku6PooaggQXJuZCANCj4g
+QmVyZ21hbm4gT24gRnJpLCBPY3QgMjAsIDIwMTcgYXQgMTA6NTIgQU0sIExpIFdlaSA8bGl3ZWky
+MTNAaHVhd2VpLmNvbT4gd3JvdGU6DQo+PiAtLS0gL2Rldi9udWxsDQo+PiArKysgYi9Eb2N1bWVu
+dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPj4gQEAgLTAsMCAr
+MSw0NiBAQA0KPj4gKyogSGlzaWxpY29uIFVuaXZlcnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhv
+c3QgQ29udHJvbGxlcg0KPj4gKw0KPj4gK1VGUyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmli
+ZSBvbi1jaGlwIFVGUyBoYXJkd2FyZSBtYWNyby4NCj4+ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xs
+ZXIgc2hvdWxkIGhhdmUgaXRzIG93biBub2RlLg0KPj4gKw0KPj4gK1JlcXVpcmVkIHByb3BlcnRp
+ZXM6DQo+PiArLSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBhdGlibGUgbGlzdCwgY29udGFpbnMg
+b25lIG9mIHRoZSBmb2xsb3dpbmcgLQ0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgImhpc2ls
+aWNvbixoaTM2NjAtdWZzIiBmb3IgaGlzaSB1ZnMgaG9zdCBjb250cm9sbGVyDQo+PiArICAgICAg
+ICAgICAgICAgICAgICAgICAgcHJlc2VudCBvbiBIaTM2NjAgY2hpcHNldC4NCg0KT25lIG1vcmUg
+dGhpbmcgSSBqdXN0IG5vdGljZWQ6IHlvdSBkb24ndCBkZXNjcmliZSB0aGUgZGV2aWNlIGFzIGNv
+bXBhdGlibGUgd2l0aCB0aGUgdWZzaGNkIHNwZWMgYXMgZGVmaW5lZCBpbiB0aGUgZ2VuZXJpYyBi
+aW5kaW5nLiBTaG91bGRuJ3Qgd2UgaGF2ZSBib3RoIGNvbXBhdGlibGUgc3RyaW5ncyBsaXN0ZWQg
+aGVyZT8NCg0KT2ssIEkgd2lsbCBmaXggaXQgaW4gcGF0Y2ggdjY7DQoNCj4gSW4gcGFydGljdWxh
+ciwgSSB3b25kZXIgaWYgd2hhdCB5b3UgZGVzY3JpYmUgYXMgdGhlICJVRlMgU1lTIENUUkwiDQo+
+IGFyZWEgY29ycmVzcG9uZHMgdG8gd2hhdCBRdWFsY29tbSBoYXZlIGRlc2NyaWJlZCBhcyB0aGVp
+ciBQSFkgaW1wbGVtZW50YXRpb24uIEl0IGNlcnRhaW5seSBzZWVtcyB0byBkcml2ZXIgc29tZSBv
+ZiB0aGUgcHJvcGVydGllcyB0aGF0IHdvdWxkIG5vcm1hbGx5IGJlIGFzc29jaWF0ZWQgd2l0aCBh
+IFBIWS4NCj4NCj4gTGl3ZWk6WWVzLCBhIHBhcnQgb2YgIlVGUyBTWVMgQ1RSTCIgaXMgYXNzb2Np
+YXRlZCB3aXRoIGEgUEhZLCBidXQgZnJvbSBvdXIgY2hpcCBjb2xsZWFndWUgdGhhdCB3ZSBhc3N1
+cmUgIlVGUyBTWVMgQ1RSTCIgaXMgYXNzb2NpYXRlZCB3aXRoIGNsay9yZXNldC9wb3dlciBvbi9w
+b3dlciBvZmYgYW5kIHNvIG9uLg0KPiBJbiBmYWN0LCBpbiBhZGRpdGlvbiB0byB0aGUgY29udHJv
+bGxlciBpdHNlbGYsIHRoZSBjb250cm9sbGVyIHJlbGF0ZWQgcGVyaXBoZXJ5IGFyZSBhbGwgaW4g
+dGhpcyBhcmVhLiBTbyBpdCdzIG5vdCBhcHByb3ByaWF0ZSB0byBwdXQgdGhpcyBpbnRvIGEgc2Vw
+YXJhdGUgcGh5IG5vZGUuDQoNCkknbSBub3Qgc3VyZSBJIHVuZGVyc3RhbmQgaGVyZS4gRG8geW91
+IG1lYW4gdGhlIHJlc2V0IGhhbmRsZSBpcyBmb3IgcmVzZXR0aW5nIHRoZSBQSFkgcmF0aGVyIHRo
+YW4gdGhlIFVGUyBIQ0Q/DQoNCk1heWJlIG15IGRlc2NyaXB0aW9uIGlzIG5vdCBjbGVhciBlbm91
+Z2gsIG91ciBVRlMgaG9zdCBzb2MgaW1wbGVtZW50YXRpb24gY2FuIGJlIGRpdmlkZWQgaW50byB0
+d28gcGFydHM6IFVGUyBjb250cm9sbGVyIGFuZCByZWxhdGVkIHBlcmlwaGVyYWwgY2lyY3VpdCwg
+dGhhdCAiSENJIHN0YW5kYXJkIjwtPiBVRlMgY29udHJvbGxlciwNCiAiVUZTIFNZUyBDVFJMIjwt
+PiByZWxhdGVkIHBlcmlwaGVyYWwgY2lyY3VpdCwgYW5kIFBIWSBpcyBwYXJ0IG9mIHRoZSBwZXJp
+cGhlcmFsIGNpcmN1aXQuIFNvIHRoZSAiVUZTIFNZUyBDVFJMIiBhcmVhIGRvZXMgbm90IGNvcnJl
+c3BvbmQgY29tcGxldGVseSB0byB3aGF0IFF1YWxjb21tIGhhdmUgZGVzY3JpYmVkIGFzIHRoZWly
+IFBIWSBpbXBsZW1lbnRhdGlvbi4NClRoZSByb290IHJlYXNvbiBpcyB0aGF0IG91ciBVRlMgaG9z
+dCBoYWQgbm90IGRpdmlkZWQgaW50byBVRlMgY29udHJvbGxlciBhbmQgUEhZ77ybDQoNCg0KPiA+
+IEZvciB0aGUgImNsb2NrLW5hbWVzIiBwcm9wZXJ0eSwgeW91IHNwZWNpZnkgImNsa19yZWYiLCB3
+aGljaCBJIGFzc3VtZSBpcyB0aGUgc2FtZSBhcyB3aGF0IFF1YWxjb21tIGNhbGwgInJlZl9jbGsi
+LiBJJ2Qgc3VnZ2VzdCB5b3UgdXNlIHRoZSBleGlzdGluZyBuYW1lIGFuZCBhZGQgdGhhdCBhcyB0
+aGUgZGVmYXVsdCBuYW1lIGluIHRoZSB1ZnNoY2QtcGx0ZnJtLnR4dCBiaW5kaW5nIGRvY3VtZW50
+Lg0KPg0KPiBMaXdlaToiIHJlZl9jbGsgIiBpcyBhbHJlYWR5IGluIHRoZSB1ZnNoY2QtcGx0ZnJt
+LnR4dCBiaW5kaW5nIA0KPiBkb2N1bWVudCwgYW5kIHBhcnNlIGluIHVmc2hjZC5jLCBzbyB3ZSB3
+aWxsIHJlcGxhY2UgImNsa19yZWYiIHdpdGggDQo+ICJyZWZfY2xrIi4gSSB3aWxsIGZpeCBpdCBp
+biBwYXRjaCB2NjsNCg0Kb2sNCg0KPiA+IFRoZSAiY2xrX3BoeSIgcHJvcGVydHkgYXBwZWFycyB0
+byBiZSByZWxhdGVkIHRvIHRoZSBQSFksIHNvIGl0IG1pZ2h0IGJlIGJldHRlciB0byBoYXZlIGEg
+c2VwYXJhdGUgcGh5IG5vZGUgd2l0aCBlaXRoZXIganVzdCB0aGUgY2xrLCBvciB3aXRoIHRoZSBj
+bGsgcGx1cyB0aGUgIlVGUyBTWVMgQ1RSTCIgcmVnaXN0ZXIgYXJlYSwgd2hpY2hldmVyIG1hdGNo
+ZXMgeW91ciBoYXJkd2FyZSBiZXR0ZXIsIGFuZCB0aGVuIHVzZSB0ZWggInBoeXMvcGh5LW5hbWVz
+IiBwcm9wZXJ0eSB0byByZWZlciB0byB0aGF0Lg0KPg0KPiBMaXdlaTogT0ssIEkgd2lsbCBhZGQg
+YSBzZXBhcmF0ZSBwaHkgbm9kZSBhbmQgZml4IGl0IGluIHBhdGNoIHY2Ow0KDQpUaGFua3MuDQoN
+Cj4+IFRoZSByZXNldCBoYW5kbGluZyB5b3UgZGVzY3JpYmUgaGVyZSAoYm90aCByZXNldHMgYW5k
+IHJlc2V0LWdwaW9zKSBhcHBlYXJzIHRvIGJlIGNvbXBsZXRlbHkgZ2VuZXJpYywgc28gSSdkIHN1
+Z2dlc3QgYWRkaW5nIHRob3NlIHRvIHVmc2hjZC1wbHRmcm0udHh0IGluc3RlYWQgb2YgeW91ciBv
+d24gYmluZGluZywgdG8gZW5zdXJlIHRoYXQgZnV0dXJlIGRyaXZlcnMgdXNlIHRoZSBzYW1lIGlk
+ZW50aWZpZXJzLg0KPg0KPiBMaXdlaTogRnJvbSBvdXIgc29jIGNoaXAgY29sbGVhZ3VlLCByZXNl
+dCBpbmNsdWRlICJyc3QiLCAiYXNzZXJ0IiBpcyANCj4gbm90IGdlbmVyaWMgYW5kIHJlbGF0ZWQg
+d2l0aCBvdXIgc29jIGltcGxlbWVudGF0aW9uLCB5b3UgY2FuIHNlZSANCj4gdWZzX2hpc2lfc29j
+X2luaXQoKSBpbiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1oaXNpLmMsIHRoZSBwb3NpdGlvbiBvZiAN
+Cj4gcnN0IGFuZCBhc3NlcnQgaXMgdmVyeSBzcGVjaWFsLCBpdCdzIGhhcmQgdG8gcHV0IGl0IGlu
+IGEgZ2VuZXJpYyANCj4gcHJvY2VzczsNCg0KSXQgc2VlbXMgb2RkIHRoYXQgdGhlIGFiaWxpdHkg
+dG8gcmVzZXQgYSBkZXZpY2UgaXMgc3BlY2lmaWMgdG8geW91ciBpbXBsZW1lbnRhdGlvbi4gV2hh
+dCBJIG1lYW50IGlzIHRoYXQgb3RoZXIgaW1wbGVtZW50YXRpb25zIG1heSBhbHNvIHJlcXVpcmUg
+YSByZXNldCwgc28gZGVzY3JpYmluZyB0aGUgd2F5IHlvdSByZWZlciB0byB0aGlzIGludG8gdGhl
+IGdlbmVyaWMgYmluZGluZyB3b3VsZCBiZSBoZWxwZnVsLCB0byBwcmV2ZW50IG90aGVycyBmcm9t
+IGFkZGluZyBhbm90aGVyIGluY29tcGF0aWJsZSB3YXkgdG8gZG8gdGhlIHNhbWUgdGhpbmcuDQoN
+CkEgbG90IG9mIGdlbmVyaWMgYmluZGluZ3MgaGF2ZSBhIHJlZmVyZW5jZSB0byBhIHJlc2V0IGNv
+bnRyb2xsZXIgdGhhdCBpZiBwcmVzZW50IG5lZWRzIHRvIGJlIHVzZWQgYmVmb3JlIGZpcnN0IGFj
+Y2Vzc2luZyB0aGUgZGV2aWNlIGl0c2VsZi4NCg0KSSBtZWFuIG91ciByZXNldCBwcm9jZXNzIGlz
+IHJlYWxseSBzcGVjaWFsLCBidXQgdGhlcmUgaXMgbm8gcGFyc2Ugb2YgdGhpcyAicmVzZXQiIGlu
+IGdlbmVyaWMgZHJpdmVyIGNvZGUgbGlrZSB1ZnNoY2QuYyBvciB1ZnNoY2QtcGx0ZnJtLmM7IEV2
+ZW4gaWYgSSBhZGQgdGhvc2UgdG8gdWZzaGNkLXBsdGZybS50eHQgYW5kIGltcGxlbWVudCB0aGUg
+Y29tbW9uIHBhcnNpbmcgY29kZSwgYnV0IG91ciBzcGVjaWFsIHJlcXVpcmVtZW50cyBhcmUgZGlm
+ZmljdWx0IHRvIHNhdGlzZnk7DQpXaGF0IGRvIHlvdSB0aGluayBhYm91dCBpZiBJIHB1dCBhbGwg
+dGhlIGltcGxlbWVudGF0aW9ucyBvZiByZXNldCBpbiBvdXIgZHJpdmVyIGNvZGUsIGFuZCByZW1v
+dmUgInJlc2V0IiBwcm9wZXJ0eSBoZXJlPw0KDQo+IHJlc2V0LWdwaW9zIGlzIHVzZWQgdG8gc29s
+dmUgYSBkZWZlY3Qgb2YgdGhlIFNPQyBjaGlwIHJlc2V0IGZ1bmN0aW9uIA0KPiBhbmQgaXQgaXMg
+bm90IGdlbmVyaWMgLCBidXQgb3VyIGNoaXAgaGFzIGJlZW4gdXBkYXRlZCwgc28gdGhpcyBpcyBu
+byANCj4gbG9uZ2VyIG5lZWRlZCwgYW5kIEkgd2lsbCByZW1vdmUgaXQgaW4gdGhlIHBhdGNoIHY2
+Ow0KDQpPay4NCg0KICAgICAgQXJuZA0K
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
