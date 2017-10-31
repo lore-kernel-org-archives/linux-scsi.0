@@ -1,53 +1,32 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH 1/2] scsi: megaraid: Remove redundant code in megasas_alloc_cmds
-Date: Tue, 31 Oct 2017 23:06:18 +0530
-Message-ID: <5501933ac4d2773c529357265e4b2c73@mail.gmail.com>
-References: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] target/iscsi: Convert timers to use timer_setup()
+Date: Tue, 31 Oct 2017 13:42:12 -0400
+Message-ID: <yq1k1zb8b9n.fsf@oracle.com>
+References: <20171027091930.GA14728@beast> <1509109031.3135.1.camel@wdc.com>
+        <CAGXu5j+z9t28n33e6r9hxRNX1hpkzF4Z5sy308sWYh84whkRfQ@mail.gmail.com>
+        <1509470185.12927.1.camel@wdc.com> <yq11slj9qtq.fsf@oracle.com>
+        <1509471239.12927.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yisheng Xie <xieyisheng1@huawei.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1509471239.12927.3.camel@wdc.com> (Bart Van Assche's message of
+        "Tue, 31 Oct 2017 17:34:00 +0000")
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "keescook@chromium.org" <keescook@chromium.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "varun@chelsio.com" <varun@chelsio.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "jiangyilism@gmail.com" <jiangyilism@gmail.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Yisheng Xie [mailto:xieyisheng1@huawei.com]
-Sent: Wednesday, October 25, 2017 3:27 PM
-To: kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
-shivasharan.srikanteshwara@broadcom.com; jejb@linux.vnet.ibm.com;
-martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; Yisheng Xie
-Subject: [PATCH 1/2] scsi: megaraid: Remove redundant code in
-megasas_alloc_cmds
 
-megasas_alloc_cmds is to alloc cmd_list of instance instead of fusion, and
-fusion is useless in this function. Just remove it.
+Bart,
 
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 --
- 1 file changed, 2 deletions(-)
+> The tree I tested indeed includes that rebased patch. BTW, since the code
+> touched by that patch has not been modified in the past months, the rebased
+> patch is identical to the patch I posted in May 2017.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e518dad..0640168 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4033,9 +4033,7 @@ int megasas_alloc_cmds(struct megasas_instance
-*instance)
- 	int j;
- 	u16 max_cmd;
- 	struct megasas_cmd *cmd;
--	struct fusion_context *fusion;
+OK. Just checking.
 
--	fusion = instance->ctrl_context;
- 	max_cmd = instance->max_mfi_cmds;
+So what's the plan here? Should both patches be routed through the timer
+tree?
 
- 	/*
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-
---
-1.7.12.4
+-- 
+Martin K. Petersen	Oracle Linux Engineering
