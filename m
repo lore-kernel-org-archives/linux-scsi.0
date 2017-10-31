@@ -1,52 +1,109 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: ibmvscsi: Convert timers to use timer_setup()
-Date: Tue, 31 Oct 2017 14:46:40 -0700
-Message-ID: <8db42ced-307e-15f1-817a-5c4e76c5df58@linux.vnet.ibm.com>
-References: <20171025100607.GA145026@beast>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54932 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753962AbdJaVqs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 31 Oct 2017 17:46:48 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v9VLhgpM185605
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2017 17:46:47 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2dxxk7rdmy-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2017 17:46:47 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-        Tue, 31 Oct 2017 17:46:47 -0400
-In-Reply-To: <20171025100607.GA145026@beast>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Long Li <longli@exchange.microsoft.com>
+Subject: [PATCH] storvsc: Avoid excessive host scan on controller change
+Date: Tue, 31 Oct 2017 14:58:08 -0700
+Message-ID: <20171031215808.11629-1-longli@exchange.microsoft.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Long Li <longli@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 
-On 10/25/2017 03:06 AM, Kees Cook wrote:
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly.
-> 
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  drivers/scsi/ibmvscsi/ibmvfc.c   | 14 ++++++--------
->  drivers/scsi/ibmvscsi/ibmvscsi.c |  7 +++----
->  2 files changed, 9 insertions(+), 12 deletions(-)
+From: Long Li <longli@microsoft.com>
 
-Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+When there are multiple disks attached to the same SCSI controller,
+the host may send several VSTOR_OPERATION_REMOVE_DEVICE or
+VSTOR_OPERATION_ENUMERATE_BUS messages in a row, to indicate there is a
+change on the SCSI controller. In response, storvsc rescans the SCSI host.
+
+There is no need to do multiple scans on the same host. Fix the code to do
+only one scan.
+
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 6febcdb..b602f52 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -488,6 +488,8 @@ struct hv_host_device {
+ 	unsigned char target;
+ 	struct workqueue_struct *handle_error_wq;
+ 	char work_q_name[20];
++	struct work_struct host_scan_work;
++	struct Scsi_Host *host;
+ };
+ 
+ struct storvsc_scan_work {
+@@ -516,13 +518,12 @@ static void storvsc_device_scan(struct work_struct *work)
+ 
+ static void storvsc_host_scan(struct work_struct *work)
+ {
+-	struct storvsc_scan_work *wrk;
+ 	struct Scsi_Host *host;
+ 	struct scsi_device *sdev;
++	struct hv_host_device *host_device =
++		container_of(work, struct hv_host_device, host_scan_work);
+ 
+-	wrk = container_of(work, struct storvsc_scan_work, work);
+-	host = wrk->host;
+-
++	host = host_device->host;
+ 	/*
+ 	 * Before scanning the host, first check to see if any of the
+ 	 * currrently known devices have been hot removed. We issue a
+@@ -542,8 +543,6 @@ static void storvsc_host_scan(struct work_struct *work)
+ 	 * Now scan the host to discover LUNs that may have been added.
+ 	 */
+ 	scsi_scan_host(host);
+-
+-	kfree(wrk);
+ }
+ 
+ static void storvsc_remove_lun(struct work_struct *work)
+@@ -1119,8 +1118,7 @@ static void storvsc_on_receive(struct storvsc_device *stor_device,
+ 			     struct vstor_packet *vstor_packet,
+ 			     struct storvsc_cmd_request *request)
+ {
+-	struct storvsc_scan_work *work;
+-
++	struct hv_host_device *host_dev;
+ 	switch (vstor_packet->operation) {
+ 	case VSTOR_OPERATION_COMPLETE_IO:
+ 		storvsc_on_io_completion(stor_device, vstor_packet, request);
+@@ -1128,13 +1126,9 @@ static void storvsc_on_receive(struct storvsc_device *stor_device,
+ 
+ 	case VSTOR_OPERATION_REMOVE_DEVICE:
+ 	case VSTOR_OPERATION_ENUMERATE_BUS:
+-		work = kmalloc(sizeof(struct storvsc_scan_work), GFP_ATOMIC);
+-		if (!work)
+-			return;
+-
+-		INIT_WORK(&work->work, storvsc_host_scan);
+-		work->host = stor_device->host;
+-		schedule_work(&work->work);
++		host_dev = shost_priv(stor_device->host);
++		queue_work(
++			host_dev->handle_error_wq, &host_dev->host_scan_work);
+ 		break;
+ 
+ 	case VSTOR_OPERATION_FCHBA_DATA:
+@@ -1747,6 +1741,7 @@ static int storvsc_probe(struct hv_device *device,
+ 
+ 	host_dev->port = host->host_no;
+ 	host_dev->dev = device;
++	host_dev->host = host;
+ 
+ 
+ 	stor_device = kzalloc(sizeof(struct storvsc_device), GFP_KERNEL);
+@@ -1815,6 +1810,7 @@ static int storvsc_probe(struct hv_device *device,
+ 			create_singlethread_workqueue(host_dev->work_q_name);
+ 	if (!host_dev->handle_error_wq)
+ 		goto err_out2;
++	INIT_WORK(&host_dev->host_scan_work, storvsc_host_scan);
+ 	/* Register the HBA and start the scsi bus scan */
+ 	ret = scsi_add_host(host, &device->device);
+ 	if (ret != 0)
+-- 
+2.7.4
