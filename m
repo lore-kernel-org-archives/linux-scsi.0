@@ -1,28 +1,54 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] target/iscsi: Convert timers to use timer_setup()
-Date: Tue, 31 Oct 2017 14:13:59 -0400
-Message-ID: <yq1fu9z89so.fsf@oracle.com>
-References: <20171027091930.GA14728@beast> <1509109031.3135.1.camel@wdc.com>
-        <CAGXu5j+z9t28n33e6r9hxRNX1hpkzF4Z5sy308sWYh84whkRfQ@mail.gmail.com>
-        <1509470185.12927.1.camel@wdc.com> <yq11slj9qtq.fsf@oracle.com>
-        <1509471239.12927.3.camel@wdc.com> <yq1k1zb8b9n.fsf@oracle.com>
-        <CAGXu5jJNabMzjCSwFjaaF6VcBBD57gG9FgXTBgAHCmbKcb_AHw@mail.gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: sas: Convert timers to use timer_setup()
+Date: Tue, 31 Oct 2017 18:13:14 +0000
+Message-ID: <70f0b708-4b73-ee05-96c3-0b45bcba7dd3@huawei.com>
+References: <20171025100800.GA145125@beast>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jJNabMzjCSwFjaaF6VcBBD57gG9FgXTBgAHCmbKcb_AHw@mail.gmail.com>
-        (Kees Cook's message of "Tue, 31 Oct 2017 11:12:29 -0700")
+In-Reply-To: <20171025100800.GA145125@beast>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "varun@chelsio.com" <varun@chelsio.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "jiangyilism@gmail.com" <jiangyilism@gmail.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+To: Kees Cook <keescook@chromium.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Jack Wang <jinpu.wang@profitbricks.com>, "lindar_liu@usish.com" <lindar_liu@usish.com>, Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, Baoyou Xie <baoyou.xie@linaro.org>, "weiyongjun (A)" <weiyongjun1@huawei.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 25/10/2017 11:08, Kees Cook wrote:
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly. This requires adding a pointer to
+> hold the timer's target task, as there isn't a link back from slow_task.
+>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: Jack Wang <jinpu.wang@profitbricks.com>
+> Cc: lindar_liu@usish.com
+> Cc: Jens Axboe <axboe@fb.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+> Cc: Baoyou Xie <baoyou.xie@linaro.org>
+> Cc: Wei Yongjun <weiyongjun1@huawei.com>
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Kees,
+Acked-by: John Garry <john.garry@huawei.com> #for hisi_sas part
+Tested-by: John Garry <john.garry@huawei.com> # basic sanity test for 
+hisi_sas (+ libsas)
 
-> That was my plan. Does that sound okay?
-
-Yep, that's fine.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas.h       |  1 -
+>  drivers/scsi/hisi_sas/hisi_sas_main.c  | 14 ++++++--------
+>  drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  6 +++---
+>  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 24 +++++++++++-------------
+>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  2 +-
+>  drivers/scsi/libsas/sas_expander.c     |  8 ++++----
+>  drivers/scsi/libsas/sas_init.c         |  3 ++-
+>  drivers/scsi/libsas/sas_scsi_host.c    |  2 +-
+>  drivers/scsi/mvsas/mv_init.c           |  3 +--
+>  drivers/scsi/mvsas/mv_sas.c            | 15 +++++++--------
+>  drivers/scsi/mvsas/mv_sas.h            |  1 -
+>  drivers/scsi/pm8001/pm8001_sas.c       | 11 +++++------
+>  include/scsi/libsas.h                  |  1 +
+>  13 files changed, 42 insertions(+), 49 deletions(-)
