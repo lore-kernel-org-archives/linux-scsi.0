@@ -1,49 +1,87 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: RE: system hung up when offlining CPUs
-Date: Wed, 1 Nov 2017 01:47:01 +0100 (CET)
-Message-ID: <alpine.DEB.2.20.1711010105260.1942@nanos>
-References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com> <cd524af7-1f20-1956-1e44-92a451053387@gmail.com> <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com> <20170821131809.GA17564@lst.de> <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com>
- <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com> <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com> <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de> <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com> <alpine.DEB.2.20.1709131529400.1874@nanos>
- <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com> <alpine.DEB.2.20.1709161212160.2105@nanos> <alpine.DEB.2.20.1709161630580.2105@nanos> <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com> <alpine.DEB.2.20.1710032328280.2278@nanos> <alpine.DEB.2.20.1710042208400.2406@nanos>
- <3d93387d-30eb-0434-2216-0e6435c633f8@gmail.com> <857c813c-29cd-6e9f-5cde-52421d4d8429@gmail.com> <alpine.DEB.2.20.1710162106400.2037@nanos> <817f0d359fca6830ece5b1fcf207ce65@mail.gmail.com>
+From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
+Subject: Re: [PATCH] scsi: qla4xxx: Convert timers to use timer_setup()
+Date: Wed, 1 Nov 2017 07:06:14 +0000
+Message-ID: <D61F6B9C.42267%manish.rangankar@cavium.com>
+References: <20171025100743.GA145111@beast>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <817f0d359fca6830ece5b1fcf207ce65@mail.gmail.com>
+In-Reply-To: <20171025100743.GA145111@beast>
+Content-Language: en-US
+Content-ID: <F7882078B427234090AD28DD86DD3E0F@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
-Cc: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>
+To: Kees Cook <keescook@chromium.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 30 Oct 2017, Shivasharan Srikanteshwara wrote:
 
-> In managed-interrupts case, interrupts which were affine to the offlined
-> CPU is not getting migrated to another available CPU. But the
-> documentation at below link says that "all interrupts" are migrated to a
-> new CPU. So not all interrupts are getting migrated to a new CPU then.
+On 25/10/17 3:37 PM, "Kees Cook" <keescook@chromium.org> wrote:
 
-Correct.
+>In preparation for unconditionally passing the struct timer_list pointer
+>to
+>all timer callbacks, switch to using the new timer_setup() and
+>from_timer()
+>to pass the timer pointer explicitly.
+>
+>Cc: QLogic-Storage-Upstream@qlogic.com
+>Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+>Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>Cc: linux-scsi@vger.kernel.org
+>Signed-off-by: Kees Cook <keescook@chromium.org>
+>---
+> drivers/scsi/qla4xxx/ql4_os.c | 12 ++++++------
+> 1 file changed, 6 insertions(+), 6 deletions(-)
+>
+>diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+>index 64c6fa563fdb..2b8a8ce2a431 100644
+>--- a/drivers/scsi/qla4xxx/ql4_os.c
+>+++ b/drivers/scsi/qla4xxx/ql4_os.c
+>@@ -3955,16 +3955,15 @@ void qla4xxx_update_session_conn_param(struct
+>scsi_qla_host *ha,
+> /*
+>  * Timer routines
+>  */
+>+static void qla4xxx_timer(struct timer_list *t);
+>=20
+>-static void qla4xxx_start_timer(struct scsi_qla_host *ha, void *func,
+>+static void qla4xxx_start_timer(struct scsi_qla_host *ha,
+> 				unsigned long interval)
+> {
+> 	DEBUG(printk("scsi: %s: Starting timer thread for adapter %d\n",
+> 		     __func__, ha->host->host_no));
+>-	init_timer(&ha->timer);
+>+	timer_setup(&ha->timer, qla4xxx_timer, 0);
+> 	ha->timer.expires =3D jiffies + interval * HZ;
+>-	ha->timer.data =3D (unsigned long)ha;
+>-	ha->timer.function =3D (void (*)(unsigned long))func;
+> 	add_timer(&ha->timer);
+> 	ha->timer_active =3D 1;
+> }
+>@@ -4508,8 +4507,9 @@ static void qla4xxx_check_relogin_flash_ddb(struct
+>iscsi_cls_session *cls_sess)
+>  * qla4xxx_timer - checks every second for work to do.
+>  * @ha: Pointer to host adapter structure.
+>  **/
+>-static void qla4xxx_timer(struct scsi_qla_host *ha)
+>+static void qla4xxx_timer(struct timer_list *t)
+> {
+>+	struct scsi_qla_host *ha =3D from_timer(ha, t, timer);
+> 	int start_dpc =3D 0;
+> 	uint16_t w;
+>=20
+>@@ -8805,7 +8805,7 @@ static int qla4xxx_probe_adapter(struct pci_dev
+>*pdev,
+> 	ha->isp_ops->enable_intrs(ha);
+>=20
+> 	/* Start timer thread. */
+>-	qla4xxx_start_timer(ha, qla4xxx_timer, 1);
+>+	qla4xxx_start_timer(ha, 1);
+>=20
+> 	set_bit(AF_INIT_DONE, &ha->flags);
+>=20
+>--=20
+>2.7.4
 
-> https://www.kernel.org/doc/html/v4.11/core-api/cpu_hotplug.html#the-offlin
-> e-case
-> "- All interrupts targeted to this CPU are migrated to a new CPU"
 
-Well, documentation is not always up to date :)
- 
-> Once the last CPU in the affinity mask is offlined and a particular IRQ
-> is shutdown, is there a way currently for the device driver to get
-> callback to complete all outstanding requests on that queue?
-
-No and I have no idea how the other drivers deal with that.
-
-The way you can do that is to have your own hotplug callback which is
-invoked when the cpu goes down, but way before the interrupt is shut down,
-which is one of the last steps. Ideally this would be a callback in the
-generic block code which then calls out to all instances like its done for
-the cpu dead state.
-
-Jens, Christoph?
-
-Thanks,
-
-	tglx
+Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
