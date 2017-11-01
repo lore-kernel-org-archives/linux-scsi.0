@@ -1,83 +1,49 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 9/9] iscsi: filter flashnode sysfs by net namespace
-Date: Tue, 31 Oct 2017 15:41:04 -0700
-Message-ID: <20171031224104.17735-10-cleech@redhat.com>
-References: <20171031224104.17735-1-cleech@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: RE: system hung up when offlining CPUs
+Date: Wed, 1 Nov 2017 01:47:01 +0100 (CET)
+Message-ID: <alpine.DEB.2.20.1711010105260.1942@nanos>
+References: <c55a33b4-a886-8882-dd8d-5c488f94ee06@gmail.com> <cd524af7-1f20-1956-1e44-92a451053387@gmail.com> <c1c7e0d6-d908-b511-8418-bca288a0d20a@arm.com> <20170821131809.GA17564@lst.de> <fce0ad52-8739-09c8-ec9d-a23eb92cec5a@arm.com>
+ <8e0d76cd-7cd4-3a98-12ba-815f00d4d772@gmail.com> <2f2ae1bc-4093-d083-6a18-96b9aaa090c9@gmail.com> <b3e88f4d-8ca4-e265-5e09-437285cb18f5@suse.de> <8cb26204cb5402824496bbb6b636e0af@mail.gmail.com> <alpine.DEB.2.20.1709131529400.1874@nanos>
+ <3ce6837a-9aba-0ff4-64b9-7ebca5afca13@gmail.com> <alpine.DEB.2.20.1709161212160.2105@nanos> <alpine.DEB.2.20.1709161630580.2105@nanos> <78ce7246-c567-3f5f-b168-9bcfc659d4bd@gmail.com> <alpine.DEB.2.20.1710032328280.2278@nanos> <alpine.DEB.2.20.1710042208400.2406@nanos>
+ <3d93387d-30eb-0434-2216-0e6435c633f8@gmail.com> <857c813c-29cd-6e9f-5cde-52421d4d8429@gmail.com> <alpine.DEB.2.20.1710162106400.2037@nanos> <817f0d359fca6830ece5b1fcf207ce65@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBCYMVIPVXQMBBKHY4PHQKGQEUBMOCJA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20171031224104.17735-1-cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <817f0d359fca6830ece5b1fcf207ce65@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
+Cc: YASUAKI ISHIMATSU <yasu.isimatu@gmail.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Marc Zyngier <marc.zyngier@arm.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, mpe@ellerman.id.au, keith.busch@intel.com, peterz@infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Finished the net namespace support for flashnode sysfs devices
+On Mon, 30 Oct 2017, Shivasharan Srikanteshwara wrote:
 
-Signed-off-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- drivers/scsi/scsi_transport_iscsi.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+> In managed-interrupts case, interrupts which were affine to the offlined
+> CPU is not getting migrated to another available CPU. But the
+> documentation at below link says that "all interrupts" are migrated to a
+> new CPU. So not all interrupts are getting migrated to a new CPU then.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 5ffda170ac9d..783971d72c4c 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1268,8 +1268,41 @@ static int iscsi_is_flashnode_conn_dev(struct device *dev, void *data)
- 	return dev->type == &iscsi_flashnode_conn_dev_type;
- }
+Correct.
+
+> https://www.kernel.org/doc/html/v4.11/core-api/cpu_hotplug.html#the-offlin
+> e-case
+> "- All interrupts targeted to this CPU are migrated to a new CPU"
+
+Well, documentation is not always up to date :)
  
-+static struct net *iscsi_flashnode_sess_net(struct iscsi_flash_session *f_sess)
-+{
-+	struct Scsi_Host *shost = iscsi_flash_session_to_shost(f_sess);
-+	struct iscsi_cls_host *ihost = shost->shost_data;
-+
-+	return iscsi_host_net(ihost);
-+}
-+
-+static struct net *iscsi_flashnode_conn_net(struct iscsi_flash_conn *f_conn)
-+{
-+	struct iscsi_flash_session *f_sess =
-+		iscsi_flash_conn_to_flash_session(f_conn);
-+
-+	return iscsi_flashnode_sess_net(f_sess);
-+}
-+
-+static const void *iscsi_flashnode_namespace(struct device *dev)
-+{
-+	struct iscsi_flash_conn *f_conn;
-+	struct iscsi_flash_session *f_sess;
-+
-+	if (iscsi_is_flashnode_conn_dev(dev, NULL)) {
-+		f_conn = iscsi_dev_to_flash_conn(dev);
-+		return iscsi_flashnode_conn_net(f_conn);
-+	} else if (iscsi_is_flashnode_session_dev(dev)) {
-+		f_sess = iscsi_dev_to_flash_session(dev);
-+		return iscsi_flashnode_sess_net(f_sess);
-+	}
-+	return NULL;
-+}
-+
- static struct class iscsi_flashnode = {
- 	.name = "iscsi_flashnode",
-+	.ns_type = &net_ns_type_operations,
-+	.namespace = iscsi_flashnode_namespace,
- };
- 
- /**
--- 
-2.9.5
+> Once the last CPU in the affinity mask is offlined and a particular IRQ
+> is shutdown, is there a way currently for the device driver to get
+> callback to complete all outstanding requests on that queue?
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+No and I have no idea how the other drivers deal with that.
+
+The way you can do that is to have your own hotplug callback which is
+invoked when the cpu goes down, but way before the interrupt is shut down,
+which is one of the last steps. Ideally this would be a callback in the
+generic block code which then calls out to all instances like its done for
+the cpu dead state.
+
+Jens, Christoph?
+
+Thanks,
+
+	tglx
