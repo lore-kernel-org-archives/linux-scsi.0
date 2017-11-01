@@ -1,33 +1,26 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: fixes kernel crash while tracing
- ata_eh_link_autopsy event
-Date: Wed, 1 Nov 2017 07:30:47 -0700
-Message-ID: <20171101143031.GL3252168@devbig577.frc2.facebook.com>
-References: <1508926976-11467-1-git-send-email-rsahu@apm.com>
- <20171025145450.GA59538@devbig577.frc2.facebook.com>
- <CAFd313w9W2hHFPJ47y0jeNb1u7=0deLtwcRF=+HXGBYft-QaLw@mail.gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v2 2/8] crypto: scompress - use sgl_alloc() and sgl_free()
+Date: Wed, 1 Nov 2017 14:50:37 +0000
+Message-ID: <1509547836.2530.1.camel@wdc.com>
+References: <20171016224940.1332-1-bart.vanassche@wdc.com>
+         <20171016224940.1332-3-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAFd313w9W2hHFPJ47y0jeNb1u7=0deLtwcRF=+HXGBYft-QaLw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Rameshwar Sahu <rsahu@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <20171016224940.1332-3-bart.vanassche@wdc.com>
+Content-Language: en-US
+Content-ID: <A0428C09C8906D4A93A16B75E566FE60@namprd04.prod.outlook.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
-
-On Tue, Oct 31, 2017 at 08:52:44PM +0530, Rameshwar Sahu wrote:
-> > probably should take both link and dev and use dev iff it's not NULL.
-> >
-> 
-> Instead of this would it be better to call trace_ata_eh_link_autopsy() if
-> dev is not NULL from ata error handler ??
-
-Oh yeah, that'd work too and be probably better.
-
-Thanks.
-
--- 
-tejun
+T24gTW9uLCAyMDE3LTEwLTE2IGF0IDE1OjQ5IC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+IFVzZSB0aGUgc2dsX2FsbG9jKCkgYW5kIHNnbF9mcmVlKCkgZnVuY3Rpb25zIGluc3RlYWQg
+b2Ygb3BlbiBjb2RpbmcNCj4gdGhlc2UgZnVuY3Rpb25zLg0KPiANCj4gU2lnbmVkLW9mZi1ieTog
+QmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPg0KPiBDYzogQXJkIEJpZXNo
+ZXV2ZWwgPGFyZC5iaWVzaGV1dmVsQGxpbmFyby5vcmc+DQo+IENjOiBIZXJiZXJ0IFh1IDxoZXJi
+ZXJ0QGdvbmRvci5hcGFuYS5vcmcuYXU+DQoNCkFyZCBhbmQvb3IgSGVyYmVydCwgY2FuIHlvdSBw
+bGVhc2UgaGF2ZSBhIGxvb2sgYXQgdGhpcyBwYXRjaCBhbmQgbGV0IHVzIGtub3cNCndoZXRoZXIg
+b3Igbm90IGl0IGxvb2tzIGZpbmUgdG8geW91Pw0KDQpUaGFua3MsDQoNCkJhcnQu
