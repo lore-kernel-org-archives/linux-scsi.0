@@ -1,26 +1,39 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 Subject: Re: [PATCH v2 2/8] crypto: scompress - use sgl_alloc() and sgl_free()
-Date: Wed, 1 Nov 2017 14:50:37 +0000
-Message-ID: <1509547836.2530.1.camel@wdc.com>
-References: <20171016224940.1332-1-bart.vanassche@wdc.com>
-         <20171016224940.1332-3-bart.vanassche@wdc.com>
+Date: Wed, 1 Nov 2017 15:17:06 +0000
+Message-ID: <CAKv+Gu_-pqqVn5QeuM_OR0itQS-v5uFATt-ZzNDmPy8CHSLrGg@mail.gmail.com>
+References: <20171016224940.1332-1-bart.vanassche@wdc.com> <20171016224940.1332-3-bart.vanassche@wdc.com>
+ <1509547836.2530.1.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20171016224940.1332-3-bart.vanassche@wdc.com>
-Content-Language: en-US
-Content-ID: <A0428C09C8906D4A93A16B75E566FE60@namprd04.prod.outlook.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f178.google.com ([209.85.223.178]:51373 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753474AbdKAPRH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2017 11:17:07 -0400
+Received: by mail-io0-f178.google.com with SMTP id b186so6747195iof.8
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Nov 2017 08:17:07 -0700 (PDT)
+In-Reply-To: <1509547836.2530.1.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-T24gTW9uLCAyMDE3LTEwLTE2IGF0IDE1OjQ5IC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IFVzZSB0aGUgc2dsX2FsbG9jKCkgYW5kIHNnbF9mcmVlKCkgZnVuY3Rpb25zIGluc3RlYWQg
-b2Ygb3BlbiBjb2RpbmcNCj4gdGhlc2UgZnVuY3Rpb25zLg0KPiANCj4gU2lnbmVkLW9mZi1ieTog
-QmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPg0KPiBDYzogQXJkIEJpZXNo
-ZXV2ZWwgPGFyZC5iaWVzaGV1dmVsQGxpbmFyby5vcmc+DQo+IENjOiBIZXJiZXJ0IFh1IDxoZXJi
-ZXJ0QGdvbmRvci5hcGFuYS5vcmcuYXU+DQoNCkFyZCBhbmQvb3IgSGVyYmVydCwgY2FuIHlvdSBw
-bGVhc2UgaGF2ZSBhIGxvb2sgYXQgdGhpcyBwYXRjaCBhbmQgbGV0IHVzIGtub3cNCndoZXRoZXIg
-b3Igbm90IGl0IGxvb2tzIGZpbmUgdG8geW91Pw0KDQpUaGFua3MsDQoNCkJhcnQu
+On 1 November 2017 at 14:50, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+> On Mon, 2017-10-16 at 15:49 -0700, Bart Van Assche wrote:
+>> Use the sgl_alloc() and sgl_free() functions instead of open coding
+>> these functions.
+>>
+>> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+>> Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+>
+> Ard and/or Herbert, can you please have a look at this patch and let us know
+> whether or not it looks fine to you?
+>
+
+The patch itself does not look unreasonable, but I can't find
+sgl_alloc() anywhere in the source tree. Given that you have cc'ed me
+on this patch only, I can only assume that you are adding this as part
+of the series, but without any context, I can't really review this,
+sorry.
