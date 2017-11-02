@@ -1,33 +1,30 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] block: fix CDROM dependency on BLK_DEV
-Date: Thu, 2 Nov 2017 14:59:42 +0000
-Message-ID: <1509634781.2484.3.camel@wdc.com>
+Date: Thu, 2 Nov 2017 15:01:20 +0000
+Message-ID: <1509634878.2484.5.camel@wdc.com>
 References: <20171102111952.4021454-1-arnd@arndb.de>
+         <212c24f4-7329-f1f5-93c8-090727ed7226@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171102111952.4021454-1-arnd@arndb.de>
+In-Reply-To: <212c24f4-7329-f1f5-93c8-090727ed7226@kernel.dk>
 Content-Language: en-US
-Content-ID: <6B475AAD9AC35344BB140CB22E9C96AA@namprd04.prod.outlook.com>
+Content-ID: <4468D533762A8E4A8E18E259DFBE8F28@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "arnd@arndb.de" <arnd@arndb.de>, "axboe@kernel.dk" <axboe@kernel.dk>
 Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "davem@davemloft.net" <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE3LTExLTAyIGF0IDEyOjE5ICswMTAwLCBBcm5kIEJlcmdtYW5uIHdyb3RlOg0K
-PiBBZnRlciB0aGUgY2Ryb20gY2xlYW51cCwgSSBnZXQgcmFuZGNvbmZpZyB3YXJuaW5ncyBmb3Ig
-c29tZSBjb25maWd1cmF0aW9uczoNCj4gDQo+IHdhcm5pbmc6IChCTEtfREVWX0lERUNEICYmIEJM
-S19ERVZfU1IpIHNlbGVjdHMgQ0RST00gd2hpY2ggaGFzIHVubWV0IGRpcmVjdCBkZXBlbmRlbmNp
-ZXMgKEJMS19ERVYpDQoNCkhlbGxvIEFybmQsDQoNClNpbmNlIEplbnMgaGFzIGFscmVhZHkgcXVl
-dWVkIHlvdXIgcGF0Y2ggaXQncyB0b28gbGF0ZSB0byBjb25zaWRlciBhbHRlcm5hdGl2ZXMuDQpB
-bnl3YXksIHNpbmNlIHRoZSBjZHJvbSBkcml2ZXIgY2FsbHMgYmxvY2sgbGF5ZXIgZnVuY3Rpb25z
-IGRpcmVjdGx5LCBoYXZlIHlvdQ0KY29uc2lkZXJlZCB0aGUgZm9sbG93aW5nIGFsdGVybmF0aXZl
-Pw0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9jay9LY29uZmlnIGIvZHJpdmVycy9ibG9jay9L
-Y29uZmlnDQppbmRleCAwZGFkMWQyNTM2ZjcuLmU3MDQ0Yzg5MzgxNyAxMDA2NDQNCi0tLSBhL2Ry
-aXZlcnMvYmxvY2svS2NvbmZpZw0KKysrIGIvZHJpdmVycy9ibG9jay9LY29uZmlnDQpAQCAtNjks
-NiArNjksNyBAQCBjb25maWcgQU1JR0FfWjJSQU0NCiANCiBjb25maWcgQ0RST00NCiAJdHJpc3Rh
-dGUgIkNELVJPTSBkcml2ZXIiDQorCWRlcGVuZHMgb24gQkxLX0RFVg0KIAloZWxwDQogCSAgQSBD
-RC1ST00gaXMgYSBwcmUtcHJlc3NlZCBvcHRpY2FsIGNvbXBhY3QgZGlzYyB3aGljaCBjb250YWlu
-cw0KIAkgIGRhdGEuIFRoZSBuYW1lIGlzIGFuIGFjcm9ueW0gd2hpY2ggc3RhbmRzIGZvciAiQ29t
-cGFjdCBEaXNj
+T24gVGh1LCAyMDE3LTExLTAyIGF0IDA4OjI3IC0wNjAwLCBKZW5zIEF4Ym9lIHdyb3RlOg0KPiBP
+biAxMS8wMi8yMDE3IDA1OjE5IEFNLCBBcm5kIEJlcmdtYW5uIHdyb3RlOg0KPiA+IEFmdGVyIHRo
+ZSBjZHJvbSBjbGVhbnVwLCBJIGdldCByYW5kY29uZmlnIHdhcm5pbmdzIGZvciBzb21lIGNvbmZp
+Z3VyYXRpb25zOg0KPiA+IA0KPiA+IHdhcm5pbmc6IChCTEtfREVWX0lERUNEICYmIEJMS19ERVZf
+U1IpIHNlbGVjdHMgQ0RST00gd2hpY2ggaGFzIHVubWV0IGRpcmVjdCBkZXBlbmRlbmNpZXMgKEJM
+S19ERVYpDQo+ID4gDQo+ID4gVGhpcyBhZGRzIGFuIGV4cGxpY2l0IEJMS19ERVYgZGVwZW5kZW5j
+eSBmb3IgYm90aCBkcml2ZXJzLiBUaGUgb3RoZXINCj4gPiBkcml2ZXJzIHRoYXQgc2VsZWN0ICdD
+RFJPTScgYWxyZWFkeSBoYXZlIHRoaXMgYW5kIGRvbid0IG5lZWQgYSBjaGFuZ2UuDQo+IA0KPiBU
+aGFua3MgQXJuZCwgYXBwbGllZC4NCg0KSGVsbG8gSmVucywNCg0KQ2FuIHlvdSB3YWl0IGF0IGxl
+YXN0IDI0IGhvdXJzIGFmdGVyIGEgcGF0Y2ggaGFzIGJlZW4gcG9zdGVkIGJlZm9yZSBhcHBseWlu
+ZyBpdA0Kc3VjaCB0aG9zZSB3aG8gd2FudCB0byBwb3N0IHJldmlldyBjb21tZW50cyBoYXZlIGEg
+Y2hhbmNlIHRvIGRvIHRoYXQ/DQoNClRoYW5rcywNCg0KQmFydC4=
