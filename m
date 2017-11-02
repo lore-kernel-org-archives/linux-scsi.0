@@ -1,40 +1,46 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] block: fix CDROM dependency on BLK_DEV
-Date: Thu, 2 Nov 2017 09:11:04 -0600
-Message-ID: <e11ff1e1-7555-1d8b-2223-bb8d7866a793@kernel.dk>
-References: <20171102111952.4021454-1-arnd@arndb.de>
- <212c24f4-7329-f1f5-93c8-090727ed7226@kernel.dk>
- <1509634878.2484.5.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1509634878.2484.5.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "arnd@arndb.de" <arnd@arndb.de>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "davem@davemloft.net" <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: hisi_sas: select CONFIG_RAS
+Date: Thu,  2 Nov 2017 17:50:53 +0100
+Message-ID: <20171102165059.213216-1-arnd@arndb.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.74]:58050 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933391AbdKBQvW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2017 12:51:22 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Xiang Chen <chenxiang66@hisilicon.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/02/2017 09:01 AM, Bart Van Assche wrote:
-> On Thu, 2017-11-02 at 08:27 -0600, Jens Axboe wrote:
->> On 11/02/2017 05:19 AM, Arnd Bergmann wrote:
->>> After the cdrom cleanup, I get randconfig warnings for some configurations:
->>>
->>> warning: (BLK_DEV_IDECD && BLK_DEV_SR) selects CDROM which has unmet direct dependencies (BLK_DEV)
->>>
->>> This adds an explicit BLK_DEV dependency for both drivers. The other
->>> drivers that select 'CDROM' already have this and don't need a change.
->>
->> Thanks Arnd, applied.
-> 
-> Hello Jens,
-> 
-> Can you wait at least 24 hours after a patch has been posted before applying it
-> such those who want to post review comments have a chance to do that?
+The driver now uses the RAS infrastructure, and fails to link if that
+is disabled:
 
-I generally at least do that, unless they are trivial...
+drivers/scsi/hisi_sas/hisi_sas_v2_hw.o: In function `fatal_ecc_int_v2_hw':
+hisi_sas_v2_hw.c:(.text+0xb08): undefined reference to `__tracepoint_non_standard_event'
+drivers/scsi/hisi_sas/hisi_sas_v2_hw.o: In function `fatal_axi_int_v2_hw':
+hisi_sas_v2_hw.c:(.text+0x1b34): undefined reference to `__tracepoint_non_standard_event'
 
+This adds an explicit Kconfig 'select RAS' statement. I don't know if
+the driver uses the interface correctly, as no other driver seems to do
+it like this, but the change fixes the link error.
 
+Fixes: dfeb5021f001 ("scsi: hisi_sas: report ECC and AXI errors in v2 hw to userspace")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/hisi_sas/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
+index d42f29a5eb65..6ad8a6251d21 100644
+--- a/drivers/scsi/hisi_sas/Kconfig
++++ b/drivers/scsi/hisi_sas/Kconfig
+@@ -4,6 +4,7 @@ config SCSI_HISI_SAS
+ 	depends on ARM64 || COMPILE_TEST
+ 	select SCSI_SAS_LIBSAS
+ 	select BLK_DEV_INTEGRITY
++	select RAS
+ 	depends on ATA
+ 	help
+ 		This driver supports HiSilicon's SAS HBA, including support based
 -- 
-Jens Axboe
+2.9.0
