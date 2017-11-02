@@ -1,30 +1,41 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] block: fix CDROM dependency on BLK_DEV
-Date: Thu, 2 Nov 2017 15:01:20 +0000
-Message-ID: <1509634878.2484.5.camel@wdc.com>
-References: <20171102111952.4021454-1-arnd@arndb.de>
-         <212c24f4-7329-f1f5-93c8-090727ed7226@kernel.dk>
+From: Victor Gonzalo <vic.thor@second.anddroptable.net>
+Subject: Re: [PATCH] scsi_debug: Added Format Unit and Sanitize commands
+Date: Thu, 2 Nov 2017 17:05:47 +0200
+Message-ID: <20171102150547.GA28088@sadr.members.linode.com>
+References: <20171102135402.GA27394@sadr.members.linode.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <212c24f4-7329-f1f5-93c8-090727ed7226@kernel.dk>
-Content-Language: en-US
-Content-ID: <4468D533762A8E4A8E18E259DFBE8F28@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "arnd@arndb.de" <arnd@arndb.de>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "davem@davemloft.net" <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.tmdhosting.com ([198.143.161.162]:48742 "EHLO
+        mx2.tmdhosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754886AbdKBPFv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2017 11:05:51 -0400
+Received: from [184.154.216.246] (helo=s610.tmd.cloud)
+        by mx2.tmdhosting.com with esmtps (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+        (Exim 4.89)
+        (envelope-from <vic.thor@second.anddroptable.net>)
+        id 1eAH42-0004zp-8p
+        for linux-scsi@vger.kernel.org; Thu, 02 Nov 2017 10:05:51 -0500
+Received: from li1490-145.members.linode.com ([139.162.173.145]:42222 helo=sadr.members.linode.com)
+        by s610.tmd.cloud with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.89)
+        (envelope-from <vic.thor@second.anddroptable.net>)
+        id 1eAH41-0003KY-2U
+        for linux-scsi@vger.kernel.org; Thu, 02 Nov 2017 11:05:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20171102135402.GA27394@sadr.members.linode.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE3LTExLTAyIGF0IDA4OjI3IC0wNjAwLCBKZW5zIEF4Ym9lIHdyb3RlOg0KPiBP
-biAxMS8wMi8yMDE3IDA1OjE5IEFNLCBBcm5kIEJlcmdtYW5uIHdyb3RlOg0KPiA+IEFmdGVyIHRo
-ZSBjZHJvbSBjbGVhbnVwLCBJIGdldCByYW5kY29uZmlnIHdhcm5pbmdzIGZvciBzb21lIGNvbmZp
-Z3VyYXRpb25zOg0KPiA+IA0KPiA+IHdhcm5pbmc6IChCTEtfREVWX0lERUNEICYmIEJMS19ERVZf
-U1IpIHNlbGVjdHMgQ0RST00gd2hpY2ggaGFzIHVubWV0IGRpcmVjdCBkZXBlbmRlbmNpZXMgKEJM
-S19ERVYpDQo+ID4gDQo+ID4gVGhpcyBhZGRzIGFuIGV4cGxpY2l0IEJMS19ERVYgZGVwZW5kZW5j
-eSBmb3IgYm90aCBkcml2ZXJzLiBUaGUgb3RoZXINCj4gPiBkcml2ZXJzIHRoYXQgc2VsZWN0ICdD
-RFJPTScgYWxyZWFkeSBoYXZlIHRoaXMgYW5kIGRvbid0IG5lZWQgYSBjaGFuZ2UuDQo+IA0KPiBU
-aGFua3MgQXJuZCwgYXBwbGllZC4NCg0KSGVsbG8gSmVucywNCg0KQ2FuIHlvdSB3YWl0IGF0IGxl
-YXN0IDI0IGhvdXJzIGFmdGVyIGEgcGF0Y2ggaGFzIGJlZW4gcG9zdGVkIGJlZm9yZSBhcHBseWlu
-ZyBpdA0Kc3VjaCB0aG9zZSB3aG8gd2FudCB0byBwb3N0IHJldmlldyBjb21tZW50cyBoYXZlIGEg
-Y2hhbmNlIHRvIGRvIHRoYXQ/DQoNClRoYW5rcywNCg0KQmFydC4=
+Sorry about the double post. I had troubles to configure this
+email server, google flagged my messages as spam so I
+decided to resend it.
+
+As a side-effect, I improved the comment, the subject and
+even fixed a typo on the signed-off-by! All advantages! ;)
+
+Sorry again.
+
+-Víctor
