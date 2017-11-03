@@ -1,153 +1,68 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 04/17] lpfc: Fix crash after bad bar setup on driver attachment
-Date: Fri,  3 Nov 2017 15:56:15 -0700
-Message-ID: <20171103225628.24716-5-jsmart2021@gmail.com>
+Subject: [PATCH 08/17] lpfc: Fix display for debugfs queInfo
+Date: Fri,  3 Nov 2017 15:56:19 -0700
+Message-ID: <20171103225628.24716-9-jsmart2021@gmail.com>
 References: <20171103225628.24716-1-jsmart2021@gmail.com>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:44606 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751568AbdKCW4p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Nov 2017 18:56:45 -0400
+Received: by mail-qk0-f193.google.com with SMTP id r64so5067332qkc.1
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Nov 2017 15:56:45 -0700 (PDT)
 In-Reply-To: <20171103225628.24716-1-jsmart2021@gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-In test cases where an instance of the driver is detached and
-reattached, the driver will crash on reattachment. There is a
-compound if statement that will skip over the bar setup if
-the pci_resource_start call is not successful. The driver
-erroneously returns success to its bar setup in this scenario
-even though the bars aren't properly configured.
+Display for lpfc/fnX/iDiag/queInfo isn't formatted perfectly.
+Corrected the format strings for the queue info debug messages.
 
-Rework the offending code segment for proper initialization steps.
-If the pci_resource_start call fails, -ENOMEM is now returned.
-
-Sample stack:
-
-rport-5:0-10: blocked FC remote port time out: removing rport
-BUG: unable to handle kernel NULL pointer dereference at           (null)
-... lpfc_sli4_wait_bmbx_ready+0x32/0x70 [lpfc]
-...
-...  RIP: 0010:...  ... lpfc_sli4_wait_bmbx_ready+0x32/0x70 [lpfc]
- Call Trace:
-  ... lpfc_sli4_post_sync_mbox+0x106/0x4d0 [lpfc]
-  ... ? __alloc_pages_nodemask+0x176/0x420
-  ... ? __kmalloc+0x2e/0x230
-  ... lpfc_sli_issue_mbox_s4+0x533/0x720 [lpfc]
-  ... ? mempool_alloc+0x69/0x170
-  ... ? dma_generic_alloc_coherent+0x8f/0x140
-  ... lpfc_sli_issue_mbox+0xf/0x20 [lpfc]
-  ... lpfc_sli4_driver_resource_setup+0xa6f/0x1130 [lpfc]
-  ... ? lpfc_pci_probe_one+0x23e/0x16f0 [lpfc]
-  ... lpfc_pci_probe_one+0x445/0x16f0 [lpfc]
-  ... local_pci_probe+0x45/0xa0
-  ... work_for_cpu_fn+0x14/0x20
-  ... process_one_work+0x17a/0x440
-
-Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 84 ++++++++++++++++++++++++++-----------------
- 1 file changed, 51 insertions(+), 33 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 745aff753396..fc9f91327724 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -9437,44 +9437,62 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
- 		lpfc_sli4_bar0_register_memmap(phba, if_type);
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index d50c481ec41c..e8c5a0927dd7 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -3248,7 +3248,7 @@ __lpfc_idiag_print_eq(struct lpfc_queue *qp, char *eqtype,
+ 
+ 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
+ 			"\n%s EQ info: EQ-STAT[max:x%x noE:x%x "
+-			"bs:x%x proc:x%llx eqd %d]\n",
++			"cqe_proc:x%x eqe_proc:x%llx eqd %d]\n",
+ 			eqtype, qp->q_cnt_1, qp->q_cnt_2, qp->q_cnt_3,
+ 			(unsigned long long)qp->q_cnt_4, qp->q_mode);
+ 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
+@@ -3368,6 +3368,12 @@ lpfc_idiag_queinfo_read(struct file *file, char __user *buf, size_t nbytes,
+ 		if (len >= max_cnt)
+ 			goto too_big;
+ 
++		qp = phba->sli4_hba.hdr_rq;
++		len = __lpfc_idiag_print_rqpair(qp, phba->sli4_hba.dat_rq,
++						"ELS RQpair", pbuffer, len);
++		if (len >= max_cnt)
++			goto too_big;
++
+ 		/* Slow-path NVME LS response CQ */
+ 		qp = phba->sli4_hba.nvmels_cq;
+ 		len = __lpfc_idiag_print_cq(qp, "NVME LS",
+@@ -3385,12 +3391,6 @@ lpfc_idiag_queinfo_read(struct file *file, char __user *buf, size_t nbytes,
+ 		if (len >= max_cnt)
+ 			goto too_big;
+ 
+-		qp = phba->sli4_hba.hdr_rq;
+-		len = __lpfc_idiag_print_rqpair(qp, phba->sli4_hba.dat_rq,
+-				"RQpair", pbuffer, len);
+-		if (len >= max_cnt)
+-			goto too_big;
+-
+ 		goto out;
  	}
  
--	if ((if_type == LPFC_SLI_INTF_IF_TYPE_0) &&
--	    (pci_resource_start(pdev, PCI_64BIT_BAR2))) {
--		/*
--		 * Map SLI4 if type 0 HBA Control Register base to a kernel
--		 * virtual address and setup the registers.
--		 */
--		phba->pci_bar1_map = pci_resource_start(pdev, PCI_64BIT_BAR2);
--		bar1map_len = pci_resource_len(pdev, PCI_64BIT_BAR2);
--		phba->sli4_hba.ctrl_regs_memmap_p =
--				ioremap(phba->pci_bar1_map, bar1map_len);
--		if (!phba->sli4_hba.ctrl_regs_memmap_p) {
--			dev_printk(KERN_ERR, &pdev->dev,
--			   "ioremap failed for SLI4 HBA control registers.\n");
-+	if (if_type == LPFC_SLI_INTF_IF_TYPE_0) {
-+		if (pci_resource_start(pdev, PCI_64BIT_BAR2)) {
-+			/*
-+			 * Map SLI4 if type 0 HBA Control Register base to a
-+			 * kernel virtual address and setup the registers.
-+			 */
-+			phba->pci_bar1_map = pci_resource_start(pdev,
-+								PCI_64BIT_BAR2);
-+			bar1map_len = pci_resource_len(pdev, PCI_64BIT_BAR2);
-+			phba->sli4_hba.ctrl_regs_memmap_p =
-+					ioremap(phba->pci_bar1_map,
-+						bar1map_len);
-+			if (!phba->sli4_hba.ctrl_regs_memmap_p) {
-+				dev_err(&pdev->dev,
-+					   "ioremap failed for SLI4 HBA "
-+					    "control registers.\n");
-+				error = -ENOMEM;
-+				goto out_iounmap_conf;
-+			}
-+			phba->pci_bar2_memmap_p =
-+					 phba->sli4_hba.ctrl_regs_memmap_p;
-+			lpfc_sli4_bar1_register_memmap(phba);
-+		} else {
-+			error = -ENOMEM;
- 			goto out_iounmap_conf;
- 		}
--		phba->pci_bar2_memmap_p = phba->sli4_hba.ctrl_regs_memmap_p;
--		lpfc_sli4_bar1_register_memmap(phba);
- 	}
- 
--	if ((if_type == LPFC_SLI_INTF_IF_TYPE_0) &&
--	    (pci_resource_start(pdev, PCI_64BIT_BAR4))) {
--		/*
--		 * Map SLI4 if type 0 HBA Doorbell Register base to a kernel
--		 * virtual address and setup the registers.
--		 */
--		phba->pci_bar2_map = pci_resource_start(pdev, PCI_64BIT_BAR4);
--		bar2map_len = pci_resource_len(pdev, PCI_64BIT_BAR4);
--		phba->sli4_hba.drbl_regs_memmap_p =
--				ioremap(phba->pci_bar2_map, bar2map_len);
--		if (!phba->sli4_hba.drbl_regs_memmap_p) {
--			dev_printk(KERN_ERR, &pdev->dev,
--			   "ioremap failed for SLI4 HBA doorbell registers.\n");
--			goto out_iounmap_ctrl;
--		}
--		phba->pci_bar4_memmap_p = phba->sli4_hba.drbl_regs_memmap_p;
--		error = lpfc_sli4_bar2_register_memmap(phba, LPFC_VF0);
--		if (error)
-+	if (if_type == LPFC_SLI_INTF_IF_TYPE_0) {
-+		if (pci_resource_start(pdev, PCI_64BIT_BAR4)) {
-+			/*
-+			 * Map SLI4 if type 0 HBA Doorbell Register base to
-+			 * a kernel virtual address and setup the registers.
-+			 */
-+			phba->pci_bar2_map = pci_resource_start(pdev,
-+								PCI_64BIT_BAR4);
-+			bar2map_len = pci_resource_len(pdev, PCI_64BIT_BAR4);
-+			phba->sli4_hba.drbl_regs_memmap_p =
-+					ioremap(phba->pci_bar2_map,
-+						bar2map_len);
-+			if (!phba->sli4_hba.drbl_regs_memmap_p) {
-+				dev_err(&pdev->dev,
-+					   "ioremap failed for SLI4 HBA"
-+					   " doorbell registers.\n");
-+				error = -ENOMEM;
-+				goto out_iounmap_ctrl;
-+			}
-+			phba->pci_bar4_memmap_p =
-+					phba->sli4_hba.drbl_regs_memmap_p;
-+			error = lpfc_sli4_bar2_register_memmap(phba, LPFC_VF0);
-+			if (error)
-+				goto out_iounmap_all;
-+		} else {
-+			error = -ENOMEM;
- 			goto out_iounmap_all;
-+		}
- 	}
- 
- 	return 0;
 -- 
 2.13.1
