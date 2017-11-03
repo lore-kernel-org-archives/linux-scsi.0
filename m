@@ -1,45 +1,31 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] lpfc: Tie in to new dev_loss_tmo interface in nvme transport
-Date: Fri,  3 Nov 2017 09:12:36 -0700
-Message-ID: <20171103161236.15127-1-jsmart2021@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:56408 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751290AbdKCQMs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Nov 2017 12:12:48 -0400
-Received: by mail-qt0-f193.google.com with SMTP id z28so3809193qtz.13
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Nov 2017 09:12:47 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] scsi: be2iscsi: Use kasprintf
+Date: Fri, 03 Nov 2017 12:25:11 -0400
+Message-ID: <yq17ev772jc.fsf@oracle.com>
+References: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
+        <20171103151613.GA2601@himanshu-Vostro-3559>
+        <yq1o9oj75bi.fsf@oracle.com>
+        <20171103161052.GA11274@himanshu-Vostro-3559>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171103161052.GA11274@himanshu-Vostro-3559> (Himanshu Jha's
+        message of "Fri, 3 Nov 2017 21:40:52 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Himanshu Jha <himanshujha199640@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
 
-This patch calls the new nvme transport routine for dev_loss_tmo
-whenever the SCSI fc transport calls the lldd to make a dynamic
-change to a remote ports dev_loss_tmo.
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
+Himanshu,
 
----
-This lpfc patch, as dependent upon the new nvme transport
-nvme_fc_set_remoteport_devloss() call, should enter via nvme-4.15
----
- drivers/scsi/lpfc/lpfc_attr.c | 3 +++
- 1 file changed, 3 insertions(+)
+>> It is not. It needs a review/ack from the driver maintainers.
+>
+> What about Kyle Fortin's review ?
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index c17677f494af..1191a92e2dbc 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3246,6 +3246,9 @@ lpfc_update_rport_devloss_tmo(struct lpfc_vport *vport)
- 			continue;
- 		if (ndlp->rport)
- 			ndlp->rport->dev_loss_tmo = vport->cfg_devloss_tmo;
-+		if (ndlp->nrport)
-+			nvme_fc_set_remoteport_devloss(ndlp->nrport->remoteport,
-+						       vport->cfg_devloss_tmo);
- 	}
- 	spin_unlock_irq(shost->host_lock);
- }
+Kyle's review is fine. But when a driver is actively maintained, like
+be2iscsi is, I always give ack/nack rights to the relevant maintainers.
+In this case that's Jitendra.
+
 -- 
-2.13.1
+Martin K. Petersen	Oracle Linux Engineering
