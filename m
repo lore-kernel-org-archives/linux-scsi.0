@@ -1,99 +1,31 @@
-From: Himanshu Jha <himanshujha199640@gmail.com>
-Subject: Re: [PATCH v2] scsi: be2iscsi: Use kasprintf
-Date: Fri, 3 Nov 2017 20:46:14 +0530
-Message-ID: <20171103151613.GA2601@himanshu-Vostro-3559>
-References: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: hisi_sas: select CONFIG_RAS
+Date: Fri, 03 Nov 2017 11:24:03 -0400
+Message-ID: <yq1shdv75d8.fsf@oracle.com>
+References: <20171102165059.213216-1-arnd@arndb.de>
+        <bdb263f7-7e1f-47ab-881b-2feeeeccfbf5@huawei.com>
+        <CAK8P3a3fvRQ+oUg=EUuWxdyyyMGHiL7sQMLhCY53sfCRyinOAA@mail.gmail.com>
+        <50ad8f0e-9b21-4277-4be9-dfd6b82e5554@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:52735 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751303AbdKCPQY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Nov 2017 11:16:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <50ad8f0e-9b21-4277-4be9-dfd6b82e5554@huawei.com> (John Garry's
+        message of "Fri, 3 Nov 2017 12:02:16 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Xiang Chen <chenxiang66@hisilicon.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>, Shiju Jose <shiju.jose@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com
-
-On Wed, Oct 11, 2017 at 09:06:14PM +0530, Himanshu Jha wrote:
-
-Hi James,
 
 
+John,
 
-Just a reminder, is my patch in our queue ?
+> Actually this interface is intended for logging UEFI CPER non-standard
+> records from kernel RAS/APEI framework to userspace. It is not intended
+> for kernel peripheral driver logging (like this case). Until we get a
+> community concensus on whether this is acceptable, I would rather revert
+> the original patch.
 
-Thanks
-Himanshu Jha
+OK, dropped it for now.
 
-
-> Use kasprintf instead of combination of kmalloc and sprintf.
-> Also, remove BEISCSI_MSI_NAME macro used to specify size of string as
-> kasprintf handles size computations.
-> 
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> ---
-> v2:
->    -remove the unnecessary macro BEISCSI_MSI_NAME. 
-> 
->  drivers/scsi/be2iscsi/be_main.c | 12 +++++-------
->  drivers/scsi/be2iscsi/be_main.h |  2 --
->  2 files changed, 5 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index b4542e7..6a9ee0e 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -803,15 +803,14 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
->  
->  	if (pcidev->msix_enabled) {
->  		for (i = 0; i < phba->num_cpus; i++) {
-> -			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
-> -						    GFP_KERNEL);
-> +			phba->msi_name[i] = kasprintf(GFP_KERNEL,
-> +						      "beiscsi_%02x_%02x",
-> +						      phba->shost->host_no, i);
->  			if (!phba->msi_name[i]) {
->  				ret = -ENOMEM;
->  				goto free_msix_irqs;
->  			}
->  
-> -			sprintf(phba->msi_name[i], "beiscsi_%02x_%02x",
-> -				phba->shost->host_no, i);
->  			ret = request_irq(pci_irq_vector(pcidev, i),
->  					  be_isr_msix, 0, phba->msi_name[i],
->  					  &phwi_context->be_eq[i]);
-> @@ -824,13 +823,12 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
->  				goto free_msix_irqs;
->  			}
->  		}
-> -		phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME, GFP_KERNEL);
-> +		phba->msi_name[i] = kasprintf(GFP_KERNEL, "beiscsi_mcc_%02x",
-> +					      phba->shost->host_no);
->  		if (!phba->msi_name[i]) {
->  			ret = -ENOMEM;
->  			goto free_msix_irqs;
->  		}
-> -		sprintf(phba->msi_name[i], "beiscsi_mcc_%02x",
-> -			phba->shost->host_no);
->  		ret = request_irq(pci_irq_vector(pcidev, i), be_isr_mcc, 0,
->  				  phba->msi_name[i], &phwi_context->be_eq[i]);
->  		if (ret) {
-> diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-> index 81ce3ff..8166de5 100644
-> --- a/drivers/scsi/be2iscsi/be_main.h
-> +++ b/drivers/scsi/be2iscsi/be_main.h
-> @@ -155,8 +155,6 @@
->  #define PAGES_REQUIRED(x) \
->  	((x < PAGE_SIZE) ? 1 :  ((x + PAGE_SIZE - 1) / PAGE_SIZE))
->  
-> -#define BEISCSI_MSI_NAME 20 /* size of msi_name string */
-> -
->  #define MEM_DESCR_OFFSET 8
->  #define BEISCSI_DEFQ_HDR 1
->  #define BEISCSI_DEFQ_DATA 0
-> -- 
-> 2.7.4
-> 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
