@@ -1,31 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: be2iscsi: Use kasprintf
-Date: Fri, 03 Nov 2017 12:25:11 -0400
-Message-ID: <yq17ev772jc.fsf@oracle.com>
-References: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
-        <20171103151613.GA2601@himanshu-Vostro-3559>
-        <yq1o9oj75bi.fsf@oracle.com>
-        <20171103161052.GA11274@himanshu-Vostro-3559>
+Subject: Re: [PATCH] scsi: lpfc: fix kzalloc-simple.cocci warnings
+Date: Fri, 03 Nov 2017 12:26:50 -0400
+Message-ID: <yq1375v72gl.fsf@oracle.com>
+References: <1507750961-26945-1-git-send-email-gomonovych@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171103161052.GA11274@himanshu-Vostro-3559> (Himanshu Jha's
-        message of "Fri, 3 Nov 2017 21:40:52 +0530")
+In-Reply-To: <1507750961-26945-1-git-send-email-gomonovych@gmail.com> (Vasyl
+        Gomonovych's message of "Wed, 11 Oct 2017 21:42:41 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com
+To: Vasyl Gomonovych <gomonovych@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Himanshu,
+Vasyl,
 
->> It is not. It needs a review/ack from the driver maintainers.
+> drivers/scsi/lpfc/lpfc_debugfs.c:5460:22-29: WARNING: kzalloc should be used for phba -> nvmeio_trc, instead of kmalloc/memset
+> drivers/scsi/lpfc/lpfc_debugfs.c:2230:20-27: WARNING: kzalloc should be used for phba -> nvmeio_trc, instead of kmalloc/memset
 >
-> What about Kyle Fortin's review ?
+>  Use kzalloc rather than kmalloc followed by memset with 0
 
-Kyle's review is fine. But when a driver is actively maintained, like
-be2iscsi is, I always give ack/nack rights to the relevant maintainers.
-In this case that's Jitendra.
+Applied to 4.15/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
