@@ -1,49 +1,51 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] scsi: lpfc_els: use swap macro in lpfc_plogi_confirm_nport
-Date: Fri, 3 Nov 2017 11:42:21 -0500
-Message-ID: <20171103164221.GA14017@embeddedor.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.14-rc7
+Date: Fri, 03 Nov 2017 09:42:30 -0700
+Message-ID: <1509727350.3148.36.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Make use of the swap macro and remove unnecessary variable keep_nlp_flag.
-This makes the code easier to read and maintain.
+One minor fix in the error leg of the qla2xxx driver (it oopses the
+system if we get an error trying to start the internal kernel thread).
+ The fix is minor because the problem isn't often encountered in the
+field (although it can be induced by inserting the module in a low
+memory environment).
 
-This code was detected with the help of Coccinelle.
+The patch is available here:
 
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Douglas Miller (1):
+      scsi: qla2xxx: Fix oops in qla2x00_probe_one error path
+
+And the diffstat:
+
+ drivers/scsi/qla2xxx/qla_os.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/lpfc/lpfc_els.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index b14f7c5..1b745fe 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1525,7 +1525,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 	struct fc_rport *rport;
- 	struct serv_parm *sp;
- 	uint8_t  name[sizeof(struct lpfc_name)];
--	uint32_t rc, keepDID = 0, keep_nlp_flag = 0;
-+	uint32_t rc, keepDID = 0;
- 	uint16_t keep_nlp_state;
- 	struct lpfc_nvme_rport *keep_nrport = NULL;
- 	int  put_node;
-@@ -1616,9 +1616,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 		       phba->cfg_rrq_xri_bitmap_sz);
- 
- 	spin_lock_irq(shost->host_lock);
--	keep_nlp_flag = new_ndlp->nlp_flag;
--	new_ndlp->nlp_flag = ndlp->nlp_flag;
--	ndlp->nlp_flag = keep_nlp_flag;
-+	swap(new_ndlp->nlp_flag, ndlp->nlp_flag);
- 	spin_unlock_irq(shost->host_lock);
- 
- 	/* Set nlp_states accordingly */
--- 
-2.7.4
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3bd956d3bc5d..dce42a416876 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3212,6 +3212,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ql_log(ql_log_fatal, base_vha, 0x00ed,
+ 		    "Failed to start DPC thread.\n");
+ 		ret = PTR_ERR(ha->dpc_thread);
++		ha->dpc_thread = NULL;
+ 		goto probe_failed;
+ 	}
+ 	ql_dbg(ql_dbg_init, base_vha, 0x00ee,
