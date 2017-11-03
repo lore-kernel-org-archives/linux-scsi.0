@@ -1,25 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: be2iscsi: Use kasprintf
-Date: Fri, 03 Nov 2017 11:25:05 -0400
-Message-ID: <yq1o9oj75bi.fsf@oracle.com>
-References: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
-        <20171103151613.GA2601@himanshu-Vostro-3559>
+Subject: Re: [PATCH 1/2] scsi: megaraid: Remove redundant code in megasas_alloc_cmds
+Date: Fri, 03 Nov 2017 11:26:15 -0400
+Message-ID: <yq1k1z7759k.fsf@oracle.com>
+References: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171103151613.GA2601@himanshu-Vostro-3559> (Himanshu Jha's
-        message of "Fri, 3 Nov 2017 20:46:14 +0530")
+In-Reply-To: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
+        (Yisheng Xie's message of "Wed, 25 Oct 2017 17:57:07 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Himanshu,
+Yisheng,
 
-> Just a reminder, is my patch in our queue ?
+> megasas_alloc_cmds is to alloc cmd_list of instance instead of fusion,
+> and fusion is useless in this function. Just remove it.
 
-It is not. It needs a review/ack from the driver maintainers.
+Applied to 4.15/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
