@@ -1,23 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] scsi: megaraid: Remove redundant code in megasas_alloc_cmds
-Date: Fri, 03 Nov 2017 11:26:15 -0400
-Message-ID: <yq1k1z7759k.fsf@oracle.com>
-References: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
+Subject: Re: [PATCH] scsi: megaraid_sas:  fix spelling mistake: "thershold" -> "threshold"
+Date: Fri, 03 Nov 2017 11:46:31 -0400
+Message-ID: <yq1bmkj74bs.fsf@oracle.com>
+References: <20171102101810.18413-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1508925428-51660-1-git-send-email-xieyisheng1@huawei.com>
-        (Yisheng Xie's message of "Wed, 25 Oct 2017 17:57:07 +0800")
+In-Reply-To: <20171102101810.18413-1-colin.king@canonical.com> (Colin King's
+        message of "Thu, 2 Nov 2017 10:18:10 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yisheng Xie <xieyisheng1@huawei.com>
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Yisheng,
+Colin,
 
-> megasas_alloc_cmds is to alloc cmd_list of instance instead of fusion,
-> and fusion is useless in this function. Just remove it.
+> Trivial fix to spelling mistake in dev_info message
 
 Applied to 4.15/scsi-queue.
 
