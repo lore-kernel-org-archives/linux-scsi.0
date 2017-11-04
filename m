@@ -1,207 +1,52 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH] blk-mq: don't handle failure in .get_budget
-Date: Sun,  5 Nov 2017 02:21:12 +0800
-Message-ID: <20171104182112.32666-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39862 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932148AbdKDSV2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 4 Nov 2017 14:21:28 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Aleksa Sarai <asarai@suse.de>
+Subject: [PATCH] scsi: require CAP_SYS_ADMIN to write to procfs interface
+Date: Sun,  5 Nov 2017 05:59:13 +1100
+Message-ID: <20171104185913.10658-1-asarai@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, Valentin Rothberg <vrothberg@suse.com>, cyphar@cyphar.com, Aleksa Sarai <asarai@suse.de>, stable@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Laurence Oberman <loberman@redhat.com>, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
 
-It is enough to just check if we can get the budget via .get_budget().
-And we don't need to deal with device state change in .get_budget().
+Previously, the only capability effectively required to operate on the
+/proc/scsi interface was CAP_DAC_OVERRIDE (or for some other files,
+having an fsuid of GLOBAL_ROOT_UID was enough). This means that
+semi-privileged processes could interfere with core components of a
+system (such as causing a DoS by removing the underlying SCSI device of
+the host's / mount).
 
-For SCSI, one issue to be fixed is that we have to call scsi_mq_uninit_cmd()
-to free allocated ressources if SCSI device fails to handle the request. And
-it isn't enough to simply call blk_mq_end_request() to do that if this request
-is marked as RQF_DONTPREP.
-
-Fixes: 0df21c86bdbf(scsi: implement .get_budget and .put_budget for blk-mq)
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Cc: <stable@vger.kernel.org>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>
+Signed-off-by: Aleksa Sarai <asarai@suse.de>
 ---
- block/blk-mq-sched.c    | 14 ++------------
- block/blk-mq.c          | 17 ++++-------------
- block/blk-mq.h          |  5 ++---
- drivers/scsi/scsi_lib.c | 11 +++--------
- include/linux/blk-mq.h  |  2 +-
- 5 files changed, 12 insertions(+), 37 deletions(-)
+ drivers/scsi/scsi_proc.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 7775f6b12fa9..13a27d4d1671 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -94,23 +94,18 @@ static void blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index 480a597b3877..486aedce2f05 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -51,7 +51,10 @@ static ssize_t proc_scsi_host_write(struct file *file, const char __user *buf,
+ 	struct Scsi_Host *shost = PDE_DATA(file_inode(file));
+ 	ssize_t ret = -ENOMEM;
+ 	char *page;
+-    
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM
++
+ 	if (count > PROC_BLOCK_SIZE)
+ 		return -EOVERFLOW;
  
- 	do {
- 		struct request *rq;
--		blk_status_t ret;
+@@ -313,6 +316,9 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
+ 	char *buffer, *p;
+ 	int err;
  
- 		if (e->type->ops.mq.has_work &&
- 				!e->type->ops.mq.has_work(hctx))
- 			break;
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
+ 	if (!buf || length > PAGE_SIZE)
+ 		return -EINVAL;
  
--		ret = blk_mq_get_dispatch_budget(hctx);
--		if (ret == BLK_STS_RESOURCE)
-+		if (!blk_mq_get_dispatch_budget(hctx))
- 			break;
- 
- 		rq = e->type->ops.mq.dispatch_request(hctx);
- 		if (!rq) {
- 			blk_mq_put_dispatch_budget(hctx);
- 			break;
--		} else if (ret != BLK_STS_OK) {
--			blk_mq_end_request(rq, ret);
--			continue;
- 		}
- 
- 		/*
-@@ -146,22 +141,17 @@ static void blk_mq_do_dispatch_ctx(struct blk_mq_hw_ctx *hctx)
- 
- 	do {
- 		struct request *rq;
--		blk_status_t ret;
- 
- 		if (!sbitmap_any_bit_set(&hctx->ctx_map))
- 			break;
- 
--		ret = blk_mq_get_dispatch_budget(hctx);
--		if (ret == BLK_STS_RESOURCE)
-+		if (!blk_mq_get_dispatch_budget(hctx))
- 			break;
- 
- 		rq = blk_mq_dequeue_from_ctx(hctx, ctx);
- 		if (!rq) {
- 			blk_mq_put_dispatch_budget(hctx);
- 			break;
--		} else if (ret != BLK_STS_OK) {
--			blk_mq_end_request(rq, ret);
--			continue;
- 		}
- 
- 		/*
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index e4d2490f4e7e..f4e1d8447b5d 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1134,13 +1134,8 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
- 			}
- 		}
- 
--		if (!got_budget) {
--			ret = blk_mq_get_dispatch_budget(hctx);
--			if (ret == BLK_STS_RESOURCE)
--				break;
--			if (ret != BLK_STS_OK)
--				goto fail_rq;
--		}
-+		if (!got_budget && !blk_mq_get_dispatch_budget(hctx))
-+			break;
- 
- 		list_del_init(&rq->queuelist);
- 
-@@ -1167,7 +1162,6 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
- 			break;
- 		}
- 
-- fail_rq:
- 		if (unlikely(ret != BLK_STS_OK)) {
- 			errors++;
- 			blk_mq_end_request(rq, BLK_STS_IOERR);
-@@ -1639,12 +1633,10 @@ static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
- 	if (!blk_mq_get_driver_tag(rq, NULL, false))
- 		goto insert;
- 
--	ret = blk_mq_get_dispatch_budget(hctx);
--	if (ret == BLK_STS_RESOURCE) {
-+	if (!blk_mq_get_dispatch_budget(hctx)) {
- 		blk_mq_put_driver_tag(rq);
- 		goto insert;
--	} else if (ret != BLK_STS_OK)
--		goto fail_rq;
-+	}
- 
- 	new_cookie = request_to_qc_t(hctx, rq);
- 
-@@ -1662,7 +1654,6 @@ static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
- 		__blk_mq_requeue_request(rq);
- 		goto insert;
- 	default:
-- fail_rq:
- 		*cookie = BLK_QC_T_NONE;
- 		blk_mq_end_request(rq, ret);
- 		return;
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 522b420dedc0..f97aceff76e9 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -147,14 +147,13 @@ static inline void blk_mq_put_dispatch_budget(struct blk_mq_hw_ctx *hctx)
- 		q->mq_ops->put_budget(hctx);
- }
- 
--static inline blk_status_t blk_mq_get_dispatch_budget(
--		struct blk_mq_hw_ctx *hctx)
-+static inline bool blk_mq_get_dispatch_budget(struct blk_mq_hw_ctx *hctx)
- {
- 	struct request_queue *q = hctx->queue;
- 
- 	if (q->mq_ops->get_budget)
- 		return q->mq_ops->get_budget(hctx);
--	return BLK_STS_OK;
-+	return true;
- }
- 
- #endif
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7f218ef61900..c537c4d768c1 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1949,27 +1949,22 @@ static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
- 	put_device(&sdev->sdev_gendev);
- }
- 
--static blk_status_t scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
-+static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
- {
- 	struct request_queue *q = hctx->queue;
- 	struct scsi_device *sdev = q->queuedata;
--	blk_status_t ret;
--
--	ret = prep_to_mq(scsi_prep_state_check(sdev, NULL));
--	if (ret == BLK_STS_RESOURCE || ret != BLK_STS_OK)
--		return ret;
- 
- 	if (!get_device(&sdev->sdev_gendev))
- 		goto out;
- 	if (!scsi_dev_queue_ready(q, sdev))
- 		goto out_put_device;
- 
--	return BLK_STS_OK;
-+	return true;
- 
- out_put_device:
- 	put_device(&sdev->sdev_gendev);
- out:
--	return BLK_STS_RESOURCE;
-+	return false;
- }
- 
- static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index e5e6becd57d3..439a7970ed5d 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -92,7 +92,7 @@ struct blk_mq_queue_data {
- 
- typedef blk_status_t (queue_rq_fn)(struct blk_mq_hw_ctx *,
- 		const struct blk_mq_queue_data *);
--typedef blk_status_t (get_budget_fn)(struct blk_mq_hw_ctx *);
-+typedef bool (get_budget_fn)(struct blk_mq_hw_ctx *);
- typedef void (put_budget_fn)(struct blk_mq_hw_ctx *);
- typedef enum blk_eh_timer_return (timeout_fn)(struct request *, bool);
- typedef int (init_hctx_fn)(struct blk_mq_hw_ctx *, void *, unsigned int);
 -- 
-2.9.5
+2.14.3
