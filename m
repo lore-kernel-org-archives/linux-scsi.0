@@ -1,43 +1,36 @@
-From: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH v3] scsi: require CAP_SYS_ADMIN to write to procfs
-	interface
-Date: Sun, 5 Nov 2017 15:02:10 +1100
-Message-ID: <b3bcff37-d77d-4dc6-ba83-7dddcb51a703@suse.de>
-References: <20171105025635.10843-1-asarai@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20171105025635.10843-1-asarai-l3A5Bk7waGM@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+From: Pan Bian <bianpan2016@163.com>
+Subject: [PATCH] scsi: advansys: fix improper function call to kfree
+Date: Sun,  5 Nov 2017 22:30:12 +0800
+Message-ID: <1509892212-10489-1-git-send-email-bianpan2016@163.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/05/2017 01:56 PM, Aleksa Sarai wrote:
-> Previously, the only capability effectively required to operate on the
-> /proc/scsi interface was CAP_DAC_OVERRIDE (or for some other files,
-> having an fsuid of GLOBAL_ROOT_UID was enough). This means that
-> semi-privileged processes could interfere with core components of a
-> system (such as causing a DoS by removing the underlying SCSI device of
-> the host's / mount).
+In function advansys_eisa_probe(), data->host[i] holds the return value
+of scsi_host_alloc(). The memory allocated by scsi_host_alloc() should
+be deallocated with scsi_host_put(), not kfree().
 
-An alternative to this patch would be to make the open(2) call fail, if 
-you try to open it write-only or read-write. Not sure which would be 
-preferred (should it be possible to pass /proc/scsi/scsi to a 
-semi-privileged process to write to?).
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+ drivers/scsi/advansys.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 24e57e7..1f56a6d 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -11678,8 +11678,8 @@ static int advansys_eisa_probe(struct device *dev)
+ 	return 0;
+ 
+  free_data:
+-	kfree(data->host[0]);
+-	kfree(data->host[1]);
++	scsi_host_put(data->host[0]);
++	scsi_host_put(data->host[1]);
+ 	kfree(data);
+  fail:
+ 	return err;
 -- 
-Aleksa Sarai
-Senior Software Engineer (Containers)
-SUSE Linux GmbH
-https://www.cyphar.com/
+1.9.1
