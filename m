@@ -1,32 +1,43 @@
 From: Greg KH <greg@kroah.com>
 Subject: Re: [PATCH v3] scsi: require CAP_SYS_ADMIN to write to procfs
  interface
-Date: Sun, 5 Nov 2017 08:31:21 +0100
-Message-ID: <20171105073121.GB1431@kroah.com>
+Date: Sun, 5 Nov 2017 11:29:42 +0100
+Message-ID: <20171105102942.GA31503@kroah.com>
 References: <20171105025635.10843-1-asarai@suse.de>
+ <20171105073121.GB1431@kroah.com>
+ <CAOviyagXOJE3JqYwd3hUNA+qL0cRVafDgma8FTvq9To9iBaYmQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:60545 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750933AbdKEK3a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Nov 2017 05:29:30 -0500
 Content-Disposition: inline
-In-Reply-To: <20171105025635.10843-1-asarai@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aleksa Sarai <asarai@suse.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, Valentin Rothberg <vrothberg@suse.com>, cyphar@cyphar.com, stable@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
+In-Reply-To: <CAOviyagXOJE3JqYwd3hUNA+qL0cRVafDgma8FTvq9To9iBaYmQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: Aleksa Sarai <asarai@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, Valentin Rothberg <vrothberg@suse.com>, stable@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
 
-On Sun, Nov 05, 2017 at 01:56:35PM +1100, Aleksa Sarai wrote:
-> Previously, the only capability effectively required to operate on the
-> /proc/scsi interface was CAP_DAC_OVERRIDE (or for some other files,
-> having an fsuid of GLOBAL_ROOT_UID was enough). This means that
-> semi-privileged processes could interfere with core components of a
-> system (such as causing a DoS by removing the underlying SCSI device of
-> the host's / mount).
 
-Given that the previous patch didn't even compile, I worry that you have
-not tested this at all to see what breaks/changes in userspace with this
-type of user-visable api change.
+A: Because it messes up the order in which people normally read text.
+Q: Why is top-posting such a bad thing?
+A: Top-posting.
+Q: What is the most annoying thing in e-mail?
 
-What did you do to test this?
+A: No.
+Q: Should I include quotations after my reply?
+
+http://daringfireball.net/2007/07/on_top
+
+On Sun, Nov 05, 2017 at 08:11:20PM +1100, Aleksa Sarai wrote:
+> I've booted it on a few of my laptops, and nothing seemed to break. Is
+> there a particular test-suite you'd recommend that I run?
+
+Workloads/tools that normally interact with this file would be the best
+ones, right?  Odds are, your normal "laptop booting/running" mode does
+not do anything with this file.
 
 thanks,
 
