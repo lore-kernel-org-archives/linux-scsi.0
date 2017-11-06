@@ -1,47 +1,68 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 0/4] scsi: qla2xxx: Convert timers to use timer_setup()
-Date: Mon, 6 Nov 2017 19:58:45 +0000
-Message-ID: <0CA81505-0EFB-4F30-A0B1-E021953741D1@cavium.com>
-References: <1509477229-62141-1-git-send-email-keescook@chromium.org>
- <CAGXu5jJnB9rAN_qjrdh3iGfWtB2-p5dqNOtqScnSZn9j20iFgg@mail.gmail.com>
- <F16A8DFC-AF77-44A0-BDC8-F0197A314123@cavium.com>
- <1509927529.8757.1.camel@wdc.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH] qla2xxx: Suppress a kernel complaint in qla_init_base_qpair()
+Date: Mon, 6 Nov 2017 11:59:05 -0800
+Message-ID: <20171106195905.5139-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1509927529.8757.1.camel@wdc.com>
-Content-Language: en-US
-Content-ID: <BB9BC9812B78674CA8B287FF1F4C423C@namprd07.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "keescook@chromium.org" <keescook@chromium.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:46394 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753698AbdKFT7J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2017 14:59:09 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Quinn Tran <quinn.tran@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, stable@vger.kernel.org
 
-SGkgQmFydCwgDQoNCj4gT24gTm92IDUsIDIwMTcsIGF0IDQ6MTggUE0sIEJhcnQgVmFuIEFzc2No
-ZSA8YmFydC52YW5hc3NjaGVAd2RjLmNvbT4gd3JvdGU6DQo+IA0KPiBPbiBXZWQsIDIwMTctMTEt
-MDEgYXQgMTk6MTggKzAwMDAsIE1hZGhhbmksIEhpbWFuc2h1IHdyb3RlOg0KPj4gSGkgS2Vlcywg
-DQo+PiANCj4+PiBPbiBOb3YgMSwgMjAxNywgYXQgMTE6NDYgQU0sIEtlZXMgQ29vayA8a2Vlc2Nv
-b2tAY2hyb21pdW0ub3JnPiB3cm90ZToNCj4+PiANCj4+PiBPbiBUdWUsIE9jdCAzMSwgMjAxNyBh
-dCAxMjoxMyBQTSwgS2VlcyBDb29rIDxrZWVzY29va0BjaHJvbWl1bS5vcmc+IHdyb3RlOg0KPj4+
-PiBUaGlzIGJyZWFrcyBvdXQgdGhlIGxvZ2ljYWwgc3RlcHMgdG8gY29udmVydCB0aGUgcWxhMnh4
-eCB0aW1lcnM6DQo+Pj4+IA0KPj4+PiAxKSBpbml0X3RpbWVyKCkgLT4gc2V0dXBfdGltZXIoKQ0K
-Pj4+PiAyKSByZWZhY3RvciBxbGEyeDAwX3N0YXJ0X3RpbWVyKCkgdG8gbm90IHBhc3MgY2FsbGJh
-Y2sgYXMgYXJndW1lbnQNCj4+Pj4gMykgcWxhMngwMF90aW1lcigpIHRvIHVzZSB0aW1lcl9zZXR1
-cCgpDQo+Pj4+IDQpIHFsYTJ4MDBfc3BfdGltZW91dCgpIHRvIHVzZSB0aW1lcl9zZXR1cCgpDQo+
-Pj4+IA0KPj4+PiBUaGUgcmVzdWx0aW5nIGRpZmYgaXMgaWRlbnRpY2FsIHRvIHRoZSBwYXRjaCB0
-aGF0IGFwcGVhcnMgdG8gbG9jayB1cA0KPj4+PiB0aGUgZHJpdmVyLiBUaGlzIHNob3VsZCBoZWxw
-IGlkZW50aWZ5IHdoaWNoIHN0ZXAgY2F1c2VzIHRoaXMgYmVoYXZpb3IuDQo+Pj4gDQo+Pj4gSGks
-IGp1c3QgY3VyaW91cyBpZiB0aGVyZSdzIGJlZW4gYW55IHByb2dyZXNzIG9uIGRlYnVnZ2luZyB0
-aGUgaXNzdWUNCj4+PiB5b3Ugc2F3IHdpdGggdGhpcyBzZXJpZXM/DQo+PiANCj4+IFNvcnJ5IGZv
-ciBkZWxheS4gSSB3aWxsIHRlc3QgdGhpcyBzZXJpZXMgbGF0ZXIgdG9kYXkgYW5kIHBvc3QgdXBk
-YXRlLiANCj4gDQo+IEhlbGxvIEhpbWFuc2h1IGFuZCBLZWVzLA0KPiANCj4gVGhlIHFsYTJ4eHgg
-ZHJpdmVyIGRvZXMgbm90IGNyYXNoIGlmIGFwcGx5IHRoZXNlIGZvdXIgcGF0Y2hlcyBvbiBrZXJu
-ZWwNCj4gdjQuMTQtcmM4IGFuZCBsb2FkIHRoZSBxbGEyeHh4IGRyaXZlciBvbiBteSB0ZXN0IHNl
-dHVwLiBQb2ludC10by1wb2ludA0KPiBtb2RlIHNlZW1zIGJyb2tlbiBhZ2FpbiBidXQgSSBkb24n
-dCB0aGluayB0aGF0J3MgcmVsYXRlZCB0byB0aGlzIHBhdGNoDQo+IHNlcmllcy4NCj4gDQo+IEJh
-cnQuDQoNCldoYXQga2luZCBvZiBlcnJvcnMgeW91IGFyZSBzZWVpbmcgd2l0aCBQb2ludC10by1w
-b2ludCBtb2RlLiBJ4oCZbGwgbG9vayBhdCB0aG9zZQ0KYW5kIHdpbGwgc3VibWl0IGZpeGVzIGZv
-ciBpdCBhbG9uZyB3aXRoIHRoZSBvdGhlciBpc3N1ZXMgeW91IGhhdmUgcmFpc2VkIGVhcmxpZXIu
-DQoNCktlZXMsIA0KDQpJ4oCZbGwgZ2V0IGJhY2sgdG8gdmFsaWRhdGluZyB0aGUgc2VyaWVzIGFn
-YWluIG5vdy4gU29ycnkgZm9yIGRlbGF5LiANCg0KVGhhbmtzLA0KLSBIaW1hbnNodQ0KDQo=
+Avoid that the following is reported while loading the qla2xxx
+kernel module:
+
+BUG: using smp_processor_id() in preemptible [00000000] code: modprobe/783
+caller is debug_smp_processor_id+0x17/0x20
+CPU: 7 PID: 783 Comm: modprobe Not tainted 4.14.0-rc8-dbg+ #2
+Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+Call Trace:
+ dump_stack+0x8e/0xce
+ check_preemption_disabled+0xe3/0xf0
+ debug_smp_processor_id+0x17/0x20
+ qla2x00_probe_one+0xf43/0x26c0 [qla2xxx]
+ pci_device_probe+0xca/0x140
+ driver_probe_device+0x2e2/0x440
+ __driver_attach+0xa3/0xe0
+ bus_for_each_dev+0x5f/0x90
+ driver_attach+0x19/0x20
+ bus_add_driver+0x1c0/0x260
+ driver_register+0x5b/0xd0
+ __pci_register_driver+0x63/0x70
+ qla2x00_module_init+0x1d6/0x222 [qla2xxx]
+ do_one_initcall+0x3c/0x163
+ do_init_module+0x55/0x1eb
+ load_module+0x20a2/0x2890
+ SYSC_finit_module+0xd7/0xf0
+ SyS_finit_module+0x9/0x10
+ entry_SYSCALL_64_fastpath+0x23/0xc2
+
+Fixes: commit 8abfa9e22683 ("scsi: qla2xxx: Add function call to qpair for door bell")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Quinn Tran <quinn.tran@cavium.com>
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3bd956d3bc5d..b514bd5d2ac5 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -388,7 +388,7 @@ static void qla_init_base_qpair(struct scsi_qla_host *vha, struct req_que *req,
+ 	INIT_LIST_HEAD(&ha->base_qpair->nvme_done_list);
+ 	ha->base_qpair->enable_class_2 = ql2xenableclass2;
+ 	/* init qpair to this cpu. Will adjust at run time. */
+-	qla_cpu_update(rsp->qpair, smp_processor_id());
++	qla_cpu_update(rsp->qpair, raw_smp_processor_id());
+ 	ha->base_qpair->pdev = ha->pdev;
+ 
+ 	if (IS_QLA27XX(ha) || IS_QLA83XX(ha))
+-- 
+2.14.3
