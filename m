@@ -1,21 +1,68 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V9 2/4] MIPS: Implement
-        dma_map_ops::get_cache_alignment()
-Date: Mon, 6 Nov 2017 19:21:48 +0100
-Message-ID: <20171106182148.GA29657@lst.de>
-References: <1508742767-28366-1-git-send-email-chenhc@lemote.com> <1508742767-28366-2-git-send-email-chenhc@lemote.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
+ scsi_mq_get_budget()
+Date: Mon, 6 Nov 2017 19:45:23 +0000
+Message-ID: <1509997522.2409.58.camel@wdc.com>
+References: <20171104015534.32684-1-ming.lei@redhat.com>
+         <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1508742767-28366-2-git-send-email-chenhc@lemote.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Huacai Chen <chenhc@lemote.com>
-Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:33963 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932743AbdKFTp1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2017 14:45:27 -0500
+In-Reply-To: <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
+Content-Language: en-US
+Content-ID: <081AA71FEDF4FA4BBCB54D237153F001@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
 
-This doesn't apply to the current dma mapping tree:
-
-	http://git.infradead.org/users/hch/dma-mapping.git/shortlog/refs/heads/for-next
-
-so even if I were to get the proper ACKs it would need a resend.
+T24gU2F0LCAyMDE3LTExLTA0IGF0IDA4OjE5IC0wNjAwLCBKZW5zIEF4Ym9lIHdyb3RlOg0KPiBP
+biAxMS8wMy8yMDE3IDA3OjU1IFBNLCBNaW5nIExlaSB3cm90ZToNCj4gPiBJdCBpcyB2ZXJ5IGV4
+cGVuc2l2ZSB0byBhdG9taWNfaW5jL2F0b21pY19kZWMgdGhlIGhvc3Qgd2lkZSBjb3VudGVyIG9m
+DQo+ID4gaG9zdC0+YnVzeV9jb3VudCwgYW5kIGl0IHNob3VsZCBoYXZlIGJlZW4gYXZvaWRlZCB2
+aWEgYmxrLW1xJ3MgbWVjaGFuaXNtDQo+ID4gb2YgZ2V0dGluZyBkcml2ZXIgdGFnLCB3aGljaCB1
+c2VzIHRoZSBtb3JlIGVmZmljaWVudCB3YXkgb2Ygc2JpdG1hcCBxdWV1ZS4NCj4gPiANCj4gPiBB
+bHNvIHdlIGRvbid0IGNoZWNrIGF0b21pY19yZWFkKCZzZGV2LT5kZXZpY2VfYnVzeSkgaW4gc2Nz
+aV9tcV9nZXRfYnVkZ2V0KCkNCj4gPiBhbmQgZG9uJ3QgcnVuIHF1ZXVlIGlmIHRoZSBjb3VudGVy
+IGJlY29tZXMgemVybywgc28gSU8gaGFuZyBtYXkgYmUgY2F1c2VkDQo+ID4gaWYgYWxsIHJlcXVl
+c3RzIGFyZSBjb21wbGV0ZWQganVzdCBiZWZvcmUgdGhlIGN1cnJlbnQgU0NTSSBkZXZpY2UNCj4g
+PiBpcyBhZGRlZCB0byBzaG9zdC0+c3RhcnZlZF9saXN0Lg0KPiANCj4gVGhpcyBsb29rcyBsaWtl
+IGFuIGltcHJvdmVtZW50LiBJIGhhdmUgYWRkZWQgaXQgZm9yIDQuMTUuDQo+IA0KPiBCYXJ0LCBk
+b2VzIHRoaXMgZml4IHlvdXIgaGFuZz8NCg0KTm8sIGl0IGRvZXNuJ3QuIEFmdGVyIEkgaGFkIHJl
+ZHVjZWQgc3RhcmdldC0+Y2FuX3F1ZXVlIGluIHRoZSBTUlAgaW5pdGlhdG9yIEkNCnJhbiBpbnRv
+IHRoZSBmb2xsb3dpbmcgaGFuZyB3aGlsZSBydW5uaW5nIHRoZSBzcnAtdGVzdCBzb2Z0d2FyZToN
+Cg0Kc3lzcnE6IFN5c1JxIDogU2hvdyBCbG9ja2VkIFN0YXRlDQogIHRhc2sgICAgICAgICAgICAg
+ICAgICAgICAgICBQQyBzdGFjayAgIHBpZCBmYXRoZXINCnN5c3RlbWQtdWRldmQgICBEICAgIDAg
+MTk4ODIgICAgNDY3IDB4ODAwMDAxMDYNCkNhbGwgVHJhY2U6DQogX19zY2hlZHVsZSsweDJmYS8w
+eGJiMA0KIHNjaGVkdWxlKzB4MzYvMHg5MA0KIGlvX3NjaGVkdWxlKzB4MTYvMHg0MA0KIF9fbG9j
+a19wYWdlKzB4MTBhLzB4MTQwDQogdHJ1bmNhdGVfaW5vZGVfcGFnZXNfcmFuZ2UrMHg0ZmYvMHg4
+MDANCiB0cnVuY2F0ZV9pbm9kZV9wYWdlcysweDE1LzB4MjANCiBraWxsX2JkZXYrMHgzNS8weDQw
+DQogX19ibGtkZXZfcHV0KzB4NmQvMHgxZjANCiBibGtkZXZfcHV0KzB4NGUvMHgxMzANCiBibGtk
+ZXZfY2xvc2UrMHgyNS8weDMwDQogX19mcHV0KzB4ZWQvMHgxZjANCiBfX19fZnB1dCsweGUvMHgx
+MA0KIHRhc2tfd29ya19ydW4rMHg4Yi8weGMwDQogZG9fZXhpdCsweDM4ZC8weGM3MA0KIGRvX2dy
+b3VwX2V4aXQrMHg1MC8weGQwDQogZ2V0X3NpZ25hbCsweDJhZC8weDhjMA0KIGRvX3NpZ25hbCsw
+eDI4LzB4NjgwDQogZXhpdF90b191c2VybW9kZV9sb29wKzB4NWEvMHhhMA0KIGRvX3N5c2NhbGxf
+NjQrMHgxMmUvMHgxNzANCiBlbnRyeV9TWVNDQUxMNjRfc2xvd19wYXRoKzB4MjUvMHgyNQ0KDQpU
+aGUgU1JQIGluaXRpYXRvciBkcml2ZXIgd2FzIG1vZGlmaWVkIGFzIGZvbGxvd3MgZm9yIHRoaXMg
+dGVzdDoNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvaW5maW5pYmFuZC91bHAvc3JwL2liX3NycC5j
+IGIvZHJpdmVycy9pbmZpbmliYW5kL3VscC9zcnAvaWJfc3JwLmMNCmluZGV4IGE2NjY0NDY3NjUx
+ZS4uOWQyNGE4NzFjYzJlIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9pbmZpbmliYW5kL3VscC9zcnAv
+aWJfc3JwLmMNCisrKyBiL2RyaXZlcnMvaW5maW5pYmFuZC91bHAvc3JwL2liX3NycC5jDQoNCkBA
+IC0yODM1LDYgKzI4MzksMTMgQEAgc3RhdGljIGludCBzcnBfcmVzZXRfaG9zdChzdHJ1Y3Qgc2Nz
+aV9jbW5kICpzY21uZCkNCiAJcmV0dXJuIHNycF9yZWNvbm5lY3RfcnBvcnQodGFyZ2V0LT5ycG9y
+dCkgPT0gMCA/IFNVQ0NFU1MgOiBGQUlMRUQ7DQogfQ0KIA0KK3N0YXRpYyBpbnQgc3JwX3Rhcmdl
+dF9hbGxvYyhzdHJ1Y3Qgc2NzaV90YXJnZXQgKnN0YXJnZXQpDQorew0KKwlzdGFyZ2V0LT5jYW5f
+cXVldWUgPSAxOw0KKwlyZXR1cm4gMDsNCit9DQorDQogc3RhdGljIGludCBzcnBfc2xhdmVfYWxs
+b2Moc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KQ0KIHsNCiAJc3RydWN0IFNjc2lfSG9zdCAqc2hv
+c3QgPSBzZGV2LT5ob3N0Ow0KQEAgLTMwMzksNiArMzA1MCw3IEBAIHN0YXRpYyBzdHJ1Y3Qgc2Nz
+aV9ob3N0X3RlbXBsYXRlIHNycF90ZW1wbGF0ZSA9IHsNCiAJLm1vZHVsZQkJCQk9IFRISVNfTU9E
+VUxFLA0KIAkubmFtZQkJCQk9ICJJbmZpbmlCYW5kIFNSUCBpbml0aWF0b3IiLA0KIAkucHJvY19u
+YW1lCQkJPSBEUlZfTkFNRSwNCisJLnRhcmdldF9hbGxvYwkJCT0gc3JwX3RhcmdldF9hbGxvYywN
+CiAJLnNsYXZlX2FsbG9jCQkJPSBzcnBfc2xhdmVfYWxsb2MsDQogCS5zbGF2ZV9jb25maWd1cmUJ
+CT0gc3JwX3NsYXZlX2NvbmZpZ3VyZSwNCiAJLmluZm8JCQkJPSBzcnBfdGFyZ2V0X2luZm8sDQoN
+CkJhcnQuDQo=
