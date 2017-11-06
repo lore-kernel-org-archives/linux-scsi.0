@@ -1,68 +1,63 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
- scsi_mq_get_budget()
-Date: Mon, 6 Nov 2017 19:45:23 +0000
-Message-ID: <1509997522.2409.58.camel@wdc.com>
-References: <20171104015534.32684-1-ming.lei@redhat.com>
-         <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 0/4] qla2xxx: Add FC-NVMe Target support
+Date: Mon, 6 Nov 2017 11:55:26 -0800
+Message-ID: <20171106195530.17408-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:33963 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932743AbdKFTp1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2017 14:45:27 -0500
-In-Reply-To: <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
-Content-Language: en-US
-Content-ID: <081AA71FEDF4FA4BBCB54D237153F001@namprd04.prod.outlook.com>
+Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:34634
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753914AbdKFTzg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Nov 2017 14:55:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-T24gU2F0LCAyMDE3LTExLTA0IGF0IDA4OjE5IC0wNjAwLCBKZW5zIEF4Ym9lIHdyb3RlOg0KPiBP
-biAxMS8wMy8yMDE3IDA3OjU1IFBNLCBNaW5nIExlaSB3cm90ZToNCj4gPiBJdCBpcyB2ZXJ5IGV4
-cGVuc2l2ZSB0byBhdG9taWNfaW5jL2F0b21pY19kZWMgdGhlIGhvc3Qgd2lkZSBjb3VudGVyIG9m
-DQo+ID4gaG9zdC0+YnVzeV9jb3VudCwgYW5kIGl0IHNob3VsZCBoYXZlIGJlZW4gYXZvaWRlZCB2
-aWEgYmxrLW1xJ3MgbWVjaGFuaXNtDQo+ID4gb2YgZ2V0dGluZyBkcml2ZXIgdGFnLCB3aGljaCB1
-c2VzIHRoZSBtb3JlIGVmZmljaWVudCB3YXkgb2Ygc2JpdG1hcCBxdWV1ZS4NCj4gPiANCj4gPiBB
-bHNvIHdlIGRvbid0IGNoZWNrIGF0b21pY19yZWFkKCZzZGV2LT5kZXZpY2VfYnVzeSkgaW4gc2Nz
-aV9tcV9nZXRfYnVkZ2V0KCkNCj4gPiBhbmQgZG9uJ3QgcnVuIHF1ZXVlIGlmIHRoZSBjb3VudGVy
-IGJlY29tZXMgemVybywgc28gSU8gaGFuZyBtYXkgYmUgY2F1c2VkDQo+ID4gaWYgYWxsIHJlcXVl
-c3RzIGFyZSBjb21wbGV0ZWQganVzdCBiZWZvcmUgdGhlIGN1cnJlbnQgU0NTSSBkZXZpY2UNCj4g
-PiBpcyBhZGRlZCB0byBzaG9zdC0+c3RhcnZlZF9saXN0Lg0KPiANCj4gVGhpcyBsb29rcyBsaWtl
-IGFuIGltcHJvdmVtZW50LiBJIGhhdmUgYWRkZWQgaXQgZm9yIDQuMTUuDQo+IA0KPiBCYXJ0LCBk
-b2VzIHRoaXMgZml4IHlvdXIgaGFuZz8NCg0KTm8sIGl0IGRvZXNuJ3QuIEFmdGVyIEkgaGFkIHJl
-ZHVjZWQgc3RhcmdldC0+Y2FuX3F1ZXVlIGluIHRoZSBTUlAgaW5pdGlhdG9yIEkNCnJhbiBpbnRv
-IHRoZSBmb2xsb3dpbmcgaGFuZyB3aGlsZSBydW5uaW5nIHRoZSBzcnAtdGVzdCBzb2Z0d2FyZToN
-Cg0Kc3lzcnE6IFN5c1JxIDogU2hvdyBCbG9ja2VkIFN0YXRlDQogIHRhc2sgICAgICAgICAgICAg
-ICAgICAgICAgICBQQyBzdGFjayAgIHBpZCBmYXRoZXINCnN5c3RlbWQtdWRldmQgICBEICAgIDAg
-MTk4ODIgICAgNDY3IDB4ODAwMDAxMDYNCkNhbGwgVHJhY2U6DQogX19zY2hlZHVsZSsweDJmYS8w
-eGJiMA0KIHNjaGVkdWxlKzB4MzYvMHg5MA0KIGlvX3NjaGVkdWxlKzB4MTYvMHg0MA0KIF9fbG9j
-a19wYWdlKzB4MTBhLzB4MTQwDQogdHJ1bmNhdGVfaW5vZGVfcGFnZXNfcmFuZ2UrMHg0ZmYvMHg4
-MDANCiB0cnVuY2F0ZV9pbm9kZV9wYWdlcysweDE1LzB4MjANCiBraWxsX2JkZXYrMHgzNS8weDQw
-DQogX19ibGtkZXZfcHV0KzB4NmQvMHgxZjANCiBibGtkZXZfcHV0KzB4NGUvMHgxMzANCiBibGtk
-ZXZfY2xvc2UrMHgyNS8weDMwDQogX19mcHV0KzB4ZWQvMHgxZjANCiBfX19fZnB1dCsweGUvMHgx
-MA0KIHRhc2tfd29ya19ydW4rMHg4Yi8weGMwDQogZG9fZXhpdCsweDM4ZC8weGM3MA0KIGRvX2dy
-b3VwX2V4aXQrMHg1MC8weGQwDQogZ2V0X3NpZ25hbCsweDJhZC8weDhjMA0KIGRvX3NpZ25hbCsw
-eDI4LzB4NjgwDQogZXhpdF90b191c2VybW9kZV9sb29wKzB4NWEvMHhhMA0KIGRvX3N5c2NhbGxf
-NjQrMHgxMmUvMHgxNzANCiBlbnRyeV9TWVNDQUxMNjRfc2xvd19wYXRoKzB4MjUvMHgyNQ0KDQpU
-aGUgU1JQIGluaXRpYXRvciBkcml2ZXIgd2FzIG1vZGlmaWVkIGFzIGZvbGxvd3MgZm9yIHRoaXMg
-dGVzdDoNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvaW5maW5pYmFuZC91bHAvc3JwL2liX3NycC5j
-IGIvZHJpdmVycy9pbmZpbmliYW5kL3VscC9zcnAvaWJfc3JwLmMNCmluZGV4IGE2NjY0NDY3NjUx
-ZS4uOWQyNGE4NzFjYzJlIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9pbmZpbmliYW5kL3VscC9zcnAv
-aWJfc3JwLmMNCisrKyBiL2RyaXZlcnMvaW5maW5pYmFuZC91bHAvc3JwL2liX3NycC5jDQoNCkBA
-IC0yODM1LDYgKzI4MzksMTMgQEAgc3RhdGljIGludCBzcnBfcmVzZXRfaG9zdChzdHJ1Y3Qgc2Nz
-aV9jbW5kICpzY21uZCkNCiAJcmV0dXJuIHNycF9yZWNvbm5lY3RfcnBvcnQodGFyZ2V0LT5ycG9y
-dCkgPT0gMCA/IFNVQ0NFU1MgOiBGQUlMRUQ7DQogfQ0KIA0KK3N0YXRpYyBpbnQgc3JwX3Rhcmdl
-dF9hbGxvYyhzdHJ1Y3Qgc2NzaV90YXJnZXQgKnN0YXJnZXQpDQorew0KKwlzdGFyZ2V0LT5jYW5f
-cXVldWUgPSAxOw0KKwlyZXR1cm4gMDsNCit9DQorDQogc3RhdGljIGludCBzcnBfc2xhdmVfYWxs
-b2Moc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KQ0KIHsNCiAJc3RydWN0IFNjc2lfSG9zdCAqc2hv
-c3QgPSBzZGV2LT5ob3N0Ow0KQEAgLTMwMzksNiArMzA1MCw3IEBAIHN0YXRpYyBzdHJ1Y3Qgc2Nz
-aV9ob3N0X3RlbXBsYXRlIHNycF90ZW1wbGF0ZSA9IHsNCiAJLm1vZHVsZQkJCQk9IFRISVNfTU9E
-VUxFLA0KIAkubmFtZQkJCQk9ICJJbmZpbmlCYW5kIFNSUCBpbml0aWF0b3IiLA0KIAkucHJvY19u
-YW1lCQkJPSBEUlZfTkFNRSwNCisJLnRhcmdldF9hbGxvYwkJCT0gc3JwX3RhcmdldF9hbGxvYywN
-CiAJLnNsYXZlX2FsbG9jCQkJPSBzcnBfc2xhdmVfYWxsb2MsDQogCS5zbGF2ZV9jb25maWd1cmUJ
-CT0gc3JwX3NsYXZlX2NvbmZpZ3VyZSwNCiAJLmluZm8JCQkJPSBzcnBfdGFyZ2V0X2luZm8sDQoN
-CkJhcnQuDQo=
+Hi Martin,
+
+This series adds support for FC-NVMe Target.
+
+Patch #1 addes new qla_nvmet files for FC-NVMe Target support. 
+Patch #2 adds Kconfig and Makefile changes to prepare code compile.
+Patch #3 and #4 has bulk of changes to handle FC-NVMe Target LS4 
+processing via Purex pass through path.
+
+Note: All the patches in this series must be applied before they can be compilable.
+
+Please apply them to 4.15/scsi-queue at your earliest convenience.
+
+Thanks,
+Himanshu
+
+Anil Gurumurthy (4):
+  qla2xxx_nvmet: Add files for FC-NVMe Target support
+  qla2xxx_nvmet: Added Makefile and Kconfig changes
+  qla2xxx_nvmet: Add FC-NVMe Target LS request handling
+  qla2xxx_nvmet: Add FC-NVMe Target handling
+
+ drivers/scsi/qla2xxx/Kconfig      |   1 +
+ drivers/scsi/qla2xxx/Makefile     |   3 +-
+ drivers/scsi/qla2xxx/qla_dbg.c    |   1 +
+ drivers/scsi/qla2xxx/qla_dbg.h    |   2 +
+ drivers/scsi/qla2xxx/qla_def.h    |  35 +-
+ drivers/scsi/qla2xxx/qla_fw.h     | 263 +++++++++++
+ drivers/scsi/qla2xxx/qla_gbl.h    |  17 +-
+ drivers/scsi/qla2xxx/qla_gs.c     |  15 +-
+ drivers/scsi/qla2xxx/qla_init.c   |  49 +-
+ drivers/scsi/qla2xxx/qla_iocb.c   |  42 +-
+ drivers/scsi/qla2xxx/qla_isr.c    |  70 +++
+ drivers/scsi/qla2xxx/qla_mbx.c    | 100 +++-
+ drivers/scsi/qla2xxx/qla_nvme.h   |  33 --
+ drivers/scsi/qla2xxx/qla_nvmet.c  | 783 ++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_nvmet.h  | 130 ++++++
+ drivers/scsi/qla2xxx/qla_os.c     |  75 ++-
+ drivers/scsi/qla2xxx/qla_target.c | 932 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_target.h |  93 +++-
+ 18 files changed, 2585 insertions(+), 59 deletions(-)
+ create mode 100644 drivers/scsi/qla2xxx/qla_nvmet.c
+ create mode 100644 drivers/scsi/qla2xxx/qla_nvmet.h
+
+-- 
+2.12.0
