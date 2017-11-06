@@ -1,107 +1,38 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: RE: [PATCH v2] scsi: be2iscsi: Use kasprintf
-Date: Mon, 6 Nov 2017 10:31:22 +0530
-Message-ID: <02ee3723e44b953558a3ba3100ecabaa@mail.gmail.com>
-References: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 7/8] scsi/pmcraid: Remove an unused structure member
+Date: Mon, 6 Nov 2017 08:10:49 +0100
+Message-ID: <f3d36f08-dc2a-3541-d3ae-e3d84dac1050@suse.de>
+References: <20171103222339.26540-1-bart.vanassche@wdc.com>
+ <20171103222339.26540-8-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1507736174-13089-1-git-send-email-himanshujha199640@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu Jha <himanshujha199640@gmail.com>, jejb@linux.vnet.ibm.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Subramanian Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171103222339.26540-8-bart.vanassche@wdc.com>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Himanshu Jha [mailto:himanshujha199640@gmail.com]
-> Sent: Wednesday, October 11, 2017 9:06 PM
-> To: jejb@linux.vnet.ibm.com
-> Cc: martin.petersen@oracle.com; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; subbu.seetharaman@broadcom.com;
-> ketan.mukadam@broadcom.com; jitendra.bhivare@broadcom.com;
-> Himanshu Jha <himanshujha199640@gmail.com>
-> Subject: [PATCH v2] scsi: be2iscsi: Use kasprintf
->
-> Use kasprintf instead of combination of kmalloc and sprintf.
-> Also, remove BEISCSI_MSI_NAME macro used to specify size of string as
-> kasprintf handles size computations.
->
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+On 11/03/2017 11:23 PM, Bart Van Assche wrote:
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 > ---
-> v2:
->    -remove the unnecessary macro BEISCSI_MSI_NAME.
->
->  drivers/scsi/be2iscsi/be_main.c | 12 +++++-------
-> drivers/scsi/be2iscsi/be_main.h |  2 --
->  2 files changed, 5 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.c
-b/drivers/scsi/be2iscsi/be_main.c
-> index b4542e7..6a9ee0e 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -803,15 +803,14 @@ static int beiscsi_init_irqs(struct beiscsi_hba
-*phba)
->
->  	if (pcidev->msix_enabled) {
->  		for (i = 0; i < phba->num_cpus; i++) {
-> -			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
-> -						    GFP_KERNEL);
-> +			phba->msi_name[i] = kasprintf(GFP_KERNEL,
-> +						      "beiscsi_%02x_%02x",
-> +
-phba->shost->host_no, i);
->  			if (!phba->msi_name[i]) {
->  				ret = -ENOMEM;
->  				goto free_msix_irqs;
->  			}
->
-> -			sprintf(phba->msi_name[i], "beiscsi_%02x_%02x",
-> -				phba->shost->host_no, i);
->  			ret = request_irq(pci_irq_vector(pcidev, i),
->  					  be_isr_msix, 0,
-phba->msi_name[i],
->  					  &phwi_context->be_eq[i]);
-> @@ -824,13 +823,12 @@ static int beiscsi_init_irqs(struct beiscsi_hba
-*phba)
->  				goto free_msix_irqs;
->  			}
->  		}
-> -		phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
-> GFP_KERNEL);
-> +		phba->msi_name[i] = kasprintf(GFP_KERNEL,
-> "beiscsi_mcc_%02x",
-> +					      phba->shost->host_no);
->  		if (!phba->msi_name[i]) {
->  			ret = -ENOMEM;
->  			goto free_msix_irqs;
->  		}
-> -		sprintf(phba->msi_name[i], "beiscsi_mcc_%02x",
-> -			phba->shost->host_no);
->  		ret = request_irq(pci_irq_vector(pcidev, i), be_isr_mcc,
-0,
->  				  phba->msi_name[i], &phwi_context-
-> >be_eq[i]);
->  		if (ret) {
-> diff --git a/drivers/scsi/be2iscsi/be_main.h
-b/drivers/scsi/be2iscsi/be_main.h
-> index 81ce3ff..8166de5 100644
-> --- a/drivers/scsi/be2iscsi/be_main.h
-> +++ b/drivers/scsi/be2iscsi/be_main.h
-> @@ -155,8 +155,6 @@
->  #define PAGES_REQUIRED(x) \
->  	((x < PAGE_SIZE) ? 1 :  ((x + PAGE_SIZE - 1) / PAGE_SIZE))
->
-> -#define BEISCSI_MSI_NAME 20 /* size of msi_name string */
-> -
->  #define MEM_DESCR_OFFSET 8
->  #define BEISCSI_DEFQ_HDR 1
->  #define BEISCSI_DEFQ_DATA 0
-> --
-> 2.7.4
+>  drivers/scsi/pmcraid.h | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Looks good.
+Cheers,
 
-- Thanks.
-
-Reviewed-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
