@@ -1,187 +1,106 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] fnic: use 64-bit timestamps
-Date: Tue,  7 Nov 2017 11:41:39 +0100
-Message-ID: <20171107104305.2952640-1-arnd@arndb.de>
+Subject: [PATCH] aacraid: use timespec64 instead of timeval
+Date: Tue,  7 Nov 2017 11:46:05 +0100
+Message-ID: <20171107104613.3183755-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Johannes Thumshirn <jthumshirn@suse.de>, Deepa Dinamani <deepa.kernel@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, David Carroll <david.carroll@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-struct timespec is deprecated since it overflows in 2038 on 32-bit
-architectures, so we should use timespec64 consistently.
+aacraid passes the current time to the firmware in one of two ways,
+either as year/month/day/... or as 32-bit unsigned seconds.
 
-I'm slightly adapting the format strings here, to make sure we
-print the nanoseconds with the correct number of leading zeroes.
+The first one is broken on 32-bit architectures as it cannot
+go past year 2038. Using timespec64 here makes it behave properly
+on both 32-bit and 64-bit architectures, and avoids relying
+on signed integer overflow to pass times into the second interface.
+
+The interface used in aac_send_hosttime() however is still
+problematic in year 2106 when 32-bit seconds overflow. Hopefully
+we don't have to worry about aacraid by that time.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/fnic/fnic_debugfs.c |  2 +-
- drivers/scsi/fnic/fnic_stats.h   |  4 +--
- drivers/scsi/fnic/fnic_trace.c   | 58 ++++++++++++++++++++--------------------
- 3 files changed, 32 insertions(+), 32 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index 5e3d909cfc53..db44e1bf1ecd 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -632,7 +632,7 @@ static ssize_t fnic_reset_stats_write(struct file *file,
- 			sizeof(struct io_path_stats) - sizeof(u64));
- 		memset(fw_stats_p+1, 0,
- 			sizeof(struct fw_stats) - sizeof(u64));
--		getnstimeofday(&stats->stats_timestamps.last_reset_time);
-+		ktime_get_real_ts64(&stats->stats_timestamps.last_reset_time);
- 	}
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index dfe8e70f8d99..525a652dab48 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -2383,19 +2383,19 @@ static int aac_send_wellness_command(struct aac_dev *dev, char *wellness_str,
+ 	goto out;
+ }
  
- 	(*ppos)++;
-diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
-index e007feedbf72..9daa6ada6fa0 100644
---- a/drivers/scsi/fnic/fnic_stats.h
-+++ b/drivers/scsi/fnic/fnic_stats.h
-@@ -18,8 +18,8 @@
- #define _FNIC_STATS_H_
- 
- struct stats_timestamps {
--	struct timespec last_reset_time;
--	struct timespec last_read_time;
-+	struct timespec64 last_reset_time;
-+	struct timespec64 last_read_time;
- };
- 
- struct io_path_stats {
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index 4826f596cb31..abddde11982b 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -111,7 +111,7 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 	int len = 0;
- 	unsigned long flags;
- 	char str[KSYM_SYMBOL_LEN];
--	struct timespec val;
-+	struct timespec64 val;
- 	fnic_trace_data_t *tbp;
- 
- 	spin_lock_irqsave(&fnic_trace_lock, flags);
-@@ -129,10 +129,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			/* Convert function pointer to function name */
- 			if (sizeof(unsigned long) < 8) {
- 				sprint_symbol(str, tbp->fnaddr.low);
--				jiffies_to_timespec(tbp->timestamp.low, &val);
-+				jiffies_to_timespec64(tbp->timestamp.low, &val);
- 			} else {
- 				sprint_symbol(str, tbp->fnaddr.val);
--				jiffies_to_timespec(tbp->timestamp.val, &val);
-+				jiffies_to_timespec64(tbp->timestamp.val, &val);
- 			}
- 			/*
- 			 * Dump trace buffer entry to memory file
-@@ -140,8 +140,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			 */
- 			len += snprintf(fnic_dbgfs_prt->buffer + len,
- 				  (trace_max_pages * PAGE_SIZE * 3) - len,
--				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
--				  "%16llx %16llx %16llx\n", val.tv_sec,
-+				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
-+				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
- 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
- 				  tbp->data[0], tbp->data[1], tbp->data[2],
- 				  tbp->data[3], tbp->data[4]);
-@@ -171,10 +171,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			/* Convert function pointer to function name */
- 			if (sizeof(unsigned long) < 8) {
- 				sprint_symbol(str, tbp->fnaddr.low);
--				jiffies_to_timespec(tbp->timestamp.low, &val);
-+				jiffies_to_timespec64(tbp->timestamp.low, &val);
- 			} else {
- 				sprint_symbol(str, tbp->fnaddr.val);
--				jiffies_to_timespec(tbp->timestamp.val, &val);
-+				jiffies_to_timespec64(tbp->timestamp.val, &val);
- 			}
- 			/*
- 			 * Dump trace buffer entry to memory file
-@@ -182,8 +182,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			 */
- 			len += snprintf(fnic_dbgfs_prt->buffer + len,
- 				  (trace_max_pages * PAGE_SIZE * 3) - len,
--				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
--				  "%16llx %16llx %16llx\n", val.tv_sec,
-+				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
-+				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
- 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
- 				  tbp->data[0], tbp->data[1], tbp->data[2],
- 				  tbp->data[3], tbp->data[4]);
-@@ -217,29 +217,29 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+-int aac_send_safw_hostttime(struct aac_dev *dev, struct timeval *now)
++int aac_send_safw_hostttime(struct aac_dev *dev, struct timespec64 *now)
  {
- 	int len = 0;
- 	int buf_size = debug->buf_size;
--	struct timespec val1, val2;
-+	struct timespec64 val1, val2;
+ 	struct tm cur_tm;
+ 	char wellness_str[] = "<HW>TD\010\0\0\0\0\0\0\0\0\0DW\0\0ZZ";
+ 	u32 datasize = sizeof(wellness_str);
+-	unsigned long local_time;
++	time64_t local_time;
+ 	int ret = -ENODEV;
  
--	getnstimeofday(&val1);
-+	ktime_get_real_ts64(&val1);
- 	len = snprintf(debug->debug_buffer + len, buf_size - len,
- 		"------------------------------------------\n"
- 		 "\t\tTime\n"
- 		"------------------------------------------\n");
+ 	if (!dev->sa_firmware)
+ 		goto out;
  
- 	len += snprintf(debug->debug_buffer + len, buf_size - len,
--		"Current time :          [%ld:%ld]\n"
--		"Last stats reset time:  [%ld:%ld]\n"
--		"Last stats read time:   [%ld:%ld]\n"
--		"delta since last reset: [%ld:%ld]\n"
--		"delta since last read:  [%ld:%ld]\n",
--	val1.tv_sec, val1.tv_nsec,
--	stats->stats_timestamps.last_reset_time.tv_sec,
-+		"Current time :          [%lld:%ld]\n"
-+		"Last stats reset time:  [%lld:%09ld]\n"
-+		"Last stats read time:   [%lld:%ld]\n"
-+		"delta since last reset: [%lld:%ld]\n"
-+		"delta since last read:  [%lld:%ld]\n",
-+	(s64)val1.tv_sec, val1.tv_nsec,
-+	(s64)stats->stats_timestamps.last_reset_time.tv_sec,
- 	stats->stats_timestamps.last_reset_time.tv_nsec,
--	stats->stats_timestamps.last_read_time.tv_sec,
-+	(s64)stats->stats_timestamps.last_read_time.tv_sec,
- 	stats->stats_timestamps.last_read_time.tv_nsec,
--	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
--	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
--	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
--	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
-+	(s64)timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
-+	timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
-+	(s64)timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
-+	timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
+-	local_time = (u32)(now->tv_sec - (sys_tz.tz_minuteswest * 60));
+-	time_to_tm(local_time, 0, &cur_tm);
++	local_time = (now->tv_sec - (sys_tz.tz_minuteswest * 60));
++	time64_to_tm(local_time, 0, &cur_tm);
+ 	cur_tm.tm_mon += 1;
+ 	cur_tm.tm_year += 1900;
+ 	wellness_str[8] = bin2bcd(cur_tm.tm_hour);
+@@ -2412,7 +2412,7 @@ int aac_send_safw_hostttime(struct aac_dev *dev, struct timeval *now)
+ 	return ret;
+ }
  
- 	stats->stats_timestamps.last_read_time = val1;
+-int aac_send_hosttime(struct aac_dev *dev, struct timeval *now)
++int aac_send_hosttime(struct aac_dev *dev, struct timespec64 *now)
+ {
+ 	int ret = -ENOMEM;
+ 	struct fib *fibptr;
+@@ -2424,7 +2424,7 @@ int aac_send_hosttime(struct aac_dev *dev, struct timeval *now)
  
-@@ -403,12 +403,12 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- 		  "\t\tOther Important Statistics\n"
- 		  "------------------------------------------\n");
+ 	aac_fib_init(fibptr);
+ 	info = (__le32 *)fib_data(fibptr);
+-	*info = cpu_to_le32(now->tv_sec);
++	*info = cpu_to_le32(now->tv_sec); /* overflow in y2106 */
+ 	ret = aac_fib_send(SendHostTime, fibptr, sizeof(*info), FsaNormal,
+ 					1, 1, NULL, NULL);
  
--	jiffies_to_timespec(stats->misc_stats.last_isr_time, &val1);
--	jiffies_to_timespec(stats->misc_stats.last_ack_time, &val2);
-+	jiffies_to_timespec64(stats->misc_stats.last_isr_time, &val1);
-+	jiffies_to_timespec64(stats->misc_stats.last_ack_time, &val2);
+@@ -2496,7 +2496,7 @@ int aac_command_thread(void *data)
+ 		}
+ 		if (!time_before(next_check_jiffies,next_jiffies)
+ 		 && ((difference = next_jiffies - jiffies) <= 0)) {
+-			struct timeval now;
++			struct timespec64 now;
+ 			int ret;
  
- 	len += snprintf(debug->debug_buffer + len, buf_size - len,
--		  "Last ISR time: %llu (%8lu.%8lu)\n"
--		  "Last ACK time: %llu (%8lu.%8lu)\n"
-+		  "Last ISR time: %llu (%8llu.%09lu)\n"
-+		  "Last ACK time: %llu (%8llu.%09lu)\n"
- 		  "Number of ISRs: %lld\n"
- 		  "Maximum CQ Entries: %lld\n"
- 		  "Number of ACK index out of range: %lld\n"
-@@ -425,9 +425,9 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- 		  "Number of rport not ready: %lld\n"
- 		  "Number of receive frame errors: %lld\n",
- 		  (u64)stats->misc_stats.last_isr_time,
--		  val1.tv_sec, val1.tv_nsec,
-+		  (s64)val1.tv_sec, val1.tv_nsec,
- 		  (u64)stats->misc_stats.last_ack_time,
--		  val2.tv_sec, val2.tv_nsec,
-+		  (s64)val2.tv_sec, val2.tv_nsec,
- 		  (u64)atomic64_read(&stats->misc_stats.isr_count),
- 		  (u64)atomic64_read(&stats->misc_stats.max_cq_entries),
- 		  (u64)atomic64_read(&stats->misc_stats.ack_index_out_of_range),
+ 			/* Don't even try to talk to adapter if its sick */
+@@ -2506,15 +2506,15 @@ int aac_command_thread(void *data)
+ 			next_check_jiffies = jiffies
+ 					   + ((long)(unsigned)check_interval)
+ 					   * HZ;
+-			do_gettimeofday(&now);
++			ktime_get_real_ts64(&now);
+ 
+ 			/* Synchronize our watches */
+-			if (((1000000 - (1000000 / HZ)) > now.tv_usec)
+-			 && (now.tv_usec > (1000000 / HZ)))
+-				difference = (((1000000 - now.tv_usec) * HZ)
+-				  + 500000) / 1000000;
++			if (((NSEC_PER_SEC - (NSEC_PER_SEC / HZ)) > now.tv_nsec)
++			 && (now.tv_nsec > (NSEC_PER_SEC / HZ)))
++				difference = (((NSEC_PER_SEC - now.tv_nsec) * HZ)
++				  + NSEC_PER_SEC / 2) / NSEC_PER_SEC;
+ 			else {
+-				if (now.tv_usec > 500000)
++				if (now.tv_nsec > NSEC_PER_SEC / 2)
+ 					++now.tv_sec;
+ 
+ 				if (dev->sa_firmware)
 -- 
 2.9.0
