@@ -1,32 +1,33 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 2/4] qla2xxx_nvmet: Added Makefile and Kconfig changes
-Date: Tue, 7 Nov 2017 16:17:13 +0800
-Message-ID: <201711071656.kWMfgRlp%fengguang.wu@intel.com>
-References: <20171106195530.17408-3-himanshu.madhani@cavium.com>
+Subject: Re: [PATCH 4/4] qla2xxx_nvmet: Add FC-NVMe Target handling
+Date: Tue, 7 Nov 2017 16:18:41 +0800
+Message-ID: <201711071620.Jt9DQ1Lb%fengguang.wu@intel.com>
+References: <20171106195530.17408-5-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="YZ5djTAD1cGYuMQK"
+Content-Type: multipart/mixed; boundary="UlVJffcvxoiEqYs2"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:37068 "EHLO mga05.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:10440 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932229AbdKGISQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Nov 2017 03:18:16 -0500
+        id S932696AbdKGITR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Nov 2017 03:19:17 -0500
 Content-Disposition: inline
-In-Reply-To: <20171106195530.17408-3-himanshu.madhani@cavium.com>
+In-Reply-To: <20171106195530.17408-5-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: kbuild-all@01.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 
---YZ5djTAD1cGYuMQK
+--UlVJffcvxoiEqYs2
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
 Hi Anil,
 
-I love your patch! Yet something to improve:
+I love your patch! Perhaps something to improve:
 
-[auto build test ERROR on scsi/for-next]
-[also build test ERROR on v4.14-rc8 next-20171106]
+[auto build test WARNING on scsi/for-next]
+[also build test WARNING on next-20171106]
+[cannot apply to v4.14-rc8]
 [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
 url:    https://github.com/0day-ci/linux/commits/Himanshu-Madhani/qla2xxx-Add-FC-NVMe-Target-support/20171107-153645
@@ -39,233 +40,106 @@ reproduce:
         # save the attached .config to linux build tree
         make.cross ARCH=xtensa 
 
-Note: the linux-review/Himanshu-Madhani/qla2xxx-Add-FC-NVMe-Target-support/20171107-153645 HEAD 9c5e24e821aa40552221b3103bc914bc4cd42293 builds fine.
-      It only hurts bisectibility.
+All warnings (new ones prefixed by >>):
 
-All errors (new ones prefixed by >>):
+   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_send_els_resp':
+>> drivers/scsi/qla2xxx/qla_target.c:400:6: warning: format '%llx' expects argument of type 'long long unsigned int', but argument 7 has type 'dma_addr_t' [-Wformat=]
+         sp, purex, udma, loop_id);
+         ^
+   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_nvme_els_done':
+   drivers/scsi/qla2xxx/qla_target.c:446:6: warning: format '%llx' expects argument of type 'long long unsigned int', but argument 8 has type 'dma_addr_t' [-Wformat=]
+         sp->gen1);
+         ^
+   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_send_plogi_resp':
+   drivers/scsi/qla2xxx/qla_target.c:475:6: warning: format '%llx' expects argument of type 'long long unsigned int', but argument 8 has type 'dma_addr_t' [-Wformat=]
+         sp, vha, plogi_ack_buf, plogi_ack_udma);
+         ^
+   drivers/scsi/qla2xxx/qla_target.c:488:40: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+     ret = qla2x00_get_plogi_template(vha, (uint64_t)tmp, (116/4 - 1));
+                                           ^
+   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_process_logo':
+   drivers/scsi/qla2xxx/qla_target.c:689:6: warning: format '%llx' expects argument of type 'long long unsigned int', but argument 8 has type 'dma_addr_t' [-Wformat=]
+         sp, vha, logo_ack_buf, logo_ack_udma);
+         ^
+   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_process_prli':
+   drivers/scsi/qla2xxx/qla_target.c:754:6: warning: format '%llx' expects argument of type 'long long unsigned int', but argument 8 has type 'dma_addr_t' [-Wformat=]
+         sp, vha, prli_ack_buf, prli_ack_udma);
+         ^
 
-   In file included from drivers/scsi//qla2xxx/qla_nvmet.c:14:0:
-   drivers/scsi//qla2xxx/qla_nvmet.h:31:25: error: field 'nvme_cmd_iu' has incomplete type
-     struct atio7_nvme_cmnd nvme_cmd_iu;
-                            ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qlt_nvmet_ls_done':
-   drivers/scsi//qla2xxx/qla_nvmet.c:48:46: error: 'struct <anonymous>' has no member named 'cmd'
-     struct qla_nvmet_cmd *tgt_cmd = nvme->u.nvme.cmd;
-                                                 ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:55:47: error: 'struct <anonymous>' has no member named 'cmd'
-      sp, sp->vha, nvme->u.nvme.desc, nvme->u.nvme.cmd);
-                                                  ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_ls_rsp':
-   drivers/scsi//qla2xxx/qla_nvmet.c:92:13: error: 'SRB_NVMET_LS' undeclared (first use in this function)
-     sp->type = SRB_NVMET_LS;
-                ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:92:13: note: each undeclared identifier is reported only once for each function it appears in
-   drivers/scsi//qla2xxx/qla_nvmet.c:100:14: error: 'struct <anonymous>' has no member named 'exchange_address'
-     nvme->u.nvme.exchange_address = tgt_cmd->atio.u.pt_ls4.exchange_address;
-                 ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:100:49: error: 'union <anonymous>' has no member named 'pt_ls4'
-     nvme->u.nvme.exchange_address = tgt_cmd->atio.u.pt_ls4.exchange_address;
-                                                    ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:101:14: error: 'struct <anonymous>' has no member named 'nport_handle'
-     nvme->u.nvme.nport_handle = tgt_cmd->atio.u.pt_ls4.nport_handle;
-                 ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:101:45: error: 'union <anonymous>' has no member named 'pt_ls4'
-     nvme->u.nvme.nport_handle = tgt_cmd->atio.u.pt_ls4.nport_handle;
-                                                ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:102:14: error: 'struct <anonymous>' has no member named 'vp_index'
-     nvme->u.nvme.vp_index = tgt_cmd->atio.u.pt_ls4.vp_index;
-                 ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:102:41: error: 'union <anonymous>' has no member named 'pt_ls4'
-     nvme->u.nvme.vp_index = tgt_cmd->atio.u.pt_ls4.vp_index;
-                                            ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:104:14: error: 'struct <anonymous>' has no member named 'cmd'
-     nvme->u.nvme.cmd = tgt_cmd; /* To be freed */
-                 ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_fcp_abort':
-   drivers/scsi//qla2xxx/qla_nvmet.c:168:13: error: 'SRB_NVMET_SEND_ABTS' undeclared (first use in this function)
-     sp->type = SRB_NVMET_SEND_ABTS;
-                ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_create_targetport':
-   drivers/scsi//qla2xxx/qla_nvmet.c:226:9: error: 'ql_dbg_nvme' undeclared (first use in this function)
-     ql_dbg(ql_dbg_nvme, vha, 0xe081,
-            ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:236:10: error: 'struct scsi_qla_host' has no member named 'targetport'
-         &vha->targetport);
-             ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:243:41: error: 'struct scsi_qla_host' has no member named 'targetport'
-     tport = (struct qla_nvmet_tgtport *)vha->targetport->private;
-                                            ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_delete':
->> drivers/scsi//qla2xxx/qla_nvmet.c:261:17: error: 'volatile struct <anonymous>' has no member named 'nvmet_enabled'
-     if (!vha->flags.nvmet_enabled)
-                    ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:263:9: error: 'struct scsi_qla_host' has no member named 'targetport'
-     if (vha->targetport) {
-            ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:264:42: error: 'struct scsi_qla_host' has no member named 'targetport'
-      tport = (struct qla_nvmet_tgtport *)vha->targetport->private;
-                                             ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:266:10: error: 'ql_dbg_nvme' undeclared (first use in this function)
-      ql_dbg(ql_dbg_nvme, vha, 0xe083,
-             ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:269:37: error: 'struct scsi_qla_host' has no member named 'targetport'
-      nvmet_fc_unregister_targetport(vha->targetport);
-                                        ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:272:3: error: implicit declaration of function 'nvmet_release_sessions' [-Werror=implicit-function-declaration]
-      nvmet_release_sessions(vha);
-      ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_handle_ls':
-   drivers/scsi//qla2xxx/qla_nvmet.c:300:2: error: implicit declaration of function 'qla_nvmet_find_sess_by_s_id' [-Werror=implicit-function-declaration]
-     sess = qla_nvmet_find_sess_by_s_id(vha, look_up_sid);
-     ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:300:7: warning: assignment makes pointer from integer without a cast
-     sess = qla_nvmet_find_sess_by_s_id(vha, look_up_sid);
-          ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:308:10: error: 'ql_dbg_nvme' undeclared (first use in this function)
-      ql_dbg(ql_dbg_nvme, vha, 0xe084,
-             ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:316:25: error: 'union <anonymous>' has no member named 'pt_ls4'
-     memcpy(&tgt_cmd->atio.u.pt_ls4, pt_ls4, sizeof(struct pt_ls4_rx_unsol));
-                            ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:327:31: error: 'struct scsi_qla_host' has no member named 'targetport'
-     ret = nvmet_fc_rcv_ls_req(vha->targetport,
-                                  ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_process_cmd':
-   drivers/scsi//qla2xxx/qla_nvmet.c:360:32: error: 'struct scsi_qla_host' has no member named 'targetport'
-     ret = nvmet_fc_rcv_fcp_req(vha->targetport, &tgt_cmd->cmd.fcp_req,
-                                   ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_handle_abts':
-   drivers/scsi//qla2xxx/qla_nvmet.c:400:28: error: 'struct scsi_qla_host' has no member named 'targetport'
-     nvmet_fc_rcv_fcp_abort(vha->targetport, &cmd->cmd.fcp_req);
-                               ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_send_resp_ctio':
-   drivers/scsi//qla2xxx/qla_nvmet.c:456:34: error: 'union <anonymous>' has no member named 'nvme_isp27'
-     struct fcp_hdr *fchdr = &atio->u.nvme_isp27.fcp_hdr;
-                                     ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:477:13: error: 'SRB_NVMET_FCP' undeclared (first use in this function)
-     sp->type = SRB_NVMET_FCP;
-                ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:481:23: error: 'struct <anonymous>' has no member named 'cmd'
-     sp->u.iocb_cmd.u.nvme.cmd = cmd;
-                          ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:485:10: error: 'ql_dbg_nvme' undeclared (first use in this function)
-      ql_dbg(ql_dbg_nvme, vha, 0x3067,
-             ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:501:31: error: 'union <anonymous>' has no member named 'nvme_isp27'
-     ctio->exchange_addr = atio->u.nvme_isp27.exchange_addr;
-                                  ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:505:19: error: 'union <anonymous>' has no member named 'nvme_isp27'
-     c_flags = atio->u.nvme_isp27.attr << 9;
-                      ^
-   drivers/scsi//qla2xxx/qla_nvmet.c: In function 'qla_nvmet_send_abts_ctio':
-   drivers/scsi//qla2xxx/qla_nvmet.c:731:13: error: 'SRB_NVMET_ABTS' undeclared (first use in this function)
-     sp->type = SRB_NVMET_ABTS;
-                ^
-   drivers/scsi//qla2xxx/qla_nvmet.c:737:10: error: 'ql_dbg_nvme' undeclared (first use in this function)
-      ql_dbg(ql_dbg_nvme, vha, 0x3067,
-             ^
-   cc1: some warnings being treated as errors
+vim +400 drivers/scsi/qla2xxx/qla_target.c
 
-vim +261 drivers/scsi//qla2xxx/qla_nvmet.c
-
-3465c5ae Anil Gurumurthy 2017-11-06  197  
-3465c5ae Anil Gurumurthy 2017-11-06  198  static struct nvmet_fc_target_template qla_nvmet_fc_transport = {
-3465c5ae Anil Gurumurthy 2017-11-06  199  	.targetport_delete	= qla_nvmet_targetport_delete,
-3465c5ae Anil Gurumurthy 2017-11-06  200  	.xmt_ls_rsp		= qla_nvmet_ls_rsp,
-3465c5ae Anil Gurumurthy 2017-11-06  201  	.fcp_op			= qla_nvmet_fcp_op,
-3465c5ae Anil Gurumurthy 2017-11-06  202  	.fcp_abort		= qla_nvmet_fcp_abort,
-3465c5ae Anil Gurumurthy 2017-11-06  203  	.fcp_req_release	= qla_nvmet_fcp_req_release,
-3465c5ae Anil Gurumurthy 2017-11-06  204  	.max_hw_queues		= 8,
-3465c5ae Anil Gurumurthy 2017-11-06  205  	.max_sgl_segments	= 128,
-3465c5ae Anil Gurumurthy 2017-11-06  206  	.max_dif_sgl_segments	= 64,
-3465c5ae Anil Gurumurthy 2017-11-06  207  	.dma_boundary		= 0xFFFFFFFF,
-3465c5ae Anil Gurumurthy 2017-11-06  208  	.target_features	= NVMET_FCTGTFEAT_READDATA_RSP |
-3465c5ae Anil Gurumurthy 2017-11-06  209  					NVMET_FCTGTFEAT_CMD_IN_ISR |
-3465c5ae Anil Gurumurthy 2017-11-06  210  					NVMET_FCTGTFEAT_OPDONE_IN_ISR,
-3465c5ae Anil Gurumurthy 2017-11-06  211  	.target_priv_sz	= sizeof(struct nvme_private),
-3465c5ae Anil Gurumurthy 2017-11-06  212  };
-3465c5ae Anil Gurumurthy 2017-11-06  213  #endif
-3465c5ae Anil Gurumurthy 2017-11-06  214  /*
-3465c5ae Anil Gurumurthy 2017-11-06  215   * qla_nvmet_create_targetport -
-3465c5ae Anil Gurumurthy 2017-11-06  216   * Create a targetport. Registers the template with the nvme-t
-3465c5ae Anil Gurumurthy 2017-11-06  217   * layer
-3465c5ae Anil Gurumurthy 2017-11-06  218   */
-3465c5ae Anil Gurumurthy 2017-11-06  219  int qla_nvmet_create_targetport(struct scsi_qla_host *vha)
-3465c5ae Anil Gurumurthy 2017-11-06  220  {
-3465c5ae Anil Gurumurthy 2017-11-06  221  #if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-3465c5ae Anil Gurumurthy 2017-11-06  222  	struct nvmet_fc_port_info pinfo;
-3465c5ae Anil Gurumurthy 2017-11-06  223  	struct qla_nvmet_tgtport *tport;
-3465c5ae Anil Gurumurthy 2017-11-06  224  	int error = 0;
-3465c5ae Anil Gurumurthy 2017-11-06  225  
-3465c5ae Anil Gurumurthy 2017-11-06  226  	ql_dbg(ql_dbg_nvme, vha, 0xe081,
-3465c5ae Anil Gurumurthy 2017-11-06  227  		"Creating target port for :%p\n", vha);
-3465c5ae Anil Gurumurthy 2017-11-06  228  
-3465c5ae Anil Gurumurthy 2017-11-06  229  	memset(&pinfo, 0, (sizeof(struct nvmet_fc_port_info)));
-3465c5ae Anil Gurumurthy 2017-11-06  230  	pinfo.node_name = wwn_to_u64(vha->node_name);
-3465c5ae Anil Gurumurthy 2017-11-06  231  	pinfo.port_name = wwn_to_u64(vha->port_name);
-3465c5ae Anil Gurumurthy 2017-11-06  232  	pinfo.port_id	= vha->d_id.b24;
-3465c5ae Anil Gurumurthy 2017-11-06  233  
-3465c5ae Anil Gurumurthy 2017-11-06  234  	error = nvmet_fc_register_targetport(&pinfo,
-3465c5ae Anil Gurumurthy 2017-11-06  235  	    &qla_nvmet_fc_transport, &vha->hw->pdev->dev,
-3465c5ae Anil Gurumurthy 2017-11-06 @236  	    &vha->targetport);
-3465c5ae Anil Gurumurthy 2017-11-06  237  
-3465c5ae Anil Gurumurthy 2017-11-06  238  	if (error) {
-3465c5ae Anil Gurumurthy 2017-11-06  239  		ql_dbg(ql_dbg_nvme, vha, 0xe082,
-3465c5ae Anil Gurumurthy 2017-11-06  240  			"Cannot register NVME transport:%d\n", error);
-3465c5ae Anil Gurumurthy 2017-11-06  241  		return error;
-3465c5ae Anil Gurumurthy 2017-11-06  242  	}
-3465c5ae Anil Gurumurthy 2017-11-06  243  	tport = (struct qla_nvmet_tgtport *)vha->targetport->private;
-3465c5ae Anil Gurumurthy 2017-11-06  244  	tport->vha = vha;
-3465c5ae Anil Gurumurthy 2017-11-06  245  	ql_dbg(ql_dbg_nvme, vha, 0xe082,
-3465c5ae Anil Gurumurthy 2017-11-06  246  		" Registered NVME transport:%p WWPN:%llx\n",
-3465c5ae Anil Gurumurthy 2017-11-06  247  		tport, pinfo.port_name);
-3465c5ae Anil Gurumurthy 2017-11-06  248  #endif
-3465c5ae Anil Gurumurthy 2017-11-06  249  	return 0;
-3465c5ae Anil Gurumurthy 2017-11-06  250  }
-3465c5ae Anil Gurumurthy 2017-11-06  251  
-3465c5ae Anil Gurumurthy 2017-11-06  252  /*
-3465c5ae Anil Gurumurthy 2017-11-06  253   * qla_nvmet_delete -
-3465c5ae Anil Gurumurthy 2017-11-06  254   * Delete a targetport.
-3465c5ae Anil Gurumurthy 2017-11-06  255   */
-3465c5ae Anil Gurumurthy 2017-11-06  256  int qla_nvmet_delete(struct scsi_qla_host *vha)
-3465c5ae Anil Gurumurthy 2017-11-06  257  {
-3465c5ae Anil Gurumurthy 2017-11-06  258  #if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-3465c5ae Anil Gurumurthy 2017-11-06  259  	struct qla_nvmet_tgtport *tport;
-3465c5ae Anil Gurumurthy 2017-11-06  260  
-3465c5ae Anil Gurumurthy 2017-11-06 @261  	if (!vha->flags.nvmet_enabled)
-3465c5ae Anil Gurumurthy 2017-11-06  262  		return 0;
-3465c5ae Anil Gurumurthy 2017-11-06  263  	if (vha->targetport) {
-3465c5ae Anil Gurumurthy 2017-11-06  264  		tport = (struct qla_nvmet_tgtport *)vha->targetport->private;
-3465c5ae Anil Gurumurthy 2017-11-06  265  
-3465c5ae Anil Gurumurthy 2017-11-06  266  		ql_dbg(ql_dbg_nvme, vha, 0xe083,
-3465c5ae Anil Gurumurthy 2017-11-06  267  			"Deleting target port :%p\n", tport);
-3465c5ae Anil Gurumurthy 2017-11-06  268  		init_completion(&tport->tport_del);
-3465c5ae Anil Gurumurthy 2017-11-06  269  		nvmet_fc_unregister_targetport(vha->targetport);
-3465c5ae Anil Gurumurthy 2017-11-06  270  		wait_for_completion_timeout(&tport->tport_del, 5);
-3465c5ae Anil Gurumurthy 2017-11-06  271  
-3465c5ae Anil Gurumurthy 2017-11-06  272  		nvmet_release_sessions(vha);
-3465c5ae Anil Gurumurthy 2017-11-06  273  	}
-3465c5ae Anil Gurumurthy 2017-11-06  274  #endif
-3465c5ae Anil Gurumurthy 2017-11-06  275  	return 0;
-3465c5ae Anil Gurumurthy 2017-11-06  276  }
-3465c5ae Anil Gurumurthy 2017-11-06  277  
-
-:::::: The code at line 261 was first introduced by commit
-:::::: 3465c5aeb3161f2f168841ded707571ffe38d136 qla2xxx_nvmet: Add files for FC-NVMe Target support
-
-:::::: TO: Anil Gurumurthy <anil.gurumurthy@cavium.com>
-:::::: CC: 0day robot <fengguang.wu@intel.com>
+   375	
+   376	/* Send an ELS response */
+   377	int qlt_send_els_resp(srb_t *sp, struct __els_pt *els_pkt)
+   378	{
+   379		struct purex_entry_24xx *purex = (struct purex_entry_24xx *)
+   380						sp->u.snvme_els.ptr;
+   381		dma_addr_t udma = sp->u.snvme_els.dma_addr;
+   382		struct fc_port *fcport;
+   383		port_id_t port_id;
+   384		uint16_t loop_id;
+   385	
+   386		port_id.b.domain = purex->s_id[2];
+   387		port_id.b.area   = purex->s_id[1];
+   388		port_id.b.al_pa  = purex->s_id[0];
+   389		port_id.b.rsvd_1 = 0;
+   390	
+   391		fcport = qla2x00_find_fcport_by_nportid(sp->vha, &port_id, 1);
+   392		if (fcport)
+   393			/* There is no session with the swt */
+   394			loop_id = fcport->loop_id;
+   395		else
+   396			loop_id = 0xFFFF;
+   397	
+   398		ql_log(ql_log_info, sp->vha, 0xfff9,
+   399		    "sp: %p, purex: %p, udam: %#llx, loop_id: 0x%x\n",
+ > 400		    sp, purex, udma, loop_id);
+   401	
+   402		els_pkt->entry_type = ELS_IOCB_TYPE;
+   403		els_pkt->entry_count = 1;
+   404	
+   405		els_pkt->handle = sp->handle;
+   406		els_pkt->nphdl = cpu_to_le16(loop_id);
+   407		els_pkt->tx_dsd_cnt = cpu_to_le16(1);
+   408		els_pkt->vp_index = purex->vp_idx;
+   409		els_pkt->sof = EST_SOFI3;
+   410		els_pkt->rcv_exchg_id = cpu_to_le32(purex->rx_xchg_addr);
+   411		els_pkt->op_code = sp->cmd_type;
+   412		els_pkt->did_lo = cpu_to_le16(purex->s_id[0] | (purex->s_id[1] << 8));
+   413		els_pkt->did_hi = purex->s_id[2];
+   414		els_pkt->sid_hi = purex->d_id[2];
+   415		els_pkt->sid_lo = cpu_to_le16(purex->d_id[0] | (purex->d_id[1] << 8));
+   416	
+   417		if (sp->gen2 == ELS_ACC)
+   418			els_pkt->cntl_flags = cpu_to_le16(EPD_ELS_ACC);
+   419		else
+   420			els_pkt->cntl_flags = cpu_to_le16(EPD_ELS_RJT);
+   421	
+   422		els_pkt->tx_bc = cpu_to_le32(sp->gen1);
+   423		els_pkt->tx_dsd[0] = cpu_to_le32(LSD(udma));
+   424		els_pkt->tx_dsd[1] = cpu_to_le32(MSD(udma));
+   425		els_pkt->tx_dsd_len = cpu_to_le32(sp->gen1);
+   426		/* Memory Barrier */
+   427		wmb();
+   428	
+   429		ql_log(ql_log_info, sp->vha, 0x11030, "Dumping PLOGI ELS\n");
+   430		ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, sp->vha, 0xffff,
+   431			(uint8_t *)els_pkt, sizeof(*els_pkt));
+   432	
+   433		return 0;
+   434	}
+   435	
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---YZ5djTAD1cGYuMQK
+--UlVJffcvxoiEqYs2
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICGFoAVoAAy5jb25maWcAlFxbc+M2sn7Pr1A5+3BO1W7GlifK5Gz5ASRBESuSoAlQsv3C
+H4sICNFpAVoAAy5jb25maWcAlFxbc+M2sn7Pr1A5+3BO1W7GlifK5Gz5ASRBESuSoAlQsv3C
 0tiaGVdsyWXJSebfn27whhvp2Zdk+HXj1mj0DZB//unnGXk7HZ63p8f77dPT99nX3X73uj3t
 HmZfHp92/55FfJZzOaMRk78Ac/q4f/v7w9+n3f64nX385eLyl/PZave63z3NwsP+y+PXN2j8
 eNj/9PNPIc9jtqzveE7rKCNX3zvkRtJcaN/lRtCsvgmTJYmimqRLXjKZZAPDkua0ZGGdbChb
@@ -1222,4 +1096,4 @@ aJj3FxO1moaeWizLouHXuxFqAqLz13MGoQxpQWev9G6wBf3+ujgJQJgFOhMqVDAKhQDHZB7d
 yavQ2GEAWhy+LsLSpi2EngJ0cfR6RISGwRjujB6mGMwnXWbe9oLLALnRIDOptJiLhUt0RUP3
 TB92NGmYQcgQKDi57goQnF50Ux/1RDao/wOs9CQb1C0DAA==
 
---YZ5djTAD1cGYuMQK--
+--UlVJffcvxoiEqYs2--
