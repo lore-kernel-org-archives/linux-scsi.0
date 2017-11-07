@@ -1,108 +1,43 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V2] scsi_debugfs: fix crash in scsi_show_rq()
-Date: Tue,  7 Nov 2017 23:21:55 +0800
-Message-ID: <20171107152155.19949-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50264 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751841AbdKGPWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Nov 2017 10:22:14 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V2] scsi_debugfs: fix crash in scsi_show_rq()
+Date: Tue, 7 Nov 2017 16:13:48 +0000
+Message-ID: <1510071227.2656.12.camel@wdc.com>
+References: <20171107152155.19949-1-ming.lei@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171107152155.19949-1-ming.lei@redhat.com>
+Content-Language: en-US
+Content-ID: <54B0B6F2C4D015428009068C659912C4@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "JBottomley@parallels.com" <JBottomley@parallels.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "john.garry@huawei.com" <john.garry@huawei.com>, "hare@suse.com" <hare@suse.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "osandov@fb.com" <osandov@fb.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.com>
 
-cmd->cmnd can be allocated/freed dynamically in case of T10_PI_TYPE2_PROTECTION,
-so we can't access it in scsi_show_rq() if 'SCpnt->cmnd != scsi_req(rq)->cmd',
-because this request can be freed any time.
-
-This patch trys to fix the following kernel crash when dumping request via
-block's debugfs interface:
-
-[  252.962045] BUG: unable to handle kernel NULL pointer dereference at           (null)
-[  252.963007] IP: scsi_format_opcode_name+0x1a/0x1c0
-[  252.963007] PGD 25e75a067 P4D 25e75a067 PUD 25e75b067 PMD 0
-[  252.963007] Oops: 0000 [#1] PREEMPT SMP
-[  252.963007] Dumping ftrace buffer:
-[  252.963007]    (ftrace buffer empty)
-[  252.963007] Modules linked in: scsi_debug ebtable_filter ebtables ip6table_filter ip6_tables xt_CHECKSUM iptable_mangle ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack libcrc32c bridge stp llc iptable_filter fuse ip_tables sd_mod sg mptsas mptscsih mptbase crc32c_intel ahci libahci nvme serio_raw scsi_transport_sas libata lpc_ich nvme_core virtio_scsi binfmt_misc dm_mod iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi null_blk configs
-[  252.963007] CPU: 1 PID: 1881 Comm: cat Not tainted 4.14.0-rc2.blk_mq_io_hang+ #516
-[  252.963007] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.9.3-1.fc25 04/01/2014
-[  252.963007] task: ffff88025e6f6000 task.stack: ffffc90001bd0000
-[  252.963007] RIP: 0010:scsi_format_opcode_name+0x1a/0x1c0
-[  252.963007] RSP: 0018:ffffc90001bd3c50 EFLAGS: 00010286
-[  252.963007] RAX: 00000000ffff4843 RBX: 0000000000000050 RCX: 0000000000000000
-[  252.963007] RDX: 0000000000000000 RSI: 0000000000000050 RDI: ffffc90001bd3cd8
-[  252.963007] RBP: ffffc90001bd3c88 R08: 0000000000001000 R09: 0000000000000000
-[  252.963007] R10: ffff880275134000 R11: ffff88027513406c R12: 0000000000000050
-[  252.963007] R13: ffffc90001bd3cd8 R14: 0000000000000000 R15: 0000000000000000
-[  252.963007] FS:  00007f4d11762700(0000) GS:ffff88027fc40000(0000) knlGS:0000000000000000
-[  252.963007] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  252.963007] CR2: 0000000000000000 CR3: 000000025e789003 CR4: 00000000003606e0
-[  252.963007] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  252.963007] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[  252.963007] Call Trace:
-[  252.963007]  __scsi_format_command+0x27/0xc0
-[  252.963007]  scsi_show_rq+0x5c/0xc0
-[  252.963007]  ? seq_printf+0x4e/0x70
-[  252.963007]  ? blk_flags_show+0x5b/0xf0
-[  252.963007]  __blk_mq_debugfs_rq_show+0x116/0x130
-[  252.963007]  blk_mq_debugfs_rq_show+0xe/0x10
-[  252.963007]  seq_read+0xfe/0x3b0
-[  252.963007]  ? __handle_mm_fault+0x631/0x1150
-[  252.963007]  full_proxy_read+0x54/0x90
-[  252.963007]  __vfs_read+0x37/0x160
-[  252.963007]  ? security_file_permission+0x9b/0xc0
-[  252.963007]  vfs_read+0x96/0x130
-[  252.963007]  SyS_read+0x55/0xc0
-[  252.963007]  entry_SYSCALL_64_fastpath+0x1a/0xa5
-[  252.963007] RIP: 0033:0x7f4d1127e9b0
-[  252.963007] RSP: 002b:00007ffd27082568 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
-[  252.963007] RAX: ffffffffffffffda RBX: 00007f4d1154bb20 RCX: 00007f4d1127e9b0
-[  252.963007] RDX: 0000000000020000 RSI: 00007f4d115a7000 RDI: 0000000000000003
-[  252.963007] RBP: 0000000000021010 R08: ffffffffffffffff R09: 0000000000000000
-[  252.963007] R10: 000000000000037b R11: 0000000000000246 R12: 0000000000022000
-[  252.963007] R13: 00007f4d1154bb78 R14: 0000000000001000 R15: 0000000000020000
-[  252.963007] Code: c6 e8 1b ca 24 00 eb 8c e8 74 2c ae ff 0f 1f 40 00 0f 1f 44 00 00 55 48 89 e5 41 56 41 55 41 54 53 49 89 fd 49 89 f4 48 83 ec 18 <44> 0f b6 32 48 c7 45 c8 00 00 00 00 65 48 8b 04 25 28 00 00 00
-[  252.963007] RIP: scsi_format_opcode_name+0x1a/0x1c0 RSP: ffffc90001bd3c50
-[  252.963007] CR2: 0000000000000000
-[  252.963007] ---[ end trace 83c5bddfbaa6573c ]---
-[  252.963007] Kernel panic - not syncing: Fatal exception
-[  252.963007] Dumping ftrace buffer:
-[  252.963007]    (ftrace buffer empty)
-[  252.963007] Kernel Offset: disabled
-[  252.963007] ---[ end Kernel panic - not syncing: Fatal exception
-
-Fixes: 0eebd005dd07(scsi: Implement blk_mq_ops.show_rq())
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Omar Sandoval <osandov@fb.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
-V2:
-	fix a typo found by John Garry.
-
- drivers/scsi/scsi_debugfs.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-index 5e9755008aed..7a50878446b4 100644
---- a/drivers/scsi/scsi_debugfs.c
-+++ b/drivers/scsi/scsi_debugfs.c
-@@ -9,7 +9,10 @@ void scsi_show_rq(struct seq_file *m, struct request *rq)
- 	int msecs = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
- 	char buf[80];
- 
--	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
-+	if (cmd->cmnd == scsi_req(rq)->cmd)
-+		__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
-+	else
-+		strcpy(buf, "unknown");
- 	seq_printf(m, ", .cmd=%s, .retries=%d, allocated %d.%03d s ago", buf,
- 		   cmd->retries, msecs / 1000, msecs % 1000);
- }
--- 
-2.9.5
+T24gVHVlLCAyMDE3LTExLTA3IGF0IDIzOjIxICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gY21k
+LT5jbW5kIGNhbiBiZSBhbGxvY2F0ZWQvZnJlZWQgZHluYW1pY2FsbHkgaW4gY2FzZSBvZiBUMTBf
+UElfVFlQRTJfUFJPVEVDVElPTiwNCj4gc28gd2UgY2FuJ3QgYWNjZXNzIGl0IGluIHNjc2lfc2hv
+d19ycSgpIGlmICdTQ3BudC0+Y21uZCAhPSBzY3NpX3JlcShycSktPmNtZCcsDQo+IGJlY2F1c2Ug
+dGhpcyByZXF1ZXN0IGNhbiBiZSBmcmVlZCBhbnkgdGltZS4NCg0KVGhhdCBkZXNjcmlwdGlvbiBp
+cyBpbmFjY3VyYXRlLiBJdCBpcyBub3QgYWxsb3dlZCB0byBmcmVlIFNDcG50LT5jbW5kIHdoaWxl
+DQphIGNvbW1hbmQgaXMgYmVpbmcgZXhlY3V0ZWQuDQoNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+c2NzaS9zY3NpX2RlYnVnZnMuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2RlYnVnZnMuYw0KPiBpbmRl
+eCA1ZTk3NTUwMDhhZWQuLjdhNTA4Nzg0NDZiNCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3Np
+L3Njc2lfZGVidWdmcy5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX2RlYnVnZnMuYw0KPiBA
+QCAtOSw3ICs5LDEwIEBAIHZvaWQgc2NzaV9zaG93X3JxKHN0cnVjdCBzZXFfZmlsZSAqbSwgc3Ry
+dWN0IHJlcXVlc3QgKnJxKQ0KPiAgCWludCBtc2VjcyA9IGppZmZpZXNfdG9fbXNlY3MoamlmZmll
+cyAtIGNtZC0+amlmZmllc19hdF9hbGxvYyk7DQo+ICAJY2hhciBidWZbODBdOw0KPiAgDQo+IC0J
+X19zY3NpX2Zvcm1hdF9jb21tYW5kKGJ1Ziwgc2l6ZW9mKGJ1ZiksIGNtZC0+Y21uZCwgY21kLT5j
+bWRfbGVuKTsNCj4gKwlpZiAoY21kLT5jbW5kID09IHNjc2lfcmVxKHJxKS0+Y21kKQ0KPiArCQlf
+X3Njc2lfZm9ybWF0X2NvbW1hbmQoYnVmLCBzaXplb2YoYnVmKSwgY21kLT5jbW5kLCBjbWQtPmNt
+ZF9sZW4pOw0KPiArCWVsc2UNCj4gKwkJc3RyY3B5KGJ1ZiwgInVua25vd24iKTsNCj4gIAlzZXFf
+cHJpbnRmKG0sICIsIC5jbWQ9JXMsIC5yZXRyaWVzPSVkLCBhbGxvY2F0ZWQgJWQuJTAzZCBzIGFn
+byIsIGJ1ZiwNCj4gIAkJICAgY21kLT5yZXRyaWVzLCBtc2VjcyAvIDEwMDAsIG1zZWNzICUgMTAw
+MCk7DQo+ICB9DQoNClRoaXMgY2hhbmdlIGludHJvZHVjZXMgYSBuZXcgYnVnLCBuYW1lbHkgdGhh
+dCAidW5rbm93biIgd2lsbCBhcHBlYXIgaW4gdGhlDQpkZWJ1Z2ZzIG91dHB1dCBpZiAoY21kLT5j
+bW5kICE9IHNjc2lfcmVxKHJxKS0+Y21kKS4gSGF2ZSB5b3UgY29uc2lkZXJlZCB0byB1c2UNCnRo
+ZSB0ZXN0IChjbWQtPmNtbmQgIT0gTlVMTCkgaW5zdGVhZD8NCg0KQWRkaXRpb25hbGx5LCBpZiB5
+b3UgcmVhbGx5IHdhbnQgdG8gYXZvaWQgdGhhdCB0aGlzIGNvZGUgY3Jhc2hlcyBpZiBOVUxMIGlz
+DQphc3NpZ25lZCB0byBjbWQtPmNtbmQgeW91IHdpbGwgaGF2ZSB0byB1c2UgUkVBRF9PTkNFKGNt
+ZC0+Y21uZCkuDQoNCkJhcnQu
