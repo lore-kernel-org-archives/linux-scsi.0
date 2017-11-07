@@ -1,78 +1,109 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: network namespace, netlink and sysfs changes for iSCSI (Re: [PATCH
- 0/9] use network namespace for iSCSI control interfaces)
-Date: Tue, 7 Nov 2017 10:01:56 -0800
-Message-ID: <20171107180156.GD29597@straylight.hirudinean.org>
-References: <20171031224104.17735-1-cleech@redhat.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] sd: Fix a disk probing hang
+Date: Tue, 07 Nov 2017 10:09:00 -0800
+Message-ID: <1510078140.3118.18.camel@linux.vnet.ibm.com>
+References: <20171107173807.14396-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35048 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932272AbdKGSB7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Nov 2017 13:01:59 -0500
-Content-Disposition: inline
-In-Reply-To: <20171031224104.17735-1-cleech@redhat.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40210 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753208AbdKGSJI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 13:09:08 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vA7I8bcn004006
+        for <linux-scsi@vger.kernel.org>; Tue, 7 Nov 2017 13:09:08 -0500
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2e3h6nsuey-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Nov 2017 13:09:07 -0500
+Received: from localhost
+        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Tue, 7 Nov 2017 11:09:06 -0700
+In-Reply-To: <20171107173807.14396-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Hello,
+On Tue, 2017-11-07 at 09:38 -0800, Bart Van Assche wrote:
+> Avoid that disk probing hangs as follows if a SCSI host is removed
+> after disk scanning started and before it completed:
+> 
+> Call Trace:
+>  __schedule+0x2fa/0xbb0
+>  schedule+0x36/0x90
+>  schedule_timeout+0x22c/0x570
+>  io_schedule_timeout+0x1e/0x50
+>  wait_for_completion_io_timeout+0x11f/0x180
+>  blk_execute_rq+0x86/0xc0
+>  scsi_execute+0xdb/0x1f0
+>  sd_revalidate_disk+0xed/0x1c70 [sd_mod]
+>  sd_probe_async+0xc3/0x1d0 [sd_mod]
+>  async_run_entry_fn+0x38/0x160
+>  process_one_work+0x20a/0x660
+>  worker_thread+0x3d/0x3b0
+>  kthread+0x13a/0x150
+>  ret_from_fork+0x27/0x40
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/sd.c | 23 ++++++++++++++++++++++-
+>  1 file changed, 22 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 0313486d85c8..d5e2b73c02ea 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3225,11 +3225,13 @@ static void sd_probe_async(void *data,
+> async_cookie_t cookie)
+>  {
+>  	struct scsi_disk *sdkp = data;
+>  	struct scsi_device *sdp;
+> +	struct Scsi_Host *host;
+>  	struct gendisk *gd;
+>  	u32 index;
+>  	struct device *dev;
+>  
+>  	sdp = sdkp->device;
+> +	host = sdp->host;
+>  	gd = sdkp->disk;
+>  	index = sdkp->index;
+>  	dev = &sdp->sdev_gendev;
+> @@ -3253,6 +3255,13 @@ static void sd_probe_async(void *data,
+> async_cookie_t cookie)
+>  	sdkp->first_scan = 1;
+>  	sdkp->max_medium_access_timeouts = SD_MAX_MEDIUM_TIMEOUTS;
+>  
+> +	mutex_lock(&host->scan_mutex);
 
-I have this set of changes to the iSCSI control interfaces pending
-review, but seeing as it's sysfs and netlink changes there's not a lot
-of feedback from linux-scsi.
+I really don't like this: by taking the scan mutex here, you
+synchronize this with everything else and make this routine single
+threaded with every other host scan operation.  That would make the
+name sd_probe_async() a complete lie.
 
-I was hoping I could get a brief review on the adding of network
-namespace support here.
+Additionally, any reference to the disk should *automatically* hold the
+host, because the last reference to the host is in the disk release
+routine, so this explicit taking of a reference should be completely
+unnecessary (and if it isn't, we need to fix the bug at source, not
+hide it like this).
 
-Thank you,
-Chris
+The whole point about our async routines is that they're supposed to
+rely on refcounting.  So, the host cannot be freed until the last
+device reference is gone.  However, the host and its devices can go
+into DEL state, which means the mid-layer replies error for them and
+the async scan is supposed to take that error and pass it up.  The hang
+you're getting may be the result of a missing scsi_device_online()
+check, or it could be some premature failure of the underlying device
+driver (going into SHOST_DEL with outstanding commands causes them to
+get frozen) but can you investigate the root cause rather than trying
+this bandaid?
 
-On Tue, Oct 31, 2017 at 03:40:55PM -0700, Chris Leech wrote:
-> This series of changes makes the iSCSI netlink and sysfs control
-> interfaces filtered by network namespace.  This is required to run
-> iscsid in any network namespace other than the initial default one.
-> 
-> Currently the netlink communication will fail if iscsid is started in a
-> non-default network namespace, as there is no kernel side socket.  After
-> fixing that, the rest of these changes are to filter visibility of the
-> iSCSI transport objects by netns.  This allows for multiple iscsid
-> instances to be run, one per netns, each controlling it's own set of
-> iSCSI sessions.
-> 
-> The iSCSI transport objects are filtered, but not the SCSI or block
-> layer devices.  So while iSCSI hosts and sessions become limited to a
-> network namespace, any attached devices remain visible system wide.
-> 
-> This currently only supports iscsi_tcp running in a new namespace, as it
-> creates a virtual host per session.  Support could be added later to
-> allow assignment of iSCSI HBAs to network namespace, much as is done for
-> network interfaces.
-> 
-> Chris Leech (9):
->   iscsi: create per-net iscsi netlink kernel sockets
->   iscsi: associate endpoints with a host
->   iscsi: sysfs filtering by network namespace
->   iscsi: make all iSCSI netlink multicast namespace aware
->   iscsi: set netns for iscsi_tcp hosts
->   iscsi: check net namespace for all iscsi lookups
->   iscsi: convert flashnode devices from bus to class
->   iscsi: rename iscsi_bus_flash_* to iscsi_flash_*
->   iscsi: filter flashnode sysfs by net namespace
-> 
->  drivers/infiniband/ulp/iser/iscsi_iser.c |   7 +-
->  drivers/scsi/be2iscsi/be_iscsi.c         |   6 +-
->  drivers/scsi/bnx2i/bnx2i_iscsi.c         |   6 +-
->  drivers/scsi/cxgbi/libcxgbi.c            |   6 +-
->  drivers/scsi/iscsi_tcp.c                 |   7 +
->  drivers/scsi/qedi/qedi_iscsi.c           |   6 +-
->  drivers/scsi/qla4xxx/ql4_os.c            |  62 +--
->  drivers/scsi/scsi_transport_iscsi.c      | 625 ++++++++++++++++++++++---------
->  include/scsi/scsi_transport_iscsi.h      |  63 ++--
->  9 files changed, 538 insertions(+), 250 deletions(-)
-> 
-> -- 
-> 2.9.5
-> 
+Thanks,
+
+James
