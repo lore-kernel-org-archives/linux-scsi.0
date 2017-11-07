@@ -1,98 +1,71 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: network namespace, netlink and sysfs changes for iSCSI (Re:
- [PATCH 0/9] use network namespace for iSCSI control interfaces)
-Date: Tue, 07 Nov 2017 12:45:26 -0800
-Message-ID: <1510087526.3118.37.camel@HansenPartnership.com>
-References: <20171031224104.17735-1-cleech@redhat.com>
-         <20171107180156.GD29597@straylight.hirudinean.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH] lpfc: Fix hard lock up NMI in els timeout handling.
+Date: Tue,  7 Nov 2017 12:59:02 -0800
+Message-ID: <20171107205902.17352-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50842 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751674AbdKGUp2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 15:45:28 -0500
-In-Reply-To: <20171107180156.GD29597@straylight.hirudinean.org>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:43969 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933309AbdKGU7O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 15:59:14 -0500
+Received: by mail-qk0-f195.google.com with SMTP id 78so794979qkz.0
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Nov 2017 12:59:14 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Leech <cleech@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+To: linux-scsi@vger.kernel.org
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Tue, 2017-11-07 at 10:01 -0800, Chris Leech wrote:
-> Hello,
-> 
-> I have this set of changes to the iSCSI control interfaces pending
-> review, but seeing as it's sysfs and netlink changes there's not a
-> lot of feedback from linux-scsi.
+From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Well, it's a bit unlikely that they understand network namespaces.
+System crashed due to a hard lockup at lpfc_els_timeout_handler+0x128.
 
-> I was hoping I could get a brief review on the adding of network
-> namespace support here.
+The els ring's txcmplq list is corrupted: the last element in the list
+does not point back the the head causing a loop. Issue is the
+els processing path for sli4 hbas are using the hbalock instead of
+the ring_lock for removing elements from the txcmplq list.
 
-Most network namespace work is done on netdev@vger.kernel.org, but they
-probably won't understand all the SCSI bits, but perhaps they don't
-need to; it's basically the netlink and the filters, right?
+Use the adapter SLI_REV to determine which lock should be used for
+removing iocbqs from the els rings txcmplq.
 
-The other list that would take a more generic view is the containers
-one containers@lists.linux-foundation.org because that's where most
-namespace stuff ends up.
+note: the future refactoring will address this so that we don't have
+this ugly type-based lock code.
 
-James
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-
-
-> Thank you,
-> Chris
-> 
-> On Tue, Oct 31, 2017 at 03:40:55PM -0700, Chris Leech wrote:
-> > 
-> > This series of changes makes the iSCSI netlink and sysfs control
-> > interfaces filtered by network namespace.  This is required to run
-> > iscsid in any network namespace other than the initial default one.
-> > 
-> > Currently the netlink communication will fail if iscsid is started
-> > in a non-default network namespace, as there is no kernel side
-> > socket.  After fixing that, the rest of these changes are to filter
-> > visibility of the iSCSI transport objects by netns.  This allows
-> > for multiple iscsid instances to be run, one per netns, each
-> > controlling it's own set of iSCSI sessions.
-> > 
-> > The iSCSI transport objects are filtered, but not the SCSI or block
-> > layer devices.  So while iSCSI hosts and sessions become limited to
-> > a network namespace, any attached devices remain visible system
-> > wide.
-> > 
-> > This currently only supports iscsi_tcp running in a new namespace,
-> > as it creates a virtual host per session.  Support could be added
-> > later to allow assignment of iSCSI HBAs to network namespace, much
-> > as is done for network interfaces.
-> > 
-> > Chris Leech (9):
-> >   iscsi: create per-net iscsi netlink kernel sockets
-> >   iscsi: associate endpoints with a host
-> >   iscsi: sysfs filtering by network namespace
-> >   iscsi: make all iSCSI netlink multicast namespace aware
-> >   iscsi: set netns for iscsi_tcp hosts
-> >   iscsi: check net namespace for all iscsi lookups
-> >   iscsi: convert flashnode devices from bus to class
-> >   iscsi: rename iscsi_bus_flash_* to iscsi_flash_*
-> >   iscsi: filter flashnode sysfs by net namespace
-> > 
-> >  drivers/infiniband/ulp/iser/iscsi_iser.c |   7 +-
-> >  drivers/scsi/be2iscsi/be_iscsi.c         |   6 +-
-> >  drivers/scsi/bnx2i/bnx2i_iscsi.c         |   6 +-
-> >  drivers/scsi/cxgbi/libcxgbi.c            |   6 +-
-> >  drivers/scsi/iscsi_tcp.c                 |   7 +
-> >  drivers/scsi/qedi/qedi_iscsi.c           |   6 +-
-> >  drivers/scsi/qla4xxx/ql4_os.c            |  62 +--
-> >  drivers/scsi/scsi_transport_iscsi.c      | 625
-> > ++++++++++++++++++++++---------
-> >  include/scsi/scsi_transport_iscsi.h      |  63 ++--
-> >  9 files changed, 538 insertions(+), 250 deletions(-)
-> > 
-> > -- 
-> > 2.9.5
-> > 
-> 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1229f58bdd09..c1c7df607604 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2732,7 +2732,8 @@ lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+  *
+  * This function looks up the iocb_lookup table to get the command iocb
+  * corresponding to the given response iocb using the iotag of the
+- * response iocb. This function is called with the hbalock held.
++ * response iocb. This function is called with the hbalock held
++ * for sli3 devices or the ring_lock for sli4 devices.
+  * This function returns the command iocb object if it finds the command
+  * iocb else returns NULL.
+  **/
+@@ -2828,9 +2829,15 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	unsigned long iflag;
+ 
+ 	/* Based on the iotag field, get the cmd IOCB from the txcmplq */
+-	spin_lock_irqsave(&phba->hbalock, iflag);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_lock_irqsave(&pring->ring_lock, iflag);
++	else
++		spin_lock_irqsave(&phba->hbalock, iflag);
+ 	cmdiocbp = lpfc_sli_iocbq_lookup(phba, pring, saveq);
+-	spin_unlock_irqrestore(&phba->hbalock, iflag);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		spin_unlock_irqrestore(&pring->ring_lock, iflag);
++	else
++		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 
+ 	if (cmdiocbp) {
+ 		if (cmdiocbp->iocb_cmpl) {
+-- 
+2.13.1
