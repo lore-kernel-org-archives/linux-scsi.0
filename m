@@ -1,29 +1,34 @@
 From: Chris Leech <cleech@redhat.com>
-Subject: Re: [PATCH 0/9] use network namespace for iSCSI control interfaces
-Date: Tue, 7 Nov 2017 09:44:13 -0800
-Message-ID: <20171107174413.GB29597@straylight.hirudinean.org>
+Subject: network namespace, netlink and sysfs changes for iSCSI (Re: [PATCH
+ 0/9] use network namespace for iSCSI control interfaces)
+Date: Tue, 7 Nov 2017 10:01:56 -0800
+Message-ID: <20171107180156.GD29597@straylight.hirudinean.org>
 References: <20171031224104.17735-1-cleech@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41734 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35048 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753909AbdKGRoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Nov 2017 12:44:15 -0500
+        id S932272AbdKGSB7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Nov 2017 13:01:59 -0500
 Content-Disposition: inline
 In-Reply-To: <20171031224104.17735-1-cleech@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
-Cc: Lee Duncan <lduncan@suse.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>
+Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
-Anyone have comments or criticisms?  Lee?
+Hello,
 
-Suggestions on anyone else I should be pinging for feedback?
-These changes are in the iSCSI code, but are all netlink and sysfs
-related namespace issues so I get that it's not a typical SCSI review.
+I have this set of changes to the iSCSI control interfaces pending
+review, but seeing as it's sysfs and netlink changes there's not a lot
+of feedback from linux-scsi.
 
-- Chris
+I was hoping I could get a brief review on the adding of network
+namespace support here.
+
+Thank you,
+Chris
 
 On Tue, Oct 31, 2017 at 03:40:55PM -0700, Chris Leech wrote:
 > This series of changes makes the iSCSI netlink and sysfs control
