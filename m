@@ -1,71 +1,78 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] lpfc: Fix hard lock up NMI in els timeout handling.
-Date: Tue,  7 Nov 2017 12:59:02 -0800
-Message-ID: <20171107205902.17352-1-jsmart2021@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:43969 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933309AbdKGU7O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 15:59:14 -0500
-Received: by mail-qk0-f195.google.com with SMTP id 78so794979qkz.0
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Nov 2017 12:59:14 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Himanshu Jha <himanshujha199640@gmail.com>
+Subject: Re: [PATCH] scsi: Use vzalloc instead of vmalloc/memset
+Date: Wed, 8 Nov 2017 02:30:46 +0530
+Message-ID: <20171107210046.GA3948@himanshu-Vostro-3559>
+References: <1509832586-1429-1-git-send-email-himanshujha199640@gmail.com>
+ <20171107195136.GD22894@wotan.suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171107195136.GD22894@wotan.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, qla2xxx-upstream@qlogic.com, kartilak@cisco.com, sebaddel@cisco.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-From: Dick Kennedy <dick.kennedy@broadcom.com>
+On Tue, Nov 07, 2017 at 08:51:36PM +0100, Luis R. Rodriguez wrote:
+> On Sun, Nov 05, 2017 at 03:26:26AM +0530, Himanshu Jha wrote:
+> > Use vzalloc instead of vmalloc/memset to allocate memory filled with 0
+> > value.
+> > 
+> > Done using Coccinelle.
+> > Semantic patch used :
+> > 
+> > @@
+> > expression x,a;
+> > statement S;
+> > @@
+> > 
+> > - x = vmalloc(a);
+> > + x = vzalloc(a);
+> >   if (x == NULL || ...) S
+> > - memset(x, 0, a);
+> 
+> How many false positives do you get? Have you identified any?
+> If not you should consider adding this SmPL rule to:
+> 
+> scripts/coccinelle/api/
+> 
+> Some maintainers may ask you for the SmPL rule to be upstream first,
+> not all though. So its good practice for you to strive for this.
+> Another reason for it to go upstream is then other maintainers
+> can / should be running coccicheck against their subsystem to avoid
+> stupid regressions.
+> 
+> You may want to explain for patches like these that they have been
+> tested by 0-day without any issues found.
+> 
+> Also add the tag:
+> 
+> Generated-by: Coccinelle SmPL
+> 
+> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+> > ---
+> >  drivers/scsi/bfa/bfad.c            | 3 +--
+> >  drivers/scsi/bfa/bfad_debugfs.c    | 8 ++------
+> >  drivers/scsi/qla2xxx/qla_bsg.c     | 3 +--
+> >  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 5 +----
+> >  drivers/scsi/scsi_debug.c          | 6 ++----
+> >  drivers/scsi/snic/snic_trc.c       | 3 +--
+> >  6 files changed, 8 insertions(+), 20 deletions(-)
+> 
+> Split this up per driver, and resend by using ./scripts/get_maintainer.pl
+> foo.patch and ensuring the right folks get the email.  Right now you 
+> just spammed tons of people and the changes may be preferred to go
+> upstream atomically per driver, always assume this first.
+> 
+> Other than this, feel free to add to each of the patches you created:
+> 
 
-System crashed due to a hard lockup at lpfc_els_timeout_handler+0x128.
+Thanks for the feeedback! I will resend the patch with the necessary
+changes.
 
-The els ring's txcmplq list is corrupted: the last element in the list
-does not point back the the head causing a loop. Issue is the
-els processing path for sli4 hbas are using the hbalock instead of
-the ring_lock for removing elements from the txcmplq list.
+> Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
 
-Use the adapter SLI_REV to determine which lock should be used for
-removing iocbqs from the els rings txcmplq.
 
-note: the future refactoring will address this so that we don't have
-this ugly type-based lock code.
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_sli.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 1229f58bdd09..c1c7df607604 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2732,7 +2732,8 @@ lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
-  *
-  * This function looks up the iocb_lookup table to get the command iocb
-  * corresponding to the given response iocb using the iotag of the
-- * response iocb. This function is called with the hbalock held.
-+ * response iocb. This function is called with the hbalock held
-+ * for sli3 devices or the ring_lock for sli4 devices.
-  * This function returns the command iocb object if it finds the command
-  * iocb else returns NULL.
-  **/
-@@ -2828,9 +2829,15 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	unsigned long iflag;
- 
- 	/* Based on the iotag field, get the cmd IOCB from the txcmplq */
--	spin_lock_irqsave(&phba->hbalock, iflag);
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		spin_lock_irqsave(&pring->ring_lock, iflag);
-+	else
-+		spin_lock_irqsave(&phba->hbalock, iflag);
- 	cmdiocbp = lpfc_sli_iocbq_lookup(phba, pring, saveq);
--	spin_unlock_irqrestore(&phba->hbalock, iflag);
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		spin_unlock_irqrestore(&pring->ring_lock, iflag);
-+	else
-+		spin_unlock_irqrestore(&phba->hbalock, iflag);
- 
- 	if (cmdiocbp) {
- 		if (cmdiocbp->iocb_cmpl) {
--- 
-2.13.1
+Thanks
+Himanshu Jha
