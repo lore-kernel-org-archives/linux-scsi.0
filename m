@@ -1,80 +1,83 @@
-From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Subject: RE: [bug report] scsi: mpt3sas: Added support for nvme encapsulated
- request message.
-Date: Tue, 7 Nov 2017 10:29:20 -0700
-Message-ID: <258eaa60cc970201a449e079c37a2dbb@mail.gmail.com>
-References: <20171107113330.airlabvvr3l7oku6@mwanda>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
+ scsi_mq_get_budget()
+Date: Tue, 7 Nov 2017 17:34:38 +0000
+Message-ID: <1510076077.2656.24.camel@wdc.com>
+References: <20171104015534.32684-1-ming.lei@redhat.com>
+         <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
+         <1509997522.2409.58.camel@wdc.com> <20171107021125.GB15090@ming.t460p>
+         <1510071607.2656.17.camel@wdc.com>
+         <74925156-b425-de0e-de39-0a166ef5c5f3@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:57180 "EHLO
-        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753517AbdKGR3W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 12:29:22 -0500
-Received: by mail-qk0-f176.google.com with SMTP id l194so16229486qke.13
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Nov 2017 09:29:22 -0800 (PST)
-In-Reply-To: <20171107113330.airlabvvr3l7oku6@mwanda>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:55011 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751446AbdKGRem (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 12:34:42 -0500
+In-Reply-To: <74925156-b425-de0e-de39-0a166ef5c5f3@kernel.dk>
+Content-Language: en-US
+Content-ID: <1BD6AFFE820EBA4F9794B3912D7D41BE@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
+To: "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
 
-Dan,
-The MPI structures are of variable length and can go up to a maximum of
-128 bytes (a MPI frame size) and as MPI standard the variable length MPI
-structures are left out with the last element as a single dword array.
-Can we ignore the warning?  If not we need to modify the MPI structure to
-have the NVMe_Command array to the maximum size of the frame (which is
-typically 128 but can change across hardware generations)
-
-Thanks
-Sathya
-
------Original Message-----
-From: mpt-fusionlinux.pdl@broadcom.com
-[mailto:mpt-fusionlinux.pdl@broadcom.com] On Behalf Of Dan Carpenter
-Sent: Tuesday, November 7, 2017 4:34 AM
-To: suganath-prabu.subramani@broadcom.com
-Cc: MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: mpt3sas: Added support for nvme encapsulated
-request message.
-
-Hello Suganath Prabu Subramani,
-
-The patch aff39e61218f: "scsi: mpt3sas: Added support for nvme
-encapsulated request message." from Oct 31, 2017, leads to the following
-static checker warning:
-
-	drivers/scsi/mpt3sas/mpt3sas_base.c:1459 _base_build_nvme_prp()
-	error: buffer overflow 'nvme_encap_request->NVMe_Command' 4 <= 24
-
-drivers/scsi/mpt3sas/mpt3sas_base.c
-  1453          /*
-  1454           * Set pointers to PRP1 and PRP2, which are in the NVMe
-command.
-  1455           * PRP1 is located at a 24 byte offset from the start of
-the NVMe
-                                        ^^^^^^^ The ->NVMe_Command is
-declared as a 4 byte array so this makes static checkers puzzled how there
-are more than 24 bytes in it.
-
-  1456           * command.  Then set the current PRP entry pointer to
-PRP1.
-  1457           */
-  1458          prp1_entry = (__le64 *)(nvme_encap_request->NVMe_Command +
-  1459              NVME_CMD_PRP1_OFFSET);
-  1460          prp2_entry = (__le64 *)(nvme_encap_request->NVMe_Command +
-  1461              NVME_CMD_PRP2_OFFSET);
-  1462          prp_entry = prp1_entry;
-  1463          /*
-  1464           * For the PRP entries, use the specially allocated buffer
-of
-  1465           * contiguous memory.
-  1466           */
-  1467          prp_page = (__le64 *)mpt3sas_base_get_pcie_sgl(ioc, smid);
-  1468          prp_page_phys = (__le64
-*)mpt3sas_base_get_pcie_sgl_dma(ioc, smid);
-  1469
-
-regards,
-dan carpenter
+T24gVHVlLCAyMDE3LTExLTA3IGF0IDA5OjI5IC0wNzAwLCBKZW5zIEF4Ym9lIHdyb3RlOg0KPiBP
+biAxMS8wNy8yMDE3IDA5OjIwIEFNLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6DQo+ID4gT24gVHVl
+LCAyMDE3LTExLTA3IGF0IDEwOjExICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gPiA+IElmIHlv
+dSBjYW4gcmVwcm9kdWNlLCBwbGVhc2UgcHJvdmlkZSBtZSBhdCBsZWFzdCB0aGUgZm9sbG93aW5n
+IGxvZw0KPiA+ID4gZmlyc3Q6DQo+ID4gPiANCj4gPiA+IAlmaW5kIC9zeXMva2VybmVsL2RlYnVn
+L2Jsb2NrIC1uYW1lIHRhZ3MgfCB4YXJncyBjYXQgfCBncmVwIGJ1c3kNCj4gPiA+IA0KPiA+ID4g
+SWYgYW55IHBlbmRpbmcgcmVxdWVzdHMgYXJuJ3QgY29tcGxldGVkLCBwbGVhc2UgcHJvdmlkZSB0
+aGUgcmVsYXRlZA0KPiA+ID4gaW5mbyBpbiBkYmdmcyBhYm91dCB3aGVyZSBpcyB0aGUgcmVxdWVz
+dC4NCj4gPiANCj4gPiBFdmVyeSB0aW1lIEkgcmFuIHRoZSBhYm92ZSBvciBhIHNpbWlsYXIgY29t
+bWFuZCBpdHMgb3V0cHV0IHdhcyBlbXB0eS4gSQ0KPiA+IGFzc3VtZSB0aGF0J3MgYmVjYXVzZSB0
+aGUgaGFuZyB1c3VhbGx5IG9jY3VycyBpbiBhIHBoYXNlIHdoZXJlIHRoZXNlIGRlYnVnZnMNCj4g
+PiBhdHRyaWJ1dGVzIGVpdGhlciBoYXZlIG5vdCB5ZXQgYmVlbiBjcmVhdGVkIG9yIGhhdmUgYWxy
+ZWFkeSBkaXNhcHBlYXJlZC4NCj4gDQo+IEJhcnQsIGRvIHlvdSBzdGlsbCBzZWUgYSBoYW5nIHdp
+dGggdGhlIHBhdGNoIHRoYXQgZml4ZXMgdGhlIHRhZyBsZWFrIHdoZW4NCj4gd2UgZmFpbCB0byBn
+ZXQgYSBkaXNwYXRjaCBidWRnZXQ/DQo+IA0KPiBodHRwczovL21hcmMuaW5mby8/bD1saW51eC1i
+bG9jayZtPTE1MTAwNDg4MTQxMTQ4MCZ3PTINCj4gDQo+IEkndmUgcnVuIGEgbG90IG9mIHN0YWJp
+bGl0eSB0ZXN0aW5nIGhlcmUsIGFuZCBJIGhhdmVuJ3QgcnVuIGludG8gYW55DQo+IGlzc3Vlcy4g
+VGhpcyBpcyB3aXRoIHNoYXJlZCB0YWdzIGFzIHdlbGwuIFNvIGlmIHlvdSBzdGlsbCBzZWUgdGhl
+IGZhaWx1cmUNCj4gY2FzZSB3aXRoIHRoZSBjdXJyZW50IHRyZWUgQU5EIHRoZSBhYm92ZSBwYXRj
+aCwgdGhlbiBJJ2xsIHRyeSBhbmQgZ2V0DQo+IGEgdGVzdCBjYXNlIHNldHVwIHRoYXQgaGl0cyBp
+dCB0b28gc28gd2UgY2FuIGdldCB0byB0aGUgYm90dG9tIG9mIHRoaXMuDQoNCkl0IHRvb2sgYSBs
+aXR0bGUgbG9uZ2VyIHRoYW4gZXhwZWN0ZWQgYnV0IEkganVzdCByYW4gaW50byB0aGUgZm9sbG93
+aW5nDQpsb2NrdXAgd2l0aCB5b3VyIGZvci1uZXh0IGJyYW5jaCBvZiB0aGlzIG1vcm5pbmcgKGNv
+bW1pdCBlOGZhNDRiYjhhZjkpIGFuZA0KTWluZydzIHBhdGNoICJibGstbXE6IHB1dCBkcml2ZXIg
+dGFnIGlmIGRpc3BhdGNoIGJ1ZGdldCBjYW4ndCBiZSBnb3QiDQphcHBsaWVkIG9uIHRvcCBvZiBp
+dDoNCg0KWyAyNTc1LjMyNDY3OF0gc3lzcnE6IFN5c1JxIDogU2hvdyBCbG9ja2VkIFN0YXRlDQpb
+IDI1NzUuMzMyMzM2XSAgIHRhc2sgICAgICAgICAgICAgICAgICAgICAgICBQQyBzdGFjayAgIHBp
+ZCBmYXRoZXINClsgMjU3NS4zNDUyMzldIHN5c3RlbWQtdWRldmQgICBEICAgIDAgNDc1NzcgICAg
+NTE4IDB4MDAwMDAxMDYNClsgMjU3NS4zNTM4MjFdIENhbGwgVHJhY2U6DQpbIDI1NzUuMzU4ODA1
+XSAgX19zY2hlZHVsZSsweDI4Yi8weDg5MA0KWyAyNTc1LjM2NDkwNl0gIHNjaGVkdWxlKzB4MzYv
+MHg4MA0KWyAyNTc1LjM3MDQzNl0gIGlvX3NjaGVkdWxlKzB4MTYvMHg0MA0KWyAyNTc1LjM3NjI4
+N10gIF9fbG9ja19wYWdlKzB4ZmMvMHgxNDANClsgMjU3NS4zODIwNjFdICA/IHBhZ2VfY2FjaGVf
+dHJlZV9pbnNlcnQrMHhjMC8weGMwDQpbIDI1NzUuMzg4OTQzXSAgdHJ1bmNhdGVfaW5vZGVfcGFn
+ZXNfcmFuZ2UrMHg1ZTgvMHg4MzANClsgMjU3NS4zOTYwODNdICB0cnVuY2F0ZV9pbm9kZV9wYWdl
+cysweDE1LzB4MjANClsgMjU3NS40MDIzOThdICBraWxsX2JkZXYrMHgyZi8weDQwDQpbIDI1NzUu
+NDA3NTM4XSAgX19ibGtkZXZfcHV0KzB4NzQvMHgxZjANClsgMjU3NS40MTMwMTBdICA/IGttZW1f
+Y2FjaGVfZnJlZSsweDE5Ny8weDFjMA0KWyAyNTc1LjQxODk4Nl0gIGJsa2Rldl9wdXQrMHg0Yy8w
+eGQwDQpbIDI1NzUuNDI0MDQwXSAgYmxrZGV2X2Nsb3NlKzB4MzQvMHg3MA0KWyAyNTc1LjQyOTIx
+Nl0gIF9fZnB1dCsweGU3LzB4MjIwDQpbIDI1NzUuNDMzODYzXSAgX19fX2ZwdXQrMHhlLzB4MTAN
+ClsgMjU3NS40Mzg0OTBdICB0YXNrX3dvcmtfcnVuKzB4NzYvMHg5MA0KWyAyNTc1LjQ0MzYxOV0g
+IGRvX2V4aXQrMHgyZTAvMHhhZjANClsgMjU3NS40NDgzMTFdICBkb19ncm91cF9leGl0KzB4NDMv
+MHhiMA0KWyAyNTc1LjQ1MzM4Nl0gIGdldF9zaWduYWwrMHgyOTkvMHg1ZTANClsgMjU3NS40NTgz
+MDNdICBkb19zaWduYWwrMHgzNy8weDc0MA0KWyAyNTc1LjQ2Mjk3Nl0gID8gYmxrZGV2X3JlYWRf
+aXRlcisweDM1LzB4NDANClsgMjU3NS40Njg0MjVdICA/IG5ld19zeW5jX3JlYWQrMHhkZS8weDEz
+MA0KWyAyNTc1LjQ3MzYyMF0gID8gdmZzX3JlYWQrMHgxMTUvMHgxMzANClsgMjU3NS40NzgzODhd
+ICBleGl0X3RvX3VzZXJtb2RlX2xvb3ArMHg4MC8weGQwDQpbIDI1NzUuNDg0MDAyXSAgZG9fc3lz
+Y2FsbF82NCsweGIzLzB4YzANClsgMjU3NS40ODg4MTNdICBlbnRyeV9TWVNDQUxMNjRfc2xvd19w
+YXRoKzB4MjUvMHgyNQ0KWyAyNTc1LjQ5NDc1OV0gUklQOiAwMDMzOjB4N2VmZDgyOWNiZDExDQpb
+IDI1NzUuNDk5NTA2XSBSU1A6IDAwMmI6MDAwMDdmZmZmOTg0Zjk3OCBFRkxBR1M6IDAwMDAwMjQ2
+IE9SSUdfUkFYOiAwMDAwMDAwMDAwMDAwMDAwDQpbIDI1NzUuNTA4NzQxXSBSQVg6IDAwMDAwMDAw
+MDAwMjIwMDAgUkJYOiAwMDAwNTVmMTlmOTAyY2EwIFJDWDogMDAwMDdlZmQ4MjljYmQxMQ0KWyAy
+NTc1LjUxNzQ1NV0gUkRYOiAwMDAwMDAwMDAwMDQwMDAwIFJTSTogMDAwMDU1ZjE5ZjkwMmNjOCBS
+REk6IDAwMDAwMDAwMDAwMDAwMDcNClsgMjU3NS41MjYxNjNdIFJCUDogMDAwMDU1ZjE5ZjdmYjlk
+MCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwNTVmMTlmOTAyY2EwDQpbIDI1NzUuNTM0
+ODYwXSBSMTA6IDAwMDA1NWYxOWY5MDJjYjggUjExOiAwMDAwMDAwMDAwMDAwMjQ2IFIxMjogMDAw
+MDAwMDAwMDAwMDAwMA0KWyAyNTc1LjU0NDI1MF0gUjEzOiAwMDAwMDAwMDAwMDQwMDAwIFIxNDog
+MDAwMDU1ZjE5ZjdmYmEyMCBSMTU6IDAwMDAwMDAwMDAwNDAwMDANCg0KQmFydC4=
