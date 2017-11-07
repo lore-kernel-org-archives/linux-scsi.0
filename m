@@ -1,46 +1,52 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
- scsi_mq_get_budget()
-Date: Tue, 7 Nov 2017 09:29:32 -0700
-Message-ID: <74925156-b425-de0e-de39-0a166ef5c5f3@kernel.dk>
-References: <20171104015534.32684-1-ming.lei@redhat.com>
- <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
- <1509997522.2409.58.camel@wdc.com> <20171107021125.GB15090@ming.t460p>
- <1510071607.2656.17.camel@wdc.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH 1/4] qla2xxx_nvmet: Add files for FC-NVMe Target support
+Date: Tue, 7 Nov 2017 09:05:38 -0800
+Message-ID: <e24db463-4b2c-611a-ddef-e217fa23962a@broadcom.com>
+References: <20171106195530.17408-1-himanshu.madhani@cavium.com>
+ <20171106195530.17408-2-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1510071607.2656.17.camel@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:50219 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751473AbdKGRFl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 12:05:41 -0500
+Received: by mail-qk0-f180.google.com with SMTP id p7so2157169qkd.7
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Nov 2017 09:05:41 -0800 (PST)
+In-Reply-To: <20171106195530.17408-2-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-On 11/07/2017 09:20 AM, Bart Van Assche wrote:
-> On Tue, 2017-11-07 at 10:11 +0800, Ming Lei wrote:
->> If you can reproduce, please provide me at least the following log
->> first:
->>
->> 	find /sys/kernel/debug/block -name tags | xargs cat | grep busy
->>
->> If any pending requests arn't completed, please provide the related
->> info in dbgfs about where is the request.
-> 
-> Every time I ran the above or a similar command its output was empty. I
-> assume that's because the hang usually occurs in a phase where these debugfs
-> attributes either have not yet been created or have already disappeared.
+On 11/6/2017 11:55 AM, Himanshu Madhani wrote:
+> From: Anil Gurumurthy <anil.gurumurthy@cavium.com>
+>
+> +static struct nvmet_fc_target_template qla_nvmet_fc_transport = {
+> +	.targetport_delete	= qla_nvmet_targetport_delete,
+> +	.xmt_ls_rsp		= qla_nvmet_ls_rsp,
+> +	.fcp_op			= qla_nvmet_fcp_op,
+> +	.fcp_abort		= qla_nvmet_fcp_abort,
+> +	.fcp_req_release	= qla_nvmet_fcp_req_release,
+> +	.max_hw_queues		= 8,
+> +	.max_sgl_segments	= 128,
+> +	.max_dif_sgl_segments	= 64,
+> +	.dma_boundary		= 0xFFFFFFFF,
+> +	.target_features	= NVMET_FCTGTFEAT_READDATA_RSP |
+> +					NVMET_FCTGTFEAT_CMD_IN_ISR |
+> +					NVMET_FCTGTFEAT_OPDONE_IN_ISR,
+> +	.target_priv_sz	= sizeof(struct nvme_private),
+> +};
+> +#endif
+>
 
-Bart, do you still see a hang with the patch that fixes the tag leak when
-we fail to get a dispatch budget?
+Do you really need the xxx_IN_ISR features ?  e.g. are you calling the 
+nvmet_fc cmd receive and op done calls in ISR context or something that 
+can't/shouldn't continue into the nvmet layers ?
 
-https://marc.info/?l=linux-block&m=151004881411480&w=2
+I was looking to remove those flags and the work_q items behind it as I 
+believed the qla2xxx driver called everything in a deferred callback.
 
-I've run a lot of stability testing here, and I haven't run into any
-issues. This is with shared tags as well. So if you still see the failure
-case with the current tree AND the above patch, then I'll try and get
-a test case setup that hits it too so we can get to the bottom of this.
-
--- 
-Jens Axboe
+-- james
