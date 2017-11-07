@@ -1,68 +1,47 @@
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH] scsi: Use vzalloc instead of vmalloc/memset
-Date: Tue, 7 Nov 2017 20:51:36 +0100
-Message-ID: <20171107195136.GD22894@wotan.suse.de>
-References: <1509832586-1429-1-git-send-email-himanshujha199640@gmail.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: network namespace, netlink and sysfs changes for iSCSI (Re:
+ [PATCH 0/9] use network namespace for iSCSI control interfaces)
+Date: Tue, 7 Nov 2017 21:28:42 +0100
+Message-ID: <20171107202842.GA12196@kroah.com>
+References: <20171031224104.17735-1-cleech@redhat.com>
+ <20171107180156.GD29597@straylight.hirudinean.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBCUJ7YGL3QFBB3VORDIAKGQE6J2NTYA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Content-Disposition: inline
-In-Reply-To: <1509832586-1429-1-git-send-email-himanshujha199640@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, qla2xxx-upstream@qlogic.com, kartilak@cisco.com, sebaddel@cisco.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mcgrof@kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+In-Reply-To: <20171107180156.GD29597-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Nov 05, 2017 at 03:26:26AM +0530, Himanshu Jha wrote:
-> Use vzalloc instead of vmalloc/memset to allocate memory filled with 0
-> value.
+On Tue, Nov 07, 2017 at 10:01:56AM -0800, Chris Leech wrote:
+> Hello,
 > 
-> Done using Coccinelle.
-> Semantic patch used :
+> I have this set of changes to the iSCSI control interfaces pending
+> review, but seeing as it's sysfs and netlink changes there's not a lot
+> of feedback from linux-scsi.
 > 
-> @@
-> expression x,a;
-> statement S;
-> @@
-> 
-> - x = vmalloc(a);
-> + x = vzalloc(a);
->   if (x == NULL || ...) S
-> - memset(x, 0, a);
+> I was hoping I could get a brief review on the adding of network
+> namespace support here.
 
-How many false positives do you get? Have you identified any?
-If not you should consider adding this SmPL rule to:
+Where is "here"?  I don't see any patches "here" to review :(
 
-scripts/coccinelle/api/
+And no, I'm not on the scsi mailing lists :)
 
-Some maintainers may ask you for the SmPL rule to be upstream first,
-not all though. So its good practice for you to strive for this.
-Another reason for it to go upstream is then other maintainers
-can / should be running coccicheck against their subsystem to avoid
-stupid regressions.
+thanks,
 
-You may want to explain for patches like these that they have been
-tested by 0-day without any issues found.
+greg k-h
 
-Also add the tag:
-
-Generated-by: Coccinelle SmPL
-
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> ---
->  drivers/scsi/bfa/bfad.c            | 3 +--
->  drivers/scsi/bfa/bfad_debugfs.c    | 8 ++------
->  drivers/scsi/qla2xxx/qla_bsg.c     | 3 +--
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 5 +----
->  drivers/scsi/scsi_debug.c          | 6 ++----
->  drivers/scsi/snic/snic_trc.c       | 3 +--
->  6 files changed, 8 insertions(+), 20 deletions(-)
-
-Split this up per driver, and resend by using ./scripts/get_maintainer.pl
-foo.patch and ensuring the right folks get the email.  Right now you 
-just spammed tons of people and the changes may be preferred to go
-upstream atomically per driver, always assume this first.
-
-Other than this, feel free to add to each of the patches you created:
-
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
