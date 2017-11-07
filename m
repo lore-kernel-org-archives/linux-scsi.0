@@ -1,30 +1,46 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
  scsi_mq_get_budget()
-Date: Tue, 7 Nov 2017 16:20:08 +0000
-Message-ID: <1510071607.2656.17.camel@wdc.com>
+Date: Tue, 7 Nov 2017 09:29:32 -0700
+Message-ID: <74925156-b425-de0e-de39-0a166ef5c5f3@kernel.dk>
 References: <20171104015534.32684-1-ming.lei@redhat.com>
-         <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
-         <1509997522.2409.58.camel@wdc.com> <20171107021125.GB15090@ming.t460p>
+ <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
+ <1509997522.2409.58.camel@wdc.com> <20171107021125.GB15090@ming.t460p>
+ <1510071607.2656.17.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171107021125.GB15090@ming.t460p>
+In-Reply-To: <1510071607.2656.17.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <CC0BE78F1BF06048BE95C2642441DC16@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "loberman@redhat.com" <loberman@redhat.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE3LTExLTA3IGF0IDEwOjExICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gSWYg
-eW91IGNhbiByZXByb2R1Y2UsIHBsZWFzZSBwcm92aWRlIG1lIGF0IGxlYXN0IHRoZSBmb2xsb3dp
-bmcgbG9nDQo+IGZpcnN0Og0KPiANCj4gCWZpbmQgL3N5cy9rZXJuZWwvZGVidWcvYmxvY2sgLW5h
-bWUgdGFncyB8IHhhcmdzIGNhdCB8IGdyZXAgYnVzeQ0KPiANCj4gSWYgYW55IHBlbmRpbmcgcmVx
-dWVzdHMgYXJuJ3QgY29tcGxldGVkLCBwbGVhc2UgcHJvdmlkZSB0aGUgcmVsYXRlZA0KPiBpbmZv
-IGluIGRiZ2ZzIGFib3V0IHdoZXJlIGlzIHRoZSByZXF1ZXN0Lg0KDQpFdmVyeSB0aW1lIEkgcmFu
-IHRoZSBhYm92ZSBvciBhIHNpbWlsYXIgY29tbWFuZCBpdHMgb3V0cHV0IHdhcyBlbXB0eS4gSQ0K
-YXNzdW1lIHRoYXQncyBiZWNhdXNlIHRoZSBoYW5nIHVzdWFsbHkgb2NjdXJzIGluIGEgcGhhc2Ug
-d2hlcmUgdGhlc2UgZGVidWdmcw0KYXR0cmlidXRlcyBlaXRoZXIgaGF2ZSBub3QgeWV0IGJlZW4g
-Y3JlYXRlZCBvciBoYXZlIGFscmVhZHkgZGlzYXBwZWFyZWQuDQoNCkJhcnQu
+On 11/07/2017 09:20 AM, Bart Van Assche wrote:
+> On Tue, 2017-11-07 at 10:11 +0800, Ming Lei wrote:
+>> If you can reproduce, please provide me at least the following log
+>> first:
+>>
+>> 	find /sys/kernel/debug/block -name tags | xargs cat | grep busy
+>>
+>> If any pending requests arn't completed, please provide the related
+>> info in dbgfs about where is the request.
+> 
+> Every time I ran the above or a similar command its output was empty. I
+> assume that's because the hang usually occurs in a phase where these debugfs
+> attributes either have not yet been created or have already disappeared.
+
+Bart, do you still see a hang with the patch that fixes the tag leak when
+we fail to get a dispatch budget?
+
+https://marc.info/?l=linux-block&m=151004881411480&w=2
+
+I've run a lot of stability testing here, and I haven't run into any
+issues. This is with shared tags as well. So if you still see the failure
+case with the current tree AND the above patch, then I'll try and get
+a test case setup that hits it too so we can get to the bottom of this.
+
+-- 
+Jens Axboe
