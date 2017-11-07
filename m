@@ -1,165 +1,79 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 0/4] scsi: qla2xxx: Convert timers to use timer_setup()
-Date: Tue, 7 Nov 2017 04:30:11 +0000
-Message-ID: <1510029010.2917.7.camel@wdc.com>
-References: <1509477229-62141-1-git-send-email-keescook@chromium.org>
-         <CAGXu5jJnB9rAN_qjrdh3iGfWtB2-p5dqNOtqScnSZn9j20iFgg@mail.gmail.com>
-         <F16A8DFC-AF77-44A0-BDC8-F0197A314123@cavium.com>
-         <1509927529.8757.1.camel@wdc.com>
-         <0CA81505-0EFB-4F30-A0B1-E021953741D1@cavium.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [ata_scsi_offline_dev] BUG: sleeping function called from invalid
+ context at kernel/locking/mutex.c:238
+Date: Tue, 7 Nov 2017 07:55:45 +0100
+Message-ID: <f932a4c8-639a-b7ef-d377-851a4498f557@suse.de>
+References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
+ <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com>
+ <20171029231835.3725fnd5yehlmqob@wfg-t540p.sh.intel.com>
+ <20171030110511.scfrdtlnf5lbdhu5@pd.tnic>
+ <CA+55aFy2c88wKndjRAds-3MZ+MsArGBySOog+Rxmd2AciGFGkA@mail.gmail.com>
+ <CA+55aFwW7sbguREtVzKAUkNGb4cGh_eADqkEYcUurX5xS60_ww@mail.gmail.com>
+ <526e7cf2-0672-e44b-c32f-26128a2dfd37@codeaurora.org>
+ <20171106224635.qopgsszwxzuitkpf@wfg-t540p.sh.intel.com>
+ <20171106225354.6ucl4f4ipsjlntzl@wfg-t540p.sh.intel.com>
+ <CA+55aFy+ok0wvjCmf4gPr+TSUHTs8i42APx=xmi1RnZN=0nFkg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="_003_151002901029177camelwdccom_"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0CA81505-0EFB-4F30-A0B1-E021953741D1@cavium.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFy+ok0wvjCmf4gPr+TSUHTs8i42APx=xmi1RnZN=0nFkg@mail.gmail.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Himanshu.Madhani@cavium.com" <Himanshu.Madhani@cavium.com>
-Cc: "keescook@chromium.org" <keescook@chromium.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "qla2xxx-upstream@cavium.com" <qla2xxx-upstream@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Fengguang Wu <fengguang.wu@intel.com>
+Cc: IDE-ML <linux-ide@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
---_003_151002901029177camelwdccom_
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <71BCA588420DD9408F0A1C62FE2E396E@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+On 11/07/2017 12:12 AM, Linus Torvalds wrote:
+> On Mon, Nov 6, 2017 at 2:53 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+>>
+>> The same dmesg happen to contain another libata related bug. Attached again.
+>> It's rare and in the error handling path, so unlikely a new regression.
+>>
+>> [   49.608280] BUG: sleeping function called from invalid context at kernel/locking/mutex.c:238
+>> [   49.647821]  mutex_lock+0x20/0x50
+>> [   49.651443]  kernfs_find_and_get_ns+0x23/0x60
+>> [   49.656104]  sysfs_notify+0x77/0x90
+>> [   49.659900]  scsi_device_set_state+0x63/0x150
+>> [   49.664559]  ata_scsi_offline_dev+0x1c/0x30 [libata]
+>> [   49.669817]  ata_eh_detach_dev+0x3b/0xb0 [libata]
+> 
+> ata_eh_detach_dev() does
+> 
+>         spin_lock_irqsave(ap->lock, flags);
+> 
+> and then does
+> 
+>         if (ata_scsi_offline_dev(dev)) {
+>                 dev->flags |= ATA_DFLAG_DETACHED;
+>                 ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
+>         }
+> 
+> inside that spinlock. And this code is not new - it has done it since
+> 2006 or so.
+> 
+> But it does seem to be a new regression in 4.14, caused by commit
+> 8a97712e5314 ("scsi: make 'state' device attribute pollable"), because
+> that's what added the sysfs_notify() call to scsi_device_set_state(),
+> which made that spinlock be a problem.
+> 
+> That commit came in through the SCSI merge this merge window, and it
+> seems to still revert cleanly.
+> 
+> So I do suspect that by now we should just revert that commit. It's
+> not clear why that state attribute should be pollable, and the new
+> code is clearly very much buggy.
+> 
+> Hannes, Martin?
+> 
+Seeing the complexity involved, yes, please revert that.
 
-T24gTW9uLCAyMDE3LTExLTA2IGF0IDE5OjU4ICswMDAwLCBNYWRoYW5pLCBIaW1hbnNodSB3cm90
-ZToNCj4gT24gTm92IDUsIDIwMTcsIGF0IDQ6MTggUE0sIEJhcnQgVmFuIEFzc2NoZSA8YmFydC52
-YW5hc3NjaGVAd2RjLmNvbT4gd3JvdGU6DQo+ID4gVGhlIHFsYTJ4eHggZHJpdmVyIGRvZXMgbm90
-IGNyYXNoIGlmIGFwcGx5IHRoZXNlIGZvdXIgcGF0Y2hlcyBvbiBrZXJuZWwNCj4gPiB2NC4xNC1y
-YzggYW5kIGxvYWQgdGhlIHFsYTJ4eHggZHJpdmVyIG9uIG15IHRlc3Qgc2V0dXAuIFBvaW50LXRv
-LXBvaW50DQo+ID4gbW9kZSBzZWVtcyBicm9rZW4gYWdhaW4gYnV0IEkgZG9uJ3QgdGhpbmsgdGhh
-dCdzIHJlbGF0ZWQgdG8gdGhpcyBwYXRjaA0KPiA+IHNlcmllcy4NCj4gDQo+IFdoYXQga2luZCBv
-ZiBlcnJvcnMgeW91IGFyZSBzZWVpbmcgd2l0aCBQb2ludC10by1wb2ludCBtb2RlLiBJ4oCZbGwg
-bG9vayBhdCB0aG9zZQ0KPiBhbmQgd2lsbCBzdWJtaXQgZml4ZXMgZm9yIGl0IGFsb25nIHdpdGgg
-dGhlIG90aGVyIGlzc3VlcyB5b3UgaGF2ZSByYWlzZWQgZWFybGllci4NCg0KSGVsbG8gSGltYW5z
-aHUsDQoNClRoZSB0ZXN0IEkgcmFuIGlzIGFzIGZvbGxvd3MgKHRoaXMgdGVzdCBwYXNzZWQgaW4g
-dGhlIHBhc3QpOg0KKiBDb25uZWN0IHRoZSB0d28gcG9ydHMgb2YgYSBkdWFsLXBvcnQgSEJBIHRv
-IGVhY2ggb3RoZXIuDQoqIENvbmZpZ3VyZSBxZW11IHN1Y2ggdGhhdCBpdCBhbGxvd3MgdGhlIGd1
-ZXN0IFZNIHRvIGFjY2VzcyB0aGUgRkMgSEJBIG9uDQogIHRoZSBob3N0Lg0KKiBTdGFydCB0aGUg
-Vk0gYW5kIGJ1aWxkIHRoZSBMaW51eCBrZXJuZWwgd2l0aCBkZWJ1ZyBvcHRpb25zIGVuYWJsZWQu
-DQoqIEFmdGVyIGhhdmluZyBib290ZWQgdGhlIGRlYnVnIGtlcm5lbCwgcmVzdGFydCBMSU8gYnkg
-cnVubmluZyB0aGUNCiAgcmVzdGFydC1saW8tZmMgc2NyaXB0IChhdHRhY2hlZCkuDQoqIEFmdGVy
-IHRoZSBzY3JpcHQgZmluaXNoZWQsIHJ1biBsc3Njc2kuIFNldmVyYWwgTElPIExVTnMgc2hvdWxk
-IGJlIHNob3duLg0KDQpUaGUgc2NyaXB0IHNob3VsZCBmaW5pc2ggYWZ0ZXIgYSBmZXcgc2Vjb25k
-cyBidXQgd2l0aCB0aGUgbGF0ZXN0IGtlcm5lbCBpdA0KdGFrZXMgbXVjaCBsb25nZXIgYW5kIG5v
-IExJTyBMVU5zIGFyZSBzaG93biBpbiB0aGUgbHNzY3NpIG91dHB1dC4NCg0KUGxlYXNlIGxldCBt
-ZSBrbm93IGlmIHlvdSBuZWVkIG1vcmUgaW5mb3JtYXRpb24uDQoNCkJhcnQu
+Cheers,
 
---_003_151002901029177camelwdccom_
-Content-Type: application/x-shellscript; name="restart-lio-fc"
-Content-Description: restart-lio-fc
-Content-Disposition: attachment; filename="restart-lio-fc"; size=4820;
-	creation-date="Tue, 07 Nov 2017 04:30:11 GMT";
-	modification-date="Tue, 07 Nov 2017 04:30:11 GMT"
-Content-ID: <AC1D0525CBFA6D4295EC6E7EDC4AF572@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-IyEvYmluL2Jhc2gKCiMgc2hlbGxjaGVjayBzb3VyY2U9dGNtX25vZGUuc2gKLiAiJChkaXJuYW1l
-ICIkMCIpL3RjbV9ub2RlLnNoIgoKY29udmVydF9wb3J0X25hbWUoKSB7CiAgICBzZWQgJ3MvXjB4
-Ly87cy8uLi8mOi9nO3MvOiQvLycKfQoKc2hvcHQgLXMgbnVsbGdsb2IKCmZpbGVzaXplPSQoKDE2
-KjEwMjQqMTAyNCkpCgptb2Rwcm9iZSBxbGEyeHh4CmluaXRpYXRvcnM9KCkKZm9yIHAgaW4gL3N5
-cy9jbGFzcy9mY19ob3N0LyovcG9ydF9uYW1lOyBkbwogICAgcT0kKGNvbnZlcnRfcG9ydF9uYW1l
-IDwiJHAiKQogICAgaW5pdGlhdG9ycys9KCRxKQpkb25lCgppZiBbICEgLWUgL3N5cy9tb2R1bGUv
-Y29uZmlnZnMgXTsgdGhlbgogICAgbW9kcHJvYmUgY29uZmlnZnMKZmkKaWYgISBtb3VudCB8IGdy
-ZXAgLXF3IGNvbmZpZ2ZzOyB0aGVuCiAgICBtb3VudCAtdCBjb25maWdmcyBub25lIC9zeXMva2Vy
-bmVsL2NvbmZpZwpmaQoKY2QgLyB8fCB0cnVlCgppZiBbIC1lIC9zeXMva2VybmVsL2NvbmZpZyBd
-OyB0aGVuCiAgICBybSAtZiAvc3lzL2tlcm5lbC9jb25maWcvdGFyZ2V0LyovKi8qL2FjbHMvKi8q
-LyogPiYvZGV2L251bGwKICAgIHJtZGlyIC9zeXMva2VybmVsL2NvbmZpZy90YXJnZXQvKi8qLyov
-YWNscy8qLyogPiYvZGV2L251bGwKICAgIHJtZGlyIC9zeXMva2VybmVsL2NvbmZpZy90YXJnZXQv
-Ki8qLyovYWNscy8qID4mL2Rldi9udWxsCiAgICBybSAtZiAvc3lzL2tlcm5lbC9jb25maWcvdGFy
-Z2V0LyovKi8qL2x1bi8qLyogPiYvZGV2L251bGwKICAgIHJtZGlyIC9zeXMva2VybmVsL2NvbmZp
-Zy90YXJnZXQvKi8qLyovbHVuLyogPiYvZGV2L251bGwKICAgIHJtZGlyIC9zeXMva2VybmVsL2Nv
-bmZpZy90YXJnZXQvKi8qLyogPiYvZGV2L251bGwKICAgIHJtZGlyIC9zeXMva2VybmVsL2NvbmZp
-Zy90YXJnZXQvKi8qID4mL2Rldi9udWxsCiAgICBybWRpciAvc3lzL2tlcm5lbC9jb25maWcvdGFy
-Z2V0LyogPiYvZGV2L251bGwKZmkKCmZvciBtIGluIHRjbV9mYyB0Y21fcWxhMnh4eDsgZG8KICAg
-IGlmIFsgLWUgL3N5cy9tb2R1bGUvJG0gXTsgdGhlbgoJbW9kcHJvYmUgLXIgIiRtIgogICAgZmkK
-ZG9uZQoKcm1kaXIgL3N5cy9rZXJuZWwvY29uZmlnL3RhcmdldC9jb3JlLyovKiA+Ji9kZXYvbnVs
-bApybWRpciAvc3lzL2tlcm5lbC9jb25maWcvdGFyZ2V0L2NvcmUvKiA+Ji9kZXYvbnVsbAoKIyAk
-KGRpcm5hbWUgJDApL3JlbG9hZC1mY29lLWluaXRpYXRvciBzdG9wCgpmb3IgbSBpbiB0Y21fbG9v
-cCBpc2NzaV90YXJnZXRfbW9kIHRhcmdldF9jb3JlX3BzY3NpIHRhcmdldF9jb3JlX2libG9ja1wK
-CSB0YXJnZXRfY29yZV9maWxlIHRhcmdldF9jb3JlX3N0Z3QgdGFyZ2V0X2NvcmVfbW9kIHRhcmdl
-dF9jb3JlX3VzZXJcCgkgYnJkCmRvCiAgICBpZiBbIC1lIC9zeXMvbW9kdWxlLyRtIF07IHRoZW4K
-CW1vZHByb2JlIC1yICRtCiAgICBmaQpkb25lCgppZiBbIC1lIC9zeXMvbW9kdWxlL2xpYmZjb2Uv
-cGFyYW1ldGVycy9kZXN0cm95IF07IHRoZW4KICAgIGZvciBpIGluIC9zeXMvY2xhc3MvbmV0Lyo7
-IGRvCglmPSIkKGJhc2VuYW1lICIkaSIpIgoJZWNobyAiJGYiID4vc3lzL21vZHVsZS9saWJmY29l
-L3BhcmFtZXRlcnMvZGVzdHJveSAyPi9kZXYvbnVsbAogICAgZG9uZQpmaQoKaWYgWyAiJDEiID0g
-InN0b3AiIF07IHRoZW4KICAgIGV4aXQgMApmaQoKIyAkKGRpcm5hbWUgJDApL3JlbG9hZC1mY29l
-LWluaXRpYXRvciBzdG9wCgptb2Rwcm9iZSBicmQgcmRfbnI9MSByZF9zaXplPSQoKDE2PDwxMCkp
-Cgptb2Rwcm9iZSBmY29lCmZvciBpIGluIC9zeXMvY2xhc3MvbmV0Lyo7IGRvCiAgICBmPSIkKGJh
-c2VuYW1lICIkaSIpIgogICAgaWYgWyAiJGYiICE9IGxvIF0gJiYgWyAhIC1lICIkaS9icmlkZ2Ui
-IF0gJiYgWyAiJCg8IiRpL2FkZHJfbGVuIikiID0gNiBdCiAgICB0aGVuCgllY2hvICIkZiIgPi9z
-eXMvbW9kdWxlL2xpYmZjb2UvcGFyYW1ldGVycy9jcmVhdGVfdm4ydm4KCWZvciBjIGluICIkaSIv
-Y3Rscio7IGRvCgkgICAgZWNobyAwICAgICA+IiRjL2VuYWJsZWQiCgkgICAgZWNobyBWTjJWTiA+
-IiRjL21vZGUiCgkgICAgZWNobyAxICAgICA+IiRjL2VuYWJsZWQiCglkb25lCiAgICBmaQpkb25l
-Cgptb2Rwcm9iZSBxbGEyeHh4CmhjYXM9KCkKZm9yIGYgaW4gL3N5cy9jbGFzcy9mY19ob3N0Lyov
-cG9ydF9uYW1lOyBkbwogICAgaGNhcys9KCIkKGNvbnZlcnRfcG9ydF9uYW1lIDwiJGYiKSIpCmRv
-bmUKCiMgbW9kcHJvYmUgdGNtX2ZjIHx8IGV4aXQgJD8KbW9kcHJvYmUgdGNtX3FsYTJ4eHggfHwg
-ZXhpdCAkPwoKZm9yIG0gaW4gdGNtX2ZjIHFsYTJ4eHggdGNtX3FsYTJ4eHggdGFyZ2V0X2NvcmVf
-bW9kOyBkbwogICAgZWNobyBtb2R1bGUgIiRtIiArcG1mID4vc3lzL2tlcm5lbC9kZWJ1Zy9keW5h
-bWljX2RlYnVnL2NvbnRyb2wKZG9uZQojIEZDX0xJQkZDX0xPR0dJTkcgICAgICAgICAgPSAweDAx
-IC8qIEdlbmVyYWwgbG9nZ2luZywgbm90IGNhdGVnb3JpemVkICovCiMgRkNfTFBPUlRfTE9HR0lO
-RyAgICAgICAgICA9IDB4MDIgLyogbHBvcnQgbGF5ZXIgbG9nZ2luZyAqLwojIEZDX0RJU0NfTE9H
-R0lORyAgICAgICAgICAgPSAweDA0IC8qIGRpc2NvdmVyeSBsYXllciBsb2dnaW5nICovCiMgRkNf
-UlBPUlRfTE9HR0lORyAgICAgICAgICA9IDB4MDggLyogcnBvcnQgbGF5ZXIgbG9nZ2luZyAqLwoj
-IEZDX0ZDUF9MT0dHSU5HICAgICAgICAgICAgPSAweDEwIC8qIEkvTyBwYXRoIGxvZ2dpbmcgKi8K
-IyBGQ19FTV9MT0dHSU5HCSAgICAgICAgICAgID0gMHgyMCAvKiBFeGNoYW5nZSBNYW5hZ2VyIGxv
-Z2dpbmcgKi8KIyBGQ19FWENIX0xPR0dJTkcgICAgICAgICAgID0gMHg0MCAvKiBFeGNoYW5nZS9T
-ZXF1ZW5jZSBsb2dnaW5nICovCiMgRkNfU0NTSV9MT0dHSU5HICAgICAgICAgICA9IDB4ODAgLyog
-U0NTSSBsb2dnaW5nIChtb3N0bHkgZXJyb3IgaGFuZGxpbmcpICovCiMgZWNobyAyNTUgPi9zeXMv
-bW9kdWxlL2xpYmZjL3BhcmFtZXRlcnMvZGVidWdfbG9nZ2luZwojIExJQkZDT0VfTE9HR0lORwkg
-ICAgPSAweDAxIC8qIEdlbmVyYWwgbG9nZ2luZywgbm90IGNhdGVnb3JpemVkICovCiMgTElCRkNP
-RV9GSVBfTE9HR0lORyAgICAgICA9IDB4MDIgLyogRklQIGxvZ2dpbmcgKi8KIyBMSUJGQ09FX1RS
-QU5TUE9SVF9MT0dHSU5HID0gMHgwNCAvKiBGQ29FIHRyYW5zcG9ydCBsb2dnaW5nICovCiMgTElC
-RkNPRV9TWVNGU19MT0dHSU5HICAgICA9IDB4MDggLyogZmNvZV9zeXNmcyBsb2dnaW5nICovCmVj
-aG8gMTUgPi9zeXMvbW9kdWxlL2xpYmZjb2UvcGFyYW1ldGVycy9kZWJ1Z19sb2dnaW5nCiMgRkNP
-RV9MT0dHSU5HCSAgICAgICAgICAgID0gMHgwMSAvKiBHZW5lcmFsIGxvZ2dpbmcsIG5vdCBjYXRl
-Z29yaXplZCAqLwojIEZDT0VfTkVUREVWX0xPR0dJTkcgICAgICAgPSAweDAyIC8qIE5ldGRldmlj
-ZSBsb2dnaW5nICovCmVjaG8gMyA+L3N5cy9tb2R1bGUvZmNvZS9wYXJhbWV0ZXJzL2RlYnVnX2xv
-Z2dpbmcKCm1vZHByb2JlIHRhcmdldF9jb3JlX2ZpbGUgfHwgZXhpdCAkPwppZiBbICEgLWUgL2Rl
-di9yYW1kaXNrIF07IHRoZW4gCiAgICBkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9yYW1kaXNrIGJz
-PSR7ZmlsZXNpemV9IGNvdW50PTEKZmkKCnZkZXYwPSJmaWxlaW9fMC92ZGV2MCIKdmRldjE9ImZp
-bGVpb18xL3ZkZXYxIgp2ZGV2Mj0iaWJsb2NrXzAvdmRldjIiCnZkZXZzPSgkdmRldjAgJHZkZXYx
-ICR2ZGV2MikKdGNtX25vZGUgLS1maWxlaW8gJHZkZXYwIC9kZXYvcmFtZGlzayAke2ZpbGVzaXpl
-fSAxIHx8IGV4aXQgJD8KdGNtX25vZGUgLS1maWxlaW8gJHZkZXYxIC9kZXYvcmFtZGlzayA2NTUz
-NiAgICAgICAyIHx8IGV4aXQgJD8KdGNtX25vZGUgLS1maWxlaW8gJHZkZXYyIC9kZXYvcmFtMCAg
-ICAxICAgICAgICAgICAzIHx8IGV4aXQgJD8KaWYgWyAtZSAvc3lzL2tlcm5lbC9jb25maWcvdGFy
-Z2V0L2NvcmUvcmRfZHJfMCBdOyB0aGVuCiAgICB2ZGV2Mz0icmRfZHJfMC92ZGV2MyIKICAgIHRj
-bV9ub2RlIC0tcmFtZGlzayAkdmRldjMgMiA0IHx8IGV4aXQgJD8KICAgIHZkZXZzKz0oJHZkZXYz
-KQpmaQpjZCAvc3lzL2tlcm5lbC9jb25maWcvdGFyZ2V0IHx8IGV4aXQgJD8KIyBta2RpciBmYyB8
-fCBleGl0ICQ/Cm1rZGlyIHFsYTJ4eHggfHwgZXhpdCAkPwpmb3IgZCBpbiBmYyBxbGEyeHh4OyBk
-bwogICAgKAoJaWYgY2QgJGQ7IHRoZW4KCWZvciBoY2EgaW4gIiR7aGNhc1tAXX0iOyBkbwoJICAg
-IG1rZGlyICIkaGNhIgoJICAgIFsgLWUgIiRoY2EiIF0gfHwgY29udGludWUKCSAgICBlY2hvICIk
-aGNhIgoJICAgIG1rZGlyICIkaGNhIi90cGd0XzEKCSAgICBpPTAKCSAgICBmb3IgdiBpbiAiJHt2
-ZGV2c1tAXX0iOyBkbwoJCW1rZGlyICIkaGNhIi90cGd0XzEvbHVuL2x1bl8kaQoJCSgKCQkgICAg
-Y2QgIiRoY2EvdHBndF8xL2x1bi9sdW5fJGkiICYmCgkJCWxuIC1zICIuLi8uLi8uLi8uLi8uLi9j
-b3JlLyR2IgoJCSkKCQlpPSQoKGkrMSkpCgkgICAgZG9uZQoJICAgIGZvciBpbmkgaW4gIiR7aW5p
-dGlhdG9yc1tAXX0iOyBkbwoJCSgKCQkgICAgY2QgIiRoY2EiL3RwZ3RfMS9hY2xzCgkJICAgIG1r
-ZGlyICIke2luaX0iCgkJICAgIGNkICIke2luaX0iCgkJICAgIGZvciAoKGkgPSAwOyBpIDwgJHsj
-dmRldnNbQF19OyBpKyspKSBkbwoJCQkoCgkJCSAgICBta2RpciBsdW5fJGkgJiYKCQkJCWNkIGx1
-bl8kaSAmJgoJCQkJbG4gLXMgLi4vLi4vLi4vbHVuL2x1bl8kaQoJCQkpCgkJICAgIGRvbmUKCQkp
-CgkgICAgZG9uZQoJICAgIGVjaG8gMSA+ICIkaGNhIi90cGd0XzEvZW5hYmxlIHx8IGV4aXQgJD8K
-CWRvbmUKCWZpCiAgICApIHx8IGV4aXQgJD8KZG9uZQo=
-
---_003_151002901029177camelwdccom_
-Content-Type: application/x-shellscript; name="tcm_node.sh"
-Content-Description: tcm_node.sh
-Content-Disposition: attachment; filename="tcm_node.sh"; size=639;
-	creation-date="Tue, 07 Nov 2017 04:30:11 GMT";
-	modification-date="Tue, 07 Nov 2017 04:30:11 GMT"
-Content-ID: <8C366087BD74A94F97015788A938B243@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-IyEvYmluL2Jhc2gKCnJhbmRvbV9saW9fc2VyaWFsKCkgewogICAgZGQgaWY9L2Rldi91cmFuZG9t
-IGJzPTEyIGNvdW50PTEgMj4vZGV2L251bGwgfAoJb2QgLXYgLXR4MSAtdzk5IHwgewoJICAgIHJl
-YWQgLXIgb2Zmc2V0IGJ5dGVzCgkgICAgZWNobyAiJHtieXRlcy8vIH0iCgkgICAgZWNobyAiJG9m
-ZnNldCIgPiAvZGV2L251bGwKCX0KfQoKdGNtX25vZGUoKSB7CiAgICBsb2NhbCB2ZGV2PSQyIHBh
-dGg9JDMgc2l6ZT0kNCBzZXJpYWw9JDUKCiAgICBjYXNlICQxIGluCgktLWZpbGVpb3wtLWJsb2Nr
-KQoJICAgICgKCQljZCAvc3lzL2tlcm5lbC9jb25maWcvdGFyZ2V0L2NvcmUgJiYKCQkgICAgbWtk
-aXIgLXAgIiR2ZGV2IiAmJgoJCSAgICBjZCAiJHZkZXYiICYmCgkJICAgIGlmIFsgLWIgIiRwYXRo
-IiBdOyB0aGVuCgkJCWVjaG8gInVkZXZfcGF0aD0kcGF0aCwiID5jb250cm9sCgkJICAgIGVsc2UK
-CQkJZWNobyAiZmRfZGV2X25hbWU9JHBhdGgsZmRfZGV2X3NpemU9JHNpemUsIiA+Y29udHJvbAoJ
-CSAgICBmaSAmJgoJCSAgICBlY2hvICIke3NlcmlhbH0iID53d24vdnBkX3VuaXRfc2VyaWFsICYm
-CgkJICAgIGVjaG8gMSA+IGVuYWJsZQoJICAgICkKCSAgICA7OwoJKikKCSAgICByZXR1cm4gMTs7
-CiAgICBlc2FjCn0K
-
---_003_151002901029177camelwdccom_--
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
