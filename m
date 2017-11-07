@@ -1,79 +1,49 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [ata_scsi_offline_dev] BUG: sleeping function called from invalid
- context at kernel/locking/mutex.c:238
-Date: Tue, 7 Nov 2017 07:55:45 +0100
-Message-ID: <f932a4c8-639a-b7ef-d377-851a4498f557@suse.de>
-References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
- <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com>
- <20171029231835.3725fnd5yehlmqob@wfg-t540p.sh.intel.com>
- <20171030110511.scfrdtlnf5lbdhu5@pd.tnic>
- <CA+55aFy2c88wKndjRAds-3MZ+MsArGBySOog+Rxmd2AciGFGkA@mail.gmail.com>
- <CA+55aFwW7sbguREtVzKAUkNGb4cGh_eADqkEYcUurX5xS60_ww@mail.gmail.com>
- <526e7cf2-0672-e44b-c32f-26128a2dfd37@codeaurora.org>
- <20171106224635.qopgsszwxzuitkpf@wfg-t540p.sh.intel.com>
- <20171106225354.6ucl4f4ipsjlntzl@wfg-t540p.sh.intel.com>
- <CA+55aFy+ok0wvjCmf4gPr+TSUHTs8i42APx=xmi1RnZN=0nFkg@mail.gmail.com>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH] storvsc: Avoid excessive host scan on controller change
+Date: Tue, 7 Nov 2017 07:22:52 +0000
+Message-ID: <MWHPR21MB0846B712CA11989D339AD437CE510@MWHPR21MB0846.namprd21.prod.outlook.com>
+References: <20171031215808.11629-1-longli@exchange.microsoft.com>
+ <yq1o9oe3gf5.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFy+ok0wvjCmf4gPr+TSUHTs8i42APx=xmi1RnZN=0nFkg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1o9oe3gf5.fsf@oracle.com>
 Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Fengguang Wu <fengguang.wu@intel.com>
-Cc: IDE-ML <linux-ide@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/07/2017 12:12 AM, Linus Torvalds wrote:
-> On Mon, Nov 6, 2017 at 2:53 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
->>
->> The same dmesg happen to contain another libata related bug. Attached again.
->> It's rare and in the error handling path, so unlikely a new regression.
->>
->> [   49.608280] BUG: sleeping function called from invalid context at kernel/locking/mutex.c:238
->> [   49.647821]  mutex_lock+0x20/0x50
->> [   49.651443]  kernfs_find_and_get_ns+0x23/0x60
->> [   49.656104]  sysfs_notify+0x77/0x90
->> [   49.659900]  scsi_device_set_state+0x63/0x150
->> [   49.664559]  ata_scsi_offline_dev+0x1c/0x30 [libata]
->> [   49.669817]  ata_eh_detach_dev+0x3b/0xb0 [libata]
-> 
-> ata_eh_detach_dev() does
-> 
->         spin_lock_irqsave(ap->lock, flags);
-> 
-> and then does
-> 
->         if (ata_scsi_offline_dev(dev)) {
->                 dev->flags |= ATA_DFLAG_DETACHED;
->                 ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
->         }
-> 
-> inside that spinlock. And this code is not new - it has done it since
-> 2006 or so.
-> 
-> But it does seem to be a new regression in 4.14, caused by commit
-> 8a97712e5314 ("scsi: make 'state' device attribute pollable"), because
-> that's what added the sysfs_notify() call to scsi_device_set_state(),
-> which made that spinlock be a problem.
-> 
-> That commit came in through the SCSI merge this merge window, and it
-> seems to still revert cleanly.
-> 
-> So I do suspect that by now we should just revert that commit. It's
-> not clear why that state attribute should be pollable, and the new
-> code is clearly very much buggy.
-> 
-> Hannes, Martin?
-> 
-Seeing the complexity involved, yes, please revert that.
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Monday, November 6, 2017 7:40 PM
+> To: Long Li <longli@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
+> <haiyangz@microsoft.com>; Stephen Hemminger
+> <sthemmin@microsoft.com>; James E . J . Bottomley
+> <JBottomley@odin.com>; Martin K . Petersen
+> <martin.petersen@oracle.com>; devel@linuxdriverproject.org; linux-
+> scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Long Li
+> <longli@microsoft.com>
+> Subject: Re: [PATCH] storvsc: Avoid excessive host scan on controller cha=
+nge
+>=20
+>=20
+> Long,
+>=20
+> > When there are multiple disks attached to the same SCSI controller,
+> > the host may send several VSTOR_OPERATION_REMOVE_DEVICE or
+> > VSTOR_OPERATION_ENUMERATE_BUS messages in a row, to indicate
+> there is
+> > a change on the SCSI controller. In response, storvsc rescans the SCSI
+> > host.
+>=20
+> Applied to 4.15/scsi-queue with some fuzz. Please verify, thanks!
 
-Cheers,
+Martin, thank you! All looking good.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Long
+
+>=20
+> --
+> Martin K. Petersen	Oracle Linux Engineering
