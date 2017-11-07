@@ -1,106 +1,52 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] aacraid: use timespec64 instead of timeval
-Date: Tue,  7 Nov 2017 11:46:05 +0100
-Message-ID: <20171107104613.3183755-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, David Carroll <david.carroll@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] scsi: mpt3sas: Added support for nvme encapsulated
+ request message.
+Date: Tue, 7 Nov 2017 14:33:30 +0300
+Message-ID: <20171107113330.airlabvvr3l7oku6@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:47373 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753905AbdKGLdj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 06:33:39 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: suganath-prabu.subramani@broadcom.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 
-aacraid passes the current time to the firmware in one of two ways,
-either as year/month/day/... or as 32-bit unsigned seconds.
+Hello Suganath Prabu Subramani,
 
-The first one is broken on 32-bit architectures as it cannot
-go past year 2038. Using timespec64 here makes it behave properly
-on both 32-bit and 64-bit architectures, and avoids relying
-on signed integer overflow to pass times into the second interface.
+The patch aff39e61218f: "scsi: mpt3sas: Added support for nvme
+encapsulated request message." from Oct 31, 2017, leads to the
+following static checker warning:
 
-The interface used in aac_send_hosttime() however is still
-problematic in year 2106 when 32-bit seconds overflow. Hopefully
-we don't have to worry about aacraid by that time.
+	drivers/scsi/mpt3sas/mpt3sas_base.c:1459 _base_build_nvme_prp()
+	error: buffer overflow 'nvme_encap_request->NVMe_Command' 4 <= 24
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/aacraid/commsup.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+drivers/scsi/mpt3sas/mpt3sas_base.c
+  1453          /*
+  1454           * Set pointers to PRP1 and PRP2, which are in the NVMe command.
+  1455           * PRP1 is located at a 24 byte offset from the start of the NVMe
+                                        ^^^^^^^
+The ->NVMe_Command is declared as a 4 byte array so this makes static
+checkers puzzled how there are more than 24 bytes in it.
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index dfe8e70f8d99..525a652dab48 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -2383,19 +2383,19 @@ static int aac_send_wellness_command(struct aac_dev *dev, char *wellness_str,
- 	goto out;
- }
- 
--int aac_send_safw_hostttime(struct aac_dev *dev, struct timeval *now)
-+int aac_send_safw_hostttime(struct aac_dev *dev, struct timespec64 *now)
- {
- 	struct tm cur_tm;
- 	char wellness_str[] = "<HW>TD\010\0\0\0\0\0\0\0\0\0DW\0\0ZZ";
- 	u32 datasize = sizeof(wellness_str);
--	unsigned long local_time;
-+	time64_t local_time;
- 	int ret = -ENODEV;
- 
- 	if (!dev->sa_firmware)
- 		goto out;
- 
--	local_time = (u32)(now->tv_sec - (sys_tz.tz_minuteswest * 60));
--	time_to_tm(local_time, 0, &cur_tm);
-+	local_time = (now->tv_sec - (sys_tz.tz_minuteswest * 60));
-+	time64_to_tm(local_time, 0, &cur_tm);
- 	cur_tm.tm_mon += 1;
- 	cur_tm.tm_year += 1900;
- 	wellness_str[8] = bin2bcd(cur_tm.tm_hour);
-@@ -2412,7 +2412,7 @@ int aac_send_safw_hostttime(struct aac_dev *dev, struct timeval *now)
- 	return ret;
- }
- 
--int aac_send_hosttime(struct aac_dev *dev, struct timeval *now)
-+int aac_send_hosttime(struct aac_dev *dev, struct timespec64 *now)
- {
- 	int ret = -ENOMEM;
- 	struct fib *fibptr;
-@@ -2424,7 +2424,7 @@ int aac_send_hosttime(struct aac_dev *dev, struct timeval *now)
- 
- 	aac_fib_init(fibptr);
- 	info = (__le32 *)fib_data(fibptr);
--	*info = cpu_to_le32(now->tv_sec);
-+	*info = cpu_to_le32(now->tv_sec); /* overflow in y2106 */
- 	ret = aac_fib_send(SendHostTime, fibptr, sizeof(*info), FsaNormal,
- 					1, 1, NULL, NULL);
- 
-@@ -2496,7 +2496,7 @@ int aac_command_thread(void *data)
- 		}
- 		if (!time_before(next_check_jiffies,next_jiffies)
- 		 && ((difference = next_jiffies - jiffies) <= 0)) {
--			struct timeval now;
-+			struct timespec64 now;
- 			int ret;
- 
- 			/* Don't even try to talk to adapter if its sick */
-@@ -2506,15 +2506,15 @@ int aac_command_thread(void *data)
- 			next_check_jiffies = jiffies
- 					   + ((long)(unsigned)check_interval)
- 					   * HZ;
--			do_gettimeofday(&now);
-+			ktime_get_real_ts64(&now);
- 
- 			/* Synchronize our watches */
--			if (((1000000 - (1000000 / HZ)) > now.tv_usec)
--			 && (now.tv_usec > (1000000 / HZ)))
--				difference = (((1000000 - now.tv_usec) * HZ)
--				  + 500000) / 1000000;
-+			if (((NSEC_PER_SEC - (NSEC_PER_SEC / HZ)) > now.tv_nsec)
-+			 && (now.tv_nsec > (NSEC_PER_SEC / HZ)))
-+				difference = (((NSEC_PER_SEC - now.tv_nsec) * HZ)
-+				  + NSEC_PER_SEC / 2) / NSEC_PER_SEC;
- 			else {
--				if (now.tv_usec > 500000)
-+				if (now.tv_nsec > NSEC_PER_SEC / 2)
- 					++now.tv_sec;
- 
- 				if (dev->sa_firmware)
--- 
-2.9.0
+  1456           * command.  Then set the current PRP entry pointer to PRP1.
+  1457           */
+  1458          prp1_entry = (__le64 *)(nvme_encap_request->NVMe_Command +
+  1459              NVME_CMD_PRP1_OFFSET);
+  1460          prp2_entry = (__le64 *)(nvme_encap_request->NVMe_Command +
+  1461              NVME_CMD_PRP2_OFFSET);
+  1462          prp_entry = prp1_entry;
+  1463          /*
+  1464           * For the PRP entries, use the specially allocated buffer of
+  1465           * contiguous memory.
+  1466           */
+  1467          prp_page = (__le64 *)mpt3sas_base_get_pcie_sgl(ioc, smid);
+  1468          prp_page_phys = (__le64 *)mpt3sas_base_get_pcie_sgl_dma(ioc, smid);
+  1469  
+
+regards,
+dan carpenter
