@@ -1,28 +1,24 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi_debugfs: fix crash in scsi_show_rq()
-Date: Tue, 7 Nov 2017 15:04:09 +0000
-Message-ID: <88aa2b0b-ef36-411e-a429-06da2dda50d3@huawei.com>
-References: <20171107145526.19315-1-ming.lei@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/4] qla2xxx: Add FC-NVMe Target support
+Date: Tue, 7 Nov 2017 07:07:28 -0800
+Message-ID: <20171107150728.GA17161@infradead.org>
+References: <20171106195530.17408-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:9971 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965250AbdKGPFS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 10:05:18 -0500
-In-Reply-To: <20171107145526.19315-1-ming.lei@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:41218 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933868AbdKGPHb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 10:07:31 -0500
+Content-Disposition: inline
+In-Reply-To: <20171106195530.17408-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.com>
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-Hi Ming,
+Please send this to the linux-nvme list, and the nvme FC maintainer.
 
-On 07/11/2017 14:55, Ming Lei wrote:
- > +		strcpy(buf, "unknow");
-
-typo?
-
-Thanks,
-John
+Also I'd really like to see Cavium involved with the community a bit
+before we take on another driver.  Right now it's basically just
+James with a bit of help from Johannes.
