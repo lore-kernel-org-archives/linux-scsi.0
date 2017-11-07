@@ -1,103 +1,187 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
- scsi_mq_get_budget()
-Date: Tue, 7 Nov 2017 18:15:53 +0800
-Message-ID: <20171107101546.GA2848@ming.t460p>
-References: <20171104015534.32684-1-ming.lei@redhat.com>
- <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
- <1509997522.2409.58.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1509997522.2409.58.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] fnic: use 64-bit timestamps
+Date: Tue,  7 Nov 2017 11:41:39 +0100
+Message-ID: <20171107104305.2952640-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Johannes Thumshirn <jthumshirn@suse.de>, Deepa Dinamani <deepa.kernel@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 06, 2017 at 07:45:23PM +0000, Bart Van Assche wrote:
-> On Sat, 2017-11-04 at 08:19 -0600, Jens Axboe wrote:
-> > On 11/03/2017 07:55 PM, Ming Lei wrote:
-> > > It is very expensive to atomic_inc/atomic_dec the host wide counter of
-> > > host->busy_count, and it should have been avoided via blk-mq's mechanism
-> > > of getting driver tag, which uses the more efficient way of sbitmap queue.
-> > > 
-> > > Also we don't check atomic_read(&sdev->device_busy) in scsi_mq_get_budget()
-> > > and don't run queue if the counter becomes zero, so IO hang may be caused
-> > > if all requests are completed just before the current SCSI device
-> > > is added to shost->starved_list.
-> > 
-> > This looks like an improvement. I have added it for 4.15.
-> > 
-> > Bart, does this fix your hang?
-> 
-> No, it doesn't. After I had reduced starget->can_queue in the SRP initiator I
-> ran into the following hang while running the srp-test software:
-> 
-> sysrq: SysRq : Show Blocked State
->   task                        PC stack   pid father
-> systemd-udevd   D    0 19882    467 0x80000106
-> Call Trace:
->  __schedule+0x2fa/0xbb0
->  schedule+0x36/0x90
->  io_schedule+0x16/0x40
->  __lock_page+0x10a/0x140
->  truncate_inode_pages_range+0x4ff/0x800
->  truncate_inode_pages+0x15/0x20
->  kill_bdev+0x35/0x40
->  __blkdev_put+0x6d/0x1f0
->  blkdev_put+0x4e/0x130
->  blkdev_close+0x25/0x30
->  __fput+0xed/0x1f0
->  ____fput+0xe/0x10
->  task_work_run+0x8b/0xc0
->  do_exit+0x38d/0xc70
->  do_group_exit+0x50/0xd0
->  get_signal+0x2ad/0x8c0
->  do_signal+0x28/0x680
->  exit_to_usermode_loop+0x5a/0xa0
->  do_syscall_64+0x12e/0x170
->  entry_SYSCALL64_slow_path+0x25/0x25
-> 
-> The SRP initiator driver was modified as follows for this test:
-> 
-> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-> index a6664467651e..9d24a871cc2e 100644
-> --- a/drivers/infiniband/ulp/srp/ib_srp.c
-> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-> 
-> @@ -2835,6 +2839,13 @@ static int srp_reset_host(struct scsi_cmnd *scmnd)
->  	return srp_reconnect_rport(target->rport) == 0 ? SUCCESS : FAILED;
->  }
->  
-> +static int srp_target_alloc(struct scsi_target *starget)
-> +{
-> +	starget->can_queue = 1;
-> +	return 0;
-> +}
-> +
->  static int srp_slave_alloc(struct scsi_device *sdev)
->  {
->  	struct Scsi_Host *shost = sdev->host;
-> @@ -3039,6 +3050,7 @@ static struct scsi_host_template srp_template = {
->  	.module				= THIS_MODULE,
->  	.name				= "InfiniBand SRP initiator",
->  	.proc_name			= DRV_NAME,
-> +	.target_alloc			= srp_target_alloc,
->  	.slave_alloc			= srp_slave_alloc,
->  	.slave_configure		= srp_slave_configure,
->  	.info				= srp_target_info,
+struct timespec is deprecated since it overflows in 2038 on 32-bit
+architectures, so we should use timespec64 consistently.
 
-Last time, you didn't mention the target patch for setting its
-can_queue as 1, so I think you can't reproduce the issue on upstream
-kernel without out-of-tree patch. Then looks it is another issue,
-and we are making progress actually.
+I'm slightly adapting the format strings here, to make sure we
+print the nanoseconds with the correct number of leading zeroes.
 
-I just posted a one-line patch, which should address the small queue
-depth issue, please let us know if it fixes your issue:
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/fnic/fnic_debugfs.c |  2 +-
+ drivers/scsi/fnic/fnic_stats.h   |  4 +--
+ drivers/scsi/fnic/fnic_trace.c   | 58 ++++++++++++++++++++--------------------
+ 3 files changed, 32 insertions(+), 32 deletions(-)
 
-	https://marc.info/?l=linux-block&m=151004881411480&w=2
-
+diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+index 5e3d909cfc53..db44e1bf1ecd 100644
+--- a/drivers/scsi/fnic/fnic_debugfs.c
++++ b/drivers/scsi/fnic/fnic_debugfs.c
+@@ -632,7 +632,7 @@ static ssize_t fnic_reset_stats_write(struct file *file,
+ 			sizeof(struct io_path_stats) - sizeof(u64));
+ 		memset(fw_stats_p+1, 0,
+ 			sizeof(struct fw_stats) - sizeof(u64));
+-		getnstimeofday(&stats->stats_timestamps.last_reset_time);
++		ktime_get_real_ts64(&stats->stats_timestamps.last_reset_time);
+ 	}
+ 
+ 	(*ppos)++;
+diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
+index e007feedbf72..9daa6ada6fa0 100644
+--- a/drivers/scsi/fnic/fnic_stats.h
++++ b/drivers/scsi/fnic/fnic_stats.h
+@@ -18,8 +18,8 @@
+ #define _FNIC_STATS_H_
+ 
+ struct stats_timestamps {
+-	struct timespec last_reset_time;
+-	struct timespec last_read_time;
++	struct timespec64 last_reset_time;
++	struct timespec64 last_read_time;
+ };
+ 
+ struct io_path_stats {
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index 4826f596cb31..abddde11982b 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -111,7 +111,7 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 	int len = 0;
+ 	unsigned long flags;
+ 	char str[KSYM_SYMBOL_LEN];
+-	struct timespec val;
++	struct timespec64 val;
+ 	fnic_trace_data_t *tbp;
+ 
+ 	spin_lock_irqsave(&fnic_trace_lock, flags);
+@@ -129,10 +129,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			/* Convert function pointer to function name */
+ 			if (sizeof(unsigned long) < 8) {
+ 				sprint_symbol(str, tbp->fnaddr.low);
+-				jiffies_to_timespec(tbp->timestamp.low, &val);
++				jiffies_to_timespec64(tbp->timestamp.low, &val);
+ 			} else {
+ 				sprint_symbol(str, tbp->fnaddr.val);
+-				jiffies_to_timespec(tbp->timestamp.val, &val);
++				jiffies_to_timespec64(tbp->timestamp.val, &val);
+ 			}
+ 			/*
+ 			 * Dump trace buffer entry to memory file
+@@ -140,8 +140,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			 */
+ 			len += snprintf(fnic_dbgfs_prt->buffer + len,
+ 				  (trace_max_pages * PAGE_SIZE * 3) - len,
+-				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
+-				  "%16llx %16llx %16llx\n", val.tv_sec,
++				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
++				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
+ 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
+ 				  tbp->data[0], tbp->data[1], tbp->data[2],
+ 				  tbp->data[3], tbp->data[4]);
+@@ -171,10 +171,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			/* Convert function pointer to function name */
+ 			if (sizeof(unsigned long) < 8) {
+ 				sprint_symbol(str, tbp->fnaddr.low);
+-				jiffies_to_timespec(tbp->timestamp.low, &val);
++				jiffies_to_timespec64(tbp->timestamp.low, &val);
+ 			} else {
+ 				sprint_symbol(str, tbp->fnaddr.val);
+-				jiffies_to_timespec(tbp->timestamp.val, &val);
++				jiffies_to_timespec64(tbp->timestamp.val, &val);
+ 			}
+ 			/*
+ 			 * Dump trace buffer entry to memory file
+@@ -182,8 +182,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			 */
+ 			len += snprintf(fnic_dbgfs_prt->buffer + len,
+ 				  (trace_max_pages * PAGE_SIZE * 3) - len,
+-				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
+-				  "%16llx %16llx %16llx\n", val.tv_sec,
++				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
++				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
+ 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
+ 				  tbp->data[0], tbp->data[1], tbp->data[2],
+ 				  tbp->data[3], tbp->data[4]);
+@@ -217,29 +217,29 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ {
+ 	int len = 0;
+ 	int buf_size = debug->buf_size;
+-	struct timespec val1, val2;
++	struct timespec64 val1, val2;
+ 
+-	getnstimeofday(&val1);
++	ktime_get_real_ts64(&val1);
+ 	len = snprintf(debug->debug_buffer + len, buf_size - len,
+ 		"------------------------------------------\n"
+ 		 "\t\tTime\n"
+ 		"------------------------------------------\n");
+ 
+ 	len += snprintf(debug->debug_buffer + len, buf_size - len,
+-		"Current time :          [%ld:%ld]\n"
+-		"Last stats reset time:  [%ld:%ld]\n"
+-		"Last stats read time:   [%ld:%ld]\n"
+-		"delta since last reset: [%ld:%ld]\n"
+-		"delta since last read:  [%ld:%ld]\n",
+-	val1.tv_sec, val1.tv_nsec,
+-	stats->stats_timestamps.last_reset_time.tv_sec,
++		"Current time :          [%lld:%ld]\n"
++		"Last stats reset time:  [%lld:%09ld]\n"
++		"Last stats read time:   [%lld:%ld]\n"
++		"delta since last reset: [%lld:%ld]\n"
++		"delta since last read:  [%lld:%ld]\n",
++	(s64)val1.tv_sec, val1.tv_nsec,
++	(s64)stats->stats_timestamps.last_reset_time.tv_sec,
+ 	stats->stats_timestamps.last_reset_time.tv_nsec,
+-	stats->stats_timestamps.last_read_time.tv_sec,
++	(s64)stats->stats_timestamps.last_read_time.tv_sec,
+ 	stats->stats_timestamps.last_read_time.tv_nsec,
+-	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
+-	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
+-	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
+-	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
++	(s64)timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
++	timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
++	(s64)timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
++	timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
+ 
+ 	stats->stats_timestamps.last_read_time = val1;
+ 
+@@ -403,12 +403,12 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		  "\t\tOther Important Statistics\n"
+ 		  "------------------------------------------\n");
+ 
+-	jiffies_to_timespec(stats->misc_stats.last_isr_time, &val1);
+-	jiffies_to_timespec(stats->misc_stats.last_ack_time, &val2);
++	jiffies_to_timespec64(stats->misc_stats.last_isr_time, &val1);
++	jiffies_to_timespec64(stats->misc_stats.last_ack_time, &val2);
+ 
+ 	len += snprintf(debug->debug_buffer + len, buf_size - len,
+-		  "Last ISR time: %llu (%8lu.%8lu)\n"
+-		  "Last ACK time: %llu (%8lu.%8lu)\n"
++		  "Last ISR time: %llu (%8llu.%09lu)\n"
++		  "Last ACK time: %llu (%8llu.%09lu)\n"
+ 		  "Number of ISRs: %lld\n"
+ 		  "Maximum CQ Entries: %lld\n"
+ 		  "Number of ACK index out of range: %lld\n"
+@@ -425,9 +425,9 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		  "Number of rport not ready: %lld\n"
+ 		  "Number of receive frame errors: %lld\n",
+ 		  (u64)stats->misc_stats.last_isr_time,
+-		  val1.tv_sec, val1.tv_nsec,
++		  (s64)val1.tv_sec, val1.tv_nsec,
+ 		  (u64)stats->misc_stats.last_ack_time,
+-		  val2.tv_sec, val2.tv_nsec,
++		  (s64)val2.tv_sec, val2.tv_nsec,
+ 		  (u64)atomic64_read(&stats->misc_stats.isr_count),
+ 		  (u64)atomic64_read(&stats->misc_stats.max_cq_entries),
+ 		  (u64)atomic64_read(&stats->misc_stats.ack_index_out_of_range),
 -- 
-Ming
+2.9.0
