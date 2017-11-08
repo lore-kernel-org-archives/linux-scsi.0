@@ -1,34 +1,42 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch 2/2] scsi: mpt3sas: remove a stray KERN_INFO
-Date: Wed, 8 Nov 2017 11:38:20 +0300
-Message-ID: <20171108083819.u2yufaeamh2vffac@mwanda>
+Subject: [PATCH 1/2] tcmu: Fix some memory corruption
+Date: Wed, 8 Nov 2017 11:43:44 +0300
+Message-ID: <20171108084344.hmqtb5k2puzh3sc6@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32918 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750969AbdKHIic (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 03:38:32 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:18948 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750727AbdKHIoC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 03:44:02 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Kenjiro Nakayama <nakayamakenjiro@gmail.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-pr_info() has a KERN_INFO already so the second KERN_INFO isn't needed.
+"udev->nl_reply_supported" is an int but on 64 bit arches we are writing
+8 bytes of data to it so it corrupts four bytes beyond the end of the
+struct.
 
+Fixes: b849b4567549 ("target: Add netlink command reply supported option for each device")
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 3a9438a1704e..b258f210120a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -8683,7 +8684,7 @@ _scsih_mark_responding_pcie_device(struct MPT3SAS_ADAPTER *ioc,
- 
- 			if (pcie_device->handle == pcie_device_pg0->DevHandle)
- 				goto out;
--			pr_info(KERN_INFO "\thandle changed from(0x%04x)!!!\n",
-+			pr_info("\thandle changed from(0x%04x)!!!\n",
- 			    pcie_device->handle);
- 			pcie_device->handle = pcie_device_pg0->DevHandle;
- 			if (sas_target_priv_data)
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 3be4c9696d19..07f2d95f7ae7 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1724,11 +1724,10 @@ static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
+ 				ret = -ENOMEM;
+ 				break;
+ 			}
+-			ret = kstrtol(arg_p, 0,
+-					(long int *) &udev->nl_reply_supported);
++			ret = kstrtoint(arg_p, 0, &udev->nl_reply_supported);
+ 			kfree(arg_p);
+ 			if (ret < 0)
+-				pr_err("kstrtoul() failed for nl_reply_supported=\n");
++				pr_err("kstrtoint() failed for nl_reply_supported=\n");
+ 			break;
+ 		default:
+ 			break;
