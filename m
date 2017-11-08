@@ -1,14 +1,18 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V7 3/8] block: mq-deadline: Introduce zone locking support
-Date: Wed,  8 Nov 2017 17:11:13 +0900
-Message-ID: <20171108081118.7632-4-damien.lemoal@wdc.com>
+Subject: [PATCH V7 5/8] block: deadline-iosched: Introduce zone locking support
+Date: Wed,  8 Nov 2017 17:11:15 +0900
+Message-ID: <20171108081118.7632-6-damien.lemoal@wdc.com>
 References: <20171108081118.7632-1-damien.lemoal@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:26097 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751049AbdKHILo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 03:11:44 -0500
 In-Reply-To: <20171108081118.7632-1-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
-List-Id: linux-scsi@vger.kernel.org
 
 Introduce zone write locking to avoid write request reordering with
 zoned block devices. This is achieved using a finer selection of the
@@ -22,41 +26,58 @@ next request to dispatch:
       request in the dispatch queue tested (back to step 1).
 
 For a write request that has locked its target zone, the zone is
-unlocked either when the request completes with a call to the method
-deadline_request_completed() or when the request is requeued using
-dd_insert_request().
+unlocked either when the request completes and the method
+deadline_request_completed() is called, or when the request is requeued
+using the method deadline_add_request().
 
 Requests targeting a locked zone are always left in the scheduler queue
-to preserve the lba ordering for write requests. If no write request
-can be dispatched, allow reads to be dispatched even if the write batch
-is not done.
+to preserve the initial write order. If no write request can be
+dispatched, allow reads to be dispatched even if the write batch is not
+done.
 
 If the device used is not a zoned block device, or if zoned block device
-support is disabled, this patch does not modify mq-deadline behavior.
+support is disabled, this patch does not modify deadline behavior.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/mq-deadline.c | 89 +++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 86 insertions(+), 3 deletions(-)
+ block/deadline-iosched.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 68 insertions(+), 3 deletions(-)
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index 8bd6db9e69c7..d56972e8ebda 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -59,6 +59,7 @@ struct deadline_data {
- 	int front_merges;
+diff --git a/block/deadline-iosched.c b/block/deadline-iosched.c
+index 81e3f0897457..9de9f156e203 100644
+--- a/block/deadline-iosched.c
++++ b/block/deadline-iosched.c
+@@ -98,6 +98,12 @@ deadline_add_request(struct request_queue *q, struct request *rq)
+ 	struct deadline_data *dd = q->elevator->elevator_data;
+ 	const int data_dir = rq_data_dir(rq);
  
- 	spinlock_t lock;
-+	spinlock_t zone_lock;
- 	struct list_head dispatch;
- };
++	/*
++	 * This may be a requeue of a write request that has locked its
++	 * target zone. If it is the case, this releases the zone lock.
++	 */
++	blk_req_zone_write_unlock(rq);
++
+ 	deadline_add_rq_rb(dd, rq);
  
-@@ -198,13 +199,33 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
+ 	/*
+@@ -188,6 +194,12 @@ deadline_move_to_dispatch(struct deadline_data *dd, struct request *rq)
+ {
+ 	struct request_queue *q = rq->q;
+ 
++	/*
++	 * For a zoned block device, write requests must write lock their
++	 * target zone.
++	 */
++	blk_req_zone_write_lock(rq);
++
+ 	deadline_remove_request(q, rq);
+ 	elv_dispatch_add_tail(q, rq);
+ }
+@@ -235,13 +247,28 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
  static struct request *
  deadline_fifo_request(struct deadline_data *dd, int data_dir)
  {
 +	struct request *rq;
-+	unsigned long flags;
 +
  	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
  		return NULL;
@@ -73,25 +94,20 @@ index 8bd6db9e69c7..d56972e8ebda 100644
 +	 * Look for a write request that can be dispatched, that is one with
 +	 * an unlocked target zone.
 +	 */
-+	spin_lock_irqsave(&dd->zone_lock, flags);
 +	list_for_each_entry(rq, &dd->fifo_list[WRITE], queuelist) {
 +		if (blk_req_can_dispatch_to_zone(rq))
-+			goto out;
++			return rq;
 +	}
-+	rq = NULL;
-+out:
-+	spin_unlock_irqrestore(&dd->zone_lock, flags);
 +
-+	return rq;
++	return NULL;
  }
  
  /*
-@@ -214,10 +235,32 @@ deadline_fifo_request(struct deadline_data *dd, int data_dir)
+@@ -251,10 +278,29 @@ deadline_fifo_request(struct deadline_data *dd, int data_dir)
  static struct request *
  deadline_next_request(struct deadline_data *dd, int data_dir)
  {
 +	struct request *rq;
-+	unsigned long flags;
 +
  	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
  		return NULL;
@@ -108,19 +124,17 @@ index 8bd6db9e69c7..d56972e8ebda 100644
 +	 * Look for a write request that can be dispatched, that is one with
 +	 * an unlocked target zone.
 +	 */
-+	spin_lock_irqsave(&dd->zone_lock, flags);
 +	while (rq) {
 +		if (blk_req_can_dispatch_to_zone(rq))
-+			break;
++			return rq;
 +		rq = deadline_latter_request(rq);
 +	}
-+	spin_unlock_irqrestore(&dd->zone_lock, flags);
 +
-+	return rq;
++	return NULL;
  }
  
  /*
-@@ -259,7 +302,8 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+@@ -288,7 +334,8 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
  	if (reads) {
  		BUG_ON(RB_EMPTY_ROOT(&dd->sort_list[READ]));
  
@@ -130,7 +144,7 @@ index 8bd6db9e69c7..d56972e8ebda 100644
  			goto dispatch_writes;
  
  		data_dir = READ;
-@@ -304,6 +348,13 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+@@ -333,6 +380,13 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
  		rq = next_rq;
  	}
  
@@ -139,77 +153,35 @@ index 8bd6db9e69c7..d56972e8ebda 100644
 +	 * them can be dispatched, rq will be NULL.
 +	 */
 +	if (!rq)
-+		return NULL;
++		return 0;
 +
  	dd->batching = 0;
  
  dispatch_request:
-@@ -313,6 +364,10 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	dd->batching++;
- 	deadline_move_request(dd, rq);
- done:
-+	/*
-+	 * If the request needs its target zone locked, do it.
-+	 */
-+	blk_req_zone_write_lock(rq);
- 	rq->rq_flags |= RQF_STARTED;
- 	return rq;
- }
-@@ -368,6 +423,7 @@ static int dd_init_queue(struct request_queue *q, struct elevator_type *e)
- 	dd->front_merges = 1;
- 	dd->fifo_batch = fifo_batch;
- 	spin_lock_init(&dd->lock);
-+	spin_lock_init(&dd->zone_lock);
- 	INIT_LIST_HEAD(&dd->dispatch);
- 
- 	q->elevator = eq;
-@@ -424,6 +480,12 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	const int data_dir = rq_data_dir(rq);
- 
-+	/*
-+	 * This may be a requeue of a write request that has locked its
-+	 * target zone. If it is the case, this releases the zone lock.
-+	 */
-+	blk_req_zone_write_unlock(rq);
-+
- 	if (blk_mq_sched_try_insert_merge(q, rq))
- 		return;
- 
-@@ -468,6 +530,26 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 	spin_unlock(&dd->lock);
+@@ -345,6 +399,16 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
+ 	return 1;
  }
  
 +/*
-+ * For zoned block devices, write unlock the target zone of
-+ * completed write requests. Do this while holding the zone lock
-+ * spinlock so that the zone is never unlocked while deadline_fifo_request()
-+ * while deadline_next_request() are executing.
++ * For zoned block devices, write unlock the target zone of completed
++ * write requests.
 + */
-+static void dd_completed_request(struct request *rq)
++static void
++deadline_completed_request(struct request_queue *q, struct request *rq)
 +{
-+	struct request_queue *q = rq->q;
-+
-+	if (blk_queue_is_zoned(q)) {
-+		struct deadline_data *dd = q->elevator->elevator_data;
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&dd->zone_lock, flags);
-+		blk_req_zone_write_unlock(rq);
-+		spin_unlock_irqrestore(&dd->zone_lock, flags);
-+	}
++	blk_req_zone_write_unlock(rq);
 +}
 +
- static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
+ static void deadline_exit_queue(struct elevator_queue *e)
  {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
-@@ -669,6 +751,7 @@ static struct elevator_type mq_deadline = {
- 	.ops.mq = {
- 		.insert_requests	= dd_insert_requests,
- 		.dispatch_request	= dd_dispatch_request,
-+		.completed_request	= dd_completed_request,
- 		.next_request		= elv_rb_latter_request,
- 		.former_request		= elv_rb_former_request,
- 		.bio_merge		= dd_bio_merge,
+ 	struct deadline_data *dd = e->elevator_data;
+@@ -466,6 +530,7 @@ static struct elevator_type iosched_deadline = {
+ 		.elevator_merged_fn =		deadline_merged_request,
+ 		.elevator_merge_req_fn =	deadline_merged_requests,
+ 		.elevator_dispatch_fn =		deadline_dispatch_requests,
++		.elevator_completed_req_fn =	deadline_completed_request,
+ 		.elevator_add_req_fn =		deadline_add_request,
+ 		.elevator_former_req_fn =	elv_rb_former_request,
+ 		.elevator_latter_req_fn =	elv_rb_latter_request,
 -- 
 2.13.6
