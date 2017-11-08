@@ -1,78 +1,100 @@
 From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
  scsi_mq_get_budget()
-Date: Wed, 8 Nov 2017 08:50:27 +0800
-Message-ID: <20171108005022.GC20599@ming.t460p>
+Date: Wed, 8 Nov 2017 08:53:39 +0800
+Message-ID: <20171108005338.GD20599@ming.t460p>
 References: <20171104015534.32684-1-ming.lei@redhat.com>
  <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
  <1509997522.2409.58.camel@wdc.com>
  <20171107021125.GB15090@ming.t460p>
  <1510071607.2656.17.camel@wdc.com>
  <74925156-b425-de0e-de39-0a166ef5c5f3@kernel.dk>
- <49b5c202-0303-85f7-102a-fcc013e7256e@kernel.dk>
- <292e3f7d-cfe3-840a-5a5e-d00e01239152@kernel.dk>
- <a6a505f5-d374-2878-6c55-116255795346@kernel.dk>
- <1510094074.2656.39.camel@wdc.com>
+ <1510076077.2656.24.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51526 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759032AbdKHAum (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Nov 2017 19:50:42 -0500
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1510094074.2656.39.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1510076077.2656.24.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
 To: Bart Van Assche <Bart.VanAssche@wdc.com>
 Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Nov 07, 2017 at 10:34:35PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-11-07 at 15:06 -0700, Jens Axboe wrote:
-> > Just to keep everyone in the loop, this bug is not new to
-> > for-4.15/block, nor is it new to the current 4.41-rc or 4.13. So it's
-> > probably different to what Bart is hitting, but it's a bug none the
-> > less...
+On Tue, Nov 07, 2017 at 05:34:38PM +0000, Bart Van Assche wrote:
+> On Tue, 2017-11-07 at 09:29 -0700, Jens Axboe wrote:
+> > On 11/07/2017 09:20 AM, Bart Van Assche wrote:
+> > > On Tue, 2017-11-07 at 10:11 +0800, Ming Lei wrote:
+> > > > If you can reproduce, please provide me at least the following log
+> > > > first:
+> > > > 
+> > > > 	find /sys/kernel/debug/block -name tags | xargs cat | grep busy
+> > > > 
+> > > > If any pending requests arn't completed, please provide the related
+> > > > info in dbgfs about where is the request.
+> > > 
+> > > Every time I ran the above or a similar command its output was empty. I
+> > > assume that's because the hang usually occurs in a phase where these debugfs
+> > > attributes either have not yet been created or have already disappeared.
+> > 
+> > Bart, do you still see a hang with the patch that fixes the tag leak when
+> > we fail to get a dispatch budget?
+> > 
+> > https://marc.info/?l=linux-block&m=151004881411480&w=2
+> > 
+> > I've run a lot of stability testing here, and I haven't run into any
+> > issues. This is with shared tags as well. So if you still see the failure
+> > case with the current tree AND the above patch, then I'll try and get
+> > a test case setup that hits it too so we can get to the bottom of this.
 > 
-> Hello Jens,
+> It took a little longer than expected but I just ran into the following
+> lockup with your for-next branch of this morning (commit e8fa44bb8af9) and
+> Ming's patch "blk-mq: put driver tag if dispatch budget can't be got"
+> applied on top of it:
 > 
-> There are several reasons why I think that patch "blk-mq: don't handle
-> TAG_SHARED in restart" really should be reverted:
-> * That patch is based on the assumption that only the SCSI driver uses shared
->   tags. That assumption is not correct. null_blk and nvme also use shared tags.
+> [ 2575.324678] sysrq: SysRq : Show Blocked State
+> [ 2575.332336]   task                        PC stack   pid father
+> [ 2575.345239] systemd-udevd   D    0 47577    518 0x00000106
+> [ 2575.353821] Call Trace:
+> [ 2575.358805]  __schedule+0x28b/0x890
+> [ 2575.364906]  schedule+0x36/0x80
+> [ 2575.370436]  io_schedule+0x16/0x40
+> [ 2575.376287]  __lock_page+0xfc/0x140
+> [ 2575.382061]  ? page_cache_tree_insert+0xc0/0xc0
+> [ 2575.388943]  truncate_inode_pages_range+0x5e8/0x830
+> [ 2575.396083]  truncate_inode_pages+0x15/0x20
+> [ 2575.402398]  kill_bdev+0x2f/0x40
+> [ 2575.407538]  __blkdev_put+0x74/0x1f0
+> [ 2575.413010]  ? kmem_cache_free+0x197/0x1c0
+> [ 2575.418986]  blkdev_put+0x4c/0xd0
+> [ 2575.424040]  blkdev_close+0x34/0x70
+> [ 2575.429216]  __fput+0xe7/0x220
+> [ 2575.433863]  ____fput+0xe/0x10
+> [ 2575.438490]  task_work_run+0x76/0x90
+> [ 2575.443619]  do_exit+0x2e0/0xaf0
+> [ 2575.448311]  do_group_exit+0x43/0xb0
+> [ 2575.453386]  get_signal+0x299/0x5e0
+> [ 2575.458303]  do_signal+0x37/0x740
+> [ 2575.462976]  ? blkdev_read_iter+0x35/0x40
+> [ 2575.468425]  ? new_sync_read+0xde/0x130
+> [ 2575.473620]  ? vfs_read+0x115/0x130
+> [ 2575.478388]  exit_to_usermode_loop+0x80/0xd0
+> [ 2575.484002]  do_syscall_64+0xb3/0xc0
+> [ 2575.488813]  entry_SYSCALL64_slow_path+0x25/0x25
+> [ 2575.494759] RIP: 0033:0x7efd829cbd11
+> [ 2575.499506] RSP: 002b:00007ffff984f978 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+> [ 2575.508741] RAX: 0000000000022000 RBX: 000055f19f902ca0 RCX: 00007efd829cbd11
+> [ 2575.517455] RDX: 0000000000040000 RSI: 000055f19f902cc8 RDI: 0000000000000007
+> [ 2575.526163] RBP: 000055f19f7fb9d0 R08: 0000000000000000 R09: 000055f19f902ca0
+> [ 2575.534860] R10: 000055f19f902cb8 R11: 0000000000000246 R12: 0000000000000000
+> [ 2575.544250] R13: 0000000000040000 R14: 000055f19f7fba20 R15: 0000000000040000
 
-No, both null_blk and nvme should be handled by BLK_MQ_S_TAG_WAITING, not need
-to waste CPU to check all shared tags.
+Again please show us the output of 'tags' to see if there is pending
+requests not completed.
 
-> * As my tests have shown, the algorithm for restarting queues based on the
+Please run this test on linus tree(V4.14-rc7) to see if the same issue
+can be reproduced.
 
-Your test doesn't show it is related with RESTART since there isn't
-pending request in output of 'tags'.
-
->   SCSI starved list is flawed. So using that mechanism instead of the blk-mq
->   shared queue restarting algorithm is wrong.
-
-The algorithm based on starved list has been used for dozens of years
-for SCSI, I don't think it is flawed enough.
-
-> * We are close to the merge window. It is too late for trying to fix the
->   "blk-mq: don't handle TAG_SHARED in restart" patch.
-
-If you can provide us the reproduction approach, the time is enough to fix it
-before V4.15 release.
-
-> 
-> My proposal is to make sure that what will be sent to Linus during the v4.15
-> merge window works reliably. That means using the v4.13/v4.14 algorithm for
-> queue restarting which is an algorithm that is trusted by the community. If
-> Roman Penyaev's patch could get applied that would be even better.
-
-Frankly speaking, the algorithm for blk-mq's restarting won't be used by SCSI at
-all because scsi_end_request() restarts the queue before the restart for TAG_SHARED.
-
-For NVMe and null_blk, it is basically same since we cover that via BLK_MQ_S_TAG_WAITING.
-
-So Nak your proposal.
+Also if possible, please provide us the way for reproducing.
 
 -- 
 Ming
