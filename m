@@ -1,121 +1,80 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V7 4/8] block: deadline-iosched: Introduce dispatch helpers
-Date: Wed,  8 Nov 2017 17:11:14 +0900
-Message-ID: <20171108081118.7632-5-damien.lemoal@wdc.com>
-References: <20171108081118.7632-1-damien.lemoal@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171108081118.7632-1-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH] sd: Fix a disk probing hang
+Date: Wed, 8 Nov 2017 09:12:53 +0100
+Message-ID: <cf1f170e-3cf4-bed2-e6a9-2354748e0078@suse.com>
+References: <20171107173807.14396-1-bart.vanassche@wdc.com>
+ <1510078140.3118.18.camel@linux.vnet.ibm.com>
+ <1510094539.2656.44.camel@wdc.com>
+ <1510095425.3118.62.camel@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.nue.novell.com ([195.135.221.5]:33399 "EHLO
+        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750720AbdKHIM4 (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Wed, 8 Nov 2017 03:12:56 -0500
+In-Reply-To: <1510095425.3118.62.camel@linux.vnet.ibm.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>
 
-Avoid directly referencing the next_rq and fifo_list arrays using the
-helper functions deadline_next_request() and deadline_fifo_request() to
-facilitate changes in the dispatch request selection in
-deadline_dispatch_requests() for zoned block devices.
+On 11/07/2017 11:57 PM, James Bottomley wrote:
+> On Tue, 2017-11-07 at 22:42 +0000, Bart Van Assche wrote:
+>> On Tue, 2017-11-07 at 10:09 -0800, James Bottomley wrote:
+>>>
+>>> but can you investigate the root cause rather than trying this
+>>> bandaid?
+>>
+>> Hello James,
+>>
+>> Thanks for your reply. I think that the root cause is that SCSI
+>> scanning activity can continue to submit I/O even after
+>> scsi_remove_host() has unlocked scan_mutex but that
+>> scsi_remove_host() removes some of the infrastructure that is
+>> essential to process SCSI requests.
+> 
+> That's not really a useful answer: how does it submit I/O after the
+> device goes into DEL?  In theory every I/O submitted after this is
+> returned with an immediate error.  I could buy the fact that we have
+> pending I/O submitted before we go into DEL, which would argue for some
+> sort of quiesce wait, but I don't see how I/O submitted after DEL
+> causes a hang.
+> 
+>>  Are you OK with
+>> e.g. moving a significant part of scsi_remove_host() into
+>> scsi_host_dev_release()?
+> 
+> Well not really without seeing the root cause.  Before scsi_forget_host
+> ()it's all about state and after it's just removing some user visible
+> host attributes, so I can't see how either matters much.
+>  scsi_forget_host() must be executed from scsi_remove_host() because
+> that's how the devices go into the DEL state and how we error the
+> requests without troubling the device driver, so that can't be moved to
+> release
+> 
+You know, this actually looks like the same issue I'm chasing with iser;
+we have a customer who regularly sees lockups during scanning.
+As it turns out, iser is calling scsi_device_del() from the RX thread.
+Which in turn needs to call async_synchronize().
+If a disk scan is running at the same time we have a nice deadlock, as
+the RX thread can't move forward before aynch_synchronize() returns,
+which it'll never do as the scan cannot complete.
+I've tried to fix that by having the async probing only waiting for that
+particular instance (look for patch 'sd: use async_probe cookie to avoid
+deadlocks'), but this wasn't greeted with much enthusiasm.
 
-While at it, also remove the unnecessary forward declaration of the
-function deadline_move_request().
+So maybe it's time to investigate this properly.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- block/deadline-iosched.c | 47 +++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 37 insertions(+), 10 deletions(-)
+Cheers,
 
-diff --git a/block/deadline-iosched.c b/block/deadline-iosched.c
-index b83f77460d28..81e3f0897457 100644
---- a/block/deadline-iosched.c
-+++ b/block/deadline-iosched.c
-@@ -50,8 +50,6 @@ struct deadline_data {
- 	int front_merges;
- };
- 
--static void deadline_move_request(struct deadline_data *, struct request *);
--
- static inline struct rb_root *
- deadline_rb_root(struct deadline_data *dd, struct request *rq)
- {
-@@ -231,6 +229,35 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
- }
- 
- /*
-+ * For the specified data direction, return the next request to dispatch using
-+ * arrival ordered lists.
-+ */
-+static struct request *
-+deadline_fifo_request(struct deadline_data *dd, int data_dir)
-+{
-+	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
-+		return NULL;
-+
-+	if (list_empty(&dd->fifo_list[data_dir]))
-+		return NULL;
-+
-+	return rq_entry_fifo(dd->fifo_list[data_dir].next);
-+}
-+
-+/*
-+ * For the specified data direction, return the next request to dispatch using
-+ * sector position sorted lists.
-+ */
-+static struct request *
-+deadline_next_request(struct deadline_data *dd, int data_dir)
-+{
-+	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
-+		return NULL;
-+
-+	return dd->next_rq[data_dir];
-+}
-+
-+/*
-  * deadline_dispatch_requests selects the best request according to
-  * read/write expire, fifo_batch, etc
-  */
-@@ -239,16 +266,15 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	const int reads = !list_empty(&dd->fifo_list[READ]);
- 	const int writes = !list_empty(&dd->fifo_list[WRITE]);
--	struct request *rq;
-+	struct request *rq, *next_rq;
- 	int data_dir;
- 
- 	/*
- 	 * batches are currently reads XOR writes
- 	 */
--	if (dd->next_rq[WRITE])
--		rq = dd->next_rq[WRITE];
--	else
--		rq = dd->next_rq[READ];
-+	rq = deadline_next_request(dd, WRITE);
-+	if (!rq)
-+		rq = deadline_next_request(dd, READ);
- 
- 	if (rq && dd->batching < dd->fifo_batch)
- 		/* we have a next request are still entitled to batch */
-@@ -291,19 +317,20 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
- 	/*
- 	 * we are not running a batch, find best request for selected data_dir
- 	 */
--	if (deadline_check_fifo(dd, data_dir) || !dd->next_rq[data_dir]) {
-+	next_rq = deadline_next_request(dd, data_dir);
-+	if (deadline_check_fifo(dd, data_dir) || !next_rq) {
- 		/*
- 		 * A deadline has expired, the last request was in the other
- 		 * direction, or we have run out of higher-sectored requests.
- 		 * Start again from the request with the earliest expiry time.
- 		 */
--		rq = rq_entry_fifo(dd->fifo_list[data_dir].next);
-+		rq = deadline_fifo_request(dd, data_dir);
- 	} else {
- 		/*
- 		 * The last req was the same dir and we have a next request in
- 		 * sort order. No expired requests so continue on from here.
- 		 */
--		rq = dd->next_rq[data_dir];
-+		rq = next_rq;
- 	}
- 
- 	dd->batching = 0;
+Hannes
 -- 
-2.13.6
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
