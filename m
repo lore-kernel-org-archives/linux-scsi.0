@@ -1,185 +1,57 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V8 5/7] deadline-iosched: Introduce zone locking support
-Date: Thu,  9 Nov 2017 15:57:05 +0900
-Message-ID: <20171109065707.17210-6-damien.lemoal@wdc.com>
-References: <20171109065707.17210-1-damien.lemoal@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171109065707.17210-1-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: [PATCH 0/13] scsi: arcmsr: add some driver options and support new
+ adapter ARC-1884
+Date: Thu, 09 Nov 2017 07:16:21 +0800
+Message-ID: <1510182981.4523.48.camel@Centos6.3-64>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f194.google.com ([209.85.223.194]:49919 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752613AbdKIHQ0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 02:16:26 -0500
+Received: by mail-io0-f194.google.com with SMTP id n137so8759727iod.6
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Nov 2017 23:16:26 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hare@suse.de, dan.carpenter@oracle.com, hch@infradead.org
 
-Introduce zone write locking to avoid write request reordering with
-zoned block devices. This is achieved using a finer selection of the
-next request to dispatch:
-1) Any non-write request is always allowed to proceed.
-2) Any write to a conventional zone is always allowed to proceed.
-3) For a write to a sequential zone, the zone lock is first checked.
-   a) If the zone is not locked, the write is allowed to proceed after
-      its target zone is locked.
-   b) If the zone is locked, the write request is skipped and the next
-      request in the dispatch queue tested (back to step 1).
+From: Ching Huang <ching2048@areca.com.tw>
 
-For a write request that has locked its target zone, the zone is
-unlocked either when the request completes and the method
-deadline_request_completed() is called, or when the request is requeued
-using the method deadline_add_request().
+Hi all,
 
-Requests targeting a locked zone are always left in the scheduler queue
-to preserve the initial write order. If no write request can be
-dispatched, allow reads to be dispatched even if the write batch is not
-done.
+The following patches apply to Martin's 4.15/scsi-queue.
 
-If the device used is not a zoned block device, or if zoned block device
-support is disabled, this patch does not modify deadline behavior.
+Patch 1: redefine ACB_ADAPTER_TYPE_A, _B, _C, _D and subsequent changes.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Patch 2: simplify arcmsr_iop_init function.
+
+Patch 3: add codes for ACB_ADAPTER_TYPE_E to support new adapter ARC-1884
+
+Patch 4: replace constant ARCMSR_MAX_FREECCB_NUM by variable acb->maxFreeCCB that was got from firmware.
+
+Patch 5: add driver option host_can_queue to set host->can_queue value by user. It's value expands
+         up to 1024.
+
+Patch 6: replace constant ARCMSR_MAX_OUTSTANDING_CMD by variable acb->maxOutstanding that was determined by user.
+
+Patch 7: add driver option cmd_per_lun to set host->cmd_per_lun value by user.
+
+Patch 8: add ACB_F_MSG_GET_CONFIG to acb->acb_flags for for message interrupt checking before schedule work for
+         get device map.
+
+Patch 9: add a function arcmsr_set_iop_datetime and driver option set_date_time to set date and time to firmware.
+
+Patch 10: fix clear doorbell queue on ACB_ADAPTER_TYPE_B controller.
+
+Patch 11: spin off duplicate code of timer init for message isr BH in arcmsr_probe and arcmsr_resume as a function
+          arcmsr_init_get_devmap_timer
+
+Patch 12: adjust some tab or white-space to make text alignment.
+
+Patch 13: update driver version to v1.40.00.02-20171011
+
+Please review. Thanks.
+
 ---
- block/deadline-iosched.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 68 insertions(+), 3 deletions(-)
-
-diff --git a/block/deadline-iosched.c b/block/deadline-iosched.c
-index 81e3f0897457..9de9f156e203 100644
---- a/block/deadline-iosched.c
-+++ b/block/deadline-iosched.c
-@@ -98,6 +98,12 @@ deadline_add_request(struct request_queue *q, struct request *rq)
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	const int data_dir = rq_data_dir(rq);
- 
-+	/*
-+	 * This may be a requeue of a write request that has locked its
-+	 * target zone. If it is the case, this releases the zone lock.
-+	 */
-+	blk_req_zone_write_unlock(rq);
-+
- 	deadline_add_rq_rb(dd, rq);
- 
- 	/*
-@@ -188,6 +194,12 @@ deadline_move_to_dispatch(struct deadline_data *dd, struct request *rq)
- {
- 	struct request_queue *q = rq->q;
- 
-+	/*
-+	 * For a zoned block device, write requests must write lock their
-+	 * target zone.
-+	 */
-+	blk_req_zone_write_lock(rq);
-+
- 	deadline_remove_request(q, rq);
- 	elv_dispatch_add_tail(q, rq);
- }
-@@ -235,13 +247,28 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
- static struct request *
- deadline_fifo_request(struct deadline_data *dd, int data_dir)
- {
-+	struct request *rq;
-+
- 	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
- 		return NULL;
- 
- 	if (list_empty(&dd->fifo_list[data_dir]))
- 		return NULL;
- 
--	return rq_entry_fifo(dd->fifo_list[data_dir].next);
-+	rq = rq_entry_fifo(dd->fifo_list[data_dir].next);
-+	if (data_dir == READ || !blk_queue_is_zoned(rq->q))
-+		return rq;
-+
-+	/*
-+	 * Look for a write request that can be dispatched, that is one with
-+	 * an unlocked target zone.
-+	 */
-+	list_for_each_entry(rq, &dd->fifo_list[WRITE], queuelist) {
-+		if (blk_req_can_dispatch_to_zone(rq))
-+			return rq;
-+	}
-+
-+	return NULL;
- }
- 
- /*
-@@ -251,10 +278,29 @@ deadline_fifo_request(struct deadline_data *dd, int data_dir)
- static struct request *
- deadline_next_request(struct deadline_data *dd, int data_dir)
- {
-+	struct request *rq;
-+
- 	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
- 		return NULL;
- 
--	return dd->next_rq[data_dir];
-+	rq = dd->next_rq[data_dir];
-+	if (!rq)
-+		return NULL;
-+
-+	if (data_dir == READ || !blk_queue_is_zoned(rq->q))
-+		return rq;
-+
-+	/*
-+	 * Look for a write request that can be dispatched, that is one with
-+	 * an unlocked target zone.
-+	 */
-+	while (rq) {
-+		if (blk_req_can_dispatch_to_zone(rq))
-+			return rq;
-+		rq = deadline_latter_request(rq);
-+	}
-+
-+	return NULL;
- }
- 
- /*
-@@ -288,7 +334,8 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
- 	if (reads) {
- 		BUG_ON(RB_EMPTY_ROOT(&dd->sort_list[READ]));
- 
--		if (writes && (dd->starved++ >= dd->writes_starved))
-+		if (deadline_fifo_request(dd, WRITE) &&
-+		    (dd->starved++ >= dd->writes_starved))
- 			goto dispatch_writes;
- 
- 		data_dir = READ;
-@@ -333,6 +380,13 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
- 		rq = next_rq;
- 	}
- 
-+	/*
-+	 * For a zoned block device, if we only have writes queued and none of
-+	 * them can be dispatched, rq will be NULL.
-+	 */
-+	if (!rq)
-+		return 0;
-+
- 	dd->batching = 0;
- 
- dispatch_request:
-@@ -345,6 +399,16 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
- 	return 1;
- }
- 
-+/*
-+ * For zoned block devices, write unlock the target zone of completed
-+ * write requests.
-+ */
-+static void
-+deadline_completed_request(struct request_queue *q, struct request *rq)
-+{
-+	blk_req_zone_write_unlock(rq);
-+}
-+
- static void deadline_exit_queue(struct elevator_queue *e)
- {
- 	struct deadline_data *dd = e->elevator_data;
-@@ -466,6 +530,7 @@ static struct elevator_type iosched_deadline = {
- 		.elevator_merged_fn =		deadline_merged_request,
- 		.elevator_merge_req_fn =	deadline_merged_requests,
- 		.elevator_dispatch_fn =		deadline_dispatch_requests,
-+		.elevator_completed_req_fn =	deadline_completed_request,
- 		.elevator_add_req_fn =		deadline_add_request,
- 		.elevator_former_req_fn =	elv_rb_former_request,
- 		.elevator_latter_req_fn =	elv_rb_latter_request,
--- 
-2.13.6
