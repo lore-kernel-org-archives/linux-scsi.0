@@ -1,108 +1,239 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 4/6] target: Avoid early CMD_T_PRE_EXECUTE failures during ABORT_TASK
-Date: Wed,  8 Nov 2017 04:31:50 +0000
-Message-ID: <1510115512-15617-5-git-send-email-nab@linux-iscsi.org>
-References: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54052 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751931AbdKHEVk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 23:21:40 -0500
-In-Reply-To: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
+ scsi_mq_get_budget()
+Date: Wed, 8 Nov 2017 14:20:43 +0800
+Message-ID: <20171108062041.GB30541@ming.t460p>
+References: <20171107021125.GB15090@ming.t460p>
+ <1510071607.2656.17.camel@wdc.com>
+ <74925156-b425-de0e-de39-0a166ef5c5f3@kernel.dk>
+ <49b5c202-0303-85f7-102a-fcc013e7256e@kernel.dk>
+ <292e3f7d-cfe3-840a-5a5e-d00e01239152@kernel.dk>
+ <a6a505f5-d374-2878-6c55-116255795346@kernel.dk>
+ <20171108010345.GF20599@ming.t460p>
+ <81215aae-2755-1b4c-b7bd-1aef5d1dfa1b@kernel.dk>
+ <20171108031204.GB30129@ming.t460p>
+ <8450283f-4882-0f2f-fdc8-8ab02f1dc333@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8450283f-4882-0f2f-fdc8-8ab02f1dc333@kernel.dk>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Donald White <dew@datera.io>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, Nov 07, 2017 at 08:17:59PM -0700, Jens Axboe wrote:
+> On 11/07/2017 08:12 PM, Ming Lei wrote:
+> > On Tue, Nov 07, 2017 at 08:01:48PM -0700, Jens Axboe wrote:
+> >> On 11/07/2017 06:03 PM, Ming Lei wrote:
+> >>> On Tue, Nov 07, 2017 at 03:06:31PM -0700, Jens Axboe wrote:
+> >>>> On 11/07/2017 10:36 AM, Jens Axboe wrote:
+> >>>>> On 11/07/2017 10:10 AM, Jens Axboe wrote:
+> >>>>>> On 11/07/2017 09:29 AM, Jens Axboe wrote:
+> >>>>>>> On 11/07/2017 09:20 AM, Bart Van Assche wrote:
+> >>>>>>>> On Tue, 2017-11-07 at 10:11 +0800, Ming Lei wrote:
+> >>>>>>>>> If you can reproduce, please provide me at least the following log
+> >>>>>>>>> first:
+> >>>>>>>>>
+> >>>>>>>>> 	find /sys/kernel/debug/block -name tags | xargs cat | grep busy
+> >>>>>>>>>
+> >>>>>>>>> If any pending requests arn't completed, please provide the related
+> >>>>>>>>> info in dbgfs about where is the request.
+> >>>>>>>>
+> >>>>>>>> Every time I ran the above or a similar command its output was empty. I
+> >>>>>>>> assume that's because the hang usually occurs in a phase where these debugfs
+> >>>>>>>> attributes either have not yet been created or have already disappeared.
+> >>>>>>>
+> >>>>>>> Bart, do you still see a hang with the patch that fixes the tag leak when
+> >>>>>>> we fail to get a dispatch budget?
+> >>>>>>>
+> >>>>>>> https://marc.info/?l=linux-block&m=151004881411480&w=2
+> >>>>>>>
+> >>>>>>> I've run a lot of stability testing here, and I haven't run into any
+> >>>>>>> issues. This is with shared tags as well. So if you still see the failure
+> >>>>>>> case with the current tree AND the above patch, then I'll try and get
+> >>>>>>> a test case setup that hits it too so we can get to the bottom of this.
+> >>>>>>
+> >>>>>> Ming, I managed to reproduce the hang using null_blk. Note this is
+> >>>>>> WITHOUT the patch mentioned above, running with that now.
+> >>>>>>
+> >>>>>> # modprobe null_blk queue_mode=2 nr_devices=4 shared_tags=1 submit_queues=1 hw_queue_depth=1
+> >>>>>>
+> >>>>>> and using this fio file:
+> >>>>>>
+> >>>>>> [global]
+> >>>>>> bs=4k
+> >>>>>> rw=randread
+> >>>>>> norandommap
+> >>>>>> direct=1
+> >>>>>> ioengine=libaio
+> >>>>>> iodepth=4
+> >>>>>>
+> >>>>>> [nullb0]
+> >>>>>> filename=/dev/nullb0
+> >>>>>> [nullb1]
+> >>>>>> filename=/dev/nullb1
+> >>>>>> [nullb2]
+> >>>>>> filename=/dev/nullb2
+> >>>>>> [nullb3]
+> >>>>>> filename=/dev/nullb3
+> >>>>>>
+> >>>>>> it seemed to keep running, but it hung when exiting. The troublesome
+> >>>>>> device was nullb1:
+> >>>>>>
+> >>>>>> [  492.513374] INFO: task fio:3263 blocked for more than 120 seconds.
+> >>>>>> [  492.520782]       Not tainted 4.14.0-rc7+ #499
+> >>>>>> [  492.526247] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> >>>>>> [  492.535904] fio             D13208  3263   3211 0x00000000
+> >>>>>> [  492.542535] Call Trace:
+> >>>>>> [  492.545764]  __schedule+0x279/0x720
+> >>>>>> [  492.550151]  schedule+0x33/0x90
+> >>>>>> [  492.554145]  io_schedule+0x16/0x40
+> >>>>>> [  492.558435]  blk_mq_get_tag+0x148/0x250
+> >>>>>> [  492.563211]  ? finish_wait+0x90/0x90
+> >>>>>> [  492.567693]  blk_mq_get_request+0xf0/0x3e0
+> >>>>>> [  492.572760]  blk_mq_make_request+0xe2/0x690
+> >>>>>> [  492.577913]  generic_make_request+0xfc/0x2f0
+> >>>>>> [  492.583177]  submit_bio+0x64/0x120
+> >>>>>> [  492.587475]  ? set_page_dirty_lock+0x4b/0x60
+> >>>>>> [  492.592736]  ? submit_bio+0x64/0x120
+> >>>>>> [  492.597309]  ? bio_set_pages_dirty+0x55/0x60
+> >>>>>> [  492.602570]  blkdev_direct_IO+0x388/0x3c0
+> >>>>>> [  492.607546]  ? free_ioctx_users+0xe0/0xe0
+> >>>>>> [  492.612511]  ? blk_mq_dispatch_rq_list+0x238/0x3a0
+> >>>>>> [  492.618353]  ? _raw_spin_unlock+0xe/0x20
+> >>>>>> [  492.623227]  generic_file_read_iter+0xb3/0xa00
+> >>>>>> [  492.628682]  ? generic_file_read_iter+0xb3/0xa00
+> >>>>>> [  492.634334]  ? security_file_permission+0x9b/0xc0
+> >>>>>> [  492.640114]  blkdev_read_iter+0x35/0x40
+> >>>>>> [  492.644877]  aio_read+0xc5/0x120
+> >>>>>> [  492.648973]  ? aio_read_events+0x24c/0x340
+> >>>>>> [  492.654124]  ? __might_sleep+0x4a/0x80
+> >>>>>> [  492.658800]  do_io_submit+0x47c/0x5e0
+> >>>>>> [  492.663373]  ? do_io_submit+0x47c/0x5e0
+> >>>>>> [  492.668234]  SyS_io_submit+0x10/0x20
+> >>>>>> [  492.672715]  ? SyS_io_submit+0x10/0x20
+> >>>>>> [  492.677394]  entry_SYSCALL_64_fastpath+0x13/0x94
+> >>>>>> [  492.683039] RIP: 0033:0x7f83d1871717
+> >>>>>> [  492.687521] RSP: 002b:00007ffd38fe5a88 EFLAGS: 00000202 ORIG_RAX: 00000000000000d1
+> >>>>>> [  492.696969] RAX: ffffffffffffffda RBX: 00007f83b6972b50 RCX: 00007f83d1871717
+> >>>>>> [  492.705423] RDX: 0000000001f41418 RSI: 0000000000000001 RDI: 00007f83e4d36000
+> >>>>>> [  492.713889] RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000001f3f2e0
+> >>>>>> [  492.722352] R10: 0000000000001000 R11: 0000000000000202 R12: 00007ffd38fe5be0
+> >>>>>> [  492.730827] R13: 00007f83b6972b01 R14: 00007f83b69824b8 R15: 00007f83b6982368
+> >>>>>>
+> >>>>>> and if we look at the debug entries, it's waiting on a scheduler tag:
+> >>>>>>
+> >>>>>> sched_tags:nr_tags=2
+> >>>>>> sched_tags:nr_reserved_tags=0
+> >>>>>> sched_tags:active_queues=0
+> >>>>>> sched_tags:bitmap_tags:
+> >>>>>> sched_tags:depth=2
+> >>>>>> sched_tags:busy=2
+> >>>>>> sched_tags:bits_per_word=64
+> >>>>>> sched_tags:map_nr=1
+> >>>>>> sched_tags:alloc_hint={0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0}
+> >>>>>> sched_tags:wake_batch=1
+> >>>>>> sched_tags:wake_index=4
+> >>>>>> sched_tags:ws={
+> >>>>>> sched_tags:	{.wait_cnt=-102, .wait=inactive},
+> >>>>>> sched_tags:	{.wait_cnt=-126, .wait=inactive},
+> >>>>>> sched_tags:	{.wait_cnt=-72, .wait=inactive},
+> >>>>>> sched_tags:	{.wait_cnt=-96, .wait=inactive},
+> >>>>>> sched_tags:	{.wait_cnt=-134, .wait=inactive},
+> >>>>>> sched_tags:	{.wait_cnt=-116, .wait=inactive},
+> >>>>>> sched_tags:	{.wait_cnt=-90, .wait=inactive},
+> >>>>>> sched_tags:	{.wait_cnt=-115, .wait=active},
+> >>>>>> sched_tags:}
+> >>>>>> sched_tags:round_robin=0
+> >>>>>> sched_tags_bitmap:00000000: 03
+> >>>>>>
+> >>>>>> with SCHED_RESTART being set:
+> >>>>>>
+> >>>>>> state:SCHED_RESTART
+> >>>>>>
+> >>>>>> and with the driver tags being idle:
+> >>>>>>
+> >>>>>> tags:nr_tags=1
+> >>>>>> tags:nr_reserved_tags=0
+> >>>>>> tags:active_queues=0
+> >>>>>> tags:bitmap_tags:
+> >>>>>> tags:depth=1
+> >>>>>> tags:busy=0
+> >>>>>> tags:bits_per_word=64
+> >>>>>> tags:map_nr=1
+> >>>>>> tags:alloc_hint={0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+> >>>>>> tags:wake_batch=1
+> >>>>>> tags:wake_index=3
+> >>>>>> tags:ws={
+> >>>>>> tags:	{.wait_cnt=-48, .wait=inactive},
+> >>>>>> tags:	{.wait_cnt=-39, .wait=inactive},
+> >>>>>> tags:	{.wait_cnt=-50, .wait=inactive},
+> >>>>>> tags:	{.wait_cnt=-47, .wait=inactive},
+> >>>>>> tags:	{.wait_cnt=-25, .wait=inactive},
+> >>>>>> tags:	{.wait_cnt=-24, .wait=inactive},
+> >>>>>> tags:	{.wait_cnt=-47, .wait=inactive},
+> >>>>>> tags:	{.wait_cnt=-47, .wait=inactive},
+> >>>>>> tags:}
+> >>>>>
+> >>>>> Unsurprisingly (since this is sched_tags starvation) this still happens
+> >>>>> with the patch. Same trace as above. Note that dispatch has two requests
+> >>>>> sitting ready:
+> >>>>>
+> >>>>> ffff881ff5ab1000 {.op=READ, .cmd_flags=, .rq_flags=STARTED|IO_STAT, .atomic_flags=COMPLETE, .tag=-1, .internal_tag=0}
+> >>>>> ffff881ff5ab1240 {.op=READ, .cmd_flags=, .rq_flags=STARTED|IO_STAT, .atomic_flags=COMPLETE, .tag=-1, .internal_tag=1}
+> >>>>>
+> >>>>> while we're blocked trying to get a new sched tag off the regular
+> >>>>> blk_mq_make_request() path. It looks like a missing restart of the hctx.
+> >>>>
+> >>>> Just to keep everyone in the loop, this bug is not new to
+> >>>> for-4.15/block, nor is it new to the current 4.41-rc or 4.13. So it's
+> >>>> probably different to what Bart is hitting, but it's a bug none the
+> >>>> less...
+> >>>
+> >>> Thanks for running this test ans share us the result.
+> >>>
+> >>>>
+> >>>> To me, this looks like a race between marking the queue as needing a
+> >>>> restart, and the driver tag being released and re-running the queue. If
+> >>>> I do:
+> >>>>
+> >>>> # echo run > /sys/kernel/debug/block/nullb1/state
+> >>>>
+> >>>> then it starts just fine. So there must be a race between marking the
+> >>>> need for a restart (when getting the driver tag fails), and when one of
+> >>>> the shared tag queues finishes a request and releases the driver tag.
+> >>>
+> >>> Just one hint, blk-mq's RESTART won't work if no requests are pending,
+> >>> but looks no efficient/reliable way to handle that.
+> >>
+> >> Requests are pending, see above output. My assumption/theory was that
+> >> we were racing on setting restart. Simplified version:
+> >>
+> >> CPUX					CPUY
+> >> get_driver_tag, fails
+> >> 					complete request, put tag
+> >> 					check restart, not set
+> >> mark needing restart
+> > 
+> > This case should be covered by TAG_WAITING.
+> 
+> Right. The keyword here being 'should'.
+> 
+> > If get_driver_tag fails on CPUX, this hctx will be added to tags's wait
+> > queue, then the 'complete request' on CPUY will trigger to run queue via
+> > blk_mq_dispatch_wake().
+> 
+> I know how it's _supposed_ to work. I'm saying that the debug info
+> indicates that we have a problem in there, which matches what the
+> TAG_WAITING should be covering for us. The TAG_WAITING may be fine and
+> the issue could be somewhere else, it just looks identical for now.
 
-This patch fixes bug where early se_cmd exceptions that occur
-before backend execution can result in use-after-free if/when
-a subsequent ABORT_TASK occurs for the same tag.
+One possible reason:
 
-Since an early se_cmd exception will have had se_cmd added to
-se_session->sess_cmd_list via target_get_sess_cmd(), it will
-not have CMD_T_COMPLETE set by the usual target_complete_cmd()
-backend completion path.
+	- the request to be dispatched may not be added to hctx->dispatch
+	when blk_mq_dispatch_wake() is triggered.
 
-This causes a subsequent ABORT_TASK + __target_check_io_state()
-to signal ABORT_TASK should proceed.  As core_tmr_abort_task()
-executes, it will bring the outstanding se_cmd->cmd_kref count
-down to zero releasing se_cmd, after se_cmd has already been
-queued with error status into fabric driver response path code.
-
-To address this bug, introduce a CMD_T_PRE_EXECUTE bit that is
-set at target_get_sess_cmd() time, and cleared immediately before
-backend driver dispatch in target_execute_cmd() once CMD_T_ACTIVE
-is set.
-
-Then, check CMD_T_PRE_EXECUTE within __target_check_io_state() to
-determine when an early exception has occured, and avoid aborting
-this se_cmd since it will have already been queued into fabric
-driver response path code.
-
-Reported-by: Donald White <dew@datera.io>
-Cc: Donald White <dew@datera.io>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_tmr.c       | 9 +++++++++
- drivers/target/target_core_transport.c | 2 ++
- include/target/target_core_base.h      | 1 +
- 3 files changed, 12 insertions(+)
-
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 61909b2..9c7bc1c 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -133,6 +133,15 @@ static bool __target_check_io_state(struct se_cmd *se_cmd,
- 		spin_unlock(&se_cmd->t_state_lock);
- 		return false;
- 	}
-+	if (se_cmd->transport_state & CMD_T_PRE_EXECUTE) {
-+		if (se_cmd->scsi_status) {
-+			pr_debug("Attempted to abort io tag: %llu early failure"
-+				 " status: 0x%02x\n", se_cmd->tag,
-+				 se_cmd->scsi_status);
-+			spin_unlock(&se_cmd->t_state_lock);
-+			return false;
-+		}
-+	}
- 	if (sess->sess_tearing_down || se_cmd->cmd_wait_set) {
- 		pr_debug("Attempted to abort io tag: %llu already shutdown,"
- 			" skipping\n", se_cmd->tag);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 0e89db8..58caacd 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1975,6 +1975,7 @@ void target_execute_cmd(struct se_cmd *cmd)
- 	}
- 
- 	cmd->t_state = TRANSPORT_PROCESSING;
-+	cmd->transport_state &= ~CMD_T_PRE_EXECUTE;
- 	cmd->transport_state |= CMD_T_ACTIVE | CMD_T_SENT;
- 	spin_unlock_irq(&cmd->t_state_lock);
- 
-@@ -2667,6 +2668,7 @@ int target_get_sess_cmd(struct se_cmd *se_cmd, bool ack_kref)
- 		ret = -ESHUTDOWN;
- 		goto out;
- 	}
-+	se_cmd->transport_state |= CMD_T_PRE_EXECUTE;
- 	list_add_tail(&se_cmd->se_cmd_list, &se_sess->sess_cmd_list);
- out:
- 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index d3139a9..ccf501b 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -490,6 +490,7 @@ struct se_cmd {
- #define CMD_T_STOP		(1 << 5)
- #define CMD_T_TAS		(1 << 10)
- #define CMD_T_FABRIC_STOP	(1 << 11)
-+#define CMD_T_PRE_EXECUTE	(1 << 12)
- 	spinlock_t		t_state_lock;
- 	struct kref		cmd_kref;
- 	struct completion	t_transport_stop_comp;
 -- 
-1.9.1
+Ming
