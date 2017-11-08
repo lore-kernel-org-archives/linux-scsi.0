@@ -1,28 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_transport_fc: add 64GBIT and 128GBIT port speed definitions
-Date: Wed, 08 Nov 2017 18:01:27 -0500
-Message-ID: <yq1lgjgz86w.fsf@oracle.com>
-References: <20171103232608.26460-1-jsmart2021@gmail.com>
+Subject: Re: [PATCH] aacraid: use timespec64 instead of timeval
+Date: Wed, 08 Nov 2017 18:08:33 -0500
+Message-ID: <yq1h8u4z7v2.fsf@oracle.com>
+References: <20171107104613.3183755-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38499 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752534AbdKHXBe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 18:01:34 -0500
-In-Reply-To: <20171103232608.26460-1-jsmart2021@gmail.com> (James Smart's
-        message of "Fri, 3 Nov 2017 16:26:08 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171107104613.3183755-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Tue, 7 Nov 2017 11:46:05 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, David Carroll <david.carroll@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
 
-James,
+Arnd,
 
-> Add 64GBIT and 128GBIT port speed definitions.
+> aacraid passes the current time to the firmware in one of two ways,
+> either as year/month/day/... or as 32-bit unsigned seconds.
 >
-> Upcoming hardware will reference these speeds.
+> The first one is broken on 32-bit architectures as it cannot go past
+> year 2038. Using timespec64 here makes it behave properly on both
+> 32-bit and 64-bit architectures, and avoids relying on signed integer
+> overflow to pass times into the second interface.
+>
+> The interface used in aac_send_hosttime() however is still problematic
+> in year 2106 when 32-bit seconds overflow. Hopefully we don't have to
+> worry about aacraid by that time.
 
 Applied to 4.15/scsi-queue. Thanks!
 
