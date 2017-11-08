@@ -1,66 +1,50 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: BUG: scsi/qla2xxx: scsi_done from qla2x00_sp_compl race with
- scsi_queue_insert from abort handler
-Date: Wed, 8 Nov 2017 14:29:16 +0800
-Message-ID: <fb728db3-d577-8be1-d2e1-a402e3088b69@oracle.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [bug report] scsi: mpt3sas: Added support for nvme encapsulated
+ request message.
+Date: Wed, 8 Nov 2017 11:07:15 +0300
+Message-ID: <20171108080715.rn4c6ujlx5kuy46g@mwanda>
+References: <20171107113330.airlabvvr3l7oku6@mwanda>
+ <258eaa60cc970201a449e079c37a2dbb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:21650 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750704AbdKHIH2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 03:07:28 -0500
+Content-Disposition: inline
+In-Reply-To: <258eaa60cc970201a449e079c37a2dbb@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
 
-Hi 
+On Tue, Nov 07, 2017 at 10:29:20AM -0700, Sathya Prakash Veerichetty wrote:
+> Dan,
+> The MPI structures are of variable length and can go up to a maximum of
+> 128 bytes (a MPI frame size) and as MPI standard the variable length MPI
+> structures are left out with the last element as a single dword array.
+> Can we ignore the warning?
 
-[1.] One line summary of the problem:
-scsi_done from qla2x00_sp_compl race with scsi_queue_insert from scmd_eh_abort_handler()
-then cause the BUG_ON(blk_queued_rq(req)) trigger.
+Yeah.  These are a one time email but eventually other people running
+static checkers are going to be confused as well.
 
-[2.] Full description of the problem/report:
-The detailed scene is as following:
-cpu A                                                 cpu B
-kworker                                               interrupt
-                                                     
-scmd_eh_abort_handler()                               
-  -> scsi_try_to_abort_cmd()                   qla2x00_status_entry()   
-    -> qla2xxx_eh_abort()                        -> res = DID_RESET << 16 //case CS_ABORTED   
-      -> qla2x00_eh_wait_on_command()            -> qla2x00_sp_compl()                      
-        >>>>                                       +-> cmd->result = res; // --->P0_B
-          while (CMD_SP(cmd) && wait_iter--) {     +-> qla2x00_sp_free_dma()             
-            msleep(ABORT_POLLING_PERIOD);          |    -> CMD_SP(cmd) = NULL                             
-          }                                        |             
-        >>>>                                       |
-  -> scsi_noretry_cmd() //--->P2_A                 |
-  -> scsi_queue_insert()                           +-> scsi_done()
-    -> __scsi_queue_insert()                         -> blk_complete_request()
-      -> cmd->result = 0; // --->P0_A                  |
-        -> blk_requeue_request()                       |
-          -> blk_clear_rq_complete() // --->P1_A       |
-            -> elv_requeue_request()                   |
-              -> __elv_add_request()                   +-> blk_mark_rq_complete() //  ----> P1_B
-                // req will be queued here             +-> __blk_complete_request()
-                                                    BLK_SOFTIRQ
-                                                    scsi_softirq_done()
-                                                      -> scsi_decide_disposition() // ----> P2_B
-                                                      // scsi_cmnd->result is set to 0 in P0_A
-                                                      // so it will return SUCCESS
-                                                        -> scsi_finish_command()
-                                                          -> scsi_io_completion()
-                                                            -> scsi_end_request()
-                                                              -> blk_finish_request()  // BUG_ON(blk_queued_rq(req)) !!!
+> If not we need to modify the MPI structure to
+> have the NVMe_Command array to the maximum size of the frame (which is
+> typically 128 but can change across hardware generations)
 
-The scsi_cmd->result was set to DID_RESET << 16 at P0_B.
-At P2_A, the scsi_noretry_cmd() would return 0 and scsi_queue_insert() would be invoked.
-When the blk_clear_rq_complete() at P1_A was invoked before the blk_mark_rq_complete()
-at P1_B, __blk_complete_request() would be invoked in cpu B.
-At P2_B, the scsi_decide_disposition() will return SUCCESS as the scsi_cmd->result had been set to 0 at P0_A.
-Finally, the BUG_ON(blk_queued_rq(req)) in blk_finish_request() was triggered.
+To be honest, to declaring arrays as their maximum size is a pretty
+common idiom...
 
-Whether the scsi_done should be invoked in qla2xxx_sp_compl() when scsi_cmd is aborted ?
-When the P1_B is before P1_A, it will do nothing, otherwise, the panic comes up.
+	U8      NVMe_Command[4];                /*0x20 */
 
-Thanks
-Jianchao
+What does the 4 *mean* in this context?  As a human being, I would
+understand that to be a 4 byte array, but it's clearly not.  You're
+saying it's supposed to be a single dword array but why???  Is there
+something special and mandatory stored in the first 4 bytes?  Why can't
+it just be a zero size array?
+
+It would help if there were at least a comment or something.
+
+regards,
+dan carpenter
