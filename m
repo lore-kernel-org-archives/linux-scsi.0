@@ -1,42 +1,35 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 1/2] tcmu: Fix some memory corruption
-Date: Wed, 8 Nov 2017 11:43:44 +0300
-Message-ID: <20171108084344.hmqtb5k2puzh3sc6@mwanda>
+Subject: [PATCH 2/2] tcmu: Add a missing unlock on an error path
+Date: Wed, 8 Nov 2017 11:44:15 +0300
+Message-ID: <20171108084415.dn443crpreqwqoiw@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18948 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:19356 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750727AbdKHIoC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 03:44:02 -0500
+        with ESMTP id S1751499AbdKHIpH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 03:45:07 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Kenjiro Nakayama <nakayamakenjiro@gmail.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-"udev->nl_reply_supported" is an int but on 64 bit arches we are writing
-8 bytes of data to it so it corrupts four bytes beyond the end of the
-struct.
+We added a new error path here but we forgot to drop the lock first
+before returning.
 
-Fixes: b849b4567549 ("target: Add netlink command reply supported option for each device")
+Fixes: 0d44374c1aae ("tcmu: fix double se_cmd completion")
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 3be4c9696d19..07f2d95f7ae7 100644
+index 07f2d95f7ae7..cc2468a299d3 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
-@@ -1724,11 +1724,10 @@ static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
- 				ret = -ENOMEM;
- 				break;
- 			}
--			ret = kstrtol(arg_p, 0,
--					(long int *) &udev->nl_reply_supported);
-+			ret = kstrtoint(arg_p, 0, &udev->nl_reply_supported);
- 			kfree(arg_p);
- 			if (ret < 0)
--				pr_err("kstrtoul() failed for nl_reply_supported=\n");
-+				pr_err("kstrtoint() failed for nl_reply_supported=\n");
- 			break;
- 		default:
- 			break;
+@@ -888,6 +888,7 @@ tcmu_queue_cmd_ring(struct tcmu_cmd *tcmu_cmd)
+ 	ret = tcmu_setup_cmd_timer(tcmu_cmd);
+ 	if (ret) {
+ 		tcmu_cmd_free_data(tcmu_cmd, tcmu_cmd->dbi_cnt);
++		mutex_unlock(&udev->cmdr_lock);
+ 		return TCM_OUT_OF_RESOURCES;
+ 	}
+ 	entry->hdr.cmd_id = tcmu_cmd->cmd_id;
