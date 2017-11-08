@@ -1,106 +1,65 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2] scsi_debugfs: fix crash in scsi_show_rq()
-Date: Wed, 8 Nov 2017 11:37:40 +0800
-Message-ID: <20171108033733.GA30541@ming.t460p>
-References: <20171107152155.19949-1-ming.lei@redhat.com>
- <1510071227.2656.12.camel@wdc.com>
- <20171108005906.GE20599@ming.t460p>
- <1510103203.2656.59.camel@wdc.com>
- <20171108011543.GG20599@ming.t460p>
- <1510110263.3118.74.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42162 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751807AbdKHDhz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Nov 2017 22:37:55 -0500
-Content-Disposition: inline
-In-Reply-To: <1510110263.3118.74.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/6] target fixes for v4.15-rc1
+Date: Wed,  8 Nov 2017 04:31:46 +0000
+Message-ID: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "hare@suse.com" <hare@suse.com>, "osandov@fb.com" <osandov@fb.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
 
-Hi James,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Tue, Nov 07, 2017 at 07:04:23PM -0800, James Bottomley wrote:
-> On Wed, 2017-11-08 at 09:15 +0800, Ming Lei wrote:
-> > On Wed, Nov 08, 2017 at 01:06:44AM +0000, Bart Van Assche wrote:
-> > > 
-> > > On Wed, 2017-11-08 at 08:59 +0800, Ming Lei wrote:
-> > > > 
-> > > > On Tue, Nov 07, 2017 at 04:13:48PM +0000, Bart Van Assche wrote:
-> > > > > 
-> > > > > On Tue, 2017-11-07 at 23:21 +0800, Ming Lei wrote:
-> > > > > > 
-> > > > > > diff --git a/drivers/scsi/scsi_debugfs.c
-> > > > > > b/drivers/scsi/scsi_debugfs.c
-> > > > > > index 5e9755008aed..7a50878446b4 100644
-> > > > > > --- a/drivers/scsi/scsi_debugfs.c
-> > > > > > +++ b/drivers/scsi/scsi_debugfs.c
-> > > > > > @@ -9,7 +9,10 @@ void scsi_show_rq(struct seq_file *m, struct
-> > > > > > request *rq)
-> > > > > >  	int msecs = jiffies_to_msecs(jiffies - cmd-
-> > > > > > >jiffies_at_alloc);
-> > > > > >  	char buf[80];
-> > > > > >  
-> > > > > > -	__scsi_format_command(buf, sizeof(buf), cmd->cmnd,
-> > > > > > cmd->cmd_len);
-> > > > > > +	if (cmd->cmnd == scsi_req(rq)->cmd)
-> > > > > > +		__scsi_format_command(buf, sizeof(buf), cmd-
-> > > > > > >cmnd, cmd->cmd_len);
-> > > > > > +	else
-> > > > > > +		strcpy(buf, "unknown");
-> > > > > >  	seq_printf(m, ", .cmd=%s, .retries=%d, allocated
-> > > > > > %d.%03d s ago", buf,
-> > > > > >  		   cmd->retries, msecs / 1000, msecs %
-> > > > > > 1000);
-> > > > > >  }
-> > > > > 
-> > > > > This change introduces a new bug, namely that "unknown" will
-> > > > > appear in the debugfs output if (cmd->cmnd != scsi_req(rq)-
-> > > > > >cmd). Have you considered to use
-> > > > 
-> > > > Because there isn't reliable way to get the command safely, and I
-> > > > don't think it is a new bug.
-> > > > 
-> > > > > 
-> > > > > the test (cmd->cmnd != NULL) instead?
-> > > > 
-> > > > No, that is worse, because you may cause use-after-free if you
-> > > > read a freed buffer.
-> > > 
-> > > It seems like your operating mode is still to contradict all
-> > > feedback you get instead of trying to address the feedback you get?
-> > > 
-> > > Anyway, this is a debugging facility so I'm not convinced that
-> > > avoiding a (very sporadic) use-after-free in this code is better
-> > > than omitting very useful output.
-> > 
-> > OK, if no one objects the use-after-free, because this way may
-> > trigger warning from some utility, such as KASAN.
-> 
-> Good grief, this list is supposed to be for technical discussions not
-> kindergarten playground squabbles; could you both please act your age?
+Hi all,
 
-In my reply, I mentioned I don't object to check NULL any more, and only
-provide one extra input about possible KASAN's complaint, which may annoy
-people.
+Here are the outstanding target bugfixes in queue for v4.15-rc1
+code.
 
-> 
-> The patch as proposed would lose us all information about PI commands,
-> hence the objection.  For the concern about use after free on the NULL
-> check, what about modifying sd_uninit_command() to NULL SCpnt->cmnd
-> before it calls mempool_free()?  That will likely eliminate the race
-> window for printing the command.
+Patch #1 addresses a long standing bug wrt to QUEUE_FULL and
+SCSI task attribute handling, that results in SCSI task related
+counters getting updated multiple times during QUEUE_FULL.
 
-That may decrease the window, but can't eliminate it because of write/read
-can be reordered.
+It primarly effects hosts using ORDERED tasks, which depend upon
+these counters to know when to delay incoming tasks.
 
-But looks better, will cook a patch soon, together with using READ_ONCE() and
-WRITE_ONCE().
+Patch #2 is for a recent v4.11+ regression, which during ABORT
+of COMPARE_AND_WRITE can result in se_device->cam_sem getting
+leaked due to se_cmd->transport_complete_callback() being
+skipped.
 
-Thanks,
-Ming
+Patch #3 addresses a possible end-less loop during QUEUE_FULL +
+TFO->write_pending() failure, allowing se_cmd quiese to properly
+complete the outstanding descriptor when requested.
+
+Patch #4 addresses a use-after-tree that was hit in the field,
+involving pre-backend execution se_cmd exceptions + subsequent
+ABORT_TASK for a matching tag.
+
+Patch #5 + #6 address a iscsi-target TMR related memory and
+se_cmd->cmd_kref reference leaks respectively.
+
+We've been testing #4, #5, and #6 internally on v4.1.y stable
+code, and have not run into additional regressions.
+
+The rest are straight-forward.
+
+Please review.
+
+--nab
+
+Nicholas Bellinger (6):
+  target: Fix QUEUE_FULL + SCSI task attribute handling
+  target: Fix caw_sem leak in transport_generic_request_failure
+  target: Fix quiese during transport_write_pending_qf endless loop
+  target: Avoid early CMD_T_PRE_EXECUTE failures during ABORT_TASK
+  iscsi-target: Make TASK_REASSIGN use proper se_cmd->cmd_kref
+  iscsi-target: Fix non-immediate TMR reference leak
+
+ drivers/target/iscsi/iscsi_target.c    | 30 ++++++++++++++----------------
+ drivers/target/target_core_tmr.c       |  9 +++++++++
+ drivers/target/target_core_transport.c | 26 +++++++++++++++++++++++---
+ include/target/target_core_base.h      |  1 +
+ 4 files changed, 47 insertions(+), 19 deletions(-)
+
+-- 
+1.9.1
