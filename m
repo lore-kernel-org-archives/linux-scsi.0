@@ -1,63 +1,68 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] scsi: ppa: mark expected switch fall-throughs
-Date: Wed, 8 Nov 2017 11:17:39 -0600
-Message-ID: <20171108171739.GA9139@embeddedor.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 1/4] qla2xxx_nvmet: Add files for FC-NVMe Target support
+Date: Wed, 8 Nov 2017 17:35:04 +0000
+Message-ID: <08505C4B-8371-4B8D-82F3-0268912EE3EB@cavium.com>
+References: <20171106195530.17408-1-himanshu.madhani@cavium.com>
+ <20171106195530.17408-2-himanshu.madhani@cavium.com>
+ <e24db463-4b2c-611a-ddef-e217fa23962a@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0073.outbound.protection.outlook.com ([104.47.41.73]:61216
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750818AbdKHRfH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Nov 2017 12:35:07 -0500
+In-Reply-To: <e24db463-4b2c-611a-ddef-e217fa23962a@broadcom.com>
+Content-Language: en-US
+Content-ID: <56E768218F423949A246AAEA7539AAE7@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+Hi James,=20
 
-Addresses-Coverity-ID: 114988
-Addresses-Coverity-ID: 114989
-Addresses-Coverity-ID: 114990
-Addresses-Coverity-ID: 114991
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
- drivers/scsi/ppa.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> On Nov 7, 2017, at 9:05 AM, James Smart <james.smart@broadcom.com> wrote:
+>=20
+> On 11/6/2017 11:55 AM, Himanshu Madhani wrote:
+>> From: Anil Gurumurthy <anil.gurumurthy@cavium.com>
+>>=20
+>> +static struct nvmet_fc_target_template qla_nvmet_fc_transport =3D {
+>> +	.targetport_delete	=3D qla_nvmet_targetport_delete,
+>> +	.xmt_ls_rsp		=3D qla_nvmet_ls_rsp,
+>> +	.fcp_op			=3D qla_nvmet_fcp_op,
+>> +	.fcp_abort		=3D qla_nvmet_fcp_abort,
+>> +	.fcp_req_release	=3D qla_nvmet_fcp_req_release,
+>> +	.max_hw_queues		=3D 8,
+>> +	.max_sgl_segments	=3D 128,
+>> +	.max_dif_sgl_segments	=3D 64,
+>> +	.dma_boundary		=3D 0xFFFFFFFF,
+>> +	.target_features	=3D NVMET_FCTGTFEAT_READDATA_RSP |
+>> +					NVMET_FCTGTFEAT_CMD_IN_ISR |
+>> +					NVMET_FCTGTFEAT_OPDONE_IN_ISR,
+>> +	.target_priv_sz	=3D sizeof(struct nvme_private),
+>> +};
+>> +#endif
+>>=20
+>=20
+> Do you really need the xxx_IN_ISR features ?  e.g. are you calling the nv=
+met_fc cmd receive and op done calls in ISR context or something that can't=
+/shouldn't continue into the nvmet layers ?
+>=20
+> I was looking to remove those flags and the work_q items behind it as I b=
+elieved the qla2xxx driver called everything in a deferred callback.
+>=20
 
-diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
-index 7be5823..ee86a0c 100644
---- a/drivers/scsi/ppa.c
-+++ b/drivers/scsi/ppa.c
-@@ -724,6 +724,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
- 			return 0;
- 		}
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
- 	case 3:		/* Phase 3 - Ready to accept a command */
- 		w_ctr(ppb, 0x0c);
-@@ -733,6 +734,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
- 		if (!ppa_send_command(cmd))
- 			return 0;
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
- 	case 4:		/* Phase 4 - Setup scatter/gather buffers */
- 		if (scsi_bufflen(cmd)) {
-@@ -746,6 +748,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
- 		}
- 		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
- 	case 5:		/* Phase 5 - Data transfer stage */
- 		w_ctr(ppb, 0x0c);
-@@ -758,6 +761,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
- 		if (retv == 0)
- 			return 1;
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
- 	case 6:		/* Phase 6 - Read status/message */
- 		cmd->result = DID_OK << 16;
--- 
-2.7.4
+Agree we do nvme_fc* callbacks in deferred context, but without the xxx_IN_=
+ISR flag during NVMe Target template registration, we were running into cra=
+sh due to recursive spin_lock held as part of CTIO response in our driver.
+
+
+> -- james
+>=20
+>=20
+
+Thanks,
+- Himanshu
