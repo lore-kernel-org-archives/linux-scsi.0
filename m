@@ -1,47 +1,30 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH] tcmu: clean up the scatter helper
-Date: Wed, 8 Nov 2017 16:49:12 -0600
-Message-ID: <5ffcb5e2-e53a-3b6d-496b-9cd24e860e50@linux.vnet.ibm.com>
-References: <1499927630-19785-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <1501453144.1499.24.camel@haakon3.daterainc.com>
- <1ff87e2e-ad52-f985-e1cb-1d6cc26392b4@linux.vnet.ibm.com>
- <5A0388C3.8020702@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi_transport_fc: add 64GBIT and 128GBIT port speed definitions
+Date: Wed, 08 Nov 2017 18:01:27 -0500
+Message-ID: <yq1lgjgz86w.fsf@oracle.com>
+References: <20171103232608.26460-1-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5A0388C3.8020702@redhat.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, lixiubo@cmss.chinamobile.com
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38499 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752534AbdKHXBe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 18:01:34 -0500
+In-Reply-To: <20171103232608.26460-1-jsmart2021@gmail.com> (James Smart's
+        message of "Fri, 3 Nov 2017 16:26:08 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
 
-> On 11/08/2017 04:39 PM, Bryant G. Ly wrote:
->> On 7/30/17 5:19 PM, Nicholas A. Bellinger wrote:
->>
->>> On Thu, 2017-07-13 at 14:33 +0800, lixiubo@cmss.chinamobile.com wrote:
->>>> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
->>>>
->>>> Add some comments to make the scatter code to be more readable.
->>>>
->>>> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
->>>> ---
->>>>  drivers/target/target_core_user.c | 30 +++++++++++++++++++++++++-----
->>>>  1 file changed, 25 insertions(+), 5 deletions(-)
->>>>
->>> Applied to target-pending/for-next.
->>>
->>> Thanks Xiubo + MNC.
->>>
->> This one seems to also be missing from the tree. 
->>
-> I ported this one to my patchset that is built without the
-> "tcmu: Add fifo type waiter list support to avoid starvation" patch:
+James,
+
+> Add 64GBIT and 128GBIT port speed definitions.
 >
-> https://www.spinics.net/lists/target-devel/msg16153.html
->
-Thanks Mike! I was trying to catch up and I missed all that. I see that the current for-next has everything. 
+> Upcoming hardware will reference these speeds.
 
--Bryant
+Applied to 4.15/scsi-queue. Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
