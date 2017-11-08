@@ -1,29 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V7 8/8] scsi: sd_zbc: Fix zone information initialization
-Date: Wed, 08 Nov 2017 18:46:04 -0500
-Message-ID: <yq1wp30wczn.fsf@oracle.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH V7 6/8] scsi: sd_zbc: Initialize device request queue
+ zoned data
+Date: Thu, 9 Nov 2017 08:54:00 +0900
+Message-ID: <c7d023a9-68bd-d78b-a2c0-702d35b6f0ed@wdc.com>
 References: <20171108081118.7632-1-damien.lemoal@wdc.com>
-        <20171108081118.7632-9-damien.lemoal@wdc.com>
+ <20171108081118.7632-7-damien.lemoal@wdc.com> <yq160akxrsb.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171108081118.7632-9-damien.lemoal@wdc.com> (Damien Le Moal's
-        message of "Wed, 8 Nov 2017 17:11:18 +0900")
+In-Reply-To: <yq160akxrsb.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Martin,
 
-Damien,
+On 11/9/17 08:41, Martin K. Petersen wrote:
+> 
+> Damien,
+> 
+>> wait for the disk capacity and number of zones to stabilize on the
+>> second revalidation pass to allocate and initialize the bitmaps.
+> 
+> Stabilize how?
 
-> Make sure that the device request queue zone information (number of
-> zones and zone bitmaps) are reinitialized if the number of zones
-> changes (e.g. on a drive capacity change on revalidate).
-
-This should probably be part of patch 6.
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+If RC_BASIS is 0, the capacity changes after the first report zones...
+In any case, as you suggested, patch 8 should be merged with this one.
+I will fix that and post a v8.
+Thank you for the review.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Damien Le Moal,
+Western Digital
