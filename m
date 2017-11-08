@@ -1,58 +1,62 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 6/6] iscsi-target: Fix non-immediate TMR reference leak
-Date: Wed,  8 Nov 2017 04:31:52 +0000
-Message-ID: <1510115512-15617-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/6] target: Fix quiese during transport_write_pending_qf endless loop
+Date: Wed,  8 Nov 2017 04:31:49 +0000
+Message-ID: <1510115512-15617-4-git-send-email-nab@linux-iscsi.org>
 References: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54052 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751956AbdKHEVl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 23:21:41 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, Potnuri Bharat Teja <bharat@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a se_cmd->cmd_kref reference leak that can
-occur when a non immediate TMR is proceeded our of command
-sequence number order, and CMDSN_LOWER_THAN_EXP is returned
-by iscsit_sequence_cmd().
+This patch fixes a potential end-less loop during QUEUE_FULL,
+where cmd->se_tfo->write_pending() callback fails repeatedly
+but __transport_wait_for_tasks() has already been invoked to
+quiese the outstanding se_cmd descriptor.
 
-To address this bug, call target_put_sess_cmd() during this
-special case following what iscsit_process_scsi_cmd() does
-upon CMDSN_LOWER_THAN_EXP.
+To address this bug, this patch adds a CMD_T_STOP|CMD_T_ABORTED
+check within transport_write_pending_qf() and invokes the
+existing se_cmd->t_transport_stop_comp to signal quiese
+completion back to __transport_wait_for_tasks().
 
 Cc: Mike Christie <mchristi@redhat.com>
 Cc: Hannes Reinecke <hare@suse.com>
+Cc: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Cc: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Cc: Potnuri Bharat Teja <bharat@chelsio.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/target/target_core_transport.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 048d422..3b7bb58 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -2094,12 +2094,14 @@ static enum tcm_tmreq_table iscsit_convert_tmf(u8 iscsi_tmf)
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index d02218c..0e89db8 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2560,7 +2560,20 @@ void transport_kunmap_data_sg(struct se_cmd *cmd)
  
- 	if (!(hdr->opcode & ISCSI_OP_IMMEDIATE)) {
- 		int cmdsn_ret = iscsit_sequence_cmd(conn, cmd, buf, hdr->cmdsn);
--		if (cmdsn_ret == CMDSN_HIGHER_THAN_EXP)
-+		if (cmdsn_ret == CMDSN_HIGHER_THAN_EXP) {
- 			out_of_order_cmdsn = 1;
--		else if (cmdsn_ret == CMDSN_LOWER_THAN_EXP)
-+		} else if (cmdsn_ret == CMDSN_LOWER_THAN_EXP) {
-+			target_put_sess_cmd(&cmd->se_cmd);
- 			return 0;
--		else if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER)
-+		} else if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER) {
- 			return -1;
-+		}
- 	}
- 	iscsit_ack_from_expstatsn(conn, be32_to_cpu(hdr->exp_statsn));
+ static void transport_write_pending_qf(struct se_cmd *cmd)
+ {
++	unsigned long flags;
+ 	int ret;
++	bool stop;
++
++	spin_lock_irqsave(&cmd->t_state_lock, flags);
++	stop = (cmd->transport_state & (CMD_T_STOP | CMD_T_ABORTED));
++	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++
++	if (stop) {
++		pr_debug("%s:%d CMD_T_STOP|CMD_T_ABORTED for ITT: 0x%08llx\n",
++			__func__, __LINE__, cmd->tag);
++		complete_all(&cmd->t_transport_stop_comp);
++		return;
++	}
  
+ 	ret = cmd->se_tfo->write_pending(cmd);
+ 	if (ret) {
 -- 
 1.9.1
