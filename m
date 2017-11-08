@@ -1,65 +1,56 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH 0/3] zfcp: timer_setup() refactoring feature for v4.15-rc1
-Date: Wed, 8 Nov 2017 10:59:50 -0800
-Message-ID: <CAGXu5jJJPYY+BnvJsbwjN2OCJ9bBFPzb+92XFU8pYnDcRjWD_g@mail.gmail.com>
-References: <20171108141709.79074-1-maier@linux.vnet.ibm.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/6] target: Fix quiese during transport_write_pending_qf
+ endless loop
+Date: Wed, 8 Nov 2017 15:29:27 -0600
+Message-ID: <6892cffb-3734-7bd7-aa42-1d91b70ee57b@linux.vnet.ibm.com>
+References: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
+ <1510115512-15617-4-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:52562 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751716AbdKHS7w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 13:59:52 -0500
-Received: by mail-io0-f196.google.com with SMTP id f20so7058954ioj.9
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Nov 2017 10:59:52 -0800 (PST)
-In-Reply-To: <20171108141709.79074-1-maier@linux.vnet.ibm.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33114 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753035AbdKHV3f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 16:29:35 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vA8LNsSj110360
+        for <linux-scsi@vger.kernel.org>; Wed, 8 Nov 2017 16:29:34 -0500
+Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2e48fr4bj3-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Nov 2017 16:29:33 -0500
+Received: from localhost
+        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Wed, 8 Nov 2017 16:29:33 -0500
+In-Reply-To: <1510115512-15617-4-git-send-email-nab@linux-iscsi.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
-
-On Wed, Nov 8, 2017 at 6:17 AM, Steffen Maier <maier@linux.vnet.ibm.com> wrote:
-> Hi all,
->
-> here is a small series for the timer_setup() refactoring of zfcp.
-> We target it for the merge window to land in v4.15-rc1.
->
-> Unfortunately, they don't seem to apply to the current state of neither
-> James' misc branch nor Martin's 4.15/scsi-queue branch,
-> because they depend on:
-> v4.14-rc3 686fef928bba ("timer: Prepare to change timer callback argument type")
-> and
-> v4.14-rc7 ab31fd0ce65e ("scsi: zfcp: fix erp_action use-before-initialize in REC action trace").
->
-> However, they do apply to Linus' tree for v4.14-rc7 or later and
-> thus they would also apply for the upcoming merge window.
->
-> In http://www.spinics.net/lists/linux-scsi/msg114581.html I saw a decision
-> to have such changes go in via the timer tree. I would be happy with that.
->
-> Kees Cook (1):
->   zfcp: convert timers to use timer_setup()
->
-> Steffen Maier (2):
->   zfcp: purely mechanical update using timer API, plus blank lines
->   zfcp: drop open coded assignments of timer_list.function
-
-These looks great, thanks!
-
--Kees
-
->
->  drivers/s390/scsi/zfcp_erp.c | 15 +++++++++------
->  drivers/s390/scsi/zfcp_ext.h |  2 +-
->  drivers/s390/scsi/zfcp_fsf.c | 13 ++++++-------
->  3 files changed, 16 insertions(+), 14 deletions(-)
->
-> --
-> 2.13.5
->
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, Potnuri Bharat Teja <bharat@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>
 
 
-
--- 
-Kees Cook
-Pixel Security
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+> This patch fixes a potential end-less loop during QUEUE_FULL,
+> where cmd->se_tfo->write_pending() callback fails repeatedly
+> but __transport_wait_for_tasks() has already been invoked to
+> quiese the outstanding se_cmd descriptor.
+>
+> To address this bug, this patch adds a CMD_T_STOP|CMD_T_ABORTED
+> check within transport_write_pending_qf() and invokes the
+> existing se_cmd->t_transport_stop_comp to signal quiese
+> completion back to __transport_wait_for_tasks().
+>
+> Cc: Mike Christie <mchristi@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Cc: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+> Cc: Potnuri Bharat Teja <bharat@chelsio.com>
+> Cc: Sagi Grimberg <sagi@grimberg.me>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>
+Reviewed-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
