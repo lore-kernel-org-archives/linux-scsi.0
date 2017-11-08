@@ -1,19 +1,24 @@
 From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Subject: RE: [PATCH 1/2] scsi: mpt3sas: cleanup _scsih_pcie_enumeration_event()
-Date: Wed, 8 Nov 2017 09:02:36 -0700
-Message-ID: <8864f0cfd553b70171d8bffac6587e32@mail.gmail.com>
-References: <20171108082101.wwseluw5bwnsgwue@mwanda>
+Subject: RE: [patch 2/2] scsi: mpt3sas: remove a stray KERN_INFO
+Date: Wed, 8 Nov 2017 09:03:17 -0700
+Message-ID: <c153aa212e6c8918020602fba7e975ce@mail.gmail.com>
+References: <20171108083819.u2yufaeamh2vffac@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20171108082101.wwseluw5bwnsgwue@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:47596 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752654AbdKHQDT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2017 11:03:19 -0500
+Received: by mail-qk0-f181.google.com with SMTP id m189so3926395qke.4
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Nov 2017 08:03:19 -0800 (PST)
+In-Reply-To: <20171108083819.u2yufaeamh2vffac@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Dan Carpenter <dan.carpenter@oracle.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 Cc: Chaitra Basappa <chaitra.basappa@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 Thanks.
-
 Acked-by: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 
 -----Original Message-----
@@ -23,52 +28,26 @@ To: Sathya Prakash; Suganath Prabu Subramani
 Cc: Chaitra P B; James E.J. Bottomley; Martin K. Petersen;
 MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
 kernel-janitors@vger.kernel.org
-Subject: [PATCH 1/2] scsi: mpt3sas: cleanup
-_scsih_pcie_enumeration_event()
+Subject: [patch 2/2] scsi: mpt3sas: remove a stray KERN_INFO
 
-The indenting wasn't right, because the last two prints weren't indented
-far enough.  Also it used pr_info() where it was supposed to use
-pr_cont().  I reversed the if statement and pulled the code in one tab and
-did a couple other minor cleanups.
+pr_info() has a KERN_INFO already so the second KERN_INFO isn't needed.
 
-Fixes: 4318c7347847 ("scsi: mpt3sas: Handle NVMe PCIe device related
-events generated from firmware.")
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 3a9438a1704e..93b45e618edb 100644
+index 3a9438a1704e..b258f210120a 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -7700,17 +7700,18 @@ _scsih_pcie_enumeration_event(struct
+@@ -8683,7 +8684,7 @@ _scsih_mark_responding_pcie_device(struct
 MPT3SAS_ADAPTER *ioc,
- 	Mpi26EventDataPCIeEnumeration_t *event_data =
- 		(Mpi26EventDataPCIeEnumeration_t *)fw_event->event_data;
 
--	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK) {
--		pr_info(MPT3SAS_FMT "pcie enumeration event: (%s) Flag
-0x%02x",
--			ioc->name,
--			((event_data->ReasonCode ==
--			MPI26_EVENT_PCIE_ENUM_RC_STARTED) ?
--			"started" : "completed"), event_data->Flags);
-+	if (!(ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK))
-+		return;
-+
-+	pr_info(MPT3SAS_FMT "pcie enumeration event: (%s) Flag 0x%02x",
-+		ioc->name,
-+		(event_data->ReasonCode ==
-MPI26_EVENT_PCIE_ENUM_RC_STARTED) ?
-+			"started" : "completed",
-+		event_data->Flags);
- 	if (event_data->EnumerationStatus)
--		pr_info("enumeration_status(0x%08x)",
--		    le32_to_cpu(event_data->EnumerationStatus));
--	pr_info("\n");
--	}
-+		pr_cont("enumeration_status(0x%08x)",
-+			le32_to_cpu(event_data->EnumerationStatus));
-+	pr_cont("\n");
- }
-
- /**
+ 			if (pcie_device->handle ==
+pcie_device_pg0->DevHandle)
+ 				goto out;
+-			pr_info(KERN_INFO "\thandle changed
+from(0x%04x)!!!\n",
++			pr_info("\thandle changed from(0x%04x)!!!\n",
+ 			    pcie_device->handle);
+ 			pcie_device->handle = pcie_device_pg0->DevHandle;
+ 			if (sas_target_priv_data)
