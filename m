@@ -1,68 +1,74 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 1/4] qla2xxx_nvmet: Add files for FC-NVMe Target support
-Date: Wed, 8 Nov 2017 17:35:04 +0000
-Message-ID: <08505C4B-8371-4B8D-82F3-0268912EE3EB@cavium.com>
-References: <20171106195530.17408-1-himanshu.madhani@cavium.com>
- <20171106195530.17408-2-himanshu.madhani@cavium.com>
- <e24db463-4b2c-611a-ddef-e217fa23962a@broadcom.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
+ scsi_mq_get_budget()
+Date: Wed, 8 Nov 2017 10:57:23 -0700
+Message-ID: <e699ee0f-1ff9-42be-8283-7cdaea65b0b3@kernel.dk>
+References: <20171104015534.32684-1-ming.lei@redhat.com>
+ <adb7f6bd-bf0d-8176-808b-32a84ac4273a@kernel.dk>
+ <1509997522.2409.58.camel@wdc.com> <20171107021125.GB15090@ming.t460p>
+ <1510071607.2656.17.camel@wdc.com> <20171108003934.GB20599@ming.t460p>
+ <26ee805b-883f-d588-5649-13700244b6e8@kernel.dk>
+ <20171108025830.GA30129@ming.t460p>
+ <1a153ff3-9d53-d347-cb16-b8480e690221@kernel.dk>
+ <1510159293.24237.19.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0073.outbound.protection.outlook.com ([104.47.41.73]:61216
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750818AbdKHRfH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Nov 2017 12:35:07 -0500
-In-Reply-To: <e24db463-4b2c-611a-ddef-e217fa23962a@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1510159293.24237.19.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <56E768218F423949A246AAEA7539AAE7@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "john.garry@huawei.com" <john.garry@huawei.com>, "osandov@fb.com" <osandov@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi James,=20
+On 11/08/2017 09:41 AM, Bart Van Assche wrote:
+> On Tue, 2017-11-07 at 20:06 -0700, Jens Axboe wrote:
+>> At this point, I have no idea what Bart's setup looks like. Bart, it
+>> would be REALLY helpful if you could tell us how you are reproducing
+>> your hang. I don't know why this has to be dragged out.
+> 
+> Hello Jens,
+> 
+> It is a disappointment to me that you have allowed Ming to evaluate other
+> approaches than reverting "blk-mq: don't handle TAG_SHARED in restart". That
+> patch namely replaces an algorithm that is trusted by the community with an
+> algorithm of which even Ming acknowledged that it is racy. A quote from [1]:
+> "IO hang may be caused if all requests are completed just before the current
+> SCSI device is added to shost->starved_list". I don't know of any way to fix
+> that race other than serializing request submission and completion by adding
+> locking around these actions, which is something we don't want. Hence my
+> request to revert that patch.
 
-> On Nov 7, 2017, at 9:05 AM, James Smart <james.smart@broadcom.com> wrote:
->=20
-> On 11/6/2017 11:55 AM, Himanshu Madhani wrote:
->> From: Anil Gurumurthy <anil.gurumurthy@cavium.com>
->>=20
->> +static struct nvmet_fc_target_template qla_nvmet_fc_transport =3D {
->> +	.targetport_delete	=3D qla_nvmet_targetport_delete,
->> +	.xmt_ls_rsp		=3D qla_nvmet_ls_rsp,
->> +	.fcp_op			=3D qla_nvmet_fcp_op,
->> +	.fcp_abort		=3D qla_nvmet_fcp_abort,
->> +	.fcp_req_release	=3D qla_nvmet_fcp_req_release,
->> +	.max_hw_queues		=3D 8,
->> +	.max_sgl_segments	=3D 128,
->> +	.max_dif_sgl_segments	=3D 64,
->> +	.dma_boundary		=3D 0xFFFFFFFF,
->> +	.target_features	=3D NVMET_FCTGTFEAT_READDATA_RSP |
->> +					NVMET_FCTGTFEAT_CMD_IN_ISR |
->> +					NVMET_FCTGTFEAT_OPDONE_IN_ISR,
->> +	.target_priv_sz	=3D sizeof(struct nvme_private),
->> +};
->> +#endif
->>=20
->=20
-> Do you really need the xxx_IN_ISR features ?  e.g. are you calling the nv=
-met_fc cmd receive and op done calls in ISR context or something that can't=
-/shouldn't continue into the nvmet layers ?
->=20
-> I was looking to remove those flags and the work_q items behind it as I b=
-elieved the qla2xxx driver called everything in a deferred callback.
->=20
+I was reluctant to revert it, in case we could work out a better way of
+doing it. As I mentioned in the other replies, it's not exactly the
+prettiest or most efficient. However, since we currently don't have
+a good solution for the issue, I'm fine with reverting that patch.
 
-Agree we do nvme_fc* callbacks in deferred context, but without the xxx_IN_=
-ISR flag during NVMe Target template registration, we were running into cra=
-sh due to recursive spin_lock held as part of CTIO response in our driver.
+> Regarding the test I run, here is a summary of what I mentioned in previous
+> e-mails:
+> * I modified the SRP initiator such that the SCSI target queue depth is
+>   reduced to one by setting starget->can_queue to 1 from inside
+>   scsi_host_template.target_alloc.
+> * With that modified SRP initiator I run the srp-test software as follows
+>   until something breaks:
+>   while ./run_tests -f xfs -d -e deadline -r 60; do :; done
 
+What kernel options are needed? Where do I download everything I need?
 
-> -- james
->=20
->=20
+In other words, would it be possible to do a fuller guide for getting
+this setup and running?
 
-Thanks,
-- Himanshu
+I'll run my simple test case as well, since it's currently breaking
+basically everywhere.
+
+> Today a system with at least one InfiniBand HCA is required to run that test.
+> When I have the time I will post the SRP initiator and target patches on the
+> linux-rdma mailing list that make it possible to run that test against the
+> SoftRoCE driver (drivers/infiniband/sw/rxe). The only hardware required to
+> use that driver is an Ethernet adapter.
+
+OK, I guess I can't run it then... I'll have to rely on your testing.
+
+-- 
+Jens Axboe
