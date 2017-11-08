@@ -1,250 +1,208 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] SCSI: don't get target/host busy_count in
- scsi_mq_get_budget()
-Date: Wed, 8 Nov 2017 23:59:10 +0800
-Message-ID: <20171108155903.GA11003@ming.t460p>
-References: <1510071607.2656.17.camel@wdc.com>
- <74925156-b425-de0e-de39-0a166ef5c5f3@kernel.dk>
- <49b5c202-0303-85f7-102a-fcc013e7256e@kernel.dk>
- <292e3f7d-cfe3-840a-5a5e-d00e01239152@kernel.dk>
- <a6a505f5-d374-2878-6c55-116255795346@kernel.dk>
- <20171108010345.GF20599@ming.t460p>
- <81215aae-2755-1b4c-b7bd-1aef5d1dfa1b@kernel.dk>
- <20171108031204.GB30129@ming.t460p>
- <8450283f-4882-0f2f-fdc8-8ab02f1dc333@kernel.dk>
- <20171108062041.GB30541@ming.t460p>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH V3] scsi_debugfs: fix crash in scsi_show_rq()
+Date: Wed, 08 Nov 2017 08:01:08 -0800
+Message-ID: <1510156868.3121.7.camel@HansenPartnership.com>
+References: <20171108132149.3769-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171108062041.GB30541@ming.t460p>
+In-Reply-To: <20171108132149.3769-1-ming.lei@redhat.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "loberman@redhat.com" <loberman@redhat.com>
+To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, John Garry <john.garry@huawei.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 08, 2017 at 02:20:41PM +0800, Ming Lei wrote:
-> On Tue, Nov 07, 2017 at 08:17:59PM -0700, Jens Axboe wrote:
-> > On 11/07/2017 08:12 PM, Ming Lei wrote:
-> > > On Tue, Nov 07, 2017 at 08:01:48PM -0700, Jens Axboe wrote:
-> > >> On 11/07/2017 06:03 PM, Ming Lei wrote:
-> > >>> On Tue, Nov 07, 2017 at 03:06:31PM -0700, Jens Axboe wrote:
-> > >>>> On 11/07/2017 10:36 AM, Jens Axboe wrote:
-> > >>>>> On 11/07/2017 10:10 AM, Jens Axboe wrote:
-> > >>>>>> On 11/07/2017 09:29 AM, Jens Axboe wrote:
-> > >>>>>>> On 11/07/2017 09:20 AM, Bart Van Assche wrote:
-> > >>>>>>>> On Tue, 2017-11-07 at 10:11 +0800, Ming Lei wrote:
-> > >>>>>>>>> If you can reproduce, please provide me at least the following log
-> > >>>>>>>>> first:
-> > >>>>>>>>>
-> > >>>>>>>>> 	find /sys/kernel/debug/block -name tags | xargs cat | grep busy
-> > >>>>>>>>>
-> > >>>>>>>>> If any pending requests arn't completed, please provide the related
-> > >>>>>>>>> info in dbgfs about where is the request.
-> > >>>>>>>>
-> > >>>>>>>> Every time I ran the above or a similar command its output was empty. I
-> > >>>>>>>> assume that's because the hang usually occurs in a phase where these debugfs
-> > >>>>>>>> attributes either have not yet been created or have already disappeared.
-> > >>>>>>>
-> > >>>>>>> Bart, do you still see a hang with the patch that fixes the tag leak when
-> > >>>>>>> we fail to get a dispatch budget?
-> > >>>>>>>
-> > >>>>>>> https://marc.info/?l=linux-block&m=151004881411480&w=2
-> > >>>>>>>
-> > >>>>>>> I've run a lot of stability testing here, and I haven't run into any
-> > >>>>>>> issues. This is with shared tags as well. So if you still see the failure
-> > >>>>>>> case with the current tree AND the above patch, then I'll try and get
-> > >>>>>>> a test case setup that hits it too so we can get to the bottom of this.
-> > >>>>>>
-> > >>>>>> Ming, I managed to reproduce the hang using null_blk. Note this is
-> > >>>>>> WITHOUT the patch mentioned above, running with that now.
-> > >>>>>>
-> > >>>>>> # modprobe null_blk queue_mode=2 nr_devices=4 shared_tags=1 submit_queues=1 hw_queue_depth=1
-> > >>>>>>
-> > >>>>>> and using this fio file:
-> > >>>>>>
-> > >>>>>> [global]
-> > >>>>>> bs=4k
-> > >>>>>> rw=randread
-> > >>>>>> norandommap
-> > >>>>>> direct=1
-> > >>>>>> ioengine=libaio
-> > >>>>>> iodepth=4
-> > >>>>>>
-> > >>>>>> [nullb0]
-> > >>>>>> filename=/dev/nullb0
-> > >>>>>> [nullb1]
-> > >>>>>> filename=/dev/nullb1
-> > >>>>>> [nullb2]
-> > >>>>>> filename=/dev/nullb2
-> > >>>>>> [nullb3]
-> > >>>>>> filename=/dev/nullb3
-> > >>>>>>
-> > >>>>>> it seemed to keep running, but it hung when exiting. The troublesome
-> > >>>>>> device was nullb1:
-> > >>>>>>
-> > >>>>>> [  492.513374] INFO: task fio:3263 blocked for more than 120 seconds.
-> > >>>>>> [  492.520782]       Not tainted 4.14.0-rc7+ #499
-> > >>>>>> [  492.526247] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> > >>>>>> [  492.535904] fio             D13208  3263   3211 0x00000000
-> > >>>>>> [  492.542535] Call Trace:
-> > >>>>>> [  492.545764]  __schedule+0x279/0x720
-> > >>>>>> [  492.550151]  schedule+0x33/0x90
-> > >>>>>> [  492.554145]  io_schedule+0x16/0x40
-> > >>>>>> [  492.558435]  blk_mq_get_tag+0x148/0x250
-> > >>>>>> [  492.563211]  ? finish_wait+0x90/0x90
-> > >>>>>> [  492.567693]  blk_mq_get_request+0xf0/0x3e0
-> > >>>>>> [  492.572760]  blk_mq_make_request+0xe2/0x690
-> > >>>>>> [  492.577913]  generic_make_request+0xfc/0x2f0
-> > >>>>>> [  492.583177]  submit_bio+0x64/0x120
-> > >>>>>> [  492.587475]  ? set_page_dirty_lock+0x4b/0x60
-> > >>>>>> [  492.592736]  ? submit_bio+0x64/0x120
-> > >>>>>> [  492.597309]  ? bio_set_pages_dirty+0x55/0x60
-> > >>>>>> [  492.602570]  blkdev_direct_IO+0x388/0x3c0
-> > >>>>>> [  492.607546]  ? free_ioctx_users+0xe0/0xe0
-> > >>>>>> [  492.612511]  ? blk_mq_dispatch_rq_list+0x238/0x3a0
-> > >>>>>> [  492.618353]  ? _raw_spin_unlock+0xe/0x20
-> > >>>>>> [  492.623227]  generic_file_read_iter+0xb3/0xa00
-> > >>>>>> [  492.628682]  ? generic_file_read_iter+0xb3/0xa00
-> > >>>>>> [  492.634334]  ? security_file_permission+0x9b/0xc0
-> > >>>>>> [  492.640114]  blkdev_read_iter+0x35/0x40
-> > >>>>>> [  492.644877]  aio_read+0xc5/0x120
-> > >>>>>> [  492.648973]  ? aio_read_events+0x24c/0x340
-> > >>>>>> [  492.654124]  ? __might_sleep+0x4a/0x80
-> > >>>>>> [  492.658800]  do_io_submit+0x47c/0x5e0
-> > >>>>>> [  492.663373]  ? do_io_submit+0x47c/0x5e0
-> > >>>>>> [  492.668234]  SyS_io_submit+0x10/0x20
-> > >>>>>> [  492.672715]  ? SyS_io_submit+0x10/0x20
-> > >>>>>> [  492.677394]  entry_SYSCALL_64_fastpath+0x13/0x94
-> > >>>>>> [  492.683039] RIP: 0033:0x7f83d1871717
-> > >>>>>> [  492.687521] RSP: 002b:00007ffd38fe5a88 EFLAGS: 00000202 ORIG_RAX: 00000000000000d1
-> > >>>>>> [  492.696969] RAX: ffffffffffffffda RBX: 00007f83b6972b50 RCX: 00007f83d1871717
-> > >>>>>> [  492.705423] RDX: 0000000001f41418 RSI: 0000000000000001 RDI: 00007f83e4d36000
-> > >>>>>> [  492.713889] RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000001f3f2e0
-> > >>>>>> [  492.722352] R10: 0000000000001000 R11: 0000000000000202 R12: 00007ffd38fe5be0
-> > >>>>>> [  492.730827] R13: 00007f83b6972b01 R14: 00007f83b69824b8 R15: 00007f83b6982368
-> > >>>>>>
-> > >>>>>> and if we look at the debug entries, it's waiting on a scheduler tag:
-> > >>>>>>
-> > >>>>>> sched_tags:nr_tags=2
-> > >>>>>> sched_tags:nr_reserved_tags=0
-> > >>>>>> sched_tags:active_queues=0
-> > >>>>>> sched_tags:bitmap_tags:
-> > >>>>>> sched_tags:depth=2
-> > >>>>>> sched_tags:busy=2
-> > >>>>>> sched_tags:bits_per_word=64
-> > >>>>>> sched_tags:map_nr=1
-> > >>>>>> sched_tags:alloc_hint={0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0}
-> > >>>>>> sched_tags:wake_batch=1
-> > >>>>>> sched_tags:wake_index=4
-> > >>>>>> sched_tags:ws={
-> > >>>>>> sched_tags:	{.wait_cnt=-102, .wait=inactive},
-> > >>>>>> sched_tags:	{.wait_cnt=-126, .wait=inactive},
-> > >>>>>> sched_tags:	{.wait_cnt=-72, .wait=inactive},
-> > >>>>>> sched_tags:	{.wait_cnt=-96, .wait=inactive},
-> > >>>>>> sched_tags:	{.wait_cnt=-134, .wait=inactive},
-> > >>>>>> sched_tags:	{.wait_cnt=-116, .wait=inactive},
-> > >>>>>> sched_tags:	{.wait_cnt=-90, .wait=inactive},
-> > >>>>>> sched_tags:	{.wait_cnt=-115, .wait=active},
-> > >>>>>> sched_tags:}
-> > >>>>>> sched_tags:round_robin=0
-> > >>>>>> sched_tags_bitmap:00000000: 03
-> > >>>>>>
-> > >>>>>> with SCHED_RESTART being set:
-> > >>>>>>
-> > >>>>>> state:SCHED_RESTART
-> > >>>>>>
-> > >>>>>> and with the driver tags being idle:
-> > >>>>>>
-> > >>>>>> tags:nr_tags=1
-> > >>>>>> tags:nr_reserved_tags=0
-> > >>>>>> tags:active_queues=0
-> > >>>>>> tags:bitmap_tags:
-> > >>>>>> tags:depth=1
-> > >>>>>> tags:busy=0
-> > >>>>>> tags:bits_per_word=64
-> > >>>>>> tags:map_nr=1
-> > >>>>>> tags:alloc_hint={0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-> > >>>>>> tags:wake_batch=1
-> > >>>>>> tags:wake_index=3
-> > >>>>>> tags:ws={
-> > >>>>>> tags:	{.wait_cnt=-48, .wait=inactive},
-> > >>>>>> tags:	{.wait_cnt=-39, .wait=inactive},
-> > >>>>>> tags:	{.wait_cnt=-50, .wait=inactive},
-> > >>>>>> tags:	{.wait_cnt=-47, .wait=inactive},
-> > >>>>>> tags:	{.wait_cnt=-25, .wait=inactive},
-> > >>>>>> tags:	{.wait_cnt=-24, .wait=inactive},
-> > >>>>>> tags:	{.wait_cnt=-47, .wait=inactive},
-> > >>>>>> tags:	{.wait_cnt=-47, .wait=inactive},
-> > >>>>>> tags:}
-> > >>>>>
-> > >>>>> Unsurprisingly (since this is sched_tags starvation) this still happens
-> > >>>>> with the patch. Same trace as above. Note that dispatch has two requests
-> > >>>>> sitting ready:
-> > >>>>>
-> > >>>>> ffff881ff5ab1000 {.op=READ, .cmd_flags=, .rq_flags=STARTED|IO_STAT, .atomic_flags=COMPLETE, .tag=-1, .internal_tag=0}
-> > >>>>> ffff881ff5ab1240 {.op=READ, .cmd_flags=, .rq_flags=STARTED|IO_STAT, .atomic_flags=COMPLETE, .tag=-1, .internal_tag=1}
-> > >>>>>
-> > >>>>> while we're blocked trying to get a new sched tag off the regular
-> > >>>>> blk_mq_make_request() path. It looks like a missing restart of the hctx.
-> > >>>>
-> > >>>> Just to keep everyone in the loop, this bug is not new to
-> > >>>> for-4.15/block, nor is it new to the current 4.41-rc or 4.13. So it's
-> > >>>> probably different to what Bart is hitting, but it's a bug none the
-> > >>>> less...
-> > >>>
-> > >>> Thanks for running this test ans share us the result.
-> > >>>
-> > >>>>
-> > >>>> To me, this looks like a race between marking the queue as needing a
-> > >>>> restart, and the driver tag being released and re-running the queue. If
-> > >>>> I do:
-> > >>>>
-> > >>>> # echo run > /sys/kernel/debug/block/nullb1/state
-> > >>>>
-> > >>>> then it starts just fine. So there must be a race between marking the
-> > >>>> need for a restart (when getting the driver tag fails), and when one of
-> > >>>> the shared tag queues finishes a request and releases the driver tag.
-> > >>>
-> > >>> Just one hint, blk-mq's RESTART won't work if no requests are pending,
-> > >>> but looks no efficient/reliable way to handle that.
-> > >>
-> > >> Requests are pending, see above output. My assumption/theory was that
-> > >> we were racing on setting restart. Simplified version:
-> > >>
-> > >> CPUX					CPUY
-> > >> get_driver_tag, fails
-> > >> 					complete request, put tag
-> > >> 					check restart, not set
-> > >> mark needing restart
-> > > 
-> > > This case should be covered by TAG_WAITING.
-> > 
-> > Right. The keyword here being 'should'.
-> > 
-> > > If get_driver_tag fails on CPUX, this hctx will be added to tags's wait
-> > > queue, then the 'complete request' on CPUY will trigger to run queue via
-> > > blk_mq_dispatch_wake().
-> > 
-> > I know how it's _supposed_ to work. I'm saying that the debug info
-> > indicates that we have a problem in there, which matches what the
-> > TAG_WAITING should be covering for us. The TAG_WAITING may be fine and
-> > the issue could be somewhere else, it just looks identical for now.
+On Wed, 2017-11-08 at 21:21 +0800, Ming Lei wrote:
+> cmd->cmnd can be allocated/freed dynamically in case of
+> T10_PI_TYPE2_PROTECTION,
+> so we should check it in scsi_show_rq() because this request may have
+> been freed in scsi_show_rq().
 > 
-> One possible reason:
+> This patch fixs the following kernel crash when dumping request via
+> block's
+> debugfs interface:
 > 
-> 	- the request to be dispatched may not be added to hctx->dispatch
-> 	when blk_mq_dispatch_wake() is triggered.
+> [  252.962045] BUG: unable to handle kernel NULL pointer dereference
+> at           (null)
+> [  252.963007] IP: scsi_format_opcode_name+0x1a/0x1c0
+> [  252.963007] PGD 25e75a067 P4D 25e75a067 PUD 25e75b067 PMD 0
+> [  252.963007] Oops: 0000 [#1] PREEMPT SMP
+> [  252.963007] Dumping ftrace buffer:
+> [  252.963007]    (ftrace buffer empty)
+> [  252.963007] Modules linked in: scsi_debug ebtable_filter ebtables
+> ip6table_filter ip6_tables xt_CHECKSUM iptable_mangle ipt_MASQUERADE
+> nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4
+> nf_nat_ipv4 nf_nat nf_conntrack libcrc32c bridge stp llc
+> iptable_filter fuse ip_tables sd_mod sg mptsas mptscsih mptbase
+> crc32c_intel ahci libahci nvme serio_raw scsi_transport_sas libata
+> lpc_ich nvme_core virtio_scsi binfmt_misc dm_mod iscsi_tcp
+> libiscsi_tcp libiscsi scsi_transport_iscsi null_blk configs
+> [  252.963007] CPU: 1 PID: 1881 Comm: cat Not tainted 4.14.0-
+> rc2.blk_mq_io_hang+ #516
+> [  252.963007] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),
+> BIOS 1.9.3-1.fc25 04/01/2014
+> [  252.963007] task: ffff88025e6f6000 task.stack: ffffc90001bd0000
+> [  252.963007] RIP: 0010:scsi_format_opcode_name+0x1a/0x1c0
+> [  252.963007] RSP: 0018:ffffc90001bd3c50 EFLAGS: 00010286
+> [  252.963007] RAX: 00000000ffff4843 RBX: 0000000000000050 RCX:
+> 0000000000000000
+> [  252.963007] RDX: 0000000000000000 RSI: 0000000000000050 RDI:
+> ffffc90001bd3cd8
+> [  252.963007] RBP: ffffc90001bd3c88 R08: 0000000000001000 R09:
+> 0000000000000000
+> [  252.963007] R10: ffff880275134000 R11: ffff88027513406c R12:
+> 0000000000000050
+> [  252.963007] R13: ffffc90001bd3cd8 R14: 0000000000000000 R15:
+> 0000000000000000
+> [  252.963007] FS:  00007f4d11762700(0000) GS:ffff88027fc40000(0000)
+> knlGS:0000000000000000
+> [  252.963007] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  252.963007] CR2: 0000000000000000 CR3: 000000025e789003 CR4:
+> 00000000003606e0
+> [  252.963007] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> 0000000000000000
+> [  252.963007] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+> 0000000000000400
+> [  252.963007] Call Trace:
+> [  252.963007]  __scsi_format_command+0x27/0xc0
+> [  252.963007]  scsi_show_rq+0x5c/0xc0
+> [  252.963007]  ? seq_printf+0x4e/0x70
+> [  252.963007]  ? blk_flags_show+0x5b/0xf0
+> [  252.963007]  __blk_mq_debugfs_rq_show+0x116/0x130
+> [  252.963007]  blk_mq_debugfs_rq_show+0xe/0x10
+> [  252.963007]  seq_read+0xfe/0x3b0
+> [  252.963007]  ? __handle_mm_fault+0x631/0x1150
+> [  252.963007]  full_proxy_read+0x54/0x90
+> [  252.963007]  __vfs_read+0x37/0x160
+> [  252.963007]  ? security_file_permission+0x9b/0xc0
+> [  252.963007]  vfs_read+0x96/0x130
+> [  252.963007]  SyS_read+0x55/0xc0
+> [  252.963007]  entry_SYSCALL_64_fastpath+0x1a/0xa5
+> [  252.963007] RIP: 0033:0x7f4d1127e9b0
+> [  252.963007] RSP: 002b:00007ffd27082568 EFLAGS: 00000246 ORIG_RAX:
+> 0000000000000000
+> [  252.963007] RAX: ffffffffffffffda RBX: 00007f4d1154bb20 RCX:
+> 00007f4d1127e9b0
+> [  252.963007] RDX: 0000000000020000 RSI: 00007f4d115a7000 RDI:
+> 0000000000000003
+> [  252.963007] RBP: 0000000000021010 R08: ffffffffffffffff R09:
+> 0000000000000000
+> [  252.963007] R10: 000000000000037b R11: 0000000000000246 R12:
+> 0000000000022000
+> [  252.963007] R13: 00007f4d1154bb78 R14: 0000000000001000 R15:
+> 0000000000020000
+> [  252.963007] Code: c6 e8 1b ca 24 00 eb 8c e8 74 2c ae ff 0f 1f 40
+> 00 0f 1f 44 00 00 55 48 89 e5 41 56 41 55 41 54 53 49 89 fd 49 89 f4
+> 48 83 ec 18 <44> 0f b6 32 48 c7 45 c8 00 00 00 00 65 48 8b 04 25 28
+> 00 00 00
+> [  252.963007] RIP: scsi_format_opcode_name+0x1a/0x1c0 RSP:
+> ffffc90001bd3c50
+> [  252.963007] CR2: 0000000000000000
+> [  252.963007] ---[ end trace 83c5bddfbaa6573c ]---
+> [  252.963007] Kernel panic - not syncing: Fatal exception
+> [  252.963007] Dumping ftrace buffer:
+> [  252.963007]    (ftrace buffer empty)
+> [  252.963007] Kernel Offset: disabled
+> [  252.963007] ---[ end Kernel panic - not syncing: Fatal exception
+> 
+> Fixes: 0eebd005dd07(scsi: Implement blk_mq_ops.show_rq())
+> Cc: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Omar Sandoval <osandov@fb.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+> V2:
+> 	- fix typo
+> V3:
+> 	- prefer to dump data and accept read-after-free
+> 	- add some comment
+> 
+> James, since read-after-free is inevitable and we prefer to dump
+> data,
+> we needn't to move clearing the buffer pointer before freeing the
+> buffer
+> in sd_uninit_command(), otherwise we may miss the dump a bit
+> 
+>  drivers/scsi/scsi_debugfs.c | 12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_debugfs.c
+> b/drivers/scsi/scsi_debugfs.c
+> index 5e9755008aed..2320d8f569b8 100644
+> --- a/drivers/scsi/scsi_debugfs.c
+> +++ b/drivers/scsi/scsi_debugfs.c
+> @@ -9,7 +9,17 @@ void scsi_show_rq(struct seq_file *m, struct request
+> *rq)
+>  	int msecs = jiffies_to_msecs(jiffies - cmd-
+> >jiffies_at_alloc);
+>  	char buf[80];
+>  
+> -	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd-
+> >cmd_len);
+> +	/*
+> +	 * This rq may have been freed, so don't be surprised if
+> +	 * read-after-free is reported.
 
-If we call blk_mq_dispatch_wait_add() after request is added to hctx->dispatch,
-TAG_WAITING becomes basically similar with SCHED_RESTART.
+This can be fixed, see below.
 
-Now I don't object to revert 358a3a6bccb7(blk-mq: don't handle TAG_SHARED in restart)
-any more, because SCHED_RESTART works fine from this viewpoint even
-though it isn't efficient. We can improve it in the future.
+> +	 *
+> +	 * __scsi_format_command() should be written as not being
+> broken
+> +	 * with gargabe 'cdb' input.
+> +	 */
+> +	if (cmd->cmnd && cmd->cmd_len)
 
-Also we might need to unify both TAG_WAITING and SCHED_RESTART into one generic
-restart mechanism, and make it efficient. IMO, both two aren't efficient enough.
+Why is it necessary to check cmd_len as well?  It's not wrong, it just
+doesn't seem to be useful
 
--- 
-Ming
+> +		__scsi_format_command(buf, sizeof(buf), cmd->cmnd,
+> cmd->cmd_len);
+> +	else
+> +		strcpy(buf, "");
+>  	seq_printf(m, ", .cmd=%s, .retries=%d, allocated %d.%03d s
+> ago", buf,
+>  		   cmd->retries, msecs / 1000, msecs % 1000);
+>  }
+
+
+This is what you need as well:
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d175c5c5ccf8..2d5e918c3e75 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1284,6 +1284,7 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
+ {
+ 	struct request *rq = SCpnt->request;
++	unsigned char *cmnd = SCpnt->cmnd;
+ 
+ 	if (SCpnt->flags & SCMD_ZONE_WRITE_LOCK)
+ 		sd_zbc_write_unlock_zone(SCpnt);
+@@ -1292,9 +1293,9 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
+ 		__free_page(rq->special_vec.bv_page);
+ 
+ 	if (SCpnt->cmnd != scsi_req(rq)->cmd) {
+-		mempool_free(SCpnt->cmnd, sd_cdb_pool);
+ 		SCpnt->cmnd = NULL;
+ 		SCpnt->cmd_len = 0;
++		mempool_free(cmnd, sd_cdb_pool);
+ 	}
+ }
+
+
+The reason it works is that function calls are an absolute barrier, so
+setting the cmnd to NULL is seen everywhere before the mempool_free()
+starts and the execution path of mempool_free() is much longer
+than _scsi_format_command() so you can never get a use after free in
+practice.  To make this completely bullet proof, scsi_show_rq() should
+take a copy of the cmnd pointer before testing and using it, otherwise
+there's a minute window where it could go to NULL between the check and
+__scsi_format_command().  I've forgotten if we can rely on no-
+preemption for RT or we need to add it explicitly, but I'm sure you can
+figure it out.
+
+James
