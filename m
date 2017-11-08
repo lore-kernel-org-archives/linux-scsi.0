@@ -1,100 +1,58 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 5/6] iscsi-target: Make TASK_REASSIGN use proper se_cmd->cmd_kref
-Date: Wed,  8 Nov 2017 04:31:51 +0000
-Message-ID: <1510115512-15617-6-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 6/6] iscsi-target: Fix non-immediate TMR reference leak
+Date: Wed,  8 Nov 2017 04:31:52 +0000
+Message-ID: <1510115512-15617-7-git-send-email-nab@linux-iscsi.org>
 References: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54050 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:54052 "EHLO
         linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751943AbdKHEVk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 23:21:40 -0500
+        with ESMTP id S1751956AbdKHEVl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2017 23:21:41 -0500
 In-Reply-To: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Donald White <dew@datera.io>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Since commit 59b6986dbf fixed a potential NULL pointer dereference
-by allocating a se_tmr_req for ISCSI_TM_FUNC_TASK_REASSIGN, the
-se_tmr_req is currently leaked by iscsit_free_cmd() because no
-iscsi_cmd->se_cmd.se_tfo was associated.
+This patch fixes a se_cmd->cmd_kref reference leak that can
+occur when a non immediate TMR is proceeded our of command
+sequence number order, and CMDSN_LOWER_THAN_EXP is returned
+by iscsit_sequence_cmd().
 
-To address this, treat ISCSI_TM_FUNC_TASK_REASSIGN like any other
-TMR and call transport_init_se_cmd() + target_get_sess_cmd() to
-setup iscsi_cmd->se_cmd.se_tfo with se_cmd->cmd_kref of 2.
+To address this bug, call target_put_sess_cmd() during this
+special case following what iscsit_process_scsi_cmd() does
+upon CMDSN_LOWER_THAN_EXP.
 
-This will ensure normal release operation once se_cmd->cmd_kref
-reaches zero and target_release_cmd_kref() is invoked, se_tmr_req
-will be released via existing target_free_cmd_mem() and
-core_tmr_release_req() code.
-
-Reported-by: Donald White <dew@datera.io>
-Cc: Donald White <dew@datera.io>
 Cc: Mike Christie <mchristi@redhat.com>
 Cc: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c | 22 +++++++++-------------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+ drivers/target/iscsi/iscsi_target.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 541f66a..048d422 100644
+index 048d422..3b7bb58 100644
 --- a/drivers/target/iscsi/iscsi_target.c
 +++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1955,7 +1955,6 @@ static enum tcm_tmreq_table iscsit_convert_tmf(u8 iscsi_tmf)
- 	struct iscsi_tmr_req *tmr_req;
- 	struct iscsi_tm *hdr;
- 	int out_of_order_cmdsn = 0, ret;
--	bool sess_ref = false;
- 	u8 function, tcm_function = TMR_UNKNOWN;
+@@ -2094,12 +2094,14 @@ static enum tcm_tmreq_table iscsit_convert_tmf(u8 iscsi_tmf)
  
- 	hdr			= (struct iscsi_tm *) buf;
-@@ -1988,22 +1987,23 @@ static enum tcm_tmreq_table iscsit_convert_tmf(u8 iscsi_tmf)
+ 	if (!(hdr->opcode & ISCSI_OP_IMMEDIATE)) {
+ 		int cmdsn_ret = iscsit_sequence_cmd(conn, cmd, buf, hdr->cmdsn);
+-		if (cmdsn_ret == CMDSN_HIGHER_THAN_EXP)
++		if (cmdsn_ret == CMDSN_HIGHER_THAN_EXP) {
+ 			out_of_order_cmdsn = 1;
+-		else if (cmdsn_ret == CMDSN_LOWER_THAN_EXP)
++		} else if (cmdsn_ret == CMDSN_LOWER_THAN_EXP) {
++			target_put_sess_cmd(&cmd->se_cmd);
+ 			return 0;
+-		else if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER)
++		} else if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER) {
+ 			return -1;
++		}
+ 	}
+ 	iscsit_ack_from_expstatsn(conn, be32_to_cpu(hdr->exp_statsn));
  
- 	cmd->data_direction = DMA_NONE;
- 	cmd->tmr_req = kzalloc(sizeof(*cmd->tmr_req), GFP_KERNEL);
--	if (!cmd->tmr_req)
-+	if (!cmd->tmr_req) {
- 		return iscsit_add_reject_cmd(cmd,
- 					     ISCSI_REASON_BOOKMARK_NO_RESOURCES,
- 					     buf);
-+	}
-+
-+	transport_init_se_cmd(&cmd->se_cmd, &iscsi_ops,
-+			      conn->sess->se_sess, 0, DMA_NONE,
-+			      TCM_SIMPLE_TAG, cmd->sense_buffer + 2);
-+
-+	target_get_sess_cmd(&cmd->se_cmd, true);
- 
- 	/*
- 	 * TASK_REASSIGN for ERL=2 / connection stays inside of
- 	 * LIO-Target $FABRIC_MOD
- 	 */
- 	if (function != ISCSI_TM_FUNC_TASK_REASSIGN) {
--		transport_init_se_cmd(&cmd->se_cmd, &iscsi_ops,
--				      conn->sess->se_sess, 0, DMA_NONE,
--				      TCM_SIMPLE_TAG, cmd->sense_buffer + 2);
--
--		target_get_sess_cmd(&cmd->se_cmd, true);
--		sess_ref = true;
- 		tcm_function = iscsit_convert_tmf(function);
- 		if (tcm_function == TMR_UNKNOWN) {
- 			pr_err("Unknown iSCSI TMR Function:"
-@@ -2119,12 +2119,8 @@ static enum tcm_tmreq_table iscsit_convert_tmf(u8 iscsi_tmf)
- 	 * For connection recovery, this is also the default action for
- 	 * TMR TASK_REASSIGN.
- 	 */
--	if (sess_ref) {
--		pr_debug("Handle TMR, using sess_ref=true check\n");
--		target_put_sess_cmd(&cmd->se_cmd);
--	}
--
- 	iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
-+	target_put_sess_cmd(&cmd->se_cmd);
- 	return 0;
- }
- EXPORT_SYMBOL(iscsit_handle_task_mgt_cmd);
 -- 
 1.9.1
