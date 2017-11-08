@@ -1,65 +1,64 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/6] target fixes for v4.15-rc1
-Date: Wed,  8 Nov 2017 04:31:46 +0000
-Message-ID: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 1/6] target: Fix QUEUE_FULL + SCSI task attribute handling
+Date: Wed,  8 Nov 2017 04:31:47 +0000
+Message-ID: <1510115512-15617-2-git-send-email-nab@linux-iscsi.org>
+References: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1510115512-15617-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi all,
+This patch fixes a bug during QUEUE_FULL where transport_complete_qf()
+calls transport_complete_task_attr() after it's already been invoked
+by target_complete_ok_work() or transport_generic_request_failure()
+during initial completion, preceeding QUEUE_FULL.
 
-Here are the outstanding target bugfixes in queue for v4.15-rc1
-code.
+This will result in se_device->simple_cmds, se_device->dev_cur_ordered_id
+and/or se_device->dev_ordered_sync being updated multiple times for
+a single se_cmd.
 
-Patch #1 addresses a long standing bug wrt to QUEUE_FULL and
-SCSI task attribute handling, that results in SCSI task related
-counters getting updated multiple times during QUEUE_FULL.
+To address this bug, clear SCF_TASK_ATTR_SET after the first call
+to transport_complete_task_attr(), and avoid updating SCSI task
+attribute related counters for any subsequent calls.
 
-It primarly effects hosts using ORDERED tasks, which depend upon
-these counters to know when to delay incoming tasks.
+Also, when a se_cmd is deferred due to ordered tags and executed
+via target_restart_delayed_cmds(), set CMD_T_SENT before execution
+matching what target_execute_cmd() does.
 
-Patch #2 is for a recent v4.11+ regression, which during ABORT
-of COMPARE_AND_WRITE can result in se_device->cam_sem getting
-leaked due to se_cmd->transport_complete_callback() being
-skipped.
+Cc: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Cc: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Patch #3 addresses a possible end-less loop during QUEUE_FULL +
-TFO->write_pending() failure, allowing se_cmd quiese to properly
-complete the outstanding descriptor when requested.
-
-Patch #4 addresses a use-after-tree that was hit in the field,
-involving pre-backend execution se_cmd exceptions + subsequent
-ABORT_TASK for a matching tag.
-
-Patch #5 + #6 address a iscsi-target TMR related memory and
-se_cmd->cmd_kref reference leaks respectively.
-
-We've been testing #4, #5, and #6 internally on v4.1.y stable
-code, and have not run into additional regressions.
-
-The rest are straight-forward.
-
-Please review.
-
---nab
-
-Nicholas Bellinger (6):
-  target: Fix QUEUE_FULL + SCSI task attribute handling
-  target: Fix caw_sem leak in transport_generic_request_failure
-  target: Fix quiese during transport_write_pending_qf endless loop
-  target: Avoid early CMD_T_PRE_EXECUTE failures during ABORT_TASK
-  iscsi-target: Make TASK_REASSIGN use proper se_cmd->cmd_kref
-  iscsi-target: Fix non-immediate TMR reference leak
-
- drivers/target/iscsi/iscsi_target.c    | 30 ++++++++++++++----------------
- drivers/target/target_core_tmr.c       |  9 +++++++++
- drivers/target/target_core_transport.c | 26 +++++++++++++++++++++++---
- include/target/target_core_base.h      |  1 +
- 4 files changed, 47 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 473d652..c33d1e9 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2011,6 +2011,8 @@ static void target_restart_delayed_cmds(struct se_device *dev)
+ 		list_del(&cmd->se_delayed_node);
+ 		spin_unlock(&dev->delayed_cmd_lock);
+ 
++		cmd->transport_state |= CMD_T_SENT;
++
+ 		__target_execute_cmd(cmd, true);
+ 
+ 		if (cmd->sam_task_attr == TCM_ORDERED_TAG)
+@@ -2046,6 +2048,8 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
+ 		pr_debug("Incremented dev_cur_ordered_id: %u for ORDERED\n",
+ 			 dev->dev_cur_ordered_id);
+ 	}
++	cmd->se_cmd_flags &= ~SCF_TASK_ATTR_SET;
++
+ restart:
+ 	target_restart_delayed_cmds(dev);
+ }
 -- 
 1.9.1
