@@ -1,8 +1,7 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 0/13] scsi: arcmsr: add some driver options and support new
- adapter ARC-1884
-Date: Thu, 09 Nov 2017 07:37:59 +0800
-Message-ID: <1510184279.4523.60.camel@Centos6.3-64>
+Subject: [PATCH 2/13] scsi: arcmsr: simplify arcmsr_iop_init function
+Date: Thu, 09 Nov 2017 07:44:14 +0800
+Message-ID: <1510184654.4523.63.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -13,39 +12,293 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-Hi all,
+simplify arcmsr_iop_init function
 
-The following patches apply to Martin's 4.15/scsi-queue.
-
-Patch 1: redefine ACB_ADAPTER_TYPE_A, _B, _C, _D and subsequent changes.
-
-Patch 2: simplify arcmsr_iop_init function.
-
-Patch 3: add codes for ACB_ADAPTER_TYPE_E to support new adapter ARC-1884
-
-Patch 4: replace constant ARCMSR_MAX_FREECCB_NUM by variable acb->maxFreeCCB that was got from firmware.
-
-Patch 5: add driver option host_can_queue to set host->can_queue value by user. It's value expands
-         up to 1024.
-
-Patch 6: replace constant ARCMSR_MAX_OUTSTANDING_CMD by variable acb->maxOutstanding that was determined by user.
-
-Patch 7: add driver option cmd_per_lun to set host->cmd_per_lun value by user.
-
-Patch 8: add ACB_F_MSG_GET_CONFIG to acb->acb_flags for for message interrupt checking before schedule work for
-         get device map.
-
-Patch 9: add a function arcmsr_set_iop_datetime and driver option set_date_time to set date and time to firmware.
-
-Patch 10: fix clear doorbell queue on ACB_ADAPTER_TYPE_B controller.
-
-Patch 11: spin off duplicate code of timer init for message isr BH in arcmsr_probe and arcmsr_resume as a function
-          arcmsr_init_get_devmap_timer
-
-Patch 12: adjust some tab or white-space to make text alignment.
-
-Patch 13: update driver version to v1.40.00.02-20171011
-
-Please review. Thanks.
-
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
+
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-08 18:46:42.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-08 18:46:40.000000000 +0800
+@@ -3675,6 +3675,39 @@ static void arcmsr_hardware_reset(struct
+ 	msleep(1000);
+ 	return;
+ }
++
++static bool arcmsr_reset_in_progress(struct AdapterControlBlock *acb)
++{
++	bool rtn = true;
++
++	switch(acb->adapter_type) {
++	case ACB_ADAPTER_TYPE_A:{
++		struct MessageUnit_A __iomem *reg = acb->pmuA;
++		rtn = ((readl(&reg->outbound_msgaddr1) &
++			ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) == 0) ? true : false;
++		}
++		break;
++	case ACB_ADAPTER_TYPE_B:{
++		struct MessageUnit_B *reg = acb->pmuB;
++		rtn = ((readl(reg->iop2drv_doorbell) &
++			ARCMSR_MESSAGE_FIRMWARE_OK) == 0) ? true : false;
++		}
++		break;
++	case ACB_ADAPTER_TYPE_C:{
++		struct MessageUnit_C __iomem *reg = acb->pmuC;
++		rtn = (readl(&reg->host_diagnostic) & 0x04) ? true : false;
++		}
++		break;
++	case ACB_ADAPTER_TYPE_D:{
++		struct MessageUnit_D *reg = acb->pmuD;
++		rtn = ((readl(reg->sample_at_reset) & 0x80) == 0) ?
++			true : false;
++		}
++		break;
++	}
++	return rtn;
++}
++
+ static void arcmsr_iop_init(struct AdapterControlBlock *acb)
+ {
+ 	uint32_t intmask_org;
+@@ -3729,197 +3762,55 @@ static uint8_t arcmsr_iop_reset(struct A
+ static int arcmsr_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct AdapterControlBlock *acb;
+-	uint32_t intmask_org, outbound_doorbell;
+ 	int retry_count = 0;
+ 	int rtn = FAILED;
+ 	acb = (struct AdapterControlBlock *) cmd->device->host->hostdata;
+-	printk(KERN_ERR "arcmsr: executing bus reset eh.....num_resets = %d, num_aborts = %d \n", acb->num_resets, acb->num_aborts);
++	pr_notice("arcmsr: executing bus reset eh.....num_resets = %d,"
++		" num_aborts = %d \n", acb->num_resets, acb->num_aborts);
+ 	acb->num_resets++;
+ 
+-	switch(acb->adapter_type){
+-		case ACB_ADAPTER_TYPE_A:{
+-			if (acb->acb_flags & ACB_F_BUS_RESET){
+-				long timeout;
+-				printk(KERN_ERR "arcmsr: there is an  bus reset eh proceeding.......\n");
+-				timeout = wait_event_timeout(wait_q, (acb->acb_flags & ACB_F_BUS_RESET) == 0, 220*HZ);
+-				if (timeout) {
+-					return SUCCESS;
+-				}
+-			}
+-			acb->acb_flags |= ACB_F_BUS_RESET;
+-			if (!arcmsr_iop_reset(acb)) {
+-				struct MessageUnit_A __iomem *reg;
+-				reg = acb->pmuA;
+-				arcmsr_hardware_reset(acb);
+-				acb->acb_flags &= ~ACB_F_IOP_INITED;
+-sleep_again:
+-				ssleep(ARCMSR_SLEEPTIME);
+-				if ((readl(&reg->outbound_msgaddr1) & ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) == 0) {
+-					printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, retry=%d\n", acb->host->host_no, retry_count);
+-					if (retry_count > ARCMSR_RETRYCOUNT) {
+-						acb->fw_flag = FW_DEADLOCK;
+-						printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, RETRY TERMINATED!!\n", acb->host->host_no);
+-						return FAILED;
+-					}
+-					retry_count++;
+-					goto sleep_again;
+-				}
+-				acb->acb_flags |= ACB_F_IOP_INITED;
+-				/* disable all outbound interrupt */
+-				intmask_org = arcmsr_disable_outbound_ints(acb);
+-				arcmsr_get_firmware_spec(acb);
+-				arcmsr_start_adapter_bgrb(acb);
+-				/* clear Qbuffer if door bell ringed */
+-				outbound_doorbell = readl(&reg->outbound_doorbell);
+-				writel(outbound_doorbell, &reg->outbound_doorbell); /*clear interrupt */
+-   				writel(ARCMSR_INBOUND_DRIVER_DATA_READ_OK, &reg->inbound_doorbell);
+-				/* enable outbound Post Queue,outbound doorbell Interrupt */
+-				arcmsr_enable_outbound_ints(acb, intmask_org);
+-				atomic_set(&acb->rq_map_token, 16);
+-				atomic_set(&acb->ante_token_value, 16);
+-				acb->fw_flag = FW_NORMAL;
+-				mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				rtn = SUCCESS;
+-				printk(KERN_ERR "arcmsr: scsi  bus reset eh returns with success\n");
+-			} else {
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				atomic_set(&acb->rq_map_token, 16);
+-				atomic_set(&acb->ante_token_value, 16);
+-				acb->fw_flag = FW_NORMAL;
+-				mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6*HZ));
+-				rtn = SUCCESS;
+-			}
+-			break;
+-		}
+-		case ACB_ADAPTER_TYPE_B:{
+-			acb->acb_flags |= ACB_F_BUS_RESET;
+-			if (!arcmsr_iop_reset(acb)) {
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				rtn = FAILED;
+-			} else {
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				atomic_set(&acb->rq_map_token, 16);
+-				atomic_set(&acb->ante_token_value, 16);
+-				acb->fw_flag = FW_NORMAL;
+-				mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-				rtn = SUCCESS;
+-			}
+-			break;
+-		}
+-		case ACB_ADAPTER_TYPE_C:{
+-			if (acb->acb_flags & ACB_F_BUS_RESET) {
+-				long timeout;
+-				printk(KERN_ERR "arcmsr: there is an bus reset eh proceeding.......\n");
+-				timeout = wait_event_timeout(wait_q, (acb->acb_flags & ACB_F_BUS_RESET) == 0, 220*HZ);
+-				if (timeout) {
+-					return SUCCESS;
+-				}
+-			}
+-			acb->acb_flags |= ACB_F_BUS_RESET;
+-			if (!arcmsr_iop_reset(acb)) {
+-				struct MessageUnit_C __iomem *reg;
+-				reg = acb->pmuC;
+-				arcmsr_hardware_reset(acb);
+-				acb->acb_flags &= ~ACB_F_IOP_INITED;
+-sleep:
+-				ssleep(ARCMSR_SLEEPTIME);
+-				if ((readl(&reg->host_diagnostic) & 0x04) != 0) {
+-					printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, retry=%d\n", acb->host->host_no, retry_count);
+-					if (retry_count > ARCMSR_RETRYCOUNT) {
+-						acb->fw_flag = FW_DEADLOCK;
+-						printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, RETRY TERMINATED!!\n", acb->host->host_no);
+-						return FAILED;
+-					}
+-					retry_count++;
+-					goto sleep;
+-				}
+-				acb->acb_flags |= ACB_F_IOP_INITED;
+-				/* disable all outbound interrupt */
+-				intmask_org = arcmsr_disable_outbound_ints(acb);
+-				arcmsr_get_firmware_spec(acb);
+-				arcmsr_start_adapter_bgrb(acb);
+-				/* clear Qbuffer if door bell ringed */
+-				arcmsr_clear_doorbell_queue_buffer(acb);
+-				/* enable outbound Post Queue,outbound doorbell Interrupt */
+-				arcmsr_enable_outbound_ints(acb, intmask_org);
+-				atomic_set(&acb->rq_map_token, 16);
+-				atomic_set(&acb->ante_token_value, 16);
+-				acb->fw_flag = FW_NORMAL;
+-				mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				rtn = SUCCESS;
+-				printk(KERN_ERR "arcmsr: scsi bus reset eh returns with success\n");
+-			} else {
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				atomic_set(&acb->rq_map_token, 16);
+-				atomic_set(&acb->ante_token_value, 16);
+-				acb->fw_flag = FW_NORMAL;
+-				mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6*HZ));
+-				rtn = SUCCESS;
+-			}
+-			break;
+-		}
+-		case ACB_ADAPTER_TYPE_D: {
+-			if (acb->acb_flags & ACB_F_BUS_RESET) {
+-				long timeout;
+-				pr_notice("arcmsr: there is an bus reset"
+-					" eh proceeding.......\n");
+-				timeout = wait_event_timeout(wait_q, (acb->acb_flags
+-					& ACB_F_BUS_RESET) == 0, 220 * HZ);
+-				if (timeout)
+-					return SUCCESS;
+-			}
+-			acb->acb_flags |= ACB_F_BUS_RESET;
+-			if (!arcmsr_iop_reset(acb)) {
+-				struct MessageUnit_D *reg;
+-				reg = acb->pmuD;
+-				arcmsr_hardware_reset(acb);
+-				acb->acb_flags &= ~ACB_F_IOP_INITED;
+-			nap:
+-				ssleep(ARCMSR_SLEEPTIME);
+-				if ((readl(reg->sample_at_reset) & 0x80) != 0) {
+-					pr_err("arcmsr%d: waiting for "
+-						"hw bus reset return, retry=%d\n",
+-						acb->host->host_no, retry_count);
+-					if (retry_count > ARCMSR_RETRYCOUNT) {
+-						acb->fw_flag = FW_DEADLOCK;
+-						pr_err("arcmsr%d: waiting for hw bus"
+-							" reset return, "
+-							"RETRY TERMINATED!!\n",
+-							acb->host->host_no);
+-						return FAILED;
+-					}
+-					retry_count++;
+-					goto nap;
+-				}
+-				acb->acb_flags |= ACB_F_IOP_INITED;
+-				/* disable all outbound interrupt */
+-				intmask_org = arcmsr_disable_outbound_ints(acb);
+-				arcmsr_get_firmware_spec(acb);
+-				arcmsr_start_adapter_bgrb(acb);
+-				arcmsr_clear_doorbell_queue_buffer(acb);
+-				arcmsr_enable_outbound_ints(acb, intmask_org);
+-				atomic_set(&acb->rq_map_token, 16);
+-				atomic_set(&acb->ante_token_value, 16);
+-				acb->fw_flag = FW_NORMAL;
+-				mod_timer(&acb->eternal_timer,
+-					jiffies + msecs_to_jiffies(6 * HZ));
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				rtn = SUCCESS;
+-				pr_err("arcmsr: scsi bus reset "
+-					"eh returns with success\n");
+-			} else {
+-				acb->acb_flags &= ~ACB_F_BUS_RESET;
+-				atomic_set(&acb->rq_map_token, 16);
+-				atomic_set(&acb->ante_token_value, 16);
+-				acb->fw_flag = FW_NORMAL;
+-				mod_timer(&acb->eternal_timer,
+-					jiffies + msecs_to_jiffies(6 * HZ));
+-				rtn = SUCCESS;
+-			}
+-			break;
+-		}
++	if (acb->acb_flags & ACB_F_BUS_RESET) {
++		long timeout;
++		pr_notice("arcmsr: there is an bus reset eh proceeding...\n");
++		timeout = wait_event_timeout(wait_q, (acb->acb_flags
++			& ACB_F_BUS_RESET) == 0, 220 * HZ);
++		if (timeout)
++			return SUCCESS;
++	}
++	acb->acb_flags |= ACB_F_BUS_RESET;
++	if (!arcmsr_iop_reset(acb)) {
++		arcmsr_hardware_reset(acb);
++		acb->acb_flags &= ~ACB_F_IOP_INITED;
++wait_reset_done:
++		ssleep(ARCMSR_SLEEPTIME);
++		if (arcmsr_reset_in_progress(acb)) {
++			if (retry_count > ARCMSR_RETRYCOUNT) {
++				acb->fw_flag = FW_DEADLOCK;
++				pr_notice("arcmsr%d: waiting for hw bus reset"
++					" return, RETRY TERMINATED!!\n",
++					acb->host->host_no);
++				return FAILED;
++			}
++			retry_count++;
++			goto wait_reset_done;
++		}
++		arcmsr_iop_init(acb);
++		atomic_set(&acb->rq_map_token, 16);
++		atomic_set(&acb->ante_token_value, 16);					
++		acb->fw_flag = FW_NORMAL;
++		mod_timer(&acb->eternal_timer, jiffies +
++			msecs_to_jiffies(6 * HZ));
++		acb->acb_flags &= ~ACB_F_BUS_RESET;
++		rtn = SUCCESS;					
++		pr_notice("arcmsr: scsi bus reset eh returns with success\n");
++	} else {
++		acb->acb_flags &= ~ACB_F_BUS_RESET;
++		atomic_set(&acb->rq_map_token, 16);
++		atomic_set(&acb->ante_token_value, 16);
++		acb->fw_flag = FW_NORMAL;
++		mod_timer(&acb->eternal_timer, jiffies +
++			msecs_to_jiffies(6 * HZ));
++		rtn = SUCCESS;
+ 	}
+ 	return rtn;
+ }
