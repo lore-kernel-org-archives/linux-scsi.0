@@ -1,52 +1,35 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH v2 1/4] qla2xxx_nvmet: Add files for FC-NVMe Target
- support
-Date: Thu, 9 Nov 2017 07:36:22 -0800
-Message-ID: <3cf657ee-67a7-1b33-9a79-a0415d7a651b@broadcom.com>
-References: <20171109031754.10270-1-himanshu.madhani@cavium.com>
- <20171109031754.10270-2-himanshu.madhani@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v11 0/7] block, scsi, md: Improve suspend and resume
+Date: Thu, 9 Nov 2017 16:54:32 +0000
+Message-ID: <1510246471.2608.11.camel@wdc.com>
+References: <20171030224205.25212-1-bart.vanassche@wdc.com>
+         <15255980.N0RxqQ3jgM@natalenko.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:50181 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751665AbdKIPg0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 10:36:26 -0500
-Received: by mail-qk0-f193.google.com with SMTP id p7so8152456qkd.7
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 07:36:25 -0800 (PST)
-In-Reply-To: <20171109031754.10270-2-himanshu.madhani@cavium.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <15255980.N0RxqQ3jgM@natalenko.name>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <75ACB10512968D4DA203819D22BAD613@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "oleksandr@natalenko.name" <oleksandr@natalenko.name>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>, linux-nvme@lists.infradead.org, hch@lst.de, sagi@grimberg.me, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
 
-On 11/8/2017 7:17 PM, Himanshu Madhani wrote:
-> +static struct nvmet_fc_target_template qla_nvmet_fc_transport = {
-> +	.targetport_delete	= qla_nvmet_targetport_delete,
-> +	.xmt_ls_rsp		= qla_nvmet_ls_rsp,
-> +	.fcp_op			= qla_nvmet_fcp_op,
-> +	.fcp_abort		= qla_nvmet_fcp_abort,
-> +	.fcp_req_release	= qla_nvmet_fcp_req_release,
-> +	.max_hw_queues		= 8,
-> +	.max_sgl_segments	= 128,
-> +	.max_dif_sgl_segments	= 64,
-> +	.dma_boundary		= 0xFFFFFFFF,
-> +	.target_features	= NVMET_FCTGTFEAT_READDATA_RSP |
-> +					NVMET_FCTGTFEAT_CMD_IN_ISR |
-> +					NVMET_FCTGTFEAT_OPDONE_IN_ISR,
-> +	.target_priv_sz	= sizeof(struct nvme_private),
-> +};
->
-
- From the patch set prior:
- > Agree we do nvme_fc* callbacks in deferred context, but without the 
-xxx_IN_ISR flag during NVMe Target template registration, we were 
-running into crash due to recursive spin_lock held as part of CTIO 
-response in our driver.
-
-Can you look into removing this recursive spin lock ?    I don't think 
-it's a good idea to be holding a spin lock when upcalling the transport.
-
--- james
+T24gVGh1LCAyMDE3LTExLTA5IGF0IDA3OjE2ICswMTAwLCBPbGVrc2FuZHIgTmF0YWxlbmtvIHdy
+b3RlOg0KPiBpcyB0aGlzIHNvbWV0aGluZyBrbm93biB0byB5b3UsIG9yIGl0IGlzIGp1c3QgbXkg
+ZmF1bHQgYXBwbHlpbmcgdGhpcyBzZXJpZXMgdG8gDQo+IHY0LjEzPyBFeGNlcHQgaGF2aW5nIHRo
+aXMgd2FybmluZywgc3VzcGVuZC9yZXN1bWUgd29ya3MgZm9yIG1lOg0KPiANCj4gWyAgIDI3LjM4
+Mzg0Nl0gc2QgMDowOjA6MDogW3NkYV0gU3RhcnRpbmcgZGlzaw0KPiBbICAgMjcuMzgzOTc2XSBz
+ZCAxOjA6MDowOiBbc2RiXSBTdGFydGluZyBkaXNrDQo+IFsgICAyNy40NTEyMThdIHNkYjogQXR0
+ZW1wdCB0byBhbGxvY2F0ZSBub24tcHJlZW1wdCByZXF1ZXN0IGluIHByZWVtcHQtb25seSANCj4g
+bW9kZS4NCj4gWyAgIDI3LjQ1OTY0MF0gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0t
+LS0tDQo+IFsgICAyNy40NjQ1MjFdIFdBUk5JTkc6IENQVTogMCBQSUQ6IDE3MiBhdCBibG9jay9i
+bGstY29yZS5jOjgyMyBibGtfcXVldWVfZW50ZXIrMHgyMjIvMHgyODANCg0KSGVsbG8gT2xla3Nh
+bmRyLA0KDQpUaGFua3MgZm9yIHRoZSB0ZXN0aW5nLiBUaGUgd2FybmluZyB0aGF0IHlvdSByZXBv
+cnRlZCBpcyBleHBlY3RlZC4gTWF5YmUgaXQNCnNob3VsZCBiZSBsZWZ0IG91dCB0byBhdm9pZCB0
+aGF0IHVzZXJzIGdldCBjb25mdXNlZC4NCg0KSmVucywgdGhpcyBwYXRjaCBzZXJpZXMgc3RpbGwg
+YXBwbGllcyBjbGVhbmx5IG9uIHRvcCBvZiB5b3VyIGZvci00LjE1L2Jsb2NrDQpicmFuY2guIEFy
+ZSB5b3UgZmluZSB3aXRoIHRoaXMgcGF0Y2ggc2VyaWVzIG9yIGRvIHlvdSBwZXJoYXBzIHdhbnQg
+bWUgdG8NCnJlcG9zdCBpdCB3aXRoIE9sZWtzYW5kcidzIFRlc3RlZC1ieSB0YWcgYWRkZWQgdG8g
+ZWFjaCBwYXRjaD8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
