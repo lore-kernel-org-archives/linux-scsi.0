@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 1/4] qla2xxx_nvmet: Add files for FC-NVMe Target support
-Date: Wed, 8 Nov 2017 19:17:51 -0800
-Message-ID: <20171109031754.10270-2-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 3/4] qla2xxx_nvmet: Add FC-NVMe Target LS request handling
+Date: Wed, 8 Nov 2017 19:17:53 -0800
+Message-ID: <20171109031754.10270-4-himanshu.madhani@cavium.com>
 References: <20171109031754.10270-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:51648
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:9967
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751550AbdKIDSE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Nov 2017 22:18:04 -0500
+        id S1751660AbdKIDSF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Nov 2017 22:18:05 -0500
 In-Reply-To: <20171109031754.10270-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,936 +24,109 @@ Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_nvmet.c | 783 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_nvmet.h | 130 +++++++
- 2 files changed, 913 insertions(+)
- create mode 100644 drivers/scsi/qla2xxx/qla_nvmet.c
- create mode 100644 drivers/scsi/qla2xxx/qla_nvmet.h
+ drivers/scsi/qla2xxx/qla_dbg.c  |  1 +
+ drivers/scsi/qla2xxx/qla_dbg.h  |  2 ++
+ drivers/scsi/qla2xxx/qla_iocb.c | 42 ++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvmet.c b/drivers/scsi/qla2xxx/qla_nvmet.c
-new file mode 100644
-index 000000000000..ed486a2f899f
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla_nvmet.c
-@@ -0,0 +1,783 @@
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 3e9dc54b89a3..974cae74072f 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -67,6 +67,7 @@
+  * | Target Mode Management	  |	  0xf09b       | 0xf002		|
+  * |                              |                    | 0xf046-0xf049  |
+  * | Target Mode Task Management  |	  0x1000d      |		|
++ * | NVME			  |	  0x11000      |		|
+  * ----------------------------------------------------------------------
+  */
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
+index 8877aa97d829..4ad97923e40b 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.h
++++ b/drivers/scsi/qla2xxx/qla_dbg.h
+@@ -367,6 +367,8 @@ ql_log_qp(uint32_t, struct qla_qpair *, int32_t, const char *fmt, ...);
+ #define ql_dbg_tgt_tmr	0x00001000 /* Target mode task management */
+ #define ql_dbg_tgt_dif  0x00000800 /* Target mode dif */
+ 
++#define ql_dbg_nvme 0x00000400 /* NVME Target */
 +
+ extern int qla27xx_dump_mpi_ram(struct qla_hw_data *, uint32_t, uint32_t *,
+ 	uint32_t, void **);
+ extern int qla24xx_dump_ram(struct qla_hw_data *, uint32_t, uint32_t *,
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index d810a447cb4a..4ac2817e5f8d 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2152,7 +2152,7 @@ __qla2x00_alloc_iocbs(struct qla_qpair *qpair, srb_t *sp)
+ 	sp->handle = handle;
+ 
+ 	/* Adjust entry-counts as needed. */
+-	if (sp->type != SRB_SCSI_CMD)
++	if ((sp->type != SRB_SCSI_CMD) && (sp->type != SRB_NVMET_FCP))
+ 		req_cnt = sp->iocbs;
+ 
+ skip_cmd_array:
+@@ -3381,6 +3381,40 @@ qla_nvme_ls(srb_t *sp, struct pt_ls4_request *cmd_pkt)
+ 	return rval;
+ }
+ 
 +/*
-+ * QLogic Fibre Channel HBA Driver
-+ * Copyright (c)  2003-2017 QLogic Corporation
-+ *
-+ * See LICENSE.qla2xxx for copyright and licensing details.
-+ */
-+#include <linux/scatterlist.h>
-+#include <linux/delay.h>
-+#include <linux/nvme.h>
-+#include <linux/nvme-fc.h>
-+
-+#include "qla_nvme.h"
-+#include "qla_nvmet.h"
-+
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+static void qla_nvmet_send_resp_ctio(struct qla_qpair *qpair,
-+	struct qla_nvmet_cmd *cmd, struct nvmefc_tgt_fcp_req *rsp);
-+static void qla_nvmet_send_abts_ctio(struct scsi_qla_host *vha,
-+		struct abts_recv_from_24xx *abts, bool flag);
-+
-+/*
-+ * qla_nvmet_targetport_delete -
-+ * Invoked by the nvmet to indicate that the target port has
-+ * been deleted
-+ */
-+static void
-+qla_nvmet_targetport_delete(struct nvmet_fc_target_port *targetport)
-+{
-+	struct qla_nvmet_tgtport *tport = targetport->private;
-+
-+	complete(&tport->tport_del);
-+}
-+#endif
-+
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+/*
-+ * qlt_nvmet_ls_done -
-+ * Invoked by the firmware interface to indicate the completion
-+ * of an LS cmd
-+ * Free all associated resources of the LS cmd
-+ */
-+static void qlt_nvmet_ls_done(void *ptr, int res)
-+{
-+	struct srb *sp = ptr;
-+	struct srb_iocb   *nvme = &sp->u.iocb_cmd;
-+	struct nvmefc_tgt_ls_req *rsp = nvme->u.nvme.desc;
-+	struct qla_nvmet_cmd *tgt_cmd = nvme->u.nvme.cmd;
-+
-+	ql_log(ql_log_info, sp->vha, 0x11000,
-+		"Done with NVME LS4 req\n");
-+
-+	ql_log(ql_log_info, sp->vha, 0x11001,
-+		"sp: %p vha: %p, rsp: %p, cmd: %p\n",
-+		sp, sp->vha, nvme->u.nvme.desc, nvme->u.nvme.cmd);
-+
-+	rsp->done(rsp);
-+	/* Free tgt_cmd */
-+	kfree(tgt_cmd->buf);
-+	kfree(tgt_cmd);
-+	qla2x00_rel_sp(sp);
-+}
-+
-+/*
-+ * qla_nvmet_ls_rsp -
-+ * Invoked by the nvme-t to complete the LS req.
-+ * Prepare and send a response CTIO to the firmware.
++ * Build NVMET LS response
 + */
 +static int
-+qla_nvmet_ls_rsp(struct nvmet_fc_target_port *tgtport,
-+			struct nvmefc_tgt_ls_req *rsp)
++qla_nvmet_ls(srb_t *sp, struct pt_ls4_request *rsp_pkt)
 +{
-+	struct qla_nvmet_cmd *tgt_cmd =
-+		container_of(rsp, struct qla_nvmet_cmd, cmd.ls_req);
-+	struct scsi_qla_host *vha = tgt_cmd->vha;
-+	struct srb_iocb   *nvme;
-+	int     rval = QLA_FUNCTION_FAILED;
-+	srb_t *sp;
-+
-+	ql_log(ql_log_info, vha, 0x11002,
-+		"Dumping the NVMET-LS response buffer\n");
-+	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x2075,
-+		(uint8_t *)rsp->rspbuf, rsp->rsplen);
-+
-+	/* Alloc SRB structure */
-+	sp = qla2x00_get_sp(vha, NULL, GFP_ATOMIC);
-+	if (!sp) {
-+		ql_log(ql_log_info, vha, 0x11003, "Failed to allocate SRB\n");
-+		return -ENOMEM;
-+	}
-+
-+	sp->type = SRB_NVMET_LS;
-+	sp->done = qlt_nvmet_ls_done;
-+	sp->vha = vha;
-+	sp->fcport = tgt_cmd->fcport;
++	struct srb_iocb *nvme;
++	int     rval = QLA_SUCCESS;
 +
 +	nvme = &sp->u.iocb_cmd;
-+	nvme->u.nvme.rsp_dma = rsp->rspdma;
-+	nvme->u.nvme.rsp_len = rsp->rsplen;
-+	nvme->u.nvme.exchange_address = tgt_cmd->atio.u.pt_ls4.exchange_address;
-+	nvme->u.nvme.nport_handle = tgt_cmd->atio.u.pt_ls4.nport_handle;
-+	nvme->u.nvme.vp_index = tgt_cmd->atio.u.pt_ls4.vp_index;
 +
-+	nvme->u.nvme.cmd = tgt_cmd; /* To be freed */
-+	nvme->u.nvme.desc = rsp; /* Call back to nvmet */
++	rsp_pkt->entry_type = PT_LS4_REQUEST;
++	rsp_pkt->entry_count = 1;
++	rsp_pkt->control_flags = cpu_to_le16(CF_LS4_RESPONDER << CF_LS4_SHIFT);
++	rsp_pkt->handle = sp->handle;
 +
-+	rval = qla2x00_start_sp(sp);
-+	if (rval != QLA_SUCCESS) {
-+		ql_log(ql_log_warn, vha, 0x11004,
-+			"qla2x00_start_sp failed = %d\n", rval);
-+		return rval;
-+	}
++	rsp_pkt->nport_handle = sp->fcport->loop_id;
++	rsp_pkt->vp_index = nvme->u.nvme.vp_index;
++	rsp_pkt->exchange_address = cpu_to_le32(nvme->u.nvme.exchange_address);
 +
-+	return 0;
++	rsp_pkt->tx_dseg_count = 1;
++	rsp_pkt->tx_byte_count = cpu_to_le16(nvme->u.nvme.rsp_len);
++	rsp_pkt->dseg0_len = cpu_to_le16(nvme->u.nvme.rsp_len);
++	rsp_pkt->dseg0_address[0] = cpu_to_le32(LSD(nvme->u.nvme.rsp_dma));
++	rsp_pkt->dseg0_address[1] = cpu_to_le32(MSD(nvme->u.nvme.rsp_dma));
++
++	ql_log(ql_log_info, sp->vha, 0xffff,
++		"Dumping the NVME-LS response IOCB\n");
++	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, sp->vha, 0x2075,
++		(uint8_t *)rsp_pkt, sizeof(*rsp_pkt));
++
++	return rval;
 +}
 +
-+/*
-+ * qla_nvmet_fcp_op -
-+ * Invoked by the nvme-t to complete the IO.
-+ * Prepare and send a response CTIO to the firmware.
-+ */
-+static int
-+qla_nvmet_fcp_op(struct nvmet_fc_target_port *tgtport,
-+			struct nvmefc_tgt_fcp_req *rsp)
-+{
-+	struct qla_nvmet_cmd *tgt_cmd =
-+		container_of(rsp, struct qla_nvmet_cmd, cmd.fcp_req);
-+	struct scsi_qla_host *vha = tgt_cmd->vha;
-+
-+	/* Prepare and send CTIO 82h */
-+	qla_nvmet_send_resp_ctio(vha->qpair, tgt_cmd, rsp);
-+
-+	return 0;
-+}
-+/*
-+ * qla_nvmet_fcp_abort_done
-+ * free up the used resources
-+ */
-+static void qla_nvmet_fcp_abort_done(void *ptr, int res)
-+{
-+	srb_t *sp = ptr;
-+
-+	qla2x00_rel_sp(sp);
-+}
-+
-+/*
-+ * qla_nvmet_fcp_abort -
-+ * Invoked by the nvme-t to abort an IO
-+ * Send an abort to the firmware
-+ */
-+static void
-+qla_nvmet_fcp_abort(struct nvmet_fc_target_port *tgtport,
-+			struct nvmefc_tgt_fcp_req *req)
-+{
-+	struct qla_nvmet_cmd *tgt_cmd =
-+		container_of(req, struct qla_nvmet_cmd, cmd.fcp_req);
-+	struct scsi_qla_host *vha = tgt_cmd->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	srb_t *sp;
-+
-+	/* Alloc SRB structure */
-+	sp = qla2x00_get_sp(vha, NULL, GFP_KERNEL);
-+	if (!sp) {
-+		ql_log(ql_log_info, vha, 0x11005, "Failed to allocate SRB\n");
-+		return;
-+	}
-+
-+	sp->type = SRB_NVMET_SEND_ABTS;
-+	sp->done = qla_nvmet_fcp_abort_done;
-+	sp->vha = vha;
-+	sp->fcport = tgt_cmd->fcport;
-+
-+	ha->isp_ops->abort_command(sp);
-+
-+}
-+
-+/*
-+ * qla_nvmet_fcp_req_release -
-+ * Delete the cmd from the list and free the cmd
-+ */
-+
-+static void
-+qla_nvmet_fcp_req_release(struct nvmet_fc_target_port *tgtport,
-+			struct nvmefc_tgt_fcp_req *rsp)
-+{
-+	struct qla_nvmet_cmd *tgt_cmd =
-+		container_of(rsp, struct qla_nvmet_cmd, cmd.fcp_req);
-+	scsi_qla_host_t *vha = tgt_cmd->vha;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
-+	list_del(&tgt_cmd->cmd_list);
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
-+
-+	kfree(tgt_cmd);
-+}
-+
-+static struct nvmet_fc_target_template qla_nvmet_fc_transport = {
-+	.targetport_delete	= qla_nvmet_targetport_delete,
-+	.xmt_ls_rsp		= qla_nvmet_ls_rsp,
-+	.fcp_op			= qla_nvmet_fcp_op,
-+	.fcp_abort		= qla_nvmet_fcp_abort,
-+	.fcp_req_release	= qla_nvmet_fcp_req_release,
-+	.max_hw_queues		= 8,
-+	.max_sgl_segments	= 128,
-+	.max_dif_sgl_segments	= 64,
-+	.dma_boundary		= 0xFFFFFFFF,
-+	.target_features	= NVMET_FCTGTFEAT_READDATA_RSP |
-+					NVMET_FCTGTFEAT_CMD_IN_ISR |
-+					NVMET_FCTGTFEAT_OPDONE_IN_ISR,
-+	.target_priv_sz	= sizeof(struct nvme_private),
-+};
-+#endif
-+/*
-+ * qla_nvmet_create_targetport -
-+ * Create a targetport. Registers the template with the nvme-t
-+ * layer
-+ */
-+int qla_nvmet_create_targetport(struct scsi_qla_host *vha)
-+{
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+	struct nvmet_fc_port_info pinfo;
-+	struct qla_nvmet_tgtport *tport;
-+	int error = 0;
-+
-+	ql_dbg(ql_dbg_nvme, vha, 0xe081,
-+		"Creating target port for :%p\n", vha);
-+
-+	memset(&pinfo, 0, (sizeof(struct nvmet_fc_port_info)));
-+	pinfo.node_name = wwn_to_u64(vha->node_name);
-+	pinfo.port_name = wwn_to_u64(vha->port_name);
-+	pinfo.port_id	= vha->d_id.b24;
-+
-+	error = nvmet_fc_register_targetport(&pinfo,
-+	    &qla_nvmet_fc_transport, &vha->hw->pdev->dev,
-+	    &vha->targetport);
-+
-+	if (error) {
-+		ql_dbg(ql_dbg_nvme, vha, 0xe082,
-+			"Cannot register NVME transport:%d\n", error);
-+		return error;
-+	}
-+	tport = (struct qla_nvmet_tgtport *)vha->targetport->private;
-+	tport->vha = vha;
-+	ql_dbg(ql_dbg_nvme, vha, 0xe082,
-+		" Registered NVME transport:%p WWPN:%llx\n",
-+		tport, pinfo.port_name);
-+#endif
-+	return 0;
-+}
-+
-+/*
-+ * qla_nvmet_delete -
-+ * Delete a targetport.
-+ */
-+int qla_nvmet_delete(struct scsi_qla_host *vha)
-+{
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+	struct qla_nvmet_tgtport *tport;
-+
-+	if (!vha->flags.nvmet_enabled)
-+		return 0;
-+	if (vha->targetport) {
-+		tport = (struct qla_nvmet_tgtport *)vha->targetport->private;
-+
-+		ql_dbg(ql_dbg_nvme, vha, 0xe083,
-+			"Deleting target port :%p\n", tport);
-+		init_completion(&tport->tport_del);
-+		nvmet_fc_unregister_targetport(vha->targetport);
-+		wait_for_completion_timeout(&tport->tport_del, 5);
-+
-+		nvmet_release_sessions(vha);
-+	}
-+#endif
-+	return 0;
-+}
-+
-+/*
-+ * qla_nvmet_handle_ls -
-+ * Handle a link service request from the initiator.
-+ * Get the LS payload from the ATIO queue, invoke
-+ * nvmet_fc_rcv_ls_req to pass the LS req to nvmet.
-+ */
-+int qla_nvmet_handle_ls(struct scsi_qla_host *vha,
-+	struct pt_ls4_rx_unsol *pt_ls4, void *buf)
-+{
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+	struct qla_nvmet_cmd *tgt_cmd;
-+	uint32_t size;
-+	int ret;
-+	uint32_t look_up_sid;
-+	fc_port_t *sess = NULL;
-+
-+	look_up_sid = pt_ls4->s_id[2] << 16 |
-+				pt_ls4->s_id[1] << 8 | pt_ls4->s_id[0];
-+
-+	ql_log(ql_log_info, vha, 0x11005,
-+		"%s - Look UP sid: %#x\n", __func__, look_up_sid);
-+
-+	sess = qla_nvmet_find_sess_by_s_id(vha, look_up_sid);
-+	if (unlikely(!sess))
-+		WARN_ON(1);
-+
-+	size = cpu_to_le16(pt_ls4->desc_len) + 8;
-+
-+	tgt_cmd = kzalloc(sizeof(struct qla_nvmet_cmd), GFP_ATOMIC);
-+	if (tgt_cmd == NULL) {
-+		ql_dbg(ql_dbg_nvme, vha, 0xe084,
-+			"Memory allocation failed\n");
-+		return -ENOMEM;
-+	}
-+	tgt_cmd->vha = vha;
-+	tgt_cmd->ox_id = pt_ls4->ox_id;
-+	tgt_cmd->buf = buf;
-+	/* Store the received nphdl, rx_exh_addr etc */
-+	memcpy(&tgt_cmd->atio.u.pt_ls4, pt_ls4, sizeof(struct pt_ls4_rx_unsol));
-+	tgt_cmd->fcport = sess;
-+
-+	ql_log(ql_log_info, vha, 0x11006,
-+		"Dumping the PURLS-ATIO request\n");
-+	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x2075,
-+		(uint8_t *)pt_ls4, sizeof(struct pt_ls4_rx_unsol));
-+
-+	ql_log(ql_log_info, vha, 0x11007,
-+		"Sending LS to nvmet buf: %p, len: %#x\n", buf, size);
-+
-+	ret = nvmet_fc_rcv_ls_req(vha->targetport,
-+		&tgt_cmd->cmd.ls_req, buf, size);
-+
-+	if (ret == 0) {
-+		ql_log(ql_log_info, vha, 0x11008,
-+			"LS req handled successfully\n");
-+		return 0;
-+	}
-+	ql_log(ql_log_warn, vha, 0x11009,
-+		"LS req failed\n");
-+
-+	return ret;
-+#else
-+	return 0;
-+#endif
-+}
-+
-+/*
-+ * qla_nvmet_process_cmd -
-+ * Handle NVME cmd request from the initiator.
-+ * Get the NVME payload from the ATIO queue, invoke
-+ * nvmet_fc_rcv_ls_req to pass the LS req to nvmet.
-+ * On a failure send an abts to the initiator?
-+ */
-+int qla_nvmet_process_cmd(struct scsi_qla_host *vha,
-+	struct qla_nvmet_cmd *tgt_cmd)
-+{
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+	int ret;
-+	struct atio7_nvme_cmnd *nvme_cmd;
-+
-+	nvme_cmd = (struct atio7_nvme_cmnd *)&tgt_cmd->nvme_cmd_iu;
-+
-+	ret = nvmet_fc_rcv_fcp_req(vha->targetport, &tgt_cmd->cmd.fcp_req,
-+			nvme_cmd, tgt_cmd->cmd_len);
-+	if (ret != 0) {
-+		ql_log(ql_log_warn, vha, 0x1100a,
-+			"%s-%d - Failed (ret: %#x) to process NVME command\n",
-+				__func__, __LINE__, ret);
-+		/* Send ABTS to initator ? */
-+	}
-+#endif
-+	return 0;
-+}
-+
-+/*
-+ * qla_nvmet_handle_abts
-+ * Handle an abort from the initiator
-+ * Invoke nvmet_fc_rcv_fcp_abort to pass the abts to the nvmet
-+ */
-+int qla_nvmet_handle_abts(struct scsi_qla_host *vha,
-+	struct abts_recv_from_24xx *abts)
-+{
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+	uint16_t ox_id = cpu_to_be16(abts->fcp_hdr_le.ox_id);
-+	unsigned long flags;
-+	struct qla_nvmet_cmd *cmd = NULL;
-+
-+	/* Retrieve the cmd from cmd list */
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
-+	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
-+		if (cmd->ox_id == ox_id)
-+			break; /* Found the cmd */
-+	}
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
-+	if (!cmd) {
-+		ql_log(ql_log_warn, vha, 0x1100b,
-+			"%s-%d - Command not found\n", __func__, __LINE__);
-+		/* Send a RJT */
-+		qla_nvmet_send_abts_ctio(vha, abts, 0);
-+		return 0;
-+	}
-+
-+	nvmet_fc_rcv_fcp_abort(vha->targetport, &cmd->cmd.fcp_req);
-+	/* Send an ACC */
-+	qla_nvmet_send_abts_ctio(vha, abts, 1);
-+#endif
-+	return 0;
-+}
-+
-+#if	IS_ENABLED(CONFIG_NVME_TARGET_FC)
-+/*
-+ * qla_nvmet_abts_done
-+ * Complete the cmd back to the nvme-t and
-+ * free up the used resources
-+ */
-+static void qla_nvmet_abts_done(void *ptr, int res)
-+{
-+	srb_t *sp = ptr;
-+
-+	qla2x00_rel_sp(sp);
-+}
-+/*
-+ * qla_nvmet_fcp_done
-+ * Complete the cmd back to the nvme-t and
-+ * free up the used resources
-+ */
-+static void qla_nvmet_fcp_done(void *ptr, int res)
-+{
-+	srb_t *sp = ptr;
-+	struct nvmefc_tgt_fcp_req *rsp;
-+
-+	rsp = sp->u.iocb_cmd.u.nvme.desc;
-+
-+	if (res) {
-+		rsp->fcp_error = NVME_SC_SUCCESS;
-+		if (rsp->op == NVMET_FCOP_RSP)
-+			rsp->transferred_length = 0;
-+		else
-+			rsp->transferred_length = rsp->transfer_length;
-+	} else {
-+		rsp->fcp_error = NVME_SC_DATA_XFER_ERROR;
-+		rsp->transferred_length = 0;
-+	}
-+	rsp->done(rsp);
-+	qla2x00_rel_sp(sp);
-+}
-+
-+/*
-+ * qla_nvmet_send_resp_ctio
-+ * Send the response CTIO to the firmware
-+ */
-+static void qla_nvmet_send_resp_ctio(struct qla_qpair *qpair,
-+	struct qla_nvmet_cmd *cmd, struct nvmefc_tgt_fcp_req *rsp_buf)
-+{
-+	struct atio_from_isp *atio = &cmd->atio;
-+	struct ctio_nvme_to_27xx *ctio;
-+	struct scsi_qla_host *vha = cmd->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct fcp_hdr *fchdr = &atio->u.nvme_isp27.fcp_hdr;
-+	srb_t *sp;
-+	unsigned long flags;
-+	uint16_t temp, c_flags = 0;
-+	struct req_que *req = vha->hw->req_q_map[0];
-+	uint32_t req_cnt = 1;
-+	uint32_t *cur_dsd;
-+	uint16_t avail_dsds;
-+	uint16_t tot_dsds, i, cnt;
-+	struct scatterlist *sgl, *sg;
-+
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+	/* Alloc SRB structure */
-+	sp = qla2x00_get_sp(vha, cmd->fcport, GFP_KERNEL);
-+	if (!sp) {
-+		ql_log(ql_log_info, vha, 0x1100c, "Failed to allocate SRB\n");
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+		return;
-+	}
-+
-+	sp->type = SRB_NVMET_FCP;
-+	sp->name = "nvmet_fcp";
-+	sp->done = qla_nvmet_fcp_done;
-+	sp->u.iocb_cmd.u.nvme.desc = rsp_buf;
-+	sp->u.iocb_cmd.u.nvme.cmd = cmd;
-+
-+	ctio = (struct ctio_nvme_to_27xx *)qla2x00_alloc_iocbs(vha, sp);
-+	if (!ctio) {
-+		ql_dbg(ql_dbg_nvme, vha, 0x3067,
-+		    "qla2x00t(%ld): %s failed: unable to allocate request packet",
-+		    vha->host_no, __func__);
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+		return;
-+	}
-+
-+	ctio->entry_type = CTIO_NVME;
-+	ctio->entry_count = 1;
-+	ctio->handle = sp->handle;
-+	ctio->nport_handle = cpu_to_le16(cmd->fcport->loop_id);
-+	ctio->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
-+	ctio->vp_index = vha->vp_idx;
-+	ctio->initiator_id[0] = fchdr->s_id[2];
-+	ctio->initiator_id[1] = fchdr->s_id[1];
-+	ctio->initiator_id[2] = fchdr->s_id[0];
-+	ctio->exchange_addr = atio->u.nvme_isp27.exchange_addr;
-+	temp = be16_to_cpu(fchdr->ox_id);
-+	ctio->ox_id = cpu_to_le16(temp);
-+	tot_dsds = ctio->dseg_count = cpu_to_le16(rsp_buf->sg_cnt);
-+	c_flags = atio->u.nvme_isp27.attr << 9;
-+
-+	if ((ctio->dseg_count > 1) && (rsp_buf->op != NVMET_FCOP_RSP)) {
-+		/* Check for additional continuation IOCB space */
-+		req_cnt = qla24xx_calc_iocbs(vha, ctio->dseg_count);
-+		ctio->entry_count = req_cnt;
-+
-+		if (req->cnt < (req_cnt + 2)) {
-+			cnt = (uint16_t)RD_REG_DWORD_RELAXED(req->req_q_out);
-+
-+			if  (req->ring_index < cnt)
-+				req->cnt = cnt - req->ring_index;
-+			else
-+				req->cnt = req->length -
-+				    (req->ring_index - cnt);
-+
-+			if (unlikely(req->cnt < (req_cnt + 2))) {
-+				ql_log(ql_log_warn, vha, 0xfff,
-+					"Running out of IOCB space for continuation IOCBs\n");
-+				goto err_exit;
-+			}
-+		}
-+	}
-+
-+	switch (rsp_buf->op) {
-+	case NVMET_FCOP_READDATA:
-+	case NVMET_FCOP_READDATA_RSP:
-+		/* Populate the CTIO resp with the SGL present in the rsp */
-+		ql_log(ql_log_info, vha, 0x1100c,
-+			"op: %#x, ox_id=%x c_flags=%x transfer_length: %#x req_cnt: %#x, tot_dsds: %#x\n",
-+			rsp_buf->op, ctio->ox_id, c_flags,
-+			rsp_buf->transfer_length, req_cnt, tot_dsds);
-+
-+		avail_dsds = 1;
-+		cur_dsd = (uint32_t *)
-+				&ctio->u.nvme_status_mode0.dsd0[0];
-+		sgl = rsp_buf->sg;
-+
-+		/* Load data segments */
-+		for_each_sg(sgl, sg, tot_dsds, i) {
-+			dma_addr_t      sle_dma;
-+			cont_a64_entry_t *cont_pkt;
-+
-+			/* Allocate additional continuation packets? */
-+			if (avail_dsds == 0) {
-+				/*
-+				 * Five DSDs are available in the Cont
-+				 * Type 1 IOCB.
-+				 */
-+
-+				/* Adjust ring index */
-+				req->ring_index++;
-+				if (req->ring_index == req->length) {
-+					req->ring_index = 0;
-+					req->ring_ptr = req->ring;
-+				} else {
-+					req->ring_ptr++;
-+				}
-+				cont_pkt = (cont_a64_entry_t *)
-+						req->ring_ptr;
-+				*((uint32_t *)(&cont_pkt->entry_type)) =
-+					cpu_to_le32(CONTINUE_A64_TYPE);
-+
-+				cur_dsd = (uint32_t *)
-+						cont_pkt->dseg_0_address;
-+				avail_dsds = 5;
-+			}
-+
-+			sle_dma = sg_dma_address(sg);
-+			*cur_dsd++ = cpu_to_le32(LSD(sle_dma));
-+			*cur_dsd++ = cpu_to_le32(MSD(sle_dma));
-+			*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
-+			avail_dsds--;
-+		}
-+
-+		ctio->u.nvme_status_mode0.transfer_len =
-+			cpu_to_le32(rsp_buf->transfer_length);
-+		ctio->u.nvme_status_mode0.relative_offset =
-+			cpu_to_le32(rsp_buf->offset);
-+		ctio->flags = cpu_to_le16(c_flags | 0x2);
-+
-+		if (rsp_buf->op == NVMET_FCOP_READDATA_RSP) {
-+			if (rsp_buf->rsplen == 12) {
-+				ctio->flags |=
-+					NVMET_CTIO_STS_MODE0 |
-+					NVMET_CTIO_SEND_STATUS;
-+			} else if (rsp_buf->rsplen == 32) {
-+				struct nvme_fc_ersp_iu *ersp =
-+				    rsp_buf->rspaddr;
-+				uint32_t iter = 4, *inbuf, *outbuf;
-+
-+				ctio->flags |=
-+					NVMET_CTIO_STS_MODE1 |
-+					NVMET_CTIO_SEND_STATUS;
-+				inbuf = (uint32_t *)
-+					&((uint8_t *)rsp_buf->rspaddr)[16];
-+				outbuf = (uint32_t *)
-+				    ctio->u.nvme_status_mode1.nvme_comp_q_entry;
-+				for (; iter; iter--)
-+					*outbuf++ = cpu_to_be32(*inbuf++);
-+
-+				ctio->u.nvme_status_mode1.rsp_seq_num =
-+					cpu_to_be32(ersp->rsn);
-+				ctio->u.nvme_status_mode1.transfer_len =
-+					cpu_to_be32(ersp->xfrd_len);
-+			} else
-+				ql_log(ql_log_warn, vha, 0x1100d,
-+						"unhandled resp len = %x\n",
-+						rsp_buf->rsplen);
-+		}
+ int
+ qla2x00_start_sp(srb_t *sp)
+ {
+@@ -3440,6 +3474,9 @@ qla2x00_start_sp(srb_t *sp)
+ 	case SRB_NVME_LS:
+ 		qla_nvme_ls(sp, pkt);
+ 		break;
++	case SRB_NVMET_LS:
++		qla_nvmet_ls(sp, pkt);
 +		break;
-+
-+	case NVMET_FCOP_WRITEDATA:
-+		/* Send transfer rdy */
-+		ql_log(ql_log_info, vha, 0x1100e,
-+			"FCOP_WRITE: ox_id=%x c_flags=%x transfer_length: %#x req_cnt: %#x, tot_dsds: %#x\n",
-+			ctio->ox_id, c_flags, rsp_buf->transfer_length,
-+			req_cnt, tot_dsds);
-+
-+		ctio->flags = cpu_to_le16(c_flags | 0x1);
-+
-+		avail_dsds = 1;
-+		cur_dsd = (uint32_t *)&ctio->u.nvme_status_mode0.dsd0[0];
-+		sgl = rsp_buf->sg;
-+
-+		/* Load data segments */
-+		for_each_sg(sgl, sg, tot_dsds, i) {
-+			dma_addr_t      sle_dma;
-+			cont_a64_entry_t *cont_pkt;
-+
-+			/* Allocate additional continuation packets? */
-+			if (avail_dsds == 0) {
-+				/*
-+				 * Five DSDs are available in the Continuation
-+				 * Type 1 IOCB.
-+				 */
-+
-+				/* Adjust ring index */
-+				req->ring_index++;
-+				if (req->ring_index == req->length) {
-+					req->ring_index = 0;
-+					req->ring_ptr = req->ring;
-+				} else {
-+					req->ring_ptr++;
-+				}
-+				cont_pkt = (cont_a64_entry_t *)req->ring_ptr;
-+				*((uint32_t *)(&cont_pkt->entry_type)) =
-+					cpu_to_le32(CONTINUE_A64_TYPE);
-+
-+				cur_dsd = (uint32_t *)cont_pkt->dseg_0_address;
-+				avail_dsds = 5;
-+			}
-+
-+			sle_dma = sg_dma_address(sg);
-+			*cur_dsd++ = cpu_to_le32(LSD(sle_dma));
-+			*cur_dsd++ = cpu_to_le32(MSD(sle_dma));
-+			*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
-+			avail_dsds--;
-+		}
-+
-+		ctio->u.nvme_status_mode0.transfer_len =
-+			cpu_to_le32(rsp_buf->transfer_length);
-+		ctio->u.nvme_status_mode0.relative_offset =
-+			cpu_to_le32(rsp_buf->offset);
-+
+ 	case SRB_ABT_CMD:
+ 		IS_QLAFX00(ha) ?
+ 			qlafx00_abort_iocb(sp, pkt) :
+@@ -3459,6 +3496,9 @@ qla2x00_start_sp(srb_t *sp)
+ 	case SRB_NACK_LOGO:
+ 		qla2x00_send_notify_ack_iocb(sp, pkt);
+ 		break;
++	case SRB_NVME_ELS_RSP:
++		qlt_send_els_resp(sp, pkt);
 +		break;
-+	case NVMET_FCOP_RSP:
-+		/* Send a response frame */
-+		ctio->flags = cpu_to_le16(c_flags);
-+		if (rsp_buf->rsplen == 12) {
-+			ctio->flags |=
-+			NVMET_CTIO_STS_MODE0 | NVMET_CTIO_SEND_STATUS;
-+		} else if (rsp_buf->rsplen == 32) {
-+			struct nvme_fc_ersp_iu *ersp = rsp_buf->rspaddr;
-+			uint32_t iter = 4, *inbuf, *outbuf;
-+
-+			ctio->flags |=
-+				NVMET_CTIO_STS_MODE1 | NVMET_CTIO_SEND_STATUS;
-+			inbuf = (uint32_t *)
-+				&((uint8_t *)rsp_buf->rspaddr)[16];
-+			outbuf = (uint32_t *)
-+				ctio->u.nvme_status_mode1.nvme_comp_q_entry;
-+			for (; iter; iter--)
-+				*outbuf++ = cpu_to_be32(*inbuf++);
-+			ctio->u.nvme_status_mode1.rsp_seq_num =
-+						cpu_to_be32(ersp->rsn);
-+			ctio->u.nvme_status_mode1.transfer_len =
-+						cpu_to_be32(ersp->xfrd_len);
-+
-+			ql_log(ql_log_info, vha, 0x1100f,
-+				"op: %#x, rsplen: %#x\n", rsp_buf->op,
-+				rsp_buf->rsplen);
-+		} else
-+			ql_log(ql_log_warn, vha, 0x11010,
-+				"unhandled resp len = %x for op NVMET_FCOP_RSP\n",
-+				rsp_buf->rsplen);
-+		break;
-+	}
-+
-+	/* Memory Barrier */
-+	wmb();
-+
-+	qla2x00_start_iocbs(vha, vha->hw->req_q_map[0]);
-+err_exit:
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+}
-+
-+/*
-+ * qla_nvmet_send_abts_ctio
-+ * Send the abts CTIO to the firmware
-+ */
-+static void qla_nvmet_send_abts_ctio(struct scsi_qla_host *vha,
-+		struct abts_recv_from_24xx *rabts, bool flag)
-+{
-+	struct abts_resp_to_24xx *resp;
-+	srb_t *sp;
-+	uint32_t f_ctl;
-+	uint8_t *p;
-+
-+	/* Alloc SRB structure */
-+	sp = qla2x00_get_sp(vha, NULL, GFP_ATOMIC);
-+	if (!sp) {
-+		ql_log(ql_log_info, vha, 0x11011, "Failed to allocate SRB\n");
-+		return;
-+	}
-+
-+	sp->type = SRB_NVMET_ABTS;
-+	sp->name = "nvmet_abts";
-+	sp->done = qla_nvmet_abts_done;
-+
-+	resp = (struct abts_resp_to_24xx *)qla2x00_alloc_iocbs(vha, sp);
-+	if (!resp) {
-+		ql_dbg(ql_dbg_nvme, vha, 0x3067,
-+		    "qla2x00t(%ld): %s failed: unable to allocate request packet",
-+		    vha->host_no, __func__);
-+		return;
-+	}
-+
-+	resp->entry_type = ABTS_RESP_24XX;
-+	resp->entry_count = 1;
-+	resp->handle = sp->handle;
-+
-+	resp->nport_handle = rabts->nport_handle;
-+	resp->vp_index = rabts->vp_index;
-+	resp->exchange_address = rabts->exchange_addr_to_abort;
-+	resp->fcp_hdr_le = rabts->fcp_hdr_le;
-+	f_ctl = cpu_to_le32(F_CTL_EXCH_CONTEXT_RESP |
-+	    F_CTL_LAST_SEQ | F_CTL_END_SEQ |
-+	    F_CTL_SEQ_INITIATIVE);
-+	p = (uint8_t *)&f_ctl;
-+	resp->fcp_hdr_le.f_ctl[0] = *p++;
-+	resp->fcp_hdr_le.f_ctl[1] = *p++;
-+	resp->fcp_hdr_le.f_ctl[2] = *p;
-+
-+	resp->fcp_hdr_le.d_id[0] = rabts->fcp_hdr_le.s_id[0];
-+	resp->fcp_hdr_le.d_id[1] = rabts->fcp_hdr_le.s_id[1];
-+	resp->fcp_hdr_le.d_id[2] = rabts->fcp_hdr_le.s_id[2];
-+	resp->fcp_hdr_le.s_id[0] = rabts->fcp_hdr_le.d_id[0];
-+	resp->fcp_hdr_le.s_id[1] = rabts->fcp_hdr_le.d_id[1];
-+	resp->fcp_hdr_le.s_id[2] = rabts->fcp_hdr_le.d_id[2];
-+
-+	if (flag) { /* BA_ACC */
-+		resp->fcp_hdr_le.r_ctl = R_CTL_BASIC_LINK_SERV | R_CTL_B_ACC;
-+		resp->payload.ba_acct.seq_id_valid = SEQ_ID_INVALID;
-+		resp->payload.ba_acct.low_seq_cnt = 0x0000;
-+		resp->payload.ba_acct.high_seq_cnt = 0xFFFF;
-+		resp->payload.ba_acct.ox_id = rabts->fcp_hdr_le.ox_id;
-+		resp->payload.ba_acct.rx_id = rabts->fcp_hdr_le.rx_id;
-+	} else {
-+		resp->fcp_hdr_le.r_ctl = R_CTL_BASIC_LINK_SERV | R_CTL_B_RJT;
-+		resp->payload.ba_rjt.reason_code =
-+			BA_RJT_REASON_CODE_UNABLE_TO_PERFORM;
-+	}
-+	/* Memory Barrier */
-+	wmb();
-+
-+	qla2x00_start_iocbs(vha, vha->hw->req_q_map[0]);
-+}
-+#endif
-diff --git a/drivers/scsi/qla2xxx/qla_nvmet.h b/drivers/scsi/qla2xxx/qla_nvmet.h
-new file mode 100644
-index 000000000000..5c9e793116bd
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla_nvmet.h
-@@ -0,0 +1,130 @@
-+
-+/*
-+ * QLogic Fibre Channel HBA Driver
-+ * Copyright (c)  2003-2017 QLogic Corporation
-+ *
-+ * See LICENSE.qla2xxx for copyright and licensing details.
-+ */
-+#ifndef __QLA_NVMET_H
-+#define __QLA_NVMET_H
-+
-+#include <linux/blk-mq.h>
-+#include <uapi/scsi/fc/fc_fs.h>
-+#include <uapi/scsi/fc/fc_els.h>
-+#include <linux/nvme-fc-driver.h>
-+
-+#include "qla_def.h"
-+
-+struct qla_nvmet_tgtport {
-+	struct scsi_qla_host *vha;
-+	struct completion tport_del;
-+};
-+
-+struct qla_nvmet_cmd {
-+	union {
-+		struct nvmefc_tgt_ls_req ls_req;
-+		struct nvmefc_tgt_fcp_req fcp_req;
-+	} cmd;
-+	struct scsi_qla_host *vha;
-+	void *buf;
-+	struct atio_from_isp atio;
-+	struct atio7_nvme_cmnd nvme_cmd_iu;
-+	uint16_t cmd_len;
-+	spinlock_t nvme_cmd_lock;
-+	struct list_head cmd_list; /* List of cmds */
-+	struct work_struct work;
-+
-+	struct scatterlist *sg;	/* cmd data buffer SG vector */
-+	int sg_cnt;		/* SG segments count */
-+	int bufflen;		/* cmd buffer length */
-+	int offset;
-+	enum dma_data_direction dma_data_direction;
-+	uint16_t ox_id;
-+	struct fc_port *fcport;
-+};
-+
-+#define CTIO_NVME    0x82            /* CTIO FC-NVMe IOCB */
-+struct ctio_nvme_to_27xx {
-+	uint8_t entry_type;             /* Entry type. */
-+	uint8_t entry_count;            /* Entry count. */
-+	uint8_t sys_define;             /* System defined. */
-+	uint8_t entry_status;           /* Entry Status. */
-+
-+	uint32_t handle;                /* System handle. */
-+	uint16_t nport_handle;          /* N_PORT handle. */
-+	uint16_t timeout;               /* Command timeout. */
-+
-+	uint16_t dseg_count;            /* Data segment count. */
-+	uint8_t	 vp_index;		/* vp_index */
-+	uint8_t  addl_flags;		/* Additional flags */
-+
-+	uint8_t  initiator_id[3];	/* Initiator ID */
-+	uint8_t	 rsvd1;
-+
-+	uint32_t exchange_addr;		/* Exch addr */
-+
-+	uint16_t ox_id;			/* Ox ID */
-+	uint16_t flags;
-+#define NVMET_CTIO_STS_MODE0 0
-+#define NVMET_CTIO_STS_MODE1 BIT_6
-+#define NVMET_CTIO_STS_MODE2 BIT_7
-+#define NVMET_CTIO_SEND_STATUS BIT_15
-+	union {
-+		struct {
-+			uint8_t reserved1[8];
-+			uint32_t relative_offset;
-+			uint8_t	reserved2[4];
-+			uint32_t transfer_len;
-+			uint8_t reserved3[4];
-+			uint32_t dsd0[2];
-+			uint32_t dsd0_len;
-+		} nvme_status_mode0;
-+		struct {
-+			uint8_t nvme_comp_q_entry[16];
-+			uint32_t transfer_len;
-+			uint32_t rsp_seq_num;
-+			uint32_t dsd0[2];
-+			uint32_t dsd0_len;
-+		} nvme_status_mode1;
-+		struct {
-+			uint32_t reserved4[4];
-+			uint32_t transfer_len;
-+			uint32_t reserved5;
-+			uint32_t rsp_dsd[2];
-+			uint32_t rsp_dsd_len;
-+		} nvme_status_mode2;
-+	} u;
-+} __packed;
-+
-+/*
-+ * ISP queue - CTIO type FC NVMe from ISP to target driver
-+ * returned entry structure.
-+ */
-+struct ctio_nvme_from_27xx {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;		    /* System defined handle */
-+	uint16_t status;
-+	uint16_t timeout;
-+	uint16_t dseg_count;		    /* Data segment count. */
-+	uint8_t  vp_index;
-+	uint8_t  reserved1[5];
-+	uint32_t exchange_address;
-+	uint16_t ox_id;
-+	uint16_t flags;
-+	uint32_t residual;
-+	uint8_t  reserved2[32];
-+} __packed;
-+
-+int qla_nvmet_handle_ls(struct scsi_qla_host *vha,
-+	struct pt_ls4_rx_unsol *ls4, void *buf);
-+int qla_nvmet_create_targetport(struct scsi_qla_host *vha);
-+int qla_nvmet_delete(struct scsi_qla_host *vha);
-+int qla_nvmet_handle_abts(struct scsi_qla_host *vha,
-+	struct abts_recv_from_24xx *abts);
-+int qla_nvmet_process_cmd(struct scsi_qla_host *vha,
-+	struct qla_nvmet_cmd *cmd);
-+
-+#endif
+ 	default:
+ 		break;
+ 	}
 -- 
 2.12.0
