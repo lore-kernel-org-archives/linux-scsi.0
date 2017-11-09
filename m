@@ -1,134 +1,121 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v12 0/7] block, scsi: Improve suspend and resume
-Date: Thu, 9 Nov 2017 10:49:52 -0800
-Message-ID: <20171109184959.4617-1-bart.vanassche@wdc.com>
+Subject: [PATCH v12 1/7] block: Make q_usage_counter also track legacy requests
+Date: Thu, 9 Nov 2017 10:49:53 -0800
+Message-ID: <20171109184959.4617-2-bart.vanassche@wdc.com>
+References: <20171109184959.4617-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171109184959.4617-1-bart.vanassche@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Jens,
+From: Ming Lei <ming.lei@redhat.com>
 
-It is known that during the resume following a hibernate, especially when
-using an md RAID1 array created on top of SCSI devices, sometimes the system
-hangs instead of resuming up properly. This patch series fixes that
-problem. These patches have been tested on top of the block layer for-next
-branch. Please consider these changes for kernel v4.15.
+This patch makes it possible to pause request allocation for
+the legacy block layer by calling blk_mq_freeze_queue() and
+blk_mq_unfreeze_queue().
 
-Thanks,
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+[ bvanassche: Combined two patches into one, edited a comment and made sure
+  REQ_NOWAIT is handled properly in blk_old_get_request() ]
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Martin Steigerwald <martin@lichtvoll.de>
+Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-core.c | 12 ++++++++++++
+ block/blk-mq.c   | 10 ++--------
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-Bart.
-
-Changes between v11 and v12:
-- Left out the WARN_ONCE() statement from blk_queue_enter().
-- In patch 6, also update the direct_make_request() blk_queue_enter() call.
-
-Changes between v10 and v11:
-- Left out the three md patches because a deadlock was reported when using XFS
-  on top of md RAID 1. This deadlock occurred because the md kernel thread got
-  frozen before the kernel thread running xfsaild().
-- Left out the blk_queue_enter() / blk_queue_exit() changes from
-  block/blk-timeout.c because a recent patch removed these calls from
-  blk_timeout_work().
-- Retested the whole series.
-
-Changes between v9 and v10:
-- Made sure that scsi_device_resume() handles SCSI devices that are in an
-  error state correctly. Unlike other SCSI transport protocols, during an
-  ATA device resume the ATA controller is reset. This should fix the
-  blk_queue_enter WARNING reported by the kernel test robot.
-
-Changes between v8 and v9:
-- Modified the third patch such that the MD_RECOVERY_FROZEN flag is restored
-  properly after a resume.
-- Modified the ninth patch such that a kernel warning is reported if it is
-  attempted to call scsi_device_quiesce() from multiple contexts concurrently.
-- Added Reviewed-by / Tested-by tags as appropriate.
-  
-Changes between v7 and v8:
-- Fixed a (theoretical?) race identified by Ming Lei.
-- Added a tenth patch that checks whether the proper type of flags has been
-  passed to a range of block layer functions.
-
-Changes between v6 and v7:
-- Added support for the PREEMPT_ONLY flag in blk-mq-debugfs.c.
-- Fixed kerneldoc header of blk_queue_enter().
-- Added a rcu_read_lock_sched() / rcu_read_unlock_sched() pair in
-  blk_set_preempt_only().
-- Removed a synchronize_rcu() call from scsi_device_quiesce().
-- Modified the description of patch 9/9 in this series.
-- Removed scsi_run_queue() call from scsi_device_resume().
-
-Changes between v5 and v6:
-- Split an md patch into two patches to make it easier to review the changes.
-- For the md patch that suspends I/O while the system is frozen, switched back
-  to the freezer mechanism because this makes the code shorter and easier to
-  review.
-- Changed blk_set/clear_preempt_only() from EXPORT_SYMBOL() into
-  EXPORT_SYMBOL_GPL().
-- Made blk_set_preempt_only() behave as a test-and-set operation.
-- Introduced blk_get_request_flags() and BLK_MQ_REQ_PREEMPT as requested by
-  Christoph and reduced the number of arguments of blk_queue_enter() back from
-  three to two.
-- In scsi_device_quiesce(), moved the blk_mq_freeze_queue() call out of a
-  critical section. Made the explanation of why the synchronize_rcu() call
-  is necessary more detailed.
-
-Changes between v4 and v5:
-- Split blk_set_preempt_only() into two functions as requested by Christoph.
-- Made blk_get_request() trigger WARN_ONCE() if it is attempted to allocate
-  a request while the system is frozen. This is a big help to identify drivers
-  that submit I/O while the system is frozen.
-- Since kernel thread freezing is on its way out, reworked the approach for
-  avoiding that the md driver submits I/O while the system is frozen such that
-  the approach no longer depends on the kernel thread freeze mechanism.
-- Fixed the (theoretical) deadlock in scsi_device_quiesce() that was identified
-  by Ming.
-
-Changes between v3 and v4:
-- Made sure that this patch series not only works for scsi-mq but also for
-  the legacy SCSI stack.
-- Removed an smp_rmb()/smp_wmb() pair from the hot path and added a comment
-  that explains why that is safe.
-- Reordered the patches in this patch series.
-
-Changes between v2 and v3:
-- Made md kernel threads freezable.
-- Changed the approach for quiescing SCSI devices again.
-- Addressed Ming's review comments.
-
-Changes compared to v1 of this patch series:
-- Changed the approach and rewrote the patch series.
-
-Bart Van Assche (6):
-  block: Introduce blk_get_request_flags()
-  block: Introduce BLK_MQ_REQ_PREEMPT
-  ide, scsi: Tell the block layer at request allocation time about
-    preempt requests
-  block: Add the QUEUE_FLAG_PREEMPT_ONLY request queue flag
-  block, scsi: Make SCSI quiesce and resume work reliably
-  block, nvme: Introduce blk_mq_req_flags_t
-
-Ming Lei (1):
-  block: Make q_usage_counter also track legacy requests
-
- block/blk-core.c           | 132 +++++++++++++++++++++++++++++++++++++--------
- block/blk-mq-debugfs.c     |   1 +
- block/blk-mq.c             |  20 +++----
- block/blk-mq.h             |   2 +-
- drivers/ide/ide-pm.c       |   4 +-
- drivers/nvme/host/core.c   |   5 +-
- drivers/nvme/host/nvme.h   |   5 +-
- drivers/scsi/scsi_lib.c    |  48 +++++++++++------
- fs/block_dev.c             |   4 +-
- include/linux/blk-mq.h     |  16 ++++--
- include/linux/blk_types.h  |   2 +
- include/linux/blkdev.h     |  11 +++-
- include/scsi/scsi_device.h |   1 +
- 13 files changed, 188 insertions(+), 63 deletions(-)
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 5e81dcf4690a..a4362849059a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -612,6 +612,9 @@ void blk_set_queue_dying(struct request_queue *q)
+ 		}
+ 		spin_unlock_irq(q->queue_lock);
+ 	}
++
++	/* Make blk_queue_enter() reexamine the DYING flag. */
++	wake_up_all(&q->mq_freeze_wq);
+ }
+ EXPORT_SYMBOL_GPL(blk_set_queue_dying);
+ 
+@@ -1398,16 +1401,22 @@ static struct request *blk_old_get_request(struct request_queue *q,
+ 					   unsigned int op, gfp_t gfp_mask)
+ {
+ 	struct request *rq;
++	int ret = 0;
+ 
+ 	WARN_ON_ONCE(q->mq_ops);
+ 
+ 	/* create ioc upfront */
+ 	create_io_context(gfp_mask, q->node);
+ 
++	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ||
++			      (op & REQ_NOWAIT));
++	if (ret)
++		return ERR_PTR(ret);
+ 	spin_lock_irq(q->queue_lock);
+ 	rq = get_request(q, op, NULL, gfp_mask);
+ 	if (IS_ERR(rq)) {
+ 		spin_unlock_irq(q->queue_lock);
++		blk_queue_exit(q);
+ 		return rq;
+ 	}
+ 
+@@ -1579,6 +1588,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 		blk_free_request(rl, req);
+ 		freed_request(rl, sync, rq_flags);
+ 		blk_put_rl(rl);
++		blk_queue_exit(q);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(__blk_put_request);
+@@ -1860,8 +1870,10 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
+ 	 * Grab a free request. This is might sleep but can not fail.
+ 	 * Returns with the queue unlocked.
+ 	 */
++	blk_queue_enter_live(q);
+ 	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
+ 	if (IS_ERR(req)) {
++		blk_queue_exit(q);
+ 		__wbt_done(q->rq_wb, wb_acct);
+ 		if (PTR_ERR(req) == -ENOMEM)
+ 			bio->bi_status = BLK_STS_RESOURCE;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 2396f036c388..2b7d95b2cdfb 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -126,7 +126,8 @@ void blk_freeze_queue_start(struct request_queue *q)
+ 	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
+ 	if (freeze_depth == 1) {
+ 		percpu_ref_kill(&q->q_usage_counter);
+-		blk_mq_run_hw_queues(q, false);
++		if (q->mq_ops)
++			blk_mq_run_hw_queues(q, false);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
+@@ -256,13 +257,6 @@ void blk_mq_wake_waiters(struct request_queue *q)
+ 	queue_for_each_hw_ctx(q, hctx, i)
+ 		if (blk_mq_hw_queue_mapped(hctx))
+ 			blk_mq_tag_wakeup_all(hctx->tags, true);
+-
+-	/*
+-	 * If we are called because the queue has now been marked as
+-	 * dying, we need to ensure that processes currently waiting on
+-	 * the queue are notified as well.
+-	 */
+-	wake_up_all(&q->mq_freeze_wq);
+ }
+ 
+ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
 -- 
 2.14.3
