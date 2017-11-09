@@ -1,121 +1,83 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v12 1/7] block: Make q_usage_counter also track legacy requests
-Date: Thu, 9 Nov 2017 10:49:53 -0800
-Message-ID: <20171109184959.4617-2-bart.vanassche@wdc.com>
+Subject: [PATCH v12 3/7] block: Introduce BLK_MQ_REQ_PREEMPT
+Date: Thu, 9 Nov 2017 10:49:55 -0800
+Message-ID: <20171109184959.4617-4-bart.vanassche@wdc.com>
 References: <20171109184959.4617-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:7504 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752790AbdKISuE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 13:50:04 -0500
 In-Reply-To: <20171109184959.4617-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-From: Ming Lei <ming.lei@redhat.com>
+Set RQF_PREEMPT if BLK_MQ_REQ_PREEMPT is passed to
+blk_get_request_flags().
 
-This patch makes it possible to pause request allocation for
-the legacy block layer by calling blk_mq_freeze_queue() and
-blk_mq_unfreeze_queue().
-
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-[ bvanassche: Combined two patches into one, edited a comment and made sure
-  REQ_NOWAIT is handled properly in blk_old_get_request() ]
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Tested-by: Martin Steigerwald <martin@lichtvoll.de>
 Tested-by: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- block/blk-core.c | 12 ++++++++++++
- block/blk-mq.c   | 10 ++--------
- 2 files changed, 14 insertions(+), 8 deletions(-)
+ block/blk-core.c       | 4 +++-
+ block/blk-mq.c         | 2 ++
+ include/linux/blk-mq.h | 1 +
+ 3 files changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 5e81dcf4690a..a4362849059a 100644
+index 0f7093dfc010..17eed16a6e04 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -612,6 +612,9 @@ void blk_set_queue_dying(struct request_queue *q)
- 		}
- 		spin_unlock_irq(q->queue_lock);
- 	}
-+
-+	/* Make blk_queue_enter() reexamine the DYING flag. */
-+	wake_up_all(&q->mq_freeze_wq);
- }
- EXPORT_SYMBOL_GPL(blk_set_queue_dying);
+@@ -1263,6 +1263,8 @@ static struct request *__get_request(struct request_list *rl, unsigned int op,
+ 	blk_rq_set_rl(rq, rl);
+ 	rq->cmd_flags = op;
+ 	rq->rq_flags = rq_flags;
++	if (flags & BLK_MQ_REQ_PREEMPT)
++		rq->rq_flags |= RQF_PREEMPT;
  
-@@ -1398,16 +1401,22 @@ static struct request *blk_old_get_request(struct request_queue *q,
- 					   unsigned int op, gfp_t gfp_mask)
- {
- 	struct request *rq;
-+	int ret = 0;
+ 	/* init elvpriv */
+ 	if (rq_flags & RQF_ELVPRIV) {
+@@ -1444,7 +1446,7 @@ struct request *blk_get_request_flags(struct request_queue *q, unsigned int op,
+ 	struct request *req;
  
- 	WARN_ON_ONCE(q->mq_ops);
+ 	WARN_ON_ONCE(op & REQ_NOWAIT);
+-	WARN_ON_ONCE(flags & ~BLK_MQ_REQ_NOWAIT);
++	WARN_ON_ONCE(flags & ~(BLK_MQ_REQ_NOWAIT | BLK_MQ_REQ_PREEMPT));
  
- 	/* create ioc upfront */
- 	create_io_context(gfp_mask, q->node);
- 
-+	ret = blk_queue_enter(q, !(gfp_mask & __GFP_DIRECT_RECLAIM) ||
-+			      (op & REQ_NOWAIT));
-+	if (ret)
-+		return ERR_PTR(ret);
- 	spin_lock_irq(q->queue_lock);
- 	rq = get_request(q, op, NULL, gfp_mask);
- 	if (IS_ERR(rq)) {
- 		spin_unlock_irq(q->queue_lock);
-+		blk_queue_exit(q);
- 		return rq;
- 	}
- 
-@@ -1579,6 +1588,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 		blk_free_request(rl, req);
- 		freed_request(rl, sync, rq_flags);
- 		blk_put_rl(rl);
-+		blk_queue_exit(q);
- 	}
- }
- EXPORT_SYMBOL_GPL(__blk_put_request);
-@@ -1860,8 +1870,10 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
- 	 * Grab a free request. This is might sleep but can not fail.
- 	 * Returns with the queue unlocked.
- 	 */
-+	blk_queue_enter_live(q);
- 	req = get_request(q, bio->bi_opf, bio, GFP_NOIO);
- 	if (IS_ERR(req)) {
-+		blk_queue_exit(q);
- 		__wbt_done(q->rq_wb, wb_acct);
- 		if (PTR_ERR(req) == -ENOMEM)
- 			bio->bi_status = BLK_STS_RESOURCE;
+ 	if (q->mq_ops) {
+ 		req = blk_mq_alloc_request(q, op, flags);
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 2396f036c388..2b7d95b2cdfb 100644
+index 2b7d95b2cdfb..2c7ceb34a016 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -126,7 +126,8 @@ void blk_freeze_queue_start(struct request_queue *q)
- 	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
- 	if (freeze_depth == 1) {
- 		percpu_ref_kill(&q->q_usage_counter);
--		blk_mq_run_hw_queues(q, false);
-+		if (q->mq_ops)
-+			blk_mq_run_hw_queues(q, false);
- 	}
- }
- EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
-@@ -256,13 +257,6 @@ void blk_mq_wake_waiters(struct request_queue *q)
- 	queue_for_each_hw_ctx(q, hctx, i)
- 		if (blk_mq_hw_queue_mapped(hctx))
- 			blk_mq_tag_wakeup_all(hctx->tags, true);
--
--	/*
--	 * If we are called because the queue has now been marked as
--	 * dying, we need to ensure that processes currently waiting on
--	 * the queue are notified as well.
--	 */
--	wake_up_all(&q->mq_freeze_wq);
- }
+@@ -291,6 +291,8 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
+ 	rq->q = data->q;
+ 	rq->mq_ctx = data->ctx;
+ 	rq->cmd_flags = op;
++	if (data->flags & BLK_MQ_REQ_PREEMPT)
++		rq->rq_flags |= RQF_PREEMPT;
+ 	if (blk_queue_io_stat(data->q))
+ 		rq->rq_flags |= RQF_IO_STAT;
+ 	/* do not touch atomic flags, it needs atomic ops against the timer */
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 4ae987c2352c..82b56609736a 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -212,6 +212,7 @@ enum {
+ 	BLK_MQ_REQ_NOWAIT	= (1 << 0), /* return when out of requests */
+ 	BLK_MQ_REQ_RESERVED	= (1 << 1), /* allocate from reserved pool */
+ 	BLK_MQ_REQ_INTERNAL	= (1 << 2), /* allocate internal/sched tag */
++	BLK_MQ_REQ_PREEMPT	= (1 << 3), /* set RQF_PREEMPT */
+ };
  
- bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
+ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
 -- 
 2.14.3
