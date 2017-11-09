@@ -1,74 +1,133 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 7/13] scsi: arcmsr: add driver option cmd_per_lun to set
- host->cmd_per_lun value by user
-Date: Thu, 09 Nov 2017 08:15:09 +0800
-Message-ID: <1510186509.4523.81.camel@Centos6.3-64>
+Subject: [PATCH 8/13] scsi: arcmsr: add ACB_F_MSG_GET_CONFIG to
+ acb->acb_flags for for message interrupt checking before schedule work for
+ get device map
+Date: Thu, 09 Nov 2017 08:19:21 +0800
+Message-ID: <1510186761.4523.85.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f46.google.com ([209.85.214.46]:55130 "EHLO
-        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753124AbdKIIPM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 03:15:12 -0500
-Received: by mail-it0-f46.google.com with SMTP id 72so9740237itk.3
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 00:15:12 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hare@suse.de, dan.carpenter@oracle.com, hch@infradead.org
+List-Id: linux-scsi@vger.kernel.org
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-add driver option cmd_per_lun to set host->cmd_per_lun value by user
+add ACB_F_MSG_GET_CONFIG to acb->acb_flags for for message interrupt checking before schedule work for get device map
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
 diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2017-08-04 17:40:54.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2017-08-04 18:12:54.000000000 +0800
-@@ -61,7 +61,9 @@ struct device_attribute;
- #define ARCMSR_MAX_XFER_SECTORS_C						304
- #define ARCMSR_MAX_TARGETID							17
- #define ARCMSR_MAX_TARGETLUN							8
--#define ARCMSR_MAX_CMD_PERLUN		                 ARCMSR_MAX_OUTSTANDING_CMD
-+#define ARCMSR_MAX_CMD_PERLUN		128
-+#define ARCMSR_DEFAULT_CMD_PERLUN	32
-+#define ARCMSR_MIN_CMD_PERLUN		1
- #define ARCMSR_MAX_QBUFFER							4096
- #define ARCMSR_DEFAULT_SG_ENTRIES						38
- #define ARCMSR_MAX_HBB_POSTQUEUE						264
+--- a/drivers/scsi/arcmsr/arcmsr.h	2017-08-04 18:12:54.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr.h	2017-08-04 18:39:18.000000000 +0800
+@@ -787,6 +787,7 @@ struct AdapterControlBlock
+ 	/* iop init */
+ 	#define ACB_F_ABORT				0x0200
+ 	#define ACB_F_FIRMWARE_TRAP           		0x0400
++	#define ACB_F_MSG_GET_CONFIG		0x1000
+ 	struct CommandControlBlock *			pccb_pool[ARCMSR_MAX_FREECCB_NUM];
+ 	/* used for memory free */
+ 	struct list_head		ccb_free_list;
 diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-08 18:52:04.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-08 18:52:48.000000000 +0800
-@@ -79,6 +79,10 @@ static int host_can_queue = ARCMSR_DEFAU
- module_param(host_can_queue, int, S_IRUGO);
- MODULE_PARM_DESC(host_can_queue, " adapter queue depth(32 ~ 1024), default is 128");
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-08 18:52:48.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-08 18:53:30.000000000 +0800
+@@ -743,6 +743,7 @@ static void arcmsr_message_isr_bh_fn(str
+ 	struct scsi_device *psdev;
+ 	char diff, temp;
  
-+static int cmd_per_lun = ARCMSR_DEFAULT_CMD_PERLUN;
-+module_param(cmd_per_lun, int, S_IRUGO);
-+MODULE_PARM_DESC(cmd_per_lun, " device queue depth(1 ~ 128), default is 32");
-+
- #define	ARCMSR_SLEEPTIME	10
- #define	ARCMSR_RETRYCOUNT	12
++	acb->acb_flags &= ~ACB_F_MSG_GET_CONFIG;
+ 	switch (acb->adapter_type) {
+ 	case ACB_ADAPTER_TYPE_A: {
+ 		struct MessageUnit_A __iomem *reg  = acb->pmuA;
+@@ -2332,7 +2333,8 @@ static void arcmsr_hbaA_message_isr(stru
+ 	struct MessageUnit_A __iomem *reg  = acb->pmuA;
+ 	/*clear interrupt and message state*/
+ 	writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT, &reg->outbound_intstatus);
+-	schedule_work(&acb->arcmsr_do_message_isr_bh);
++	if (acb->acb_flags & ACB_F_MSG_GET_CONFIG)
++		schedule_work(&acb->arcmsr_do_message_isr_bh);
+ }
+ static void arcmsr_hbaB_message_isr(struct AdapterControlBlock *acb)
+ {
+@@ -2340,7 +2342,8 @@ static void arcmsr_hbaB_message_isr(stru
  
-@@ -141,7 +145,7 @@ static struct scsi_host_template arcmsr_
- 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
- 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
- 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
--	.cmd_per_lun		= ARCMSR_MAX_CMD_PERLUN,
-+	.cmd_per_lun		= ARCMSR_DEFAULT_CMD_PERLUN,
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.shost_attrs		= arcmsr_host_attrs,
- 	.no_write_same		= 1,
-@@ -884,7 +888,9 @@ static int arcmsr_probe(struct pci_dev *
- 	if ((host_can_queue < ARCMSR_MIN_OUTSTANDING_CMD) || (host_can_queue > ARCMSR_MAX_OUTSTANDING_CMD))
- 		host_can_queue = ARCMSR_DEFAULT_OUTSTANDING_CMD;
- 	host->can_queue = host_can_queue;	/* max simultaneous cmds */		
--	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
-+	if ((cmd_per_lun < ARCMSR_MIN_CMD_PERLUN) || (cmd_per_lun > ARCMSR_MAX_CMD_PERLUN))
-+		cmd_per_lun = ARCMSR_DEFAULT_CMD_PERLUN;
-+	host->cmd_per_lun = cmd_per_lun;	    
- 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
- 	host->unique_id = (bus << 8) | dev_fun;
- 	pci_set_drvdata(pdev, host);
+ 	/*clear interrupt and message state*/
+ 	writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN, reg->iop2drv_doorbell);
+-	schedule_work(&acb->arcmsr_do_message_isr_bh);
++	if (acb->acb_flags & ACB_F_MSG_GET_CONFIG)
++		schedule_work(&acb->arcmsr_do_message_isr_bh);
+ }
+ /*
+ **********************************************************************************
+@@ -2356,7 +2359,8 @@ static void arcmsr_hbaC_message_isr(stru
+ 	struct MessageUnit_C __iomem *reg  = acb->pmuC;
+ 	/*clear interrupt and message state*/
+ 	writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR, &reg->outbound_doorbell_clear);
+-	schedule_work(&acb->arcmsr_do_message_isr_bh);
++	if (acb->acb_flags & ACB_F_MSG_GET_CONFIG)
++		schedule_work(&acb->arcmsr_do_message_isr_bh);
+ }
+ 
+ static void arcmsr_hbaD_message_isr(struct AdapterControlBlock *acb)
+@@ -2365,7 +2369,8 @@ static void arcmsr_hbaD_message_isr(stru
+ 
+ 	writel(ARCMSR_ARC1214_IOP2DRV_MESSAGE_CMD_DONE, reg->outbound_doorbell);
+ 	readl(reg->outbound_doorbell);
+-	schedule_work(&acb->arcmsr_do_message_isr_bh);
++	if (acb->acb_flags & ACB_F_MSG_GET_CONFIG)
++		schedule_work(&acb->arcmsr_do_message_isr_bh);
+ }
+ 
+ static void arcmsr_hbaE_message_isr(struct AdapterControlBlock *acb)
+@@ -2373,7 +2378,8 @@ static void arcmsr_hbaE_message_isr(stru
+ 	struct MessageUnit_E __iomem *reg  = acb->pmuE;
+ 
+ 	writel(0, &reg->host_int_status);
+-	schedule_work(&acb->arcmsr_do_message_isr_bh);
++	if (acb->acb_flags & ACB_F_MSG_GET_CONFIG)
++		schedule_work(&acb->arcmsr_do_message_isr_bh);
+ }
+ 
+ static int arcmsr_hbaA_handle_isr(struct AdapterControlBlock *acb)
+@@ -3830,6 +3836,7 @@ static void arcmsr_hbaA_request_device_m
+ 			return;
+ 		}
+ 		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
++		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+ 		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+ 	}
+ 	return;
+@@ -3852,6 +3859,7 @@ static void arcmsr_hbaB_request_device_m
+ 			return;
+ 		}
+ 		writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell);
++		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+ 		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+ 	}
+ 	return;
+@@ -3875,6 +3883,7 @@ static void arcmsr_hbaC_request_device_m
+ 		}
+ 		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
+ 		writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &reg->inbound_doorbell);
++		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+ 		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+ 	}
+ 	return;
+@@ -3904,6 +3913,7 @@ static void arcmsr_hbaD_request_device_m
+ 		}
+ 		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG,
+ 			reg->inbound_msgaddr0);
++		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+ 		mod_timer(&acb->eternal_timer, jiffies +
+ 			msecs_to_jiffies(6 * HZ));
+ 	}
+@@ -3934,6 +3944,7 @@ static void arcmsr_hbaE_request_device_m
+ 		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
+ 		acb->out_doorbell ^= ARCMSR_HBEMU_DRV2IOP_MESSAGE_CMD_DONE;
+ 		writel(acb->out_doorbell, &reg->iobound_doorbell);
++		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+ 		mod_timer(&acb->eternal_timer, jiffies +
+ 			msecs_to_jiffies(6 * HZ));
+ 	}
