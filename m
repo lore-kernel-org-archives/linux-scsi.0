@@ -1,35 +1,43 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v12 0/7] block, scsi: Improve suspend and resume
-Date: Thu, 9 Nov 2017 14:00:28 -0700
-Message-ID: <253ed84c-8395-846a-43cd-0d4c5df8c416@kernel.dk>
-References: <20171109184959.4617-1-bart.vanassche@wdc.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH v3] scsi: require CAP_SYS_ADMIN to write to procfs interface
+Date: Thu, 09 Nov 2017 15:40:18 -0600
+Message-ID: <87inejdtbx.fsf@xmission.com>
+References: <20171105025635.10843-1-asarai@suse.de>
+        <b3bcff37-d77d-4dc6-ba83-7dddcb51a703@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:54714 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751017AbdKIVAa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 16:00:30 -0500
-Received: by mail-io0-f193.google.com with SMTP id e89so11323966ioi.11
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 13:00:30 -0800 (PST)
-In-Reply-To: <20171109184959.4617-1-bart.vanassche@wdc.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <b3bcff37-d77d-4dc6-ba83-7dddcb51a703@suse.de> (Aleksa Sarai's
+        message of "Sun, 5 Nov 2017 15:02:10 +1100")
+Sender: stable-owner@vger.kernel.org
+To: Aleksa Sarai <asarai@suse.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, Valentin Rothberg <vrothberg@suse.com>, cyphar@cyphar.com, stable@vger.kernel.org, greg@kroah.com
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>
 
-On 11/09/2017 11:49 AM, Bart Van Assche wrote:
-> Hello Jens,
-> 
-> It is known that during the resume following a hibernate, especially when
-> using an md RAID1 array created on top of SCSI devices, sometimes the system
-> hangs instead of resuming up properly. This patch series fixes that
-> problem. These patches have been tested on top of the block layer for-next
-> branch. Please consider these changes for kernel v4.15.
+Aleksa Sarai <asarai@suse.de> writes:
 
-Applied, thanks Bart.
+> On 11/05/2017 01:56 PM, Aleksa Sarai wrote:
+>> Previously, the only capability effectively required to operate on the
+>> /proc/scsi interface was CAP_DAC_OVERRIDE (or for some other files,
+>> having an fsuid of GLOBAL_ROOT_UID was enough). This means that
+>> semi-privileged processes could interfere with core components of a
+>> system (such as causing a DoS by removing the underlying SCSI device of
+>> the host's / mount).
+>
+> An alternative to this patch would be to make the open(2) call fail, if you try
+> to open it write-only or read-write. Not sure which would be preferred (should
+> it be possible to pass /proc/scsi/scsi to a semi-privileged process to write
+> to?).
 
--- 
-Jens Axboe
+Making open fail is very much the preferred solution.
+
+Testing for permission on write can be avoided by finding a suid root
+application whose error output acts like a suid cat.
+
+The best current practice for adding this kind of permission check is to
+add the check in open.  For some older use cases where we made this
+mistake we had to maintian a check during write to avoid breaking
+userspace.  But as this check is new there is no reason to add a check
+anywhere except in open.
+
+Eric
