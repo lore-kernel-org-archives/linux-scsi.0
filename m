@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V8 3/7] mq-deadline: Introduce zone locking support
-Date: Thu,  9 Nov 2017 15:57:03 +0900
-Message-ID: <20171109065707.17210-4-damien.lemoal@wdc.com>
+Subject: [PATCH V8 6/7] sd_zbc: Initialize device request queue zoned data
+Date: Thu,  9 Nov 2017 15:57:06 +0900
+Message-ID: <20171109065707.17210-7-damien.lemoal@wdc.com>
 References: <20171109065707.17210-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171109065707.17210-1-damien.lemoal@wdc.com>
@@ -10,208 +10,204 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce zone write locking to avoid write request reordering with
-zoned block devices. This is achieved using a finer selection of the
-next request to dispatch:
-1) Any non-write request is always allowed to proceed.
-2) Any write to a conventional zone is always allowed to proceed.
-3) For a write to a sequential zone, the zone lock is first checked.
-   a) If the zone is not locked, the write is allowed to proceed after
-      its target zone is locked.
-   b) If the zone is locked, the write request is skipped and the next
-      request in the dispatch queue tested (back to step 1).
-
-For a write request that has locked its target zone, the zone is
-unlocked either when the request completes with a call to the method
-deadline_request_completed() or when the request is requeued using
-dd_insert_request().
-
-Requests targeting a locked zone are always left in the scheduler queue
-to preserve the lba ordering for write requests. If no write request
-can be dispatched, allow reads to be dispatched even if the write batch
-is not done.
-
-If the device used is not a zoned block device, or if zoned block device
-support is disabled, this patch does not modify mq-deadline behavior.
+Initialize the seq_zones_bitmap, seq_zones_wlock and nr_zones fields of
+the disk request queue on disk revalidate. As the seq_zones_bitmap
+and seq_zones_wlock allocations are identical, introduce the helper
+sd_zbc_alloc_zone_bitmap(). Using this helper, reallocate the bitmaps
+whenever the disk capacity (number of zones) changes.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/mq-deadline.c | 89 +++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 86 insertions(+), 3 deletions(-)
+ drivers/scsi/sd_zbc.c | 152 +++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 144 insertions(+), 8 deletions(-)
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index 8bd6db9e69c7..d56972e8ebda 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -59,6 +59,7 @@ struct deadline_data {
- 	int front_merges;
- 
- 	spinlock_t lock;
-+	spinlock_t zone_lock;
- 	struct list_head dispatch;
- };
- 
-@@ -198,13 +199,33 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
- static struct request *
- deadline_fifo_request(struct deadline_data *dd, int data_dir)
- {
-+	struct request *rq;
-+	unsigned long flags;
-+
- 	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
- 		return NULL;
- 
- 	if (list_empty(&dd->fifo_list[data_dir]))
- 		return NULL;
- 
--	return rq_entry_fifo(dd->fifo_list[data_dir].next);
-+	rq = rq_entry_fifo(dd->fifo_list[data_dir].next);
-+	if (data_dir == READ || !blk_queue_is_zoned(rq->q))
-+		return rq;
-+
-+	/*
-+	 * Look for a write request that can be dispatched, that is one with
-+	 * an unlocked target zone.
-+	 */
-+	spin_lock_irqsave(&dd->zone_lock, flags);
-+	list_for_each_entry(rq, &dd->fifo_list[WRITE], queuelist) {
-+		if (blk_req_can_dispatch_to_zone(rq))
-+			goto out;
-+	}
-+	rq = NULL;
-+out:
-+	spin_unlock_irqrestore(&dd->zone_lock, flags);
-+
-+	return rq;
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 27793b9f54c0..c715b8363ce0 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -586,8 +586,123 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 	return 0;
  }
  
- /*
-@@ -214,10 +235,32 @@ deadline_fifo_request(struct deadline_data *dd, int data_dir)
- static struct request *
- deadline_next_request(struct deadline_data *dd, int data_dir)
- {
-+	struct request *rq;
-+	unsigned long flags;
-+
- 	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
- 		return NULL;
- 
--	return dd->next_rq[data_dir];
-+	rq = dd->next_rq[data_dir];
-+	if (!rq)
-+		return NULL;
-+
-+	if (data_dir == READ || !blk_queue_is_zoned(rq->q))
-+		return rq;
-+
-+	/*
-+	 * Look for a write request that can be dispatched, that is one with
-+	 * an unlocked target zone.
-+	 */
-+	spin_lock_irqsave(&dd->zone_lock, flags);
-+	while (rq) {
-+		if (blk_req_can_dispatch_to_zone(rq))
-+			break;
-+		rq = deadline_latter_request(rq);
-+	}
-+	spin_unlock_irqrestore(&dd->zone_lock, flags);
-+
-+	return rq;
- }
- 
- /*
-@@ -259,7 +302,8 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	if (reads) {
- 		BUG_ON(RB_EMPTY_ROOT(&dd->sort_list[READ]));
- 
--		if (writes && (dd->starved++ >= dd->writes_starved))
-+		if (deadline_fifo_request(dd, WRITE) &&
-+		    (dd->starved++ >= dd->writes_starved))
- 			goto dispatch_writes;
- 
- 		data_dir = READ;
-@@ -304,6 +348,13 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 		rq = next_rq;
- 	}
- 
-+	/*
-+	 * For a zoned block device, if we only have writes queued and none of
-+	 * them can be dispatched, rq will be NULL.
-+	 */
-+	if (!rq)
-+		return NULL;
-+
- 	dd->batching = 0;
- 
- dispatch_request:
-@@ -313,6 +364,10 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	dd->batching++;
- 	deadline_move_request(dd, rq);
- done:
-+	/*
-+	 * If the request needs its target zone locked, do it.
-+	 */
-+	blk_req_zone_write_lock(rq);
- 	rq->rq_flags |= RQF_STARTED;
- 	return rq;
- }
-@@ -368,6 +423,7 @@ static int dd_init_queue(struct request_queue *q, struct elevator_type *e)
- 	dd->front_merges = 1;
- 	dd->fifo_batch = fifo_batch;
- 	spin_lock_init(&dd->lock);
-+	spin_lock_init(&dd->zone_lock);
- 	INIT_LIST_HEAD(&dd->dispatch);
- 
- 	q->elevator = eq;
-@@ -424,6 +480,12 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	const int data_dir = rq_data_dir(rq);
- 
-+	/*
-+	 * This may be a requeue of a write request that has locked its
-+	 * target zone. If it is the case, this releases the zone lock.
-+	 */
-+	blk_req_zone_write_unlock(rq);
-+
- 	if (blk_mq_sched_try_insert_merge(q, rq))
- 		return;
- 
-@@ -468,6 +530,26 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 	spin_unlock(&dd->lock);
- }
- 
-+/*
-+ * For zoned block devices, write unlock the target zone of
-+ * completed write requests. Do this while holding the zone lock
-+ * spinlock so that the zone is never unlocked while deadline_fifo_request()
-+ * while deadline_next_request() are executing.
++/**
++ * sd_zbc_alloc_zone_bitmap - Allocate a zone bitmap (one bit per zone).
++ * @sdkp: The disk of the bitmap
 + */
-+static void dd_completed_request(struct request *rq)
++static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
 +{
-+	struct request_queue *q = rq->q;
++	struct request_queue *q = sdkp->disk->queue;
 +
-+	if (blk_queue_is_zoned(q)) {
-+		struct deadline_data *dd = q->elevator->elevator_data;
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&dd->zone_lock, flags);
-+		blk_req_zone_write_unlock(rq);
-+		spin_unlock_irqrestore(&dd->zone_lock, flags);
-+	}
++	return kzalloc_node(BITS_TO_LONGS(sdkp->nr_zones)
++			    * sizeof(unsigned long),
++			    GFP_KERNEL, q->node);
 +}
 +
- static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
++/**
++ * sd_zbc_get_seq_zones - Parse report zones reply to identify sequential zones
++ * @sdkp: disk used
++ * @buf: report reply buffer
++ * @seq_zone_bitamp: bitmap of sequential zones to set
++ *
++ * Parse reported zone descriptors in @buf to identify sequential zones and
++ * set the reported zone bit in @seq_zones_bitmap accordingly.
++ * Since read-only and offline zones cannot be written, do not
++ * mark them as sequential in the bitmap.
++ * Return the LBA after the last zone reported.
++ */
++static sector_t sd_zbc_get_seq_zones(struct scsi_disk *sdkp, unsigned char *buf,
++				     unsigned int buflen,
++				     unsigned long *seq_zones_bitmap)
++{
++	sector_t lba, next_lba = sdkp->capacity;
++	unsigned int buf_len, list_length;
++	unsigned char *rec;
++	u8 type, cond;
++
++	list_length = get_unaligned_be32(&buf[0]) + 64;
++	buf_len = min(list_length, buflen);
++	rec = buf + 64;
++
++	while (rec < buf + buf_len) {
++		type = rec[0] & 0x0f;
++		cond = (rec[1] >> 4) & 0xf;
++		lba = get_unaligned_be64(&rec[16]);
++		if (type != ZBC_ZONE_TYPE_CONV &&
++		    cond != ZBC_ZONE_COND_READONLY &&
++		    cond != ZBC_ZONE_COND_OFFLINE)
++			set_bit(lba >> sdkp->zone_shift, seq_zones_bitmap);
++		next_lba = lba + get_unaligned_be64(&rec[8]);
++		rec += 64;
++	}
++
++	return next_lba;
++}
++
++/**
++ * sd_zbc_setup_seq_zones_bitmap - Initialize the disk seq zone bitmap.
++ * @sdkp: target disk
++ *
++ * Allocate a zone bitmap and initialize it by identifying sequential zones.
++ */
++static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
++{
++	struct request_queue *q = sdkp->disk->queue;
++	unsigned long *seq_zones_bitmap;
++	sector_t lba = 0;
++	unsigned char *buf;
++	int ret = -ENOMEM;
++
++	seq_zones_bitmap = sd_zbc_alloc_zone_bitmap(sdkp);
++	if (!seq_zones_bitmap)
++		return -ENOMEM;
++
++	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
++	if (!buf)
++		goto out;
++
++	while (lba < sdkp->capacity) {
++		ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, lba);
++		if (ret)
++			goto out;
++		lba = sd_zbc_get_seq_zones(sdkp, buf, SD_ZBC_BUF_SIZE,
++					   seq_zones_bitmap);
++	}
++
++	if (lba != sdkp->capacity) {
++		/* Something went wrong */
++		ret = -EIO;
++	}
++
++out:
++	kfree(buf);
++	if (ret) {
++		kfree(seq_zones_bitmap);
++		return ret;
++	}
++
++	q->seq_zones_bitmap = seq_zones_bitmap;
++
++	return 0;
++}
++
++static void sd_zbc_cleanup(struct scsi_disk *sdkp)
++{
++	struct request_queue *q = sdkp->disk->queue;
++
++	kfree(q->seq_zones_bitmap);
++	q->seq_zones_bitmap = NULL;
++
++	kfree(q->seq_zones_wlock);
++	q->seq_zones_wlock = NULL;
++
++	q->nr_zones = 0;
++}
++
+ static int sd_zbc_setup(struct scsi_disk *sdkp)
  {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
-@@ -669,6 +751,7 @@ static struct elevator_type mq_deadline = {
- 	.ops.mq = {
- 		.insert_requests	= dd_insert_requests,
- 		.dispatch_request	= dd_dispatch_request,
-+		.completed_request	= dd_completed_request,
- 		.next_request		= elv_rb_latter_request,
- 		.former_request		= elv_rb_former_request,
- 		.bio_merge		= dd_bio_merge,
++	struct request_queue *q = sdkp->disk->queue;
++	int ret;
+ 
+ 	/* READ16/WRITE16 is mandatory for ZBC disks */
+ 	sdkp->device->use_16_for_rw = 1;
+@@ -599,15 +714,36 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
+ 	sdkp->nr_zones =
+ 		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
+ 
+-	if (!sdkp->zones_wlock) {
+-		sdkp->zones_wlock = kcalloc(BITS_TO_LONGS(sdkp->nr_zones),
+-					    sizeof(unsigned long),
+-					    GFP_KERNEL);
+-		if (!sdkp->zones_wlock)
+-			return -ENOMEM;
++	/*
++	 * Initialize the device request queue information if the number
++	 * of zones changed.
++	 */
++	if (sdkp->nr_zones != q->nr_zones) {
++
++		sd_zbc_cleanup(sdkp);
++
++		q->nr_zones = sdkp->nr_zones;
++		if (sdkp->nr_zones) {
++			q->seq_zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
++			if (!q->seq_zones_wlock) {
++				ret = -ENOMEM;
++				goto err;
++			}
++
++			ret = sd_zbc_setup_seq_zones_bitmap(sdkp);
++			if (ret) {
++				sd_zbc_cleanup(sdkp);
++				goto err;
++			}
++		}
++
+ 	}
+ 
+ 	return 0;
++
++err:
++	sd_zbc_cleanup(sdkp);
++	return ret;
+ }
+ 
+ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+@@ -661,14 +797,14 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ 
+ err:
+ 	sdkp->capacity = 0;
++	sd_zbc_cleanup(sdkp);
+ 
+ 	return ret;
+ }
+ 
+ void sd_zbc_remove(struct scsi_disk *sdkp)
+ {
+-	kfree(sdkp->zones_wlock);
+-	sdkp->zones_wlock = NULL;
++	sd_zbc_cleanup(sdkp);
+ }
+ 
+ void sd_zbc_print_zones(struct scsi_disk *sdkp)
 -- 
 2.13.6
