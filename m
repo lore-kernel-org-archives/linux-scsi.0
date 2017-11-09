@@ -1,35 +1,51 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH v11 0/7] block, scsi, md: Improve suspend and resume
-Date: Thu, 9 Nov 2017 16:54:32 +0000
-Message-ID: <1510246471.2608.11.camel@wdc.com>
+Date: Thu, 9 Nov 2017 09:55:58 -0700
+Message-ID: <5e91482c-16f5-13c8-e42d-cbe8dda355ad@kernel.dk>
 References: <20171030224205.25212-1-bart.vanassche@wdc.com>
-         <15255980.N0RxqQ3jgM@natalenko.name>
+ <15255980.N0RxqQ3jgM@natalenko.name> <1510246471.2608.11.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <15255980.N0RxqQ3jgM@natalenko.name>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f47.google.com ([209.85.214.47]:33420 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752869AbdKIQ4A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 11:56:00 -0500
+Received: by mail-it0-f47.google.com with SMTP id n134so1712588itg.0
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 08:56:00 -0800 (PST)
+In-Reply-To: <1510246471.2608.11.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <75ACB10512968D4DA203819D22BAD613@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "oleksandr@natalenko.name" <oleksandr@natalenko.name>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
 
-T24gVGh1LCAyMDE3LTExLTA5IGF0IDA3OjE2ICswMTAwLCBPbGVrc2FuZHIgTmF0YWxlbmtvIHdy
-b3RlOg0KPiBpcyB0aGlzIHNvbWV0aGluZyBrbm93biB0byB5b3UsIG9yIGl0IGlzIGp1c3QgbXkg
-ZmF1bHQgYXBwbHlpbmcgdGhpcyBzZXJpZXMgdG8gDQo+IHY0LjEzPyBFeGNlcHQgaGF2aW5nIHRo
-aXMgd2FybmluZywgc3VzcGVuZC9yZXN1bWUgd29ya3MgZm9yIG1lOg0KPiANCj4gWyAgIDI3LjM4
-Mzg0Nl0gc2QgMDowOjA6MDogW3NkYV0gU3RhcnRpbmcgZGlzaw0KPiBbICAgMjcuMzgzOTc2XSBz
-ZCAxOjA6MDowOiBbc2RiXSBTdGFydGluZyBkaXNrDQo+IFsgICAyNy40NTEyMThdIHNkYjogQXR0
-ZW1wdCB0byBhbGxvY2F0ZSBub24tcHJlZW1wdCByZXF1ZXN0IGluIHByZWVtcHQtb25seSANCj4g
-bW9kZS4NCj4gWyAgIDI3LjQ1OTY0MF0gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0t
-LS0tDQo+IFsgICAyNy40NjQ1MjFdIFdBUk5JTkc6IENQVTogMCBQSUQ6IDE3MiBhdCBibG9jay9i
-bGstY29yZS5jOjgyMyBibGtfcXVldWVfZW50ZXIrMHgyMjIvMHgyODANCg0KSGVsbG8gT2xla3Nh
-bmRyLA0KDQpUaGFua3MgZm9yIHRoZSB0ZXN0aW5nLiBUaGUgd2FybmluZyB0aGF0IHlvdSByZXBv
-cnRlZCBpcyBleHBlY3RlZC4gTWF5YmUgaXQNCnNob3VsZCBiZSBsZWZ0IG91dCB0byBhdm9pZCB0
-aGF0IHVzZXJzIGdldCBjb25mdXNlZC4NCg0KSmVucywgdGhpcyBwYXRjaCBzZXJpZXMgc3RpbGwg
-YXBwbGllcyBjbGVhbmx5IG9uIHRvcCBvZiB5b3VyIGZvci00LjE1L2Jsb2NrDQpicmFuY2guIEFy
-ZSB5b3UgZmluZSB3aXRoIHRoaXMgcGF0Y2ggc2VyaWVzIG9yIGRvIHlvdSBwZXJoYXBzIHdhbnQg
-bWUgdG8NCnJlcG9zdCBpdCB3aXRoIE9sZWtzYW5kcidzIFRlc3RlZC1ieSB0YWcgYWRkZWQgdG8g
-ZWFjaCBwYXRjaD8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+On 11/09/2017 09:54 AM, Bart Van Assche wrote:
+> On Thu, 2017-11-09 at 07:16 +0100, Oleksandr Natalenko wrote:
+>> is this something known to you, or it is just my fault applying this series to 
+>> v4.13? Except having this warning, suspend/resume works for me:
+>>
+>> [   27.383846] sd 0:0:0:0: [sda] Starting disk
+>> [   27.383976] sd 1:0:0:0: [sdb] Starting disk
+>> [   27.451218] sdb: Attempt to allocate non-preempt request in preempt-only 
+>> mode.
+>> [   27.459640] ------------[ cut here ]------------
+>> [   27.464521] WARNING: CPU: 0 PID: 172 at block/blk-core.c:823 blk_queue_enter+0x222/0x280
+> 
+> Hello Oleksandr,
+> 
+> Thanks for the testing. The warning that you reported is expected. Maybe it
+> should be left out to avoid that users get confused.
+
+If the warning is expected, then it should be removed. It'll just confuse
+users and cause useless bug reports.
+
+> Jens, this patch series still applies cleanly on top of your for-4.15/block
+> branch. Are you fine with this patch series or do you perhaps want me to
+> repost it with Oleksandr's Tested-by tag added to each patch?
+
+Since you need to kill the warning anyway, let's get it respun.
+
+-- 
+Jens Axboe
