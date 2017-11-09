@@ -1,132 +1,134 @@
-From: Oleksandr Natalenko <oleksandr@natalenko.name>
-Subject: Re: [PATCH v11 0/7] block, scsi, md: Improve suspend and resume
-Date: Thu, 09 Nov 2017 07:16:52 +0100
-Message-ID: <15255980.N0RxqQ3jgM@natalenko.name>
-References: <20171030224205.25212-1-bart.vanassche@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171030224205.25212-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>, Martin Steigerwald <martin@lichtvoll.de>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH V8 0/7] blk-mq support for ZBC disks
+Date: Thu,  9 Nov 2017 15:57:00 +0900
+Message-ID: <20171109065707.17210-1-damien.lemoal@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:29572 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752431AbdKIG5J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 01:57:09 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Bart,
+This series, formerly titled "scsi-mq support for ZBC disks", implements
+support for ZBC disks for system using the scsi-mq I/O path.
 
-is this something known to you, or it is just my fault applying this series=
- to=20
-v4.13? Except having this warning, suspend/resume works for me:
+The current scsi level support of ZBC disks guarantees write request ordering
+using a per-zone write lock which prevents issuing simultaneously multiple
+write commands to a zone, doing so avoid reordering of sequential writes to
+sequential zones. This method is however ineffective when scsi-mq is used with
+zoned block devices. This is due to the different execution model of blk-mq
+which passes a request to the scsi layer for dispatching after the request has
+been removed from the I/O scheduler queue. That is, when the scsi layer tries
+to lock the target zone of the request, the request may already be out of
+order and zone write locking fails to prevent that.
 
-=3D=3D=3D
-[   27.383846] sd 0:0:0:0: [sda] Starting disk
-[   27.383976] sd 1:0:0:0: [sdb] Starting disk
-[   27.451218] sdb: Attempt to allocate non-preempt request in preempt-only=
-=20
-mode.
-[   27.459640] ------------[ cut here ]------------
-[   27.464521] WARNING: CPU: 0 PID: 172 at block/blk-core.c:823=20
-blk_queue_enter+0x222/0x280
-[   27.470867] Modules linked in: nls_iso8859_1 nls_cp437 vfat fat kvm_inte=
-l=20
-iTCO_wdt bochs_drm iTCO_vendor_support ppdev kvm ttm irqbypass evdev=20
-input_leds drm_kms_helper joydev psmouse led_class lpc_ich pcspkr i2c_i801=
-=20
-mousedev parport_pc mac_hid qemu_fw_cfg drm parport syscopyarea sysfillrect=
-=20
-sysimgblt button fb_sys_fops intel_agp intel_gtt sch_fq_codel ip_tables=20
-x_tables xfs dm_thin_pool dm_persistent_data dm_bio_prison dm_bufio libcrc3=
-2c=20
-crc32c_generic dm_crypt algif_skcipher af_alg dm_mod dax raid10 md_mod sr_m=
-od=20
-sd_mod cdrom hid_generic usbhid hid crct10dif_pclmul crc32_pclmul crc32c_in=
-tel=20
-ghash_clmulni_intel uhci_hcd pcbc serio_raw atkbd libps2 ahci aesni_intel=20
-xhci_pci ehci_pci aes_x86_64 crypto_simd glue_helper xhci_hcd ehci_hcd liba=
-hci=20
-cryptd libata usbcore usb_common i8042 serio virtio_pci
-[   27.501799]  virtio_net virtio_scsi scsi_mod virtio_ring virtio
-[   27.503639] CPU: 0 PID: 172 Comm: md0_raid10 Not tainted 4.13.0-pf13 #1
-[   27.505492] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 0.0=
-=2E0=20
-02/06/2015
-[   27.507693] task: ffff88001f6aa340 task.stack: ffffc900005e8000
-[   27.509516] RIP: 0010:blk_queue_enter+0x222/0x280
-[   27.511623] RSP: 0018:ffffc900005ebb70 EFLAGS: 00010282
-[   27.512978] RAX: 0000000000000042 RBX: 0000000000000000 RCX:=20
-0000000000000000
-[   27.514389] RDX: 0000000000000000 RSI: ffff88001f80dbd8 RDI:=20
-ffff88001f80dbd8
-[   27.516339] RBP: ffffc900005ebbd0 R08: 000000000000028e R09:=20
-0000000000000000
-[   27.519083] R10: ffffc900005ebc50 R11: 00000000ffffffff R12:=20
-0000000100000000
-[   27.521298] R13: ffff88001deaa100 R14: 0000000000000000 R15:=20
-ffff88001deaa100
-[   27.523577] FS:  0000000000000000(0000) GS:ffff88001f800000(0000) knlGS:
-0000000000000000
-[   27.525889] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   27.527928] CR2: 00005568d4d27858 CR3: 000000001983b000 CR4:=20
-00000000001406f0
-[   27.529721] Call Trace:
-[   27.530622]  ? wait_woken+0x80/0x80
-[   27.531739]  generic_make_request+0xf1/0x320
-[   27.532806]  submit_bio+0x73/0x150
-[   27.533775]  ? submit_bio+0x73/0x150
-[   27.534773]  md_super_write.part.58+0xbd/0xe0 [md_mod]
-[   27.536078]  md_update_sb.part.59+0x534/0x840 [md_mod]
-[   27.537468]  ? percpu_ref_switch_to_percpu+0x36/0x40
-[   27.538862]  md_check_recovery+0x452/0x510 [md_mod]
-[   27.540273]  raid10d+0x62/0x1420 [raid10]
-[   27.541757]  ? schedule+0x3d/0xb0
-[   27.542744]  ? schedule+0x3d/0xb0
-[   27.544013]  ? schedule_timeout+0x208/0x390
-[   27.546399]  md_thread+0x120/0x160 [md_mod]
-[   27.548810]  ? md_thread+0x120/0x160 [md_mod]
-[   27.550394]  ? wait_woken+0x80/0x80
-[   27.551840]  kthread+0x124/0x140
-[   27.551846]  ? state_show+0x2f0/0x2f0 [md_mod]
-[   27.551848]  ? kthread_create_on_node+0x70/0x70
-[   27.551852]  ? SyS_exit_group+0x14/0x20
-[   27.551857]  ret_from_fork+0x25/0x30
-[   27.551859] Code: 00 00 e9 6d fe ff ff 31 c0 e9 66 fe ff ff 49 8b 87 e0 =
-01=20
-00 00 48 c7 c7 78 73 95 81 c6 05 6c 11 80 00 01 48 8b 30 e8 0f 0f de ff <0f=
->=20
-ff e9 97 fe ff ff 49 8b b7 a8 01 00 00 89 c2 83 e6 20 0f 85=20
-[   27.551882] ---[ end trace ba6164315560503f ]---
-[   27.701328] ata4: SATA link down (SStatus 0 SControl 300)
-[   27.710425] ata5: SATA link down (SStatus 0 SControl 300)
-[   27.714620] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[   27.722375] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[   27.733520] ata6: SATA link down (SStatus 0 SControl 300)
-[   27.738315] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[   27.743962] ata3.00: configured for UDMA/100
-[   27.747153] ata2.00: configured for UDMA/100
-[   27.750833] ata1.00: configured for UDMA/100
-[   27.781627] usb 2-1: reset high-speed USB device number 2 using xhci_hcd
-[   27.963142] PM: resume of devices complete after 627.949 msecs
-[   27.971546] OOM killer enabled.
-[   27.978424] Restarting tasks ... done.
-=3D=3D=3D
+Various approaches have been tried to solve this problem directly from the core
+code of blk-mq. All of them had the serious disadvantage of cluttering blk-mq
+code with zoned block device specific conditions and processing, making
+maintenance and testing difficult.
 
-Thanks.
+This series adds blk-mq support for zoned block devices at the I/O scheduler
+level with simple modifications of the mq-deadline scheduler. Implementation
+is done with reusable helpers defined in the zoned block device support file
+(blk-zoned.c). These helpers provide per zone write locking control functions
+similar to what was implemented directly in the SCSI layer in sd_zbc.c.
+The zone write locking mechanism is used by mq-deadline for the exact same
+purpose, that is, to limit writes per zone to at most one request to avoid
+reordering.
 
-On pond=C4=9Bl=C3=AD 30. =C5=99=C3=ADjna 2017 23:41:58 CET Bart Van Assche =
-wrote:
-> It is known that during the resume following a hibernate, especially when
-> using an md RAID1 array created on top of SCSI devices, sometimes the sys=
-tem
-> hangs instead of coming up properly. This patch series fixes that
-> problem. These patches have been tested on top of the block layer for-next
-> branch. Please consider these changes for kernel v4.15.
+The changes to mq-deadline do not affect its operation with regular disks. The
+same scheduling behavior is maintained for these devices. Compared to the SCSI
+layer zone locking implementation, this series optimizes avoids locking
+conventional zones which result in a use of these zone that is comparable to a
+regular disk.
 
-> Changes between v10 and v11:
-> - Left out the three md patches because a deadlock was reported when using
-> XFS on top of md RAID 1. This deadlock occurred because the md kernel
-> thread got frozen before the kernel thread running xfsaild().
-> - Left out the blk_queue_enter() / blk_queue_exit() changes from
->   block/blk-timeout.c because a recent patch removed these calls from
->   blk_timeout_work().
-> - Retested the whole series.
+This series also implements changes to the legacy deadline-iosched. Doing so,
+the zone locking code at the SCSI layer in sd.c and sd_zbc.c can be removed.
+This results in a significant simplification of the sd driver command handling.
+
+Patch 1 to 5 introduce the zone locking helpers in the block layer and modify
+the deadline and mq-deadline schedulers. They equally apply on top of the block
+tree branch for-4.15/block and on top of the scsi tree branch 4.15/scsi-queue.
+Patch 6 to 8 remove the SCSI layer zone locking and initialize the device
+request queue zone information. They apply to the scsi tree branch
+4.15/scsi-queue. To cleanly apply these last 3 patches to the block tree branch
+for-4.15/block, the following patches from the scsi tree must first be applied:
+
+aa8a845662 "scsi: sd_zbc: Move ZBC declarations to scsi_proto.h"
+e98f42bcad "scsi: sd_zbc: Fix comments and indentation"
+5eed92d173 "scsi: sd_zbc: Rearrange code"
+e8c77ec483 "scsi: sd_zbc: Use well defined macros"
+4a109032e3 "scsi: sd_zbc: Fix sd_zbc_read_zoned_characteristics()"
+
+Of note is that this series imposes the use of the deadline and mq-deadline
+schedulers with zoned block devices. A system can trivialy enforce this using
+a udev rule such as:
+
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTRS{queue/zoned}=="host-managed", \
+ATTR{queue/scheduler}="deadline"
+
+This rules applies equally for the legacy SCSI path as well as the scsi-mq path
+thanks to "mq-deadline" being aliased to "deadline".
+
+Comments are as always very much appreciated.
+
+Changes from v7:
+* Merged patch 8 into patch 6
+* Fixed various typos and commit messages
+
+Changes from v6:
+* Implement zone write locking helpers in the block layer
+* Also modify legacy path deadline scheduler to remove all zone write locking
+  code from the scsi layer
+
+Changes from v5:
+* Refactor patches to introduce the zone_lock spinlock only when needed
+* Addressed Bart's comments (in particular explanations of the zone_lock
+  spinlock use)
+
+Changes from v4:
+* Various fixes and improvements (From Christoph's comments)
+* Dropped zones_wlock scheduler tunable attribute
+
+Changes from v3:
+* Integrated support directly into mq-deadline instead of creating a new I/O
+  scheduler.
+* Disable setting of default mq scheduler for single queue devices
+
+Changes from v2:
+* Introduced blk_zoned structure
+* Moved I/O scheduler from drivers/scsi to block
+
+Changes from v1:
+* Addressed Bart's comments for the blk-mq patches (declarations files)
+* Split (former) patch 4 into multiple patches to facilitate review
+* Fixed scsi disk lookup from io scheduler by introducing
+  scsi_disk_from_queue()
+
+Christoph Hellwig (1):
+  block: introduce zoned block devices zone write locking
+
+Damien Le Moal (6):
+  mq-deadline: Introduce dispatch helpers
+  mq-deadline: Introduce zone locking support
+  deadline-iosched: Introduce dispatch helpers
+  deadline-iosched: Introduce zone locking support
+  sd_zbc: Initialize device request queue zoned data
+  sd: Remove zone write locking
+
+ block/blk-core.c         |   1 +
+ block/blk-zoned.c        |  42 +++++++++
+ block/deadline-iosched.c | 114 ++++++++++++++++++++---
+ block/mq-deadline.c      | 130 ++++++++++++++++++++++++--
+ drivers/scsi/sd.c        |  41 +--------
+ drivers/scsi/sd.h        |  11 ---
+ drivers/scsi/sd_zbc.c    | 235 +++++++++++++++++++++++++++++------------------
+ include/linux/blkdev.h   | 111 ++++++++++++++++++++++
+ include/scsi/scsi_cmnd.h |   3 +-
+ 9 files changed, 528 insertions(+), 160 deletions(-)
+
+-- 
+2.13.6
