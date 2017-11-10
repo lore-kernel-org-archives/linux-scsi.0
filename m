@@ -1,76 +1,88 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/3] scsi: 3ware: fix 32-bit time calculations
-Date: Fri, 10 Nov 2017 16:58:25 +0100
-Message-ID: <20171110155840.1941250-1-arnd@arndb.de>
+Subject: [PATCH 2/3] scsi: 3ware: use 64-bit times for FW time sync
+Date: Fri, 10 Nov 2017 16:58:26 +0100
+Message-ID: <20171110155840.1941250-2-arnd@arndb.de>
+References: <20171110155840.1941250-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171110155840.1941250-1-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Adam Radford <aradford@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Arnd Bergmann <arnd@arndb.de>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-twl_aen_queue_event/twa_aen_queue_event, we use do_gettimeofday()
-to read the lower 32 bits of the current time in seconds, to pass
-them to the TW_IOCTL_GET_NEXT_EVENT ioctl or the 3ware_aen_read
-sysfs file.
+The calculation of the number of seconds since Sunday 00:00:00 overflows
+in 2106, meaning that we instead will return the seconds since Wednesday
+06:28:16 afterwards.
 
-This will overflow on all architectures in year 2106, there is
-not much we can do about that without breaking the ABI. User
-space has 90 years to learn to deal with it, so it's probably ok.
-
-I'm changing it to use ktime_get_real_seconds() with a comment
-to document what happens when.
+Using 64-bit time stamps avoids this slight inconsistency, and the
+deprecated do_gettimeofday(), replacing it with the simpler
+ktime_get_real_seconds().
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/3w-9xxx.c | 5 ++---
- drivers/scsi/3w-sas.c  | 5 ++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/3w-9xxx.c |  8 +++-----
+ drivers/scsi/3w-sas.c  | 10 ++++------
+ 2 files changed, 7 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 00e7968a1d70..cb9af3f7b653 100644
+index cb9af3f7b653..b1c9bd9c1bfd 100644
 --- a/drivers/scsi/3w-9xxx.c
 +++ b/drivers/scsi/3w-9xxx.c
-@@ -369,7 +369,6 @@ static int twa_aen_drain_queue(TW_Device_Extension *tw_dev, int no_check_reset)
- static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_Header *header)
+@@ -472,11 +472,10 @@ static char *twa_aen_severity_lookup(unsigned char severity_code)
+ static void twa_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
  {
- 	u32 local_time;
--	struct timeval time;
- 	TW_Event *event;
- 	unsigned short aen;
- 	char host[16];
-@@ -392,8 +391,8 @@ static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	memset(event, 0, sizeof(TW_Event));
+ 	u32 schedulertime;
+-	struct timeval utc;
+ 	TW_Command_Full *full_command_packet;
+ 	TW_Command *command_packet;
+ 	TW_Param_Apache *param;
+-	u32 local_time;
++	time64_t local_time;
  
- 	event->severity = TW_SEV_OUT(header->status_block.severity__reserved);
--	do_gettimeofday(&time);
--	local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
-+	/* event->time_stamp_sec overflows in y2106 */
-+	local_time = (u32)(ktime_get_real_seconds() - (sys_tz.tz_minuteswest * 60));
- 	event->time_stamp_sec = local_time;
- 	event->aen_code = aen;
- 	event->retrieved = TW_AEN_NOT_RETRIEVED;
+ 	/* Fill out the command packet */
+ 	full_command_packet = tw_dev->command_packet_virt[request_id];
+@@ -498,9 +497,8 @@ static void twa_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
+ 
+ 	/* Convert system time in UTC to local time seconds since last 
+            Sunday 12:00AM */
+-	do_gettimeofday(&utc);
+-	local_time = (u32)(utc.tv_sec - (sys_tz.tz_minuteswest * 60));
+-	schedulertime = local_time - (3 * 86400);
++	local_time = (ktime_get_real_seconds() - (sys_tz.tz_minuteswest * 60));
++	div_u64_rem(local_time - (3 * 86400), 604800, &schedulertime);
+ 	schedulertime = cpu_to_le32(schedulertime % 604800);
+ 
+ 	memcpy(param->data, &schedulertime, sizeof(u32));
 diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index b150e131b2e7..c283fdb3cb24 100644
+index c283fdb3cb24..cf9f2a09b47d 100644
 --- a/drivers/scsi/3w-sas.c
 +++ b/drivers/scsi/3w-sas.c
-@@ -221,7 +221,6 @@ static char *twl_aen_severity_lookup(unsigned char severity_code)
- static void twl_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_Header *header)
+@@ -407,11 +407,10 @@ static int twl_aen_read_queue(TW_Device_Extension *tw_dev, int request_id)
+ static void twl_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
  {
- 	u32 local_time;
--	struct timeval time;
- 	TW_Event *event;
- 	unsigned short aen;
- 	char host[16];
-@@ -240,8 +239,8 @@ static void twl_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	memset(event, 0, sizeof(TW_Event));
+ 	u32 schedulertime;
+-	struct timeval utc;
+ 	TW_Command_Full *full_command_packet;
+ 	TW_Command *command_packet;
+ 	TW_Param_Apache *param;
+-	u32 local_time;
++	time64_t local_time;
  
- 	event->severity = TW_SEV_OUT(header->status_block.severity__reserved);
--	do_gettimeofday(&time);
--	local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
-+	/* event->time_stamp_sec overflows in y2106 */
-+	local_time = (u32)(ktime_get_real_seconds() - (sys_tz.tz_minuteswest * 60));
- 	event->time_stamp_sec = local_time;
- 	event->aen_code = aen;
- 	event->retrieved = TW_AEN_NOT_RETRIEVED;
+ 	/* Fill out the command packet */
+ 	full_command_packet = tw_dev->command_packet_virt[request_id];
+@@ -433,10 +432,9 @@ static void twl_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
+ 
+ 	/* Convert system time in UTC to local time seconds since last 
+            Sunday 12:00AM */
+-	do_gettimeofday(&utc);
+-	local_time = (u32)(utc.tv_sec - (sys_tz.tz_minuteswest * 60));
+-	schedulertime = local_time - (3 * 86400);
+-	schedulertime = cpu_to_le32(schedulertime % 604800);
++	local_time = (ktime_get_real_seconds() - (sys_tz.tz_minuteswest * 60));
++	div_u64_rem(local_time - (3 * 86400), 604800, &schedulertime);
++	schedulertime = cpu_to_le32(schedulertime);
+ 
+ 	memcpy(param->data, &schedulertime, sizeof(u32));
+ 
 -- 
 2.9.0
