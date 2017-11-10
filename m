@@ -1,97 +1,172 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 4/7] scsi: bfa: document overflow of io_profile_start_time
-Date: Fri, 10 Nov 2017 16:37:12 +0100
-Message-ID: <20171110153715.1929456-5-arnd@arndb.de>
+Subject: [PATCH 2/7] scsi: bfa: use proper time accessor for stats_reset_time
+Date: Fri, 10 Nov 2017 16:37:10 +0100
+Message-ID: <20171110153715.1929456-3-arnd@arndb.de>
 References: <20171110153715.1929456-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:57082 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752861AbdKJPjN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2017 10:39:13 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171110153715.1929456-1-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org, hch@lst.de, hare@suse.com, jthumshirn@suse.de, Arnd Bergmann <arnd@arndb.de>
+List-Id: linux-scsi@vger.kernel.org
 
-io_profile_start_time() gets read using do_gettimeofday() and passed
-down as a 32-bit value through multiple functions. This will overflow
-in y2038 or y2106, depending on whether it gets interpreted as
-unsigned in the end.
+We use the deprecated do_gettimeofday() function to read the
+current time when resetting the statistics in both bfa_port
+and bfa_svc. This works fine because overflow is handled
+correctly, but we want to get rid of do_gettimeofday() and
+using a non-monotonic time suffers from concurrent
+settimeofday calls and other problems.
 
-This changes do_gettimeofday() to ktime_get_real_seconds() and pushes
-the point at which it overflows to where we actually assign it to
-the bfa_fcpim_del_itn_stats_s structure, with an appropriate
-comment.
+This uses the ktime_get_seconds() function instead, which
+does what we need here.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/bfa/bfa_fcpim.c | 3 ++-
- drivers/scsi/bfa/bfa_fcpim.h | 4 ++--
- drivers/scsi/bfa/bfad_bsg.c  | 4 +---
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/bfa/bfa_port.c | 15 +++------------
+ drivers/scsi/bfa/bfa_port.h |  2 +-
+ drivers/scsi/bfa/bfa_svc.c  | 15 ++++-----------
+ drivers/scsi/bfa/bfa_svc.h  |  2 +-
+ 4 files changed, 9 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index 5f53b3276234..2c85f5b1f9c1 100644
---- a/drivers/scsi/bfa/bfa_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -468,7 +468,7 @@ bfa_ioim_profile_start(struct bfa_ioim_s *ioim)
- }
+diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
+index da1721e0d167..079bc77f4102 100644
+--- a/drivers/scsi/bfa/bfa_port.c
++++ b/drivers/scsi/bfa/bfa_port.c
+@@ -96,14 +96,11 @@ bfa_port_get_stats_isr(struct bfa_port_s *port, bfa_status_t status)
+ 	port->stats_busy = BFA_FALSE;
  
- bfa_status_t
--bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time)
-+bfa_fcpim_profile_on(struct bfa_s *bfa, time64_t time)
+ 	if (status == BFA_STATUS_OK) {
+-		struct timeval tv;
+-
+ 		memcpy(port->stats, port->stats_dma.kva,
+ 		       sizeof(union bfa_port_stats_u));
+ 		bfa_port_stats_swap(port, port->stats);
+ 
+-		do_gettimeofday(&tv);
+-		port->stats->fc.secs_reset = tv.tv_sec - port->stats_reset_time;
++		port->stats->fc.secs_reset = ktime_get_seconds() - port->stats_reset_time;
+ 	}
+ 
+ 	if (port->stats_cbfn) {
+@@ -124,16 +121,13 @@ bfa_port_get_stats_isr(struct bfa_port_s *port, bfa_status_t status)
+ static void
+ bfa_port_clear_stats_isr(struct bfa_port_s *port, bfa_status_t status)
  {
- 	struct bfa_itnim_s *itnim;
- 	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
-@@ -1478,6 +1478,7 @@ bfa_itnim_get_ioprofile(struct bfa_itnim_s *itnim,
- 		return BFA_STATUS_IOPROFILE_OFF;
+-	struct timeval tv;
+-
+ 	port->stats_status = status;
+ 	port->stats_busy   = BFA_FALSE;
  
- 	itnim->ioprofile.index = BFA_IOBUCKET_MAX;
-+	/* unsigned 32-bit time_t overflow here in y2106 */
- 	itnim->ioprofile.io_profile_start_time =
- 				bfa_io_profile_start_time(itnim->bfa);
- 	itnim->ioprofile.clock_res_mul = bfa_io_lat_clock_res_mul;
-diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
-index e93921dec347..ec8f863540ae 100644
---- a/drivers/scsi/bfa/bfa_fcpim.h
-+++ b/drivers/scsi/bfa/bfa_fcpim.h
-@@ -136,7 +136,7 @@ struct bfa_fcpim_s {
- 	struct bfa_fcpim_del_itn_stats_s del_itn_stats;
- 	bfa_boolean_t		ioredirect;
- 	bfa_boolean_t		io_profile;
--	u32			io_profile_start_time;
-+	time64_t		io_profile_start_time;
- 	bfa_fcpim_profile_t     profile_comp;
- 	bfa_fcpim_profile_t     profile_start;
- };
-@@ -310,7 +310,7 @@ bfa_status_t bfa_fcpim_port_iostats(struct bfa_s *bfa,
- 			struct bfa_itnim_iostats_s *stats, u8 lp_tag);
- void bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *fcpim_stats,
- 			struct bfa_itnim_iostats_s *itnim_stats);
--bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time);
-+bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, time64_t time);
- bfa_status_t bfa_fcpim_profile_off(struct bfa_s *bfa);
- 
- #define bfa_fcpim_ioredirect_enabled(__bfa)				\
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 72ca2a2e08e2..01fc51a70356 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -2094,13 +2094,11 @@ bfad_iocmd_fcpim_cfg_profile(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
- {
- 	struct bfa_bsg_fcpim_profile_s *iocmd =
- 				(struct bfa_bsg_fcpim_profile_s *)cmd;
--	struct timeval  tv;
- 	unsigned long	flags;
- 
+ 	/*
+ 	* re-initialize time stamp for stats reset
+ 	*/
 -	do_gettimeofday(&tv);
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	if (v_cmd == IOCMD_FCPIM_PROFILE_ON)
--		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa, tv.tv_sec);
-+		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa, ktime_get_real_seconds());
- 	else if (v_cmd == IOCMD_FCPIM_PROFILE_OFF)
- 		iocmd->status = bfa_fcpim_profile_off(&bfad->bfa);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+-	port->stats_reset_time = tv.tv_sec;
++	port->stats_reset_time = ktime_get_seconds();
+ 
+ 	if (port->stats_cbfn) {
+ 		port->stats_cbfn(port->stats_cbarg, status);
+@@ -471,8 +465,6 @@ void
+ bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
+ 		 void *dev, struct bfa_trc_mod_s *trcmod)
+ {
+-	struct timeval tv;
+-
+ 	WARN_ON(!port);
+ 
+ 	port->dev    = dev;
+@@ -494,8 +486,7 @@ bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
+ 	/*
+ 	 * initialize time stamp for stats reset
+ 	 */
+-	do_gettimeofday(&tv);
+-	port->stats_reset_time = tv.tv_sec;
++	port->stats_reset_time = ktime_get_seconds();
+ 
+ 	bfa_trc(port, 0);
+ }
+diff --git a/drivers/scsi/bfa/bfa_port.h b/drivers/scsi/bfa/bfa_port.h
+index 26dc1bf14c85..0c3b200243ca 100644
+--- a/drivers/scsi/bfa/bfa_port.h
++++ b/drivers/scsi/bfa/bfa_port.h
+@@ -36,7 +36,7 @@ struct bfa_port_s {
+ 	bfa_port_stats_cbfn_t		stats_cbfn;
+ 	void				*stats_cbarg;
+ 	bfa_status_t			stats_status;
+-	u32			stats_reset_time;
++	time64_t			stats_reset_time;
+ 	union bfa_port_stats_u		*stats;
+ 	struct bfa_dma_s		stats_dma;
+ 	bfa_boolean_t			endis_pending;
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index e640223bab3c..dd7d1e6bc2d8 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -3047,7 +3047,6 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+ 	struct bfa_port_cfg_s *port_cfg = &fcport->cfg;
+ 	struct bfa_fcport_ln_s *ln = &fcport->ln;
+-	struct timeval tv;
+ 
+ 	fcport->bfa = bfa;
+ 	ln->fcport = fcport;
+@@ -3060,8 +3059,7 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	/*
+ 	 * initialize time stamp for stats reset
+ 	 */
+-	do_gettimeofday(&tv);
+-	fcport->stats_reset_time = tv.tv_sec;
++	fcport->stats_reset_time = ktime_get_seconds();
+ 	fcport->stats_dma_ready = BFA_FALSE;
+ 
+ 	/*
+@@ -3295,9 +3293,7 @@ __bfa_cb_fcport_stats_get(void *cbarg, bfa_boolean_t complete)
+ 	union bfa_fcport_stats_u *ret;
+ 
+ 	if (complete) {
+-		struct timeval tv;
+-		if (fcport->stats_status == BFA_STATUS_OK)
+-			do_gettimeofday(&tv);
++		time64_t time = ktime_get_seconds();
+ 
+ 		list_for_each_safe(qe, qen, &fcport->stats_pending_q) {
+ 			bfa_q_deq(&fcport->stats_pending_q, &qe);
+@@ -3312,7 +3308,7 @@ __bfa_cb_fcport_stats_get(void *cbarg, bfa_boolean_t complete)
+ 					bfa_fcport_fcoe_stats_swap(&ret->fcoe,
+ 							&fcport->stats->fcoe);
+ 					ret->fcoe.secs_reset =
+-					tv.tv_sec - fcport->stats_reset_time;
++						time - fcport->stats_reset_time;
+ 				}
+ 			}
+ 			bfa_cb_queue_status(fcport->bfa, &cb->hcb_qe,
+@@ -3373,13 +3369,10 @@ __bfa_cb_fcport_stats_clr(void *cbarg, bfa_boolean_t complete)
+ 	struct list_head *qe, *qen;
+ 
+ 	if (complete) {
+-		struct timeval tv;
+-
+ 		/*
+ 		 * re-initialize time stamp for stats reset
+ 		 */
+-		do_gettimeofday(&tv);
+-		fcport->stats_reset_time = tv.tv_sec;
++		fcport->stats_reset_time = ktime_get_seconds();
+ 		list_for_each_safe(qe, qen, &fcport->statsclr_pending_q) {
+ 			bfa_q_deq(&fcport->statsclr_pending_q, &qe);
+ 			cb = (struct bfa_cb_pending_q_s *)qe;
+diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
+index ea2278bc78a8..7e8fb6231d49 100644
+--- a/drivers/scsi/bfa/bfa_svc.h
++++ b/drivers/scsi/bfa/bfa_svc.h
+@@ -505,7 +505,7 @@ struct bfa_fcport_s {
+ 	struct list_head	stats_pending_q;
+ 	struct list_head	statsclr_pending_q;
+ 	bfa_boolean_t		stats_qfull;
+-	u32		stats_reset_time; /*  stats reset time stamp */
++	time64_t		stats_reset_time; /*  stats reset time stamp */
+ 	bfa_boolean_t		diag_busy; /*  diag busy status */
+ 	bfa_boolean_t		beacon; /*  port beacon status */
+ 	bfa_boolean_t		link_e2e_beacon; /*  link beacon status */
 -- 
 2.9.0
