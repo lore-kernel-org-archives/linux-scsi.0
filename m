@@ -1,115 +1,245 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 11/17] lpfc: Linux LPFC driver does not process all RSCNs
-Date: Thu,  9 Nov 2017 17:08:28 -0800
-Message-ID: <20171110010834.4542-12-jsmart2021@gmail.com>
+Subject: [PATCH v2 15/17] lpfc: Fix driver handling of nvme resources during unload
+Date: Thu,  9 Nov 2017 17:08:32 -0800
+Message-ID: <20171110010834.4542-16-jsmart2021@gmail.com>
 References: <20171110010834.4542-1-jsmart2021@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:44789 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755509AbdKJBIy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 20:08:54 -0500
-Received: by mail-qk0-f195.google.com with SMTP id v137so10130901qkb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 17:08:54 -0800 (PST)
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20171110010834.4542-1-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+List-Id: linux-scsi@vger.kernel.org
 
-During RSCN storms, the driver does not rediscover some targets.
-The driver marks some RSCN as to be handled after the ones it's
-working on. The driver missed processing some deferred RSCN.
+During driver unload, the driver may crash due to NULL pointers.
+The NULL pointers were due to the driver not protecting itself
+sufficiently during some of the teardown paths.
+Additionally, the driver was not waiting for and cleanup up nvme
+io resources. As such, the driver wasn't making the callbacks
+to the transport, stalling the transports association teardown.
 
-Move where the driver checks for deferred RSCNs and initiate
-deferred RSCN handling if the flag was set. Also revise nport state
-within the RSCN confirm routine. Add some state data to a possible
-debug print to aid future debugging.
+This patch waits for io clean up before tearding down and adds
+checks for possible NULL pointers.
 
+Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c      | 19 +++++++++++++++++++
- drivers/scsi/lpfc/lpfc_els.c     |  4 +---
- drivers/scsi/lpfc/lpfc_hbadisc.c |  9 +++++++--
- 3 files changed, 27 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h |  2 +
+ drivers/scsi/lpfc/lpfc_init.c | 18 ++++++++
+ drivers/scsi/lpfc/lpfc_nvme.c | 96 ++++++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 105 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 33417681f5d4..0990f81524cd 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -685,6 +685,25 @@ lpfc_cmpl_ct_cmd_gid_ft(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			lpfc_els_flush_rscn(vport);
- 		goto out;
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 7e300734b345..dac33900bf17 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -254,6 +254,8 @@ void lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba,
+ 			    struct lpfc_nvmet_ctxbuf *ctxp);
+ int lpfc_nvmet_rcv_unsol_abort(struct lpfc_vport *vport,
+ 			       struct fc_frame_header *fc_hdr);
++void lpfc_sli_flush_nvme_rings(struct lpfc_hba *phba);
++void lpfc_nvme_wait_for_io_drain(struct lpfc_hba *phba);
+ void lpfc_sli4_build_dflt_fcf_record(struct lpfc_hba *, struct fcf_record *,
+ 			uint16_t);
+ int lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 7a06f23a3baf..c466ceb43bc9 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -10136,6 +10136,16 @@ lpfc_sli4_xri_exchange_busy_wait(struct lpfc_hba *phba)
+ 	int fcp_xri_cmpl = 1;
+ 	int els_xri_cmpl = list_empty(&phba->sli4_hba.lpfc_abts_els_sgl_list);
+ 
++	/* Driver just aborted IOs during the hba_unset process.  Pause
++	 * here to give the HBA time to complete the IO and get entries
++	 * into the abts lists.
++	 */
++	msleep(LPFC_XRI_EXCH_BUSY_WAIT_T1 * 5);
 +
-+	spin_lock_irq(shost->host_lock);
-+	if (vport->fc_flag & FC_RSCN_DEFERRED) {
-+		vport->fc_flag &= ~FC_RSCN_DEFERRED;
-+		spin_unlock_irq(shost->host_lock);
++	/* Wait for NVME pending IO to flush back to transport. */
++	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
++		lpfc_nvme_wait_for_io_drain(phba);
 +
-+		/*
-+		 * Skip processing the NS response
-+		 * Re-issue the NS cmd
-+		 */
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+				 "0151 Process Deferred RSCN Data: x%x x%x\n",
-+				 vport->fc_flag, vport->fc_rscn_id_cnt);
-+		lpfc_els_handle_rscn(vport);
+ 	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_FCP)
+ 		fcp_xri_cmpl =
+ 			list_empty(&phba->sli4_hba.lpfc_abts_scsi_buf_list);
+@@ -11659,6 +11669,10 @@ lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
+ 	/* Flush all driver's outstanding SCSI I/Os as we are to reset */
+ 	lpfc_sli_flush_fcp_rings(phba);
+ 
++	/* Flush the outstanding NVME IOs if fc4 type enabled. */
++	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
++		lpfc_sli_flush_nvme_rings(phba);
 +
-+		goto out;
+ 	/* stop all timers */
+ 	lpfc_stop_hba_timers(phba);
+ 
+@@ -11690,6 +11704,10 @@ lpfc_sli4_prep_dev_for_perm_failure(struct lpfc_hba *phba)
+ 
+ 	/* Clean up all driver's outstanding SCSI I/Os */
+ 	lpfc_sli_flush_fcp_rings(phba);
++
++	/* Flush the outstanding NVME IOs if fc4 type enabled. */
++	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
++		lpfc_sli_flush_nvme_rings(phba);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index ea7a0e65bbfd..67bd0ff299d1 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -88,6 +88,9 @@ lpfc_nvme_create_queue(struct nvme_fc_local_port *pnvme_lport,
+ 	struct lpfc_nvme_qhandle *qhandle;
+ 	char *str;
+ 
++	if (!pnvme_lport->private)
++		return -ENOMEM;
++
+ 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
+ 	vport = lport->vport;
+ 	qhandle = kzalloc(sizeof(struct lpfc_nvme_qhandle), GFP_KERNEL);
+@@ -140,6 +143,9 @@ lpfc_nvme_delete_queue(struct nvme_fc_local_port *pnvme_lport,
+ 	struct lpfc_nvme_lport *lport;
+ 	struct lpfc_vport *vport;
+ 
++	if (!pnvme_lport->private)
++		return;
++
+ 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
+ 	vport = lport->vport;
+ 
+@@ -1265,13 +1271,29 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 	struct lpfc_nvme_buf *lpfc_ncmd;
+ 	struct lpfc_nvme_rport *rport;
+ 	struct lpfc_nvme_qhandle *lpfc_queue_info;
+-	struct lpfc_nvme_fcpreq_priv *freqpriv = pnvme_fcreq->private;
++	struct lpfc_nvme_fcpreq_priv *freqpriv;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	uint64_t start = 0;
+ #endif
+ 
++	/* Validate pointers. LLDD fault handling with transport does
++	 * have timing races.
++	 */
+ 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
++	if (unlikely(!lport)) {
++		ret = -EINVAL;
++		goto out_fail;
 +	}
-+	spin_unlock_irq(shost->host_lock);
 +
- 	if (irsp->ulpStatus) {
- 		/* Check for retry */
- 		if (vport->fc_ns_retry < LPFC_MAX_NS_RETRY) {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 911066c9612d..71ec580f46a3 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1675,6 +1675,7 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 	vport = lport->vport;
++
++	if (unlikely(!hw_queue_handle)) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
++				 "6129 Fail Abort, NULL hw_queue_handle\n");
++		ret = -EINVAL;
++		goto out_fail;
++	}
++
+ 	phba = vport->phba;
  
- 		/* Two ndlps cannot have the same did on the nodelist */
- 		ndlp->nlp_DID = keepDID;
-+		lpfc_nlp_set_state(vport, ndlp, keep_nlp_state);
- 		if (phba->sli_rev == LPFC_SLI_REV4 &&
- 		    active_rrqs_xri_bitmap)
- 			memcpy(ndlp->active_rrqs_xri_bitmap,
-@@ -6177,9 +6178,6 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 		lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
- 		/* send RECOVERY event for ALL nodes that match RSCN payload */
- 		lpfc_rscn_recovery_check(vport);
--		spin_lock_irq(shost->host_lock);
--		vport->fc_flag &= ~FC_RSCN_DEFERRED;
--		spin_unlock_irq(shost->host_lock);
- 		return 0;
+ 	if (vport->load_flag & FC_UNLOADING) {
+@@ -1284,13 +1306,9 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 		goto out_fail;
  	}
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_UNSOL,
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 3468257bda02..4577330313c0 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -5832,14 +5832,19 @@ static struct lpfc_nodelist *
- __lpfc_find_node(struct lpfc_vport *vport, node_filter filter, void *param)
- {
- 	struct lpfc_nodelist *ndlp;
-+	uint32_t data1;
  
- 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
- 		if (filter(ndlp, param)) {
-+			data1 = (((uint32_t) ndlp->nlp_state << 24) |
-+				 ((uint32_t) ndlp->nlp_xri << 16) |
-+				 ((uint32_t) ndlp->nlp_type << 8) |
-+				 ((uint32_t) ndlp->nlp_rpi & 0xff));
- 			lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
- 					 "3185 FIND node filter %p DID "
--					 "Data: x%p x%x x%x\n",
-+					 "Data: x%p x%x x%x x%x\n",
- 					 filter, ndlp, ndlp->nlp_DID,
--					 ndlp->nlp_flag);
-+					 ndlp->nlp_flag, data1);
- 			return ndlp;
- 		}
+-	/* Validate pointers. */
+-	if (!pnvme_lport || !pnvme_rport || !freqpriv) {
+-		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR | LOG_NODE,
+-				 "6117 No Send:IO submit ptrs NULL, lport %p, "
+-				 "rport %p fcreq_priv %p\n",
+-				 pnvme_lport, pnvme_rport, freqpriv);
+-		ret = -ENODEV;
++	freqpriv = pnvme_fcreq->private;
++	if (unlikely(!freqpriv)) {
++		ret = -EINVAL;
+ 		goto out_fail;
  	}
+ 
+@@ -1497,20 +1515,34 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	struct lpfc_nvme_lport *lport;
+ 	struct lpfc_vport *vport;
+ 	struct lpfc_hba *phba;
+-	struct lpfc_nvme_rport *rport;
+ 	struct lpfc_nvme_buf *lpfc_nbuf;
+ 	struct lpfc_iocbq *abts_buf;
+ 	struct lpfc_iocbq *nvmereq_wqe;
+-	struct lpfc_nvme_fcpreq_priv *freqpriv = pnvme_fcreq->private;
++	struct lpfc_nvme_fcpreq_priv *freqpriv;
+ 	union lpfc_wqe *abts_wqe;
+ 	unsigned long flags;
+ 	int ret_val;
+ 
++	/* Validate pointers. LLDD fault handling with transport does
++	 * have timing races.
++	 */
+ 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
+-	rport = (struct lpfc_nvme_rport *)pnvme_rport->private;
++	if (unlikely(!lport))
++		return;
++
+ 	vport = lport->vport;
++
++	if (unlikely(!hw_queue_handle)) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
++				 "6129 Fail Abort, HW Queue Handle NULL.\n");
++		return;
++	}
++
+ 	phba = vport->phba;
++	freqpriv = pnvme_fcreq->private;
+ 
++	if (unlikely(!freqpriv))
++		return;
+ 	if (vport->load_flag & FC_UNLOADING)
+ 		return;
+ 
+@@ -2678,3 +2710,45 @@ lpfc_sli4_nvme_xri_aborted(struct lpfc_hba *phba,
+ 			"6312 XRI Aborted xri x%x not found\n", xri);
+ 
+ }
++
++/**
++ * lpfc_nvme_wait_for_io_drain - Wait for all NVME wqes to complete
++ * @phba: Pointer to HBA context object.
++ *
++ * This function flushes all wqes in the nvme rings and frees all resources
++ * in the txcmplq. This function does not issue abort wqes for the IO
++ * commands in txcmplq, they will just be returned with
++ * IOERR_SLI_DOWN. This function is invoked with EEH when device's PCI
++ * slot has been permanently disabled.
++ **/
++void
++lpfc_nvme_wait_for_io_drain(struct lpfc_hba *phba)
++{
++	struct lpfc_sli_ring  *pring;
++	u32 i, wait_cnt = 0;
++
++	if (phba->sli_rev < LPFC_SLI_REV4)
++		return;
++
++	/* Cycle through all NVME rings and make sure all outstanding
++	 * WQEs have been removed from the txcmplqs.
++	 */
++	for (i = 0; i < phba->cfg_nvme_io_channel; i++) {
++		pring = phba->sli4_hba.nvme_wq[i]->pring;
++
++		/* Retrieve everything on the txcmplq */
++		while (!list_empty(&pring->txcmplq)) {
++			msleep(LPFC_XRI_EXCH_BUSY_WAIT_T1);
++			wait_cnt++;
++
++			/* The sleep is 10mS.  Every ten seconds,
++			 * dump a message.  Something is wrong.
++			 */
++			if ((wait_cnt % 1000) == 0) {
++				lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
++						"6178 NVME IO not empty, "
++						"cnt %d\n", wait_cnt);
++			}
++		}
++	}
++}
 -- 
 2.13.1
