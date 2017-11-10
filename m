@@ -1,245 +1,122 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 15/17] lpfc: Fix driver handling of nvme resources during unload
-Date: Thu,  9 Nov 2017 17:08:32 -0800
-Message-ID: <20171110010834.4542-16-jsmart2021@gmail.com>
+Subject: [PATCH v2 14/17] lpfc: Fix crash during driver unload with running nvme traffic
+Date: Thu,  9 Nov 2017 17:08:31 -0800
+Message-ID: <20171110010834.4542-15-jsmart2021@gmail.com>
 References: <20171110010834.4542-1-jsmart2021@gmail.com>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:45292 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755527AbdKJBI5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 20:08:57 -0500
+Received: by mail-qk0-f193.google.com with SMTP id p19so4940522qke.2
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 17:08:57 -0800 (PST)
 In-Reply-To: <20171110010834.4542-1-jsmart2021@gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-During driver unload, the driver may crash due to NULL pointers.
-The NULL pointers were due to the driver not protecting itself
-sufficiently during some of the teardown paths.
-Additionally, the driver was not waiting for and cleanup up nvme
-io resources. As such, the driver wasn't making the callbacks
-to the transport, stalling the transports association teardown.
+When the driver is unloading, the nvme transport could be in the
+process of submitting new requests, will send abort requests to
+terminate associations, or may make LS-related requests.
+The driver's abort and request entry points currently is ignorant
+of the unloading state and is starting the requests even though
+the infrastructure to complete them continues to teardown.
 
-This patch waits for io clean up before tearding down and adds
-checks for possible NULL pointers.
+Change the entry points for new requests to check whether unloading
+and if so, reject the requests. Abort routines check unloading, and
+if so, noop the request. An abort is noop'd as the teardown paths
+are already aborting/terminating the io outstanding at the time the
+teardown initiated.
 
-Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_crtn.h |  2 +
- drivers/scsi/lpfc/lpfc_init.c | 18 ++++++++
- drivers/scsi/lpfc/lpfc_nvme.c | 96 ++++++++++++++++++++++++++++++++++++++-----
- 3 files changed, 105 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c  | 14 ++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.c | 11 +++++++++++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 7e300734b345..dac33900bf17 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -254,6 +254,8 @@ void lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba,
- 			    struct lpfc_nvmet_ctxbuf *ctxp);
- int lpfc_nvmet_rcv_unsol_abort(struct lpfc_vport *vport,
- 			       struct fc_frame_header *fc_hdr);
-+void lpfc_sli_flush_nvme_rings(struct lpfc_hba *phba);
-+void lpfc_nvme_wait_for_io_drain(struct lpfc_hba *phba);
- void lpfc_sli4_build_dflt_fcf_record(struct lpfc_hba *, struct fcf_record *,
- 			uint16_t);
- int lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7a06f23a3baf..c466ceb43bc9 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -10136,6 +10136,16 @@ lpfc_sli4_xri_exchange_busy_wait(struct lpfc_hba *phba)
- 	int fcp_xri_cmpl = 1;
- 	int els_xri_cmpl = list_empty(&phba->sli4_hba.lpfc_abts_els_sgl_list);
- 
-+	/* Driver just aborted IOs during the hba_unset process.  Pause
-+	 * here to give the HBA time to complete the IO and get entries
-+	 * into the abts lists.
-+	 */
-+	msleep(LPFC_XRI_EXCH_BUSY_WAIT_T1 * 5);
-+
-+	/* Wait for NVME pending IO to flush back to transport. */
-+	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
-+		lpfc_nvme_wait_for_io_drain(phba);
-+
- 	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_FCP)
- 		fcp_xri_cmpl =
- 			list_empty(&phba->sli4_hba.lpfc_abts_scsi_buf_list);
-@@ -11659,6 +11669,10 @@ lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
- 	/* Flush all driver's outstanding SCSI I/Os as we are to reset */
- 	lpfc_sli_flush_fcp_rings(phba);
- 
-+	/* Flush the outstanding NVME IOs if fc4 type enabled. */
-+	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
-+		lpfc_sli_flush_nvme_rings(phba);
-+
- 	/* stop all timers */
- 	lpfc_stop_hba_timers(phba);
- 
-@@ -11690,6 +11704,10 @@ lpfc_sli4_prep_dev_for_perm_failure(struct lpfc_hba *phba)
- 
- 	/* Clean up all driver's outstanding SCSI I/Os */
- 	lpfc_sli_flush_fcp_rings(phba);
-+
-+	/* Flush the outstanding NVME IOs if fc4 type enabled. */
-+	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
-+		lpfc_sli_flush_nvme_rings(phba);
- }
- 
- /**
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index ea7a0e65bbfd..67bd0ff299d1 100644
+index 12d09a6a4563..ea7a0e65bbfd 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -88,6 +88,9 @@ lpfc_nvme_create_queue(struct nvme_fc_local_port *pnvme_lport,
- 	struct lpfc_nvme_qhandle *qhandle;
- 	char *str;
- 
-+	if (!pnvme_lport->private)
-+		return -ENOMEM;
-+
- 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
- 	vport = lport->vport;
- 	qhandle = kzalloc(sizeof(struct lpfc_nvme_qhandle), GFP_KERNEL);
-@@ -140,6 +143,9 @@ lpfc_nvme_delete_queue(struct nvme_fc_local_port *pnvme_lport,
- 	struct lpfc_nvme_lport *lport;
- 	struct lpfc_vport *vport;
- 
-+	if (!pnvme_lport->private)
-+		return;
-+
- 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
- 	vport = lport->vport;
- 
-@@ -1265,13 +1271,29 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 	struct lpfc_nvme_buf *lpfc_ncmd;
- 	struct lpfc_nvme_rport *rport;
- 	struct lpfc_nvme_qhandle *lpfc_queue_info;
--	struct lpfc_nvme_fcpreq_priv *freqpriv = pnvme_fcreq->private;
-+	struct lpfc_nvme_fcpreq_priv *freqpriv;
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	uint64_t start = 0;
- #endif
- 
-+	/* Validate pointers. LLDD fault handling with transport does
-+	 * have timing races.
-+	 */
- 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
-+	if (unlikely(!lport)) {
-+		ret = -EINVAL;
-+		goto out_fail;
-+	}
-+
- 	vport = lport->vport;
-+
-+	if (unlikely(!hw_queue_handle)) {
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
-+				 "6129 Fail Abort, NULL hw_queue_handle\n");
-+		ret = -EINVAL;
-+		goto out_fail;
-+	}
-+
- 	phba = vport->phba;
- 
- 	if (vport->load_flag & FC_UNLOADING) {
-@@ -1284,13 +1306,9 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 		goto out_fail;
- 	}
- 
--	/* Validate pointers. */
--	if (!pnvme_lport || !pnvme_rport || !freqpriv) {
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR | LOG_NODE,
--				 "6117 No Send:IO submit ptrs NULL, lport %p, "
--				 "rport %p fcreq_priv %p\n",
--				 pnvme_lport, pnvme_rport, freqpriv);
--		ret = -ENODEV;
-+	freqpriv = pnvme_fcreq->private;
-+	if (unlikely(!freqpriv)) {
-+		ret = -EINVAL;
- 		goto out_fail;
- 	}
- 
-@@ -1497,20 +1515,34 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	struct lpfc_nvme_lport *lport;
- 	struct lpfc_vport *vport;
- 	struct lpfc_hba *phba;
--	struct lpfc_nvme_rport *rport;
- 	struct lpfc_nvme_buf *lpfc_nbuf;
- 	struct lpfc_iocbq *abts_buf;
- 	struct lpfc_iocbq *nvmereq_wqe;
--	struct lpfc_nvme_fcpreq_priv *freqpriv = pnvme_fcreq->private;
-+	struct lpfc_nvme_fcpreq_priv *freqpriv;
- 	union lpfc_wqe *abts_wqe;
- 	unsigned long flags;
- 	int ret_val;
- 
-+	/* Validate pointers. LLDD fault handling with transport does
-+	 * have timing races.
-+	 */
- 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
--	rport = (struct lpfc_nvme_rport *)pnvme_rport->private;
-+	if (unlikely(!lport))
-+		return;
-+
- 	vport = lport->vport;
-+
-+	if (unlikely(!hw_queue_handle)) {
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
-+				 "6129 Fail Abort, HW Queue Handle NULL.\n");
-+		return;
-+	}
-+
- 	phba = vport->phba;
-+	freqpriv = pnvme_fcreq->private;
- 
-+	if (unlikely(!freqpriv))
-+		return;
+@@ -423,6 +423,9 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
  	if (vport->load_flag & FC_UNLOADING)
+ 		return -ENODEV;
+ 
++	if (vport->load_flag & FC_UNLOADING)
++		return -ENODEV;
++
+ 	ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
+ 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
+@@ -538,6 +541,9 @@ lpfc_nvme_ls_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	vport = lport->vport;
+ 	phba = vport->phba;
+ 
++	if (vport->load_flag & FC_UNLOADING)
++		return;
++
+ 	ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
+ 	if (!ndlp) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
+@@ -1273,6 +1279,11 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 		goto out_fail;
+ 	}
+ 
++	if (vport->load_flag & FC_UNLOADING) {
++		ret = -ENODEV;
++		goto out_fail;
++	}
++
+ 	/* Validate pointers. */
+ 	if (!pnvme_lport || !pnvme_rport || !freqpriv) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR | LOG_NODE,
+@@ -1500,6 +1511,9 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	vport = lport->vport;
+ 	phba = vport->phba;
+ 
++	if (vport->load_flag & FC_UNLOADING)
++		return;
++
+ 	/* Announce entry to new IO submit field. */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
+ 			 "6002 Abort Request to rport DID x%06x "
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 84cf1b9079f7..2b50aecc2722 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -635,6 +635,9 @@ lpfc_nvmet_xmt_ls_rsp(struct nvmet_fc_target_port *tgtport,
+ 	if (phba->pport->load_flag & FC_UNLOADING)
+ 		return -ENODEV;
+ 
++	if (phba->pport->load_flag & FC_UNLOADING)
++		return -ENODEV;
++
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_DISC,
+ 			"6023 NVMET LS rsp oxid x%x\n", ctxp->oxid);
+ 
+@@ -721,6 +724,11 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 		goto aerr;
+ 	}
+ 
++	if (phba->pport->load_flag & FC_UNLOADING) {
++		rc = -ENODEV;
++		goto aerr;
++	}
++
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	if (ctxp->ts_cmd_nvme) {
+ 		if (rsp->op == NVMET_FCOP_RSP)
+@@ -823,6 +831,9 @@ lpfc_nvmet_xmt_fcp_abort(struct nvmet_fc_target_port *tgtport,
+ 	if (phba->pport->load_flag & FC_UNLOADING)
  		return;
  
-@@ -2678,3 +2710,45 @@ lpfc_sli4_nvme_xri_aborted(struct lpfc_hba *phba,
- 			"6312 XRI Aborted xri x%x not found\n", xri);
- 
- }
-+
-+/**
-+ * lpfc_nvme_wait_for_io_drain - Wait for all NVME wqes to complete
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This function flushes all wqes in the nvme rings and frees all resources
-+ * in the txcmplq. This function does not issue abort wqes for the IO
-+ * commands in txcmplq, they will just be returned with
-+ * IOERR_SLI_DOWN. This function is invoked with EEH when device's PCI
-+ * slot has been permanently disabled.
-+ **/
-+void
-+lpfc_nvme_wait_for_io_drain(struct lpfc_hba *phba)
-+{
-+	struct lpfc_sli_ring  *pring;
-+	u32 i, wait_cnt = 0;
-+
-+	if (phba->sli_rev < LPFC_SLI_REV4)
++	if (phba->pport->load_flag & FC_UNLOADING)
 +		return;
 +
-+	/* Cycle through all NVME rings and make sure all outstanding
-+	 * WQEs have been removed from the txcmplqs.
-+	 */
-+	for (i = 0; i < phba->cfg_nvme_io_channel; i++) {
-+		pring = phba->sli4_hba.nvme_wq[i]->pring;
-+
-+		/* Retrieve everything on the txcmplq */
-+		while (!list_empty(&pring->txcmplq)) {
-+			msleep(LPFC_XRI_EXCH_BUSY_WAIT_T1);
-+			wait_cnt++;
-+
-+			/* The sleep is 10mS.  Every ten seconds,
-+			 * dump a message.  Something is wrong.
-+			 */
-+			if ((wait_cnt % 1000) == 0) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
-+						"6178 NVME IO not empty, "
-+						"cnt %d\n", wait_cnt);
-+			}
-+		}
-+	}
-+}
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_ABTS,
+ 			"6103 NVMET Abort op: oxri x%x flg x%x ste %d\n",
+ 			ctxp->oxid, ctxp->flag, ctxp->state);
 -- 
 2.13.1
