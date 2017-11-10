@@ -1,172 +1,51 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 2/7] scsi: bfa: use proper time accessor for stats_reset_time
-Date: Fri, 10 Nov 2017 16:37:10 +0100
-Message-ID: <20171110153715.1929456-3-arnd@arndb.de>
-References: <20171110153715.1929456-1-arnd@arndb.de>
+Subject: [PATCH] scsi: esas2r: use ktime_get_real_seconds()
+Date: Fri, 10 Nov 2017 16:39:34 +0100
+Message-ID: <20171110153947.1932747-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171110153715.1929456-1-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org, hch@lst.de, hare@suse.com, jthumshirn@suse.de, Arnd Bergmann <arnd@arndb.de>
+To: Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We use the deprecated do_gettimeofday() function to read the
-current time when resetting the statistics in both bfa_port
-and bfa_svc. This works fine because overflow is handled
-correctly, but we want to get rid of do_gettimeofday() and
-using a non-monotonic time suffers from concurrent
-settimeofday calls and other problems.
+do_gettimeofday() is deprecated because of the y2038 overflow.
+Here, we use the result to pass into a 32-bit field in the firmware,
+which still risks an overflow, but if the firmware is written
+to expect unsigned values, it can at least last until y2106,
+and there is not much we can do about it.
 
-This uses the ktime_get_seconds() function instead, which
-does what we need here.
+This changes do_gettimeofday() to ktime_get_real_seconds(), which
+at least simplifies the code a bit, and avoids the deprecated
+interface. I'm adding a comment about the overflow to document
+what happens.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/bfa/bfa_port.c | 15 +++------------
- drivers/scsi/bfa/bfa_port.h |  2 +-
- drivers/scsi/bfa/bfa_svc.c  | 15 ++++-----------
- drivers/scsi/bfa/bfa_svc.h  |  2 +-
- 4 files changed, 9 insertions(+), 25 deletions(-)
+ drivers/scsi/esas2r/esas2r_init.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
-index da1721e0d167..079bc77f4102 100644
---- a/drivers/scsi/bfa/bfa_port.c
-+++ b/drivers/scsi/bfa/bfa_port.c
-@@ -96,14 +96,11 @@ bfa_port_get_stats_isr(struct bfa_port_s *port, bfa_status_t status)
- 	port->stats_busy = BFA_FALSE;
- 
- 	if (status == BFA_STATUS_OK) {
--		struct timeval tv;
--
- 		memcpy(port->stats, port->stats_dma.kva,
- 		       sizeof(union bfa_port_stats_u));
- 		bfa_port_stats_swap(port, port->stats);
- 
--		do_gettimeofday(&tv);
--		port->stats->fc.secs_reset = tv.tv_sec - port->stats_reset_time;
-+		port->stats->fc.secs_reset = ktime_get_seconds() - port->stats_reset_time;
- 	}
- 
- 	if (port->stats_cbfn) {
-@@ -124,16 +121,13 @@ bfa_port_get_stats_isr(struct bfa_port_s *port, bfa_status_t status)
- static void
- bfa_port_clear_stats_isr(struct bfa_port_s *port, bfa_status_t status)
- {
--	struct timeval tv;
--
- 	port->stats_status = status;
- 	port->stats_busy   = BFA_FALSE;
- 
- 	/*
- 	* re-initialize time stamp for stats reset
- 	*/
--	do_gettimeofday(&tv);
--	port->stats_reset_time = tv.tv_sec;
-+	port->stats_reset_time = ktime_get_seconds();
- 
- 	if (port->stats_cbfn) {
- 		port->stats_cbfn(port->stats_cbarg, status);
-@@ -471,8 +465,6 @@ void
- bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
- 		 void *dev, struct bfa_trc_mod_s *trcmod)
- {
--	struct timeval tv;
--
- 	WARN_ON(!port);
- 
- 	port->dev    = dev;
-@@ -494,8 +486,7 @@ bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
- 	/*
- 	 * initialize time stamp for stats reset
- 	 */
--	do_gettimeofday(&tv);
--	port->stats_reset_time = tv.tv_sec;
-+	port->stats_reset_time = ktime_get_seconds();
- 
- 	bfa_trc(port, 0);
- }
-diff --git a/drivers/scsi/bfa/bfa_port.h b/drivers/scsi/bfa/bfa_port.h
-index 26dc1bf14c85..0c3b200243ca 100644
---- a/drivers/scsi/bfa/bfa_port.h
-+++ b/drivers/scsi/bfa/bfa_port.h
-@@ -36,7 +36,7 @@ struct bfa_port_s {
- 	bfa_port_stats_cbfn_t		stats_cbfn;
- 	void				*stats_cbarg;
- 	bfa_status_t			stats_status;
--	u32			stats_reset_time;
-+	time64_t			stats_reset_time;
- 	union bfa_port_stats_u		*stats;
- 	struct bfa_dma_s		stats_dma;
- 	bfa_boolean_t			endis_pending;
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index e640223bab3c..dd7d1e6bc2d8 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -3047,7 +3047,6 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
- 	struct bfa_port_cfg_s *port_cfg = &fcport->cfg;
- 	struct bfa_fcport_ln_s *ln = &fcport->ln;
--	struct timeval tv;
- 
- 	fcport->bfa = bfa;
- 	ln->fcport = fcport;
-@@ -3060,8 +3059,7 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	/*
- 	 * initialize time stamp for stats reset
- 	 */
--	do_gettimeofday(&tv);
--	fcport->stats_reset_time = tv.tv_sec;
-+	fcport->stats_reset_time = ktime_get_seconds();
- 	fcport->stats_dma_ready = BFA_FALSE;
- 
- 	/*
-@@ -3295,9 +3293,7 @@ __bfa_cb_fcport_stats_get(void *cbarg, bfa_boolean_t complete)
- 	union bfa_fcport_stats_u *ret;
- 
- 	if (complete) {
--		struct timeval tv;
--		if (fcport->stats_status == BFA_STATUS_OK)
--			do_gettimeofday(&tv);
-+		time64_t time = ktime_get_seconds();
- 
- 		list_for_each_safe(qe, qen, &fcport->stats_pending_q) {
- 			bfa_q_deq(&fcport->stats_pending_q, &qe);
-@@ -3312,7 +3308,7 @@ __bfa_cb_fcport_stats_get(void *cbarg, bfa_boolean_t complete)
- 					bfa_fcport_fcoe_stats_swap(&ret->fcoe,
- 							&fcport->stats->fcoe);
- 					ret->fcoe.secs_reset =
--					tv.tv_sec - fcport->stats_reset_time;
-+						time - fcport->stats_reset_time;
- 				}
- 			}
- 			bfa_cb_queue_status(fcport->bfa, &cb->hcb_qe,
-@@ -3373,13 +3369,10 @@ __bfa_cb_fcport_stats_clr(void *cbarg, bfa_boolean_t complete)
- 	struct list_head *qe, *qen;
- 
- 	if (complete) {
--		struct timeval tv;
--
- 		/*
- 		 * re-initialize time stamp for stats reset
- 		 */
--		do_gettimeofday(&tv);
--		fcport->stats_reset_time = tv.tv_sec;
-+		fcport->stats_reset_time = ktime_get_seconds();
- 		list_for_each_safe(qe, qen, &fcport->statsclr_pending_q) {
- 			bfa_q_deq(&fcport->statsclr_pending_q, &qe);
- 			cb = (struct bfa_cb_pending_q_s *)qe;
-diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
-index ea2278bc78a8..7e8fb6231d49 100644
---- a/drivers/scsi/bfa/bfa_svc.h
-+++ b/drivers/scsi/bfa/bfa_svc.h
-@@ -505,7 +505,7 @@ struct bfa_fcport_s {
- 	struct list_head	stats_pending_q;
- 	struct list_head	statsclr_pending_q;
- 	bfa_boolean_t		stats_qfull;
--	u32		stats_reset_time; /*  stats reset time stamp */
-+	time64_t		stats_reset_time; /*  stats reset time stamp */
- 	bfa_boolean_t		diag_busy; /*  diag busy status */
- 	bfa_boolean_t		beacon; /*  port beacon status */
- 	bfa_boolean_t		link_e2e_beacon; /*  link beacon status */
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+index 5b14dd29b764..67b3e3354e3c 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -1223,8 +1223,6 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
+ 	case ESAS2R_INIT_MSG_START:
+ 	case ESAS2R_INIT_MSG_REINIT:
+ 	{
+-		struct timeval now;
+-		do_gettimeofday(&now);
+ 		esas2r_hdebug("CFG init");
+ 		esas2r_build_cfg_req(a,
+ 				     rq,
+@@ -1233,7 +1231,8 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
+ 				     NULL);
+ 		ci = (struct atto_vda_cfg_init *)&rq->vrq->cfg.data.init;
+ 		ci->sgl_page_size = cpu_to_le32(sgl_page_size);
+-		ci->epoch_time = cpu_to_le32(now.tv_sec);
++		/* firmware interface overflows in y2106 */
++		ci->epoch_time = cpu_to_le32(ktime_get_real_seconds());
+ 		rq->flags |= RF_FAILURE_OK;
+ 		a->init_msg = ESAS2R_INIT_MSG_INIT;
+ 		break;
 -- 
 2.9.0
