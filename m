@@ -1,81 +1,69 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 5/7] scsi: bfa: replace bfa_get_log_time() with
-	ktime_get_real_seconds()
-Date: Fri, 10 Nov 2017 16:37:13 +0100
-Message-ID: <20171110153715.1929456-6-arnd@arndb.de>
+Subject: [PATCH 7/7] scsi: bfa: use 64-bit times in bfa_aen_entry_s ABI
+Date: Fri, 10 Nov 2017 16:37:15 +0100
+Message-ID: <20171110153715.1929456-8-arnd@arndb.de>
 References: <20171110153715.1929456-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.13]:51544 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753264AbdKJPhv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2017 10:37:51 -0500
 In-Reply-To: <20171110153715.1929456-1-arnd@arndb.de>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: hare@suse.com, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hch@lst.de
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org, hch@lst.de, hare@suse.com, jthumshirn@suse.de, Arnd Bergmann <arnd@arndb.de>
 
-VGhlIGJmYV9nZXRfbG9nX3RpbWUoKSByZXR1cm5zIGEgNjQtYml0IHRpbWVzdGFtcCB0aGF0IGRv
-ZXMgbm90CnN1ZmZlciBmcm9tIHRoZSB5MjAzOCBvdmVyZmxvdyBvbiA2NC1iaXQgc3lzdGVtcy4g
-SG93ZXZlciwgb24gMzItYml0CmFyY2hpdGVjdHVyZXMgdGhlIHRpbWVzdGFtcCB3aWxsIGp1bXAg
-ZnJvbSAweDAwMDAwMDAwN2ZmZmZmZmYKdG8gMHhmZmZmZmZmZjgwMDAwMDAwIGluIHkyMDM4IGFu
-ZCBwcm9kdWNlIHdyb25nIHJlc3VsdHMuCgpUaGUga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpIGZ1
-bmN0aW9uIGRvZXMgdGhlIHNhbWUgdGhpbmcgYXMKYmZhX2dldF9sb2dfdGltZSgpIHdpdGhvdXQg
-dGhhdCBwcm9ibGVtLCBzbyB3ZSBjYW4gc2ltcGx5IHJlbW92ZQp0aGUgZm9ybWVyIHVzZSBrdGlt
-ZV9nZXRfcmVhbF9zZWNvbmRzKCkgaW5zdGVhZC4KClNpZ25lZC1vZmYtYnk6IEFybmQgQmVyZ21h
-bm4gPGFybmRAYXJuZGIuZGU+Ci0tLQogZHJpdmVycy9zY3NpL2JmYS9iZmFfc3ZjLmMgfCAzMiAr
-KysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDEwIGluc2Vy
-dGlvbnMoKyksIDIyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9iZmEv
-YmZhX3N2Yy5jIGIvZHJpdmVycy9zY3NpL2JmYS9iZmFfc3ZjLmMKaW5kZXggZGQ3ZDFlNmJjMmQ4
-Li45ZDIwZDJjOTJlOGMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9iZmEvYmZhX3N2Yy5jCisr
-KyBiL2RyaXZlcnMvc2NzaS9iZmEvYmZhX3N2Yy5jCkBAIC0yODgsMTggKzI4OCw2IEBAIHBsa2Rf
-dmFsaWRhdGVfbG9ncmVjKHN0cnVjdCBiZmFfcGxvZ19yZWNfcyAqcGxfcmVjKQogCXJldHVybiAw
-OwogfQogCi1zdGF0aWMgdTY0Ci1iZmFfZ2V0X2xvZ190aW1lKHZvaWQpCi17Ci0JdTY0IHN5c3Rl
-bV90aW1lID0gMDsKLQlzdHJ1Y3QgdGltZXZhbCB0djsKLQlkb19nZXR0aW1lb2ZkYXkoJnR2KTsK
-LQotCS8qIFdlIGFyZSBpbnRlcmVzdGVkIGluIHNlY29uZHMgb25seS4gKi8KLQlzeXN0ZW1fdGlt
-ZSA9IHR2LnR2X3NlYzsKLQlyZXR1cm4gc3lzdGVtX3RpbWU7Ci19Ci0KIHN0YXRpYyB2b2lkCiBi
-ZmFfcGxvZ19hZGQoc3RydWN0IGJmYV9wbG9nX3MgKnBsb2csIHN0cnVjdCBiZmFfcGxvZ19yZWNf
-cyAqcGxfcmVjKQogewpAQCAtMzIwLDcgKzMwOCw3IEBAIGJmYV9wbG9nX2FkZChzdHJ1Y3QgYmZh
-X3Bsb2dfcyAqcGxvZywgc3RydWN0IGJmYV9wbG9nX3JlY19zICpwbF9yZWMpCiAKIAltZW1jcHko
-cGxfcmVjcCwgcGxfcmVjLCBzaXplb2Yoc3RydWN0IGJmYV9wbG9nX3JlY19zKSk7CiAKLQlwbF9y
-ZWNwLT50diA9IGJmYV9nZXRfbG9nX3RpbWUoKTsKKwlwbF9yZWNwLT50diA9IGt0aW1lX2dldF9y
-ZWFsX3NlY29uZHMoKTsKIAlCRkFfUExfTE9HX1JFQ19JTkNSKHBsb2ctPnRhaWwpOwogCiAJaWYg
-KHBsb2ctPmhlYWQgPT0gcGxvZy0+dGFpbCkKQEAgLTYxNDEsMTMgKzYxMjksMTMgQEAgYmZhX2Zj
-ZGlhZ19sYl9pc19ydW5uaW5nKHN0cnVjdCBiZmFfcyAqYmZhKQogLyoKICAqCUQtcG9ydAogICov
-Ci0jZGVmaW5lIGJmYV9kcG9ydF9yZXN1bHRfc3RhcnQoX19kcG9ydCwgX19tb2RlKSBkbyB7CQkJ
-XAotCQkoX19kcG9ydCktPnJlc3VsdC5zdGFydF90aW1lID0gYmZhX2dldF9sb2dfdGltZSgpOwlc
-Ci0JCShfX2Rwb3J0KS0+cmVzdWx0LnN0YXR1cyA9IERQT1JUX1RFU1RfU1RfSU5QUkc7CQlcCi0J
-CShfX2Rwb3J0KS0+cmVzdWx0Lm1vZGUgPSAoX19tb2RlKTsJCQlcCi0JCShfX2Rwb3J0KS0+cmVz
-dWx0LnJwX3B3d24gPSAoX19kcG9ydCktPnJwX3B3d247CQlcCi0JCShfX2Rwb3J0KS0+cmVzdWx0
-LnJwX253d24gPSAoX19kcG9ydCktPnJwX253d247CQlcCi0JCShfX2Rwb3J0KS0+cmVzdWx0Lmxw
-Y250ID0gKF9fZHBvcnQpLT5scGNudDsJCVwKKyNkZWZpbmUgYmZhX2Rwb3J0X3Jlc3VsdF9zdGFy
-dChfX2Rwb3J0LCBfX21vZGUpIGRvIHsJCQkJXAorCQkoX19kcG9ydCktPnJlc3VsdC5zdGFydF90
-aW1lID0ga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpOwlcCisJCShfX2Rwb3J0KS0+cmVzdWx0LnN0
-YXR1cyA9IERQT1JUX1RFU1RfU1RfSU5QUkc7CQkJXAorCQkoX19kcG9ydCktPnJlc3VsdC5tb2Rl
-ID0gKF9fbW9kZSk7CQkJCVwKKwkJKF9fZHBvcnQpLT5yZXN1bHQucnBfcHd3biA9IChfX2Rwb3J0
-KS0+cnBfcHd3bjsJCQlcCisJCShfX2Rwb3J0KS0+cmVzdWx0LnJwX253d24gPSAoX19kcG9ydCkt
-PnJwX253d247CQkJXAorCQkoX19kcG9ydCktPnJlc3VsdC5scGNudCA9IChfX2Rwb3J0KS0+bHBj
-bnQ7CQkJXAogfSB3aGlsZSAoMCkKIAogc3RhdGljIGJmYV9ib29sZWFuX3QgYmZhX2Rwb3J0X3Nl
-bmRfcmVxKHN0cnVjdCBiZmFfZHBvcnRfcyAqZHBvcnQsCkBAIC02NTgxLDcgKzY1NjksNyBAQCBi
-ZmFfZHBvcnRfc2NuKHN0cnVjdCBiZmFfZHBvcnRfcyAqZHBvcnQsIHN0cnVjdCBiZmlfZGlhZ19k
-cG9ydF9zY25fcyAqbXNnKQogCiAJc3dpdGNoIChkcG9ydC0+aTJobXNnLnNjbi5zdGF0ZSkgewog
-CWNhc2UgQkZJX0RQT1JUX1NDTl9URVNUQ09NUDoKLQkJZHBvcnQtPnJlc3VsdC5lbmRfdGltZSA9
-IGJmYV9nZXRfbG9nX3RpbWUoKTsKKwkJZHBvcnQtPnJlc3VsdC5lbmRfdGltZSA9IGt0aW1lX2dl
-dF9yZWFsX3NlY29uZHMoKTsKIAkJYmZhX3RyYyhkcG9ydC0+YmZhLCBkcG9ydC0+cmVzdWx0LmVu
-ZF90aW1lKTsKIAogCQlkcG9ydC0+cmVzdWx0LnN0YXR1cyA9IG1zZy0+aW5mby50ZXN0Y29tcC5z
-dGF0dXM7CkBAIC02NjI4LDcgKzY2MTYsNyBAQCBiZmFfZHBvcnRfc2NuKHN0cnVjdCBiZmFfZHBv
-cnRfcyAqZHBvcnQsIHN0cnVjdCBiZmlfZGlhZ19kcG9ydF9zY25fcyAqbXNnKQogCWNhc2UgQkZJ
-X0RQT1JUX1NDTl9TVUJURVNUU1RBUlQ6CiAJCXN1YnRlc3R0eXBlID0gbXNnLT5pbmZvLnRlc3Rz
-dGFydC50eXBlOwogCQlkcG9ydC0+cmVzdWx0LnN1YnRlc3Rbc3VidGVzdHR5cGVdLnN0YXJ0X3Rp
-bWUgPQotCQkJYmZhX2dldF9sb2dfdGltZSgpOworCQkJa3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygp
-OwogCQlkcG9ydC0+cmVzdWx0LnN1YnRlc3Rbc3VidGVzdHR5cGVdLnN0YXR1cyA9CiAJCQlEUE9S
-VF9URVNUX1NUX0lOUFJHOwogCi0tIAoyLjkuMAoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFy
-by5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
+bfa_aen_entry_s is passed through a netlink socket that can be read
+by either 32-bit or 64-bit processes, but the data format is different
+between the two on current implementations.
+
+Originally, this was using a 'struct timeval', which also suffers from
+getting redefined with a new libc implementation.
+
+With this patch, the layout gets fixed to having two 64-bit members
+for the time, making it the same on 32-bit kernels and 64-bit kernels
+running either compat or native user space including x32.
+
+Provided that the new header file gets used to recompile any 32-bit
+application binaries, this will fix running those on a 64-bit kernel
+(with or without this patch) e.g. in a container environment,
+and it will make binaries work that will be built against a future
+32-bit glibc that uses a 64-bit time_t, and avoid the y2038
+overflow there.
+
+However, this also breaks compatibility with any existing 32-bit
+binary running on a native 32-bit kernel, those must be recompiled
+against the new header, which in turn makes them incompatible with
+older kernels unless the same change gets applied there.
+
+Obviously this patch should only be applied when the benefits
+outweigh the possible breakage. I'm posting it under the assumption
+that there are no open-source tools using the netlink interface,
+and that users of the binaries provided by qlogic for SLES10/11
+and RHEL5/6 are not actually being used on new future systems
+with 32-bit x86 kernels.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+---
+ drivers/scsi/bfa/bfa_defs_svc.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index df1e874015c4..3d0c96a5c873 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -1455,8 +1455,8 @@ struct bfa_aen_entry_s {
+ 	enum bfa_aen_category   aen_category;
+ 	u32                     aen_type;
+ 	union bfa_aen_data_u    aen_data;
+-	unsigned long		aen_tv_sec;
+-	unsigned long		aen_tv_usec;
++	u64			aen_tv_sec;
++	u64			aen_tv_usec;
+ 	u32                     seq_num;
+ 	u32                     bfad_num;
+ };
+-- 
+2.9.0
