@@ -1,41 +1,69 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 17/17] lpfc: update driver version to 11.4.0.5
-Date: Thu,  9 Nov 2017 17:08:34 -0800
-Message-ID: <20171110010834.4542-18-jsmart2021@gmail.com>
+Subject: [PATCH v2 08/17] lpfc: Fix display for debugfs queInfo
+Date: Thu,  9 Nov 2017 17:08:25 -0800
+Message-ID: <20171110010834.4542-9-jsmart2021@gmail.com>
 References: <20171110010834.4542-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:43159 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755523AbdKJBJA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 20:09:00 -0500
-Received: by mail-qt0-f195.google.com with SMTP id j58so10085607qtj.0
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 17:08:59 -0800 (PST)
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:51530 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755517AbdKJBIv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2017 20:08:51 -0500
+Received: by mail-qk0-f194.google.com with SMTP id n66so10106057qki.8
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2017 17:08:51 -0800 (PST)
 In-Reply-To: <20171110010834.4542-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Update the driver version to 11.4.0.5
+Display for lpfc/fnX/iDiag/queInfo isn't formatted perfectly.
+Corrected the format strings for the queue info debug messages.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index e0181371af09..cc2f5cec98c5 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index d50c481ec41c..e8c5a0927dd7 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -3248,7 +3248,7 @@ __lpfc_idiag_print_eq(struct lpfc_queue *qp, char *eqtype,
  
--#define LPFC_DRIVER_VERSION "11.4.0.4"
-+#define LPFC_DRIVER_VERSION "11.4.0.5"
- #define LPFC_DRIVER_NAME		"lpfc"
+ 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
+ 			"\n%s EQ info: EQ-STAT[max:x%x noE:x%x "
+-			"bs:x%x proc:x%llx eqd %d]\n",
++			"cqe_proc:x%x eqe_proc:x%llx eqd %d]\n",
+ 			eqtype, qp->q_cnt_1, qp->q_cnt_2, qp->q_cnt_3,
+ 			(unsigned long long)qp->q_cnt_4, qp->q_mode);
+ 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
+@@ -3368,6 +3368,12 @@ lpfc_idiag_queinfo_read(struct file *file, char __user *buf, size_t nbytes,
+ 		if (len >= max_cnt)
+ 			goto too_big;
  
- /* Used for SLI 2/3 */
++		qp = phba->sli4_hba.hdr_rq;
++		len = __lpfc_idiag_print_rqpair(qp, phba->sli4_hba.dat_rq,
++						"ELS RQpair", pbuffer, len);
++		if (len >= max_cnt)
++			goto too_big;
++
+ 		/* Slow-path NVME LS response CQ */
+ 		qp = phba->sli4_hba.nvmels_cq;
+ 		len = __lpfc_idiag_print_cq(qp, "NVME LS",
+@@ -3385,12 +3391,6 @@ lpfc_idiag_queinfo_read(struct file *file, char __user *buf, size_t nbytes,
+ 		if (len >= max_cnt)
+ 			goto too_big;
+ 
+-		qp = phba->sli4_hba.hdr_rq;
+-		len = __lpfc_idiag_print_rqpair(qp, phba->sli4_hba.dat_rq,
+-				"RQpair", pbuffer, len);
+-		if (len >= max_cnt)
+-			goto too_big;
+-
+ 		goto out;
+ 	}
+ 
 -- 
 2.13.1
