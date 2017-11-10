@@ -1,69 +1,52 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 7/7] scsi: bfa: use 64-bit times in bfa_aen_entry_s ABI
-Date: Fri, 10 Nov 2017 16:37:15 +0100
-Message-ID: <20171110153715.1929456-8-arnd@arndb.de>
-References: <20171110153715.1929456-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:51544 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753264AbdKJPhv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2017 10:37:51 -0500
-In-Reply-To: <20171110153715.1929456-1-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 0/7] scsi: bfa: do_gettimeofday removal
+Date: Fri, 10 Nov 2017 16:37:08 +0100
+Message-ID: <20171110153715.1929456-1-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
 To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org, hch@lst.de, hare@suse.com, jthumshirn@suse.de, Arnd Bergmann <arnd@arndb.de>
+Cc: hare@suse.com, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hch@lst.de
+List-Id: linux-scsi@vger.kernel.org
 
-bfa_aen_entry_s is passed through a netlink socket that can be read
-by either 32-bit or 64-bit processes, but the data format is different
-between the two on current implementations.
-
-Originally, this was using a 'struct timeval', which also suffers from
-getting redefined with a new libc implementation.
-
-With this patch, the layout gets fixed to having two 64-bit members
-for the time, making it the same on 32-bit kernels and 64-bit kernels
-running either compat or native user space including x32.
-
-Provided that the new header file gets used to recompile any 32-bit
-application binaries, this will fix running those on a 64-bit kernel
-(with or without this patch) e.g. in a container environment,
-and it will make binaries work that will be built against a future
-32-bit glibc that uses a 64-bit time_t, and avoid the y2038
-overflow there.
-
-However, this also breaks compatibility with any existing 32-bit
-binary running on a native 32-bit kernel, those must be recompiled
-against the new header, which in turn makes them incompatible with
-older kernels unless the same change gets applied there.
-
-Obviously this patch should only be applied when the benefits
-outweigh the possible breakage. I'm posting it under the assumption
-that there are no open-source tools using the netlink interface,
-and that users of the binaries provided by qlogic for SLES10/11
-and RHEL5/6 are not actually being used on new future systems
-with 32-bit x86 kernels.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
----
- drivers/scsi/bfa/bfa_defs_svc.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index df1e874015c4..3d0c96a5c873 100644
---- a/drivers/scsi/bfa/bfa_defs_svc.h
-+++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -1455,8 +1455,8 @@ struct bfa_aen_entry_s {
- 	enum bfa_aen_category   aen_category;
- 	u32                     aen_type;
- 	union bfa_aen_data_u    aen_data;
--	unsigned long		aen_tv_sec;
--	unsigned long		aen_tv_usec;
-+	u64			aen_tv_sec;
-+	u64			aen_tv_usec;
- 	u32                     seq_num;
- 	u32                     bfad_num;
- };
--- 
-2.9.0
+VGhlIGJmYSBkcml2ZXIgaXMgb25lIG9mIHRoZSBtYWluIHVzZXJzIG9mIGRvX2dldHRpbWVvZmRh
+eSgpLCBhIGZ1bmN0aW9uCnRoYXQgSSdtIHRyeWluZyB0byByZW1vdmUgYXMgcGFydCBvZiB0aGUg
+eTIwMzggY2xlYW51cC4KClRoZSB0aW1lc3RhbXBzIGFyZSBhbGwgdXNlcyBpbiBzbGlnaHRseSBk
+aWZmZXJlbnQgd2F5cywgc28gdGhpcyBoYXMgdHVybmVkCmludG8gYSByYXRoZXIgbG9uZ2lzaCBz
+ZXJpZXMgZm9yIGRvaW5nIHNvbWV0aGluZyB0aGF0IHNob3VsZCBiZSBzaW1wbGUuCgpUaGUgbGFz
+dCBwYXRjaCBpbiB0aGUgc2VyaWVzICgic2NzaTogYmZhOiB1c2UgNjQtYml0IHRpbWVzIGluCmJm
+YV9hZW5fZW50cnlfcyBBQkkiKSBpcyBvbmUgdGhhdCBuZWVkcyB0byBiZSByZXZpZXdlZCB2ZXJ5
+IGNhcmVmdWxseSwKYW5kIGl0IGNhbiBiZSBza2lwcGVkIGlmIHRoZSBtYWludGFpbmVycyBwcmVm
+ZXIgdG8gbGVhdmUgdGhlIDMyLWJpdCBBQkkKdW5jaGFuZ2VkLCB0aGUgcmVzdCBhcmUgaG9wZWZ1
+bGx5IGZhaXJseSBzdHJhaWdodGZvcndhcmQuCgogICAgICBBcm5kCgpBcm5kIEJlcmdtYW5uICg3
+KToKICBzY3NpOiBiZmE6IHVzZSBrdGltZV9nZXRfcmVhbF90czY0IGZvciBmaXJtd2FyZSB0aW1l
+c3RhbXAKICBzY3NpOiBiZmE6IHVzZSBwcm9wZXIgdGltZSBhY2Nlc3NvciBmb3Igc3RhdHNfcmVz
+ZXRfdGltZQogIHNjc2k6IGJmYTogaW1wcm92ZSBiZmFfaW9jX3NlbmRfZW5hYmxlL2Rpc2FibGUg
+ZGF0YQogIHNjc2k6IGJmYTogZG9jdW1lbnQgb3ZlcmZsb3cgb2YgaW9fcHJvZmlsZV9zdGFydF90
+aW1lCiAgc2NzaTogYmZhOiByZXBsYWNlIGJmYV9nZXRfbG9nX3RpbWUoKSB3aXRoIGt0aW1lX2dl
+dF9yZWFsX3NlY29uZHMoKQogIHNjc2k6IGJmYTogdHJ5IHRvIHNhbml0aXplIHZlbmRvciBuZXRs
+aW5rIGV2ZW50cwogIHNjc2k6IGJmYTogdXNlIDY0LWJpdCB0aW1lcyBpbiBiZmFfYWVuX2VudHJ5
+X3MgQUJJCgogZHJpdmVycy9zY3NpL2JmYS9iZmFfY3MuaCAgICAgICB8ICA2ICsrKy0tLQogZHJp
+dmVycy9zY3NpL2JmYS9iZmFfZGVmc19zdmMuaCB8ICAzICsrLQogZHJpdmVycy9zY3NpL2JmYS9i
+ZmFfZmNwaW0uYyAgICB8ICAzICsrLQogZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNwaW0uaCAgICB8
+ICA0ICsrLS0KIGRyaXZlcnMvc2NzaS9iZmEvYmZhX2lvYy5jICAgICAgfCAgOCArKysrLS0tCiBk
+cml2ZXJzL3Njc2kvYmZhL2JmYV9wb3J0LmMgICAgIHwgMTUgKysrLS0tLS0tLS0tLQogZHJpdmVy
+cy9zY3NpL2JmYS9iZmFfcG9ydC5oICAgICB8ICAyICstCiBkcml2ZXJzL3Njc2kvYmZhL2JmYV9z
+dmMuYyAgICAgIHwgNDcgKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+IGRyaXZlcnMvc2NzaS9iZmEvYmZhX3N2Yy5oICAgICAgfCAgMiArLQogZHJpdmVycy9zY3NpL2Jm
+YS9iZmFkX2JzZy5jICAgICB8ICA0ICstLS0KIGRyaXZlcnMvc2NzaS9iZmEvYmZhZF9pbS5oICAg
+ICAgfCAzMiArKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tCiAxMSBmaWxlcyBjaGFuZ2VkLCA1
+NiBpbnNlcnRpb25zKCspLCA3MCBkZWxldGlvbnMoLSkKCi0tIAoyLjkuMAoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGluZyBsaXN0Clky
+MDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21haWxtYW4vbGlz
+dGluZm8veTIwMzgK
