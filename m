@@ -1,81 +1,97 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 6/7] scsi: bfa: try to sanitize vendor netlink events
-Date: Fri, 10 Nov 2017 16:37:14 +0100
-Message-ID: <20171110153715.1929456-7-arnd@arndb.de>
+Subject: [PATCH 4/7] scsi: bfa: document overflow of io_profile_start_time
+Date: Fri, 10 Nov 2017 16:37:12 +0100
+Message-ID: <20171110153715.1929456-5-arnd@arndb.de>
 References: <20171110153715.1929456-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.74]:57082 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752861AbdKJPjN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2017 10:39:13 -0500
 In-Reply-To: <20171110153715.1929456-1-arnd@arndb.de>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: hare@suse.com, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hch@lst.de
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org, hch@lst.de, hare@suse.com, jthumshirn@suse.de, Arnd Bergmann <arnd@arndb.de>
 
-YmZhX2Flbl9lbnRyeV9zIGlzIHBhc3NlZCB0byB1c2VyIHNwYWNlIGluIGEgbmV0bGluayBtZXNz
-YWdlLCBidXQKaXMgZGVmaW5lZCB1c2luZyBhICdzdHJ1Y3QgdGltZXZhbCcgYW5kIGFuICdlbnVt
-JyB0aGF0IGFyZSBub3Qgb25seQpkaWZmZXJlbnQgYmV0d2VlbiBhcmNoaXRlY3R1cmVzLCBidXQg
-YWxzbyBiZXR3ZWVuIDMyLWJpdCB1c2VyIHNwYWNlIGFuZAo2NC1iaXQga2VybmVscyB0aGV5IG1h
-eSBydW4gb24sIGFzIHdlbGwgYXMgZGVwZW5kaW5nIG9uIHRoZSBwYXJ0aWN1bGFyCkMgbGlicmFy
-eSB0aGF0IGRlZmluZXMgdGltZXZhbC4KClRoaXMgY2hhbmdlcyB0aGUgaW4ta2VybmVsIGRlZmlu
-aXRpb24gdG8gbm8gbG9uZ2VyIHVzZSB0aGUgdGltZXZhbAp0eXBlIGRpcmVjdGx5IGJ1dCBpbnN0
-ZWFkIHVzZSB0d28gb3Blbi1jb2RlZCAndW5zaWduZWQgbG9uZycgbWVtYmVycy4KVGhpcyBrZWVw
-cyB0aGUgZXhpc3RpbmcgQUJJLCBidXQgbWFraW5nIHRoZSB2YXJpYWJsZSB1bnNpZ25lZCBhbHNv
-CmhlbHBzIG1ha2UgaXQgd29yayBhZnRlciB5MjAzOCwgdW50aWwgaXQgb3ZlcmZsb3dzIGluIDIx
-MDYuCgpTaW5jZSB0aGUgbWFjcm8gYmVjb21lcyBvdmVybHkgY29tcGxleCBhdCB0aGlzIHBvaW50
-LCBJJ20gY2hhbmdpbmcKaXQgdG8gYW4gaW5saW5lIGZ1bmN0aW9uIGZvciByZWFkYWJpbGl0eS4K
-CkknbSBub3QgY2hhbmdpbmcgdGhlIDMyLWJpdCB1c2VyLXNwYWNlIEFCSSBhdCB0aGlzIHBvaW50
-LCB0byBrZWVwIHRoZQpjaGFuZ2VzIHNlcGFyYXRlLCBJIGRlYWxseSB0aGlzIHdvdWxkIGJlIGRl
-ZmluZWQgdXNpbmcgdGhlIHNhbWUKYmluYXJ5IGxheW91dCBmb3IgYWxsIGFyY2hpdGVjdHVyZXMu
-CgpTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgotLS0KIGRyaXZl
-cnMvc2NzaS9iZmEvYmZhX2RlZnNfc3ZjLmggfCAgMyArKy0KIGRyaXZlcnMvc2NzaS9iZmEvYmZh
-ZF9pbS5oICAgICAgfCAzMiArKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLQogMiBmaWxl
-cyBjaGFuZ2VkLCAyNCBpbnNlcnRpb25zKCspLCAxMSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvYmZhL2JmYV9kZWZzX3N2Yy5oIGIvZHJpdmVycy9zY3NpL2JmYS9iZmFf
-ZGVmc19zdmMuaAppbmRleCBlODE3MDdmOTM4Y2IuLmRmMWU4NzQwMTVjNCAxMDA2NDQKLS0tIGEv
-ZHJpdmVycy9zY3NpL2JmYS9iZmFfZGVmc19zdmMuaAorKysgYi9kcml2ZXJzL3Njc2kvYmZhL2Jm
-YV9kZWZzX3N2Yy5oCkBAIC0xNDU1LDcgKzE0NTUsOCBAQCBzdHJ1Y3QgYmZhX2Flbl9lbnRyeV9z
-IHsKIAllbnVtIGJmYV9hZW5fY2F0ZWdvcnkgICBhZW5fY2F0ZWdvcnk7CiAJdTMyICAgICAgICAg
-ICAgICAgICAgICAgYWVuX3R5cGU7CiAJdW5pb24gYmZhX2Flbl9kYXRhX3UgICAgYWVuX2RhdGE7
-Ci0Jc3RydWN0IHRpbWV2YWwgICAgICAgICAgYWVuX3R2OworCXVuc2lnbmVkIGxvbmcJCWFlbl90
-dl9zZWM7CisJdW5zaWduZWQgbG9uZwkJYWVuX3R2X3VzZWM7CiAJdTMyICAgICAgICAgICAgICAg
-ICAgICAgc2VxX251bTsKIAl1MzIgICAgICAgICAgICAgICAgICAgICBiZmFkX251bTsKIH07CmRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYmZhL2JmYWRfaW0uaCBiL2RyaXZlcnMvc2NzaS9iZmEv
-YmZhZF9pbS5oCmluZGV4IGM4MWVjMmE3N2VmNS4uN2Y3NjE2YzUyODE0IDEwMDY0NAotLS0gYS9k
-cml2ZXJzL3Njc2kvYmZhL2JmYWRfaW0uaAorKysgYi9kcml2ZXJzL3Njc2kvYmZhL2JmYWRfaW0u
-aApAQCAtMTMxLDE2ICsxMzEsMjggQEAgc3RydWN0IGJmYWRfaW1fcyB7CiB9IHdoaWxlICgwKQog
-CiAvKiBwb3N0IGZjX2hvc3QgdmVuZG9yIGV2ZW50ICovCi0jZGVmaW5lIGJmYWRfaW1fcG9zdF92
-ZW5kb3JfZXZlbnQoX2VudHJ5LCBfZHJ2LCBfY250LCBfY2F0LCBfZXZ0KSBkbyB7CSAgICAgIFwK
-LQlkb19nZXR0aW1lb2ZkYXkoJihfZW50cnkpLT5hZW5fdHYpOwkJCQkgICAgICBcCi0JKF9lbnRy
-eSktPmJmYWRfbnVtID0gKF9kcnYpLT5pbnN0X25vOwkJCQkgICAgICBcCi0JKF9lbnRyeSktPnNl
-cV9udW0gPSAoX2NudCk7CQkJCQkgICAgICBcCi0JKF9lbnRyeSktPmFlbl9jYXRlZ29yeSA9IChf
-Y2F0KTsJCQkJICAgICAgXAotCShfZW50cnkpLT5hZW5fdHlwZSA9IChfZXZ0KTsJCQkJCSAgICAg
-IFwKLQlpZiAoKF9kcnYpLT5iZmFkX2ZsYWdzICYgQkZBRF9GQzRfUFJPQkVfRE9ORSkJCQkgICAg
-ICBcCi0JCXF1ZXVlX3dvcmsoKF9kcnYpLT5pbS0+ZHJ2X3dvcmtxLAkJCSAgICAgIFwKLQkJCSAg
-ICYoX2RydiktPmltLT5hZW5faW1fbm90aWZ5X3dvcmspOwkJICAgICAgXAotfSB3aGlsZSAoMCkK
-K3N0YXRpYyBpbmxpbmUgdm9pZCBiZmFkX2ltX3Bvc3RfdmVuZG9yX2V2ZW50KHN0cnVjdCBiZmFf
-YWVuX2VudHJ5X3MgKmVudHJ5LAorCQkJCQkgICAgIHN0cnVjdCBiZmFkX3MgKmRydiwgaW50IGNu
-dCwKKwkJCQkJICAgICBlbnVtIGJmYV9hZW5fY2F0ZWdvcnkgY2F0LAorCQkJCQkgICAgIGVudW0g
-YmZhX2lvY19hZW5fZXZlbnQgZXZ0KQoreworCXN0cnVjdCB0aW1lc3BlYzY0IHRzOworCisJa3Rp
-bWVfZ2V0X3JlYWxfdHM2NCgmdHMpOworCS8qCisJICogJ3Vuc2lnbmVkIGxvbmcgYWVuX3R2X3Nl
-Yycgb3ZlcmZsb3dzIGluIHkyMTA2IG9uIDMyLWJpdAorCSAqIGFyY2hpdGVjdHVyZXMsIG9yIGlu
-IDIwMzggaWYgdXNlciBzcGFjZSBpbnRlcnByZXRzIGl0CisJICogYXMgJ3NpZ25lZCcuCisJICov
-CisJZW50cnktPmFlbl90dl9zZWMgPSB0cy50dl9zZWM7CisJZW50cnktPmFlbl90dl91c2VjID0g
-dHMudHZfbnNlYyAvIE5TRUNfUEVSX1VTRUM7CisJZW50cnktPmJmYWRfbnVtID0gZHJ2LT5pbnN0
-X25vOworCWVudHJ5LT5zZXFfbnVtID0gY250OworCWVudHJ5LT5hZW5fY2F0ZWdvcnkgPSBjYXQ7
-CisJZW50cnktPmFlbl90eXBlID0gZXZ0OworCWlmIChkcnYtPmJmYWRfZmxhZ3MgJiBCRkFEX0ZD
-NF9QUk9CRV9ET05FKQorCQlxdWV1ZV93b3JrKGRydi0+aW0tPmRydl93b3JrcSwgJmRydi0+aW0t
-PmFlbl9pbV9ub3RpZnlfd29yayk7Cit9CiAKIHN0cnVjdCBTY3NpX0hvc3QgKmJmYWRfc2NzaV9o
-b3N0X2FsbG9jKHN0cnVjdCBiZmFkX2ltX3BvcnRfcyAqaW1fcG9ydCwKIAkJCQlzdHJ1Y3QgYmZh
-ZF9zICopOwotLSAKMi45LjAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fClkyMDM4IG1haWxpbmcgbGlzdApZMjAzOEBsaXN0cy5saW5hcm8ub3JnCmh0dHBz
-Oi8vbGlzdHMubGluYXJvLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3kyMDM4Cg==
+io_profile_start_time() gets read using do_gettimeofday() and passed
+down as a 32-bit value through multiple functions. This will overflow
+in y2038 or y2106, depending on whether it gets interpreted as
+unsigned in the end.
+
+This changes do_gettimeofday() to ktime_get_real_seconds() and pushes
+the point at which it overflows to where we actually assign it to
+the bfa_fcpim_del_itn_stats_s structure, with an appropriate
+comment.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/bfa/bfa_fcpim.c | 3 ++-
+ drivers/scsi/bfa/bfa_fcpim.h | 4 ++--
+ drivers/scsi/bfa/bfad_bsg.c  | 4 +---
+ 3 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 5f53b3276234..2c85f5b1f9c1 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -468,7 +468,7 @@ bfa_ioim_profile_start(struct bfa_ioim_s *ioim)
+ }
+ 
+ bfa_status_t
+-bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time)
++bfa_fcpim_profile_on(struct bfa_s *bfa, time64_t time)
+ {
+ 	struct bfa_itnim_s *itnim;
+ 	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+@@ -1478,6 +1478,7 @@ bfa_itnim_get_ioprofile(struct bfa_itnim_s *itnim,
+ 		return BFA_STATUS_IOPROFILE_OFF;
+ 
+ 	itnim->ioprofile.index = BFA_IOBUCKET_MAX;
++	/* unsigned 32-bit time_t overflow here in y2106 */
+ 	itnim->ioprofile.io_profile_start_time =
+ 				bfa_io_profile_start_time(itnim->bfa);
+ 	itnim->ioprofile.clock_res_mul = bfa_io_lat_clock_res_mul;
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index e93921dec347..ec8f863540ae 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -136,7 +136,7 @@ struct bfa_fcpim_s {
+ 	struct bfa_fcpim_del_itn_stats_s del_itn_stats;
+ 	bfa_boolean_t		ioredirect;
+ 	bfa_boolean_t		io_profile;
+-	u32			io_profile_start_time;
++	time64_t		io_profile_start_time;
+ 	bfa_fcpim_profile_t     profile_comp;
+ 	bfa_fcpim_profile_t     profile_start;
+ };
+@@ -310,7 +310,7 @@ bfa_status_t bfa_fcpim_port_iostats(struct bfa_s *bfa,
+ 			struct bfa_itnim_iostats_s *stats, u8 lp_tag);
+ void bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *fcpim_stats,
+ 			struct bfa_itnim_iostats_s *itnim_stats);
+-bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time);
++bfa_status_t bfa_fcpim_profile_on(struct bfa_s *bfa, time64_t time);
+ bfa_status_t bfa_fcpim_profile_off(struct bfa_s *bfa);
+ 
+ #define bfa_fcpim_ioredirect_enabled(__bfa)				\
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 72ca2a2e08e2..01fc51a70356 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -2094,13 +2094,11 @@ bfad_iocmd_fcpim_cfg_profile(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
+ {
+ 	struct bfa_bsg_fcpim_profile_s *iocmd =
+ 				(struct bfa_bsg_fcpim_profile_s *)cmd;
+-	struct timeval  tv;
+ 	unsigned long	flags;
+ 
+-	do_gettimeofday(&tv);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	if (v_cmd == IOCMD_FCPIM_PROFILE_ON)
+-		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa, tv.tv_sec);
++		iocmd->status = bfa_fcpim_profile_on(&bfad->bfa, ktime_get_real_seconds());
+ 	else if (v_cmd == IOCMD_FCPIM_PROFILE_OFF)
+ 		iocmd->status = bfa_fcpim_profile_off(&bfad->bfa);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+-- 
+2.9.0
