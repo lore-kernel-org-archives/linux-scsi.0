@@ -1,61 +1,59 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: Re: [PATCH] scsi: bnx2i: bnx2i_hwi: use swap macro in
- bnx2i_send_iscsi_nopout
-Date: Mon, 13 Nov 2017 08:33:42 +0000
-Message-ID: <D62F5647.43759%manish.rangankar@cavium.com>
-References: <20171103195839.GA23385@embeddedor.com>
+From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
+Subject: Re: [PATCH V9 1/4] dma-mapping: Rework dma_get_cache_alignment()
+Date: Mon, 13 Nov 2017 16:37:09 +0800
+Message-ID: <tencent_2CE7124212471D7F3E9CA16E@qq.com>
+References: <1508742767-28366-1-git-send-email-chenhc@lemote.com>
+        <20171110123059.GA9296@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171103195839.GA23385@embeddedor.com>
-Content-Language: en-US
-Content-ID: <706E1877EA3D0445902206FD5CB865D8@namprd07.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20171110123059.GA9296@lst.de>
+Sender: stable-owner@vger.kernel.org
+Cc: =?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?= <hch@lst.de>, =?utf-8?B?TWFyZWsgU3p5cHJvd3NraQ==?= <m.szyprowski@samsung.com>, =?utf-8?B?Um9iaW4gTXVycGh5?= <robin.murphy@arm.com>, =?utf-8?B?QW5kcmV3IE1vcnRvbg==?= <akpm@linux-foundation.org>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?UmFsZiBCYWVjaGxl?= <ralf@linux-mips.org>, =?utf-8?B?SmFtZXMgSG9nYW4=?= <james.hogan@imgtec.com>, =?utf-8?B?bGludXgtbWlwcw==?= <linux-mips@linux-mips.org>, =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-On 04/11/17 1:28 AM, "Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
-
->Make use of the swap macro and remove unnecessary variable tmp.
->This makes the code easier to read and maintain.
->
->This code was detected with the help of Coccinelle.
->
->Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
->---
-> drivers/scsi/bnx2i/bnx2i_hwi.c | 9 +++------
-> 1 file changed, 3 insertions(+), 6 deletions(-)
->
->diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c
->b/drivers/scsi/bnx2i/bnx2i_hwi.c
->index e0640e0..9e3bf53 100644
->--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
->+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
->@@ -547,12 +547,9 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn
->*bnx2i_conn,
-> 	nopout_wqe->op_attr =3D ISCSI_FLAG_CMD_FINAL;
-> 	memcpy(nopout_wqe->lun, &nopout_hdr->lun, 8);
->=20
->-	if (test_bit(BNX2I_NX2_DEV_57710, &ep->hba->cnic_dev_type)) {
->-		u32 tmp =3D nopout_wqe->lun[0];
->-		/* 57710 requires LUN field to be swapped */
->-		nopout_wqe->lun[0] =3D nopout_wqe->lun[1];
->-		nopout_wqe->lun[1] =3D tmp;
->-	}
->+	/* 57710 requires LUN field to be swapped */
->+	if (test_bit(BNX2I_NX2_DEV_57710, &ep->hba->cnic_dev_type))
->+		swap(nopout_wqe->lun[0], nopout_wqe->lun[1]);
->=20
-> 	nopout_wqe->itt =3D ((u16)task->itt |
-> 			   (ISCSI_TASK_TYPE_MPATH <<
->--=20
->2.7.4
-
-Thanks,
-
-Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
-
->
+QnV0IGluIGI0NF9pbml0KCksIHRoZXJlIGlzIG5vIGRldmljZSBpbnN0YW5jZXMuDQogDQog
+DQogDQotLS0tLS0tLS0tLS0tLS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpG
+cm9tOiAgIkNocmlzdG9waCBIZWxsd2lnIjxoY2hAbHN0LmRlPjsNCkRhdGU6ICBGcmksIE5v
+diAxMCwgMjAxNyAwODozMCBQTQ0KVG86ICAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUu
+Y29tPjsgDQpDYzogICJDaHJpc3RvcGggSGVsbHdpZyI8aGNoQGxzdC5kZT47ICJNYXJlayBT
+enlwcm93c2tpIjxtLnN6eXByb3dza2lAc2Ftc3VuZy5jb20+OyAiUm9iaW4gTXVycGh5Ijxy
+b2Jpbi5tdXJwaHlAYXJtLmNvbT47ICJBbmRyZXcgTW9ydG9uIjxha3BtQGxpbnV4LWZvdW5k
+YXRpb24ub3JnPjsgIkZ1eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgt
+a2VybmVsIjxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgIlJhbGYgQmFlY2hsZSI8
+cmFsZkBsaW51eC1taXBzLm9yZz47ICJKYW1lcyBIb2dhbiI8amFtZXMuaG9nYW5AaW1ndGVj
+LmNvbT47ICJsaW51eC1taXBzIjxsaW51eC1taXBzQGxpbnV4LW1pcHMub3JnPjsgIkphbWVz
+IEUgLiBKIC4gQm90dG9tbGV5IjxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT47ICJNYXJ0aW4g
+SyAuIFBldGVyc2VuIjxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47ICJsaW51eC1zY3Np
+IjxsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZz47ICJzdGFibGUiPHN0YWJsZUB2Z2VyLmtl
+cm5lbC5vcmc+OyAiTWljaGFlbCBTIC4gVHNpcmtpbiI8bXN0QHJlZGhhdC5jb20+OyAiUGF3
+ZWwgT3NjaWFrIjxwYXdlbEBvc2NpYWsuY29tPjsgIkt5dW5nbWluIFBhcmsiPGt5dW5nbWlu
+LnBhcmtAc2Ftc3VuZy5jb20+OyAiTWljaGFlbCBDaGFuIjxtaWNoYWVsLmNoYW5AYnJvYWRj
+b20uY29tPjsgIkJlbmphbWluIEhlcnJlbnNjaG1pZHQiPGJlbmhAa2VybmVsLmNyYXNoaW5n
+Lm9yZz47ICJJdmFuIE1pa2hheWxvdiI8aXZhbkBydS5pYm0uY29tPjsgIlRhcmlxIFRvdWth
+biI8dGFyaXF0QG1lbGxhbm94LmNvbT47ICJBbmR5IEdyb3NzIjxhZ3Jvc3NAY29kZWF1cm9y
+YS5vcmc+OyAiTWFyayBBIC4gR3JlZXIiPG1ncmVlckBhbmltYWxjcmVlay5jb20+OyAiUm9i
+ZXJ0IEJhbGR5Z2EiPHIuYmFsZHlnYUBoYWNrZXJpb24uY29tPjsgDQpTdWJqZWN0OiAgUmU6
+IFtQQVRDSCBWOSAxLzRdIGRtYS1tYXBwaW5nOiBSZXdvcmsgZG1hX2dldF9jYWNoZV9hbGln
+bm1lbnQoKQ0KDQogDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC9ldGhlcm5ldC9icm9h
+ZGNvbS9iNDQuYyBiL2RyaXZlcnMvbmV0L2V0aGVybmV0L2Jyb2FkY29tL2I0NC5jDQo+IGlu
+ZGV4IGExMTI1ZDEuLjJmNmZmZTUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L2V0aGVy
+bmV0L2Jyb2FkY29tL2I0NC5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L2V0aGVybmV0L2Jyb2Fk
+Y29tL2I0NC5jDQo+IEBAIC0yMzQ0LDYgKzIzNDQsMTAgQEAgc3RhdGljIGludCBiNDRfaW5p
+dF9vbmUoc3RydWN0IHNzYl9kZXZpY2UgKnNkZXYsDQo+ICAJc3RydWN0IG5ldF9kZXZpY2Ug
+KmRldjsNCj4gIAlzdHJ1Y3QgYjQ0ICpicDsNCj4gIAlpbnQgZXJyOw0KPiArCXVuc2lnbmVk
+IGludCBkbWFfZGVzY19hbGlnbl9zaXplID0gZG1hX2dldF9jYWNoZV9hbGlnbm1lbnQoc2Rl
+di0+ZG1hX2Rldik7DQo+ICsNCj4gKwkvKiBTZXR1cCBwYXJhbWF0ZXJzIGZvciBzeW5jaW5n
+IFJYL1RYIERNQSBkZXNjcmlwdG9ycyAqLw0KPiArCWRtYV9kZXNjX3N5bmNfc2l6ZSA9IG1h
+eF90KHVuc2lnbmVkIGludCwgZG1hX2Rlc2NfYWxpZ25fc2l6ZSwgc2l6ZW9mKHN0cnVjdCBk
+bWFfZGVzYykpOw0KPiAgDQo+ICAJaW5zdGFuY2UrKzsNCj4gIA0KPiBAQCAtMjU4NywxMiAr
+MjU5MSw4IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBiNDRfcGNpX2V4aXQodm9pZCkNCj4gIA0K
+PiAgc3RhdGljIGludCBfX2luaXQgYjQ0X2luaXQodm9pZCkNCj4gIHsNCj4gLQl1bnNpZ25l
+ZCBpbnQgZG1hX2Rlc2NfYWxpZ25fc2l6ZSA9IGRtYV9nZXRfY2FjaGVfYWxpZ25tZW50KCk7
+DQo+ICAJaW50IGVycjsNCj4gIA0KPiAtCS8qIFNldHVwIHBhcmFtYXRlcnMgZm9yIHN5bmNp
+bmcgUlgvVFggRE1BIGRlc2NyaXB0b3JzICovDQo+IC0JZG1hX2Rlc2Nfc3luY19zaXplID0g
+bWF4X3QodW5zaWduZWQgaW50LCBkbWFfZGVzY19hbGlnbl9zaXplLCBzaXplb2Yoc3RydWN0
+IGRtYV9kZXNjKSk7DQo+IC0NCg0KVGhpcyBsb29rcyB3cm9uZyAtIHlvdSBvdmVycmlkZSBh
+IGdsb2JhbCB2YXJpYWJsZSBmb3IgZWFjaCBwcm9iZWQNCmRldmljZS4=
