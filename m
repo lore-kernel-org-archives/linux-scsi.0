@@ -1,48 +1,26 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [Y2038] [PATCH 3/7] scsi: bfa: improve bfa_ioc_send_enable/disable
- data
-Date: Mon, 13 Nov 2017 15:55:13 +0100
-Message-ID: <CAK8P3a37rEZq0PdpmvNF2wsAWNO=R+pod4Mq+WF1p2bo1UGUGA@mail.gmail.com>
-References: <20171110153715.1929456-1-arnd@arndb.de> <20171110153715.1929456-4-arnd@arndb.de>
- <1510582114.18523.3.camel@codethink.co.uk>
+From: Amos Kalonzo <daniel.basha.tg@gmail.com>
+Subject: Re:
+Date: Mon, 13 Nov 2017 15:55:29 +0100
+Message-ID: <CAKUwMNBF_G0zCBA-QOUO2R4oLZzL_9_AierxU6RvQA0C0fNcOw__30331.3411809087$1510585022$gmane$org@mail.gmail.com>
+Reply-To: info@acalonzo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1510582114.18523.3.camel@codethink.co.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ben Hutchings <ben.hutchings@codethink.co.uk>
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, linux-scsi <linux-scsi@vger.kernel.org>, y2038 Mailman List <y2038@lists.linaro.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:48388 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753265AbdKMOza (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2017 09:55:30 -0500
+Received: by mail-yw0-f196.google.com with SMTP id q1so13622151ywh.5
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2017 06:55:30 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 13, 2017 at 3:08 PM, Ben Hutchings
-<ben.hutchings@codethink.co.uk> wrote:
-> On Fri, 2017-11-10 at 16:37 +0100, Arnd Bergmann wrote:
+Attn:
 
->>
->>       bfi_h2i_set(enable_req.mh, BFI_MC_IOC, BFI_IOC_H2I_ENABLE_REQ,
->>                   bfa_ioc_portid(ioc));
->>       enable_req.clscode = cpu_to_be16(ioc->clscode);
->> -     do_gettimeofday(&tv);
->> -     enable_req.tv_sec = be32_to_cpu(tv.tv_sec);
->> +     /* unsigned 32-bit time_t overflow in y2106 */
->> +     enable_req.tv_sec = be32_to_cpu(ktime_get_real_seconds());
->
-> The byte order conversion should also logically be cpu_to_be32(), not
-> be32_to_cpu().
->
+I am wondering why You haven't respond to my email for some days now.
+reference to my client's contract balance payment of (11.7M,USD)
+Kindly get back to me for more details.
 
-Right, I had not noticed that. I just tried fixing this, looking at what
-sparse thinks of the file as a whole. I found it basically hopeless
-to fix the endianess warnings in this driver, it seems completely
-random here whether they are used correctly, in the opposite
-direction as expected, or just flip data in place as in
+Best Regards
 
-attr->part[i].part_off = be32_to_cpu(f->part[i].part_off);
-
-I'd rather not touch that part. IIRC I had at some point spent
-a day trying to clean up the "warning: symbol
- 'bfa_flash_sem_get' was not declared. Should it be static?"
-sparse warnings for some driver, before giving up for
-similar reasons.
-
-       Arnd
+Amos Kalonzo
