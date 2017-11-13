@@ -1,67 +1,55 @@
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Subject: Re: isci regression in 4.11.0-rc2 by scsi: libsas: allow async aborts
-Date: Mon, 13 Nov 2017 11:23:48 +0100
-Message-ID: <3553f40f-8ca0-2fb4-963e-5d1e9b176635@profihost.ag>
-References: <2dcd4012-1255-c28f-22c2-32890b421473@profihost.ag>
+From: "M,Shakour Rosarita" <hassantara789@gmail.com>
+Subject: Hello Dear...
+Date: Mon, 13 Nov 2017 12:09:04 +0000
+Message-ID: <CAMyxZDH2p+uK_Um8DSB=B8hEvjMHY+RuQsSgfgLVTKdLjVBK8w__40839.7732805044$1510574956$gmane$org@mail.gmail.com>
+Reply-To: mshakourrosarita22@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:39453 "EHLO
-        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751705AbdKMKXu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Nov 2017 05:23:50 -0500
-In-Reply-To: <2dcd4012-1255-c28f-22c2-32890b421473@profihost.ag>
-Content-Language: de-DE
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:56330 "EHLO
+        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752624AbdKMMJG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2017 07:09:06 -0500
+Received: by mail-vk0-f66.google.com with SMTP id g11so9851802vkd.13
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2017 04:09:06 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jth@kernel.org, hare@suse.de, martin.petersen@oracle.com, intel-linux-scu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, artur.paszkiewicz@intel.com
 
-ping - anybody?
+Hello Dear...
 
-Greets,
-Stefan
+I know that this message will come to you as a surprise. I hoped that
+you will not expose or betray this trust and confident that I am about
+to repose on you, my name is M, Shakour Rosarita. I am 19 years old
+Girl, female, from Tartu Syria, (never married) 61 kg, white in
+complexion, and I am currently living in the refugee camp here in
+Abidjan Ivory Coast, My late beloved father M,Shakour Hassin was a
+renowned businessman and owner of Natour Petrol Station in Syria, he
+was killed in a stampede riot in Tartu, Syria.
+When I got the news about my parents. I fled to a nearby country
+Jordan before I joined a ferry to Africa and came to Abidjan capital
+city Ivory Coast West Africa find safety here.
+I came in 2015 to Abidjan and I now live in refugee camps here as
+refugees are allowed freely to enter here without, My late father
+deposited (US$6.200.000.00m) My late father kept the money at the bank
+of Africa, I want you to help me transfer the money to your hand so
+that you will help me bring me into your country for my continue
+education.
 
-Am 08.11.2017 um 10:33 schrieb Stefan Priebe - Profihost AG:
-> Hello,
-> 
-> after upgrading some servers from 4.9 to a kernel > 4.11 i saw a
-> regression where i cannot boot into the os.
-> 
-> The kernel is crashing in the isci (NOT iscsi) driver in task abort.
-> 
-> Message:
-> Unable to handle kernel NULL pointer dereference at isci_task_abort_task
-> 
-> git bisect detected the following offending commit:
-> 909657615d9b3ce709be4fd95b9a9e8c8c7c2be6 is the first bad commit
-> commit 909657615d9b3ce709be4fd95b9a9e8c8c7c2be6
-> Author: Christoph Hellwig <hch@lst.de>
-> Date: Thu Apr 6 15:36:32 2017 +0200
-> 
->     scsi: libsas: allow async aborts
-> 
->     We now first try to call ->eh_abort_handler from a work queue, but
-> libsas
->     was always failing that for no good reason. Allow async aborts.
-> 
->     Reviewed-by: Johannes Thumshirn <jth@kernel.org>
->     Reviewed-by: Hannes Reinecke <hare@suse.de>
->     Signed-off-by: Christoph Hellwig <hch@lst.de>
->     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> :040000 040000 b15f1eb57bf74667aefb7a304fa09bf58386eaf2
-> 64df540499763db44c7e1b6ec9a55ffa9b2ebedc M drivers
-> 
-> i can't grab much information except for a photo as the boot process is
-> before netconsole or others can jump in.
-> 
-> The caller of isci_task_abort_task seems to be sas_eh_abort_handler.
-> 
-> Thanks!
-> 
-> Greets,
-> Stefan
-> 
+I sent my pictures here for you to see. Who I am seriously looking for
+a good-person in my life, so I want to hear from you soon and learn
+more about you.
+
+I am an open-minded and friendly girl to share a good time with you
+and have fun and enjoy on the go, bird watching, the rest of our
+lives. My Hobbies, tourism books, dance, music, soccer, tennis,
+swimming and cinema.
+I would just think about you, including your dose and doesn=E2=80=99t .I
+believe we will do well together, and live like one family.
+Thank you and God bless you, for you in your promise to help me here,
+looking forward to your reply by the grace of God and have a good day.
+I hope you send me your photos as well? I await your next reply in
+faith please reply through my private email at
+(mshakourrosarita22@gmail.com):
+Thanks.
+Ms Rosarita
