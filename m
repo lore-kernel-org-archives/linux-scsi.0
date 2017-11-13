@@ -1,92 +1,227 @@
-From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko-WRw03QTAyf3sq35pWSNszA@public.gmane.org>
-Subject: Re: [PATCH] uas: Add US_FL_NO_ATA_1X quirk for one more Seagate
- device
-Date: Mon, 13 Nov 2017 12:38:14 -0500
-Message-ID: <20171113123814.4e70a498@Vantage.cJ>
-References: <20171110151344.10563-1-hdegoede@redhat.com>
-        <20171112164234.48b5185c@Vantage.cJ>
-        <46d6dde9-e811-9655-96db-a046de521782@246060.ru>
-        <20171113011438.458369bf@Vantage.cJ>
-        <3d276729-63f7-9727-4a22-55849712439c@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH V4] scsi_debugfs: fix crash in scsi_show_rq()
+Date: Mon, 13 Nov 2017 10:55:52 -0800
+Message-ID: <1510599352.3336.20.camel@HansenPartnership.com>
+References: <20171110090144.11791-1-ming.lei@redhat.com>
+         <1510332718.3095.2.camel@HansenPartnership.com>
+         <20171111024337.GB20382@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <3d276729-63f7-9727-4a22-55849712439c-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrey Astafyev <1@246060.ru>, Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38912 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754354AbdKMSzz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Nov 2017 13:55:55 -0500
+In-Reply-To: <20171111024337.GB20382@ming.t460p>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, John Garry <john.garry@huawei.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
 
-Hi Hans,
+On Sat, 2017-11-11 at 10:43 +0800, Ming Lei wrote:
+> On Fri, Nov 10, 2017 at 08:51:58AM -0800, James Bottomley wrote:
+> > 
+> > On Fri, 2017-11-10 at 17:01 +0800, Ming Lei wrote:
+> > > 
+> > > cmd->cmnd can be allocated/freed dynamically in case of
+> > > T10_PI_TYPE2_PROTECTION, so we should check it in scsi_show_rq()
+> > > because this request may have been freed already here, and cmd-
+> > > >cmnd has been set as null.
+> > > 
+> > > We choose to accept read-after-free and dump request data as far
+> > > as possible.
+> > > 
+> > > This patch fixs the following kernel crash when dumping request
+> > > via block's debugfs interface:
+> > > 
+> > > [  252.962045] BUG: unable to handle kernel NULL pointer
+> > > dereference
+> > > at           (null)
+> > > [  252.963007] IP: scsi_format_opcode_name+0x1a/0x1c0
+> > > [  252.963007] PGD 25e75a067 P4D 25e75a067 PUD 25e75b067 PMD 0
+> > > [  252.963007] Oops: 0000 [#1] PREEMPT SMP
+> > > [  252.963007] Dumping ftrace buffer:
+> > > [  252.963007]    (ftrace buffer empty)
+> > > [  252.963007] Modules linked in: scsi_debug ebtable_filter
+> > > ebtables
+> > > ip6table_filter ip6_tables xt_CHECKSUM iptable_mangle
+> > > ipt_MASQUERADE
+> > > nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4
+> > > nf_defrag_ipv4
+> > > nf_nat_ipv4 nf_nat nf_conntrack libcrc32c bridge stp llc
+> > > iptable_filter fuse ip_tables sd_mod sg mptsas mptscsih mptbase
+> > > crc32c_intel ahci libahci nvme serio_raw scsi_transport_sas
+> > > libata
+> > > lpc_ich nvme_core virtio_scsi binfmt_misc dm_mod iscsi_tcp
+> > > libiscsi_tcp libiscsi scsi_transport_iscsi null_blk configs
+> > > [  252.963007] CPU: 1 PID: 1881 Comm: cat Not tainted 4.14.0-
+> > > rc2.blk_mq_io_hang+ #516
+> > > [  252.963007] Hardware name: QEMU Standard PC (Q35 + ICH9,
+> > > 2009),
+> > > BIOS 1.9.3-1.fc25 04/01/2014
+> > > [  252.963007] task: ffff88025e6f6000 task.stack:
+> > > ffffc90001bd0000
+> > > [  252.963007] RIP: 0010:scsi_format_opcode_name+0x1a/0x1c0
+> > > [  252.963007] RSP: 0018:ffffc90001bd3c50 EFLAGS: 00010286
+> > > [  252.963007] RAX: 00000000ffff4843 RBX: 0000000000000050 RCX:
+> > > 0000000000000000
+> > > [  252.963007] RDX: 0000000000000000 RSI: 0000000000000050 RDI:
+> > > ffffc90001bd3cd8
+> > > [  252.963007] RBP: ffffc90001bd3c88 R08: 0000000000001000 R09:
+> > > 0000000000000000
+> > > [  252.963007] R10: ffff880275134000 R11: ffff88027513406c R12:
+> > > 0000000000000050
+> > > [  252.963007] R13: ffffc90001bd3cd8 R14: 0000000000000000 R15:
+> > > 0000000000000000
+> > > [  252.963007] FS:  00007f4d11762700(0000)
+> > > GS:ffff88027fc40000(0000)
+> > > knlGS:0000000000000000
+> > > [  252.963007] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > [  252.963007] CR2: 0000000000000000 CR3: 000000025e789003 CR4:
+> > > 00000000003606e0
+> > > [  252.963007] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> > > 0000000000000000
+> > > [  252.963007] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+> > > 0000000000000400
+> > > [  252.963007] Call Trace:
+> > > [  252.963007]  __scsi_format_command+0x27/0xc0
+> > > [  252.963007]  scsi_show_rq+0x5c/0xc0
+> > > [  252.963007]  ? seq_printf+0x4e/0x70
+> > > [  252.963007]  ? blk_flags_show+0x5b/0xf0
+> > > [  252.963007]  __blk_mq_debugfs_rq_show+0x116/0x130
+> > > [  252.963007]  blk_mq_debugfs_rq_show+0xe/0x10
+> > > [  252.963007]  seq_read+0xfe/0x3b0
+> > > [  252.963007]  ? __handle_mm_fault+0x631/0x1150
+> > > [  252.963007]  full_proxy_read+0x54/0x90
+> > > [  252.963007]  __vfs_read+0x37/0x160
+> > > [  252.963007]  ? security_file_permission+0x9b/0xc0
+> > > [  252.963007]  vfs_read+0x96/0x130
+> > > [  252.963007]  SyS_read+0x55/0xc0
+> > > [  252.963007]  entry_SYSCALL_64_fastpath+0x1a/0xa5
+> > > [  252.963007] RIP: 0033:0x7f4d1127e9b0
+> > > [  252.963007] RSP: 002b:00007ffd27082568 EFLAGS: 00000246
+> > > ORIG_RAX:
+> > > 0000000000000000
+> > > [  252.963007] RAX: ffffffffffffffda RBX: 00007f4d1154bb20 RCX:
+> > > 00007f4d1127e9b0
+> > > [  252.963007] RDX: 0000000000020000 RSI: 00007f4d115a7000 RDI:
+> > > 0000000000000003
+> > > [  252.963007] RBP: 0000000000021010 R08: ffffffffffffffff R09:
+> > > 0000000000000000
+> > > [  252.963007] R10: 000000000000037b R11: 0000000000000246 R12:
+> > > 0000000000022000
+> > > [  252.963007] R13: 00007f4d1154bb78 R14: 0000000000001000 R15:
+> > > 0000000000020000
+> > > [  252.963007] Code: c6 e8 1b ca 24 00 eb 8c e8 74 2c ae ff 0f 1f
+> > > 40
+> > > 00 0f 1f 44 00 00 55 48 89 e5 41 56 41 55 41 54 53 49 89 fd 49 89
+> > > f4
+> > > 48 83 ec 18 <44> 0f b6 32 48 c7 45 c8 00 00 00 00 65 48 8b 04 25
+> > > 28
+> > > 00 00 00
+> > > [  252.963007] RIP: scsi_format_opcode_name+0x1a/0x1c0 RSP:
+> > > ffffc90001bd3c50
+> > > [  252.963007] CR2: 0000000000000000
+> > > [  252.963007] ---[ end trace 83c5bddfbaa6573c ]---
+> > > [  252.963007] Kernel panic - not syncing: Fatal exception
+> > > [  252.963007] Dumping ftrace buffer:
+> > > [  252.963007]    (ftrace buffer empty)
+> > > [  252.963007] Kernel Offset: disabled
+> > > [  252.963007] ---[ end Kernel panic - not syncing: Fatal
+> > > exception
+> > > 
+> > > Fixes: 0eebd005dd07(scsi: Implement blk_mq_ops.show_rq())
+> > > Cc: Bart Van Assche <bart.vanassche@sandisk.com>
+> > > Cc: Omar Sandoval <osandov@fb.com>
+> > > Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> > > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > > Cc: Hannes Reinecke <hare@suse.com>
+> > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > > ---
+> > > V2:
+> > >    - fix typo
+> > > V3:
+> > >    - prefer to dump data and accept read-after-free
+> > >    - add some comment
+> > > V4:
+> > >    - read the two variable into local variable first, for
+> > > avoiding
+> > > 	free between check and passing to __scsi_format_command().
+> > > 	
+> > > 
+> > >  drivers/scsi/scsi_debugfs.c | 14 +++++++++++++-
+> > >  1 file changed, 13 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/scsi/scsi_debugfs.c
+> > > b/drivers/scsi/scsi_debugfs.c
+> > > index 5e9755008aed..f8437c456458 100644
+> > > --- a/drivers/scsi/scsi_debugfs.c
+> > > +++ b/drivers/scsi/scsi_debugfs.c
+> > > @@ -8,8 +8,20 @@ void scsi_show_rq(struct seq_file *m, struct
+> > > request
+> > > *rq)
+> > >  	struct scsi_cmnd *cmd = container_of(scsi_req(rq),
+> > > typeof(*cmd), req);
+> > >  	int msecs = jiffies_to_msecs(jiffies - cmd-
+> > > > 
+> > > > jiffies_at_alloc);
+> > >  	char buf[80];
+> > > +	unsigned char *cdb = cmd->cmnd;
+> > > +	unsigned short cdb_len = cmd->cmd_len;
+> > > 
+> > >  
+> > > -	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd-
+> > > > 
+> > > > cmd_len);
+> > > +	/*
+> > > +	 * This rq may have been freed, so don't be surprised if
+> > > +	 * read-after-free is reported.
+> > 
+> > I said fix this in sd.c:sd_uninit_command() by setting SCpnt->cmnd
+> > to NULL before calling mempool_free().
+> 
+> Hi James,
+> 
+> That can't avoid the use-after-free in both reality and theory.
 
-On Mon, 13 Nov 2017 10:04:53 +0100
-Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+I believe I already gave you the theory of how to avoid it.
 
-> Hi,
->=20
-> On 13-11-17 07:14, J=C3=A9r=C3=B4me Carretero wrote:
-> > On Mon, 13 Nov 2017 07:01:30 +0300
-> > Andrey Astafyev <1@246060.ru> wrote:
-> >  =20
-> >> 13.11.2017 00:42, J=C3=A9r=C3=B4me Carretero =D0=BF=D0=B8=D1=88=D0=B5=
-=D1=82: =20
-> >>> Nov 12 16:20:59 Bidule kernel: sd 22:0:0:0: [sdaa] tag#2
-> >>> uas_eh_abort_handler 0 uas-tag 3 inflight: CMD OUT
-> >>> [...]
-> >>> Do you see such things?
+> When 'cdb = cmd->cmnd' is executed in CPU1, 'cbd' is a valid pointer,
+> just after this instruction is done, this request is completed in
+> CPU2, and mempool_free() is run to complete this buffer.
+> 
+> Firstly,  both preemption and IRQ can happen inside
+> __scsi_format_command(),
+> when this function is scheduled to rerun, this buffer is freed since
+> mempool_free() has completed already, which is run in irq context. 
 
-> > For my devices, adding US_FL_NO_ATA_1X to unusual_uas.h didn't
-> > change anything, and while adding US_FL_IGNORE_UAS (using
-> > quirks=3D0bc2:ab34:u,0bc2:ab38:u) there are still device resets,
-> > but they cause shorter hangs in system activity (~1 second when
-> > UAS was more like ~20). =20
->=20
-> The errors you are seeing are write errors. If you're seeing these
-> errors with both the usb-storage and uas drivers then there likely
-> is something wrong with your setup / hardware.
+so disable irq's before taking the cmnd pointer copy ...
 
-My latest drives are Seagate Backup+ Hub 8TB and have ~ 50 hours of
-uptime. I have connected them to different controllers and they do the
-same as the first generation of the same capacity from 2015.
+> Secondly, the use-after-free can't be avoided too if we disable irq
+> when checking and reading the variable. See following:
+> 
+> mempool_free(cmd->cmnd) is often run much quick because we complete
+> request on same CPU with the submission CPU(the CPU for allocation of
+> cmd->cmnd).
 
-SMART says that everything is OK on these disks (I have another that
-was RMA'ed and the symptoms of failure are something else), and if there
-were USB errors, the messages wouldn't be at the higher SCSI level, I
-guess I would see "xact failed" USB errors... no?
+only in the add element case, which won't cause a use after free from
+any tool's point of view.  If you want greater assurance, take the
+pool->lock (with encapsulation so we're not poking around in mempool
+internals).
 
-> Does the drive in question use an external power-supply or is it
-> USB bus-powered? If it is the latter then that is likely the problem.
+> So from CPU1's review, cmd->cmnd is in a remote NUMA node,
+> __scsi_format_command() is executed much slower than mempool_free().
+> So when mempool_free() returns, __scsi_format_command() may not
+> fetched the buffer in L1 cache yet, then use-after-free
+> is still triggered.
+> 
+> That is why I say this use-after-free is inevitable no matter
+> 'setting SCpnt->cmnd to NULL before calling mempool_free()' or not.
 
-External power supply & ~2-ft cable provided by Seagate.
+The bottom line is that there are several creative ways around this but
+the proposed code is currently broken and simply putting a comment in
+saying so doesn't make it acceptable.
 
-> Anyways things I would check and try to swap are both the cable
-> used, the power-supply used (if any), the USB-port used as well
-> as trying the disk on a completely different computer.
-
-I did that. The same thing happens.
-
-> I've the feeling something is busted with your hardware, it
-> could be the disk itself. Did you mention that this was the first
-> release of a new higher capacity ? Those often have some kinks
-> which are worked out in later revisions.
-
-No, that's about the 3rd release I think.
-
-
-I really suspect this has to do with GC activity of these SMR drives,
-as if the write activity is throttled or in more spaced bursts (same
-USB-level intensity), then there is no problem.
-
-I will do longer tests and see if only some of them do that, after
-they have been subjected to similar usage history.
-
-
-Best regards,
-
---=20
-J=C3=A9r=C3=B4me
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
