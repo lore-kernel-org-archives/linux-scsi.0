@@ -1,72 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 4.14+ merge
- window
-Date: Wed, 15 Nov 2017 18:35:51 +0900
-Message-ID: <1510738551.19284.3.camel@HansenPartnership.com>
-References: <1510677363.4078.16.camel@HansenPartnership.com>
-         <CA+55aFx791+T60zeDRH+08eb7TxhYMW7pJBSCi8HezFtSkEHvw@mail.gmail.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V4] scsi_debugfs: fix crash in scsi_show_rq()
+Date: Wed, 15 Nov 2017 18:09:51 +0800
+Message-ID: <20171115100949.GC908@ming.t460p>
+References: <20171110090144.11791-1-ming.lei@redhat.com>
+ <1510332718.3095.2.camel@HansenPartnership.com>
+ <20171111024337.GB20382@ming.t460p>
+ <1510599352.3336.20.camel@HansenPartnership.com>
+ <20171114005544.GA20889@ming.t460p>
+ <1510683292.3077.3.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56602 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756000AbdKOJgX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Nov 2017 04:36:23 -0500
-In-Reply-To: <CA+55aFx791+T60zeDRH+08eb7TxhYMW7pJBSCi8HezFtSkEHvw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1510683292.3077.3.camel@HansenPartnership.com>
+Sender: linux-block-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, John Garry <john.garry@huawei.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Hannes Reinecke <hare@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Tue, 2017-11-14 at 16:33 -0800, Linus Torvalds wrote:
-> On Tue, Nov 14, 2017 at 8:36 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
+On Tue, Nov 14, 2017 at 10:14:52AM -0800, James Bottomley wrote:
+> On Tue, 2017-11-14 at 08:55 +0800, Ming Lei wrote:
+> > Hi James,
 > > 
+> > On Mon, Nov 13, 2017 at 10:55:52AM -0800, James Bottomley wrote:
+> > > 
+> > > On Sat, 2017-11-11 at 10:43 +0800, Ming Lei wrote:
+> > > > 
+> > > > So from CPU1's review, cmd->cmnd is in a remote NUMA node,
+> > > > __scsi_format_command() is executed much slower than
+> > > > mempool_free().
+> > > > So when mempool_free() returns, __scsi_format_command() may not
+> > > > fetched the buffer in L1 cache yet, then use-after-free
+> > > > is still triggered.
+> > > > 
+> > > > That is why I say this use-after-free is inevitable no matter
+> > > > 'setting SCpnt->cmnd to NULL before calling mempool_free()' or
+> > > > not.
+> > > 
+> > > The bottom line is that there are several creative ways around this
+> > > but the proposed code is currently broken and simply putting a
+> > > comment in saying so doesn't make it acceptable.
 > > 
-> > Hannes Reinecke (14):
-> >       scsi: scsi_devinfo: Reformat blacklist flags
+> > As I explained above, I didn't see one really workable way. Or please
+> > correct it if I am wrong.
 > 
-> Ugh, that's just really ugly, but it's also wrong.
-> 
-> Just having long lines would probably have been much preferable, and
-> would mean that the commit that explains the bit would show up when
-> you grep for the bit.
-> 
-> Having a small helper macro like
-> 
->    #define BLIST_n(x) ((__force __u32 __bitwise)(1 << (n)))
-> 
-> woiuld also likely have made it more legible.
-> 
-> But that only takes care of the ugliness and the greppability.
-> 
-> It's not right for sparse even _with_ those changes.
-> 
-> Why? Because "__bitwise" actually creates a new type. So what those
-> BLIST defines should do is to use a special type something like
-> 
->     typedef unsigned int __bitwise blist_flags_t;
-> 
-> and now you have _one_ type thanks to that typedef, that is different
-> from all the other bitwise types. Then you force all the constants
-> and the field that implements to have that type, and you have type-
-> safety: you can use those constants together, and you can assign the
-> result to the blist flags, but you can't mix it with other __bitwise
-> types.
-> 
-> That's why things like this work:
-> 
->     typedef __u16 __bitwise __le16;
->     typedef __u16 __bitwise __be16;
-> 
-> where __le16 and __be16 are actually different types, even though
-> their underlying _storage_ is the same (a 16-bit unsigned).
-> 
-> Anyway, I've pulled, because clearly this only matters for sparse,
-> but I would hope that this gets fixed up, ok?
+> I simply can't believe it's beyond the wit of man to solve a use after
+> free race. �About 40% of kernel techniques are devoted to this. �All I
+> really care about is not losing the PI information we previously had.
+> �I agree with Bart that NULL cmnd is a good indicator, so it seems
+> reasonable to use it. �If you have another mechanism, feel free to
+> propose it.
 
-It will, boss; I'll make sure of it.
+Hi James,
 
-James
+This patch is my proposal, no others thought of yet.
+
+We can fix the use-after-free easily via lock, rcu and ..., but some cost
+has to pay. In this case, we can't wait too long in show_rq(), otherwise
+we may lose important debug info, so I do not have better way.
+
+IMO this use-after-free is actually no harm, I don't think we have to fix
+it, but it should be better to not let utility warn on this case.
+
+
+Thanks,
+Ming
