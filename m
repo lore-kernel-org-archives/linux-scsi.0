@@ -1,55 +1,84 @@
-From: "M,Shakour Rosarita" <hassantara789@gmail.com>
-Subject: Hello Dear...
-Date: Wed, 15 Nov 2017 11:38:15 +0000
-Message-ID: <CAMyxZDE0oLsvNkEuwqreU+ts7=O+YuPgJ3YtzLjz78_fp-hW3g@mail.gmail.com>
-Reply-To: mshakourrosarita22@gmail.com
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V4] scsi_debugfs: fix crash in scsi_show_rq()
+Date: Wed, 15 Nov 2017 20:04:50 +0800
+Message-ID: <20171115120449.GD908@ming.t460p>
+References: <20171110090144.11791-1-ming.lei@redhat.com>
+ <1510332718.3095.2.camel@HansenPartnership.com>
+ <20171111024337.GB20382@ming.t460p>
+ <1510599352.3336.20.camel@HansenPartnership.com>
+ <20171114005544.GA20889@ming.t460p>
+ <1510683292.3077.3.camel@HansenPartnership.com>
+ <20171115100949.GC908@ming.t460p>
+ <1510741680.3088.1.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ua0-f194.google.com ([209.85.217.194]:50023 "EHLO
-        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757678AbdKOLiR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2017 06:38:17 -0500
-Received: by mail-ua0-f194.google.com with SMTP id u13so15088412uaf.6
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Nov 2017 03:38:16 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1510741680.3088.1.camel@HansenPartnership.com>
+Sender: linux-block-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, John Garry <john.garry@huawei.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Dear...
+On Wed, Nov 15, 2017 at 07:28:00PM +0900, James Bottomley wrote:
+> On Wed, 2017-11-15 at 18:09 +0800, Ming Lei wrote:
+> > On Tue, Nov 14, 2017 at 10:14:52AM -0800, James Bottomley wrote:
+> > > 
+> > > On Tue, 2017-11-14 at 08:55 +0800, Ming Lei wrote:
+> > > > 
+> > > > Hi James,
+> > > > 
+> > > > On Mon, Nov 13, 2017 at 10:55:52AM -0800, James Bottomley wrote:
+> > > > > 
+> > > > > 
+> > > > > On Sat, 2017-11-11 at 10:43 +0800, Ming Lei wrote:
+> > > > > > 
+> > > > > > 
+> > > > > > So from CPU1's review, cmd->cmnd is in a remote NUMA node,
+> > > > > > __scsi_format_command() is executed much slower than
+> > > > > > mempool_free().
+> > > > > > So when mempool_free() returns, __scsi_format_command() may
+> > > > > > not fetched the buffer in L1 cache yet, then use-after-free
+> > > > > > is still triggered.
+> > > > > > 
+> > > > > > That is why I say this use-after-free is inevitable no matter
+> > > > > > 'setting SCpnt->cmnd to NULL before calling mempool_free()'
+> > > > > > or not.
+> > > > > 
+> > > > > The bottom line is that there are several creative ways around
+> > > > > this but the proposed code is currently broken and simply
+> > > > > putting a comment in saying so doesn't make it acceptable.
+> > > > 
+> > > > As I explained above, I didn't see one really workable way. Or
+> > > > please correct it if I am wrong.
+> > > 
+> > > I simply can't believe it's beyond the wit of man to solve a use
+> > > after free race.  About 40% of kernel techniques are devoted to
+> > > this.  All I really care about is not losing the PI information we
+> > > previously had.  I agree with Bart that NULL cmnd is a good
+> > > indicator, so it seems reasonable to use it.  If you have another
+> > > mechanism, feel free to propose it.
+> > 
+> > Hi James,
+> > 
+> > This patch is my proposal, no others thought of yet.
+> > 
+> > We can fix the use-after-free easily via lock, rcu and ..., but some
+> > cost has to pay. In this case, we can't wait too long in show_rq(),
+> > otherwise we may lose important debug info, so I do not have better
+> > way.
+> > 
+> > IMO this use-after-free is actually no harm, I don't think we have to
+> > fix it, but it should be better to not let utility warn on this case.
+> 
+> Fine, so lose the snide comment and set the cmnd to NULL *before*
+> calling free so we narrow the race window.
 
-I know that this message will come to you as a surprise. I hoped that
-you will not expose or betray this trust and confident that I am about
-to repose on you, my name is M, Shakour Rosarita. I am 19 years old
-Girl, female, from Tartu Syria, (never married) 61 kg, white in
-complexion, and I am currently living in the refugee camp here in
-Abidjan Ivory Coast, My late beloved father M,Shakour Hassin was a
-renowned businessman and owner of Natour Petrol Station in Syria, he
-was killed in a stampede riot in Tartu, Syria.
-When I got the news about my parents. I fled to a nearby country
-Jordan before I joined a ferry to Africa and came to Abidjan capital
-city Ivory Coast West Africa find safety here.
-I came in 2015 to Abidjan and I now live in refugee camps here as
-refugees are allowed freely to enter here without, My late father
-deposited (US$6.200.000.00m) My late father kept the money at the bank
-of Africa, I want you to help me transfer the money to your hand so
-that you will help me bring me into your country for my continue
-education.
+Hi James,
 
-I sent my pictures here for you to see. Who I am seriously looking for
-a good-person in my life, so I want to hear from you soon and learn
-more about you.
+Given we can't avoid the use-after-free, how about not do that way so
+we won't lose the precious debug info too early?
 
-I am an open-minded and friendly girl to share a good time with you
-and have fun and enjoy on the go, bird watching, the rest of our
-lives. My Hobbies, tourism books, dance, music, soccer, tennis,
-swimming and cinema.
-I would just think about you, including your dose and doesn=E2=80=99t .I
-believe we will do well together, and live like one family.
-Thank you and God bless you, for you in your promise to help me here,
-looking forward to your reply by the grace of God and have a good day.
-I hope you send me your photos as well? I await your next reply in
-faith please reply through my private email at
-(mshakourrosarita22@gmail.com):
-Thanks.
-Ms Rosarita
+Thanks,
+Ming
