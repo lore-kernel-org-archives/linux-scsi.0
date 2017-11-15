@@ -1,27 +1,53 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi: Use 'blist_flags_t' for scsi_devinfo flags
-Date: Wed, 15 Nov 2017 15:36:07 +0000
-Message-ID: <1510760165.2839.3.camel@wdc.com>
-References: <1510744050-53682-1-git-send-email-hare@suse.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: aacraid: remove unused variable managed_request_id
+Date: Wed, 15 Nov 2017 16:53:41 +0000
+Message-ID: <20171115165341.20042-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:23748 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758520AbdKOPgJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2017 10:36:09 -0500
-In-Reply-To: <1510744050-53682-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <F8EB04D225C0CA4090E719A6F951C492@namprd04.prod.outlook.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:57747 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932101AbdKOQxr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2017 11:53:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "hare@suse.com" <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTExLTE1IGF0IDEyOjA3ICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IEFzIHBlciByZWNvbW1lbmRhdGlvbiBmcm9tIExpbnVzIHdlIHNob3VsZCBiZSB1c2luZyBh
-IGRpc3RpbmN0DQo+IHR5cGUgZm9yIGJsYWNrbGlzdCBmbGFncy4NCg0KSGVsbG8gSGFubmVzLA0K
-DQpIYXZlIHlvdSBub3RpY2VkIHRoYXQgdGhpcyBwYXRjaCBpcyBhIHN1YnNldCBvZiB0aGUgcGF0
-Y2ggc2VyaWVzIEkgcG9zdGVkDQp5ZXN0ZXJkYXkgKGh0dHBzOi8vbWFyYy5pbmZvLz9sPWxpbnV4
-LXNjc2kmbT0xNTEwNzEzMzMxMTMyNDEmdz0yKT8NCg0KQmFydC4=
+From: Colin Ian King <colin.king@canonical.com>
+
+Variable managed_request_id is being assigned but it is never read,
+hence it is redundant and can be removed. Cleans up clang warning:
+
+drivers/scsi/aacraid/linit.c:706:5: warning: Value stored to
+'managed_request_id' is never read
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/aacraid/linit.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index c9252b138c1f..3677beff9c17 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -690,7 +690,6 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 		struct aac_hba_tm_req *tmf;
+ 		int status;
+ 		u64 address;
+-		__le32 managed_request_id;
+ 
+ 		pr_err("%s: Host adapter abort request (%d,%d,%d,%d)\n",
+ 		 AAC_DRIVERNAME,
+@@ -703,8 +702,6 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 				(fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA) &&
+ 				(fib->callback_data == cmd)) {
+ 				found = 1;
+-				managed_request_id = ((struct aac_hba_cmd_req *)
+-					fib->hw_fib_va)->request_id;
+ 				break;
+ 			}
+ 		}
+-- 
+2.14.1
