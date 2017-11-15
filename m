@@ -1,63 +1,71 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 4.14+ merge window
-Date: Tue, 14 Nov 2017 16:33:15 -0800
-Message-ID: <CA+55aFx791+T60zeDRH+08eb7TxhYMW7pJBSCi8HezFtSkEHvw@mail.gmail.com>
-References: <1510677363.4078.16.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH 2/3] Constify scsi_dev_info_list_add_keyed() string arguments
+Date: Tue, 14 Nov 2017 16:57:20 -0800
+Message-ID: <20171115005721.11023-3-bart.vanassche@wdc.com>
+References: <20171115005721.11023-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:47814 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbdKOAdQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2017 19:33:16 -0500
-In-Reply-To: <1510677363.4078.16.camel@HansenPartnership.com>
+Received: from rap-us.hgst.com ([199.255.44.250]:7904 "EHLO localhost"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753413AbdKOBDz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Nov 2017 20:03:55 -0500
+In-Reply-To: <20171115005721.11023-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Tue, Nov 14, 2017 at 8:36 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> Hannes Reinecke (14):
->       scsi: scsi_devinfo: Reformat blacklist flags
+This patch does not change any functionality.
 
-Ugh, that's just really ugly, but it's also wrong.
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/scsi_devinfo.c | 9 +++++----
+ drivers/scsi/scsi_priv.h    | 4 ++--
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-Just having long lines would probably have been much preferable, and
-would mean that the commit that explains the bit would show up when
-you grep for the bit.
-
-Having a small helper macro like
-
-   #define BLIST_n(x) ((__force __u32 __bitwise)(1 << (n)))
-
-woiuld also likely have made it more legible.
-
-But that only takes care of the ugliness and the greppability.
-
-It's not right for sparse even _with_ those changes.
-
-Why? Because "__bitwise" actually creates a new type. So what those
-BLIST defines should do is to use a special type something like
-
-    typedef unsigned int __bitwise blist_flags_t;
-
-and now you have _one_ type thanks to that typedef, that is different
-from all the other bitwise types. Then you force all the constants and
-the field that implements to have that type, and you have type-safety:
-you can use those constants together, and you can assign the result to
-the blist flags, but you can't mix it with other __bitwise types.
-
-That's why things like this work:
-
-    typedef __u16 __bitwise __le16;
-    typedef __u16 __bitwise __be16;
-
-where __le16 and __be16 are actually different types, even though
-their underlying _storage_ is the same (a 16-bit unsigned).
-
-Anyway, I've pulled, because clearly this only matters for sparse, but
-I would hope that this gets fixed up, ok?
-
-             Linus
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index e63873537139..d195560a641c 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -292,8 +292,8 @@ static struct scsi_dev_info_list_table *scsi_devinfo_lookup_by_key(int key)
+  * scsi_strcpy_devinfo: called from scsi_dev_info_list_add to copy into
+  * devinfo vendor and model strings.
+  */
+-static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
+-				char *from, int compatible)
++static void scsi_strcpy_devinfo(const char *name, char *to, size_t to_length,
++				const char *from, int compatible)
+ {
+ 	size_t from_length;
+ 
+@@ -360,8 +360,9 @@ static int scsi_dev_info_list_add(int compatible, char *vendor, char *model,
+  *
+  * Returns: 0 OK, -error on failure.
+  **/
+-int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+-				 char *strflags, int flags, int key)
++int scsi_dev_info_list_add_keyed(int compatible, const char *vendor,
++				 const char *model, const char *strflags,
++				 int flags, int key)
+ {
+ 	struct scsi_dev_info_list *devinfo;
+ 	struct scsi_dev_info_list_table *devinfo_table =
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index d79759271fe3..b82238577b19 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -58,8 +58,8 @@ extern int scsi_get_device_flags_keyed(struct scsi_device *sdev,
+ 				       const unsigned char *vendor,
+ 				       const unsigned char *model, int key,
+ 				       unsigned int *flags);
+-extern int scsi_dev_info_list_add_keyed(int compatible, char *vendor,
+-					char *model, char *strflags,
++extern int scsi_dev_info_list_add_keyed(int compatible, const char *vendor,
++					const char *model, const char *strflags,
+ 					int flags, int key);
+ extern int scsi_dev_info_list_del_keyed(char *vendor, char *model, int key);
+ extern int scsi_dev_info_add_list(int key, const char *name);
+-- 
+2.15.0
