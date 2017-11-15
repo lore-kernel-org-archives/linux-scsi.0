@@ -1,84 +1,33 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V4] scsi_debugfs: fix crash in scsi_show_rq()
-Date: Wed, 15 Nov 2017 20:04:50 +0800
-Message-ID: <20171115120449.GD908@ming.t460p>
-References: <20171110090144.11791-1-ming.lei@redhat.com>
- <1510332718.3095.2.camel@HansenPartnership.com>
- <20171111024337.GB20382@ming.t460p>
- <1510599352.3336.20.camel@HansenPartnership.com>
- <20171114005544.GA20889@ming.t460p>
- <1510683292.3077.3.camel@HansenPartnership.com>
- <20171115100949.GC908@ming.t460p>
- <1510741680.3088.1.camel@HansenPartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 197877] arcmsr fails to initialize Areca ARC-1110/ARC-1120 on
+ some systems
+Date: Wed, 15 Nov 2017 13:32:45 +0000
+Message-ID: <bug-197877-11613-gnSljTNQpr@https.bugzilla.kernel.org/>
+References: <bug-197877-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1510741680.3088.1.camel@HansenPartnership.com>
-Sender: linux-block-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, John Garry <john.garry@huawei.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:36488 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756578AbdKONcq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Nov 2017 08:32:46 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 75E9529FB8
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Nov 2017 13:32:46 +0000 (UTC)
+In-Reply-To: <bug-197877-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-On Wed, Nov 15, 2017 at 07:28:00PM +0900, James Bottomley wrote:
-> On Wed, 2017-11-15 at 18:09 +0800, Ming Lei wrote:
-> > On Tue, Nov 14, 2017 at 10:14:52AM -0800, James Bottomley wrote:
-> > > 
-> > > On Tue, 2017-11-14 at 08:55 +0800, Ming Lei wrote:
-> > > > 
-> > > > Hi James,
-> > > > 
-> > > > On Mon, Nov 13, 2017 at 10:55:52AM -0800, James Bottomley wrote:
-> > > > > 
-> > > > > 
-> > > > > On Sat, 2017-11-11 at 10:43 +0800, Ming Lei wrote:
-> > > > > > 
-> > > > > > 
-> > > > > > So from CPU1's review, cmd->cmnd is in a remote NUMA node,
-> > > > > > __scsi_format_command() is executed much slower than
-> > > > > > mempool_free().
-> > > > > > So when mempool_free() returns, __scsi_format_command() may
-> > > > > > not fetched the buffer in L1 cache yet, then use-after-free
-> > > > > > is still triggered.
-> > > > > > 
-> > > > > > That is why I say this use-after-free is inevitable no matter
-> > > > > > 'setting SCpnt->cmnd to NULL before calling mempool_free()'
-> > > > > > or not.
-> > > > > 
-> > > > > The bottom line is that there are several creative ways around
-> > > > > this but the proposed code is currently broken and simply
-> > > > > putting a comment in saying so doesn't make it acceptable.
-> > > > 
-> > > > As I explained above, I didn't see one really workable way. Or
-> > > > please correct it if I am wrong.
-> > > 
-> > > I simply can't believe it's beyond the wit of man to solve a use
-> > > after free race.  About 40% of kernel techniques are devoted to
-> > > this.  All I really care about is not losing the PI information we
-> > > previously had.  I agree with Bart that NULL cmnd is a good
-> > > indicator, so it seems reasonable to use it.  If you have another
-> > > mechanism, feel free to propose it.
-> > 
-> > Hi James,
-> > 
-> > This patch is my proposal, no others thought of yet.
-> > 
-> > We can fix the use-after-free easily via lock, rcu and ..., but some
-> > cost has to pay. In this case, we can't wait too long in show_rq(),
-> > otherwise we may lose important debug info, so I do not have better
-> > way.
-> > 
-> > IMO this use-after-free is actually no harm, I don't think we have to
-> > fix it, but it should be better to not let utility warn on this case.
-> 
-> Fine, so lose the snide comment and set the cmnd to NULL *before*
-> calling free so we narrow the race window.
+https://bugzilla.kernel.org/show_bug.cgi?id=197877
 
-Hi James,
+--- Comment #1 from kr@sognnes.no ---
+Created attachment 260677
+  --> https://bugzilla.kernel.org/attachment.cgi?id=260677&action=edit
+.config for 4.14
 
-Given we can't avoid the use-after-free, how about not do that way so
-we won't lose the precious debug info too early?
-
-Thanks,
-Ming
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
