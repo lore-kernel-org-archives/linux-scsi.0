@@ -1,64 +1,51 @@
 From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
-Subject: Re: Seagate External SMR drive USB resets (was: Re: [PATCH] uas:
- Add US_FL_NO_ATA_1X quirk for one more Seagate device)
-Date: Wed, 15 Nov 2017 18:17:08 -0500
-Message-ID: <20171115181708.0a5d9288@Vantage.cJ>
-References: <Pine.LNX.4.44L0.1711151656350.1363-100000@iolanthe.rowland.org>
-        <1510785608.6323.10.camel@HansenPartnership.com>
+Subject: Re: Seagate External SMR drive USB resets... why? / USB storage
+ debugging
+Date: Wed, 15 Nov 2017 18:27:08 -0500
+Message-ID: <20171115182708.25b97ebe@Vantage.cJ>
+References: <20171115164902.00d1330d@Vantage.cJ>
+        <Pine.LNX.4.44L0.1711151656350.1363-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zougloub.eu ([69.70.16.42]:52658 "EHLO zougloub.eu"
+Received: from zougloub.eu ([69.70.16.42]:52764 "EHLO zougloub.eu"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932618AbdKOXP5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Nov 2017 18:15:57 -0500
-In-Reply-To: <1510785608.6323.10.camel@HansenPartnership.com>
+        id S1758644AbdKOXZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Nov 2017 18:25:57 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1711151656350.1363-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Jens <jens-bugzilla.kernel.org@spamfreemail.de>, Andrey Astafyev <1@246060.ru>, Oliver Neukum <oneukum@suse.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Joe Perches <joe@perches.com>
+Cc: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Jens <jens-bugzilla.kernel.org@spamfreemail.de>, Andrey Astafyev <1@246060.ru>, Oliver Neukum <oneukum@suse.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, 15 Nov 2017 17:02:39 -0500 (EST)
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-
-On Thu, 16 Nov 2017 07:40:08 +0900
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> On Wed, 2017-11-15 at 17:02 -0500, Alan Stern wrote:
-> > On Wed, 15 Nov 2017, J=C3=A9r=C3=B4me Carretero wrote: =20
-> > > >=C2=A0=C2=A0 Because with several of these drives / lots of activity=
- / =20
-> > occasional =20
-> > > >=C2=A0=C2=A0 issues, it looks like it will be hard to catch (yes I c=
-an use
-> > > > usbmon).
-> > > >=C2=A0
-> > > > - It looks like there is no configurable timeout for USB MSC =20
-> > requests. =20
-> > > >=C2=A0=C2=A0 Perhaps the device is not responding in time and this i=
-s why =20
-> > it's =20
-> > > >=C2=A0=C2=A0 reset? =20
-> >=20
-> > Timeouts are set by the SCSI layer.=C2=A0 I believe they are rather long
-> > (30 seconds, by default).=C2=A0 Presumably they are configurable,
-> > although I would have to do some digging to figure out how. =20
+> > > - It looks like (haven't tested it yet) the CONFIG_DYNAMIC_DEBUG
+> > > isn't used with the USB mass storage debugging infrastructure,
+> > > please confirm? If unused, are we interested to have a patch that
+> > > would go back to regular pr_debug() that can work with dynamic
+> > > debugging? =20
 >=20
-> They're in /sys/class/scsi_device/<id>/device/timeout
+> dev_dbg() please, not pr_debug().  But yes, that would be worthwhile.
+
+Yes obviously.
+
+Adding Joe Perches to the loop as he did a refactor of USB mass storage
+a while ago.
 
 
-I'll use wireshark to check the cause: for sure, the drives are not
-"timing out" after 30 seconds (indeed the reported value
-in /sys/class/scsi_device/.../timeout or /sys/block/*/device/timeout),
-because I see (in dstat) that a disk is busy until the right about the
-moment where its reset message appears.
+> Note, however, that usb-storage debugging is meant only for debugging
+> problems in the usb-storage driver itself, not for debugging problems
+> in attached devices.  We use usbmon or wireshark for the latter.
 
-Is it possible that the SCSI timeout doesn't get set into an USB URB
-timeout (I'll check by myself, but asking doesn't hurt) ?
+OK but I find that a "reset" message without any reason is not
+as helpful as it could have been. At the minimum I'll try to scratch my
+own itch and see if I can go at the bottom of my issue.
 
 
-Thank you,
+Regards,
 
 --=20
 J=C3=A9r=C3=B4me
