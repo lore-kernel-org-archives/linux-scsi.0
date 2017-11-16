@@ -1,30 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] Introduce a type for device information flags, namely bflags_t
-Date: Wed, 15 Nov 2017 19:00:24 -0500
-Message-ID: <yq1efozqehz.fsf@oracle.com>
-References: <20171115023317.3595-1-bart.vanassche@wdc.com>
-        <20171115023317.3595-4-bart.vanassche@wdc.com>
+Subject: Re: [PATCH] scsi: Use 'blist_flags_t' for scsi_devinfo flags
+Date: Wed, 15 Nov 2017 19:07:50 -0500
+Message-ID: <yq1a7znqe5l.fsf@oracle.com>
+References: <1510744050-53682-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20473 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932182AbdKPABp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2017 19:01:45 -0500
-In-Reply-To: <20171115023317.3595-4-bart.vanassche@wdc.com> (Bart Van Assche's
-        message of "Tue, 14 Nov 2017 18:33:17 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1510744050-53682-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Wed, 15 Nov 2017 12:07:30 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 
-Bart,
+Hi Hannes,
 
-> +typedef __u32 __bitwise bflags_t;
+> As per recommendation from Linus we should be using a distinct
+> type for blacklist flags.
+> -#define BLIST_MAX_1024		((__force __u32 __bitwise)(1 << 30))
+> +#define BLIST_MAX_1024		((__force blist_flags_t)(1 << 30))
 
-Since we're already out of flags, let's not perpetuate the u32
-limitation.
+You are missing:
+
+/* Use UNMAP limit for WRITE SAME */
+#define BLIST_UNMAP_LIMIT_WS		((__force blist_flags_t)(1 << 31))
+
+I'll fix it up...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
