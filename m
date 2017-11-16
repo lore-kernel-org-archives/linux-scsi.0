@@ -1,400 +1,298 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: [bug report] A race between device_resume and removing disk
-Date: Thu, 16 Nov 2017 11:54:20 +0800
-Message-ID: <44c1bcaf-8cb4-50e6-b18f-1feb9c438614@hisilicon.com>
+From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
+Subject: Re: Seagate External SMR drive USB resets (XHCI transfer error, not
+ timeout)
+Date: Wed, 15 Nov 2017 23:21:29 -0500
+Message-ID: <20171115232129.102a1122@Vantage.cJ>
+References: <Pine.LNX.4.44L0.1711151656350.1363-100000@iolanthe.rowland.org>
+        <1510785608.6323.10.camel@HansenPartnership.com>
+        <20171115181708.0a5d9288@Vantage.cJ>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: sre@kernel.org, rjw@rjwysocki.net, rafael@kernel.org, will.deacon@arm.com, martin.petersen@oracle.com, Bart Van Assche <Bart.VanAssche@wdc.com>, james.bottomley@hansenpartnership.com, arnd@arndb.de
-Cc: John Garry <john.garry@huawei.com>, jonathan.cameron@huawei.com, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
+Content-Type: multipart/mixed; boundary="MP_/_4HkocK+Yms5W0YSdctCJZp"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zougloub.eu ([69.70.16.42]:57084 "EHLO zougloub.eu"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751455AbdKPEUU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Nov 2017 23:20:20 -0500
+In-Reply-To: <20171115181708.0a5d9288@Vantage.cJ>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Jens <jens-bugzilla.kernel.org@spamfreemail.de>, Andrey Astafyev <1@246060.ru>, Oliver Neukum <oneukum@suse.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi all,
+--MP_/_4HkocK+Yms5W0YSdctCJZp
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-When debugging suspend and resume of hisi_sas, I find a issue: use 
-commands (echo freeze > /sys/power/state) to
-suspend, after 5s system will be resumed as i enable TEST_DEVICES. But if
-I plug one disks during suspend, system will be blocked all the time and 
-it seems that there is a deadlock.
+Hi,
 
-I suspect that when device resume, it will acquire dev->mutex 
-(device_lock(dev)) during almost the
-whole device resume process, but if remove a disk, it also tries to 
-acquire dev->mutex when device_del.
-So it causes a deadlock. Do you have any idea about this issue?
+On Wed, 15 Nov 2017 18:17:08 -0500
+J=C3=A9r=C3=B4me Carretero <cJ-ko@zougloub.eu> wrote:
 
-Follows are part of the log of normal print and exception print. In my 
-environment, there are 11 disks on expander
-(5 SATA disks and 6 SAS disks).
+> Hi,
+>=20
+>=20
+> On Thu, 16 Nov 2017 07:40:08 +0900
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+>=20
+> > On Wed, 2017-11-15 at 17:02 -0500, Alan Stern wrote: =20
+> > > On Wed, 15 Nov 2017, J=C3=A9r=C3=B4me Carretero wrote:   =20
+> > > > >=C2=A0=C2=A0 Because with several of these drives / lots of
+> > > > >activity /   =20
+> > > occasional   =20
+> > > > >=C2=A0=C2=A0 issues, it looks like it will be hard to catch (yes I=
+ can
+> > > > >use
+> > > > > usbmon).
+> > > > >=C2=A0
+> > > > > - It looks like there is no configurable timeout for USB
+> > > > > MSC   =20
+> > > requests.   =20
+> > > > >=C2=A0=C2=A0 Perhaps the device is not responding in time and this=
+ is
+> > > > >why   =20
+> > > it's   =20
+> > > > >=C2=A0=C2=A0 reset?   =20
+> > >=20
+> > > Timeouts are set by the SCSI layer.=C2=A0 I believe they are rather
+> > > long (30 seconds, by default).=C2=A0 Presumably they are configurable,
+> > > although I would have to do some digging to figure out how.   =20
+> >=20
+> > They're in /sys/class/scsi_device/<id>/device/timeout =20
+>=20
+>=20
+> I'll use wireshark to check the cause: for sure, the drives are not
+> "timing out" after 30 seconds (indeed the reported value
+> in /sys/class/scsi_device/.../timeout or /sys/block/*/device/timeout),
+> because I see (in dstat) that a disk is busy until the right about the
+> moment where its reset message appears.
+>=20
+> Is it possible that the SCSI timeout doesn't get set into an USB URB
+> timeout (I'll check by myself, but asking doesn't hurt) ?
 
-regards,
-shawn
+I performed an usbmon capture extract, centered around the event
+(there was a few hundred MBs written for this to happen):
+
+ Nov 15 22:16:33 Bidule kernel: usb 6-4.3.2.1: reset SuperSpeed USB
+  device number 8 using xhci_hcd
+
+I can see that the computer is sending a write request, and sees a
+-EPROTO in answer (capture in attachment), so scratch the timeout issue
+(and actually when thinking about it, this matches what UAS was saying,
+except that UAS was taking ages to recover).
+
+Looked for EPROTO in the usb code, and found a dynamic debug printf in
+XHCI; after enabling it:
+
+ Nov 15 22:45:03 Bidule kernel: xhci_hcd 0000:07:00.0: Transfer error for s=
+lot 13 ep 3 on endpoint
+ Nov 15 22:45:03 Bidule kernel: xhci_hcd 0000:07:00.0: Transfer error for s=
+lot 12 ep 3 on endpoint
+ Nov 15 22:45:03 Bidule kernel: usb 6-4.3.3.1: reset SuperSpeed USB device =
+number 9 using xhci_hcd
+ Nov 15 22:45:03 Bidule kernel: usb 6-4.3.2.1: reset SuperSpeed USB device =
+number 8 using xhci_hcd
+
+First, I understand that a bad USB device could poison the kernel log,
+but shouldn't that xhci_dbg() (and others eg. babble) be at least an
+xhci_info() (I saw 2a9227a5)?
+
+Then... I don't know enough to attribute the issue the upstream USB hub(s)
+or the drive endpoint not behaving properly, or the kernel... what
+should I do with these messages?
+
+I'm still filling the drives, will perform a scrub after, to see if
+the issue causes data loss...
 
 
-Normal log of suspend as follows:
+--=20
+J=C3=A9r=C3=B4me
 
-[  189.789974] PM: suspend entry (s2idle)
-[  189.798045] PM: Syncing filesystems ... done.
-[  189.935324] Freezing user space processes ... (elapsed 0.009 seconds) 
-done.
-[  189.955044] OOM killer disabled.
-[  189.959111] Freezing remaining freezable tasks ... (elapsed 0.012 
-seconds) done.
-[  190.065399] sd 0:0:10:0: [sdk] Synchronizing SCSI cache
-[  190.090948] sd 0:0:10:0: [sdk] Stopping disk
-[  190.113157] sd 0:0:9:0: [sdj] Synchronizing SCSI cache
-[  190.139116] sd 0:0:8:0: [sdi] Synchronizing SCSI cache
-[  190.160252] sd 0:0:7:0: [sdh] Synchronizing SCSI cache
-[  190.175968] sd 0:0:7:0: [sdh] Stopping disk
-[  191.401325] sd 0:0:5:0: [sdf] Synchronizing SCSI cache
-[  191.429529] sd 0:0:3:0: [sdd] Synchronizing SCSI cache
-[  191.452532] sd 0:0:2:0: [sdc] Synchronizing SCSI cache
-[  191.752248] sd 0:0:2:0: [sdc] Stopping disk
-[  192.045536] sd 0:0:1:0: [sdb] Synchronizing SCSI cache
-[  192.072078] sd 0:0:1:0: [sdb] Stopping disk
-[  192.744386] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[  192.760704] sd 0:0:0:0: [sda] Stopping disk
-[  193.397060] hisi_sas_v3_suspend
-[  194.587783] PM: suspend devices took 4.604 seconds
-[  194.594688] PM: suspend debug: Waiting for 5 second(s).
-[  199.687272] hisi_sas_v3_resume
-[  199.740433] hisi_sas_v3_hw 0000:74:02.0: phyup: phy0 link_rate=8
-[  199.747979] hisi_sas_v3_hw 0000:74:02.0: phyup: phy1 link_rate=8
-[  199.754995] hisi_sas_v3_hw 0000:74:02.0: phyup: phy2 link_rate=8
-[  199.787405] hisi_sas_v3_hw 0000:74:02.0: phyup: phy3 link_rate=8
-[  199.820411] sas: sas_form_port: phy0 belongs to port0 already(4)!
-[  199.831008] sas: sas_form_port: phy1 belongs to port0 already(4)!
-[  199.839963] sas: sas_form_port: phy2 belongs to port0 already(4)!
-[  199.849237] sas: sas_form_port: phy3 belongs to port0 already(4)!
-[  200.366863] ata7: SATA link down (SStatus 0 SControl 300)
-[  200.379220] ata6: SATA link down (SStatus 0 SControl 300)
-[  200.828384] sas: broadcast received: 0
-[  200.838602] sas: REVALIDATING DOMAIN on port 0, pid:1454
-[  200.862876] sd 0:0:0:0: [sda] Starting disk
-[  200.881098] sd 0:0:1:0: [sdb] Starting disk
-[  200.891951] sd 0:0:2:0: [sdc] Starting disk
-[  200.949758] sd 0:0:7:0: [sdh] Starting disk
-[  200.990573] sd 0:0:10:0: [sdk] Starting disk
-[  201.114636] sas: Expander phy change count has changed
-[  201.188709] sas: ex 500e004aaaaaaa1f phy16 originated BROADCAST(CHANGE)
-[  201.197145] sas: phy16 part of wide port with phy17
-[  201.211154] sas: ex 500e004aaaaaaa1f phy 0x10 broadcast flutter
-[  201.222900] sas: ex 500e004aaaaaaa1f phy17 originated BROADCAST(CHANGE)
-[  201.231045] sas: phy17 part of wide port with phy16
-[  201.244352] sas: ex 500e004aaaaaaa1f phy 0x11 broadcast flutter
-[  201.258344] sas: ex 500e004aaaaaaa1f phy18 originated BROADCAST(CHANGE)
-[  201.268344] sas: phy18 part of wide port with phy16
-[  201.283102] sas: ex 500e004aaaaaaa1f phy 0x12 broadcast flutter
-[  201.294168] sas: ex 500e004aaaaaaa1f phy19 originated BROADCAST(CHANGE)
-[  201.302386] sas: phy19 part of wide port with phy16
-[  201.315813] sas: ex 500e004aaaaaaa1f phy 0x13 broadcast flutter
-[  201.346615] sas: done REVALIDATING DOMAIN on port 0, pid:1454, res 0x0
-[  203.640641] PM: resume devices took 3.984 seconds
-[  203.648996] OOM killer enabled.
-[  203.655016] Restarting tasks ... done.
-[  203.690494] PM: suspend exit
+PS: BTW, thanks a lot for the help so far.
+PPS: It would be so nice if someone from Seagate was reading this.
 
-The log of removing disk when suspend is as follows:
+--MP_/_4HkocK+Yms5W0YSdctCJZp
+Content-Type: application/gzip
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=smr-reset-excerpt.pcapng.gz
 
-[44750.653222] PM: suspend entry (s2idle)
-[44750.658991] PM: Syncing filesystems ... done.
-[44750.699868] Freezing user space processes ... (elapsed 0.015 seconds) 
-done.
-[44750.725734] OOM killer disabled.
-[44750.729711] Freezing remaining freezable tasks ... (elapsed 0.018 
-seconds) done.
-[44750.820672] sd 0:0:13:0: [sdk] Synchronizing SCSI cache
-[44750.844056] sd 0:0:13:0: [sdk] Stopping disk
-[44750.917433] sd 0:0:9:0: [sdj] Synchronizing SCSI cache
-[44750.949032] sd 0:0:8:0: [sdi] Synchronizing SCSI cache
-[44750.972730] sd 0:0:7:0: [sdh] Synchronizing SCSI cache
-[44750.989813] sd 0:0:7:0: [sdh] Stopping disk
-[44752.207539] sd 0:0:5:0: [sdf] Synchronizing SCSI cache
-[44752.239773] sd 0:0:3:0: [sdd] Synchronizing SCSI cache
-[44752.264202] sd 0:0:2:0: [sdc] Synchronizing SCSI cache
-[44752.283091] sd 0:0:2:0: [sdc] Stopping disk
-[44752.857859] sd 0:0:1:0: [sdb] Synchronizing SCSI cache
-[44752.884278] sd 0:0:1:0: [sdb] Stopping disk
-[44753.547281] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[44753.563534] sd 0:0:0:0: [sda] Stopping disk
-[44754.186119] hisi_sas_v3_suspend
-[44755.380615] PM: suspend devices took 4.620 seconds
-[44755.387566] PM: suspend debug: Waiting for 5 second(s).
-[44760.481947] hisi_sas_v3_resume
-[44760.545002] hisi_sas_v3_hw 0000:74:02.0: phyup: phy0 link_rate=8
-[44760.553511] hisi_sas_v3_hw 0000:74:02.0: phyup: phy1 link_rate=8
-[44760.560449] hisi_sas_v3_hw 0000:74:02.0: phyup: phy2 link_rate=8
-[44760.569585] sas: broadcast received: 0
-[44760.575273] sas: REVALIDATING DOMAIN on port 0, pid:2543
-[44760.586836] hisi_sas_v3_hw 0000:74:02.0: phyup: phy3 link_rate=8
-[44760.667425] sas: Expander phy change count has changed
-[44760.720375] sas: ex 500e004aaaaaaa1f phy11 originated BROADCAST(CHANGE)
-[44760.766008] sas: ex 500e004aaaaaaa1f phy16 originated BROADCAST(CHANGE)
-[44760.775866] sas: phy16 part of wide port with phy17
-[44760.791094] sas: ex 500e004aaaaaaa1f phy 0x10 broadcast flutter
-[44760.808368] sas: ex 500e004aaaaaaa1f phy17 originated BROADCAST(CHANGE)
-[44760.817757] sas: phy17 part of wide port with phy16
-[44760.824945] ata6: SATA link down (SStatus 0 SControl 300)
-[44760.829942] ata7: SATA link down (SStatus 0 SControl 300)
-[44760.855445] sas: ex 500e004aaaaaaa1f phy 0x11 broadcast flutter
-[44760.870484] sas: ex 500e004aaaaaaa1f phy18 originated BROADCAST(CHANGE)
-[44760.880241] sas: phy18 part of wide port with phy16
-[44760.895521] sas: ex 500e004aaaaaaa1f phy 0x12 broadcast flutter
-[44760.906639] sas: ex 500e004aaaaaaa1f phy19 originated BROADCAST(CHANGE)
-[44760.914870] sas: phy19 part of wide port with phy16
-[44760.929393] sas: ex 500e004aaaaaaa1f phy 0x13 broadcast flutter
-[44760.957832] sas: done REVALIDATING DOMAIN on port 0, pid:2543, res 0x0
-[44761.642204] sd 0:0:0:0: [sda] Starting disk
-[44761.653165] sd 0:0:1:0: [sdb] Starting disk
-[44761.663506] sd 0:0:2:0: [sdc] Starting disk
-[44761.715975] sd 0:0:7:0: [sdh] Starting disk
-[44911.477779] INFO: task kworker/u2:7:1054 blocked for more than 120 
-seconds.
-[44911.491820]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[44911.499782] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[44911.511059] kworker/u2:7    D    0  1054      2 0x00000020
-[44911.518771] Workqueue: events_unbound async_run_entry_fn
-[44911.526803] Call trace:
-[44911.531809] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[44911.538319] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[44911.545501] [<ffff000008976914>] schedule+0x38/0x9c
-[44911.552086] [<ffff000008976d20>] schedule_preempt_disabled+0x20/0x38
-[44911.559195] [<ffff000008977920>] __mutex_lock.isra.9+0x138/0x4bc
-[44911.566663] [<ffff000008977cb4>] __mutex_lock_slowpath+0x10/0x18
-[44911.574891] [<ffff000008977cec>] mutex_lock+0x30/0x38
-[44911.581204] [<ffff00000858a2b4>] device_resume+0x48/0x124
-[44911.589741] [<ffff00000858a3b4>] async_resume+0x24/0x54
-[44911.596747] [<ffff0000080e837c>] async_run_entry_fn+0x44/0x108
-[44911.604873] [<ffff0000080df0c0>] process_one_work+0x128/0x2b0
-[44911.611419] [<ffff0000080df29c>] worker_thread+0x54/0x3c8
-[44911.618406] [<ffff0000080e4f90>] kthread+0x100/0x12c
-[44911.625448] [<ffff000008085314>] ret_from_fork+0x10/0x18
-[44911.632049] INFO: task kworker/u2:14:1486 blocked for more than 120 
-seconds.
-[44911.640715]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[44911.648270] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[44911.657506] kworker/u2:14   D    0  1486      2 0x00000020
-[44911.664647] Workqueue: 0000:74:02.0_event_q sas_port_event_worker
-[44911.672501] Call trace:
-[44911.675840] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[44911.683374] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[44911.691057] [<ffff000008976914>] schedule+0x38/0x9c
-[44911.699536] [<ffff000008979bfc>] schedule_timeout+0x198/0x338
-[44911.706251] [<ffff000008977488>] wait_for_common+0x9c/0x140
-[44911.713251] [<ffff000008977540>] wait_for_completion+0x14/0x1c
-[44911.720605] [<ffff0000080dcea8>] flush_workqueue+0xf4/0x3cc
-[44911.726993] [<ffff0000085c71dc>] sas_porte_broadcast_rcvd+0x5c/0x68
-[44911.734834] [<ffff0000085c79d0>] sas_port_event_worker+0x24/0x38
-[44911.742815] [<ffff0000080df0c0>] process_one_work+0x128/0x2b0
-[44911.751780] [<ffff0000080df29c>] worker_thread+0x54/0x3c8
-[44911.757989] [<ffff0000080e4f90>] kthread+0x100/0x12c
-[44911.764699] [<ffff000008085314>] ret_from_fork+0x10/0x18
-[44911.773153] INFO: task kworker/u2:18:2543 blocked for more than 120 
-seconds.
-[44911.781630]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[44911.790194] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[44911.799406] kworker/u2:18   D    0  2543      2 0x00000000
-[44911.806845] Workqueue: 0000:74:02.0_disco_q sas_revalidate_domain
-[44911.814980] Call trace:
-[44911.817940] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[44911.825266] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[44911.831290] [<ffff000008976914>] schedule+0x38/0x9c
-[44911.837629] [<ffff000008979bfc>] schedule_timeout+0x198/0x338
-[44911.844803] [<ffff000008977488>] wait_for_common+0x9c/0x140
-[44911.852655] [<ffff000008977540>] wait_for_completion+0x14/0x1c
-[44911.860032] [<ffff0000080dea8c>] flush_work+0xe4/0x1cc
-[44911.867769] [<ffff0000080dec74>] flush_delayed_work+0x3c/0x48
-[44911.874563] [<ffff0000081a4154>] wb_shutdown+0xcc/0x130
-[44911.881259] [<ffff0000081a4cb4>] bdi_unregister+0x5c/0x1e4
-[44911.888554] [<ffff000008395fa4>] del_gendisk+0x114/0x1ec
-[44911.894687] [<ffff0000085d20b4>] sd_remove+0x60/0xb8
-[44911.901552] [<ffff00000857d220>] 
-device_release_driver_internal+0x148/0x1d4
-[44911.910347] [<ffff00000857d2c0>] device_release_driver+0x14/0x1c
-[44911.917140] [<ffff00000857c110>] bus_remove_device+0xc8/0x104
-[44911.925918] [<ffff000008578d80>] device_del+0x1f8/0x300
-[44911.933151] [<ffff0000085c0dd4>] __scsi_remove_device+0xec/0x118
-[44911.940840] [<ffff0000085c0e28>] scsi_remove_device+0x28/0x3c
-[44911.947373] [<ffff0000085c0ff4>] scsi_remove_target+0x180/0x1b4
-[44911.954787] [<ffff0000085c4238>] sas_rphy_remove+0x60/0x64
-[44911.961743] [<ffff0000085c4250>] sas_rphy_delete+0x14/0x28
-[44911.968317] [<ffff0000085c8484>] sas_destruct_devices+0x58/0x8c
-[44911.975717] [<ffff0000085c8774>] sas_revalidate_domain+0x5c/0xe8
-[44911.983196] [<ffff0000080df0c0>] process_one_work+0x128/0x2b0
-[44911.989661] [<ffff0000080df29c>] worker_thread+0x54/0x3c8
-[44911.996605] [<ffff0000080e4f90>] kthread+0x100/0x12c
-[44912.003599] [<ffff000008085314>] ret_from_fork+0x10/0x18
-[44912.009820] INFO: task freeze.sh:2761 blocked for more than 120 seconds.
-[44912.018287]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[44912.026127] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[44912.035360] freeze.sh       D    0  2761   1434 0x00000000
-[44912.041716] Call trace:
-[44912.045665] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[44912.051671] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[44912.058440] [<ffff000008976914>] schedule+0x38/0x9c
-[44912.064082] [<ffff0000080e87d0>] 
-async_synchronize_cookie_domain+0x88/0xd4
-[44912.072441] [<ffff0000080e884c>] async_synchronize_full+0x14/0x1c
-[44912.080206] [<ffff00000858b248>] dpm_resume+0x1f4/0x22c
-[44912.087688] [<ffff00000858b43c>] dpm_resume_end+0x14/0x28
-[44912.093984] [<ffff00000810aa6c>] suspend_devices_and_enter+0x174/0x59c
-[44912.102216] [<ffff00000810b0d4>] pm_suspend+0x240/0x310
-[44912.109190] [<ffff000008109aac>] state_store+0x84/0x108
-[44912.115240] [<ffff000008966da0>] kobj_attr_store+0x14/0x24
-[44912.122681] [<ffff00000827c108>] sysfs_kf_write+0x40/0x48
-[44912.129844] [<ffff00000827b424>] kernfs_fop_write+0xc0/0x1d0
-[44912.137099] [<ffff00000820440c>] __vfs_write+0x28/0x124
-[44912.143863] [<ffff0000082046f0>] vfs_write+0xa0/0x198
-[44912.151844] [<ffff00000820496c>] SyS_write+0x44/0xa0
-[44912.157628] Exception stack(0xffff00000ad0bec0 to 0xffff00000ad0c000)
-[44912.165651] bec0: 0000000000000001 000000002e7ca808 0000000000000007 
-0000000000000000
-[44912.175136] bee0: 0000000000000000 0000ffff90b56140 000000002e7ca80e 
-fefefefefefefefe
-[44912.184489] bf00: 0000000000000040 0000000000000006 7f7f7f7f7f7f7f7f 
-0101010101010101
-[44912.193820] bf20: 0000000000000030 0000000000000018 ffffffffffffffff 
-00000ab180000000
-[44912.203422] bf40: 0000000000000000 0000ffff90b77644 0000ffffd0175190 
-0000000000000007
-[44912.214156] bf60: 000000002e7ca808 0000ffff90c544f8 0000000000000007 
-0000000000000000
-[44912.224106] bf80: 0000000000000001 00000000004c7e28 00000000004ea000 
-00000000004c8620
-[44912.233362] bfa0: 0000000000000000 0000ffffd0175430 0000ffff90b7e844 
-0000ffffd0175430
-[44912.245409] bfc0: 0000ffff90bcc108 0000000020000000 0000000000000001 
-0000000000000040
-[44912.256310] bfe0: 0000000000000000 0000000000000000 0000000000000000 
-0000000000000000
-[44912.266743] [<ffff0000080837b0>] el0_svc_naked+0x24/0x28
-^[OP^[OP^[OP[45032.312301] INFO: task kworker/u2:7:1054 blocked for more 
-than 120 seconds.
-[45032.323340]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[45032.331329] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[45032.341433] kworker/u2:7    D    0  1054      2 0x00000020
-[45032.348849] Workqueue: events_unbound async_run_entry_fn
-[45032.355787] Call trace:
-[45032.359246] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[45032.366311] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[45032.373419] [<ffff000008976914>] schedule+0x38/0x9c
-[45032.379019] [<ffff000008976d20>] schedule_preempt_disabled+0x20/0x38
-[45032.386834] [<ffff000008977920>] __mutex_lock.isra.9+0x138/0x4bc
-[45032.395203] [<ffff000008977cb4>] __mutex_lock_slowpath+0x10/0x18
-[45032.403043] [<ffff000008977cec>] mutex_lock+0x30/0x38
-[45032.410578] [<ffff00000858a2b4>] device_resume+0x48/0x124
-[45032.417488] [<ffff00000858a3b4>] async_resume+0x24/0x54
-[45032.424180] [<ffff0000080e837c>] async_run_entry_fn+0x44/0x108
-[45032.431883] [<ffff0000080df0c0>] process_one_work+0x128/0x2b0
-[45032.439096] [<ffff0000080df29c>] worker_thread+0x54/0x3c8
-[45032.447480] [<ffff0000080e4f90>] kthread+0x100/0x12c
-[45032.453284] [<ffff000008085314>] ret_from_fork+0x10/0x18
-[45032.460493] INFO: task kworker/u2:14:1486 blocked for more than 120 
-seconds.
-[45032.469003]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[45032.476389] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[45032.485551] kworker/u2:14   D    0  1486      2 0x00000020
-[45032.494109] Workqueue: 0000:74:02.0_event_q sas_port_event_worker
-[45032.502144] Call trace:
-[45032.505058] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[45032.511818] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[45032.520320] [<ffff000008976914>] schedule+0x38/0x9c
-[45032.526305] [<ffff000008979bfc>] schedule_timeout+0x198/0x338
-[45032.533498] [<ffff000008977488>] wait_for_common+0x9c/0x140
-[45032.541105] [<ffff000008977540>] wait_for_completion+0x14/0x1c
-[45032.547716] [<ffff0000080dcea8>] flush_workqueue+0xf4/0x3cc
-[45032.554855] [<ffff0000085c71dc>] sas_porte_broadcast_rcvd+0x5c/0x68
-[45032.563156] [<ffff0000085c79d0>] sas_port_event_worker+0x24/0x38
-[45032.569943] [<ffff0000080df0c0>] process_one_work+0x128/0x2b0
-[45032.578263] [<ffff0000080df29c>] worker_thread+0x54/0x3c8
-[45032.585164] [<ffff0000080e4f90>] kthread+0x100/0x12c
-[45032.590837] [<ffff000008085314>] ret_from_fork+0x10/0x18
-[45032.598410] INFO: task kworker/u2:18:2543 blocked for more than 120 
-seconds.
-[45032.606936]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[45032.615045] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[45032.624952] kworker/u2:18   D    0  2543      2 0x00000000
-[45032.631577] Workqueue: 0000:74:02.0_disco_q sas_revalidate_domain
-[45032.639213] Call trace:
-[45032.642438] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[45032.649234] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[45032.656581] [<ffff000008976914>] schedule+0x38/0x9c
-[45032.662359] [<ffff000008979bfc>] schedule_timeout+0x198/0x338
-[45032.669503] [<ffff000008977488>] wait_for_common+0x9c/0x140
-[45032.677661] [<ffff000008977540>] wait_for_completion+0x14/0x1c
-[45032.684200] [<ffff0000080dea8c>] flush_work+0xe4/0x1cc
-[45032.690820] [<ffff0000080dec74>] flush_delayed_work+0x3c/0x48
-[45032.699376] [<ffff0000081a4154>] wb_shutdown+0xcc/0x130
-[45032.705368] [<ffff0000081a4cb4>] bdi_unregister+0x5c/0x1e4
-[45032.712611] [<ffff000008395fa4>] del_gendisk+0x114/0x1ec
-[45032.719691] [<ffff0000085d20b4>] sd_remove+0x60/0xb8
-[45032.725770] [<ffff00000857d220>] 
-device_release_driver_internal+0x148/0x1d4
-[45032.734592] [<ffff00000857d2c0>] device_release_driver+0x14/0x1c
-[45032.742680] [<ffff00000857c110>] bus_remove_device+0xc8/0x104
-[45032.749871] [<ffff000008578d80>] device_del+0x1f8/0x300
-[45032.757028] [<ffff0000085c0dd4>] __scsi_remove_device+0xec/0x118
-[45032.764582] [<ffff0000085c0e28>] scsi_remove_device+0x28/0x3c
-[45032.772051] [<ffff0000085c0ff4>] scsi_remove_target+0x180/0x1b4
-[45032.778688] [<ffff0000085c4238>] sas_rphy_remove+0x60/0x64
-[45032.785643] [<ffff0000085c4250>] sas_rphy_delete+0x14/0x28
-[45032.793256] [<ffff0000085c8484>] sas_destruct_devices+0x58/0x8c
-[45032.799922] [<ffff0000085c8774>] sas_revalidate_domain+0x5c/0xe8
-[45032.807405] [<ffff0000080df0c0>] process_one_work+0x128/0x2b0
-[45032.815090] [<ffff0000080df29c>] worker_thread+0x54/0x3c8
-[45032.821273] [<ffff0000080e4f90>] kthread+0x100/0x12c
-[45032.827761] [<ffff000008085314>] ret_from_fork+0x10/0x18
-[45032.835821] INFO: task freeze.sh:2761 blocked for more than 120 seconds.
-[45032.845691]       Not tainted 4.14.0-rc5-29338-g01140e9-dirty #802
-[45032.852448] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[45032.861643] freeze.sh       D    0  2761   1434 0x00000000
-[45032.869003] Call trace:
-[45032.872184] [<ffff000008085fa4>] __switch_to+0x94/0xa8
-[45032.879406] [<ffff0000089764c0>] __schedule+0x1a8/0x5c4
-[45032.887821] [<ffff000008976914>] schedule+0x38/0x9c
-[45032.893536] [<ffff0000080e87d0>] 
-async_synchronize_cookie_domain+0x88/0xd4
-[45032.901929] [<ffff0000080e884c>] async_synchronize_full+0x14/0x1c
-[45032.909939] [<ffff00000858b248>] dpm_resume+0x1f4/0x22c
-[45032.916211] [<ffff00000858b43c>] dpm_resume_end+0x14/0x28
-[45032.923147] [<ffff00000810aa6c>] suspend_devices_and_enter+0x174/0x59c
-[45032.931149] [<ffff00000810b0d4>] pm_suspend+0x240/0x310
-[45032.937332] [<ffff000008109aac>] state_store+0x84/0x108
-[45032.944213] [<ffff000008966da0>] kobj_attr_store+0x14/0x24
-[45032.951530] [<ffff00000827c108>] sysfs_kf_write+0x40/0x48
-[45032.957715] [<ffff00000827b424>] kernfs_fop_write+0xc0/0x1d0
-[45032.965180] [<ffff00000820440c>] __vfs_write+0x28/0x124
-[45032.971969] [<ffff0000082046f0>] vfs_write+0xa0/0x198
-[45032.977888] [<ffff00000820496c>] SyS_write+0x44/0xa0
-[45032.984551] Exception stack(0xffff00000ad0bec0 to 0xffff00000ad0c000)
-[45032.992697] bec0: 0000000000000001 000000002e7ca808 0000000000000007 
-0000000000000000
-[45033.003467] bee0: 0000000000000000 0000ffff90b56140 000000002e7ca80e 
-fefefefefefefefe
-[45033.014204] bf00: 0000000000000040 0000000000000006 7f7f7f7f7f7f7f7f 
-0101010101010101
-[45033.024031] bf20: 0000000000000030 0000000000000018 ffffffffffffffff 
-00000ab180000000
-[45033.034896] bf40: 0000000000000000 0000ffff90b77644 0000ffffd0175190 
-0000000000000007
-[45033.045329] bf60: 000000002e7ca808 0000ffff90c544f8 0000000000000007 
-0000000000000000
-[45033.055841] bf80: 0000000000000001 00000000004c7e28 00000000004ea000 
-00000000004c8620
-[45033.066824] bfa0: 0000000000000000 0000ffffd0175430 0000ffff90b7e844 
-0000ffffd0175430
-[45033.076757] bfc0: 0000ffff90bcc108 0000000020000000 0000000000000001 
-0000000000000040
-[45033.087472] bfe0: 0000000000000000 0000000000000000 0000000000000000 
-0000000000000000
-[45033.097927] [<ffff0000080837b0>] el0_svc_naked+0x24/0x28
+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
+
+--MP_/_4HkocK+Yms5W0YSdctCJZp--
