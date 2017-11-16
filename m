@@ -1,298 +1,188 @@
-From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
-Subject: Re: Seagate External SMR drive USB resets (XHCI transfer error, not
- timeout)
-Date: Wed, 15 Nov 2017 23:21:29 -0500
-Message-ID: <20171115232129.102a1122@Vantage.cJ>
-References: <Pine.LNX.4.44L0.1711151656350.1363-100000@iolanthe.rowland.org>
-        <1510785608.6323.10.camel@HansenPartnership.com>
-        <20171115181708.0a5d9288@Vantage.cJ>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="MP_/_4HkocK+Yms5W0YSdctCJZp"
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] scsi_debug: add cdb_len parameter
+Date: Wed, 15 Nov 2017 23:36:50 -0500
+Message-ID: <20171116043650.18903-1-dgilbert@interlog.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zougloub.eu ([69.70.16.42]:57084 "EHLO zougloub.eu"
+Received: from smtp.infotech.no ([82.134.31.41]:38142 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751455AbdKPEUU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Nov 2017 23:20:20 -0500
-In-Reply-To: <20171115181708.0a5d9288@Vantage.cJ>
+        id S932181AbdKPEgz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Nov 2017 23:36:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Jens <jens-bugzilla.kernel.org@spamfreemail.de>, Andrey Astafyev <1@246060.ru>, Oliver Neukum <oneukum@suse.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, hare@suse.de
 
---MP_/_4HkocK+Yms5W0YSdctCJZp
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-Hi,
-
-On Wed, 15 Nov 2017 18:17:08 -0500
-J=C3=A9r=C3=B4me Carretero <cJ-ko@zougloub.eu> wrote:
-
-> Hi,
->=20
->=20
-> On Thu, 16 Nov 2017 07:40:08 +0900
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->=20
-> > On Wed, 2017-11-15 at 17:02 -0500, Alan Stern wrote: =20
-> > > On Wed, 15 Nov 2017, J=C3=A9r=C3=B4me Carretero wrote:   =20
-> > > > >=C2=A0=C2=A0 Because with several of these drives / lots of
-> > > > >activity /   =20
-> > > occasional   =20
-> > > > >=C2=A0=C2=A0 issues, it looks like it will be hard to catch (yes I=
- can
-> > > > >use
-> > > > > usbmon).
-> > > > >=C2=A0
-> > > > > - It looks like there is no configurable timeout for USB
-> > > > > MSC   =20
-> > > requests.   =20
-> > > > >=C2=A0=C2=A0 Perhaps the device is not responding in time and this=
- is
-> > > > >why   =20
-> > > it's   =20
-> > > > >=C2=A0=C2=A0 reset?   =20
-> > >=20
-> > > Timeouts are set by the SCSI layer.=C2=A0 I believe they are rather
-> > > long (30 seconds, by default).=C2=A0 Presumably they are configurable,
-> > > although I would have to do some digging to figure out how.   =20
-> >=20
-> > They're in /sys/class/scsi_device/<id>/device/timeout =20
->=20
->=20
-> I'll use wireshark to check the cause: for sure, the drives are not
-> "timing out" after 30 seconds (indeed the reported value
-> in /sys/class/scsi_device/.../timeout or /sys/block/*/device/timeout),
-> because I see (in dstat) that a disk is busy until the right about the
-> moment where its reset message appears.
->=20
-> Is it possible that the SCSI timeout doesn't get set into an USB URB
-> timeout (I'll check by myself, but asking doesn't hurt) ?
-
-I performed an usbmon capture extract, centered around the event
-(there was a few hundred MBs written for this to happen):
-
- Nov 15 22:16:33 Bidule kernel: usb 6-4.3.2.1: reset SuperSpeed USB
-  device number 8 using xhci_hcd
-
-I can see that the computer is sending a write request, and sees a
--EPROTO in answer (capture in attachment), so scratch the timeout issue
-(and actually when thinking about it, this matches what UAS was saying,
-except that UAS was taking ages to recover).
-
-Looked for EPROTO in the usb code, and found a dynamic debug printf in
-XHCI; after enabling it:
-
- Nov 15 22:45:03 Bidule kernel: xhci_hcd 0000:07:00.0: Transfer error for s=
-lot 13 ep 3 on endpoint
- Nov 15 22:45:03 Bidule kernel: xhci_hcd 0000:07:00.0: Transfer error for s=
-lot 12 ep 3 on endpoint
- Nov 15 22:45:03 Bidule kernel: usb 6-4.3.3.1: reset SuperSpeed USB device =
-number 9 using xhci_hcd
- Nov 15 22:45:03 Bidule kernel: usb 6-4.3.2.1: reset SuperSpeed USB device =
-number 8 using xhci_hcd
-
-First, I understand that a bad USB device could poison the kernel log,
-but shouldn't that xhci_dbg() (and others eg. babble) be at least an
-xhci_info() (I saw 2a9227a5)?
-
-Then... I don't know enough to attribute the issue the upstream USB hub(s)
-or the drive endpoint not behaving properly, or the kernel... what
-should I do with these messages?
-
-I'm still filling the drives, will perform a scrub after, to see if
-the issue causes data loss...
+While testing "sd: Micro-optimize READ / WRITE CDB encoding" patches it was
+helpful to check various code paths associated with READ/WRITE 6, 10
+and 16 byte cdb variants. There seems to be no user space "knobs" to
+twiddle use_10_for_rw and friends in the scsi_device structure.
+So add a parameter to scsi_debug called "cdb_len" for this purpose.
 
 
---=20
-J=C3=A9r=C3=B4me
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 86 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 83 insertions(+), 3 deletions(-)
 
-PS: BTW, thanks a lot for the help so far.
-PPS: It would be so nice if someone from Seagate was reading this.
-
---MP_/_4HkocK+Yms5W0YSdctCJZp
-Content-Type: application/gzip
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=smr-reset-excerpt.pcapng.gz
-
-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
-
---MP_/_4HkocK+Yms5W0YSdctCJZp--
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 09ba494f8896..a573012524b3 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6,7 +6,7 @@
+  *  anything out of the ordinary is seen.
+  * ^^^^^^^^^^^^^^^^^^^^^^^ Original ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  *
+- * Copyright (C) 2001 - 2016 Douglas Gilbert
++ * Copyright (C) 2001 - 2017 Douglas Gilbert
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -61,8 +61,8 @@
+ #include "scsi_logging.h"
+ 
+ /* make sure inq_product_rev string corresponds to this version */
+-#define SDEBUG_VERSION "1.86"
+-static const char *sdebug_version_date = "20160430";
++#define SDEBUG_VERSION "1.87"
++static const char *sdebug_version_date = "20171105";
+ 
+ #define MY_NAME "scsi_debug"
+ 
+@@ -105,6 +105,7 @@ static const char *sdebug_version_date = "20160430";
+  * (id 0) containing 1 logical unit (lun 0). That is 1 device.
+  */
+ #define DEF_ATO 1
++#define DEF_CDB_LEN 10
+ #define DEF_JDELAY   1		/* if > 0 unit is a jiffy */
+ #define DEF_DEV_SIZE_MB   8
+ #define DEF_DIF 0
+@@ -571,6 +572,7 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
+ 
+ static int sdebug_add_host = DEF_NUM_HOST;
+ static int sdebug_ato = DEF_ATO;
++static int sdebug_cdb_len = DEF_CDB_LEN;
+ static int sdebug_jdelay = DEF_JDELAY;	/* if > 0 then unit is jiffies */
+ static int sdebug_dev_size_mb = DEF_DEV_SIZE_MB;
+ static int sdebug_dif = DEF_DIF;
+@@ -797,6 +799,62 @@ static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
+ 	/* return -ENOTTY; // correct return but upsets fdisk */
+ }
+ 
++static void config_cdb_len(struct scsi_device * sdev)
++{
++	switch (sdebug_cdb_len) {
++	case 6:	/* suggest 6 byte READ, WRITE and MODE SENSE/SELECT */
++		sdev->use_10_for_rw = false;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = false;
++		break;
++	case 10: /* suggest 10 byte RWs and 6 byte MODE SENSE/SELECT */
++		sdev->use_10_for_rw = true;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = false;
++		break;
++	case 12: /* suggest 10 byte RWs and 10 byte MODE SENSE/SELECT */
++		sdev->use_10_for_rw = true;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = true;
++		break;
++	case 16:
++		sdev->use_10_for_rw = false;
++		sdev->use_16_for_rw = true;
++		sdev->use_10_for_ms = true;
++		break;
++	case 32: /* No knobs to suggest this so same as 16 for now */
++		sdev->use_10_for_rw = false;
++		sdev->use_16_for_rw = true;
++		sdev->use_10_for_ms = true;
++		break;
++	default:
++		pr_warn("unexpected cdb_len=%d, force to 10\n",
++			sdebug_cdb_len);
++		sdev->use_10_for_rw = true;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = false;
++		sdebug_cdb_len = 10;
++		break;
++	}
++}
++
++static void all_config_cdb_len(void)
++{
++	struct sdebug_host_info *sdbg_host;
++	struct Scsi_Host *shost;
++	struct scsi_device *sdev;
++
++
++	spin_lock(&sdebug_host_list_lock);
++	list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++		shost = sdbg_host->shost;
++		shost_for_each_device(sdev, shost) {
++			config_cdb_len(sdev);
++		}
++	}
++	spin_unlock(&sdebug_host_list_lock);
++}
++
+ static void clear_luns_changed_on_target(struct sdebug_dev_info *devip)
+ {
+ 	struct sdebug_host_info *sdhp;
+@@ -3660,6 +3718,7 @@ static int scsi_debug_slave_configure(struct scsi_device *sdp)
+ 	blk_queue_max_segment_size(sdp->request_queue, -1U);
+ 	if (sdebug_no_uld)
+ 		sdp->no_uld_attach = 1;
++	config_cdb_len(sdp);
+ 	return 0;
+ }
+ 
+@@ -4141,6 +4200,7 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+  */
+ module_param_named(add_host, sdebug_add_host, int, S_IRUGO | S_IWUSR);
+ module_param_named(ato, sdebug_ato, int, S_IRUGO);
++module_param_named(cdb_len, sdebug_cdb_len, int, S_IRUGO | S_IWUSR);
+ module_param_named(clustering, sdebug_clustering, bool, S_IRUGO | S_IWUSR);
+ module_param_named(delay, sdebug_jdelay, int, S_IRUGO | S_IWUSR);
+ module_param_named(dev_size_mb, sdebug_dev_size_mb, int, S_IRUGO);
+@@ -4192,6 +4252,7 @@ MODULE_VERSION(SDEBUG_VERSION);
+ 
+ MODULE_PARM_DESC(add_host, "0..127 hosts allowed(def=1)");
+ MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
++MODULE_PARM_DESC(cdb_len, "suggest CDB lengths to drivers (def=10)");
+ MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=0)");
+ MODULE_PARM_DESC(delay, "response delay (def=1 jiffy); 0:imm, -1,-2:tiny");
+ MODULE_PARM_DESC(dev_size_mb, "size in MiB of ram shared by devs(def=8)");
+@@ -4875,6 +4936,24 @@ static ssize_t uuid_ctl_show(struct device_driver *ddp, char *buf)
+ }
+ static DRIVER_ATTR_RO(uuid_ctl);
+ 
++static ssize_t cdb_len_show(struct device_driver *ddp, char *buf)
++{
++	return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_cdb_len);
++}
++static ssize_t cdb_len_store(struct device_driver *ddp, const char *buf,
++			     size_t count)
++{
++	int n;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		sdebug_cdb_len = n;
++		all_config_cdb_len();
++		return count;
++	}
++	return -EINVAL;
++}
++static DRIVER_ATTR_RW(cdb_len);
++
+ 
+ /* Note: The following array creates attribute files in the
+    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
+@@ -4914,6 +4993,7 @@ static struct attribute *sdebug_drv_attrs[] = {
+ 	&driver_attr_ndelay.attr,
+ 	&driver_attr_strict.attr,
+ 	&driver_attr_uuid_ctl.attr,
++	&driver_attr_cdb_len.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(sdebug_drv);
+-- 
+2.14.1
