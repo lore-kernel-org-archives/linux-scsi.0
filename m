@@ -1,188 +1,26 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] scsi_debug: add cdb_len parameter
-Date: Wed, 15 Nov 2017 23:36:50 -0500
-Message-ID: <20171116043650.18903-1-dgilbert@interlog.com>
+From: "cefhqxyplinux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: =?windows-1251?Q?=CA=CB=C8=C5=CD=D2=D1=CA=C8=C5_=C1=C0=C7?=
+        =?windows-1251?Q?=DB!!!_=CF=EE=E4=F0=EE=E1=ED=E5=E5=3A_pr?=
+        =?windows-1251?Q?odawez401=40gmail=2Ecom_=D3=E7=ED=E0=E9?=
+        =?windows-1251?Q?=F2=E5_=EF=EE=E4=F0=EE=E1=ED=EE=F1=F2=E8?=
+        =?windows-1251?Q?!?=
+Date: Thu, 16 Nov 2017 17:12:54 +0600
+Message-ID: <2ED4858C4C98B675A9ACE5582C7E6D17@vger.kernel.org>
+Reply-To: "cefhqxyplinux-scsi@vger.kernel.org" <prodawez401@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1251";
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:38142 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932181AbdKPEgz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Nov 2017 23:36:55 -0500
+Received: from [103.235.171.177] ([103.235.171.177]:50396 "EHLO
+        localhost.localdomain" rhost-flags-FAIL-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750852AbdKPLJe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Nov 2017 06:09:34 -0500
+Received: from 103.235.171.177 (localhost [127.0.0.1])
+        by localhost.localdomain (Postfix) with SMTP id ECBDC1C076D
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2017 13:52:12 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, hare@suse.de
 
-While testing "sd: Micro-optimize READ / WRITE CDB encoding" patches it was
-helpful to check various code paths associated with READ/WRITE 6, 10
-and 16 byte cdb variants. There seems to be no user space "knobs" to
-twiddle use_10_for_rw and friends in the scsi_device structure.
-So add a parameter to scsi_debug called "cdb_len" for this purpose.
-
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi_debug.c | 86 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 83 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 09ba494f8896..a573012524b3 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -6,7 +6,7 @@
-  *  anything out of the ordinary is seen.
-  * ^^^^^^^^^^^^^^^^^^^^^^^ Original ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  *
-- * Copyright (C) 2001 - 2016 Douglas Gilbert
-+ * Copyright (C) 2001 - 2017 Douglas Gilbert
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -61,8 +61,8 @@
- #include "scsi_logging.h"
- 
- /* make sure inq_product_rev string corresponds to this version */
--#define SDEBUG_VERSION "1.86"
--static const char *sdebug_version_date = "20160430";
-+#define SDEBUG_VERSION "1.87"
-+static const char *sdebug_version_date = "20171105";
- 
- #define MY_NAME "scsi_debug"
- 
-@@ -105,6 +105,7 @@ static const char *sdebug_version_date = "20160430";
-  * (id 0) containing 1 logical unit (lun 0). That is 1 device.
-  */
- #define DEF_ATO 1
-+#define DEF_CDB_LEN 10
- #define DEF_JDELAY   1		/* if > 0 unit is a jiffy */
- #define DEF_DEV_SIZE_MB   8
- #define DEF_DIF 0
-@@ -571,6 +572,7 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
- 
- static int sdebug_add_host = DEF_NUM_HOST;
- static int sdebug_ato = DEF_ATO;
-+static int sdebug_cdb_len = DEF_CDB_LEN;
- static int sdebug_jdelay = DEF_JDELAY;	/* if > 0 then unit is jiffies */
- static int sdebug_dev_size_mb = DEF_DEV_SIZE_MB;
- static int sdebug_dif = DEF_DIF;
-@@ -797,6 +799,62 @@ static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
- 	/* return -ENOTTY; // correct return but upsets fdisk */
- }
- 
-+static void config_cdb_len(struct scsi_device * sdev)
-+{
-+	switch (sdebug_cdb_len) {
-+	case 6:	/* suggest 6 byte READ, WRITE and MODE SENSE/SELECT */
-+		sdev->use_10_for_rw = false;
-+		sdev->use_16_for_rw = false;
-+		sdev->use_10_for_ms = false;
-+		break;
-+	case 10: /* suggest 10 byte RWs and 6 byte MODE SENSE/SELECT */
-+		sdev->use_10_for_rw = true;
-+		sdev->use_16_for_rw = false;
-+		sdev->use_10_for_ms = false;
-+		break;
-+	case 12: /* suggest 10 byte RWs and 10 byte MODE SENSE/SELECT */
-+		sdev->use_10_for_rw = true;
-+		sdev->use_16_for_rw = false;
-+		sdev->use_10_for_ms = true;
-+		break;
-+	case 16:
-+		sdev->use_10_for_rw = false;
-+		sdev->use_16_for_rw = true;
-+		sdev->use_10_for_ms = true;
-+		break;
-+	case 32: /* No knobs to suggest this so same as 16 for now */
-+		sdev->use_10_for_rw = false;
-+		sdev->use_16_for_rw = true;
-+		sdev->use_10_for_ms = true;
-+		break;
-+	default:
-+		pr_warn("unexpected cdb_len=%d, force to 10\n",
-+			sdebug_cdb_len);
-+		sdev->use_10_for_rw = true;
-+		sdev->use_16_for_rw = false;
-+		sdev->use_10_for_ms = false;
-+		sdebug_cdb_len = 10;
-+		break;
-+	}
-+}
-+
-+static void all_config_cdb_len(void)
-+{
-+	struct sdebug_host_info *sdbg_host;
-+	struct Scsi_Host *shost;
-+	struct scsi_device *sdev;
-+
-+
-+	spin_lock(&sdebug_host_list_lock);
-+	list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+		shost = sdbg_host->shost;
-+		shost_for_each_device(sdev, shost) {
-+			config_cdb_len(sdev);
-+		}
-+	}
-+	spin_unlock(&sdebug_host_list_lock);
-+}
-+
- static void clear_luns_changed_on_target(struct sdebug_dev_info *devip)
- {
- 	struct sdebug_host_info *sdhp;
-@@ -3660,6 +3718,7 @@ static int scsi_debug_slave_configure(struct scsi_device *sdp)
- 	blk_queue_max_segment_size(sdp->request_queue, -1U);
- 	if (sdebug_no_uld)
- 		sdp->no_uld_attach = 1;
-+	config_cdb_len(sdp);
- 	return 0;
- }
- 
-@@ -4141,6 +4200,7 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
-  */
- module_param_named(add_host, sdebug_add_host, int, S_IRUGO | S_IWUSR);
- module_param_named(ato, sdebug_ato, int, S_IRUGO);
-+module_param_named(cdb_len, sdebug_cdb_len, int, S_IRUGO | S_IWUSR);
- module_param_named(clustering, sdebug_clustering, bool, S_IRUGO | S_IWUSR);
- module_param_named(delay, sdebug_jdelay, int, S_IRUGO | S_IWUSR);
- module_param_named(dev_size_mb, sdebug_dev_size_mb, int, S_IRUGO);
-@@ -4192,6 +4252,7 @@ MODULE_VERSION(SDEBUG_VERSION);
- 
- MODULE_PARM_DESC(add_host, "0..127 hosts allowed(def=1)");
- MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
-+MODULE_PARM_DESC(cdb_len, "suggest CDB lengths to drivers (def=10)");
- MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=0)");
- MODULE_PARM_DESC(delay, "response delay (def=1 jiffy); 0:imm, -1,-2:tiny");
- MODULE_PARM_DESC(dev_size_mb, "size in MiB of ram shared by devs(def=8)");
-@@ -4875,6 +4936,24 @@ static ssize_t uuid_ctl_show(struct device_driver *ddp, char *buf)
- }
- static DRIVER_ATTR_RO(uuid_ctl);
- 
-+static ssize_t cdb_len_show(struct device_driver *ddp, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_cdb_len);
-+}
-+static ssize_t cdb_len_store(struct device_driver *ddp, const char *buf,
-+			     size_t count)
-+{
-+	int n;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		sdebug_cdb_len = n;
-+		all_config_cdb_len();
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+static DRIVER_ATTR_RW(cdb_len);
-+
- 
- /* Note: The following array creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-@@ -4914,6 +4993,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_ndelay.attr,
- 	&driver_attr_strict.attr,
- 	&driver_attr_uuid_ctl.attr,
-+	&driver_attr_cdb_len.attr,
- 	NULL,
- };
- ATTRIBUTE_GROUPS(sdebug_drv);
--- 
-2.14.1
+KLIENTSKIE BAZI!!! Podrobnee: prodawez401@gmail.com Uznaite podrobnosti!
