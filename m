@@ -1,72 +1,96 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 0/2] sd: Fix a deadlock between event checking and device
- removal
-Date: Fri, 17 Nov 2017 17:01:24 +0000
-Message-ID: <1510938082.2846.23.camel@wdc.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH 0/2] sd: Fix a deadlock between event checking and device removal
+Date: Fri, 17 Nov 2017 18:10:56 +0100
+Message-ID: <CAD+HZHXUd2TwfX9WSQad1edmfXfmRNYgQ6N=_3Ny3JyH=q8QXQ@mail.gmail.com>
 References: <a8f0ee8f-7b40-2375-47a4-52f78af29d8d@sandisk.com>
-         <1479016028.17624.16.camel@linux.vnet.ibm.com>
-         <9500e9b2-2d34-099d-aa90-d38fb3feb02e@sandisk.com>
-         <CAD+HZHUVsaDYO7yL2Ct868kdK=dE3PuRmy-Jfp2d2zmEBJPwFg@mail.gmail.com>
-         <1510680828.2280.16.camel@sandisk.com>
-         <CAD+HZHWAUPRxHyG0VRcfTmBs2KbUX30wsa7=HGGApQ94sEj26g@mail.gmail.com>
+ <1479016028.17624.16.camel@linux.vnet.ibm.com> <9500e9b2-2d34-099d-aa90-d38fb3feb02e@sandisk.com>
+ <CAD+HZHUVsaDYO7yL2Ct868kdK=dE3PuRmy-Jfp2d2zmEBJPwFg@mail.gmail.com>
+ <1510680828.2280.16.camel@sandisk.com> <CAD+HZHWAUPRxHyG0VRcfTmBs2KbUX30wsa7=HGGApQ94sEj26g@mail.gmail.com>
+ <1510938082.2846.23.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:15396 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751425AbdKQRB1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Nov 2017 12:01:27 -0500
-In-Reply-To: <CAD+HZHWAUPRxHyG0VRcfTmBs2KbUX30wsa7=HGGApQ94sEj26g@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <EEACB0EFB9A8554FBB0CFD9810DCABC0@namprd04.prod.outlook.com>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:44436 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752133AbdKQRK6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Nov 2017 12:10:58 -0500
+Received: by mail-wr0-f195.google.com with SMTP id l22so2679939wrc.11
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Nov 2017 09:10:57 -0800 (PST)
+In-Reply-To: <1510938082.2846.23.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
 Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "snitzer@redhat.com" <snitzer@redhat.com>
 
-T24gRnJpLCAyMDE3LTExLTE3IGF0IDE2OjE0ICswMTAwLCBKYWNrIFdhbmcgd3JvdGU6DQo+IEkg
-c3VzcGVjdCBjb3VsZCBiZSBtaXNzaW5nIHJ1biBxdWV1ZSBvciBsb3N0IElPLCBJTUhPIGl0J3Mg
-dW5saWtlbHkNCj4gYmVsb3cgZGlzayBwcm9iaW5nIGZpeCB0aGUgYnVnLg0KDQpJZiB0aGUgc3lz
-dGVtIGlzIHN0aWxsIGluIHRoaXMgc3RhdGUgb3IgaWYgeW91IGNhbiByZXByb2R1Y2UgdGhpcyBp
-c3N1ZSwNCnBsZWFzZSBjb2xsZWN0IGFuZCBhbmFseXplIHRoZSBpbmZvcm1hdGlvbiB1bmRlciAv
-c3lzL2tlcm5lbC9kZWJ1Zy9ibG9jay4NClRoYXQncyB0aGUgb25seSB3YXkgSSBrbm93IG9mIHRv
-IHZlcmlmeSB3aGV0aGVyIG9yIG5vdCBhIGxvY2t1cCBoYXMgYmVlbg0KY2F1c2VkIGJ5IGEgbWlz
-c2luZyBxdWV1ZSBydW4uIElmIHRoZSBmb2xsb3dpbmcgY29tbWFuZCByZXNvbHZlcyB0aGUgbG9j
-a3VwDQp0aGVuIHRoZSByb290IGNhdXNlIGlzIGRlZmluaXRlbHkgYSBtaXNzaW5nIHF1ZXVlIHJ1
-bjoNCg0KZm9yIGYgaW4gL3N5cy9rZXJuZWwvZGVidWcvYmxvY2svKjsgZG8gZWNobyBraWNrID4k
-Zi9zdGF0ZTsgZG9uZQ0KDQpXaGVuIGFuYWx5emluZyBxdWV1ZSBsb2NrdXBzIGl0J3MgaW1wb3J0
-YW50IHRvIGFsc28gaGF2ZSBpbmZvcm1hdGlvbiBhYm91dA0KcmVxdWVzdHMgdGhhdCBoYXZlIGJl
-ZW4gcXVldWVkIGJ1dCB0aGF0IGhhdmUgbm90IHlldCBiZWVuIHN0YXJ0ZWQuIEknbSB1c2luZw0K
-dGhlIGZvbGxvd2luZyBwYXRjaCBsb2NhbGx5ICh3aWxsIHNwbGl0IHRoaXMgcGF0Y2ggYW5kIHN1
-Ym1pdCBpdCBwcm9wZXJseSB3aGVuDQpJIGhhdmUgdGhlIHRpbWUpOg0KDQpkaWZmIC0tZ2l0IGEv
-YmxvY2svYmxrLW1xLWRlYnVnZnMuYyBiL2Jsb2NrL2Jsay1tcS1kZWJ1Z2ZzLmMNCmluZGV4IDI5
-ZTg0NTE5MzFmZi4uM2M5ZDY0NzkzODY1IDEwMDY0NA0KLS0tIGEvYmxvY2svYmxrLW1xLWRlYnVn
-ZnMuYw0KKysrIGIvYmxvY2svYmxrLW1xLWRlYnVnZnMuYw0KQEAgLTQwOCw4ICs0MDgsNyBAQCBz
-dGF0aWMgdm9pZCBoY3R4X3Nob3dfYnVzeV9ycShzdHJ1Y3QgcmVxdWVzdCAqcnEsIHZvaWQgKmRh
-dGEsIGJvb2wgcmVzZXJ2ZWQpDQogew0KIAljb25zdCBzdHJ1Y3Qgc2hvd19idXN5X3BhcmFtcyAq
-cGFyYW1zID0gZGF0YTsNCiANCi0JaWYgKGJsa19tcV9tYXBfcXVldWUocnEtPnEsIHJxLT5tcV9j
-dHgtPmNwdSkgPT0gcGFyYW1zLT5oY3R4ICYmDQotCSAgICB0ZXN0X2JpdChSRVFfQVRPTV9TVEFS
-VEVELCAmcnEtPmF0b21pY19mbGFncykpDQorCWlmIChibGtfbXFfbWFwX3F1ZXVlKHJxLT5xLCBy
-cS0+bXFfY3R4LT5jcHUpID09IHBhcmFtcy0+aGN0eCkNCiAJCV9fYmxrX21xX2RlYnVnZnNfcnFf
-c2hvdyhwYXJhbXMtPm0sDQogCQkJCQkgbGlzdF9lbnRyeV9ycSgmcnEtPnF1ZXVlbGlzdCkpOw0K
-IH0NCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9kZWJ1Z2ZzLmMgYi9kcml2ZXJzL3Nj
-c2kvc2NzaV9kZWJ1Z2ZzLmMNCmluZGV4IDAxZjA4YzAzZjJjMS4uNDFkMWUzYTAxNzg2IDEwMDY0
-NA0KLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfZGVidWdmcy5jDQorKysgYi9kcml2ZXJzL3Njc2kv
-c2NzaV9kZWJ1Z2ZzLmMNCkBAIC03LDEwICs3LDE0IEBADQogdm9pZCBzY3NpX3Nob3dfcnEoc3Ry
-dWN0IHNlcV9maWxlICptLCBzdHJ1Y3QgcmVxdWVzdCAqcnEpDQogew0KIAlzdHJ1Y3Qgc2NzaV9j
-bW5kICpjbWQgPSBjb250YWluZXJfb2Yoc2NzaV9yZXEocnEpLCB0eXBlb2YoKmNtZCksIHJlcSk7
-DQotCWludCBtc2VjcyA9IGppZmZpZXNfdG9fbXNlY3MoamlmZmllcyAtIGNtZC0+amlmZmllc19h
-dF9hbGxvYyk7DQotCWNoYXIgYnVmWzgwXTsNCisJaW50IGFsbG9jX21zID0gamlmZmllc190b19t
-c2VjcyhqaWZmaWVzIC0gY21kLT5qaWZmaWVzX2F0X2FsbG9jKTsNCisJaW50IHRpbWVvdXRfbXMg
-PSBqaWZmaWVzX3RvX21zZWNzKHJxLT50aW1lb3V0KTsNCisJY29uc3QgdTggKmNvbnN0IGNkYiA9
-IFJFQURfT05DRShjbWQtPmNtbmQpOw0KKwljaGFyIGJ1Zls4MF0gPSAiKD8pIjsNCiANCi0JX19z
-Y3NpX2Zvcm1hdF9jb21tYW5kKGJ1Ziwgc2l6ZW9mKGJ1ZiksIGNtZC0+Y21uZCwgY21kLT5jbWRf
-bGVuKTsNCi0Jc2VxX3ByaW50ZihtLCAiLCAuY21kPSVzLCAucmV0cmllcz0lZCwgYWxsb2NhdGVk
-ICVkLiUwM2QgcyBhZ28iLCBidWYsDQotCQkgICBjbWQtPnJldHJpZXMsIG1zZWNzIC8gMTAwMCwg
-bXNlY3MgJSAxMDAwKTsNCisJaWYgKChjbWQtPmZsYWdzICYgU0NNRF9JTklUSUFMSVpFRCkgJiYg
-Y2RiKQ0KKwkJX19zY3NpX2Zvcm1hdF9jb21tYW5kKGJ1Ziwgc2l6ZW9mKGJ1ZiksIGNkYiwgY21k
-LT5jbWRfbGVuKTsNCisJc2VxX3ByaW50ZihtLCAiLCAuY21kPSVzLCAucmV0cmllcz0lZCwgLnRp
-bWVvdXQ9JWQuJTAzZCwgYWxsb2NhdGVkICVkLiUwM2QgcyBhZ28iLA0KKwkJICAgYnVmLCBjbWQt
-PnJldHJpZXMsIHRpbWVvdXRfbXMgLyAxMDAwLCB0aW1lb3V0X21zICUgMTAwMCwNCisJCSAgIGFs
-bG9jX21zIC8gMTAwMCwgYWxsb2NfbXMgJSAxMDAwKTsNCiB9
+2017-11-17 18:01 GMT+01:00 Bart Van Assche <Bart.VanAssche@wdc.com>:
+> On Fri, 2017-11-17 at 16:14 +0100, Jack Wang wrote:
+>> I suspect could be missing run queue or lost IO, IMHO it's unlikely
+>> below disk probing fix the bug.
+>
+> If the system is still in this state or if you can reproduce this issue,
+> please collect and analyze the information under /sys/kernel/debug/block.
+> That's the only way I know of to verify whether or not a lockup has been
+> caused by a missing queue run. If the following command resolves the lockup
+> then the root cause is definitely a missing queue run:
+
+It's production server, I was too late to gather more information.
+kernel is 4.4.36/4.4.50
+Request mode for both multipath and scsi, no multiqueue involvement.
+
+I found thread back to 2012, you also report this problem in 3.2..
+https://lkml.org/lkml/2012/1/3/163
+
+I might be a very old bug.
+
+I will try harder to reproduce.
+
+Thanks,
+Jack
+
+
+>
+> for f in /sys/kernel/debug/block/*; do echo kick >$f/state; done
+>
+> When analyzing queue lockups it's important to also have information about
+> requests that have been queued but that have not yet been started. I'm using
+> the following patch locally (will split this patch and submit it properly when
+> I have the time):
+>
+> diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+> index 29e8451931ff..3c9d64793865 100644
+> --- a/block/blk-mq-debugfs.c
+> +++ b/block/blk-mq-debugfs.c
+> @@ -408,8 +408,7 @@ static void hctx_show_busy_rq(struct request *rq, void *data, bool reserved)
+>  {
+>         const struct show_busy_params *params = data;
+>
+> -       if (blk_mq_map_queue(rq->q, rq->mq_ctx->cpu) == params->hctx &&
+> -           test_bit(REQ_ATOM_STARTED, &rq->atomic_flags))
+> +       if (blk_mq_map_queue(rq->q, rq->mq_ctx->cpu) == params->hctx)
+>                 __blk_mq_debugfs_rq_show(params->m,
+>                                          list_entry_rq(&rq->queuelist));
+>  }
+> diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
+> index 01f08c03f2c1..41d1e3a01786 100644
+> --- a/drivers/scsi/scsi_debugfs.c
+> +++ b/drivers/scsi/scsi_debugfs.c
+> @@ -7,10 +7,14 @@
+>  void scsi_show_rq(struct seq_file *m, struct request *rq)
+>  {
+>         struct scsi_cmnd *cmd = container_of(scsi_req(rq), typeof(*cmd), req);
+> -       int msecs = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
+> -       char buf[80];
+> +       int alloc_ms = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
+> +       int timeout_ms = jiffies_to_msecs(rq->timeout);
+> +       const u8 *const cdb = READ_ONCE(cmd->cmnd);
+> +       char buf[80] = "(?)";
+>
+> -       __scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
+> -       seq_printf(m, ", .cmd=%s, .retries=%d, allocated %d.%03d s ago", buf,
+> -                  cmd->retries, msecs / 1000, msecs % 1000);
+> +       if ((cmd->flags & SCMD_INITIALIZED) && cdb)
+> +               __scsi_format_command(buf, sizeof(buf), cdb, cmd->cmd_len);
+> +       seq_printf(m, ", .cmd=%s, .retries=%d, .timeout=%d.%03d, allocated %d.%03d s ago",
+> +                  buf, cmd->retries, timeout_ms / 1000, timeout_ms % 1000,
+> +                  alloc_ms / 1000, alloc_ms % 1000);
+>  }
