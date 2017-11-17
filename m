@@ -1,49 +1,54 @@
 From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH] scsi_devinfo: apply to HP XP the same flags as Hitachi VSP
-Date: Fri, 17 Nov 2017 21:31:36 +0100
-Message-ID: <20171117203136.8833-1-xose.vazquez@gmail.com>
+Subject: [PATCH] scsi_dh: add new rdac devices
+Date: Fri, 17 Nov 2017 22:05:13 +0100
+Message-ID: <20171117210513.9667-1-xose.vazquez@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:38204 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934775AbdKQUbk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Nov 2017 15:31:40 -0500
-Received: by mail-wm0-f68.google.com with SMTP id 128so217977wmo.3
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Nov 2017 12:31:40 -0800 (PST)
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:45839 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762042AbdKQVFS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Nov 2017 16:05:18 -0500
+Received: by mail-wr0-f196.google.com with SMTP id a63so3152962wrc.12
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Nov 2017 13:05:17 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Hannes Reinecke <hare@suse.de>, Takahiro Yasui <takahiro.yasui@hds.com>, Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
-56f3d383f modified some Hitachi entries:
+Add IBM 3542 and 3552, arrays: FAStT200 and FAStT500.
+Add full STK OPENstorage family, arrays: 9176, D173, D178, D210, D220, D240 and D280.
+Add STK BladeCtlr family, arrays: B210, B220, B240 and B280.
 
-   HITACHI is always supporting VPD pages, even though it's claiming to
-   support SCSI Revision 3 only.
-~~~
+These changes were done in multipath-tools time ago.
 
-The same should have been done also for HP-rebranded.
-
+Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: Takahiro Yasui <takahiro.yasui@hds.com>
-Cc: Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
 Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
 Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- drivers/scsi/scsi_devinfo.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_dh.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 320d0a81358d..3ab4d337bf55 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -182,7 +182,7 @@ static struct {
- 	{"HITACHI", "6586-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HITACHI", "6588-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
--	{"HP", "OPEN-", "*", BLIST_REPORTLUN2}, /* HP XP Arrays */
-+	{"HP", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES}, /* HP XP Arrays */
- 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
- 	{"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 2b785d09d5bd..b88b5dbbc444 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -56,10 +56,13 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
+ 	{"IBM", "1815",			"rdac", },
+ 	{"IBM", "1818",			"rdac", },
+ 	{"IBM", "3526",			"rdac", },
++	{"IBM", "3542",			"rdac", },
++	{"IBM", "3552",			"rdac", },
+ 	{"SGI", "TP9",			"rdac", },
+ 	{"SGI", "IS",			"rdac", },
+-	{"STK", "OPENstorage D280",	"rdac", },
++	{"STK", "OPENstorage",		"rdac", },
+ 	{"STK", "FLEXLINE 380",		"rdac", },
++	{"STK", "BladeCtlr",		"rdac", },
+ 	{"SUN", "CSM",			"rdac", },
+ 	{"SUN", "LCSM100",		"rdac", },
+ 	{"SUN", "STK6580_6780",		"rdac", },
 -- 
 2.14.3
