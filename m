@@ -1,52 +1,52 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] scsi: ufs: ufshcd: fix potential NULL pointer dereference in
- ufshcd_config_vreg
-Date: Mon, 20 Nov 2017 08:12:29 -0600
-Message-ID: <20171120141229.GA2130@embeddedor.com>
+From: Vincent Minet <v.minet@criteo.com>
+Subject: [PATCH] scsi: smartpqi: put controller in SIS mode at shutdown
+Date: Mon, 20 Nov 2017 19:25:05 +0100
+Message-ID: <20171120182505.12947-1-v.minet@criteo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx08-00287e01.pphosted.com ([62.209.51.156]:52080 "EHLO
+        mx07-00287e01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751902AbdKTSqC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Nov 2017 13:46:02 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: esc.storagedev@microsemi.com, Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-_vreg_ is being dereferenced before it is null checked, hence there is a
-potential null pointer dereference.
+Since commit 162d7753fce9 ("scsi: smartpqi: ensure controller is in SIS
+mode at init"), the driver is able to work even if the controller is in
+PQI mode at startup. This made it possible to keep using the controller
+across a kexec.
 
-Fix this by moving the pointer dereference after _vreg_ has been null
-checked.
+But kernels built before that patch still expect the controller to be in
+SIS mode at startup. They will fail when kexec'd. To handle that case,
+this patch reverts the controller to SIS mode during the ->shutdown()
+callback.
 
-This issue was detected with the help of Coccinelle.
-
-Fixes: aa4976130934 ("ufs: Add regulator enable support")
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+Signed-off-by: Vincent Minet <v.minet@criteo.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 011c336..a355d98 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6559,12 +6559,15 @@ static int ufshcd_config_vreg(struct device *dev,
- 		struct ufs_vreg *vreg, bool on)
- {
- 	int ret = 0;
--	struct regulator *reg = vreg->reg;
--	const char *name = vreg->name;
-+	struct regulator *reg;
-+	const char *name;
- 	int min_uV, uA_load;
- 
- 	BUG_ON(!vreg);
- 
-+	reg = vreg->reg;
-+	name = vreg->name;
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index b2880c7709e6..5e898dd9ae2b 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6699,7 +6699,12 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
+ 	 * storage.
+ 	 */
+ 	rc = pqi_flush_cache(ctrl_info, SHUTDOWN);
+-	pqi_reset(ctrl_info);
 +
- 	if (regulator_count_voltages(reg) > 0) {
- 		min_uV = on ? vreg->min_uV : 0;
- 		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
++	if (ctrl_info->pqi_mode_enabled)
++		pqi_revert_to_sis_mode(ctrl_info);
++	else
++		pqi_reset(ctrl_info);
++
+ 	if (rc == 0)
+ 		return;
+ 
 -- 
-2.7.4
+2.15.0
