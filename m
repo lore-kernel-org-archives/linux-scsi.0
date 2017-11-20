@@ -1,60 +1,103 @@
-From: Stuart Hayes <stuart.w.hayes@gmail.com>
-Subject: [PATCH] scsi_error: ensure EH wakes up on error to prevent host
- getting stuck
-Date: Mon, 20 Nov 2017 13:11:50 -0600
-Message-ID: <f771349c-e391-3d67-4b22-86674fcc7647@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Joshua_Giles@Dell.com
+From: Romain Perier <romain.perier@gmail.com>
+Subject: [PATCH v15 0/5] Replace PCI pool by DMA pool API
+Date: Mon, 20 Nov 2017 20:32:42 +0100
+Message-ID: <20171120193247.8187-1-romain.perier@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:33633 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752057AbdKTTdG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 14:33:06 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Romain Perier <romain.perier@gmail.com>
 
-When a command is added to the host's error handler command queue, there is a chance that the error handler will not be woken up.  This can happen when one CPU is running scsi_eh_scmd_add() at the same time as another CPU is running scsi_device_unbusy() for a different command on the same host.  Each function changes one value, and then looks at the value of a variable that the other function has just changed, but if they both see stale data, neither will actually wake up the error handler.
+The current PCI pool API are simple macro functions direct expanded to
+the appropriate dma pool functions. The prototypes are almost the same
+and semantically, they are very similar. I propose to use the DMA pool
+API directly and get rid of the old API.
 
-In scsi_eh_scmd_add, host_failed is incremented, then scsi_eh_wakeup() is called, which sees that host_busy is still 2, so it doesn't actually wake up the handler.  Meanwhile, in scsi_device_unbusy(), host_busy is decremented, and then it sees that host_failed is 0, so it doesn't even call scsi_eh_wakeup().
+This set of patches, replaces the old API by the dma pool API
+and remove the defines.
 
-Signed-off-by: Stuart Hyaes <stuart.w.hayes@gmail.com>
+Changes in v15:
+- Rebased series onto next-20171120
+- Added patch 04/05 for mpt3sas scsi driver
 
----
-diff -pur linux-4.14/drivers/scsi/scsi_error.c linux-4.14-stu/drivers/scsi/scsi_error.c
---- linux-4.14/drivers/scsi/scsi_error.c	2017-11-12 12:46:13.000000000 -0600
-+++ linux-4.14-stu/drivers/scsi/scsi_error.c	2017-11-17 14:22:19.230867923 -0600
-@@ -243,6 +243,10 @@ void scsi_eh_scmd_add(struct scsi_cmnd *
- 	scsi_eh_reset(scmd);
- 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
- 	shost->host_failed++;
-+	/*
-+	 * See scsi_device_unbusy() for explanation of smp_mb().
-+	 */
-+	smp_mb();
- 	scsi_eh_wakeup(shost);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
-diff -pur linux-4.14/drivers/scsi/scsi_lib.c linux-4.14-stu/drivers/scsi/scsi_lib.c
---- linux-4.14/drivers/scsi/scsi_lib.c	2017-11-12 12:46:13.000000000 -0600
-+++ linux-4.14-stu/drivers/scsi/scsi_lib.c	2017-11-17 14:22:15.814867833 -0600
-@@ -325,6 +325,15 @@ void scsi_device_unbusy(struct scsi_devi
- 	unsigned long flags;
- 
- 	atomic_dec(&shost->host_busy);
-+	
-+	/* This function changes host_busy and looks at host_failed, while
-+	 * scsi_eh_scmd_add() updates host_failed and looks at host_busy (in
-+	 * scsi_eh_wakeup())... if these happen simultaneously without the smp
-+	 * memory barrier, each can see the old value, such that neither will
-+	 * wake up the error handler, which can cause the host controller to
-+	 * be hung forever.
-+	 */
-+	smp_mb();
- 	if (starget->can_queue > 0)
- 		atomic_dec(&starget->target_busy);
- 
+Changes in v14:
+- Rebased series onto next-20171018
+- Rebased patch 03/05 on latest driver
 
+Changes in v13:
+- Rebased series onto next-20170906
+- Added a new commit for the hinic ethernet driver
+- Remove previously merged patches
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+Changes in v12:
+- Rebased series onto next-20170822
+
+Changes in v11:
+- Rebased series onto next-20170809
+- Removed patches 08-14, these have been merged.
+
+Changes in v10:
+- Rebased series onto next-20170706
+- I have fixed and improved patch "scsi: megaraid: Replace PCI pool old API"
+
+Changes in v9:
+- Rebased series onto next-20170522
+- I have fixed and improved the patch for lpfc driver
+
+Changes in v8:
+- Rebased series onto next-20170428
+
+Changes in v7:
+- Rebased series onto next-20170416
+- Added Acked-by, Tested-by and Reviwed-by tags
+
+Changes in v6:
+- Fixed an issue reported by kbuild test robot about changes in DAC960
+- Removed patches 15/19,16/19,17/19,18/19. They have been merged by Greg
+- Added Acked-by Tags
+
+Changes in v5:
+- Re-worded the cover letter (remove sentence about checkpatch.pl)
+- Rebased series onto next-20170308
+- Fix typos in commit message
+- Added Acked-by Tags
+
+Changes in v4:
+- Rebased series onto next-20170301
+- Removed patch 20/20: checks done by checkpath.pl, no longer required.
+  Thanks to Peter and Joe for their feedbacks.
+- Added Reviewed-by tags
+
+Changes in v3:
+- Rebased series onto next-20170224
+- Fix checkpath.pl reports for patch 11/20 and patch 12/20
+- Remove prefix RFC
+Changes in v2:
+- Introduced patch 18/20
+- Fixed cosmetic changes: spaces before brace, live over 80 characters
+- Removed some of the check for NULL pointers before calling dma_pool_destroy
+- Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
+- Added Tested-by and Acked-by tags
+
+Romain Perier (5):
+  block: DAC960: Replace PCI pool old API
+  net: e100: Replace PCI pool old API
+  hinic: Replace PCI pool old API
+  scsi: mpt3sas: Replace PCI pool old API
+  PCI: Remove PCI pool macro functions
+
+ drivers/block/DAC960.c                            | 38 +++++++++++------------
+ drivers/block/DAC960.h                            |  4 +--
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+ drivers/net/ethernet/intel/e100.c                 | 12 +++----
+ drivers/scsi/mpt3sas/mpt3sas_base.c               | 12 +++----
+ include/linux/pci.h                               |  9 ------
+ 7 files changed, 38 insertions(+), 49 deletions(-)
+
+-- 
+2.14.1
