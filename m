@@ -1,29 +1,39 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] Some fixes to aacraid
-Date: Mon, 20 Nov 2017 22:34:11 -0500
-Message-ID: <yq1vai4l2z0.fsf@oracle.com>
-References: <20171117211455.29031-1-gpiccoli@linux.vnet.ibm.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: Re: [PATCH 0/13] scsi: arcmsr: add some driver options and support
+ new adapter ARC-1884
+Date: Tue, 21 Nov 2017 03:48:47 +0800
+Message-ID: <1511207327.11695.9.camel@Centos6.3-64>
+References: <1510184279.4523.60.camel@Centos6.3-64>
+         <yq160a4nxih.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36811 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752670AbdKUDe3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 22:34:29 -0500
-In-Reply-To: <20171117211455.29031-1-gpiccoli@linux.vnet.ibm.com> (Guilherme
-        G. Piccoli's message of "Fri, 17 Nov 2017 19:14:52 -0200")
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:46526 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752322AbdKUDsz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 22:48:55 -0500
+Received: by mail-pg0-f50.google.com with SMTP id z184so9102151pgd.13
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 19:48:55 -0800 (PST)
+In-Reply-To: <yq160a4nxih.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: aacraid@microsemi.com, linux-scsi@vger.kernel.org, david.carroll@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, gpiccoli@protonmail.ch
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hare@suse.de, dan.carpenter@oracle.com, hch@infradead.org
 
+On Mon, 2017-11-20 at 22:03 -0500, Martin K. Petersen wrote:
+> Ching,
+> 
+> > The following patches apply to Martin's 4.15/scsi-queue.
+> 
+> Applied to 4.16/scsi-queue. Thank you!
+> 
+Hi Martin,
 
-Guilherme,
+Thank you for response.
+These patches can apply to 4.16/scsi-queue is very good.
 
-> This series presents 3 small fixes for aacraid driver.  The most
-> important is the crash prevention, IMHO.
+It will be very appreciation if you can spend a little time to review our driver's patch. Providing a better software driver is you and our common target. We will keep going.
 
-Applied to 4.15/scsi-fixes. Thank you!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+Ching
