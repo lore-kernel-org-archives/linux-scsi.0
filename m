@@ -1,78 +1,57 @@
-From: Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH v15 2/5] net: e100: Replace PCI pool old API
-Date: Mon, 20 Nov 2017 20:32:44 +0100
-Message-ID: <20171120193247.8187-3-romain.perier@gmail.com>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v15 5/5] PCI: Remove PCI pool macro functions
+Date: Mon, 20 Nov 2017 14:34:49 -0600
+Message-ID: <20171120203449.GA16362@bhelgaas-glaptop.roam.corp.google.com>
 References: <20171120193247.8187-1-romain.perier@gmail.com>
+ <20171120193247.8187-6-romain.perier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20171120193247.8187-6-romain.perier@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Romain Perier <romain.perier@collabora.com>
+To: Romain Perier <romain.perier@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Romain Perier <romain.perier@collabora.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Romain Perier <romain.perier@collabora.com>
+On Mon, Nov 20, 2017 at 08:32:47PM +0100, Romain Perier wrote:
+> From: Romain Perier <romain.perier@collabora.com>
+> 
+> Now that all the drivers use dma pool API, we can remove the macro
+> functions for PCI pool.
+> 
+> Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+I already acked this once on Oct 24.  Please keep that ack and include
+it in any future postings so I don't have to deal with this again.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/net/ethernet/intel/e100.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
-index 44b3937f7e81..29486478836e 100644
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -607,7 +607,7 @@ struct nic {
- 	struct mem *mem;
- 	dma_addr_t dma_addr;
- 
--	struct pci_pool *cbs_pool;
-+	struct dma_pool *cbs_pool;
- 	dma_addr_t cbs_dma_addr;
- 	u8 adaptive_ifs;
- 	u8 tx_threshold;
-@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
- 			nic->cb_to_clean = nic->cb_to_clean->next;
- 			nic->cbs_avail++;
- 		}
--		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
-+		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
- 		nic->cbs = NULL;
- 		nic->cbs_avail = 0;
- 	}
-@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
- 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
- 	nic->cbs_avail = 0;
- 
--	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
-+	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
- 				   &nic->cbs_dma_addr);
- 	if (!nic->cbs)
- 		return -ENOMEM;
-@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
- 		goto err_out_free;
- 	}
--	nic->cbs_pool = pci_pool_create(netdev->name,
--			   nic->pdev,
-+	nic->cbs_pool = dma_pool_create(netdev->name,
-+			   &nic->pdev->dev,
- 			   nic->params.cbs.max * sizeof(struct cb),
- 			   sizeof(u32),
- 			   0);
-@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
- 		unregister_netdev(netdev);
- 		e100_free(nic);
- 		pci_iounmap(pdev, nic->csr);
--		pci_pool_destroy(nic->cbs_pool);
-+		dma_pool_destroy(nic->cbs_pool);
- 		free_netdev(netdev);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
--- 
-2.14.1
+> ---
+>  include/linux/pci.h | 9 ---------
+>  1 file changed, 9 deletions(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 96c94980d1ff..d03b4a20033d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1324,15 +1324,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+>  #include <linux/pci-dma.h>
+>  #include <linux/dmapool.h>
+>  
+> -#define	pci_pool dma_pool
+> -#define pci_pool_create(name, pdev, size, align, allocation) \
+> -		dma_pool_create(name, &pdev->dev, size, align, allocation)
+> -#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
+> -#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
+> -#define	pci_pool_zalloc(pool, flags, handle) \
+> -		dma_pool_zalloc(pool, flags, handle)
+> -#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+> -
+>  struct msix_entry {
+>  	u32	vector;	/* kernel uses to write allocated vector */
+>  	u16	entry;	/* driver uses to specify entry, OS writes */
+> -- 
+> 2.14.1
+> 
