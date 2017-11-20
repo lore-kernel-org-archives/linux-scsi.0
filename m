@@ -1,55 +1,52 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 17/17] lpfc: update driver version to 11.4.0.5
-Date: Mon, 20 Nov 2017 14:40:53 +0100
-Message-ID: <4b929b70-3f32-b4bb-10e2-e82e64624141@suse.de>
-References: <20171110010834.4542-1-jsmart2021@gmail.com>
- <20171110010834.4542-18-jsmart2021@gmail.com>
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] scsi: ufs: ufshcd: fix potential NULL pointer dereference in
+ ufshcd_config_vreg
+Date: Mon, 20 Nov 2017 08:12:29 -0600
+Message-ID: <20171120141229.GA2130@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58895 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751187AbdKTNkz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Nov 2017 08:40:55 -0500
-In-Reply-To: <20171110010834.4542-18-jsmart2021@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On 11/10/2017 02:08 AM, James Smart wrote:
-> Update the driver version to 11.4.0.5
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc_version.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-> index e0181371af09..cc2f5cec98c5 100644
-> --- a/drivers/scsi/lpfc/lpfc_version.h
-> +++ b/drivers/scsi/lpfc/lpfc_version.h
-> @@ -20,7 +20,7 @@
->   * included with this package.                                     *
->   *******************************************************************/
->  
-> -#define LPFC_DRIVER_VERSION "11.4.0.4"
-> +#define LPFC_DRIVER_VERSION "11.4.0.5"
->  #define LPFC_DRIVER_NAME		"lpfc"
->  
->  /* Used for SLI 2/3 */
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+_vreg_ is being dereferenced before it is null checked, hence there is a
+potential null pointer dereference.
 
-Cheers,
+Fix this by moving the pointer dereference after _vreg_ has been null
+checked.
 
-Hannes
+This issue was detected with the help of Coccinelle.
+
+Fixes: aa4976130934 ("ufs: Add regulator enable support")
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 011c336..a355d98 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6559,12 +6559,15 @@ static int ufshcd_config_vreg(struct device *dev,
+ 		struct ufs_vreg *vreg, bool on)
+ {
+ 	int ret = 0;
+-	struct regulator *reg = vreg->reg;
+-	const char *name = vreg->name;
++	struct regulator *reg;
++	const char *name;
+ 	int min_uV, uA_load;
+ 
+ 	BUG_ON(!vreg);
+ 
++	reg = vreg->reg;
++	name = vreg->name;
++
+ 	if (regulator_count_voltages(reg) > 0) {
+ 		min_uV = on ? vreg->min_uV : 0;
+ 		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.7.4
