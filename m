@@ -1,57 +1,262 @@
-From: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v15 5/5] PCI: Remove PCI pool macro functions
-Date: Mon, 20 Nov 2017 14:34:49 -0600
-Message-ID: <20171120203449.GA16362@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171120193247.8187-1-romain.perier@gmail.com>
- <20171120193247.8187-6-romain.perier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171120193247.8187-6-romain.perier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Romain Perier <romain.perier@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Romain Perier <romain.perier@collabora.com>
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v3 03/17] lpfc: Handle XRI_ABORTED_CQE in soft IRQ
+Date: Mon, 20 Nov 2017 16:00:30 -0800
+Message-ID: <20171121000044.27702-4-jsmart2021@gmail.com>
+References: <20171121000044.27702-1-jsmart2021@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:42443 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751282AbdKUAA5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:00:57 -0500
+Received: by mail-qk0-f193.google.com with SMTP id a194so9753375qkc.9
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:00:57 -0800 (PST)
+In-Reply-To: <20171121000044.27702-1-jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Mon, Nov 20, 2017 at 08:32:47PM +0100, Romain Perier wrote:
-> From: Romain Perier <romain.perier@collabora.com>
-> 
-> Now that all the drivers use dma pool API, we can remove the macro
-> functions for PCI pool.
-> 
-> Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
+XRI_ABORTED_CQE completions were not being handled in the fast path.
+They were being queued and deferred to the lpfc worker thread
+for processing. This is an artifact of the driver design prior
+to moving queue processing out of the isr and into a workq
+element. Now that queue processing is already in a deferred context,
+remove this artifact and process them directly.
 
-I already acked this once on Oct 24.  Please keep that ack and include
-it in any future postings so I don't have to deal with this again.
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/lpfc/lpfc.h         |  1 -
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  2 -
+ drivers/scsi/lpfc/lpfc_init.c    |  8 ----
+ drivers/scsi/lpfc/lpfc_sli.c     | 97 +++++++++++++++-------------------------
+ drivers/scsi/lpfc/lpfc_sli4.h    |  2 -
+ 5 files changed, 35 insertions(+), 75 deletions(-)
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  include/linux/pci.h | 9 ---------
->  1 file changed, 9 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 96c94980d1ff..d03b4a20033d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1324,15 +1324,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
->  #include <linux/pci-dma.h>
->  #include <linux/dmapool.h>
->  
-> -#define	pci_pool dma_pool
-> -#define pci_pool_create(name, pdev, size, align, allocation) \
-> -		dma_pool_create(name, &pdev->dev, size, align, allocation)
-> -#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
-> -#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
-> -#define	pci_pool_zalloc(pool, flags, handle) \
-> -		dma_pool_zalloc(pool, flags, handle)
-> -#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
-> -
->  struct msix_entry {
->  	u32	vector;	/* kernel uses to write allocated vector */
->  	u16	entry;	/* driver uses to specify entry, OS writes */
-> -- 
-> 2.14.1
-> 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 231302273257..7219b6ce5dc7 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -705,7 +705,6 @@ struct lpfc_hba {
+ 					 * capability
+ 					 */
+ #define HBA_NVME_IOQ_FLUSH      0x80000 /* NVME IO queues flushed. */
+-#define NVME_XRI_ABORT_EVENT	0x100000
+ 
+ 	uint32_t fcp_ring_in_use; /* When polling test if intr-hndlr active*/
+ 	struct lpfc_dmabuf slim2p;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index d9a03beb76a4..3468257bda02 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -640,8 +640,6 @@ lpfc_work_done(struct lpfc_hba *phba)
+ 			lpfc_handle_rrq_active(phba);
+ 		if (phba->hba_flag & FCP_XRI_ABORT_EVENT)
+ 			lpfc_sli4_fcp_xri_abort_event_proc(phba);
+-		if (phba->hba_flag & NVME_XRI_ABORT_EVENT)
+-			lpfc_sli4_nvme_xri_abort_event_proc(phba);
+ 		if (phba->hba_flag & ELS_XRI_ABORT_EVENT)
+ 			lpfc_sli4_els_xri_abort_event_proc(phba);
+ 		if (phba->hba_flag & ASYNC_EVENT)
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 52c039e9f4a4..745aff753396 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5954,9 +5954,6 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 		INIT_LIST_HEAD(&phba->sli4_hba.lpfc_abts_nvme_buf_list);
+ 		INIT_LIST_HEAD(&phba->sli4_hba.lpfc_abts_nvmet_ctx_list);
+ 		INIT_LIST_HEAD(&phba->sli4_hba.lpfc_nvmet_io_wait_list);
+-
+-		/* Fast-path XRI aborted CQ Event work queue list */
+-		INIT_LIST_HEAD(&phba->sli4_hba.sp_nvme_xri_aborted_work_queue);
+ 	}
+ 
+ 	/* This abort list used by worker thread */
+@@ -9199,11 +9196,6 @@ lpfc_sli4_cq_event_release_all(struct lpfc_hba *phba)
+ 	/* Pending ELS XRI abort events */
+ 	list_splice_init(&phba->sli4_hba.sp_els_xri_aborted_work_queue,
+ 			 &cqelist);
+-	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
+-		/* Pending NVME XRI abort events */
+-		list_splice_init(&phba->sli4_hba.sp_nvme_xri_aborted_work_queue,
+-				 &cqelist);
+-	}
+ 	/* Pending asynnc events */
+ 	list_splice_init(&phba->sli4_hba.sp_asynce_work_queue,
+ 			 &cqelist);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 2ad444ce7529..4b76db19ef73 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -12318,41 +12318,6 @@ void lpfc_sli4_fcp_xri_abort_event_proc(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli4_nvme_xri_abort_event_proc - Process nvme xri abort event
+- * @phba: pointer to lpfc hba data structure.
+- *
+- * This routine is invoked by the worker thread to process all the pending
+- * SLI4 NVME abort XRI events.
+- **/
+-void lpfc_sli4_nvme_xri_abort_event_proc(struct lpfc_hba *phba)
+-{
+-	struct lpfc_cq_event *cq_event;
+-
+-	/* First, declare the fcp xri abort event has been handled */
+-	spin_lock_irq(&phba->hbalock);
+-	phba->hba_flag &= ~NVME_XRI_ABORT_EVENT;
+-	spin_unlock_irq(&phba->hbalock);
+-	/* Now, handle all the fcp xri abort events */
+-	while (!list_empty(&phba->sli4_hba.sp_nvme_xri_aborted_work_queue)) {
+-		/* Get the first event from the head of the event queue */
+-		spin_lock_irq(&phba->hbalock);
+-		list_remove_head(&phba->sli4_hba.sp_nvme_xri_aborted_work_queue,
+-				 cq_event, struct lpfc_cq_event, list);
+-		spin_unlock_irq(&phba->hbalock);
+-		/* Notify aborted XRI for NVME work queue */
+-		if (phba->nvmet_support) {
+-			lpfc_sli4_nvmet_xri_aborted(phba,
+-						    &cq_event->cqe.wcqe_axri);
+-		} else {
+-			lpfc_sli4_nvme_xri_aborted(phba,
+-						   &cq_event->cqe.wcqe_axri);
+-		}
+-		/* Free the event processed back to the free pool */
+-		lpfc_sli4_cq_event_release(phba, cq_event);
+-	}
+-}
+-
+-/**
+  * lpfc_sli4_els_xri_abort_event_proc - Process els xri abort event
+  * @phba: pointer to lpfc hba data structure.
+  *
+@@ -12548,6 +12513,24 @@ lpfc_sli4_els_wcqe_to_rspiocbq(struct lpfc_hba *phba,
+ 	return irspiocbq;
+ }
+ 
++inline struct lpfc_cq_event *
++lpfc_cq_event_setup(struct lpfc_hba *phba, void *entry, int size)
++{
++	struct lpfc_cq_event *cq_event;
++
++	/* Allocate a new internal CQ_EVENT entry */
++	cq_event = lpfc_sli4_cq_event_alloc(phba);
++	if (!cq_event) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"0602 Failed to alloc CQ_EVENT entry\n");
++		return NULL;
++	}
++
++	/* Move the CQE into the event */
++	memcpy(&cq_event->cqe, entry, size);
++	return cq_event;
++}
++
+ /**
+  * lpfc_sli4_sp_handle_async_event - Handle an asynchroous event
+  * @phba: Pointer to HBA context object.
+@@ -12569,16 +12552,9 @@ lpfc_sli4_sp_handle_async_event(struct lpfc_hba *phba, struct lpfc_mcqe *mcqe)
+ 			"word2:x%x, word3:x%x\n", mcqe->word0,
+ 			mcqe->mcqe_tag0, mcqe->mcqe_tag1, mcqe->trailer);
+ 
+-	/* Allocate a new internal CQ_EVENT entry */
+-	cq_event = lpfc_sli4_cq_event_alloc(phba);
+-	if (!cq_event) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-				"0394 Failed to allocate CQ_EVENT entry\n");
++	cq_event = lpfc_cq_event_setup(phba, mcqe, sizeof(struct lpfc_mcqe));
++	if (!cq_event)
+ 		return false;
+-	}
+-
+-	/* Move the CQE into an asynchronous event entry */
+-	memcpy(&cq_event->cqe, mcqe, sizeof(struct lpfc_mcqe));
+ 	spin_lock_irqsave(&phba->hbalock, iflags);
+ 	list_add_tail(&cq_event->list, &phba->sli4_hba.sp_asynce_work_queue);
+ 	/* Set the async event flag */
+@@ -12824,18 +12800,12 @@ lpfc_sli4_sp_handle_abort_xri_wcqe(struct lpfc_hba *phba,
+ 	struct lpfc_cq_event *cq_event;
+ 	unsigned long iflags;
+ 
+-	/* Allocate a new internal CQ_EVENT entry */
+-	cq_event = lpfc_sli4_cq_event_alloc(phba);
+-	if (!cq_event) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-				"0602 Failed to allocate CQ_EVENT entry\n");
+-		return false;
+-	}
+-
+-	/* Move the CQE into the proper xri abort event list */
+-	memcpy(&cq_event->cqe, wcqe, sizeof(struct sli4_wcqe_xri_aborted));
+ 	switch (cq->subtype) {
+ 	case LPFC_FCP:
++		cq_event = lpfc_cq_event_setup(
++			phba, wcqe, sizeof(struct sli4_wcqe_xri_aborted));
++		if (!cq_event)
++			return false;
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+ 		list_add_tail(&cq_event->list,
+ 			      &phba->sli4_hba.sp_fcp_xri_aborted_work_queue);
+@@ -12845,6 +12815,10 @@ lpfc_sli4_sp_handle_abort_xri_wcqe(struct lpfc_hba *phba,
+ 		workposted = true;
+ 		break;
+ 	case LPFC_ELS:
++		cq_event = lpfc_cq_event_setup(
++			phba, wcqe, sizeof(struct sli4_wcqe_xri_aborted));
++		if (!cq_event)
++			return false;
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+ 		list_add_tail(&cq_event->list,
+ 			      &phba->sli4_hba.sp_els_xri_aborted_work_queue);
+@@ -12854,13 +12828,13 @@ lpfc_sli4_sp_handle_abort_xri_wcqe(struct lpfc_hba *phba,
+ 		workposted = true;
+ 		break;
+ 	case LPFC_NVME:
+-		spin_lock_irqsave(&phba->hbalock, iflags);
+-		list_add_tail(&cq_event->list,
+-			      &phba->sli4_hba.sp_nvme_xri_aborted_work_queue);
+-		/* Set the nvme xri abort event flag */
+-		phba->hba_flag |= NVME_XRI_ABORT_EVENT;
+-		spin_unlock_irqrestore(&phba->hbalock, iflags);
+-		workposted = true;
++		/* Notify aborted XRI for NVME work queue */
++		if (phba->nvmet_support)
++			lpfc_sli4_nvmet_xri_aborted(phba, wcqe);
++		else
++			lpfc_sli4_nvme_xri_aborted(phba, wcqe);
++
++		workposted = false;
+ 		break;
+ 	default:
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+@@ -12868,7 +12842,6 @@ lpfc_sli4_sp_handle_abort_xri_wcqe(struct lpfc_hba *phba,
+ 				"%08x %08x %08x %08x\n",
+ 				cq->subtype, wcqe->word0, wcqe->parameter,
+ 				wcqe->word2, wcqe->word3);
+-		lpfc_sli4_cq_event_release(phba, cq_event);
+ 		workposted = false;
+ 		break;
+ 	}
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 301ce46d2d70..da302bfb0223 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -672,7 +672,6 @@ struct lpfc_sli4_hba {
+ 	struct list_head sp_asynce_work_queue;
+ 	struct list_head sp_fcp_xri_aborted_work_queue;
+ 	struct list_head sp_els_xri_aborted_work_queue;
+-	struct list_head sp_nvme_xri_aborted_work_queue;
+ 	struct list_head sp_unsol_work_queue;
+ 	struct lpfc_sli4_link link_state;
+ 	struct lpfc_sli4_lnk_info lnk_info;
+@@ -824,7 +823,6 @@ void lpfc_sli4_fcf_redisc_event_proc(struct lpfc_hba *);
+ int lpfc_sli4_resume_rpi(struct lpfc_nodelist *,
+ 			void (*)(struct lpfc_hba *, LPFC_MBOXQ_t *), void *);
+ void lpfc_sli4_fcp_xri_abort_event_proc(struct lpfc_hba *);
+-void lpfc_sli4_nvme_xri_abort_event_proc(struct lpfc_hba *phba);
+ void lpfc_sli4_els_xri_abort_event_proc(struct lpfc_hba *);
+ void lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *,
+ 			       struct sli4_wcqe_xri_aborted *);
+-- 
+2.13.1
