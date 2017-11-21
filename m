@@ -1,158 +1,123 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 04/17] lpfc: Fix crash after bad bar setup on driver attachment
-Date: Mon, 20 Nov 2017 16:00:31 -0800
-Message-ID: <20171121000044.27702-5-jsmart2021@gmail.com>
+Subject: [PATCH v3 14/17] lpfc: Fix crash during driver unload with running nvme traffic
+Date: Mon, 20 Nov 2017 16:00:41 -0800
+Message-ID: <20171121000044.27702-15-jsmart2021@gmail.com>
 References: <20171121000044.27702-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:41948 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751962AbdKUAA6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:00:58 -0500
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:40963 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752015AbdKUABM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:01:12 -0500
+Received: by mail-qt0-f195.google.com with SMTP id i40so5750339qti.8
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:01:11 -0800 (PST)
 In-Reply-To: <20171121000044.27702-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-In test cases where an instance of the driver is detached and
-reattached, the driver will crash on reattachment. There is a
-compound if statement that will skip over the bar setup if
-the pci_resource_start call is not successful. The driver
-erroneously returns success to its bar setup in this scenario
-even though the bars aren't properly configured.
+When the driver is unloading, the nvme transport could be in the
+process of submitting new requests, will send abort requests to
+terminate associations, or may make LS-related requests.
+The driver's abort and request entry points currently is ignorant
+of the unloading state and is starting the requests even though
+the infrastructure to complete them continues to teardown.
 
-Rework the offending code segment for proper initialization steps.
-If the pci_resource_start call fails, -ENOMEM is now returned.
+Change the entry points for new requests to check whether unloading
+and if so, reject the requests. Abort routines check unloading, and
+if so, noop the request. An abort is noop'd as the teardown paths
+are already aborting/terminating the io outstanding at the time the
+teardown initiated.
 
-Sample stack:
-
-rport-5:0-10: blocked FC remote port time out: removing rport
-BUG: unable to handle kernel NULL pointer dereference at           (null)
-... lpfc_sli4_wait_bmbx_ready+0x32/0x70 [lpfc]
-...
-...  RIP: 0010:...  ... lpfc_sli4_wait_bmbx_ready+0x32/0x70 [lpfc]
- Call Trace:
-  ... lpfc_sli4_post_sync_mbox+0x106/0x4d0 [lpfc]
-  ... ? __alloc_pages_nodemask+0x176/0x420
-  ... ? __kmalloc+0x2e/0x230
-  ... lpfc_sli_issue_mbox_s4+0x533/0x720 [lpfc]
-  ... ? mempool_alloc+0x69/0x170
-  ... ? dma_generic_alloc_coherent+0x8f/0x140
-  ... lpfc_sli_issue_mbox+0xf/0x20 [lpfc]
-  ... lpfc_sli4_driver_resource_setup+0xa6f/0x1130 [lpfc]
-  ... ? lpfc_pci_probe_one+0x23e/0x16f0 [lpfc]
-  ... lpfc_pci_probe_one+0x445/0x16f0 [lpfc]
-  ... local_pci_probe+0x45/0xa0
-  ... work_for_cpu_fn+0x14/0x20
-  ... process_one_work+0x17a/0x440
-
-Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 84 ++++++++++++++++++++++++++-----------------
- 1 file changed, 51 insertions(+), 33 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c  | 14 ++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.c | 11 +++++++++++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 745aff753396..fc9f91327724 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -9437,44 +9437,62 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
- 		lpfc_sli4_bar0_register_memmap(phba, if_type);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 3aa3b889b4cf..9b231c88ca8b 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -423,6 +423,9 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
+ 	if (vport->load_flag & FC_UNLOADING)
+ 		return -ENODEV;
+ 
++	if (vport->load_flag & FC_UNLOADING)
++		return -ENODEV;
++
+ 	ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
+ 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
+@@ -538,6 +541,9 @@ lpfc_nvme_ls_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	vport = lport->vport;
+ 	phba = vport->phba;
+ 
++	if (vport->load_flag & FC_UNLOADING)
++		return;
++
+ 	ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
+ 	if (!ndlp) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
+@@ -1273,6 +1279,11 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 		goto out_fail;
  	}
  
--	if ((if_type == LPFC_SLI_INTF_IF_TYPE_0) &&
--	    (pci_resource_start(pdev, PCI_64BIT_BAR2))) {
--		/*
--		 * Map SLI4 if type 0 HBA Control Register base to a kernel
--		 * virtual address and setup the registers.
--		 */
--		phba->pci_bar1_map = pci_resource_start(pdev, PCI_64BIT_BAR2);
--		bar1map_len = pci_resource_len(pdev, PCI_64BIT_BAR2);
--		phba->sli4_hba.ctrl_regs_memmap_p =
--				ioremap(phba->pci_bar1_map, bar1map_len);
--		if (!phba->sli4_hba.ctrl_regs_memmap_p) {
--			dev_printk(KERN_ERR, &pdev->dev,
--			   "ioremap failed for SLI4 HBA control registers.\n");
-+	if (if_type == LPFC_SLI_INTF_IF_TYPE_0) {
-+		if (pci_resource_start(pdev, PCI_64BIT_BAR2)) {
-+			/*
-+			 * Map SLI4 if type 0 HBA Control Register base to a
-+			 * kernel virtual address and setup the registers.
-+			 */
-+			phba->pci_bar1_map = pci_resource_start(pdev,
-+								PCI_64BIT_BAR2);
-+			bar1map_len = pci_resource_len(pdev, PCI_64BIT_BAR2);
-+			phba->sli4_hba.ctrl_regs_memmap_p =
-+					ioremap(phba->pci_bar1_map,
-+						bar1map_len);
-+			if (!phba->sli4_hba.ctrl_regs_memmap_p) {
-+				dev_err(&pdev->dev,
-+					   "ioremap failed for SLI4 HBA "
-+					    "control registers.\n");
-+				error = -ENOMEM;
-+				goto out_iounmap_conf;
-+			}
-+			phba->pci_bar2_memmap_p =
-+					 phba->sli4_hba.ctrl_regs_memmap_p;
-+			lpfc_sli4_bar1_register_memmap(phba);
-+		} else {
-+			error = -ENOMEM;
- 			goto out_iounmap_conf;
- 		}
--		phba->pci_bar2_memmap_p = phba->sli4_hba.ctrl_regs_memmap_p;
--		lpfc_sli4_bar1_register_memmap(phba);
++	if (vport->load_flag & FC_UNLOADING) {
++		ret = -ENODEV;
++		goto out_fail;
++	}
++
+ 	/* Validate pointers. */
+ 	if (!pnvme_lport || !pnvme_rport || !freqpriv) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR | LOG_NODE,
+@@ -1500,6 +1511,9 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	vport = lport->vport;
+ 	phba = vport->phba;
+ 
++	if (vport->load_flag & FC_UNLOADING)
++		return;
++
+ 	/* Announce entry to new IO submit field. */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
+ 			 "6002 Abort Request to rport DID x%06x "
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 84cf1b9079f7..2b50aecc2722 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -635,6 +635,9 @@ lpfc_nvmet_xmt_ls_rsp(struct nvmet_fc_target_port *tgtport,
+ 	if (phba->pport->load_flag & FC_UNLOADING)
+ 		return -ENODEV;
+ 
++	if (phba->pport->load_flag & FC_UNLOADING)
++		return -ENODEV;
++
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_DISC,
+ 			"6023 NVMET LS rsp oxid x%x\n", ctxp->oxid);
+ 
+@@ -721,6 +724,11 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 		goto aerr;
  	}
  
--	if ((if_type == LPFC_SLI_INTF_IF_TYPE_0) &&
--	    (pci_resource_start(pdev, PCI_64BIT_BAR4))) {
--		/*
--		 * Map SLI4 if type 0 HBA Doorbell Register base to a kernel
--		 * virtual address and setup the registers.
--		 */
--		phba->pci_bar2_map = pci_resource_start(pdev, PCI_64BIT_BAR4);
--		bar2map_len = pci_resource_len(pdev, PCI_64BIT_BAR4);
--		phba->sli4_hba.drbl_regs_memmap_p =
--				ioremap(phba->pci_bar2_map, bar2map_len);
--		if (!phba->sli4_hba.drbl_regs_memmap_p) {
--			dev_printk(KERN_ERR, &pdev->dev,
--			   "ioremap failed for SLI4 HBA doorbell registers.\n");
--			goto out_iounmap_ctrl;
--		}
--		phba->pci_bar4_memmap_p = phba->sli4_hba.drbl_regs_memmap_p;
--		error = lpfc_sli4_bar2_register_memmap(phba, LPFC_VF0);
--		if (error)
-+	if (if_type == LPFC_SLI_INTF_IF_TYPE_0) {
-+		if (pci_resource_start(pdev, PCI_64BIT_BAR4)) {
-+			/*
-+			 * Map SLI4 if type 0 HBA Doorbell Register base to
-+			 * a kernel virtual address and setup the registers.
-+			 */
-+			phba->pci_bar2_map = pci_resource_start(pdev,
-+								PCI_64BIT_BAR4);
-+			bar2map_len = pci_resource_len(pdev, PCI_64BIT_BAR4);
-+			phba->sli4_hba.drbl_regs_memmap_p =
-+					ioremap(phba->pci_bar2_map,
-+						bar2map_len);
-+			if (!phba->sli4_hba.drbl_regs_memmap_p) {
-+				dev_err(&pdev->dev,
-+					   "ioremap failed for SLI4 HBA"
-+					   " doorbell registers.\n");
-+				error = -ENOMEM;
-+				goto out_iounmap_ctrl;
-+			}
-+			phba->pci_bar4_memmap_p =
-+					phba->sli4_hba.drbl_regs_memmap_p;
-+			error = lpfc_sli4_bar2_register_memmap(phba, LPFC_VF0);
-+			if (error)
-+				goto out_iounmap_all;
-+		} else {
-+			error = -ENOMEM;
- 			goto out_iounmap_all;
-+		}
- 	}
++	if (phba->pport->load_flag & FC_UNLOADING) {
++		rc = -ENODEV;
++		goto aerr;
++	}
++
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	if (ctxp->ts_cmd_nvme) {
+ 		if (rsp->op == NVMET_FCOP_RSP)
+@@ -823,6 +831,9 @@ lpfc_nvmet_xmt_fcp_abort(struct nvmet_fc_target_port *tgtport,
+ 	if (phba->pport->load_flag & FC_UNLOADING)
+ 		return;
  
- 	return 0;
++	if (phba->pport->load_flag & FC_UNLOADING)
++		return;
++
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_ABTS,
+ 			"6103 NVMET Abort op: oxri x%x flg x%x ste %d\n",
+ 			ctxp->oxid, ctxp->flag, ctxp->state);
 -- 
 2.13.1
