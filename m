@@ -1,56 +1,48 @@
-From: Unknown <unknown@unknown.invalid>
-Subject: Attention
-Date: Tue, 21 Nov 2017 12:00:34 -0430
-Message-ID: <20171121152750.9AF11104481@mail.fcgo.gov.np>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi_debug: add cdb_len parameter
+Date: Tue, 21 Nov 2017 16:48:34 +0000
+Message-ID: <1511282912.2692.8.camel@wdc.com>
+References: <20171116043650.18903-1-dgilbert@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.fcgo.gov.np ([202.70.88.133]:35539 "EHLO mail.fcgo.gov.np"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751145AbdKUQJj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Nov 2017 11:09:39 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by mail.fcgo.gov.np (Postfix) with ESMTP id 9A6821083BF
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2017 21:28:34 +0545 (NPT)
-Received: from mail.fcgo.gov.np ([127.0.0.1])
-        by localhost (mail.fcgo.gov.np [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id zrakiN10d1e9 for <linux-scsi@vger.kernel.org>;
-        Tue, 21 Nov 2017 21:28:34 +0545 (NPT)
-Received: from localhost (localhost [127.0.0.1])
-        by mail.fcgo.gov.np (Postfix) with ESMTP id 2CCCB10B678
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2017 21:20:28 +0545 (NPT)
-Received: from mail.fcgo.gov.np ([127.0.0.1])
-        by localhost (mail.fcgo.gov.np [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id LKuTp5rZv1kJ for <linux-scsi@vger.kernel.org>;
-        Tue, 21 Nov 2017 21:20:28 +0545 (NPT)
-Received: from [10.0.2.15] (unknown [213.205.251.15])
-        by mail.fcgo.gov.np (Postfix) with ESMTPSA id 9AF11104481
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2017 21:12:50 +0545 (NPT)
-Content-Description: Mail message body
-From: "WEBMAIL SERVICE" <>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:10558 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751145AbdKUQsg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Nov 2017 11:48:36 -0500
+In-Reply-To: <20171116043650.18903-1-dgilbert@interlog.com>
+Content-Language: en-US
+Content-ID: <BB6FC13F532D0C43B48DC5CA8D0C695B@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-Dear eMail User,
-
-Your email account is due for upgrade. Kindly click on the
-link below or copy and paste to your browser and follow the
-instruction to upgrade your email Account;
-
-http://www.surveybrother.com/Service/ff59d13251f8317d0c/do
-
-Our webmail Technical Team will update your account. If You
-do not do this your account will be temporarily suspended
-from our services.
-
-Warning!! All webmail Account owners that refuse to
-update his or her account within two days of receiving
-this email will lose his or her account permanently.
-
-Thank you for your cooperation!
-
-Sincere regards,
-WEB MAIL ADMINISTRATOR
-Copyright @2017 MAIL OFFICE All rights reserved
+T24gV2VkLCAyMDE3LTExLTE1IGF0IDIzOjM2IC0wNTAwLCBEb3VnbGFzIEdpbGJlcnQgd3JvdGU6
+DQo+IC0jZGVmaW5lIFNERUJVR19WRVJTSU9OICIxLjg2Ig0KPiAtc3RhdGljIGNvbnN0IGNoYXIg
+KnNkZWJ1Z192ZXJzaW9uX2RhdGUgPSAiMjAxNjA0MzAiOw0KPiArI2RlZmluZSBTREVCVUdfVkVS
+U0lPTiAiMS44NyINCj4gK3N0YXRpYyBjb25zdCBjaGFyICpzZGVidWdfdmVyc2lvbl9kYXRlID0g
+IjIwMTcxMTA1IjsNCg0KSXMgdGhpcyBraW5kIG9mIHZlcnNpb24gaW5mb3JtYXRpb24gcmVhbGx5
+IHVzZWZ1bCBmb3IgYW4gdXBzdHJlYW0gZHJpdmVyPyBDYW4NCnRoaXMgdmVyc2lvbiBpbmZvcm1h
+dGlvbiBiZSByZW1vdmVkPw0KDQo+ICtzdGF0aWMgdm9pZCBhbGxfY29uZmlnX2NkYl9sZW4odm9p
+ZCkNCj4gK3sNCj4gKwlzdHJ1Y3Qgc2RlYnVnX2hvc3RfaW5mbyAqc2RiZ19ob3N0Ow0KPiArCXN0
+cnVjdCBTY3NpX0hvc3QgKnNob3N0Ow0KPiArCXN0cnVjdCBzY3NpX2RldmljZSAqc2RldjsNCj4g
+Kw0KPiArDQo+ICsJc3Bpbl9sb2NrKCZzZGVidWdfaG9zdF9saXN0X2xvY2spOw0KDQpBIG1pbm9y
+IHJlbWFyaywgYnV0IGFueXdheTogb3RoZXIga2VybmVsIGNvZGUgb25seSB1c2VzIGEgc2luZ2xl
+IGJsYW5rIGxpbmUNCmJldHdlZW4gZGVjbGFyYXRpb25zIGFuZCBjb2RlLg0KDQo+ICtzdGF0aWMg
+c3NpemVfdCBjZGJfbGVuX3N0b3JlKHN0cnVjdCBkZXZpY2VfZHJpdmVyICpkZHAsIGNvbnN0IGNo
+YXIgKmJ1ZiwNCj4gKwkJCSAgICAgc2l6ZV90IGNvdW50KQ0KPiArew0KPiArCWludCBuOw0KPiAr
+DQo+ICsJaWYgKChjb3VudCA+IDApICYmICgxID09IHNzY2FuZihidWYsICIlZCIsICZuKSkgJiYg
+KG4gPj0gMCkpIHsNCj4gKwkJc2RlYnVnX2NkYl9sZW4gPSBuOw0KPiArCQlhbGxfY29uZmlnX2Nk
+Yl9sZW4oKTsNCj4gKwkJcmV0dXJuIGNvdW50Ow0KPiArCX0NCj4gKwlyZXR1cm4gLUVJTlZBTDsN
+Cj4gK30NCg0KQ2hlY2twYXRjaCBzaG91bGQgaGF2ZSByZWNvbW1lbmRlZCB0byB1c2Uga3N0cnRv
+aW50KCkgaW5zdGVhZCBvZiBzc2NhbmYoKS4NClRoZSBjb3VudCBjaGVjayBpcyBub3QgbmVjZXNz
+YXJ5IHNpbmNlIHRoZSBidWZmZXIgcGFzc2VkIHRvIHN5c2ZzIHN0b3JlDQpmdW5jdGlvbnMgaXMg
+J1wwJy10ZXJtaW5hdGVkLiBBZGRpdGlvbmFsbHksIHBsZWFzZSBkbyBub3QgdXNlIHBhcmVudGhl
+c2VzIGlmDQp0aGVzZSBhcmUgbm90IG5lY2Vzc2FyeS4gVGhlIGFwcHJvYWNoIHVzZWQgaW4gbW9z
+dCBwYXJ0cyBvZiB0aGUga2VybmVsIHRvDQpoYW5kbGUgZXJyb3JzIGlzIHRoZSBvcHBvc2l0ZSBv
+ZiB0aGUgYWJvdmUsIG5hbWVseToNCg0KCWVycm9yID0gLyogcHJvY2VzcyBpbnB1dHMgKi8NCglp
+ZiAoZXJyb3IpDQoJCXJldHVybiBlcnJvcjsNCgkvKiBhY3R1YWwgcHJvY2Vzc2luZyBjb2RlICov
+DQoNClBsZWFzZSBjb25zaWRlciB0byBmb2xsb3cgdGhhdCBzdHlsZS4NCg0KVGhhbmtzLA0KDQpC
+YXJ0Lg==
