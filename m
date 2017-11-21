@@ -1,52 +1,64 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] libsas: align sata_device's rps_resp on a cacheline
-Date: Tue, 21 Nov 2017 14:23:39 +0100
-Message-ID: <20171121132339.1702-4-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 2/3] scsi: use dma_get_cache_alignment() as minimum DMA
+	alignment
+Date: Tue, 21 Nov 2017 14:23:38 +0100
+Message-ID: <20171121132339.1702-3-hch@lst.de>
 References: <20171121132339.1702-1-hch@lst.de>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20171121132339.1702-1-hch@lst.de>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Huacai Chen <chenhc@lemote.com>, linux-scsi@vger.kernel.org, iommu@lists.linux-foundation.org, stable@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20171121132339.1702-1-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Huacai Chen <chenhc-h23VmSynlr/QT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Huacai Chen <chenhc@lemote.com>
+From: Huacai Chen <chenhc-h23VmSynlr/QT0dZR+AlfA@public.gmane.org>
 
-The rps_resp buffer in ata_device is a DMA target, but it isn't
-explicitly cacheline aligned. Due to this, adjacent fields can be
-overwritten with stale data from memory on non-coherent architectures.
-As a result, the kernel is sometimes unable to communicate with an
-SATA device behind a SAS expander.
+In non-coherent DMA mode, kernel uses cache flushing operations to maintain
+I/O coherency, so scsi's block queue should be aligned to the value
+returned by dma_get_cache_alignment().  Otherwise, If a DMA buffer and a
+kernel structure share a same cache line, and if the kernel structure has
+dirty data, cache_invalidate (no writeback) will cause data corruption.
 
-Fix this by ensuring that the rps_resp buffer is cacheline aligned.
-
-This issue is similar to that fixed by Commit 84bda12af31f93 ("libata:
-align ap->sector_buf") and Commit 4ee34ea3a12396f35b26 ("libata: Align
-ata_device's id on a cacheline").
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Huacai Chen <chenhc@lemote.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Huacai Chen <chenhc-h23VmSynlr/QT0dZR+AlfA@public.gmane.org>
+[hch: rebased and updated the comment and changelog]
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- include/scsi/libsas.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_lib.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 0f9cbf96c093..6df6fe0c2198 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -159,11 +159,11 @@ struct expander_device {
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1cbc497e00bd..00742c50cd44 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2148,11 +2148,13 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 		q->limits.cluster = 0;
  
- struct sata_device {
- 	unsigned int class;
--	struct smp_resp        rps_resp; /* report_phy_sata_resp */
- 	u8     port_no;        /* port number, if this is a PM (Port) */
- 
- 	struct ata_port *ap;
- 	struct ata_host ata_host;
-+	struct smp_resp rps_resp ____cacheline_aligned; /* report_phy_sata_resp */
- 	u8     fis[ATA_RESP_FIS_SIZE];
- };
+ 	/*
+-	 * set a reasonable default alignment on word boundaries: the
+-	 * host and device may alter it using
+-	 * blk_queue_update_dma_alignment() later.
++	 * Set a reasonable default alignment:  The larger of 32-byte (dword),
++	 * which is a common minimum for HBAs, and the minimum DMA alignment,
++	 * which is set by the platform.
++	 *
++	 * Devices that require a bigger alignment can increase it later.
+ 	 */
+-	blk_queue_dma_alignment(q, 0x03);
++	blk_queue_dma_alignment(q, max(4, dma_get_cache_alignment()) - 1);
+ }
+ EXPORT_SYMBOL_GPL(__scsi_init_queue);
  
 -- 
 2.14.2
