@@ -1,82 +1,71 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 01/17] lpfc: FLOGI failures are reported when connected to a private loop.
-Date: Mon, 20 Nov 2017 16:00:28 -0800
-Message-ID: <20171121000044.27702-2-jsmart2021@gmail.com>
-References: <20171121000044.27702-1-jsmart2021@gmail.com>
+Subject: [PATCH v3 00/17] lpfc updates for 11.4.0.5
+Date: Mon, 20 Nov 2017 16:00:27 -0800
+Message-ID: <20171121000044.27702-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:35851 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751871AbdKUAAz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:00:55 -0500
-Received: by mail-qk0-f196.google.com with SMTP id o6so9753335qkh.3
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:00:54 -0800 (PST)
-In-Reply-To: <20171121000044.27702-1-jsmart2021@gmail.com>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:38024 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751864AbdKUAAx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:00:53 -0500
+Received: by mail-qk0-f181.google.com with SMTP id a142so9761743qkb.5
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:00:53 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: James Smart <jsmart2021@gmail.com>
 
-When the HBA is connected to a private loop, the driver
-reports FLOGI loop-open failure as functional error. This is
-an expected condition.
+This patch set provides a number of bug fixes and additions to
+the driver.
 
-Mark loop-open failure as a warning instead of error.
+The patches were cut against the Martin's 4.15/scsi-queue tree.
+There are no outside dependencies and are expected to be pulled
+via Martins tree.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/lpfc/lpfc_els.c | 27 ++++++++++++++-------------
- 1 file changed, 14 insertions(+), 13 deletions(-)
+v2:
+ Rework patch 1 per review
+ Add signed-by's on other patches
+v3:
+ Rework patches 11 and 13 per review
+ Add signed-by's on other patches
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index b14f7c5653cd..c81cdc637e64 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1030,30 +1030,31 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 
- stop_rr_fcf_flogi:
- 		/* FLOGI failure */
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--				"2858 FLOGI failure Status:x%x/x%x TMO:x%x "
--				"Data x%x x%x\n",
--				irsp->ulpStatus, irsp->un.ulpWord[4],
--				irsp->ulpTimeout, phba->hba_flag,
--				phba->fcf.fcf_flag);
-+		if (!(irsp->ulpStatus == IOSTAT_LOCAL_REJECT &&
-+		      ((irsp->un.ulpWord[4] & IOERR_PARAM_MASK) ==
-+					IOERR_LOOP_OPEN_FAILURE)))
-+			lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
-+					"2858 FLOGI failure Status:x%x/x%x "
-+					"TMO:x%x Data x%x x%x\n",
-+					irsp->ulpStatus, irsp->un.ulpWord[4],
-+					irsp->ulpTimeout, phba->hba_flag,
-+					phba->fcf.fcf_flag);
- 
- 		/* Check for retry */
- 		if (lpfc_els_retry(phba, cmdiocb, rspiocb))
- 			goto out;
- 
--		/* FLOGI failure */
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--				 "0100 FLOGI failure Status:x%x/x%x TMO:x%x\n",
--				 irsp->ulpStatus, irsp->un.ulpWord[4],
--				 irsp->ulpTimeout);
--
--
- 		/* If this is not a loop open failure, bail out */
- 		if (!(irsp->ulpStatus == IOSTAT_LOCAL_REJECT &&
- 		      ((irsp->un.ulpWord[4] & IOERR_PARAM_MASK) ==
- 					IOERR_LOOP_OPEN_FAILURE)))
- 			goto flogifail;
- 
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_ELS,
-+				 "0150 FLOGI failure Status:x%x/x%x TMO:x%x\n",
-+				 irsp->ulpStatus, irsp->un.ulpWord[4],
-+				 irsp->ulpTimeout);
-+
- 		/* FLOGI failed, so there is no fabric */
- 		spin_lock_irq(shost->host_lock);
- 		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
+
+James Smart (17):
+  lpfc: FLOGI failures are reported when connected to a private loop.
+  lpfc: Expand WQE capability of every NVME hardware queue
+  lpfc: Handle XRI_ABORTED_CQE in soft IRQ
+  lpfc: Fix crash after bad bar setup on driver attachment
+  lpfc: Fix NVME LS abort_xri
+  lpfc: Raise maximum NVME sg list size for 256 elements
+  lpfc: Driver fails to detect direct attach storage array
+  lpfc: Fix display for debugfs queInfo
+  lpfc: Adjust default value of lpfc_nvmet_mrq
+  lpfc: Fix ndlp ref count for pt2pt mode issue RSCN
+  lpfc: Linux LPFC driver does not process all RSCNs
+  lpfc: correct port registrations with nvme_fc
+  lpfc: Correct driver deregistrations with host nvme transport
+  lpfc: Fix crash during driver unload with running nvme traffic
+  lpfc: Fix driver handling of nvme resources during unload
+  lpfc: small sg cnt cleanup
+  lpfc: update driver version to 11.4.0.5
+
+ drivers/scsi/lpfc/lpfc.h         |   4 +-
+ drivers/scsi/lpfc/lpfc_attr.c    |  13 ++-
+ drivers/scsi/lpfc/lpfc_crtn.h    |   2 +
+ drivers/scsi/lpfc/lpfc_ct.c      |  19 +++
+ drivers/scsi/lpfc/lpfc_debugfs.c |  16 +--
+ drivers/scsi/lpfc/lpfc_disc.h    |   2 +
+ drivers/scsi/lpfc/lpfc_els.c     |  71 ++++++------
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  29 +++--
+ drivers/scsi/lpfc/lpfc_hw4.h     |   6 +-
+ drivers/scsi/lpfc/lpfc_init.c    | 243 +++++++++++++++++++++++++--------------
+ drivers/scsi/lpfc/lpfc_nvme.c    | 230 +++++++++++++++++++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_nvme.h    |   5 +-
+ drivers/scsi/lpfc/lpfc_nvmet.c   |  13 ++-
+ drivers/scsi/lpfc/lpfc_nvmet.h   |   4 +
+ drivers/scsi/lpfc/lpfc_sli.c     | 169 ++++++++++++++-------------
+ drivers/scsi/lpfc/lpfc_sli4.h    |  10 +-
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ 17 files changed, 587 insertions(+), 251 deletions(-)
+
 -- 
 2.13.1
