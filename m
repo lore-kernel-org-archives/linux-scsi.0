@@ -1,27 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hpsa: remove an unecessary NULL check
-Date: Mon, 20 Nov 2017 21:31:32 -0500
-Message-ID: <yq1ine4nz0b.fsf@oracle.com>
-References: <20171107130131.3zohbeoobjxbqmdz@mwanda>
+Subject: Re: [PATCH] scsi: ppa: mark expected switch fall-throughs
+Date: Mon, 20 Nov 2017 21:34:01 -0500
+Message-ID: <yq1efosnyw6.fsf@oracle.com>
+References: <20171108171739.GA9139@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23573 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751389AbdKUCbo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 21:31:44 -0500
-In-Reply-To: <20171107130131.3zohbeoobjxbqmdz@mwanda> (Dan Carpenter's message
-        of "Tue, 7 Nov 2017 16:01:32 +0300")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171108171739.GA9139@embeddedor.com> (Gustavo A. R. Silva's
+        message of "Wed, 8 Nov 2017 11:17:39 -0600")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 
-> device->scsi3addr[] is an array, not a pointer, so it can't be NULL.
-> I've removed the check.
+Gustavo A.,
 
-Microsemi folks, please review. Thanks!
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
+
+Applied to 4.16/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
