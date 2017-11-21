@@ -1,25 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ppa: mark expected switch fall-throughs
-Date: Mon, 20 Nov 2017 21:34:01 -0500
-Message-ID: <yq1efosnyw6.fsf@oracle.com>
-References: <20171108171739.GA9139@embeddedor.com>
+Subject: Re: [PATCH V8 6/7] sd_zbc: Initialize device request queue zoned data
+Date: Mon, 20 Nov 2017 21:36:55 -0500
+Message-ID: <yq1a7zgnyrc.fsf@oracle.com>
+References: <20171109065707.17210-1-damien.lemoal@wdc.com>
+        <20171109065707.17210-7-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171108171739.GA9139@embeddedor.com> (Gustavo A. R. Silva's
-        message of "Wed, 8 Nov 2017 11:17:39 -0600")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:28458 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751876AbdKUChH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 21:37:07 -0500
+In-Reply-To: <20171109065707.17210-7-damien.lemoal@wdc.com> (Damien Le Moal's
+        message of "Thu, 9 Nov 2017 15:57:06 +0900")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
 
-Gustavo A.,
+Damien,
 
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+> Initialize the seq_zones_bitmap, seq_zones_wlock and nr_zones fields
+> of the disk request queue on disk revalidate. As the seq_zones_bitmap
+> and seq_zones_wlock allocations are identical, introduce the helper
+> sd_zbc_alloc_zone_bitmap(). Using this helper, reallocate the bitmaps
+> whenever the disk capacity (number of zones) changes.
 
-Applied to 4.16/scsi-queue.
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
