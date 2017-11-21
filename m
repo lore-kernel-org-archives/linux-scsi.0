@@ -1,237 +1,42 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 13/17] lpfc: Correct driver deregistrations with host nvme transport
-Date: Mon, 20 Nov 2017 16:00:40 -0800
-Message-ID: <20171121000044.27702-14-jsmart2021@gmail.com>
+Subject: [PATCH v3 17/17] lpfc: update driver version to 11.4.0.5
+Date: Mon, 20 Nov 2017 16:00:44 -0800
+Message-ID: <20171121000044.27702-18-jsmart2021@gmail.com>
 References: <20171121000044.27702-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:40288 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752010AbdKUABK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:01:10 -0500
-Received: by mail-qt0-f195.google.com with SMTP id u42so16953649qte.7
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:01:10 -0800 (PST)
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:43057 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752018AbdKUABN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:01:13 -0500
+Received: by mail-qt0-f194.google.com with SMTP id w10so5030499qtb.10
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:01:13 -0800 (PST)
 In-Reply-To: <20171121000044.27702-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-The driver's interaction with the host nvme transport has been
-incorrect for a while. The driver did not wait for the unregister
-callbacks (waited only 5 jiffies). Thus the driver may remove
-objects that may be referenced by subsequent abort commands from
-the transport, and the actual unregister callback was effectively
-a noop. This was especially problematic if the driver was unloaded.
-
-The driver now waits for the unregister callbacks, as it should,
-before continuing with teardown.
+Update the driver version to 11.4.0.5
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
-
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
-v3:
-  per review: clear NLP_WAIT_FOR_UNREG in all cases
----
- drivers/scsi/lpfc/lpfc_disc.h |   2 +
- drivers/scsi/lpfc/lpfc_nvme.c | 116 +++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/lpfc/lpfc_nvme.h |   2 +
- 3 files changed, 114 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
-index f9a566eaef04..5a7547f9d8d8 100644
---- a/drivers/scsi/lpfc/lpfc_disc.h
-+++ b/drivers/scsi/lpfc/lpfc_disc.h
-@@ -134,6 +134,8 @@ struct lpfc_nodelist {
- 	struct lpfc_scsicmd_bkt *lat_data;	/* Latency data */
- 	uint32_t fc4_prli_sent;
- 	uint32_t upcall_flags;
-+#define NLP_WAIT_FOR_UNREG    0x1
-+
- 	uint32_t nvme_fb_size; /* NVME target's supported byte cnt */
- #define NVME_FB_BIT_SHIFT 9    /* PRLI Rsp first burst in 512B units. */
- };
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index d3ada630b427..3aa3b889b4cf 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -154,6 +154,10 @@ lpfc_nvme_localport_delete(struct nvme_fc_local_port *localport)
- {
- 	struct lpfc_nvme_lport *lport = localport->private;
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index e0181371af09..cc2f5cec98c5 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
-+	lpfc_printf_vlog(lport->vport, KERN_INFO, LOG_NVME,
-+			 "6173 localport %p delete complete\n",
-+			 lport);
-+
- 	/* release any threads waiting for the unreg to complete */
- 	complete(&lport->lport_unreg_done);
- }
-@@ -946,10 +950,19 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	freqpriv->nvme_buf = NULL;
+-#define LPFC_DRIVER_VERSION "11.4.0.4"
++#define LPFC_DRIVER_VERSION "11.4.0.5"
+ #define LPFC_DRIVER_NAME		"lpfc"
  
- 	/* NVME targets need completion held off until the abort exchange
--	 * completes.
-+	 * completes unless the NVME Rport is getting unregistered.
- 	 */
--	if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY))
-+	if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY) ||
-+	    ndlp->upcall_flags & NLP_WAIT_FOR_UNREG) {
-+		/* Clear the XBUSY flag to prevent double completions.
-+		 * The nvme rport is getting unregistered and there is
-+		 * no need to defer the IO.
-+		 */
-+		if (lpfc_ncmd->flags & LPFC_SBUF_XBUSY)
-+			lpfc_ncmd->flags &= ~LPFC_SBUF_XBUSY;
-+
- 		nCmd->done(nCmd);
-+	}
- 
- 	spin_lock_irqsave(&phba->hbalock, flags);
- 	lpfc_ncmd->nrport = NULL;
-@@ -2234,6 +2247,47 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
- 	return ret;
- }
- 
-+/* lpfc_nvme_lport_unreg_wait - Wait for the host to complete an lport unreg.
-+ *
-+ * The driver has to wait for the host nvme transport to callback
-+ * indicating the localport has successfully unregistered all
-+ * resources.  Since this is an uninterruptible wait, loop every ten
-+ * seconds and print a message indicating no progress.
-+ *
-+ * An uninterruptible wait is used because of the risk of transport-to-
-+ * driver state mismatch.
-+ */
-+void
-+lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
-+			   struct lpfc_nvme_lport *lport)
-+{
-+#if (IS_ENABLED(CONFIG_NVME_FC))
-+	u32 wait_tmo;
-+	int ret;
-+
-+	/* Host transport has to clean up and confirm requiring an indefinite
-+	 * wait. Print a message if a 10 second wait expires and renew the
-+	 * wait. This is unexpected.
-+	 */
-+	wait_tmo = msecs_to_jiffies(LPFC_NVME_WAIT_TMO * 1000);
-+	while (true) {
-+		ret = wait_for_completion_timeout(&lport->lport_unreg_done,
-+						  wait_tmo);
-+		if (unlikely(!ret)) {
-+			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
-+					 "6176 Lport %p Localport %p wait "
-+					 "timed out. Renewing.\n",
-+					 lport, vport->localport);
-+			continue;
-+		}
-+		break;
-+	}
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
-+			 "6177 Lport %p Localport %p Complete Success\n",
-+			 lport, vport->localport);
-+#endif
-+}
-+
- /**
-  * lpfc_nvme_destroy_localport - Destroy lpfc_nvme bound to nvme transport.
-  * @pnvme: pointer to lpfc nvme data structure.
-@@ -2268,7 +2322,11 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 	 */
- 	init_completion(&lport->lport_unreg_done);
- 	ret = nvme_fc_unregister_localport(localport);
--	wait_for_completion_timeout(&lport->lport_unreg_done, 5);
-+
-+	/* Wait for completion.  This either blocks
-+	 * indefinitely or succeeds
-+	 */
-+	lpfc_nvme_lport_unreg_wait(vport, lport);
- 
- 	/* Regardless of the unregister upcall response, clear
- 	 * nvmei_support.  All rports are unregistered and the
-@@ -2424,6 +2482,47 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- #endif
- }
- 
-+/* lpfc_nvme_rport_unreg_wait - Wait for the host to complete an rport unreg.
-+ *
-+ * The driver has to wait for the host nvme transport to callback
-+ * indicating the remoteport has successfully unregistered all
-+ * resources.  Since this is an uninterruptible wait, loop every ten
-+ * seconds and print a message indicating no progress.
-+ *
-+ * An uninterruptible wait is used because of the risk of transport-to-
-+ * driver state mismatch.
-+ */
-+void
-+lpfc_nvme_rport_unreg_wait(struct lpfc_vport *vport,
-+			   struct lpfc_nvme_rport *rport)
-+{
-+#if (IS_ENABLED(CONFIG_NVME_FC))
-+	u32 wait_tmo;
-+	int ret;
-+
-+	/* Host transport has to clean up and confirm requiring an indefinite
-+	 * wait. Print a message if a 10 second wait expires and renew the
-+	 * wait. This is unexpected.
-+	 */
-+	wait_tmo = msecs_to_jiffies(LPFC_NVME_WAIT_TMO * 1000);
-+	while (true) {
-+		ret = wait_for_completion_timeout(&rport->rport_unreg_done,
-+						  wait_tmo);
-+		if (unlikely(!ret)) {
-+			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
-+					 "6174 Rport %p Remoteport %p wait "
-+					 "timed out. Renewing.\n",
-+					 rport, rport->remoteport);
-+			continue;
-+		}
-+		break;
-+	}
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
-+			 "6175 Rport %p Remoteport %p Complete Success\n",
-+			 rport, rport->remoteport);
-+#endif
-+}
-+
- /* lpfc_nvme_unregister_port - unbind the DID and port_role from this rport.
-  *
-  * There is no notion of Devloss or rport recovery from the current
-@@ -2480,14 +2579,19 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		/* No concern about the role change on the nvme remoteport.
- 		 * The transport will update it.
- 		 */
-+		ndlp->upcall_flags |= NLP_WAIT_FOR_UNREG;
- 		ret = nvme_fc_unregister_remoteport(remoteport);
--		if (ret != 0) {
-+		if (ret != 0)
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
- 					 "6167 NVME unregister failed %d "
- 					 "port_state x%x\n",
- 					 ret, remoteport->port_state);
--		}
--
-+		else
-+			/* Wait for completion.  This either blocks
-+			 * indefinitely or succeeds
-+			 */
-+			lpfc_nvme_rport_unreg_wait(vport, rport);
-+		ndlp->upcall_flags &= ~NLP_WAIT_FOR_UNREG;
- 	}
- 	return;
- 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
-index fbfc1786cd04..903ec37f465f 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.h
-+++ b/drivers/scsi/lpfc/lpfc_nvme.h
-@@ -27,6 +27,8 @@
- 
- #define LPFC_NVME_ERSP_LEN		0x20
- 
-+#define LPFC_NVME_WAIT_TMO              10
-+
- struct lpfc_nvme_qhandle {
- 	uint32_t index;		/* WQ index to use */
- 	uint32_t qidx;		/* queue index passed to create */
+ /* Used for SLI 2/3 */
 -- 
 2.13.1
