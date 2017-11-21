@@ -1,30 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: csiostor: remove unneeded DRIVER_LICENSE #define
-Date: Mon, 20 Nov 2017 22:15:45 -0500
-Message-ID: <yq1k1ykmie6.fsf@oracle.com>
-References: <20171117142122.GF17880@kroah.com>
+Subject: Re: [PATCH] scsi: fix another I2O typo
+Date: Mon, 20 Nov 2017 22:17:36 -0500
+Message-ID: <yq1fu98mib3.fsf@oracle.com>
+References: <8885e6a1-5a41-2a9c-aaf3-d0ba061b4775@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171117142122.GF17880@kroah.com> (Greg Kroah-Hartman's message
-        of "Fri, 17 Nov 2017 15:21:22 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, linux-kernel@vger.kernel.org, Philippe Ombredanne <pombredanne@nexb.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:37981 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752389AbdKUDSH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 22:18:07 -0500
+In-Reply-To: <8885e6a1-5a41-2a9c-aaf3-d0ba061b4775@infradead.org> (Randy
+        Dunlap's message of "Sat, 18 Nov 2017 17:46:59 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 
-Greg,
+Randy,
 
-> There is no need to #define the license of the driver, just put it in
-> the MODULE_LICENSE() line directly as a text string.
->
-> This allows tools that check that the module license matches the source
-> code license to work properly, as there is no need to unwind the
-> unneeded dereference, especially when the string is defined in a .h file
-> far away from the .c file it is used in.
+> Correct another typo I20 to I2O.
 
-Applied to 4.16/scsi-queue, thanks!
+Applied to 4.16/scsi-queue, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
