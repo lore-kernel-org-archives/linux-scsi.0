@@ -1,198 +1,102 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 09/17] lpfc: Adjust default value of lpfc_nvmet_mrq
-Date: Mon, 20 Nov 2017 16:00:36 -0800
-Message-ID: <20171121000044.27702-10-jsmart2021@gmail.com>
-References: <20171121000044.27702-1-jsmart2021@gmail.com>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] target-core: don't use "const char*" for a buffer that is written to
+Date: Tue, 21 Nov 2017 01:12:43 +0100
+Message-ID: <20171121001244.8026-1-linux@rasmusvillemoes.dk>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:42197 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751518AbdKUABE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:01:04 -0500
-Received: by mail-qt0-f194.google.com with SMTP id 31so16965768qtz.9
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:01:03 -0800 (PST)
-In-Reply-To: <20171121000044.27702-1-jsmart2021@gmail.com>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:37055 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751198AbdKUANQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 19:13:16 -0500
+Received: by mail-wr0-f196.google.com with SMTP id k61so9695870wrc.4
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2017 16:13:16 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Rasmus Villemoes <rasmus.villemoes@prevas.dk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The current default for async hw receive queues is 1, which presents
-issues under heavy load as number of queues influence the available
-async receive buffer limits.
+From: Rasmus Villemoes <rasmus.villemoes@prevas.dk>
 
-Raise the default to the either the current hw limit (16) or the number
-of hw qs configured (io channel value).
+iscsi_parse_pr_out_transport_id launders the const away via a call to
+strstr(), and then modifies the buffer (writing a nul byte) through
+the return value. It's cleaner to be honest and simply declare the
+parameter as "char*", fixing up the call chain, and allowing us to
+drop the cast in the return statement.
 
-Revise the attribute definition for mrq to better reflect what we do
-for hw queues. E.g. 0 means default to optimal (# of cpus), non-zero
-specifies a specific limit. Before this change, mrq=0 meant target
-mode was disabled. As 0 now has a different meaning, rework the
-if tests to use the better nvmet_support check.
+Amusingly, the two current callers found it necessary to cast a
+non-const pointer to a const.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 ---
- drivers/scsi/lpfc/lpfc_attr.c    | 11 ++++++++--
- drivers/scsi/lpfc/lpfc_debugfs.c |  2 +-
- drivers/scsi/lpfc/lpfc_init.c    | 47 ++++++++++++++++++++++++----------------
- drivers/scsi/lpfc/lpfc_nvmet.h   |  4 ++++
- 4 files changed, 42 insertions(+), 22 deletions(-)
+ drivers/target/target_core_fabric_lib.c | 6 +++---
+ drivers/target/target_core_internal.h   | 2 +-
+ drivers/target/target_core_pr.c         | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 4dcd129ca901..598e07f43912 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3361,12 +3361,13 @@ LPFC_ATTR_R(suppress_rsp, 1, 0, 1,
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+index 508da345b73f..71a80257a052 100644
+--- a/drivers/target/target_core_fabric_lib.c
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -273,7 +273,7 @@ static int iscsi_get_pr_transport_id_len(
  
- /*
-  * lpfc_nvmet_mrq: Specify number of RQ pairs for processing NVMET cmds
-+ * lpfc_nvmet_mrq = 0  driver will calcualte optimal number of RQ pairs
-  * lpfc_nvmet_mrq = 1  use a single RQ pair
-  * lpfc_nvmet_mrq >= 2  use specified RQ pairs for MRQ
-  *
-  */
- LPFC_ATTR_R(nvmet_mrq,
--	    1, 1, 16,
-+	    LPFC_NVMET_MRQ_AUTO, LPFC_NVMET_MRQ_AUTO, LPFC_NVMET_MRQ_MAX,
- 	    "Specify number of RQ pairs for processing NVMET cmds");
- 
- /*
-@@ -6357,6 +6358,9 @@ lpfc_nvme_mod_param_dep(struct lpfc_hba *phba)
- 				phba->cfg_nvmet_fb_size = LPFC_NVMET_FB_SZ_MAX;
+ static char *iscsi_parse_pr_out_transport_id(
+ 	struct se_portal_group *se_tpg,
+-	const char *buf,
++	char *buf,
+ 	u32 *out_tid_len,
+ 	char **port_nexus_ptr)
+ {
+@@ -356,7 +356,7 @@ static char *iscsi_parse_pr_out_transport_id(
  		}
- 
-+		if (!phba->cfg_nvmet_mrq)
-+			phba->cfg_nvmet_mrq = phba->cfg_nvme_io_channel;
-+
- 		/* Adjust lpfc_nvmet_mrq to avoid running out of WQE slots */
- 		if (phba->cfg_nvmet_mrq > phba->cfg_nvme_io_channel) {
- 			phba->cfg_nvmet_mrq = phba->cfg_nvme_io_channel;
-@@ -6364,10 +6368,13 @@ lpfc_nvme_mod_param_dep(struct lpfc_hba *phba)
- 					"6018 Adjust lpfc_nvmet_mrq to %d\n",
- 					phba->cfg_nvmet_mrq);
- 		}
-+		if (phba->cfg_nvmet_mrq > LPFC_NVMET_MRQ_MAX)
-+			phba->cfg_nvmet_mrq = LPFC_NVMET_MRQ_MAX;
-+
- 	} else {
- 		/* Not NVME Target mode.  Turn off Target parameters. */
- 		phba->nvmet_support = 0;
--		phba->cfg_nvmet_mrq = 0;
-+		phba->cfg_nvmet_mrq = LPFC_NVMET_MRQ_OFF;
- 		phba->cfg_nvmet_fb_size = 0;
  	}
  
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 4df5a21bd93b..b7f57492aefc 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -3213,7 +3213,7 @@ lpfc_idiag_cqs_for_eq(struct lpfc_hba *phba, char *pbuffer,
- 			return 1;
+-	return (char *)&buf[4];
++	return &buf[4];
+ }
+ 
+ int target_get_pr_transport_id_len(struct se_node_acl *nacl,
+@@ -405,7 +405,7 @@ int target_get_pr_transport_id(struct se_node_acl *nacl,
+ }
+ 
+ const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+-		const char *buf, u32 *out_tid_len, char **port_nexus_ptr)
++		char *buf, u32 *out_tid_len, char **port_nexus_ptr)
+ {
+ 	u32 offset;
+ 
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 18e3eb16e756..cada158cf1c2 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -101,7 +101,7 @@ int	target_get_pr_transport_id(struct se_node_acl *nacl,
+ 		struct t10_pr_registration *pr_reg, int *format_code,
+ 		unsigned char *buf);
+ const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+-		const char *buf, u32 *out_tid_len, char **port_nexus_ptr);
++		char *buf, u32 *out_tid_len, char **port_nexus_ptr);
+ 
+ /* target_core_hba.c */
+ struct se_hba *core_alloc_hba(const char *, u32, u32);
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index dd2cd8048582..09941d1ae6c1 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1597,7 +1597,7 @@ core_scsi3_decode_spec_i_port(
+ 			dest_rtpi = tmp_lun->lun_rtpi;
+ 
+ 			i_str = target_parse_pr_out_transport_id(tmp_tpg,
+-					(const char *)ptr, &tid_len, &iport_ptr);
++					ptr, &tid_len, &iport_ptr);
+ 			if (!i_str)
+ 				continue;
+ 
+@@ -3285,7 +3285,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
+ 		goto out;
  	}
- 
--	if (eqidx < phba->cfg_nvmet_mrq) {
-+	if ((eqidx < phba->cfg_nvmet_mrq) && phba->nvmet_support) {
- 		/* NVMET CQset */
- 		qp = phba->sli4_hba.nvmet_cqset[eqidx];
- 		*len = __lpfc_idiag_print_cq(qp, "NVMET CQset", pbuffer, *len);
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index fc9f91327724..7a06f23a3baf 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7939,8 +7939,12 @@ lpfc_sli4_queue_verify(struct lpfc_hba *phba)
- 		phba->cfg_fcp_io_channel = io_channel;
- 	if (phba->cfg_nvme_io_channel > io_channel)
- 		phba->cfg_nvme_io_channel = io_channel;
--	if (phba->cfg_nvme_io_channel < phba->cfg_nvmet_mrq)
--		phba->cfg_nvmet_mrq = phba->cfg_nvme_io_channel;
-+	if (phba->nvmet_support) {
-+		if (phba->cfg_nvme_io_channel < phba->cfg_nvmet_mrq)
-+			phba->cfg_nvmet_mrq = phba->cfg_nvme_io_channel;
-+	}
-+	if (phba->cfg_nvmet_mrq > LPFC_NVMET_MRQ_MAX)
-+		phba->cfg_nvmet_mrq = LPFC_NVMET_MRQ_MAX;
- 
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"2574 IO channels: irqs %d fcp %d nvme %d MRQ: %d\n",
-@@ -8454,13 +8458,15 @@ lpfc_sli4_queue_destroy(struct lpfc_hba *phba)
- 	/* Release NVME CQ mapping array */
- 	lpfc_sli4_release_queue_map(&phba->sli4_hba.nvme_cq_map);
- 
--	lpfc_sli4_release_queues(&phba->sli4_hba.nvmet_cqset,
--					phba->cfg_nvmet_mrq);
-+	if (phba->nvmet_support) {
-+		lpfc_sli4_release_queues(&phba->sli4_hba.nvmet_cqset,
-+					 phba->cfg_nvmet_mrq);
- 
--	lpfc_sli4_release_queues(&phba->sli4_hba.nvmet_mrq_hdr,
--					phba->cfg_nvmet_mrq);
--	lpfc_sli4_release_queues(&phba->sli4_hba.nvmet_mrq_data,
--					phba->cfg_nvmet_mrq);
-+		lpfc_sli4_release_queues(&phba->sli4_hba.nvmet_mrq_hdr,
-+					 phba->cfg_nvmet_mrq);
-+		lpfc_sli4_release_queues(&phba->sli4_hba.nvmet_mrq_data,
-+					 phba->cfg_nvmet_mrq);
-+	}
- 
- 	/* Release mailbox command work queue */
- 	__lpfc_sli4_release_queue(&phba->sli4_hba.mbx_wq);
-@@ -9015,19 +9021,22 @@ lpfc_sli4_queue_unset(struct lpfc_hba *phba)
- 		for (qidx = 0; qidx < phba->cfg_nvme_io_channel; qidx++)
- 			lpfc_cq_destroy(phba, phba->sli4_hba.nvme_cq[qidx]);
- 
--	/* Unset NVMET MRQ queue */
--	if (phba->sli4_hba.nvmet_mrq_hdr) {
--		for (qidx = 0; qidx < phba->cfg_nvmet_mrq; qidx++)
--			lpfc_rq_destroy(phba,
-+	if (phba->nvmet_support) {
-+		/* Unset NVMET MRQ queue */
-+		if (phba->sli4_hba.nvmet_mrq_hdr) {
-+			for (qidx = 0; qidx < phba->cfg_nvmet_mrq; qidx++)
-+				lpfc_rq_destroy(
-+					phba,
- 					phba->sli4_hba.nvmet_mrq_hdr[qidx],
- 					phba->sli4_hba.nvmet_mrq_data[qidx]);
--	}
-+		}
- 
--	/* Unset NVMET CQ Set complete queue */
--	if (phba->sli4_hba.nvmet_cqset) {
--		for (qidx = 0; qidx < phba->cfg_nvmet_mrq; qidx++)
--			lpfc_cq_destroy(phba,
--					phba->sli4_hba.nvmet_cqset[qidx]);
-+		/* Unset NVMET CQ Set complete queue */
-+		if (phba->sli4_hba.nvmet_cqset) {
-+			for (qidx = 0; qidx < phba->cfg_nvmet_mrq; qidx++)
-+				lpfc_cq_destroy(
-+					phba, phba->sli4_hba.nvmet_cqset[qidx]);
-+		}
- 	}
- 
- 	/* Unset FCP response complete queue */
-@@ -10403,7 +10412,7 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	    !phba->nvme_support) {
- 		phba->nvme_support = 0;
- 		phba->nvmet_support = 0;
--		phba->cfg_nvmet_mrq = 0;
-+		phba->cfg_nvmet_mrq = LPFC_NVMET_MRQ_OFF;
- 		phba->cfg_nvme_io_channel = 0;
- 		phba->io_channel_irqs = phba->cfg_fcp_io_channel;
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT | LOG_NVME,
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 25a65b0bb7f3..6723e7b81946 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.h
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -25,6 +25,10 @@
- #define LPFC_NVMET_RQE_DEF_COUNT	512
- #define LPFC_NVMET_SUCCESS_LEN	12
- 
-+#define LPFC_NVMET_MRQ_OFF		0xffff
-+#define LPFC_NVMET_MRQ_AUTO		0
-+#define LPFC_NVMET_MRQ_MAX		16
-+
- /* Used for NVME Target */
- struct lpfc_nvmet_tgtport {
- 	struct lpfc_hba *phba;
+ 	initiator_str = target_parse_pr_out_transport_id(dest_se_tpg,
+-			(const char *)&buf[24], &tmp_tid_len, &iport_ptr);
++			&buf[24], &tmp_tid_len, &iport_ptr);
+ 	if (!initiator_str) {
+ 		pr_err("SPC-3 PR REGISTER_AND_MOVE: Unable to locate"
+ 			" initiator_str from Transport ID\n");
 -- 
-2.13.1
+2.11.0
