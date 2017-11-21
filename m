@@ -1,25 +1,26 @@
-From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-Subject: Re: [PATCH] scsi/eh: fix hang adding ehandler wakeups after
- decrementing host_busy
-Date: Tue, 21 Nov 2017 11:39:55 +0300
-Message-ID: <e8ee72f8-8588-9fae-a029-20b225529d42@virtuozzo.com>
-References: <20170905125424.15412-1-ptikhomirov@virtuozzo.com>
+From: Wesley <mauro.ruffino@fva.org.br>
+Subject: Hello Gorgeous
+Date: Tue, 21 Nov 2017 04:03:22 -0400 (AMT)
+Message-ID: <1328862671.193859.1511251402096.JavaMail.zimbra@fva.org.br>
+Reply-To: Wesley <wesleycoolguy1@outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db5eur01on0137.outbound.protection.outlook.com ([104.47.2.137]:36096
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751502AbdKUIkC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Nov 2017 03:40:02 -0500
-In-Reply-To: <20170905125424.15412-1-ptikhomirov@virtuozzo.com>
-Content-Language: en-US
+Received: from jau.fva.org.br ([186.226.60.109]:36444 "EHLO jau.fva.org.br"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751669AbdKUIlT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Nov 2017 03:41:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, devel@openvz.org
 
-JFYI these patch is in Virtuozzo7 kernel from September, and we have no 
-issues found with it until now by out testing, and initial problem does 
-not reproduce for 2.5 months.
+Am Wesley from the United States, I hope this message met you well anyway i really want to get to know you better, i`m an easy-going man, and I am currently looking for a relationship in which I feel loved.
+ 
+I would love to get to know the "real" you as a friend. Your likes, your dislikes, your interests...... what makes YOU My favorite color is Blue. My favorite food is BACON, I could easily become a vegetarian if it wasn't for bacon!!
+ 
+I hope you can tell me more details about your job, relationship and your past.
+ 
+ 
+Hoping to hear from you soon.
+ 
+Wesley.
