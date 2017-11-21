@@ -1,19 +1,19 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 11/17] lpfc: Linux LPFC driver does not process all
- RSCNs
-Date: Tue, 21 Nov 2017 09:12:41 +0100
-Message-ID: <3eed3ff8-31b1-d79a-721d-90c73cd3e1d6@suse.de>
+Subject: Re: [PATCH v3 13/17] lpfc: Correct driver deregistrations with host
+ nvme transport
+Date: Tue, 21 Nov 2017 09:13:53 +0100
+Message-ID: <5ca245e5-0399-adb0-2003-920344b3adc2@suse.de>
 References: <20171121000044.27702-1-jsmart2021@gmail.com>
- <20171121000044.27702-12-jsmart2021@gmail.com>
+ <20171121000044.27702-14-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38337 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38522 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751189AbdKUIMn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Nov 2017 03:12:43 -0500
-In-Reply-To: <20171121000044.27702-12-jsmart2021@gmail.com>
+        id S1751154AbdKUINy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Nov 2017 03:13:54 -0500
+In-Reply-To: <20171121000044.27702-14-jsmart2021@gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,27 +21,27 @@ To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
 On 11/21/2017 01:00 AM, James Smart wrote:
-> During RSCN storms, the driver does not rediscover some targets.
-> The driver marks some RSCN as to be handled after the ones it's
-> working on. The driver missed processing some deferred RSCN.
+> The driver's interaction with the host nvme transport has been
+> incorrect for a while. The driver did not wait for the unregister
+> callbacks (waited only 5 jiffies). Thus the driver may remove
+> objects that may be referenced by subsequent abort commands from
+> the transport, and the actual unregister callback was effectively
+> a noop. This was especially problematic if the driver was unloaded.
 > 
-> Move where the driver checks for deferred RSCNs and initiate
-> deferred RSCN handling if the flag was set. Also revise nport state
-> within the RSCN confirm routine. Add some state data to a possible
-> debug print to aid future debugging.
+> The driver now waits for the unregister callbacks, as it should,
+> before continuing with teardown.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > 
 > ---
 > v3:
->   per review, fix weird data element that was a combination of
->   multiple fields. The log print now has each field.
+>   per review: clear NLP_WAIT_FOR_UNREG in all cases
 > ---
->  drivers/scsi/lpfc/lpfc_ct.c      | 19 +++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_els.c     |  4 +---
->  drivers/scsi/lpfc/lpfc_hbadisc.c |  7 +++++--
->  3 files changed, 25 insertions(+), 5 deletions(-)
+>  drivers/scsi/lpfc/lpfc_disc.h |   2 +
+>  drivers/scsi/lpfc/lpfc_nvme.c | 116 +++++++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/lpfc/lpfc_nvme.h |   2 +
+>  3 files changed, 114 insertions(+), 6 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
