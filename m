@@ -1,29 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: st.c: fix kernel-doc mismatch
-Date: Mon, 20 Nov 2017 22:18:37 -0500
-Message-ID: <yq18tf0mi9e.fsf@oracle.com>
-References: <fa663a7f-8248-9562-dda7-8c54e13b5824@infradead.org>
+Subject: Re: [PATCH] scsi: aacraid: remove unused variable managed_request_id
+Date: Mon, 20 Nov 2017 22:22:16 -0500
+Message-ID: <yq14lpomi3b.fsf@oracle.com>
+References: <20171115165341.20042-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33980 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752151AbdKUDTO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 22:19:14 -0500
-In-Reply-To: <fa663a7f-8248-9562-dda7-8c54e13b5824@infradead.org> (Randy
-        Dunlap's message of "Mon, 20 Nov 2017 18:25:08 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171115165341.20042-1-colin.king@canonical.com> (Colin King's
+        message of "Wed, 15 Nov 2017 16:53:41 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 
-Randy,
+Colin,
 
-> Fix kernel-doc function name and comments in st.c::read_ns_show():
-> change us to ns to match the function name.
+> Variable managed_request_id is being assigned but it is never read,
+> hence it is redundant and can be removed. Cleans up clang warning:
 
-Applied to 4.16/scsi-queue. Thanks!
+Applied to 4.16/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
