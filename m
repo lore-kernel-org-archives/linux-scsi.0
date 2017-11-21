@@ -1,28 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] bfa: remove unused pointer 'port'
-Date: Mon, 20 Nov 2017 22:22:37 -0500
-Message-ID: <yq1zi7gl3ia.fsf@oracle.com>
-References: <20171115170849.20413-1-colin.king@canonical.com>
+Subject: Re: [PATCH 0/3] Some fixes to aacraid
+Date: Mon, 20 Nov 2017 22:34:11 -0500
+Message-ID: <yq1vai4l2z0.fsf@oracle.com>
+References: <20171117211455.29031-1-gpiccoli@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171115170849.20413-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 15 Nov 2017 17:08:49 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:36811 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752670AbdKUDe3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2017 22:34:29 -0500
+In-Reply-To: <20171117211455.29031-1-gpiccoli@linux.vnet.ibm.com> (Guilherme
+        G. Piccoli's message of "Fri, 17 Nov 2017 19:14:52 -0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: aacraid@microsemi.com, linux-scsi@vger.kernel.org, david.carroll@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, gpiccoli@protonmail.ch
 
 
-Colin,
+Guilherme,
 
-> The pointer 'port' is being assigned but it is never read, hence it is
-> redundant and can be removed. Cleans up clang warning:
->
-> drivers/scsi/bfa/bfad_attr.c:505:2: warning: Value stored to 'port'
-> is never read
+> This series presents 3 small fixes for aacraid driver.  The most
+> important is the crash prevention, IMHO.
 
-Applied to 4.16/scsi-queue. Thanks, Colin!
+Applied to 4.15/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
