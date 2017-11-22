@@ -1,25 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hpsa: remove an unecessary NULL check
-Date: Tue, 21 Nov 2017 22:59:15 -0500
-Message-ID: <yq1k1yjklpo.fsf@oracle.com>
-References: <20171107130131.3zohbeoobjxbqmdz@mwanda>
+Subject: Re: [PATCH] scsi: ufs: ufshcd: fix potential NULL pointer dereference in ufshcd_config_vreg
+Date: Tue, 21 Nov 2017 23:01:15 -0500
+Message-ID: <yq1fu97klmc.fsf@oracle.com>
+References: <20171120141229.GA2130@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20171107130131.3zohbeoobjxbqmdz@mwanda> (Dan Carpenter's message
-        of "Tue, 7 Nov 2017 16:01:32 +0300")
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171120141229.GA2130@embeddedor.com> (Gustavo A. R. Silva's
+        message of "Mon, 20 Nov 2017 08:12:29 -0600")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Dan,
+Gustavo A.,
 
-> device->scsi3addr[] is an array, not a pointer, so it can't be NULL.
-> I've removed the check.
+> _vreg_ is being dereferenced before it is null checked, hence there is a
+> potential null pointer dereference.
+>
+> Fix this by moving the pointer dereference after _vreg_ has been null
+> checked.
 
-Applied to 4.16/scsi-queue. Thanks!
+Applied to 4.15/scsi-fixes, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
