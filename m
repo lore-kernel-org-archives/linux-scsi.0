@@ -1,28 +1,28 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 2/3] scsi: arcmsr: Add driver module parameter msix_enable
-Date: Thu, 23 Nov 2017 14:43:36 +0300
-Message-ID: <20171123114336.bnekgwbrdbx7kvnn@mwanda>
-References: <1511400674.9832.23.camel@Centos6.3-64>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/3] scsi: arcmsr: add driver module parameter -
+ msi_enable, msix_enable
+Date: Thu, 23 Nov 2017 04:57:39 -0800
+Message-ID: <20171123125739.GA25627@infradead.org>
+References: <1511400123.9832.14.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1511400674.9832.23.camel@Centos6.3-64>
+In-Reply-To: <1511400123.9832.14.camel@Centos6.3-64>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Ching Huang <ching2048@areca.com.tw>
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hare@suse.de, hch@infradead.org
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, hare@suse.de, dan.carpenter@oracle.com, hch@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Nov 23, 2017 at 09:31:14AM +0800, Ching Huang wrote:
-> @@ -829,12 +833,15 @@ arcmsr_request_irq(struct pci_dev *pdev,
->  	unsigned long flags;
->  	int nvec, i;
->  
-> +	if (msix_enable == 0)
-> +		goto msi_int0;
+On Thu, Nov 23, 2017 at 09:22:03AM +0800, Ching Huang wrote:
+> From: Ching Huang <ching2048@areca.com.tw>
+> 
+> Hi all,
+> 
+> The following patches apply to Martin's 4.16/scsi-queue.
+> 
+> Patch 1: Add module parameter msi_enable to has a chance to disable msi interrupt if it does not work properly.
+> 
+> Patch 2: Add module parameter msix_enable to has a chance to disable msix interrupt if it does not work properly.
 
-I feel like this goto is not very beautiful, but I can't actually apply
-this patch?  Which tree is this written against?  I'm using linux-next.
-
-regards,
-dan carpenter
+Why would it not work properly?
