@@ -1,46 +1,106 @@
-From: =?utf-8?Q?=C3=96zkan_G=C3=B6ksu?= <ozkan.goksu@usishi.com>
-Subject: mpt3sas_cm2 attempting host reset for a 1 faulted disk
-Date: Wed, 22 Nov 2017 17:56:53 +0200
-Message-ID: <C8931243-3202-4343-9481-0CE8BEBC3A1F@usishi.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:37682 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751338AbdKVO4D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Nov 2017 09:56:03 -0500
-Received: by mail-wm0-f47.google.com with SMTP id v186so10763252wma.2
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Nov 2017 06:56:02 -0800 (PST)
-Received: from [192.168.10.7] ([195.142.102.158])
-        by smtp.gmail.com with ESMTPSA id e124sm1614596wmg.34.2017.11.22.06.56.00
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 22 Nov 2017 06:56:01 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH] Ensure that the SCSI error handler gets woken up
+Date: Wed, 22 Nov 2017 17:05:05 -0800
+Message-ID: <20171123010505.9603-1-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Konstantin Khorenko <khorenko@virtuozzo.com>, Stuart Hayes <stuart.w.hayes@gmail.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+If scsi_eh_scmd_add() is called concurrently with scsi_host_queue_ready()
+while shost->host_blocked > 0 then it can happen that neither function
+wakes up the SCSI error handler. Fix this by making every function that
+decreases the host_busy counter to wake up the error handler if necessary.
 
-I have 5 jbod and i reach each one 2 sas cable with 5 LSI 3008.
+Reported-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Fixes: commit 746650160866 ("scsi: convert host_busy to atomic_t")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Konstantin Khorenko <khorenko@virtuozzo.com>
+Cc: Stuart Hayes <stuart.w.hayes@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_error.c |  3 ++-
+ drivers/scsi/scsi_lib.c   | 22 ++++++++++++++--------
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
-Last day my cluster imported zfs pool to controller 2.
-I was have 1 faulted disk in this pool already "sdhr".
-When the pool imported on controller2 few sec or minute later I lost 1 =
-jbod because mpt3sas_cm2 reset LSI card + expanders. After few sec i was =
-able to use the jbod again.
-
-But why? I was only have 1 faulted disk!.
-If mpt3 will reset at every import for a faulted disk "which i have 390 =
-disk, i will have 1-2 faulted disk its normal" we have a big problem!=20
-
-LSISAS3008: FWVersion(15.00.00.00), ChipRevision(0x02), =
-BiosVersion(08.35.00.00
-
-My Kernel=3D  Linux 4.13.11-1-ARCH #1 SMP PREEMPT Thu Nov 2 10:25:56 CET =
-2017 x86_64 GNU/Linux
-
-Kernel log=3D=20
-https://gist.github.com/morphinz/26812c7025c5125b4fa60e300ec76bd0
-
-BTW: I lost index 2 and "sdhr" in that jbod:=
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 5e89049e9b4e..f7f014c755d7 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -61,9 +61,10 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+ static int scsi_try_to_abort_cmd(struct scsi_host_template *,
+ 				 struct scsi_cmnd *);
+ 
+-/* called with shost->host_lock held */
+ void scsi_eh_wakeup(struct Scsi_Host *shost)
+ {
++	lockdep_assert_held(shost->host_lock);
++
+ 	if (atomic_read(&shost->host_busy) == shost->host_failed) {
+ 		trace_scsi_eh_wakeup(shost);
+ 		wake_up_process(shost->ehandler);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1e05e1885ac8..abd37d77af2d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -318,22 +318,28 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ 		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+ }
+ 
+-void scsi_device_unbusy(struct scsi_device *sdev)
++static void scsi_dec_host_busy(struct Scsi_Host *shost)
+ {
+-	struct Scsi_Host *shost = sdev->host;
+-	struct scsi_target *starget = scsi_target(sdev);
+ 	unsigned long flags;
+ 
+ 	atomic_dec(&shost->host_busy);
+-	if (starget->can_queue > 0)
+-		atomic_dec(&starget->target_busy);
+-
+ 	if (unlikely(scsi_host_in_recovery(shost) &&
+ 		     (shost->host_failed || shost->host_eh_scheduled))) {
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		scsi_eh_wakeup(shost);
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 	}
++}
++
++void scsi_device_unbusy(struct scsi_device *sdev)
++{
++	struct Scsi_Host *shost = sdev->host;
++	struct scsi_target *starget = scsi_target(sdev);
++
++	scsi_dec_host_busy(shost);
++
++	if (starget->can_queue > 0)
++		atomic_dec(&starget->target_busy);
+ 
+ 	atomic_dec(&sdev->device_busy);
+ }
+@@ -1532,7 +1538,7 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 		list_add_tail(&sdev->starved_entry, &shost->starved_list);
+ 	spin_unlock_irq(shost->host_lock);
+ out_dec:
+-	atomic_dec(&shost->host_busy);
++	scsi_dec_host_busy(shost);
+ 	return 0;
+ }
+ 
+@@ -2020,7 +2026,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	return BLK_STS_OK;
+ 
+ out_dec_host_busy:
+-       atomic_dec(&shost->host_busy);
++	scsi_dec_host_busy(shost);
+ out_dec_target_busy:
+ 	if (scsi_target(sdev)->can_queue > 0)
+ 		atomic_dec(&scsi_target(sdev)->target_busy);
+-- 
+2.15.0
