@@ -1,51 +1,28 @@
-From: =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
-Subject: [PATCH] scsi: sd: add missing KERN_CONT for disk spin-up
-Date: Fri, 24 Nov 2017 18:02:35 +0100
-Message-ID: <2a37c111d0ffed64653921fc405c7a17be64a41a.1511542918.git.mirq-linux@rere.qmqm.pl>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH V8 0/7] blk-mq support for ZBC disks
+Date: Fri, 24 Nov 2017 23:48:53 +0000
+Message-ID: <1511567307.2137.5.camel@wdc.com>
+References: <20171109065707.17210-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 78-11-180-123.static.ip.netia.com.pl ([78.11.180.123]:58352
-        "EHLO rere.qmqm.pl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750731AbdKXRHo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Nov 2017 12:07:44 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:35340 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753772AbdKXXs5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Nov 2017 18:48:57 -0500
+In-Reply-To: <20171109065707.17210-1-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <C56582D97F323947980985DC18B323DF@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-KERN_CONT is now required for continued printks(). Add it.
-
-Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
----
- drivers/scsi/sd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d175c5c5ccf8..9743b5f0800d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2142,7 +2142,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 			}
- 			/* Wait 1 second for next try */
- 			msleep(1000);
--			printk(".");
-+			printk(KERN_CONT ".");
- 
- 		/*
- 		 * Wait for USB flash devices with slow firmware.
-@@ -2172,9 +2172,9 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 
- 	if (spintime) {
- 		if (scsi_status_is_good(the_result))
--			printk("ready\n");
-+			printk(KERN_CONT "ready\n");
- 		else
--			printk("not responding...\n");
-+			printk(KERN_CONT "not responding...\n");
- 	}
- }
- 
--- 
-2.11.0
+W0Z1bGwgcXVvdGUgZGVsZXRlZF0NCg0KSGkgSmVucywNCg0KQW55IGNvbW1lbnQgcmVnYXJkaW5n
+IHRoaXMgc2VyaWVzID8NCkkgdW5kZXJzdGFuZCB0aGF0IHRoaXMgd291bGQgYmUgZm9yIHRoZSA0
+LjE2IG1lcmdlIHdpbmRvdywgc28gbm8gaHVycnksDQpidXQgSSB3b3VsZCBsaWtlIHRvIGtub3cg
+aWYgSSBuZWVkIHRvIGdvIGJhY2sgdG8gdGhlIGRyYXdpbmcgYm9hcmQgZm9yDQpaQkMgYmxrLW1x
+L3Njc2ktbXEgc3VwcG9ydCBvciBpZiB0aGlzIGlzIGFuIGFjY2VwdGFibGUgc29sdXRpb24uDQoN
+CkJlc3QgcmVnYXJkcy4NCg0KLS0gDQpEYW1pZW4gTGUgTW9hbA0KV2VzdGVybiBEaWdpdGFsIFJl
+c2VhcmNoDQo=
