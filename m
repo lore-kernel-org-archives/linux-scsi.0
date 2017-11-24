@@ -1,13 +1,13 @@
 From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: bfa: use setup_timer instead of init_timer
-Date: Fri, 24 Nov 2017 13:44:02 +0000
-Message-ID: <20171124134402.32739-1-colin.king@canonical.com>
+Subject: [PATCH] scsi: sym53c8xx_2: use setup_timer instead of init_timer
+Date: Fri, 24 Nov 2017 13:52:36 +0000
+Message-ID: <20171124135236.492-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -18,24 +18,23 @@ function and data fields.
 
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/bfa/bfad.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 5caf5f3ff642..c910b238bc9e 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -719,10 +719,7 @@ bfad_bfa_tmo(unsigned long data)
- void
- bfad_init_timer(struct bfad_s *bfad)
- {
--	init_timer(&bfad->hal_tmo);
--	bfad->hal_tmo.function = bfad_bfa_tmo;
--	bfad->hal_tmo.data = (unsigned long)bfad;
--
-+	setup_timer(&bfad->hal_tmo, bfad_bfa_tmo, (unsigned long)bfad);
- 	mod_timer(&bfad->hal_tmo,
- 		  jiffies + msecs_to_jiffies(BFA_TIMER_FREQ));
- }
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index d32e3ba8863e..285397d42558 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -1351,9 +1351,7 @@ static struct Scsi_Host *sym_attach(struct scsi_host_template *tpnt, int unit,
+ 	/*
+ 	 *  Start the timer daemon
+ 	 */
+-	init_timer(&np->s.timer);
+-	np->s.timer.data     = (unsigned long) np;
+-	np->s.timer.function = sym53c8xx_timer;
++	setup_timer(&np->s.timer, sym53c8xx_timer, (unsigned long)np);
+ 	np->s.lasttime=0;
+ 	sym_timer (np);
+ 
 -- 
 2.14.1
