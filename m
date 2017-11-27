@@ -1,64 +1,31 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: News UBSAN warnings in aacraid
-Date: Mon, 27 Nov 2017 21:17:03 +0200 (EET)
-Message-ID: <alpine.LRH.2.21.1711272112050.5402@math.ut.ee>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: UFS utilities
+Date: Mon, 27 Nov 2017 19:35:25 +0000
+Message-ID: <1511811323.2993.13.camel@wdc.com>
+References: <c7f3d6f543ae41c1bb625b1612e47057@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Dave Carroll <david.carroll@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <c7f3d6f543ae41c1bb625b1612e47057@SIWEX5A.sing.micron.com>
+Content-Language: en-US
+Content-ID: <E9BCE0E035E76C48A74B88EB9BF3DD57@namprd04.prod.outlook.com>
+Sender: stable-owner@vger.kernel.org
+To: "beanhuo@micron.com" <beanhuo@micron.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Tried 4.15-rc1 on an old 32-bit HP Netserver with aacraid card. Compared 
-to 4.14, there are new UBSAN warnings with timer related backtraces, so 
-the timespec64 change seems suspicious:
-
-[   12.228058] ================================================================================
-[   12.228155] UBSAN: Undefined behaviour in drivers/scsi/aacraid/commsup.c:2514:49
-[   12.228229] signed integer overflow:
-[   12.228283] 964297611 * 250 cannot be represented in type 'long int'
-[   12.228347] CPU: 1 PID: 276 Comm: aacraid Not tainted 4.15.0-rc1 #80
-[   12.228404] Hardware name: Hewlett Packard HP NetServer/HP System Board, BIOS 4.06.46 PW 06/25/2003
-[   12.228477] Call Trace:
-[   12.228560]  dump_stack+0x48/0x65
-[   12.228620]  ubsan_epilogue+0xe/0x40
-[   12.228677]  handle_overflow+0xad/0xc0
-[   12.228754]  ? del_timer_sync+0x39/0x50
-[   12.228818]  ? __getnstimeofday64+0x4d/0x200
-[   12.228877]  __ubsan_handle_mul_overflow+0x12/0x20
-[   12.229037]  aac_command_thread+0x1243/0x1290 [aacraid]
-[   12.229109]  ? pick_next_task_fair+0x27f/0x760
-[   12.229175]  ? __schedule+0x1b1/0x8e0
-[   12.229245]  ? wake_up_q+0xa0/0xa0
-[   12.229311]  kthread+0x13d/0x1f0
-[   12.229390]  ? aac_send_hosttime+0xf0/0xf0 [aacraid]
-[   12.229449]  ? __kthread_create_worker+0x110/0x110
-[   12.229516]  ret_from_fork+0x19/0x24
-[   12.229571] ================================================================================
-[   12.292055] ================================================================================
-[   12.292130] UBSAN: Undefined behaviour in drivers/scsi/aacraid/commsup.c:2515:7
-[   12.292200] signed integer overflow:
-[   12.292252] 1734571608 + 500000000 cannot be represented in type 'long int'
-[   12.292312] CPU: 1 PID: 276 Comm: aacraid Not tainted 4.15.0-rc1 #80
-[   12.292368] Hardware name: Hewlett Packard HP NetServer/HP System Board, BIOS 4.06.46 PW 06/25/2003
-[   12.292439] Call Trace:
-[   12.292494]  dump_stack+0x48/0x65
-[   12.292550]  ubsan_epilogue+0xe/0x40
-[   12.292606]  handle_overflow+0xad/0xc0
-[   12.292665]  ? del_timer_sync+0x39/0x50
-[   12.292722]  ? __getnstimeofday64+0x4d/0x200
-[   12.292780]  __ubsan_handle_add_overflow+0x12/0x20
-[   12.292861]  aac_command_thread+0x1259/0x1290 [aacraid]
-[   12.292922]  ? pick_next_task_fair+0x27f/0x760
-[   12.292980]  ? __schedule+0x1b1/0x8e0
-[   12.293037]  ? wake_up_q+0xa0/0xa0
-[   12.293094]  kthread+0x13d/0x1f0
-[   12.293172]  ? aac_send_hosttime+0xf0/0xf0 [aacraid]
-[   12.293231]  ? __kthread_create_worker+0x110/0x110
-[   12.293289]  ret_from_fork+0x19/0x24
-[   12.293345] ================================================================================
-
-
--- 
-Meelis Roos (mroos@linux.ee)
+T24gTW9uLCAyMDE3LTExLTI3IGF0IDExOjI1ICswMDAwLCBCZWFuIEh1byAoYmVhbmh1bykgd3Jv
+dGU6DQo+IElzIHRoZXJlIHNvbWVvbmUga25vd3MgaWYgZXhpc3RzIG9uZSB1dGlsaXMgZGVkaWNh
+dGVkIHRvIFVGUyBkZXZpY2UsDQo+IHJhdGhlciB0aGFuIFNDU0kgdXRpbHM/IEkgaGF2ZSB0cmll
+ZCBzZzMtdXRpbHMsIGJ1dCBpdCBpcyBub3QgY29udmVuaWVudA0KPiBmb3IgdGhlIGVtYmVkZGVk
+IEFSTS1iYXNlZCBzeXN0ZW0uDQoNCkhlbGxvIEJlYW4sDQoNClBsZWFzZSBiZSBtb3JlIHNwZWNp
+ZmljLiBXaGF0IGlzIGluY29udmVuaWVudCBhYm91dCBzZzNfdXRpbHMgb24gZW1iZWRkZWQNCkFS
+TSBzeXN0ZW1zPw0KDQo+IEFuZCBhbHNvIGl0IGRvZXNuJ3Qgc3VwcG9ydCBzZXZlcmFsIFVGUyBz
+cGVjaWFsIGNvbW1hbmQuIA0KDQpBcmUgeW91IHJlZmVycmluZyB0byBTQ1NJIGNvbW1hbmRzIG9y
+IHJhdGhlciB0byBVRlMgY29tbWFuZHMgdGhhdCBmYWxsDQpvdXRzaWRlIHRoZSBTQ1NJIHNwZWM/
+IEFueXdheSwgYW4gYXBwcm9hY2ggdGhhdCBpcyB1c2VkIGJ5IG1hbnkgU0NTSSBkcml2ZXJzDQp0
+byBleHBvcnQgaW5mb3JtYXRpb24gdG8gdXNlciBzcGFjZSB0aGF0IGZhbGxzIG91dHNpZGUgdGhl
+IFNDU0kgc3BlYyBpcyB0bw0KY3JlYXRlIGFkZGl0aW9uYWwgc3lzZnMgYXR0cmlidXRlcy4gU2Vl
+IGFsc28gdGhlIHNkZXZfYXR0cnMgYW5kIHNob3N0X2F0dHJzDQptZW1iZXJzIG9mIHN0cnVjdCBz
+Y3NpX2hvc3RfdGVtcGxhdGUuDQoNCkJhcnQu
