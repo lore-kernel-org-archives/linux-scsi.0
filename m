@@ -1,34 +1,134 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Stuart Hayes <stuart.w.hayes@gmail.com>
 Subject: Re: [PATCH] Ensure that the SCSI error handler gets woken up
-Date: Mon, 27 Nov 2017 21:39:07 +0000
-Message-ID: <1511818746.2993.14.camel@wdc.com>
+Date: Mon, 27 Nov 2017 15:53:16 -0600
+Message-ID: <966ef08d-6975-8739-7f4e-3df3cfe7ee12@gmail.com>
 References: <20171123010505.9603-1-bart.vanassche@wdc.com>
-         <20171123081802.GA20705@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20171123081802.GA20705@lst.de>
+In-Reply-To: <20171123010505.9603-1-bart.vanassche@wdc.com>
 Content-Language: en-US
-Content-ID: <C771531CFB24444CB81BA9D848182F66@namprd04.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>
-Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "stuart.w.hayes@gmail.com" <stuart.w.hayes@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE3LTExLTIzIGF0IDA5OjE4ICswMTAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYyBiL2RyaXZlcnMv
-c2NzaS9zY3NpX2Vycm9yLmMNCj4gPiBpbmRleCA1ZTg5MDQ5ZTliNGUuLmY3ZjAxNGM3NTVkNyAx
-MDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jDQo+ID4gKysrIGIvZHJp
-dmVycy9zY3NpL3Njc2lfZXJyb3IuYw0KPiA+IEBAIC02MSw5ICs2MSwxMCBAQCBzdGF0aWMgaW50
-IHNjc2lfZWhfdHJ5X3N0dShzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKTsNCj4gPiAgc3RhdGljIGlu
-dCBzY3NpX3RyeV90b19hYm9ydF9jbWQoc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSAqLA0KPiA+
-ICAJCQkJIHN0cnVjdCBzY3NpX2NtbmQgKik7DQo+ID4gIA0KPiA+IC0vKiBjYWxsZWQgd2l0aCBz
-aG9zdC0+aG9zdF9sb2NrIGhlbGQgKi8NCj4gPiAgdm9pZCBzY3NpX2VoX3dha2V1cChzdHJ1Y3Qg
-U2NzaV9Ib3N0ICpzaG9zdCkNCj4gPiAgew0KPiA+ICsJbG9ja2RlcF9hc3NlcnRfaGVsZChzaG9z
-dC0+aG9zdF9sb2NrKTsNCj4gPiArDQo+ID4gIAlpZiAoYXRvbWljX3JlYWQoJnNob3N0LT5ob3N0
-X2J1c3kpID09IHNob3N0LT5ob3N0X2ZhaWxlZCkgew0KPiA+ICAJCXRyYWNlX3Njc2lfZWhfd2Fr
-ZXVwKHNob3N0KTsNCj4gPiAgCQl3YWtlX3VwX3Byb2Nlc3Moc2hvc3QtPmVoYW5kbGVyKTsNCj4g
-DQo+IENhbiB5b3Ugc3BsaXQgdGhpcyBjb21tZW50IHRvIGFzc2VydCBjaGFuZ2UgaW50byBhIHNl
-cGFyYXRlIHBhdGNoLCBwbGVhc2U/DQoNCkhlbGxvIENocmlzdG9waC4NCg0KVGhhbmtzIGZvciB0
-aGUgcmV2aWV3LiBJIHdpbGwgbWFrZSB0aGUgcmVxdWVzdGVkIGNoYW5nZS4NCg0KQmFydC4=
+For what it's worth, this does not fix the problem that both Pavel's original 
+patch (https://patchwork.kernel.org/patch/9938919/) and the patch I submitted 
+(https://patchwork.kernel.org/patch/10067059/) would fix.  I verified that 
+this patch still fails on my system.
+
+The only problem I am able to reproduce where the error handler doesn't get 
+woken up is when scsi_eh_scmd_add() and scsi_device_unbusy() are running at 
+the same time on different CPUs... scsi_eh_scmd_add() increments host_failed 
+and checks host_busy, while scsi_device_unbusy() decrements host_busy and 
+checks host_failed, and scsi_device_unbusy() does that when it does not hold 
+the spin lock, and there's no smp_mb(), so they can each see stale values 
+and neither will actually wake the error handler.
+
+Could you modify this patch to make scsi_dec_host_busy() get the spin lock 
+right before checking host_failed instead of right after, like Pavel's patch, 
+to protect against this?
+
+Thanks
+Stuart
+
+On 11/22/2017 7:05 PM, Bart Van Assche wrote:
+> If scsi_eh_scmd_add() is called concurrently with scsi_host_queue_ready()
+> while shost->host_blocked > 0 then it can happen that neither function
+> wakes up the SCSI error handler. Fix this by making every function that
+> decreases the host_busy counter to wake up the error handler if necessary.
+> 
+> Reported-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+> Fixes: commit 746650160866 ("scsi: convert host_busy to atomic_t")
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Konstantin Khorenko <khorenko@virtuozzo.com>
+> Cc: Stuart Hayes <stuart.w.hayes@gmail.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/scsi_error.c |  3 ++-
+>  drivers/scsi/scsi_lib.c   | 22 ++++++++++++++--------
+>  2 files changed, 16 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 5e89049e9b4e..f7f014c755d7 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -61,9 +61,10 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+>  static int scsi_try_to_abort_cmd(struct scsi_host_template *,
+>  				 struct scsi_cmnd *);
+>  
+> -/* called with shost->host_lock held */
+>  void scsi_eh_wakeup(struct Scsi_Host *shost)
+>  {
+> +	lockdep_assert_held(shost->host_lock);
+> +
+>  	if (atomic_read(&shost->host_busy) == shost->host_failed) {
+>  		trace_scsi_eh_wakeup(shost);
+>  		wake_up_process(shost->ehandler);
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 1e05e1885ac8..abd37d77af2d 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -318,22 +318,28 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+>  		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+>  }
+>  
+> -void scsi_device_unbusy(struct scsi_device *sdev)
+> +static void scsi_dec_host_busy(struct Scsi_Host *shost)
+>  {
+> -	struct Scsi_Host *shost = sdev->host;
+> -	struct scsi_target *starget = scsi_target(sdev);
+>  	unsigned long flags;
+>  
+>  	atomic_dec(&shost->host_busy);
+> -	if (starget->can_queue > 0)
+> -		atomic_dec(&starget->target_busy);
+> -
+>  	if (unlikely(scsi_host_in_recovery(shost) &&
+>  		     (shost->host_failed || shost->host_eh_scheduled))) {
+>  		spin_lock_irqsave(shost->host_lock, flags);
+>  		scsi_eh_wakeup(shost);
+>  		spin_unlock_irqrestore(shost->host_lock, flags);
+>  	}
+> +}
+> +
+> +void scsi_device_unbusy(struct scsi_device *sdev)
+> +{
+> +	struct Scsi_Host *shost = sdev->host;
+> +	struct scsi_target *starget = scsi_target(sdev);
+> +
+> +	scsi_dec_host_busy(shost);
+> +
+> +	if (starget->can_queue > 0)
+> +		atomic_dec(&starget->target_busy);
+>  
+>  	atomic_dec(&sdev->device_busy);
+>  }
+> @@ -1532,7 +1538,7 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+>  		list_add_tail(&sdev->starved_entry, &shost->starved_list);
+>  	spin_unlock_irq(shost->host_lock);
+>  out_dec:
+> -	atomic_dec(&shost->host_busy);
+> +	scsi_dec_host_busy(shost);
+>  	return 0;
+>  }
+>  
+> @@ -2020,7 +2026,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>  	return BLK_STS_OK;
+>  
+>  out_dec_host_busy:
+> -       atomic_dec(&shost->host_busy);
+> +	scsi_dec_host_busy(shost);
+>  out_dec_target_busy:
+>  	if (scsi_target(sdev)->can_queue > 0)
+>  		atomic_dec(&scsi_target(sdev)->target_busy);
+> 
+
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
