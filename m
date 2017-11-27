@@ -1,71 +1,24 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: [PATCH] scsi_devinfo: cleanly zero-pad devinfo strings
-Date: Mon, 27 Nov 2017 23:47:35 +0100
-Message-ID: <20171127224735.32139-2-mwilck@suse.com>
-References: <20171127224735.32139-1-mwilck@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:57955 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751771AbdK0WsM (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Mon, 27 Nov 2017 17:48:12 -0500
-In-Reply-To: <20171127224735.32139-1-mwilck@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] Ensure that the SCSI error handler gets woken up
+Date: Mon, 27 Nov 2017 23:56:08 +0000
+Message-ID: <1511826967.2993.21.camel@wdc.com>
+References: <20171123010505.9603-1-bart.vanassche@wdc.com>
+         <966ef08d-6975-8739-7f4e-3df3cfe7ee12@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <966ef08d-6975-8739-7f4e-3df3cfe7ee12@gmail.com>
+Content-Language: en-US
+Content-ID: <C7A59B1855810149A5035CDA1F58AD07@namprd04.prod.outlook.com>
+Sender: stable-owner@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "stuart.w.hayes@gmail.com" <stuart.w.hayes@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.com" <hare@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "ptikhomirov@virtuozzo.com" <ptikhomirov@virtuozzo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Alan Stern <stern@rowland.harvard.edu>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.de>
 
-Cleanly fill memory for "vendor" and "model" with 0-bytes for
-the "compatible" case rather than adding only a single 0 byte.
-This simplifies the devinfo code a a bit, and avoids mistakes
-in other places of the code (not in current upstream, but we
-had one such mistake in the SUSE kernel).
-
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/scsi_devinfo.c | 23 +++++++----------------
- 1 file changed, 7 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index d6db5697472e..6e784a09b21a 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -34,7 +34,6 @@ struct scsi_dev_info_list_table {
- };
- 
- 
--static const char spaces[] = "                "; /* 16 of them */
- static unsigned scsi_default_dev_flags;
- static LIST_HEAD(scsi_dev_info_list);
- static char scsi_dev_flags[256];
-@@ -298,21 +297,13 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
- 	size_t from_length;
- 
- 	from_length = strlen(from);
--	strncpy(to, from, min(to_length, from_length));
--	if (from_length < to_length) {
--		if (compatible) {
--			/*
--			 * NUL terminate the string if it is short.
--			 */
--			to[from_length] = '\0';
--		} else {
--			/*
--			 * space pad the string if it is short.
--			 */
--			strncpy(&to[from_length], spaces,
--				to_length - from_length);
--		}
--	}
-+	/* This zero-pads the destination */
-+	strncpy(to, from, to_length);
-+	if (from_length < to_length && !compatible)
-+		/*
-+		 * space pad the string if it is short.
-+		 */
-+		memset(&to[from_length], ' ', to_length - from_length);
- 	if (from_length > to_length)
- 		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
- 			__func__, name, from);
--- 
-2.15.0
+T24gTW9uLCAyMDE3LTExLTI3IGF0IDE1OjUzIC0wNjAwLCBTdHVhcnQgSGF5ZXMgd3JvdGU6DQo+
+IENvdWxkIHlvdSBtb2RpZnkgdGhpcyBwYXRjaCB0byBtYWtlIHNjc2lfZGVjX2hvc3RfYnVzeSgp
+IGdldCB0aGUgc3BpbiBsb2NrIA0KPiByaWdodCBiZWZvcmUgY2hlY2tpbmcgaG9zdF9mYWlsZWQg
+aW5zdGVhZCBvZiByaWdodCBhZnRlciwgbGlrZSBQYXZlbCdzIHBhdGNoLCANCj4gdG8gcHJvdGVj
+dCBhZ2FpbnN0IHRoaXM/DQoNCkhlbGxvIFN0dWFydCwNCg0KVGhhbmtzIGZvciB0aGUgZmVlZGJh
+Y2suIEkgd2lsbCBsb29rIGludG8gdGhpcy4NCg0KQmFydC4=
