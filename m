@@ -1,90 +1,34 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: News UBSAN warnings in aacraid
-Date: Mon, 27 Nov 2017 22:32:45 +0100
-Message-ID: <CAK8P3a00CC20bD2cfuJhRwrmmSte7y83a0Z2hx+CRoqQotJktA@mail.gmail.com>
-References: <alpine.LRH.2.21.1711272112050.5402@math.ut.ee>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] Ensure that the SCSI error handler gets woken up
+Date: Mon, 27 Nov 2017 21:39:07 +0000
+Message-ID: <1511818746.2993.14.camel@wdc.com>
+References: <20171123010505.9603-1-bart.vanassche@wdc.com>
+         <20171123081802.GA20705@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.21.1711272112050.5402@math.ut.ee>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Dave Carroll <david.carroll@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20171123081802.GA20705@lst.de>
+Content-Language: en-US
+Content-ID: <C771531CFB24444CB81BA9D848182F66@namprd04.prod.outlook.com>
+Sender: stable-owner@vger.kernel.org
+To: "hch@lst.de" <hch@lst.de>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "stuart.w.hayes@gmail.com" <stuart.w.hayes@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 27, 2017 at 8:17 PM, Meelis Roos <mroos@linux.ee> wrote:
-> Tried 4.15-rc1 on an old 32-bit HP Netserver with aacraid card. Compared
-> to 4.14, there are new UBSAN warnings with timer related backtraces, so
-> the timespec64 change seems suspicious:
-
-> [   12.228155] UBSAN: Undefined behaviour in drivers/scsi/aacraid/commsup.c:2514:49
-> [   12.228229] signed integer overflow:
-> [   12.228283] 964297611 * 250 cannot be represented in type 'long int'
-
-Thanks for reporting it! For reference, this is my change that got applied to
-aac_command_thread:
-
-@@ -2496,7 +2496,7 @@ int aac_command_thread(void *data)
-                }
-                if (!time_before(next_check_jiffies,next_jiffies)
-                 && ((difference = next_jiffies - jiffies) <= 0)) {
--                       struct timeval now;
-+                       struct timespec64 now;
-                        int ret;
-
-                        /* Don't even try to talk to adapter if its sick */
-@@ -2506,15 +2506,15 @@ int aac_command_thread(void *data)
-                        next_check_jiffies = jiffies
-                                           + ((long)(unsigned)check_interval)
-                                           * HZ;
--                       do_gettimeofday(&now);
-+                       ktime_get_real_ts64(&now);
-
-                        /* Synchronize our watches */
--                       if (((1000000 - (1000000 / HZ)) > now.tv_usec)
--                        && (now.tv_usec > (1000000 / HZ)))
--                               difference = (((1000000 - now.tv_usec) * HZ)
--                                 + 500000) / 1000000;
-+                       if (((NSEC_PER_SEC - (NSEC_PER_SEC / HZ)) > now.tv_nsec)
-+                        && (now.tv_nsec > (NSEC_PER_SEC / HZ)))
-+                               difference = (((NSEC_PER_SEC -
-now.tv_nsec) * HZ)
-+                                 + NSEC_PER_SEC / 2) / NSEC_PER_SEC;
-                        else {
--                               if (now.tv_usec > 500000)
-+                               if (now.tv_nsec > NSEC_PER_SEC / 2)
-                                        ++now.tv_sec;
-
-                                if (dev->sa_firmware)
-
-The problem is that a microsecond number (0 to 999999) multiplied by
-HZ (100 to 1024) always fits in a 32-bit integer, but the nanosecond
-number doesn't.
-
-We could make that a 64-bit division, but that would be fairly expensive.
-
-I'm trying to understand the bigger picture now, rather than simply
-attempting to do a simple conversion, but I don't see what we are
-actually trying to compute in 'difference' here.
-
-I think this chunk would solve the problem and result in the
-same behavior as before:
-
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -2511,8 +2511,8 @@ int aac_command_thread(void *data)
-                        /* Synchronize our watches */
-                        if (((NSEC_PER_SEC - (NSEC_PER_SEC / HZ)) > now.tv_nsec)
-                         && (now.tv_nsec > (NSEC_PER_SEC / HZ)))
--                               difference = (((NSEC_PER_SEC -
-now.tv_nsec) * HZ)
--                                 + NSEC_PER_SEC / 2) / NSEC_PER_SEC;
-+                               difference = HZ + HZ / 2 -
-+                                            now.tv_nsec / (NSEC_PER_SEC / HZ);
-                        else {
-                                if (now.tv_nsec > NSEC_PER_SEC / 2)
-                                        ++now.tv_sec;
-
-but I don't see why we add in half a second here. Any ideas?
-
-       Arnd
+T24gVGh1LCAyMDE3LTExLTIzIGF0IDA5OjE4ICswMTAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYyBiL2RyaXZlcnMv
+c2NzaS9zY3NpX2Vycm9yLmMNCj4gPiBpbmRleCA1ZTg5MDQ5ZTliNGUuLmY3ZjAxNGM3NTVkNyAx
+MDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jDQo+ID4gKysrIGIvZHJp
+dmVycy9zY3NpL3Njc2lfZXJyb3IuYw0KPiA+IEBAIC02MSw5ICs2MSwxMCBAQCBzdGF0aWMgaW50
+IHNjc2lfZWhfdHJ5X3N0dShzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKTsNCj4gPiAgc3RhdGljIGlu
+dCBzY3NpX3RyeV90b19hYm9ydF9jbWQoc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSAqLA0KPiA+
+ICAJCQkJIHN0cnVjdCBzY3NpX2NtbmQgKik7DQo+ID4gIA0KPiA+IC0vKiBjYWxsZWQgd2l0aCBz
+aG9zdC0+aG9zdF9sb2NrIGhlbGQgKi8NCj4gPiAgdm9pZCBzY3NpX2VoX3dha2V1cChzdHJ1Y3Qg
+U2NzaV9Ib3N0ICpzaG9zdCkNCj4gPiAgew0KPiA+ICsJbG9ja2RlcF9hc3NlcnRfaGVsZChzaG9z
+dC0+aG9zdF9sb2NrKTsNCj4gPiArDQo+ID4gIAlpZiAoYXRvbWljX3JlYWQoJnNob3N0LT5ob3N0
+X2J1c3kpID09IHNob3N0LT5ob3N0X2ZhaWxlZCkgew0KPiA+ICAJCXRyYWNlX3Njc2lfZWhfd2Fr
+ZXVwKHNob3N0KTsNCj4gPiAgCQl3YWtlX3VwX3Byb2Nlc3Moc2hvc3QtPmVoYW5kbGVyKTsNCj4g
+DQo+IENhbiB5b3Ugc3BsaXQgdGhpcyBjb21tZW50IHRvIGFzc2VydCBjaGFuZ2UgaW50byBhIHNl
+cGFyYXRlIHBhdGNoLCBwbGVhc2U/DQoNCkhlbGxvIENocmlzdG9waC4NCg0KVGhhbmtzIGZvciB0
+aGUgcmV2aWV3LiBJIHdpbGwgbWFrZSB0aGUgcmVxdWVzdGVkIGNoYW5nZS4NCg0KQmFydC4=
