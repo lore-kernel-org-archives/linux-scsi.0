@@ -1,25 +1,23 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: libfc: fix ELS request handling
-Date: Mon, 27 Nov 2017 09:16:07 +0100
-Message-ID: <20171127081607.awfwrtte3yhvbxss@linux-x5ow.site>
-References: <20171125183810.20035-1-mwilck@suse.com>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: UFS utilities
+Date: Mon, 27 Nov 2017 11:25:47 +0000
+Message-ID: <c7f3d6f543ae41c1bb625b1612e47057@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171125183810.20035-1-mwilck@suse.com>
-Sender: stable-owner@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Martin Wilck <mwilck@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Chad Dupuis <chad.dupuis@cavium.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks Martin,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Hi, all 
+Is there someone knows if exists one utilis dedicated to UFS device, rather than SCSI utils?
+I have tried sg3-utils, but it is not convenient for the embedded ARM-based system.
+And also it doesn't support several UFS special command. 
+If we don't have this kind of tool for UFS, is it necessary for us to develop a ufs-utils?
+I need your every expert's inputs and suggestions.
+Thanks in advance.
+
+//Bean Huo
