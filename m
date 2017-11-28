@@ -1,39 +1,28 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 22/22] qla2xxx: Update driver version to 10.00.00.03-k
-Date: Tue, 28 Nov 2017 11:35:03 -0800
-Message-ID: <20171128193503.13695-23-himanshu.madhani@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 14/22] qla2xxx: Fix nested spinlock
+Date: Tue, 28 Nov 2017 19:45:01 +0000
+Message-ID: <1511898300.28512.20.camel@wdc.com>
 References: <20171128193503.13695-1-himanshu.madhani@cavium.com>
+         <20171128193503.13695-15-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:35490
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932178AbdK1Tfl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Nov 2017 14:35:41 -0500
-In-Reply-To: <20171128193503.13695-1-himanshu.madhani@cavium.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:25309 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752914AbdK1TpE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Nov 2017 14:45:04 -0500
+In-Reply-To: <20171128193503.13695-15-himanshu.madhani@cavium.com>
+Content-Language: en-US
+Content-ID: <855EE31CDEBD614FBD4A972208B850CF@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index b6ec02b96d3d..911b82226d13 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,7 +7,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.00.00.02-k"
-+#define QLA2XXX_VERSION      "10.00.00.03-k"
- 
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	0
--- 
-2.12.0
+T24gVHVlLCAyMDE3LTExLTI4IGF0IDExOjM0IC0wODAwLCBIaW1hbnNodSBNYWRoYW5pIHdyb3Rl
+Og0KPiBGcm9tOiBRdWlubiBUcmFuIDxxdWlubi50cmFuQGNhdml1bS5jb20+DQoNCk5lc3Rpbmcg
+c3BpbmxvY2tzIGlzIGFsbG93ZWQgc28gSSB0aGluayBhIG1vcmUgZGV0YWlsZWQgZGVzY3JpcHRp
+b24NCmlzIHJlcXVpcmVkIGZvciB0aGlzIHBhdGNoLiBJdCB3b3VsZCBoZWxwIGUuZy4gdG8gZXhw
+bGFpbiB3aHkgdGhpcw0KcGF0Y2ggaXMgYSBidWcgZml4IGFuZCBhbHNvIHdoYXQgaXQgZml4ZXMu
+DQoNClRoYW5rcywNCg0KQmFydC4=
