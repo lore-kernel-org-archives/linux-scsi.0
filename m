@@ -1,104 +1,79 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] scsi: ufs: add Exynos-specific driver
-Date: Tue, 28 Nov 2017 06:24:39 -0800
-Message-ID: <20171128142439.GA5765@infradead.org>
-References: <CGME20171128053631epcas1p389908b55511552b79b4083109dddc515@epcas1p3.samsung.com>
- <002a01d3680a$d8817200$89845600$@samsung.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] bfa: fix access to bfad_im_port_s
+Date: Tue, 28 Nov 2017 16:26:57 +0100
+Message-ID: <20171128152657.13421-1-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49011 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750829AbdK1OYk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Nov 2017 09:24:40 -0500
-Content-Disposition: inline
-In-Reply-To: <002a01d3680a$d8817200$89845600$@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?6rmA6riw7JuF?= <kwmad.kim@samsung.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, =?utf-8?B?6rmA67aA7KeE?= <boojin.kim@samsung.com>, YOUNGEUN PARK <youngeun.park@samsung.com>
 
-On Tue, Nov 28, 2017 at 02:36:31PM +0900, 김기웅 wrote:
-> This driver is to use UFS devices on Exynos SoC and
-> has been already used for many years for commercial products.
+Commit 'cd21c605b2cf ("scsi: fc: provide fc_bsg_to_shost() helper")'
+changed access to bfa's 'struct bfad_im_port_s' by using shost_priv()
+instead of shost->hostdata[0].
 
-So why do you only submit it only now?
+This lead to crashes like in the following back-trace:
 
-> +/* Helper for UFS CAL interface */
-> +static inline int ufs_init_cal(struct exynos_ufs *ufs, int idx,
-> +					struct platform_device *pdev)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int ufs_pre_link(struct exynos_ufs *ufs)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int ufs_post_link(struct exynos_ufs *ufs)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int ufs_pre_gear_change(struct exynos_ufs *ufs,
-> +				struct uic_pwr_mode *pmd)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int ufs_post_gear_change(struct exynos_ufs *ufs)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int ufs_post_h8_enter(struct exynos_ufs *ufs)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int ufs_pre_h8_exit(struct exynos_ufs *ufs)
-> +{
-> +	return 0;
-> +}
+task: ffff880046375300 ti: ffff8800a2ef8000 task.ti: ffff8800a2ef8000
+RIP: e030:[<ffffffffa04c8252>]  [<ffffffffa04c8252>] bfa_fcport_get_attr+0x82/0x260 [bfa]
+RSP: e02b:ffff8800a2efba10  EFLAGS: 00010046
+RAX: 575f415441536432 RBX: ffff8800a2efba28 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffff8800a2efba28 RDI: ffff880004dc31d8
+RBP: ffff880004dc31d8 R08: 0000000000000000 R09: 0000000000000001
+R10: ffff88011fadc468 R11: 0000000000000001 R12: ffff880004dc31f0
+R13: 0000000000000200 R14: ffff880004dc61d0 R15: ffff880004947a10
+FS:  00007feb1e489700(0000) GS:ffff88011fac0000(0000) knlGS:0000000000000000
+CS:  e033 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 00007ffe14e46c10 CR3: 00000000957b8000 CR4: 0000000000000660
+Stack:
+ ffff88001d4da000 ffff880004dc31c0 ffffffffa048a9df ffffffff81e56380
+ 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+[] bfad_iocmd_ioc_get_info+0x4f/0x220 [bfa]
+[] bfad_iocmd_handler+0xa00/0xd40 [bfa]
+[] bfad_im_bsg_request+0xee/0x1b0 [bfa]
+[] fc_bsg_dispatch+0x10b/0x1b0 [scsi_transport_fc]
+[] bsg_request_fn+0x11d/0x1c0
+[] __blk_run_queue+0x2f/0x40
+[] blk_execute_rq_nowait+0xa8/0x160
+[] blk_execute_rq+0x77/0x120
+[] bsg_ioctl+0x1b6/0x200
+[] do_vfs_ioctl+0x2cd/0x4a0
+[] SyS_ioctl+0x74/0x80
+[] entry_SYSCALL_64_fastpath+0x12/0x6d
 
-These are all dummys, please rmeove them.
+Fixes: cd21c605b2cf ("scsi: fc: provide fc_bsg_to_shost() helper")
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Michal Koutný <mkoutny@suse.com>
+---
+ drivers/scsi/bfa/bfad_bsg.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-> +#ifndef __EXYNOS_UFS_VS_DEBUG__
-
-Please don't have ifdef code that isn't Kconfig selectable.
-
-> +#ifndef __EXYNOS_UFS_MMIO_FUNC__
-> +#define __EXYNOS_UFS_MMIO_FUNC__
-> +#define EXYNOS_UFS_MMIO_FUNC(name)						\
-> +static inline void name##_writel(struct exynos_ufs *ufs, u32 val, u32 reg)	\
-> +{										\
-> +	writel(val, ufs->reg_##name + reg);					\
-> +}										\
-> +										\
-> +static inline u32 name##_readl(struct exynos_ufs *ufs, u32 reg)			\
-> +{										\
-> +	return readl(ufs->reg_##name + reg);					\
-> +}
-> +
-> +EXYNOS_UFS_MMIO_FUNC(hci);
-> +EXYNOS_UFS_MMIO_FUNC(unipro);
-
-Please remove this macro magic.
-
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 1332e544da92..1afd5ac9707c 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -308,6 +308,7 @@ struct ufs_hba_variant_ops {
->  	int	(*setup_clocks)(struct ufs_hba *, bool,
->  				enum ufs_notify_change_status);
->  	int     (*setup_regulators)(struct ufs_hba *, bool);
-> +	void    (*host_reset)(struct ufs_hba *);
->  	int	(*hce_enable_notify)(struct ufs_hba *,
->  				     enum ufs_notify_change_status);
->  	int	(*link_startup_notify)(struct ufs_hba *,
-
-New ufs core methods should be added in a separate patch with 
-a good description, and also with actual callers using them.
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 72ca2a2e08e2..09ef68c8225f 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -3135,7 +3135,8 @@ bfad_im_bsg_vendor_request(struct bsg_job *job)
+ 	struct fc_bsg_request *bsg_request = job->request;
+ 	struct fc_bsg_reply *bsg_reply = job->reply;
+ 	uint32_t vendor_cmd = bsg_request->rqst_data.h_vendor.vendor_cmd[0];
+-	struct bfad_im_port_s *im_port = shost_priv(fc_bsg_to_shost(job));
++	struct Scsi_Host *shost = fc_bsg_to_shost(job);
++	struct bfad_im_port_s *im_port = shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
+ 	void *payload_kbuf;
+ 	int rc = -EINVAL;
+@@ -3350,7 +3351,8 @@ int
+ bfad_im_bsg_els_ct_request(struct bsg_job *job)
+ {
+ 	struct bfa_bsg_data *bsg_data;
+-	struct bfad_im_port_s *im_port = shost_priv(fc_bsg_to_shost(job));
++	struct Scsi_Host *shost = fc_bsg_to_shost(job);
++	struct bfad_im_port_s *im_port = shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
+ 	bfa_bsg_fcpt_t *bsg_fcpt;
+ 	struct bfad_fcxp    *drv_fcxp;
+-- 
+2.13.6
