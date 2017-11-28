@@ -1,55 +1,52 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 04/22] qla2xxx: Skip IRQ affinity for Target QPairs
-Date: Tue, 28 Nov 2017 11:34:45 -0800
-Message-ID: <20171128193503.13695-5-himanshu.madhani@cavium.com>
+Subject: [PATCH 09/22] qla2xxx: Fix NPIV host cleanup in target mode
+Date: Tue, 28 Nov 2017 11:34:50 -0800
+Message-ID: <20171128193503.13695-10-himanshu.madhani@cavium.com>
 References: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:4638
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0086.outbound.protection.outlook.com ([104.47.37.86]:30249
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752410AbdK1TfO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Nov 2017 14:35:14 -0500
+        id S1752410AbdK1TfU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Nov 2017 14:35:20 -0500
 In-Reply-To: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Sawan Chandak <sawan.chandak@cavium.com>
 
-Fix co-existence between Block MQ and Target Mode. Block MQ
-and initiator mode requires midlayer queue mapping to check
-for IRQ to be affinitize. For target mode, it's not the case.
+Add check to make sure we are cleaning up global target host
+list only for NPIV hosts
 
-Fixes: 09620eeb62c41 ("scsi: qla2xxx: Add debug knob for user control workload")
-Cc: <stable@vger.kernel.org> # 4.12+
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Fixes: bdbe24de281e2 ("scsi: qla2xxx: Cleanup NPIV host in target mode during config teardown")
+Cc: <stable@vger.kernel.org> # 4.10+
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index dfbf82e716b0..428e1bfaa83b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -6609,9 +6609,14 @@ qla83xx_disable_laser(scsi_qla_host_t *vha)
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 924d58f5408f..1bec8aebb7b6 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1561,8 +1561,11 @@ static void qlt_release(struct qla_tgt *tgt)
  
- static int qla2xxx_map_queues(struct Scsi_Host *shost)
- {
-+	int rc;
- 	scsi_qla_host_t *vha = (scsi_qla_host_t *)shost->hostdata;
+ 	btree_destroy64(&tgt->lun_qpair_map);
  
--	return blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
-+	if (USER_CTRL_IRQ(vha->hw))
-+		rc = blk_mq_map_queues(&shost->tag_set);
-+	else
-+		rc = blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
-+	return rc;
- }
+-	if (ha->tgt.tgt_ops && ha->tgt.tgt_ops->remove_target)
+-		ha->tgt.tgt_ops->remove_target(vha);
++	if (vha->vp_idx)
++		if (ha->tgt.tgt_ops &&
++		    ha->tgt.tgt_ops->remove_target &&
++		    vha->vha_tgt.target_lport_ptr)
++			ha->tgt.tgt_ops->remove_target(vha);
  
- static const struct pci_error_handlers qla2xxx_err_handler = {
+ 	vha->vha_tgt.qla_tgt = NULL;
+ 
 -- 
 2.12.0
