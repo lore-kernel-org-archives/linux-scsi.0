@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 02/22] qla2xxx: Fix gpnid error processing
-Date: Tue, 28 Nov 2017 11:34:43 -0800
-Message-ID: <20171128193503.13695-3-himanshu.madhani@cavium.com>
+Subject: [PATCH 04/22] qla2xxx: Skip IRQ affinity for Target QPairs
+Date: Tue, 28 Nov 2017 11:34:45 -0800
+Message-ID: <20171128193503.13695-5-himanshu.madhani@cavium.com>
 References: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0071.outbound.protection.outlook.com ([104.47.42.71]:8096
+Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:4638
         "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752410AbdK1TfK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Nov 2017 14:35:10 -0500
+        id S1752410AbdK1TfO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Nov 2017 14:35:14 -0500
 In-Reply-To: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,31 +19,37 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Stop GPNID command from advancing if command has failed.
+Fix co-existence between Block MQ and Target Mode. Block MQ
+and initiator mode requires midlayer queue mapping to check
+for IRQ to be affinitize. For target mode, it's not the case.
 
-Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
-Cc: <stable@vger.kernel.org> # 4.10+
+Fixes: 09620eeb62c41 ("scsi: qla2xxx: Add debug knob for user control workload")
+Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_gs.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/qla2xxx/qla_os.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index bc3db6abc9a0..ddc69d36877e 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3211,6 +3211,11 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
- 	    sp->name, res, ct_req->req.port_id.port_id,
- 	    ct_rsp->rsp.gpn_id.port_name);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index dfbf82e716b0..428e1bfaa83b 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -6609,9 +6609,14 @@ qla83xx_disable_laser(scsi_qla_host_t *vha)
  
-+	if (res) {
-+		sp->free(sp);
-+		return;
-+	}
-+
- 	memset(&ea, 0, sizeof(ea));
- 	memcpy(ea.port_name, ct_rsp->rsp.gpn_id.port_name, WWN_SIZE);
- 	ea.sp = sp;
+ static int qla2xxx_map_queues(struct Scsi_Host *shost)
+ {
++	int rc;
+ 	scsi_qla_host_t *vha = (scsi_qla_host_t *)shost->hostdata;
+ 
+-	return blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
++	if (USER_CTRL_IRQ(vha->hw))
++		rc = blk_mq_map_queues(&shost->tag_set);
++	else
++		rc = blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
++	return rc;
+ }
+ 
+ static const struct pci_error_handlers qla2xxx_err_handler = {
 -- 
 2.12.0
