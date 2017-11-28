@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 17/22] qla2xxx: Clear loop id after delete
-Date: Tue, 28 Nov 2017 11:34:58 -0800
-Message-ID: <20171128193503.13695-18-himanshu.madhani@cavium.com>
+Subject: [PATCH 13/22] qla2xxx: Fix PRLI state check
+Date: Tue, 28 Nov 2017 11:34:54 -0800
+Message-ID: <20171128193503.13695-14-himanshu.madhani@cavium.com>
 References: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0062.outbound.protection.outlook.com ([104.47.37.62]:41502
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0074.outbound.protection.outlook.com ([104.47.32.74]:50528
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932154AbdK1Tfa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Nov 2017 14:35:30 -0500
+        id S1752410AbdK1TfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Nov 2017 14:35:23 -0500
 In-Reply-To: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,51 +19,32 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-clear loop id after delete to prevent session invalidation
-of stale session.
+Get Port Database MBX cmd is to validate current Login state upon
+PRLI completion. Current code looks at the last login state for
+re-validation which was incorrect. This patch removed incorrect
+state check.
 
-Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
+Fixes: 15f30a5752287 ("qla2xxx: Use IOCB interface to submit non-critical MBX.")
 Cc: <stable@vger.kernel.org> # 4.10+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 1c219998ab60..0c0453f2ca9e 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -986,7 +986,7 @@ static void qlt_free_session_done(struct work_struct *work)
- 			sess->send_els_logo = 0;
- 		}
- 
--		if (sess->logout_on_delete) {
-+		if (sess->logout_on_delete && sess->loop_id != FC_NO_LOOP_ID) {
- 			int rc;
- 
- 			rc = qla2x00_post_async_logout_work(vha, sess, NULL);
-@@ -1045,8 +1045,7 @@ static void qlt_free_session_done(struct work_struct *work)
- 		sess->login_succ = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index cb717d47339f..e2b5fa47bb57 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -6160,8 +6160,7 @@ int __qla24xx_parse_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport,
  	}
  
--	if (sess->chip_reset != ha->base_qpair->chip_reset)
--		qla2x00_clear_loop_id(sess);
-+	qla2x00_clear_loop_id(sess);
- 
- 	if (sess->conflict) {
- 		sess->conflict->login_pause = 0;
-@@ -4600,9 +4599,9 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
- 				    "Invalidating sess %p loop_id %d wwn %llx.\n",
- 				    other_sess, other_sess->loop_id, other_wwn);
- 
--
- 				other_sess->keep_nport_handle = 1;
--				*conflict_sess = other_sess;
-+				if (other_sess->disc_state != DSC_DELETED)
-+					*conflict_sess = other_sess;
- 				qlt_schedule_sess_for_deletion(other_sess,
- 				    true);
- 			}
+ 	/* Check for logged in state. */
+-	if (current_login_state != PDS_PRLI_COMPLETE &&
+-	    last_login_state != PDS_PRLI_COMPLETE) {
++	if (current_login_state != PDS_PRLI_COMPLETE) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x119a,
+ 		    "Unable to verify login-state (%x/%x) for loop_id %x.\n",
+ 		    current_login_state, last_login_state, fcport->loop_id);
 -- 
 2.12.0
