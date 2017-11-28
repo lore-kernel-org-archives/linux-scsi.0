@@ -1,25 +1,36 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi: scsi_devinfo: handle non-terminated strings
-Date: Tue, 28 Nov 2017 16:59:07 +0000
-Message-ID: <1511888345.28512.2.camel@wdc.com>
-References: <20171127224735.32139-1-mwilck@suse.com>
+From: Cong Wang <xiyou.wangcong@gmail.com>
+Subject: Re: [PATCH] libsas: flush pending destruct work in sas_unregister_domain_devices()
+Date: Tue, 28 Nov 2017 09:00:54 -0800
+Message-ID: <CAM_iQpV-uy9VXfVx9s5AX8TN5-0G=7Ny0uvmCCn7V7ys_gBbWw@mail.gmail.com>
+References: <20171128002445.16594-1-xiyou.wangcong@gmail.com> <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:22137 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752990AbdK1Q7K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Nov 2017 11:59:10 -0500
-In-Reply-To: <20171127224735.32139-1-mwilck@suse.com>
-Content-Language: en-US
-Content-ID: <FD735E736E92584CBAC876E4163EFCDE@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "mwilck@suse.com" <mwilck@suse.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "mwilck@suse.de" <mwilck@suse.de>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
 
-T24gTW9uLCAyMDE3LTExLTI3IGF0IDIzOjQ3ICswMTAwLCBNYXJ0aW4gV2lsY2sgd3JvdGU6DQo+
-IGRldmluZm8tPnZlbmRvciBhbmQgZGV2aW5mby0+bW9kZWwgYXJlbid0IG5lY2Vzc2FyaWx5DQo+
-IHplcm8tdGVybWluYXRlZC4NCg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52
-YW5hc3NjaGVAd2RjLmNvbT4=
+On Tue, Nov 28, 2017 at 12:20 AM, Johannes Thumshirn <jthumshirn@suse.de> w=
+rote:
+> On Mon, Nov 27, 2017 at 04:24:45PM -0800, Cong Wang wrote:
+>> We saw dozens of the following kernel waring:
+>>
+>>  WARNING: CPU: 0 PID: 705 at fs/sysfs/group.c:224 sysfs_remove_group+0x5=
+4/0x88()
+>>  sysfs group ffffffff81ab7670 not found for kobject '6:0:3:0'
+>>  Modules linked in: cpufreq_ondemand x86_pkg_temp_thermal coretemp kvm_i=
+ntel kvm microcode raid0 iTCO_wdt iTCO_vendor_support sb_edac edac_core lpc=
+_ich mfd_core ioatdma i2c_i801 shpchp wmi hed acpi_cpufreq lp parport tcp_d=
+iag inet_diag ipmi_si ipmi_devintf ipmi_msghandler sch_fq_codel igb ptp pps=
+_core i2c_algo_bit i2c_core crc32c_intel isci libsas scsi_transport_sas dca=
+ ipv6
+>>  CPU: 0 PID: 705 Comm: kworker/u240:0 Not tainted 4.1.35.el7.x86_64 #1
+>
+> This should by now be fixed with commit fbce4d97fd43 ("scsi: fixup kernel
+> warning during rmmod()" which went into v4.14-rc6.
+
+I don't see the full backtrace in commit fbce4d97fd43, but it is probably
+not rmmod path in our case.
