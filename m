@@ -1,31 +1,93 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] Ensure that the SCSI error handler gets woken up
-Date: Tue, 28 Nov 2017 15:33:45 +0000
-Message-ID: <1511883224.2664.3.camel@wdc.com>
-References: <4549fca5-5d83-2e0f-195f-4460d9febc5f@virtuozzo.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] bfa: fix access to bfad_im_port_s
+Date: Tue, 28 Nov 2017 16:36:47 +0100
+Message-ID: <0ac66aa7-3328-93c9-2029-304b7932977c@suse.de>
+References: <20171128152657.13421-1-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:63046 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751982AbdK1Pds (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Nov 2017 10:33:48 -0500
-In-Reply-To: <4549fca5-5d83-2e0f-195f-4460d9febc5f@virtuozzo.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171128152657.13421-1-jthumshirn@suse.de>
 Content-Language: en-US
-Content-ID: <54CF1D4A43880D4DA872C44EBAE0B57C@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "ptikhomirov@virtuozzo.com" <ptikhomirov@virtuozzo.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stuart.w.hayes@gmail.com" <stuart.w.hayes@gmail.com>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.com" <hare@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>
 
-T24gVHVlLCAyMDE3LTExLTI4IGF0IDEyOjA0ICswMzAwLCBQYXZlbCBUaWtob21pcm92IHdyb3Rl
-Og0KPiAxLXN0LCBTdHVhcnQgLSB0aGFua3MgZm9yIGFkZGluZyBtZSB0byBDQywgMi1uZCBCYXJ0
-IC0gbm8gaWRlYSB3aHkgeW91IA0KPiBkaWRuJ3Q/ID0pDQoNClRoYXQgbXVzdCBoYXZlIGJlZW4g
-YW4gb3ZlcnNpZ2h0LiBTb3JyeSB0aGF0IEkgaGFkIG5vdCBhZGRlZCB5b3UgdG8gdGhlDQpDYy1s
-aXN0LiBJIHdpbGwgYWRkIHlvdSB0byB0aGUgQ2MtbGlzdCB3aGVuIEkgcG9zdCB0aGUgbmV4dCB2
-ZXJzaW9uIG9mIHRoaXMNCnBhdGNoLg0KDQo+IEkgZG9uJ3Qgc2VlIGFub3RoZXIgd2F5IHRvIGZp
-eCB0aGVzZSBwcm9ibGVtLg0KDQpUaGF0IGRvZXNuJ3QgbWVhbiB0aGF0IHRoZXJlIGlzIG5vIG90
-aGVyIHdheSA6LSkgSSBpbXBsZW1lbnRlZCBhbiBhbHRlcm5hdGl2ZQ0KYXBwcm9hY2ggeWVzdGVy
-ZGF5IGFuZCBJIGhhdmUgc3RhcnRlZCB0ZXN0aW5nIGl0LiBJIHdpbGwgcG9zdCB0aGF0IHBhdGNo
-IGFzDQpzb29uIGFzIG15IHRlc3RzIGhhdmUgZmluaXNoZWQuDQoNCkJhcnQu
+On 11/28/2017 04:26 PM, Johannes Thumshirn wrote:
+> Commit 'cd21c605b2cf ("scsi: fc: provide fc_bsg_to_shost() helper")'
+> changed access to bfa's 'struct bfad_im_port_s' by using shost_priv()
+> instead of shost->hostdata[0].
+> 
+> This lead to crashes like in the following back-trace:
+> 
+> task: ffff880046375300 ti: ffff8800a2ef8000 task.ti: ffff8800a2ef8000
+> RIP: e030:[<ffffffffa04c8252>]  [<ffffffffa04c8252>] bfa_fcport_get_attr+0x82/0x260 [bfa]
+> RSP: e02b:ffff8800a2efba10  EFLAGS: 00010046
+> RAX: 575f415441536432 RBX: ffff8800a2efba28 RCX: 0000000000000000
+> RDX: 0000000000000000 RSI: ffff8800a2efba28 RDI: ffff880004dc31d8
+> RBP: ffff880004dc31d8 R08: 0000000000000000 R09: 0000000000000001
+> R10: ffff88011fadc468 R11: 0000000000000001 R12: ffff880004dc31f0
+> R13: 0000000000000200 R14: ffff880004dc61d0 R15: ffff880004947a10
+> FS:  00007feb1e489700(0000) GS:ffff88011fac0000(0000) knlGS:0000000000000000
+> CS:  e033 DS: 0000 ES: 0000 CR0: 000000008005003b
+> CR2: 00007ffe14e46c10 CR3: 00000000957b8000 CR4: 0000000000000660
+> Stack:
+>  ffff88001d4da000 ffff880004dc31c0 ffffffffa048a9df ffffffff81e56380
+>  0000000000000000 0000000000000000 0000000000000000 0000000000000000
+> [] bfad_iocmd_ioc_get_info+0x4f/0x220 [bfa]
+> [] bfad_iocmd_handler+0xa00/0xd40 [bfa]
+> [] bfad_im_bsg_request+0xee/0x1b0 [bfa]
+> [] fc_bsg_dispatch+0x10b/0x1b0 [scsi_transport_fc]
+> [] bsg_request_fn+0x11d/0x1c0
+> [] __blk_run_queue+0x2f/0x40
+> [] blk_execute_rq_nowait+0xa8/0x160
+> [] blk_execute_rq+0x77/0x120
+> [] bsg_ioctl+0x1b6/0x200
+> [] do_vfs_ioctl+0x2cd/0x4a0
+> [] SyS_ioctl+0x74/0x80
+> [] entry_SYSCALL_64_fastpath+0x12/0x6d
+> 
+> Fixes: cd21c605b2cf ("scsi: fc: provide fc_bsg_to_shost() helper")
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Michal Koutný <mkoutny@suse.com>
+> ---
+>  drivers/scsi/bfa/bfad_bsg.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+> index 72ca2a2e08e2..09ef68c8225f 100644
+> --- a/drivers/scsi/bfa/bfad_bsg.c
+> +++ b/drivers/scsi/bfa/bfad_bsg.c
+> @@ -3135,7 +3135,8 @@ bfad_im_bsg_vendor_request(struct bsg_job *job)
+>  	struct fc_bsg_request *bsg_request = job->request;
+>  	struct fc_bsg_reply *bsg_reply = job->reply;
+>  	uint32_t vendor_cmd = bsg_request->rqst_data.h_vendor.vendor_cmd[0];
+> -	struct bfad_im_port_s *im_port = shost_priv(fc_bsg_to_shost(job));
+> +	struct Scsi_Host *shost = fc_bsg_to_shost(job);
+> +	struct bfad_im_port_s *im_port = shost->hostdata[0];
+>  	struct bfad_s *bfad = im_port->bfad;
+>  	void *payload_kbuf;
+>  	int rc = -EINVAL;
+> @@ -3350,7 +3351,8 @@ int
+>  bfad_im_bsg_els_ct_request(struct bsg_job *job)
+>  {
+>  	struct bfa_bsg_data *bsg_data;
+> -	struct bfad_im_port_s *im_port = shost_priv(fc_bsg_to_shost(job));
+> +	struct Scsi_Host *shost = fc_bsg_to_shost(job);
+> +	struct bfad_im_port_s *im_port = shost->hostdata[0];
+>  	struct bfad_s *bfad = im_port->bfad;
+>  	bfa_bsg_fcpt_t *bsg_fcpt;
+>  	struct bfad_fcxp    *drv_fcxp;
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
