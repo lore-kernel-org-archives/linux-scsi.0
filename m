@@ -1,44 +1,24 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: News UBSAN warnings in aacraid
-Date: Tue, 28 Nov 2017 14:27:18 +0100
-Message-ID: <CAK8P3a04ZmNU6zAyaJHnvm2m_9itHxhtVUd67kMEW-JXNdC8Rg@mail.gmail.com>
-References: <alpine.LRH.2.21.1711272112050.5402@math.ut.ee>
- <CAK8P3a00CC20bD2cfuJhRwrmmSte7y83a0Z2hx+CRoqQotJktA@mail.gmail.com> <alpine.LRH.2.21.1711281504580.27929@math.ut.ee>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 1/3] scsi: arcmsr: Add driver module parameter
+ msi_enable
+Date: Tue, 28 Nov 2017 05:58:55 -0800
+Message-ID: <20171128135855.GA24390@infradead.org>
+References: <1511832524.4399.20.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.21.1711281504580.27929@math.ut.ee>
+Content-Disposition: inline
+In-Reply-To: <1511832524.4399.20.camel@Centos6.3-64>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Dave Carroll <david.carroll@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, hch@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Nov 28, 2017 at 2:05 PM, Meelis Roos <mroos@linux.ee> wrote:
->> I think this chunk would solve the problem and result in the
->> same behavior as before:
->>
->> --- a/drivers/scsi/aacraid/commsup.c
->> +++ b/drivers/scsi/aacraid/commsup.c
->> @@ -2511,8 +2511,8 @@ int aac_command_thread(void *data)
->>                         /* Synchronize our watches */
->>                         if (((NSEC_PER_SEC - (NSEC_PER_SEC / HZ)) > now.tv_nsec)
->>                          && (now.tv_nsec > (NSEC_PER_SEC / HZ)))
->> -                               difference = (((NSEC_PER_SEC -
->> now.tv_nsec) * HZ)
->> -                                 + NSEC_PER_SEC / 2) / NSEC_PER_SEC;
->> +                               difference = HZ + HZ / 2 -
->> +                                            now.tv_nsec / (NSEC_PER_SEC / HZ);
->>                         else {
->>                                 if (now.tv_nsec > NSEC_PER_SEC / 2)
->>                                         ++now.tv_sec;
->>
->> but I don't see why we add in half a second here. Any ideas?
->
-> I did not try to understand the details but I can confirm that this
-> patch makes the warnings go away.
+On Tue, Nov 28, 2017 at 09:28:44AM +0800, Ching Huang wrote:
+> From: Ching Huang <ching2048@areca.com.tw>
+> 
+> Add module parameter msi_enable to has a chance to disable msi interrupt if between controller and system has
+> msi INT compatible issue.
 
-Thanks for testing! I've wrote it up as a proper patch now, and tried
-to capture what I understand about this code and how I got to
-the new change.
-
-       Arnd
+If there is a system issue the system will need a quirk, and not every
+driver.
