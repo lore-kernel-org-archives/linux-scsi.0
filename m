@@ -1,24 +1,21 @@
 From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
 Subject: Re: [PATCH] Ensure that the SCSI error handler gets woken up
-Date: Tue, 28 Nov 2017 11:54:01 +0300
-Message-ID: <b4df3f11-05cb-9147-a28a-635a93c9ad9c@virtuozzo.com>
+Date: Tue, 28 Nov 2017 12:04:59 +0300
+Message-ID: <4549fca5-5d83-2e0f-195f-4460d9febc5f@virtuozzo.com>
+References: <20171123010505.9603-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-eopbgr00136.outbound.protection.outlook.com ([40.107.0.136]:30734
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751451AbdK1IyJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Nov 2017 03:54:09 -0500
-In-Reply-To: 
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20171123010505.9603-1-bart.vanassche@wdc.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: Stuart Hayes <stuart.w.hayes@gmail.com>, linux-scsi@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Sorry, missed the thread, resending.
+Resend again, Added proper in-reply-to, finally, sorry for my mailing 
+skills.
 
 1-st, Stuart - thanks for adding me to CC, 2-nd Bart - no idea why you 
 didn't? =)
