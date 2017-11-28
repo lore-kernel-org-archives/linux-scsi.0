@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v2 2/3] scsi: arcmsr: Add driver module parameter
- msix_enable
-Date: Tue, 28 Nov 2017 09:32:24 +0800
-Message-ID: <1511832744.4399.24.camel@Centos6.3-64>
+Subject: [PATCH v2 3/3] scsi: arcmsr: Update driver version to
+ v1.40.00.03-20171124
+Date: Tue, 28 Nov 2017 09:35:36 +0800
+Message-ID: <1511832936.4399.27.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -13,38 +13,19 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-Add module parameter msix_enable to has a chance to disable msix interrupt if between controller and system has
-msix INT compatible issue.
+Update driver version to v1.40.00.03-20171124
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-24 15:16:20.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2017-11-24 15:17:46.000000000 +0800
-@@ -75,6 +75,10 @@ MODULE_DESCRIPTION("Areca ARC11xx/12xx/1
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(ARCMSR_DRIVER_VERSION);
- 
-+static int msix_enable = 1;
-+module_param(msix_enable, int, S_IRUGO);
-+MODULE_PARM_DESC(msix_enable, "Enable MSI-X interrupt(0 ~ 1), msix_enable=1(enable), =0(disable)");
-+
- static int msi_enable = 1;
- module_param(msi_enable, int, S_IRUGO);
- MODULE_PARM_DESC(msi_enable, "Enable MSI interrupt(0 ~ 1), msi_enable=1(enable), =0(disable)");
-@@ -829,12 +833,15 @@ arcmsr_request_irq(struct pci_dev *pdev,
- 	unsigned long flags;
- 	int nvec, i;
- 
-+	if (msix_enable == 0)
-+		goto msi_int0;
- 	nvec = pci_alloc_irq_vectors(pdev, 1, ARCMST_NUM_MSIX_VECTORS,
- 			PCI_IRQ_MSIX);
- 	if (nvec > 0) {
- 		pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
- 		flags = 0;
- 	} else {
-+msi_int0:
- 		if (msi_enable == 1) {
- 			nvec = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
- 			if (nvec == 1) {
+diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+--- a/drivers/scsi/arcmsr/arcmsr.h	2017-11-23 14:29:46.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr.h	2017-11-24 12:07:00.000000000 +0800
+@@ -54,7 +54,7 @@ struct device_attribute;
+ #endif
+ #define ARCMSR_DEFAULT_OUTSTANDING_CMD	128
+ #define ARCMSR_MIN_OUTSTANDING_CMD	32
+-#define ARCMSR_DRIVER_VERSION		"v1.40.00.02-20171011"
++#define ARCMSR_DRIVER_VERSION		"v1.40.00.03-20171124"
+ #define ARCMSR_SCSI_INITIATOR_ID	255
+ #define ARCMSR_MAX_XFER_SECTORS		512
+ #define ARCMSR_MAX_XFER_SECTORS_B	4096
