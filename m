@@ -1,136 +1,66 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 11/22] qla2xxx: Fix Relogin being triggered too fast
-Date: Tue, 28 Nov 2017 11:34:52 -0800
-Message-ID: <20171128193503.13695-12-himanshu.madhani@cavium.com>
+Subject: [PATCH 18/22] qla2xxx: Defer processing of GS IOCB calls
+Date: Tue, 28 Nov 2017 11:34:59 -0800
+Message-ID: <20171128193503.13695-19-himanshu.madhani@cavium.com>
 References: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0048.outbound.protection.outlook.com ([104.47.37.48]:32352
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0046.outbound.protection.outlook.com ([104.47.32.46]:25512
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754127AbdK1TfW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Nov 2017 14:35:22 -0500
+        id S932167AbdK1Tff (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Nov 2017 14:35:35 -0500
 In-Reply-To: <20171128193503.13695-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Giridhar Malavali <giridhar.malavali@cavium.com>
 
-Current driver design schedules relogin process via DPC thread
-every 1 second. In a large fabric, this DPC thread tries to
-schedule too many jobs and might get overloaded. As a result of
-this processing of DPC thread, it can schedule relogin earlier
-than 1 second.
+This patch defers processing of GS IOCB calls from interrupt
+context to avoid hardware spinlock recursion.
+
+Following stack trace is seen
+
+? mod_timer+0x193/0x330
+? ql_dbg+0xa7/0xf0 [qla2xxx]
+_raw_spin_lock_irqsave+0x31/0x40
+qla2x00_start_sp+0x3b/0x250 [qla2xxx]
+qla24xx_async_gnl+0x1d3/0x240 [qla2xxx]
+qla24xx_fcport_handle_login+0x285/0x290 [qla2xxx]
+? vprintk_func+0x20/0x50
 
 Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 Cc: <stable@vger.kernel.org> # 4.10+
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |  1 +
- drivers/scsi/qla2xxx/qla_mid.c | 24 +++++++++++++++---------
- drivers/scsi/qla2xxx/qla_os.c  | 22 ++++++++++++++--------
- 3 files changed, 30 insertions(+), 17 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index d9b4a0651a0f..93ff92e2363f 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -4110,6 +4110,7 @@ typedef struct scsi_qla_host {
- #define LOOP_READY	5
- #define LOOP_DEAD	6
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 7dd19785f820..57b8f43c5980 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -975,7 +975,7 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 			ql_dbg(ql_dbg_disc, vha, 0x20bd,
+ 			    "%s %d %8phC post gnl\n",
+ 			    __func__, __LINE__, fcport->port_name);
+-			qla24xx_async_gnl(vha, fcport);
++			qla24xx_post_gnl_work(vha, fcport);
+ 		} else {
+ 			ql_dbg(ql_dbg_disc, vha, 0x20bf,
+ 			    "%s %d %8phC post login\n",
+@@ -1143,7 +1143,7 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
+ 		ql_dbg(ql_dbg_disc, vha, 0x20e9, "%s %d %8phC post gidpn\n",
+ 		    __func__, __LINE__, fcport->port_name);
  
-+	unsigned long   relogin_jif;
- 	unsigned long   dpc_flags;
- #define RESET_MARKER_NEEDED	0	/* Send marker to ISP. */
- #define RESET_ACTIVE		1
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index bd9f14bf7ac2..618ca272d01a 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -343,15 +343,21 @@ qla2x00_do_dpc_vp(scsi_qla_host_t *vha)
- 		    "FCPort update end.\n");
+-		qla24xx_async_gidpn(vha, fcport);
++		qla24xx_post_gidpn_work(vha, fcport);
+ 		return;
  	}
  
--	if ((test_and_clear_bit(RELOGIN_NEEDED, &vha->dpc_flags)) &&
--		!test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags) &&
--		atomic_read(&vha->loop_state) != LOOP_DOWN) {
--
--		ql_dbg(ql_dbg_dpc, vha, 0x4018,
--		    "Relogin needed scheduled.\n");
--		qla2x00_relogin(vha);
--		ql_dbg(ql_dbg_dpc, vha, 0x4019,
--		    "Relogin needed end.\n");
-+	if (test_bit(RELOGIN_NEEDED, &vha->dpc_flags) &&
-+	    !test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags) &&
-+	    atomic_read(&vha->loop_state) != LOOP_DOWN) {
-+
-+		if (!vha->relogin_jif ||
-+		    time_after_eq(jiffies, vha->relogin_jif)) {
-+			vha->relogin_jif = jiffies + HZ;
-+			clear_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-+
-+			ql_dbg(ql_dbg_dpc, vha, 0x4018,
-+			    "Relogin needed scheduled.\n");
-+			qla2x00_relogin(vha);
-+			ql_dbg(ql_dbg_dpc, vha, 0x4019,
-+			    "Relogin needed end.\n");
-+		}
- 	}
- 
- 	if (test_and_clear_bit(RESET_MARKER_NEEDED, &vha->dpc_flags) &&
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 820d1c185beb..2ec77b9f78b8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4905,7 +4905,7 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 	 */
- 		if (atomic_read(&fcport->state) != FCS_ONLINE &&
- 		    fcport->login_retry && !(fcport->flags & FCF_ASYNC_SENT)) {
--			fcport->login_retry--;
-+
- 			if (fcport->flags & FCF_FABRIC_DEVICE) {
- 				ql_dbg(ql_dbg_disc, fcport->vha, 0x2108,
- 				    "%s %8phC DS %d LS %d\n", __func__,
-@@ -4916,6 +4916,7 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 				ea.fcport = fcport;
- 				qla2x00_fcport_event_handler(vha, &ea);
- 			} else {
-+				fcport->login_retry--;
- 				status = qla2x00_local_device_login(vha,
- 								fcport);
- 				if (status == QLA_SUCCESS) {
-@@ -5898,16 +5899,21 @@ qla2x00_do_dpc(void *data)
- 		}
- 
- 		/* Retry each device up to login retry count */
--		if ((test_and_clear_bit(RELOGIN_NEEDED,
--						&base_vha->dpc_flags)) &&
-+		if (test_bit(RELOGIN_NEEDED, &base_vha->dpc_flags) &&
- 		    !test_bit(LOOP_RESYNC_NEEDED, &base_vha->dpc_flags) &&
- 		    atomic_read(&base_vha->loop_state) != LOOP_DOWN) {
- 
--			ql_dbg(ql_dbg_dpc, base_vha, 0x400d,
--			    "Relogin scheduled.\n");
--			qla2x00_relogin(base_vha);
--			ql_dbg(ql_dbg_dpc, base_vha, 0x400e,
--			    "Relogin end.\n");
-+			if (!base_vha->relogin_jif ||
-+			    time_after_eq(jiffies, base_vha->relogin_jif)) {
-+				base_vha->relogin_jif = jiffies + HZ;
-+				clear_bit(RELOGIN_NEEDED, &base_vha->dpc_flags);
-+
-+				ql_dbg(ql_dbg_dpc, base_vha, 0x400d,
-+				    "Relogin scheduled.\n");
-+				qla2x00_relogin(base_vha);
-+				ql_dbg(ql_dbg_dpc, base_vha, 0x400e,
-+				    "Relogin end.\n");
-+			}
- 		}
- loop_resync_check:
- 		if (test_and_clear_bit(LOOP_RESYNC_NEEDED,
 -- 
 2.12.0
