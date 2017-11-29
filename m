@@ -1,26 +1,41 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi: fix race condition when removing target
-Date: Wed, 29 Nov 2017 17:34:21 +0100
-Message-ID: <20171129163421.GA32495@lst.de>
-References: <20171129030556.47833-1-yanaijie@huawei.com> <1511973108.3222.10.camel@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 197875] Processes hang on attempted access of WDC WD30-EZRX 3TB
+ HDD on HP Z420 Workstation
+Date: Wed, 29 Nov 2017 16:36:47 +0000
+Message-ID: <bug-197875-11613-JJxgs57LuM@https.bugzilla.kernel.org/>
+References: <bug-197875-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53916 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753719AbdK2QeW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 11:34:22 -0500
-Content-Disposition: inline
-In-Reply-To: <1511973108.3222.10.camel@linux.vnet.ibm.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:60538 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753210AbdK2Qgs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 11:36:48 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id CBD1729B51
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2017 16:36:47 +0000 (UTC)
+In-Reply-To: <bug-197875-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Zhaohongjiang <zhaohongjiang@huawei.com>, Miao Xie <miaoxie@huawei.com>
+To: linux-scsi@kernel.org
 
-On Wed, Nov 29, 2017 at 08:31:48AM -0800, James Bottomley wrote:
-> This analysis fails here: get_device() on something with refcount 0
-> returns NULL.  That triggers the if clause to ignore this device.
+https://bugzilla.kernel.org/show_bug.cgi?id=197875
 
-No, it doesn't.  Take a look at the get_device and kobject_get
-implementations,
+--- Comment #5 from Bart Van Assche (bvanassche@acm.org) ---
+So command processing got stuck. Since there are two code paths in recent
+kernels we need to know whether or not scsi-mq was used. Hence please provide
+the output of the following command:
+
+for d in /sys/block/*; do sfx=""; [ -e "$d/mq" ] && sfx=" [mq]"; echo "$d$sfx";
+done
+
+If the above command reports that scsi-mq is being used for the WDC disk,
+please check whether the following command resolves the lockup:
+
+for d in /sys/kernel/debug/block/*/state; do echo kick >$d; done
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
