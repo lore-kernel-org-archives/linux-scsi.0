@@ -1,26 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: aacraid: address UBSAN warning regression
-Date: Wed, 29 Nov 2017 00:07:48 -0500
-Message-ID: <yq1fu8xhduj.fsf@oracle.com>
-References: <20171128132536.3037571-1-arnd@arndb.de>
+Subject: Re: [PATCH] bfa: fix access to bfad_im_port_s
+Date: Wed, 29 Nov 2017 00:10:05 -0500
+Message-ID: <yq1bmjlhdqq.fsf@oracle.com>
+References: <20171128152657.13421-1-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171128132536.3037571-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Tue, 28 Nov 2017 14:25:25 +0100")
+In-Reply-To: <20171128152657.13421-1-jthumshirn@suse.de> (Johannes Thumshirn's
+        message of "Tue, 28 Nov 2017 16:26:57 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Meelis Roos <mroos@linux.ee>, Dave Carroll <david.carroll@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arnd,
+Johannes,
 
-> As reported by Meelis Roos, my previous patch causes an incorrect
-> calculation of the timeout, through an undefined signed integer
-> overflow:
+> Commit 'cd21c605b2cf ("scsi: fc: provide fc_bsg_to_shost() helper")'
+> changed access to bfa's 'struct bfad_im_port_s' by using shost_priv()
+> instead of shost->hostdata[0].
 
-Applied to 4.15/scsi-fixes, thank you!
+Applied to 4.15/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
