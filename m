@@ -1,44 +1,131 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 14/22] qla2xxx: Fix nested spinlock
-Date: Tue, 28 Nov 2017 22:55:13 +0000
-Message-ID: <634CDECC-41DC-4937-B0C3-01E4520BE3F2@cavium.com>
-References: <20171128193503.13695-1-himanshu.madhani@cavium.com>
- <20171128193503.13695-15-himanshu.madhani@cavium.com>
- <1511898300.28512.20.camel@wdc.com>
- <F873F5EF-0F1D-4E73-82C4-081D048BAF96@cavium.com>
- <1511906943.28512.28.camel@wdc.com>
- <A933D13D-16D3-4458-B7DE-B992BC615A7E@cavium.com>
- <1511908033.28512.31.camel@wdc.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH] scsi: fix race condition when removing target
+Date: Wed, 29 Nov 2017 11:05:56 +0800
+Message-ID: <20171129030556.47833-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0073.outbound.protection.outlook.com ([104.47.37.73]:10144
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752674AbdK1WzP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Nov 2017 17:55:15 -0500
-In-Reply-To: <1511908033.28512.31.camel@wdc.com>
-Content-Language: en-US
-Content-ID: <5F87AF6392523749968987C6CC35E021@namprd07.prod.outlook.com>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:11035 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752720AbdK2DAV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Nov 2017 22:00:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, Jason Yan <yanaijie@huawei.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Zhaohongjiang <zhaohongjiang@huawei.com>, Miao Xie <miaoxie@huawei.com>
 
-SGkgQmFydCwgDQoNCk9uIE5vdiAyOCwgMjAxNywgYXQgMjoyNyBQTSwgQmFydCBWYW4gQXNzY2hl
-IDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPiB3cm90ZToNCj4gDQo+IE9uIFR1ZSwgMjAxNy0xMS0y
-OCBhdCAyMjoyMiArMDAwMCwgTWFkaGFuaSwgSGltYW5zaHUgd3JvdGU6DQo+PiBUaGlzIHdhcyBy
-ZXBvcnRlZCBieSBjdXN0b21lciBzbyBpIGFtIG5vdCB2ZXJ5IGNvbmZpZGVudCB0aGV5IHdvdWxk
-IGhhdmUgQ09ORklHX1BST1ZFX0xPQ0tJTkcgZW5hYmxlZCBpbg0KPj4gdGhlaXIgc2V0dXAuIEni
-gJlsbCBlbmFibGUgdGhpcyBvbiBvdXIgc2V0dXAgYW5kIHdlIGNhbiB0cnkgdG8gcmVwcm9kdWNl
-IHRoaXMgaXNzdWUuIA0KPj4gDQo+PiBMZXQgbWUga25vdyBpZiB5b3Ugd2FudCBtZSB0byBkcm9w
-IHRoaXMgcGF0Y2ggdW50aWwgd2UgZ2V0IG1vcmUgZGV0YWlscy4NCj4gDQo+IEhlbGxvIEhpbWFu
-c2h1LA0KPiANCj4gV2hhdCBJIHRoaW5rIGlzIHRoYXQgYXQgbGVhc3QgYW4gZXhwbGFuYXRpb24g
-c2hvdWxkIGJlIHByb3ZpZGVkIGFib3V0IHdoeSBpdA0KPiBpcyBzYWZlIHRvIGxlYXZlIG91dCB0
-aGUgc3Bpbl9sb2NrKCkgYW5kIHNwaW5fdW5sb2NrKCkgY2FsbHMuIFdoYXQgZG9lcyB0aGUNCj4g
-aGFyZHdhcmUgbG9jayBwcm90ZWN0IGFuZCB3aHkgaXMgaXQgc2FmZSB0byBsZWF2ZSBpdCBvdXQg
-ZnJvbQ0KPiBxbGEyeDAwX2Vsc19kY21kX2lvY2JfdGltZW91dCgpPw0KPiANCg0KT2theSB3aWxs
-IHVwZGF0ZSBwYXRjaCB3aXRoIHRoZSBkZXNjcmlwdGlvbiBhbmQgc3VibWl0IHYyIG9mIHRoaXMg
-cGF0Y2guDQoNCj4gVGhhbmtzLA0KPiANCj4gQmFydC4NCg0KVGhhbmtzLA0KLSBIaW1hbnNodQ0K
-DQo=
+In commit fbce4d97fd43 ("scsi: fixup kernel warning during rmmod()"), we
+removed scsi_device_get() and directly called get_device() to increase
+the refcount of the device. But actullay scsi_device_get() will fail in
+three cases:
+1. the scsi device is in SDEV_DEL or SDEV_CANCEL state
+2. get_device() fail
+3. the module is not alive
+
+The intended purpose was to remove the check of the module alive.
+Unfortunately the check of the device state was droped too. And this
+introduced a race condition like this:
+
+      CPU0                                           CPU1
+__scsi_remove_target()
+  ->iterate shost->__devices
+  ->scsi_remove_device()
+  ->put_device()
+      someone still hold a refcount
+                                                   sd_release()
+                                                      ->scsi_disk_put()
+                                                      ->put_device() last put and trigger the device release
+
+  ->goto restart
+  ->iterate shost->__devices and got the same device
+  ->get_device() while refcount is 0
+  ->scsi_remove_device()
+  ->put_device() refcount decreased to 0 again
+  ->scsi_device_dev_release()
+  ->scsi_device_dev_release_usercontext()
+
+                                                      ->scsi_device_dev_release()
+                                                      ->scsi_device_dev_release_usercontext()
+
+The same scsi device will be found agian because it is in the shost->__devices
+list until scsi_device_dev_release_usercontext() called, although the device
+state was set to SDEV_DEL after the first scsi_remove_device().
+
+Finally we got a oops in scsi_device_dev_release_usercontext() when the second
+time be called.
+
+Call trace:
+[<ffff0000086bc624>] scsi_device_dev_release_usercontext+0x7c/0x1c0
+[<ffff0000080f1f90>] execute_in_process_context+0x70/0x80
+[<ffff0000086bc598>] scsi_device_dev_release+0x28/0x38
+[<ffff0000086662cc>] device_release+0x3c/0xa0
+[<ffff000008c2e780>] kobject_put+0x80/0xf0
+[<ffff0000086666fc>] put_device+0x24/0x30
+[<ffff0000086aeee0>] scsi_device_put+0x30/0x40
+[<ffff000008704894>] scsi_disk_put+0x44/0x60
+[<ffff000008704a50>] sd_release+0x50/0x80
+[<ffff0000082bc704>] __blkdev_put+0x21c/0x230
+[<ffff0000082bcb2c>] blkdev_put+0x54/0x118
+[<ffff0000082bcc1c>] blkdev_close+0x2c/0x40
+[<ffff000008279b64>] __fput+0x94/0x1d8
+[<ffff000008279d20>] ____fput+0x20/0x30
+[<ffff0000080f6f54>] task_work_run+0x9c/0xb8
+[<ffff0000080dba64>] do_exit+0x2b4/0x9f8
+[<ffff0000080dc234>] do_group_exit+0x3c/0xa0
+[<ffff0000080dc2b8>] __wake_up_parent+0x0/0x40
+
+And sometimes in __scsi_remove_target() it will loop for a long time
+removing the same device if someone else holding a refcount until the
+last refcount is released.
+
+Notice that if CONFIG_REFCOUNT_FULL is open this race won't be triggered
+because the full refcount implement will prevent the refcount increase
+when it is 0.
+
+Fix this by checking the sdev_state again like we did before in
+scsi_device_get(). Then when iterating shost again we will skip the device
+deleted because scsi_remove_device() will set the device state to
+SDEV_CANCEL or SDEV_DEL.
+
+Fixes: fbce4d97fd43 ("scsi: fixup kernel warning during rmmod()")
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: Hannes Reinecke <hare@suse.de>
+CC: Christoph Hellwig <hch@lst.de>
+CC: Johannes Thumshirn <jthumshirn@suse.de>
+CC: Zhaohongjiang <zhaohongjiang@huawei.com>
+CC: Miao Xie <miaoxie@huawei.com>
+---
+ drivers/scsi/scsi_sysfs.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 50e7d7e..d398894 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1398,6 +1398,15 @@ void scsi_remove_device(struct scsi_device *sdev)
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
++static int scsi_device_get_not_deleted(struct scsi_device *sdev)
++{
++	if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
++		return -ENXIO;
++	if (!get_device(&sdev->sdev_gendev))
++		return -ENXIO;
++	return 0;
++}
++
+ static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -1415,7 +1424,7 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ 		 */
+ 		if (sdev->channel != starget->channel ||
+ 		    sdev->id != starget->id ||
+-		    !get_device(&sdev->sdev_gendev))
++		    scsi_device_get_not_deleted(sdev))
+ 			continue;
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		scsi_remove_device(sdev);
+-- 
+2.9.5
