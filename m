@@ -1,26 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: libfc: fix ELS request handling
-Date: Tue, 28 Nov 2017 23:59:37 -0500
-Message-ID: <yq1o9nlhe86.fsf@oracle.com>
-References: <20171125183810.20035-1-mwilck@suse.com>
+Subject: Re: [PATCH] scsi: debug: remove jiffies_to_timespec
+Date: Wed, 29 Nov 2017 00:01:40 -0500
+Message-ID: <yq1k1y9he4r.fsf@oracle.com>
+References: <20171127113647.2352914-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171125183810.20035-1-mwilck@suse.com> (Martin Wilck's message
-        of "Sat, 25 Nov 2017 19:38:10 +0100")
+In-Reply-To: <20171127113647.2352914-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Mon, 27 Nov 2017 12:36:25 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Martin Wilck <mwilck@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Chad Dupuis <chad.dupuis@cavium.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, y2038@lists.linaro.org, Bart Van Assche <bart.vanassche@wdc.com>, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Martin,
+Arnd,
 
-> The modification of fc_lport_recv_els_req() in commit fcabb09e59a7
-> (merged in 4.12-rc1) caused certain requests not to be handled at all.
-> Fix that.
+> There is no need to go through an intermediate timespec to convert to
+> ktime_t when we just want a simple multiplication. This gets rid of
+> one of the few users of jiffies_to_timespec, which I hope to remove as
+> part of the y2038 cleanup.
 
-Applied to 4.15/scsi-fixes. Thank you!
+Applied to 4.16/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
