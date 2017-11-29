@@ -1,48 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: UFS utilities
-Date: Wed, 29 Nov 2017 08:20:21 -0800
-Message-ID: <1511972421.3222.6.camel@HansenPartnership.com>
-References: <e8aa9f0b9e854fe6bff7cb17dc08ce8c@SIWEX5A.sing.micron.com>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH] scsi: fix race condition when removing target
+Date: Wed, 29 Nov 2017 17:20:50 +0100
+Message-ID: <20171129162050.GA32071@lst.de>
+References: <20171129030556.47833-1-yanaijie@huawei.com> <1511972310.2671.7.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <e8aa9f0b9e854fe6bff7cb17dc08ce8c@SIWEX5A.sing.micron.com>
-Sender: stable-owner@vger.kernel.org
-To: "Bean Huo (beanhuo)" <beanhuo@micron.com>, Greg KH <gregkh@linuxfoundation.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:53840 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753128AbdK2QUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 11:20:52 -0500
+Content-Disposition: inline
+In-Reply-To: <1511972310.2671.7.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "zhaohongjiang@huawei.com" <zhaohongjiang@huawei.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "yanaijie@huawei.com" <yanaijie@huawei.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "miaoxie@huawei.com" <miaoxie@huawei.com>
 
-On Wed, 2017-11-29 at 15:39 +0000, Bean Huo (beanhuo) wrote:
-> Thread-Topic: UFS utilities
->  Thread-Index: AdNpKDYJWTPjczfxQHC/pD9WNnnl4w==
+On Wed, Nov 29, 2017 at 04:18:30PM +0000, Bart Van Assche wrote:
+> As the above patch description shows it can happen that the SCSI core calls
+> get_device() after the device reference count has reached zero and before
+> the memory for struct device is freed. Although the above patch looks fine
+> to me, would you consider it acceptable to modify get_device() such that it
+> uses kobject_get_unless_zero() instead of kobject_get()? I'm asking this
+> because that change would help to reduce the complexity of the already too
+> complicated SCSI core.
 
-Could you fix your mail transfer agent?  It's using these non standard
-headers instead of the RFC mandated In-Reply-To: and References:
-
-The problem is that this breaks threading on the public mailing lists
-and means most of us can't tie this email back to the original thread.
-
-> > On Mon, Nov 27, 2017 at 11:25:47AM +0000, Bean Huo (beanhuo) wrote:
-> > > 
-> > > Hi, all
-> > > Is there someone knows if exists one utilis dedicated to UFS
-> > > device, rather than SCSI utils?
-> > > 
-> > > I have tried sg3-utils, but it is not convenient for the embedded
-> > > ARM-based system.
-> > > 
-> > > And also it doesn't support several UFS special command.
-> > 
-> > What specific UFS commands do you need to make to the device that
-> > the current driver does not support?
-> 
-> 
-> There are some UFS/vendor native commands. They are not SCSI based.
-
-Can you list them?  The reason for asking is that SCSI-3 is pretty
-extensive in terms of management utilities, so any function you do with
-vendor native commands that matches an sg3utils function could be done
-by the latter instead via a SCSI translation layer.
-
-James
+I don't think we can just modify get_device, but we can add a new
+get_device_unless_zero.  In fact I have an open coded variant of that
+in nvme, and was planning to submit one for the current merge window..
