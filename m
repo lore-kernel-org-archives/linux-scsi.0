@@ -1,41 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 197875] Processes hang on attempted access of WDC WD30-EZRX 3TB
- HDD on HP Z420 Workstation
-Date: Wed, 29 Nov 2017 16:36:47 +0000
-Message-ID: <bug-197875-11613-JJxgs57LuM@https.bugzilla.kernel.org/>
-References: <bug-197875-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: fix race condition when removing target
+Date: Wed, 29 Nov 2017 08:47:02 -0800
+Message-ID: <1511974022.3222.11.camel@linux.vnet.ibm.com>
+References: <20171129030556.47833-1-yanaijie@huawei.com>
+         <1511973108.3222.10.camel@linux.vnet.ibm.com>
+         <20171129163421.GA32495@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:60538 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753210AbdK2Qgs (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36924 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932117AbdK2QrM (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 11:36:48 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id CBD1729B51
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2017 16:36:47 +0000 (UTC)
-In-Reply-To: <bug-197875-11613@https.bugzilla.kernel.org/>
+        Wed, 29 Nov 2017 11:47:12 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vATGjU2I157484
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2017 11:47:11 -0500
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2ehwr5hr9p-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2017 11:47:11 -0500
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Wed, 29 Nov 2017 09:47:10 -0700
+In-Reply-To: <20171129163421.GA32495@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Zhaohongjiang <zhaohongjiang@huawei.com>, Miao Xie <miaoxie@huawei.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=197875
+On Wed, 2017-11-29 at 17:34 +0100, Christoph Hellwig wrote:
+> On Wed, Nov 29, 2017 at 08:31:48AM -0800, James Bottomley wrote:
+> > 
+> > This analysis fails here: get_device() on something with refcount 0
+> > returns NULL.  That triggers the if clause to ignore this device.
+> 
+> No, it doesn't.  Take a look at the get_device and kobject_get
+> implementations,
 
---- Comment #5 from Bart Van Assche (bvanassche@acm.org) ---
-So command processing got stuck. Since there are two code paths in recent
-kernels we need to know whether or not scsi-mq was used. Hence please provide
-the output of the following command:
+Hm, so why doesn't get_device use kref_get_unless_zero()?
 
-for d in /sys/block/*; do sfx=""; [ -e "$d/mq" ] && sfx=" [mq]"; echo "$d$sfx";
-done
-
-If the above command reports that scsi-mq is being used for the WDC disk,
-please check whether the following command resolves the lockup:
-
-for d in /sys/kernel/debug/block/*/state; do echo kick >$d; done
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+James
