@@ -1,26 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] bfa: fix access to bfad_im_port_s
-Date: Wed, 29 Nov 2017 00:10:05 -0500
-Message-ID: <yq1bmjlhdqq.fsf@oracle.com>
-References: <20171128152657.13421-1-jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: wd719x: make card_types static const, shrinks object size
+Date: Wed, 29 Nov 2017 00:12:34 -0500
+Message-ID: <yq17eu9hdml.fsf@oracle.com>
+References: <20171128181234.24330-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171128152657.13421-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Tue, 28 Nov 2017 16:26:57 +0100")
+In-Reply-To: <20171128181234.24330-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 28 Nov 2017 18:12:34 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Colin King <colin.king@canonical.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Johannes,
+Colin,
 
-> Commit 'cd21c605b2cf ("scsi: fc: provide fc_bsg_to_shost() helper")'
-> changed access to bfa's 'struct bfad_im_port_s' by using shost_priv()
-> instead of shost->hostdata[0].
+> Don't populate the read-only array card_types on the stack but instead
+> make it static and constify it. Makes the object code smaller by over
+> 110 bytes:
 
-Applied to 4.15/scsi-fixes. Thanks!
+Applied to 4.16/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
