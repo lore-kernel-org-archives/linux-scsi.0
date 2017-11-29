@@ -1,27 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: debug: remove jiffies_to_timespec
-Date: Wed, 29 Nov 2017 00:01:40 -0500
-Message-ID: <yq1k1y9he4r.fsf@oracle.com>
-References: <20171127113647.2352914-1-arnd@arndb.de>
+Subject: Re: [PATCH] scsi: aacraid: address UBSAN warning regression
+Date: Wed, 29 Nov 2017 00:07:48 -0500
+Message-ID: <yq1fu8xhduj.fsf@oracle.com>
+References: <20171128132536.3037571-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171127113647.2352914-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Mon, 27 Nov 2017 12:36:25 +0100")
+In-Reply-To: <20171128132536.3037571-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Tue, 28 Nov 2017 14:25:25 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, y2038@lists.linaro.org, Bart Van Assche <bart.vanassche@wdc.com>, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Meelis Roos <mroos@linux.ee>, Dave Carroll <david.carroll@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
 Arnd,
 
-> There is no need to go through an intermediate timespec to convert to
-> ktime_t when we just want a simple multiplication. This gets rid of
-> one of the few users of jiffies_to_timespec, which I hope to remove as
-> part of the y2038 cleanup.
+> As reported by Meelis Roos, my previous patch causes an incorrect
+> calculation of the timeout, through an undefined signed integer
+> overflow:
 
-Applied to 4.16/scsi-queue. Thanks!
+Applied to 4.15/scsi-fixes, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
