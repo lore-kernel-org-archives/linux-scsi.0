@@ -1,66 +1,48 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 18/22] qla2xxx: Defer processing of GS IOCB calls
-Date: Wed, 29 Nov 2017 19:40:43 -0800
-Message-ID: <20171130034047.15070-19-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 15/22] qla2xxx: Replace fcport alloc with qla2x00_alloc_fcport
+Date: Wed, 29 Nov 2017 19:40:40 -0800
+Message-ID: <20171130034047.15070-16-himanshu.madhani@cavium.com>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:11808
+Received: from mail-by2nam01on0060.outbound.protection.outlook.com ([104.47.34.60]:22967
         "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753275AbdK3DlT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 22:41:19 -0500
+        id S1753388AbdK3DlQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:41:16 -0500
 In-Reply-To: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-This patch defers processing of GS IOCB calls from interrupt
-context to avoid hardware spinlock recursion.
+Current code manually allocate an fcport structure that
+is not properly initialize. Replace kzalloc with
+qla2x00_alloc_fcport, so that all fields are initialized.
+Also set set scan flag to port found
 
-Following stack trace is seen
-
-? mod_timer+0x193/0x330
-? ql_dbg+0xa7/0xf0 [qla2xxx]
-_raw_spin_lock_irqsave+0x31/0x40
-qla2x00_start_sp+0x3b/0x250 [qla2xxx]
-qla24xx_async_gnl+0x1d3/0x240 [qla2xxx]
-qla24xx_fcport_handle_login+0x285/0x290 [qla2xxx]
-? vprintk_func+0x20/0x50
-
-Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
-Cc: <stable@vger.kernel.org> # 4.10+
-Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 7dd19785f820..57b8f43c5980 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -975,7 +975,7 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
- 			ql_dbg(ql_dbg_disc, vha, 0x20bd,
- 			    "%s %d %8phC post gnl\n",
- 			    __func__, __LINE__, fcport->port_name);
--			qla24xx_async_gnl(vha, fcport);
-+			qla24xx_post_gnl_work(vha, fcport);
- 		} else {
- 			ql_dbg(ql_dbg_disc, vha, 0x20bf,
- 			    "%s %d %8phC post login\n",
-@@ -1143,7 +1143,7 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
- 		ql_dbg(ql_dbg_disc, vha, 0x20e9, "%s %d %8phC post gidpn\n",
- 		    __func__, __LINE__, fcport->port_name);
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index e824cdc77139..2a6242d97a7e 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -5783,7 +5783,7 @@ static fc_port_t *qlt_get_port_database(struct scsi_qla_host *vha,
+ 	unsigned long flags;
+ 	u8 newfcport = 0;
  
--		qla24xx_async_gidpn(vha, fcport);
-+		qla24xx_post_gidpn_work(vha, fcport);
- 		return;
- 	}
- 
+-	fcport = kzalloc(sizeof(*fcport), GFP_KERNEL);
++	fcport = qla2x00_alloc_fcport(vha, GFP_KERNEL);
+ 	if (!fcport) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf06f,
+ 		    "qla_target(%d): Allocation of tmp FC port failed",
 -- 
 2.12.0
