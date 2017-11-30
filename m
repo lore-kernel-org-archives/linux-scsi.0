@@ -1,66 +1,66 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 14/22] qla2xxx: Fix abort command deadlock due to spinlock
-Date: Wed, 29 Nov 2017 19:40:39 -0800
-Message-ID: <20171130034047.15070-15-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 18/22] qla2xxx: Defer processing of GS IOCB calls
+Date: Wed, 29 Nov 2017 19:40:43 -0800
+Message-ID: <20171130034047.15070-19-himanshu.madhani@cavium.com>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0072.outbound.protection.outlook.com ([104.47.40.72]:21824
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:11808
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753432AbdK3DlO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 22:41:14 -0500
+        id S1753275AbdK3DlT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:41:19 -0500
 In-Reply-To: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Giridhar Malavali <giridhar.malavali@cavium.com>
 
-Original code acquires hardware_lock to add Abort IOCB
-onto driver's request queue for processing. However,
-abort_command() will also acquire hardware lock to look up
-sp pointer before issuing abort IOCB command resulting
-into a deadlock. This patch safely removes the possible
-deadlock scenario by removing extra spinlock.
+This patch defers processing of GS IOCB calls from interrupt
+context to avoid hardware spinlock recursion.
 
-Fixes: 6eb54715b54bb ("qla2xxx: Added interface to send explicit LOGO.")
+Following stack trace is seen
+
+? mod_timer+0x193/0x330
+? ql_dbg+0xa7/0xf0 [qla2xxx]
+_raw_spin_lock_irqsave+0x31/0x40
+qla2x00_start_sp+0x3b/0x250 [qla2xxx]
+qla24xx_async_gnl+0x1d3/0x240 [qla2xxx]
+qla24xx_fcport_handle_login+0x285/0x290 [qla2xxx]
+? vprintk_func+0x20/0x50
+
+Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 Cc: <stable@vger.kernel.org> # 4.10+
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index d810a447cb4a..106f4ac4f733 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2394,7 +2394,6 @@ qla2x00_els_dcmd_iocb_timeout(void *data)
- 	struct scsi_qla_host *vha = sp->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct srb_iocb *lio = &sp->u.iocb_cmd;
--	unsigned long flags = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 7dd19785f820..57b8f43c5980 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -975,7 +975,7 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 			ql_dbg(ql_dbg_disc, vha, 0x20bd,
+ 			    "%s %d %8phC post gnl\n",
+ 			    __func__, __LINE__, fcport->port_name);
+-			qla24xx_async_gnl(vha, fcport);
++			qla24xx_post_gnl_work(vha, fcport);
+ 		} else {
+ 			ql_dbg(ql_dbg_disc, vha, 0x20bf,
+ 			    "%s %d %8phC post login\n",
+@@ -1143,7 +1143,7 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
+ 		ql_dbg(ql_dbg_disc, vha, 0x20e9, "%s %d %8phC post gidpn\n",
+ 		    __func__, __LINE__, fcport->port_name);
  
- 	ql_dbg(ql_dbg_io, vha, 0x3069,
- 	    "%s Timeout, hdl=%x, portid=%02x%02x%02x\n",
-@@ -2402,7 +2401,6 @@ qla2x00_els_dcmd_iocb_timeout(void *data)
- 	    fcport->d_id.b.al_pa);
- 
- 	/* Abort the exchange */
--	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	if (ha->isp_ops->abort_command(sp)) {
- 		ql_dbg(ql_dbg_io, vha, 0x3070,
- 		    "mbx abort_command failed.\n");
-@@ -2410,7 +2408,6 @@ qla2x00_els_dcmd_iocb_timeout(void *data)
- 		ql_dbg(ql_dbg_io, vha, 0x3071,
- 		    "mbx abort_command success.\n");
+-		qla24xx_async_gidpn(vha, fcport);
++		qla24xx_post_gidpn_work(vha, fcport);
+ 		return;
  	}
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
  
- 	complete(&lio->u.els_logo.comp);
- }
 -- 
 2.12.0
