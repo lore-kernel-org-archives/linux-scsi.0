@@ -1,46 +1,52 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 12/22] qla2xxx: Clear send ELS LOGO flag after target re-login
-Date: Wed, 29 Nov 2017 19:40:37 -0800
-Message-ID: <20171130034047.15070-13-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 09/22] qla2xxx: Fix NPIV host cleanup in target mode
+Date: Wed, 29 Nov 2017 19:40:34 -0800
+Message-ID: <20171130034047.15070-10-himanshu.madhani@cavium.com>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0074.outbound.protection.outlook.com ([104.47.40.74]:18054
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0048.outbound.protection.outlook.com ([104.47.38.48]:19264
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753388AbdK3DlJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 22:41:09 -0500
+        id S1752980AbdK3DlI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:41:08 -0500
 In-Reply-To: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Sawan Chandak <sawan.chandak@cavium.com>
 
-This patch fixes clearing out els_send_logo flag at the
-time of session deletion.
+Add check to make sure we are cleaning up global target host
+list only for NPIV hosts
 
-Fixes: 3515832cc614 ("scsi: qla2xxx: Reset the logo flag, after target re-login.")
+Fixes: bdbe24de281e2 ("scsi: qla2xxx: Cleanup NPIV host in target mode during config teardown")
 Cc: <stable@vger.kernel.org> # 4.10+
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/qla2xxx/qla_target.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 283ff316e4b2..e824cdc77139 100644
+index 924d58f5408f..1bec8aebb7b6 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -983,6 +983,7 @@ static void qlt_free_session_done(struct work_struct *work)
- 			logo.id = sess->d_id;
- 			logo.cmd_count = 0;
- 			qlt_send_first_logo(vha, &logo);
-+			sess->send_els_logo = 0;
- 		}
+@@ -1561,8 +1561,11 @@ static void qlt_release(struct qla_tgt *tgt)
  
- 		if (sess->logout_on_delete) {
+ 	btree_destroy64(&tgt->lun_qpair_map);
+ 
+-	if (ha->tgt.tgt_ops && ha->tgt.tgt_ops->remove_target)
+-		ha->tgt.tgt_ops->remove_target(vha);
++	if (vha->vp_idx)
++		if (ha->tgt.tgt_ops &&
++		    ha->tgt.tgt_ops->remove_target &&
++		    vha->vha_tgt.target_lport_ptr)
++			ha->tgt.tgt_ops->remove_target(vha);
+ 
+ 	vha->vha_tgt.qla_tgt = NULL;
+ 
 -- 
 2.12.0
