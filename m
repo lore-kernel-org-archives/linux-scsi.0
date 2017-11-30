@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 07/22] qla2xxx: Serialize GPNID for multiple RSCN
-Date: Wed, 29 Nov 2017 19:40:32 -0800
-Message-ID: <20171130034047.15070-8-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 10/22] qla2xxx: Relogin to target port on a cable swap
+Date: Wed, 29 Nov 2017 19:40:35 -0800
+Message-ID: <20171130034047.15070-11-himanshu.madhani@cavium.com>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:32704
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0056.outbound.protection.outlook.com ([104.47.34.56]:52267
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753237AbdK3DlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 22:41:04 -0500
+        id S1753237AbdK3DlJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:41:09 -0500
 In-Reply-To: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,212 +19,343 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-GPNID is triggered by RSCN. For multiple RSCNs of the same
-affected NPORT ID, serialize the GPNID to prevent confusion.
+If user swaps one target port for another target port for same
+switch port, the new target port is not being recognized by the
+driver. Current code assumes that old Target port has recovered
+from link down. The fix will ask switch what is the WWPN of a
+specific NportID (GPNID) rather than assuming it's the same Target
+port which has came back.
 
 Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 Cc: <stable@vger.kernel.org> # 4.10+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h | 48 +++++++++++++++++++++++-------------------
- drivers/scsi/qla2xxx/qla_gs.c  | 35 +++++++++++++++++++++++++-----
- drivers/scsi/qla2xxx/qla_isr.c |  2 +-
- drivers/scsi/qla2xxx/qla_os.c  |  1 +
- 4 files changed, 58 insertions(+), 28 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c     | 164 ++++++++++++++++++++++++++++++--------
+ drivers/scsi/qla2xxx/qla_init.c   |   6 +-
+ drivers/scsi/qla2xxx/qla_os.c     |  35 +++++++-
+ drivers/scsi/qla2xxx/qla_target.c |  35 ++++++--
+ 4 files changed, 194 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 01a9b8971e88..d9b4a0651a0f 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -315,6 +315,29 @@ struct srb_cmd {
- /* To identify if a srb is of T10-CRC type. @sp => srb_t pointer */
- #define IS_PROT_IO(sp)	(sp->flags & SRB_CRC_CTX_DSD_VALID)
- 
-+/*
-+ * 24 bit port ID type definition.
-+ */
-+typedef union {
-+	uint32_t b24 : 24;
-+
-+	struct {
-+#ifdef __BIG_ENDIAN
-+		uint8_t domain;
-+		uint8_t area;
-+		uint8_t al_pa;
-+#elif defined(__LITTLE_ENDIAN)
-+		uint8_t al_pa;
-+		uint8_t area;
-+		uint8_t domain;
-+#else
-+#error "__BIG_ENDIAN or __LITTLE_ENDIAN must be defined!"
-+#endif
-+		uint8_t rsvd_1;
-+	} b;
-+} port_id_t;
-+#define INVALID_PORT_ID	0xFFFFFF
-+
- struct els_logo_payload {
- 	uint8_t opcode;
- 	uint8_t rsvd[3];
-@@ -338,6 +361,7 @@ struct ct_arg {
- 	u32		rsp_size;
- 	void		*req;
- 	void		*rsp;
-+	port_id_t	id;
- };
- 
- /*
-@@ -499,6 +523,7 @@ typedef struct srb {
- 	const char *name;
- 	int iocbs;
- 	struct qla_qpair *qpair;
-+	struct list_head elem;
- 	u32 gen1;	/* scratch */
- 	u32 gen2;	/* scratch */
- 	union {
-@@ -2164,28 +2189,6 @@ struct imm_ntfy_from_isp {
- #define REQUEST_ENTRY_SIZE	(sizeof(request_t))
- 
- 
--/*
-- * 24 bit port ID type definition.
-- */
--typedef union {
--	uint32_t b24 : 24;
--
--	struct {
--#ifdef __BIG_ENDIAN
--		uint8_t domain;
--		uint8_t area;
--		uint8_t al_pa;
--#elif defined(__LITTLE_ENDIAN)
--		uint8_t al_pa;
--		uint8_t area;
--		uint8_t domain;
--#else
--#error "__BIG_ENDIAN or __LITTLE_ENDIAN must be defined!"
--#endif
--		uint8_t rsvd_1;
--	} b;
--} port_id_t;
--#define INVALID_PORT_ID	0xFFFFFF
- 
- /*
-  * Switch info gathering structure.
-@@ -4252,6 +4255,7 @@ typedef struct scsi_qla_host {
- 	uint8_t n2n_node_name[WWN_SIZE];
- 	uint8_t n2n_port_name[WWN_SIZE];
- 	uint16_t	n2n_id;
-+	struct list_head gpnid_list;
- } scsi_qla_host_t;
- 
- struct qla27xx_image_status {
 diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index ea1b562ebc8a..59ecc4eda6cd 100644
+index 59ecc4eda6cd..4486c9cc72e6 100644
 --- a/drivers/scsi/qla2xxx/qla_gs.c
 +++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3221,16 +3221,17 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
- 	    (struct ct_sns_rsp *)sp->u.iocb_cmd.u.ctarg.rsp;
- 	struct event_arg ea;
- 	struct qla_work_evt *e;
-+	unsigned long flags;
+@@ -3171,43 +3171,136 @@ void qla24xx_async_gpnid_done(scsi_qla_host_t *vha, srb_t *sp)
  
- 	if (res)
- 		ql_dbg(ql_dbg_disc, vha, 0x2066,
--		    "Async done-%s fail res %x ID %3phC. %8phC\n",
--		    sp->name, res, ct_req->req.port_id.port_id,
-+		    "Async done-%s fail res %x rscn gen %d ID %3phC. %8phC\n",
-+		    sp->name, res, sp->gen1, ct_req->req.port_id.port_id,
- 		    ct_rsp->rsp.gpn_id.port_name);
- 	else
- 		ql_dbg(ql_dbg_disc, vha, 0x2066,
--		    "Async done-%s good ID %3phC. %8phC\n",
--		    sp->name, ct_req->req.port_id.port_id,
-+		    "Async done-%s good rscn gen %d ID %3phC. %8phC\n",
-+		    sp->name, sp->gen1, ct_req->req.port_id.port_id,
- 		    ct_rsp->rsp.gpn_id.port_name);
- 
- 	memset(&ea, 0, sizeof(ea));
-@@ -3242,11 +3243,20 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
- 	ea.rc = res;
- 	ea.event = FCME_GPNID_DONE;
- 
-+	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-+	list_del(&sp->elem);
-+	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-+
- 	if (res) {
- 		if (res == QLA_FUNCTION_TIMEOUT)
- 			qla24xx_post_gpnid_work(sp->vha, &ea.id);
- 		sp->free(sp);
- 		return;
-+	} else if (sp->gen1) {
-+		/* There was anoter RSNC for this Nport ID */
-+		qla24xx_post_gpnid_work(sp->vha, &ea.id);
-+		sp->free(sp);
-+		return;
- 	}
- 
- 	qla2x00_fcport_event_handler(vha, &ea);
-@@ -3282,8 +3292,9 @@ int qla24xx_async_gpnid(scsi_qla_host_t *vha, port_id_t *id)
+ void qla24xx_handle_gpnid_event(scsi_qla_host_t *vha, struct event_arg *ea)
  {
- 	int rval = QLA_FUNCTION_FAILED;
- 	struct ct_sns_req       *ct_req;
--	srb_t *sp;
-+	srb_t *sp, *tsp;
- 	struct ct_sns_pkt *ct_sns;
-+	unsigned long flags;
+-	fc_port_t *fcport;
+-	unsigned long flags;
++	fc_port_t *fcport, *conflict, *t;
  
- 	if (!vha->flags.online)
- 		goto done;
-@@ -3294,8 +3305,22 @@ int qla24xx_async_gpnid(scsi_qla_host_t *vha, port_id_t *id)
+-	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+-	fcport = qla2x00_find_fcport_by_wwpn(vha, ea->port_name, 1);
+-	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++	ql_dbg(ql_dbg_disc, vha, 0xffff,
++	    "%s %d port_id: %06x\n",
++	    __func__, __LINE__, ea->id.b24);
  
- 	sp->type = SRB_CT_PTHRU_CMD;
- 	sp->name = "gpnid";
-+	sp->u.iocb_cmd.u.ctarg.id = *id;
-+	sp->gen1 = 0;
- 	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
- 
-+	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-+	list_for_each_entry(tsp, &vha->gpnid_list, elem) {
-+		if (tsp->u.iocb_cmd.u.ctarg.id.b24 == id->b24) {
-+			tsp->gen1++;
-+			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-+			sp->free(sp);
-+			goto done;
-+		}
-+	}
-+	list_add_tail(&sp->elem, &vha->gpnid_list);
-+	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+-	if (fcport) {
+-		/* cable moved. just plugged in */
+-		fcport->rscn_gen++;
+-		fcport->d_id = ea->id;
+-		fcport->scan_state = QLA_FCPORT_FOUND;
+-		fcport->flags |= FCF_FABRIC_DEVICE;
+-
+-		switch (fcport->disc_state) {
+-		case DSC_DELETED:
+-			ql_dbg(ql_dbg_disc, vha, 0x210d,
+-			    "%s %d %8phC login\n", __func__, __LINE__,
+-			    fcport->port_name);
+-			qla24xx_fcport_handle_login(vha, fcport);
+-			break;
+-		case DSC_DELETE_PEND:
+-			break;
+-		default:
+-			ql_dbg(ql_dbg_disc, vha, 0x2064,
+-			    "%s %d %8phC post del sess\n",
+-			    __func__, __LINE__, fcport->port_name);
+-			qlt_schedule_sess_for_deletion_lock(fcport);
+-			break;
++	if (ea->rc) {
++		/* cable is disconnected */
++		list_for_each_entry_safe(fcport, t, &vha->vp_fcports, list) {
++			if (fcport->d_id.b24 == ea->id.b24) {
++				ql_dbg(ql_dbg_disc, vha, 0xffff,
++				    "%s %d %8phC DS %d\n",
++				    __func__, __LINE__,
++				    fcport->port_name,
++				    fcport->disc_state);
++				fcport->scan_state = QLA_FCPORT_SCAN;
++				switch (fcport->disc_state) {
++				case DSC_DELETED:
++				case DSC_DELETE_PEND:
++					break;
++				default:
++					ql_dbg(ql_dbg_disc, vha, 0xffff,
++					    "%s %d %8phC post del sess\n",
++					    __func__, __LINE__,
++					    fcport->port_name);
++					qlt_schedule_sess_for_deletion_lock
++						(fcport);
++					break;
++				}
++			}
+ 		}
+ 	} else {
+-		/* create new fcport */
+-		ql_dbg(ql_dbg_disc, vha, 0x2065,
+-		    "%s %d %8phC post new sess\n",
+-		    __func__, __LINE__, ea->port_name);
++		/* cable is connected */
++		fcport = qla2x00_find_fcport_by_wwpn(vha, ea->port_name, 1);
++		if (fcport) {
++			list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
++			    list) {
++				if ((conflict->d_id.b24 == ea->id.b24) &&
++				    (fcport != conflict)) {
++					/* 2 fcports with conflict Nport ID or
++					 * an existing fcport is having nport ID
++					 * conflict with new fcport.
++					 */
 +
- 	sp->u.iocb_cmd.u.ctarg.req = dma_alloc_coherent(&vha->hw->pdev->dev,
- 		sizeof(struct ct_sns_pkt), &sp->u.iocb_cmd.u.ctarg.req_dma,
- 		GFP_KERNEL);
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 545c527263d0..85382387a52b 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1574,7 +1574,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		/* borrowing sts_entry_24xx.comp_status.
- 		   same location as ct_entry_24xx.comp_status
++					ql_dbg(ql_dbg_disc, vha, 0xffff,
++					    "%s %d %8phC DS %d\n",
++					    __func__, __LINE__,
++					    conflict->port_name,
++					    conflict->disc_state);
++					conflict->scan_state = QLA_FCPORT_SCAN;
++					switch (conflict->disc_state) {
++					case DSC_DELETED:
++					case DSC_DELETE_PEND:
++						break;
++					default:
++						ql_dbg(ql_dbg_disc, vha, 0xffff,
++						    "%s %d %8phC post del sess\n",
++						    __func__, __LINE__,
++						    conflict->port_name);
++						qlt_schedule_sess_for_deletion_lock
++							(conflict);
++						break;
++					}
++				}
++			}
+ 
+-		qla24xx_post_newsess_work(vha, &ea->id, ea->port_name, NULL);
++			fcport->rscn_gen++;
++			fcport->scan_state = QLA_FCPORT_FOUND;
++			fcport->flags |= FCF_FABRIC_DEVICE;
++			switch (fcport->disc_state) {
++			case DSC_LOGIN_COMPLETE:
++				/* recheck session is still intact. */
++				ql_dbg(ql_dbg_disc, vha, 0x210d,
++				    "%s %d %8phC revalidate session with ADISC\n",
++				    __func__, __LINE__, fcport->port_name);
++				qla24xx_post_gpdb_work(vha, fcport,
++				    PDO_FORCE_ADISC);
++				break;
++			case DSC_DELETED:
++				ql_dbg(ql_dbg_disc, vha, 0x210d,
++				    "%s %d %8phC login\n", __func__, __LINE__,
++				    fcport->port_name);
++				fcport->d_id = ea->id;
++				qla24xx_fcport_handle_login(vha, fcport);
++				break;
++			case DSC_DELETE_PEND:
++				fcport->d_id = ea->id;
++				break;
++			default:
++				fcport->d_id = ea->id;
++				break;
++			}
++		} else {
++			list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
++			    list) {
++				if (conflict->d_id.b24 == ea->id.b24) {
++					/* 2 fcports with conflict Nport ID or
++					 * an existing fcport is having nport ID
++					 * conflict with new fcport.
++					 */
++					ql_dbg(ql_dbg_disc, vha, 0xffff,
++					    "%s %d %8phC DS %d\n",
++					    __func__, __LINE__,
++					    conflict->port_name,
++					    conflict->disc_state);
++
++					conflict->scan_state = QLA_FCPORT_SCAN;
++					switch (conflict->disc_state) {
++					case DSC_DELETED:
++					case DSC_DELETE_PEND:
++						break;
++					default:
++						ql_dbg(ql_dbg_disc, vha, 0xffff,
++						    "%s %d %8phC post del sess\n",
++						    __func__, __LINE__,
++						    conflict->port_name);
++						qlt_schedule_sess_for_deletion_lock
++							(conflict);
++						break;
++					}
++				}
++			}
++
++			/* create new fcport */
++			ql_dbg(ql_dbg_disc, vha, 0x2065,
++			    "%s %d %8phC post new sess\n",
++			    __func__, __LINE__, ea->port_name);
++			qla24xx_post_newsess_work(vha, &ea->id,
++			    ea->port_name, NULL);
++		}
+ 	}
+ }
+ 
+@@ -3248,10 +3341,11 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
+ 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+ 
+ 	if (res) {
+-		if (res == QLA_FUNCTION_TIMEOUT)
++		if (res == QLA_FUNCTION_TIMEOUT) {
+ 			qla24xx_post_gpnid_work(sp->vha, &ea.id);
+-		sp->free(sp);
+-		return;
++			sp->free(sp);
++			return;
++		}
+ 	} else if (sp->gen1) {
+ 		/* There was anoter RSNC for this Nport ID */
+ 		qla24xx_post_gpnid_work(sp->vha, &ea.id);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2f246996d3e2..7dd19785f820 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -925,6 +925,9 @@ void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 		 * must have triggered the session to be re-validate.
+ 		 * session is still valid.
  		 */
--		res = qla2x00_chk_ms_status(vha, (ms_iocb_entry_t *)pkt,
-+		res = qla2x00_chk_ms_status(sp->vha, (ms_iocb_entry_t *)pkt,
- 			(struct ct_sns_rsp *)sp->u.iocb_cmd.u.ctarg.rsp,
- 			sp->name);
- 		sp->done(sp, res);
++		ql_dbg(ql_dbg_disc, vha, 0x20d6,
++		    "%s %d %8phC session revalidate success\n",
++		    __func__, __LINE__, fcport->port_name);
+ 		fcport->disc_state = DSC_LOGIN_COMPLETE;
+ 	}
+ 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+@@ -1049,9 +1052,8 @@ void qla24xx_handle_rscn_event(fc_port_t *fcport, struct event_arg *ea)
+ 	switch (fcport->disc_state) {
+ 	case DSC_DELETED:
+ 	case DSC_LOGIN_COMPLETE:
+-		qla24xx_post_gidpn_work(fcport->vha, fcport);
++		qla24xx_post_gpnid_work(fcport->vha, &ea->id);
+ 		break;
+-
+ 	default:
+ 		break;
+ 	}
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 428e1bfaa83b..e71d99ba57f9 100644
+index e71d99ba57f9..820d1c185beb 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4515,6 +4515,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
- 	INIT_LIST_HEAD(&vha->qp_list);
- 	INIT_LIST_HEAD(&vha->gnl.fcports);
- 	INIT_LIST_HEAD(&vha->nvme_rport_list);
-+	INIT_LIST_HEAD(&vha->gpnid_list);
+@@ -4760,10 +4760,39 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
+ 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
  
- 	spin_lock_init(&vha->work_lock);
- 	spin_lock_init(&vha->cmd_list_lock);
+ 	if (fcport) {
+-		if (pla)
++		if (pla) {
+ 			qlt_plogi_ack_unref(vha, pla);
+-		else
+-			qla24xx_async_gffid(vha, fcport);
++		} else {
++			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
++			tfcp = qla2x00_find_fcport_by_nportid(vha,
++			    &e->u.new_sess.id, 1);
++			if (tfcp && (tfcp != fcport)) {
++				/*
++				 * We have a conflict fcport with same NportID.
++				 */
++				ql_dbg(ql_dbg_disc, vha, 0xffff,
++				    "%s %8phC found conflict b4 add. DS %d LS %d\n",
++				    __func__, tfcp->port_name, tfcp->disc_state,
++				    tfcp->fw_login_state);
++
++				switch (tfcp->disc_state) {
++				case DSC_DELETED:
++					break;
++				case DSC_DELETE_PEND:
++					fcport->login_pause = 1;
++					tfcp->conflict = fcport;
++					break;
++				default:
++					fcport->login_pause = 1;
++					tfcp->conflict = fcport;
++					qlt_schedule_sess_for_deletion_lock
++						(tfcp);
++					break;
++				}
++			}
++			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++			qla24xx_async_gnl(vha, fcport);
++		}
+ 	}
+ 
+ 	if (free_fcport) {
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 1bec8aebb7b6..283ff316e4b2 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -890,6 +890,17 @@ qlt_plogi_ack_link(struct scsi_qla_host *vha, struct qlt_plogi_ack_t *pla,
+ 		iocb->u.isp24.port_id[1], iocb->u.isp24.port_id[0],
+ 		pla->ref_count, pla, link);
+ 
++	if (link == QLT_PLOGI_LINK_CONFLICT) {
++		switch (sess->disc_state) {
++		case DSC_DELETED:
++		case DSC_DELETE_PEND:
++			pla->ref_count--;
++			return;
++		default:
++			break;
++		}
++	}
++
+ 	if (sess->plogi_link[link])
+ 		qlt_plogi_ack_unref(vha, sess->plogi_link[link]);
+ 
+@@ -4737,6 +4748,10 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 		sess->d_id = port_id;
+ 		sess->login_gen++;
+ 
++		ql_dbg(ql_dbg_disc, vha, 0x20f9,
++		    "%s %d %8phC  DS %d\n",
++		    __func__, __LINE__, sess->port_name, sess->disc_state);
++
+ 		switch (sess->disc_state) {
+ 		case DSC_DELETED:
+ 			qlt_plogi_ack_unref(vha, pla);
+@@ -4786,12 +4801,20 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 		}
+ 
+ 		if (conflict_sess) {
+-			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf09b,
+-			    "PRLI with conflicting sess %p port %8phC\n",
+-			    conflict_sess, conflict_sess->port_name);
+-			qlt_send_term_imm_notif(vha, iocb, 1);
+-			res = 0;
+-			break;
++			switch (conflict_sess->disc_state) {
++			case DSC_DELETED:
++			case DSC_DELETE_PEND:
++				break;
++			default:
++				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf09b,
++				    "PRLI with conflicting sess %p port %8phC\n",
++				    conflict_sess, conflict_sess->port_name);
++				conflict_sess->fw_login_state =
++				    DSC_LS_PORT_UNAVAIL;
++				qlt_send_term_imm_notif(vha, iocb, 1);
++				res = 0;
++				break;
++			}
+ 		}
+ 
+ 		if (sess != NULL) {
 -- 
 2.12.0
