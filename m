@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 06/22] qla2xxx: Retry switch command on time out
-Date: Wed, 29 Nov 2017 19:40:31 -0800
-Message-ID: <20171130034047.15070-7-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 07/22] qla2xxx: Serialize GPNID for multiple RSCN
+Date: Wed, 29 Nov 2017 19:40:32 -0800
+Message-ID: <20171130034047.15070-8-himanshu.madhani@cavium.com>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0067.outbound.protection.outlook.com ([104.47.36.67]:32352
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:32704
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752980AbdK3DlD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 22:41:03 -0500
+        id S1753237AbdK3DlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:41:04 -0500
 In-Reply-To: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,81 +19,212 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Retry GID_PN & GPN_ID switch commands for time out case.
+GPNID is triggered by RSCN. For multiple RSCNs of the same
+affected NPORT ID, serialize the GPNID to prevent confusion.
 
 Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 Cc: <stable@vger.kernel.org> # 4.10+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_gs.c | 34 ++++++++++++++++++++++++++--------
- 1 file changed, 26 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h | 48 +++++++++++++++++++++++-------------------
+ drivers/scsi/qla2xxx/qla_gs.c  | 35 +++++++++++++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_isr.c |  2 +-
+ drivers/scsi/qla2xxx/qla_os.c  |  1 +
+ 4 files changed, 58 insertions(+), 28 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 01a9b8971e88..d9b4a0651a0f 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -315,6 +315,29 @@ struct srb_cmd {
+ /* To identify if a srb is of T10-CRC type. @sp => srb_t pointer */
+ #define IS_PROT_IO(sp)	(sp->flags & SRB_CRC_CTX_DSD_VALID)
+ 
++/*
++ * 24 bit port ID type definition.
++ */
++typedef union {
++	uint32_t b24 : 24;
++
++	struct {
++#ifdef __BIG_ENDIAN
++		uint8_t domain;
++		uint8_t area;
++		uint8_t al_pa;
++#elif defined(__LITTLE_ENDIAN)
++		uint8_t al_pa;
++		uint8_t area;
++		uint8_t domain;
++#else
++#error "__BIG_ENDIAN or __LITTLE_ENDIAN must be defined!"
++#endif
++		uint8_t rsvd_1;
++	} b;
++} port_id_t;
++#define INVALID_PORT_ID	0xFFFFFF
++
+ struct els_logo_payload {
+ 	uint8_t opcode;
+ 	uint8_t rsvd[3];
+@@ -338,6 +361,7 @@ struct ct_arg {
+ 	u32		rsp_size;
+ 	void		*req;
+ 	void		*rsp;
++	port_id_t	id;
+ };
+ 
+ /*
+@@ -499,6 +523,7 @@ typedef struct srb {
+ 	const char *name;
+ 	int iocbs;
+ 	struct qla_qpair *qpair;
++	struct list_head elem;
+ 	u32 gen1;	/* scratch */
+ 	u32 gen2;	/* scratch */
+ 	union {
+@@ -2164,28 +2189,6 @@ struct imm_ntfy_from_isp {
+ #define REQUEST_ENTRY_SIZE	(sizeof(request_t))
+ 
+ 
+-/*
+- * 24 bit port ID type definition.
+- */
+-typedef union {
+-	uint32_t b24 : 24;
+-
+-	struct {
+-#ifdef __BIG_ENDIAN
+-		uint8_t domain;
+-		uint8_t area;
+-		uint8_t al_pa;
+-#elif defined(__LITTLE_ENDIAN)
+-		uint8_t al_pa;
+-		uint8_t area;
+-		uint8_t domain;
+-#else
+-#error "__BIG_ENDIAN or __LITTLE_ENDIAN must be defined!"
+-#endif
+-		uint8_t rsvd_1;
+-	} b;
+-} port_id_t;
+-#define INVALID_PORT_ID	0xFFFFFF
+ 
+ /*
+  * Switch info gathering structure.
+@@ -4252,6 +4255,7 @@ typedef struct scsi_qla_host {
+ 	uint8_t n2n_node_name[WWN_SIZE];
+ 	uint8_t n2n_port_name[WWN_SIZE];
+ 	uint16_t	n2n_id;
++	struct list_head gpnid_list;
+ } scsi_qla_host_t;
+ 
+ struct qla27xx_image_status {
 diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 8984f857bb34..ea1b562ebc8a 100644
+index ea1b562ebc8a..59ecc4eda6cd 100644
 --- a/drivers/scsi/qla2xxx/qla_gs.c
 +++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -175,6 +175,9 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
- 				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
- 			}
- 			break;
-+		case CS_TIMEOUT:
-+			rval = QLA_FUNCTION_TIMEOUT;
-+			/* drop through */
- 		default:
- 			ql_dbg(ql_dbg_disc, vha, 0x2033,
- 			    "%s failed, completion status (%x) on port_id: "
-@@ -2889,9 +2892,22 @@ static void qla2x00_async_gidpn_sp_done(void *s, int res)
- 	ea.rc = res;
- 	ea.event = FCME_GIDPN_DONE;
+@@ -3221,16 +3221,17 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
+ 	    (struct ct_sns_rsp *)sp->u.iocb_cmd.u.ctarg.rsp;
+ 	struct event_arg ea;
+ 	struct qla_work_evt *e;
++	unsigned long flags;
  
--	ql_dbg(ql_dbg_disc, vha, 0x204f,
--	    "Async done-%s res %x, WWPN %8phC ID %3phC \n",
--	    sp->name, res, fcport->port_name, id);
-+	if (res == QLA_FUNCTION_TIMEOUT) {
-+		ql_dbg(ql_dbg_disc, sp->vha, 0xffff,
-+		    "Async done-%s WWPN %8phC timed out.\n",
-+		    sp->name, fcport->port_name);
-+		qla24xx_post_gidpn_work(sp->vha, fcport);
-+		sp->free(sp);
-+		return;
-+	} else if (res) {
-+		ql_dbg(ql_dbg_disc, sp->vha, 0xffff,
-+		    "Async done-%s fail res %x, WWPN %8phC\n",
-+		    sp->name, res, fcport->port_name);
-+	} else {
-+		ql_dbg(ql_dbg_disc, vha, 0x204f,
-+		    "Async done-%s good WWPN %8phC ID %3phC\n",
-+		    sp->name, fcport->port_name, id);
-+	}
- 
- 	qla2x00_fcport_event_handler(vha, &ea);
- 
-@@ -3217,11 +3233,6 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
- 		    sp->name, ct_req->req.port_id.port_id,
+ 	if (res)
+ 		ql_dbg(ql_dbg_disc, vha, 0x2066,
+-		    "Async done-%s fail res %x ID %3phC. %8phC\n",
+-		    sp->name, res, ct_req->req.port_id.port_id,
++		    "Async done-%s fail res %x rscn gen %d ID %3phC. %8phC\n",
++		    sp->name, res, sp->gen1, ct_req->req.port_id.port_id,
+ 		    ct_rsp->rsp.gpn_id.port_name);
+ 	else
+ 		ql_dbg(ql_dbg_disc, vha, 0x2066,
+-		    "Async done-%s good ID %3phC. %8phC\n",
+-		    sp->name, ct_req->req.port_id.port_id,
++		    "Async done-%s good rscn gen %d ID %3phC. %8phC\n",
++		    sp->name, sp->gen1, ct_req->req.port_id.port_id,
  		    ct_rsp->rsp.gpn_id.port_name);
  
--	if (res) {
--		sp->free(sp);
--		return;
--	}
--
  	memset(&ea, 0, sizeof(ea));
- 	memcpy(ea.port_name, ct_rsp->rsp.gpn_id.port_name, WWN_SIZE);
- 	ea.sp = sp;
-@@ -3231,6 +3242,13 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
+@@ -3242,11 +3243,20 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
  	ea.rc = res;
  	ea.event = FCME_GPNID_DONE;
  
-+	if (res) {
-+		if (res == QLA_FUNCTION_TIMEOUT)
-+			qla24xx_post_gpnid_work(sp->vha, &ea.id);
++	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
++	list_del(&sp->elem);
++	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++
+ 	if (res) {
+ 		if (res == QLA_FUNCTION_TIMEOUT)
+ 			qla24xx_post_gpnid_work(sp->vha, &ea.id);
+ 		sp->free(sp);
+ 		return;
++	} else if (sp->gen1) {
++		/* There was anoter RSNC for this Nport ID */
++		qla24xx_post_gpnid_work(sp->vha, &ea.id);
 +		sp->free(sp);
 +		return;
-+	}
-+
- 	qla2x00_fcport_event_handler(vha, &ea);
+ 	}
  
- 	e = qla2x00_alloc_work(vha, QLA_EVT_GPNID_DONE);
+ 	qla2x00_fcport_event_handler(vha, &ea);
+@@ -3282,8 +3292,9 @@ int qla24xx_async_gpnid(scsi_qla_host_t *vha, port_id_t *id)
+ {
+ 	int rval = QLA_FUNCTION_FAILED;
+ 	struct ct_sns_req       *ct_req;
+-	srb_t *sp;
++	srb_t *sp, *tsp;
+ 	struct ct_sns_pkt *ct_sns;
++	unsigned long flags;
+ 
+ 	if (!vha->flags.online)
+ 		goto done;
+@@ -3294,8 +3305,22 @@ int qla24xx_async_gpnid(scsi_qla_host_t *vha, port_id_t *id)
+ 
+ 	sp->type = SRB_CT_PTHRU_CMD;
+ 	sp->name = "gpnid";
++	sp->u.iocb_cmd.u.ctarg.id = *id;
++	sp->gen1 = 0;
+ 	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
+ 
++	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
++	list_for_each_entry(tsp, &vha->gpnid_list, elem) {
++		if (tsp->u.iocb_cmd.u.ctarg.id.b24 == id->b24) {
++			tsp->gen1++;
++			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++			sp->free(sp);
++			goto done;
++		}
++	}
++	list_add_tail(&sp->elem, &vha->gpnid_list);
++	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++
+ 	sp->u.iocb_cmd.u.ctarg.req = dma_alloc_coherent(&vha->hw->pdev->dev,
+ 		sizeof(struct ct_sns_pkt), &sp->u.iocb_cmd.u.ctarg.req_dma,
+ 		GFP_KERNEL);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 545c527263d0..85382387a52b 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1574,7 +1574,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		/* borrowing sts_entry_24xx.comp_status.
+ 		   same location as ct_entry_24xx.comp_status
+ 		 */
+-		res = qla2x00_chk_ms_status(vha, (ms_iocb_entry_t *)pkt,
++		res = qla2x00_chk_ms_status(sp->vha, (ms_iocb_entry_t *)pkt,
+ 			(struct ct_sns_rsp *)sp->u.iocb_cmd.u.ctarg.rsp,
+ 			sp->name);
+ 		sp->done(sp, res);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 428e1bfaa83b..e71d99ba57f9 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4515,6 +4515,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	INIT_LIST_HEAD(&vha->qp_list);
+ 	INIT_LIST_HEAD(&vha->gnl.fcports);
+ 	INIT_LIST_HEAD(&vha->nvme_rport_list);
++	INIT_LIST_HEAD(&vha->gpnid_list);
+ 
+ 	spin_lock_init(&vha->work_lock);
+ 	spin_lock_init(&vha->cmd_list_lock);
 -- 
 2.12.0
