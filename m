@@ -1,32 +1,80 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi: fix race condition when removing target
-Date: Thu, 30 Nov 2017 16:08:38 +0000
-Message-ID: <1512058117.2774.1.camel@wdc.com>
-References: <20171129030556.47833-1-yanaijie@huawei.com>
-         <1511972310.2671.7.camel@wdc.com> <20171129162050.GA32071@lst.de>
-         <1511977145.2671.13.camel@wdc.com> <5A1F5C77.5050405@huawei.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 14/22] qla2xxx: Fix abort command deadlock due to
+ spinlock
+Date: Thu, 30 Nov 2017 17:19:09 +0100
+Message-ID: <aff3d196-29bc-5b10-9546-ef5a124dd8c4@suse.de>
+References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
+ <20171130034047.15070-15-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:25229 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752179AbdK3QIm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Nov 2017 11:08:42 -0500
-In-Reply-To: <5A1F5C77.5050405@huawei.com>
+Received: from mx2.suse.de ([195.135.220.15]:57477 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751745AbdK3QTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Nov 2017 11:19:12 -0500
+In-Reply-To: <20171130034047.15070-15-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Content-ID: <621451024B36DF4BA1049B741DFD6FF7@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>, "yanaijie@huawei.com" <yanaijie@huawei.com>
-Cc: "zhaohongjiang@huawei.com" <zhaohongjiang@huawei.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "miaoxie@huawei.com" <miaoxie@huawei.com>
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE3LTExLTMwIGF0IDA5OjE4ICswODAwLCBKYXNvbiBZYW4gd3JvdGU6DQo+IEhp
-IEJhcnQsIEkgY2hvc2UgdGhlIGFwcHJvYWNoIGluIG15IHBhdGNoIGJlY2F1c2UgaXQgaGFzIGJl
-ZW4gdXNlZCBpbg0KPiBzY3NpX2RldmljZV9nZXQoKSBmb3IgeWVhcnMgYW5kIGJlZW4gcHJvdmVk
-IHNhZmUuIEkgdGhpbmsgdXNpbmcNCj4ga29iamVjdF9nZXRfdW5sZXNzX3plcm8oKSBpcyBzYWZl
-IGhlcmUgYW5kIGNhbiBmaXggdGhpcyBpc3N1ZSB0b28uIEFuZA0KPiB0aGlzIGFwcHJvYWNoIGlz
-IGJlbmVmaWNpYWwgdG8gYWxsIHVzZXJzLg0KDQpIZWxsbyBKYXNvbiwNCg0KQSBwb3NzaWJsZSBh
-cHByb2FjaCBpcyB0aGF0IHdlIHN0YXJ0IHdpdGggeW91ciBwYXRjaCBhbmQgZGVmZXIgYW55IGdl
-dF9kZXZpY2UoKQ0KY2hhbmdlcyB1bnRpbCBhZnRlciB5b3VyIHBhdGNoIGhhcyBiZWVuIGFwcGxp
-ZWQuDQoNCkJhcnQu
+On 11/30/2017 04:40 AM, Himanshu Madhani wrote:
+> From: Quinn Tran <quinn.tran@cavium.com>
+> 
+> Original code acquires hardware_lock to add Abort IOCB
+> onto driver's request queue for processing. However,
+> abort_command() will also acquire hardware lock to look up
+> sp pointer before issuing abort IOCB command resulting
+> into a deadlock. This patch safely removes the possible
+> deadlock scenario by removing extra spinlock.
+> 
+> Fixes: 6eb54715b54bb ("qla2xxx: Added interface to send explicit LOGO.")
+> Cc: <stable@vger.kernel.org> # 4.10+
+> Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_iocb.c | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+> index d810a447cb4a..106f4ac4f733 100644
+> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+> @@ -2394,7 +2394,6 @@ qla2x00_els_dcmd_iocb_timeout(void *data)
+>  	struct scsi_qla_host *vha = sp->vha;
+>  	struct qla_hw_data *ha = vha->hw;
+>  	struct srb_iocb *lio = &sp->u.iocb_cmd;
+> -	unsigned long flags = 0;
+>  
+>  	ql_dbg(ql_dbg_io, vha, 0x3069,
+>  	    "%s Timeout, hdl=%x, portid=%02x%02x%02x\n",
+> @@ -2402,7 +2401,6 @@ qla2x00_els_dcmd_iocb_timeout(void *data)
+>  	    fcport->d_id.b.al_pa);
+>  
+>  	/* Abort the exchange */
+> -	spin_lock_irqsave(&ha->hardware_lock, flags);
+>  	if (ha->isp_ops->abort_command(sp)) {
+>  		ql_dbg(ql_dbg_io, vha, 0x3070,
+>  		    "mbx abort_command failed.\n");
+> @@ -2410,7 +2408,6 @@ qla2x00_els_dcmd_iocb_timeout(void *data)
+>  		ql_dbg(ql_dbg_io, vha, 0x3071,
+>  		    "mbx abort_command success.\n");
+>  	}
+> -	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+>  
+>  	complete(&lio->u.els_logo.comp);
+>  }
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
