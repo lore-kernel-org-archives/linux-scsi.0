@@ -1,19 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 01/22] qla2xxx: Fix system crash for Notify ack timeout
- handling
-Date: Thu, 30 Nov 2017 16:47:41 +0100
-Message-ID: <45ea9e48-d6e1-8989-6e95-ccda5d014dd9@suse.de>
+Subject: Re: [PATCH v2 02/22] qla2xxx: Fix gpnid error processing
+Date: Thu, 30 Nov 2017 16:48:02 +0100
+Message-ID: <bfa8e740-febc-394d-2907-ea44d0646008@suse.de>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
- <20171130034047.15070-2-himanshu.madhani@cavium.com>
+ <20171130034047.15070-3-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53668 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53693 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752367AbdK3Prn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Nov 2017 10:47:43 -0500
-In-Reply-To: <20171130034047.15070-2-himanshu.madhani@cavium.com>
+        id S1752123AbdK3PsD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Nov 2017 10:48:03 -0500
+In-Reply-To: <20171130034047.15070-3-himanshu.madhani@cavium.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,30 +22,32 @@ Cc: linux-scsi@vger.kernel.org
 On 11/30/2017 04:40 AM, Himanshu Madhani wrote:
 > From: Quinn Tran <quinn.tran@cavium.com>
 > 
-> Fix NULL pointer crash due to missing timeout handling callback
-> for Notify Ack IOCB.
+> Stop GPNID command from advancing if command has failed.
 > 
 > Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 > Cc: <stable@vger.kernel.org> # 4.10+
 > Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 > ---
->  drivers/scsi/qla2xxx/qla_target.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/qla2xxx/qla_gs.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index 18069edd4773..1259ec85ec0a 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -665,7 +665,7 @@ int qla24xx_async_notify_ack(scsi_qla_host_t *vha, fc_port_t *fcport,
->  	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha)+2);
+> diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+> index bc3db6abc9a0..ddc69d36877e 100644
+> --- a/drivers/scsi/qla2xxx/qla_gs.c
+> +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> @@ -3211,6 +3211,11 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
+>  	    sp->name, res, ct_req->req.port_id.port_id,
+>  	    ct_rsp->rsp.gpn_id.port_name);
 >  
->  	sp->u.iocb_cmd.u.nack.ntfy = ntfy;
-> -
-> +	sp->u.iocb_cmd.timeout = qla2x00_async_iocb_timeout;
->  	sp->done = qla2x00_async_nack_sp_done;
->  
->  	rval = qla2x00_start_sp(sp);
+> +	if (res) {
+> +		sp->free(sp);
+> +		return;
+> +	}
+> +
+>  	memset(&ea, 0, sizeof(ea));
+>  	memcpy(ea.port_name, ct_rsp->rsp.gpn_id.port_name, WWN_SIZE);
+>  	ea.sp = sp;
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
