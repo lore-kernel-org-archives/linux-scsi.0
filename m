@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 03/22] qla2xxx: Move session delete to driver work queue
-Date: Wed, 29 Nov 2017 19:40:28 -0800
-Message-ID: <20171130034047.15070-4-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 05/22] qla2xxx: Fix re-login for Nport Handle in use
+Date: Wed, 29 Nov 2017 19:40:30 -0800
+Message-ID: <20171130034047.15070-6-himanshu.madhani@cavium.com>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0056.outbound.protection.outlook.com ([104.47.36.56]:19653
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0073.outbound.protection.outlook.com ([104.47.34.73]:58688
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753066AbdK3Dk7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 22:40:59 -0500
+        id S1753091AbdK3DlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:41:02 -0500
 In-Reply-To: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,48 +19,152 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Move session delete from system work queue to driver's
-work queue for in time processing.
+When NPort Handle is in use, driver needs to mark the handle
+as used and pick another. Instead, the code clears the handle
+and re-pick the same handle.
 
 Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 Cc: <stable@vger.kernel.org> # 4.10+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c     | 3 ++-
- drivers/scsi/qla2xxx/qla_target.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c   | 16 ++++++++++-----
+ drivers/scsi/qla2xxx/qla_init.c | 44 +++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_isr.c  |  5 -----
+ 3 files changed, 51 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 46f2d0cf7c0d..dfbf82e716b0 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3193,10 +3193,11 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    host->can_queue, base_vha->req,
- 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index ddc69d36877e..8984f857bb34 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -2833,7 +2833,7 @@ void qla24xx_handle_gidpn_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 				}
+ 			} else { /* fcport->d_id.b24 != ea->id.b24 */
+ 				fcport->d_id.b24 = ea->id.b24;
+-				if (fcport->deleted == QLA_SESS_DELETED) {
++				if (fcport->deleted != QLA_SESS_DELETED) {
+ 					ql_dbg(ql_dbg_disc, vha, 0x2021,
+ 					    "%s %d %8phC post del sess\n",
+ 					    __func__, __LINE__, fcport->port_name);
+@@ -3206,10 +3206,16 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
+ 	struct event_arg ea;
+ 	struct qla_work_evt *e;
  
-+	ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 0);
+-	ql_dbg(ql_dbg_disc, vha, 0x2066,
+-	    "Async done-%s res %x ID %3phC. %8phC\n",
+-	    sp->name, res, ct_req->req.port_id.port_id,
+-	    ct_rsp->rsp.gpn_id.port_name);
++	if (res)
++		ql_dbg(ql_dbg_disc, vha, 0x2066,
++		    "Async done-%s fail res %x ID %3phC. %8phC\n",
++		    sp->name, res, ct_req->req.port_id.port_id,
++		    ct_rsp->rsp.gpn_id.port_name);
++	else
++		ql_dbg(ql_dbg_disc, vha, 0x2066,
++		    "Async done-%s good ID %3phC. %8phC\n",
++		    sp->name, ct_req->req.port_id.port_id,
++		    ct_rsp->rsp.gpn_id.port_name);
+ 
+ 	if (res) {
+ 		sp->free(sp);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 1bafa043f9f1..be4c67b465b8 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1452,6 +1452,8 @@ static void
+ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ {
+ 	port_id_t cid;	/* conflict Nport id */
++	u16 lid;
++	struct fc_port *conflict_fcport;
+ 
+ 	switch (ea->data[0]) {
+ 	case MBS_COMMAND_COMPLETE:
+@@ -1467,8 +1469,12 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 			qla24xx_post_prli_work(vha, ea->fcport);
+ 		} else {
+ 			ql_dbg(ql_dbg_disc, vha, 0x20ea,
+-				"%s %d %8phC post gpdb\n",
+-				__func__, __LINE__, ea->fcport->port_name);
++			    "%s %d %8phC LoopID 0x%x in use with %06x. post gnl\n",
++			    __func__, __LINE__, ea->fcport->port_name,
++			    ea->fcport->loop_id, ea->fcport->d_id.b24);
 +
- 	if (ha->mqenable) {
- 		bool mq = false;
- 		bool startit = false;
--		ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 0);
++			set_bit(ea->fcport->loop_id, vha->hw->loop_id_map);
++			ea->fcport->loop_id = FC_NO_LOOP_ID;
+ 			ea->fcport->chip_reset = vha->hw->base_qpair->chip_reset;
+ 			ea->fcport->logout_on_delete = 1;
+ 			ea->fcport->send_els_logo = 0;
+@@ -1513,8 +1519,38 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 		    ea->fcport->d_id.b.domain, ea->fcport->d_id.b.area,
+ 		    ea->fcport->d_id.b.al_pa);
  
- 		if (QLA_TGT_MODE_ENABLED()) {
- 			mq = true;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 1259ec85ec0a..924d58f5408f 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1205,7 +1205,8 @@ void qlt_schedule_sess_for_deletion(struct fc_port *sess,
- 	ql_dbg(ql_dbg_tgt, sess->vha, 0xe001,
- 	    "Scheduling sess %p for deletion\n", sess);
+-		qla2x00_clear_loop_id(ea->fcport);
+-		qla24xx_post_gidpn_work(vha, ea->fcport);
++		lid = ea->iop[1] & 0xffff;
++		qlt_find_sess_invalidate_other(vha,
++		    wwn_to_u64(ea->fcport->port_name),
++		    ea->fcport->d_id, lid, &conflict_fcport);
++
++		if (conflict_fcport) {
++			/*
++			 * Another fcport share the same loop_id/nport id.
++			 * Conflict fcport needs to finish cleanup before this
++			 * fcport can proceed to login.
++			 */
++			conflict_fcport->conflict = ea->fcport;
++			ea->fcport->login_pause = 1;
++
++			ql_dbg(ql_dbg_disc, vha, 0x20ed,
++			    "%s %d %8phC NPortId %06x inuse with loopid 0x%x. post gidpn\n",
++			    __func__, __LINE__, ea->fcport->port_name,
++			    ea->fcport->d_id.b24, lid);
++			qla2x00_clear_loop_id(ea->fcport);
++			qla24xx_post_gidpn_work(vha, ea->fcport);
++		} else {
++			ql_dbg(ql_dbg_disc, vha, 0x20ed,
++			    "%s %d %8phC NPortId %06x inuse with loopid 0x%x. sched delete\n",
++			    __func__, __LINE__, ea->fcport->port_name,
++			    ea->fcport->d_id.b24, lid);
++
++			qla2x00_clear_loop_id(ea->fcport);
++			set_bit(lid, vha->hw->loop_id_map);
++			ea->fcport->loop_id = lid;
++			ea->fcport->keep_nport_handle = 0;
++			qlt_schedule_sess_for_deletion(ea->fcport, false);
++		}
+ 		break;
+ 	}
+ 	return;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 2fd79129bb2a..545c527263d0 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2369,7 +2369,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	int res = 0;
+ 	uint16_t state_flags = 0;
+ 	uint16_t retry_delay = 0;
+-	uint8_t no_logout = 0;
  
--	schedule_work(&sess->del_work);
-+	INIT_WORK(&sess->del_work, qla24xx_delete_sess_fn);
-+	queue_work(sess->vha->hw->wq, &sess->del_work);
- }
+ 	sts = (sts_entry_t *) pkt;
+ 	sts24 = (struct sts_entry_24xx *) pkt;
+@@ -2640,7 +2639,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 		break;
  
- void qlt_schedule_sess_for_deletion_lock(struct fc_port *sess)
+ 	case CS_PORT_LOGGED_OUT:
+-		no_logout = 1;
+ 	case CS_PORT_CONFIG_CHG:
+ 	case CS_PORT_BUSY:
+ 	case CS_INCOMPLETE:
+@@ -2671,9 +2669,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 				port_state_str[atomic_read(&fcport->state)],
+ 				comp_status);
+ 
+-			if (no_logout)
+-				fcport->logout_on_delete = 0;
+-
+ 			qla2x00_mark_device_lost(fcport->vha, fcport, 1, 1);
+ 			qlt_schedule_sess_for_deletion_lock(fcport);
+ 		}
 -- 
 2.12.0
