@@ -1,71 +1,75 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH] scsi: fix race condition when removing target
-Date: Thu, 30 Nov 2017 09:18:47 +0800
-Message-ID: <5A1F5C77.5050405@huawei.com>
-References: <20171129030556.47833-1-yanaijie@huawei.com>
- <1511972310.2671.7.camel@wdc.com> <20171129162050.GA32071@lst.de>
- <1511977145.2671.13.camel@wdc.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH v2 00/22]  qla2xxx: Bug fixes for 4.15-rc2
+Date: Wed, 29 Nov 2017 19:40:25 -0800
+Message-ID: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:11481 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752426AbdK3BY6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Nov 2017 20:24:58 -0500
-In-Reply-To: <1511977145.2671.13.camel@wdc.com>
+Received: from mail-dm3nam03on0063.outbound.protection.outlook.com ([104.47.41.63]:49520
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752980AbdK3Dkx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:40:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@lst.de" <hch@lst.de>
-Cc: "zhaohongjiang@huawei.com" <zhaohongjiang@huawei.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "miaoxie@huawei.com" <miaoxie@huawei.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
+Hi Martin,
 
+This series contains bug fixes discovered during error handling test
+cases for large fabric.
 
-On 2017/11/30 1:39, Bart Van Assche wrote:
-> On Wed, 2017-11-29 at 17:20 +0100, hch@lst.de wrote:
->> On Wed, Nov 29, 2017 at 04:18:30PM +0000, Bart Van Assche wrote:
->>> As the above patch description shows it can happen that the SCSI core calls
->>> get_device() after the device reference count has reached zero and before
->>> the memory for struct device is freed. Although the above patch looks fine
->>> to me, would you consider it acceptable to modify get_device() such that it
->>> uses kobject_get_unless_zero() instead of kobject_get()? I'm asking this
->>> because that change would help to reduce the complexity of the already too
->>> complicated SCSI core.
->>
->> I don't think we can just modify get_device, but we can add a new
->> get_device_unless_zero.  In fact I have an open coded variant of that
->> in nvme, and was planning to submit one for the current merge window..
->
-> Sorry but I don't see why we can't modify get_device()? Can you explain why
-> you think that something like the patch below is wrong?
->
-> Thanks,
->
-> Bart.
->
+Please apply this series to 4.15-rc2 at your earliest convenience.
 
-Hi Bart, I chose the approach in my patch because it has been used in
-scsi_device_get() for years and been proved safe. I think using
-kobject_get_unless_zero() is safe here and can fix this issue too. And
-this approach is beneficial to all users.
+Changes from v1 -> v2
 
->
-> [PATCH] Make it safe to use get_device() if the reference count is zero
->
-> ---
->   drivers/base/core.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 110230d86527..049a5d9dba8a 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -1916,7 +1916,7 @@ EXPORT_SYMBOL_GPL(device_register);
->    */
->   struct device *get_device(struct device *dev)
->   {
-> -	return dev ? kobj_to_dev(kobject_get(&dev->kobj)) : NULL;
-> +	return dev && kobject_get_unless_zero(&dev->kobj) ? dev : NULL;
->   }
->   EXPORT_SYMBOL_GPL(get_device);
->
+o Updated patch description for patch 14 as per Bart's suggestion.
+
+Thanks,
+Himanshu
+
+Giridhar Malavali (2):
+  qla2xxx: Defer processing of GS IOCB calls
+  qla2xxx: Remove aborting ELS IOCB call issued as part of timeout.
+
+Himanshu Madhani (2):
+  qla2xxx: Fix memory leak in dual/target mode
+  qla2xxx: Update driver version to 10.00.00.03-k
+
+Quinn Tran (17):
+  qla2xxx: Fix system crash for Notify ack timeout handling
+  qla2xxx: Fix gpnid error processing
+  qla2xxx: Move session delete to driver work queue
+  qla2xxx: Skip IRQ affinity for Target QPairs
+  qla2xxx: Fix re-login for Nport Handle in use
+  qla2xxx: Retry switch command on time out
+  qla2xxx: Serialize GPNID for multiple RSCN
+  qla2xxx: Fix login state machine stuck at GPDB
+  qla2xxx: Relogin to target port on a cable swap
+  qla2xxx: Fix Relogin being triggered too fast
+  qla2xxx: Clear send ELS LOGO flag after target re-login
+  qla2xxx: Fix PRLI state check
+  qla2xxx: Fix abort command deadlock due to spinlock
+  qla2xxx: Replace fcport alloc with qla2x00_alloc_fcport
+  qla2xxx: Fix scan state field for fcport
+  qla2xxx: Clear loop id after delete
+  qla2xxx: Fix system crash in qlt_plogi_ack_unref
+
+Sawan Chandak (1):
+  qla2xxx: Fix NPIV host cleanup in target mode
+
+ drivers/scsi/qla2xxx/qla_def.h     |  49 ++++----
+ drivers/scsi/qla2xxx/qla_gs.c      | 230 ++++++++++++++++++++++++++++++-------
+ drivers/scsi/qla2xxx/qla_init.c    |  69 +++++++++--
+ drivers/scsi/qla2xxx/qla_iocb.c    |  13 ---
+ drivers/scsi/qla2xxx/qla_isr.c     |   7 +-
+ drivers/scsi/qla2xxx/qla_mbx.c     |   3 +-
+ drivers/scsi/qla2xxx/qla_mid.c     |  42 ++++---
+ drivers/scsi/qla2xxx/qla_os.c      |  78 ++++++++++---
+ drivers/scsi/qla2xxx/qla_target.c  |  60 +++++++---
+ drivers/scsi/qla2xxx/qla_version.h |   2 +-
+ 10 files changed, 405 insertions(+), 148 deletions(-)
+
+-- 
+2.12.0
