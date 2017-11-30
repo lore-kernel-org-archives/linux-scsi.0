@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 20/22] qla2xxx: Fix system crash in qlt_plogi_ack_unref
-Date: Wed, 29 Nov 2017 19:40:45 -0800
-Message-ID: <20171130034047.15070-21-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 13/22] qla2xxx: Fix PRLI state check
+Date: Wed, 29 Nov 2017 19:40:38 -0800
+Message-ID: <20171130034047.15070-14-himanshu.madhani@cavium.com>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0072.outbound.protection.outlook.com ([104.47.37.72]:20032
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0076.outbound.protection.outlook.com ([104.47.42.76]:32160
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753018AbdK3DlY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Nov 2017 22:41:24 -0500
+        id S1753237AbdK3DlN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Nov 2017 22:41:13 -0500
 In-Reply-To: <20171130034047.15070-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,49 +19,32 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Fix system crash due to NULL pointer access.
+Get Port Database MBX cmd is to validate current Login state upon
+PRLI completion. Current code looks at the last login state for
+re-validation which was incorrect. This patch removed incorrect
+state check.
 
-qlt_plogi_ack_t and fc_port structures were not properly
-bound before calling qlt_plogi_ack_unref().
-
-RIP: 0010:qlt_plogi_ack_unref+0xa1/0x150 [qla2xxx]
-Call Trace:
-qla24xx_create_new_sess+0xb1/0x320 [qla2xxx]
-qla2x00_do_work+0x123/0x260 [qla2xxx]
-qla2x00_iocb_work_fn+0x30/0x40 [qla2xxx]
-process_one_work+0x1f3/0x530
-worker_thread+0x4e/0x480
-kthread+0x10c/0x140
-
-Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
+Fixes: 15f30a5752287 ("qla2xxx: Use IOCB interface to submit non-critical MBX.")
 Cc: <stable@vger.kernel.org> # 4.10+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2ec77b9f78b8..789030c9dd26 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4750,11 +4750,11 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 		} else {
- 			list_add_tail(&fcport->list, &vha->vp_fcports);
- 
--			if (pla) {
--				qlt_plogi_ack_link(vha, pla, fcport,
--				    QLT_PLOGI_LINK_SAME_WWN);
--				pla->ref_count--;
--			}
-+		}
-+		if (pla) {
-+			qlt_plogi_ack_link(vha, pla, fcport,
-+			    QLT_PLOGI_LINK_SAME_WWN);
-+			pla->ref_count--;
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index cb717d47339f..e2b5fa47bb57 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -6160,8 +6160,7 @@ int __qla24xx_parse_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport,
  	}
- 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+ 
+ 	/* Check for logged in state. */
+-	if (current_login_state != PDS_PRLI_COMPLETE &&
+-	    last_login_state != PDS_PRLI_COMPLETE) {
++	if (current_login_state != PDS_PRLI_COMPLETE) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x119a,
+ 		    "Unable to verify login-state (%x/%x) for loop_id %x.\n",
+ 		    current_login_state, last_login_state, fcport->loop_id);
 -- 
 2.12.0
