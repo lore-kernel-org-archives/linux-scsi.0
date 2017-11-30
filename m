@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 07/22] qla2xxx: Serialize GPNID for multiple RSCN
-Date: Thu, 30 Nov 2017 16:53:56 +0100
-Message-ID: <fe70a84f-3548-0af5-c70c-6a33b8a02d9e@suse.de>
+Subject: Re: [PATCH v2 08/22] qla2xxx: Fix login state machine stuck at GPDB
+Date: Thu, 30 Nov 2017 16:54:43 +0100
+Message-ID: <2b84c723-6c71-c371-00b6-77c3b3e0b69a@suse.de>
 References: <20171130034047.15070-1-himanshu.madhani@cavium.com>
- <20171130034047.15070-8-himanshu.madhani@cavium.com>
+ <20171130034047.15070-9-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54600 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54684 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751267AbdK3Px5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Nov 2017 10:53:57 -0500
-In-Reply-To: <20171130034047.15070-8-himanshu.madhani@cavium.com>
+        id S1752293AbdK3Pyp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Nov 2017 10:54:45 -0500
+In-Reply-To: <20171130034047.15070-9-himanshu.madhani@cavium.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,43 +22,18 @@ Cc: linux-scsi@vger.kernel.org
 On 11/30/2017 04:40 AM, Himanshu Madhani wrote:
 > From: Quinn Tran <quinn.tran@cavium.com>
 > 
-> GPNID is triggered by RSCN. For multiple RSCNs of the same
-> affected NPORT ID, serialize the GPNID to prevent confusion.
+> This patch returns discovery state machine back to
+> Login Complete.
 > 
 > Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 > Cc: <stable@vger.kernel.org> # 4.10+
 > Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 > ---
->  drivers/scsi/qla2xxx/qla_def.h | 48 +++++++++++++++++++++++-------------------
->  drivers/scsi/qla2xxx/qla_gs.c  | 35 +++++++++++++++++++++++++-----
->  drivers/scsi/qla2xxx/qla_isr.c |  2 +-
->  drivers/scsi/qla2xxx/qla_os.c  |  1 +
->  4 files changed, 58 insertions(+), 28 deletions(-)
+>  drivers/scsi/qla2xxx/qla_init.c | 11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
 > 
-[ .. ]
-> @@ -3242,11 +3243,20 @@ static void qla2x00_async_gpnid_sp_done(void *s, int res)
->  	ea.rc = res;
->  	ea.event = FCME_GPNID_DONE;
->  
-> +	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-> +	list_del(&sp->elem);
-> +	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-> +
->  	if (res) {
->  		if (res == QLA_FUNCTION_TIMEOUT)
->  			qla24xx_post_gpnid_work(sp->vha, &ea.id);
->  		sp->free(sp);
->  		return;
-> +	} else if (sp->gen1) {
-> +		/* There was anoter RSNC for this Nport ID */
-> +		qla24xx_post_gpnid_work(sp->vha, &ea.id);
-> +		sp->free(sp);
-> +		return;
->  	}
->  
->  	qla2x00_fcport_event_handler(vha, &ea);
-Two spelling errors in one line ...
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
