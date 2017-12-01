@@ -1,158 +1,234 @@
-From: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2NSAyLzVdIGR0LWJpbmRpbmdzOiBz?=
- =?utf-8?Q?csi:_ufs:_add_document_for_hisi-ufs?=
-Date: Fri, 1 Dec 2017 03:17:11 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA4637F@DGGEMM506-MBS.china.huawei.com>
-References: <20171020085259.8093-1-liwei213@huawei.com>
- <20171020085259.8093-3-liwei213@huawei.com>
- <CAK8P3a0z_q-GNc-vSPbovu8yrEQyCGDccoDe16rycW+uOwO4Dw@mail.gmail.com>
- <1699CE87DE933F49876AD744B5DC140FA321D1@DGGEMM506-MBX.china.huawei.com>
- <CAK8P3a37yYDQZpZxmunCdSO83qkqywTME5Xo0k56nWEs2k+=dg@mail.gmail.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH] scsi: fix race condition when removing target
+Date: Fri, 1 Dec 2017 16:40:54 +0800
+Message-ID: <5A211596.2010707@huawei.com>
+References: <20171129030556.47833-1-yanaijie@huawei.com>
+ <1511972310.2671.7.camel@wdc.com> <20171129162050.GA32071@lst.de>
+ <1511977145.2671.13.camel@wdc.com> <5A1F5C77.5050405@huawei.com>
+ <1512058117.2774.1.camel@wdc.com>
+ <1512086178.3020.35.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: zh-CN
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "liwei (CM)" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "xuwei (O)" <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, DTML <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TZNg+MwTxZMZA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:11465 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751413AbdLAIla (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Dec 2017 03:41:30 -0500
+In-Reply-To: <1512086178.3020.35.camel@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@lst.de" <hch@lst.de>
+Cc: "zhaohongjiang@huawei.com" <zhaohongjiang@huawei.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "miaoxie@huawei.com" <miaoxie@huawei.com>
 
-SGksIEFybmQNClNvcnJ5IHRvIGJvdGhlciB5b3UsIHNvbWUgcXVlc3Rpb25zIGFib3V0IHRoaXMg
-cGF0Y2ggd2lsbCB0cm91YmxlIHlvdSB0byBnaXZlIHNvbWUgYWR2aWNlOg0KKwl1ZnM6IHVmc0Bm
-ZjNiMDAwMCB7DQorCQljb21wYXRpYmxlID0gImhpc2lsaWNvbixoaTM2NjAtdWZzIiwgImplZGVj
-LHVmcy0xLjEiOw0KKwkJLyogMDogSENJIHN0YW5kYXJkICovDQorCQkvKiAxOiBVRlMgU1lTIENU
-UkwgKi8NCisJCXJlZyA9IDwweDAgMHhmZjNiMDAwMCAweDAgMHgxMDAwPiwNCisJCQk8MHgwIDB4
-ZmYzYjEwMDAgMHgwIDB4MTAwMD47DQorCQlpbnRlcnJ1cHQtcGFyZW50ID0gPCZnaWM+Ow0KKwkJ
-aW50ZXJydXB0cyA9IDxHSUNfU1BJIDI3OCBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCisJCWNsb2Nr
-cyA9IDwmY3JnX2N0cmwgSEkzNjYwX0NMS19HQVRFX1VGU0lPX1JFRj4sDQorCQkJPCZjcmdfY3Ry
-bCBISTM2NjBfQ0xLX0dBVEVfVUZTUEhZX0NGRz47DQorCQljbG9jay1uYW1lcyA9ICJjbGtfcmVm
-IiwgImNsa19waHkiOw0KKwkJZnJlcS10YWJsZS1oeiA9IDwwIDA+LCA8MCAwPjsNCisJCS8qIG9m
-ZnNldDogMHg4NDsgYml0OiAxMiAqLw0KKwkJLyogb2Zmc2V0OiAweDg0OyBiaXQ6IDcgICovDQor
-CQlyZXNldHMgPSA8JmNyZ19yc3QgMHg4NCAxMj4sDQorCQkJPCZjcmdfcnN0IDB4ODQgNz47DQor
-CQlyZXNldC1uYW1lcyA9ICJyc3QiLCAiYXNzZXJ0IjsNCisJfTsNCg0KMS4gb3VyIFVGUyBob3N0
-IHNvYyBpbXBsZW1lbnRhdGlvbiBjYW4gYmUgZGl2aWRlZCBpbnRvIHR3byBwYXJ0czogVUZTIGNv
-bnRyb2xsZXIgYW5kIHJlbGF0ZWQgcGVyaXBoZXJhbCBjaXJjdWl0LCB0aGF0ICJIQ0kgc3RhbmRh
-cmQiPC0+IFVGUyBjb250cm9sbGVyLCAgIlVGUyBTWVMgQ1RSTCI8LT4gcmVsYXRlZCBwZXJpcGhl
-cmFsIGNpcmN1aXQsIGFuZCBQSFkgaXMgcGFydCBvZiB0aGUgcGVyaXBoZXJhbCBjaXJjdWl0LiBT
-byB0aGUgIlVGUyBTWVMgQ1RSTCIgYXJlYSBkb2VzIG5vdCBjb3JyZXNwb25kIGNvbXBsZXRlbHkg
-dG8gd2hhdCBRdWFsY29tbSBoYXZlIGRlc2NyaWJlZCBhcyB0aGVpciBQSFkgaW1wbGVtZW50YXRp
-b24uIEluIGZhY3QsIHdlIGRvIG5vdCBoYXZlIGFuIGluZGVwZW5kZW50IHJlZ2lzdGVyIHNwYWNl
-IHRvIGNvbnRyb2wgdGhlIFBIWS4gDQoNCjIuIEZyb20gb3VyIHNvYyBjaGlwIGNvbGxlYWd1ZSwg
-InJzdCIsICJhc3NlcnQiIGlzIG5vdCBnZW5lcmljIGFuZCByZWxhdGVkIHdpdGggb3VyIHNvYyBp
-bXBsZW1lbnRhdGlvbi4gSW4gZmFjdO+8jGl0IGlzIG5vdCBqdXN0IGEgcnN0IGFuZCBhc3NlcnQg
-b2YgdGhlIFVGUyBjb250cm9sbGVyLCBidXQgZm9yIHRoZSBlbnRpcmUgVUZTIElQICxzbyBJIGRv
-bid0IHRoaW5rIGl0J3MgdmVyeSBoZWxwZnVsIGZvciBvdGhlcnMuDQoNCkkgdGhpbmsgdGhlIGFi
-b3ZlIHBsYWNlcyB3aWxsIGJlIHJlc2VydmVkLCBkbyB5b3UgaGF2ZSBhbnkgYmV0dGVyIGFkdmlj
-ZXMuDQoNClRoYW5rIHlvdSB2ZXJ5IG11Y2guDQoNCg0KLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0K
-5Y+R5Lu25Lq6OiBsaXdlaSAoQ00pIA0K5Y+R6YCB5pe26Ze0OiAyMDE35bm0MTDmnIgzMeaXpSAy
-MDozNQ0K5pS25Lu25Lq6OiAnQXJuZCBCZXJnbWFubicNCuaKhOmAgTogUm9iIEhlcnJpbmc7IE1h
-cmsgUnV0bGFuZDsgeHV3ZWkgKE8pOyBDYXRhbGluIE1hcmluYXM7IFdpbGwgRGVhY29uOyBWaW5h
-eWFrIEhvbGlrYXR0aTsgSmFtZXMgRS5KLiBCb3R0b21sZXk7IE1hcnRpbiBLLiBQZXRlcnNlbjsg
-S2V2aW4gSGlsbWFuOyBHcmVnb3J5IENMRU1FTlQ7IFRob21hcyBQZXRhenpvbmk7IE1hc2FoaXJv
-IFlhbWFkYTsgUmlrdSBWb2lwaW87IFRoaWVycnkgUmVkaW5nOyBLcnp5c3p0b2YgS296bG93c2tp
-OyBFcmljIEFuaG9sdDsgRFRNTDsgTGludXggS2VybmVsIE1haWxpbmcgTGlzdDsgTGludXggQVJN
-OyBsaW51eC1zY3NpOyBHdW9kb25nIFh1OyBGZW5nYmFvcGVuZyAoa2V2aW4sIEtpcmluIFNvbHV0
-aW9uIERlcHQpOyBsaWh1YW4gKFopOyB3YW5neXVwZW5nIChBKTsgemFuZ2xlaWdhbmcNCuS4u+mi
-mDog562U5aSNOiDnrZTlpI06IFtQQVRDSCB2NSAyLzVdIGR0LWJpbmRpbmdzOiBzY3NpOiB1ZnM6
-IGFkZCBkb2N1bWVudCBmb3IgaGlzaS11ZnMNCg0KSGksIEFybmQNClRoYW5rIHlvdSBmb3IgeW91
-ciByZXBseS4NCi0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCuWPkeS7tuS6ujogYXJuZGJlcmdtYW5u
-QGdtYWlsLmNvbSBbbWFpbHRvOmFybmRiZXJnbWFubkBnbWFpbC5jb21dIOS7o+ihqCBBcm5kIEJl
-cmdtYW5uDQrlj5HpgIHml7bpl7Q6IDIwMTflubQxMOaciDMw5pelIDIzOjIyDQrmlLbku7bkuro6
-IGxpd2VpIChDTSkNCuaKhOmAgTogUm9iIEhlcnJpbmc7IE1hcmsgUnV0bGFuZDsgeHV3ZWkgKE8p
-OyBDYXRhbGluIE1hcmluYXM7IFdpbGwgRGVhY29uOyBWaW5heWFrIEhvbGlrYXR0aTsgSmFtZXMg
-RS5KLiBCb3R0b21sZXk7IE1hcnRpbiBLLiBQZXRlcnNlbjsgS2V2aW4gSGlsbWFuOyBHcmVnb3J5
-IENMRU1FTlQ7IFRob21hcyBQZXRhenpvbmk7IE1hc2FoaXJvIFlhbWFkYTsgUmlrdSBWb2lwaW87
-IFRoaWVycnkgUmVkaW5nOyBLcnp5c3p0b2YgS296bG93c2tpOyBFcmljIEFuaG9sdDsgRFRNTDsg
-TGludXggS2VybmVsIE1haWxpbmcgTGlzdDsgTGludXggQVJNOyBsaW51eC1zY3NpOyBHdW9kb25n
-IFh1OyBGZW5nYmFvcGVuZyAoa2V2aW4sIEtpcmluIFNvbHV0aW9uIERlcHQpOyBsaWh1YW4gKFop
-OyB3YW5neXVwZW5nIChBKQ0K5Li76aKYOiBSZTog562U5aSNOiBbUEFUQ0ggdjUgMi81XSBkdC1i
-aW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1lbnQgZm9yIGhpc2ktdWZzDQoNCk9uIFR1ZSwg
-T2N0IDI0LCAyMDE3IGF0IDExOjA2IEFNLCBsaXdlaSAoQ00pIDxsaXdlaTIxM0BodWF3ZWkuY29t
-PiB3cm90ZToNCj4gd2hhdCdzIHlvdXIgb3BpbmlvbiBhYm91dCBteSBleHBsYW5hdGlvbiBhbmQg
-cmV2aXNpb24gbWV0aG9kPw0KPiBJIGFtIGxvb2tpbmcgZm9yd2FyZCB0byB5b3VyIHJlcGx5LCB0
-aGFua3MhDQoNClNvcnJ5IGZvciB0aGUgZGVsYXksIEkgd2FzIHRyYXZlbGxpbmcgbGFzdCB3ZWVr
-Lg0KPiDlj5Hku7bkuro6IGFybmRiZXJnbWFubkBnbWFpbC5jb20gW21haWx0bzphcm5kYmVyZ21h
-bm5AZ21haWwuY29tXSDku6PooaggQXJuZCANCj4gQmVyZ21hbm4gT24gRnJpLCBPY3QgMjAsIDIw
-MTcgYXQgMTA6NTIgQU0sIExpIFdlaSA8bGl3ZWkyMTNAaHVhd2VpLmNvbT4gd3JvdGU6DQo+PiAt
-LS0gL2Rldi9udWxsDQo+PiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-dWZzL3Vmcy1oaXNpLnR4dA0KPj4gQEAgLTAsMCArMSw0NiBAQA0KPj4gKyogSGlzaWxpY29uIFVu
-aXZlcnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhvc3QgQ29udHJvbGxlcg0KPj4gKw0KPj4gK1VG
-UyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmliZSBvbi1jaGlwIFVGUyBoYXJkd2FyZSBtYWNy
-by4NCj4+ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xsZXIgc2hvdWxkIGhhdmUgaXRzIG93biBub2Rl
-Lg0KPj4gKw0KPj4gK1JlcXVpcmVkIHByb3BlcnRpZXM6DQo+PiArLSBjb21wYXRpYmxlICAgICAg
-ICA6IGNvbXBhdGlibGUgbGlzdCwgY29udGFpbnMgb25lIG9mIHRoZSBmb2xsb3dpbmcgLQ0KPj4g
-KyAgICAgICAgICAgICAgICAgICAgICAgImhpc2lsaWNvbixoaTM2NjAtdWZzIiBmb3IgaGlzaSB1
-ZnMgaG9zdCBjb250cm9sbGVyDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAgcHJlc2VudCBv
-biBIaTM2NjAgY2hpcHNldC4NCg0KT25lIG1vcmUgdGhpbmcgSSBqdXN0IG5vdGljZWQ6IHlvdSBk
-b24ndCBkZXNjcmliZSB0aGUgZGV2aWNlIGFzIGNvbXBhdGlibGUgd2l0aCB0aGUgdWZzaGNkIHNw
-ZWMgYXMgZGVmaW5lZCBpbiB0aGUgZ2VuZXJpYyBiaW5kaW5nLiBTaG91bGRuJ3Qgd2UgaGF2ZSBi
-b3RoIGNvbXBhdGlibGUgc3RyaW5ncyBsaXN0ZWQgaGVyZT8NCg0KT2ssIEkgd2lsbCBmaXggaXQg
-aW4gcGF0Y2ggdjY7DQoNCj4gSW4gcGFydGljdWxhciwgSSB3b25kZXIgaWYgd2hhdCB5b3UgZGVz
-Y3JpYmUgYXMgdGhlICJVRlMgU1lTIENUUkwiDQo+IGFyZWEgY29ycmVzcG9uZHMgdG8gd2hhdCBR
-dWFsY29tbSBoYXZlIGRlc2NyaWJlZCBhcyB0aGVpciBQSFkgaW1wbGVtZW50YXRpb24uIEl0IGNl
-cnRhaW5seSBzZWVtcyB0byBkcml2ZXIgc29tZSBvZiB0aGUgcHJvcGVydGllcyB0aGF0IHdvdWxk
-IG5vcm1hbGx5IGJlIGFzc29jaWF0ZWQgd2l0aCBhIFBIWS4NCj4NCj4gTGl3ZWk6WWVzLCBhIHBh
-cnQgb2YgIlVGUyBTWVMgQ1RSTCIgaXMgYXNzb2NpYXRlZCB3aXRoIGEgUEhZLCBidXQgZnJvbSBv
-dXIgY2hpcCBjb2xsZWFndWUgdGhhdCB3ZSBhc3N1cmUgIlVGUyBTWVMgQ1RSTCIgaXMgYXNzb2Np
-YXRlZCB3aXRoIGNsay9yZXNldC9wb3dlciBvbi9wb3dlciBvZmYgYW5kIHNvIG9uLg0KPiBJbiBm
-YWN0LCBpbiBhZGRpdGlvbiB0byB0aGUgY29udHJvbGxlciBpdHNlbGYsIHRoZSBjb250cm9sbGVy
-IHJlbGF0ZWQgcGVyaXBoZXJ5IGFyZSBhbGwgaW4gdGhpcyBhcmVhLiBTbyBpdCdzIG5vdCBhcHBy
-b3ByaWF0ZSB0byBwdXQgdGhpcyBpbnRvIGEgc2VwYXJhdGUgcGh5IG5vZGUuDQoNCkknbSBub3Qg
-c3VyZSBJIHVuZGVyc3RhbmQgaGVyZS4gRG8geW91IG1lYW4gdGhlIHJlc2V0IGhhbmRsZSBpcyBm
-b3IgcmVzZXR0aW5nIHRoZSBQSFkgcmF0aGVyIHRoYW4gdGhlIFVGUyBIQ0Q/DQoNCk1heWJlIG15
-IGRlc2NyaXB0aW9uIGlzIG5vdCBjbGVhciBlbm91Z2gsIG91ciBVRlMgaG9zdCBzb2MgaW1wbGVt
-ZW50YXRpb24gY2FuIGJlIGRpdmlkZWQgaW50byB0d28gcGFydHM6IFVGUyBjb250cm9sbGVyIGFu
-ZCByZWxhdGVkIHBlcmlwaGVyYWwgY2lyY3VpdCwgdGhhdCAiSENJIHN0YW5kYXJkIjwtPiBVRlMg
-Y29udHJvbGxlciwgICJVRlMgU1lTIENUUkwiPC0+IHJlbGF0ZWQgcGVyaXBoZXJhbCBjaXJjdWl0
-LCBhbmQgUEhZIGlzIHBhcnQgb2YgdGhlIHBlcmlwaGVyYWwgY2lyY3VpdC4gU28gdGhlICJVRlMg
-U1lTIENUUkwiIGFyZWEgZG9lcyBub3QgY29ycmVzcG9uZCBjb21wbGV0ZWx5IHRvIHdoYXQgUXVh
-bGNvbW0gaGF2ZSBkZXNjcmliZWQgYXMgdGhlaXIgUEhZIGltcGxlbWVudGF0aW9uLg0KVGhlIHJv
-b3QgcmVhc29uIGlzIHRoYXQgb3VyIFVGUyBob3N0IGhhZCBub3QgZGl2aWRlZCBpbnRvIFVGUyBj
-b250cm9sbGVyIGFuZCBQSFnvvJsNCg0KDQo+ID4gRm9yIHRoZSAiY2xvY2stbmFtZXMiIHByb3Bl
-cnR5LCB5b3Ugc3BlY2lmeSAiY2xrX3JlZiIsIHdoaWNoIEkgYXNzdW1lIGlzIHRoZSBzYW1lIGFz
-IHdoYXQgUXVhbGNvbW0gY2FsbCAicmVmX2NsayIuIEknZCBzdWdnZXN0IHlvdSB1c2UgdGhlIGV4
-aXN0aW5nIG5hbWUgYW5kIGFkZCB0aGF0IGFzIHRoZSBkZWZhdWx0IG5hbWUgaW4gdGhlIHVmc2hj
-ZC1wbHRmcm0udHh0IGJpbmRpbmcgZG9jdW1lbnQuDQo+DQo+IExpd2VpOiIgcmVmX2NsayAiIGlz
-IGFscmVhZHkgaW4gdGhlIHVmc2hjZC1wbHRmcm0udHh0IGJpbmRpbmcgDQo+IGRvY3VtZW50LCBh
-bmQgcGFyc2UgaW4gdWZzaGNkLmMsIHNvIHdlIHdpbGwgcmVwbGFjZSAiY2xrX3JlZiIgd2l0aCAN
-Cj4gInJlZl9jbGsiLiBJIHdpbGwgZml4IGl0IGluIHBhdGNoIHY2Ow0KDQpvaw0KDQo+ID4gVGhl
-ICJjbGtfcGh5IiBwcm9wZXJ0eSBhcHBlYXJzIHRvIGJlIHJlbGF0ZWQgdG8gdGhlIFBIWSwgc28g
-aXQgbWlnaHQgYmUgYmV0dGVyIHRvIGhhdmUgYSBzZXBhcmF0ZSBwaHkgbm9kZSB3aXRoIGVpdGhl
-ciBqdXN0IHRoZSBjbGssIG9yIHdpdGggdGhlIGNsayBwbHVzIHRoZSAiVUZTIFNZUyBDVFJMIiBy
-ZWdpc3RlciBhcmVhLCB3aGljaGV2ZXIgbWF0Y2hlcyB5b3VyIGhhcmR3YXJlIGJldHRlciwgYW5k
-IHRoZW4gdXNlIHRlaCAicGh5cy9waHktbmFtZXMiIHByb3BlcnR5IHRvIHJlZmVyIHRvIHRoYXQu
-DQo+DQo+IExpd2VpOiBPSywgSSB3aWxsIGFkZCBhIHNlcGFyYXRlIHBoeSBub2RlIGFuZCBmaXgg
-aXQgaW4gcGF0Y2ggdjY7DQoNClRoYW5rcy4NCg0KPj4gVGhlIHJlc2V0IGhhbmRsaW5nIHlvdSBk
-ZXNjcmliZSBoZXJlIChib3RoIHJlc2V0cyBhbmQgcmVzZXQtZ3Bpb3MpIGFwcGVhcnMgdG8gYmUg
-Y29tcGxldGVseSBnZW5lcmljLCBzbyBJJ2Qgc3VnZ2VzdCBhZGRpbmcgdGhvc2UgdG8gdWZzaGNk
-LXBsdGZybS50eHQgaW5zdGVhZCBvZiB5b3VyIG93biBiaW5kaW5nLCB0byBlbnN1cmUgdGhhdCBm
-dXR1cmUgZHJpdmVycyB1c2UgdGhlIHNhbWUgaWRlbnRpZmllcnMuDQo+DQo+IExpd2VpOiBGcm9t
-IG91ciBzb2MgY2hpcCBjb2xsZWFndWUsIHJlc2V0IGluY2x1ZGUgInJzdCIsICJhc3NlcnQiIGlz
-IA0KPiBub3QgZ2VuZXJpYyBhbmQgcmVsYXRlZCB3aXRoIG91ciBzb2MgaW1wbGVtZW50YXRpb24s
-IHlvdSBjYW4gc2VlDQo+IHVmc19oaXNpX3NvY19pbml0KCkgaW4gZHJpdmVycy9zY3NpL3Vmcy91
-ZnMtaGlzaS5jLCB0aGUgcG9zaXRpb24gb2YgDQo+IHJzdCBhbmQgYXNzZXJ0IGlzIHZlcnkgc3Bl
-Y2lhbCwgaXQncyBoYXJkIHRvIHB1dCBpdCBpbiBhIGdlbmVyaWMgDQo+IHByb2Nlc3M7DQoNCkl0
-IHNlZW1zIG9kZCB0aGF0IHRoZSBhYmlsaXR5IHRvIHJlc2V0IGEgZGV2aWNlIGlzIHNwZWNpZmlj
-IHRvIHlvdXIgaW1wbGVtZW50YXRpb24uIFdoYXQgSSBtZWFudCBpcyB0aGF0IG90aGVyIGltcGxl
-bWVudGF0aW9ucyBtYXkgYWxzbyByZXF1aXJlIGEgcmVzZXQsIHNvIGRlc2NyaWJpbmcgdGhlIHdh
-eSB5b3UgcmVmZXIgdG8gdGhpcyBpbnRvIHRoZSBnZW5lcmljIGJpbmRpbmcgd291bGQgYmUgaGVs
-cGZ1bCwgdG8gcHJldmVudCBvdGhlcnMgZnJvbSBhZGRpbmcgYW5vdGhlciBpbmNvbXBhdGlibGUg
-d2F5IHRvIGRvIHRoZSBzYW1lIHRoaW5nLg0KDQpBIGxvdCBvZiBnZW5lcmljIGJpbmRpbmdzIGhh
-dmUgYSByZWZlcmVuY2UgdG8gYSByZXNldCBjb250cm9sbGVyIHRoYXQgaWYgcHJlc2VudCBuZWVk
-cyB0byBiZSB1c2VkIGJlZm9yZSBmaXJzdCBhY2Nlc3NpbmcgdGhlIGRldmljZSBpdHNlbGYuDQoN
-CkkgbWVhbiBvdXIgcmVzZXQgcHJvY2VzcyBpcyByZWFsbHkgc3BlY2lhbCwgYnV0IHRoZXJlIGlz
-IG5vIHBhcnNlIG9mIHRoaXMgInJlc2V0IiBpbiBnZW5lcmljIGRyaXZlciBjb2RlIGxpa2UgdWZz
-aGNkLmMgb3IgdWZzaGNkLXBsdGZybS5jOyBFdmVuIGlmIEkgYWRkIHRob3NlIHRvIHVmc2hjZC1w
-bHRmcm0udHh0IGFuZCBpbXBsZW1lbnQgdGhlIGNvbW1vbiBwYXJzaW5nIGNvZGUsIGJ1dCBvdXIg
-c3BlY2lhbCByZXF1aXJlbWVudHMgYXJlIGRpZmZpY3VsdCB0byBzYXRpc2Z5OyBXaGF0IGRvIHlv
-dSB0aGluayBhYm91dCBpZiBJIHB1dCBhbGwgdGhlIGltcGxlbWVudGF0aW9ucyBvZiByZXNldCBp
-biBvdXIgZHJpdmVyIGNvZGUsIGFuZCByZW1vdmUgInJlc2V0IiBwcm9wZXJ0eSBoZXJlPw0KDQo+
-IHJlc2V0LWdwaW9zIGlzIHVzZWQgdG8gc29sdmUgYSBkZWZlY3Qgb2YgdGhlIFNPQyBjaGlwIHJl
-c2V0IGZ1bmN0aW9uIA0KPiBhbmQgaXQgaXMgbm90IGdlbmVyaWMgLCBidXQgb3VyIGNoaXAgaGFz
-IGJlZW4gdXBkYXRlZCwgc28gdGhpcyBpcyBubyANCj4gbG9uZ2VyIG5lZWRlZCwgYW5kIEkgd2ls
-bCByZW1vdmUgaXQgaW4gdGhlIHBhdGNoIHY2Ow0KDQpPay4NCg0KICAgICAgQXJuZA0K
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+On 2017/12/1 7:56, James Bottomley wrote:
+> On Thu, 2017-11-30 at 16:08 +0000, Bart Van Assche wrote:
+>> On Thu, 2017-11-30 at 09:18 +0800, Jason Yan wrote:
+>>>
+>>> Hi Bart, I chose the approach in my patch because it has been used
+>>> in scsi_device_get() for years and been proved safe. I think using
+>>> kobject_get_unless_zero() is safe here and can fix this issue too.
+>>> And this approach is beneficial to all users.
+>>
+>> Hello Jason,
+>>
+>> A possible approach is that we start with your patch and defer any
+>> get_device() changes until after your patch has been applied.
+>
+> It's possible, but not quite good enough: the same race can be produced
+> with any of our sdev lists that are deleted in the release callback,
+> because there could be a released device on any one of them.  The only
+> way to mediate it properly is to get a reference in the iterator using
+> kobject_get_unless_zero().
+>
+> It's a bit like a huge can of worms, there's another problem every time
+> I look.  However, this is something like the mechanism that could work
+> (and if get_device() ever gets fixed, we can put it in place of
+> kobject_get_unless_zero()).
+>
+> James
+>
+> ---
+>
+> diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+> index 6be77b3aa8a5..c3246f26c02c 100644
+> --- a/drivers/scsi/53c700.c
+> +++ b/drivers/scsi/53c700.c
+> @@ -1169,6 +1169,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
+>
+>   			
+>   		}
+> +		put_device(&SDp->sdev_gendev);
+>   	} else if(dsps == A_RESELECTED_DURING_SELECTION) {
+>
+>   		/* This section is full of debugging code because I've
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index c3fc34b9964d..7736f3fb2501 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -1198,6 +1198,7 @@ static int esp_reconnect(struct esp *esp)
+>   		goto do_reset;
+>   	}
+>   	lp = dev->hostdata;
+> +	put_device(&dev->sdev_gendev);
+>
+>   	ent = lp->non_tagged_cmd;
+>   	if (!ent) {
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index a7e4fba724b7..c96c11716152 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -677,11 +677,10 @@ struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *starget,
+>   {
+>   	struct scsi_device *sdev;
+>
+> -	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
+> -		if (sdev->sdev_state == SDEV_DEL)
+> -			continue;
+> -		if (sdev->lun ==lun)
+> +	__sdev_for_each_get(sdev, &starget->devices, same_target_siblings) {
+> +		if (sdev->sdev_state != SDEV_DEL && sdev->lun ==lun)
+>   			return sdev;
+> +		put_device(&sdev->sdev_gendev);
+>   	}
+>
+>   	return NULL;
+> @@ -700,15 +699,16 @@ EXPORT_SYMBOL(__scsi_device_lookup_by_target);
+>   struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *starget,
+>   						 u64 lun)
+>   {
+> -	struct scsi_device *sdev;
+> +  struct scsi_device *sdev, *sdev_copy;
+>   	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+>   	unsigned long flags;
+>
+>   	spin_lock_irqsave(shost->host_lock, flags);
+> -	sdev = __scsi_device_lookup_by_target(starget, lun);
+> +	sdev_copy = sdev = __scsi_device_lookup_by_target(starget, lun);
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+>   	if (sdev && scsi_device_get(sdev))
+>   		sdev = NULL;
+> -	spin_unlock_irqrestore(shost->host_lock, flags);
+> +	put_device(&sdev_copy->sdev_gendev);
+>
+>   	return sdev;
+>   }
+> @@ -735,12 +735,12 @@ struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
+>   {
+>   	struct scsi_device *sdev;
+>
+> -	list_for_each_entry(sdev, &shost->__devices, siblings) {
+> -		if (sdev->sdev_state == SDEV_DEL)
+> -			continue;
+> -		if (sdev->channel == channel && sdev->id == id &&
+> -				sdev->lun ==lun)
+> +	__sdev_for_each_get(sdev, &shost->__devices, siblings) {
+> +		if (sdev->sdev_state != SDEV_DEL &&
+> +		    sdev->channel == channel && sdev->id == id &&
+> +		    sdev->lun ==lun)
+>   			return sdev;
+> +		put_device(&sdev->sdev_gendev);
+>   	}
+>
+>   	return NULL;
+> @@ -761,14 +761,15 @@ EXPORT_SYMBOL(__scsi_device_lookup);
+>   struct scsi_device *scsi_device_lookup(struct Scsi_Host *shost,
+>   		uint channel, uint id, u64 lun)
+>   {
+> -	struct scsi_device *sdev;
+> +  struct scsi_device *sdev, *sdev_copy;
+>   	unsigned long flags;
+>
+>   	spin_lock_irqsave(shost->host_lock, flags);
+> -	sdev = __scsi_device_lookup(shost, channel, id, lun);
+> +	sdev_copy = sdev = __scsi_device_lookup(shost, channel, id, lun);
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+>   	if (sdev && scsi_device_get(sdev))
+>   		sdev = NULL;
+> -	spin_unlock_irqrestore(shost->host_lock, flags);
+> +	put_device(&sdev_copy->sdev_gendev);
+>
+>   	return sdev;
+>   }
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 40124648a07b..cddd5a93e962 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1870,11 +1870,14 @@ void scsi_forget_host(struct Scsi_Host *shost)
+>
+>    restart:
+>   	spin_lock_irqsave(shost->host_lock, flags);
+> -	list_for_each_entry(sdev, &shost->__devices, siblings) {
+> -		if (sdev->sdev_state == SDEV_DEL)
+> +	__sdev_for_each_get(sdev, &shost->__devices, siblings) {
+> +		if (sdev->sdev_state == SDEV_DEL) {
+> +			put_device(&sdev->sdev_gendev);
+>   			continue;
+> +		}
+>   		spin_unlock_irqrestore(shost->host_lock, flags);
+>   		__scsi_remove_device(sdev);
+> +		put_device(&sdev->sdev_gendev);
+>   		goto restart;
+>   	}
+>   	spin_unlock_irqrestore(shost->host_lock, flags);
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index f796bd61f3f0..380404ec49cd 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1375,17 +1375,7 @@ static void __scsi_remove_target(struct scsi_target *starget)
+>
+>   	spin_lock_irqsave(shost->host_lock, flags);
+>    restart:
+> -	list_for_each_entry(sdev, &shost->__devices, siblings) {
+> -		/*
+> -		 * We cannot call scsi_device_get() here, as
+> -		 * we might've been called from rmmod() causing
+> -		 * scsi_device_get() to fail the module_is_live()
+> -		 * check.
+> -		 */
+> -		if (sdev->channel != starget->channel ||
+> -		    sdev->id != starget->id ||
+> -		    !get_device(&sdev->sdev_gendev))
+> -			continue;
+> +	__sdev_for_each_get(sdev, &starget->devices, same_target_siblings) {
+>   		spin_unlock_irqrestore(shost->host_lock, flags);
+>   		scsi_remove_device(sdev);
+>   		put_device(&sdev->sdev_gendev);
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 571ddb49b926..2e4d48d8cd68 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -380,6 +380,23 @@ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
+>   #define __shost_for_each_device(sdev, shost) \
+>   	list_for_each_entry((sdev), &((shost)->__devices), siblings)
+>
+
+Seems that __shost_for_each_device() is still not safe. scsi device been 
+deleted stays in the list and put_device() can be called anywhere out of 
+the host lock.
+
+> +/**
+> + * __sdev_list_for_each_get - get a reference to each element
+> + * @sdev: the scsi device to use in the body
+> + * @head: the head of the list
+> + * @list: the element (sdev->list) containing list members
+> + *
+> + * Iterator that only executes the body if it can obtain a reference
+> + * to the element.  This closes a race where the device release can
+> + * have been called, but the element is still on the lists.
+> + *
+> + * The lock protecting the list (the host lock) must be held before
+> + * calling this iterator
+> + */
+> +#define __sdev_for_each_get(sdev, head, list)				\
+> +	list_for_each_entry(sdev, head, list)				\
+> +		if (kobject_get_unless_zero(&sdev->sdev_gendev.kobj))
+> +
+>   extern int scsi_change_queue_depth(struct scsi_device *, int);
+>   extern int scsi_track_queue_full(struct scsi_device *, int);
+>
+>
+>
+> .
+>
