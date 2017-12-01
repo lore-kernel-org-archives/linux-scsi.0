@@ -1,234 +1,175 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH] scsi: fix race condition when removing target
-Date: Fri, 1 Dec 2017 16:40:54 +0800
-Message-ID: <5A211596.2010707@huawei.com>
-References: <20171129030556.47833-1-yanaijie@huawei.com>
- <1511972310.2671.7.camel@wdc.com> <20171129162050.GA32071@lst.de>
- <1511977145.2671.13.camel@wdc.com> <5A1F5C77.5050405@huawei.com>
- <1512058117.2774.1.camel@wdc.com>
- <1512086178.3020.35.camel@linux.vnet.ibm.com>
+From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Subject: Re: [PATCH 1/2] Ensure that the SCSI error handler gets woken up
+Date: Fri, 1 Dec 2017 11:42:15 +0300
+Message-ID: <2f7daf8a-fd66-95c2-78e0-644e0bff4dd0@virtuozzo.com>
+References: <20171130224456.23100-1-bart.vanassche@wdc.com>
+ <20171130224456.23100-2-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:11465 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbdLAIla (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Dec 2017 03:41:30 -0500
-In-Reply-To: <1512086178.3020.35.camel@linux.vnet.ibm.com>
+Received: from mail-eopbgr10119.outbound.protection.outlook.com ([40.107.1.119]:14413
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751796AbdLAImW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 Dec 2017 03:42:22 -0500
+In-Reply-To: <20171130224456.23100-2-bart.vanassche@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@lst.de" <hch@lst.de>
-Cc: "zhaohongjiang@huawei.com" <zhaohongjiang@huawei.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "miaoxie@huawei.com" <miaoxie@huawei.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, Stuart Hayes <stuart.w.hayes@gmail.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 
 
-On 2017/12/1 7:56, James Bottomley wrote:
-> On Thu, 2017-11-30 at 16:08 +0000, Bart Van Assche wrote:
->> On Thu, 2017-11-30 at 09:18 +0800, Jason Yan wrote:
->>>
->>> Hi Bart, I chose the approach in my patch because it has been used
->>> in scsi_device_get() for years and been proved safe. I think using
->>> kobject_get_unless_zero() is safe here and can fix this issue too.
->>> And this approach is beneficial to all users.
->>
->> Hello Jason,
->>
->> A possible approach is that we start with your patch and defer any
->> get_device() changes until after your patch has been applied.
->
-> It's possible, but not quite good enough: the same race can be produced
-> with any of our sdev lists that are deleted in the release callback,
-> because there could be a released device on any one of them.  The only
-> way to mediate it properly is to get a reference in the iterator using
-> kobject_get_unless_zero().
->
-> It's a bit like a huge can of worms, there's another problem every time
-> I look.  However, this is something like the mechanism that could work
-> (and if get_device() ever gets fixed, we can put it in place of
-> kobject_get_unless_zero()).
->
-> James
->
+
+On 12/01/2017 01:44 AM, Bart Van Assche wrote:
+> If scsi_eh_scmd_add() is called concurrently with
+> scsi_host_queue_ready() while shost->host_blocked > 0 then it can
+> happen that neither function wakes up the SCSI error handler. Fix
+> this by making every function that decreases the host_busy counter
+> wake up the error handler if necessary and by protecting the
+> host_failed checks with the SCSI host lock.
+> 
+> Reported-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+> Fixes: commit 746650160866 ("scsi: convert host_busy to atomic_t")
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Konstantin Khorenko <khorenko@virtuozzo.com>
+> Cc: Stuart Hayes <stuart.w.hayes@gmail.com>
+> Cc: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: <stable@vger.kernel.org>
 > ---
->
-> diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-> index 6be77b3aa8a5..c3246f26c02c 100644
-> --- a/drivers/scsi/53c700.c
-> +++ b/drivers/scsi/53c700.c
-> @@ -1169,6 +1169,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
->
->   			
->   		}
-> +		put_device(&SDp->sdev_gendev);
->   	} else if(dsps == A_RESELECTED_DURING_SELECTION) {
->
->   		/* This section is full of debugging code because I've
-> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index c3fc34b9964d..7736f3fb2501 100644
-> --- a/drivers/scsi/esp_scsi.c
-> +++ b/drivers/scsi/esp_scsi.c
-> @@ -1198,6 +1198,7 @@ static int esp_reconnect(struct esp *esp)
->   		goto do_reset;
->   	}
->   	lp = dev->hostdata;
-> +	put_device(&dev->sdev_gendev);
->
->   	ent = lp->non_tagged_cmd;
->   	if (!ent) {
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index a7e4fba724b7..c96c11716152 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -677,11 +677,10 @@ struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *starget,
+>   drivers/scsi/scsi_error.c |  8 +++++++-
+>   drivers/scsi/scsi_lib.c   | 39 ++++++++++++++++++++++++++++-----------
+>   2 files changed, 35 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 5e89049e9b4e..b22a9a23c74c 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -233,19 +233,25 @@ static void scsi_eh_reset(struct scsi_cmnd *scmd)
+>   void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
 >   {
->   	struct scsi_device *sdev;
->
-> -	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
-> -		if (sdev->sdev_state == SDEV_DEL)
-> -			continue;
-> -		if (sdev->lun ==lun)
-> +	__sdev_for_each_get(sdev, &starget->devices, same_target_siblings) {
-> +		if (sdev->sdev_state != SDEV_DEL && sdev->lun ==lun)
->   			return sdev;
-> +		put_device(&sdev->sdev_gendev);
->   	}
->
->   	return NULL;
-> @@ -700,15 +699,16 @@ EXPORT_SYMBOL(__scsi_device_lookup_by_target);
->   struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *starget,
->   						 u64 lun)
->   {
-> -	struct scsi_device *sdev;
-> +  struct scsi_device *sdev, *sdev_copy;
->   	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+>   	struct Scsi_Host *shost = scmd->device->host;
+> +	enum scsi_host_state shost_state;
 >   	unsigned long flags;
->
+>   	int ret;
+>   
+>   	WARN_ON_ONCE(!shost->ehandler);
+>   
 >   	spin_lock_irqsave(shost->host_lock, flags);
-> -	sdev = __scsi_device_lookup_by_target(starget, lun);
-> +	sdev_copy = sdev = __scsi_device_lookup_by_target(starget, lun);
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
->   	if (sdev && scsi_device_get(sdev))
->   		sdev = NULL;
-> -	spin_unlock_irqrestore(shost->host_lock, flags);
-> +	put_device(&sdev_copy->sdev_gendev);
->
->   	return sdev;
->   }
-> @@ -735,12 +735,12 @@ struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
->   {
->   	struct scsi_device *sdev;
->
-> -	list_for_each_entry(sdev, &shost->__devices, siblings) {
-> -		if (sdev->sdev_state == SDEV_DEL)
-> -			continue;
-> -		if (sdev->channel == channel && sdev->id == id &&
-> -				sdev->lun ==lun)
-> +	__sdev_for_each_get(sdev, &shost->__devices, siblings) {
-> +		if (sdev->sdev_state != SDEV_DEL &&
-> +		    sdev->channel == channel && sdev->id == id &&
-> +		    sdev->lun ==lun)
->   			return sdev;
-> +		put_device(&sdev->sdev_gendev);
+> +	shost_state = shost->shost_state;
+>   	if (scsi_host_set_state(shost, SHOST_RECOVERY)) {
+>   		ret = scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY);
+>   		WARN_ON_ONCE(ret);
 >   	}
->
->   	return NULL;
-> @@ -761,14 +761,15 @@ EXPORT_SYMBOL(__scsi_device_lookup);
->   struct scsi_device *scsi_device_lookup(struct Scsi_Host *shost,
->   		uint channel, uint id, u64 lun)
->   {
-> -	struct scsi_device *sdev;
-> +  struct scsi_device *sdev, *sdev_copy;
->   	unsigned long flags;
->
->   	spin_lock_irqsave(shost->host_lock, flags);
-> -	sdev = __scsi_device_lookup(shost, channel, id, lun);
-> +	sdev_copy = sdev = __scsi_device_lookup(shost, channel, id, lun);
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
->   	if (sdev && scsi_device_get(sdev))
->   		sdev = NULL;
-> -	spin_unlock_irqrestore(shost->host_lock, flags);
-> +	put_device(&sdev_copy->sdev_gendev);
->
->   	return sdev;
+>   	if (shost->eh_deadline != -1 && !shost->last_reset)
+>   		shost->last_reset = jiffies;
+> -
+> +	if (shost_state != shost->shost_state) {
+> +		spin_unlock_irqrestore(shost->host_lock, flags);
+> +		synchronize_rcu();
+
+We can come here from interrupt context, so may be we should use 
+call_rcu() here instead, possible backtrace:
+
+  => scsi_eh_scmd_add
+  => scsi_times_out
+  => blk_rq_timed_out
+  => blk_abort_request
+  => ata_qc_schedule_eh
+  => ata_qc_complete
+  => ata_do_link_abort
+  => ata_port_abort
+  => ahci_handle_port_interrupt
+  => ahci_single_irq_intr
+  => __handle_irq_event_percpu
+  => handle_irq_event_percpu
+  => handle_irq_event
+  => handle_edge_irq
+  => handle_irq
+  => do_IRQ
+
+> +		spin_lock_irqsave(shost->host_lock, flags);
+> +	}
+>   	scsi_eh_reset(scmd);
+>   	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+>   	shost->host_failed++;
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index b6d3842b6809..7d18fb245d7d 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -318,22 +318,39 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+>   		cmd->cmd_len = scsi_command_size(cmd->cmnd);
 >   }
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 40124648a07b..cddd5a93e962 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1870,11 +1870,14 @@ void scsi_forget_host(struct Scsi_Host *shost)
->
->    restart:
->   	spin_lock_irqsave(shost->host_lock, flags);
-> -	list_for_each_entry(sdev, &shost->__devices, siblings) {
-> -		if (sdev->sdev_state == SDEV_DEL)
-> +	__sdev_for_each_get(sdev, &shost->__devices, siblings) {
-> +		if (sdev->sdev_state == SDEV_DEL) {
-> +			put_device(&sdev->sdev_gendev);
->   			continue;
-> +		}
->   		spin_unlock_irqrestore(shost->host_lock, flags);
->   		__scsi_remove_device(sdev);
-> +		put_device(&sdev->sdev_gendev);
->   		goto restart;
->   	}
->   	spin_unlock_irqrestore(shost->host_lock, flags);
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index f796bd61f3f0..380404ec49cd 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1375,17 +1375,7 @@ static void __scsi_remove_target(struct scsi_target *starget)
->
->   	spin_lock_irqsave(shost->host_lock, flags);
->    restart:
-> -	list_for_each_entry(sdev, &shost->__devices, siblings) {
-> -		/*
-> -		 * We cannot call scsi_device_get() here, as
-> -		 * we might've been called from rmmod() causing
-> -		 * scsi_device_get() to fail the module_is_live()
-> -		 * check.
-> -		 */
-> -		if (sdev->channel != starget->channel ||
-> -		    sdev->id != starget->id ||
-> -		    !get_device(&sdev->sdev_gendev))
-> -			continue;
-> +	__sdev_for_each_get(sdev, &starget->devices, same_target_siblings) {
->   		spin_unlock_irqrestore(shost->host_lock, flags);
->   		scsi_remove_device(sdev);
->   		put_device(&sdev->sdev_gendev);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 571ddb49b926..2e4d48d8cd68 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -380,6 +380,23 @@ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
->   #define __shost_for_each_device(sdev, shost) \
->   	list_for_each_entry((sdev), &((shost)->__devices), siblings)
->
-
-Seems that __shost_for_each_device() is still not safe. scsi device been 
-deleted stays in the list and put_device() can be called anywhere out of 
-the host lock.
-
-> +/**
-> + * __sdev_list_for_each_get - get a reference to each element
-> + * @sdev: the scsi device to use in the body
-> + * @head: the head of the list
-> + * @list: the element (sdev->list) containing list members
-> + *
-> + * Iterator that only executes the body if it can obtain a reference
-> + * to the element.  This closes a race where the device release can
-> + * have been called, but the element is still on the lists.
-> + *
-> + * The lock protecting the list (the host lock) must be held before
-> + * calling this iterator
+>   
+> -void scsi_device_unbusy(struct scsi_device *sdev)
+> +/*
+> + * Decrement the host_busy counter and wake up the error handler if necessary.
+> + * Avoid as follows that the error handler is not woken up if shost->host_busy
+> + * == shost->host_failed: use synchronize_rcu() in scsi_eh_scmd_add() in
+> + * combination with an RCU read lock in this function to ensure that this
+> + * function in its entirety either finishes before scsi_eh_scmd_add()
+> + * increases the host_failed counter or that it notices the shost state change
+> + * made by scsi_eh_scmd_add().
 > + */
-> +#define __sdev_for_each_get(sdev, head, list)				\
-> +	list_for_each_entry(sdev, head, list)				\
-> +		if (kobject_get_unless_zero(&sdev->sdev_gendev.kobj))
+> +static void scsi_dec_host_busy(struct Scsi_Host *shost)
+>   {
+> -	struct Scsi_Host *shost = sdev->host;
+> -	struct scsi_target *starget = scsi_target(sdev);
+>   	unsigned long flags;
+>   
+> +	rcu_read_lock();
+>   	atomic_dec(&shost->host_busy);
+> -	if (starget->can_queue > 0)
+> -		atomic_dec(&starget->target_busy);
+> -
+> -	if (unlikely(scsi_host_in_recovery(shost) &&
+> -		     (shost->host_failed || shost->host_eh_scheduled))) {
+> +	if (unlikely(scsi_host_in_recovery(shost))) {
+>   		spin_lock_irqsave(shost->host_lock, flags);
+> -		scsi_eh_wakeup(shost);
+> +		if (shost->host_failed || shost->host_eh_scheduled)
+> +			scsi_eh_wakeup(shost);
+>   		spin_unlock_irqrestore(shost->host_lock, flags);
+>   	}
+> +	rcu_read_unlock();
+> +}
 > +
->   extern int scsi_change_queue_depth(struct scsi_device *, int);
->   extern int scsi_track_queue_full(struct scsi_device *, int);
->
->
->
-> .
->
+> +void scsi_device_unbusy(struct scsi_device *sdev)
+> +{
+> +	struct Scsi_Host *shost = sdev->host;
+> +	struct scsi_target *starget = scsi_target(sdev);
+> +
+> +	scsi_dec_host_busy(shost);
+> +
+> +	if (starget->can_queue > 0)
+> +		atomic_dec(&starget->target_busy);
+>   
+>   	atomic_dec(&sdev->device_busy);
+>   }
+> @@ -1531,7 +1548,7 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+>   		list_add_tail(&sdev->starved_entry, &shost->starved_list);
+>   	spin_unlock_irq(shost->host_lock);
+>   out_dec:
+> -	atomic_dec(&shost->host_busy);
+> +	scsi_dec_host_busy(shost);
+>   	return 0;
+>   }
+>   
+> @@ -2017,7 +2034,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>   	return BLK_STS_OK;
+>   
+>   out_dec_host_busy:
+> -       atomic_dec(&shost->host_busy);
+> +	scsi_dec_host_busy(shost);
+>   out_dec_target_busy:
+>   	if (scsi_target(sdev)->can_queue > 0)
+>   		atomic_dec(&scsi_target(sdev)->target_busy);
+> 
+
+-- 
+Best regards, Tikhomirov Pavel
+Software Developer, Virtuozzo.
