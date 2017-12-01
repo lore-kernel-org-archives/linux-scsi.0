@@ -1,30 +1,46 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 2/2] Convert a source code comment into a runtime check
-Date: Fri, 01 Dec 2017 09:46:17 +0100
-Message-ID: <mqdzi723kfa.fsf@linux-x5ow.site>
-References: <20171130224456.23100-1-bart.vanassche@wdc.com>
-        <20171130224456.23100-3-bart.vanassche@wdc.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: bnx2fc: fix spelling mistake: "Couldnt" -> "Couldn't"
+Date: Fri,  1 Dec 2017 09:37:25 +0000
+Message-ID: <20171201093725.9274-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38708 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750994AbdLAIqS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Dec 2017 03:46:18 -0500
-In-Reply-To: <20171130224456.23100-3-bart.vanassche@wdc.com> (Bart Van
-        Assche's message of "Thu, 30 Nov 2017 14:44:56 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+From: Colin Ian King <colin.king@canonical.com>
+
+Trivial fix to spelling mistake in error message text.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index e6b9de7d41ac..65de1d0578a1 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1552,7 +1552,7 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
+ 
+ 	rc = bnx2fc_shost_config(lport, parent);
+ 	if (rc) {
+-		printk(KERN_ERR PFX "Couldnt configure shost for %s\n",
++		printk(KERN_ERR PFX "Couldn't configure shost for %s\n",
+ 			interface->netdev->name);
+ 		goto lp_config_err;
+ 	}
+@@ -1560,7 +1560,7 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
+ 	/* Initialize the libfc library */
+ 	rc = bnx2fc_libfc_config(lport);
+ 	if (rc) {
+-		printk(KERN_ERR PFX "Couldnt configure libfc\n");
++		printk(KERN_ERR PFX "Couldn't configure libfc\n");
+ 		goto shost_err;
+ 	}
+ 	fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.14.1
