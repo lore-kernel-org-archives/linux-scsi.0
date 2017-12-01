@@ -1,39 +1,35 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: ipr: fix incorrect indentation of assignment statement
-Date: Fri,  1 Dec 2017 13:33:27 +0000
-Message-ID: <20171201133327.15515-1-colin.king@canonical.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] scsi: fix race condition when removing target
+Date: Fri, 01 Dec 2017 09:41:50 -0500
+Message-ID: <1512139310.30220.60.camel@localhost.localdomain>
+References: <20171129030556.47833-1-yanaijie@huawei.com>
+         <1511972310.2671.7.camel@wdc.com> <20171129162050.GA32071@lst.de>
+         <1511977145.2671.13.camel@wdc.com> <5A1F5C77.5050405@huawei.com>
+         <1512058117.2774.1.camel@wdc.com>
+         <1512086178.3020.35.camel@linux.vnet.ibm.com> <5A211596.2010707@huawei.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48334 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752739AbdLAOlw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 Dec 2017 09:41:52 -0500
+In-Reply-To: <5A211596.2010707@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@lst.de" <hch@lst.de>, "zhaohongjiang@huawei.com" <zhaohongjiang@huawei.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "miaoxie@huawei.com" <miaoxie@huawei.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+We have another test case that demonstrates this issue involving
+duplicate invocations of scsi_device_dev_release() on the same
+device.  This other test case involves repeated log in / log out
+of an iSCSI target.  (The first test case I mentioned in an earlier
+mail was an oscillating FC port with a low dev_loss_tmo value.)
 
-Remove one extraneous level of indentation on an assignment statement.
+The iSCSI test was not fixed by Jason Yan's patch, however adding Bart's
+change to use kobject_get_unless_zero() in get_device() as well seems to
+have resolved it.  We are going to try with just Bart's change next.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/ipr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index cc0187965eee..e07dd990e585 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9653,8 +9653,8 @@ static int ipr_alloc_cmd_blks(struct ipr_ioa_cfg *ioa_cfg)
- 			if (i == 0) {
- 				entries_each_hrrq = IPR_NUM_INTERNAL_CMD_BLKS;
- 				ioa_cfg->hrrq[i].min_cmd_id = 0;
--					ioa_cfg->hrrq[i].max_cmd_id =
--						(entries_each_hrrq - 1);
-+				ioa_cfg->hrrq[i].max_cmd_id =
-+					(entries_each_hrrq - 1);
- 			} else {
- 				entries_each_hrrq =
- 					IPR_NUM_BASE_CMD_BLKS/
--- 
-2.14.1
+-Ewan
