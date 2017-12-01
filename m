@@ -1,38 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/2] Ensure that the SCSI error handler gets woken up
-Date: Fri, 01 Dec 2017 09:45:47 +0100
-Message-ID: <mqd609q4z0k.fsf@linux-x5ow.site>
+Subject: Re: [PATCH 2/2] Convert a source code comment into a runtime check
+Date: Fri, 01 Dec 2017 09:46:17 +0100
+Message-ID: <mqdzi723kfa.fsf@linux-x5ow.site>
 References: <20171130224456.23100-1-bart.vanassche@wdc.com>
-        <20171130224456.23100-2-bart.vanassche@wdc.com>
+        <20171130224456.23100-3-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38659 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38708 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750994AbdLAIps (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Dec 2017 03:45:48 -0500
-In-Reply-To: <20171130224456.23100-2-bart.vanassche@wdc.com> (Bart Van
-        Assche's message of "Thu, 30 Nov 2017 14:44:55 -0800")
+        id S1750994AbdLAIqS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 Dec 2017 03:46:18 -0500
+In-Reply-To: <20171130224456.23100-3-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Thu, 30 Nov 2017 14:44:56 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, Stuart Hayes <stuart.w.hayes@gmail.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, stable@vger.kernel.org
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-Hi Bart,
-
-Bart Van Assche <bart.vanassche@wdc.com> writes:
-[...]
-
-> +	if (shost_state != shost->shost_state) {
-> +		spin_unlock_irqrestore(shost->host_lock, flags);
-> +		synchronize_rcu();
-> +		spin_lock_irqsave(shost->host_lock, flags);
-> +	}
-
-Plese correct me if I'm wrong, but once you drop the host lock all
-assumptions about states it protects are void, aren't they? 
-
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
