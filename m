@@ -1,50 +1,83 @@
-From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Subject: RE: [EXT] Re: UFS utilities
-Date: Mon, 4 Dec 2017 15:20:34 +0000
-Message-ID: <daba96e0adb146289e3f55bcebeb09f0@SIWEX5A.sing.micron.com>
-References: <c7f3d6f543ae41c1bb625b1612e47057@SIWEX5A.sing.micron.com>
- <1511811323.2993.13.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1511811323.2993.13.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH] blk-mq: Fix several SCSI request queue lockups
+Date: Mon,  4 Dec 2017 09:30:32 -0800
+Message-ID: <20171204173032.16330-1-bart.vanassche@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIEJhcnQNClNvcnJ5IGZvciBsYXRlciENCj4NCj5IZWxsbyBCZWFuLA0KPg0KPlBsZWFzZSBi
-ZSBtb3JlIHNwZWNpZmljLiBXaGF0IGlzIGluY29udmVuaWVudCBhYm91dCBzZzNfdXRpbHMgb24g
-ZW1iZWRkZWQNCj5BUk0gc3lzdGVtcz8NCj4NCkV4YWN0bHksIEkgZG9uJ3Qga25vdyBob3cgdG8g
-Y29tcGlsZSBzZzNfdXRpbHMgd2l0aCBzdGF0aWMgbGlicmFyeSwgaW5zdGVhZCBvZiBzaGFyaW5n
-IGxpYnJhcnkuIEkgdXNlZCBmb2xsb3dpbmcgY29uZmlndXJhdGlvbg0KUGFyYW1ldGVyOg0KLi9j
-b25maWd1cmUgLS1lbmFibGUtc3RhdGljPXllcyAtLWJ1aWxkPXg4Nl82NC11bmtub3duLWxpbnV4
-LWdudSAtLWhvc3Q9YWFyY2g2NC1saW51eC1nbnUgIC0tcHJlZml4PSRQV0Qvb3V0LyAgQ0M9YWFy
-Y2g2NC1saW51eC1nbnUtZw0KICAgIGNjIC0tdGFyZ2V0PWFhcmNoNjQtbGludXgtZ251IExEPWFh
-cmNoNjQtbGludXgtZ251LWxkIEFTPWFhcmNoNjQtbGludXgtZ251LWFzIENGTEFHUz0tc3RhdGlj
-IExERkxBR1M9LXN0YXRpYw0KDQpCdXQgdGhlIG9iamVjdCBmaWxlcyBhcmUgc3RpbGwgZHluYW1p
-Y2FsbHkgbGlua2VkLg0KDQpFTEYgNjQtYml0IExTQiBleGVjdXRhYmxlLCBBUk0gYWFyY2g2NCwg
-dmVyc2lvbiAxIChTWVNWKSwgZHluYW1pY2FsbHkgbGlua2VkLCBpbnRlcnByZXRlciAvbGliL2xk
-LWxpbnV4LWFhcmNoNjQuc28uMSwgDQpmb3IgR05VL0xpbnV4IDMuNy4wLCBCdWlsZElEW3NoYTFd
-PTRmMDFiNGM5ZjFmZjQ3YmMwMGFlZjkzOTUwYzAyNzM0YjRjYzhlNTcsIG5vdCBzdHJpcHBlZC4N
-Cg0KSSB3YW50IGl0IHRvIGJlIHN0YXRpY2FsbHkgbGlua2VkLiBPdGhlcndpc2UsIEkgc2hvdWxk
-IGNvcHkgaXRzIGxpYnJhcnkgdG8gbXkgbGliIGZvbGRlciwgYW5kIHNvbWV0aW1lcyBmb3IgdGhl
-IGVtYmVkZGVkLCANCk5lZWQgdG8gcmUtYnVpbGQgcm9vdGZzLiBNZWFud2hpbGUsIGZvciB0aGUg
-VUZTLCB0aGVyZSBhcmUgdG90YWxseSAyNyBzY3NpIGNvbW1hbmRzIGJlaW5nIHVzZWQgYmFzZWQg
-b24gVUZTMi4xLg0KRm9yIHRoZSBtb3N0IGNhc2UsIHdlIGp1c3QgdXNlIHNldmVyYWwgc2czX3V0
-aWxzIG9iamVjdCBmaWxlcywgZG9uJ3QgbmVlZCB0byBjb3B5IGFsbCBvYmplY3QgZmlsZXMgdG8g
-dGhlIGVuZGluZyBwcm9kdWN0LiANCg0KPj4gQW5kIGFsc28gaXQgZG9lc24ndCBzdXBwb3J0IHNl
-dmVyYWwgVUZTIHNwZWNpYWwgY29tbWFuZC4NCj4NCj5BcmUgeW91IHJlZmVycmluZyB0byBTQ1NJ
-IGNvbW1hbmRzIG9yIHJhdGhlciB0byBVRlMgY29tbWFuZHMgdGhhdCBmYWxsDQo+b3V0c2lkZSB0
-aGUgU0NTSSBzcGVjPyBBbnl3YXksIGFuIGFwcHJvYWNoIHRoYXQgaXMgdXNlZCBieSBtYW55IFND
-U0kgZHJpdmVycw0KPnRvIGV4cG9ydCBpbmZvcm1hdGlvbiB0byB1c2VyIHNwYWNlIHRoYXQgZmFs
-bHMgb3V0c2lkZSB0aGUgU0NTSSBzcGVjIGlzIHRvDQo+Y3JlYXRlIGFkZGl0aW9uYWwgc3lzZnMg
-YXR0cmlidXRlcy4gU2VlIGFsc28gdGhlIHNkZXZfYXR0cnMgYW5kIHNob3N0X2F0dHJzDQo+bWVt
-YmVycyBvZiBzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlLg0KPg0KWWVzLCBmb3IgdGhlIFVGUyBp
-bmZvcm1hdGlvbiwgSSBjYW4gdXNlIHRoZXNlIGludGVyZmFjZS9hcHByb2FjaCB0byBlYXNpbHkg
-Z2V0Lg0KSSBhbSB0aGlua2luZyBob3cgYWJvdXQgc29tZSB0ZXN0aW5nIGNhc2UgYW5kIGNvbmZp
-Z3VyYXRpb24gb3BlcmF0aW9uLg0KQWxzbywgaXMgaXQgcG9zc2libGUgYnlwYXNzIFNDU0kgc3Rh
-Y2tzIGFuZCBnbyBpbnRvIGRpcmVjdGx5IFVGUyBzdGFjaz8NClRoYW5rcyBmb3IgeW91ciBpbnB1
-dHMuDQo+QmFydC4NCg0KLy9CZWFuIEh1bw0K
+Commit 0df21c86bdbf introduced several bugs:
+* A SCSI queue stall for queue depths > 1, addressed by commit
+  88022d7201e9 ("blk-mq: don't handle failure in .get_budget")
+* A systematic lockup for SCSI queues with queue depth 1. The
+  following test reproduces that bug systematically:
+  - Change the SRP initiator such that SCSI target queue depth is
+    limited to 1.
+  - Run the following command:
+      srp-test/run_tests -f xfs -d -e none -r 60 -t 01
+  See also "[PATCH 4/7] blk-mq: Avoid that request processing
+  stalls when sharing tags"
+  (https://marc.info/?l=linux-block&m=151208695316857). Note:
+  reverting commit 0df21c86bdbf also fixes a sporadic SCSI request
+  queue lockup while inserting a blk_mq_sched_mark_restart_hctx()
+  before all blk_mq_dispatch_rq_list() calls only fixes the
+  systematic lockup for queue depth 1.
+* A scsi_debug lockup - see also "[PATCH] SCSI: delay run queue if
+  device is blocked in scsi_dev_queue_ready()"
+  (https://marc.info/?l=linux-block&m=151223233407154).
+
+I think the above means that it is too risky to try to fix all bugs
+introduced by commit 0df21c86bdbf before kernel v4.15 is released.
+Hence revert that commit.
+
+Fixes: commit 0df21c86bdbf ("scsi: implement .get_budget and .put_budget for blk-mq")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/scsi_lib.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 84bd2b16d216..a7e7966f1477 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1976,9 +1976,11 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	struct scsi_device *sdev = q->queuedata;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+-	blk_status_t ret;
++	blk_status_t ret = BLK_STS_RESOURCE;
+ 	int reason;
+ 
++	if (!scsi_mq_get_budget(hctx))
++		goto out;
+ 	ret = prep_to_mq(scsi_prep_state_check(sdev, req));
+ 	if (ret != BLK_STS_OK)
+ 		goto out_put_budget;
+@@ -2022,6 +2024,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		atomic_dec(&scsi_target(sdev)->target_busy);
+ out_put_budget:
+ 	scsi_mq_put_budget(hctx);
++out:
+ 	switch (ret) {
+ 	case BLK_STS_OK:
+ 		break;
+@@ -2225,8 +2228,6 @@ struct request_queue *scsi_old_alloc_queue(struct scsi_device *sdev)
+ }
+ 
+ static const struct blk_mq_ops scsi_mq_ops = {
+-	.get_budget	= scsi_mq_get_budget,
+-	.put_budget	= scsi_mq_put_budget,
+ 	.queue_rq	= scsi_queue_rq,
+ 	.complete	= scsi_softirq_done,
+ 	.timeout	= scsi_timeout,
+-- 
+2.15.0
