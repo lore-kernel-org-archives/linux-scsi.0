@@ -1,60 +1,78 @@
 From: Kyuho Choi <chlrbgh0@gmail.com>
-Subject: Re: [PATCH] scsi: ufs: ufshcd: Enable no_write_same for scsi host
-Date: Mon, 4 Dec 2017 10:26:59 +0900
-Message-ID: <CAP2JTQLuBvUOCNoT-KgcfSiBLGqJV3ZangzSnbjJGgH=hfQMFA@mail.gmail.com>
-References: <20171130041907.4417-1-bjorn.andersson@linaro.org>
+Subject: Re: UFS utilities
+Date: Mon, 4 Dec 2017 11:47:38 +0900
+Message-ID: <CAP2JTQ+zPDEXQeRanE48OPqBMwGRo-bJKdaVh-bBZCEDpZKenA@mail.gmail.com>
+References: <e8aa9f0b9e854fe6bff7cb17dc08ce8c@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20171130041907.4417-1-bjorn.andersson@linaro.org>
-Sender: stable-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <e8aa9f0b9e854fe6bff7cb17dc08ce8c@SIWEX5A.sing.micron.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Anderson,
+Hi,
 
-Could you please check about below thread?
+On 11/30/17, Bean Huo (beanhuo) <beanhuo@micron.com> wrote:
+> Hi, Greg
+>
+>>On Mon, Nov 27, 2017 at 11:25:47AM +0000, Bean Huo (beanhuo) wrote:
+>>> Hi, all
+>>> Is there someone knows if exists one utilis dedicated to UFS device,
+>>> rather
+>>than SCSI utils?
+>>> I have tried sg3-utils, but it is not convenient for the embedded
+>>> ARM-based
+>>system.
+>>> And also it doesn't support several UFS special command.
+>>
+>>What specific UFS commands do you need to make to the device that the
+>>current driver does not support?
+>
+>
+> There are some UFS/vendor native commands. They are not SCSI based.
+>
 
-https://patchwork.kernel.org/patch/6357751/
+UFS command means uic/dme commands?.
+AFAIK, many uic/dme commands need  pre/post operation of SoC related.
+So, it would be need modify sg3-utils or another.
 
-Your patch is same as my old one.
+Therefore, IMHO, I don't know why we need it. But if you still want
+it, You'll be need to modify/create user application and modified ufs
+driver for your needs.
 
-On 11/30/17, Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
-> Occasionally the following error message can be seen in the logs of
-> Qualcomm devices using UFS:
+About vendor command, it's vendor specific.
+It'll be possible to support by sg3-utils. And it need modify too.
+
+>>And yes, this is a trick question as there are about 4 different major
+>> forks that
+>>I know of of the UFS driver in different vendor trees, all of which
+>> support
+>>different types of UFS commands :(
+>>
+>>> If we don't have this kind of tool for UFS, is it necessary for us to
+>>> develop a
+>>>ufs-utils?
+>>
+>>I doubt it, what neds to happen is getting all of the functionality that
+>> lives in
+>>these different forks all merged upstream into the in-kernel driver.  Then
+>> I bet
+>>all of the needed functionality you are looking for will be there.
+>>
+> Sometimes customers tend to use user space tool to do some configuration.
+> And especially, for example the UFS FFU.
 >
-> EXT4-fs (sda9): Delayed block allocation failed for inode 685600 at logical
-> offset 1086 with max blocks 3 with error 121
-> EXT4-fs (sda9): This should not happen!! Data will be lost
+
+As i knew, in case of FFU, it's possible to support by sg_write_buffer.
+
+>>good luck!
+>>
+> Thanks !
+>>greg k-h
 >
-> This is caused by a failing WRITE_SAME command, which per the JEDEC UFS
-> specification is not a supported. Set the no_write_same flag on the
-> ufshcd SCSI host to let the SCSI layer know this.
->
-> Fixes: 7a3e97b0dc4b ("[SCSI] ufshcd: UFS Host controller driver")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 88c086f5c4e3..e5b1efd1dafd 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6515,6 +6515,7 @@ static struct scsi_host_template
-> ufshcd_driver_template = {
->  	.can_queue		= UFSHCD_CAN_QUEUE,
->  	.max_host_blocked	= 1,
->  	.track_queue_depth	= 1,
-> +	.no_write_same		= 1,
->  };
->
->  static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg
-> *vreg,
-> --
-> 2.15.0
+> //Bean Huo
 >
 >
 
