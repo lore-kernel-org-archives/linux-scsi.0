@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 15/22] qla2xxx: Replace fcport alloc with qla2x00_alloc_fcport
-Date: Mon, 4 Dec 2017 14:45:10 -0800
-Message-ID: <20171204224517.3409-16-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 16/22] qla2xxx: Fix scan state field for fcport
+Date: Mon, 4 Dec 2017 14:45:11 -0800
+Message-ID: <20171204224517.3409-17-himanshu.madhani@cavium.com>
 References: <20171204224517.3409-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0087.outbound.protection.outlook.com ([104.47.32.87]:14063
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0080.outbound.protection.outlook.com ([104.47.34.80]:62787
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752414AbdLDWpu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1752283AbdLDWpu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 4 Dec 2017 17:45:50 -0500
 In-Reply-To: <20171204224517.3409-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,31 +19,29 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Current code manually allocate an fcport structure that
-is not properly initialize. Replace kzalloc with
-qla2x00_alloc_fcport, so that all fields are initialized.
-Also set set scan flag to port found
+Add correct value of scan_state field indicating state
+of the FC port
 
-Cc: <stable@vger.kernel.org>
+Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
+Cc: <stable@vger.kernel.org> # 4.10+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index e824cdc77139..2a6242d97a7e 100644
+index 2a6242d97a7e..1c219998ab60 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5783,7 +5783,7 @@ static fc_port_t *qlt_get_port_database(struct scsi_qla_host *vha,
- 	unsigned long flags;
- 	u8 newfcport = 0;
+@@ -5812,6 +5812,7 @@ static fc_port_t *qlt_get_port_database(struct scsi_qla_host *vha,
+ 		tfcp->port_type = fcport->port_type;
+ 		tfcp->supported_classes = fcport->supported_classes;
+ 		tfcp->flags |= fcport->flags;
++		tfcp->scan_state = QLA_FCPORT_FOUND;
  
--	fcport = kzalloc(sizeof(*fcport), GFP_KERNEL);
-+	fcport = qla2x00_alloc_fcport(vha, GFP_KERNEL);
- 	if (!fcport) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf06f,
- 		    "qla_target(%d): Allocation of tmp FC port failed",
+ 		del = fcport;
+ 		fcport = tfcp;
 -- 
 2.12.0
