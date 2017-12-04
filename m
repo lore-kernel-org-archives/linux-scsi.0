@@ -1,58 +1,125 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 1/3] scsi_get_device_flags_keyed(): Always return device flags
-Date: Mon,  4 Dec 2017 10:36:31 -0800
-Message-ID: <20171204183633.32139-2-bart.vanassche@wdc.com>
+Subject: [PATCH 3/3] Introduce scsi_devinfo_key enumeration type
+Date: Mon,  4 Dec 2017 10:36:33 -0800
+Message-ID: <20171204183633.32139-4-bart.vanassche@wdc.com>
 References: <20171204183633.32139-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from esa1.hgst.iphmx.com ([68.232.141.245]:31911 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751980AbdLDSgf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 13:36:35 -0500
+        with ESMTP id S1751934AbdLDSgg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 13:36:36 -0500
 In-Reply-To: <20171204183633.32139-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Since scsi_get_device_flags_keyed() callers do not check whether or
-not the returned value is an error code, change that function such
-that it returns a flags value even if the 'key' argument is invalid.
-Note: since commit 28a0bc4120d3 ("scsi: sd: Implement blacklist
-option for WRITE SAME w/ UNMAP") bit 31 is a valid device information
-flag so checking whether bit 31 is set in the return value is not
-sufficient to tell the difference between an error code and a flags
-value.
+Since symbolic names for the device information keys alread exist,
+associate an enumeration type with these symbolic values. This change
+makes it clear what the valid values for the 'key' arguments are.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi_devinfo.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 14 ++++++++------
+ drivers/scsi/scsi_priv.h    | 14 ++++++++------
+ 2 files changed, 16 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 78d4aa8df675..2fed250e87bf 100644
+index 4b33c001ae23..82bc807e1d50 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
-@@ -599,17 +599,12 @@ blist_flags_t scsi_get_device_flags_keyed(struct scsi_device *sdev,
- 				int key)
+@@ -361,7 +361,8 @@ static int scsi_dev_info_list_add(int compatible, char *vendor, char *model,
+  * Returns: 0 OK, -error on failure.
+  **/
+ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+-				 char *strflags, blist_flags_t flags, int key)
++				 char *strflags, blist_flags_t flags,
++				 enum scsi_devinfo_key key)
  {
  	struct scsi_dev_info_list *devinfo;
--	int err;
+ 	struct scsi_dev_info_list_table *devinfo_table =
+@@ -410,7 +411,7 @@ EXPORT_SYMBOL(scsi_dev_info_list_add_keyed);
+  * Returns: pointer to matching entry, or ERR_PTR on failure.
+  **/
+ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+-		const char *model, int key)
++		const char *model, enum scsi_devinfo_key key)
+ {
+ 	struct scsi_dev_info_list *devinfo;
+ 	struct scsi_dev_info_list_table *devinfo_table =
+@@ -492,7 +493,8 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+  *
+  * Returns: 0 OK, -error on failure.
+  **/
+-int scsi_dev_info_list_del_keyed(char *vendor, char *model, int key)
++int scsi_dev_info_list_del_keyed(char *vendor, char *model,
++				 enum scsi_devinfo_key key)
+ {
+ 	struct scsi_dev_info_list *found;
  
- 	devinfo = scsi_dev_info_list_find(vendor, model, key);
- 	if (!IS_ERR(devinfo))
- 		return devinfo->flags;
+@@ -594,7 +596,7 @@ blist_flags_t scsi_get_device_flags(struct scsi_device *sdev,
+ blist_flags_t scsi_get_device_flags_keyed(struct scsi_device *sdev,
+ 				const unsigned char *vendor,
+ 				const unsigned char *model,
+-				int key)
++				enum scsi_devinfo_key key)
+ {
+ 	struct scsi_dev_info_list *devinfo;
  
--	err = PTR_ERR(devinfo);
--	if (err != -ENOENT)
--		return err;
--
--	/* nothing found, return nothing */
-+	/* key or device not found: return nothing */
- 	if (key != SCSI_DEVINFO_GLOBAL)
- 		return 0;
+@@ -776,7 +778,7 @@ void scsi_exit_devinfo(void)
+  * Adds the requested list, returns zero on success, -EEXIST if the
+  * key is already registered to a list, or other error on failure.
+  */
+-int scsi_dev_info_add_list(int key, const char *name)
++int scsi_dev_info_add_list(enum scsi_devinfo_key key, const char *name)
+ {
+ 	struct scsi_dev_info_list_table *devinfo_table =
+ 		scsi_devinfo_lookup_by_key(key);
+@@ -808,7 +810,7 @@ EXPORT_SYMBOL(scsi_dev_info_add_list);
+  * frees the list itself.  Returns 0 on success or -EINVAL if the key
+  * can't be found.
+  */
+-int scsi_dev_info_remove_list(int key)
++int scsi_dev_info_remove_list(enum scsi_devinfo_key key)
+ {
+ 	struct list_head *lh, *lh_next;
+ 	struct scsi_dev_info_list_table *devinfo_table =
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index a5946cd64caa..61024db5953d 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -45,7 +45,7 @@ static inline void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+ /* scsi_devinfo.c */
  
+ /* list of keys for the lists */
+-enum {
++enum scsi_devinfo_key {
+ 	SCSI_DEVINFO_GLOBAL = 0,
+ 	SCSI_DEVINFO_SPI,
+ };
+@@ -56,13 +56,15 @@ extern blist_flags_t scsi_get_device_flags(struct scsi_device *sdev,
+ extern blist_flags_t scsi_get_device_flags_keyed(struct scsi_device *sdev,
+ 						 const unsigned char *vendor,
+ 						 const unsigned char *model,
+-						 int key);
++						 enum scsi_devinfo_key key);
+ extern int scsi_dev_info_list_add_keyed(int compatible, char *vendor,
+ 					char *model, char *strflags,
+-					blist_flags_t flags, int key);
+-extern int scsi_dev_info_list_del_keyed(char *vendor, char *model, int key);
+-extern int scsi_dev_info_add_list(int key, const char *name);
+-extern int scsi_dev_info_remove_list(int key);
++					blist_flags_t flags,
++					enum scsi_devinfo_key key);
++extern int scsi_dev_info_list_del_keyed(char *vendor, char *model,
++					enum scsi_devinfo_key key);
++extern int scsi_dev_info_add_list(enum scsi_devinfo_key key, const char *name);
++extern int scsi_dev_info_remove_list(enum scsi_devinfo_key key);
+ 
+ extern int __init scsi_init_devinfo(void);
+ extern void scsi_exit_devinfo(void);
 -- 
 2.15.0
