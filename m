@@ -1,83 +1,62 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH] SCSI: delay run queue if device is blocked in scsi_dev_queue_ready()
-Date: Sun,  3 Dec 2017 00:31:50 +0800
-Message-ID: <20171202163150.1273-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>
+From: Kyuho Choi <chlrbgh0@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: ufshcd: Enable no_write_same for scsi host
+Date: Mon, 4 Dec 2017 10:26:59 +0900
+Message-ID: <CAP2JTQLuBvUOCNoT-KgcfSiBLGqJV3ZangzSnbjJGgH=hfQMFA@mail.gmail.com>
+References: <20171130041907.4417-1-bjorn.andersson@linaro.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20171130041907.4417-1-bjorn.andersson@linaro.org>
+Sender: stable-owner@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Before commit 0df21c86bdbf ("scsi: implement .get_budget and .put_budget
-for blk-mq"), we run queue after 3ms if device is blocked and queue is
-idle, which is done in handling BLK_STS_RESOURCE. After commit 0df21c86bdbf
-is introduced, queue won't be run any more under this situation.
+Hi Anderson,
 
-IO hang is observed when timeout happened, and this patch fixes the IO
-hang issue by running queue after delay in scsi_dev_queue_ready, just like
-non-mq.
+Could you please check about below thread?
 
-This issue can be triggered by the following script:
+https://patchwork.kernel.org/patch/6357751/
 
-	#!/bin/sh
-	rmmod scsi_debug
-	modprobe scsi_debug max_queue=1
+Your patch is same as my old one.
 
-	DEVICE=`ls -d /sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*/block/* | head -1 | xargs basename`
+On 11/30/17, Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
+> Occasionally the following error message can be seen in the logs of
+> Qualcomm devices using UFS:
+>
+> EXT4-fs (sda9): Delayed block allocation failed for inode 685600 at logical
+> offset 1086 with max blocks 3 with error 121
+> EXT4-fs (sda9): This should not happen!! Data will be lost
+>
+> This is caused by a failing WRITE_SAME command, which per the JEDEC UFS
+> specification is not a supported. Set the no_write_same flag on the
+> ufshcd SCSI host to let the SCSI layer know this.
+>
+> Fixes: 7a3e97b0dc4b ("[SCSI] ufshcd: UFS Host controller driver")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 88c086f5c4e3..e5b1efd1dafd 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6515,6 +6515,7 @@ static struct scsi_host_template
+> ufshcd_driver_template = {
+>  	.can_queue		= UFSHCD_CAN_QUEUE,
+>  	.max_host_blocked	= 1,
+>  	.track_queue_depth	= 1,
+> +	.no_write_same		= 1,
+>  };
+>
+>  static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg
+> *vreg,
+> --
+> 2.15.0
+>
+>
 
-	DISK_DIR=`ls -d /sys/block/$DEVICE/device/scsi_disk/*`
-
-	echo "using scsi device $DEVICE"
-	echo "-1" >/sys/bus/pseudo/drivers/scsi_debug/every_nth
-	echo starting loop $i
-	echo "temporary write through" >$DISK_DIR/cache_type
-	echo "128" >/sys/bus/pseudo/drivers/scsi_debug/opts
-	echo none > /sys/block/$DEVICE/queue/scheduler
-	dd if=/dev/$DEVICE of=/dev/null bs=1M iflag=direct count=1 &
-	sleep 5
-	echo "0" >/sys/bus/pseudo/drivers/scsi_debug/opts
-	wait
-	echo "SUCCESS"
-
-Fixes: 0df21c86bdbf ("scsi: implement .get_budget and .put_budget for blk-mq")
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index cf9f36a1113f..9aada86055d3 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1387,6 +1387,15 @@ static void scsi_unprep_fn(struct request_queue *q, struct request *req)
- 	scsi_uninit_cmd(blk_mq_rq_to_pdu(req));
- }
- 
-+static void scsi_mq_delay_queue(struct request_queue *q, unsigned long msecs)
-+{
-+	struct blk_mq_hw_ctx *hctx;
-+	int i;
-+
-+	queue_for_each_hw_ctx(q, hctx, i)
-+		blk_mq_delay_run_hw_queue(hctx, msecs);
-+}
-+
- /*
-  * scsi_dev_queue_ready: if we can send requests to sdev, return 1 else
-  * return 0.
-@@ -1407,11 +1416,10 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
- 		 * unblock after device_blocked iterates to zero
- 		 */
- 		if (atomic_dec_return(&sdev->device_blocked) > 0) {
--			/*
--			 * For the MQ case we take care of this in the caller.
--			 */
- 			if (!q->mq_ops)
- 				blk_delay_queue(q, SCSI_QUEUE_DELAY);
-+			else
-+				scsi_mq_delay_queue(q, SCSI_QUEUE_DELAY);
- 			goto out_dec;
- 		}
- 		SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
--- 
-2.9.5
+WBR,
+Kyuho Choi
