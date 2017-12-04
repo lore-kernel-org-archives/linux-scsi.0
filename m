@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 01/22] qla2xxx: Fix system crash for Notify ack timeout handling
-Date: Mon, 4 Dec 2017 14:44:56 -0800
-Message-ID: <20171204224517.3409-2-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 04/22] qla2xxx: Skip IRQ affinity for Target QPairs
+Date: Mon, 4 Dec 2017 14:44:59 -0800
+Message-ID: <20171204224517.3409-5-himanshu.madhani@cavium.com>
 References: <20171204224517.3409-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0080.outbound.protection.outlook.com ([104.47.36.80]:42717
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0050.outbound.protection.outlook.com ([104.47.33.50]:64416
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752216AbdLDWp0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Dec 2017 17:45:26 -0500
+        id S1752283AbdLDWpd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Dec 2017 17:45:33 -0500
 In-Reply-To: <20171204224517.3409-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,30 +19,38 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Fix NULL pointer crash due to missing timeout handling callback
-for Notify Ack IOCB.
+Fix co-existence between Block MQ and Target Mode. Block MQ
+and initiator mode requires midlayer queue mapping to check
+for IRQ to be affinitize. For target mode, it's not the case.
 
-Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
-Cc: <stable@vger.kernel.org> # 4.10+
+Fixes: 09620eeb62c41 ("scsi: qla2xxx: Add debug knob for user control workload")
+Cc: <stable@vger.kernel.org> # 4.12+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 18069edd4773..1259ec85ec0a 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -665,7 +665,7 @@ int qla24xx_async_notify_ack(scsi_qla_host_t *vha, fc_port_t *fcport,
- 	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha)+2);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index dfbf82e716b0..428e1bfaa83b 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -6609,9 +6609,14 @@ qla83xx_disable_laser(scsi_qla_host_t *vha)
  
- 	sp->u.iocb_cmd.u.nack.ntfy = ntfy;
--
-+	sp->u.iocb_cmd.timeout = qla2x00_async_iocb_timeout;
- 	sp->done = qla2x00_async_nack_sp_done;
+ static int qla2xxx_map_queues(struct Scsi_Host *shost)
+ {
++	int rc;
+ 	scsi_qla_host_t *vha = (scsi_qla_host_t *)shost->hostdata;
  
- 	rval = qla2x00_start_sp(sp);
+-	return blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
++	if (USER_CTRL_IRQ(vha->hw))
++		rc = blk_mq_map_queues(&shost->tag_set);
++	else
++		rc = blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
++	return rc;
+ }
+ 
+ static const struct pci_error_handlers qla2xxx_err_handler = {
 -- 
 2.12.0
