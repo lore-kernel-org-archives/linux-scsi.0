@@ -1,100 +1,45 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] blk-mq: Fix several SCSI request queue lockups
-Date: Mon, 4 Dec 2017 23:32:27 +0000
-Message-ID: <1512430346.2795.34.camel@wdc.com>
-References: <20171204173032.16330-1-bart.vanassche@wdc.com>
-         <20171204224200.GA6888@ming.t460p> <1512427697.2795.14.camel@wdc.com>
-         <20171204230151.GD6888@ming.t460p>
+From: Holger =?iso-8859-1?q?Hoffst=E4tte?=
+        <holger@applied-asynchrony.com>
+Subject: Re: [PATCH] SCSI: delay run queue if device is blocked in
+ scsi_dev_queue_ready()
+Date: Mon, 4 Dec 2017 23:48:07 +0000 (UTC)
+Message-ID: <pan$2c3c7$7c7c04a5$f22df3ad$bef841cb@applied-asynchrony.com>
+References: <20171202163150.1273-1-ming.lei@redhat.com>
+        <1512400159.23838.1.camel@wdc.com> <20171204224507.GB6888@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:11072 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751200AbdLDXcb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 18:32:31 -0500
-In-Reply-To: <20171204230151.GD6888@ming.t460p>
-Content-Language: en-US
-Content-ID: <CBA8B5F9DED71743A18324296858EF2A@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 
-T24gVHVlLCAyMDE3LTEyLTA1IGF0IDA3OjAxICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-TW9uLCBEZWMgMDQsIDIwMTcgYXQgMTA6NDg6MThQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IE9uIFR1ZSwgMjAxNy0xMi0wNSBhdCAwNjo0MiArMDgwMCwgTWluZyBMZWkgd3Jv
-dGU6DQo+ID4gPiBPbiBNb24sIERlYyAwNCwgMjAxNyBhdCAwOTozMDozMkFNIC0wODAwLCBCYXJ0
-IFZhbiBBc3NjaGUgd3JvdGU6DQo+ID4gPiA+ICogQSBzeXN0ZW1hdGljIGxvY2t1cCBmb3IgU0NT
-SSBxdWV1ZXMgd2l0aCBxdWV1ZSBkZXB0aCAxLiBUaGUNCj4gPiA+ID4gICBmb2xsb3dpbmcgdGVz
-dCByZXByb2R1Y2VzIHRoYXQgYnVnIHN5c3RlbWF0aWNhbGx5Og0KPiA+ID4gPiAgIC0gQ2hhbmdl
-IHRoZSBTUlAgaW5pdGlhdG9yIHN1Y2ggdGhhdCBTQ1NJIHRhcmdldCBxdWV1ZSBkZXB0aCBpcw0K
-PiA+ID4gPiAgICAgbGltaXRlZCB0byAxLg0KPiA+ID4gPiAgIC0gUnVuIHRoZSBmb2xsb3dpbmcg
-Y29tbWFuZDoNCj4gPiA+ID4gICAgICAgc3JwLXRlc3QvcnVuX3Rlc3RzIC1mIHhmcyAtZCAtZSBu
-b25lIC1yIDYwIC10IDAxDQo+ID4gPiA+ICAgU2VlIGFsc28gIltQQVRDSCA0LzddIGJsay1tcTog
-QXZvaWQgdGhhdCByZXF1ZXN0IHByb2Nlc3NpbmcNCj4gPiA+ID4gICBzdGFsbHMgd2hlbiBzaGFy
-aW5nIHRhZ3MiDQo+ID4gPiA+ICAgKGh0dHBzOi8vbWFyYy5pbmZvLz9sPWxpbnV4LWJsb2NrJm09
-MTUxMjA4Njk1MzE2ODU3KS4gTm90ZToNCj4gPiA+ID4gICByZXZlcnRpbmcgY29tbWl0IDBkZjIx
-Yzg2YmRiZiBhbHNvIGZpeGVzIGEgc3BvcmFkaWMgU0NTSSByZXF1ZXN0DQo+ID4gPiA+ICAgcXVl
-dWUgbG9ja3VwIHdoaWxlIGluc2VydGluZyBhIGJsa19tcV9zY2hlZF9tYXJrX3Jlc3RhcnRfaGN0
-eCgpDQo+ID4gPiA+ICAgYmVmb3JlIGFsbCBibGtfbXFfZGlzcGF0Y2hfcnFfbGlzdCgpIGNhbGxz
-IG9ubHkgZml4ZXMgdGhlDQo+ID4gPiA+ICAgc3lzdGVtYXRpYyBsb2NrdXAgZm9yIHF1ZXVlIGRl
-cHRoIDEuDQo+ID4gPiANCj4gPiA+IFlvdSBhcmUgdGhlIG9ubHkgcmVwcm9kdWNlciBbIC4uLiBd
-DQo+ID4gDQo+ID4gVGhhdCdzIG5vdCBjb3JyZWN0LiBJJ20gcHJldHR5IHN1cmUgaWYgeW91IHRy
-eSB0byByZXByb2R1Y2UgdGhpcyB0aGF0DQo+ID4geW91IHdpbGwgc2VlIHRoZSBzYW1lIGhhbmcg
-SSByYW4gaW50by4gRG9lcyB0aGlzIG1lYW4gdGhhdCB5b3UgaGF2ZSBub3QNCj4gPiB5ZXQgdHJp
-ZWQgdG8gcmVwcm9kdWNlIHRoZSBoYW5nIEkgcmVwb3J0ZWQ/DQo+IA0KPiBEbyB5b3UgbWVhbiBl
-dmVyeSBrZXJuZWwgZGV2ZWxvcGVyIGhhcyB0byBvd24gb25lIFNSUC9JQiBoYXJkd2FyZT8NCg0K
-V2hlbiBJIGhhdmUgdGhlIHRpbWUgSSB3aWxsIG1ha2UgaXQgcG9zc2libGUgdG8gcnVuIHRoaXMg
-dGVzdCBvbiBhbnkgc3lzdGVtDQplcXVpcHBlZCB3aXRoIGF0IGxlYXN0IG9uZSBFdGhlcm5ldCBw
-b3J0LiBCdXQgdGhlIGZhY3QgdGhhdCB0aGUgdGVzdCBJDQptZW50aW9uZWQgcmVxdWlyZXMgSUIg
-aGFyZHdhcmUgc2hvdWxkIG5vdCBwcmV2ZW50IHlvdSBmcm9tIHJ1bm5pbmcgdGhpcyB0ZXN0DQpz
-aW5jZSB5b3UgaGF2ZSBydW4gdGhpcyB0ZXN0IHNvZnR3YXJlIGJlZm9yZS4NCg0KPiBJIGRvbid0
-IGhhdmUgeW91ciBoYXJkd2FyZSB0byByZXByb2R1Y2UgdGhhdCwNCg0KVGhhdCdzIG5vdCB0cnVl
-LiBZb3VyIGVtcGxveWVyIGRlZmluaXRlbHkgb3ducyBJQiBoYXJkd2FyZS4gRS5nLiB0aGUNCmZv
-bGxvd2luZyBtZXNzYWdlIHNob3dzIHRoYXQgeW91IGhhdmUgcnVuIHRoZSBzcnAtdGVzdCB5b3Vy
-c2VsZiBvbiBJQiBoYXJkd2FyZQ0Kb25seSBmb3VyIHdlZWtzIGFnbzoNCg0KaHR0cHM6Ly93d3cu
-c3Bpbmljcy5uZXQvbGlzdHMvbGludXgtYmxvY2svbXNnMTk1MTEuaHRtbA0KDQo+IE90aGVyd2lz
-ZSwgdGhlcmUgc2hvdWxkIGhhdmUgYmUgc3VjaCBzaW1pbGFyIHJlcG9ydHMgZnJvbSBvdGhlcnMs
-IG5vdCBmcm9tDQo+IG9ubHkgeW91Lg0KDQpUaGF0J3Mgbm90IGNvcnJlY3QgZWl0aGVyLiBIb3cg
-bG9uZyB3YXMgaXQgYWdvIHRoYXQga2VybmVsIHY0LjE1LXJjMSB3YXMNCnJlbGVhc2VkPyBPbmUg
-d2Vlaz8gSG93IG1hbnkgU1JQIHVzZXJzIGRvIHlvdSB0aGluayBoYXZlIHRyaWVkIHRvIHRyaWdn
-ZXIgYQ0KcXVldWUgZnVsbCBjb25kaXRpb24gd2l0aCB0aGF0IGtlcm5lbCB2ZXJzaW9uPw0KDQo+
-IE1vcmUgaW1wb3J0YW50bHkgSSBkb24ndCB1bmRlcnN0YW5kIHdoeSB5b3UgY2FuJ3Qgc2hhcmUg
-dGhlIGtlcm5lbA0KPiBsb2cvZGVidWdmcyBsb2cgd2hlbiBJTyBoYW5nIGhhcHBlbnM/DQo+IA0K
-PiBXaXRob3V0IGFueSBrZXJuZWwgbG9nLCBob3cgY2FuIHdlIGNvbmZpcm0gdGhhdCBpdCBpcyBh
-IHZhbGlkIHJlcG9ydD8NCg0KSXQncyByZWFsbHkgdW5mb3J0dW5hdGUgdGhhdCB5b3UgYXJlIGZv
-Y3Vzc2luZyBvbiBkZW55aW5nIHRoYXQgdGhlIGJ1ZyBJDQpyZXBvcnRlZCBleGlzdHMgaW5zdGVh
-ZCBvZiB0cnlpbmcgdG8gZml4IHRoZSBidWdzIGludHJvZHVjZWQgYnkgY29tbWl0DQpiMzQ3Njg5
-ZmZiY2EuIEJUVywgSSBoYXZlIG1vcmUgdGhhbiBlbm91Z2ggZXhwZXJpZW5jZSB0byBkZWNpZGUg
-bXlzZWxmIHdoYXQNCmEgdmFsaWQgcmVwb3J0IGlzIGFuZCB3aGF0IG5vdC4gSSBjYW4gZWFzaWx5
-IHNlbmQgeW91IHNldmVyYWwgTUIgb2Yga2VybmVsDQpsb2dzLiBUaGUgcmVhc29uIEkgaGF2ZSBu
-b3QgeWV0IGRvbmUgdGhpcyBpcyBiZWNhdXNlIEknbSA5OS45JSBzdXJlIHRoYXQNCnRoZXNlIHdv
-bid0IGhlbHAgdG8gcm9vdCBjYXVzZSB0aGUgcmVwb3J0ZWQgaXNzdWUuIEJ1dCBJIGNhbiB0ZWxs
-IHlvdSB3aGF0DQpJIGxlYXJuZWQgZnJvbSBhbmFseXppbmcgdGhlIGluZm9ybWF0aW9uIHVuZGVy
-IC9zeXMva2VybmVsL2RlYnVnL2Jsb2NrOg0KZXZlcnkgdGltZSBhIGhhbmcgb2NjdXJyZWQgSSBu
-b3RpY2VkIHRoYXQgbm8gcmVxdWVzdHMgd2VyZSAiYnVzeSIsIHRoYXQgdHdvDQpyZXF1ZXN0cyBv
-Y2N1cnJlZCBpbiBycV9saXN0cyBhbmQgb25lIHJlcXVlc3Qgb2NjdXJyZWQgaW4gYSBoY3R4IGRp
-c3BhdGNoDQpsaXN0LiBUaGlzIGlzIGVub3VnaCB0byBjb25jbHVkZSB0aGF0IGEgcXVldWUgcnVu
-IHdhcyBtaXNzaW5nLiBBbmQgSSB0aGluaw0KdGhhdCB0aGUgcGF0Y2ggYXQgdGhlIHN0YXJ0IG9m
-IHRoaXMgZS1tYWlsIHRocmVhZCBub3Qgb25seSBzaG93cyB0aGF0IHRoZQ0Kcm9vdCBjYXVzZSBp
-cyBpbiB0aGUgYmxvY2sgbGF5ZXIgYnV0IGFsc28gdGhhdCB0aGlzIGJ1ZyB3YXMgaW50cm9kdWNl
-ZCBieQ0KY29tbWl0IGIzNDc2ODlmZmJjYS4NCg0KPiA+ID4gWW91IHNhaWQgdGhhdCB5b3VyIHBh
-dGNoIGZpeGVzICdjb21taXQgYjM0NzY4OWZmYmNhICgiYmxrLW1xLXNjaGVkOg0KPiA+ID4gaW1w
-cm92ZSBkaXNwYXRjaGluZyBmcm9tIHN3IHF1ZXVlIiknLCBidXQgeW91IGRvbid0IG1lbnRpb24g
-YW55IGlzc3VlDQo+ID4gPiBhYm91dCB0aGF0IGNvbW1pdC4NCj4gPiANCj4gPiBUaGF0J3Mgbm90
-IGNvcnJlY3QgZWl0aGVyLiBGcm9tIHRoZSBjb21taXQgbWVzc2FnZSAiQSBzeXN0ZW1hdGljIGxv
-Y2t1cA0KPiA+IGZvciBTQ1NJIHF1ZXVlcyB3aXRoIHF1ZXVlIGRlcHRoIDEuIg0KPiANCj4gSSBt
-ZWFuIHlvdSBtZW50aW9uZWQgeW91ciBwYXRjaCBjYW4gZml4ICdjb21taXQgYjM0NzY4OWZmYmNh
-DQo+ICgiYmxrLW1xLXNjaGVkOiBpbXByb3ZlIGRpc3BhdGNoaW5nIGZyb20gc3cgcXVldWUiKScs
-IGJ1dCB5b3UgbmV2ZXINCj4gcG9pbnQgd2hlcmUgdGhlIGNvbW1pdCBiMzQ3Njg5ZmZiY2EgaXMg
-d3JvbmcsIGhvdyB5b3VyIHBhdGNoIGZpeGVzDQo+IHRoZSBtaXN0YWtlIG9mIHRoYXQgY29tbWl0
-Lg0KDQpZb3Ugc2hvdWxkIGtub3cgdGhhdCBpdCBpcyBub3QgcmVxdWlyZWQgdG8gcGVyZm9ybSBh
-IHJvb3QgY2F1c2UgYW5hbHlzaXMNCmJlZm9yZSBwb3N0aW5nIGEgcmV2ZXJ0LiBIYXZpbmcgcGVy
-Zm9ybWVkIGEgYmlzZWN0IGlzIHN1ZmZpY2llbnQuDQoNCkJUVywgaXQgc2VlbXMgbGlrZSB5b3Ug
-Zm9yZ290IHRoYXQgbGFzdCBGcmlkYXkgSSBleHBsYWluZWQgdG8geW91IHRoYXQgdGhlcmUNCmlz
-IGFuIG9idmlvdXMgYnVnIGluIGNvbW1pdCBiMzQ3Njg5ZmZiY2EsIG5hbWVseSB0aGF0IGEgYmxr
-X21xX3NjaGVkX21hcmtfcmVzdGFydF9oY3R4KCkNCmNhbGwgaXMgbWlzc2luZyBpbiBibGtfbXFf
-c2NoZWRfZGlzcGF0Y2hfcmVxdWVzdHMoKSBiZWZvcmUgdGhlIGJsa19tcV9kb19kaXNwYXRjaF9j
-dHgoKQ0KY2FsbC4gU2VlIGFsc28gaHR0cHM6Ly9tYXJjLmluZm8vP2w9bGludXgtYmxvY2smbT0x
-NTEyMTU3OTQyMjQ0MDEuDQoNCkJhcnQu
+On Tue, 05 Dec 2017 06:45:08 +0800, Ming Lei wrote:
+
+> On Mon, Dec 04, 2017 at 03:09:20PM +0000, Bart Van Assche wrote:
+>> On Sun, 2017-12-03 at 00:31 +0800, Ming Lei wrote:
+>> > Fixes: 0df21c86bdbf ("scsi: implement .get_budget and .put_budget for blk-mq")
+>> 
+>> It might be safer to revert commit 0df21c86bdbf instead of trying to fix all
+>> issues introduced by that commit for kernel version v4.15 ...
+> 
+> What are all issues in v4.15-rc? Up to now, it is the only issue reported,
+> and can be fixed by this simple patch, which one can be thought as cleanup
+> too.
+
+Even with this patch I've encountered at least one hang that
+seemed related. I'm using most of block/scsi-4.15 on top of 4.14 and
+the hang in question was on a rotating disk. It could be solved by activating
+a different scheduler on the hanging device; all hanging sync/df processes got
+unstuck and all was fine again, which leads me to believe that there is at least
+one more rare condition where delaying requests (as done in the budget patch)
+leads to a hang.
+
+This happened with mq-deadline which I was testing specifically to avoid
+any BFQ-related side effects.
+
+I didn't do anything specific to trigger the hang and have not been able
+to reproduce it during regular usage.
+
+-h
