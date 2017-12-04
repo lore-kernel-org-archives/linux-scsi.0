@@ -1,109 +1,52 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 21/22] qla2xxx: Fix memory leak in dual/target mode
-Date: Mon, 4 Dec 2017 14:45:16 -0800
-Message-ID: <20171204224517.3409-22-himanshu.madhani@cavium.com>
-References: <20171204224517.3409-1-himanshu.madhani@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] blk-mq: Fix several SCSI request queue lockups
+Date: Mon, 4 Dec 2017 22:48:18 +0000
+Message-ID: <1512427697.2795.14.camel@wdc.com>
+References: <20171204173032.16330-1-bart.vanassche@wdc.com>
+         <20171204224200.GA6888@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0040.outbound.protection.outlook.com ([104.47.38.40]:41602
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752149AbdLDWqH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Dec 2017 17:46:07 -0500
-In-Reply-To: <20171204224517.3409-1-himanshu.madhani@cavium.com>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:59995 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750995AbdLDWsV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 17:48:21 -0500
+In-Reply-To: <20171204224200.GA6888@ming.t460p>
+Content-Language: en-US
+Content-ID: <DDD5BD0DB68A3B44BDC0E819456B8984@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 
-When driver is loaded in Target/Dual mode, it creates QPair
-to support MQ and allocates resources for each QPair. This Qpair
-initialization is delayed until the FW personality is changed to
-Dual/Target mode by issuing chip reset. At the time of chip reset
-firmware is re-initilized in correct personality all the QPairs
-are initialized by sending MBC_INITIALIZE_MULTIQ (001Fh).
-
-This patch fixes memory leak by adding check to issue
-MBC_INITIALIZE_MULTIQ command only while deleting rsp/req queue
-when the flag is set for initiator mode, and clean up QPair resources
-correctly during the driver unload. This MBX does not need to be
-issued for Target/Dual mode because chip reset will reset ISP.
-
-Fixes: d65237c7f0860 ("scsi: qla2xxx: Fix mailbox failure while deleting Queue pairs")
-Cc: <stable@vger.kernel.org> # 4.10+
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/qla2xxx/qla_init.c |  4 +---
- drivers/scsi/qla2xxx/qla_mid.c  | 18 ++++++++++--------
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 57b8f43c5980..58663df38627 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -8220,9 +8220,6 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
- 	int ret = QLA_FUNCTION_FAILED;
- 	struct qla_hw_data *ha = qpair->hw;
- 
--	if (!vha->flags.qpairs_req_created && !vha->flags.qpairs_rsp_created)
--		goto fail;
--
- 	qpair->delete_in_progress = 1;
- 	while (atomic_read(&qpair->ref_count))
- 		msleep(500);
-@@ -8230,6 +8227,7 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
- 	ret = qla25xx_delete_req_que(vha, qpair->req);
- 	if (ret != QLA_SUCCESS)
- 		goto fail;
-+
- 	ret = qla25xx_delete_rsp_que(vha, qpair->rsp);
- 	if (ret != QLA_SUCCESS)
- 		goto fail;
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 618ca272d01a..e538e6308885 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -575,14 +575,15 @@ qla25xx_free_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
- int
- qla25xx_delete_req_que(struct scsi_qla_host *vha, struct req_que *req)
- {
--	int ret = -1;
-+	int ret = QLA_SUCCESS;
- 
--	if (req) {
-+	if (req && vha->flags.qpairs_req_created) {
- 		req->options |= BIT_0;
- 		ret = qla25xx_init_req_que(vha, req);
-+		if (ret != QLA_SUCCESS)
-+			return QLA_FUNCTION_FAILED;
- 	}
--	if (ret == QLA_SUCCESS)
--		qla25xx_free_req_que(vha, req);
-+	qla25xx_free_req_que(vha, req);
- 
- 	return ret;
- }
-@@ -590,14 +591,15 @@ qla25xx_delete_req_que(struct scsi_qla_host *vha, struct req_que *req)
- int
- qla25xx_delete_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
- {
--	int ret = -1;
-+	int ret = QLA_SUCCESS;
- 
--	if (rsp) {
-+	if (rsp && vha->flags.qpairs_rsp_created) {
- 		rsp->options |= BIT_0;
- 		ret = qla25xx_init_rsp_que(vha, rsp);
-+		if (ret != QLA_SUCCESS)
-+			return QLA_FUNCTION_FAILED;
- 	}
--	if (ret == QLA_SUCCESS)
--		qla25xx_free_rsp_que(vha, rsp);
-+	qla25xx_free_rsp_que(vha, rsp);
- 
- 	return ret;
- }
--- 
-2.12.0
+T24gVHVlLCAyMDE3LTEyLTA1IGF0IDA2OjQyICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
+TW9uLCBEZWMgMDQsIDIwMTcgYXQgMDk6MzA6MzJBTSAtMDgwMCwgQmFydCBWYW4gQXNzY2hlIHdy
+b3RlOg0KPiA+ICogQSBzeXN0ZW1hdGljIGxvY2t1cCBmb3IgU0NTSSBxdWV1ZXMgd2l0aCBxdWV1
+ZSBkZXB0aCAxLiBUaGUNCj4gPiAgIGZvbGxvd2luZyB0ZXN0IHJlcHJvZHVjZXMgdGhhdCBidWcg
+c3lzdGVtYXRpY2FsbHk6DQo+ID4gICAtIENoYW5nZSB0aGUgU1JQIGluaXRpYXRvciBzdWNoIHRo
+YXQgU0NTSSB0YXJnZXQgcXVldWUgZGVwdGggaXMNCj4gPiAgICAgbGltaXRlZCB0byAxLg0KPiA+
+ICAgLSBSdW4gdGhlIGZvbGxvd2luZyBjb21tYW5kOg0KPiA+ICAgICAgIHNycC10ZXN0L3J1bl90
+ZXN0cyAtZiB4ZnMgLWQgLWUgbm9uZSAtciA2MCAtdCAwMQ0KPiA+ICAgU2VlIGFsc28gIltQQVRD
+SCA0LzddIGJsay1tcTogQXZvaWQgdGhhdCByZXF1ZXN0IHByb2Nlc3NpbmcNCj4gPiAgIHN0YWxs
+cyB3aGVuIHNoYXJpbmcgdGFncyINCj4gPiAgIChodHRwczovL21hcmMuaW5mby8/bD1saW51eC1i
+bG9jayZtPTE1MTIwODY5NTMxNjg1NykuIE5vdGU6DQo+ID4gICByZXZlcnRpbmcgY29tbWl0IDBk
+ZjIxYzg2YmRiZiBhbHNvIGZpeGVzIGEgc3BvcmFkaWMgU0NTSSByZXF1ZXN0DQo+ID4gICBxdWV1
+ZSBsb2NrdXAgd2hpbGUgaW5zZXJ0aW5nIGEgYmxrX21xX3NjaGVkX21hcmtfcmVzdGFydF9oY3R4
+KCkNCj4gPiAgIGJlZm9yZSBhbGwgYmxrX21xX2Rpc3BhdGNoX3JxX2xpc3QoKSBjYWxscyBvbmx5
+IGZpeGVzIHRoZQ0KPiA+ICAgc3lzdGVtYXRpYyBsb2NrdXAgZm9yIHF1ZXVlIGRlcHRoIDEuDQo+
+IA0KPiBZb3UgYXJlIHRoZSBvbmx5IHJlcHJvZHVjZXIgWyAuLi4gXQ0KDQpUaGF0J3Mgbm90IGNv
+cnJlY3QuIEknbSBwcmV0dHkgc3VyZSBpZiB5b3UgdHJ5IHRvIHJlcHJvZHVjZSB0aGlzIHRoYXQN
+CnlvdSB3aWxsIHNlZSB0aGUgc2FtZSBoYW5nIEkgcmFuIGludG8uIERvZXMgdGhpcyBtZWFuIHRo
+YXQgeW91IGhhdmUgbm90DQp5ZXQgdHJpZWQgdG8gcmVwcm9kdWNlIHRoZSBoYW5nIEkgcmVwb3J0
+ZWQ/DQoNCj4gWW91IHNhaWQgdGhhdCB5b3VyIHBhdGNoIGZpeGVzICdjb21taXQgYjM0NzY4OWZm
+YmNhICgiYmxrLW1xLXNjaGVkOg0KPiBpbXByb3ZlIGRpc3BhdGNoaW5nIGZyb20gc3cgcXVldWUi
+KScsIGJ1dCB5b3UgZG9uJ3QgbWVudGlvbiBhbnkgaXNzdWUNCj4gYWJvdXQgdGhhdCBjb21taXQu
+DQoNClRoYXQncyBub3QgY29ycmVjdCBlaXRoZXIuIEZyb20gdGhlIGNvbW1pdCBtZXNzYWdlICJB
+IHN5c3RlbWF0aWMgbG9ja3VwDQpmb3IgU0NTSSBxdWV1ZXMgd2l0aCBxdWV1ZSBkZXB0aCAxLiIN
+Cg0KPiA+IEkgdGhpbmsgdGhlIGFib3ZlIG1lYW5zIHRoYXQgaXQgaXMgdG9vIHJpc2t5IHRvIHRy
+eSB0byBmaXggYWxsIGJ1Z3MNCj4gPiBpbnRyb2R1Y2VkIGJ5IGNvbW1pdCAwZGYyMWM4NmJkYmYg
+YmVmb3JlIGtlcm5lbCB2NC4xNSBpcyByZWxlYXNlZC4NCj4gPiBIZW5jZSByZXZlcnQgdGhhdCBj
+b21taXQuDQo+IA0KPiBXaGF0IGlzIHRoZSByaXNrPw0KDQpUaGF0IG1vcmUgYnVncyB3ZXJlIGlu
+dHJvZHVjZWQgYnkgY29tbWl0IDBkZjIxYzg2YmRiZiB0aGFuIHRoZSBvbmVzIHRoYXQNCmhhdmUg
+YmVlbiBkaXNjb3ZlcmVkIHNvIGZhci4NCg0KQmFydC4=
