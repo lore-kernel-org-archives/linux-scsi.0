@@ -1,27 +1,50 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] SCSI: delay run queue if device is blocked in
- scsi_dev_queue_ready()
-Date: Mon, 4 Dec 2017 15:09:20 +0000
-Message-ID: <1512400159.23838.1.camel@wdc.com>
-References: <20171202163150.1273-1-ming.lei@redhat.com>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: RE: [EXT] Re: UFS utilities
+Date: Mon, 4 Dec 2017 15:20:34 +0000
+Message-ID: <daba96e0adb146289e3f55bcebeb09f0@SIWEX5A.sing.micron.com>
+References: <c7f3d6f543ae41c1bb625b1612e47057@SIWEX5A.sing.micron.com>
+ <1511811323.2993.13.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:37684 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752716AbdLDPJW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 10:09:22 -0500
-In-Reply-To: <20171202163150.1273-1-ming.lei@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1511811323.2993.13.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <CBAB3E1F6BE04A488A0671802BF98FDC@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
 
-T24gU3VuLCAyMDE3LTEyLTAzIGF0IDAwOjMxICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gRml4
-ZXM6IDBkZjIxYzg2YmRiZiAoInNjc2k6IGltcGxlbWVudCAuZ2V0X2J1ZGdldCBhbmQgLnB1dF9i
-dWRnZXQgZm9yIGJsay1tcSIpDQoNCkl0IG1pZ2h0IGJlIHNhZmVyIHRvIHJldmVydCBjb21taXQg
-MGRmMjFjODZiZGJmIGluc3RlYWQgb2YgdHJ5aW5nIHRvIGZpeCBhbGwNCmlzc3VlcyBpbnRyb2R1
-Y2VkIGJ5IHRoYXQgY29tbWl0IGZvciBrZXJuZWwgdmVyc2lvbiB2NC4xNSAuLi4NCg0KQmFydC4=
+SGksIEJhcnQNClNvcnJ5IGZvciBsYXRlciENCj4NCj5IZWxsbyBCZWFuLA0KPg0KPlBsZWFzZSBi
+ZSBtb3JlIHNwZWNpZmljLiBXaGF0IGlzIGluY29udmVuaWVudCBhYm91dCBzZzNfdXRpbHMgb24g
+ZW1iZWRkZWQNCj5BUk0gc3lzdGVtcz8NCj4NCkV4YWN0bHksIEkgZG9uJ3Qga25vdyBob3cgdG8g
+Y29tcGlsZSBzZzNfdXRpbHMgd2l0aCBzdGF0aWMgbGlicmFyeSwgaW5zdGVhZCBvZiBzaGFyaW5n
+IGxpYnJhcnkuIEkgdXNlZCBmb2xsb3dpbmcgY29uZmlndXJhdGlvbg0KUGFyYW1ldGVyOg0KLi9j
+b25maWd1cmUgLS1lbmFibGUtc3RhdGljPXllcyAtLWJ1aWxkPXg4Nl82NC11bmtub3duLWxpbnV4
+LWdudSAtLWhvc3Q9YWFyY2g2NC1saW51eC1nbnUgIC0tcHJlZml4PSRQV0Qvb3V0LyAgQ0M9YWFy
+Y2g2NC1saW51eC1nbnUtZw0KICAgIGNjIC0tdGFyZ2V0PWFhcmNoNjQtbGludXgtZ251IExEPWFh
+cmNoNjQtbGludXgtZ251LWxkIEFTPWFhcmNoNjQtbGludXgtZ251LWFzIENGTEFHUz0tc3RhdGlj
+IExERkxBR1M9LXN0YXRpYw0KDQpCdXQgdGhlIG9iamVjdCBmaWxlcyBhcmUgc3RpbGwgZHluYW1p
+Y2FsbHkgbGlua2VkLg0KDQpFTEYgNjQtYml0IExTQiBleGVjdXRhYmxlLCBBUk0gYWFyY2g2NCwg
+dmVyc2lvbiAxIChTWVNWKSwgZHluYW1pY2FsbHkgbGlua2VkLCBpbnRlcnByZXRlciAvbGliL2xk
+LWxpbnV4LWFhcmNoNjQuc28uMSwgDQpmb3IgR05VL0xpbnV4IDMuNy4wLCBCdWlsZElEW3NoYTFd
+PTRmMDFiNGM5ZjFmZjQ3YmMwMGFlZjkzOTUwYzAyNzM0YjRjYzhlNTcsIG5vdCBzdHJpcHBlZC4N
+Cg0KSSB3YW50IGl0IHRvIGJlIHN0YXRpY2FsbHkgbGlua2VkLiBPdGhlcndpc2UsIEkgc2hvdWxk
+IGNvcHkgaXRzIGxpYnJhcnkgdG8gbXkgbGliIGZvbGRlciwgYW5kIHNvbWV0aW1lcyBmb3IgdGhl
+IGVtYmVkZGVkLCANCk5lZWQgdG8gcmUtYnVpbGQgcm9vdGZzLiBNZWFud2hpbGUsIGZvciB0aGUg
+VUZTLCB0aGVyZSBhcmUgdG90YWxseSAyNyBzY3NpIGNvbW1hbmRzIGJlaW5nIHVzZWQgYmFzZWQg
+b24gVUZTMi4xLg0KRm9yIHRoZSBtb3N0IGNhc2UsIHdlIGp1c3QgdXNlIHNldmVyYWwgc2czX3V0
+aWxzIG9iamVjdCBmaWxlcywgZG9uJ3QgbmVlZCB0byBjb3B5IGFsbCBvYmplY3QgZmlsZXMgdG8g
+dGhlIGVuZGluZyBwcm9kdWN0LiANCg0KPj4gQW5kIGFsc28gaXQgZG9lc24ndCBzdXBwb3J0IHNl
+dmVyYWwgVUZTIHNwZWNpYWwgY29tbWFuZC4NCj4NCj5BcmUgeW91IHJlZmVycmluZyB0byBTQ1NJ
+IGNvbW1hbmRzIG9yIHJhdGhlciB0byBVRlMgY29tbWFuZHMgdGhhdCBmYWxsDQo+b3V0c2lkZSB0
+aGUgU0NTSSBzcGVjPyBBbnl3YXksIGFuIGFwcHJvYWNoIHRoYXQgaXMgdXNlZCBieSBtYW55IFND
+U0kgZHJpdmVycw0KPnRvIGV4cG9ydCBpbmZvcm1hdGlvbiB0byB1c2VyIHNwYWNlIHRoYXQgZmFs
+bHMgb3V0c2lkZSB0aGUgU0NTSSBzcGVjIGlzIHRvDQo+Y3JlYXRlIGFkZGl0aW9uYWwgc3lzZnMg
+YXR0cmlidXRlcy4gU2VlIGFsc28gdGhlIHNkZXZfYXR0cnMgYW5kIHNob3N0X2F0dHJzDQo+bWVt
+YmVycyBvZiBzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlLg0KPg0KWWVzLCBmb3IgdGhlIFVGUyBp
+bmZvcm1hdGlvbiwgSSBjYW4gdXNlIHRoZXNlIGludGVyZmFjZS9hcHByb2FjaCB0byBlYXNpbHkg
+Z2V0Lg0KSSBhbSB0aGlua2luZyBob3cgYWJvdXQgc29tZSB0ZXN0aW5nIGNhc2UgYW5kIGNvbmZp
+Z3VyYXRpb24gb3BlcmF0aW9uLg0KQWxzbywgaXMgaXQgcG9zc2libGUgYnlwYXNzIFNDU0kgc3Rh
+Y2tzIGFuZCBnbyBpbnRvIGRpcmVjdGx5IFVGUyBzdGFjaz8NClRoYW5rcyBmb3IgeW91ciBpbnB1
+dHMuDQo+QmFydC4NCg0KLy9CZWFuIEh1bw0K
