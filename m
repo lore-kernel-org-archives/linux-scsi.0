@@ -1,32 +1,81 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] SCSI: delay run queue if device is blocked in
- scsi_dev_queue_ready()
-Date: Mon, 4 Dec 2017 22:49:55 +0000
-Message-ID: <1512427794.2795.15.camel@wdc.com>
-References: <20171202163150.1273-1-ming.lei@redhat.com>
-         <1512400159.23838.1.camel@wdc.com> <20171204224507.GB6888@ming.t460p>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] blk-mq: Fix several SCSI request queue lockups
+Date: Tue, 5 Dec 2017 07:01:52 +0800
+Message-ID: <20171204230151.GD6888@ming.t460p>
+References: <20171204173032.16330-1-bart.vanassche@wdc.com>
+ <20171204224200.GA6888@ming.t460p>
+ <1512427697.2795.14.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171204224507.GB6888@ming.t460p>
-Content-Language: en-US
-Content-ID: <DCBDC07BA0E1C04091B6CDB8DF41C815@namprd04.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <1512427697.2795.14.camel@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE3LTEyLTA1IGF0IDA2OjQ1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-TW9uLCBEZWMgMDQsIDIwMTcgYXQgMDM6MDk6MjBQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IE9uIFN1biwgMjAxNy0xMi0wMyBhdCAwMDozMSArMDgwMCwgTWluZyBMZWkgd3Jv
-dGU6DQo+ID4gPiBGaXhlczogMGRmMjFjODZiZGJmICgic2NzaTogaW1wbGVtZW50IC5nZXRfYnVk
-Z2V0IGFuZCAucHV0X2J1ZGdldCBmb3IgYmxrLW1xIikNCj4gPiANCj4gPiBJdCBtaWdodCBiZSBz
-YWZlciB0byByZXZlcnQgY29tbWl0IDBkZjIxYzg2YmRiZiBpbnN0ZWFkIG9mIHRyeWluZyB0byBm
-aXggYWxsDQo+ID4gaXNzdWVzIGludHJvZHVjZWQgYnkgdGhhdCBjb21taXQgZm9yIGtlcm5lbCB2
-ZXJzaW9uIHY0LjE1IC4uLg0KPiANCj4gV2hhdCBhcmUgYWxsIGlzc3VlcyBpbiB2NC4xNS1yYz8g
-VXAgdG8gbm93LCBpdCBpcyB0aGUgb25seSBpc3N1ZSByZXBvcnRlZCwNCj4gYW5kIGNhbiBiZSBm
-aXhlZCBieSB0aGlzIHNpbXBsZSBwYXRjaCwgd2hpY2ggb25lIGNhbiBiZSB0aG91Z2h0IGFzIGNs
-ZWFudXANCj4gdG9vLg0KDQpUaGUgdGhyZWUgaXNzdWVzIEkgZGVzY3JpYmVkIGluIHRoZSBjb21t
-aXQgbWVzc2FnZSBvZiB0aGUgcGF0Y2ggdGhhdCBpcyBhdmFpbGFibGUgYXQ6DQpodHRwczovL21h
-cmMuaW5mby8/bD1saW51eC1ibG9jayZtPTE1MTI0MDg2NjAxMDU3Mi4NCg0KQmFydC4=
+On Mon, Dec 04, 2017 at 10:48:18PM +0000, Bart Van Assche wrote:
+> On Tue, 2017-12-05 at 06:42 +0800, Ming Lei wrote:
+> > On Mon, Dec 04, 2017 at 09:30:32AM -0800, Bart Van Assche wrote:
+> > > * A systematic lockup for SCSI queues with queue depth 1. The
+> > >   following test reproduces that bug systematically:
+> > >   - Change the SRP initiator such that SCSI target queue depth is
+> > >     limited to 1.
+> > >   - Run the following command:
+> > >       srp-test/run_tests -f xfs -d -e none -r 60 -t 01
+> > >   See also "[PATCH 4/7] blk-mq: Avoid that request processing
+> > >   stalls when sharing tags"
+> > >   (https://marc.info/?l=linux-block&m=151208695316857). Note:
+> > >   reverting commit 0df21c86bdbf also fixes a sporadic SCSI request
+> > >   queue lockup while inserting a blk_mq_sched_mark_restart_hctx()
+> > >   before all blk_mq_dispatch_rq_list() calls only fixes the
+> > >   systematic lockup for queue depth 1.
+> > 
+> > You are the only reproducer [ ... ]
+> 
+> That's not correct. I'm pretty sure if you try to reproduce this that
+> you will see the same hang I ran into. Does this mean that you have not
+> yet tried to reproduce the hang I reported?
+
+Do you mean every kernel developer has to own one SRP/IB hardware?
+I don't have your hardware to reproduce that, and I don't think most
+of guys have that. Otherwise, there should have be such similar reports
+from others, not from only you.
+
+More importantly I don't understand why you can't share the kernel
+log/debugfs log when IO hang happens?
+
+Without any kernel log, how can we confirm that it is a valid report?
+
+> 
+> > You said that your patch fixes 'commit b347689ffbca ("blk-mq-sched:
+> > improve dispatching from sw queue")', but you don't mention any issue
+> > about that commit.
+> 
+> That's not correct either. From the commit message "A systematic lockup
+> for SCSI queues with queue depth 1."
+
+I mean you mentioned your patch can fix 'commit b347689ffbca
+("blk-mq-sched: improve dispatching from sw queue")', but you never
+point where the commit b347689ffbca is wrong, how your patch fixes
+the mistake of that commit.
+
+> 
+> > > I think the above means that it is too risky to try to fix all bugs
+> > > introduced by commit 0df21c86bdbf before kernel v4.15 is released.
+> > > Hence revert that commit.
+> > 
+> > What is the risk?
+> 
+> That more bugs were introduced by commit 0df21c86bdbf than the ones that
+> have been discovered so far.
+
+If you don't provide any log, I have to ignore your report simply.
+So there is only one real issue which can be addressed easily by
+the following patch:
+
+https://marc.info/?l=linux-scsi&m=151223234607157&w=2
+
+-- 
+Ming
