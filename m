@@ -1,80 +1,54 @@
-From: Kyuho Choi <chlrbgh0@gmail.com>
-Subject: Re: UFS utilities
-Date: Mon, 4 Dec 2017 11:47:38 +0900
-Message-ID: <CAP2JTQ+zPDEXQeRanE48OPqBMwGRo-bJKdaVh-bBZCEDpZKenA@mail.gmail.com>
-References: <e8aa9f0b9e854fe6bff7cb17dc08ce8c@SIWEX5A.sing.micron.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] SCSI: delay run queue if device is blocked in scsi_dev_queue_ready()
+Date: Mon, 04 Dec 2017 09:19:33 +0100
+Message-ID: <mqdindmoqga.fsf@linux-x5ow.site>
+References: <20171202163150.1273-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e8aa9f0b9e854fe6bff7cb17dc08ce8c@SIWEX5A.sing.micron.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171202163150.1273-1-ming.lei@redhat.com> (Ming Lei's message
+        of "Sun, 3 Dec 2017 00:31:50 +0800")
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
 
-On 11/30/17, Bean Huo (beanhuo) <beanhuo@micron.com> wrote:
-> Hi, Greg
->
->>On Mon, Nov 27, 2017 at 11:25:47AM +0000, Bean Huo (beanhuo) wrote:
->>> Hi, all
->>> Is there someone knows if exists one utilis dedicated to UFS device,
->>> rather
->>than SCSI utils?
->>> I have tried sg3-utils, but it is not convenient for the embedded
->>> ARM-based
->>system.
->>> And also it doesn't support several UFS special command.
->>
->>What specific UFS commands do you need to make to the device that the
->>current driver does not support?
->
->
-> There are some UFS/vendor native commands. They are not SCSI based.
->
+Hi Ming,
 
-UFS command means uic/dme commands?.
-AFAIK, many uic/dme commands need  pre/post operation of SoC related.
-So, it would be need modify sg3-utils or another.
-
-Therefore, IMHO, I don't know why we need it. But if you still want
-it, You'll be need to modify/create user application and modified ufs
-driver for your needs.
-
-About vendor command, it's vendor specific.
-It'll be possible to support by sg3-utils. And it need modify too.
-
->>And yes, this is a trick question as there are about 4 different major
->> forks that
->>I know of of the UFS driver in different vendor trees, all of which
->> support
->>different types of UFS commands :(
->>
->>> If we don't have this kind of tool for UFS, is it necessary for us to
->>> develop a
->>>ufs-utils?
->>
->>I doubt it, what neds to happen is getting all of the functionality that
->> lives in
->>these different forks all merged upstream into the in-kernel driver.  Then
->> I bet
->>all of the needed functionality you are looking for will be there.
->>
-> Sometimes customers tend to use user space tool to do some configuration.
-> And especially, for example the UFS FFU.
+Ming Lei <ming.lei@redhat.com> writes:
+> This issue can be triggered by the following script:
 >
-
-As i knew, in case of FFU, it's possible to support by sg_write_buffer.
-
->>good luck!
->>
-> Thanks !
->>greg k-h
+> 	#!/bin/sh
+> 	rmmod scsi_debug
+> 	modprobe scsi_debug max_queue=1
 >
-> //Bean Huo
+> 	DEVICE=`ls -d /sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*/block/* | head -1 | xargs basename`
 >
+> 	DISK_DIR=`ls -d /sys/block/$DEVICE/device/scsi_disk/*`
 >
+> 	echo "using scsi device $DEVICE"
+> 	echo "-1" >/sys/bus/pseudo/drivers/scsi_debug/every_nth
+> 	echo starting loop $i
+> 	echo "temporary write through" >$DISK_DIR/cache_type
+> 	echo "128" >/sys/bus/pseudo/drivers/scsi_debug/opts
+> 	echo none > /sys/block/$DEVICE/queue/scheduler
+> 	dd if=/dev/$DEVICE of=/dev/null bs=1M iflag=direct count=1 &
+> 	sleep 5
+> 	echo "0" >/sys/bus/pseudo/drivers/scsi_debug/opts
+> 	wait
+> 	echo "SUCCESS"
 
-WBR,
-Kyuho Choi
+Can you please submit a test-case for blktest as well, given you have a
+nice reproducer?
+
+Thanks,
+        Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
