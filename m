@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 17/22] qla2xxx: Clear loop id after delete
-Date: Mon, 4 Dec 2017 14:45:12 -0800
-Message-ID: <20171204224517.3409-18-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 18/22] qla2xxx: Defer processing of GS IOCB calls
+Date: Mon, 4 Dec 2017 14:45:13 -0800
+Message-ID: <20171204224517.3409-19-himanshu.madhani@cavium.com>
 References: <20171204224517.3409-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,62 +9,59 @@ Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-by2nam03on0088.outbound.protection.outlook.com ([104.47.42.88]:37712
         "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752050AbdLDWpw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Dec 2017 17:45:52 -0500
+        id S1752422AbdLDWp4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Dec 2017 17:45:56 -0500
 In-Reply-To: <20171204224517.3409-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Giridhar Malavali <giridhar.malavali@cavium.com>
 
-clear loop id after delete to prevent session invalidation
-of stale session.
+This patch defers processing of GS IOCB calls from interrupt
+context to avoid hardware spinlock recursion.
+
+Following stack trace is seen
+
+? mod_timer+0x193/0x330
+? ql_dbg+0xa7/0xf0 [qla2xxx]
+_raw_spin_lock_irqsave+0x31/0x40
+qla2x00_start_sp+0x3b/0x250 [qla2xxx]
+qla24xx_async_gnl+0x1d3/0x240 [qla2xxx]
+qla24xx_fcport_handle_login+0x285/0x290 [qla2xxx]
+? vprintk_func+0x20/0x50
 
 Fixes: 726b85487067d ("qla2xxx: Add framework for async fabric discovery")
 Cc: <stable@vger.kernel.org> # 4.10+
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 1c219998ab60..0c0453f2ca9e 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -986,7 +986,7 @@ static void qlt_free_session_done(struct work_struct *work)
- 			sess->send_els_logo = 0;
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 7dd19785f820..57b8f43c5980 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -975,7 +975,7 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 			ql_dbg(ql_dbg_disc, vha, 0x20bd,
+ 			    "%s %d %8phC post gnl\n",
+ 			    __func__, __LINE__, fcport->port_name);
+-			qla24xx_async_gnl(vha, fcport);
++			qla24xx_post_gnl_work(vha, fcport);
+ 		} else {
+ 			ql_dbg(ql_dbg_disc, vha, 0x20bf,
+ 			    "%s %d %8phC post login\n",
+@@ -1143,7 +1143,7 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
+ 		ql_dbg(ql_dbg_disc, vha, 0x20e9, "%s %d %8phC post gidpn\n",
+ 		    __func__, __LINE__, fcport->port_name);
  
--		if (sess->logout_on_delete) {
-+		if (sess->logout_on_delete && sess->loop_id != FC_NO_LOOP_ID) {
- 			int rc;
- 
- 			rc = qla2x00_post_async_logout_work(vha, sess, NULL);
-@@ -1045,8 +1045,7 @@ static void qlt_free_session_done(struct work_struct *work)
- 		sess->login_succ = 0;
+-		qla24xx_async_gidpn(vha, fcport);
++		qla24xx_post_gidpn_work(vha, fcport);
+ 		return;
  	}
  
--	if (sess->chip_reset != ha->base_qpair->chip_reset)
--		qla2x00_clear_loop_id(sess);
-+	qla2x00_clear_loop_id(sess);
- 
- 	if (sess->conflict) {
- 		sess->conflict->login_pause = 0;
-@@ -4600,9 +4599,9 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
- 				    "Invalidating sess %p loop_id %d wwn %llx.\n",
- 				    other_sess, other_sess->loop_id, other_wwn);
- 
--
- 				other_sess->keep_nport_handle = 1;
--				*conflict_sess = other_sess;
-+				if (other_sess->disc_state != DSC_DELETED)
-+					*conflict_sess = other_sess;
- 				qlt_schedule_sess_for_deletion(other_sess,
- 				    true);
- 			}
 -- 
 2.12.0
