@@ -1,47 +1,106 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
 Subject: Re: [PATCH v3 1/2] Ensure that the SCSI error handler gets woken up
-Date: Tue, 5 Dec 2017 21:46:06 +0000
-Message-ID: <1512510365.2660.35.camel@wdc.com>
+Date: Wed, 6 Dec 2017 01:49:49 +0300
+Message-ID: <5A27228D.1090705@virtuozzo.com>
 References: <1512490788.2660.16.camel@wdc.com>
-         <sr4inbsihn7krboba8euqqp1.1512508675214@email.android.com>
+ <sr4inbsihn7krboba8euqqp1.1512508675214@email.android.com>
+ <1512510365.2660.35.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <sr4inbsihn7krboba8euqqp1.1512508675214@email.android.com>
-Content-Language: en-US
-Content-ID: <D0462E8DEAC2E84AA851787665735B4B@namprd04.prod.outlook.com>
-Sender: stable-owner@vger.kernel.org
-To: "ptikhomirov@virtuozzo.com" <ptikhomirov@virtuozzo.com>
-Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "stuart.w.hayes@gmail.com" <stuart.w.hayes@gmail.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-eopbgr20133.outbound.protection.outlook.com ([40.107.2.133]:18848
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752390AbdLEWvL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Dec 2017 17:51:11 -0500
+In-Reply-To: <1512510365.2660.35.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "stuart.w.hayes@gmail.com" <stuart.w.hayes@gmail.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>
 
-T24gV2VkLCAyMDE3LTEyLTA2IGF0IDAwOjE3ICswMzAwLCBwdGlraG9taXJvdiB3cm90ZToNCj4g
-SSBtZWFuIHRocmVhZHMgaW4gc2NzaV9kZWNfaG9zdF9idXN5KCkgdGhlIHBhcnQgdW5kZXIgcmN1
-X3JlYWRfbG9jayBhcmUNCj4gZGl2aWRlZCBpbnRvIHR3byBncm91cHM6IGEpIGZpbmlzaGVkIGJl
-Zm9yZSBjYWxsX3JjdSwgYikgYmVnaW5uaW5nIHJjdQ0KPiBzZWN0aW9uIGFmdGVyIGNhbGxfcmN1
-LiBTbyBmaXJzdCwgaW4gc2NzaV9laF9pbmNfaG9zdF9mYWlsZWQoKSB3ZSB3aWxsDQo+IHNlZSBh
-bGwgY2hhbmdlcyB0byBob3N0IGJ1c3kgZnJvbSBncm91cCAoYSksIHNlY29uZCwgYWxsIHRocmVh
-ZHMgaW4gZ3JvdXANCj4gKGIpIHdpbGwgc2VlIG91ciBjaGFuZ2UgdG8gaG9zdF9mYWlsZWQuIEVp
-dGhlciB0aGVyZSBpcyBub2JvZHkgaW4gKGIpIGFuZA0KPiB3ZSB3aWxsIHN0YXJ0IEVILCBvciB0
-aGUgdGhyZWFkIGZyb20gKGIpIHdoaWNoIGVudGVyZWQgc3Bpbl9sb2NrIGxhc3Qgd2lsbA0KPiBz
-dGFydCBFSC4NCj4gDQo+IEluIHlvdXIgY2FzZSB0YXNrcyBmcm9tIGIgZG9lcyBub3Qgc2VlIGhv
-c3RfZmFpbGVkIHdhcyBpbmNyZW1lbnRlZCwgYW5kDQo+IHdpbGwgbm90IHN0YXJ0IEVILg0KDQpI
-ZWxsbyBQYXZlbCwNCg0KV2hhdCBkb2VzICJ5b3VyIGNhc2UiIG1lYW4/IEluIG15IHByZXZpb3Vz
-IGUtbWFpbCBJIGV4cGxhaW5lZCBhIHNjZW5hcmlvIHRoYXQNCmNhbm5vdCBoYXBwZW4gc28gaXQn
-cyBub3QgY2xlYXIgdG8gbWUgd2hhdCAieW91ciBjYXNlIiByZWZlcnMgdG8/DQoNCkFkZGl0aW9u
-YWxseSwgaXQgc2VlbXMgbGlrZSB5b3UgYXJlIGFzc3VtaW5nIHRoYXQgUkNVIGd1YXJhbnRlZXMg
-b3JkZXJpbmcgb2YNClJDVSByZWFkLWxvY2tlZCBzZWN0aW9ucyBhZ2FpbnN0IGNhbGxfcmN1KCk/
-IFRoYXQncyBub3QgaG93IFJDVSB3b3Jrcy4gUkNVDQpndWFyYW50ZWVzIHNlcmlhbGl6YXRpb24g
-b2YgcmVhZC1sb2NrZWQgc2VjdGlvbnMgYWdhaW5zdCBncmFjZSBwZXJpb2RzLiBUaGUNCmZ1bmN0
-aW9uIHNjc2lfZWhfaW5jX2hvc3RfZmFpbGVkKCkgaXMgaW52b2tlZCB0aHJvdWdoIGNhbGxfcmN1
-KCkgYW5kIGhlbmNlDQp3aWxsIGJlIGNhbGxlZCBkdXJpbmcgYSBncmFjZSBwZXJpb2QuDQoNCkFu
-eXdheSwgdGhlIGRpZmZlcmVudCBzY2VuYXJpb3MgSSBzZWUgYXJlIGFzIGZvbGxvd3M6DQooYSkg
-c2NzaV9kZWNfaG9zdF9idXN5KCkgZmluaXNoZXMgYmVmb3JlIHNjc2lfZWhfaW5jX2hvc3RfZmFp
-bGVkKCkgc3RhcnRzLg0KKGIpIHNjc2lfZGVjX2hvc3RfYnVzeSgpIHN0YXJ0cyBhZnRlciBzY3Np
-X2VoX2luY19ob3N0X2ZhaWxlZCgpIGhhcw0KICAgIGZpbmlzaGVkLg0KDQpJbiBjYXNlIChhKSBz
-Y3NpX2VoX2luY19ob3N0X2ZhaWxlZCgpIHdpbGwgd2FrZSB1cCB0aGUgZXJyb3IgaGFuZGxlci4g
-QW5kIGluDQpjYXNlIChiKSBzY3NpX2RlY19ob3N0X2J1c3koKSB3aWxsIHdha2UgdXAgdGhlIGVy
-cm9yIGhhbmRsZXIuIFNvIGl0J3Mgbm90DQpjbGVhciB0byBtZSB3aHkgeW91IHRoaW5rIHRoYXQg
-dGhlcmUgaXMgYSBzY2VuYXJpbyBpbiB3aGljaCB0aGUgRUggd29uJ3QgYmUNCndva2VuIHVwPw0K
-DQpCYXJ0Lg==
+Hello, Bart!
+
+On 12/06/2017 12:46 AM, Bart Van Assche wrote:
+> On Wed, 2017-12-06 at 00:17 +0300, ptikhomirov wrote:
+>> I mean threads in scsi_dec_host_busy() the part under rcu_read_lock are
+>> divided into two groups: a) finished before call_rcu, b) beginning rcu
+>> section after call_rcu. So first, in scsi_eh_inc_host_failed() we will
+>> see all changes to host busy from group (a), second, all threads in group
+>> (b) will see our change to host_failed. Either there is nobody in (b) and
+>> we will start EH, or the thread from (b) which entered spin_lock last will
+>> start EH.
+>>
+>> In your case tasks from b does not see host_failed was incremented, and
+>> will not start EH.
+>
+> Hello Pavel,
+>
+> What does "your case" mean? In my previous e-mail I explained a scenario that
+> cannot happen so it's not clear to me what "your case" refers to?
+
+By "your case" I meant how your code works, especially that host_failed 
+increment is inside scsi_eh_inc_host_failed() in your patch.
+
+>
+> Additionally, it seems like you are assuming that RCU guarantees ordering of
+> RCU read-locked sections against call_rcu()?
+
+Sorry.. Not "call_rcu" itself, In my previous reply I meant the delayed 
+callback which actually triggers. (s/call_rcu/call_rcu's callback start/)
+
+> That's not how RCU works. RCU
+> guarantees serialization of read-locked sections against grace periods. The
+> function scsi_eh_inc_host_failed() is invoked through call_rcu() and hence
+> will be called during a grace period.
+
+May be I missunderstand something, but I think that callback from 
+call_rcu is guaranteed to _start_ after a grace period, but not to end 
+before a next grace period. Other threads can enter rcu_read_lock 
+protected critical regions while we are still in a callback and will run 
+concurrently with callback.
+
+>
+> Anyway, the different scenarios I see are as follows:
+> (a) scsi_dec_host_busy() finishes before scsi_eh_inc_host_failed() starts.
+> (b) scsi_dec_host_busy() starts after scsi_eh_inc_host_failed() has
+>      finished.
+
+So I think in (b) scsi_dec_host_busy starts after 
+scsi_eh_inc_host_failed has _started_.
+
+>
+> In case (a) scsi_eh_inc_host_failed() will wake up the error handler. And in
+> case (b) scsi_dec_host_busy() will wake up the error handler. So it's not
+> clear to me why you think that there is a scenario in which the EH won't be
+> woken up?
+
+So in case (b), in my understanding, scsi_dec_host_busy can skip wakeups 
+as it does not see host_failed change yet.
+
+>
+> Bart.
+>
+
+To prove my point, some parts of kernel docs:
+
+"This function invokes func(head) after a grace period has elapsed." 
+Documentation/RCU/whatisRCU.txt
+
+"
+15.     The whole point of call_rcu(), synchronize_rcu(), and friends
+         is to wait until all pre-existing readers have finished before
+         carrying out some otherwise-destructive operation.
+...
+         Because these primitives only wait for pre-existing readers, it
+         is the caller's responsibility to guarantee that any subsequent
+         readers will execute safely.
+"
+Documentation/RCU/checklist.txt
+
+There is nothing about "callback ends before next grace period".
+
+Sorry, if I'm missing something.
+
+Pavel.
