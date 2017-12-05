@@ -1,43 +1,221 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 1/2] scsi-mq: Only show the CDB if available
-Date: Tue, 5 Dec 2017 13:00:09 +0800
-Message-ID: <20171205050008.GA9989@ming.t460p>
-References: <20171205003809.1705-1-bart.vanassche@wdc.com>
- <20171205003809.1705-2-bart.vanassche@wdc.com>
- <20171205011536.GC8365@ming.t460p>
- <1512439190.2739.0.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1512439190.2739.0.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH v2] scsi_debug: add cdb_len paramete
+Date: Tue,  5 Dec 2017 00:05:49 -0500
+Message-ID: <20171205050549.31526-1-dgilbert@interlog.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:60940 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750852AbdLEFFx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Dec 2017 00:05:53 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hare@suse.de, bart.vanassche@sandisk.com, James.Bottomley@HansenPartnership.com
 
-On Tue, Dec 05, 2017 at 01:59:51AM +0000, Bart Van Assche wrote:
-> On Tue, 2017-12-05 at 09:15 +0800, Ming Lei wrote:
-> > On Mon, Dec 04, 2017 at 04:38:08PM -0800, Bart Van Assche wrote:
-> > > Since the next patch will make it possible that scsi_show_rq() gets
-> > > called before the CDB pointer is changed into a non-NULL value,
-> > > only show the CDB if the CDB pointer is not NULL. Additionally,
-> > > show the request timeout and SCSI command flags. This patch also
-> > > fixes a bug that was reported by Ming Lei. See also Ming Lei,
-> > > scsi_debugfs: fix crash in scsi_show_rq(), linux-scsi, 7 November
-> > > 2017 (https://marc.info/?l=linux-block&m=151006655317188).
-> > 
-> > Please cook a patch for fixing the crash issue only, since we need
-> > to backport the fix to stable kernel.
-> 
-> The code that is touched by this patch is only used for kernel debugging.
-> I will do this if others agree with your opinion.
+While testing "sd: Micro-optimize READ / WRITE CDB encoding" patches it was
+helpful to check various code paths associated with READ/WRITE 6, 10
+and 16 byte cdb variants. There seems to be no user space "knobs" to
+twiddle use_10_for_rw and friends in the scsi_device structure.
+So add a parameter to scsi_debug called "cdb_len" for this purpose.
 
-No, do not mix two different things in one patch, especially the fix part
-need to be backported to stable.
+Changes since v1:
+  - address most of the concerns from Bart Van Assche
+  - keep driver version and date and tie them into some responses
+    (e.g. version becomes INQUIRY Revision field)
 
-The fix part should aim at V4.15, and the other part can be a V4.16
-stuff.
+Patch built on lk 4.15.0-rc2
 
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 92 ++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 87 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index e4f037f0f38b..691ce8f37d34 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6,7 +6,7 @@
+  *  anything out of the ordinary is seen.
+  * ^^^^^^^^^^^^^^^^^^^^^^^ Original ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  *
+- * Copyright (C) 2001 - 2016 Douglas Gilbert
++ * Copyright (C) 2001 - 2017 Douglas Gilbert
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -61,8 +61,8 @@
+ #include "scsi_logging.h"
+ 
+ /* make sure inq_product_rev string corresponds to this version */
+-#define SDEBUG_VERSION "1.86"
+-static const char *sdebug_version_date = "20160430";
++#define SDEBUG_VERSION "0187"	/* format to fit INQUIRY revision field */
++static const char *sdebug_version_date = "20171202";
+ 
+ #define MY_NAME "scsi_debug"
+ 
+@@ -105,6 +105,7 @@ static const char *sdebug_version_date = "20160430";
+  * (id 0) containing 1 logical unit (lun 0). That is 1 device.
+  */
+ #define DEF_ATO 1
++#define DEF_CDB_LEN 10
+ #define DEF_JDELAY   1		/* if > 0 unit is a jiffy */
+ #define DEF_DEV_SIZE_MB   8
+ #define DEF_DIF 0
+@@ -571,6 +572,7 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
+ 
+ static int sdebug_add_host = DEF_NUM_HOST;
+ static int sdebug_ato = DEF_ATO;
++static int sdebug_cdb_len = DEF_CDB_LEN;
+ static int sdebug_jdelay = DEF_JDELAY;	/* if > 0 then unit is jiffies */
+ static int sdebug_dev_size_mb = DEF_DEV_SIZE_MB;
+ static int sdebug_dif = DEF_DIF;
+@@ -797,6 +799,61 @@ static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
+ 	/* return -ENOTTY; // correct return but upsets fdisk */
+ }
+ 
++static void config_cdb_len(struct scsi_device *sdev)
++{
++	switch (sdebug_cdb_len) {
++	case 6:	/* suggest 6 byte READ, WRITE and MODE SENSE/SELECT */
++		sdev->use_10_for_rw = false;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = false;
++		break;
++	case 10: /* suggest 10 byte RWs and 6 byte MODE SENSE/SELECT */
++		sdev->use_10_for_rw = true;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = false;
++		break;
++	case 12: /* suggest 10 byte RWs and 10 byte MODE SENSE/SELECT */
++		sdev->use_10_for_rw = true;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = true;
++		break;
++	case 16:
++		sdev->use_10_for_rw = false;
++		sdev->use_16_for_rw = true;
++		sdev->use_10_for_ms = true;
++		break;
++	case 32: /* No knobs to suggest this so same as 16 for now */
++		sdev->use_10_for_rw = false;
++		sdev->use_16_for_rw = true;
++		sdev->use_10_for_ms = true;
++		break;
++	default:
++		pr_warn("unexpected cdb_len=%d, force to 10\n",
++			sdebug_cdb_len);
++		sdev->use_10_for_rw = true;
++		sdev->use_16_for_rw = false;
++		sdev->use_10_for_ms = false;
++		sdebug_cdb_len = 10;
++		break;
++	}
++}
++
++static void all_config_cdb_len(void)
++{
++	struct sdebug_host_info *sdbg_host;
++	struct Scsi_Host *shost;
++	struct scsi_device *sdev;
++
++	spin_lock(&sdebug_host_list_lock);
++	list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++		shost = sdbg_host->shost;
++		shost_for_each_device(sdev, shost) {
++			config_cdb_len(sdev);
++		}
++	}
++	spin_unlock(&sdebug_host_list_lock);
++}
++
+ static void clear_luns_changed_on_target(struct sdebug_dev_info *devip)
+ {
+ 	struct sdebug_host_info *sdhp;
+@@ -955,7 +1012,7 @@ static int fetch_to_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
+ 
+ static char sdebug_inq_vendor_id[9] = "Linux   ";
+ static char sdebug_inq_product_id[17] = "scsi_debug      ";
+-static char sdebug_inq_product_rev[5] = "0186";	/* version less '.' */
++static char sdebug_inq_product_rev[5] = SDEBUG_VERSION;
+ /* Use some locally assigned NAAs for SAS addresses. */
+ static const u64 naa3_comp_a = 0x3222222000000000ULL;
+ static const u64 naa3_comp_b = 0x3333333000000000ULL;
+@@ -1411,6 +1468,8 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	memcpy(&arr[8], sdebug_inq_vendor_id, 8);
+ 	memcpy(&arr[16], sdebug_inq_product_id, 16);
+ 	memcpy(&arr[32], sdebug_inq_product_rev, 4);
++	/* Use Vendor Specific area to place driver date in ASCII hex */
++	memcpy(&arr[36], sdebug_version_date, 8);
+ 	/* version descriptors (2 bytes each) follow */
+ 	put_unaligned_be16(0xc0, arr + 58);   /* SAM-6 no version claimed */
+ 	put_unaligned_be16(0x5c0, arr + 60);  /* SPC-5 no version claimed */
+@@ -3660,6 +3719,7 @@ static int scsi_debug_slave_configure(struct scsi_device *sdp)
+ 	blk_queue_max_segment_size(sdp->request_queue, -1U);
+ 	if (sdebug_no_uld)
+ 		sdp->no_uld_attach = 1;
++	config_cdb_len(sdp);
+ 	return 0;
+ }
+ 
+@@ -4141,6 +4201,7 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+  */
+ module_param_named(add_host, sdebug_add_host, int, S_IRUGO | S_IWUSR);
+ module_param_named(ato, sdebug_ato, int, S_IRUGO);
++module_param_named(cdb_len, sdebug_cdb_len, int, 0644);
+ module_param_named(clustering, sdebug_clustering, bool, S_IRUGO | S_IWUSR);
+ module_param_named(delay, sdebug_jdelay, int, S_IRUGO | S_IWUSR);
+ module_param_named(dev_size_mb, sdebug_dev_size_mb, int, S_IRUGO);
+@@ -4198,6 +4259,7 @@ MODULE_VERSION(SDEBUG_VERSION);
+ 
+ MODULE_PARM_DESC(add_host, "0..127 hosts allowed(def=1)");
+ MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
++MODULE_PARM_DESC(cdb_len, "suggest CDB lengths to drivers (def=10)");
+ MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=0)");
+ MODULE_PARM_DESC(delay, "response delay (def=1 jiffy); 0:imm, -1,-2:tiny");
+ MODULE_PARM_DESC(dev_size_mb, "size in MiB of ram shared by devs(def=8)");
+@@ -4210,7 +4272,8 @@ MODULE_PARM_DESC(guard, "protection checksum: 0=crc, 1=ip (def=0)");
+ MODULE_PARM_DESC(host_lock, "host_lock is ignored (def=0)");
+ MODULE_PARM_DESC(inq_vendor, "SCSI INQUIRY vendor string (def=\"Linux\")");
+ MODULE_PARM_DESC(inq_product, "SCSI INQUIRY product string (def=\"scsi_debug\")");
+-MODULE_PARM_DESC(inq_rev, "SCSI INQUIRY revision string (def=\"0186\")");
++MODULE_PARM_DESC(inq_rev, "SCSI INQUIRY revision string (def=\""
++		 SDEBUG_VERSION "\")");
+ MODULE_PARM_DESC(lbpu, "enable LBP, support UNMAP command (def=0)");
+ MODULE_PARM_DESC(lbpws, "enable LBP, support WRITE SAME(16) with UNMAP bit (def=0)");
+ MODULE_PARM_DESC(lbpws10, "enable LBP, support WRITE SAME(10) with UNMAP bit (def=0)");
+@@ -4884,6 +4947,24 @@ static ssize_t uuid_ctl_show(struct device_driver *ddp, char *buf)
+ }
+ static DRIVER_ATTR_RO(uuid_ctl);
+ 
++static ssize_t cdb_len_show(struct device_driver *ddp, char *buf)
++{
++	return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_cdb_len);
++}
++static ssize_t cdb_len_store(struct device_driver *ddp, const char *buf,
++			     size_t count)
++{
++	int ret, n;
++
++	ret = kstrtoint(buf, 0, &n);
++	if (ret)
++		return ret;
++	sdebug_cdb_len = n;
++	all_config_cdb_len();
++	return count;
++}
++static DRIVER_ATTR_RW(cdb_len);
++
+ 
+ /* Note: The following array creates attribute files in the
+    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
+@@ -4923,6 +5004,7 @@ static struct attribute *sdebug_drv_attrs[] = {
+ 	&driver_attr_ndelay.attr,
+ 	&driver_attr_strict.attr,
+ 	&driver_attr_uuid_ctl.attr,
++	&driver_attr_cdb_len.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(sdebug_drv);
 -- 
-Ming
+2.14.1
