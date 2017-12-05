@@ -1,59 +1,57 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] SCSI: delay run queue if device is blocked in
- scsi_dev_queue_ready()
-Date: Tue, 5 Dec 2017 13:16:30 +0800
-Message-ID: <20171205051624.GB9989@ming.t460p>
-References: <20171202163150.1273-1-ming.lei@redhat.com>
- <1512400159.23838.1.camel@wdc.com>
- <20171204224507.GB6888@ming.t460p>
- <pan$2c3c7$7c7c04a5$f22df3ad$bef841cb@applied-asynchrony.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v3 00/22]  qla2xxx: Bug fixes for 4.15-rc2
+Date: Tue, 5 Dec 2017 05:28:09 +0000
+Message-ID: <E2C1FCEE-E4A1-4942-A711-730ABF4E4A4D@cavium.com>
+References: <20171204224517.3409-1-himanshu.madhani@cavium.com>
+ <yq1k1y16heg.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <pan$2c3c7$7c7c04a5$f22df3ad$bef841cb@applied-asynchrony.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0048.outbound.protection.outlook.com ([104.47.37.48]:16800
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751052AbdLEF2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Dec 2017 00:28:11 -0500
+In-Reply-To: <yq1k1y16heg.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <7CE6D8E2A4B3844EB02556F973BCE05E@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Dec 04, 2017 at 11:48:07PM +0000, Holger Hoffstätte wrote:
-> On Tue, 05 Dec 2017 06:45:08 +0800, Ming Lei wrote:
-> 
-> > On Mon, Dec 04, 2017 at 03:09:20PM +0000, Bart Van Assche wrote:
-> >> On Sun, 2017-12-03 at 00:31 +0800, Ming Lei wrote:
-> >> > Fixes: 0df21c86bdbf ("scsi: implement .get_budget and .put_budget for blk-mq")
-> >> 
-> >> It might be safer to revert commit 0df21c86bdbf instead of trying to fix all
-> >> issues introduced by that commit for kernel version v4.15 ...
-> > 
-> > What are all issues in v4.15-rc? Up to now, it is the only issue reported,
-> > and can be fixed by this simple patch, which one can be thought as cleanup
-> > too.
-> 
-> Even with this patch I've encountered at least one hang that
-> seemed related. I'm using most of block/scsi-4.15 on top of 4.14 and
-> the hang in question was on a rotating disk. It could be solved by activating
-> a different scheduler on the hanging device; all hanging sync/df processes got
-> unstuck and all was fine again, which leads me to believe that there is at least
-> one more rare condition where delaying requests (as done in the budget patch)
-> leads to a hang.
-> 
-> This happened with mq-deadline which I was testing specifically to avoid
-> any BFQ-related side effects.
+Hi Martin,=20
 
-OK, this looks a new report.
+> On Dec 4, 2017, at 6:24 PM, Martin K. Petersen <martin.petersen@oracle.co=
+m> wrote:
+>=20
+>=20
+> Himanshu,
+>=20
+>> drivers/scsi/qla2xxx/qla_def.h     |  49 ++++----
+>> drivers/scsi/qla2xxx/qla_gs.c      | 230 ++++++++++++++++++++++++++++++-=
+------
+>> drivers/scsi/qla2xxx/qla_init.c    |  69 +++++++++--
+>> drivers/scsi/qla2xxx/qla_iocb.c    |  13 ---
+>> drivers/scsi/qla2xxx/qla_isr.c     |   7 +-
+>> drivers/scsi/qla2xxx/qla_mbx.c     |   3 +-
+>> drivers/scsi/qla2xxx/qla_mid.c     |  42 ++++---
+>> drivers/scsi/qla2xxx/qla_os.c      |  78 ++++++++++---
+>> drivers/scsi/qla2xxx/qla_target.c  |  60 +++++++---
+>> drivers/scsi/qla2xxx/qla_version.h |   2 +-
+>> 10 files changed, 405 insertions(+), 148 deletions(-)
+>=20
+> This looks pretty big for a series of bug fixes. Are all these patches
+> really candidates for 4.15 and stable backports all the way back to
+> 4.10?
+>=20
+> --=20
+> Martin K. Petersen	Oracle Linux Engineering
 
-Without any log, we can't make any progress, and even we can't guess
-what the issue is related with.
 
-Could you post your dmesg log(include the hang process stack trace)? And
-dump the debugfs log by the following script when this hang happens?
+Yes Please. I would want them back ported to 4.10 since these issues were d=
+iscovered in combination of 4.10/4.11 kernel.
 
-	http://people.redhat.com/minlei/tests/tools/dump-blk-info
-
-BTW, you just need to pass the disk name to the script, such as: /dev/sda.
-
--- 
-Ming
+Thanks,
+- Himanshu
