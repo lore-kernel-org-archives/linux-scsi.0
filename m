@@ -1,71 +1,44 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH] SCSI: run queue if SCSI device queue isn't ready and queue is idle
-Date: Tue,  5 Dec 2017 15:52:56 +0800
-Message-ID: <20171205075256.10319-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39728 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752272AbdLEHxL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Dec 2017 02:53:11 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Fabian =?iso-8859-1?Q?Gr=FCnbichler?= <f.gruenbichler@proxmox.com>
+Subject: Re: [REGRESSION][v4.13.y][v4.14.y] scsi: libsas: allow async aborts
+Date: Tue, 5 Dec 2017 09:57:06 +0100
+Message-ID: <20171205085614.tyyvu4ultnctbzw4@nora.maurer-it.com>
+References: <27d1c9b1-9a80-4982-290b-3916d6e5c80f@canonical.com>
+ <100fda00-3da4-1bf1-eaf2-fc0b4fb4fe37@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <100fda00-3da4-1bf1-eaf2-fc0b4fb4fe37@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>, hch@lst.de, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jthumshirn@suse.de, bart.vanassche@wdc.com, bblock@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jth@kernel.org, stable@vger.kernel.org, gregkh@linuxfoundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, =?UTF-8?q?Holger=20Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>, Ming Lei <ming.lei@redhat.com>
 
-Before commit 0df21c86bdbf ("scsi: implement .get_budget and .put_budget
-for blk-mq"), we run queue after 3ms if queue is idle and SCSI device
-queue isn't ready, which is done in handling BLK_STS_RESOURCE. After
-commit 0df21c86bdbf is introduced, queue won't be run any more under
-this situation.
+On Fri, Nov 17, 2017 at 03:09:37PM +0100, Hannes Reinecke wrote:
+> On 11/16/2017 11:08 PM, Joseph Salisbury wrote:
+> > Hi Christoph,
+> > 
+> > A kernel bug report was opened against Ubuntu [0].  After a kernel
+> > bisect, it was found that reverting the following commit resolved this bug:
+> > 
+> > 909657615d9b ("scsi: libsas: allow async aborts")
+> > 
+> >      
+> > The regression was introduced as of v4.12-rc1, and it still exists in
+> > 4.14 mainline.
+> > 
+> > I was hoping to get your feedback, since you are the patch author.  Do
+> > you think gathering any additional data will help diagnose this issue,
+> > or would it be best to submit a revert request?
+> > 
+> I'll be checking what's going on there.
+> 
+> Cheers,
+> 
+> Hannes
 
-IO hang is observed when timeout happened, and this patch fixes the IO
-hang issue by running queue after delay in scsi_dev_queue_ready, just like
-non-mq. This issue can be triggered by the following script[1].
+Any news about this regression? Any traces / data affected users can
+provide?
 
-There is another issue which can be covered by running idle queue:
-when .get_budget() is called on request coming from hctx->dispatch_list,
-if one request just completes during .get_budget(), we can't depend on
-SCSI's restart to make progress any more. This patch fixes the race too.
-
-With this patch, we basically recover to previous behaviour(before commit
-0df21c86bdbf) of handling idle queue when running out of resource.
-
-[1] script for test/verify SCSI timeout
-rmmod scsi_debug
-modprobe scsi_debug max_queue=1
-
-DEVICE=`ls -d /sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*/block/* | head -1 | xargs basename`
-DISK_DIR=`ls -d /sys/block/$DEVICE/device/scsi_disk/*`
-
-echo "using scsi device $DEVICE"
-echo "-1" >/sys/bus/pseudo/drivers/scsi_debug/every_nth
-echo "temporary write through" >$DISK_DIR/cache_type
-echo "128" >/sys/bus/pseudo/drivers/scsi_debug/opts
-echo none > /sys/block/$DEVICE/queue/scheduler
-dd if=/dev/$DEVICE of=/dev/null bs=1M iflag=direct count=1 &
-sleep 5
-echo "0" >/sys/bus/pseudo/drivers/scsi_debug/opts
-wait
-echo "SUCCESS"
-
-Fixes: 0df21c86bdbf ("scsi: implement .get_budget and .put_budget for blk-mq")
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index db9556662e27..1816dd8259b3 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1967,6 +1967,8 @@ static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
- out_put_device:
- 	put_device(&sdev->sdev_gendev);
- out:
-+	if (atomic_read(&sdev->device_busy) == 0 && !scsi_device_blocked(sdev))
-+		blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
- 	return false;
- }
- 
--- 
-2.9.5
+Thanks!
