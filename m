@@ -1,46 +1,40 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 1/2] scsi-mq: Only show the CDB if available
-Date: Tue, 5 Dec 2017 12:00:16 +0800
-Message-ID: <20171205040015.GA9885@ming.t460p>
-References: <20171205003809.1705-1-bart.vanassche@wdc.com>
- <20171205003809.1705-2-bart.vanassche@wdc.com>
- <20171205011536.GC8365@ming.t460p>
- <yq1zi6x3knv.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 00/22]  qla2xxx: Bug fixes for 4.15-rc2
+Date: Mon, 04 Dec 2017 21:24:39 -0500
+Message-ID: <yq1k1y16heg.fsf@oracle.com>
+References: <20171204224517.3409-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1zi6x3knv.fsf@oracle.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:38325 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752143AbdLEEFE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 23:05:04 -0500
+In-Reply-To: <20171204224517.3409-1-himanshu.madhani@cavium.com> (Himanshu
+        Madhani's message of "Mon, 4 Dec 2017 14:44:55 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Mon, Dec 04, 2017 at 10:42:28PM -0500, Martin K. Petersen wrote:
-> 
-> Hi Ming,
-> 
-> > Please cook a patch for fixing the crash issue only, since we need
-> > to backport the fix to stable kernel.
-> 
-> I thought you were going to submit a V5 that addressed James' concerns?
-> 
-> -- 
-> Martin K. Petersen	Oracle Linux Engineering
-
-Hi Martin,
-
-I replied in the following link for James's concerns:
-
-	https://marc.info/?l=linux-block&m=151074751321108&w=2
-
-The fact is that use-after-free can't avoided at all, no matter if
-we set the cmnd to NULL before calling free, that means we have to
-handle use-after-free well in scsi_show_rq(), so we don't need to
-touch the free code.
-
-So V4 is well enough for merge, IMO.
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Thanks,
-Ming
+Himanshu,
+
+>  drivers/scsi/qla2xxx/qla_def.h     |  49 ++++----
+>  drivers/scsi/qla2xxx/qla_gs.c      | 230 ++++++++++++++++++++++++++++++-------
+>  drivers/scsi/qla2xxx/qla_init.c    |  69 +++++++++--
+>  drivers/scsi/qla2xxx/qla_iocb.c    |  13 ---
+>  drivers/scsi/qla2xxx/qla_isr.c     |   7 +-
+>  drivers/scsi/qla2xxx/qla_mbx.c     |   3 +-
+>  drivers/scsi/qla2xxx/qla_mid.c     |  42 ++++---
+>  drivers/scsi/qla2xxx/qla_os.c      |  78 ++++++++++---
+>  drivers/scsi/qla2xxx/qla_target.c  |  60 +++++++---
+>  drivers/scsi/qla2xxx/qla_version.h |   2 +-
+>  10 files changed, 405 insertions(+), 148 deletions(-)
+
+This looks pretty big for a series of bug fixes. Are all these patches
+really candidates for 4.15 and stable backports all the way back to
+4.10?
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
