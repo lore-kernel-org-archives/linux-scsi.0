@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 5/17] scsi: arcmsr: replace constant ARCMSR_MAX_FREECCB_NUM
- by variable
-Date: Tue, 05 Dec 2017 09:44:23 +0800
-Message-ID: <1512438263.4577.45.camel@Centos6.3-64>
+Subject: [PATCH 6/17] scsi: arcmsr: add driver option host_can_queue to set
+ host->can_queue value by user
+Date: Tue, 05 Dec 2017 09:47:44 +0800
+Message-ID: <1512438464.4577.48.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -14,77 +14,70 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-replace constant ARCMSR_MAX_FREECCB_NUM by variable acb->maxFreeCCB that was got from firmware
+add driver option host_can_queue to set host->can_queue value by user. It's value expands up to 1024
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
 diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2017-12-05 15:24:16.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2017-12-05 15:25:06.000000000 +0800
-@@ -831,6 +831,7 @@ struct AdapterControlBlock
- 	atomic_t			ante_token_value;
- 	uint32_t	maxOutstanding;
- 	int		vector_count;
-+	uint32_t		maxFreeCCB;
- 	uint32_t		doneq_index;
- 	uint32_t		ccbsize;
- 	uint32_t		in_doorbell;
+--- a/drivers/scsi/arcmsr/arcmsr.h	2017-12-05 15:25:06.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr.h	2017-12-05 15:25:36.000000000 +0800
+@@ -47,6 +47,8 @@ struct device_attribute;
+ /*The limit of outstanding scsi command that firmware can handle*/
+ #define ARCMSR_MAX_FREECCB_NUM		1024
+ #define ARCMSR_MAX_OUTSTANDING_CMD	1024
++#define ARCMSR_DEFAULT_OUTSTANDING_CMD	128
++#define ARCMSR_MIN_OUTSTANDING_CMD	32
+ #define ARCMSR_DRIVER_VERSION		"v1.30.00.22-20151126"
+ #define ARCMSR_SCSI_INITIATOR_ID						255
+ #define ARCMSR_MAX_XFER_SECTORS							512
 diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2017-12-05 11:47:16.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2017-12-05 11:47:04.000000000 +0800
-@@ -688,7 +688,7 @@ static int arcmsr_alloc_ccb_pool(struct 
- 	acb->host->max_sectors = max_xfer_len/512;
- 	acb->host->sg_tablesize = max_sg_entrys;
- 	roundup_ccbsize = roundup(sizeof(struct CommandControlBlock) + (max_sg_entrys - 1) * sizeof(struct SG64ENTRY), 32);
--	acb->uncache_size = roundup_ccbsize * ARCMSR_MAX_FREECCB_NUM;
-+	acb->uncache_size = roundup_ccbsize * acb->maxFreeCCB;
- 	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->uncache_size, &dma_coherent_handle, GFP_KERNEL);
- 	if(!dma_coherent){
- 		printk(KERN_NOTICE "arcmsr%d: dma_alloc_coherent got error\n", acb->host->host_no);
-@@ -700,7 +700,7 @@ static int arcmsr_alloc_ccb_pool(struct 
- 	acb->ccbsize = roundup_ccbsize;
- 	ccb_tmp = dma_coherent;
- 	acb->vir2phy_offset = (unsigned long)dma_coherent - (unsigned long)dma_coherent_handle;
--	for(i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++){
-+	for(i = 0; i < acb->maxFreeCCB; i++){
- 		cdb_phyaddr = dma_coherent_handle + offsetof(struct CommandControlBlock, arcmsr_cdb);
- 		switch (acb->adapter_type) {
- 		case ACB_ADAPTER_TYPE_A:
-@@ -1427,7 +1427,7 @@ static void arcmsr_remove(struct pci_dev
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2017-12-05 11:47:04.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2017-12-05 11:46:50.000000000 +0800
+@@ -75,6 +75,10 @@ MODULE_DESCRIPTION("Areca ARC11xx/12xx/1
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(ARCMSR_DRIVER_VERSION);
  
- 		arcmsr_abort_allcmd(acb);
- 		arcmsr_done4abort_postqueue(acb);
--		for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
-+		for (i = 0; i < acb->maxFreeCCB; i++) {
- 			struct CommandControlBlock *ccb = acb->pccb_pool[i];
- 			if (ccb->startdone == ARCMSR_CCB_START) {
- 				ccb->startdone = ARCMSR_CCB_ABORTED;
-@@ -3239,6 +3239,9 @@ static bool arcmsr_get_firmware_spec(str
- 	else
- 		acb->maxOutstanding = acb->firm_numbers_queue - 1;
- 	acb->host->can_queue = acb->maxOutstanding;
-+	acb->maxFreeCCB = acb->host->can_queue;
-+	if (acb->maxFreeCCB < ARCMSR_MAX_FREECCB_NUM)
-+		acb->maxFreeCCB += 64;
- 	return rtn;
- }
++static int host_can_queue = ARCMSR_DEFAULT_OUTSTANDING_CMD;
++module_param(host_can_queue, int, S_IRUGO);
++MODULE_PARM_DESC(host_can_queue, " adapter queue depth(32 ~ 1024), default is 128");
++
+ #define	ARCMSR_SLEEPTIME	10
+ #define	ARCMSR_RETRYCOUNT	12
  
-@@ -4261,7 +4264,7 @@ static uint8_t arcmsr_iop_reset(struct A
- 		rtnval = arcmsr_abort_allcmd(acb);
- 		/* clear all outbound posted Q */
- 		arcmsr_done4abort_postqueue(acb);
--		for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
-+		for (i = 0; i < acb->maxFreeCCB; i++) {
- 			ccb = acb->pccb_pool[i];
- 			if (ccb->startdone == ARCMSR_CCB_START) {
- 				scsi_dma_unmap(ccb->pcmd);
-@@ -4369,7 +4372,7 @@ static int arcmsr_abort(struct scsi_cmnd
+@@ -133,7 +137,7 @@ static struct scsi_host_template arcmsr_
+ 	.eh_bus_reset_handler	= arcmsr_bus_reset,
+ 	.bios_param		= arcmsr_bios_param,
+ 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
+-	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
++	.can_queue		= ARCMSR_DEFAULT_OUTSTANDING_CMD,
+ 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
+ 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
+ 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
+@@ -877,7 +881,9 @@ static int arcmsr_probe(struct pci_dev *
+ 	host->max_lun = ARCMSR_MAX_TARGETLUN;
+ 	host->max_id = ARCMSR_MAX_TARGETID;		/*16:8*/
+ 	host->max_cmd_len = 16;	 			/*this is issue of 64bit LBA ,over 2T byte*/
+-	host->can_queue = ARCMSR_MAX_OUTSTANDING_CMD;
++	if ((host_can_queue < ARCMSR_MIN_OUTSTANDING_CMD) || (host_can_queue > ARCMSR_MAX_OUTSTANDING_CMD))
++		host_can_queue = ARCMSR_DEFAULT_OUTSTANDING_CMD;
++	host->can_queue = host_can_queue;	/* max simultaneous cmds */		
+ 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
+ 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
+ 	host->unique_id = (bus << 8) | dev_fun;
+@@ -3234,11 +3240,11 @@ static bool arcmsr_get_firmware_spec(str
+ 	default:
+ 		break;
  	}
- 
- 	intmask_org = arcmsr_disable_outbound_ints(acb);
--	for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
-+	for (i = 0; i < acb->maxFreeCCB; i++) {
- 		struct CommandControlBlock *ccb = acb->pccb_pool[i];
- 		if (ccb->startdone == ARCMSR_CCB_START && ccb->pcmd == cmd) {
- 			ccb->startdone = ARCMSR_CCB_ABORTED;
+-	if (acb->firm_numbers_queue > ARCMSR_MAX_OUTSTANDING_CMD)
+-		acb->maxOutstanding = ARCMSR_MAX_OUTSTANDING_CMD;
++	acb->maxOutstanding = acb->firm_numbers_queue - 1;
++	if (acb->host->can_queue >= acb->firm_numbers_queue)
++		acb->host->can_queue = acb->maxOutstanding;
+ 	else
+-		acb->maxOutstanding = acb->firm_numbers_queue - 1;
+-	acb->host->can_queue = acb->maxOutstanding;
++		acb->maxOutstanding = acb->host->can_queue;
+ 	acb->maxFreeCCB = acb->host->can_queue;
+ 	if (acb->maxFreeCCB < ARCMSR_MAX_FREECCB_NUM)
+ 		acb->maxFreeCCB += 64;
