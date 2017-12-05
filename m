@@ -1,33 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_devinfo: cleanly zero-pad devinfo strings
-Date: Mon, 04 Dec 2017 22:09:06 -0500
-Message-ID: <yq17eu16fcd.fsf@oracle.com>
-References: <20171127224735.32139-1-mwilck@suse.com>
-        <20171127224735.32139-2-mwilck@suse.com>
+Subject: Re: [PATCH] [SCSI] fnic: Fix coccinelle warnings
+Date: Mon, 04 Dec 2017 22:18:02 -0500
+Message-ID: <yq1374p6exh.fsf@oracle.com>
+References: <1511298946-26600-1-git-send-email-gomonovych@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37478 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751852AbdLEDJf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:09:35 -0500
-In-Reply-To: <20171127224735.32139-2-mwilck@suse.com> (Martin Wilck's message
-        of "Mon, 27 Nov 2017 23:47:35 +0100")
+Received: from userp2120.oracle.com ([156.151.31.85]:43884 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750995AbdLEDSK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:18:10 -0500
+In-Reply-To: <1511298946-26600-1-git-send-email-gomonovych@gmail.com> (Vasyl
+        Gomonovych's message of "Tue, 21 Nov 2017 22:15:46 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Alan Stern <stern@rowland.harvard.edu>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.de>
+To: Vasyl Gomonovych <gomonovych@gmail.com>
+Cc: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Martin,
+Vasyl,
 
-> Cleanly fill memory for "vendor" and "model" with 0-bytes for the
-> "compatible" case rather than adding only a single 0 byte.  This
-> simplifies the devinfo code a a bit, and avoids mistakes in other
-> places of the code (not in current upstream, but we had one such
-> mistake in the SUSE kernel).
+> Remove the duplicate copies of this simple function and use an
+> open-coded version.
 
-Applied to 4.15/scsi-fixes. Thank you!
+Applied to 4.16/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
