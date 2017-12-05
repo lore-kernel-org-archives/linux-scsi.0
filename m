@@ -1,41 +1,47 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 1/2] scsi-mq: Only show the CDB if available
-Date: Tue, 5 Dec 2017 17:51:11 +0000
-Message-ID: <1512496270.2660.23.camel@wdc.com>
-References: <20171205003809.1705-1-bart.vanassche@wdc.com>
-         <20171205003809.1705-2-bart.vanassche@wdc.com>
-         <20171205011536.GC8365@ming.t460p> <1512439190.2739.0.camel@wdc.com>
-         <20171205050008.GA9989@ming.t460p> <1512490952.2660.18.camel@wdc.com>
-         <20171205163824.GB23788@ming.t460p>
+Subject: Re: [PATCH v3 1/2] Ensure that the SCSI error handler gets woken up
+Date: Tue, 5 Dec 2017 21:46:06 +0000
+Message-ID: <1512510365.2660.35.camel@wdc.com>
+References: <1512490788.2660.16.camel@wdc.com>
+         <sr4inbsihn7krboba8euqqp1.1512508675214@email.android.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:39559 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751937AbdLERvQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2017 12:51:16 -0500
-In-Reply-To: <20171205163824.GB23788@ming.t460p>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <sr4inbsihn7krboba8euqqp1.1512508675214@email.android.com>
 Content-Language: en-US
-Content-ID: <B9C1B3689CA37A4CB5F66AD6487CFF8C@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <D0462E8DEAC2E84AA851787665735B4B@namprd04.prod.outlook.com>
+Sender: stable-owner@vger.kernel.org
+To: "ptikhomirov@virtuozzo.com" <ptikhomirov@virtuozzo.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "stuart.w.hayes@gmail.com" <stuart.w.hayes@gmail.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 
-T24gV2VkLCAyMDE3LTEyLTA2IGF0IDAwOjM4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-VHVlLCBEZWMgMDUsIDIwMTcgYXQgMDQ6MjI6MzNQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IE9uIFR1ZSwgMjAxNy0xMi0wNSBhdCAxMzowMCArMDgwMCwgTWluZyBMZWkgd3Jv
-dGU6DQo+ID4gPiBObywgZG8gbm90IG1peCB0d28gZGlmZmVyZW50IHRoaW5ncyBpbiBvbmUgcGF0
-Y2gsIGVzcGVjaWFsbHkgdGhlIGZpeCBwYXJ0DQo+ID4gPiBuZWVkIHRvIGJlIGJhY2twb3J0ZWQg
-dG8gc3RhYmxlLg0KPiA+ID4gDQo+ID4gPiBUaGUgZml4IHBhcnQgc2hvdWxkIGFpbSBhdCBWNC4x
-NSwgYW5kIHRoZSBvdGhlciBwYXJ0IGNhbiBiZSBhIFY0LjE2DQo+ID4gPiBzdHVmZi4NCj4gPiAN
-Cj4gPiBEb2VzIHRoaXMgbWVhbiB0aGF0IHlvdSBkbyBub3QgcGxhbiB0byBwb3N0IGEgdjUgb2Yg
-eW91ciBwYXRjaCBhbmQgdGhhdCB5b3UNCj4gPiB3YW50IG1lIHRvIHJld29yayB0aGlzIHBhdGNo
-IHNlcmllcz8gSSBjYW4gZG8gdGhhdC4NCj4gDQo+IEkgYmVsaWV2ZSBWNCBoYXMgYmVlbiBPSyBm
-b3IgbWVyZ2UsIGFjdHVhbGx5IHRoZSBvbmx5IGNvbmNlcm4gZnJvbSBKYW1lcw0KPiBpcyB0aGF0
-ICdzZXQgdGhlIGNtbmQgdG8gTlVMTCAqYmVmb3JlKiBjYWxsaW5nIGZyZWUgc28gd2UgbmFycm93
-IHRoZSByYWNlDQo+IHdpbmRvdy4nLCBidXQgdGhhdCBpc24ndCByZXF1aXJlZCBhcyBJIGV4cGxh
-aW5lZCwgZXZlbiB0aG91Z2ggeW91IGRvbid0IGRvDQo+IHRoYXQgaW4gdGhpcyBwYXRjaCB0b28u
-DQoNClRoZSBuZXh0IHZlcnNpb24gb2YgdGhpcyBwYXRjaCBzZXJpZXMgd2lsbCBpbmNsdWRlIHRo
-ZSBzZCBkcml2ZXIgY2hhbmdlIHJlcXVlc3RlZA0KYnkgSmFtZXMuDQoNCkJhcnQu
+T24gV2VkLCAyMDE3LTEyLTA2IGF0IDAwOjE3ICswMzAwLCBwdGlraG9taXJvdiB3cm90ZToNCj4g
+SSBtZWFuIHRocmVhZHMgaW4gc2NzaV9kZWNfaG9zdF9idXN5KCkgdGhlIHBhcnQgdW5kZXIgcmN1
+X3JlYWRfbG9jayBhcmUNCj4gZGl2aWRlZCBpbnRvIHR3byBncm91cHM6IGEpIGZpbmlzaGVkIGJl
+Zm9yZSBjYWxsX3JjdSwgYikgYmVnaW5uaW5nIHJjdQ0KPiBzZWN0aW9uIGFmdGVyIGNhbGxfcmN1
+LiBTbyBmaXJzdCwgaW4gc2NzaV9laF9pbmNfaG9zdF9mYWlsZWQoKSB3ZSB3aWxsDQo+IHNlZSBh
+bGwgY2hhbmdlcyB0byBob3N0IGJ1c3kgZnJvbSBncm91cCAoYSksIHNlY29uZCwgYWxsIHRocmVh
+ZHMgaW4gZ3JvdXANCj4gKGIpIHdpbGwgc2VlIG91ciBjaGFuZ2UgdG8gaG9zdF9mYWlsZWQuIEVp
+dGhlciB0aGVyZSBpcyBub2JvZHkgaW4gKGIpIGFuZA0KPiB3ZSB3aWxsIHN0YXJ0IEVILCBvciB0
+aGUgdGhyZWFkIGZyb20gKGIpIHdoaWNoIGVudGVyZWQgc3Bpbl9sb2NrIGxhc3Qgd2lsbA0KPiBz
+dGFydCBFSC4NCj4gDQo+IEluIHlvdXIgY2FzZSB0YXNrcyBmcm9tIGIgZG9lcyBub3Qgc2VlIGhv
+c3RfZmFpbGVkIHdhcyBpbmNyZW1lbnRlZCwgYW5kDQo+IHdpbGwgbm90IHN0YXJ0IEVILg0KDQpI
+ZWxsbyBQYXZlbCwNCg0KV2hhdCBkb2VzICJ5b3VyIGNhc2UiIG1lYW4/IEluIG15IHByZXZpb3Vz
+IGUtbWFpbCBJIGV4cGxhaW5lZCBhIHNjZW5hcmlvIHRoYXQNCmNhbm5vdCBoYXBwZW4gc28gaXQn
+cyBub3QgY2xlYXIgdG8gbWUgd2hhdCAieW91ciBjYXNlIiByZWZlcnMgdG8/DQoNCkFkZGl0aW9u
+YWxseSwgaXQgc2VlbXMgbGlrZSB5b3UgYXJlIGFzc3VtaW5nIHRoYXQgUkNVIGd1YXJhbnRlZXMg
+b3JkZXJpbmcgb2YNClJDVSByZWFkLWxvY2tlZCBzZWN0aW9ucyBhZ2FpbnN0IGNhbGxfcmN1KCk/
+IFRoYXQncyBub3QgaG93IFJDVSB3b3Jrcy4gUkNVDQpndWFyYW50ZWVzIHNlcmlhbGl6YXRpb24g
+b2YgcmVhZC1sb2NrZWQgc2VjdGlvbnMgYWdhaW5zdCBncmFjZSBwZXJpb2RzLiBUaGUNCmZ1bmN0
+aW9uIHNjc2lfZWhfaW5jX2hvc3RfZmFpbGVkKCkgaXMgaW52b2tlZCB0aHJvdWdoIGNhbGxfcmN1
+KCkgYW5kIGhlbmNlDQp3aWxsIGJlIGNhbGxlZCBkdXJpbmcgYSBncmFjZSBwZXJpb2QuDQoNCkFu
+eXdheSwgdGhlIGRpZmZlcmVudCBzY2VuYXJpb3MgSSBzZWUgYXJlIGFzIGZvbGxvd3M6DQooYSkg
+c2NzaV9kZWNfaG9zdF9idXN5KCkgZmluaXNoZXMgYmVmb3JlIHNjc2lfZWhfaW5jX2hvc3RfZmFp
+bGVkKCkgc3RhcnRzLg0KKGIpIHNjc2lfZGVjX2hvc3RfYnVzeSgpIHN0YXJ0cyBhZnRlciBzY3Np
+X2VoX2luY19ob3N0X2ZhaWxlZCgpIGhhcw0KICAgIGZpbmlzaGVkLg0KDQpJbiBjYXNlIChhKSBz
+Y3NpX2VoX2luY19ob3N0X2ZhaWxlZCgpIHdpbGwgd2FrZSB1cCB0aGUgZXJyb3IgaGFuZGxlci4g
+QW5kIGluDQpjYXNlIChiKSBzY3NpX2RlY19ob3N0X2J1c3koKSB3aWxsIHdha2UgdXAgdGhlIGVy
+cm9yIGhhbmRsZXIuIFNvIGl0J3Mgbm90DQpjbGVhciB0byBtZSB3aHkgeW91IHRoaW5rIHRoYXQg
+dGhlcmUgaXMgYSBzY2VuYXJpbyBpbiB3aGljaCB0aGUgRUggd29uJ3QgYmUNCndva2VuIHVwPw0K
+DQpCYXJ0Lg==
