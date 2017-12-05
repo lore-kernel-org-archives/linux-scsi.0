@@ -1,26 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v15 4/5] scsi: mpt3sas: Replace PCI pool old API
-Date: Mon, 04 Dec 2017 22:20:17 -0500
-Message-ID: <yq1y3mh509a.fsf@oracle.com>
-References: <20171120193247.8187-1-romain.perier@gmail.com>
-        <20171120193247.8187-5-romain.perier@gmail.com>
+Subject: Re: [PATCH] mpt3sas: Remove unused variable requeue_event
+Date: Mon, 04 Dec 2017 22:21:39 -0500
+Message-ID: <yq1tvx55070.fsf@oracle.com>
+References: <1512209966-27239-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20171120193247.8187-5-romain.perier@gmail.com> (Romain Perier's
-        message of "Mon, 20 Nov 2017 20:32:46 +0100")
-Sender: linux-pci-owner@vger.kernel.org
-To: Romain Perier <romain.perier@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:31927 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751934AbdLEDWQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:22:16 -0500
+In-Reply-To: <1512209966-27239-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        (Suganath Prabu S.'s message of "Sat, 2 Dec 2017 02:19:26 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com
 
 
-Romain,
+Suganath,
 
-> The PCI pool API is deprecated. This commit replaces the PCI pool old
-> API by the appropriate function with the DMA pool API.
+> No Functional change just cleanup,
+> Removed variable requeue_event and made function as void.
 
-Applied to 4.16/scsi-queue. Thanks!
+Applied to 4.16/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
