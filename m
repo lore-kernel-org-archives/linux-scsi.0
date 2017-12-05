@@ -1,208 +1,62 @@
-From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-Subject: Re: [PATCH v3 1/2] Ensure that the SCSI error handler gets woken up
-Date: Tue, 5 Dec 2017 13:18:56 +0300
-Message-ID: <8514bfc3-4d11-be94-eef4-82f48d436656@virtuozzo.com>
-References: <20171204180624.18722-1-bart.vanassche@wdc.com>
- <20171204180624.18722-2-bart.vanassche@wdc.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: [PATCH 15/17] scsi: arcmsr: Add driver module parameter msi_enable
+Date: Tue, 05 Dec 2017 10:24:01 +0800
+Message-ID: <1512440641.4577.80.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-eopbgr40128.outbound.protection.outlook.com ([40.107.4.128]:29979
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752773AbdLEKTE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Dec 2017 05:19:04 -0500
-In-Reply-To: <20171204180624.18722-2-bart.vanassche@wdc.com>
-Content-Language: en-US
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:37727 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753266AbdLEKYK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2017 05:24:10 -0500
+Received: by mail-pg0-f53.google.com with SMTP id y6so10382298pgp.4
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Dec 2017 02:24:10 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>, Stuart Hayes <stuart.w.hayes@gmail.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, sfr@canb.auug.org.au
 
-On 12/04/2017 09:06 PM, Bart Van Assche wrote:
-> If scsi_eh_scmd_add() is called concurrently with
-> scsi_host_queue_ready() while shost->host_blocked > 0 then it can
-> happen that neither function wakes up the SCSI error handler. Fix
-> this by making every function that decreases the host_busy counter
-> wake up the error handler if necessary and by protecting the
-> host_failed checks with the SCSI host lock.
-> 
-> Reported-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-> References: https://marc.info/?l=linux-kernel&m=150461610630736
-> Fixes: commit 746650160866 ("scsi: convert host_busy to atomic_t")
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com> > Cc: Konstantin Khorenko <khorenko@virtuozzo.com>
-> Cc: Stuart Hayes <stuart.w.hayes@gmail.com>
-> Cc: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: <stable@vger.kernel.org>
-> ---
->   drivers/scsi/hosts.c      |  6 ++++++
->   drivers/scsi/scsi_error.c | 18 ++++++++++++++++--
->   drivers/scsi/scsi_lib.c   | 39 ++++++++++++++++++++++++++++-----------
->   include/scsi/scsi_host.h  |  2 ++
->   4 files changed, 52 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index a306af6a5ea7..a0a7e4ff255c 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -324,6 +324,9 @@ static void scsi_host_dev_release(struct device *dev)
->   
->   	scsi_proc_hostdir_rm(shost->hostt);
->   
-> +	/* Wait for functions invoked through call_rcu(&shost->rcu, ...) */
-> +	rcu_barrier();
-> +
->   	if (shost->tmf_work_q)
->   		destroy_workqueue(shost->tmf_work_q);
->   	if (shost->ehandler)
-> @@ -331,6 +334,8 @@ static void scsi_host_dev_release(struct device *dev)
->   	if (shost->work_q)
->   		destroy_workqueue(shost->work_q);
->   
-> +	destroy_rcu_head(&shost->rcu);
-> +
->   	if (shost->shost_state == SHOST_CREATED) {
->   		/*
->   		 * Free the shost_dev device name here if scsi_host_alloc()
-> @@ -399,6 +404,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->   	INIT_LIST_HEAD(&shost->starved_list);
->   	init_waitqueue_head(&shost->host_wait);
->   	mutex_init(&shost->scan_mutex);
-> +	init_rcu_head(&shost->rcu);
->   
->   	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
->   	if (index < 0)
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 5e89049e9b4e..258b8a741992 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -226,6 +226,17 @@ static void scsi_eh_reset(struct scsi_cmnd *scmd)
->   	}
->   }
->   
-> +static void scsi_eh_inc_host_failed(struct rcu_head *head)
-> +{
-> +	struct Scsi_Host *shost = container_of(head, typeof(*shost), rcu);
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	shost->host_failed++;
+From: Ching Huang <ching2048@areca.com.tw>
 
-May be we need to increment host_failed before call_rcu(), so that all 
-rcu protected readers already see a change at these point?
+Add module parameter msi_enable to has a chance to disable msi interrupt if between controller and system has
+msi INT compatible issue.
 
-> +	scsi_eh_wakeup(shost);
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +}
-> +
->   /**
->    * scsi_eh_scmd_add - add scsi cmd to error handling.
->    * @scmd:	scmd to run eh on.
-> @@ -248,9 +259,12 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
->   
->   	scsi_eh_reset(scmd);
->   	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
-> -	shost->host_failed++;
-> -	scsi_eh_wakeup(shost);
->   	spin_unlock_irqrestore(shost->host_lock, flags);
-> +	/*
-> +	 * Ensure that all tasks observe the host state change before the
-> +	 * host_failed change.
-> +	 */
-> +	call_rcu(&shost->rcu, scsi_eh_inc_host_failed);
->   }
->   
->   /**
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index b6d3842b6809..5cbc69b2b1ae 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -318,22 +318,39 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
->   		cmd->cmd_len = scsi_command_size(cmd->cmnd);
->   }
->   
-> -void scsi_device_unbusy(struct scsi_device *sdev)
-> +/*
-> + * Decrement the host_busy counter and wake up the error handler if necessary.
-> + * Avoid as follows that the error handler is not woken up if shost->host_busy
-> + * == shost->host_failed: use call_rcu() in scsi_eh_scmd_add() in combination
-> + * with an RCU read lock in this function to ensure that this function in its
-> + * entirety either finishes before scsi_eh_scmd_add() increases the
-> + * host_failed counter or that it notices the shost state change made by
-> + * scsi_eh_scmd_add().
-> + */
-> +static void scsi_dec_host_busy(struct Scsi_Host *shost)
->   {
-> -	struct Scsi_Host *shost = sdev->host;
-> -	struct scsi_target *starget = scsi_target(sdev);
->   	unsigned long flags;
->   
-> +	rcu_read_lock();
->   	atomic_dec(&shost->host_busy);
-> -	if (starget->can_queue > 0)
-> -		atomic_dec(&starget->target_busy);
-> -
-> -	if (unlikely(scsi_host_in_recovery(shost) &&
-> -		     (shost->host_failed || shost->host_eh_scheduled))) {
-> +	if (unlikely(scsi_host_in_recovery(shost))) {
->   		spin_lock_irqsave(shost->host_lock, flags);
-> -		scsi_eh_wakeup(shost);
-> +		if (shost->host_failed || shost->host_eh_scheduled)
-> +			scsi_eh_wakeup(shost);
->   		spin_unlock_irqrestore(shost->host_lock, flags);
->   	}
-> +	rcu_read_unlock();
-> +}
-> +
-> +void scsi_device_unbusy(struct scsi_device *sdev)
-> +{
-> +	struct Scsi_Host *shost = sdev->host;
-> +	struct scsi_target *starget = scsi_target(sdev);
-> +
-> +	scsi_dec_host_busy(shost);
-> +
-> +	if (starget->can_queue > 0)
-> +		atomic_dec(&starget->target_busy);
->   
->   	atomic_dec(&sdev->device_busy);
->   }
-> @@ -1531,7 +1548,7 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
->   		list_add_tail(&sdev->starved_entry, &shost->starved_list);
->   	spin_unlock_irq(shost->host_lock);
->   out_dec:
-> -	atomic_dec(&shost->host_busy);
-> +	scsi_dec_host_busy(shost);
->   	return 0;
->   }
->   
-> @@ -2017,7 +2034,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->   	return BLK_STS_OK;
->   
->   out_dec_host_busy:
-> -       atomic_dec(&shost->host_busy);
-> +	scsi_dec_host_busy(shost);
->   out_dec_target_busy:
->   	if (scsi_target(sdev)->can_queue > 0)
->   		atomic_dec(&scsi_target(sdev)->target_busy);
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index a8b7bf879ced..1a1df0d21ee3 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -571,6 +571,8 @@ struct Scsi_Host {
->   		struct blk_mq_tag_set	tag_set;
->   	};
->   
-> +	struct rcu_head rcu;
-> +
->   	atomic_t host_busy;		   /* commands actually active on low-level */
->   	atomic_t host_blocked;
->   
-> 
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+---
 
--- 
-Best regards, Tikhomirov Pavel
-Software Developer, Virtuozzo.
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2017-12-05 11:44:36.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2017-12-05 16:59:58.000000000 +0800
+@@ -75,6 +75,10 @@ MODULE_DESCRIPTION("Areca ARC11xx/12xx/1
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(ARCMSR_DRIVER_VERSION);
+ 
++static int msi_enable = 1;
++module_param(msi_enable, int, S_IRUGO);
++MODULE_PARM_DESC(msi_enable, "Enable MSI interrupt(0 ~ 1), msi_enable=1(enable), =0(disable)");
++
+ static int host_can_queue = ARCMSR_DEFAULT_OUTSTANDING_CMD;
+ module_param(host_can_queue, int, S_IRUGO);
+ MODULE_PARM_DESC(host_can_queue, " adapter queue depth(32 ~ 1024), default is 128");
+@@ -831,11 +835,17 @@ arcmsr_request_irq(struct pci_dev *pdev,
+ 		pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
+ 		flags = 0;
+ 	} else {
+-		nvec = pci_alloc_irq_vectors(pdev, 1, 1,
+-				PCI_IRQ_MSI | PCI_IRQ_LEGACY);
++		if (msi_enable == 1) {
++			nvec = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
++			if (nvec == 1) {
++				dev_info(&pdev->dev, "msi enabled\n");
++				goto msi_int1;
++			}
++		}
++		nvec = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_LEGACY);
+ 		if (nvec < 1)
+ 			return FAILED;
+-
++msi_int1:
+ 		flags = IRQF_SHARED;
+ 	}
+ 
