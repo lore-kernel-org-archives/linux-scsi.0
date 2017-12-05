@@ -1,74 +1,71 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] SCSI: delay run queue if device is blocked in
- scsi_dev_queue_ready()
-Date: Tue, 5 Dec 2017 14:56:42 +0800
-Message-ID: <20171205065641.GC9989@ming.t460p>
-References: <20171202163150.1273-1-ming.lei@redhat.com>
- <1512400159.23838.1.camel@wdc.com>
- <20171204224507.GB6888@ming.t460p>
- <pan$2c3c7$7c7c04a5$f22df3ad$bef841cb@applied-asynchrony.com>
- <20171205051624.GB9989@ming.t460p>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171205051624.GB9989@ming.t460p>
-Sender: linux-block-owner@vger.kernel.org
-To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] SCSI: run queue if SCSI device queue isn't ready and queue is idle
+Date: Tue,  5 Dec 2017 15:52:56 +0800
+Message-ID: <20171205075256.10319-1-ming.lei@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39728 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752272AbdLEHxL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Dec 2017 02:53:11 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, =?UTF-8?q?Holger=20Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>, Ming Lei <ming.lei@redhat.com>
 
-On Tue, Dec 05, 2017 at 01:16:24PM +0800, Ming Lei wrote:
-> On Mon, Dec 04, 2017 at 11:48:07PM +0000, Holger Hoffstätte wrote:
-> > On Tue, 05 Dec 2017 06:45:08 +0800, Ming Lei wrote:
-> > 
-> > > On Mon, Dec 04, 2017 at 03:09:20PM +0000, Bart Van Assche wrote:
-> > >> On Sun, 2017-12-03 at 00:31 +0800, Ming Lei wrote:
-> > >> > Fixes: 0df21c86bdbf ("scsi: implement .get_budget and .put_budget for blk-mq")
-> > >> 
-> > >> It might be safer to revert commit 0df21c86bdbf instead of trying to fix all
-> > >> issues introduced by that commit for kernel version v4.15 ...
-> > > 
-> > > What are all issues in v4.15-rc? Up to now, it is the only issue reported,
-> > > and can be fixed by this simple patch, which one can be thought as cleanup
-> > > too.
-> > 
-> > Even with this patch I've encountered at least one hang that
-> > seemed related. I'm using most of block/scsi-4.15 on top of 4.14 and
-> > the hang in question was on a rotating disk. It could be solved by activating
-> > a different scheduler on the hanging device; all hanging sync/df processes got
-> > unstuck and all was fine again, which leads me to believe that there is at least
-> > one more rare condition where delaying requests (as done in the budget patch)
-> > leads to a hang.
-> > 
-> > This happened with mq-deadline which I was testing specifically to avoid
-> > any BFQ-related side effects.
-> 
-> OK, this looks a new report.
-> 
-> Without any log, we can't make any progress, and even we can't guess
-> what the issue is related with.
-> 
-> Could you post your dmesg log(include the hang process stack trace)? And
-> dump the debugfs log by the following script when this hang happens?
-> 
-> 	http://people.redhat.com/minlei/tests/tools/dump-blk-info
-> 
-> BTW, you just need to pass the disk name to the script, such as: /dev/sda.
+Before commit 0df21c86bdbf ("scsi: implement .get_budget and .put_budget
+for blk-mq"), we run queue after 3ms if queue is idle and SCSI device
+queue isn't ready, which is done in handling BLK_STS_RESOURCE. After
+commit 0df21c86bdbf is introduced, queue won't be run any more under
+this situation.
 
-Thinking of the issue further, this patch only covers case of
-scsi_set_blocked(), but don't consider the case in which .get_budget()
-is called inside blk_mq_dispatch_rq_list() for request coming from
-hctx->dispatch_list.
+IO hang is observed when timeout happened, and this patch fixes the IO
+hang issue by running queue after delay in scsi_dev_queue_ready, just like
+non-mq. This issue can be triggered by the following script[1].
 
-If .get_budget() is called in both blk_mq_do_dispatch_sched() and
-blk_mq_do_dispatch_ctx(), we don't need to run queue if the queue
-is idle. But if it is called from blk_mq_dispatch_rq_list() for request
-coming from hctx->dispatch_list, we have to run queue if queue is
-idle, as before.
+There is another issue which can be covered by running idle queue:
+when .get_budget() is called on request coming from hctx->dispatch_list,
+if one request just completes during .get_budget(), we can't depend on
+SCSI's restart to make progress any more. This patch fixes the race too.
 
-So please ignore this patch, and will submit V2 for cover both cases.
+With this patch, we basically recover to previous behaviour(before commit
+0df21c86bdbf) of handling idle queue when running out of resource.
 
-Thanks,
-Ming
+[1] script for test/verify SCSI timeout
+rmmod scsi_debug
+modprobe scsi_debug max_queue=1
+
+DEVICE=`ls -d /sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*/block/* | head -1 | xargs basename`
+DISK_DIR=`ls -d /sys/block/$DEVICE/device/scsi_disk/*`
+
+echo "using scsi device $DEVICE"
+echo "-1" >/sys/bus/pseudo/drivers/scsi_debug/every_nth
+echo "temporary write through" >$DISK_DIR/cache_type
+echo "128" >/sys/bus/pseudo/drivers/scsi_debug/opts
+echo none > /sys/block/$DEVICE/queue/scheduler
+dd if=/dev/$DEVICE of=/dev/null bs=1M iflag=direct count=1 &
+sleep 5
+echo "0" >/sys/bus/pseudo/drivers/scsi_debug/opts
+wait
+echo "SUCCESS"
+
+Fixes: 0df21c86bdbf ("scsi: implement .get_budget and .put_budget for blk-mq")
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index db9556662e27..1816dd8259b3 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1967,6 +1967,8 @@ static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
+ out_put_device:
+ 	put_device(&sdev->sdev_gendev);
+ out:
++	if (atomic_read(&sdev->device_busy) == 0 && !scsi_device_blocked(sdev))
++		blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
+ 	return false;
+ }
+ 
+-- 
+2.9.5
