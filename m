@@ -1,39 +1,95 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] SCSI: run queue if SCSI device queue isn't ready and
- queue is idle
-Date: Wed, 6 Dec 2017 00:45:12 +0800
-Message-ID: <20171205164511.GC23788@ming.t460p>
-References: <20171205075256.10319-1-ming.lei@redhat.com>
- <1512490099.2660.6.camel@sandisk.com>
- <20171205162825.GA23788@ming.t460p>
- <1512492105.2660.22.camel@wdc.com>
+Subject: Re: [PATCH V4] scsi_debugfs: fix crash in scsi_show_rq()
+Date: Wed, 6 Dec 2017 00:55:45 +0800
+Message-ID: <20171205165543.GD23788@ming.t460p>
+References: <20171110090144.11791-1-ming.lei@redhat.com>
+ <1510332718.3095.2.camel@HansenPartnership.com>
+ <20171111024337.GB20382@ming.t460p>
+ <1510599352.3336.20.camel@HansenPartnership.com>
+ <20171114005544.GA20889@ming.t460p>
+ <1510683292.3077.3.camel@HansenPartnership.com>
+ <20171115100949.GC908@ming.t460p>
+ <1510741680.3088.1.camel@HansenPartnership.com>
+ <20171115120449.GD908@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1512492105.2660.22.camel@wdc.com>
+In-Reply-To: <20171115120449.GD908@ming.t460p>
 Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "hare@suse.com" <hare@suse.com>, "holger@applied-asynchrony.com" <holger@applied-asynchrony.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, John Garry <john.garry@huawei.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 05, 2017 at 04:41:46PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-12-06 at 00:28 +0800, Ming Lei wrote:
-> > This is still a workaround for RESTART, see my comment before:
+On Wed, Nov 15, 2017 at 08:04:49PM +0800, Ming Lei wrote:
+> On Wed, Nov 15, 2017 at 07:28:00PM +0900, James Bottomley wrote:
+> > On Wed, 2017-11-15 at 18:09 +0800, Ming Lei wrote:
+> > > On Tue, Nov 14, 2017 at 10:14:52AM -0800, James Bottomley wrote:
+> > > > 
+> > > > On Tue, 2017-11-14 at 08:55 +0800, Ming Lei wrote:
+> > > > > 
+> > > > > Hi James,
+> > > > > 
+> > > > > On Mon, Nov 13, 2017 at 10:55:52AM -0800, James Bottomley wrote:
+> > > > > > 
+> > > > > > 
+> > > > > > On Sat, 2017-11-11 at 10:43 +0800, Ming Lei wrote:
+> > > > > > > 
+> > > > > > > 
+> > > > > > > So from CPU1's review, cmd->cmnd is in a remote NUMA node,
+> > > > > > > __scsi_format_command() is executed much slower than
+> > > > > > > mempool_free().
+> > > > > > > So when mempool_free() returns, __scsi_format_command() may
+> > > > > > > not fetched the buffer in L1 cache yet, then use-after-free
+> > > > > > > is still triggered.
+> > > > > > > 
+> > > > > > > That is why I say this use-after-free is inevitable no matter
+> > > > > > > 'setting SCpnt->cmnd to NULL before calling mempool_free()'
+> > > > > > > or not.
+> > > > > > 
+> > > > > > The bottom line is that there are several creative ways around
+> > > > > > this but the proposed code is currently broken and simply
+> > > > > > putting a comment in saying so doesn't make it acceptable.
+> > > > > 
+> > > > > As I explained above, I didn't see one really workable way. Or
+> > > > > please correct it if I am wrong.
+> > > > 
+> > > > I simply can't believe it's beyond the wit of man to solve a use
+> > > > after free race.  About 40% of kernel techniques are devoted to
+> > > > this.  All I really care about is not losing the PI information we
+> > > > previously had.  I agree with Bart that NULL cmnd is a good
+> > > > indicator, so it seems reasonable to use it.  If you have another
+> > > > mechanism, feel free to propose it.
+> > > 
+> > > Hi James,
+> > > 
+> > > This patch is my proposal, no others thought of yet.
+> > > 
+> > > We can fix the use-after-free easily via lock, rcu and ..., but some
+> > > cost has to pay. In this case, we can't wait too long in show_rq(),
+> > > otherwise we may lose important debug info, so I do not have better
+> > > way.
+> > > 
+> > > IMO this use-after-free is actually no harm, I don't think we have to
+> > > fix it, but it should be better to not let utility warn on this case.
 > > 
-> > 	https://marc.info/?l=linux-block&m=151217500929341&w=2
+> > Fine, so lose the snide comment and set the cmnd to NULL *before*
+> > calling free so we narrow the race window.
 > 
-> A quote from that e-mail: "The theory about using BLK_MQ_S_SCHED_RESTART in
-> current way is that we mark it after requests are added to hctx->dispatch".
-> Reading that makes me wonder whether you understand the purpose of the
-> BLK_MQ_S_SCHED_RESTART flag? That flag is not set after requests are added
-> to the dispatch list but after requests have been *removed*. The purpose of
-> that flag is to detect whether another thread has run the queue after
-> requests were removed from the dispatch list and before these were readded.
-> If so, the queue needs to be rerun.
+> Hi James,
+> 
+> Given we can't avoid the use-after-free, how about not do that way so
+> we won't lose the precious debug info too early?
 
-If you want to discuss that, please reply on that thread of '[PATCH 4/7] blk-mq:
-Avoid that request processing sta', I will reply on you there too.
+Hi James,
 
--- 
+Are you fine with V4?
+
+As I explained, the use-after-free can't be avoided, we have to make
+scsi_show_rq() to survive that, so we don't need to touch code in free path.
+Also we won't lose debug info too early in this way, not like 'set the cmnd
+to NULL *before* calling free'.
+
+Thanks,
 Ming
