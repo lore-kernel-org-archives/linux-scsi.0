@@ -1,24 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ipr: fix incorrect indentation of assignment statement
-Date: Mon, 04 Dec 2017 22:30:36 -0500
-Message-ID: <yq18teh4zs3.fsf@oracle.com>
-References: <20171201133327.15515-1-colin.king@canonical.com>
+Subject: Re: [PATCH] ibmvscsis: add DRC indices to debug statements
+Date: Mon, 04 Dec 2017 22:32:37 -0500
+Message-ID: <yq14lp54zoq.fsf@oracle.com>
+References: <20171204220728.94613-1-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171201133327.15515-1-colin.king@canonical.com> (Colin King's
-        message of "Fri, 1 Dec 2017 13:33:27 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Brian King <brking@us.ibm.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:55419 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751756AbdLEDcs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:32:48 -0500
+In-Reply-To: <20171204220728.94613-1-bryantly@linux.vnet.ibm.com> (Bryant
+        G. Ly's message of "Mon, 4 Dec 2017 16:07:28 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: nab@linux-iscsi.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Brad Warrum <bwarrum@us.ibm.com>
 
 
-Colin,
+Bryant,
 
-> Remove one extraneous level of indentation on an assignment statement.
+> Where applicable, changes pr_debug, pr_info, pr_err, etc. calls
+> to the dev_* versions.  This adds the DRC index of the device to the
+> corresponding trace statement.
 
-Applied to 4.16/scsi-queue, thanks!
+Applied to 4.16/scsi-queue, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
