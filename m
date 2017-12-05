@@ -1,30 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ibmvscsis: add DRC indices to debug statements
-Date: Mon, 04 Dec 2017 22:32:37 -0500
-Message-ID: <yq14lp54zoq.fsf@oracle.com>
-References: <20171204220728.94613-1-bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] scsi-mq: Only show the CDB if available
+Date: Mon, 04 Dec 2017 22:42:28 -0500
+Message-ID: <yq1zi6x3knv.fsf@oracle.com>
+References: <20171205003809.1705-1-bart.vanassche@wdc.com>
+        <20171205003809.1705-2-bart.vanassche@wdc.com>
+        <20171205011536.GC8365@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55419 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751756AbdLEDcs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:32:48 -0500
-In-Reply-To: <20171204220728.94613-1-bryantly@linux.vnet.ibm.com> (Bryant
-        G. Ly's message of "Mon, 4 Dec 2017 16:07:28 -0600")
+Received: from aserp2120.oracle.com ([141.146.126.78]:33948 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751934AbdLEDny (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:43:54 -0500
+In-Reply-To: <20171205011536.GC8365@ming.t460p> (Ming Lei's message of "Tue, 5
+        Dec 2017 09:15:37 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: nab@linux-iscsi.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Brad Warrum <bwarrum@us.ibm.com>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 
-Bryant,
+Hi Ming,
 
-> Where applicable, changes pr_debug, pr_info, pr_err, etc. calls
-> to the dev_* versions.  This adds the DRC index of the device to the
-> corresponding trace statement.
+> Please cook a patch for fixing the crash issue only, since we need
+> to backport the fix to stable kernel.
 
-Applied to 4.16/scsi-queue, thank you!
+I thought you were going to submit a V5 that addressed James' concerns?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
