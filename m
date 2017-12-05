@@ -1,27 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] mpt3sas: Remove unused variable requeue_event
-Date: Mon, 04 Dec 2017 22:21:39 -0500
-Message-ID: <yq1tvx55070.fsf@oracle.com>
-References: <1512209966-27239-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: add some definition included in UFS HCI specifications
+Date: Mon, 04 Dec 2017 22:23:41 -0500
+Message-ID: <yq1po7t503m.fsf@oracle.com>
+References: <CGME20171128053529epcas1p37ae00cda0b6f73698e5e887b0c4de8c4@epcas1p3.samsung.com>
+        <002901d3680a$b35e74f0$1a1b5ed0$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31927 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751934AbdLEDWQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:22:16 -0500
-In-Reply-To: <1512209966-27239-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-        (Suganath Prabu S.'s message of "Sat, 2 Dec 2017 02:19:26 -0800")
+Received: from aserp1040.oracle.com ([141.146.126.69]:44468 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752050AbdLEDXu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2017 22:23:50 -0500
+In-Reply-To: <002901d3680a$b35e74f0$1a1b5ed0$@samsung.com> (=?utf-8?B?Ig==?=
+ =?utf-8?B?6rmA6riw7JuFIidz?= message
+        of "Tue, 28 Nov 2017 14:35:29 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com
+To: kwmad.kim@samsung.com
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, YOUNGEUN PARK <youngeun.park@samsung.com>, =?utf-8?B?6rmA67aA7KeE?= <boojin.kim@samsung.com>
 
 
-Suganath,
-
-> No Functional change just cleanup,
-> Removed variable requeue_event and made function as void.
+> These would be used in the future in some specific drivers.
 
 Applied to 4.16/scsi-queue. Thank you!
 
