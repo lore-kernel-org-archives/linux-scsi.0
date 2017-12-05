@@ -1,49 +1,39 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/2] scsi-mq: Only show the CDB if available
-Date: Tue, 05 Dec 2017 08:43:49 -0800
-Message-ID: <1512492229.3019.25.camel@linux.vnet.ibm.com>
-References: <20171205003809.1705-1-bart.vanassche@wdc.com>
-         <20171205003809.1705-2-bart.vanassche@wdc.com>
-         <20171205011536.GC8365@ming.t460p> <1512439190.2739.0.camel@wdc.com>
-         <20171205050008.GA9989@ming.t460p> <1512490952.2660.18.camel@wdc.com>
-         <20171205163824.GB23788@ming.t460p>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] SCSI: run queue if SCSI device queue isn't ready and
+ queue is idle
+Date: Wed, 6 Dec 2017 00:45:12 +0800
+Message-ID: <20171205164511.GC23788@ming.t460p>
+References: <20171205075256.10319-1-ming.lei@redhat.com>
+ <1512490099.2660.6.camel@sandisk.com>
+ <20171205162825.GA23788@ming.t460p>
+ <1512492105.2660.22.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171205163824.GB23788@ming.t460p>
+Content-Disposition: inline
+In-Reply-To: <1512492105.2660.22.camel@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "hare@suse.com" <hare@suse.com>, "holger@applied-asynchrony.com" <holger@applied-asynchrony.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2017-12-06 at 00:38 +0800, Ming Lei wrote:
-> On Tue, Dec 05, 2017 at 04:22:33PM +0000, Bart Van Assche wrote:
+On Tue, Dec 05, 2017 at 04:41:46PM +0000, Bart Van Assche wrote:
+> On Wed, 2017-12-06 at 00:28 +0800, Ming Lei wrote:
+> > This is still a workaround for RESTART, see my comment before:
 > > 
-> > On Tue, 2017-12-05 at 13:00 +0800, Ming Lei wrote:
-> > > 
-> > > No, do not mix two different things in one patch, especially the
-> > > fix part need to be backported to stable.
-> > > 
-> > > The fix part should aim at V4.15, and the other part can be a
-> > > V4.16 stuff.
-> > 
-> > Does this mean that you do not plan to post a v5 of your patch and
-> > that you want me to rework this patch series? I can do that.
+> > 	https://marc.info/?l=linux-block&m=151217500929341&w=2
 > 
-> I believe V4 has been OK for merge, actually the only concern from
-> James is that 'set the cmnd to NULL *before* calling free so we
-> narrow the race window.', but that isn't required as I explained,
-> even though you don't do that in this patch too.
-> 
-> 	https://marc.info/?t=151030464300003&r=1&w=2
-> 
-> I will work on V5 if Martin/James thinks it is needed.
+> A quote from that e-mail: "The theory about using BLK_MQ_S_SCHED_RESTART in
+> current way is that we mark it after requests are added to hctx->dispatch".
+> Reading that makes me wonder whether you understand the purpose of the
+> BLK_MQ_S_SCHED_RESTART flag? That flag is not set after requests are added
+> to the dispatch list but after requests have been *removed*. The purpose of
+> that flag is to detect whether another thread has run the queue after
+> requests were removed from the dispatch list and before these were readded.
+> If so, the queue needs to be rerun.
 
-I don't buy that it isn't needed.  The point (and the pattern) is for a
-destructive action set the signal *before* you execute the action not
-after.  The reason should be obvious: if you set it after you invite a
-race where the check says OK but the object has gone.  Even if the race
-is highly unlikely, the pattern point still holds.
+If you want to discuss that, please reply on that thread of '[PATCH 4/7] blk-mq:
+Avoid that request processing sta', I will reply on you there too.
 
-James
+-- 
+Ming
