@@ -1,40 +1,27 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 1/3] scsi: Fix a scsi_show_rq() NULL pointer dereference
-Date: Tue,  5 Dec 2017 16:57:51 -0800
-Message-ID: <20171206005753.28734-2-bart.vanassche@wdc.com>
+Subject: [PATCH v2 3/3] scsi-mq-debugfs: Show more information
+Date: Tue,  5 Dec 2017 16:57:53 -0800
+Message-ID: <20171206005753.28734-4-bart.vanassche@wdc.com>
 References: <20171206005753.28734-1-bart.vanassche@wdc.com>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:21752 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753616AbdLFA54 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2017 19:57:56 -0500
 In-Reply-To: <20171206005753.28734-1-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Avoid that scsi_show_rq() triggers a NULL pointer dereference if
-called after sd_uninit_command(). Swap the NULL pointer assignment
-and the mempool_free() call in sd_uninit_command() to make it less
-likely that scsi_show_rq() triggers a use-after-free. Note: even
-with these changes scsi_show_rq() can trigger a use-after-free but
-that's a lesser evil than e.g. suppressing debug information for
-T10-PI commands completely. This patch fixes the following oops:
+Show the request result, request timeout and SCSI command flags.
+This information is very helpful when trying to figure out why a
+queue got stuck. An example of the information that is exported
+through debugfs:
 
-BUG: unable to handle kernel NULL pointer dereference at (null)
-IP: scsi_format_opcode_name+0x1a/0x1c0
-CPU: 1 PID: 1881 Comm: cat Not tainted 4.14.0-rc2.blk_mq_io_hang+ #516
-Call Trace:
- __scsi_format_command+0x27/0xc0
- scsi_show_rq+0x5c/0xc0
- __blk_mq_debugfs_rq_show+0x116/0x130
- blk_mq_debugfs_rq_show+0xe/0x10
- seq_read+0xfe/0x3b0
- full_proxy_read+0x54/0x90
- __vfs_read+0x37/0x160
- vfs_read+0x96/0x130
- SyS_read+0x55/0xc0
- entry_SYSCALL_64_fastpath+0x1a/0xa5
+$ (cd /sys/kernel/debug/block && find -type f -print0 | xargs -0 grep ago)
+./sda/hctx0/busy:ffff8804a4523300 {.op=READ, .cmd_flags=FAILFAST_DEV|FAILFAST_TRANSPORT|FAILFAST_DRIVER|RAHEAD, .rq_flags=MQ_INFLIGHT|DONTPREP|IO_STAT|STATS, .atomic_flags=STARTED, .tag=24, .internal_tag=-1, .cmd=Read(10) 28 00 06 80 1c c8 00 00 08 00, .retries=0, .result = 0x0, .flags=TAGGED|INITIALIZED, .timeout=90.000, allocated 0.010 s ago}
 
-Fixes: 0eebd005dd07 ("scsi: Implement blk_mq_ops.show_rq()")
-Reported-by: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
@@ -42,53 +29,67 @@ Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: stable@vger.kernel.org
 ---
- drivers/scsi/scsi_debugfs.c | 6 ++++--
- drivers/scsi/sd.c           | 4 +++-
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_debugfs.c | 41 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-index 01f08c03f2c1..c3765d29fd3f 100644
+index c3765d29fd3f..37ed6bb8e6ec 100644
 --- a/drivers/scsi/scsi_debugfs.c
 +++ b/drivers/scsi/scsi_debugfs.c
-@@ -8,9 +8,11 @@ void scsi_show_rq(struct seq_file *m, struct request *rq)
+@@ -4,15 +4,50 @@
+ #include <scsi/scsi_dbg.h>
+ #include "scsi_debugfs.h"
+ 
++#define SCSI_CMD_FLAG_NAME(name) [ilog2(SCMD_##name)] = #name
++static const char *const scsi_cmd_flags[] = {
++	SCSI_CMD_FLAG_NAME(TAGGED),
++	SCSI_CMD_FLAG_NAME(UNCHECKED_ISA_DMA),
++	SCSI_CMD_FLAG_NAME(ZONE_WRITE_LOCK),
++	SCSI_CMD_FLAG_NAME(INITIALIZED),
++};
++#undef SCSI_CMD_FLAG_NAME
++
++static int scsi_flags_show(struct seq_file *m, const unsigned long flags,
++			   const char *const *flag_name, int flag_name_count)
++{
++	bool sep = false;
++	int i;
++
++	for (i = 0; i < sizeof(flags) * BITS_PER_BYTE; i++) {
++		if (!(flags & BIT(i)))
++			continue;
++		if (sep)
++			seq_puts(m, "|");
++		sep = true;
++		if (i < flag_name_count && flag_name[i])
++			seq_puts(m, flag_name[i]);
++		else
++			seq_printf(m, "%d", i);
++	}
++	return 0;
++}
++
+ void scsi_show_rq(struct seq_file *m, struct request *rq)
  {
  	struct scsi_cmnd *cmd = container_of(scsi_req(rq), typeof(*cmd), req);
- 	int msecs = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
--	char buf[80];
-+	const u8 *const cdb = READ_ONCE(cmd->cmnd);
-+	char buf[80] = "(?)";
+-	int msecs = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
++	int alloc_ms = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
++	int timeout_ms = jiffies_to_msecs(rq->timeout);
+ 	const u8 *const cdb = READ_ONCE(cmd->cmnd);
+ 	char buf[80] = "(?)";
  
--	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
-+	if (cdb)
-+		__scsi_format_command(buf, sizeof(buf), cdb, cmd->cmd_len);
- 	seq_printf(m, ", .cmd=%s, .retries=%d, allocated %d.%03d s ago", buf,
- 		   cmd->retries, msecs / 1000, msecs % 1000);
+ 	if (cdb)
+ 		__scsi_format_command(buf, sizeof(buf), cdb, cmd->cmd_len);
+-	seq_printf(m, ", .cmd=%s, .retries=%d, allocated %d.%03d s ago", buf,
+-		   cmd->retries, msecs / 1000, msecs % 1000);
++	seq_printf(m, ", .cmd=%s, .retries=%d, .result = %#x, .flags=", buf,
++		   cmd->retries, cmd->result);
++	scsi_flags_show(m, cmd->flags, scsi_cmd_flags,
++			ARRAY_SIZE(scsi_cmd_flags));
++	seq_printf(m, ", .timeout=%d.%03d, allocated %d.%03d s ago",
++		   timeout_ms / 1000, timeout_ms % 1000,
++		   alloc_ms / 1000, alloc_ms % 1000);
  }
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d175c5c5ccf8..d841743b2107 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1284,6 +1284,7 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- static void sd_uninit_command(struct scsi_cmnd *SCpnt)
- {
- 	struct request *rq = SCpnt->request;
-+	u8 *cmnd;
- 
- 	if (SCpnt->flags & SCMD_ZONE_WRITE_LOCK)
- 		sd_zbc_write_unlock_zone(SCpnt);
-@@ -1292,9 +1293,10 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
- 		__free_page(rq->special_vec.bv_page);
- 
- 	if (SCpnt->cmnd != scsi_req(rq)->cmd) {
--		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-+		cmnd = SCpnt->cmnd;
- 		SCpnt->cmnd = NULL;
- 		SCpnt->cmd_len = 0;
-+		mempool_free(cmnd, sd_cdb_pool);
- 	}
- }
- 
 -- 
 2.15.0
