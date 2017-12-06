@@ -1,113 +1,145 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: bfa: fix type conversion warning
-Date: Wed,  6 Dec 2017 15:14:18 +0100
-Message-ID: <20171206141444.634681-1-arnd@arndb.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: fusion: clean up some indentations
+Date: Wed,  6 Dec 2017 15:02:43 +0000
+Message-ID: <20171206150243.20695-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A regression fix introduced a harmless type mismatch warning:
+From: Colin Ian King <colin.king@canonical.com>
 
-drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_im_bsg_vendor_request':
-drivers/scsi/bfa/bfad_bsg.c:3137:35: error: initialization of 'struct bfad_im_port_s *' from 'long unsigned int' makes pointer from integer without a cast [-Werror=int-conversion]
-  struct bfad_im_port_s *im_port = shost->hostdata[0];
-                                   ^~~~~
-drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_im_bsg_els_ct_request':
-drivers/scsi/bfa/bfad_bsg.c:3353:35: error: initialization of 'struct bfad_im_port_s *' from 'long unsigned int' makes pointer from integer without a cast [-Werror=int-conversion]
-  struct bfad_im_port_s *im_port = shost->hostdata[0];
+There are several places where the source is not indented correctly
+with either too many or too few levels of intentation. Fix these.
 
-This changes the code back to shost_priv() once more, but encapsulates
-it in an inline function to document the rather unusual way of
-using the private data only as a pointer to the previously allocated
-structure.
-
-I did not try to get rid of the extra indirection level entirely,
-which would have been rather invasive and required reworking the entire
-initialization sequence.
-
-Fixes: 45349821ab3a ("scsi: bfa: fix access to bfad_im_port_s")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c |  4 ++--
- drivers/scsi/bfa/bfad_im.c  |  6 ++++--
- drivers/scsi/bfa/bfad_im.h  | 10 ++++++++++
- 3 files changed, 16 insertions(+), 4 deletions(-)
+ drivers/message/fusion/mptbase.c | 57 ++++++++++++++++++++--------------------
+ 1 file changed, 29 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index fa9a966e2c2a..3976e787ba64 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -3134,7 +3134,7 @@ bfad_im_bsg_vendor_request(struct bsg_job *job)
- 	struct fc_bsg_reply *bsg_reply = job->reply;
- 	uint32_t vendor_cmd = bsg_request->rqst_data.h_vendor.vendor_cmd[0];
- 	struct Scsi_Host *shost = fc_bsg_to_shost(job);
--	struct bfad_im_port_s *im_port = shost->hostdata[0];
-+	struct bfad_im_port_s *im_port = bfad_get_im_port(shost);
- 	struct bfad_s *bfad = im_port->bfad;
- 	void *payload_kbuf;
- 	int rc = -EINVAL;
-@@ -3350,7 +3350,7 @@ bfad_im_bsg_els_ct_request(struct bsg_job *job)
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 7a93400eea2a..8df37fa1e977 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -958,7 +958,7 @@ mpt_put_msg_frame(u8 cb_idx, MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf)
  {
- 	struct bfa_bsg_data *bsg_data;
- 	struct Scsi_Host *shost = fc_bsg_to_shost(job);
--	struct bfad_im_port_s *im_port = shost->hostdata[0];
-+	struct bfad_im_port_s *im_port = bfad_get_im_port(shost);
- 	struct bfad_s *bfad = im_port->bfad;
- 	bfa_bsg_fcpt_t *bsg_fcpt;
- 	struct bfad_fcxp    *drv_fcxp;
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 24e657a4ec80..c05d6e91e4bd 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -546,6 +546,7 @@ int
- bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port,
- 			struct device *dev)
+ 	u32 mf_dma_addr;
+ 	int req_offset;
+-	u16	 req_idx;	/* Request index */
++	u16 req_idx;	/* Request index */
+ 
+ 	/* ensure values are reset properly! */
+ 	mf->u.frame.hwhdr.msgctxu.fld.cb_idx = cb_idx;		/* byte */
+@@ -994,7 +994,7 @@ mpt_put_msg_frame_hi_pri(u8 cb_idx, MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf)
  {
-+	struct bfad_im_port_pointer *im_portp;
- 	int error = 1;
+ 	u32 mf_dma_addr;
+ 	int req_offset;
+-	u16	 req_idx;	/* Request index */
++	u16 req_idx;	/* Request index */
  
- 	mutex_lock(&bfad_mutex);
-@@ -564,7 +565,8 @@ bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port,
- 		goto out_free_idr;
- 	}
- 
--	im_port->shost->hostdata[0] = (unsigned long)im_port;
-+	im_portp = shost_priv(im_port->shost);
-+	im_portp->p = im_port;
- 	im_port->shost->unique_id = im_port->idr_id;
- 	im_port->shost->this_id = -1;
- 	im_port->shost->max_id = MAX_FCP_TARGET;
-@@ -748,7 +750,7 @@ bfad_scsi_host_alloc(struct bfad_im_port_s *im_port, struct bfad_s *bfad)
- 
- 	sht->sg_tablesize = bfad->cfg_data.io_max_sge;
- 
--	return scsi_host_alloc(sht, sizeof(unsigned long));
-+	return scsi_host_alloc(sht, sizeof(struct bfad_im_port_pointer));
+ 	/* ensure values are reset properly! */
+ 	mf->u.frame.hwhdr.msgctxu.fld.cb_idx = cb_idx;
+@@ -1128,11 +1128,12 @@ mpt_add_sge_64bit_1078(void *pAddr, u32 flagslength, dma_addr_t dma_addr)
+ static void
+ mpt_add_chain(void *pAddr, u8 next, u16 length, dma_addr_t dma_addr)
+ {
+-		SGEChain32_t *pChain = (SGEChain32_t *) pAddr;
+-		pChain->Length = cpu_to_le16(length);
+-		pChain->Flags = MPI_SGE_FLAGS_CHAIN_ELEMENT;
+-		pChain->NextChainOffset = next;
+-		pChain->Address = cpu_to_le32(dma_addr);
++	SGEChain32_t *pChain = (SGEChain32_t *) pAddr;
++
++	pChain->Length = cpu_to_le16(length);
++	pChain->Flags = MPI_SGE_FLAGS_CHAIN_ELEMENT;
++	pChain->NextChainOffset = next;
++	pChain->Address = cpu_to_le32(dma_addr);
  }
  
- void
-diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
-index 7f7616c52814..af66275570c3 100644
---- a/drivers/scsi/bfa/bfad_im.h
-+++ b/drivers/scsi/bfa/bfad_im.h
-@@ -69,6 +69,16 @@ struct bfad_im_port_s {
- 	struct fc_vport *fc_vport;
- };
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+@@ -1147,18 +1148,18 @@ mpt_add_chain(void *pAddr, u8 next, u16 length, dma_addr_t dma_addr)
+ static void
+ mpt_add_chain_64bit(void *pAddr, u8 next, u16 length, dma_addr_t dma_addr)
+ {
+-		SGEChain64_t *pChain = (SGEChain64_t *) pAddr;
+-		u32 tmp = dma_addr & 0xFFFFFFFF;
++	SGEChain64_t *pChain = (SGEChain64_t *) pAddr;
++	u32 tmp = dma_addr & 0xFFFFFFFF;
  
-+struct bfad_im_port_pointer {
-+	struct bfad_im_port_s *p;
-+};
-+
-+static inline struct bfad_im_port_s *bfad_get_im_port(struct Scsi_Host *host)
-+{
-+	struct bfad_im_port_pointer *im_portp = shost_priv(host);
-+	return im_portp->p;
-+}
-+
- enum bfad_itnim_state {
- 	ITNIM_STATE_NONE,
- 	ITNIM_STATE_ONLINE,
+-		pChain->Length = cpu_to_le16(length);
+-		pChain->Flags = (MPI_SGE_FLAGS_CHAIN_ELEMENT |
+-				 MPI_SGE_FLAGS_64_BIT_ADDRESSING);
++	pChain->Length = cpu_to_le16(length);
++	pChain->Flags = (MPI_SGE_FLAGS_CHAIN_ELEMENT |
++			 MPI_SGE_FLAGS_64_BIT_ADDRESSING);
+ 
+-		pChain->NextChainOffset = next;
++	pChain->NextChainOffset = next;
+ 
+-		pChain->Address.Low = cpu_to_le32(tmp);
+-		tmp = (u32)(upper_32_bits(dma_addr));
+-		pChain->Address.High = cpu_to_le32(tmp);
++	pChain->Address.Low = cpu_to_le32(tmp);
++	tmp = (u32)(upper_32_bits(dma_addr));
++	pChain->Address.High = cpu_to_le32(tmp);
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+@@ -1360,7 +1361,7 @@ mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init)
+ 	ioc->add_sge(psge, flags_length, ioc->HostPageBuffer_dma);
+ 	ioc->facts.HostPageBufferSGE = ioc_init->HostPageBufferSGE;
+ 
+-return 0;
++	return 0;
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+@@ -2152,7 +2153,7 @@ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	    device_state);
+ 
+ 	/* put ioc into READY_STATE */
+-	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
++	if (SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
+ 		printk(MYIOC_s_ERR_FMT
+ 		"pci-suspend:  IOC msg unit reset failed!\n", ioc->name);
+ 	}
+@@ -6348,7 +6349,7 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS *pCfg)
+ 	u8		 page_type = 0, extend_page;
+ 	unsigned long 	 timeleft;
+ 	unsigned long	 flags;
+-    int		 in_isr;
++	int		 in_isr;
+ 	u8		 issue_hard_reset = 0;
+ 	u8		 retry_count = 0;
+ 
+@@ -8092,15 +8093,15 @@ mpt_spi_log_info(MPT_ADAPTER *ioc, u32 log_info)
+ static void
+ mpt_sas_log_info(MPT_ADAPTER *ioc, u32 log_info, u8 cb_idx)
+ {
+-union loginfo_type {
+-	u32	loginfo;
+-	struct {
+-		u32	subcode:16;
+-		u32	code:8;
+-		u32	originator:4;
+-		u32	bus_type:4;
+-	}dw;
+-};
++	union loginfo_type {
++		u32	loginfo;
++		struct {
++			u32	subcode:16;
++			u32	code:8;
++			u32	originator:4;
++			u32	bus_type:4;
++		} dw;
++	};
+ 	union loginfo_type sas_loginfo;
+ 	char *originator_desc = NULL;
+ 	char *code_desc = NULL;
 -- 
-2.9.0
+2.14.1
