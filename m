@@ -1,95 +1,81 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 3/3] scsi-mq-debugfs: Show more information
-Date: Tue,  5 Dec 2017 16:57:53 -0800
-Message-ID: <20171206005753.28734-4-bart.vanassche@wdc.com>
-References: <20171206005753.28734-1-bart.vanassche@wdc.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH 1/2] scsi-mq: Only show the CDB if available
+Date: Wed, 6 Dec 2017 09:16:43 +0800
+Message-ID: <20171206011641.GA26512@ming.t460p>
+References: <20171205003809.1705-1-bart.vanassche@wdc.com>
+ <20171205003809.1705-2-bart.vanassche@wdc.com>
+ <20171205011536.GC8365@ming.t460p>
+ <1512439190.2739.0.camel@wdc.com>
+ <20171205050008.GA9989@ming.t460p>
+ <1512490952.2660.18.camel@wdc.com>
+ <20171205163824.GB23788@ming.t460p>
+ <1512492229.3019.25.camel@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:21752 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753616AbdLFA54 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2017 19:57:56 -0500
-In-Reply-To: <20171206005753.28734-1-bart.vanassche@wdc.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51838 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753308AbdLFBQ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Dec 2017 20:16:58 -0500
+Content-Disposition: inline
+In-Reply-To: <1512492229.3019.25.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
 
-Show the request result, request timeout and SCSI command flags.
-This information is very helpful when trying to figure out why a
-queue got stuck. An example of the information that is exported
-through debugfs:
+On Tue, Dec 05, 2017 at 08:43:49AM -0800, James Bottomley wrote:
+> On Wed, 2017-12-06 at 00:38 +0800, Ming Lei wrote:
+> > On Tue, Dec 05, 2017 at 04:22:33PM +0000, Bart Van Assche wrote:
+> > > 
+> > > On Tue, 2017-12-05 at 13:00 +0800, Ming Lei wrote:
+> > > > 
+> > > > No, do not mix two different things in one patch, especially the
+> > > > fix part need to be backported to stable.
+> > > > 
+> > > > The fix part should aim at V4.15, and the other part can be a
+> > > > V4.16 stuff.
+> > > 
+> > > Does this mean that you do not plan to post a v5 of your patch and
+> > > that you want me to rework this patch series? I can do that.
+> > 
+> > I believe V4 has been OK for merge, actually the only concern from
+> > James is that 'set the cmnd to NULL *before* calling free so we
+> > narrow the race window.', but that isn't required as I explained,
+> > even though you don't do that in this patch too.
+> > 
+> > 	https://marc.info/?t=151030464300003&r=1&w=2
+> > 
+> > I will work on V5 if Martin/James thinks it is needed.
+> 
+> I don't buy that it isn't needed.  The point (and the pattern) is for a
+> destructive action set the signal *before* you execute the action not
+> after.  The reason should be obvious: if you set it after you invite a
+> race where the check says OK but the object has gone.  Even if the race
 
-$ (cd /sys/kernel/debug/block && find -type f -print0 | xargs -0 grep ago)
-./sda/hctx0/busy:ffff8804a4523300 {.op=READ, .cmd_flags=FAILFAST_DEV|FAILFAST_TRANSPORT|FAILFAST_DRIVER|RAHEAD, .rq_flags=MQ_INFLIGHT|DONTPREP|IO_STAT|STATS, .atomic_flags=STARTED, .tag=24, .internal_tag=-1, .cmd=Read(10) 28 00 06 80 1c c8 00 00 08 00, .retries=0, .result = 0x0, .flags=TAGGED|INITIALIZED, .timeout=90.000, allocated 0.010 s ago}
+Even you do that, the race is still highly likely there:
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_debugfs.c | 41 ++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 38 insertions(+), 3 deletions(-)
+1) mempool_free() can be much quicker than scsi_show_rq() because it is
+a local free, and scsi_show_rq() can be run from remote CPU wrt. the
+allocated 'cmd->cmnd', and access to remote NUMA node should be slower
+than mempool_free(), so use-after-free is triggered.
 
-diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-index c3765d29fd3f..37ed6bb8e6ec 100644
---- a/drivers/scsi/scsi_debugfs.c
-+++ b/drivers/scsi/scsi_debugfs.c
-@@ -4,15 +4,50 @@
- #include <scsi/scsi_dbg.h>
- #include "scsi_debugfs.h"
- 
-+#define SCSI_CMD_FLAG_NAME(name) [ilog2(SCMD_##name)] = #name
-+static const char *const scsi_cmd_flags[] = {
-+	SCSI_CMD_FLAG_NAME(TAGGED),
-+	SCSI_CMD_FLAG_NAME(UNCHECKED_ISA_DMA),
-+	SCSI_CMD_FLAG_NAME(ZONE_WRITE_LOCK),
-+	SCSI_CMD_FLAG_NAME(INITIALIZED),
-+};
-+#undef SCSI_CMD_FLAG_NAME
-+
-+static int scsi_flags_show(struct seq_file *m, const unsigned long flags,
-+			   const char *const *flag_name, int flag_name_count)
-+{
-+	bool sep = false;
-+	int i;
-+
-+	for (i = 0; i < sizeof(flags) * BITS_PER_BYTE; i++) {
-+		if (!(flags & BIT(i)))
-+			continue;
-+		if (sep)
-+			seq_puts(m, "|");
-+		sep = true;
-+		if (i < flag_name_count && flag_name[i])
-+			seq_puts(m, flag_name[i]);
-+		else
-+			seq_printf(m, "%d", i);
-+	}
-+	return 0;
-+}
-+
- void scsi_show_rq(struct seq_file *m, struct request *rq)
- {
- 	struct scsi_cmnd *cmd = container_of(scsi_req(rq), typeof(*cmd), req);
--	int msecs = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
-+	int alloc_ms = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
-+	int timeout_ms = jiffies_to_msecs(rq->timeout);
- 	const u8 *const cdb = READ_ONCE(cmd->cmnd);
- 	char buf[80] = "(?)";
- 
- 	if (cdb)
- 		__scsi_format_command(buf, sizeof(buf), cdb, cmd->cmd_len);
--	seq_printf(m, ", .cmd=%s, .retries=%d, allocated %d.%03d s ago", buf,
--		   cmd->retries, msecs / 1000, msecs % 1000);
-+	seq_printf(m, ", .cmd=%s, .retries=%d, .result = %#x, .flags=", buf,
-+		   cmd->retries, cmd->result);
-+	scsi_flags_show(m, cmd->flags, scsi_cmd_flags,
-+			ARRAY_SIZE(scsi_cmd_flags));
-+	seq_printf(m, ", .timeout=%d.%03d, allocated %d.%03d s ago",
-+		   timeout_ms / 1000, timeout_ms % 1000,
-+		   alloc_ms / 1000, alloc_ms % 1000);
- }
+2) any preemption or local IRQ in scsi_show_rq() can make it touch
+a freed buffer, and sd_uninit_command() is run from irq context.
+
+3) no any barrier is applied, so the actual write can be reordered
+in sd_uninit_command()
+
+So setting the cmd->cmnd as NULL before mempool_free() can't avoid
+the use-after-free, scsi_show_rq() has to survive that, then
+do we really need to add the unnecessary change in sd_uninit_command()?
+
+Not mention the change will make the debug info disappear too early, is
+that what we need?
+
+> is highly unlikely, the pattern point still holds.
+
+
 -- 
-2.15.0
+Ming
