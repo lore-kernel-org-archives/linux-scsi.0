@@ -1,54 +1,59 @@
-From: Philippe Ombredanne <pombredanne-od1rfyK75/E@public.gmane.org>
-Subject: Re: [PATCH v6 1/5] scsi: ufs: add Hisilicon ufs driver code
-Date: Thu, 7 Dec 2017 11:34:16 +0100
-Message-ID: <CAOFm3uEgT4gzusQpXb3SnriTdU0nAha2tcVKOoZJRjZw=dx7sg@mail.gmail.com>
-References: <20171207102026.14977-1-liwei213@huawei.com> <20171207102026.14977-2-liwei213@huawei.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v2] scsi: libsas: fix length error in sas_smp_handler()
+Date: Thu, 7 Dec 2017 18:57:51 +0800
+Message-ID: <20171207105751.27225-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20171207102026.14977-2-liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org, riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>linux-
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2218 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752291AbdLGKv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Dec 2017 05:51:57 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, john.garry@huawei.com, hch@lst.de
+Cc: linux-scsi@vger.kernel.org, jthumshirn@suse.de, hare@suse.com, Jason Yan <yanaijie@huawei.com>
 
-Dear Li,
+The bsg_job_done() requires the length of payload received, but we give
+it the untransferred residual.
 
-On Thu, Dec 7, 2017 at 11:20 AM, Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> add Hisilicon ufs driver code.
->
-> Signed-off-by: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Geng Jianfeng <gengjianfeng-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-> Signed-off-by: Zang Leigang <zangleigang-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-> Signed-off-by: Yu Jianfeng <steven.yujianfeng-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-[]
+Fixes: 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib for SMP passthrough")
+Reported-and-tested-by: chenqilin <chenqilin2@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/libsas/sas_expander.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs-hisi.c
-> @@ -0,0 +1,624 @@
-> +/*
-> + *
-> + * HiSilicon Hixxxx UFS Driver
-> + *
-> + * Copyright (c) 2016-2017 Linaro Ltd.
-> + * Copyright (c) 2016-2017 HiSilicon Technologies Co., Ltd.
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; either version 2 of the License, or
-> + * (at your option) any later version.
-> + */
-
-Would you consider using the new SPDX license ids instead?
-Check Thomas doc patches for instructions.
-This would be great and while you are it may be this could be adopted
-for all HiSilicon and Huawei past, present and future contributions?
-Thank you for your kind consideration!
-
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 50cb0f3..6c40ecc 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -2143,7 +2143,7 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 		struct sas_rphy *rphy)
+ {
+ 	struct domain_device *dev;
+-	unsigned int reslen = 0;
++	unsigned int rcvlen = 0;
+ 	int ret = -EINVAL;
+ 
+ 	/* no rphy means no smp target support (ie aic94xx host) */
+@@ -2177,12 +2177,12 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 
+ 	ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
+ 			job->reply_payload.sg_list);
+-	if (ret > 0) {
+-		/* positive number is the untransferred residual */
+-		reslen = ret;
++	if (ret >= 0) {
++		/* bsg_job_done() requires the length received  */
++		rcvlen = job->reply_payload.payload_len - ret;
+ 		ret = 0;
+ 	}
+ 
+ out:
+-	bsg_job_done(job, ret, reslen);
++	bsg_job_done(job, ret, rcvlen);
+ }
 -- 
-Cordially
-Philippe Ombredanne
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2.9.5
