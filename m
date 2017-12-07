@@ -1,44 +1,76 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v3 0/2] Ensure that the SCSI error handler gets woken up
-Date: Thu, 7 Dec 2017 16:50:04 +0000
-Message-ID: <1512665404.2624.13.camel@wdc.com>
-References: <20171204180624.18722-1-bart.vanassche@wdc.com>
-         <yq1o9nbxpx4.fsf@oracle.com>
-         <d408dd47-1706-c448-2b74-cbc91a5f90da@huawei.com>
+Subject: Re: linux-next: build failure after merge of the scsi-mkp tree
+Date: Thu, 7 Dec 2017 17:30:03 +0000
+Message-ID: <1512667802.2624.20.camel@wdc.com>
+References: <20171207145728.57cd9ac4@canb.auug.org.au>
+         <1512619169.3298.3.camel@wdc.com>
+         <20171207152521.0036b131@canb.auug.org.au>
+         <20171207044222.GK7829@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:37827 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754311AbdLGQuH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 11:50:07 -0500
-In-Reply-To: <d408dd47-1706-c448-2b74-cbc91a5f90da@huawei.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171207044222.GK7829@linux.vnet.ibm.com>
 Content-Language: en-US
-Content-ID: <A297B06D93967E45A60F2F263ADC8573@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <D9EEA6B5DBEEEB47A3B1EE01260AB3D8@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>
+Cc: "josh@joshtriplett.org" <josh@joshtriplett.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ptikhomirov@virtuozzo.com" <ptikhomirov@virtuozzo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "john.garry@huawei.com" <john.garry@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
 
-T24gVGh1LCAyMDE3LTEyLTA3IGF0IDEyOjAyICswMDAwLCBKb2huIEdhcnJ5IHdyb3RlOg0KPiBP
-biAwNy8xMi8yMDE3IDAxOjU1LCBNYXJ0aW4gSy4gUGV0ZXJzZW4gd3JvdGU6DQo+ID4gDQo+ID4g
-QmFydCwNCj4gPiANCj4gPiA+IEFzIHJlcG9ydGVkIGJ5IFBhdmVsIFRpa2hvbWlyb3YgaXQgY2Fu
-IGhhcHBlbiB0aGF0IHRoZSBTQ1NJIGVycm9yDQo+ID4gPiBoYW5kbGVyIGRvZXMgbm90IGdldCB3
-b2tlbiB1cC4gVGhpcyBpcyB2ZXJ5IGFubm95aW5nIGJlY2F1c2UgaXQNCj4gPiA+IHJlc3VsdHMg
-aW4gYSBxdWV1ZSBzdGFsbC4gVGhlIHR3byBwYXRjaGVzIGluIHRoaXMgc2VyaWVzIGFkZHJlc3Mg
-dGhpcw0KPiA+ID4gaXNzdWUgd2l0aG91dCBhY3F1aXJpbmcgdGhlIFNDU0kgaG9zdCBsb2NrIGlu
-IHRoZSBob3QgcGF0aC4gUGxlYXNlDQo+ID4gPiBjb25zaWRlciB0aGVzZSBwYXRjaGVzIGZvciBr
-ZXJuZWwgdjQuMTYuDQo+ID4gDQo+ID4gQXBwbGllZCB0byA0LjE2L3Njc2ktcXVldWUuIFRoYW5r
-IHlvdSENCj4gPiANCj4gDQo+IElzIGFueW9uZSBmaW5kaW5nIGEgYnVpbGQgZXJyb3IgZm9yIHRo
-aXMgcGF0Y2g/IEkgYnVpbHQgYWxsbW9kY29uZmlnIG9uIA0KPiBNYXJ0aW4ncyA0LjE2L3Njc2kt
-cXVldWUgYW5kIEkgZ2V0IHRoaXM6DQo+IEVSUk9SOiAiaW5pdF9yY3VfaGVhZCIgW2RyaXZlcnMv
-c2NzaS9zY3NpX21vZC5rb10gdW5kZWZpbmVkIQ0KPiBFUlJPUjogImRlc3Ryb3lfcmN1X2hlYWQi
-IFtkcml2ZXJzL3Njc2kvc2NzaV9tb2Qua29dIHVuZGVmaW5lZCENCj4gDQo+IFJldmVydGluZyBm
-aXhlcyBpdC4NCj4gDQo+ICBGcm9tIGEgcXVpY2sgY2hlY2ssIGl0IHNlZW1zIHRoZSByY3UgZnVu
-Y2l0b25zIGFyZSBub3QgZXhwb3J0ZWQsIGFuZCANCj4gU0NTST1tIG1lYW5zIGhvc3RzLmMgY2Fu
-bm90IHJlZmVyZW5jZSBpdC4NCg0KSGVsbG8gSm9obiwNCg0KQSBkaXNjdXNzaW9uIGlzIG9uZ29p
-bmcgYWJvdXQgdGhpcyBpc3N1ZSBvbiB0aGUgbGludXgtbmV4dCBtYWlsaW5nIGxpc3QuDQpQYXVs
-IEUuIE1jS2VubmV5IHByb3Bvc2VkIHRvIGV4cG9ydCBib3RoIHRoZSBpbml0X3JjdV9oZWFkKCkg
-YW5kDQpkZXN0cm95X3JjdV9oZWFkKCkgZnVuY3Rpb25zLiBTZWUgYWxzbyBodHRwczovL2xrbWwu
-b3JnL2xrbWwvMjAxNy8xMi82LzExNTAuDQoNCkJhcnQu
+T24gV2VkLCAyMDE3LTEyLTA2IGF0IDIwOjQyIC0wODAwLCBQYXVsIEUuIE1jS2VubmV5IHdyb3Rl
+Og0KPiBPbiBUaHUsIERlYyAwNywgMjAxNyBhdCAwMzoyNToyMVBNICsxMTAwLCBTdGVwaGVuIFJv
+dGh3ZWxsIHdyb3RlOg0KPiA+IE9uIFRodSwgNyBEZWMgMjAxNyAwMzo1OTozMCArMDAwMCBCYXJ0
+IFZhbiBBc3NjaGUgPEJhcnQuVmFuQXNzY2hlQHdkYy5jb20+IHdyb3RlOg0KPiA+ID4gT24gVGh1
+LCAyMDE3LTEyLTA3IGF0IDE0OjU3ICsxMTAwLCBTdGVwaGVuIFJvdGh3ZWxsIHdyb3RlOg0KPiA+
+ID4gPiBBZnRlciBtZXJnaW5nIHRoZSBzY3NpLW1rcCB0cmVlLCB0b2RheSdzIGxpbnV4LW5leHQg
+YnVpbGQgKHg4Nl82NA0KPiA+ID4gPiBhbGxtb2Rjb25maWcpIGZhaWxlZCBsaWtlIHRoaXM6DQo+
+ID4gPiA+IA0KPiA+ID4gPiBFUlJPUjogImluaXRfcmN1X2hlYWQiIFtkcml2ZXJzL3Njc2kvc2Nz
+aV9tb2Qua29dIHVuZGVmaW5lZCENCj4gPiA+ID4gRVJST1I6ICJkZXN0cm95X3JjdV9oZWFkIiBb
+ZHJpdmVycy9zY3NpL3Njc2lfbW9kLmtvXSB1bmRlZmluZWQhDQo+ID4gPiA+IA0KPiA+ID4gPiBD
+YXVzZWQgYnkgY29tbWl0DQo+ID4gPiA+IA0KPiA+ID4gPiAgIGFjOTA0MjBmMTdjOSAoInNjc2k6
+IGNvcmU6IEVuc3VyZSB0aGF0IHRoZSBTQ1NJIGVycm9yIGhhbmRsZXIgZ2V0cyB3b2tlbiB1cCIp
+DQo+ID4gPiA+IA0KPiA+ID4gPiBJIGhhdmUgdXNlZCB0aGUgc2NzaS1ta3AgdHJlZSBmcm9tIG5l
+eHQtMjAxNzEyMDYgZm9yIHRvZGF5LiAgDQo+ID4gPiANCj4gPiA+IERvZXMgdGhhdCBtZWFuIEkn
+bSB0aGUgZmlyc3Qgb25lIHdobyBhZGRlZCBSQ1UgY29kZSB0byB0aGUgU0NTSSBjb3JlPw0KPiA+
+IA0KPiA+IFRoZSBvbmx5IG90aGVyIHVzZXMgb2YgaW5pdF9yY3VfaGVhZCgpIGFyZSBpbiBkcml2
+ZXJzL2lvbW11L2ludGVsLXN2bS5jDQo+ID4gYW5kIGtlcm5lbC9pcnEvaXJxZGVzYy5jLiAgZGVz
+dHJveV9yY3VfaGVhZCgpIGFwcGVhcnMgdG8gbm90IGJlIHVzZWQNCj4gPiBhbnl3aGVyZSAuLi4N
+Cj4gDQo+IFRoZSBrZXkgcG9pbnQgaXMgdGhhdCBCYXJ0IGFwcGVhcnMgdG8gYmUgdGhlIGZpcnN0
+IHRvIHRyeSB1c2luZyB0aGVtIGluDQo+IGEgbW9kdWxlLCBmb3Igd2hpY2ggZXhwb3J0cyBhcmUg
+bmVlZGVkLiAgRG9lcyB0aGUgcGF0Y2ggYmVsb3cgaGVscD8NCj4gDQo+IAkJCQkJCQlUaGFueCwg
+UGF1bA0KPiANCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IA0KPiBjb21taXQgY2RlNDY5MWEzYTQ1OTFl
+NzM1NTI5NWRkNjI2MTBlMzI2MjE1OTAwMg0KPiBBdXRob3I6IFBhdWwgRS4gTWNLZW5uZXkgPHBh
+dWxtY2tAbGludXgudm5ldC5pYm0uY29tPg0KPiBEYXRlOiAgIFdlZCBEZWMgNiAyMDozOTozOCAy
+MDE3IC0wODAwDQo+IA0KPiAgICAgcmN1OiBFeHBvcnQgaW5pdF9yY3VfaGVhZCgpIGFuZCBkZXN0
+cm95X3JjdV9oZWFkKCkgdG8gR1BMIG1vZHVsZXMNCj4gICAgIA0KPiAgICAgVXNlIG9mIGluaXRf
+cmN1X2hlYWQoKSBhbmQgZGVzdHJveV9yY3VfaGVhZCgpIGZyb20gbW9kdWxlcyByZXN1bHRzIGlu
+DQo+ICAgICB0aGUgZm9sbG93aW5nIGJ1aWxkLXRpbWUgZXJyb3I6DQo+ICAgICANCj4gICAgIAlF
+UlJPUjogImluaXRfcmN1X2hlYWQiIFtkcml2ZXJzL3Njc2kvc2NzaV9tb2Qua29dIHVuZGVmaW5l
+ZCENCj4gICAgIAlFUlJPUjogImRlc3Ryb3lfcmN1X2hlYWQiIFtkcml2ZXJzL3Njc2kvc2NzaV9t
+b2Qua29dIHVuZGVmaW5lZCENCj4gICAgIA0KPiAgICAgVGhpcyBjb21taXQgdGhlcmVmb3JlIGFk
+ZHMgRVhQT1JUX1NZTUJPTF9HUEwoKSBmb3IgZWFjaCB0byBhbGxvdyB0aGVtDQo+ICAgICB0byBi
+ZSB1c2VkIGJ5IEdQTC1saWNlbnNlZCBrZXJuZWwgbW9kdWxlcy4NCj4gICAgIA0KPiAgICAgUmVw
+b3J0ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8QmFydC5WYW5Bc3NjaGVAd2RjLmNvbT4NCj4gICAg
+IFJlcG9ydGVkLWJ5OiBTdGVwaGVuIFJvdGh3ZWxsIDxzZnJAY2FuYi5hdXVnLm9yZy5hdT4NCj4g
+ICAgIFNpZ25lZC1vZmYtYnk6IFBhdWwgRS4gTWNLZW5uZXkgPHBhdWxtY2tAbGludXgudm5ldC5p
+Ym0uY29tPg0KPiANCj4gZGlmZiAtLWdpdCBhL2tlcm5lbC9yY3UvdXBkYXRlLmMgYi9rZXJuZWwv
+cmN1L3VwZGF0ZS5jDQo+IGluZGV4IDhkNTkxZDg0MTFmZS4uNGM0ZDI2ZTlhNjdiIDEwMDY0NA0K
+PiAtLS0gYS9rZXJuZWwvcmN1L3VwZGF0ZS5jDQo+ICsrKyBiL2tlcm5lbC9yY3UvdXBkYXRlLmMN
+Cj4gQEAgLTQyMiwxMSArNDIyLDEzIEBAIHZvaWQgaW5pdF9yY3VfaGVhZChzdHJ1Y3QgcmN1X2hl
+YWQgKmhlYWQpDQo+ICB7DQo+ICAJZGVidWdfb2JqZWN0X2luaXQoaGVhZCwgJnJjdWhlYWRfZGVi
+dWdfZGVzY3IpOw0KPiAgfQ0KPiArRVhQT1JUX1NZTUJPTF9HUEwoaW5pdF9yY3VfaGVhZCk7DQo+
+ICANCj4gIHZvaWQgZGVzdHJveV9yY3VfaGVhZChzdHJ1Y3QgcmN1X2hlYWQgKmhlYWQpDQo+ICB7
+DQo+ICAJZGVidWdfb2JqZWN0X2ZyZWUoaGVhZCwgJnJjdWhlYWRfZGVidWdfZGVzY3IpOw0KPiAg
+fQ0KPiArRVhQT1JUX1NZTUJPTF9HUEwoZGVzdHJveV9yY3VfaGVhZCk7DQo+ICANCj4gIHN0YXRp
+YyBib29sIHJjdWhlYWRfaXNfc3RhdGljX29iamVjdCh2b2lkICphZGRyKQ0KPiAgew0KDQooK2xp
+bnV4LXNjc2kpDQoNCkhlbGxvIFBhdWwsDQoNCkhvdyBhYm91dCBjaGFuZ2luZyB0aGUgY29tbWl0
+IG1lc3NhZ2UgaW50byAiLi4uIGZpeGVzIGEgYnVpbGQgZmFpbHVyZSB3aXRoDQpDT05GSUdfREVC
+VUdfT0JKRUNUU19SQ1VfSEVBRD15Ij8gT3RoZXJ3aXNlIHRoZSBhYm92ZSBwYXRjaCBsb29rcyBm
+aW5lIHRvIG1lDQphbmQgZml4ZXMgdGhlIHJlcG9ydGVkIGJ1aWxkIGZhaWx1cmUgb24gbXkgc2V0
+dXAuDQoNCkhvd2V2ZXIsIHdoYXQncyBub3QgY2xlYXIgdG8gbWUgaXMgdGhyb3VnaCB3aGljaCB0
+cmVlIHRoaXMgcGF0Y2ggc2hvdWxkIGJlDQpzZW50IHRvIExpbnVzPyBTaG91bGQgdGhlIGFib3Zl
+IHBhdGNoIGJlIHNlbnQgYXMgYSB2NC4xNS1yYyBmaXggb3Igc2hvdWxkDQpNYXJ0aW4gcGVyaGFw
+cyBxdWV1ZSBpdCBpbiBoaXMgdHJlZSBmb3IgdjQuMTYtcmMxPw0KDQpUaGFua3MsDQoNCkJhcnQu
+DQoNCg==
