@@ -1,40 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: linux-next: build failure after merge of the scsi-mkp tree
-Date: Thu, 07 Dec 2017 16:11:03 -0500
-Message-ID: <yq1wp1yw8ew.fsf@oracle.com>
-References: <20171207145728.57cd9ac4@canb.auug.org.au>
-        <1512619169.3298.3.camel@wdc.com>
-        <20171207152521.0036b131@canb.auug.org.au>
-        <20171207044222.GK7829@linux.vnet.ibm.com>
-        <1512667802.2624.20.camel@wdc.com>
-        <20171207174038.GQ7829@linux.vnet.ibm.com>
-        <20171208073439.1593936d@canb.auug.org.au>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 197875] Processes hang on attempted access of WDC WD30-EZRX 3TB
+ HDD on HP Z420 Workstation
+Date: Thu, 07 Dec 2017 21:40:24 +0000
+Message-ID: <bug-197875-11613-yo5QjMgF0z@https.bugzilla.kernel.org/>
+References: <bug-197875-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20171208073439.1593936d@canb.auug.org.au> (Stephen Rothwell's
-        message of "Fri, 8 Dec 2017 07:34:39 +1100")
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "josh@joshtriplett.org" <josh@joshtriplett.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ptikhomirov@virtuozzo.com" <ptikhomirov@virtuozzo.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:50392 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750947AbdLGVkd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 16:40:33 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id A901B28880
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2017 21:40:32 +0000 (UTC)
+In-Reply-To: <bug-197875-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=197875
 
-Stephen,
-
->> I have to defer to you guys on that one.  Left to myself, I will just
->> push it into the next merge window (as opposed to using my normal
->> process, which at this point would get it into the one following).
->> 
->> So please let me know how you would like to proceed.
->
-> Clearly, it needs to go via Martin's tree as otherwise his tree will
-> not build in some circumstances ... or if it going to cause problems
-> for Paul, then it should be in a separate non-rebasing branch (probably
-> of Paul's tree) that is merged into Pauls main branch and Marin's tree.
-
-I'm perfectly OK with taking it through the SCSI tree. Probably the path
-of least resistance.
+--- Comment #9 from Bart Van Assche (bvanassche@acm.org) ---
+My hope was that the list of PCI devices would show a PCI HBA of which the
+driver has been modified recently. Since that's not the case I'm out of ideas
+about what could be the root cause of this bug. Unless someone else has an idea
+about how to find the root cause of this issue I think your only option is to
+perform a bisect of the Linux kernel.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+You are receiving this mail because:
+You are the assignee for the bug.
