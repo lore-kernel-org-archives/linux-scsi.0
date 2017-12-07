@@ -1,82 +1,44 @@
-From: Max Kellermann <mk@cm4all.com>
-Subject: [PATCH] drivers/scsi/qla2xxx: fix double free bug after firmware
- timeout
-Date: Thu, 07 Dec 2017 15:46:44 +0100
-Message-ID: <151265800413.23884.12590131670697249849.stgit@rabbit.intern.cm-ag>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v3 0/2] Ensure that the SCSI error handler gets woken up
+Date: Thu, 7 Dec 2017 16:50:04 +0000
+Message-ID: <1512665404.2624.13.camel@wdc.com>
+References: <20171204180624.18722-1-bart.vanassche@wdc.com>
+         <yq1o9nbxpx4.fsf@oracle.com>
+         <d408dd47-1706-c448-2b74-cbc91a5f90da@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
-Cc: max.kellermann@gmail.com, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:37827 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754311AbdLGQuH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 11:50:07 -0500
+In-Reply-To: <d408dd47-1706-c448-2b74-cbc91a5f90da@huawei.com>
+Content-Language: en-US
+Content-ID: <A297B06D93967E45A60F2F263ADC8573@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "john.garry@huawei.com" <john.garry@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
 
-When the qla2xxx firmware is unavailable, eventually
-qla2x00_sp_timeout() is reached, which calls the timeout function and
-frees the srb_t instance.
-
-The timeout function always resolves to qla2x00_async_iocb_timeout(),
-which invokes another callback function called "done".  All of these
-qla2x00_*_sp_done() callbacks also free the srb_t instance; after
-returning to qla2x00_sp_timeout(), it is freed again.
-
-The fix is to remove the "sp->free(sp)" call from qla2x00_sp_timeout()
-and add it to those code paths in qla2x00_async_iocb_timeout() which
-do not already free the object.
-
-This is how it looks like with KASAN:
-
- BUG: KASAN: use-after-free in qla2x00_sp_timeout+0x228/0x250
- Read of size 8 at addr ffff88278147a590 by task swapper/2/0
-
- Allocated by task 1502:
-  save_stack+0x33/0xa0
-  kasan_kmalloc+0xa0/0xd0
-  kmem_cache_alloc+0xb8/0x1c0
-  mempool_alloc+0xd6/0x260
-  qla24xx_async_gnl+0x3c5/0x1100
-
- Freed by task 0:
-  save_stack+0x33/0xa0
-  kasan_slab_free+0x72/0xc0
-  kmem_cache_free+0x75/0x200
-  qla24xx_async_gnl_sp_done+0x556/0x9e0
-  qla2x00_async_iocb_timeout+0x1c7/0x420
-  qla2x00_sp_timeout+0x16d/0x250
-  call_timer_fn+0x36/0x200
-
- The buggy address belongs to the object at ffff88278147a440
-  which belongs to the cache qla2xxx_srbs of size 344
- The buggy address is located 336 bytes inside of
-  344-byte region [ffff88278147a440, ffff88278147a598)
-
-Signed-off-by: Max Kellermann <mk@cm4all.com>
----
- drivers/scsi/qla2xxx/qla_init.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index b5b48ddca962..801890564e00 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -58,7 +58,6 @@ qla2x00_sp_timeout(unsigned long __data)
- 	req->outstanding_cmds[sp->handle] = NULL;
- 	iocb = &sp->u.iocb_cmd;
- 	iocb->timeout(sp);
--	sp->free(sp);
- 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
- }
- 
-@@ -121,9 +120,11 @@ qla2x00_async_iocb_timeout(void *data)
- 		ea.data[1] = lio->u.logio.data[1];
- 		ea.sp = sp;
- 		qla24xx_handle_plogi_done_event(fcport->vha, &ea);
-+		sp->free(sp);
- 		break;
- 	case SRB_LOGOUT_CMD:
- 		qlt_logo_completion_handler(fcport, QLA_FUNCTION_TIMEOUT);
-+		sp->free(sp);
- 		break;
- 	case SRB_CT_PTHRU_CMD:
- 	case SRB_MB_IOCB:
+T24gVGh1LCAyMDE3LTEyLTA3IGF0IDEyOjAyICswMDAwLCBKb2huIEdhcnJ5IHdyb3RlOg0KPiBP
+biAwNy8xMi8yMDE3IDAxOjU1LCBNYXJ0aW4gSy4gUGV0ZXJzZW4gd3JvdGU6DQo+ID4gDQo+ID4g
+QmFydCwNCj4gPiANCj4gPiA+IEFzIHJlcG9ydGVkIGJ5IFBhdmVsIFRpa2hvbWlyb3YgaXQgY2Fu
+IGhhcHBlbiB0aGF0IHRoZSBTQ1NJIGVycm9yDQo+ID4gPiBoYW5kbGVyIGRvZXMgbm90IGdldCB3
+b2tlbiB1cC4gVGhpcyBpcyB2ZXJ5IGFubm95aW5nIGJlY2F1c2UgaXQNCj4gPiA+IHJlc3VsdHMg
+aW4gYSBxdWV1ZSBzdGFsbC4gVGhlIHR3byBwYXRjaGVzIGluIHRoaXMgc2VyaWVzIGFkZHJlc3Mg
+dGhpcw0KPiA+ID4gaXNzdWUgd2l0aG91dCBhY3F1aXJpbmcgdGhlIFNDU0kgaG9zdCBsb2NrIGlu
+IHRoZSBob3QgcGF0aC4gUGxlYXNlDQo+ID4gPiBjb25zaWRlciB0aGVzZSBwYXRjaGVzIGZvciBr
+ZXJuZWwgdjQuMTYuDQo+ID4gDQo+ID4gQXBwbGllZCB0byA0LjE2L3Njc2ktcXVldWUuIFRoYW5r
+IHlvdSENCj4gPiANCj4gDQo+IElzIGFueW9uZSBmaW5kaW5nIGEgYnVpbGQgZXJyb3IgZm9yIHRo
+aXMgcGF0Y2g/IEkgYnVpbHQgYWxsbW9kY29uZmlnIG9uIA0KPiBNYXJ0aW4ncyA0LjE2L3Njc2kt
+cXVldWUgYW5kIEkgZ2V0IHRoaXM6DQo+IEVSUk9SOiAiaW5pdF9yY3VfaGVhZCIgW2RyaXZlcnMv
+c2NzaS9zY3NpX21vZC5rb10gdW5kZWZpbmVkIQ0KPiBFUlJPUjogImRlc3Ryb3lfcmN1X2hlYWQi
+IFtkcml2ZXJzL3Njc2kvc2NzaV9tb2Qua29dIHVuZGVmaW5lZCENCj4gDQo+IFJldmVydGluZyBm
+aXhlcyBpdC4NCj4gDQo+ICBGcm9tIGEgcXVpY2sgY2hlY2ssIGl0IHNlZW1zIHRoZSByY3UgZnVu
+Y2l0b25zIGFyZSBub3QgZXhwb3J0ZWQsIGFuZCANCj4gU0NTST1tIG1lYW5zIGhvc3RzLmMgY2Fu
+bm90IHJlZmVyZW5jZSBpdC4NCg0KSGVsbG8gSm9obiwNCg0KQSBkaXNjdXNzaW9uIGlzIG9uZ29p
+bmcgYWJvdXQgdGhpcyBpc3N1ZSBvbiB0aGUgbGludXgtbmV4dCBtYWlsaW5nIGxpc3QuDQpQYXVs
+IEUuIE1jS2VubmV5IHByb3Bvc2VkIHRvIGV4cG9ydCBib3RoIHRoZSBpbml0X3JjdV9oZWFkKCkg
+YW5kDQpkZXN0cm95X3JjdV9oZWFkKCkgZnVuY3Rpb25zLiBTZWUgYWxzbyBodHRwczovL2xrbWwu
+b3JnL2xrbWwvMjAxNy8xMi82LzExNTAuDQoNCkJhcnQu
