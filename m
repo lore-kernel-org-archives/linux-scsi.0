@@ -1,45 +1,120 @@
 From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v3 0/2] Ensure that the SCSI error handler gets woken up
-Date: Thu, 7 Dec 2017 12:02:07 +0000
-Message-ID: <d408dd47-1706-c448-2b74-cbc91a5f90da@huawei.com>
-References: <20171204180624.18722-1-bart.vanassche@wdc.com>
- <yq1o9nbxpx4.fsf@oracle.com>
+Subject: Re: [PATCH] libsas: flush pending destruct work in
+ sas_unregister_domain_devices()
+Date: Thu, 7 Dec 2017 13:37:53 +0000
+Message-ID: <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com>
+References: <20171128002445.16594-1-xiyou.wangcong@gmail.com>
+ <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site>
+ <922397da-7dd3-c24e-1d94-e4804a769331@huawei.com>
+ <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:40089 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753066AbdLGMCe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Dec 2017 07:02:34 -0500
-In-Reply-To: <yq1o9nbxpx4.fsf@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jason Yan <yanaijie@huawei.com>, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
 
-On 07/12/2017 01:55, Martin K. Petersen wrote:
+On 28/11/2017 17:04, Cong Wang wrote:
+> On Tue, Nov 28, 2017 at 3:18 AM, John Garry <john.garry@huawei.com> wrote:
+>> On 28/11/2017 08:20, Johannes Thumshirn wrote:
+>>>
+>>> On Mon, Nov 27, 2017 at 04:24:45PM -0800, Cong Wang wrote:
+>>>>
+>>>> We saw dozens of the following kernel waring:
+>>>>
+>>>>  WARNING: CPU: 0 PID: 705 at fs/sysfs/group.c:224
+>>>> sysfs_remove_group+0x54/0x88()
+>>>>  sysfs group ffffffff81ab7670 not found for kobject '6:0:3:0'
+>>>>  Modules linked in: cpufreq_ondemand x86_pkg_temp_thermal coretemp
+>>>> kvm_intel kvm microcode raid0 iTCO_wdt iTCO_vendor_support sb_edac edac_core
+>>>> lpc_ich mfd_core ioatdma i2c_i801 shpchp wmi hed acpi_cpufreq lp parport
+>>>> tcp_diag inet_diag ipmi_si ipmi_devintf ipmi_msghandler sch_fq_codel igb ptp
+>>>> pps_core i2c_algo_bit i2c_core crc32c_intel isci libsas scsi_transport_sas
+>>>> dca ipv6
+>>>>  CPU: 0 PID: 705 Comm: kworker/u240:0 Not tainted 4.1.35.el7.x86_64 #1
+>>>
+>>>
+>>> This should by now be fixed with commit fbce4d97fd43 ("scsi: fixup kernel
+>>> warning during rmmod()" which went into v4.14-rc6.
+>>>
+>>
+>> Is that the same issue? I think Cong Wang is just trying to deal with the
+>> longstanding libsas hotplug WARN.
 >
-> Bart,
+> Right, we saw it on both 4.1 and 3.14, clearly an old bug.
 >
->> As reported by Pavel Tikhomirov it can happen that the SCSI error
->> handler does not get woken up. This is very annoying because it
->> results in a queue stall. The two patches in this series address this
->> issue without acquiring the SCSI host lock in the hot path. Please
->> consider these patches for kernel v4.16.
 >
-> Applied to 4.16/scsi-queue. Thank you!
+>>
+>> We at Huawei are still working to fix it. Our patchset is under internal
+>> test at the moment.
+>>
+>> As for this patch:
+>>>  drivers/scsi/libsas/sas_discover.c | 7 ++++++-
+>>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_discover.c
+>>> b/drivers/scsi/libsas/sas_discover.c
+>>> index 60de66252fa2..27c11fc7aa2b 100644
+>>> --- a/drivers/scsi/libsas/sas_discover.c
+>>> +++ b/drivers/scsi/libsas/sas_discover.c
+>>> @@ -388,6 +388,11 @@ void sas_unregister_dev(struct asd_sas_port *port,
+>>> struct domain_device *dev)
+>>>       }
+>>>  }
+>>>
+>>> +static void sas_flush_work(struct asd_sas_port *port)
+>>> +{
+>>> +     scsi_flush_work(port->ha->core.shost);
+>>> +}
+>>> +
+>>>  void sas_unregister_domain_devices(struct asd_sas_port *port, int gone)
+>>>  {
+>>>       struct domain_device *dev, *n;
+>>> @@ -401,8 +406,8 @@ void sas_unregister_domain_devices(struct asd_sas_port
+>>> *port, int gone)
+>>>       list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
+>>>               sas_unregister_dev(port, dev);
+>>>
+>>> +     sas_flush_work(port);
+>>
+>> How can this work as sas_unregister_domain_devices() may be called from the
+>> same workqueue which you're trying to flush?
 >
 
-Is anyone finding a build error for this patch? I built allmodconfig on 
-Martin's 4.16/scsi-queue and I get this:
-ERROR: "init_rcu_head" [drivers/scsi/scsi_mod.ko] undefined!
-ERROR: "destroy_rcu_head" [drivers/scsi/scsi_mod.ko] undefined!
+Sorry for slow reply, just remembered this now.
 
-Reverting fixes it.
+>
+> I don't understand, the only caller of sas_unregister_domain_devices()
+> is sas_deform_port().
+>
 
- From a quick check, it seems the rcu funcitons are not exported, and 
-SCSI=m means hosts.c cannot reference it.
+And sas_deform_port() may be called from another worker on the same 
+queue, right? As in sas_phye_loss_of_signal()->sas_deform_port()
 
-Cheers,
+As I see today, this is the problem callchain:
+sas_deform_port()
+sas_unregister_domain_devices()
+sas_unregister_dev()
+sas_discover_event(DISCE_DESTRUCT)
+
+The device destruct takes place in a separate worker from which 
+sas_deform_port() is called, but the same queue. So we have this queued 
+destruct happen after the port is fully deformed -> hence the WARN.
+
+I guess you only tested your patch on disks attached through an expander.
+
+Thanks,
 John
+
+
+
+
+
+
+
+
+> .
+>
