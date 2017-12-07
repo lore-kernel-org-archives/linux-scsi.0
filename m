@@ -1,59 +1,45 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v2] scsi: libsas: fix length error in sas_smp_handler()
-Date: Thu, 7 Dec 2017 18:57:51 +0800
-Message-ID: <20171207105751.27225-1-yanaijie@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v3 0/2] Ensure that the SCSI error handler gets woken up
+Date: Thu, 7 Dec 2017 12:02:07 +0000
+Message-ID: <d408dd47-1706-c448-2b74-cbc91a5f90da@huawei.com>
+References: <20171204180624.18722-1-bart.vanassche@wdc.com>
+ <yq1o9nbxpx4.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2218 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752291AbdLGKv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Dec 2017 05:51:57 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:40089 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753066AbdLGMCe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Dec 2017 07:02:34 -0500
+In-Reply-To: <yq1o9nbxpx4.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, john.garry@huawei.com, hch@lst.de
-Cc: linux-scsi@vger.kernel.org, jthumshirn@suse.de, hare@suse.com, Jason Yan <yanaijie@huawei.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
 
-The bsg_job_done() requires the length of payload received, but we give
-it the untransferred residual.
+On 07/12/2017 01:55, Martin K. Petersen wrote:
+>
+> Bart,
+>
+>> As reported by Pavel Tikhomirov it can happen that the SCSI error
+>> handler does not get woken up. This is very annoying because it
+>> results in a queue stall. The two patches in this series address this
+>> issue without acquiring the SCSI host lock in the hot path. Please
+>> consider these patches for kernel v4.16.
+>
+> Applied to 4.16/scsi-queue. Thank you!
+>
 
-Fixes: 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib for SMP passthrough")
-Reported-and-tested-by: chenqilin <chenqilin2@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/libsas/sas_expander.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Is anyone finding a build error for this patch? I built allmodconfig on 
+Martin's 4.16/scsi-queue and I get this:
+ERROR: "init_rcu_head" [drivers/scsi/scsi_mod.ko] undefined!
+ERROR: "destroy_rcu_head" [drivers/scsi/scsi_mod.ko] undefined!
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 50cb0f3..6c40ecc 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -2143,7 +2143,7 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
- 		struct sas_rphy *rphy)
- {
- 	struct domain_device *dev;
--	unsigned int reslen = 0;
-+	unsigned int rcvlen = 0;
- 	int ret = -EINVAL;
- 
- 	/* no rphy means no smp target support (ie aic94xx host) */
-@@ -2177,12 +2177,12 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
- 
- 	ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
- 			job->reply_payload.sg_list);
--	if (ret > 0) {
--		/* positive number is the untransferred residual */
--		reslen = ret;
-+	if (ret >= 0) {
-+		/* bsg_job_done() requires the length received  */
-+		rcvlen = job->reply_payload.payload_len - ret;
- 		ret = 0;
- 	}
- 
- out:
--	bsg_job_done(job, ret, reslen);
-+	bsg_job_done(job, ret, rcvlen);
- }
--- 
-2.9.5
+Reverting fixes it.
+
+ From a quick check, it seems the rcu funcitons are not exported, and 
+SCSI=m means hosts.c cannot reference it.
+
+Cheers,
+John
