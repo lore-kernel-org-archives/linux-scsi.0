@@ -1,116 +1,25 @@
-From: Rafael David Tinoco <rafael.tinoco@canonical.com>
-Subject: [PATCH] scsi: libiscsi: Allow sd_shutdown on bad transport
-Date: Thu,  7 Dec 2017 19:59:13 -0200
-Message-ID: <1512683953-5959-1-git-send-email-rafael.tinoco@canonical.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:59833 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750967AbdLGV7V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 16:59:21 -0500
-Received: from mail-qt0-f200.google.com ([209.85.216.200])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <rafael.tinoco@canonical.com>)
-        id 1eN4CO-0007z1-82
-        for linux-scsi@vger.kernel.org; Thu, 07 Dec 2017 21:59:20 +0000
-Received: by mail-qt0-f200.google.com with SMTP id k23so9847536qtc.14
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2017 13:59:20 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Max Kellermann <max@duempel.org>
+Subject: Re: [PATCH] drivers/scsi/qla2xxx: fix double free bug after firmware
+ timeout
+Date: Thu, 7 Dec 2017 23:10:53 +0100
+Message-ID: <20171207221053.krqfykp4y3w6impr@swift.blarg.de>
+References: <151265800413.23884.12590131670697249849.stgit@rabbit.intern.cm-ag>
+ <F250F948-C720-4D0C-8DCC-329E9FB6B1CA@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <F250F948-C720-4D0C-8DCC-329E9FB6B1CA@cavium.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Cc: Max Kellermann <mk@cm4all.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "max.kellermann@gmail.com" <max.kellermann@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, Jay Vosburgh <jay.vosburgh@canonical.com>, Daniel Axtens <daniel.axtens@canonical.com>, Dragan Stancevic <dragan.stancevic@canonical.com>
 
-If, for any reason, userland shuts down iscsi transport interfaces
-before proper logouts - like when logging in to LUNs manually,
-without logging out on server shutdown, or when automated scripts
-can't umount/logout from logged LUNs - kernel will hang forever on
-its sd_sync_cache() logic, after issuing the SYNCHRONIZE_CACHE cmd
-to all still existent paths.
+On 2017/12/07 21:38, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com> wrote:
+> NACK
+> 
+> These calls are asynchronous calls and free should be called by
+> completion.
 
-PID: 1 TASK: ffff8801a69b8000 CPU: 1 COMMAND: "systemd-shutdow"
- #0 [ffff8801a69c3a30] __schedule at ffffffff8183e9ee
- #1 [ffff8801a69c3a80] schedule at ffffffff8183f0d5
- #2 [ffff8801a69c3a98] schedule_timeout at ffffffff81842199
- #3 [ffff8801a69c3b40] io_schedule_timeout at ffffffff8183e604
- #4 [ffff8801a69c3b70] wait_for_completion_io_timeout at ffffffff8183fc6c
- #5 [ffff8801a69c3bd0] blk_execute_rq at ffffffff813cfe10
- #6 [ffff8801a69c3c88] scsi_execute at ffffffff815c3fc7
- #7 [ffff8801a69c3cc8] scsi_execute_req_flags at ffffffff815c60fe
- #8 [ffff8801a69c3d30] sd_sync_cache at ffffffff815d37d7
- #9 [ffff8801a69c3da8] sd_shutdown at ffffffff815d3c3c
-
-This happens because iscsi_eh_cmd_timed_out(), the transport layer
-timeout helper, would tell the queue timeout function (scsi_times_out)
-to reset the request timer over and over, until the session state is
-back to logged in state. Unfortunately, during server shutdown, this
-might never happen again.
-
-Other option would be "not to handle" the issue in the transport
-layer. That would trigger the error handler logic, which would also
-need the session state to be logged in again.
-
-Best option, for such case, is to tell upper layers that the command
-was handled during the transport layer error handler helper, marking
-it as DID_NO_CONNECT, which will allow completion and inform about
-the problem.
-
-After the session was marked as ISCSI_STATE_FAILED, due to the first
-timeout during the server shutdown phase, all subsequent cmds will
-fail to be queued, allowing upper logic to fail faster.
-
-Signed-off-by: Rafael David Tinoco <rafael.tinoco@canonical.com>
----
- drivers/scsi/libiscsi.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 9c50d2d9f27c..785d1c55d152 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1696,6 +1696,15 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 		 */
- 		switch (session->state) {
- 		case ISCSI_STATE_FAILED:
-+			/*
-+			 * cmds should fail during shutdown, if the session
-+			 * state is bad, allowing completion to happen
-+			 */
-+			if (unlikely(system_state != SYSTEM_RUNNING)) {
-+				reason = FAILURE_SESSION_FAILED;
-+				sc->result = DID_NO_CONNECT << 16;
-+				break;
-+			}
- 		case ISCSI_STATE_IN_RECOVERY:
- 			reason = FAILURE_SESSION_IN_RECOVERY;
- 			sc->result = DID_IMM_RETRY << 16;
-@@ -1978,6 +1987,19 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
- 	}
- 
- 	if (session->state != ISCSI_STATE_LOGGED_IN) {
-+		/*
-+		 * During shutdown, if session is prematurely disconnected,
-+		 * recovery won't happen and there will be hung cmds. Not
-+		 * handling cmds would trigger EH, also bad in this case.
-+		 * Instead, handle cmd, allow completion to happen and let
-+		 * upper layer to deal with the result.
-+		 */
-+		if (unlikely(system_state != SYSTEM_RUNNING)) {
-+			sc->result = DID_NO_CONNECT << 16;
-+			ISCSI_DBG_EH(session, "sc on shutdown, handled\n");
-+			rc = BLK_EH_HANDLED;
-+			goto done;
-+		}
- 		/*
- 		 * We are probably in the middle of iscsi recovery so let
- 		 * that complete and handle the error.
-@@ -2082,7 +2104,7 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
- 		task->last_timeout = jiffies;
- 	spin_unlock(&session->frwd_lock);
- 	ISCSI_DBG_EH(session, "return %s\n", rc == BLK_EH_RESET_TIMER ?
--		     "timer reset" : "nh");
-+		     "timer reset" : "shutdown or nh");
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(iscsi_eh_cmd_timed_out);
--- 
-2.14.2
+I don't understand the NACK, and your text doesn't explain it.  It
+only describes a second bug that is orthogonal to mine.
