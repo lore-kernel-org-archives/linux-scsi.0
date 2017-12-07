@@ -1,38 +1,82 @@
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Subject: Re: [PATCH] libsas: flush pending destruct work in sas_unregister_domain_devices()
-Date: Thu, 7 Dec 2017 14:57:58 -0800
-Message-ID: <CAM_iQpVWmeq5BMvxJmD2FP6Zm6s7O05+NqzYQ6uCAp7iE1asnw@mail.gmail.com>
-References: <20171128002445.16594-1-xiyou.wangcong@gmail.com>
- <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site> <922397da-7dd3-c24e-1d94-e4804a769331@huawei.com>
- <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com> <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v6 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
+Date: Thu, 7 Dec 2017 17:35:48 -0600
+Message-ID: <20171207233548.kcgtlxfdsh3ibsxu@rob-hp-laptop>
+References: <20171207102026.14977-1-liwei213@huawei.com>
+ <20171207102026.14977-3-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jason Yan <yanaijie@huawei.com>, chenxiang <chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:45524 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751010AbdLGXfu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 18:35:50 -0500
+Content-Disposition: inline
+In-Reply-To: <20171207102026.14977-3-liwei213@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Li Wei <liwei213@huawei.com>
+Cc: mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, zangleigang@hisilicon.com, gengjianfeng@hisilicon.com, guodong.xu@linaro.org, zhangfei.gao@linaro.org, fengbaopeng@hisilicon.com
 
-On Thu, Dec 7, 2017 at 5:37 AM, John Garry <john.garry@huawei.com> wrote:
-> On 28/11/2017 17:04, Cong Wang wrote:
->>
->> I don't understand, the only caller of sas_unregister_domain_devices()
->> is sas_deform_port().
->>
->
-> And sas_deform_port() may be called from another worker on the same queue,
-> right? As in sas_phye_loss_of_signal()->sas_deform_port()
+On Thu, Dec 07, 2017 at 06:20:23PM +0800, Li Wei wrote:
+> add ufs node document for Hisilicon.
+> 
+> Signed-off-by: Li Wei <liwei213@huawei.com>
+> ---
 
-Oh, good catch! I didn't notice this subtle call path.
+Version history?
 
-Do you have any better idea to fix this? We saw this on 4.9 too.
+>  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 38 ++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> new file mode 100644
+> index 000000000000..73e10698960e
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> @@ -0,0 +1,38 @@
+> +* Hisilicon Universal Flash Storage (UFS) Host Controller
+> +
+> +UFS nodes are defined to describe on-chip UFS hardware macro.
+> +Each UFS Host Controller should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible list, contains one of the following -
+> +					"hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
+> +					host controller present on Hi36xx chipset.
+> +- reg               : should contain UFS register address space & UFS SYS CTRL register address,
+> +- interrupt-parent  : interrupt device
+> +- interrupts        : interrupt number
+> +- clocks	        : List of phandle and clock specifier pairs
+> +- clock-names       : List of clock input name strings sorted in the same
+> +					order as the clocks property. "ref_clk", "phy_clk" is optional
+> +- resets            : reset node register, one reset the clk and the other reset the controller
+> +- reset-names       : describe reset node register
+> +
+> +Example:
+> +
+> +	ufs: ufs@ff3b0000 {
+> +		compatible = "hisilicon,hi3660-ufs", "jedec,ufs-1.1";
+> +		/* 0: HCI standard */
+> +		/* 1: UFS SYS CTRL */
+> +		reg = <0x0 0xff3b0000 0x0 0x1000>,
+> +			<0x0 0xff3b1000 0x0 0x1000>;
+> +		interrupt-parent = <&gic>;
+> +		interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
+> +		clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
+> +			<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
+> +		clock-names = "ref_clk", "phy_clk";
+> +		freq-table-hz = <0 0>, <0 0>;
 
->
-> The device destruct takes place in a separate worker from which
-> sas_deform_port() is called, but the same queue. So we have this queued
-> destruct happen after the port is fully deformed -> hence the WARN.
->
-> I guess you only tested your patch on disks attached through an expander.
+? Not documented.
 
-I have very limited scsi hardware, so my testing is limited too.
+> +		/* offset: 0x84; bit: 12 */
+> +		/* offset: 0x84; bit: 7  */
+> +		resets = <&crg_rst 0x84 12>,
+> +			<&crg_rst 0x84 7>;
+> +		reset-names = "rst", "assert";
+> +	};
+> -- 
+> 2.15.0
+> 
