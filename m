@@ -1,51 +1,32 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH] scsi: libsas: fix length error in sas_smp_handler()
-Date: Thu, 7 Dec 2017 09:41:13 +0800
-Message-ID: <5A289C39.8080203@huawei.com>
-References: <20171205093943.40116-1-yanaijie@huawei.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 0/2] Ensure that the SCSI error handler gets woken up
+Date: Wed, 06 Dec 2017 20:55:19 -0500
+Message-ID: <yq1o9nbxpx4.fsf@oracle.com>
+References: <20171204180624.18722-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:55203 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751718AbdLGBm5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 Dec 2017 20:42:57 -0500
-In-Reply-To: <20171205093943.40116-1-yanaijie@huawei.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:56948 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751718AbdLGB4H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2017 20:56:07 -0500
+In-Reply-To: <20171204180624.18722-1-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Mon, 4 Dec 2017 10:06:22 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-Can anybody review this patch? Our test of SG_IO all failed because of
-this bug.
 
-On 2017/12/5 17:39, Jason Yan wrote:
-> The bsg_job_done() requires the length of payload received, but we give
-> it the untransferred residual.
->
-> Fixes: 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib for SMP")
-> Reported-and-tested-by: chenqilin <chenqilin2@huawei.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> CC: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/scsi/libsas/sas_expander.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 50cb0f3..8323dc1 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -2177,9 +2177,9 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
->
->   	ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
->   			job->reply_payload.sg_list);
-> -	if (ret > 0) {
-> +	if (ret >= 0) {
->   		/* positive number is the untransferred residual */
-> -		reslen = ret;
-> +		reslen = job->reply_payload.payload_len - ret;
->   		ret = 0;
->   	}
->
->
+Bart,
+
+> As reported by Pavel Tikhomirov it can happen that the SCSI error
+> handler does not get woken up. This is very annoying because it
+> results in a queue stall. The two patches in this series address this
+> issue without acquiring the SCSI host lock in the hot path. Please
+> consider these patches for kernel v4.16.
+
+Applied to 4.16/scsi-queue. Thank you!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
