@@ -1,83 +1,54 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH] scsi: libsas: fix length error in sas_smp_handler()
-Date: Thu, 7 Dec 2017 18:26:06 +0800
-Message-ID: <5A29173E.2040208@huawei.com>
-References: <20171205093943.40116-1-yanaijie@huawei.com>
- <5A289C39.8080203@huawei.com>
- <52a9871a-5861-6566-781b-7dbe0e4c3efe@huawei.com>
+From: Philippe Ombredanne <pombredanne-od1rfyK75/E@public.gmane.org>
+Subject: Re: [PATCH v6 1/5] scsi: ufs: add Hisilicon ufs driver code
+Date: Thu, 7 Dec 2017 11:34:16 +0100
+Message-ID: <CAOFm3uEgT4gzusQpXb3SnriTdU0nAha2tcVKOoZJRjZw=dx7sg@mail.gmail.com>
+References: <20171207102026.14977-1-liwei213@huawei.com> <20171207102026.14977-2-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2217 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752466AbdLGK1n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Dec 2017 05:27:43 -0500
-In-Reply-To: <52a9871a-5861-6566-781b-7dbe0e4c3efe@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20171207102026.14977-2-liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org, riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>linux-
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Linuxarm <linuxarm@huawei.com>
 
+Dear Li,
 
-On 2017/12/7 17:27, John Garry wrote:
-> On 07/12/2017 01:41, Jason Yan wrote:
->> Can anybody review this patch? Our test of SG_IO all failed because of
->> this bug.
->>
->> On 2017/12/5 17:39, Jason Yan wrote:
->>> The bsg_job_done() requires the length of payload received, but we give
->>> it the untransferred residual.
->>>
->>> Fixes: 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib for
->>> SMP")
->>> Reported-and-tested-by: chenqilin <chenqilin2@huawei.com>
->>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
->>> CC: Christoph Hellwig <hch@lst.de>
->>> ---
->>>   drivers/scsi/libsas/sas_expander.c | 4 ++--
->>>   1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/libsas/sas_expander.c
->>> b/drivers/scsi/libsas/sas_expander.c
->>> index 50cb0f3..8323dc1 100644
->>> --- a/drivers/scsi/libsas/sas_expander.c
->>> +++ b/drivers/scsi/libsas/sas_expander.c
->>> @@ -2177,9 +2177,9 @@ void sas_smp_handler(struct bsg_job *job, struct
->>> Scsi_Host *shost,
->>>
->>>       ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
->>>               job->reply_payload.sg_list);
->>> -    if (ret > 0) {
->>> +    if (ret >= 0) {
->>>           /* positive number is the untransferred residual */
->>> -        reslen = ret;
->>> +        reslen = job->reply_payload.payload_len - ret;
+On Thu, Dec 7, 2017 at 11:20 AM, Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> add Hisilicon ufs driver code.
 >
-> Hi Jason,
->
-> If we really want the length of the payload received, then should you
-> change the reslen variable name? The name implies "residual length",
-> which is not really what it is holding according to your change.
->
-> Thanks,
-> John
->
+> Signed-off-by: Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Geng Jianfeng <gengjianfeng-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+> Signed-off-by: Zang Leigang <zangleigang-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+> Signed-off-by: Yu Jianfeng <steven.yujianfeng-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+[]
 
-Thanks a lot. I will correct it.
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-hisi.c
+> @@ -0,0 +1,624 @@
+> +/*
+> + *
+> + * HiSilicon Hixxxx UFS Driver
+> + *
+> + * Copyright (c) 2016-2017 Linaro Ltd.
+> + * Copyright (c) 2016-2017 HiSilicon Technologies Co., Ltd.
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; either version 2 of the License, or
+> + * (at your option) any later version.
+> + */
 
-Jason
+Would you consider using the new SPDX license ids instead?
+Check Thomas doc patches for instructions.
+This would be great and while you are it may be this could be adopted
+for all HiSilicon and Huawei past, present and future contributions?
+Thank you for your kind consideration!
 
->>>           ret = 0;
->>>       }
->>>
->>>
->>
->>
->> .
->>
->
->
->
-> .
->
+-- 
+Cordially
+Philippe Ombredanne
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
