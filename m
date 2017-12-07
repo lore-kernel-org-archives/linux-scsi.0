@@ -1,120 +1,82 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] libsas: flush pending destruct work in
- sas_unregister_domain_devices()
-Date: Thu, 7 Dec 2017 13:37:53 +0000
-Message-ID: <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com>
-References: <20171128002445.16594-1-xiyou.wangcong@gmail.com>
- <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site>
- <922397da-7dd3-c24e-1d94-e4804a769331@huawei.com>
- <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
+From: Max Kellermann <mk@cm4all.com>
+Subject: [PATCH] drivers/scsi/qla2xxx: fix double free bug after firmware
+ timeout
+Date: Thu, 07 Dec 2017 15:46:44 +0100
+Message-ID: <151265800413.23884.12590131670697249849.stgit@rabbit.intern.cm-ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jason Yan <yanaijie@huawei.com>, chenxiang <chenxiang66@hisilicon.com>
+To: gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
+Cc: max.kellermann@gmail.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 28/11/2017 17:04, Cong Wang wrote:
-> On Tue, Nov 28, 2017 at 3:18 AM, John Garry <john.garry@huawei.com> wrote:
->> On 28/11/2017 08:20, Johannes Thumshirn wrote:
->>>
->>> On Mon, Nov 27, 2017 at 04:24:45PM -0800, Cong Wang wrote:
->>>>
->>>> We saw dozens of the following kernel waring:
->>>>
->>>>  WARNING: CPU: 0 PID: 705 at fs/sysfs/group.c:224
->>>> sysfs_remove_group+0x54/0x88()
->>>>  sysfs group ffffffff81ab7670 not found for kobject '6:0:3:0'
->>>>  Modules linked in: cpufreq_ondemand x86_pkg_temp_thermal coretemp
->>>> kvm_intel kvm microcode raid0 iTCO_wdt iTCO_vendor_support sb_edac edac_core
->>>> lpc_ich mfd_core ioatdma i2c_i801 shpchp wmi hed acpi_cpufreq lp parport
->>>> tcp_diag inet_diag ipmi_si ipmi_devintf ipmi_msghandler sch_fq_codel igb ptp
->>>> pps_core i2c_algo_bit i2c_core crc32c_intel isci libsas scsi_transport_sas
->>>> dca ipv6
->>>>  CPU: 0 PID: 705 Comm: kworker/u240:0 Not tainted 4.1.35.el7.x86_64 #1
->>>
->>>
->>> This should by now be fixed with commit fbce4d97fd43 ("scsi: fixup kernel
->>> warning during rmmod()" which went into v4.14-rc6.
->>>
->>
->> Is that the same issue? I think Cong Wang is just trying to deal with the
->> longstanding libsas hotplug WARN.
->
-> Right, we saw it on both 4.1 and 3.14, clearly an old bug.
->
->
->>
->> We at Huawei are still working to fix it. Our patchset is under internal
->> test at the moment.
->>
->> As for this patch:
->>>  drivers/scsi/libsas/sas_discover.c | 7 ++++++-
->>>  1 file changed, 6 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/scsi/libsas/sas_discover.c
->>> b/drivers/scsi/libsas/sas_discover.c
->>> index 60de66252fa2..27c11fc7aa2b 100644
->>> --- a/drivers/scsi/libsas/sas_discover.c
->>> +++ b/drivers/scsi/libsas/sas_discover.c
->>> @@ -388,6 +388,11 @@ void sas_unregister_dev(struct asd_sas_port *port,
->>> struct domain_device *dev)
->>>       }
->>>  }
->>>
->>> +static void sas_flush_work(struct asd_sas_port *port)
->>> +{
->>> +     scsi_flush_work(port->ha->core.shost);
->>> +}
->>> +
->>>  void sas_unregister_domain_devices(struct asd_sas_port *port, int gone)
->>>  {
->>>       struct domain_device *dev, *n;
->>> @@ -401,8 +406,8 @@ void sas_unregister_domain_devices(struct asd_sas_port
->>> *port, int gone)
->>>       list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
->>>               sas_unregister_dev(port, dev);
->>>
->>> +     sas_flush_work(port);
->>
->> How can this work as sas_unregister_domain_devices() may be called from the
->> same workqueue which you're trying to flush?
->
+When the qla2xxx firmware is unavailable, eventually
+qla2x00_sp_timeout() is reached, which calls the timeout function and
+frees the srb_t instance.
 
-Sorry for slow reply, just remembered this now.
+The timeout function always resolves to qla2x00_async_iocb_timeout(),
+which invokes another callback function called "done".  All of these
+qla2x00_*_sp_done() callbacks also free the srb_t instance; after
+returning to qla2x00_sp_timeout(), it is freed again.
 
->
-> I don't understand, the only caller of sas_unregister_domain_devices()
-> is sas_deform_port().
->
+The fix is to remove the "sp->free(sp)" call from qla2x00_sp_timeout()
+and add it to those code paths in qla2x00_async_iocb_timeout() which
+do not already free the object.
 
-And sas_deform_port() may be called from another worker on the same 
-queue, right? As in sas_phye_loss_of_signal()->sas_deform_port()
+This is how it looks like with KASAN:
 
-As I see today, this is the problem callchain:
-sas_deform_port()
-sas_unregister_domain_devices()
-sas_unregister_dev()
-sas_discover_event(DISCE_DESTRUCT)
+ BUG: KASAN: use-after-free in qla2x00_sp_timeout+0x228/0x250
+ Read of size 8 at addr ffff88278147a590 by task swapper/2/0
 
-The device destruct takes place in a separate worker from which 
-sas_deform_port() is called, but the same queue. So we have this queued 
-destruct happen after the port is fully deformed -> hence the WARN.
+ Allocated by task 1502:
+  save_stack+0x33/0xa0
+  kasan_kmalloc+0xa0/0xd0
+  kmem_cache_alloc+0xb8/0x1c0
+  mempool_alloc+0xd6/0x260
+  qla24xx_async_gnl+0x3c5/0x1100
 
-I guess you only tested your patch on disks attached through an expander.
+ Freed by task 0:
+  save_stack+0x33/0xa0
+  kasan_slab_free+0x72/0xc0
+  kmem_cache_free+0x75/0x200
+  qla24xx_async_gnl_sp_done+0x556/0x9e0
+  qla2x00_async_iocb_timeout+0x1c7/0x420
+  qla2x00_sp_timeout+0x16d/0x250
+  call_timer_fn+0x36/0x200
 
-Thanks,
-John
+ The buggy address belongs to the object at ffff88278147a440
+  which belongs to the cache qla2xxx_srbs of size 344
+ The buggy address is located 336 bytes inside of
+  344-byte region [ffff88278147a440, ffff88278147a598)
 
+Signed-off-by: Max Kellermann <mk@cm4all.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-
-
-
-
-
-> .
->
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index b5b48ddca962..801890564e00 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -58,7 +58,6 @@ qla2x00_sp_timeout(unsigned long __data)
+ 	req->outstanding_cmds[sp->handle] = NULL;
+ 	iocb = &sp->u.iocb_cmd;
+ 	iocb->timeout(sp);
+-	sp->free(sp);
+ 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+ }
+ 
+@@ -121,9 +120,11 @@ qla2x00_async_iocb_timeout(void *data)
+ 		ea.data[1] = lio->u.logio.data[1];
+ 		ea.sp = sp;
+ 		qla24xx_handle_plogi_done_event(fcport->vha, &ea);
++		sp->free(sp);
+ 		break;
+ 	case SRB_LOGOUT_CMD:
+ 		qlt_logo_completion_handler(fcport, QLA_FUNCTION_TIMEOUT);
++		sp->free(sp);
+ 		break;
+ 	case SRB_CT_PTHRU_CMD:
+ 	case SRB_MB_IOCB:
