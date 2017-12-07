@@ -1,31 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] SCSI device blacklist handling improvements
-Date: Wed, 06 Dec 2017 21:03:10 -0500
-Message-ID: <yq1k1xzxpk1.fsf@oracle.com>
-References: <20171204183633.32139-1-bart.vanassche@wdc.com>
+Subject: Re: [PATCH v2] scsi_debug: add cdb_len paramete
+Date: Wed, 06 Dec 2017 21:06:56 -0500
+Message-ID: <yq1fu8nxpdr.fsf@oracle.com>
+References: <20171205050549.31526-1-dgilbert@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57692 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751718AbdLGCDQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2017 21:03:16 -0500
-In-Reply-To: <20171204183633.32139-1-bart.vanassche@wdc.com> (Bart Van
-        Assche's message of "Mon, 4 Dec 2017 10:36:30 -0800")
+Received: from aserp2120.oracle.com ([141.146.126.78]:40694 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752243AbdLGCHI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2017 21:07:08 -0500
+In-Reply-To: <20171205050549.31526-1-dgilbert@interlog.com> (Douglas Gilbert's
+        message of "Tue, 5 Dec 2017 00:05:49 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, hare@suse.de, bart.vanassche@sandisk.com, James.Bottomley@HansenPartnership.com
 
 
-Bart,
+Doug,
 
-> These three patches is what I came up with after having reviewed
-> recent changes in the code for handling blacklist flags
-> handling. Please consider these patches for kernel v4.16.
+> While testing "sd: Micro-optimize READ / WRITE CDB encoding" patches
+> it was helpful to check various code paths associated with READ/WRITE
+> 6, 10 and 16 byte cdb variants. There seems to be no user space
+> "knobs" to twiddle use_10_for_rw and friends in the scsi_device
+> structure.  So add a parameter to scsi_debug called "cdb_len" for this
+> purpose.
 
-I applied 1 and 3 to 4.16/scsi-queue. I am still not a fan of forcing
-u32. That's a recipe for disaster when we add the next flag.
+Applied to 4.16/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
