@@ -1,108 +1,57 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH] drivers/scsi/qla2xxx: fix double free bug after firmware
- timeout
-Date: Thu, 7 Dec 2017 20:38:23 +0000
-Message-ID: <F250F948-C720-4D0C-8DCC-329E9FB6B1CA@cavium.com>
-References: <151265800413.23884.12590131670697249849.stgit@rabbit.intern.cm-ag>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] SCSI: run queue if SCSI device queue isn't ready and
+ queue is idle
+Date: Thu, 7 Dec 2017 21:06:58 +0000
+Message-ID: <1512680817.2624.29.camel@wdc.com>
+References: <20171205075256.10319-1-ming.lei@redhat.com>
+         <1512490099.2660.6.camel@sandisk.com> <20171205162825.GA23788@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:58678
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750929AbdLGUi2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Dec 2017 15:38:28 -0500
-In-Reply-To: <151265800413.23884.12590131670697249849.stgit@rabbit.intern.cm-ag>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171205162825.GA23788@ming.t460p>
 Content-Language: en-US
-Content-ID: <CFBF29B51A712144A79F640BA10D33C5@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <D434A0B94CEE9D459175F9D4A7B11F45@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "hare@suse.com" <hare@suse.com>, "holger@applied-asynchrony.com" <holger@applied-asynchrony.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Max Kellermann <mk@cm4all.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "max.kellermann@gmail.com" <max.kellermann@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Hi Max,
-
-> On Dec 7, 2017, at 6:46 AM, Max Kellermann <mk@cm4all.com> wrote:
->=20
-> When the qla2xxx firmware is unavailable, eventually
-> qla2x00_sp_timeout() is reached, which calls the timeout function and
-> frees the srb_t instance.
->=20
-> The timeout function always resolves to qla2x00_async_iocb_timeout(),
-> which invokes another callback function called "done".  All of these
-> qla2x00_*_sp_done() callbacks also free the srb_t instance; after
-> returning to qla2x00_sp_timeout(), it is freed again.
->=20
-> The fix is to remove the "sp->free(sp)" call from qla2x00_sp_timeout()
-> and add it to those code paths in qla2x00_async_iocb_timeout() which
-> do not already free the object.
->=20
-> This is how it looks like with KASAN:
->=20
-> BUG: KASAN: use-after-free in qla2x00_sp_timeout+0x228/0x250
-> Read of size 8 at addr ffff88278147a590 by task swapper/2/0
->=20
-> Allocated by task 1502:
->  save_stack+0x33/0xa0
->  kasan_kmalloc+0xa0/0xd0
->  kmem_cache_alloc+0xb8/0x1c0
->  mempool_alloc+0xd6/0x260
->  qla24xx_async_gnl+0x3c5/0x1100
->=20
-> Freed by task 0:
->  save_stack+0x33/0xa0
->  kasan_slab_free+0x72/0xc0
->  kmem_cache_free+0x75/0x200
->  qla24xx_async_gnl_sp_done+0x556/0x9e0
->  qla2x00_async_iocb_timeout+0x1c7/0x420
->  qla2x00_sp_timeout+0x16d/0x250
->  call_timer_fn+0x36/0x200
->=20
-> The buggy address belongs to the object at ffff88278147a440
->  which belongs to the cache qla2xxx_srbs of size 344
-> The buggy address is located 336 bytes inside of
->  344-byte region [ffff88278147a440, ffff88278147a598)
->=20
-> Signed-off-by: Max Kellermann <mk@cm4all.com>
-> ---
-> drivers/scsi/qla2xxx/qla_init.c |    3 ++-
-> 1 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> index b5b48ddca962..801890564e00 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -58,7 +58,6 @@ qla2x00_sp_timeout(unsigned long __data)
-> 	req->outstanding_cmds[sp->handle] =3D NULL;
-> 	iocb =3D &sp->u.iocb_cmd;
-> 	iocb->timeout(sp);
-> -	sp->free(sp);
-> 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
-> }
->=20
-> @@ -121,9 +120,11 @@ qla2x00_async_iocb_timeout(void *data)
-> 		ea.data[1] =3D lio->u.logio.data[1];
-> 		ea.sp =3D sp;
-> 		qla24xx_handle_plogi_done_event(fcport->vha, &ea);
-> +		sp->free(sp);
-> 		break;
-> 	case SRB_LOGOUT_CMD:
-> 		qlt_logo_completion_handler(fcport, QLA_FUNCTION_TIMEOUT);
-> +		sp->free(sp);
-> 		break;
-> 	case SRB_CT_PTHRU_CMD:
-> 	case SRB_MB_IOCB:
->=20
-
-
-NACK
-
-These calls are asynchronous calls and free should be called by completion.
-
-I am going to send updates to driver which we have fixed similar issue for =
-4.16
-
-Thanks,
-- Himanshu
+T24gV2VkLCAyMDE3LTEyLTA2IGF0IDAwOjI4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
+VHVlLCBEZWMgMDUsIDIwMTcgYXQgMDQ6MDg6MjBQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
+b3RlOg0KPiA+IE9uIFR1ZSwgMjAxNy0xMi0wNSBhdCAxNTo1MiArMDgwMCwgTWluZyBMZWkgd3Jv
+dGU6DQo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJz
+L3Njc2kvc2NzaV9saWIuYw0KPiA+ID4gaW5kZXggZGI5NTU2NjYyZTI3Li4xODE2ZGQ4MjU5YjMg
+MTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+ID4gKysrIGIv
+ZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj4gPiA+IEBAIC0xOTY3LDYgKzE5NjcsOCBAQCBzdGF0
+aWMgYm9vbCBzY3NpX21xX2dldF9idWRnZXQoc3RydWN0IGJsa19tcV9od19jdHggKmhjdHgpDQo+
+ID4gPiAgb3V0X3B1dF9kZXZpY2U6DQo+ID4gPiAgCXB1dF9kZXZpY2UoJnNkZXYtPnNkZXZfZ2Vu
+ZGV2KTsNCj4gPiA+ICBvdXQ6DQo+ID4gPiArCWlmIChhdG9taWNfcmVhZCgmc2Rldi0+ZGV2aWNl
+X2J1c3kpID09IDAgJiYgIXNjc2lfZGV2aWNlX2Jsb2NrZWQoc2RldikpDQo+ID4gPiArCQlibGtf
+bXFfZGVsYXlfcnVuX2h3X3F1ZXVlKGhjdHgsIFNDU0lfUVVFVUVfREVMQVkpOw0KPiA+ID4gIAly
+ZXR1cm4gZmFsc2U7DQo+ID4gPiAgfQ0KPiA+IA0KPiA+IFRoaXMgY2Fubm90IHdvcmsgc2luY2Ug
+bXVsdGlwbGUgdGhyZWFkcyBjYW4gY2FsbCBzY3NpX21xX2dldF9idWRnZXQoKQ0KPiANCj4gVGhh
+dCBpcyBleGFjdGx5IHRoZSB3YXkgd2UgYXJlIGhhbmRsaW5nIHRoZXNlIGNhc2VzIGJlZm9yZSAw
+ZGYyMWM4NmJkYmYoc2NzaToNCj4gaW1wbGVtZW50IC5nZXRfYnVkZ2V0IGFuZCAucHV0X2J1ZGdl
+dCBmb3IgYmxrLW1xKSwgc28gaWYgaXQgY2FuJ3Qgd29yaywNCj4gdGhhdCBpcyBub3QgZmF1bHQg
+b2YgY29tbWl0IDBkZjIxYzg2YmRiZi4NCj4gDQo+ID4gY29uY3VycmVudGx5IGFuZCBoZW5jZSBp
+dCBjYW4gaGFwcGVuIHRoYXQgbm9uZSBvZiB0aGVtIHNlZXMNCj4gPiBhdG9taWNfcmVhZCgmc2Rl
+di0+ZGV2aWNlX2J1c3kpID09IDAuIEJUVywgdGhlIGFib3ZlIHBhdGNoIGlzIHNvbWV0aGluZyBJ
+DQo+IA0KPiBJZiB0aGVyZSBpcyBjb25jdXJyZW50IC5nZXRfYnVkZ2V0KCksIG9uZSBvZiB0aGVt
+IHdpbGwgc2VlIHRoZSBjb3VudGVyDQo+IGJlY29taW5nIHplcm8gZmluYWxseSBiZWNhdXNlIGVh
+Y2ggc2Rldi0+ZGV2aWNlX2J1c3kgaXMgaW5jL2RlYw0KPiBhdG9taWNhbGx5LiBPciBzY3NpX2Rl
+dl9xdWV1ZV9yZWFkeSgpIHJldHVybiB0cnVlLg0KPiANCj4gQW55d2F5LCB3ZSBuZWVkIHRoaXMg
+cGF0Y2ggdG8gYXZvaWQgcG9zc2libGUgcmVncmVzc2lvbi4gSWYgeW91IHRoaW5rDQo+IHRoZXJl
+IGFyZSBidWdzIGluIGJsay1tcSBSRVNUQVJULCBqdXN0IHJvb3QgY2F1c2UgYW5kIGFuZCBmaXgg
+aXQuDQoNCkhlbGxvIE1pbmcsDQoNCldoZW4gSSBsb29rZWQgYXQgdGhlIHBhdGNoIGF0IHRoZSBz
+dGFydCBvZiB0aGlzIHRocmVhZCBmb3IgdGhlIGZpcnN0IHRpbWUgSQ0KZ290IGZydXN0cmF0ZWQg
+YmVjYXVzZSBJIGRpZG4ndCBzZWUgaG93IHRoaXMgcGF0Y2ggY291bGQgZml4IHRoZSBxdWV1ZSBz
+dGFsbA0KSSByYW4gaW50byBteXNlbGYuIFRvZGF5IEkgc3RhcnRlZCByZWFsaXppbmcgdGhhdCB3
+aGF0IEhvbGdlciByZXBvcnRlZCBpcw0KcHJvYmFibHkgYW5vdGhlciBpc3N1ZSB0aGFuIHdoYXQg
+SSByYW4gaW50byBteXNlbGYuIFNpbmNlIHRoaXMgcGF0Y2ggYnkNCml0c2VsZiBsb29rcyBub3cg
+dXNlZnVsIHRvIG1lOg0KDQpSZXZpZXdlZC1ieTogQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFz
+c2NoZUB3ZGMuY29tPg0KDQpCVFcsIGRvIHlvdSB0aGluayB0aGUgcGF0Y2ggYXQgdGhlIHN0YXJ0
+IG9mIHRoaXMgdGhyZWFkIGFsc28gZml4ZXMgdGhlIGlzc3VlDQp0aGF0IHJlc3VsdGVkIGluIGNv
+bW1pdCA4MjZhNzBhMDhiMTIgKCJTQ1NJOiBkb24ndCBnZXQgdGFyZ2V0L2hvc3QgYnVzeV9jb3Vu
+dA0KaW4gc2NzaV9tcV9nZXRfYnVkZ2V0KCkiKT8gRG8geW91IHRoaW5rIHdlIHN0aWxsIG5lZWQg
+dGhhdCBwYXRjaD8NCg0KQmFydC4=
