@@ -1,62 +1,52 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v3 00/22]  qla2xxx: Bug fixes for 4.15-rc2
-Date: Thu, 7 Dec 2017 03:51:50 +0000
-Message-ID: <B0E82B1E-596D-4795-8692-1B4300B7989E@cavium.com>
-References: <20171204224517.3409-1-himanshu.madhani@cavium.com>
- <yq1k1y16heg.fsf@oracle.com>
- <E2C1FCEE-E4A1-4942-A711-730ABF4E4A4D@cavium.com>
- <yq1bmjbxno4.fsf@oracle.com>
+From: Stuart Hayes <stuart.w.hayes@gmail.com>
+Subject: Re: [PATCH v3 1/2] Ensure that the SCSI error handler gets woken up
+Date: Wed, 6 Dec 2017 23:12:51 -0600
+Message-ID: <cf6ab64c-a6da-ba85-adb1-3ee9412b8884@gmail.com>
+References: <1512490788.2660.16.camel@wdc.com>
+ <sr4inbsihn7krboba8euqqp1.1512508675214@email.android.com>
+ <1512510365.2660.35.camel@wdc.com> <5A27228D.1090705@virtuozzo.com>
+ <1512514780.2660.46.camel@wdc.com>
+ <99fe7aac-e3f6-62cf-7677-7596d742fb8b@virtuozzo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0088.outbound.protection.outlook.com ([104.47.37.88]:5490
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752129AbdLGDvw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 Dec 2017 22:51:52 -0500
-In-Reply-To: <yq1bmjbxno4.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <99fe7aac-e3f6-62cf-7677-7596d742fb8b@virtuozzo.com>
 Content-Language: en-US
-Content-ID: <96C358CD0F9BD246981910C483C9F277@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
+To: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "khorenko@virtuozzo.com" <khorenko@virtuozzo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Martin,=20
+>>>> In case (a) scsi_eh_inc_host_failed() will wake up the error handler. And in
+>>>> case (b) scsi_dec_host_busy() will wake up the error handler. So it's not
+>>>> clear to me why you think that there is a scenario in which the EH won't be
+>>>> woken up?
+>>>
+>>> So in case (b), in my understanding, scsi_dec_host_busy can skip wakeups
+>>> as it does not see host_failed change yet.
+>>
+>> That's not correct. If scsi_dec_host_busy() obtains the SCSI host lock before
+>> scsi_eh_inc_host_failed() obtains it then the latter function will trigger a
+>> SCSI EH wakeup.
+> 
+> You are right! Thanks a lot for pointing that out! Now when I understand it, your patch looks good for me:
+> 
+> Reviewed-by: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+> 
+> By the way, I very much like your idea of using rcu for these case.
+> 
+> Thanks, Pavel.
+> 
 
-> On Dec 6, 2017, at 6:43 PM, Martin K. Petersen <martin.petersen@oracle.co=
-m> wrote:
->=20
->=20
-> Himanshu,
->=20
->>> This looks pretty big for a series of bug fixes. Are all these
->>> patches really candidates for 4.15 and stable backports all the way
->>> back to 4.10?
->=20
->> Yes Please. I would want them back ported to 4.10 since these issues
->> were discovered in combination of 4.10/4.11 kernel.
->=20
-> James already sent Linus a pull request for this week. So that would put
-> your series out another week. 22 patches and 400+ insertions. That's a
-> lot of churn for rc4, and while the changes are indeed fixes and not new
-> features, the whole thing still looks like a regular merge window driver
-> update to me.
->=20
-> This series really should have been posted before the 4.15 merge window
-> opened. However, the first iteration of this series was posted after rc1
-> was out. I'm terribly sorry, but that's just too late for something this
-> size.
->=20
+This patch tests ok on my system, too... it's run for over 24 hours, on a system that typically fails within ten minutes without the patch...
 
-> I queued everything up for 4.16.
->=20
-
-Understood the concern and i am okay this to be queued for 4.16
-
-> --=20
-> Martin K. Petersen	Oracle Linux Engineering
+Tested-by: Stuart Hayes <stuart.w.hayes@gmail.com>
 
 Thanks,
-- Himanshu=
+Stuart
+
+
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
