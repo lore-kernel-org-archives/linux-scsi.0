@@ -1,57 +1,48 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] SCSI: run queue if SCSI device queue isn't ready and
- queue is idle
-Date: Thu, 7 Dec 2017 21:06:58 +0000
-Message-ID: <1512680817.2624.29.camel@wdc.com>
-References: <20171205075256.10319-1-ming.lei@redhat.com>
-         <1512490099.2660.6.camel@sandisk.com> <20171205162825.GA23788@ming.t460p>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: linux-next: build failure after merge of the scsi-mkp tree
+Date: Thu, 7 Dec 2017 13:10:17 -0800
+Message-ID: <20171207211017.GU7829@linux.vnet.ibm.com>
+References: <20171207145728.57cd9ac4@canb.auug.org.au>
+ <1512619169.3298.3.camel@wdc.com>
+ <20171207152521.0036b131@canb.auug.org.au>
+ <20171207044222.GK7829@linux.vnet.ibm.com>
+ <1512667802.2624.20.camel@wdc.com>
+ <20171207174038.GQ7829@linux.vnet.ibm.com>
+ <20171208073439.1593936d@canb.auug.org.au>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171205162825.GA23788@ming.t460p>
-Content-Language: en-US
-Content-ID: <D434A0B94CEE9D459175F9D4A7B11F45@namprd04.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <20171208073439.1593936d@canb.auug.org.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "hare@suse.com" <hare@suse.com>, "holger@applied-asynchrony.com" <holger@applied-asynchrony.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "josh@joshtriplett.org" <josh@joshtriplett.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ptikhomirov@virtuozzo.com" <ptikhomirov@virtuozzo.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTEyLTA2IGF0IDAwOjI4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-VHVlLCBEZWMgMDUsIDIwMTcgYXQgMDQ6MDg6MjBQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IE9uIFR1ZSwgMjAxNy0xMi0wNSBhdCAxNTo1MiArMDgwMCwgTWluZyBMZWkgd3Jv
-dGU6DQo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJz
-L3Njc2kvc2NzaV9saWIuYw0KPiA+ID4gaW5kZXggZGI5NTU2NjYyZTI3Li4xODE2ZGQ4MjU5YjMg
-MTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+ID4gKysrIGIv
-ZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj4gPiA+IEBAIC0xOTY3LDYgKzE5NjcsOCBAQCBzdGF0
-aWMgYm9vbCBzY3NpX21xX2dldF9idWRnZXQoc3RydWN0IGJsa19tcV9od19jdHggKmhjdHgpDQo+
-ID4gPiAgb3V0X3B1dF9kZXZpY2U6DQo+ID4gPiAgCXB1dF9kZXZpY2UoJnNkZXYtPnNkZXZfZ2Vu
-ZGV2KTsNCj4gPiA+ICBvdXQ6DQo+ID4gPiArCWlmIChhdG9taWNfcmVhZCgmc2Rldi0+ZGV2aWNl
-X2J1c3kpID09IDAgJiYgIXNjc2lfZGV2aWNlX2Jsb2NrZWQoc2RldikpDQo+ID4gPiArCQlibGtf
-bXFfZGVsYXlfcnVuX2h3X3F1ZXVlKGhjdHgsIFNDU0lfUVVFVUVfREVMQVkpOw0KPiA+ID4gIAly
-ZXR1cm4gZmFsc2U7DQo+ID4gPiAgfQ0KPiA+IA0KPiA+IFRoaXMgY2Fubm90IHdvcmsgc2luY2Ug
-bXVsdGlwbGUgdGhyZWFkcyBjYW4gY2FsbCBzY3NpX21xX2dldF9idWRnZXQoKQ0KPiANCj4gVGhh
-dCBpcyBleGFjdGx5IHRoZSB3YXkgd2UgYXJlIGhhbmRsaW5nIHRoZXNlIGNhc2VzIGJlZm9yZSAw
-ZGYyMWM4NmJkYmYoc2NzaToNCj4gaW1wbGVtZW50IC5nZXRfYnVkZ2V0IGFuZCAucHV0X2J1ZGdl
-dCBmb3IgYmxrLW1xKSwgc28gaWYgaXQgY2FuJ3Qgd29yaywNCj4gdGhhdCBpcyBub3QgZmF1bHQg
-b2YgY29tbWl0IDBkZjIxYzg2YmRiZi4NCj4gDQo+ID4gY29uY3VycmVudGx5IGFuZCBoZW5jZSBp
-dCBjYW4gaGFwcGVuIHRoYXQgbm9uZSBvZiB0aGVtIHNlZXMNCj4gPiBhdG9taWNfcmVhZCgmc2Rl
-di0+ZGV2aWNlX2J1c3kpID09IDAuIEJUVywgdGhlIGFib3ZlIHBhdGNoIGlzIHNvbWV0aGluZyBJ
-DQo+IA0KPiBJZiB0aGVyZSBpcyBjb25jdXJyZW50IC5nZXRfYnVkZ2V0KCksIG9uZSBvZiB0aGVt
-IHdpbGwgc2VlIHRoZSBjb3VudGVyDQo+IGJlY29taW5nIHplcm8gZmluYWxseSBiZWNhdXNlIGVh
-Y2ggc2Rldi0+ZGV2aWNlX2J1c3kgaXMgaW5jL2RlYw0KPiBhdG9taWNhbGx5LiBPciBzY3NpX2Rl
-dl9xdWV1ZV9yZWFkeSgpIHJldHVybiB0cnVlLg0KPiANCj4gQW55d2F5LCB3ZSBuZWVkIHRoaXMg
-cGF0Y2ggdG8gYXZvaWQgcG9zc2libGUgcmVncmVzc2lvbi4gSWYgeW91IHRoaW5rDQo+IHRoZXJl
-IGFyZSBidWdzIGluIGJsay1tcSBSRVNUQVJULCBqdXN0IHJvb3QgY2F1c2UgYW5kIGFuZCBmaXgg
-aXQuDQoNCkhlbGxvIE1pbmcsDQoNCldoZW4gSSBsb29rZWQgYXQgdGhlIHBhdGNoIGF0IHRoZSBz
-dGFydCBvZiB0aGlzIHRocmVhZCBmb3IgdGhlIGZpcnN0IHRpbWUgSQ0KZ290IGZydXN0cmF0ZWQg
-YmVjYXVzZSBJIGRpZG4ndCBzZWUgaG93IHRoaXMgcGF0Y2ggY291bGQgZml4IHRoZSBxdWV1ZSBz
-dGFsbA0KSSByYW4gaW50byBteXNlbGYuIFRvZGF5IEkgc3RhcnRlZCByZWFsaXppbmcgdGhhdCB3
-aGF0IEhvbGdlciByZXBvcnRlZCBpcw0KcHJvYmFibHkgYW5vdGhlciBpc3N1ZSB0aGFuIHdoYXQg
-SSByYW4gaW50byBteXNlbGYuIFNpbmNlIHRoaXMgcGF0Y2ggYnkNCml0c2VsZiBsb29rcyBub3cg
-dXNlZnVsIHRvIG1lOg0KDQpSZXZpZXdlZC1ieTogQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFz
-c2NoZUB3ZGMuY29tPg0KDQpCVFcsIGRvIHlvdSB0aGluayB0aGUgcGF0Y2ggYXQgdGhlIHN0YXJ0
-IG9mIHRoaXMgdGhyZWFkIGFsc28gZml4ZXMgdGhlIGlzc3VlDQp0aGF0IHJlc3VsdGVkIGluIGNv
-bW1pdCA4MjZhNzBhMDhiMTIgKCJTQ1NJOiBkb24ndCBnZXQgdGFyZ2V0L2hvc3QgYnVzeV9jb3Vu
-dA0KaW4gc2NzaV9tcV9nZXRfYnVkZ2V0KCkiKT8gRG8geW91IHRoaW5rIHdlIHN0aWxsIG5lZWQg
-dGhhdCBwYXRjaD8NCg0KQmFydC4=
+On Fri, Dec 08, 2017 at 07:34:39AM +1100, Stephen Rothwell wrote:
+> Hi all,
+> 
+> On Thu, 7 Dec 2017 09:40:38 -0800 "Paul E. McKenney" <paulmck@linux.vnet.ibm.com> wrote:
+> >
+> > On Thu, Dec 07, 2017 at 05:30:03PM +0000, Bart Van Assche wrote:
+> > > However, what's not clear to me is through which tree this patch should be
+> > > sent to Linus? Should the above patch be sent as a v4.15-rc fix or should
+> > > Martin perhaps queue it in his tree for v4.16-rc1?  
+> > 
+> > I have to defer to you guys on that one.  Left to myself, I will just
+> > push it into the next merge window (as opposed to using my normal process,
+> > which at this point would get it into the one following).
+> > 
+> > So please let me know how you would like to proceed.
+> 
+> Clearly, it needs to go via Martin's tree as otherwise his tree will
+> not build in some circumstances ... or if it going to cause problems
+> for Paul, then it should be in a separate non-rebasing branch (probably
+> of Paul's tree) that is merged into Pauls main branch and Marin's tree.
+
+It is unlikely to cause problems, so please let it go up where convenient.
+
+Just please let me know.
+
+							Thanx, Paul
