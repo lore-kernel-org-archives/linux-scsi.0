@@ -1,43 +1,37 @@
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Subject: Re: [PATCH] libsas: flush pending destruct work in sas_unregister_domain_devices()
-Date: Thu, 7 Dec 2017 17:04:31 -0800
-Message-ID: <CAM_iQpV6XEHx5vrUz+2RVoBQQ_7hxkgasMcxiSWGBXHVDdwqKg@mail.gmail.com>
-References: <20171128002445.16594-1-xiyou.wangcong@gmail.com>
- <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site> <922397da-7dd3-c24e-1d94-e4804a769331@huawei.com>
- <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
- <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com> <CAM_iQpVWmeq5BMvxJmD2FP6Zm6s7O05+NqzYQ6uCAp7iE1asnw@mail.gmail.com>
- <CAM_iQpWL=JQFLV3uuQ1zupZgv=9oGKG4aBBsqrXnmy2ToX=PtQ@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/3] SCSI device blacklist handling improvements
+Date: Thu, 07 Dec 2017 20:10:22 -0500
+Message-ID: <yq1d13qvxc1.fsf@oracle.com>
+References: <20171204183633.32139-1-bart.vanassche@wdc.com>
+        <yq1k1xzxpk1.fsf@oracle.com> <1512668081.2624.24.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAM_iQpWL=JQFLV3uuQ1zupZgv=9oGKG4aBBsqrXnmy2ToX=PtQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jason Yan <yanaijie@huawei.com>, chenxiang <chenxiang66@hisilicon.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:54494 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752078AbdLHBK2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 20:10:28 -0500
+In-Reply-To: <1512668081.2624.24.camel@wdc.com> (Bart Van Assche's message of
+        "Thu, 7 Dec 2017 17:34:43 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Dec 7, 2017 at 4:40 PM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
-> On Thu, Dec 7, 2017 at 2:57 PM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
->> On Thu, Dec 7, 2017 at 5:37 AM, John Garry <john.garry@huawei.com> wrote:
->>> On 28/11/2017 17:04, Cong Wang wrote:
->>>>
->>>> I don't understand, the only caller of sas_unregister_domain_devices()
->>>> is sas_deform_port().
->>>>
->>>
->>> And sas_deform_port() may be called from another worker on the same queue,
->>> right? As in sas_phye_loss_of_signal()->sas_deform_port()
->>
->> Oh, good catch! I didn't notice this subtle call path.
->>
->> Do you have any better idea to fix this? We saw this on 4.9 too.
->>
->
-> I think we can just cancel the destruct work before calling
-> sas_port_delete(). This should work even if it is called in
-> another work.
->
 
-This assumes sas_port_delete() could release resources recursively
-in the hierarchy, this is true for sysfs but perhaps not true for other
-resources...
+Bart,
+
+> Are you perhaps referring to the five __force casts? If so, do you
+> have a suggestion for avoiding that sparse reports false positive
+> warnings on the conversions between int and blist_flags_t? The only
+> approach I can think of to reduce the number of __force casts is to
+> embed these __force casts into two helper functions - one for the
+> conversion from int to blist_flags_t and one for the conversion the
+> other way around.
+
+blist_flags_t is an unsigned int, you are forcing it to u32 two
+places. That's a problem waiting to happen next time we add a blacklist
+flag.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
