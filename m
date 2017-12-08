@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 04/19] scsi: hisi_sas: optimise port id refresh function
-Date: Sat, 9 Dec 2017 01:16:35 +0800
-Message-ID: <1512753410-50924-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 06/19] scsi: hisi_sas: modify hisi_sas_dev_gone() for reset
+Date: Sat, 9 Dec 2017 01:16:37 +0800
+Message-ID: <1512753410-50924-7-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,117 +9,53 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Currently refreshing the PHY port id after reset is
-done in the rescan topology function, which is quite
-late in the reset process. It could be moved earlier in
-the process, as the port id can be refreshed once the
-PHYs become ready.
+Do a couple of changes for when HISI_SAS_RESET_BIT is
+set for HBA:
+- Clearing ITCT is not necessary
+- Remove internal abort as it will fail during reset
 
-In addition to this, we should set the hisi_sas_dev port
-id to 0xff (invalid port id) if all PHYs of this port remain
-down for the same device.
+Flag sas_dev->dev_type is kept as SAS_PHY_UNUSED.
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 48 ++++++++++++++++++++++-------------
- 1 file changed, 30 insertions(+), 18 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 6446ce2..326ecb2 100644
+index 64d51a8..e4b3092 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -990,27 +990,42 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- 				sizeof(ssp_task), tmf);
+@@ -738,17 +738,19 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+ 	dev_info(dev, "found dev[%d:%x] is gone\n",
+ 		 sas_dev->device_id, sas_dev->dev_type);
+ 
+-	hisi_sas_internal_task_abort(hisi_hba, device,
++	if (!test_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags)) {
++		hisi_sas_internal_task_abort(hisi_hba, device,
+ 				     HISI_SAS_INT_ABT_DEV, 0);
+ 
+-	hisi_sas_dereg_device(hisi_hba, device);
++		hisi_sas_dereg_device(hisi_hba, device);
++
++		hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
++		device->lldd_dev = NULL;
++		memset(sas_dev, 0, sizeof(*sas_dev));
++	}
+ 
+-	hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
+ 	if (hisi_hba->hw->free_device)
+ 		hisi_hba->hw->free_device(sas_dev);
+-
+-	device->lldd_dev = NULL;
+-	memset(sas_dev, 0, sizeof(*sas_dev));
+ 	sas_dev->dev_type = SAS_PHY_UNUSED;
  }
- 
--static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba,
--		struct asd_sas_port *sas_port, enum sas_linkrate linkrate)
-+static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
- {
--	struct hisi_sas_device	*sas_dev;
--	struct domain_device *device;
-+	u32 state = hisi_hba->hw->get_phys_state(hisi_hba);
- 	int i;
- 
- 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
--		sas_dev = &hisi_hba->devices[i];
--		device = sas_dev->sas_device;
-+		struct hisi_sas_device *sas_dev = &hisi_hba->devices[i];
-+		struct domain_device *device = sas_dev->sas_device;
-+		struct asd_sas_port *sas_port;
-+		struct hisi_sas_port *port;
-+		struct hisi_sas_phy *phy = NULL;
-+		struct asd_sas_phy *sas_phy;
-+
- 		if ((sas_dev->dev_type == SAS_PHY_UNUSED)
--				|| !device || (device->port != sas_port))
-+				|| !device || !device->port)
- 			continue;
- 
--		hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
-+		sas_port = device->port;
-+		port = to_hisi_sas_port(sas_port);
-+
-+		list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el)
-+			if (state & BIT(sas_phy->id)) {
-+				phy = sas_phy->lldd_phy;
-+				break;
-+			}
-+
-+		if (phy) {
-+			port->id = phy->port_id;
- 
--		/* Update linkrate of directly attached device. */
--		if (!device->parent)
--			device->linkrate = linkrate;
-+			/* Update linkrate of directly attached device. */
-+			if (!device->parent)
-+				device->linkrate = phy->sas_phy.linkrate;
- 
--		hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
-+			hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
-+		} else
-+			port->id = 0xff;
- 	}
- }
- 
-@@ -1025,21 +1040,17 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
- 		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 		struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 		struct asd_sas_port *sas_port = sas_phy->port;
--		struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
- 		bool do_port_check = !!(_sas_port != sas_port);
- 
- 		if (!sas_phy->phy->enabled)
- 			continue;
- 
- 		/* Report PHY state change to libsas */
--		if (state & (1 << phy_no)) {
--			if (do_port_check && sas_port) {
-+		if (state & BIT(phy_no)) {
-+			if (do_port_check && sas_port && sas_port->port_dev) {
- 				struct domain_device *dev = sas_port->port_dev;
- 
- 				_sas_port = sas_port;
--				port->id = phy->port_id;
--				hisi_sas_refresh_port_id(hisi_hba,
--						sas_port, sas_phy->linkrate);
- 
- 				if (DEV_IS_EXPANDER(dev->dev_type))
- 					sas_ha->notify_port_event(sas_phy,
-@@ -1088,6 +1099,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	/* Init and wait for PHYs to come up and all libsas event finished. */
- 	hisi_hba->hw->phys_init(hisi_hba);
- 	msleep(1000);
-+	hisi_sas_refresh_port_id(hisi_hba);
- 	drain_workqueue(hisi_hba->wq);
- 	drain_workqueue(shost->work_q);
  
 -- 
 1.9.1
