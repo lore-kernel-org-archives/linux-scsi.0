@@ -1,33 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_debug: Add support for injecting SCSI_MLQUEUE_HOST_BUSY
-Date: Thu, 07 Dec 2017 21:51:20 -0500
-Message-ID: <yq1y3mesziv.fsf@oracle.com>
-References: <20171207225618.3116-1-bart.vanassche@wdc.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH] libsas: flush pending destruct work in
+ sas_unregister_domain_devices()
+Date: Fri, 8 Dec 2017 15:54:54 +0800
+Message-ID: <5A2A454E.6050108@huawei.com>
+References: <20171128002445.16594-1-xiyou.wangcong@gmail.com>
+ <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site>
+ <922397da-7dd3-c24e-1d94-e4804a769331@huawei.com>
+ <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
+ <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com>
+ <CAM_iQpVWmeq5BMvxJmD2FP6Zm6s7O05+NqzYQ6uCAp7iE1asnw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46498 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752523AbdLHCvh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 21:51:37 -0500
-In-Reply-To: <20171207225618.3116-1-bart.vanassche@wdc.com> (Bart Van Assche's
-        message of "Thu, 7 Dec 2017 14:56:18 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAM_iQpVWmeq5BMvxJmD2FP6Zm6s7O05+NqzYQ6uCAp7iE1asnw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Cong Wang <xiyou.wangcong@gmail.com>, John Garry <john.garry@huawei.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 
-Bart,
+On 2017/12/8 6:57, Cong Wang wrote:
+> On Thu, Dec 7, 2017 at 5:37 AM, John Garry <john.garry@huawei.com> wrote:
+>> On 28/11/2017 17:04, Cong Wang wrote:
+>>>
+>>> I don't understand, the only caller of sas_unregister_domain_devices()
+>>> is sas_deform_port().
+>>>
+>>
+>> And sas_deform_port() may be called from another worker on the same queue,
+>> right? As in sas_phye_loss_of_signal()->sas_deform_port()
+>
+> Oh, good catch! I didn't notice this subtle call path.
+>
+> Do you have any better idea to fix this? We saw this on 4.9 too.
+>
 
-> Although it is important to be able to trigger the code in the SCSI
-> core for SCSI_MLQUEUE_HOST_BUSY handling, currently it is
-> nontrivial to trigger that code. Hence this patch that adds a new
-> error injection option to the scsi_debug driver for making the
-> .queue_rq() implementation of this driver return
-> SCSI_MLQUEUE_HOST_BUSY.
+We have sent a patchset to fix this and to enhance libsas hotplug.
+Please refer to https://lkml.org/lkml/2017/9/6/142
 
-Applied to 4.16/scsi-queue. Thanks!
+And I'm going to send a new version soon.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Jason
+
+>>
+>> The device destruct takes place in a separate worker from which
+>> sas_deform_port() is called, but the same queue. So we have this queued
+>> destruct happen after the port is fully deformed -> hence the WARN.
+>>
+>> I guess you only tested your patch on disks attached through an expander.
+>
+> I have very limited scsi hardware, so my testing is limited too.
+>
+> .
+>
