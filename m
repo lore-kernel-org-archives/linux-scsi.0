@@ -1,189 +1,212 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 14/19] scsi: hisi_sas: do link reset for some CHL_INT2 ints
-Date: Sat, 9 Dec 2017 01:16:45 +0800
-Message-ID: <1512753410-50924-15-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 09/19] scsi: hisi_sas: add RAS feature for v3 hw
+Date: Sat, 9 Dec 2017 01:16:40 +0800
+Message-ID: <1512753410-50924-10-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2668 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754310AbdLHQbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Dec 2017 11:31:05 -0500
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-We should do link reset of PHY when identify timeout or
-STP link timeout. They are internal events of SOC and are
-notified to driver through interrupts of CHL_INT2.
-
-Besides, we should add an delay work to do link reset as
-it needs sleep. So, this patch add an new PHY event
-HISI_PHYE_LINK_RESET for this.
-
-Notes: v2 HW doesn't report the event of STP link timeout.
-So, we only need to handle event of identify timeout for v2 HW.
+We use PCIe AER to support RAS feature for v3 hw.
+This driver should do following two things to support this:
+1. Enable RAS interrupts, so that errors can be reported to
+RAS module.
+2. Realize err_handler for sas_v3_pci_driver. Then if non-fatal
+error is detected, print error source and try to recover SAS
+controller.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 12 ++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++++++++++++++----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 29 +++++++++++++++++++++++++++--
- 4 files changed, 54 insertions(+), 6 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 139 +++++++++++++++++++++++++++++++++
+ 1 file changed, 139 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index aa14638..4343c4c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -126,6 +126,7 @@ enum hisi_sas_bit_err_type {
- 
- enum hisi_sas_phy_event {
- 	HISI_PHYE_PHY_UP   = 0U,
-+	HISI_PHYE_LINK_RESET,
- 	HISI_PHYES_NUM,
- };
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 326dc81..7446a39 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -22,6 +22,8 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- 			     struct domain_device *device,
- 			     int abort_flag, int tag);
- static int hisi_sas_softreset_ata_disk(struct domain_device *device);
-+static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
-+				void *funcdata);
- 
- u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
- {
-@@ -631,8 +633,18 @@ static void hisi_sas_phyup_work(struct work_struct *work)
- 	hisi_sas_bytes_dmaed(hisi_hba, phy_no);
- }
- 
-+static void hisi_sas_linkreset_work(struct work_struct *work)
-+{
-+	struct hisi_sas_phy *phy =
-+		container_of(work, typeof(*phy), works[HISI_PHYE_LINK_RESET]);
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+
-+	hisi_sas_control_phy(sas_phy, PHY_FUNC_LINK_RESET, NULL);
-+}
-+
- static const work_func_t hisi_sas_phye_fns[HISI_PHYES_NUM] = {
- 	[HISI_PHYE_PHY_UP] = hisi_sas_phyup_work,
-+	[HISI_PHYE_LINK_RESET] = hisi_sas_linkreset_work,
- };
- 
- bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index e521c42..b8fe08d 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -245,6 +245,7 @@
- #define CHL_INT1_DMAC_RX_AXI_WR_ERR_OFF	21
- #define CHL_INT1_DMAC_RX_AXI_RD_ERR_OFF	22
- #define CHL_INT2			(PORT_BASE + 0x1bc)
-+#define CHL_INT2_SL_IDAF_TOUT_CONF_OFF	0
- #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
- #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
- #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
-@@ -1187,7 +1188,7 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xfff87fff);
- 		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xff857fff);
--		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbfe);
- 		hisi_sas_phy_write32(hisi_hba, i, SL_CFG, 0x13f801fc);
- 		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
-@@ -2905,10 +2906,19 @@ static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
- 					     CHL_INT1, irq_value1);
- 		}
- 
--		if ((irq_msk & (1 << phy_no)) && irq_value2)
--			hisi_sas_phy_write32(hisi_hba, phy_no,
--					     CHL_INT2, irq_value2);
-+		if ((irq_msk & (1 << phy_no)) && irq_value2) {
-+			struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+
-+			if (irq_value2 & BIT(CHL_INT2_SL_IDAF_TOUT_CONF_OFF)) {
-+				dev_warn(dev, "phy%d identify timeout\n",
-+						phy_no);
-+				hisi_sas_notify_phy_event(phy,
-+						HISI_PHYE_LINK_RESET);
-+			}
- 
-+			hisi_sas_phy_write32(hisi_hba, phy_no,
-+						 CHL_INT2, irq_value2);
-+		}
- 
- 		if ((irq_msk & (1 << phy_no)) && irq_value0) {
- 			if (irq_value0 & CHL_INT0_SL_RX_BCST_ACK_MSK)
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 4b7f251..9e32105 100644
+index 69aa7bc..d356e12 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -140,6 +140,7 @@
- #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
- #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
- #define STP_LINK_TIMER			(PORT_BASE + 0x120)
-+#define STP_LINK_TIMEOUT_STATE		(PORT_BASE + 0x124)
- #define CON_CFG_DRIVER			(PORT_BASE + 0x130)
- #define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
- #define SAS_SMP_CON_TIMER_CFG		(PORT_BASE + 0x138)
-@@ -165,6 +166,8 @@
- #define CHL_INT1_DMAC_RX_AXI_WR_ERR_OFF	21
- #define CHL_INT1_DMAC_RX_AXI_RD_ERR_OFF	22
- #define CHL_INT2			(PORT_BASE + 0x1bc)
-+#define CHL_INT2_SL_IDAF_TOUT_CONF_OFF	0
-+#define CHL_INT2_STP_LINK_TIMEOUT_OFF	31
- #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
- #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
- #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
-@@ -429,7 +432,7 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xffffffff);
- 		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xff87ffff);
--		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0xffffbfe);
- 		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_DWS_RESET_MSK, 0x0);
-@@ -1342,9 +1345,31 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
- 					     CHL_INT1, irq_value1);
- 		}
+@@ -204,6 +204,13 @@
+ #define AM_ROB_ECC_MULBIT_ERR_ADDR_OFF	8
+ #define AM_ROB_ECC_MULBIT_ERR_ADDR_MSK	(0xff << AM_ROB_ECC_MULBIT_ERR_ADDR_OFF)
  
--		if (irq_msk & (8 << (phy_no * 4)) && irq_value2)
-+		if (irq_msk & (8 << (phy_no * 4)) && irq_value2) {
-+			struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++/* RAS registers need init */
++#define RAS_BASE		(0x6000)
++#define SAS_RAS_INTR0			(RAS_BASE)
++#define SAS_RAS_INTR1			(RAS_BASE + 0x04)
++#define SAS_RAS_INTR0_MASK		(RAS_BASE + 0x08)
++#define SAS_RAS_INTR1_MASK		(RAS_BASE + 0x0c)
 +
-+			if (irq_value2 & BIT(CHL_INT2_SL_IDAF_TOUT_CONF_OFF)) {
-+				dev_warn(dev, "phy%d identify timeout\n",
-+							phy_no);
-+				hisi_sas_notify_phy_event(phy,
-+					HISI_PHYE_LINK_RESET);
+ /* HW dma structures */
+ /* Delivery queue header */
+ /* dw0 */
+@@ -496,6 +503,10 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 
+ 	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_HI,
+ 			 upper_32_bits(hisi_hba->initial_fis_dma));
 +
-+			}
++	/* RAS registers init */
++	hisi_sas_write32(hisi_hba, SAS_RAS_INTR0_MASK, 0x0);
++	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1_MASK, 0x0);
+ }
+ 
+ static void config_phy_opt_mode_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+@@ -2129,6 +2140,127 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	scsi_host_put(shost);
+ }
+ 
++static const struct hisi_sas_hw_error sas_ras_intr0_nfe[] = {
++	{ .irq_msk = BIT(19), .msg = "HILINK_INT" },
++	{ .irq_msk = BIT(20), .msg = "HILINK_PLL0_OUT_OF_LOCK" },
++	{ .irq_msk = BIT(21), .msg = "HILINK_PLL1_OUT_OF_LOCK" },
++	{ .irq_msk = BIT(22), .msg = "HILINK_LOSS_OF_REFCLK0" },
++	{ .irq_msk = BIT(23), .msg = "HILINK_LOSS_OF_REFCLK1" },
++	{ .irq_msk = BIT(24), .msg = "DMAC0_TX_POISON" },
++	{ .irq_msk = BIT(25), .msg = "DMAC1_TX_POISON" },
++	{ .irq_msk = BIT(26), .msg = "DMAC2_TX_POISON" },
++	{ .irq_msk = BIT(27), .msg = "DMAC3_TX_POISON" },
++	{ .irq_msk = BIT(28), .msg = "DMAC4_TX_POISON" },
++	{ .irq_msk = BIT(29), .msg = "DMAC5_TX_POISON" },
++	{ .irq_msk = BIT(30), .msg = "DMAC6_TX_POISON" },
++	{ .irq_msk = BIT(31), .msg = "DMAC7_TX_POISON" },
++};
 +
-+			if (irq_value2 & BIT(CHL_INT2_STP_LINK_TIMEOUT_OFF)) {
-+				u32 reg_value = hisi_sas_phy_read32(hisi_hba,
-+						phy_no, STP_LINK_TIMEOUT_STATE);
++static const struct hisi_sas_hw_error sas_ras_intr1_nfe[] = {
++	{ .irq_msk = BIT(0), .msg = "RXM_CFG_MEM3_ECC2B_INTR" },
++	{ .irq_msk = BIT(1), .msg = "RXM_CFG_MEM2_ECC2B_INTR" },
++	{ .irq_msk = BIT(2), .msg = "RXM_CFG_MEM1_ECC2B_INTR" },
++	{ .irq_msk = BIT(3), .msg = "RXM_CFG_MEM0_ECC2B_INTR" },
++	{ .irq_msk = BIT(4), .msg = "HGC_CQE_ECC2B_INTR" },
++	{ .irq_msk = BIT(5), .msg = "LM_CFG_IOSTL_ECC2B_INTR" },
++	{ .irq_msk = BIT(6), .msg = "LM_CFG_ITCTL_ECC2B_INTR" },
++	{ .irq_msk = BIT(7), .msg = "HGC_ITCT_ECC2B_INTR" },
++	{ .irq_msk = BIT(8), .msg = "HGC_IOST_ECC2B_INTR" },
++	{ .irq_msk = BIT(9), .msg = "HGC_DQE_ECC2B_INTR" },
++	{ .irq_msk = BIT(10), .msg = "DMAC0_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(11), .msg = "DMAC1_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(12), .msg = "DMAC2_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(13), .msg = "DMAC3_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(14), .msg = "DMAC4_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(15), .msg = "DMAC5_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(16), .msg = "DMAC6_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(17), .msg = "DMAC7_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(18), .msg = "OOO_RAM_ECC2B_INTR" },
++	{ .irq_msk = BIT(20), .msg = "HGC_DQE_POISON_INTR" },
++	{ .irq_msk = BIT(21), .msg = "HGC_IOST_POISON_INTR" },
++	{ .irq_msk = BIT(22), .msg = "HGC_ITCT_POISON_INTR" },
++	{ .irq_msk = BIT(23), .msg = "HGC_ITCT_NCQ_POISON_INTR" },
++	{ .irq_msk = BIT(24), .msg = "DMAC0_RX_POISON" },
++	{ .irq_msk = BIT(25), .msg = "DMAC1_RX_POISON" },
++	{ .irq_msk = BIT(26), .msg = "DMAC2_RX_POISON" },
++	{ .irq_msk = BIT(27), .msg = "DMAC3_RX_POISON" },
++	{ .irq_msk = BIT(28), .msg = "DMAC4_RX_POISON" },
++	{ .irq_msk = BIT(29), .msg = "DMAC5_RX_POISON" },
++	{ .irq_msk = BIT(30), .msg = "DMAC6_RX_POISON" },
++	{ .irq_msk = BIT(31), .msg = "DMAC7_RX_POISON" },
++};
 +
-+				dev_warn(dev, "phy%d stp link timeout (0x%x)\n",
-+							phy_no, reg_value);
-+				if (reg_value & BIT(4))
-+					hisi_sas_notify_phy_event(phy,
-+						HISI_PHYE_LINK_RESET);
-+			}
++static bool process_non_fatal_error_v3_hw(struct hisi_hba *hisi_hba)
++{
++	struct device *dev = hisi_hba->dev;
++	const struct hisi_sas_hw_error *ras_error;
++	bool need_reset = false;
++	u32 irq_value;
++	int i;
 +
- 			hisi_sas_phy_write32(hisi_hba, phy_no,
- 					     CHL_INT2, irq_value2);
++	irq_value = hisi_sas_read32(hisi_hba, SAS_RAS_INTR0);
++	for (i = 0; i < ARRAY_SIZE(sas_ras_intr0_nfe); i++) {
++		ras_error = &sas_ras_intr0_nfe[i];
++		if (ras_error->irq_msk & irq_value) {
++			dev_warn(dev, "SAS_RAS_INTR0: %s(irq_value=0x%x) found.\n",
++					ras_error->msg, irq_value);
++			need_reset = true;
 +		}
++	}
++	hisi_sas_write32(hisi_hba, SAS_RAS_INTR0, irq_value);
++
++	irq_value = hisi_sas_read32(hisi_hba, SAS_RAS_INTR1);
++	for (i = 0; i < ARRAY_SIZE(sas_ras_intr1_nfe); i++) {
++		ras_error = &sas_ras_intr1_nfe[i];
++		if (ras_error->irq_msk & irq_value) {
++			dev_warn(dev, "SAS_RAS_INTR1: %s(irq_value=0x%x) found.\n",
++					ras_error->msg, irq_value);
++			need_reset = true;
++		}
++	}
++	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1, irq_value);
++
++	return need_reset;
++}
++
++static pci_ers_result_t hisi_sas_error_detected_v3_hw(struct pci_dev *pdev,
++		pci_channel_state_t state)
++{
++	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
++	struct hisi_hba *hisi_hba = sha->lldd_ha;
++	struct device *dev = hisi_hba->dev;
++
++	dev_info(dev, "PCI error: detected callback, state(%d)!!\n", state);
++	if (state == pci_channel_io_perm_failure)
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	if (process_non_fatal_error_v3_hw(hisi_hba))
++		return PCI_ERS_RESULT_NEED_RESET;
++
++	return PCI_ERS_RESULT_CAN_RECOVER;
++}
++
++static pci_ers_result_t hisi_sas_mmio_enabled_v3_hw(struct pci_dev *pdev)
++{
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++static pci_ers_result_t hisi_sas_slot_reset_v3_hw(struct pci_dev *pdev)
++{
++	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
++	struct hisi_hba *hisi_hba = sha->lldd_ha;
++	struct device *dev = hisi_hba->dev;
++	HISI_SAS_DECLARE_RST_WORK_ON_STACK(r);
++
++	dev_info(dev, "PCI error: slot reset callback!!\n");
++	queue_work(hisi_hba->wq, &r.work);
++	wait_for_completion(r.completion);
++	if (r.done)
++		return PCI_ERS_RESULT_RECOVERED;
++
++	return PCI_ERS_RESULT_DISCONNECT;
++}
++
+ enum {
+ 	/* instances of the controller */
+ 	hip08,
+@@ -2139,11 +2271,18 @@ enum {
+ 	{}
+ };
  
++static const struct pci_error_handlers hisi_sas_err_handler = {
++	.error_detected	= hisi_sas_error_detected_v3_hw,
++	.mmio_enabled	= hisi_sas_mmio_enabled_v3_hw,
++	.slot_reset	= hisi_sas_slot_reset_v3_hw,
++};
++
+ static struct pci_driver sas_v3_pci_driver = {
+ 	.name		= DRV_NAME,
+ 	.id_table	= sas_v3_pci_table,
+ 	.probe		= hisi_sas_v3_probe,
+ 	.remove		= hisi_sas_v3_remove,
++	.err_handler	= &hisi_sas_err_handler,
+ };
  
- 		if (irq_msk & (2 << (phy_no * 4)) && irq_value0) {
+ module_pci_driver(sas_v3_pci_driver);
 -- 
 1.9.1
