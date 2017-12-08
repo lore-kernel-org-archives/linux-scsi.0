@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 05/19] scsi: hisi_sas: some optimizations of host controller reset
-Date: Sat, 9 Dec 2017 01:16:36 +0800
-Message-ID: <1512753410-50924-6-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 14/19] scsi: hisi_sas: do link reset for some CHL_INT2 ints
+Date: Sat, 9 Dec 2017 01:16:45 +0800
+Message-ID: <1512753410-50924-15-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,72 +14,176 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-This patch do following optimizations to host controller reset:
-1. Unblock scsi requests before rescanning topology, as SCSI
-command need be used if new device is found during rescanning
-topology.
+We should do link reset of PHY when identify timeout or
+STP link timeout. They are internal events of SOC and are
+notified to driver through interrupts of CHL_INT2.
 
-2. Remove drain_workqueue(hisi_hba->wq) and
-drain_workqueue(shost->work_q), as there is no need to ensure
-that all PHYs event are done before exiting host reset.
+Besides, we should add an delay work to do link reset as
+it needs sleep. So, this patch add an new PHY event
+HISI_PHYE_LINK_RESET for this.
 
-3. Improve message print level of host reset. Host reset is an
-important and very few occurrence event. We should know its progress
-even when not debugging.
+Notes: v2 HW doesn't report the event of STP link timeout.
+So, we only need to handle event of identify timeout for v2 HW.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 12 ++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++++++++++++++----
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 29 +++++++++++++++++++++++++++--
+ 4 files changed, 54 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index aa14638..4343c4c 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -126,6 +126,7 @@ enum hisi_sas_bit_err_type {
+ 
+ enum hisi_sas_phy_event {
+ 	HISI_PHYE_PHY_UP   = 0U,
++	HISI_PHYE_LINK_RESET,
+ 	HISI_PHYES_NUM,
+ };
+ 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 326ecb2..64d51a8 100644
+index 326dc81..7446a39 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1061,8 +1061,6 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
- 			hisi_sas_phy_down(hisi_hba, phy_no, 0);
+@@ -22,6 +22,8 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
+ 			     struct domain_device *device,
+ 			     int abort_flag, int tag);
+ static int hisi_sas_softreset_ata_disk(struct domain_device *device);
++static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
++				void *funcdata);
  
- 	}
--
--	drain_workqueue(hisi_hba->shost->work_q);
+ u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
+ {
+@@ -631,8 +633,18 @@ static void hisi_sas_phyup_work(struct work_struct *work)
+ 	hisi_sas_bytes_dmaed(hisi_hba, phy_no);
  }
  
- static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
-@@ -1079,7 +1077,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	if (test_and_set_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags))
- 		return -1;
++static void hisi_sas_linkreset_work(struct work_struct *work)
++{
++	struct hisi_sas_phy *phy =
++		container_of(work, typeof(*phy), works[HISI_PHYE_LINK_RESET]);
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++
++	hisi_sas_control_phy(sas_phy, PHY_FUNC_LINK_RESET, NULL);
++}
++
+ static const work_func_t hisi_sas_phye_fns[HISI_PHYES_NUM] = {
+ 	[HISI_PHYE_PHY_UP] = hisi_sas_phyup_work,
++	[HISI_PHYE_LINK_RESET] = hisi_sas_linkreset_work,
+ };
  
--	dev_dbg(dev, "controller resetting...\n");
-+	dev_info(dev, "controller resetting...\n");
- 	old_state = hisi_hba->hw->get_phys_state(hisi_hba);
+ bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index e521c42..b8fe08d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -245,6 +245,7 @@
+ #define CHL_INT1_DMAC_RX_AXI_WR_ERR_OFF	21
+ #define CHL_INT1_DMAC_RX_AXI_RD_ERR_OFF	22
+ #define CHL_INT2			(PORT_BASE + 0x1bc)
++#define CHL_INT2_SL_IDAF_TOUT_CONF_OFF	0
+ #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
+ #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
+ #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
+@@ -1187,7 +1188,7 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xfff87fff);
+ 		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xff857fff);
+-		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbfe);
+ 		hisi_sas_phy_write32(hisi_hba, i, SL_CFG, 0x13f801fc);
+ 		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
+ 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
+@@ -2905,10 +2906,19 @@ static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
+ 					     CHL_INT1, irq_value1);
+ 		}
  
- 	scsi_block_requests(shost);
-@@ -1088,6 +1086,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	if (rc) {
- 		dev_warn(dev, "controller reset failed (%d)\n", rc);
- 		clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+		scsi_unblock_requests(shost);
- 		goto out;
- 	}
- 	spin_lock_irqsave(&hisi_hba->lock, flags);
-@@ -1100,15 +1099,13 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	hisi_hba->hw->phys_init(hisi_hba);
- 	msleep(1000);
- 	hisi_sas_refresh_port_id(hisi_hba);
--	drain_workqueue(hisi_hba->wq);
--	drain_workqueue(shost->work_q);
-+	scsi_unblock_requests(shost);
+-		if ((irq_msk & (1 << phy_no)) && irq_value2)
+-			hisi_sas_phy_write32(hisi_hba, phy_no,
+-					     CHL_INT2, irq_value2);
++		if ((irq_msk & (1 << phy_no)) && irq_value2) {
++			struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++
++			if (irq_value2 & BIT(CHL_INT2_SL_IDAF_TOUT_CONF_OFF)) {
++				dev_warn(dev, "phy%d identify timeout\n",
++						phy_no);
++				hisi_sas_notify_phy_event(phy,
++						HISI_PHYE_LINK_RESET);
++			}
  
- 	state = hisi_hba->hw->get_phys_state(hisi_hba);
- 	hisi_sas_rescan_topology(hisi_hba, old_state, state);
--	dev_dbg(dev, "controller reset complete\n");
-+	dev_info(dev, "controller reset complete\n");
++			hisi_sas_phy_write32(hisi_hba, phy_no,
++						 CHL_INT2, irq_value2);
++		}
  
- out:
--	scsi_unblock_requests(shost);
- 	clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
+ 		if ((irq_msk & (1 << phy_no)) && irq_value0) {
+ 			if (irq_value0 & CHL_INT0_SL_RX_BCST_ACK_MSK)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 4b7f251..9e32105 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -140,6 +140,7 @@
+ #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
+ #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
+ #define STP_LINK_TIMER			(PORT_BASE + 0x120)
++#define STP_LINK_TIMEOUT_STATE		(PORT_BASE + 0x124)
+ #define CON_CFG_DRIVER			(PORT_BASE + 0x130)
+ #define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
+ #define SAS_SMP_CON_TIMER_CFG		(PORT_BASE + 0x138)
+@@ -165,6 +166,8 @@
+ #define CHL_INT1_DMAC_RX_AXI_WR_ERR_OFF	21
+ #define CHL_INT1_DMAC_RX_AXI_RD_ERR_OFF	22
+ #define CHL_INT2			(PORT_BASE + 0x1bc)
++#define CHL_INT2_SL_IDAF_TOUT_CONF_OFF	0
++#define CHL_INT2_STP_LINK_TIMEOUT_OFF	31
+ #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
+ #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
+ #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
+@@ -429,7 +432,7 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xffffffff);
+ 		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xff87ffff);
+-		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0xffffbfe);
+ 		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
+ 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
+ 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_DWS_RESET_MSK, 0x0);
+@@ -1342,9 +1345,31 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 					     CHL_INT1, irq_value1);
+ 		}
  
- 	return rc;
+-		if (irq_msk & (8 << (phy_no * 4)) && irq_value2)
++		if (irq_msk & (8 << (phy_no * 4)) && irq_value2) {
++			struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++
++			if (irq_value2 & BIT(CHL_INT2_SL_IDAF_TOUT_CONF_OFF)) {
++				dev_warn(dev, "phy%d identify timeout\n",
++							phy_no);
++				hisi_sas_notify_phy_event(phy,
++					HISI_PHYE_LINK_RESET);
++
++			}
++
++			if (irq_value2 & BIT(CHL_INT2_STP_LINK_TIMEOUT_OFF)) {
++				u32 reg_value = hisi_sas_phy_read32(hisi_hba,
++						phy_no, STP_LINK_TIMEOUT_STATE);
++
++				dev_warn(dev, "phy%d stp link timeout (0x%x)\n",
++							phy_no, reg_value);
++				if (reg_value & BIT(4))
++					hisi_sas_notify_phy_event(phy,
++						HISI_PHYE_LINK_RESET);
++			}
++
+ 			hisi_sas_phy_write32(hisi_hba, phy_no,
+ 					     CHL_INT2, irq_value2);
++		}
+ 
+ 
+ 		if (irq_msk & (2 << (phy_no * 4)) && irq_value0) {
 -- 
 1.9.1
