@@ -1,67 +1,69 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v5 0/7] Enhance libsas hotplug feature
-Date: Fri, 8 Dec 2017 17:42:03 +0800
-Message-ID: <20171208094210.24887-1-yanaijie@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v2] scsi: libsas: fix length error in sas_smp_handler()
+Date: Fri, 8 Dec 2017 09:49:46 +0000
+Message-ID: <9f0c1405-d0ba-9bc4-b91a-8cc9f9b5ba23@huawei.com>
+References: <20171207105751.27225-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Jason Yan <yanaijie@huawei.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2272 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753450AbdLHJuP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Dec 2017 04:50:15 -0500
+In-Reply-To: <20171207105751.27225-1-yanaijie@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hch@lst.de
+Cc: linux-scsi@vger.kernel.org, jthumshirn@suse.de, hare@suse.com
 
-Now the libsas hotplug has some issues, Dan Williams report
-a similar bug here before
-https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
+On 07/12/2017 10:57, Jason Yan wrote:
+> The bsg_job_done() requires the length of payload received, but we give
+> it the untransferred residual.
+>
 
-The issues we have found
-1. if LLDD burst reports lots of phy-up/phy-down sas events, some events
-   may lost because a same sas events is pending now, finally libsas topo
-   may different the hardware.
-2. receive a phy down sas event, libsas call sas_deform_port to remove
-   devices, it would first delete the sas port, then put a destruction
-   discovery event in a new work, and queue it at the tail of workqueue,
-   once the sas port be deleted, its children device will be deleted too,
-   when the destruction work start, it will found the target device has
-   been removed, and report a sysfs warnning.
-3. since a hotplug process will be devided into several works, if a phy up
-   sas event insert into phydown works, like
-   destruction work  ---> PORTE_BYTES_DMAED (sas_form_port) ---->PHYE_LOSS_OF_SIGNAL
-   the hot remove flow would broken by PORTE_BYTES_DMAED event, it's not
-   we expected, and issues would occur.
+As I understand, this patches fixes (SES) enclosure management for 
+libsas, so it's quite an important patch.
 
-v4->v5: -process only one expander's revalidation in sas_ex_revalidate_domain()
-        -notify event PORTE_BROADCAST_RCVD in sas_enable_revalidation()
-v3->v4: -use dynamic alloced work and support shutting down the phy if active event reached the threshold
-        -use flush_workqueue instead of wait-completion to process discover events synchronously
-        -direct call probe and destruct function
-v2->v3: some code improvements suggested by Johannes and John,
-        split v2 patch 2 into several small pathes.
-v1->v2: some code improvements suggested by John Garry
+Thanks,
+John
 
-Jason Yan (7):
-  scsi: libsas: Use dynamic alloced work to avoid sas event lost
-  scsi: libsas: shut down the PHY if events reached the threshold
-  scsi: libsas: make the event threshold configurable
-  scsi: libsas: Use new workqueue to run sas event and disco event
-  scsi: libsas: use flush_workqueue to process disco events
-    synchronously
-  scsi: libsas: direct call probe and destruct
-  scsi: libsas: notify event PORTE_BROADCAST_RCVD in
-    sas_enable_revalidation()
-
- drivers/scsi/hisi_sas/hisi_sas_main.c |   6 ++
- drivers/scsi/libsas/sas_ata.c         |   1 -
- drivers/scsi/libsas/sas_discover.c    |  34 ++++++-----
- drivers/scsi/libsas/sas_event.c       |  86 ++++++++++++++++++++-------
- drivers/scsi/libsas/sas_expander.c    |   8 +--
- drivers/scsi/libsas/sas_init.c        | 107 +++++++++++++++++++++++++++++++++-
- drivers/scsi/libsas/sas_internal.h    |   7 +++
- drivers/scsi/libsas/sas_phy.c         |  69 +++++++++++-----------
- drivers/scsi/libsas/sas_port.c        |  25 ++++----
- include/scsi/libsas.h                 |  30 +++++++---
- include/scsi/scsi_transport_sas.h     |   1 +
- 11 files changed, 277 insertions(+), 97 deletions(-)
-
--- 
-2.9.5
+> Fixes: 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib for SMP passthrough")
+> Reported-and-tested-by: chenqilin <chenqilin2@huawei.com>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> CC: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/libsas/sas_expander.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 50cb0f3..6c40ecc 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -2143,7 +2143,7 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+>  		struct sas_rphy *rphy)
+>  {
+>  	struct domain_device *dev;
+> -	unsigned int reslen = 0;
+> +	unsigned int rcvlen = 0;
+>  	int ret = -EINVAL;
+>
+>  	/* no rphy means no smp target support (ie aic94xx host) */
+> @@ -2177,12 +2177,12 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+>
+>  	ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
+>  			job->reply_payload.sg_list);
+> -	if (ret > 0) {
+> -		/* positive number is the untransferred residual */
+> -		reslen = ret;
+> +	if (ret >= 0) {
+> +		/* bsg_job_done() requires the length received  */
+> +		rcvlen = job->reply_payload.payload_len - ret;
+>  		ret = 0;
+>  	}
+>
+>  out:
+> -	bsg_job_done(job, ret, reslen);
+> +	bsg_job_done(job, ret, rcvlen);
+>  }
+>
