@@ -1,58 +1,116 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v2 1/3] scsi: Fix a scsi_show_rq() NULL pointer
- dereference
-Date: Fri, 8 Dec 2017 16:44:56 +0800
-Message-ID: <20171208084455.GF21488@ming.t460p>
-References: <20171206005753.28734-1-bart.vanassche@wdc.com>
- <20171206005753.28734-2-bart.vanassche@wdc.com>
- <20171208014528.GD21488@ming.t460p>
- <yq1374muebm.fsf@oracle.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v5 3/7] scsi: libsas: make the event threshold configurable
+Date: Fri, 8 Dec 2017 17:42:06 +0800
+Message-ID: <20171208094210.24887-4-yanaijie@huawei.com>
+References: <20171208094210.24887-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1374muebm.fsf@oracle.com>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2266 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753226AbdLHJgk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Dec 2017 04:36:40 -0500
+In-Reply-To: <20171208094210.24887-1-yanaijie@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Jason Yan <yanaijie@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 
-Hi Martin,
+Add a sysfs attr that LLDD can configure it for every host. We made
+a example in hisi_sas. Other LLDDs using libsas can implement it if
+they want.
 
-On Thu, Dec 07, 2017 at 09:46:21PM -0500, Martin K. Petersen wrote:
-> 
-> Ming,
-> 
-> > As I explained in [1], the use-after-free is inevitable no matter if
-> > clearing 'SCpnt->cmnd' before mempool_free() in sd_uninit_command() or
-> > not, so we need to comment the fact that cdb may point to garbage
-> > data, and this function(especially __scsi_format_command() has to
-> > survive that, so that people won't be surprised when kasan complains
-> > use-after-free, and guys will be careful when they try to change the
-> > code in future.
-> 
-> Longer term we really need to get rid of the separate CDB allocation. It
-> was a necessary evil when I did it. And not much of a concern since I
-> did not expect anybody sane to use Type 2 (it's designed for use inside
-> disk arrays).
-> 
-> However, I keep hearing about people using Type 2 drives. Some vendors
-> source drives formatted that way and use the same SKU for arrays and
-> standalone servers.
-> 
-> So we should really look into making it possible for a queue to have a
-> bigger than 16-byte built-in CDB. For Type 2 devices, 32-byte reads and
-> writes are a prerequisite. So it would be nice to be able to switch a
-> queue to a larger allocation post creation (we won't know the type until
-> after READ CAPACITY(16) has been sent).
+Suggested-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: John Garry <john.garry@huawei.com>
+CC: Johannes Thumshirn <jthumshirn@suse.de>
+CC: Ewan Milne <emilne@redhat.com>
+CC: Christoph Hellwig <hch@lst.de>
+CC: Tomas Henzl <thenzl@redhat.com>
+CC: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c |  6 ++++++
+ drivers/scsi/libsas/sas_init.c        | 31 +++++++++++++++++++++++++++++++
+ include/scsi/libsas.h                 |  1 +
+ 3 files changed, 38 insertions(+)
 
-I am wondering why you don't make __cmd[] in scsi_request defined as 32bytes?
-Even for some hosts with thousands of tag, the memory waste is still not
-too much.
-
-Or if you prefer to do post creation, we have sbitmap_queue now, which can
-help to build a pre-allocated memory pool easily, and its allocation/free is
-pretty efficient.
-
-Thanks,
-Ming
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 5f503cb..b5ce64a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1561,6 +1561,11 @@ EXPORT_SYMBOL_GPL(hisi_sas_kill_tasklets);
+ struct scsi_transport_template *hisi_sas_stt;
+ EXPORT_SYMBOL_GPL(hisi_sas_stt);
+ 
++struct device_attribute *host_attrs[] = {
++	&dev_attr_phy_event_threshold,
++	NULL,
++};
++
+ static struct scsi_host_template _hisi_sas_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -1580,6 +1585,7 @@ static struct scsi_host_template _hisi_sas_sht = {
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++	.shost_attrs		= host_attrs,
+ };
+ struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
+ EXPORT_SYMBOL_GPL(hisi_sas_sht);
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 22bfc02..afd928b 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -538,6 +538,37 @@ static struct sas_function_template sft = {
+ 	.smp_handler = sas_smp_handler,
+ };
+ 
++static inline ssize_t phy_event_threshold_show(struct device *dev,
++			struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++
++	return scnprintf(buf, PAGE_SIZE, "%u\n", sha->event_thres);
++}
++
++static inline ssize_t phy_event_threshold_store(struct device *dev,
++			struct device_attribute *attr,
++			const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++
++	sha->event_thres = simple_strtol(buf, NULL, 10);
++
++	/* threshold cannot be set too small */
++	if (sha->event_thres < 32)
++		sha->event_thres = 32;
++
++	return count;
++}
++
++DEVICE_ATTR(phy_event_threshold,
++	S_IRUGO|S_IWUSR,
++	phy_event_threshold_show,
++	phy_event_threshold_store);
++EXPORT_SYMBOL_GPL(dev_attr_phy_event_threshold);
++
+ struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *dft)
+ {
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 26683e2..701c67f 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -681,6 +681,7 @@ extern int sas_bios_param(struct scsi_device *,
+ 			  sector_t capacity, int *hsc);
+ extern struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *);
++extern struct device_attribute dev_attr_phy_event_threshold;
+ 
+ int  sas_discover_root_expander(struct domain_device *);
+ 
+-- 
+2.9.5
