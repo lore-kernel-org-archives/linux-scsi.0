@@ -1,25 +1,114 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: bfa: convert to strlcpy/strlcat
-Date: Fri, 8 Dec 2017 16:48:07 +0100
-Message-ID: <20171208154807.qh367nl3yhadj2z3@linux-x5ow.site>
-References: <20171204144814.385412-1-arnd@arndb.de>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 12/19] scsi: hisi_sas: add v2 hw port AXI error handling support
+Date: Sat, 9 Dec 2017 01:16:43 +0800
+Message-ID: <1512753410-50924-13-git-send-email-john.garry@huawei.com>
+References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171204144814.385412-1-arnd@arndb.de>
+In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Kees Cook <keescook@chromium.org>, Benjamin Poirier <bpoirier@suse.com>, Rasesh Mody <rasesh.mody@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
+
+Add port AXI errors handling for v2 hw. We do host controller
+reset for such errors.
+
+Besides, change port muli-bits ECC error handling, and we
+should also do host reset for such error. So, this patch put
+them in the same struct with port AXI error.
+
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 51 ++++++++++++++++++++++++++++++----
+ 1 file changed, 45 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 4c4a000..7257311 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -240,6 +240,10 @@
+ #define CHL_INT1_DMAC_TX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_TX_ECC_ERR_OFF)
+ #define CHL_INT1_DMAC_RX_ECC_ERR_OFF	17
+ #define CHL_INT1_DMAC_RX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_RX_ECC_ERR_OFF)
++#define CHL_INT1_DMAC_TX_AXI_WR_ERR_OFF	19
++#define CHL_INT1_DMAC_TX_AXI_RD_ERR_OFF	20
++#define CHL_INT1_DMAC_RX_AXI_WR_ERR_OFF	21
++#define CHL_INT1_DMAC_RX_AXI_RD_ERR_OFF	22
+ #define CHL_INT2			(PORT_BASE + 0x1bc)
+ #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
+ #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
+@@ -1182,7 +1186,7 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xfff87fff);
+ 		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
+-		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xffffffff);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xff857fff);
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
+ 		hisi_sas_phy_write32(hisi_hba, i, SL_CFG, 0x13f801fc);
+ 		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
+@@ -2832,6 +2836,33 @@ static void phy_bcast_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 0);
+ }
+ 
++static const struct hisi_sas_hw_error port_ecc_axi_error[] = {
++	{
++		.irq_msk = BIT(CHL_INT1_DMAC_TX_ECC_ERR_OFF),
++		.msg = "dmac_tx_ecc_bad_err",
++	},
++	{
++		.irq_msk = BIT(CHL_INT1_DMAC_RX_ECC_ERR_OFF),
++		.msg = "dmac_rx_ecc_bad_err",
++	},
++	{
++		.irq_msk = BIT(CHL_INT1_DMAC_TX_AXI_WR_ERR_OFF),
++		.msg = "dma_tx_axi_wr_err",
++	},
++	{
++		.irq_msk = BIT(CHL_INT1_DMAC_TX_AXI_RD_ERR_OFF),
++		.msg = "dma_tx_axi_rd_err",
++	},
++	{
++		.irq_msk = BIT(CHL_INT1_DMAC_RX_AXI_WR_ERR_OFF),
++		.msg = "dma_rx_axi_wr_err",
++	},
++	{
++		.irq_msk = BIT(CHL_INT1_DMAC_RX_AXI_RD_ERR_OFF),
++		.msg = "dma_rx_axi_rd_err",
++	},
++};
++
+ static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
+ {
+ 	struct hisi_hba *hisi_hba = p;
+@@ -2856,11 +2887,19 @@ static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
+ 						     CHL_INT2);
+ 
+ 		if ((irq_msk & (1 << phy_no)) && irq_value1) {
+-			if (irq_value1 & (CHL_INT1_DMAC_RX_ECC_ERR_MSK |
+-					  CHL_INT1_DMAC_TX_ECC_ERR_MSK))
+-				panic("%s: DMAC RX/TX ecc bad error!\
+-				       (0x%x)",
+-				      dev_name(dev), irq_value1);
++			int i;
++
++			for (i = 0; i < ARRAY_SIZE(port_ecc_axi_error); i++) {
++				const struct hisi_sas_hw_error *error =
++						&port_ecc_axi_error[i];
++
++				if (!(irq_value1 & error->irq_msk))
++					continue;
++
++				dev_warn(dev, "%s error (phy%d 0x%x) found!\n",
++					error->msg, phy_no, irq_value1);
++				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
++			}
+ 
+ 			hisi_sas_phy_write32(hisi_hba, phy_no,
+ 					     CHL_INT1, irq_value1);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.9.1
