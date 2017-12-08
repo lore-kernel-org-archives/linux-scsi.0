@@ -1,32 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_dh: add new rdac devices
-Date: Thu, 07 Dec 2017 21:34:34 -0500
-Message-ID: <yq1bmjauev9.fsf@oracle.com>
-References: <20171117210513.9667-1-xose.vazquez@gmail.com>
+Subject: Re: [PATCH] scsi: scsi_devinfo: replace "Dell PV 650F" with "EMC CLARiiON"
+Date: Thu, 07 Dec 2017 21:34:57 -0500
+Message-ID: <yq17etyueum.fsf@oracle.com>
+References: <20171123191614.3231-1-xose.vazquez@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36417 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752562AbdLHCfA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 21:35:00 -0500
-In-Reply-To: <20171117210513.9667-1-xose.vazquez@gmail.com> (Xose Vazquez
-        Perez's message of "Fri, 17 Nov 2017 22:05:13 +0100")
+Received: from aserp2120.oracle.com ([141.146.126.78]:34316 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752574AbdLHCfD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 21:35:03 -0500
+In-Reply-To: <20171123191614.3231-1-xose.vazquez@gmail.com> (Xose Vazquez
+        Perez's message of "Thu, 23 Nov 2017 20:16:14 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>
 
 
 Xose,
 
-> Add IBM 3542 and 3552, arrays: FAStT200 and FAStT500.
-> Add full STK OPENstorage family, arrays: 9176, D173, D178, D210, D220, D240 and D280.
-> Add STK BladeCtlr family, arrays: B210, B220, B240 and B280.
->
-> These changes were done in multipath-tools time ago.
+> The Dell PV650F is a re-branded CLARiiON FC5700.
+> And DGC/RAID,DISK identifies all CLARiiON family.
 
-Applied to 4.16/scsi-queue.
+Applied to 4.16/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
