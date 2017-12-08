@@ -1,212 +1,119 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 09/19] scsi: hisi_sas: add RAS feature for v3 hw
-Date: Sat, 9 Dec 2017 01:16:40 +0800
-Message-ID: <1512753410-50924-10-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 07/19] scsi: hisi_sas: add an mechanism to do reset work synchronously
+Date: Sat, 9 Dec 2017 01:16:38 +0800
+Message-ID: <1512753410-50924-8-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2668 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754310AbdLHQbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Dec 2017 11:31:05 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-We use PCIe AER to support RAS feature for v3 hw.
-This driver should do following two things to support this:
-1. Enable RAS interrupts, so that errors can be reported to
-RAS module.
-2. Realize err_handler for sas_v3_pci_driver. Then if non-fatal
-error is detected, print error source and try to recover SAS
-controller.
+Sometimes it is required to know when the controller reset
+has completed and also if it has completed successfully.
+For such places, we call hisi_sas_controller_reset() directly
+before. That may lead to multiple calls to this function.
+
+This patch create a per-reset structure which contains
+a completion structure and status flag to know when the reset
+completes and also the status. It is also in hisi_hba.wq to
+do reset work.
+
+As all host reset works are done in hisi_hba.wq, we don't worry
+multiple calls to hisi_sas_controller_reset().
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 139 +++++++++++++++++++++++++++++++++
- 1 file changed, 139 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      | 26 ++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 19 ++++++++++++++++++-
+ 2 files changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 69aa7bc..d356e12 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -204,6 +204,13 @@
- #define AM_ROB_ECC_MULBIT_ERR_ADDR_OFF	8
- #define AM_ROB_ECC_MULBIT_ERR_ADDR_MSK	(0xff << AM_ROB_ECC_MULBIT_ERR_ADDR_OFF)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index b2534ca..71bc8ea 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -99,6 +99,31 @@ struct hisi_sas_hw_error {
+ 	const struct hisi_sas_hw_error *sub;
+ };
  
-+/* RAS registers need init */
-+#define RAS_BASE		(0x6000)
-+#define SAS_RAS_INTR0			(RAS_BASE)
-+#define SAS_RAS_INTR1			(RAS_BASE + 0x04)
-+#define SAS_RAS_INTR0_MASK		(RAS_BASE + 0x08)
-+#define SAS_RAS_INTR1_MASK		(RAS_BASE + 0x0c)
-+
- /* HW dma structures */
- /* Delivery queue header */
- /* dw0 */
-@@ -496,6 +503,10 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 
- 	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_HI,
- 			 upper_32_bits(hisi_hba->initial_fis_dma));
-+
-+	/* RAS registers init */
-+	hisi_sas_write32(hisi_hba, SAS_RAS_INTR0_MASK, 0x0);
-+	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1_MASK, 0x0);
- }
- 
- static void config_phy_opt_mode_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-@@ -2129,6 +2140,127 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	scsi_host_put(shost);
- }
- 
-+static const struct hisi_sas_hw_error sas_ras_intr0_nfe[] = {
-+	{ .irq_msk = BIT(19), .msg = "HILINK_INT" },
-+	{ .irq_msk = BIT(20), .msg = "HILINK_PLL0_OUT_OF_LOCK" },
-+	{ .irq_msk = BIT(21), .msg = "HILINK_PLL1_OUT_OF_LOCK" },
-+	{ .irq_msk = BIT(22), .msg = "HILINK_LOSS_OF_REFCLK0" },
-+	{ .irq_msk = BIT(23), .msg = "HILINK_LOSS_OF_REFCLK1" },
-+	{ .irq_msk = BIT(24), .msg = "DMAC0_TX_POISON" },
-+	{ .irq_msk = BIT(25), .msg = "DMAC1_TX_POISON" },
-+	{ .irq_msk = BIT(26), .msg = "DMAC2_TX_POISON" },
-+	{ .irq_msk = BIT(27), .msg = "DMAC3_TX_POISON" },
-+	{ .irq_msk = BIT(28), .msg = "DMAC4_TX_POISON" },
-+	{ .irq_msk = BIT(29), .msg = "DMAC5_TX_POISON" },
-+	{ .irq_msk = BIT(30), .msg = "DMAC6_TX_POISON" },
-+	{ .irq_msk = BIT(31), .msg = "DMAC7_TX_POISON" },
++struct hisi_sas_rst {
++	struct hisi_hba *hisi_hba;
++	struct completion *completion;
++	struct work_struct work;
++	bool done;
 +};
 +
-+static const struct hisi_sas_hw_error sas_ras_intr1_nfe[] = {
-+	{ .irq_msk = BIT(0), .msg = "RXM_CFG_MEM3_ECC2B_INTR" },
-+	{ .irq_msk = BIT(1), .msg = "RXM_CFG_MEM2_ECC2B_INTR" },
-+	{ .irq_msk = BIT(2), .msg = "RXM_CFG_MEM1_ECC2B_INTR" },
-+	{ .irq_msk = BIT(3), .msg = "RXM_CFG_MEM0_ECC2B_INTR" },
-+	{ .irq_msk = BIT(4), .msg = "HGC_CQE_ECC2B_INTR" },
-+	{ .irq_msk = BIT(5), .msg = "LM_CFG_IOSTL_ECC2B_INTR" },
-+	{ .irq_msk = BIT(6), .msg = "LM_CFG_ITCTL_ECC2B_INTR" },
-+	{ .irq_msk = BIT(7), .msg = "HGC_ITCT_ECC2B_INTR" },
-+	{ .irq_msk = BIT(8), .msg = "HGC_IOST_ECC2B_INTR" },
-+	{ .irq_msk = BIT(9), .msg = "HGC_DQE_ECC2B_INTR" },
-+	{ .irq_msk = BIT(10), .msg = "DMAC0_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(11), .msg = "DMAC1_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(12), .msg = "DMAC2_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(13), .msg = "DMAC3_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(14), .msg = "DMAC4_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(15), .msg = "DMAC5_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(16), .msg = "DMAC6_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(17), .msg = "DMAC7_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(18), .msg = "OOO_RAM_ECC2B_INTR" },
-+	{ .irq_msk = BIT(20), .msg = "HGC_DQE_POISON_INTR" },
-+	{ .irq_msk = BIT(21), .msg = "HGC_IOST_POISON_INTR" },
-+	{ .irq_msk = BIT(22), .msg = "HGC_ITCT_POISON_INTR" },
-+	{ .irq_msk = BIT(23), .msg = "HGC_ITCT_NCQ_POISON_INTR" },
-+	{ .irq_msk = BIT(24), .msg = "DMAC0_RX_POISON" },
-+	{ .irq_msk = BIT(25), .msg = "DMAC1_RX_POISON" },
-+	{ .irq_msk = BIT(26), .msg = "DMAC2_RX_POISON" },
-+	{ .irq_msk = BIT(27), .msg = "DMAC3_RX_POISON" },
-+	{ .irq_msk = BIT(28), .msg = "DMAC4_RX_POISON" },
-+	{ .irq_msk = BIT(29), .msg = "DMAC5_RX_POISON" },
-+	{ .irq_msk = BIT(30), .msg = "DMAC6_RX_POISON" },
-+	{ .irq_msk = BIT(31), .msg = "DMAC7_RX_POISON" },
++#define HISI_SAS_RST_WORK_INIT(r, c) \
++	{	.hisi_hba = hisi_hba, \
++		.completion = &c, \
++		.work = __WORK_INITIALIZER(r.work, \
++				hisi_sas_sync_rst_work_handler), \
++		.done = false, \
++		}
++
++#define HISI_SAS_DECLARE_RST_WORK_ON_STACK(r) \
++	DECLARE_COMPLETION_ONSTACK(c); \
++	DECLARE_WORK(w, hisi_sas_sync_rst_work_handler); \
++	struct hisi_sas_rst r = HISI_SAS_RST_WORK_INIT(r, c)
++
++enum hisi_sas_bit_err_type {
++	HISI_SAS_ERR_SINGLE_BIT_ECC = 0x0,
++	HISI_SAS_ERR_MULTI_BIT_ECC = 0x1,
 +};
 +
-+static bool process_non_fatal_error_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+	const struct hisi_sas_hw_error *ras_error;
-+	bool need_reset = false;
-+	u32 irq_value;
-+	int i;
-+
-+	irq_value = hisi_sas_read32(hisi_hba, SAS_RAS_INTR0);
-+	for (i = 0; i < ARRAY_SIZE(sas_ras_intr0_nfe); i++) {
-+		ras_error = &sas_ras_intr0_nfe[i];
-+		if (ras_error->irq_msk & irq_value) {
-+			dev_warn(dev, "SAS_RAS_INTR0: %s(irq_value=0x%x) found.\n",
-+					ras_error->msg, irq_value);
-+			need_reset = true;
-+		}
-+	}
-+	hisi_sas_write32(hisi_hba, SAS_RAS_INTR0, irq_value);
-+
-+	irq_value = hisi_sas_read32(hisi_hba, SAS_RAS_INTR1);
-+	for (i = 0; i < ARRAY_SIZE(sas_ras_intr1_nfe); i++) {
-+		ras_error = &sas_ras_intr1_nfe[i];
-+		if (ras_error->irq_msk & irq_value) {
-+			dev_warn(dev, "SAS_RAS_INTR1: %s(irq_value=0x%x) found.\n",
-+					ras_error->msg, irq_value);
-+			need_reset = true;
-+		}
-+	}
-+	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1, irq_value);
-+
-+	return need_reset;
-+}
-+
-+static pci_ers_result_t hisi_sas_error_detected_v3_hw(struct pci_dev *pdev,
-+		pci_channel_state_t state)
-+{
-+	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
-+	struct hisi_hba *hisi_hba = sha->lldd_ha;
-+	struct device *dev = hisi_hba->dev;
-+
-+	dev_info(dev, "PCI error: detected callback, state(%d)!!\n", state);
-+	if (state == pci_channel_io_perm_failure)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	if (process_non_fatal_error_v3_hw(hisi_hba))
-+		return PCI_ERS_RESULT_NEED_RESET;
-+
-+	return PCI_ERS_RESULT_CAN_RECOVER;
-+}
-+
-+static pci_ers_result_t hisi_sas_mmio_enabled_v3_hw(struct pci_dev *pdev)
-+{
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
-+static pci_ers_result_t hisi_sas_slot_reset_v3_hw(struct pci_dev *pdev)
-+{
-+	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
-+	struct hisi_hba *hisi_hba = sha->lldd_ha;
-+	struct device *dev = hisi_hba->dev;
+ struct hisi_sas_phy {
+ 	struct hisi_hba	*hisi_hba;
+ 	struct hisi_sas_port	*port;
+@@ -426,5 +451,6 @@ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
+ 				    struct hisi_sas_slot *slot);
+ extern void hisi_sas_init_mem(struct hisi_hba *hisi_hba);
+ extern void hisi_sas_rst_work_handler(struct work_struct *work);
++extern void hisi_sas_sync_rst_work_handler(struct work_struct *work);
+ extern void hisi_sas_kill_tasklets(struct hisi_hba *hisi_hba);
+ #endif
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index e4b3092..fb162c0 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1299,8 +1299,14 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ static int hisi_sas_clear_nexus_ha(struct sas_ha_struct *sas_ha)
+ {
+ 	struct hisi_hba *hisi_hba = sas_ha->lldd_ha;
 +	HISI_SAS_DECLARE_RST_WORK_ON_STACK(r);
-+
-+	dev_info(dev, "PCI error: slot reset callback!!\n");
+ 
+-	return hisi_sas_controller_reset(hisi_hba);
 +	queue_work(hisi_hba->wq, &r.work);
 +	wait_for_completion(r.completion);
 +	if (r.done)
-+		return PCI_ERS_RESULT_RECOVERED;
++		return TMF_RESP_FUNC_COMPLETE;
 +
-+	return PCI_ERS_RESULT_DISCONNECT;
++	return TMF_RESP_FUNC_FAILED;
+ }
+ 
+ static int hisi_sas_query_task(struct sas_task *task)
+@@ -1820,6 +1826,17 @@ void hisi_sas_rst_work_handler(struct work_struct *work)
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_rst_work_handler);
+ 
++void hisi_sas_sync_rst_work_handler(struct work_struct *work)
++{
++	struct hisi_sas_rst *rst =
++		container_of(work, struct hisi_sas_rst, work);
++
++	if (!hisi_sas_controller_reset(rst->hisi_hba))
++		rst->done = true;
++	complete(rst->completion);
 +}
++EXPORT_SYMBOL_GPL(hisi_sas_sync_rst_work_handler);
 +
- enum {
- 	/* instances of the controller */
- 	hip08,
-@@ -2139,11 +2271,18 @@ enum {
- 	{}
- };
- 
-+static const struct pci_error_handlers hisi_sas_err_handler = {
-+	.error_detected	= hisi_sas_error_detected_v3_hw,
-+	.mmio_enabled	= hisi_sas_mmio_enabled_v3_hw,
-+	.slot_reset	= hisi_sas_slot_reset_v3_hw,
-+};
-+
- static struct pci_driver sas_v3_pci_driver = {
- 	.name		= DRV_NAME,
- 	.id_table	= sas_v3_pci_table,
- 	.probe		= hisi_sas_v3_probe,
- 	.remove		= hisi_sas_v3_remove,
-+	.err_handler	= &hisi_sas_err_handler,
- };
- 
- module_pci_driver(sas_v3_pci_driver);
+ int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = hisi_hba->dev;
 -- 
 1.9.1
