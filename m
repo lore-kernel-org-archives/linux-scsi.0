@@ -1,62 +1,67 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] Unexport scsi_initialize_rq()
-Date: Thu,  7 Dec 2017 15:59:31 -0800
-Message-ID: <20171207235931.18314-1-bart.vanassche@wdc.com>
+Subject: [PATCH] Remove scsi_dh_remove_device()
+Date: Thu,  7 Dec 2017 16:00:59 -0800
+Message-ID: <20171208000059.18892-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:8759 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbdLGX7c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 18:59:32 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:18676 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751020AbdLHABA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 19:01:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Commit 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib
-for SMP passthrough") removed the only call to scsi_initialize_rq()
-from outside the SCSI core. Hence unexport scsi_initialize_rq().
+Remove this function since it has an empty body.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi_lib.c  | 3 +--
- include/scsi/scsi_cmnd.h | 1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/scsi_priv.h  | 1 -
+ drivers/scsi/scsi_sysfs.c | 3 ---
+ 2 files changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1827956b33c9..c3fc4353af3c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1145,7 +1145,7 @@ EXPORT_SYMBOL(scsi_init_io);
-  * Called from inside blk_get_request() for pass-through requests and from
-  * inside scsi_init_command() for filesystem requests.
-  */
--void scsi_initialize_rq(struct request *rq)
-+static void scsi_initialize_rq(struct request *rq)
- {
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 61024db5953d..99f1db5e467e 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -186,7 +186,6 @@ void scsi_dh_release_device(struct scsi_device *sdev);
+ static inline void scsi_dh_add_device(struct scsi_device *sdev) { }
+ static inline void scsi_dh_release_device(struct scsi_device *sdev) { }
+ #endif
+-static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
  
-@@ -1153,7 +1153,6 @@ void scsi_initialize_rq(struct request *rq)
- 	cmd->jiffies_at_alloc = jiffies;
- 	cmd->retries = 0;
- }
--EXPORT_SYMBOL(scsi_initialize_rq);
+ /* 
+  * internal scsi timeout functions: for use by mid-layer and transport
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 6ee964643531..1bce5c7305ff 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1277,7 +1277,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	if (error) {
+ 		sdev_printk(KERN_INFO, sdev,
+ 				"failed to add device: %d\n", error);
+-		scsi_dh_remove_device(sdev);
+ 		return error;
+ 	}
  
- /* Add a command to the list used by the aacraid and dpt_i2o drivers */
- void scsi_add_cmd_to_list(struct scsi_cmnd *cmd)
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 7fb57e905526..949a016dd7fa 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -171,7 +171,6 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
- extern void scsi_kunmap_atomic_sg(void *virt);
- 
- extern int scsi_init_io(struct scsi_cmnd *cmd);
--extern void scsi_initialize_rq(struct request *rq);
- 
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+@@ -1286,7 +1285,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	if (error) {
+ 		sdev_printk(KERN_INFO, sdev,
+ 				"failed to add class device: %d\n", error);
+-		scsi_dh_remove_device(sdev);
+ 		device_del(&sdev->sdev_gendev);
+ 		return error;
+ 	}
+@@ -1353,7 +1351,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		bsg_unregister_queue(sdev->request_queue);
+ 		device_unregister(&sdev->sdev_dev);
+ 		transport_remove_device(dev);
+-		scsi_dh_remove_device(sdev);
+ 		device_del(dev);
+ 	} else
+ 		put_device(&sdev->sdev_dev);
 -- 
 2.15.0
