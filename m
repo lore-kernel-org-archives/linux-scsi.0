@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 10/19] scsi: hisi_sas: add some print to enhance debugging
-Date: Sat, 9 Dec 2017 01:16:41 +0800
-Message-ID: <1512753410-50924-11-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 04/19] scsi: hisi_sas: optimise port id refresh function
+Date: Sat, 9 Dec 2017 01:16:35 +0800
+Message-ID: <1512753410-50924-5-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,241 +9,117 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-Add some print at some places such as error info and cq
-of exception IO, device found etc, and also adjust some
-log levels.
+Currently refreshing the PHY port id after reset is
+done in the rescan topology function, which is quite
+late in the reset process. It could be moved earlier in
+the process, as the port id can be refreshed once the
+PHYs become ready.
 
-All this to assist debugging ability.
+In addition to this, we should set the hisi_sas_dev port
+id to 0xff (invalid port id) if all PHYs of this port remain
+down for the same device.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 ++++++++++-----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 24 +++++++++++++++++++-----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 22 +++++++++++++++++-----
- 3 files changed, 46 insertions(+), 15 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 48 ++++++++++++++++++++++-------------
+ 1 file changed, 30 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index fb162c0..1f6f063 100644
+index 6446ce2..326ecb2 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -580,6 +580,9 @@ static int hisi_sas_dev_found(struct domain_device *device)
- 		}
- 	}
- 
-+	dev_info(dev, "dev[%d:%x] found\n",
-+		sas_dev->device_id, sas_dev->dev_type);
-+
- 	return 0;
+@@ -990,27 +990,42 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
+ 				sizeof(ssp_task), tmf);
  }
  
-@@ -735,7 +738,7 @@ static void hisi_sas_dev_gone(struct domain_device *device)
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct device *dev = hisi_hba->dev;
+-static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba,
+-		struct asd_sas_port *sas_port, enum sas_linkrate linkrate)
++static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
+ {
+-	struct hisi_sas_device	*sas_dev;
+-	struct domain_device *device;
++	u32 state = hisi_hba->hw->get_phys_state(hisi_hba);
+ 	int i;
  
--	dev_info(dev, "found dev[%d:%x] is gone\n",
-+	dev_info(dev, "dev[%d:%x] is gone\n",
- 		 sas_dev->device_id, sas_dev->dev_type);
+ 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
+-		sas_dev = &hisi_hba->devices[i];
+-		device = sas_dev->sas_device;
++		struct hisi_sas_device *sas_dev = &hisi_hba->devices[i];
++		struct domain_device *device = sas_dev->sas_device;
++		struct asd_sas_port *sas_port;
++		struct hisi_sas_port *port;
++		struct hisi_sas_phy *phy = NULL;
++		struct asd_sas_phy *sas_phy;
++
+ 		if ((sas_dev->dev_type == SAS_PHY_UNUSED)
+-				|| !device || (device->port != sas_port))
++				|| !device || !device->port)
+ 			continue;
  
- 	if (!test_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags)) {
-@@ -866,12 +869,13 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
- 			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
- 				struct hisi_sas_slot *slot = task->lldd_task;
+-		hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
++		sas_port = device->port;
++		port = to_hisi_sas_port(sas_port);
++
++		list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el)
++			if (state & BIT(sas_phy->id)) {
++				phy = sas_phy->lldd_phy;
++				break;
++			}
++
++		if (phy) {
++			port->id = phy->port_id;
  
--				dev_err(dev, "abort tmf: TMF task timeout\n");
-+				dev_err(dev, "abort tmf: TMF task timeout and not done\n");
- 				if (slot)
- 					slot->task = NULL;
+-		/* Update linkrate of directly attached device. */
+-		if (!device->parent)
+-			device->linkrate = linkrate;
++			/* Update linkrate of directly attached device. */
++			if (!device->parent)
++				device->linkrate = phy->sas_phy.linkrate;
  
- 				goto ex_err;
--			}
-+			} else
-+				dev_err(dev, "abort tmf: TMF task timeout\n");
- 		}
- 
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-@@ -1495,9 +1499,10 @@ static int hisi_sas_query_task(struct sas_task *task)
- 
- 			if (slot)
- 				slot->task = NULL;
--			dev_err(dev, "internal task abort: timeout.\n");
-+			dev_err(dev, "internal task abort: timeout and not done.\n");
- 			goto exit;
--		}
+-		hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
++			hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
 +		} else
-+			dev_err(dev, "internal task abort: timeout.\n");
++			port->id = 0xff;
  	}
+ }
  
- 	if (task->task_status.resp == SAS_TASK_COMPLETE &&
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index cd9cd84..8d6886a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2361,6 +2361,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	ts->resp = SAS_TASK_COMPLETE;
+@@ -1025,21 +1040,17 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
+ 		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 		struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 		struct asd_sas_port *sas_port = sas_phy->port;
+-		struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
+ 		bool do_port_check = !!(_sas_port != sas_port);
  
- 	if (unlikely(aborted)) {
-+		dev_dbg(dev, "slot_complete: task(%p) aborted\n", task);
- 		ts->stat = SAS_ABORTED_TASK;
- 		spin_lock_irqsave(&hisi_hba->lock, flags);
- 		hisi_sas_slot_task_free(hisi_hba, task, slot);
-@@ -2405,6 +2406,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 		(!(complete_hdr->dw0 & CMPLT_HDR_RSPNS_XFRD_MSK))) {
- 		u32 err_phase = (complete_hdr->dw0 & CMPLT_HDR_ERR_PHASE_MSK)
- 				>> CMPLT_HDR_ERR_PHASE_OFF;
-+		u32 *error_info = hisi_sas_status_buf_addr_mem(slot);
+ 		if (!sas_phy->phy->enabled)
+ 			continue;
  
- 		/* Analyse error happens on which phase TX or RX */
- 		if (ERR_ON_TX_PHASE(err_phase))
-@@ -2412,6 +2414,16 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 		else if (ERR_ON_RX_PHASE(err_phase))
- 			slot_err_v2_hw(hisi_hba, task, slot, 2);
+ 		/* Report PHY state change to libsas */
+-		if (state & (1 << phy_no)) {
+-			if (do_port_check && sas_port) {
++		if (state & BIT(phy_no)) {
++			if (do_port_check && sas_port && sas_port->port_dev) {
+ 				struct domain_device *dev = sas_port->port_dev;
  
-+		if (ts->stat != SAS_DATA_UNDERRUN)
-+			dev_info(dev, "erroneous completion iptt=%d task=%p "
-+				"CQ hdr: 0x%x 0x%x 0x%x 0x%x "
-+				"Error info: 0x%x 0x%x 0x%x 0x%x\n",
-+				slot->idx, task,
-+				complete_hdr->dw0, complete_hdr->dw1,
-+				complete_hdr->act, complete_hdr->dw3,
-+				error_info[0], error_info[1],
-+				error_info[2], error_info[3]);
-+
- 		if (unlikely(slot->abort))
- 			return ts->stat;
- 		goto out;
-@@ -2461,7 +2473,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	}
+ 				_sas_port = sas_port;
+-				port->id = phy->port_id;
+-				hisi_sas_refresh_port_id(hisi_hba,
+-						sas_port, sas_phy->linkrate);
  
- 	if (!slot->port->port_attached) {
--		dev_err(dev, "slot complete: port %d has removed\n",
-+		dev_warn(dev, "slot complete: port %d has removed\n",
- 			slot->port->sas_port.id);
- 		ts->stat = SAS_PHY_DOWN;
- 	}
-@@ -2718,10 +2730,12 @@ static int phy_down_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	u32 phy_state, sl_ctrl, txid_auto;
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct hisi_sas_port *port = phy->port;
-+	struct device *dev = hisi_hba->dev;
+ 				if (DEV_IS_EXPANDER(dev->dev_type))
+ 					sas_ha->notify_port_event(sas_phy,
+@@ -1088,6 +1099,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ 	/* Init and wait for PHYs to come up and all libsas event finished. */
+ 	hisi_hba->hw->phys_init(hisi_hba);
+ 	msleep(1000);
++	hisi_sas_refresh_port_id(hisi_hba);
+ 	drain_workqueue(hisi_hba->wq);
+ 	drain_workqueue(shost->work_q);
  
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 1);
- 
- 	phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
-+	dev_info(dev, "phydown: phy%d phy_state=0x%x\n", phy_no, phy_state);
- 	hisi_sas_phy_down(hisi_hba, phy_no, (phy_state & 1 << phy_no) ? 1 : 0);
- 
- 	sl_ctrl = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-@@ -2911,7 +2925,7 @@ static void multi_bit_ecc_error_process_v2_hw(struct hisi_hba *hisi_hba,
- 			val = hisi_sas_read32(hisi_hba, ecc_error->reg);
- 			val &= ecc_error->msk;
- 			val >>= ecc_error->shift;
--			dev_warn(dev, ecc_error->msg, irq_value, val);
-+			dev_err(dev, ecc_error->msg, irq_value, val);
- 			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
- 		}
- 	}
-@@ -3020,12 +3034,12 @@ static irqreturn_t fatal_axi_int_v2_hw(int irq_no, void *p)
- 			for (; sub->msk || sub->msg; sub++) {
- 				if (!(err_value & sub->msk))
- 					continue;
--				dev_warn(dev, "%s (0x%x) found!\n",
-+				dev_err(dev, "%s (0x%x) found!\n",
- 					 sub->msg, irq_value);
- 				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
- 			}
- 		} else {
--			dev_warn(dev, "%s (0x%x) found!\n",
-+			dev_err(dev, "%s (0x%x) found!\n",
- 				 axi_error->msg, irq_value);
- 			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
- 		}
-@@ -3397,7 +3411,7 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
- 
- 		udelay(10);
- 		if (cnt++ > 10) {
--			dev_info(dev, "wait axi bus state to idle timeout!\n");
-+			dev_err(dev, "wait axi bus state to idle timeout!\n");
- 			return -1;
- 		}
- 	}
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index d356e12..67020bd 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1149,7 +1149,7 @@ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 		struct dev_to_host_fis *fis;
- 		u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
- 
--		dev_info(dev, "phyup: phy%d link_rate=%d\n", phy_no, link_rate);
-+		dev_info(dev, "phyup: phy%d link_rate=%d(sata)\n", phy_no, link_rate);
- 		initial_fis = &hisi_hba->initial_fis[phy_no];
- 		fis = &initial_fis->fis;
- 		sas_phy->oob_mode = SATA_OOB_MODE;
-@@ -1333,7 +1333,7 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
- 				if (!(irq_value1 & error->irq_msk))
- 					continue;
- 
--				dev_warn(dev, "%s error (phy%d 0x%x) found!\n",
-+				dev_err(dev, "%s error (phy%d 0x%x) found!\n",
- 					error->msg, phy_no, irq_value1);
- 				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
- 			}
-@@ -1443,12 +1443,12 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 				if (!(err_value & sub->msk))
- 					continue;
- 
--				dev_warn(dev, "%s error (0x%x) found!\n",
-+				dev_err(dev, "%s error (0x%x) found!\n",
- 					sub->msg, irq_value);
- 				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
- 			}
- 		} else {
--			dev_warn(dev, "%s error (0x%x) found!\n",
-+			dev_err(dev, "%s error (0x%x) found!\n",
- 				error->msg, irq_value);
- 			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
- 		}
-@@ -1553,6 +1553,7 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 	memset(ts, 0, sizeof(*ts));
- 	ts->resp = SAS_TASK_COMPLETE;
- 	if (unlikely(aborted)) {
-+		dev_dbg(dev, "slot complete: task(%p) aborted\n", task);
- 		ts->stat = SAS_ABORTED_TASK;
- 		spin_lock_irqsave(&hisi_hba->lock, flags);
- 		hisi_sas_slot_task_free(hisi_hba, task, slot);
-@@ -1594,7 +1595,18 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 
- 	/* check for erroneous completion */
- 	if ((complete_hdr->dw0 & CMPLT_HDR_CMPLT_MSK) == 0x3) {
-+		u32 *error_info = hisi_sas_status_buf_addr_mem(slot);
-+
- 		slot_err_v3_hw(hisi_hba, task, slot);
-+		if (ts->stat != SAS_DATA_UNDERRUN)
-+			dev_info(dev, "erroneous completion iptt=%d task=%p "
-+				"CQ hdr: 0x%x 0x%x 0x%x 0x%x "
-+				"Error info: 0x%x 0x%x 0x%x 0x%x\n",
-+				slot->idx, task,
-+				complete_hdr->dw0, complete_hdr->dw1,
-+				complete_hdr->act, complete_hdr->dw3,
-+				error_info[0], error_info[1],
-+				error_info[2], error_info[3]);
- 		if (unlikely(slot->abort))
- 			return ts->stat;
- 		goto out;
-@@ -1639,7 +1651,7 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 	}
- 
- 	if (!slot->port->port_attached) {
--		dev_err(dev, "slot complete: port %d has removed\n",
-+		dev_warn(dev, "slot complete: port %d has removed\n",
- 			slot->port->sas_port.id);
- 		ts->stat = SAS_PHY_DOWN;
- 	}
 -- 
 1.9.1
