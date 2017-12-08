@@ -1,54 +1,104 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 02/19] scsi: hisi_sas: fix dma_unmap_sg() parameter
-Date: Sat, 9 Dec 2017 01:16:33 +0800
-Message-ID: <1512753410-50924-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 11/19] scsi: hisi_sas: improve int_chnl_int_v2_hw() consistency with v3 hw
+Date: Sat, 9 Dec 2017 01:16:42 +0800
+Message-ID: <1512753410-50924-12-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2230 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754362AbdLHQbH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Dec 2017 11:31:07 -0500
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-For function dma_unmap_sg(), the <nents> parameter
-should be number of elements in the scatterlist
-prior to the mapping, not after the mapping.
+Change code format of int_chnl_int_v2_hw() to be consistent with
+v3 hw to reduce an tag indent.
 
-Fix this usage.
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 58 ++++++++++++++++------------------
+ 1 file changed, 28 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 359ec52..d842530 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -192,7 +192,8 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 8d6886a..4c4a000 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -2848,40 +2848,38 @@ static irqreturn_t int_chnl_int_v2_hw(int irq_no, void *p)
+ 			HGC_INVLD_DQE_INFO_FB_CH3_OFF) & 0x1ff;
  
- 		if (!sas_protocol_ata(task->task_proto))
- 			if (slot->n_elem)
--				dma_unmap_sg(dev, task->scatter, slot->n_elem,
-+				dma_unmap_sg(dev, task->scatter,
-+					     task->num_scatter,
- 					     task->data_dir);
+ 	while (irq_msk) {
+-		if (irq_msk & (1 << phy_no)) {
+-			u32 irq_value0 = hisi_sas_phy_read32(hisi_hba, phy_no,
+-							     CHL_INT0);
+-			u32 irq_value1 = hisi_sas_phy_read32(hisi_hba, phy_no,
+-							     CHL_INT1);
+-			u32 irq_value2 = hisi_sas_phy_read32(hisi_hba, phy_no,
+-							     CHL_INT2);
+-
+-			if (irq_value1) {
+-				if (irq_value1 & (CHL_INT1_DMAC_RX_ECC_ERR_MSK |
+-						  CHL_INT1_DMAC_TX_ECC_ERR_MSK))
+-					panic("%s: DMAC RX/TX ecc bad error!\
+-					       (0x%x)",
+-					      dev_name(dev), irq_value1);
+-
+-				hisi_sas_phy_write32(hisi_hba, phy_no,
+-						     CHL_INT1, irq_value1);
+-			}
++		u32 irq_value0 = hisi_sas_phy_read32(hisi_hba, phy_no,
++						     CHL_INT0);
++		u32 irq_value1 = hisi_sas_phy_read32(hisi_hba, phy_no,
++						     CHL_INT1);
++		u32 irq_value2 = hisi_sas_phy_read32(hisi_hba, phy_no,
++						     CHL_INT2);
++
++		if ((irq_msk & (1 << phy_no)) && irq_value1) {
++			if (irq_value1 & (CHL_INT1_DMAC_RX_ECC_ERR_MSK |
++					  CHL_INT1_DMAC_TX_ECC_ERR_MSK))
++				panic("%s: DMAC RX/TX ecc bad error!\
++				       (0x%x)",
++				      dev_name(dev), irq_value1);
  
- 		if (sas_dev)
-@@ -431,7 +432,8 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
- 	dev_err(dev, "task prep: failed[%d]!\n", rc);
- 	if (!sas_protocol_ata(task->task_proto))
- 		if (n_elem)
--			dma_unmap_sg(dev, task->scatter, n_elem,
-+			dma_unmap_sg(dev, task->scatter,
-+				     task->num_scatter,
- 				     task->data_dir);
- prep_out:
- 	return rc;
+-			if (irq_value2)
+-				hisi_sas_phy_write32(hisi_hba, phy_no,
+-						     CHL_INT2, irq_value2);
++			hisi_sas_phy_write32(hisi_hba, phy_no,
++					     CHL_INT1, irq_value1);
++		}
+ 
++		if ((irq_msk & (1 << phy_no)) && irq_value2)
++			hisi_sas_phy_write32(hisi_hba, phy_no,
++					     CHL_INT2, irq_value2);
+ 
+-			if (irq_value0) {
+-				if (irq_value0 & CHL_INT0_SL_RX_BCST_ACK_MSK)
+-					phy_bcast_v2_hw(phy_no, hisi_hba);
+ 
+-				hisi_sas_phy_write32(hisi_hba, phy_no,
+-						CHL_INT0, irq_value0
+-						& (~CHL_INT0_HOTPLUG_TOUT_MSK)
+-						& (~CHL_INT0_SL_PHY_ENABLE_MSK)
+-						& (~CHL_INT0_NOT_RDY_MSK));
+-			}
++		if ((irq_msk & (1 << phy_no)) && irq_value0) {
++			if (irq_value0 & CHL_INT0_SL_RX_BCST_ACK_MSK)
++				phy_bcast_v2_hw(phy_no, hisi_hba);
++
++			hisi_sas_phy_write32(hisi_hba, phy_no,
++					CHL_INT0, irq_value0
++					& (~CHL_INT0_HOTPLUG_TOUT_MSK)
++					& (~CHL_INT0_SL_PHY_ENABLE_MSK)
++					& (~CHL_INT0_NOT_RDY_MSK));
+ 		}
+ 		irq_msk &= ~(1 << phy_no);
+ 		phy_no++;
 -- 
 1.9.1
