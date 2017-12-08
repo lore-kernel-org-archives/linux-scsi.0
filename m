@@ -1,69 +1,155 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2] scsi: libsas: fix length error in sas_smp_handler()
-Date: Fri, 8 Dec 2017 09:49:46 +0000
-Message-ID: <9f0c1405-d0ba-9bc4-b91a-8cc9f9b5ba23@huawei.com>
-References: <20171207105751.27225-1-yanaijie@huawei.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v5 4/7] scsi: libsas: Use new workqueue to run sas event and disco event
+Date: Fri, 8 Dec 2017 17:42:07 +0800
+Message-ID: <20171208094210.24887-5-yanaijie@huawei.com>
+References: <20171208094210.24887-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2272 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753450AbdLHJuP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Dec 2017 04:50:15 -0500
-In-Reply-To: <20171207105751.27225-1-yanaijie@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171208094210.24887-1-yanaijie@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Jason Yan <yanaijie@huawei.com>, Yijing Wang <wangyijing@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hch@lst.de
-Cc: linux-scsi@vger.kernel.org, jthumshirn@suse.de, hare@suse.com
 
-On 07/12/2017 10:57, Jason Yan wrote:
-> The bsg_job_done() requires the length of payload received, but we give
-> it the untransferred residual.
->
+Now all libsas works are queued to scsi host workqueue,
+include sas event work post by LLDD and sas discovery
+work, and a sas hotplug flow may be divided into several
+works, e.g libsas receive a PORTE_BYTES_DMAED event,
+currently we process it as following steps:
+sas_form_port  --- run in work in shost workq
+	sas_discover_domain  --- run in another work in shost workq
+		...
+		sas_probe_devices  --- run in new work in shost workq
+We found during hot-add a device, libsas may need run several
+works in same workqueue to add device in system, the process is
+not atomic, it may interrupt by other sas event works, like
+PHYE_LOSS_OF_SIGNAL.
 
-As I understand, this patches fixes (SES) enclosure management for 
-libsas, so it's quite an important patch.
+This patch is preparation of execute libsas sas event in sync. We need
+to use different workqueue to run sas event and disco event. Otherwise
+the work will be blocked for waiting another chained work in the same
+workqueue.
 
-Thanks,
-John
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: John Garry <john.garry@huawei.com>
+CC: Johannes Thumshirn <jthumshirn@suse.de>
+CC: Ewan Milne <emilne@redhat.com>
+CC: Christoph Hellwig <hch@lst.de>
+CC: Tomas Henzl <thenzl@redhat.com>
+CC: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/libsas/sas_discover.c |  2 +-
+ drivers/scsi/libsas/sas_event.c    |  6 +++---
+ drivers/scsi/libsas/sas_init.c     | 18 ++++++++++++++++++
+ include/scsi/libsas.h              |  3 +++
+ 4 files changed, 25 insertions(+), 4 deletions(-)
 
-> Fixes: 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib for SMP passthrough")
-> Reported-and-tested-by: chenqilin <chenqilin2@huawei.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> CC: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/libsas/sas_expander.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 50cb0f3..6c40ecc 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -2143,7 +2143,7 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
->  		struct sas_rphy *rphy)
->  {
->  	struct domain_device *dev;
-> -	unsigned int reslen = 0;
-> +	unsigned int rcvlen = 0;
->  	int ret = -EINVAL;
->
->  	/* no rphy means no smp target support (ie aic94xx host) */
-> @@ -2177,12 +2177,12 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
->
->  	ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
->  			job->reply_payload.sg_list);
-> -	if (ret > 0) {
-> -		/* positive number is the untransferred residual */
-> -		reslen = ret;
-> +	if (ret >= 0) {
-> +		/* bsg_job_done() requires the length received  */
-> +		rcvlen = job->reply_payload.payload_len - ret;
->  		ret = 0;
->  	}
->
->  out:
-> -	bsg_job_done(job, ret, reslen);
-> +	bsg_job_done(job, ret, rcvlen);
->  }
->
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 60de662..14f714d 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -534,7 +534,7 @@ static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
+ 	 * workqueue, or known to be submitted from a context that is
+ 	 * not racing against draining
+ 	 */
+-	scsi_queue_work(ha->core.shost, &sw->work);
++	queue_work(ha->disco_q, &sw->work);
+ }
+ 
+ static void sas_chain_event(int event, unsigned long *pending,
+diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+index 5d7254a..8c82c00 100644
+--- a/drivers/scsi/libsas/sas_event.c
++++ b/drivers/scsi/libsas/sas_event.c
+@@ -40,7 +40,7 @@ int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
+ 		if (list_empty(&sw->drain_node))
+ 			list_add_tail(&sw->drain_node, &ha->defer_q);
+ 	} else
+-		rc = scsi_queue_work(ha->core.shost, &sw->work);
++		rc = queue_work(ha->event_q, &sw->work);
+ 
+ 	return rc;
+ }
+@@ -61,7 +61,6 @@ static int sas_queue_event(int event, struct sas_work *work,
+ 
+ void __sas_drain_work(struct sas_ha_struct *ha)
+ {
+-	struct workqueue_struct *wq = ha->core.shost->work_q;
+ 	struct sas_work *sw, *_sw;
+ 	int ret;
+ 
+@@ -70,7 +69,8 @@ void __sas_drain_work(struct sas_ha_struct *ha)
+ 	spin_lock_irq(&ha->lock);
+ 	spin_unlock_irq(&ha->lock);
+ 
+-	drain_workqueue(wq);
++	drain_workqueue(ha->event_q);
++	drain_workqueue(ha->disco_q);
+ 
+ 	spin_lock_irq(&ha->lock);
+ 	clear_bit(SAS_HA_DRAINING, &ha->state);
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index afd928b..c81a63b 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -110,6 +110,7 @@ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
+ 
+ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ {
++	char name[64];
+ 	int error = 0;
+ 
+ 	mutex_init(&sas_ha->disco_mutex);
+@@ -143,10 +144,24 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 		goto Undo_ports;
+ 	}
+ 
++	error = -ENOMEM;
++	snprintf(name, sizeof(name), "%s_event_q", dev_name(sas_ha->dev));
++	sas_ha->event_q = create_singlethread_workqueue(name);
++	if (!sas_ha->event_q)
++		goto Undo_ports;
++
++	snprintf(name, sizeof(name), "%s_disco_q", dev_name(sas_ha->dev));
++	sas_ha->disco_q = create_singlethread_workqueue(name);
++	if (!sas_ha->disco_q)
++		goto Undo_event_q;
++
+ 	INIT_LIST_HEAD(&sas_ha->eh_done_q);
+ 	INIT_LIST_HEAD(&sas_ha->eh_ata_q);
+ 
+ 	return 0;
++
++Undo_event_q:
++	destroy_workqueue(sas_ha->event_q);
+ Undo_ports:
+ 	sas_unregister_ports(sas_ha);
+ Undo_phys:
+@@ -177,6 +192,9 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
+ 	__sas_drain_work(sas_ha);
+ 	mutex_unlock(&sas_ha->drain_mutex);
+ 
++	destroy_workqueue(sas_ha->disco_q);
++	destroy_workqueue(sas_ha->event_q);
++
+ 	return 0;
+ }
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 701c67f..fa93c41 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -389,6 +389,9 @@ struct sas_ha_struct {
+ 	struct device *dev;	  /* should be set */
+ 	struct module *lldd_module; /* should be set */
+ 
++	struct workqueue_struct *event_q;
++	struct workqueue_struct *disco_q;
++
+ 	u8 *sas_addr;		  /* must be set */
+ 	u8 hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
+ 
+-- 
+2.9.5
