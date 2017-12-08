@@ -1,26 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] SCSI: run queue if SCSI device queue isn't ready and queue is idle
-Date: Thu, 07 Dec 2017 19:54:52 -0500
-Message-ID: <yq1shcmvy1v.fsf@oracle.com>
-References: <20171205075256.10319-1-ming.lei@redhat.com>
-        <0352a2f1-d49b-aaa1-f8e9-10486bb5fa9d@applied-asynchrony.com>
-        <20171207014002.GB10214@ming.t460p>
+Subject: Re: [PATCH] scsi: bfa: fix type conversion warning
+Date: Thu, 07 Dec 2017 19:58:52 -0500
+Message-ID: <yq1o9navxv7.fsf@oracle.com>
+References: <20171206141444.634681-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171207014002.GB10214@ming.t460p> (Ming Lei's message of "Thu,
-        7 Dec 2017 09:40:04 +0800")
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Holger =?utf-8?Q?Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171206141444.634681-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 6 Dec 2017 15:14:18 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Ming,
+Arnd,
 
-> Jens, Martin, would any of you mind making this patch in V4.15? Since
-> it fixes real use cases and this way is exact what we do before
-> 0df21c86bdbf("scsi: implement .get_budget and .put_budget for blk-mq").
+> This changes the code back to shost_priv() once more, but encapsulates
+> it in an inline function to document the rather unusual way of using
+> the private data only as a pointer to the previously allocated
+> structure.
 
 Applied to 4.15/scsi-fixes, thank you!
 
