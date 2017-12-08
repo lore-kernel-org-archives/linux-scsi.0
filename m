@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 13/19] scsi: hisi_sas: use an general way to delay PHY work
-Date: Sat, 9 Dec 2017 01:16:44 +0800
-Message-ID: <1512753410-50924-14-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 19/19] scsi: hisi_sas: add v3 hw suspend and resume
+Date: Sat, 9 Dec 2017 01:16:50 +0800
+Message-ID: <1512753410-50924-20-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,152 +9,175 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Use an general way to do delay work for a PHY. Then it will
-be easier to add new delayed work for a PHY in future.
+For v3 hw SAS, it supports configuring power state
+from D0 to D3 for entering Low Power status and
+power state from D3 to D0 for quit Low Power status.
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+When power state from D0 to D3, HW will send FLR to
+clear the registers of ECAM and BAR space, and when
+power state from D3 to D0, it will clear the
+registers of ECAM space only.
+
+So when suspend, need to do like controller reset
+(including disable interrupts/DQ/PHY/BUS), and
+also release slots after FLR. When resume,
+re-config the registers of BAR space.
+
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  9 ++++++++-
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 22 ++++++++++++++++++++--
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  2 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  4 ++--
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  2 +-
- 5 files changed, 32 insertions(+), 7 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  3 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 94 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 97 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 71bc8ea..aa14638 100644
+index 4343c4c..cc05029 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -124,12 +124,17 @@ enum hisi_sas_bit_err_type {
- 	HISI_SAS_ERR_MULTI_BIT_ECC = 0x1,
- };
- 
-+enum hisi_sas_phy_event {
-+	HISI_PHYE_PHY_UP   = 0U,
-+	HISI_PHYES_NUM,
-+};
-+
- struct hisi_sas_phy {
-+	struct work_struct	works[HISI_PHYES_NUM];
- 	struct hisi_hba	*hisi_hba;
- 	struct hisi_sas_port	*port;
- 	struct asd_sas_phy	sas_phy;
- 	struct sas_identify	identify;
--	struct work_struct	phyup_ws;
- 	u64		port_id; /* from hw */
- 	u64		dev_sas_addr;
- 	u64		frame_rcvd_size;
-@@ -453,4 +458,6 @@ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
- extern void hisi_sas_rst_work_handler(struct work_struct *work);
- extern void hisi_sas_sync_rst_work_handler(struct work_struct *work);
+@@ -461,4 +461,5 @@ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
  extern void hisi_sas_kill_tasklets(struct hisi_hba *hisi_hba);
-+extern bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
-+				enum hisi_sas_phy_event event);
+ extern bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
+ 				enum hisi_sas_phy_event event);
++extern void hisi_sas_release_tasks(struct hisi_hba *hisi_hba);
  #endif
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 1f6f063..326dc81 100644
+index ad12237..04e1172b 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -622,7 +622,7 @@ static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
- static void hisi_sas_phyup_work(struct work_struct *work)
- {
- 	struct hisi_sas_phy *phy =
--		container_of(work, struct hisi_sas_phy, phyup_ws);
-+		container_of(work, typeof(*phy), works[HISI_PHYE_PHY_UP]);
- 	struct hisi_hba *hisi_hba = phy->hisi_hba;
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	int phy_no = sas_phy->id;
-@@ -631,10 +631,27 @@ static void hisi_sas_phyup_work(struct work_struct *work)
- 	hisi_sas_bytes_dmaed(hisi_hba, phy_no);
+@@ -737,7 +737,7 @@ static void hisi_sas_release_task(struct hisi_hba *hisi_hba,
+ 		hisi_sas_do_release_task(hisi_hba, slot->task, slot);
  }
  
-+static const work_func_t hisi_sas_phye_fns[HISI_PHYES_NUM] = {
-+	[HISI_PHYE_PHY_UP] = hisi_sas_phyup_work,
-+};
-+
-+bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
-+				enum hisi_sas_phy_event event)
-+{
-+	struct hisi_hba *hisi_hba = phy->hisi_hba;
-+
-+	if (WARN_ON(event >= HISI_PHYES_NUM))
-+		return false;
-+
-+	return queue_work(hisi_hba->wq, &phy->works[event]);
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_notify_phy_event);
-+
- static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+-static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
++void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
  {
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	int i;
- 
- 	phy->hisi_hba = hisi_hba;
- 	phy->port = NULL;
-@@ -652,7 +669,8 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
- 	sas_phy->ha = (struct sas_ha_struct *)hisi_hba->shost->hostdata;
- 	sas_phy->lldd_phy = phy;
- 
--	INIT_WORK(&phy->phyup_ws, hisi_sas_phyup_work);
-+	for (i = 0; i < HISI_PHYES_NUM; i++)
-+		INIT_WORK(&phy->works[i], hisi_sas_phye_fns[i]);
- }
- 
- static void hisi_sas_port_notify_formed(struct asd_sas_phy *sas_phy)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 8cb9061..679e76f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1482,7 +1482,7 @@ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
- 	else if (phy->identify.device_type != SAS_PHY_UNUSED)
- 		phy->identify.target_port_protocols =
- 			SAS_PROTOCOL_SMP;
--	queue_work(hisi_hba->wq, &phy->phyup_ws);
-+	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
- 
- end:
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 7257311..e521c42 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2708,7 +2708,7 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- 		if (!timer_pending(&hisi_hba->timer))
- 			set_link_timer_quirk(hisi_hba);
+ 	struct hisi_sas_device *sas_dev;
+ 	struct domain_device *device;
+@@ -754,6 +754,7 @@ static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
+ 		hisi_sas_release_task(hisi_hba, device);
  	}
--	queue_work(hisi_hba->wq, &phy->phyup_ws);
-+	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
+ }
++EXPORT_SYMBOL_GPL(hisi_sas_release_tasks);
  
- end:
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
-@@ -3262,7 +3262,7 @@ static irqreturn_t sata_int_v2_hw(int irq_no, void *p)
- 	phy->identify.device_type = SAS_SATA_DEV;
- 	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
- 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
--	queue_work(hisi_hba->wq, &phy->phyup_ws);
-+	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
- 
- end:
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC1 + offset, ent_tmp);
+ static void hisi_sas_dereg_device(struct hisi_hba *hisi_hba,
+ 				struct domain_device *device)
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 67020bd..4b7f251 100644
+index 9e32105..6a408d2 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1192,7 +1192,7 @@ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+@@ -2303,6 +2303,98 @@ enum {
+ 	hip08,
+ };
  
- 	phy->port_id = port_id;
- 	phy->phy_attached = 1;
--	queue_work(hisi_hba->wq, &phy->phyup_ws);
-+	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
++static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
++	struct hisi_hba *hisi_hba = sha->lldd_ha;
++	struct device *dev = hisi_hba->dev;
++	struct Scsi_Host *shost = hisi_hba->shost;
++	u32 device_state, status;
++	int rc;
++	u32 reg_val;
++	unsigned long flags;
++
++	if (!pdev->pm_cap) {
++		dev_err(dev, "PCI PM not supported\n");
++		return -ENODEV;
++	}
++
++	set_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
++	scsi_block_requests(shost);
++	set_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
++	flush_workqueue(hisi_hba->wq);
++	/* disable DQ/PHY/bus */
++	interrupt_disable_v3_hw(hisi_hba);
++	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0x0);
++	hisi_sas_kill_tasklets(hisi_hba);
++
++	hisi_sas_stop_phys(hisi_hba);
++
++	reg_val = hisi_sas_read32(hisi_hba, AXI_MASTER_CFG_BASE +
++		AM_CTRL_GLOBAL);
++	reg_val |= 0x1;
++	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE +
++		AM_CTRL_GLOBAL, reg_val);
++
++	/* wait until bus idle */
++	rc = readl_poll_timeout(hisi_hba->regs + AXI_MASTER_CFG_BASE +
++		AM_CURR_TRANS_RETURN, status, status == 0x3, 10, 100);
++	if (rc) {
++		dev_err(dev, "axi bus is not idle, rc = %d\n", rc);
++		clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
++		clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
++		scsi_unblock_requests(shost);
++		return rc;
++	}
++
++	hisi_sas_init_mem(hisi_hba);
++
++	device_state = pci_choose_state(pdev, state);
++	dev_warn(dev, "entering operating state [D%d]\n",
++			device_state);
++	pci_save_state(pdev);
++	pci_disable_device(pdev);
++	pci_set_power_state(pdev, device_state);
++
++	spin_lock_irqsave(&hisi_hba->lock, flags);
++	hisi_sas_release_tasks(hisi_hba);
++	spin_unlock_irqrestore(&hisi_hba->lock, flags);
++
++	sas_suspend_ha(sha);
++	return 0;
++}
++
++static int hisi_sas_v3_resume(struct pci_dev *pdev)
++{
++	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
++	struct hisi_hba *hisi_hba = sha->lldd_ha;
++	struct Scsi_Host *shost = hisi_hba->shost;
++	struct device *dev = hisi_hba->dev;
++	unsigned int rc;
++	u32 device_state = pdev->current_state;
++
++	dev_warn(dev, "resuming from operating state [D%d]\n",
++			device_state);
++	pci_set_power_state(pdev, PCI_D0);
++	pci_enable_wake(pdev, PCI_D0, 0);
++	pci_restore_state(pdev);
++	rc = pci_enable_device(pdev);
++	if (rc)
++		dev_err(dev, "enable device failed during resume (%d)\n", rc);
++
++	pci_set_master(pdev);
++	scsi_unblock_requests(shost);
++	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
++
++	sas_prep_resume_ha(sha);
++	init_reg_v3_hw(hisi_hba);
++	hisi_hba->hw->phys_init(hisi_hba);
++	sas_resume_ha(sha);
++	clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
++
++	return 0;
++}
++
+ static const struct pci_device_id sas_v3_pci_table[] = {
+ 	{ PCI_VDEVICE(HUAWEI, 0xa230), hip08 },
+ 	{}
+@@ -2319,6 +2411,8 @@ enum {
+ 	.id_table	= sas_v3_pci_table,
+ 	.probe		= hisi_sas_v3_probe,
+ 	.remove		= hisi_sas_v3_remove,
++	.suspend	= hisi_sas_v3_suspend,
++	.resume		= hisi_sas_v3_resume,
+ 	.err_handler	= &hisi_sas_err_handler,
+ };
  
- end:
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
 -- 
 1.9.1
