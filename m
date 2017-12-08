@@ -1,477 +1,199 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v5 1/7] scsi: libsas: Use dynamic alloced work to avoid sas event lost
-Date: Fri, 8 Dec 2017 17:42:04 +0800
-Message-ID: <20171208094210.24887-2-yanaijie@huawei.com>
+Subject: [PATCH v5 2/7] scsi: libsas: shut down the PHY if events reached the threshold
+Date: Fri, 8 Dec 2017 17:42:05 +0800
+Message-ID: <20171208094210.24887-3-yanaijie@huawei.com>
 References: <20171208094210.24887-1-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2267 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753263AbdLHJgl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Dec 2017 04:36:41 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20171208094210.24887-1-yanaijie@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Jason Yan <yanaijie@huawei.com>, Yijing Wang <wangyijing@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Jason Yan <yanaijie@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Now libsas hotplug work is static, every sas event type has its own
-static work, LLDD driver queues the hotplug work into shost->work_q.
-If LLDD driver burst posts lots hotplug events to libsas, the hotplug
-events may pending in the workqueue like
+If the PHY burst too many events, we will alloc a lot of events for the
+worker. This may leads to memory exhaustion.
 
-shost->work_q
-new work[PORTE_BYTES_DMAED] --> |[PHYE_LOSS_OF_SIGNAL][PORTE_BYTES_DMAED] -> processing
-                                |<-------wait worker to process-------->|
+Dan Williams suggested to shut down the PHY if the events reached the
+threshold, because in this case the PHY may have gone into some
+erroneous state. Users can re-enable the PHY by sysfs if they want.
 
-In this case, a new PORTE_BYTES_DMAED event coming, libsas try to queue
-it to shost->work_q, but this work is already pending, so it would be
-lost. Finally, libsas delete the related sas port and sas devices, but
-LLDD driver expect libsas add the sas port and devices(last sas event).
+We cannot use the fixed memory pool because if we run out of events, the
+shut down event and loss of signal event will lost too. The events still
+need to be allocated and processed in this case.
 
-This patch use dynamic allocated work to avoid this issue.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Suggested-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
 CC: John Garry <john.garry@huawei.com>
 CC: Johannes Thumshirn <jthumshirn@suse.de>
 CC: Ewan Milne <emilne@redhat.com>
 CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
-CC: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/scsi/libsas/sas_event.c    | 74 +++++++++++++++++++++++++++++---------
- drivers/scsi/libsas/sas_init.c     | 27 ++++++++++++--
- drivers/scsi/libsas/sas_internal.h |  6 ++++
- drivers/scsi/libsas/sas_phy.c      | 44 +++++------------------
- drivers/scsi/libsas/sas_port.c     | 18 +++++-----
- include/scsi/libsas.h              | 17 +++++----
- 6 files changed, 115 insertions(+), 71 deletions(-)
+ drivers/scsi/libsas/sas_init.c | 33 ++++++++++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_phy.c  | 27 ++++++++++++++++++++++++++-
+ include/scsi/libsas.h          |  6 ++++++
+ 3 files changed, 64 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 0bb9eef..5d7254a 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -29,7 +29,8 @@
- 
- int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
- {
--	int rc = 0;
-+	/* it's added to the defer_q when draining so return succeed */
-+	int rc = 1;
- 
- 	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
- 		return 0;
-@@ -44,19 +45,15 @@ int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
- 	return rc;
- }
- 
--static int sas_queue_event(int event, unsigned long *pending,
--			    struct sas_work *work,
-+static int sas_queue_event(int event, struct sas_work *work,
- 			    struct sas_ha_struct *ha)
- {
--	int rc = 0;
-+	unsigned long flags;
-+	int rc;
- 
--	if (!test_and_set_bit(event, pending)) {
--		unsigned long flags;
--
--		spin_lock_irqsave(&ha->lock, flags);
--		rc = sas_queue_work(ha, work);
--		spin_unlock_irqrestore(&ha->lock, flags);
--	}
-+	spin_lock_irqsave(&ha->lock, flags);
-+	rc = sas_queue_work(ha, work);
-+	spin_unlock_irqrestore(&ha->lock, flags);
- 
- 	return rc;
- }
-@@ -66,6 +63,7 @@ void __sas_drain_work(struct sas_ha_struct *ha)
- {
- 	struct workqueue_struct *wq = ha->core.shost->work_q;
- 	struct sas_work *sw, *_sw;
-+	int ret;
- 
- 	set_bit(SAS_HA_DRAINING, &ha->state);
- 	/* flush submitters */
-@@ -78,7 +76,10 @@ void __sas_drain_work(struct sas_ha_struct *ha)
- 	clear_bit(SAS_HA_DRAINING, &ha->state);
- 	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
- 		list_del_init(&sw->drain_node);
--		sas_queue_work(ha, sw);
-+		ret = sas_queue_work(ha, sw);
-+		if (ret != 1)
-+			sas_free_event(to_asd_sas_event(&sw->work));
-+
- 	}
- 	spin_unlock_irq(&ha->lock);
- }
-@@ -119,29 +120,68 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
- 		if (!test_and_clear_bit(ev, &d->pending))
- 			continue;
- 
--		sas_queue_event(ev, &d->pending, &d->disc_work[ev].work, ha);
-+		sas_queue_event(ev, &d->disc_work[ev].work, ha);
- 	}
- 	mutex_unlock(&ha->disco_mutex);
- }
- 
-+
-+static void sas_port_event_worker(struct work_struct *work)
-+{
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
-+
-+	sas_port_event_fns[ev->event](work);
-+	sas_free_event(ev);
-+}
-+
-+static void sas_phy_event_worker(struct work_struct *work)
-+{
-+	struct asd_sas_event *ev = to_asd_sas_event(work);
-+
-+	sas_phy_event_fns[ev->event](work);
-+	sas_free_event(ev);
-+}
-+
- static int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event)
- {
-+	struct asd_sas_event *ev;
- 	struct sas_ha_struct *ha = phy->ha;
-+	int ret;
- 
- 	BUG_ON(event >= PORT_NUM_EVENTS);
- 
--	return sas_queue_event(event, &phy->port_events_pending,
--			       &phy->port_events[event].work, ha);
-+	ev = sas_alloc_event(phy);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	INIT_SAS_EVENT(ev, sas_port_event_worker, phy, event);
-+
-+	ret = sas_queue_event(event, &ev->work, ha);
-+	if (ret != 1)
-+		sas_free_event(ev);
-+
-+	return ret;
- }
- 
- int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
- {
-+	struct asd_sas_event *ev;
- 	struct sas_ha_struct *ha = phy->ha;
-+	int ret;
- 
- 	BUG_ON(event >= PHY_NUM_EVENTS);
- 
--	return sas_queue_event(event, &phy->phy_events_pending,
--			       &phy->phy_events[event].work, ha);
-+	ev = sas_alloc_event(phy);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	INIT_SAS_EVENT(ev, sas_phy_event_worker, phy, event);
-+
-+	ret = sas_queue_event(event, &ev->work, ha);
-+	if (ret != 1)
-+		sas_free_event(ev);
-+
-+	return ret;
- }
- 
- int sas_init_events(struct sas_ha_struct *sas_ha)
 diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 64fa6f5..e04f6d6 100644
+index e04f6d6..22bfc02 100644
 --- a/drivers/scsi/libsas/sas_init.c
 +++ b/drivers/scsi/libsas/sas_init.c
-@@ -39,6 +39,7 @@
- #include "../scsi_sas_internal.h"
+@@ -123,6 +123,8 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 	INIT_LIST_HEAD(&sas_ha->defer_q);
+ 	INIT_LIST_HEAD(&sas_ha->eh_dev_q);
  
- static struct kmem_cache *sas_task_cache;
-+static struct kmem_cache *sas_event_cache;
++	sas_ha->event_thres = SAS_PHY_SHUTDOWN_THRES;
++
+ 	error = sas_register_phys(sas_ha);
+ 	if (error) {
+ 		printk(KERN_NOTICE "couldn't register sas phys:%d\n", error);
+@@ -557,14 +559,43 @@ EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
  
- struct sas_task *sas_alloc_task(gfp_t flags)
+ struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
  {
-@@ -364,8 +365,6 @@ void sas_prep_resume_ha(struct sas_ha_struct *ha)
- 		struct asd_sas_phy *phy = ha->sas_phy[i];
++	struct asd_sas_event *event;
+ 	gfp_t flags = in_interrupt() ? GFP_ATOMIC : GFP_KERNEL;
++	struct sas_ha_struct *sas_ha = phy->ha;
++	struct sas_internal *i =
++		to_sas_internal(sas_ha->core.shost->transportt);
++
++	event = kmem_cache_zalloc(sas_event_cache, flags);
++	if (!event)
++		return NULL;
  
- 		memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
--		phy->port_events_pending = 0;
--		phy->phy_events_pending = 0;
- 		phy->frame_rcvd_size = 0;
- 	}
+-	return kmem_cache_zalloc(sas_event_cache, flags);
++	atomic_inc(&phy->event_nr);
++
++	if (atomic_read(&phy->event_nr) > phy->ha->event_thres) {
++		if (i->dft->lldd_control_phy) {
++			if (cmpxchg(&phy->in_shutdown, 0, 1) == 0) {
++				sas_printk("The phy%02d bursting events, shut it down.\n",
++					phy->id);
++				sas_notify_phy_event(phy, PHYE_SHUTDOWN);
++			}
++		} else {
++			/* Do not support PHY control, stop allocating events */
++			WARN_ONCE(1, "PHY control not supported.\n");
++			kmem_cache_free(sas_event_cache, event);
++			atomic_dec(&phy->event_nr);
++			event = NULL;
++		}
++	}
++
++	return event;
  }
-@@ -555,20 +554,42 @@ sas_domain_attach_transport(struct sas_domain_function_template *dft)
- }
- EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
  
+ void sas_free_event(struct asd_sas_event *event)
+ {
++	struct asd_sas_phy *phy = event->phy;
 +
-+struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
-+{
-+	gfp_t flags = in_interrupt() ? GFP_ATOMIC : GFP_KERNEL;
-+
-+	return kmem_cache_zalloc(sas_event_cache, flags);
-+}
-+
-+void sas_free_event(struct asd_sas_event *event)
-+{
-+	kmem_cache_free(sas_event_cache, event);
-+}
-+
+ 	kmem_cache_free(sas_event_cache, event);
++	atomic_dec(&phy->event_nr);
+ }
+ 
  /* ---------- SAS Class register/unregister ---------- */
- 
- static int __init sas_class_init(void)
- {
- 	sas_task_cache = KMEM_CACHE(sas_task, SLAB_HWCACHE_ALIGN);
- 	if (!sas_task_cache)
--		return -ENOMEM;
-+		goto out;
-+
-+	sas_event_cache = KMEM_CACHE(asd_sas_event, SLAB_HWCACHE_ALIGN);
-+	if (!sas_event_cache)
-+		goto free_task_kmem;
- 
- 	return 0;
-+free_task_kmem:
-+	kmem_cache_destroy(sas_task_cache);
-+out:
-+	return -ENOMEM;
- }
- 
- static void __exit sas_class_exit(void)
- {
- 	kmem_cache_destroy(sas_task_cache);
-+	kmem_cache_destroy(sas_event_cache);
- }
- 
- MODULE_AUTHOR("Luben Tuikov <luben_tuikov@adaptec.com>");
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index c07e081..d8826a7 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -61,6 +61,9 @@ int sas_show_oob_mode(enum sas_oob_mode oob_mode, char *buf);
- int  sas_register_phys(struct sas_ha_struct *sas_ha);
- void sas_unregister_phys(struct sas_ha_struct *sas_ha);
- 
-+struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy);
-+void sas_free_event(struct asd_sas_event *event);
-+
- int  sas_register_ports(struct sas_ha_struct *sas_ha);
- void sas_unregister_ports(struct sas_ha_struct *sas_ha);
- 
-@@ -99,6 +102,9 @@ void sas_hae_reset(struct work_struct *work);
- 
- void sas_free_device(struct kref *kref);
- 
-+extern const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS];
-+extern const work_func_t sas_port_event_fns[PORT_NUM_EVENTS];
-+
- #ifdef CONFIG_SCSI_SAS_HOST_SMP
- extern void sas_smp_host_handler(struct bsg_job *job, struct Scsi_Host *shost);
- #else
 diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index cdee446c..59f8292 100644
+index 59f8292..bf3e1b9 100644
 --- a/drivers/scsi/libsas/sas_phy.c
 +++ b/drivers/scsi/libsas/sas_phy.c
-@@ -35,7 +35,6 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
+@@ -35,6 +35,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
  	struct asd_sas_event *ev = to_asd_sas_event(work);
  	struct asd_sas_phy *phy = ev->phy;
  
--	clear_bit(PHYE_LOSS_OF_SIGNAL, &phy->phy_events_pending);
++	phy->in_shutdown = 0;
  	phy->error = 0;
  	sas_deform_port(phy, 1);
  }
-@@ -45,7 +44,6 @@ static void sas_phye_oob_done(struct work_struct *work)
+@@ -44,6 +45,7 @@ static void sas_phye_oob_done(struct work_struct *work)
  	struct asd_sas_event *ev = to_asd_sas_event(work);
  	struct asd_sas_phy *phy = ev->phy;
  
--	clear_bit(PHYE_OOB_DONE, &phy->phy_events_pending);
++	phy->in_shutdown = 0;
  	phy->error = 0;
  }
  
-@@ -58,8 +56,6 @@ static void sas_phye_oob_error(struct work_struct *work)
- 	struct sas_internal *i =
- 		to_sas_internal(sas_ha->core.shost->transportt);
- 
--	clear_bit(PHYE_OOB_ERROR, &phy->phy_events_pending);
--
- 	sas_deform_port(phy, 1);
- 
- 	if (!port && phy->enabled && i->dft->lldd_control_phy) {
-@@ -88,8 +84,6 @@ static void sas_phye_spinup_hold(struct work_struct *work)
- 	struct sas_internal *i =
- 		to_sas_internal(sas_ha->core.shost->transportt);
- 
--	clear_bit(PHYE_SPINUP_HOLD, &phy->phy_events_pending);
--
- 	phy->error = 0;
- 	i->dft->lldd_control_phy(phy, PHY_FUNC_RELEASE_SPINUP_HOLD, NULL);
+@@ -105,6 +107,28 @@ static void sas_phye_resume_timeout(struct work_struct *work)
  }
-@@ -99,8 +93,6 @@ static void sas_phye_resume_timeout(struct work_struct *work)
- 	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
  
--	clear_bit(PHYE_RESUME_TIMEOUT, &phy->phy_events_pending);
--
- 	/* phew, lldd got the phy back in the nick of time */
- 	if (!phy->suspended) {
- 		dev_info(&phy->phy->dev, "resume timeout cancelled\n");
-@@ -119,39 +111,12 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
- {
- 	int i;
  
--	static const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS] = {
--		[PHYE_LOSS_OF_SIGNAL] = sas_phye_loss_of_signal,
--		[PHYE_OOB_DONE] = sas_phye_oob_done,
--		[PHYE_OOB_ERROR] = sas_phye_oob_error,
--		[PHYE_SPINUP_HOLD] = sas_phye_spinup_hold,
--		[PHYE_RESUME_TIMEOUT] = sas_phye_resume_timeout,
--
--	};
--
--	static const work_func_t sas_port_event_fns[PORT_NUM_EVENTS] = {
--		[PORTE_BYTES_DMAED] = sas_porte_bytes_dmaed,
--		[PORTE_BROADCAST_RCVD] = sas_porte_broadcast_rcvd,
--		[PORTE_LINK_RESET_ERR] = sas_porte_link_reset_err,
--		[PORTE_TIMER_EVENT] = sas_porte_timer_event,
--		[PORTE_HARD_RESET] = sas_porte_hard_reset,
--	};
--
- 	/* Now register the phys. */
- 	for (i = 0; i < sas_ha->num_phys; i++) {
--		int k;
++static void sas_phye_shutdown(struct work_struct *work)
++{
++	struct asd_sas_event *ev = to_asd_sas_event(work);
++	struct asd_sas_phy *phy = ev->phy;
++	struct sas_ha_struct *sas_ha = phy->ha;
++	struct sas_internal *i =
++		to_sas_internal(sas_ha->core.shost->transportt);
++
++	if (phy->enabled) {
++		int ret;
++
++		phy->error = 0;
++		phy->enabled = 0;
++		ret = i->dft->lldd_control_phy(phy, PHY_FUNC_DISABLE, NULL);
++		if (ret)
++			sas_printk("lldd disable phy%02d returned %d\n",
++				phy->id, ret);
++	} else
++		sas_printk("phy%02d is not enabled, cannot shutdown\n",
++			phy->id);
++}
++
+ /* ---------- Phy class registration ---------- */
+ 
+ int sas_register_phys(struct sas_ha_struct *sas_ha)
+@@ -116,6 +140,7 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
  		struct asd_sas_phy *phy = sas_ha->sas_phy[i];
  
  		phy->error = 0;
++		atomic_set(&phy->event_nr, 0);
  		INIT_LIST_HEAD(&phy->port_phy_el);
--		for (k = 0; k < PORT_NUM_EVENTS; k++) {
--			INIT_SAS_WORK(&phy->port_events[k].work, sas_port_event_fns[k]);
--			phy->port_events[k].phy = phy;
--		}
--
--		for (k = 0; k < PHY_NUM_EVENTS; k++) {
--			INIT_SAS_WORK(&phy->phy_events[k].work, sas_phy_event_fns[k]);
--			phy->phy_events[k].phy = phy;
--		}
  
  		phy->port = NULL;
- 		phy->ha = sas_ha;
-@@ -179,3 +144,12 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
- 
- 	return 0;
- }
-+
-+const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS] = {
-+	[PHYE_LOSS_OF_SIGNAL] = sas_phye_loss_of_signal,
-+	[PHYE_OOB_DONE] = sas_phye_oob_done,
-+	[PHYE_OOB_ERROR] = sas_phye_oob_error,
-+	[PHYE_SPINUP_HOLD] = sas_phye_spinup_hold,
-+	[PHYE_RESUME_TIMEOUT] = sas_phye_resume_timeout,
-+
-+};
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index d3c5297..9326628 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -261,8 +261,6 @@ void sas_porte_bytes_dmaed(struct work_struct *work)
- 	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	clear_bit(PORTE_BYTES_DMAED, &phy->port_events_pending);
+@@ -151,5 +176,5 @@ const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS] = {
+ 	[PHYE_OOB_ERROR] = sas_phye_oob_error,
+ 	[PHYE_SPINUP_HOLD] = sas_phye_spinup_hold,
+ 	[PHYE_RESUME_TIMEOUT] = sas_phye_resume_timeout,
 -
- 	sas_form_port(phy);
- }
- 
-@@ -273,8 +271,6 @@ void sas_porte_broadcast_rcvd(struct work_struct *work)
- 	unsigned long flags;
- 	u32 prim;
- 
--	clear_bit(PORTE_BROADCAST_RCVD, &phy->port_events_pending);
--
- 	spin_lock_irqsave(&phy->sas_prim_lock, flags);
- 	prim = phy->sas_prim;
- 	spin_unlock_irqrestore(&phy->sas_prim_lock, flags);
-@@ -288,8 +284,6 @@ void sas_porte_link_reset_err(struct work_struct *work)
- 	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	clear_bit(PORTE_LINK_RESET_ERR, &phy->port_events_pending);
--
- 	sas_deform_port(phy, 1);
- }
- 
-@@ -298,8 +292,6 @@ void sas_porte_timer_event(struct work_struct *work)
- 	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	clear_bit(PORTE_TIMER_EVENT, &phy->port_events_pending);
--
- 	sas_deform_port(phy, 1);
- }
- 
-@@ -308,8 +300,6 @@ void sas_porte_hard_reset(struct work_struct *work)
- 	struct asd_sas_event *ev = to_asd_sas_event(work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	clear_bit(PORTE_HARD_RESET, &phy->port_events_pending);
--
- 	sas_deform_port(phy, 1);
- }
- 
-@@ -353,3 +343,11 @@ void sas_unregister_ports(struct sas_ha_struct *sas_ha)
- 			sas_deform_port(sas_ha->sas_phy[i], 0);
- 
- }
-+
-+const work_func_t sas_port_event_fns[PORT_NUM_EVENTS] = {
-+	[PORTE_BYTES_DMAED] = sas_porte_bytes_dmaed,
-+	[PORTE_BROADCAST_RCVD] = sas_porte_broadcast_rcvd,
-+	[PORTE_LINK_RESET_ERR] = sas_porte_link_reset_err,
-+	[PORTE_TIMER_EVENT] = sas_porte_timer_event,
-+	[PORTE_HARD_RESET] = sas_porte_hard_reset,
-+};
++	[PHYE_SHUTDOWN] = sas_phye_shutdown,
+ };
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 6df6fe0..61c84d5 100644
+index 61c84d5..26683e2 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -292,6 +292,7 @@ struct asd_sas_port {
- struct asd_sas_event {
- 	struct sas_work work;
- 	struct asd_sas_phy *phy;
-+	int event;
+@@ -75,6 +75,7 @@ enum phy_event {
+ 	PHYE_OOB_ERROR,
+ 	PHYE_SPINUP_HOLD,             /* hot plug SATA, no COMWAKE sent */
+ 	PHYE_RESUME_TIMEOUT,
++	PHYE_SHUTDOWN,
+ 	PHY_NUM_EVENTS,
  };
  
- static inline struct asd_sas_event *to_asd_sas_event(struct work_struct *work)
-@@ -301,17 +302,21 @@ static inline struct asd_sas_event *to_asd_sas_event(struct work_struct *work)
- 	return ev;
+@@ -311,12 +312,15 @@ static inline void INIT_SAS_EVENT(struct asd_sas_event *ev,
+ 	ev->event = event;
  }
  
-+static inline void INIT_SAS_EVENT(struct asd_sas_event *ev,
-+		void (*fn)(struct work_struct *),
-+		struct asd_sas_phy *phy, int event)
-+{
-+	INIT_SAS_WORK(&ev->work, fn);
-+	ev->phy = phy;
-+	ev->event = event;
-+}
-+
-+
++#define SAS_PHY_SHUTDOWN_THRES   1024
+ 
  /* The phy pretty much is controlled by the LLDD.
   * The class only reads those fields.
   */
  struct asd_sas_phy {
  /* private: */
--	struct asd_sas_event   port_events[PORT_NUM_EVENTS];
--	struct asd_sas_event   phy_events[PHY_NUM_EVENTS];
--
--	unsigned long port_events_pending;
--	unsigned long phy_events_pending;
--
++	atomic_t event_nr;
++	int in_shutdown;
  	int error;
  	int suspended;
  
+@@ -404,6 +408,8 @@ struct sas_ha_struct {
+ 
+ 	struct list_head eh_done_q;  /* complete via scsi_eh_flush_done_q */
+ 	struct list_head eh_ata_q; /* scmds to promote from sas to ata eh */
++
++	int event_thres;
+ };
+ 
+ #define SHOST_TO_SAS_HA(_shost) (*(struct sas_ha_struct **)(_shost)->hostdata)
 -- 
 2.9.5
