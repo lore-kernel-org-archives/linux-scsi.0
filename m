@@ -1,56 +1,58 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH] libsas: flush pending destruct work in
- sas_unregister_domain_devices()
-Date: Fri, 8 Dec 2017 15:54:54 +0800
-Message-ID: <5A2A454E.6050108@huawei.com>
-References: <20171128002445.16594-1-xiyou.wangcong@gmail.com>
- <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site>
- <922397da-7dd3-c24e-1d94-e4804a769331@huawei.com>
- <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
- <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com>
- <CAM_iQpVWmeq5BMvxJmD2FP6Zm6s7O05+NqzYQ6uCAp7iE1asnw@mail.gmail.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v2 1/3] scsi: Fix a scsi_show_rq() NULL pointer
+ dereference
+Date: Fri, 8 Dec 2017 16:44:56 +0800
+Message-ID: <20171208084455.GF21488@ming.t460p>
+References: <20171206005753.28734-1-bart.vanassche@wdc.com>
+ <20171206005753.28734-2-bart.vanassche@wdc.com>
+ <20171208014528.GD21488@ming.t460p>
+ <yq1374muebm.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAM_iQpVWmeq5BMvxJmD2FP6Zm6s7O05+NqzYQ6uCAp7iE1asnw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Cong Wang <xiyou.wangcong@gmail.com>, John Garry <john.garry@huawei.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, chenxiang <chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1374muebm.fsf@oracle.com>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Martin,
 
-On 2017/12/8 6:57, Cong Wang wrote:
-> On Thu, Dec 7, 2017 at 5:37 AM, John Garry <john.garry@huawei.com> wrote:
->> On 28/11/2017 17:04, Cong Wang wrote:
->>>
->>> I don't understand, the only caller of sas_unregister_domain_devices()
->>> is sas_deform_port().
->>>
->>
->> And sas_deform_port() may be called from another worker on the same queue,
->> right? As in sas_phye_loss_of_signal()->sas_deform_port()
->
-> Oh, good catch! I didn't notice this subtle call path.
->
-> Do you have any better idea to fix this? We saw this on 4.9 too.
->
+On Thu, Dec 07, 2017 at 09:46:21PM -0500, Martin K. Petersen wrote:
+> 
+> Ming,
+> 
+> > As I explained in [1], the use-after-free is inevitable no matter if
+> > clearing 'SCpnt->cmnd' before mempool_free() in sd_uninit_command() or
+> > not, so we need to comment the fact that cdb may point to garbage
+> > data, and this function(especially __scsi_format_command() has to
+> > survive that, so that people won't be surprised when kasan complains
+> > use-after-free, and guys will be careful when they try to change the
+> > code in future.
+> 
+> Longer term we really need to get rid of the separate CDB allocation. It
+> was a necessary evil when I did it. And not much of a concern since I
+> did not expect anybody sane to use Type 2 (it's designed for use inside
+> disk arrays).
+> 
+> However, I keep hearing about people using Type 2 drives. Some vendors
+> source drives formatted that way and use the same SKU for arrays and
+> standalone servers.
+> 
+> So we should really look into making it possible for a queue to have a
+> bigger than 16-byte built-in CDB. For Type 2 devices, 32-byte reads and
+> writes are a prerequisite. So it would be nice to be able to switch a
+> queue to a larger allocation post creation (we won't know the type until
+> after READ CAPACITY(16) has been sent).
 
-We have sent a patchset to fix this and to enhance libsas hotplug.
-Please refer to https://lkml.org/lkml/2017/9/6/142
+I am wondering why you don't make __cmd[] in scsi_request defined as 32bytes?
+Even for some hosts with thousands of tag, the memory waste is still not
+too much.
 
-And I'm going to send a new version soon.
+Or if you prefer to do post creation, we have sbitmap_queue now, which can
+help to build a pre-allocated memory pool easily, and its allocation/free is
+pretty efficient.
 
-Jason
-
->>
->> The device destruct takes place in a separate worker from which
->> sas_deform_port() is called, but the same queue. So we have this queued
->> destruct happen after the port is fully deformed -> hence the WARN.
->>
->> I guess you only tested your patch on disks attached through an expander.
->
-> I have very limited scsi hardware, so my testing is limited too.
->
-> .
->
+Thanks,
+Ming
