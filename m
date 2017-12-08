@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 19/19] scsi: hisi_sas: add v3 hw suspend and resume
-Date: Sat, 9 Dec 2017 01:16:50 +0800
-Message-ID: <1512753410-50924-20-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 15/19] scsi: hisi_sas: judge result of internal abort
+Date: Sat, 9 Dec 2017 01:16:46 +0800
+Message-ID: <1512753410-50924-16-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,175 +9,140 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-For v3 hw SAS, it supports configuring power state
-from D0 to D3 for entering Low Power status and
-power state from D3 to D0 for quit Low Power status.
+Normally, hardware should ensure that internal abort
+timeout will never happen. If happen, it would be an SoC
+failure. What's more, HW will not process any other
+commands if an internal abort hasn't return CQ, and they
+will time out also.
 
-When power state from D0 to D3, HW will send FLR to
-clear the registers of ECAM and BAR space, and when
-power state from D3 to D0, it will clear the
-registers of ECAM space only.
+So, we should judge the result of internal abort in SCSI
+EH, if it is failed, we should give up to do TMF/softreset
+and return failure to the upper layer directly.
 
-So when suspend, need to do like controller reset
-(including disable interrupts/DQ/PHY/BUS), and
-also release slots after FLR. When resume,
-re-config the registers of BAR space.
+This patch do following things to achieve this.
+1. When internal abort timeout happened, we set return
+value to -EIO in hisi_sas_internal_task_abort().
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+2. If prep_abort() is not support, let
+hisi_sas_internal_task_abort() return
+TMF_RESP_FUNC_FAILED.
+
+3. If hisi_sas_internal_task_abort() return
+an negative number, it can be thought that it not
+executed properly or internal abort timeout. Then we
+won't do behind TMF or softreset, and return failure
+directly.
+
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  3 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 94 ++++++++++++++++++++++++++++++++++
- 3 files changed, 97 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 38 ++++++++++++++++++++++++++++-------
+ 1 file changed, 31 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 4343c4c..cc05029 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -461,4 +461,5 @@ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
- extern void hisi_sas_kill_tasklets(struct hisi_hba *hisi_hba);
- extern bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
- 				enum hisi_sas_phy_event event);
-+extern void hisi_sas_release_tasks(struct hisi_hba *hisi_hba);
- #endif
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ad12237..04e1172b 100644
+index 7446a39..1b9c48c 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -737,7 +737,7 @@ static void hisi_sas_release_task(struct hisi_hba *hisi_hba,
- 		hisi_sas_do_release_task(hisi_hba, slot->task, slot);
- }
+@@ -1184,6 +1184,11 @@ static int hisi_sas_abort_task(struct sas_task *task)
  
--static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
-+void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
+ 		rc2 = hisi_sas_internal_task_abort(hisi_hba, device,
+ 						   HISI_SAS_INT_ABT_CMD, tag);
++		if (rc2 < 0) {
++			dev_err(dev, "abort task: internal abort (%d)\n", rc2);
++			return TMF_RESP_FUNC_FAILED;
++		}
++
+ 		/*
+ 		 * If the TMF finds that the IO is not in the device and also
+ 		 * the internal abort does not succeed, then it is safe to
+@@ -1201,8 +1206,12 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
+ 		task->task_proto & SAS_PROTOCOL_STP) {
+ 		if (task->dev->dev_type == SAS_SATA_DEV) {
+-			hisi_sas_internal_task_abort(hisi_hba, device,
+-						     HISI_SAS_INT_ABT_DEV, 0);
++			rc = hisi_sas_internal_task_abort(hisi_hba, device,
++						HISI_SAS_INT_ABT_DEV, 0);
++			if (rc < 0) {
++				dev_err(dev, "abort task: internal abort failed\n");
++				goto out;
++			}
+ 			hisi_sas_dereg_device(hisi_hba, device);
+ 			rc = hisi_sas_softreset_ata_disk(device);
+ 		}
+@@ -1213,7 +1222,8 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 
+ 		rc = hisi_sas_internal_task_abort(hisi_hba, device,
+ 			     HISI_SAS_INT_ABT_CMD, tag);
+-		if (rc == TMF_RESP_FUNC_FAILED && task->lldd_task) {
++		if (((rc < 0) || (rc == TMF_RESP_FUNC_FAILED)) &&
++					task->lldd_task) {
+ 			spin_lock_irqsave(&hisi_hba->lock, flags);
+ 			hisi_sas_do_release_task(hisi_hba, task, slot);
+ 			spin_unlock_irqrestore(&hisi_hba->lock, flags);
+@@ -1263,15 +1273,20 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
  {
- 	struct hisi_sas_device *sas_dev;
- 	struct domain_device *device;
-@@ -754,6 +754,7 @@ static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
- 		hisi_sas_release_task(hisi_hba, device);
- 	}
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_release_tasks);
- 
- static void hisi_sas_dereg_device(struct hisi_hba *hisi_hba,
- 				struct domain_device *device)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 9e32105..6a408d2 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2303,6 +2303,98 @@ enum {
- 	hip08,
- };
- 
-+static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
-+	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+-	unsigned long flags;
 +	struct device *dev = hisi_hba->dev;
-+	struct Scsi_Host *shost = hisi_hba->shost;
-+	u32 device_state, status;
-+	int rc;
-+	u32 reg_val;
+ 	int rc = TMF_RESP_FUNC_FAILED;
 +	unsigned long flags;
-+
-+	if (!pdev->pm_cap) {
-+		dev_err(dev, "PCI PM not supported\n");
-+		return -ENODEV;
-+	}
-+
-+	set_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
-+	scsi_block_requests(shost);
-+	set_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+	flush_workqueue(hisi_hba->wq);
-+	/* disable DQ/PHY/bus */
-+	interrupt_disable_v3_hw(hisi_hba);
-+	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0x0);
-+	hisi_sas_kill_tasklets(hisi_hba);
-+
-+	hisi_sas_stop_phys(hisi_hba);
-+
-+	reg_val = hisi_sas_read32(hisi_hba, AXI_MASTER_CFG_BASE +
-+		AM_CTRL_GLOBAL);
-+	reg_val |= 0x1;
-+	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE +
-+		AM_CTRL_GLOBAL, reg_val);
-+
-+	/* wait until bus idle */
-+	rc = readl_poll_timeout(hisi_hba->regs + AXI_MASTER_CFG_BASE +
-+		AM_CURR_TRANS_RETURN, status, status == 0x3, 10, 100);
-+	if (rc) {
-+		dev_err(dev, "axi bus is not idle, rc = %d\n", rc);
-+		clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+		clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
-+		scsi_unblock_requests(shost);
-+		return rc;
-+	}
-+
-+	hisi_sas_init_mem(hisi_hba);
-+
-+	device_state = pci_choose_state(pdev, state);
-+	dev_warn(dev, "entering operating state [D%d]\n",
-+			device_state);
-+	pci_save_state(pdev);
-+	pci_disable_device(pdev);
-+	pci_set_power_state(pdev, device_state);
-+
-+	spin_lock_irqsave(&hisi_hba->lock, flags);
-+	hisi_sas_release_tasks(hisi_hba);
-+	spin_unlock_irqrestore(&hisi_hba->lock, flags);
-+
-+	sas_suspend_ha(sha);
-+	return 0;
-+}
-+
-+static int hisi_sas_v3_resume(struct pci_dev *pdev)
-+{
-+	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
-+	struct hisi_hba *hisi_hba = sha->lldd_ha;
-+	struct Scsi_Host *shost = hisi_hba->shost;
-+	struct device *dev = hisi_hba->dev;
-+	unsigned int rc;
-+	u32 device_state = pdev->current_state;
-+
-+	dev_warn(dev, "resuming from operating state [D%d]\n",
-+			device_state);
-+	pci_set_power_state(pdev, PCI_D0);
-+	pci_enable_wake(pdev, PCI_D0, 0);
-+	pci_restore_state(pdev);
-+	rc = pci_enable_device(pdev);
-+	if (rc)
-+		dev_err(dev, "enable device failed during resume (%d)\n", rc);
-+
-+	pci_set_master(pdev);
-+	scsi_unblock_requests(shost);
-+	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+
-+	sas_prep_resume_ha(sha);
-+	init_reg_v3_hw(hisi_hba);
-+	hisi_hba->hw->phys_init(hisi_hba);
-+	sas_resume_ha(sha);
-+	clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
-+
-+	return 0;
-+}
-+
- static const struct pci_device_id sas_v3_pci_table[] = {
- 	{ PCI_VDEVICE(HUAWEI, 0xa230), hip08 },
- 	{}
-@@ -2319,6 +2411,8 @@ enum {
- 	.id_table	= sas_v3_pci_table,
- 	.probe		= hisi_sas_v3_probe,
- 	.remove		= hisi_sas_v3_remove,
-+	.suspend	= hisi_sas_v3_suspend,
-+	.resume		= hisi_sas_v3_resume,
- 	.err_handler	= &hisi_sas_err_handler,
- };
  
+ 	if (sas_dev->dev_status != HISI_SAS_DEV_EH)
+ 		return TMF_RESP_FUNC_FAILED;
+ 	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 
+-	hisi_sas_internal_task_abort(hisi_hba, device,
++	rc = hisi_sas_internal_task_abort(hisi_hba, device,
+ 					HISI_SAS_INT_ABT_DEV, 0);
++	if (rc < 0) {
++		dev_err(dev, "I_T nexus reset: internal abort (%d)\n", rc);
++		return TMF_RESP_FUNC_FAILED;
++	}
+ 	hisi_sas_dereg_device(hisi_hba, device);
+ 
+ 	rc = hisi_sas_debug_I_T_nexus_reset(device);
+@@ -1299,8 +1314,10 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 		/* Clear internal IO and then hardreset */
+ 		rc = hisi_sas_internal_task_abort(hisi_hba, device,
+ 						  HISI_SAS_INT_ABT_DEV, 0);
+-		if (rc == TMF_RESP_FUNC_FAILED)
++		if (rc < 0) {
++			dev_err(dev, "lu_reset: internal abort failed\n");
+ 			goto out;
++		}
+ 		hisi_sas_dereg_device(hisi_hba, device);
+ 
+ 		phy = sas_get_local_phy(device);
+@@ -1497,8 +1514,14 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 	struct device *dev = hisi_hba->dev;
+ 	int res;
+ 
++	/*
++	 * The interface is not realized means this HW don't support internal
++	 * abort, or don't need to do internal abort. Then here, we return
++	 * TMF_RESP_FUNC_FAILED and let other steps go on, which depends that
++	 * the internal abort has been executed and returned CQ.
++	 */
+ 	if (!hisi_hba->hw->prep_abort)
+-		return -EOPNOTSUPP;
++		return TMF_RESP_FUNC_FAILED;
+ 
+ 	task = sas_alloc_slow_task(GFP_KERNEL);
+ 	if (!task)
+@@ -1530,6 +1553,7 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 			if (slot)
+ 				slot->task = NULL;
+ 			dev_err(dev, "internal task abort: timeout and not done.\n");
++			res = -EIO;
+ 			goto exit;
+ 		} else
+ 			dev_err(dev, "internal task abort: timeout.\n");
 -- 
 1.9.1
