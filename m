@@ -1,61 +1,116 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v5 7/7] scsi: libsas: notify event PORTE_BROADCAST_RCVD in sas_enable_revalidation()
-Date: Fri, 8 Dec 2017 17:42:10 +0800
-Message-ID: <20171208094210.24887-8-yanaijie@huawei.com>
-References: <20171208094210.24887-1-yanaijie@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171208094210.24887-1-yanaijie@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Jason Yan <yanaijie@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_dh_alua: skip RTPG for devices only supporting active/optimized
+Date: Fri,  8 Dec 2017 11:14:08 +0100
+Message-ID: <1512728048-84729-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47485 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751321AbdLHKOL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Dec 2017 05:14:11 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-There are two places queuing the disco event DISCE_REVALIDATE_DOMAIN.
-One is in sas_porte_broadcast_rcvd() and uses sas_chain_event() to queue
-the event. The other is in sas_enable_revalidation() and uses
-sas_queue_event() to queue the event. We have diffrent work queues for
-event and discovery now, so the DISCE_REVALIDATE_DOMAIN event may be
-processed in both event queue and discovery queue.
+From: Hannes Reinecke <hare@suse.com>
 
-Now since we do synchronous event handling, we cannot do it in discovery
-queue, so have to trigger a fake broadcast event to re-trigger the
-revalidation from event queue.
+For hardware only supporting active/optimized there's no point in
+ever re-issuing RTPG as the only new state we can possibly read is
+active/optimized.
+This avoid spurious errors during path failover on such arrays.
 
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: John Garry <john.garry@huawei.com>
-CC: Johannes Thumshirn <jthumshirn@suse.de>
-CC: Ewan Milne <emilne@redhat.com>
-CC: Christoph Hellwig <hch@lst.de>
-CC: Tomas Henzl <thenzl@redhat.com>
-CC: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libsas/sas_event.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 35 ++++++++++++++++++++++--------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 8c82c00..ae923eb 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -116,11 +116,17 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
- 		struct asd_sas_port *port = ha->sas_port[i];
- 		const int ev = DISCE_REVALIDATE_DOMAIN;
- 		struct sas_discovery *d = &port->disc;
-+		struct asd_sas_phy *sas_phy;
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index fd22dc6..b09c12b 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -40,6 +40,7 @@
+ #define TPGS_SUPPORT_LBA_DEPENDENT	0x10
+ #define TPGS_SUPPORT_OFFLINE		0x40
+ #define TPGS_SUPPORT_TRANSITION		0x80
++#define TPGS_SUPPORT_ALL		0xdf
  
- 		if (!test_and_clear_bit(ev, &d->pending))
- 			continue;
+ #define RTPG_FMT_MASK			0x70
+ #define RTPG_FMT_EXT_HDR		0x10
+@@ -81,6 +82,7 @@ struct alua_port_group {
+ 	int			tpgs;
+ 	int			state;
+ 	int			pref;
++	int			valid_states;
+ 	unsigned		flags; /* used for optimizing STPG */
+ 	unsigned char		transition_tmo;
+ 	unsigned long		expiry;
+@@ -243,6 +245,7 @@ static struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
+ 	pg->group_id = group_id;
+ 	pg->tpgs = tpgs;
+ 	pg->state = SCSI_ACCESS_STATE_OPTIMAL;
++	pg->valid_states = TPGS_SUPPORT_ALL;
+ 	if (optimize_stpg)
+ 		pg->flags |= ALUA_OPTIMIZE_STPG;
+ 	kref_init(&pg->kref);
+@@ -516,7 +519,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	struct alua_port_group *tmp_pg;
+-	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
++	int len, k, off, bufflen = ALUA_RTPG_SIZE;
+ 	unsigned char *desc, *buff;
+ 	unsigned err, retval;
+ 	unsigned int tpg_desc_tbl_off;
+@@ -541,6 +544,20 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
  
--		sas_queue_event(ev, &d->disc_work[ev].work, ha);
-+		if (list_empty(&port->phy_list))
-+			continue;
-+
-+		sas_phy = container_of(port->phy_list.next, struct asd_sas_phy,
-+				port_phy_el);
-+		ha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
- 	}
- 	mutex_unlock(&ha->disco_mutex);
- }
+ 	if (retval) {
++		/*
++		 * If the target only supports active/optimized there's
++		 * not much we can do; it's not that we can switch paths
++		 * or somesuch.
++		 * So ignore any errors to avoid spurious failures during
++		 * path failover.
++		 */
++		if ((pg->valid_states & ~TPGS_SUPPORT_OPTIMIZED) == 0) {
++			sdev_printk(KERN_INFO, sdev,
++				    "%s: ignoring rtpg result %d\n",
++				    ALUA_DH_NAME, retval);
++			kfree(buff);
++			return SCSI_DH_OK;
++		}
+ 		if (!scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: rtpg failed, result %d\n",
+@@ -652,7 +669,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 					rcu_read_unlock();
+ 				}
+ 				if (tmp_pg == pg)
+-					valid_states = desc[1];
++					tmp_pg->valid_states = desc[1];
+ 				spin_unlock_irqrestore(&tmp_pg->lock, flags);
+ 			}
+ 			kref_put(&tmp_pg->kref, release_port_group);
+@@ -665,13 +682,13 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
+ 		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
+ 		    pg->pref ? "preferred" : "non-preferred",
+-		    valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
+-		    valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
+-		    valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
+-		    valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
+-		    valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
+-		    valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
+-		    valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
++		    pg->valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
++		    pg->valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
++		    pg->valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
++		    pg->valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
++		    pg->valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
++		    pg->valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
++		    pg->valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
+ 
+ 	switch (pg->state) {
+ 	case SCSI_ACCESS_STATE_TRANSITIONING:
 -- 
-2.9.5
+1.8.5.6
