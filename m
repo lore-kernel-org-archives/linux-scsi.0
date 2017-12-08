@@ -1,67 +1,110 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] Remove scsi_dh_remove_device()
-Date: Thu,  7 Dec 2017 16:00:59 -0800
-Message-ID: <20171208000059.18892-1-bart.vanassche@wdc.com>
+Subject: [PATCH] qla2xxx: Suppress gcc 7 fall-through warnings
+Date: Thu,  7 Dec 2017 16:02:46 -0800
+Message-ID: <20171208000246.19617-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:18676 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbdLHABA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 19:01:00 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:15671 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751001AbdLHACr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2017 19:02:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Quinn Tran <quinn.tran@cavium.com>, Hannes Reinecke <hare@suse.com>
 
-Remove this function since it has an empty body.
+Avoid that building with gcc 7 and W=1 triggers warnings similar
+to the following:
+
+drivers/scsi/qla2xxx/qla_isr.c:1189:27: warning: this statement may fall through [-Wimplicit-fallthrough=]
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: Quinn Tran <quinn.tran@cavium.com>
 Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi_priv.h  | 1 -
- drivers/scsi/scsi_sysfs.c | 3 ---
- 2 files changed, 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c     | 2 +-
+ drivers/scsi/qla2xxx/qla_isr.c    | 5 +++--
+ drivers/scsi/qla2xxx/qla_sup.c    | 1 +
+ drivers/scsi/qla2xxx/qla_target.c | 3 ++-
+ 4 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 61024db5953d..99f1db5e467e 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -186,7 +186,6 @@ void scsi_dh_release_device(struct scsi_device *sdev);
- static inline void scsi_dh_add_device(struct scsi_device *sdev) { }
- static inline void scsi_dh_release_device(struct scsi_device *sdev) { }
- #endif
--static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
- 
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 6ee964643531..1bce5c7305ff 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1277,7 +1277,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
- 				"failed to add device: %d\n", error);
--		scsi_dh_remove_device(sdev);
- 		return error;
- 	}
- 
-@@ -1286,7 +1285,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
- 				"failed to add class device: %d\n", error);
--		scsi_dh_remove_device(sdev);
- 		device_del(&sdev->sdev_gendev);
- 		return error;
- 	}
-@@ -1353,7 +1351,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		bsg_unregister_queue(sdev->request_queue);
- 		device_unregister(&sdev->sdev_dev);
- 		transport_remove_device(dev);
--		scsi_dh_remove_device(sdev);
- 		device_del(dev);
- 	} else
- 		put_device(&sdev->sdev_dev);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 7d715e58901f..07fe17a986b0 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -177,7 +177,7 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 			break;
+ 		case CS_TIMEOUT:
+ 			rval = QLA_FUNCTION_TIMEOUT;
+-			/* drop through */
++			/* fall through */
+ 		default:
+ 			ql_dbg(ql_dbg_disc, vha, 0x2033,
+ 			    "%s failed, completion status (%x) on port_id: "
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 85382387a52b..a55bfaa790a3 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1202,6 +1202,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 				qla2xxx_wake_dpc(vha);
+ 			}
+ 		}
++		/* fall through */
+ 	case MBA_IDC_COMPLETE:
+ 		if (ha->notify_lb_portup_comp && !vha->vp_idx)
+ 			complete(&ha->lb_portup_comp);
+@@ -1769,7 +1770,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 				set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+ 			qla2xxx_wake_dpc(vha);
+ 		}
+-		/* drop through */
++		/* fall through */
+ 	default:
+ 		data[0] = MBS_COMMAND_ERROR;
+ 		break;
+@@ -2967,9 +2968,9 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 				    (response_t *)pkt);
+ 				break;
+ 			} else {
+-				/* drop through */
+ 				qlt_24xx_process_atio_queue(vha, 1);
+ 			}
++			/* fall through */
+ 		case ABTS_RESP_24XX:
+ 		case CTIO_TYPE7:
+ 		case CTIO_CRC2:
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index b4336e0cd85f..d2db86ea06b2 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -2461,6 +2461,7 @@ qla2x00_write_optrom_data(struct scsi_qla_host *vha, uint8_t *buf,
+ 				sec_mask = 0x1e000;
+ 				break;
+ 			}
++			/* fall through */
+ 		default:
+ 			/* Default to 16 kb sector size. */
+ 			rest_addr = 0x3fff;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index a23107b1ec06..067bcc57a9ad 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -450,6 +450,7 @@ void qlt_response_pkt_all_vps(struct scsi_qla_host *vha,
+ 		ql_dbg(ql_dbg_tgt, vha, 0xe073,
+ 			"qla_target(%d):%s: CRC2 Response pkt\n",
+ 			vha->vp_idx, __func__);
++		/* fall through */
+ 	case CTIO_TYPE7:
+ 	{
+ 		struct ctio7_from_24xx *entry = (struct ctio7_from_24xx *)pkt;
+@@ -4889,7 +4890,7 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 			res = 1;
+ 			break;
+ 		}
+-		/* drop through */
++		/* fall through */
+ 	case ELS_LOGO:
+ 	case ELS_PRLO:
+ 		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
 -- 
 2.15.0
