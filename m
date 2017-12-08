@@ -1,61 +1,54 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 18/19] scsi: hisi_sas: re-add the lldd_port_deformed()
-Date: Sat, 9 Dec 2017 01:16:49 +0800
-Message-ID: <1512753410-50924-19-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 02/19] scsi: hisi_sas: fix dma_unmap_sg() parameter
+Date: Sat, 9 Dec 2017 01:16:33 +0800
+Message-ID: <1512753410-50924-3-git-send-email-john.garry@huawei.com>
 References: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:36068 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754093AbdLHQbD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Dec 2017 11:31:03 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1512753410-50924-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-In function sas_suspend_devices(), it requires
-callback lldd_port_deformed callback to be
-implemented if lldd_port_deformed is
-implemented.
+For function dma_unmap_sg(), the <nents> parameter
+should be number of elements in the scatterlist
+prior to the mapping, not after the mapping.
 
-So add a stub for lldd_port_deformed.
-
-Callback lldd_port_deformed was not required as the
-port deformation is done elsewhere in the LLDD.
+Fix this usage.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9bd98e5..ad12237 100644
+index 359ec52..d842530 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1613,6 +1613,10 @@ static void hisi_sas_port_formed(struct asd_sas_phy *sas_phy)
- 	hisi_sas_port_notify_formed(sas_phy);
- }
+@@ -192,7 +192,8 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
  
-+static void hisi_sas_port_deformed(struct asd_sas_phy *sas_phy)
-+{
-+}
-+
- static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
- {
- 	phy->phy_attached = 0;
-@@ -1703,6 +1707,7 @@ void hisi_sas_kill_tasklets(struct hisi_hba *hisi_hba)
- 	.lldd_query_task	= hisi_sas_query_task,
- 	.lldd_clear_nexus_ha = hisi_sas_clear_nexus_ha,
- 	.lldd_port_formed	= hisi_sas_port_formed,
-+	.lldd_port_deformed = hisi_sas_port_deformed,
- };
+ 		if (!sas_protocol_ata(task->task_proto))
+ 			if (slot->n_elem)
+-				dma_unmap_sg(dev, task->scatter, slot->n_elem,
++				dma_unmap_sg(dev, task->scatter,
++					     task->num_scatter,
+ 					     task->data_dir);
  
- void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
+ 		if (sas_dev)
+@@ -431,7 +432,8 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 	dev_err(dev, "task prep: failed[%d]!\n", rc);
+ 	if (!sas_protocol_ata(task->task_proto))
+ 		if (n_elem)
+-			dma_unmap_sg(dev, task->scatter, n_elem,
++			dma_unmap_sg(dev, task->scatter,
++				     task->num_scatter,
+ 				     task->data_dir);
+ prep_out:
+ 	return rc;
 -- 
 1.9.1
