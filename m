@@ -1,56 +1,61 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 6/9] lpfc: Fix issues connecting with nvme initiator
-Date: Fri,  8 Dec 2017 17:18:08 -0800
-Message-ID: <20171209011811.23421-7-jsmart2021@gmail.com>
-References: <20171209011811.23421-1-jsmart2021@gmail.com>
+From: Rafael David Tinoco <rafael.tinoco@canonical.com>
+Subject: Re: [PATCH] scsi: libiscsi: Allow sd_shutdown on bad transport
+Date: Fri, 8 Dec 2017 23:31:46 -0200
+Message-ID: <F7DC7920-76E9-4F8B-8E62-8E1B3F69C5A3@canonical.com>
+References: <1512683953-5959-1-git-send-email-rafael.tinoco@canonical.com>
+ <1512774750.26126.15.camel@wdc.com>
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:46814 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752240AbdLIBS3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:29 -0500
-Received: by mail-qk0-f195.google.com with SMTP id b184so1024065qkc.13
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:29 -0800 (PST)
-In-Reply-To: <20171209011811.23421-1-jsmart2021@gmail.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:51596 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752235AbdLIBbx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:31:53 -0500
+Received: from mail-qt0-f199.google.com ([209.85.216.199])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <rafael.tinoco@canonical.com>)
+        id 1eNTzc-0005IU-Fj
+        for linux-scsi@vger.kernel.org; Sat, 09 Dec 2017 01:31:52 +0000
+Received: by mail-qt0-f199.google.com with SMTP id v30so14747045qtg.9
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:31:52 -0800 (PST)
+In-Reply-To: <1512774750.26126.15.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jay.vosburgh@canonical.com" <jay.vosburgh@canonical.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "daniel.axtens@canonical.com" <daniel.axtens@canonical.com>, "dragan.stancevic@canonical.com" <dragan.stancevic@canonical.com>
 
-In the lpfc discovery engine, when as a nvme target, where the
-driver was performing mailbox io with the adapter for port login
-when a NVME PRLI is received from the host. Rather than queue and
-eventually get back to sending a response after the mailbox traffic,
-the driver rejected the io with an error response.
+Hello Bart, 
 
-Turns out this particular initiator didn't like the rejection values
-(unable to process command/command in progress) so it never attempted
-a retry of the PRLI. Thus the host never established nvme connectivity
-with the lpfc target.
+I am returning BLK_EH_HANDLED in iscsi_eh_cmd_timed_out(). Do you mean something different ? 
 
-By changing the rejection values (to Logical Busy/nothing more), the
-initiator accepted the response and would retry the PRLI, resulting in
-nvme connectivity.
+That paragraph means that I have tried to return BLK_EH_NOT_HANDLED first, because that would be the other option instead of BLK_EH_RESET_TIMER (which is causing this issue), but if I did it, the EH logic would try scsi_abort_command() and - successful or not - it would try to get sense before completion, causing more traffic on a bad state transport.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_nportdisc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Best way to allow faster completion was, indeed, returning BLK_EH_HANDLED, but changing result to DID_NO_CONNECT, because that will tell block layer not to retry, allowing the completion to happen in the SOFTIRQ handler, informing result to the upper layer. 
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 283382ac0456..d841aa42f607 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -1603,8 +1603,8 @@ lpfc_rcv_prli_reglogin_issue(struct lpfc_vport *vport,
- 			 * rpi registration does complete.
- 			 */
- 			memset(&stat, 0, sizeof(struct ls_rjt));
--			stat.un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
--			stat.un.b.lsRjtRsnCodeExp = LSEXP_CMD_IN_PROGRESS;
-+			stat.un.b.lsRjtRsnCode = LSRJT_LOGICAL_BSY;
-+			stat.un.b.lsRjtRsnCodeExp = LSEXP_NOTHING_MORE;
- 			lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb,
- 					    ndlp, NULL);
- 			return ndlp->nlp_state;
--- 
-2.13.1
+For the queue, simply now allowing queueing on such condition (shutdown + state != logged in) seemed correct. 
+
+Let me know if you want me to try something else. I would be happy to.
+
+Best,
+-Rafael
+
+> On 08/12/2017, at 09:12 PM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+> 
+> On Thu, 2017-12-07 at 19:59 -0200, Rafael David Tinoco wrote:
+>> This happens because iscsi_eh_cmd_timed_out(), the transport layer
+>> timeout helper, would tell the queue timeout function (scsi_times_out)
+>> to reset the request timer over and over, until the session state is
+>> back to logged in state. Unfortunately, during server shutdown, this
+>> might never happen again.
+> 
+> Hello Rafael,
+> 
+> Have you considered to make iscsi_eh_cmd_timed_out() return BLK_EH_HANDLED
+> if system_state != SYSTEM_RUNNING? That could result in slower shutdown than
+> with your patch but such a change would probably be really easy to review.
+> 
+> Thanks,
+> 
+> Bart.
