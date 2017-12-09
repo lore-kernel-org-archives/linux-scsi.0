@@ -1,191 +1,232 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 4/9] lpfc: Increase SCSI CQ and WQ sizes.
-Date: Fri,  8 Dec 2017 17:18:06 -0800
-Message-ID: <20171209011811.23421-5-jsmart2021@gmail.com>
+Subject: [PATCH 5/9] lpfc: Fix SCSI LUN discovery when SCSI and NVME enabled
+Date: Fri,  8 Dec 2017 17:18:07 -0800
+Message-ID: <20171209011811.23421-6-jsmart2021@gmail.com>
 References: <20171209011811.23421-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:46802 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752620AbdLIBS1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:27 -0500
-Received: by mail-qk0-f195.google.com with SMTP id b184so1023970qkc.13
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:27 -0800 (PST)
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:43510 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753492AbdLIBS2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:28 -0500
+Received: by mail-qk0-f194.google.com with SMTP id j207so1026639qke.10
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:28 -0800 (PST)
 In-Reply-To: <20171209011811.23421-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Increased the sizes of the SCSI WQ's and CQ's so that SCSI operation is
-similar to that used by NVME. However, size increase restricted only to
-those newer adapters that can support the larger WQE size, thus bigger
-queue sizes.
+When enabled for both SCSI and NVME support, and connected pt2pt to a
+SCSI only target, the driver nodelist entry for the remote port is
+left in PRLI_ISSUE state and no SCSI LUNs are discovered. Works fine
+if only configured for SCSI support.
+
+Error was due to some of the prli points still reflecting the need
+to send only 1 PRLI. On a lot of fabric configs, targets were NVME
+only, which meant the fabric-reported protocol attributes were only
+telling the driver one protocol or the other. Thus things worked
+fine. With pt2pt, the driver must send a PRLI for both protocols as
+there are no hints on what the target supports. Thus pt2pt targets
+were hitting the multiple PRLI issues.
+
+Complete the dual PRLI support. Track explicitly whether scsi (fcp)
+or nvme prli's have been sent. Accurately track protocol support
+detected on each node as reported by the fabric or probed by PRLI
+traffic.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 65 ++++++++++++++++++++++++++++---------------
- drivers/scsi/lpfc/lpfc_nvme.h |  2 --
- drivers/scsi/lpfc/lpfc_sli4.h |  6 ++--
- 3 files changed, 46 insertions(+), 27 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c        |  1 +
+ drivers/scsi/lpfc/lpfc_els.c       | 30 ++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 30 +++++++++++++-----------------
+ 3 files changed, 34 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 44a98bc913f5..f539c554588c 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7983,9 +7983,9 @@ lpfc_alloc_nvme_wq_cq(struct lpfc_hba *phba, int wqidx)
- {
- 	struct lpfc_queue *qdesc;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 2c1fe5ab3128..9d20d2c208c7 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -471,6 +471,7 @@ lpfc_prep_node_fc4type(struct lpfc_vport *vport, uint32_t Did, uint8_t fc4_type)
+ 				"Parse GID_FTrsp: did:x%x flg:x%x x%x",
+ 				Did, ndlp->nlp_flag, vport->fc_flag);
  
--	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_NVME_PAGE_SIZE,
-+	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
- 				      phba->sli4_hba.cq_esize,
--				      LPFC_NVME_CQSIZE);
-+				      LPFC_CQE_EXP_COUNT);
- 	if (!qdesc) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"0508 Failed allocate fast-path NVME CQ (%d)\n",
-@@ -7994,8 +7994,8 @@ lpfc_alloc_nvme_wq_cq(struct lpfc_hba *phba, int wqidx)
- 	}
- 	phba->sli4_hba.nvme_cq[wqidx] = qdesc;
- 
--	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_NVME_PAGE_SIZE,
--				      LPFC_WQE128_SIZE, LPFC_NVME_WQSIZE);
-+	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
-+				      LPFC_WQE128_SIZE, LPFC_WQE_EXP_COUNT);
- 	if (!qdesc) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"0509 Failed allocate fast-path NVME WQ (%d)\n",
-@@ -8011,12 +8011,18 @@ static int
- lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
- {
- 	struct lpfc_queue *qdesc;
--	uint32_t wqesize;
- 
- 	/* Create Fast Path FCP CQs */
--	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
--				      phba->sli4_hba.cq_esize,
--				      phba->sli4_hba.cq_ecount);
-+	if (phba->fcp_embed_io)
-+		/* Increase the CQ size when WQEs contain an embedded cdb */
-+		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
-+					      phba->sli4_hba.cq_esize,
-+					      LPFC_CQE_EXP_COUNT);
++			ndlp->nlp_fc4_type &= ~(NLP_FC4_FCP | NLP_FC4_NVME);
+ 			/* By default, the driver expects to support FCP FC4 */
+ 			if (fc4_type == FC_TYPE_FCP)
+ 				ndlp->nlp_fc4_type |= NLP_FC4_FCP;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 6ffd65a935c4..dfb21d9efb0d 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2094,6 +2094,10 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	ndlp = (struct lpfc_nodelist *) cmdiocb->context1;
+ 	spin_lock_irq(shost->host_lock);
+ 	ndlp->nlp_flag &= ~NLP_PRLI_SND;
 +
-+	else
-+		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
-+					      phba->sli4_hba.cq_esize,
-+					      phba->sli4_hba.cq_ecount);
- 	if (!qdesc) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"0499 Failed allocate fast-path FCP CQ (%d)\n", wqidx);
-@@ -8025,10 +8031,15 @@ lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
- 	phba->sli4_hba.fcp_cq[wqidx] = qdesc;
++	/* Driver supports multiple FC4 types.  Counters matter. */
++	vport->fc_prli_sent--;
++	ndlp->fc4_prli_sent--;
+ 	spin_unlock_irq(shost->host_lock);
  
- 	/* Create Fast Path FCP WQs */
--	wqesize = (phba->fcp_embed_io) ?
--		LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
--	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
--				      wqesize, phba->sli4_hba.wq_ecount);
-+	if (phba->fcp_embed_io)
-+		/* Increase the WQ size when WQEs contain an embedded cdb */
-+		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
-+					      LPFC_WQE128_SIZE,
-+					      LPFC_WQE_EXP_COUNT);
-+	else
-+		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
-+					      phba->sli4_hba.wq_esize,
-+					      phba->sli4_hba.wq_ecount);
- 	if (!qdesc) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"0503 Failed allocate fast-path FCP WQ (%d)\n",
-@@ -12216,7 +12227,6 @@ int
- lpfc_fof_queue_create(struct lpfc_hba *phba)
- {
- 	struct lpfc_queue *qdesc;
--	uint32_t wqesize;
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+@@ -2101,9 +2105,6 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		irsp->ulpStatus, irsp->un.ulpWord[4],
+ 		ndlp->nlp_DID);
  
- 	/* Create FOF EQ */
- 	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
-@@ -12230,21 +12240,32 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
- 	if (phba->cfg_fof) {
- 
- 		/* Create OAS CQ */
--		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
--					      phba->sli4_hba.cq_esize,
--					      phba->sli4_hba.cq_ecount);
-+		if (phba->fcp_embed_io)
-+			qdesc = lpfc_sli4_queue_alloc(phba,
-+						      LPFC_EXPANDED_PAGE_SIZE,
-+						      phba->sli4_hba.cq_esize,
-+						      LPFC_CQE_EXP_COUNT);
-+		else
-+			qdesc = lpfc_sli4_queue_alloc(phba,
-+						      LPFC_DEFAULT_PAGE_SIZE,
-+						      phba->sli4_hba.cq_esize,
-+						      phba->sli4_hba.cq_ecount);
- 		if (!qdesc)
- 			goto out_error;
- 
- 		phba->sli4_hba.oas_cq = qdesc;
- 
- 		/* Create OAS WQ */
--		wqesize = (phba->fcp_embed_io) ?
--				LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
--		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
--					      wqesize,
--					      phba->sli4_hba.wq_ecount);
+-	/* Ddriver supports multiple FC4 types.  Counters matter. */
+-	vport->fc_prli_sent--;
 -
-+		if (phba->fcp_embed_io)
-+			qdesc = lpfc_sli4_queue_alloc(phba,
-+						      LPFC_EXPANDED_PAGE_SIZE,
-+						      LPFC_WQE128_SIZE,
-+						      LPFC_WQE_EXP_COUNT);
-+		else
-+			qdesc = lpfc_sli4_queue_alloc(phba,
-+						      LPFC_DEFAULT_PAGE_SIZE,
-+						      phba->sli4_hba.wq_esize,
-+						      phba->sli4_hba.wq_ecount);
- 		if (!qdesc)
- 			goto out_error;
+ 	/* PRLI completes to NPort <nlp_DID> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0103 PRLI completes to NPort x%06x "
+@@ -2117,7 +2118,6 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
  
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
-index c0833e469b7c..03b0e8471ef4 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.h
-+++ b/drivers/scsi/lpfc/lpfc_nvme.h
-@@ -22,8 +22,6 @@
-  ********************************************************************/
+ 	if (irsp->ulpStatus) {
+ 		/* Check for retry */
+-		ndlp->fc4_prli_sent--;
+ 		if (lpfc_els_retry(phba, cmdiocb, rspiocb)) {
+ 			/* ELS command is being retried */
+ 			goto out;
+@@ -2196,6 +2196,15 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		ndlp->nlp_fc4_type |= NLP_FC4_NVME;
+ 	local_nlp_type = ndlp->nlp_fc4_type;
  
- #define LPFC_NVME_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
--#define LPFC_NVME_WQSIZE		1024
--#define LPFC_NVME_CQSIZE		4096
++	/* This routine will issue 1 or 2 PRLIs, so zero all the ndlp
++	 * fields here before any of them can complete.
++	 */
++	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
++	ndlp->nlp_type &= ~(NLP_NVME_TARGET | NLP_NVME_INITIATOR);
++	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
++	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
++	ndlp->nvme_fb_size = 0;
++
+  send_next_prli:
+ 	if (local_nlp_type & NLP_FC4_FCP) {
+ 		/* Payload is 4 + 16 = 20 x14 bytes. */
+@@ -2304,6 +2313,13 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	elsiocb->iocb_cmpl = lpfc_cmpl_els_prli;
+ 	spin_lock_irq(shost->host_lock);
+ 	ndlp->nlp_flag |= NLP_PRLI_SND;
++
++	/* The vport counters are used for lpfc_scan_finished, but
++	 * the ndlp is used to track outstanding PRLIs for different
++	 * FC4 types.
++	 */
++	vport->fc_prli_sent++;
++	ndlp->fc4_prli_sent++;
+ 	spin_unlock_irq(shost->host_lock);
+ 	if (lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0) ==
+ 	    IOCB_ERROR) {
+@@ -2314,12 +2330,6 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		return 1;
+ 	}
  
- #define LPFC_NVME_ERSP_LEN		0x20
+-	/* The vport counters are used for lpfc_scan_finished, but
+-	 * the ndlp is used to track outstanding PRLIs for different
+-	 * FC4 types.
+-	 */
+-	vport->fc_prli_sent++;
+-	ndlp->fc4_prli_sent++;
  
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index da302bfb0223..81fb58e59e60 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -170,7 +170,7 @@ struct lpfc_queue {
- 	uint32_t q_mode;
- 	uint16_t page_count;	/* Number of pages allocated for this queue */
- 	uint16_t page_size;	/* size of page allocated for this queue */
--#define LPFC_NVME_PAGE_SIZE	16384
-+#define LPFC_EXPANDED_PAGE_SIZE	16384
- #define LPFC_DEFAULT_PAGE_SIZE	4096
- 	uint16_t chann;		/* IO channel this queue is associated with */
- 	uint16_t db_format;
-@@ -370,9 +370,9 @@ struct lpfc_bmbx {
+ 	/* The driver supports 2 FC4 types.  Make sure
+ 	 * a PRLI is issued for all types before exiting.
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index df050b211e0b..283382ac0456 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -390,6 +390,11 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		break;
+ 	}
  
- #define LPFC_EQE_DEF_COUNT	1024
- #define LPFC_CQE_DEF_COUNT      1024
-+#define LPFC_CQE_EXP_COUNT      4096
- #define LPFC_WQE_DEF_COUNT      256
--#define LPFC_WQE128_DEF_COUNT   128
--#define LPFC_WQE128_MAX_COUNT   256
-+#define LPFC_WQE_EXP_COUNT      1024
- #define LPFC_MQE_DEF_COUNT      16
- #define LPFC_RQE_DEF_COUNT	512
++	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
++	ndlp->nlp_type &= ~(NLP_NVME_TARGET | NLP_NVME_INITIATOR);
++	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
++	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
++
+ 	/* Check for Nport to NPort pt2pt protocol */
+ 	if ((vport->fc_flag & FC_PT2PT) &&
+ 	    !(vport->fc_flag & FC_PT2PT_PLOGI)) {
+@@ -777,9 +782,6 @@ lpfc_rcv_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	lp = (uint32_t *) pcmd->virt;
+ 	npr = (PRLI *) ((uint8_t *) lp + sizeof (uint32_t));
  
+-	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
+-	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
+-	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
+ 	if ((npr->prliType == PRLI_FCP_TYPE) ||
+ 	    (npr->prliType == PRLI_NVME_TYPE)) {
+ 		if (npr->initiatorFunc) {
+@@ -804,8 +806,12 @@ lpfc_rcv_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		 * type.  Target mode does not issue gft_id so doesn't get
+ 		 * the fc4 type set until now.
+ 		 */
+-		if ((phba->nvmet_support) && (npr->prliType == PRLI_NVME_TYPE))
++		if (phba->nvmet_support && (npr->prliType == PRLI_NVME_TYPE)) {
+ 			ndlp->nlp_fc4_type |= NLP_FC4_NVME;
++			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
++		}
++		if (npr->prliType == PRLI_FCP_TYPE)
++			ndlp->nlp_fc4_type |= NLP_FC4_FCP;
+ 	}
+ 	if (rport) {
+ 		/* We need to update the rport role values */
+@@ -1591,7 +1597,6 @@ lpfc_rcv_prli_reglogin_issue(struct lpfc_vport *vport,
+ 		if (ndlp->nlp_flag & NLP_RPI_REGISTERED) {
+ 			lpfc_rcv_prli(vport, ndlp, cmdiocb);
+ 			lpfc_els_rsp_prli_acc(vport, cmdiocb, ndlp);
+-			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
+ 		} else {
+ 			/* RPI registration has not completed. Reject the PRLI
+ 			 * to prevent an illegal state transition when the
+@@ -1602,6 +1607,7 @@ lpfc_rcv_prli_reglogin_issue(struct lpfc_vport *vport,
+ 			stat.un.b.lsRjtRsnCodeExp = LSEXP_CMD_IN_PROGRESS;
+ 			lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb,
+ 					    ndlp, NULL);
++			return ndlp->nlp_state;
+ 		}
+ 	} else {
+ 		/* Initiator mode. */
+@@ -1957,13 +1963,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		return ndlp->nlp_state;
+ 	}
+ 
+-	/* Check out PRLI rsp */
+-	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
+-	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
+-
+-	/* NVME or FCP first burst must be negotiated for each PRLI. */
+-	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
+-	ndlp->nvme_fb_size = 0;
+ 	if (npr && (npr->acceptRspCode == PRLI_REQ_EXECUTED) &&
+ 	    (npr->prliType == PRLI_FCP_TYPE)) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
+@@ -1980,8 +1979,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		if (npr->Retry)
+ 			ndlp->nlp_fcp_info |= NLP_FCP_2_DEVICE;
+ 
+-		/* PRLI completed.  Decrement count. */
+-		ndlp->fc4_prli_sent--;
+ 	} else if (nvpr &&
+ 		   (bf_get_be32(prli_acc_rsp_code, nvpr) ==
+ 		    PRLI_REQ_EXECUTED) &&
+@@ -2026,8 +2023,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 				 be32_to_cpu(nvpr->word5),
+ 				 ndlp->nlp_flag, ndlp->nlp_fcp_info,
+ 				 ndlp->nlp_type);
+-		/* PRLI completed.  Decrement count. */
+-		ndlp->fc4_prli_sent--;
+ 	}
+ 	if (!(ndlp->nlp_type & NLP_FCP_TARGET) &&
+ 	    (vport->port_type == LPFC_NPIV_PORT) &&
+@@ -2051,7 +2046,8 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		ndlp->nlp_prev_state = NLP_STE_PRLI_ISSUE;
+ 		if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET))
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_MAPPED_NODE);
+-		else
++		else if (ndlp->nlp_type &
++			 (NLP_FCP_INITIATOR | NLP_NVME_INITIATOR))
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
+ 	} else
+ 		lpfc_printf_vlog(vport,
 -- 
 2.13.1
