@@ -1,203 +1,266 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 2/9] lpfc: Fix -EOVERFLOW behavior for NVMET and defer_rcv
-Date: Fri,  8 Dec 2017 17:18:04 -0800
-Message-ID: <20171209011811.23421-3-jsmart2021@gmail.com>
+Subject: [PATCH 7/9] lpfc: Fix infinite wait when driver unregisters a remote NVME port.
+Date: Fri,  8 Dec 2017 17:18:09 -0800
+Message-ID: <20171209011811.23421-8-jsmart2021@gmail.com>
 References: <20171209011811.23421-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:38289 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752620AbdLIBSZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:25 -0500
-Received: by mail-qk0-f196.google.com with SMTP id z203so1027924qkb.5
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:25 -0800 (PST)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:46814 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752620AbdLIBSb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:31 -0500
+Received: by mail-qk0-f193.google.com with SMTP id b184so1024097qkc.13
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:30 -0800 (PST)
 In-Reply-To: <20171209011811.23421-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-The driver is all set to handle the defer_rcv api for the
-nvmet_fc transport, yet didn't properly recognize the return
-status when the defer_rcv occurred. The driver treated it simply
-as an error and aborted the io. Several residual issues occurred
-at that point.
+When unregistering a remote port the lpfc driver would eventually
+wait for the remoteport_unreg done callback. But the driver never
+completed the io aborts that would allow the connections to terminate
+thus the unreg done callback was never issued.  Turns out the coding
+style of the driver allowed for the wait to occur on the same cpu
+that the deferred isr is called on. The blocking for the wait, blocked
+the isr, and as the isr didn't run, the io aborts wouldn't finish.
 
-Finish the defer_rcv support: recognize the return status when
-the io request is being handled in a deferred style. This stops
-the rogue aborts; Replenish the async cmd rcv buffer in the
-deferred receive if needed.
+Turns out there was never a good reason to block waiting for the
+unreg done in the first place. The driver can continue execution and
+the ref counting within the driver will do the right thing.
+
+Resolve by removing the wait and patching up a few cases where the
+ref counting didn't look right - mainly cases where the remote port
+comes back before the aborts had completed and the unreg done had
+been called. Additionally, a few places which used pointer values
+to guide driver actions weren't protected by lock, so correct those.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 24 ++++++++++++++++++++++--
- drivers/scsi/lpfc/lpfc_nvmet.h |  1 +
- drivers/scsi/lpfc/lpfc_sli.c   | 24 +++++++++++++-----------
- 3 files changed, 36 insertions(+), 13 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 135 ++++++++++++++++--------------------------
+ 1 file changed, 51 insertions(+), 84 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index d80cd1def3b9..02a1cfa10f72 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -38,6 +38,7 @@
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 1097ca5a7a8e..4b2a73ebd116 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -201,16 +201,19 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
+ 	 * calling state machine to remove the node.
+ 	 */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
+-			"6146 remoteport delete complete %p\n",
++			"6146 remoteport delete of remoteport %p\n",
+ 			remoteport);
++	spin_lock_irq(&vport->phba->hbalock);
+ 	ndlp->nrport = NULL;
++	spin_unlock_irq(&vport->phba->hbalock);
++
++	/* Remove original register reference. The host transport
++	 * won't reference this rport/remoteport any further.
++	 */
+ 	lpfc_nlp_put(ndlp);
  
- #include <../drivers/nvme/host/nvme.h>
- #include <linux/nvme-fc-driver.h>
-+#include <linux/nvme-fc.h>
+  rport_err:
+-	/* This call has to execute as long as the rport is valid.
+-	 * Release any threads waiting for the unreg to complete.
+-	 */
+-	complete(&rport->rport_unreg_done);
++	return;
+ }
  
- #include "lpfc_version.h"
- #include "lpfc_hw4.h"
-@@ -218,6 +219,7 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
- 		ctxp->entry_cnt = 1;
- 		ctxp->flag = 0;
- 		ctxp->ctxbuf = ctx_buf;
-+		ctxp->rqb_buffer = (void *)nvmebuf;
- 		spin_lock_init(&ctxp->ctxlock);
+ static void
+@@ -966,16 +969,10 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 	/* NVME targets need completion held off until the abort exchange
+ 	 * completes unless the NVME Rport is getting unregistered.
+ 	 */
+-	if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY) ||
+-	    ndlp->upcall_flags & NLP_WAIT_FOR_UNREG) {
+-		/* Clear the XBUSY flag to prevent double completions.
+-		 * The nvme rport is getting unregistered and there is
+-		 * no need to defer the IO.
+-		 */
+-		if (lpfc_ncmd->flags & LPFC_SBUF_XBUSY)
+-			lpfc_ncmd->flags &= ~LPFC_SBUF_XBUSY;
  
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
-@@ -253,6 +255,17 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
++	if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY)) {
+ 		nCmd->done(nCmd);
++		lpfc_ncmd->nvmeCmd = NULL;
+ 	}
+ 
+ 	spin_lock_irqsave(&phba->hbalock, flags);
+@@ -2494,6 +2491,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 
+ 	rpinfo.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
+ 	rpinfo.node_name = wwn_to_u64(ndlp->nlp_nodename.u.wwn);
++	if (!ndlp->nrport)
++		lpfc_nlp_get(ndlp);
++
+ 	ret = nvme_fc_register_remoteport(localport, &rpinfo, &remote_port);
+ 	if (!ret) {
+ 		/* If the ndlp already has an nrport, this is just
+@@ -2502,23 +2502,33 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 		 */
+ 		rport = remote_port->private;
+ 		if (ndlp->nrport) {
+-			lpfc_printf_vlog(ndlp->vport, KERN_INFO,
+-					 LOG_NVME_DISC,
+-					 "6014 Rebinding lport to "
+-					 "rport wwpn 0x%llx, "
+-					 "Data: x%x x%x x%x x%06x\n",
+-					 remote_port->port_name,
+-					 remote_port->port_id,
+-					 remote_port->port_role,
+-					 ndlp->nlp_type,
+-					 ndlp->nlp_DID);
++			if (ndlp->nrport == remote_port->private) {
++				/* Same remoteport.  Just reuse. */
++				lpfc_printf_vlog(ndlp->vport, KERN_INFO,
++						 LOG_NVME_DISC,
++						 "6014 Rebinding lport to "
++						 "remoteport %p wwpn 0x%llx, "
++						 "Data: x%x x%x %p x%x x%06x\n",
++						 remote_port,
++						 remote_port->port_name,
++						 remote_port->port_id,
++						 remote_port->port_role,
++						 ndlp,
++						 ndlp->nlp_type,
++						 ndlp->nlp_DID);
++				return 0;
++			}
+ 			prev_ndlp = rport->ndlp;
+ 
+-			/* Sever the ndlp<->rport connection before dropping
+-			 * the ndlp ref from register.
++			/* Sever the ndlp<->rport association
++			 * before dropping the ndlp ref from
++			 * register.
+ 			 */
++			spin_lock_irq(&vport->phba->hbalock);
+ 			ndlp->nrport = NULL;
++			spin_unlock_irq(&vport->phba->hbalock);
+ 			rport->ndlp = NULL;
++			rport->remoteport = NULL;
+ 			if (prev_ndlp)
+ 				lpfc_nlp_put(ndlp);
+ 		}
+@@ -2526,19 +2536,20 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 		/* Clean bind the rport to the ndlp. */
+ 		rport->remoteport = remote_port;
+ 		rport->lport = lport;
+-		rport->ndlp = lpfc_nlp_get(ndlp);
+-		if (!rport->ndlp)
+-			return -1;
++		rport->ndlp = ndlp;
++		spin_lock_irq(&vport->phba->hbalock);
+ 		ndlp->nrport = rport;
++		spin_unlock_irq(&vport->phba->hbalock);
+ 		lpfc_printf_vlog(vport, KERN_INFO,
+ 				 LOG_NVME_DISC | LOG_NODE,
+ 				 "6022 Binding new rport to "
+-				 "lport %p Rport WWNN 0x%llx, "
++				 "lport %p Remoteport %p  WWNN 0x%llx, "
+ 				 "Rport WWPN 0x%llx DID "
+-				 "x%06x Role x%x\n",
+-				 lport,
++				 "x%06x Role x%x, ndlp %p\n",
++				 lport, remote_port,
+ 				 rpinfo.node_name, rpinfo.port_name,
+-				 rpinfo.port_id, rpinfo.port_role);
++				 rpinfo.port_id, rpinfo.port_role,
++				 ndlp);
+ 	} else {
+ 		lpfc_printf_vlog(vport, KERN_ERR,
+ 				 LOG_NVME_DISC | LOG_NODE,
+@@ -2553,47 +2564,6 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ #endif
+ }
+ 
+-/* lpfc_nvme_rport_unreg_wait - Wait for the host to complete an rport unreg.
+- *
+- * The driver has to wait for the host nvme transport to callback
+- * indicating the remoteport has successfully unregistered all
+- * resources.  Since this is an uninterruptible wait, loop every ten
+- * seconds and print a message indicating no progress.
+- *
+- * An uninterruptible wait is used because of the risk of transport-to-
+- * driver state mismatch.
+- */
+-void
+-lpfc_nvme_rport_unreg_wait(struct lpfc_vport *vport,
+-			   struct lpfc_nvme_rport *rport)
+-{
+-#if (IS_ENABLED(CONFIG_NVME_FC))
+-	u32 wait_tmo;
+-	int ret;
+-
+-	/* Host transport has to clean up and confirm requiring an indefinite
+-	 * wait. Print a message if a 10 second wait expires and renew the
+-	 * wait. This is unexpected.
+-	 */
+-	wait_tmo = msecs_to_jiffies(LPFC_NVME_WAIT_TMO * 1000);
+-	while (true) {
+-		ret = wait_for_completion_timeout(&rport->rport_unreg_done,
+-						  wait_tmo);
+-		if (unlikely(!ret)) {
+-			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
+-					 "6174 Rport %p Remoteport %p wait "
+-					 "timed out. Renewing.\n",
+-					 rport, rport->remoteport);
+-			continue;
+-		}
+-		break;
+-	}
+-	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
+-			 "6175 Rport %p Remoteport %p Complete Success\n",
+-			 rport, rport->remoteport);
+-#endif
+-}
+-
+ /* lpfc_nvme_unregister_port - unbind the DID and port_role from this rport.
+  *
+  * There is no notion of Devloss or rport recovery from the current
+@@ -2645,24 +2615,18 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	 */
+ 
+ 	if (ndlp->nlp_type & NLP_NVME_TARGET) {
+-		init_completion(&rport->rport_unreg_done);
+-
+ 		/* No concern about the role change on the nvme remoteport.
+ 		 * The transport will update it.
+ 		 */
+ 		ndlp->upcall_flags |= NLP_WAIT_FOR_UNREG;
+ 		ret = nvme_fc_unregister_remoteport(remoteport);
+-		if (ret != 0)
++		if (ret != 0) {
++			lpfc_nlp_put(ndlp);
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
+ 					 "6167 NVME unregister failed %d "
+ 					 "port_state x%x\n",
+ 					 ret, remoteport->port_state);
+-		else
+-			/* Wait for completion.  This either blocks
+-			 * indefinitely or succeeds
+-			 */
+-			lpfc_nvme_rport_unreg_wait(vport, rport);
+-		ndlp->upcall_flags &= ~NLP_WAIT_FOR_UNREG;
++		}
+ 	}
+ 	return;
+ 
+@@ -2721,8 +2685,11 @@ lpfc_sli4_nvme_xri_aborted(struct lpfc_hba *phba,
+ 			 * before the abort exchange command fully completes.
+ 			 * Once completed, it is available via the put list.
+ 			 */
+-			nvme_cmd = lpfc_ncmd->nvmeCmd;
+-			nvme_cmd->done(nvme_cmd);
++			if (lpfc_ncmd->nvmeCmd) {
++				nvme_cmd = lpfc_ncmd->nvmeCmd;
++				nvme_cmd->done(nvme_cmd);
++				lpfc_ncmd->nvmeCmd = NULL;
++			}
+ 			lpfc_release_nvme_buf(phba, lpfc_ncmd);
  			return;
  		}
- 
-+		/* Processing of FCP command is deferred */
-+		if (rc == -EOVERFLOW) {
-+			lpfc_nvmeio_data(phba,
-+					 "NVMET RCV BUSY: xri x%x sz %d "
-+					 "from %06x\n",
-+					 oxid, size, sid);
-+			/* defer repost rcv buffer till .defer_rcv callback */
-+			ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
-+			atomic_inc(&tgtp->rcv_fcp_cmd_out);
-+			return;
-+		}
- 		atomic_inc(&tgtp->rcv_fcp_cmd_drop);
- 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
- 				"2582 FCP Drop IO x%x: err x%x: x%x x%x x%x\n",
-@@ -921,7 +934,11 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
- 
- 	tgtp = phba->targetport->private;
- 	atomic_inc(&tgtp->rcv_fcp_cmd_defer);
--	lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
-+	if (ctxp->flag & LPFC_NVMET_DEFER_RCV_REPOST)
-+		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
-+	else
-+		nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
-+	ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
- }
- 
- static struct nvmet_fc_target_template lpfc_tgttemplate = {
-@@ -1693,6 +1710,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 	ctxp->entry_cnt = 1;
- 	ctxp->flag = 0;
- 	ctxp->ctxbuf = ctx_buf;
-+	ctxp->rqb_buffer = (void *)nvmebuf;
- 	spin_lock_init(&ctxp->ctxlock);
- 
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
-@@ -1726,6 +1744,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 
- 	/* Process FCP command */
- 	if (rc == 0) {
-+		ctxp->rqb_buffer = NULL;
- 		atomic_inc(&tgtp->rcv_fcp_cmd_out);
- 		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
- 		return;
-@@ -1737,10 +1756,11 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 				 "NVMET RCV BUSY: xri x%x sz %d from %06x\n",
- 				 oxid, size, sid);
- 		/* defer reposting rcv buffer till .defer_rcv callback */
--		ctxp->rqb_buffer = nvmebuf;
-+		ctxp->flag |= LPFC_NVMET_DEFER_RCV_REPOST;
- 		atomic_inc(&tgtp->rcv_fcp_cmd_out);
- 		return;
- 	}
-+	ctxp->rqb_buffer = nvmebuf;
- 
- 	atomic_inc(&tgtp->rcv_fcp_cmd_drop);
- 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 6723e7b81946..03096024e073 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.h
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -126,6 +126,7 @@ struct lpfc_nvmet_rcv_ctx {
- #define LPFC_NVMET_XBUSY		0x4  /* XB bit set on IO cmpl */
- #define LPFC_NVMET_CTX_RLS		0x8  /* ctx free requested */
- #define LPFC_NVMET_ABTS_RCV		0x10  /* ABTS received on exchange */
-+#define LPFC_NVMET_DEFER_RCV_REPOST	0x20  /* repost to RQ on defer rcv */
- 	struct rqb_dmabuf *rqb_buffer;
- 	struct lpfc_nvmet_ctxbuf *ctxbuf;
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 1d489b89954e..5f5528a12308 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -475,28 +475,30 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
- 	struct lpfc_rqe *temp_hrqe;
- 	struct lpfc_rqe *temp_drqe;
- 	struct lpfc_register doorbell;
--	int put_index;
-+	int hq_put_index;
-+	int dq_put_index;
- 
- 	/* sanity check on queue memory */
- 	if (unlikely(!hq) || unlikely(!dq))
- 		return -ENOMEM;
--	put_index = hq->host_index;
--	temp_hrqe = hq->qe[put_index].rqe;
--	temp_drqe = dq->qe[dq->host_index].rqe;
-+	hq_put_index = hq->host_index;
-+	dq_put_index = dq->host_index;
-+	temp_hrqe = hq->qe[hq_put_index].rqe;
-+	temp_drqe = dq->qe[dq_put_index].rqe;
- 
- 	if (hq->type != LPFC_HRQ || dq->type != LPFC_DRQ)
- 		return -EINVAL;
--	if (put_index != dq->host_index)
-+	if (hq_put_index != dq_put_index)
- 		return -EINVAL;
- 	/* If the host has not yet processed the next entry then we are done */
--	if (((put_index + 1) % hq->entry_count) == hq->hba_index)
-+	if (((hq_put_index + 1) % hq->entry_count) == hq->hba_index)
- 		return -EBUSY;
- 	lpfc_sli_pcimem_bcopy(hrqe, temp_hrqe, hq->entry_size);
- 	lpfc_sli_pcimem_bcopy(drqe, temp_drqe, dq->entry_size);
- 
- 	/* Update the host index to point to the next slot */
--	hq->host_index = ((put_index + 1) % hq->entry_count);
--	dq->host_index = ((dq->host_index + 1) % dq->entry_count);
-+	hq->host_index = ((hq_put_index + 1) % hq->entry_count);
-+	dq->host_index = ((dq_put_index + 1) % dq->entry_count);
- 	hq->RQ_buf_posted++;
- 
- 	/* Ring The Header Receive Queue Doorbell */
-@@ -517,7 +519,7 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
- 		}
- 		writel(doorbell.word0, hq->db_regaddr);
- 	}
--	return put_index;
-+	return hq_put_index;
- }
- 
- /**
-@@ -12887,8 +12889,8 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba *phba, struct lpfc_rcqe *rcqe)
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"2537 Receive Frame Truncated!!\n");
- 	case FC_STATUS_RQ_SUCCESS:
--		lpfc_sli4_rq_release(hrq, drq);
- 		spin_lock_irqsave(&phba->hbalock, iflags);
-+		lpfc_sli4_rq_release(hrq, drq);
- 		dma_buf = lpfc_sli_hbqbuf_get(&phba->hbqs[0].hbq_buffer_list);
- 		if (!dma_buf) {
- 			hrq->RQ_no_buf_found++;
-@@ -13290,8 +13292,8 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 				"6126 Receive Frame Truncated!!\n");
- 		/* Drop thru */
- 	case FC_STATUS_RQ_SUCCESS:
--		lpfc_sli4_rq_release(hrq, drq);
- 		spin_lock_irqsave(&phba->hbalock, iflags);
-+		lpfc_sli4_rq_release(hrq, drq);
- 		dma_buf = lpfc_sli_rqbuf_get(phba, hrq);
- 		if (!dma_buf) {
- 			hrq->RQ_no_buf_found++;
 -- 
 2.13.1
