@@ -1,232 +1,203 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 5/9] lpfc: Fix SCSI LUN discovery when SCSI and NVME enabled
-Date: Fri,  8 Dec 2017 17:18:07 -0800
-Message-ID: <20171209011811.23421-6-jsmart2021@gmail.com>
+Subject: [PATCH 2/9] lpfc: Fix -EOVERFLOW behavior for NVMET and defer_rcv
+Date: Fri,  8 Dec 2017 17:18:04 -0800
+Message-ID: <20171209011811.23421-3-jsmart2021@gmail.com>
 References: <20171209011811.23421-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:43510 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753492AbdLIBS2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:28 -0500
-Received: by mail-qk0-f194.google.com with SMTP id j207so1026639qke.10
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:28 -0800 (PST)
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:38289 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752620AbdLIBSZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:25 -0500
+Received: by mail-qk0-f196.google.com with SMTP id z203so1027924qkb.5
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:25 -0800 (PST)
 In-Reply-To: <20171209011811.23421-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-When enabled for both SCSI and NVME support, and connected pt2pt to a
-SCSI only target, the driver nodelist entry for the remote port is
-left in PRLI_ISSUE state and no SCSI LUNs are discovered. Works fine
-if only configured for SCSI support.
+The driver is all set to handle the defer_rcv api for the
+nvmet_fc transport, yet didn't properly recognize the return
+status when the defer_rcv occurred. The driver treated it simply
+as an error and aborted the io. Several residual issues occurred
+at that point.
 
-Error was due to some of the prli points still reflecting the need
-to send only 1 PRLI. On a lot of fabric configs, targets were NVME
-only, which meant the fabric-reported protocol attributes were only
-telling the driver one protocol or the other. Thus things worked
-fine. With pt2pt, the driver must send a PRLI for both protocols as
-there are no hints on what the target supports. Thus pt2pt targets
-were hitting the multiple PRLI issues.
-
-Complete the dual PRLI support. Track explicitly whether scsi (fcp)
-or nvme prli's have been sent. Accurately track protocol support
-detected on each node as reported by the fabric or probed by PRLI
-traffic.
+Finish the defer_rcv support: recognize the return status when
+the io request is being handled in a deferred style. This stops
+the rogue aborts; Replenish the async cmd rcv buffer in the
+deferred receive if needed.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c        |  1 +
- drivers/scsi/lpfc/lpfc_els.c       | 30 ++++++++++++++++++++----------
- drivers/scsi/lpfc/lpfc_nportdisc.c | 30 +++++++++++++-----------------
- 3 files changed, 34 insertions(+), 27 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 24 ++++++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_nvmet.h |  1 +
+ drivers/scsi/lpfc/lpfc_sli.c   | 24 +++++++++++++-----------
+ 3 files changed, 36 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 2c1fe5ab3128..9d20d2c208c7 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -471,6 +471,7 @@ lpfc_prep_node_fc4type(struct lpfc_vport *vport, uint32_t Did, uint8_t fc4_type)
- 				"Parse GID_FTrsp: did:x%x flg:x%x x%x",
- 				Did, ndlp->nlp_flag, vport->fc_flag);
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index d80cd1def3b9..02a1cfa10f72 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -38,6 +38,7 @@
  
-+			ndlp->nlp_fc4_type &= ~(NLP_FC4_FCP | NLP_FC4_NVME);
- 			/* By default, the driver expects to support FCP FC4 */
- 			if (fc4_type == FC_TYPE_FCP)
- 				ndlp->nlp_fc4_type |= NLP_FC4_FCP;
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 6ffd65a935c4..dfb21d9efb0d 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2094,6 +2094,10 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	ndlp = (struct lpfc_nodelist *) cmdiocb->context1;
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~NLP_PRLI_SND;
-+
-+	/* Driver supports multiple FC4 types.  Counters matter. */
-+	vport->fc_prli_sent--;
-+	ndlp->fc4_prli_sent--;
- 	spin_unlock_irq(shost->host_lock);
+ #include <../drivers/nvme/host/nvme.h>
+ #include <linux/nvme-fc-driver.h>
++#include <linux/nvme-fc.h>
  
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
-@@ -2101,9 +2105,6 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		irsp->ulpStatus, irsp->un.ulpWord[4],
- 		ndlp->nlp_DID);
+ #include "lpfc_version.h"
+ #include "lpfc_hw4.h"
+@@ -218,6 +219,7 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
+ 		ctxp->entry_cnt = 1;
+ 		ctxp->flag = 0;
+ 		ctxp->ctxbuf = ctx_buf;
++		ctxp->rqb_buffer = (void *)nvmebuf;
+ 		spin_lock_init(&ctxp->ctxlock);
  
--	/* Ddriver supports multiple FC4 types.  Counters matter. */
--	vport->fc_prli_sent--;
--
- 	/* PRLI completes to NPort <nlp_DID> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "0103 PRLI completes to NPort x%06x "
-@@ -2117,7 +2118,6 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 
- 	if (irsp->ulpStatus) {
- 		/* Check for retry */
--		ndlp->fc4_prli_sent--;
- 		if (lpfc_els_retry(phba, cmdiocb, rspiocb)) {
- 			/* ELS command is being retried */
- 			goto out;
-@@ -2196,6 +2196,15 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		ndlp->nlp_fc4_type |= NLP_FC4_NVME;
- 	local_nlp_type = ndlp->nlp_fc4_type;
- 
-+	/* This routine will issue 1 or 2 PRLIs, so zero all the ndlp
-+	 * fields here before any of them can complete.
-+	 */
-+	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
-+	ndlp->nlp_type &= ~(NLP_NVME_TARGET | NLP_NVME_INITIATOR);
-+	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
-+	ndlp->nvme_fb_size = 0;
-+
-  send_next_prli:
- 	if (local_nlp_type & NLP_FC4_FCP) {
- 		/* Payload is 4 + 16 = 20 x14 bytes. */
-@@ -2304,6 +2313,13 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_prli;
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag |= NLP_PRLI_SND;
-+
-+	/* The vport counters are used for lpfc_scan_finished, but
-+	 * the ndlp is used to track outstanding PRLIs for different
-+	 * FC4 types.
-+	 */
-+	vport->fc_prli_sent++;
-+	ndlp->fc4_prli_sent++;
- 	spin_unlock_irq(shost->host_lock);
- 	if (lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0) ==
- 	    IOCB_ERROR) {
-@@ -2314,12 +2330,6 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		return 1;
- 	}
- 
--	/* The vport counters are used for lpfc_scan_finished, but
--	 * the ndlp is used to track outstanding PRLIs for different
--	 * FC4 types.
--	 */
--	vport->fc_prli_sent++;
--	ndlp->fc4_prli_sent++;
- 
- 	/* The driver supports 2 FC4 types.  Make sure
- 	 * a PRLI is issued for all types before exiting.
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index df050b211e0b..283382ac0456 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -390,6 +390,11 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		break;
- 	}
- 
-+	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
-+	ndlp->nlp_type &= ~(NLP_NVME_TARGET | NLP_NVME_INITIATOR);
-+	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
-+
- 	/* Check for Nport to NPort pt2pt protocol */
- 	if ((vport->fc_flag & FC_PT2PT) &&
- 	    !(vport->fc_flag & FC_PT2PT_PLOGI)) {
-@@ -777,9 +782,6 @@ lpfc_rcv_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	lp = (uint32_t *) pcmd->virt;
- 	npr = (PRLI *) ((uint8_t *) lp + sizeof (uint32_t));
- 
--	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
--	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
--	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
- 	if ((npr->prliType == PRLI_FCP_TYPE) ||
- 	    (npr->prliType == PRLI_NVME_TYPE)) {
- 		if (npr->initiatorFunc) {
-@@ -804,8 +806,12 @@ lpfc_rcv_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		 * type.  Target mode does not issue gft_id so doesn't get
- 		 * the fc4 type set until now.
- 		 */
--		if ((phba->nvmet_support) && (npr->prliType == PRLI_NVME_TYPE))
-+		if (phba->nvmet_support && (npr->prliType == PRLI_NVME_TYPE)) {
- 			ndlp->nlp_fc4_type |= NLP_FC4_NVME;
-+			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
-+		}
-+		if (npr->prliType == PRLI_FCP_TYPE)
-+			ndlp->nlp_fc4_type |= NLP_FC4_FCP;
- 	}
- 	if (rport) {
- 		/* We need to update the rport role values */
-@@ -1591,7 +1597,6 @@ lpfc_rcv_prli_reglogin_issue(struct lpfc_vport *vport,
- 		if (ndlp->nlp_flag & NLP_RPI_REGISTERED) {
- 			lpfc_rcv_prli(vport, ndlp, cmdiocb);
- 			lpfc_els_rsp_prli_acc(vport, cmdiocb, ndlp);
--			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
- 		} else {
- 			/* RPI registration has not completed. Reject the PRLI
- 			 * to prevent an illegal state transition when the
-@@ -1602,6 +1607,7 @@ lpfc_rcv_prli_reglogin_issue(struct lpfc_vport *vport,
- 			stat.un.b.lsRjtRsnCodeExp = LSEXP_CMD_IN_PROGRESS;
- 			lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb,
- 					    ndlp, NULL);
-+			return ndlp->nlp_state;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+@@ -253,6 +255,17 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
+ 			return;
  		}
- 	} else {
- 		/* Initiator mode. */
-@@ -1957,13 +1963,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		return ndlp->nlp_state;
- 	}
  
--	/* Check out PRLI rsp */
--	ndlp->nlp_type &= ~(NLP_FCP_TARGET | NLP_FCP_INITIATOR);
--	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
--
--	/* NVME or FCP first burst must be negotiated for each PRLI. */
--	ndlp->nlp_flag &= ~NLP_FIRSTBURST;
--	ndlp->nvme_fb_size = 0;
- 	if (npr && (npr->acceptRspCode == PRLI_REQ_EXECUTED) &&
- 	    (npr->prliType == PRLI_FCP_TYPE)) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
-@@ -1980,8 +1979,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		if (npr->Retry)
- 			ndlp->nlp_fcp_info |= NLP_FCP_2_DEVICE;
++		/* Processing of FCP command is deferred */
++		if (rc == -EOVERFLOW) {
++			lpfc_nvmeio_data(phba,
++					 "NVMET RCV BUSY: xri x%x sz %d "
++					 "from %06x\n",
++					 oxid, size, sid);
++			/* defer repost rcv buffer till .defer_rcv callback */
++			ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
++			atomic_inc(&tgtp->rcv_fcp_cmd_out);
++			return;
++		}
+ 		atomic_inc(&tgtp->rcv_fcp_cmd_drop);
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+ 				"2582 FCP Drop IO x%x: err x%x: x%x x%x x%x\n",
+@@ -921,7 +934,11 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
  
--		/* PRLI completed.  Decrement count. */
--		ndlp->fc4_prli_sent--;
- 	} else if (nvpr &&
- 		   (bf_get_be32(prli_acc_rsp_code, nvpr) ==
- 		    PRLI_REQ_EXECUTED) &&
-@@ -2026,8 +2023,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 				 be32_to_cpu(nvpr->word5),
- 				 ndlp->nlp_flag, ndlp->nlp_fcp_info,
- 				 ndlp->nlp_type);
--		/* PRLI completed.  Decrement count. */
--		ndlp->fc4_prli_sent--;
+ 	tgtp = phba->targetport->private;
+ 	atomic_inc(&tgtp->rcv_fcp_cmd_defer);
+-	lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
++	if (ctxp->flag & LPFC_NVMET_DEFER_RCV_REPOST)
++		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
++	else
++		nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
++	ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
+ }
+ 
+ static struct nvmet_fc_target_template lpfc_tgttemplate = {
+@@ -1693,6 +1710,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 	ctxp->entry_cnt = 1;
+ 	ctxp->flag = 0;
+ 	ctxp->ctxbuf = ctx_buf;
++	ctxp->rqb_buffer = (void *)nvmebuf;
+ 	spin_lock_init(&ctxp->ctxlock);
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+@@ -1726,6 +1744,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 
+ 	/* Process FCP command */
+ 	if (rc == 0) {
++		ctxp->rqb_buffer = NULL;
+ 		atomic_inc(&tgtp->rcv_fcp_cmd_out);
+ 		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
+ 		return;
+@@ -1737,10 +1756,11 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 				 "NVMET RCV BUSY: xri x%x sz %d from %06x\n",
+ 				 oxid, size, sid);
+ 		/* defer reposting rcv buffer till .defer_rcv callback */
+-		ctxp->rqb_buffer = nvmebuf;
++		ctxp->flag |= LPFC_NVMET_DEFER_RCV_REPOST;
+ 		atomic_inc(&tgtp->rcv_fcp_cmd_out);
+ 		return;
  	}
- 	if (!(ndlp->nlp_type & NLP_FCP_TARGET) &&
- 	    (vport->port_type == LPFC_NPIV_PORT) &&
-@@ -2051,7 +2046,8 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		ndlp->nlp_prev_state = NLP_STE_PRLI_ISSUE;
- 		if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET))
- 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_MAPPED_NODE);
--		else
-+		else if (ndlp->nlp_type &
-+			 (NLP_FCP_INITIATOR | NLP_NVME_INITIATOR))
- 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
- 	} else
- 		lpfc_printf_vlog(vport,
++	ctxp->rqb_buffer = nvmebuf;
+ 
+ 	atomic_inc(&tgtp->rcv_fcp_cmd_drop);
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
+index 6723e7b81946..03096024e073 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.h
++++ b/drivers/scsi/lpfc/lpfc_nvmet.h
+@@ -126,6 +126,7 @@ struct lpfc_nvmet_rcv_ctx {
+ #define LPFC_NVMET_XBUSY		0x4  /* XB bit set on IO cmpl */
+ #define LPFC_NVMET_CTX_RLS		0x8  /* ctx free requested */
+ #define LPFC_NVMET_ABTS_RCV		0x10  /* ABTS received on exchange */
++#define LPFC_NVMET_DEFER_RCV_REPOST	0x20  /* repost to RQ on defer rcv */
+ 	struct rqb_dmabuf *rqb_buffer;
+ 	struct lpfc_nvmet_ctxbuf *ctxbuf;
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1d489b89954e..5f5528a12308 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -475,28 +475,30 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
+ 	struct lpfc_rqe *temp_hrqe;
+ 	struct lpfc_rqe *temp_drqe;
+ 	struct lpfc_register doorbell;
+-	int put_index;
++	int hq_put_index;
++	int dq_put_index;
+ 
+ 	/* sanity check on queue memory */
+ 	if (unlikely(!hq) || unlikely(!dq))
+ 		return -ENOMEM;
+-	put_index = hq->host_index;
+-	temp_hrqe = hq->qe[put_index].rqe;
+-	temp_drqe = dq->qe[dq->host_index].rqe;
++	hq_put_index = hq->host_index;
++	dq_put_index = dq->host_index;
++	temp_hrqe = hq->qe[hq_put_index].rqe;
++	temp_drqe = dq->qe[dq_put_index].rqe;
+ 
+ 	if (hq->type != LPFC_HRQ || dq->type != LPFC_DRQ)
+ 		return -EINVAL;
+-	if (put_index != dq->host_index)
++	if (hq_put_index != dq_put_index)
+ 		return -EINVAL;
+ 	/* If the host has not yet processed the next entry then we are done */
+-	if (((put_index + 1) % hq->entry_count) == hq->hba_index)
++	if (((hq_put_index + 1) % hq->entry_count) == hq->hba_index)
+ 		return -EBUSY;
+ 	lpfc_sli_pcimem_bcopy(hrqe, temp_hrqe, hq->entry_size);
+ 	lpfc_sli_pcimem_bcopy(drqe, temp_drqe, dq->entry_size);
+ 
+ 	/* Update the host index to point to the next slot */
+-	hq->host_index = ((put_index + 1) % hq->entry_count);
+-	dq->host_index = ((dq->host_index + 1) % dq->entry_count);
++	hq->host_index = ((hq_put_index + 1) % hq->entry_count);
++	dq->host_index = ((dq_put_index + 1) % dq->entry_count);
+ 	hq->RQ_buf_posted++;
+ 
+ 	/* Ring The Header Receive Queue Doorbell */
+@@ -517,7 +519,7 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
+ 		}
+ 		writel(doorbell.word0, hq->db_regaddr);
+ 	}
+-	return put_index;
++	return hq_put_index;
+ }
+ 
+ /**
+@@ -12887,8 +12889,8 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba *phba, struct lpfc_rcqe *rcqe)
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"2537 Receive Frame Truncated!!\n");
+ 	case FC_STATUS_RQ_SUCCESS:
+-		lpfc_sli4_rq_release(hrq, drq);
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
++		lpfc_sli4_rq_release(hrq, drq);
+ 		dma_buf = lpfc_sli_hbqbuf_get(&phba->hbqs[0].hbq_buffer_list);
+ 		if (!dma_buf) {
+ 			hrq->RQ_no_buf_found++;
+@@ -13290,8 +13292,8 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 				"6126 Receive Frame Truncated!!\n");
+ 		/* Drop thru */
+ 	case FC_STATUS_RQ_SUCCESS:
+-		lpfc_sli4_rq_release(hrq, drq);
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
++		lpfc_sli4_rq_release(hrq, drq);
+ 		dma_buf = lpfc_sli_rqbuf_get(phba, hrq);
+ 		if (!dma_buf) {
+ 			hrq->RQ_no_buf_found++;
 -- 
 2.13.1
