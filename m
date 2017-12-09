@@ -1,266 +1,41 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 7/9] lpfc: Fix infinite wait when driver unregisters a remote NVME port.
-Date: Fri,  8 Dec 2017 17:18:09 -0800
-Message-ID: <20171209011811.23421-8-jsmart2021@gmail.com>
+Subject: [PATCH 9/9] lpfc: update driver version to 11.4.0.6
+Date: Fri,  8 Dec 2017 17:18:11 -0800
+Message-ID: <20171209011811.23421-10-jsmart2021@gmail.com>
 References: <20171209011811.23421-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:46814 "EHLO
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:44117 "EHLO
         mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752620AbdLIBSb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:31 -0500
-Received: by mail-qk0-f193.google.com with SMTP id b184so1024097qkc.13
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:30 -0800 (PST)
+        with ESMTP id S1753738AbdLIBSd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:33 -0500
+Received: by mail-qk0-f193.google.com with SMTP id h19so1028222qkj.11
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:32 -0800 (PST)
 In-Reply-To: <20171209011811.23421-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-When unregistering a remote port the lpfc driver would eventually
-wait for the remoteport_unreg done callback. But the driver never
-completed the io aborts that would allow the connections to terminate
-thus the unreg done callback was never issued.  Turns out the coding
-style of the driver allowed for the wait to occur on the same cpu
-that the deferred isr is called on. The blocking for the wait, blocked
-the isr, and as the isr didn't run, the io aborts wouldn't finish.
-
-Turns out there was never a good reason to block waiting for the
-unreg done in the first place. The driver can continue execution and
-the ref counting within the driver will do the right thing.
-
-Resolve by removing the wait and patching up a few cases where the
-ref counting didn't look right - mainly cases where the remote port
-comes back before the aborts had completed and the unreg done had
-been called. Additionally, a few places which used pointer values
-to guide driver actions weren't protected by lock, so correct those.
+Update the driver version to 11.4.0.6
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 135 ++++++++++++++++--------------------------
- 1 file changed, 51 insertions(+), 84 deletions(-)
+ drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 1097ca5a7a8e..4b2a73ebd116 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -201,16 +201,19 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
- 	 * calling state machine to remove the node.
- 	 */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--			"6146 remoteport delete complete %p\n",
-+			"6146 remoteport delete of remoteport %p\n",
- 			remoteport);
-+	spin_lock_irq(&vport->phba->hbalock);
- 	ndlp->nrport = NULL;
-+	spin_unlock_irq(&vport->phba->hbalock);
-+
-+	/* Remove original register reference. The host transport
-+	 * won't reference this rport/remoteport any further.
-+	 */
- 	lpfc_nlp_put(ndlp);
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index cc2f5cec98c5..c232bf0e8998 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
-  rport_err:
--	/* This call has to execute as long as the rport is valid.
--	 * Release any threads waiting for the unreg to complete.
--	 */
--	complete(&rport->rport_unreg_done);
-+	return;
- }
+-#define LPFC_DRIVER_VERSION "11.4.0.5"
++#define LPFC_DRIVER_VERSION "11.4.0.6"
+ #define LPFC_DRIVER_NAME		"lpfc"
  
- static void
-@@ -966,16 +969,10 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	/* NVME targets need completion held off until the abort exchange
- 	 * completes unless the NVME Rport is getting unregistered.
- 	 */
--	if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY) ||
--	    ndlp->upcall_flags & NLP_WAIT_FOR_UNREG) {
--		/* Clear the XBUSY flag to prevent double completions.
--		 * The nvme rport is getting unregistered and there is
--		 * no need to defer the IO.
--		 */
--		if (lpfc_ncmd->flags & LPFC_SBUF_XBUSY)
--			lpfc_ncmd->flags &= ~LPFC_SBUF_XBUSY;
- 
-+	if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY)) {
- 		nCmd->done(nCmd);
-+		lpfc_ncmd->nvmeCmd = NULL;
- 	}
- 
- 	spin_lock_irqsave(&phba->hbalock, flags);
-@@ -2494,6 +2491,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 
- 	rpinfo.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
- 	rpinfo.node_name = wwn_to_u64(ndlp->nlp_nodename.u.wwn);
-+	if (!ndlp->nrport)
-+		lpfc_nlp_get(ndlp);
-+
- 	ret = nvme_fc_register_remoteport(localport, &rpinfo, &remote_port);
- 	if (!ret) {
- 		/* If the ndlp already has an nrport, this is just
-@@ -2502,23 +2502,33 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		 */
- 		rport = remote_port->private;
- 		if (ndlp->nrport) {
--			lpfc_printf_vlog(ndlp->vport, KERN_INFO,
--					 LOG_NVME_DISC,
--					 "6014 Rebinding lport to "
--					 "rport wwpn 0x%llx, "
--					 "Data: x%x x%x x%x x%06x\n",
--					 remote_port->port_name,
--					 remote_port->port_id,
--					 remote_port->port_role,
--					 ndlp->nlp_type,
--					 ndlp->nlp_DID);
-+			if (ndlp->nrport == remote_port->private) {
-+				/* Same remoteport.  Just reuse. */
-+				lpfc_printf_vlog(ndlp->vport, KERN_INFO,
-+						 LOG_NVME_DISC,
-+						 "6014 Rebinding lport to "
-+						 "remoteport %p wwpn 0x%llx, "
-+						 "Data: x%x x%x %p x%x x%06x\n",
-+						 remote_port,
-+						 remote_port->port_name,
-+						 remote_port->port_id,
-+						 remote_port->port_role,
-+						 ndlp,
-+						 ndlp->nlp_type,
-+						 ndlp->nlp_DID);
-+				return 0;
-+			}
- 			prev_ndlp = rport->ndlp;
- 
--			/* Sever the ndlp<->rport connection before dropping
--			 * the ndlp ref from register.
-+			/* Sever the ndlp<->rport association
-+			 * before dropping the ndlp ref from
-+			 * register.
- 			 */
-+			spin_lock_irq(&vport->phba->hbalock);
- 			ndlp->nrport = NULL;
-+			spin_unlock_irq(&vport->phba->hbalock);
- 			rport->ndlp = NULL;
-+			rport->remoteport = NULL;
- 			if (prev_ndlp)
- 				lpfc_nlp_put(ndlp);
- 		}
-@@ -2526,19 +2536,20 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		/* Clean bind the rport to the ndlp. */
- 		rport->remoteport = remote_port;
- 		rport->lport = lport;
--		rport->ndlp = lpfc_nlp_get(ndlp);
--		if (!rport->ndlp)
--			return -1;
-+		rport->ndlp = ndlp;
-+		spin_lock_irq(&vport->phba->hbalock);
- 		ndlp->nrport = rport;
-+		spin_unlock_irq(&vport->phba->hbalock);
- 		lpfc_printf_vlog(vport, KERN_INFO,
- 				 LOG_NVME_DISC | LOG_NODE,
- 				 "6022 Binding new rport to "
--				 "lport %p Rport WWNN 0x%llx, "
-+				 "lport %p Remoteport %p  WWNN 0x%llx, "
- 				 "Rport WWPN 0x%llx DID "
--				 "x%06x Role x%x\n",
--				 lport,
-+				 "x%06x Role x%x, ndlp %p\n",
-+				 lport, remote_port,
- 				 rpinfo.node_name, rpinfo.port_name,
--				 rpinfo.port_id, rpinfo.port_role);
-+				 rpinfo.port_id, rpinfo.port_role,
-+				 ndlp);
- 	} else {
- 		lpfc_printf_vlog(vport, KERN_ERR,
- 				 LOG_NVME_DISC | LOG_NODE,
-@@ -2553,47 +2564,6 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- #endif
- }
- 
--/* lpfc_nvme_rport_unreg_wait - Wait for the host to complete an rport unreg.
-- *
-- * The driver has to wait for the host nvme transport to callback
-- * indicating the remoteport has successfully unregistered all
-- * resources.  Since this is an uninterruptible wait, loop every ten
-- * seconds and print a message indicating no progress.
-- *
-- * An uninterruptible wait is used because of the risk of transport-to-
-- * driver state mismatch.
-- */
--void
--lpfc_nvme_rport_unreg_wait(struct lpfc_vport *vport,
--			   struct lpfc_nvme_rport *rport)
--{
--#if (IS_ENABLED(CONFIG_NVME_FC))
--	u32 wait_tmo;
--	int ret;
--
--	/* Host transport has to clean up and confirm requiring an indefinite
--	 * wait. Print a message if a 10 second wait expires and renew the
--	 * wait. This is unexpected.
--	 */
--	wait_tmo = msecs_to_jiffies(LPFC_NVME_WAIT_TMO * 1000);
--	while (true) {
--		ret = wait_for_completion_timeout(&rport->rport_unreg_done,
--						  wait_tmo);
--		if (unlikely(!ret)) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
--					 "6174 Rport %p Remoteport %p wait "
--					 "timed out. Renewing.\n",
--					 rport, rport->remoteport);
--			continue;
--		}
--		break;
--	}
--	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
--			 "6175 Rport %p Remoteport %p Complete Success\n",
--			 rport, rport->remoteport);
--#endif
--}
--
- /* lpfc_nvme_unregister_port - unbind the DID and port_role from this rport.
-  *
-  * There is no notion of Devloss or rport recovery from the current
-@@ -2645,24 +2615,18 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	 */
- 
- 	if (ndlp->nlp_type & NLP_NVME_TARGET) {
--		init_completion(&rport->rport_unreg_done);
--
- 		/* No concern about the role change on the nvme remoteport.
- 		 * The transport will update it.
- 		 */
- 		ndlp->upcall_flags |= NLP_WAIT_FOR_UNREG;
- 		ret = nvme_fc_unregister_remoteport(remoteport);
--		if (ret != 0)
-+		if (ret != 0) {
-+			lpfc_nlp_put(ndlp);
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
- 					 "6167 NVME unregister failed %d "
- 					 "port_state x%x\n",
- 					 ret, remoteport->port_state);
--		else
--			/* Wait for completion.  This either blocks
--			 * indefinitely or succeeds
--			 */
--			lpfc_nvme_rport_unreg_wait(vport, rport);
--		ndlp->upcall_flags &= ~NLP_WAIT_FOR_UNREG;
-+		}
- 	}
- 	return;
- 
-@@ -2721,8 +2685,11 @@ lpfc_sli4_nvme_xri_aborted(struct lpfc_hba *phba,
- 			 * before the abort exchange command fully completes.
- 			 * Once completed, it is available via the put list.
- 			 */
--			nvme_cmd = lpfc_ncmd->nvmeCmd;
--			nvme_cmd->done(nvme_cmd);
-+			if (lpfc_ncmd->nvmeCmd) {
-+				nvme_cmd = lpfc_ncmd->nvmeCmd;
-+				nvme_cmd->done(nvme_cmd);
-+				lpfc_ncmd->nvmeCmd = NULL;
-+			}
- 			lpfc_release_nvme_buf(phba, lpfc_ncmd);
- 			return;
- 		}
+ /* Used for SLI 2/3 */
 -- 
 2.13.1
