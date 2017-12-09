@@ -1,52 +1,301 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 0/9] lpfc updates for 11.4.0.6
-Date: Fri,  8 Dec 2017 17:18:02 -0800
-Message-ID: <20171209011811.23421-1-jsmart2021@gmail.com>
+Subject: [PATCH 1/9] lpfc: Fix random heartbeat timeouts during heavy IO
+Date: Fri,  8 Dec 2017 17:18:03 -0800
+Message-ID: <20171209011811.23421-2-jsmart2021@gmail.com>
+References: <20171209011811.23421-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33636 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752240AbdLIBSW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:22 -0500
-Received: by mail-qt0-f196.google.com with SMTP id e2so29028507qti.0
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:22 -0800 (PST)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:43163 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752240AbdLIBSY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2017 20:18:24 -0500
+Received: by mail-qt0-f195.google.com with SMTP id w10so28993922qtb.10
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Dec 2017 17:18:23 -0800 (PST)
+In-Reply-To: <20171209011811.23421-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-This patch set provides a number of bug fixes and 1 addition to
-the driver.
+NVME targets appear to randomly disconnect from the initiator
+when running heavy IO.
 
-The patches were cut against the Martin's 4.16/scsi-queue tree.
-There are no outside dependencies and are expected to be pulled
-via Martins tree.
+The error is due to the host aggregate (across all controllers)
+io load was beyond the maximum exchange count for nvme on the
+adapter. The driver was properly returning a resource busy status,
+but the io load was so great heartbeat commands would be bounced
+and not have a successful retry within the fuzz amount for the
+nvme heartbeat (yes, a very high io load!). Thus the target was
+terminating the controller due to a keep alive failure.
 
-James Smart (9):
-  lpfc: Fix random heartbeat timeouts during heavy IO
-  lpfc: Fix -EOVERFLOW behavior for NVMET and defer_rcv
-  lpfc: Fix receive PRLI handling
-  lpfc: Increase SCSI CQ and WQ sizes.
-  lpfc: Fix SCSI LUN discovery when SCSI and NVME enabled
-  lpfc: Fix issues connecting with nvme initiator
-  lpfc: Fix infinite wait when driver unregisters a remote NVME port.
-  lpfc: Beef up stat counters for debug
-  lpfc: update driver version to 11.4.0.6
+Resolve by reserving a few exchanges (by counters) which can be
+used when the adapter is out of normal exchanges and the command
+is a NVME heartbeat command. As counters are used, while the
+reserved command is outstanding, as soon as any other exchange
+completes, the counters are adjusted and the reserved count is
+replenished. The heartbeat completes execution in a normal fashion.
 
- drivers/scsi/lpfc/lpfc.h           |   2 +
- drivers/scsi/lpfc/lpfc_attr.c      |  46 ++++++-
- drivers/scsi/lpfc/lpfc_ct.c        |   1 +
- drivers/scsi/lpfc/lpfc_debugfs.c   |  49 +++++++-
- drivers/scsi/lpfc/lpfc_els.c       |  37 +++---
- drivers/scsi/lpfc/lpfc_init.c      |  81 ++++++++----
- drivers/scsi/lpfc/lpfc_nportdisc.c |  88 +++++++++----
- drivers/scsi/lpfc/lpfc_nvme.c      | 244 ++++++++++++++++++++-----------------
- drivers/scsi/lpfc/lpfc_nvme.h      |  16 ++-
- drivers/scsi/lpfc/lpfc_nvmet.c     |  58 +++++++--
- drivers/scsi/lpfc/lpfc_nvmet.h     |   6 +
- drivers/scsi/lpfc/lpfc_sli.c       |  24 ++--
- drivers/scsi/lpfc/lpfc_sli4.h      |   6 +-
- drivers/scsi/lpfc/lpfc_version.h   |   2 +-
- 14 files changed, 451 insertions(+), 209 deletions(-)
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc.h      |  2 ++
+ drivers/scsi/lpfc/lpfc_init.c | 16 ++++++++++-
+ drivers/scsi/lpfc/lpfc_nvme.c | 66 +++++++++++++++++++++++++++++--------------
+ drivers/scsi/lpfc/lpfc_nvme.h |  1 +
+ 4 files changed, 63 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index dd2191c83052..61fb46da05d4 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -945,6 +945,8 @@ struct lpfc_hba {
+ 	struct list_head lpfc_nvme_buf_list_get;
+ 	struct list_head lpfc_nvme_buf_list_put;
+ 	uint32_t total_nvme_bufs;
++	uint32_t get_nvme_bufs;
++	uint32_t put_nvme_bufs;
+ 	struct list_head lpfc_iocb_list;
+ 	uint32_t total_iocbq_bufs;
+ 	struct list_head active_rrq_list;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index fa211550a32a..44a98bc913f5 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1034,6 +1034,7 @@ lpfc_hba_down_post_s4(struct lpfc_hba *phba)
+ 	LIST_HEAD(nvmet_aborts);
+ 	unsigned long iflag = 0;
+ 	struct lpfc_sglq *sglq_entry = NULL;
++	int cnt;
+ 
+ 
+ 	lpfc_sli_hbqbuf_free_all(phba);
+@@ -1090,11 +1091,14 @@ lpfc_hba_down_post_s4(struct lpfc_hba *phba)
+ 	spin_unlock_irqrestore(&phba->scsi_buf_list_put_lock, iflag);
+ 
+ 	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
++		cnt = 0;
+ 		list_for_each_entry_safe(psb, psb_next, &nvme_aborts, list) {
+ 			psb->pCmd = NULL;
+ 			psb->status = IOSTAT_SUCCESS;
++			cnt++;
+ 		}
+ 		spin_lock_irqsave(&phba->nvme_buf_list_put_lock, iflag);
++		phba->put_nvme_bufs += cnt;
+ 		list_splice(&nvme_aborts, &phba->lpfc_nvme_buf_list_put);
+ 		spin_unlock_irqrestore(&phba->nvme_buf_list_put_lock, iflag);
+ 
+@@ -3339,6 +3343,7 @@ lpfc_nvme_free(struct lpfc_hba *phba)
+ 	list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
+ 				 &phba->lpfc_nvme_buf_list_put, list) {
+ 		list_del(&lpfc_ncmd->list);
++		phba->put_nvme_bufs--;
+ 		dma_pool_free(phba->lpfc_sg_dma_buf_pool, lpfc_ncmd->data,
+ 			      lpfc_ncmd->dma_handle);
+ 		kfree(lpfc_ncmd);
+@@ -3350,6 +3355,7 @@ lpfc_nvme_free(struct lpfc_hba *phba)
+ 	list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
+ 				 &phba->lpfc_nvme_buf_list_get, list) {
+ 		list_del(&lpfc_ncmd->list);
++		phba->get_nvme_bufs--;
+ 		dma_pool_free(phba->lpfc_sg_dma_buf_pool, lpfc_ncmd->data,
+ 			      lpfc_ncmd->dma_handle);
+ 		kfree(lpfc_ncmd);
+@@ -3754,9 +3760,11 @@ lpfc_sli4_nvme_sgl_update(struct lpfc_hba *phba)
+ 	uint16_t i, lxri, els_xri_cnt;
+ 	uint16_t nvme_xri_cnt, nvme_xri_max;
+ 	LIST_HEAD(nvme_sgl_list);
+-	int rc;
++	int rc, cnt;
+ 
+ 	phba->total_nvme_bufs = 0;
++	phba->get_nvme_bufs = 0;
++	phba->put_nvme_bufs = 0;
+ 
+ 	if (!(phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME))
+ 		return 0;
+@@ -3780,6 +3788,9 @@ lpfc_sli4_nvme_sgl_update(struct lpfc_hba *phba)
+ 	spin_lock(&phba->nvme_buf_list_put_lock);
+ 	list_splice_init(&phba->lpfc_nvme_buf_list_get, &nvme_sgl_list);
+ 	list_splice(&phba->lpfc_nvme_buf_list_put, &nvme_sgl_list);
++	cnt = phba->get_nvme_bufs + phba->put_nvme_bufs;
++	phba->get_nvme_bufs = 0;
++	phba->put_nvme_bufs = 0;
+ 	spin_unlock(&phba->nvme_buf_list_put_lock);
+ 	spin_unlock_irq(&phba->nvme_buf_list_get_lock);
+ 
+@@ -3824,6 +3835,7 @@ lpfc_sli4_nvme_sgl_update(struct lpfc_hba *phba)
+ 	spin_lock_irq(&phba->nvme_buf_list_get_lock);
+ 	spin_lock(&phba->nvme_buf_list_put_lock);
+ 	list_splice_init(&nvme_sgl_list, &phba->lpfc_nvme_buf_list_get);
++	phba->get_nvme_bufs = cnt;
+ 	INIT_LIST_HEAD(&phba->lpfc_nvme_buf_list_put);
+ 	spin_unlock(&phba->nvme_buf_list_put_lock);
+ 	spin_unlock_irq(&phba->nvme_buf_list_get_lock);
+@@ -5609,8 +5621,10 @@ lpfc_setup_driver_resource_phase1(struct lpfc_hba *phba)
+ 		/* Initialize the NVME buffer list used by driver for NVME IO */
+ 		spin_lock_init(&phba->nvme_buf_list_get_lock);
+ 		INIT_LIST_HEAD(&phba->lpfc_nvme_buf_list_get);
++		phba->get_nvme_bufs = 0;
+ 		spin_lock_init(&phba->nvme_buf_list_put_lock);
+ 		INIT_LIST_HEAD(&phba->lpfc_nvme_buf_list_put);
++		phba->put_nvme_bufs = 0;
+ 	}
+ 
+ 	/* Initialize the fabric iocb list */
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index c9945ed4b791..1097ca5a7a8e 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -57,7 +57,8 @@
+ /* NVME initiator-based functions */
+ 
+ static struct lpfc_nvme_buf *
+-lpfc_get_nvme_buf(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp);
++lpfc_get_nvme_buf(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
++		  int expedite);
+ 
+ static void
+ lpfc_release_nvme_buf(struct lpfc_hba *, struct lpfc_nvme_buf *);
+@@ -1265,6 +1266,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 			struct nvmefc_fcp_req *pnvme_fcreq)
+ {
+ 	int ret = 0;
++	int expedite = 0;
+ 	struct lpfc_nvme_lport *lport;
+ 	struct lpfc_vport *vport;
+ 	struct lpfc_hba *phba;
+@@ -1273,6 +1275,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 	struct lpfc_nvme_rport *rport;
+ 	struct lpfc_nvme_qhandle *lpfc_queue_info;
+ 	struct lpfc_nvme_fcpreq_priv *freqpriv;
++	struct nvme_common_command *sqe;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	uint64_t start = 0;
+ #endif
+@@ -1354,15 +1357,27 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 
+ 	}
+ 
++	/* Currently only NVME Keep alive commands should be expedited
++	 * if the driver runs out of a resource. These should only be
++	 * issued on the admin queue, qidx 0
++	 */
++	if (!lpfc_queue_info->qidx && !pnvme_fcreq->sg_cnt) {
++		sqe = &((struct nvme_fc_cmd_iu *)
++			pnvme_fcreq->cmdaddr)->sqe.common;
++		if (sqe->opcode == nvme_admin_keep_alive)
++			expedite = 1;
++	}
++
+ 	/* The node is shared with FCP IO, make sure the IO pending count does
+ 	 * not exceed the programmed depth.
+ 	 */
+-	if (atomic_read(&ndlp->cmd_pending) >= ndlp->cmd_qdepth) {
++	if ((atomic_read(&ndlp->cmd_pending) >= ndlp->cmd_qdepth) &&
++	    !expedite) {
+ 		ret = -EBUSY;
+ 		goto out_fail;
+ 	}
+ 
+-	lpfc_ncmd = lpfc_get_nvme_buf(phba, ndlp);
++	lpfc_ncmd = lpfc_get_nvme_buf(phba, ndlp, expedite);
+ 	if (lpfc_ncmd == NULL) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
+ 				 "6065 driver's buffer pool is empty, "
+@@ -1991,6 +2006,8 @@ lpfc_repost_nvme_sgl_list(struct lpfc_hba *phba)
+ 	spin_lock(&phba->nvme_buf_list_put_lock);
+ 	list_splice_init(&phba->lpfc_nvme_buf_list_get, &post_nblist);
+ 	list_splice(&phba->lpfc_nvme_buf_list_put, &post_nblist);
++	phba->get_nvme_bufs = 0;
++	phba->put_nvme_bufs = 0;
+ 	spin_unlock(&phba->nvme_buf_list_put_lock);
+ 	spin_unlock_irq(&phba->nvme_buf_list_get_lock);
+ 
+@@ -2127,6 +2144,20 @@ lpfc_new_nvme_buf(struct lpfc_vport *vport, int num_to_alloc)
+ 	return num_posted;
+ }
+ 
++static inline struct lpfc_nvme_buf *
++lpfc_nvme_buf(struct lpfc_hba *phba)
++{
++	struct lpfc_nvme_buf *lpfc_ncmd, *lpfc_ncmd_next;
++
++	list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
++				 &phba->lpfc_nvme_buf_list_get, list) {
++		list_del_init(&lpfc_ncmd->list);
++		phba->get_nvme_bufs--;
++		return lpfc_ncmd;
++	}
++	return NULL;
++}
++
+ /**
+  * lpfc_get_nvme_buf - Get a nvme buffer from lpfc_nvme_buf_list of the HBA
+  * @phba: The HBA for which this call is being executed.
+@@ -2139,35 +2170,27 @@ lpfc_new_nvme_buf(struct lpfc_vport *vport, int num_to_alloc)
+  *   Pointer to lpfc_nvme_buf - Success
+  **/
+ static struct lpfc_nvme_buf *
+-lpfc_get_nvme_buf(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
++lpfc_get_nvme_buf(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
++		  int expedite)
+ {
+-	struct lpfc_nvme_buf *lpfc_ncmd, *lpfc_ncmd_next;
++	struct lpfc_nvme_buf *lpfc_ncmd = NULL;
+ 	unsigned long iflag = 0;
+-	int found = 0;
+ 
+ 	spin_lock_irqsave(&phba->nvme_buf_list_get_lock, iflag);
+-	list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
+-				 &phba->lpfc_nvme_buf_list_get, list) {
+-		list_del_init(&lpfc_ncmd->list);
+-		found = 1;
+-		break;
+-	}
+-	if (!found) {
++	if (phba->get_nvme_bufs > LPFC_NVME_EXPEDITE_XRICNT || expedite)
++		lpfc_ncmd = lpfc_nvme_buf(phba);
++	if (!lpfc_ncmd) {
+ 		spin_lock(&phba->nvme_buf_list_put_lock);
+ 		list_splice(&phba->lpfc_nvme_buf_list_put,
+ 			    &phba->lpfc_nvme_buf_list_get);
++		phba->get_nvme_bufs += phba->put_nvme_bufs;
+ 		INIT_LIST_HEAD(&phba->lpfc_nvme_buf_list_put);
++		phba->put_nvme_bufs = 0;
+ 		spin_unlock(&phba->nvme_buf_list_put_lock);
+-		list_for_each_entry_safe(lpfc_ncmd, lpfc_ncmd_next,
+-					 &phba->lpfc_nvme_buf_list_get, list) {
+-			list_del_init(&lpfc_ncmd->list);
+-			found = 1;
+-			break;
+-		}
++		if (phba->get_nvme_bufs > LPFC_NVME_EXPEDITE_XRICNT || expedite)
++			lpfc_ncmd = lpfc_nvme_buf(phba);
+ 	}
+ 	spin_unlock_irqrestore(&phba->nvme_buf_list_get_lock, iflag);
+-	if (!found)
+-		return NULL;
+ 	return  lpfc_ncmd;
+ }
+ 
+@@ -2205,6 +2228,7 @@ lpfc_release_nvme_buf(struct lpfc_hba *phba, struct lpfc_nvme_buf *lpfc_ncmd)
+ 		lpfc_ncmd->cur_iocbq.iocb_flag = LPFC_IO_NVME;
+ 		spin_lock_irqsave(&phba->nvme_buf_list_put_lock, iflag);
+ 		list_add_tail(&lpfc_ncmd->list, &phba->lpfc_nvme_buf_list_put);
++		phba->put_nvme_bufs++;
+ 		spin_unlock_irqrestore(&phba->nvme_buf_list_put_lock, iflag);
+ 	}
+ }
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
+index 903ec37f465f..c0833e469b7c 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.h
++++ b/drivers/scsi/lpfc/lpfc_nvme.h
+@@ -28,6 +28,7 @@
+ #define LPFC_NVME_ERSP_LEN		0x20
+ 
+ #define LPFC_NVME_WAIT_TMO              10
++#define LPFC_NVME_EXPEDITE_XRICNT	8
+ 
+ struct lpfc_nvme_qhandle {
+ 	uint32_t index;		/* WQ index to use */
 -- 
 2.13.1
