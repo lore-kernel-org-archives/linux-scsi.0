@@ -1,44 +1,43 @@
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: [PATCH 1/1] scsi: fnic: add a space after %p in printf format
-Date: Sun, 10 Dec 2017 20:23:11 +0100
-Message-ID: <20171210192311.5334-1-nicolas.iooss_linux@m4x.org>
+From: Chris Boot <bootc@boo.tc>
+Subject: Re: [PATCH] sbp-target: Delete an error message for a failed memory
+ allocation in three functions
+Date: Sun, 10 Dec 2017 21:51:07 +0000
+Message-ID: <e482cc36-285c-4402-7cbf-a335428a5710@boo.tc>
+References: <06164454-67a9-d206-647c-b70f4a1c3812@users.sourceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.polytechnique.org ([129.104.30.34]:58334 "EHLO
-        mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751999AbdLJTcQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Dec 2017 14:32:16 -0500
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:40937 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751263AbdLJV5y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 10 Dec 2017 16:57:54 -0500
+In-Reply-To: <06164454-67a9-d206-647c-b70f4a1c3812@users.sourceforge.net>
+Content-Language: en-GB
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+To: SF Markus Elfring <elfring@users.sourceforge.net>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, Chris Boot <bootc@bootc.net>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-fnic_fcpio_icmnd_cmpl_handler() displays the value of sc with:
+On 10/12/2017 19:10, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sun, 10 Dec 2017 19:54:11 +0100
+> 
+> Omit an extra message for a memory allocation failure in these functions.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+[snip]
 
-    FNIC_SCSI_DBG(KERN_INFO...
-        "... sc = 0x%p"
-        "scsi_status ..."
-        ...
+Looks good to me.
 
-As the literal strings get merged, the function uses %ps instead of the
-intended raw %p format. Fix this by inserting a space.
+Acked-by: Chris Boot <bootc@boo.tc>
 
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
----
- drivers/scsi/fnic/fnic_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Chris
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 242e2ee494a1..8cbd3c9f0b4c 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -906,7 +906,7 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 
- 		FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
- 			"icmnd_cmpl abts pending "
--			  "hdr status = %s tag = 0x%x sc = 0x%p"
-+			  "hdr status = %s tag = 0x%x sc = 0x%p "
- 			  "scsi_status = %x residual = %d\n",
- 			  fnic_fcpio_status_to_str(hdr_status),
- 			  id, sc,
 -- 
-2.15.0
+Chris Boot
+bootc@boo.tc
