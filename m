@@ -1,31 +1,76 @@
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Subject: Re: [PATCH] libsas: flush pending destruct work in sas_unregister_domain_devices()
-Date: Sat, 9 Dec 2017 11:51:20 -0800
-Message-ID: <CAM_iQpVhH7cL=ZOftOrZsR0bXJX4X89ykmvniyrRxeAUYo7cGA@mail.gmail.com>
-References: <20171128002445.16594-1-xiyou.wangcong@gmail.com>
- <20171128082049.5smff3hvrkwrf77o@linux-x5ow.site> <922397da-7dd3-c24e-1d94-e4804a769331@huawei.com>
- <CAM_iQpVXuO=jHg=wyse7OoGDzLNrz3hFc_aqAPR=FsF_+s5gaw@mail.gmail.com>
- <877cfb17-ba90-da91-a549-418bb6eb6391@huawei.com> <CAM_iQpVWmeq5BMvxJmD2FP6Zm6s7O05+NqzYQ6uCAp7iE1asnw@mail.gmail.com>
- <5A2A454E.6050108@huawei.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH] sd: Increase SCSI disk probing concurrency
+Date: Sun, 10 Dec 2017 15:44:37 +0100
+Message-ID: <c3116e4b-bd48-d72c-52ff-972b9e03fc9a@suse.com>
+References: <20171208172124.32685-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pl0-f42.google.com ([209.85.160.42]:41903 "EHLO
-        mail-pl0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdLITvl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Dec 2017 14:51:41 -0500
-In-Reply-To: <5A2A454E.6050108@huawei.com>
+Received: from smtp.nue.novell.com ([195.135.221.5]:39887 "EHLO
+        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751616AbdLJOo6 (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Sun, 10 Dec 2017 09:44:58 -0500
+In-Reply-To: <20171208172124.32685-1-bart.vanassche@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: John Garry <john.garry@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>, LKML <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Praveen Murali <pmurali@logicube.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, chenxiang <chenxiang66@hisilicon.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Thu, Dec 7, 2017 at 11:54 PM, Jason Yan <yanaijie@huawei.com> wrote:
->
-> We have sent a patchset to fix this and to enhance libsas hotplug.
-> Please refer to https://lkml.org/lkml/2017/9/6/142
->
-> And I'm going to send a new version soon.
+On 12/08/2017 06:21 PM, Bart Van Assche wrote:
+> The scsi_sd_probe_domain allows to wait until all disk-probing
+> activity has finished system-wide. This slows down SCSI host removal
+> that occurs concurrently with SCSI disk probing because sd_remove()
+> waits on scsi_sd_probe_domain. Additionally, since each function that
+> waits on scsi_sd_probe_domain specifies for which disk to wait until
+> probing has finished, replace waiting on scsi_sd_probe_domain by
+> waiting until probing for a specific disk has finished. Introduce a
+> .sync() function pointer in struct scsi_driver to make it possible
+> for the SCSI power management code to wait until probing of a
+> specific disk has finished.
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/scsi.c        |  5 -----
+>  drivers/scsi/scsi_pm.c     |  6 ++++--
+>  drivers/scsi/scsi_priv.h   |  1 -
+>  drivers/scsi/sd.c          | 26 +++++++++++++++++++++-----
+>  drivers/scsi/sd.h          |  1 +
+>  include/scsi/scsi_driver.h |  1 +
+>  6 files changed, 27 insertions(+), 13 deletions(-)
+> 
+You know what, I have been working on a similar patch for quite some
+time now; however, I've taken the simpler approach of not using
+async_synchronize_full_domain() but rather async_synchronize_cookie(),
+which makes for a simpler patch :-)
 
-Thanks for working on it! Please make sure they will be queued
-for -stable too, since 3.14, 4.1 and 4.9 are all affected.
+However, in doing so I have encountered several issues which have been
+exposed by that; the most trivial one being that del_gendisk() doesn't
+check if GENHD_FL_UP is set, so it'll crash if sd_remove is called
+before sd_async_probe() is run.
+
+The other one is an imbalance between sd_probe and sd_remove;
+when sd_probe_async() is called _after_ scsi_device_remove_device()
+(which it will as the synchronization is only after device_del() has
+been called) it will trip over non-existent sysfs directories in add_disk().
+So one need to short-circuit sd_probe_async() for devices in SDEV_CANCEL
+or SDEV_DEL.
+
+However, I'm still waiting for a final confirmation on the latter issue,
+hence I haven't posted the patchset.
+If there's interest I can post them, though.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
