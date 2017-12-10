@@ -1,76 +1,95 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH] sd: Increase SCSI disk probing concurrency
-Date: Sun, 10 Dec 2017 15:44:37 +0100
-Message-ID: <c3116e4b-bd48-d72c-52ff-972b9e03fc9a@suse.com>
-References: <20171208172124.32685-1-bart.vanassche@wdc.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] scsi: doc. fixes to scsi_common.c
+Date: Sun, 10 Dec 2017 10:11:33 -0800
+Message-ID: <95ed8abc-c9a7-4301-415b-cc6d327945ba@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:39887 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751616AbdLJOo6 (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Sun, 10 Dec 2017 09:44:58 -0500
-In-Reply-To: <20171208172124.32685-1-bart.vanassche@wdc.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:57062 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752068AbdLJSLk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Dec 2017 13:11:40 -0500
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
+To: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Bart Van Assche <bart.vanassche@wdc.com>
 
-On 12/08/2017 06:21 PM, Bart Van Assche wrote:
-> The scsi_sd_probe_domain allows to wait until all disk-probing
-> activity has finished system-wide. This slows down SCSI host removal
-> that occurs concurrently with SCSI disk probing because sd_remove()
-> waits on scsi_sd_probe_domain. Additionally, since each function that
-> waits on scsi_sd_probe_domain specifies for which disk to wait until
-> probing has finished, replace waiting on scsi_sd_probe_domain by
-> waiting until probing for a specific disk has finished. Introduce a
-> .sync() function pointer in struct scsi_driver to make it possible
-> for the SCSI power management code to wait until probing of a
-> specific disk has finished.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/scsi/scsi.c        |  5 -----
->  drivers/scsi/scsi_pm.c     |  6 ++++--
->  drivers/scsi/scsi_priv.h   |  1 -
->  drivers/scsi/sd.c          | 26 +++++++++++++++++++++-----
->  drivers/scsi/sd.h          |  1 +
->  include/scsi/scsi_driver.h |  1 +
->  6 files changed, 27 insertions(+), 13 deletions(-)
-> 
-You know what, I have been working on a similar patch for quite some
-time now; however, I've taken the simpler approach of not using
-async_synchronize_full_domain() but rather async_synchronize_cookie(),
-which makes for a simpler patch :-)
+From: Randy Dunlap <rdunlap@infradead.org>
 
-However, in doing so I have encountered several issues which have been
-exposed by that; the most trivial one being that del_gendisk() doesn't
-check if GENHD_FL_UP is set, so it'll crash if sd_remove is called
-before sd_async_probe() is run.
+Clean up some comment typos and fix some errors in documentation.
 
-The other one is an imbalance between sd_probe and sd_remove;
-when sd_probe_async() is called _after_ scsi_device_remove_device()
-(which it will as the synchronization is only after device_del() has
-been called) it will trip over non-existent sysfs directories in add_disk().
-So one need to short-circuit sd_probe_async() for devices in SDEV_CANCEL
-or SDEV_DEL.
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+---
+ drivers/scsi/scsi_common.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-However, I'm still waiting for a final confirmation on the latter issue,
-hence I haven't posted the patchset.
-If there's interest I can post them, though.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+--- lnx-415-rc2.orig/drivers/scsi/scsi_common.c
++++ lnx-415-rc2/drivers/scsi/scsi_common.c
+@@ -12,7 +12,7 @@
+ 
+ /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
+  * You may not alter any existing entry (although adding new ones is
+- * encouraged once assigned by ANSI/INCITS T10
++ * encouraged once assigned by ANSI/INCITS T10).
+  */
+ static const char *const scsi_device_types[] = {
+ 	"Direct-Access    ",
+@@ -39,7 +39,7 @@ static const char *const scsi_device_typ
+ };
+ 
+ /**
+- * scsi_device_type - Return 17 char string indicating device type.
++ * scsi_device_type - Return 17-char string indicating device type.
+  * @type: type number to look up
+  */
+ const char *scsi_device_type(unsigned type)
+@@ -59,7 +59,7 @@ EXPORT_SYMBOL(scsi_device_type);
+  * @scsilun:	struct scsi_lun to be converted.
+  *
+  * Description:
+- *     Convert @scsilun from a struct scsi_lun to a four byte host byte-ordered
++ *     Convert @scsilun from a struct scsi_lun to a four-byte host byte-ordered
+  *     integer, and return the result. The caller must check for
+  *     truncation before using this function.
+  *
+@@ -98,7 +98,7 @@ EXPORT_SYMBOL(scsilun_to_int);
+  *     back into the lun value.
+  *
+  * Notes:
+- *     Given an integer : 0x0b03d204,  this function returns a
++ *     Given an integer : 0x0b03d204, this function returns a
+  *     struct scsi_lun of: d2 04 0b 03 00 00 00 00
+  *
+  */
+@@ -221,7 +221,7 @@ EXPORT_SYMBOL(scsi_sense_desc_find);
+ 
+ /**
+  * scsi_build_sense_buffer - build sense data in a buffer
+- * @desc:	Sense format (non zero == descriptor format,
++ * @desc:	Sense format (non-zero == descriptor format,
+  *              0 == fixed format)
+  * @buf:	Where to build sense data
+  * @key:	Sense key
+@@ -255,7 +255,7 @@ EXPORT_SYMBOL(scsi_build_sense_buffer);
+  * @info:	64-bit information value to be set
+  *
+  * Return value:
+- *	0 on success or EINVAL for invalid sense buffer length
++ *	0 on success or -EINVAL for invalid sense buffer length
+  **/
+ int scsi_set_sense_information(u8 *buf, int buf_len, u64 info)
+ {
+@@ -305,7 +305,7 @@ EXPORT_SYMBOL(scsi_set_sense_information
+  * @cd:		command/data bit
+  *
+  * Return value:
+- *	0 on success or EINVAL for invalid sense buffer length
++ *	0 on success or -EINVAL for invalid sense buffer length
+  */
+ int scsi_set_sense_field_pointer(u8 *buf, int buf_len, u16 fp, u8 bp, bool cd)
+ {
