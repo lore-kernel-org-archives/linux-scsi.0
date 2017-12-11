@@ -1,53 +1,33 @@
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH 1/1] scsi: fnic: add a space after %p in printf format
-Date: Mon, 11 Dec 2017 23:54:49 +0100
-Message-ID: <CAJfZ7=nnfyCV7PT8eHEu8iwKdbmPQjKzCbwA-t3KwEZqks1K0g@mail.gmail.com>
-References: <20171210192311.5334-1-nicolas.iooss_linux@m4x.org> <1513030969.2747.19.camel@wdc.com>
+Date: Mon, 11 Dec 2017 23:34:31 +0000
+Message-ID: <1513035270.2747.31.camel@wdc.com>
+References: <20171210192311.5334-1-nicolas.iooss_linux@m4x.org>
+         <1513030969.2747.19.camel@wdc.com>
+         <CAJfZ7=nnfyCV7PT8eHEu8iwKdbmPQjKzCbwA-t3KwEZqks1K0g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1513030969.2747.19.camel@wdc.com>
+In-Reply-To: <CAJfZ7=nnfyCV7PT8eHEu8iwKdbmPQjKzCbwA-t3KwEZqks1K0g@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <FB56ED7EFBC8794CA1428756B11697E7@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "kartilak@cisco.com" <kartilak@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "satishkh@cisco.com" <satishkh@cisco.com>, "sebaddel@cisco.com" <sebaddel@cisco.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "nicolas.iooss_linux@m4x.org" <nicolas.iooss_linux@m4x.org>
+Cc: "kartilak@cisco.com" <kartilak@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "satishkh@cisco.com" <satishkh@cisco.com>, "sebaddel@cisco.com" <sebaddel@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Dec 11, 2017 at 11:22 PM, Bart Van Assche
-<Bart.VanAssche@wdc.com> wrote:
->
-> On Sun, 2017-12-10 at 20:23 +0100, Nicolas Iooss wrote:
-> > fnic_fcpio_icmnd_cmpl_handler() displays the value of sc with:
-> >
-> >     FNIC_SCSI_DBG(KERN_INFO...
-> >         "... sc = 0x%p"
-> >         "scsi_status ..."
-> >         ...
-> >
-> > As the literal strings get merged, the function uses %ps instead of the
-> > intended raw %p format. Fix this by inserting a space.
-> >
-> > Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-> > ---
-> >  drivers/scsi/fnic/fnic_scsi.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-> > index 242e2ee494a1..8cbd3c9f0b4c 100644
-> > --- a/drivers/scsi/fnic/fnic_scsi.c
-> > +++ b/drivers/scsi/fnic/fnic_scsi.c
-> > @@ -906,7 +906,7 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
-> >
-> >               FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
-> >                       "icmnd_cmpl abts pending "
-> > -                       "hdr status = %s tag = 0x%x sc = 0x%p"
-> > +                       "hdr status = %s tag = 0x%x sc = 0x%p "
-> >                         "scsi_status = %x residual = %d\n",
->
-> Since the %p format specifier already inserts a 0x prefix, shouldn't 0x%p be changed
-> into %p?
-
-Does it? On the kernel I use it does not, and the documentation for %p
-does not show a 0x prefix
-(https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/printk-formats.txt?h=v4.15-rc3#n57).
-
-Nicolas
+T24gTW9uLCAyMDE3LTEyLTExIGF0IDIzOjU0ICswMTAwLCBOaWNvbGFzIElvb3NzIHdyb3RlOg0K
+PiBPbiBNb24sIERlYyAxMSwgMjAxNyBhdCAxMToyMiBQTSwgQmFydCBWYW4gQXNzY2hlDQo+IDxC
+YXJ0LlZhbkFzc2NoZUB3ZGMuY29tPiB3cm90ZToNCj4gPiBPbiBTdW4sIDIwMTctMTItMTAgYXQg
+MjA6MjMgKzAxMDAsIE5pY29sYXMgSW9vc3Mgd3JvdGU6DQo+ID4gPiAtICAgICAgICAgICAgICAg
+ICAgICAgICAiaGRyIHN0YXR1cyA9ICVzIHRhZyA9IDB4JXggc2MgPSAweCVwIg0KPiA+ID4gKyAg
+ICAgICAgICAgICAgICAgICAgICAgImhkciBzdGF0dXMgPSAlcyB0YWcgPSAweCV4IHNjID0gMHgl
+cCAiDQo+ID4gPiAgICAgICAgICAgICAgICAgICAgICAgICAic2NzaV9zdGF0dXMgPSAleCByZXNp
+ZHVhbCA9ICVkXG4iLA0KPiA+IA0KPiA+IFNpbmNlIHRoZSAlcCBmb3JtYXQgc3BlY2lmaWVyIGFs
+cmVhZHkgaW5zZXJ0cyBhIDB4IHByZWZpeCwgc2hvdWxkbid0IDB4JXAgYmUgY2hhbmdlZA0KPiA+
+IGludG8gJXA/DQo+IA0KPiBEb2VzIGl0PyBPbiB0aGUga2VybmVsIEkgdXNlIGl0IGRvZXMgbm90
+LCBhbmQgdGhlIGRvY3VtZW50YXRpb24gZm9yICVwDQo+IGRvZXMgbm90IHNob3cgYSAweCBwcmVm
+aXgNCj4gKGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L3Rv
+cnZhbGRzL2xpbnV4LmdpdC90cmVlL0RvY3VtZW50YXRpb24vcHJpbnRrLWZvcm1hdHMudHh0P2g9
+djQuMTUtcmMzI241NykuDQoNClBsZWFzZSBpZ25vcmUgbXkgY29tbWVudC4NCg0KQmFydC4=
