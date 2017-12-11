@@ -1,57 +1,78 @@
 From: =?UTF-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
-Subject: Re: [PATCH][next] scsi: arcmsr: remove redundant check for secs < 0
-Date: Mon, 11 Dec 2017 10:41:03 +0800
-Message-ID: <CAKiknE8NSv_QMK-SzXa2SL0Vx9Ttt9NxDP2aF0wRhJGs8L4WVQ@mail.gmail.com>
-References: <20171209003414.17332-1-colin.king@canonical.com>
+Subject: Re: [bug report] scsi: arcmsr: Add a function to set date and time to firmware
+Date: Mon, 11 Dec 2017 10:52:39 +0800
+Message-ID: <CAKiknE_YN-6ddrR_RoL1g_4LCQRThniHbnS-vHwU5d3ikb-ewQ@mail.gmail.com>
+References: <20171209124715.tlxmnooiqqxw5q24@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171209003414.17332-1-colin.king@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:43575 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751640AbdLKCwl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Dec 2017 21:52:41 -0500
+Received: by mail-lf0-f53.google.com with SMTP id 94so17504963lfy.10
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Dec 2017 18:52:40 -0800 (PST)
+In-Reply-To: <20171209124715.tlxmnooiqqxw5q24@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Colin,
+Dan,
 
-You are right. That's checking is redundant. secs is never be negative.
-Thanks for your correction and patch.
+Yeah, secs is never be negative. This checking is redundant and have
+to be removed.
+Thanks Colin Ian King has done this patch for me on [next].
 
-Regards,
+Thanks,
 Ching
 
-2017-12-09 8:34 GMT+08:00 Colin King <colin.king@canonical.com>:
-> From: Colin Ian King <colin.king@canonical.com>
+2017-12-09 20:47 GMT+08:00 Dan Carpenter <dan.carpenter@oracle.com>:
+> Hello Ching Huang,
 >
-> The check for secs being less than zero is redundant for two reasons.
-> Firstly, secs is unsigned so the check is always going to be false.
-> Secondly, if secs was signed the proceeding calculation of secs is
-> never going to be negative.  Hence we can remove this redundant check
-> and day and secs re-adjustment.
+> The patch b416c099472a: "scsi: arcmsr: Add a function to set date and
+> time to firmware" from Dec 5, 2017, leads to the following static
+> checker warning:
 >
-> Detected by static analysis with smatch:
-> arcmsr_set_iop_datetime() warn: unsigned 'secs' is never less than zero.
+>         drivers/scsi/arcmsr/arcmsr_hba.c:3682 arcmsr_set_iop_datetime()
+>         warn: unsigned 'secs' is never less than zero.
 >
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/arcmsr/arcmsr_hba.c | 4 ----
->  1 file changed, 4 deletions(-)
+> drivers/scsi/arcmsr/arcmsr_hba.c
+>   3658  static void arcmsr_set_iop_datetime(struct timer_list *t)
+>   3659  {
+>   3660          struct AdapterControlBlock *pacb = from_timer(pacb, t, refresh_timer);
+>   3661          unsigned int days, j, i, a, b, c, d, e, m, year, mon, day, hour, min, sec, secs, next_time;
+>                 ^^^^^^^^^^^^                                                          ^^^
 >
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-> index 0707a60bf5c0..e4258b69f4be 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -3679,10 +3679,6 @@ static void arcmsr_set_iop_datetime(struct timer_list *t)
->         secs = (u32)(tv.tv_sec - (sys_tz.tz_minuteswest * 60));
->         days = secs / 86400;
->         secs = secs - 86400 * days;
-> -       if (secs < 0) {
-> -               days = days - 1;
-> -               secs = secs + 86400;
-> -       }
->         j = days / 146097;
->         i = days - 146097 * j;
->         a = i + 719468;
-> --
-> 2.14.1
+>   3662          struct timeval tv;
+>   3663          union {
+>   3664                  struct  {
+>   3665                  uint16_t        signature;
+>   3666                  uint8_t         year;
+>   3667                  uint8_t         month;
+>   3668                  uint8_t         date;
+>   3669                  uint8_t         hour;
+>   3670                  uint8_t         minute;
+>   3671                  uint8_t         second;
+>   3672                  } a;
+>   3673                  struct  {
+>   3674                  uint32_t        msg_time[2];
+>   3675                  } b;
+>   3676          } datetime;
+>   3677
+>   3678          do_gettimeofday(&tv);
+>   3679          secs = (u32)(tv.tv_sec - (sys_tz.tz_minuteswest * 60));
+>   3680          days = secs / 86400;
+>   3681          secs = secs - 86400 * days;
+>   3682          if (secs < 0) {
+>                     ^^^^^^^^
+> Not possible.
 >
+>   3683                  days = days - 1;
+>   3684                  secs = secs + 86400;
+>   3685          }
+>   3686          j = days / 146097;
+>
+>
+> regards,
+> dan carpenter
