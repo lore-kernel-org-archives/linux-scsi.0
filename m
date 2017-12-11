@@ -1,35 +1,34 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] MAINTIANERS: change FCoE list to linux-scsi
-Date: Mon, 11 Dec 2017 10:09:30 +0100
-Message-ID: <20171211090930.14879-1-jthumshirn@suse.de>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 0/6] target/loopback/tcm: Adjustments for some function
+ implementations
+Date: Mon, 11 Dec 2017 11:40:17 +0100
+Message-ID: <42f13f0c-ae1d-ec1e-fd9d-62dd15aeba8c@users.sourceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-fcoe-devel@open-fcoe.org is defunct and all patches are routed via the SCSI
-tree anyways.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 11 Dec 2017 11:33:44 +0100
 
-So update MAINTAINERS accordingly.
+Some update suggestions were taken into account
+from static source code analysis.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Markus Elfring (6):
+  Delete an error message for a failed memory allocation in four functions
+  Improve a size determination in two functions
+  Combine substrings for 26 messages
+  Delete two unnecessary variable initialisations in tcm_loop_issue_tmr()
+  Delete an unnecessary return statement in tcm_loop_submission_work()
+  Use seq_puts() in tcm_loop_show_info()
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9e0045e3ee0c..46bbf0f210ea 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5431,7 +5431,7 @@ F:	drivers/media/tuners/fc2580*
- 
- FCOE SUBSYSTEM (libfc, libfcoe, fcoe)
- M:	Johannes Thumshirn <jth@kernel.org>
--L:	fcoe-devel@open-fcoe.org
-+L:	linux-scsi@vger.kernel.org
- W:	www.Open-FCoE.org
- S:	Supported
- F:	drivers/scsi/libfc/
+ drivers/target/loopback/tcm_loop.c | 145 ++++++++++++++++---------------------
+ 1 file changed, 61 insertions(+), 84 deletions(-)
+
 -- 
-2.13.6
+2.15.1
