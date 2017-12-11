@@ -1,78 +1,71 @@
-From: =?UTF-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
-Subject: Re: [bug report] scsi: arcmsr: Add a function to set date and time to firmware
-Date: Mon, 11 Dec 2017 10:52:39 +0800
-Message-ID: <CAKiknE_YN-6ddrR_RoL1g_4LCQRThniHbnS-vHwU5d3ikb-ewQ@mail.gmail.com>
-References: <20171209124715.tlxmnooiqqxw5q24@mwanda>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v3] scsi: libsas: fix length error in sas_smp_handler()
+Date: Mon, 11 Dec 2017 15:03:33 +0800
+Message-ID: <20171211070333.12138-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:43575 "EHLO
-        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751640AbdLKCwl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Dec 2017 21:52:41 -0500
-Received: by mail-lf0-f53.google.com with SMTP id 94so17504963lfy.10
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Dec 2017 18:52:40 -0800 (PST)
-In-Reply-To: <20171209124715.tlxmnooiqqxw5q24@mwanda>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:11924 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbdLKG6N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2017 01:58:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, john.garry@huawei.com, hch@lst.de
+Cc: linux-scsi@vger.kernel.org, jthumshirn@suse.de, hare@suse.com, Jason Yan <yanaijie@huawei.com>
 
-Dan,
+The return value of smp_execute_task_sg() is the untransferred residual,
+but bsg_job_done() requires the length of payload received. This makes
+SMP passthrough commands from userland by sg ioctl to libsas get a wrong
+response. The userland tools such as smp_utils failed becuase of these
+wrong responses:
 
-Yeah, secs is never be negative. This checking is redundant and have
-to be removed.
-Thanks Colin Ian King has done this patch for me on [next].
+~#smp_discover /dev/bsg/expander-2\:13
+response too short, len=0
+~#smp_discover /dev/bsg/expander-2\:134
+response too short, len=0
 
-Thanks,
-Ching
+Fix this by passing the actual received length to bsg_job_done(). And if
+smp_execute_task_sg() returns 0, this means received length is exactly
+the buffer length.
 
-2017-12-09 20:47 GMT+08:00 Dan Carpenter <dan.carpenter@oracle.com>:
-> Hello Ching Huang,
->
-> The patch b416c099472a: "scsi: arcmsr: Add a function to set date and
-> time to firmware" from Dec 5, 2017, leads to the following static
-> checker warning:
->
->         drivers/scsi/arcmsr/arcmsr_hba.c:3682 arcmsr_set_iop_datetime()
->         warn: unsigned 'secs' is never less than zero.
->
-> drivers/scsi/arcmsr/arcmsr_hba.c
->   3658  static void arcmsr_set_iop_datetime(struct timer_list *t)
->   3659  {
->   3660          struct AdapterControlBlock *pacb = from_timer(pacb, t, refresh_timer);
->   3661          unsigned int days, j, i, a, b, c, d, e, m, year, mon, day, hour, min, sec, secs, next_time;
->                 ^^^^^^^^^^^^                                                          ^^^
->
->   3662          struct timeval tv;
->   3663          union {
->   3664                  struct  {
->   3665                  uint16_t        signature;
->   3666                  uint8_t         year;
->   3667                  uint8_t         month;
->   3668                  uint8_t         date;
->   3669                  uint8_t         hour;
->   3670                  uint8_t         minute;
->   3671                  uint8_t         second;
->   3672                  } a;
->   3673                  struct  {
->   3674                  uint32_t        msg_time[2];
->   3675                  } b;
->   3676          } datetime;
->   3677
->   3678          do_gettimeofday(&tv);
->   3679          secs = (u32)(tv.tv_sec - (sys_tz.tz_minuteswest * 60));
->   3680          days = secs / 86400;
->   3681          secs = secs - 86400 * days;
->   3682          if (secs < 0) {
->                     ^^^^^^^^
-> Not possible.
->
->   3683                  days = days - 1;
->   3684                  secs = secs + 86400;
->   3685          }
->   3686          j = days / 146097;
->
->
-> regards,
-> dan carpenter
+Fixes: 651a01364994 ("scsi: scsi_transport_sas: switch to bsg-lib for SMP passthrough")
+Reported-and-tested-by: chenqilin <chenqilin2@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/libsas/sas_expander.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 50cb0f3..6c40ecc 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -2143,7 +2143,7 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 		struct sas_rphy *rphy)
+ {
+ 	struct domain_device *dev;
+-	unsigned int reslen = 0;
++	unsigned int rcvlen = 0;
+ 	int ret = -EINVAL;
+ 
+ 	/* no rphy means no smp target support (ie aic94xx host) */
+@@ -2177,12 +2177,12 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 
+ 	ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
+ 			job->reply_payload.sg_list);
+-	if (ret > 0) {
+-		/* positive number is the untransferred residual */
+-		reslen = ret;
++	if (ret >= 0) {
++		/* bsg_job_done() requires the length received  */
++		rcvlen = job->reply_payload.payload_len - ret;
+ 		ret = 0;
+ 	}
+ 
+ out:
+-	bsg_job_done(job, ret, reslen);
++	bsg_job_done(job, ret, rcvlen);
+ }
+-- 
+2.9.5
