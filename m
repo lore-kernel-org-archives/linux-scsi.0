@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 5/8] target/iscsi: Delete an unnecessary variable
- initialisation in iscsi_copy_param_list()
-Date: Tue, 12 Dec 2017 22:47:40 +0100
-Message-ID: <1dc1578d-277b-ec04-6493-f243a3f568ce@users.sourceforge.net>
+Subject: [PATCH 6/8] target/iscsi: Delete an unnecessary variable
+ initialisation in iscsi_create_default_params()
+Date: Tue, 12 Dec 2017 22:49:06 +0100
+Message-ID: <734e9a91-f127-c454-47ca-ba33f153758f@users.sourceforge.net>
 References: <6163538d-a406-2f60-11a2-88b4694e9975@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -16,10 +16,10 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 12 Dec 2017 21:15:55 +0100
+Date: Tue, 12 Dec 2017 21:18:39 +0100
 
-The variable "param_list" will be reassigned by a following statement.
-Thus omit the explicit initialisation at the beginning.
+The variable "param" will eventually be set to an appropriate pointer
+a bit later. Thus omit the explicit initialisation at the beginning.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
@@ -27,17 +27,17 @@ Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 06310b2c4e26..25a3a9550488 100644
+index 25a3a9550488..151269b8816d 100644
 --- a/drivers/target/iscsi/iscsi_target_parameters.c
 +++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -566,7 +566,7 @@ int iscsi_copy_param_list(
+@@ -196,7 +196,7 @@ static struct iscsi_param *iscsi_set_default_param(struct iscsi_param_list *para
+ /* #warning Add extension keys */
+ int iscsi_create_default_params(struct iscsi_param_list **param_list_ptr)
  {
- 	struct iscsi_param *param = NULL;
- 	struct iscsi_param *new_param = NULL;
--	struct iscsi_param_list *param_list = NULL;
-+	struct iscsi_param_list *param_list;
+-	struct iscsi_param *param = NULL;
++	struct iscsi_param *param;
+ 	struct iscsi_param_list *pl;
  
- 	param_list = kzalloc(sizeof(struct iscsi_param_list), GFP_KERNEL);
- 	if (!param_list)
+ 	pl = kzalloc(sizeof(struct iscsi_param_list), GFP_KERNEL);
 -- 
 2.15.1
