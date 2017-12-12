@@ -1,79 +1,38 @@
-From: Finn Thain <fthain@telegraphics.com.au>
+From: Jia-Ju Bai <baijiaju1990@163.com>
 Subject: Re: [PATCH] NCR5380: Fix a possible sleep-in-atomic bug in
  NCR5380_poll_politely2
-Date: Tue, 12 Dec 2017 14:38:57 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.21.1712121429331.3@nippy.intranet>
+Date: Tue, 12 Dec 2017 11:49:32 +0800
+Message-ID: <20fa69d8-7bfe-0ce4-b547-cc7372726bde@163.com>
 References: <1513047037-18102-1-git-send-email-baijiaju1990@163.com>
+ <alpine.LNX.2.21.1712121429331.3@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1513047037-18102-1-git-send-email-baijiaju1990@163.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: schmitzmic@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from m12-16.163.com ([220.181.12.16]:60642 "EHLO m12-16.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751123AbdLLDtt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Dec 2017 22:49:49 -0500
+In-Reply-To: <alpine.LNX.2.21.1712121429331.3@nippy.intranet>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: schmitzmic@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 
-On Tue, 12 Dec 2017, Jia-Ju Bai wrote:
+Thanks for your reply :)
 
-> From: Jia-Ju Bai <baijiaju1990@gmail.com>
-> 
-> The kernel module may sleep under a spinlock.
+On 2017/12/12 11:38, Finn Thain wrote:
+> On Tue, 12 Dec 2017, Jia-Ju Bai wrote:
+>
+>> From: Jia-Ju Bai <baijiaju1990@gmail.com>
+>>
+>> The kernel module may sleep under a spinlock.
+> The spinlock is always taken in irq mode, and the
+> schedule_timeout_uninterruptible() is conditional on !irqs_disabled().
+>
+I think I ignore this check, which causes a false bug report, sorry.
 
-The spinlock is always taken in irq mode, and the 
-schedule_timeout_uninterruptible() is conditional on !irqs_disabled().
 
-> The function call paths are:
-> NCR5380_select (acquire the spinlock)
->   NCR5380_reselect
->     NCR5380_poll_politely
->       NCR5380_poll_politely2
->         schedule_timeout_uninterruptible --> may sleep
-> 
-> NCR5380_abort (acquire the spinlock)
->   do_abort
->     NCR5380_poll_politely
->       NCR5380_poll_politely2
->         schedule_timeout_uninterruptible --> may sleep
-> 
-
-Well, it's expected to sleep here, hence the "sleep for 1ms" comment.
-
-(I notice that you left the comment unchanged in your "fix", was that an 
-oversight?)
-
-> To fix it, schedule_timeout_uninterruptible is replaced with mdelay.
-> 
-> This bug is found by my static analysis tool(DSAC) and checked by my 
-> code review.
-> 
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-
-NAK.
-
-> ---
->  drivers/scsi/NCR5380.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> index 90ea0f5..4176aca 100644
-> --- a/drivers/scsi/NCR5380.c
-> +++ b/drivers/scsi/NCR5380.c
-> @@ -202,7 +202,7 @@ static int NCR5380_poll_politely2(struct NCR5380_hostdata *hostdata,
->  
-
-Here's a little more context:
-
-        if (irqs_disabled() || in_interrupt())
-                return -ETIMEDOUT;
-
->  	/* Repeatedly sleep for 1 ms until deadline */
->  	while (time_is_after_jiffies(deadline)) {
-> -		schedule_timeout_uninterruptible(1);
-> +		mdelay(1);
->  		if ((NCR5380_read(reg1) & bit1) == val1)
->  			return 0;
->  		if ((NCR5380_read(reg2) & bit2) == val2)
-> 
-
--- 
+Thanks,
+Jia-Ju Bai
