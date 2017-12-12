@@ -1,28 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH][next] scsi: arcmsr: remove redundant check for secs < 0
-Date: Mon, 11 Dec 2017 21:37:47 -0500
-Message-ID: <yq1y3m8r7r8.fsf@oracle.com>
-References: <20171209003414.17332-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: doc. fixes to scsi_common.c
+Date: Mon, 11 Dec 2017 21:40:04 -0500
+Message-ID: <yq1tvwwr7nf.fsf@oracle.com>
+References: <95ed8abc-c9a7-4301-415b-cc6d327945ba@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171209003414.17332-1-colin.king@canonical.com> (Colin King's
-        message of "Sat, 9 Dec 2017 00:34:14 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:44204 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750759AbdLLCko (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2017 21:40:44 -0500
+In-Reply-To: <95ed8abc-c9a7-4301-415b-cc6d327945ba@infradead.org> (Randy
+        Dunlap's message of "Sun, 10 Dec 2017 10:11:33 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Bart Van Assche <bart.vanassche@wdc.com>
 
 
-Colin,
+Randy,
 
-> The check for secs being less than zero is redundant for two reasons.
-> Firstly, secs is unsigned so the check is always going to be false.
-> Secondly, if secs was signed the proceeding calculation of secs is
-> never going to be negative.  Hence we can remove this redundant check
-> and day and secs re-adjustment.
+> Clean up some comment typos and fix some errors in documentation.
 
-Applied to 4.16/scsi-queue, thanks!
+Applied to 4.16/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
