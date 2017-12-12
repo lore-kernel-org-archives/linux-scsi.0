@@ -1,174 +1,63 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3] Use blist_flags_t consistently
-Date: Tue, 12 Dec 2017 10:23:28 -0800
-Message-ID: <20171212182328.20088-1-bart.vanassche@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi_dh_alua: skip RTPG for devices only supporting
+ active/optimized
+Date: Tue, 12 Dec 2017 18:25:50 +0000
+Message-ID: <1513103148.2999.30.camel@wdc.com>
+References: <1512728048-84729-1-git-send-email-hare@suse.de>
+         <1513036829.2747.36.camel@wdc.com>
+         <b4b9333f-090f-0f78-a208-a07b061b38fe@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:37080 "EHLO
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:33131 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752190AbdLLSX3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2017 13:23:29 -0500
+        with ESMTP id S1751612AbdLLSZx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2017 13:25:53 -0500
+In-Reply-To: <b4b9333f-090f-0f78-a208-a07b061b38fe@suse.de>
+Content-Language: en-US
+Content-ID: <3FC2134A3C59954E8B46BC7B1A57D801@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
 
-Use the type blist_flags_t for all variables that represent blacklist
-flags. Additionally, suppress recently introduced sparse warnings related
-to blacklist flags.
-
-Fixes: commit c6b54164508a ("scsi: Use 'blist_flags_t' for scsi_devinfo flags")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
-Changes compared to v2:
-- Changed (__force unsigned int)sdev->sdev_bflags & BIT(i) into
-  sdev->sdev_bflags & (__force blist_flags_t)BIT(i).
-
-Changes compared to v1:
-- Changed (__force u32) casts into (__force unsigned int).
-- Left out one cast, namely the one in front of scsi_default_dev_flags.
-
- drivers/scsi/scsi_devinfo.c       |  6 ++----
- drivers/scsi/scsi_scan.c          | 13 +++++++------
- drivers/scsi/scsi_sysfs.c         |  5 +++--
- drivers/scsi/scsi_transport_spi.c | 12 +++++++-----
- 4 files changed, 19 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index a15eb4d15114..700988e2769c 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -382,10 +382,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
- 			    model, compatible);
- 
- 	if (strflags)
--		devinfo->flags = simple_strtoul(strflags, NULL, 0);
--	else
--		devinfo->flags = flags;
--
-+		flags = (__force blist_flags_t)simple_strtoul(strflags, NULL, 0);
-+	devinfo->flags = flags;
- 	devinfo->compatible = compatible;
- 
- 	if (compatible)
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index be5e919db0e8..0880d975eed3 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -770,7 +770,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
-  *     SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
-  **/
- static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
--		int *bflags, int async)
-+		blist_flags_t *bflags, int async)
- {
- 	int ret;
- 
-@@ -1049,14 +1049,15 @@ static unsigned char *scsi_inq_str(unsigned char *buf, unsigned char *inq,
-  *   - SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
-  **/
- static int scsi_probe_and_add_lun(struct scsi_target *starget,
--				  u64 lun, int *bflagsp,
-+				  u64 lun, blist_flags_t *bflagsp,
- 				  struct scsi_device **sdevp,
- 				  enum scsi_scan_mode rescan,
- 				  void *hostdata)
- {
- 	struct scsi_device *sdev;
- 	unsigned char *result;
--	int bflags, res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
-+	blist_flags_t bflags;
-+	int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 
- 	/*
-@@ -1201,7 +1202,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
-  *     Modifies sdevscan->lun.
-  **/
- static void scsi_sequential_lun_scan(struct scsi_target *starget,
--				     int bflags, int scsi_level,
-+				     blist_flags_t bflags, int scsi_level,
- 				     enum scsi_scan_mode rescan)
- {
- 	uint max_dev_lun;
-@@ -1292,7 +1293,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
-  *     0: scan completed (or no memory, so further scanning is futile)
-  *     1: could not scan with REPORT LUN
-  **/
--static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
-+static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflags,
- 				enum scsi_scan_mode rescan)
- {
- 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
-@@ -1538,7 +1539,7 @@ static void __scsi_scan_target(struct device *parent, unsigned int channel,
- 		unsigned int id, u64 lun, enum scsi_scan_mode rescan)
- {
- 	struct Scsi_Host *shost = dev_to_shost(parent);
--	int bflags = 0;
-+	blist_flags_t bflags = 0;
- 	int res;
- 	struct scsi_target *starget;
- 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index cbc0fe2c5485..c15ca457dd23 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -967,7 +967,8 @@ sdev_show_wwid(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
- 
--#define BLIST_FLAG_NAME(name) [ilog2(BLIST_##name)] = #name
-+#define BLIST_FLAG_NAME(name)					\
-+	[ilog2((__force unsigned int)BLIST_##name)] = #name
- static const char *const sdev_bflags_name[] = {
- #include "scsi_devinfo_tbl.c"
- };
-@@ -984,7 +985,7 @@ sdev_show_blacklist(struct device *dev, struct device_attribute *attr,
- 	for (i = 0; i < sizeof(sdev->sdev_bflags) * BITS_PER_BYTE; i++) {
- 		const char *name = NULL;
- 
--		if (!(sdev->sdev_bflags & BIT(i)))
-+		if (!(sdev->sdev_bflags & (__force blist_flags_t)BIT(i)))
- 			continue;
- 		if (i < ARRAY_SIZE(sdev_bflags_name) && sdev_bflags_name[i])
- 			name = sdev_bflags_name[i];
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index d0219e36080c..10ebb213ddb3 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -50,14 +50,14 @@
- 
- /* Our blacklist flags */
- enum {
--	SPI_BLIST_NOIUS = 0x1,
-+	SPI_BLIST_NOIUS = (__force blist_flags_t)0x1,
- };
- 
- /* blacklist table, modelled on scsi_devinfo.c */
- static struct {
- 	char *vendor;
- 	char *model;
--	unsigned flags;
-+	blist_flags_t flags;
- } spi_static_device_list[] __initdata = {
- 	{"HP", "Ultrium 3-SCSI", SPI_BLIST_NOIUS },
- 	{"IBM", "ULTRIUM-TD3", SPI_BLIST_NOIUS },
-@@ -221,9 +221,11 @@ static int spi_device_configure(struct transport_container *tc,
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct scsi_target *starget = sdev->sdev_target;
--	unsigned bflags = scsi_get_device_flags_keyed(sdev, &sdev->inquiry[8],
--						      &sdev->inquiry[16],
--						      SCSI_DEVINFO_SPI);
-+	blist_flags_t bflags;
-+
-+	bflags = scsi_get_device_flags_keyed(sdev, &sdev->inquiry[8],
-+					     &sdev->inquiry[16],
-+					     SCSI_DEVINFO_SPI);
- 
- 	/* Populate the target capability fields with the values
- 	 * gleaned from the device inquiry */
--- 
-2.15.1
+T24gVHVlLCAyMDE3LTEyLTEyIGF0IDA4OjAxICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIDEyLzEyLzIwMTcgMDE6MDAgQU0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBP
+biBGcmksIDIwMTctMTItMDggYXQgMTE6MTQgKzAxMDAsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToN
+Cj4gPiA+IEBAIC01NDEsNiArNTQ0LDIwIEBAIHN0YXRpYyBpbnQgYWx1YV9ydHBnKHN0cnVjdCBz
+Y3NpX2RldmljZSAqc2Rldiwgc3RydWN0IGFsdWFfcG9ydF9ncm91cCAqcGcpDQo+ID4gPiAgCXJl
+dHZhbCA9IHN1Ym1pdF9ydHBnKHNkZXYsIGJ1ZmYsIGJ1ZmZsZW4sICZzZW5zZV9oZHIsIHBnLT5m
+bGFncyk7DQo+ID4gPiAgDQo+ID4gPiAgCWlmIChyZXR2YWwpIHsNCj4gPiA+ICsJCS8qDQo+ID4g
+PiArCQkgKiBJZiB0aGUgdGFyZ2V0IG9ubHkgc3VwcG9ydHMgYWN0aXZlL29wdGltaXplZCB0aGVy
+ZSdzDQo+ID4gPiArCQkgKiBub3QgbXVjaCB3ZSBjYW4gZG87IGl0J3Mgbm90IHRoYXQgd2UgY2Fu
+IHN3aXRjaCBwYXRocw0KPiA+ID4gKwkJICogb3Igc29tZXN1Y2guDQo+ID4gPiArCQkgKiBTbyBp
+Z25vcmUgYW55IGVycm9ycyB0byBhdm9pZCBzcHVyaW91cyBmYWlsdXJlcyBkdXJpbmcNCj4gPiA+
+ICsJCSAqIHBhdGggZmFpbG92ZXIuDQo+ID4gPiArCQkgKi8NCj4gPiA+ICsJCWlmICgocGctPnZh
+bGlkX3N0YXRlcyAmIH5UUEdTX1NVUFBPUlRfT1BUSU1JWkVEKSA9PSAwKSB7DQo+ID4gPiArCQkJ
+c2Rldl9wcmludGsoS0VSTl9JTkZPLCBzZGV2LA0KPiA+ID4gKwkJCQkgICAgIiVzOiBpZ25vcmlu
+ZyBydHBnIHJlc3VsdCAlZFxuIiwNCj4gPiA+ICsJCQkJICAgIEFMVUFfREhfTkFNRSwgcmV0dmFs
+KTsNCj4gPiA+ICsJCQlrZnJlZShidWZmKTsNCj4gPiA+ICsJCQlyZXR1cm4gU0NTSV9ESF9PSzsN
+Cj4gPiA+ICsJCX0NCj4gPiANCj4gPiBIZWxsbyBIYW5uZXMsDQo+ID4gDQo+ID4gU29ycnkgYnV0
+IHRoaXMgY2hhbmdlIGxvb2tzIHdlaXJkIHRvIG1lLiBJZiBhbiBSVFBHIGZhaWxzLCBzaG91bGRu
+J3QNCj4gPiBhbHVhX3J0cGcoKSByZXR1cm4gU0NTSV9ESF9JTyBpbmRlcGVuZGVudCBvZiB3aGF0
+IEFMVUEgc3RhdGVzIHRoZSB0YXJnZXQNCj4gPiBzdXBwb3J0cz8gQXJlIHlvdSBwZXJoYXBzIHRy
+eWluZyB0byBpbXBsZW1lbnQgYSB3b3JrLWFyb3VuZCBmb3IgYW4gYXJyYXkNCj4gPiB0aGF0IGRv
+ZXMgbm90IHJlc3BvbmQgdG8gUlRQRyBkdXJpbmcgcGF0aCB0cmFuc2l0aW9ucz8NCj4gPiANCj4g
+DQo+IFllcywgcHJlY2lzZWx5Lg0KPiANCj4gVGhpbmcgaXM6IGlmIGFuIGFycmF5IGlzIG9ubHkg
+c3VwcG9ydGluZyBhY3RpdmUvb3B0aW1pemVkIHRoZSBlbnRpcmUNCj4gZGV2aWNlLWhhbmRsZXIg
+c3R1ZmYgaXMgYmFzaWNhbGx5IGEgbm8tb3AgYXMgd2UgY2FuJ3Qgc3dpdGNoIHBhdGhzIGFueXdh
+eS4NCj4gU28gaXQgZG9lc24ndCByZWFsbHkgbWF0dGVyIGlmIHRoZSBSVFBHIGZhaWxzOyBpbiBm
+YWN0LCB3ZSBjb3VsZCBqdXN0DQo+IHNob3J0LWNpcmN1aXQgdGhlIGVudGlyZSBsb2dpYy4gSSBk
+aWQgbm90IGRvIHRoYXQgdG8gYWxsb3cgZm9yIGEgc3RhdGUNCj4gbW9kaWZpY2F0aW9uIChpZSBh
+cnJheXMgX21pZ2h0XyBkZWNpZGUgdG8gYW5ub3VuY2UgYWRkaXRpb25hbCBzdGF0ZXMNCj4gZXZl
+bnR1YWxseSwgYW5kIG9ubHkgc3RhcnRpbmcgb2ZmIHdpdGggYWN0aXZlL29wdGltaXplZCBhcyBh
+biBpbml0aWFsDQo+IHN0YXRlIHNldCkuDQo+IA0KPiBCdXQgaWYgd2UgcmV0dXJuIFNDU0lfREhf
+SU8gaGVyZSB0aGUgbXVsdGlwYXRoIGxvZ2ljIHdpbGwgbm90IGF0dGVtcHQgdG8NCj4gc3dpdGNo
+IHBhdGhzLCBhbmQgZmFpbG92ZXIgd2lsbCBub3Qgd29yay4NCg0KSGVsbG8gSGFubmVzLA0KDQpJ
+IHdvdWxkIGFwcHJlY2lhdGUgaXQgaWYgaXQgd291bGQgYmUgbWVudGlvbmVkIG1vcmUgY2xlYXJs
+eSBpbiB0aGUgY29tbWVudA0KYWJvdmUgcGctPnZhbGlkX3N0YXRlcyAmIH5UUEdTX1NVUFBPUlRf
+T1BUSU1JWkVEIHRoYXQgdGhlIG5ld2x5IGFkZGVkIGNvZGUNCmlzIGEgd29ya2Fyb3VuZCBmb3Ig
+bm9uLXN0YW5kYXJkIGFycmF5IGJlaGF2aW9yLiBJJ20gYWZyYWlkIHRoYXQgb3RoZXJ3aXNlDQpw
+ZW9wbGUgd2hvIHdpbGwgcmVhZCB0aGF0IGNvZGUgd2lsbCBiZSBwdXp6bGVkIGFib3V0IHdoeSB0
+aGF0IGNvZGUgaGFzIGJlZW4NCmFkZGVkLg0KDQpUaGFua3MsDQoNCkJhcnQu
