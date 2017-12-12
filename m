@@ -1,73 +1,57 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 4/4] scsi_debug: add resp_write_scat function
-Date: Tue, 12 Dec 2017 19:40:55 +0000
-Message-ID: <1513107652.2999.42.camel@sandisk.com>
-References: <20171212011008.27689-1-dgilbert@interlog.com>
-         <20171212011008.27689-5-dgilbert@interlog.com>
+From: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
+Subject: [PATCH] scsi: aacraid: fix io drop during the reset
+Date: Tue, 12 Dec 2017 11:40:10 -0800
+Message-ID: <1513107610-24451-1-git-send-email-prasad.munirathnam@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:56132 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751643AbdLLTk6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2017 14:40:58 -0500
-In-Reply-To: <20171212011008.27689-5-dgilbert@interlog.com>
-Content-Language: en-US
-Content-ID: <E1026AC9C277B34FB6DAA7DAD0567A45@namprd04.prod.outlook.com>
+Received: from mail-sn1nam01on0079.outbound.protection.outlook.com ([104.47.32.79]:5408
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751643AbdLLTle (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Dec 2017 14:41:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: prasad.munirathnam@microsemi.com, david.carroll@microsemi.com, raghavaaditya.renukunta@microsemi.com, martin.petersen@oracle.com, james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE3LTEyLTExIGF0IDIwOjEwIC0wNTAwLCBEb3VnbGFzIEdpbGJlcnQgd3JvdGU6
-DQo+IC1zdGF0aWMgY29uc3Qgc3RydWN0IG9wY29kZV9pbmZvX3QgdmxfaWFyclsxXSA9IHsJLyog
-VkFSSUFCTEUgTEVOR1RIICovDQo+ICtzdGF0aWMgY29uc3Qgc3RydWN0IG9wY29kZV9pbmZvX3Qg
-dmxfaWFyclsyXSA9IHsJLyogVkFSSUFCTEUgTEVOR1RIICovDQoNClBsZWFzZSBsZWF2ZSBvdXQg
-dGhlIGFycmF5IHNpemUgYW5kIGxldCB0aGUgY29tcGlsZXIgZGV0ZXJtaW5lIHRoZSBhcnJheSBz
-aXplLg0KDQo+ICAJezAsIDB4N2YsIDB4YiwgRl9TQV9ISUdIIHwgRl9EX09VVCB8IEZGX0RJUkVD
-VF9JTywgcmVzcF93cml0ZV9kdDAsDQo+IC0JICAgIE5VTEwsIHszMiwgIDB4YzcsIDAsIDAsIDAs
-IDAsIDB4MWYsIDB4MTgsIDB4MCwgMHhiLCAweGZhLA0KPiAtCQkgICAwLCAweGZmLCAweGZmLCAw
-eGZmLCAweGZmfSB9LAkvKiBXUklURSgzMikgKi8NCj4gKwkgICAgTlVMTCwgezMyLCAgMHhjNywg
-MCwgMCwgMCwgMCwgMHgzZiwgMHgxOCwgMHgwLCAweGIsIDB4ZmEsDQo+ICsJCTAsIDB4ZmYsIDB4
-ZmYsIDB4ZmYsIDB4ZmZ9IH0sCS8qIFdSSVRFKDMyKSAqLw0KDQpTaG91bGRuJ3QgdGhpcyBjaGFu
-Z2UgaGF2ZSBiZWVuIGluY2x1ZGVkIGluIHRoZSBwYXRjaCB0aGF0IGZpeGVzIHRoZSBncm91cA0K
-bnVtYmVyIG1hc2s/DQogDQo+ICBzdGF0aWMgY29uc3Qgc3RydWN0IG9wY29kZV9pbmZvX3QgbWFp
-bnRfaW5faWFyclsyXSA9IHsNCj4gQEAgLTUxOCw5ICs1MjMsMTAgQEAgc3RhdGljIGNvbnN0IHN0
-cnVjdCBvcGNvZGVfaW5mb190IG9wY29kZV9pbmZvX2FycltTREVCX0lfTEFTVF9FTEVNRU5UICsg
-MV0gPSB7DQo+ICAJICAgIHs2LCAgMHgxLCAwLCAweGYsIDB4ZjcsIDB4YzcsIDAsIDAsIDAsIDAs
-IDAsIDAsIDAsIDAsIDAsIDB9IH0sDQo+ICAJezEsIDB4OWUsIDB4MTAsIEZfU0FfTE9XIHwgRl9E
-X0lOLCByZXNwX3JlYWRjYXAxNiwgc2FfaW5faWFyciwNCj4gIAkgICAgezE2LCAgMHgxMCwgMHhm
-ZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwNCj4gLQkg
-ICAgIDB4ZmYsIDB4ZmYsIDB4ZmYsIDB4MSwgMHhjN30gfSwJLyogUkVBRCBDQVBBQ0lUWSgxNikg
-Ki8NCj4gLQl7MCwgMCwgMCwgRl9JTlZfT1AgfCBGRl9SRVNQT05ELCBOVUxMLCBOVUxMLCAvKiBT
-QSBPVVQgKi8NCj4gLQkgICAgezAsICAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAw
-LCAwLCAwLCAwfSB9LA0KPiArCSAgICAgMHhmZiwgMHhmZiwgMHhmZiwgMHgxLCAweGM3fSB9LC8q
-IFNBX0lOKDE2KSwgUkVBRCBDQVBBQ0lUWSgxNikgKi8NCg0KU2hvdWxkbid0IHRoZSBhYm92ZSBj
-aGFuZ2UgYmUgZm9sZGVkIGludG8gb25lIG9mIHRoZSBvdGhlciBwYXRjaGVzPw0KDQo+IEBAIC01
-MjksOSArNTM1LDkgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBvcGNvZGVfaW5mb190IG9wY29kZV9p
-bmZvX2FycltTREVCX0lfTEFTVF9FTEVNRU5UICsgMV0gPSB7DQo+ICAJezAsIDB4MmYsIDAsIEZf
-RF9PVVRfTUFZQkUgfCBGRl9ESVJFQ1RfSU8sIE5VTEwsIE5VTEwsIC8qIFZFUklGWSgxMCkgKi8N
-Cj4gIAkgICAgezEwLCAgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwg
-MHhmZiwgMHhjNywNCj4gIAkgICAgIDAsIDAsIDAsIDAsIDAsIDB9IH0sDQo+IC0JezEsIDB4N2Ys
-IDB4OSwgRl9TQV9ISUdIIHwgRl9EX0lOIHwgRkZfRElSRUNUX0lPLCByZXNwX3JlYWRfZHQwLA0K
-PiAtCSAgICB2bF9pYXJyLCB7MzIsICAweGM3LCAwLCAwLCAwLCAwLCAweDFmLCAweDE4LCAweDAs
-IDB4OSwgMHhmZSwgMCwNCj4gLQkJICAgICAgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZn0gfSwvKiBW
-QVJJQUJMRSBMRU5HVEgsIFJFQUQoMzIpICovDQo+ICsJezIsIDB4N2YsIDB4OSwgRl9TQV9ISUdI
-IHwgRl9EX0lOIHwgRkZfRElSRUNUX0lPLCByZXNwX3JlYWRfZHQwLA0KPiArCSAgICB2bF9pYXJy
-LCB7MzIsICAweGM3LCAwLCAwLCAwLCAwLCAweDNmLCAweDE4LCAweDAsIDB4OSwgMHhmZSwgMCwN
-Cj4gKwkJMHhmZiwgMHhmZiwgMHhmZiwgMHhmZn0gfSwgICAgLyogVkFSSUFCTEUgTEVOR1RILCBS
-RUFEKDMyKSAqLw0KDQpIYXZlIHlvdSBjb25zaWRlcmVkIHRvIHVzZSBBUlJBWV9TSVpFKHZsX2lh
-cnIpIGluc3RlYWQgb2YgaGFyZC1jb2RpbmcgdGhlIGFycmF5DQpzaXplPw0KDQo+ICsJaWYgKGNt
-ZFswXSA9PSBWQVJJQUJMRV9MRU5HVEhfQ01EKSB7DQo+ICsJCWlzXzE2ID0gZmFsc2U7DQo+ICsJ
-CXdycHJvdGVjdCA9IChjbWRbMTBdID4+IDUpICYgMHg3Ow0KPiArCQlsYmRvZiA9IGdldF91bmFs
-aWduZWRfYmUxNihjbWQgKyAxMik7DQo+ICsJCW51bV9scmQgPSBnZXRfdW5hbGlnbmVkX2JlMTYo
-Y21kICsgMTYpOw0KPiArCQlidF9sZW4gPSBnZXRfdW5hbGlnbmVkX2JlMzIoY21kICsgMjgpOw0K
-PiArCQljaGVja19wcm90ID0gZmFsc2U7DQo+ICsJfSBlbHNlIHsgICAgICAgIC8qIHRoYXQgbGVh
-dmVzIFdSSVRFIFNDQVRURVJFRCgxNikgKi8NCj4gKwkJaXNfMTYgPSB0cnVlOw0KPiArCQl3cnBy
-b3RlY3QgPSAoY21kWzJdID4+IDUpICYgMHg3Ow0KPiArCQlsYmRvZiA9IGdldF91bmFsaWduZWRf
-YmUxNihjbWQgKyA0KTsNCj4gKwkJbnVtX2xyZCA9IGdldF91bmFsaWduZWRfYmUxNihjbWQgKyA4
-KTsNCj4gKwkJYnRfbGVuID0gZ2V0X3VuYWxpZ25lZF9iZTMyKGNtZCArIDEwKTsNCj4gKwkJY2hl
-Y2tfcHJvdCA9IHRydWU7DQo+ICsJfQ0KDQpJdCdzIG5vdCBjbGVhciB0byBtZSB3aHkgY2hlY2tf
-cHJvdCBpcyBzZXQgdG8gZmFsc2UgZm9yIFdSSVRFIFNDQVRURVJFRCgzMikNCmFuZCBzZXQgdG8g
-dHJ1ZSBmb3IgV1JJVEUgU0NBVFRFUkVEKDE2KT8NCg0KQmFydC4=
+"FIB_CONTEXT_FLAG_TIMEDOUT" flag is set in aac_eh_abort to
+indicate command timeout, using the same flag in reset handler
+causes the command to timeout and the IO's were droped.
+
+defined a new flag "FIB_CONTEXT_FLAG_EH_RESET" to make sure IO
+is properly handled in eh_reset handler.
+
+Signed-off-by: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
+---
+ drivers/scsi/aacraid/aacraid.h | 1 +
+ drivers/scsi/aacraid/linit.c   | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 403a639..b0b290f 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1724,6 +1724,7 @@ struct aac_dev
+ #define FIB_CONTEXT_FLAG_NATIVE_HBA		(0x00000010)
+ #define FIB_CONTEXT_FLAG_NATIVE_HBA_TMF	(0x00000020)
+ #define FIB_CONTEXT_FLAG_SCSI_CMD	(0x00000040)
++#define FIB_CONTEXT_FLAG_EH_RESET	(0x00000080)
+ 
+ /*
+  *	Define the command values
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 3677bef..03af5bd 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1034,7 +1034,7 @@ static int aac_eh_bus_reset(struct scsi_cmnd* cmd)
+ 			info = &aac->hba_map[bus][cid];
+ 			if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
+ 			    info->devtype != AAC_DEVTYPE_NATIVE_RAW) {
+-				fib->flags |= FIB_CONTEXT_FLAG_TIMED_OUT;
++				fib->flags |= FIB_CONTEXT_FLAG_EH_RESET;
+ 				cmd->SCp.phase = AAC_OWNER_ERROR_HANDLER;
+ 			}
+ 		}
+-- 
+2.7.4
