@@ -1,63 +1,31 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi_dh_alua: skip RTPG for devices only supporting
- active/optimized
-Date: Tue, 12 Dec 2017 18:25:50 +0000
-Message-ID: <1513103148.2999.30.camel@wdc.com>
-References: <1512728048-84729-1-git-send-email-hare@suse.de>
-         <1513036829.2747.36.camel@wdc.com>
-         <b4b9333f-090f-0f78-a208-a07b061b38fe@suse.de>
+Subject: Re: [PATCH 1/4] scsi_debug: tab, kstrto changes, requested by
+ checkpatch.pl
+Date: Tue, 12 Dec 2017 18:32:08 +0000
+Message-ID: <1513103528.2999.31.camel@wdc.com>
+References: <20171212011008.27689-1-dgilbert@interlog.com>
+         <20171212011008.27689-2-dgilbert@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:33131 "EHLO
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:27375 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751612AbdLLSZx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2017 13:25:53 -0500
-In-Reply-To: <b4b9333f-090f-0f78-a208-a07b061b38fe@suse.de>
+        with ESMTP id S1751625AbdLLScL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2017 13:32:11 -0500
+In-Reply-To: <20171212011008.27689-2-dgilbert@interlog.com>
 Content-Language: en-US
-Content-ID: <3FC2134A3C59954E8B46BC7B1A57D801@namprd04.prod.outlook.com>
+Content-ID: <68B05CEB061CF9409A369CF91A47185D@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
+Cc: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-T24gVHVlLCAyMDE3LTEyLTEyIGF0IDA4OjAxICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IE9uIDEyLzEyLzIwMTcgMDE6MDAgQU0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBP
-biBGcmksIDIwMTctMTItMDggYXQgMTE6MTQgKzAxMDAsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToN
-Cj4gPiA+IEBAIC01NDEsNiArNTQ0LDIwIEBAIHN0YXRpYyBpbnQgYWx1YV9ydHBnKHN0cnVjdCBz
-Y3NpX2RldmljZSAqc2Rldiwgc3RydWN0IGFsdWFfcG9ydF9ncm91cCAqcGcpDQo+ID4gPiAgCXJl
-dHZhbCA9IHN1Ym1pdF9ydHBnKHNkZXYsIGJ1ZmYsIGJ1ZmZsZW4sICZzZW5zZV9oZHIsIHBnLT5m
-bGFncyk7DQo+ID4gPiAgDQo+ID4gPiAgCWlmIChyZXR2YWwpIHsNCj4gPiA+ICsJCS8qDQo+ID4g
-PiArCQkgKiBJZiB0aGUgdGFyZ2V0IG9ubHkgc3VwcG9ydHMgYWN0aXZlL29wdGltaXplZCB0aGVy
-ZSdzDQo+ID4gPiArCQkgKiBub3QgbXVjaCB3ZSBjYW4gZG87IGl0J3Mgbm90IHRoYXQgd2UgY2Fu
-IHN3aXRjaCBwYXRocw0KPiA+ID4gKwkJICogb3Igc29tZXN1Y2guDQo+ID4gPiArCQkgKiBTbyBp
-Z25vcmUgYW55IGVycm9ycyB0byBhdm9pZCBzcHVyaW91cyBmYWlsdXJlcyBkdXJpbmcNCj4gPiA+
-ICsJCSAqIHBhdGggZmFpbG92ZXIuDQo+ID4gPiArCQkgKi8NCj4gPiA+ICsJCWlmICgocGctPnZh
-bGlkX3N0YXRlcyAmIH5UUEdTX1NVUFBPUlRfT1BUSU1JWkVEKSA9PSAwKSB7DQo+ID4gPiArCQkJ
-c2Rldl9wcmludGsoS0VSTl9JTkZPLCBzZGV2LA0KPiA+ID4gKwkJCQkgICAgIiVzOiBpZ25vcmlu
-ZyBydHBnIHJlc3VsdCAlZFxuIiwNCj4gPiA+ICsJCQkJICAgIEFMVUFfREhfTkFNRSwgcmV0dmFs
-KTsNCj4gPiA+ICsJCQlrZnJlZShidWZmKTsNCj4gPiA+ICsJCQlyZXR1cm4gU0NTSV9ESF9PSzsN
-Cj4gPiA+ICsJCX0NCj4gPiANCj4gPiBIZWxsbyBIYW5uZXMsDQo+ID4gDQo+ID4gU29ycnkgYnV0
-IHRoaXMgY2hhbmdlIGxvb2tzIHdlaXJkIHRvIG1lLiBJZiBhbiBSVFBHIGZhaWxzLCBzaG91bGRu
-J3QNCj4gPiBhbHVhX3J0cGcoKSByZXR1cm4gU0NTSV9ESF9JTyBpbmRlcGVuZGVudCBvZiB3aGF0
-IEFMVUEgc3RhdGVzIHRoZSB0YXJnZXQNCj4gPiBzdXBwb3J0cz8gQXJlIHlvdSBwZXJoYXBzIHRy
-eWluZyB0byBpbXBsZW1lbnQgYSB3b3JrLWFyb3VuZCBmb3IgYW4gYXJyYXkNCj4gPiB0aGF0IGRv
-ZXMgbm90IHJlc3BvbmQgdG8gUlRQRyBkdXJpbmcgcGF0aCB0cmFuc2l0aW9ucz8NCj4gPiANCj4g
-DQo+IFllcywgcHJlY2lzZWx5Lg0KPiANCj4gVGhpbmcgaXM6IGlmIGFuIGFycmF5IGlzIG9ubHkg
-c3VwcG9ydGluZyBhY3RpdmUvb3B0aW1pemVkIHRoZSBlbnRpcmUNCj4gZGV2aWNlLWhhbmRsZXIg
-c3R1ZmYgaXMgYmFzaWNhbGx5IGEgbm8tb3AgYXMgd2UgY2FuJ3Qgc3dpdGNoIHBhdGhzIGFueXdh
-eS4NCj4gU28gaXQgZG9lc24ndCByZWFsbHkgbWF0dGVyIGlmIHRoZSBSVFBHIGZhaWxzOyBpbiBm
-YWN0LCB3ZSBjb3VsZCBqdXN0DQo+IHNob3J0LWNpcmN1aXQgdGhlIGVudGlyZSBsb2dpYy4gSSBk
-aWQgbm90IGRvIHRoYXQgdG8gYWxsb3cgZm9yIGEgc3RhdGUNCj4gbW9kaWZpY2F0aW9uIChpZSBh
-cnJheXMgX21pZ2h0XyBkZWNpZGUgdG8gYW5ub3VuY2UgYWRkaXRpb25hbCBzdGF0ZXMNCj4gZXZl
-bnR1YWxseSwgYW5kIG9ubHkgc3RhcnRpbmcgb2ZmIHdpdGggYWN0aXZlL29wdGltaXplZCBhcyBh
-biBpbml0aWFsDQo+IHN0YXRlIHNldCkuDQo+IA0KPiBCdXQgaWYgd2UgcmV0dXJuIFNDU0lfREhf
-SU8gaGVyZSB0aGUgbXVsdGlwYXRoIGxvZ2ljIHdpbGwgbm90IGF0dGVtcHQgdG8NCj4gc3dpdGNo
-IHBhdGhzLCBhbmQgZmFpbG92ZXIgd2lsbCBub3Qgd29yay4NCg0KSGVsbG8gSGFubmVzLA0KDQpJ
-IHdvdWxkIGFwcHJlY2lhdGUgaXQgaWYgaXQgd291bGQgYmUgbWVudGlvbmVkIG1vcmUgY2xlYXJs
-eSBpbiB0aGUgY29tbWVudA0KYWJvdmUgcGctPnZhbGlkX3N0YXRlcyAmIH5UUEdTX1NVUFBPUlRf
-T1BUSU1JWkVEIHRoYXQgdGhlIG5ld2x5IGFkZGVkIGNvZGUNCmlzIGEgd29ya2Fyb3VuZCBmb3Ig
-bm9uLXN0YW5kYXJkIGFycmF5IGJlaGF2aW9yLiBJJ20gYWZyYWlkIHRoYXQgb3RoZXJ3aXNlDQpw
-ZW9wbGUgd2hvIHdpbGwgcmVhZCB0aGF0IGNvZGUgd2lsbCBiZSBwdXp6bGVkIGFib3V0IHdoeSB0
-aGF0IGNvZGUgaGFzIGJlZW4NCmFkZGVkLg0KDQpUaGFua3MsDQoNCkJhcnQu
+T24gTW9uLCAyMDE3LTEyLTExIGF0IDIwOjEwIC0wNTAwLCBEb3VnbGFzIEdpbGJlcnQgd3JvdGU6
+DQo+IFNvbWUgb2YgbXkgZGV2ZWxvcG1lbnQgdG9vbHMgdGVuZCB0byBhZGQgc3BhY2VzIChteSBw
+cmVmZXJlbmNlKSByYXRoZXINCj4gdGhhbiB0YWJzIChrZXJuZWwgY29udmVudGlvbikuIFJ1bm5p
+bmcgdW5leHBhbmQgdG8gY2xlYW4gdGhlc2Ugc3BhY2VzDQo+IHVwIGZvdW5kIG1vcmUgb2YgdGhl
+bSB0aGFuIGNoZWNrcGF0Y2gucGwgZGlkLiBUaGVuIGNoZWNrcGF0Y2gucGwNCj4gY29tcGxhaW5l
+ZCBhYm91dCBvdGhlciBzdHlsZSB2aW9sYXRpb25zIGluIHRob3NlIG5ld2x5IHRhYmJlZCBsaW5l
+cy4NCg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAd2RjLmNv
+bT4NCg0K
