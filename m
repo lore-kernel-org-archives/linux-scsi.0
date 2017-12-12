@@ -1,51 +1,29 @@
-From: Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] NCR5380: Fix a possible sleep-in-atomic bug in NCR5380_poll_politely2
-Date: Tue, 12 Dec 2017 10:50:37 +0800
-Message-ID: <1513047037-18102-1-git-send-email-baijiaju1990@163.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: schmitzmic@gmail.com, fthain@telegraphics.com.au, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 18/45] drivers: scsi: qla2xxx: remove duplicate includes
+Date: Mon, 11 Dec 2017 21:53:04 -0500
+Message-ID: <yq14lowr71r.fsf@oracle.com>
+References: <1512580083-5750-1-git-send-email-pravin.shedge4linux@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:46922 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750759AbdLLCxP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2017 21:53:15 -0500
+In-Reply-To: <1512580083-5750-1-git-send-email-pravin.shedge4linux@gmail.com>
+        (Pravin Shedge's message of "Wed, 6 Dec 2017 22:38:03 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-
-The kernel module may sleep under a spinlock.
-The function call paths are:
-NCR5380_select (acquire the spinlock)
-  NCR5380_reselect
-    NCR5380_poll_politely
-      NCR5380_poll_politely2
-        schedule_timeout_uninterruptible --> may sleep
-
-NCR5380_abort (acquire the spinlock)
-  do_abort
-    NCR5380_poll_politely
-      NCR5380_poll_politely2
-        schedule_timeout_uninterruptible --> may sleep
-
-To fix it, schedule_timeout_uninterruptible is replaced with mdelay.
-
-This bug is found by my static analysis tool(DSAC) and checked by my code review.
+To: Pravin Shedge <pravin.shedge4linux@gmail.com>
+Cc: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
 
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
----
- drivers/scsi/NCR5380.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Pravin,
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 90ea0f5..4176aca 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -202,7 +202,7 @@ static int NCR5380_poll_politely2(struct NCR5380_hostdata *hostdata,
- 
- 	/* Repeatedly sleep for 1 ms until deadline */
- 	while (time_is_after_jiffies(deadline)) {
--		schedule_timeout_uninterruptible(1);
-+		mdelay(1);
- 		if ((NCR5380_read(reg1) & bit1) == val1)
- 			return 0;
- 		if ((NCR5380_read(reg2) & bit2) == val2)
+> These duplicate includes have been found with scripts/checkincludes.pl but
+> they have been removed manually to avoid removing false positives.
+
+Applied to 4.16/scsi-queue. Thank you!
+
 -- 
-1.7.9.5
+Martin K. Petersen	Oracle Linux Engineering
