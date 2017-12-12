@@ -1,42 +1,40 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [GIT PULL] SCSI fixes for 4.15-rc3
-Date: Tue, 12 Dec 2017 09:16:16 -0800
-Message-ID: <CA+55aFy8hepLBW9Zvfk4MgibG4eHF5qkmon+2Zs6KWLQfFH-fg@mail.gmail.com>
+Date: Tue, 12 Dec 2017 12:22:44 -0500
+Message-ID: <yq1indbq2sb.fsf@oracle.com>
 References: <1513095686.3110.9.camel@HansenPartnership.com>
+        <CA+55aFy8hepLBW9Zvfk4MgibG4eHF5qkmon+2Zs6KWLQfFH-fg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1513095686.3110.9.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:52254 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751542AbdLLR1z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2017 12:27:55 -0500
+In-Reply-To: <CA+55aFy8hepLBW9Zvfk4MgibG4eHF5qkmon+2Zs6KWLQfFH-fg@mail.gmail.com>
+        (Linus Torvalds's message of "Tue, 12 Dec 2017 09:16:16 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Tue, Dec 12, 2017 at 8:21 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
+
+Linus,
+
+> This is utter shite, and doesn't even compile cleanly.
 >
-> The most important one is the bfa fix because it's easy to oops the
-> kernel with this driver, a regression in the new timespec conversion in
-> aacraid and a regression in the Fibre Channel ELS handling patch.  The
-> other three are a theoretical problem with termination in the
-> vendor/host matching code and a use after free in lpfc.
+> Sure, it's "just" a warning, and the code works. But no, I'm not
+> pulling crap like this. If you save a pointer in an integer
+> "hostdata[0]" field, then you damn well do the proper casts or helper
+> functions or something, you don't just ignore the compiler when it
+> very reasonably warns about it.
+>
+> What the hell is going on? Nobody compiled this stuff at all? Or
+> nobody cares about new build warnings?
 
-No, this is just complete garbage.
+Arnd and Johannes fixed this up right away:
 
-> Johannes Thumshirn (1):
->       scsi: bfa: fix access to bfad_im_port_s
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=fixes&id=45349821ab3a8d378b8f37e52c6fe1aa1b870c47
 
-This is utter shite, and doesn't even compile cleanly.
-
-Sure, it's "just" a warning, and the code works. But no, I'm not
-pulling crap like this. If you save a pointer in an integer
-"hostdata[0]" field, then you damn well do the proper casts or helper
-functions or something, you don't just ignore the compiler when it
-very reasonably warns about it.
-
-What the hell is going on? Nobody compiled this stuff at all? Or
-nobody cares about new build warnings?
-
-That is not acceptable.
-
-                          Linus
+-- 
+Martin K. Petersen	Oracle Linux Engineering
