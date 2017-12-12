@@ -1,44 +1,81 @@
-From: Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] esas2r: Fix a possible sleep-in-atomic bug in esas2r_wait_request
-Date: Tue, 12 Dec 2017 16:27:57 +0800
-Message-ID: <1513067277-23126-1-git-send-email-baijiaju1990@163.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linuxdrivers@attotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 4/4] sd: use async_probe cookie to avoid deadlocks
+Date: Tue, 12 Dec 2017 09:57:52 +0100
+Message-ID: <1513069072-32514-5-git-send-email-hare@suse.de>
+References: <1513069072-32514-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:46996 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752152AbdLLI55 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Dec 2017 03:57:57 -0500
+In-Reply-To: <1513069072-32514-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The driver may sleep in the interrupt handler.
-The function call path is:
-esas2r_adapter_tasklet (interrupt handler)
-  esas2r_do_tasklet_tasks
-    esas2r_handle_chip_rst_during_tasklet
-      esas2r_init_adapter_hw
-        esas2r_init_msgs
-          esas2r_wait_request
-            schedule_timeout_interruptible --> may sleep
+With the current design we're waiting for all async probes to
+finish when removing any sd device.
+This might lead to a livelock where the 'remove' call is blocking
+for any probe calls to finish, and the probe calls are waiting for
+a response, which will never be processes as the thread handling
+the responses is waiting for the remove call to finish.
+Which is completely pointless as we only _really_ care for the
+probe on _this_ device to be completed; any other probing can
+happily continue for all we care.
+So save the async probing cookie in the structure and only wait
+if this specific probe is still active.
 
-To fix it, schedule_timeout_uninterruptible is replaced with mdelay.
-
-This bug is found by my static analysis tool(DSAC) and checked by my code review.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/esas2r/esas2r_main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sd.c | 6 ++++--
+ drivers/scsi/sd.h | 3 +++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index 4eb1430..4cd8f79 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -1307,7 +1307,7 @@ void esas2r_wait_request(struct esas2r_adapter *a, struct esas2r_request *rq)
- 		if (rq->req_stat != RS_STARTED)
- 			break;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index abbab17..7bf20ca 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3416,7 +3416,8 @@ static int sd_probe(struct device *dev)
+ 	dev_set_drvdata(dev, sdkp);
  
--		schedule_timeout_interruptible(msecs_to_jiffies(100));
-+		mdelay(100);
+ 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
+-	async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
++	sdkp->async_probe = async_schedule_domain(sd_probe_async, sdkp,
++						  &scsi_sd_probe_domain);
  
- 		if ((jiffies_to_msecs(jiffies) - starttime) > timeout) {
- 			esas2r_hdebug("request TMO");
+ 	return 0;
+ 
+@@ -3454,7 +3455,8 @@ static int sd_remove(struct device *dev)
+ 	scsi_autopm_get_device(sdkp->device);
+ 
+ 	async_synchronize_full_domain(&scsi_sd_pm_domain);
+-	async_synchronize_full_domain(&scsi_sd_probe_domain);
++	async_synchronize_cookie_domain(sdkp->async_probe,
++					&scsi_sd_probe_domain);
+ 	device_del(&sdkp->dev);
+ 	del_gendisk(sdkp->disk);
+ 	sd_shutdown(dev);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 320de75..d8aff29 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -2,6 +2,8 @@
+ #ifndef _SCSI_DISK_H
+ #define _SCSI_DISK_H
+ 
++#include <linux/async.h>
++
+ /*
+  * More than enough for everybody ;)  The huge number of majors
+  * is a leftover from 16bit dev_t days, we don't really need that
+@@ -73,6 +75,7 @@ struct scsi_disk {
+ 	struct device	dev;
+ 	struct gendisk	*disk;
+ 	struct opal_dev *opal_dev;
++	async_cookie_t  async_probe;
+ #ifdef CONFIG_BLK_DEV_ZONED
+ 	unsigned int	nr_zones;
+ 	unsigned int	zone_blocks;
 -- 
-1.7.9.5
+1.8.5.6
