@@ -1,34 +1,29 @@
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [BUG] drivers/scsi/dpt_i2o: a possible sleep-in-atomic bug in
- adpt_i2o_status_get
-Date: Tue, 12 Dec 2017 10:20:25 +0800
-Message-ID: <267ca600-93dd-3f1f-8f63-3362b1495524@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: bfa: convert to strlcpy/strlcat
+Date: Mon, 11 Dec 2017 21:32:24 -0500
+Message-ID: <yq1374gsmkn.fsf@oracle.com>
+References: <20171204144814.385412-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: aacraid@adaptec.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:35866 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750759AbdLLChs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2017 21:37:48 -0500
+In-Reply-To: <20171204144814.385412-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Mon, 4 Dec 2017 15:47:00 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-According to drivers/scsi/dpt_i2o.c, the kernel module may sleep under a 
-spinlock.
-The function call paths are:
-adpt_reset (acquire the spinlock)
-   __adpt_reset
-     adpt_hba_reset
-       adpt_i2o_activate_hba
-         adpt_i2o_status_get
-           dma_alloc_coherent(GFP_KERNEL) --> may sleep
-           schedule_timeout_uninterruptible --> may sleep
-
-A possible fixing is to replace "schedule_timeout_uninterruptible" with 
-"mdelay" and replace "GFP_KERNEL" with "GFP_ATOMIC".
-If this fixing is correct, I can send a patch.
-This possible bug is found by my static analysis tool (DSAC) and checked 
-by my code review.
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Kees Cook <keescook@chromium.org>, Benjamin Poirier <bpoirier@suse.com>, Rasesh Mody <rasesh.mody@cavium.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Thanks,
-Jia-Ju Bai
+Arnd,
+
+> The bfa driver has a number of real issues with string termination
+> that gcc-8 now points out:
+
+Applied to 4.16/scsi-queue. Thank you!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
