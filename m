@@ -1,41 +1,170 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi_dh_alua: skip RTPG for devices only supporting
- active/optimized
-Date: Tue, 12 Dec 2017 00:00:30 +0000
-Message-ID: <1513036829.2747.36.camel@wdc.com>
-References: <1512728048-84729-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH v2] Use blist_flags_t consistently
+Date: Mon, 11 Dec 2017 16:08:03 -0800
+Message-ID: <20171212000803.5989-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:4178 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751289AbdLLAAg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2017 19:00:36 -0500
-In-Reply-To: <1512728048-84729-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <2B20C786CB074A45A664BCF8BAC5B0CD@namprd04.prod.outlook.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:44070 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751657AbdLLAIE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2017 19:08:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-T24gRnJpLCAyMDE3LTEyLTA4IGF0IDExOjE0ICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IEBAIC01NDEsNiArNTQ0LDIwIEBAIHN0YXRpYyBpbnQgYWx1YV9ydHBnKHN0cnVjdCBzY3Np
-X2RldmljZSAqc2Rldiwgc3RydWN0IGFsdWFfcG9ydF9ncm91cCAqcGcpDQo+ICAJcmV0dmFsID0g
-c3VibWl0X3J0cGcoc2RldiwgYnVmZiwgYnVmZmxlbiwgJnNlbnNlX2hkciwgcGctPmZsYWdzKTsN
-Cj4gIA0KPiAgCWlmIChyZXR2YWwpIHsNCj4gKwkJLyoNCj4gKwkJICogSWYgdGhlIHRhcmdldCBv
-bmx5IHN1cHBvcnRzIGFjdGl2ZS9vcHRpbWl6ZWQgdGhlcmUncw0KPiArCQkgKiBub3QgbXVjaCB3
-ZSBjYW4gZG87IGl0J3Mgbm90IHRoYXQgd2UgY2FuIHN3aXRjaCBwYXRocw0KPiArCQkgKiBvciBz
-b21lc3VjaC4NCj4gKwkJICogU28gaWdub3JlIGFueSBlcnJvcnMgdG8gYXZvaWQgc3B1cmlvdXMg
-ZmFpbHVyZXMgZHVyaW5nDQo+ICsJCSAqIHBhdGggZmFpbG92ZXIuDQo+ICsJCSAqLw0KPiArCQlp
-ZiAoKHBnLT52YWxpZF9zdGF0ZXMgJiB+VFBHU19TVVBQT1JUX09QVElNSVpFRCkgPT0gMCkgew0K
-PiArCQkJc2Rldl9wcmludGsoS0VSTl9JTkZPLCBzZGV2LA0KPiArCQkJCSAgICAiJXM6IGlnbm9y
-aW5nIHJ0cGcgcmVzdWx0ICVkXG4iLA0KPiArCQkJCSAgICBBTFVBX0RIX05BTUUsIHJldHZhbCk7
-DQo+ICsJCQlrZnJlZShidWZmKTsNCj4gKwkJCXJldHVybiBTQ1NJX0RIX09LOw0KPiArCQl9DQoN
-CkhlbGxvIEhhbm5lcywNCg0KU29ycnkgYnV0IHRoaXMgY2hhbmdlIGxvb2tzIHdlaXJkIHRvIG1l
-LiBJZiBhbiBSVFBHIGZhaWxzLCBzaG91bGRuJ3QNCmFsdWFfcnRwZygpIHJldHVybiBTQ1NJX0RI
-X0lPIGluZGVwZW5kZW50IG9mIHdoYXQgQUxVQSBzdGF0ZXMgdGhlIHRhcmdldA0Kc3VwcG9ydHM/
-IEFyZSB5b3UgcGVyaGFwcyB0cnlpbmcgdG8gaW1wbGVtZW50IGEgd29yay1hcm91bmQgZm9yIGFu
-IGFycmF5DQp0aGF0IGRvZXMgbm90IHJlc3BvbmQgdG8gUlRQRyBkdXJpbmcgcGF0aCB0cmFuc2l0
-aW9ucz8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+Use the type blist_flags_t for all variables that represent blacklist
+flags. Additionally, suppress recently introduced sparse warnings related
+to blacklist flags.
+
+Fixes: commit c6b54164508a ("scsi: Use 'blist_flags_t' for scsi_devinfo flags")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+---
+Changes compared to v1:
+- Changed (__force u32) casts into (__force unsigned int).
+- Left out one cast, namely the one in front of scsi_default_dev_flags.
+
+ drivers/scsi/scsi_devinfo.c       |  6 ++----
+ drivers/scsi/scsi_scan.c          | 13 +++++++------
+ drivers/scsi/scsi_sysfs.c         |  5 +++--
+ drivers/scsi/scsi_transport_spi.c | 12 +++++++-----
+ 4 files changed, 19 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index a15eb4d15114..700988e2769c 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -382,10 +382,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+ 			    model, compatible);
+ 
+ 	if (strflags)
+-		devinfo->flags = simple_strtoul(strflags, NULL, 0);
+-	else
+-		devinfo->flags = flags;
+-
++		flags = (__force blist_flags_t)simple_strtoul(strflags, NULL, 0);
++	devinfo->flags = flags;
+ 	devinfo->compatible = compatible;
+ 
+ 	if (compatible)
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index be5e919db0e8..0880d975eed3 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -770,7 +770,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+  *     SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
+  **/
+ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+-		int *bflags, int async)
++		blist_flags_t *bflags, int async)
+ {
+ 	int ret;
+ 
+@@ -1049,14 +1049,15 @@ static unsigned char *scsi_inq_str(unsigned char *buf, unsigned char *inq,
+  *   - SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
+  **/
+ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+-				  u64 lun, int *bflagsp,
++				  u64 lun, blist_flags_t *bflagsp,
+ 				  struct scsi_device **sdevp,
+ 				  enum scsi_scan_mode rescan,
+ 				  void *hostdata)
+ {
+ 	struct scsi_device *sdev;
+ 	unsigned char *result;
+-	int bflags, res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
++	blist_flags_t bflags;
++	int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 
+ 	/*
+@@ -1201,7 +1202,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+  *     Modifies sdevscan->lun.
+  **/
+ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+-				     int bflags, int scsi_level,
++				     blist_flags_t bflags, int scsi_level,
+ 				     enum scsi_scan_mode rescan)
+ {
+ 	uint max_dev_lun;
+@@ -1292,7 +1293,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+  *     0: scan completed (or no memory, so further scanning is futile)
+  *     1: could not scan with REPORT LUN
+  **/
+-static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
++static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflags,
+ 				enum scsi_scan_mode rescan)
+ {
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+@@ -1538,7 +1539,7 @@ static void __scsi_scan_target(struct device *parent, unsigned int channel,
+ 		unsigned int id, u64 lun, enum scsi_scan_mode rescan)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+-	int bflags = 0;
++	blist_flags_t bflags = 0;
+ 	int res;
+ 	struct scsi_target *starget;
+ 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index cbc0fe2c5485..907acd877ef8 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -967,7 +967,8 @@ sdev_show_wwid(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+ 
+-#define BLIST_FLAG_NAME(name) [ilog2(BLIST_##name)] = #name
++#define BLIST_FLAG_NAME(name)					\
++	[ilog2((__force unsigned int)BLIST_##name)] = #name
+ static const char *const sdev_bflags_name[] = {
+ #include "scsi_devinfo_tbl.c"
+ };
+@@ -984,7 +985,7 @@ sdev_show_blacklist(struct device *dev, struct device_attribute *attr,
+ 	for (i = 0; i < sizeof(sdev->sdev_bflags) * BITS_PER_BYTE; i++) {
+ 		const char *name = NULL;
+ 
+-		if (!(sdev->sdev_bflags & BIT(i)))
++		if (!((__force unsigned int)sdev->sdev_bflags & BIT(i)))
+ 			continue;
+ 		if (i < ARRAY_SIZE(sdev_bflags_name) && sdev_bflags_name[i])
+ 			name = sdev_bflags_name[i];
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index d0219e36080c..10ebb213ddb3 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -50,14 +50,14 @@
+ 
+ /* Our blacklist flags */
+ enum {
+-	SPI_BLIST_NOIUS = 0x1,
++	SPI_BLIST_NOIUS = (__force blist_flags_t)0x1,
+ };
+ 
+ /* blacklist table, modelled on scsi_devinfo.c */
+ static struct {
+ 	char *vendor;
+ 	char *model;
+-	unsigned flags;
++	blist_flags_t flags;
+ } spi_static_device_list[] __initdata = {
+ 	{"HP", "Ultrium 3-SCSI", SPI_BLIST_NOIUS },
+ 	{"IBM", "ULTRIUM-TD3", SPI_BLIST_NOIUS },
+@@ -221,9 +221,11 @@ static int spi_device_configure(struct transport_container *tc,
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	struct scsi_target *starget = sdev->sdev_target;
+-	unsigned bflags = scsi_get_device_flags_keyed(sdev, &sdev->inquiry[8],
+-						      &sdev->inquiry[16],
+-						      SCSI_DEVINFO_SPI);
++	blist_flags_t bflags;
++
++	bflags = scsi_get_device_flags_keyed(sdev, &sdev->inquiry[8],
++					     &sdev->inquiry[16],
++					     SCSI_DEVINFO_SPI);
+ 
+ 	/* Populate the target capability fields with the values
+ 	 * gleaned from the device inquiry */
+-- 
+2.15.1
