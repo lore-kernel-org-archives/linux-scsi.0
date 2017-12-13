@@ -1,88 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_dh_alua: skip RTPG for devices only supporting
- active/optimized
-Date: Wed, 13 Dec 2017 10:14:32 +0100
-Message-ID: <ae1e8739-d9e6-c370-dc7e-e4075505b288@suse.de>
-References: <1512728048-84729-1-git-send-email-hare@suse.de>
- <1513036829.2747.36.camel@wdc.com>
- <b4b9333f-090f-0f78-a208-a07b061b38fe@suse.de>
- <1513103148.2999.30.camel@wdc.com>
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH 2/2] tests/scsi/0001: Regression test for SCSI device
+ blacklisting
+Date: Wed, 13 Dec 2017 01:29:39 -0800
+Message-ID: <20171213092939.GA2842@vader>
+References: <1502275806-27972-1-git-send-email-hare@suse.de>
+ <1502275806-27972-2-git-send-email-hare@suse.de>
+ <20170816060049.GA6640@vader>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59152 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751863AbdLMJOf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Dec 2017 04:14:35 -0500
-In-Reply-To: <1513103148.2999.30.camel@wdc.com>
-Content-Language: en-US
+Received: from mail-pg0-f52.google.com ([74.125.83.52]:41048 "EHLO
+        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751614AbdLMJ3n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Dec 2017 04:29:43 -0500
+Received: by mail-pg0-f52.google.com with SMTP id o2so1010827pgc.8
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Dec 2017 01:29:43 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20170816060049.GA6640@vader>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Omar Sandoval <osandov@fb.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.com>
 
-On 12/12/2017 07:25 PM, Bart Van Assche wrote:
-> On Tue, 2017-12-12 at 08:01 +0100, Hannes Reinecke wrote:
->> On 12/12/2017 01:00 AM, Bart Van Assche wrote:
->>> On Fri, 2017-12-08 at 11:14 +0100, Hannes Reinecke wrote:
->>>> @@ -541,6 +544,20 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
->>>>  	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
->>>>  
->>>>  	if (retval) {
->>>> +		/*
->>>> +		 * If the target only supports active/optimized there's
->>>> +		 * not much we can do; it's not that we can switch paths
->>>> +		 * or somesuch.
->>>> +		 * So ignore any errors to avoid spurious failures during
->>>> +		 * path failover.
->>>> +		 */
->>>> +		if ((pg->valid_states & ~TPGS_SUPPORT_OPTIMIZED) == 0) {
->>>> +			sdev_printk(KERN_INFO, sdev,
->>>> +				    "%s: ignoring rtpg result %d\n",
->>>> +				    ALUA_DH_NAME, retval);
->>>> +			kfree(buff);
->>>> +			return SCSI_DH_OK;
->>>> +		}
->>>
->>> Hello Hannes,
->>>
->>> Sorry but this change looks weird to me. If an RTPG fails, shouldn't
->>> alua_rtpg() return SCSI_DH_IO independent of what ALUA states the target
->>> supports? Are you perhaps trying to implement a work-around for an array
->>> that does not respond to RTPG during path transitions?
->>>
->>
->> Yes, precisely.
->>
->> Thing is: if an array is only supporting active/optimized the entire
->> device-handler stuff is basically a no-op as we can't switch paths anyway.
->> So it doesn't really matter if the RTPG fails; in fact, we could just
->> short-circuit the entire logic. I did not do that to allow for a state
->> modification (ie arrays _might_ decide to announce additional states
->> eventually, and only starting off with active/optimized as an initial
->> state set).
->>
->> But if we return SCSI_DH_IO here the multipath logic will not attempt to
->> switch paths, and failover will not work.
+On Tue, Aug 15, 2017 at 11:00:49PM -0700, Omar Sandoval wrote:
+> On Wed, Aug 09, 2017 at 12:50:06PM +0200, Hannes Reinecke wrote:
+> > SCSI device blacklisting seems to be a tricky subject, with
+> > lots of potential for messing up the selection algorithm.
+> > This adds a test for catching regressions here.
 > 
-> Hello Hannes,
-> 
-> I would appreciate it if it would be mentioned more clearly in the comment
-> above pg->valid_states & ~TPGS_SUPPORT_OPTIMIZED that the newly added code
-> is a workaround for non-standard array behavior. I'm afraid that otherwise
-> people who will read that code will be puzzled about why that code has been
-> added.
-> 
-Okay, not a problem.
-Will be sending out a v2.
+> I'm waiting to see how the patches end up before applying this, but I'm
+> glad to see this test :) A few comments below. I've addressed most of
+> them and pushed it to https://github.com/osandov/blktests/tree/scsi-blacklist,
+> but the golden output needs to be updated for v3 of your patches. Could
+> you modify the patch in my branch and resend? Thanks for adding tests!
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Hannes, can you resend these tests now that your patches are in? Let me
+know if you need any help. Thanks!
