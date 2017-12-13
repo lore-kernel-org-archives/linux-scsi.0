@@ -1,81 +1,63 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 1/4] block: check for GENHD_FL_UP in del_gendisk()
-Date: Wed, 13 Dec 2017 08:36:54 +0100
-Message-ID: <b06f503b-c420-fe32-5464-eaaa52732340@suse.com>
-References: <1513069072-32514-1-git-send-email-hare@suse.de>
- <1513069072-32514-2-git-send-email-hare@suse.de>
- <1513097821.2999.12.camel@sandisk.com>
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: Re: [BUG] scsi/qla2xxx: a possible sleep-in-atomic bug in qlt_get_tag
+Date: Wed, 13 Dec 2017 15:38:20 +0800
+Message-ID: <e6dc47be-50ef-a0dd-a07b-95e60a3103a1@gmail.com>
+References: <0363371c-db1c-169f-df5f-ca15b3839e41@gmail.com>
+ <1513140121.3110.78.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:56690 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751098AbdLMHg5 (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Wed, 13 Dec 2017 02:36:57 -0500
-In-Reply-To: <1513097821.2999.12.camel@sandisk.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1513140121.3110.78.camel@linux.vnet.ibm.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, qla2xxx-upstream@qlogic.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 12/12/2017 05:57 PM, Bart Van Assche wrote:
-> On Tue, 2017-12-12 at 09:57 +0100, Hannes Reinecke wrote:
->> From: Hannes Reinecke <hare@suse.com>
+
+On 2017/12/13 12:42, James Bottomley wrote:
+> On Wed, 2017-12-13 at 11:18 +0800, Jia-Ju Bai wrote:
+>> The driver may sleep under a spinlock.
+>> The function call paths are:
+>> qlt_handle_abts_recv_work (acquire the spinlock)
+>>     qlt_response_pkt_all_vps
+>>       qlt_response_pkt
+>>         qlt_handle_cmd_for_atio
+>>           qlt_get_tag
+>>             percpu_ida_alloc --> may sleep
 >>
->> When a device is probed asynchronously del_gendisk() might be called
->> before the async probing was run, causing del_gendisk() to crash
->> due to uninitialized sysfs objects.
+>> qla82xx_msix_rsp_q (acquire the spinlock)
+>>     qla24xx_process_response_queue
+>>       qlt_handle_abts_recv
+>>         qlt_response_pkt_all_vps
+>>           qlt_response_pkt
+>>             qlt_handle_cmd_for_atio
+>>               qlt_get_tag
+>>                 percpu_ida_alloc --> may sleep-in-atomic
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>  block/genhd.c | 3 +++
->>  1 file changed, 3 insertions(+)
+>> qla24xx_intr_handler (acquire the spinlock)
+>>     qla24xx_process_response_queue
+>>       qlt_handle_abts_recv
+>>         qlt_response_pkt
+>>           qlt_handle_cmd_for_atio
+>>             qlt_get_tag
+>>               percpu_ida_alloc --> may sleep
 >>
->> diff --git a/block/genhd.c b/block/genhd.c
->> index c2223f1..cc40d95 100644
->> --- a/block/genhd.c
->> +++ b/block/genhd.c
->> @@ -697,6 +697,9 @@ void del_gendisk(struct gendisk *disk)
->>  	struct disk_part_iter piter;
->>  	struct hd_struct *part;
->>  
->> +	if (!(disk->flags & GENHD_FL_UP))
->> +		return;
->> +
->>  	blk_integrity_del(disk);
->>  	disk_del_events(disk);
-> 
-> Hello Hannes,
-> 
-> Thank you for having published your approach for increasing disk probing
-> concurrency. Your approach looks interesting to me. However, I don't think
-> that patches 1/4..3/4 are sufficient to avoid races between e.g.
-> device_add_disk() and del_gendisk(). As far as I know no locks are held
-> around the device_add_disk() and del_gendisk() calls. Does that mean that
-> del_gendisk() can call e.g. blk_integrity_del() before device_add_disk() has
-> called blk_integrity_add()?
-> 
-In principle, yes.
-However, the overall idea here is that  device_add_disk() and
-del_gendisk() are enclosed within upper layer procedures, which
-themselves provide additional locking.
-In our case the sd driver provided synchronisation guarantees ensuring
-that device_add_disk() and del_gendisk() doesn't run concurrently.
+>> I do not find a good way to fix it, so I only report.
+>> This possible bug is found by my static analysis tool (DSAC) and
+>> checked by my code review.
+> The report is incorrect: percpu_ida_alloc with state==TASK_RUNNING is
+> atomic (and interrupt) safe which appears to be the case here.
+>
+> James
+>
 
-if one is really concerned we could convert disk->flags to a bitmask,
-and use atomic bitmask modification; that should avoid any concurrency
-issues.
-However, I'm not sure if it's worth it.
+Thanks for your reply :)
+I have checked the definition of percpu_ida_alloc, and I think you are 
+right.
+Sorry for my incorrect bug report.
 
-Cheers,
 
-Hannes
--- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Thanks,
+Jia-Ju Bai
