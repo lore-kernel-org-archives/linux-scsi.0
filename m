@@ -1,38 +1,60 @@
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH 2/2] tests/scsi/0001: Regression test for SCSI device
- blacklisting
-Date: Wed, 13 Dec 2017 01:29:39 -0800
-Message-ID: <20171213092939.GA2842@vader>
-References: <1502275806-27972-1-git-send-email-hare@suse.de>
- <1502275806-27972-2-git-send-email-hare@suse.de>
- <20170816060049.GA6640@vader>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/9] lpfc: Fix random heartbeat timeouts during heavy IO
+Date: Wed, 13 Dec 2017 12:33:03 +0100
+Message-ID: <30c3b4cf-4860-61e1-ec56-c8897b2e82dd@suse.de>
+References: <20171209011811.23421-1-jsmart2021@gmail.com>
+ <20171209011811.23421-2-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f52.google.com ([74.125.83.52]:41048 "EHLO
-        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751614AbdLMJ3n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Dec 2017 04:29:43 -0500
-Received: by mail-pg0-f52.google.com with SMTP id o2so1010827pgc.8
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Dec 2017 01:29:43 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20170816060049.GA6640@vader>
+Received: from mx2.suse.de ([195.135.220.15]:44561 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752584AbdLMLdF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Dec 2017 06:33:05 -0500
+In-Reply-To: <20171209011811.23421-2-jsmart2021@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Omar Sandoval <osandov@fb.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.com>
+To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Tue, Aug 15, 2017 at 11:00:49PM -0700, Omar Sandoval wrote:
-> On Wed, Aug 09, 2017 at 12:50:06PM +0200, Hannes Reinecke wrote:
-> > SCSI device blacklisting seems to be a tricky subject, with
-> > lots of potential for messing up the selection algorithm.
-> > This adds a test for catching regressions here.
+On 12/09/2017 02:18 AM, James Smart wrote:
+> NVME targets appear to randomly disconnect from the initiator
+> when running heavy IO.
 > 
-> I'm waiting to see how the patches end up before applying this, but I'm
-> glad to see this test :) A few comments below. I've addressed most of
-> them and pushed it to https://github.com/osandov/blktests/tree/scsi-blacklist,
-> but the golden output needs to be updated for v3 of your patches. Could
-> you modify the patch in my branch and resend? Thanks for adding tests!
+> The error is due to the host aggregate (across all controllers)
+> io load was beyond the maximum exchange count for nvme on the
+> adapter. The driver was properly returning a resource busy status,
+> but the io load was so great heartbeat commands would be bounced
+> and not have a successful retry within the fuzz amount for the
+> nvme heartbeat (yes, a very high io load!). Thus the target was
+> terminating the controller due to a keep alive failure.
+> 
+> Resolve by reserving a few exchanges (by counters) which can be
+> used when the adapter is out of normal exchanges and the command
+> is a NVME heartbeat command. As counters are used, while the
+> reserved command is outstanding, as soon as any other exchange
+> completes, the counters are adjusted and the reserved count is
+> replenished. The heartbeat completes execution in a normal fashion.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc.h      |  2 ++
+>  drivers/scsi/lpfc/lpfc_init.c | 16 ++++++++++-
+>  drivers/scsi/lpfc/lpfc_nvme.c | 66 +++++++++++++++++++++++++++++--------------
+>  drivers/scsi/lpfc/lpfc_nvme.h |  1 +
+>  4 files changed, 63 insertions(+), 22 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Hannes, can you resend these tests now that your patches are in? Let me
-know if you need any help. Thanks!
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
