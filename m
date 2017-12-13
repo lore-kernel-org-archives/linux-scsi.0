@@ -1,63 +1,221 @@
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: Re: [BUG] scsi/qla2xxx: a possible sleep-in-atomic bug in qlt_get_tag
-Date: Wed, 13 Dec 2017 15:38:20 +0800
-Message-ID: <e6dc47be-50ef-a0dd-a07b-95e60a3103a1@gmail.com>
-References: <0363371c-db1c-169f-df5f-ca15b3839e41@gmail.com>
- <1513140121.3110.78.camel@linux.vnet.ibm.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: [PATCH 5/4] scsi: arcmsr: simplify arcmsr_request_device_map
+ routine
+Date: Wed, 13 Dec 2017 16:33:36 +0800
+Message-ID: <1513154016.8691.9.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1513140121.3110.78.camel@linux.vnet.ibm.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, qla2xxx-upstream@qlogic.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
+From: Ching Huang <ching2048@areca.com.tw>
 
-On 2017/12/13 12:42, James Bottomley wrote:
-> On Wed, 2017-12-13 at 11:18 +0800, Jia-Ju Bai wrote:
->> The driver may sleep under a spinlock.
->> The function call paths are:
->> qlt_handle_abts_recv_work (acquire the spinlock)
->>     qlt_response_pkt_all_vps
->>       qlt_response_pkt
->>         qlt_handle_cmd_for_atio
->>           qlt_get_tag
->>             percpu_ida_alloc --> may sleep
->>
->> qla82xx_msix_rsp_q (acquire the spinlock)
->>     qla24xx_process_response_queue
->>       qlt_handle_abts_recv
->>         qlt_response_pkt_all_vps
->>           qlt_response_pkt
->>             qlt_handle_cmd_for_atio
->>               qlt_get_tag
->>                 percpu_ida_alloc --> may sleep-in-atomic
->>
->> qla24xx_intr_handler (acquire the spinlock)
->>     qla24xx_process_response_queue
->>       qlt_handle_abts_recv
->>         qlt_response_pkt
->>           qlt_handle_cmd_for_atio
->>             qlt_get_tag
->>               percpu_ida_alloc --> may sleep
->>
->> I do not find a good way to fix it, so I only report.
->> This possible bug is found by my static analysis tool (DSAC) and
->> checked by my code review.
-> The report is incorrect: percpu_ida_alloc with state==TASK_RUNNING is
-> atomic (and interrupt) safe which appears to be the case here.
->
-> James
->
+simplify arcmsr_request_device_map routine
 
-Thanks for your reply :)
-I have checked the definition of percpu_ida_alloc, and I think you are 
-right.
-Sorry for my incorrect bug report.
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+---
 
-
-Thanks,
-Jia-Ju Bai
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 95c9f08..4774559 100755
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -122,9 +122,6 @@ static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);
+ static void arcmsr_hbaA_flush_cache(struct AdapterControlBlock *acb);
+ static void arcmsr_hbaB_flush_cache(struct AdapterControlBlock *acb);
+ static void arcmsr_request_device_map(struct timer_list *t);
+-static void arcmsr_hbaA_request_device_map(struct AdapterControlBlock *acb);
+-static void arcmsr_hbaB_request_device_map(struct AdapterControlBlock *acb);
+-static void arcmsr_hbaC_request_device_map(struct AdapterControlBlock *acb);
+ static void arcmsr_message_isr_bh_fn(struct work_struct *work);
+ static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb);
+ static void arcmsr_start_adapter_bgrb(struct AdapterControlBlock *acb);
+@@ -3789,113 +3786,12 @@ static void arcmsr_wait_firmware_ready(struct AdapterControlBlock *acb)
+ 	}
+ }
+ 
+-static void arcmsr_hbaA_request_device_map(struct AdapterControlBlock *acb)
+-{
+-	struct MessageUnit_A __iomem *reg = acb->pmuA;
+-	if (unlikely(atomic_read(&acb->rq_map_token) == 0) || ((acb->acb_flags & ACB_F_BUS_RESET) != 0 ) || ((acb->acb_flags & ACB_F_ABORT) != 0 )){
+-		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-		return;
+-	} else {
+-		acb->fw_flag = FW_NORMAL;
+-		if (atomic_read(&acb->ante_token_value) == atomic_read(&acb->rq_map_token)){
+-			atomic_set(&acb->rq_map_token, 16);
+-		}
+-		atomic_set(&acb->ante_token_value, atomic_read(&acb->rq_map_token));
+-		if (atomic_dec_and_test(&acb->rq_map_token)) {
+-			mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-			return;
+-		}
+-		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
+-		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+-		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-	}
+-	return;
+-}
+-
+-static void arcmsr_hbaB_request_device_map(struct AdapterControlBlock *acb)
+-{
+-	struct MessageUnit_B *reg = acb->pmuB;
+-	if (unlikely(atomic_read(&acb->rq_map_token) == 0) || ((acb->acb_flags & ACB_F_BUS_RESET) != 0 ) || ((acb->acb_flags & ACB_F_ABORT) != 0 )){
+-		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-		return;
+-	} else {
+-		acb->fw_flag = FW_NORMAL;
+-		if (atomic_read(&acb->ante_token_value) == atomic_read(&acb->rq_map_token)) {
+-			atomic_set(&acb->rq_map_token, 16);
+-		}
+-		atomic_set(&acb->ante_token_value, atomic_read(&acb->rq_map_token));
+-		if (atomic_dec_and_test(&acb->rq_map_token)) {
+-			mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-			return;
+-		}
+-		writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell);
+-		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+-		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-	}
+-	return;
+-}
+-
+-static void arcmsr_hbaC_request_device_map(struct AdapterControlBlock *acb)
+-{
+-	struct MessageUnit_C __iomem *reg = acb->pmuC;
+-	if (unlikely(atomic_read(&acb->rq_map_token) == 0) || ((acb->acb_flags & ACB_F_BUS_RESET) != 0) || ((acb->acb_flags & ACB_F_ABORT) != 0)) {
+-		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-		return;
+-	} else {
+-		acb->fw_flag = FW_NORMAL;
+-		if (atomic_read(&acb->ante_token_value) == atomic_read(&acb->rq_map_token)) {
+-			atomic_set(&acb->rq_map_token, 16);
+-		}
+-		atomic_set(&acb->ante_token_value, atomic_read(&acb->rq_map_token));
+-		if (atomic_dec_and_test(&acb->rq_map_token)) {
+-			mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-			return;
+-		}
+-		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
+-		writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &reg->inbound_doorbell);
+-		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+-		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+-	}
+-	return;
+-}
+-
+-static void arcmsr_hbaD_request_device_map(struct AdapterControlBlock *acb)
+-{
+-	struct MessageUnit_D *reg = acb->pmuD;
+-
+-	if (unlikely(atomic_read(&acb->rq_map_token) == 0) ||
+-		((acb->acb_flags & ACB_F_BUS_RESET) != 0) ||
+-		((acb->acb_flags & ACB_F_ABORT) != 0)) {
+-		mod_timer(&acb->eternal_timer,
+-			jiffies + msecs_to_jiffies(6 * HZ));
+-	} else {
+-		acb->fw_flag = FW_NORMAL;
+-		if (atomic_read(&acb->ante_token_value) ==
+-			atomic_read(&acb->rq_map_token)) {
+-			atomic_set(&acb->rq_map_token, 16);
+-		}
+-		atomic_set(&acb->ante_token_value,
+-			atomic_read(&acb->rq_map_token));
+-		if (atomic_dec_and_test(&acb->rq_map_token)) {
+-			mod_timer(&acb->eternal_timer, jiffies +
+-				msecs_to_jiffies(6 * HZ));
+-			return;
+-		}
+-		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG,
+-			reg->inbound_msgaddr0);
+-		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+-		mod_timer(&acb->eternal_timer, jiffies +
+-			msecs_to_jiffies(6 * HZ));
+-	}
+-}
+-
+-static void arcmsr_hbaE_request_device_map(struct AdapterControlBlock *acb)
++static void arcmsr_request_device_map(struct timer_list *t)
+ {
+-	struct MessageUnit_E __iomem *reg = acb->pmuE;
+-
++	struct AdapterControlBlock *acb = from_timer(acb, t, eternal_timer);
+ 	if (unlikely(atomic_read(&acb->rq_map_token) == 0) ||
+-		((acb->acb_flags & ACB_F_BUS_RESET) != 0) ||
+-		((acb->acb_flags & ACB_F_ABORT) != 0)) {
++		(acb->acb_flags & ACB_F_BUS_RESET) ||
++		(acb->acb_flags & ACB_F_ABORT)) {
+ 		mod_timer(&acb->eternal_timer,
+ 			jiffies + msecs_to_jiffies(6 * HZ));
+ 	} else {
+@@ -3911,37 +3807,40 @@ static void arcmsr_hbaE_request_device_map(struct AdapterControlBlock *acb)
+ 				msecs_to_jiffies(6 * HZ));
+ 			return;
+ 		}
+-		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
+-		acb->out_doorbell ^= ARCMSR_HBEMU_DRV2IOP_MESSAGE_CMD_DONE;
+-		writel(acb->out_doorbell, &reg->iobound_doorbell);
+-		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
+-		mod_timer(&acb->eternal_timer, jiffies +
+-			msecs_to_jiffies(6 * HZ));
+-	}
+-}
+-
+-static void arcmsr_request_device_map(struct timer_list *t)
+-{
+-	struct AdapterControlBlock *acb = from_timer(acb, t, eternal_timer);
+-	switch (acb->adapter_type) {
++		switch (acb->adapter_type) {
+ 		case ACB_ADAPTER_TYPE_A: {
+-			arcmsr_hbaA_request_device_map(acb);
+-		}
+-		break;
++			struct MessageUnit_A __iomem *reg = acb->pmuA;
++			writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
++			break;
++			}
+ 		case ACB_ADAPTER_TYPE_B: {
+-			arcmsr_hbaB_request_device_map(acb);
+-		}
+-		break;
++			struct MessageUnit_B *reg = acb->pmuB;
++			writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell);
++			break;
++			}
+ 		case ACB_ADAPTER_TYPE_C: {
+-			arcmsr_hbaC_request_device_map(acb);
++			struct MessageUnit_C __iomem *reg = acb->pmuC;
++			writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
++			writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &reg->inbound_doorbell);
++			break;
++			}
++		case ACB_ADAPTER_TYPE_D: {
++			struct MessageUnit_D *reg = acb->pmuD;
++			writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, reg->inbound_msgaddr0);
++			break;
++			}
++		case ACB_ADAPTER_TYPE_E: {
++			struct MessageUnit_E __iomem *reg = acb->pmuE;
++			writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
++			acb->out_doorbell ^= ARCMSR_HBEMU_DRV2IOP_MESSAGE_CMD_DONE;
++			writel(acb->out_doorbell, &reg->iobound_doorbell);
++			break;
++			}
++		default:
++			return;
+ 		}
+-		break;
+-		case ACB_ADAPTER_TYPE_D:
+-			arcmsr_hbaD_request_device_map(acb);
+-		break;
+-		case ACB_ADAPTER_TYPE_E:
+-			arcmsr_hbaE_request_device_map(acb);
+-		break;
++		acb->acb_flags |= ACB_F_MSG_GET_CONFIG;
++		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+ 	}
+ }
+ 
