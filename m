@@ -1,45 +1,45 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH] scsi: aacraid: fix io drop during the reset
-Date: Wed, 13 Dec 2017 21:23:54 +0000
-Message-ID: <c2a7ecdf480c4946aa5571469685802c@microsemi.com>
-References: <1513107610-24451-1-git-send-email-prasad.munirathnam@microsemi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0089.outbound.protection.outlook.com ([104.47.37.89]:43712
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753682AbdLMVX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Dec 2017 16:23:59 -0500
-In-Reply-To: <1513107610-24451-1-git-send-email-prasad.munirathnam@microsemi.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andrei Vagin <avagin@openvz.org>
+Subject: [PATCH] target: don't call an unmap callback if a range length is zero
+Date: Wed, 13 Dec 2017 13:55:13 -0800
+Message-ID: <20171213215513.26416-1-avagin@openvz.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrei Vagin <avagin@openvz.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Prasad Munirathnam <Prasad.Munirathnam@microsemi.com>Prasad Munirathnam <Prasad.Munirathnam@microsemi.com>, Dave Carroll <david.carroll@microsemi.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+If a length of a range is zero, it means there is nothing to unmap
+and we can skip this range.
 
+Here is one more reason, why we have to skip such ranges.  An unmap
+callback calls file_operations->fallocate(), but the man page for the
+fallocate syscall says that fallocate(fd, mode, offset, let) returns
+EINVAL, if len is zero. It means that file_operations->fallocate() isn't
+obligated to handle zero ranges too.
 
-> -----Original Message-----
-> From: Prasad B Munirathnam [mailto:prasad.munirathnam@microsemi.com]
-> Sent: Tuesday, December 12, 2017 11:40 AM
-> To: Prasad Munirathnam <Prasad.Munirathnam@microsemi.com>; Dave
-> Carroll <david.carroll@microsemi.com>; Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>;
-> martin.petersen@oracle.com; james.bottomley@hansenpartnership.com
-> Cc: linux-scsi@vger.kernel.org
-> Subject: [PATCH] scsi: aacraid: fix io drop during the reset
->=20
-> "FIB_CONTEXT_FLAG_TIMEDOUT" flag is set in aac_eh_abort to
-> indicate command timeout, using the same flag in reset handler
-> causes the command to timeout and the IO's were droped.
->=20
-> defined a new flag "FIB_CONTEXT_FLAG_EH_RESET" to make sure IO
-> is properly handled in eh_reset handler.
->=20
-> Signed-off-by: Prasad B Munirathnam
-> <prasad.munirathnam@microsemi.com>
-> ---
-Reviewed-by :Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.co=
-m>
+Signed-off-by: Andrei Vagin <avagin@openvz.org>
+---
+ drivers/target/target_core_sbc.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 750a04ed0e93..b054682e974f 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1216,9 +1216,11 @@ sbc_execute_unmap(struct se_cmd *cmd)
+ 			goto err;
+ 		}
+ 
+-		ret = ops->execute_unmap(cmd, lba, range);
+-		if (ret)
+-			goto err;
++		if (range) {
++			ret = ops->execute_unmap(cmd, lba, range);
++			if (ret)
++				goto err;
++		}
+ 
+ 		ptr += 16;
+ 		size -= 16;
+-- 
+2.13.6
