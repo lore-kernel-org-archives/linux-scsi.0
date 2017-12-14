@@ -1,74 +1,91 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] scsi: lpfc: Correct driver deregistrations with host
- nvme transport
-Date: Thu, 14 Dec 2017 10:58:37 +0300
-Message-ID: <20171214075837.bb33pzf5k3xpglnu@mwanda>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] driver core: Make it safe to use get_device() if the
+ reference count is zero
+Date: Thu, 14 Dec 2017 09:10:12 +0100
+Message-ID: <20171214081012.GA16072@kroah.com>
+References: <20171214033936.6534-1-yanaijie@huawei.com>
+ <20171214074227.GA30120@kroah.com>
+ <5A322EBE.9040108@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46178 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750785AbdLNIJI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Dec 2017 03:09:08 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <5A322EBE.9040108@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, "Ewan D . Milne" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: jsmart2021@gmail.com
-Cc: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+On Thu, Dec 14, 2017 at 03:56:46PM +0800, Jason Yan wrote:
+> 
+> On 2017/12/14 15:42, Greg KH wrote:
+> > On Thu, Dec 14, 2017 at 11:39:36AM +0800, Jason Yan wrote:
+> > > Some driviers may have the chance to increase a reference count that
+> > > has dropped to zero when using get_device() because of their design.
+> > Then those drivers are broken :)
+> > 
+> > > We have met such a issue with scsi:
+> > > https://www.spinics.net/lists/linux-scsi/msg115295.html
+> > > 
+> > > The scsi core will keep the scsi device object in the host list after
+> > > it has been deleted and the iterator can still find it. All of the
+> > > places where need iterating have to check the state of the scsi device
+> > > and this makes a lot of code redundancy and complexity.
+> > > 
+> > > Provide a safe mechanism in get_device() by using
+> > > kobject_get_unless_zero().
+> > > 
+> > > Suggested-by: Bart Van Assche <bart.vanassche@wdc.com>
+> > > Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> > > CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > CC: Bart Van Assche <bart.vanassche@wdc.com>
+> > > CC: Ewan D. Milne <emilne@redhat.com>
+> > > CC: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+> > > CC: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >   drivers/base/core.c | 2 +-
+> > >   1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > > index 12ebd05..cc74810 100644
+> > > --- a/drivers/base/core.c
+> > > +++ b/drivers/base/core.c
+> > > @@ -1916,7 +1916,7 @@ EXPORT_SYMBOL_GPL(device_register);
+> > >    */
+> > >   struct device *get_device(struct device *dev)
+> > >   {
+> > > -	return dev ? kobj_to_dev(kobject_get(&dev->kobj)) : NULL;
+> > > +	return dev && kobject_get_unless_zero(&dev->kobj) ? dev : NULL;
+> > I really don't want to do this, the bus the device is on should prevent
+> > this from happening.
+> > 
+> > Also, once that reference count drops to zero, the memory should be
+> > freed, so you really have a stale pointer here, and this code would fail
+> > if you had slab debugging enabled anyway.
+> 
+> Actually I don't want this either. But the design of scsi core will leave
+> the scsi device on the host list after it is deleted, and it can  be
+> found later and the refcount have a very big chance to increase from
+> zero again. And after a lot of discussion it seems that the scsi layer
+> is difficult to change the situation in the near future.
 
-This is a semi-automatic email about new static checker warnings.
+Keeping a 'struct device' reference counted chunk of memory on a list
+that has a different lifetime rule from that device itself, is crazy.
 
-The patch add9d6be3d65: "scsi: lpfc: Correct driver deregistrations
-with host nvme transport" from Nov 20, 2017, leads to the following
-Smatch complaint:
+And yes, I remember how all of this came about, but I really don't have
+the time to work on it myself...
 
-    drivers/scsi/lpfc/lpfc_nvme.c:969 lpfc_nvme_io_cmd_wqe_cmpl()
-    error: we previously assumed 'ndlp' could be null (see line 938)
+> > So I don't even think this fixes the issue you think it fixes :)
+> 
+> This issue is very easy to reproduce on my machine and I have tested the
+> patch and it really fixes the issue.
 
-drivers/scsi/lpfc/lpfc_nvme.c
-   937	
-   938		if (ndlp && NLP_CHK_NODE_ACT(ndlp))
-                    ^^^^
-Existing code assumes ndlp can be NULL.
+Even with slab debugging enabled?  If so, what is keeping that memory
+from being freed once the reference count drops to 0?
 
-   939			atomic_dec(&ndlp->cmd_pending);
-   940	
-   941		/* Update stats and complete the IO.  There is
-   942		 * no need for dma unprep because the nvme_transport
-   943		 * owns the dma address.
-   944		 */
-   945	#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
-   946		if (lpfc_ncmd->ts_cmd_start) {
-   947			lpfc_ncmd->ts_isr_cmpl = pwqeIn->isr_timestamp;
-   948			lpfc_ncmd->ts_data_nvme = ktime_get_ns();
-   949			phba->ktime_last_cmd = lpfc_ncmd->ts_data_nvme;
-   950			lpfc_nvme_ktime(phba, lpfc_ncmd);
-   951		}
-   952		if (phba->cpucheck_on & LPFC_CHECK_NVME_IO) {
-   953			if (lpfc_ncmd->cpu != smp_processor_id())
-   954				lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
-   955						 "6701 CPU Check cmpl: "
-   956						 "cpu %d expect %d\n",
-   957						 smp_processor_id(), lpfc_ncmd->cpu);
-   958			if (lpfc_ncmd->cpu < LPFC_CHECK_CPU_CNT)
-   959				phba->cpucheck_cmpl_io[lpfc_ncmd->cpu]++;
-   960		}
-   961	#endif
-   962		freqpriv = nCmd->private;
-   963		freqpriv->nvme_buf = NULL;
-   964	
-   965		/* NVME targets need completion held off until the abort exchange
-   966		 * completes unless the NVME Rport is getting unregistered.
-   967		 */
-   968		if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY) ||
-   969		    ndlp->upcall_flags & NLP_WAIT_FOR_UNREG) {
-                    ^^^^^^^^^^^^^^^^^
-The patch adds an unchecked dereference.
+I think you are just papering over the real issue here, which is one
+reason I really do not like the get_unless_zero() function at all.
 
-   970			/* Clear the XBUSY flag to prevent double completions.
-   971			 * The nvme rport is getting unregistered and there is
+thanks,
 
-regards,
-dan carpenter
+greg k-h
