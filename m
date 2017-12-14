@@ -1,113 +1,70 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] driver core: Make it safe to use get_device() if the
- reference count is zero
-Date: Thu, 14 Dec 2017 09:56:48 +0100
-Message-ID: <20171214085648.GB32290@kroah.com>
-References: <20171214033936.6534-1-yanaijie@huawei.com>
- <20171214074227.GA30120@kroah.com>
- <5A322EBE.9040108@huawei.com>
- <20171214081012.GA16072@kroah.com>
- <5A32360C.2060002@huawei.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] scsi: qla2xxx: Fix memory leak in dual/target mode
+Date: Thu, 14 Dec 2017 11:02:23 +0300
+Message-ID: <20171214080223.eflsnwquncqmw4p5@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:45319 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750795AbdLNJAF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Dec 2017 04:00:05 -0500
 Content-Disposition: inline
-In-Reply-To: <5A32360C.2060002@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, "Ewan D . Milne" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: himanshu.madhani@cavium.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Dec 14, 2017 at 04:27:56PM +0800, Jason Yan wrote:
-> 
-> 
-> On 2017/12/14 16:10, Greg KH wrote:
-> > On Thu, Dec 14, 2017 at 03:56:46PM +0800, Jason Yan wrote:
-> > > 
-> > > On 2017/12/14 15:42, Greg KH wrote:
-> > > > On Thu, Dec 14, 2017 at 11:39:36AM +0800, Jason Yan wrote:
-> > > > > Some driviers may have the chance to increase a reference count that
-> > > > > has dropped to zero when using get_device() because of their design.
-> > > > Then those drivers are broken :)
-> > > > 
-> > > > > We have met such a issue with scsi:
-> > > > > https://www.spinics.net/lists/linux-scsi/msg115295.html
-> > > > > 
-> > > > > The scsi core will keep the scsi device object in the host list after
-> > > > > it has been deleted and the iterator can still find it. All of the
-> > > > > places where need iterating have to check the state of the scsi device
-> > > > > and this makes a lot of code redundancy and complexity.
-> > > > > 
-> > > > > Provide a safe mechanism in get_device() by using
-> > > > > kobject_get_unless_zero().
-> > > > > 
-> > > > > Suggested-by: Bart Van Assche <bart.vanassche@wdc.com>
-> > > > > Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> > > > > CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > > CC: Bart Van Assche <bart.vanassche@wdc.com>
-> > > > > CC: Ewan D. Milne <emilne@redhat.com>
-> > > > > CC: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-> > > > > CC: Christoph Hellwig <hch@lst.de>
-> > > > > ---
-> > > > >    drivers/base/core.c | 2 +-
-> > > > >    1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/drivers/base/core.c b/drivers/base/core.c
-> > > > > index 12ebd05..cc74810 100644
-> > > > > --- a/drivers/base/core.c
-> > > > > +++ b/drivers/base/core.c
-> > > > > @@ -1916,7 +1916,7 @@ EXPORT_SYMBOL_GPL(device_register);
-> > > > >     */
-> > > > >    struct device *get_device(struct device *dev)
-> > > > >    {
-> > > > > -	return dev ? kobj_to_dev(kobject_get(&dev->kobj)) : NULL;
-> > > > > +	return dev && kobject_get_unless_zero(&dev->kobj) ? dev : NULL;
-> > > > I really don't want to do this, the bus the device is on should prevent
-> > > > this from happening.
-> > > > 
-> > > > Also, once that reference count drops to zero, the memory should be
-> > > > freed, so you really have a stale pointer here, and this code would fail
-> > > > if you had slab debugging enabled anyway.
-> > > 
-> > > Actually I don't want this either. But the design of scsi core will leave
-> > > the scsi device on the host list after it is deleted, and it can  be
-> > > found later and the refcount have a very big chance to increase from
-> > > zero again. And after a lot of discussion it seems that the scsi layer
-> > > is difficult to change the situation in the near future.
-> > 
-> > Keeping a 'struct device' reference counted chunk of memory on a list
-> > that has a different lifetime rule from that device itself, is crazy.
-> > 
-> 
-> The lifetime rule is the same. That device itself will delete from the
-> host list in the destructor, scsi_device_dev_release_usercontext(), and
-> the memory will be freed after that. That's why this issue came out.
-> 
-> > And yes, I remember how all of this came about, but I really don't have
-> > the time to work on it myself...
-> > 
-> > > > So I don't even think this fixes the issue you think it fixes :)
-> > > 
-> > > This issue is very easy to reproduce on my machine and I have tested the
-> > > patch and it really fixes the issue.
-> > 
-> > Even with slab debugging enabled?  If so, what is keeping that memory
-> > from being freed once the reference count drops to 0?
-> > 
-> 
-> As above, the memory is not freed yet when we increasing the refconunt from
-> zero, so it's nothing to do with slab debugging enabled or not. If
-> we want to free it, we have to grab host lock first to delete it from
-> the list, so if we are grabing the host lock, we can increase the
-> refcount safely from 0 to 1.
+Hello himanshu.madhani@cavium.com,
 
-Wait, what?  Once that refcount goes to 0, the release callback will be
-called, and the memory had better be freed.  Any pointer you might still
-have to the structure is now invalid.  The fact that you are somehow
-still keeping that pointer around is not ok, and slab debugging should
-have caused the memory to be overwritten and garbage would result if you
-tried to make this call again.
+This is a semi-automatic email about new static checker warnings.
 
-thanks,
+The patch 7867b98dceb7: "scsi: qla2xxx: Fix memory leak in
+dual/target mode" from Dec 4, 2017, leads to the following Smatch
+complaint:
 
-greg k-h
+    drivers/scsi/qla2xxx/qla_mid.c:586 qla25xx_delete_req_que()
+    error: we previously assumed 'req' could be null (see line 580)
+
+    drivers/scsi/qla2xxx/qla_mid.c:602 qla25xx_delete_rsp_que()
+    error: we previously assumed 'rsp' could be null (see line 596)
+
+
+drivers/scsi/qla2xxx/qla_mid.c
+   579	
+   580		if (req && vha->flags.qpairs_req_created) {
+                    ^^^
+Check for NULL
+
+   581			req->options |= BIT_0;
+   582			ret = qla25xx_init_req_que(vha, req);
+   583			if (ret != QLA_SUCCESS)
+   584				return QLA_FUNCTION_FAILED;
+   585		}
+   586		qla25xx_free_req_que(vha, req);
+                                          ^^^
+Unchecked dereference inside function.
+
+   587	
+   588		return ret;
+
+	[ snip ]
+
+   595	
+   596		if (rsp && vha->flags.qpairs_rsp_created) {
+                    ^^^ 
+  597			rsp->options |= BIT_0;
+   598			ret = qla25xx_init_rsp_que(vha, rsp);
+   599			if (ret != QLA_SUCCESS)
+   600				return QLA_FUNCTION_FAILED;
+   601		}
+   602		qla25xx_free_rsp_que(vha, rsp);
+                                          ^^^
+   603	
+   604		return ret;
+
+regards,
+dan carpenter
+
+regards,
+dan carpenter
