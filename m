@@ -1,67 +1,154 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH] scsi: check for device state in __scsi_remove_target()
-Date: Thu, 14 Dec 2017 10:02:19 +0100
-Message-ID: <f43e0560-7a46-6d72-41f9-0d90fa20948c@suse.com>
-References: <1513171297-58020-1-git-send-email-hare@suse.de>
- <1513203795.2413.14.camel@wdc.com> <5A3230D3.2060302@huawei.com>
+From: Ohad Sharabi <ohad.sharabi@sandisk.com>
+Subject: [PATCH] scsi: ufs: add trace event for ufs upiu
+Date: Thu, 14 Dec 2017 11:23:24 +0200
+Message-ID: <1513243404-9503-1-git-send-email-ohad.sharabi@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:47156 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750749AbdLNJCW (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Thu, 14 Dec 2017 04:02:22 -0500
-In-Reply-To: <5A3230D3.2060302@huawei.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.com, Ohad Sharabi <ohad.sharabi@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 12/14/2017 09:05 AM, Jason Yan wrote:
-> 
-> On 2017/12/14 6:23, Bart Van Assche wrote:
->> On Wed, 2017-12-13 at 14:21 +0100, Hannes Reinecke wrote:
->>> As it turned out device_get() doesn't use kref_get_unless_zero(),
->>> so we will be always getting a device pointer.
->>> So we need to check for the device state in __scsi_remove_target()
->>> to avoid tripping over deleted objects.
->>>
->>> Fixes: fbce4d9 ("scsi: fixup kernel warning during rmmod()")
->>
->> How about adding Reported-by: Jason Yan? See also
->> https://www.spinics.net/lists/linux-scsi/msg115295.html
->>
->> Anyway:
->>
->> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
->>
-> 
-> Seems the same as my patch.So how do we plan to fix this issue,
-> pick this approach up or the approach James Bottomley suggested?
-> I have sent a patch to change get_device() but Greg seems do not
-> like this way.
-> 
-This is actually a real regression, which can be trivially exercised by
-eg logging out from two connections to an iSCSI target.
-(Our QA tripped across that one).
-So I'd rather have to have it fixed reasonably soon.
+Add UFS Protocol Information Units(upiu) trace events for ufs driver,
+used to trace various ufs transaction types- command, task-management
+and device management.
+The trace-point format is generic and can be easily adapted to trace
+other upius if needed.
+Currently tracing ufs transaction of type 'device management', which
+this patch introduce, cannot be obtained from any other trace.
+Device management transactions are used for communication with the
+device such as reading and writing descriptor or attributes etc.
 
-While 'get_device' is IMO the 'correct' solution it surely warrants a
-broader discussion, plus one would need to audit all callers to check
-the return value. If we were going down that route we should probably
-add a __must_check to get_device(), too.
-But again, this will probably drag out for quite some time, and I'd
-prefer to have the fix in the meantime.
+Signed-off-by: Ohad Sharabi <ohad.sharabi@sandisk.com>
+---
+ drivers/scsi/ufs/ufshcd.c  | 48 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/trace/events/ufs.h | 28 +++++++++++++++++++++++++++
+ 2 files changed, 76 insertions(+)
 
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index a355d98..6d79c99 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -274,6 +274,47 @@ static inline void ufshcd_remove_non_printable(char *val)
+ 		*val = ' ';
+ }
+ 
++static void ufshcd_add_upiu_trace(struct ufs_hba *hba, unsigned int tag,
++	const char *str)
++{
++	struct utp_task_req_desc *descp;
++	struct utp_upiu_task_req *task_req;
++	struct utp_upiu_req *rq;
++	u8 tx_code, *hdr, *tsf;
++	int off;
++
++	if (!trace_ufshcd_upiu_enabled())
++		return;
++
++	off = (int)tag - hba->nutrs;
++	if (off < 0) {
++		rq = hba->lrb[tag].ucd_req_ptr;
++		hdr = (u8 *)&rq->header;
++	} else {
++		descp = &hba->utmrdl_base_addr[off];
++		task_req = (struct utp_upiu_task_req *)descp->task_req_upiu;
++		hdr = (u8 *)&task_req->header;
++	}
++
++	tx_code = hdr[0] & 0x3f;
++	switch (hdr[0] & 0x3f) {
++	case UPIU_TRANSACTION_COMMAND:
++		tsf = (u8 *)&rq->sc.cdb;
++		break;
++	case UPIU_TRANSACTION_TASK_REQ:
++		tsf = (u8 *)&task_req->input_param1;
++		break;
++	case UPIU_TRANSACTION_QUERY_REQ:
++		tsf = (u8 *)&rq->qr;
++		break;
++	default:
++		return;
++	}
++
++	/* trace UPIU header and Transaction Specific Fields (TSF) */
++	trace_ufshcd_upiu(dev_name(hba->dev), str, hdr, tsf);
++}
++
+ static void ufshcd_add_command_trace(struct ufs_hba *hba,
+ 		unsigned int tag, const char *str)
+ {
+@@ -283,6 +324,9 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
+ 	struct ufshcd_lrb *lrbp;
+ 	int transfer_len = -1;
+ 
++	/* trace UPIU also */
++	ufshcd_add_upiu_trace(hba, tag, str);
++
+ 	if (!trace_ufshcd_command_enabled())
+ 		return;
+ 
+@@ -5462,11 +5506,14 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 
++	ufshcd_add_upiu_trace(hba, task_tag, "tm_send");
++
+ 	/* wait until the task management command is completed */
+ 	err = wait_event_timeout(hba->tm_wq,
+ 			test_bit(free_slot, &hba->tm_condition),
+ 			msecs_to_jiffies(TM_CMD_TIMEOUT));
+ 	if (!err) {
++		ufshcd_add_upiu_trace(hba, task_tag, "tm_complete_err");
+ 		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
+ 				__func__, tm_function);
+ 		if (ufshcd_clear_tm_cmd(hba, free_slot))
+@@ -5475,6 +5522,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 		err = -ETIMEDOUT;
+ 	} else {
+ 		err = ufshcd_task_req_compl(hba, free_slot, tm_response);
++		ufshcd_add_upiu_trace(hba, task_tag, "tm_complete");
+ 	}
+ 
+ 	clear_bit(free_slot, &hba->tm_condition);
+diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+index bf6f826..0b2ff5d 100644
+--- a/include/trace/events/ufs.h
++++ b/include/trace/events/ufs.h
+@@ -257,6 +257,34 @@
+ 	)
+ );
+ 
++TRACE_EVENT(ufshcd_upiu,
++	TP_PROTO(const char *dev_name, const char *str, unsigned char *hdr,
++			unsigned char *tsf),
++
++	TP_ARGS(dev_name, str, hdr, tsf),
++
++	TP_STRUCT__entry(
++		__string(dev_name, dev_name)
++		__string(str, str)
++		__array(unsigned char, hdr, 12)
++		__array(unsigned char, tsf, 16)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__assign_str(str, str);
++		memcpy(__entry->hdr, hdr, sizeof(__entry->hdr));
++		memcpy(__entry->tsf, tsf, sizeof(__entry->tsf));
++	),
++
++	TP_printk(
++		"%s: %s: HDR:%s, CDB:%s",
++		__get_str(str), __get_str(dev_name),
++		__print_hex(__entry->hdr, sizeof(__entry->hdr)),
++		__print_hex(__entry->tsf, sizeof(__entry->tsf))
++	)
++);
++
+ #endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ) */
+ 
+ /* This part must be outside protection */
 -- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.9.1
