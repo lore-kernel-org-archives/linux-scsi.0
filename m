@@ -1,86 +1,64 @@
-From: Michal Suchanek <msuchanek@suse.de>
-Subject: [PATCH 5/6] Documentetion: cdrom: introduce CDS_DRIVE_ERROR
-Date: Thu, 14 Dec 2017 16:13:54 +0100
-Message-ID: <794a72f8f78b076a9b8a47cbc8cb63e650a2ce37.1513263482.git.msuchanek@suse.de>
-References: <cover.1513263482.git.msuchanek@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1513263482.git.msuchanek@suse.de>
-In-Reply-To: <cover.1513263482.git.msuchanek@suse.de>
-References: <cover.1513263482.git.msuchanek@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Suchanek <msuchanek@suse.de>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 1/4] block: check for GENHD_FL_UP in del_gendisk()
+Date: Thu, 14 Dec 2017 21:47:02 +0000
+Message-ID: <1513288021.2475.76.camel@wdc.com>
+References: <1513069072-32514-1-git-send-email-hare@suse.de>
+         <1513069072-32514-2-git-send-email-hare@suse.de>
+         <1513097821.2999.12.camel@sandisk.com>
+         <b06f503b-c420-fe32-5464-eaaa52732340@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:1590 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752154AbdLNVrE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Dec 2017 16:47:04 -0500
+In-Reply-To: <b06f503b-c420-fe32-5464-eaaa52732340@suse.com>
+Content-Language: en-US
+Content-ID: <7312252462CD584EB2722A264108DF5B@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hare@suse.com" <hare@suse.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-CDS_DRIVE_NOT_READY is used for the state in which CDROM is 'becoming
-ready' (typically analyzing the disc) but also as the fallback when
-nothing else applies. Introduce CDS_DRIVE_ERROR for the fallback case.
-
-Signed-off-by: Michal Suchanek <msuchanek@suse.de>
----
- Documentation/cdrom/cdrom-standard.tex | 8 +++++++-
- Documentation/cdrom/ide-cd             | 6 ++++++
- Documentation/ioctl/cdrom.txt          | 1 +
- 3 files changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/cdrom/cdrom-standard.tex b/Documentation/cdrom/cdrom-standard.tex
-index 8f85b0e41046..018284ba696a 100644
---- a/Documentation/cdrom/cdrom-standard.tex
-+++ b/Documentation/cdrom/cdrom-standard.tex
-@@ -371,11 +371,17 @@ $$
- CDS_NO_INFO& no information available\cr
- CDS_NO_DISC& no disc is inserted, tray is closed\cr
- CDS_TRAY_OPEN& tray is opened\cr
--CDS_DRIVE_NOT_READY& something is wrong, tray is moving?\cr
-+CDS_DRIVE_NOT_READY& tray just closed?\cr
- CDS_DISC_OK& a disc is loaded and everything is fine\cr
-+CDS_DRIVE_ERROR& something is wrong\cr
- }
- $$
- 
-+Note: The IDE and SCSI cdroms have a status code 'drive becoming ready' which
-+is typically returned when the drive has just closed and is analyzing the disc.
-+For other cdrom types this state is not reported by the hardware or not
-+implemented by the driver.
-+
- \subsection{$Int\ media_changed(struct\ cdrom_device_info * cdi, int\ disc_nr)$}
- 
- This function is very similar to the original function in $struct\ 
-diff --git a/Documentation/cdrom/ide-cd b/Documentation/cdrom/ide-cd
-index a5f2a7f1ff46..9324a8fd9a39 100644
---- a/Documentation/cdrom/ide-cd
-+++ b/Documentation/cdrom/ide-cd
-@@ -455,6 +455,9 @@ main (int argc, char **argv)
- 		case CDS_DRIVE_NOT_READY:
- 			printf ("Drive Not Ready.\n");
- 			break;
-+		case CDS_DRIVE_ERROR:
-+			printf ("Drive problem.\n");
-+			break;
- 		default:
- 			printf ("This Should not happen!\n");
- 			break;
-@@ -481,6 +484,9 @@ main (int argc, char **argv)
- 			case CDS_NO_INFO:
- 				printf ("No Information available.");
- 				break;
-+			case CDS_DRIVE_ERROR:
-+				printf ("Drive problem.\n");
-+				break;
- 			default:
- 				printf ("This Should not happen!\n");
- 				break;
-diff --git a/Documentation/ioctl/cdrom.txt b/Documentation/ioctl/cdrom.txt
-index a4d62a9d6771..7720d11807c3 100644
---- a/Documentation/ioctl/cdrom.txt
-+++ b/Documentation/ioctl/cdrom.txt
-@@ -700,6 +700,7 @@ CDROM_DRIVE_STATUS		Get tray position, etc.
- 	    CDS_TRAY_OPEN
- 	    CDS_DRIVE_NOT_READY
- 	    CDS_DISC_OK
-+	    CDS_DRIVE_ERROR
- 	    -1			error
- 
- 	error returns:
--- 
-2.13.6
+T24gV2VkLCAyMDE3LTEyLTEzIGF0IDA4OjM2ICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIDEyLzEyLzIwMTcgMDU6NTcgUE0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBP
+biBUdWUsIDIwMTctMTItMTIgYXQgMDk6NTcgKzAxMDAsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToN
+Cj4gPiA+IEZyb206IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4NCj4gPiA+IA0KPiA+
+ID4gV2hlbiBhIGRldmljZSBpcyBwcm9iZWQgYXN5bmNocm9ub3VzbHkgZGVsX2dlbmRpc2soKSBt
+aWdodCBiZSBjYWxsZWQNCj4gPiA+IGJlZm9yZSB0aGUgYXN5bmMgcHJvYmluZyB3YXMgcnVuLCBj
+YXVzaW5nIGRlbF9nZW5kaXNrKCkgdG8gY3Jhc2gNCj4gPiA+IGR1ZSB0byB1bmluaXRpYWxpemVk
+IHN5c2ZzIG9iamVjdHMuDQo+ID4gPiANCj4gPiA+IFNpZ25lZC1vZmYtYnk6IEhhbm5lcyBSZWlu
+ZWNrZSA8aGFyZUBzdXNlLmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gIGJsb2NrL2dlbmhkLmMgfCAz
+ICsrKw0KPiA+ID4gIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKykNCj4gPiA+IA0KPiA+
+ID4gZGlmZiAtLWdpdCBhL2Jsb2NrL2dlbmhkLmMgYi9ibG9jay9nZW5oZC5jDQo+ID4gPiBpbmRl
+eCBjMjIyM2YxLi5jYzQwZDk1IDEwMDY0NA0KPiA+ID4gLS0tIGEvYmxvY2svZ2VuaGQuYw0KPiA+
+ID4gKysrIGIvYmxvY2svZ2VuaGQuYw0KPiA+ID4gQEAgLTY5Nyw2ICs2OTcsOSBAQCB2b2lkIGRl
+bF9nZW5kaXNrKHN0cnVjdCBnZW5kaXNrICpkaXNrKQ0KPiA+ID4gIAlzdHJ1Y3QgZGlza19wYXJ0
+X2l0ZXIgcGl0ZXI7DQo+ID4gPiAgCXN0cnVjdCBoZF9zdHJ1Y3QgKnBhcnQ7DQo+ID4gPiAgDQo+
+ID4gPiArCWlmICghKGRpc2stPmZsYWdzICYgR0VOSERfRkxfVVApKQ0KPiA+ID4gKwkJcmV0dXJu
+Ow0KPiA+ID4gKw0KPiA+ID4gIAlibGtfaW50ZWdyaXR5X2RlbChkaXNrKTsNCj4gPiA+ICAJZGlz
+a19kZWxfZXZlbnRzKGRpc2spOw0KPiA+IA0KPiA+IEhlbGxvIEhhbm5lcywNCj4gPiANCj4gPiBU
+aGFuayB5b3UgZm9yIGhhdmluZyBwdWJsaXNoZWQgeW91ciBhcHByb2FjaCBmb3IgaW5jcmVhc2lu
+ZyBkaXNrIHByb2JpbmcNCj4gPiBjb25jdXJyZW5jeS4gWW91ciBhcHByb2FjaCBsb29rcyBpbnRl
+cmVzdGluZyB0byBtZS4gSG93ZXZlciwgSSBkb24ndCB0aGluaw0KPiA+IHRoYXQgcGF0Y2hlcyAx
+LzQuLjMvNCBhcmUgc3VmZmljaWVudCB0byBhdm9pZCByYWNlcyBiZXR3ZWVuIGUuZy4NCj4gPiBk
+ZXZpY2VfYWRkX2Rpc2soKSBhbmQgZGVsX2dlbmRpc2soKS4gQXMgZmFyIGFzIEkga25vdyBubyBs
+b2NrcyBhcmUgaGVsZA0KPiA+IGFyb3VuZCB0aGUgZGV2aWNlX2FkZF9kaXNrKCkgYW5kIGRlbF9n
+ZW5kaXNrKCkgY2FsbHMuIERvZXMgdGhhdCBtZWFuIHRoYXQNCj4gPiBkZWxfZ2VuZGlzaygpIGNh
+biBjYWxsIGUuZy4gYmxrX2ludGVncml0eV9kZWwoKSBiZWZvcmUgZGV2aWNlX2FkZF9kaXNrKCkg
+aGFzDQo+ID4gY2FsbGVkIGJsa19pbnRlZ3JpdHlfYWRkKCk/DQo+IA0KPiBJbiBwcmluY2lwbGUs
+IHllcy4gSG93ZXZlciwgdGhlIG92ZXJhbGwgaWRlYSBoZXJlIGlzIHRoYXQgZGV2aWNlX2FkZF9k
+aXNrKCkNCj4gYW5kIGRlbF9nZW5kaXNrKCkgYXJlIGVuY2xvc2VkIHdpdGhpbiB1cHBlciBsYXll
+ciBwcm9jZWR1cmVzLCB3aGljaCB0aGVtc2VsdmVzDQo+IHByb3ZpZGUgYWRkaXRpb25hbCBsb2Nr
+aW5nLiBJbiBvdXIgY2FzZSB0aGUgc2QgZHJpdmVyIHByb3ZpZGVkIHN5bmNocm9uaXNhdGlvbg0K
+PiBndWFyYW50ZWVzIGVuc3VyaW5nIHRoYXQgZGV2aWNlX2FkZF9kaXNrKCkgYW5kIGRlbF9nZW5k
+aXNrKCkgZG9lc24ndCBydW4NCj4gY29uY3VycmVudGx5Lg0KPiANCj4gaWYgb25lIGlzIHJlYWxs
+eSBjb25jZXJuZWQgd2UgY291bGQgY29udmVydCBkaXNrLT5mbGFncyB0byBhIGJpdG1hc2ssIGFu
+ZCB1c2UNCj4gYXRvbWljIGJpdG1hc2sgbW9kaWZpY2F0aW9uOyB0aGF0IHNob3VsZCBhdm9pZCBh
+bnkgY29uY3VycmVuY3kgaXNzdWVzLg0KDQpIZWxsbyBIYW5uZXMsDQoNClJlZ2FyZGluZyB0aGUg
+c2NlbmFyaW8gZXhwbGFpbmVkIGluIGEgcHJldmlvdXMgZS1tYWlsOiB3aGF0IGd1YXJhbnRlZXMg
+dGhhdCB0aGUNCmRldmljZV9hZGRfZGlzaygpIGNhbGwgaW4gc2RfcHJvYmVfYXN5bmMoKSBkb2Vz
+IG5vdCBoYXBwZW4gY29uY3VycmVudGx5IHdpdGggdGhlDQpkZXZpY2VfdW5yZWdpc3RlcigpIGNh
+bGwgZnJvbSBfX3Njc2lfcmVtb3ZlX2RldmljZSgpPw0KDQpUaGFua3MsDQoNCkJhcnQu
