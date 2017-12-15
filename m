@@ -1,342 +1,151 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/3] virtio-scsi: Add FC transport class
-Date: Fri, 15 Dec 2017 19:08:22 +0100
-Message-ID: <55641493-64bf-d997-9883-62fbf59a0404@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/3] virtio_scsi: Implement 'native LUN' feature
+Date: Fri, 15 Dec 2017 19:17:50 +0100
+Message-ID: <8b0a2527-7fe1-1475-49e4-0f34c753baaf@linux.vnet.ibm.com>
 References: <1513246316-56019-1-git-send-email-hare@suse.de>
- <1513246316-56019-3-git-send-email-hare@suse.de>
+ <1513246316-56019-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:51526 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49968 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755406AbdLOSIa (ORCPT
+        by vger.kernel.org with ESMTP id S1755851AbdLOSR5 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 Dec 2017 13:08:30 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vBFI7idD036893
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Dec 2017 13:08:29 -0500
-Received: from e06smtp15.uk.ibm.com (e06smtp15.uk.ibm.com [195.75.94.111])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2evfmu40uk-1
+        Fri, 15 Dec 2017 13:17:57 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vBFIGwjZ131308
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Dec 2017 13:17:57 -0500
+Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2evhkqdbtv-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Dec 2017 13:08:29 -0500
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Dec 2017 13:17:56 -0500
 Received: from localhost
-        by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-        Fri, 15 Dec 2017 18:08:26 -0000
-In-Reply-To: <1513246316-56019-3-git-send-email-hare@suse.de>
+        Fri, 15 Dec 2017 18:17:54 -0000
+In-Reply-To: <1513246316-56019-4-git-send-email-hare@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
+Just a few very early view-only review comments.
+Haven't run the code.
 
 On 12/14/2017 11:11 AM, Hannes Reinecke wrote:
-> When a device announces an 'FC' protocol we should be pulling
-> in the FC transport class to have the rports etc setup correctly.
+> The 'native LUN' feature allows virtio-scsi to pass in the LUN
+> numbers from the underlying storage directly, without having
+> to modify the LUN number itself.
+> It works by shifting the existing LUN number down by 8 bytes,
+> and add the virtio-specific 8-byte LUN steering header.
+> With that virtio doesn't have to mangle the LUN number, allowing
+> us to pass the 'real' LUN number to the guest.
 
-It took some time for me to understand what this does.
-It seems to mirror the topology of rports and sdevs that exist under the 
-fc_host on the kvm host side to the virtio-scsi-fc side in the guest.
+I only see shifts by 16 bits in the code below which would be 2 bytes.
+I had a quick look at the corresponding qemu code which looked the same 
+to me.
+What's the relation to 8 byte shifting, which would be 64 bit shift and 
+thus odd for a 64 bit LUN, mentioned in the description here?
 
-I like the idea. This is also what I've been suggesting users to do if 
-they back virtio-scsi with zfcp on the kvm host side. Primarily to not 
-stall all virtio-scsi I/O on all paths if the guest ever gets into 
-scsi_eh. But also to make it look like an HBA pass through so one can 
-more easily migrate to this once we have FCP pass through.
+If the code keeps the LUN level 1 and 2 (dropping level 3 and 4) and I 
+just don't understand it, it would be fine, I guess.
 
-> 
+> Of course, we do cut off the last 8 bytes of the 'real' LUN number,
+> but I'm not aware of any array utilizing that, so the impact should
+> be negligible.
+
+Why did we do v3.17 commit 9cb78c16f5da ("scsi: use 64-bit LUNs")? ;-)
+
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->   drivers/scsi/virtio_scsi.c | 323 ++++++++++++++++++++++++++++++++++++++-------
->   1 file changed, 277 insertions(+), 46 deletions(-)
+>   drivers/scsi/virtio_scsi.c       | 62 ++++++++++++++++++++++++++++++----------
+>   include/uapi/linux/virtio_scsi.h |  1 +
+>   2 files changed, 48 insertions(+), 15 deletions(-)
 > 
 > diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index a561e90..f925fbd 100644
+> index f925fbd..63c2c85 100644
 > --- a/drivers/scsi/virtio_scsi.c
 > +++ b/drivers/scsi/virtio_scsi.c
+> @@ -356,8 +356,12 @@ static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
+>   	struct scsi_device *sdev;
+>   	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
+>   	unsigned int target = event->lun[1];
+> -	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
+> +	u64 lun;
+> 
+> +	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_NATIVE_LUN))
+> +		lun = scsilun_to_int((struct scsi_lun *)event->lun) >> 16;
+> +	else
+> +		lun = (event->lun[2] << 8) | event->lun[3];
 
-> @@ -591,11 +616,25 @@ static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
->   					struct scsi_cmnd *sc)
 
-> +	if (vscsi->protocol == SCSI_PROTOCOL_FCP) {
-> +		struct fc_rport *rport =
-> +			starget_to_rport(scsi_target(sc->device));
-> +		if (rport && rport->dd_data) {
-> +			tgt = rport->dd_data;
-> +			target_id = tgt->target_id;
-> +		}
-> +	} else
-> +		tgt = scsi_target(sc->device)->hostdata;
-> +	if (!tgt || tgt->removed) {
-
-> @@ -648,16 +687,30 @@ static int virtscsi_queuecommand_multi(struct Scsi_Host *sh,
->   				       struct scsi_cmnd *sc)
-
-> +	if (vscsi->protocol == SCSI_PROTOCOL_FCP) {
-> +		struct fc_rport *rport =
-> +			starget_to_rport(scsi_target(sc->device));
-> +		if (rport && rport->dd_data) {
-> +			tgt = rport->dd_data;
-> +			target_id = tgt->target_id;
-> +		}
-> +	} else
-> +		tgt = scsi_target(sc->device)->hostdata;
-> +	if (!tgt || tgt->removed) {
-
-repeating pattern?
-
-> @@ -696,12 +749,27 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+> @@ -524,10 +532,16 @@ static void virtio_scsi_init_hdr(struct virtio_device *vdev,
+>   				 int target_id,
+>   				 struct scsi_cmnd *sc)
 >   {
-> +	if (vscsi->protocol == SCSI_PROTOCOL_FCP) {
-> +		struct fc_rport *rport =
-> +			starget_to_rport(scsi_target(sc->device));
-> +		if (rport && rport->dd_data ) {
-> +			tgt = rport->dd_data;
-> +			target_id = tgt->target_id;
-> +		} else
-> +			return FAST_IO_FAIL;
+> -	cmd->lun[0] = 1;
+> -	cmd->lun[1] = target_id;
+> -	cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
+> -	cmd->lun[3] = sc->device->lun & 0xff;
+> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_NATIVE_LUN)) {
+> +		u64 lun = sc->device->lun << 16;
+> +		lun |= ((u64)1 << 8) | (u64)target_id;
+> +		int_to_scsilun(lun, (struct scsi_lun *)&cmd->lun);
 > +	} else {
-> +		tgt = scsi_target(sc->device)->hostdata;
-> +		if (!tgt || tgt->removed)
-
-The other patterns have the !tgt check outside of the if else condition.
-For consistency this might work here, too?
-
-> +			return FAST_IO_FAIL;
+> +		cmd->lun[0] = 1;
+> +		cmd->lun[1] = target_id;
+> +		cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
+> +		cmd->lun[3] = sc->device->lun & 0xff;
 > +	}
 
+Above 2 patterns seem to repeat. Have helper functions (similar to 
+int_to_scsilun()) now that it's more than just 4 lines of filling in the 
+virtio lun?
 
-> @@ -755,19 +823,34 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+> @@ -851,10 +871,18 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+>   		.subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
 
-> +	if (vscsi->protocol == SCSI_PROTOCOL_FCP) {
-> +		struct fc_rport *rport =
-> +			starget_to_rport(scsi_target(sc->device));
-> +		if (rport && rport->dd_data ) {
-> +			tgt = rport->dd_data;
-> +			target_id = tgt->target_id;
-> +		} else
-> +			return FAST_IO_FAIL;
+>   		.lun[0] = 1,
+>   		.lun[1] = target_id,
+
+drop those 2 superfluous lines, too?
+
+> -		.lun[2] = (sc->device->lun >> 8) | 0x40,
+> -		.lun[3] = sc->device->lun & 0xff,
+>   		.tag = cpu_to_virtio64(vscsi->vdev, (unsigned long)sc),
+>   	};
+> +	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_NATIVE_LUN)) {
+> +		u64 lun = sc->device->lun << 16;
+> +		lun |= ((u64)1 << 8) | (u64)target_id;
+> +		int_to_scsilun(lun, (struct scsi_lun *)&cmd->req.tmf.lun);
 > +	} else {
-> +		tgt = scsi_target(sc->device)->hostdata;
-> +		if (!tgt || tgt->removed)
-> +			return FAST_IO_FAIL;
+> +		cmd->req.tmf.lun[0] = 1;
+> +		cmd->req.tmf.lun[1] = target_id;
+> +		cmd->req.tmf.lun[2] = (sc->device->lun >> 8) | 0x40;
+> +		cmd->req.tmf.lun[3] = sc->device->lun & 0xff;
 > +	}
 
-dito
-
-> @@ -857,27 +970,67 @@ static void virtscsi_rescan_work(struct work_struct *work)
-> 
->   	wait_for_completion(&comp);
-
-Waiting in work item .vs. having the response (IRQ) path trigger 
-subsequent processing async ?
-Or do we need the call chain(s) getting here to be in our own process 
-context via the workqueue anyway?
-
->   	target_id = virtio32_to_cpu(vscsi->vdev, cmd->resp.rescan.id);
-> -	if (target_id != -1) {
-> -		int transport = virtio32_to_cpu(vscsi->vdev,
-> -						cmd->resp.rescan.transport);
-> -		spin_lock_irq(&vscsi->rescan_lock);
-> -		vscsi->next_target_id = target_id + 1;
-> -		spin_unlock_irq(&vscsi->rescan_lock);
-> -		shost_printk(KERN_INFO, sh,
-> -			     "found %s target %d (WWN %*phN)\n",
-> -			     transport == SCSI_PROTOCOL_FCP ? "FC" : "SAS",
-> -			     target_id, 8,
-> -			     cmd->resp.rescan.port_wwn);
-> -		scsi_scan_target(&sh->shost_gendev, 0, target_id,
-> -				 SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
-> -		queue_work(system_freezable_wq, &vscsi->rescan_work);
-> -	} else {
-> +	if (target_id == -1) {
-
-This boolean if expression was introduced in the previous patch.
-Why negate it here?
-It causes a number of potentially unnecessary changed lines making 
-review harder.
-
-
-> +	if (transport == SCSI_PROTOCOL_FCP) {
-> +		struct fc_rport_identifiers rport_ids;
-> +		struct fc_rport *rport;
-> +
-> +		rport_ids.node_name = wwn_to_u64(cmd->resp.rescan.node_wwn);
-> +		rport_ids.port_name = wwn_to_u64(cmd->resp.rescan.port_wwn);
-> +		rport_ids.port_id = (target_id >> 8);
-
-Why do you shift target_id by one byte to the right?
-
-> +		rport = fc_remote_port_add(sh, 0, &rport_ids);
-> +		if (rport) {
-> +			tgt->rport = rport;
-> +			rport->dd_data = tgt;
-> +			fc_remote_port_rolechg(rport, FC_RPORT_ROLE_FCP_TARGET);
-
-Is the rolechg to get some event? Otherwise we could have 
-rport_ids.roles = FC_RPORT_ROLE_FCP_TARGET before fc_remote_port_add().
-
-> +		} else {
-> +			spin_lock_irq(&vscsi->rescan_lock);
-> +			list_del(&tgt->list);
-> +			spin_unlock_irq(&vscsi->rescan_lock);
-> +			kfree(tgt);
-> +			tgt = NULL;
-> +		}
-> +	} else {
-> +		scsi_scan_target(&sh->shost_gendev, 0, tgt->target_id,
-> +				 SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
-> +	}
-> +	queue_work(system_freezable_wq, &vscsi->rescan_work);
-> +out:
->   	mempool_free(cmd, virtscsi_cmd_pool);
->   	return;
->   scan_host:
-
-> @@ -932,14 +1089,31 @@ static void virtscsi_scan_host(struct virtio_scsi *vscsi)
->   static void virtscsi_scan_start(struct Scsi_Host *sh)
->   {
->   	struct virtio_scsi *vscsi = shost_priv(sh);
-> +	struct virtio_scsi_target_state *tgt;
-> 
-> -	virtscsi_scan_host(vscsi);
->   	spin_lock_irq(&vscsi->rescan_lock);
->   	if (vscsi->next_target_id != -1) {
->   		shost_printk(KERN_INFO, sh, "rescan: already running\n");
->   		spin_unlock_irq(&vscsi->rescan_lock);
->   		return;
->   	}
-> +	if (vscsi->protocol == SCSI_PROTOCOL_FCP) {
-> +		fc_host_node_name(sh) = vscsi->wwnn;
-> +		fc_host_port_name(sh) = vscsi->wwpn;
-> +		fc_host_port_id(sh) = 0x00ff00;
-> +		fc_host_port_type(sh) = FC_PORTTYPE_NPIV;
-
-Why is this hardcoded?
-
-At least with zfcp, we can have kvm host *v*HBAs without NPIV.
-
-> +		fc_host_port_state(sh) = FC_PORTSTATE_BLOCKED;
-> +		list_for_each_entry(tgt, &vscsi->target_list, list) {
-> +			if (tgt->rport) {
-> +				fc_remote_port_delete(tgt->rport);
-
-I'm not familiar with the scan callbacks, maybe that's why I wonder why 
-you block all rports when scanning the host. Is it so that the 
-subsequent port scans can call the properly paired fc_remote_port_add to 
-potentially update a previously existing rport with new properties we 
-got from the qemu/host side.
-
-> +				tgt->rport = NULL;
-> +			}
-> +			tgt->removed = true;
-> +		}
-> +	} else {
-> +		list_for_each_entry(tgt, &vscsi->target_list, list)
-> +			tgt->removed = true;
-> +	}
->   	vscsi->next_target_id = 0;
->   	shost_printk(KERN_INFO, sh, "rescan: start\n");
->   	spin_unlock_irq(&vscsi->rescan_lock);
-> @@ -954,12 +1128,14 @@ int virtscsi_scan_finished(struct Scsi_Host *sh, unsigned long time)
->   	spin_lock_irq(&vscsi->rescan_lock);
->   	if (vscsi->next_target_id != -1)
->   		ret = 0;
-> +	else if (vscsi->protocol == SCSI_PROTOCOL_FCP)
-> +		fc_host_port_state(sh) = FC_PORTSTATE_ONLINE;
->   	spin_unlock_irq(&vscsi->rescan_lock);
->   	if (!ret)
->   		flush_work(&vscsi->rescan_work);
-> 
-> -	shost_printk(KERN_INFO, sh, "rescan: %s finished\n",
-> -		     ret ? "" : "not");
-> +	shost_printk(KERN_INFO, sh, "rescan: %sfinished\n",
-> +		     ret ? "" : "not ");
-
-You introduced it in the previous patch, so do the fixup there in the 
-first place?
-
->   	return ret;
+>   	return virtscsi_tmf(vscsi, cmd);
 >   }
 > 
-> @@ -978,6 +1154,34 @@ static ssize_t virtscsi_host_store_rescan(struct device *dev,
->   	NULL,
->   };
-> 
-> +static int virtscsi_issue_lip(struct Scsi_Host *shost)
-> +{
-> +	struct virtio_scsi *vscsi = shost_priv(shost);
-> +	unsigned long start = jiffies;
-> +	struct virtio_scsi_target_state *tgt;
-> +
-> +	spin_lock_irq(&vscsi->rescan_lock);
-> +	if (vscsi->next_target_id != -1) {
-> +		spin_unlock_irq(&vscsi->rescan_lock);
-> +		return 0;
-> +	}
+> @@ -1429,7 +1457,10 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>   	/* LUNs > 256 are reported with format 1, so they go in the range
+>   	 * 16640-32767.
+>   	 */
 
-> +	fc_host_port_state(shost) = FC_PORTSTATE_BLOCKED;
-> +	list_for_each_entry(tgt, &vscsi->target_list, list) {
-> +		if (tgt->rport) {
-> +			fc_remote_port_delete(tgt->rport);
-> +			tgt->rport = NULL;
-> +		}
-> +	}
-> +	vscsi->next_target_id = 0;
+Above old comment now only seems to apply to the then case of the 
+following if statement, not to the else case.
 
-I see some code duplication with what's in virtscsi_scan_host().
-Not sure if reduction is worth it.
-
-> +	spin_unlock_irq(&vscsi->rescan_lock);
-> +	queue_work(system_freezable_wq, &vscsi->rescan_work);
-> +
-> +	while (!virtscsi_scan_finished(shost, jiffies - start))
-> +		msleep(10);
-> +
-> +	return 0;
-> +}
-> +
->   static struct scsi_host_template virtscsi_host_template_single = {
->   	.module = THIS_MODULE,
->   	.name = "Virtio SCSI HBA",
-> @@ -1066,6 +1270,20 @@ static ssize_t virtscsi_host_store_rescan(struct device *dev,
->   	.track_queue_depth = 1,
->   };
-> 
-> +static struct fc_function_template virtscsi_transport_functions = {
-> +	.dd_fcrport_size = sizeof(struct virtio_scsi_target_state *),
-> +	.show_host_node_name = 1,
-> +	.show_host_port_name = 1,
-> +	.show_host_port_id = 1,
-> +	.show_host_port_state = 1,
-> +	.show_host_port_type = 1,
-> +	.show_starget_node_name = 1,
-> +	.show_starget_port_name = 1,
-> +	.show_starget_port_id = 1,
-> +	.show_rport_dev_loss_tmo = 1,
-> +	.issue_fc_host_lip = virtscsi_issue_lip,
-> +};
-> +
->   #define virtscsi_config_get(vdev, fld) \
->   	({ \
->   		typeof(((struct virtio_scsi_config *)0)->fld) __val; \
-> @@ -1193,7 +1411,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
->   	vscsi->num_queues = num_queues;
->   	vdev->priv = shost;
->   	vscsi->next_target_id = -1;
-> +	vscsi->protocol = SCSI_PROTOCOL_SAS;
-
-Why is the old/legacy/non-fcp hardcoded SAS?
-Doesn't the non-fcp virtio-scsi have any real transport at all, i.e. "none"?
-Maybe I just don't understand semantics of vscsi->protocol well enough.
-
->   	spin_lock_init(&vscsi->rescan_lock);
-> +	INIT_LIST_HEAD(&vscsi->target_list);
->   	INIT_WORK(&vscsi->rescan_work, virtscsi_rescan_work);
-> 
->   	err = virtscsi_init(vdev, vscsi);
+> -	shost->max_lun = virtscsi_config_get(vdev, max_lun) + 1 + 0x4000;
+> +	if (!virtio_has_feature(vdev, VIRTIO_SCSI_F_NATIVE_LUN))
+> +		shost->max_lun = virtscsi_config_get(vdev, max_lun) + 1 + 0x4000;
+> +	else
+> +		shost->max_lun = (u64)-1;
+>   	shost->max_id = num_targets;
+>   	shost->max_channel = 0;
+>   	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
 
 
 -- 
