@@ -1,31 +1,72 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 5/7] scsi: libsas: use flush_workqueue to process disco
- events synchronously
-Date: Fri, 15 Dec 2017 13:21:22 +0100
-Message-ID: <44a05f30-b21a-e9c4-7f34-a2abb3859332@suse.de>
+Subject: Re: [PATCH v5 6/7] scsi: libsas: direct call probe and destruct
+Date: Fri, 15 Dec 2017 13:23:22 +0100
+Message-ID: <488de1f2-b7ff-13a5-ec6b-f95d3e099fe2@suse.de>
 References: <20171208094210.24887-1-yanaijie@huawei.com>
- <20171208094210.24887-6-yanaijie@huawei.com>
+ <20171208094210.24887-7-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48195 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754931AbdLOMVZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 Dec 2017 07:21:25 -0500
-In-Reply-To: <20171208094210.24887-6-yanaijie@huawei.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171208094210.24887-7-yanaijie@huawei.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
 On 12/08/2017 10:42 AM, Jason Yan wrote:
-> Now we are processing sas event and discover event in different workqueues.
-> It's safe to wait the discover event done in the sas event work. Use
-> flush_workqueue() to insure the disco and revalidate events processed
-> synchronously so that the whole discover and revalidate process will not
-> be interrupted by other events.
+> In commit 87c8331fcf72 ("[SCSI] libsas: prevent domain rediscovery
+> competing with ata error handling") introduced disco mutex to prevent
+> rediscovery competing with ata error handling and put the whole
+> revalidation in the mutex. But the rphy add/remove needs to wait for the
+> error handling which also grabs the disco mutex. This may leads to dead
+> lock.So the probe and destruct event were introduce to do the rphy
+> add/remove asynchronously and out of the lock.
+> 
+> The asynchronously processed workers makes the whole discovery process
+> not atomic, the other events may interrupt the process. For example,
+> if a loss of signal event inserted before the probe event, the
+> sas_deform_port() is called and the port will be deleted.
+> 
+> And sas_port_delete() may run before the destruct event, but the
+> port-x:x is the top parent of end device or expander. This leads to
+> a kernel WARNING such as:
+> 
+> [   82.042979] sysfs group 'power' not found for kobject 'phy-1:0:22'
+> [   82.042983] ------------[ cut here ]------------
+> [   82.042986] WARNING: CPU: 54 PID: 1714 at fs/sysfs/group.c:237
+> sysfs_remove_group+0x94/0xa0
+> [   82.043059] Call trace:
+> [   82.043082] [<ffff0000082e7624>] sysfs_remove_group+0x94/0xa0
+> [   82.043085] [<ffff00000864e320>] dpm_sysfs_remove+0x60/0x70
+> [   82.043086] [<ffff00000863ee10>] device_del+0x138/0x308
+> [   82.043089] [<ffff00000869a2d0>] sas_phy_delete+0x38/0x60
+> [   82.043091] [<ffff00000869a86c>] do_sas_phy_delete+0x6c/0x80
+> [   82.043093] [<ffff00000863dc20>] device_for_each_child+0x58/0xa0
+> [   82.043095] [<ffff000008696f80>] sas_remove_children+0x40/0x50
+> [   82.043100] [<ffff00000869d1bc>] sas_destruct_devices+0x64/0xa0
+> [   82.043102] [<ffff0000080e93bc>] process_one_work+0x1fc/0x4b0
+> [   82.043104] [<ffff0000080e96c0>] worker_thread+0x50/0x490
+> [   82.043105] [<ffff0000080f0364>] kthread+0xfc/0x128
+> [   82.043107] [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+> 
+> Make probe and destruct a direct call in the disco and revalidate function,
+> but put them outside the lock. The whole discovery or revalidate won't
+> be interrupted by other events. And the DISCE_PROBE and DISCE_DESTRUCT
+> event are deleted as a result of the direct call.
+> 
+> Introduce a new list to destruct the sas_port and put the port delete after
+> the destruct. This makes sure the right order of destroying the sysfs
+> kobject and fix the warning above.
+> 
+> In sas_ex_revalidate_domain() have a loop to find all broadcasted
+> device, and sometimes we have a chance to find the same expander twice.
+> Because the sas_port will be deleted at the end of the whole revalidate
+> process, sas_port with the same name cannot be added before this.
+> Otherwise the sysfs will complain of creating duplicate filename. Since
+> the LLDD will send broadcast for every device change, we can only
+> process one expander's revalidation.
 > 
 > Signed-off-by: Jason Yan <yanaijie@huawei.com>
 > CC: John Garry <john.garry@huawei.com>
@@ -35,33 +76,16 @@ On 12/08/2017 10:42 AM, Jason Yan wrote:
 > CC: Tomas Henzl <thenzl@redhat.com>
 > CC: Dan Williams <dan.j.williams@intel.com>
 > ---
->  drivers/scsi/libsas/sas_port.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>  drivers/scsi/libsas/sas_ata.c      |  1 -
+>  drivers/scsi/libsas/sas_discover.c | 32 ++++++++++++++++++--------------
+>  drivers/scsi/libsas/sas_expander.c |  8 +++-----
+>  drivers/scsi/libsas/sas_internal.h |  1 +
+>  drivers/scsi/libsas/sas_port.c     |  3 +++
+>  include/scsi/libsas.h              |  3 +--
+>  include/scsi/scsi_transport_sas.h  |  1 +
+>  7 files changed, 27 insertions(+), 22 deletions(-)
 > 
-> diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-> index 9326628..64722f4 100644
-> --- a/drivers/scsi/libsas/sas_port.c
-> +++ b/drivers/scsi/libsas/sas_port.c
-> @@ -192,6 +192,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
->  		si->dft->lldd_port_formed(phy);
->  
->  	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
-> +	flush_workqueue(sas_ha->disco_q);
->  }
->  
->  /**
-> @@ -277,6 +278,9 @@ void sas_porte_broadcast_rcvd(struct work_struct *work)
->  
->  	SAS_DPRINTK("broadcast received: %d\n", prim);
->  	sas_discover_event(phy->port, DISCE_REVALIDATE_DOMAIN);
-> +
-> +	if (phy->port)
-> +		flush_workqueue(phy->port->ha->disco_q);
->  }
->  
->  void sas_porte_link_reset_err(struct work_struct *work)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
