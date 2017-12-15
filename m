@@ -1,32 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3] Use blist_flags_t consistently
-Date: Thu, 14 Dec 2017 22:33:04 -0500
-Message-ID: <yq1zi6kmzrj.fsf@oracle.com>
-References: <20171212182328.20088-1-bart.vanassche@wdc.com>
+Subject: Re: [PATCH] scsi: aacraid: fix io drop during the reset
+Date: Thu, 14 Dec 2017 22:34:23 -0500
+Message-ID: <yq1vah8mzpc.fsf@oracle.com>
+References: <1513107610-24451-1-git-send-email-prasad.munirathnam@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57524 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754718AbdLODj5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Dec 2017 22:39:57 -0500
-In-Reply-To: <20171212182328.20088-1-bart.vanassche@wdc.com> (Bart Van
-        Assche's message of "Tue, 12 Dec 2017 10:23:28 -0800")
+Received: from userp2130.oracle.com ([156.151.31.86]:53846 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754718AbdLODtb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Dec 2017 22:49:31 -0500
+In-Reply-To: <1513107610-24451-1-git-send-email-prasad.munirathnam@microsemi.com>
+        (Prasad B. Munirathnam's message of "Tue, 12 Dec 2017 11:40:10 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
+Cc: david.carroll@microsemi.com, raghavaaditya.renukunta@microsemi.com, martin.petersen@oracle.com, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
 
-Bart,
+Prasad,
 
-> Use the type blist_flags_t for all variables that represent blacklist
-> flags. Additionally, suppress recently introduced sparse warnings
-> related to blacklist flags.
+> "FIB_CONTEXT_FLAG_TIMEDOUT" flag is set in aac_eh_abort to
+> indicate command timeout, using the same flag in reset handler
+> causes the command to timeout and the IO's were droped.
 
-Applied to 4.15/scsi-fixes, thanks!
-
-PS. Had to tweak the commit ID.
+Applied to 4.15/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
