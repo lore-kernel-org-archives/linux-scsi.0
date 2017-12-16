@@ -1,41 +1,109 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 198161] incremental patch-4.9.51-52 on sg.c break Nero 4 nero
- burning rom application
-Date: Sat, 16 Dec 2017 14:10:57 +0000
-Message-ID: <bug-198161-11613-Dc7lXfKmqN@https.bugzilla.kernel.org/>
-References: <bug-198161-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH] scsi_dh: fix format of struct members
+Date: Sat, 16 Dec 2017 17:19:07 +0100
+Message-ID: <20171216161907.6204-1-xose.vazquez@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:45870 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752724AbdLPOK7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Dec 2017 09:10:59 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 920A8295DC
-        for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2017 14:10:59 +0000 (UTC)
-In-Reply-To: <bug-198161-11613@https.bugzilla.kernel.org/>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:46141 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752746AbdLPQTO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Dec 2017 11:19:14 -0500
+Received: by mail-wm0-f68.google.com with SMTP id r78so22528839wme.5
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2017 08:19:13 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=198161
+Remove useless trailing comma and space.
 
---- Comment #4 from Jean-Luc (luc.bertho@gmail.com) ---
-(In reply to Bart Van Assche from comment #1)
-> That's really bad. We need to know whether this issue only occurs with older
-> stable kernels or also in recent kernel versions. Please verify with a
-> recent kernel version. If I e.g. install nerolinux-4.0.0.0b-x86_64.deb in a
-> VM running kernel 4.13.0-19-generic then it correctly recognizes the Qemu
-> DVD.
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/scsi/scsi_dh.c | 66 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
 
-Hello Bart,
-I compiled and tested version 4.13.1 directly on my laptop
-Operating System: Debian GNU / Linux 7.11
-everything is OK
-
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index b88b5dbbc444..bbbe279970e4 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -36,43 +36,43 @@ struct scsi_dh_blist {
+ };
+ 
+ static const struct scsi_dh_blist scsi_dh_blist[] = {
+-	{"DGC", "RAID",			"emc" },
+-	{"DGC", "DISK",			"emc" },
+-	{"DGC", "VRAID",		"emc" },
++	{"DGC", "RAID",			"emc"},
++	{"DGC", "DISK",			"emc"},
++	{"DGC", "VRAID",		"emc"},
+ 
+-	{"COMPAQ", "MSA1000 VOLUME",	"hp_sw" },
+-	{"COMPAQ", "HSV110",		"hp_sw" },
++	{"COMPAQ", "MSA1000 VOLUME",	"hp_sw"},
++	{"COMPAQ", "HSV110",		"hp_sw"},
+ 	{"HP", "HSV100",		"hp_sw"},
+ 	{"DEC", "HSG80",		"hp_sw"},
+ 
+-	{"IBM", "1722",			"rdac", },
+-	{"IBM", "1724",			"rdac", },
+-	{"IBM", "1726",			"rdac", },
+-	{"IBM", "1742",			"rdac", },
+-	{"IBM", "1745",			"rdac", },
+-	{"IBM", "1746",			"rdac", },
+-	{"IBM", "1813",			"rdac", },
+-	{"IBM", "1814",			"rdac", },
+-	{"IBM", "1815",			"rdac", },
+-	{"IBM", "1818",			"rdac", },
+-	{"IBM", "3526",			"rdac", },
+-	{"IBM", "3542",			"rdac", },
+-	{"IBM", "3552",			"rdac", },
+-	{"SGI", "TP9",			"rdac", },
+-	{"SGI", "IS",			"rdac", },
+-	{"STK", "OPENstorage",		"rdac", },
+-	{"STK", "FLEXLINE 380",		"rdac", },
+-	{"STK", "BladeCtlr",		"rdac", },
+-	{"SUN", "CSM",			"rdac", },
+-	{"SUN", "LCSM100",		"rdac", },
+-	{"SUN", "STK6580_6780",		"rdac", },
+-	{"SUN", "SUN_6180",		"rdac", },
+-	{"SUN", "ArrayStorage",		"rdac", },
+-	{"DELL", "MD3",			"rdac", },
+-	{"NETAPP", "INF-01-00",		"rdac", },
+-	{"LSI", "INF-01-00",		"rdac", },
+-	{"ENGENIO", "INF-01-00",	"rdac", },
+-	{NULL, NULL,			NULL },
++	{"IBM", "1722",			"rdac"},
++	{"IBM", "1724",			"rdac"},
++	{"IBM", "1726",			"rdac"},
++	{"IBM", "1742",			"rdac"},
++	{"IBM", "1745",			"rdac"},
++	{"IBM", "1746",			"rdac"},
++	{"IBM", "1813",			"rdac"},
++	{"IBM", "1814",			"rdac"},
++	{"IBM", "1815",			"rdac"},
++	{"IBM", "1818",			"rdac"},
++	{"IBM", "3526",			"rdac"},
++	{"IBM", "3542",			"rdac"},
++	{"IBM", "3552",			"rdac"},
++	{"SGI", "TP9",			"rdac"},
++	{"SGI", "IS",			"rdac"},
++	{"STK", "OPENstorage",		"rdac"},
++	{"STK", "FLEXLINE 380",		"rdac"},
++	{"STK", "BladeCtlr",		"rdac"},
++	{"SUN", "CSM",			"rdac"},
++	{"SUN", "LCSM100",		"rdac"},
++	{"SUN", "STK6580_6780",		"rdac"},
++	{"SUN", "SUN_6180",		"rdac"},
++	{"SUN", "ArrayStorage",		"rdac"},
++	{"DELL", "MD3",			"rdac"},
++	{"NETAPP", "INF-01-00",		"rdac"},
++	{"LSI", "INF-01-00",		"rdac"},
++	{"ENGENIO", "INF-01-00",	"rdac"},
++	{NULL, NULL,			NULL},
+ };
+ 
+ static const char *
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.14.3
