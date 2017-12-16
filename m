@@ -1,109 +1,52 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH] scsi_dh: fix format of struct members
-Date: Sat, 16 Dec 2017 17:19:07 +0100
-Message-ID: <20171216161907.6204-1-xose.vazquez@gmail.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [bug report] scsi: qla2xxx: Fix memory leak in dual/target mode
+Date: Sat, 16 Dec 2017 17:00:57 +0000
+Message-ID: <91462A90-A09E-45EA-9C4F-010FE5307168@cavium.com>
+References: <20171214080223.eflsnwquncqmw4p5@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:46141 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752746AbdLPQTO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Dec 2017 11:19:14 -0500
-Received: by mail-wm0-f68.google.com with SMTP id r78so22528839wme.5
-        for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2017 08:19:13 -0800 (PST)
+Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:29181
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752513AbdLPRA7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Dec 2017 12:00:59 -0500
+In-Reply-To: <20171214080223.eflsnwquncqmw4p5@mwanda>
+Content-Language: en-US
+Content-ID: <E949B56C3A06AF4C9DB24554F89FE77C@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Remove useless trailing comma and space.
-
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/scsi/scsi_dh.c | 66 +++++++++++++++++++++++++-------------------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index b88b5dbbc444..bbbe279970e4 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -36,43 +36,43 @@ struct scsi_dh_blist {
- };
- 
- static const struct scsi_dh_blist scsi_dh_blist[] = {
--	{"DGC", "RAID",			"emc" },
--	{"DGC", "DISK",			"emc" },
--	{"DGC", "VRAID",		"emc" },
-+	{"DGC", "RAID",			"emc"},
-+	{"DGC", "DISK",			"emc"},
-+	{"DGC", "VRAID",		"emc"},
- 
--	{"COMPAQ", "MSA1000 VOLUME",	"hp_sw" },
--	{"COMPAQ", "HSV110",		"hp_sw" },
-+	{"COMPAQ", "MSA1000 VOLUME",	"hp_sw"},
-+	{"COMPAQ", "HSV110",		"hp_sw"},
- 	{"HP", "HSV100",		"hp_sw"},
- 	{"DEC", "HSG80",		"hp_sw"},
- 
--	{"IBM", "1722",			"rdac", },
--	{"IBM", "1724",			"rdac", },
--	{"IBM", "1726",			"rdac", },
--	{"IBM", "1742",			"rdac", },
--	{"IBM", "1745",			"rdac", },
--	{"IBM", "1746",			"rdac", },
--	{"IBM", "1813",			"rdac", },
--	{"IBM", "1814",			"rdac", },
--	{"IBM", "1815",			"rdac", },
--	{"IBM", "1818",			"rdac", },
--	{"IBM", "3526",			"rdac", },
--	{"IBM", "3542",			"rdac", },
--	{"IBM", "3552",			"rdac", },
--	{"SGI", "TP9",			"rdac", },
--	{"SGI", "IS",			"rdac", },
--	{"STK", "OPENstorage",		"rdac", },
--	{"STK", "FLEXLINE 380",		"rdac", },
--	{"STK", "BladeCtlr",		"rdac", },
--	{"SUN", "CSM",			"rdac", },
--	{"SUN", "LCSM100",		"rdac", },
--	{"SUN", "STK6580_6780",		"rdac", },
--	{"SUN", "SUN_6180",		"rdac", },
--	{"SUN", "ArrayStorage",		"rdac", },
--	{"DELL", "MD3",			"rdac", },
--	{"NETAPP", "INF-01-00",		"rdac", },
--	{"LSI", "INF-01-00",		"rdac", },
--	{"ENGENIO", "INF-01-00",	"rdac", },
--	{NULL, NULL,			NULL },
-+	{"IBM", "1722",			"rdac"},
-+	{"IBM", "1724",			"rdac"},
-+	{"IBM", "1726",			"rdac"},
-+	{"IBM", "1742",			"rdac"},
-+	{"IBM", "1745",			"rdac"},
-+	{"IBM", "1746",			"rdac"},
-+	{"IBM", "1813",			"rdac"},
-+	{"IBM", "1814",			"rdac"},
-+	{"IBM", "1815",			"rdac"},
-+	{"IBM", "1818",			"rdac"},
-+	{"IBM", "3526",			"rdac"},
-+	{"IBM", "3542",			"rdac"},
-+	{"IBM", "3552",			"rdac"},
-+	{"SGI", "TP9",			"rdac"},
-+	{"SGI", "IS",			"rdac"},
-+	{"STK", "OPENstorage",		"rdac"},
-+	{"STK", "FLEXLINE 380",		"rdac"},
-+	{"STK", "BladeCtlr",		"rdac"},
-+	{"SUN", "CSM",			"rdac"},
-+	{"SUN", "LCSM100",		"rdac"},
-+	{"SUN", "STK6580_6780",		"rdac"},
-+	{"SUN", "SUN_6180",		"rdac"},
-+	{"SUN", "ArrayStorage",		"rdac"},
-+	{"DELL", "MD3",			"rdac"},
-+	{"NETAPP", "INF-01-00",		"rdac"},
-+	{"LSI", "INF-01-00",		"rdac"},
-+	{"ENGENIO", "INF-01-00",	"rdac"},
-+	{NULL, NULL,			NULL},
- };
- 
- static const char *
--- 
-2.14.3
+SGkgRGFuLCANCg0KPiBPbiBEZWMgMTQsIDIwMTcsIGF0IDI6MDIgQU0sIERhbiBDYXJwZW50ZXIg
+PGRhbi5jYXJwZW50ZXJAb3JhY2xlLmNvbT4gd3JvdGU6DQo+IA0KPiBIZWxsbyBoaW1hbnNodS5t
+YWRoYW5pQGNhdml1bS5jb20sDQo+IA0KPiBUaGlzIGlzIGEgc2VtaS1hdXRvbWF0aWMgZW1haWwg
+YWJvdXQgbmV3IHN0YXRpYyBjaGVja2VyIHdhcm5pbmdzLg0KPiANCj4gVGhlIHBhdGNoIDc4Njdi
+OThkY2ViNzogInNjc2k6IHFsYTJ4eHg6IEZpeCBtZW1vcnkgbGVhayBpbg0KPiBkdWFsL3Rhcmdl
+dCBtb2RlIiBmcm9tIERlYyA0LCAyMDE3LCBsZWFkcyB0byB0aGUgZm9sbG93aW5nIFNtYXRjaA0K
+PiBjb21wbGFpbnQ6DQo+IA0KPiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWlkLmM6NTg2
+IHFsYTI1eHhfZGVsZXRlX3JlcV9xdWUoKQ0KPiAgICBlcnJvcjogd2UgcHJldmlvdXNseSBhc3N1
+bWVkICdyZXEnIGNvdWxkIGJlIG51bGwgKHNlZSBsaW5lIDU4MCkNCj4gDQo+ICAgIGRyaXZlcnMv
+c2NzaS9xbGEyeHh4L3FsYV9taWQuYzo2MDIgcWxhMjV4eF9kZWxldGVfcnNwX3F1ZSgpDQo+ICAg
+IGVycm9yOiB3ZSBwcmV2aW91c2x5IGFzc3VtZWQgJ3JzcCcgY291bGQgYmUgbnVsbCAoc2VlIGxp
+bmUgNTk2KQ0KPiANCj4gDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9taWQuYw0KPiAgIDU3
+OQkNCj4gICA1ODAJCWlmIChyZXEgJiYgdmhhLT5mbGFncy5xcGFpcnNfcmVxX2NyZWF0ZWQpIHsN
+Cj4gICAgICAgICAgICAgICAgICAgIF5eXg0KPiBDaGVjayBmb3IgTlVMTA0KPiANCj4gICA1ODEJ
+CQlyZXEtPm9wdGlvbnMgfD0gQklUXzA7DQo+ICAgNTgyCQkJcmV0ID0gcWxhMjV4eF9pbml0X3Jl
+cV9xdWUodmhhLCByZXEpOw0KPiAgIDU4MwkJCWlmIChyZXQgIT0gUUxBX1NVQ0NFU1MpDQo+ICAg
+NTg0CQkJCXJldHVybiBRTEFfRlVOQ1RJT05fRkFJTEVEOw0KPiAgIDU4NQkJfQ0KPiAgIDU4NgkJ
+cWxhMjV4eF9mcmVlX3JlcV9xdWUodmhhLCByZXEpOw0KPiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIF5eXg0KPiBVbmNoZWNrZWQgZGVyZWZlcmVuY2UgaW5zaWRlIGZ1
+bmN0aW9uLg0KPiANCj4gICA1ODcJDQo+ICAgNTg4CQlyZXR1cm4gcmV0Ow0KPiANCj4gCVsgc25p
+cCBdDQo+IA0KPiAgIDU5NQkNCj4gICA1OTYJCWlmIChyc3AgJiYgdmhhLT5mbGFncy5xcGFpcnNf
+cnNwX2NyZWF0ZWQpIHsNCj4gICAgICAgICAgICAgICAgICAgIF5eXiANCj4gIDU5NwkJCXJzcC0+
+b3B0aW9ucyB8PSBCSVRfMDsNCj4gICA1OTgJCQlyZXQgPSBxbGEyNXh4X2luaXRfcnNwX3F1ZSh2
+aGEsIHJzcCk7DQo+ICAgNTk5CQkJaWYgKHJldCAhPSBRTEFfU1VDQ0VTUykNCj4gICA2MDAJCQkJ
+cmV0dXJuIFFMQV9GVU5DVElPTl9GQUlMRUQ7DQo+ICAgNjAxCQl9DQo+ICAgNjAyCQlxbGEyNXh4
+X2ZyZWVfcnNwX3F1ZSh2aGEsIHJzcCk7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgXl5eDQo+ICAgNjAzCQ0KPiAgIDYwNAkJcmV0dXJuIHJldDsNCj4gDQo+IHJl
+Z2FyZHMsDQo+IGRhbiBjYXJwZW50ZXINCj4gDQo+IHJlZ2FyZHMsDQo+IGRhbiBjYXJwZW50ZXIN
+Cg0KVGhhbmtzIGZvciByZXBvcnRpbmcuIEnigJlsbCBzZW5kIG91dCBwYXRjaCB3aXRoIHRoZSBj
+b3JyZWN0aW9ucw0KDQoNClRoYW5rcywNCi0gSGltYW5zaHUNCg0K
