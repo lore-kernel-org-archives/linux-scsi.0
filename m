@@ -1,116 +1,65 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: Driver version for PMC Adaptec HBA in Linux and from vendor
-Date: Sat, 16 Dec 2017 10:41:20 +0100
-Message-ID: <66402afc-7a08-8e68-b1ba-6b3b52e2d051@molgen.mpg.de>
-References: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
- <4D8E82A446BF54499747901DBDEB737A7B8C48D8@avsrvexchmbx2.microsemi.net>
- <71e28514-9832-5fae-ba69-1a6cbe5ae269@molgen.mpg.de>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: scsi_devinfo: devices and pattern matching
+Date: Sat, 16 Dec 2017 14:31:34 +0100
+Message-ID: <bebefebe-e1b8-5f15-a59d-ed5099ebcf4e@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:51722 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751511AbdLPJlW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Dec 2017 04:41:22 -0500
-In-Reply-To: <71e28514-9832-5fae-ba69-1a6cbe5ae269@molgen.mpg.de>
-Content-Language: de-DE
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:42906 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752724AbdLPNbj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Dec 2017 08:31:39 -0500
+Received: by mail-wm0-f45.google.com with SMTP id b199so22142072wme.1
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2017 05:31:38 -0800 (PST)
+Content-Language: en-GB
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, aacraid@microsemi.com
-Cc: linux-scsi@vger.kernel.org, it+linux-scsi@molgen.mpg.de
+To: Hannes Reinecke <hare@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Bart Van Assche <bart.vanassche@wdc.com>, Martin Wilck <mwilck@suse.com>, Martin Petersen <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-[Corrected email address.]
+Hi,
 
-Am 16.12.2017 um 10:39 schrieb Paul Menzel:
-> Dear Aditya,
-> 
-> 
-> Am 17.02.2017 um 20:29 schrieb Raghava Aditya Renukunta:
-> 
->>> Using a PMC Adaptec HBA 1000-8e with latest Linux, it only initializes
->>> in sync mode, instead of async mode.
->>
->> The patches that enable async mode in HBA 1000-8e, have been included 
->> in the James Bottomley's linux-scsi Branch and are on track be
->> Included into Linux 4.11.
->>
->> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/
->>
->>> ```
->>> $ git describe --tag
->>> v4.10-rc8-47-g0722f57bf
->>> $ dmesg
->>> [   21.359635] Adaptec aacraid driver 1.2-1[41066]-ms
->>> [   21.360017] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have
->>> ASPM control
->>> [   21.363987] AAC0: Async. mode not supported by current driver, sync.
->>> mode enforced.
->>> [   21.363987] Please update driver to get full performance.
->>> [   21.364949] AAC0: kernel 1.2-0[0] Nov  5 2015
->>> [   21.365275] AAC0: monitor 0.0-0[0]
->>> [   21.371382] AAC0: bios 0.13-209[32000]
->>> [   21.371711] AAC0: serial 10F447
->>> [   21.372035] AAC0: Non-DASD support enabled.
->>> [   21.372360] AAC0: 64bit support enabled.
->>> [   21.372688] AAC0: 64 Bit DAC enabled
->>> […]
->>> $ git grep 'AAC_DRIVER_BUILD 41066'
->>> drivers/scsi/aacraid/aacraid.h:# define AAC_DRIVER_BUILD 41066
->>> ```
->>>
->>> Searching the vendor Web site, there is *Linux Driver Source
->>> 1.2.1-53005* available for download [1].
->>
->> The latest upstream driver version is 50740. We will be reaching 
->> version 53005 in couple of patch sets  ( ~ 3).
->>
->> http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=96f6a6134766de0d42a98c7758736dde16e0add5 
->>
-> 
-> Thank you for the details. At our infrastructure we only want to use LTS 
-> Linux kernels, and the latest in 4.14. So right now, Linux 4.14.6 
-> includes version 50834 [1], which is the same version currently in Linus 
-> master branch (4.15-rc3). Is that save to use with async mode, or are 
-> you aware of problems and we should always use the latest out of tree 
-> driver, which is at version 55022 and can be download from the Microsemi 
-> server [3].
-> 
->>> How does the upstream process work? Is there a git repository somewhere
->>> from Microsemi? Are the patches already up for review? (I didn’t find 
->>> them.)
->>
->> We try to push out patch sets to kernel.org for every major  driver 
->> release we make.  Usually they go into the
->> sub component maintainers branch (linux-scsi ) , which is then pushed 
->> out to Linus when the merge
->> window for  opens (currently the merge window for 4.10 is closed , 
->> barring fixes). So Linux version 4.11 should have
->> full async support and more for HBA1000-8e.
->>
->> We do not maintain a git repository unfortunately, but we do release 
->> the source code for every release as you
->> indicated.
->>
->> For further reference the patches are sent out in the scsi mailing 
->> list linux-scsi@vger.kernel.org ,
->> the archive is here http://marc.info/?l=linux-scsi&r=1&w=2 .
->>
->> Hope I cleared up your doubts. Please do reach out if you have other 
->> concerns or questions.
-> 
-> Yes, thank you for your elaborate answer, which cleared up a lot of my 
-> doubts. We would be even more satisfied if you moved your development 
-> fully to the Linux kernel tree, so that it always carries the latest 
-> driver. If we can help with that by contacting certain people, please 
-> tell us.
-> 
-> 
-> Kind regards,
-> 
-> Paul
-> 
-> 
->>> [1] https://storage.microsemi.com/en-us/speed/raid/aac/linux/aacraid-linux-src-1_2_1-53005_tgz.php
-> [2] https://elixir.free-electrons.com/linux/v4.14.6/source/drivers/scsi/aacraid/aacraid.h#L100
-> [3] https://storage.microsemi.com/en-us/downloads/linux_source/linux_source_code/productid=aha-1000-8e&dn=microsemi+adaptec+hba+1000-8e.php 
+After last pattern matching changes, maybe some entries should be revised:
+
+
+Empty strings(current meaning?):
+	{"", "Scanner", "1.80", BLIST_NOLUN},	/* responds to all lun */
+	{"Promise", "", NULL, BLIST_SPARSELUN},
+	{"HP", "C1790A", "", BLIST_NOLUN},		/* scanjet iip */
+	{"HP", "C2500A", "", BLIST_NOLUN},		/* scanjet iicx */
+
+
+Overlapping(?) strings(remove one???):
+	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
+	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
+
+	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+	
+	{"Promise", "", NULL, BLIST_SPARSELUN},
+	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
+
+
+Odd "revision level" string(is it right? EOT?):
+        {"SEAGATE", "ST157N", "\004|j", BLIST_NOLUN},
+
+
+Duplicate strings(They should be merged):
+	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
+	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN},
+
+
+Keep in mind, for future patches, that there are regex metacharacters(!!):
+        {"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
+        {"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
+        {"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},     /* Dell PV 530F */
+
+
+For homogeneity reasons, should "*" revision level be replaced by NULL?
+
+
+And the current pattern matching algorithm should be described clearer, right
+now it's a bit confused.
+
+
+Thank you.
