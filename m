@@ -1,52 +1,60 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [bug report] scsi: qla2xxx: Fix memory leak in dual/target mode
-Date: Sat, 16 Dec 2017 17:00:57 +0000
-Message-ID: <91462A90-A09E-45EA-9C4F-010FE5307168@cavium.com>
-References: <20171214080223.eflsnwquncqmw4p5@mwanda>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH] qla2xxx: Fix smatch warning in qla25xx_delete_{rsp|req}_que
+Date: Sat, 16 Dec 2017 16:05:09 -0800
+Message-ID: <20171217000509.6129-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:29181
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0058.outbound.protection.outlook.com ([104.47.38.58]:26560
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752513AbdLPRA7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Dec 2017 12:00:59 -0500
-In-Reply-To: <20171214080223.eflsnwquncqmw4p5@mwanda>
-Content-Language: en-US
-Content-ID: <E949B56C3A06AF4C9DB24554F89FE77C@namprd07.prod.outlook.com>
+        id S1751512AbdLQAFN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Dec 2017 19:05:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-SGkgRGFuLCANCg0KPiBPbiBEZWMgMTQsIDIwMTcsIGF0IDI6MDIgQU0sIERhbiBDYXJwZW50ZXIg
-PGRhbi5jYXJwZW50ZXJAb3JhY2xlLmNvbT4gd3JvdGU6DQo+IA0KPiBIZWxsbyBoaW1hbnNodS5t
-YWRoYW5pQGNhdml1bS5jb20sDQo+IA0KPiBUaGlzIGlzIGEgc2VtaS1hdXRvbWF0aWMgZW1haWwg
-YWJvdXQgbmV3IHN0YXRpYyBjaGVja2VyIHdhcm5pbmdzLg0KPiANCj4gVGhlIHBhdGNoIDc4Njdi
-OThkY2ViNzogInNjc2k6IHFsYTJ4eHg6IEZpeCBtZW1vcnkgbGVhayBpbg0KPiBkdWFsL3Rhcmdl
-dCBtb2RlIiBmcm9tIERlYyA0LCAyMDE3LCBsZWFkcyB0byB0aGUgZm9sbG93aW5nIFNtYXRjaA0K
-PiBjb21wbGFpbnQ6DQo+IA0KPiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWlkLmM6NTg2
-IHFsYTI1eHhfZGVsZXRlX3JlcV9xdWUoKQ0KPiAgICBlcnJvcjogd2UgcHJldmlvdXNseSBhc3N1
-bWVkICdyZXEnIGNvdWxkIGJlIG51bGwgKHNlZSBsaW5lIDU4MCkNCj4gDQo+ICAgIGRyaXZlcnMv
-c2NzaS9xbGEyeHh4L3FsYV9taWQuYzo2MDIgcWxhMjV4eF9kZWxldGVfcnNwX3F1ZSgpDQo+ICAg
-IGVycm9yOiB3ZSBwcmV2aW91c2x5IGFzc3VtZWQgJ3JzcCcgY291bGQgYmUgbnVsbCAoc2VlIGxp
-bmUgNTk2KQ0KPiANCj4gDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9taWQuYw0KPiAgIDU3
-OQkNCj4gICA1ODAJCWlmIChyZXEgJiYgdmhhLT5mbGFncy5xcGFpcnNfcmVxX2NyZWF0ZWQpIHsN
-Cj4gICAgICAgICAgICAgICAgICAgIF5eXg0KPiBDaGVjayBmb3IgTlVMTA0KPiANCj4gICA1ODEJ
-CQlyZXEtPm9wdGlvbnMgfD0gQklUXzA7DQo+ICAgNTgyCQkJcmV0ID0gcWxhMjV4eF9pbml0X3Jl
-cV9xdWUodmhhLCByZXEpOw0KPiAgIDU4MwkJCWlmIChyZXQgIT0gUUxBX1NVQ0NFU1MpDQo+ICAg
-NTg0CQkJCXJldHVybiBRTEFfRlVOQ1RJT05fRkFJTEVEOw0KPiAgIDU4NQkJfQ0KPiAgIDU4NgkJ
-cWxhMjV4eF9mcmVlX3JlcV9xdWUodmhhLCByZXEpOw0KPiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIF5eXg0KPiBVbmNoZWNrZWQgZGVyZWZlcmVuY2UgaW5zaWRlIGZ1
-bmN0aW9uLg0KPiANCj4gICA1ODcJDQo+ICAgNTg4CQlyZXR1cm4gcmV0Ow0KPiANCj4gCVsgc25p
-cCBdDQo+IA0KPiAgIDU5NQkNCj4gICA1OTYJCWlmIChyc3AgJiYgdmhhLT5mbGFncy5xcGFpcnNf
-cnNwX2NyZWF0ZWQpIHsNCj4gICAgICAgICAgICAgICAgICAgIF5eXiANCj4gIDU5NwkJCXJzcC0+
-b3B0aW9ucyB8PSBCSVRfMDsNCj4gICA1OTgJCQlyZXQgPSBxbGEyNXh4X2luaXRfcnNwX3F1ZSh2
-aGEsIHJzcCk7DQo+ICAgNTk5CQkJaWYgKHJldCAhPSBRTEFfU1VDQ0VTUykNCj4gICA2MDAJCQkJ
-cmV0dXJuIFFMQV9GVU5DVElPTl9GQUlMRUQ7DQo+ICAgNjAxCQl9DQo+ICAgNjAyCQlxbGEyNXh4
-X2ZyZWVfcnNwX3F1ZSh2aGEsIHJzcCk7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgXl5eDQo+ICAgNjAzCQ0KPiAgIDYwNAkJcmV0dXJuIHJldDsNCj4gDQo+IHJl
-Z2FyZHMsDQo+IGRhbiBjYXJwZW50ZXINCj4gDQo+IHJlZ2FyZHMsDQo+IGRhbiBjYXJwZW50ZXIN
-Cg0KVGhhbmtzIGZvciByZXBvcnRpbmcuIEnigJlsbCBzZW5kIG91dCBwYXRjaCB3aXRoIHRoZSBj
-b3JyZWN0aW9ucw0KDQoNClRoYW5rcywNCi0gSGltYW5zaHUNCg0K
+This patch fixes following warnings reported by smatch
+
+drivers/scsi/qla2xxx/qla_mid.c:586 qla25xx_delete_req_que()
+error: we previously assumed 'req' could be null (see line 580)
+
+drivers/scsi/qla2xxx/qla_mid.c:602 qla25xx_delete_rsp_que()
+error: we previously assumed 'rsp' could be null (see line 596)
+
+Fixes: 7867b98dceb7 ("scsi: qla2xxx: Fix memory leak in dual/target mode")
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_mid.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index e538e6308885..522d585a1a08 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -582,8 +582,9 @@ qla25xx_delete_req_que(struct scsi_qla_host *vha, struct req_que *req)
+ 		ret = qla25xx_init_req_que(vha, req);
+ 		if (ret != QLA_SUCCESS)
+ 			return QLA_FUNCTION_FAILED;
++
++		qla25xx_free_req_que(vha, req);
+ 	}
+-	qla25xx_free_req_que(vha, req);
+ 
+ 	return ret;
+ }
+@@ -598,8 +599,9 @@ qla25xx_delete_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 		ret = qla25xx_init_rsp_que(vha, rsp);
+ 		if (ret != QLA_SUCCESS)
+ 			return QLA_FUNCTION_FAILED;
++
++		qla25xx_free_rsp_que(vha, rsp);
+ 	}
+-	qla25xx_free_rsp_que(vha, rsp);
+ 
+ 	return ret;
+ }
+-- 
+2.12.0
