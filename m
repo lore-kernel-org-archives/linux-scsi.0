@@ -1,89 +1,50 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: scsi_devinfo: devices and pattern matching
-Date: Mon, 18 Dec 2017 09:36:47 +0100
-Message-ID: <5cdd66a5-f4f4-e010-5e6e-91eacaf790f0@suse.de>
-References: <bebefebe-e1b8-5f15-a59d-ed5099ebcf4e@gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [trivial PATCH] treewide: Align function definition open/close
+ braces
+Date: Mon, 18 Dec 2017 14:31:12 +0200
+Message-ID: <CAHp75Vfw=AQHkiC7WhUkuytxG_reO8rmEfpA7z-2yAekFQ4AYQ@mail.gmail.com>
+References: <1513556924.31581.51.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52361 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756832AbdLRIgu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Dec 2017 03:36:50 -0500
-In-Reply-To: <bebefebe-e1b8-5f15-a59d-ed5099ebcf4e@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <1513556924.31581.51.camel@perches.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Joe Perches <joe@perches.com>
+Cc: linux-rtc@vger.kernel.org, ALSA Development Mailing List <alsa-devel@alsa-project.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, Jiri Kosina <trivial@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, MPT-FusionLinux.pdl@broadcom.com, acpi4asus-user <acpi4asus-user@lists.sourceforge.net>, "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, Platform Driver <platform-driver-x86@vger.kernel.org>, linux-xfs@vger.kernel.org, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, linux-audit@redhat.com, amd-gfx@lists.freedesktop.org, netdev <netdev@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, ocfs2-devel@oss.oracle.com, Linux Media Mailing List <linux-media@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, Bart Van Assche <bart.vanassche@wdc.com>, Martin Wilck <mwilck@suse.com>, Martin Petersen <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 12/16/2017 02:31 PM, Xose Vazquez Perez wrote:
-> Hi,
-> 
-> After last pattern matching changes, maybe some entries should be revised:
-> 
-> 
-> Empty strings(current meaning?):
-> 	{"", "Scanner", "1.80", BLIST_NOLUN},	/* responds to all lun */
-> 	{"Promise", "", NULL, BLIST_SPARSELUN},
-> 	{"HP", "C1790A", "", BLIST_NOLUN},		/* scanjet iip */
-> 	{"HP", "C2500A", "", BLIST_NOLUN},		/* scanjet iicx */
-> 
-We would need to check what the hardware actually returns, whether it
-_really_ is an empty string or whether it's meant to be a catch-all entry.
-
-> 
-> Overlapping(?) strings(remove one???):
-> 	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
-> 	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},>
-> 	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-> 	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-> 	
-> 	{"Promise", "", NULL, BLIST_SPARSELUN},
-> 	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
-> 
-That is by design, and nothing to worry about, as the specific entries
-are subsets of the more generic entries.
-
-> 
-> Odd "revision level" string(is it right? EOT?):
->         {"SEAGATE", "ST157N", "\004|j", BLIST_NOLUN},
-> 
-> 
-We might need to check what the ST157N actually returns; if we can't I
-fear the entry need to stay as it is.
-
-> Duplicate strings(They should be merged):
-> 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
-> 	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN},
-> 
-Ah. Good point. Yes, it should be merged.
-
-> 
-> Keep in mind, for future patches, that there are regex metacharacters(!!):
->         {"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
->         {"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
->         {"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},     /* Dell PV 530F */
-> 
-Hmm. Yes, but again we need to validate this with real hardware before
-making any changes here.
-
-> 
-> For homogeneity reasons, should "*" revision level be replaced by NULL?
-> 
-> 
-> And the current pattern matching algorithm should be described clearer, right
-> now it's a bit confused.
-> 
-I'll be sending out a blktest entry for the devinfo string matching;
-that will give us a proper regression test suite.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+T24gTW9uLCBEZWMgMTgsIDIwMTcgYXQgMjoyOCBBTSwgSm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVz
+LmNvbT4gd3JvdGU6Cj4gU29tZSBmdW5jdGlvbnMgZGVmaW5pdGlvbnMgaGF2ZSBlaXRoZXIgdGhl
+IGluaXRpYWwgb3BlbiBicmFjZSBhbmQvb3IKPiB0aGUgY2xvc2luZyBicmFjZSBvdXRzaWRlIG9m
+IGNvbHVtbiAxLgo+Cj4gTW92ZSB0aG9zZSBicmFjZXMgdG8gY29sdW1uIDEuCj4KPiBUaGlzIGFs
+bG93cyB2YXJpb3VzIGZ1bmN0aW9uIGFuYWx5emVycyBsaWtlIGdudSBjb21wbGV4aXR5IHRvIHdv
+cmsKPiBwcm9wZXJseSBmb3IgdGhlc2UgbW9kaWZpZWQgZnVuY3Rpb25zLgo+Cj4gTWlzY2VsbGFu
+ZWE6Cj4KPiBvIFJlbW92ZSBleHRyYSB0cmFpbGluZyA7IGFuZCBibGFuayBsaW5lIGZyb20geGZz
+X2FnZl92ZXJpZnkKPgo+IFNpZ25lZC1vZmYtYnk6IEpvZSBQZXJjaGVzIDxqb2VAcGVyY2hlcy5j
+b20+Cgo+ICBkcml2ZXJzL3BsYXRmb3JtL3g4Ni9lZWVwYy1sYXB0b3AuYyAgICAgICAgICAgICAg
+ICAgIHwgIDIgKy0KCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGxhdGZvcm0veDg2L2VlZXBjLWxh
+cHRvcC5jIGIvZHJpdmVycy9wbGF0Zm9ybS94ODYvZWVlcGMtbGFwdG9wLmMKPiBpbmRleCA1YTY4
+MTk2Mjg5OWMuLjRjMzg5MDRhOGEzMiAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3BsYXRmb3JtL3g4
+Ni9lZWVwYy1sYXB0b3AuYwo+ICsrKyBiL2RyaXZlcnMvcGxhdGZvcm0veDg2L2VlZXBjLWxhcHRv
+cC5jCj4gQEAgLTQ5Miw3ICs0OTIsNyBAQCBzdGF0aWMgdm9pZCBlZWVwY19wbGF0Zm9ybV9leGl0
+KHN0cnVjdCBlZWVwY19sYXB0b3AgKmVlZXBjKQo+ICAgKiBwb3RlbnRpYWxseSBiYWQgdGltZSwg
+c3VjaCBhcyBhIHRpbWVyIGludGVycnVwdC4KPiAgICovCj4gIHN0YXRpYyB2b2lkIHRwZF9sZWRf
+dXBkYXRlKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykKPiAtIHsKPiArewo+ICAgICAgICAgc3Ry
+dWN0IGVlZXBjX2xhcHRvcCAqZWVlcGM7Cj4KPiAgICAgICAgIGVlZXBjID0gY29udGFpbmVyX29m
+KHdvcmssIHN0cnVjdCBlZWVwY19sYXB0b3AsIHRwZF9sZWRfd29yayk7Cj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvcnRjL3J0Yy1hYi1iNXplLXMzLmMgYi9kcml2ZXJzL3J0Yy9ydGMtYWItYjV6ZS1z
+My5jCj4gaW5kZXggYTMxOWJmMWU0OWRlLi5lZjVjMTZkZmFiZmEgMTAwNjQ0CgpBY2tlZC1ieTog
+QW5keSBTaGV2Y2hlbmtvIDxhbmR5LnNoZXZjaGVua29AZ21haWwuY29tPgoKZm9yIFBEeDg2IGNo
+YW5nZXMuCgoKLS0gCldpdGggQmVzdCBSZWdhcmRzLApBbmR5IFNoZXZjaGVua28KX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcg
+bGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRl
+c2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsCg==
