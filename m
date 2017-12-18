@@ -1,74 +1,112 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: check for device state in __scsi_remove_target()
-Date: Mon, 18 Dec 2017 09:38:21 -0500
-Message-ID: <1513607901.10760.101.camel@localhost.localdomain>
-References: <1513171297-58020-1-git-send-email-hare@suse.de>
-         <1513203795.2413.14.camel@wdc.com> <5A3230D3.2060302@huawei.com>
-         <f43e0560-7a46-6d72-41f9-0d90fa20948c@suse.com>
-         <1513289436.10760.79.camel@localhost.localdomain>
-Reply-To: emilne@redhat.com
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: Driver version for PMC Adaptec HBA in Linux and from vendor
+Date: Mon, 18 Dec 2017 18:09:28 +0000
+Message-ID: <759acea897474b7798476133896a29d5@microsemi.com>
+References: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
+ <4D8E82A446BF54499747901DBDEB737A7B8C48D8@avsrvexchmbx2.microsemi.net>
+ <71e28514-9832-5fae-ba69-1a6cbe5ae269@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33585 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758910AbdLROiX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Dec 2017 09:38:23 -0500
-In-Reply-To: <1513289436.10760.79.camel@localhost.localdomain>
+Received: from mail-by2nam03on0089.outbound.protection.outlook.com ([104.47.42.89]:21184
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933323AbdLRSJj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Dec 2017 13:09:39 -0500
+In-Reply-To: <71e28514-9832-5fae-ba69-1a6cbe5ae269@molgen.mpg.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: Jason Yan <yanaijie@huawei.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Paul Menzel <pmenzel@molgen.mpg.de>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "it+linux-scsi@molgen.mpg.de" <it+linux-scsi@molgen.mpg.de>
 
-On Thu, 2017-12-14 at 17:10 -0500, Ewan D. Milne wrote:
-> On Thu, 2017-12-14 at 10:02 +0100, Hannes Reinecke wrote:
-> > On 12/14/2017 09:05 AM, Jason Yan wrote:
-> > > 
-> > > On 2017/12/14 6:23, Bart Van Assche wrote:
-> > >> On Wed, 2017-12-13 at 14:21 +0100, Hannes Reinecke wrote:
-> > >>> As it turned out device_get() doesn't use kref_get_unless_zero(),
-> > >>> so we will be always getting a device pointer.
-> > >>> So we need to check for the device state in __scsi_remove_target()
-> > >>> to avoid tripping over deleted objects.
-> > >>>
-> > >>> Fixes: fbce4d9 ("scsi: fixup kernel warning during rmmod()")
-> > >>
-> > >> How about adding Reported-by: Jason Yan? See also
-> > >> https://www.spinics.net/lists/linux-scsi/msg115295.html
-> > >>
-> > >> Anyway:
-> > >>
-> > >> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-> > >>
-> > > 
-> > > Seems the same as my patch.So how do we plan to fix this issue,
-> > > pick this approach up or the approach James Bottomley suggested?
-> > > I have sent a patch to change get_device() but Greg seems do not
-> > > like this way.
-> > > 
-> > This is actually a real regression, which can be trivially exercised by
-> > eg logging out from two connections to an iSCSI target.
-> > (Our QA tripped across that one).
-> > So I'd rather have to have it fixed reasonably soon.
-> > 
-> > While 'get_device' is IMO the 'correct' solution it surely warrants a
-> > broader discussion, plus one would need to audit all callers to check
-> > the return value. If we were going down that route we should probably
-> > add a __must_check to get_device(), too.
-> > But again, this will probably drag out for quite some time, and I'd
-> > prefer to have the fix in the meantime.
-> > 
-> > Cheers,
-> > 
-> > Hannes
-> 
-> We have 2 reproducible test cases, this patch fixes one of them,
-> which was a continually oscillating FC target port w/short dev_loss_tmo.
-> I'm still waiting for a report on the iSCSI test.  The code looks good.
-> We need to get some kind of fix for this sooner rather than later.
-> 
-> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-Report here is that Hannes's patch fixes our failing iSCSI test also.
-Martin/James, can we get this in please?
+DQpIaSBQYXVsLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFBhdWwg
+TWVuemVsIFttYWlsdG86cG1lbnplbEBtb2xnZW4ubXBnLmRlXQ0KPiBTZW50OiBTYXR1cmRheSwg
+RGVjZW1iZXIgMTYsIDIwMTcgMTozOSBBTQ0KPiBUbzogUmFnaGF2YSBBZGl0eWEgUmVudWt1bnRh
+DQo+IDxSYWdoYXZhQWRpdHlhLlJlbnVrdW50YUBtaWNyb3NlbWkuY29tPjsgZGwtZXNjLUFhY3Jh
+aWQgTGludXggRHJpdmVyDQo+IDxhYWNyYWlkQG1pY3Jvc2VtaS5jb20+DQo+IENjOiBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZzsgaXQrbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3Vi
+amVjdDogUmU6IERyaXZlciB2ZXJzaW9uIGZvciBQTUMgQWRhcHRlYyBIQkEgaW4gTGludXggYW5k
+IGZyb20gdmVuZG9yDQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4gDQo+IERlYXIgQWRpdHlh
+LA0KPiANCj4gDQo+IEFtIDE3LjAyLjIwMTcgdW0gMjA6Mjkgc2NocmllYiBSYWdoYXZhIEFkaXR5
+YSBSZW51a3VudGE6DQo+IA0KPiA+PiBVc2luZyBhIFBNQyBBZGFwdGVjIEhCQSAxMDAwLThlIHdp
+dGggbGF0ZXN0IExpbnV4LCBpdCBvbmx5IGluaXRpYWxpemVzDQo+ID4+IGluIHN5bmMgbW9kZSwg
+aW5zdGVhZCBvZiBhc3luYyBtb2RlLg0KPiA+DQo+ID4gVGhlIHBhdGNoZXMgdGhhdCBlbmFibGUg
+YXN5bmMgbW9kZSBpbiBIQkEgMTAwMC04ZSwgaGF2ZSBiZWVuIGluY2x1ZGVkIGluDQo+IHRoZSBK
+YW1lcyBCb3R0b21sZXkncyBsaW51eC1zY3NpIEJyYW5jaCBhbmQgYXJlIG9uIHRyYWNrIGJlDQo+
+ID4gSW5jbHVkZWQgaW50byBMaW51eCA0LjExLg0KPiA+DQo+ID4gaHR0cHM6Ly9naXQua2VybmVs
+Lm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvamVqYi9zY3NpLmdpdC8NCj4gPg0KPiA+PiBgYGAN
+Cj4gPj4gJCBnaXQgZGVzY3JpYmUgLS10YWcNCj4gPj4gdjQuMTAtcmM4LTQ3LWcwNzIyZjU3YmYN
+Cj4gPj4gJCBkbWVzZw0KPiA+PiBbICAgMjEuMzU5NjM1XSBBZGFwdGVjIGFhY3JhaWQgZHJpdmVy
+IDEuMi0xWzQxMDY2XS1tcw0KPiA+PiBbICAgMjEuMzYwMDE3XSBhYWNyYWlkIDAwMDA6MDQ6MDAu
+MDogY2FuJ3QgZGlzYWJsZSBBU1BNOyBPUyBkb2Vzbid0IGhhdmUNCj4gPj4gQVNQTSBjb250cm9s
+DQo+ID4+IFsgICAyMS4zNjM5ODddIEFBQzA6IEFzeW5jLiBtb2RlIG5vdCBzdXBwb3J0ZWQgYnkg
+Y3VycmVudCBkcml2ZXIsIHN5bmMuDQo+ID4+IG1vZGUgZW5mb3JjZWQuDQo+ID4+IFsgICAyMS4z
+NjM5ODddIFBsZWFzZSB1cGRhdGUgZHJpdmVyIHRvIGdldCBmdWxsIHBlcmZvcm1hbmNlLg0KPiA+
+PiBbICAgMjEuMzY0OTQ5XSBBQUMwOiBrZXJuZWwgMS4yLTBbMF0gTm92ICA1IDIwMTUNCj4gPj4g
+WyAgIDIxLjM2NTI3NV0gQUFDMDogbW9uaXRvciAwLjAtMFswXQ0KPiA+PiBbICAgMjEuMzcxMzgy
+XSBBQUMwOiBiaW9zIDAuMTMtMjA5WzMyMDAwXQ0KPiA+PiBbICAgMjEuMzcxNzExXSBBQUMwOiBz
+ZXJpYWwgMTBGNDQ3DQo+ID4+IFsgICAyMS4zNzIwMzVdIEFBQzA6IE5vbi1EQVNEIHN1cHBvcnQg
+ZW5hYmxlZC4NCj4gPj4gWyAgIDIxLjM3MjM2MF0gQUFDMDogNjRiaXQgc3VwcG9ydCBlbmFibGVk
+Lg0KPiA+PiBbICAgMjEuMzcyNjg4XSBBQUMwOiA2NCBCaXQgREFDIGVuYWJsZWQNCj4gPj4gW+KA
+pl0NCj4gPj4gJCBnaXQgZ3JlcCAnQUFDX0RSSVZFUl9CVUlMRCA0MTA2NicNCj4gPj4gZHJpdmVy
+cy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oOiMgZGVmaW5lIEFBQ19EUklWRVJfQlVJTEQgNDEwNjYN
+Cj4gPj4gYGBgDQo+ID4+DQo+ID4+IFNlYXJjaGluZyB0aGUgdmVuZG9yIFdlYiBzaXRlLCB0aGVy
+ZSBpcyAqTGludXggRHJpdmVyIFNvdXJjZQ0KPiA+PiAxLjIuMS01MzAwNSogYXZhaWxhYmxlIGZv
+ciBkb3dubG9hZCBbMV0uDQo+ID4NCj4gPiBUaGUgbGF0ZXN0IHVwc3RyZWFtIGRyaXZlciB2ZXJz
+aW9uIGlzIDUwNzQwLiBXZSB3aWxsIGJlIHJlYWNoaW5nIHZlcnNpb24NCj4gNTMwMDUgaW4gY291
+cGxlIG9mIHBhdGNoIHNldHMgICggfiAzKS4NCj4gPg0KPiA+DQo+IGh0dHA6Ly9naXQua2VybmVs
+Lm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvamVqYi9zY3NpLmdpdC9jb21taXQvP2lkPTk2ZjZh
+NjEzDQo+IDQ3NjZkZTBkNDJhOThjNzc1ODczNmRkZTE2ZTBhZGQ1DQo+IA0KPiBUaGFuayB5b3Ug
+Zm9yIHRoZSBkZXRhaWxzLiBBdCBvdXIgaW5mcmFzdHJ1Y3R1cmUgd2Ugb25seSB3YW50IHRvIHVz
+ZSBMVFMNCj4gTGludXgga2VybmVscywgYW5kIHRoZSBsYXRlc3QgaW4gNC4xNC4gU28gcmlnaHQg
+bm93LCBMaW51eCA0LjE0LjYNCj4gaW5jbHVkZXMgdmVyc2lvbiA1MDgzNCBbMV0sIHdoaWNoIGlz
+IHRoZSBzYW1lIHZlcnNpb24gY3VycmVudGx5IGluIExpbnVzDQo+IG1hc3RlciBicmFuY2ggKDQu
+MTUtcmMzKS4gSXMgdGhhdCBzYXZlIHRvIHVzZSB3aXRoIGFzeW5jIG1vZGUsIG9yIGFyZQ0KPiB5
+b3UgYXdhcmUgb2YgcHJvYmxlbXMgYW5kIHdlIHNob3VsZCBhbHdheXMgdXNlIHRoZSBsYXRlc3Qg
+b3V0IG9mIHRyZWUNCj4gZHJpdmVyLCB3aGljaCBpcyBhdCB2ZXJzaW9uIDU1MDIyIGFuZCBjYW4g
+YmUgZG93bmxvYWQgZnJvbSB0aGUgTWljcm9zZW1pDQo+IHNlcnZlciBbM10uDQoNCldlbGwgYXQg
+dGhpcyBwb2ludCBJIGFtIGluIHRoZSBwcm9jZXNzIG9mIGNyZWF0aW5nIGEgcGF0Y2ggc2V0IHRo
+YXQgc29sdmVzIGEga2R1bXAgcmVncmVzc2lvbiBpc3N1ZShTaG91bGQgYmUgb3V0IGJlZm9yZSB0
+aGUgbmV3IHllYXIpLCBvdGhlciB0aGFuIHRoYXQgdGhlIHVwc3RyZWFtIGRyaXZlciBpcyBwcmV0
+dHkgbXVjaCB1cCB0byBkYXRlLiBJZiBrZHVtcCBzdXBwb3J0IGlzIGEgbXVzdCAgZm9yIHlvdSBJ
+IHdvdWxkIHJlY29tbWVuZCB0aGF0ICA1NTAyMiBiZSB1c2VkLg0KDQo+ID4+IEhvdyBkb2VzIHRo
+ZSB1cHN0cmVhbSBwcm9jZXNzIHdvcms/IElzIHRoZXJlIGEgZ2l0IHJlcG9zaXRvcnkNCj4gc29t
+ZXdoZXJlDQo+ID4+IGZyb20gTWljcm9zZW1pPyBBcmUgdGhlIHBhdGNoZXMgYWxyZWFkeSB1cCBm
+b3IgcmV2aWV3PyAoSSBkaWRu4oCZdCBmaW5kDQo+IHRoZW0uKQ0KPiA+DQo+ID4gV2UgdHJ5IHRv
+IHB1c2ggb3V0IHBhdGNoIHNldHMgdG8ga2VybmVsLm9yZyBmb3IgZXZlcnkgbWFqb3IgIGRyaXZl
+ciByZWxlYXNlDQo+IHdlIG1ha2UuICBVc3VhbGx5IHRoZXkgZ28gaW50byB0aGUNCj4gPiBzdWIg
+Y29tcG9uZW50IG1haW50YWluZXJzIGJyYW5jaCAobGludXgtc2NzaSApICwgd2hpY2ggaXMgdGhl
+biBwdXNoZWQgb3V0DQo+IHRvIExpbnVzIHdoZW4gdGhlIG1lcmdlDQo+ID4gd2luZG93IGZvciAg
+b3BlbnMgKGN1cnJlbnRseSB0aGUgbWVyZ2Ugd2luZG93IGZvciA0LjEwIGlzIGNsb3NlZCAsIGJh
+cnJpbmcNCj4gZml4ZXMpLiBTbyBMaW51eCB2ZXJzaW9uIDQuMTEgc2hvdWxkIGhhdmUNCj4gPiBm
+dWxsIGFzeW5jIHN1cHBvcnQgYW5kIG1vcmUgZm9yIEhCQTEwMDAtOGUuDQo+ID4NCj4gPiBXZSBk
+byBub3QgbWFpbnRhaW4gYSBnaXQgcmVwb3NpdG9yeSB1bmZvcnR1bmF0ZWx5LCBidXQgd2UgZG8g
+cmVsZWFzZSB0aGUNCj4gc291cmNlIGNvZGUgZm9yIGV2ZXJ5IHJlbGVhc2UgYXMgeW91DQo+ID4g
+aW5kaWNhdGVkLg0KPiA+DQo+ID4gRm9yIGZ1cnRoZXIgcmVmZXJlbmNlIHRoZSBwYXRjaGVzIGFy
+ZSBzZW50IG91dCBpbiB0aGUgc2NzaSBtYWlsaW5nIGxpc3QgbGludXgtDQo+IHNjc2lAdmdlci5r
+ZXJuZWwub3JnICwNCj4gPiB0aGUgYXJjaGl2ZSBpcyBoZXJlIGh0dHA6Ly9tYXJjLmluZm8vP2w9
+bGludXgtc2NzaSZyPTEmdz0yIC4NCj4gPg0KPiA+IEhvcGUgSSBjbGVhcmVkIHVwIHlvdXIgZG91
+YnRzLiBQbGVhc2UgZG8gcmVhY2ggb3V0IGlmIHlvdSBoYXZlIG90aGVyDQo+IGNvbmNlcm5zIG9y
+IHF1ZXN0aW9ucy4NCj4gDQo+IFllcywgdGhhbmsgeW91IGZvciB5b3VyIGVsYWJvcmF0ZSBhbnN3
+ZXIsIHdoaWNoIGNsZWFyZWQgdXAgYSBsb3Qgb2YgbXkNCj4gZG91YnRzLiBXZSB3b3VsZCBiZSBl
+dmVuIG1vcmUgc2F0aXNmaWVkIGlmIHlvdSBtb3ZlZCB5b3VyIGRldmVsb3BtZW50DQo+IGZ1bGx5
+IHRvIHRoZSBMaW51eCBrZXJuZWwgdHJlZSwgc28gdGhhdCBpdCBhbHdheXMgY2FycmllcyB0aGUg
+bGF0ZXN0DQo+IGRyaXZlci4gSWYgd2UgY2FuIGhlbHAgd2l0aCB0aGF0IGJ5IGNvbnRhY3Rpbmcg
+Y2VydGFpbiBwZW9wbGUsIHBsZWFzZQ0KPiB0ZWxsIHVzLg0KDQogV2Ugd291bGQgbG92ZSB0bywg
+YnV0ICB3ZSBoYXZlIGxvdHMgb2YgY3VzdG9tZXJzIHdobyBhcmUgb24gdGhlIG9sZGVyIGtlcm5l
+bCB2ZXJzaW9ucyAyLjYuMzIsIDMuMTAuMCBldGMgYW5kIEl0IGJlY29tZXMgYWxtb3N0IGltcG9z
+c2libGUgZm9yIHVzIHRvIGZ1bGx5IG1vdmUgb3VyIGRldmVsb3BtZW50IHRvIHRoZSAgTGludXgg
+a2VybmVsIHRyZWUgYW5kIHN1cHBvcnQgb3VyIGN1c3RvbWVycyBhdCB0aGUgc2FtZSB0aW1lLiAg
+SG9wZWZ1bGx5IHdlIHdpbGwgc3RhcnQgYmVpbmcgdXAgdG8gZGF0ZSB3aXRoIHRoZSB1cHN0cmVh
+bSBrZXJuZWwgaW4gdGhlIGNvbWluZyBtb250aHMuIEhvcGUgdGhhdCBhbnN3ZXJlZCB5b3VyIHF1
+ZXN0aW9ucy4NCg0KVGhhbmtzIGFuZCBIYXBweSBIb2xpZGF5cyENClJhZ2hhdmEgQWRpdHlhIA0K
+DQo+IEtpbmQgcmVnYXJkcywNCj4gDQo+IFBhdWwNCj4gDQo+IA0KPiA+PiBbMV0gaHR0cHM6Ly9z
+dG9yYWdlLm1pY3Jvc2VtaS5jb20vZW4tdXMvc3BlZWQvcmFpZC9hYWMvbGludXgvYWFjcmFpZC0N
+Cj4gbGludXgtc3JjLTFfMl8xLTUzMDA1X3Rnei5waHANCj4gWzJdDQo+IGh0dHBzOi8vZWxpeGly
+LmZyZWUtDQo+IGVsZWN0cm9ucy5jb20vbGludXgvdjQuMTQuNi9zb3VyY2UvZHJpdmVycy9zY3Np
+L2FhY3JhaWQvYWFjcmFpZC5oI0wxMDANCj4gWzNdDQo+IGh0dHBzOi8vc3RvcmFnZS5taWNyb3Nl
+bWkuY29tL2VuLQ0KPiB1cy9kb3dubG9hZHMvbGludXhfc291cmNlL2xpbnV4X3NvdXJjZV9jb2Rl
+L3Byb2R1Y3RpZD1haGEtMTAwMC0NCj4gOGUmZG49bWljcm9zZW1pK2FkYXB0ZWMraGJhKzEwMDAt
+OGUucGhwDQo=
