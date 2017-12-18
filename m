@@ -1,34 +1,63 @@
-From: "Sandra Younes" <mamg7610885@angel.ocn.ne.jp>
-Subject: Re: Distress Call Please don't ignore
-Date: Mon, 18 Dec 2017 23:45:13 +0200
-Message-ID: <201712182145.vBILid19003499__46318.6144399971$1513634358$gmane$org@mf-smf-ucb001.ocn.ad.jp>
-Reply-To: <tdavalvse@gmail.com>
+From: Paul Moore <paul@paul-moore.com>
+Subject: Re: [trivial PATCH] treewide: Align function definition open/close braces
+Date: Mon, 18 Dec 2017 17:04:14 -0500
+Message-ID: <CAHC9VhTEcj5o1789dZ2CR9W=buPGNa6gSJRc0m8GpUSpn1-xRA@mail.gmail.com>
+References: <1513556924.31581.51.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mbkd0340.ocn.ad.jp ([153.149.236.41]:33303 "EHLO
-        mbkd0340.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935229AbdLRWAa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Dec 2017 17:00:30 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <platform-driver-x86-owner@vger.kernel.org>
+In-Reply-To: <1513556924.31581.51.camel@perches.com>
+Sender: platform-driver-x86-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Jiri Kosina <trivial@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-rtc@vger.kernel.org, alsa-devel@alsa-project.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, acpi4asus-user@lists.sourceforge.net, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org, linux-xfs@vger.kernel.org, linux-acpi@vger.kernel.org, linux-audit@redhat.com, amd-gfx@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, ocfs2-devel@oss.oracle.com, linux-media@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Good Day,
+On Sun, Dec 17, 2017 at 7:28 PM, Joe Perches <joe@perches.com> wrote:
+> Some functions definitions have either the initial open brace and/or
+> the closing brace outside of column 1.
+>
+> Move those braces to column 1.
+>
+> This allows various function analyzers like gnu complexity to work
+> properly for these modified functions.
+>
+> Miscellanea:
+>
+> o Remove extra trailing ; and blank line from xfs_agf_verify
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+> git diff -w shows no difference other than the above 'Miscellanea'
+>
+> (this is against -next, but it applies against Linus' tree
+>  with a couple offsets)
+>
+>  arch/x86/include/asm/atomic64_32.h                   |  2 +-
+>  drivers/acpi/custom_method.c                         |  2 +-
+>  drivers/acpi/fan.c                                   |  2 +-
+>  drivers/gpu/drm/amd/display/dc/core/dc.c             |  2 +-
+>  drivers/media/i2c/msp3400-kthreads.c                 |  2 +-
+>  drivers/message/fusion/mptsas.c                      |  2 +-
+>  drivers/net/ethernet/qlogic/netxen/netxen_nic_init.c |  2 +-
+>  drivers/net/wireless/ath/ath9k/xmit.c                |  2 +-
+>  drivers/platform/x86/eeepc-laptop.c                  |  2 +-
+>  drivers/rtc/rtc-ab-b5ze-s3.c                         |  2 +-
+>  drivers/scsi/dpt_i2o.c                               |  2 +-
+>  drivers/scsi/sym53c8xx_2/sym_glue.c                  |  2 +-
+>  fs/locks.c                                           |  2 +-
+>  fs/ocfs2/stack_user.c                                |  2 +-
+>  fs/xfs/libxfs/xfs_alloc.c                            |  5 ++---
+>  fs/xfs/xfs_export.c                                  |  2 +-
+>  kernel/audit.c                                       |  6 +++---
+>  kernel/trace/trace_printk.c                          |  4 ++--
+>  lib/raid6/sse2.c                                     | 14 +++++++-------
+>  sound/soc/fsl/fsl_dma.c                              |  2 +-
+>  20 files changed, 30 insertions(+), 31 deletions(-)
 
-Forgive my indignation if this message comes to you as a surprise and may offend your personality for contacting you without your prior consent and writing through this channel.
+For the audit bits ...
 
-I came across your name and contact on the course of my personal searching when i was searching for a foreign reliable partner. I was assured of your capability and reliability after going true your profile.
+Acked-by: Paul Moore <paul@paul-moore.com>
 
-I'm (Miss. Sandra) from Benghazi libya, My father of blessed memory by name late General Abdel Fattah Younes who was shot death by Islamist-linked militia within the anti-Gaddafi forces on 28th July, 2011 and after two days later my mother with my two brothers was killed one early morning by the rebels as result of civil war that is going on in my country Libya, then after the burial of my parents, my uncles conspired and sold my father's properties and left nothing for me. On a faithful morning, I opened my father's briefcase and discover a document which he has deposited ($6.250M USD) in a bank in a Turkish Bank which has a small branch in Canada with my name as the legitimate/next of kin. Meanwhile i have located the bank,and have also discussed the possiblity of transfering the fund. M
- y father left a clause to the bank that i must introduce a trusted foreign partner who would be my trustee to help me invest this fund; hence the need for your assistance,i request that you be my t
-rustee and assist me in e
-
-You will also be responsible for the investment and management of the fund for me and also you will help me get a good school where i will further my education.
-I agreed to give you 40% of the $6.250M once the transfer is done. this is my true life story, I will be glad to receive your respond soonest for more details to enable us start and champion the transfer less than 14 banking days as i was informed by the bank manager.
-
-Thanks for giving me your attention,
-
-Yours sincerely,
-Miss. Sandra Younes
+-- 
+paul moore
+www.paul-moore.com
