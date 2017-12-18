@@ -1,50 +1,74 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [trivial PATCH] treewide: Align function definition open/close
- braces
-Date: Mon, 18 Dec 2017 14:31:12 +0200
-Message-ID: <CAHp75Vfw=AQHkiC7WhUkuytxG_reO8rmEfpA7z-2yAekFQ4AYQ@mail.gmail.com>
-References: <1513556924.31581.51.camel@perches.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] scsi: check for device state in __scsi_remove_target()
+Date: Mon, 18 Dec 2017 09:38:21 -0500
+Message-ID: <1513607901.10760.101.camel@localhost.localdomain>
+References: <1513171297-58020-1-git-send-email-hare@suse.de>
+         <1513203795.2413.14.camel@wdc.com> <5A3230D3.2060302@huawei.com>
+         <f43e0560-7a46-6d72-41f9-0d90fa20948c@suse.com>
+         <1513289436.10760.79.camel@localhost.localdomain>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <1513556924.31581.51.camel@perches.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Joe Perches <joe@perches.com>
-Cc: linux-rtc@vger.kernel.org, ALSA Development Mailing List <alsa-devel@alsa-project.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, Jiri Kosina <trivial@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, MPT-FusionLinux.pdl@broadcom.com, acpi4asus-user <acpi4asus-user@lists.sourceforge.net>, "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, Platform Driver <platform-driver-x86@vger.kernel.org>, linux-xfs@vger.kernel.org, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, linux-audit@redhat.com, amd-gfx@lists.freedesktop.org, netdev <netdev@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, ocfs2-devel@oss.oracle.com, Linux Media Mailing List <linux-media@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33585 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758910AbdLROiX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Dec 2017 09:38:23 -0500
+In-Reply-To: <1513289436.10760.79.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.com>
+Cc: Jason Yan <yanaijie@huawei.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gTW9uLCBEZWMgMTgsIDIwMTcgYXQgMjoyOCBBTSwgSm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVz
-LmNvbT4gd3JvdGU6Cj4gU29tZSBmdW5jdGlvbnMgZGVmaW5pdGlvbnMgaGF2ZSBlaXRoZXIgdGhl
-IGluaXRpYWwgb3BlbiBicmFjZSBhbmQvb3IKPiB0aGUgY2xvc2luZyBicmFjZSBvdXRzaWRlIG9m
-IGNvbHVtbiAxLgo+Cj4gTW92ZSB0aG9zZSBicmFjZXMgdG8gY29sdW1uIDEuCj4KPiBUaGlzIGFs
-bG93cyB2YXJpb3VzIGZ1bmN0aW9uIGFuYWx5emVycyBsaWtlIGdudSBjb21wbGV4aXR5IHRvIHdv
-cmsKPiBwcm9wZXJseSBmb3IgdGhlc2UgbW9kaWZpZWQgZnVuY3Rpb25zLgo+Cj4gTWlzY2VsbGFu
-ZWE6Cj4KPiBvIFJlbW92ZSBleHRyYSB0cmFpbGluZyA7IGFuZCBibGFuayBsaW5lIGZyb20geGZz
-X2FnZl92ZXJpZnkKPgo+IFNpZ25lZC1vZmYtYnk6IEpvZSBQZXJjaGVzIDxqb2VAcGVyY2hlcy5j
-b20+Cgo+ICBkcml2ZXJzL3BsYXRmb3JtL3g4Ni9lZWVwYy1sYXB0b3AuYyAgICAgICAgICAgICAg
-ICAgIHwgIDIgKy0KCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGxhdGZvcm0veDg2L2VlZXBjLWxh
-cHRvcC5jIGIvZHJpdmVycy9wbGF0Zm9ybS94ODYvZWVlcGMtbGFwdG9wLmMKPiBpbmRleCA1YTY4
-MTk2Mjg5OWMuLjRjMzg5MDRhOGEzMiAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3BsYXRmb3JtL3g4
-Ni9lZWVwYy1sYXB0b3AuYwo+ICsrKyBiL2RyaXZlcnMvcGxhdGZvcm0veDg2L2VlZXBjLWxhcHRv
-cC5jCj4gQEAgLTQ5Miw3ICs0OTIsNyBAQCBzdGF0aWMgdm9pZCBlZWVwY19wbGF0Zm9ybV9leGl0
-KHN0cnVjdCBlZWVwY19sYXB0b3AgKmVlZXBjKQo+ICAgKiBwb3RlbnRpYWxseSBiYWQgdGltZSwg
-c3VjaCBhcyBhIHRpbWVyIGludGVycnVwdC4KPiAgICovCj4gIHN0YXRpYyB2b2lkIHRwZF9sZWRf
-dXBkYXRlKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykKPiAtIHsKPiArewo+ICAgICAgICAgc3Ry
-dWN0IGVlZXBjX2xhcHRvcCAqZWVlcGM7Cj4KPiAgICAgICAgIGVlZXBjID0gY29udGFpbmVyX29m
-KHdvcmssIHN0cnVjdCBlZWVwY19sYXB0b3AsIHRwZF9sZWRfd29yayk7Cj4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvcnRjL3J0Yy1hYi1iNXplLXMzLmMgYi9kcml2ZXJzL3J0Yy9ydGMtYWItYjV6ZS1z
-My5jCj4gaW5kZXggYTMxOWJmMWU0OWRlLi5lZjVjMTZkZmFiZmEgMTAwNjQ0CgpBY2tlZC1ieTog
-QW5keSBTaGV2Y2hlbmtvIDxhbmR5LnNoZXZjaGVua29AZ21haWwuY29tPgoKZm9yIFBEeDg2IGNo
-YW5nZXMuCgoKLS0gCldpdGggQmVzdCBSZWdhcmRzLApBbmR5IFNoZXZjaGVua28KX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcg
-bGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRl
-c2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsCg==
+On Thu, 2017-12-14 at 17:10 -0500, Ewan D. Milne wrote:
+> On Thu, 2017-12-14 at 10:02 +0100, Hannes Reinecke wrote:
+> > On 12/14/2017 09:05 AM, Jason Yan wrote:
+> > > 
+> > > On 2017/12/14 6:23, Bart Van Assche wrote:
+> > >> On Wed, 2017-12-13 at 14:21 +0100, Hannes Reinecke wrote:
+> > >>> As it turned out device_get() doesn't use kref_get_unless_zero(),
+> > >>> so we will be always getting a device pointer.
+> > >>> So we need to check for the device state in __scsi_remove_target()
+> > >>> to avoid tripping over deleted objects.
+> > >>>
+> > >>> Fixes: fbce4d9 ("scsi: fixup kernel warning during rmmod()")
+> > >>
+> > >> How about adding Reported-by: Jason Yan? See also
+> > >> https://www.spinics.net/lists/linux-scsi/msg115295.html
+> > >>
+> > >> Anyway:
+> > >>
+> > >> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+> > >>
+> > > 
+> > > Seems the same as my patch.So how do we plan to fix this issue,
+> > > pick this approach up or the approach James Bottomley suggested?
+> > > I have sent a patch to change get_device() but Greg seems do not
+> > > like this way.
+> > > 
+> > This is actually a real regression, which can be trivially exercised by
+> > eg logging out from two connections to an iSCSI target.
+> > (Our QA tripped across that one).
+> > So I'd rather have to have it fixed reasonably soon.
+> > 
+> > While 'get_device' is IMO the 'correct' solution it surely warrants a
+> > broader discussion, plus one would need to audit all callers to check
+> > the return value. If we were going down that route we should probably
+> > add a __must_check to get_device(), too.
+> > But again, this will probably drag out for quite some time, and I'd
+> > prefer to have the fix in the meantime.
+> > 
+> > Cheers,
+> > 
+> > Hannes
+> 
+> We have 2 reproducible test cases, this patch fixes one of them,
+> which was a continually oscillating FC target port w/short dev_loss_tmo.
+> I'm still waiting for a report on the iSCSI test.  The code looks good.
+> We need to get some kind of fix for this sooner rather than later.
+> 
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+
+Report here is that Hannes's patch fixes our failing iSCSI test also.
+Martin/James, can we get this in please?
