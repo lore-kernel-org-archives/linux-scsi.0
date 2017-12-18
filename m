@@ -1,236 +1,156 @@
-From: Joe Perches <joe@perches.com>
-Subject: [trivial PATCH] treewide: Align function definition open/close braces
-Date: Sun, 17 Dec 2017 16:28:44 -0800
-Message-ID: <1513556924.31581.51.camel@perches.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/3] virtio_scsi: Implement 'native LUN' feature
+Date: Mon, 18 Dec 2017 08:48:28 +0100
+Message-ID: <c17da627-3228-07c3-fdde-628949ac3053@suse.de>
+References: <1513246316-56019-1-git-send-email-hare@suse.de>
+ <1513246316-56019-4-git-send-email-hare@suse.de>
+ <8b0a2527-7fe1-1475-49e4-0f34c753baaf@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Jiri Kosina <trivial@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-rtc@vger.kernel.org, alsa-devel@alsa-project.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, acpi4asus-user@lists.sourceforge.net, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org, linux-xfs@vger.kernel.org, linux-acpi@vger.kernel.org, linux-audit@redhat.com, amd-gfx@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, ocfs2-devel@oss.oracle.com, linux-media@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:48329 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757706AbdLRHsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Dec 2017 02:48:31 -0500
+In-Reply-To: <8b0a2527-7fe1-1475-49e4-0f34c753baaf@linux.vnet.ibm.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-U29tZSBmdW5jdGlvbnMgZGVmaW5pdGlvbnMgaGF2ZSBlaXRoZXIgdGhlIGluaXRpYWwgb3BlbiBi
-cmFjZSBhbmQvb3IKdGhlIGNsb3NpbmcgYnJhY2Ugb3V0c2lkZSBvZiBjb2x1bW4gMS4KCk1vdmUg
-dGhvc2UgYnJhY2VzIHRvIGNvbHVtbiAxLgoKVGhpcyBhbGxvd3MgdmFyaW91cyBmdW5jdGlvbiBh
-bmFseXplcnMgbGlrZSBnbnUgY29tcGxleGl0eSB0byB3b3JrCnByb3Blcmx5IGZvciB0aGVzZSBt
-b2RpZmllZCBmdW5jdGlvbnMuCgpNaXNjZWxsYW5lYToKCm8gUmVtb3ZlIGV4dHJhIHRyYWlsaW5n
-IDsgYW5kIGJsYW5rIGxpbmUgZnJvbSB4ZnNfYWdmX3ZlcmlmeQoKU2lnbmVkLW9mZi1ieTogSm9l
-IFBlcmNoZXMgPGpvZUBwZXJjaGVzLmNvbT4KLS0tCmdpdCBkaWZmIC13IHNob3dzIG5vIGRpZmZl
-cmVuY2Ugb3RoZXIgdGhhbiB0aGUgYWJvdmUgJ01pc2NlbGxhbmVhJwoKKHRoaXMgaXMgYWdhaW5z
-dCAtbmV4dCwgYnV0IGl0IGFwcGxpZXMgYWdhaW5zdCBMaW51cycgdHJlZQogd2l0aCBhIGNvdXBs
-ZSBvZmZzZXRzKQoKIGFyY2gveDg2L2luY2x1ZGUvYXNtL2F0b21pYzY0XzMyLmggICAgICAgICAg
-ICAgICAgICAgfCAgMiArLQogZHJpdmVycy9hY3BpL2N1c3RvbV9tZXRob2QuYyAgICAgICAgICAg
-ICAgICAgICAgICAgICB8ICAyICstCiBkcml2ZXJzL2FjcGkvZmFuLmMgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KIGRyaXZlcnMvZ3B1L2RybS9hbWQvZGlzcGxheS9k
-Yy9jb3JlL2RjLmMgICAgICAgICAgICAgfCAgMiArLQogZHJpdmVycy9tZWRpYS9pMmMvbXNwMzQw
-MC1rdGhyZWFkcy5jICAgICAgICAgICAgICAgICB8ICAyICstCiBkcml2ZXJzL21lc3NhZ2UvZnVz
-aW9uL21wdHNhcy5jICAgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KIGRyaXZlcnMvbmV0L2V0
-aGVybmV0L3Fsb2dpYy9uZXR4ZW4vbmV0eGVuX25pY19pbml0LmMgfCAgMiArLQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYXRoL2F0aDlrL3htaXQuYyAgICAgICAgICAgICAgICB8ICAyICstCiBkcml2
-ZXJzL3BsYXRmb3JtL3g4Ni9lZWVwYy1sYXB0b3AuYyAgICAgICAgICAgICAgICAgIHwgIDIgKy0K
-IGRyaXZlcnMvcnRjL3J0Yy1hYi1iNXplLXMzLmMgICAgICAgICAgICAgICAgICAgICAgICAgfCAg
-MiArLQogZHJpdmVycy9zY3NpL2RwdF9pMm8uYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICB8ICAyICstCiBkcml2ZXJzL3Njc2kvc3ltNTNjOHh4XzIvc3ltX2dsdWUuYyAgICAgICAgICAg
-ICAgICAgIHwgIDIgKy0KIGZzL2xvY2tzLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgfCAgMiArLQogZnMvb2NmczIvc3RhY2tfdXNlci5jICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICB8ICAyICstCiBmcy94ZnMvbGlieGZzL3hmc19hbGxvYy5jICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIHwgIDUgKystLS0KIGZzL3hmcy94ZnNfZXhwb3J0LmMgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMiArLQoga2VybmVsL2F1ZGl0LmMgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICA2ICsrKy0tLQoga2VybmVsL3Ry
-YWNlL3RyYWNlX3ByaW50ay5jICAgICAgICAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0KIGxp
-Yi9yYWlkNi9zc2UyLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxNCAr
-KysrKysrLS0tLS0tLQogc291bmQvc29jL2ZzbC9mc2xfZG1hLmMgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICB8ICAyICstCiAyMCBmaWxlcyBjaGFuZ2VkLCAzMCBpbnNlcnRpb25zKCspLCAz
-MSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9hdG9taWM2
-NF8zMi5oIGIvYXJjaC94ODYvaW5jbHVkZS9hc20vYXRvbWljNjRfMzIuaAppbmRleCA5N2M0NmI4
-MTY5YjcuLmQ0ZDQ4ODMwODBmYSAxMDA2NDQKLS0tIGEvYXJjaC94ODYvaW5jbHVkZS9hc20vYXRv
-bWljNjRfMzIuaAorKysgYi9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9hdG9taWM2NF8zMi5oCkBAIC0x
-MjIsNyArMTIyLDcgQEAgc3RhdGljIGlubGluZSBsb25nIGxvbmcgYXRvbWljNjRfcmVhZChjb25z
-dCBhdG9taWM2NF90ICp2KQogCWxvbmcgbG9uZyByOwogCWFsdGVybmF0aXZlX2F0b21pYzY0KHJl
-YWQsICI9JkEiIChyKSwgImMiICh2KSA6ICJtZW1vcnkiKTsKIAlyZXR1cm4gcjsKLSB9Cit9CiAK
-IC8qKgogICogYXRvbWljNjRfYWRkX3JldHVybiAtIGFkZCBhbmQgcmV0dXJuCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL2FjcGkvY3VzdG9tX21ldGhvZC5jIGIvZHJpdmVycy9hY3BpL2N1c3RvbV9tZXRo
-b2QuYwppbmRleCBjNjhlNzI0MTRhNjcuLmU5NjdjMTE3M2JhMyAxMDA2NDQKLS0tIGEvZHJpdmVy
-cy9hY3BpL2N1c3RvbV9tZXRob2QuYworKysgYi9kcml2ZXJzL2FjcGkvY3VzdG9tX21ldGhvZC5j
-CkBAIC05NCw3ICs5NCw3IEBAIHN0YXRpYyB2b2lkIF9fZXhpdCBhY3BpX2N1c3RvbV9tZXRob2Rf
-ZXhpdCh2b2lkKQogewogCWlmIChjbV9kZW50cnkpCiAJCWRlYnVnZnNfcmVtb3ZlKGNtX2RlbnRy
-eSk7Ci0gfQorfQogCiBtb2R1bGVfaW5pdChhY3BpX2N1c3RvbV9tZXRob2RfaW5pdCk7CiBtb2R1
-bGVfZXhpdChhY3BpX2N1c3RvbV9tZXRob2RfZXhpdCk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL2Fj
-cGkvZmFuLmMgYi9kcml2ZXJzL2FjcGkvZmFuLmMKaW5kZXggNmNmNDk4ODIwNmYyLi4zNTYzMTAz
-NTkwYzYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYWNwaS9mYW4uYworKysgYi9kcml2ZXJzL2FjcGkv
-ZmFuLmMKQEAgLTIxOSw3ICsyMTksNyBAQCBmYW5fc2V0X2N1cl9zdGF0ZShzdHJ1Y3QgdGhlcm1h
-bF9jb29saW5nX2RldmljZSAqY2RldiwgdW5zaWduZWQgbG9uZyBzdGF0ZSkKIAkJcmV0dXJuIGZh
-bl9zZXRfc3RhdGVfYWNwaTQoZGV2aWNlLCBzdGF0ZSk7CiAJZWxzZQogCQlyZXR1cm4gZmFuX3Nl
-dF9zdGF0ZShkZXZpY2UsIHN0YXRlKTsKLSB9Cit9CiAKIHN0YXRpYyBjb25zdCBzdHJ1Y3QgdGhl
-cm1hbF9jb29saW5nX2RldmljZV9vcHMgZmFuX2Nvb2xpbmdfb3BzID0gewogCS5nZXRfbWF4X3N0
-YXRlID0gZmFuX2dldF9tYXhfc3RhdGUsCmRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vYW1k
-L2Rpc3BsYXkvZGMvY29yZS9kYy5jIGIvZHJpdmVycy9ncHUvZHJtL2FtZC9kaXNwbGF5L2RjL2Nv
-cmUvZGMuYwppbmRleCBkMTQ4OGQ1ZWUwMjguLjFlMGQxZTdjNTMyNCAxMDA2NDQKLS0tIGEvZHJp
-dmVycy9ncHUvZHJtL2FtZC9kaXNwbGF5L2RjL2NvcmUvZGMuYworKysgYi9kcml2ZXJzL2dwdS9k
-cm0vYW1kL2Rpc3BsYXkvZGMvY29yZS9kYy5jCkBAIC00NjEsNyArNDYxLDcgQEAgc3RhdGljIHZv
-aWQgZGlzYWJsZV9kYW5nbGluZ19wbGFuZShzdHJ1Y3QgZGMgKmRjLCBzdHJ1Y3QgZGNfc3RhdGUg
-KmNvbnRleHQpCiAgKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqLwogCiBzdHJ1Y3QgZGMgKmRjX2NyZWF0
-ZShjb25zdCBzdHJ1Y3QgZGNfaW5pdF9kYXRhICppbml0X3BhcmFtcykKLSB7Cit7CiAJc3RydWN0
-IGRjICpkYyA9IGt6YWxsb2Moc2l6ZW9mKCpkYyksIEdGUF9LRVJORUwpOwogCXVuc2lnbmVkIGlu
-dCBmdWxsX3BpcGVfY291bnQ7CiAKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWVkaWEvaTJjL21zcDM0
-MDAta3RocmVhZHMuYyBiL2RyaXZlcnMvbWVkaWEvaTJjL21zcDM0MDAta3RocmVhZHMuYwppbmRl
-eCA0ZGQwMWU5ZjU1M2IuLmRjNmNiOGQ0NzViMyAxMDA2NDQKLS0tIGEvZHJpdmVycy9tZWRpYS9p
-MmMvbXNwMzQwMC1rdGhyZWFkcy5jCisrKyBiL2RyaXZlcnMvbWVkaWEvaTJjL21zcDM0MDAta3Ro
-cmVhZHMuYwpAQCAtODg1LDcgKzg4NSw3IEBAIHN0YXRpYyBpbnQgbXNwMzR4eGdfbW9kdXMoc3Ry
-dWN0IGkyY19jbGllbnQgKmNsaWVudCkKIH0KIAogc3RhdGljIHZvaWQgbXNwMzR4eGdfc2V0X3Nv
-dXJjZShzdHJ1Y3QgaTJjX2NsaWVudCAqY2xpZW50LCB1MTYgcmVnLCBpbnQgaW4pCi0geworewog
-CXN0cnVjdCBtc3Bfc3RhdGUgKnN0YXRlID0gdG9fc3RhdGUoaTJjX2dldF9jbGllbnRkYXRhKGNs
-aWVudCkpOwogCWludCBzb3VyY2UsIG1hdHJpeDsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZXNz
-YWdlL2Z1c2lvbi9tcHRzYXMuYyBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2FzLmMKaW5k
-ZXggMzQ1ZjYwMzU1OTllLi42OWE2MmQyMzUxNGIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbWVzc2Fn
-ZS9mdXNpb24vbXB0c2FzLmMKKysrIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRzYXMuYwpA
-QCAtMjk2OCw3ICsyOTY4LDcgQEAgbXB0c2FzX2V4cF9yZXBtYW51ZmFjdHVyZV9pbmZvKE1QVF9B
-REFQVEVSICppb2MsCiAJbXV0ZXhfdW5sb2NrKCZpb2MtPnNhc19tZ210Lm11dGV4KTsKIG91dDoK
-IAlyZXR1cm4gcmV0OwotIH0KK30KIAogc3RhdGljIHZvaWQKIG1wdHNhc19wYXJzZV9kZXZpY2Vf
-aW5mbyhzdHJ1Y3Qgc2FzX2lkZW50aWZ5ICppZGVudGlmeSwKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-bmV0L2V0aGVybmV0L3Fsb2dpYy9uZXR4ZW4vbmV0eGVuX25pY19pbml0LmMgYi9kcml2ZXJzL25l
-dC9ldGhlcm5ldC9xbG9naWMvbmV0eGVuL25ldHhlbl9uaWNfaW5pdC5jCmluZGV4IDNkZDk3MzQ3
-NTEyNS4uMGVhMTQxZWNlMTllIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC9ldGhlcm5ldC9xbG9n
-aWMvbmV0eGVuL25ldHhlbl9uaWNfaW5pdC5jCisrKyBiL2RyaXZlcnMvbmV0L2V0aGVybmV0L3Fs
-b2dpYy9uZXR4ZW4vbmV0eGVuX25pY19pbml0LmMKQEAgLTYwMyw3ICs2MDMsNyBAQCBzdGF0aWMg
-c3RydWN0IHVuaV90YWJsZV9kZXNjICpueF9nZXRfdGFibGVfZGVzYyhjb25zdCB1OCAqdW5pcm9t
-LCBpbnQgc2VjdGlvbikKIAogc3RhdGljIGludAogbmV0eGVuX25pY192YWxpZGF0ZV9oZWFkZXIo
-c3RydWN0IG5ldHhlbl9hZGFwdGVyICphZGFwdGVyKQotIHsKK3sKIAljb25zdCB1OCAqdW5pcm9t
-ID0gYWRhcHRlci0+ZnctPmRhdGE7CiAJc3RydWN0IHVuaV90YWJsZV9kZXNjICpkaXJlY3Rvcnkg
-PSAoc3RydWN0IHVuaV90YWJsZV9kZXNjICopICZ1bmlyb21bMF07CiAJdTMyIGZ3X2ZpbGVfc2l6
-ZSA9IGFkYXB0ZXItPmZ3LT5zaXplOwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-YXRoL2F0aDlrL3htaXQuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay94bWl0LmMK
-aW5kZXggYmQ0MzgwNjJhNmRiLi5iYWVkYzcxODZiMTAgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2F0aC9hdGg5ay94bWl0LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRo
-L2F0aDlrL3htaXQuYwpAQCAtMTk2LDcgKzE5Niw3IEBAIGF0aF90aWRfcHVsbChzdHJ1Y3QgYXRo
-X2F0eF90aWQgKnRpZCkKIAl9CiAKIAlyZXR1cm4gc2tiOwotIH0KK30KIAogc3RhdGljIHN0cnVj
-dCBza19idWZmICphdGhfdGlkX2RlcXVldWUoc3RydWN0IGF0aF9hdHhfdGlkICp0aWQpCiB7CmRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3BsYXRmb3JtL3g4Ni9lZWVwYy1sYXB0b3AuYyBiL2RyaXZlcnMv
-cGxhdGZvcm0veDg2L2VlZXBjLWxhcHRvcC5jCmluZGV4IDVhNjgxOTYyODk5Yy4uNGMzODkwNGE4
-YTMyIDEwMDY0NAotLS0gYS9kcml2ZXJzL3BsYXRmb3JtL3g4Ni9lZWVwYy1sYXB0b3AuYworKysg
-Yi9kcml2ZXJzL3BsYXRmb3JtL3g4Ni9lZWVwYy1sYXB0b3AuYwpAQCAtNDkyLDcgKzQ5Miw3IEBA
-IHN0YXRpYyB2b2lkIGVlZXBjX3BsYXRmb3JtX2V4aXQoc3RydWN0IGVlZXBjX2xhcHRvcCAqZWVl
-cGMpCiAgKiBwb3RlbnRpYWxseSBiYWQgdGltZSwgc3VjaCBhcyBhIHRpbWVyIGludGVycnVwdC4K
-ICAqLwogc3RhdGljIHZvaWQgdHBkX2xlZF91cGRhdGUoc3RydWN0IHdvcmtfc3RydWN0ICp3b3Jr
-KQotIHsKK3sKIAlzdHJ1Y3QgZWVlcGNfbGFwdG9wICplZWVwYzsKIAogCWVlZXBjID0gY29udGFp
-bmVyX29mKHdvcmssIHN0cnVjdCBlZWVwY19sYXB0b3AsIHRwZF9sZWRfd29yayk7CmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3J0Yy9ydGMtYWItYjV6ZS1zMy5jIGIvZHJpdmVycy9ydGMvcnRjLWFiLWI1
-emUtczMuYwppbmRleCBhMzE5YmYxZTQ5ZGUuLmVmNWMxNmRmYWJmYSAxMDA2NDQKLS0tIGEvZHJp
-dmVycy9ydGMvcnRjLWFiLWI1emUtczMuYworKysgYi9kcml2ZXJzL3J0Yy9ydGMtYWItYjV6ZS1z
-My5jCkBAIC02NDgsNyArNjQ4LDcgQEAgc3RhdGljIGludCBhYmI1emVzM19ydGNfc2V0X2FsYXJt
-KHN0cnVjdCBkZXZpY2UgKmRldiwgc3RydWN0IHJ0Y193a2Fscm0gKmFsYXJtKQogCQkJcmV0KTsK
-IAogCXJldHVybiByZXQ7Ci0gfQorfQogCiAvKiBFbmFibGUgb3IgZGlzYWJsZSBiYXR0ZXJ5IGxv
-dyBpcnEgZ2VuZXJhdGlvbiAqLwogc3RhdGljIGlubGluZSBpbnQgX2FiYjV6ZXMzX3J0Y19iYXR0
-ZXJ5X2xvd19pcnFfZW5hYmxlKHN0cnVjdCByZWdtYXAgKnJlZ21hcCwKZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvc2NzaS9kcHRfaTJvLmMgYi9kcml2ZXJzL3Njc2kvZHB0X2kyby5jCmluZGV4IGZkMTcy
-YjA4OTBkMy4uYTAwZDgyMmUzMTQyIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvZHB0X2kyby5j
-CisrKyBiL2RyaXZlcnMvc2NzaS9kcHRfaTJvLmMKQEAgLTM1MjQsNyArMzUyNCw3IEBAIHN0YXRp
-YyBpbnQgYWRwdF9pMm9fc3lzdGFiX3NlbmQoYWRwdF9oYmEqIHBIYmEpCiAjZW5kaWYKIAogCXJl
-dHVybiByZXQ7CQotIH0KK30KIAogCiAvKj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvc2NzaS9zeW01M2M4eHhfMi9zeW1fZ2x1ZS5jIGIvZHJpdmVycy9zY3NpL3N5bTUz
-Yzh4eF8yL3N5bV9nbHVlLmMKaW5kZXggNzkxYTIxODJkZTUzLi43MzIwZDVmZTRjYmMgMTAwNjQ0
-Ci0tLSBhL2RyaXZlcnMvc2NzaS9zeW01M2M4eHhfMi9zeW1fZ2x1ZS5jCisrKyBiL2RyaXZlcnMv
-c2NzaS9zeW01M2M4eHhfMi9zeW1fZ2x1ZS5jCkBAIC0xMzkzLDcgKzEzOTMsNyBAQCBzdGF0aWMg
-c3RydWN0IFNjc2lfSG9zdCAqc3ltX2F0dGFjaChzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlICp0
-cG50LCBpbnQgdW5pdCwKIAkJc2NzaV9ob3N0X3B1dChzaG9zdCk7CiAKIAlyZXR1cm4gTlVMTDsK
-LSB9Cit9CiAKIAogLyoKZGlmZiAtLWdpdCBhL2ZzL2xvY2tzLmMgYi9mcy9sb2Nrcy5jCmluZGV4
-IDIxYjRkZmEyODllZS4uZDIzOTlkMDAxYWZlIDEwMDY0NAotLS0gYS9mcy9sb2Nrcy5jCisrKyBi
-L2ZzL2xvY2tzLmMKQEAgLTU1OSw3ICs1NTksNyBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGxvY2tf
-bWFuYWdlcl9vcGVyYXRpb25zIGxlYXNlX21hbmFnZXJfb3BzID0gewogICogSW5pdGlhbGl6ZSBh
-IGxlYXNlLCB1c2UgdGhlIGRlZmF1bHQgbG9jayBtYW5hZ2VyIG9wZXJhdGlvbnMKICAqLwogc3Rh
-dGljIGludCBsZWFzZV9pbml0KHN0cnVjdCBmaWxlICpmaWxwLCBsb25nIHR5cGUsIHN0cnVjdCBm
-aWxlX2xvY2sgKmZsKQotIHsKK3sKIAlpZiAoYXNzaWduX3R5cGUoZmwsIHR5cGUpICE9IDApCiAJ
-CXJldHVybiAtRUlOVkFMOwogCmRpZmYgLS1naXQgYS9mcy9vY2ZzMi9zdGFja191c2VyLmMgYi9m
-cy9vY2ZzMi9zdGFja191c2VyLmMKaW5kZXggZGFlOWViN2M0NDFlLi5kMmZiOTdiMTczZGEgMTAw
-NjQ0Ci0tLSBhL2ZzL29jZnMyL3N0YWNrX3VzZXIuYworKysgYi9mcy9vY2ZzMi9zdGFja191c2Vy
-LmMKQEAgLTM5OCw3ICszOTgsNyBAQCBzdGF0aWMgaW50IG9jZnMyX2NvbnRyb2xfZG9fc2V0bm9k
-ZV9tc2coc3RydWN0IGZpbGUgKmZpbGUsCiAKIHN0YXRpYyBpbnQgb2NmczJfY29udHJvbF9kb19z
-ZXR2ZXJzaW9uX21zZyhzdHJ1Y3QgZmlsZSAqZmlsZSwKIAkJCQkJICAgc3RydWN0IG9jZnMyX2Nv
-bnRyb2xfbWVzc2FnZV9zZXR2ICptc2cpCi0geworewogCWxvbmcgbWFqb3IsIG1pbm9yOwogCWNo
-YXIgKnB0ciA9IE5VTEw7CiAJc3RydWN0IG9jZnMyX2NvbnRyb2xfcHJpdmF0ZSAqcCA9IGZpbGUt
-PnByaXZhdGVfZGF0YTsKZGlmZiAtLWdpdCBhL2ZzL3hmcy9saWJ4ZnMveGZzX2FsbG9jLmMgYi9m
-cy94ZnMvbGlieGZzL3hmc19hbGxvYy5jCmluZGV4IDBkYTgwMDE5YTkxNy4uMjE3MTA4Zjc2NWQ1
-IDEwMDY0NAotLS0gYS9mcy94ZnMvbGlieGZzL3hmc19hbGxvYy5jCisrKyBiL2ZzL3hmcy9saWJ4
-ZnMveGZzX2FsbG9jLmMKQEAgLTI0MDEsNyArMjQwMSw3IEBAIHN0YXRpYyBib29sCiB4ZnNfYWdm
-X3ZlcmlmeSgKIAlzdHJ1Y3QgeGZzX21vdW50ICptcCwKIAlzdHJ1Y3QgeGZzX2J1ZgkqYnApCi0g
-eworewogCXN0cnVjdCB4ZnNfYWdmCSphZ2YgPSBYRlNfQlVGX1RPX0FHRihicCk7CiAKIAlpZiAo
-eGZzX3NiX3ZlcnNpb25faGFzY3JjKCZtcC0+bV9zYikpIHsKQEAgLTI0NDksOCArMjQ0OSw3IEBA
-IHhmc19hZ2ZfdmVyaWZ5KAogCSAgICAgYmUzMl90b19jcHUoYWdmLT5hZ2ZfcmVmY291bnRfbGV2
-ZWwpID4gWEZTX0JUUkVFX01BWExFVkVMUykpCiAJCXJldHVybiBmYWxzZTsKIAotCXJldHVybiB0
-cnVlOzsKLQorCXJldHVybiB0cnVlOwogfQogCiBzdGF0aWMgdm9pZApkaWZmIC0tZ2l0IGEvZnMv
-eGZzL3hmc19leHBvcnQuYyBiL2ZzL3hmcy94ZnNfZXhwb3J0LmMKaW5kZXggZmUxYmZlZTM1ODk4
-Li43ZDVjMzU1ZDc4YjUgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfZXhwb3J0LmMKKysrIGIvZnMv
-eGZzL3hmc19leHBvcnQuYwpAQCAtMTIyLDcgKzEyMiw3IEBAIHhmc19uZnNfZ2V0X2lub2RlKAog
-CXN0cnVjdCBzdXBlcl9ibG9jawkqc2IsCiAJdTY0CQkJaW5vLAogCXUzMgkJCWdlbmVyYXRpb24p
-Ci0geworewogIAl4ZnNfbW91bnRfdAkJKm1wID0gWEZTX00oc2IpOwogCXhmc19pbm9kZV90CQkq
-aXA7CiAJaW50CQkJZXJyb3I7CmRpZmYgLS1naXQgYS9rZXJuZWwvYXVkaXQuYyBiL2tlcm5lbC9h
-dWRpdC5jCmluZGV4IDIyN2RiOTliMGYxOS4uZDk3ZThmMGY3M2NhIDEwMDY0NAotLS0gYS9rZXJu
-ZWwvYXVkaXQuYworKysgYi9rZXJuZWwvYXVkaXQuYwpAQCAtNDQzLDE1ICs0NDMsMTUgQEAgc3Rh
-dGljIGludCBhdWRpdF9zZXRfZmFpbHVyZSh1MzIgc3RhdGUpCiAgKiBEcm9wIGFueSByZWZlcmVu
-Y2VzIGluc2lkZSB0aGUgYXVkaXRkIGNvbm5lY3Rpb24gdHJhY2tpbmcgc3RydWN0IGFuZCBmcmVl
-CiAgKiB0aGUgbWVtb3J5LgogICovCi0gc3RhdGljIHZvaWQgYXVkaXRkX2Nvbm5fZnJlZShzdHJ1
-Y3QgcmN1X2hlYWQgKnJjdSkKLSB7CitzdGF0aWMgdm9pZCBhdWRpdGRfY29ubl9mcmVlKHN0cnVj
-dCByY3VfaGVhZCAqcmN1KQorewogCXN0cnVjdCBhdWRpdGRfY29ubmVjdGlvbiAqYWM7CiAKIAlh
-YyA9IGNvbnRhaW5lcl9vZihyY3UsIHN0cnVjdCBhdWRpdGRfY29ubmVjdGlvbiwgcmN1KTsKIAlw
-dXRfcGlkKGFjLT5waWQpOwogCXB1dF9uZXQoYWMtPm5ldCk7CiAJa2ZyZWUoYWMpOwotIH0KK30K
-IAogLyoqCiAgKiBhdWRpdGRfc2V0IC0gU2V0L1Jlc2V0IHRoZSBhdWRpdGQgY29ubmVjdGlvbiBz
-dGF0ZQpkaWZmIC0tZ2l0IGEva2VybmVsL3RyYWNlL3RyYWNlX3ByaW50ay5jIGIva2VybmVsL3Ry
-YWNlL3RyYWNlX3ByaW50ay5jCmluZGV4IGFkMWQ2MTY0ZTk0Ni4uNTBmNDRiN2IyYjMyIDEwMDY0
-NAotLS0gYS9rZXJuZWwvdHJhY2UvdHJhY2VfcHJpbnRrLmMKKysrIGIva2VybmVsL3RyYWNlL3Ry
-YWNlX3ByaW50ay5jCkBAIC0xOTYsNyArMTk2LDcgQEAgc3RydWN0IG5vdGlmaWVyX2Jsb2NrIG1v
-ZHVsZV90cmFjZV9icHJpbnRrX2Zvcm1hdF9uYiA9IHsKIH07CiAKIGludCBfX3RyYWNlX2Jwcmlu
-dGsodW5zaWduZWQgbG9uZyBpcCwgY29uc3QgY2hhciAqZm10LCAuLi4pCi0geworewogCWludCBy
-ZXQ7CiAJdmFfbGlzdCBhcDsKIApAQCAtMjE0LDcgKzIxNCw3IEBAIGludCBfX3RyYWNlX2Jwcmlu
-dGsodW5zaWduZWQgbG9uZyBpcCwgY29uc3QgY2hhciAqZm10LCAuLi4pCiBFWFBPUlRfU1lNQk9M
-X0dQTChfX3RyYWNlX2JwcmludGspOwogCiBpbnQgX19mdHJhY2VfdmJwcmludGsodW5zaWduZWQg
-bG9uZyBpcCwgY29uc3QgY2hhciAqZm10LCB2YV9saXN0IGFwKQotIHsKK3sKIAlpZiAodW5saWtl
-bHkoIWZtdCkpCiAJCXJldHVybiAwOwogCmRpZmYgLS1naXQgYS9saWIvcmFpZDYvc3NlMi5jIGIv
-bGliL3JhaWQ2L3NzZTIuYwppbmRleCAxZDIyNzZiMDA3ZWUuLjgxOTFlMWQwZDJmYiAxMDA2NDQK
-LS0tIGEvbGliL3JhaWQ2L3NzZTIuYworKysgYi9saWIvcmFpZDYvc3NlMi5jCkBAIC05MSw3ICs5
-MSw3IEBAIHN0YXRpYyB2b2lkIHJhaWQ2X3NzZTIxX2dlbl9zeW5kcm9tZShpbnQgZGlza3MsIHNp
-emVfdCBieXRlcywgdm9pZCAqKnB0cnMpCiAKIHN0YXRpYyB2b2lkIHJhaWQ2X3NzZTIxX3hvcl9z
-eW5kcm9tZShpbnQgZGlza3MsIGludCBzdGFydCwgaW50IHN0b3AsCiAJCQkJICAgICBzaXplX3Qg
-Ynl0ZXMsIHZvaWQgKipwdHJzKQotIHsKK3sKIAl1OCAqKmRwdHIgPSAodTggKiopcHRyczsKIAl1
-OCAqcCwgKnE7CiAJaW50IGQsIHosIHowOwpAQCAtMjAwLDkgKzIwMCw5IEBAIHN0YXRpYyB2b2lk
-IHJhaWQ2X3NzZTIyX2dlbl9zeW5kcm9tZShpbnQgZGlza3MsIHNpemVfdCBieXRlcywgdm9pZCAq
-KnB0cnMpCiAJa2VybmVsX2ZwdV9lbmQoKTsKIH0KIAotIHN0YXRpYyB2b2lkIHJhaWQ2X3NzZTIy
-X3hvcl9zeW5kcm9tZShpbnQgZGlza3MsIGludCBzdGFydCwgaW50IHN0b3AsCitzdGF0aWMgdm9p
-ZCByYWlkNl9zc2UyMl94b3Jfc3luZHJvbWUoaW50IGRpc2tzLCBpbnQgc3RhcnQsIGludCBzdG9w
-LAogCQkJCSAgICAgc2l6ZV90IGJ5dGVzLCB2b2lkICoqcHRycykKLSB7Cit7CiAJdTggKipkcHRy
-ID0gKHU4ICoqKXB0cnM7CiAJdTggKnAsICpxOwogCWludCBkLCB6LCB6MDsKQEAgLTI2NSw3ICsy
-NjUsNyBAQCBzdGF0aWMgdm9pZCByYWlkNl9zc2UyMl9nZW5fc3luZHJvbWUoaW50IGRpc2tzLCBz
-aXplX3QgYnl0ZXMsIHZvaWQgKipwdHJzKQogCiAJYXNtIHZvbGF0aWxlKCJzZmVuY2UiIDogOiA6
-ICJtZW1vcnkiKTsKIAlrZXJuZWxfZnB1X2VuZCgpOwotIH0KK30KIAogY29uc3Qgc3RydWN0IHJh
-aWQ2X2NhbGxzIHJhaWQ2X3NzZTJ4MiA9IHsKIAlyYWlkNl9zc2UyMl9nZW5fc3luZHJvbWUsCkBA
-IC0zNjYsOSArMzY2LDkgQEAgc3RhdGljIHZvaWQgcmFpZDZfc3NlMjRfZ2VuX3N5bmRyb21lKGlu
-dCBkaXNrcywgc2l6ZV90IGJ5dGVzLCB2b2lkICoqcHRycykKIAlrZXJuZWxfZnB1X2VuZCgpOwog
-fQogCi0gc3RhdGljIHZvaWQgcmFpZDZfc3NlMjRfeG9yX3N5bmRyb21lKGludCBkaXNrcywgaW50
-IHN0YXJ0LCBpbnQgc3RvcCwKK3N0YXRpYyB2b2lkIHJhaWQ2X3NzZTI0X3hvcl9zeW5kcm9tZShp
-bnQgZGlza3MsIGludCBzdGFydCwgaW50IHN0b3AsCiAJCQkJICAgICBzaXplX3QgYnl0ZXMsIHZv
-aWQgKipwdHJzKQotIHsKK3sKIAl1OCAqKmRwdHIgPSAodTggKiopcHRyczsKIAl1OCAqcCwgKnE7
-CiAJaW50IGQsIHosIHowOwpAQCAtNDcxLDcgKzQ3MSw3IEBAIHN0YXRpYyB2b2lkIHJhaWQ2X3Nz
-ZTI0X2dlbl9zeW5kcm9tZShpbnQgZGlza3MsIHNpemVfdCBieXRlcywgdm9pZCAqKnB0cnMpCiAJ
-fQogCWFzbSB2b2xhdGlsZSgic2ZlbmNlIiA6IDogOiAibWVtb3J5Iik7CiAJa2VybmVsX2ZwdV9l
-bmQoKTsKLSB9Cit9CiAKIAogY29uc3Qgc3RydWN0IHJhaWQ2X2NhbGxzIHJhaWQ2X3NzZTJ4NCA9
-IHsKZGlmZiAtLWdpdCBhL3NvdW5kL3NvYy9mc2wvZnNsX2RtYS5jIGIvc291bmQvc29jL2ZzbC9m
-c2xfZG1hLmMKaW5kZXggMGMxMWY0MzRhMzc0Li5lYzYxOWY1MWQzMzYgMTAwNjQ0Ci0tLSBhL3Nv
-dW5kL3NvYy9mc2wvZnNsX2RtYS5jCisrKyBiL3NvdW5kL3NvYy9mc2wvZnNsX2RtYS5jCkBAIC04
-NzksNyArODc5LDcgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBzbmRfcGNtX29wcyBmc2xfZG1hX29w
-cyA9IHsKIH07CiAKIHN0YXRpYyBpbnQgZnNsX3NvY19kbWFfcHJvYmUoc3RydWN0IHBsYXRmb3Jt
-X2RldmljZSAqcGRldikKLSB7Cit7CiAJc3RydWN0IGRtYV9vYmplY3QgKmRtYTsKIAlzdHJ1Y3Qg
-ZGV2aWNlX25vZGUgKm5wID0gcGRldi0+ZGV2Lm9mX25vZGU7CiAJc3RydWN0IGRldmljZV9ub2Rl
-ICpzc2lfbnA7CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-XwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcK
-aHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+On 12/15/2017 07:17 PM, Steffen Maier wrote:
+> Just a few very early view-only review comments.
+> Haven't run the code.
+> 
+> On 12/14/2017 11:11 AM, Hannes Reinecke wrote:
+>> The 'native LUN' feature allows virtio-scsi to pass in the LUN
+>> numbers from the underlying storage directly, without having
+>> to modify the LUN number itself.
+>> It works by shifting the existing LUN number down by 8 bytes,
+>> and add the virtio-specific 8-byte LUN steering header.
+>> With that virtio doesn't have to mangle the LUN number, allowing
+>> us to pass the 'real' LUN number to the guest.
+> 
+> I only see shifts by 16 bits in the code below which would be 2 bytes.
+> I had a quick look at the corresponding qemu code which looked the same
+> to me.
+> What's the relation to 8 byte shifting, which would be 64 bit shift and
+> thus odd for a 64 bit LUN, mentioned in the description here?
+> 
+> If the code keeps the LUN level 1 and 2 (dropping level 3 and 4) and I
+> just don't understand it, it would be fine, I guess.
+> 
+Yeah, messed that one up. It should be 8 _bits_, obviously.
+
+>> Of course, we do cut off the last 8 bytes of the 'real' LUN number,
+>> but I'm not aware of any array utilizing that, so the impact should
+>> be negligible.
+> 
+> Why did we do v3.17 commit 9cb78c16f5da ("scsi: use 64-bit LUNs")? ;-)
+> 
+Because that patch just lifts the internal code to use 64-bit LUNs
+without any changes to the behaviour.
+This one uses the internal 64-bit LUNs and actually changes the behaviour.
+
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>   drivers/scsi/virtio_scsi.c       | 62
+>> ++++++++++++++++++++++++++++++----------
+>>   include/uapi/linux/virtio_scsi.h |  1 +
+>>   2 files changed, 48 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+>> index f925fbd..63c2c85 100644
+>> --- a/drivers/scsi/virtio_scsi.c
+>> +++ b/drivers/scsi/virtio_scsi.c
+>> @@ -356,8 +356,12 @@ static void
+>> virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
+>>       struct scsi_device *sdev;
+>>       struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
+>>       unsigned int target = event->lun[1];
+>> -    unsigned int lun = (event->lun[2] << 8) | event->lun[3];
+>> +    u64 lun;
+>>
+>> +    if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_NATIVE_LUN))
+>> +        lun = scsilun_to_int((struct scsi_lun *)event->lun) >> 16;
+>> +    else
+>> +        lun = (event->lun[2] << 8) | event->lun[3];
+> 
+> 
+>> @@ -524,10 +532,16 @@ static void virtio_scsi_init_hdr(struct
+>> virtio_device *vdev,
+>>                    int target_id,
+>>                    struct scsi_cmnd *sc)
+>>   {
+>> -    cmd->lun[0] = 1;
+>> -    cmd->lun[1] = target_id;
+>> -    cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
+>> -    cmd->lun[3] = sc->device->lun & 0xff;
+>> +    if (virtio_has_feature(vdev, VIRTIO_SCSI_F_NATIVE_LUN)) {
+>> +        u64 lun = sc->device->lun << 16;
+>> +        lun |= ((u64)1 << 8) | (u64)target_id;
+>> +        int_to_scsilun(lun, (struct scsi_lun *)&cmd->lun);
+>> +    } else {
+>> +        cmd->lun[0] = 1;
+>> +        cmd->lun[1] = target_id;
+>> +        cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
+>> +        cmd->lun[3] = sc->device->lun & 0xff;
+>> +    }
+> 
+> Above 2 patterns seem to repeat. Have helper functions (similar to
+> int_to_scsilun()) now that it's more than just 4 lines of filling in the
+> virtio lun?
+> 
+Yes, can do.
+
+>> @@ -851,10 +871,18 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+>>           .subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
+> 
+>>           .lun[0] = 1,
+>>           .lun[1] = target_id,
+> 
+> drop those 2 superfluous lines, too?
+> 
+Hmm. Will be checking.
+
+>> -        .lun[2] = (sc->device->lun >> 8) | 0x40,
+>> -        .lun[3] = sc->device->lun & 0xff,
+>>           .tag = cpu_to_virtio64(vscsi->vdev, (unsigned long)sc),
+>>       };
+>> +    if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_NATIVE_LUN)) {
+>> +        u64 lun = sc->device->lun << 16;
+>> +        lun |= ((u64)1 << 8) | (u64)target_id;
+>> +        int_to_scsilun(lun, (struct scsi_lun *)&cmd->req.tmf.lun);
+>> +    } else {
+>> +        cmd->req.tmf.lun[0] = 1;
+>> +        cmd->req.tmf.lun[1] = target_id;
+>> +        cmd->req.tmf.lun[2] = (sc->device->lun >> 8) | 0x40;
+>> +        cmd->req.tmf.lun[3] = sc->device->lun & 0xff;
+>> +    }
+> 
+>>       return virtscsi_tmf(vscsi, cmd);
+>>   }
+>>
+>> @@ -1429,7 +1457,10 @@ static int virtscsi_probe(struct virtio_device
+>> *vdev)
+>>       /* LUNs > 256 are reported with format 1, so they go in the range
+>>        * 16640-32767.
+>>        */
+> 
+> Above old comment now only seems to apply to the then case of the
+> following if statement, not to the else case.
+> 
+Yes.
+Will be doing a respin.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
