@@ -1,49 +1,46 @@
-From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: Re: [trivial PATCH] treewide: Align function
- definition open/close braces
-Date: Mon, 18 Dec 2017 23:15:11 +0100
-Message-ID: <20171218221511.GH15162@piout.net>
-References: <1513556924.31581.51.camel@perches.com>
+From: chenxiang <chenxiang66@hisilicon.com>
+Subject: [PATCH] scsi: hisi_sas: fix a warning reported by sparse
+Date: Tue, 19 Dec 2017 09:15:23 +0800
+Message-ID: <1513646123-93775-1-git-send-email-chenxiang66@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-Content-Disposition: inline
-In-Reply-To: <1513556924.31581.51.camel@perches.com>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-rtc@vger.kernel.org, alsa-devel@alsa-project.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, Jiri Kosina <trivial@kernel.org>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, acpi4asus-user@lists.sourceforge.net, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org, linux-xfs@vger.kernel.org, linux-acpi@vger.kernel.org, linux-audit@redhat.com, amd-gfx@lists.freedesktop.org, netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, ocfs2-devel@oss.oracle.com, linux-media@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 17/12/2017 at 16:28:44 -0800, Joe Perches wrote:
-> Some functions definitions have either the initial open brace and/or
-> the closing brace outside of column 1.
-> 
-> Move those braces to column 1.
-> 
-> This allows various function analyzers like gnu complexity to work
-> properly for these modified functions.
-> 
-> Miscellanea:
-> 
-> o Remove extra trailing ; and blank line from xfs_agf_verify
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+The type of function pci_choose_state's return value is pci_power_t while we
+define it as a u32. A warning will be reported by sparse. So change u32 
+into pci_power_t.
 
-For RTC:
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Acked-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 6a408d2..05fb291 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2309,7 +2309,8 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct device *dev = hisi_hba->dev;
+ 	struct Scsi_Host *shost = hisi_hba->shost;
+-	u32 device_state, status;
++	u32 status;
++	pci_power_t device_state;
+ 	int rc;
+ 	u32 reg_val;
+ 	unsigned long flags;
+@@ -2371,7 +2372,7 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
+ 	struct Scsi_Host *shost = hisi_hba->shost;
+ 	struct device *dev = hisi_hba->dev;
+ 	unsigned int rc;
+-	u32 device_state = pdev->current_state;
++	pci_power_t device_state = pdev->current_state;
+ 
+ 	dev_warn(dev, "resuming from operating state [D%d]\n",
+ 			device_state);
 -- 
-Alexandre Belloni, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+1.9.1
