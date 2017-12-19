@@ -1,76 +1,124 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: use sysfs entry for health info
-Date: Tue, 19 Dec 2017 21:07:31 +0000
-Message-ID: <1513717650.2535.13.camel@wdc.com>
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [PATCH 2/2 v2] scsi: ufs: use sysfs entry for health info
+Date: Tue, 19 Dec 2017 14:45:31 -0800
+Message-ID: <20171219224531.GA23445@jaegeuk-macbookpro.roam.corp.google.com>
 References: <20171219200254.23120-1-jaegeuk@kernel.org>
-         <20171219200254.23120-2-jaegeuk@kernel.org>
+ <20171219200254.23120-2-jaegeuk@kernel.org>
+ <1513717650.2535.13.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:5604 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbdLSVHf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Dec 2017 16:07:35 -0500
-In-Reply-To: <20171219200254.23120-2-jaegeuk@kernel.org>
-Content-Language: en-US
-Content-ID: <2019607DEF07F648AC99EA7E290603B5@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1513717650.2535.13.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jaegeuk@google.com" <jaegeuk@google.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "jaegeuk@kernel.org" <jaegeuk@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "jaegeuk@google.com" <jaegeuk@google.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
 
-T24gVHVlLCAyMDE3LTEyLTE5IGF0IDEyOjAyIC0wODAwLCBKYWVnZXVrIEtpbSB3cm90ZToNCj4g
-VGhpcyBwYXRjaCBpbnRyb2R1Y2VzIHN5c2ZzIGVudHJpZXMgdG8gc2hvdyB0aGUgaW5mb3JtYXRp
-b24uDQoNCldoYXQgaW5mb3JtYXRpb24gZG9lcyAidGhlIGluZm9ybWF0aW9uIiByZWZlciB0bz8N
-Cg0KUmVnYXJkaW5nIHRoZSBwYXRjaCB0aXRsZTogSSB0aGluayB0aGlzIHBhdGNoIGludHJvZHVj
-ZXMgbmV3IHN5c2ZzIGF0dHJpYnV0ZXMNCmluc3RlYWQgb2YgdXNpbmcgZXhpc3Rpbmcgc3lzZnMg
-ZW50cmllcy4gSWYgc28sIHBsZWFzZSByZWZsZWN0IHRoaXMgaW4gdGhlIHBhdGNoDQp0aXRsZS4N
-Cg0KPiAgIyBjYXQgL3N5cy9kZXZpY2VzL3NvYy8xZGE0MDAwLnVmc2hjL2hlYWx0aC9lb2wNCj4g
-ICMgY2F0IC9zeXMvZGV2aWNlcy9zb2MvMWRhNDAwMC51ZnNoYy9oZWFsdGgvbGVuZ3RoDQo+ICAj
-IGNhdCAvc3lzL2RldmljZXMvc29jLzFkYTQwMDAudWZzaGMvaGVhbHRoL2xpZmV0aW1lQQ0KPiAg
-IyBjYXQgL3N5cy9kZXZpY2VzL3NvYy8xZGE0MDAwLnVmc2hjL2hlYWx0aC9saWZldGltZUINCj4g
-ICMgY2F0IC9zeXMvZGV2aWNlcy9zb2MvMWRhNDAwMC51ZnNoYy9oZWFsdGgvdHlwZQ0KDQpXaGF0
-IGlzIHRoZSBtZWFuaW5nIG9mIHRoZSBhYm92ZSBzaGVsbCBjb21tYW5kcyBpbiB0aGUgY29udGV4
-dCBvZiB0aGUgcGF0Y2gNCmRlc2NyaXB0aW9uPw0KDQo+IHN0cnVjdCBkZXNjX2ZpZWxkX29mZnNl
-dCBoZWFsdGhfZGVzY19maWVsZF9uYW1lW10gPSB7DQo+IAl7ImJMZW5ndGgiLCAgICAgICAgICAg
-ICAweDAwLCBCWVRFfSwNCj4gCXsiYkRlc2NyaXB0b3JUeXBlIiwgICAgIDB4MDEsIEJZVEV9LA0K
-PiAJeyJiUHJlRU9MSW5mbyIsICAgICAgICAgMHgwMiwgQllURX0sDQo+IAl7ImJEZXZpY2VMaWZl
-VGltZUVzdEEiLCAweDAzLCBCWVRFfSwNCj4gCXsiYkRldmljZUxpZmVUaW1lRXN0QiIsIDB4MDQs
-IEJZVEV9DQo+IH07DQoNCldoeSBoYXMgdGhlIGFib3ZlIGRhdGEgYmVlbiBtZW50aW9uZWQgaW4g
-dGhlIHBhdGNoIGRlc2NyaXB0aW9uPw0KDQo+IGJQcmVFT0xJbmZvDQo+ICAtIDAwaDogTm90IGRl
-ZmluZWQNCj4gIC0gMDFoOiBOb3JtYWwNCj4gIC0gMDJoOiBXYXJuaW5nDQo+ICAtIDAzaDogQ3Jp
-dGljYWwNCj4gDQo+IGJEZXZpY2VMaWZlVGltZUVzdEENCj4gIC0gMDBoOiBOb3QgZGVmaW5lZA0K
-PiAgLSAwMWg6ICAwJSB+IDEwJSBkZXZpY2UgbGlmZSB0aW1lIHVzZWQNCj4gIC0gMDJoOiAxMCUg
-fiAyMCUgZGV2aWNlIGxpZmUgdGltZSB1c2VkDQo+ICAtIDAzaDogMjAlIH4gMzAlIGRldmljZSBs
-aWZlIHRpbWUgdXNlZA0KPiAgLSAwNGg6IDMwJSB+IDQwJSBkZXZpY2UgbGlmZSB0aW1lIHVzZWQN
-Cj4gIC0gMDVoOiA0MCUgfiA1MCUgZGV2aWNlIGxpZmUgdGltZSB1c2VkDQo+ICAtIDA2aDogNTAl
-IH4gNjAlIGRldmljZSBsaWZlIHRpbWUgdXNlZA0KPiAgLSAwN2g6IDYwJSB+IDcwJSBkZXZpY2Ug
-bGlmZSB0aW1lIHVzZWQNCj4gIC0gMDhoOiA3MCUgfiA4MCUgZGV2aWNlIGxpZmUgdGltZSB1c2Vk
-DQo+ICAtIDA5aDogODAlIH4gOTAlIGRldmljZSBsaWZlIHRpbWUgdXNlZA0KPiAgLSAwQWg6IDkw
-JSB+IDEwMCUgZGV2aWNlIGxpZmUgdGltZSB1c2VkDQo+ICAtIDBCaDogRXhjZWVkZWQgaXRzIG1h
-eGltdW0gZXN0aW1hdGVkIGRldmljZSBsaWZlIHRpbWUNCg0KQWdhaW4sIHdoeSBoYXMgdGhlIGFi
-b3ZlIGluZm9ybWF0aW9uIGJlZW4gbWVudGlvbmVkIGluIHRoZSBwYXRjaCBkZXNjcmlwdGlvbj8N
-CiANCj4gK3N0YXRpYyBzc2l6ZV90IGhlYWx0aF9hdHRyX3Nob3coc3RydWN0IGRldmljZSAqZGV2
-LA0KPiArCQkJCXN0cnVjdCBoZWFsdGhfYXR0ciAqYXR0ciwgY2hhciAqYnVmKQ0KPiArew0KPiAr
-CXN0cnVjdCB1ZnNfaGJhICpoYmEgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsNCj4gKwlpbnQgYnVm
-Zl9sZW4gPSBoYmEtPmRlc2Nfc2l6ZS5oZWFsdGhfZGVzYzsNCj4gKwl1OCBkZXNjX2J1ZltoYmEt
-PmRlc2Nfc2l6ZS5oZWFsdGhfZGVzY107DQoNCklzIGRlc2NfYnVmW10gYSB2YXJpYWJsZS1sZW5n
-dGggYXJyYXk/IElmIHNvLCBob3cgYmlnIGNhbg0KaGJhLT5kZXNjX3NpemUuaGVhbHRoX2Rlc2Mg
-YmU/IENhbiB0aGF0IG51bWJlciBoYXZlIGEgbmVnYXRpdmUgdmFsdWU/DQoNCj4gKwlyZXR1cm4g
-c2NucHJpbnRmKGJ1ZiwgUEFHRV9TSVpFLCAiMHglMDJ4IiwgZGVzY19idWZbYXR0ci0+Ynl0ZXNd
-KTsNCg0KUGxlYXNlIGNoZWNrIHdoZXRoZXIgYXR0ci0+Ynl0ZXMgZmFsbHMgaW5zaWRlIHRoZSBi
-b3VuZHMgb2YgdGhlIGRlc2NfYnVmW10gYXJyYXkNCmJlZm9yZSB1c2luZyB0aGF0IHZhbHVlIGFz
-IGFuIGluZGV4Lg0KDQo+ICsjZGVmaW5lIEhFQUxUSF9BVFRSX1JPKF9uYW1lLCBfYnl0ZXMpCQkJ
-CQlcDQo+ICtzdGF0aWMgc3RydWN0IGhlYWx0aF9hdHRyIHVmc19oZWFsdGhfIyNfbmFtZSA9IHsJ
-CQlcDQo+ICsJLmF0dHIgPSB7Lm5hbWUgPSBfX3N0cmluZ2lmeShfbmFtZSksIC5tb2RlID0gMDQ0
-NH0sCQlcDQo+ICsJLnNob3cgPSBoZWFsdGhfYXR0cl9zaG93LAkJCQkJXA0KPiArCS5ieXRlcyA9
-IF9ieXRlcywJCQkJCQlcDQo+ICt9DQo+ICsNCj4gK0hFQUxUSF9BVFRSX1JPKGxlbmd0aCwgMCk7
-DQo+ICtIRUFMVEhfQVRUUl9STyh0eXBlLCAxKTsNCj4gK0hFQUxUSF9BVFRSX1JPKGVvbCwgMik7
-DQo+ICtIRUFMVEhfQVRUUl9STyhsaWZldGltZUEsIDMpOw0KPiArSEVBTFRIX0FUVFJfUk8obGlm
-ZXRpbWVCLCA0KTsNCg0KVGhlIGFib3ZlIG1ha2VzIGNsZWFyIHRoYXQgdGhlIHZhbHVlIHN0b3Jl
-ZCBpbiB0aGUgc3RydWN0dXJlIG1lbWJlciB3aXRoIHRoZSBuYW1lDQoiYnl0ZXMiIHJlcHJlc2Vu
-dHMgYW4gYXJyYXkgaW5kZXguIFBsZWFzZSBjaG9vc2UgYSBiZXR0ZXIgbmFtZSBmb3IgdGhhdCBz
-dHJ1Y3R1cmUNCm1lbWJlci4NCg0KQWRkaXRpb25hbGx5LCBzaW5jZSB0aGlzIHBhdGNoIGludHJv
-ZHVjZXMgbmV3IHN5c2ZzIGF0dHJpYnV0ZXMsIHdoeSBkb2Vzbid0IGl0DQphZGQgYW55IGRvY3Vt
-ZW50YXRpb24gdW5kZXIgRG9jdW1lbnRhdGlvbi9BQkkvPw0KDQpUaGFua3MsDQoNCkJhcnQu
+On 12/19, Bart Van Assche wrote:
+> On Tue, 2017-12-19 at 12:02 -0800, Jaegeuk Kim wrote:
+> > This patch introduces sysfs entries to show the information.
+> 
+> What information does "the information" refer to?
+> 
+> Regarding the patch title: I think this patch introduces new sysfs attributes
+> instead of using existing sysfs entries. If so, please reflect this in the patch
+> title.
+> 
+> >  # cat /sys/devices/soc/1da4000.ufshc/health/eol
+> >  # cat /sys/devices/soc/1da4000.ufshc/health/length
+> >  # cat /sys/devices/soc/1da4000.ufshc/health/lifetimeA
+> >  # cat /sys/devices/soc/1da4000.ufshc/health/lifetimeB
+> >  # cat /sys/devices/soc/1da4000.ufshc/health/type
+> 
+> What is the meaning of the above shell commands in the context of the patch
+> description?
+> 
+> > struct desc_field_offset health_desc_field_name[] = {
+> > 	{"bLength",             0x00, BYTE},
+> > 	{"bDescriptorType",     0x01, BYTE},
+> > 	{"bPreEOLInfo",         0x02, BYTE},
+> > 	{"bDeviceLifeTimeEstA", 0x03, BYTE},
+> > 	{"bDeviceLifeTimeEstB", 0x04, BYTE}
+> > };
+> 
+> Why has the above data been mentioned in the patch description?
+> 
+> > bPreEOLInfo
+> >  - 00h: Not defined
+> >  - 01h: Normal
+> >  - 02h: Warning
+> >  - 03h: Critical
+> > 
+> > bDeviceLifeTimeEstA
+> >  - 00h: Not defined
+> >  - 01h:  0% ~ 10% device life time used
+> >  - 02h: 10% ~ 20% device life time used
+> >  - 03h: 20% ~ 30% device life time used
+> >  - 04h: 30% ~ 40% device life time used
+> >  - 05h: 40% ~ 50% device life time used
+> >  - 06h: 50% ~ 60% device life time used
+> >  - 07h: 60% ~ 70% device life time used
+> >  - 08h: 70% ~ 80% device life time used
+> >  - 09h: 80% ~ 90% device life time used
+> >  - 0Ah: 90% ~ 100% device life time used
+> >  - 0Bh: Exceeded its maximum estimated device life time
+> 
+> Again, why has the above information been mentioned in the patch description?
+
+Let me send v2.
+
+>  
+> > +static ssize_t health_attr_show(struct device *dev,
+> > +				struct health_attr *attr, char *buf)
+> > +{
+> > +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> > +	int buff_len = hba->desc_size.health_desc;
+> > +	u8 desc_buf[hba->desc_size.health_desc];
+> 
+> Is desc_buf[] a variable-length array? If so, how big can
+> hba->desc_size.health_desc be? Can that number have a negative value?
+
+IIUC, it is given by UFS which must be valid. Otherwise, it should be
+QUERY_DESC_HEALTH_DEF_SIZE which is valid again. This is similarly being
+done in other sysfs entries here.
+
+> 
+> > +	return scnprintf(buf, PAGE_SIZE, "0x%02x", desc_buf[attr->bytes]);
+> 
+> Please check whether attr->bytes falls inside the bounds of the desc_buf[] array
+> before using that value as an index.
+
+Okay.
+
+> 
+> > +#define HEALTH_ATTR_RO(_name, _bytes)					\
+> > +static struct health_attr ufs_health_##_name = {			\
+> > +	.attr = {.name = __stringify(_name), .mode = 0444},		\
+> > +	.show = health_attr_show,					\
+> > +	.bytes = _bytes,						\
+> > +}
+> > +
+> > +HEALTH_ATTR_RO(length, 0);
+> > +HEALTH_ATTR_RO(type, 1);
+> > +HEALTH_ATTR_RO(eol, 2);
+> > +HEALTH_ATTR_RO(lifetimeA, 3);
+> > +HEALTH_ATTR_RO(lifetimeB, 4);
+> 
+> The above makes clear that the value stored in the structure member with the name
+> "bytes" represents an array index. Please choose a better name for that structure
+> member.
+
+Changed to byte_offset.
+
+> Additionally, since this patch introduces new sysfs attributes, why doesn't it
+> add any documentation under Documentation/ABI/?
+
+Added.
+
+Thanks,
+
+> 
+> Thanks,
+> 
+> Bart.
