@@ -1,52 +1,70 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] scsi: hpsa: Use vsnprintf extension %phN
-Date: Tue, 19 Dec 2017 19:09:59 +0200
-Message-ID: <20171219170959.40768-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] libsas: remove private hex2bin() implementation
+Date: Tue, 19 Dec 2017 19:37:27 +0200
+Message-ID: <20171219173727.41841-1-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15968 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:17146 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751171AbdLSRKD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Dec 2017 12:10:03 -0500
+        id S1750799AbdLSRha (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Dec 2017 12:37:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-Using this extension reduces the object size.
+The function sas_parse_addr() could be easily substituted by hex2bin() which is
+in kernel library code.
 
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/scsi/hpsa.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c | 20 ++++----------------
+ 1 file changed, 4 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index b0aa5dc1d54c..4c018b653f18 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4619,21 +4619,13 @@ static int hpsa_scatter_gather(struct ctlr_info *h,
- 	return 0;
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 58476b728c57..626727207889 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -27,6 +27,7 @@
+ #include <linux/firmware.h>
+ #include <linux/export.h>
+ #include <linux/ctype.h>
++#include <linux/kernel.h>
+ 
+ #include "sas_internal.h"
+ 
+@@ -946,21 +947,6 @@ void sas_target_destroy(struct scsi_target *starget)
+ 	sas_put_device(found_dev);
  }
  
--#define BUFLEN 128
- static inline void warn_zero_length_transfer(struct ctlr_info *h,
- 						u8 *cdb, int cdb_len,
- 						const char *func)
- {
--	char buf[BUFLEN];
--	int outlen;
+-static void sas_parse_addr(u8 *sas_addr, const char *p)
+-{
 -	int i;
+-	for (i = 0; i < SAS_ADDR_SIZE; i++) {
+-		u8 h, l;
+-		if (!*p)
+-			break;
+-		h = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
+-		p++;
+-		l = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
+-		p++;
+-		sas_addr[i] = (h<<4) | l;
+-	}
+-}
 -
--	outlen = scnprintf(buf, BUFLEN,
--				"%s: Blocking zero-length request: CDB:", func);
--	for (i = 0; i < cdb_len; i++)
--		outlen += scnprintf(buf+outlen, BUFLEN - outlen,
--					"%02hhx", cdb[i]);
--	dev_warn(&h->pdev->dev, "%s\n", buf);
-+	dev_warn(&h->pdev->dev,
-+		 "%s: Blocking zero-length request: CDB:%*phN\n",
-+		 func, cdb_len, cdb);
- }
+ #define SAS_STRING_ADDR_SIZE	16
  
- #define IO_ACCEL_INELIGIBLE 1
+ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
+@@ -977,7 +963,9 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
+ 		goto out;
+ 	}
+ 
+-	sas_parse_addr(addr, fw->data);
++	res = hex2bin(addr, fw->data, strnlen(fw->data, SAS_ADDR_SIZE * 2) / 2);
++	if (res)
++		goto out;
+ 
+ out:
+ 	release_firmware(fw);
 -- 
 2.15.1
