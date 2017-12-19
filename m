@@ -1,256 +1,133 @@
-From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [PATCH 2/2 v2] scsi: ufs: use sysfs entry for health info
-Date: Tue, 19 Dec 2017 14:46:44 -0800
-Message-ID: <20171219224644.GB23445@jaegeuk-macbookpro.roam.corp.google.com>
-References: <20171219200254.23120-1-jaegeuk@kernel.org>
- <20171219200254.23120-2-jaegeuk@kernel.org>
- <1513717650.2535.13.camel@wdc.com>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: Driver version for PMC Adaptec HBA in Linux and from vendor
+Date: Wed, 20 Dec 2017 00:12:23 +0100
+Message-ID: <c9b6807f-d357-d50d-ab03-9c2fa897d902@molgen.mpg.de>
+References: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
+ <4D8E82A446BF54499747901DBDEB737A7B8C48D8@avsrvexchmbx2.microsemi.net>
+ <71e28514-9832-5fae-ba69-1a6cbe5ae269@molgen.mpg.de>
+ <759acea897474b7798476133896a29d5@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1513717650.2535.13.camel@wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jaegeuk@google.com" <jaegeuk@google.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:48935 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753421AbdLSXM2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Dec 2017 18:12:28 -0500
+In-Reply-To: <759acea897474b7798476133896a29d5@microsemi.com>
+Content-Language: de-DE
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+Cc: linux-scsi@vger.kernel.org, it+linux-scsi@molgen.mpg.de
 
->From 3368207da5988b8fed4e41e6c0f49a60ac014222 Mon Sep 17 00:00:00 2001
-From: Jaegeuk Kim <jaegeuk@google.com>
-Date: Tue, 26 Sep 2017 20:53:48 -0700
-Subject: [PATCH 2/2] scsi: ufs: introduce sysfs entries exposing UFS health
- info
+Dear Raghava Aditya,
 
-This patch adds a new sysfs group, namely health, via:
 
-   /sys/devices/soc/X.ufshc/health/
+Thank you for your answer.
 
-This directory contains the below entries, each of which shows an 8-bytes
-hex number representing different meanings defined by JEDEC specfication.
+Am 18.12.2017 um 19:09 schrieb Raghava Aditya Renukunta:
 
-Users can simply read these entries to check how their underlying flash
-storage is getting reached out to its end of life. For example, if
-lifetimeA shows 0xb, it would be the right time to consider device swap.
+>> -----Original Message-----
+>> From: Paul Menzel [mailto:pmenzel@molgen.mpg.de]
+>> Sent: Saturday, December 16, 2017 1:39 AM
+>> To: Raghava Aditya Renukunta
+>> <RaghavaAditya.Renukunta@microsemi.com>; dl-esc-Aacraid Linux Driver
+>> <aacraid@microsemi.com>
+>> Cc: linux-scsi@vger.kernel.org; it+linux-scsi@vger.kernel.org
+>> Subject: Re: Driver version for PMC Adaptec HBA in Linux and from vendor
 
- - length
-   : must be 25h
+>> Am 17.02.2017 um 20:29 schrieb Raghava Aditya Renukunta:
+>>
+>>>> Using a PMC Adaptec HBA 1000-8e with latest Linux, it only initializes
+>>>> in sync mode, instead of async mode.
+>>>
+>>> The patches that enable async mode in HBA 1000-8e, have been included in
+>> the James Bottomley's linux-scsi Branch and are on track be
+>>> Included into Linux 4.11.
+>>>
+>>> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/
+>>>
+>>>> ```
+>>>> $ git describe --tag
+>>>> v4.10-rc8-47-g0722f57bf
+>>>> $ dmesg
+>>>> [   21.359635] Adaptec aacraid driver 1.2-1[41066]-ms
+>>>> [   21.360017] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have
+>>>> ASPM control
+>>>> [   21.363987] AAC0: Async. mode not supported by current driver, sync.
+>>>> mode enforced.
+>>>> [   21.363987] Please update driver to get full performance.
+>>>> [   21.364949] AAC0: kernel 1.2-0[0] Nov  5 2015
+>>>> [   21.365275] AAC0: monitor 0.0-0[0]
+>>>> [   21.371382] AAC0: bios 0.13-209[32000]
+>>>> [   21.371711] AAC0: serial 10F447
+>>>> [   21.372035] AAC0: Non-DASD support enabled.
+>>>> [   21.372360] AAC0: 64bit support enabled.
+>>>> [   21.372688] AAC0: 64 Bit DAC enabled
+>>>> […]
+>>>> $ git grep 'AAC_DRIVER_BUILD 41066'
+>>>> drivers/scsi/aacraid/aacraid.h:# define AAC_DRIVER_BUILD 41066
+>>>> ```
+>>>>
+>>>> Searching the vendor Web site, there is *Linux Driver Source
+>>>> 1.2.1-53005* available for download [1].
+>>>
+>>> The latest upstream driver version is 50740. We will be reaching version 53005 in couple of patch sets  ( ~ 3).
+>>>
+>> http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=96f6a613
+>> 4766de0d42a98c7758736dde16e0add5
+>>
+>> Thank you for the details. At our infrastructure we only want to use LTS
+>> Linux kernels, and the latest in 4.14. So right now, Linux 4.14.6
+>> includes version 50834 [1], which is the same version currently in Linus
+>> master branch (4.15-rc3). Is that save to use with async mode, or are
+>> you aware of problems and we should always use the latest out of tree
+>> driver, which is at version 55022 and can be download from the Microsemi
+>> server [3].
+> 
+> Well at this point I am in the process of creating a patch set that solves a kdump regression issue(Should be out before the new year), other than that the upstream driver is pretty much up to date. If kdump support is a must  for you I would recommend that  55022 be used.
 
- - type
-   : must be 09h
+ From your answer the state of async support is unclear to me. Could you 
+please clarify, if that’s support in 4.14.x? (What source line do I need 
+to check?)
 
- - eol
-   00h: Not defined
-   01h: Normal
-   02h: Warning
-   03h: Critical
+>>>> How does the upstream process work? Is there a git repository somewhere
+>>>> from Microsemi? Are the patches already up for review? (I didn’t find them.)
+>>>
+>>> We try to push out patch sets to kernel.org for every major  driver release we make.  Usually they go into the
+>>> sub component maintainers branch (linux-scsi ) , which is then pushed out to Linus when the merge
+>>> window for  opens (currently the merge window for 4.10 is closed , barring fixes). So Linux version 4.11 should have
+>>> full async support and more for HBA1000-8e.
+>>>
+>>> We do not maintain a git repository unfortunately, but we do release the >>> source code for every release as you indicated.
+>>>
+>>> For further reference the patches are sent out in the scsi mailing list linux-scsi@vger.kernel.org ,
+>>> the archive is here http://marc.info/?l=linux-scsi&r=1&w=2 .
+>>>
+>>> Hope I cleared up your doubts. Please do reach out if you have other concerns or questions.
+>>
+>> Yes, thank you for your elaborate answer, which cleared up a lot of my
+>> doubts. We would be even more satisfied if you moved your development
+>> fully to the Linux kernel tree, so that it always carries the latest
+>> driver. If we can help with that by contacting certain people, please
+>> tell us.
+> 
+> We would love to, but  we have lots of customers who are on the older kernel versions 2.6.32, 3.10.0 etc and It becomes almost impossible for us to fully move our development to the  Linux kernel tree and support our customers at the same time.  Hopefully we will start being up to date with the upstream kernel in the coming months. Hope that answered your questions.
 
- - lifetimeA/B
-   00h: Not defined
-   01h:  0% ~ 10% device life time used
-   02h: 10% ~ 20% device life time used
-   03h: 20% ~ 30% device life time used
-   04h: 30% ~ 40% device life time used
-   05h: 40% ~ 50% device life time used
-   06h: 50% ~ 60% device life time used
-   07h: 60% ~ 70% device life time used
-   08h: 70% ~ 80% device life time used
-   09h: 80% ~ 90% device life time used
-   0Ah: 90% ~ 100% device life time used
-   0Bh: Exceeded its maximum estimated device life time
+I understand, but doesn’t it make more sense to adapt the model like 
+done for Linux Long Term Support (LTS) series to develop against the 
+latest Linux kernel, and then backport the corresponding patches?
 
-Cc: Greg KH <gregkh@linuxfoundation.org>
-Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
----
- Documentation/ABI/testing/sysfs-devices-soc-ufs | 25 +++++++++
- MAINTAINERS                                     |  1 +
- drivers/scsi/ufs/ufs.h                          |  2 +
- drivers/scsi/ufs/ufshcd.c                       | 69 ++++++++++++++++++++++++-
- drivers/scsi/ufs/ufshcd.h                       |  1 +
- 5 files changed, 97 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/ABI/testing/sysfs-devices-soc-ufs
+Maybe you should talk to Red Hat and SUSE? I guess that’s the systems 
+you have to support. Probably you already talk to them.
 
-diff --git a/Documentation/ABI/testing/sysfs-devices-soc-ufs b/Documentation/ABI/testing/sysfs-devices-soc-ufs
-new file mode 100644
-index 000000000000..313771a383e4
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-devices-soc-ufs
-@@ -0,0 +1,25 @@
-+What:		/sys/devices/soc/X.ufshc/health
-+Date:		September 2017
-+contact:	Jaegeuk Kim <jaegeuk@google.com>
-+Description:
-+		This directory contains health information reported by UFS.
-+		- length must be 25h
-+		- type must be 09h
-+		- eol represent
-+		  00h: Not defined
-+		  01h: Normal
-+		  02h: Warning
-+		  03h: Critical
-+		- lifetimeA/B
-+		  00h: Not defined
-+		  01h:  0% ~ 10% device life time used
-+		  02h: 10% ~ 20% device life time used
-+		  03h: 20% ~ 30% device life time used
-+		  04h: 30% ~ 40% device life time used
-+		  05h: 40% ~ 50% device life time used
-+		  06h: 50% ~ 60% device life time used
-+		  07h: 60% ~ 70% device life time used
-+		  08h: 70% ~ 80% device life time used
-+		  09h: 80% ~ 90% device life time used
-+		  0Ah: 90% ~ 100% device life time used
-+		  0Bh: Exceeded its maximum estimated device life time
-diff --git a/MAINTAINERS b/MAINTAINERS
-index aa71ab52fd76..947034319bb4 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -13999,6 +13999,7 @@ M:	Vinayak Holikatti <vinholikatti@gmail.com>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	Documentation/scsi/ufs.txt
-+F:	Documentation/ABI/testing/sysfs-devices-soc-ufs
- F:	drivers/scsi/ufs/
- 
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 54deeb754db5..1af541d56c7d 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -154,6 +154,7 @@ enum desc_idn {
- 	QUERY_DESC_IDN_RFU_1		= 0x6,
- 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
- 	QUERY_DESC_IDN_POWER		= 0x8,
-+	QUERY_DESC_IDN_HEALTH		= 0x9,
- 	QUERY_DESC_IDN_MAX,
- };
- 
-@@ -169,6 +170,7 @@ enum ufs_desc_def_size {
- 	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
- 	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
- 	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
-+	QUERY_DESC_HEALTH_DEF_SIZE		= 0x25,
- };
- 
- /* Unit descriptor parameters offsets in bytes*/
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 12ff7daebb00..5cbb08fff0f4 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2991,6 +2991,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
- 	case QUERY_DESC_IDN_RFU_1:
- 		*desc_len = 0;
- 		break;
-+	case QUERY_DESC_IDN_HEALTH:
-+		*desc_len = hba->desc_size.health_desc;
-+		break;
- 	default:
- 		*desc_len = 0;
- 		return -EINVAL;
-@@ -6298,6 +6301,11 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
- 		&hba->desc_size.geom_desc);
- 	if (err)
- 		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-+
-+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
-+		&hba->desc_size.health_desc);
-+	if (err)
-+		hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
- }
- 
- static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
-@@ -6308,6 +6316,7 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
- 	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
- 	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
- 	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-+	hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
- }
- 
- /**
-@@ -7688,14 +7697,72 @@ static const struct attribute_group ufshcd_attr_group = {
- 	.attrs = ufshcd_attrs,
- };
- 
-+struct health_attr {
-+	struct attribute attr;
-+	ssize_t (*show)(struct device *dev,
-+				struct health_attr *attr, char *buf);
-+	int byte_offset;
-+};
-+
-+static ssize_t health_attr_show(struct device *dev,
-+				struct health_attr *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	int buff_len = hba->desc_size.health_desc;
-+	u8 desc_buf[hba->desc_size.health_desc];
-+	int err;
-+
-+	if (attr->byte_offset >= buff_len)
-+		return 0;
-+
-+	pm_runtime_get_sync(hba->dev);
-+	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_HEALTH, 0,
-+					desc_buf, buff_len);
-+	pm_runtime_put_sync(hba->dev);
-+	if (err)
-+		return 0;
-+
-+	return scnprintf(buf, PAGE_SIZE, "0x%02x", desc_buf[attr->byte_offset]);
-+}
-+
-+#define HEALTH_ATTR_RO(_name, _byte_offset)				\
-+static struct health_attr ufs_health_##_name = {			\
-+	.attr = {.name = __stringify(_name), .mode = 0444},		\
-+	.show = health_attr_show,					\
-+	.byte_offset = _byte_offset,					\
-+}
-+
-+HEALTH_ATTR_RO(length, 0);
-+HEALTH_ATTR_RO(type, 1);
-+HEALTH_ATTR_RO(eol, 2);
-+HEALTH_ATTR_RO(lifetimeA, 3);
-+HEALTH_ATTR_RO(lifetimeB, 4);
-+
-+static struct attribute *ufshcd_health_attrs[] = {
-+	&ufs_health_length.attr,
-+	&ufs_health_type.attr,
-+	&ufs_health_eol.attr,
-+	&ufs_health_lifetimeA.attr,
-+	&ufs_health_lifetimeB.attr,
-+	NULL
-+};
-+
-+static const struct attribute_group ufshcd_health_attr_group = {
-+	.name = "health",
-+	.attrs = ufshcd_health_attrs,
-+};
-+
- static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba)
- {
- 	if (sysfs_create_group(&hba->dev->kobj, &ufshcd_attr_group))
--		dev_err(hba->dev, "Failed to create sysfs group\n");
-+		dev_err(hba->dev, "Failed to create default sysfs group\n");
-+	if (sysfs_create_group(&hba->dev->kobj, &ufshcd_health_attr_group))
-+		dev_err(hba->dev, "Failed to create health sysfs group\n");
- }
- 
- static inline void ufshcd_remove_sysfs_nodes(struct ufs_hba *hba)
- {
-+	sysfs_remove_group(&hba->dev->kobj, &ufshcd_health_attr_group);
- 	sysfs_remove_group(&hba->dev->kobj, &ufshcd_attr_group);
- }
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 56e26eb15185..ba44cbcf755e 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -229,6 +229,7 @@ struct ufs_desc_size {
- 	int interc_desc;
- 	int unit_desc;
- 	int conf_desc;
-+	int health_desc;
- };
- 
- /**
--- 
-2.15.0.531.g2ccb3012c9-goog
+
+Kind regards,
+
+Paul
+
+
+>>>> [1] https://storage.microsemi.com/en-us/speed/raid/aac/linux/aacraid-linux-src-1_2_1-53005_tgz.php
+>> [2] https://elixir.free-electrons.com/linux/v4.14.6/source/drivers/scsi/aacraid/aacraid.h#L100
+>> [3] https://storage.microsemi.com/en-us/downloads/linux_source/linux_source_code/productid=aha-1000-8e&dn=microsemi+adaptec+hba+1000-8e.php
