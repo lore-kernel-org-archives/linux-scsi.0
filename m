@@ -1,70 +1,63 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] libsas: remove private hex2bin() implementation
-Date: Tue, 19 Dec 2017 19:37:27 +0200
-Message-ID: <20171219173727.41841-1-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:17146 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750799AbdLSRha (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Dec 2017 12:37:30 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [-next PATCH 0/4] sysfs and DEVICE_ATTR_<foo>
+Date: Tue, 19 Dec 2017 10:15:05 -0800
+Message-ID: <cover.1513706701.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, platform-driver-x86@vger.kernel.org, linux-s390@vger.kernel.org, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org, linux-omap@vger.kernel.org
+Cc: devel@driverdev.osuosl.org, linux-fbdev@vger.kernel.org, linux-sh@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org, linux-media@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-The function sas_parse_addr() could be easily substituted by hex2bin() which is
-in kernel library code.
-
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/scsi/libsas/sas_scsi_host.c | 20 ++++----------------
- 1 file changed, 4 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 58476b728c57..626727207889 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -27,6 +27,7 @@
- #include <linux/firmware.h>
- #include <linux/export.h>
- #include <linux/ctype.h>
-+#include <linux/kernel.h>
- 
- #include "sas_internal.h"
- 
-@@ -946,21 +947,6 @@ void sas_target_destroy(struct scsi_target *starget)
- 	sas_put_device(found_dev);
- }
- 
--static void sas_parse_addr(u8 *sas_addr, const char *p)
--{
--	int i;
--	for (i = 0; i < SAS_ADDR_SIZE; i++) {
--		u8 h, l;
--		if (!*p)
--			break;
--		h = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
--		p++;
--		l = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
--		p++;
--		sas_addr[i] = (h<<4) | l;
--	}
--}
--
- #define SAS_STRING_ADDR_SIZE	16
- 
- int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
-@@ -977,7 +963,9 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
- 		goto out;
- 	}
- 
--	sas_parse_addr(addr, fw->data);
-+	res = hex2bin(addr, fw->data, strnlen(fw->data, SAS_ADDR_SIZE * 2) / 2);
-+	if (res)
-+		goto out;
- 
- out:
- 	release_firmware(fw);
--- 
-2.15.1
+Sm9lIFBlcmNoZXMgKDQpOgogIHN5c2ZzLmg6IFVzZSBvY3RhbCBwZXJtaXNzaW9ucwogIHRyZWV3
+aWRlOiBVc2UgREVWSUNFX0FUVFJfUlcKICB0cmVld2lkZTogVXNlIERFVklDRV9BVFRSX1JPCiAg
+dHJlZXdpZGU6IFVzZSBERVZJQ0VfQVRUUl9XTwoKIGFyY2gvYXJtL21hY2gtcHhhL3NoYXJwc2xf
+cG0uYyAgICAgICAgICAgICAgICAgICAgIHwgIDQgKy0KIGFyY2gvczM5MC9rZXJuZWwvc21wLmMg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KIGFyY2gvczM5MC9rZXJuZWwvdG9w
+b2xvZ3kuYyAgICAgICAgICAgICAgICAgICAgICAgIHwgIDMgKy0KIGFyY2gvc2gvZHJpdmVycy9w
+dXNoLXN3aXRjaC5jICAgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KIGFyY2gvdGlsZS9rZXJu
+ZWwvc3lzZnMuYyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgMTIgKystLQogYXJjaC94ODYv
+a2VybmVsL2NwdS9taWNyb2NvZGUvY29yZS5jICAgICAgICAgICAgICAgfCAgMiArLQogZHJpdmVy
+cy9hY3BpL2RldmljZV9zeXNmcy5jICAgICAgICAgICAgICAgICAgICAgICAgfCAgNiArLQogZHJp
+dmVycy9jaGFyL2lwbWkvaXBtaV9tc2doYW5kbGVyLmMgICAgICAgICAgICAgICAgfCAxNyArKyst
+LS0KIGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfc3lzZnMuYyAgICAgICAgICAgICAgICAgIHwg
+MTIgKystLQogZHJpdmVycy9pbnB1dC90b3VjaHNjcmVlbi9lbGFudHNfaTJjLmMgICAgICAgICAg
+ICAgfCAgMiArLQogZHJpdmVycy9uZXQvZXRoZXJuZXQvaWJtL2libXZuaWMuYyAgICAgICAgICAg
+ICAgICAgfCAgMiArLQogZHJpdmVycy9uZXQvd2ltYXgvaTI0MDBtL3N5c2ZzLmMgICAgICAgICAg
+ICAgICAgICAgfCAgMyArLQogZHJpdmVycy9udm1lL2hvc3QvY29yZS5jICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgfCAxMCArKy0tCiBkcml2ZXJzL3BsYXRmb3JtL3g4Ni9jb21wYWwtbGFwdG9w
+LmMgICAgICAgICAgICAgICB8IDE4ICsrLS0tLQogZHJpdmVycy9zMzkwL2Npby9jc3MuYyAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgfCAgOCArLS0KIGRyaXZlcnMvczM5MC9jaW8vZGV2aWNl
+LmMgICAgICAgICAgICAgICAgICAgICAgICAgIHwgMTAgKystLQogZHJpdmVycy9zMzkwL2NyeXB0
+by9hcF9jYXJkLmMgICAgICAgICAgICAgICAgICAgICAgfCAgMiArLQogZHJpdmVycy9zY3NpL2hw
+c2EuYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxMCArKy0tCiBkcml2ZXJzL3Nj
+c2kvbHBmYy9scGZjX2F0dHIuYyAgICAgICAgICAgICAgICAgICAgICB8IDY0ICsrKysrKysrLS0t
+LS0tLS0tLS0tLS0KIC4uLi9zdGFnaW5nL21lZGlhL2F0b21pc3AvcGNpL2F0b21pc3AyL2htbS9o
+bW0uYyAgIHwgIDggKy0tCiBkcml2ZXJzL3RoZXJtYWwvdGhlcm1hbF9zeXNmcy5jICAgICAgICAg
+ICAgICAgICAgICB8IDE3ICsrKy0tLQogZHJpdmVycy90dHkvc2VyaWFsL3NoLXNjaS5jICAgICAg
+ICAgICAgICAgICAgICAgICAgfCAgMiArLQogZHJpdmVycy91c2IvaG9zdC94aGNpLWRiZ2NhcC5j
+ICAgICAgICAgICAgICAgICAgICAgfCAgMiArLQogZHJpdmVycy91c2IvcGh5L3BoeS10YWh2by5j
+ICAgICAgICAgICAgICAgICAgICAgICAgfCAgMiArLQogZHJpdmVycy92aWRlby9mYmRldi9hdW9f
+azE5MHguYyAgICAgICAgICAgICAgICAgICAgfCAgNCArLQogZHJpdmVycy92aWRlby9mYmRldi93
+MTAwZmIuYyAgICAgICAgICAgICAgICAgICAgICAgfCAgNCArLQogaW5jbHVkZS9saW51eC9zeXNm
+cy5oICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxNCArKy0tLQogbGliL3Rlc3RfZmly
+bXdhcmUuYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxNCArKy0tLQogbGliL3Rl
+c3Rfa21vZC5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxNCArKy0tLQog
+c291bmQvc29jL29tYXAvbWNic3AuYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNCAr
+LQogc291bmQvc29jL3NvYy1jb3JlLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAg
+MiArLQogc291bmQvc29jL3NvYy1kYXBtLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+fCAgMiArLQogMzIgZmlsZXMgY2hhbmdlZCwgMTIwIGluc2VydGlvbnMoKyksIDE1OCBkZWxldGlv
+bnMoLSkKCi0tIAoyLjE1LjAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNr
+dG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Ry
+aS1kZXZlbAo=
