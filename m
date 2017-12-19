@@ -1,24 +1,43 @@
-From: Jani Nikula <jani.nikula@linux.intel.com>
-Subject: Re: [-next PATCH 0/4] sysfs and DEVICE_ATTR_<foo>
-Date: Tue, 19 Dec 2017 20:54:32 +0200
-Message-ID: <87vah2o8ev.fsf@intel.com>
-References: <cover.1513706701.git.joe@perches.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-media-owner@vger.kernel.org>
-In-Reply-To: <cover.1513706701.git.joe@perches.com>
-Sender: linux-media-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>, linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, platform-driver-x86@vger.kernel.org, linux-s390@vger.kernel.org, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org, linux-omap@vger.kernel.org
-Cc: devel@driverdev.osuosl.org, linux-fbdev@vger.kernel.org, linux-sh@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org, linux-media@vger.kernel.org
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH] lpfc: correct sg_seg_cnt attribute min vs default
+Date: Tue, 19 Dec 2017 10:57:50 -0800
+Message-ID: <20171219185750.24348-1-jsmart2021@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:46611 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751488AbdLSS57 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Dec 2017 13:57:59 -0500
+Received: by mail-qk0-f196.google.com with SMTP id c85so9668870qkh.13
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2017 10:57:58 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
 
-On Tue, 19 Dec 2017, Joe Perches <joe@perches.com> wrote:
->  drivers/gpu/drm/i915/i915_sysfs.c                  | 12 ++--
+Prior patch mixed up what argument in the macro was what, so min
+value was placed as the "default" argument, and the default value
+was placed as the "min" argument. Thus, when the default was applied,
+it looked like the default was smaller than the allowed min.
 
-For i915,
+swap argument postions to correct.
 
-Acked-by: Jani Nikula <jani.nikula@intel.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 797bb42a6306..8938c867ed2c 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -5174,7 +5174,7 @@ LPFC_ATTR(delay_discovery, 0, 0, 1,
+  * this parameter will be limited to 128 if BlockGuard is enabled under SLI4
+  * and will be limited to 512 if BlockGuard is enabled under SLI3.
+  */
+-LPFC_ATTR_R(sg_seg_cnt, LPFC_MIN_SG_SEG_CNT, LPFC_DEFAULT_SG_SEG_CNT,
++LPFC_ATTR_R(sg_seg_cnt, LPFC_DEFAULT_SG_SEG_CNT, LPFC_MIN_SG_SEG_CNT, 
+ 	    LPFC_MAX_SG_SEG_CNT, "Max Scatter Gather Segment Count");
+ 
+ /*
 -- 
-Jani Nikula, Intel Open Source Technology Center
+2.13.1
