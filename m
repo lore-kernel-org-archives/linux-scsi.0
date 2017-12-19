@@ -1,7 +1,7 @@
 From: Jaegeuk Kim <jaegeuk@kernel.org>
 Subject: Re: [PATCH 2/2 v2] scsi: ufs: use sysfs entry for health info
-Date: Tue, 19 Dec 2017 14:45:31 -0800
-Message-ID: <20171219224531.GA23445@jaegeuk-macbookpro.roam.corp.google.com>
+Date: Tue, 19 Dec 2017 14:46:44 -0800
+Message-ID: <20171219224644.GB23445@jaegeuk-macbookpro.roam.corp.google.com>
 References: <20171219200254.23120-1-jaegeuk@kernel.org>
  <20171219200254.23120-2-jaegeuk@kernel.org>
  <1513717650.2535.13.camel@wdc.com>
@@ -15,110 +15,242 @@ To: Bart Van Assche <Bart.VanAssche@wdc.com>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jaegeuk@google.com" <jaegeuk@google.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/19, Bart Van Assche wrote:
-> On Tue, 2017-12-19 at 12:02 -0800, Jaegeuk Kim wrote:
-> > This patch introduces sysfs entries to show the information.
-> 
-> What information does "the information" refer to?
-> 
-> Regarding the patch title: I think this patch introduces new sysfs attributes
-> instead of using existing sysfs entries. If so, please reflect this in the patch
-> title.
-> 
-> >  # cat /sys/devices/soc/1da4000.ufshc/health/eol
-> >  # cat /sys/devices/soc/1da4000.ufshc/health/length
-> >  # cat /sys/devices/soc/1da4000.ufshc/health/lifetimeA
-> >  # cat /sys/devices/soc/1da4000.ufshc/health/lifetimeB
-> >  # cat /sys/devices/soc/1da4000.ufshc/health/type
-> 
-> What is the meaning of the above shell commands in the context of the patch
-> description?
-> 
-> > struct desc_field_offset health_desc_field_name[] = {
-> > 	{"bLength",             0x00, BYTE},
-> > 	{"bDescriptorType",     0x01, BYTE},
-> > 	{"bPreEOLInfo",         0x02, BYTE},
-> > 	{"bDeviceLifeTimeEstA", 0x03, BYTE},
-> > 	{"bDeviceLifeTimeEstB", 0x04, BYTE}
-> > };
-> 
-> Why has the above data been mentioned in the patch description?
-> 
-> > bPreEOLInfo
-> >  - 00h: Not defined
-> >  - 01h: Normal
-> >  - 02h: Warning
-> >  - 03h: Critical
-> > 
-> > bDeviceLifeTimeEstA
-> >  - 00h: Not defined
-> >  - 01h:  0% ~ 10% device life time used
-> >  - 02h: 10% ~ 20% device life time used
-> >  - 03h: 20% ~ 30% device life time used
-> >  - 04h: 30% ~ 40% device life time used
-> >  - 05h: 40% ~ 50% device life time used
-> >  - 06h: 50% ~ 60% device life time used
-> >  - 07h: 60% ~ 70% device life time used
-> >  - 08h: 70% ~ 80% device life time used
-> >  - 09h: 80% ~ 90% device life time used
-> >  - 0Ah: 90% ~ 100% device life time used
-> >  - 0Bh: Exceeded its maximum estimated device life time
-> 
-> Again, why has the above information been mentioned in the patch description?
+>From 3368207da5988b8fed4e41e6c0f49a60ac014222 Mon Sep 17 00:00:00 2001
+From: Jaegeuk Kim <jaegeuk@google.com>
+Date: Tue, 26 Sep 2017 20:53:48 -0700
+Subject: [PATCH 2/2] scsi: ufs: introduce sysfs entries exposing UFS health
+ info
 
-Let me send v2.
+This patch adds a new sysfs group, namely health, via:
 
->  
-> > +static ssize_t health_attr_show(struct device *dev,
-> > +				struct health_attr *attr, char *buf)
-> > +{
-> > +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> > +	int buff_len = hba->desc_size.health_desc;
-> > +	u8 desc_buf[hba->desc_size.health_desc];
-> 
-> Is desc_buf[] a variable-length array? If so, how big can
-> hba->desc_size.health_desc be? Can that number have a negative value?
+   /sys/devices/soc/X.ufshc/health/
 
-IIUC, it is given by UFS which must be valid. Otherwise, it should be
-QUERY_DESC_HEALTH_DEF_SIZE which is valid again. This is similarly being
-done in other sysfs entries here.
+This directory contains the below entries, each of which shows an 8-bytes
+hex number representing different meanings defined by JEDEC specfication.
 
-> 
-> > +	return scnprintf(buf, PAGE_SIZE, "0x%02x", desc_buf[attr->bytes]);
-> 
-> Please check whether attr->bytes falls inside the bounds of the desc_buf[] array
-> before using that value as an index.
+Users can simply read these entries to check how their underlying flash
+storage is getting reached out to its end of life. For example, if
+lifetimeA shows 0xb, it would be the right time to consider device swap.
 
-Okay.
+ - length
+   : must be 25h
 
-> 
-> > +#define HEALTH_ATTR_RO(_name, _bytes)					\
-> > +static struct health_attr ufs_health_##_name = {			\
-> > +	.attr = {.name = __stringify(_name), .mode = 0444},		\
-> > +	.show = health_attr_show,					\
-> > +	.bytes = _bytes,						\
-> > +}
-> > +
-> > +HEALTH_ATTR_RO(length, 0);
-> > +HEALTH_ATTR_RO(type, 1);
-> > +HEALTH_ATTR_RO(eol, 2);
-> > +HEALTH_ATTR_RO(lifetimeA, 3);
-> > +HEALTH_ATTR_RO(lifetimeB, 4);
-> 
-> The above makes clear that the value stored in the structure member with the name
-> "bytes" represents an array index. Please choose a better name for that structure
-> member.
+ - type
+   : must be 09h
 
-Changed to byte_offset.
+ - eol
+   00h: Not defined
+   01h: Normal
+   02h: Warning
+   03h: Critical
 
-> Additionally, since this patch introduces new sysfs attributes, why doesn't it
-> add any documentation under Documentation/ABI/?
+ - lifetimeA/B
+   00h: Not defined
+   01h:  0% ~ 10% device life time used
+   02h: 10% ~ 20% device life time used
+   03h: 20% ~ 30% device life time used
+   04h: 30% ~ 40% device life time used
+   05h: 40% ~ 50% device life time used
+   06h: 50% ~ 60% device life time used
+   07h: 60% ~ 70% device life time used
+   08h: 70% ~ 80% device life time used
+   09h: 80% ~ 90% device life time used
+   0Ah: 90% ~ 100% device life time used
+   0Bh: Exceeded its maximum estimated device life time
 
-Added.
+Cc: Greg KH <gregkh@linuxfoundation.org>
+Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+---
+ Documentation/ABI/testing/sysfs-devices-soc-ufs | 25 +++++++++
+ MAINTAINERS                                     |  1 +
+ drivers/scsi/ufs/ufs.h                          |  2 +
+ drivers/scsi/ufs/ufshcd.c                       | 69 ++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h                       |  1 +
+ 5 files changed, 97 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-devices-soc-ufs
 
-Thanks,
-
-> 
-> Thanks,
-> 
-> Bart.
+diff --git a/Documentation/ABI/testing/sysfs-devices-soc-ufs b/Documentation/ABI/testing/sysfs-devices-soc-ufs
+new file mode 100644
+index 000000000000..313771a383e4
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-devices-soc-ufs
+@@ -0,0 +1,25 @@
++What:		/sys/devices/soc/X.ufshc/health
++Date:		September 2017
++contact:	Jaegeuk Kim <jaegeuk@google.com>
++Description:
++		This directory contains health information reported by UFS.
++		- length must be 25h
++		- type must be 09h
++		- eol represent
++		  00h: Not defined
++		  01h: Normal
++		  02h: Warning
++		  03h: Critical
++		- lifetimeA/B
++		  00h: Not defined
++		  01h:  0% ~ 10% device life time used
++		  02h: 10% ~ 20% device life time used
++		  03h: 20% ~ 30% device life time used
++		  04h: 30% ~ 40% device life time used
++		  05h: 40% ~ 50% device life time used
++		  06h: 50% ~ 60% device life time used
++		  07h: 60% ~ 70% device life time used
++		  08h: 70% ~ 80% device life time used
++		  09h: 80% ~ 90% device life time used
++		  0Ah: 90% ~ 100% device life time used
++		  0Bh: Exceeded its maximum estimated device life time
+diff --git a/MAINTAINERS b/MAINTAINERS
+index aa71ab52fd76..947034319bb4 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13999,6 +13999,7 @@ M:	Vinayak Holikatti <vinholikatti@gmail.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	Documentation/scsi/ufs.txt
++F:	Documentation/ABI/testing/sysfs-devices-soc-ufs
+ F:	drivers/scsi/ufs/
+ 
+ UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 54deeb754db5..1af541d56c7d 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -154,6 +154,7 @@ enum desc_idn {
+ 	QUERY_DESC_IDN_RFU_1		= 0x6,
+ 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
+ 	QUERY_DESC_IDN_POWER		= 0x8,
++	QUERY_DESC_IDN_HEALTH		= 0x9,
+ 	QUERY_DESC_IDN_MAX,
+ };
+ 
+@@ -169,6 +170,7 @@ enum ufs_desc_def_size {
+ 	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
+ 	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
+ 	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
++	QUERY_DESC_HEALTH_DEF_SIZE		= 0x25,
+ };
+ 
+ /* Unit descriptor parameters offsets in bytes*/
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 12ff7daebb00..5cbb08fff0f4 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2991,6 +2991,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
+ 	case QUERY_DESC_IDN_RFU_1:
+ 		*desc_len = 0;
+ 		break;
++	case QUERY_DESC_IDN_HEALTH:
++		*desc_len = hba->desc_size.health_desc;
++		break;
+ 	default:
+ 		*desc_len = 0;
+ 		return -EINVAL;
+@@ -6298,6 +6301,11 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
+ 		&hba->desc_size.geom_desc);
+ 	if (err)
+ 		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
++		&hba->desc_size.health_desc);
++	if (err)
++		hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+ }
+ 
+ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+@@ -6308,6 +6316,7 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+ 	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+ 	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
+ 	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++	hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+ }
+ 
+ /**
+@@ -7688,14 +7697,72 @@ static const struct attribute_group ufshcd_attr_group = {
+ 	.attrs = ufshcd_attrs,
+ };
+ 
++struct health_attr {
++	struct attribute attr;
++	ssize_t (*show)(struct device *dev,
++				struct health_attr *attr, char *buf);
++	int byte_offset;
++};
++
++static ssize_t health_attr_show(struct device *dev,
++				struct health_attr *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int buff_len = hba->desc_size.health_desc;
++	u8 desc_buf[hba->desc_size.health_desc];
++	int err;
++
++	if (attr->byte_offset >= buff_len)
++		return 0;
++
++	pm_runtime_get_sync(hba->dev);
++	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_HEALTH, 0,
++					desc_buf, buff_len);
++	pm_runtime_put_sync(hba->dev);
++	if (err)
++		return 0;
++
++	return scnprintf(buf, PAGE_SIZE, "0x%02x", desc_buf[attr->byte_offset]);
++}
++
++#define HEALTH_ATTR_RO(_name, _byte_offset)				\
++static struct health_attr ufs_health_##_name = {			\
++	.attr = {.name = __stringify(_name), .mode = 0444},		\
++	.show = health_attr_show,					\
++	.byte_offset = _byte_offset,					\
++}
++
++HEALTH_ATTR_RO(length, 0);
++HEALTH_ATTR_RO(type, 1);
++HEALTH_ATTR_RO(eol, 2);
++HEALTH_ATTR_RO(lifetimeA, 3);
++HEALTH_ATTR_RO(lifetimeB, 4);
++
++static struct attribute *ufshcd_health_attrs[] = {
++	&ufs_health_length.attr,
++	&ufs_health_type.attr,
++	&ufs_health_eol.attr,
++	&ufs_health_lifetimeA.attr,
++	&ufs_health_lifetimeB.attr,
++	NULL
++};
++
++static const struct attribute_group ufshcd_health_attr_group = {
++	.name = "health",
++	.attrs = ufshcd_health_attrs,
++};
++
+ static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba)
+ {
+ 	if (sysfs_create_group(&hba->dev->kobj, &ufshcd_attr_group))
+-		dev_err(hba->dev, "Failed to create sysfs group\n");
++		dev_err(hba->dev, "Failed to create default sysfs group\n");
++	if (sysfs_create_group(&hba->dev->kobj, &ufshcd_health_attr_group))
++		dev_err(hba->dev, "Failed to create health sysfs group\n");
+ }
+ 
+ static inline void ufshcd_remove_sysfs_nodes(struct ufs_hba *hba)
+ {
++	sysfs_remove_group(&hba->dev->kobj, &ufshcd_health_attr_group);
+ 	sysfs_remove_group(&hba->dev->kobj, &ufshcd_attr_group);
+ }
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 56e26eb15185..ba44cbcf755e 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -229,6 +229,7 @@ struct ufs_desc_size {
+ 	int interc_desc;
+ 	int unit_desc;
+ 	int conf_desc;
++	int health_desc;
+ };
+ 
+ /**
+-- 
+2.15.0.531.g2ccb3012c9-goog
