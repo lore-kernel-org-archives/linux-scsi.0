@@ -1,133 +1,140 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: Driver version for PMC Adaptec HBA in Linux and from vendor
-Date: Wed, 20 Dec 2017 00:12:23 +0100
-Message-ID: <c9b6807f-d357-d50d-ab03-9c2fa897d902@molgen.mpg.de>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: Driver version for PMC Adaptec HBA in Linux and from vendor
+Date: Tue, 19 Dec 2017 23:19:11 +0000
+Message-ID: <7ae9b03ab73246969bae98613a23cabb@microsemi.com>
 References: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
  <4D8E82A446BF54499747901DBDEB737A7B8C48D8@avsrvexchmbx2.microsemi.net>
  <71e28514-9832-5fae-ba69-1a6cbe5ae269@molgen.mpg.de>
  <759acea897474b7798476133896a29d5@microsemi.com>
+ <c9b6807f-d357-d50d-ab03-9c2fa897d902@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:48935 "EHLO mx1.molgen.mpg.de"
+Received: from mail-cys01nam02on0066.outbound.protection.outlook.com ([104.47.37.66]:22103
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753421AbdLSXM2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Dec 2017 18:12:28 -0500
-In-Reply-To: <759acea897474b7798476133896a29d5@microsemi.com>
-Content-Language: de-DE
+        id S1752716AbdLSXTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Dec 2017 18:19:18 -0500
+In-Reply-To: <c9b6807f-d357-d50d-ab03-9c2fa897d902@molgen.mpg.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
-Cc: linux-scsi@vger.kernel.org, it+linux-scsi@molgen.mpg.de
+To: Paul Menzel <pmenzel@molgen.mpg.de>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "it+linux-scsi@molgen.mpg.de" <it+linux-scsi@molgen.mpg.de>
 
-Dear Raghava Aditya,
-
-
-Thank you for your answer.
-
-Am 18.12.2017 um 19:09 schrieb Raghava Aditya Renukunta:
-
->> -----Original Message-----
->> From: Paul Menzel [mailto:pmenzel@molgen.mpg.de]
->> Sent: Saturday, December 16, 2017 1:39 AM
->> To: Raghava Aditya Renukunta
->> <RaghavaAditya.Renukunta@microsemi.com>; dl-esc-Aacraid Linux Driver
->> <aacraid@microsemi.com>
->> Cc: linux-scsi@vger.kernel.org; it+linux-scsi@vger.kernel.org
->> Subject: Re: Driver version for PMC Adaptec HBA in Linux and from vendor
-
->> Am 17.02.2017 um 20:29 schrieb Raghava Aditya Renukunta:
->>
->>>> Using a PMC Adaptec HBA 1000-8e with latest Linux, it only initializes
->>>> in sync mode, instead of async mode.
->>>
->>> The patches that enable async mode in HBA 1000-8e, have been included in
->> the James Bottomley's linux-scsi Branch and are on track be
->>> Included into Linux 4.11.
->>>
->>> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/
->>>
->>>> ```
->>>> $ git describe --tag
->>>> v4.10-rc8-47-g0722f57bf
->>>> $ dmesg
->>>> [   21.359635] Adaptec aacraid driver 1.2-1[41066]-ms
->>>> [   21.360017] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have
->>>> ASPM control
->>>> [   21.363987] AAC0: Async. mode not supported by current driver, sync.
->>>> mode enforced.
->>>> [   21.363987] Please update driver to get full performance.
->>>> [   21.364949] AAC0: kernel 1.2-0[0] Nov  5 2015
->>>> [   21.365275] AAC0: monitor 0.0-0[0]
->>>> [   21.371382] AAC0: bios 0.13-209[32000]
->>>> [   21.371711] AAC0: serial 10F447
->>>> [   21.372035] AAC0: Non-DASD support enabled.
->>>> [   21.372360] AAC0: 64bit support enabled.
->>>> [   21.372688] AAC0: 64 Bit DAC enabled
->>>> […]
->>>> $ git grep 'AAC_DRIVER_BUILD 41066'
->>>> drivers/scsi/aacraid/aacraid.h:# define AAC_DRIVER_BUILD 41066
->>>> ```
->>>>
->>>> Searching the vendor Web site, there is *Linux Driver Source
->>>> 1.2.1-53005* available for download [1].
->>>
->>> The latest upstream driver version is 50740. We will be reaching version 53005 in couple of patch sets  ( ~ 3).
->>>
->> http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=96f6a613
->> 4766de0d42a98c7758736dde16e0add5
->>
->> Thank you for the details. At our infrastructure we only want to use LTS
->> Linux kernels, and the latest in 4.14. So right now, Linux 4.14.6
->> includes version 50834 [1], which is the same version currently in Linus
->> master branch (4.15-rc3). Is that save to use with async mode, or are
->> you aware of problems and we should always use the latest out of tree
->> driver, which is at version 55022 and can be download from the Microsemi
->> server [3].
-> 
-> Well at this point I am in the process of creating a patch set that solves a kdump regression issue(Should be out before the new year), other than that the upstream driver is pretty much up to date. If kdump support is a must  for you I would recommend that  55022 be used.
-
- From your answer the state of async support is unclear to me. Could you 
-please clarify, if that’s support in 4.14.x? (What source line do I need 
-to check?)
-
->>>> How does the upstream process work? Is there a git repository somewhere
->>>> from Microsemi? Are the patches already up for review? (I didn’t find them.)
->>>
->>> We try to push out patch sets to kernel.org for every major  driver release we make.  Usually they go into the
->>> sub component maintainers branch (linux-scsi ) , which is then pushed out to Linus when the merge
->>> window for  opens (currently the merge window for 4.10 is closed , barring fixes). So Linux version 4.11 should have
->>> full async support and more for HBA1000-8e.
->>>
->>> We do not maintain a git repository unfortunately, but we do release the >>> source code for every release as you indicated.
->>>
->>> For further reference the patches are sent out in the scsi mailing list linux-scsi@vger.kernel.org ,
->>> the archive is here http://marc.info/?l=linux-scsi&r=1&w=2 .
->>>
->>> Hope I cleared up your doubts. Please do reach out if you have other concerns or questions.
->>
->> Yes, thank you for your elaborate answer, which cleared up a lot of my
->> doubts. We would be even more satisfied if you moved your development
->> fully to the Linux kernel tree, so that it always carries the latest
->> driver. If we can help with that by contacting certain people, please
->> tell us.
-> 
-> We would love to, but  we have lots of customers who are on the older kernel versions 2.6.32, 3.10.0 etc and It becomes almost impossible for us to fully move our development to the  Linux kernel tree and support our customers at the same time.  Hopefully we will start being up to date with the upstream kernel in the coming months. Hope that answered your questions.
-
-I understand, but doesn’t it make more sense to adapt the model like 
-done for Linux Long Term Support (LTS) series to develop against the 
-latest Linux kernel, and then backport the corresponding patches?
-
-Maybe you should talk to Red Hat and SUSE? I guess that’s the systems 
-you have to support. Probably you already talk to them.
-
-
-Kind regards,
-
-Paul
-
-
->>>> [1] https://storage.microsemi.com/en-us/speed/raid/aac/linux/aacraid-linux-src-1_2_1-53005_tgz.php
->> [2] https://elixir.free-electrons.com/linux/v4.14.6/source/drivers/scsi/aacraid/aacraid.h#L100
->> [3] https://storage.microsemi.com/en-us/downloads/linux_source/linux_source_code/productid=aha-1000-8e&dn=microsemi+adaptec+hba+1000-8e.php
+SGkgUGF1bCwNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQYXVsIE1l
+bnplbCBbbWFpbHRvOnBtZW56ZWxAbW9sZ2VuLm1wZy5kZV0NCj4gU2VudDogVHVlc2RheSwgRGVj
+ZW1iZXIgMTksIDIwMTcgMzoxMiBQTQ0KPiBUbzogUmFnaGF2YSBBZGl0eWEgUmVudWt1bnRhDQo+
+IDxSYWdoYXZhQWRpdHlhLlJlbnVrdW50YUBtaWNyb3NlbWkuY29tPjsgZGwtZXNjLUFhY3JhaWQg
+TGludXggRHJpdmVyDQo+IDxhYWNyYWlkQG1pY3Jvc2VtaS5jb20+DQo+IENjOiBsaW51eC1zY3Np
+QHZnZXIua2VybmVsLm9yZzsgaXQrbGludXgtc2NzaUBtb2xnZW4ubXBnLmRlDQo+IFN1YmplY3Q6
+IFJlOiBEcml2ZXIgdmVyc2lvbiBmb3IgUE1DIEFkYXB0ZWMgSEJBIGluIExpbnV4IGFuZCBmcm9t
+IHZlbmRvcg0KPiANCj4gRVhURVJOQUwgRU1BSUwNCj4gDQo+IA0KPiBEZWFyIFJhZ2hhdmEgQWRp
+dHlhLA0KPiANCj4gDQo+IFRoYW5rIHlvdSBmb3IgeW91ciBhbnN3ZXIuDQo+IA0KPiBBbSAxOC4x
+Mi4yMDE3IHVtIDE5OjA5IHNjaHJpZWIgUmFnaGF2YSBBZGl0eWEgUmVudWt1bnRhOg0KPiANCj4g
+Pj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTogUGF1bCBNZW56ZWwgW21h
+aWx0bzpwbWVuemVsQG1vbGdlbi5tcGcuZGVdDQo+ID4+IFNlbnQ6IFNhdHVyZGF5LCBEZWNlbWJl
+ciAxNiwgMjAxNyAxOjM5IEFNDQo+ID4+IFRvOiBSYWdoYXZhIEFkaXR5YSBSZW51a3VudGENCj4g
+Pj4gPFJhZ2hhdmFBZGl0eWEuUmVudWt1bnRhQG1pY3Jvc2VtaS5jb20+OyBkbC1lc2MtQWFjcmFp
+ZCBMaW51eCBEcml2ZXINCj4gPj4gPGFhY3JhaWRAbWljcm9zZW1pLmNvbT4NCj4gPj4gQ2M6IGxp
+bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBpdCtsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0K
+PiA+PiBTdWJqZWN0OiBSZTogRHJpdmVyIHZlcnNpb24gZm9yIFBNQyBBZGFwdGVjIEhCQSBpbiBM
+aW51eCBhbmQgZnJvbQ0KPiB2ZW5kb3INCj4gDQo+ID4+IEFtIDE3LjAyLjIwMTcgdW0gMjA6Mjkg
+c2NocmllYiBSYWdoYXZhIEFkaXR5YSBSZW51a3VudGE6DQo+ID4+DQo+ID4+Pj4gVXNpbmcgYSBQ
+TUMgQWRhcHRlYyBIQkEgMTAwMC04ZSB3aXRoIGxhdGVzdCBMaW51eCwgaXQgb25seSBpbml0aWFs
+aXplcw0KPiA+Pj4+IGluIHN5bmMgbW9kZSwgaW5zdGVhZCBvZiBhc3luYyBtb2RlLg0KPiA+Pj4N
+Cj4gPj4+IFRoZSBwYXRjaGVzIHRoYXQgZW5hYmxlIGFzeW5jIG1vZGUgaW4gSEJBIDEwMDAtOGUs
+IGhhdmUgYmVlbg0KPiBpbmNsdWRlZCBpbg0KPiA+PiB0aGUgSmFtZXMgQm90dG9tbGV5J3MgbGlu
+dXgtc2NzaSBCcmFuY2ggYW5kIGFyZSBvbiB0cmFjayBiZQ0KPiA+Pj4gSW5jbHVkZWQgaW50byBM
+aW51eCA0LjExLg0KPiA+Pj4NCj4gPj4+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51
+eC9rZXJuZWwvZ2l0L2plamIvc2NzaS5naXQvDQo+ID4+Pg0KPiA+Pj4+IGBgYA0KPiA+Pj4+ICQg
+Z2l0IGRlc2NyaWJlIC0tdGFnDQo+ID4+Pj4gdjQuMTAtcmM4LTQ3LWcwNzIyZjU3YmYNCj4gPj4+
+PiAkIGRtZXNnDQo+ID4+Pj4gWyAgIDIxLjM1OTYzNV0gQWRhcHRlYyBhYWNyYWlkIGRyaXZlciAx
+LjItMVs0MTA2Nl0tbXMNCj4gPj4+PiBbICAgMjEuMzYwMDE3XSBhYWNyYWlkIDAwMDA6MDQ6MDAu
+MDogY2FuJ3QgZGlzYWJsZSBBU1BNOyBPUyBkb2Vzbid0IGhhdmUNCj4gPj4+PiBBU1BNIGNvbnRy
+b2wNCj4gPj4+PiBbICAgMjEuMzYzOTg3XSBBQUMwOiBBc3luYy4gbW9kZSBub3Qgc3VwcG9ydGVk
+IGJ5IGN1cnJlbnQgZHJpdmVyLCBzeW5jLg0KPiA+Pj4+IG1vZGUgZW5mb3JjZWQuDQo+ID4+Pj4g
+WyAgIDIxLjM2Mzk4N10gUGxlYXNlIHVwZGF0ZSBkcml2ZXIgdG8gZ2V0IGZ1bGwgcGVyZm9ybWFu
+Y2UuDQo+ID4+Pj4gWyAgIDIxLjM2NDk0OV0gQUFDMDoga2VybmVsIDEuMi0wWzBdIE5vdiAgNSAy
+MDE1DQo+ID4+Pj4gWyAgIDIxLjM2NTI3NV0gQUFDMDogbW9uaXRvciAwLjAtMFswXQ0KPiA+Pj4+
+IFsgICAyMS4zNzEzODJdIEFBQzA6IGJpb3MgMC4xMy0yMDlbMzIwMDBdDQo+ID4+Pj4gWyAgIDIx
+LjM3MTcxMV0gQUFDMDogc2VyaWFsIDEwRjQ0Nw0KPiA+Pj4+IFsgICAyMS4zNzIwMzVdIEFBQzA6
+IE5vbi1EQVNEIHN1cHBvcnQgZW5hYmxlZC4NCj4gPj4+PiBbICAgMjEuMzcyMzYwXSBBQUMwOiA2
+NGJpdCBzdXBwb3J0IGVuYWJsZWQuDQo+ID4+Pj4gWyAgIDIxLjM3MjY4OF0gQUFDMDogNjQgQml0
+IERBQyBlbmFibGVkDQo+ID4+Pj4gW+KApl0NCj4gPj4+PiAkIGdpdCBncmVwICdBQUNfRFJJVkVS
+X0JVSUxEIDQxMDY2Jw0KPiA+Pj4+IGRyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaDojIGRl
+ZmluZSBBQUNfRFJJVkVSX0JVSUxEIDQxMDY2DQo+ID4+Pj4gYGBgDQo+ID4+Pj4NCj4gPj4+PiBT
+ZWFyY2hpbmcgdGhlIHZlbmRvciBXZWIgc2l0ZSwgdGhlcmUgaXMgKkxpbnV4IERyaXZlciBTb3Vy
+Y2UNCj4gPj4+PiAxLjIuMS01MzAwNSogYXZhaWxhYmxlIGZvciBkb3dubG9hZCBbMV0uDQo+ID4+
+Pg0KPiA+Pj4gVGhlIGxhdGVzdCB1cHN0cmVhbSBkcml2ZXIgdmVyc2lvbiBpcyA1MDc0MC4gV2Ug
+d2lsbCBiZSByZWFjaGluZyB2ZXJzaW9uDQo+IDUzMDA1IGluIGNvdXBsZSBvZiBwYXRjaCBzZXRz
+ICAoIH4gMykuDQo+ID4+Pg0KPiA+Pg0KPiBodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51
+eC9rZXJuZWwvZ2l0L2plamIvc2NzaS5naXQvY29tbWl0Lz9pZD05NmY2YTYxMw0KPiA+PiA0NzY2
+ZGUwZDQyYTk4Yzc3NTg3MzZkZGUxNmUwYWRkNQ0KPiA+Pg0KPiA+PiBUaGFuayB5b3UgZm9yIHRo
+ZSBkZXRhaWxzLiBBdCBvdXIgaW5mcmFzdHJ1Y3R1cmUgd2Ugb25seSB3YW50IHRvIHVzZSBMVFMN
+Cj4gPj4gTGludXgga2VybmVscywgYW5kIHRoZSBsYXRlc3QgaW4gNC4xNC4gU28gcmlnaHQgbm93
+LCBMaW51eCA0LjE0LjYNCj4gPj4gaW5jbHVkZXMgdmVyc2lvbiA1MDgzNCBbMV0sIHdoaWNoIGlz
+IHRoZSBzYW1lIHZlcnNpb24gY3VycmVudGx5IGluIExpbnVzDQo+ID4+IG1hc3RlciBicmFuY2gg
+KDQuMTUtcmMzKS4gSXMgdGhhdCBzYXZlIHRvIHVzZSB3aXRoIGFzeW5jIG1vZGUsIG9yIGFyZQ0K
+PiA+PiB5b3UgYXdhcmUgb2YgcHJvYmxlbXMgYW5kIHdlIHNob3VsZCBhbHdheXMgdXNlIHRoZSBs
+YXRlc3Qgb3V0IG9mIHRyZWUNCj4gPj4gZHJpdmVyLCB3aGljaCBpcyBhdCB2ZXJzaW9uIDU1MDIy
+IGFuZCBjYW4gYmUgZG93bmxvYWQgZnJvbSB0aGUgTWljcm9zZW1pDQo+ID4+IHNlcnZlciBbM10u
+DQo+ID4NCj4gPiBXZWxsIGF0IHRoaXMgcG9pbnQgSSBhbSBpbiB0aGUgcHJvY2VzcyBvZiBjcmVh
+dGluZyBhIHBhdGNoIHNldCB0aGF0IHNvbHZlcyBhDQo+IGtkdW1wIHJlZ3Jlc3Npb24gaXNzdWUo
+U2hvdWxkIGJlIG91dCBiZWZvcmUgdGhlIG5ldyB5ZWFyKSwgb3RoZXIgdGhhbiB0aGF0DQo+IHRo
+ZSB1cHN0cmVhbSBkcml2ZXIgaXMgcHJldHR5IG11Y2ggdXAgdG8gZGF0ZS4gSWYga2R1bXAgc3Vw
+cG9ydCBpcyBhIG11c3QNCj4gZm9yIHlvdSBJIHdvdWxkIHJlY29tbWVuZCB0aGF0ICA1NTAyMiBi
+ZSB1c2VkLg0KPiANCj4gIEZyb20geW91ciBhbnN3ZXIgdGhlIHN0YXRlIG9mIGFzeW5jIHN1cHBv
+cnQgaXMgdW5jbGVhciB0byBtZS4gQ291bGQgeW91DQo+IHBsZWFzZSBjbGFyaWZ5LCBpZiB0aGF0
+4oCZcyBzdXBwb3J0IGluIDQuMTQueD8gKFdoYXQgc291cmNlIGxpbmUgZG8gSSBuZWVkDQo+IHRv
+IGNoZWNrPykNCg0KSXQgaXMgc3VwcG9ydGVkIGluIDQuMTQsIHRoZXJlIGlzIG5vIHNpbmdsZSBs
+aW5lIHNwZWNpZmljYWxseSwgYnV0IGlmIHRoZSB2YXJpYWJsZSBzYV9maXJtd2FyZSBpcyBzZXQN
+CnRoZW4gYXN5bmMgbW9kZSBpcyBlbmFibGVkLg0KDQo+ID4+Pj4gSG93IGRvZXMgdGhlIHVwc3Ry
+ZWFtIHByb2Nlc3Mgd29yaz8gSXMgdGhlcmUgYSBnaXQgcmVwb3NpdG9yeQ0KPiBzb21ld2hlcmUN
+Cj4gPj4+PiBmcm9tIE1pY3Jvc2VtaT8gQXJlIHRoZSBwYXRjaGVzIGFscmVhZHkgdXAgZm9yIHJl
+dmlldz8gKEkgZGlkbuKAmXQgZmluZA0KPiB0aGVtLikNCj4gPj4+DQo+ID4+PiBXZSB0cnkgdG8g
+cHVzaCBvdXQgcGF0Y2ggc2V0cyB0byBrZXJuZWwub3JnIGZvciBldmVyeSBtYWpvciAgZHJpdmVy
+DQo+IHJlbGVhc2Ugd2UgbWFrZS4gIFVzdWFsbHkgdGhleSBnbyBpbnRvIHRoZQ0KPiA+Pj4gc3Vi
+IGNvbXBvbmVudCBtYWludGFpbmVycyBicmFuY2ggKGxpbnV4LXNjc2kgKSAsIHdoaWNoIGlzIHRo
+ZW4gcHVzaGVkDQo+IG91dCB0byBMaW51cyB3aGVuIHRoZSBtZXJnZQ0KPiA+Pj4gd2luZG93IGZv
+ciAgb3BlbnMgKGN1cnJlbnRseSB0aGUgbWVyZ2Ugd2luZG93IGZvciA0LjEwIGlzIGNsb3NlZCAs
+DQo+IGJhcnJpbmcgZml4ZXMpLiBTbyBMaW51eCB2ZXJzaW9uIDQuMTEgc2hvdWxkIGhhdmUNCj4g
+Pj4+IGZ1bGwgYXN5bmMgc3VwcG9ydCBhbmQgbW9yZSBmb3IgSEJBMTAwMC04ZS4NCj4gPj4+DQo+
+ID4+PiBXZSBkbyBub3QgbWFpbnRhaW4gYSBnaXQgcmVwb3NpdG9yeSB1bmZvcnR1bmF0ZWx5LCBi
+dXQgd2UgZG8gcmVsZWFzZSB0aGUNCj4gPj4+IHNvdXJjZSBjb2RlIGZvciBldmVyeSByZWxlYXNl
+IGFzIHlvdSBpbmRpY2F0ZWQuDQo+ID4+Pg0KPiA+Pj4gRm9yIGZ1cnRoZXIgcmVmZXJlbmNlIHRo
+ZSBwYXRjaGVzIGFyZSBzZW50IG91dCBpbiB0aGUgc2NzaSBtYWlsaW5nIGxpc3QNCj4gbGludXgt
+c2NzaUB2Z2VyLmtlcm5lbC5vcmcgLA0KPiA+Pj4gdGhlIGFyY2hpdmUgaXMgaGVyZSBodHRwOi8v
+bWFyYy5pbmZvLz9sPWxpbnV4LXNjc2kmcj0xJnc9MiAuDQo+ID4+Pg0KPiA+Pj4gSG9wZSBJIGNs
+ZWFyZWQgdXAgeW91ciBkb3VidHMuIFBsZWFzZSBkbyByZWFjaCBvdXQgaWYgeW91IGhhdmUgb3Ro
+ZXINCj4gY29uY2VybnMgb3IgcXVlc3Rpb25zLg0KPiA+Pg0KPiA+PiBZZXMsIHRoYW5rIHlvdSBm
+b3IgeW91ciBlbGFib3JhdGUgYW5zd2VyLCB3aGljaCBjbGVhcmVkIHVwIGEgbG90IG9mIG15DQo+
+ID4+IGRvdWJ0cy4gV2Ugd291bGQgYmUgZXZlbiBtb3JlIHNhdGlzZmllZCBpZiB5b3UgbW92ZWQg
+eW91cg0KPiBkZXZlbG9wbWVudA0KPiA+PiBmdWxseSB0byB0aGUgTGludXgga2VybmVsIHRyZWUs
+IHNvIHRoYXQgaXQgYWx3YXlzIGNhcnJpZXMgdGhlIGxhdGVzdA0KPiA+PiBkcml2ZXIuIElmIHdl
+IGNhbiBoZWxwIHdpdGggdGhhdCBieSBjb250YWN0aW5nIGNlcnRhaW4gcGVvcGxlLCBwbGVhc2UN
+Cj4gPj4gdGVsbCB1cy4NCj4gPg0KPiA+IFdlIHdvdWxkIGxvdmUgdG8sIGJ1dCAgd2UgaGF2ZSBs
+b3RzIG9mIGN1c3RvbWVycyB3aG8gYXJlIG9uIHRoZSBvbGRlcg0KPiBrZXJuZWwgdmVyc2lvbnMg
+Mi42LjMyLCAzLjEwLjAgZXRjIGFuZCBJdCBiZWNvbWVzIGFsbW9zdCBpbXBvc3NpYmxlIGZvciB1
+cyB0bw0KPiBmdWxseSBtb3ZlIG91ciBkZXZlbG9wbWVudCB0byB0aGUgIExpbnV4IGtlcm5lbCB0
+cmVlIGFuZCBzdXBwb3J0IG91cg0KPiBjdXN0b21lcnMgYXQgdGhlIHNhbWUgdGltZS4gIEhvcGVm
+dWxseSB3ZSB3aWxsIHN0YXJ0IGJlaW5nIHVwIHRvIGRhdGUgd2l0aA0KPiB0aGUgdXBzdHJlYW0g
+a2VybmVsIGluIHRoZSBjb21pbmcgbW9udGhzLiBIb3BlIHRoYXQgYW5zd2VyZWQgeW91cg0KPiBx
+dWVzdGlvbnMuDQo+IA0KPiBJIHVuZGVyc3RhbmQsIGJ1dCBkb2VzbuKAmXQgaXQgbWFrZSBtb3Jl
+IHNlbnNlIHRvIGFkYXB0IHRoZSBtb2RlbCBsaWtlDQo+IGRvbmUgZm9yIExpbnV4IExvbmcgVGVy
+bSBTdXBwb3J0IChMVFMpIHNlcmllcyB0byBkZXZlbG9wIGFnYWluc3QgdGhlDQo+IGxhdGVzdCBM
+aW51eCBrZXJuZWwsIGFuZCB0aGVuIGJhY2twb3J0IHRoZSBjb3JyZXNwb25kaW5nIHBhdGNoZXM/
+DQo+IA0KPiBNYXliZSB5b3Ugc2hvdWxkIHRhbGsgdG8gUmVkIEhhdCBhbmQgU1VTRT8gSSBndWVz
+cyB0aGF04oCZcyB0aGUgc3lzdGVtcw0KPiB5b3UgaGF2ZSB0byBzdXBwb3J0LiBQcm9iYWJseSB5
+b3UgYWxyZWFkeSB0YWxrIHRvIHRoZW0uDQoNClRoYXQgaXMgYSBnb29kIHRob3VnaHQsIEkgY2Fu
+IGZ1bm5lbCBiYWNrIHlvdXIgZmVlZGJhY2sgdG8gbXkgVGVhbSBhbmQgTWFuYWdlbWVudC4gSSBj
+ZXJ0YWlubHkgdGhpbmsgdGhlcmUgaXMgdmFsdWUgaW4gaXQuDQoNClJlZ2FyZHMsDQpSYWdoYXZh
+IEFkaXR5YQ0KIA0KPiBLaW5kIHJlZ2FyZHMsDQo+IA0KPiBQYXVsDQo+IA0KPiANCj4gPj4+PiBb
+MV0gaHR0cHM6Ly9zdG9yYWdlLm1pY3Jvc2VtaS5jb20vZW4tDQo+IHVzL3NwZWVkL3JhaWQvYWFj
+L2xpbnV4L2FhY3JhaWQtbGludXgtc3JjLTFfMl8xLTUzMDA1X3Rnei5waHANCj4gPj4gWzJdIGh0
+dHBzOi8vZWxpeGlyLmZyZWUtDQo+IGVsZWN0cm9ucy5jb20vbGludXgvdjQuMTQuNi9zb3VyY2Uv
+ZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oI0wxMDANCj4gPj4gWzNdIGh0dHBzOi8vc3Rv
+cmFnZS5taWNyb3NlbWkuY29tL2VuLQ0KPiB1cy9kb3dubG9hZHMvbGludXhfc291cmNlL2xpbnV4
+X3NvdXJjZV9jb2RlL3Byb2R1Y3RpZD1haGEtMTAwMC0NCj4gOGUmZG49bWljcm9zZW1pK2FkYXB0
+ZWMraGJhKzEwMDAtOGUucGhwDQo=
