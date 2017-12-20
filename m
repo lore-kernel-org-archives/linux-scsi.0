@@ -1,31 +1,29 @@
-From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [PATCH 1/2 v3] scsi: ufs: introduce static sysfs entries
-Date: Wed, 20 Dec 2017 12:16:45 -0800
-Message-ID: <20171220201645.GA52542@jaegeuk-macbookpro.roam.corp.google.com>
-References: <20171220191631.50329-1-jaegeuk@kernel.org>
- <1513797648.2603.33.camel@wdc.com>
+From: Sagi Grimberg <sagi@grimberg.me>
+Subject: Re: [-next PATCH 3/4] treewide: Use DEVICE_ATTR_RO
+Date: Wed, 20 Dec 2017 22:26:35 +0200
+Message-ID: <5c332f87-e2d4-c961-1b5a-e08a9bd1aaf3@grimberg.me>
+References: <cover.1513706701.git.joe@perches.com>
+ <2e64e7d278fa9e4e255221fb84717884a7bfb69c.1513706701.git.joe@perches.com>
+ <5619005.tOTWM00GFv@aspire.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1513797648.2603.33.camel@wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jaegeuk@google.com" <jaegeuk@google.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <5619005.tOTWM00GFv@aspire.rjw.lan>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Joe Perches <joe@perches.com>
+Cc: Don Brace <don.brace@microsemi.com>, linux-nvme@lists.infradead.org, Rich Felker <dalias@libc.org>, linux-sh@vger.kernel.org, David Airlie <airlied@linux.ie>, esc.storagedev@microsemi.com, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Russell King <linux@armlinux.org.uk>, Keith Busch <keith.busch@intel.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Christoph Hellwig <hch@lst.de>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Arnd Bergmann <arnd@arndb.de>, Yoshinori Sato <ysato@users.sourceforge.jp>, Takashi Iwai <tiwai@suse.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, linux-acpi@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Len Brown <lenb@kernel.org>, Dic
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Bart,
+for the NVMe bits,
 
-On 12/20, Bart Van Assche wrote:
-> On Wed, 2017-12-20 at 11:16 -0800, Jaegeuk Kim wrote:
-> > From: Jaegeuk Kim <jaegeuk@google.com>
-> 
-> Hello Jaegeuk,
-> 
-> For future patch series submissions, please include a cover letter that explains
-> the purpose of the patch series and please also document the changes between the
-> different versions of the patch series in the cover letter.
-
-Yup, I'll be aware of it. Thank you for the advice.
-
-Thanks,
+Acked-by: Sagi Grimberg <sagi@grimberg.me>
