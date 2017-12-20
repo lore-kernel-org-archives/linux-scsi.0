@@ -1,83 +1,49 @@
-From: Joe Perches <joe@perches.com>
+From: Jarkko Nikula <jarkko.nikula@bitmer.com>
 Subject: Re: [-next PATCH 2/4] treewide: Use DEVICE_ATTR_RW
-Date: Wed, 20 Dec 2017 02:55:07 -0800
-Message-ID: <1513767307.1234.114.camel@perches.com>
+Date: Wed, 20 Dec 2017 12:54:04 +0200
+Message-ID: <20171220105404.GA29856@bitmer.com>
 References: <cover.1513706701.git.joe@perches.com>
  <cd38f14f06e1f447b3159ffe8c69c0df8241bb6e.1513706701.git.joe@perches.com>
- <20171220083403.GA27231@bitmer.com> <1513761884.1234.83.camel@perches.com>
- <20171220093211.GA16177@kroah.com> <1513763681.1234.101.camel@perches.com>
- <20171220095926.GA24285@kroah.com>
+ <20171220083403.GA27231@bitmer.com>
+ <1513761884.1234.83.camel@perches.com>
+ <20171220093211.GA16177@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20171220095926.GA24285@kroah.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>
-Cc: linux-fbdev@vger.kernel.org, David Airlie <airlied@linux.ie>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Jaroslav Kysela <perex@perex.cz>, Peter Ujfalusi <peter.ujfalusi@ti.com>, linux-s390@vger.kernel.org, linux-omap@vger.kernel.org, "James E.J.
- Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Takashi Iwai <tiwai@suse.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, Cezary Jackiewicz <cezary.jackiewicz@gmail.com>, linux-serial@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, Darren Hart <dvhart@infradead.org>, Zhang Rui <rui.zhang@intel.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Mathias Nyman <mathias.nyman@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Peter Oberparleiter <oberp>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171220093211.GA16177@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Joe Perches <joe@perches.com>, Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Cezary Jackiewicz <cezary.jackiewicz@gmail.com>, Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>, Sebastian Ott <sebott@linux.vnet.ibm.com>, Peter Oberparleiter <oberpar@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Mathias Nyman <mathias.nyman@intel.com>, Felipe Balbi <balbi@kernel.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Peter Ujfalusi <peter.ujfalusi@ti.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>Heiko Carstens <h>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTEyLTIwIGF0IDEwOjU5ICswMTAwLCBHcmVnIEtyb2FoLUhhcnRtYW4gd3Jv
-dGU6Cj4gPiA+IFdoeSB5b3UgZGlkbid0IHNlbmQgdGhhdCBwYXRjaCB0byB0aGUgc3lzZnMgbWFp
-bnRhaW5lciBpcyBhIGJpdCBvZGQuLi4gIDopCj4gPiAKPiA+IFNvIGhlcmUncyBhbiBvcHBvcnR1
-bml0eSBmb3IgeW91Ogo+ID4gCj4gPiBUaGUgc3lzZnMgbWFpbnRhaW5lciBoYXNuJ3QgYWRkZWQg
-aW5jbHVkZS9saW51eC9zeXNmcy5oIHRvCj4gPiB0aGUgbGlzdCBvZiBtYWludGFpbmVkIGZpbGVz
-Li4uCj4gPiAKPiA+IERSSVZFUiBDT1JFLCBLT0JKRUNUUywgREVCVUdGUyBBTkQgU1lTRlMKPiA+
-IE06CUdyZWcgS3JvYWgtSGFydG1hbiA8Z3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc+Cj4gPiBU
-OglnaXQgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2dyZWdr
-aC9kcml2ZXItY29yZS5naXQKPiA+IFM6CVN1cHBvcnRlZAo+ID4gRjoJRG9jdW1lbnRhdGlvbi9r
-b2JqZWN0LnR4dAo+ID4gRjoJZHJpdmVycy9iYXNlLwo+ID4gRjoJZnMvZGVidWdmcy8KPiA+IEY6
-CWZzL3N5c2ZzLwo+ID4gRjoJaW5jbHVkZS9saW51eC9kZWJ1Z2ZzLmgKPiA+IEY6CWluY2x1ZGUv
-bGludXgva29iaioKPiA+IEY6CWxpYi9rb2JqKgo+IAo+IEhlaCwgZ29vZCBwb2ludCwgYnV0IHVz
-aW5nIGdldF9tYWludGFpbmVyLnBsIGRvZXMgcHV0IG1lIGF0IHRoZSB0b3Agb2YKPiB0aGUgbGlz
-dCB0aGF0IHlvdSBzaG91bGQgYmUgY2M6aW5nOgo+IAo+ICQgLi9zY3JpcHRzL2dldF9tYWludGFp
-bmVyLnBsIC0tZmlsZSBpbmNsdWRlL2xpbnV4L3N5c2ZzLmgKPiBHcmVnIEtyb2FoLUhhcnRtYW4g
-PGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnPiAoY29tbWl0X3NpZ25lcjozLzM9MTAwJSxhdXRo
-b3JlZDoyLzM9NjclLGFkZGVkX2xpbmVzOjcvOD04OCUpCj4gS2F0ZSBTdGV3YXJ0IDxrc3Rld2Fy
-dEBsaW51eGZvdW5kYXRpb24ub3JnPiAoY29tbWl0X3NpZ25lcjoxLzM9MzMlKQo+IFRob21hcyBH
-bGVpeG5lciA8dGdseEBsaW51dHJvbml4LmRlPiAoY29tbWl0X3NpZ25lcjoxLzM9MzMlKQo+IFBo
-aWxpcHBlIE9tYnJlZGFubmUgPHBvbWJyZWRhbm5lQG5leGIuY29tPiAoY29tbWl0X3NpZ25lcjox
-LzM9MzMlKQo+IE5pY2sgRGVzYXVsbmllcnMgPG5pY2suZGVzYXVsbmllcnNAZ21haWwuY29tPiAo
-Y29tbWl0X3NpZ25lcjoxLzM9MzMlLGF1dGhvcmVkOjEvMz0zMyUsYWRkZWRfbGluZXM6MS84PTEy
-JSxyZW1vdmVkX2xpbmVzOjEvMT0xMDAlKQo+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcg
-KG9wZW4gbGlzdCkKClRoZSBzY3JpcHQgSSB1c2UgdG8gc2VuZCBwYXRjaGVzIGFkZHMgLS1ub2dp
-dCAtLW5vZ2l0LWZhbGxiYWNrCnRvIGNvcHkgb25seSBsaXN0ZWQgbWFpbnRhaW5lcnMgYmVjYXVz
-ZSBwZW9wbGUgdGhhdCBzZW5kIGNsZWFudXAKcGF0Y2hlcyBkb24ndCBnZW5lcmFsbHkgbGlrZSB0
-byBnZXQgcmFuZG9tIHBhdGNoZXMuCgo+ID4gYnR3OiB0aGVyZSBhcmUgbWFueSB1c2VzIG9mIGEg
-cmV2ZXJzZWQgZGVjbGFyYXRpb24gc3R5bGUgb2YgREVWSUNFX0FUVFIKPiA+IAo+ID4gSGVyZSdz
-IGFub3RoZXIgdGhpbmcgdGhhdCBjb3VsZCBiZSBkb25lIGZvciBtb3JlIERFVklDRV9BVFRSXzxG
-T08+IHVzZXMuCj4gPiAKPiA+ID09PQo+ID4gCj4gPiBTb21lIERFVklDRV9BVFRSIGRlZmluaXRp
-b25zIHVzZSBhIHJldmVyc2VkIHN0YXRpYyBmdW5jdGlvbiBmb3JtIGZyb20KPiA+IHRoZSB0eXBp
-Y2FsLiAgQ29udmVydCB0aGVtIHRvIHVzZSB0aGUgbW9yZSBjb21tb24gbWFjcm8gZm9ybSBzbyBp
-dCBpcwo+ID4gZWFzaWVyIHRvIGdyZXAgZm9yIHRoZSBzdHlsZS4KW10KPiA+ICQgZ2l0IGdyZXAg
-LS1uYW1lLW9ubHkgLXcgREVWSUNFX0FUVFIgfCBcCj4gPiAgIHhhcmdzIHBlcmwgLWkgZGV2X2F0
-dHJfcndfYmFja3dhcmRzLnBlcmwKPiBBaCwgbmljZSwgSSBsb3ZlIHBlcmwgOgoKVGhhdCB3YXMg
-YSBiYWQgY29weS9wYXN0ZSBvZiB0aGUgc2NyaXB0LgoKVGhlIGFjdHVhbCBzY3JpcHQgZm9yIFJX
-IGlzOgoKJCBjYXQgZGV2X2F0dHJfcndfYmFja3dhcmRzLnBlcmwKbG9jYWwgJC87CndoaWxlICg8
-PikgewogICAgbXkgJGZpbGUgPSAkXzsKICAgIHdoaWxlICgkZmlsZSA9fiBtL1xiREVWSUNFX0FU
-VFJccypcKFxzKihcdyspXHMqLC9nKSB7CglteSAkdmFyID0gJDE7CglpZiAoJGZpbGUgPX4gcy9c
-YkRFVklDRV9BVFRSXHMqXChccyoke3Zhcn1ccyosXHMqXCg/KFxzKlNfSVJVR09ccypcfFxzKlNf
-SVdVU1J8XHMqU19JV1VTUlxzKlx8XHMqU19JUlVHT1xzKnxccyowNjQ0XHMqKVwpP1xzKixccypz
-aG93XyR7dmFyfVxzKixccypzdG9yZV8ke3Zhcn1ccypcKS9ERVZJQ0VfQVRUUl9SVygke3Zhcn0p
-L2cpIHsKCSAgICAkZmlsZSA9fiBzL1xic2hvd18ke3Zhcn1cYi8ke3Zhcn1fc2hvdy9nOwoJICAg
-ICRmaWxlID1+IHMvXGJzdG9yZV8ke3Zhcn1cYi8ke3Zhcn1fc3RvcmUvZzsKCX0KICAgIH0KICAg
-IHByaW50ICRmaWxlOwp9CgpUaGVyZSBhcmUgMyBkaWZmZXJlbnQgcGVybCBzY3JpcHRzIGZvciBy
-dywgcm8sIGFuZCB3by4KYW5kIHRoZXNlIHNjcmlwdHMsIGJlY2F1c2Ugb2YgZnVuY3Rpb24gcmVu
-YW1pbmcgYW5kCnBvc3NpYmxlIHJldXNlIG9mIHRoZSBvcmlnaW5hbCBmdW5jdGlvbiBuYW1lcyBi
-eSBvdGhlcgpzdHJpbmcgY29uY2F0ZW5hdGVkIG1hY3JvcywgY3JlYXRlIHNvbWUgYmFkIGNvbnZl
-cnNpb25zCnNvIHRoZXkgbmVlZCBzb21lIG1hbnVhbCBjbGVhbnVwcyB0b28uCgpQZXJoYXBzIGNv
-Y2NpbmVsbGUgY291bGQgZG8gYSBiZXR0ZXIgam9iIG9mIGl0LCBidXQKbGlrZWx5IHN0cmluZyBj
-b25jYXRlbmF0aW9uIG1hY3JvIHVzZXMgYXJlIGdvaW5nIHRvCmJlIGhhcmQgdG8gZGVhbCB3aXRo
-IGluIGFueSBjYXNlLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Au
-b3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRl
-dmVsCg==
+On Wed, Dec 20, 2017 at 10:32:11AM +0100, Greg Kroah-Hartman wrote:
+> On Wed, Dec 20, 2017 at 01:24:44AM -0800, Joe Perches wrote:
+> > On Wed, 2017-12-20 at 10:34 +0200, Jarkko Nikula wrote:
+> > > On Tue, Dec 19, 2017 at 10:15:07AM -0800, Joe Perches wrote:
+> > > > Convert DEVICE_ATTR uses to DEVICE_ATTR_RW where possible.
+> > [] 
+> > > > diff --git a/sound/soc/omap/mcbsp.c b/sound/soc/omap/mcbsp.c
+> > []
+> > > > @@ -854,7 +854,7 @@ static ssize_t dma_op_mode_store(struct device *dev,
+> > > >  	return size;
+> > > >  }
+> > > >  
+> > > > -static DEVICE_ATTR(dma_op_mode, 0644, dma_op_mode_show, dma_op_mode_store);
+> > > > +static DEVICE_ATTR_RW(dma_op_mode);
+> > > >  
+> > > 
+> > > While I can ack this part here if it helps generic cleanup effort I
+> > > don't understart would it improve code readability in general? Mode 644
+> > > is clear and don't need any grepping but for DEVICE_ATTR_RW() I had to go
+> > > through all of these files in order to see what does it mean:
+> 
+> Yeah, 644 is "clear", but _RW() is even more clear.  Ideally I want to
+> get rid of all of the "non-standard" users that set random modes of
+> sysfs files, as we get it wrong too many times.  Using the "defaults" is
+> much better.
+> 
+Fair enough. For the sound/soc/omap/ (Acked-by was missing from my
+previous reply):
+
+Acked-by: Jarkko Nikula <jarkko.nikula@bitmer.com>
