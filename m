@@ -1,218 +1,66 @@
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/2 v2] scsi: ufs: use sysfs entry for health info
-Date: Wed, 20 Dec 2017 10:26:26 +0100
-Message-ID: <20171220092626.GA14791@kroah.com>
-References: <20171219200254.23120-1-jaegeuk@kernel.org>
- <20171219200254.23120-2-jaegeuk@kernel.org>
- <1513717650.2535.13.camel@wdc.com>
- <20171219224644.GB23445@jaegeuk-macbookpro.roam.corp.google.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [-next PATCH 2/4] treewide: Use DEVICE_ATTR_RW
+Date: Wed, 20 Dec 2017 10:32:11 +0100
+Message-ID: <20171220093211.GA16177@kroah.com>
+References: <cover.1513706701.git.joe@perches.com>
+ <cd38f14f06e1f447b3159ffe8c69c0df8241bb6e.1513706701.git.joe@perches.com>
+ <20171220083403.GA27231@bitmer.com>
+ <1513761884.1234.83.camel@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20171219224644.GB23445@jaegeuk-macbookpro.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jaegeuk@google.com" <jaegeuk@google.com>
+In-Reply-To: <1513761884.1234.83.camel@perches.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Jarkko Nikula <jarkko.nikula@bitmer.com>, Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Cezary Jackiewicz <cezary.jackiewicz@gmail.com>, Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>, Sebastian Ott <sebott@linux.vnet.ibm.com>, Peter Oberparleiter <oberpar@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Mathias Nyman <mathias.nyman@intel.com>, Felipe Balbi <balbi@kernel.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Peter Ujfalusi <peter.ujfalusi@ti.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 19, 2017 at 02:46:44PM -0800, Jaegeuk Kim wrote:
-> >From 3368207da5988b8fed4e41e6c0f49a60ac014222 Mon Sep 17 00:00:00 2001
-> From: Jaegeuk Kim <jaegeuk@google.com>
-> Date: Tue, 26 Sep 2017 20:53:48 -0700
-> Subject: [PATCH 2/2] scsi: ufs: introduce sysfs entries exposing UFS health
->  info
-> 
-> This patch adds a new sysfs group, namely health, via:
-> 
->    /sys/devices/soc/X.ufshc/health/
-> 
-> This directory contains the below entries, each of which shows an 8-bytes
-> hex number representing different meanings defined by JEDEC specfication.
-> 
-> Users can simply read these entries to check how their underlying flash
-> storage is getting reached out to its end of life. For example, if
-> lifetimeA shows 0xb, it would be the right time to consider device swap.
-> 
->  - length
->    : must be 25h
-> 
->  - type
->    : must be 09h
-> 
->  - eol
->    00h: Not defined
->    01h: Normal
->    02h: Warning
->    03h: Critical
-> 
->  - lifetimeA/B
->    00h: Not defined
->    01h:  0% ~ 10% device life time used
->    02h: 10% ~ 20% device life time used
->    03h: 20% ~ 30% device life time used
->    04h: 30% ~ 40% device life time used
->    05h: 40% ~ 50% device life time used
->    06h: 50% ~ 60% device life time used
->    07h: 60% ~ 70% device life time used
->    08h: 70% ~ 80% device life time used
->    09h: 80% ~ 90% device life time used
->    0Ah: 90% ~ 100% device life time used
->    0Bh: Exceeded its maximum estimated device life time
-> 
-> Cc: Greg KH <gregkh@linuxfoundation.org>
-> Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
-> ---
->  Documentation/ABI/testing/sysfs-devices-soc-ufs | 25 +++++++++
->  MAINTAINERS                                     |  1 +
->  drivers/scsi/ufs/ufs.h                          |  2 +
->  drivers/scsi/ufs/ufshcd.c                       | 69 ++++++++++++++++++++++++-
->  drivers/scsi/ufs/ufshcd.h                       |  1 +
->  5 files changed, 97 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/ABI/testing/sysfs-devices-soc-ufs
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-devices-soc-ufs b/Documentation/ABI/testing/sysfs-devices-soc-ufs
-> new file mode 100644
-> index 000000000000..313771a383e4
-> --- /dev/null
-> +++ b/Documentation/ABI/testing/sysfs-devices-soc-ufs
-> @@ -0,0 +1,25 @@
-> +What:		/sys/devices/soc/X.ufshc/health
-> +Date:		September 2017
-> +contact:	Jaegeuk Kim <jaegeuk@google.com>
-> +Description:
-> +		This directory contains health information reported by UFS.
-> +		- length must be 25h
-> +		- type must be 09h
-> +		- eol represent
-> +		  00h: Not defined
-> +		  01h: Normal
-> +		  02h: Warning
-> +		  03h: Critical
-> +		- lifetimeA/B
-> +		  00h: Not defined
-> +		  01h:  0% ~ 10% device life time used
-> +		  02h: 10% ~ 20% device life time used
-> +		  03h: 20% ~ 30% device life time used
-> +		  04h: 30% ~ 40% device life time used
-> +		  05h: 40% ~ 50% device life time used
-> +		  06h: 50% ~ 60% device life time used
-> +		  07h: 60% ~ 70% device life time used
-> +		  08h: 70% ~ 80% device life time used
-> +		  09h: 80% ~ 90% device life time used
-> +		  0Ah: 90% ~ 100% device life time used
-> +		  0Bh: Exceeded its maximum estimated device life time
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index aa71ab52fd76..947034319bb4 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -13999,6 +13999,7 @@ M:	Vinayak Holikatti <vinholikatti@gmail.com>
->  L:	linux-scsi@vger.kernel.org
->  S:	Supported
->  F:	Documentation/scsi/ufs.txt
-> +F:	Documentation/ABI/testing/sysfs-devices-soc-ufs
->  F:	drivers/scsi/ufs/
->  
->  UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index 54deeb754db5..1af541d56c7d 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -154,6 +154,7 @@ enum desc_idn {
->  	QUERY_DESC_IDN_RFU_1		= 0x6,
->  	QUERY_DESC_IDN_GEOMETRY		= 0x7,
->  	QUERY_DESC_IDN_POWER		= 0x8,
-> +	QUERY_DESC_IDN_HEALTH		= 0x9,
->  	QUERY_DESC_IDN_MAX,
->  };
->  
-> @@ -169,6 +170,7 @@ enum ufs_desc_def_size {
->  	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
->  	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
->  	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
-> +	QUERY_DESC_HEALTH_DEF_SIZE		= 0x25,
->  };
->  
->  /* Unit descriptor parameters offsets in bytes*/
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 12ff7daebb00..5cbb08fff0f4 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2991,6 +2991,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
->  	case QUERY_DESC_IDN_RFU_1:
->  		*desc_len = 0;
->  		break;
-> +	case QUERY_DESC_IDN_HEALTH:
-> +		*desc_len = hba->desc_size.health_desc;
-> +		break;
->  	default:
->  		*desc_len = 0;
->  		return -EINVAL;
-> @@ -6298,6 +6301,11 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
->  		&hba->desc_size.geom_desc);
->  	if (err)
->  		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-> +
-> +	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
-> +		&hba->desc_size.health_desc);
-> +	if (err)
-> +		hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
->  }
->  
->  static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
-> @@ -6308,6 +6316,7 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
->  	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
->  	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
->  	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-> +	hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
->  }
->  
->  /**
-> @@ -7688,14 +7697,72 @@ static const struct attribute_group ufshcd_attr_group = {
->  	.attrs = ufshcd_attrs,
->  };
->  
-> +struct health_attr {
-> +	struct attribute attr;
-> +	ssize_t (*show)(struct device *dev,
-> +				struct health_attr *attr, char *buf);
-> +	int byte_offset;
-> +};
-> +
-> +static ssize_t health_attr_show(struct device *dev,
-> +				struct health_attr *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +	int buff_len = hba->desc_size.health_desc;
-> +	u8 desc_buf[hba->desc_size.health_desc];
-> +	int err;
-> +
-> +	if (attr->byte_offset >= buff_len)
-> +		return 0;
-> +
-> +	pm_runtime_get_sync(hba->dev);
-> +	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_HEALTH, 0,
-> +					desc_buf, buff_len);
-> +	pm_runtime_put_sync(hba->dev);
-> +	if (err)
-> +		return 0;
-> +
-> +	return scnprintf(buf, PAGE_SIZE, "0x%02x", desc_buf[attr->byte_offset]);
-> +}
-> +
-> +#define HEALTH_ATTR_RO(_name, _byte_offset)				\
-> +static struct health_attr ufs_health_##_name = {			\
-> +	.attr = {.name = __stringify(_name), .mode = 0444},		\
-> +	.show = health_attr_show,					\
-> +	.byte_offset = _byte_offset,					\
-> +}
+On Wed, Dec 20, 2017 at 01:24:44AM -0800, Joe Perches wrote:
+> On Wed, 2017-12-20 at 10:34 +0200, Jarkko Nikula wrote:
+> > On Tue, Dec 19, 2017 at 10:15:07AM -0800, Joe Perches wrote:
+> > > Convert DEVICE_ATTR uses to DEVICE_ATTR_RW where possible.
+> [] 
+> > > diff --git a/sound/soc/omap/mcbsp.c b/sound/soc/omap/mcbsp.c
+> []
+> > > @@ -854,7 +854,7 @@ static ssize_t dma_op_mode_store(struct device *dev,
+> > >  	return size;
+> > >  }
+> > >  
+> > > -static DEVICE_ATTR(dma_op_mode, 0644, dma_op_mode_show, dma_op_mode_store);
+> > > +static DEVICE_ATTR_RW(dma_op_mode);
+> > >  
+> > 
+> > While I can ack this part here if it helps generic cleanup effort I
+> > don't understart would it improve code readability in general? Mode 644
+> > is clear and don't need any grepping but for DEVICE_ATTR_RW() I had to go
+> > through all of these files in order to see what does it mean:
 
-This is a nice "hack" to make things simpler, but I worry about not
-using the "normal" __ATTR_* macros here.  But I can't think of a simpler
-way to do this now, except if you had a table of strings and offsets
-that you then used to look up to get the offset based on the name of the
-attribute.
+Yeah, 644 is "clear", but _RW() is even more clear.  Ideally I want to
+get rid of all of the "non-standard" users that set random modes of
+sysfs files, as we get it wrong too many times.  Using the "defaults" is
+much better.
 
-Anyway, nice job, I'm just rambling:
+> Are you suggesting that device.h (as that is where
+> DEVICE_ATTR and the other DEVICE_ATTR_<FOO> variants
+> are #defined) should have better comments for the
+> _<FOO> variants?
+> 
+> > DEVICE_ATTR_RW: include/linux/device.h
+> > __ATTR_RW: include/linux/sysfs.h
+> > S_IWUSR: include/uapi/linux/stat.h
+> > S_IRUGO: include/linux/stat.h
+> 
+> btw: patch 1/4 of the series does remove the uses of
+> S_<PERMS> from these macros in sysfs.h and converts
+> them to simple octal instead.
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Why you didn't send that patch to the sysfs maintainer is a bit odd...  :)
+
+I should be taking this whole series through my tree.  Joe, thanks for
+doing this in an automated way, I've been wanting to see this done for a
+long time.
+
+thanks,
+
+greg k-h
