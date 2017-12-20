@@ -1,55 +1,47 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 21/43] qla2xxx: Remove calling cancel_work_sync()
-Date: Wed, 20 Dec 2017 21:41:20 +0000
-Message-ID: <7B62A4A1-0A14-43E3-834D-7C0908FED0DA@cavium.com>
-References: <20171220065644.21511-1-himanshu.madhani@cavium.com>
- <20171220065644.21511-22-himanshu.madhani@cavium.com>
- <1513789005.2603.30.camel@wdc.com>
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+Subject: Re: [-next PATCH 3/4] treewide: Use DEVICE_ATTR_RO
+Date: Wed, 20 Dec 2017 22:38:22 +0100
+Message-ID: <87tvwlcc6p.fsf@belgarion.home>
+References: <cover.1513706701.git.joe@perches.com>
+ <2e64e7d278fa9e4e255221fb84717884a7bfb69c.1513706701.git.joe@perches.com>
+ <5619005.tOTWM00GFv@aspire.rjw.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0072.outbound.protection.outlook.com ([104.47.40.72]:56928
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754502AbdLTVlW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Dec 2017 16:41:22 -0500
-In-Reply-To: <1513789005.2603.30.camel@wdc.com>
-Content-Language: en-US
-Content-ID: <D27AC467C41B344EA3AC86ADDD0B7BF8@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <5619005.tOTWM00GFv@aspire.rjw.lan> (Rafael J. Wysocki's message
+ of "Wed, 20 Dec 2017 20:00:43 +0100")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Joe Perches <joe@perches.com>
+Cc: Don Brace <don.brace@microsemi.com>, linux-nvme@lists.infradead.org, Rich Felker <dalias@libc.org>, linux-sh@vger.kernel.org, David Airlie <airlied@linux.ie>, esc.storagedev@microsemi.com, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Jaroslav Kysela <perex@perex.cz>, Keith Busch <keith.busch@intel.com>, Russell King <linux@arm.osuosl.org>, Christoph Hellwig <hch@lst.de>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Yoshinor i Sato <ysato@users.sourceforge.jp>, Takashi Iwai <tiwai@suse.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, linux-acpi@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Len Brown <lenb@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+"Rafael J. Wysocki" <rjw@rjwysocki.net> writes:
 
-> On Dec 20, 2017, at 10:56 AM, Bart Van Assche <bart.vanassche@wdc.com> wr=
-ote:
->=20
-> On Tue, 2017-12-19 at 22:56 -0800, Himanshu Madhani wrote:
->> @@ -1234,8 +1234,6 @@ void qlt_schedule_sess_for_deletion(struct fc_port=
- *sess,
->> 	ql_dbg(ql_dbg_tgt, sess->vha, 0xe001,
->> 	    "Scheduling sess %p for deletion\n", sess);
->>=20
->> -	/* use cancel to push work element through before re-queue */
->> -	cancel_work_sync(&sess->del_work);
->> 	INIT_WORK(&sess->del_work, qla24xx_delete_sess_fn);
->> 	queue_work(sess->vha->hw->wq, &sess->del_work);
->=20
-> Why had this cancel_work_sync() call been introduced in
-> qlt_schedule_sess_for_deletion() and why do you think it is safe to remov=
-e
-> this call? Both questions should have been answered in the patch descript=
-ion.
->=20
-> Thanks,
->=20
-> Bart.
+> On Tuesday, December 19, 2017 7:15:08 PM CET Joe Perches wrote:
+>> Convert DEVICE_ATTR uses to DEVICE_ATTR_RO where possible.
+>> 
+>> Done with perl script:
+>> 
+>> $ git grep -w --name-only DEVICE_ATTR | \
+>>   xargs perl -i -e 'local $/; while (<>) { s/\bDEVICE_ATTR\s*\(\s*(\w+)\s*,\s*\(?(?:\s*S_IRUGO\s*|\s*0444\s*)\)?\s*,\s*\1_show\s*,\s*NULL\s*\)/DEVICE_ATTR_RO(\1)/g; print;}'
+>> 
+>> Signed-off-by: Joe Perches <joe@perches.com>
+>> ---
+>>  arch/arm/mach-pxa/sharpsl_pm.c                       |  4 ++--
 
-I will drop this patch from current series and will update commit message w=
-ith details
-as suggested and submit in next series.
+For mach-pxa:
+Acked-by: Robert Jarzmik <robert.jarzmik@free.fr>
 
-Thanks,
-- Himanshu
+Cheers.
+
+--
+Robert
