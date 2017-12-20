@@ -1,24 +1,29 @@
-From: ZIMBRA Mail Services <meimei.liu@utbm.fr>
-Subject: Alerte
-Date: Wed, 20 Dec 2017 10:08:58 +0100 (CET)
-Message-ID: <550110110.131921392.1513760938326.JavaMail.zimbra@utbm.fr>
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+Subject: Re: [-next PATCH 0/4] sysfs and DEVICE_ATTR_<foo>
+Date: Wed, 20 Dec 2017 11:46:06 +0200
+Message-ID: <87r2rppw9t.fsf@linux.intel.com>
+References: <cover.1513706701.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from serveur23137.utbm.fr ([193.48.231.37]:52523 "EHLO smtp2.utbm.fr"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754261AbdLTJiC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Dec 2017 04:38:02 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <cover.1513706701.git.joe@perches.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Joe Perches <joe@perches.com>, linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-nvme@lists.infradead.org, platform-driver-x86@vger.kernel.org, linux-s390@vger.kernel.org, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org, linux-omap@vger.kernel.org
+Cc: devel@driverdev.osuosl.org, linux-fbdev@vger.kernel.org, linux-sh@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org, linux-media@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Vous devez mettre =C3=A0 jour maintenant le plus r=C3=A9cent ZIMBRA! Mail p=
-our =C3=A9viter la fermeture. Une fois votre compte mis =C3=A0 jour, nous r=
-=C3=A9tablirons votre statut normal.
-=C2=A0
-Mettre =C3=A0 niveau Zimbra maintenant: http://isjkkd-xkshn-dnduek.tripod.c=
-om/
-=C2=A0
-Donc,
-ZIMBRA Mail services
+CkhpLAoKSm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVzLmNvbT4gd3JpdGVzOgo+ICBkcml2ZXJzL3Vz
+Yi9waHkvcGh5LXRhaHZvLmMgICAgICAgICAgICAgICAgICAgICAgICB8ICAyICstCgpBY2tlZC1i
+eTogRmVsaXBlIEJhbGJpIDxmZWxpcGUuYmFsYmlAbGludXguaW50ZWwuY29tPgoKLS0gCmJhbGJp
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkludGVsLWdm
+eCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xp
+c3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVsLWdmeAo=
