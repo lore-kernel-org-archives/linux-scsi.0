@@ -1,29 +1,43 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] lpfc: correct sg_seg_cnt attribute min vs default
-Date: Wed, 20 Dec 2017 09:36:33 +0100
-Message-ID: <mqdr2rpokxa.fsf@linux-x5ow.site>
-References: <20171219185750.24348-1-jsmart2021@gmail.com>
+From: Jarkko Nikula <jarkko.nikula@bitmer.com>
+Subject: Re: [-next PATCH 2/4] treewide: Use DEVICE_ATTR_RW
+Date: Wed, 20 Dec 2017 10:34:03 +0200
+Message-ID: <20171220083403.GA27231@bitmer.com>
+References: <cover.1513706701.git.joe@perches.com>
+ <cd38f14f06e1f447b3159ffe8c69c0df8241bb6e.1513706701.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60354 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753974AbdLTIgf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Dec 2017 03:36:35 -0500
-In-Reply-To: <20171219185750.24348-1-jsmart2021@gmail.com> (James Smart's
-        message of "Tue, 19 Dec 2017 10:57:50 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <cd38f14f06e1f447b3159ffe8c69c0df8241bb6e.1513706701.git.joe@perches.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Cezary Jackiewicz <cezary.jackiewicz@gmail.com>, Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>, Sebastian Ott <sebott@linux.vnet.ibm.com>, Peter Oberparleiter <oberpar@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mathias Nyman <mathias.nyman@intel.com>, Felipe Balbi <balbi@kernel.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Peter Ujfalusi <peter.ujfalusi@ti.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
-Thanks a lot,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+On Tue, Dec 19, 2017 at 10:15:07AM -0800, Joe Perches wrote:
+> Convert DEVICE_ATTR uses to DEVICE_ATTR_RW where possible.
+> 
+...
+  
+> diff --git a/sound/soc/omap/mcbsp.c b/sound/soc/omap/mcbsp.c
+> index 7a54e3083203..79d4dc785e5c 100644
+> --- a/sound/soc/omap/mcbsp.c
+> +++ b/sound/soc/omap/mcbsp.c
+> @@ -854,7 +854,7 @@ static ssize_t dma_op_mode_store(struct device *dev,
+>  	return size;
+>  }
+>  
+> -static DEVICE_ATTR(dma_op_mode, 0644, dma_op_mode_show, dma_op_mode_store);
+> +static DEVICE_ATTR_RW(dma_op_mode);
+>  
+While I can ack this part here if it helps generic cleanup effort I
+don't understart would it improve code readability in general? Mode 644
+is clear and don't need any grepping but for DEVICE_ATTR_RW() I had to go
+through all of these files in order to see what does it mean:
+
+DEVICE_ATTR_RW: include/linux/device.h
+__ATTR_RW: include/linux/sysfs.h
+S_IWUSR: include/uapi/linux/stat.h
+S_IRUGO: include/linux/stat.h
+
+Jarkko Nikula <jarkko.nikula@bitmer.com>
