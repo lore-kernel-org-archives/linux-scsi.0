@@ -1,68 +1,28 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 01/43] qla2xxx: Fix stale memory access for name pointer
-Date: Wed, 20 Dec 2017 16:25:48 +0000
-Message-ID: <1513787147.2603.10.camel@wdc.com>
+Subject: Re: [PATCH 02/43] qla2xxx: Fix NULL pointer access for fcport
+ structure
+Date: Wed, 20 Dec 2017 16:26:33 +0000
+Message-ID: <1513787192.2603.12.camel@wdc.com>
 References: <20171220065644.21511-1-himanshu.madhani@cavium.com>
-         <20171220065644.21511-2-himanshu.madhani@cavium.com>
+         <20171220065644.21511-3-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:21784 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751456AbdLTQZu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Dec 2017 11:25:50 -0500
-In-Reply-To: <20171220065644.21511-2-himanshu.madhani@cavium.com>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:36520 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754544AbdLTQ0f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Dec 2017 11:26:35 -0500
+In-Reply-To: <20171220065644.21511-3-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Content-ID: <EDC089E17C820B46AB5ACE0DB378C756@namprd04.prod.outlook.com>
+Content-ID: <1C08F7DFE4F9464F86CD583BDA523658@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 T24gVHVlLCAyMDE3LTEyLTE5IGF0IDIyOjU2IC0wODAwLCBIaW1hbnNodSBNYWRoYW5pIHdyb3Rl
-Og0KPiBOYW1lIHBvaW50ZXIgZm9yIHNwIGRlc2NyaWJpbmcgZWFjaCBjb21tYW5kIGlzIGFzc2ln
-bmVkIHdpdGggc3RhY2sNCj4gZnJhbWUncyBtZW1vcnkuIFRoZSBzdGFjayBmcmFtZSBjb3VsZCBl
-dmVudHVhbGx5IGJlIHJlLXVzZSwgd2hlcmUNCj4gbmFtZSBwb2ludGVyIGFjY2VzcyBjYW4gZ2V0
-IGdldCBnYXJiYWdlLiBUaGlzIHBhdGNoIGRlc2lnbmF0ZXMNCj4gc3RhdGljIG1lbW9yeSBmb3Ig
-bmFtZSBwb2ludGVyIHRvIGZpeCB0aGlzIHByb2JsZW0uDQoNCldoaWNoIHN0YWNrIG1lbW9yeSBh
-Y2Nlc3NlcyBoYXZlIGJlZW4gcmVtb3ZlZCBieSB0aGlzIHBhdGNoPyBTb3JyeSBidXQgSQ0KaGF2
-ZW4ndCBmb3VuZCBhbnkgc3RhY2sgbWVtb3J5IGFjY2VzcyBjaGFuZ2VzIGluIHRoaXMgcGF0Y2gu
-IEFkZGl0aW9uYWxseSwNCkkgaGF2ZW4ndCBmb3VuZCBhbnkgY2hhbmdlcyBpbiB0aGlzIHBhdGNo
-IHRoYXQgbG9vayB1c2VmdWwgdG8gbWUuIEFyZSB5b3UNCmF3YXJlIHRoYXQgZm9yIHN0YXRlbWVu
-dHMgbGlrZSAic3RyID0gInVua25vd24iIiB0aGUgY29tcGlsZXIgYWxsb2NhdGVzDQpzdGF0aWMg
-bWVtb3J5IGZvciB0aGUgc3RyaW5nICJ1bmtub3duIj8NCg0KPiArc3RydWN0IHNwX25hbWUgew0K
-PiArCXVpbnQxNl90IGNtZDsNCj4gKwljb25zdCBjaGFyICpzdHI7DQo+ICt9Ow0KPiArDQoNClsg
-Li4uIF0NCiANCj4gK3N0cnVjdCBzcF9uYW1lIHNwX3N0cltdID0gew0KPiArCXsgU1BDTl9VTktO
-T1dOLCAidW5rbm93biIgfSwNCj4gKwl7IFNQQ05fR0lEUE4sICJnaWRwbiIgfSwNCj4gKwl7IFNQ
-Q05fR1BTQywgImdwc2MiIH0sDQo+ICsJeyBTUENOX0dQTklELCAiZ3BuaWQiIH0sDQo+ICsJeyBT
-UENOX0dQTkZULCAiZ3BuZnQiIH0sDQo+ICsJeyBTUENOX0dOTklELCAiZ25uaWQiIH0sDQo+ICsJ
-eyBTUENOX0dGUE5JRCwgImdmcG5pZCIgfSwNCj4gKwl7IFNQQ05fR0ZGSUQsICJnZmZpZCIgfSwN
-Cj4gKwl7IFNQQ05fTE9HSU4sICJsb2dpbiIgfSwNCj4gKwl7IFNQQ05fTE9HT1VULCAibG9nb3V0
-IiB9LA0KPiArCXsgU1BDTl9BRElTQywgImFkaXNjIiB9LA0KPiArCXsgU1BDTl9HTkxJU1QsICJn
-bmxpc3QiIH0sDQo+ICsJeyBTUENOX0dQREIsICJncGRiIiB9LA0KPiArCXsgU1BDTl9UTUYsICJ0
-bWYiIH0sDQo+ICsJeyBTUENOX0FCT1JULCAiYWJvcnQiIH0sDQo+ICsJeyBTUENOX05BQ0ssICJu
-YWNrIiB9LA0KPiArCXsgU1BDTl9CU0dfUlBULCAiYnNnX2Vsc19ycHQiIH0sDQo+ICsJeyBTUENO
-X0JTR19IU1QsICJic2dfZWxzX2hzdCIgfSwNCj4gKwl7IFNQQ05fQlNHX0NULCAiYnNnX2N0IiB9
-LA0KPiArCXsgU1BDTl9CU0dfRlhfTUdNVCwgImJzZ19meF9tZ210IiB9LA0KPiArCXsgU1BDTl9F
-TFNfRENNRCwgIkVMU19EQ01EIiB9LA0KPiArCXsgU1BDTl9GWERJU0MsICJmeGRpc2MiIH0sDQo+
-ICsJeyBTUENOX1BSTEksICJwcmxpIiB9LA0KPiArCXsgU1BDTl9OVk1FX0xTLCAibnZtZV9scyIg
-fSwNCj4gKwl7IFNQQ05fTlZNRV9DTUQsICJudm1lX2NtZCIgfSwNCj4gK307DQoNCklmIHlvdSB3
-YW50IHRvIGtlZXAgdGhlIHNwX3N0cltdIGFycmF5IGFmdGVyIHdoYXQgSSB3cm90ZSBhYm92ZSwg
-cGxlYXNlDQpyZW1vdmUgdGhlIHNwX25hbWUgc3RydWN0dXJlIGFuZCBjaGFuZ2Ugc3Bfc3RyW10g
-aW50byBzb21ldGhpbmcgbGlrZSB0aGUNCmZvbGxvd2luZzoNCg0Kc3RhdGljIGNvbnN0IGNoYXIg
-KnNwX3N0cltdID0gew0KCVtTUENOX1VOS05PV05dID0gInVua25vd24iLA0KCS4uLg0KfTsNCg0K
-PiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMNCj4gKysrIGIvZHJpdmVycy9z
-Y3NpL3FsYTJ4eHgvcWxhX21ieC5jDQo+IEBAIC0xNCw2ICsxNCw3IEBAIHN0YXRpYyBzdHJ1Y3Qg
-bWJfY21kX25hbWUgew0KPiAgCXVpbnQxNl90IGNtZDsNCj4gIAljb25zdCBjaGFyICpzdHI7DQo+
-ICB9IG1iX3N0cltdID0gew0KPiArCXswLCAidW5rbm93biBtYiJ9LA0KPiAgCXtNQkNfR0VUX1BP
-UlRfREFUQUJBU0UsCQkiR1BEQiJ9LA0KPiAgCXtNQkNfR0VUX0lEX0xJU1QsCQkiR0lETGlzdCJ9
-LA0KPiAgCXtNQkNfR0VUX0xJTktfUFJJVl9TVEFUUywJIlN0YXRzIn0sDQo+IEBAIC0yNCwxMiAr
-MjUsMTIgQEAgc3RhdGljIGNvbnN0IGNoYXIgKm1iX3RvX3N0cih1aW50MTZfdCBjbWQpDQo+ICAJ
-aW50IGk7DQo+ICAJc3RydWN0IG1iX2NtZF9uYW1lICplOw0KPiAgDQo+IC0JZm9yIChpID0gMDsg
-aSA8IEFSUkFZX1NJWkUobWJfc3RyKTsgaSsrKSB7DQo+ICsJZm9yIChpID0gMTsgaSA8IEFSUkFZ
-X1NJWkUobWJfc3RyKTsgaSsrKSB7DQo+ICAJCWUgPSBtYl9zdHIgKyBpOw0KPiAgCQlpZiAoY21k
-ID09IGUtPmNtZCkNCj4gIAkJCXJldHVybiBlLT5zdHI7DQo+ICAJfQ0KPiAtCXJldHVybiAidW5r
-bm93biI7DQo+ICsJcmV0dXJuIG1iX3N0clswXS5zdHI7DQo+ICB9DQoNClNvcnJ5IGJ1dCB0aGUg
-YWJvdmUgY2hhbmdlIGRvZXMgbm90IGxvb2sgdXNlZnVsIHRvIG1lIGluIGFueSB3YXkuIElzIHRo
-aXMNCmp1c3QgY29kZSBjaHVybj8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+Og0KPiBGcm9tOiBRdWlubiBUcmFuIDxxdWlubi50cmFuQGNhdml1bS5jb20+DQo+IA0KPiB3aGVu
+IHByZW9jZXNzaW5nIGlvY2IgaW4gYSB0aW1lb3V0IGNhc2UsIGRyaXZlciB3YXMgdHJ5aW5nIHRv
+IGxvZyBtZXNzYWdlcw0KICAgICAgIF5eXl5eXl5eXl5eDQogICAgICAgcHJvY2Vzc2luZz8NCg0K
+QmFydC4=
