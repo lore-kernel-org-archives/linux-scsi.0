@@ -1,50 +1,218 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [-next PATCH 2/4] treewide: Use DEVICE_ATTR_RW
-Date: Wed, 20 Dec 2017 01:24:44 -0800
-Message-ID: <1513761884.1234.83.camel@perches.com>
-References: <cover.1513706701.git.joe@perches.com>
- <cd38f14f06e1f447b3159ffe8c69c0df8241bb6e.1513706701.git.joe@perches.com>
- <20171220083403.GA27231@bitmer.com>
+From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/2 v2] scsi: ufs: use sysfs entry for health info
+Date: Wed, 20 Dec 2017 10:26:26 +0100
+Message-ID: <20171220092626.GA14791@kroah.com>
+References: <20171219200254.23120-1-jaegeuk@kernel.org>
+ <20171219200254.23120-2-jaegeuk@kernel.org>
+ <1513717650.2535.13.camel@wdc.com>
+ <20171219224644.GB23445@jaegeuk-macbookpro.roam.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20171220083403.GA27231@bitmer.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Jarkko Nikula <jarkko.nikula@bitmer.com>
-Cc: linux-fbdev@vger.kernel.org, David Airlie <airlied@linux.ie>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Jaroslav Kysela <perex@perex.cz>, Peter Ujfalusi <peter.ujfalusi@ti.com>, linux-s390@vger.kernel.org, linux-omap@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Takashi Iwai <tiwai@suse.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, Cezary Jackiewicz <cezary.jackiewicz@gmail.com>, linux-serial@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, Darren Hart <dvhart@infradead.org>, Zhang Rui <rui.zhang@intel.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Mathias Nyman <mathias.nyman@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Peter Oberparleiter <oberp>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171219224644.GB23445@jaegeuk-macbookpro.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jaegeuk@google.com" <jaegeuk@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTEyLTIwIGF0IDEwOjM0ICswMjAwLCBKYXJra28gTmlrdWxhIHdyb3RlOgo+
-IE9uIFR1ZSwgRGVjIDE5LCAyMDE3IGF0IDEwOjE1OjA3QU0gLTA4MDAsIEpvZSBQZXJjaGVzIHdy
-b3RlOgo+ID4gQ29udmVydCBERVZJQ0VfQVRUUiB1c2VzIHRvIERFVklDRV9BVFRSX1JXIHdoZXJl
-IHBvc3NpYmxlLgpbXSAKPiA+IGRpZmYgLS1naXQgYS9zb3VuZC9zb2Mvb21hcC9tY2JzcC5jIGIv
-c291bmQvc29jL29tYXAvbWNic3AuYwpbXQo+ID4gQEAgLTg1NCw3ICs4NTQsNyBAQCBzdGF0aWMg
-c3NpemVfdCBkbWFfb3BfbW9kZV9zdG9yZShzdHJ1Y3QgZGV2aWNlICpkZXYsCj4gPiAgCXJldHVy
-biBzaXplOwo+ID4gIH0KPiA+ICAKPiA+IC1zdGF0aWMgREVWSUNFX0FUVFIoZG1hX29wX21vZGUs
-IDA2NDQsIGRtYV9vcF9tb2RlX3Nob3csIGRtYV9vcF9tb2RlX3N0b3JlKTsKPiA+ICtzdGF0aWMg
-REVWSUNFX0FUVFJfUlcoZG1hX29wX21vZGUpOwo+ID4gIAo+IAo+IFdoaWxlIEkgY2FuIGFjayB0
-aGlzIHBhcnQgaGVyZSBpZiBpdCBoZWxwcyBnZW5lcmljIGNsZWFudXAgZWZmb3J0IEkKPiBkb24n
-dCB1bmRlcnN0YXJ0IHdvdWxkIGl0IGltcHJvdmUgY29kZSByZWFkYWJpbGl0eSBpbiBnZW5lcmFs
-PyBNb2RlIDY0NAo+IGlzIGNsZWFyIGFuZCBkb24ndCBuZWVkIGFueSBncmVwcGluZyBidXQgZm9y
-IERFVklDRV9BVFRSX1JXKCkgSSBoYWQgdG8gZ28KPiB0aHJvdWdoIGFsbCBvZiB0aGVzZSBmaWxl
-cyBpbiBvcmRlciB0byBzZWUgd2hhdCBkb2VzIGl0IG1lYW46CgpBcmUgeW91IHN1Z2dlc3Rpbmcg
-dGhhdCBkZXZpY2UuaCAoYXMgdGhhdCBpcyB3aGVyZQpERVZJQ0VfQVRUUiBhbmQgdGhlIG90aGVy
-IERFVklDRV9BVFRSXzxGT08+IHZhcmlhbnRzCmFyZSAjZGVmaW5lZCkgc2hvdWxkIGhhdmUgYmV0
-dGVyIGNvbW1lbnRzIGZvciB0aGUKXzxGT08+IHZhcmlhbnRzPwoKPiBERVZJQ0VfQVRUUl9SVzog
-aW5jbHVkZS9saW51eC9kZXZpY2UuaAo+IF9fQVRUUl9SVzogaW5jbHVkZS9saW51eC9zeXNmcy5o
-Cj4gU19JV1VTUjogaW5jbHVkZS91YXBpL2xpbnV4L3N0YXQuaAo+IFNfSVJVR086IGluY2x1ZGUv
-bGludXgvc3RhdC5oCgpidHc6IHBhdGNoIDEvNCBvZiB0aGUgc2VyaWVzIGRvZXMgcmVtb3ZlIHRo
-ZSB1c2VzIG9mClNfPFBFUk1TPiBmcm9tIHRoZXNlIG1hY3JvcyBpbiBzeXNmcy5oIGFuZCBjb252
-ZXJ0cwp0aGVtIHRvIHNpbXBsZSBvY3RhbCBpbnN0ZWFkLgoKX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2
-ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21h
-aWxtYW4vbGlzdGluZm8vZHJpLWRldmVsCg==
+On Tue, Dec 19, 2017 at 02:46:44PM -0800, Jaegeuk Kim wrote:
+> >From 3368207da5988b8fed4e41e6c0f49a60ac014222 Mon Sep 17 00:00:00 2001
+> From: Jaegeuk Kim <jaegeuk@google.com>
+> Date: Tue, 26 Sep 2017 20:53:48 -0700
+> Subject: [PATCH 2/2] scsi: ufs: introduce sysfs entries exposing UFS health
+>  info
+> 
+> This patch adds a new sysfs group, namely health, via:
+> 
+>    /sys/devices/soc/X.ufshc/health/
+> 
+> This directory contains the below entries, each of which shows an 8-bytes
+> hex number representing different meanings defined by JEDEC specfication.
+> 
+> Users can simply read these entries to check how their underlying flash
+> storage is getting reached out to its end of life. For example, if
+> lifetimeA shows 0xb, it would be the right time to consider device swap.
+> 
+>  - length
+>    : must be 25h
+> 
+>  - type
+>    : must be 09h
+> 
+>  - eol
+>    00h: Not defined
+>    01h: Normal
+>    02h: Warning
+>    03h: Critical
+> 
+>  - lifetimeA/B
+>    00h: Not defined
+>    01h:  0% ~ 10% device life time used
+>    02h: 10% ~ 20% device life time used
+>    03h: 20% ~ 30% device life time used
+>    04h: 30% ~ 40% device life time used
+>    05h: 40% ~ 50% device life time used
+>    06h: 50% ~ 60% device life time used
+>    07h: 60% ~ 70% device life time used
+>    08h: 70% ~ 80% device life time used
+>    09h: 80% ~ 90% device life time used
+>    0Ah: 90% ~ 100% device life time used
+>    0Bh: Exceeded its maximum estimated device life time
+> 
+> Cc: Greg KH <gregkh@linuxfoundation.org>
+> Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+> ---
+>  Documentation/ABI/testing/sysfs-devices-soc-ufs | 25 +++++++++
+>  MAINTAINERS                                     |  1 +
+>  drivers/scsi/ufs/ufs.h                          |  2 +
+>  drivers/scsi/ufs/ufshcd.c                       | 69 ++++++++++++++++++++++++-
+>  drivers/scsi/ufs/ufshcd.h                       |  1 +
+>  5 files changed, 97 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/ABI/testing/sysfs-devices-soc-ufs
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-devices-soc-ufs b/Documentation/ABI/testing/sysfs-devices-soc-ufs
+> new file mode 100644
+> index 000000000000..313771a383e4
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-devices-soc-ufs
+> @@ -0,0 +1,25 @@
+> +What:		/sys/devices/soc/X.ufshc/health
+> +Date:		September 2017
+> +contact:	Jaegeuk Kim <jaegeuk@google.com>
+> +Description:
+> +		This directory contains health information reported by UFS.
+> +		- length must be 25h
+> +		- type must be 09h
+> +		- eol represent
+> +		  00h: Not defined
+> +		  01h: Normal
+> +		  02h: Warning
+> +		  03h: Critical
+> +		- lifetimeA/B
+> +		  00h: Not defined
+> +		  01h:  0% ~ 10% device life time used
+> +		  02h: 10% ~ 20% device life time used
+> +		  03h: 20% ~ 30% device life time used
+> +		  04h: 30% ~ 40% device life time used
+> +		  05h: 40% ~ 50% device life time used
+> +		  06h: 50% ~ 60% device life time used
+> +		  07h: 60% ~ 70% device life time used
+> +		  08h: 70% ~ 80% device life time used
+> +		  09h: 80% ~ 90% device life time used
+> +		  0Ah: 90% ~ 100% device life time used
+> +		  0Bh: Exceeded its maximum estimated device life time
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index aa71ab52fd76..947034319bb4 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -13999,6 +13999,7 @@ M:	Vinayak Holikatti <vinholikatti@gmail.com>
+>  L:	linux-scsi@vger.kernel.org
+>  S:	Supported
+>  F:	Documentation/scsi/ufs.txt
+> +F:	Documentation/ABI/testing/sysfs-devices-soc-ufs
+>  F:	drivers/scsi/ufs/
+>  
+>  UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index 54deeb754db5..1af541d56c7d 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -154,6 +154,7 @@ enum desc_idn {
+>  	QUERY_DESC_IDN_RFU_1		= 0x6,
+>  	QUERY_DESC_IDN_GEOMETRY		= 0x7,
+>  	QUERY_DESC_IDN_POWER		= 0x8,
+> +	QUERY_DESC_IDN_HEALTH		= 0x9,
+>  	QUERY_DESC_IDN_MAX,
+>  };
+>  
+> @@ -169,6 +170,7 @@ enum ufs_desc_def_size {
+>  	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
+>  	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
+>  	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
+> +	QUERY_DESC_HEALTH_DEF_SIZE		= 0x25,
+>  };
+>  
+>  /* Unit descriptor parameters offsets in bytes*/
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 12ff7daebb00..5cbb08fff0f4 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2991,6 +2991,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
+>  	case QUERY_DESC_IDN_RFU_1:
+>  		*desc_len = 0;
+>  		break;
+> +	case QUERY_DESC_IDN_HEALTH:
+> +		*desc_len = hba->desc_size.health_desc;
+> +		break;
+>  	default:
+>  		*desc_len = 0;
+>  		return -EINVAL;
+> @@ -6298,6 +6301,11 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
+>  		&hba->desc_size.geom_desc);
+>  	if (err)
+>  		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
+> +
+> +	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
+> +		&hba->desc_size.health_desc);
+> +	if (err)
+> +		hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+>  }
+>  
+>  static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+> @@ -6308,6 +6316,7 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+>  	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+>  	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
+>  	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
+> +	hba->desc_size.health_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+>  }
+>  
+>  /**
+> @@ -7688,14 +7697,72 @@ static const struct attribute_group ufshcd_attr_group = {
+>  	.attrs = ufshcd_attrs,
+>  };
+>  
+> +struct health_attr {
+> +	struct attribute attr;
+> +	ssize_t (*show)(struct device *dev,
+> +				struct health_attr *attr, char *buf);
+> +	int byte_offset;
+> +};
+> +
+> +static ssize_t health_attr_show(struct device *dev,
+> +				struct health_attr *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	int buff_len = hba->desc_size.health_desc;
+> +	u8 desc_buf[hba->desc_size.health_desc];
+> +	int err;
+> +
+> +	if (attr->byte_offset >= buff_len)
+> +		return 0;
+> +
+> +	pm_runtime_get_sync(hba->dev);
+> +	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_HEALTH, 0,
+> +					desc_buf, buff_len);
+> +	pm_runtime_put_sync(hba->dev);
+> +	if (err)
+> +		return 0;
+> +
+> +	return scnprintf(buf, PAGE_SIZE, "0x%02x", desc_buf[attr->byte_offset]);
+> +}
+> +
+> +#define HEALTH_ATTR_RO(_name, _byte_offset)				\
+> +static struct health_attr ufs_health_##_name = {			\
+> +	.attr = {.name = __stringify(_name), .mode = 0444},		\
+> +	.show = health_attr_show,					\
+> +	.byte_offset = _byte_offset,					\
+> +}
+
+This is a nice "hack" to make things simpler, but I worry about not
+using the "normal" __ATTR_* macros here.  But I can't think of a simpler
+way to do this now, except if you had a table of strings and offsets
+that you then used to look up to get the offset based on the name of the
+attribute.
+
+Anyway, nice job, I'm just rambling:
+
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
