@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 09/43] qla2xxx: Fix Firmware dump size for Extended login and Exchange Offload
-Date: Tue, 19 Dec 2017 22:56:10 -0800
-Message-ID: <20171220065644.21511-10-himanshu.madhani@cavium.com>
+Subject: [PATCH 10/43] qla2xxx: Replace GPDB with async ADISC command
+Date: Tue, 19 Dec 2017 22:56:11 -0800
+Message-ID: <20171220065644.21511-11-himanshu.madhani@cavium.com>
 References: <20171220065644.21511-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0073.outbound.protection.outlook.com ([104.47.34.73]:24389
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0059.outbound.protection.outlook.com ([104.47.36.59]:62584
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932295AbdLTG5F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Dec 2017 01:57:05 -0500
+        id S932388AbdLTG5G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Dec 2017 01:57:06 -0500
 In-Reply-To: <20171220065644.21511-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,357 +19,244 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-This patch adjusts and reallocates fw_dump memory for target mode
-to save for extended login and exchange offload buffers into
-dump captured.
+Replace call to Get Port DataBase MB with PDO_FORCE_ADISC
+flag with async ADISC command so driver can see ADISC command
+has error or not.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 209 +++++++++++++++++++++-------------------
- drivers/scsi/qla2xxx/qla_tmpl.c |  40 +++++++-
- 2 files changed, 147 insertions(+), 102 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  2 ++
+ drivers/scsi/qla2xxx/qla_gs.c   | 20 +++++++-----
+ drivers/scsi/qla2xxx/qla_init.c | 68 +++++++++++++++++++++++------------------
+ 3 files changed, 53 insertions(+), 37 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 8fbe1736a1a4..18b393453002 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2320,6 +2320,7 @@ enum discovery_state {
+ 	DSC_GPSC,
+ 	DSC_UPD_FCPORT,
+ 	DSC_LOGIN_COMPLETE,
++	DSC_ADISC,
+ 	DSC_DELETE_PEND,
+ };
+ 
+@@ -2346,6 +2347,7 @@ enum fcport_mgt_event {
+ 	FCME_GPNID_DONE,
+ 	FCME_GFFID_DONE,
+ 	FCME_DELETE_DONE,
++	FCME_ADISC_DONE,
+ };
+ 
+ enum rscn_addr_format {
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 6aa6dd74fe86..b1c6485c307b 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -2867,15 +2867,19 @@ void qla24xx_handle_gidpn_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 					    "%s %d %8phC post %s\n", __func__,
+ 					    __LINE__, fcport->port_name,
+ 					    (atomic_read(&fcport->state) ==
+-					    FCS_ONLINE) ? "gpdb" : "gnl");
++					    FCS_ONLINE) ? "adisc" : "gnl");
+ 
+ 					if (atomic_read(&fcport->state) ==
+-					    FCS_ONLINE)
+-						qla24xx_post_gpdb_work(vha,
+-						    fcport, PDO_FORCE_ADISC);
+-					else
++					    FCS_ONLINE) {
++						u16 data[2];
++
++						data[0] = data[1] = 0;
++						qla2x00_post_async_adisc_work(
++						    vha, fcport, data);
++					} else {
+ 						qla24xx_post_gnl_work(vha,
+ 						    fcport);
++					}
+ 					break;
+ 				}
+ 			} else { /* fcport->d_id.b24 != ea->id.b24 */
+@@ -3216,6 +3220,7 @@ void qla24xx_async_gpnid_done(scsi_qla_host_t *vha, srb_t *sp)
+ void qla24xx_handle_gpnid_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ {
+ 	fc_port_t *fcport, *conflict, *t;
++	u16 data[2];
+ 
+ 	ql_dbg(ql_dbg_disc, vha, 0xffff,
+ 	    "%s %d port_id: %06x\n",
+@@ -3290,8 +3295,9 @@ void qla24xx_handle_gpnid_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 				ql_dbg(ql_dbg_disc, vha, 0x210d,
+ 				    "%s %d %8phC revalidate session with ADISC\n",
+ 				    __func__, __LINE__, fcport->port_name);
+-				qla24xx_post_gpdb_work(vha, fcport,
+-				    PDO_FORCE_ADISC);
++				data[0] = data[1] = 0;
++				qla2x00_post_async_adisc_work(vha, fcport,
++				    data);
+ 				break;
+ 			case DSC_DELETED:
+ 				ql_dbg(ql_dbg_disc, vha, 0x210d,
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 429305caef47..5cd04bfa5cae 100644
+index 5cd04bfa5cae..0a1c287c2d66 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2593,70 +2593,27 @@ qla24xx_chip_diag(scsi_qla_host_t *vha)
+@@ -41,6 +41,7 @@ static void qla24xx_handle_plogi_done_event(struct scsi_qla_host *,
+     struct event_arg *);
+ static void qla24xx_handle_prli_done_event(struct scsi_qla_host *,
+     struct event_arg *);
++static void qla24xx_handle_gpdb_event(scsi_qla_host_t *, struct event_arg *);
+ 
+ /* SRB Extensions ---------------------------------------------------------- */
+ 
+@@ -277,17 +278,31 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
+ 	return rval;
+ }
++static
++void qla24xx_handle_adisc_event(scsi_qla_host_t *vha, struct event_arg *ea)
++{
++	qla24xx_handle_gpdb_event(vha, ea);
++}
+ 
+ static void
+ qla2x00_async_adisc_sp_done(void *ptr, int res)
+ {
+ 	srb_t *sp = ptr;
+ 	struct scsi_qla_host *vha = sp->vha;
+-	struct srb_iocb *lio = &sp->u.iocb_cmd;
++	struct event_arg ea;
++
++	ql_dbg(ql_dbg_disc, vha, 0x2066,
++	    "Async done-%s res %x %8phC\n",
++	    sp->name, res, sp->fcport->port_name);
++
++	memset(&ea, 0, sizeof(ea));
++	ea.event = FCME_ADISC_DONE;
++	ea.rc = res;
++	ea.fcport = sp->fcport;
++	ea.sp = sp;
++
++	qla2x00_fcport_event_handler(vha, &ea);
+ 
+-	if (!test_bit(UNLOADING, &vha->dpc_flags))
+-		qla2x00_post_async_adisc_done_work(sp->vha, sp->fcport,
+-		    lio->u.logio.data);
+ 	sp->free(sp);
+ }
+ 
+@@ -305,8 +320,11 @@ qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 	if (!sp)
+ 		goto done;
+ 
++	fcport->disc_state = DSC_ADISC;
+ 	sp->type = SRB_ADISC_CMD;
+ 	sp->name = sp_to_str(SPCN_ADISC);
++	sp->gen1 = fcport->rscn_gen;
++	sp->gen2 = fcport->login_gen;
+ 	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
+ 
+ 	lio = &sp->u.iocb_cmd;
+@@ -319,15 +337,15 @@ qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 		goto done_free_sp;
+ 
+ 	ql_dbg(ql_dbg_disc, vha, 0x206f,
+-	    "Async-adisc - hdl=%x loopid=%x portid=%02x%02x%02x.\n",
+-	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
+-	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
++	    "Async-adisc - hdl=%x loopid=%x portid=%06x %8phC.\n",
++	    sp->handle, fcport->loop_id, fcport->d_id.b24, fcport->port_name);
+ 	return rval;
+ 
+ done_free_sp:
+ 	sp->free(sp);
+ done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++	qla2x00_post_async_adisc_work(vha, fcport, data);
  	return rval;
  }
  
--void
--qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
-+static void
-+qla2x00_alloc_offload_mem(scsi_qla_host_t *vha)
+@@ -869,7 +887,6 @@ void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 	int rval = ea->rc;
+ 	fc_port_t *fcport = ea->fcport;
+ 	unsigned long flags;
+-	u16 opt = ea->sp->u.iocb_cmd.u.mbx.out_mb[10];
+ 
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
+ 
+@@ -900,8 +917,7 @@ void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 	}
+ 
+ 	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+-	if (opt != PDO_FORCE_ADISC)
+-		ea->fcport->login_gen++;
++	ea->fcport->login_gen++;
+ 	ea->fcport->deleted = 0;
+ 	ea->fcport->logout_on_delete = 1;
+ 
+@@ -941,6 +957,7 @@ void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 
+ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
  {
- 	int rval;
--	uint32_t dump_size, fixed_size, mem_size, req_q_size, rsp_q_size,
--	    eft_size, fce_size, mq_size;
- 	dma_addr_t tc_dma;
- 	void *tc;
- 	struct qla_hw_data *ha = vha->hw;
--	struct req_que *req = ha->req_q_map[0];
--	struct rsp_que *rsp = ha->rsp_q_map[0];
++	u16 data[2];
+ 	if (fcport->login_retry == 0)
+ 		return 0;
  
--	if (ha->fw_dump) {
-+	if (ha->eft) {
- 		ql_dbg(ql_dbg_init, vha, 0x00bd,
--		    "Firmware dump already allocated.\n");
-+		    "%s: Offload Mem is already allocated.\n",
-+		    __func__);
- 		return;
- 	}
- 
--	ha->fw_dumped = 0;
--	ha->fw_dump_cap_flags = 0;
--	dump_size = fixed_size = mem_size = eft_size = fce_size = mq_size = 0;
--	req_q_size = rsp_q_size = 0;
--
--	if (IS_QLA27XX(ha))
--		goto try_fce;
--
--	if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
--		fixed_size = sizeof(struct qla2100_fw_dump);
--	} else if (IS_QLA23XX(ha)) {
--		fixed_size = offsetof(struct qla2300_fw_dump, data_ram);
--		mem_size = (ha->fw_memory_size - 0x11000 + 1) *
--		    sizeof(uint16_t);
--	} else if (IS_FWI2_CAPABLE(ha)) {
--		if (IS_QLA83XX(ha) || IS_QLA27XX(ha))
--			fixed_size = offsetof(struct qla83xx_fw_dump, ext_mem);
--		else if (IS_QLA81XX(ha))
--			fixed_size = offsetof(struct qla81xx_fw_dump, ext_mem);
--		else if (IS_QLA25XX(ha))
--			fixed_size = offsetof(struct qla25xx_fw_dump, ext_mem);
--		else
--			fixed_size = offsetof(struct qla24xx_fw_dump, ext_mem);
--
--		mem_size = (ha->fw_memory_size - 0x100000 + 1) *
--		    sizeof(uint32_t);
--		if (ha->mqenable) {
--			if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha))
--				mq_size = sizeof(struct qla2xxx_mq_chain);
--			/*
--			 * Allocate maximum buffer size for all queues.
--			 * Resizing must be done at end-of-dump processing.
--			 */
--			mq_size += ha->max_req_queues *
--			    (req->length * sizeof(request_t));
--			mq_size += ha->max_rsp_queues *
--			    (rsp->length * sizeof(response_t));
--		}
--		if (ha->tgt.atio_ring)
--			mq_size += ha->tgt.atio_q_length * sizeof(request_t);
-+	if (IS_FWI2_CAPABLE(ha)) {
- 		/* Allocate memory for Fibre Channel Event Buffer. */
- 		if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
- 		    !IS_QLA27XX(ha))
- 			goto try_eft;
- 
--try_fce:
- 		if (ha->fce)
- 			dma_free_coherent(&ha->pdev->dev,
- 			    FCE_SIZE, ha->fce, ha->fce_dma);
-@@ -2684,7 +2641,6 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
- 		ql_dbg(ql_dbg_init, vha, 0x00c0,
- 		    "Allocate (%d KB) for FCE...\n", FCE_SIZE / 1024);
- 
--		fce_size = sizeof(struct qla2xxx_fce_chain) + FCE_SIZE;
- 		ha->flags.fce_enabled = 1;
- 		ha->fce_dma = tc_dma;
- 		ha->fce = tc;
-@@ -2701,7 +2657,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
- 			ql_log(ql_log_warn, vha, 0x00c1,
- 			    "Unable to allocate (%d KB) for EFT.\n",
- 			    EFT_SIZE / 1024);
--			goto cont_alloc;
-+			goto eft_err;
+@@ -999,23 +1016,11 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 			break;
  		}
  
- 		rval = qla2x00_enable_eft_trace(vha, tc_dma, EFT_NUM_BUFFERS);
-@@ -2710,17 +2666,76 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
- 			    "Unable to initialize EFT (%d).\n", rval);
- 			dma_free_coherent(&ha->pdev->dev, EFT_SIZE, tc,
- 			    tc_dma);
--			goto cont_alloc;
-+			goto eft_err;
- 		}
- 		ql_dbg(ql_dbg_init, vha, 0x00c3,
- 		    "Allocated (%d KB) EFT ...\n", EFT_SIZE / 1024);
- 
--		eft_size = EFT_SIZE;
- 		ha->eft_dma = tc_dma;
- 		ha->eft = tc;
- 	}
- 
--cont_alloc:
-+eft_err:
-+	return;
-+}
-+
-+void
-+qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
-+{
-+	uint32_t dump_size, fixed_size, mem_size, req_q_size, rsp_q_size,
-+	    eft_size, fce_size, mq_size;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct req_que *req = ha->req_q_map[0];
-+	struct rsp_que *rsp = ha->rsp_q_map[0];
-+	struct qla2xxx_fw_dump *fw_dump;
-+
-+	dump_size = fixed_size = mem_size = eft_size = fce_size = mq_size = 0;
-+	req_q_size = rsp_q_size = 0;
-+
-+	if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
-+		fixed_size = sizeof(struct qla2100_fw_dump);
-+	} else if (IS_QLA23XX(ha)) {
-+		fixed_size = offsetof(struct qla2300_fw_dump, data_ram);
-+		mem_size = (ha->fw_memory_size - 0x11000 + 1) *
-+		    sizeof(uint16_t);
-+	} else if (IS_FWI2_CAPABLE(ha)) {
-+		if (IS_QLA83XX(ha) || IS_QLA27XX(ha))
-+			fixed_size = offsetof(struct qla83xx_fw_dump, ext_mem);
-+		else if (IS_QLA81XX(ha))
-+			fixed_size = offsetof(struct qla81xx_fw_dump, ext_mem);
-+		else if (IS_QLA25XX(ha))
-+			fixed_size = offsetof(struct qla25xx_fw_dump, ext_mem);
-+		else
-+			fixed_size = offsetof(struct qla24xx_fw_dump, ext_mem);
-+
-+		mem_size = (ha->fw_memory_size - 0x100000 + 1) *
-+		    sizeof(uint32_t);
-+		if (ha->mqenable) {
-+			if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha))
-+				mq_size = sizeof(struct qla2xxx_mq_chain);
-+			/*
-+			 * Allocate maximum buffer size for all queues.
-+			 * Resizing must be done at end-of-dump processing.
-+			 */
-+			mq_size += ha->max_req_queues *
-+			    (req->length * sizeof(request_t));
-+			mq_size += ha->max_rsp_queues *
-+			    (rsp->length * sizeof(response_t));
-+		}
-+		if (ha->tgt.atio_ring)
-+			mq_size += ha->tgt.atio_q_length * sizeof(request_t);
-+		/* Allocate memory for Fibre Channel Event Buffer. */
-+		if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
-+		    !IS_QLA27XX(ha))
-+			goto try_eft;
-+
-+		fce_size = sizeof(struct qla2xxx_fce_chain) + FCE_SIZE;
-+try_eft:
-+		ql_dbg(ql_dbg_init, vha, 0x00c3,
-+		    "Allocated (%d KB) EFT ...\n", EFT_SIZE / 1024);
-+		eft_size = EFT_SIZE;
-+	}
-+
- 	if (IS_QLA27XX(ha)) {
- 		if (!ha->fw_dump_template) {
- 			ql_log(ql_log_warn, vha, 0x00ba,
-@@ -2748,51 +2763,44 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
- 			ha->exlogin_size;
- 
- allocate:
--	ha->fw_dump = vmalloc(dump_size);
--	if (!ha->fw_dump) {
--		ql_log(ql_log_warn, vha, 0x00c4,
--		    "Unable to allocate (%d KB) for firmware dump.\n",
--		    dump_size / 1024);
+-		if (fcport->flags & FCF_FCP2_DEVICE) {
+-			u8 opt = PDO_FORCE_ADISC;
 -
--		if (ha->fce) {
--			dma_free_coherent(&ha->pdev->dev, FCE_SIZE, ha->fce,
--			    ha->fce_dma);
--			ha->fce = NULL;
--			ha->fce_dma = 0;
+-			ql_dbg(ql_dbg_disc, vha, 0x20c9,
+-			    "%s %d %8phC post gpdb\n",
+-			    __func__, __LINE__, fcport->port_name);
+-
+-			fcport->disc_state = DSC_GPDB;
+-			qla24xx_post_gpdb_work(vha, fcport, opt);
+-		} else {
+-			ql_dbg(ql_dbg_disc, vha, 0x20cf,
+-			    "%s %d %8phC post login\n",
+-			    __func__, __LINE__, fcport->port_name);
+-			fcport->disc_state = DSC_LOGIN_PEND;
+-			qla2x00_post_async_login_work(vha, fcport, NULL);
 -		}
 -
--		if (ha->eft) {
--			dma_free_coherent(&ha->pdev->dev, eft_size, ha->eft,
--			    ha->eft_dma);
--			ha->eft = NULL;
--			ha->eft_dma = 0;
-+	if (!ha->fw_dump_len || dump_size != ha->fw_dump_len) {
-+		fw_dump = vmalloc(dump_size);
-+		if (!fw_dump) {
-+			ql_log(ql_log_warn, vha, 0x00c4,
-+			    "Unable to allocate (%d KB) for firmware dump.\n",
-+			    dump_size / 1024);
-+		} else {
-+			if (ha->fw_dump)
-+				vfree(ha->fw_dump);
-+			ha->fw_dump = fw_dump;
-+
-+			ha->fw_dump_len = dump_size;
-+			ql_dbg(ql_dbg_init, vha, 0x00c5,
-+			    "Allocated (%d KB) for firmware dump.\n",
-+			    dump_size / 1024);
-+
-+			if (IS_QLA27XX(ha))
-+				return;
-+
-+			ha->fw_dump->signature[0] = 'Q';
-+			ha->fw_dump->signature[1] = 'L';
-+			ha->fw_dump->signature[2] = 'G';
-+			ha->fw_dump->signature[3] = 'C';
-+			ha->fw_dump->version = htonl(1);
-+
-+			ha->fw_dump->fixed_size = htonl(fixed_size);
-+			ha->fw_dump->mem_size = htonl(mem_size);
-+			ha->fw_dump->req_q_size = htonl(req_q_size);
-+			ha->fw_dump->rsp_q_size = htonl(rsp_q_size);
-+
-+			ha->fw_dump->eft_size = htonl(eft_size);
-+			ha->fw_dump->eft_addr_l = htonl(LSD(ha->eft_dma));
-+			ha->fw_dump->eft_addr_h = htonl(MSD(ha->eft_dma));
-+
-+			ha->fw_dump->header_size =
-+				htonl(offsetof(struct qla2xxx_fw_dump, isp));
- 		}
--		return;
- 	}
--	ha->fw_dump_len = dump_size;
--	ql_dbg(ql_dbg_init, vha, 0x00c5,
--	    "Allocated (%d KB) for firmware dump.\n", dump_size / 1024);
--
--	if (IS_QLA27XX(ha))
--		return;
--
--	ha->fw_dump->signature[0] = 'Q';
--	ha->fw_dump->signature[1] = 'L';
--	ha->fw_dump->signature[2] = 'G';
--	ha->fw_dump->signature[3] = 'C';
--	ha->fw_dump->version = htonl(1);
--
--	ha->fw_dump->fixed_size = htonl(fixed_size);
--	ha->fw_dump->mem_size = htonl(mem_size);
--	ha->fw_dump->req_q_size = htonl(req_q_size);
--	ha->fw_dump->rsp_q_size = htonl(rsp_q_size);
--
--	ha->fw_dump->eft_size = htonl(eft_size);
--	ha->fw_dump->eft_addr_l = htonl(LSD(ha->eft_dma));
--	ha->fw_dump->eft_addr_h = htonl(MSD(ha->eft_dma));
--
--	ha->fw_dump->header_size =
--	    htonl(offsetof(struct qla2xxx_fw_dump, isp));
- }
++		ql_dbg(ql_dbg_disc, vha, 0x20cf,
++		    "%s %d %8phC post login\n",
++		    __func__, __LINE__, fcport->port_name);
++		fcport->disc_state = DSC_LOGIN_PEND;
++		qla2x00_post_async_login_work(vha, fcport, NULL);
+ 		break;
  
- static int
-@@ -3154,9 +3162,12 @@ qla2x00_setup_chip(scsi_qla_host_t *vha)
- 				if (rval != QLA_SUCCESS)
- 					goto failed;
+ 	case DSC_LOGIN_FAILED:
+@@ -1029,10 +1034,10 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	case DSC_LOGIN_COMPLETE:
+ 		/* recheck login state */
+ 		ql_dbg(ql_dbg_disc, vha, 0x20d1,
+-		    "%s %d %8phC post gpdb\n",
++		    "%s %d %8phC post adisc\n",
+ 		    __func__, __LINE__, fcport->port_name);
+-
+-		qla24xx_post_gpdb_work(vha, fcport, PDO_FORCE_ADISC);
++		data[0] = data[1] = 0;
++		qla2x00_post_async_adisc_work(vha, fcport, data);
+ 		break;
  
--				if (!fw_major_version && ql2xallocfwdump
--				    && !(IS_P3P_TYPE(ha)))
-+				if (!fw_major_version && !(IS_P3P_TYPE(ha)))
-+					qla2x00_alloc_offload_mem(vha);
-+
-+				if (ql2xallocfwdump && !(IS_P3P_TYPE(ha)))
- 					qla2x00_alloc_fw_dump(vha);
-+
- 			} else {
- 				goto failed;
- 			}
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 733e8dcccf5c..731ca0d8520a 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -526,7 +526,8 @@ qla27xx_fwdt_entry_t268(struct scsi_qla_host *vha,
- {
- 	ql_dbg(ql_dbg_misc, vha, 0xd20c,
- 	    "%s: gethb(%x) [%lx]\n", __func__, ent->t268.buf_type, *len);
--	if (ent->t268.buf_type == T268_BUF_TYPE_EXTD_TRACE) {
-+	switch (ent->t268.buf_type) {
-+	case T268_BUF_TYPE_EXTD_TRACE:
- 		if (vha->hw->eft) {
- 			if (buf) {
- 				ent->t268.buf_size = EFT_SIZE;
-@@ -538,10 +539,43 @@ qla27xx_fwdt_entry_t268(struct scsi_qla_host *vha,
- 			    "%s: missing eft\n", __func__);
- 			qla27xx_skip_entry(ent, buf);
- 		}
--	} else {
--		ql_dbg(ql_dbg_misc, vha, 0xd02b,
+ 	default:
+@@ -1264,6 +1269,9 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha, struct event_arg *ea)
+ 	case FCME_DELETE_DONE:
+ 		qla24xx_handle_delete_done_event(vha, ea);
+ 		break;
++	case FCME_ADISC_DONE:
++		qla24xx_handle_adisc_event(vha, ea);
 +		break;
-+	case T268_BUF_TYPE_EXCH_BUFOFF:
-+		if (vha->hw->exchoffld_buf) {
-+			if (buf) {
-+				ent->t268.buf_size = vha->hw->exchoffld_size;
-+				ent->t268.start_addr =
-+					vha->hw->exchoffld_buf_dma;
-+			}
-+			qla27xx_insertbuf(vha->hw->exchoffld_buf,
-+			    vha->hw->exchoffld_size, buf, len);
-+		} else {
-+			ql_dbg(ql_dbg_misc, vha, 0xd028,
-+			    "%s: missing exch offld\n", __func__);
-+			qla27xx_skip_entry(ent, buf);
-+		}
-+		break;
-+	case T268_BUF_TYPE_EXTD_LOGIN:
-+		if (vha->hw->exlogin_buf) {
-+			if (buf) {
-+				ent->t268.buf_size = vha->hw->exlogin_size;
-+				ent->t268.start_addr =
-+					vha->hw->exlogin_buf_dma;
-+			}
-+			qla27xx_insertbuf(vha->hw->exlogin_buf,
-+			    vha->hw->exlogin_size, buf, len);
-+		} else {
-+			ql_dbg(ql_dbg_misc, vha, 0xd028,
-+			    "%s: missing ext login\n", __func__);
-+			qla27xx_skip_entry(ent, buf);
-+		}
-+		break;
-+
-+	default:
-+		ql_dbg(ql_dbg_async, vha, 0xd02b,
- 		    "%s: unknown buffer %x\n", __func__, ent->t268.buf_type);
- 		qla27xx_skip_entry(ent, buf);
-+		break;
- 	}
- 
- 	return false;
+ 	default:
+ 		BUG_ON(1);
+ 		break;
 -- 
 2.12.0
