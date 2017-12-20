@@ -1,78 +1,43 @@
 From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 01/43] qla2xxx: Fix stale memory access for name pointer
-Date: Wed, 20 Dec 2017 20:37:26 +0000
-Message-ID: <FD878B9C-451A-4D55-8488-0A14CBD20598@cavium.com>
+Subject: Re: [PATCH 02/43] qla2xxx: Fix NULL pointer access for fcport
+ structure
+Date: Wed, 20 Dec 2017 20:38:13 +0000
+Message-ID: <FA09399C-53E4-4042-B4CC-303FAE980035@cavium.com>
 References: <20171220065644.21511-1-himanshu.madhani@cavium.com>
- <20171220065644.21511-2-himanshu.madhani@cavium.com>
- <1513787147.2603.10.camel@wdc.com>
+ <20171220065644.21511-3-himanshu.madhani@cavium.com>
+ <1513787192.2603.12.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0079.outbound.protection.outlook.com ([104.47.38.79]:23808
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0086.outbound.protection.outlook.com ([104.47.41.86]:33452
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754428AbdLTUh3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Dec 2017 15:37:29 -0500
-In-Reply-To: <1513787147.2603.10.camel@wdc.com>
+        id S1755557AbdLTUiQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Dec 2017 15:38:16 -0500
+In-Reply-To: <1513787192.2603.12.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <AC5B8FFC9C9A6F43A1107D1739240332@namprd07.prod.outlook.com>
+Content-ID: <BD3DEFD58F18304A987FFCBDA88E3095@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@wdc.com>
 Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-SGkgQmFydCwgDQoNCj4gT24gRGVjIDIwLCAyMDE3LCBhdCAxMDoyNSBBTSwgQmFydCBWYW4gQXNz
-Y2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPiB3cm90ZToNCj4gDQo+IE9uIFR1ZSwgMjAxNy0x
-Mi0xOSBhdCAyMjo1NiAtMDgwMCwgSGltYW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+IE5hbWUgcG9p
-bnRlciBmb3Igc3AgZGVzY3JpYmluZyBlYWNoIGNvbW1hbmQgaXMgYXNzaWduZWQgd2l0aCBzdGFj
-aw0KPj4gZnJhbWUncyBtZW1vcnkuIFRoZSBzdGFjayBmcmFtZSBjb3VsZCBldmVudHVhbGx5IGJl
-IHJlLXVzZSwgd2hlcmUNCj4+IG5hbWUgcG9pbnRlciBhY2Nlc3MgY2FuIGdldCBnZXQgZ2FyYmFn
-ZS4gVGhpcyBwYXRjaCBkZXNpZ25hdGVzDQo+PiBzdGF0aWMgbWVtb3J5IGZvciBuYW1lIHBvaW50
-ZXIgdG8gZml4IHRoaXMgcHJvYmxlbS4NCj4gDQo+IFdoaWNoIHN0YWNrIG1lbW9yeSBhY2Nlc3Nl
-cyBoYXZlIGJlZW4gcmVtb3ZlZCBieSB0aGlzIHBhdGNoPyBTb3JyeSBidXQgSQ0KPiBoYXZlbid0
-IGZvdW5kIGFueSBzdGFjayBtZW1vcnkgYWNjZXNzIGNoYW5nZXMgaW4gdGhpcyBwYXRjaC4gQWRk
-aXRpb25hbGx5LA0KPiBJIGhhdmVuJ3QgZm91bmQgYW55IGNoYW5nZXMgaW4gdGhpcyBwYXRjaCB0
-aGF0IGxvb2sgdXNlZnVsIHRvIG1lLiBBcmUgeW91DQo+IGF3YXJlIHRoYXQgZm9yIHN0YXRlbWVu
-dHMgbGlrZSAic3RyID0gInVua25vd24iIiB0aGUgY29tcGlsZXIgYWxsb2NhdGVzDQo+IHN0YXRp
-YyBtZW1vcnkgZm9yIHRoZSBzdHJpbmcgInVua25vd27igJ0/DQo+IA0KDQpTdXJlLiBUaGUgaW50
-ZW50aW9uIG9mIHBhdGNoIHdhcyB0byBjbGVhbnVwIGFuZCBtYWtlIHN1cmUgdGhlcmUgaXMgbWVt
-b3J5IGFsbG9jYXRlZA0Kb24gdGhlIHN0YWNrIGZvciBuYW1lLg0KIA0KPj4gK3N0cnVjdCBzcF9u
-YW1lIHsNCj4+ICsJdWludDE2X3QgY21kOw0KPj4gKwljb25zdCBjaGFyICpzdHI7DQo+PiArfTsN
-Cj4+ICsNCj4gDQo+IFsgLi4uIF0NCj4gDQo+PiArc3RydWN0IHNwX25hbWUgc3Bfc3RyW10gPSB7
-DQo+PiArCXsgU1BDTl9VTktOT1dOLCAidW5rbm93biIgfSwNCj4+ICsJeyBTUENOX0dJRFBOLCAi
-Z2lkcG4iIH0sDQo+PiArCXsgU1BDTl9HUFNDLCAiZ3BzYyIgfSwNCj4+ICsJeyBTUENOX0dQTklE
-LCAiZ3BuaWQiIH0sDQo+PiArCXsgU1BDTl9HUE5GVCwgImdwbmZ0IiB9LA0KPj4gKwl7IFNQQ05f
-R05OSUQsICJnbm5pZCIgfSwNCj4+ICsJeyBTUENOX0dGUE5JRCwgImdmcG5pZCIgfSwNCj4+ICsJ
-eyBTUENOX0dGRklELCAiZ2ZmaWQiIH0sDQo+PiArCXsgU1BDTl9MT0dJTiwgImxvZ2luIiB9LA0K
-Pj4gKwl7IFNQQ05fTE9HT1VULCAibG9nb3V0IiB9LA0KPj4gKwl7IFNQQ05fQURJU0MsICJhZGlz
-YyIgfSwNCj4+ICsJeyBTUENOX0dOTElTVCwgImdubGlzdCIgfSwNCj4+ICsJeyBTUENOX0dQREIs
-ICJncGRiIiB9LA0KPj4gKwl7IFNQQ05fVE1GLCAidG1mIiB9LA0KPj4gKwl7IFNQQ05fQUJPUlQs
-ICJhYm9ydCIgfSwNCj4+ICsJeyBTUENOX05BQ0ssICJuYWNrIiB9LA0KPj4gKwl7IFNQQ05fQlNH
-X1JQVCwgImJzZ19lbHNfcnB0IiB9LA0KPj4gKwl7IFNQQ05fQlNHX0hTVCwgImJzZ19lbHNfaHN0
-IiB9LA0KPj4gKwl7IFNQQ05fQlNHX0NULCAiYnNnX2N0IiB9LA0KPj4gKwl7IFNQQ05fQlNHX0ZY
-X01HTVQsICJic2dfZnhfbWdtdCIgfSwNCj4+ICsJeyBTUENOX0VMU19EQ01ELCAiRUxTX0RDTUQi
-IH0sDQo+PiArCXsgU1BDTl9GWERJU0MsICJmeGRpc2MiIH0sDQo+PiArCXsgU1BDTl9QUkxJLCAi
-cHJsaSIgfSwNCj4+ICsJeyBTUENOX05WTUVfTFMsICJudm1lX2xzIiB9LA0KPj4gKwl7IFNQQ05f
-TlZNRV9DTUQsICJudm1lX2NtZCIgfSwNCj4+ICt9Ow0KPiANCj4gSWYgeW91IHdhbnQgdG8ga2Vl
-cCB0aGUgc3Bfc3RyW10gYXJyYXkgYWZ0ZXIgd2hhdCBJIHdyb3RlIGFib3ZlLCBwbGVhc2UNCj4g
-cmVtb3ZlIHRoZSBzcF9uYW1lIHN0cnVjdHVyZSBhbmQgY2hhbmdlIHNwX3N0cltdIGludG8gc29t
-ZXRoaW5nIGxpa2UgdGhlDQo+IGZvbGxvd2luZzoNCj4gDQo+IHN0YXRpYyBjb25zdCBjaGFyICpz
-cF9zdHJbXSA9IHsNCj4gCVtTUENOX1VOS05PV05dID0gInVua25vd24iLA0KPiAJLi4uDQo+IH07
-DQo+IA0KDQpJIHdpbGwgZHJvcCB0aGlzIHBhdGNoIGZyb20gdGhlIGN1cnJlbnQgc3VibWlzc2lv
-bi4NCg0KPj4gLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5jDQo+PiArKysgYi9k
-cml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMNCj4+IEBAIC0xNCw2ICsxNCw3IEBAIHN0YXRp
-YyBzdHJ1Y3QgbWJfY21kX25hbWUgew0KPj4gCXVpbnQxNl90IGNtZDsNCj4+IAljb25zdCBjaGFy
-ICpzdHI7DQo+PiB9IG1iX3N0cltdID0gew0KPj4gKwl7MCwgInVua25vd24gbWIifSwNCj4+IAl7
-TUJDX0dFVF9QT1JUX0RBVEFCQVNFLAkJIkdQREIifSwNCj4+IAl7TUJDX0dFVF9JRF9MSVNULAkJ
-IkdJRExpc3QifSwNCj4+IAl7TUJDX0dFVF9MSU5LX1BSSVZfU1RBVFMsCSJTdGF0cyJ9LA0KPj4g
-QEAgLTI0LDEyICsyNSwxMiBAQCBzdGF0aWMgY29uc3QgY2hhciAqbWJfdG9fc3RyKHVpbnQxNl90
-IGNtZCkNCj4+IAlpbnQgaTsNCj4+IAlzdHJ1Y3QgbWJfY21kX25hbWUgKmU7DQo+PiANCj4+IC0J
-Zm9yIChpID0gMDsgaSA8IEFSUkFZX1NJWkUobWJfc3RyKTsgaSsrKSB7DQo+PiArCWZvciAoaSA9
-IDE7IGkgPCBBUlJBWV9TSVpFKG1iX3N0cik7IGkrKykgew0KPj4gCQllID0gbWJfc3RyICsgaTsN
-Cj4+IAkJaWYgKGNtZCA9PSBlLT5jbWQpDQo+PiAJCQlyZXR1cm4gZS0+c3RyOw0KPj4gCX0NCj4+
-IC0JcmV0dXJuICJ1bmtub3duIjsNCj4+ICsJcmV0dXJuIG1iX3N0clswXS5zdHI7DQo+PiB9DQo+
-IA0KPiBTb3JyeSBidXQgdGhlIGFib3ZlIGNoYW5nZSBkb2VzIG5vdCBsb29rIHVzZWZ1bCB0byBt
-ZSBpbiBhbnkgd2F5LiBJcyB0aGlzDQo+IGp1c3QgY29kZSBjaHVybj8NCj4gDQoNClN1cmUuIHdp
-bGwgZHJvcCB0aGlzIGNoYW5nZQ0KDQo+IFRoYW5rcywNCj4gDQo+IEJhcnQuDQoNClRoYW5rcywN
-Ci0gSGltYW5zaHUNCg0K
+
+> On Dec 20, 2017, at 10:26 AM, Bart Van Assche <bart.vanassche@wdc.com> wr=
+ote:
+>=20
+> On Tue, 2017-12-19 at 22:56 -0800, Himanshu Madhani wrote:
+>> From: Quinn Tran <quinn.tran@cavium.com>
+>>=20
+>> when preocessing iocb in a timeout case, driver was trying to log messag=
+es
+>       ^^^^^^^^^^^
+>       processing?
+>=20
+> Bart.
+
+Will fix in v2 of the series
+
+Thanks,
+- Himanshu
