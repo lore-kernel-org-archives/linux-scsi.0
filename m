@@ -1,131 +1,31 @@
 From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [PATCH 1/2] scsi: ufs: introduce static sysfs entries
-Date: Wed, 20 Dec 2017 11:46:25 -0800
-Message-ID: <20171220194625.GA50788@jaegeuk-macbookpro.roam.corp.google.com>
-References: <20171219200254.23120-1-jaegeuk@kernel.org>
- <20171220080221.GB22932@kroah.com>
+Subject: Re: [PATCH 1/2 v3] scsi: ufs: introduce static sysfs entries
+Date: Wed, 20 Dec 2017 12:16:45 -0800
+Message-ID: <20171220201645.GA52542@jaegeuk-macbookpro.roam.corp.google.com>
+References: <20171220191631.50329-1-jaegeuk@kernel.org>
+ <1513797648.2603.33.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59126 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756377AbdLTTq1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Dec 2017 14:46:27 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20171220080221.GB22932@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1513797648.2603.33.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jaegeuk@google.com" <jaegeuk@google.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@google.com>
 
-On 12/20, Greg KH wrote:
-> On Tue, Dec 19, 2017 at 12:02:53PM -0800, Jaegeuk Kim wrote:
+Hi Bart,
+
+On 12/20, Bart Van Assche wrote:
+> On Wed, 2017-12-20 at 11:16 -0800, Jaegeuk Kim wrote:
 > > From: Jaegeuk Kim <jaegeuk@google.com>
-> > 
-> > This patch introduces attribute group to show existing sysfs entries.
-> > 
-> > Cc: Greg KH <gregkh@linuxfoundation.org>
-> > Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c | 48 +++++++++++++++++++----------------------------
-> >  drivers/scsi/ufs/ufshcd.h |  2 --
-> >  2 files changed, 19 insertions(+), 31 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 011c3369082c..12ff7daebb00 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -7605,7 +7605,7 @@ static inline ssize_t ufshcd_pm_lvl_store(struct device *dev,
-> >  	return count;
-> >  }
-> >  
-> > -static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
-> > +static ssize_t rpm_lvl_show(struct device *dev,
-> >  		struct device_attribute *attr, char *buf)
-> >  {
-> >  	struct ufs_hba *hba = dev_get_drvdata(dev);
-> > @@ -7634,24 +7634,13 @@ static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
-> >  	return curr_len;
-> >  }
-> >  
-> > -static ssize_t ufshcd_rpm_lvl_store(struct device *dev,
-> > +static ssize_t rpm_lvl_store(struct device *dev,
-> >  		struct device_attribute *attr, const char *buf, size_t count)
-> >  {
-> >  	return ufshcd_pm_lvl_store(dev, attr, buf, count, true);
-> >  }
-> >  
-> > -static void ufshcd_add_rpm_lvl_sysfs_nodes(struct ufs_hba *hba)
-> > -{
-> > -	hba->rpm_lvl_attr.show = ufshcd_rpm_lvl_show;
-> > -	hba->rpm_lvl_attr.store = ufshcd_rpm_lvl_store;
-> > -	sysfs_attr_init(&hba->rpm_lvl_attr.attr);
-> > -	hba->rpm_lvl_attr.attr.name = "rpm_lvl";
-> > -	hba->rpm_lvl_attr.attr.mode = 0644;
-> > -	if (device_create_file(hba->dev, &hba->rpm_lvl_attr))
-> > -		dev_err(hba->dev, "Failed to create sysfs for rpm_lvl\n");
-> > -}
-> > -
-> > -static ssize_t ufshcd_spm_lvl_show(struct device *dev,
-> > +static ssize_t spm_lvl_show(struct device *dev,
-> >  		struct device_attribute *attr, char *buf)
-> >  {
-> >  	struct ufs_hba *hba = dev_get_drvdata(dev);
-> > @@ -7680,33 +7669,34 @@ static ssize_t ufshcd_spm_lvl_show(struct device *dev,
-> >  	return curr_len;
-> >  }
-> >  
-> > -static ssize_t ufshcd_spm_lvl_store(struct device *dev,
-> > +static ssize_t spm_lvl_store(struct device *dev,
-> >  		struct device_attribute *attr, const char *buf, size_t count)
-> >  {
-> >  	return ufshcd_pm_lvl_store(dev, attr, buf, count, false);
-> >  }
-> >  
-> > -static void ufshcd_add_spm_lvl_sysfs_nodes(struct ufs_hba *hba)
-> > -{
-> > -	hba->spm_lvl_attr.show = ufshcd_spm_lvl_show;
-> > -	hba->spm_lvl_attr.store = ufshcd_spm_lvl_store;
-> > -	sysfs_attr_init(&hba->spm_lvl_attr.attr);
-> > -	hba->spm_lvl_attr.attr.name = "spm_lvl";
-> > -	hba->spm_lvl_attr.attr.mode = 0644;
-> > -	if (device_create_file(hba->dev, &hba->spm_lvl_attr))
-> > -		dev_err(hba->dev, "Failed to create sysfs for spm_lvl\n");
-> > -}
-> > +static DEVICE_ATTR_RW(rpm_lvl);
-> > +static DEVICE_ATTR_RW(spm_lvl);
-> > +
-> > +static struct attribute *ufshcd_attrs[] = {
-> > +	&dev_attr_rpm_lvl.attr,
-> > +	&dev_attr_spm_lvl.attr,
-> > +	NULL
-> > +};
-> > +
-> > +static const struct attribute_group ufshcd_attr_group = {
-> > +	.attrs = ufshcd_attrs,
-> > +};
 > 
-> ATTRIBUTE_GROUPS()?
+> Hello Jaegeuk,
 > 
-> >  static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba)
-> >  {
-> > -	ufshcd_add_rpm_lvl_sysfs_nodes(hba);
-> > -	ufshcd_add_spm_lvl_sysfs_nodes(hba);
-> > +	if (sysfs_create_group(&hba->dev->kobj, &ufshcd_attr_group))
-> > +		dev_err(hba->dev, "Failed to create sysfs group\n");
-> 
-> That will turn this into sysfs_create_groups()
-> 
-> But really, you should be able to do this all "at once"  And really, it
-> should be a "default attribute group" that the driver core adds to the
-> device, but that's outside the scope of this patchset.
-> 
-> So for now, this is just fine, the attribute groups work is for an
-> add-on patch.  Thanks for working to get this upstream, I'm tired of
-> seeing all of the different variants of this driver floating around
-> out-of-tree.
+> For future patch series submissions, please include a cover letter that explains
+> the purpose of the patch series and please also document the changes between the
+> different versions of the patch series in the cover letter.
 
-Agreed, it's really painful to sync it across many kernels. :(
-Anyway, I've changed to use ATTRIBUTE_GROUPS() in v3 as well.
+Yup, I'll be aware of it. Thank you for the advice.
 
 Thanks,
