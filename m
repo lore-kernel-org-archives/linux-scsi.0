@@ -1,88 +1,122 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 42/43] qla2xxx: Serialize session free in  qlt_free_session_done
-Date: Tue, 19 Dec 2017 22:56:43 -0800
-Message-ID: <20171220065644.21511-43-himanshu.madhani@cavium.com>
-References: <20171220065644.21511-1-himanshu.madhani@cavium.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/2] scsi: ufs: introduce static sysfs entries
+Date: Wed, 20 Dec 2017 09:02:21 +0100
+Message-ID: <20171220080221.GB22932@kroah.com>
+References: <20171219200254.23120-1-jaegeuk@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0057.outbound.protection.outlook.com ([104.47.32.57]:8134
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932477AbdLTG5x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Dec 2017 01:57:53 -0500
-In-Reply-To: <20171220065644.21511-1-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171219200254.23120-1-jaegeuk@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@google.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+On Tue, Dec 19, 2017 at 12:02:53PM -0800, Jaegeuk Kim wrote:
+> From: Jaegeuk Kim <jaegeuk@google.com>
+> 
+> This patch introduces attribute group to show existing sysfs entries.
+> 
+> Cc: Greg KH <gregkh@linuxfoundation.org>
+> Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 48 +++++++++++++++++++----------------------------
+>  drivers/scsi/ufs/ufshcd.h |  2 --
+>  2 files changed, 19 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 011c3369082c..12ff7daebb00 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7605,7 +7605,7 @@ static inline ssize_t ufshcd_pm_lvl_store(struct device *dev,
+>  	return count;
+>  }
+>  
+> -static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
+> +static ssize_t rpm_lvl_show(struct device *dev,
+>  		struct device_attribute *attr, char *buf)
+>  {
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+> @@ -7634,24 +7634,13 @@ static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
+>  	return curr_len;
+>  }
+>  
+> -static ssize_t ufshcd_rpm_lvl_store(struct device *dev,
+> +static ssize_t rpm_lvl_store(struct device *dev,
+>  		struct device_attribute *attr, const char *buf, size_t count)
+>  {
+>  	return ufshcd_pm_lvl_store(dev, attr, buf, count, true);
+>  }
+>  
+> -static void ufshcd_add_rpm_lvl_sysfs_nodes(struct ufs_hba *hba)
+> -{
+> -	hba->rpm_lvl_attr.show = ufshcd_rpm_lvl_show;
+> -	hba->rpm_lvl_attr.store = ufshcd_rpm_lvl_store;
+> -	sysfs_attr_init(&hba->rpm_lvl_attr.attr);
+> -	hba->rpm_lvl_attr.attr.name = "rpm_lvl";
+> -	hba->rpm_lvl_attr.attr.mode = 0644;
+> -	if (device_create_file(hba->dev, &hba->rpm_lvl_attr))
+> -		dev_err(hba->dev, "Failed to create sysfs for rpm_lvl\n");
+> -}
+> -
+> -static ssize_t ufshcd_spm_lvl_show(struct device *dev,
+> +static ssize_t spm_lvl_show(struct device *dev,
+>  		struct device_attribute *attr, char *buf)
+>  {
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+> @@ -7680,33 +7669,34 @@ static ssize_t ufshcd_spm_lvl_show(struct device *dev,
+>  	return curr_len;
+>  }
+>  
+> -static ssize_t ufshcd_spm_lvl_store(struct device *dev,
+> +static ssize_t spm_lvl_store(struct device *dev,
+>  		struct device_attribute *attr, const char *buf, size_t count)
+>  {
+>  	return ufshcd_pm_lvl_store(dev, attr, buf, count, false);
+>  }
+>  
+> -static void ufshcd_add_spm_lvl_sysfs_nodes(struct ufs_hba *hba)
+> -{
+> -	hba->spm_lvl_attr.show = ufshcd_spm_lvl_show;
+> -	hba->spm_lvl_attr.store = ufshcd_spm_lvl_store;
+> -	sysfs_attr_init(&hba->spm_lvl_attr.attr);
+> -	hba->spm_lvl_attr.attr.name = "spm_lvl";
+> -	hba->spm_lvl_attr.attr.mode = 0644;
+> -	if (device_create_file(hba->dev, &hba->spm_lvl_attr))
+> -		dev_err(hba->dev, "Failed to create sysfs for spm_lvl\n");
+> -}
+> +static DEVICE_ATTR_RW(rpm_lvl);
+> +static DEVICE_ATTR_RW(spm_lvl);
+> +
+> +static struct attribute *ufshcd_attrs[] = {
+> +	&dev_attr_rpm_lvl.attr,
+> +	&dev_attr_spm_lvl.attr,
+> +	NULL
+> +};
+> +
+> +static const struct attribute_group ufshcd_attr_group = {
+> +	.attrs = ufshcd_attrs,
+> +};
 
-Add free_pending flag to serialize queueing of
-free_work element onto the work queue
+ATTRIBUTE_GROUPS()?
 
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_def.h    |  1 +
- drivers/scsi/qla2xxx/qla_target.c | 13 +++++++++++++
- 2 files changed, 14 insertions(+)
+>  static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba)
+>  {
+> -	ufshcd_add_rpm_lvl_sysfs_nodes(hba);
+> -	ufshcd_add_spm_lvl_sysfs_nodes(hba);
+> +	if (sysfs_create_group(&hba->dev->kobj, &ufshcd_attr_group))
+> +		dev_err(hba->dev, "Failed to create sysfs group\n");
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 0c31c8ad0c1e..3feb843ef333 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2384,6 +2384,7 @@ typedef struct fc_port {
- 
- 	unsigned int conf_compl_supported:1;
- 	unsigned int deleted:2;
-+	unsigned int free_pending:1;
- 	unsigned int local:1;
- 	unsigned int logout_on_delete:1;
- 	unsigned int logo_ack_needed:1;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 814dfb1036de..225b88c47505 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1105,6 +1105,7 @@ static void qlt_free_session_done(struct work_struct *work)
- 			sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN] = NULL;
- 		}
- 	}
-+
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf001,
-@@ -1118,6 +1119,9 @@ static void qlt_free_session_done(struct work_struct *work)
- 		wake_up_all(&vha->fcport_waitQ);
- 
- 	base_vha = pci_get_drvdata(ha->pdev);
-+
-+	sess->free_pending = 0;
-+
- 	if (test_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags))
- 		return;
- 
-@@ -1140,11 +1144,20 @@ static void qlt_free_session_done(struct work_struct *work)
- void qlt_unreg_sess(struct fc_port *sess)
- {
- 	struct scsi_qla_host *vha = sess->vha;
-+	unsigned long flags;
- 
- 	ql_dbg(ql_dbg_disc, sess->vha, 0x210a,
- 	    "%s sess %p for deletion %8phC\n",
- 	    __func__, sess, sess->port_name);
- 
-+	spin_lock_irqsave(&sess->vha->work_lock, flags);
-+	if (sess->free_pending) {
-+		spin_unlock_irqrestore(&sess->vha->work_lock, flags);
-+		return;
-+	}
-+	sess->free_pending = 1;
-+	spin_unlock_irqrestore(&sess->vha->work_lock, flags);
-+
- 	if (sess->se_sess)
- 		vha->hw->tgt.tgt_ops->clear_nacl_from_fcport_map(sess);
- 
--- 
-2.12.0
+That will turn this into sysfs_create_groups()
+
+But really, you should be able to do this all "at once"  And really, it
+should be a "default attribute group" that the driver core adds to the
+device, but that's outside the scope of this patchset.
+
+So for now, this is just fine, the attribute groups work is for an
+add-on patch.  Thanks for working to get this upstream, I'm tired of
+seeing all of the different variants of this driver floating around
+out-of-tree.
+
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
