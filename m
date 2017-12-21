@@ -1,133 +1,91 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 13/29] scsi: aacraid: Untangle targets setup from report phy luns
-Date: Thu, 21 Dec 2017 09:34:04 -0800
-Message-ID: <20171221173420.8213-14-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 18/29] scsi: aacraid: Merge func to get container information
+Date: Thu, 21 Dec 2017 09:34:09 -0800
+Message-ID: <20171221173420.8213-19-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0064.outbound.protection.outlook.com ([104.47.33.64]:1286
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0073.outbound.protection.outlook.com ([104.47.40.73]:50048
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754007AbdLURem (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 12:34:42 -0500
+        id S1754187AbdLURer (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Dec 2017 12:34:47 -0500
 In-Reply-To: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, aacraid@microsemi.com, tom.white@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>
 
-Remove function call to process targets from the report phy luns function
-and make it a function in its own right. This will help understand the
-flow of the code.
+Merge aac_get_containers to setup target function, so that information
+about all the present devices can be retrieved in one shot.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aachba.c  | 44 +++++++++++++++++++++++++++++++-----------
- drivers/scsi/aacraid/aacraid.h |  1 +
- 2 files changed, 34 insertions(+), 11 deletions(-)
+ drivers/scsi/aacraid/aachba.c  |  4 ++++
+ drivers/scsi/aacraid/commsup.c | 34 +++++++++++++++-------------------
+ 2 files changed, 19 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 90377b1..cf02910 100644
+index 01cb825..7f6036c 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -1802,14 +1802,16 @@ static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
-  *
-  *	Update our hba map with the information gathered from the FW
-  */
--static void aac_set_safw_attr_all_targets(struct aac_dev *dev,
--		struct aac_ciss_phys_luns_resp *phys_luns, int rescan)
-+static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
+@@ -2032,6 +2032,10 @@ static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
  {
- 	/* ok and extended reporting */
- 	u32 lun_count, nexus;
- 	u32 i, bus, target;
- 	u8 expose_flag, attribs;
- 	u8 devtype;
-+	struct aac_ciss_phys_luns_resp *phys_luns;
-+
-+	phys_luns = dev->safw_phys_luns;
+ 	int rcode = 0;
  
- 	lun_count = ((phys_luns->list_length[0] << 24)
- 			+ (phys_luns->list_length[1] << 16)
-@@ -1855,6 +1857,12 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev,
- 	}
- }
- 
-+static inline void aac_free_safw_ciss_luns(struct aac_dev *dev)
-+{
-+	kfree(dev->safw_phys_luns);
-+	dev->safw_phys_luns = NULL;
-+}
-+
- /**
-  *	aac_get_safw_ciss_luns()	Process topology change
-  *	@dev:		aac_dev structure
-@@ -1875,7 +1883,7 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
- 		(AAC_MAX_TARGETS - 1) * sizeof(struct _ciss_lun);
- 	phys_luns = kmalloc(datasize, GFP_KERNEL);
- 	if (phys_luns == NULL)
--		goto err_out;
-+		goto out;
- 
- 	memset(&srbu, 0, sizeof(struct aac_srb_unit));
- 
-@@ -1888,22 +1896,36 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
- 
- 	rcode = aac_send_safw_bmic_cmd(dev, &srbu, phys_luns, datasize);
- 	if (unlikely(rcode < 0))
--		goto err_out;
-+		goto mem_free_all;
- 
--	/* analyse data */
--	if (rcode >= 0 && phys_luns->resp_flag == 2) {
--		/* ok and extended reporting */
--		aac_set_safw_attr_all_targets(dev, phys_luns, rescan);
-+	if (phys_luns->resp_flag != 2) {
-+		rcode = -ENOMSG;
-+		goto mem_free_all;
- 	}
- 
--	kfree(phys_luns);
--err_out:
-+	dev->safw_phys_luns = phys_luns;
-+
-+out:
- 	return rcode;
-+mem_free_all:
-+	kfree(phys_luns);
-+	goto out;
-+
- }
- 
- static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
- {
--	return aac_get_safw_ciss_luns(dev, rescan);
-+	int rcode = 0;
-+
-+	rcode = aac_get_safw_ciss_luns(dev, rescan);
++	rcode = aac_get_containers(dev);
 +	if (unlikely(rcode < 0))
 +		goto out;
 +
-+	aac_set_safw_attr_all_targets(dev, rescan);
-+
-+	aac_free_safw_ciss_luns(dev);
-+out:
-+	return rcode;
- }
+ 	rcode = aac_get_safw_ciss_luns(dev, rescan);
+ 	if (unlikely(rcode < 0))
+ 		goto out;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index f3077b3..9625eb0 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1949,26 +1949,22 @@ static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
  
- int aac_setup_safw_adapter(struct aac_dev *dev, int rescan)
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 5690767..19af4d9 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1671,6 +1671,7 @@ struct aac_dev
- 	struct msix_entry	msixentry[AAC_MAX_MSIX];
- 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
- 	struct aac_hba_map_info	hba_map[AAC_MAX_BUSES][AAC_MAX_TARGETS];
-+	struct aac_ciss_phys_luns_resp *safw_phys_luns;
- 	u8			adapter_shutdown;
- 	u32			handle_pci_error;
- };
+ 		aac_resolve_luns(dev);
+ 
+-		if (events == SA_AIF_LDEV_CHANGE ||
+-		    events == SA_AIF_BPCFG_CHANGE) {
+-			aac_get_containers(dev);
+-			for (container = 0; container <
++		for (container = 0; container <
+ 			dev->maximum_num_containers; ++container) {
+-				sdev = scsi_device_lookup(dev->scsi_host_ptr,
+-						CONTAINER_CHANNEL,
+-						container, 0);
+-				if (dev->fsa_dev[container].valid && !sdev) {
+-					scsi_add_device(dev->scsi_host_ptr,
+-						CONTAINER_CHANNEL,
+-						container, 0);
+-				} else if (!dev->fsa_dev[container].valid &&
+-					sdev) {
+-					scsi_remove_device(sdev);
+-					scsi_device_put(sdev);
+-				} else if (sdev) {
+-					scsi_rescan_device(&sdev->sdev_gendev);
+-					scsi_device_put(sdev);
+-				}
++			sdev = scsi_device_lookup(dev->scsi_host_ptr,
++					CONTAINER_CHANNEL,
++					container, 0);
++			if (dev->fsa_dev[container].valid && !sdev) {
++				scsi_add_device(dev->scsi_host_ptr,
++					CONTAINER_CHANNEL,
++					container, 0);
++			} else if (!dev->fsa_dev[container].valid &&
++				sdev) {
++				scsi_remove_device(sdev);
++				scsi_device_put(sdev);
++			} else if (sdev) {
++				scsi_rescan_device(&sdev->sdev_gendev);
++				scsi_device_put(sdev);
+ 			}
+ 		}
+ 		break;
 -- 
 2.9.4
