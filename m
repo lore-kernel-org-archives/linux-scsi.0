@@ -1,77 +1,74 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 22/29] scsi: aacraid: Merge adapter setup with resolve luns
-Date: Thu, 21 Dec 2017 09:34:13 -0800
-Message-ID: <20171221173420.8213-23-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 26/29] scsi: aacraid: Fix hang while scanning in eh recovery
+Date: Thu, 21 Dec 2017 09:34:17 -0800
+Message-ID: <20171221173420.8213-27-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0043.outbound.protection.outlook.com ([104.47.36.43]:60032
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0049.outbound.protection.outlook.com ([104.47.42.49]:27386
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754621AbdLURew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 12:34:52 -0500
+        id S1753761AbdLURey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Dec 2017 12:34:54 -0500
 In-Reply-To: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, aacraid@microsemi.com, tom.white@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>
 
-The device hotplug events are processed only after retrieving the updated
-lun information from the fw. Does not make sense to keep them separate.
+Add back the ability to scan for hotplug changes while eh was in progress.
 
-Merge both the hotplug handling and safw adapter setup code into single
-function.
+Schedule a rescan for a later time in the eh recovery code and wait for
+eh to complete in the rescan worker.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/commsup.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/scsi/aacraid/aacraid.h | 4 ++++
+ drivers/scsi/aacraid/commsup.c | 9 +++++++++
+ 2 files changed, 13 insertions(+)
 
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 70e03ed..9b678f7 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -41,6 +41,7 @@
+ 
+ #include <linux/interrupt.h>
+ #include <linux/pci.h>
++#include <scsi/scsi_host.h>
+ 
+ /*------------------------------------------------------------------------------
+  *              D E F I N E S
+@@ -2655,6 +2656,9 @@ static inline void aac_safw_rescan_worker(struct work_struct *work)
+ 	struct aac_dev *dev = container_of(to_delayed_work(work),
+ 		struct aac_dev, safw_rescan_worker);
+ 
++	wait_event(dev->scsi_host_ptr->host_wait,
++		!scsi_host_in_recovery(dev->scsi_host_ptr));
++
+ 	aac_scan_host(dev, AAC_RESCAN);
+ }
+ 
 diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 2cd880f..f781076 100644
+index 48b5234..adebf2e 100644
 --- a/drivers/scsi/aacraid/commsup.c
 +++ b/drivers/scsi/aacraid/commsup.c
-@@ -1938,11 +1938,18 @@ static int aac_is_safw_device_exposed(struct aac_dev *dev, int bus, int target)
- 	return is_exposed;
- }
+@@ -1671,6 +1671,15 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	aac->in_reset = 0;
+ 	scsi_unblock_requests(host);
  
--static void aac_resolve_luns(struct aac_dev *dev)
-+static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
- {
- 	int i;
--	int bus, target;
-+	int bus;
-+	int target;
- 	int is_exposed = 0;
-+	int rcode = 0;
-+
-+	rcode = aac_setup_safw_adapter(dev, rescan);
-+	if (unlikely(rcode < 0)) {
-+		goto out;
++	/*
++	 * Issue bus rescan to catch any configuration that might have
++	 * occurred
++	 */
++	if (!retval) {
++		dev_info(&aac->pdev->dev, "Scheduling bus rescan\n");
++		aac_schedule_safw_scan_worker(aac);
 +	}
- 
- 	for (i = 0; i < AAC_BUS_TARGET_LOOP; i++) {
- 
-@@ -1957,6 +1964,8 @@ static void aac_resolve_luns(struct aac_dev *dev)
- 								is_exposed)
- 			aac_remove_safw_device(dev, bus, target);
++
+ 	if (jafo) {
+ 		spin_lock_irq(host->host_lock);
  	}
-+out:
-+	return rcode;
- }
- 
- /**
-@@ -1992,9 +2001,7 @@ static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
- 	case SA_AIF_LDEV_CHANGE:
- 	case SA_AIF_BPCFG_CHANGE:
- 
--		aac_setup_safw_adapter(dev, AAC_RESCAN);
--
--		aac_resolve_luns(dev);
-+		aac_update_safw_host_devices(dev, AAC_RESCAN);
- 		break;
- 
- 	case SA_AIF_BPSTAT_CHANGE:
 -- 
 2.9.4
