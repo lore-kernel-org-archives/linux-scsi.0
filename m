@@ -1,43 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: storvsc: Fix scsi_cmd error assignments in
- storvsc_handle_error
-Date: Wed, 20 Dec 2017 21:24:10 -0500
-Message-ID: <yq1fu84hl85.fsf@oracle.com>
-References: <1513708368-25951-1-git-send-email-cavery@redhat.com>
+Subject: Re: [PATCH] lpfc: correct sg_seg_cnt attribute min vs default
+Date: Wed, 20 Dec 2017 21:28:01 -0500
+Message-ID: <yq1bmishl1q.fsf@oracle.com>
+References: <20171219185750.24348-1-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1513708368-25951-1-git-send-email-cavery@redhat.com> (Cathy
- Avery's message of "Tue, 19 Dec 2017 13:32:48 -0500")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: sthemmin@microsoft.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, jejb@linux.vnet.ibm.com
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:46476 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755868AbdLUC2H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Dec 2017 21:28:07 -0500
+In-Reply-To: <20171219185750.24348-1-jsmart2021@gmail.com> (James Smart's
+        message of "Tue, 19 Dec 2017 10:57:50 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
 
-Cathy,
+James,
 
-> When an I/O is returned with an srb_status of SRB_STATUS_INVALID_LUN
-> which has zero good_bytes it must be assigned an error. Otherwise the
-> I/O will be continuously requeued and will cause a deadlock in the
-> case where disks are being hot added and removed. sd_probe_async will
-> wait forever for its I/O to complete while holding
-> scsi_sd_probe_domain.
+> Prior patch mixed up what argument in the macro was what, so min
+> value was placed as the "default" argument, and the default value
+> was placed as the "min" argument. Thus, when the default was applied,
+> it looked like the default was smaller than the allowed min.
 >
-> Also returning the default error of DID_TARGET_FAILURE causes
-> multipath to not retry the I/O resulting in applications receiving I/O
-> errors before a failover can occur.
+> swap argument postions to correct.
 
-Applied to 4.15/scsi-fixes. Thank you!
+Applied to 4.16/scsi-queue (after fixing whitespace error). Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
