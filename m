@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V9 2/7] mq-deadline: Introduce dispatch helpers
-Date: Thu, 21 Dec 2017 15:43:39 +0900
-Message-ID: <20171221064344.6228-3-damien.lemoal@wdc.com>
+Subject: [PATCH V9 4/7] deadline-iosched: Introduce dispatch helpers
+Date: Thu, 21 Dec 2017 15:43:41 +0900
+Message-ID: <20171221064344.6228-5-damien.lemoal@wdc.com>
 References: <20171221064344.6228-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171221064344.6228-1-damien.lemoal@wdc.com>
@@ -13,27 +13,38 @@ List-Id: linux-scsi@vger.kernel.org
 Avoid directly referencing the next_rq and fifo_list arrays using the
 helper functions deadline_next_request() and deadline_fifo_request() to
 facilitate changes in the dispatch request selection in
-__dd_dispatch_request() for zoned block devices.
+deadline_dispatch_requests() for zoned block devices.
+
+While at it, also remove the unnecessary forward declaration of the
+function deadline_move_request().
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/mq-deadline.c | 45 +++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 8 deletions(-)
+ block/deadline-iosched.c | 47 +++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 37 insertions(+), 10 deletions(-)
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index 0179e484ec98..8bd6db9e69c7 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -191,6 +191,35 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
+diff --git a/block/deadline-iosched.c b/block/deadline-iosched.c
+index b83f77460d28..81e3f0897457 100644
+--- a/block/deadline-iosched.c
++++ b/block/deadline-iosched.c
+@@ -50,8 +50,6 @@ struct deadline_data {
+ 	int front_merges;
+ };
+ 
+-static void deadline_move_request(struct deadline_data *, struct request *);
+-
+ static inline struct rb_root *
+ deadline_rb_root(struct deadline_data *dd, struct request *rq)
+ {
+@@ -230,6 +228,35 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
  	return 0;
  }
  
 +/*
-+ * For the specified data direction, return the next request to
-+ * dispatch using arrival ordered lists.
++ * For the specified data direction, return the next request to dispatch using
++ * arrival ordered lists.
 + */
 +static struct request *
 +deadline_fifo_request(struct deadline_data *dd, int data_dir)
@@ -48,8 +59,8 @@ index 0179e484ec98..8bd6db9e69c7 100644
 +}
 +
 +/*
-+ * For the specified data direction, return the next request to
-+ * dispatch using sector position sorted lists.
++ * For the specified data direction, return the next request to dispatch using
++ * sector position sorted lists.
 + */
 +static struct request *
 +deadline_next_request(struct deadline_data *dd, int data_dir)
@@ -63,16 +74,14 @@ index 0179e484ec98..8bd6db9e69c7 100644
  /*
   * deadline_dispatch_requests selects the best request according to
   * read/write expire, fifo_batch, etc
-@@ -198,7 +227,7 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
- static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
+@@ -239,16 +266,15 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
+ 	struct deadline_data *dd = q->elevator->elevator_data;
+ 	const int reads = !list_empty(&dd->fifo_list[READ]);
+ 	const int writes = !list_empty(&dd->fifo_list[WRITE]);
 -	struct request *rq;
 +	struct request *rq, *next_rq;
- 	bool reads, writes;
  	int data_dir;
  
-@@ -214,10 +243,9 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
  	/*
  	 * batches are currently reads XOR writes
  	 */
@@ -86,7 +95,7 @@ index 0179e484ec98..8bd6db9e69c7 100644
  
  	if (rq && dd->batching < dd->fifo_batch)
  		/* we have a next request are still entitled to batch */
-@@ -260,19 +288,20 @@ static struct request *__dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+@@ -291,19 +317,20 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
  	/*
  	 * we are not running a batch, find best request for selected data_dir
  	 */
