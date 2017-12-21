@@ -1,111 +1,133 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 15/29] scsi: aacraid: Create helper functions to get lun info
-Date: Thu, 21 Dec 2017 09:34:06 -0800
-Message-ID: <20171221173420.8213-16-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 13/29] scsi: aacraid: Untangle targets setup from report phy luns
+Date: Thu, 21 Dec 2017 09:34:04 -0800
+Message-ID: <20171221173420.8213-14-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0079.outbound.protection.outlook.com ([104.47.38.79]:32896
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0064.outbound.protection.outlook.com ([104.47.33.64]:1286
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754124AbdLUReo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 12:34:44 -0500
+        id S1754007AbdLURem (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Dec 2017 12:34:42 -0500
 In-Reply-To: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, aacraid@microsemi.com, tom.white@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>
 
-Created inline function to retrieve lun info for each device from the
-phy luns structure.
+Remove function call to process targets from the report phy luns function
+and make it a function in its own right. This will help understand the
+flow of the code.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aachba.c | 59 ++++++++++++++++++++++++++++++++++---------
- 1 file changed, 47 insertions(+), 12 deletions(-)
+ drivers/scsi/aacraid/aachba.c  | 44 +++++++++++++++++++++++++++++++-----------
+ drivers/scsi/aacraid/aacraid.h |  1 +
+ 2 files changed, 34 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index affa2f1..83d2576 100644
+index 90377b1..cf02910 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -1847,7 +1847,48 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
- mem_free_all:
- 	kfree(phys_luns);
- 	goto out;
-+}
-+
-+static inline u32 aac_get_safw_phys_lun_count(struct aac_dev *dev)
-+{
-+	struct aac_ciss_phys_luns_resp *phys_luns;
-+
-+	phys_luns = dev->safw_phys_luns;
-+
-+	return ((phys_luns->list_length[0]<<24) +
-+			(phys_luns->list_length[1]<<16) +
-+			(phys_luns->list_length[2]<<8) +
-+			(phys_luns->list_length[3])) / 24;
-+}
- 
-+static inline u32 aac_get_safw_phys_bus(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].level2[1] & 0x3f;
-+}
-+
-+static inline u32 aac_get_safw_phys_target(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].level2[0];
-+}
-+
-+static inline u32 aac_get_safw_phys_expose_flag(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].bus >> 6;
-+}
-+
-+static inline u32 aac_get_safw_phys_attribs(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].node_ident[9];
-+}
-+
-+static inline u32 aac_get_safw_phys_nexus(struct aac_dev *dev, int lun)
-+{
-+	return *((u32 *)&dev->safw_phys_luns->lun[lun].node_ident[12]);
-+}
-+
-+static inline u32 aac_get_safw_phys_device_type(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].node_ident[8];
- }
- 
- /**
-@@ -1865,22 +1906,16 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
+@@ -1802,14 +1802,16 @@ static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
+  *
+  *	Update our hba map with the information gathered from the FW
+  */
+-static void aac_set_safw_attr_all_targets(struct aac_dev *dev,
+-		struct aac_ciss_phys_luns_resp *phys_luns, int rescan)
++static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
+ {
+ 	/* ok and extended reporting */
+ 	u32 lun_count, nexus;
  	u32 i, bus, target;
  	u8 expose_flag, attribs;
  	u8 devtype;
--	struct aac_ciss_phys_luns_resp *phys_luns;
--
--	phys_luns = dev->safw_phys_luns;
++	struct aac_ciss_phys_luns_resp *phys_luns;
++
++	phys_luns = dev->safw_phys_luns;
  
--	lun_count = ((phys_luns->list_length[0] << 24)
--			+ (phys_luns->list_length[1] << 16)
--			+ (phys_luns->list_length[2] << 8)
--			+ (phys_luns->list_length[3])) / 24;
-+	lun_count = aac_get_safw_phys_lun_count(dev);
+ 	lun_count = ((phys_luns->list_length[0] << 24)
+ 			+ (phys_luns->list_length[1] << 16)
+@@ -1855,6 +1857,12 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev,
+ 	}
+ }
  
- 	for (i = 0; i < lun_count; ++i) {
++static inline void aac_free_safw_ciss_luns(struct aac_dev *dev)
++{
++	kfree(dev->safw_phys_luns);
++	dev->safw_phys_luns = NULL;
++}
++
+ /**
+  *	aac_get_safw_ciss_luns()	Process topology change
+  *	@dev:		aac_dev structure
+@@ -1875,7 +1883,7 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
+ 		(AAC_MAX_TARGETS - 1) * sizeof(struct _ciss_lun);
+ 	phys_luns = kmalloc(datasize, GFP_KERNEL);
+ 	if (phys_luns == NULL)
+-		goto err_out;
++		goto out;
  
--		bus = phys_luns->lun[i].level2[1] & 0x3f;
--		target = phys_luns->lun[i].level2[0];
--		expose_flag = phys_luns->lun[i].bus >> 6;
--		attribs = phys_luns->lun[i].node_ident[9];
--		nexus = *((u32 *) &phys_luns->lun[i].node_ident[12]);
-+		bus = aac_get_safw_phys_bus(dev, i);
-+		target = aac_get_safw_phys_target(dev, i);
-+		expose_flag = aac_get_safw_phys_expose_flag(dev, i);
-+		attribs = aac_get_safw_phys_attribs(dev, i);
-+		nexus = aac_get_safw_phys_nexus(dev, i);
+ 	memset(&srbu, 0, sizeof(struct aac_srb_unit));
  
- 		if (bus >= AAC_MAX_BUSES || target >= AAC_MAX_TARGETS)
- 			continue;
+@@ -1888,22 +1896,36 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
+ 
+ 	rcode = aac_send_safw_bmic_cmd(dev, &srbu, phys_luns, datasize);
+ 	if (unlikely(rcode < 0))
+-		goto err_out;
++		goto mem_free_all;
+ 
+-	/* analyse data */
+-	if (rcode >= 0 && phys_luns->resp_flag == 2) {
+-		/* ok and extended reporting */
+-		aac_set_safw_attr_all_targets(dev, phys_luns, rescan);
++	if (phys_luns->resp_flag != 2) {
++		rcode = -ENOMSG;
++		goto mem_free_all;
+ 	}
+ 
+-	kfree(phys_luns);
+-err_out:
++	dev->safw_phys_luns = phys_luns;
++
++out:
+ 	return rcode;
++mem_free_all:
++	kfree(phys_luns);
++	goto out;
++
+ }
+ 
+ static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
+ {
+-	return aac_get_safw_ciss_luns(dev, rescan);
++	int rcode = 0;
++
++	rcode = aac_get_safw_ciss_luns(dev, rescan);
++	if (unlikely(rcode < 0))
++		goto out;
++
++	aac_set_safw_attr_all_targets(dev, rescan);
++
++	aac_free_safw_ciss_luns(dev);
++out:
++	return rcode;
+ }
+ 
+ int aac_setup_safw_adapter(struct aac_dev *dev, int rescan)
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 5690767..19af4d9 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1671,6 +1671,7 @@ struct aac_dev
+ 	struct msix_entry	msixentry[AAC_MAX_MSIX];
+ 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
+ 	struct aac_hba_map_info	hba_map[AAC_MAX_BUSES][AAC_MAX_TARGETS];
++	struct aac_ciss_phys_luns_resp *safw_phys_luns;
+ 	u8			adapter_shutdown;
+ 	u32			handle_pci_error;
+ };
 -- 
 2.9.4
