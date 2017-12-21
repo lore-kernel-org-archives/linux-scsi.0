@@ -1,81 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/3] ses: Retry Power-on-reset check condition
-Date: Thu, 21 Dec 2017 16:39:06 +0100
-Message-ID: <6cf23b03-6552-c2b8-e29a-b887bd6517c9@suse.de>
-References: <1513855354-86603-1-git-send-email-hare@suse.de>
- <1513855354-86603-4-git-send-email-hare@suse.de>
- <1513870157.3132.5.camel@HansenPartnership.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: remove extra white space at the end of the line
+Date: Thu, 21 Dec 2017 16:09:07 +0000
+Message-ID: <1513872544.2931.13.camel@wdc.com>
+References: <20171221024049.36509-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40145 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752118AbdLUPjI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 10:39:08 -0500
-In-Reply-To: <1513870157.3132.5.camel@HansenPartnership.com>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:25729 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755301AbdLUQJK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Dec 2017 11:09:10 -0500
+In-Reply-To: <20171221024049.36509-1-yanaijie@huawei.com>
 Content-Language: en-US
+Content-ID: <BB5D64963649BD43AFF9AF95DAD5B22C@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "yanaijie@huawei.com" <yanaijie@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, Damien Le Moal <Damien.LeMoal@wdc.com>
 
-On 12/21/2017 04:29 PM, James Bottomley wrote:
-> On Thu, 2017-12-21 at 12:22 +0100, Hannes Reinecke wrote:
->> During startup any SCSI request might encounter a 'Power-on/reset'
->> sense code, which just can be retried.
->> In the case of ses it needs to be retried, otherwise ses will
->> errorneously detect this as a failure and not attach the driver.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>  drivers/scsi/ses.c | 14 ++++++++++----
->>  1 file changed, 10 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
->> index c1f96b0..9c8b3db 100644
->> --- a/drivers/scsi/ses.c
->> +++ b/drivers/scsi/ses.c
->> @@ -110,14 +110,20 @@ static int ses_recv_diag(struct scsi_device
->> *sdev, int page_code,
->>  		0
->>  	};
->>  	unsigned char recv_page_code;
->> +	int retries = SES_RETRIES;
->>  	struct scsi_sense_hdr sshdr;
->>  
->> +retry:
->>  	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf,
->> bufflen,
->> -				&sshdr, SES_TIMEOUT, SES_RETRIES,
->> NULL);
->> +				&sshdr, SES_TIMEOUT, retries, NULL);
->>  	if (unlikely(ret)) {
->> -		if (status_byte(ret) == CHECK_CONDITION &&
->> -		    sshdr.asc == 0x25 && sshdr.ascq == 0x00) {
->> -			ret = -ENODEV;
->> +		if (status_byte(ret) == CHECK_CONDITION) {
->> +			if (sshdr.asc == 0x29) {
->> +				retries--;
-> 
-> Nothing ever checks this, meaning the loop potentially never
-> terminates.
-> 
-> We already have two templates for how to do this in sd.c ... on the
-> other hand I can't see any use of scsi_execute/scsi_execute_req that
-> actually want to see the ASC 29 conditions, so it might be better to
-> integrate it into scsi_execute().
-> 
-I was wondering about the same, as the POR conditions are pretty
-pointless (ATM; my friends from NetApp tend to disagree here :-)
-So ok, I'll be moving it into scsi_execute_req().
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+T24gVGh1LCAyMDE3LTEyLTIxIGF0IDEwOjQwICswODAwLCBKYXNvbiBZYW4gd3JvdGU6DQo+IE15
+IGVkaXRvciBhbHdheXMgdHJ5IHRvIHJlbW92ZSB0aGUgZXh0cmEgd2hpdGUgc3BhY2UgYXQgdGhl
+IGVuZCBvZiB0aGUNCj4gbGluZSB3aGVuIEkgbWFrZSBzb21lIGNoYW5nZXMuIEknbSB0aXJlZCBv
+ZiBhZGp1c3RpbmcgdGhlbSBtYW51YWxseS4NCj4gQ2FuIHdlIHJlbW92ZSB0aGVtIGluIG1haW5s
+aW5lPw0KDQpIZWxsbyBKYXNvbiwNCg0KSSB0aGluayB0aGlzIG1lYW5zIHRoYXQgeW91ciBlZGl0
+b3IgaGFzIGJlZW4gbWlzY29uZmlndXJlZC4gQW55IGtlcm5lbCBjb2RlDQpjaGFuZ2VzIHNob3Vs
+ZCBiZSB0aGUgcmVzdWx0IG9mIGEgZGVsaWJlcmF0ZSBhY3Rpb24gYnkgYSBodW1hbi4gQ29uZmln
+dXJpbmcgYW4NCmVkaXRvciB0byBhcHBseSBhbnkgY2hhbmdlcyBhdXRvbWF0aWNhbGx5IHRvIGV4
+aXN0aW5nIGNvZGUgaXMgd3JvbmcuDQoNClRoZXJlIGFyZSBzZXZlcmFsIHJlYXNvbnMgd2h5IG1v
+c3Qga2VybmVsIG1haW50YWluZXJzIGlnbm9yZSBwYXRjaGVzIGxpa2UgdGhpcw0Kb25lIHNpbGVu
+dGx5Og0KKiBXaGl0ZXNwYWNlIGNoYW5nZXMgbWFrZSBpdCBoYXJkZXIgdGhhbiBuZWNlc3Nhcnkg
+dG8gYmFja3BvcnQgcGF0Y2hlcyB0bw0KICBkaXN0cm8ga2VybmVscy4gQmVmb3JlIGEgcGF0Y2gg
+dGhhdCBjYW1lIGxhdGVyIHRoYW4gdGhlIHdoaXRlc3BhY2UgY2hhbmdlcw0KICBjYW4gYmUgYmFj
+a3BvcnRlZCwgdGhlIHdoaXRlc3BhY2UgY2hhbmdlIGhhcyB0byBiZSBiYWNrcG9ydGVkLiBBZGRp
+dGlvbmFsbHksDQogIGlmIGEgd2hpdGVzcGFjZSBjaGFuZ2UgdG91Y2hlcyBtYW55IHNvdXJjZSBm
+aWxlcywgdGhlIG9yZGVyIGluIHdoaWNoIHRvDQogIGJhY2twb3J0IHBhdGNoZXMgYmVjb21lcyBy
+ZWFsbHkgaW1wb3J0YW50Lg0KKiBCZWZvcmUgYSBrZXJuZWwgZGV2ZWxvcGVyIHBvc3RzIGEgcGF0
+Y2ggdGhhdCBmaXhlcyBhIGJ1ZyBzaGUgb3IgaGUgaGFzIHRvDQogIHZlcmlmeSB0aGUgY2hhbmdl
+IGhpc3RvcnkgKGdpdCBsb2cgLXApIHRvIGZpZ3VyZSBvdXQgd2hpY2ggcGF0Y2ggaW50cm9kdWNl
+ZA0KICB0aGUgYnVnLiBQYXRjaGVzIHRoYXQgb25seSBjaGFuZ2UgY29kaW5nIHN0eWxlIHBvbGx1
+dGUgdGhlIGNoYW5nZSBoaXN0b3J5Lg0KKiBBY2NlcHRpbmcgYSBwYXRjaCB0aGF0IG9ubHkgY2hh
+bmdlcyB3aGl0ZXNwYWNlIHdvdWxkIG9wZW4gdGhlIGZsb29kZ2F0ZXMgZm9yDQogIG90aGVyIGtl
+cm5lbCBjb2Rpbmcgc3R5bGUgY2hhbmdlIHBhdGNoZXMuIElmIGEgcGF0Y2ggdGhhdCBvbmx5IGNo
+YW5nZXMNCiAgd2hpdGVzcGFjZSB3b3VsZCBnZXQgYWNjZXB0ZWQgaXQgd2lsbCBiZWNvbWUgaGFy
+ZCB0byBrZWVwIG90aGVyIGtlcm5lbA0KICBjb2Rpbmcgc3R5bGUgY2hhbmdlIHBhdGNoZXMgb3V0
+LiBBIGZldyBleGFtcGxlcyBvZiByZWNlbnRseSBwb3N0ZWQgY29kaW5nDQogIHN0eWxlIHBhdGNo
+ZXMgdGhhdCBkbyBub3QgY2hhbmdlIGFueSBmdW5jdGlvbmFsaXR5IGFyZToNCiAgLSBzY3NpX2Ro
+OiBmaXggZm9ybWF0IG9mIHN0cnVjdCBtZW1iZXJzDQogICAgKGh0dHBzOi8vbWFyYy5pbmZvLz9s
+PWxpbnV4LXNjc2kmbT0xNTEzNDQxMTU3MTYxMjImdz0yKS4NCiAgLSBQUzM6IEFkanVzdG1lbnRz
+IGZvciBzaXggZnVuY3Rpb24gaW1wbGVtZW50YXRpb25zDQogICAgKGh0dHBzOi8vd3d3LnNwaW5p
+Y3MubmV0L2xpc3RzL2xpbnV4LWtlcm5lbC1qYW5pdG9ycy9tc2czODI1Mi5odG1sKS4NCg0KU2Vl
+IGFsc28gaHR0cHM6Ly9idHJmcy53aWtpLmtlcm5lbC5vcmcvaW5kZXgucGhwL0RldmVsb3BlciUy
+N3NfRkFRI0hvd19ub3RfdG9fc3RhcnQuDQoNClRoYW5rcywNCg0KQmFydC4=
