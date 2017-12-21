@@ -1,14 +1,14 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: [RFC PATCH] qla2xxx: sp_str[] can be static
+Subject: Re: [PATCH 01/43] qla2xxx: Fix stale memory access for name pointer
 Date: Thu, 21 Dec 2017 13:26:59 +0800
-Message-ID: <20171221052659.GA2018@lkp-wsm-ep1>
+Message-ID: <201712211335.XaL3TncM%fengguang.wu@intel.com>
 References: <20171220065644.21511-2-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22831 "EHLO mga02.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:64079 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750782AbdLUF1i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1750871AbdLUF1i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 21 Dec 2017 00:27:38 -0500
 Content-Disposition: inline
 In-Reply-To: <20171220065644.21511-2-himanshu.madhani@cavium.com>
@@ -16,23 +16,28 @@ Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: kbuild-all@01.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
+Hi Quinn,
 
-Fixes: a3e84f0484ea ("qla2xxx: Fix stale memory access for name pointer")
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on scsi/for-next]
+[also build test WARNING on next-20171220]
+[cannot apply to v4.15-rc4]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Himanshu-Madhani/qla2xxx-Driver-update/20171221-085840
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+
+Please review and possibly fold the followup patch.
+
 ---
- qla_gs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 7e88e828..54c8dfd 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -15,7 +15,7 @@ static int qla2x00_sns_gnn_id(scsi_qla_host_t *, sw_info_t *);
- static int qla2x00_sns_rft_id(scsi_qla_host_t *);
- static int qla2x00_sns_rnn_id(scsi_qla_host_t *);
- 
--struct sp_name sp_str[] = {
-+static struct sp_name sp_str[] = {
- 	{ SPCN_UNKNOWN, "unknown" },
- 	{ SPCN_GIDPN, "gidpn" },
- 	{ SPCN_GPSC, "gpsc" },
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
