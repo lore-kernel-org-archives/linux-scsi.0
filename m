@@ -1,57 +1,107 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/3] ses: Retry Power-on-reset check condition
-Date: Thu, 21 Dec 2017 12:22:34 +0100
-Message-ID: <1513855354-86603-4-git-send-email-hare@suse.de>
-References: <1513855354-86603-1-git-send-email-hare@suse.de>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH v2] scsi: remove extra white space at the end of the line
+Date: Thu, 21 Dec 2017 13:38:39 +0000
+Message-ID: <f0764d16-f8eb-21e1-79ac-b41bc56105fa@wdc.com>
+References: <20171221113535.38734-1-yanaijie@huawei.com>
+Reply-To: Damien Le Moal <Damien.LeMoal@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60781 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752088AbdLULWi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 06:22:38 -0500
-In-Reply-To: <1513855354-86603-1-git-send-email-hare@suse.de>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:10489 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751564AbdLUNio (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Dec 2017 08:38:44 -0500
+In-Reply-To: <20171221113535.38734-1-yanaijie@huawei.com>
+Content-Language: en-US
+Content-ID: <5B07539D0A957346846A9772438CFD94@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Jason Yan <yanaijie@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>
 
-During startup any SCSI request might encounter a 'Power-on/reset'
-sense code, which just can be retried.
-In the case of ses it needs to be retried, otherwise ses will
-errorneously detect this as a failure and not attach the driver.
-
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/ses.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index c1f96b0..9c8b3db 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -110,14 +110,20 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
- 		0
- 	};
- 	unsigned char recv_page_code;
-+	int retries = SES_RETRIES;
- 	struct scsi_sense_hdr sshdr;
- 
-+retry:
- 	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
--				&sshdr, SES_TIMEOUT, SES_RETRIES, NULL);
-+				&sshdr, SES_TIMEOUT, retries, NULL);
- 	if (unlikely(ret)) {
--		if (status_byte(ret) == CHECK_CONDITION &&
--		    sshdr.asc == 0x25 && sshdr.ascq == 0x00) {
--			ret = -ENODEV;
-+		if (status_byte(ret) == CHECK_CONDITION) {
-+			if (sshdr.asc == 0x29) {
-+				retries--;
-+				goto retry;
-+			}
-+			if (sshdr.asc == 0x25 && sshdr.ascq == 0x00)
-+				ret = -ENODEV;
- 		}
- 		return ret;
- 	}
--- 
-1.8.5.6
+SmFzb24sDQoNCk9uIDIwMTcvMTIvMjEgMjA6MzUsIEphc29uIFlhbiB3cm90ZToNCj4gTXkgZWRp
+dG9yIGFsd2F5cyB0cnkgdG8gcmVtb3ZlIHRoZSBleHRyYSB3aGl0ZSBzcGFjZSBhdCB0aGUgZW5k
+IG9mIHRoZQ0KPiBsaW5lIHdoZW4gSSBtYWtlIHNvbWUgY2hhbmdlcy4gSSdtIHRpcmVkIG9mIGFk
+anVzdGluZyB0aGVtIG1hbnVhbGx5Lg0KPiBDYW4gd2UgcmVtb3ZlIHRoZW0gaW4gbWFpbmxpbmU/
+DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBKYXNvbiBZYW4gPHlhbmFpamllQGh1YXdlaS5jb20+DQo+
+IC0tLQ0KPiAgZHJpdmVycy9zY3NpLzN3LTl4eHguYyAgICAgICAgICAgIHwgIDQ4ICsrLS0tDQo+
+ICBkcml2ZXJzL3Njc2kvM3ctc2FzLmMgICAgICAgICAgICAgfCAgNDIgKystLQ0KPiAgZHJpdmVy
+cy9zY3NpLzN3LXh4eHguYyAgICAgICAgICAgIHwgMTQwICsrKysrKy0tLS0tLQ0KPiAgZHJpdmVy
+cy9zY3NpLzN3LXh4eHguaCAgICAgICAgICAgIHwgIDY2ICsrKy0tLQ0KPiAgZHJpdmVycy9zY3Np
+LzUzYzcwMC5jICAgICAgICAgICAgIHwgMTA0ICsrKystLS0tLQ0KPiAgZHJpdmVycy9zY3NpLzUz
+YzcwMC5oICAgICAgICAgICAgIHwgICA4ICstDQo+ICBkcml2ZXJzL3Njc2kvRmxhc2hQb2ludC5j
+ICAgICAgICAgfCAgMTAgKy0NCj4gIGRyaXZlcnMvc2NzaS9OQ1I1MzgwLmggICAgICAgICAgICB8
+ICAyMiArLQ0KPiAgZHJpdmVycy9zY3NpL05DUjUzYzQwNmEuYyAgICAgICAgIHwgIDI2ICstLQ0K
+PiAgZHJpdmVycy9zY3NpL05DUl9ENzAwLmMgICAgICAgICAgIHwgICA4ICstDQo+ICBkcml2ZXJz
+L3Njc2kvTkNSX1E3MjAuYyAgICAgICAgICAgfCAgMTAgKy0NCj4gIGRyaXZlcnMvc2NzaS9hMTAw
+dTJ3LmMgICAgICAgICAgICB8ICAgMiArLQ0KPiAgZHJpdmVycy9zY3NpL2FkdmFuc3lzLmMgICAg
+ICAgICAgIHwgICAyICstDQo+ICBkcml2ZXJzL3Njc2kvYWhhMTU0Mi5jICAgICAgICAgICAgfCAg
+MTQgKy0NCj4gIGRyaXZlcnMvc2NzaS9haGExNzQwLmMgICAgICAgICAgICB8ICAzNiArKy0tDQo+
+ICBkcml2ZXJzL3Njc2kvYXRwODcwdS5jICAgICAgICAgICAgfCAxODAgKysrKysrKystLS0tLS0t
+LQ0KPiAgZHJpdmVycy9zY3NpL2F0cDg3MHUuaCAgICAgICAgICAgIHwgICAyICstDQo+ICBkcml2
+ZXJzL3Njc2kvZGMzOTV4LmMgICAgICAgICAgICAgfCAgODQgKysrKy0tLS0NCj4gIGRyaXZlcnMv
+c2NzaS9kbXgzMTkxZC5jICAgICAgICAgICB8ICAgMiArLQ0KPiAgZHJpdmVycy9zY3NpL2RwdF9p
+Mm8uYyAgICAgICAgICAgIHwgMjQyICsrKysrKysrKystLS0tLS0tLS0tLQ0KPiAgZHJpdmVycy9z
+Y3NpL2RwdGkuaCAgICAgICAgICAgICAgIHwgIDE0ICstDQo+ICBkcml2ZXJzL3Njc2kvZWF0YS5j
+ICAgICAgICAgICAgICAgfCAgIDQgKy0NCj4gIGRyaXZlcnMvc2NzaS9lYXRhX2dlbmVyaWMuaCAg
+ICAgICB8ICA1OCArKy0tLQ0KPiAgZHJpdmVycy9zY3NpL2VhdGFfcGlvLmMgICAgICAgICAgIHwg
+IDE4ICstDQo+ICBkcml2ZXJzL3Njc2kvZWF0YV9waW8uaCAgICAgICAgICAgfCAgIDIgKy0NCj4g
+IGRyaXZlcnMvc2NzaS9mZG9tYWluLmMgICAgICAgICAgICB8IDEwNiArKysrLS0tLS0NCj4gIGRy
+aXZlcnMvc2NzaS9nZHRoLmMgICAgICAgICAgICAgICB8IDQyMiArKysrKysrKysrKysrKysrKyst
+LS0tLS0tLS0tLS0tLS0tLS0NCj4gIGRyaXZlcnMvc2NzaS9nZHRoLmggICAgICAgICAgICAgICB8
+ICA0MCArKy0tDQo+ICBkcml2ZXJzL3Njc2kvZ2R0aF9pb2N0bC5oICAgICAgICAgfCAgIDggKy0N
+Cj4gIGRyaXZlcnMvc2NzaS9nZHRoX3Byb2MuYyAgICAgICAgICB8ICA2MiArKystLS0NCj4gIGRy
+aXZlcnMvc2NzaS9nZHRoX3Byb2MuaCAgICAgICAgICB8ICAgMiArLQ0KPiAgZHJpdmVycy9zY3Np
+L2hvc3RzLmMgICAgICAgICAgICAgIHwgICA2ICstDQo+ICBkcml2ZXJzL3Njc2kvaW1tLmMgICAg
+ICAgICAgICAgICAgfCAgMTggKy0NCj4gIGRyaXZlcnMvc2NzaS9pbW0uaCAgICAgICAgICAgICAg
+ICB8ICAgOCArLQ0KPiAgZHJpdmVycy9zY3NpL2luaXRpby5jICAgICAgICAgICAgIHwgICAyICst
+DQo+ICBkcml2ZXJzL3Njc2kvbGFzaTcwMC5jICAgICAgICAgICAgfCAgIDQgKy0NCj4gIGRyaXZl
+cnMvc2NzaS9tYWM1M2M5NC5jICAgICAgICAgICB8ICAgNiArLQ0KPiAgZHJpdmVycy9zY3NpL21l
+Z2FyYWlkLmMgICAgICAgICAgIHwgIDQyICsrLS0NCj4gIGRyaXZlcnMvc2NzaS9tZXNoLmMgICAg
+ICAgICAgICAgICB8ICAyMiArLQ0KPiAgZHJpdmVycy9zY3NpL25jcjUzYzh4eC5jICAgICAgICAg
+IHwgNDQwICsrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICBkcml2ZXJz
+L3Njc2kvbmNyNTNjOHh4LmggICAgICAgICAgfCAgNzggKysrLS0tLQ0KPiAgZHJpdmVycy9zY3Np
+L25zcDMyLmMgICAgICAgICAgICAgIHwgMTE2ICsrKysrLS0tLS0NCj4gIGRyaXZlcnMvc2NzaS9u
+c3AzMl9kZWJ1Zy5jICAgICAgICB8ICAyMiArLQ0KPiAgZHJpdmVycy9zY3NpL29zc3QuYyAgICAg
+ICAgICAgICAgIHwgMTY4ICsrKysrKystLS0tLS0tLQ0KPiAgZHJpdmVycy9zY3NpL29zc3QuaCAg
+ICAgICAgICAgICAgIHwgICA4ICstDQo+ICBkcml2ZXJzL3Njc2kvb3NzdF9vcHRpb25zLmggICAg
+ICAgfCAgIDYgKy0NCj4gIGRyaXZlcnMvc2NzaS9wcGEuYyAgICAgICAgICAgICAgICB8ICAzOCAr
+Ky0tDQo+ICBkcml2ZXJzL3Njc2kvcHBhLmggICAgICAgICAgICAgICAgfCAgMTAgKy0NCj4gIGRy
+aXZlcnMvc2NzaS9xbGExMjgwLmMgICAgICAgICAgICB8ICAyMiArLQ0KPiAgZHJpdmVycy9zY3Np
+L3FsYTEyODAuaCAgICAgICAgICAgIHwgIDEwICstDQo+ICBkcml2ZXJzL3Njc2kvcWxvZ2ljZmFz
+LmMgICAgICAgICAgfCAgMTAgKy0NCj4gIGRyaXZlcnMvc2NzaS9xbG9naWNmYXM0MDguYyAgICAg
+ICB8ICA1MiArKy0tLQ0KPiAgZHJpdmVycy9zY3NpL3Fsb2dpY3B0aS5jICAgICAgICAgIHwgICA4
+ICstDQo+ICBkcml2ZXJzL3Njc2kvcWxvZ2ljcHRpLmggICAgICAgICAgfCAgIDIgKy0NCj4gIGRy
+aXZlcnMvc2NzaS9yYWlkX2NsYXNzLmMgICAgICAgICB8ICAgNiArLQ0KPiAgZHJpdmVycy9zY3Np
+L3Njc2kuYyAgICAgICAgICAgICAgIHwgICAyICstDQo+ICBkcml2ZXJzL3Njc2kvc2NzaS5oICAg
+ICAgICAgICAgICAgfCAgIDIgKy0NCj4gIGRyaXZlcnMvc2NzaS9zY3NpX2RlYnVnLmMgICAgICAg
+ICB8ICAgMiArLQ0KPiAgZHJpdmVycy9zY3NpL3Njc2lfaW9jdGwuYyAgICAgICAgIHwgIDIyICst
+DQo+ICBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYyAgICAgICAgICAgfCAgMjAgKy0NCj4gIGRyaXZl
+cnMvc2NzaS9zY3NpX3ByaXYuaCAgICAgICAgICB8ICAgNCArLQ0KPiAgZHJpdmVycy9zY3NpL3Nj
+c2lfcHJvYy5jICAgICAgICAgIHwgIDEyICstDQo+ICBkcml2ZXJzL3Njc2kvc2NzaV9zY2FuLmMg
+ICAgICAgICAgfCAgMTAgKy0NCj4gIGRyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMgICAgICAgICB8
+ICAgNCArLQ0KPiAgZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X3NwaS5jIHwgIDQ4ICsrLS0t
+DQo+ICBkcml2ZXJzL3Njc2kvc2NzaWNhbS5jICAgICAgICAgICAgfCAgIDYgKy0NCj4gIGRyaXZl
+cnMvc2NzaS9zZC5jICAgICAgICAgICAgICAgICB8ICA2MCArKystLS0NCj4gIGRyaXZlcnMvc2Nz
+aS9zZy5jICAgICAgICAgICAgICAgICB8ICAxNCArLQ0KPiAgZHJpdmVycy9zY3NpL3NnaXdkOTMu
+YyAgICAgICAgICAgIHwgICAyICstDQo+ICBkcml2ZXJzL3Njc2kvc2ltNzEwLmMgICAgICAgICAg
+ICAgfCAgIDQgKy0NCj4gIGRyaXZlcnMvc2NzaS9zci5jICAgICAgICAgICAgICAgICB8ICAgNiAr
+LQ0KPiAgZHJpdmVycy9zY3NpL3NyLmggICAgICAgICAgICAgICAgIHwgICA2ICstDQo+ICBkcml2
+ZXJzL3Njc2kvc3JfaW9jdGwuYyAgICAgICAgICAgfCAgIDggKy0NCj4gIGRyaXZlcnMvc2NzaS9z
+cl92ZW5kb3IuYyAgICAgICAgICB8ICAgOCArLQ0KPiAgZHJpdmVycy9zY3NpL3N0LmMgICAgICAg
+ICAgICAgICAgIHwgICA0ICstDQo+ICBkcml2ZXJzL3Njc2kvc3VuM19zY3NpLmMgICAgICAgICAg
+fCAgMzQgKy0tDQo+ICBkcml2ZXJzL3Njc2kvc3ltNTNjNDE2LmMgICAgICAgICAgfCAgMjAgKy0N
+Cj4gIGRyaXZlcnMvc2NzaS9zeW01M2M0MTYuaCAgICAgICAgICB8ICAgMiArLQ0KPiAgZHJpdmVy
+cy9zY3NpL3phbG9uLmMgICAgICAgICAgICAgIHwgICA2ICstDQo+ICA3OSBmaWxlcyBjaGFuZ2Vk
+LCAxNTk3IGluc2VydGlvbnMoKyksIDE1OTcgZGVsZXRpb25zKC0pDQoNCnNjcmlwdHMvY2hlY2tw
+YXRjaC5wbCByZXBvcnRzIDIyMCBpbnN0YW5jZXMgb2Ygd2hpdGUgc3BhY2VzIGF0IHRoZSAqYmVn
+aW5uaW5nKg0Kb2YgbGluZXMsIGFuZCB0aGF0IGlzIG9ubHkgZm9yIHdoYXQgeW91ciBwYXRjaGVz
+IHRvdWNoZWQgYW5kIHRoZSBsaW5lcyBhcm91bmQgdGhlbS4NCg0KSWYgSSBydW4gaW4gdGhlIGRy
+aXZlcnMvc2NzaSBkaXJlY3RvcnkgdGhlIGNvbW1hbmQ6DQoNCmdyZXAgLXIgJ14gW1sgXV0qJyAq
+LltjaF0gfCB3YyAtbA0KDQpJIGdldCA4Nzk1IGxpbmVzLiBJIGd1ZXNzIHlvdSBjb3VsZCBtYWtl
+IHlvdXIgcGF0Y2ggZXZlbiBiaWdnZXI6KQ0KDQpJZiB3ZSBleGNsdWRlIGxlYWRpbmcgc3BhY2Vz
+LCBhcHBseWluZyB0aGUgcGF0Y2ggYW5kIGRvaW5nIGEgImRpZmYgLXJiIiBvZiB0aGUNCnBhdGNo
+ZWQgc2NzaSBmaWxlcyBhZ2FpbnN0IHRoZSBvcmlnaW5hbCB1bnBhdGNoZWQgZmlsZXMgbGVhZHMg
+dG8gbm8gZGlmZmVyZW5jZXMNCmF0IGFsbC4gU28gaXQgbG9va3MgZ29vZC4NCg0KQmVzdCByZWdh
+cmRzLg0KDQotLSANCkRhbWllbiBMZSBNb2FsDQpXZXN0ZXJuIERpZ2l0YWwgUmVzZWFyY2g=
