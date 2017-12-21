@@ -1,127 +1,276 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V9 0/7] blk-mq support for ZBC disks
-Date: Thu, 21 Dec 2017 15:43:37 +0900
-Message-ID: <20171221064344.6228-1-damien.lemoal@wdc.com>
+Subject: [PATCH V9 1/7] block: introduce zoned block devices zone write locking
+Date: Thu, 21 Dec 2017 15:43:38 +0900
+Message-ID: <20171221064344.6228-2-damien.lemoal@wdc.com>
+References: <20171221064344.6228-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171221064344.6228-1-damien.lemoal@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This series, formerly titled "scsi-mq support for ZBC disks", implements
-support for ZBC disks for system using the scsi-mq I/O path.
+From: Christoph Hellwig <hch@lst.de>
 
-The current scsi level support of ZBC disks guarantees write request ordering
-using a per-zone write lock which prevents issuing simultaneously multiple
-write commands to a zone, doing so avoid reordering of sequential writes to
-sequential zones. This method is however ineffective when scsi-mq is used with
-zoned block devices. This is due to the different execution model of blk-mq
-which passes a request to the scsi layer for dispatching after the request has
-been removed from the I/O scheduler queue. That is, when the scsi layer tries
-to lock the target zone of the request, the request may already be out of
-order and zone write locking fails to prevent that.
+Components relying only on the request_queue structure for accessing
+block devices (e.g. I/O schedulers) have a limited knowledged of the
+device characteristics. In particular, the device capacity cannot be
+easily discovered, which for a zoned block device also result in the
+inability to easily know the number of zones of the device (the zone
+size is indicated by the chunk_sectors field of the queue limits).
 
-Various approaches have been tried to solve this problem directly from the core
-code of blk-mq. All of them had the serious disadvantage of cluttering blk-mq
-code with zoned block device specific conditions and processing, making
-maintenance and testing difficult.
+Introduce the nr_zones field to the request_queue structure to simplify
+access to this information. Also, add the bitmap seq_zone_bitmap which
+indicates which zones of the device are sequential zones (write
+preferred or write required) and the bitmap seq_zones_wlock which
+indicates if a zone is write locked, that is, if a write request
+targeting a zone was dispatched to the device. These fields are
+initialized by the low level block device driver (sd.c for ZBC/ZAC
+disks). They are not initialized by stacking drivers (device mappers)
+handling zoned block devices (e.g. dm-linear).
 
-This series adds blk-mq support for zoned block devices at the I/O scheduler
-level with simple modifications of the mq-deadline scheduler. Implementation
-is done with reusable helpers defined in the zoned block device support file
-(blk-zoned.c). These helpers provide per zone write locking control functions
-similar to what was implemented directly in the SCSI layer in sd_zbc.c.
-The zone write locking mechanism is used by mq-deadline for the exact same
-purpose, that is, to limit writes per zone to at most one request to avoid
-reordering.
+Using this, I/O schedulers can introduce zone write locking to control
+request dispatching to a zoned block device and avoid write request
+reordering by limiting to at most a single write request per zone
+outside of the scheduler at any time.
 
-The changes to mq-deadline do not affect its operation with regular disks. The
-same scheduling behavior is maintained for these devices. Compared to the SCSI
-layer zone locking implementation, this series optimizes avoids locking
-conventional zones which result in a use of these zone that is comparable to a
-regular disk.
+Based on previous patches from Damien Le Moal.
 
-This series also implements changes to the legacy deadline-iosched. Doing so,
-the zone locking code at the SCSI layer in sd.c and sd_zbc.c can be removed.
-This results in a significant simplification of the sd driver command handling.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+[Damien]
+* Fixed comments and identation in blkdev.h
+* Changed helper functions
+* Fixed this commit message
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ block/blk-core.c       |   1 +
+ block/blk-zoned.c      |  42 +++++++++++++++++++
+ include/linux/blkdev.h | 111 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 154 insertions(+)
 
-Patch 1 to 5 introduce the zone locking helpers in the block layer and modify
-the deadline and mq-deadline schedulers.
-Patch 6 and 7 remove the SCSI layer zone locking and initialize the device
-request queue zone information.
-
-All patches apply without conflicts to the scsi tree branch 4.16/scsi-queue, to
-the block tree branch for-linus as well as to the current 4.15-rc4 tree.
-
-Of note is that this series imposes the use of the deadline and mq-deadline
-schedulers with zoned block devices. A system can trivialy enforce this using
-a udev rule such as:
-
-ACTION=="add|change", KERNEL=="sd[a-z]", ATTRS{queue/zoned}=="host-managed", \
-ATTR{queue/scheduler}="deadline"
-
-This rules applies equally for the legacy SCSI path as well as the scsi-mq path
-thanks to "mq-deadline" being aliased to "deadline".
-
-Comments are as always very much appreciated.
-
-Changes from v8:
-* Rebased on 4.15-rc4
-
-Changes from v7:
-* Merged patch 8 into patch 6
-* Fixed various typos and commit messages
-
-Changes from v6:
-* Implement zone write locking helpers in the block layer
-* Also modify legacy path deadline scheduler to remove all zone write locking
-  code from the scsi layer
-
-Changes from v5:
-* Refactor patches to introduce the zone_lock spinlock only when needed
-* Addressed Bart's comments (in particular explanations of the zone_lock
-  spinlock use)
-
-Changes from v4:
-* Various fixes and improvements (From Christoph's comments)
-* Dropped zones_wlock scheduler tunable attribute
-
-Changes from v3:
-* Integrated support directly into mq-deadline instead of creating a new I/O
-  scheduler.
-* Disable setting of default mq scheduler for single queue devices
-
-Changes from v2:
-* Introduced blk_zoned structure
-* Moved I/O scheduler from drivers/scsi to block
-
-Changes from v1:
-* Addressed Bart's comments for the blk-mq patches (declarations files)
-* Split (former) patch 4 into multiple patches to facilitate review
-* Fixed scsi disk lookup from io scheduler by introducing
-  scsi_disk_from_queue()
-
-Christoph Hellwig (1):
-  block: introduce zoned block devices zone write locking
-
-Damien Le Moal (6):
-  mq-deadline: Introduce dispatch helpers
-  mq-deadline: Introduce zone locking support
-  deadline-iosched: Introduce dispatch helpers
-  deadline-iosched: Introduce zone locking support
-  sd_zbc: Initialize device request queue zoned data
-  sd: Remove zone write locking
-
- block/blk-core.c         |   1 +
- block/blk-zoned.c        |  42 +++++++++
- block/deadline-iosched.c | 114 ++++++++++++++++++++---
- block/mq-deadline.c      | 130 ++++++++++++++++++++++++--
- drivers/scsi/sd.c        |  41 +--------
- drivers/scsi/sd.h        |  11 ---
- drivers/scsi/sd_zbc.c    | 235 +++++++++++++++++++++++++++++------------------
- include/linux/blkdev.h   | 111 ++++++++++++++++++++++
- include/scsi/scsi_cmnd.h |   3 +-
- 9 files changed, 528 insertions(+), 160 deletions(-)
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b8881750a3ac..e6e5bbc4c366 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1641,6 +1641,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 
+ 	lockdep_assert_held(q->queue_lock);
+ 
++	blk_req_zone_write_unlock(req);
+ 	blk_pm_put_request(req);
+ 
+ 	elv_completed_request(q, req);
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index ff57fb51b338..acb7252c7e81 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -21,6 +21,48 @@ static inline sector_t blk_zone_start(struct request_queue *q,
+ 	return sector & ~zone_mask;
+ }
+ 
++/*
++ * Return true if a request is a write requests that needs zone write locking.
++ */
++bool blk_req_needs_zone_write_lock(struct request *rq)
++{
++	if (!rq->q->seq_zones_wlock)
++		return false;
++
++	if (blk_rq_is_passthrough(rq))
++		return false;
++
++	switch (req_op(rq)) {
++	case REQ_OP_WRITE_ZEROES:
++	case REQ_OP_WRITE_SAME:
++	case REQ_OP_WRITE:
++		return blk_rq_zone_is_seq(rq);
++	default:
++		return false;
++	}
++}
++EXPORT_SYMBOL_GPL(blk_req_needs_zone_write_lock);
++
++void __blk_req_zone_write_lock(struct request *rq)
++{
++	if (WARN_ON_ONCE(test_and_set_bit(blk_rq_zone_no(rq),
++					  rq->q->seq_zones_wlock)))
++		return;
++
++	WARN_ON_ONCE(rq->rq_flags & RQF_ZONE_WRITE_LOCKED);
++	rq->rq_flags |= RQF_ZONE_WRITE_LOCKED;
++}
++EXPORT_SYMBOL_GPL(__blk_req_zone_write_lock);
++
++void __blk_req_zone_write_unlock(struct request *rq)
++{
++	rq->rq_flags &= ~RQF_ZONE_WRITE_LOCKED;
++	if (rq->q->seq_zones_wlock)
++		WARN_ON_ONCE(!test_and_clear_bit(blk_rq_zone_no(rq),
++						 rq->q->seq_zones_wlock));
++}
++EXPORT_SYMBOL_GPL(__blk_req_zone_write_unlock);
++
+ /*
+  * Check that a zone report belongs to the partition.
+  * If yes, fix its start sector and write pointer, copy it in the
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8089ca17db9a..46e606f5b44b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -121,6 +121,8 @@ typedef __u32 __bitwise req_flags_t;
+ /* Look at ->special_vec for the actual data payload instead of the
+    bio chain. */
+ #define RQF_SPECIAL_PAYLOAD	((__force req_flags_t)(1 << 18))
++/* The per-zone write lock is held for this request */
++#define RQF_ZONE_WRITE_LOCKED	((__force req_flags_t)(1 << 19))
+ 
+ /* flags that prevent us from merging requests: */
+ #define RQF_NOMERGE_FLAGS \
+@@ -546,6 +548,22 @@ struct request_queue {
+ 
+ 	struct queue_limits	limits;
+ 
++	/*
++	 * Zoned block device information for request dispatch control.
++	 * nr_zones is the total number of zones of the device. This is always
++	 * 0 for regular block devices. seq_zones_bitmap is a bitmap of nr_zones
++	 * bits which indicates if a zone is conventional (bit clear) or
++	 * sequential (bit set). seq_zones_wlock is a bitmap of nr_zones
++	 * bits which indicates if a zone is write locked, that is, if a write
++	 * request targeting the zone was dispatched. All three fields are
++	 * initialized by the low level device driver (e.g. scsi/sd.c).
++	 * Stacking drivers (device mappers) may or may not initialize
++	 * these fields.
++	 */
++	unsigned int		nr_zones;
++	unsigned long		*seq_zones_bitmap;
++	unsigned long		*seq_zones_wlock;
++
+ 	/*
+ 	 * sg stuff
+ 	 */
+@@ -790,6 +808,27 @@ static inline unsigned int blk_queue_zone_sectors(struct request_queue *q)
+ 	return blk_queue_is_zoned(q) ? q->limits.chunk_sectors : 0;
+ }
+ 
++static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
++{
++	return q->nr_zones;
++}
++
++static inline unsigned int blk_queue_zone_no(struct request_queue *q,
++					     sector_t sector)
++{
++	if (!blk_queue_is_zoned(q))
++		return 0;
++	return sector >> ilog2(q->limits.chunk_sectors);
++}
++
++static inline bool blk_queue_zone_is_seq(struct request_queue *q,
++					 sector_t sector)
++{
++	if (!blk_queue_is_zoned(q) || !q->seq_zones_bitmap)
++		return false;
++	return test_bit(blk_queue_zone_no(q, sector), q->seq_zones_bitmap);
++}
++
+ static inline bool rq_is_sync(struct request *rq)
+ {
+ 	return op_is_sync(rq->cmd_flags);
+@@ -1029,6 +1068,16 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+ 	return blk_rq_cur_bytes(rq) >> 9;
+ }
+ 
++static inline unsigned int blk_rq_zone_no(struct request *rq)
++{
++	return blk_queue_zone_no(rq->q, blk_rq_pos(rq));
++}
++
++static inline unsigned int blk_rq_zone_is_seq(struct request *rq)
++{
++	return blk_queue_zone_is_seq(rq->q, blk_rq_pos(rq));
++}
++
+ /*
+  * Some commands like WRITE SAME have a payload or data transfer size which
+  * is different from the size of the request.  Any driver that supports such
+@@ -1578,7 +1627,15 @@ static inline unsigned int bdev_zone_sectors(struct block_device *bdev)
+ 
+ 	if (q)
+ 		return blk_queue_zone_sectors(q);
++	return 0;
++}
+ 
++static inline unsigned int bdev_nr_zones(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (q)
++		return blk_queue_nr_zones(q);
+ 	return 0;
+ }
+ 
+@@ -1954,6 +2011,60 @@ extern int __blkdev_driver_ioctl(struct block_device *, fmode_t, unsigned int,
+ extern int bdev_read_page(struct block_device *, sector_t, struct page *);
+ extern int bdev_write_page(struct block_device *, sector_t, struct page *,
+ 						struct writeback_control *);
++
++#ifdef CONFIG_BLK_DEV_ZONED
++bool blk_req_needs_zone_write_lock(struct request *rq);
++void __blk_req_zone_write_lock(struct request *rq);
++void __blk_req_zone_write_unlock(struct request *rq);
++
++static inline void blk_req_zone_write_lock(struct request *rq)
++{
++	if (blk_req_needs_zone_write_lock(rq))
++		__blk_req_zone_write_lock(rq);
++}
++
++static inline void blk_req_zone_write_unlock(struct request *rq)
++{
++	if (rq->rq_flags & RQF_ZONE_WRITE_LOCKED)
++		__blk_req_zone_write_unlock(rq);
++}
++
++static inline bool blk_req_zone_is_write_locked(struct request *rq)
++{
++	return rq->q->seq_zones_wlock &&
++		test_bit(blk_rq_zone_no(rq), rq->q->seq_zones_wlock);
++}
++
++static inline bool blk_req_can_dispatch_to_zone(struct request *rq)
++{
++	if (!blk_req_needs_zone_write_lock(rq))
++		return true;
++	return !blk_req_zone_is_write_locked(rq);
++}
++#else
++static inline bool blk_req_needs_zone_write_lock(struct request *rq)
++{
++	return false;
++}
++
++static inline void blk_req_zone_write_lock(struct request *rq)
++{
++}
++
++static inline void blk_req_zone_write_unlock(struct request *rq)
++{
++}
++static inline bool blk_req_zone_is_write_locked(struct request *rq)
++{
++	return false;
++}
++
++static inline bool blk_req_can_dispatch_to_zone(struct request *rq)
++{
++	return true;
++}
++#endif /* CONFIG_BLK_DEV_ZONED */
++
+ #else /* CONFIG_BLOCK */
+ 
+ struct block_device;
 -- 
 2.14.3
