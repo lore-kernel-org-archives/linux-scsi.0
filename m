@@ -1,123 +1,171 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 24/29] scsi: aacraid: Use hotplug handling function in place of scsi_scan_host
-Date: Thu, 21 Dec 2017 09:34:15 -0800
-Message-ID: <20171221173420.8213-25-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 25/29] scsi: aacraid: Reschedule host scan in case of failure
+Date: Thu, 21 Dec 2017 09:34:16 -0800
+Message-ID: <20171221173420.8213-26-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0062.outbound.protection.outlook.com ([104.47.40.62]:7592
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0069.outbound.protection.outlook.com ([104.47.37.69]:53597
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754695AbdLURfD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 12:35:03 -0500
+        id S1753944AbdLURfF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Dec 2017 12:35:05 -0500
 In-Reply-To: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, aacraid@microsemi.com, tom.white@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>
 
-Driver uses scsi_scan_host to add new devices in the driver init path,
-which adds all the fw exposed devices. The drivers resorts to queue
-command checks to block out commands to _hidden_ devices.
+If the driver fails to retrieve information from the fw (could happen when
+the fw is not fully in its senses), the driver does nothing and change is
+not processed correctly by the driver
 
-Use the hotplug handler code to add new devices during driver init and
-other areas, this is only for safw. For ARC scsi_scan_host will still
-apply.
+Schedule host rescan in case of failure. This is only for SAFW, since
+the information retrieval failure will happen on SAFW devices.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aachba.c  |  4 ----
- drivers/scsi/aacraid/aacraid.h |  1 +
- drivers/scsi/aacraid/commsup.c | 18 +++++++++++++++---
- drivers/scsi/aacraid/linit.c   |  5 +++--
- 4 files changed, 19 insertions(+), 9 deletions(-)
+ drivers/scsi/aacraid/aacraid.h | 27 ++++++++++++++++++++++++++-
+ drivers/scsi/aacraid/commsup.c | 14 +++++++++++++-
+ drivers/scsi/aacraid/linit.c   |  5 +++++
+ 3 files changed, 44 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 74f1dd2..eef7322 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2161,10 +2161,6 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 		dev->maximum_num_channels = le32_to_cpu(bus_info->BusCount);
- 	}
- 
--	if (!dev->sync_mode && dev->sa_firmware &&
--		dev->supplement_adapter_info.virt_device_bus != 0xffff)
--		rcode = aac_setup_safw_adapter(dev, AAC_INIT);
--
- 	if (!dev->in_reset) {
- 		char buffer[16];
- 		tmp = le32_to_cpu(dev->adapter_info.kernelrev);
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index c70c998..ba84d99 100644
+index ba84d99..70e03ed 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2719,6 +2719,7 @@ static inline int aac_supports_2T(struct aac_dev *dev)
+@@ -1341,6 +1341,8 @@ struct fib {
+ #define AAC_EXPOSE_DISK		0
+ #define AAC_HIDE_DISK			3
+ 
++#define AAC_SAFW_RESCAN_DELAY  10
++
+ struct aac_hba_map_info {
+ 	__le32	rmw_nexus;		/* nexus for native HBA devices */
+ 	u8		devtype;	/* device type */
+@@ -1611,6 +1613,7 @@ struct aac_dev
+ 	int			maximum_num_channels;
+ 	struct fsa_dev_info	*fsa_dev;
+ 	struct task_struct	*thread;
++	struct delayed_work	safw_rescan_worker;
+ 	int			cardtype;
+ 	/*
+ 	 *This lock will protect the two 32-bit
+@@ -2639,12 +2642,35 @@ static inline int aac_adapter_check_health(struct aac_dev *dev)
+ 	return (dev)->a_ops.adapter_check_health(dev);
+ }
+ 
++
++int aac_scan_host(struct aac_dev *dev, int rescan);
++
++static inline void aac_schedule_safw_scan_worker(struct aac_dev *dev)
++{
++	schedule_delayed_work(&dev->safw_rescan_worker, AAC_SAFW_RESCAN_DELAY);
++}
++
++static inline void aac_safw_rescan_worker(struct work_struct *work)
++{
++	struct aac_dev *dev = container_of(to_delayed_work(work),
++		struct aac_dev, safw_rescan_worker);
++
++	aac_scan_host(dev, AAC_RESCAN);
++}
++
++static inline void aac_cancel_safw_rescan_worker(struct aac_dev *dev)
++{
++	if (dev->sa_firmware)
++		cancel_delayed_work_sync(&dev->safw_rescan_worker);
++}
++
+ /* SCp.phase values */
+ #define AAC_OWNER_MIDLEVEL	0x101
+ #define AAC_OWNER_LOWLEVEL	0x102
+ #define AAC_OWNER_ERROR_HANDLER	0x103
+ #define AAC_OWNER_FIRMWARE	0x106
+ 
++void aac_safw_rescan_worker(struct work_struct *work);
+ int aac_acquire_irq(struct aac_dev *dev);
+ void aac_free_irq(struct aac_dev *dev);
+ int aac_setup_safw_adapter(struct aac_dev *dev, int rescan);
+@@ -2719,7 +2745,6 @@ static inline int aac_supports_2T(struct aac_dev *dev)
  	return (dev->adapter_info.options & AAC_OPT_NEW_COMM_64);
  }
  
-+int aac_scan_host(struct aac_dev *dev, int rescan);
+-int aac_scan_host(struct aac_dev *dev, int rescan);
  char * get_container_type(unsigned type);
  extern int numacb;
  extern char aac_driver_version[];
 diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 698c049..46ee7ba 100644
+index 46ee7ba..48b5234 100644
 --- a/drivers/scsi/aacraid/commsup.c
 +++ b/drivers/scsi/aacraid/commsup.c
-@@ -1968,6 +1968,19 @@ static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
+@@ -1968,16 +1968,28 @@ static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
  	return rcode;
  }
  
-+int aac_scan_host(struct aac_dev *dev, int rescan)
++static int aac_scan_safw_host(struct aac_dev *dev, int rescan)
 +{
 +	int rcode = 0;
 +
-+	mutex_lock(&dev->scan_mutex);
-+	if (dev->sa_firmware)
-+		rcode = aac_update_safw_host_devices(dev, rescan);
-+	else
-+		scsi_scan_host(dev->scsi_host_ptr);
-+	mutex_unlock(&dev->scan_mutex);
++	rcode = aac_update_safw_host_devices(dev, rescan);
++	if (rcode)
++		aac_schedule_safw_scan_worker(dev);
++
 +	return rcode;
 +}
 +
- /**
-  *	aac_handle_sa_aif	Handle a message from the firmware
-  *	@dev: Which adapter this fib is from
-@@ -2001,9 +2014,8 @@ static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
- 	case SA_AIF_LDEV_CHANGE:
- 	case SA_AIF_BPCFG_CHANGE:
+ int aac_scan_host(struct aac_dev *dev, int rescan)
+ {
+ 	int rcode = 0;
  
--		mutex_lock(&dev->scan_mutex);
--		aac_update_safw_host_devices(dev, AAC_RESCAN);
--		mutex_unlock(&dev->scan_mutex);
-+		aac_scan_host(dev, AAC_RESCAN);
+ 	mutex_lock(&dev->scan_mutex);
+ 	if (dev->sa_firmware)
+-		rcode = aac_update_safw_host_devices(dev, rescan);
++		rcode = aac_scan_safw_host(dev, rescan);
+ 	else
+ 		scsi_scan_host(dev->scsi_host_ptr);
+ 	mutex_unlock(&dev->scan_mutex);
 +
- 		break;
+ 	return rcode;
+ }
  
- 	case SA_AIF_BPSTAT_CHANGE:
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 2c862cd..7ea7b2c 100644
+index 7ea7b2c..d39dc5e 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -1787,7 +1787,8 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	error = scsi_add_host(shost, &pdev->dev);
- 	if (error)
- 		goto out_deinit;
--	scsi_scan_host(shost);
+@@ -1684,6 +1684,8 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	mutex_init(&aac->ioctl_mutex);
+ 	mutex_init(&aac->scan_mutex);
 +
-+	aac_scan_host(aac, AAC_INIT);
++	INIT_DELAYED_WORK(&aac->safw_rescan_worker, aac_safw_rescan_worker);
+ 	/*
+ 	 *	Map in the registers from the adapter.
+ 	 */
+@@ -1873,6 +1875,7 @@ static int aac_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
  
- 	pci_enable_pcie_error_reporting(pdev);
- 	pci_save_state(pdev);
-@@ -2071,7 +2072,7 @@ static void aac_pci_resume(struct pci_dev *pdev)
- 		if (sdev->sdev_state == SDEV_OFFLINE)
- 			sdev->sdev_state = SDEV_RUNNING;
- 	scsi_unblock_requests(aac->scsi_host_ptr);
--	scsi_scan_host(aac->scsi_host_ptr);
-+	aac_scan_host(aac, AAC_RESCAN);
- 	pci_save_state(pdev);
+ 	scsi_block_requests(shost);
++	aac_cancel_safw_rescan_worker(aac);
+ 	aac_send_shutdown(aac);
  
- 	dev_err(&pdev->dev, "aacraid: PCI error - resume\n");
+ 	aac_release_resources(aac);
+@@ -1931,6 +1934,7 @@ static void aac_remove_one(struct pci_dev *pdev)
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+ 
++	aac_cancel_safw_rescan_worker(aac);
+ 	scsi_remove_host(shost);
+ 
+ 	__aac_shutdown(aac);
+@@ -1988,6 +1992,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
+ 		aac->handle_pci_error = 1;
+ 
+ 		scsi_block_requests(aac->scsi_host_ptr);
++		aac_cancel_safw_rescan_worker(aac);
+ 		aac_flush_ios(aac);
+ 		aac_release_resources(aac);
+ 
 -- 
 2.9.4
