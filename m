@@ -1,213 +1,102 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V9 6/7] sd_zbc: Initialize device request queue zoned data
-Date: Thu, 21 Dec 2017 15:43:43 +0900
-Message-ID: <20171221064344.6228-7-damien.lemoal@wdc.com>
-References: <20171221064344.6228-1-damien.lemoal@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171221064344.6228-1-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+From: chenxiang <chenxiang66@hisilicon.com>
+Subject: [PATCH] scsi: fix dma_unmap_sg() parameter in some drivers
+Date: Thu, 21 Dec 2017 16:15:30 +0800
+Message-ID: <1513844130-52564-1-git-send-email-chenxiang66@hisilicon.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2712 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750866AbdLUH2y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Dec 2017 02:28:54 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: john.garry@huawei.com, jgarzik@pobox.com, jack_wang@usish.com, =dan.j.williams@intel.com, bryantly@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, chenxiang <chenxiang66@hisilicon.com>
 
-Initialize the seq_zones_bitmap, seq_zones_wlock and nr_zones fields of
-the disk request queue on disk revalidate. As the seq_zones_bitmap
-and seq_zones_wlock allocations are identical, introduce the helper
-sd_zbc_alloc_zone_bitmap(). Using this helper, reallocate the bitmaps
-whenever the disk capacity (number of zones) changes.
+For function dma_unmap_sg(), the <nents> parameter should be number of
+elements in the scatterlist prior to the mapping, not after the mapping.
+So fix this usage in ibmvscsi_tgt/isci/mvsas/pm8001.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/sd_zbc.c | 152 +++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 144 insertions(+), 8 deletions(-)
+ drivers/scsi/ibmvscsi_tgt/libsrp.c | 6 ++++--
+ drivers/scsi/isci/request.c        | 2 +-
+ drivers/scsi/mvsas/mv_sas.c        | 4 ++--
+ drivers/scsi/pm8001/pm8001_sas.c   | 2 +-
+ 4 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 27793b9f54c0..c715b8363ce0 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -586,8 +586,123 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	return 0;
+diff --git a/drivers/scsi/ibmvscsi_tgt/libsrp.c b/drivers/scsi/ibmvscsi_tgt/libsrp.c
+index 5a4cc28..16054c0 100644
+--- a/drivers/scsi/ibmvscsi_tgt/libsrp.c
++++ b/drivers/scsi/ibmvscsi_tgt/libsrp.c
+@@ -193,7 +193,8 @@ static int srp_direct_data(struct ibmvscsis_cmd *cmd, struct srp_direct_buf *md,
+ 	err = rdma_io(cmd, sg, nsg, md, 1, dir, len);
+ 
+ 	if (dma_map)
+-		dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
++		dma_unmap_sg(iue->target->dev, sg, cmd->se_cmd.t_data_nents,
++				DMA_BIDIRECTIONAL);
+ 
+ 	return err;
  }
+@@ -265,7 +266,8 @@ static int srp_indirect_data(struct ibmvscsis_cmd *cmd, struct srp_cmd *srp_cmd,
+ 	err = rdma_io(cmd, sg, nsg, md, nmd, dir, len);
  
-+/**
-+ * sd_zbc_alloc_zone_bitmap - Allocate a zone bitmap (one bit per zone).
-+ * @sdkp: The disk of the bitmap
-+ */
-+static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+
-+	return kzalloc_node(BITS_TO_LONGS(sdkp->nr_zones)
-+			    * sizeof(unsigned long),
-+			    GFP_KERNEL, q->node);
-+}
-+
-+/**
-+ * sd_zbc_get_seq_zones - Parse report zones reply to identify sequential zones
-+ * @sdkp: disk used
-+ * @buf: report reply buffer
-+ * @seq_zone_bitamp: bitmap of sequential zones to set
-+ *
-+ * Parse reported zone descriptors in @buf to identify sequential zones and
-+ * set the reported zone bit in @seq_zones_bitmap accordingly.
-+ * Since read-only and offline zones cannot be written, do not
-+ * mark them as sequential in the bitmap.
-+ * Return the LBA after the last zone reported.
-+ */
-+static sector_t sd_zbc_get_seq_zones(struct scsi_disk *sdkp, unsigned char *buf,
-+				     unsigned int buflen,
-+				     unsigned long *seq_zones_bitmap)
-+{
-+	sector_t lba, next_lba = sdkp->capacity;
-+	unsigned int buf_len, list_length;
-+	unsigned char *rec;
-+	u8 type, cond;
-+
-+	list_length = get_unaligned_be32(&buf[0]) + 64;
-+	buf_len = min(list_length, buflen);
-+	rec = buf + 64;
-+
-+	while (rec < buf + buf_len) {
-+		type = rec[0] & 0x0f;
-+		cond = (rec[1] >> 4) & 0xf;
-+		lba = get_unaligned_be64(&rec[16]);
-+		if (type != ZBC_ZONE_TYPE_CONV &&
-+		    cond != ZBC_ZONE_COND_READONLY &&
-+		    cond != ZBC_ZONE_COND_OFFLINE)
-+			set_bit(lba >> sdkp->zone_shift, seq_zones_bitmap);
-+		next_lba = lba + get_unaligned_be64(&rec[8]);
-+		rec += 64;
-+	}
-+
-+	return next_lba;
-+}
-+
-+/**
-+ * sd_zbc_setup_seq_zones_bitmap - Initialize the disk seq zone bitmap.
-+ * @sdkp: target disk
-+ *
-+ * Allocate a zone bitmap and initialize it by identifying sequential zones.
-+ */
-+static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+	unsigned long *seq_zones_bitmap;
-+	sector_t lba = 0;
-+	unsigned char *buf;
-+	int ret = -ENOMEM;
-+
-+	seq_zones_bitmap = sd_zbc_alloc_zone_bitmap(sdkp);
-+	if (!seq_zones_bitmap)
-+		return -ENOMEM;
-+
-+	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
-+	if (!buf)
-+		goto out;
-+
-+	while (lba < sdkp->capacity) {
-+		ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, lba);
-+		if (ret)
-+			goto out;
-+		lba = sd_zbc_get_seq_zones(sdkp, buf, SD_ZBC_BUF_SIZE,
-+					   seq_zones_bitmap);
-+	}
-+
-+	if (lba != sdkp->capacity) {
-+		/* Something went wrong */
-+		ret = -EIO;
-+	}
-+
-+out:
-+	kfree(buf);
-+	if (ret) {
-+		kfree(seq_zones_bitmap);
-+		return ret;
-+	}
-+
-+	q->seq_zones_bitmap = seq_zones_bitmap;
-+
-+	return 0;
-+}
-+
-+static void sd_zbc_cleanup(struct scsi_disk *sdkp)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+
-+	kfree(q->seq_zones_bitmap);
-+	q->seq_zones_bitmap = NULL;
-+
-+	kfree(q->seq_zones_wlock);
-+	q->seq_zones_wlock = NULL;
-+
-+	q->nr_zones = 0;
-+}
-+
- static int sd_zbc_setup(struct scsi_disk *sdkp)
- {
-+	struct request_queue *q = sdkp->disk->queue;
-+	int ret;
+ 	if (dma_map)
+-		dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
++		dma_unmap_sg(iue->target->dev, sg, cmd->se_cmd.t_data_nents,
++				DMA_BIDIRECTIONAL);
  
- 	/* READ16/WRITE16 is mandatory for ZBC disks */
- 	sdkp->device->use_16_for_rw = 1;
-@@ -599,15 +714,36 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
- 	sdkp->nr_zones =
- 		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
+ free_mem:
+ 	if (token && dma_map) {
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index ed197bc..225d947 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -2914,7 +2914,7 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
+ 					 task->total_xfer_len, task->data_dir);
+ 		else  /* unmap the sgl dma addresses */
+ 			dma_unmap_sg(&ihost->pdev->dev, task->scatter,
+-				     request->num_sg_entries, task->data_dir);
++				     task->num_scatter, task->data_dir);
+ 		break;
+ 	case SAS_PROTOCOL_SMP: {
+ 		struct scatterlist *sg = &task->smp_task.smp_req;
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index cff43bd..4b2cf36 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -848,7 +848,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 	dev_printk(KERN_ERR, mvi->dev, "mvsas prep failed[%d]!\n", rc);
+ 	if (!sas_protocol_ata(task->task_proto))
+ 		if (n_elem)
+-			dma_unmap_sg(mvi->dev, task->scatter, n_elem,
++			dma_unmap_sg(mvi->dev, task->scatter, task->num_scatter,
+ 				     task->data_dir);
+ prep_out:
+ 	return rc;
+@@ -899,7 +899,7 @@ static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
+ 	if (!sas_protocol_ata(task->task_proto))
+ 		if (slot->n_elem)
+ 			dma_unmap_sg(mvi->dev, task->scatter,
+-				     slot->n_elem, task->data_dir);
++				     task->num_scatter, task->data_dir);
  
--	if (!sdkp->zones_wlock) {
--		sdkp->zones_wlock = kcalloc(BITS_TO_LONGS(sdkp->nr_zones),
--					    sizeof(unsigned long),
--					    GFP_KERNEL);
--		if (!sdkp->zones_wlock)
--			return -ENOMEM;
-+	/*
-+	 * Initialize the device request queue information if the number
-+	 * of zones changed.
-+	 */
-+	if (sdkp->nr_zones != q->nr_zones) {
-+
-+		sd_zbc_cleanup(sdkp);
-+
-+		q->nr_zones = sdkp->nr_zones;
-+		if (sdkp->nr_zones) {
-+			q->seq_zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
-+			if (!q->seq_zones_wlock) {
-+				ret = -ENOMEM;
-+				goto err;
-+			}
-+
-+			ret = sd_zbc_setup_seq_zones_bitmap(sdkp);
-+			if (ret) {
-+				sd_zbc_cleanup(sdkp);
-+				goto err;
-+			}
-+		}
-+
- 	}
- 
- 	return 0;
-+
-+err:
-+	sd_zbc_cleanup(sdkp);
-+	return ret;
- }
- 
- int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
-@@ -661,14 +797,14 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 
- err:
- 	sdkp->capacity = 0;
-+	sd_zbc_cleanup(sdkp);
- 
- 	return ret;
- }
- 
- void sd_zbc_remove(struct scsi_disk *sdkp)
- {
--	kfree(sdkp->zones_wlock);
--	sdkp->zones_wlock = NULL;
-+	sd_zbc_cleanup(sdkp);
- }
- 
- void sd_zbc_print_zones(struct scsi_disk *sdkp)
+ 	switch (task->task_proto) {
+ 	case SAS_PROTOCOL_SMP:
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 947d601..576a0f0 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -466,7 +466,7 @@ static int pm8001_task_exec(struct sas_task *task,
+ 	dev_printk(KERN_ERR, pm8001_ha->dev, "pm8001 exec failed[%d]!\n", rc);
+ 	if (!sas_protocol_ata(t->task_proto))
+ 		if (n_elem)
+-			dma_unmap_sg(pm8001_ha->dev, t->scatter, n_elem,
++			dma_unmap_sg(pm8001_ha->dev, t->scatter, t->num_scatter,
+ 				t->data_dir);
+ out_done:
+ 	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
 -- 
-2.14.3
+1.9.1
