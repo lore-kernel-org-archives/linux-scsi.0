@@ -1,91 +1,105 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 18/29] scsi: aacraid: Merge func to get container information
-Date: Thu, 21 Dec 2017 09:34:09 -0800
-Message-ID: <20171221173420.8213-19-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 17/29] scsi: aacraid: Add helper function to set queue depth
+Date: Thu, 21 Dec 2017 09:34:08 -0800
+Message-ID: <20171221173420.8213-18-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0073.outbound.protection.outlook.com ([104.47.40.73]:50048
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0044.outbound.protection.outlook.com ([104.47.38.44]:58272
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754187AbdLURer (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 12:34:47 -0500
+        id S1753819AbdLUReq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Dec 2017 12:34:46 -0500
 In-Reply-To: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, aacraid@microsemi.com, tom.white@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>
 
-Merge aac_get_containers to setup target function, so that information
-about all the present devices can be retrieved in one shot.
+Add helper function to set queue depth from information retrieved from
+the bmic phy structure.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aachba.c  |  4 ++++
- drivers/scsi/aacraid/commsup.c | 34 +++++++++++++++-------------------
- 2 files changed, 19 insertions(+), 19 deletions(-)
+ drivers/scsi/aacraid/aachba.c | 37 ++++++++++++++++++++++++-------------
+ 1 file changed, 24 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 01cb825..7f6036c 100644
+index a29c8fb..01cb825 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -2032,6 +2032,10 @@ static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
- {
- 	int rcode = 0;
+@@ -1756,6 +1756,28 @@ static int aac_send_safw_bmic_cmd(struct aac_dev *dev,
+ 	return rcode;
+ }
  
-+	rcode = aac_get_containers(dev);
-+	if (unlikely(rcode < 0))
-+		goto out;
++static void aac_set_safw_target_qd(struct aac_dev *dev, int bus, int target)
++{
 +
- 	rcode = aac_get_safw_ciss_luns(dev, rescan);
++	struct aac_ciss_identify_pd *identify_resp;
++
++	if (dev->hba_map[bus][target].devtype != AAC_DEVTYPE_NATIVE_RAW)
++		return;
++
++	identify_resp = dev->hba_map[bus][target].safw_identify_resp;
++	if (identify_resp == NULL) {
++		dev->hba_map[bus][target].qd_limit = 32;
++		return;
++	}
++
++	if (identify_resp->current_queue_depth_limit <= 0 ||
++		identify_resp->current_queue_depth_limit > 255)
++		dev->hba_map[bus][target].qd_limit = 32;
++	else
++		dev->hba_map[bus][target].qd_limit =
++			identify_resp->current_queue_depth_limit;
++}
++
+ static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
+ 	struct aac_ciss_identify_pd **identify_resp, u32 bus, u32 target)
+ {
+@@ -1782,13 +1804,6 @@ static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
  	if (unlikely(rcode < 0))
- 		goto out;
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index f3077b3..9625eb0 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1949,26 +1949,22 @@ static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
+ 		goto mem_free_all;
  
- 		aac_resolve_luns(dev);
+-	if (identify_reply->current_queue_depth_limit <= 0 ||
+-		identify_reply->current_queue_depth_limit > 32)
+-		dev->hba_map[bus][target].qd_limit = 32;
+-	else
+-		dev->hba_map[bus][target].qd_limit =
+-			identify_reply->current_queue_depth_limit;
+-
+ 	*identify_resp = identify_reply;
  
--		if (events == SA_AIF_LDEV_CHANGE ||
--		    events == SA_AIF_BPCFG_CHANGE) {
--			aac_get_containers(dev);
--			for (container = 0; container <
-+		for (container = 0; container <
- 			dev->maximum_num_containers; ++container) {
--				sdev = scsi_device_lookup(dev->scsi_host_ptr,
--						CONTAINER_CHANNEL,
--						container, 0);
--				if (dev->fsa_dev[container].valid && !sdev) {
--					scsi_add_device(dev->scsi_host_ptr,
--						CONTAINER_CHANNEL,
--						container, 0);
--				} else if (!dev->fsa_dev[container].valid &&
--					sdev) {
--					scsi_remove_device(sdev);
--					scsi_device_put(sdev);
--				} else if (sdev) {
--					scsi_rescan_device(&sdev->sdev_gendev);
--					scsi_device_put(sdev);
--				}
-+			sdev = scsi_device_lookup(dev->scsi_host_ptr,
-+					CONTAINER_CHANNEL,
-+					container, 0);
-+			if (dev->fsa_dev[container].valid && !sdev) {
-+				scsi_add_device(dev->scsi_host_ptr,
-+					CONTAINER_CHANNEL,
-+					container, 0);
-+			} else if (!dev->fsa_dev[container].valid &&
-+				sdev) {
-+				scsi_remove_device(sdev);
-+				scsi_device_put(sdev);
-+			} else if (sdev) {
-+				scsi_rescan_device(&sdev->sdev_gendev);
-+				scsi_device_put(sdev);
- 			}
- 		}
- 		break;
+ out:
+@@ -1947,17 +1962,14 @@ static int aac_get_safw_attr_all_targets(struct aac_dev *dev, int rescan)
+ 		rcode = aac_issue_safw_bmic_identify(dev,
+ 						&identify_resp, bus, target);
+ 
+-		if (unlikely(rcode < 0)) {
+-			dev->hba_map[bus][target].qd_limit = 32;
++		if (unlikely(rcode < 0))
+ 			goto free_identify_resp;
+-		}
+ 
+ 		dev->hba_map[bus][target].safw_identify_resp = identify_resp;
+ 	}
+ 
+ out:
+ 	return rcode;
+-
+ free_identify_resp:
+ 	aac_free_safw_all_identify_resp(dev, i);
+ 	goto out;
+@@ -2006,8 +2018,7 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
+ 		} else
+ 			devtype = AAC_DEVTYPE_ARC_RAW;
+ 
+-		if (devtype != AAC_DEVTYPE_NATIVE_RAW)
+-			goto update_devtype;
++		aac_set_safw_target_qd(dev, bus, target);
+ 
+ update_devtype:
+ 		if (rescan == AAC_INIT)
 -- 
 2.9.4
