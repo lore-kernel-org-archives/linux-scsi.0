@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V9 7/7] sd: Remove zone write locking
-Date: Thu, 21 Dec 2017 15:43:44 +0900
-Message-ID: <20171221064344.6228-8-damien.lemoal@wdc.com>
+Subject: [PATCH V9 5/7] deadline-iosched: Introduce zone locking support
+Date: Thu, 21 Dec 2017 15:43:42 +0900
+Message-ID: <20171221064344.6228-6-damien.lemoal@wdc.com>
 References: <20171221064344.6228-1-damien.lemoal@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20171221064344.6228-1-damien.lemoal@wdc.com>
@@ -10,273 +10,176 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The block layer now handles zone write locking.
+Introduce zone write locking to avoid write request reordering with
+zoned block devices. This is achieved using a finer selection of the
+next request to dispatch:
+1) Any non-write request is always allowed to proceed.
+2) Any write to a conventional zone is always allowed to proceed.
+3) For a write to a sequential zone, the zone lock is first checked.
+   a) If the zone is not locked, the write is allowed to proceed after
+      its target zone is locked.
+   b) If the zone is locked, the write request is skipped and the next
+      request in the dispatch queue tested (back to step 1).
+
+For a write request that has locked its target zone, the zone is
+unlocked either when the request completes and the method
+deadline_request_completed() is called, or when the request is requeued
+using the method deadline_add_request().
+
+Requests targeting a locked zone are always left in the scheduler queue
+to preserve the initial write order. If no write request can be
+dispatched, allow reads to be dispatched even if the write batch is not
+done.
+
+If the device used is not a zoned block device, or if zoned block device
+support is disabled, this patch does not modify deadline behavior.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c        | 41 +++---------------------
- drivers/scsi/sd.h        | 11 -------
- drivers/scsi/sd_zbc.c    | 83 ------------------------------------------------
- include/scsi/scsi_cmnd.h |  3 +-
- 4 files changed, 6 insertions(+), 132 deletions(-)
+ block/deadline-iosched.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 68 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a028ab3322a9..f1157b4fe32e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -851,16 +851,13 @@ static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
- 	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
--	int ret;
+diff --git a/block/deadline-iosched.c b/block/deadline-iosched.c
+index 81e3f0897457..9de9f156e203 100644
+--- a/block/deadline-iosched.c
++++ b/block/deadline-iosched.c
+@@ -98,6 +98,12 @@ deadline_add_request(struct request_queue *q, struct request *rq)
+ 	struct deadline_data *dd = q->elevator->elevator_data;
+ 	const int data_dir = rq_data_dir(rq);
  
- 	if (!(rq->cmd_flags & REQ_NOUNMAP)) {
- 		switch (sdkp->zeroing_mode) {
- 		case SD_ZERO_WS16_UNMAP:
--			ret = sd_setup_write_same16_cmnd(cmd, true);
--			goto out;
-+			return sd_setup_write_same16_cmnd(cmd, true);
- 		case SD_ZERO_WS10_UNMAP:
--			ret = sd_setup_write_same10_cmnd(cmd, true);
--			goto out;
-+			return sd_setup_write_same10_cmnd(cmd, true);
- 		}
++	/*
++	 * This may be a requeue of a write request that has locked its
++	 * target zone. If it is the case, this releases the zone lock.
++	 */
++	blk_req_zone_write_unlock(rq);
++
+ 	deadline_add_rq_rb(dd, rq);
+ 
+ 	/*
+@@ -188,6 +194,12 @@ deadline_move_to_dispatch(struct deadline_data *dd, struct request *rq)
+ {
+ 	struct request_queue *q = rq->q;
+ 
++	/*
++	 * For a zoned block device, write requests must write lock their
++	 * target zone.
++	 */
++	blk_req_zone_write_lock(rq);
++
+ 	deadline_remove_request(q, rq);
+ 	elv_dispatch_add_tail(q, rq);
+ }
+@@ -235,13 +247,28 @@ static inline int deadline_check_fifo(struct deadline_data *dd, int ddir)
+ static struct request *
+ deadline_fifo_request(struct deadline_data *dd, int data_dir)
+ {
++	struct request *rq;
++
+ 	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
+ 		return NULL;
+ 
+ 	if (list_empty(&dd->fifo_list[data_dir]))
+ 		return NULL;
+ 
+-	return rq_entry_fifo(dd->fifo_list[data_dir].next);
++	rq = rq_entry_fifo(dd->fifo_list[data_dir].next);
++	if (data_dir == READ || !blk_queue_is_zoned(rq->q))
++		return rq;
++
++	/*
++	 * Look for a write request that can be dispatched, that is one with
++	 * an unlocked target zone.
++	 */
++	list_for_each_entry(rq, &dd->fifo_list[WRITE], queuelist) {
++		if (blk_req_can_dispatch_to_zone(rq))
++			return rq;
++	}
++
++	return NULL;
+ }
+ 
+ /*
+@@ -251,10 +278,29 @@ deadline_fifo_request(struct deadline_data *dd, int data_dir)
+ static struct request *
+ deadline_next_request(struct deadline_data *dd, int data_dir)
+ {
++	struct request *rq;
++
+ 	if (WARN_ON_ONCE(data_dir != READ && data_dir != WRITE))
+ 		return NULL;
+ 
+-	return dd->next_rq[data_dir];
++	rq = dd->next_rq[data_dir];
++	if (!rq)
++		return NULL;
++
++	if (data_dir == READ || !blk_queue_is_zoned(rq->q))
++		return rq;
++
++	/*
++	 * Look for a write request that can be dispatched, that is one with
++	 * an unlocked target zone.
++	 */
++	while (rq) {
++		if (blk_req_can_dispatch_to_zone(rq))
++			return rq;
++		rq = deadline_latter_request(rq);
++	}
++
++	return NULL;
+ }
+ 
+ /*
+@@ -288,7 +334,8 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
+ 	if (reads) {
+ 		BUG_ON(RB_EMPTY_ROOT(&dd->sort_list[READ]));
+ 
+-		if (writes && (dd->starved++ >= dd->writes_starved))
++		if (deadline_fifo_request(dd, WRITE) &&
++		    (dd->starved++ >= dd->writes_starved))
+ 			goto dispatch_writes;
+ 
+ 		data_dir = READ;
+@@ -333,6 +380,13 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
+ 		rq = next_rq;
  	}
  
-@@ -868,15 +865,9 @@ static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
- 		return BLKPREP_INVALID;
++	/*
++	 * For a zoned block device, if we only have writes queued and none of
++	 * them can be dispatched, rq will be NULL.
++	 */
++	if (!rq)
++		return 0;
++
+ 	dd->batching = 0;
  
- 	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
--		ret = sd_setup_write_same16_cmnd(cmd, false);
--	else
--		ret = sd_setup_write_same10_cmnd(cmd, false);
--
--out:
--	if (sd_is_zoned(sdkp) && ret == BLKPREP_OK)
--		return sd_zbc_write_lock_zone(cmd);
-+		return sd_setup_write_same16_cmnd(cmd, false);
- 
--	return ret;
-+	return sd_setup_write_same10_cmnd(cmd, false);
+ dispatch_request:
+@@ -345,6 +399,16 @@ static int deadline_dispatch_requests(struct request_queue *q, int force)
+ 	return 1;
  }
  
- static void sd_config_write_same(struct scsi_disk *sdkp)
-@@ -964,12 +955,6 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 
- 	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
- 
--	if (sd_is_zoned(sdkp)) {
--		ret = sd_zbc_write_lock_zone(cmd);
--		if (ret != BLKPREP_OK)
--			return ret;
--	}
--
- 	sector >>= ilog2(sdp->sector_size) - 9;
- 	nr_sectors >>= ilog2(sdp->sector_size) - 9;
- 
-@@ -1004,9 +989,6 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 	ret = scsi_init_io(cmd);
- 	rq->__data_len = nr_bytes;
- 
--	if (sd_is_zoned(sdkp) && ret != BLKPREP_OK)
--		sd_zbc_write_unlock_zone(cmd);
--
- 	return ret;
- }
- 
-@@ -1036,19 +1018,12 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	sector_t threshold;
- 	unsigned int this_count = blk_rq_sectors(rq);
- 	unsigned int dif, dix;
--	bool zoned_write = sd_is_zoned(sdkp) && rq_data_dir(rq) == WRITE;
- 	int ret;
- 	unsigned char protect;
- 
--	if (zoned_write) {
--		ret = sd_zbc_write_lock_zone(SCpnt);
--		if (ret != BLKPREP_OK)
--			return ret;
--	}
--
- 	ret = scsi_init_io(SCpnt);
- 	if (ret != BLKPREP_OK)
--		goto out;
-+		return ret;
- 	WARN_ON_ONCE(SCpnt != rq->special);
- 
- 	/* from here on until we're complete, any goto out
-@@ -1267,9 +1242,6 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	 */
- 	ret = BLKPREP_OK;
-  out:
--	if (zoned_write && ret != BLKPREP_OK)
--		sd_zbc_write_unlock_zone(SCpnt);
--
- 	return ret;
- }
- 
-@@ -1314,9 +1286,6 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
- 	struct request *rq = SCpnt->request;
- 	u8 *cmnd;
- 
--	if (SCpnt->flags & SCMD_ZONE_WRITE_LOCK)
--		sd_zbc_write_unlock_zone(SCpnt);
--
- 	if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
- 		__free_page(rq->special_vec.bv_page);
- 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 320de758323e..0d663b5e45bb 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -77,7 +77,6 @@ struct scsi_disk {
- 	unsigned int	nr_zones;
- 	unsigned int	zone_blocks;
- 	unsigned int	zone_shift;
--	unsigned long	*zones_wlock;
- 	unsigned int	zones_optimal_open;
- 	unsigned int	zones_optimal_nonseq;
- 	unsigned int	zones_max_open;
-@@ -283,8 +282,6 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
- extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
- extern void sd_zbc_remove(struct scsi_disk *sdkp);
- extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
--extern int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd);
--extern void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd);
- extern int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd);
- extern int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);
- extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
-@@ -302,14 +299,6 @@ static inline void sd_zbc_remove(struct scsi_disk *sdkp) {}
- 
- static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
- 
--static inline int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
--{
--	/* Let the drive fail requests */
--	return BLKPREP_OK;
--}
--
--static inline void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd) {}
--
- static inline int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd)
++/*
++ * For zoned block devices, write unlock the target zone of completed
++ * write requests.
++ */
++static void
++deadline_completed_request(struct request_queue *q, struct request *rq)
++{
++	blk_req_zone_write_unlock(rq);
++}
++
+ static void deadline_exit_queue(struct elevator_queue *e)
  {
- 	return BLKPREP_INVALID;
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index c715b8363ce0..6c348a211ebb 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -229,17 +229,6 @@ static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
- 	return logical_to_sectors(sdkp->device, sdkp->zone_blocks);
- }
- 
--/**
-- * sd_zbc_zone_no - Get the number of the zone conataining a sector.
-- * @sdkp: The target disk
-- * @sector: 512B sector address contained in the zone
-- */
--static inline unsigned int sd_zbc_zone_no(struct scsi_disk *sdkp,
--					  sector_t sector)
--{
--	return sectors_to_logical(sdkp->device, sector) >> sdkp->zone_shift;
--}
--
- /**
-  * sd_zbc_setup_reset_cmnd - Prepare a RESET WRITE POINTER scsi command.
-  * @cmd: the command to setup
-@@ -278,78 +267,6 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
- 	return BLKPREP_OK;
- }
- 
--/**
-- * sd_zbc_write_lock_zone - Write lock a sequential zone.
-- * @cmd: write command
-- *
-- * Called from sd_init_cmd() for write requests (standard write, write same or
-- * write zeroes operations). If the request target zone is not already locked,
-- * the zone is locked and BLKPREP_OK returned, allowing the request to proceed
-- * through dispatch in scsi_request_fn(). Otherwise, BLKPREP_DEFER is returned,
-- * forcing the request to wait for the zone to be unlocked, that is, for the
-- * previously issued write request targeting the same zone to complete.
-- *
-- * This is called from blk_peek_request() context with the queue lock held and
-- * before the request is removed from the scheduler. As a result, multiple
-- * contexts executing concurrently scsi_request_fn() cannot result in write
-- * sequence reordering as only a single write request per zone is allowed to
-- * proceed.
-- */
--int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
--{
--	struct request *rq = cmd->request;
--	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
--	sector_t sector = blk_rq_pos(rq);
--	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
--	unsigned int zno = sd_zbc_zone_no(sdkp, sector);
--
--	/*
--	 * Note: Checks of the alignment of the write command on
--	 * logical blocks is done in sd.c
--	 */
--
--	/* Do not allow zone boundaries crossing on host-managed drives */
--	if (blk_queue_zoned_model(sdkp->disk->queue) == BLK_ZONED_HM &&
--	    (sector & (zone_sectors - 1)) + blk_rq_sectors(rq) > zone_sectors)
--		return BLKPREP_KILL;
--
--	/*
--	 * Do not issue more than one write at a time per
--	 * zone. This solves write ordering problems due to
--	 * the unlocking of the request queue in the dispatch
--	 * path in the non scsi-mq case.
--	 */
--	if (sdkp->zones_wlock &&
--	    test_and_set_bit(zno, sdkp->zones_wlock))
--		return BLKPREP_DEFER;
--
--	WARN_ON_ONCE(cmd->flags & SCMD_ZONE_WRITE_LOCK);
--	cmd->flags |= SCMD_ZONE_WRITE_LOCK;
--
--	return BLKPREP_OK;
--}
--
--/**
-- * sd_zbc_write_unlock_zone - Write unlock a sequential zone.
-- * @cmd: write command
-- *
-- * Called from sd_uninit_cmd(). Unlocking the request target zone will allow
-- * dispatching the next write request for the zone.
-- */
--void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
--{
--	struct request *rq = cmd->request;
--	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
--
--	if (sdkp->zones_wlock && cmd->flags & SCMD_ZONE_WRITE_LOCK) {
--		unsigned int zno = sd_zbc_zone_no(sdkp, blk_rq_pos(rq));
--		WARN_ON_ONCE(!test_bit(zno, sdkp->zones_wlock));
--		cmd->flags &= ~SCMD_ZONE_WRITE_LOCK;
--		clear_bit_unlock(zno, sdkp->zones_wlock);
--		smp_mb__after_atomic();
--	}
--}
--
- /**
-  * sd_zbc_complete - ZBC command post processing.
-  * @cmd: Completed command
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 7fb57e905526..6bce2f64c220 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -58,8 +58,7 @@ struct scsi_pointer {
- /* for scmd->flags */
- #define SCMD_TAGGED		(1 << 0)
- #define SCMD_UNCHECKED_ISA_DMA	(1 << 1)
--#define SCMD_ZONE_WRITE_LOCK	(1 << 2)
--#define SCMD_INITIALIZED	(1 << 3)
-+#define SCMD_INITIALIZED	(1 << 2)
- /* flags preserved across unprep / reprep */
- #define SCMD_PRESERVED_FLAGS	(SCMD_UNCHECKED_ISA_DMA | SCMD_INITIALIZED)
- 
+ 	struct deadline_data *dd = e->elevator_data;
+@@ -466,6 +530,7 @@ static struct elevator_type iosched_deadline = {
+ 		.elevator_merged_fn =		deadline_merged_request,
+ 		.elevator_merge_req_fn =	deadline_merged_requests,
+ 		.elevator_dispatch_fn =		deadline_dispatch_requests,
++		.elevator_completed_req_fn =	deadline_completed_request,
+ 		.elevator_add_req_fn =		deadline_add_request,
+ 		.elevator_former_req_fn =	elv_rb_former_request,
+ 		.elevator_latter_req_fn =	elv_rb_latter_request,
 -- 
 2.14.3
