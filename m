@@ -1,77 +1,55 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 01/29] scsi: aacraid: Fix udev inquiry race condition
-Date: Thu, 21 Dec 2017 09:33:52 -0800
-Message-ID: <20171221173420.8213-2-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 04/29] scsi: aacraid: Do not remove offlined devices
+Date: Thu, 21 Dec 2017 09:33:55 -0800
+Message-ID: <20171221173420.8213-5-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0040.outbound.protection.outlook.com ([104.47.42.40]:15680
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0048.outbound.protection.outlook.com ([104.47.38.48]:18521
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752513AbdLURe0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Dec 2017 12:34:26 -0500
+        id S1753761AbdLURee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Dec 2017 12:34:34 -0500
 In-Reply-To: <20171221173420.8213-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, aacraid@microsemi.com, tom.white@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>
 
-When udev requests for a devices inquiry string, it might create multiple
-threads causing a race condition on the shared inquiry resource string.
+As part of the recovery process, the drivers removes offline devices (
+done by the kernel) and then tries to add them back in the rescan code.
+Removing the device is like taking a sledgehammer to a nail.
 
-Created a buffer with the string for each thread.
+Set the device as running if it is marked offline.
 
-Cc: <stable@vger.kernel.org>
-Fixes: 3bc8070fb75b3315 ([SCSI] aacraid: SMC vendor identification)
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aachba.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index af3e4d3..f264515 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -913,8 +913,18 @@ static void setinqstr(struct aac_dev *dev, void *data, int tindex)
- 	memset(str, ' ', sizeof(*str));
- 
- 	if (sup_adap_info->adapter_type_text[0]) {
--		char *cp = sup_adap_info->adapter_type_text;
- 		int c;
-+		char *cp;
-+		char *cname = kmalloc(sizeof(sup_adap_info->adapter_type_text),
-+								GFP_ATOMIC);
-+
-+		if (!cname)
-+			return;
-+
-+		cp = cname;
-+		memcpy(cname, sup_adap_info->adapter_type_text,
-+			sizeof(sup_adap_info->adapter_type_text));
-+
- 		if ((cp[0] == 'A') && (cp[1] == 'O') && (cp[2] == 'C'))
- 			inqstrcpy("SMC", str->vid);
- 		else {
-@@ -923,7 +933,7 @@ static void setinqstr(struct aac_dev *dev, void *data, int tindex)
- 				++cp;
- 			c = *cp;
- 			*cp = '\0';
--			inqstrcpy(sup_adap_info->adapter_type_text, str->vid);
-+			inqstrcpy(cname, str->vid);
- 			*cp = c;
- 			while (*cp && *cp != ' ')
- 				++cp;
-@@ -937,8 +947,8 @@ static void setinqstr(struct aac_dev *dev, void *data, int tindex)
- 			cp[sizeof(str->pid)] = '\0';
- 		}
- 		inqstrcpy (cp, str->pid);
--		if (c)
--			cp[sizeof(str->pid)] = c;
-+
-+		kfree(cname);
- 	} else {
- 		struct aac_driver_ident *mp = aac_get_driver_ident(dev->cardtype);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index ffbfd04..32b8bdb 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1658,14 +1658,12 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 		command->scsi_done(command);
+ 	}
+ 	/*
+-	 * Any Device that was already marked offline needs to be cleaned up
++	 * Any Device that was already marked offline needs to be marked
++	 * running
+ 	 */
+ 	__shost_for_each_device(dev, host) {
+-		if (!scsi_device_online(dev)) {
+-			sdev_printk(KERN_INFO, dev, "Removing offline device\n");
+-			scsi_remove_device(dev);
+-			scsi_device_put(dev);
+-		}
++		if (!scsi_device_online(dev))
++			scsi_device_set_state(dev, SDEV_RUNNING);
+ 	}
+ 	retval = 0;
  
 -- 
 2.9.4
