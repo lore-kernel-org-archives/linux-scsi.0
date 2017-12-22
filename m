@@ -1,57 +1,53 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] scsi: scsi_transport_fc: fix typos on 64/128 GBit define names
-Date: Thu, 21 Dec 2017 14:25:52 -0800
-Message-ID: <20171221222552.12470-1-jsmart2021@gmail.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: lpfc: don't dereference localport before it has been null checked
+Date: Fri, 22 Dec 2017 00:28:52 +0000
+Message-ID: <20171222002852.10892-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:39419 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752402AbdLUW0B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Dec 2017 17:26:01 -0500
-Received: by mail-qk0-f195.google.com with SMTP id u184so32769868qkd.6
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2017 14:26:00 -0800 (PST)
+Received: from youngberry.canonical.com ([91.189.89.112]:35769 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755844AbdLVA24 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Dec 2017 19:28:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The define names specified 64Bit/128Bit, not 64GBIT/128GBIT.
-Correct the names.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
+localport is being dereferenced to assign lport and then immediately
+afterwards localport is being sanity checked to see if it is null.
+Fix this by only dereferencing localport until after it has been
+null checked.
+
+Detected by CoverityScan, CID#1463038 ("Dereference before null check")
+
+Fixes: 3a8cefbfc5ee ("scsi: lpfc: Beef up stat counters for debug")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/scsi_transport_fc.c | 4 ++--
- include/scsi/scsi_transport_fc.h | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 4664024bd5d3..be3be0f9cb2d 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -267,8 +267,8 @@ static const struct {
- 	{ FC_PORTSPEED_50GBIT,		"50 Gbit" },
- 	{ FC_PORTSPEED_100GBIT,		"100 Gbit" },
- 	{ FC_PORTSPEED_25GBIT,		"25 Gbit" },
--	{ FC_PORTSPEED_64BIT,		"64 Gbit" },
--	{ FC_PORTSPEED_128BIT,		"128 Gbit" },
-+	{ FC_PORTSPEED_64GBIT,		"64 Gbit" },
-+	{ FC_PORTSPEED_128GBIT,		"128 Gbit" },
- 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
- };
- fc_bitfield_name_search(port_speed, fc_port_speed_names)
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 8cf30215c177..15da45dc2a5d 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -139,8 +139,8 @@ enum fc_vport_state {
- #define FC_PORTSPEED_50GBIT		0x200
- #define FC_PORTSPEED_100GBIT		0x400
- #define FC_PORTSPEED_25GBIT		0x800
--#define FC_PORTSPEED_64BIT		0x1000
--#define FC_PORTSPEED_128BIT		0x2000
-+#define FC_PORTSPEED_64GBIT		0x1000
-+#define FC_PORTSPEED_128GBIT		0x2000
- #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 797bb42a6306..986a3dc2efaf 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -277,13 +277,13 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 	}
  
- /*
+ 	localport = vport->localport;
+-	lport = (struct lpfc_nvme_lport *)localport->private;
+ 	if (!localport) {
+ 		len = snprintf(buf, PAGE_SIZE,
+ 				"NVME Initiator x%llx is not allocated\n",
+ 				wwn_to_u64(vport->fc_portname.u.wwn));
+ 		return len;
+ 	}
++	lport = (struct lpfc_nvme_lport *)localport->private;
+ 	len = snprintf(buf, PAGE_SIZE, "NVME Initiator Enabled\n");
+ 
+ 	spin_lock_irq(shost->host_lock);
 -- 
-2.13.1
+2.14.1
