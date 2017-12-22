@@ -1,32 +1,36 @@
-From: Steffen Weber <steffen.weber@gmail.com>
-Subject: [PATCH] scsi: smartpqi: allow static build ("built-in")
-Date: Fri, 22 Dec 2017 18:18:47 +0100
-Message-ID: <20171222171847.14006-1-steffen.weber@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/3] ses: skip error messages for invalid LUNs
+Date: Fri, 22 Dec 2017 09:39:11 -0800
+Message-ID: <1513964351.3163.14.camel@HansenPartnership.com>
+References: <1513855354-86603-1-git-send-email-hare@suse.de>
+         <1513855354-86603-3-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:44243 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755826AbdLVRTK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Dec 2017 12:19:10 -0500
-Received: by mail-wm0-f50.google.com with SMTP id t8so22994733wmc.3
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Dec 2017 09:19:10 -0800 (PST)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39208 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756218AbdLVRjN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Dec 2017 12:39:13 -0500
+In-Reply-To: <1513855354-86603-3-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: don.brace@microsemi.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
-Cc: Steffen Weber <steffen.weber@gmail.com>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-If CONFIG_SCSI_SMARTPQI=y then don't build this driver as a module.
----
- drivers/scsi/smartpqi/Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Thu, 2017-12-21 at 12:22 +0100, Hannes Reinecke wrote:
+> Some storage array set the 'Embedded enclosure' bit even though
+> no LUN is present, causing the first RECEIVE DIAGNOSTIC call to
+> be returned with sense code 'LOGICAL UNIT NOT SUPPORTED'.
+> This patch skips the annoying 'Failed to get diagnostic page 0x1'
+> messages for those cases.
 
-diff --git a/drivers/scsi/smartpqi/Makefile b/drivers/scsi/smartpqi/Makefile
-index 0f42a225a..e6b779930 100644
---- a/drivers/scsi/smartpqi/Makefile
-+++ b/drivers/scsi/smartpqi/Makefile
-@@ -1,3 +1,3 @@
- ccflags-y += -I.
--obj-m		+= smartpqi.o
-+obj-$(CONFIG_SCSI_SMARTPQI) += smartpqi.o
- smartpqi-objs := smartpqi_init.o smartpqi_sis.o smartpqi_sas_transport.o
--- 
-2.15.1
+What disagnostic pages does this thing support?  Can you do a receive
+diagnostic on page 0 to find out?  I suspect a lot of embedded
+enclosure services are simple and support page 7 only.  If it really
+refuses all diagnostic page requests (which would be a gross standards
+violation), then it should probably be blacklisted by inquiry string as
+unusable.
+
+James
