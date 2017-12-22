@@ -1,23 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: scsi_transport_fc: fix typos on 64/128 GBit define
- names
-Date: Fri, 22 Dec 2017 08:19:47 +0100
-Message-ID: <20171222071947.hbec4e3yy4kcohgq@linux-x5ow.site>
-References: <20171221222552.12470-1-jsmart2021@gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: don't dereference localport before it has
+ been null checked
+Date: Fri, 22 Dec 2017 08:20:27 +0100
+Message-ID: <20171222072027.4mfp45eeuj2ynu3q@linux-x5ow.site>
+References: <20171222002852.10892-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51136 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751104AbdLVHTt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Dec 2017 02:19:49 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20171221222552.12470-1-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20171222002852.10892-1-colin.king@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
