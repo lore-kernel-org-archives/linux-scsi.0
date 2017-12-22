@@ -1,15 +1,15 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 07/11] mpt3sas: always use first reserved smid for ioctl  passthrough
-Date: Thu, 21 Dec 2017 23:31:43 -0800
-Message-ID: <1513927907-19735-8-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 08/11] mpt3sas: simplify task management functions
+Date: Thu, 21 Dec 2017 23:31:44 -0800
+Message-ID: <1513927907-19735-9-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1513927907-19735-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:39910 "EHLO
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:43702 "EHLO
         mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754109AbdLVHcm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Dec 2017 02:32:42 -0500
-Received: by mail-wm0-f67.google.com with SMTP id i11so19803080wmf.4
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2017 23:32:42 -0800 (PST)
+        with ESMTP id S1751428AbdLVHcr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Dec 2017 02:32:47 -0500
+Received: by mail-wm0-f67.google.com with SMTP id n138so20012867wmg.2
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2017 23:32:46 -0800 (PST)
 In-Reply-To: <1513927907-19735-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,88 +18,138 @@ Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Hannes Reinecke <
 
 From: Hannes Reinecke <hare@suse.de>
 
-ioctl passthrough commands require a SCSIIO smid, but cannot
-easily integrate with the block layer. But the driver already
-has reserved some SCSIIO smids and we're only ever allowing
-one ioctl command at a time we can use the first reserved smid
-for ioctl commands.
+No functional change. Code optimization.
+One can simply check 'target_busy' or 'device_busy' when figuring
+out if there are outstanding commands; no need to painstakingly
+counting them by hand.
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 19 +++++++++++++------
- drivers/scsi/mpt3sas/mpt3sas_ctl.c  | 10 ++--------
- 2 files changed, 15 insertions(+), 14 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 88 +++---------------------------------
+ 1 file changed, 7 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index afe42a8..a49040e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -908,14 +908,18 @@ static u8
- _base_get_cb_idx(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- {
- 	int i;
-+	u16 ctl_smid = ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT + 1;
- 	u8 cb_idx = 0xFF;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 0434fd6..c8216c4 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1517,74 +1517,6 @@ _scsih_scsi_lookup_find_by_scmd(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd
+ }
  
- 	if (smid < ioc->hi_priority_smid) {
- 		struct scsiio_tracker *st;
- 
--		st = mpt3sas_get_st_from_smid(ioc, smid);
--		if (st)
--			cb_idx = st->cb_idx;
-+		if (smid < ctl_smid) {
-+			st = mpt3sas_get_st_from_smid(ioc, smid);
-+			if (st)
-+				cb_idx = st->cb_idx;
-+		} else if (smid == ctl_smid)
-+			cb_idx = ioc->ctl_cb_idx;
- 	} else if (smid < ioc->internal_smid) {
- 		i = smid - ioc->hi_priority_smid;
- 		cb_idx = ioc->hpr_lookup[i].cb_idx;
-@@ -2922,7 +2926,9 @@ mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- 		ioc->scsi_lookup[i].cb_idx = 0xFF;
- 		ioc->scsi_lookup[i].scmd = NULL;
- 		ioc->scsi_lookup[i].direct_io = 0;
--		list_add(&ioc->scsi_lookup[i].tracker_list, &ioc->free_list);
-+		if (i < ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT)
-+			list_add(&ioc->scsi_lookup[i].tracker_list,
-+				 &ioc->free_list);
- 		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
- 
- 		_base_recovery_check(ioc);
-@@ -5787,8 +5793,9 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
- 		ioc->scsi_lookup[i].smid = smid;
- 		ioc->scsi_lookup[i].scmd = NULL;
- 		ioc->scsi_lookup[i].direct_io = 0;
--		list_add_tail(&ioc->scsi_lookup[i].tracker_list,
--		    &ioc->free_list);
-+		if (i < ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT)
-+			list_add_tail(&ioc->scsi_lookup[i].tracker_list,
-+				      &ioc->free_list);
- 	}
- 
- 	/* hi-priority queue */
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b4c374b..4f23498 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -724,14 +724,8 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 			goto out;
- 		}
- 	} else {
+ /**
+- * _scsih_scsi_lookup_find_by_target - search for matching channel:id
+- * @ioc: per adapter object
+- * @id: target id
+- * @channel: channel
+- * Context: This function will acquire ioc->scsi_lookup_lock.
+- *
+- * This will search for a matching channel:id in the scsi_lookup array,
+- * returning 1 if found.
+- */
+-static u8
+-_scsih_scsi_lookup_find_by_target(struct MPT3SAS_ADAPTER *ioc, int id,
+-	int channel)
+-{
+-	u8 found;
+-	unsigned long	flags;
+-	int i;
 -
--		smid = mpt3sas_base_get_smid_scsiio(ioc, ioc->ctl_cb_idx, NULL);
--		if (!smid) {
--			pr_err(MPT3SAS_FMT "%s: failed obtaining a smid\n",
--			    ioc->name, __func__);
--			ret = -EAGAIN;
+-	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+-	found = 0;
+-	for (i = 0 ; i < ioc->scsiio_depth; i++) {
+-		if (ioc->scsi_lookup[i].scmd &&
+-		    (ioc->scsi_lookup[i].scmd->device->id == id &&
+-		    ioc->scsi_lookup[i].scmd->device->channel == channel)) {
+-			found = 1;
 -			goto out;
 -		}
-+		/* Use first reserved smid for passthrough ioctls */
-+		smid = ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT + 1;
- 	}
+-	}
+- out:
+-	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+-	return found;
+-}
+-
+-/**
+- * _scsih_scsi_lookup_find_by_lun - search for matching channel:id:lun
+- * @ioc: per adapter object
+- * @id: target id
+- * @lun: lun number
+- * @channel: channel
+- * Context: This function will acquire ioc->scsi_lookup_lock.
+- *
+- * This will search for a matching channel:id:lun in the scsi_lookup array,
+- * returning 1 if found.
+- */
+-static u8
+-_scsih_scsi_lookup_find_by_lun(struct MPT3SAS_ADAPTER *ioc, int id,
+-	unsigned int lun, int channel)
+-{
+-	u8 found;
+-	unsigned long	flags;
+-	int i;
+-
+-	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+-	found = 0;
+-	for (i = 0 ; i < ioc->scsiio_depth; i++) {
+-		if (ioc->scsi_lookup[i].scmd &&
+-		    (ioc->scsi_lookup[i].scmd->device->id == id &&
+-		    ioc->scsi_lookup[i].scmd->device->channel == channel &&
+-		    ioc->scsi_lookup[i].scmd->device->lun == lun)) {
+-			found = 1;
+-			goto out;
+-		}
+-	}
+- out:
+-	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+-	return found;
+-}
+-
+-/**
+  * scsih_change_queue_depth - setting device queue depth
+  * @sdev: scsi device struct
+  * @qdepth: requested queue depth
+@@ -2849,19 +2781,9 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 		rc = FAILED;
+ 		break;
  
- 	ret = 0;
+-	case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
+-		if (_scsih_scsi_lookup_find_by_target(ioc, id, channel))
+-			rc = FAILED;
+-		else
+-			rc = SUCCESS;
+-		break;
+ 	case MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET:
+ 	case MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET:
+-		if (_scsih_scsi_lookup_find_by_lun(ioc, id, lun, channel))
+-			rc = FAILED;
+-		else
+-			rc = SUCCESS;
+-		break;
++	case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
+ 	case MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK:
+ 		rc = SUCCESS;
+ 		break;
+@@ -3082,7 +3004,9 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+ 	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
+ 	    scmd->device->id, scmd->device->lun,
+ 	    MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 30);
+-
++	/* Check for busy commands after reset */
++	if (r == SUCCESS && atomic_read(&scmd->device->device_busy))
++		r = FAILED;
+  out:
+ 	sdev_printk(KERN_INFO, scmd->device, "device reset: %s scmd(%p)\n",
+ 	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
+@@ -3144,7 +3068,9 @@ scsih_target_reset(struct scsi_cmnd *scmd)
+ 	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
+ 	    scmd->device->id, 0, MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
+ 	    30);
+-
++	/* Check for busy commands after reset */
++	if (r == SUCCESS && atomic_read(&starget->target_busy))
++		r = FAILED;
+  out:
+ 	starget_printk(KERN_INFO, starget, "target reset: %s scmd(%p)\n",
+ 	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
 -- 
 2.5.5
