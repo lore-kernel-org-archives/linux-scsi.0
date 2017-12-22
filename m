@@ -1,42 +1,53 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [RFC] sg3_utils: sgp_dd: work around on pthread_cancel for
- android
-Date: Fri, 22 Dec 2017 18:24:51 +0000
-Message-ID: <1513967090.2579.13.camel@sandisk.com>
-References: <e5c8b6616ea7487d83087da7623576ae@SIWEX5A.sing.micron.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] target: fix kernel-doc warnings in
+ drivers/target/target_core_transport.c
+Date: Fri, 22 Dec 2017 14:06:42 -0800
+Message-ID: <b2fa87ef-6c41-57a1-0e64-ac7cf73c5e91@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:4327 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756554AbdLVSYz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Dec 2017 13:24:55 -0500
-In-Reply-To: <e5c8b6616ea7487d83087da7623576ae@SIWEX5A.sing.micron.com>
+Received: from merlin.infradead.org ([205.233.59.134]:51574 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755934AbdLVWGz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Dec 2017 17:06:55 -0500
 Content-Language: en-US
-Content-ID: <A53BAF75562E55438FE0E6F988BF4D81@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "beanhuo@micron.com" <beanhuo@micron.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: "hare@suse.de" <hare@suse.de>
+To: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagi@grimberg.me>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-T24gRnJpLCAyMDE3LTEyLTIyIGF0IDE3OjAwICswMDAwLCBCZWFuIEh1byAoYmVhbmh1bykgd3Jv
-dGU6DQo+ICBjYXNlICIke2hvc3R9IiBpbg0KPiArICAgICAgICAqLSotYW5kcm9pZCopDQo+ICsJ
-CUFDX0RFRklORV9VTlFVT1RFRChTR19PTl9BTkRST0lELCAxLCBbc2czX3V0aWxzIG9uIGFuZHJv
-aWRdKQ0KPiArCQlBQ19ERUZJTkVfVU5RVU9URUQoU0dfTElCX0xJTlVYLCAxLCBbc2czX3V0aWxz
-IG9uIGxpbnV4XSkNCj4gKyAgICAgICAgICAgICAgICBBQ19TVUJTVChbb3NfY2ZsYWdzXSwgWycn
-XSkNCj4gKyAgICAgICAgICAgICAgICBBQ19TVUJTVChbb3NfbGlic10sIFsnJ10pIDs7DQo+ICAg
-ICAgICAgICotKi1saW51eC1nbnUqKQ0KPiAgCQlBQ19ERUZJTkVfVU5RVU9URUQoU0dfTElCX0xJ
-TlVYLCAxLCBbc2czX3V0aWxzIG9uIGxpbnV4XSkNCj4gICAgICAgICAgICAgICAgICBBQ19TVUJT
-VChbb3NfY2ZsYWdzXSwgWycnXSkNCj4gQEAgLTc5LDYgKzg0LDcgQEAgQU1fQ09ORElUSU9OQUwo
-T1NfT1NGLCBbZWNobyAkaG9zdF9vcyB8IGdyZXAgJ15vc2YnID4gL2Rldi9udWxsXSkNCj4gIEFN
-X0NPTkRJVElPTkFMKE9TX1NPTEFSSVMsIFtlY2hvICRob3N0X29zIHwgZ3JlcCAnXnNvbGFyaXMn
-ID4gL2Rldi9udWxsXSkNCj4gIEFNX0NPTkRJVElPTkFMKE9TX1dJTjMyX01JTkdXLCBbZWNobyAk
-aG9zdF9vcyB8IGdyZXAgJ15taW5ndycgPiAvZGV2L251bGxdKQ0KPiAgQU1fQ09ORElUSU9OQUwo
-T1NfV0lOMzJfQ1lHV0lOLCBbZWNobyAkaG9zdF9vcyB8IGdyZXAgJ15jeWd3aW4nID4gL2Rldi9u
-dWxsXSkNCj4gK0FNX0NPTkRJVElPTkFMKE9TX0FORFJPSUQsIFtlY2hvICRob3N0X29zIHwgZ3Jl
-cCAnYW5kcm9pZCcgPiAvZGV2L251bGxdKQ0KDQpIZWxsbyBCZWFuLA0KDQpQbGVhc2UgY29uc2lk
-ZXIgdG8gdXNlIEFDX0NIRUNLX0ZVTkMoW3B0aHJlYWRfY2FuY2VsXSkgb3Igc2ltaWxhciB0byBj
-aGVjayB0aGUNCmF2YWlsYWJpbGl0eSBvZiBwdGhyZWFkX2NhbmNlbCgpLiBFeHBsaWNpdCBkaXN0
-cm8gY2hlY2tzIGFyZSBtdWNoIGhhcmRlciB0byBtYWludGFpbg0KdGhhbiBjaGVja3MgZm9yIGlu
-ZGl2aWR1YWwgZnVuY3Rpb25zLg0KDQpUaGFua3MsDQoNCkJhcnQu
+From: Randy Dunlap <rdunlap@infradead.org>
+
+Correct a function parameter's name to eliminate kernel-doc warnings
+in drivers/target/target_core_transport.c.
+
+Fixes these kernel-doc warnings: (tested by adding these files to a new
+target.rst documentation file: WIP)
+
+../drivers/target/target_core_transport.c:1671: warning: No description found for parameter 'fabric_tmr_ptr'
+../drivers/target/target_core_transport.c:1671: warning: Excess function parameter 'fabric_context' description in 'target_submit_tmr'
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc:	"Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc:	linux-scsi@vger.kernel.org
+Cc:	target-devel@vger.kernel.org
+Cc:	Sagi Grimberg <sagi@grimberg.me>
+Cc:	linux-rdma@vger.kernel.org
+Cc:	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:	"Martin K. Petersen" <martin.petersen@oracle.com>
+---
+ drivers/target/target_core_transport.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-next-20171221.orig/drivers/target/target_core_transport.c
++++ linux-next-20171221/drivers/target/target_core_transport.c
+@@ -1654,7 +1654,7 @@ static bool target_lookup_lun_from_tag(s
+  * @se_sess: associated se_sess for endpoint
+  * @sense: pointer to SCSI sense buffer
+  * @unpacked_lun: unpacked LUN to reference for struct se_lun
+- * @fabric_context: fabric context for TMR req
++ * @fabric_tmr_ptr: fabric context for TMR req
+  * @tm_type: Type of TM request
+  * @gfp: gfp type for caller
+  * @tag: referenced task tag for TMR_ABORT_TASK
