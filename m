@@ -1,123 +1,62 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] scsi: fix iscsi-related kernel-doc warnings
-Date: Fri, 22 Dec 2017 14:08:27 -0800
-Message-ID: <44a0f532-b1e9-e0cf-4a61-d592a4306f61@infradead.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [RFC] sg3_utils: sgp_dd: work around on pthread_cancel for
+ android
+Date: Fri, 22 Dec 2017 19:43:38 -0500
+Message-ID: <b5e85d2f-e7d6-517b-a9b1-7fa482d5c5f0@interlog.com>
+References: <e5c8b6616ea7487d83087da7623576ae@SIWEX5A.sing.micron.com>
+ <1513967090.2579.13.camel@sandisk.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagi@grimberg.me>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:47488 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757092AbdLWAno (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Dec 2017 19:43:44 -0500
+In-Reply-To: <1513967090.2579.13.camel@sandisk.com>
+Content-Language: en-CA
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "beanhuo@micron.com" <beanhuo@micron.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "hare@suse.de" <hare@suse.de>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+On 2017-12-22 01:24 PM, Bart Van Assche wrote:
+> On Fri, 2017-12-22 at 17:00 +0000, Bean Huo (beanhuo) wrote:
+>>   case "${host}" in
+>> +        *-*-android*)
+>> +		AC_DEFINE_UNQUOTED(SG_ON_ANDROID, 1, [sg3_utils on android])
+>> +		AC_DEFINE_UNQUOTED(SG_LIB_LINUX, 1, [sg3_utils on linux])
+>> +                AC_SUBST([os_cflags], [''])
+>> +                AC_SUBST([os_libs], ['']) ;;
+>>           *-*-linux-gnu*)
+>>   		AC_DEFINE_UNQUOTED(SG_LIB_LINUX, 1, [sg3_utils on linux])
+>>                   AC_SUBST([os_cflags], [''])
+>> @@ -79,6 +84,7 @@ AM_CONDITIONAL(OS_OSF, [echo $host_os | grep '^osf' > /dev/null])
+>>   AM_CONDITIONAL(OS_SOLARIS, [echo $host_os | grep '^solaris' > /dev/null])
+>>   AM_CONDITIONAL(OS_WIN32_MINGW, [echo $host_os | grep '^mingw' > /dev/null])
+>>   AM_CONDITIONAL(OS_WIN32_CYGWIN, [echo $host_os | grep '^cygwin' > /dev/null])
+>> +AM_CONDITIONAL(OS_ANDROID, [echo $host_os | grep 'android' > /dev/null])
+> 
+> Hello Bean,
+> 
+> Please consider to use AC_CHECK_FUNC([pthread_cancel]) or similar to check the
+> availability of pthread_cancel(). Explicit distro checks are much harder to maintain
+> than checks for individual functions.
 
-Fix kernel-doc warnings in drivers/scsi/ that are related to iscsi
-support interfaces.
+That macro doesn't work in Linux. It doesn't work in the sense that
+Linux (Ubuntu 17.10) does have pthread_cancel but needs -lpthread
+in the link. So AC_CHECK_FUNC([pthread_cancel]) does not place
+'#define HAVE_PTHREAD_CANCEL 1' in config.h .
 
-Fixes these kernel-doc warnings: (tested by adding these files to a new
-target.rst documentation file: WIP)
+This seems to work in Linux but may not work in Android:
+AC_SEARCH_LIBS([pthread_cancel], [pthread], [AC_DEFINE(HAVE_PTHREAD_CANCEL, 1, 
+[Found pthread_cancel])], [])
 
-../drivers/scsi/libiscsi.c:2740: warning: No description found for parameter 'dd_size'
-../drivers/scsi/libiscsi.c:2740: warning: No description found for parameter 'id'
-../drivers/scsi/libiscsi.c:2961: warning: No description found for parameter 'cls_conn'
-../drivers/scsi/iscsi_tcp.c:313: warning: No description found for parameter 'conn'
-../drivers/scsi/iscsi_tcp.c:363: warning: No description found for parameter 'conn'
-../drivers/scsi/libiscsi_tcp.c:810: warning: No description found for parameter 'tcp_conn'
-../drivers/scsi/libiscsi_tcp.c:810: warning: No description found for parameter 'segment'
-../drivers/scsi/libiscsi_tcp.c:887: warning: No description found for parameter 'offloaded'
-../drivers/scsi/libiscsi_tcp.c:887: warning: No description found for parameter 'status'
-../drivers/scsi/libiscsi_tcp.c:887: warning: Excess function parameter 'offload' description in 'iscsi_tcp_recv_skb'
-../drivers/scsi/libiscsi_tcp.c:964: warning: Excess function parameter 'conn' description in 'iscsi_tcp_task_init'
-../drivers/scsi/libiscsi_tcp.c:964: warning: Excess function parameter 'sc' description in 'iscsi_tcp_task_init'
+Bean, could you check?
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc:	"Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc:	linux-scsi@vger.kernel.org
-Cc:	target-devel@vger.kernel.org
-Cc:	Sagi Grimberg <sagi@grimberg.me>
-Cc:	linux-rdma@vger.kernel.org
-Cc:	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:	"Martin K. Petersen" <martin.petersen@oracle.com>
----
- drivers/scsi/iscsi_tcp.c    |    2 ++
- drivers/scsi/libiscsi.c     |    4 +++-
- drivers/scsi/libiscsi_tcp.c |    9 +++++----
- 3 files changed, 10 insertions(+), 5 deletions(-)
+Anyway, I like having an OS type for Android (which I have renamed from
+Bean's patch to SG_LIB_ANDROID to be consistent with my other OS
+naming). Overall the patch works in Linux.
 
---- linux-next-20171221.orig/drivers/scsi/libiscsi.c
-+++ linux-next-20171221/drivers/scsi/libiscsi.c
-@@ -2722,8 +2722,10 @@ static void iscsi_host_dec_session_cnt(s
-  * @iscsit: iscsi transport template
-  * @shost: scsi host
-  * @cmds_max: session can queue
-+ * @dd_size: private driver data size, added to session allocation size
-  * @cmd_task_size: LLD task private data size
-  * @initial_cmdsn: initial CmdSN
-+ * @id: target ID to add to this session
-  *
-  * This can be used by software iscsi_transports that allocate
-  * a session per scsi host.
-@@ -2951,7 +2953,7 @@ EXPORT_SYMBOL_GPL(iscsi_conn_setup);
- 
- /**
-  * iscsi_conn_teardown - teardown iscsi connection
-- * cls_conn: iscsi class connection
-+ * @cls_conn: iscsi class connection
-  *
-  * TODO: we may need to make this into a two step process
-  * like scsi-mls remove + put host
---- linux-next-20171221.orig/drivers/scsi/iscsi_tcp.c
-+++ linux-next-20171221/drivers/scsi/iscsi_tcp.c
-@@ -307,6 +307,7 @@ static int iscsi_sw_tcp_xmit_segment(str
- 
- /**
-  * iscsi_sw_tcp_xmit - TCP transmit
-+ * @conn: iscsi connection
-  **/
- static int iscsi_sw_tcp_xmit(struct iscsi_conn *conn)
- {
-@@ -357,6 +358,7 @@ error:
- 
- /**
-  * iscsi_tcp_xmit_qlen - return the number of bytes queued for xmit
-+ * @conn: iscsi connection
-  */
- static inline int iscsi_sw_tcp_xmit_qlen(struct iscsi_conn *conn)
- {
---- linux-next-20171221.orig/drivers/scsi/libiscsi_tcp.c
-+++ linux-next-20171221/drivers/scsi/libiscsi_tcp.c
-@@ -798,6 +798,8 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn
- 
- /**
-  * iscsi_tcp_hdr_recv_done - process PDU header
-+ * @tcp_conn: iSCSI TCP connection
-+ * @segment: the buffer segment being processed
-  *
-  * This is the callback invoked when the PDU header has
-  * been received. If the header is followed by additional
-@@ -876,9 +878,10 @@ EXPORT_SYMBOL_GPL(iscsi_tcp_recv_segment
-  * @conn: iscsi connection
-  * @skb: network buffer with header and/or data segment
-  * @offset: offset in skb
-- * @offload: bool indicating if transfer was offloaded
-+ * @offloaded: bool indicating if transfer was offloaded
-+ * @status: iscsi TCP status result
-  *
-- * Will return status of transfer in status. And will return
-+ * Will return status of transfer in @status. And will return
-  * number of bytes copied.
-  */
- int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
-@@ -955,9 +958,7 @@ EXPORT_SYMBOL_GPL(iscsi_tcp_recv_skb);
- 
- /**
-  * iscsi_tcp_task_init - Initialize iSCSI SCSI_READ or SCSI_WRITE commands
-- * @conn: iscsi connection
-  * @task: scsi command task
-- * @sc: scsi command
-  */
- int iscsi_tcp_task_init(struct iscsi_task *task)
- {
+Doug Gilbert
