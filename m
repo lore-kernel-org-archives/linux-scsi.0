@@ -1,85 +1,67 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: [PATCH] target: add kernel-doc overview in target_core_user.[hc]
-Date: Fri, 22 Dec 2017 21:40:38 -0800
-Message-ID: <7e8662e8-f554-cc8c-0287-6a22f561692b@infradead.org>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: Re: [RFC] sg3_utils: sgp_dd: work around on pthread_cancel for
+ android
+Date: Sat, 23 Dec 2017 10:19:33 +0000
+Message-ID: <dcd86d371fd742c693eac4db5f9335f9@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout.micron.com ([137.201.242.129]:32245 "EHLO
+        mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750713AbdLWKTo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Dec 2017 05:19:44 -0500
 Content-Language: en-US
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "hare@suse.de" <hare@suse.de>
 
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-
-Make documentation on target-supported userspace-I/O design be
-usable by kernel-doc by using "DOC:".
-
-Signed-off-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc:	"Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc:	linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc:	target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc:	Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-Cc:	linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc:	"James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc:	"Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc:	Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc:	Andy Grover <agrover-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- drivers/target/target_core_user.c     |    6 +++++-
- include/uapi/linux/target_core_user.h |   11 ++++++-----
- 2 files changed, 11 insertions(+), 6 deletions(-)
-
---- linux-next-20171221.orig/drivers/target/target_core_user.c
-+++ linux-next-20171221/drivers/target/target_core_user.c
-@@ -42,7 +42,11 @@
- 
- #include <linux/target_core_user.h>
- 
--/*
-+/**
-+ * DOC: Userspace I/O
-+ * Userspace I/O
-+ * -------------
-+ *
-  * Define a shared-memory interface for LIO to pass SCSI commands and
-  * data to userspace for processing. This is to allow backends that
-  * are too complex for in-kernel support to be possible.
---- linux-next-20171221.orig/include/uapi/linux/target_core_user.h
-+++ linux-next-20171221/include/uapi/linux/target_core_user.h
-@@ -9,21 +9,22 @@
- 
- #define TCMU_VERSION "2.0"
- 
--/*
-+/**
-+ * DOC: Ring Design
-  * Ring Design
-  * -----------
-  *
-  * The mmaped area is divided into three parts:
-- * 1) The mailbox (struct tcmu_mailbox, below)
-- * 2) The command ring
-- * 3) Everything beyond the command ring (data)
-+ * 1) The mailbox (struct tcmu_mailbox, below);
-+ * 2) The command ring;
-+ * 3) Everything beyond the command ring (data).
-  *
-  * The mailbox tells userspace the offset of the command ring from the
-  * start of the shared memory region, and how big the command ring is.
-  *
-  * The kernel passes SCSI commands to userspace by putting a struct
-  * tcmu_cmd_entry in the ring, updating mailbox->cmd_head, and poking
-- * userspace via uio's interrupt mechanism.
-+ * userspace via UIO's interrupt mechanism.
-  *
-  * tcmu_cmd_entry contains a header. If the header type is PAD,
-  * userspace should skip hdr->length bytes (mod cmdr_size) to find the
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGksIERvdWcgYW5kIEJhcnQNClRoYW5rcyBzbyBtdWNoIGZvciB5b3VyIHByb21wdCByZXNwb25z
+ZS4NClNlZSBiZWxvdyBteSBhY3Rpb246DQoNCj5PbiAyMDE3LTEyLTIyIDAxOjI0IFBNLCBCYXJ0
+IFZhbiBBc3NjaGUgd3JvdGU6DQo+PiBPbiBGcmksIDIwMTctMTItMjIgYXQgMTc6MDAgKzAwMDAs
+IEJlYW4gSHVvIChiZWFuaHVvKSB3cm90ZToNCj4+PiAgIGNhc2UgIiR7aG9zdH0iIGluDQo+Pj4g
+KyAgICAgICAgKi0qLWFuZHJvaWQqKQ0KPj4+ICsJCUFDX0RFRklORV9VTlFVT1RFRChTR19PTl9B
+TkRST0lELCAxLCBbc2czX3V0aWxzIG9uDQo+YW5kcm9pZF0pDQo+Pj4gKwkJQUNfREVGSU5FX1VO
+UVVPVEVEKFNHX0xJQl9MSU5VWCwgMSwgW3NnM191dGlscyBvbiBsaW51eF0pDQo+Pj4gKyAgICAg
+ICAgICAgICAgICBBQ19TVUJTVChbb3NfY2ZsYWdzXSwgWycnXSkNCj4+PiArICAgICAgICAgICAg
+ICAgIEFDX1NVQlNUKFtvc19saWJzXSwgWycnXSkgOzsNCj4+PiAgICAgICAgICAgKi0qLWxpbnV4
+LWdudSopDQo+Pj4gICAJCUFDX0RFRklORV9VTlFVT1RFRChTR19MSUJfTElOVVgsIDEsIFtzZzNf
+dXRpbHMgb24gbGludXhdKQ0KPj4+ICAgICAgICAgICAgICAgICAgIEFDX1NVQlNUKFtvc19jZmxh
+Z3NdLCBbJyddKSBAQCAtNzksNiArODQsNyBAQA0KPj4+IEFNX0NPTkRJVElPTkFMKE9TX09TRiwg
+W2VjaG8gJGhvc3Rfb3MgfCBncmVwICdeb3NmJyA+IC9kZXYvbnVsbF0pDQo+Pj4gICBBTV9DT05E
+SVRJT05BTChPU19TT0xBUklTLCBbZWNobyAkaG9zdF9vcyB8IGdyZXAgJ15zb2xhcmlzJyA+DQo+
+L2Rldi9udWxsXSkNCj4+PiAgIEFNX0NPTkRJVElPTkFMKE9TX1dJTjMyX01JTkdXLCBbZWNobyAk
+aG9zdF9vcyB8IGdyZXAgJ15taW5ndycgPg0KPi9kZXYvbnVsbF0pDQo+Pj4gICBBTV9DT05ESVRJ
+T05BTChPU19XSU4zMl9DWUdXSU4sIFtlY2hvICRob3N0X29zIHwgZ3JlcCAnXmN5Z3dpbicgPg0K
+Pj4+IC9kZXYvbnVsbF0pDQo+Pj4gK0FNX0NPTkRJVElPTkFMKE9TX0FORFJPSUQsIFtlY2hvICRo
+b3N0X29zIHwgZ3JlcCAnYW5kcm9pZCcgPg0KPj4+ICsvZGV2L251bGxdKQ0KPj4NCj4+IEhlbGxv
+IEJlYW4sDQo+Pg0KPj4gUGxlYXNlIGNvbnNpZGVyIHRvIHVzZSBBQ19DSEVDS19GVU5DKFtwdGhy
+ZWFkX2NhbmNlbF0pIG9yIHNpbWlsYXIgdG8NCj4+IGNoZWNrIHRoZSBhdmFpbGFiaWxpdHkgb2Yg
+cHRocmVhZF9jYW5jZWwoKS4gRXhwbGljaXQgZGlzdHJvIGNoZWNrcyBhcmUNCj4+IG11Y2ggaGFy
+ZGVyIHRvIG1haW50YWluIHRoYW4gY2hlY2tzIGZvciBpbmRpdmlkdWFsIGZ1bmN0aW9ucy4NCj4N
+Cj5UaGF0IG1hY3JvIGRvZXNuJ3Qgd29yayBpbiBMaW51eC4gSXQgZG9lc24ndCB3b3JrIGluIHRo
+ZSBzZW5zZSB0aGF0IExpbnV4DQo+KFVidW50dSAxNy4xMCkgZG9lcyBoYXZlIHB0aHJlYWRfY2Fu
+Y2VsIGJ1dCBuZWVkcyAtbHB0aHJlYWQgaW4gdGhlIGxpbmsuIFNvDQo+QUNfQ0hFQ0tfRlVOQyhb
+cHRocmVhZF9jYW5jZWxdKSBkb2VzIG5vdCBwbGFjZSAnI2RlZmluZQ0KPkhBVkVfUFRIUkVBRF9D
+QU5DRUwgMScgaW4gY29uZmlnLmggLg0KPg0KQ29ycmVjdCwgcHRocmVhZF9jYW5jZWwgbmVlZHMg
+LWxwdGhyZWFkIGluIHRoZSBsaW5rLCBBQ19DSEVDS19GVU5DIGNhbm5vdA0KUHJvcGVybHkgZmln
+dXJlIG91dCB0aGF0Lg0KDQo+VGhpcyBzZWVtcyB0byB3b3JrIGluIExpbnV4IGJ1dCBtYXkgbm90
+IHdvcmsgaW4gQW5kcm9pZDoNCj5BQ19TRUFSQ0hfTElCUyhbcHRocmVhZF9jYW5jZWxdLCBbcHRo
+cmVhZF0sDQo+W0FDX0RFRklORShIQVZFX1BUSFJFQURfQ0FOQ0VMLCAxLCBbRm91bmQgcHRocmVh
+ZF9jYW5jZWxdKV0sIFtdKQ0KPg0KPkJlYW4sIGNvdWxkIHlvdSBjaGVjaz8NCj4NCkRvdWcsIEkg
+aGFkIHRyaWVkIHRoYXQsIGl0IHdvcmtzLCBidXQgdGhpcyBpcyBmb3IgQyBjb2RlcyBtYWNybyBk
+ZWZpbml0aW9uIGluIHRoZSBjb25maWcuaC4NCkhvdyBjYW4gSSBmaWd1cmUgb3V0IGluIHRoZSAv
+c3JjL01ha2VmaWxlLmFjIGJldHdlZW4gQW5kcm9pZCBPUyBhbmQgbm9uLUFuZHJvaWQ/DQpDYW4g
+eW91IGdpdmUgbWUgc29tZSBzdWdnZXN0aW9ucz8gTGlrZSB0aGlzOg0KICAgICBpZiBPU19BTkRS
+T0lEDQogICAgIHNncF9kZF9MREFERCA9IC4uL2xpYi9saWJzZ3V0aWxzMi5sYSBAb3NfbGlic0AN
+CiAgICBlbHNlDQogICAgc2dwX2RkX0xEQUREID0gLi4vbGliL2xpYnNndXRpbHMyLmxhIEBvc19s
+aWJzQCAtbHB0aHJlYWQNCiAgICBlbmRpZg0KPkFueXdheSwgSSBsaWtlIGhhdmluZyBhbiBPUyB0
+eXBlIGZvciBBbmRyb2lkICh3aGljaCBJIGhhdmUgcmVuYW1lZCBmcm9tDQo+QmVhbidzIHBhdGNo
+IHRvIFNHX0xJQl9BTkRST0lEIHRvIGJlIGNvbnNpc3RlbnQgd2l0aCBteSBvdGhlciBPUyBuYW1p
+bmcpLg0KPk92ZXJhbGwgdGhlIHBhdGNoIHdvcmtzIGluIExpbnV4Lg0KPg0KWWVzLCB3ZSBzdGls
+bCBuZWVkIHRoaXMgT1MgdHlwZSBmb3IgQW5kcm9pZCwgc2luY2UgdGhlcmUgYXJlIHNldmVyYWwg
+Y29kZXMgbmVlZGVkIHRvIGJlDQpNb2RpZmllZCBiYXNlZCBvbiB0aGlzIE9TIHR5cGUuIEZvciBl
+eGFtcGxlLCBibG9jayBkZXZpY2Ugbm9kZSBmb2xkZXIgaW4gdGhlIEFuZHJvaWQNCmlzIC9kZXYv
+YmxvY2svc2d4Li4uLCBidXQgZm9yIHRoZSBvdGhlciBMaW51eCBiYXNlZCBPUywgaXQgaXMgL2Rl
+di9zZ3guLi4uDQoNCkhhdmUgYSBncmVhdCBob2xpZGF5IQ0KQmVhbiBIdW8NCg0K
