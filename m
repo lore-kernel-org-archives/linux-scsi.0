@@ -1,41 +1,66 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [RFC] sg3_utils: sgp_dd: work around on pthread_cancel for
- android
-Date: Sat, 23 Dec 2017 13:29:51 +0000
-Message-ID: <1514035791.2965.3.camel@wdc.com>
-References: <dcd86d371fd742c693eac4db5f9335f9@SIWEX5A.sing.micron.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] ses: make initial allocation size configurable
+Date: Sat, 23 Dec 2017 15:29:34 +0100
+Message-ID: <d38fc9a3-bdbf-06e5-5362-3a51f15e18f4@suse.de>
+References: <1513855354-86603-1-git-send-email-hare@suse.de>
+ <1513855354-86603-2-git-send-email-hare@suse.de>
+ <1513962873.3163.12.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:12856 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750810AbdLWN34 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Dec 2017 08:29:56 -0500
-In-Reply-To: <dcd86d371fd742c693eac4db5f9335f9@SIWEX5A.sing.micron.com>
+Received: from mx2.suse.de ([195.135.220.15]:41906 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752216AbdLWO3g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 23 Dec 2017 09:29:36 -0500
+In-Reply-To: <1513962873.3163.12.camel@HansenPartnership.com>
 Content-Language: en-US
-Content-ID: <3D927B1574146041811B31FAD325C873@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "beanhuo@micron.com" <beanhuo@micron.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: "hare@suse.de" <hare@suse.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-T24gU2F0LCAyMDE3LTEyLTIzIGF0IDEwOjE5ICswMDAwLCBCZWFuIEh1byAoYmVhbmh1bykgd3Jv
-dGU6DQo+IERvdWcgd3JvdGU6DQo+ID4gVGhpcyBzZWVtcyB0byB3b3JrIGluIExpbnV4IGJ1dCBt
-YXkgbm90IHdvcmsgaW4gQW5kcm9pZDoNCj4gPiBBQ19TRUFSQ0hfTElCUyhbcHRocmVhZF9jYW5j
-ZWxdLCBbcHRocmVhZF0sDQo+ID4gW0FDX0RFRklORShIQVZFX1BUSFJFQURfQ0FOQ0VMLCAxLCBb
-Rm91bmQgcHRocmVhZF9jYW5jZWxdKV0sIFtdKQ0KPiA+IA0KPiA+IEJlYW4sIGNvdWxkIHlvdSBj
-aGVjaz8NCj4gPiANCj4gDQo+IERvdWcsIEkgaGFkIHRyaWVkIHRoYXQsIGl0IHdvcmtzLCBidXQg
-dGhpcyBpcyBmb3IgQyBjb2RlcyBtYWNybyBkZWZpbml0aW9uIGluIHRoZSBjb25maWcuaC4NCj4g
-SG93IGNhbiBJIGZpZ3VyZSBvdXQgaW4gdGhlIC9zcmMvTWFrZWZpbGUuYWMgYmV0d2VlbiBBbmRy
-b2lkIE9TIGFuZCBub24tQW5kcm9pZD8NCj4gQ2FuIHlvdSBnaXZlIG1lIHNvbWUgc3VnZ2VzdGlv
-bnM/IExpa2UgdGhpczoNCj4gICAgICBpZiBPU19BTkRST0lEDQo+ICAgICAgc2dwX2RkX0xEQURE
-ID0gLi4vbGliL2xpYnNndXRpbHMyLmxhIEBvc19saWJzQA0KPiAgICAgZWxzZQ0KPiAgICAgc2dw
-X2RkX0xEQUREID0gLi4vbGliL2xpYnNndXRpbHMyLmxhIEBvc19saWJzQCAtbHB0aHJlYWQNCj4g
-ICAgIGVuZGlmDQoNCkhvdyBhYm91dCBsZWF2aW5nIG91dCB0aGUgZm9sbG93aW5nOg0KLSBVc2Ug
-QUNfU0VBUkNIX0xJQlMoW3B0aHJlYWRfY2FuY2VsXSwgW3B0aHJlYWRdKSBhbmQgQUNfQ0hFQ0tf
-RlVOQyhbcHRocmVhZF9jYW5jZWxdKSBpbg0KICBjb25maWd1cmUuYWMuIA0KLSBVc2UgQExJQlNA
-IGluIE1ha2VmaWxlLmFtLg0KDQpGcm9tIGh0dHBzOi8vd3d3LmdudS5vcmcvc29mdHdhcmUvYXV0
-b2NvbmYvbWFudWFsL2F1dG9jb25mLTIuNjYvaHRtbF9ub2RlL0xpYnJhcmllcy5odG1sOg0KIklm
-IGFjdGlvbi1pZi1mb3VuZCBpcyBub3Qgc3BlY2lmaWVkLCB0aGUgZGVmYXVsdCBhY3Rpb24gcHJl
-cGVuZHMgLWxsaWJyYXJ5IHRvIExJQlMgWy4uLl0iLg0KDQpCYXJ0Lg0KDQo=
+On 12/22/2017 06:14 PM, James Bottomley wrote:
+> On Thu, 2017-12-21 at 12:22 +0100, Hannes Reinecke wrote:
+>> Some storage arrays have an incorrect SES implementation which will
+>> always return the allocation length of the CDB instead of the true
+>> length of the requested page.
+> 
+> That's a pretty gross standards violation, is this common?  When the
+> buffer is > than the data to return, does it get set then?  Because if
+> not, we're going to be processing bogus data and no module parameter
+> can fix this because the returned length depends on the number of
+> elements in the enclosure making this parameter really unsafe unless
+> you get it exactly right.
+> 
+It's actually the first time I've observed that; the vendor is already
+alerted.
+But yes, if the buffer is larger than the page the correct page size is
+set, so we won't be suffering from the above issue.
+
+>> With this patch one can modify the initial allocation size to
+>> get the full output of those arrays.
+> 
+> This really doesn't look like the right way to do it.  Shouldn't we
+> rather have a blacklist for these devices and simply do a page for each
+> allocation for them (assuming they return the correct length when over
+> subscribed).
+> 
+I really doubt it's worth it. It's just a single array line with a
+particular firmware revision from what I've seen.
+The one problem we're continually running into is that the blacklist
+flags are essentially used up, so I'd be rather careful with adding some
+not-that-common scenarios to it.
+I would love to have the blacklist size increased, though; I do have a
+few other issues which would rather benefit from being handled by a
+blacklist flag ...
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
