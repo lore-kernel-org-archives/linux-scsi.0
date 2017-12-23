@@ -1,59 +1,46 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/3] ses: make initial allocation size configurable
-Date: Sat, 23 Dec 2017 15:29:34 +0100
-Message-ID: <d38fc9a3-bdbf-06e5-5362-3a51f15e18f4@suse.de>
+Subject: Re: [PATCH 2/3] ses: skip error messages for invalid LUNs
+Date: Sat, 23 Dec 2017 15:37:23 +0100
+Message-ID: <50d1463b-efaf-f95f-1681-7c482c73fc11@suse.de>
 References: <1513855354-86603-1-git-send-email-hare@suse.de>
- <1513855354-86603-2-git-send-email-hare@suse.de>
- <1513962873.3163.12.camel@HansenPartnership.com>
+ <1513855354-86603-3-git-send-email-hare@suse.de>
+ <1513964351.3163.14.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41906 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42231 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752216AbdLWO3g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 23 Dec 2017 09:29:36 -0500
-In-Reply-To: <1513962873.3163.12.camel@HansenPartnership.com>
+        id S1752334AbdLWOh0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 23 Dec 2017 09:37:26 -0500
+In-Reply-To: <1513964351.3163.14.camel@HansenPartnership.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 12/22/2017 06:14 PM, James Bottomley wrote:
+On 12/22/2017 06:39 PM, James Bottomley wrote:
 > On Thu, 2017-12-21 at 12:22 +0100, Hannes Reinecke wrote:
->> Some storage arrays have an incorrect SES implementation which will
->> always return the allocation length of the CDB instead of the true
->> length of the requested page.
+>> Some storage array set the 'Embedded enclosure' bit even though
+>> no LUN is present, causing the first RECEIVE DIAGNOSTIC call to
+>> be returned with sense code 'LOGICAL UNIT NOT SUPPORTED'.
+>> This patch skips the annoying 'Failed to get diagnostic page 0x1'
+>> messages for those cases.
 > 
-> That's a pretty gross standards violation, is this common?  When the
-> buffer is > than the data to return, does it get set then?  Because if
-> not, we're going to be processing bogus data and no module parameter
-> can fix this because the returned length depends on the number of
-> elements in the enclosure making this parameter really unsafe unless
-> you get it exactly right.
+> What disagnostic pages does this thing support?  Can you do a receive
+> diagnostic on page 0 to find out?  I suspect a lot of embedded
+> enclosure services are simple and support page 7 only.  If it really
+> refuses all diagnostic page requests (which would be a gross standards
+> violation), then it should probably be blacklisted by inquiry string as
+> unusable.
 > 
-It's actually the first time I've observed that; the vendor is already
-alerted.
-But yes, if the buffer is larger than the page the correct page size is
-set, so we won't be suffering from the above issue.
-
->> With this patch one can modify the initial allocation size to
->> get the full output of those arrays.
-> 
-> This really doesn't look like the right way to do it.  Shouldn't we
-> rather have a blacklist for these devices and simply do a page for each
-> allocation for them (assuming they return the correct length when over
-> subscribed).
-> 
-I really doubt it's worth it. It's just a single array line with a
-particular firmware revision from what I've seen.
-The one problem we're continually running into is that the blacklist
-flags are essentially used up, so I'd be rather careful with adding some
-not-that-common scenarios to it.
-I would love to have the blacklist size increased, though; I do have a
-few other issues which would rather benefit from being handled by a
-blacklist flag ...
+If a LUN is connected it'll respond to the usual set (0, 1, 2, und 6).
+Sending a RECEIVE DIAGNOSTIC to page 0 will probably yield the same
+result (ie being returned with that sense code), but at least we won't
+try to access the other pages.
+But anyway, yes, the implementation is dodgy.
+I'm in contact with the vendor and try to straighten things out.
 
 Cheers,
 
