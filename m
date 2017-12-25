@@ -1,38 +1,56 @@
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: imm: Replace mdelay with msleep in imm_init
-Date: Sun, 24 Dec 2017 18:32:24 +0800
-Message-ID: <1514111544-26598-1-git-send-email-baijiaju1990@gmail.com>
+From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Subject: [PATCH v1 0/9] ufs: sysfs: read-only access to device descriptors, attributes and flags
+Date: Mon, 25 Dec 2017 10:34:29 +0200
+Message-ID: <1514190878-5571-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-imm_init is not called in an interrupt handler 
-nor holding a spinlock.
-The function mdelay in it can be replaced with msleep, 
-to reduce busy wait.
+This patch introduces sysfs entries that will provide read-only access to
+device management data that could be received with UFS query requests.
+User-space applications will be able to read UFS device descriptors,
+flags and attributes. This will allow to get full UFS device configuration
+and its status. The descriptors are provided as set of files representing
+its parameters. The flags are using "true"/"false" representation of
+their value. The attributes are shown as hexadecimal value. The
+descriptors, attributes and flags are placed in separate subfolders under
+the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
+string descriptor subfolder contains five string descriptors defined by
+UFS specification 2.1. The LUN specific descriptor and attribute are 
+placed under corresponding SCSI device sysfs entries
+(/sys/class/scsi_device/*/device/).
+In addition the patch presents an additional field in the
+scsi_host_template structure - struct attribute_group **sdev_group.
+This field allows to define groups of attributes. It will provide an
+ability to use binary attributes in addition to device attributes and
+to group them under subfolders if necessary.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
----
- drivers/scsi/imm.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Stanislav Nijnikov (9):
+  ufs: sysfs: device descriptor
+  ufs: sysfs: interconnect descriptor
+  ufs: sysfs: geometry descriptor
+  ufs: sysfs: health descriptor
+  ufs: sysfs: power descriptor
+  ufs: sysfs: string descriptors
+  ufs: sysfs: unit descriptor
+  ufs: sysfs: flags
+  ufs: sysfs: attributes
 
-diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
-index 87c9419..4805c0e 100644
---- a/drivers/scsi/imm.c
-+++ b/drivers/scsi/imm.c
-@@ -591,9 +591,9 @@ static int imm_init(imm_struct *dev)
- 	if (imm_connect(dev, 0) != 1)
- 		return -EIO;
- 	imm_reset_pulse(dev->base);
--	mdelay(1);	/* Delay to allow devices to settle */
-+	msleep(1);	/* Delay to allow devices to settle */
- 	imm_disconnect(dev);
--	mdelay(1);	/* Another delay to allow devices to settle */
-+	msleep(1);	/* Another delay to allow devices to settle */
- 	return device_check(dev);
- }
- 
+ Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c                  |  14 +
+ drivers/scsi/ufs/Makefile                  |   2 +-
+ drivers/scsi/ufs/ufs-sysfs.c               | 643 +++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.h               |  14 +
+ drivers/scsi/ufs/ufs.h                     | 115 ++++-
+ drivers/scsi/ufs/ufshcd.c                  |  52 +-
+ drivers/scsi/ufs/ufshcd.h                  |  25 +
+ include/scsi/scsi_host.h                   |   6 +
+ 9 files changed, 1642 insertions(+), 33 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
+
 -- 
-1.7.9.5
+2.7.4
