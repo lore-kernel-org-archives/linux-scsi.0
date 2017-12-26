@@ -1,52 +1,125 @@
-From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Subject: Re: [RFC] sg3_utils: sgp_dd: work around on pthread_cancel for
- android
-Date: Tue, 26 Dec 2017 22:21:29 +0000
-Message-ID: <c392b57894184572bd1285be32f4a27f@SIWEX5A.sing.micron.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] documentation: add a target/iscsi driver document
+Date: Tue, 26 Dec 2017 15:50:50 -0800
+Message-ID: <2affd531-43d1-c798-8467-dece4b88a1df@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:55394 "EHLO
-        mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751407AbdLZWVp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Dec 2017 17:21:45 -0500
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: "hare@suse.de" <hare@suse.de>
 
-SGksIEJhcnQNCg0KPg0KPk9uIFNhdCwgMjAxNy0xMi0yMyBhdCAxMDoxOSArMDAwMCwgQmVhbiBI
-dW8gKGJlYW5odW8pIHdyb3RlOg0KPj4gRG91ZyB3cm90ZToNCj4+ID4gVGhpcyBzZWVtcyB0byB3
-b3JrIGluIExpbnV4IGJ1dCBtYXkgbm90IHdvcmsgaW4gQW5kcm9pZDoNCj4+ID4gQUNfU0VBUkNI
-X0xJQlMoW3B0aHJlYWRfY2FuY2VsXSwgW3B0aHJlYWRdLA0KPj4gPiBbQUNfREVGSU5FKEhBVkVf
-UFRIUkVBRF9DQU5DRUwsIDEsIFtGb3VuZCBwdGhyZWFkX2NhbmNlbF0pXSwgW10pDQo+PiA+DQo+
-PiA+IEJlYW4sIGNvdWxkIHlvdSBjaGVjaz8NCj4+ID4NCj4+DQo+PiBEb3VnLCBJIGhhZCB0cmll
-ZCB0aGF0LCBpdCB3b3JrcywgYnV0IHRoaXMgaXMgZm9yIEMgY29kZXMgbWFjcm8gZGVmaW5pdGlv
-biBpbg0KPnRoZSBjb25maWcuaC4NCj4+IEhvdyBjYW4gSSBmaWd1cmUgb3V0IGluIHRoZSAvc3Jj
-L01ha2VmaWxlLmFjIGJldHdlZW4gQW5kcm9pZCBPUyBhbmQgbm9uLQ0KPkFuZHJvaWQ/DQo+PiBD
-YW4geW91IGdpdmUgbWUgc29tZSBzdWdnZXN0aW9ucz8gTGlrZSB0aGlzOg0KPj4gICAgICBpZiBP
-U19BTkRST0lEDQo+PiAgICAgIHNncF9kZF9MREFERCA9IC4uL2xpYi9saWJzZ3V0aWxzMi5sYSBA
-b3NfbGlic0ANCj4+ICAgICBlbHNlDQo+PiAgICAgc2dwX2RkX0xEQUREID0gLi4vbGliL2xpYnNn
-dXRpbHMyLmxhIEBvc19saWJzQCAtbHB0aHJlYWQNCj4+ICAgICBlbmRpZg0KPg0KPkhvdyBhYm91
-dCBsZWF2aW5nIG91dCB0aGUgZm9sbG93aW5nOg0KPi0gVXNlIEFDX1NFQVJDSF9MSUJTKFtwdGhy
-ZWFkX2NhbmNlbF0sIFtwdGhyZWFkXSkgYW5kDQo+QUNfQ0hFQ0tfRlVOQyhbcHRocmVhZF9jYW5j
-ZWxdKSBpbg0KPiAgY29uZmlndXJlLmFjLg0KPi0gVXNlIEBMSUJTQCBpbiBNYWtlZmlsZS5hbS4N
-Cj4NCj5Gcm9tIGh0dHBzOi8vd3d3LmdudS5vcmcvc29mdHdhcmUvYXV0b2NvbmYvbWFudWFsL2F1
-dG9jb25mLQ0KPjIuNjYvaHRtbF9ub2RlL0xpYnJhcmllcy5odG1sOg0KPiJJZiBhY3Rpb24taWYt
-Zm91bmQgaXMgbm90IHNwZWNpZmllZCwgdGhlIGRlZmF1bHQgYWN0aW9uIHByZXBlbmRzIC1sbGli
-cmFyeSB0byBMSUJTDQo+Wy4uLl0iLg0KSSBjaGVja2VkIHRoZXNlLiBNeSBjaGFuZ2VzIGFyZSBi
-ZWxvdzoNCg0KQ29uZmlndXJlLmFjOg0KKyMgY2hlY2sgZm9yIHB0aHJlYWRfY2FuY2VsDQorQUNf
-U0VBUkNIX0xJQlMocHRocmVhZF9jYW5jZWwsIHB0aHJlYWQsDQorICAgICBbQUNfREVGSU5FKEhB
-VkVfUFRIUkVBRF9DQU5DRUwsIDEsIFtoYXZlIHB0aHJlYWRfY2FuY2VsXSldLCBbXSwgW10pDQoN
-ClNyYy9NYWtlZmlsZS5hbQ0KLXNncF9kZF9MREFERCA9IC4uL2xpYi9saWJzZ3V0aWxzMi5sYSBA
-b3NfbGlic0AgLWxwdGhyZWFkDQorc2dwX2RkX0xEQUREID0gLi4vbGliL2xpYnNndXRpbHMyLmxh
-IEBvc19saWJzQCBATElCU0ANCg0KSW4gdGhlIFNyYy9zZ3BfZGQuYywgSSBjYW4gdXNlIG1hY3Jv
-IGRlZmluaXRpb24gIiBIQVZFX1BUSFJFQURfQ0FOQ0VMIiB0byBkaWZmZXJlbnRpYXRlDQpwdGhy
-ZWFkX2NhbmNlbCBzdXBwb3J0cyBvciBub3QuDQoNCkl0IHdvcmtzLiANCkJ1dCBJIGdvdCBvbmUg
-d2FybmluZyBiZWxvdyB3aGlsZSBydW4gYXV0b3JlY29uZiAsIGRvIHlvdSBrbm93IHdoYXQgaXMg
-d3Jvbmcgd2l0aCB0aGF0Pw0KY29uZmlndXJlLmFjOjE1OiB3YXJuaW5nOiBBQ19QUk9HX0xJQlRP
-T0wgd2FzIGNhbGxlZCBiZWZvcmUgQU1fUFJPR19BUg0KY29uZmlndXJlLmFjOjE1OiB3YXJuaW5n
-OiBMVF9JTklUIHdhcyBjYWxsZWQgYmVmb3JlIEFNX1BST0dfQVINCg0KdGhhbmtzIGluIGFkdmFu
-Y2UhDQpCZWFuIEh1bw0KDQo=
+From: Randy Dunlap <rdunlap@infradead.org>
+
+Add a driver-api document for target/iSCSI interfaces.
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+---
+This patch depends on 4 previous patches to driver source files:
+
+[PATCH] target: fix kernel-doc warnings in drivers/target/target_core_transport.c
+  https://marc.info/?l=linux-scsi&m=151398041926906&w=2
+
+[PATCH] scsi: fix iscsi-related kernel-doc warnings
+  https://marc.info/?l=linux-scsi&m=151398051426923&w=2
+
+[PATCH] target: add kernel-doc overview in target_core_user.[hc]
+  [PATCH] target: add kernel-doc overview in target_core_user.[hc]
+
+[PATCH] target: cleanup target_core_transport.c for kernel-doc
+  https://marc.info/?l=linux-scsi&m=151409284812033&w=2
+
+ Documentation/driver-api/index.rst  |    1 
+ Documentation/driver-api/scsi.rst   |    2 
+ Documentation/driver-api/target.rst |   64 ++++++++++++++++++++++++++
+ 3 files changed, 66 insertions(+), 1 deletion(-)
+
+--- linux-next-20171221.orig/Documentation/driver-api/index.rst
++++ linux-next-20171221/Documentation/driver-api/index.rst
+@@ -34,6 +34,7 @@ available subsections can be seen below.
+    edac
+    scsi
+    libata
++   target
+    mtdnand
+    miscellaneous
+    w1
+--- linux-next-20171221.orig/Documentation/driver-api/scsi.rst
++++ linux-next-20171221/Documentation/driver-api/scsi.rst
+@@ -340,5 +340,5 @@ todo
+ ~~~~
+ 
+ Parallel (fast/wide/ultra) SCSI, USB, SATA, SAS, Fibre Channel,
+-FireWire, ATAPI devices, Infiniband, I2O, iSCSI, Parallel ports,
++FireWire, ATAPI devices, Infiniband, I2O, Parallel ports,
+ netlink...
+--- /dev/null
++++ linux-next-20171221/Documentation/driver-api/target.rst
+@@ -0,0 +1,64 @@
++=================================
++target and iSCSI Interfaces Guide
++=================================
++
++Introduction and Overview
++=========================
++
++TBD
++
++Target core device interfaces
++=============================
++
++.. kernel-doc:: drivers/target/target_core_device.c
++    :export:
++
++Target core transport interfaces
++================================
++
++.. kernel-doc:: drivers/target/target_core_transport.c
++    :export:
++
++Target-supported userspace I/O
++==============================
++
++.. kernel-doc:: drivers/target/target_core_user.c
++    :doc: Userspace I/O
++
++.. kernel-doc:: include/uapi/linux/target_core_user.h
++    :doc: Ring Design
++
++iSCSI helper functions
++======================
++
++.. kernel-doc:: drivers/scsi/libiscsi.c
++   :export:
++
++
++iSCSI boot information
++======================
++
++.. kernel-doc:: drivers/scsi/iscsi_boot_sysfs.c
++   :export
++
++
++iSCSI transport class
++=====================
++
++The file drivers/scsi/scsi_transport_iscsi.c defines transport
++attributes for the iSCSI class, which sends SCSI packets over TCP/IP
++connections.
++
++.. kernel-doc:: drivers/scsi/scsi_transport_iscsi.c
++   :export:
++
++
++iSCSI TCP interfaces
++====================
++
++.. kernel-doc:: drivers/scsi/iscsi_tcp.c
++   :internal:
++
++.. kernel-doc:: drivers/scsi/libiscsi_tcp.c
++   :export:
++
