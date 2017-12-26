@@ -1,23 +1,19 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH v1 8/9] ufs: sysfs: flags
-Date: Tue, 26 Dec 2017 20:29:56 +0800
-Message-ID: <201712262009.r8iwhOR8%fengguang.wu@intel.com>
-References: <1514190878-5571-9-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: Re: [PATCH v1 9/9] ufs: sysfs: attributes
+Date: Wed, 27 Dec 2017 00:58:33 +0800
+Message-ID: <201712270046.CJzR2NZ7%fengguang.wu@intel.com>
+References: <1514190878-5571-10-git-send-email-stanislav.nijnikov@wdc.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="oyUTqETQ0mS9luUI"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58319 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750732AbdLZMab (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Dec 2017 07:30:31 -0500
+Content-Type: multipart/mixed; boundary="Qxx1br4bt0+wmkIi"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1514190878-5571-9-git-send-email-stanislav.nijnikov@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1514190878-5571-10-git-send-email-stanislav.nijnikov@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+List-Id: linux-scsi@vger.kernel.org
 
 
---oyUTqETQ0mS9luUI
+--Qxx1br4bt0+wmkIi
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -43,23 +39,25 @@ All errors (new ones prefixed by >>):
    see include/linux/module.h for more information
    WARNING: modpost: missing MODULE_LICENSE() in drivers/scsi/ufs/ufs-sysfs.o
    see include/linux/module.h for more information
+>> ERROR: "ufs_sysfs_lun_attributes_group" [drivers/scsi/ufs/ufshcd.ko] undefined!
    ERROR: "ufs_sysfs_unit_descriptor_group" [drivers/scsi/ufs/ufshcd.ko] undefined!
    ERROR: "ufs_sysfs_add_device_management" [drivers/scsi/ufs/ufshcd.ko] undefined!
    ERROR: "ufs_sysfs_remove_device_management" [drivers/scsi/ufs/ufshcd.ko] undefined!
    ERROR: "ufshcd_read_string_desc" [drivers/scsi/ufs/ufs-sysfs.ko] undefined!
    ERROR: "ufshcd_query_descriptor_retry" [drivers/scsi/ufs/ufs-sysfs.ko] undefined!
->> ERROR: "ufshcd_query_flag" [drivers/scsi/ufs/ufs-sysfs.ko] undefined!
+   ERROR: "ufshcd_query_flag" [drivers/scsi/ufs/ufs-sysfs.ko] undefined!
+>> ERROR: "ufshcd_query_attr" [drivers/scsi/ufs/ufs-sysfs.ko] undefined!
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---oyUTqETQ0mS9luUI
+--Qxx1br4bt0+wmkIi
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICDw0QloAAy5jb25maWcAlDzJdtw4kvf6inyuOXQfypZkl8b95ukAkiATTpJgAWAuuvCp
+H4sICARyQloAAy5jb25maWcAlDzJdtw4kvf6inyuOXQfypZkl8b95ukAkiATTpJgAWAuuvCp
 pHSVXstSjZae8t9PRIALAIJZ3T7YZkRgCwRiQyB//OHHFXt7ffp283p/e/Pw8H312/Hx+Hzz
 erxbfb1/OP7PKpOrWpoVz4R5D8Tl/ePbnx/+/HzZXX5afXp//vP7s5+eb89Xm+Pz4/FhlT49
 fr3/7Q06uH96/OHHH1JZ56IA2kSYq+/D556ae9/Th6i1UW1qhKy7jKcy42pCytY0relyqSpm
@@ -808,4 +806,4 @@ seSE34eOh7r0ou+Ud5AdygLIuSyc/IBZRr1lgTNx0z5WbaFi5llMsTfMpsjADl9yi7aby5B2
 59oYeQYuG5DJhCkyAU5GCgb661/XXg3Xv/CemrlWcHksSXvfDtJ3NNaAppuxgy8HYb9CFGSV
 cB/ms9Gsjg2MJpImRKJpS5tKOwko0Bqb+nb/B0GRBtjqgQIA
 
---oyUTqETQ0mS9luUI--
+--Qxx1br4bt0+wmkIi--
