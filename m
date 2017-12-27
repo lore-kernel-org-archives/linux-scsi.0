@@ -1,35 +1,26 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 10/12] hpsa: drop unneeded newline
-Date: Wed, 27 Dec 2017 15:51:43 +0100
-Message-ID: <1514386305-7402-11-git-send-email-Julia.Lawall@lip6.fr>
-References: <1514386305-7402-1-git-send-email-Julia.Lawall@lip6.fr>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 3/9] ufs: sysfs: geometry descriptor
+Date: Wed, 27 Dec 2017 16:20:41 +0100
+Message-ID: <20171227152041.GD20967@kroah.com>
+References: <1514387627-27817-1-git-send-email-stanislav.nijnikov@wdc.com>
+ <1514387627-27817-4-git-send-email-stanislav.nijnikov@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1514386305-7402-1-git-send-email-Julia.Lawall@lip6.fr>
+Content-Disposition: inline
+In-Reply-To: <1514387627-27817-4-git-send-email-stanislav.nijnikov@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
-hpsa_show_dev_msg prints other information and a newline after the
-message string, so the message string does not need to include a
-newline explicitly.  Done using Coccinelle.
+On Wed, Dec 27, 2017 at 05:13:41PM +0200, Stanislav Nijnikov wrote:
+> This patch introduces a sysfs group entry for the UFS geometry descriptor
+> parameters. The group adds "geometry_descriptor" folder under the UFS
+> driver sysfs entry (/sys/bus/platform/drivers/ufshcd/*). The parameters
+> are shown as hexadecimal numbers. The full information about the parameters
+> could be found at UFS specifications 2.1.
+> 
+> Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index b0aa5dc..3bb8191 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3518,7 +3518,7 @@ static void hpsa_get_enclosure_info(struct ctlr_info *h,
- 
- 	if (rc != IO_OK)
- 		hpsa_show_dev_msg(KERN_INFO, h, encl_dev,
--			"Error, could not get enclosure information\n");
-+			"Error, could not get enclosure information");
- }
- 
- static u64 hpsa_get_sas_address_from_report_physical(struct ctlr_info *h,
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
