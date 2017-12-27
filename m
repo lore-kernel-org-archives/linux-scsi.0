@@ -1,127 +1,41 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH v2 24/30] scsi: aacraid: Use hotplug handling function in place of scsi_scan_host
-Date: Tue, 26 Dec 2017 20:34:45 -0800
-Message-ID: <20171227043451.27813-25-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH v2 30/30] scsi: aacraid: Update driver version to 50877
+Date: Tue, 26 Dec 2017 20:34:51 -0800
+Message-ID: <20171227043451.27813-31-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0041.outbound.protection.outlook.com ([104.47.32.41]:60976
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0042.outbound.protection.outlook.com ([104.47.33.42]:15948
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751798AbdL0EfW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Dec 2017 23:35:22 -0500
+        id S1751800AbdL0Efa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Dec 2017 23:35:30 -0500
 In-Reply-To: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Driver uses scsi_scan_host to add new devices in the driver init path,
-which adds all the fw exposed devices. The drivers resorts to queue
-command checks to block out commands to _hidden_ devices.
-
-Use the hotplug handler code to add new devices during driver init and
-other areas, this is only for safw. For ARC scsi_scan_host will still
-apply.
+Update driver Version to 50877
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-
 ---
-Changes in V2:
-None
+ drivers/scsi/aacraid/aacraid.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/scsi/aacraid/aachba.c  |  4 ----
- drivers/scsi/aacraid/aacraid.h |  1 +
- drivers/scsi/aacraid/commsup.c | 18 +++++++++++++++---
- drivers/scsi/aacraid/linit.c   |  5 +++--
- 4 files changed, 19 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 4ad9d3f..426c61a 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2150,10 +2150,6 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 		dev->maximum_num_channels = le32_to_cpu(bus_info->BusCount);
- 	}
- 
--	if (!dev->sync_mode && dev->sa_firmware &&
--		dev->supplement_adapter_info.virt_device_bus != 0xffff)
--		rcode = aac_setup_safw_adapter(dev, AAC_INIT);
--
- 	if (!dev->in_reset) {
- 		char buffer[16];
- 		tmp = le32_to_cpu(dev->adapter_info.kernelrev);
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index c70c998..ba84d99 100644
+index 4d3536d..3e8bfcf 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2719,6 +2719,7 @@ static inline int aac_supports_2T(struct aac_dev *dev)
- 	return (dev->adapter_info.options & AAC_OPT_NEW_COMM_64);
- }
+@@ -98,7 +98,7 @@ enum {
+ #define	PMC_GLOBAL_INT_BIT0		0x00000001
  
-+int aac_scan_host(struct aac_dev *dev, int rescan);
- char * get_container_type(unsigned type);
- extern int numacb;
- extern char aac_driver_version[];
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 491e633..4e2687c 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1964,6 +1964,19 @@ static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
- 	return rcode;
- }
- 
-+int aac_scan_host(struct aac_dev *dev, int rescan)
-+{
-+	int rcode = 0;
-+
-+	mutex_lock(&dev->scan_mutex);
-+	if (dev->sa_firmware)
-+		rcode = aac_update_safw_host_devices(dev, rescan);
-+	else
-+		scsi_scan_host(dev->scsi_host_ptr);
-+	mutex_unlock(&dev->scan_mutex);
-+	return rcode;
-+}
-+
- /**
-  *	aac_handle_sa_aif	Handle a message from the firmware
-  *	@dev: Which adapter this fib is from
-@@ -1997,9 +2010,8 @@ static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
- 	case SA_AIF_LDEV_CHANGE:
- 	case SA_AIF_BPCFG_CHANGE:
- 
--		mutex_lock(&dev->scan_mutex);
--		aac_update_safw_host_devices(dev, AAC_RESCAN);
--		mutex_unlock(&dev->scan_mutex);
-+		aac_scan_host(dev, AAC_RESCAN);
-+
- 		break;
- 
- 	case SA_AIF_BPSTAT_CHANGE:
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 2c862cd..7ea7b2c 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1787,7 +1787,8 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	error = scsi_add_host(shost, &pdev->dev);
- 	if (error)
- 		goto out_deinit;
--	scsi_scan_host(shost);
-+
-+	aac_scan_host(aac, AAC_INIT);
- 
- 	pci_enable_pcie_error_reporting(pdev);
- 	pci_save_state(pdev);
-@@ -2071,7 +2072,7 @@ static void aac_pci_resume(struct pci_dev *pdev)
- 		if (sdev->sdev_state == SDEV_OFFLINE)
- 			sdev->sdev_state = SDEV_RUNNING;
- 	scsi_unblock_requests(aac->scsi_host_ptr);
--	scsi_scan_host(aac->scsi_host_ptr);
-+	aac_scan_host(aac, AAC_RESCAN);
- 	pci_save_state(pdev);
- 
- 	dev_err(&pdev->dev, "aacraid: PCI error - resume\n");
+ #ifndef AAC_DRIVER_BUILD
+-# define AAC_DRIVER_BUILD 50834
++# define AAC_DRIVER_BUILD 50877
+ # define AAC_DRIVER_BRANCH "-custom"
+ #endif
+ #define MAXIMUM_NUM_CONTAINERS	32
 -- 
 2.9.4
