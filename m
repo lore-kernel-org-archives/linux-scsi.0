@@ -1,7 +1,7 @@
 From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v1 6/9] ufs: sysfs: string descriptors
-Date: Wed, 27 Dec 2017 15:49:33 +0200
-Message-ID: <1514382576-20542-7-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: [PATCH v1 4/9] ufs: sysfs: health descriptor
+Date: Wed, 27 Dec 2017 15:49:31 +0200
+Message-ID: <1514382576-20542-5-git-send-email-stanislav.nijnikov@wdc.com>
 References: <1514382576-20542-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1514382576-20542-1-git-send-email-stanislav.nijnikov@wdc.com>
@@ -12,172 +12,165 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 39 ++++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.c               | 58 ++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.c                  |  5 +--
- drivers/scsi/ufs/ufshcd.h                  |  3 ++
- 4 files changed, 103 insertions(+), 2 deletions(-)
+ Documentation/ABI/testing/sysfs-driver-ufs | 28 ++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 20 ++++++++++++++++++++
+ drivers/scsi/ufs/ufs.h                     | 11 +++++++++++
+ drivers/scsi/ufs/ufshcd.c                  |  8 ++++++++
+ drivers/scsi/ufs/ufshcd.h                  |  1 +
+ 5 files changed, 68 insertions(+)
 
 diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 7b86efd..736280e 100644
+index db68bf6..59399e3 100644
 --- a/Documentation/ABI/testing/sysfs-driver-ufs
 +++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -450,4 +450,43 @@ Description:	This file shows maximum VCC, VCCQ and VCCQ2 value for
- 		active ICC levels from 0 to 15. This is one of the UFS
- 		power descriptor parameters. The full information about
- 		the descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/string_descriptors/manufacturer_name
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file contains a device manufactureer name string.
-+		The full information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/string_descriptors/product_name
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file contains a product name string. The full information
-+		about the descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/string_descriptors/oem_id
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file contains a OEM ID string. The full information
-+		about the descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/string_descriptors/serial_number
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file contains a device serial number string. The full
-+		information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/string_descriptors/product_revision
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file contains a product revision string. The full
-+		information about the descriptor could be found at
-+		UFS specifications 2.1.
+@@ -413,3 +413,31 @@ Description:	This file shows the memory capacity adjustment factor for
+ 		descriptor parameters. The full information about the
+ 		descriptor could be found at UFS specifications 2.1.
  		The file is read only.
++
++
++What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/eol_info
++Date:		August 2017
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows preend of life information. This is one
++		of the UFS health descriptor parameters. The full
++		information about the descriptor could be found at
++		UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/life_time_estimation_a
++Date:		August 2017
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows indication of the device life time
++		(method a). This is one of the UFS health descriptor
++		parameters. The full information about the descriptor
++		could be found at UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/life_time_estimation_b
++Date:		August 2017
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows indication of the device life time
++		(method b). This is one of the UFS health descriptor
++		parameters. The full information about the descriptor
++		could be found at UFS specifications 2.1.
++		The file is read only.
 \ No newline at end of file
 diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index a1a0636..1be058c 100644
+index 82ba7b1..441dc87 100644
 --- a/drivers/scsi/ufs/ufs-sysfs.c
 +++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -371,12 +371,70 @@ static const struct attribute_group ufs_sysfs_power_descriptor_group = {
- 	.attrs = ufs_sysfs_power_descriptor,
+@@ -232,10 +232,30 @@ static const struct attribute_group ufs_sysfs_geometry_descriptor_group = {
+ 	.attrs = ufs_sysfs_geometry_descriptor,
  };
  
-+#define ufs_sysfs_string_descriptor_show(_name, _pname)                       \
-+static ssize_t _name##_show(struct device *dev,                               \
-+	struct device_attribute *attr, char *buf)                             \
-+{                                                                             \
-+	u8 index;                                                             \
-+	struct ufs_hba *hba = dev_get_drvdata(dev);                           \
-+	int ret;                                                              \
-+	int desc_len = QUERY_DESC_MAX_SIZE;                                   \
-+	u8 *desc_buf;                                                         \
-+	desc_buf = kzalloc(QUERY_DESC_MAX_SIZE, GFP_ATOMIC);                  \
-+	if (!desc_buf)                                                        \
-+		return -ENOMEM;                                               \
-+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC, \
-+		QUERY_DESC_IDN_DEVICE, 0, 0, desc_buf, &desc_len);            \
-+	if (ret) {                                                            \
-+		ret = -EINVAL;                                                \
-+		goto out;                                                     \
-+	}                                                                     \
-+	index = desc_buf[DEVICE_DESC_PARAM_##_pname];                         \
-+	memset(desc_buf, 0, QUERY_DESC_MAX_SIZE);                             \
-+	if (ufshcd_read_string_desc(hba, index, desc_buf,                     \
-+		QUERY_DESC_MAX_SIZE, true)) {                                 \
-+		ret = -EINVAL;                                                \
-+		goto out;                                                     \
-+	}                                                                     \
-+	ret = snprintf(buf, PAGE_SIZE, "%s\n",                                \
-+		desc_buf + QUERY_DESC_HDR_SIZE);                              \
-+out:                                                                          \
-+	kfree(desc_buf);                                                      \
-+	return ret;                                                           \
-+}
++#define UFS_HEALTH_DESC_PARAM(_name, _uname, _size)                     \
++	UFS_DESC_PARAM(_name, _uname, HEALTH, _size)
 +
-+#define UFS_STRING_DESCRIPTOR(_name, _pname)                                  \
-+	ufs_sysfs_string_descriptor_show(_name, _pname)                       \
-+	static DEVICE_ATTR_RO(_name)
++UFS_HEALTH_DESC_PARAM(eol_info, EOL_INFO, BYTE);
++UFS_HEALTH_DESC_PARAM(life_time_estimation_a, LIFE_TIME_EST_A, BYTE);
++UFS_HEALTH_DESC_PARAM(life_time_estimation_b, LIFE_TIME_EST_B, BYTE);
 +
-+UFS_STRING_DESCRIPTOR(manufacturer_name, MANF_NAME);
-+UFS_STRING_DESCRIPTOR(product_name, PRDCT_NAME);
-+UFS_STRING_DESCRIPTOR(oem_id, OEM_ID);
-+UFS_STRING_DESCRIPTOR(serial_number, SN);
-+UFS_STRING_DESCRIPTOR(product_revision, PRDCT_REV);
-+
-+static struct attribute *ufs_sysfs_string_descriptors[] = {
-+	&dev_attr_manufacturer_name.attr,
-+	&dev_attr_product_name.attr,
-+	&dev_attr_oem_id.attr,
-+	&dev_attr_serial_number.attr,
-+	&dev_attr_product_revision.attr,
++static struct attribute *ufs_sysfs_health_descriptor[] = {
++	&dev_attr_eol_info.attr,
++	&dev_attr_life_time_estimation_a.attr,
++	&dev_attr_life_time_estimation_b.attr,
 +	NULL,
 +};
 +
-+static const struct attribute_group ufs_sysfs_string_descriptors_group = {
-+	.name = "string_descriptors",
-+	.attrs = ufs_sysfs_string_descriptors,
++static const struct attribute_group ufs_sysfs_health_descriptor_group = {
++	.name = "health_descriptor",
++	.attrs = ufs_sysfs_health_descriptor,
 +};
-+
 +
  static const struct attribute_group *ufs_sysfs_groups[] = {
  	&ufs_sysfs_device_descriptor_group,
  	&ufs_sysfs_interconnect_descriptor_group,
  	&ufs_sysfs_geometry_descriptor_group,
- 	&ufs_sysfs_health_descriptor_group,
- 	&ufs_sysfs_power_descriptor_group,
-+	&ufs_sysfs_string_descriptors_group,
++	&ufs_sysfs_health_descriptor_group,
  	NULL,
  };
  
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 04d41c8..6bfeedb 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -154,6 +154,7 @@ enum desc_idn {
+ 	QUERY_DESC_IDN_RFU_1		= 0x6,
+ 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
+ 	QUERY_DESC_IDN_POWER		= 0x8,
++	QUERY_DESC_IDN_HEALTH           = 0x9,
+ 	QUERY_DESC_IDN_MAX,
+ };
+ 
+@@ -169,6 +170,7 @@ enum ufs_desc_def_size {
+ 	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
+ 	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
+ 	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
++	QUERY_DESC_HEALTH_DEF_SIZE		= 0x25,
+ };
+ 
+ /* Unit descriptor parameters offsets in bytes*/
+@@ -274,6 +276,15 @@ enum geometry_desc_param {
+ 	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
+ };
+ 
++/* Health descriptor parameters offsets in bytes*/
++enum health_desc_param {
++	HEALTH_DESC_PARAM_LEN			= 0x0,
++	HEALTH_DESC_PARAM_TYPE			= 0x1,
++	HEALTH_DESC_PARAM_EOL_INFO		= 0x2,
++	HEALTH_DESC_PARAM_LIFE_TIME_EST_A	= 0x3,
++	HEALTH_DESC_PARAM_LIFE_TIME_EST_B	= 0x4,
++};
++
+ /*
+  * Logical Unit Write Protect
+  * 00h: LU not write protected
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7b61e02..b78f6ab 100644
+index 6e15cda..7b61e02 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3115,8 +3115,8 @@ static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
-  * Return 0 in case of success, non-zero otherwise
-  */
- #define ASCII_STD true
--static int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
--				   u8 *buf, u32 size, bool ascii)
-+int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
-+			    u8 *buf, u32 size, bool ascii)
- {
- 	int err = 0;
- 
-@@ -3172,6 +3172,7 @@ static int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
- out:
- 	return err;
+@@ -2988,6 +2988,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
+ 	case QUERY_DESC_IDN_STRING:
+ 		*desc_len = QUERY_DESC_MAX_SIZE;
+ 		break;
++	case QUERY_DESC_IDN_HEALTH:
++		*desc_len = hba->desc_size.hlth_desc;
++		break;
+ 	case QUERY_DESC_IDN_RFU_0:
+ 	case QUERY_DESC_IDN_RFU_1:
+ 		*desc_len = 0;
+@@ -6299,6 +6302,10 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
+ 		&hba->desc_size.geom_desc);
+ 	if (err)
+ 		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
++		&hba->desc_size.hlth_desc);
++	if (err)
++		hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
  }
-+EXPORT_SYMBOL(ufshcd_read_string_desc);
+ 
+ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+@@ -6309,6 +6316,7 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+ 	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+ 	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
+ 	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+ }
  
  /**
-  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 2235e7d..e5c2615 100644
+index 6a0ec4b..2235e7d 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -848,6 +848,9 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
- 				  u8 *desc_buf, int *buf_len);
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, bool *flag_res);
-+int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
-+			    u8 *buf, u32 size, bool ascii);
-+
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
+@@ -229,6 +229,7 @@ struct ufs_desc_size {
+ 	int interc_desc;
+ 	int unit_desc;
+ 	int conf_desc;
++	int hlth_desc;
+ };
  
+ /**
 -- 
 2.7.4
