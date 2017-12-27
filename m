@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH v2 16/30] scsi: aacraid: Save bmic phy information for each phy
-Date: Tue, 26 Dec 2017 20:34:37 -0800
-Message-ID: <20171227043451.27813-17-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH v2 15/30] scsi: aacraid: Create helper functions to get lun info
+Date: Tue, 26 Dec 2017 20:34:36 -0800
+Message-ID: <20171227043451.27813-16-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0059.outbound.protection.outlook.com ([104.47.32.59]:54080
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0046.outbound.protection.outlook.com ([104.47.40.46]:47936
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751495AbdL0EfP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751539AbdL0EfP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 26 Dec 2017 23:35:15 -0500
 In-Reply-To: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,164 +17,101 @@ List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Save the bmic information for each phy, so that it can processed in
-target setup function.
+Created inline function to retrieve lun info for each device from the
+phy luns structure.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 
 ---
 Changes in V2:
-Removed unused phy_luns variable
+Use get_unaligned_be32 instead of open ended conversion
 
- drivers/scsi/aacraid/aachba.c  | 84 +++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/aacraid/aacraid.h |  1 +
- 2 files changed, 79 insertions(+), 6 deletions(-)
+ drivers/scsi/aacraid/aachba.c | 54 +++++++++++++++++++++++++++++++++----------
+ 1 file changed, 42 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index fa0132b..baa3de5 100644
+index 43a3c11..fa0132b 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -1756,7 +1756,7 @@ static int aac_send_safw_bmic_cmd(struct aac_dev *dev,
- }
+@@ -42,6 +42,8 @@
+ #include <linux/highmem.h> /* For flush_kernel_dcache_page */
+ #include <linux/module.h>
  
- static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
--	u32 bus, u32 target)
-+	struct aac_ciss_identify_pd **identify_resp, u32 bus, u32 target)
- {
- 	int rcode = -ENOMEM;
- 	int datasize;
-@@ -1779,7 +1779,7 @@ static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
- 
- 	rcode = aac_send_safw_bmic_cmd(dev, &srbu, identify_reply, datasize);
- 	if (unlikely(rcode < 0))
--		goto out;
-+		goto mem_free_all;
- 
- 	if (identify_reply->current_queue_depth_limit <= 0 ||
- 		identify_reply->current_queue_depth_limit > 32)
-@@ -1788,9 +1788,13 @@ static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
- 		dev->hba_map[bus][target].qd_limit =
- 			identify_reply->current_queue_depth_limit;
- 
--	kfree(identify_reply);
-+	*identify_resp = identify_reply;
++#include <asm/unaligned.h>
 +
- out:
- 	return rcode;
-+mem_free_all:
-+	kfree(identify_reply);
-+	goto out;
- }
- 
- static inline void aac_free_safw_ciss_luns(struct aac_dev *dev)
-@@ -1883,6 +1887,71 @@ static inline u32 aac_get_safw_phys_device_type(struct aac_dev *dev, int lun)
- 	return dev->safw_phys_luns->lun[lun].node_ident[8];
- }
- 
-+static inline void aac_free_safw_identify_resp(struct aac_dev *dev,
-+						int bus, int target)
-+{
-+	kfree(dev->hba_map[bus][target].safw_identify_resp);
-+	dev->hba_map[bus][target].safw_identify_resp = NULL;
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+@@ -1844,7 +1846,41 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
+ mem_free_all:
+ 	kfree(phys_luns);
+ 	goto out;
 +}
 +
-+static inline void aac_free_safw_all_identify_resp(struct aac_dev *dev,
-+	int lun_count)
++static inline u32 aac_get_safw_phys_lun_count(struct aac_dev *dev)
 +{
-+	int luns;
-+	int i;
-+	u32 bus;
-+	u32 target;
-+
-+	luns = aac_get_safw_phys_lun_count(dev);
-+
-+	if (luns < lun_count)
-+		lun_count = luns;
-+	else if (lun_count < 0)
-+		lun_count = luns;
-+
-+	for (i = 0; i < lun_count; i++) {
-+		bus = aac_get_safw_phys_bus(dev, i);
-+		target = aac_get_safw_phys_target(dev, i);
-+
-+		aac_free_safw_identify_resp(dev, bus, target);
-+	}
++	return get_unaligned_be32(&dev->safw_phys_luns->list_length[0]);
 +}
 +
-+static int aac_get_safw_attr_all_targets(struct aac_dev *dev, int rescan)
++static inline u32 aac_get_safw_phys_bus(struct aac_dev *dev, int lun)
 +{
-+	int i;
-+	int rcode = 0;
-+	u32 lun_count;
-+	u32 bus;
-+	u32 target;
-+	struct aac_ciss_identify_pd *identify_resp = NULL;
-+
-+	lun_count = aac_get_safw_phys_lun_count(dev);
-+
-+	for (i = 0; i < lun_count; ++i) {
-+
-+		bus = aac_get_safw_phys_bus(dev, i);
-+		target = aac_get_safw_phys_target(dev, i);
-+
-+		rcode = aac_issue_safw_bmic_identify(dev,
-+						&identify_resp, bus, target);
-+
-+		if (unlikely(rcode < 0)) {
-+			dev->hba_map[bus][target].qd_limit = 32;
-+			goto free_identify_resp;
-+		}
-+
-+		dev->hba_map[bus][target].safw_identify_resp = identify_resp;
-+	}
-+
-+out:
-+	return rcode;
-+
-+free_identify_resp:
-+	aac_free_safw_all_identify_resp(dev, i);
-+	goto out;
++	return dev->safw_phys_luns->lun[lun].level2[1] & 0x3f;
 +}
 +
++static inline u32 aac_get_safw_phys_target(struct aac_dev *dev, int lun)
++{
++	return dev->safw_phys_luns->lun[lun].level2[0];
++}
+ 
++static inline u32 aac_get_safw_phys_expose_flag(struct aac_dev *dev, int lun)
++{
++	return dev->safw_phys_luns->lun[lun].bus >> 6;
++}
++
++static inline u32 aac_get_safw_phys_attribs(struct aac_dev *dev, int lun)
++{
++	return dev->safw_phys_luns->lun[lun].node_ident[9];
++}
++
++static inline u32 aac_get_safw_phys_nexus(struct aac_dev *dev, int lun)
++{
++	return *((u32 *)&dev->safw_phys_luns->lun[lun].node_ident[12]);
++}
++
++static inline u32 aac_get_safw_phys_device_type(struct aac_dev *dev, int lun)
++{
++	return dev->safw_phys_luns->lun[lun].node_ident[8];
+ }
+ 
  /**
-  *	aac_set_safw_attr_all_targets-	update current hba map with data from FW
-  *	@dev:	aac_dev structure
-@@ -1929,9 +1998,6 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
- 		if (devtype != AAC_DEVTYPE_NATIVE_RAW)
- 			goto update_devtype;
- 
--		if (aac_issue_safw_bmic_identify(dev, bus, target) < 0)
--			dev->hba_map[bus][target].qd_limit = 32;
+@@ -1862,22 +1898,16 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
+ 	u32 i, bus, target;
+ 	u8 expose_flag, attribs;
+ 	u8 devtype;
+-	struct aac_ciss_phys_luns_resp *phys_luns;
 -
- update_devtype:
- 		if (rescan == AAC_INIT)
- 			dev->hba_map[bus][target].devtype = devtype;
-@@ -1948,8 +2014,14 @@ static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
- 	if (unlikely(rcode < 0))
- 		goto out;
+-	phys_luns = dev->safw_phys_luns;
  
-+	rcode = aac_get_safw_attr_all_targets(dev, rescan);
-+	if (unlikely(rcode < 0))
-+		goto free_ciss_luns;
-+
- 	aac_set_safw_attr_all_targets(dev, rescan);
+-	lun_count = ((phys_luns->list_length[0] << 24)
+-			+ (phys_luns->list_length[1] << 16)
+-			+ (phys_luns->list_length[2] << 8)
+-			+ (phys_luns->list_length[3])) / 24;
++	lun_count = aac_get_safw_phys_lun_count(dev);
  
-+	aac_free_safw_all_identify_resp(dev, -1);
-+free_ciss_luns:
- 	aac_free_safw_ciss_luns(dev);
- out:
- 	return rcode;
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 19af4d9..b1a6045 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1345,6 +1345,7 @@ struct aac_hba_map_info {
- 					/* after xth TM LUN reset */
- 	u16		qd_limit;
- 	u8		expose;		/*checks if to expose or not*/
-+	struct aac_ciss_identify_pd  *safw_identify_resp;
- };
+ 	for (i = 0; i < lun_count; ++i) {
  
- /*
+-		bus = phys_luns->lun[i].level2[1] & 0x3f;
+-		target = phys_luns->lun[i].level2[0];
+-		expose_flag = phys_luns->lun[i].bus >> 6;
+-		attribs = phys_luns->lun[i].node_ident[9];
+-		nexus = *((u32 *) &phys_luns->lun[i].node_ident[12]);
++		bus = aac_get_safw_phys_bus(dev, i);
++		target = aac_get_safw_phys_target(dev, i);
++		expose_flag = aac_get_safw_phys_expose_flag(dev, i);
++		attribs = aac_get_safw_phys_attribs(dev, i);
++		nexus = aac_get_safw_phys_nexus(dev, i);
+ 
+ 		if (bus >= AAC_MAX_BUSES || target >= AAC_MAX_TARGETS)
+ 			continue;
 -- 
 2.9.4
