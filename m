@@ -1,7 +1,7 @@
 From: Greg KH <gregkh@linuxfoundation.org>
 Subject: Re: [PATCH v2 1/9] ufs: sysfs: device descriptor
-Date: Wed, 27 Dec 2017 16:19:04 +0100
-Message-ID: <20171227151904.GA20967@kroah.com>
+Date: Wed, 27 Dec 2017 16:20:01 +0100
+Message-ID: <20171227152001.GB20967@kroah.com>
 References: <1514387627-27817-1-git-send-email-stanislav.nijnikov@wdc.com>
  <1514387627-27817-2-git-send-email-stanislav.nijnikov@wdc.com>
 Mime-Version: 1.0
@@ -15,23 +15,31 @@ Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.c
 List-Id: linux-scsi@vger.kernel.org
 
 On Wed, Dec 27, 2017 at 05:13:39PM +0200, Stanislav Nijnikov wrote:
-> +EXPORT_SYMBOL(ufs_sysfs_add_device_management);
-
-Whhy is this exported?  What external module uses it?
-
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> new file mode 100644
+> index 0000000..63a8e68
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -0,0 +1,158 @@
+> +#include <linux/err.h>
+> +#include <linux/string.h>
 > +
-> +void ufs_sysfs_remove_device_management(struct ufs_hba *hba)
-> +{
-> +	sysfs_remove_groups(&hba->dev->kobj, ufs_sysfs_groups);
-> +}
-> +EXPORT_SYMBOL(ufs_sysfs_remove_device_management);
-> +
-> +MODULE_LICENSE("GPL");
+> +#include "ufs.h"
+> +#include "ufs-sysfs.h"
 
-Are you sure you didn't just put 2 module license fields in the same
-module?
+No SPDX license information or copyright info for this file?  That's
+brave :(
 
-Other than those nits, looks good!
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.h b/drivers/scsi/ufs/ufs-sysfs.h
+> new file mode 100644
+> index 0000000..369ba21
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-sysfs.h
+> @@ -0,0 +1,10 @@
+> +#ifndef __UFS_SYSFS_H__
+> +#define __UFS_SYSFS_H__
+
+Same comment here.
 
 thanks,
 
