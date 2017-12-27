@@ -1,43 +1,60 @@
-From: Eugen Hagler <f.eugen@protonmail.com>
-Subject: 2018 Business Proposal
-Date: Wed, 27 Dec 2017 14:02:39 +0000
-Message-ID: <1548a9d4e0b1fd8a614dca3d6bdd8c5c__15514.1116273173$1514384937$gmane$org@protonmail.com>
-Reply-To: eugenhaglermail@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aij184.rev.netart.pl ([77.55.217.184]:49800 "EHLO
-        chijioke00rd.nazwa.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751983AbdL0Oak (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Dec 2017 09:30:40 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Subject: [PATCH v2 0/9] ufs: sysfs: read-only access to device descriptors, attributes and flags
+Date: Wed, 27 Dec 2017 17:13:38 +0200
+Message-ID: <1514387627-27817-1-git-send-email-stanislav.nijnikov@wdc.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org
+Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
+This patch introduces sysfs entries that will provide read-only access to
+device management data that could be received with UFS query requests.
+User-space applications will be able to read UFS device descriptors,
+flags and attributes. This will allow to get full UFS device configuration
+and its status. The descriptors are provided as set of files representing
+its parameters. The flags are using "true"/"false" representation of
+their value. The attributes are shown as hexadecimal value. The
+descriptors, attributes and flags are placed in separate subfolders under
+the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
+string descriptor subfolder contains five string descriptors defined by
+UFS specification 2.1. The LUN specific descriptor and attribute are 
+placed under corresponding SCSI device sysfs entries
+(/sys/class/scsi_device/*/device/).
+In addition the patch presents an additional field in the
+scsi_host_template structure - struct attribute_group **sdev_group.
+This field allows to define groups of attributes. It will provide an
+ability to use binary attributes in addition to device attributes and
+to group them under subfolders if necessary.
 
+Changelog:
+v1 -> v2
+Provided additional description for the changes
 
-Season's Greeting's!
+Stanislav Nijnikov (9):
+  ufs: sysfs: device descriptor
+  ufs: sysfs: interconnect descriptor
+  ufs: sysfs: geometry descriptor
+  ufs: sysfs: health descriptor
+  ufs: sysfs: power descriptor
+  ufs: sysfs: string descriptors
+  ufs: sysfs: unit descriptor
+  ufs: sysfs: flags
+  ufs: sysfs: attributes
 
-My sincere apology if this email will cause any inconvenience.
+ Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c                  |  14 +
+ drivers/scsi/ufs/Makefile                  |   2 +-
+ drivers/scsi/ufs/ufs-sysfs.c               | 649 +++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.h               |  14 +
+ drivers/scsi/ufs/ufs.h                     | 115 ++++-
+ drivers/scsi/ufs/ufshcd.c                  |  56 +-
+ drivers/scsi/ufs/ufshcd.h                  |  25 +
+ include/scsi/scsi_host.h                   |   6 +
+ 9 files changed, 1652 insertions(+), 33 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
 
-I have a proposal which I think might be of interest to you, I have a
-client who is searching for good business owners that have got lucrative
-projects/business ideas he can invest his funds on.
-
-My client has great interest to invest in worthy creative start ups that
-has good potentials. He is not concerned about the type of project or
-the location of the investment, rather his interest is that the project
-should be one that will be able to yield a high profit return on
-investment.
-
-The capital he want to invest is 25 million Dollars. His plan is to
-invest in a long term (maybe a period of 10 - 15 years) and after that,
-will withdraw his original capital and at the end of every financial
-year both of you will be sharing the interest generated on any
-percentage you both agree on. I will await your feedback if interested
-with your telephone number to enhance our communication.
-
-Regards
-Mr Eugen Hagler
-Email: eugenhaglermail@gmail.com
+-- 
+2.7.4
