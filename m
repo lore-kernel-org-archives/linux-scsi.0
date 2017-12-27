@@ -1,50 +1,32 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH 2/2 v4] scsi: ufs: introduce sysfs entries exposing UFS
- health info
-Date: Wed, 27 Dec 2017 09:00:10 +0000
-Message-ID: <DM5PR04MB10856CCEE145B2B8AADDF668FC070@DM5PR04MB1085.namprd04.prod.outlook.com>
-References: <20171220191631.50329-1-jaegeuk@kernel.org>
- <20171220191631.50329-2-jaegeuk@kernel.org>
- <20171220221325.GA56741@jaegeuk-macbookpro.roam.corp.google.com>
- <20171221075935.GB9645@kroah.com>
+From: "Sra. Angel Rania" <sra.angelrania83@gmail.com>
+Subject: Re: You will definetely be interested...
+Date: Wed, 27 Dec 2017 10:16:53 +0000
+Message-ID: <CAKx+QTsL6tbExobjfKn2Kvd+VURLikaeJ+JuuxF8mixxBiriEQ__27838.5242134847$1514369708$gmane$org@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20171221075935.GB9645@kroah.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jaegeuk Kim <jaegeuk@google.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:36901 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751813AbdL0KQ4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Dec 2017 05:16:56 -0500
+Received: by mail-qt0-f193.google.com with SMTP id f2so47405274qtj.4
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Dec 2017 02:16:55 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Dear,
 
+Reading your profile has given me courage in search of a reasponsable
+and trust worthy Fellow. The past has treated me so awfully but now I
+am ready to move on despite of my health condition. I will like to
+have a sincere and important discussion with you that will be in your
+favor likewise to you and your environment especially to your close
+family. Endeavor to reply me and I have attached my picture in case
+you long to know who emailed you. I will be waiting to hear from you
+as soon as possble.
+Thanks for paying attention to my mail and will appreciate so much if
+I receive a reply from you for understable details.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Greg Kroah-Hartman
-> Sent: Thursday, December 21, 2017 10:00 AM
-> To: Jaegeuk Kim <jaegeuk@kernel.org>
-> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Jaegeuk Kim
-> <jaegeuk@google.com>
-> Subject: Re: [PATCH 2/2 v4] scsi: ufs: introduce sysfs entries exposing U=
-FS
-> health info
->=20
-> On Wed, Dec 20, 2017 at 02:13:25PM -0800, Jaegeuk Kim wrote:
-> > This patch adds a new sysfs group, namely health, via:
-> >
-> >    /sys/devices/soc/X.ufshc/health/
-As device health is just one piece of information out of the device managem=
-ent,
-I think that you should address this in a more comprehensive way,
-And set hooks for much more device info:
-Allow access to device descriptors, attributes and flags.
-The attributes and flags should be placed in separate subfolders
-The LUN specific descriptors and attributes should be placed in a luns subf=
-older, and then per descriptor / attribute type
-You might also would like to consider differentiating read and write - to c=
-ontrol those type of accesses as well.
+Thanks,
 
-Cheers,
-Avri
+Mrs. Rania Hassan
