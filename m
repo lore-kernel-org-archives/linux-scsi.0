@@ -1,7 +1,7 @@
 From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v2 8/9] ufs: sysfs: flags
-Date: Wed, 27 Dec 2017 17:13:46 +0200
-Message-ID: <1514387627-27817-9-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: [PATCH v2 5/9] ufs: sysfs: power descriptor
+Date: Wed, 27 Dec 2017 17:13:43 +0200
+Message-ID: <1514387627-27817-6-git-send-email-stanislav.nijnikov@wdc.com>
 References: <1514387627-27817-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1514387627-27817-1-git-send-email-stanislav.nijnikov@wdc.com>
@@ -10,191 +10,174 @@ To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfounda
 Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch introduces a sysfs group entry for the UFS flags. The group adds
-"flags" folder under the UFS driver sysfs entry
-(/sys/bus/platform/drivers/ufshcd/*). The flags are shown as boolean value
-("true" or "false"). The full information about the UFS flags could be
+This patch introduces a sysfs group entry for the UFS power descriptor
+parameters. The group adds "power_descriptor" folder under the UFS driver
+sysfs entry (/sys/bus/platform/drivers/ufshcd/*). The parameters are shown
+as hexadecimal numbers. The full information about the parameters could be
 found at UFS specifications 2.1.
 
 Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 65 ++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.c               | 42 +++++++++++++++++++
- drivers/scsi/ufs/ufs.h                     | 14 +++++--
- drivers/scsi/ufs/ufshcd.c                  |  1 +
- 4 files changed, 119 insertions(+), 3 deletions(-)
+ Documentation/ABI/testing/sysfs-driver-ufs |  10 +++
+ drivers/scsi/ufs/ufs-sysfs.c               | 121 +++++++++++++++++++++++++++++
+ 2 files changed, 131 insertions(+)
 
 diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 5ff8dfa..832da97 100644
+index 59399e3..7b86efd 100644
 --- a/Documentation/ABI/testing/sysfs-driver-ufs
 +++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -597,4 +597,69 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
- Description:	This file shows the granularity of the LUN. This is one of
- 		the UFS unit descriptor parameters. The full information
- 		about the descriptor could be found at UFS specifications 2.1.
+@@ -440,4 +440,14 @@ Description:	This file shows indication of the device life time
+ 		(method b). This is one of the UFS health descriptor
+ 		parameters. The full information about the descriptor
+ 		could be found at UFS specifications 2.1.
 +		The file is read only.
 +
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/device_init
++What:		/sys/bus/platform/drivers/ufshcd/*/power_descriptor/active_icc_levels_vcc*
 +Date:		August 2017
 +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the device init status. The full information
-+		about the flag could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/permanent_wpe
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows whether permanent write protection is enabled.
-+		The full information about the flag could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/power_on_wpe
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows whether write protection is enabled on all
-+		logical units configured as power on write protected. The
-+		full information about the flag could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/bkops_enable
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows whether the device background operations are
-+		enabled. The full information about the flag could be
-+		found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/life_span_mode_enable
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows whether the device life span mode is enabled.
-+		The full information about the flag could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/phy_resource_removal
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows whether physical resource removal is enable.
-+		The full information about the flag could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/busy_rtc
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows whether the device is executing internal
-+		operation related to real time clock. The full information
-+		about the flag could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/disable_fw_update
-+Date:		August 2017
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows whether the device FW update is permanently
-+		disabled. The full information about the flag could be found
-+		at UFS specifications 2.1.
++Description:	This file shows maximum VCC, VCCQ and VCCQ2 value for
++		active ICC levels from 0 to 15. This is one of the UFS
++		power descriptor parameters. The full information about
++		the descriptor could be found at UFS specifications 2.1.
  		The file is read only.
 \ No newline at end of file
 diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 509abc9..de80c20 100644
+index 441dc87..a1a0636 100644
 --- a/drivers/scsi/ufs/ufs-sysfs.c
 +++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -427,6 +427,47 @@ static const struct attribute_group ufs_sysfs_string_descriptors_group = {
- 	.attrs = ufs_sysfs_string_descriptors,
+@@ -251,11 +251,132 @@ static const struct attribute_group ufs_sysfs_health_descriptor_group = {
+ 	.attrs = ufs_sysfs_health_descriptor,
  };
  
-+#define ufs_sysfs_flag_show(_name, _uname)                                    \
-+static ssize_t _name##_show(struct device *dev,                               \
++#define ufs_sysfs_power_desc_param_show(_name, _puname, _index)               \
++static ssize_t _name##_index##_show(struct device *dev,                       \
 +	struct device_attribute *attr, char *buf)                             \
 +{                                                                             \
-+	bool flag;                                                            \
 +	struct ufs_hba *hba = dev_get_drvdata(dev);                           \
-+	if (ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,               \
-+		QUERY_FLAG_IDN_##_uname, &flag))                              \
-+		return -EINVAL;                                               \
-+	return sprintf(buf, "%s\n", flag ? "true" : "false");                 \
++	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_POWER, 0, buf,   \
++		PWR_DESC_##_puname##_0 + _index * UFS_PARAM_WORD_SIZE,        \
++		UFS_PARAM_WORD_SIZE);                                         \
 +}
 +
-+#define UFS_FLAG(_name, _uname)                                               \
-+	ufs_sysfs_flag_show(_name, _uname)                                    \
-+	static DEVICE_ATTR_RO(_name)
++#define UFS_POWER_DESC_PARAM(_pname, _puname, _index)                         \
++	ufs_sysfs_power_desc_param_show(_pname, _puname, _index)              \
++	static DEVICE_ATTR_RO(_pname##_index)
 +
-+UFS_FLAG(device_init, FDEVICEINIT);
-+UFS_FLAG(permanent_wpe, PERMANENT_WPE);
-+UFS_FLAG(power_on_wpe, PWR_ON_WPE);
-+UFS_FLAG(bkops_enable, BKOPS_EN);
-+UFS_FLAG(life_span_mode_enable, LIFE_SPAN_MODE_ENABLE);
-+UFS_FLAG(phy_resource_removal, FPHYRESOURCEREMOVAL);
-+UFS_FLAG(busy_rtc, BUSY_RTC);
-+UFS_FLAG(disable_fw_update, PERMANENTLY_DISABLE_FW_UPDATE);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 0);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 1);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 2);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 3);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 4);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 5);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 6);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 7);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 8);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 9);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 10);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 11);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 12);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 13);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 14);
++UFS_POWER_DESC_PARAM(active_icc_levels_vcc, ACTIVE_LVLS_VCC, 15);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 0);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 1);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 2);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 3);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 4);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 5);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 6);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 7);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 8);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 9);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 10);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 11);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 12);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 13);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 14);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq, ACTIVE_LVLS_VCCQ, 15);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 0);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 1);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 2);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 3);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 4);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 5);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 6);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 7);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 8);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 9);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 10);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 11);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 12);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 13);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 14);
++UFS_POWER_DESC_PARAM(active_icc_levels_vccq2, ACTIVE_LVLS_VCCQ2, 15);
 +
-+static struct attribute *ufs_sysfs_device_flags[] = {
-+	&dev_attr_device_init.attr,
-+	&dev_attr_permanent_wpe.attr,
-+	&dev_attr_power_on_wpe.attr,
-+	&dev_attr_bkops_enable.attr,
-+	&dev_attr_life_span_mode_enable.attr,
-+	&dev_attr_phy_resource_removal.attr,
-+	&dev_attr_busy_rtc.attr,
-+	&dev_attr_disable_fw_update.attr,
++static struct attribute *ufs_sysfs_power_descriptor[] = {
++	&dev_attr_active_icc_levels_vcc0.attr,
++	&dev_attr_active_icc_levels_vcc1.attr,
++	&dev_attr_active_icc_levels_vcc2.attr,
++	&dev_attr_active_icc_levels_vcc3.attr,
++	&dev_attr_active_icc_levels_vcc4.attr,
++	&dev_attr_active_icc_levels_vcc5.attr,
++	&dev_attr_active_icc_levels_vcc6.attr,
++	&dev_attr_active_icc_levels_vcc7.attr,
++	&dev_attr_active_icc_levels_vcc8.attr,
++	&dev_attr_active_icc_levels_vcc9.attr,
++	&dev_attr_active_icc_levels_vcc10.attr,
++	&dev_attr_active_icc_levels_vcc11.attr,
++	&dev_attr_active_icc_levels_vcc12.attr,
++	&dev_attr_active_icc_levels_vcc13.attr,
++	&dev_attr_active_icc_levels_vcc14.attr,
++	&dev_attr_active_icc_levels_vcc15.attr,
++	&dev_attr_active_icc_levels_vccq0.attr,
++	&dev_attr_active_icc_levels_vccq1.attr,
++	&dev_attr_active_icc_levels_vccq2.attr,
++	&dev_attr_active_icc_levels_vccq3.attr,
++	&dev_attr_active_icc_levels_vccq4.attr,
++	&dev_attr_active_icc_levels_vccq5.attr,
++	&dev_attr_active_icc_levels_vccq6.attr,
++	&dev_attr_active_icc_levels_vccq7.attr,
++	&dev_attr_active_icc_levels_vccq8.attr,
++	&dev_attr_active_icc_levels_vccq9.attr,
++	&dev_attr_active_icc_levels_vccq10.attr,
++	&dev_attr_active_icc_levels_vccq11.attr,
++	&dev_attr_active_icc_levels_vccq12.attr,
++	&dev_attr_active_icc_levels_vccq13.attr,
++	&dev_attr_active_icc_levels_vccq14.attr,
++	&dev_attr_active_icc_levels_vccq15.attr,
++	&dev_attr_active_icc_levels_vccq20.attr,
++	&dev_attr_active_icc_levels_vccq21.attr,
++	&dev_attr_active_icc_levels_vccq22.attr,
++	&dev_attr_active_icc_levels_vccq23.attr,
++	&dev_attr_active_icc_levels_vccq24.attr,
++	&dev_attr_active_icc_levels_vccq25.attr,
++	&dev_attr_active_icc_levels_vccq26.attr,
++	&dev_attr_active_icc_levels_vccq27.attr,
++	&dev_attr_active_icc_levels_vccq28.attr,
++	&dev_attr_active_icc_levels_vccq29.attr,
++	&dev_attr_active_icc_levels_vccq210.attr,
++	&dev_attr_active_icc_levels_vccq211.attr,
++	&dev_attr_active_icc_levels_vccq212.attr,
++	&dev_attr_active_icc_levels_vccq213.attr,
++	&dev_attr_active_icc_levels_vccq214.attr,
++	&dev_attr_active_icc_levels_vccq215.attr,
 +	NULL,
 +};
 +
-+static const struct attribute_group ufs_sysfs_flags_group = {
-+	.name = "flags",
-+	.attrs = ufs_sysfs_device_flags,
++static const struct attribute_group ufs_sysfs_power_descriptor_group = {
++	.name = "power_descriptor",
++	.attrs = ufs_sysfs_power_descriptor,
 +};
- 
++
  static const struct attribute_group *ufs_sysfs_groups[] = {
  	&ufs_sysfs_device_descriptor_group,
-@@ -435,6 +476,7 @@ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_interconnect_descriptor_group,
+ 	&ufs_sysfs_geometry_descriptor_group,
  	&ufs_sysfs_health_descriptor_group,
- 	&ufs_sysfs_power_descriptor_group,
- 	&ufs_sysfs_string_descriptors_group,
-+	&ufs_sysfs_flags_group,
++	&ufs_sysfs_power_descriptor_group,
  	NULL,
  };
  
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 7387059..df5e73e 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -130,9 +130,17 @@ enum {
- 
- /* Flag idn for Query Requests*/
- enum flag_idn {
--	QUERY_FLAG_IDN_FDEVICEINIT      = 0x01,
--	QUERY_FLAG_IDN_PWR_ON_WPE	= 0x03,
--	QUERY_FLAG_IDN_BKOPS_EN         = 0x04,
-+	QUERY_FLAG_IDN_FDEVICEINIT			= 0x01,
-+	QUERY_FLAG_IDN_PERMANENT_WPE			= 0x02,
-+	QUERY_FLAG_IDN_PWR_ON_WPE			= 0x03,
-+	QUERY_FLAG_IDN_BKOPS_EN				= 0x04,
-+	QUERY_FLAG_IDN_LIFE_SPAN_MODE_ENABLE		= 0x05,
-+	QUERY_FLAG_IDN_PURGE_ENABLE			= 0x06,
-+	QUERY_FLAG_IDN_RESERVED2			= 0x07,
-+	QUERY_FLAG_IDN_FPHYRESOURCEREMOVAL		= 0x08,
-+	QUERY_FLAG_IDN_BUSY_RTC				= 0x09,
-+	QUERY_FLAG_IDN_RESERVED3			= 0x0A,
-+	QUERY_FLAG_IDN_PERMANENTLY_DISABLE_FW_UPDATE	= 0x0B,
- };
- 
- /* Attribute idn for Query requests */
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0fb89a6..72e5b9a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2699,6 +2699,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	ufshcd_release(hba);
- 	return err;
- }
-+EXPORT_SYMBOL(ufshcd_query_flag);
- 
- /**
-  * ufshcd_query_attr - API function for sending attribute requests
 -- 
 2.7.4
