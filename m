@@ -1,23 +1,29 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH v2 28/30] scsi: aacraid: Remove unused rescan variable
-Date: Tue, 26 Dec 2017 20:34:49 -0800
-Message-ID: <20171227043451.27813-29-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH v2 29/30] scsi: aacraid: Remove AAC_HIDE_DISK check in queue command
+Date: Tue, 26 Dec 2017 20:34:50 -0800
+Message-ID: <20171227043451.27813-30-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0044.outbound.protection.outlook.com ([104.47.34.44]:54464
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0077.outbound.protection.outlook.com ([104.47.37.77]:27328
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751642AbdL0Ef1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Dec 2017 23:35:27 -0500
+        id S1751822AbdL0Ef3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Dec 2017 23:35:29 -0500
 In-Reply-To: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Remove unused rescan variable.
+Earlier driver would scan throgh all supported buses and targets and add
+devices that responded. It would add devices that were _hidden_ by the fw.
+Driver would invalidate commands sent to _hidden_ devices via the
+AAC_HIDE_DISK check.
+
+Since the driver now adds only the devices that are supposed to be
+exposed, this code can be removed.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 
@@ -25,200 +31,58 @@ Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Changes in V2:
 None
 
- drivers/scsi/aacraid/aachba.c  | 19 +++++++++----------
- drivers/scsi/aacraid/aacraid.h |  6 +++---
- drivers/scsi/aacraid/commsup.c | 14 +++++++-------
- drivers/scsi/aacraid/linit.c   |  4 ++--
- 4 files changed, 21 insertions(+), 22 deletions(-)
+ drivers/scsi/aacraid/aachba.c  | 10 ----------
+ drivers/scsi/aacraid/aacraid.h |  3 ---
+ 2 files changed, 13 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 426c61a..f498bed 100644
+index f498bed..a2bdd79 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -1821,12 +1821,11 @@ static inline void aac_free_safw_ciss_luns(struct aac_dev *dev)
- /**
-  *	aac_get_safw_ciss_luns()	Process topology change
-  *	@dev:		aac_dev structure
-- *	@rescan:	Indicates rescan
-  *
-  *	Execute a CISS REPORT PHYS LUNS and process the results into
-  *	the current hba_map.
-  */
--static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
-+static int aac_get_safw_ciss_luns(struct aac_dev *dev)
- {
- 	int rcode = -ENOMEM;
- 	int datasize;
-@@ -1932,7 +1931,7 @@ static inline void aac_free_safw_all_identify_resp(struct aac_dev *dev,
- 	}
- }
+@@ -1994,8 +1994,6 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev)
+ 		if (bus >= AAC_MAX_BUSES || target >= AAC_MAX_TARGETS)
+ 			continue;
  
--static int aac_get_safw_attr_all_targets(struct aac_dev *dev, int rescan)
-+static int aac_get_safw_attr_all_targets(struct aac_dev *dev)
- {
- 	int i;
- 	int rcode = 0;
-@@ -1972,7 +1971,7 @@ static int aac_get_safw_attr_all_targets(struct aac_dev *dev, int rescan)
-  *
-  *	Update our hba map with the information gathered from the FW
-  */
--static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
-+static void aac_set_safw_attr_all_targets(struct aac_dev *dev)
- {
- 	/* ok and extended reporting */
- 	u32 lun_count, nexus;
-@@ -2018,7 +2017,7 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
- 	}
- }
+-		dev->hba_map[bus][target].expose = expose_flag;
+-
+ 		if (expose_flag != 0) {
+ 			devtype = AAC_DEVTYPE_RAID_MEMBER;
+ 			goto update_devtype;
+@@ -2913,14 +2911,6 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+ 			}
+ 		} else {  /* check for physical non-dasd devices */
+ 			bus = aac_logical_to_phys(scmd_channel(scsicmd));
+-			if (bus < AAC_MAX_BUSES && cid < AAC_MAX_TARGETS &&
+-				(dev->hba_map[bus][cid].expose
+-						== AAC_HIDE_DISK)){
+-				if (scsicmd->cmnd[0] == INQUIRY) {
+-					scsicmd->result = DID_NO_CONNECT << 16;
+-					goto scsi_done_ret;
+-				}
+-			}
  
--static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
-+static int aac_setup_safw_targets(struct aac_dev *dev)
- {
- 	int rcode = 0;
- 
-@@ -2026,15 +2025,15 @@ static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
- 	if (unlikely(rcode < 0))
- 		goto out;
- 
--	rcode = aac_get_safw_ciss_luns(dev, rescan);
-+	rcode = aac_get_safw_ciss_luns(dev);
- 	if (unlikely(rcode < 0))
- 		goto out;
- 
--	rcode = aac_get_safw_attr_all_targets(dev, rescan);
-+	rcode = aac_get_safw_attr_all_targets(dev);
- 	if (unlikely(rcode < 0))
- 		goto free_ciss_luns;
- 
--	aac_set_safw_attr_all_targets(dev, rescan);
-+	aac_set_safw_attr_all_targets(dev);
- 
- 	aac_free_safw_all_identify_resp(dev, -1);
- free_ciss_luns:
-@@ -2043,9 +2042,9 @@ static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
- 	return rcode;
- }
- 
--int aac_setup_safw_adapter(struct aac_dev *dev, int rescan)
-+int aac_setup_safw_adapter(struct aac_dev *dev)
- {
--	return aac_setup_safw_targets(dev, rescan);
-+	return aac_setup_safw_targets(dev);
- }
- 
- int aac_get_adapter_info(struct aac_dev* dev)
+ 			if (bus < AAC_MAX_BUSES && cid < AAC_MAX_TARGETS &&
+ 				dev->hba_map[bus][cid].devtype
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 4cefc47..3e8a44c 100644
+index 3e8a44c..4d3536d 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2644,7 +2644,7 @@ static inline int aac_adapter_check_health(struct aac_dev *dev)
- }
+@@ -1339,8 +1339,6 @@ struct fib {
+ #define AAC_DEVTYPE_RAID_MEMBER	1
+ #define AAC_DEVTYPE_ARC_RAW		2
+ #define AAC_DEVTYPE_NATIVE_RAW		3
+-#define AAC_EXPOSE_DISK		0
+-#define AAC_HIDE_DISK			3
  
+ #define AAC_SAFW_RESCAN_DELAY  10
  
--int aac_scan_host(struct aac_dev *dev, int rescan);
-+int aac_scan_host(struct aac_dev *dev);
- 
- static inline void aac_schedule_safw_scan_worker(struct aac_dev *dev)
- {
-@@ -2659,7 +2659,7 @@ static inline void aac_safw_rescan_worker(struct work_struct *work)
- 	wait_event(dev->scsi_host_ptr->host_wait,
- 		!scsi_host_in_recovery(dev->scsi_host_ptr));
- 
--	aac_scan_host(dev, AAC_RESCAN);
-+	aac_scan_host(dev);
- }
- 
- static inline void aac_cancel_safw_rescan_worker(struct aac_dev *dev)
-@@ -2677,7 +2677,7 @@ static inline void aac_cancel_safw_rescan_worker(struct aac_dev *dev)
- void aac_safw_rescan_worker(struct work_struct *work);
- int aac_acquire_irq(struct aac_dev *dev);
- void aac_free_irq(struct aac_dev *dev);
--int aac_setup_safw_adapter(struct aac_dev *dev, int rescan);
-+int aac_setup_safw_adapter(struct aac_dev *dev);
- const char *aac_driverinfo(struct Scsi_Host *);
- void aac_fib_vector_assign(struct aac_dev *dev);
- struct fib *aac_fib_alloc(struct aac_dev *dev);
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index f0c3e7d..fbf8b7e 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1944,7 +1944,7 @@ static int aac_is_safw_device_exposed(struct aac_dev *dev, int bus, int target)
- 	return is_exposed;
- }
- 
--static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
-+static int aac_update_safw_host_devices(struct aac_dev *dev)
- {
- 	int i;
- 	int bus;
-@@ -1952,7 +1952,7 @@ static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
- 	int is_exposed = 0;
- 	int rcode = 0;
- 
--	rcode = aac_setup_safw_adapter(dev, rescan);
-+	rcode = aac_setup_safw_adapter(dev);
- 	if (unlikely(rcode < 0)) {
- 		goto out;
- 	}
-@@ -1974,24 +1974,24 @@ static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
- 	return rcode;
- }
- 
--static int aac_scan_safw_host(struct aac_dev *dev, int rescan)
-+static int aac_scan_safw_host(struct aac_dev *dev)
- {
- 	int rcode = 0;
- 
--	rcode = aac_update_safw_host_devices(dev, rescan);
-+	rcode = aac_update_safw_host_devices(dev);
- 	if (rcode)
- 		aac_schedule_safw_scan_worker(dev);
- 
- 	return rcode;
- }
- 
--int aac_scan_host(struct aac_dev *dev, int rescan)
-+int aac_scan_host(struct aac_dev *dev)
- {
- 	int rcode = 0;
- 
- 	mutex_lock(&dev->scan_mutex);
- 	if (dev->sa_firmware)
--		rcode = aac_scan_safw_host(dev, rescan);
-+		rcode = aac_scan_safw_host(dev);
- 	else
- 		scsi_scan_host(dev->scsi_host_ptr);
- 	mutex_unlock(&dev->scan_mutex);
-@@ -2032,7 +2032,7 @@ static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
- 	case SA_AIF_LDEV_CHANGE:
- 	case SA_AIF_BPCFG_CHANGE:
- 
--		aac_scan_host(dev, AAC_RESCAN);
-+		aac_scan_host(dev);
- 
- 		break;
- 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index bf9d2b7..ad6ec57 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1790,7 +1790,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (error)
- 		goto out_deinit;
- 
--	aac_scan_host(aac, AAC_INIT);
-+	aac_scan_host(aac);
- 
- 	pci_enable_pcie_error_reporting(pdev);
- 	pci_save_state(pdev);
-@@ -2077,7 +2077,7 @@ static void aac_pci_resume(struct pci_dev *pdev)
- 		if (sdev->sdev_state == SDEV_OFFLINE)
- 			sdev->sdev_state = SDEV_RUNNING;
- 	scsi_unblock_requests(aac->scsi_host_ptr);
--	aac_scan_host(aac, AAC_RESCAN);
-+	aac_scan_host(aac);
- 	pci_save_state(pdev);
- 
- 	dev_err(&pdev->dev, "aacraid: PCI error - resume\n");
+@@ -1350,7 +1348,6 @@ struct aac_hba_map_info {
+ 	u8		reset_state;	/* 0 - no reset, 1..x - */
+ 					/* after xth TM LUN reset */
+ 	u16		qd_limit;
+-	u8		expose;		/*checks if to expose or not*/
+ 	u32		scan_counter;
+ 	struct aac_ciss_identify_pd  *safw_identify_resp;
+ };
 -- 
 2.9.4
