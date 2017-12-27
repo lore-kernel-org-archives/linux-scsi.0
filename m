@@ -1,372 +1,112 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v2 9/9] ufs: sysfs: attributes
-Date: Wed, 27 Dec 2017 16:23:56 +0100
-Message-ID: <20171227152356.GJ20967@kroah.com>
-References: <1514387627-27817-1-git-send-email-stanislav.nijnikov@wdc.com>
- <1514387627-27817-10-git-send-email-stanislav.nijnikov@wdc.com>
+From: Tomer Tayar <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 net-next 0/4] qed*: Advance to FW 8.33.1.0
+Date: Wed, 27 Dec 2017 19:30:04 +0200
+Message-ID: <1514395808-16916-1-git-send-email-Tomer.Tayar@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1514387627-27817-10-git-send-email-stanislav.nijnikov@wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.com
+Content-Type: text/plain
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tomer Tayar <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Dec 27, 2017 at 05:13:47PM +0200, Stanislav Nijnikov wrote:
-> This patch introduces a sysfs group entry for the UFS attributes. The
-> group adds "attributes" folder under the UFS driver sysfs entry
-> (/sys/bus/platform/drivers/ufshcd/*). The attributes are shown
-> as hexadecimal numbers. The full information about the attributes could
-> be found at UFS specifications 2.1.
-> 
-> Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> ---
->  Documentation/ABI/testing/sysfs-driver-ufs | 141 ++++++++++++++++++++++++++++-
->  drivers/scsi/ufs/ufs-sysfs.c               |  90 ++++++++++++++++++
->  drivers/scsi/ufs/ufs-sysfs.h               |   1 +
->  drivers/scsi/ufs/ufs.h                     |  27 +++++-
->  drivers/scsi/ufs/ufshcd.c                  |   6 +-
->  drivers/scsi/ufs/ufshcd.h                  |   2 +
->  6 files changed, 260 insertions(+), 7 deletions(-)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-> index 832da97..804e952 100644
-> --- a/Documentation/ABI/testing/sysfs-driver-ufs
-> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
-> @@ -662,4 +662,143 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
->  Description:	This file shows whether the device FW update is permanently
->  		disabled. The full information about the flag could be found
->  		at UFS specifications 2.1.
-> -		The file is read only.
-> \ No newline at end of file
-> +		The file is read only.
-> +
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/boot_lun_enabled
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the boot lun enabled UFS device attribute.
-> +		The full information about the attribute could be found at
-> +		UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/current_power_mode
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the current power mode UFS device attribute.
-> +		The full information about the attribute could be found at
-> +		UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/active_icc_level
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the active icc level UFS device attribute.
-> +		The full information about the attribute could be found at
-> +		UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/ooo_data_enabled
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the out of order data transfer enabled UFS
-> +		device attribute. The full information about the attribute
-> +		could be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/bkops_status
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the background operations status UFS device
-> +		attribute. The full information about the attribute could
-> +		be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/purge_status
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the purge operation status UFS device
-> +		attribute. The full information about the attribute could
-> +		be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_data_in_size
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file shows the maximum data size in a DATA IN
-> +		UPIU. The full information about the attribute could
-> +		be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_data_out_size
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file shows the maximum number of bytes that can be
-> +		requested with a READY TO TRANSFER UPIU. The full information
-> +		about the attribute could be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/reference_clock_frequency
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the reference clock frequency UFS device
-> +		attribute. The full information about the attribute could
-> +		be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/configuration_descriptor_lock
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file shows whether the configuration descriptor is locked.
-> +		The full information about the attribute could be found at
-> +		UFS specifications 2.1. The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_number_of_rtt
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the maximum current number of
-> +		outstanding RTTs in device that is allowed. The full
-> +		information about the attribute could be found at
-> +		UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/exception_event_control
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the exception event control UFS device
-> +		attribute. The full information about the attribute could
-> +		be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/exception_event_status
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the exception event status UFS device
-> +		attribute. The full information about the attribute could
-> +		be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/ffu_status
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file provides the ffu status UFS device attribute.
-> +		The full information about the attribute could be found at
-> +		UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/psa_state
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file show the PSA feature status. The full information
-> +		about the attribute could be found at UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/psa_data_size
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file shows the amount of data that the host plans to
-> +		load to all logical units in pre-soldering state.
-> +		The full information about the attribute could be found at
-> +		UFS specifications 2.1.
-> +		The file is read only.
-> +
-> +
-> +What:		/sys/class/scsi_device/*/device/dyn_cap_needed
-> +Date:		August 2017
-> +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-> +Description:	This file shows the The amount of physical memory needed
-> +		to be removed from the physical memory resources pool of
-> +		the particular logical unit. The full information about
-> +		the attribute could be found at UFS specifications 2.1.
-> +		The file is read only.
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index de80c20..637a907 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -469,6 +469,64 @@ static const struct attribute_group ufs_sysfs_flags_group = {
->  	.attrs = ufs_sysfs_device_flags,
->  };
->  
-> +#define ufs_sysfs_attribute_show_function(_name, _uname)                      \
-> +static ssize_t _name##_show(struct device *dev,                               \
-> +	struct device_attribute *attr, char *buf)                             \
-> +{                                                                             \
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);                           \
-> +	u32 value;                                                            \
-> +	if (ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,               \
-> +		QUERY_ATTR_IDN_##_uname, 0, 0, &value))                       \
-> +		return -EINVAL;                                               \
-> +	return sprintf(buf, "0x%08X\n", value);                               \
-> +}
-> +
-> +#define UFS_ATTRIBUTE(_name, _uname)                                          \
-> +	ufs_sysfs_attribute_show_function(_name, _uname)                      \
-> +	static DEVICE_ATTR_RO(_name)
-> +
-> +UFS_ATTRIBUTE(boot_lun_enabled, BOOT_LU_EN);
-> +UFS_ATTRIBUTE(current_power_mode, POWER_MODE);
-> +UFS_ATTRIBUTE(active_icc_level, ACTIVE_ICC_LVL);
-> +UFS_ATTRIBUTE(ooo_data_enabled, OOO_DATA_EN);
-> +UFS_ATTRIBUTE(bkops_status, BKOPS_STATUS);
-> +UFS_ATTRIBUTE(purge_status, PURGE_STATUS);
-> +UFS_ATTRIBUTE(max_data_in_size, MAX_DATA_IN);
-> +UFS_ATTRIBUTE(max_data_out_size, MAX_DATA_OUT);
-> +UFS_ATTRIBUTE(reference_clock_frequency, REF_CLK_FREQ);
-> +UFS_ATTRIBUTE(configuration_descriptor_lock, CONF_DESC_LOCK);
-> +UFS_ATTRIBUTE(max_number_of_rtt, MAX_NUM_OF_RTT);
-> +UFS_ATTRIBUTE(exception_event_control, EE_CONTROL);
-> +UFS_ATTRIBUTE(exception_event_status, EE_STATUS);
-> +UFS_ATTRIBUTE(ffu_status, FFU_STATUS);
-> +UFS_ATTRIBUTE(psa_state, PSA_STATE);
-> +UFS_ATTRIBUTE(psa_data_size, PSA_DATA_SIZE);
-> +
-> +static struct attribute *ufs_sysfs_attributes[] = {
-> +	&dev_attr_boot_lun_enabled.attr,
-> +	&dev_attr_current_power_mode.attr,
-> +	&dev_attr_active_icc_level.attr,
-> +	&dev_attr_ooo_data_enabled.attr,
-> +	&dev_attr_bkops_status.attr,
-> +	&dev_attr_purge_status.attr,
-> +	&dev_attr_max_data_in_size.attr,
-> +	&dev_attr_max_data_out_size.attr,
-> +	&dev_attr_reference_clock_frequency.attr,
-> +	&dev_attr_configuration_descriptor_lock.attr,
-> +	&dev_attr_max_number_of_rtt.attr,
-> +	&dev_attr_exception_event_control.attr,
-> +	&dev_attr_exception_event_status.attr,
-> +	&dev_attr_ffu_status.attr,
-> +	&dev_attr_psa_state.attr,
-> +	&dev_attr_psa_data_size.attr,
-> +	NULL,
-> +};
-> +
-> +static const struct attribute_group ufs_sysfs_attributes_group = {
-> +	.name = "attributes",
-> +	.attrs = ufs_sysfs_attributes,
-> +};
-> +
->  static const struct attribute_group *ufs_sysfs_groups[] = {
->  	&ufs_sysfs_device_descriptor_group,
->  	&ufs_sysfs_interconnect_descriptor_group,
-> @@ -477,6 +535,7 @@ static const struct attribute_group *ufs_sysfs_groups[] = {
->  	&ufs_sysfs_power_descriptor_group,
->  	&ufs_sysfs_string_descriptors_group,
->  	&ufs_sysfs_flags_group,
-> +	&ufs_sysfs_attributes_group,
->  	NULL,
->  };
->  
-> @@ -538,6 +597,37 @@ struct attribute_group ufs_sysfs_unit_descriptor_group = {
->  };
->  EXPORT_SYMBOL(ufs_sysfs_unit_descriptor_group);
->  
-> +#define ufs_sysfs_lun_attribute_show_function(_name, _uname)                  \
-> +static ssize_t _name##_attribute_show(struct device *dev,                     \
-> +	struct device_attribute *attr, char *buf)                             \
-> +{                                                                             \
-> +	u32 value;                                                            \
-> +	struct scsi_device *sdev = to_scsi_device(dev);                       \
-> +	struct ufs_hba *hba = shost_priv(sdev->host);                         \
-> +	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);                          \
-> +	if (ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,               \
-> +		QUERY_ATTR_IDN_##_uname, lun, 0, &value))                     \
-> +		return -EINVAL;                                               \
-> +	return sprintf(buf, "0x%08X\n", value);                               \
-> +}
-> +
-> +#define UFS_LUN_ATTRIBUTE(_name, _uname)                                      \
-> +	ufs_sysfs_lun_attribute_show_function(_name, _uname)                  \
-> +	static DEVICE_ATTR_RO(_name##_attribute)
-> +
-> +
-> +UFS_LUN_ATTRIBUTE(dyn_cap_needed, DYN_CAP_NEEDED);
-> +
-> +static struct attribute *ufs_sysfs_lun_attributes[] = {
-> +	&dev_attr_dyn_cap_needed_attribute.attr,
-> +	NULL,
-> +};
-> +
-> +struct attribute_group ufs_sysfs_lun_attributes_group = {
-> +	.attrs = ufs_sysfs_lun_attributes,
-> +};
-> +EXPORT_SYMBOL(ufs_sysfs_lun_attributes_group);
-> +
->  void ufs_sysfs_add_device_management(struct ufs_hba *hba)
->  {
->  	int ret;
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.h b/drivers/scsi/ufs/ufs-sysfs.h
-> index 2d4d7c6..10692de 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.h
-> +++ b/drivers/scsi/ufs/ufs-sysfs.h
-> @@ -10,4 +10,5 @@ void ufs_sysfs_add_device_management(struct ufs_hba *hba);
->  void ufs_sysfs_remove_device_management(struct ufs_hba *hba);
->  
->  extern struct attribute_group ufs_sysfs_unit_descriptor_group;
-> +extern struct attribute_group ufs_sysfs_lun_attributes_group;
->  #endif
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index df5e73e..14e5bf7 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -145,10 +145,29 @@ enum flag_idn {
->  
->  /* Attribute idn for Query requests */
->  enum attr_idn {
-> -	QUERY_ATTR_IDN_ACTIVE_ICC_LVL	= 0x03,
-> -	QUERY_ATTR_IDN_BKOPS_STATUS	= 0x05,
-> -	QUERY_ATTR_IDN_EE_CONTROL	= 0x0D,
-> -	QUERY_ATTR_IDN_EE_STATUS	= 0x0E,
-> +	QUERY_ATTR_IDN_BOOT_LU_EN		= 0x00,
-> +	QUERY_ATTR_IDN_RESERVED			= 0x01,
-> +	QUERY_ATTR_IDN_POWER_MODE		= 0x02,
-> +	QUERY_ATTR_IDN_ACTIVE_ICC_LVL		= 0x03,
-> +	QUERY_ATTR_IDN_OOO_DATA_EN		= 0x04,
-> +	QUERY_ATTR_IDN_BKOPS_STATUS		= 0x05,
-> +	QUERY_ATTR_IDN_PURGE_STATUS		= 0x06,
-> +	QUERY_ATTR_IDN_MAX_DATA_IN		= 0x07,
-> +	QUERY_ATTR_IDN_MAX_DATA_OUT		= 0x08,
-> +	QUERY_ATTR_IDN_DYN_CAP_NEEDED		= 0x09,
-> +	QUERY_ATTR_IDN_REF_CLK_FREQ		= 0x0A,
-> +	QUERY_ATTR_IDN_CONF_DESC_LOCK		= 0x0B,
-> +	QUERY_ATTR_IDN_MAX_NUM_OF_RTT		= 0x0C,
-> +	QUERY_ATTR_IDN_EE_CONTROL		= 0x0D,
-> +	QUERY_ATTR_IDN_EE_STATUS		= 0x0E,
-> +	QUERY_ATTR_IDN_SECONDS_PASSED		= 0x0F,
-> +	QUERY_ATTR_IDN_CNTX_CONF		= 0x10,
-> +	QUERY_ATTR_IDN_CORR_PRG_BLK_NUM		= 0x11,
-> +	QUERY_ATTR_IDN_RESERVED2		= 0x12,
-> +	QUERY_ATTR_IDN_RESERVED3		= 0x13,
-> +	QUERY_ATTR_IDN_FFU_STATUS		= 0x14,
-> +	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
-> +	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
->  };
->  
->  /* Descriptor idn for Query requests */
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 72e5b9a..24c56df 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2712,8 +2712,8 @@ EXPORT_SYMBOL(ufshcd_query_flag);
->   *
->   * Returns 0 for success, non-zero in case of failure
->  */
-> -static int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
-> -			enum attr_idn idn, u8 index, u8 selector, u32 *attr_val)
-> +int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
-> +		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val)
->  {
->  	struct ufs_query_req *request = NULL;
->  	struct ufs_query_res *response = NULL;
-> @@ -2764,6 +2764,7 @@ static int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
->  	ufshcd_release(hba);
->  	return err;
->  }
-> +EXPORT_SYMBOL(ufshcd_query_attr);
+This series advances all qed* drivers to use firmware 8.33.1.0 which brings
+new capabilities and initial support of new HW. The changes are mostly in
+qed, and include changes in the FW interface files, as well as updating the
+FW initialization and debug collection code. The protocol drivers have
+minor functional changes for this firmware.
 
-Same export symbol question here.
+Patch 1 Rearranges and refactors the FW interface files in preparation of
+the new FW (no functional change).
+Patch 2 Prepares the code for support of new HW (no functional change).
+Patch 3 Actual utilization of the new FW.
+Patch 4 Advances drivers' version.
 
-thanks,
+v3->v4:
+Fix a compilation issue which was reported by krobot (dependency on CRC8).
 
-greg k-h
+v2->v3:
+Resend the series with a fixed title in the cover letter.
+
+v1->v2:
+- Break the previous single patch into several patches.
+- Fix compilation issues which were reported by krobot.
+
+Tomer Tayar (4):
+  qed*: Refactoring and rearranging FW API with no functional impact
+  qed*: HSI renaming for different types of HW
+  qed*: Utilize FW 8.33.1.0
+  qed*: Advance drivers' version to 8.33.0.20
+
+ drivers/infiniband/hw/qedr/main.c                  |     2 +-
+ drivers/infiniband/hw/qedr/qedr_hsi_rdma.h         |   125 +-
+ drivers/net/ethernet/qlogic/Kconfig                |     1 +
+ drivers/net/ethernet/qlogic/qed/qed.h              |    12 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c          |    37 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h          |     4 +-
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.c         |     4 +-
+ drivers/net/ethernet/qlogic/qed/qed_debug.c        |  1167 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev.c          |    15 +-
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c         |    10 +-
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 10603 ++++++++++---------
+ drivers/net/ethernet/qlogic/qed/qed_hw.c           |    68 +
+ drivers/net/ethernet/qlogic/qed/qed_hw.h           |     4 +
+ .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    |  1091 +-
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |    22 +-
+ drivers/net/ethernet/qlogic/qed/qed_int.c          |     8 +-
+ drivers/net/ethernet/qlogic/qed/qed_int.h          |     2 +-
+ drivers/net/ethernet/qlogic/qed/qed_iscsi.c        |    58 +-
+ drivers/net/ethernet/qlogic/qed/qed_iwarp.c        |    33 +-
+ drivers/net/ethernet/qlogic/qed/qed_iwarp.h        |     3 +-
+ drivers/net/ethernet/qlogic/qed/qed_l2.c           |   118 +-
+ drivers/net/ethernet/qlogic/qed/qed_l2.h           |    33 +-
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c          |    28 +-
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c          |     2 +-
+ drivers/net/ethernet/qlogic/qed/qed_rdma.c         |     2 +-
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h     |   190 +-
+ drivers/net/ethernet/qlogic/qed/qed_sp_commands.c  |     8 +-
+ drivers/net/ethernet/qlogic/qed/qed_spq.c          |     8 +-
+ drivers/net/ethernet/qlogic/qed/qed_sriov.c        |    22 +-
+ drivers/net/ethernet/qlogic/qed/qed_sriov.h        |    24 +
+ drivers/net/ethernet/qlogic/qede/qede.h            |     6 +-
+ drivers/net/ethernet/qlogic/qede/qede_filter.c     |    26 +-
+ drivers/net/ethernet/qlogic/qede/qede_main.c       |     2 +-
+ drivers/scsi/qedf/drv_fcoe_fw_funcs.c              |    35 +-
+ drivers/scsi/qedf/drv_fcoe_fw_funcs.h              |     2 +-
+ drivers/scsi/qedf/qedf.h                           |     4 +-
+ drivers/scsi/qedf/qedf_els.c                       |     2 +-
+ drivers/scsi/qedf/qedf_hsi.h                       |    68 -
+ drivers/scsi/qedf/qedf_io.c                        |    35 +-
+ drivers/scsi/qedf/qedf_main.c                      |    12 +-
+ drivers/scsi/qedf/qedf_version.h                   |     8 +-
+ drivers/scsi/qedi/qedi_debugfs.c                   |     4 +-
+ drivers/scsi/qedi/qedi_fw.c                        |    59 +-
+ drivers/scsi/qedi/qedi_fw_api.c                    |   139 +-
+ drivers/scsi/qedi/qedi_fw_iscsi.h                  |     2 +-
+ drivers/scsi/qedi/qedi_gbl.h                       |     5 +-
+ drivers/scsi/qedi/qedi_iscsi.c                     |     9 +-
+ drivers/scsi/qedi/qedi_iscsi.h                     |     2 +-
+ drivers/scsi/qedi/qedi_main.c                      |    29 +-
+ drivers/scsi/qedi/qedi_version.h                   |     8 +-
+ include/linux/qed/common_hsi.h                     |  1264 ++-
+ include/linux/qed/eth_common.h                     |   396 +-
+ include/linux/qed/fcoe_common.h                    |   940 +-
+ include/linux/qed/iscsi_common.h                   |  1585 +--
+ include/linux/qed/iwarp_common.h                   |    17 +-
+ include/linux/qed/qed_eth_if.h                     |    38 +-
+ include/linux/qed/qed_if.h                         |    36 +-
+ include/linux/qed/qed_iscsi_if.h                   |     2 -
+ include/linux/qed/qed_ll2_if.h                     |     2 +-
+ include/linux/qed/rdma_common.h                    |    25 +-
+ include/linux/qed/roce_common.h                    |    15 +-
+ include/linux/qed/storage_common.h                 |    91 +-
+ include/linux/qed/tcp_common.h                     |   165 +-
+ 63 files changed, 10241 insertions(+), 8496 deletions(-)
+
+-- 
+1.8.3.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
