@@ -1,24 +1,25 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH v2 11/30] scsi: aacraid: Refactor and rename to make mirror existing changes
-Date: Tue, 26 Dec 2017 20:34:32 -0800
-Message-ID: <20171227043451.27813-12-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH v2 13/30] scsi: aacraid: Untangle targets setup from report phy luns
+Date: Tue, 26 Dec 2017 20:34:34 -0800
+Message-ID: <20171227043451.27813-14-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0051.outbound.protection.outlook.com ([104.47.33.51]:63168
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0089.outbound.protection.outlook.com ([104.47.37.89]:47232
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751807AbdL0EfL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Dec 2017 23:35:11 -0500
+        id S1751798AbdL0EfM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Dec 2017 23:35:12 -0500
 In-Reply-To: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Rename variables and functions to make bmic identify, report phy luns
-to make them consistent across code internal existing code bases
+Remove function call to process targets from the report phy luns function
+and make it a function in its own right. This will help understand the
+flow of the code.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 
@@ -26,147 +27,111 @@ Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Changes in V2:
 None
 
- drivers/scsi/aacraid/aachba.c  | 36 +++++++++++++++++++-----------------
- drivers/scsi/aacraid/aacraid.h |  2 +-
- drivers/scsi/aacraid/commsup.c |  2 +-
- 3 files changed, 21 insertions(+), 19 deletions(-)
+ drivers/scsi/aacraid/aachba.c  | 44 +++++++++++++++++++++++++++++++-----------
+ drivers/scsi/aacraid/aacraid.h |  1 +
+ 2 files changed, 34 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 1853bd2..801aff0 100644
+index 5a95883..629a04d 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -1753,17 +1753,18 @@ static int aac_send_safw_bmic_cmd(struct aac_dev *dev,
- 	return rcode;
- }
- 
--static int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
-+static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
-+	u32 bus, u32 target)
- {
- 	int rcode = -ENOMEM;
--	u16 datasize;
-+	int datasize;
- 	struct aac_srb_unit srbu;
- 	struct aac_srb *srbcmd;
--	struct aac_ciss_identify_pd *identify_resp;
-+	struct aac_ciss_identify_pd *identify_reply;
- 
- 	datasize = sizeof(struct aac_ciss_identify_pd);
--	identify_resp = kmalloc(datasize, GFP_KERNEL);
--	if (!identify_resp)
-+	identify_reply = kmalloc(datasize, GFP_KERNEL);
-+	if (!identify_reply)
- 		goto out;
- 
- 	memset(&srbu, 0, sizeof(struct aac_srb_unit));
-@@ -1774,30 +1775,31 @@ static int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
- 	srbcmd->cdb[2]	= (u8)((AAC_MAX_LUN + target) & 0x00FF);
- 	srbcmd->cdb[6]	= CISS_IDENTIFY_PHYSICAL_DEVICE;
- 
--	rcode = aac_send_safw_bmic_cmd(dev, &srbu, identify_resp, datasize);
-+	rcode = aac_send_safw_bmic_cmd(dev, &srbu, identify_reply, datasize);
- 	if (unlikely(rcode < 0))
- 		goto out;
- 
--	if (identify_resp->current_queue_depth_limit <= 0 ||
--		identify_resp->current_queue_depth_limit > 32)
-+	if (identify_reply->current_queue_depth_limit <= 0 ||
-+		identify_reply->current_queue_depth_limit > 32)
- 		dev->hba_map[bus][target].qd_limit = 32;
- 	else
- 		dev->hba_map[bus][target].qd_limit =
--			identify_resp->current_queue_depth_limit;
-+			identify_reply->current_queue_depth_limit;
- 
--	kfree(identify_resp);
-+	kfree(identify_reply);
- out:
- 	return rcode;
- }
- 
- /**
-- *	aac_update hba_map()-	update current hba map with data from FW
-+ *	aac_set_safw_attr_all_targets-	update current hba map with data from FW
-  *	@dev:	aac_dev structure
-  *	@phys_luns: FW information from report phys luns
-+ *	@rescan: Indicates scan type
+@@ -1799,14 +1799,16 @@ static int aac_issue_safw_bmic_identify(struct aac_dev *dev,
   *
   *	Update our hba map with the information gathered from the FW
   */
--void aac_update_hba_map(struct aac_dev *dev,
-+static void aac_set_safw_attr_all_targets(struct aac_dev *dev,
- 		struct aac_ciss_phys_luns_resp *phys_luns, int rescan)
+-static void aac_set_safw_attr_all_targets(struct aac_dev *dev,
+-		struct aac_ciss_phys_luns_resp *phys_luns, int rescan)
++static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
  {
  	/* ok and extended reporting */
-@@ -1839,7 +1841,7 @@ void aac_update_hba_map(struct aac_dev *dev,
- 		if (devtype != AAC_DEVTYPE_NATIVE_RAW)
- 			goto update_devtype;
+ 	u32 lun_count, nexus;
+ 	u32 i, bus, target;
+ 	u8 expose_flag, attribs;
+ 	u8 devtype;
++	struct aac_ciss_phys_luns_resp *phys_luns;
++
++	phys_luns = dev->safw_phys_luns;
  
--		if (aac_issue_bmic_identify(dev, bus, target) < 0)
-+		if (aac_issue_safw_bmic_identify(dev, bus, target) < 0)
- 			dev->hba_map[bus][target].qd_limit = 32;
- 
- update_devtype:
-@@ -1851,14 +1853,14 @@ void aac_update_hba_map(struct aac_dev *dev,
+ 	lun_count = ((phys_luns->list_length[0] << 24)
+ 			+ (phys_luns->list_length[1] << 16)
+@@ -1852,6 +1854,12 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev,
+ 	}
  }
  
++static inline void aac_free_safw_ciss_luns(struct aac_dev *dev)
++{
++	kfree(dev->safw_phys_luns);
++	dev->safw_phys_luns = NULL;
++}
++
  /**
-- *	aac_report_phys_luns()	Process topology change
-+ *	aac_get_safw_ciss_luns()	Process topology change
+  *	aac_get_safw_ciss_luns()	Process topology change
   *	@dev:		aac_dev structure
-  *	@rescan:	Indicates rescan
-  *
-  *	Execute a CISS REPORT PHYS LUNS and process the results into
-  *	the current hba_map.
-  */
--int aac_report_phys_luns(struct aac_dev *dev, int rescan)
-+int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
+@@ -1872,7 +1880,7 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
+ 		(AAC_MAX_TARGETS - 1) * sizeof(struct _ciss_lun);
+ 	phys_luns = kmalloc(datasize, GFP_KERNEL);
+ 	if (phys_luns == NULL)
+-		goto err_out;
++		goto out;
+ 
+ 	memset(&srbu, 0, sizeof(struct aac_srb_unit));
+ 
+@@ -1885,22 +1893,36 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
+ 
+ 	rcode = aac_send_safw_bmic_cmd(dev, &srbu, phys_luns, datasize);
+ 	if (unlikely(rcode < 0))
+-		goto err_out;
++		goto mem_free_all;
+ 
+-	/* analyse data */
+-	if (rcode >= 0 && phys_luns->resp_flag == 2) {
+-		/* ok and extended reporting */
+-		aac_set_safw_attr_all_targets(dev, phys_luns, rescan);
++	if (phys_luns->resp_flag != 2) {
++		rcode = -ENOMSG;
++		goto mem_free_all;
+ 	}
+ 
+-	kfree(phys_luns);
+-err_out:
++	dev->safw_phys_luns = phys_luns;
++
++out:
+ 	return rcode;
++mem_free_all:
++	kfree(phys_luns);
++	goto out;
++
+ }
+ 
+ static int aac_setup_safw_targets(struct aac_dev *dev, int rescan)
  {
- 	int rcode = -ENOMEM;
- 	int datasize;
-@@ -1888,7 +1890,7 @@ int aac_report_phys_luns(struct aac_dev *dev, int rescan)
- 	/* analyse data */
- 	if (rcode >= 0 && phys_luns->resp_flag == 2) {
- 		/* ok and extended reporting */
--		aac_update_hba_map(dev, phys_luns, rescan);
-+		aac_set_safw_attr_all_targets(dev, phys_luns, rescan);
- 	}
+-	return aac_get_safw_ciss_luns(dev, rescan);
++	int rcode = 0;
++
++	rcode = aac_get_safw_ciss_luns(dev, rescan);
++	if (unlikely(rcode < 0))
++		goto out;
++
++	aac_set_safw_attr_all_targets(dev, rescan);
++
++	aac_free_safw_ciss_luns(dev);
++out:
++	return rcode;
+ }
  
- 	kfree(phys_luns);
-@@ -2001,7 +2003,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 	if (!dev->sync_mode && dev->sa_firmware &&
- 		dev->supplement_adapter_info.virt_device_bus != 0xffff) {
- 		/* Thor SA Firmware -> CISS_REPORT_PHYSICAL_LUNS */
--		rcode = aac_report_phys_luns(dev, AAC_INIT);
-+		rcode = aac_get_safw_ciss_luns(dev, AAC_INIT);
- 	}
- 
- 	if (!dev->in_reset) {
+ int aac_setup_safw_adapter(struct aac_dev *dev, int rescan)
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 3a20168..d81d0aa 100644
+index 5690767..19af4d9 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2639,7 +2639,7 @@ static inline int aac_adapter_check_health(struct aac_dev *dev)
- 
- int aac_acquire_irq(struct aac_dev *dev);
- void aac_free_irq(struct aac_dev *dev);
--int aac_report_phys_luns(struct aac_dev *dev, int rescan);
-+int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan);
- const char *aac_driverinfo(struct Scsi_Host *);
- void aac_fib_vector_assign(struct aac_dev *dev);
- struct fib *aac_fib_alloc(struct aac_dev *dev);
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index f70f112..82ddc74 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1945,7 +1945,7 @@ static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
- 			for (target = 0; target < AAC_MAX_TARGETS; target++)
- 				dev->hba_map[bus][target].new_devtype = 0;
- 
--		rcode = aac_report_phys_luns(dev, AAC_RESCAN);
-+		rcode = aac_get_safw_ciss_luns(dev, AAC_RESCAN);
- 
- 		aac_resolve_luns(dev);
- 
+@@ -1671,6 +1671,7 @@ struct aac_dev
+ 	struct msix_entry	msixentry[AAC_MAX_MSIX];
+ 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
+ 	struct aac_hba_map_info	hba_map[AAC_MAX_BUSES][AAC_MAX_TARGETS];
++	struct aac_ciss_phys_luns_resp *safw_phys_luns;
+ 	u8			adapter_shutdown;
+ 	u32			handle_pci_error;
+ };
 -- 
 2.9.4
