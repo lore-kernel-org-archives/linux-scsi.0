@@ -1,117 +1,175 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH v2 15/30] scsi: aacraid: Create helper functions to get lun info
-Date: Tue, 26 Dec 2017 20:34:36 -0800
-Message-ID: <20171227043451.27813-16-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH v2 25/30] scsi: aacraid: Reschedule host scan in case of failure
+Date: Tue, 26 Dec 2017 20:34:46 -0800
+Message-ID: <20171227043451.27813-26-RaghavaAditya.Renukunta@microsemi.com>
 References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0046.outbound.protection.outlook.com ([104.47.40.46]:47936
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0068.outbound.protection.outlook.com ([104.47.36.68]:54432
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751539AbdL0EfP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Dec 2017 23:35:15 -0500
+        id S1751857AbdL0EfZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Dec 2017 23:35:25 -0500
 In-Reply-To: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Created inline function to retrieve lun info for each device from the
-phy luns structure.
+If the driver fails to retrieve information from the fw (could happen when
+the fw is not fully in its senses), the driver does nothing and change is
+not processed correctly by the driver
+
+Schedule host rescan in case of failure. This is only for SAFW, since
+the information retrieval failure will happen on SAFW devices.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 
 ---
 Changes in V2:
-Use get_unaligned_be32 instead of open ended conversion
+Rename rescan worker to match kernel coding conventions
 
- drivers/scsi/aacraid/aachba.c | 54 +++++++++++++++++++++++++++++++++----------
- 1 file changed, 42 insertions(+), 12 deletions(-)
+ drivers/scsi/aacraid/aacraid.h | 27 ++++++++++++++++++++++++++-
+ drivers/scsi/aacraid/commsup.c | 14 +++++++++++++-
+ drivers/scsi/aacraid/linit.c   |  5 +++++
+ 3 files changed, 44 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 43a3c11..fa0132b 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -42,6 +42,8 @@
- #include <linux/highmem.h> /* For flush_kernel_dcache_page */
- #include <linux/module.h>
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index ba84d99..54078bf 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1341,6 +1341,8 @@ struct fib {
+ #define AAC_EXPOSE_DISK		0
+ #define AAC_HIDE_DISK			3
  
-+#include <asm/unaligned.h>
++#define AAC_SAFW_RESCAN_DELAY  10
 +
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-@@ -1844,7 +1846,41 @@ static int aac_get_safw_ciss_luns(struct aac_dev *dev, int rescan)
- mem_free_all:
- 	kfree(phys_luns);
- 	goto out;
-+}
-+
-+static inline u32 aac_get_safw_phys_lun_count(struct aac_dev *dev)
-+{
-+	return get_unaligned_be32(&dev->safw_phys_luns->list_length[0]);
-+}
-+
-+static inline u32 aac_get_safw_phys_bus(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].level2[1] & 0x3f;
-+}
-+
-+static inline u32 aac_get_safw_phys_target(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].level2[0];
-+}
- 
-+static inline u32 aac_get_safw_phys_expose_flag(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].bus >> 6;
-+}
-+
-+static inline u32 aac_get_safw_phys_attribs(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].node_ident[9];
-+}
-+
-+static inline u32 aac_get_safw_phys_nexus(struct aac_dev *dev, int lun)
-+{
-+	return *((u32 *)&dev->safw_phys_luns->lun[lun].node_ident[12]);
-+}
-+
-+static inline u32 aac_get_safw_phys_device_type(struct aac_dev *dev, int lun)
-+{
-+	return dev->safw_phys_luns->lun[lun].node_ident[8];
+ struct aac_hba_map_info {
+ 	__le32	rmw_nexus;		/* nexus for native HBA devices */
+ 	u8		devtype;	/* device type */
+@@ -1611,6 +1613,7 @@ struct aac_dev
+ 	int			maximum_num_channels;
+ 	struct fsa_dev_info	*fsa_dev;
+ 	struct task_struct	*thread;
++	struct delayed_work	safw_rescan_work;
+ 	int			cardtype;
+ 	/*
+ 	 *This lock will protect the two 32-bit
+@@ -2639,12 +2642,35 @@ static inline int aac_adapter_check_health(struct aac_dev *dev)
+ 	return (dev)->a_ops.adapter_check_health(dev);
  }
  
- /**
-@@ -1862,22 +1898,16 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev, int rescan)
- 	u32 i, bus, target;
- 	u8 expose_flag, attribs;
- 	u8 devtype;
--	struct aac_ciss_phys_luns_resp *phys_luns;
--
--	phys_luns = dev->safw_phys_luns;
++
++int aac_scan_host(struct aac_dev *dev, int rescan);
++
++static inline void aac_schedule_safw_scan_worker(struct aac_dev *dev)
++{
++	schedule_delayed_work(&dev->safw_rescan_work, AAC_SAFW_RESCAN_DELAY);
++}
++
++static inline void aac_safw_rescan_worker(struct work_struct *work)
++{
++	struct aac_dev *dev = container_of(to_delayed_work(work),
++		struct aac_dev, safw_rescan_work);
++
++	aac_scan_host(dev, AAC_RESCAN);
++}
++
++static inline void aac_cancel_safw_rescan_worker(struct aac_dev *dev)
++{
++	if (dev->sa_firmware)
++		cancel_delayed_work_sync(&dev->safw_rescan_work);
++}
++
+ /* SCp.phase values */
+ #define AAC_OWNER_MIDLEVEL	0x101
+ #define AAC_OWNER_LOWLEVEL	0x102
+ #define AAC_OWNER_ERROR_HANDLER	0x103
+ #define AAC_OWNER_FIRMWARE	0x106
  
--	lun_count = ((phys_luns->list_length[0] << 24)
--			+ (phys_luns->list_length[1] << 16)
--			+ (phys_luns->list_length[2] << 8)
--			+ (phys_luns->list_length[3])) / 24;
-+	lun_count = aac_get_safw_phys_lun_count(dev);
++void aac_safw_rescan_worker(struct work_struct *work);
+ int aac_acquire_irq(struct aac_dev *dev);
+ void aac_free_irq(struct aac_dev *dev);
+ int aac_setup_safw_adapter(struct aac_dev *dev, int rescan);
+@@ -2719,7 +2745,6 @@ static inline int aac_supports_2T(struct aac_dev *dev)
+ 	return (dev->adapter_info.options & AAC_OPT_NEW_COMM_64);
+ }
  
- 	for (i = 0; i < lun_count; ++i) {
+-int aac_scan_host(struct aac_dev *dev, int rescan);
+ char * get_container_type(unsigned type);
+ extern int numacb;
+ extern char aac_driver_version[];
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 4e2687c..d562053 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1964,16 +1964,28 @@ static int aac_update_safw_host_devices(struct aac_dev *dev, int rescan)
+ 	return rcode;
+ }
  
--		bus = phys_luns->lun[i].level2[1] & 0x3f;
--		target = phys_luns->lun[i].level2[0];
--		expose_flag = phys_luns->lun[i].bus >> 6;
--		attribs = phys_luns->lun[i].node_ident[9];
--		nexus = *((u32 *) &phys_luns->lun[i].node_ident[12]);
-+		bus = aac_get_safw_phys_bus(dev, i);
-+		target = aac_get_safw_phys_target(dev, i);
-+		expose_flag = aac_get_safw_phys_expose_flag(dev, i);
-+		attribs = aac_get_safw_phys_attribs(dev, i);
-+		nexus = aac_get_safw_phys_nexus(dev, i);
++static int aac_scan_safw_host(struct aac_dev *dev, int rescan)
++{
++	int rcode = 0;
++
++	rcode = aac_update_safw_host_devices(dev, rescan);
++	if (rcode)
++		aac_schedule_safw_scan_worker(dev);
++
++	return rcode;
++}
++
+ int aac_scan_host(struct aac_dev *dev, int rescan)
+ {
+ 	int rcode = 0;
  
- 		if (bus >= AAC_MAX_BUSES || target >= AAC_MAX_TARGETS)
- 			continue;
+ 	mutex_lock(&dev->scan_mutex);
+ 	if (dev->sa_firmware)
+-		rcode = aac_update_safw_host_devices(dev, rescan);
++		rcode = aac_scan_safw_host(dev, rescan);
+ 	else
+ 		scsi_scan_host(dev->scsi_host_ptr);
+ 	mutex_unlock(&dev->scan_mutex);
++
+ 	return rcode;
+ }
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 7ea7b2c..bf9d2b7 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1684,6 +1684,8 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	mutex_init(&aac->ioctl_mutex);
+ 	mutex_init(&aac->scan_mutex);
++
++	INIT_DELAYED_WORK(&aac->safw_rescan_work, aac_safw_rescan_worker);
+ 	/*
+ 	 *	Map in the registers from the adapter.
+ 	 */
+@@ -1873,6 +1875,7 @@ static int aac_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+ 
+ 	scsi_block_requests(shost);
++	aac_cancel_safw_rescan_worker(aac);
+ 	aac_send_shutdown(aac);
+ 
+ 	aac_release_resources(aac);
+@@ -1931,6 +1934,7 @@ static void aac_remove_one(struct pci_dev *pdev)
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+ 
++	aac_cancel_safw_rescan_worker(aac);
+ 	scsi_remove_host(shost);
+ 
+ 	__aac_shutdown(aac);
+@@ -1988,6 +1992,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
+ 		aac->handle_pci_error = 1;
+ 
+ 		scsi_block_requests(aac->scsi_host_ptr);
++		aac_cancel_safw_rescan_worker(aac);
+ 		aac_flush_ios(aac);
+ 		aac_release_resources(aac);
+ 
 -- 
 2.9.4
