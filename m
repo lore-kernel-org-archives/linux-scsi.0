@@ -1,66 +1,134 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 29/37] qla2xxx: Increase verbosity of debug messages logged
-Date: Thu, 28 Dec 2017 12:33:37 -0800
-Message-ID: <20171228203345.2702-30-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 15/37] qla2xxx: Tweak resource count dump
+Date: Thu, 28 Dec 2017 12:33:23 -0800
+Message-ID: <20171228203345.2702-16-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0072.outbound.protection.outlook.com ([104.47.34.72]:19632
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0089.outbound.protection.outlook.com ([104.47.40.89]:60974
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755302AbdL1UeZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:25 -0500
+        id S1754128AbdL1UeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:03 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Quinn Tran <quinn.tran@qlogic.com>
 
-Add verbose bit for debug messages to reduce excessive
-log messages
+Fetch actual data from firmware instead of static data
+at chip reset time.
 
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_dfs.c | 32 +++++++++++++++++---------------
+ drivers/scsi/qla2xxx/qla_gbl.h |  1 +
+ drivers/scsi/qla2xxx/qla_mbx.c | 30 ++++++++++++++++++++++++++++++
+ 3 files changed, 48 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index a4783eb11711..786efdb5788a 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -209,7 +209,7 @@ struct scsi_qla_host *qlt_find_host_by_d_id(struct scsi_qla_host *vha,
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index d231e7156134..ddb53db61fd2 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -127,21 +127,23 @@ static int
+ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
+ {
+ 	struct scsi_qla_host *vha = s->private;
+-	struct qla_hw_data *ha = vha->hw;
+-
+-	seq_puts(s, "FW Resource count\n\n");
+-	seq_printf(s, "Original TGT exchg count[%d]\n",
+-	    ha->orig_fw_tgt_xcb_count);
+-	seq_printf(s, "current TGT exchg count[%d]\n",
+-	    ha->cur_fw_tgt_xcb_count);
+-	seq_printf(s, "original Initiator Exchange count[%d]\n",
+-	    ha->orig_fw_xcb_count);
+-	seq_printf(s, "Current Initiator Exchange count[%d]\n",
+-	    ha->cur_fw_xcb_count);
+-	seq_printf(s, "Original IOCB count[%d]\n", ha->orig_fw_iocb_count);
+-	seq_printf(s, "Current IOCB count[%d]\n", ha->cur_fw_iocb_count);
+-	seq_printf(s, "MAX VP count[%d]\n", ha->max_npiv_vports);
+-	seq_printf(s, "MAX FCF count[%d]\n", ha->fw_max_fcf_count);
++	uint16_t mb[MAX_IOCB_MB_REG];
++	int rc;
++
++	rc = qla24xx_res_count_wait(vha, mb, SIZEOF_IOCB_MB_REG);
++	if (rc != QLA_SUCCESS) {
++		seq_printf(s, "Mailbox Command failed %d, mb %#x", rc, mb[0]);
++	} else {
++		seq_puts(s, "FW Resource count\n\n");
++		seq_printf(s, "Original TGT exchg count[%d]\n", mb[1]);
++		seq_printf(s, "current TGT exchg count[%d]\n", mb[2]);
++		seq_printf(s, "original Initiator Exchange count[%d]\n", mb[3]);
++		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[6]);
++		seq_printf(s, "Original IOCB count[%d]\n", mb[7]);
++		seq_printf(s, "Current IOCB count[%d]\n", mb[10]);
++		seq_printf(s, "MAX VP count[%d]\n", mb[11]);
++		seq_printf(s, "MAX FCF count[%d]\n", mb[12]);
++	}
  
- 	host = btree_lookup32(&vha->hw->tgt.host_map, key);
- 	if (!host)
--		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf005,
-+		ql_dbg(ql_dbg_tgt_mgt + ql_dbg_verbose, vha, 0xf005,
- 		    "Unable to find host %06x\n", key);
+ 	return 0;
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 7b61c96502e4..9d7b66abfc10 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -504,6 +504,7 @@ int qla24xx_get_port_login_templ(scsi_qla_host_t *, dma_addr_t,
  
- 	return host;
-@@ -310,17 +310,17 @@ static void qlt_try_to_dequeue_unknown_atios(struct scsi_qla_host *vha,
+ extern int qla27xx_get_zio_threshold(scsi_qla_host_t *, uint16_t *);
+ extern int qla27xx_set_zio_threshold(scsi_qla_host_t *, uint16_t);
++int qla24xx_res_count_wait(struct scsi_qla_host *, uint16_t *, int);
  
- 		host = qlt_find_host_by_d_id(vha, u->atio.u.isp24.fcp_hdr.d_id);
- 		if (host != NULL) {
--			ql_dbg(ql_dbg_async, vha, 0x502f,
-+			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x502f,
- 			    "Requeuing unknown ATIO_TYPE7 %p\n", u);
- 			qlt_24xx_atio_pkt(host, &u->atio, ha_locked);
- 		} else if (tgt->tgt_stop) {
--			ql_dbg(ql_dbg_async, vha, 0x503a,
-+			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x503a,
- 			    "Freeing unknown %s %p, because tgt is being stopped\n",
- 			    "ATIO_TYPE7", u);
- 			qlt_send_term_exchange(vha->hw->base_qpair, NULL,
- 			    &u->atio, ha_locked, 0);
- 		} else {
--			ql_dbg(ql_dbg_async, vha, 0x503d,
-+			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x503d,
- 			    "Reschedule u %p, vha %p, host %p\n", u, vha, host);
- 			if (!queued) {
- 				queued = 1;
+ /*
+  * Global Function Prototypes in qla_isr.c source file.
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index dea2e66be0b1..adc93a505f15 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -17,6 +17,7 @@ static struct mb_cmd_name {
+ 	{MBC_GET_PORT_DATABASE,		"GPDB"},
+ 	{MBC_GET_ID_LIST,		"GIDList"},
+ 	{MBC_GET_LINK_PRIV_STATS,	"Stats"},
++	{MBC_GET_RESOURCE_COUNTS,	"ResCnt"},
+ };
+ 
+ static const char *mb_to_str(uint16_t cmd)
+@@ -6272,3 +6273,32 @@ qla2x00_read_sfp_dev(struct scsi_qla_host *vha, char *buf, int count)
+ 
+ 	return rval;
+ }
++
++int qla24xx_res_count_wait(struct scsi_qla_host *vha,
++    uint16_t *out_mb, int out_mb_sz)
++{
++	int rval = QLA_FUNCTION_FAILED;
++	mbx_cmd_t mc;
++
++	if (!vha->hw->flags.fw_started)
++		goto done;
++
++	memset(&mc, 0, sizeof(mc));
++	mc.mb[0] = MBC_GET_RESOURCE_COUNTS;
++
++	rval = qla24xx_send_mb_cmd(vha, &mc);
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0xffff,
++			"%s:  fail\n", __func__);
++	} else {
++		if (out_mb_sz <= SIZEOF_IOCB_MB_REG)
++			memcpy(out_mb, mc.mb, out_mb_sz);
++		else
++			memcpy(out_mb, mc.mb, SIZEOF_IOCB_MB_REG);
++
++		ql_dbg(ql_dbg_mbx, vha, 0xffff,
++			"%s:  done\n", __func__);
++	}
++done:
++	return rval;
++}
 -- 
 2.12.0
