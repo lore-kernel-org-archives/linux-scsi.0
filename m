@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 34/37] qla2xxx: Remove unused argument from qlt_schedule_sess_for_deletion()
-Date: Thu, 28 Dec 2017 12:33:42 -0800
-Message-ID: <20171228203345.2702-35-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 32/37] qla2xxx: Prevent multiple active discovery commands per session
+Date: Thu, 28 Dec 2017 12:33:40 -0800
+Message-ID: <20171228203345.2702-33-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0087.outbound.protection.outlook.com ([104.47.41.87]:57775
+Received: from mail-dm3nam03on0042.outbound.protection.outlook.com ([104.47.41.42]:45927
         "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754134AbdL1Uei (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:38 -0500
+        id S1754128AbdL1Ued (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:33 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,147 +19,263 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Immeadiate flag is not used for scheduling session deletion.
-Remove it to simplfy session deletion code path.
+Add check to allow single discovery command per session to be sent
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h    |  2 +-
- drivers/scsi/qla2xxx/qla_init.c   | 10 +++++-----
- drivers/scsi/qla2xxx/qla_target.c | 16 +++++++---------
- 3 files changed, 13 insertions(+), 15 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c   | 34 +++++++++++++++++-----------------
+ drivers/scsi/qla2xxx/qla_init.c | 30 +++++++++++++++---------------
+ 2 files changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 3f3863c09de2..47bff9ab1176 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -887,7 +887,7 @@ void qla24xx_do_nack_work(struct scsi_qla_host *, struct qla_work_evt *);
- void qlt_plogi_ack_link(struct scsi_qla_host *, struct qlt_plogi_ack_t *,
- 	struct fc_port *, enum qlt_plogi_link_t);
- void qlt_plogi_ack_unref(struct scsi_qla_host *, struct qlt_plogi_ack_t *);
--extern void qlt_schedule_sess_for_deletion(struct fc_port *, bool);
-+extern void qlt_schedule_sess_for_deletion(struct fc_port *);
- extern void qlt_schedule_sess_for_deletion_lock(struct fc_port *);
- extern struct fc_port *qlt_find_sess_invalidate_other(scsi_qla_host_t *,
- 	uint64_t wwn, port_id_t port_id, uint16_t loop_id, struct fc_port **);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 8e09f6f16643..abc31b983b93 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3127,16 +3127,16 @@ int qla24xx_async_gidpn(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	struct ct_sns_req       *ct_req;
+ 	srb_t *sp;
+ 
+-	if (!vha->flags.online)
+-		goto done;
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
++		return rval;
+ 
+-	fcport->flags |= FCF_ASYNC_SENT;
+ 	fcport->disc_state = DSC_GID_PN;
+ 	fcport->scan_state = QLA_FCPORT_SCAN;
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_ATOMIC);
+ 	if (!sp)
+ 		goto done;
+ 
++	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp->type = SRB_CT_PTHRU_CMD;
+ 	sp->name = "gidpn";
+ 	sp->gen1 = fcport->rscn_gen;
+@@ -3177,8 +3177,8 @@ int qla24xx_async_gidpn(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 
+ done_free_sp:
+ 	sp->free(sp);
+-done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++done:
+ 	return rval;
+ }
+ 
+@@ -3319,14 +3319,14 @@ int qla24xx_async_gpsc(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	struct ct_sns_req       *ct_req;
+ 	srb_t *sp;
+ 
+-	if (!vha->flags.online)
+-		goto done;
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
++		return rval;
+ 
+-	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+ 	if (!sp)
+ 		goto done;
+ 
++	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp->type = SRB_CT_PTHRU_CMD;
+ 	sp->name = "gpsc";
+ 	sp->gen1 = fcport->rscn_gen;
+@@ -3366,8 +3366,8 @@ int qla24xx_async_gpsc(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 
+ done_free_sp:
+ 	sp->free(sp);
+-done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++done:
+ 	return rval;
+ }
+ 
+@@ -3780,7 +3780,7 @@ int qla24xx_async_gffid(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	struct ct_sns_req       *ct_req;
+ 	srb_t *sp;
+ 
+-	if (!vha->flags.online)
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
+ 		return rval;
+ 
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+@@ -4337,15 +4337,15 @@ int qla24xx_async_gnnid(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	struct ct_sns_req       *ct_req;
+ 	srb_t *sp;
+ 
+-	if (!vha->flags.online)
+-		goto done;
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
++		return rval;
+ 
+-	fcport->flags |= FCF_ASYNC_SENT;
+ 	fcport->disc_state = DSC_GNN_ID;
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_ATOMIC);
+ 	if (!sp)
+ 		goto done;
+ 
++	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp->type = SRB_CT_PTHRU_CMD;
+ 	sp->name = "gnnid";
+ 	sp->gen1 = fcport->rscn_gen;
+@@ -4386,8 +4386,8 @@ int qla24xx_async_gnnid(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 
+ done_free_sp:
+ 	sp->free(sp);
+-done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++done:
+ 	return rval;
+ }
+ 
+@@ -4474,15 +4474,15 @@ int qla24xx_async_gfpnid(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	struct ct_sns_req       *ct_req;
+ 	srb_t *sp;
+ 
+-	if (!vha->flags.online)
+-		goto done;
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
++		return rval;
+ 
+-	fcport->flags |= FCF_ASYNC_SENT;
+ 	fcport->disc_state = DSC_GFPN_ID;
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_ATOMIC);
+ 	if (!sp)
+ 		goto done;
+ 
++	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp->type = SRB_CT_PTHRU_CMD;
+ 	sp->name = "gfpnid";
+ 	sp->gen1 = fcport->rscn_gen;
+@@ -4524,8 +4524,8 @@ int qla24xx_async_gfpnid(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 
+ done_free_sp:
+ 	sp->free(sp);
+-done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++done:
+ 	return rval;
+ }
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 956f51e78e5c..aaa8c07b2d8d 100644
+index 6452f4c8df5e..93febc177aa7 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -353,7 +353,7 @@ void qla24xx_handle_adisc_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 		ql_dbg(ql_dbg_disc, vha, 0x2066,
- 		    "%s %8phC: adisc fail: post delete\n",
- 		    __func__, ea->fcport->port_name);
--		qlt_schedule_sess_for_deletion(ea->fcport, 1);
-+		qlt_schedule_sess_for_deletion(ea->fcport);
- 		return;
- 	}
+@@ -207,7 +207,6 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 		lio->u.logio.flags |= SRB_LOGIN_RETRIED;
+ 	rval = qla2x00_start_sp(sp);
+ 	if (rval != QLA_SUCCESS) {
+-		fcport->flags &= ~FCF_ASYNC_SENT;
+ 		fcport->flags |= FCF_LOGIN_NEEDED;
+ 		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+ 		goto done_free_sp;
+@@ -222,8 +221,8 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
  
-@@ -527,7 +527,7 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
- 			ql_dbg(ql_dbg_disc, vha, 0x20e3,
- 			    "%s %d %8phC post del sess\n",
- 			    __func__, __LINE__, fcport->port_name);
--			qlt_schedule_sess_for_deletion(fcport, 1);
-+			qlt_schedule_sess_for_deletion(fcport);
- 			return;
- 		}
- 
-@@ -599,7 +599,7 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
- 				    __func__, __LINE__,
- 				    conflict_fcport->port_name);
- 				qlt_schedule_sess_for_deletion
--					(conflict_fcport, 1);
-+					(conflict_fcport);
- 			}
- 
- 			/* FW already picked this loop id for another fcport */
-@@ -1134,7 +1134,7 @@ static void qla_chk_n2n_b4_login(struct scsi_qla_host *vha, fc_port_t *fcport)
- 				    "%s %d %8phC post del sess - out of loopid\n",
- 				    __func__, __LINE__, fcport->port_name);
- 				fcport->scan_state = 0;
--				qlt_schedule_sess_for_deletion(fcport, true);
-+				qlt_schedule_sess_for_deletion(fcport);
- 				return;
- 			}
- 		}
-@@ -1780,7 +1780,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 			set_bit(lid, vha->hw->loop_id_map);
- 			ea->fcport->loop_id = lid;
- 			ea->fcport->keep_nport_handle = 0;
--			qlt_schedule_sess_for_deletion(ea->fcport, false);
-+			qlt_schedule_sess_for_deletion(ea->fcport);
- 		}
- 		break;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 786efdb5788a..867d089c3ebe 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1211,8 +1211,7 @@ static void qla24xx_chk_fcp_state(struct fc_port *sess)
+ done_free_sp:
+ 	sp->free(sp);
+-done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++done:
+ 	return rval;
  }
  
- /* ha->tgt.sess_lock supposed to be held on entry */
--void qlt_schedule_sess_for_deletion(struct fc_port *sess,
--	bool immediate)
-+void qlt_schedule_sess_for_deletion(struct fc_port *sess)
+@@ -245,9 +244,11 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
  {
- 	struct qla_tgt *tgt = sess->tgt;
+ 	srb_t *sp;
+ 	struct srb_iocb *lio;
+-	int rval;
++	int rval = QLA_FUNCTION_FAILED;
++
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
++		return rval;
  
-@@ -1252,7 +1251,7 @@ void qlt_schedule_sess_for_deletion_lock(struct fc_port *sess)
+-	rval = QLA_FUNCTION_FAILED;
+ 	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+ 	if (!sp)
+@@ -715,14 +716,13 @@ int qla24xx_async_gnl(struct scsi_qla_host *vha, fc_port_t *fcport)
  	unsigned long flags;
- 	struct qla_hw_data *ha = sess->vha->hw;
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
--	qlt_schedule_sess_for_deletion(sess, 1);
-+	qlt_schedule_sess_for_deletion(sess);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- }
+ 	u16 *mb;
  
-@@ -1264,7 +1263,7 @@ static void qlt_clear_tgt_db(struct qla_tgt *tgt)
+-	if (!vha->flags.online)
+-		goto done;
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
++		return rval;
  
- 	list_for_each_entry(sess, &vha->vp_fcports, list) {
- 		if (sess->se_sess)
--			qlt_schedule_sess_for_deletion(sess, 1);
-+			qlt_schedule_sess_for_deletion(sess);
+ 	ql_dbg(ql_dbg_disc, vha, 0x20d9,
+ 	    "Async-gnlist WWPN %8phC \n", fcport->port_name);
+ 
+ 	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+-	fcport->flags |= FCF_ASYNC_SENT;
+ 	fcport->disc_state = DSC_GNL;
+ 	fcport->last_rscn_gen = fcport->rscn_gen;
+ 	fcport->last_login_gen = fcport->login_gen;
+@@ -730,8 +730,7 @@ int qla24xx_async_gnl(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	list_add_tail(&fcport->gnl_entry, &vha->gnl.fcports);
+ 	if (vha->gnl.sent) {
+ 		spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+-		rval = QLA_SUCCESS;
+-		goto done;
++		return QLA_SUCCESS;
  	}
- 
- 	/* At this point tgt could be already dead */
-@@ -1439,7 +1438,7 @@ qlt_fc_port_deleted(struct scsi_qla_host *vha, fc_port_t *fcport, int max_gen)
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf008, "qla_tgt_fc_port_deleted %p", sess);
- 
- 	sess->local = 1;
--	qlt_schedule_sess_for_deletion(sess, false);
-+	qlt_schedule_sess_for_deletion(sess);
+ 	vha->gnl.sent = 1;
  	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+@@ -739,6 +738,8 @@ int qla24xx_async_gnl(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+ 	if (!sp)
+ 		goto done;
++
++	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp->type = SRB_MB_IOCB;
+ 	sp->name = "gnlist";
+ 	sp->gen1 = fcport->rscn_gen;
+@@ -773,8 +774,8 @@ int qla24xx_async_gnl(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 
+ done_free_sp:
+ 	sp->free(sp);
+-done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++done:
+ 	return rval;
  }
  
-@@ -4522,7 +4521,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
- 				 * might have cleared it when requested this session
- 				 * deletion, so don't touch it
- 				 */
--				qlt_schedule_sess_for_deletion(other_sess, true);
-+				qlt_schedule_sess_for_deletion(other_sess);
- 			} else {
- 				/*
- 				 * Another wwn used to have our s_id/loop_id
-@@ -4535,8 +4534,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
- 				other_sess->keep_nport_handle = 1;
- 				if (other_sess->disc_state != DSC_DELETED)
- 					*conflict_sess = other_sess;
--				qlt_schedule_sess_for_deletion(other_sess,
--				    true);
-+				qlt_schedule_sess_for_deletion(other_sess);
- 			}
- 			continue;
- 		}
-@@ -4550,7 +4548,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
+@@ -898,7 +899,6 @@ qla24xx_async_prli(struct scsi_qla_host *vha, fc_port_t *fcport)
  
- 			/* Same loop_id but different s_id
- 			 * Ok to kill and logout */
--			qlt_schedule_sess_for_deletion(other_sess, true);
-+			qlt_schedule_sess_for_deletion(other_sess);
- 		}
- 	}
+ 	rval = qla2x00_start_sp(sp);
+ 	if (rval != QLA_SUCCESS) {
+-		fcport->flags &= ~FCF_ASYNC_SENT;
+ 		fcport->flags |= FCF_LOGIN_NEEDED;
+ 		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+ 		goto done_free_sp;
+@@ -940,16 +940,16 @@ int qla24xx_async_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
+ 	struct port_database_24xx *pd;
+ 	struct qla_hw_data *ha = vha->hw;
  
+-	if (!vha->flags.online)
+-		goto done;
++	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
++		return rval;
+ 
+-	fcport->flags |= FCF_ASYNC_SENT;
+ 	fcport->disc_state = DSC_GPDB;
+ 
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+ 	if (!sp)
+ 		goto done;
+ 
++	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp->type = SRB_MB_IOCB;
+ 	sp->name = "gpdb";
+ 	sp->gen1 = fcport->rscn_gen;
+@@ -995,8 +995,8 @@ int qla24xx_async_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
+ 		dma_pool_free(ha->s_dma_pool, pd, pd_dma);
+ 
+ 	sp->free(sp);
+-done:
+ 	fcport->flags &= ~FCF_ASYNC_SENT;
++done:
+ 	qla24xx_post_gpdb_work(vha, fcport, opt);
+ 	return rval;
+ }
 -- 
 2.12.0
