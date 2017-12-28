@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 10/37] qla2xxx: Use shadow register for ISP27XX
-Date: Thu, 28 Dec 2017 12:33:18 -0800
-Message-ID: <20171228203345.2702-11-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 06/37] qla2xxx: Fix Firmware dump size for Extended login and Exchange Offload
+Date: Thu, 28 Dec 2017 12:33:14 -0800
+Message-ID: <20171228203345.2702-7-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0047.outbound.protection.outlook.com ([104.47.36.47]:15520
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0040.outbound.protection.outlook.com ([104.47.34.40]:60936
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754537AbdL1UeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:03 -0500
+        id S1751220AbdL1UeB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:01 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,29 +19,357 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-For ISP27XX, use shadow register to read FW provided REQQ's consumer
-index. The shadow register is dma'ed by firmware.
+This patch adjusts and reallocates fw_dump memory for target mode
+to save for extended login and exchange offload buffers into
+dump captured.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_init.c | 209 +++++++++++++++++++++-------------------
+ drivers/scsi/qla2xxx/qla_tmpl.c |  40 +++++++-
+ 2 files changed, 147 insertions(+), 102 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 2d523b71cc1f..d1dfa784d895 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2158,7 +2158,9 @@ __qla2x00_alloc_iocbs(struct qla_qpair *qpair, srb_t *sp)
- skip_cmd_array:
- 	/* Check for room on request queue. */
- 	if (req->cnt < req_cnt + 2) {
--		if (ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha))
-+		if (qpair->use_shadow_reg)
-+			cnt = *req->out_ptr;
-+		else if (ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha))
- 			cnt = RD_REG_DWORD(&reg->isp25mq.req_q_out);
- 		else if (IS_P3P_TYPE(ha))
- 			cnt = RD_REG_DWORD(&reg->isp82.req_q_out);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 5fef2bf55a9f..fc307752b2f5 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2593,70 +2593,27 @@ qla24xx_chip_diag(scsi_qla_host_t *vha)
+ 	return rval;
+ }
+ 
+-void
+-qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
++static void
++qla2x00_alloc_offload_mem(scsi_qla_host_t *vha)
+ {
+ 	int rval;
+-	uint32_t dump_size, fixed_size, mem_size, req_q_size, rsp_q_size,
+-	    eft_size, fce_size, mq_size;
+ 	dma_addr_t tc_dma;
+ 	void *tc;
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct req_que *req = ha->req_q_map[0];
+-	struct rsp_que *rsp = ha->rsp_q_map[0];
+ 
+-	if (ha->fw_dump) {
++	if (ha->eft) {
+ 		ql_dbg(ql_dbg_init, vha, 0x00bd,
+-		    "Firmware dump already allocated.\n");
++		    "%s: Offload Mem is already allocated.\n",
++		    __func__);
+ 		return;
+ 	}
+ 
+-	ha->fw_dumped = 0;
+-	ha->fw_dump_cap_flags = 0;
+-	dump_size = fixed_size = mem_size = eft_size = fce_size = mq_size = 0;
+-	req_q_size = rsp_q_size = 0;
+-
+-	if (IS_QLA27XX(ha))
+-		goto try_fce;
+-
+-	if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
+-		fixed_size = sizeof(struct qla2100_fw_dump);
+-	} else if (IS_QLA23XX(ha)) {
+-		fixed_size = offsetof(struct qla2300_fw_dump, data_ram);
+-		mem_size = (ha->fw_memory_size - 0x11000 + 1) *
+-		    sizeof(uint16_t);
+-	} else if (IS_FWI2_CAPABLE(ha)) {
+-		if (IS_QLA83XX(ha) || IS_QLA27XX(ha))
+-			fixed_size = offsetof(struct qla83xx_fw_dump, ext_mem);
+-		else if (IS_QLA81XX(ha))
+-			fixed_size = offsetof(struct qla81xx_fw_dump, ext_mem);
+-		else if (IS_QLA25XX(ha))
+-			fixed_size = offsetof(struct qla25xx_fw_dump, ext_mem);
+-		else
+-			fixed_size = offsetof(struct qla24xx_fw_dump, ext_mem);
+-
+-		mem_size = (ha->fw_memory_size - 0x100000 + 1) *
+-		    sizeof(uint32_t);
+-		if (ha->mqenable) {
+-			if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha))
+-				mq_size = sizeof(struct qla2xxx_mq_chain);
+-			/*
+-			 * Allocate maximum buffer size for all queues.
+-			 * Resizing must be done at end-of-dump processing.
+-			 */
+-			mq_size += ha->max_req_queues *
+-			    (req->length * sizeof(request_t));
+-			mq_size += ha->max_rsp_queues *
+-			    (rsp->length * sizeof(response_t));
+-		}
+-		if (ha->tgt.atio_ring)
+-			mq_size += ha->tgt.atio_q_length * sizeof(request_t);
++	if (IS_FWI2_CAPABLE(ha)) {
+ 		/* Allocate memory for Fibre Channel Event Buffer. */
+ 		if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
+ 		    !IS_QLA27XX(ha))
+ 			goto try_eft;
+ 
+-try_fce:
+ 		if (ha->fce)
+ 			dma_free_coherent(&ha->pdev->dev,
+ 			    FCE_SIZE, ha->fce, ha->fce_dma);
+@@ -2684,7 +2641,6 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 		ql_dbg(ql_dbg_init, vha, 0x00c0,
+ 		    "Allocate (%d KB) for FCE...\n", FCE_SIZE / 1024);
+ 
+-		fce_size = sizeof(struct qla2xxx_fce_chain) + FCE_SIZE;
+ 		ha->flags.fce_enabled = 1;
+ 		ha->fce_dma = tc_dma;
+ 		ha->fce = tc;
+@@ -2701,7 +2657,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 			ql_log(ql_log_warn, vha, 0x00c1,
+ 			    "Unable to allocate (%d KB) for EFT.\n",
+ 			    EFT_SIZE / 1024);
+-			goto cont_alloc;
++			goto eft_err;
+ 		}
+ 
+ 		rval = qla2x00_enable_eft_trace(vha, tc_dma, EFT_NUM_BUFFERS);
+@@ -2710,17 +2666,76 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 			    "Unable to initialize EFT (%d).\n", rval);
+ 			dma_free_coherent(&ha->pdev->dev, EFT_SIZE, tc,
+ 			    tc_dma);
+-			goto cont_alloc;
++			goto eft_err;
+ 		}
+ 		ql_dbg(ql_dbg_init, vha, 0x00c3,
+ 		    "Allocated (%d KB) EFT ...\n", EFT_SIZE / 1024);
+ 
+-		eft_size = EFT_SIZE;
+ 		ha->eft_dma = tc_dma;
+ 		ha->eft = tc;
+ 	}
+ 
+-cont_alloc:
++eft_err:
++	return;
++}
++
++void
++qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
++{
++	uint32_t dump_size, fixed_size, mem_size, req_q_size, rsp_q_size,
++	    eft_size, fce_size, mq_size;
++	struct qla_hw_data *ha = vha->hw;
++	struct req_que *req = ha->req_q_map[0];
++	struct rsp_que *rsp = ha->rsp_q_map[0];
++	struct qla2xxx_fw_dump *fw_dump;
++
++	dump_size = fixed_size = mem_size = eft_size = fce_size = mq_size = 0;
++	req_q_size = rsp_q_size = 0;
++
++	if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
++		fixed_size = sizeof(struct qla2100_fw_dump);
++	} else if (IS_QLA23XX(ha)) {
++		fixed_size = offsetof(struct qla2300_fw_dump, data_ram);
++		mem_size = (ha->fw_memory_size - 0x11000 + 1) *
++		    sizeof(uint16_t);
++	} else if (IS_FWI2_CAPABLE(ha)) {
++		if (IS_QLA83XX(ha) || IS_QLA27XX(ha))
++			fixed_size = offsetof(struct qla83xx_fw_dump, ext_mem);
++		else if (IS_QLA81XX(ha))
++			fixed_size = offsetof(struct qla81xx_fw_dump, ext_mem);
++		else if (IS_QLA25XX(ha))
++			fixed_size = offsetof(struct qla25xx_fw_dump, ext_mem);
++		else
++			fixed_size = offsetof(struct qla24xx_fw_dump, ext_mem);
++
++		mem_size = (ha->fw_memory_size - 0x100000 + 1) *
++		    sizeof(uint32_t);
++		if (ha->mqenable) {
++			if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha))
++				mq_size = sizeof(struct qla2xxx_mq_chain);
++			/*
++			 * Allocate maximum buffer size for all queues.
++			 * Resizing must be done at end-of-dump processing.
++			 */
++			mq_size += ha->max_req_queues *
++			    (req->length * sizeof(request_t));
++			mq_size += ha->max_rsp_queues *
++			    (rsp->length * sizeof(response_t));
++		}
++		if (ha->tgt.atio_ring)
++			mq_size += ha->tgt.atio_q_length * sizeof(request_t);
++		/* Allocate memory for Fibre Channel Event Buffer. */
++		if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
++		    !IS_QLA27XX(ha))
++			goto try_eft;
++
++		fce_size = sizeof(struct qla2xxx_fce_chain) + FCE_SIZE;
++try_eft:
++		ql_dbg(ql_dbg_init, vha, 0x00c3,
++		    "Allocated (%d KB) EFT ...\n", EFT_SIZE / 1024);
++		eft_size = EFT_SIZE;
++	}
++
+ 	if (IS_QLA27XX(ha)) {
+ 		if (!ha->fw_dump_template) {
+ 			ql_log(ql_log_warn, vha, 0x00ba,
+@@ -2748,51 +2763,44 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 			ha->exlogin_size;
+ 
+ allocate:
+-	ha->fw_dump = vmalloc(dump_size);
+-	if (!ha->fw_dump) {
+-		ql_log(ql_log_warn, vha, 0x00c4,
+-		    "Unable to allocate (%d KB) for firmware dump.\n",
+-		    dump_size / 1024);
+-
+-		if (ha->fce) {
+-			dma_free_coherent(&ha->pdev->dev, FCE_SIZE, ha->fce,
+-			    ha->fce_dma);
+-			ha->fce = NULL;
+-			ha->fce_dma = 0;
+-		}
+-
+-		if (ha->eft) {
+-			dma_free_coherent(&ha->pdev->dev, eft_size, ha->eft,
+-			    ha->eft_dma);
+-			ha->eft = NULL;
+-			ha->eft_dma = 0;
++	if (!ha->fw_dump_len || dump_size != ha->fw_dump_len) {
++		fw_dump = vmalloc(dump_size);
++		if (!fw_dump) {
++			ql_log(ql_log_warn, vha, 0x00c4,
++			    "Unable to allocate (%d KB) for firmware dump.\n",
++			    dump_size / 1024);
++		} else {
++			if (ha->fw_dump)
++				vfree(ha->fw_dump);
++			ha->fw_dump = fw_dump;
++
++			ha->fw_dump_len = dump_size;
++			ql_dbg(ql_dbg_init, vha, 0x00c5,
++			    "Allocated (%d KB) for firmware dump.\n",
++			    dump_size / 1024);
++
++			if (IS_QLA27XX(ha))
++				return;
++
++			ha->fw_dump->signature[0] = 'Q';
++			ha->fw_dump->signature[1] = 'L';
++			ha->fw_dump->signature[2] = 'G';
++			ha->fw_dump->signature[3] = 'C';
++			ha->fw_dump->version = htonl(1);
++
++			ha->fw_dump->fixed_size = htonl(fixed_size);
++			ha->fw_dump->mem_size = htonl(mem_size);
++			ha->fw_dump->req_q_size = htonl(req_q_size);
++			ha->fw_dump->rsp_q_size = htonl(rsp_q_size);
++
++			ha->fw_dump->eft_size = htonl(eft_size);
++			ha->fw_dump->eft_addr_l = htonl(LSD(ha->eft_dma));
++			ha->fw_dump->eft_addr_h = htonl(MSD(ha->eft_dma));
++
++			ha->fw_dump->header_size =
++				htonl(offsetof(struct qla2xxx_fw_dump, isp));
+ 		}
+-		return;
+ 	}
+-	ha->fw_dump_len = dump_size;
+-	ql_dbg(ql_dbg_init, vha, 0x00c5,
+-	    "Allocated (%d KB) for firmware dump.\n", dump_size / 1024);
+-
+-	if (IS_QLA27XX(ha))
+-		return;
+-
+-	ha->fw_dump->signature[0] = 'Q';
+-	ha->fw_dump->signature[1] = 'L';
+-	ha->fw_dump->signature[2] = 'G';
+-	ha->fw_dump->signature[3] = 'C';
+-	ha->fw_dump->version = htonl(1);
+-
+-	ha->fw_dump->fixed_size = htonl(fixed_size);
+-	ha->fw_dump->mem_size = htonl(mem_size);
+-	ha->fw_dump->req_q_size = htonl(req_q_size);
+-	ha->fw_dump->rsp_q_size = htonl(rsp_q_size);
+-
+-	ha->fw_dump->eft_size = htonl(eft_size);
+-	ha->fw_dump->eft_addr_l = htonl(LSD(ha->eft_dma));
+-	ha->fw_dump->eft_addr_h = htonl(MSD(ha->eft_dma));
+-
+-	ha->fw_dump->header_size =
+-	    htonl(offsetof(struct qla2xxx_fw_dump, isp));
+ }
+ 
+ static int
+@@ -3118,9 +3126,12 @@ qla2x00_setup_chip(scsi_qla_host_t *vha)
+ 				if (rval != QLA_SUCCESS)
+ 					goto failed;
+ 
+-				if (!fw_major_version && ql2xallocfwdump
+-				    && !(IS_P3P_TYPE(ha)))
++				if (!fw_major_version && !(IS_P3P_TYPE(ha)))
++					qla2x00_alloc_offload_mem(vha);
++
++				if (ql2xallocfwdump && !(IS_P3P_TYPE(ha)))
+ 					qla2x00_alloc_fw_dump(vha);
++
+ 			} else {
+ 				goto failed;
+ 			}
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 733e8dcccf5c..731ca0d8520a 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -526,7 +526,8 @@ qla27xx_fwdt_entry_t268(struct scsi_qla_host *vha,
+ {
+ 	ql_dbg(ql_dbg_misc, vha, 0xd20c,
+ 	    "%s: gethb(%x) [%lx]\n", __func__, ent->t268.buf_type, *len);
+-	if (ent->t268.buf_type == T268_BUF_TYPE_EXTD_TRACE) {
++	switch (ent->t268.buf_type) {
++	case T268_BUF_TYPE_EXTD_TRACE:
+ 		if (vha->hw->eft) {
+ 			if (buf) {
+ 				ent->t268.buf_size = EFT_SIZE;
+@@ -538,10 +539,43 @@ qla27xx_fwdt_entry_t268(struct scsi_qla_host *vha,
+ 			    "%s: missing eft\n", __func__);
+ 			qla27xx_skip_entry(ent, buf);
+ 		}
+-	} else {
+-		ql_dbg(ql_dbg_misc, vha, 0xd02b,
++		break;
++	case T268_BUF_TYPE_EXCH_BUFOFF:
++		if (vha->hw->exchoffld_buf) {
++			if (buf) {
++				ent->t268.buf_size = vha->hw->exchoffld_size;
++				ent->t268.start_addr =
++					vha->hw->exchoffld_buf_dma;
++			}
++			qla27xx_insertbuf(vha->hw->exchoffld_buf,
++			    vha->hw->exchoffld_size, buf, len);
++		} else {
++			ql_dbg(ql_dbg_misc, vha, 0xd028,
++			    "%s: missing exch offld\n", __func__);
++			qla27xx_skip_entry(ent, buf);
++		}
++		break;
++	case T268_BUF_TYPE_EXTD_LOGIN:
++		if (vha->hw->exlogin_buf) {
++			if (buf) {
++				ent->t268.buf_size = vha->hw->exlogin_size;
++				ent->t268.start_addr =
++					vha->hw->exlogin_buf_dma;
++			}
++			qla27xx_insertbuf(vha->hw->exlogin_buf,
++			    vha->hw->exlogin_size, buf, len);
++		} else {
++			ql_dbg(ql_dbg_misc, vha, 0xd028,
++			    "%s: missing ext login\n", __func__);
++			qla27xx_skip_entry(ent, buf);
++		}
++		break;
++
++	default:
++		ql_dbg(ql_dbg_async, vha, 0xd02b,
+ 		    "%s: unknown buffer %x\n", __func__, ent->t268.buf_type);
+ 		qla27xx_skip_entry(ent, buf);
++		break;
+ 	}
+ 
+ 	return false;
 -- 
 2.12.0
