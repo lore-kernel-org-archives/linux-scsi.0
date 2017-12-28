@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 31/37] qla2xxx: Add retry limit for fabric scan logic
-Date: Thu, 28 Dec 2017 12:33:39 -0800
-Message-ID: <20171228203345.2702-32-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 36/37] qla2xxx: Serialize session free in qlt_free_session_done
+Date: Thu, 28 Dec 2017 12:33:44 -0800
+Message-ID: <20171228203345.2702-37-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0044.outbound.protection.outlook.com ([104.47.34.44]:64224
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0081.outbound.protection.outlook.com ([104.47.40.81]:57952
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754055AbdL1Ueb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:31 -0500
+        id S1754886AbdL1Uen (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:43 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,104 +19,70 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Switch scan is assumed to succeed most of the time.
-If the scan failed, then scan is limit 5 retries.
+Add free_pending flag to serialize queueing of
+free_work element onto the work queue
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |  2 ++
- drivers/scsi/qla2xxx/qla_gs.c  | 32 ++++++++++++++++++++------------
- drivers/scsi/qla2xxx/qla_isr.c |  1 +
- 3 files changed, 23 insertions(+), 12 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |  1 +
+ drivers/scsi/qla2xxx/qla_target.c | 13 +++++++++++++
+ 2 files changed, 14 insertions(+)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 0d20f5f8d7ab..99d2afa520c2 100644
+index ac2f340bc1c6..f7396a2e28ba 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2986,6 +2986,8 @@ struct fab_scan_rp {
- struct fab_scan {
- 	struct fab_scan_rp *l;
- 	u32 size;
-+	u16 scan_retry;
-+#define MAX_SCAN_RETRIES 5
- 	enum scan_flags_t scan_flags;
- 	struct delayed_work scan_work;
- };
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 963ebcb7cf2c..8e09f6f16643 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3875,13 +3875,17 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+@@ -2334,6 +2334,7 @@ typedef struct fc_port {
  
- 	rc = sp->rc;
- 	if (rc) {
--		ql_dbg(ql_dbg_disc, vha, 0xffff,
--		    "GPNFT failed. FC4type %x. Rescanning.\n",
--		    fc4type);
--		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
--		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
-+		vha->scan.scan_retry++;
-+		if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
-+			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
-+			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
-+		} else {
-+			ql_dbg(ql_dbg_disc, vha, 0xffff,
-+			    "Fabric scan failed on all retries.\n");
-+		}
- 		goto out;
+ 	unsigned int conf_compl_supported:1;
+ 	unsigned int deleted:2;
++	unsigned int free_pending:1;
+ 	unsigned int local:1;
+ 	unsigned int logout_on_delete:1;
+ 	unsigned int logo_ack_needed:1;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 72b452db26da..0d3c3f647f91 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1105,6 +1105,7 @@ static void qlt_free_session_done(struct work_struct *work)
+ 			sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN] = NULL;
+ 		}
  	}
-+	vha->scan.scan_retry = 0;
- 
- 	list_for_each_entry(fcport, &vha->vp_fcports, list)
- 		fcport->scan_state = QLA_FCPORT_SCAN;
-@@ -3964,7 +3968,6 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
- 
- out:
- 	qla24xx_sp_unmap(vha, sp);
--
- 	spin_lock_irqsave(&vha->work_lock, flags);
- 	vha->scan.scan_flags &= ~SF_SCANNING;
- 	spin_unlock_irqrestore(&vha->work_lock, flags);
-@@ -3992,16 +3995,21 @@ static void qla2x00_async_gpnft_gnnft_sp_done(void *s, int res)
- 	if (res) {
- 		unsigned long flags;
- 
--		ql_dbg(ql_dbg_disc, sp->vha, 0xffff,
--		    "Async done-%s timed out.\n",
--		    sp->name);
- 		sp->free(sp);
- 		spin_lock_irqsave(&vha->work_lock, flags);
- 		vha->scan.scan_flags &= ~SF_SCANNING;
-+		vha->scan.scan_retry++;
- 		spin_unlock_irqrestore(&vha->work_lock, flags);
--		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
--		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
--		qla2xxx_wake_dpc(vha);
 +
-+		if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
-+			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
-+			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
-+			qla2xxx_wake_dpc(vha);
-+		} else {
-+			ql_dbg(ql_dbg_disc, sp->vha, 0xffff,
-+			    "Async done-%s rescan failed on all retries\n",
-+			    sp->name);
-+		}
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ 
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf001,
+@@ -1118,6 +1119,9 @@ static void qlt_free_session_done(struct work_struct *work)
+ 		wake_up_all(&vha->fcport_waitQ);
+ 
+ 	base_vha = pci_get_drvdata(ha->pdev);
++
++	sess->free_pending = 0;
++
+ 	if (test_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags))
  		return;
- 	}
  
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 67434b9ee7de..a37a2a474a50 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1059,6 +1059,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
- 		 * Mark all devices as missing so we will login again.
- 		 */
- 		atomic_set(&vha->loop_state, LOOP_UP);
-+		vha->scan.scan_retry = 0;
+@@ -1140,11 +1144,20 @@ static void qlt_free_session_done(struct work_struct *work)
+ void qlt_unreg_sess(struct fc_port *sess)
+ {
+ 	struct scsi_qla_host *vha = sess->vha;
++	unsigned long flags;
  
- 		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
- 		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+ 	ql_dbg(ql_dbg_disc, sess->vha, 0x210a,
+ 	    "%s sess %p for deletion %8phC\n",
+ 	    __func__, sess, sess->port_name);
+ 
++	spin_lock_irqsave(&sess->vha->work_lock, flags);
++	if (sess->free_pending) {
++		spin_unlock_irqrestore(&sess->vha->work_lock, flags);
++		return;
++	}
++	sess->free_pending = 1;
++	spin_unlock_irqrestore(&sess->vha->work_lock, flags);
++
+ 	if (sess->se_sess)
+ 		vha->hw->tgt.tgt_ops->clear_nacl_from_fcport_map(sess);
+ 
 -- 
 2.12.0
