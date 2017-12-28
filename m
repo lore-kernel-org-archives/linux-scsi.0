@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 12/37] qla2xxx: Add ability to send PRLO
-Date: Thu, 28 Dec 2017 12:33:20 -0800
-Message-ID: <20171228203345.2702-13-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 29/37] qla2xxx: Increase verbosity of debug messages logged
+Date: Thu, 28 Dec 2017 12:33:37 -0800
+Message-ID: <20171228203345.2702-30-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0089.outbound.protection.outlook.com ([104.47.40.89]:60974
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0072.outbound.protection.outlook.com ([104.47.34.72]:19632
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755234AbdL1UeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:11 -0500
+        id S1755302AbdL1UeZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:25 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,197 +19,48 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Add ability to send Implicit PRLO to flush IOs
-from FW back to driver.
+Add verbose bit for debug messages to reduce excessive
+log messages
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |  3 +++
- drivers/scsi/qla2xxx/qla_gbl.h  |  8 ++++++
- drivers/scsi/qla2xxx/qla_init.c | 59 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_iocb.c | 17 ++++++++++++
- drivers/scsi/qla2xxx/qla_os.c   |  9 +++++++
- 5 files changed, 96 insertions(+)
+ drivers/scsi/qla2xxx/qla_target.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 92dbba47d3cf..7a42aad55ec3 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -507,6 +507,7 @@ struct srb_iocb {
- #define SRB_NVME_LS	20
- #define SRB_PRLI_CMD	21
- #define SRB_CTRL_VP	22
-+#define SRB_PRLO_CMD	23
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index a4783eb11711..786efdb5788a 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -209,7 +209,7 @@ struct scsi_qla_host *qlt_find_host_by_d_id(struct scsi_qla_host *vha,
  
- enum {
- 	TYPE_SRB,
-@@ -3140,6 +3141,8 @@ enum qla_work_type {
- 	QLA_EVT_GNL,
- 	QLA_EVT_NACK,
- 	QLA_EVT_RELOGIN,
-+	QLA_EVT_ASYNC_PRLO,
-+	QLA_EVT_ASYNC_PRLO_DONE,
- };
+ 	host = btree_lookup32(&vha->hw->tgt.host_map, key);
+ 	if (!host)
+-		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf005,
++		ql_dbg(ql_dbg_tgt_mgt + ql_dbg_verbose, vha, 0xf005,
+ 		    "Unable to find host %06x\n", key);
  
+ 	return host;
+@@ -310,17 +310,17 @@ static void qlt_try_to_dequeue_unknown_atios(struct scsi_qla_host *vha,
  
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index aabd49ef95a3..7b61c96502e4 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -66,6 +66,7 @@ extern void qla84xx_put_chip(struct scsi_qla_host *);
- extern int qla2x00_async_login(struct scsi_qla_host *, fc_port_t *,
-     uint16_t *);
- extern int qla2x00_async_logout(struct scsi_qla_host *, fc_port_t *);
-+extern int qla2x00_async_prlo(struct scsi_qla_host *, fc_port_t *);
- extern int qla2x00_async_adisc(struct scsi_qla_host *, fc_port_t *,
-     uint16_t *);
- extern int qla2x00_async_tm_cmd(fc_port_t *, uint32_t, uint32_t, uint32_t);
-@@ -109,6 +110,13 @@ int qla24xx_post_newsess_work(struct scsi_qla_host *, port_id_t *, u8 *,
- int qla24xx_fcport_handle_login(struct scsi_qla_host *, fc_port_t *);
- int qla24xx_detect_sfp(scsi_qla_host_t *vha);
- int qla24xx_post_gpdb_work(struct scsi_qla_host *, fc_port_t *, u8);
-+void qla2x00_async_prlo_done(struct scsi_qla_host *, fc_port_t *,
-+    uint16_t *);
-+extern int qla2x00_post_async_prlo_work(struct scsi_qla_host *, fc_port_t *,
-+    uint16_t *);
-+extern int qla2x00_post_async_prlo_done_work(struct scsi_qla_host *,
-+    fc_port_t *, uint16_t *);
-+
- /*
-  * Global Data in qla_os.c source file.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 39d1edc6c2b1..56bff7856cf8 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -278,6 +278,65 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	fcport->flags &= ~FCF_ASYNC_SENT;
- 	return rval;
- }
-+
-+void
-+qla2x00_async_prlo_done(struct scsi_qla_host *vha, fc_port_t *fcport,
-+    uint16_t *data)
-+{
-+	/* Don't re-login in target mode */
-+	if (!fcport->tgt_session)
-+		qla2x00_mark_device_lost(vha, fcport, 1, 0);
-+	qlt_logo_completion_handler(fcport, data[0]);
-+}
-+
-+static void
-+qla2x00_async_prlo_sp_done(void *s, int res)
-+{
-+	srb_t *sp = (srb_t *)s;
-+	struct srb_iocb *lio = &sp->u.iocb_cmd;
-+	struct scsi_qla_host *vha = sp->vha;
-+
-+	if (!test_bit(UNLOADING, &vha->dpc_flags))
-+		qla2x00_post_async_prlo_done_work(sp->fcport->vha, sp->fcport,
-+		    lio->u.logio.data);
-+	sp->free(sp);
-+}
-+
-+int
-+qla2x00_async_prlo(struct scsi_qla_host *vha, fc_port_t *fcport)
-+{
-+	srb_t *sp;
-+	struct srb_iocb *lio;
-+	int rval;
-+
-+	rval = QLA_FUNCTION_FAILED;
-+	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
-+	if (!sp)
-+		goto done;
-+
-+	sp->type = SRB_PRLO_CMD;
-+	sp->name = "prlo";
-+	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
-+
-+	lio = &sp->u.iocb_cmd;
-+	lio->timeout = qla2x00_async_iocb_timeout;
-+	sp->done = qla2x00_async_prlo_sp_done;
-+	rval = qla2x00_start_sp(sp);
-+	if (rval != QLA_SUCCESS)
-+		goto done_free_sp;
-+
-+	ql_dbg(ql_dbg_disc, vha, 0x2070,
-+	    "Async-prlo - hdl=%x loop-id=%x portid=%02x%02x%02x.\n",
-+	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
-+	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
-+	return rval;
-+
-+done_free_sp:
-+	sp->free(sp);
-+done:
-+	return rval;
-+}
-+
- static
- void qla24xx_handle_adisc_event(scsi_qla_host_t *vha, struct event_arg *ea)
- {
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index d1dfa784d895..14a3f6932c9c 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -3390,6 +3390,20 @@ qla25xx_ctrlvp_iocb(srb_t *sp, struct vp_ctrl_entry_24xx *vce)
- 	vce->vp_idx_map[map] |= 1 << pos;
- }
- 
-+static void
-+qla24xx_prlo_iocb(srb_t *sp, struct logio_entry_24xx *logio)
-+{
-+	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
-+	logio->control_flags =
-+	    cpu_to_le16(LCF_COMMAND_PRLO|LCF_IMPL_PRLO);
-+
-+	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
-+	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
-+	logio->port_id[1] = sp->fcport->d_id.b.area;
-+	logio->port_id[2] = sp->fcport->d_id.b.domain;
-+	logio->vp_index = sp->fcport->vha->vp_idx;
-+}
-+
- int
- qla2x00_start_sp(srb_t *sp)
- {
-@@ -3471,6 +3485,9 @@ qla2x00_start_sp(srb_t *sp)
- 	case SRB_CTRL_VP:
- 		qla25xx_ctrlvp_iocb(sp, pkt);
- 		break;
-+	case SRB_PRLO_CMD:
-+		qla24xx_prlo_iocb(sp, pkt);
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 487e1affacf4..aca7afc139ea 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4690,6 +4690,8 @@ qla2x00_post_async_work(logout, QLA_EVT_ASYNC_LOGOUT);
- qla2x00_post_async_work(logout_done, QLA_EVT_ASYNC_LOGOUT_DONE);
- qla2x00_post_async_work(adisc, QLA_EVT_ASYNC_ADISC);
- qla2x00_post_async_work(adisc_done, QLA_EVT_ASYNC_ADISC_DONE);
-+qla2x00_post_async_work(prlo, QLA_EVT_ASYNC_PRLO);
-+qla2x00_post_async_work(prlo_done, QLA_EVT_ASYNC_PRLO_DONE);
- 
- int
- qla2x00_post_uevent_work(struct scsi_qla_host *vha, u32 code)
-@@ -4943,6 +4945,13 @@ qla2x00_do_work(struct scsi_qla_host *vha)
- 		case QLA_EVT_NACK:
- 			qla24xx_do_nack_work(vha, e);
- 			break;
-+		case QLA_EVT_ASYNC_PRLO:
-+			qla2x00_async_prlo(vha, e->u.logio.fcport);
-+			break;
-+		case QLA_EVT_ASYNC_PRLO_DONE:
-+			qla2x00_async_prlo_done(vha, e->u.logio.fcport,
-+			    e->u.logio.data);
-+			break;
- 		}
- 		if (e->flags & QLA_EVT_FLAG_FREE)
- 			kfree(e);
+ 		host = qlt_find_host_by_d_id(vha, u->atio.u.isp24.fcp_hdr.d_id);
+ 		if (host != NULL) {
+-			ql_dbg(ql_dbg_async, vha, 0x502f,
++			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x502f,
+ 			    "Requeuing unknown ATIO_TYPE7 %p\n", u);
+ 			qlt_24xx_atio_pkt(host, &u->atio, ha_locked);
+ 		} else if (tgt->tgt_stop) {
+-			ql_dbg(ql_dbg_async, vha, 0x503a,
++			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x503a,
+ 			    "Freeing unknown %s %p, because tgt is being stopped\n",
+ 			    "ATIO_TYPE7", u);
+ 			qlt_send_term_exchange(vha->hw->base_qpair, NULL,
+ 			    &u->atio, ha_locked, 0);
+ 		} else {
+-			ql_dbg(ql_dbg_async, vha, 0x503d,
++			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x503d,
+ 			    "Reschedule u %p, vha %p, host %p\n", u, vha, host);
+ 			if (!queued) {
+ 				queued = 1;
 -- 
 2.12.0
