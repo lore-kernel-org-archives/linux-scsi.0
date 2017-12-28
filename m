@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 30/37] qla2xxx: Delay loop id allocation at login
-Date: Thu, 28 Dec 2017 12:33:38 -0800
-Message-ID: <20171228203345.2702-31-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 31/37] qla2xxx: Add retry limit for fabric scan logic
+Date: Thu, 28 Dec 2017 12:33:39 -0800
+Message-ID: <20171228203345.2702-32-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0063.outbound.protection.outlook.com ([104.47.38.63]:31920
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0044.outbound.protection.outlook.com ([104.47.34.44]:64224
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755286AbdL1Ue2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:28 -0500
+        id S1754055AbdL1Ueb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:31 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,103 +19,104 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Delay loop id allocation to login time
+Switch scan is assumed to succeed most of the time.
+If the scan failed, then scan is limit 5 retries.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 64 ++++++++++++++++++++++-------------------
- 1 file changed, 35 insertions(+), 29 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |  2 ++
+ drivers/scsi/qla2xxx/qla_gs.c  | 32 ++++++++++++++++++++------------
+ drivers/scsi/qla2xxx/qla_isr.c |  1 +
+ 3 files changed, 23 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e9513ec344b1..6452f4c8df5e 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -580,36 +580,29 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 0d20f5f8d7ab..99d2afa520c2 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2986,6 +2986,8 @@ struct fab_scan_rp {
+ struct fab_scan {
+ 	struct fab_scan_rp *l;
+ 	u32 size;
++	u16 scan_retry;
++#define MAX_SCAN_RETRIES 5
+ 	enum scan_flags_t scan_flags;
+ 	struct delayed_work scan_work;
+ };
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 963ebcb7cf2c..8e09f6f16643 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3875,13 +3875,17 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
  
- 	if (!found) {
- 		/* fw has no record of this port */
--		if (fcport->loop_id == FC_NO_LOOP_ID) {
--			qla2x00_find_new_loop_id(vha, fcport);
--			fcport->fw_login_state = DSC_LS_PORT_UNAVAIL;
--		} else {
--			for (i = 0; i < n; i++) {
--				e = &vha->gnl.l[i];
--				id.b.domain = e->port_id[0];
--				id.b.area = e->port_id[1];
--				id.b.al_pa = e->port_id[2];
--				id.b.rsvd_1 = 0;
--				loop_id = le16_to_cpu(e->nport_handle);
--
--				if (fcport->d_id.b24 == id.b24) {
--					conflict_fcport =
--					    qla2x00_find_fcport_by_wwpn(vha,
--						e->port_name, 0);
--
--					ql_dbg(ql_dbg_disc, vha, 0x20e6,
--					    "%s %d %8phC post del sess\n",
--					    __func__, __LINE__,
--					    conflict_fcport->port_name);
--					qlt_schedule_sess_for_deletion
--						(conflict_fcport, 1);
--				}
--
--				if (fcport->loop_id == loop_id) {
--					/* FW already picked this loop id for another fcport */
--					qla2x00_find_new_loop_id(vha, fcport);
--				}
-+		for (i = 0; i < n; i++) {
-+			e = &vha->gnl.l[i];
-+			id.b.domain = e->port_id[0];
-+			id.b.area = e->port_id[1];
-+			id.b.al_pa = e->port_id[2];
-+			id.b.rsvd_1 = 0;
-+			loop_id = le16_to_cpu(e->nport_handle);
-+
-+			if (fcport->d_id.b24 == id.b24) {
-+				conflict_fcport =
-+					qla2x00_find_fcport_by_wwpn(vha,
-+					    e->port_name, 0);
-+				ql_dbg(ql_dbg_disc, vha, 0x20e6,
-+				    "%s %d %8phC post del sess\n",
-+				    __func__, __LINE__,
-+				    conflict_fcport->port_name);
-+				qlt_schedule_sess_for_deletion
-+					(conflict_fcport, 1);
- 			}
-+
-+			/* FW already picked this loop id for another fcport */
-+			if (fcport->loop_id == loop_id)
-+				fcport->loop_id = FC_NO_LOOP_ID;
- 		}
- 		qla24xx_fcport_handle_login(vha, fcport);
- 	}
-@@ -1104,6 +1097,7 @@ void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- static void qla_chk_n2n_b4_login(struct scsi_qla_host *vha, fc_port_t *fcport)
- {
- 	u8 login = 0;
-+	int rc;
- 
- 	if (qla_tgt_mode_enabled(vha))
- 		return;
-@@ -1129,6 +1123,18 @@ static void qla_chk_n2n_b4_login(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	}
- 
- 	if (login) {
-+		if (fcport->loop_id == FC_NO_LOOP_ID) {
-+			fcport->fw_login_state = DSC_LS_PORT_UNAVAIL;
-+			rc = qla2x00_find_new_loop_id(vha, fcport);
-+			if (rc) {
-+				ql_dbg(ql_dbg_disc, vha, 0x20e6,
-+				    "%s %d %8phC post del sess - out of loopid\n",
-+				    __func__, __LINE__, fcport->port_name);
-+				fcport->scan_state = 0;
-+				qlt_schedule_sess_for_deletion(fcport, true);
-+				return;
-+			}
+ 	rc = sp->rc;
+ 	if (rc) {
+-		ql_dbg(ql_dbg_disc, vha, 0xffff,
+-		    "GPNFT failed. FC4type %x. Rescanning.\n",
+-		    fc4type);
+-		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+-		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++		vha->scan.scan_retry++;
++		if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
++			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++		} else {
++			ql_dbg(ql_dbg_disc, vha, 0xffff,
++			    "Fabric scan failed on all retries.\n");
 +		}
- 		ql_dbg(ql_dbg_disc, vha, 0x20bf,
- 		    "%s %d %8phC post login\n",
- 		    __func__, __LINE__, fcport->port_name);
+ 		goto out;
+ 	}
++	vha->scan.scan_retry = 0;
+ 
+ 	list_for_each_entry(fcport, &vha->vp_fcports, list)
+ 		fcport->scan_state = QLA_FCPORT_SCAN;
+@@ -3964,7 +3968,6 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 
+ out:
+ 	qla24xx_sp_unmap(vha, sp);
+-
+ 	spin_lock_irqsave(&vha->work_lock, flags);
+ 	vha->scan.scan_flags &= ~SF_SCANNING;
+ 	spin_unlock_irqrestore(&vha->work_lock, flags);
+@@ -3992,16 +3995,21 @@ static void qla2x00_async_gpnft_gnnft_sp_done(void *s, int res)
+ 	if (res) {
+ 		unsigned long flags;
+ 
+-		ql_dbg(ql_dbg_disc, sp->vha, 0xffff,
+-		    "Async done-%s timed out.\n",
+-		    sp->name);
+ 		sp->free(sp);
+ 		spin_lock_irqsave(&vha->work_lock, flags);
+ 		vha->scan.scan_flags &= ~SF_SCANNING;
++		vha->scan.scan_retry++;
+ 		spin_unlock_irqrestore(&vha->work_lock, flags);
+-		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+-		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+-		qla2xxx_wake_dpc(vha);
++
++		if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
++			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++			qla2xxx_wake_dpc(vha);
++		} else {
++			ql_dbg(ql_dbg_disc, sp->vha, 0xffff,
++			    "Async done-%s rescan failed on all retries\n",
++			    sp->name);
++		}
+ 		return;
+ 	}
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 67434b9ee7de..a37a2a474a50 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1059,6 +1059,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 		 * Mark all devices as missing so we will login again.
+ 		 */
+ 		atomic_set(&vha->loop_state, LOOP_UP);
++		vha->scan.scan_retry = 0;
+ 
+ 		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+ 		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
 -- 
 2.12.0
