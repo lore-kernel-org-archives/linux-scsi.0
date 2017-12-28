@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 02/37] qla2xxx: Use IOCB path to submit Control VP MBX command
-Date: Thu, 28 Dec 2017 12:33:10 -0800
-Message-ID: <20171228203345.2702-3-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 04/37] qla2xxx: Add boundary checks for exchanges to be offloaded
+Date: Thu, 28 Dec 2017 12:33:12 -0800
+Message-ID: <20171228203345.2702-5-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0051.outbound.protection.outlook.com ([104.47.34.51]:37027
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0081.outbound.protection.outlook.com ([104.47.41.81]:16143
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754413AbdL1Ud5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:33:57 -0500
+        id S1751220AbdL1Udz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:33:55 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,342 +19,120 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Use IOCB patch to submit Control VP MBX command to reduce
-bottle-neck for mbx interface.
+Max boundary for exchange off load is 32k exchanges. If a system
+is unable to allocate large memory buffer to support this feature,
+then driver will reduce the number of exchanges down to a value
+system can support.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |  7 ++++
- drivers/scsi/qla2xxx/qla_init.c   |  1 +
- drivers/scsi/qla2xxx/qla_inline.h |  1 +
- drivers/scsi/qla2xxx/qla_iocb.c   | 23 ++++++++++++
- drivers/scsi/qla2xxx/qla_isr.c    | 35 ++++++++++++++++++
- drivers/scsi/qla2xxx/qla_mbx.c    | 77 ---------------------------------------
- drivers/scsi/qla2xxx/qla_mid.c    | 76 ++++++++++++++++++++++++++++++++++++++
- 7 files changed, 143 insertions(+), 77 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |  3 +++
+ drivers/scsi/qla2xxx/qla_os.c  | 39 ++++++++++++++++++++++++++++++---------
+ 2 files changed, 33 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 93ff92e2363f..969a7dee9f72 100644
+index 969a7dee9f72..043dd51a2760 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -472,6 +472,10 @@ struct srb_iocb {
- 			uint32_t timeout_sec;
- 			struct	list_head   entry;
- 		} nvme;
-+		struct {
-+			u16 cmd;
-+			u16 vp_index;
-+		} ctrlvp;
- 	} u;
+@@ -288,6 +288,8 @@ struct name_list_extended {
+ #define ATIO_ENTRY_CNT_24XX		4096	/* Number of ATIO entries. */
+ #define RESPONSE_ENTRY_CNT_FX00		256     /* Number of response entries.*/
+ #define FW_DEF_EXCHANGES_CNT 2048
++#define FW_MAX_EXCHANGES_CNT (32 * 1024)
++#define REDUCE_EXCHANGES_CNT  (8 * 1024)
  
- 	struct timer_list timer;
-@@ -500,6 +504,7 @@ struct srb_iocb {
- #define SRB_NVME_CMD	19
- #define SRB_NVME_LS	20
- #define SRB_PRLI_CMD	21
-+#define SRB_CTRL_VP	22
+ struct req_que;
+ struct qla_tgt_sess;
+@@ -3506,6 +3508,7 @@ struct qla_hw_data {
+ 		uint32_t	using_lr_setting:1;
+ 	} flags;
  
- enum {
- 	TYPE_SRB,
-@@ -526,6 +531,8 @@ typedef struct srb {
- 	struct list_head elem;
- 	u32 gen1;	/* scratch */
- 	u32 gen2;	/* scratch */
-+	int rc;
-+	struct completion comp;
- 	union {
- 		struct srb_iocb iocb_cmd;
- 		struct bsg_job *bsg_job;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index b650ebec1b9d..5fef2bf55a9f 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -135,6 +135,7 @@ qla2x00_async_iocb_timeout(void *data)
- 	case SRB_NACK_PLOGI:
- 	case SRB_NACK_PRLI:
- 	case SRB_NACK_LOGO:
-+	case SRB_CTRL_VP:
- 		sp->done(sp, QLA_FUNCTION_TIMEOUT);
- 		break;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 17d2c20f1f75..4d32426393c7 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -273,6 +273,7 @@ qla2x00_init_timer(srb_t *sp, unsigned long tmo)
- 	sp->u.iocb_cmd.timer.expires = jiffies + tmo * HZ;
- 	add_timer(&sp->u.iocb_cmd.timer);
- 	sp->free = qla2x00_sp_free;
-+	init_completion(&sp->comp);
- 	if (IS_QLAFX00(sp->vha->hw) && (sp->type == SRB_FXIOCB_DCMD))
- 		init_completion(&sp->u.iocb_cmd.u.fxiocb.fxiocb_comp);
- 	if (sp->type == SRB_ELS_DCMD)
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 8ea59586f4f1..2d523b71cc1f 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -3368,6 +3368,26 @@ qla_nvme_ls(srb_t *sp, struct pt_ls4_request *cmd_pkt)
- 	return rval;
- }
++	uint16_t max_exchg;
+ 	uint16_t long_range_distance;	/* 32G & above */
+ #define LR_DISTANCE_5K  1
+ #define LR_DISTANCE_10K 0
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 987bade1c606..029b95b2bd8a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2789,6 +2789,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ha->init_cb_size = sizeof(init_cb_t);
+ 	ha->link_data_rate = PORT_SPEED_UNKNOWN;
+ 	ha->optrom_size = OPTROM_SIZE_2300;
++	ha->max_exchg = FW_MAX_EXCHANGES_CNT;
  
-+static void
-+qla25xx_ctrlvp_iocb(srb_t *sp, struct vp_ctrl_entry_24xx *vce)
-+{
-+	int map, pos;
+ 	/* Assign ISP specific operations. */
+ 	if (IS_QLA2100(ha)) {
+@@ -4230,6 +4231,9 @@ qla2x00_number_of_exch(scsi_qla_host_t *vha, u32 *ret_cnt, u16 max_cnt)
+ 	u32 temp;
+ 	*ret_cnt = FW_DEF_EXCHANGES_CNT;
+ 
++	if (max_cnt > vha->hw->max_exchg)
++		max_cnt = vha->hw->max_exchg;
 +
-+	vce->entry_type = VP_CTRL_IOCB_TYPE;
-+	vce->handle = sp->handle;
-+	vce->entry_count = 1;
-+	vce->command = cpu_to_le16(sp->u.iocb_cmd.u.ctrlvp.cmd);
-+	vce->vp_count = cpu_to_le16(1);
-+
-+	/*
-+	 * index map in firmware starts with 1; decrement index
-+	 * this is ok as we never use index 0
-+	 */
-+	map = (sp->u.iocb_cmd.u.ctrlvp.vp_index - 1) / 8;
-+	pos = (sp->u.iocb_cmd.u.ctrlvp.vp_index - 1) & 7;
-+	vce->vp_idx_map[map] |= 1 << pos;
-+}
-+
- int
- qla2x00_start_sp(srb_t *sp)
+ 	if (qla_ini_mode_enabled(vha)) {
+ 		if (ql2xiniexchg > max_cnt)
+ 			ql2xiniexchg = max_cnt;
+@@ -4259,8 +4263,8 @@ int
+ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
  {
-@@ -3446,6 +3466,9 @@ qla2x00_start_sp(srb_t *sp)
- 	case SRB_NACK_LOGO:
- 		qla2x00_send_notify_ack_iocb(sp, pkt);
- 		break;
-+	case SRB_CTRL_VP:
-+		qla25xx_ctrlvp_iocb(sp, pkt);
-+		break;
- 	default:
- 		break;
+ 	int rval;
+-	u16 size, max_cnt;
+-	u32 temp;
++	u16	size, max_cnt;
++	u32 actual_cnt, totsz;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	if (!ha->flags.exchoffld_enabled)
+@@ -4277,16 +4281,19 @@ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
+ 		return rval;
  	}
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a55bfaa790a3..a265c2d8c9cc 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1937,6 +1937,37 @@ qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 	sp->done(sp, ret);
- }
  
-+static void qla_ctrlvp_completed(scsi_qla_host_t *vha, struct req_que *req,
-+    struct vp_ctrl_entry_24xx *vce)
-+{
-+	const char func[] = "CTRLVP-IOCB";
-+	srb_t *sp;
-+	int rval = QLA_SUCCESS;
+-	qla2x00_number_of_exch(vha, &temp, max_cnt);
+-	temp *= size;
++	qla2x00_number_of_exch(vha, &actual_cnt, max_cnt);
++	ql_log(ql_log_info, vha, 0xd014,
++	    "Actual exchange offload count: %d.\n", actual_cnt);
 +
-+	sp = qla2x00_get_sp_from_handle(vha, func, req, vce);
-+	if (!sp)
-+		return;
-+
-+	if (vce->entry_status != 0) {
-+		ql_dbg(ql_dbg_vport, vha, 0x10c4,
-+		    "%s: Failed to complete IOCB -- error status (%x)\n",
-+		    sp->name, vce->entry_status);
-+		rval = QLA_FUNCTION_FAILED;
-+	} else if (vce->comp_status != cpu_to_le16(CS_COMPLETE)) {
-+		ql_dbg(ql_dbg_vport, vha, 0x10c5,
-+		    "%s: Failed to complete IOCB -- completion status (%x) vpidx %x\n",
-+		    sp->name, le16_to_cpu(vce->comp_status),
-+		    le16_to_cpu(vce->vp_idx_failed));
-+		rval = QLA_FUNCTION_FAILED;
-+	} else {
-+		ql_dbg(ql_dbg_vport, vha, 0x10c6,
-+		    "Done %s.\n", __func__);
-+	}
-+
-+	sp->rc = rval;
-+	sp->done(sp, rval);
-+}
-+
- /**
-  * qla2x00_process_response_queue() - Process response queue entries.
-  * @ha: SCSI driver HA context
-@@ -3001,6 +3032,10 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 			qla24xx_mbx_iocb_entry(vha, rsp->req,
- 			    (struct mbx_24xx_entry *)pkt);
- 			break;
-+		case VP_CTRL_IOCB_TYPE:
-+			qla_ctrlvp_completed(vha, rsp->req,
-+			    (struct vp_ctrl_entry_24xx *)pkt);
-+			break;
- 		default:
- 			/* Type Not Supported. */
- 			ql_dbg(ql_dbg_async, vha, 0x5042,
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index e2b5fa47bb57..dea2e66be0b1 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3945,83 +3945,6 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
- }
++	totsz = actual_cnt * size;
  
- /*
-- * qla24xx_control_vp
-- *	Enable a virtual port for given host
-- *
-- * Input:
-- *	ha = adapter block pointer.
-- *	vhba = virtual adapter (unused)
-- *	index = index number for enabled VP
-- *
-- * Returns:
-- *	qla2xxx local function return status code.
-- *
-- * Context:
-- *	Kernel context.
-- */
--int
--qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
--{
--	int		rval;
--	int		map, pos;
--	struct vp_ctrl_entry_24xx   *vce;
--	dma_addr_t	vce_dma;
--	struct qla_hw_data *ha = vha->hw;
--	int	vp_index = vha->vp_idx;
--	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
--
--	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10c1,
--	    "Entered %s enabling index %d.\n", __func__, vp_index);
--
--	if (vp_index == 0 || vp_index >= ha->max_npiv_vports)
--		return QLA_PARAMETER_ERROR;
--
--	vce = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &vce_dma);
--	if (!vce) {
--		ql_log(ql_log_warn, vha, 0x10c2,
--		    "Failed to allocate VP control IOCB.\n");
--		return QLA_MEMORY_ALLOC_FAILED;
--	}
--
--	vce->entry_type = VP_CTRL_IOCB_TYPE;
--	vce->entry_count = 1;
--	vce->command = cpu_to_le16(cmd);
--	vce->vp_count = cpu_to_le16(1);
--
--	/* index map in firmware starts with 1; decrement index
--	 * this is ok as we never use index 0
--	 */
--	map = (vp_index - 1) / 8;
--	pos = (vp_index - 1) & 7;
--	mutex_lock(&ha->vport_lock);
--	vce->vp_idx_map[map] |= 1 << pos;
--	mutex_unlock(&ha->vport_lock);
--
--	rval = qla2x00_issue_iocb(base_vha, vce, vce_dma, 0);
--	if (rval != QLA_SUCCESS) {
--		ql_dbg(ql_dbg_mbx, vha, 0x10c3,
--		    "Failed to issue VP control IOCB (%x).\n", rval);
--	} else if (vce->entry_status != 0) {
--		ql_dbg(ql_dbg_mbx, vha, 0x10c4,
--		    "Failed to complete IOCB -- error status (%x).\n",
--		    vce->entry_status);
--		rval = QLA_FUNCTION_FAILED;
--	} else if (vce->comp_status != cpu_to_le16(CS_COMPLETE)) {
--		ql_dbg(ql_dbg_mbx, vha, 0x10c5,
--		    "Failed to complete IOCB -- completion status (%x).\n",
--		    le16_to_cpu(vce->comp_status));
--		rval = QLA_FUNCTION_FAILED;
--	} else {
--		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10c6,
--		    "Done %s.\n", __func__);
--	}
--
--	dma_pool_free(ha->s_dma_pool, vce, vce_dma);
--
--	return rval;
--}
--
--/*
-  * qla2x00_send_change_request
-  *	Receive or disable RSCN request from fabric controller
-  *
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 522d585a1a08..e6f3d2d62c61 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -894,3 +894,79 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
- failed:
- 	return 0;
- }
+-	if (temp != ha->exchoffld_size) {
++	if (totsz != ha->exchoffld_size) {
+ 		qla2x00_free_exchoffld_buffer(ha);
+-		ha->exchoffld_size = temp;
++		ha->exchoffld_size = totsz;
+ 
+ 		ql_log(ql_log_info, vha, 0xd016,
+-		    "Exchange offload: max_count=%d, buffers=0x%x, total=%d.\n",
+-		    max_cnt, size, temp);
++		    "Exchange offload: max_count=%d, actual count=%d entry sz=0x%x, total sz=0x%x\n",
++		    max_cnt, actual_cnt, size, totsz);
+ 
+ 		ql_log(ql_log_info, vha, 0xd017,
+ 		    "Exchange Buffers requested size = 0x%x\n",
+@@ -4297,7 +4304,21 @@ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
+ 			ha->exchoffld_size, &ha->exchoffld_buf_dma, GFP_KERNEL);
+ 		if (!ha->exchoffld_buf) {
+ 			ql_log_pci(ql_log_fatal, ha->pdev, 0xd013,
+-			"Failed to allocate memory for exchoffld_buf_dma.\n");
++			"Failed to allocate memory for Exchange Offload.\n");
 +
-+static void qla_ctrlvp_sp_done(void *s, int res)
-+{
-+	struct srb *sp = s;
++			if (ha->max_exchg >
++			    (FW_DEF_EXCHANGES_CNT + REDUCE_EXCHANGES_CNT)) {
++				ha->max_exchg -= REDUCE_EXCHANGES_CNT;
++			} else if (ha->max_exchg >
++			    (FW_DEF_EXCHANGES_CNT + 512)) {
++				ha->max_exchg -= 512;
++			} else {
++				ha->flags.exchoffld_enabled = 0;
++				ql_log_pci(ql_log_fatal, ha->pdev, 0xd013,
++				    "Disabling Exchange offload due to lack of memory\n");
++			}
++			ha->exchoffld_size = 0;
 +
-+	complete(&sp->comp);
-+	/* don't free sp here. Let the caller do the free */
-+}
-+
-+/**
-+ * qla24xx_control_vp() - Enable a virtual port for given host
-+ * @vha:	adapter block pointer
-+ * @cmd:	command type to be sent for enable virtual port
-+ *
-+ * Return:	qla2xxx local function return status code.
-+ */
-+int qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
-+{
-+	int rval = QLA_MEMORY_ALLOC_FAILED;
-+	struct qla_hw_data *ha = vha->hw;
-+	int	vp_index = vha->vp_idx;
-+	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
-+	srb_t *sp;
-+
-+	ql_dbg(ql_dbg_vport, vha, 0x10c1,
-+	    "Entered %s cmd %x index %d.\n", __func__, cmd, vp_index);
-+
-+	if (vp_index == 0 || vp_index >= ha->max_npiv_vports)
-+		return QLA_PARAMETER_ERROR;
-+
-+	sp = qla2x00_get_sp(base_vha, NULL, GFP_KERNEL);
-+	if (!sp)
-+		goto done;
-+
-+	sp->type = SRB_CTRL_VP;
-+	sp->name = "ctrl_vp";
-+	sp->done = qla_ctrlvp_sp_done;
-+	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
-+	sp->u.iocb_cmd.timeout = qla2x00_async_iocb_timeout;
-+	sp->u.iocb_cmd.u.ctrlvp.cmd = cmd;
-+	sp->u.iocb_cmd.u.ctrlvp.vp_index = vp_index;
-+
-+	rval = qla2x00_start_sp(sp);
-+	if (rval != QLA_SUCCESS) {
-+		ql_dbg(ql_dbg_async, vha, 0xffff,
-+		    "%s: %s Failed submission. %x.\n",
-+		    __func__, sp->name, rval);
-+		goto done_free_sp;
-+	}
-+
-+	ql_dbg(ql_dbg_vport, vha, 0x113f, "%s hndl %x submitted\n",
-+	    sp->name, sp->handle);
-+
-+	wait_for_completion(&sp->comp);
-+	rval = sp->rc;
-+	switch (rval) {
-+	case QLA_FUNCTION_TIMEOUT:
-+		ql_dbg(ql_dbg_vport, vha, 0xffff, "%s: %s Timeout. %x.\n",
-+		    __func__, sp->name, rval);
-+		break;
-+	case QLA_SUCCESS:
-+		ql_dbg(ql_dbg_vport, vha, 0xffff, "%s: %s done.\n",
-+		    __func__, sp->name);
-+		goto done_free_sp;
-+	default:
-+		ql_dbg(ql_dbg_vport, vha, 0xffff, "%s: %s Failed. %x.\n",
-+		    __func__, sp->name, rval);
-+		goto done_free_sp;
-+	}
-+done:
-+	return rval;
-+
-+done_free_sp:
-+	sp->free(sp);
-+	return rval;
-+}
+ 			return -ENOMEM;
+ 		}
+ 	}
 -- 
 2.12.0
