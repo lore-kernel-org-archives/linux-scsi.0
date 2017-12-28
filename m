@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 33/37] qla2xxx: Prevent relogin trigger from sending too many commands
-Date: Thu, 28 Dec 2017 12:33:41 -0800
-Message-ID: <20171228203345.2702-34-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 14/37] qla2xxx: Allow target mode to accept PRLI in dual mode
+Date: Thu, 28 Dec 2017 12:33:22 -0800
+Message-ID: <20171228203345.2702-15-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0050.outbound.protection.outlook.com ([104.47.40.50]:63437
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0054.outbound.protection.outlook.com ([104.47.42.54]:8768
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754749AbdL1Uef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:35 -0500
+        id S1751220AbdL1UeN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:13 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,164 +19,91 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-This patch adds check for pending work event before queueing
-relogin work to prevent redundant work to be active at the
-same time.
+For Dual Mode, Initiator side of the driver finish login,
+target side receive PRLI, but driver terminates PRLI.
+This patch allows target side to go ahead and accept PRLI.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |  1 +
- drivers/scsi/qla2xxx/qla_gs.c   |  6 ++++--
- drivers/scsi/qla2xxx/qla_init.c | 14 +++++++++-----
- drivers/scsi/qla2xxx/qla_os.c   |  4 +++-
- 4 files changed, 17 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c   |  5 +++++
+ drivers/scsi/qla2xxx/qla_target.c | 16 +++++++++++++---
+ 2 files changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 99d2afa520c2..ac2f340bc1c6 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2454,6 +2454,7 @@ static const char * const port_state_str[] = {
- #define FCF_FCP2_DEVICE		BIT_2
- #define FCF_ASYNC_SENT		BIT_3
- #define FCF_CONF_COMP_SUPPORTED BIT_4
-+#define FCF_ASYNC_ACTIVE	BIT_5
- 
- /* No loop ID flag. */
- #define FC_NO_LOOP_ID		0x1000
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index abc31b983b93..546011b1a765 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3088,7 +3088,7 @@ static void qla2x00_async_gidpn_sp_done(void *s, int res)
- 	u8 *id = fcport->ct_desc.ct_sns->p.rsp.rsp.gid_pn.port_id;
- 	struct event_arg ea;
- 
--	fcport->flags &= ~FCF_ASYNC_SENT;
-+	fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 
- 	memset(&ea, 0, sizeof(ea));
- 	ea.fcport = fcport;
-@@ -3197,6 +3197,7 @@ int qla24xx_post_gidpn_work(struct scsi_qla_host *vha, fc_port_t *fcport)
- 		return QLA_FUNCTION_FAILED;
- 
- 	e->u.fcport.fcport = fcport;
-+	fcport->flags |= FCF_ASYNC_ACTIVE;
- 	return qla2x00_post_work(vha, e);
- }
- 
-@@ -3209,6 +3210,7 @@ int qla24xx_post_gpsc_work(struct scsi_qla_host *vha, fc_port_t *fcport)
- 		return QLA_FUNCTION_FAILED;
- 
- 	e->u.fcport.fcport = fcport;
-+	fcport->flags |= FCF_ASYNC_ACTIVE;
- 	return qla2x00_post_work(vha, e);
- }
- 
-@@ -3256,7 +3258,7 @@ static void qla24xx_async_gpsc_sp_done(void *s, int res)
- 	    "Async done-%s res %x, WWPN %8phC \n",
- 	    sp->name, res, fcport->port_name);
- 
--	fcport->flags &= ~FCF_ASYNC_SENT;
-+	fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 
- 	if (res == (DID_ERROR << 16)) {
- 		/* entry status error */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 93febc177aa7..956f51e78e5c 100644
+index 4e6d3eb4caa4..34ee8c755655 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -109,7 +109,7 @@ qla2x00_async_iocb_timeout(void *data)
- 		    "Async-%s timeout - hdl=%x portid=%06x %8phC.\n",
- 		    sp->name, sp->handle, fcport->d_id.b24, fcport->port_name);
+@@ -1537,6 +1537,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 	port_id_t cid;	/* conflict Nport id */
+ 	u16 lid;
+ 	struct fc_port *conflict_fcport;
++	unsigned long flags;
  
--		fcport->flags &= ~FCF_ASYNC_SENT;
-+		fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 	} else {
- 		pr_info("Async-%s timeout - hdl=%x.\n",
- 		    sp->name, sp->handle);
-@@ -154,7 +154,8 @@ qla2x00_async_login_sp_done(void *ptr, int res)
- 	ql_dbg(ql_dbg_disc, vha, 0x20dd,
- 	    "%s %8phC res %d \n", __func__, sp->fcport->port_name, res);
+ 	switch (ea->data[0]) {
+ 	case MBS_COMMAND_COMPLETE:
+@@ -1557,10 +1558,14 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 			    ea->fcport->loop_id, ea->fcport->d_id.b24);
  
--	sp->fcport->flags &= ~FCF_ASYNC_SENT;
-+	sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
+ 			set_bit(ea->fcport->loop_id, vha->hw->loop_id_map);
++			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+ 			ea->fcport->loop_id = FC_NO_LOOP_ID;
+ 			ea->fcport->chip_reset = vha->hw->base_qpair->chip_reset;
+ 			ea->fcport->logout_on_delete = 1;
+ 			ea->fcport->send_els_logo = 0;
++			ea->fcport->fw_login_state = DSC_LS_PRLI_COMP;
++			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
 +
- 	if (!test_bit(UNLOADING, &vha->dpc_flags)) {
- 		memset(&ea, 0, sizeof(ea));
- 		ea.event = FCME_PLOGI_DONE;
-@@ -232,7 +233,7 @@ qla2x00_async_logout_sp_done(void *ptr, int res)
- 	srb_t *sp = ptr;
- 	struct srb_iocb *lio = &sp->u.iocb_cmd;
+ 			qla24xx_post_gpdb_work(vha, ea->fcport, 0);
+ 		}
+ 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index db6fd3b747ed..52a412132abb 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -4682,7 +4682,7 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 	uint16_t wd3_lo;
+ 	int res = 0;
+ 	struct qlt_plogi_ack_t *pla;
+-	unsigned long flags;
++	unsigned long flags = 0;
  
--	sp->fcport->flags &= ~FCF_ASYNC_SENT;
-+	sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 	if (!test_bit(UNLOADING, &sp->vha->dpc_flags))
- 		qla2x00_post_async_logout_done_work(sp->vha, sp->fcport,
- 		    lio->u.logio.data);
-@@ -665,7 +666,7 @@ qla24xx_async_gnl_sp_done(void *s, int res)
+ 	wwn = wwn_to_u64(iocb->u.isp24.port_name);
  
- 	list_for_each_entry_safe(fcport, tf, &h, gnl_entry) {
- 		list_del_init(&fcport->gnl_entry);
--		fcport->flags &= ~FCF_ASYNC_SENT;
-+		fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 		ea.fcport = fcport;
+@@ -4818,8 +4818,14 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 		}
  
- 		qla2x00_fcport_event_handler(vha, &ea);
-@@ -788,6 +789,7 @@ int qla24xx_post_gnl_work(struct scsi_qla_host *vha, fc_port_t *fcport)
- 		return QLA_FUNCTION_FAILED;
+ 		if (sess != NULL) {
+-			if (sess->fw_login_state != DSC_LS_PLOGI_PEND &&
+-			    sess->fw_login_state != DSC_LS_PLOGI_COMP) {
++			spin_lock_irqsave(&tgt->ha->tgt.sess_lock, flags);
++			switch (sess->fw_login_state) {
++			case DSC_LS_PLOGI_COMP:
++			case DSC_LS_PRLI_COMP:
++				break;
++			default:
++				spin_unlock_irqrestore(&tgt->ha->tgt.sess_lock,
++				    flags);
+ 				/*
+ 				 * Impatient initiator sent PRLI before last
+ 				 * PLOGI could finish. Will force him to re-try,
+@@ -4830,6 +4836,8 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 				    sess);
+ 				qlt_send_term_imm_notif(vha, iocb, 1);
+ 				res = 0;
++				spin_lock_irqsave(&tgt->ha->tgt.sess_lock,
++				    flags);
+ 				break;
+ 			}
  
- 	e->u.fcport.fcport = fcport;
-+	fcport->flags |= FCF_ASYNC_ACTIVE;
- 	return qla2x00_post_work(vha, e);
- }
+@@ -4853,6 +4861,8 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 				sess->port_type = FCT_INITIATOR;
+ 			else
+ 				sess->port_type = FCT_TARGET;
++
++			spin_unlock_irqrestore(&tgt->ha->tgt.sess_lock, flags);
+ 		}
+ 		res = 1; /* send notify ack */
  
-@@ -805,7 +807,7 @@ void qla24xx_async_gpdb_sp_done(void *s, int res)
- 	    "Async done-%s res %x, WWPN %8phC mb[1]=%x mb[2]=%x \n",
- 	    sp->name, res, fcport->port_name, mb[1], mb[2]);
- 
--	fcport->flags &= ~FCF_ASYNC_SENT;
-+	fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 
- 	memset(&ea, 0, sizeof(ea));
- 	ea.event = FCME_GPDB_DONE;
-@@ -927,6 +929,7 @@ int qla24xx_post_gpdb_work(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
- 
- 	e->u.fcport.fcport = fcport;
- 	e->u.fcport.opt = opt;
-+	fcport->flags |= FCF_ASYNC_ACTIVE;
- 	return qla2x00_post_work(vha, e);
- }
- 
-@@ -1516,6 +1519,7 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
- 
- done_free_sp:
- 	sp->free(sp);
-+	sp->fcport->flags &= ~FCF_ASYNC_SENT;
- done:
- 	return rval;
- }
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 605100e3c6c6..a64f67a562f0 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4697,6 +4697,7 @@ int qla2x00_post_async_##name##_work(		\
- 		e->u.logio.data[0] = data[0];	\
- 		e->u.logio.data[1] = data[1];	\
- 	}					\
-+	fcport->flags |= FCF_ASYNC_ACTIVE;	\
- 	return qla2x00_post_work(vha, e);	\
- }
- 
-@@ -5076,7 +5077,8 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 		 * to it if we haven't run out of retries.
- 		 */
- 		if (atomic_read(&fcport->state) != FCS_ONLINE &&
--		    fcport->login_retry && !(fcport->flags & FCF_ASYNC_SENT)) {
-+		    fcport->login_retry &&
-+		    !(fcport->flags & (FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE))) {
- 			if (vha->hw->current_topology != ISP_CFG_NL) {
- 				ql_dbg(ql_dbg_disc, fcport->vha, 0x2108,
- 				    "%s %8phC DS %d LS %d\n", __func__,
 -- 
 2.12.0
