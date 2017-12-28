@@ -1,80 +1,360 @@
-From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [PATCH 2/2 v4] scsi: ufs: introduce sysfs entries exposing UFS
- health info
-Date: Thu, 28 Dec 2017 12:10:55 -0800
-Message-ID: <20171228201055.GA49748@jaegeuk-macbookpro.roam.corp.google.com>
-References: <20171220191631.50329-1-jaegeuk@kernel.org>
- <20171220191631.50329-2-jaegeuk@kernel.org>
- <20171220221325.GA56741@jaegeuk-macbookpro.roam.corp.google.com>
- <20171221075935.GB9645@kroah.com>
- <DM5PR04MB10856CCEE145B2B8AADDF668FC070@DM5PR04MB1085.namprd04.prod.outlook.com>
- <20171227131052.GA13384@kroah.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH v2 02/37] qla2xxx: Use IOCB path to submit Control VP MBX command
+Date: Thu, 28 Dec 2017 12:33:10 -0800
+Message-ID: <20171228203345.2702-3-himanshu.madhani@cavium.com>
+References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171227131052.GA13384@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Avri Altman <Avri.Altman@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jaegeuk Kim <jaegeuk@google.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0051.outbound.protection.outlook.com ([104.47.34.51]:37027
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754413AbdL1Ud5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:33:57 -0500
+In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-On 12/27, Greg Kroah-Hartman wrote:
-> On Wed, Dec 27, 2017 at 09:00:10AM +0000, Avri Altman wrote:
-> > 
-> > 
-> > > -----Original Message-----
-> > > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > > owner@vger.kernel.org] On Behalf Of Greg Kroah-Hartman
-> > > Sent: Thursday, December 21, 2017 10:00 AM
-> > > To: Jaegeuk Kim <jaegeuk@kernel.org>
-> > > Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Jaegeuk Kim
-> > > <jaegeuk@google.com>
-> > > Subject: Re: [PATCH 2/2 v4] scsi: ufs: introduce sysfs entries exposing UFS
-> > > health info
-> > > 
-> > > On Wed, Dec 20, 2017 at 02:13:25PM -0800, Jaegeuk Kim wrote:
-> > > > This patch adds a new sysfs group, namely health, via:
-> > > >
-> > > >    /sys/devices/soc/X.ufshc/health/
-> > As device health is just one piece of information out of the device management,
-> > I think that you should address this in a more comprehensive way,
-> > And set hooks for much more device info:
-> > Allow access to device descriptors, attributes and flags.
-> 
-> Add on patches are easy to create for this if people really want and
-> need it :)
-> 
-> > The attributes and flags should be placed in separate subfolders
-> 
-> Why?  What is that going to help with?
-> 
-> > The LUN specific descriptors and attributes should be placed in a luns
-> > subfolder, and then per descriptor / attribute type
-> 
-> Again, why?
-> 
-> > You might also would like to consider differentiating read and write -
-> > to control those type of accesses as well.
-> 
-> What do you mean by this exactly?
-> 
-> As it is, this is a step forward in getting attributes that people are
-> asking for and already using, into the kernel tree.  Please don't object
-> because not all attributes that are possible are being added here, it
-> should be trivial to add more as needed, right?
-> 
-> I'm really tired of seeing all of the various out-of-tree forks of this
-> driver, it's about time that someone works to get those features merged,
-> right?
+From: Quinn Tran <quinn.tran@cavium.com>
 
-Indeed, it seems someone has already done similar work before. Let me drop
-my patches and dive into that, although I have to clean up all the mess once
-again. :(
+Use IOCB patch to submit Control VP MBX command to reduce
+bottle-neck for mbx interface.
 
-Thanks,
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_def.h    |  7 ++++
+ drivers/scsi/qla2xxx/qla_init.c   |  1 +
+ drivers/scsi/qla2xxx/qla_inline.h |  1 +
+ drivers/scsi/qla2xxx/qla_iocb.c   | 23 ++++++++++++
+ drivers/scsi/qla2xxx/qla_isr.c    | 35 ++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_mbx.c    | 77 ---------------------------------------
+ drivers/scsi/qla2xxx/qla_mid.c    | 76 ++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 143 insertions(+), 77 deletions(-)
 
-> 
-> thanks,
-> 
-> greg k-h
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 93ff92e2363f..969a7dee9f72 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -472,6 +472,10 @@ struct srb_iocb {
+ 			uint32_t timeout_sec;
+ 			struct	list_head   entry;
+ 		} nvme;
++		struct {
++			u16 cmd;
++			u16 vp_index;
++		} ctrlvp;
+ 	} u;
+ 
+ 	struct timer_list timer;
+@@ -500,6 +504,7 @@ struct srb_iocb {
+ #define SRB_NVME_CMD	19
+ #define SRB_NVME_LS	20
+ #define SRB_PRLI_CMD	21
++#define SRB_CTRL_VP	22
+ 
+ enum {
+ 	TYPE_SRB,
+@@ -526,6 +531,8 @@ typedef struct srb {
+ 	struct list_head elem;
+ 	u32 gen1;	/* scratch */
+ 	u32 gen2;	/* scratch */
++	int rc;
++	struct completion comp;
+ 	union {
+ 		struct srb_iocb iocb_cmd;
+ 		struct bsg_job *bsg_job;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index b650ebec1b9d..5fef2bf55a9f 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -135,6 +135,7 @@ qla2x00_async_iocb_timeout(void *data)
+ 	case SRB_NACK_PLOGI:
+ 	case SRB_NACK_PRLI:
+ 	case SRB_NACK_LOGO:
++	case SRB_CTRL_VP:
+ 		sp->done(sp, QLA_FUNCTION_TIMEOUT);
+ 		break;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index 17d2c20f1f75..4d32426393c7 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -273,6 +273,7 @@ qla2x00_init_timer(srb_t *sp, unsigned long tmo)
+ 	sp->u.iocb_cmd.timer.expires = jiffies + tmo * HZ;
+ 	add_timer(&sp->u.iocb_cmd.timer);
+ 	sp->free = qla2x00_sp_free;
++	init_completion(&sp->comp);
+ 	if (IS_QLAFX00(sp->vha->hw) && (sp->type == SRB_FXIOCB_DCMD))
+ 		init_completion(&sp->u.iocb_cmd.u.fxiocb.fxiocb_comp);
+ 	if (sp->type == SRB_ELS_DCMD)
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 8ea59586f4f1..2d523b71cc1f 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -3368,6 +3368,26 @@ qla_nvme_ls(srb_t *sp, struct pt_ls4_request *cmd_pkt)
+ 	return rval;
+ }
+ 
++static void
++qla25xx_ctrlvp_iocb(srb_t *sp, struct vp_ctrl_entry_24xx *vce)
++{
++	int map, pos;
++
++	vce->entry_type = VP_CTRL_IOCB_TYPE;
++	vce->handle = sp->handle;
++	vce->entry_count = 1;
++	vce->command = cpu_to_le16(sp->u.iocb_cmd.u.ctrlvp.cmd);
++	vce->vp_count = cpu_to_le16(1);
++
++	/*
++	 * index map in firmware starts with 1; decrement index
++	 * this is ok as we never use index 0
++	 */
++	map = (sp->u.iocb_cmd.u.ctrlvp.vp_index - 1) / 8;
++	pos = (sp->u.iocb_cmd.u.ctrlvp.vp_index - 1) & 7;
++	vce->vp_idx_map[map] |= 1 << pos;
++}
++
+ int
+ qla2x00_start_sp(srb_t *sp)
+ {
+@@ -3446,6 +3466,9 @@ qla2x00_start_sp(srb_t *sp)
+ 	case SRB_NACK_LOGO:
+ 		qla2x00_send_notify_ack_iocb(sp, pkt);
+ 		break;
++	case SRB_CTRL_VP:
++		qla25xx_ctrlvp_iocb(sp, pkt);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index a55bfaa790a3..a265c2d8c9cc 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1937,6 +1937,37 @@ qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
+ 	sp->done(sp, ret);
+ }
+ 
++static void qla_ctrlvp_completed(scsi_qla_host_t *vha, struct req_que *req,
++    struct vp_ctrl_entry_24xx *vce)
++{
++	const char func[] = "CTRLVP-IOCB";
++	srb_t *sp;
++	int rval = QLA_SUCCESS;
++
++	sp = qla2x00_get_sp_from_handle(vha, func, req, vce);
++	if (!sp)
++		return;
++
++	if (vce->entry_status != 0) {
++		ql_dbg(ql_dbg_vport, vha, 0x10c4,
++		    "%s: Failed to complete IOCB -- error status (%x)\n",
++		    sp->name, vce->entry_status);
++		rval = QLA_FUNCTION_FAILED;
++	} else if (vce->comp_status != cpu_to_le16(CS_COMPLETE)) {
++		ql_dbg(ql_dbg_vport, vha, 0x10c5,
++		    "%s: Failed to complete IOCB -- completion status (%x) vpidx %x\n",
++		    sp->name, le16_to_cpu(vce->comp_status),
++		    le16_to_cpu(vce->vp_idx_failed));
++		rval = QLA_FUNCTION_FAILED;
++	} else {
++		ql_dbg(ql_dbg_vport, vha, 0x10c6,
++		    "Done %s.\n", __func__);
++	}
++
++	sp->rc = rval;
++	sp->done(sp, rval);
++}
++
+ /**
+  * qla2x00_process_response_queue() - Process response queue entries.
+  * @ha: SCSI driver HA context
+@@ -3001,6 +3032,10 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 			qla24xx_mbx_iocb_entry(vha, rsp->req,
+ 			    (struct mbx_24xx_entry *)pkt);
+ 			break;
++		case VP_CTRL_IOCB_TYPE:
++			qla_ctrlvp_completed(vha, rsp->req,
++			    (struct vp_ctrl_entry_24xx *)pkt);
++			break;
+ 		default:
+ 			/* Type Not Supported. */
+ 			ql_dbg(ql_dbg_async, vha, 0x5042,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index e2b5fa47bb57..dea2e66be0b1 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3945,83 +3945,6 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
+ }
+ 
+ /*
+- * qla24xx_control_vp
+- *	Enable a virtual port for given host
+- *
+- * Input:
+- *	ha = adapter block pointer.
+- *	vhba = virtual adapter (unused)
+- *	index = index number for enabled VP
+- *
+- * Returns:
+- *	qla2xxx local function return status code.
+- *
+- * Context:
+- *	Kernel context.
+- */
+-int
+-qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
+-{
+-	int		rval;
+-	int		map, pos;
+-	struct vp_ctrl_entry_24xx   *vce;
+-	dma_addr_t	vce_dma;
+-	struct qla_hw_data *ha = vha->hw;
+-	int	vp_index = vha->vp_idx;
+-	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+-
+-	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10c1,
+-	    "Entered %s enabling index %d.\n", __func__, vp_index);
+-
+-	if (vp_index == 0 || vp_index >= ha->max_npiv_vports)
+-		return QLA_PARAMETER_ERROR;
+-
+-	vce = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &vce_dma);
+-	if (!vce) {
+-		ql_log(ql_log_warn, vha, 0x10c2,
+-		    "Failed to allocate VP control IOCB.\n");
+-		return QLA_MEMORY_ALLOC_FAILED;
+-	}
+-
+-	vce->entry_type = VP_CTRL_IOCB_TYPE;
+-	vce->entry_count = 1;
+-	vce->command = cpu_to_le16(cmd);
+-	vce->vp_count = cpu_to_le16(1);
+-
+-	/* index map in firmware starts with 1; decrement index
+-	 * this is ok as we never use index 0
+-	 */
+-	map = (vp_index - 1) / 8;
+-	pos = (vp_index - 1) & 7;
+-	mutex_lock(&ha->vport_lock);
+-	vce->vp_idx_map[map] |= 1 << pos;
+-	mutex_unlock(&ha->vport_lock);
+-
+-	rval = qla2x00_issue_iocb(base_vha, vce, vce_dma, 0);
+-	if (rval != QLA_SUCCESS) {
+-		ql_dbg(ql_dbg_mbx, vha, 0x10c3,
+-		    "Failed to issue VP control IOCB (%x).\n", rval);
+-	} else if (vce->entry_status != 0) {
+-		ql_dbg(ql_dbg_mbx, vha, 0x10c4,
+-		    "Failed to complete IOCB -- error status (%x).\n",
+-		    vce->entry_status);
+-		rval = QLA_FUNCTION_FAILED;
+-	} else if (vce->comp_status != cpu_to_le16(CS_COMPLETE)) {
+-		ql_dbg(ql_dbg_mbx, vha, 0x10c5,
+-		    "Failed to complete IOCB -- completion status (%x).\n",
+-		    le16_to_cpu(vce->comp_status));
+-		rval = QLA_FUNCTION_FAILED;
+-	} else {
+-		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10c6,
+-		    "Done %s.\n", __func__);
+-	}
+-
+-	dma_pool_free(ha->s_dma_pool, vce, vce_dma);
+-
+-	return rval;
+-}
+-
+-/*
+  * qla2x00_send_change_request
+  *	Receive or disable RSCN request from fabric controller
+  *
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 522d585a1a08..e6f3d2d62c61 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -894,3 +894,79 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
+ failed:
+ 	return 0;
+ }
++
++static void qla_ctrlvp_sp_done(void *s, int res)
++{
++	struct srb *sp = s;
++
++	complete(&sp->comp);
++	/* don't free sp here. Let the caller do the free */
++}
++
++/**
++ * qla24xx_control_vp() - Enable a virtual port for given host
++ * @vha:	adapter block pointer
++ * @cmd:	command type to be sent for enable virtual port
++ *
++ * Return:	qla2xxx local function return status code.
++ */
++int qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
++{
++	int rval = QLA_MEMORY_ALLOC_FAILED;
++	struct qla_hw_data *ha = vha->hw;
++	int	vp_index = vha->vp_idx;
++	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
++	srb_t *sp;
++
++	ql_dbg(ql_dbg_vport, vha, 0x10c1,
++	    "Entered %s cmd %x index %d.\n", __func__, cmd, vp_index);
++
++	if (vp_index == 0 || vp_index >= ha->max_npiv_vports)
++		return QLA_PARAMETER_ERROR;
++
++	sp = qla2x00_get_sp(base_vha, NULL, GFP_KERNEL);
++	if (!sp)
++		goto done;
++
++	sp->type = SRB_CTRL_VP;
++	sp->name = "ctrl_vp";
++	sp->done = qla_ctrlvp_sp_done;
++	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
++	sp->u.iocb_cmd.timeout = qla2x00_async_iocb_timeout;
++	sp->u.iocb_cmd.u.ctrlvp.cmd = cmd;
++	sp->u.iocb_cmd.u.ctrlvp.vp_index = vp_index;
++
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_async, vha, 0xffff,
++		    "%s: %s Failed submission. %x.\n",
++		    __func__, sp->name, rval);
++		goto done_free_sp;
++	}
++
++	ql_dbg(ql_dbg_vport, vha, 0x113f, "%s hndl %x submitted\n",
++	    sp->name, sp->handle);
++
++	wait_for_completion(&sp->comp);
++	rval = sp->rc;
++	switch (rval) {
++	case QLA_FUNCTION_TIMEOUT:
++		ql_dbg(ql_dbg_vport, vha, 0xffff, "%s: %s Timeout. %x.\n",
++		    __func__, sp->name, rval);
++		break;
++	case QLA_SUCCESS:
++		ql_dbg(ql_dbg_vport, vha, 0xffff, "%s: %s done.\n",
++		    __func__, sp->name);
++		goto done_free_sp;
++	default:
++		ql_dbg(ql_dbg_vport, vha, 0xffff, "%s: %s Failed. %x.\n",
++		    __func__, sp->name, rval);
++		goto done_free_sp;
++	}
++done:
++	return rval;
++
++done_free_sp:
++	sp->free(sp);
++	return rval;
++}
+-- 
+2.12.0
