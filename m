@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 22/37] qla2xxx: Fix login state machine freeze
-Date: Thu, 28 Dec 2017 12:33:30 -0800
-Message-ID: <20171228203345.2702-23-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 24/37] qla2xxx: Remove session creation redundant code
+Date: Thu, 28 Dec 2017 12:33:32 -0800
+Message-ID: <20171228203345.2702-25-himanshu.madhani@cavium.com>
 References: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0043.outbound.protection.outlook.com ([104.47.41.43]:37760
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0042.outbound.protection.outlook.com ([104.47.37.42]:19020
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755281AbdL1UeP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Dec 2017 15:34:15 -0500
+        id S1754886AbdL1UeR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Dec 2017 15:34:17 -0500
 In-Reply-To: <20171228203345.2702-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,37 +19,183 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Relogin stop moving forward due to improper check of scan_state flag.
+Current code creates a session when a new port is
+discovered, and a PLOGI/PRLI is received. There is
+no need to create session when command has arrived.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 122 ++------------------------------------
+ 1 file changed, 5 insertions(+), 117 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 4f4d8b2b7b32..bb0669901e13 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1268,11 +1268,6 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
- {
- 	fc_port_t *fcport = ea->fcport;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 75474725fe59..a4783eb11711 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2018,15 +2018,10 @@ static void qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf012,
+ 		    "qla_target(%d): task abort for non-existant session\n",
+ 		    vha->vp_idx);
+-		rc = qlt_sched_sess_work(vha->vha_tgt.qla_tgt,
+-		    QLA_TGT_SESS_WORK_ABORT, abts, sizeof(*abts));
+-
+ 		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
  
--	if (fcport->scan_state != QLA_FCPORT_FOUND) {
--		fcport->login_retry++;
+-		if (rc != 0) {
+-			qlt_24xx_send_abts_resp(ha->base_qpair, abts,
+-			    FCP_TMF_REJECTED, false);
+-		}
++		qlt_24xx_send_abts_resp(ha->base_qpair, abts, FCP_TMF_REJECTED,
++			    false);
+ 		return;
+ 	}
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+@@ -4246,87 +4241,6 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
+ 	return cmd;
+ }
+ 
+-static void qlt_create_sess_from_atio(struct work_struct *work)
+-{
+-	struct qla_tgt_sess_op *op = container_of(work,
+-					struct qla_tgt_sess_op, work);
+-	scsi_qla_host_t *vha = op->vha;
+-	struct qla_hw_data *ha = vha->hw;
+-	struct fc_port *sess;
+-	struct qla_tgt_cmd *cmd;
+-	unsigned long flags;
+-	uint8_t *s_id = op->atio.u.isp24.fcp_hdr.s_id;
+-
+-	spin_lock_irqsave(&vha->cmd_list_lock, flags);
+-	list_del(&op->cmd_list);
+-	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
+-
+-	if (op->aborted) {
+-		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf083,
+-		    "sess_op with tag %u is aborted\n",
+-		    op->atio.u.isp24.exchange_addr);
+-		goto out_term;
+-	}
+-
+-	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf022,
+-	    "qla_target(%d): Unable to find wwn login"
+-	    " (s_id %x:%x:%x), trying to create it manually\n",
+-	    vha->vp_idx, s_id[0], s_id[1], s_id[2]);
+-
+-	if (op->atio.u.raw.entry_count > 1) {
+-		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf023,
+-		    "Dropping multy entry atio %p\n", &op->atio);
+-		goto out_busy;
+-	}
+-
+-	sess = qlt_make_local_sess(vha, s_id);
+-	/* sess has an extra creation ref. */
+-
+-	if (!sess)
+-		goto out_busy;
+-	/*
+-	 * Now obtain a pre-allocated session tag using the original op->atio
+-	 * packet header, and dispatch into __qlt_do_work() using the existing
+-	 * process context.
+-	 */
+-	cmd = qlt_get_tag(vha, sess, &op->atio);
+-	if (!cmd) {
+-		struct qla_qpair *qpair = ha->base_qpair;
+-
+-		spin_lock_irqsave(qpair->qp_lock_ptr, flags);
+-		qlt_send_busy(qpair, &op->atio, tc_sam_status);
+-		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+-
+-		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+-		ha->tgt.tgt_ops->put_sess(sess);
+-		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+-		kfree(op);
 -		return;
 -	}
 -
- 	ql_dbg(ql_dbg_disc, vha, 0x2102,
- 	    "%s %8phC DS %d LS %d P %d del %d cnfl %p rscn %d|%d login %d|%d fl %x\n",
- 	    __func__, fcport->port_name, fcport->disc_state,
-@@ -1322,7 +1317,6 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha, struct event_arg *ea)
- 	int rc;
+-	/*
+-	 * __qlt_do_work() will call qlt_put_sess() to release
+-	 * the extra reference taken above by qlt_make_local_sess()
+-	 */
+-	__qlt_do_work(cmd);
+-	kfree(op);
+-	return;
+-out_term:
+-	qlt_send_term_exchange(vha->hw->base_qpair, NULL, &op->atio, 0, 0);
+-	kfree(op);
+-	return;
+-out_busy:
+-	{
+-		struct qla_qpair *qpair = ha->base_qpair;
+-
+-		spin_lock_irqsave(qpair->qp_lock_ptr, flags);
+-		qlt_send_busy(qpair, &op->atio, qla_sam_status);
+-		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+-		kfree(op);
+-	}
+-	return;
+-}
+-
+ /* ha->hardware_lock supposed to be held on entry */
+ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
+ 	struct atio_from_isp *atio)
+@@ -4351,23 +4265,8 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
+ 		return -EBUSY;
  
- 	switch (ea->event) {
--	case FCME_RELOGIN:
- 	case FCME_RSCN:
- 	case FCME_GIDPN_DONE:
- 	case FCME_GPSC_DONE:
+ 	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha, atio->u.isp24.fcp_hdr.s_id);
+-	if (unlikely(!sess)) {
+-		struct qla_tgt_sess_op *op = kzalloc(sizeof(struct qla_tgt_sess_op),
+-						     GFP_ATOMIC);
+-		if (!op)
+-			return -ENOMEM;
+-
+-		memcpy(&op->atio, atio, sizeof(*atio));
+-		op->vha = vha;
+-
+-		spin_lock_irqsave(&vha->cmd_list_lock, flags);
+-		list_add_tail(&op->cmd_list, &vha->qla_sess_op_cmd_list);
+-		spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
+-
+-		INIT_WORK(&op->work, qlt_create_sess_from_atio);
+-		queue_work(qla_tgt_wq, &op->work);
+-		return 0;
+-	}
++	if (unlikely(!sess))
++		return -EFAULT;
+ 
+ 	/* Another WWN used to have our s_id. Our PLOGI scheduled its
+ 	 * session deletion, but it's still in sess_del_work wq */
+@@ -4477,14 +4376,11 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
+ {
+ 	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct qla_tgt *tgt;
+ 	struct fc_port *sess;
+ 	u64 unpacked_lun;
+ 	int fn;
+ 	unsigned long flags;
+ 
+-	tgt = vha->vha_tgt.qla_tgt;
+-
+ 	fn = a->u.isp24.fcp_cmnd.task_mgmt_flags;
+ 
+ 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+@@ -4495,15 +4391,7 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
+ 	unpacked_lun =
+ 	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
+ 
+-	if (!sess) {
+-		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf024,
+-		    "qla_target(%d): task mgmt fn 0x%x for "
+-		    "non-existant session\n", vha->vp_idx, fn);
+-		return qlt_sched_sess_work(tgt, QLA_TGT_SESS_WORK_TM, iocb,
+-		    sizeof(struct atio_from_isp));
+-	}
+-
+-	if (sess->deleted)
++	if (sess == NULL || sess->deleted)
+ 		return -EFAULT;
+ 
+ 	return qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
 -- 
 2.12.0
