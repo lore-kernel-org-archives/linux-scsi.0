@@ -1,133 +1,103 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: [PATCH v2] target: add a target/iscsi driver-api Documentation
- chapter
-Date: Wed, 27 Dec 2017 12:48:05 -0800
-Message-ID: <0a5cd0a8-2f3e-f001-8b69-2f5e34cc7cb2@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+From: Chaitra P B <chaitra.basappa@broadcom.com>
+Subject: [PATCH] mpt3sas: Proper handling of set/clear of "ATA command pending" flag.
+Date: Wed, 27 Dec 2017 23:09:11 -0800
+Message-ID: <1514444951-9502-1-git-send-email-chaitra.basappa@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:41229 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750981AbdL1HJo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Dec 2017 02:09:44 -0500
+Received: by mail-qk0-f195.google.com with SMTP id a8so11402029qkb.8
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Dec 2017 23:09:44 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+1.In IO path, setting of "ATA command pending" flag early before device
+ removal, invalid device handle etc., checks causes any new commands to be
+ always returned with SAM_STAT_BUSY and when the driver removes the drive
+ the SML issues SYNC Cache command and that command is always returned with
+ SAM_STAT_BUSY and thus making SYNC Cache command to requeued.
 
-Add a driver-api document for target/iSCSI interfaces.
+2.If the driver gets an ATA PT command for a SATA drive then the driver set
+ "ATA command pending" flag in device specific data structure not to allow
+ any further commands until the ATA PT command is completed. However, after
+ setting the flag if the driver decides to return the command back to upper
+ layers without actually issuing to the firmware(I,e., returns from qcmd
+ failure return paths) then the corresponding flag is not cleared and this
+ prevents the driver from sending any new commands to the drive.
 
-Signed-off-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+ This patch fixes above two issues by setting of "ATA command pending" flag
+ after checking for whether device deleted, invalid device handle, device
+ busy with task management. And by setting "ATA command pending" flag to
+ false in all of the qcmd failure return paths after setting the flag.
+
+Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   28 +++++++++++++++-------------
+ 1 files changed, 15 insertions(+), 13 deletions(-)
 
-This patch depends on 4 previous patches to driver source files:
-
-[PATCH] target: fix kernel-doc warnings in drivers/target/target_core_transport.c
-  https://marc.info/?l=linux-scsi&m=151398041926906&w=2
-
-[PATCH] scsi: fix iscsi-related kernel-doc warnings
-  https://marc.info/?l=linux-scsi&m=151398051426923&w=2
-
-[PATCH] target: add kernel-doc overview in target_core_user.[hc]
-  [PATCH] target: add kernel-doc overview in target_core_user.[hc]
-
-[PATCH] target: cleanup target_core_transport.c for kernel-doc
-  https://marc.info/?l=linux-scsi&m=151409284812033&w=2
-
-v2: fix missing ':' on one line (:export:)
-
- Documentation/driver-api/index.rst  |    1 
- Documentation/driver-api/scsi.rst   |    2 
- Documentation/driver-api/target.rst |   64 ++++++++++++++++++++++++++
- 3 files changed, 66 insertions(+), 1 deletion(-)
-
---- linux-next-20171221.orig/Documentation/driver-api/index.rst
-+++ linux-next-20171221/Documentation/driver-api/index.rst
-@@ -34,6 +34,7 @@ available subsections can be seen below.
-    edac
-    scsi
-    libata
-+   target
-    mtdnand
-    miscellaneous
-    w1
---- linux-next-20171221.orig/Documentation/driver-api/scsi.rst
-+++ linux-next-20171221/Documentation/driver-api/scsi.rst
-@@ -340,5 +340,5 @@ todo
- ~~~~
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 82d5612..74fca18 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4600,19 +4600,6 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		return 0;
+ 	}
  
- Parallel (fast/wide/ultra) SCSI, USB, SATA, SAS, Fibre Channel,
--FireWire, ATAPI devices, Infiniband, I2O, iSCSI, Parallel ports,
-+FireWire, ATAPI devices, Infiniband, I2O, Parallel ports,
- netlink...
---- /dev/null
-+++ linux-next-20171221/Documentation/driver-api/target.rst
-@@ -0,0 +1,64 @@
-+=================================
-+target and iSCSI Interfaces Guide
-+=================================
+-	/*
+-	 * Bug work around for firmware SATL handling.  The loop
+-	 * is based on atomic operations and ensures consistency
+-	 * since we're lockless at this point
+-	 */
+-	do {
+-		if (test_bit(0, &sas_device_priv_data->ata_command_pending)) {
+-			scmd->result = SAM_STAT_BUSY;
+-			scmd->scsi_done(scmd);
+-			return 0;
+-		}
+-	} while (_scsih_set_satl_pending(scmd, true));
+-
+ 	sas_target_priv_data = sas_device_priv_data->sas_target;
+ 
+ 	/* invalid device handle */
+@@ -4638,6 +4625,19 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	    sas_device_priv_data->block)
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 
++	/*
++	 * Bug work around for firmware SATL handling.  The loop
++	 * is based on atomic operations and ensures consistency
++	 * since we're lockless at this point
++	 */
++	do {
++		if (test_bit(0, &sas_device_priv_data->ata_command_pending)) {
++			scmd->result = SAM_STAT_BUSY;
++			scmd->scsi_done(scmd);
++			return 0;
++		}
++	} while (_scsih_set_satl_pending(scmd, true));
 +
-+Introduction and Overview
-+=========================
-+
-+TBD
-+
-+Target core device interfaces
-+=============================
-+
-+.. kernel-doc:: drivers/target/target_core_device.c
-+    :export:
-+
-+Target core transport interfaces
-+================================
-+
-+.. kernel-doc:: drivers/target/target_core_transport.c
-+    :export:
-+
-+Target-supported userspace I/O
-+==============================
-+
-+.. kernel-doc:: drivers/target/target_core_user.c
-+    :doc: Userspace I/O
-+
-+.. kernel-doc:: include/uapi/linux/target_core_user.h
-+    :doc: Ring Design
-+
-+iSCSI helper functions
-+======================
-+
-+.. kernel-doc:: drivers/scsi/libiscsi.c
-+   :export:
-+
-+
-+iSCSI boot information
-+======================
-+
-+.. kernel-doc:: drivers/scsi/iscsi_boot_sysfs.c
-+   :export:
-+
-+
-+iSCSI transport class
-+=====================
-+
-+The file drivers/scsi/scsi_transport_iscsi.c defines transport
-+attributes for the iSCSI class, which sends SCSI packets over TCP/IP
-+connections.
-+
-+.. kernel-doc:: drivers/scsi/scsi_transport_iscsi.c
-+   :export:
-+
-+
-+iSCSI TCP interfaces
-+====================
-+
-+.. kernel-doc:: drivers/scsi/iscsi_tcp.c
-+   :internal:
-+
-+.. kernel-doc:: drivers/scsi/libiscsi_tcp.c
-+   :export:
-+
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	if (scmd->sc_data_direction == DMA_FROM_DEVICE)
+ 		mpi_control = MPI2_SCSIIO_CONTROL_READ;
+ 	else if (scmd->sc_data_direction == DMA_TO_DEVICE)
+@@ -4665,6 +4665,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	if (!smid) {
+ 		pr_err(MPT3SAS_FMT "%s: failed obtaining a smid\n",
+ 		    ioc->name, __func__);
++		_scsih_set_satl_pending(scmd, false);
+ 		goto out;
+ 	}
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+@@ -4696,6 +4697,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		pcie_device = sas_target_priv_data->pcie_dev;
+ 		if (ioc->build_sg_scmd(ioc, scmd, smid, pcie_device)) {
+ 			mpt3sas_base_free_smid(ioc, smid);
++			_scsih_set_satl_pending(scmd, false);
+ 			goto out;
+ 		}
+ 	} else
+-- 
+1.7.1
