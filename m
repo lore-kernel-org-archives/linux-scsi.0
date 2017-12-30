@@ -1,43 +1,27 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v3 1/9] ufs: sysfs: device descriptor
-Date: Fri, 29 Dec 2017 10:23:27 +0100
-Message-ID: <20171229092327.GB19402@kroah.com>
-References: <1514467754-24499-1-git-send-email-stanislav.nijnikov@wdc.com>
- <1514467754-24499-2-git-send-email-stanislav.nijnikov@wdc.com>
+From: Loretta Robles <Loretta.Robles@hci.utah.edu>
+Subject: RE: ATTENTION!!!
+Date: Sat, 30 Dec 2017 00:28:56 +0000
+Message-ID: <35D4F79A8B8138489F38DE5CF6200454E572AB2F__37727.9121465564$1514594400$gmane$org@HCI-EX-MB2.hci.utah.edu>
+References: <35D4F79A8B8138489F38DE5CF6200454E570015C@HCI-EX-MB2.hci.utah.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49190 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754830AbdL2JX0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Dec 2017 04:23:26 -0500
-Content-Disposition: inline
-In-Reply-To: <1514467754-24499-2-git-send-email-stanislav.nijnikov@wdc.com>
+Received: from ipo7.cc.utah.edu ([155.97.144.42]:56546 "EHLO ipo7.cc.utah.edu"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750709AbdL3AlD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 29 Dec 2017 19:41:03 -0500
+In-Reply-To: <35D4F79A8B8138489F38DE5CF6200454E570015C@HCI-EX-MB2.hci.utah.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.com
+To: Loretta Robles <Loretta.Robles@hci.utah.edu>
 
-On Thu, Dec 28, 2017 at 03:29:06PM +0200, Stanislav Nijnikov wrote:
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -0,0 +1,170 @@
-> +/*
-> +* UFS Device Management sysfs
-> +*
-> +* Copyright (C) 2017 Western Digital Corporation
-> +*
-> +* This program is free software; you can redistribute it and/or
-> +* modify it under the terms of the GNU General Public License version
-> +* 2 as published by the Free Software Foundation.
-> +*
-> +* This program is distributed in the hope that it will be useful, but
-> +* WITHOUT ANY WARRANTY; without even the implied warranty of
-> +* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> +* General Public License for more details.
 
-Please use the SPDX format for all of this, like I asked last time :(
+________________________________
+From: Loretta Robles
+Sent: Friday, December 29, 2017 1:01 PM
+To: Loretta Robles
+Subject: ATTENTION!!!
 
-thanks,
-
-greg k-h
+You have been randomly selected for a donation. Contact soriz4040@gmail.com for claims.
