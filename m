@@ -1,7 +1,7 @@
 From: Himanshu Jha <himanshujha199640@gmail.com>
-Subject: [PATCH 4/9] scsi: mvsas: Use zeroing allocator rather than allocator/memset
-Date: Sat, 30 Dec 2017 20:58:27 +0530
-Message-ID: <1514647712-6332-5-git-send-email-himanshujha199640@gmail.com>
+Subject: [PATCH 6/9] scsi: dpt_i2o: Use zeroing allocator rather than allocator/memset
+Date: Sat, 30 Dec 2017 20:58:29 +0530
+Message-ID: <1514647712-6332-7-git-send-email-himanshujha199640@gmail.com>
 References: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
@@ -18,57 +18,77 @@ Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
 Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
 Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
 ---
- drivers/scsi/mvsas/mv_init.c | 27 +++++++++++----------------
- 1 file changed, 11 insertions(+), 16 deletions(-)
+ drivers/scsi/dpt_i2o.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 8c91637..6748394 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -253,33 +253,28 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
- 	/*
- 	 * alloc and init our DMA areas
- 	 */
--	mvi->tx = dma_alloc_coherent(mvi->dev,
--				     sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
--				     &mvi->tx_dma, GFP_KERNEL);
-+	mvi->tx = dma_zalloc_coherent(mvi->dev,
-+				      sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
-+				      &mvi->tx_dma, GFP_KERNEL);
- 	if (!mvi->tx)
- 		goto err_out;
--	memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
--	mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
--					 &mvi->rx_fis_dma, GFP_KERNEL);
-+	mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-+					  &mvi->rx_fis_dma, GFP_KERNEL);
- 	if (!mvi->rx_fis)
- 		goto err_out;
--	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
--
--	mvi->rx = dma_alloc_coherent(mvi->dev,
--				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
--				     &mvi->rx_dma, GFP_KERNEL);
-+	mvi->rx = dma_zalloc_coherent(mvi->dev,
-+				      sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
-+				      &mvi->rx_dma, GFP_KERNEL);
- 	if (!mvi->rx)
- 		goto err_out;
--	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
- 	mvi->rx[0] = cpu_to_le32(0xfff);
- 	mvi->rx_cons = 0xfff;
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index fd172b0..67cd777 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1371,13 +1371,12 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
+ 		schedule_timeout_uninterruptible(1);
+ 	} while (m == EMPTY_QUEUE);
  
--	mvi->slot = dma_alloc_coherent(mvi->dev,
--				       sizeof(*mvi->slot) * slot_nr,
--				       &mvi->slot_dma, GFP_KERNEL);
-+	mvi->slot = dma_zalloc_coherent(mvi->dev,
-+					sizeof(*mvi->slot) * slot_nr,
-+					&mvi->slot_dma, GFP_KERNEL);
- 	if (!mvi->slot)
- 		goto err_out;
--	memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
+-	status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
++	status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
+ 	if(status == NULL) {
+ 		adpt_send_nop(pHba, m);
+ 		printk(KERN_ERR"IOP reset failed - no free memory.\n");
+ 		return -ENOMEM;
+ 	}
+-	memset(status,0,4);
  
- 	mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
- 				       TRASH_BUCKET_SIZE,
+ 	msg[0]=EIGHT_WORD_MSG_SIZE|SGL_OFFSET_0;
+ 	msg[1]=I2O_CMD_ADAPTER_RESET<<24|HOST_TID<<12|ADAPTER_TID;
+@@ -2827,14 +2826,13 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 
+ 	msg=(u32 __iomem *)(pHba->msg_addr_virt+m);
+ 
+-	status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
++	status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
+ 	if (!status) {
+ 		adpt_send_nop(pHba, m);
+ 		printk(KERN_WARNING"%s: IOP reset failed - no free memory.\n",
+ 			pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(status, 0, 4);
+ 
+ 	writel(EIGHT_WORD_MSG_SIZE| SGL_OFFSET_6, &msg[0]);
+ 	writel(I2O_CMD_OUTBOUND_INIT<<24 | HOST_TID<<12 | ADAPTER_TID, &msg[1]);
+@@ -2881,14 +2879,14 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 			pHba->reply_pool, pHba->reply_pool_pa);
+ 	}
+ 
+-	pHba->reply_pool = dma_alloc_coherent(&pHba->pDev->dev,
+-				pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4,
+-				&pHba->reply_pool_pa, GFP_KERNEL);
++	pHba->reply_pool = dma_zalloc_coherent(&pHba->pDev->dev,
++				pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4,
++				&pHba->reply_pool_pa, GFP_KERNEL);
+ 	if (!pHba->reply_pool) {
+ 		printk(KERN_ERR "%s: Could not allocate reply pool\n", pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(pHba->reply_pool, 0 , pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4);
+ 
+ 	for(i = 0; i < pHba->reply_fifo_size; i++) {
+ 		writel(pHba->reply_pool_pa + (i * REPLY_FRAME_SIZE * 4),
+@@ -3117,13 +3115,12 @@ static int adpt_i2o_build_sys_table(void)
+ 	sys_tbl_len = sizeof(struct i2o_sys_tbl) +	// Header + IOPs
+ 				(hba_count) * sizeof(struct i2o_sys_tbl_entry);
+ 
+-	sys_tbl = dma_alloc_coherent(&pHba->pDev->dev,
+-				sys_tbl_len, &sys_tbl_pa, GFP_KERNEL);
++	sys_tbl = dma_zalloc_coherent(&pHba->pDev->dev, sys_tbl_len,
++				      &sys_tbl_pa, GFP_KERNEL);
+ 	if (!sys_tbl) {
+ 		printk(KERN_WARNING "SysTab Set failed. Out of memory.\n");	
+ 		return -ENOMEM;
+ 	}
+-	memset(sys_tbl, 0, sys_tbl_len);
+ 
+ 	sys_tbl->num_entries = hba_count;
+ 	sys_tbl->version = I2OVERSION;
 -- 
 2.7.4
