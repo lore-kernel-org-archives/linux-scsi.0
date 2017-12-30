@@ -1,69 +1,177 @@
 From: Himanshu Jha <himanshujha199640@gmail.com>
-Subject: [PATCH 0/9] scsi: Use zeroing allocators than allocator/memset
-Date: Sat, 30 Dec 2017 20:58:23 +0530
-Message-ID: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
+Subject: [PATCH 1/9] scsi: qla4xxx: Use zeroing allocator rather than allocator/memset
+Date: Sat, 30 Dec 2017 20:58:24 +0530
+Message-ID: <1514647712-6332-2-git-send-email-himanshujha199640@gmail.com>
+References: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, aacraid@adaptec.com
 Cc: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, QLogic-Storage-Upstream@qlogic.com, satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, QLogic-Storage-Upstream@cavium.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-There are many instances where a region of memory is allocated using
-allocator functions and immediately the region of memory is zeroed using
-memset function.
+Use dma_zalloc_coherent instead of dma_alloc_coherent followed by memset
+0.
 
-We already have zeroing memory allocator function for that purpose and
-replacing the currently used allocator functions with zeroing allocators
-will make code cleaner, easier to read, and also reduce the code size.
-
-For eg:
-
-Before:
-himanshu@himanshu-Vostro-3559:~/linux-next$ size drivers/scsi/bnx2fc/bnx2fc_hwi.o
-   text    data     bss     dec     hex filename
-  40783    5940      64   46787    b6c3 drivers/scsi/bnx2fc/bnx2fc_hwi.o
-
-After: 
-himanshu@himanshu-Vostro-3559:~/linux-next$ size drivers/scsi/bnx2fc/bnx2fc_hwi.o
-   text    data     bss     dec     hex filename
-  40619    5940      64   46623    b61f drivers/scsi/bnx2fc/bnx2fc_hwi.o
-
-Also, all these patches have been tested using 0-day test service with
-zero build failures.
-
-Done using Coccinelle.
 Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
-Link: https://lkml.org/lkml/2017/12/26/205
 
-Himanshu Jha (9):
-  scsi: qla4xxx: Use zeroing allocator rather than allocator/memset
-  scsi: qla2xxx: Use zeroing allocator rather than allocator/memset
-  scsi: qedi: Use zeroing allocator instead of allocator/memset
-  scsi: mvsas: Use zeroing allocator rather than allocator/memset
-  scsi: fnic: Use zeroing allocator rather than allocator/memset
-  scsi: dpt_i2o: Use zeroing allocator rather than allocator/memset
-  scsi: bnx2fc: Use zeroing allocator rather than allocator/memset
-  scsi: bfa: Use zeroing allocator rather than allocator/memset
-  scsi: bnx2i: Use zeroing allocator rather than allocator/memset
+Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+---
+ drivers/scsi/qla4xxx/ql4_init.c |  5 ++---
+ drivers/scsi/qla4xxx/ql4_mbx.c  | 21 +++++++++------------
+ drivers/scsi/qla4xxx/ql4_nx.c   |  5 ++---
+ drivers/scsi/qla4xxx/ql4_os.c   | 12 +++++-------
+ 4 files changed, 18 insertions(+), 25 deletions(-)
 
- drivers/scsi/bfa/bfad.c            |  3 +-
- drivers/scsi/bfa/bfad_debugfs.c    |  8 ++---
- drivers/scsi/bnx2fc/bnx2fc_hwi.c   | 60 ++++++++++++++++----------------------
- drivers/scsi/bnx2fc/bnx2fc_tgt.c   | 51 ++++++++++++++------------------
- drivers/scsi/bnx2i/bnx2i_hwi.c     | 14 ++++-----
- drivers/scsi/dpt_i2o.c             | 19 +++++-------
- drivers/scsi/fnic/fnic_debugfs.c   | 10 ++-----
- drivers/scsi/fnic/fnic_trace.c     |  9 ++----
- drivers/scsi/mvsas/mv_init.c       | 27 +++++++----------
- drivers/scsi/qedi/qedi_main.c      | 42 ++++++++++----------------
- drivers/scsi/qla2xxx/qla_attr.c    |  5 ++--
- drivers/scsi/qla2xxx/qla_bsg.c     |  9 ++----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  5 +---
- drivers/scsi/qla4xxx/ql4_init.c    |  5 ++--
- drivers/scsi/qla4xxx/ql4_mbx.c     | 21 ++++++-------
- drivers/scsi/qla4xxx/ql4_nx.c      |  5 ++--
- drivers/scsi/qla4xxx/ql4_os.c      | 12 ++++----
- 17 files changed, 118 insertions(+), 187 deletions(-)
-
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 5d6d158..52b1a0b 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -153,15 +153,14 @@ int qla4xxx_get_sys_info(struct scsi_qla_host *ha)
+ 	dma_addr_t sys_info_dma;
+ 	int status = QLA_ERROR;
+ 
+-	sys_info = dma_alloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
+-				      &sys_info_dma, GFP_KERNEL);
++	sys_info = dma_zalloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
++				       &sys_info_dma, GFP_KERNEL);
+ 	if (sys_info == NULL) {
+ 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+ 			      ha->host_no, __func__));
+ 
+ 		goto exit_get_sys_info_no_free;
+ 	}
+-	memset(sys_info, 0, sizeof(*sys_info));
+ 
+ 	/* Get flash sys info */
+ 	if (qla4xxx_get_flash(ha, sys_info_dma, FLASH_OFFSET_SYS_INFO,
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 1da04f3..bda2e64 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -625,15 +625,14 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+ 	int status = QLA_ERROR;
+ 
+-	init_fw_cb = dma_alloc_coherent(&ha->pdev->dev,
+-					sizeof(struct addr_ctrl_blk),
+-					&init_fw_cb_dma, GFP_KERNEL);
++	init_fw_cb = dma_zalloc_coherent(&ha->pdev->dev,
++					 sizeof(struct addr_ctrl_blk),
++					 &init_fw_cb_dma, GFP_KERNEL);
+ 	if (init_fw_cb == NULL) {
+ 		DEBUG2(printk("scsi%ld: %s: Unable to alloc init_cb\n",
+ 			      ha->host_no, __func__));
+ 		goto exit_init_fw_cb_no_free;
+ 	}
+-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
+ 
+ 	/* Get Initialize Firmware Control Block. */
+ 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+@@ -710,9 +709,9 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host * ha)
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+ 
+-	init_fw_cb = dma_alloc_coherent(&ha->pdev->dev,
+-					sizeof(struct addr_ctrl_blk),
+-					&init_fw_cb_dma, GFP_KERNEL);
++	init_fw_cb = dma_zalloc_coherent(&ha->pdev->dev,
++					 sizeof(struct addr_ctrl_blk),
++					 &init_fw_cb_dma, GFP_KERNEL);
+ 	if (init_fw_cb == NULL) {
+ 		printk("scsi%ld: %s: Unable to alloc init_cb\n", ha->host_no,
+ 		       __func__);
+@@ -720,7 +719,6 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host * ha)
+ 	}
+ 
+ 	/* Get Initialize Firmware Control Block. */
+-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
+ 	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma) !=
+ 	    QLA_SUCCESS) {
+ 		DEBUG2(printk("scsi%ld: %s: Failed to get init_fw_ctrl_blk\n",
+@@ -1342,16 +1340,15 @@ int qla4xxx_about_firmware(struct scsi_qla_host *ha)
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+ 	int status = QLA_ERROR;
+ 
+-	about_fw = dma_alloc_coherent(&ha->pdev->dev,
+-				      sizeof(struct about_fw_info),
+-				      &about_fw_dma, GFP_KERNEL);
++	about_fw = dma_zalloc_coherent(&ha->pdev->dev,
++				       sizeof(struct about_fw_info),
++				       &about_fw_dma, GFP_KERNEL);
+ 	if (!about_fw) {
+ 		DEBUG2(ql4_printk(KERN_ERR, ha, "%s: Unable to alloc memory "
+ 				  "for about_fw\n", __func__));
+ 		return status;
+ 	}
+ 
+-	memset(about_fw, 0, sizeof(struct about_fw_info));
+ 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+ 	memset(&mbox_sts, 0, sizeof(mbox_sts));
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index e91abb3..968bd85 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -4050,15 +4050,14 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
+ 	dma_addr_t sys_info_dma;
+ 	int status = QLA_ERROR;
+ 
+-	sys_info = dma_alloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
+-				      &sys_info_dma, GFP_KERNEL);
++	sys_info = dma_zalloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
++				       &sys_info_dma, GFP_KERNEL);
+ 	if (sys_info == NULL) {
+ 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+ 		    ha->host_no, __func__));
+ 		return status;
+ 	}
+ 
+-	memset(sys_info, 0, sizeof(*sys_info));
+ 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+ 	memset(&mbox_sts, 0, sizeof(mbox_sts));
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 2b8a8ce..82e889b 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -2689,16 +2689,15 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost, void *data, uint32_t len)
+ 	uint32_t rem = len;
+ 	struct nlattr *attr;
+ 
+-	init_fw_cb = dma_alloc_coherent(&ha->pdev->dev,
+-					sizeof(struct addr_ctrl_blk),
+-					&init_fw_cb_dma, GFP_KERNEL);
++	init_fw_cb = dma_zalloc_coherent(&ha->pdev->dev,
++					 sizeof(struct addr_ctrl_blk),
++					 &init_fw_cb_dma, GFP_KERNEL);
+ 	if (!init_fw_cb) {
+ 		ql4_printk(KERN_ERR, ha, "%s: Unable to alloc init_cb\n",
+ 			   __func__);
+ 		return -ENOMEM;
+ 	}
+ 
+-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
+ 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+ 	memset(&mbox_sts, 0, sizeof(mbox_sts));
+ 
+@@ -4196,15 +4195,14 @@ static int qla4xxx_mem_alloc(struct scsi_qla_host *ha)
+ 			  sizeof(struct shadow_regs) +
+ 			  MEM_ALIGN_VALUE +
+ 			  (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1);
+-	ha->queues = dma_alloc_coherent(&ha->pdev->dev, ha->queues_len,
+-					&ha->queues_dma, GFP_KERNEL);
++	ha->queues = dma_zalloc_coherent(&ha->pdev->dev, ha->queues_len,
++					 &ha->queues_dma, GFP_KERNEL);
+ 	if (ha->queues == NULL) {
+ 		ql4_printk(KERN_WARNING, ha,
+ 		    "Memory Allocation failed - queues.\n");
+ 
+ 		goto mem_alloc_error_exit;
+ 	}
+-	memset(ha->queues, 0, ha->queues_len);
+ 
+ 	/*
+ 	 * As per RISC alignment requirements -- the bus-address must be a
 -- 
-2.7.4
