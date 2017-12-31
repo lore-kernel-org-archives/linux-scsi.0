@@ -1,77 +1,143 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.15-rc5
-Date: Sat, 30 Dec 2017 14:25:30 -0800
-Message-ID: <1514672730.3109.5.camel@HansenPartnership.com>
+From: Rafael Tinoco <rafaeldtinoco@kernelpath.com>
+Subject: Re: [PATCH] scsi: libiscsi: Allow sd_shutdown on bad transport
+Date: Sun, 31 Dec 2017 10:48:16 -0200
+Message-ID: <CABdQkv_6pEVLxeRwJAEg+GLn1X1NrMT9rXDpyoxMU4eucD5OWw@mail.gmail.com>
+References: <1512683953-5959-1-git-send-email-rafael.tinoco@canonical.com> <yq1zi6cg5xv.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:34127 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750739AbdLaMss (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Dec 2017 07:48:48 -0500
+Received: by mail-wr0-f196.google.com with SMTP id 36so11703919wrh.1
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Dec 2017 04:48:47 -0800 (PST)
+In-Reply-To: <yq1zi6cg5xv.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Rafael David Tinoco <rafael.tinoco@canonical.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, Jay Vosburgh <jay.vosburgh@canonical.com>, Daniel Axtens <daniel.axtens@canonical.com>, Dragan Stancevic <dragan.stancevic@canonical.com>
 
-Two simple fixes, both of which cause I/O hangs.  The storvsc one is
-from the hyper-v which can hang under certain hot add/remove conditions
-and the other is generally, where removing a target and a device in
-close proximity can result in the release method being executed twice
-(and subsequent list and other corruption and an eventual panic).
+Hello Lee,
 
-The patch is available here:
+I saw there was a reply from Lee to googlegroups
+(https://goo.gl/x8LhFm). I haven't responded before because I was
+subscribed only to linux-scsi@, my bad.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Yes, it worked as expected.
 
-The short changelog is:
+>From your question:
 
-Cathy Avery (1):
-      scsi: storvsc: Fix scsi_cmd error assignments in storvsc_handle_error
+> Rafael:
 
-Hannes Reinecke (1):
-      scsi: core: check for device state in __scsi_remove_target()
+> Did you test this change, i.e. shutdowns no longer hang, under test
+> circumstances, with this change?
 
-And the diffstat:
+Yes, my start work was:
 
+https://pastebin.ubuntu.com/26292711/
 
- drivers/scsi/scsi_sysfs.c  | 5 ++++-
- drivers/scsi/storvsc_drv.c | 3 ++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+And the tests during devel:
 
-With full diff below.
+https://pastebin.ubuntu.com/26292701/
+https://pastebin.ubuntu.com/26292702/
 
-James
+And finally with the submitted patch the expected behavior:
 
----
+https://pastebin.ubuntu.com/26292706/ -> just 1 session
+https://pastebin.ubuntu.com/26292708/ -> multiple sessions
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index a9996c16f4ae..26ce17178401 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1415,7 +1415,10 @@ static void __scsi_remove_target(struct scsi_target *starget)
- 		 * check.
- 		 */
- 		if (sdev->channel != starget->channel ||
--		    sdev->id != starget->id ||
-+		    sdev->id != starget->id)
-+			continue;
-+		if (sdev->sdev_state == SDEV_DEL ||
-+		    sdev->sdev_state == SDEV_CANCEL ||
- 		    !get_device(&sdev->sdev_gendev))
- 			continue;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 1b06cf0375dc..3b3d1d050cac 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -953,10 +953,11 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 		case TEST_UNIT_READY:
- 			break;
- 		default:
--			set_host_byte(scmnd, DID_TARGET_FAILURE);
-+			set_host_byte(scmnd, DID_ERROR);
- 		}
- 		break;
- 	case SRB_STATUS_INVALID_LUN:
-+		set_host_byte(scmnd, DID_NO_CONNECT);
- 		do_work = true;
- 		process_err_fn = storvsc_remove_lun;
- 		break;
+Note:
+
+[   78.427670]  session6: iscsi_eh_cmd_timed_out scsi cmd
+ffff88b2ef499160 timedout
+[   78.427671]  session6: iscsi_eh_cmd_timed_out sc on shutdown, handled
+[   78.427671]  session6: iscsi_eh_cmd_timed_out return shutdown or nh
+
+[   78.437637]  session7: iscsi_eh_cmd_timed_out scsi cmd
+ffff88b2f161c160 timedout
+[   78.438366]  session7: iscsi_eh_cmd_timed_out sc on shutdown, handled
+[   78.439004]  session7: iscsi_eh_cmd_timed_out return shutdown or nh
+
+[   78.441551]  session8: iscsi_eh_cmd_timed_out scsi cmd
+ffff88b2ef49a160 timedout
+[   78.442278]  session8: iscsi_eh_cmd_timed_out sc on shutdown, handled
+[   78.442914]  session8: iscsi_eh_cmd_timed_out return shutdown or nh
+
+[  109.149438]  session2: iscsi_eh_cmd_timed_out scsi cmd
+ffff88b2ef1fd560 timedout
+[  109.150251]  session2: iscsi_eh_cmd_timed_out sc on shutdown, handled
+[  109.150969]  session2: iscsi_eh_cmd_timed_out return shutdown or nh
+
+[   78.427506] sd 8:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
+hostbyte=DID_OK driverbyte=DRIVER_OK
+[   78.427662] sd 7:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
+hostbyte=DID_OK driverbyte=DRIVER_OK
+[   78.439548] sd 9:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
+hostbyte=DID_OK driverbyte=DRIVER_OK
+[  109.146728] sd 3:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
+hostbyte=DID_OK driverbyte=DRIVER_OK
+
+the iscsi_eh_cmd_timed_out logic after the ping timeouts.
+
+And then:
+
+[   78.427678] sd 7:0:0:1: tag#0 Done: SUCCESS Result:
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[   78.443456] sd 8:0:0:1: tag#0 Done: SUCCESS Result:
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[   78.447592] sd 9:0:0:1: tag#0 Done: SUCCESS Result:
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[  109.151582] sd 3:0:0:1: tag#0 Done: SUCCESS Result:
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+
+The iscsi_queuecommand logic setting RESULT to DID_NO_CONNECT when
+queueing under shutdown on disconnected transport.
+
+[   78.427683] sd 7:0:0:1: Notifying upper driver of completion (result 10000)
+[   78.445899] sd 8:0:0:1: Notifying upper driver of completion (result 10000)
+[   78.450035] sd 9:0:0:1: Notifying upper driver of completion (result 10000)
+[  109.154495] sd 3:0:0:1: Notifying upper driver of completion (result 10000)
+
+> [side note: we *really* need an open-iscsi test suite! Anybody?]
+
+I'm interested in creating/helping (specially now that I read big part
+of the code because of this bug).
+
+> As long as the upper levels handle this correctly, I'm good with it.
+
+Yes, check it out. At the end:
+
+[  109.354984] sd 8:0:0:1: tag#0 0 sectors total, 0 bytes done.
+[  109.355596] sd 8:0:0:1: [sda] Synchronize Cache(10) failed: Result:
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[  109.356980] reboot: Restarting system
+[  109.357392] reboot: machine restart
+
+You see the "sync cache failed" message (important to see you couldn't
+sync that disk and you might need to fix userland shutdown order) with
+DID_NO_CONNECT (since the sd_shutdown tries to sync 3 times you might
+see lots of DID_NO_CONNECT errors, for all sessions, but all of the
+commands will be handled after this change, and upper layer informed
+of the error).
+
+I hope that answers you. Let me know if you want me to provide any
+other information.
+
+Cheers
+-Rafael
+
+On Thu, Dec 21, 2017 at 12:39 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>> If, for any reason, userland shuts down iscsi transport interfaces
+>> before proper logouts - like when logging in to LUNs manually, without
+>> logging out on server shutdown, or when automated scripts can't
+>> umount/logout from logged LUNs - kernel will hang forever on its
+>> sd_sync_cache() logic, after issuing the SYNCHRONIZE_CACHE cmd to all
+>> still existent paths.
+>
+> Chris and Lee: Please review. Thanks!
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
