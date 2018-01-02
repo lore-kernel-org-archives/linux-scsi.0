@@ -1,45 +1,88 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [Cluster-devel] [PATCH 00/12] drop unneeded newline
-Date: Tue, 2 Jan 2018 16:16:30 +0100 (CET)
-Message-ID: <alpine.DEB.2.20.1801021615510.23552@hadrien>
-References: <1514386305-7402-1-git-send-email-Julia.Lawall@lip6.fr>
- <1878806802.2632123.1514901158666.JavaMail.zimbra@redhat.com>
- <1019862289.2632779.1514901387442.JavaMail.zimbra@redhat.com>
- <alpine.DEB.2.20.1801021458360.24055@hadrien>
- <1514905900.4242.4.camel@wdc.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: Re: [RFC] sg3_utils: sgp_dd: work around on pthread_cancel for
+ android
+Date: Tue, 2 Jan 2018 08:40:48 -0800
+Message-ID: <b406b487-3d4b-18a3-5fde-bd4d2617292d@wdc.com>
+References: <c392b57894184572bd1285be32f4a27f@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <1514905900.4242.4.camel@wdc.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "dev@openvswitch.org" <dev@openvswitch.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dccp@vger.kernel.org" <dccp@vger.kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, "esc.storagedev@microsemi.com" <esc.storagedev@microsemi.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "cluster-devel@redhat.com" <cluster-devel@redhat.com>, "julia.lawall@lip6.fr" <julia.lawall@lip6.fr>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "rpeterso@redhat.com" <rpeterso@redhat.com>, "namhyung@kernel.org" <namhyung@kernel.org>, linux-ext4@vger.kernel.
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:40699 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751097AbeABQks (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2018 11:40:48 -0500
+In-Reply-To: <c392b57894184572bd1285be32f4a27f@SIWEX5A.sing.micron.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Bean Huo (beanhuo)" <beanhuo@micron.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
+Cc: "hare@suse.de" <hare@suse.de>
 
-CgpPbiBUdWUsIDIgSmFuIDIwMTgsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToKCj4gT24gVHVlLCAy
-MDE4LTAxLTAyIGF0IDE1OjAwICswMTAwLCBKdWxpYSBMYXdhbGwgd3JvdGU6Cj4gPiBPbiBUdWUs
-IDIgSmFuIDIwMTgsIEJvYiBQZXRlcnNvbiB3cm90ZToKPiA+ID4gLS0tLS0gT3JpZ2luYWwgTWVz
-c2FnZSAtLS0tLQo+ID4gPiA+IC0tLS0tIE9yaWdpbmFsIE1lc3NhZ2UgLS0tLS0KPiA+ID4gPgo+
-ID4gPiBTdGlsbCwgdGhlIEdGUzIgYW5kIERMTSBjb2RlIGhhcyBhIHBsZXRob3JhIG9mIGJyb2tl
-bi11cCBwcmludGsgbWVzc2FnZXMsCj4gPiA+IGFuZCBJIGRvbid0IGxpa2UgdGhlIHRob3VnaHQg
-b2YgcmUtY29tYmluaW5nIHRoZW0gYWxsLgo+ID4KPiA+IEFjdHVhbGx5LCB0aGUgcG9pbnQgb2Yg
-dGhlIHBhdGNoIHdhcyB0byByZW1vdmUgdGhlIHVubmVjZXNzYXJ5IFxuIGF0IHRoZQo+ID4gZW5k
-IG9mIHRoZSBzdHJpbmcsIGJlY2F1c2UgbG9nX3ByaW50IHdpbGwgYWRkIGFub3RoZXIgb25lLiAg
-SWYgeW91IHByZWZlcgo+ID4gdG8ga2VlcCB0aGUgc3RyaW5nIGJyb2tlbiB1cCwgSSBjYW4gcmVz
-ZW5kIHRoZSBwYXRjaCBpbiB0aGF0IGZvcm0sIGJ1dAo+ID4gd2l0aG91dCB0aGUgdW5uZWNlc3Nh
-cnkgXG4uCj4KPiBQbGVhc2UgY29tYmluZSBhbnkgdXNlci12aXNpYmxlIHN0cmluZ3MgaW50byBh
-IHNpbmdsZSBsaW5lIGZvciB3aGljaCB0aGUKPiB1bm5lZWRlZCBuZXdsaW5lIGlzIGRyb3BwZWQg
-c2luY2UgdGhlc2Ugc3RyaW5ncyBhcmUgbW9kaWZpZWQgYW55d2F5IGJ5Cj4geW91ciBwYXRjaC4K
-ClRoYXQgaXMgd2hhdCB0aGUgc3VibWl0dGVkIHBhdGNoICgyLzEyIHNwZWNpZmljYWxseSkgZGlk
-LgoKanVsaWEKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-ZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0
-dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsCg==
+On 12/26/17 14:21, Bean Huo (beanhuo) wrote:
+>My changes are below:
+> 
+> Configure.ac:
+> +# check for pthread_cancel
+> +AC_SEARCH_LIBS(pthread_cancel, pthread,
+> +     [AC_DEFINE(HAVE_PTHREAD_CANCEL, 1, [have pthread_cancel])], [], [])
+> 
+> Src/Makefile.am
+> -sgp_dd_LDADD = ../lib/libsgutils2.la @os_libs@ -lpthread
+> +sgp_dd_LDADD = ../lib/libsgutils2.la @os_libs@ @LIBS@
+> 
+> In the Src/sgp_dd.c, I can use macro definition " HAVE_PTHREAD_CANCEL" to differentiate
+> pthread_cancel supports or not.
+> 
+> It works.
+> But I got one warning below while run autoreconf , do you know what is wrong with that?
+> configure.ac:15: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+> configure.ac:15: warning: LT_INIT was called before AM_PROG_AR
+
+Hello Bean,
+
+Even if these warnings would get addressed, we still would need 
+something like the following change for src/sgp_dd.c:
+
+diff --git a/src/sgp_dd.c b/src/sgp_dd.c
+--- a/src/sgp_dd.c
++++ b/src/sgp_dd.c
+@@ -181,6 +181,7 @@ static int sg_finish_io(bool wr, Rq_elem * rep,
+
+  static pthread_mutex_t strerr_mut = PTHREAD_MUTEX_INITIALIZER;
+
++static bool shutting_down = false;
+  static bool do_sync = false;
+  static bool do_time = false;
+  static Rq_coll rcoll;
+@@ -470,6 +471,8 @@ sig_listen_thread(void * v_clp)
+
+      while (1) {
+          sigwait(&signal_set, &sig_number);
++        if (shutting_down)
++                break;
+          if (SIGINT == sig_number) {
+              pr2serr(ME "interrupted by SIGINT\n");
+              guarded_stop_both(clp);
+@@ -1629,8 +1632,10 @@ main(int argc, char * argv[])
+          }
+      }
+
+-    status = pthread_cancel(sig_listen_thread_id);
+-    if (0 != status) err_exit(status, "pthread_cancel");
++    shutting_down = true;
++
++    status = pthread_kill(sig_listen_thread_id, SIGINT);
++    if (0 != status) err_exit(status, "pthread_kill");
+      if (STDIN_FILENO != rcoll.infd)
+          close(rcoll.infd);
+
+My proposal is to leave out any ifdef HAVE_PTHREAD_CANCEL tests and to 
+use pthread_kill() on all platforms. Since sgp_dd is the only tool that 
+uses pthread_cancel() this approach will allow to leave out the 
+pthread_cancel() configure test. I'm proposing this approach because it 
+will make it easier to maintain and to test the sgp_dd tool.
+
+Thanks,
+
+Bart.
