@@ -1,323 +1,440 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH for sg3_utils 2/4] configure.ac: Only link with the pthread library if required
-Date: Tue,  2 Jan 2018 10:13:39 -0800
-Message-ID: <20180102181341.13435-3-bart.vanassche@wdc.com>
+Subject: [PATCH for sg3_utils 1/4] configure.ac: Suppress an autoconf warning
+Date: Tue,  2 Jan 2018 10:13:38 -0800
+Message-ID: <20180102181341.13435-2-bart.vanassche@wdc.com>
 References: <20180102181341.13435-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:36146 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751238AbeABSNo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2018 13:13:44 -0500
+        with ESMTP id S1751211AbeABSNp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2018 13:13:45 -0500
 In-Reply-To: <20180102181341.13435-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Doug Gilbert <dgilbert@interlog.com>
 Cc: Hannes Reinecke <hare@suse.com>, Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-Let the configure script detect whether pthread functions occur in the
-pthread library (all platforms except Android) or in the C library
-(Android). From the autoconf manual:
+Avoid that autoconf reports the following warning:
 
-  action-if-found is a list of shell commands to run if the link with the
-  library succeeds; action-if-not-found is a list of shell commands to run
-  if the link fails. If action-if-found is not specified, the default action
-  prepends -llibrary to LIBS and defines 'HAVE_LIBlibrary' (in all capitals).
+configure.ac:15: warning: LT_INIT was called before AM_PROG_AR
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 ---
- Makefile.in         |  1 +
- config.h.in         |  4 +--
- configure           | 94 +++++++++++++++--------------------------------------
- configure.ac        | 10 ++++--
- doc/Makefile.in     |  1 +
- include/Makefile.in |  1 +
- lib/Makefile.in     |  1 +
- scripts/Makefile.in |  1 +
- src/Makefile.am     |  2 +-
- src/Makefile.in     |  3 +-
- 10 files changed, 45 insertions(+), 73 deletions(-)
+ configure    | 352 +++++++++++++++++++++++++++++------------------------------
+ configure.ac |   6 +-
+ 2 files changed, 179 insertions(+), 179 deletions(-)
 
-diff --git a/Makefile.in b/Makefile.in
-index 0054cfe62bd6..4e2b06453f28 100644
---- a/Makefile.in
-+++ b/Makefile.in
-@@ -261,6 +261,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
- PACKAGE_URL = @PACKAGE_URL@
- PACKAGE_VERSION = @PACKAGE_VERSION@
- PATH_SEPARATOR = @PATH_SEPARATOR@
-+PTHREAD_LIB = @PTHREAD_LIB@
- RANLIB = @RANLIB@
- SED = @SED@
- SET_MAKE = @SET_MAKE@
-diff --git a/config.h.in b/config.h.in
-index b33212f47d27..b5c6715ade05 100644
---- a/config.h.in
-+++ b/config.h.in
-@@ -36,10 +36,10 @@
- /* Define to 1 if you have the `posix_memalign' function. */
- #undef HAVE_POSIX_MEMALIGN
- 
--/* Found pthread_cancel */
-+/* Define to 1 if you have the `pthread_cancel' function. */
- #undef HAVE_PTHREAD_CANCEL
- 
--/* Found pthread_kill */
-+/* Define to 1 if you have the `pthread_kill' function. */
- #undef HAVE_PTHREAD_KILL
- 
- /* Define to 1 if you have the <stdint.h> header file. */
 diff --git a/configure b/configure
-index 5fe9a187a373..59b01f4fdf5b 100755
+index 4a664c1bc343..5fe9a187a373 100755
 --- a/configure
 +++ b/configure
-@@ -652,6 +652,7 @@ OS_FREEBSD_TRUE
- os_libs
- os_cflags
- GETOPT_O_FILES
-+PTHREAD_LIB
- CPP
- LT_SYS_LIBRARY_PATH
- OTOOL64
-@@ -12332,9 +12333,10 @@ _ACEOF
- fi
- done
+@@ -661,8 +661,6 @@ NMEDIT
+ DSYMUTIL
+ MANIFEST_TOOL
+ RANLIB
+-ac_ct_AR
+-AR
+ DLLTOOL
+ OBJDUMP
+ LN_S
+@@ -683,6 +681,8 @@ build_vendor
+ build_cpu
+ build
+ LIBTOOL
++ac_ct_AR
++AR
+ am__fastdepCC_FALSE
+ am__fastdepCC_TRUE
+ CCDEPMODE
+@@ -3920,6 +3920,180 @@ fi
+ # AC_PROG_CXX
  
--{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pthread_cancel" >&5
--$as_echo_n "checking for library containing pthread_cancel... " >&6; }
--if ${ac_cv_search_pthread_cancel+:} false; then :
-+SAVED_LIBS=$LIBS
-+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pthread_create" >&5
-+$as_echo_n "checking for library containing pthread_create... " >&6; }
-+if ${ac_cv_search_pthread_create+:} false; then :
-   $as_echo_n "(cached) " >&6
- else
-   ac_func_search_save_LIBS=$LIBS
-@@ -12347,11 +12349,11 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
- #ifdef __cplusplus
- extern "C"
- #endif
--char pthread_cancel ();
-+char pthread_create ();
- int
- main ()
- {
--return pthread_cancel ();
-+return pthread_create ();
-   ;
-   return 0;
- }
-@@ -12364,89 +12366,47 @@ for ac_lib in '' pthread; do
-     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-   fi
-   if ac_fn_c_try_link "$LINENO"; then :
--  ac_cv_search_pthread_cancel=$ac_res
-+  ac_cv_search_pthread_create=$ac_res
- fi
- rm -f core conftest.err conftest.$ac_objext \
-     conftest$ac_exeext
--  if ${ac_cv_search_pthread_cancel+:} false; then :
-+  if ${ac_cv_search_pthread_create+:} false; then :
-   break
- fi
- done
--if ${ac_cv_search_pthread_cancel+:} false; then :
-+if ${ac_cv_search_pthread_create+:} false; then :
  
- else
--  ac_cv_search_pthread_cancel=no
-+  ac_cv_search_pthread_create=no
- fi
- rm conftest.$ac_ext
- LIBS=$ac_func_search_save_LIBS
- fi
--{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_pthread_cancel" >&5
--$as_echo "$ac_cv_search_pthread_cancel" >&6; }
--ac_res=$ac_cv_search_pthread_cancel
-+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_pthread_create" >&5
-+$as_echo "$ac_cv_search_pthread_create" >&6; }
-+ac_res=$ac_cv_search_pthread_create
- if test "$ac_res" != no; then :
-   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
++# AM_PROG_AR is supported and needed since automake v1.12+
++
++if test -n "$ac_tool_prefix"; then
++  for ac_prog in ar lib "link -lib"
++  do
++    # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
++set dummy $ac_tool_prefix$ac_prog; ac_word=$2
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
++$as_echo_n "checking for $ac_word... " >&6; }
++if ${ac_cv_prog_AR+:} false; then :
++  $as_echo_n "(cached) " >&6
++else
++  if test -n "$AR"; then
++  ac_cv_prog_AR="$AR" # Let the user override the test.
++else
++as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
++for as_dir in $PATH
++do
++  IFS=$as_save_IFS
++  test -z "$as_dir" && as_dir=.
++    for ac_exec_ext in '' $ac_executable_extensions; do
++  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
++    ac_cv_prog_AR="$ac_tool_prefix$ac_prog"
++    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
++    break 2
++  fi
++done
++  done
++IFS=$as_save_IFS
++
++fi
++fi
++AR=$ac_cv_prog_AR
++if test -n "$AR"; then
++  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $AR" >&5
++$as_echo "$AR" >&6; }
++else
++  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
++$as_echo "no" >&6; }
++fi
++
++
++    test -n "$AR" && break
++  done
++fi
++if test -z "$AR"; then
++  ac_ct_AR=$AR
++  for ac_prog in ar lib "link -lib"
++do
++  # Extract the first word of "$ac_prog", so it can be a program name with args.
++set dummy $ac_prog; ac_word=$2
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
++$as_echo_n "checking for $ac_word... " >&6; }
++if ${ac_cv_prog_ac_ct_AR+:} false; then :
++  $as_echo_n "(cached) " >&6
++else
++  if test -n "$ac_ct_AR"; then
++  ac_cv_prog_ac_ct_AR="$ac_ct_AR" # Let the user override the test.
++else
++as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
++for as_dir in $PATH
++do
++  IFS=$as_save_IFS
++  test -z "$as_dir" && as_dir=.
++    for ac_exec_ext in '' $ac_executable_extensions; do
++  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
++    ac_cv_prog_ac_ct_AR="$ac_prog"
++    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
++    break 2
++  fi
++done
++  done
++IFS=$as_save_IFS
++
++fi
++fi
++ac_ct_AR=$ac_cv_prog_ac_ct_AR
++if test -n "$ac_ct_AR"; then
++  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_AR" >&5
++$as_echo "$ac_ct_AR" >&6; }
++else
++  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
++$as_echo "no" >&6; }
++fi
++
++
++  test -n "$ac_ct_AR" && break
++done
++
++  if test "x$ac_ct_AR" = x; then
++    AR="false"
++  else
++    case $cross_compiling:$ac_tool_warned in
++yes:)
++{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
++$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
++ac_tool_warned=yes ;;
++esac
++    AR=$ac_ct_AR
++  fi
++fi
++
++: ${AR=ar}
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking the archiver ($AR) interface" >&5
++$as_echo_n "checking the archiver ($AR) interface... " >&6; }
++if ${am_cv_ar_interface+:} false; then :
++  $as_echo_n "(cached) " >&6
++else
++  ac_ext=c
++ac_cpp='$CPP $CPPFLAGS'
++ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
++ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
++ac_compiler_gnu=$ac_cv_c_compiler_gnu
++
++   am_cv_ar_interface=ar
++   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++int some_variable = 0;
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  am_ar_try='$AR cru libconftest.a conftest.$ac_objext >&5'
++      { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$am_ar_try\""; } >&5
++  (eval $am_ar_try) 2>&5
++  ac_status=$?
++  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
++  test $ac_status = 0; }
++      if test "$ac_status" -eq 0; then
++        am_cv_ar_interface=ar
++      else
++        am_ar_try='$AR -NOLOGO -OUT:conftest.lib conftest.$ac_objext >&5'
++        { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$am_ar_try\""; } >&5
++  (eval $am_ar_try) 2>&5
++  ac_status=$?
++  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
++  test $ac_status = 0; }
++        if test "$ac_status" -eq 0; then
++          am_cv_ar_interface=lib
++        else
++          am_cv_ar_interface=unknown
++        fi
++      fi
++      rm -f conftest.lib libconftest.a
++
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++   ac_ext=c
++ac_cpp='$CPP $CPPFLAGS'
++ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
++ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
++ac_compiler_gnu=$ac_cv_c_compiler_gnu
++
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $am_cv_ar_interface" >&5
++$as_echo "$am_cv_ar_interface" >&6; }
++
++case $am_cv_ar_interface in
++ar)
++  ;;
++lib)
++  # Microsoft lib, so override with the ar-lib wrapper script.
++  # FIXME: It is wrong to rewrite AR.
++  # But if we don't then we get into trouble of one sort or another.
++  # A longer-term fix would be to have automake use am__AR in this case,
++  # and then we could set am__AR="$am_aux_dir/ar-lib \$(AR)" or something
++  # similar.
++  AR="$am_aux_dir/ar-lib $AR"
++  ;;
++unknown)
++  as_fn_error $? "could not determine $AR interface" "$LINENO" 5
++  ;;
++esac
++
++
+ # Adding libtools to the build seems to bring in C++ environment
+ case `pwd` in
+   *\ * | *\	*)
+@@ -5491,7 +5665,6 @@ test -z "$sharedlib_from_linklib_cmd" && sharedlib_from_linklib_cmd=$ECHO
  
--$as_echo "#define HAVE_PTHREAD_CANCEL 1" >>confdefs.h
+ 
+ 
 -
- fi
+ if test -n "$ac_tool_prefix"; then
+   for ac_prog in ar
+   do
+@@ -11987,179 +12160,6 @@ CC=$lt_save_CC
  
--{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pthread_kill" >&5
--$as_echo_n "checking for library containing pthread_kill... " >&6; }
--if ${ac_cv_search_pthread_kill+:} false; then :
+ 
+ 
+-# AM_PROG_AR is supported and needed since automake v1.12+
+-if test -n "$ac_tool_prefix"; then
+-  for ac_prog in ar lib "link -lib"
+-  do
+-    # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
+-set dummy $ac_tool_prefix$ac_prog; ac_word=$2
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+-$as_echo_n "checking for $ac_word... " >&6; }
+-if ${ac_cv_prog_AR+:} false; then :
 -  $as_echo_n "(cached) " >&6
 -else
--  ac_func_search_save_LIBS=$LIBS
--cat confdefs.h - <<_ACEOF >conftest.$ac_ext
--/* end confdefs.h.  */
--
--/* Override any GCC internal prototype to avoid an error.
--   Use char because int might match the return type of a GCC
--   builtin and then its argument prototype would still apply.  */
--#ifdef __cplusplus
--extern "C"
--#endif
--char pthread_kill ();
--int
--main ()
--{
--return pthread_kill ();
--  ;
--  return 0;
--}
-+# AC_SEARCH_LIBS adds libraries at the start of $LIBS so remove $SAVED_LIBS
-+# from the end of $LIBS.
-+pthread_lib=${LIBS%${SAVED_LIBS}}
-+for ac_func in pthread_cancel pthread_kill
-+do :
-+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
-+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
-+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
-+  cat >>confdefs.h <<_ACEOF
-+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
- _ACEOF
--for ac_lib in '' pthread; do
--  if test -z "$ac_lib"; then
--    ac_res="none required"
--  else
--    ac_res=-l$ac_lib
--    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
--  fi
--  if ac_fn_c_try_link "$LINENO"; then :
--  ac_cv_search_pthread_kill=$ac_res
--fi
--rm -f core conftest.err conftest.$ac_objext \
--    conftest$ac_exeext
--  if ${ac_cv_search_pthread_kill+:} false; then :
--  break
--fi
--done
--if ${ac_cv_search_pthread_kill+:} false; then :
- 
+-  if test -n "$AR"; then
+-  ac_cv_prog_AR="$AR" # Let the user override the test.
 -else
--  ac_cv_search_pthread_kill=no
--fi
--rm conftest.$ac_ext
--LIBS=$ac_func_search_save_LIBS
- fi
--{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_pthread_kill" >&5
--$as_echo "$ac_cv_search_pthread_kill" >&6; }
--ac_res=$ac_cv_search_pthread_kill
--if test "$ac_res" != no; then :
--  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+-for as_dir in $PATH
+-do
+-  IFS=$as_save_IFS
+-  test -z "$as_dir" && as_dir=.
+-    for ac_exec_ext in '' $ac_executable_extensions; do
+-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+-    ac_cv_prog_AR="$ac_tool_prefix$ac_prog"
+-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+-    break 2
+-  fi
+-done
+-  done
+-IFS=$as_save_IFS
 -
--$as_echo "#define HAVE_PTHREAD_KILL 1" >>confdefs.h
-+done
- 
 -fi
-+LIBS=$SAVED_LIBS
-+PTHREAD_LIB=$pthread_lib
- 
- 
- 
+-fi
+-AR=$ac_cv_prog_AR
+-if test -n "$AR"; then
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $AR" >&5
+-$as_echo "$AR" >&6; }
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-
+-
+-    test -n "$AR" && break
+-  done
+-fi
+-if test -z "$AR"; then
+-  ac_ct_AR=$AR
+-  for ac_prog in ar lib "link -lib"
+-do
+-  # Extract the first word of "$ac_prog", so it can be a program name with args.
+-set dummy $ac_prog; ac_word=$2
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+-$as_echo_n "checking for $ac_word... " >&6; }
+-if ${ac_cv_prog_ac_ct_AR+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  if test -n "$ac_ct_AR"; then
+-  ac_cv_prog_ac_ct_AR="$ac_ct_AR" # Let the user override the test.
+-else
+-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+-for as_dir in $PATH
+-do
+-  IFS=$as_save_IFS
+-  test -z "$as_dir" && as_dir=.
+-    for ac_exec_ext in '' $ac_executable_extensions; do
+-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+-    ac_cv_prog_ac_ct_AR="$ac_prog"
+-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+-    break 2
+-  fi
+-done
+-  done
+-IFS=$as_save_IFS
+-
+-fi
+-fi
+-ac_ct_AR=$ac_cv_prog_ac_ct_AR
+-if test -n "$ac_ct_AR"; then
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_AR" >&5
+-$as_echo "$ac_ct_AR" >&6; }
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-
+-
+-  test -n "$ac_ct_AR" && break
+-done
+-
+-  if test "x$ac_ct_AR" = x; then
+-    AR="false"
+-  else
+-    case $cross_compiling:$ac_tool_warned in
+-yes:)
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+-ac_tool_warned=yes ;;
+-esac
+-    AR=$ac_ct_AR
+-  fi
+-fi
+-
+-: ${AR=ar}
+-
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking the archiver ($AR) interface" >&5
+-$as_echo_n "checking the archiver ($AR) interface... " >&6; }
+-if ${am_cv_ar_interface+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_ext=c
+-ac_cpp='$CPP $CPPFLAGS'
+-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+-
+-   am_cv_ar_interface=ar
+-   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-int some_variable = 0;
+-_ACEOF
+-if ac_fn_c_try_compile "$LINENO"; then :
+-  am_ar_try='$AR cru libconftest.a conftest.$ac_objext >&5'
+-      { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$am_ar_try\""; } >&5
+-  (eval $am_ar_try) 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }
+-      if test "$ac_status" -eq 0; then
+-        am_cv_ar_interface=ar
+-      else
+-        am_ar_try='$AR -NOLOGO -OUT:conftest.lib conftest.$ac_objext >&5'
+-        { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$am_ar_try\""; } >&5
+-  (eval $am_ar_try) 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }
+-        if test "$ac_status" -eq 0; then
+-          am_cv_ar_interface=lib
+-        else
+-          am_cv_ar_interface=unknown
+-        fi
+-      fi
+-      rm -f conftest.lib libconftest.a
+-
+-fi
+-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+-   ac_ext=c
+-ac_cpp='$CPP $CPPFLAGS'
+-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+-
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $am_cv_ar_interface" >&5
+-$as_echo "$am_cv_ar_interface" >&6; }
+-
+-case $am_cv_ar_interface in
+-ar)
+-  ;;
+-lib)
+-  # Microsoft lib, so override with the ar-lib wrapper script.
+-  # FIXME: It is wrong to rewrite AR.
+-  # But if we don't then we get into trouble of one sort or another.
+-  # A longer-term fix would be to have automake use am__AR in this case,
+-  # and then we could set am__AR="$am_aux_dir/ar-lib \$(AR)" or something
+-  # similar.
+-  AR="$am_aux_dir/ar-lib $AR"
+-  ;;
+-unknown)
+-  as_fn_error $? "could not determine $AR interface" "$LINENO" 5
+-  ;;
+-esac
+-
+-
+ # check for headers
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
+ $as_echo_n "checking for ANSI C header files... " >&6; }
 diff --git a/configure.ac b/configure.ac
-index 129c2f9d4d4d..6164850d0aa3 100644
+index 1cce0b25f583..129c2f9d4d4d 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -25,8 +25,14 @@ AC_CHECK_FUNCS(posix_fadvise)
- AC_CHECK_FUNCS(posix_memalign)
- AC_CHECK_FUNCS(sysconf)
- AC_CHECK_FUNCS(lseek64)
--AC_SEARCH_LIBS([pthread_cancel], [pthread], [AC_DEFINE(HAVE_PTHREAD_CANCEL, 1, [Found pthread_cancel])], [])
--AC_SEARCH_LIBS([pthread_kill], [pthread], [AC_DEFINE(HAVE_PTHREAD_KILL, 1, [Found pthread_kill])], [])
-+SAVED_LIBS=$LIBS
-+AC_SEARCH_LIBS([pthread_create], [pthread])
-+# AC_SEARCH_LIBS adds libraries at the start of $LIBS so remove $SAVED_LIBS
-+# from the end of $LIBS.
-+pthread_lib=${LIBS%${SAVED_LIBS}}
-+AC_CHECK_FUNCS([pthread_cancel pthread_kill])
-+LIBS=$SAVED_LIBS
-+AC_SUBST(PTHREAD_LIB, [$pthread_lib])
- AC_SUBST(GETOPT_O_FILES)
+@@ -7,13 +7,13 @@ AM_CONFIG_HEADER(config.h)
+ AC_PROG_CC
+ # AC_PROG_CXX
+ AC_PROG_INSTALL
+-		
+-# Adding libtools to the build seems to bring in C++ environment
+-AC_PROG_LIBTOOL
  
- AC_CANONICAL_HOST
-diff --git a/doc/Makefile.in b/doc/Makefile.in
-index 012c294ccf6b..5b3f009554af 100644
---- a/doc/Makefile.in
-+++ b/doc/Makefile.in
-@@ -219,6 +219,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
- PACKAGE_URL = @PACKAGE_URL@
- PACKAGE_VERSION = @PACKAGE_VERSION@
- PATH_SEPARATOR = @PATH_SEPARATOR@
-+PTHREAD_LIB = @PTHREAD_LIB@
- RANLIB = @RANLIB@
- SED = @SED@
- SET_MAKE = @SET_MAKE@
-diff --git a/include/Makefile.in b/include/Makefile.in
-index f0f4a2b17745..0016be3edf15 100644
---- a/include/Makefile.in
-+++ b/include/Makefile.in
-@@ -239,6 +239,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
- PACKAGE_URL = @PACKAGE_URL@
- PACKAGE_VERSION = @PACKAGE_VERSION@
- PATH_SEPARATOR = @PATH_SEPARATOR@
-+PTHREAD_LIB = @PTHREAD_LIB@
- RANLIB = @RANLIB@
- SED = @SED@
- SET_MAKE = @SET_MAKE@
-diff --git a/lib/Makefile.in b/lib/Makefile.in
-index 2594c724aa96..35d83c1d3dd6 100644
---- a/lib/Makefile.in
-+++ b/lib/Makefile.in
-@@ -283,6 +283,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
- PACKAGE_URL = @PACKAGE_URL@
- PACKAGE_VERSION = @PACKAGE_VERSION@
- PATH_SEPARATOR = @PATH_SEPARATOR@
-+PTHREAD_LIB = @PTHREAD_LIB@
- RANLIB = @RANLIB@
- SED = @SED@
- SET_MAKE = @SET_MAKE@
-diff --git a/scripts/Makefile.in b/scripts/Makefile.in
-index 0a81294b1d67..1daa3818f5cb 100644
---- a/scripts/Makefile.in
-+++ b/scripts/Makefile.in
-@@ -208,6 +208,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
- PACKAGE_URL = @PACKAGE_URL@
- PACKAGE_VERSION = @PACKAGE_VERSION@
- PATH_SEPARATOR = @PATH_SEPARATOR@
-+PTHREAD_LIB = @PTHREAD_LIB@
- RANLIB = @RANLIB@
- SED = @SED@
- SET_MAKE = @SET_MAKE@
-diff --git a/src/Makefile.am b/src/Makefile.am
-index 4c3bb1caff71..33c7be515b8d 100644
---- a/src/Makefile.am
-+++ b/src/Makefile.am
-@@ -86,7 +86,7 @@ sg_modes_LDADD = ../lib/libsgutils2.la @os_libs@
+ # AM_PROG_AR is supported and needed since automake v1.12+
+ ifdef([AM_PROG_AR], [AM_PROG_AR], []) 
  
- sg_opcodes_LDADD = ../lib/libsgutils2.la @os_libs@
++# Adding libtools to the build seems to bring in C++ environment
++AC_PROG_LIBTOOL
++
+ # check for headers
+ AC_HEADER_STDC
  
--sgp_dd_LDADD = ../lib/libsgutils2.la @os_libs@ -lpthread
-+sgp_dd_LDADD = ../lib/libsgutils2.la @os_libs@ @PTHREAD_LIB@
- 
- sg_persist_LDADD = ../lib/libsgutils2.la @os_libs@
- 
-diff --git a/src/Makefile.in b/src/Makefile.in
-index 3117f2528d76..eec196432869 100644
---- a/src/Makefile.in
-+++ b/src/Makefile.in
-@@ -499,6 +499,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
- PACKAGE_URL = @PACKAGE_URL@
- PACKAGE_VERSION = @PACKAGE_VERSION@
- PATH_SEPARATOR = @PATH_SEPARATOR@
-+PTHREAD_LIB = @PTHREAD_LIB@
- RANLIB = @RANLIB@
- SED = @SED@
- SET_MAKE = @SET_MAKE@
-@@ -590,7 +591,7 @@ sg_map_LDADD = ../lib/libsgutils2.la @os_libs@
- sgm_dd_LDADD = ../lib/libsgutils2.la @os_libs@
- sg_modes_LDADD = ../lib/libsgutils2.la @os_libs@
- sg_opcodes_LDADD = ../lib/libsgutils2.la @os_libs@
--sgp_dd_LDADD = ../lib/libsgutils2.la @os_libs@ -lpthread
-+sgp_dd_LDADD = ../lib/libsgutils2.la @os_libs@ @PTHREAD_LIB@
- sg_persist_LDADD = ../lib/libsgutils2.la @os_libs@
- sg_prevent_LDADD = ../lib/libsgutils2.la @os_libs@
- sg_raw_LDADD = ../lib/libsgutils2.la @os_libs@
 -- 
 2.15.1
