@@ -1,143 +1,202 @@
-From: Rafael Tinoco <rafaeldtinoco@kernelpath.com>
-Subject: Re: [PATCH] scsi: libiscsi: Allow sd_shutdown on bad transport
-Date: Sun, 31 Dec 2017 10:48:16 -0200
-Message-ID: <CABdQkv_6pEVLxeRwJAEg+GLn1X1NrMT9rXDpyoxMU4eucD5OWw@mail.gmail.com>
-References: <1512683953-5959-1-git-send-email-rafael.tinoco@canonical.com> <yq1zi6cg5xv.fsf@oracle.com>
+From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
+Subject: Re: [PATCH 1/9] scsi: qla4xxx: Use zeroing allocator rather than
+ allocator/memset
+Date: Tue, 2 Jan 2018 04:39:20 +0000
+Message-ID: <D6710A8A.4F523%manish.rangankar@cavium.com>
+References: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
+ <1514647712-6332-2-git-send-email-himanshujha199640@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:34127 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750739AbdLaMss (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Dec 2017 07:48:48 -0500
-Received: by mail-wr0-f196.google.com with SMTP id 36so11703919wrh.1
-        for <linux-scsi@vger.kernel.org>; Sun, 31 Dec 2017 04:48:47 -0800 (PST)
-In-Reply-To: <yq1zi6cg5xv.fsf@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1514647712-6332-2-git-send-email-himanshujha199640@gmail.com>
+Content-Language: en-US
+Content-ID: <2FB69548789AF442AF02C8A3D2024691@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Himanshu Jha <himanshujha199640@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "aacraid@adaptec.com" <aacraid@adaptec.com>
+Cc: "Gurumurthy, Anil" <Anil.Gurumurthy@cavium.com>, "Kalluru, Sudarsana" <Sudarsana.Kalluru@cavium.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "satishkh@cisco.com" <satishkh@cisco.com>, "sebaddel@cisco.com" <sebaddel@cisco.com>, "kartilak@cisco.com" <kartilak@cisco.com>Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Rafael David Tinoco <rafael.tinoco@canonical.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, Jay Vosburgh <jay.vosburgh@canonical.com>, Daniel Axtens <daniel.axtens@canonical.com>, Dragan Stancevic <dragan.stancevic@canonical.com>
 
-Hello Lee,
 
-I saw there was a reply from Lee to googlegroups
-(https://goo.gl/x8LhFm). I haven't responded before because I was
-subscribed only to linux-scsi@, my bad.
 
-Yes, it worked as expected.
+On 30/12/17 8:58 PM, "Himanshu Jha" <himanshujha199640@gmail.com> wrote:
 
->From your question:
-
-> Rafael:
-
-> Did you test this change, i.e. shutdowns no longer hang, under test
-> circumstances, with this change?
-
-Yes, my start work was:
-
-https://pastebin.ubuntu.com/26292711/
-
-And the tests during devel:
-
-https://pastebin.ubuntu.com/26292701/
-https://pastebin.ubuntu.com/26292702/
-
-And finally with the submitted patch the expected behavior:
-
-https://pastebin.ubuntu.com/26292706/ -> just 1 session
-https://pastebin.ubuntu.com/26292708/ -> multiple sessions
-
-Note:
-
-[   78.427670]  session6: iscsi_eh_cmd_timed_out scsi cmd
-ffff88b2ef499160 timedout
-[   78.427671]  session6: iscsi_eh_cmd_timed_out sc on shutdown, handled
-[   78.427671]  session6: iscsi_eh_cmd_timed_out return shutdown or nh
-
-[   78.437637]  session7: iscsi_eh_cmd_timed_out scsi cmd
-ffff88b2f161c160 timedout
-[   78.438366]  session7: iscsi_eh_cmd_timed_out sc on shutdown, handled
-[   78.439004]  session7: iscsi_eh_cmd_timed_out return shutdown or nh
-
-[   78.441551]  session8: iscsi_eh_cmd_timed_out scsi cmd
-ffff88b2ef49a160 timedout
-[   78.442278]  session8: iscsi_eh_cmd_timed_out sc on shutdown, handled
-[   78.442914]  session8: iscsi_eh_cmd_timed_out return shutdown or nh
-
-[  109.149438]  session2: iscsi_eh_cmd_timed_out scsi cmd
-ffff88b2ef1fd560 timedout
-[  109.150251]  session2: iscsi_eh_cmd_timed_out sc on shutdown, handled
-[  109.150969]  session2: iscsi_eh_cmd_timed_out return shutdown or nh
-
-[   78.427506] sd 8:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
-hostbyte=DID_OK driverbyte=DRIVER_OK
-[   78.427662] sd 7:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
-hostbyte=DID_OK driverbyte=DRIVER_OK
-[   78.439548] sd 9:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
-hostbyte=DID_OK driverbyte=DRIVER_OK
-[  109.146728] sd 3:0:0:1: tag#0 Done: TIMEOUT_ERROR Result:
-hostbyte=DID_OK driverbyte=DRIVER_OK
-
-the iscsi_eh_cmd_timed_out logic after the ping timeouts.
-
-And then:
-
-[   78.427678] sd 7:0:0:1: tag#0 Done: SUCCESS Result:
-hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-[   78.443456] sd 8:0:0:1: tag#0 Done: SUCCESS Result:
-hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-[   78.447592] sd 9:0:0:1: tag#0 Done: SUCCESS Result:
-hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-[  109.151582] sd 3:0:0:1: tag#0 Done: SUCCESS Result:
-hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-
-The iscsi_queuecommand logic setting RESULT to DID_NO_CONNECT when
-queueing under shutdown on disconnected transport.
-
-[   78.427683] sd 7:0:0:1: Notifying upper driver of completion (result 10000)
-[   78.445899] sd 8:0:0:1: Notifying upper driver of completion (result 10000)
-[   78.450035] sd 9:0:0:1: Notifying upper driver of completion (result 10000)
-[  109.154495] sd 3:0:0:1: Notifying upper driver of completion (result 10000)
-
-> [side note: we *really* need an open-iscsi test suite! Anybody?]
-
-I'm interested in creating/helping (specially now that I read big part
-of the code because of this bug).
-
-> As long as the upper levels handle this correctly, I'm good with it.
-
-Yes, check it out. At the end:
-
-[  109.354984] sd 8:0:0:1: tag#0 0 sectors total, 0 bytes done.
-[  109.355596] sd 8:0:0:1: [sda] Synchronize Cache(10) failed: Result:
-hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-[  109.356980] reboot: Restarting system
-[  109.357392] reboot: machine restart
-
-You see the "sync cache failed" message (important to see you couldn't
-sync that disk and you might need to fix userland shutdown order) with
-DID_NO_CONNECT (since the sd_shutdown tries to sync 3 times you might
-see lots of DID_NO_CONNECT errors, for all sessions, but all of the
-commands will be handled after this change, and upper layer informed
-of the error).
-
-I hope that answers you. Let me know if you want me to provide any
-other information.
-
-Cheers
--Rafael
-
-On Thu, Dec 21, 2017 at 12:39 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
+>Use dma_zalloc_coherent instead of dma_alloc_coherent followed by memset
+>0.
 >
->> If, for any reason, userland shuts down iscsi transport interfaces
->> before proper logouts - like when logging in to LUNs manually, without
->> logging out on server shutdown, or when automated scripts can't
->> umount/logout from logged LUNs - kernel will hang forever on its
->> sd_sync_cache() logic, after issuing the SYNCHRONIZE_CACHE cmd to all
->> still existent paths.
+>Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
 >
-> Chris and Lee: Please review. Thanks!
+>Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
+>Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+>---
+> drivers/scsi/qla4xxx/ql4_init.c |  5 ++---
+> drivers/scsi/qla4xxx/ql4_mbx.c  | 21 +++++++++------------
+> drivers/scsi/qla4xxx/ql4_nx.c   |  5 ++---
+> drivers/scsi/qla4xxx/ql4_os.c   | 12 +++++-------
+> 4 files changed, 18 insertions(+), 25 deletions(-)
 >
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+>diff --git a/drivers/scsi/qla4xxx/ql4_init.c
+>b/drivers/scsi/qla4xxx/ql4_init.c
+>index 5d6d158..52b1a0b 100644
+>--- a/drivers/scsi/qla4xxx/ql4_init.c
+>+++ b/drivers/scsi/qla4xxx/ql4_init.c
+>@@ -153,15 +153,14 @@ int qla4xxx_get_sys_info(struct scsi_qla_host *ha)
+> 	dma_addr_t sys_info_dma;
+> 	int status =3D QLA_ERROR;
+>=20
+>-	sys_info =3D dma_alloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
+>-				      &sys_info_dma, GFP_KERNEL);
+>+	sys_info =3D dma_zalloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
+>+				       &sys_info_dma, GFP_KERNEL);
+> 	if (sys_info =3D=3D NULL) {
+> 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+> 			      ha->host_no, __func__));
+>=20
+> 		goto exit_get_sys_info_no_free;
+> 	}
+>-	memset(sys_info, 0, sizeof(*sys_info));
+>=20
+> 	/* Get flash sys info */
+> 	if (qla4xxx_get_flash(ha, sys_info_dma, FLASH_OFFSET_SYS_INFO,
+>diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c
+>b/drivers/scsi/qla4xxx/ql4_mbx.c
+>index 1da04f3..bda2e64 100644
+>--- a/drivers/scsi/qla4xxx/ql4_mbx.c
+>+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+>@@ -625,15 +625,14 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host *
+>ha)
+> 	uint32_t mbox_sts[MBOX_REG_COUNT];
+> 	int status =3D QLA_ERROR;
+>=20
+>-	init_fw_cb =3D dma_alloc_coherent(&ha->pdev->dev,
+>-					sizeof(struct addr_ctrl_blk),
+>-					&init_fw_cb_dma, GFP_KERNEL);
+>+	init_fw_cb =3D dma_zalloc_coherent(&ha->pdev->dev,
+>+					 sizeof(struct addr_ctrl_blk),
+>+					 &init_fw_cb_dma, GFP_KERNEL);
+> 	if (init_fw_cb =3D=3D NULL) {
+> 		DEBUG2(printk("scsi%ld: %s: Unable to alloc init_cb\n",
+> 			      ha->host_no, __func__));
+> 		goto exit_init_fw_cb_no_free;
+> 	}
+>-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
+>=20
+> 	/* Get Initialize Firmware Control Block. */
+> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+>@@ -710,9 +709,9 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host
+>* ha)
+> 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+> 	uint32_t mbox_sts[MBOX_REG_COUNT];
+>=20
+>-	init_fw_cb =3D dma_alloc_coherent(&ha->pdev->dev,
+>-					sizeof(struct addr_ctrl_blk),
+>-					&init_fw_cb_dma, GFP_KERNEL);
+>+	init_fw_cb =3D dma_zalloc_coherent(&ha->pdev->dev,
+>+					 sizeof(struct addr_ctrl_blk),
+>+					 &init_fw_cb_dma, GFP_KERNEL);
+> 	if (init_fw_cb =3D=3D NULL) {
+> 		printk("scsi%ld: %s: Unable to alloc init_cb\n", ha->host_no,
+> 		       __func__);
+>@@ -720,7 +719,6 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host
+>* ha)
+> 	}
+>=20
+> 	/* Get Initialize Firmware Control Block. */
+>-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
+> 	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma) !=
+=3D
+> 	    QLA_SUCCESS) {
+> 		DEBUG2(printk("scsi%ld: %s: Failed to get init_fw_ctrl_blk\n",
+>@@ -1342,16 +1340,15 @@ int qla4xxx_about_firmware(struct scsi_qla_host
+>*ha)
+> 	uint32_t mbox_sts[MBOX_REG_COUNT];
+> 	int status =3D QLA_ERROR;
+>=20
+>-	about_fw =3D dma_alloc_coherent(&ha->pdev->dev,
+>-				      sizeof(struct about_fw_info),
+>-				      &about_fw_dma, GFP_KERNEL);
+>+	about_fw =3D dma_zalloc_coherent(&ha->pdev->dev,
+>+				       sizeof(struct about_fw_info),
+>+				       &about_fw_dma, GFP_KERNEL);
+> 	if (!about_fw) {
+> 		DEBUG2(ql4_printk(KERN_ERR, ha, "%s: Unable to alloc memory "
+> 				  "for about_fw\n", __func__));
+> 		return status;
+> 	}
+>=20
+>-	memset(about_fw, 0, sizeof(struct about_fw_info));
+> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+> 	memset(&mbox_sts, 0, sizeof(mbox_sts));
+>=20
+>diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+>index e91abb3..968bd85 100644
+>--- a/drivers/scsi/qla4xxx/ql4_nx.c
+>+++ b/drivers/scsi/qla4xxx/ql4_nx.c
+>@@ -4050,15 +4050,14 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host
+>*ha)
+> 	dma_addr_t sys_info_dma;
+> 	int status =3D QLA_ERROR;
+>=20
+>-	sys_info =3D dma_alloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
+>-				      &sys_info_dma, GFP_KERNEL);
+>+	sys_info =3D dma_zalloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
+>+				       &sys_info_dma, GFP_KERNEL);
+> 	if (sys_info =3D=3D NULL) {
+> 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+> 		    ha->host_no, __func__));
+> 		return status;
+> 	}
+>=20
+>-	memset(sys_info, 0, sizeof(*sys_info));
+> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+> 	memset(&mbox_sts, 0, sizeof(mbox_sts));
+>=20
+>diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+>index 2b8a8ce..82e889b 100644
+>--- a/drivers/scsi/qla4xxx/ql4_os.c
+>+++ b/drivers/scsi/qla4xxx/ql4_os.c
+>@@ -2689,16 +2689,15 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost,
+>void *data, uint32_t len)
+> 	uint32_t rem =3D len;
+> 	struct nlattr *attr;
+>=20
+>-	init_fw_cb =3D dma_alloc_coherent(&ha->pdev->dev,
+>-					sizeof(struct addr_ctrl_blk),
+>-					&init_fw_cb_dma, GFP_KERNEL);
+>+	init_fw_cb =3D dma_zalloc_coherent(&ha->pdev->dev,
+>+					 sizeof(struct addr_ctrl_blk),
+>+					 &init_fw_cb_dma, GFP_KERNEL);
+> 	if (!init_fw_cb) {
+> 		ql4_printk(KERN_ERR, ha, "%s: Unable to alloc init_cb\n",
+> 			   __func__);
+> 		return -ENOMEM;
+> 	}
+>=20
+>-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
+> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+> 	memset(&mbox_sts, 0, sizeof(mbox_sts));
+>=20
+>@@ -4196,15 +4195,14 @@ static int qla4xxx_mem_alloc(struct scsi_qla_host
+>*ha)
+> 			  sizeof(struct shadow_regs) +
+> 			  MEM_ALIGN_VALUE +
+> 			  (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1);
+>-	ha->queues =3D dma_alloc_coherent(&ha->pdev->dev, ha->queues_len,
+>-					&ha->queues_dma, GFP_KERNEL);
+>+	ha->queues =3D dma_zalloc_coherent(&ha->pdev->dev, ha->queues_len,
+>+					 &ha->queues_dma, GFP_KERNEL);
+> 	if (ha->queues =3D=3D NULL) {
+> 		ql4_printk(KERN_WARNING, ha,
+> 		    "Memory Allocation failed - queues.\n");
+>=20
+> 		goto mem_alloc_error_exit;
+> 	}
+>-	memset(ha->queues, 0, ha->queues_len);
+>=20
+> 	/*
+> 	 * As per RISC alignment requirements -- the bus-address must be a
+>--=20
+
+Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
+
+>
