@@ -1,86 +1,107 @@
 From: Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH v17 3/4] hinic: Replace PCI pool old API
-Date: Tue,  2 Jan 2018 18:53:55 +0100
-Message-ID: <20180102175356.7999-4-romain.perier@gmail.com>
-References: <20180102175356.7999-1-romain.perier@gmail.com>
+Subject: [PATCH v17 0/4] Replace PCI pool by DMA pool API
+Date: Tue,  2 Jan 2018 18:53:52 +0100
+Message-ID: <20180102175356.7999-1-romain.perier@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180102175356.7999-1-romain.perier@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Romain Perier <romain.perier@collabora.com>
+Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Romain Perier <romain.perier@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Romain Perier <romain.perier@collabora.com>
+The current PCI pool API are simple macro functions direct expanded to
+the appropriate dma pool functions. The prototypes are almost the same
+and semantically, they are very similar. I propose to use the DMA pool
+API directly and get rid of the old API.
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+This set of patches, replaces the old API by the dma pool API
+and remove the defines.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: David S. Miller <davem@davemloft.net>
----
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
+Changes in v17:
+- Rebased series onto next-20180102
+- Added Acked-by tags by David S. Miller on patches 02/04
+  and 03/04
+
+Changes in v16:
+- Rebased series onto next-20171215
+- I have fixed patch 04/04, so it can be applied
+- Added Acked-by for Bjorn Helgaas on patch 04/04
+
+Changes in v15:
+- Rebased series onto next-20171120
+- Added patch 04/05 for mpt3sas scsi driver
+
+Changes in v14:
+- Rebased series onto next-20171018
+- Rebased patch 03/05 on latest driver
+
+Changes in v13:
+- Rebased series onto next-20170906
+- Added a new commit for the hinic ethernet driver
+- Remove previously merged patches
+
+Changes in v12:
+- Rebased series onto next-20170822
+
+Changes in v11:
+- Rebased series onto next-20170809
+- Removed patches 08-14, these have been merged.
+
+Changes in v10:
+- Rebased series onto next-20170706
+- I have fixed and improved patch "scsi: megaraid: Replace PCI pool old API"
+
+Changes in v9:
+- Rebased series onto next-20170522
+- I have fixed and improved the patch for lpfc driver
+
+Changes in v8:
+- Rebased series onto next-20170428
+
+Changes in v7:
+- Rebased series onto next-20170416
+- Added Acked-by, Tested-by and Reviwed-by tags
+
+Changes in v6:
+- Fixed an issue reported by kbuild test robot about changes in DAC960
+- Removed patches 15/19,16/19,17/19,18/19. They have been merged by Greg
+- Added Acked-by Tags
+
+Changes in v5:
+- Re-worded the cover letter (remove sentence about checkpatch.pl)
+- Rebased series onto next-20170308
+- Fix typos in commit message
+- Added Acked-by Tags
+
+Changes in v4:
+- Rebased series onto next-20170301
+- Removed patch 20/20: checks done by checkpath.pl, no longer required.
+  Thanks to Peter and Joe for their feedbacks.
+- Added Reviewed-by tags
+
+Changes in v3:
+- Rebased series onto next-20170224
+- Fix checkpath.pl reports for patch 11/20 and patch 12/20
+- Remove prefix RFC
+Changes in v2:
+- Introduced patch 18/20
+- Fixed cosmetic changes: spaces before brace, live over 80 characters
+- Removed some of the check for NULL pointers before calling dma_pool_destroy
+- Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
+- Added Tested-by and Acked-by tags
+
+Romain Perier (4):
+  block: DAC960: Replace PCI pool old API
+  net: e100: Replace PCI pool old API
+  hinic: Replace PCI pool old API
+  PCI: Remove PCI pool macro functions
+
+ drivers/block/DAC960.c                            | 38 +++++++++++------------
+ drivers/block/DAC960.h                            |  4 +--
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/ethernet/intel/e100.c                 | 12 +++----
+ include/linux/pci.h                               |  9 ------
+ 6 files changed, 32 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-index 7d95f0866fb0..28a81ac97af5 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 	struct hinic_hwif *hwif = cmdqs->hwif;
- 	struct pci_dev *pdev = hwif->pdev;
- 
--	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
-+	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
- 				       &cmdq_buf->dma_addr);
- 	if (!cmdq_buf->buf) {
- 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
-@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 			 struct hinic_cmdq_buf *cmdq_buf)
- {
--	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
-+	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
- }
- 
- static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
-@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	int err;
- 
- 	cmdqs->hwif = hwif;
--	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
-+	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
- 					       HINIC_CMDQ_BUF_SIZE,
- 					       HINIC_CMDQ_BUF_SIZE, 0);
- 	if (!cmdqs->cmdq_buf_pool)
-@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
- err_saved_wqs:
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- 	return err;
- }
- 
-@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
- 
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- }
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-index b35583400cb6..23f8d39eab68 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-@@ -157,7 +157,7 @@ struct hinic_cmdq {
- struct hinic_cmdqs {
- 	struct hinic_hwif       *hwif;
- 
--	struct pci_pool         *cmdq_buf_pool;
-+	struct dma_pool         *cmdq_buf_pool;
- 
- 	struct hinic_wq         *saved_wqs;
- 
 -- 
 2.14.1
