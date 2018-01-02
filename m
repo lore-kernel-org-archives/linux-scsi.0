@@ -1,77 +1,31 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Re: [PATCH v1] libsas: remove private hex2bin() implementation
-Date: Tue, 2 Jan 2018 19:16:35 +0800
-Message-ID: <9c38dd28-8d18-d4e5-15dd-bd8c590c648a@hisilicon.com>
-References: <20171219173727.41841-1-andriy.shevchenko@linux.intel.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH 0/3] Three small fixes for libsas
+Date: Tue, 2 Jan 2018 20:15:07 +0800
+Message-ID: <20180102121510.12570-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:3220 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751666AbeABLRF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Jan 2018 06:17:05 -0500
-In-Reply-To: <20171219173727.41841-1-andriy.shevchenko@linux.intel.com>
+Received: from szxga06-in.huawei.com ([45.249.212.32]:55472 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752129AbeABMIL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Jan 2018 07:08:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, zhaohongjiang@huawei.com, miaoxie@huawei.com, hch@lst.de, hare@suse.com, Jason Yan <yanaijie@huawei.com>
 
-ÔÚ 2017/12/20 1:37, Andy Shevchenko Ð´µÀ:
-> The function sas_parse_addr() could be easily substituted by hex2bin() which is
-> in kernel library code.
->
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+We've found three small bugs. Please consider including them for 4.15.
 
-Tested-by: Xiang Chen <chenxiang66@hisilicon.com>
+Jason Yan (2):
+  scsi: libsas: fix memory leak in sas_smp_get_phy_events()
+  scsi: libsas: fix error when getting phy events
 
-> ---
->   drivers/scsi/libsas/sas_scsi_host.c | 20 ++++----------------
->   1 file changed, 4 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index 58476b728c57..626727207889 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -27,6 +27,7 @@
->   #include <linux/firmware.h>
->   #include <linux/export.h>
->   #include <linux/ctype.h>
-> +#include <linux/kernel.h>
->   
->   #include "sas_internal.h"
->   
-> @@ -946,21 +947,6 @@ void sas_target_destroy(struct scsi_target *starget)
->   	sas_put_device(found_dev);
->   }
->   
-> -static void sas_parse_addr(u8 *sas_addr, const char *p)
-> -{
-> -	int i;
-> -	for (i = 0; i < SAS_ADDR_SIZE; i++) {
-> -		u8 h, l;
-> -		if (!*p)
-> -			break;
-> -		h = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
-> -		p++;
-> -		l = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
-> -		p++;
-> -		sas_addr[i] = (h<<4) | l;
-> -	}
-> -}
-> -
->   #define SAS_STRING_ADDR_SIZE	16
->   
->   int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
-> @@ -977,7 +963,9 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
->   		goto out;
->   	}
->   
-> -	sas_parse_addr(addr, fw->data);
-> +	res = hex2bin(addr, fw->data, strnlen(fw->data, SAS_ADDR_SIZE * 2) / 2);
-> +	if (res)
-> +		goto out;
->   
->   out:
->   	release_firmware(fw);
+chenxiang (1):
+  scsi: libsas: initialize sas_phy status according to response of
+    DISCOVER
+
+ drivers/scsi/libsas/sas_expander.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+-- 
+2.9.5
