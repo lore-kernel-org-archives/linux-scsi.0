@@ -1,79 +1,46 @@
-From: Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH v17 2/4] net: e100: Replace PCI pool old API
-Date: Tue,  2 Jan 2018 18:53:54 +0100
-Message-ID: <20180102175356.7999-3-romain.perier@gmail.com>
-References: <20180102175356.7999-1-romain.perier@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180102175356.7999-1-romain.perier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Romain Perier <romain.perier@collabora.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH for sg3_utils 0/4] Simplify the sg3_utils configure script
+Date: Tue,  2 Jan 2018 10:13:37 -0800
+Message-ID: <20180102181341.13435-1-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:36146 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751211AbeABSNo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2018 13:13:44 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>
+Cc: Hannes Reinecke <hare@suse.com>, Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-From: Romain Perier <romain.perier@collabora.com>
+Hello Doug,
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+The four patches in this series is what I came up with after having reviewed
+the sg3_utils configure script. Please consider to apply these patches on the
+sg3_utils trunk.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Acked-by: David S. Miller <davem@davemloft.net>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/net/ethernet/intel/e100.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
-index 44b3937f7e81..29486478836e 100644
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -607,7 +607,7 @@ struct nic {
- 	struct mem *mem;
- 	dma_addr_t dma_addr;
- 
--	struct pci_pool *cbs_pool;
-+	struct dma_pool *cbs_pool;
- 	dma_addr_t cbs_dma_addr;
- 	u8 adaptive_ifs;
- 	u8 tx_threshold;
-@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
- 			nic->cb_to_clean = nic->cb_to_clean->next;
- 			nic->cbs_avail++;
- 		}
--		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
-+		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
- 		nic->cbs = NULL;
- 		nic->cbs_avail = 0;
- 	}
-@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
- 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
- 	nic->cbs_avail = 0;
- 
--	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
-+	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
- 				   &nic->cbs_dma_addr);
- 	if (!nic->cbs)
- 		return -ENOMEM;
-@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
- 		goto err_out_free;
- 	}
--	nic->cbs_pool = pci_pool_create(netdev->name,
--			   nic->pdev,
-+	nic->cbs_pool = dma_pool_create(netdev->name,
-+			   &nic->pdev->dev,
- 			   nic->params.cbs.max * sizeof(struct cb),
- 			   sizeof(u32),
- 			   0);
-@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
- 		unregister_netdev(netdev);
- 		e100_free(nic);
- 		pci_iounmap(pdev, nic->csr);
--		pci_pool_destroy(nic->cbs_pool);
-+		dma_pool_destroy(nic->cbs_pool);
- 		free_netdev(netdev);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
+Bart.
+
+Bart Van Assche (4):
+  configure.ac: Suppress an autoconf warning
+  configure.ac: Only link with the pthread library if required
+  configure.ac: Avoid code duplication
+  configure.ac, Makefile.am: Use CFLAGS and LIBS instead of os_cflags
+    and os_libs
+
+ Makefile.in         |   3 +-
+ config.h.in         |   6 +-
+ configure           | 672 +++++++++++++++++++---------------------------------
+ configure.ac        |  83 +++----
+ doc/Makefile.in     |   3 +-
+ include/Makefile.in |   3 +-
+ lib/Makefile.am     |   2 +-
+ lib/Makefile.in     |   5 +-
+ scripts/Makefile.in |   3 +-
+ src/Makefile.am     | 140 ++++++-----
+ src/Makefile.in     | 145 ++++++------
+ 11 files changed, 425 insertions(+), 640 deletions(-)
+
 -- 
-2.14.1
+2.15.1
