@@ -1,137 +1,83 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Re: [PATCH] scsi: fix dma_unmap_sg() parameter in some drivers
-Date: Tue, 2 Jan 2018 19:04:56 +0800
-Message-ID: <c7c7b5c0-16cf-dc63-05af-b4e731940f43@hisilicon.com>
-References: <1513844130-52564-1-git-send-email-chenxiang66@hisilicon.com>
- <b1477472-0c29-6cfe-15f2-47e0f8f4d087@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v5 0/7] Enhance libsas hotplug feature
+Date: Tue, 2 Jan 2018 11:06:00 +0000
+Message-ID: <8f6e3763-2b04-23e8-f1ec-8ed3c58f55d3@huawei.com>
+References: <20171208094210.24887-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3256 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751602AbeABLFg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Jan 2018 06:05:36 -0500
-In-Reply-To: <b1477472-0c29-6cfe-15f2-47e0f8f4d087@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171208094210.24887-1-yanaijie@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: Jason Yan <yanaijie@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
-Cc: jgarzik@pobox.com, jack_wang@usish.com, dan.j.williams@intel.com, bryantly@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com
 
-在 2018/1/2 18:51, John Garry 写道:
-> On 21/12/2017 08:15, chenxiang wrote:
->> For function dma_unmap_sg(), the <nents> parameter should be number of
->> elements in the scatterlist prior to the mapping, not after the mapping.
->> So fix this usage in ibmvscsi_tgt/isci/mvsas/pm8001.
->>
+On 08/12/2017 09:42, Jason Yan wrote:
+> Now the libsas hotplug has some issues, Dan Williams report
+> a similar bug here before
+> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
 >
-> Hi chenxiang,
->
-> I think that it may be better to rewrite the series with a patch per 
-> driver, so that we can add specific "fixes" ID tag. Please also 
-> include "CC:" tag per patch, cc'ing the respective driver maintainer 
-> (if any).
 
-Ok, i will split it with a patch per driver.
+Hi Martin, James,
 
+At this point we feel that we have a decent solution to the 
+long-standing libsas hotplug issues.
+
+Hannes has kindly reviewed the series.
+
+Can you let us know what else you require for acceptance? More 
+independent review or testing?
+
+Thanks,
+John
+
+> The issues we have found
+> 1. if LLDD burst reports lots of phy-up/phy-down sas events, some events
+>    may lost because a same sas events is pending now, finally libsas topo
+>    may different the hardware.
+> 2. receive a phy down sas event, libsas call sas_deform_port to remove
+>    devices, it would first delete the sas port, then put a destruction
+>    discovery event in a new work, and queue it at the tail of workqueue,
+>    once the sas port be deleted, its children device will be deleted too,
+>    when the destruction work start, it will found the target device has
+>    been removed, and report a sysfs warnning.
+> 3. since a hotplug process will be devided into several works, if a phy up
+>    sas event insert into phydown works, like
+>    destruction work  ---> PORTE_BYTES_DMAED (sas_form_port) ---->PHYE_LOSS_OF_SIGNAL
+>    the hot remove flow would broken by PORTE_BYTES_DMAED event, it's not
+>    we expected, and issues would occur.
 >
-> BTW, I guess that there are many more instances of this issue 
-> throughout the kernel...
+> v4->v5: -process only one expander's revalidation in sas_ex_revalidate_domain()
+>         -notify event PORTE_BROADCAST_RCVD in sas_enable_revalidation()
+> v3->v4: -use dynamic alloced work and support shutting down the phy if active event reached the threshold
+>         -use flush_workqueue instead of wait-completion to process discover events synchronously
+>         -direct call probe and destruct function
+> v2->v3: some code improvements suggested by Johannes and John,
+>         split v2 patch 2 into several small pathes.
+> v1->v2: some code improvements suggested by John Garry
 >
-> Much appreciated,
-> John
+> Jason Yan (7):
+>   scsi: libsas: Use dynamic alloced work to avoid sas event lost
+>   scsi: libsas: shut down the PHY if events reached the threshold
+>   scsi: libsas: make the event threshold configurable
+>   scsi: libsas: Use new workqueue to run sas event and disco event
+>   scsi: libsas: use flush_workqueue to process disco events
+>     synchronously
+>   scsi: libsas: direct call probe and destruct
+>   scsi: libsas: notify event PORTE_BROADCAST_RCVD in
+>     sas_enable_revalidation()
 >
->> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
->> ---
->>  drivers/scsi/ibmvscsi_tgt/libsrp.c | 6 ++++--
->>  drivers/scsi/isci/request.c        | 2 +-
->>  drivers/scsi/mvsas/mv_sas.c        | 4 ++--
->>  drivers/scsi/pm8001/pm8001_sas.c   | 2 +-
->>  4 files changed, 8 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/scsi/ibmvscsi_tgt/libsrp.c 
->> b/drivers/scsi/ibmvscsi_tgt/libsrp.c
->> index 5a4cc28..16054c0 100644
->> --- a/drivers/scsi/ibmvscsi_tgt/libsrp.c
->> +++ b/drivers/scsi/ibmvscsi_tgt/libsrp.c
->> @@ -193,7 +193,8 @@ static int srp_direct_data(struct ibmvscsis_cmd 
->> *cmd, struct srp_direct_buf *md,
->>      err = rdma_io(cmd, sg, nsg, md, 1, dir, len);
->>
->>      if (dma_map)
->> -        dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
->> +        dma_unmap_sg(iue->target->dev, sg, cmd->se_cmd.t_data_nents,
->> +                DMA_BIDIRECTIONAL);
->>
->>      return err;
->>  }
->> @@ -265,7 +266,8 @@ static int srp_indirect_data(struct ibmvscsis_cmd 
->> *cmd, struct srp_cmd *srp_cmd,
->>      err = rdma_io(cmd, sg, nsg, md, nmd, dir, len);
->>
->>      if (dma_map)
->> -        dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
->> +        dma_unmap_sg(iue->target->dev, sg, cmd->se_cmd.t_data_nents,
->> +                DMA_BIDIRECTIONAL);
->>
->>  free_mem:
->>      if (token && dma_map) {
->> diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
->> index ed197bc..225d947 100644
->> --- a/drivers/scsi/isci/request.c
->> +++ b/drivers/scsi/isci/request.c
->> @@ -2914,7 +2914,7 @@ static void 
->> isci_request_io_request_complete(struct isci_host *ihost,
->>                       task->total_xfer_len, task->data_dir);
->>          else  /* unmap the sgl dma addresses */
->>              dma_unmap_sg(&ihost->pdev->dev, task->scatter,
->> -                     request->num_sg_entries, task->data_dir);
->> +                     task->num_scatter, task->data_dir);
->>          break;
->>      case SAS_PROTOCOL_SMP: {
->>          struct scatterlist *sg = &task->smp_task.smp_req;
->> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
->> index cff43bd..4b2cf36 100644
->> --- a/drivers/scsi/mvsas/mv_sas.c
->> +++ b/drivers/scsi/mvsas/mv_sas.c
->> @@ -848,7 +848,7 @@ static int mvs_task_prep(struct sas_task *task, 
->> struct mvs_info *mvi, int is_tmf
->>      dev_printk(KERN_ERR, mvi->dev, "mvsas prep failed[%d]!\n", rc);
->>      if (!sas_protocol_ata(task->task_proto))
->>          if (n_elem)
->> -            dma_unmap_sg(mvi->dev, task->scatter, n_elem,
->> +            dma_unmap_sg(mvi->dev, task->scatter, task->num_scatter,
->>                       task->data_dir);
->>  prep_out:
->>      return rc;
->> @@ -899,7 +899,7 @@ static void mvs_slot_task_free(struct mvs_info 
->> *mvi, struct sas_task *task,
->>      if (!sas_protocol_ata(task->task_proto))
->>          if (slot->n_elem)
->>              dma_unmap_sg(mvi->dev, task->scatter,
->> -                     slot->n_elem, task->data_dir);
->> +                     task->num_scatter, task->data_dir);
->>
->>      switch (task->task_proto) {
->>      case SAS_PROTOCOL_SMP:
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.c 
->> b/drivers/scsi/pm8001/pm8001_sas.c
->> index 947d601..576a0f0 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.c
->> +++ b/drivers/scsi/pm8001/pm8001_sas.c
->> @@ -466,7 +466,7 @@ static int pm8001_task_exec(struct sas_task *task,
->>      dev_printk(KERN_ERR, pm8001_ha->dev, "pm8001 exec 
->> failed[%d]!\n", rc);
->>      if (!sas_protocol_ata(t->task_proto))
->>          if (n_elem)
->> -            dma_unmap_sg(pm8001_ha->dev, t->scatter, n_elem,
->> +            dma_unmap_sg(pm8001_ha->dev, t->scatter, t->num_scatter,
->>                  t->data_dir);
->>  out_done:
->>      spin_unlock_irqrestore(&pm8001_ha->lock, flags);
->>
->
->
->
-> .
+>  drivers/scsi/hisi_sas/hisi_sas_main.c |   6 ++
+>  drivers/scsi/libsas/sas_ata.c         |   1 -
+>  drivers/scsi/libsas/sas_discover.c    |  34 ++++++-----
+>  drivers/scsi/libsas/sas_event.c       |  86 ++++++++++++++++++++-------
+>  drivers/scsi/libsas/sas_expander.c    |   8 +--
+>  drivers/scsi/libsas/sas_init.c        | 107 +++++++++++++++++++++++++++++++++-
+>  drivers/scsi/libsas/sas_internal.h    |   7 +++
+>  drivers/scsi/libsas/sas_phy.c         |  69 +++++++++++-----------
+>  drivers/scsi/libsas/sas_port.c        |  25 ++++----
+>  include/scsi/libsas.h                 |  30 +++++++---
+>  include/scsi/scsi_transport_sas.h     |   1 +
+>  11 files changed, 277 insertions(+), 97 deletions(-)
 >
