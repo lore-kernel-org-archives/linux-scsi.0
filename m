@@ -1,68 +1,33 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 2/3] scsi: libsas: fix error when getting phy events
-Date: Tue, 2 Jan 2018 13:50:00 +0000
-Message-ID: <e88b6f32-4830-2cd9-9239-937a136a0254@huawei.com>
-References: <20180102121510.12570-1-yanaijie@huawei.com>
- <20180102121510.12570-3-yanaijie@huawei.com>
+From: Bob Peterson <rpeterso@redhat.com>
+Subject: Re: [Cluster-devel] [PATCH 00/12] drop unneeded newline
+Date: Tue, 2 Jan 2018 08:52:38 -0500 (EST)
+Message-ID: <1878806802.2632123.1514901158666.JavaMail.zimbra@redhat.com>
+References: <1514386305-7402-1-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:49665 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751622AbeABNu1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Jan 2018 08:50:27 -0500
-In-Reply-To: <20180102121510.12570-3-yanaijie@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <1514386305-7402-1-git-send-email-Julia.Lawall@lip6.fr>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: dev@openvswitch.org, linux-s390@vger.kernel.org, linux-media@vger.kernel.org, linux-scsi@vger.kernel.org, dccp@vger.kernel.org, Alexander Shishkin <alexander.shishkin@linux.intel.com>, netdev@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, cluster-devel@redhat.com, amd-gfx@lists.freedesktop.org, Namhyung Kim <namhyung@kernel.org>, linux-ext4@vger.kernel.org, Jiri Olsa <jolsa@redhat.com>, linux-arm-kernel@lists.infradead.org, esc storagedev <esc.storagedev@microsemi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, zhaohongjiang@huawei.com, miaoxie@huawei.com, hch@lst.de, hare@suse.com, chenqilin <chenqilin2@huawei.com>, chenxiang <chenxiang66@hisilicon.com>, Linuxarm <linuxarm@huawei.com>
 
-On 02/01/2018 12:15, Jason Yan wrote:
-> The intend purpose here was to goto out if smp_execute_task() returned
-> error. Obviously something got screwed up. We will never get these link
-> error statistics below:
->
-> ~:/sys/class/sas_phy/phy-1:0:12 # cat invalid_dword_count
-> 0
-> ~:/sys/class/sas_phy/phy-1:0:12 # cat running_disparity_error_count
-> 0
-> ~:/sys/class/sas_phy/phy-1:0:12 # cat loss_of_dword_sync_count
-> 0
-> ~:/sys/class/sas_phy/phy-1:0:12 # cat phy_reset_problem_count
-> 0
->
-> Obviously we should goto error handler if smp_execute_task() returns
-> non-zero.
->
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> CC: John Garry <john.garry@huawei.com>
-> CC: chenqilin <chenqilin2@huawei.com>
-> CC: chenxiang <chenxiang66@hisilicon.com>
-> ---
->  drivers/scsi/libsas/sas_expander.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 4b0c67f..6eab487 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -686,7 +686,7 @@ int sas_smp_get_phy_events(struct sas_phy *phy)
->  	res = smp_execute_task(dev, req, RPEL_REQ_SIZE,
->  			            resp, RPEL_RESP_SIZE);
->
-> -	if (!res)
-> +	if (res)
->  		goto out;
-
-This seems to have been broken for some time.
-
-Could you inject some errors on the link to verify that this function 
-actually works properly with this change, i.e. non-zero reading?
-
-Thanks,
-John
-
->
->  	phy->invalid_dword_count = scsi_to_u32(&resp[12]);
->
+LS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLQp8IERyb3AgbmV3bGluZSBhdCB0aGUgZW5kIG9m
+IGEgbWVzc2FnZSBzdHJpbmcgd2hlbiB0aGUgcHJpbnRpbmcgZnVuY3Rpb24gYWRkcwp8IGEgbmV3
+bGluZS4KCkhpIEp1bGlhLAoKTkFDSy4KCkFzIG11Y2ggYXMgaXQncyBhIHBhaW4gd2hlbiBzZWFy
+Y2hpbmcgdGhlIHNvdXJjZSBjb2RlIGZvciBvdXRwdXQgc3RyaW5ncywKdGhpcyBwYXRjaCBzZXQg
+Z29lcyBhZ2FpbnN0IHRoZSBhY2NlcHRlZCBMaW51eCBjb2Rpbmcgc3R5bGUgZG9jdW1lbnQuIFNl
+ZToKCmh0dHBzOi8vd3d3Lmtlcm5lbC5vcmcvZG9jL2h0bWwvdjQuMTAvcHJvY2Vzcy9jb2Rpbmct
+c3R5bGUuaHRtbCNicmVha2luZy1sb25nLWxpbmVzLWFuZC1zdHJpbmdzCgpSZWdhcmRzLAoKQm9i
+IFBldGVyc29uCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpo
+dHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
