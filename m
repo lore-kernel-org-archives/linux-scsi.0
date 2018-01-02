@@ -1,17 +1,17 @@
 From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: Re: [PATCH 1/9] scsi: qla4xxx: Use zeroing allocator rather than
+Subject: Re: [PATCH 3/9] scsi: qedi: Use zeroing allocator instead of
  allocator/memset
-Date: Tue, 2 Jan 2018 04:39:20 +0000
-Message-ID: <D6710A8A.4F523%manish.rangankar@cavium.com>
+Date: Tue, 2 Jan 2018 04:40:42 +0000
+Message-ID: <D6710AF7.4F533%manish.rangankar@cavium.com>
 References: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
- <1514647712-6332-2-git-send-email-himanshujha199640@gmail.com>
+ <1514647712-6332-4-git-send-email-himanshujha199640@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1514647712-6332-2-git-send-email-himanshujha199640@gmail.com>
+In-Reply-To: <1514647712-6332-4-git-send-email-himanshujha199640@gmail.com>
 Content-Language: en-US
-Content-ID: <2FB69548789AF442AF02C8A3D2024691@namprd07.prod.outlook.com>
+Content-ID: <2E77EDF39D9E264390EFEA2A3C871429@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Himanshu Jha <himanshujha199640@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "aacraid@adaptec.com" <aacraid@adaptec.com>
 Cc: "Gurumurthy, Anil" <Anil.Gurumurthy@cavium.com>, "Kalluru, Sudarsana" <Sudarsana.Kalluru@cavium.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "satishkh@cisco.com" <satishkh@cisco.com>, "sebaddel@cisco.com" <sebaddel@cisco.com>, "kartilak@cisco.com" <kartilak@cisco.com>Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -29,173 +29,116 @@ On 30/12/17 8:58 PM, "Himanshu Jha" <himanshujha199640@gmail.com> wrote:
 >Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
 >Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
 >---
-> drivers/scsi/qla4xxx/ql4_init.c |  5 ++---
-> drivers/scsi/qla4xxx/ql4_mbx.c  | 21 +++++++++------------
-> drivers/scsi/qla4xxx/ql4_nx.c   |  5 ++---
-> drivers/scsi/qla4xxx/ql4_os.c   | 12 +++++-------
-> 4 files changed, 18 insertions(+), 25 deletions(-)
+> drivers/scsi/qedi/qedi_main.c | 42
+>+++++++++++++++---------------------------
+> 1 file changed, 15 insertions(+), 27 deletions(-)
 >
->diff --git a/drivers/scsi/qla4xxx/ql4_init.c
->b/drivers/scsi/qla4xxx/ql4_init.c
->index 5d6d158..52b1a0b 100644
->--- a/drivers/scsi/qla4xxx/ql4_init.c
->+++ b/drivers/scsi/qla4xxx/ql4_init.c
->@@ -153,15 +153,14 @@ int qla4xxx_get_sys_info(struct scsi_qla_host *ha)
-> 	dma_addr_t sys_info_dma;
-> 	int status =3D QLA_ERROR;
->=20
->-	sys_info =3D dma_alloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
->-				      &sys_info_dma, GFP_KERNEL);
->+	sys_info =3D dma_zalloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
->+				       &sys_info_dma, GFP_KERNEL);
-> 	if (sys_info =3D=3D NULL) {
-> 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
-> 			      ha->host_no, __func__));
->=20
-> 		goto exit_get_sys_info_no_free;
-> 	}
->-	memset(sys_info, 0, sizeof(*sys_info));
->=20
-> 	/* Get flash sys info */
-> 	if (qla4xxx_get_flash(ha, sys_info_dma, FLASH_OFFSET_SYS_INFO,
->diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c
->b/drivers/scsi/qla4xxx/ql4_mbx.c
->index 1da04f3..bda2e64 100644
->--- a/drivers/scsi/qla4xxx/ql4_mbx.c
->+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
->@@ -625,15 +625,14 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host *
->ha)
-> 	uint32_t mbox_sts[MBOX_REG_COUNT];
-> 	int status =3D QLA_ERROR;
->=20
->-	init_fw_cb =3D dma_alloc_coherent(&ha->pdev->dev,
->-					sizeof(struct addr_ctrl_blk),
->-					&init_fw_cb_dma, GFP_KERNEL);
->+	init_fw_cb =3D dma_zalloc_coherent(&ha->pdev->dev,
->+					 sizeof(struct addr_ctrl_blk),
->+					 &init_fw_cb_dma, GFP_KERNEL);
-> 	if (init_fw_cb =3D=3D NULL) {
-> 		DEBUG2(printk("scsi%ld: %s: Unable to alloc init_cb\n",
-> 			      ha->host_no, __func__));
-> 		goto exit_init_fw_cb_no_free;
-> 	}
->-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
->=20
-> 	/* Get Initialize Firmware Control Block. */
-> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
->@@ -710,9 +709,9 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host
->* ha)
-> 	uint32_t mbox_cmd[MBOX_REG_COUNT];
-> 	uint32_t mbox_sts[MBOX_REG_COUNT];
->=20
->-	init_fw_cb =3D dma_alloc_coherent(&ha->pdev->dev,
->-					sizeof(struct addr_ctrl_blk),
->-					&init_fw_cb_dma, GFP_KERNEL);
->+	init_fw_cb =3D dma_zalloc_coherent(&ha->pdev->dev,
->+					 sizeof(struct addr_ctrl_blk),
->+					 &init_fw_cb_dma, GFP_KERNEL);
-> 	if (init_fw_cb =3D=3D NULL) {
-> 		printk("scsi%ld: %s: Unable to alloc init_cb\n", ha->host_no,
-> 		       __func__);
->@@ -720,7 +719,6 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host
->* ha)
+>diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+>index cccc34a..5ef0b36 100644
+>--- a/drivers/scsi/qedi/qedi_main.c
+>+++ b/drivers/scsi/qedi/qedi_main.c
+>@@ -1268,16 +1268,14 @@ static int qedi_alloc_bdq(struct qedi_ctx *qedi)
 > 	}
 >=20
-> 	/* Get Initialize Firmware Control Block. */
->-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
-> 	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma) !=
-=3D
-> 	    QLA_SUCCESS) {
-> 		DEBUG2(printk("scsi%ld: %s: Failed to get init_fw_ctrl_blk\n",
->@@ -1342,16 +1340,15 @@ int qla4xxx_about_firmware(struct scsi_qla_host
->*ha)
-> 	uint32_t mbox_sts[MBOX_REG_COUNT];
-> 	int status =3D QLA_ERROR;
->=20
->-	about_fw =3D dma_alloc_coherent(&ha->pdev->dev,
->-				      sizeof(struct about_fw_info),
->-				      &about_fw_dma, GFP_KERNEL);
->+	about_fw =3D dma_zalloc_coherent(&ha->pdev->dev,
->+				       sizeof(struct about_fw_info),
->+				       &about_fw_dma, GFP_KERNEL);
-> 	if (!about_fw) {
-> 		DEBUG2(ql4_printk(KERN_ERR, ha, "%s: Unable to alloc memory "
-> 				  "for about_fw\n", __func__));
-> 		return status;
-> 	}
->=20
->-	memset(about_fw, 0, sizeof(struct about_fw_info));
-> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-> 	memset(&mbox_sts, 0, sizeof(mbox_sts));
->=20
->diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
->index e91abb3..968bd85 100644
->--- a/drivers/scsi/qla4xxx/ql4_nx.c
->+++ b/drivers/scsi/qla4xxx/ql4_nx.c
->@@ -4050,15 +4050,14 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host
->*ha)
-> 	dma_addr_t sys_info_dma;
-> 	int status =3D QLA_ERROR;
->=20
->-	sys_info =3D dma_alloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
->-				      &sys_info_dma, GFP_KERNEL);
->+	sys_info =3D dma_zalloc_coherent(&ha->pdev->dev, sizeof(*sys_info),
->+				       &sys_info_dma, GFP_KERNEL);
-> 	if (sys_info =3D=3D NULL) {
-> 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
-> 		    ha->host_no, __func__));
-> 		return status;
-> 	}
->=20
->-	memset(sys_info, 0, sizeof(*sys_info));
-> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-> 	memset(&mbox_sts, 0, sizeof(mbox_sts));
->=20
->diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
->index 2b8a8ce..82e889b 100644
->--- a/drivers/scsi/qla4xxx/ql4_os.c
->+++ b/drivers/scsi/qla4xxx/ql4_os.c
->@@ -2689,16 +2689,15 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost,
->void *data, uint32_t len)
-> 	uint32_t rem =3D len;
-> 	struct nlattr *attr;
->=20
->-	init_fw_cb =3D dma_alloc_coherent(&ha->pdev->dev,
->-					sizeof(struct addr_ctrl_blk),
->-					&init_fw_cb_dma, GFP_KERNEL);
->+	init_fw_cb =3D dma_zalloc_coherent(&ha->pdev->dev,
->+					 sizeof(struct addr_ctrl_blk),
->+					 &init_fw_cb_dma, GFP_KERNEL);
-> 	if (!init_fw_cb) {
-> 		ql4_printk(KERN_ERR, ha, "%s: Unable to alloc init_cb\n",
-> 			   __func__);
+> 	/* Allocate list of PBL pages */
+>-	qedi->bdq_pbl_list =3D dma_alloc_coherent(&qedi->pdev->dev,
+>-						PAGE_SIZE,
+>-						&qedi->bdq_pbl_list_dma,
+>-						GFP_KERNEL);
+>+	qedi->bdq_pbl_list =3D dma_zalloc_coherent(&qedi->pdev->dev, PAGE_SIZE,
+>+						 &qedi->bdq_pbl_list_dma,
+>+						 GFP_KERNEL);
+> 	if (!qedi->bdq_pbl_list) {
+> 		QEDI_ERR(&qedi->dbg_ctx,
+> 			 "Could not allocate list of PBL pages.\n");
 > 		return -ENOMEM;
 > 	}
->=20
->-	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
-> 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-> 	memset(&mbox_sts, 0, sizeof(mbox_sts));
->=20
->@@ -4196,15 +4195,14 @@ static int qla4xxx_mem_alloc(struct scsi_qla_host
->*ha)
-> 			  sizeof(struct shadow_regs) +
-> 			  MEM_ALIGN_VALUE +
-> 			  (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1);
->-	ha->queues =3D dma_alloc_coherent(&ha->pdev->dev, ha->queues_len,
->-					&ha->queues_dma, GFP_KERNEL);
->+	ha->queues =3D dma_zalloc_coherent(&ha->pdev->dev, ha->queues_len,
->+					 &ha->queues_dma, GFP_KERNEL);
-> 	if (ha->queues =3D=3D NULL) {
-> 		ql4_printk(KERN_WARNING, ha,
-> 		    "Memory Allocation failed - queues.\n");
->=20
-> 		goto mem_alloc_error_exit;
-> 	}
->-	memset(ha->queues, 0, ha->queues_len);
+>-	memset(qedi->bdq_pbl_list, 0, PAGE_SIZE);
 >=20
 > 	/*
-> 	 * As per RISC alignment requirements -- the bus-address must be a
+> 	 * Now populate PBL list with pages that contain pointers to the
+>@@ -1367,11 +1365,10 @@ static int qedi_alloc_global_queues(struct
+>qedi_ctx *qedi)
+> 		    (qedi->global_queues[i]->cq_pbl_size +
+> 		    (QEDI_PAGE_SIZE - 1));
+>=20
+>-		qedi->global_queues[i]->cq =3D
+>-		    dma_alloc_coherent(&qedi->pdev->dev,
+>-				       qedi->global_queues[i]->cq_mem_size,
+>-				       &qedi->global_queues[i]->cq_dma,
+>-				       GFP_KERNEL);
+>+		qedi->global_queues[i]->cq =3D
+>+			dma_zalloc_coherent(&qedi->pdev->dev,
+>+					qedi->global_queues[i]->cq_mem_size,
+>+					&qedi->global_queues[i]->cq_dma,
+>+					GFP_KERNEL);
+>=20
+> 		if (!qedi->global_queues[i]->cq) {
+> 			QEDI_WARN(&qedi->dbg_ctx,
+>@@ -1379,14 +1376,10 @@ static int qedi_alloc_global_queues(struct
+>qedi_ctx *qedi)
+> 			status =3D -ENOMEM;
+> 			goto mem_alloc_failure;
+> 		}
+>-		memset(qedi->global_queues[i]->cq, 0,
+>-		       qedi->global_queues[i]->cq_mem_size);
+>-
+>-		qedi->global_queues[i]->cq_pbl =3D
+>-		    dma_alloc_coherent(&qedi->pdev->dev,
+>-				       qedi->global_queues[i]->cq_pbl_size,
+>-				       &qedi->global_queues[i]->cq_pbl_dma,
+>-				       GFP_KERNEL);
+>+		qedi->global_queues[i]->cq_pbl =3D
+>+			dma_zalloc_coherent(&qedi->pdev->dev,
+>+					qedi->global_queues[i]->cq_pbl_size,
+>+					&qedi->global_queues[i]->cq_pbl_dma,
+>+					GFP_KERNEL);
+>=20
+> 		if (!qedi->global_queues[i]->cq_pbl) {
+> 			QEDI_WARN(&qedi->dbg_ctx,
+>@@ -1394,8 +1387,6 @@ static int qedi_alloc_global_queues(struct qedi_ctx
+>*qedi)
+> 			status =3D -ENOMEM;
+> 			goto mem_alloc_failure;
+> 		}
+>-		memset(qedi->global_queues[i]->cq_pbl, 0,
+>-		       qedi->global_queues[i]->cq_pbl_size);
+>=20
+> 		/* Create PBL */
+> 		num_pages =3D qedi->global_queues[i]->cq_mem_size /
+>@@ -1456,25 +1447,22 @@ int qedi_alloc_sq(struct qedi_ctx *qedi, struct
+>qedi_endpoint *ep)
+> 	ep->sq_pbl_size =3D (ep->sq_mem_size / QEDI_PAGE_SIZE) * sizeof(void *);
+> 	ep->sq_pbl_size =3D ep->sq_pbl_size + QEDI_PAGE_SIZE;
+>=20
+>-	ep->sq =3D dma_alloc_coherent(&qedi->pdev->dev, ep->sq_mem_size,
+>-				    &ep->sq_dma, GFP_KERNEL);
+>+	ep->sq =3D dma_zalloc_coherent(&qedi->pdev->dev, ep->sq_mem_size,
+>+				     &ep->sq_dma, GFP_KERNEL);
+> 	if (!ep->sq) {
+> 		QEDI_WARN(&qedi->dbg_ctx,
+> 			  "Could not allocate send queue.\n");
+> 		rval =3D -ENOMEM;
+> 		goto out;
+> 	}
+>-	memset(ep->sq, 0, ep->sq_mem_size);
+>-
+>-	ep->sq_pbl =3D dma_alloc_coherent(&qedi->pdev->dev, ep->sq_pbl_size,
+>-					&ep->sq_pbl_dma, GFP_KERNEL);
+>+	ep->sq_pbl =3D dma_zalloc_coherent(&qedi->pdev->dev, ep->sq_pbl_size,
+>+					 &ep->sq_pbl_dma, GFP_KERNEL);
+> 	if (!ep->sq_pbl) {
+> 		QEDI_WARN(&qedi->dbg_ctx,
+> 			  "Could not allocate send queue PBL.\n");
+> 		rval =3D -ENOMEM;
+> 		goto out_free_sq;
+> 	}
+>-	memset(ep->sq_pbl, 0, ep->sq_pbl_size);
+>=20
+> 	/* Create PBL */
+> 	num_pages =3D ep->sq_mem_size / QEDI_PAGE_SIZE;
 >--=20
+>2.7.4
 
 Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
 
