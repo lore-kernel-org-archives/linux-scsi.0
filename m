@@ -1,121 +1,79 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH] scsi: libiscsi: Allow sd_shutdown on bad transport
-Date: Tue, 2 Jan 2018 20:27:52 -0800
-Message-ID: <b87c01be-0f97-3fd7-a84b-b5300ba10a81@suse.com>
-References: <1512683953-5959-1-git-send-email-rafael.tinoco@canonical.com>
+From: "Elior, Ariel" <Ariel.Elior-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Subject: RE: [PATCH v4 net-next 0/4] qed*: Advance to FW 8.33.1.0
+Date: Wed, 3 Jan 2018 07:32:29 +0000
+Message-ID: <CY1PR0701MB1337F7E67D0DE039C488FF39901E0@CY1PR0701MB1337.namprd07.prod.outlook.com>
+References: <1514395808-16916-1-git-send-email-Tomer.Tayar@cavium.com>
+ <20180102.135836.317444223426222615.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47896 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751164AbeACE17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Jan 2018 23:27:59 -0500
-In-Reply-To: <1512683953-5959-1-git-send-email-rafael.tinoco@canonical.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20180102.135836.317444223426222615.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Tayar, Tomer" <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Cc: "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Rafael David Tinoco <rafael.tinoco@canonical.com>, Chris Leech <cleech@redhat.com>
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, Jay Vosburgh <jay.vosburgh@canonical.com>, Daniel Axtens <daniel.axtens@canonical.com>, Dragan Stancevic <dragan.stancevic@canonical.com>
 
+> From: Tomer Tayar <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Date: Wed, 27 Dec 2017 19:30:04 +0200
+>=20
+> > This series advances all qed* drivers to use firmware 8.33.1.0 which br=
+ings
+> > new capabilities and initial support of new HW. The changes are mostly =
+in
+> > qed, and include changes in the FW interface files, as well as updating=
+ the
+> > FW initialization and debug collection code. The protocol drivers have
+> > minor functional changes for this firmware.
+> >
+> > Patch 1 Rearranges and refactors the FW interface files in preparation =
+of
+> > the new FW (no functional change).
+> > Patch 2 Prepares the code for support of new HW (no functional change).
+> > Patch 3 Actual utilization of the new FW.
+> > Patch 4 Advances drivers' version.
+> >
+> > v3->v4:
+> > Fix a compilation issue which was reported by krobot (dependency on CRC=
+8).
+> >
+> > v2->v3:
+> > Resend the series with a fixed title in the cover letter.
+> >
+> > v1->v2:
+> > - Break the previous single patch into several patches.
+> > - Fix compilation issues which were reported by krobot.
+>=20
+> I'm going to apply this, however....
+>=20
+> These firmware update changes are rediculously invasive.
+>=20
+> Backporting patches through these updates will be a giant task if not
+> impossible for anyone who tries to do something like this.
+>=20
+> Who reviewed these changes outside of Cavium to look for clerical
+> and typographical errors?  I be nobody did.  I personally scanned
+> them for about 20 minutes.
+>=20
+> Therefore, it is my judgment that the way firmware support updates are
+> done in the QED driver is detrimental to it's long term
+> maintainability.
+>=20
+> Thank you.
 
+Hi Dave,
+We fully understand the concern regarding the size/depth of these changes,
+and the difficulty of getting them reviewed, etc. Hopefully, this is the la=
+st time
+you will see such massive changes. Future FW upgrades are expected to be fa=
+r
+lighter in their impact on the code. We also plan to make them more
+frequent, which will further reduce the size/invasiveness of each change.
+Thanks, and appreciate your time spent on reviewing this.
+Ariel
 
-On 12/07/2017 01:59 PM, Rafael David Tinoco wrote:
-> If, for any reason, userland shuts down iscsi transport interfaces
-> before proper logouts - like when logging in to LUNs manually,
-> without logging out on server shutdown, or when automated scripts
-> can't umount/logout from logged LUNs - kernel will hang forever on
-> its sd_sync_cache() logic, after issuing the SYNCHRONIZE_CACHE cmd
-> to all still existent paths.
-> 
-> PID: 1 TASK: ffff8801a69b8000 CPU: 1 COMMAND: "systemd-shutdow"
->  #0 [ffff8801a69c3a30] __schedule at ffffffff8183e9ee
->  #1 [ffff8801a69c3a80] schedule at ffffffff8183f0d5
->  #2 [ffff8801a69c3a98] schedule_timeout at ffffffff81842199
->  #3 [ffff8801a69c3b40] io_schedule_timeout at ffffffff8183e604
->  #4 [ffff8801a69c3b70] wait_for_completion_io_timeout at ffffffff8183fc6c
->  #5 [ffff8801a69c3bd0] blk_execute_rq at ffffffff813cfe10
->  #6 [ffff8801a69c3c88] scsi_execute at ffffffff815c3fc7
->  #7 [ffff8801a69c3cc8] scsi_execute_req_flags at ffffffff815c60fe
->  #8 [ffff8801a69c3d30] sd_sync_cache at ffffffff815d37d7
->  #9 [ffff8801a69c3da8] sd_shutdown at ffffffff815d3c3c
-> 
-> This happens because iscsi_eh_cmd_timed_out(), the transport layer
-> timeout helper, would tell the queue timeout function (scsi_times_out)
-> to reset the request timer over and over, until the session state is
-> back to logged in state. Unfortunately, during server shutdown, this
-> might never happen again.
-> 
-> Other option would be "not to handle" the issue in the transport
-> layer. That would trigger the error handler logic, which would also
-> need the session state to be logged in again.
-> 
-> Best option, for such case, is to tell upper layers that the command
-> was handled during the transport layer error handler helper, marking
-> it as DID_NO_CONNECT, which will allow completion and inform about
-> the problem.
-> 
-> After the session was marked as ISCSI_STATE_FAILED, due to the first
-> timeout during the server shutdown phase, all subsequent cmds will
-> fail to be queued, allowing upper logic to fail faster.
-> 
-> Signed-off-by: Rafael David Tinoco <rafael.tinoco@canonical.com>
-> ---
->  drivers/scsi/libiscsi.c | 24 +++++++++++++++++++++++-
->  1 file changed, 23 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 9c50d2d9f27c..785d1c55d152 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -1696,6 +1696,15 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
->  		 */
->  		switch (session->state) {
->  		case ISCSI_STATE_FAILED:
-> +			/*
-> +			 * cmds should fail during shutdown, if the session
-> +			 * state is bad, allowing completion to happen
-> +			 */
-> +			if (unlikely(system_state != SYSTEM_RUNNING)) {
-> +				reason = FAILURE_SESSION_FAILED;
-> +				sc->result = DID_NO_CONNECT << 16;
-> +				break;
-> +			}
->  		case ISCSI_STATE_IN_RECOVERY:
->  			reason = FAILURE_SESSION_IN_RECOVERY;
->  			sc->result = DID_IMM_RETRY << 16;
-> @@ -1978,6 +1987,19 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
->  	}
->  
->  	if (session->state != ISCSI_STATE_LOGGED_IN) {
-> +		/*
-> +		 * During shutdown, if session is prematurely disconnected,
-> +		 * recovery won't happen and there will be hung cmds. Not
-> +		 * handling cmds would trigger EH, also bad in this case.
-> +		 * Instead, handle cmd, allow completion to happen and let
-> +		 * upper layer to deal with the result.
-> +		 */
-> +		if (unlikely(system_state != SYSTEM_RUNNING)) {
-> +			sc->result = DID_NO_CONNECT << 16;
-> +			ISCSI_DBG_EH(session, "sc on shutdown, handled\n");
-> +			rc = BLK_EH_HANDLED;
-> +			goto done;
-> +		}
->  		/*
->  		 * We are probably in the middle of iscsi recovery so let
->  		 * that complete and handle the error.
-> @@ -2082,7 +2104,7 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
->  		task->last_timeout = jiffies;
->  	spin_unlock(&session->frwd_lock);
->  	ISCSI_DBG_EH(session, "return %s\n", rc == BLK_EH_RESET_TIMER ?
-> -		     "timer reset" : "nh");
-> +		     "timer reset" : "shutdown or nh");
->  	return rc;
->  }
->  EXPORT_SYMBOL_GPL(iscsi_eh_cmd_timed_out);
-> 
-
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-
--- 
-Lee
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
