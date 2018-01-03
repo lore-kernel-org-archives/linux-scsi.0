@@ -1,56 +1,54 @@
-From: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v17 0/4] Replace PCI pool by DMA pool API
-Date: Wed, 3 Jan 2018 15:34:33 -0600
-Message-ID: <20180103213433.GA189303@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180102175356.7999-1-romain.perier@gmail.com>
- <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 0/6] cxlflash: Miscellaneous patches
+Date: Wed,  3 Jan 2018 16:53:22 -0600
+Message-ID: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44462 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750945AbeACVei (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Jan 2018 16:34:38 -0500
-Content-Disposition: inline
-In-Reply-To: <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42942 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751262AbeACWxh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 17:53:37 -0500
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id w03MnFO9009905
+        for <linux-scsi@vger.kernel.org>; Wed, 3 Jan 2018 17:53:37 -0500
+Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2f982y0hqy-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jan 2018 17:53:36 -0500
+Received: from localhost
+        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Wed, 3 Jan 2018 17:53:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Romain Perier <romain.perier@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On Tue, Jan 02, 2018 at 04:17:24PM -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 02, 2018 at 06:53:52PM +0100, Romain Perier wrote:
-> > The current PCI pool API are simple macro functions direct expanded to
-> > the appropriate dma pool functions. The prototypes are almost the same
-> > and semantically, they are very similar. I propose to use the DMA pool
-> > API directly and get rid of the old API.
-> > 
-> > This set of patches, replaces the old API by the dma pool API
-> > and remove the defines.
-> > ...
-> 
-> > Romain Perier (4):
-> >   block: DAC960: Replace PCI pool old API
-> >   net: e100: Replace PCI pool old API
-> >   hinic: Replace PCI pool old API
-> >   PCI: Remove PCI pool macro functions
-> > 
-> >  drivers/block/DAC960.c                            | 38 +++++++++++------------
-> >  drivers/block/DAC960.h                            |  4 +--
-> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
-> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
-> >  drivers/net/ethernet/intel/e100.c                 | 12 +++----
-> >  include/linux/pci.h                               |  9 ------
-> >  6 files changed, 32 insertions(+), 43 deletions(-)
-> 
-> Applied to pci/misc for v4.16, thanks!
+This patch series contains miscellaneous fixes. The first patch fixes a
+bug while the rest improve the code structure and prepare the code for
+future enhancements.
 
-Oops, my mistake.  I can't remove the macros themselves yet because
-some of the uses were removed by patches that were applied via other
-trees, and those patches are not in my tree.
+This series is intended for 4.16 and is bisectable.
 
-To avoid ordering dependencies during the merge window, I dropped the
-"PCI: Remove PCI pool macro functions" patch.  Please repost that
-after all the removals have made it into Linus' tree.
+Matthew R. Ochs (3):
+  cxlflash: Explicitly cache number of interrupts per context
+  cxlflash: Remove embedded CXL work structures
+  cxlflash: Staging to support future accelerators
 
-Bjorn
+Uma Krishnan (3):
+  cxlflash: Reset command ioasc
+  cxlflash: Update cxl-specific arguments to generic cookie
+  cxlflash: Adapter context init can return error
+
+ drivers/scsi/cxlflash/Makefile    |   2 +-
+ drivers/scsi/cxlflash/backend.h   |  41 ++++++++++
+ drivers/scsi/cxlflash/common.h    |   8 +-
+ drivers/scsi/cxlflash/cxl_hw.c    | 168 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/cxlflash/main.c      | 100 +++++++++--------------
+ drivers/scsi/cxlflash/superpipe.c |  64 +++++++--------
+ drivers/scsi/cxlflash/superpipe.h |   4 +-
+ 7 files changed, 288 insertions(+), 99 deletions(-)
+ create mode 100644 drivers/scsi/cxlflash/backend.h
+ create mode 100644 drivers/scsi/cxlflash/cxl_hw.c
+
+-- 
+2.1.0
