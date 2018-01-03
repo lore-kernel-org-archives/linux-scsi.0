@@ -1,58 +1,275 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 1/6] cxlflash: Reset command ioasc
-Date: Wed,  3 Jan 2018 16:54:02 -0600
-Message-ID: <1515020042-43590-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 2/6] cxlflash: Update cxl-specific arguments to generic cookie
+Date: Wed,  3 Jan 2018 16:54:25 -0600
+Message-ID: <1515020065-43649-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46320 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751206AbeACWyW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 17:54:22 -0500
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id w03MsMjb021260
-        for <linux-scsi@vger.kernel.org>; Wed, 3 Jan 2018 17:54:22 -0500
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2f982y0j9d-1
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41358 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751206AbeACWye (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 17:54:34 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id w03MsGcJ125722
+        for <linux-scsi@vger.kernel.org>; Wed, 3 Jan 2018 17:54:33 -0500
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2f92xvd9w8-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jan 2018 17:54:22 -0500
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jan 2018 17:54:33 -0500
 Received: from localhost
-        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 3 Jan 2018 15:54:21 -0700
+        Wed, 3 Jan 2018 15:54:32 -0700
 In-Reply-To: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-In the event of a command failure, cxlflash returns the failure to the
-upper layers to process. After processing the error, when the command is
-queued again, the private command structure will not be zeroed and the
-ioasc could be stale. Per the SISLite specification, the AFU only sets the
-ioasc in the presence of a failure. Thus, even though the original command
-succeeds the second time, the command is considered a failure due to stale
-ioasc. This cycle repeats indefinitely and can cause a hang or IO failure.
+Convert cxl-specific pointers to generic cookies to facilitate future
+enhancements.
 
-To fix the issue, clear the ioasc before queuing any command.
-
-Fixes: 479ad8e9d48c ("scsi: cxlflash: Remove zeroing of private command
-data")
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/cxlflash/common.h    |  4 ++--
+ drivers/scsi/cxlflash/main.c      | 38 +++++++++++++++++++-------------------
+ drivers/scsi/cxlflash/superpipe.c | 15 +++++++--------
+ drivers/scsi/cxlflash/superpipe.h |  2 +-
+ 4 files changed, 29 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index 6d95e8e..d2a180d 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -129,7 +129,7 @@ struct cxlflash_cfg {
+ 	int lr_port;
+ 	atomic_t scan_host_needed;
+ 
+-	struct cxl_afu *cxl_afu;
++	void *afu_cookie;
+ 
+ 	atomic_t recovery_threads;
+ 	struct mutex ctx_recovery_mutex;
+@@ -203,7 +203,7 @@ struct hwq {
+ 	 * fields after this point
+ 	 */
+ 	struct afu *afu;
+-	struct cxl_context *ctx;
++	void *ctx_cookie;
+ 	struct cxl_ioctl_start_work work;
+ 	struct sisl_host_map __iomem *host_map;		/* MC host map */
+ 	struct sisl_ctrl_map __iomem *ctrl_map;		/* MC control map */
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 38b3a9c..48d3663 100644
+index 48d3663..3880d52 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -620,6 +620,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 	cmd->parent = afu;
- 	cmd->hwq_index = hwq_index;
+@@ -739,7 +739,7 @@ static void term_intr(struct cxlflash_cfg *cfg, enum undo_level level,
  
-+	cmd->sa.ioasc = 0;
- 	cmd->rcb.ctx_id = hwq->ctx_hndl;
- 	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
- 	cmd->rcb.port_sel = CHAN2PORTMASK(scp->device->channel);
+ 	hwq = get_hwq(afu, index);
+ 
+-	if (!hwq->ctx) {
++	if (!hwq->ctx_cookie) {
+ 		dev_err(dev, "%s: returning with NULL MC\n", __func__);
+ 		return;
+ 	}
+@@ -748,13 +748,13 @@ static void term_intr(struct cxlflash_cfg *cfg, enum undo_level level,
+ 	case UNMAP_THREE:
+ 		/* SISL_MSI_ASYNC_ERROR is setup only for the primary HWQ */
+ 		if (index == PRIMARY_HWQ)
+-			cxl_unmap_afu_irq(hwq->ctx, 3, hwq);
++			cxl_unmap_afu_irq(hwq->ctx_cookie, 3, hwq);
+ 	case UNMAP_TWO:
+-		cxl_unmap_afu_irq(hwq->ctx, 2, hwq);
++		cxl_unmap_afu_irq(hwq->ctx_cookie, 2, hwq);
+ 	case UNMAP_ONE:
+-		cxl_unmap_afu_irq(hwq->ctx, 1, hwq);
++		cxl_unmap_afu_irq(hwq->ctx_cookie, 1, hwq);
+ 	case FREE_IRQ:
+-		cxl_free_afu_irqs(hwq->ctx);
++		cxl_free_afu_irqs(hwq->ctx_cookie);
+ 		/* fall through */
+ 	case UNDO_NOOP:
+ 		/* No action required */
+@@ -783,15 +783,15 @@ static void term_mc(struct cxlflash_cfg *cfg, u32 index)
+ 
+ 	hwq = get_hwq(afu, index);
+ 
+-	if (!hwq->ctx) {
++	if (!hwq->ctx_cookie) {
+ 		dev_err(dev, "%s: returning with NULL MC\n", __func__);
+ 		return;
+ 	}
+ 
+-	WARN_ON(cxl_stop_context(hwq->ctx));
++	WARN_ON(cxl_stop_context(hwq->ctx_cookie));
+ 	if (index != PRIMARY_HWQ)
+-		WARN_ON(cxl_release_context(hwq->ctx));
+-	hwq->ctx = NULL;
++		WARN_ON(cxl_release_context(hwq->ctx_cookie));
++	hwq->ctx_cookie = NULL;
+ 
+ 	spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
+ 	flush_pending_cmds(hwq);
+@@ -1611,7 +1611,7 @@ static int start_context(struct cxlflash_cfg *cfg, u32 index)
+ 	struct hwq *hwq = get_hwq(cfg->afu, index);
+ 	int rc = 0;
+ 
+-	rc = cxl_start_context(hwq->ctx,
++	rc = cxl_start_context(hwq->ctx_cookie,
+ 			       hwq->work.work_element_descriptor,
+ 			       NULL);
+ 
+@@ -1748,7 +1748,7 @@ static void init_pcr(struct cxlflash_cfg *cfg)
+ 	for (i = 0; i < afu->num_hwqs; i++) {
+ 		hwq = get_hwq(afu, i);
+ 
+-		hwq->ctx_hndl = (u16) cxl_process_element(hwq->ctx);
++		hwq->ctx_hndl = (u16) cxl_process_element(hwq->ctx_cookie);
+ 		hwq->host_map = &afu->afu_map->hosts[hwq->ctx_hndl].host;
+ 		hwq->ctrl_map = &afu->afu_map->ctrls[hwq->ctx_hndl].ctrl;
+ 
+@@ -1926,7 +1926,7 @@ static enum undo_level init_intr(struct cxlflash_cfg *cfg,
+ 				 struct hwq *hwq)
+ {
+ 	struct device *dev = &cfg->dev->dev;
+-	struct cxl_context *ctx = hwq->ctx;
++	void *ctx = hwq->ctx_cookie;
+ 	int rc = 0;
+ 	enum undo_level level = UNDO_NOOP;
+ 	bool is_primary_hwq = (hwq->index == PRIMARY_HWQ);
+@@ -1980,7 +1980,7 @@ static enum undo_level init_intr(struct cxlflash_cfg *cfg,
+  */
+ static int init_mc(struct cxlflash_cfg *cfg, u32 index)
+ {
+-	struct cxl_context *ctx;
++	void *ctx;
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct hwq *hwq = get_hwq(cfg->afu, index);
+ 	int rc = 0;
+@@ -1999,8 +1999,8 @@ static int init_mc(struct cxlflash_cfg *cfg, u32 index)
+ 		goto err1;
+ 	}
+ 
+-	WARN_ON(hwq->ctx);
+-	hwq->ctx = ctx;
++	WARN_ON(hwq->ctx_cookie);
++	hwq->ctx_cookie = ctx;
+ 
+ 	/* Set it up as a master with the CXL */
+ 	cxl_set_master(ctx);
+@@ -2040,7 +2040,7 @@ static int init_mc(struct cxlflash_cfg *cfg, u32 index)
+ 	if (index != PRIMARY_HWQ)
+ 		cxl_release_context(ctx);
+ err1:
+-	hwq->ctx = NULL;
++	hwq->ctx_cookie = NULL;
+ 	goto out;
+ }
+ 
+@@ -2095,7 +2095,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 	struct hwq *hwq;
+ 	int i;
+ 
+-	cxl_perst_reloads_same_image(cfg->cxl_afu, true);
++	cxl_perst_reloads_same_image(cfg->afu_cookie, true);
+ 
+ 	afu->num_hwqs = afu->desired_hwqs;
+ 	for (i = 0; i < afu->num_hwqs; i++) {
+@@ -2109,7 +2109,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 
+ 	/* Map the entire MMIO space of the AFU using the first context */
+ 	hwq = get_hwq(afu, PRIMARY_HWQ);
+-	afu->afu_map = cxl_psa_map(hwq->ctx);
++	afu->afu_map = cxl_psa_map(hwq->ctx_cookie);
+ 	if (!afu->afu_map) {
+ 		dev_err(dev, "%s: cxl_psa_map failed\n", __func__);
+ 		rc = -ENOMEM;
+@@ -3702,7 +3702,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_drvdata(pdev, cfg);
+ 
+-	cfg->cxl_afu = cxl_pci_to_afu(pdev);
++	cfg->afu_cookie = cxl_pci_to_afu(pdev);
+ 
+ 	rc = init_pci(cfg);
+ 	if (rc) {
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 170fff5..18f6240 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -810,14 +810,13 @@ static struct ctx_info *create_context(struct cxlflash_cfg *cfg)
+  * init_context() - initializes a previously allocated context
+  * @ctxi:	Previously allocated context
+  * @cfg:	Internal structure associated with the host.
+- * @ctx:	Previously obtained CXL context reference.
++ * @ctx:	Previously obtained context cookie.
+  * @ctxid:	Previously obtained process element associated with CXL context.
+  * @file:	Previously obtained file associated with CXL context.
+  * @perms:	User-specified permissions.
+  */
+ static void init_context(struct ctx_info *ctxi, struct cxlflash_cfg *cfg,
+-			 struct cxl_context *ctx, int ctxid, struct file *file,
+-			 u32 perms)
++			 void *ctx, int ctxid, struct file *file, u32 perms)
+ {
+ 	struct afu *afu = cfg->afu;
+ 
+@@ -976,7 +975,7 @@ static int cxlflash_disk_detach(struct scsi_device *sdev,
+  */
+ static int cxlflash_cxl_release(struct inode *inode, struct file *file)
+ {
+-	struct cxl_context *ctx = cxl_fops_get_context(file);
++	void *ctx = cxl_fops_get_context(file);
+ 	struct cxlflash_cfg *cfg = container_of(file->f_op, struct cxlflash_cfg,
+ 						cxl_fops);
+ 	struct device *dev = &cfg->dev->dev;
+@@ -1089,7 +1088,7 @@ static int cxlflash_mmap_fault(struct vm_fault *vmf)
+ {
+ 	struct vm_area_struct *vma = vmf->vma;
+ 	struct file *file = vma->vm_file;
+-	struct cxl_context *ctx = cxl_fops_get_context(file);
++	void *ctx = cxl_fops_get_context(file);
+ 	struct cxlflash_cfg *cfg = container_of(file->f_op, struct cxlflash_cfg,
+ 						cxl_fops);
+ 	struct device *dev = &cfg->dev->dev;
+@@ -1162,7 +1161,7 @@ static const struct vm_operations_struct cxlflash_mmap_vmops = {
+  */
+ static int cxlflash_cxl_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+-	struct cxl_context *ctx = cxl_fops_get_context(file);
++	void *ctx = cxl_fops_get_context(file);
+ 	struct cxlflash_cfg *cfg = container_of(file->f_op, struct cxlflash_cfg,
+ 						cxl_fops);
+ 	struct device *dev = &cfg->dev->dev;
+@@ -1317,7 +1316,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 	u64 rctxid = 0UL;
+ 	struct file *file = NULL;
+ 
+-	struct cxl_context *ctx = NULL;
++	void *ctx = NULL;
+ 
+ 	int fd = -1;
+ 
+@@ -1529,7 +1528,7 @@ static int recover_context(struct cxlflash_cfg *cfg,
+ 	int fd = -1;
+ 	int ctxid = -1;
+ 	struct file *file;
+-	struct cxl_context *ctx;
++	void *ctx;
+ 	struct afu *afu = cfg->afu;
+ 
+ 	ctx = cxl_dev_context_init(cfg->dev);
+diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
+index 0b59768..62097df 100644
+--- a/drivers/scsi/cxlflash/superpipe.h
++++ b/drivers/scsi/cxlflash/superpipe.h
+@@ -104,7 +104,7 @@ struct ctx_info {
+ 	bool err_recovery_active;
+ 	struct mutex mutex; /* Context protection */
+ 	struct kref kref;
+-	struct cxl_context *ctx;
++	void *ctx;
+ 	struct cxlflash_cfg *cfg;
+ 	struct list_head luns;	/* LUNs attached to this context */
+ 	const struct vm_operations_struct *cxl_mmap_vmops;
 -- 
 2.1.0
