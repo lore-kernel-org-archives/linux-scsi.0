@@ -1,108 +1,45 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: [PATCH] aacraid driver oops with dead battery
-Date: Wed, 3 Jan 2018 11:11:09 +0200 (EET)
-Message-ID: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: RE: [PATCH for sg3_utils 1/4] configure.ac: Suppress an autoconf
+ warning
+Date: Wed, 3 Jan 2018 09:14:18 +0000
+Message-ID: <14e5b239cd7247cf8427ac990143d48d@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:49636 "EHLO smtp2.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751255AbeACJLN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Jan 2018 04:11:13 -0500
+Received: from mailout.micron.com ([137.201.242.129]:51601 "EHLO
+        mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751245AbeACJPA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 04:15:00 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>, Doug Gilbert <dgilbert@interlog.com>
+Cc: Hannes Reinecke <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The battery in my HP NetRAID-4M died of old age, and the aacraid driver 
-started oopsing with NULL pointer dereference on startup after that.
+>a/configure.ac b/configure.ac index 1cce0b25f583..129c2f9d4d4d 100644
+>--- a/configure.ac
+>+++ b/configure.ac
+>@@ -7,13 +7,13 @@ AM_CONFIG_HEADER(config.h)  AC_PROG_CC  #
+>AC_PROG_CXX  AC_PROG_INSTALL
+>-
+>-# Adding libtools to the build seems to bring in C++ environment -
+>AC_PROG_LIBTOOL
+>
+> # AM_PROG_AR is supported and needed since automake v1.12+
+>ifdef([AM_PROG_AR], [AM_PROG_AR], [])
+>
+>+# Adding libtools to the build seems to bring in C++ environment
+>+AC_PROG_LIBTOOL
+>+
+> # check for headers
+> AC_HEADER_STDC
+>
 
-Fix it by reordering the init sequence to fill in function pointers 
-before ioremapping memory, or dev->a_ops.adapter_ioremap pointer will be 
-NULL.
+After moving "AC_PROG_LIBTOOL" to back " ifdef([AM_PROG_AR], [AM_PROG_AR], [])",
+"Warning: LT_INIT was called before AM_PROG_AR" disappears.
 
-Other subtypes of aacraid seem to have the order already correct.
+Tested-by: Bean Huo <beanhuo@micron.com>
 
-This was the call trace:
-
- ? aac_probe_one+0x7a5/0xb30 [aacraid]
- pci_device_probe+0xc0/0x1a0
- driver_probe_device+0x1df/0x3b0
- __driver_attach+0xa9/0xe0
- ? driver_probe_device+0x3b0/0x3b0
- bus_for_each_dev+0x4c/0x90
- driver_attach+0x1d/0x40
- ? driver_probe_device+0x3b0/0x3b0
- bus_add_driver+0x1a7/0x2a0
- driver_register+0x6e/0x130
- __pci_register_driver+0x54/0x90
- ? 0xf81f4000
- aac_init+0x2b/0x1000 [aacraid]
- do_one_initcall+0x45/0x1e0
- ? kfree_skbmem+0x74/0xa0
- ? kfree+0x16d/0x240
- ? kvfree+0x45/0x50
- ? kvfree+0x45/0x50
- ? __vunmap+0x99/0x120
- ? do_init_module+0x1a/0x245
- do_init_module+0x83/0x245
- load_module+0x2764/0x34a0
- ? kernel_read_file+0x150/0x320
- SyS_finit_module+0x82/0xa0
- do_fast_syscall_32+0xba/0x340
-
-Signed-off-by: Meelis Roos <mroos@linux.ee>
-
-diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
-index 553922fed524..882f40353b96 100644
---- a/drivers/scsi/aacraid/sa.c
-+++ b/drivers/scsi/aacraid/sa.c
-@@ -329,6 +329,22 @@ int aac_sa_init(struct aac_dev *dev)
- 	instance = dev->id;
- 	name     = dev->name;
- 
-+	/*
-+	 *	Fill in the function dispatch table.
-+	 */
-+
-+	dev->a_ops.adapter_interrupt = aac_sa_interrupt_adapter;
-+	dev->a_ops.adapter_disable_int = aac_sa_disable_interrupt;
-+	dev->a_ops.adapter_enable_int = aac_sa_enable_interrupt;
-+	dev->a_ops.adapter_notify = aac_sa_notify_adapter;
-+	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
-+	dev->a_ops.adapter_check_health = aac_sa_check_health;
-+	dev->a_ops.adapter_restart = aac_sa_restart_adapter;
-+	dev->a_ops.adapter_start = aac_sa_start_adapter;
-+	dev->a_ops.adapter_intr = aac_sa_intr;
-+	dev->a_ops.adapter_deliver = aac_rx_deliver_producer;
-+	dev->a_ops.adapter_ioremap = aac_sa_ioremap;
-+
- 	if (aac_sa_ioremap(dev, dev->base_size)) {
- 		printk(KERN_WARNING "%s: unable to map adapter.\n", name);
- 		goto error_iounmap;
-@@ -362,22 +378,6 @@ int aac_sa_init(struct aac_dev *dev)
- 		msleep(1);
- 	}
- 
--	/*
--	 *	Fill in the function dispatch table.
--	 */
--
--	dev->a_ops.adapter_interrupt = aac_sa_interrupt_adapter;
--	dev->a_ops.adapter_disable_int = aac_sa_disable_interrupt;
--	dev->a_ops.adapter_enable_int = aac_sa_enable_interrupt;
--	dev->a_ops.adapter_notify = aac_sa_notify_adapter;
--	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
--	dev->a_ops.adapter_check_health = aac_sa_check_health;
--	dev->a_ops.adapter_restart = aac_sa_restart_adapter;
--	dev->a_ops.adapter_start = aac_sa_start_adapter;
--	dev->a_ops.adapter_intr = aac_sa_intr;
--	dev->a_ops.adapter_deliver = aac_rx_deliver_producer;
--	dev->a_ops.adapter_ioremap = aac_sa_ioremap;
--
- 	/*
- 	 *	First clear out all interrupts.  Then enable the one's that 
- 	 *	we can handle.
-
-
--- 
-Meelis Roos (mroos@linux.ee)
+>--
+>2.15.1
