@@ -1,61 +1,39 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: 4.15-rcX 32-bit SCSI suspend2ram warning
-Date: Wed, 3 Jan 2018 17:51:22 +0000
-Message-ID: <1515001882.2582.15.camel@wdc.com>
-References: <CAM6Zs0XZ1ejXq6-DtKS19ZNU2-jQa++YTQZ-LWuaOOQECbrS9Q@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v2.2] sd: Micro-optimize READ / WRITE CDB encoding
+Date: Wed, 3 Jan 2018 16:27:17 -0500
+Message-ID: <412b3828-7da9-ac4e-bf58-de7bdad96ab9@interlog.com>
+References: <20171026050603.14856-1-dgilbert@interlog.com>
+ <yq11slqifmo.fsf@oracle.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:32976 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750753AbeACRvZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 12:51:25 -0500
-In-Reply-To: <CAM6Zs0XZ1ejXq6-DtKS19ZNU2-jQa++YTQZ-LWuaOOQECbrS9Q@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <7C2700D7694FBF46AA810B75F242C8F5@namprd04.prod.outlook.com>
+Received: from smtp.infotech.no ([82.134.31.41]:55176 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750912AbeACV1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Jan 2018 16:27:23 -0500
+In-Reply-To: <yq11slqifmo.fsf@oracle.com>
+Content-Language: en-CA
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "terraluna977@gmail.com" <terraluna977@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com, jejb@linux.vnet.ibm.com, hch@lst.de, hare@suse.com, jthumshirn@suse.de
 
-T24gV2VkLCAyMDE4LTAxLTAzIGF0IDEyOjE2IC0wNTAwLCBXb29keSBTdXdhbHNraSB3cm90ZToN
-Cj4gU3RhcnRpbmcgd2l0aCBhIDMyLWJpdCA0LjE1LXJjWCBJIGhhdmUgb2JzZXJ2ZWQgYSB3YXJu
-aW5nIGluIGRtZXNnLA0KPiBoYXBwZW5pbmcgd2hlbiB0aGUgc3lzdGVtIGdvZXMgdG8gc3VzcGVu
-ZDJyYW0uIElmIGl0IGlzIGp1c3QgYSB3YXJuaW5nDQo+IC0gY291bGQgd2UgaGF2ZSBpdCBxdWll
-dCdldCBkb3duPw0KDQooK2xpbnV4LXNjc2kpDQoNClRoYW5rIHlvdSBmb3IgaGF2aW5nIHJlcG9y
-dGVkIHRoaXMuIFRoZSBjb21tZW50IGFib3ZlIHRoZSB3YXJuaW5nIHRoYXQgaGFzDQpiZWVuIHRy
-aWdnZXJlZCBpcyBhcyBmb2xsb3dzOg0KDQoJLyoNCgkgKiBJdCBpcyBhbGxvd2VkIHRvIGNhbGwg
-c2NzaV9kZXZpY2VfcXVpZXNjZSgpIG11bHRpcGxlIHRpbWVzIGZyb20NCgkgKiB0aGUgc2FtZSBj
-b250ZXh0IGJ1dCBjb25jdXJyZW50IHNjc2lfZGV2aWNlX3F1aWVzY2UoKSBjYWxscyBhcmUNCgkg
-KiBub3QgYWxsb3dlZC4NCgkgKi8NCglXQVJOX09OX09OQ0Uoc2Rldi0+cXVpZXNjZWRfYnkgJiYg
-c2Rldi0+cXVpZXNjZWRfYnkgIT0gY3VycmVudCk7DQoNClRoYXQgbWVhbnMgdGhhdCBzdXBwcmVz
-c2luZyB0aGUgd2FybmluZyB3b3VsZCBiZSB3cm9uZyAtIGl0IHdvdWxkIGhpZGUgdGhlDQpyYWNl
-IGNvbmRpdGlvbiBidXQgbm90IGZpeCBpdC4gQW55d2F5LCB3b3VsZCBpdCBiZSBwb3NzaWJsZSB0
-byB0ZXN0IHRoZQ0KKGVudGlyZWx5IHVudGVzdGVkKSBwYXRjaCBiZWxvdz8gU29ycnkgYnV0IEkg
-Y3VycmVudGx5IGRvbid0IGhhdmUgYWNjZXNzIHRvDQphIHRlc3Qgc2V0dXAgdGhhdCB0cmlnZ2Vy
-cyB0aGUgU1BJIERWIGNvZGUuDQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQpkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X3NwaS5jIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJh
-bnNwb3J0X3NwaS5jDQppbmRleCAxMGViYjIxM2RkYjMuLmFiZDQ4Y2ZmYjI4MiAxMDA2NDQNCi0t
-LSBhL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcGkuYw0KKysrIGIvZHJpdmVycy9zY3Np
-L3Njc2lfdHJhbnNwb3J0X3NwaS5jDQpAQCAtMjYsNiArMjYsNyBAQA0KICNpbmNsdWRlIDxsaW51
-eC9tdXRleC5oPg0KICNpbmNsdWRlIDxsaW51eC9zeXNmcy5oPg0KICNpbmNsdWRlIDxsaW51eC9z
-bGFiLmg+DQorI2luY2x1ZGUgPGxpbnV4L3N1c3BlbmQuaD4NCiAjaW5jbHVkZSA8c2NzaS9zY3Np
-Lmg+DQogI2luY2x1ZGUgInNjc2lfcHJpdi5oIg0KICNpbmNsdWRlIDxzY3NpL3Njc2lfZGV2aWNl
-Lmg+DQpAQCAtMTAwOSwxMSArMTAxMCwyMCBAQCBzcGlfZHZfZGV2aWNlKHN0cnVjdCBzY3NpX2Rl
-dmljZSAqc2RldikNCiAJdTggKmJ1ZmZlcjsNCiAJY29uc3QgaW50IGxlbiA9IFNQSV9NQVhfRUNI
-T19CVUZGRVJfU0laRSoyOw0KIA0KKwkvKg0KKwkgKiBCZWNhdXNlIHRoaXMgZnVuY3Rpb24gYW5k
-IHRoZSBwb3dlciBtYW5hZ2VtZW50IGNvZGUgYm90aCBjYWxsDQorCSAqIHNjc2lfZGV2aWNlX3F1
-aWVzY2UoKSwgaXQgaXMgbm90IHNhZmUgdG8gcGVyZm9ybSBkb21haW4gdmFsaWRhdGlvbg0KKwkg
-KiB3aGlsZSBzdXNwZW5kIG9yIHJlc3VtZSBpcyBpbiBwcm9ncmVzcy4gSGVuY2UgdGhlDQorCSAq
-IGxvY2svdW5sb2NrX3N5c3RlbV9zbGVlcCgpIGNhbGxzLg0KKwkgKi8NCisJbG9ja19zeXN0ZW1f
-c2xlZXAoKTsNCisNCiAJaWYgKHVubGlrZWx5KHNwaV9kdl9pbl9wcm9ncmVzcyhzdGFyZ2V0KSkp
-DQotCQlyZXR1cm47DQorCQlnb3RvIHVubG9jazsNCiANCiAJaWYgKHVubGlrZWx5KHNjc2lfZGV2
-aWNlX2dldChzZGV2KSkpDQotCQlyZXR1cm47DQorCQlnb3RvIHVubG9jazsNCisNCiAJc3BpX2R2
-X2luX3Byb2dyZXNzKHN0YXJnZXQpID0gMTsNCiANCiAJYnVmZmVyID0ga3phbGxvYyhsZW4sIEdG
-UF9LRVJORUwpOw0KQEAgLTEwNDQsMTEgKzEwNTQsMTMgQEAgc3BpX2R2X2RldmljZShzdHJ1Y3Qg
-c2NzaV9kZXZpY2UgKnNkZXYpDQogDQogCXNwaV9pbml0aWFsX2R2KHN0YXJnZXQpID0gMTsNCiAN
-Ci0gb3V0X2ZyZWU6DQorb3V0X2ZyZWU6DQogCWtmcmVlKGJ1ZmZlcik7DQotIG91dF9wdXQ6DQor
-b3V0X3B1dDoNCiAJc3BpX2R2X2luX3Byb2dyZXNzKHN0YXJnZXQpID0gMDsNCiAJc2NzaV9kZXZp
-Y2VfcHV0KHNkZXYpOw0KK3VubG9jazoNCisJdW5sb2NrX3N5c3RlbV9zbGVlcCgpOw0KIH0NCiBF
-WFBPUlRfU1lNQk9MKHNwaV9kdl9kZXZpY2UpOw0KIA0KLS0gDQoyLjE1LjENCg==
+On 2017-10-26 02:31 AM, Martin K. Petersen wrote:
+> 
+> Doug,
+> 
+>> The sd_setup_read_write_cmnd() function is on the "fast path" for
+>> block system access to SCSI devices (logical units). Rewrite this
+>> function to improve speed and readability.
+> 
+> Please do any optimizations on top of my scsi-work branch which has the
+> sd_setup_read_write_cmnd() rewrite. I'm at kernel summit this week but
+> will rebase when time permits.
+
+The most recent patch I can see on sd.c and specifically the function
+sd_setup_read_write_cmnd() is May last year. Until it gets rebased
+it is not useful for building further patches on.
+
+Doug Gilbert
