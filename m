@@ -1,73 +1,75 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH v2 22/30] scsi: aacraid: Merge adapter setup with resolve
- luns
-Date: Wed, 3 Jan 2018 17:00:57 +0000
-Message-ID: <62b6c88e782c46fe8d502f49a8d885cc@microsemi.com>
-References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
-        <20171227043451.27813-23-RaghavaAditya.Renukunta@microsemi.com>
- <87h8s31crn.fsf@suse.cz>
+Subject: RE: [PATCH] aacraid driver oops with dead battery
+Date: Wed, 3 Jan 2018 17:05:50 +0000
+Message-ID: <ae3b432d2a604927b794fd3d62524bdd@microsemi.com>
+References: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0045.outbound.protection.outlook.com ([104.47.36.45]:54496
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0046.outbound.protection.outlook.com ([104.47.38.46]:8156
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750864AbeACRBV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Jan 2018 12:01:21 -0500
-In-Reply-To: <87h8s31crn.fsf@suse.cz>
+        id S1750829AbeACRF5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Jan 2018 12:05:57 -0500
+In-Reply-To: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nikola Pajkovsky <npajkovsky@suse.cz>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Scott Benesh <scott.benesh@microsemi.com>, Tom White <tom.white@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+To: Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
 
-Hi Nikola,
 
 > -----Original Message-----
-> From: Nikola Pajkovsky [mailto:npajkovsky@suse.cz]
-> Sent: Wednesday, January 3, 2018 2:02 AM
-> To: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
-> Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
-> scsi@vger.kernel.org; Scott Benesh <scott.benesh@microsemi.com>; Tom
-> White <tom.white@microsemi.com>; dl-esc-Aacraid Linux Driver
-> <aacraid@microsemi.com>; Guilherme G . Piccoli
-> <gpiccoli@linux.vnet.ibm.com>; Bart Van Assche
-> <Bart.VanAssche@wdc.com>
-> Subject: Re: [PATCH v2 22/30] scsi: aacraid: Merge adapter setup with res=
-olve
-> luns
+> From: mroos@math.ut.ee [mailto:mroos@math.ut.ee] On Behalf Of Meelis
+> Roos
+> Sent: Wednesday, January 3, 2018 1:11 AM
+> To: linux-scsi@vger.kernel.org; dl-esc-Aacraid Linux Driver
+> <aacraid@microsemi.com>
+> Subject: [PATCH] aacraid driver oops with dead battery
 >=20
 > EXTERNAL EMAIL
 >=20
 >=20
-> Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-> writes:
+> The battery in my HP NetRAID-4M died of old age, and the aacraid driver
+> started oopsing with NULL pointer dereference on startup after that.
 >=20
-> > The device hotplug events are processed only after retrieving the updat=
-ed
-> > lun information from the fw. Does not make sense to keep them separate.
-> >
-> > Merge both the hotplug handling and safw adapter setup code into single
-> > function.
-> >
-> > Signed-off-by: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
+> Fix it by reordering the init sequence to fill in function pointers
+> before ioremapping memory, or dev->a_ops.adapter_ioremap pointer will
+> be
+> NULL.
 >=20
-> According to subsequent commit
+> Other subtypes of aacraid seem to have the order already correct.
 >=20
->   [PATCH v2 23/30] scsi: aacraid: Block concurrent hotplug event handling
+> This was the call trace:
 >=20
-> this commit is racy, because 23/30 adds ->scan_mutex. Shouldn't be these
-> commits squashed?
+>  ? aac_probe_one+0x7a5/0xb30 [aacraid]
+>  pci_device_probe+0xc0/0x1a0
+>  driver_probe_device+0x1df/0x3b0
+>  __driver_attach+0xa9/0xe0
+>  ? driver_probe_device+0x3b0/0x3b0
+>  bus_for_each_dev+0x4c/0x90
+>  driver_attach+0x1d/0x40
+>  ? driver_probe_device+0x3b0/0x3b0
+>  bus_add_driver+0x1a7/0x2a0
+>  driver_register+0x6e/0x130
+>  __pci_register_driver+0x54/0x90
+>  ? 0xf81f4000
+>  aac_init+0x2b/0x1000 [aacraid]
+>  do_one_initcall+0x45/0x1e0
+>  ? kfree_skbmem+0x74/0xa0
+>  ? kfree+0x16d/0x240
+>  ? kvfree+0x45/0x50
+>  ? kvfree+0x45/0x50
+>  ? __vunmap+0x99/0x120
+>  ? do_init_module+0x1a/0x245
+>  do_init_module+0x83/0x245
+>  load_module+0x2764/0x34a0
+>  ? kernel_read_file+0x150/0x320
+>  SyS_finit_module+0x82/0xa0
+>  do_fast_syscall_32+0xba/0x340
+>=20
+> Signed-off-by: Meelis Roos <mroos@linux.ee>
+.....
 
-I tried to make the patches as logically distinct as possible, maybe I got =
-a bit too ambitious and I expected the patches to go thru as a set so I don=
-=92t think it would make any difference. What do you think?=20
-
-Thanks
-Raghava Aditya
-
-> --
-> Nikola
+Reviewed-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.co=
+m>
