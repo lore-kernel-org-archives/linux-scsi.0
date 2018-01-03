@@ -1,39 +1,56 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v2.2] sd: Micro-optimize READ / WRITE CDB encoding
-Date: Wed, 3 Jan 2018 16:27:17 -0500
-Message-ID: <412b3828-7da9-ac4e-bf58-de7bdad96ab9@interlog.com>
-References: <20171026050603.14856-1-dgilbert@interlog.com>
- <yq11slqifmo.fsf@oracle.com>
-Reply-To: dgilbert@interlog.com
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v17 0/4] Replace PCI pool by DMA pool API
+Date: Wed, 3 Jan 2018 15:34:33 -0600
+Message-ID: <20180103213433.GA189303@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180102175356.7999-1-romain.perier@gmail.com>
+ <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:55176 "EHLO smtp.infotech.no"
+Received: from mail.kernel.org ([198.145.29.99]:44462 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750912AbeACV1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Jan 2018 16:27:23 -0500
-In-Reply-To: <yq11slqifmo.fsf@oracle.com>
-Content-Language: en-CA
+        id S1750945AbeACVei (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Jan 2018 16:34:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com, jejb@linux.vnet.ibm.com, hch@lst.de, hare@suse.com, jthumshirn@suse.de
+To: Romain Perier <romain.perier@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On 2017-10-26 02:31 AM, Martin K. Petersen wrote:
+On Tue, Jan 02, 2018 at 04:17:24PM -0600, Bjorn Helgaas wrote:
+> On Tue, Jan 02, 2018 at 06:53:52PM +0100, Romain Perier wrote:
+> > The current PCI pool API are simple macro functions direct expanded to
+> > the appropriate dma pool functions. The prototypes are almost the same
+> > and semantically, they are very similar. I propose to use the DMA pool
+> > API directly and get rid of the old API.
+> > 
+> > This set of patches, replaces the old API by the dma pool API
+> > and remove the defines.
+> > ...
 > 
-> Doug,
+> > Romain Perier (4):
+> >   block: DAC960: Replace PCI pool old API
+> >   net: e100: Replace PCI pool old API
+> >   hinic: Replace PCI pool old API
+> >   PCI: Remove PCI pool macro functions
+> > 
+> >  drivers/block/DAC960.c                            | 38 +++++++++++------------
+> >  drivers/block/DAC960.h                            |  4 +--
+> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
+> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+> >  drivers/net/ethernet/intel/e100.c                 | 12 +++----
+> >  include/linux/pci.h                               |  9 ------
+> >  6 files changed, 32 insertions(+), 43 deletions(-)
 > 
->> The sd_setup_read_write_cmnd() function is on the "fast path" for
->> block system access to SCSI devices (logical units). Rewrite this
->> function to improve speed and readability.
-> 
-> Please do any optimizations on top of my scsi-work branch which has the
-> sd_setup_read_write_cmnd() rewrite. I'm at kernel summit this week but
-> will rebase when time permits.
+> Applied to pci/misc for v4.16, thanks!
 
-The most recent patch I can see on sd.c and specifically the function
-sd_setup_read_write_cmnd() is May last year. Until it gets rebased
-it is not useful for building further patches on.
+Oops, my mistake.  I can't remove the macros themselves yet because
+some of the uses were removed by patches that were applied via other
+trees, and those patches are not in my tree.
 
-Doug Gilbert
+To avoid ordering dependencies during the merge window, I dropped the
+"PCI: Remove PCI pool macro functions" patch.  Please repost that
+after all the removals have made it into Linus' tree.
+
+Bjorn
