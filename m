@@ -1,54 +1,58 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 0/6] cxlflash: Miscellaneous patches
-Date: Wed,  3 Jan 2018 16:53:22 -0600
-Message-ID: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 1/6] cxlflash: Reset command ioasc
+Date: Wed,  3 Jan 2018 16:54:02 -0600
+Message-ID: <1515020042-43590-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+References: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42942 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46320 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751262AbeACWxh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 17:53:37 -0500
+        by vger.kernel.org with ESMTP id S1751206AbeACWyW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 17:54:22 -0500
 Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id w03MnFO9009905
-        for <linux-scsi@vger.kernel.org>; Wed, 3 Jan 2018 17:53:37 -0500
-Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2f982y0hqy-1
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id w03MsMjb021260
+        for <linux-scsi@vger.kernel.org>; Wed, 3 Jan 2018 17:54:22 -0500
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2f982y0j9d-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jan 2018 17:53:36 -0500
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jan 2018 17:54:22 -0500
 Received: from localhost
-        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 3 Jan 2018 17:53:35 -0500
+        Wed, 3 Jan 2018 15:54:21 -0700
+In-Reply-To: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-This patch series contains miscellaneous fixes. The first patch fixes a
-bug while the rest improve the code structure and prepare the code for
-future enhancements.
+In the event of a command failure, cxlflash returns the failure to the
+upper layers to process. After processing the error, when the command is
+queued again, the private command structure will not be zeroed and the
+ioasc could be stale. Per the SISLite specification, the AFU only sets the
+ioasc in the presence of a failure. Thus, even though the original command
+succeeds the second time, the command is considered a failure due to stale
+ioasc. This cycle repeats indefinitely and can cause a hang or IO failure.
 
-This series is intended for 4.16 and is bisectable.
+To fix the issue, clear the ioasc before queuing any command.
 
-Matthew R. Ochs (3):
-  cxlflash: Explicitly cache number of interrupts per context
-  cxlflash: Remove embedded CXL work structures
-  cxlflash: Staging to support future accelerators
+Fixes: 479ad8e9d48c ("scsi: cxlflash: Remove zeroing of private command
+data")
+Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+---
+ drivers/scsi/cxlflash/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Uma Krishnan (3):
-  cxlflash: Reset command ioasc
-  cxlflash: Update cxl-specific arguments to generic cookie
-  cxlflash: Adapter context init can return error
-
- drivers/scsi/cxlflash/Makefile    |   2 +-
- drivers/scsi/cxlflash/backend.h   |  41 ++++++++++
- drivers/scsi/cxlflash/common.h    |   8 +-
- drivers/scsi/cxlflash/cxl_hw.c    | 168 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/cxlflash/main.c      | 100 +++++++++--------------
- drivers/scsi/cxlflash/superpipe.c |  64 +++++++--------
- drivers/scsi/cxlflash/superpipe.h |   4 +-
- 7 files changed, 288 insertions(+), 99 deletions(-)
- create mode 100644 drivers/scsi/cxlflash/backend.h
- create mode 100644 drivers/scsi/cxlflash/cxl_hw.c
-
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 38b3a9c..48d3663 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -620,6 +620,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	cmd->parent = afu;
+ 	cmd->hwq_index = hwq_index;
+ 
++	cmd->sa.ioasc = 0;
+ 	cmd->rcb.ctx_id = hwq->ctx_hndl;
+ 	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
+ 	cmd->rcb.port_sel = CHAN2PORTMASK(scp->device->channel);
 -- 
 2.1.0
