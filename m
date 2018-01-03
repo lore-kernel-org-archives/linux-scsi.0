@@ -1,56 +1,40 @@
-From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Subject: RE: [PATCH for sg3_utils 0/4] Simplify the sg3_utils configure script
-Date: Wed, 3 Jan 2018 09:37:31 +0000
-Message-ID: <0ecf9f85250f4269b98bd85c8c3592fa@SIWEX5A.sing.micron.com>
+From: Nikola Pajkovsky <npajkovsky@suse.cz>
+Subject: Re: [PATCH v2 22/30] scsi: aacraid: Merge adapter setup with resolve luns
+Date: Wed, 03 Jan 2018 11:02:04 +0100
+Message-ID: <87h8s31crn.fsf@suse.cz>
+References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
+        <20171227043451.27813-23-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:34756 "EHLO
-        mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752170AbeACJiJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 04:38:09 -0500
-Content-Language: en-US
+Received: from mx2.suse.de ([195.135.220.15]:36959 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751427AbeACKCH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Jan 2018 05:02:07 -0500
+In-Reply-To: <20171227043451.27813-23-RaghavaAditya.Renukunta@microsemi.com>
+        (Raghava Aditya Renukunta's message of "Tue, 26 Dec 2017 20:34:43
+        -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, Doug Gilbert <dgilbert@interlog.com>
-Cc: Hannes Reinecke <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-Hi, Bart and Dong
-Do you think we need to submit all changed diff including some generated files by automake?
-Such as config.h.in, Makefile.in..., in fact, we only manually did a few modificaiton on
-Some files such as configura.ac,makefile.am.
- 
+Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
+
+> The device hotplug events are processed only after retrieving the updated
+> lun information from the fw. Does not make sense to keep them separate.
 >
->Hello Doug,
+> Merge both the hotplug handling and safw adapter setup code into single
+> function.
 >
->The four patches in this series is what I came up with after having reviewed
->the sg3_utils configure script. Please consider to apply these patches on the
->sg3_utils trunk.
->
->Thanks,
->
->Bart.
->
->Bart Van Assche (4):
->  configure.ac: Suppress an autoconf warning
->  configure.ac: Only link with the pthread library if required
->  configure.ac: Avoid code duplication
->  configure.ac, Makefile.am: Use CFLAGS and LIBS instead of os_cflags
->    and os_libs
->
-> Makefile.in         |   3 +-
-> config.h.in         |   6 +-
-> configure           | 672 +++++++++++++++++++---------------------------------
-> configure.ac        |  83 +++----
-> doc/Makefile.in     |   3 +-
-> include/Makefile.in |   3 +-
-> lib/Makefile.am     |   2 +-
-> lib/Makefile.in     |   5 +-
-> scripts/Makefile.in |   3 +-
-> src/Makefile.am     | 140 ++++++-----
-> src/Makefile.in     | 145 ++++++------
-> 11 files changed, 425 insertions(+), 640 deletions(-)
->
->--
->2.15.1
+> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+
+According to subsequent commit
+
+  [PATCH v2 23/30] scsi: aacraid: Block concurrent hotplug event handling
+
+this commit is racy, because 23/30 adds ->scan_mutex. Shouldn't be these
+commits squashed?
+
+--
+Nikola
