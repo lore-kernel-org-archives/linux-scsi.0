@@ -1,73 +1,55 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH for sg3_utils 0/4] Simplify the sg3_utils configure script
-Date: Wed, 3 Jan 2018 09:12:39 -0500
-Message-ID: <fd26ac48-81ee-f82e-c6a0-2718d5dd4484@interlog.com>
-References: <0ecf9f85250f4269b98bd85c8c3592fa@SIWEX5A.sing.micron.com>
-Reply-To: dgilbert@interlog.com
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [-next PATCH 2/4] treewide: Use DEVICE_ATTR_RW
+Date: Wed, 03 Jan 2018 16:16:08 +0100
+Message-ID: <4624388.pPJCIclP0U@amdc3058>
+References: <cover.1513706701.git.joe@perches.com>
+ <CGME20171219181536epcas2p18d023209dc13ac504457c07b8b2b8965@epcas2p1.samsung.com>
+ <cd38f14f06e1f447b3159ffe8c69c0df8241bb6e.1513706701.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53983 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751214AbeACOMr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Jan 2018 09:12:47 -0500
-In-Reply-To: <0ecf9f85250f4269b98bd85c8c3592fa@SIWEX5A.sing.micron.com>
-Content-Language: en-CA
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-reply-to: <cd38f14f06e1f447b3159ffe8c69c0df8241bb6e.1513706701.git.joe@perches.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Joe Perches <joe@perches.com>
+Cc: linux-fbdev@vger.kernel.org, David Airlie <airlied@linux.ie>, Heiko Carstens <heiko.carstens@de.ibm.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Jaroslav Kysela <perex@perex.cz>, Peter Ujfalusi <peter.ujfalusi@ti.com>, linux-s390@vger.kernel.org, linux-omap@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Takashi Iwai <tiwai@suse.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>, Cezary Jackiewicz <cezary.jackiewicz@gmail.com>, linux-serial@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, Darren Hart <dvhart@infradead.org>, Zhang Rui <rui.zhang@intel.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Mathias Nyman <mathias.nyman@intel.com>, linux-pm@vger.kernel.org, Peter Oberparleiter <oberpar@linux.vnet.ibm.com>, intel-gfx@lists.freedesktop.org, Eduardo Valentin <edube>
 List-Id: linux-scsi@vger.kernel.org
-To: "Bean Huo (beanhuo)" <beanhuo@micron.com>, Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Hannes Reinecke <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-On 2018-01-03 04:37 AM, Bean Huo (beanhuo) wrote:
-> Hi, Bart and Dong
-> Do you think we need to submit all changed diff including some generated files by automake?
-> Such as config.h.in, Makefile.in..., in fact, we only manually did a few modificaiton on
-> Some files such as configura.ac,makefile.am.
-
-Hi,
-Yes, I only needed the configure.ac and Makefile.am changes from Bart.
-Anyway, they are in my sg3_utils subversion rev 742 which should
-appear soon on Hannes' site:
-    https://github.com/hreinecke/sg3_utils
-
-Currently it is at rev 741.
-
-sgp_dd was also changed to only use pthread_kill() with the older code
-"#if 0"-ed out just in case it needs to be revisited. The checking macros
-for pthread_cancel() and pthread_kill() are still in configure.ac .
-
-Doug Gilbert
-
->> The four patches in this series is what I came up with after having reviewed
->> the sg3_utils configure script. Please consider to apply these patches on the
->> sg3_utils trunk.
->>
->> Thanks,
->>
->> Bart.
->>
->> Bart Van Assche (4):
->>   configure.ac: Suppress an autoconf warning
->>   configure.ac: Only link with the pthread library if required
->>   configure.ac: Avoid code duplication
->>   configure.ac, Makefile.am: Use CFLAGS and LIBS instead of os_cflags
->>     and os_libs
->>
->> Makefile.in         |   3 +-
->> config.h.in         |   6 +-
->> configure           | 672 +++++++++++++++++++---------------------------------
->> configure.ac        |  83 +++----
->> doc/Makefile.in     |   3 +-
->> include/Makefile.in |   3 +-
->> lib/Makefile.am     |   2 +-
->> lib/Makefile.in     |   5 +-
->> scripts/Makefile.in |   3 +-
->> src/Makefile.am     | 140 ++++++-----
->> src/Makefile.in     | 145 ++++++------
->> 11 files changed, 425 insertions(+), 640 deletions(-)
->>
->> --
->> 2.15.1
-> 
-> 
+T24gVHVlc2RheSwgRGVjZW1iZXIgMTksIDIwMTcgMTA6MTU6MDcgQU0gSm9lIFBlcmNoZXMgd3Jv
+dGU6Cj4gQ29udmVydCBERVZJQ0VfQVRUUiB1c2VzIHRvIERFVklDRV9BVFRSX1JXIHdoZXJlIHBv
+c3NpYmxlLgo+IAo+IERvbmUgd2l0aCBwZXJsIHNjcmlwdDoKPiAKPiAkIGdpdCBncmVwIC13IC0t
+bmFtZS1vbmx5IERFVklDRV9BVFRSIHwgXAo+ICAgeGFyZ3MgcGVybCAtaSAtZSAnbG9jYWwgJC87
+IHdoaWxlICg8PikgeyBzL1xiREVWSUNFX0FUVFJccypcKFxzKihcdyspXHMqLFxzKlwoPyhccypT
+X0lSVUdPXHMqXHxccypTX0lXVVNSfFxzKlNfSVdVU1JccypcfFxzKlNfSVJVR09ccyp8XHMqMDY0
+NFxzKilcKT9ccyosXHMqXDFfc2hvd1xzKixccypcMV9zdG9yZVxzKlwpL0RFVklDRV9BVFRSX1JX
+KFwxKS9nOyBwcmludDt9Jwo+IAo+IFNpZ25lZC1vZmYtYnk6IEpvZSBQZXJjaGVzIDxqb2VAcGVy
+Y2hlcy5jb20+Cj4gLS0tCj4gIGFyY2gvczM5MC9rZXJuZWwvdG9wb2xvZ3kuYyAgICAgICAgICB8
+ICAzICstLQo+ICBhcmNoL3RpbGUva2VybmVsL3N5c2ZzLmMgICAgICAgICAgICAgfCAgMiArLQo+
+ICBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X3N5c2ZzLmMgICAgfCAgNiArKy0tLQo+ICBkcml2
+ZXJzL3BsYXRmb3JtL3g4Ni9jb21wYWwtbGFwdG9wLmMgfCAxOCArKysrKy0tLS0tLS0tLS0KPiAg
+ZHJpdmVycy9zMzkwL2Npby9kZXZpY2UuYyAgICAgICAgICAgIHwgIDIgKy0KPiAgZHJpdmVycy9z
+Y3NpL2xwZmMvbHBmY19hdHRyLmMgICAgICAgIHwgNDMgKysrKysrKysrKysrLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tCj4gIGRyaXZlcnMvdGhlcm1hbC90aGVybWFsX3N5c2ZzLmMgICAgICB8ICA5
+ICsrKystLS0tCj4gIGRyaXZlcnMvdHR5L3NlcmlhbC9zaC1zY2kuYyAgICAgICAgICB8ICAyICst
+Cj4gIGRyaXZlcnMvdXNiL2hvc3QveGhjaS1kYmdjYXAuYyAgICAgICB8ICAyICstCj4gIGRyaXZl
+cnMvdXNiL3BoeS9waHktdGFodm8uYyAgICAgICAgICB8ICAyICstCj4gIGRyaXZlcnMvdmlkZW8v
+ZmJkZXYvYXVvX2sxOTB4LmMgICAgICB8ICA0ICsrLS0KPiAgZHJpdmVycy92aWRlby9mYmRldi93
+MTAwZmIuYyAgICAgICAgIHwgIDQgKystLQo+ICBsaWIvdGVzdF9maXJtd2FyZS5jICAgICAgICAg
+ICAgICAgICAgfCAxNCArKysrKy0tLS0tLS0KPiAgbGliL3Rlc3Rfa21vZC5jICAgICAgICAgICAg
+ICAgICAgICAgIHwgMTQgKysrKystLS0tLS0tCj4gIHNvdW5kL3NvYy9vbWFwL21jYnNwLmMgICAg
+ICAgICAgICAgICB8ICA0ICsrLS0KPiAgMTUgZmlsZXMgY2hhbmdlZCwgNDkgaW5zZXJ0aW9ucygr
+KSwgODAgZGVsZXRpb25zKC0pCgpGb3IgZmJkZXYgY2hhbmdlczoKCkFja2VkLWJ5OiBCYXJ0bG9t
+aWVqIFpvbG5pZXJraWV3aWN6IDxiLnpvbG5pZXJraWVAc2Ftc3VuZy5jb20+CgpCZXN0IHJlZ2Fy
+ZHMsCi0tCkJhcnRsb21pZWogWm9sbmllcmtpZXdpY3oKU2Ftc3VuZyBSJkQgSW5zdGl0dXRlIFBv
+bGFuZApTYW1zdW5nIEVsZWN0cm9uaWNzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5m
+cmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9pbnRlbC1nZngK
