@@ -1,79 +1,108 @@
-From: "Elior, Ariel" <Ariel.Elior-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-Subject: RE: [PATCH v4 net-next 0/4] qed*: Advance to FW 8.33.1.0
-Date: Wed, 3 Jan 2018 07:32:29 +0000
-Message-ID: <CY1PR0701MB1337F7E67D0DE039C488FF39901E0@CY1PR0701MB1337.namprd07.prod.outlook.com>
-References: <1514395808-16916-1-git-send-email-Tomer.Tayar@cavium.com>
- <20180102.135836.317444223426222615.davem@davemloft.net>
+From: Meelis Roos <mroos@linux.ee>
+Subject: [PATCH] aacraid driver oops with dead battery
+Date: Wed, 3 Jan 2018 11:11:09 +0200 (EET)
+Message-ID: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20180102.135836.317444223426222615.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Content-Language: en-US
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Tayar, Tomer" <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-Cc: "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:49636 "EHLO smtp2.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751255AbeACJLN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Jan 2018 04:11:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 
-> From: Tomer Tayar <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Date: Wed, 27 Dec 2017 19:30:04 +0200
->=20
-> > This series advances all qed* drivers to use firmware 8.33.1.0 which br=
-ings
-> > new capabilities and initial support of new HW. The changes are mostly =
-in
-> > qed, and include changes in the FW interface files, as well as updating=
- the
-> > FW initialization and debug collection code. The protocol drivers have
-> > minor functional changes for this firmware.
-> >
-> > Patch 1 Rearranges and refactors the FW interface files in preparation =
-of
-> > the new FW (no functional change).
-> > Patch 2 Prepares the code for support of new HW (no functional change).
-> > Patch 3 Actual utilization of the new FW.
-> > Patch 4 Advances drivers' version.
-> >
-> > v3->v4:
-> > Fix a compilation issue which was reported by krobot (dependency on CRC=
-8).
-> >
-> > v2->v3:
-> > Resend the series with a fixed title in the cover letter.
-> >
-> > v1->v2:
-> > - Break the previous single patch into several patches.
-> > - Fix compilation issues which were reported by krobot.
->=20
-> I'm going to apply this, however....
->=20
-> These firmware update changes are rediculously invasive.
->=20
-> Backporting patches through these updates will be a giant task if not
-> impossible for anyone who tries to do something like this.
->=20
-> Who reviewed these changes outside of Cavium to look for clerical
-> and typographical errors?  I be nobody did.  I personally scanned
-> them for about 20 minutes.
->=20
-> Therefore, it is my judgment that the way firmware support updates are
-> done in the QED driver is detrimental to it's long term
-> maintainability.
->=20
-> Thank you.
+The battery in my HP NetRAID-4M died of old age, and the aacraid driver 
+started oopsing with NULL pointer dereference on startup after that.
 
-Hi Dave,
-We fully understand the concern regarding the size/depth of these changes,
-and the difficulty of getting them reviewed, etc. Hopefully, this is the la=
-st time
-you will see such massive changes. Future FW upgrades are expected to be fa=
-r
-lighter in their impact on the code. We also plan to make them more
-frequent, which will further reduce the size/invasiveness of each change.
-Thanks, and appreciate your time spent on reviewing this.
-Ariel
+Fix it by reordering the init sequence to fill in function pointers 
+before ioremapping memory, or dev->a_ops.adapter_ioremap pointer will be 
+NULL.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Other subtypes of aacraid seem to have the order already correct.
+
+This was the call trace:
+
+ ? aac_probe_one+0x7a5/0xb30 [aacraid]
+ pci_device_probe+0xc0/0x1a0
+ driver_probe_device+0x1df/0x3b0
+ __driver_attach+0xa9/0xe0
+ ? driver_probe_device+0x3b0/0x3b0
+ bus_for_each_dev+0x4c/0x90
+ driver_attach+0x1d/0x40
+ ? driver_probe_device+0x3b0/0x3b0
+ bus_add_driver+0x1a7/0x2a0
+ driver_register+0x6e/0x130
+ __pci_register_driver+0x54/0x90
+ ? 0xf81f4000
+ aac_init+0x2b/0x1000 [aacraid]
+ do_one_initcall+0x45/0x1e0
+ ? kfree_skbmem+0x74/0xa0
+ ? kfree+0x16d/0x240
+ ? kvfree+0x45/0x50
+ ? kvfree+0x45/0x50
+ ? __vunmap+0x99/0x120
+ ? do_init_module+0x1a/0x245
+ do_init_module+0x83/0x245
+ load_module+0x2764/0x34a0
+ ? kernel_read_file+0x150/0x320
+ SyS_finit_module+0x82/0xa0
+ do_fast_syscall_32+0xba/0x340
+
+Signed-off-by: Meelis Roos <mroos@linux.ee>
+
+diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
+index 553922fed524..882f40353b96 100644
+--- a/drivers/scsi/aacraid/sa.c
++++ b/drivers/scsi/aacraid/sa.c
+@@ -329,6 +329,22 @@ int aac_sa_init(struct aac_dev *dev)
+ 	instance = dev->id;
+ 	name     = dev->name;
+ 
++	/*
++	 *	Fill in the function dispatch table.
++	 */
++
++	dev->a_ops.adapter_interrupt = aac_sa_interrupt_adapter;
++	dev->a_ops.adapter_disable_int = aac_sa_disable_interrupt;
++	dev->a_ops.adapter_enable_int = aac_sa_enable_interrupt;
++	dev->a_ops.adapter_notify = aac_sa_notify_adapter;
++	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
++	dev->a_ops.adapter_check_health = aac_sa_check_health;
++	dev->a_ops.adapter_restart = aac_sa_restart_adapter;
++	dev->a_ops.adapter_start = aac_sa_start_adapter;
++	dev->a_ops.adapter_intr = aac_sa_intr;
++	dev->a_ops.adapter_deliver = aac_rx_deliver_producer;
++	dev->a_ops.adapter_ioremap = aac_sa_ioremap;
++
+ 	if (aac_sa_ioremap(dev, dev->base_size)) {
+ 		printk(KERN_WARNING "%s: unable to map adapter.\n", name);
+ 		goto error_iounmap;
+@@ -362,22 +378,6 @@ int aac_sa_init(struct aac_dev *dev)
+ 		msleep(1);
+ 	}
+ 
+-	/*
+-	 *	Fill in the function dispatch table.
+-	 */
+-
+-	dev->a_ops.adapter_interrupt = aac_sa_interrupt_adapter;
+-	dev->a_ops.adapter_disable_int = aac_sa_disable_interrupt;
+-	dev->a_ops.adapter_enable_int = aac_sa_enable_interrupt;
+-	dev->a_ops.adapter_notify = aac_sa_notify_adapter;
+-	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
+-	dev->a_ops.adapter_check_health = aac_sa_check_health;
+-	dev->a_ops.adapter_restart = aac_sa_restart_adapter;
+-	dev->a_ops.adapter_start = aac_sa_start_adapter;
+-	dev->a_ops.adapter_intr = aac_sa_intr;
+-	dev->a_ops.adapter_deliver = aac_rx_deliver_producer;
+-	dev->a_ops.adapter_ioremap = aac_sa_ioremap;
+-
+ 	/*
+ 	 *	First clear out all interrupts.  Then enable the one's that 
+ 	 *	we can handle.
+
+
+-- 
+Meelis Roos (mroos@linux.ee)
