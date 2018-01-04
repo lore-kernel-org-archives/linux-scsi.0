@@ -1,38 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fix iscsi-related kernel-doc warnings
-Date: Wed, 03 Jan 2018 23:11:48 -0500
-Message-ID: <yq1373mxny3.fsf@oracle.com>
-References: <44a0f532-b1e9-e0cf-4a61-d592a4306f61@infradead.org>
+Subject: Re: [PATCH 00/30] aacraid: Refactor for sas transport and bug fixes
+Date: Wed, 03 Jan 2018 23:28:50 -0500
+Message-ID: <yq1vagiw8l9.fsf@oracle.com>
+References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <44a0f532-b1e9-e0cf-4a61-d592a4306f61@infradead.org> (Randy
-        Dunlap's message of "Fri, 22 Dec 2017 14:08:27 -0800")
-Sender: target-devel-owner@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagi@grimberg.me>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:41918 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751546AbeADE26 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 23:28:58 -0500
+In-Reply-To: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
+        (Raghava Aditya Renukunta's message of "Tue, 26 Dec 2017 20:34:21
+        -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
 
-Randy,
+Raghava,
 
-> Fix kernel-doc warnings in drivers/scsi/ that are related to iscsi
-> support interfaces.
->
-> Fixes these kernel-doc warnings: (tested by adding these files to a new
-> target.rst documentation file: WIP)
+> This patchset primarily lays the foundation for adding sas transport
+> support to the aacraid driver. Being said these patches are mainly
+> code refactors, bug fixes and improvements.
 
-Applied to 4.16/scsi-queue, thanks!
-
-> Cc:	"Nicholas A. Bellinger" <nab@linux-iscsi.org>
-> Cc:	linux-scsi@vger.kernel.org
-> Cc:	target-devel@vger.kernel.org
-> Cc:	Sagi Grimberg <sagi@grimberg.me>
-> Cc:	linux-rdma@vger.kernel.org
-> Cc:	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> Cc:	"Martin K. Petersen" <martin.petersen@oracle.com>
-
-     ^^^ checkpatch complains about these spaces.
+Applied to 4.16/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
