@@ -1,50 +1,59 @@
-From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [Resend PATCH 00/11] mpt3sas: Enable scsi MQ & lockless command submission
-Date: Thu,  4 Jan 2018 04:57:00 -0800
-Message-ID: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v3 2/3] scsi: libsas: fix error when getting phy events
+Date: Thu, 4 Jan 2018 21:04:32 +0800
+Message-ID: <20180104130433.42813-3-yanaijie@huawei.com>
+References: <20180104130433.42813-1-yanaijie@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:39221 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752679AbeADM5b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:57:31 -0500
-Received: by mail-qk0-f196.google.com with SMTP id c5so1769467qkg.6
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:57:31 -0800 (PST)
+Received: from szxga06-in.huawei.com ([45.249.212.32]:49736 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752460AbeADM52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Jan 2018 07:57:28 -0500
+In-Reply-To: <20180104130433.42813-1-yanaijie@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Hannes Reinecke <hare@suse.de>
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, zhaohongjiang@huawei.com, miaoxie@huawei.com, hch@lst.de, hare@suse.com, Jason Yan <yanaijie@huawei.com>, John Garry <john.garry@huawei.com>, chenqilin <chenqilin2@huawei.com>, chenxiang <chenxiang66@hisilicon.com>
 
-From: Hannes Reinecke <hare@suse.de>
+The intend purpose here was to goto out if smp_execute_task() returned
+error. Obviously something got screwed up. We will never get these link
+error statistics below:
 
-Hi all,
+~:/sys/class/sas_phy/phy-1:0:12 # cat invalid_dword_count
+0
+~:/sys/class/sas_phy/phy-1:0:12 # cat running_disparity_error_count
+0
+~:/sys/class/sas_phy/phy-1:0:12 # cat loss_of_dword_sync_count
+0
+~:/sys/class/sas_phy/phy-1:0:12 # cat phy_reset_problem_count
+0
 
-This patch set is initially posted by Hannes Reinecke to enable scsi
-multiqueue for the mpt3sas driver.
-While the HBA only has a single mailbox register for submitting commands,
-it does have individual receive queues per MSI-X interrupt and as such
-does benefit from converting it to full multiqueue support. 
+Obviously we should goto error handler if smp_execute_task() returns
+non-zero.
 
-Suganath Prabu S (11):
-  mpt3sas: set default value for cb_idx
-  mpt3sas: use list_splice_init()
-  mpt3sas: separate out _base_recovery_check()
-  mpt3sas: open-code _scsih_scsi_lookup_get()
-  mpt3sas: Introduce mpt3sas_get_st_from_smid()
-  mpt3sas: check command status before attempting abort
-  mpt3sas: always use first reserved smid for ioctl      passthrough
-  mpt3sas: simplify task management functions
-  mpt3sas: simplify mpt3sas_scsi_issue_tm()
-  mpt3sas: simplify _wait_for_commands_to_complete()
-  mpt3sas: lockless command submission
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: John Garry <john.garry@huawei.com>
+CC: chenqilin <chenqilin2@huawei.com>
+CC: chenxiang <chenxiang66@hisilicon.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/libsas/sas_expander.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/scsi/mpt3sas/mpt3sas_base.c      | 199 +++++++++++----------
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  29 ++-
- drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  31 ++--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 292 +++++++------------------------
- drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  33 +---
- 5 files changed, 191 insertions(+), 393 deletions(-)
-
-Thanks,
-Suganath Prabu S
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 4b0c67f..6eab487 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -686,7 +686,7 @@ int sas_smp_get_phy_events(struct sas_phy *phy)
+ 	res = smp_execute_task(dev, req, RPEL_REQ_SIZE,
+ 			            resp, RPEL_RESP_SIZE);
+ 
+-	if (!res)
++	if (res)
+ 		goto out;
+ 
+ 	phy->invalid_dword_count = scsi_to_u32(&resp[12]);
 -- 
-2.5.5
+2.9.5
