@@ -1,52 +1,73 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v2 3/3] scsi: libsas: initialize sas_phy status according to response of DISCOVER
-Date: Thu, 4 Jan 2018 19:47:41 +0800
-Message-ID: <20180104114741.37358-4-yanaijie@huawei.com>
-References: <20180104114741.37358-1-yanaijie@huawei.com>
+From: Nikola Pajkovsky <npajkovsky@suse.cz>
+Subject: Re: [PATCH v2 22/30] scsi: aacraid: Merge adapter setup with resolve luns
+Date: Thu, 04 Jan 2018 13:36:56 +0100
+Message-ID: <878tdd242f.fsf@suse.cz>
+References: <20171227043451.27813-1-RaghavaAditya.Renukunta@microsemi.com>
+        <20171227043451.27813-23-RaghavaAditya.Renukunta@microsemi.com>
+        <87h8s31crn.fsf@suse.cz>
+        <62b6c88e782c46fe8d502f49a8d885cc@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3722 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752778AbeADLkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 Jan 2018 06:40:32 -0500
-In-Reply-To: <20180104114741.37358-1-yanaijie@huawei.com>
+Received: from mx2.suse.de ([195.135.220.15]:60785 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751940AbeADMg7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Jan 2018 07:36:59 -0500
+In-Reply-To: <62b6c88e782c46fe8d502f49a8d885cc@microsemi.com> (Raghava Aditya
+        Renukunta's message of "Wed, 3 Jan 2018 17:00:57 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, zhaohongjiang@huawei.com, miaoxie@huawei.com, hch@lst.de, hare@suse.com, chenxiang <chenxiang66@hisilicon.com>, Jason Yan <yanaijie@huawei.com>
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Scott Benesh <scott.benesh@microsemi.com>, Tom White <tom.white@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-From: chenxiang <chenxiang66@hisilicon.com>
+Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
 
-The status of SAS PHY is in sas_phy->enabled. There is an issue that the
-status of a remote SAS PHY may be initialized incorrectly: if disable remote
-SAS PHY through sysfs interface (such as echo 0 > /sys/class/sas_phy/phy-1:0:0/enable),
-then reboot the system, and we will find the status of remote SAS PHY which is
-disabled before is 1 (cat /sys/class/sas_phy/phy-1:0:0/enable). But actually
-the status of remote SAS PHY is disabled and the device attached is not found.
+> Hi Nikola,
+>
+>> -----Original Message-----
+>> From: Nikola Pajkovsky [mailto:npajkovsky@suse.cz]
+>> Sent: Wednesday, January 3, 2018 2:02 AM
+>> To: Raghava Aditya Renukunta
+>> <RaghavaAditya.Renukunta@microsemi.com>
+>> Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
+>> scsi@vger.kernel.org; Scott Benesh <scott.benesh@microsemi.com>; Tom
+>> White <tom.white@microsemi.com>; dl-esc-Aacraid Linux Driver
+>> <aacraid@microsemi.com>; Guilherme G . Piccoli
+>> <gpiccoli@linux.vnet.ibm.com>; Bart Van Assche
+>> <Bart.VanAssche@wdc.com>
+>> Subject: Re: [PATCH v2 22/30] scsi: aacraid: Merge adapter setup with resolve
+>> luns
+>> 
+>> EXTERNAL EMAIL
+>> 
+>> 
+>> Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+>> writes:
+>> 
+>> > The device hotplug events are processed only after retrieving the updated
+>> > lun information from the fw. Does not make sense to keep them separate.
+>> >
+>> > Merge both the hotplug handling and safw adapter setup code into single
+>> > function.
+>> >
+>> > Signed-off-by: Raghava Aditya Renukunta
+>> <RaghavaAditya.Renukunta@microsemi.com>
+>> 
+>> According to subsequent commit
+>> 
+>>   [PATCH v2 23/30] scsi: aacraid: Block concurrent hotplug event handling
+>> 
+>> this commit is racy, because 23/30 adds ->scan_mutex. Shouldn't be these
+>> commits squashed?
+>
+> I tried to make the patches as logically distinct as possible, maybe I
+> got a bit too ambitious and I expected the patches to go thru as a set so
+> I don’t think it would make any difference. What do you think?
 
-In SAS protocol, NEGOTIATED LOGICAL LINK RATE field of DISCOVER response is 0x1
-when remote SAS PHY is disabled. So initialize sas_phy->enabled according to
-the value of NEGOTIATED LOGICAL LINK RATE field.
+It does make difference, when you start cherry-picking patches to
+downstream kernel. However, I don't have strong opinion here, so it can
+stay as is.
 
-Signed-off-by: chenxiang <chenxiang66@hisilicon.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
----
- drivers/scsi/libsas/sas_expander.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 6eab487..c79cfd1 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -293,6 +293,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 	phy->phy->minimum_linkrate = dr->pmin_linkrate;
- 	phy->phy->maximum_linkrate = dr->pmax_linkrate;
- 	phy->phy->negotiated_linkrate = phy->linkrate;
-+	phy->phy->enabled = (phy->linkrate == SAS_PHY_DISABLED) ? 0:1;
- 
-  skip:
- 	if (new_phy)
 -- 
-2.9.5
+Nikola
