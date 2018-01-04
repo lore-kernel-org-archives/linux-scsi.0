@@ -1,15 +1,15 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [Resend 10/11] mpt3sas: simplify _wait_for_commands_to_complete()
-Date: Thu,  4 Jan 2018 04:57:10 -0800
-Message-ID: <1515070631-14740-11-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [Resend 09/11] mpt3sas: simplify mpt3sas_scsi_issue_tm()
+Date: Thu,  4 Jan 2018 04:57:09 -0800
+Message-ID: <1515070631-14740-10-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:44900 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752895AbeADM6I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:58:08 -0500
-Received: by mail-qt0-f193.google.com with SMTP id m59so1718132qte.11
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:58:08 -0800 (PST)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:35902 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752671AbeADM6E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:58:04 -0500
+Received: by mail-qt0-f195.google.com with SMTP id a16so1730130qtj.3
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:58:04 -0800 (PST)
 In-Reply-To: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,59 +18,300 @@ Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@b
 
 From: Hannes Reinecke <hare@suse.de>
 
-Use 'host_busy' instead of counting outstanding commands by hand.
+Move the check for outstanding commands out of the function
+allowing us to simplify the overall code.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |   6 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   |   4 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 106 ++++++++++++-----------------------
+ 3 files changed, 41 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index d4b32af..2314949 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2898,9 +2898,9 @@ _base_recovery_check(struct MPT3SAS_ADAPTER *ioc)
- 	 * See _wait_for_commands_to_complete() call with regards to this code.
- 	 */
- 	if (ioc->shost_recovery && ioc->pending_io_count) {
--		if (ioc->pending_io_count == 1)
-+		ioc->pending_io_count = atomic_read(&ioc->shost->host_busy);
-+		if (ioc->pending_io_count == 0)
- 			wake_up(&ioc->reset_wq);
--		ioc->pending_io_count--;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 23e9af5..58ac923 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1444,11 +1444,9 @@ u8 mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ void mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase);
+ 
+ int mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+-	uint channel, uint id, uint lun, u8 type, u16 smid_task,
+-	ulong timeout);
++	u64 lun, u8 type, u16 smid_task, u16 msix_task, ulong timeout);
+ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+-	uint channel, uint id, uint lun, u8 type, u16 smid_task,
+-	ulong timeout);
++	u64 lun, u8 type, u16 smid_task, u16 msix_task, ulong timeout);
+ 
+ void mpt3sas_scsih_set_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle);
+ void mpt3sas_scsih_clear_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 4f23498..fc74e22 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -1075,8 +1075,8 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 				le16_to_cpu(mpi_request->FunctionDependent1));
+ 			mpt3sas_halt_firmware(ioc);
+ 			mpt3sas_scsih_issue_locked_tm(ioc,
+-			    le16_to_cpu(mpi_request->FunctionDependent1), 0, 0,
+-			    0, MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 30);
++			    le16_to_cpu(mpi_request->FunctionDependent1), 0,
++			    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 0, 30);
+ 		} else
+ 			mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
  	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index c6cbadc..e6c8dec 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1495,25 +1495,24 @@ _scsih_scsi_lookup_get_clear(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+  * This will search for a scmd pointer in the scsi_lookup array,
+  * returning the revelent smid.  A returned value of zero means invalid.
+  */
+-static u16
++struct scsiio_tracker *
+ _scsih_scsi_lookup_find_by_scmd(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd
+ 	*scmd)
+ {
+-	u16 smid;
+-	unsigned long	flags;
++	struct scsiio_tracker *st = NULL;
++	unsigned long flags;
+ 	int i;
+ 
+ 	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+-	smid = 0;
+ 	for (i = 0; i < ioc->scsiio_depth; i++) {
+ 		if (ioc->scsi_lookup[i].scmd == scmd) {
+-			smid = ioc->scsi_lookup[i].smid;
++			st = &ioc->scsi_lookup[i];
+ 			goto out;
+ 		}
+ 	}
+  out:
+ 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+-	return smid;
++	return st;
  }
  
-@@ -6310,15 +6310,13 @@ _base_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
-  * _wait_for_commands_to_complete - reset controller
-  * @ioc: Pointer to MPT_ADAPTER structure
+ /**
+@@ -2646,32 +2645,30 @@ mpt3sas_scsih_clear_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ /**
+  * mpt3sas_scsih_issue_tm - main routine for sending tm requests
+  * @ioc: per adapter struct
+- * @device_handle: device handle
+- * @channel: the channel assigned by the OS
+- * @id: the id assigned by the OS
++ * @handle: device handle
+  * @lun: lun number
+  * @type: MPI2_SCSITASKMGMT_TASKTYPE__XXX (defined in mpi2_init.h)
+  * @smid_task: smid assigned to the task
++ * @msix_task: MSIX table index supplied by the OS
+  * @timeout: timeout in seconds
+  * Context: user
   *
-- * This function waiting(3s) for all pending commands to complete
-+ * This function is waiting 10s for all pending commands to complete
-  * prior to putting controller in reset.
+  * A generic API for sending task management requests to firmware.
+  *
+  * The callback index is set inside `ioc->tm_cb_idx`.
++ * The caller is responsible to check for outstanding commands.
+  *
+  * Return SUCCESS or FAILED.
   */
- static void
- _wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+ int
+-mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+-	uint id, uint lun, u8 type, u16 smid_task, ulong timeout)
++mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
++	u64 lun, u8 type, u16 smid_task, u16 msix_task, ulong timeout)
  {
+ 	Mpi2SCSITaskManagementRequest_t *mpi_request;
+ 	Mpi2SCSITaskManagementReply_t *mpi_reply;
+ 	u16 smid = 0;
  	u32 ioc_state;
--	unsigned long flags;
--	u16 i;
+-	struct scsiio_tracker *scsi_lookup = NULL;
+ 	int rc;
+-	u16 msix_task = 0;
  
- 	ioc->pending_io_count = 0;
+ 	lockdep_assert_held(&ioc->tm_cmds.mutex);
  
-@@ -6327,11 +6325,7 @@ _wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
- 		return;
+@@ -2703,14 +2700,6 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 		return (!rc) ? SUCCESS : FAILED;
+ 	}
  
- 	/* pending command count */
--	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
--	for (i = 0; i < ioc->scsiio_depth; i++)
--		if (ioc->scsi_lookup[i].cb_idx != 0xFF)
--			ioc->pending_io_count++;
--	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-+	ioc->pending_io_count = atomic_read(&ioc->shost->host_busy);
+-	if (type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) {
+-		scsi_lookup = mpt3sas_get_st_from_smid(ioc, smid_task);
+-		if (!scsi_lookup)
+-			return FAILED;
+-		if (scsi_lookup->cb_idx == 0xFF)
+-			return SUCCESS;
+-	}
+-
+ 	smid = mpt3sas_base_get_smid_hpr(ioc, ioc->tm_cb_idx);
+ 	if (!smid) {
+ 		pr_err(MPT3SAS_FMT "%s: failed obtaining a smid\n",
+@@ -2733,12 +2722,6 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	int_to_scsilun(lun, (struct scsi_lun *)mpi_request->LUN);
+ 	mpt3sas_scsih_set_tm_flag(ioc, handle);
+ 	init_completion(&ioc->tm_cmds.done);
+-	if ((type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) &&
+-	    scsi_lookup &&
+-	    (scsi_lookup->msix_io < ioc->reply_queue_count))
+-		msix_task = scsi_lookup->msix_io;
+-	else
+-		msix_task = 0;
+ 	ioc->put_smid_hi_priority(ioc, smid, msix_task);
+ 	wait_for_completion_timeout(&ioc->tm_cmds.done, timeout*HZ);
+ 	if (!(ioc->tm_cmds.status & MPT3_CMD_COMPLETE)) {
+@@ -2772,25 +2755,7 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 				    sizeof(Mpi2SCSITaskManagementRequest_t)/4);
+ 		}
+ 	}
+-
+-	switch (type) {
+-	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
+-		rc = SUCCESS;
+-		if (scsi_lookup && scsi_lookup->scmd == NULL)
+-			break;
+-		rc = FAILED;
+-		break;
+-
+-	case MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET:
+-	case MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET:
+-	case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
+-	case MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK:
+-		rc = SUCCESS;
+-		break;
+-	default:
+-		rc = FAILED;
+-		break;
+-	}
++	rc = SUCCESS;
  
- 	if (!ioc->pending_io_count)
- 		return;
+ out:
+ 	mpt3sas_scsih_clear_tm_flag(ioc, handle);
+@@ -2799,13 +2764,13 @@ out:
+ }
+ 
+ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+-	uint channel, uint id, uint lun, u8 type, u16 smid_task, ulong timeout)
++	u64 lun, u8 type, u16 smid_task, u16 msix_task, ulong timeout)
+ {
+ 	int ret;
+ 
+ 	mutex_lock(&ioc->tm_cmds.mutex);
+-	ret = mpt3sas_scsih_issue_tm(ioc, handle, channel, id, lun, type,
+-			smid_task, timeout);
++	ret = mpt3sas_scsih_issue_tm(ioc, handle, lun, type, smid_task,
++			msix_task, timeout);
+ 	mutex_unlock(&ioc->tm_cmds.mutex);
+ 
+ 	return ret;
+@@ -2904,7 +2869,7 @@ scsih_abort(struct scsi_cmnd *scmd)
+ {
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+-	u16 smid;
++	struct scsiio_tracker *st = NULL;
+ 	u16 handle;
+ 	int r;
+ 
+@@ -2923,8 +2888,8 @@ scsih_abort(struct scsi_cmnd *scmd)
+ 	}
+ 
+ 	/* search for the command */
+-	smid = _scsih_scsi_lookup_find_by_scmd(ioc, scmd);
+-	if (!smid) {
++	st = _scsih_scsi_lookup_find_by_scmd(ioc, scmd);
++	if (!st) {
+ 		scmd->result = DID_RESET << 16;
+ 		r = SUCCESS;
+ 		goto out;
+@@ -2942,10 +2907,12 @@ scsih_abort(struct scsi_cmnd *scmd)
+ 	mpt3sas_halt_firmware(ioc);
+ 
+ 	handle = sas_device_priv_data->sas_target->handle;
+-	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
+-	    scmd->device->id, scmd->device->lun,
+-	    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid, 30);
+-
++	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->lun,
++		MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK,
++		st->smid, st->msix_io, 30);
++	/* Command must be cleared after abort */
++	if (r == SUCCESS && st->scmd)
++		r = FAILED;
+  out:
+ 	sdev_printk(KERN_INFO, scmd->device, "task abort: %s scmd(%p)\n",
+ 	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
+@@ -3001,9 +2968,8 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+ 		goto out;
+ 	}
+ 
+-	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
+-	    scmd->device->id, scmd->device->lun,
+-	    MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 30);
++	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->lun,
++		MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 0, 30);
+ 	/* Check for busy commands after reset */
+ 	if (r == SUCCESS && atomic_read(&scmd->device->device_busy))
+ 		r = FAILED;
+@@ -3065,9 +3031,8 @@ scsih_target_reset(struct scsi_cmnd *scmd)
+ 		goto out;
+ 	}
+ 
+-	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
+-	    scmd->device->id, 0, MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
+-	    30);
++	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, 0,
++		MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 0, 30);
+ 	/* Check for busy commands after reset */
+ 	if (r == SUCCESS && atomic_read(&starget->target_busy))
+ 		r = FAILED;
+@@ -7421,6 +7386,7 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
+ {
+ 	struct scsi_cmnd *scmd;
+ 	struct scsi_device *sdev;
++	struct scsiio_tracker *st;
+ 	u16 smid, handle;
+ 	u32 lun;
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+@@ -7462,7 +7428,8 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
+ 	for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
+ 		if (ioc->shost_recovery)
+ 			goto out;
+-		scmd = ioc->scsi_lookup[smid - 1].scmd;
++		st = &ioc->scsi_lookup[smid - 1];
++		scmd = st->scmd;
+ 		if (!scmd)
+ 			continue;
+ 		sdev = scmd->device;
+@@ -7486,8 +7453,9 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
+ 			goto out;
+ 
+ 		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+-		r = mpt3sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
+-		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid, 30);
++		r = mpt3sas_scsih_issue_tm(ioc, handle, lun,
++			MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid,
++			st->msix_io, 30);
+ 		if (r == FAILED) {
+ 			sdev_printk(KERN_WARNING, sdev,
+ 			    "mpt3sas_scsih_issue_tm: FAILED when sending "
+@@ -7526,10 +7494,10 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
+ 		if (ioc->shost_recovery)
+ 			goto out_no_lock;
+ 
+-		r = mpt3sas_scsih_issue_tm(ioc, handle, sdev->channel, sdev->id,
+-		    sdev->lun, MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid,
+-		    30);
+-		if (r == FAILED) {
++		r = mpt3sas_scsih_issue_tm(ioc, handle, sdev->lun,
++			MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid,
++			st->msix_io, 30);
++		if (r == FAILED || st->scmd) {
+ 			sdev_printk(KERN_WARNING, sdev,
+ 			    "mpt3sas_scsih_issue_tm: ABORT_TASK: FAILED : "
+ 			    "scmd(%p)\n", scmd);
 -- 
 2.5.5
