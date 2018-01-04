@@ -1,38 +1,53 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v2 3/3] scsi: libsas: initialize sas_phy status according
- to response of DISCOVER
-Date: Thu, 4 Jan 2018 20:42:50 +0800
-Message-ID: <5A4E214A.5040101@huawei.com>
-References: <20180104114741.37358-1-yanaijie@huawei.com>
- <20180104114741.37358-4-yanaijie@huawei.com> <20180104124121.GC6749@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [Resend 01/11] mpt3sas: set default value for cb_idx
+Date: Thu,  4 Jan 2018 04:57:01 -0800
+Message-ID: <1515070631-14740-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+References: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:57922 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752330AbeADMp2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 Jan 2018 07:45:28 -0500
-In-Reply-To: <20180104124121.GC6749@lst.de>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:42675 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752690AbeADM5f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:57:35 -0500
+Received: by mail-qk0-f196.google.com with SMTP id d202so1772214qkc.9
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:57:35 -0800 (PST)
+In-Reply-To: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, zhaohongjiang@huawei.com, miaoxie@huawei.com, hare@suse.com, chenxiang <chenxiang66@hisilicon.com>
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
+From: Hannes Reinecke <hare@suse.de>
 
+No functional change
 
-On 2018/1/4 20:41, Christoph Hellwig wrote:
-> On Thu, Jan 04, 2018 at 07:47:41PM +0800, Jason Yan wrote:
->> +	phy->phy->enabled = (phy->linkrate == SAS_PHY_DISABLED) ? 0:1;
->
-> missing whitespaces around the ":, but this could just be simplified to:
->
-> 	phy->phy->enabled = (phy->linkrate != SAS_PHY_DISABLED);
->
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-That's better, will update. Thanks.
-
-> Otherwise this looks fine.
->
-> .
->
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 08237b8..e3857e5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -899,7 +899,7 @@ static u8
+ _base_get_cb_idx(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	int i;
+-	u8 cb_idx;
++	u8 cb_idx = 0xFF;
+ 
+ 	if (smid < ioc->hi_priority_smid) {
+ 		i = smid - 1;
+@@ -910,8 +910,7 @@ _base_get_cb_idx(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ 	} else if (smid <= ioc->hba_queue_depth) {
+ 		i = smid - ioc->internal_smid;
+ 		cb_idx = ioc->internal_lookup[i].cb_idx;
+-	} else
+-		cb_idx = 0xFF;
++	}
+ 	return cb_idx;
+ }
+ 
+-- 
+2.5.5
