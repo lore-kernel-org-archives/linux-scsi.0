@@ -1,37 +1,58 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH] scsi: libcxgbi: use GFP_ATOMIC in cxgbi_conn_alloc_pdu()
-Date: Thu,  4 Jan 2018 21:04:17 +0530
-Message-ID: <1515080057-24553-1-git-send-email-varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:16241 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753313AbeADPeh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 10:34:37 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Romain Perier <romain.perier@gmail.com>
+Subject: Re: [PATCH v17 0/4] Replace PCI pool by DMA pool API
+Date: Thu, 4 Jan 2018 16:59:44 +0100
+Message-ID: <CABgxDoLGGYGoEsmUgxk7RWFwc9WD5DBi53sBVsvKjwtM_AehjQ@mail.gmail.com>
+References: <20180102175356.7999-1-romain.perier@gmail.com>
+ <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com> <20180103213433.GA189303@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180103213433.GA189303@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, netdev <netdev@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, varun@chelsio.com
 
-For mgmt cmds ->alloc_pdu() can be called from atomic
-context so use GFP_ATOMIC instead of GFP_KERNEL.
+Hi,
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/scsi/cxgbi/libcxgbi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Ok, will do. Thanks !
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index ce13364..3f3af5e 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -1914,7 +1914,7 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task, u8 opcode)
- 	if (task->sc) {
- 		task->hdr = (struct iscsi_hdr *)tdata->skb->data;
- 	} else {
--		task->hdr = kzalloc(SKB_TX_ISCSI_PDU_HEADER_MAX, GFP_KERNEL);
-+		task->hdr = kzalloc(SKB_TX_ISCSI_PDU_HEADER_MAX, GFP_ATOMIC);
- 		if (!task->hdr) {
- 			__kfree_skb(tdata->skb);
- 			tdata->skb = NULL;
--- 
-2.0.2
+Romain
+
+2018-01-03 22:34 GMT+01:00 Bjorn Helgaas <helgaas@kernel.org>:
+> On Tue, Jan 02, 2018 at 04:17:24PM -0600, Bjorn Helgaas wrote:
+>> On Tue, Jan 02, 2018 at 06:53:52PM +0100, Romain Perier wrote:
+>> > The current PCI pool API are simple macro functions direct expanded to
+>> > the appropriate dma pool functions. The prototypes are almost the same
+>> > and semantically, they are very similar. I propose to use the DMA pool
+>> > API directly and get rid of the old API.
+>> >
+>> > This set of patches, replaces the old API by the dma pool API
+>> > and remove the defines.
+>> > ...
+>>
+>> > Romain Perier (4):
+>> >   block: DAC960: Replace PCI pool old API
+>> >   net: e100: Replace PCI pool old API
+>> >   hinic: Replace PCI pool old API
+>> >   PCI: Remove PCI pool macro functions
+>> >
+>> >  drivers/block/DAC960.c                            | 38 +++++++++++------------
+>> >  drivers/block/DAC960.h                            |  4 +--
+>> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
+>> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+>> >  drivers/net/ethernet/intel/e100.c                 | 12 +++----
+>> >  include/linux/pci.h                               |  9 ------
+>> >  6 files changed, 32 insertions(+), 43 deletions(-)
+>>
+>> Applied to pci/misc for v4.16, thanks!
+>
+> Oops, my mistake.  I can't remove the macros themselves yet because
+> some of the uses were removed by patches that were applied via other
+> trees, and those patches are not in my tree.
+>
+> To avoid ordering dependencies during the merge window, I dropped the
+> "PCI: Remove PCI pool macro functions" patch.  Please repost that
+> after all the removals have made it into Linus' tree.
+>
+> Bjorn
