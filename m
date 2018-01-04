@@ -1,34 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5 0/7] Enhance libsas hotplug feature
-Date: Thu, 04 Jan 2018 01:01:50 -0500
-Message-ID: <yq1inciw4a9.fsf@oracle.com>
-References: <20171208094210.24887-1-yanaijie@huawei.com>
-        <8f6e3763-2b04-23e8-f1ec-8ed3c58f55d3@huawei.com>
+Subject: Re: [PATCH] aacraid driver oops with dead battery
+Date: Thu, 04 Jan 2018 01:04:07 -0500
+Message-ID: <yq1efn6w46g.fsf@oracle.com>
+References: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8f6e3763-2b04-23e8-f1ec-8ed3c58f55d3@huawei.com> (John Garry's
-        message of "Tue, 2 Jan 2018 11:06:00 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, Jason Yan <yanaijie@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:55128 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752015AbeADGEW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 01:04:22 -0500
+In-Reply-To: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee> (Meelis Roos's
+        message of "Wed, 3 Jan 2018 11:11:09 +0200 (EET)")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: linux-scsi@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 
 
-John,
+Meelis,
 
-> At this point we feel that we have a decent solution to the
-> long-standing libsas hotplug issues.
+> The battery in my HP NetRAID-4M died of old age, and the aacraid
+> driver started oopsing with NULL pointer dereference on startup after
+> that.
 >
-> Hannes has kindly reviewed the series.
->
-> Can you let us know what else you require for acceptance? More
-> independent review or testing?
+> Fix it by reordering the init sequence to fill in function pointers
+> before ioremapping memory, or dev->a_ops.adapter_ioremap pointer will
+> be NULL.
 
-According to my notes, Hannes had some concerns wrt. one of the
-patches. That's why I didn't merge the series.
-
-Please address the comments and we'll take it from there.
+Applied to 4.16/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
