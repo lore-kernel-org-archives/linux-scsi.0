@@ -1,29 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: scsi_transport_fc: fix typos on 64/128 GBit define names
-Date: Wed, 03 Jan 2018 22:51:31 -0500
-Message-ID: <yq1o9maxovw.fsf@oracle.com>
-References: <20171221222552.12470-1-jsmart2021@gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: don't dereference localport before it has been null checked
+Date: Wed, 03 Jan 2018 22:53:10 -0500
+Message-ID: <yq1k1wyxot5.fsf@oracle.com>
+References: <20171222002852.10892-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57510 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751584AbeADDvi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 22:51:38 -0500
-In-Reply-To: <20171221222552.12470-1-jsmart2021@gmail.com> (James Smart's
-        message of "Thu, 21 Dec 2017 14:25:52 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171222002852.10892-1-colin.king@canonical.com> (Colin King's
+        message of "Fri, 22 Dec 2017 00:28:52 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
 
-James,
+Colin,
 
-> The define names specified 64Bit/128Bit, not 64GBIT/128GBIT.
-> Correct the names.
+> localport is being dereferenced to assign lport and then immediately
+> afterwards localport is being sanity checked to see if it is null.
+> Fix this by only dereferencing localport until after it has been
+> null checked.
 
-Applied to 4.16/scsi-queue. Thanks!
+Applied to 4.16/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
