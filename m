@@ -1,60 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: remove extra white space at the end of the line
-Date: Wed, 03 Jan 2018 22:36:09 -0500
-Message-ID: <yq1608iz45y.fsf@oracle.com>
-References: <20171221024049.36509-1-yanaijie@huawei.com>
-        <1513872544.2931.13.camel@wdc.com>
-        <20171222070318.p4bor426wcc7kxwm@linux-x5ow.site>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] scsi: libiscsi: Allow sd_shutdown on bad transport
+Date: Wed, 03 Jan 2018 22:39:51 -0500
+Message-ID: <yq11sj6z3zs.fsf@oracle.com>
+References: <1512683953-5959-1-git-send-email-rafael.tinoco@canonical.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50340 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751338AbeADDgY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jan 2018 22:36:24 -0500
-In-Reply-To: <20171222070318.p4bor426wcc7kxwm@linux-x5ow.site> (Johannes
-        Thumshirn's message of "Fri, 22 Dec 2017 08:03:18 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBDVIJONZ3YDRBD6EW3JAKGQE2M5A2SQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1512683953-5959-1-git-send-email-rafael.tinoco-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+	(Rafael David Tinoco's message of "Thu, 7 Dec 2017 19:59:13 -0200")
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Rafael David Tinoco <rafael.tinoco-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jay Vosburgh <jay.vosburgh-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Daniel Axtens <daniel.axtens-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Dragan Stancevic <dragan.stancevic-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "yanaijie@huawei.com" <yanaijie@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>
 
 
-Johannes,
+Rafael,
 
-> All in all I'm so much in favour of this cleanup patch (and even would
-> apprechiate more of these, especailly getting rid of all those
-> camelCase foo we have in the scsi hba drivers).
->
-> Let's see how Martin and James deceide about it.
+> If, for any reason, userland shuts down iscsi transport interfaces
+> before proper logouts - like when logging in to LUNs manually, without
+> logging out on server shutdown, or when automated scripts can't
+> umount/logout from logged LUNs - kernel will hang forever on its
+> sd_sync_cache() logic, after issuing the SYNCHRONIZE_CACHE cmd to all
+> still existent paths.
 
-I am thoroughly annoyed by all the legacy whitespace problems. I've been
-working on two different sd patch series over the holidays and both
-caused me no end of grief due to legacy formatting issues.
-
-I have had an unbreak-sd patch sitting in my queue for several years but
-never pulled the trigger on it. For the usual reasons.
-
-I'm not particularly worried about bisection. But fixing whitespace does
-make it harder on the distro backporting front (Very pleased that you
-have now inadvertently volunteered to deal with all the issues that may
-arise at SUSE from such a subsystem-wide cleanup :).
-
-Anyway. I'm OK with fixing up the core pieces since they are the ones
-that annoy me the most. But I'm not sure we should enforce cleanups on
-drivers without an ack from the relevant maintainer. And for the
-unmaintained legacy baggage, I'm just not sure it's worth the hassle to
-clean things up. Fixing the crufty old things gives an illusion of the
-driver being actively worked on. I'd rather see dead code being left as
-such. Gives us a good indication of when it's safe to drop.
-
-One thing I specifically don't want is to open the flood gates for
-drive-by whitespace patches. I have no interest in wasting cycles on
-that. I generally only take arbitrary 3rd party cleanups if a driver is
-actively maintained and the maintainer specifically acks the change.
-
-PS. I'll at least partially unbreak sd.c as part of the series I'll be
-posting shortly.
+Applied to 4.16/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
