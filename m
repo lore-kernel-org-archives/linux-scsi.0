@@ -1,15 +1,15 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [Resend 04/11] mpt3sas: open-code _scsih_scsi_lookup_get()
-Date: Thu,  4 Jan 2018 04:57:04 -0800
-Message-ID: <1515070631-14740-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [Resend 10/11] mpt3sas: simplify _wait_for_commands_to_complete()
+Date: Thu,  4 Jan 2018 04:57:10 -0800
+Message-ID: <1515070631-14740-11-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:38992 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752764AbeADM5q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:57:46 -0500
-Received: by mail-qt0-f195.google.com with SMTP id k19so1722530qtj.6
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:57:46 -0800 (PST)
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:44900 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752895AbeADM6I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:58:08 -0500
+Received: by mail-qt0-f193.google.com with SMTP id m59so1718132qte.11
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:58:08 -0800 (PST)
 In-Reply-To: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,47 +18,59 @@ Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@b
 
 From: Hannes Reinecke <hare@suse.de>
 
-Just a wrapper around the scsi lookup array and only used
-in one place, so open-code it.
+Use 'host_busy' instead of counting outstanding commands by hand.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 9a2cede..e482fa2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1445,19 +1445,6 @@ _scsih_is_nvme_device(u32 device_info)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index d4b32af..2314949 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2898,9 +2898,9 @@ _base_recovery_check(struct MPT3SAS_ADAPTER *ioc)
+ 	 * See _wait_for_commands_to_complete() call with regards to this code.
+ 	 */
+ 	if (ioc->shost_recovery && ioc->pending_io_count) {
+-		if (ioc->pending_io_count == 1)
++		ioc->pending_io_count = atomic_read(&ioc->shost->host_busy);
++		if (ioc->pending_io_count == 0)
+ 			wake_up(&ioc->reset_wq);
+-		ioc->pending_io_count--;
+ 	}
  }
  
- /**
-- * _scsih_scsi_lookup_get - returns scmd entry
-- * @ioc: per adapter object
-- * @smid: system request message index
-- *
-- * Returns the smid stored scmd pointer.
-- */
--static struct scsi_cmnd *
--_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
--{
--	return ioc->scsi_lookup[smid - 1].scmd;
--}
--
--/**
-  * __scsih_scsi_lookup_get_clear - returns scmd entry without
-  *						holding any lock.
-  * @ioc: per adapter object
-@@ -7543,7 +7530,7 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
- 	for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
- 		if (ioc->shost_recovery)
- 			goto out;
--		scmd = _scsih_scsi_lookup_get(ioc, smid);
-+		scmd = ioc->scsi_lookup[smid - 1].scmd;
- 		if (!scmd)
- 			continue;
- 		sdev = scmd->device;
+@@ -6310,15 +6310,13 @@ _base_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
+  * _wait_for_commands_to_complete - reset controller
+  * @ioc: Pointer to MPT_ADAPTER structure
+  *
+- * This function waiting(3s) for all pending commands to complete
++ * This function is waiting 10s for all pending commands to complete
+  * prior to putting controller in reset.
+  */
+ static void
+ _wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	u32 ioc_state;
+-	unsigned long flags;
+-	u16 i;
+ 
+ 	ioc->pending_io_count = 0;
+ 
+@@ -6327,11 +6325,7 @@ _wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+ 		return;
+ 
+ 	/* pending command count */
+-	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+-	for (i = 0; i < ioc->scsiio_depth; i++)
+-		if (ioc->scsi_lookup[i].cb_idx != 0xFF)
+-			ioc->pending_io_count++;
+-	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++	ioc->pending_io_count = atomic_read(&ioc->shost->host_busy);
+ 
+ 	if (!ioc->pending_io_count)
+ 		return;
 -- 
 2.5.5
