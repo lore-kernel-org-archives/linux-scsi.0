@@ -1,15 +1,15 @@
 From: chenxiang <chenxiang66@hisilicon.com>
-Subject: [PATCH v2 3/4] scsi: mvsas: fix dma_unmap_sg() parameter
-Date: Thu, 4 Jan 2018 10:36:44 +0800
-Message-ID: <1515033405-37477-4-git-send-email-chenxiang66@hisilicon.com>
+Subject: [PATCH v2 1/4] scsi: ibmvscsis: fix dma_unmap_sg() parameter
+Date: Thu, 4 Jan 2018 10:36:42 +0800
+Message-ID: <1515033405-37477-2-git-send-email-chenxiang66@hisilicon.com>
 References: <1515033405-37477-1-git-send-email-chenxiang66@hisilicon.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:54755 "EHLO huawei.com"
+Received: from szxga07-in.huawei.com ([45.249.212.35]:54754 "EHLO huawei.com"
         rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752004AbeADChg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Jan 2018 21:37:36 -0500
+        id S1752059AbeADChi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Jan 2018 21:37:38 -0500
 In-Reply-To: <1515033405-37477-1-git-send-email-chenxiang66@hisilicon.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,36 +20,37 @@ For function dma_unmap_sg(), the <nents> parameter should be number of
 elements in the scatterlist prior to the mapping, not after the mapping.
 Fix this usage.
 
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>
-Fixes: 0b15fb1fd("[SCSI]mvsas: add support for Task collector mode and fixed relative
-bugs")
+Cc: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Cc: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Fixes: 88a678bb("ibmscsis: Initial commit of IBM VSCSI Tgt Driver")
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/mvsas/mv_sas.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi_tgt/libsrp.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index cff43bd..4b2cf36 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -848,7 +848,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
- 	dev_printk(KERN_ERR, mvi->dev, "mvsas prep failed[%d]!\n", rc);
- 	if (!sas_protocol_ata(task->task_proto))
- 		if (n_elem)
--			dma_unmap_sg(mvi->dev, task->scatter, n_elem,
-+			dma_unmap_sg(mvi->dev, task->scatter, task->num_scatter,
- 				     task->data_dir);
- prep_out:
- 	return rc;
-@@ -899,7 +899,7 @@ static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
- 	if (!sas_protocol_ata(task->task_proto))
- 		if (slot->n_elem)
- 			dma_unmap_sg(mvi->dev, task->scatter,
--				     slot->n_elem, task->data_dir);
-+				     task->num_scatter, task->data_dir);
+diff --git a/drivers/scsi/ibmvscsi_tgt/libsrp.c b/drivers/scsi/ibmvscsi_tgt/libsrp.c
+index 5a4cc28..16054c0 100644
+--- a/drivers/scsi/ibmvscsi_tgt/libsrp.c
++++ b/drivers/scsi/ibmvscsi_tgt/libsrp.c
+@@ -193,7 +193,8 @@ static int srp_direct_data(struct ibmvscsis_cmd *cmd, struct srp_direct_buf *md,
+ 	err = rdma_io(cmd, sg, nsg, md, 1, dir, len);
  
- 	switch (task->task_proto) {
- 	case SAS_PROTOCOL_SMP:
+ 	if (dma_map)
+-		dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
++		dma_unmap_sg(iue->target->dev, sg, cmd->se_cmd.t_data_nents,
++				DMA_BIDIRECTIONAL);
+ 
+ 	return err;
+ }
+@@ -265,7 +266,8 @@ static int srp_indirect_data(struct ibmvscsis_cmd *cmd, struct srp_cmd *srp_cmd,
+ 	err = rdma_io(cmd, sg, nsg, md, nmd, dir, len);
+ 
+ 	if (dma_map)
+-		dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
++		dma_unmap_sg(iue->target->dev, sg, cmd->se_cmd.t_data_nents,
++				DMA_BIDIRECTIONAL);
+ 
+ free_mem:
+ 	if (token && dma_map) {
 -- 
 1.9.1
