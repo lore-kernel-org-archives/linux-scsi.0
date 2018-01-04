@@ -1,52 +1,58 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v3 3/3] scsi: libsas: initialize sas_phy status according to response of DISCOVER
-Date: Thu, 4 Jan 2018 21:04:33 +0800
-Message-ID: <20180104130433.42813-4-yanaijie@huawei.com>
-References: <20180104130433.42813-1-yanaijie@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [Resend 02/11] mpt3sas: use list_splice_init()
+Date: Thu,  4 Jan 2018 04:57:02 -0800
+Message-ID: <1515070631-14740-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+References: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:49731 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752480AbeADM52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 Jan 2018 07:57:28 -0500
-In-Reply-To: <20180104130433.42813-1-yanaijie@huawei.com>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33442 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752690AbeADM5i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:57:38 -0500
+Received: by mail-qk0-f194.google.com with SMTP id x7so1786080qkb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:57:38 -0800 (PST)
+In-Reply-To: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, zhaohongjiang@huawei.com, miaoxie@huawei.com, hch@lst.de, hare@suse.com, chenxiang <chenxiang66@hisilicon.com>, Jason Yan <yanaijie@huawei.com>
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-From: chenxiang <chenxiang66@hisilicon.com>
+From: Hannes Reinecke <hare@suse.de>
 
-The status of SAS PHY is in sas_phy->enabled. There is an issue that the
-status of a remote SAS PHY may be initialized incorrectly: if disable remote
-SAS PHY through sysfs interface (such as echo 0 > /sys/class/sas_phy/phy-1:0:0/enable),
-then reboot the system, and we will find the status of remote SAS PHY which is
-disabled before is 1 (cat /sys/class/sas_phy/phy-1:0:0/enable). But actually
-the status of remote SAS PHY is disabled and the device attached is not found.
+Use 'list_splice_init()' instead of hand-crafted function.
+No functional change.
 
-In SAS protocol, NEGOTIATED LOGICAL LINK RATE field of DISCOVER response is 0x1
-when remote SAS PHY is disabled. So initialize sas_phy->enabled according to
-the value of NEGOTIATED LOGICAL LINK RATE field.
-
-Signed-off-by: chenxiang <chenxiang66@hisilicon.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 6eab487..c79cfd1 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -293,6 +293,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
- 	phy->phy->minimum_linkrate = dr->pmin_linkrate;
- 	phy->phy->maximum_linkrate = dr->pmax_linkrate;
- 	phy->phy->negotiated_linkrate = phy->linkrate;
-+	phy->phy->enabled = (phy->linkrate != SAS_PHY_DISABLED);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index e3857e5..464a11e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2885,20 +2885,13 @@ mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	unsigned long flags;
+ 	int i;
+-	struct chain_tracker *chain_req, *next;
  
-  skip:
- 	if (new_phy)
+ 	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+ 	if (smid < ioc->hi_priority_smid) {
+ 		/* scsiio queue */
+ 		i = smid - 1;
+-		if (!list_empty(&ioc->scsi_lookup[i].chain_list)) {
+-			list_for_each_entry_safe(chain_req, next,
+-			    &ioc->scsi_lookup[i].chain_list, tracker_list) {
+-				list_del_init(&chain_req->tracker_list);
+-				list_add(&chain_req->tracker_list,
+-				    &ioc->free_chain_list);
+-			}
+-		}
++		list_splice_init(&ioc->scsi_lookup[i].chain_list,
++				 &ioc->free_chain_list);
+ 		ioc->scsi_lookup[i].cb_idx = 0xFF;
+ 		ioc->scsi_lookup[i].scmd = NULL;
+ 		ioc->scsi_lookup[i].direct_io = 0;
 -- 
-2.9.5
+2.5.5
