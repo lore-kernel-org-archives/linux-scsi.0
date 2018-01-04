@@ -1,15 +1,15 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [Resend 06/11] mpt3sas: check command status before attempting abort
-Date: Thu,  4 Jan 2018 04:57:06 -0800
-Message-ID: <1515070631-14740-7-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [Resend 05/11] mpt3sas: Introduce mpt3sas_get_st_from_smid()
+Date: Thu,  4 Jan 2018 04:57:05 -0800
+Message-ID: <1515070631-14740-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:41745 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752858AbeADM5x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:57:53 -0500
-Received: by mail-qk0-f195.google.com with SMTP id a8so1767153qkb.8
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:57:53 -0800 (PST)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:46977 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752744AbeADM5u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 07:57:50 -0500
+Received: by mail-qt0-f195.google.com with SMTP id r39so1708771qtr.13
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2018 04:57:50 -0800 (PST)
 In-Reply-To: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,44 +18,131 @@ Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@b
 
 From: Hannes Reinecke <hare@suse.de>
 
-When attempting a command abort we should check the command status
-prior to sending the abort; the command might've been completed
-already.
+Abstract accesses to the scsi_lookup array by introducing
+mpt3sas_get_st_from_smid().
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 22 ++++++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  2 ++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     |  7 ++++---
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  4 +++-
+ 4 files changed, 27 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 55aa80c..1ea4232 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -888,6 +888,15 @@ _base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
+ 	return 1;
+ }
+ 
++struct scsiio_tracker *
++mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	if (WARN_ON(!smid) ||
++	    WARN_ON(smid >= ioc->hi_priority_smid))
++		return NULL;
++	return &ioc->scsi_lookup[smid - 1];
++}
++
+ /**
+  * _base_get_cb_idx - obtain the callback index
+  * @ioc: per adapter object
+@@ -902,8 +911,11 @@ _base_get_cb_idx(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ 	u8 cb_idx = 0xFF;
+ 
+ 	if (smid < ioc->hi_priority_smid) {
+-		i = smid - 1;
+-		cb_idx = ioc->scsi_lookup[i].cb_idx;
++		struct scsiio_tracker *st;
++
++		st = mpt3sas_get_st_from_smid(ioc, smid);
++		if (st)
++			cb_idx = st->cb_idx;
+ 	} else if (smid < ioc->internal_smid) {
+ 		i = smid - ioc->hi_priority_smid;
+ 		cb_idx = ioc->hpr_lookup[i].cb_idx;
+@@ -1294,6 +1306,7 @@ static struct chain_tracker *
+ _base_get_chain_buffer_tracker(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	struct chain_tracker *chain_req;
++	struct scsiio_tracker *st;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+@@ -1306,8 +1319,9 @@ _base_get_chain_buffer_tracker(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ 	chain_req = list_entry(ioc->free_chain_list.next,
+ 	    struct chain_tracker, tracker_list);
+ 	list_del_init(&chain_req->tracker_list);
+-	list_add_tail(&chain_req->tracker_list,
+-	    &ioc->scsi_lookup[smid - 1].chain_list);
++	st = mpt3sas_get_st_from_smid(ioc, smid);
++	if (st)
++		list_add_tail(&chain_req->tracker_list, &st->chain_list);
+ 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+ 	return chain_req;
+ }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 60f42ca..23e9af5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1402,6 +1402,8 @@ void mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc);
+ u16 mpt3sas_base_get_smid_hpr(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
+ u16 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+ 	struct scsi_cmnd *scmd);
++struct scsiio_tracker *mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc,
++	u16 smid);
+ 
+ u16 mpt3sas_base_get_smid(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
+ void mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid);
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a11774b..8870cef 100644
+index e482fa2..a11774b 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2771,6 +2771,14 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
- 		return (!rc) ? SUCCESS : FAILED;
+@@ -2779,7 +2779,7 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
  	}
  
-+	if (type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) {
+ 	if (type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK)
+-		scsi_lookup = &ioc->scsi_lookup[smid_task - 1];
 +		scsi_lookup = mpt3sas_get_st_from_smid(ioc, smid_task);
-+		if (!scsi_lookup)
-+			return FAILED;
-+		if (scsi_lookup->cb_idx == 0xFF)
-+			return SUCCESS;
-+	}
-+
- 	smid = mpt3sas_base_get_smid_hpr(ioc, ioc->tm_cb_idx);
- 	if (!smid) {
- 		pr_err(MPT3SAS_FMT "%s: failed obtaining a smid\n",
-@@ -2778,9 +2786,6 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
- 		return FAILED;
- 	}
  
--	if (type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK)
--		scsi_lookup = mpt3sas_get_st_from_smid(ioc, smid_task);
--
  	dtmprintk(ioc, pr_info(MPT3SAS_FMT
  		"sending tm: handle(0x%04x), task_type(0x%02x), smid(%d)\n",
- 		ioc->name, handle, type, smid_task));
+@@ -2797,7 +2797,8 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	mpt3sas_scsih_set_tm_flag(ioc, handle);
+ 	init_completion(&ioc->tm_cmds.done);
+ 	if ((type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) &&
+-			(scsi_lookup->msix_io < ioc->reply_queue_count))
++	    scsi_lookup &&
++	    (scsi_lookup->msix_io < ioc->reply_queue_count))
+ 		msix_task = scsi_lookup->msix_io;
+ 	else
+ 		msix_task = 0;
+@@ -2838,7 +2839,7 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	switch (type) {
+ 	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
+ 		rc = SUCCESS;
+-		if (scsi_lookup->scmd == NULL)
++		if (scsi_lookup && scsi_lookup->scmd == NULL)
+ 			break;
+ 		rc = FAILED;
+ 		break;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+index ced7d9f..890d6a9 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+@@ -270,7 +270,9 @@ out_error:
+ inline u8
+ mpt3sas_scsi_direct_io_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+-	return ioc->scsi_lookup[smid - 1].direct_io;
++	struct scsiio_tracker *st = mpt3sas_get_st_from_smid(ioc, smid);
++
++	return st ? st->direct_io : 0;
+ }
+ 
+ /**
 -- 
 2.5.5
