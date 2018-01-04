@@ -1,34 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid driver oops with dead battery
-Date: Thu, 04 Jan 2018 01:04:07 -0500
-Message-ID: <yq1efn6w46g.fsf@oracle.com>
-References: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee>
+Subject: Re: [PATCH 1/9] scsi: qla4xxx: Use zeroing allocator rather than allocator/memset
+Date: Thu, 04 Jan 2018 01:08:53 -0500
+Message-ID: <yq1a7xuw3yi.fsf@oracle.com>
+References: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
+        <1514647712-6332-2-git-send-email-himanshujha199640@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55128 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752015AbeADGEW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2018 01:04:22 -0500
-In-Reply-To: <alpine.LRH.2.21.1801031057510.4107@math.ut.ee> (Meelis Roos's
-        message of "Wed, 3 Jan 2018 11:11:09 +0200 (EET)")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1514647712-6332-2-git-send-email-himanshujha199640@gmail.com>
+        (Himanshu Jha's message of "Sat, 30 Dec 2017 20:58:24 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Himanshu Jha <himanshujha199640@gmail.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, aacraid@adaptec.com, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, QLogic-Storage-Upstream@qlogic.com, satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, QLogic-Storage-Upstream@cavium.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: linux-scsi@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 
 
-Meelis,
+Himanshu,
 
-> The battery in my HP NetRAID-4M died of old age, and the aacraid
-> driver started oopsing with NULL pointer dereference on startup after
-> that.
->
-> Fix it by reordering the init sequence to fill in function pointers
-> before ioremapping memory, or dev->a_ops.adapter_ioremap pointer will
-> be NULL.
+> Use dma_zalloc_coherent instead of dma_alloc_coherent followed by memset
+> 0.
 
-Applied to 4.16/scsi-queue, thanks!
+Applied to 4.16/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
