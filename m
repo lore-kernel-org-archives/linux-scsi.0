@@ -1,21 +1,21 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Subject: [PATCH 13/14] megaraid_sas: NVME passthru command support
-Date: Fri,  5 Jan 2018 05:33:04 -0800
-Message-ID: <1515159184-26747-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Date: Fri,  5 Jan 2018 05:35:39 -0800
+Message-ID: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:38917 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751067AbeAENdX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2018 08:33:23 -0500
-Received: by mail-pg0-f65.google.com with SMTP id 81so2000498pgf.6
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jan 2018 05:33:23 -0800 (PST)
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:40157 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751469AbeAENf5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2018 08:35:57 -0500
+Received: by mail-pf0-f194.google.com with SMTP id v26so2184650pfl.7
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jan 2018 05:35:56 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, linux-nvme@vger.kernel.org, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, linux-nvme@lists.infradead.org, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
 Feature - NVME pass-through via MFI interface.
 Current MR product support different encapsulation via MFI frame work.
