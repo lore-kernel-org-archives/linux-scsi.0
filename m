@@ -1,183 +1,35 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v4 1/5] lib/scatterlist: Introduce sgl_alloc() and sgl_free()
-Date: Fri,  5 Jan 2018 08:26:46 -0800
-Message-ID: <20180105162650.31083-2-bart.vanassche@wdc.com>
-References: <20180105162650.31083-1-bart.vanassche@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180105162650.31083-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
+Date: Fri, 5 Jan 2018 16:32:17 +0000
+Message-ID: <1515169935.3254.2.camel@wdc.com>
+References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:27621 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752202AbeAEQcU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2018 11:32:20 -0500
+In-Reply-To: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <34F1C6216A735E4C9F50BCD9F4F010FD@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "vlee@freedesktop.org" <vlee@freedesktop.org>
 
-Many kernel drivers contain code that allocates and frees both a
-scatterlist and the pages that populate that scatterlist.
-Introduce functions in lib/scatterlist.c that perform these tasks
-instead of duplicating this functionality in multiple drivers.
-Only include these functions in the build if CONFIG_SGL_ALLOC=y
-to avoid that the kernel size increases if this functionality is
-not used.
-
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- include/linux/scatterlist.h |  10 +++++
- lib/Kconfig                 |   4 ++
- lib/scatterlist.c           | 105 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 119 insertions(+)
-
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index b7c83254c566..b8a7c1d1dbe3 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -276,6 +276,16 @@ int sg_alloc_table_from_pages(struct sg_table *sgt, struct page **pages,
- 			      unsigned int n_pages, unsigned int offset,
- 			      unsigned long size, gfp_t gfp_mask);
- 
-+#ifdef CONFIG_SGL_ALLOC
-+struct scatterlist *sgl_alloc_order(unsigned long long length,
-+				    unsigned int order, bool chainable,
-+				    gfp_t gfp, unsigned int *nent_p);
-+struct scatterlist *sgl_alloc(unsigned long long length, gfp_t gfp,
-+			      unsigned int *nent_p);
-+void sgl_free_order(struct scatterlist *sgl, int order);
-+void sgl_free(struct scatterlist *sgl);
-+#endif /* CONFIG_SGL_ALLOC */
-+
- size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents, void *buf,
- 		      size_t buflen, off_t skip, bool to_buffer);
- 
-diff --git a/lib/Kconfig b/lib/Kconfig
-index c5e84fbcb30b..4dd5c11366f9 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -409,6 +409,10 @@ config HAS_DMA
- 	depends on !NO_DMA
- 	default y
- 
-+config SGL_ALLOC
-+	bool
-+	default n
-+
- config DMA_NOOP_OPS
- 	bool
- 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index 7c1c55f7daaa..9afc9b432083 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -474,6 +474,111 @@ int sg_alloc_table_from_pages(struct sg_table *sgt, struct page **pages,
- }
- EXPORT_SYMBOL(sg_alloc_table_from_pages);
- 
-+#ifdef CONFIG_SGL_ALLOC
-+
-+/**
-+ * sgl_alloc_order - allocate a scatterlist and its pages
-+ * @length: Length in bytes of the scatterlist. Must be at least one
-+ * @order: Second argument for alloc_pages()
-+ * @chainable: Whether or not to allocate an extra element in the scatterlist
-+ *	for scatterlist chaining purposes
-+ * @gfp: Memory allocation flags
-+ * @nent_p: [out] Number of entries in the scatterlist that have pages
-+ *
-+ * Returns: A pointer to an initialized scatterlist or %NULL upon failure.
-+ */
-+struct scatterlist *sgl_alloc_order(unsigned long long length,
-+				    unsigned int order, bool chainable,
-+				    gfp_t gfp, unsigned int *nent_p)
-+{
-+	struct scatterlist *sgl, *sg;
-+	struct page *page;
-+	unsigned int nent, nalloc;
-+	u32 elem_len;
-+
-+	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
-+	/* Check for integer overflow */
-+	if (length > (nent << (PAGE_SHIFT + order)))
-+		return NULL;
-+	nalloc = nent;
-+	if (chainable) {
-+		/* Check for integer overflow */
-+		if (nalloc + 1 < nalloc)
-+			return NULL;
-+		nalloc++;
-+	}
-+	sgl = kmalloc_array(nalloc, sizeof(struct scatterlist),
-+			    (gfp & ~GFP_DMA) | __GFP_ZERO);
-+	if (!sgl)
-+		return NULL;
-+
-+	sg_init_table(sgl, nent);
-+	sg = sgl;
-+	while (length) {
-+		elem_len = min_t(u64, length, PAGE_SIZE << order);
-+		page = alloc_pages(gfp, order);
-+		if (!page) {
-+			sgl_free(sgl);
-+			return NULL;
-+		}
-+
-+		sg_set_page(sg, page, elem_len, 0);
-+		length -= elem_len;
-+		sg = sg_next(sg);
-+	}
-+	WARN_ON_ONCE(sg);
-+	if (nent_p)
-+		*nent_p = nent;
-+	return sgl;
-+}
-+EXPORT_SYMBOL(sgl_alloc_order);
-+
-+/**
-+ * sgl_alloc - allocate a scatterlist and its pages
-+ * @length: Length in bytes of the scatterlist
-+ * @gfp: Memory allocation flags
-+ * @nent_p: [out] Number of entries in the scatterlist
-+ *
-+ * Returns: A pointer to an initialized scatterlist or %NULL upon failure.
-+ */
-+struct scatterlist *sgl_alloc(unsigned long long length, gfp_t gfp,
-+			      unsigned int *nent_p)
-+{
-+	return sgl_alloc_order(length, 0, false, gfp, nent_p);
-+}
-+EXPORT_SYMBOL(sgl_alloc);
-+
-+/**
-+ * sgl_free_order - free a scatterlist and its pages
-+ * @sgl: Scatterlist with one or more elements
-+ * @order: Second argument for __free_pages()
-+ */
-+void sgl_free_order(struct scatterlist *sgl, int order)
-+{
-+	struct scatterlist *sg;
-+	struct page *page;
-+
-+	for (sg = sgl; sg; sg = sg_next(sg)) {
-+		page = sg_page(sg);
-+		if (page)
-+			__free_pages(page, order);
-+	}
-+	kfree(sgl);
-+}
-+EXPORT_SYMBOL(sgl_free_order);
-+
-+/**
-+ * sgl_free - free a scatterlist and its pages
-+ * @sgl: Scatterlist with one or more elements
-+ */
-+void sgl_free(struct scatterlist *sgl)
-+{
-+	sgl_free_order(sgl, 0);
-+}
-+EXPORT_SYMBOL(sgl_free);
-+
-+#endif /* CONFIG_SGL_ALLOC */
-+
- void __sg_page_iter_start(struct sg_page_iter *piter,
- 			  struct scatterlist *sglist, unsigned int nents,
- 			  unsigned long pgoffset)
--- 
-2.15.1
+T24gVGh1LCAyMDE4LTAxLTA0IGF0IDE0OjMyIC0wODAwLCBWaW5zb24gTGVlIHdyb3RlOg0KPiBI
+UCBQcm9MaWFudCBETDM2MHAgR2VuOCB3aXRoIFNtYXJ0IEFycmF5IFA0MjBpIGJvb3RzIHRvIHRo
+ZSBsb2dpbg0KPiBwcm9tcHQgYW5kIGhhbmdzIHdpdGggTGludXggNC4xMyBvciBsYXRlci4gSSBj
+YW5ub3QgbG9nIGluIG9uIGNvbnNvbGUNCj4gb3IgU1NIIGludG8gdGhlIG1hY2hpbmUuIExpbnV4
+IDQuMTIgYW5kIG9sZGVyIGJvb3QgZmluZS4NCj4gDQo+IEkgc2VlIHRoZXNlIG1lc3NhZ2VzIG9u
+IHRoZSBjb25zb2xlLg0KPiANCj4gWyAgMjQyLjg0MzIwNl0gSU5GTzogdGFzayBzY3NpX2VoXzI6
+NDY1IGJsb2NrZWQgZm9yIG1vcmUgdGhhbiAxMjAgc2Vjb25kcy4NCj4gWyAgMjQyLjg3NzgzNV0g
+ICAgICAgTm90IHRhaW50ZWQgNC4xNS4wLTA0MTUwMHJjNi1nZW5lcmljICMyMDE3MTIzMTIzMzAN
+Cg0KSXQgc2VlbXMgbGlrZSBzb21ldGhpbmcgZ290IHN0dWNrIGluIHRoZSBibG9jayBsYXllci4g
+VGhlIHRyYWRpdGlvbmFsIHdheSB0bw0KZGVidWcgdGhpcyBpcyB0byBhbmFseXplIHRoZSBpbmZv
+cm1hdGlvbiB0aGF0IGlzIGF2YWlsYWJsZSB1bmRlcg0KL3N5cy9rZXJuZWwvZGVidWcvYmxvY2su
+IEhvd2V2ZXIsIHNpbmNlIGxvZ2luIGlzIG5vdCBwb3NzaWJsZSB3ZSBjYW4ndCB1c2UNCnRoYXQg
+YXBwcm9hY2guIFdvdWxkIGl0IGJlIHBvc3NpYmxlIGZvciB5b3UgdG8gY2hlY2sgd2hldGhlciB0
+aGlzIGhhcyBiZWVuDQpyZXNvbHZlZCBpbiBrZXJuZWwgdjQuMTUtcmM2LCBhbmQgaWYgbm90LCBi
+aXNlY3QgdGhpcz8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0K
