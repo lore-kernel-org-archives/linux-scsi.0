@@ -1,194 +1,133 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 09/14] megaraid_sas: Update LD map after populating drv_map driver map copy
-Date: Fri,  5 Jan 2018 05:27:44 -0800
-Message-ID: <1515158869-26693-10-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 08/14] megaraid_sas: Use megasas_wait_for_adapter_operational to detect controller state in IOCTL path
+Date: Fri,  5 Jan 2018 05:27:43 -0800
+Message-ID: <1515158869-26693-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1515158869-26693-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:45243 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751815AbeAEN3c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2018 08:29:32 -0500
-Received: by mail-pg0-f66.google.com with SMTP id c194so1018137pga.12
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jan 2018 05:29:32 -0800 (PST)
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:38317 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751815AbeAEN33 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2018 08:29:29 -0500
+Received: by mail-pf0-f194.google.com with SMTP id u25so2181005pfg.5
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jan 2018 05:29:29 -0800 (PST)
 In-Reply-To: <1515158869-26693-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Issue –
-There may be some IO accessing incorrect raid map, but driver has checks in
-IO path to handle those cases. It is always better to move to new raid map only
-once raid map is populated and validated.
-No functional defect. Fix is provided as part of review.
-Fix –
-Update instance->map_id after driver has populated new driver raid map
-from firmware raid map.
+In IOCTL path, re-use megasas_wait_for_adapter_operational API to detect
+controller state. This will make driver to use this API uniformly in all cases
+where we need to wait for adapter to become operational.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  2 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   | 20 ++++++++++++--------
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 16 ++++++++--------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 +-
- 4 files changed, 22 insertions(+), 18 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 60 ++-----------------------------
+ 1 file changed, 2 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 0a66935ddf33..14b82c0b0461 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -230,7 +230,7 @@ enum MFI_CMD_OP {
- /*
-  * Global functions
-  */
--extern u8 MR_ValidateMapInfo(struct megasas_instance *instance);
-+extern u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id);
- 
- 
- /*
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 34d1fb75285a..6da2766694cb 100644
+index 5ab343d386f9..34d1fb75285a 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3331,10 +3331,10 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 			&& (cmd->frame->dcmd.mbox.b[1] == 1)) {
- 			fusion->fast_path_io = 0;
- 			spin_lock_irqsave(instance->host->host_lock, flags);
-+			status = cmd->frame->hdr.cmd_status;
- 			instance->map_update_cmd = NULL;
--			if (cmd->frame->hdr.cmd_status != 0) {
--				if (cmd->frame->hdr.cmd_status !=
--				    MFI_STAT_NOT_FOUND)
-+			if (status != MFI_STAT_OK) {
-+				if (status != MFI_STAT_NOT_FOUND)
- 					dev_warn(&instance->pdev->dev, "map syncfailed, status = 0x%x\n",
- 					       cmd->frame->hdr.cmd_status);
- 				else {
-@@ -3344,8 +3344,8 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 						flags);
- 					break;
- 				}
--			} else
--				instance->map_id++;
-+			}
-+
- 			megasas_return_cmd(instance, cmd);
+@@ -7305,9 +7305,6 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ 	struct megasas_iocpacket *ioc;
+ 	struct megasas_instance *instance;
+ 	int error;
+-	int i;
+-	unsigned long flags;
+-	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
  
- 			/*
-@@ -3353,10 +3353,14 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 			 * Validate Map will set proper value.
- 			 * Meanwhile all IOs will go as LD IO.
- 			 */
--			if (MR_ValidateMapInfo(instance))
-+			if (status == MFI_STAT_OK &&
-+			    (MR_ValidateMapInfo(instance, (instance->map_id + 1)))) {
-+				instance->map_id++;
- 				fusion->fast_path_io = 1;
--			else
-+			} else {
- 				fusion->fast_path_io = 0;
-+			}
-+
- 			megasas_sync_map_info(instance);
- 			spin_unlock_irqrestore(instance->host->host_lock,
- 					       flags);
-@@ -5432,7 +5436,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		ctrl_info->adapterOperations2.supportUnevenSpans;
- 	if (instance->UnevenSpanSupport) {
- 		struct fusion_context *fusion = instance->ctrl_context;
--		if (MR_ValidateMapInfo(instance))
-+		if (MR_ValidateMapInfo(instance, instance->map_id))
- 			fusion->fast_path_io = 1;
- 		else
- 			fusion->fast_path_io = 0;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index f2ffde430ec1..59ecbb3b53b5 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -168,7 +168,7 @@ static struct MR_LD_SPAN *MR_LdSpanPtrGet(u32 ld, u32 span,
- /*
-  * This function will Populate Driver Map using firmware raid map
-  */
--static int MR_PopulateDrvRaidMap(struct megasas_instance *instance)
-+static int MR_PopulateDrvRaidMap(struct megasas_instance *instance, u64 map_id)
- {
- 	struct fusion_context *fusion = instance->ctrl_context;
- 	struct MR_FW_RAID_MAP_ALL     *fw_map_old    = NULL;
-@@ -181,7 +181,7 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 	ioc = memdup_user(user_ioc, sizeof(*ioc));
+ 	if (IS_ERR(ioc))
+@@ -7319,10 +7316,6 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ 		goto out_kfree_ioc;
+ 	}
  
+-	/* Adjust ioctl wait time for VF mode */
+-	if (instance->requestorId)
+-		wait_time = MEGASAS_ROUTINE_WAIT_TIME_VF;
+-
+ 	/* Block ioctls in VF mode */
+ 	if (instance->requestorId && !allow_vf_ioctls) {
+ 		error = -ENODEV;
+@@ -7345,32 +7338,10 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ 		goto out_kfree_ioc;
+ 	}
  
- 	struct MR_DRV_RAID_MAP_ALL *drv_map =
--			fusion->ld_drv_map[(instance->map_id & 1)];
-+			fusion->ld_drv_map[(map_id & 1)];
- 	struct MR_DRV_RAID_MAP *pDrvRaidMap = &drv_map->raidMap;
- 	void *raid_map_data = NULL;
+-	for (i = 0; i < wait_time; i++) {
+-
+-		spin_lock_irqsave(&instance->hba_lock, flags);
+-		if (atomic_read(&instance->adprecovery) == MEGASAS_HBA_OPERATIONAL) {
+-			spin_unlock_irqrestore(&instance->hba_lock, flags);
+-			break;
+-		}
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
+-
+-		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
+-			dev_notice(&instance->pdev->dev, "waiting"
+-				"for controller reset to finish\n");
+-		}
+-
+-		msleep(1000);
+-	}
+-
+-	spin_lock_irqsave(&instance->hba_lock, flags);
+-	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
+-
+-		dev_err(&instance->pdev->dev, "timed out while waiting for HBA to recover\n");
++	if  (megasas_wait_for_adapter_operational(instance)) {
+ 		error = -ENODEV;
+ 		goto out_up;
+ 	}
+-	spin_unlock_irqrestore(&instance->hba_lock, flags);
  
-@@ -190,7 +190,7 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 	       0xff, (sizeof(u16) * MAX_LOGICAL_DRIVES_DYN));
+ 	error = megasas_mgmt_fw_ioctl(instance, user_ioc, ioc);
+ out_up:
+@@ -7386,9 +7357,6 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
+ 	struct megasas_instance *instance;
+ 	struct megasas_aen aen;
+ 	int error;
+-	int i;
+-	unsigned long flags;
+-	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
  
- 	if (instance->max_raid_mapsize) {
--		fw_map_dyn = fusion->ld_map[(instance->map_id & 1)];
-+		fw_map_dyn = fusion->ld_map[(map_id & 1)];
- 		desc_table =
- 		(struct MR_RAID_MAP_DESC_TABLE *)((void *)fw_map_dyn + le32_to_cpu(fw_map_dyn->desc_table_offset));
- 		if (desc_table != fw_map_dyn->raid_map_desc_table)
-@@ -255,7 +255,7 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 	if (file->private_data != file) {
+ 		printk(KERN_DEBUG "megasas: fasync_helper was not "
+@@ -7412,32 +7380,8 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
+ 		return -ENODEV;
+ 	}
  
- 	} else if (instance->supportmax256vd) {
- 		fw_map_ext =
--			(struct MR_FW_RAID_MAP_EXT *)fusion->ld_map[(instance->map_id & 1)];
-+			(struct MR_FW_RAID_MAP_EXT *)fusion->ld_map[(map_id & 1)];
- 		ld_count = (u16)le16_to_cpu(fw_map_ext->ldCount);
- 		if (ld_count > MAX_LOGICAL_DRIVES_EXT) {
- 			dev_dbg(&instance->pdev->dev, "megaraid_sas: LD count exposed in RAID map in not valid\n");
-@@ -282,7 +282,7 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 			cpu_to_le32(sizeof(struct MR_FW_RAID_MAP_EXT));
- 	} else {
- 		fw_map_old = (struct MR_FW_RAID_MAP_ALL *)
--			fusion->ld_map[(instance->map_id & 1)];
-+				fusion->ld_map[(map_id & 1)];
- 		pFwRaidMap = &fw_map_old->raidMap;
- 		ld_count = (u16)le32_to_cpu(pFwRaidMap->ldCount);
- 		if (ld_count > MAX_LOGICAL_DRIVES) {
-@@ -313,7 +313,7 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- /*
-  * This function will validate Map info data provided by FW
-  */
--u8 MR_ValidateMapInfo(struct megasas_instance *instance)
-+u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
- {
- 	struct fusion_context *fusion;
- 	struct MR_DRV_RAID_MAP_ALL *drv_map;
-@@ -325,11 +325,11 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
- 	u16 ld;
- 	u32 expected_size;
+-	for (i = 0; i < wait_time; i++) {
+-
+-		spin_lock_irqsave(&instance->hba_lock, flags);
+-		if (atomic_read(&instance->adprecovery) == MEGASAS_HBA_OPERATIONAL) {
+-			spin_unlock_irqrestore(&instance->hba_lock,
+-						flags);
+-			break;
+-		}
+-
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
+-
+-		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
+-			dev_notice(&instance->pdev->dev, "waiting for"
+-				"controller reset to finish\n");
+-		}
+-
+-		msleep(1000);
+-	}
+-
+-	spin_lock_irqsave(&instance->hba_lock, flags);
+-	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+-		spin_unlock_irqrestore(&instance->hba_lock, flags);
+-		dev_err(&instance->pdev->dev, "timed out while waiting for HBA to recover\n");
++	if  (megasas_wait_for_adapter_operational(instance))
+ 		return -ENODEV;
+-	}
+-	spin_unlock_irqrestore(&instance->hba_lock, flags);
  
--	if (MR_PopulateDrvRaidMap(instance))
-+	if (MR_PopulateDrvRaidMap(instance, map_id))
- 		return 0;
- 
- 	fusion = instance->ctrl_context;
--	drv_map = fusion->ld_drv_map[(instance->map_id & 1)];
-+	drv_map = fusion->ld_drv_map[(map_id & 1)];
- 	pDrvRaidMap = &drv_map->raidMap;
- 
- 	lbInfo = fusion->load_balance_info;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index ea3312205a0e..74dadd052be4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1320,7 +1320,7 @@ megasas_get_map_info(struct megasas_instance *instance)
- 
- 	fusion->fast_path_io = 0;
- 	if (!megasas_get_ld_map_info(instance)) {
--		if (MR_ValidateMapInfo(instance)) {
-+		if (MR_ValidateMapInfo(instance, instance->map_id)) {
- 			fusion->fast_path_io = 1;
- 			return 0;
- 		}
+ 	mutex_lock(&instance->reset_mutex);
+ 	error = megasas_register_aen(instance, aen.seq_num,
 -- 
 2.14.1
