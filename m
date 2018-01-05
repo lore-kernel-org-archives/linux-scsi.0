@@ -1,117 +1,137 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v4 2/5] crypto: scompress - use sgl_alloc() and sgl_free()
-Date: Fri,  5 Jan 2018 08:26:47 -0800
-Message-ID: <20180105162650.31083-3-bart.vanassche@wdc.com>
+Subject: [PATCH v4 4/5] nvmet/rdma: Use sgl_alloc() and sgl_free()
+Date: Fri,  5 Jan 2018 08:26:49 -0800
+Message-ID: <20180105162650.31083-5-bart.vanassche@wdc.com>
 References: <20180105162650.31083-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from esa1.hgst.iphmx.com ([68.232.141.245]:12110 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751849AbeAEQ0w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2018 11:26:52 -0500
+        with ESMTP id S1751593AbeAEQ0x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2018 11:26:53 -0500
 In-Reply-To: <20180105162650.31083-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>
 
 Use the sgl_alloc() and sgl_free() functions instead of open coding
 these functions.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Acked-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Sagi Grimberg <sagi@grimberg.me>
 ---
- crypto/Kconfig     |  1 +
- crypto/scompress.c | 51 ++-------------------------------------------------
- 2 files changed, 3 insertions(+), 49 deletions(-)
+ drivers/nvme/target/Kconfig |  1 +
+ drivers/nvme/target/rdma.c  | 63 +++------------------------------------------
+ 2 files changed, 5 insertions(+), 59 deletions(-)
 
-diff --git a/crypto/Kconfig b/crypto/Kconfig
-index f7911963bb79..20360e040425 100644
---- a/crypto/Kconfig
-+++ b/crypto/Kconfig
-@@ -106,6 +106,7 @@ config CRYPTO_KPP
- config CRYPTO_ACOMP2
- 	tristate
- 	select CRYPTO_ALGAPI2
+diff --git a/drivers/nvme/target/Kconfig b/drivers/nvme/target/Kconfig
+index 4d9715630e21..5f4f8b16685f 100644
+--- a/drivers/nvme/target/Kconfig
++++ b/drivers/nvme/target/Kconfig
+@@ -29,6 +29,7 @@ config NVME_TARGET_RDMA
+ 	tristate "NVMe over Fabrics RDMA target support"
+ 	depends on INFINIBAND
+ 	depends on NVME_TARGET
 +	select SGL_ALLOC
- 
- config CRYPTO_ACOMP
- 	tristate
-diff --git a/crypto/scompress.c b/crypto/scompress.c
-index 2075e2c4e7df..968bbcf65c94 100644
---- a/crypto/scompress.c
-+++ b/crypto/scompress.c
-@@ -140,53 +140,6 @@ static int crypto_scomp_init_tfm(struct crypto_tfm *tfm)
- 	return ret;
+ 	help
+ 	  This enables the NVMe RDMA target support, which allows exporting NVMe
+ 	  devices over RDMA.
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 49912909c298..0e4c15754c58 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -185,59 +185,6 @@ nvmet_rdma_put_rsp(struct nvmet_rdma_rsp *rsp)
+ 	spin_unlock_irqrestore(&rsp->queue->rsps_lock, flags);
  }
  
--static void crypto_scomp_sg_free(struct scatterlist *sgl)
+-static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents)
 -{
--	int i, n;
--	struct page *page;
+-	struct scatterlist *sg;
+-	int count;
 -
--	if (!sgl)
+-	if (!sgl || !nents)
 -		return;
 -
--	n = sg_nents(sgl);
--	for_each_sg(sgl, sgl, n, i) {
--		page = sg_page(sgl);
--		if (page)
--			__free_page(page);
--	}
--
+-	for_each_sg(sgl, sg, nents, count)
+-		__free_page(sg_page(sg));
 -	kfree(sgl);
 -}
 -
--static struct scatterlist *crypto_scomp_sg_alloc(size_t size, gfp_t gfp)
+-static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
+-		u32 length)
 -{
--	struct scatterlist *sgl;
+-	struct scatterlist *sg;
 -	struct page *page;
--	int i, n;
+-	unsigned int nent;
+-	int i = 0;
 -
--	n = ((size - 1) >> PAGE_SHIFT) + 1;
+-	nent = DIV_ROUND_UP(length, PAGE_SIZE);
+-	sg = kmalloc_array(nent, sizeof(struct scatterlist), GFP_KERNEL);
+-	if (!sg)
+-		goto out;
 -
--	sgl = kmalloc_array(n, sizeof(struct scatterlist), gfp);
--	if (!sgl)
--		return NULL;
+-	sg_init_table(sg, nent);
 -
--	sg_init_table(sgl, n);
+-	while (length) {
+-		u32 page_len = min_t(u32, length, PAGE_SIZE);
 -
--	for (i = 0; i < n; i++) {
--		page = alloc_page(gfp);
+-		page = alloc_page(GFP_KERNEL);
 -		if (!page)
--			goto err;
--		sg_set_page(sgl + i, page, PAGE_SIZE, 0);
+-			goto out_free_pages;
+-
+-		sg_set_page(&sg[i], page, page_len, 0);
+-		length -= page_len;
+-		i++;
 -	}
+-	*sgl = sg;
+-	*nents = nent;
+-	return 0;
 -
--	return sgl;
--
--err:
--	sg_mark_end(sgl + i);
--	crypto_scomp_sg_free(sgl);
--	return NULL;
+-out_free_pages:
+-	while (i > 0) {
+-		i--;
+-		__free_page(sg_page(&sg[i]));
+-	}
+-	kfree(sg);
+-out:
+-	return NVME_SC_INTERNAL;
 -}
 -
- static int scomp_acomp_comp_decomp(struct acomp_req *req, int dir)
+ static int nvmet_rdma_alloc_cmd(struct nvmet_rdma_device *ndev,
+ 			struct nvmet_rdma_cmd *c, bool admin)
  {
- 	struct crypto_acomp *tfm = crypto_acomp_reqtfm(req);
-@@ -220,7 +173,7 @@ static int scomp_acomp_comp_decomp(struct acomp_req *req, int dir)
- 					      scratch_dst, &req->dlen, *ctx);
- 	if (!ret) {
- 		if (!req->dst) {
--			req->dst = crypto_scomp_sg_alloc(req->dlen, GFP_ATOMIC);
-+			req->dst = sgl_alloc(req->dlen, GFP_ATOMIC, NULL);
- 			if (!req->dst)
- 				goto out;
- 		}
-@@ -274,7 +227,7 @@ int crypto_init_scomp_ops_async(struct crypto_tfm *tfm)
+@@ -484,7 +431,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
+ 	}
  
- 	crt->compress = scomp_acomp_compress;
- 	crt->decompress = scomp_acomp_decompress;
--	crt->dst_free = crypto_scomp_sg_free;
-+	crt->dst_free = sgl_free;
- 	crt->reqsize = sizeof(void *);
+ 	if (rsp->req.sg != &rsp->cmd->inline_sg)
+-		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt);
++		sgl_free(rsp->req.sg);
  
- 	return 0;
+ 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
+ 		nvmet_rdma_process_wr_wait_list(queue);
+@@ -621,16 +568,14 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+ 	u32 len = get_unaligned_le24(sgl->length);
+ 	u32 key = get_unaligned_le32(sgl->key);
+ 	int ret;
+-	u16 status;
+ 
+ 	/* no data command? */
+ 	if (!len)
+ 		return 0;
+ 
+-	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
+-			len);
+-	if (status)
+-		return status;
++	rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
++	if (!rsp->req.sg)
++		return NVME_SC_INTERNAL;
+ 
+ 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
+ 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
 -- 
 2.15.1
