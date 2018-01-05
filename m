@@ -1,113 +1,104 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v4 3/5] nvmet/fc: Use sgl_alloc() and sgl_free()
-Date: Fri,  5 Jan 2018 08:26:48 -0800
-Message-ID: <20180105162650.31083-4-bart.vanassche@wdc.com>
+Subject: [PATCH v4 5/5] target: Use sgl_alloc_order() and sgl_free()
+Date: Fri,  5 Jan 2018 08:26:50 -0800
+Message-ID: <20180105162650.31083-6-bart.vanassche@wdc.com>
 References: <20180105162650.31083-1-bart.vanassche@wdc.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20180105162650.31083-1-bart.vanassche@wdc.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, Keith Busch <keith.busch@intel.com>, James Smart <james.smart@broadcom.com>, Sagi Grimberg <sagi@grimberg.me>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, linux-nvme@lists.infradead.org, Bart Van Assche <bart.vanassche@wdc.com>, Sagi Grimberg <sagi@grimberg.me>
 List-Id: linux-scsi@vger.kernel.org
 
-Use the sgl_alloc() and sgl_free() functions instead of open coding
-these functions.
+Use the sgl_alloc_order() and sgl_free() functions instead of open
+coding these functions.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Acked-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Cc: Keith Busch <keith.busch@intel.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: James Smart <james.smart@broadcom.com>
 Cc: Sagi Grimberg <sagi@grimberg.me>
 ---
- drivers/nvme/target/Kconfig |  1 +
- drivers/nvme/target/fc.c    | 36 ++----------------------------------
- 2 files changed, 3 insertions(+), 34 deletions(-)
+ drivers/target/Kconfig                 |  1 +
+ drivers/target/target_core_transport.c | 46 +++-------------------------------
+ 2 files changed, 5 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/nvme/target/Kconfig b/drivers/nvme/target/Kconfig
-index 03e4ab65fe77..4d9715630e21 100644
---- a/drivers/nvme/target/Kconfig
-+++ b/drivers/nvme/target/Kconfig
-@@ -39,6 +39,7 @@ config NVME_TARGET_FC
- 	tristate "NVMe over Fabrics FC target driver"
- 	depends on NVME_TARGET
- 	depends on HAS_DMA
+diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+index e2bc99980f75..4c44d7bed01a 100644
+--- a/drivers/target/Kconfig
++++ b/drivers/target/Kconfig
+@@ -5,6 +5,7 @@ menuconfig TARGET_CORE
+ 	select CONFIGFS_FS
+ 	select CRC_T10DIF
+ 	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
 +	select SGL_ALLOC
+ 	default n
  	help
- 	  This enables the NVMe FC target support, which allows exporting NVMe
- 	  devices over FC.
-diff --git a/drivers/nvme/target/fc.c b/drivers/nvme/target/fc.c
-index 5fd86039e353..840d1a39de33 100644
---- a/drivers/nvme/target/fc.c
-+++ b/drivers/nvme/target/fc.c
-@@ -1697,31 +1697,12 @@ static int
- nvmet_fc_alloc_tgt_pgs(struct nvmet_fc_fcp_iod *fod)
+ 	Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 58caacd54a3b..a001ba711cca 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2300,13 +2300,7 @@ static void target_complete_ok_work(struct work_struct *work)
+ 
+ void target_free_sgl(struct scatterlist *sgl, int nents)
  {
- 	struct scatterlist *sg;
+-	struct scatterlist *sg;
+-	int count;
+-
+-	for_each_sg(sgl, sg, nents, count)
+-		__free_page(sg_page(sg));
+-
+-	kfree(sgl);
++	sgl_free(sgl);
+ }
+ EXPORT_SYMBOL(target_free_sgl);
+ 
+@@ -2414,42 +2408,10 @@ int
+ target_alloc_sgl(struct scatterlist **sgl, unsigned int *nents, u32 length,
+ 		 bool zero_page, bool chainable)
+ {
+-	struct scatterlist *sg;
 -	struct page *page;
- 	unsigned int nent;
--	u32 page_len, length;
+-	gfp_t zero_flag = (zero_page) ? __GFP_ZERO : 0;
+-	unsigned int nalloc, nent;
 -	int i = 0;
+-
+-	nalloc = nent = DIV_ROUND_UP(length, PAGE_SIZE);
+-	if (chainable)
+-		nalloc++;
+-	sg = kmalloc_array(nalloc, sizeof(struct scatterlist), GFP_KERNEL);
+-	if (!sg)
+-		return -ENOMEM;
++	gfp_t gfp = GFP_KERNEL | (zero_page ? __GFP_ZERO : 0);
  
--	length = fod->req.transfer_len;
--	nent = DIV_ROUND_UP(length, PAGE_SIZE);
--	sg = kmalloc_array(nent, sizeof(struct scatterlist), GFP_KERNEL);
-+	sg = sgl_alloc(fod->req.transfer_len, GFP_KERNEL, &nent);
- 	if (!sg)
- 		goto out;
- 
--	sg_init_table(sg, nent);
+-	sg_init_table(sg, nalloc);
 -
 -	while (length) {
--		page_len = min_t(u32, length, PAGE_SIZE);
--
--		page = alloc_page(GFP_KERNEL);
+-		u32 page_len = min_t(u32, length, PAGE_SIZE);
+-		page = alloc_page(GFP_KERNEL | zero_flag);
 -		if (!page)
--			goto out_free_pages;
+-			goto out;
 -
 -		sg_set_page(&sg[i], page, page_len, 0);
 -		length -= page_len;
 -		i++;
 -	}
+-	*sgl = sg;
+-	*nents = nent;
+-	return 0;
 -
- 	fod->data_sg = sg;
- 	fod->data_sg_cnt = nent;
- 	fod->data_sg_cnt = fc_dma_map_sg(fod->tgtport->dev, sg, nent,
-@@ -1731,14 +1712,6 @@ nvmet_fc_alloc_tgt_pgs(struct nvmet_fc_fcp_iod *fod)
- 
- 	return 0;
- 
--out_free_pages:
+-out:
 -	while (i > 0) {
 -		i--;
 -		__free_page(sg_page(&sg[i]));
 -	}
 -	kfree(sg);
--	fod->data_sg = NULL;
--	fod->data_sg_cnt = 0;
- out:
- 	return NVME_SC_INTERNAL;
+-	return -ENOMEM;
++	*sgl = sgl_alloc_order(length, 0, chainable, gfp, nents);
++	return *sgl ? 0 : -ENOMEM;
  }
-@@ -1746,18 +1719,13 @@ nvmet_fc_alloc_tgt_pgs(struct nvmet_fc_fcp_iod *fod)
- static void
- nvmet_fc_free_tgt_pgs(struct nvmet_fc_fcp_iod *fod)
- {
--	struct scatterlist *sg;
--	int count;
--
- 	if (!fod->data_sg || !fod->data_sg_cnt)
- 		return;
+ EXPORT_SYMBOL(target_alloc_sgl);
  
- 	fc_dma_unmap_sg(fod->tgtport->dev, fod->data_sg, fod->data_sg_cnt,
- 				((fod->io_dir == NVMET_FCP_WRITE) ?
- 					DMA_FROM_DEVICE : DMA_TO_DEVICE));
--	for_each_sg(fod->data_sg, sg, fod->data_sg_cnt, count)
--		__free_page(sg_page(sg));
--	kfree(fod->data_sg);
-+	sgl_free(fod->data_sg);
- 	fod->data_sg = NULL;
- 	fod->data_sg_cnt = 0;
- }
 -- 
 2.15.1
