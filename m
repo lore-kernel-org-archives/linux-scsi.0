@@ -1,134 +1,123 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
+From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative execution
-Date: Fri, 05 Jan 2018 20:22:02 -0600
-Message-ID: <87y3lbpvzp.fsf@xmission.com>
+Date: Fri, 5 Jan 2018 22:30:16 -0800
+Message-ID: <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
 References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <87y3lbpvzp.fsf@xmission.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-media-owner@vger.kernel.org>
-In-Reply-To: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-        (Dan Williams's message of "Fri, 05 Jan 2018 17:09:53 -0800")
-Sender: linux-media-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, peterz@infradead.org, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Zhang Rui <rui.zhang@intel.com>, linux-media@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <87y3lbpvzp.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Alan Cox <alan.cox-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Srinivas Pandruvada <srinivas.pandruvada-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Solomon Peachy <pizza-pCgMCH4qpMRg9hUCZPvPmw@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Christian Lamparter <chunkeey-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>, Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andi Kleen <ak-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, X86 ML <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alexey Kuznetsov <kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org>, Zhang Rui <rui.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Linux-media-u79uwXL29TY@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Dan Williams <dan.j.williams@intel.com> writes:
-
-> Quoting Mark's original RFC:
+On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
+> Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> writes:
 >
-> "Recently, Google Project Zero discovered several classes of attack
-> against speculative execution. One of these, known as variant-1, allows
-> explicit bounds checks to be bypassed under speculation, providing an
-> arbitrary read gadget. Further details can be found on the GPZ blog [1]
-> and the Documentation patch in this series."
+>> Quoting Mark's original RFC:
+>>
+>> "Recently, Google Project Zero discovered several classes of attack
+>> against speculative execution. One of these, known as variant-1, allows
+>> explicit bounds checks to be bypassed under speculation, providing an
+>> arbitrary read gadget. Further details can be found on the GPZ blog [1]
+>> and the Documentation patch in this series."
+>>
+>> This series incorporates Mark Rutland's latest api and adds the x86
+>> specific implementation of nospec_barrier. The
+>> nospec_{array_ptr,ptr,barrier} helpers are then combined with a kernel
+>> wide analysis performed by Elena Reshetova to address static analysis
+>> reports where speculative execution on a userspace controlled value
+>> could bypass a bounds check. The patches address a precondition for the
+>> attack discussed in the Spectre paper [2].
 >
-> This series incorporates Mark Rutland's latest api and adds the x86
-> specific implementation of nospec_barrier. The
-> nospec_{array_ptr,ptr,barrier} helpers are then combined with a kernel
-> wide analysis performed by Elena Reshetova to address static analysis
-> reports where speculative execution on a userspace controlled value
-> could bypass a bounds check. The patches address a precondition for the
-> attack discussed in the Spectre paper [2].
-
-Please expand this.
-
-It is not clear what the static analysis is looking for.  Have a clear
-description of what is being fixed is crucial for allowing any of these
-changes.
-
-For the details given in the change description what I read is magic
-changes because a magic process says this code is vunlerable.
-
-Given the similarities in the code that is being patched to many other
-places in the kernel it is not at all clear that this small set of
-changes is sufficient for any purpose.
-
-> A consideration worth noting for reviewing these patches is to weigh the
-> dramatic cost of being wrong about whether a given report is exploitable
-> vs the overhead nospec_{array_ptr,ptr} may introduce. In other words,
-> lets make the bar for applying these patches be "can you prove that the
-> bounds check bypass is *not* exploitable". Consider that the Spectre
-> paper reports one example of a speculation window being ~180 cycles.
-
-
-> Note that there is also a proposal from Linus, array_access [3], that
-> attempts to quash speculative execution past a bounds check without
-> introducing an lfence instruction. That may be a future optimization
-> possibility that is compatible with this api, but it would appear to
-> need guarantees from the compiler that it is not clear the kernel can
-> rely on at this point. It is also not clear that it would be a
-> significant performance win vs lfence.
-
-It is also not clear that these changes fix anything, or are in any
-sense correct for the problem they are trying to fix as the problem
-is not clearly described.
-
-In at least one place (mpls) you are patching a fast path.  Compile out
-or don't load mpls by all means.  But it is not acceptable to change the
-fast path without even considering performance.
-
-So because the description sucks, and the due diligence is not there.
-
-Nacked-by: "Eric W. Biederman" <ebiederm@xmission.com>
-
-to the series.
-
-
+> Please expand this.
 >
-> These patches also will also be available via the 'nospec' git branch
-> here:
+> It is not clear what the static analysis is looking for.  Have a clear
+> description of what is being fixed is crucial for allowing any of these
+> changes.
 >
->     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec
+> For the details given in the change description what I read is magic
+> changes because a magic process says this code is vunlerable.
+
+Yes, that was my first reaction to the patches as well, I try below to
+add some more background and guidance, but in the end these are static
+analysis reports across a wide swath of sub-systems. It's going to
+take some iteration with domain experts to improve the patch
+descriptions, and that's the point of this series, to get the better
+trained eyes from the actual sub-system owners to take a look at these
+reports.
+
+For example, I'm looking for feedback like what Srinivas gave where he
+identified that the report is bogus, the branch condition can not be
+seeded with bad values in that path. Be like Srinivas.
+
+> Given the similarities in the code that is being patched to many other
+> places in the kernel it is not at all clear that this small set of
+> changes is sufficient for any purpose.
+
+I find this assertion absurd, when in the past have we as kernel
+developers ever been handed a static analysis report and then
+questioned why the static analysis did not flag other call sites
+before first reviewing the ones it did find?
+
+>> A consideration worth noting for reviewing these patches is to weigh the
+>> dramatic cost of being wrong about whether a given report is exploitable
+>> vs the overhead nospec_{array_ptr,ptr} may introduce. In other words,
+>> lets make the bar for applying these patches be "can you prove that the
+>> bounds check bypass is *not* exploitable". Consider that the Spectre
+>> paper reports one example of a speculation window being ~180 cycles.
 >
-> [1]: https://googleprojectzero.blogspot.co.uk/2018/01/reading-privileged-memory-with-side.html
-> [2]: https://spectreattack.com/spectre.pdf
-> [3]: https://marc.info/?l=linux-kernel&m=151510446027625&w=2
 >
-> ---
+>> Note that there is also a proposal from Linus, array_access [3], that
+>> attempts to quash speculative execution past a bounds check without
+>> introducing an lfence instruction. That may be a future optimization
+>> possibility that is compatible with this api, but it would appear to
+>> need guarantees from the compiler that it is not clear the kernel can
+>> rely on at this point. It is also not clear that it would be a
+>> significant performance win vs lfence.
 >
-> Andi Kleen (1):
->       x86, barrier: stop speculation for failed access_ok
->
-> Dan Williams (13):
->       x86: implement nospec_barrier()
->       [media] uvcvideo: prevent bounds-check bypass via speculative execution
->       carl9170: prevent bounds-check bypass via speculative execution
->       p54: prevent bounds-check bypass via speculative execution
->       qla2xxx: prevent bounds-check bypass via speculative execution
->       cw1200: prevent bounds-check bypass via speculative execution
->       Thermal/int340x: prevent bounds-check bypass via speculative execution
->       ipv6: prevent bounds-check bypass via speculative execution
->       ipv4: prevent bounds-check bypass via speculative execution
->       vfs, fdtable: prevent bounds-check bypass via speculative execution
->       net: mpls: prevent bounds-check bypass via speculative execution
->       udf: prevent bounds-check bypass via speculative execution
->       userns: prevent bounds-check bypass via speculative execution
->
-> Mark Rutland (4):
->       asm-generic/barrier: add generic nospec helpers
->       Documentation: document nospec helpers
->       arm64: implement nospec_ptr()
->       arm: implement nospec_ptr()
->
->  Documentation/speculation.txt                      |  166 ++++++++++++++++++++
->  arch/arm/include/asm/barrier.h                     |   75 +++++++++
->  arch/arm64/include/asm/barrier.h                   |   55 +++++++
->  arch/x86/include/asm/barrier.h                     |    6 +
->  arch/x86/include/asm/uaccess.h                     |   17 ++
->  drivers/media/usb/uvc/uvc_v4l2.c                   |    7 +
->  drivers/net/wireless/ath/carl9170/main.c           |    6 -
->  drivers/net/wireless/intersil/p54/main.c           |    8 +
->  drivers/net/wireless/st/cw1200/sta.c               |   10 +
->  drivers/net/wireless/st/cw1200/wsm.h               |    4 
->  drivers/scsi/qla2xxx/qla_mr.c                      |   15 +-
->  .../thermal/int340x_thermal/int340x_thermal_zone.c |   14 +-
->  fs/udf/misc.c                                      |   39 +++--
->  include/asm-generic/barrier.h                      |   68 ++++++++
->  include/linux/fdtable.h                            |    5 -
->  kernel/user_namespace.c                            |   10 -
->  net/ipv4/raw.c                                     |    9 +
->  net/ipv6/raw.c                                     |    9 +
->  net/mpls/af_mpls.c                                 |   12 +
->  19 files changed, 466 insertions(+), 69 deletions(-)
->  create mode 100644 Documentation/speculation.txt
+> It is also not clear that these changes fix anything, or are in any
+> sense correct for the problem they are trying to fix as the problem
+> is not clearly described.
+
+I'll try my best. I don't have first hand knowledge of how the static
+analyzer is doing this job, and I don't think it matters for
+evaluating these reports. I'll give you my thoughts on how I would
+handle one of these reports if it flagged one of the sub-systems I
+maintain.
+
+Start with the example from the Spectre paper:
+
+    if (x < array1_size)
+        y = array2[array1[x] * 256];
+
+In all the patches 'x' and 'array1' are called out explicitly. For example:
+
+    net: mpls: prevent bounds-check bypass via speculative execution
+
+    Static analysis reports that 'index' may be a user controlled value that
+    is used as a data dependency reading 'rt' from the 'platform_label'
+    array...
+
+So the first thing to review is whether the analyzer got it wrong and
+'x' is not arbitrarily controllable by userspace to cause speculation
+outside of the checked bounds. Be like Srinivas. The next step is to
+ask whether the code can be refactored so that 'x' is sanitized
+earlier in the call stack, especially if the nospec_array_ptr() lands
+in a hot path. The next aspect that I expect most would be tempted to
+go check is whether 'array2[array1[x]]' occurs later in the code
+stream, but with speculation windows being architecture dependent and
+potentially large (~180 cycles in one case says the paper) I submit
+that we should err on the side of caution and not guess if that second
+dependent read has been emitted somewhere in the instruction stream.
+
+> In at least one place (mpls) you are patching a fast path.  Compile out
+> or don't load mpls by all means.  But it is not acceptable to change the
+> fast path without even considering performance.
+
+Performance matters greatly, but I need help to identify a workload
+that is representative for this fast path to see what, if any, impact
+is incurred. Even better is a review that says "nope, 'index' is not
+subject to arbitrary userspace control at this point, drop the patch."
