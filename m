@@ -1,39 +1,113 @@
-From: Li Wei <liwei213@huawei.com>
-Subject: [PATCH v7 4/5] arm64: defconfig: enable configs for Hisilicon ufs
-Date: Sat, 6 Jan 2018 17:51:16 +0800
-Message-ID: <20180106095117.67907-5-liwei213@huawei.com>
+From: Simon Leinen <simon.leinen@switch.ch>
+Subject: Re: Oops: NULL pointer dereference - RIP: isci_task_abort_task+0x30/0x3e0 [isci]
+Date: Sat, 06 Jan 2018 12:40:22 +0100
+Message-ID: <aa608fb4gp.fsf_-_@switch.ch>
 References: <20180106095117.67907-1-liwei213@huawei.com>
+        <20180106095117.67907-5-liwei213@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180106095117.67907-1-liwei213@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
-Cc: zangleigang@hisilicon.com, gengjianfeng@hisilicon.com, guodong.xu@linaro.org, zhangfei.gao@linaro.org, fengbaopeng@hisilicon.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iberico.switch.ch ([130.59.113.143]:54420 "EHLO
+        iberico.switch.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752575AbeAFLyE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Jan 2018 06:54:04 -0500
+In-Reply-To: <1515154428.30693.43.camel@debian.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yves-Alexis Perez <corsac@debian.org>
+Cc: linux-scsi@vger.kernel.org, Stefan Priebe <s.priebe@profihost.ag>
 
-This enable configs for Hisilicon Hixxxx UFS driver.
+Yves-Alexis Perez wrote:
+> since kernel 4.11 (sorry it took so long to report) I have a box
+> failing to boot with a NULL pointer dereference (the box is stuck
+> there afterwards).
 
-Signed-off-by: Li Wei <liwei213@huawei.com>
-Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
----
- arch/arm64/configs/defconfig | 3 +++
- 1 file changed, 3 insertions(+)
+I get the same result on a Quanta server with several 4.13 and 4.14
+kernels (from the Ubuntu "mainline" and Xenial hwe-edge PPAs).
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 6356c6da34ea..fa6f921eed86 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -174,6 +174,9 @@ CONFIG_BLK_DEV_SD=y
- CONFIG_SCSI_SAS_ATA=y
- CONFIG_SCSI_HISI_SAS=y
- CONFIG_SCSI_HISI_SAS_PCI=y
-+CONFIG_SCSI_UFSHCD=y
-+CONFIG_SCSI_UFSHCD_PLATFORM=y
-+CONFIG_SCSI_UFS_HISI=y
- CONFIG_ATA=y
- CONFIG_SATA_AHCI=y
- CONFIG_SATA_AHCI_PLATFORM=y
+This (I guess) problem had been reported by Stefan Priebe under
+"isci regression in 4.11.0-rc2 by scsi: libsas: allow async aborts"
+on 8 November, 2017[1].  That report didn't elicit any response here.
+
+> The bug has also been reported to the Debian BTS ([2]) and a
+> suggestion to revert 90965761 has been made. I can confirm it fix the
+> boot issue.
+
+The Debian people have implemented the suggestion to revert 90965761 as
+of their 4.14.12-1 kernel package[2].
+
+> I don't have the complete stack trace at hand but there's an example
+> in the Debian bug.
+
+Here's a stack trace from my server.  It was copied and pasted from a
+serial console (IPMI SOL), I hope it's complete.
+
+  [    9.184043] BUG: unable to handle kernel NULL pointer dereference at           (null)
+  [    9.184055] IP: isci_task_abort_task+0x43/0x400 [isci]
+  [    9.184056] PGD 0
+  [    9.184056] P4D 0
+  [    9.184057]
+  [    9.184058] Oops: 0000 [#1] SMP
+  [    9.184060] Modules linked in: aesni_intel(+) aes_x86_64 crypto_simd glue_helper cryptd mei_me intel_cstate intel_rapl_perf mei shpchp lpc_ich ipmi_si(+) mac_hid kvm_intel kvm irqbypass ib_iser rdma_cm iw_cm ib_cm ib_core iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi ipmi_devintf ipmi_msghandler autofs4 btrfs xor raid6_pq ast ttm drm_kms_helper ixgbe igb syscopyarea isci sysfillrect i2c_algo_bit dca sysimgblt libsas fb_sys_fops ptp mdio drm scsi_transport_sas pps_core wmi
+  [    9.184084] CPU: 18 PID: 434 Comm: kworker/u48:1 Not tainted 4.13.0-21-generic #24~16.04.1-Ubuntu
+  [    9.184084] Hardware name: Quanta S210-X12RS V2/S210-X12RS V2, BIOS S2RQ4A08 08/12/2013
+  [    9.184090] Workqueue: scsi_tmf_0 scmd_eh_abort_handler
+  [    9.184091] task: ffff96507bb05d00 task.stack: ffffa2de87bb4000
+  [    9.184095] RIP: 0010:isci_task_abort_task+0x43/0x400 [isci]
+  [    9.184095] RSP: 0018:ffffa2de87bb7c88 EFLAGS: 00010246
+  [    9.184096] RAX: 0000000000000000 RBX: ffff9650782f11a8 RCX: 0000000000000000
+  [    9.184097] RDX: 0000000000000000 RSI: ffff9650782f11a8 RDI: 0000000000000000
+  [    9.184097] RBP: ffffa2de87bb7e28 R08: 0000000000000000 R09: 0000000000000001
+  [    9.184098] R10: 000000000000b8cb R11: 00000000000002f3 R12: ffff9650782f1148
+  [    9.184098] R13: ffff9650758cb800 R14: 0000000000000008 R15: 0000000000000000
+  [    9.184099] FS:  0000000000000000(0000) GS:ffff9660bf380000(0000) knlGS:0000000000000000
+  [    9.184100] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  [    9.184100] CR2: 0000000000000000 CR3: 000000004b009000 CR4: 00000000001406e0
+  [    9.184101] Call Trace:
+  [    9.184107]  ? cpumask_next_and+0x31/0x50
+  [    9.184110]  ? load_balance+0x1b5/0x9c0
+  [    9.184114]  ? sched_clock+0x9/0x10
+  [    9.184116]  ? sched_clock+0x9/0x10
+  [    9.184117]  ? sched_clock+0x9/0x10
+  [    9.184120]  ? sched_clock_cpu+0x11/0xb0
+  [    9.184121]  ? pick_next_task_fair+0x3c7/0x560
+  [    9.184123]  ? __switch_to+0x211/0x510
+  [    9.184125]  ? put_prev_entity+0x27/0x100
+  [    9.184129]  sas_eh_abort_handler+0x30/0x50 [libsas]
+  [    9.184131]  scmd_eh_abort_handler+0x74/0x230
+  [    9.184135]  process_one_work+0x156/0x410
+  [    9.184136]  worker_thread+0x4b/0x460
+  [    9.184138]  kthread+0x109/0x140
+  [    9.184139]  ? process_one_work+0x410/0x410
+  [    9.184140]  ? kthread_create_on_node+0x70/0x70
+  [    9.184143]  ret_from_fork+0x25/0x30
+  [    9.184144] Code: 08 48 81 ec 78 01 00 00 c7 85 78 fe ff ff 00 00 00 00 c7 85 80 fe ff ff 00 00 00 00 65 48 8b 04 25 28 00 00 00 48 89 45 d0 31 c0 <48> 8b 07 48 8b 40 30 48 8b 80 90 02 00 00 4c 8b a0 28 01 00 00
+  [    9.184160] RIP: isci_task_abort_task+0x43/0x400 [isci] RSP: ffffa2de87bb7c88
+  [    9.184161] CR2: 0000000000000000
+  [    9.184162] ---[ end trace bf9920b58fca631f ]---
+
+> The machine is a Dell Precision T5600 with the following SATA
+> controllers:
+
+> 00:1f.2 SATA controller: Intel Corporation C600/X79 series chipset 6-Port SATA
+> AHCI Controller (rev 05)
+> 05:00.0 Serial Attached SCSI controller: Intel Corporation C602 chipset 4-Port 
+> SATA Storage Control Unit (rev 05)
+
+Mine is a Quanta S210-X12RS server with only one SATA controller:
+
+08:00.0 Serial Attached SCSI controller: Intel Corporation C602 chipset 4-Port SATA Storage Control Unit (rev 05)
+
+Connected to that SATA controller are two Samsung 850 EVO 250GB SSDs and
+one 3TB WD Red disk.
+
+> If you need more information or need me to test something, please ask.
+
+Likewise.
+
+Best regards,
 -- 
-2.15.0
+Simon.
+
+[1] https://marc.info/?l=linux-scsi&m=151013394701914
+[2] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=882414
