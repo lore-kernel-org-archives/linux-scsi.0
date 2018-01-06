@@ -1,39 +1,35 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 10/18] qla2xxx: prevent bounds-check bypass via
- speculative execution
-Date: Sat, 6 Jan 2018 10:42:09 +0100
-Message-ID: <20180106094209.GB11525@kroah.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151520104838.32271.7038801336240727574.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180106090322.GF4380@kroah.com>
+From: Li Wei <liwei213@huawei.com>
+Subject: [PATCH v7 0/5] scsi: ufs: add ufs driver code for Hisilicon Hi3660 SoC
+Date: Sat, 6 Jan 2018 17:51:12 +0800
+Message-ID: <20180106095117.67907-1-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arch-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180106090322.GF4380@kroah.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, peterz@infradead.org, netdev@vger.kernel.org, qla2xxx-upstream@qlogic.com, tglx@linutronix.de, torvalds@linux-foundation.org, Elena Reshetova <elena.reshetova@intel.com>, alan@linux.intel.com
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc: zangleigang@hisilicon.com, gengjianfeng@hisilicon.com, guodong.xu@linaro.org, zhangfei.gao@linaro.org, fengbaopeng@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jan 06, 2018 at 10:03:22AM +0100, Greg KH wrote:
-> On Fri, Jan 05, 2018 at 05:10:48PM -0800, Dan Williams wrote:
-> > Static analysis reports that 'handle' may be a user controlled value
-> > that is used as a data dependency to read 'sp' from the
-> > 'req->outstanding_cmds' array.  In order to avoid potential leaks of
-> > kernel memory values, block speculative execution of the instruction
-> > stream that could issue reads based on an invalid value of 'sp'. In this
-> > case 'sp' is directly dereferenced later in the function.
-> 
-> I'm pretty sure that 'handle' comes from the hardware, not from
-> userspace, from what I can tell here.  If we want to start auditing
-> __iomem data sources, great!  But that's a bigger task, and one I don't
-> think we are ready to tackle...
+This patchset adds driver support for UFS for Hi3660 SoC. It is verified on HiKey960 board.
 
-And as Peter Zijlstra has already mentioned, if we have to look at those
-codepaths, USB drivers are the first up for that mess, so having access
-to the coverity rules would be a great help in starting that effort.
+Li Wei (5):
+  scsi: ufs: add Hisilicon ufs driver code
+  dt-bindings: scsi: ufs: add document for hisi-ufs
+  arm64: dts: add ufs dts node
+  arm64: defconfig: enable configs for Hisilicon ufs
+  arm64: defconfig: enable f2fs and squashfs
 
-thanks,
+ Documentation/devicetree/bindings/ufs/ufs-hisi.txt |  43 ++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  20 +
+ arch/arm64/configs/defconfig                       |  11 +
+ drivers/scsi/ufs/Kconfig                           |   9 +
+ drivers/scsi/ufs/Makefile                          |   1 +
+ drivers/scsi/ufs/ufs-hisi.c                        | 621 +++++++++++++++++++++
+ drivers/scsi/ufs/ufs-hisi.h                        | 116 ++++
+ 7 files changed, 821 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+ create mode 100644 drivers/scsi/ufs/ufs-hisi.c
+ create mode 100644 drivers/scsi/ufs/ufs-hisi.h
 
-greg k-h
+-- 
+2.15.0
