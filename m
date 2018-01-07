@@ -1,63 +1,47 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
-Date: Sat, 06 Jan 2018 15:45:02 -0500
-Message-ID: <1515271502.7741.1.camel@redhat.com>
-References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
-         <1515169935.3254.2.camel@wdc.com>
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/6] cxlflash: Reset command ioasc
+Date: Sun, 7 Jan 2018 13:27:59 -0600
+Message-ID: <20180107192759.GA45065@p8tul1-build.aus.stglabs.ibm.com>
+References: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1515020042-43590-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f179.google.com ([209.85.216.179]:46824 "EHLO
-        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752708AbeAFUpE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Jan 2018 15:45:04 -0500
-Received: by mail-qt0-f179.google.com with SMTP id r39so9589380qtr.13
-        for <linux-scsi@vger.kernel.org>; Sat, 06 Jan 2018 12:45:04 -0800 (PST)
-In-Reply-To: <1515169935.3254.2.camel@wdc.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59786 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754292AbeAGT2E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jan 2018 14:28:04 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.21) with SMTP id w07JOROm039052
+        for <linux-scsi@vger.kernel.org>; Sun, 7 Jan 2018 14:28:04 -0500
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2fbc6bdftf-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Jan 2018 14:28:03 -0500
+Received: from localhost
+        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+        Sun, 7 Jan 2018 14:28:02 -0500
+Content-Disposition: inline
+In-Reply-To: <1515020042-43590-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "vlee@freedesktop.org" <vlee@freedesktop.org>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On Fri, 2018-01-05 at 16:32 +0000, Bart Van Assche wrote:
-> On Thu, 2018-01-04 at 14:32 -0800, Vinson Lee wrote:
-> > HP ProLiant DL360p Gen8 with Smart Array P420i boots to the login
-> > prompt and hangs with Linux 4.13 or later. I cannot log in on
-> > console
-> > or SSH into the machine. Linux 4.12 and older boot fine.
-> > 
-> > I see these messages on the console.
-> > 
-> > [  242.843206] INFO: task scsi_eh_2:465 blocked for more than 120
-> > seconds.
-> > [  242.877835]       Not tainted 4.15.0-041500rc6-generic
-> > #201712312330
+On Wed, Jan 03, 2018 at 04:54:02PM -0600, Uma Krishnan wrote:
+> In the event of a command failure, cxlflash returns the failure to the
+> upper layers to process. After processing the error, when the command is
+> queued again, the private command structure will not be zeroed and the
+> ioasc could be stale. Per the SISLite specification, the AFU only sets the
+> ioasc in the presence of a failure. Thus, even though the original command
+> succeeds the second time, the command is considered a failure due to stale
+> ioasc. This cycle repeats indefinitely and can cause a hang or IO failure.
 > 
-> It seems like something got stuck in the block layer. The traditional
-> way to
-> debug this is to analyze the information that is available under
-> /sys/kernel/debug/block. However, since login is not possible we
-> can't use
-> that approach. Would it be possible for you to check whether this has
-> been
-> resolved in kernel v4.15-rc6, and if not, bisect this?
+> To fix the issue, clear the ioasc before queuing any command.
 > 
-> Thanks,
-> 
-> Bart.
+> Fixes: 479ad8e9d48c ("scsi: cxlflash: Remove zeroing of private command
+> data")
+> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
-One of the ways to debug this given its an HP DL380 is follow this.
-
-1. Boot the working kernel
-2, ensure kdump is activated and running on boot.
-3. add these to the /etc/sysctl.conf file
-
-   kernel.panic_on_io_nmi = 1
-   kernel.panic_on_unrecovered_nmi = 1
-   kernel.unknown_nmi_panic = 1
-
-4, Once hung after boot, go to the ILO page under admin/diagnostics and
-press the Virtual NMI button to generate a vmcore
-
-When you have a vmcore, I will give you a place to upload it to so I
-can look at it
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
