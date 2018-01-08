@@ -1,44 +1,66 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Date: Mon, 8 Jan 2018 12:55:02 +0100
-Message-ID: <20180108115502.GA6176@hirez.programming.kicks-ass.net>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <87y3lbpvzp.fsf@xmission.com>
- <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
- <20180108100836.GF3040@hirez.programming.kicks-ass.net>
- <20180108114342.3b2d99fb@alans-desktop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arch-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180108114342.3b2d99fb@alans-desktop>
-Sender: linux-arch-owner@vger.kernel.org
-To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Cc: Dan Williams <dan.j.williams@intel.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Zhang
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2] libsas: Check for completed commands before calling lldd_abort_task()
+Date: Mon,  8 Jan 2018 13:04:46 +0100
+Message-ID: <1515413086-34256-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:56320 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756046AbeAHMEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Jan 2018 07:04:50 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On Mon, Jan 08, 2018 at 11:43:42AM +0000, Alan Cox wrote:
-> On Mon, 8 Jan 2018 11:08:36 +0100
-> Peter Zijlstra <peterz@infradead.org> wrote:
-> 
-> > On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
-> > > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
-> > > > In at least one place (mpls) you are patching a fast path.  Compile out
-> > > > or don't load mpls by all means.  But it is not acceptable to change the
-> > > > fast path without even considering performance.  
-> > > 
-> > > Performance matters greatly, but I need help to identify a workload
-> > > that is representative for this fast path to see what, if any, impact
-> > > is incurred. Even better is a review that says "nope, 'index' is not
-> > > subject to arbitrary userspace control at this point, drop the patch."  
-> > 
-> > I think we're focussing a little too much on pure userspace. That is, we
-> > should be saying under the attackers control. Inbound network packets
-> > could equally be under the attackers control.
-> 
-> Inbound network packets don't come with a facility to read back and do
-> cache timimg. 
+The abort handler might be racing with command completion, so the
+task might already be NULL by the time the abort handler is called.
 
-But could they not be used in conjunction with a local task to prime the
-stuff?
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/libsas/sas_scsi_host.c | 22 +++++++++++++++++++---
+ 1 file changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 58476b7..08203fb 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -486,18 +486,34 @@ static int sas_queue_reset(struct domain_device *dev, int reset_type,
+ 
+ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+ {
+-	int res;
+-	struct sas_task *task = TO_SAS_TASK(cmd);
++	int res = TMF_RESP_FUNC_COMPLETE;
++	struct sas_task *task;
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
++	struct domain_device *dev = cmd_to_domain_dev(cmd);
++	struct sas_ha_struct *ha = dev->port->ha;
++	unsigned long flags;
+ 
+ 	if (!i->dft->lldd_abort_task)
+ 		return FAILED;
+ 
+-	res = i->dft->lldd_abort_task(task);
++	/* Avoid sas_scsi_task_done() interfering */
++	spin_lock_irqsave(&dev->done_lock, flags);
++	task = TO_SAS_TASK(cmd);
++	if (test_bit(SAS_HA_FROZEN, &ha->state)) {
++		res = TMF_RESP_FUNC_FAILED;
++		task = NULL;
++	} else
++		ASSIGN_SAS_TASK(cmd, NULL);
++	spin_unlock_irqrestore(&dev->done_lock, flags);
++	if (task)
++		res = i->dft->lldd_abort_task(task);
+ 	if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
+ 		return SUCCESS;
+ 
++	spin_lock_irqsave(&dev->done_lock, flags);
++	ASSIGN_SAS_TASK(cmd, task);
++	spin_unlock_irqrestore(&dev->done_lock, flags);
+ 	return FAILED;
+ }
+ EXPORT_SYMBOL_GPL(sas_eh_abort_handler);
+-- 
+1.8.5.6
