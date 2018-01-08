@@ -1,111 +1,129 @@
-From: Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
-Subject: [PATCH 4/4] IB/srp: Fix a sleep-in-invalid-context bug
-Date: Mon,  8 Jan 2018 10:50:11 -0800
-Message-ID: <20180108185011.30018-5-bart.vanassche@wdc.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH 1/4] blk-mq: Rename request_queue.mq_freeze_wq into mq_wq
+Date: Mon,  8 Jan 2018 10:50:08 -0800
+Message-ID: <20180108185011.30018-2-bart.vanassche@wdc.com>
 References: <20180108185011.30018-1-bart.vanassche@wdc.com>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20180108185011.30018-1-bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:60235 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755930AbeAHSuR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 13:50:17 -0500
+In-Reply-To: <20180108185011.30018-1-bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@mellanox.com>, Doug Ledford <dledford@redhat.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Ming Lei <ming.lei@redhat.com>
 
-The previous two patches guarantee that srp_queuecommand() does not get
-invoked while reconnecting occurs. Hence remove the code from
-srp_queuecommand() that prevents command queueing while reconnecting.
-This patch avoids that the following can appear in the kernel log:
+Rename a waitqueue in struct request_queue since the next patch will
+add code that uses this waitqueue outside the request queue freezing
+implementation.
 
-BUG: sleeping function called from invalid context at kernel/locking/mutex.c:747
-in_atomic(): 1, irqs_disabled(): 0, pid: 5600, name: scsi_eh_9
-1 lock held by scsi_eh_9/5600:
- #0:  (rcu_read_lock){....}, at: [<00000000cbb798c7>] __blk_mq_run_hw_queue+0xf1/0x1e0
-Preemption disabled at:
-[<00000000139badf2>] __blk_mq_delay_run_hw_queue+0x78/0xf0
-CPU: 9 PID: 5600 Comm: scsi_eh_9 Tainted: G        W        4.15.0-rc4-dbg+ #1
-Hardware name: Dell Inc. PowerEdge R720/0VWT90, BIOS 2.5.4 01/22/2016
-Call Trace:
- dump_stack+0x67/0x99
- ___might_sleep+0x16a/0x250 [ib_srp]
- __mutex_lock+0x46/0x9d0
- srp_queuecommand+0x356/0x420 [ib_srp]
- scsi_dispatch_cmd+0xf6/0x3f0
- scsi_queue_rq+0x4a8/0x5f0
- blk_mq_dispatch_rq_list+0x73/0x440
- blk_mq_sched_dispatch_requests+0x109/0x1a0
- __blk_mq_run_hw_queue+0x131/0x1e0
- __blk_mq_delay_run_hw_queue+0x9a/0xf0
- blk_mq_run_hw_queue+0xc0/0x1e0
- blk_mq_start_hw_queues+0x2c/0x40
- scsi_run_queue+0x18e/0x2d0
- scsi_run_host_queues+0x22/0x40
- scsi_error_handler+0x18d/0x5f0
- kthread+0x11c/0x140
- ret_from_fork+0x24/0x30
-
-Signed-off-by: Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
-Cc: Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 21 ++-------------------
- 1 file changed, 2 insertions(+), 19 deletions(-)
+ block/blk-core.c       | 10 +++++-----
+ block/blk-mq.c         | 10 +++++-----
+ include/linux/blkdev.h |  2 +-
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 972d4b3c5223..670f187ecb91 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -2149,7 +2149,6 @@ static void srp_handle_qp_err(struct ib_cq *cq, struct ib_wc *wc,
- static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- {
- 	struct srp_target_port *target = host_to_target(shost);
--	struct srp_rport *rport = target->rport;
- 	struct srp_rdma_ch *ch;
- 	struct srp_request *req;
- 	struct srp_iu *iu;
-@@ -2159,16 +2158,6 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 	u32 tag;
- 	u16 idx;
- 	int len, ret;
--	const bool in_scsi_eh = !in_interrupt() && current == shost->ehandler;
--
--	/*
--	 * The SCSI EH thread is the only context from which srp_queuecommand()
--	 * can get invoked for blocked devices (SDEV_BLOCK /
--	 * SDEV_CREATED_BLOCK). Avoid racing with srp_reconnect_rport() by
--	 * locking the rport mutex if invoked from inside the SCSI EH.
--	 */
--	if (in_scsi_eh)
--		mutex_lock(&rport->mutex);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 8f27ab14abce..605599a2ab3b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -375,7 +375,7 @@ void blk_clear_preempt_only(struct request_queue *q)
  
- 	scmnd->result = srp_chkready(target->rport);
- 	if (unlikely(scmnd->result))
-@@ -2230,13 +2219,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 		goto err_unmap;
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 	queue_flag_clear(QUEUE_FLAG_PREEMPT_ONLY, q);
+-	wake_up_all(&q->mq_freeze_wq);
++	wake_up_all(&q->mq_wq);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(blk_clear_preempt_only);
+@@ -651,7 +651,7 @@ void blk_set_queue_dying(struct request_queue *q)
  	}
  
--	ret = 0;
--
--unlock_rport:
--	if (in_scsi_eh)
--		mutex_unlock(&rport->mutex);
--
--	return ret;
-+	return 0;
+ 	/* Make blk_queue_enter() reexamine the DYING flag. */
+-	wake_up_all(&q->mq_freeze_wq);
++	wake_up_all(&q->mq_wq);
+ }
+ EXPORT_SYMBOL_GPL(blk_set_queue_dying);
  
- err_unmap:
- 	srp_unmap_data(scmnd, ch, req);
-@@ -2258,7 +2241,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 		ret = SCSI_MLQUEUE_HOST_BUSY;
- 	}
+@@ -854,7 +854,7 @@ int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+ 		 */
+ 		smp_rmb();
  
--	goto unlock_rport;
-+	return ret;
+-		ret = wait_event_interruptible(q->mq_freeze_wq,
++		ret = wait_event_interruptible(q->mq_wq,
+ 				(atomic_read(&q->mq_freeze_depth) == 0 &&
+ 				 (preempt || !blk_queue_preempt_only(q))) ||
+ 				blk_queue_dying(q));
+@@ -875,7 +875,7 @@ static void blk_queue_usage_counter_release(struct percpu_ref *ref)
+ 	struct request_queue *q =
+ 		container_of(ref, struct request_queue, q_usage_counter);
+ 
+-	wake_up_all(&q->mq_freeze_wq);
++	wake_up_all(&q->mq_wq);
  }
  
- /*
+ static void blk_rq_timed_out_timer(struct timer_list *t)
+@@ -951,7 +951,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
+ 	q->bypass_depth = 1;
+ 	__set_bit(QUEUE_FLAG_BYPASS, &q->queue_flags);
+ 
+-	init_waitqueue_head(&q->mq_freeze_wq);
++	init_waitqueue_head(&q->mq_wq);
+ 
+ 	/*
+ 	 * Init percpu_ref in atomic mode so that it's faster to shutdown.
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 21c21ca13072..8118890fb66f 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -138,16 +138,16 @@ EXPORT_SYMBOL_GPL(blk_freeze_queue_start);
+ 
+ void blk_mq_freeze_queue_wait(struct request_queue *q)
+ {
+-	wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
++	wait_event(q->mq_wq, percpu_ref_is_zero(&q->q_usage_counter));
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_wait);
+ 
+ int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
+ 				     unsigned long timeout)
+ {
+-	return wait_event_timeout(q->mq_freeze_wq,
+-					percpu_ref_is_zero(&q->q_usage_counter),
+-					timeout);
++	return wait_event_timeout(q->mq_wq,
++				  percpu_ref_is_zero(&q->q_usage_counter),
++				  timeout);
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_wait_timeout);
+ 
+@@ -186,7 +186,7 @@ void blk_mq_unfreeze_queue(struct request_queue *q)
+ 	WARN_ON_ONCE(freeze_depth < 0);
+ 	if (!freeze_depth) {
+ 		percpu_ref_reinit(&q->q_usage_counter);
+-		wake_up_all(&q->mq_freeze_wq);
++		wake_up_all(&q->mq_wq);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_unfreeze_queue);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 742c0d9aed6b..26c4d4343edb 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -613,7 +613,7 @@ struct request_queue {
+ 	struct throtl_data *td;
+ #endif
+ 	struct rcu_head		rcu_head;
+-	wait_queue_head_t	mq_freeze_wq;
++	wait_queue_head_t	mq_wq;
+ 	struct percpu_ref	q_usage_counter;
+ 	struct list_head	all_q_node;
+ 
 -- 
 2.15.1
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
