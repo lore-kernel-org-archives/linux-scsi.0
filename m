@@ -1,42 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] libsas: Check for completed commands before calling
- lldd_abort_task()
-Date: Mon, 8 Jan 2018 12:41:44 +0100
-Message-ID: <7c62e4c6-6fc3-8571-5f92-d58f14e25f40@suse.de>
-References: <1515408716-102111-1-git-send-email-hare@suse.de>
- <20180108112348.GA7106@lst.de>
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+Date: Mon, 8 Jan 2018 11:43:42 +0000
+Message-ID: <20180108114342.3b2d99fb@alans-desktop>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <87y3lbpvzp.fsf@xmission.com>
+        <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+        <20180108100836.GF3040@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55030 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756014AbeAHLls (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Jan 2018 06:41:48 -0500
-In-Reply-To: <20180108112348.GA7106@lst.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <20180108100836.GF3040@hirez.programming.kicks-ass.net>
+Sender: linux-arch-owner@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Zhang
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.com>
 
-On 01/08/2018 12:23 PM, Christoph Hellwig wrote:
-> On Mon, Jan 08, 2018 at 11:51:56AM +0100, Hannes Reinecke wrote:
->> The abort handler might be racing with command completion, so the
->> task might already be NULL by the time the abort handler is called.
+On Mon, 8 Jan 2018 11:08:36 +0100
+Peter Zijlstra <peterz@infradead.org> wrote:
+
+> On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
+> > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
+> > > In at least one place (mpls) you are patching a fast path.  Compile out
+> > > or don't load mpls by all means.  But it is not acceptable to change the
+> > > fast path without even considering performance.  
+> > 
+> > Performance matters greatly, but I need help to identify a workload
+> > that is representative for this fast path to see what, if any, impact
+> > is incurred. Even better is a review that says "nope, 'index' is not
+> > subject to arbitrary userspace control at this point, drop the patch."  
 > 
-> But without taking dev_done_lock (or using cmpxchg) what prevents
-> use from still hitting this, although in a more narrow window?
-> 
-Good point.
-Will be updating the patch.
+> I think we're focussing a little too much on pure userspace. That is, we
+> should be saying under the attackers control. Inbound network packets
+> could equally be under the attackers control.
 
-Cheers,
+Inbound network packets don't come with a facility to read back and do
+cache timimg. For the more general case, timing attacks on network
+activity are not exactly new, and you have to mitigate them in user space
+because most of them are about how many instructions you execute on each
+path. The ancient classic being telling if a user exists by seeing if the
+password was actually checked.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Alan
