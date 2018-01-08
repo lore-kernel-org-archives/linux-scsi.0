@@ -1,48 +1,66 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Re: [PATCH v2 4/4] scsi: pm8001: fix dma_unmap_sg() parameter
-Date: Mon, 8 Jan 2018 16:53:07 +0800
-Message-ID: <8523c545-d485-d446-e0da-4f479401bcfd@hisilicon.com>
-References: <1515033405-37477-1-git-send-email-chenxiang66@hisilicon.com>
- <1515033405-37477-5-git-send-email-chenxiang66@hisilicon.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH v3 1/3] scsi: libsas: fix memory leak in
+ sas_smp_get_phy_events()
+Date: Mon, 8 Jan 2018 10:01:25 +0100
+Message-ID: <4c02b36e-fa4a-d28e-690c-699bdcd5caf0@suse.com>
+References: <20180104130433.42813-1-yanaijie@huawei.com>
+ <20180104130433.42813-2-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:57764 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755984AbeAHIyB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Jan 2018 03:54:01 -0500
-In-Reply-To: <1515033405-37477-5-git-send-email-chenxiang66@hisilicon.com>
+Received: from smtp.nue.novell.com ([195.135.221.5]:37026 "EHLO
+        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755969AbeAHJB3 (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Mon, 8 Jan 2018 04:01:29 -0500
+In-Reply-To: <20180104130433.42813-2-yanaijie@huawei.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: john.garry@huawei.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, bryantly@linux.vnet.ibm.com, mikecyr@linux.vnet.ibm.com, artur.paszkiewicz@intel.com, dan.j.williams@intel.com, yuxiangl@marvell.com, jgarzik@pobox.com, jack_wang@usish.com, lindar_liu@usish.com, xjtuwjp@gmail.com
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, zhaohongjiang@huawei.com, miaoxie@huawei.com, hch@lst.de, John Garry <john.garry@huawei.com>, chenqilin <chenqilin2@huawei.com>, chenxiang <chenxiang66@hisilicon.com>
 
-+cc Jack Wang <xjtuwjp@gmail.com>
-
-‘⁄ 2018/1/4 10:36, chenxiang –¥µ¿:
-> For function dma_unmap_sg(), the <nents> parameter should be number of
-> elements in the scatterlist prior to the mapping, not after the mapping.
-> Fix this usage.
->
-> Cc: Jack Wang <jack_wang@usish.com>
-> Cc: lindar_liu@usish.com
-> Fixes: dbf9bfe6("[SCSI]pm8001: add SAS/SATA/HBA driver")
-> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+On 01/04/2018 02:04 PM, Jason Yan wrote:
+> We've got a memory leak with the following producer:
+> 
+> while true;
+> do cat /sys/class/sas_phy/phy-1:0:12/invalid_dword_count >/dev/null;
+> done
+> 
+> The buffer req is allocated and not freed after we return. Fix it.
+> 
+> Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> CC: John Garry <john.garry@huawei.com>
+> CC: chenqilin <chenqilin2@huawei.com>
+> CC: chenxiang <chenxiang66@hisilicon.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/pm8001/pm8001_sas.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index 947d601..576a0f0 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -466,7 +466,7 @@ static int pm8001_task_exec(struct sas_task *task,
->   	dev_printk(KERN_ERR, pm8001_ha->dev, "pm8001 exec failed[%d]!\n", rc);
->   	if (!sas_protocol_ata(t->task_proto))
->   		if (n_elem)
-> -			dma_unmap_sg(pm8001_ha->dev, t->scatter, n_elem,
-> +			dma_unmap_sg(pm8001_ha->dev, t->scatter, t->num_scatter,
->   				t->data_dir);
->   out_done:
->   	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  drivers/scsi/libsas/sas_expander.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 3183d63..4b0c67f 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -695,6 +695,7 @@ int sas_smp_get_phy_events(struct sas_phy *phy)
+>  	phy->phy_reset_problem_count = scsi_to_u32(&resp[24]);
+>  
+>   out:
+> +	kfree(req);
+>  	kfree(resp);
+>  	return res;
+>  
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N√ºrnberg
+GF: F. Imend√∂rffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG N√ºrnberg)
