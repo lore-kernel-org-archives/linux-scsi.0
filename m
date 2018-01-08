@@ -1,49 +1,41 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/6] cxlflash: Reset command ioasc
-Date: Mon, 8 Jan 2018 10:43:49 -0600
-Message-ID: <32405550-D504-416D-96B6-658E9DB2601C@linux.vnet.ibm.com>
-References: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1515020042-43590-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <be8c1d08-f78a-a7f0-d912-e638646db80e@au1.ibm.com>
- <20180107193604.GB45065@p8tul1-build.aus.stglabs.ibm.com>
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Content-Type: text/html; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <20180107193604.GB45065@p8tul1-build.aus.stglabs.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] scsi: fnic: use kzalloc in fnic_fcoe_process_vlan_resp
+Date: Tue,  9 Jan 2018 00:11:15 +0100
+Message-ID: <20180108231115.17459-1-linux@rasmusvillemoes.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-<html><head></head><body dir=3D"auto" style=3D"word-wrap: break-word; =
--webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><div =
-class=3D"ApplePlainTextBody"><br><blockquote type=3D"cite">On Jan 7, =
-2018, at 1:36 PM, Matthew R. Ochs &lt;mrochs@linux.vnet.ibm.com&gt; =
-wrote:<br><br>On Thu, Jan 04, 2018 at 05:33:48PM +1100, Andrew Donnellan =
-wrote:<br><blockquote type=3D"cite">On 04/01/18 09:54, Uma Krishnan =
-wrote:<br><blockquote type=3D"cite">In the event of a command failure, =
-cxlflash returns the failure to the<br>upper layers to process. After =
-processing the error, when the command is<br>queued again, the private =
-command structure will not be zeroed and the<br>ioasc could be stale. =
-Per the SISLite specification, the AFU only sets the<br>ioasc in the =
-presence of a failure. Thus, even though the original =
-command<br>succeeds the second time, the command is considered a failure =
-due to stale<br>ioasc. This cycle repeats indefinitely and can cause a =
-hang or IO failure.<br><br>To fix the issue, clear the ioasc before =
-queuing any command.<br><br>Fixes: 479ad8e9d48c ("scsi: cxlflash: Remove =
-zeroing of private command<br>data")<br>Signed-off-by: Uma Krishnan =
-&lt;ukrishn@linux.vnet.ibm.com&gt;<br></blockquote><br>Should this go to =
-stable?<br></blockquote><br>Not a bad =
-idea.<br><br></blockquote><br><br>I will forward the patch to stable =
-once the patch is in next/master. <br>Unless there is a need to send a =
-V2. Thanks for pointing out Andrew !!</div></body></html>=
+This saves a little .text and gets rid of the unmotivated line break and
+the sizeof(...) style inconsistency.
+
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/scsi/fnic/fnic_fcs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 999fc7547560..c7bf316d8e83 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -442,15 +442,13 @@ static void fnic_fcoe_process_vlan_resp(struct fnic *fnic, struct sk_buff *skb)
+ 			vid = ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
+ 			shost_printk(KERN_INFO, fnic->lport->host,
+ 				  "process_vlan_resp: FIP VLAN %d\n", vid);
+-			vlan = kmalloc(sizeof(*vlan),
+-							GFP_ATOMIC);
++			vlan = kzalloc(sizeof(*vlan), GFP_ATOMIC);
+ 			if (!vlan) {
+ 				/* retry from timer */
+ 				spin_unlock_irqrestore(&fnic->vlans_lock,
+ 							flags);
+ 				goto out;
+ 			}
+-			memset(vlan, 0, sizeof(struct fcoe_vlan));
+ 			vlan->vid = vid & 0x0fff;
+ 			vlan->state = FIP_VLAN_AVAIL;
+ 			list_add_tail(&vlan->list, &fnic->vlans);
+-- 
+2.15.1
