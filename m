@@ -1,62 +1,40 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Date: Mon, 8 Jan 2018 19:33:37 +0100
-Message-ID: <20180108183337.iq7xjxf2dkbkzig6@gmail.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <87y3lbpvzp.fsf@xmission.com>
- <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
- <20180108100836.GF3040@hirez.programming.kicks-ass.net>
- <20180108114342.3b2d99fb@alans-desktop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180108114342.3b2d99fb@alans-desktop>
-Sender: netdev-owner@vger.kernel.org
-To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Cc: Peter Zijlstra <peterz@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH 0/4] Make SCSI transport recovery more robust
+Date: Mon,  8 Jan 2018 10:50:07 -0800
+Message-ID: <20180108185011.30018-1-bart.vanassche@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@mellanox.com>, Doug Ledford <dledford@redhat.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Hello Jens,
 
-* Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
-
-> On Mon, 8 Jan 2018 11:08:36 +0100
-> Peter Zijlstra <peterz@infradead.org> wrote:
-> 
-> > On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
-> > > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
-> > > > In at least one place (mpls) you are patching a fast path.  Compile out
-> > > > or don't load mpls by all means.  But it is not acceptable to change the
-> > > > fast path without even considering performance.  
-> > > 
-> > > Performance matters greatly, but I need help to identify a workload
-> > > that is representative for this fast path to see what, if any, impact
-> > > is incurred. Even better is a review that says "nope, 'index' is not
-> > > subject to arbitrary userspace control at this point, drop the patch."  
-> > 
-> > I think we're focussing a little too much on pure userspace. That is, we
-> > should be saying under the attackers control. Inbound network packets
-> > could equally be under the attackers control.
-> 
-> Inbound network packets don't come with a facility to read back and do
-> cache timimg. [...]
-
-But the reply packets can be measured on the sending side, and the total delay 
-timing would thus carry the timing information.
-
-Yes, a lot of noise gets added that way if we think 'packet goes through the 
-Internet' - but with gigabit local network access or even through localhost
-access a lot of noise can be removed as well.
-
-It's not as dangerous as a near instantaneous local attack, but 'needs a day of 
-runtime to brute-force through localhost or 10GigE' is still worrying in many 
-real-world security contexts.
-
-So I concur with Peter that we should generally consider making all of our 
-responses to external data (maybe with the exception of pigeon post messages) 
-Spectre-safe.
+A longstanding issue with the SCSI core is that several SCSI transport drivers
+use scsi_target_block() and scsi_target_unblock() to avoid concurrent
+.queuecommand() calls during e.g. transport recovery but that this is not
+sufficient to protect from such calls. Hence this patch series. Please
+consider this patch series for kernel v4.16.
 
 Thanks,
 
-	Ingo
+Bart.
+
+Bart Van Assche (4):
+  blk-mq: Rename request_queue.mq_freeze_wq into mq_wq
+  block: Introduce blk_wait_if_quiesced() and
+    blk_finish_wait_if_quiesced()
+  scsi: Avoid that .queuecommand() gets called for a quiesced SCSI
+    device
+  IB/srp: Fix a sleep-in-invalid-context bug
+
+ block/blk-core.c                    | 11 +++---
+ block/blk-mq.c                      | 71 ++++++++++++++++++++++++++++++++++---
+ drivers/infiniband/ulp/srp/ib_srp.c | 21 ++---------
+ drivers/scsi/scsi_error.c           |  3 ++
+ include/linux/blk-mq.h              |  2 ++
+ include/linux/blkdev.h              |  2 +-
+ 6 files changed, 80 insertions(+), 30 deletions(-)
+
+-- 
+2.15.1
