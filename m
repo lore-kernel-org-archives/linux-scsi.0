@@ -1,31 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 151661] Adaptec 3405 3805 prints "AAC: Host adapter dead -1"
- every 10 seconds but works fine anyway
-Date: Mon, 08 Jan 2018 17:44:21 +0000
-Message-ID: <bug-151661-11613-VERdpUaeOt@https.bugzilla.kernel.org/>
-References: <bug-151661-11613@https.bugzilla.kernel.org/>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+Date: Mon, 8 Jan 2018 19:33:37 +0100
+Message-ID: <20180108183337.iq7xjxf2dkbkzig6@gmail.com>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <87y3lbpvzp.fsf@xmission.com>
+ <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+ <20180108100836.GF3040@hirez.programming.kicks-ass.net>
+ <20180108114342.3b2d99fb@alans-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:50206 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751843AbeAHRoW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 12:44:22 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id B63AE2892E
-        for <linux-scsi@vger.kernel.org>; Mon,  8 Jan 2018 17:44:21 +0000 (UTC)
-In-Reply-To: <bug-151661-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180108114342.3b2d99fb@alans-desktop>
+Sender: netdev-owner@vger.kernel.org
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc: Peter Zijlstra <peterz@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=151661
 
---- Comment #22 from Matthias (hm10439@gmail.com) ---
-with my Adaptec 3405 and Kernel of Ubuntu 16.04.3 (Kernel 4.4.0-104-generic)
-and also with self-compiled 4.13.0, the message does not appear anymore.
+* Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> On Mon, 8 Jan 2018 11:08:36 +0100
+> Peter Zijlstra <peterz@infradead.org> wrote:
+> 
+> > On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
+> > > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
+> > > > In at least one place (mpls) you are patching a fast path.  Compile out
+> > > > or don't load mpls by all means.  But it is not acceptable to change the
+> > > > fast path without even considering performance.  
+> > > 
+> > > Performance matters greatly, but I need help to identify a workload
+> > > that is representative for this fast path to see what, if any, impact
+> > > is incurred. Even better is a review that says "nope, 'index' is not
+> > > subject to arbitrary userspace control at this point, drop the patch."  
+> > 
+> > I think we're focussing a little too much on pure userspace. That is, we
+> > should be saying under the attackers control. Inbound network packets
+> > could equally be under the attackers control.
+> 
+> Inbound network packets don't come with a facility to read back and do
+> cache timimg. [...]
+
+But the reply packets can be measured on the sending side, and the total delay 
+timing would thus carry the timing information.
+
+Yes, a lot of noise gets added that way if we think 'packet goes through the 
+Internet' - but with gigabit local network access or even through localhost
+access a lot of noise can be removed as well.
+
+It's not as dangerous as a near instantaneous local attack, but 'needs a day of 
+runtime to brute-force through localhost or 10GigE' is still worrying in many 
+real-world security contexts.
+
+So I concur with Peter that we should generally consider making all of our 
+responses to external data (maybe with the exception of pigeon post messages) 
+Spectre-safe.
+
+Thanks,
+
+	Ingo
