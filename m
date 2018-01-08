@@ -1,66 +1,47 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2] libsas: Check for completed commands before calling lldd_abort_task()
-Date: Mon,  8 Jan 2018 13:04:46 +0100
-Message-ID: <1515413086-34256-1-git-send-email-hare@suse.de>
+From: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+Subject: [PATCH] scsi: mptfusion: use strlcpy() instead of strncpy()
+Date: Mon, 8 Jan 2018 20:49:13 +0800
+Message-ID: <1515415753-10534-1-git-send-email-wangxiongfeng2@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56320 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756046AbeAHMEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Jan 2018 07:04:50 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:3701 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1757235AbeAHMoB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Jan 2018 07:44:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: suganath-prabu.subramani@broadcom.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wangxiongfeng2@huawei.com, arnd@arndb.de
 
-The abort handler might be racing with command completion, so the
-task might already be NULL by the time the abort handler is called.
+From: Xiongfeng Wang <xiongfeng.wang@linaro.org>
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+gcc-8 reports
+
+drivers/message/fusion/mptbase.c: In function 'mpt_display_event_info':
+./include/linux/string.h:245:9: warning: '__builtin_strncpy' specified
+bound 100 equals destination size [-Wstringop-truncation]
+
+We need to use strlcpy() to make sure the dest string is
+nul-terminated.
+
+Signed-off-by: Xiongfeng Wang <xiongfeng.wang@linaro.org>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
+ drivers/message/fusion/mptbase.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 58476b7..08203fb 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -486,18 +486,34 @@ static int sas_queue_reset(struct domain_device *dev, int reset_type,
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 7a93400..3c47888 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -7697,7 +7697,7 @@ static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int
+ 		break;
+ 	}
+ 	if (ds)
+-		strncpy(evStr, ds, EVENT_DESCR_STR_SZ);
++		strlcpy(evStr, ds, EVENT_DESCR_STR_SZ);
  
- int sas_eh_abort_handler(struct scsi_cmnd *cmd)
- {
--	int res;
--	struct sas_task *task = TO_SAS_TASK(cmd);
-+	int res = TMF_RESP_FUNC_COMPLETE;
-+	struct sas_task *task;
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct sas_internal *i = to_sas_internal(host->transportt);
-+	struct domain_device *dev = cmd_to_domain_dev(cmd);
-+	struct sas_ha_struct *ha = dev->port->ha;
-+	unsigned long flags;
  
- 	if (!i->dft->lldd_abort_task)
- 		return FAILED;
- 
--	res = i->dft->lldd_abort_task(task);
-+	/* Avoid sas_scsi_task_done() interfering */
-+	spin_lock_irqsave(&dev->done_lock, flags);
-+	task = TO_SAS_TASK(cmd);
-+	if (test_bit(SAS_HA_FROZEN, &ha->state)) {
-+		res = TMF_RESP_FUNC_FAILED;
-+		task = NULL;
-+	} else
-+		ASSIGN_SAS_TASK(cmd, NULL);
-+	spin_unlock_irqrestore(&dev->done_lock, flags);
-+	if (task)
-+		res = i->dft->lldd_abort_task(task);
- 	if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
- 		return SUCCESS;
- 
-+	spin_lock_irqsave(&dev->done_lock, flags);
-+	ASSIGN_SAS_TASK(cmd, task);
-+	spin_unlock_irqrestore(&dev->done_lock, flags);
- 	return FAILED;
- }
- EXPORT_SYMBOL_GPL(sas_eh_abort_handler);
+ 	devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT
 -- 
-1.8.5.6
+1.8.3.1
