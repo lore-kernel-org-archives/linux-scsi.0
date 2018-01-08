@@ -1,28 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] scsi: hpsa: Use vsnprintf extension %phN
-Date: Mon, 08 Jan 2018 10:54:14 -0500
-Message-ID: <yq1r2r0pcrd.fsf@oracle.com>
-References: <20171219170959.40768-1-andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH 2/2] Fix a race condition between SPI domain validation and system suspend
+Date: Mon, 08 Jan 2018 11:02:53 -0500
+Message-ID: <yq1mv1opccy.fsf@oracle.com>
+References: <20180105171909.11839-1-bart.vanassche@wdc.com>
+        <20180105171909.11839-3-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48642 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934187AbeAHPzZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 10:55:25 -0500
-In-Reply-To: <20171219170959.40768-1-andriy.shevchenko@linux.intel.com> (Andy
-        Shevchenko's message of "Tue, 19 Dec 2017 19:09:59 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20180105171909.11839-3-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Fri, 5 Jan 2018 09:19:09 -0800")
+Sender: linux-pm-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J . Wysocki" <rjw@rjwysocki.net>, Woody Suwalski <terraluna977@gmail.com>, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
 
-Andy,
+Bart,
 
-> Using this extension reduces the object size.
+> Avoid that the following warning is reported when suspending a system
+> that is using the mptspi driver:
 
-Applied to 4.16/scsi-queue, thanks!
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
