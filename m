@@ -1,62 +1,66 @@
-From: "liwei (CM)" <liwei213@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjcgMC81XSBzY3NpOiB1ZnM6IGFkZCB1ZnMgZHJp?=
- =?utf-8?Q?ver_code_for_Hisilicon_Hi3660_SoC?=
-Date: Mon, 8 Jan 2018 01:41:38 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA52644__19193.2740425274$1515375617$gmane$org@DGGEMM506-MBS.china.huawei.com>
-References: <20180106095117.67907-1-liwei213@huawei.com>
- <127f93dd-29c8-8cfc-9b02-5dc72609a272@linaro.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v5 2/7] scsi: libsas: shut down the PHY if events reached
+ the threshold
+Date: Mon, 8 Jan 2018 08:38:39 +0100
+Message-ID: <6ef7025e-f330-ede4-d194-096efd5d7c56@suse.de>
+References: <20171208094210.24887-1-yanaijie@huawei.com>
+ <20171208094210.24887-3-yanaijie@huawei.com>
+ <c1accdc7-00a7-06a3-5531-ae64ef797cd2@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:2439 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754814AbeAHBlx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 Jan 2018 20:41:53 -0500
-In-Reply-To: <127f93dd-29c8-8cfc-9b02-5dc72609a272@linaro.org>
-Content-Language: zh-CN
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <c1accdc7-00a7-06a3-5531-ae64ef797cd2@suse.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Raj.Dinesh@microsemi.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiyou.wangcong@gmail.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: zhangfei <zhangfei.gao@linaro.org>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "xuwei (O)" <xuwei5@huawei.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "khilman@baylibre.com" <khilman@baylibre.com>, "arnd@arndb.de" <arnd@arndb.de>, "gregory.clement@free-electrons.com" <gregory.clement@free-electrons.com>, "thomas.petazzoni@free-electrons.com" <thomas.petazzoni@free-electrons.com>, "yamada.masahiro@socionext.com" <yamada.masahiro@socionext.com>, "riku.voipio@linaro.org" <riku.voipio@linaro.org>
-Cc: zangleigang <zangleigang@hisilicon.com>, Gengjianfeng <gengjianfeng@hisilicon.com>, "guodong.xu@linaro.org" <guodong.xu@linaro.org>, "Fengbaopeng (kevin, Kirin Solution Dept)" <fengbaopeng@hisilicon.com>
 
-SGkuIFpoYW5nZmVpDQoNClRoYW5rIHlvdSwgSSB3aWxsIGFkZCBpdCBpbiB0aGUgbmV4dCBwYXRj
-aC4NCg0KLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0K5Y+R5Lu25Lq6OiB6aGFuZ2ZlaSBbbWFpbHRv
-OnpoYW5nZmVpLmdhb0BsaW5hcm8ub3JnXSANCuWPkemAgeaXtumXtDogMjAxOOW5tDHmnIg45pel
-IDk6NDANCuaUtuS7tuS6ujogbGl3ZWkgKENNKTsgcm9iaCtkdEBrZXJuZWwub3JnOyBtYXJrLnJ1
-dGxhbmRAYXJtLmNvbTsgeHV3ZWkgKE8pOyBjYXRhbGluLm1hcmluYXNAYXJtLmNvbTsgd2lsbC5k
-ZWFjb25AYXJtLmNvbTsgdmluaG9saWthdHRpQGdtYWlsLmNvbTsgamVqYkBsaW51eC52bmV0Lmli
-bS5jb207IG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOyBraGlsbWFuQGJheWxpYnJlLmNvbTsg
-YXJuZEBhcm5kYi5kZTsgZ3JlZ29yeS5jbGVtZW50QGZyZWUtZWxlY3Ryb25zLmNvbTsgdGhvbWFz
-LnBldGF6em9uaUBmcmVlLWVsZWN0cm9ucy5jb207IHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQu
-Y29tOyByaWt1LnZvaXBpb0BsaW5hcm8ub3JnOyB0cmVkaW5nQG52aWRpYS5jb207IGtyemtAa2Vy
-bmVsLm9yZzsgZXJpY0BhbmhvbHQubmV0OyBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgbGlu
-dXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
-YWQub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0K5oqE6YCBOiB6YW5nbGVpZ2FuZzsg
-R2VuZ2ppYW5mZW5nOyBndW9kb25nLnh1QGxpbmFyby5vcmc7IEZlbmdiYW9wZW5nIChrZXZpbiwg
-S2lyaW4gU29sdXRpb24gRGVwdCkNCuS4u+mimDogUmU6IFtQQVRDSCB2NyAwLzVdIHNjc2k6IHVm
-czogYWRkIHVmcyBkcml2ZXIgY29kZSBmb3IgSGlzaWxpY29uIEhpMzY2MCBTb0MNCg0KSGksIFdl
-aQ0KDQoNCk9uIDIwMTjlubQwMeaciDA25pelIDE3OjUxLCBMaSBXZWkgd3JvdGU6DQo+IFRoaXMg
-cGF0Y2hzZXQgYWRkcyBkcml2ZXIgc3VwcG9ydCBmb3IgVUZTIGZvciBIaTM2NjAgU29DLiBJdCBp
-cyB2ZXJpZmllZCBvbiBIaUtleTk2MCBib2FyZC4NClVzdWFsbHkgaGVyZSBzaG91bGQgbGlzdCB0
-aGUgY2hhbmdlIGNvbXBhcmVkIHdpdGggdGhlIGxhc3QgY2hhbmdlIHNldCwgdG8gbWFrZSBpdCBl
-YXNpZXIgdG8gcmV2aWV3ZXIsIHdobyBtYXkgcGF5IG1vcmUgYXR0ZW50aW9uIHRvIHRoZSBkaWZm
-ZXJlbmNlcy4NCg0KRm9yIGV4YW1wbGUNCnY3Onh4eCAvL2NoYW5nZSBzaW5jZSB2Ng0KdjY6eHh4
-IC8vIGNoYW5nZSBzaW5jZSB2NQ0KDQoNCg0KPiBMaSBXZWkgKDUpOg0KPiAgICBzY3NpOiB1ZnM6
-IGFkZCBIaXNpbGljb24gdWZzIGRyaXZlciBjb2RlDQo+ICAgIGR0LWJpbmRpbmdzOiBzY3NpOiB1
-ZnM6IGFkZCBkb2N1bWVudCBmb3IgaGlzaS11ZnMNCj4gICAgYXJtNjQ6IGR0czogYWRkIHVmcyBk
-dHMgbm9kZQ0KPiAgICBhcm02NDogZGVmY29uZmlnOiBlbmFibGUgY29uZmlncyBmb3IgSGlzaWxp
-Y29uIHVmcw0KPiAgICBhcm02NDogZGVmY29uZmlnOiBlbmFibGUgZjJmcyBhbmQgc3F1YXNoZnMN
-Cj4NCj4gICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4
-dCB8ICA0MyArKw0KPiAgIGFyY2gvYXJtNjQvYm9vdC9kdHMvaGlzaWxpY29uL2hpMzY2MC5kdHNp
-ICAgICAgICAgIHwgIDIwICsNCj4gICBhcmNoL2FybTY0L2NvbmZpZ3MvZGVmY29uZmlnICAgICAg
-ICAgICAgICAgICAgICAgICB8ICAxMSArDQo+ICAgZHJpdmVycy9zY3NpL3Vmcy9LY29uZmlnICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDkgKw0KPiAgIGRyaXZlcnMvc2NzaS91ZnMvTWFr
-ZWZpbGUgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAxICsNCj4gICBkcml2ZXJzL3Njc2kv
-dWZzL3Vmcy1oaXNpLmMgICAgICAgICAgICAgICAgICAgICAgICB8IDYyMSArKysrKysrKysrKysr
-KysrKysrKysNCj4gICBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1oaXNpLmggICAgICAgICAgICAgICAg
-ICAgICAgICB8IDExNiArKysrDQo+ICAgNyBmaWxlcyBjaGFuZ2VkLCA4MjEgaW5zZXJ0aW9ucygr
-KQ0KPiAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
-Z3MvdWZzL3Vmcy1oaXNpLnR4dA0KPiAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kv
-dWZzL3Vmcy1oaXNpLmMNCj4gICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3Vmcy91
-ZnMtaGlzaS5oDQo+DQoNCg==
+On 12/15/2017 01:18 PM, Hannes Reinecke wrote:
+> On 12/08/2017 10:42 AM, Jason Yan wrote:
+>> If the PHY burst too many events, we will alloc a lot of events for the
+>> worker. This may leads to memory exhaustion.
+>>
+>> Dan Williams suggested to shut down the PHY if the events reached the
+>> threshold, because in this case the PHY may have gone into some
+>> erroneous state. Users can re-enable the PHY by sysfs if they want.
+>>
+>> We cannot use the fixed memory pool because if we run out of events, the
+>> shut down event and loss of signal event will lost too. The events still
+>> need to be allocated and processed in this case.
+>>
+>> Suggested-by: Dan Williams <dan.j.williams@intel.com>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+>> CC: John Garry <john.garry@huawei.com>
+>> CC: Johannes Thumshirn <jthumshirn@suse.de>
+>> CC: Ewan Milne <emilne@redhat.com>
+>> CC: Christoph Hellwig <hch@lst.de>
+>> CC: Tomas Henzl <thenzl@redhat.com>
+>> ---
+>>  drivers/scsi/libsas/sas_init.c | 33 ++++++++++++++++++++++++++++++++-
+>>  drivers/scsi/libsas/sas_phy.c  | 27 ++++++++++++++++++++++++++-
+>>  include/scsi/libsas.h          |  6 ++++++
+>>  3 files changed, 64 insertions(+), 2 deletions(-)
+>>
+> Well, this still looks a bit error prone; what if the system runs out of
+> memory before the pool is exhausted?
+> (Also a threshold of 1024 events is a bit arbitrary; one might want to
+> adjust that).
+> 
+> Couldn't you allocate two static events always (for shutdown and signal
+> loss), and then use a fixed pool?
+> 
+Has actually been resolved by the next patch.
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
