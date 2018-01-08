@@ -1,33 +1,54 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V9 0/7] blk-mq support for ZBC disks
-Date: Mon, 8 Jan 2018 09:07:56 -0700
-Message-ID: <76006cca-d93f-4bc6-6408-fb86d7470dcc@kernel.dk>
-References: <20171221064344.6228-1-damien.lemoal@wdc.com>
- <20180105162150.GA16978@kernel.dk> <yq1vagcpcu1.fsf@oracle.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+Date: Mon, 8 Jan 2018 08:20:19 -0800
+Message-ID: <c2fd13f6-a2c9-d11f-d439-abb847ebed3c@wdc.com>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <87y3lbpvzp.fsf@xmission.com>
+ <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <yq1vagcpcu1.fsf@oracle.com>
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Peter Zijlstra <peterz@infradead.org>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Zhang Rui <rui.zhang@intel.com>, Linux-media@vger.ker
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/8/18 8:52 AM, Martin K. Petersen wrote:
+On 01/05/18 22:30, Dan Williams wrote:
+> On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:
+>> Please expand this.
+>>
+>> It is not clear what the static analysis is looking for.  Have a clear
+>> description of what is being fixed is crucial for allowing any of these
+>> changes.
+>>
+>> For the details given in the change description what I read is magic
+>> changes because a magic process says this code is vulnerable.
 > 
-> Jens,
-> 
->> This looks OK for me for 4.16. I can grab all of them, or I can leave
->> the last two for Martin to apply if he prefers that, though that will
->> add a block tree dependency for SCSI.
-> 
-> I already have a block dependency for 4.16. But it doesn't matter much.
+> Yes, that was my first reaction to the patches as well, I try below to
+> add some more background and guidance, but in the end these are static
+> analysis reports across a wide swath of sub-systems. It's going to
+> take some iteration with domain experts to improve the patch
+> descriptions, and that's the point of this series, to get the better
+> trained eyes from the actual sub-system owners to take a look at these
+> reports.
 
-Completely up to you - I already have 1-5, I can add 6/7 as well, or
-just can do it in your tree. Let me know what you prefer.
+More information about what the static analysis is looking for would 
+definitely be welcome.
 
+Additionally, since the analysis tool is not publicly available, how are 
+authors of new kernel code assumed to verify whether or not their code 
+needs to use nospec_array_ptr()? How are reviewers of kernel code 
+assumed to verify whether or not nospec_array_ptr() is missing where it 
+should be used?
 
--- 
-Jens Axboe
+Since this patch series only modifies the upstream kernel, how will 
+out-of-tree drivers be fixed, e.g. the nVidia driver and the Android 
+drivers?
+
+Thanks,
+
+Bart.
