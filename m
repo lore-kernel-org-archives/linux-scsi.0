@@ -1,36 +1,49 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Date: Mon, 8 Jan 2018 11:08:36 +0100
-Message-ID: <20180108100836.GF3040@hirez.programming.kicks-ass.net>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <87y3lbpvzp.fsf@xmission.com>
- <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: Oops: NULL pointer dereference - RIP:
+        isci_task_abort_task+0x30/0x3e0 [isci]
+Date: Mon, 8 Jan 2018 11:11:04 +0100
+Message-ID: <20180108101104.GA5167@lst.de>
+References: <1515154428.30693.43.camel@debian.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:35379 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756019AbeAHKLG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Jan 2018 05:11:06 -0500
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Zhang Rui <rui.zhang@intel.com>, Linux-media@vg
+In-Reply-To: <1515154428.30693.43.camel@debian.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yves-Alexis Perez <corsac@debian.org>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>
 
-On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
-> On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:
-> > In at least one place (mpls) you are patching a fast path.  Compile out
-> > or don't load mpls by all means.  But it is not acceptable to change the
-> > fast path without even considering performance.
+Hannes said he was going to look into this, which makes sense
+given that he designed the async abort code.
+
+On Fri, Jan 05, 2018 at 01:13:48PM +0100, Yves-Alexis Perez wrote:
+> Hi,
 > 
-> Performance matters greatly, but I need help to identify a workload
-> that is representative for this fast path to see what, if any, impact
-> is incurred. Even better is a review that says "nope, 'index' is not
-> subject to arbitrary userspace control at this point, drop the patch."
+> since kernel 4.11 (sorry it took so long to report) I have a box failing to
+> boot with a NULL pointer dereference (the box is stuck there afterwards).
+> 
+> The bug has also been reported to the Debian BTS (https://bugs.debian.org/cgi-
+> bin/bugreport.cgi?bug=882414) and a suggestion to revert 90965761 has been
+> made. I can confirm it fix the boot issue.
+> 
+> I don't have the complete stack trace at hand but there's an example in the
+> Debian bug. The machine is a Dell Precision T5600 with the following SATA
+> controllers:
+> 
+> 00:1f.2 SATA controller: Intel Corporation C600/X79 series chipset 6-Port SATA
+> AHCI Controller (rev 05)
+> 05:00.0 Serial Attached SCSI controller: Intel Corporation C602 chipset 4-Port 
+> SATA Storage Control Unit (rev 05)
+> 
+> If you need more information or need me to test something, please ask.
+> 
+> Regards,
+> -- 
+> Yves-Alexis
 
-I think we're focussing a little too much on pure userspace. That is, we
-should be saying under the attackers control. Inbound network packets
-could equally be under the attackers control.
-
-Sure, userspace is the most direct and highest bandwidth one, but I
-think we should treat all (kernel) external values with the same
-paranoia.
+---end quoted text---
