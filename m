@@ -1,149 +1,107 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: Re: [RESEND PATCH 2/2] scsi: qedi: Use zeroing allocator instead of
- allocator/memset
-Date: Tue, 9 Jan 2018 09:15:52 +0000
-Message-ID: <D67A854D.51B95%manish.rangankar@cavium.com>
-References: <1515488812-22664-1-git-send-email-himanshujha199640@gmail.com>
- <1515488812-22664-2-git-send-email-himanshujha199640@gmail.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCHv2] libsas: Check for completed commands before calling
+ lldd_abort_task()
+Date: Tue, 9 Jan 2018 10:27:17 +0100
+Message-ID: <e3729c0f-9715-d12f-3dce-690e8d24cf6b@suse.com>
+References: <1515413086-34256-1-git-send-email-hare@suse.de>
+ <5A544075.4010705@huawei.com> <f15f98c9-0e47-a668-0b1f-5ae3321fb52f@suse.com>
+ <5A54859C.6000308@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0056.outbound.protection.outlook.com ([104.47.40.56]:3136
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751390AbeAIJPz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Jan 2018 04:15:55 -0500
-In-Reply-To: <1515488812-22664-2-git-send-email-himanshujha199640@gmail.com>
+Received: from smtp.nue.novell.com ([195.135.221.5]:36791 "EHLO
+        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752447AbeAIJ1V (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Tue, 9 Jan 2018 04:27:21 -0500
+In-Reply-To: <5A54859C.6000308@huawei.com>
 Content-Language: en-US
-Content-ID: <3CD71B66B0E593469F27D0D34659B2C6@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Jha <himanshujha199640@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "Dupuis, Chad" <Chad.Dupuis@cavium.com>
+To: Jason Yan <yanaijie@huawei.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>
 
+On 01/09/2018 10:04 AM, Jason Yan wrote:
+> 
+> On 2018/1/9 15:34, Hannes Reinecke wrote:
+>> On 01/09/2018 05:09 AM, Jason Yan wrote:
+>>> Hannes,
+>>>
+>>> On 2018/1/8 20:04, Hannes Reinecke wrote:
+>>>> The abort handler might be racing with command completion, so the
+>>>> task might already be NULL by the time the abort handler is called.
+>>>>
+>>>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>>>> ---
+>>>>    drivers/scsi/libsas/sas_scsi_host.c | 22 +++++++++++++++++++---
+>>>>    1 file changed, 19 insertions(+), 3 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+>>>> b/drivers/scsi/libsas/sas_scsi_host.c
+>>>> index 58476b7..08203fb 100644
+>>>> --- a/drivers/scsi/libsas/sas_scsi_host.c
+>>>> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+>>>> @@ -486,18 +486,34 @@ static int sas_queue_reset(struct domain_device
+>>>> *dev, int reset_type,
+>>>>
+>>>>    int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+>>>>    {
+>>>> -    int res;
+>>>> -    struct sas_task *task = TO_SAS_TASK(cmd);
+>>>> +    int res = TMF_RESP_FUNC_COMPLETE;
+>>>> +    struct sas_task *task;
+>>>>        struct Scsi_Host *host = cmd->device->host;
+>>>>        struct sas_internal *i = to_sas_internal(host->transportt);
+>>>> +    struct domain_device *dev = cmd_to_domain_dev(cmd);
+>>>> +    struct sas_ha_struct *ha = dev->port->ha;
+>>>> +    unsigned long flags;
+>>>>
+>>>>        if (!i->dft->lldd_abort_task)
+>>>>            return FAILED;
+>>>>
+>>>> -    res = i->dft->lldd_abort_task(task);
+>>>> +    /* Avoid sas_scsi_task_done() interfering */
+>>>> +    spin_lock_irqsave(&dev->done_lock, flags);
+>>>> +    task = TO_SAS_TASK(cmd);
+>>>> +    if (test_bit(SAS_HA_FROZEN, &ha->state)) {
+>>>> +        res = TMF_RESP_FUNC_FAILED;
+>>>> +        task = NULL;
+>>>> +    } else
+>>>> +        ASSIGN_SAS_TASK(cmd, NULL);
+>>>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
+>>>> +    if (task)
+>>>> +        res = i->dft->lldd_abort_task(task);
+>>>>        if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
+>>>>            return SUCCESS;
+>>>>
+>>>> +    spin_lock_irqsave(&dev->done_lock, flags);
+>>>> +    ASSIGN_SAS_TASK(cmd, task);
+>>>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
+>>>
+>>> Why do you assign task back? As I remember, when this cmd dispatch
+>>> again, we will create a new task and assign to it again. So should we
+>>> end this task here?
+>>>
+>> We only will create a new task if we decide to retry the command.
+>> But if we return FAILED here the command is not retried but rather the
+>> SCSI EH is invoked.
+>>
+> 
+> I got it. The SCSI EH will handle this.
+> 
+> But when we return SUCCESS above, shall we free the task? I don't see
+> that LLDDs free it.
+> 
+Hmm. Possibly.
+I'll check.
 
-On 09/01/18 2:36 PM, "Himanshu Jha" <himanshujha199640@gmail.com> wrote:
+Cheers,
 
->Use dma_zalloc_coherent instead of dma_alloc_coherent followed by memset
->0.
->
->Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
->
->Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
->Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
->---
-> drivers/scsi/qedi/qedi_main.c | 42
->+++++++++++++++---------------------------
-> 1 file changed, 15 insertions(+), 27 deletions(-)
->
->diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
->index cccc34a..5ef0b36 100644
->--- a/drivers/scsi/qedi/qedi_main.c
->+++ b/drivers/scsi/qedi/qedi_main.c
->@@ -1268,16 +1268,14 @@ static int qedi_alloc_bdq(struct qedi_ctx *qedi)
-> 	}
->=20
-> 	/* Allocate list of PBL pages */
->-	qedi->bdq_pbl_list =3D dma_alloc_coherent(&qedi->pdev->dev,
->-						PAGE_SIZE,
->-						&qedi->bdq_pbl_list_dma,
->-						GFP_KERNEL);
->+	qedi->bdq_pbl_list =3D dma_zalloc_coherent(&qedi->pdev->dev, PAGE_SIZE,
->+						 &qedi->bdq_pbl_list_dma,
->+						 GFP_KERNEL);
-> 	if (!qedi->bdq_pbl_list) {
-> 		QEDI_ERR(&qedi->dbg_ctx,
-> 			 "Could not allocate list of PBL pages.\n");
-> 		return -ENOMEM;
-> 	}
->-	memset(qedi->bdq_pbl_list, 0, PAGE_SIZE);
->=20
-> 	/*
-> 	 * Now populate PBL list with pages that contain pointers to the
->@@ -1367,11 +1365,10 @@ static int qedi_alloc_global_queues(struct
->qedi_ctx *qedi)
-> 		    (qedi->global_queues[i]->cq_pbl_size +
-> 		    (QEDI_PAGE_SIZE - 1));
->=20
->-		qedi->global_queues[i]->cq =3D
->-		    dma_alloc_coherent(&qedi->pdev->dev,
->-				       qedi->global_queues[i]->cq_mem_size,
->-				       &qedi->global_queues[i]->cq_dma,
->-				       GFP_KERNEL);
->+		qedi->global_queues[i]->cq =3D dma_zalloc_coherent(&qedi->pdev->dev,
->+								 qedi->global_queues[i]->cq_mem_size,
->+								 &qedi->global_queues[i]->cq_dma,
->+								 GFP_KERNEL);
->=20
-> 		if (!qedi->global_queues[i]->cq) {
-> 			QEDI_WARN(&qedi->dbg_ctx,
->@@ -1379,14 +1376,10 @@ static int qedi_alloc_global_queues(struct
->qedi_ctx *qedi)
-> 			status =3D -ENOMEM;
-> 			goto mem_alloc_failure;
-> 		}
->-		memset(qedi->global_queues[i]->cq, 0,
->-		       qedi->global_queues[i]->cq_mem_size);
->-
->-		qedi->global_queues[i]->cq_pbl =3D
->-		    dma_alloc_coherent(&qedi->pdev->dev,
->-				       qedi->global_queues[i]->cq_pbl_size,
->-				       &qedi->global_queues[i]->cq_pbl_dma,
->-				       GFP_KERNEL);
->+		qedi->global_queues[i]->cq_pbl =3D dma_zalloc_coherent(&qedi->pdev->dev=
-,
->+								     qedi->global_queues[i]->cq_pbl_size,
->+								     &qedi->global_queues[i]->cq_pbl_dma,
->+								     GFP_KERNEL);
->=20
-> 		if (!qedi->global_queues[i]->cq_pbl) {
-> 			QEDI_WARN(&qedi->dbg_ctx,
->@@ -1394,8 +1387,6 @@ static int qedi_alloc_global_queues(struct qedi_ctx
->*qedi)
-> 			status =3D -ENOMEM;
-> 			goto mem_alloc_failure;
-> 		}
->-		memset(qedi->global_queues[i]->cq_pbl, 0,
->-		       qedi->global_queues[i]->cq_pbl_size);
->=20
-> 		/* Create PBL */
-> 		num_pages =3D qedi->global_queues[i]->cq_mem_size /
->@@ -1456,25 +1447,22 @@ int qedi_alloc_sq(struct qedi_ctx *qedi, struct
->qedi_endpoint *ep)
-> 	ep->sq_pbl_size =3D (ep->sq_mem_size / QEDI_PAGE_SIZE) * sizeof(void *);
-> 	ep->sq_pbl_size =3D ep->sq_pbl_size + QEDI_PAGE_SIZE;
->=20
->-	ep->sq =3D dma_alloc_coherent(&qedi->pdev->dev, ep->sq_mem_size,
->-				    &ep->sq_dma, GFP_KERNEL);
->+	ep->sq =3D dma_zalloc_coherent(&qedi->pdev->dev, ep->sq_mem_size,
->+				     &ep->sq_dma, GFP_KERNEL);
-> 	if (!ep->sq) {
-> 		QEDI_WARN(&qedi->dbg_ctx,
-> 			  "Could not allocate send queue.\n");
-> 		rval =3D -ENOMEM;
-> 		goto out;
-> 	}
->-	memset(ep->sq, 0, ep->sq_mem_size);
->-
->-	ep->sq_pbl =3D dma_alloc_coherent(&qedi->pdev->dev, ep->sq_pbl_size,
->-					&ep->sq_pbl_dma, GFP_KERNEL);
->+	ep->sq_pbl =3D dma_zalloc_coherent(&qedi->pdev->dev, ep->sq_pbl_size,
->+					 &ep->sq_pbl_dma, GFP_KERNEL);
-> 	if (!ep->sq_pbl) {
-> 		QEDI_WARN(&qedi->dbg_ctx,
-> 			  "Could not allocate send queue PBL.\n");
-> 		rval =3D -ENOMEM;
-> 		goto out_free_sq;
-> 	}
->-	memset(ep->sq_pbl, 0, ep->sq_pbl_size);
->=20
-> 	/* Create PBL */
-> 	num_pages =3D ep->sq_mem_size / QEDI_PAGE_SIZE;
->--=20
->2.7.4
-
-Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
-
-
->
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
