@@ -1,38 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 13/14] megaraid_sas: NVME passthru command support
-Date: Tue, 9 Jan 2018 08:45:40 -0800
-Message-ID: <20180109164540.GA11861@infradead.org>
-References: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <20180108100531.GA6967@infradead.org>
- <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
+From: "Tran, Quinn" <Quinn.Tran@cavium.com>
+Subject: Re: [bug report] scsi: qla2xxx: Fix NULL pointer access for fcport
+ structure
+Date: Tue, 9 Jan 2018 18:06:01 +0000
+Message-ID: <E7D1FE26-477E-4C17-8272-CA90F24BC3FF@cavium.com>
+References: <20180109110657.aczzcwzrsw6ye6my@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33935 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751097AbeAIQpl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jan 2018 11:45:41 -0500
-Content-Disposition: inline
-In-Reply-To: <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
+Received: from mail-sn1nam02on0083.outbound.protection.outlook.com ([104.47.36.83]:17376
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1760273AbeAISGD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Jan 2018 13:06:03 -0500
+In-Reply-To: <20180109110657.aczzcwzrsw6ye6my@mwanda>
+Content-Language: en-US
+Content-ID: <FD00051332D5234183DEE62E1441B874@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, linux-nvme@lists.infradead.org, Peter Rivera <peter.rivera@broadcom.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 09, 2018 at 10:07:28PM +0530, Kashyap Desai wrote:
-> Chris -
-> 
-> Overall NVME support behind MR controller is really a SCSI device. On top
-> of that, for MegaRaid, NVME device can be part of Virtual Disk and those
-> drive will not be exposed to the driver. User application may like to talk
-> to hidden NVME devices (part of VDs). This patch will extend the existing
-> interface for megaraid product in the same way it is currently supported
-> for other protocols like SMP, SATA pass-through.
-> 
-> Example - Current smartmon is using megaraid.h (MFI headers) to send SATA
-> pass-through.
-> 
-> https://github.com/mirror/smartmontools/blob/master/megaraid.h
-
-And that is exactly the example of why we should have never allowed
-megaraid any private passthrough ioctls to start with.
+RGFuLA0KDQpUaGFua3MuICBXaWxsIHB1c2ggb3V0IGEgZml4IHNvb24uDQoNClJlZ2FyZHMsDQpR
+dWlubiBUcmFuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBEYW4gQ2FycGVu
+dGVyIDxkYW4uY2FycGVudGVyQG9yYWNsZS5jb20+DQpEYXRlOiBUdWVzZGF5LCBKYW51YXJ5IDks
+IDIwMTggYXQgMzowNiBBTQ0KVG86ICJUcmFuLCBRdWlubiIgPFF1aW5uLlRyYW5AY2F2aXVtLmNv
+bT4NCkNjOiAibGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmciIDxsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZz4NClN1YmplY3Q6IFtidWcgcmVwb3J0XSBzY3NpOiBxbGEyeHh4OiBGaXggTlVMTCBw
+b2ludGVyIGFjY2VzcyBmb3IgZmNwb3J0IHN0cnVjdHVyZQ0KDQogICAgSGVsbG8gUXVpbm4gVHJh
+biwNCiAgICANCiAgICBUaGlzIGlzIGEgc2VtaS1hdXRvbWF0aWMgZW1haWwgYWJvdXQgbmV3IHN0
+YXRpYyBjaGVja2VyIHdhcm5pbmdzLg0KICAgIA0KICAgIFRoZSBwYXRjaCA1YzI1ZDQ1MTE2M2M6
+ICJzY3NpOiBxbGEyeHh4OiBGaXggTlVMTCBwb2ludGVyIGFjY2VzcyBmb3INCiAgICBmY3BvcnQg
+c3RydWN0dXJlIiBmcm9tIERlYyAyOCwgMjAxNywgbGVhZHMgdG8gdGhlIGZvbGxvd2luZyBTbWF0
+Y2gNCiAgICBjb21wbGFpbnQ6DQogICAgDQogICAgICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
+YV9pbml0LmM6MTMwIHFsYTJ4MDBfYXN5bmNfaW9jYl90aW1lb3V0KCkNCiAgICAgICAgZXJyb3I6
+IHdlIHByZXZpb3VzbHkgYXNzdW1lZCAnZmNwb3J0JyBjb3VsZCBiZSBudWxsIChzZWUgbGluZSAx
+MDcpDQogICAgDQogICAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2luaXQuYw0KICAgICAgIDEw
+NgkNCiAgICAgICAxMDcJCWlmIChmY3BvcnQpIHsNCiAgICAgICAgICAgICAgICAgICAgICAgIF5e
+Xl5eXl4NCiAgICBUaGUgcGF0Y2ggYWRkcyBhIGNoZWNrIGZvciBOVUxMLg0KICAgIA0KICAgICAg
+IDEwOAkJCXFsX2RiZyhxbF9kYmdfZGlzYywgZmNwb3J0LT52aGEsIDB4MjA3MSwNCiAgICAgICAx
+MDkJCQkgICAgIkFzeW5jLSVzIHRpbWVvdXQgLSBoZGw9JXggcG9ydGlkPSUwNnggJThwaEMuXG4i
+LA0KICAgICAgIDExMAkJCSAgICBzcC0+bmFtZSwgc3AtPmhhbmRsZSwgZmNwb3J0LT5kX2lkLmIy
+NCwgZmNwb3J0LT5wb3J0X25hbWUpOw0KICAgICAgIDExMQkNCiAgICAgICAxMTIJCQlmY3BvcnQt
+PmZsYWdzICY9IH4oRkNGX0FTWU5DX1NFTlQgfCBGQ0ZfQVNZTkNfQUNUSVZFKTsNCiAgICAgICAx
+MTMJCX0gZWxzZSB7DQogICAgICAgMTE0CQkJcHJfaW5mbygiQXN5bmMtJXMgdGltZW91dCAtIGhk
+bD0leC5cbiIsDQogICAgICAgMTE1CQkJICAgIHNwLT5uYW1lLCBzcC0+aGFuZGxlKTsNCiAgICAg
+ICAxMTYJCX0NCiAgICAgICAxMTcJDQogICAgICAgMTE4CQlzd2l0Y2ggKHNwLT50eXBlKSB7DQog
+ICAgICAgMTE5CQljYXNlIFNSQl9MT0dJTl9DTUQ6DQogICAgICAgMTIwCQkJLyogUmV0cnkgYXMg
+bmVlZGVkLiAqLw0KICAgICAgIDEyMQkJCWxpby0+dS5sb2dpby5kYXRhWzBdID0gTUJTX0NPTU1B
+TkRfRVJST1I7DQogICAgICAgMTIyCQkJbGlvLT51LmxvZ2lvLmRhdGFbMV0gPSBsaW8tPnUubG9n
+aW8uZmxhZ3MgJiBTUkJfTE9HSU5fUkVUUklFRCA/DQogICAgICAgMTIzCQkJCVFMQV9MT0dJT19M
+T0dJTl9SRVRSSUVEIDogMDsNCiAgICAgICAxMjQJCQltZW1zZXQoJmVhLCAwLCBzaXplb2YoZWEp
+KTsNCiAgICAgICAxMjUJCQllYS5ldmVudCA9IEZDTUVfUExPR0lfRE9ORTsNCiAgICAgICAxMjYJ
+CQllYS5mY3BvcnQgPSBzcC0+ZmNwb3J0Ow0KICAgICAgIDEyNwkJCWVhLmRhdGFbMF0gPSBsaW8t
+PnUubG9naW8uZGF0YVswXTsNCiAgICAgICAxMjgJCQllYS5kYXRhWzFdID0gbGlvLT51LmxvZ2lv
+LmRhdGFbMV07DQogICAgICAgMTI5CQkJZWEuc3AgPSBzcDsNCiAgICAgICAxMzAJCQlxbGEyNHh4
+X2hhbmRsZV9wbG9naV9kb25lX2V2ZW50KGZjcG9ydC0+dmhhLCAmZWEpOw0KICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXl5eXl5eXl5e
+Xl4NCiAgICBCdXQgdGhlcmUgaXMgYW4gdW5jaGVja2VkIE5VTEwgZGVyZWZlcmVuY2UgaGVyZS4N
+CiAgICANCiAgICAgICAxMzEJCQlicmVhazsNCiAgICAgICAxMzIJCWNhc2UgU1JCX0xPR09VVF9D
+TUQ6DQogICAgDQogICAgcmVnYXJkcywNCiAgICBkYW4gY2FycGVudGVyDQogICAgDQoNCg==
