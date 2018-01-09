@@ -1,34 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] ata: enhance the definition of SET MAX feature field
- value
-Date: Mon, 8 Jan 2018 19:38:17 -0800
-Message-ID: <20180109033817.GB3668920@devbig577.frc2.facebook.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/2] Change frame type for SET MAX commands
+Date: Mon, 08 Jan 2018 22:47:04 -0500
+Message-ID: <yq1po6jn16v.fsf@oracle.com>
 References: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
- <1514456447-213928-2-git-send-email-chenxiang66@hisilicon.com>
- <yq17esroh5k.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:44670 "EHLO
-        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755932AbeAIDiV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 22:38:21 -0500
-Content-Disposition: inline
-In-Reply-To: <yq17esroh5k.fsf@oracle.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:38744 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756630AbeAID5X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 22:57:23 -0500
+In-Reply-To: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
+        (chenxiang's message of "Thu, 28 Dec 2017 18:20:45 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: chenxiang <chenxiang66@hisilicon.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com, John Garry <john.garry@huawei.com>
+To: chenxiang <chenxiang66@hisilicon.com>
+Cc: martin.petersen@oracle.com, tj@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com
 
-On Mon, Jan 08, 2018 at 10:16:55PM -0500, Martin K. Petersen wrote:
-> 
-> Tejun,
-> 
-> Are you OK with me pulling this change through the SCSI tree?
 
-Sure, yeah, please go ahead.
+chenxiang,
 
-Thanks.
+> According to ATA protocol, there are two other values for SET MAX commands' 
+> feature field. So definite them. Also those SET MAX commands belong to 
+> different frame types,and judge feature field of SET MAX commands to decide
+> which frame type they belongs to.
+
+Applied to 4.16/scsi-queue.
 
 -- 
-tejun
+Martin K. Petersen	Oracle Linux Engineering
