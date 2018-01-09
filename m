@@ -1,32 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [Resend PATCH 00/11] mpt3sas: Enable scsi MQ & lockless command submission
-Date: Mon, 08 Jan 2018 22:09:03 -0500
-Message-ID: <yq1k1wrohio.fsf@oracle.com>
-References: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH v2 3/3] scsi-mq-debugfs: Show more information
+Date: Mon, 08 Jan 2018 22:11:22 -0500
+Message-ID: <yq1fu7fohet.fsf@oracle.com>
+References: <20171206005753.28734-1-bart.vanassche@wdc.com>
+        <20171206005753.28734-4-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55244 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756657AbeAIDJf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 22:09:35 -0500
-In-Reply-To: <1515070631-14740-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-        (Suganath Prabu S.'s message of "Thu, 4 Jan 2018 04:57:00 -0800")
+Received: from userp2120.oracle.com ([156.151.31.85]:35270 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751263AbeAIDMJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 22:12:09 -0500
+In-Reply-To: <20171206005753.28734-4-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Tue, 5 Dec 2017 16:57:53 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Hannes Reinecke <hare@suse.de>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 
-Suganath,
+Bart,
 
-> This patch set is initially posted by Hannes Reinecke to enable scsi
-> multiqueue for the mpt3sas driver.  While the HBA only has a single
-> mailbox register for submitting commands, it does have individual
-> receive queues per MSI-X interrupt and as such does benefit from
-> converting it to full multiqueue support.
+> Show the request result, request timeout and SCSI command flags.
+> This information is very helpful when trying to figure out why a
+> queue got stuck. An example of the information that is exported
+> through debugfs:
 
-Applied to 4.16/scsi-queue. Thank you!
+Applied to 4.16/scsi-fixes, thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
