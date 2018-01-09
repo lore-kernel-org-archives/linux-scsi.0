@@ -1,24 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH][scsi-next] scsi: aacraid: remove redundant setting of variable c
-Date: Mon, 08 Jan 2018 21:50:57 -0500
-Message-ID: <yq1wp0roicu.fsf@oracle.com>
-References: <20180105153106.17605-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: mptfusion: use strlcpy() instead of strncpy()
+Date: Mon, 08 Jan 2018 21:54:43 -0500
+Message-ID: <yq1shbfoi6k.fsf@oracle.com>
+References: <1515415753-10534-1-git-send-email-wangxiongfeng2@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180105153106.17605-1-colin.king@canonical.com> (Colin King's
-        message of "Fri, 5 Jan 2018 15:31:06 +0000")
+In-Reply-To: <1515415753-10534-1-git-send-email-wangxiongfeng2@huawei.com>
+        (Xiongfeng Wang's message of "Mon, 8 Jan 2018 20:49:13 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+Cc: suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Xiongfeng,
 
-> A previous commit no longer stores the contents of c, so we now have a
-> situation where c is being updated but the value is never read. Clean
-> up the code by removing the now redundant setting of variable c.
+> gcc-8 reports
+>
+> drivers/message/fusion/mptbase.c: In function 'mpt_display_event_info':
+> ./include/linux/string.h:245:9: warning: '__builtin_strncpy' specified
+> bound 100 equals destination size [-Wstringop-truncation]
+>
+> We need to use strlcpy() to make sure the dest string is
+> nul-terminated.
 
 Applied to 4.16/scsi-queue. Thanks!
 
