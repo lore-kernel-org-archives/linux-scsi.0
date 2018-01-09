@@ -1,113 +1,69 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [linux-next][qla2xxx][85caa95]kernel BUG at lib/list_debug.c:31!
-Date: Tue, 9 Jan 2018 15:54:58 +0000
-Message-ID: <1515513297.2721.2.camel@wdc.com>
-References: <1515489264.3648.18.camel@abdul.in.ibm.com>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: scsi: memory leak in sg_start_req
+Date: Tue, 9 Jan 2018 17:05:24 +0100
+Message-ID: <CACT4Y+aqgtL37SkUAro4dKqxp4GynmfTLio1qGUbGTChFU7fpA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1515489264.3648.18.camel@abdul.in.ibm.com>
-Content-Language: en-US
-Content-ID: <CE5688E003870143A61DA402B1E93FD8@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "keescook@chromium.org" <keescook@chromium.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "sim@linux.vnet.ibm.com" <sim@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "sachinp@linux.vnet.ibm.com" <sachinp@linux.vnet.ibm.com>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:39076 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933094AbeAIQFq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jan 2018 11:05:46 -0500
+Received: by mail-pg0-f47.google.com with SMTP id z20so6000032pgv.6
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2018 08:05:45 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, syzkaller <syzkaller@googlegroups.com>
 
-T24gVHVlLCAyMDE4LTAxLTA5IGF0IDE0OjQ0ICswNTMwLCBBYmR1bCBIYWxlZW0gd3JvdGU6DQo+
-IEdyZWV0aW5nJ3MsIA0KPiANCj4gTGludXggbmV4dCBrZXJuZWwgcGFuaWNzIG9uIHBvd2VycGMg
-d2hlbiBtb2R1bGUgcWxhMnh4eCBpcyBsb2FkL3VubG9hZC4NCj4gDQo+IE1hY2hpbmUgVHlwZTog
-UG93ZXIgOCBQb3dlclZNIExQQVINCj4gS2VybmVsIDogNC4xNS4wLXJjMi1uZXh0LTIwMTcxMjEx
-DQo+IGdjYyA6IHZlcnNpb24gNC44LjUNCj4gVGVzdCB0eXBlOiBtb2R1bGUgbG9hZC91bmxvYWQg
-ZmV3IHRpbWVzDQo+IA0KPiBUcmFjZSBtZXNzYWdlczoNCj4gLS0tLS0tLS0tLS0tLS0tDQo+IHFs
-YTJ4eHggWzAwMDA6MDA6MDAuMF0tMDAwNTogOiBRTG9naWMgRmlicmUgQ2hhbm5lbCBIQkEgRHJp
-dmVyOiAxMC4wMC4wMC4wMy1rLg0KPiBxbGEyeHh4IFswMTA2OmEwOjAwLjBdLTAwMWE6IDogTVNJ
-LVggdmVjdG9yIGNvdW50OiAzMi4NCj4gcWxhMnh4eCBbMDEwNjphMDowMC4wXS0wMDFkOiA6IEZv
-dW5kIGFuIElTUDI1MzIgaXJxIDUwNSBpb2Jhc2UgMHgwMDAwMDAwMGFlYjMyNGU2Lg0KPiBxbGEy
-eHh4IFswMTA2OmEwOjAwLjBdLTAwYzY6MTogTVNJLVg6IEZhaWxlZCB0byBlbmFibGUgc3VwcG9y
-dCB3aXRoIDMyIHZlY3RvcnMsIHVzaW5nIDE2IHZlY3RvcnMuDQo+IHFsYTJ4eHggWzAxMDY6YTA6
-MDAuMF0tMDBmYjoxOiBRTG9naWMgUUxFMjU2MiAtIFBDSWUgMi1wb3J0IDhHYiBGQyBBZGFwdGVy
-Lg0KPiBxbGEyeHh4IFswMTA2OmEwOjAwLjBdLTAwZmM6MTogSVNQMjUzMjogUENJZSAoNS4wR1Qv
-cyB4OCkgQCAwMTA2OmEwOjAwLjAgaGRtYS0gaG9zdCM9MSBmdz04LjA2LjAwICg5MGQ1KS4NCj4g
-cWxhMnh4eCBbMDEwNjphMDowMC4xXS0wMDFhOiA6IE1TSS1YIHZlY3RvciBjb3VudDogMzIuDQo+
-IHFsYTJ4eHggWzAxMDY6YTA6MDAuMV0tMDAxZDogOiBGb3VuZCBhbiBJU1AyNTMyIGlycSA1MDYg
-aW9iYXNlIDB4MDAwMDAwMDBhNDZmMTc3NC4NCj4gcWxhMnh4eCBbMDEwNjphMDowMC4xXS0wMGM2
-OjI6IE1TSS1YOiBGYWlsZWQgdG8gZW5hYmxlIHN1cHBvcnQgd2l0aCAzMiB2ZWN0b3JzLCB1c2lu
-ZyAxNiB2ZWN0b3JzLg0KPiAyeHh4DQo+IHFsYTJ4eHggWzAxMDY6YTA6MDAuMV0tMDBmYjoyOiBR
-TG9naWMgUUxFMjU2MiAtIFBDSWUgMi1wb3J0IDhHYiBGQyBBZGFwdGVyLg0KPiBxbGEyeHh4IFsw
-MTA2OmEwOjAwLjFdLTAwZmM6MjogSVNQMjUzMjogUENJZSAoNS4wR1QvcyB4OCkgQCAwMTA2OmEw
-OjAwLjEgaGRtYS0gaG9zdCM9MiBmdz04LjA2LjAwICg5MGQ1KS4NCj4gMDowMC4wXS01MDBhOjE6
-IExPT1AgVVAgZGV0ZWN0ZWQgKDggR2JwcykuIA0KPiBxbGEyeHh4IFswMTA2OmEwOjAwLjFdLTUw
-MGE6MjogTE9PUCBVUCBkZXRlY3RlZCAoOCBHYnBzKS4NCj4gbGlzdF9hZGQgZG91YmxlIGFkZDog
-bmV3PTAwMDAwMDAwOGQzM2U1OTQsIHByZXY9MDAwMDAwMDA4ZDMzZTU5NCwgbmV4dD0wMDAwMDAw
-MGFkZWYxZGY0Lg0KPiAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0NCj4ga2Vy
-bmVsIEJVRyBhdCBsaWIvbGlzdF9kZWJ1Zy5jOjMxISANCj4gT29wczogRXhjZXB0aW9uIGluIGtl
-cm5lbCBtb2RlLCBzaWc6IDUgWyMxXQ0KPiBMRSBTTVAgTlJfQ1BVUz0yMDQ4IE5VTUEgcFNlcmll
-cyANCj4gRHVtcGluZyBmdHJhY2UgYnVmZmVyOiANCj4gICAgKGZ0cmFjZSBidWZmZXIgZW1wdHkp
-DQo+IE1vZHVsZXMgbGlua2VkIGluOiBxbGEyeHh4KEUpIHRnMyhFKSBpYm12ZXRoKEUpIHh0X0NI
-RUNLU1VNKEUpDQo+IGlwdGFibGVfbWFuZ2xlKEUpIGlwdF9NQVNRVUVSQURFKEUpIG5mX25hdF9t
-YXNxdWVyYWRlX2lwdjQoRSkNCj4gaXB0YWJsZV9uYXQoRSkgbmZfbmF0X2lwdjQoRSkgbmZfbmF0
-KEUpIG5mX2Nvbm50cmFja19pcHY0KEUpDQo+IG5mX2RlZnJhZ19pcHY0KEUpIHh0X2Nvbm50cmFj
-ayhFKSBuZl9jb25udHJhY2soRSkgaXB0X1JFSkVDVChFKQ0KPiBuZl9yZWplY3RfaXB2NChFKSB0
-dW4oRSkgYnJpZGdlKEUpIHN0cChFKSBsbGMoRSkga3ZtX3ByKEUpIGt2bShFKQ0KPiBzY3RwX2Rp
-YWcoRSkgc2N0cChFKSBsaWJjcmMzMmMoRSkgdGNwX2RpYWcoRSkgdWRwX2RpYWcoRSkNCj4gZWJ0
-YWJsZV9maWx0ZXIoRSkgZWJ0YWJsZXMoRSkgZGNjcF9kaWFnKEUpIGlwNnRhYmxlX2ZpbHRlcihF
-KSBkY2NwKEUpDQo+IGlwNl90YWJsZXMoRSkgaXB0YWJsZV9maWx0ZXIoRSkgaW5ldF9kaWFnKEUp
-IHVuaXhfZGlhZyhFKQ0KPiBhZl9wYWNrZXRfZGlhZyhFKSBuZXRsaW5rX2RpYWcoRSkgeHRzKEUp
-IHNnKEUpIHZteF9jcnlwdG8oRSkNCj4gcHNlcmllc19ybmcoRSkgbmZzZChFKSBhdXRoX3JwY2dz
-cyhFKSBuZnNfYWNsKEUpIGxvY2tkKEUpIGdyYWNlKEUpDQo+IHN1bnJwYyhFKSBiaW5mbXRfbWlz
-YyhFKSBpcF90YWJsZXMoRSkgZXh0NChFKSBtYmNhY2hlKEUpIGpiZDIoRSkNCj4gZnNjcnlwdG8o
-RSkgc2RfbW9kKEUpIGlibXZzY3NpKEUpIHNjc2lfdHJhbnNwb3J0X3NycChFKSBudm1lX2ZjKEUp
-DQo+IG52bWVfZmFicmljcyhFKSBudm1lX2NvcmUoRSkgc2NzaV90cmFuc3BvcnRfZmMoRSkNCj4g
-IHB0cChFKSBwcHNfY29yZShFKSBkbV9taXJyb3IoRSkgZG1fcmVnaW9uX2hhc2goRSkgZG1fbG9n
-KEUpIGRtX21vZChFKQ0KPiBbbGFzdCB1bmxvYWRlZDogcWxhMnh4eF0NCj4gQ1BVOiA3IFBJRDog
-MjIyMzAgQ29tbTogcWxhMnh4eF8xX2RwYyBUYWludGVkOiBHICAgICAgICAgICAgRSAgICA0LjE1
-LjAtcmMyLW5leHQtMjAxNzEyMTEtYXV0b3Rlc3QtYXV0b3Rlc3QgIzENCj4gTklQOiAgYzAwMDAw
-MDAwMDUxMTA0MCBMUjogYzAwMDAwMDAwMDUxMTAzYyBDVFI6IDAwMDAwMDAwMDA2NTUxNzAgICAg
-ICAgIA0KPiBSRUdTOiAwMDAwMDAwMDliNzM1NmZhIFRSQVA6IDA3MDAgICBUYWludGVkOiBHICAg
-ICAgICAgICAgRSAgICAgKDQuMTUuMC1yYzItbmV4dC0yMDE3MTIxMS1hdXRvdGVzdC1hdXRvdGVz
-dCkNCj4gTVNSOiAgODAwMDAwMDEwMjgyYjAzMyA8U0YsVkVDLFZTWCxFRSxGUCxNRSxJUixEUixS
-SSxMRSxUTVtFXT4gIENSOiAyMjAwMDAyMiAgWEVSOiAwMDAwMDAwOSAgDQo+IENGQVI6IGMwMDAw
-MDAwMDAxNzA1OTQgU09GVEU6IDAgDQo+IEdQUjAwOiBjMDAwMDAwMDAwNTExMDNjIGMwMDAwMDAw
-ZmMyOTNhYzAgYzAwMDAwMDAwMTBmMWQwMCAwMDAwMDAwMDAwMDAwMDU4IA0KPiBHUFIwNDogYzAw
-MDAwMDI4ZmNjY2RkMCBjMDAwMDAwMjhmY2UzNzk4IDgwMDAwMDAwMzc0MDYwYjggZmZmZmZmZmZm
-ZmZmZmZmZiANCj4gR1BSMDg6IDAwMDAwMDAwMDAwMDAwMDAgYzAwMDAwMDAwMGQ0MzVlYyAwMDAw
-MDAwMjhlZjkwMDAwIDAwMDAwMDAwMDAwMDI3MTcgDQo+IEdQUjEyOiAwMDAwMDAwMDAwMDAwMDAw
-IGMwMDAwMDAwMGU3MzQ5ODAgYzAwMDAwMDAwMDEyMTVkOCBjMDAwMDAwMjg4Njk5NmMwIA0KPiBH
-UFIxNjogMDAwMDAwMDAwMDAwMDAwMCAwMDAwMDAwMDAwMDAwMDIwIGMwMDAwMDAyODEzZDgzZjgg
-MDAwMDAwMDAwMDAwMDAwMSANCj4gR1BSMjA6IDAwMDAwMDAwMjAwMDAwMDAgMDAwMDAwMDAwMDAw
-MjAwMCAwMDAwMDAwMDAwMDAwMDAyIGMwMDAwMDAyODEzZGM4MDggDQo+IEdQUjI0OiAwMDAwMDAw
-MDAwMDAwMDAzIDAwMDAwMDAwMDAwMDAwMDEgYzAwMDAwMDI3ZjVhNWMyMCBjMDAwMDAwMjgxM2Rj
-ZWQwIA0KPiBHUFIyODogYzAwMDAwMDI3ZjVhNWQ5MCBjMDAwMDAwMjdmNWE1ZDkwIGMwMDAwMDAy
-N2Y1YTVjMDAgYzAwMDAwMDI4MTNkYzdmOCANCj4gTklQIFtjMDAwMDAwMDAwNTExMDQwXSBfX2xp
-c3RfYWRkX3ZhbGlkKzB4NzAvMHhiMA0KPiBMUiBbYzAwMDAwMDAwMDUxMTAzY10gX19saXN0X2Fk
-ZF92YWxpZCsweDZjLzB4YjANCj4gQ2FsbCBUcmFjZToNCj4gW2MwMDAwMDAwZmMyOTNhYzBdIFtj
-MDAwMDAwMDAwNTExMDNjXSBfX2xpc3RfYWRkX3ZhbGlkKzB4NmMvMHhiMCAodW5yZWxpYWJsZSkN
-Cj4gW2MwMDAwMDAwZmMyOTNiMjBdIFtkMDAwMDAwMDA1MWYxYTA4XSBxbGEyNHh4X2FzeW5jX2du
-bCsweDEwOC8weDQyMCBbcWxhMnh4eF0NCj4gW2MwMDAwMDAwZmMyOTNiYzBdIFtkMDAwMDAwMDA1
-MWU3NjJjXSBxbGEyeDAwX2RvX3dvcmsrMHgxOGMvMHg4YzAgW3FsYTJ4eHhdDQo+IFtjMDAwMDAw
-MGZjMjkzY2UwXSBbZDAwMDAwMDAwNTFlODE4MF0gcWxhMngwMF9yZWxvZ2luKzB4NDIwLzB4ZmYw
-IFtxbGEyeHh4XQ0KPiBbYzAwMDAwMDBmYzI5M2RjMF0gW2MwMDAwMDAwMDAxMjE3MmNdIGt0aHJl
-YWQrMHgxNWMvMHgxYTANCj4gW2MwMDAwMDAwZmMyOTNlMzBdIFtjMDAwMDAwMDAwMDBiNGU4XSBy
-ZXRfZnJvbV9rZXJuZWxfdGhyZWFkKzB4NWMvMHg3NA0KPiBJbnN0cnVjdGlvbiBkdW1wOg0KPiA0
-MWRlMDAxOCAzODIxMDA2MCAzODYwMDAwMSBlODAxMDAxMCA3YzA4MDNhNiA0ZTgwMDAyMCAzYzYy
-ZmZhZSA3ZDQ0NTM3OCANCj4gMzg2MzE3NDggN2QyNTRiNzggNGJjNWY1MWQgNjAwMDAwMDAgPDBm
-ZTAwMDAwPiAzYzYyZmZhZSA3Y2M0MzM3OCAzODYzMTZmOCANCj4gLS0tWyBlbmQgdHJhY2UgYTQx
-YmM4YmQ0MzQ2NTdmMSBdLS0tDQo+IA0KPiBLZXJuZWwgcGFuaWMgLSBub3Qgc3luY2luZzogRmF0
-YWwgZXhjZXB0aW9uDQo+IER1bXBpbmcgZnRyYWNlIGJ1ZmZlcjogDQo+ICAgIChmdHJhY2UgYnVm
-ZmVyIGVtcHR5KQ0KPiBSZWJvb3RpbmcgaW4gMTAgc2Vjb25kcy4uDQo+IA0KPiBUaGlzIHRyYWNl
-IGJhY2sgdG8gdGhlIGJlbG93IGNvZGUgcGF0aDoNCj4gDQo+ICMgZ2RiIC1iYXRjaCB2bWxpbnV4
-IC1leCAnbGlzdCAqKDB4YzAwMDAwMDAwMDUxMTA0MCknDQo+IDB4YzAwMDAwMDAwMDUxMTA0MCBp
-cyBpbiBfX2xpc3RfYWRkX3ZhbGlkIChsaWIvbGlzdF9kZWJ1Zy5jOjI5KS4NCj4gMjQJCQkJImxp
-c3RfYWRkIGNvcnJ1cHRpb24uIG5leHQtPnByZXYgc2hvdWxkIGJlIHByZXYgKCVwKSwgYnV0IHdh
-cyAlcC4gKG5leHQ9JXApLlxuIiwNCj4gMjUJCQkJcHJldiwgbmV4dC0+cHJldiwgbmV4dCkgfHwN
-Cj4gMjYJCSAgICBDSEVDS19EQVRBX0NPUlJVUFRJT04ocHJldi0+bmV4dCAhPSBuZXh0LA0KPiAy
-NwkJCQkibGlzdF9hZGQgY29ycnVwdGlvbi4gcHJldi0+bmV4dCBzaG91bGQgYmUgbmV4dCAoJXAp
-LCBidXQgd2FzICVwLiAocHJldj0lcCkuXG4iLA0KPiAyOAkJCQluZXh0LCBwcmV2LT5uZXh0LCBw
-cmV2KSB8fA0KPiAyOQkJICAgIENIRUNLX0RBVEFfQ09SUlVQVElPTihuZXcgPT0gcHJldiB8fCBu
-ZXcgPT0gbmV4dCwNCj4gMzAJCQkJImxpc3RfYWRkIGRvdWJsZSBhZGQ6IG5ldz0lcCwgcHJldj0l
-cCwgbmV4dD0lcC5cbiIsDQo+IDMxCQkJCW5ldywgcHJldiwgbmV4dCkpDQo+IDMyCQkJcmV0dXJu
-IGZhbHNlOw0KPiAzMwkNCg0KKCtsaW51eC1zY3NpKQ0KDQpIZWxsbyBBYmR1bCwNCg0KUGxlYXNl
-IHJlcG9ydCBTQ1NJIExMRCBpc3N1ZXMgb24gdGhlIGxpbnV4LXNjc2kgbWFpbGluZyBsaXN0Lg0K
-DQpCYXJ0Lg==
+Hello,
+
+syzkaller has found the following memory leak:
+
+unreferenced object 0xffff88004c190000 (size 8328):
+  comm "syz-executor", pid 4627, jiffies 4294749150 (age 45.507s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    20 00 00 00 22 01 00 00 00 00 00 00 04 00 00 00   ..."...........
+  backtrace:
+    [<000000005955b5a9>] kmalloc_order+0x59/0x80 mm/slab_common.c:1124
+    [<0000000043ae006e>] kmalloc_order_trace+0x1f/0x160 mm/slab_common.c:1133
+    [<00000000d33b2e16>] kmalloc_large include/linux/slab.h:433 [inline]
+    [<00000000d33b2e16>] __kmalloc+0x2c4/0x340 mm/slub.c:3751
+    [<00000000e7430040>] kmalloc include/linux/slab.h:504 [inline]
+    [<00000000e7430040>] bio_alloc_bioset+0x4d5/0x7e0 block/bio.c:450
+    [<00000000f370e717>] bio_kmalloc include/linux/bio.h:410 [inline]
+    [<00000000f370e717>] bio_copy_user_iov+0x2be/0xcb0 block/bio.c:1226
+    [<000000001d0b79ed>] __blk_rq_map_user_iov block/blk-map.c:67 [inline]
+    [<000000001d0b79ed>] blk_rq_map_user_iov+0x2b6/0x7d0 block/blk-map.c:136
+    [<000000004200a869>] blk_rq_map_user+0x11e/0x170 block/blk-map.c:166
+    [<000000008f21739e>] sg_start_req drivers/scsi/sg.c:1794 [inline]
+    [<000000008f21739e>] sg_common_write.isra.16+0x14df/0x1ed0
+drivers/scsi/sg.c:777
+    [<00000000093f61e3>] sg_write+0x8a7/0xd7b drivers/scsi/sg.c:677
+    [<00000000b67dafdc>] __vfs_write+0x10d/0x8f0 fs/read_write.c:480
+    [<000000000638f16f>] vfs_write+0x1fd/0x570 fs/read_write.c:544
+    [<000000006a7e6867>] SYSC_write fs/read_write.c:589 [inline]
+    [<000000006a7e6867>] SyS_write+0xfa/0x250 fs/read_write.c:581
+
+can be reproduced with the following program:
+
+// autogenerated by syzkaller (http://github.com/google/syzkaller)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main()
+{
+  int fd = open("/dev/sg1", O_RDWR);
+  const char *data =
+         "\xb6\x3d\xb8\x5e\x1e\x8d\x22\x00\x00\x00\x00\x00\x00\x08\xaf\xd6\x1d"
+         "\xcc\x43\x6a\xed\x5e\xd2\xbc\x70\x18\xce\xbc\x9b\x97\xae\x21\x91\x4d"
+         "\x87\x2c\x67\x8c\xe2\x2c\x9b\x16\x0e\x96\xaa\x1f\xae\x1a";
+  write(fd, data, 0x30);
+  return 0;
+}
+
+if executed in a loop, memory consumption grows infinitely.
+
+on upstream commit b2cd1df66037e7c4697c7e40496bf7e4a5e16a2d
