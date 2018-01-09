@@ -1,29 +1,46 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V9 0/7] blk-mq support for ZBC disks
-Date: Mon, 08 Jan 2018 22:14:31 -0500
-Message-ID: <yq1bmi3oh9k.fsf@oracle.com>
-References: <20171221064344.6228-1-damien.lemoal@wdc.com>
-        <20180105162150.GA16978@kernel.dk> <yq1vagcpcu1.fsf@oracle.com>
-        <76006cca-d93f-4bc6-6408-fb86d7470dcc@kernel.dk>
+Subject: Re: [PATCH 1/2] ata: enhance the definition of SET MAX feature field value
+Date: Mon, 08 Jan 2018 22:16:55 -0500
+Message-ID: <yq17esroh5k.fsf@oracle.com>
+References: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
+        <1514456447-213928-2-git-send-email-chenxiang66@hisilicon.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <76006cca-d93f-4bc6-6408-fb86d7470dcc@kernel.dk> (Jens Axboe's
-        message of "Mon, 8 Jan 2018 09:07:56 -0700")
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1514456447-213928-2-git-send-email-chenxiang66@hisilicon.com>
+        (chenxiang's message of "Thu, 28 Dec 2017 18:20:46 +0800")
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: martin.petersen@oracle.com, chenxiang <chenxiang66@hisilicon.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Jens,
+Tejun,
 
-> Completely up to you - I already have 1-5, I can add 6/7 as well, or
-> just can do it in your tree. Let me know what you prefer.
+Are you OK with me pulling this change through the SCSI tree?
 
-Started my 4.16/scsi-fixes branch early based on your tree.
-
-I queued these two up.
+> There are two other values for SET MAX feature field according to ata
+> protocol. So definite them.
+>
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  include/linux/ata.h | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index c7a3538..40d150a 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -448,6 +448,8 @@ enum {
+>  	ATA_SET_MAX_LOCK	= 0x02,
+>  	ATA_SET_MAX_UNLOCK	= 0x03,
+>  	ATA_SET_MAX_FREEZE_LOCK	= 0x04,
+> +	ATA_SET_MAX_PASSWD_DMA	= 0x05,
+> +	ATA_SET_MAX_UNLOCK_DMA	= 0x06,
+>  
+>  	/* feature values for DEVICE CONFIGURATION OVERLAY */
+>  	ATA_DCO_RESTORE		= 0xC0,
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
