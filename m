@@ -1,31 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mptfusion: use strlcpy() instead of strncpy()
-Date: Mon, 08 Jan 2018 21:54:43 -0500
-Message-ID: <yq1shbfoi6k.fsf@oracle.com>
-References: <1515415753-10534-1-git-send-email-wangxiongfeng2@huawei.com>
+Subject: Re: [PATCH 0/6] cxlflash: Miscellaneous patches
+Date: Mon, 08 Jan 2018 22:07:51 -0500
+Message-ID: <yq1o9m3ohko.fsf@oracle.com>
+References: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1515415753-10534-1-git-send-email-wangxiongfeng2@huawei.com>
-        (Xiongfeng Wang's message of "Mon, 8 Jan 2018 20:49:13 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Xiongfeng Wang <wangxiongfeng2@huawei.com>
-Cc: suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:37658 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755856AbeAIDID (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 22:08:03 -0500
+In-Reply-To: <1515020002-43551-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+        (Uma Krishnan's message of "Wed, 3 Jan 2018 16:53:22 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
 
-Xiongfeng,
+Uma,
 
-> gcc-8 reports
->
-> drivers/message/fusion/mptbase.c: In function 'mpt_display_event_info':
-> ./include/linux/string.h:245:9: warning: '__builtin_strncpy' specified
-> bound 100 equals destination size [-Wstringop-truncation]
->
-> We need to use strlcpy() to make sure the dest string is
-> nul-terminated.
+> This patch series contains miscellaneous fixes. The first patch fixes
+> a bug while the rest improve the code structure and prepare the code
+> for future enhancements.
 
-Applied to 4.16/scsi-queue. Thanks!
+Added stable tag to first patch and applied series to
+4.16/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
