@@ -1,48 +1,36 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] storvsc: do not assume SG list is continuous when doing
- bounce buffers (for 4.1 stable only)
-Date: Tue, 9 Jan 2018 23:04:55 +0000
-Message-ID: <MWHPR21MB0846048B1EE162042C46BD4ECE100@MWHPR21MB0846.namprd21.prod.outlook.com>
-References: <1503379905-18908-1-git-send-email-longli@exchange.microsoft.com>
-        <20170822062841.GA1061@infradead.org>
-        <MWHPR21MB0190D1C8C3FAF25AE283ABCFCE840@MWHPR21MB0190.namprd21.prod.outlook.com>
-        <20170823064319.GA19373@infradead.org> <yq1ziaq9un4.fsf@oracle.com>
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 13/14] megaraid_sas: NVME passthru command support
+Date: Tue, 9 Jan 2018 16:23:05 -0700
+Message-ID: <20180109232305.GH15154@localhost.localdomain>
+References: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <20180108100531.GA6967@infradead.org>
+ <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
+ <20180109164540.GA11861@infradead.org>
+ <27ebbe5f-e06b-a800-5518-ec63d65d142a@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1ziaq9un4.fsf@oracle.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>
-Cc: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:34997 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753329AbeAIXTq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Jan 2018 18:19:46 -0500
+Content-Disposition: inline
+In-Reply-To: <27ebbe5f-e06b-a800-5518-ec63d65d142a@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-> Christoph,
->=20
-> > Ok.  If the stable maintainers are ok with your small fix I'm not
-> > going to complain too loudly.  But I'm always worried about stable
-> > trees divering too much from mainline.
->=20
-> The seemingly innocuous transition from SG_GAPS to virt boundary has
-> caused several data corruption regressions in the distro kernels. So has =
-the
-> corresponding conversion of storvsc.
->=20
-> As a result, getting the current upstream code into 4.1 would mean
-> backporting and testing a significant amount of both block layer and driv=
-er
-> code. I don't think it's worth the risk. This patch is simple and the pat=
-h of least
-> resistance.
->=20
-> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+On Tue, Jan 09, 2018 at 03:50:44PM -0500, Douglas Gilbert wrote:
+> Have you tried to do any serious work with <linux/nvme_ioctl.h> and
+> say compared it with FreeBSD and Microsoft's approach? No prize for
+> guessing which one is worst (and least extensible). Looks like the
+> Linux pass-through was at the end of a ToDo list and was "designed"
+> at 5 a.m in the morning.
 
-Sorry to bring up this patch again. It seems it hasn't made it to stable br=
-anches.
-
-Please take a look.
-
->=20
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+What the heck are you talking about? FreeBSD's NVMe passthrough is near
+identical to Linux, and Linux's existed years prior.
+ 
+You're not even touching the nvme subsystem, so why are you copying the
+linux-nvme mailing list to help you with a non-NVMe device? Please take
+your ignorant and dubious claims elsewhere.
