@@ -1,50 +1,66 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCHv2] libsas: Check for completed commands before calling
- lldd_abort_task()
-Date: Tue, 9 Jan 2018 10:30:45 +0100
-Message-ID: <b1935687-4d39-3aca-1ee5-01dc513a8735@suse.com>
-References: <1515413086-34256-1-git-send-email-hare@suse.de>
- <1515431496.3305.62.camel@debian.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] scsi: qla2xxx: Fix NULL pointer access for fcport
+ structure
+Date: Tue, 9 Jan 2018 14:06:57 +0300
+Message-ID: <20180109110657.aczzcwzrsw6ye6my@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:34542 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752590AbeAIJas (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Tue, 9 Jan 2018 04:30:48 -0500
-In-Reply-To: <1515431496.3305.62.camel@debian.org>
-Content-Language: en-US
+Received: from aserp2120.oracle.com ([141.146.126.78]:57568 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752345AbeAILHI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jan 2018 06:07:08 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: quinn.tran@cavium.com
+Cc: linux-scsi@vger.kernel.org
 
-On 01/08/2018 06:11 PM, Yves-Alexis Perez wrote:
-> On Mon, 2018-01-08 at 13:04 +0100, Hannes Reinecke wrote:
->> The abort handler might be racing with command completion, so the
->> task might already be NULL by the time the abort handler is called.
-> 
-> Hi,
-> 
-> I tried the patch on top of 4.15-rc7 (and without the revert of 90965761). I
-> don't have the NULL pointer deref anymore, but the box timeouts after SCSI
-> init. It's not completely dead, but I don't have any meaningful log from the
-> kernel.
-> 
-Can you try to boot the stock 4.15 kernel (without any patches) with
-scsi_mod.scsi_logging_level=9411
-on the kernel commandline and send me tha output?
-I really would like to see which command fails.
-THX.
+Hello Quinn Tran,
 
-Cheers,
+This is a semi-automatic email about new static checker warnings.
 
-Hannes
--- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+The patch 5c25d451163c: "scsi: qla2xxx: Fix NULL pointer access for
+fcport structure" from Dec 28, 2017, leads to the following Smatch
+complaint:
+
+    drivers/scsi/qla2xxx/qla_init.c:130 qla2x00_async_iocb_timeout()
+    error: we previously assumed 'fcport' could be null (see line 107)
+
+drivers/scsi/qla2xxx/qla_init.c
+   106	
+   107		if (fcport) {
+                    ^^^^^^^
+The patch adds a check for NULL.
+
+   108			ql_dbg(ql_dbg_disc, fcport->vha, 0x2071,
+   109			    "Async-%s timeout - hdl=%x portid=%06x %8phC.\n",
+   110			    sp->name, sp->handle, fcport->d_id.b24, fcport->port_name);
+   111	
+   112			fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
+   113		} else {
+   114			pr_info("Async-%s timeout - hdl=%x.\n",
+   115			    sp->name, sp->handle);
+   116		}
+   117	
+   118		switch (sp->type) {
+   119		case SRB_LOGIN_CMD:
+   120			/* Retry as needed. */
+   121			lio->u.logio.data[0] = MBS_COMMAND_ERROR;
+   122			lio->u.logio.data[1] = lio->u.logio.flags & SRB_LOGIN_RETRIED ?
+   123				QLA_LOGIO_LOGIN_RETRIED : 0;
+   124			memset(&ea, 0, sizeof(ea));
+   125			ea.event = FCME_PLOGI_DONE;
+   126			ea.fcport = sp->fcport;
+   127			ea.data[0] = lio->u.logio.data[0];
+   128			ea.data[1] = lio->u.logio.data[1];
+   129			ea.sp = sp;
+   130			qla24xx_handle_plogi_done_event(fcport->vha, &ea);
+                                                        ^^^^^^^^^^^
+But there is an unchecked NULL dereference here.
+
+   131			break;
+   132		case SRB_LOGOUT_CMD:
+
+regards,
+dan carpenter
