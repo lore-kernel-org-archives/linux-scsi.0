@@ -1,35 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 7/9] scsi: bnx2fc: Use zeroing allocator rather than allocator/memset
-Date: Mon, 08 Jan 2018 22:35:16 -0500
-Message-ID: <yq1tvvvn1qj.fsf@oracle.com>
-References: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
-        <1514647712-6332-8-git-send-email-himanshujha199640@gmail.com>
-        <yq1o9mauoz3.fsf@oracle.com>
-        <20180104073831.GA5862@himanshu-Vostro-3559>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] ata: enhance the definition of SET MAX feature field
+ value
+Date: Mon, 8 Jan 2018 19:38:17 -0800
+Message-ID: <20180109033817.GB3668920@devbig577.frc2.facebook.com>
+References: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
+ <1514456447-213928-2-git-send-email-chenxiang66@hisilicon.com>
+ <yq17esroh5k.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180104073831.GA5862@himanshu-Vostro-3559> (Himanshu Jha's
-        message of "Thu, 4 Jan 2018 13:08:31 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, aacraid@adaptec.com, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, QLogic-Storage-Upstream@qlogic.com, satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, QLogic-Storage-Upstream@cavium.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:44670 "EHLO
+        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755932AbeAIDiV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 22:38:21 -0500
+Content-Disposition: inline
+In-Reply-To: <yq17esroh5k.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: chenxiang <chenxiang66@hisilicon.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com, John Garry <john.garry@huawei.com>
 
+On Mon, Jan 08, 2018 at 10:16:55PM -0500, Martin K. Petersen wrote:
+> 
+> Tejun,
+> 
+> Are you OK with me pulling this change through the SCSI tree?
 
-Himanshu,
+Sure, yeah, please go ahead.
 
-> scsi: qedi: Use zeroing allocator instead of allocator/memset --Resend
-> scsi: mvsas: Use zeroing allocator rather than allocator/memset
-> scsi: fnic: Use zeroing allocator rather than allocator/memset
-> scsi: dpt_i2o: Use zeroing allocator rather than allocator/memset
-> scsi: bnx2fc: Use zeroing allocator rather than allocator/memset --Resend
->
-> But do I also need to send those mentioned above, which didn't receive
-> any response from you ?
-
-I typically only merge cleanup patches if the driver maintainer acks
-them. So you should poke the relevant maintainers.
+Thanks.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+tejun
