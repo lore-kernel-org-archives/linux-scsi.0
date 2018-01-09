@@ -1,61 +1,113 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] libsas: Disable asynchronous aborts for SATA devices
-Date: Tue,  9 Jan 2018 16:43:52 +0100
-Message-ID: <1515512632-115483-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38846 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933048AbeAIPn5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Jan 2018 10:43:57 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [linux-next][qla2xxx][85caa95]kernel BUG at lib/list_debug.c:31!
+Date: Tue, 9 Jan 2018 15:54:58 +0000
+Message-ID: <1515513297.2721.2.camel@wdc.com>
+References: <1515489264.3648.18.camel@abdul.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1515489264.3648.18.camel@abdul.in.ibm.com>
+Content-Language: en-US
+Content-ID: <CE5688E003870143A61DA402B1E93FD8@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "keescook@chromium.org" <keescook@chromium.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "sim@linux.vnet.ibm.com" <sim@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "sachinp@linux.vnet.ibm.com" <sachinp@linux.vnet.ibm.com>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Handling CD-ROM devices from libsas is decidedly odd, as libata
-relies on SCSI EH to be started to figure out that no medium is
-present.
-So we cannot do asynchronous aborts for SATA devices.
-
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/libsas/sas_scsi_host.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 6267272..6de9681 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -487,15 +487,28 @@ static int sas_queue_reset(struct domain_device *dev, int reset_type,
- 
- int sas_eh_abort_handler(struct scsi_cmnd *cmd)
- {
--	int res;
-+	int res = TMF_RESP_FUNC_FAILED;
- 	struct sas_task *task = TO_SAS_TASK(cmd);
- 	struct Scsi_Host *host = cmd->device->host;
-+	struct domain_device *dev = cmd_to_domain_dev(cmd);
- 	struct sas_internal *i = to_sas_internal(host->transportt);
-+	unsigned long flags;
- 
- 	if (!i->dft->lldd_abort_task)
- 		return FAILED;
- 
--	res = i->dft->lldd_abort_task(task);
-+	spin_lock_irqsave(host->host_lock, flags);
-+	/* We cannot do async aborts for SATA devices */
-+	if (dev_is_sata(dev) && !host->host_eh_scheduled) {
-+		spin_unlock_irqrestore(host->host_lock, flags);
-+		return FAILED;
-+	}
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+
-+	if (task)
-+		res = i->dft->lldd_abort_task(task);
-+	else
-+		SAS_DPRINTK("no task to abort\n");
- 	if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
- 		return SUCCESS;
- 
--- 
-1.8.5.6
+T24gVHVlLCAyMDE4LTAxLTA5IGF0IDE0OjQ0ICswNTMwLCBBYmR1bCBIYWxlZW0gd3JvdGU6DQo+
+IEdyZWV0aW5nJ3MsIA0KPiANCj4gTGludXggbmV4dCBrZXJuZWwgcGFuaWNzIG9uIHBvd2VycGMg
+d2hlbiBtb2R1bGUgcWxhMnh4eCBpcyBsb2FkL3VubG9hZC4NCj4gDQo+IE1hY2hpbmUgVHlwZTog
+UG93ZXIgOCBQb3dlclZNIExQQVINCj4gS2VybmVsIDogNC4xNS4wLXJjMi1uZXh0LTIwMTcxMjEx
+DQo+IGdjYyA6IHZlcnNpb24gNC44LjUNCj4gVGVzdCB0eXBlOiBtb2R1bGUgbG9hZC91bmxvYWQg
+ZmV3IHRpbWVzDQo+IA0KPiBUcmFjZSBtZXNzYWdlczoNCj4gLS0tLS0tLS0tLS0tLS0tDQo+IHFs
+YTJ4eHggWzAwMDA6MDA6MDAuMF0tMDAwNTogOiBRTG9naWMgRmlicmUgQ2hhbm5lbCBIQkEgRHJp
+dmVyOiAxMC4wMC4wMC4wMy1rLg0KPiBxbGEyeHh4IFswMTA2OmEwOjAwLjBdLTAwMWE6IDogTVNJ
+LVggdmVjdG9yIGNvdW50OiAzMi4NCj4gcWxhMnh4eCBbMDEwNjphMDowMC4wXS0wMDFkOiA6IEZv
+dW5kIGFuIElTUDI1MzIgaXJxIDUwNSBpb2Jhc2UgMHgwMDAwMDAwMGFlYjMyNGU2Lg0KPiBxbGEy
+eHh4IFswMTA2OmEwOjAwLjBdLTAwYzY6MTogTVNJLVg6IEZhaWxlZCB0byBlbmFibGUgc3VwcG9y
+dCB3aXRoIDMyIHZlY3RvcnMsIHVzaW5nIDE2IHZlY3RvcnMuDQo+IHFsYTJ4eHggWzAxMDY6YTA6
+MDAuMF0tMDBmYjoxOiBRTG9naWMgUUxFMjU2MiAtIFBDSWUgMi1wb3J0IDhHYiBGQyBBZGFwdGVy
+Lg0KPiBxbGEyeHh4IFswMTA2OmEwOjAwLjBdLTAwZmM6MTogSVNQMjUzMjogUENJZSAoNS4wR1Qv
+cyB4OCkgQCAwMTA2OmEwOjAwLjAgaGRtYS0gaG9zdCM9MSBmdz04LjA2LjAwICg5MGQ1KS4NCj4g
+cWxhMnh4eCBbMDEwNjphMDowMC4xXS0wMDFhOiA6IE1TSS1YIHZlY3RvciBjb3VudDogMzIuDQo+
+IHFsYTJ4eHggWzAxMDY6YTA6MDAuMV0tMDAxZDogOiBGb3VuZCBhbiBJU1AyNTMyIGlycSA1MDYg
+aW9iYXNlIDB4MDAwMDAwMDBhNDZmMTc3NC4NCj4gcWxhMnh4eCBbMDEwNjphMDowMC4xXS0wMGM2
+OjI6IE1TSS1YOiBGYWlsZWQgdG8gZW5hYmxlIHN1cHBvcnQgd2l0aCAzMiB2ZWN0b3JzLCB1c2lu
+ZyAxNiB2ZWN0b3JzLg0KPiAyeHh4DQo+IHFsYTJ4eHggWzAxMDY6YTA6MDAuMV0tMDBmYjoyOiBR
+TG9naWMgUUxFMjU2MiAtIFBDSWUgMi1wb3J0IDhHYiBGQyBBZGFwdGVyLg0KPiBxbGEyeHh4IFsw
+MTA2OmEwOjAwLjFdLTAwZmM6MjogSVNQMjUzMjogUENJZSAoNS4wR1QvcyB4OCkgQCAwMTA2OmEw
+OjAwLjEgaGRtYS0gaG9zdCM9MiBmdz04LjA2LjAwICg5MGQ1KS4NCj4gMDowMC4wXS01MDBhOjE6
+IExPT1AgVVAgZGV0ZWN0ZWQgKDggR2JwcykuIA0KPiBxbGEyeHh4IFswMTA2OmEwOjAwLjFdLTUw
+MGE6MjogTE9PUCBVUCBkZXRlY3RlZCAoOCBHYnBzKS4NCj4gbGlzdF9hZGQgZG91YmxlIGFkZDog
+bmV3PTAwMDAwMDAwOGQzM2U1OTQsIHByZXY9MDAwMDAwMDA4ZDMzZTU5NCwgbmV4dD0wMDAwMDAw
+MGFkZWYxZGY0Lg0KPiAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0NCj4ga2Vy
+bmVsIEJVRyBhdCBsaWIvbGlzdF9kZWJ1Zy5jOjMxISANCj4gT29wczogRXhjZXB0aW9uIGluIGtl
+cm5lbCBtb2RlLCBzaWc6IDUgWyMxXQ0KPiBMRSBTTVAgTlJfQ1BVUz0yMDQ4IE5VTUEgcFNlcmll
+cyANCj4gRHVtcGluZyBmdHJhY2UgYnVmZmVyOiANCj4gICAgKGZ0cmFjZSBidWZmZXIgZW1wdHkp
+DQo+IE1vZHVsZXMgbGlua2VkIGluOiBxbGEyeHh4KEUpIHRnMyhFKSBpYm12ZXRoKEUpIHh0X0NI
+RUNLU1VNKEUpDQo+IGlwdGFibGVfbWFuZ2xlKEUpIGlwdF9NQVNRVUVSQURFKEUpIG5mX25hdF9t
+YXNxdWVyYWRlX2lwdjQoRSkNCj4gaXB0YWJsZV9uYXQoRSkgbmZfbmF0X2lwdjQoRSkgbmZfbmF0
+KEUpIG5mX2Nvbm50cmFja19pcHY0KEUpDQo+IG5mX2RlZnJhZ19pcHY0KEUpIHh0X2Nvbm50cmFj
+ayhFKSBuZl9jb25udHJhY2soRSkgaXB0X1JFSkVDVChFKQ0KPiBuZl9yZWplY3RfaXB2NChFKSB0
+dW4oRSkgYnJpZGdlKEUpIHN0cChFKSBsbGMoRSkga3ZtX3ByKEUpIGt2bShFKQ0KPiBzY3RwX2Rp
+YWcoRSkgc2N0cChFKSBsaWJjcmMzMmMoRSkgdGNwX2RpYWcoRSkgdWRwX2RpYWcoRSkNCj4gZWJ0
+YWJsZV9maWx0ZXIoRSkgZWJ0YWJsZXMoRSkgZGNjcF9kaWFnKEUpIGlwNnRhYmxlX2ZpbHRlcihF
+KSBkY2NwKEUpDQo+IGlwNl90YWJsZXMoRSkgaXB0YWJsZV9maWx0ZXIoRSkgaW5ldF9kaWFnKEUp
+IHVuaXhfZGlhZyhFKQ0KPiBhZl9wYWNrZXRfZGlhZyhFKSBuZXRsaW5rX2RpYWcoRSkgeHRzKEUp
+IHNnKEUpIHZteF9jcnlwdG8oRSkNCj4gcHNlcmllc19ybmcoRSkgbmZzZChFKSBhdXRoX3JwY2dz
+cyhFKSBuZnNfYWNsKEUpIGxvY2tkKEUpIGdyYWNlKEUpDQo+IHN1bnJwYyhFKSBiaW5mbXRfbWlz
+YyhFKSBpcF90YWJsZXMoRSkgZXh0NChFKSBtYmNhY2hlKEUpIGpiZDIoRSkNCj4gZnNjcnlwdG8o
+RSkgc2RfbW9kKEUpIGlibXZzY3NpKEUpIHNjc2lfdHJhbnNwb3J0X3NycChFKSBudm1lX2ZjKEUp
+DQo+IG52bWVfZmFicmljcyhFKSBudm1lX2NvcmUoRSkgc2NzaV90cmFuc3BvcnRfZmMoRSkNCj4g
+IHB0cChFKSBwcHNfY29yZShFKSBkbV9taXJyb3IoRSkgZG1fcmVnaW9uX2hhc2goRSkgZG1fbG9n
+KEUpIGRtX21vZChFKQ0KPiBbbGFzdCB1bmxvYWRlZDogcWxhMnh4eF0NCj4gQ1BVOiA3IFBJRDog
+MjIyMzAgQ29tbTogcWxhMnh4eF8xX2RwYyBUYWludGVkOiBHICAgICAgICAgICAgRSAgICA0LjE1
+LjAtcmMyLW5leHQtMjAxNzEyMTEtYXV0b3Rlc3QtYXV0b3Rlc3QgIzENCj4gTklQOiAgYzAwMDAw
+MDAwMDUxMTA0MCBMUjogYzAwMDAwMDAwMDUxMTAzYyBDVFI6IDAwMDAwMDAwMDA2NTUxNzAgICAg
+ICAgIA0KPiBSRUdTOiAwMDAwMDAwMDliNzM1NmZhIFRSQVA6IDA3MDAgICBUYWludGVkOiBHICAg
+ICAgICAgICAgRSAgICAgKDQuMTUuMC1yYzItbmV4dC0yMDE3MTIxMS1hdXRvdGVzdC1hdXRvdGVz
+dCkNCj4gTVNSOiAgODAwMDAwMDEwMjgyYjAzMyA8U0YsVkVDLFZTWCxFRSxGUCxNRSxJUixEUixS
+SSxMRSxUTVtFXT4gIENSOiAyMjAwMDAyMiAgWEVSOiAwMDAwMDAwOSAgDQo+IENGQVI6IGMwMDAw
+MDAwMDAxNzA1OTQgU09GVEU6IDAgDQo+IEdQUjAwOiBjMDAwMDAwMDAwNTExMDNjIGMwMDAwMDAw
+ZmMyOTNhYzAgYzAwMDAwMDAwMTBmMWQwMCAwMDAwMDAwMDAwMDAwMDU4IA0KPiBHUFIwNDogYzAw
+MDAwMDI4ZmNjY2RkMCBjMDAwMDAwMjhmY2UzNzk4IDgwMDAwMDAwMzc0MDYwYjggZmZmZmZmZmZm
+ZmZmZmZmZiANCj4gR1BSMDg6IDAwMDAwMDAwMDAwMDAwMDAgYzAwMDAwMDAwMGQ0MzVlYyAwMDAw
+MDAwMjhlZjkwMDAwIDAwMDAwMDAwMDAwMDI3MTcgDQo+IEdQUjEyOiAwMDAwMDAwMDAwMDAwMDAw
+IGMwMDAwMDAwMGU3MzQ5ODAgYzAwMDAwMDAwMDEyMTVkOCBjMDAwMDAwMjg4Njk5NmMwIA0KPiBH
+UFIxNjogMDAwMDAwMDAwMDAwMDAwMCAwMDAwMDAwMDAwMDAwMDIwIGMwMDAwMDAyODEzZDgzZjgg
+MDAwMDAwMDAwMDAwMDAwMSANCj4gR1BSMjA6IDAwMDAwMDAwMjAwMDAwMDAgMDAwMDAwMDAwMDAw
+MjAwMCAwMDAwMDAwMDAwMDAwMDAyIGMwMDAwMDAyODEzZGM4MDggDQo+IEdQUjI0OiAwMDAwMDAw
+MDAwMDAwMDAzIDAwMDAwMDAwMDAwMDAwMDEgYzAwMDAwMDI3ZjVhNWMyMCBjMDAwMDAwMjgxM2Rj
+ZWQwIA0KPiBHUFIyODogYzAwMDAwMDI3ZjVhNWQ5MCBjMDAwMDAwMjdmNWE1ZDkwIGMwMDAwMDAy
+N2Y1YTVjMDAgYzAwMDAwMDI4MTNkYzdmOCANCj4gTklQIFtjMDAwMDAwMDAwNTExMDQwXSBfX2xp
+c3RfYWRkX3ZhbGlkKzB4NzAvMHhiMA0KPiBMUiBbYzAwMDAwMDAwMDUxMTAzY10gX19saXN0X2Fk
+ZF92YWxpZCsweDZjLzB4YjANCj4gQ2FsbCBUcmFjZToNCj4gW2MwMDAwMDAwZmMyOTNhYzBdIFtj
+MDAwMDAwMDAwNTExMDNjXSBfX2xpc3RfYWRkX3ZhbGlkKzB4NmMvMHhiMCAodW5yZWxpYWJsZSkN
+Cj4gW2MwMDAwMDAwZmMyOTNiMjBdIFtkMDAwMDAwMDA1MWYxYTA4XSBxbGEyNHh4X2FzeW5jX2du
+bCsweDEwOC8weDQyMCBbcWxhMnh4eF0NCj4gW2MwMDAwMDAwZmMyOTNiYzBdIFtkMDAwMDAwMDA1
+MWU3NjJjXSBxbGEyeDAwX2RvX3dvcmsrMHgxOGMvMHg4YzAgW3FsYTJ4eHhdDQo+IFtjMDAwMDAw
+MGZjMjkzY2UwXSBbZDAwMDAwMDAwNTFlODE4MF0gcWxhMngwMF9yZWxvZ2luKzB4NDIwLzB4ZmYw
+IFtxbGEyeHh4XQ0KPiBbYzAwMDAwMDBmYzI5M2RjMF0gW2MwMDAwMDAwMDAxMjE3MmNdIGt0aHJl
+YWQrMHgxNWMvMHgxYTANCj4gW2MwMDAwMDAwZmMyOTNlMzBdIFtjMDAwMDAwMDAwMDBiNGU4XSBy
+ZXRfZnJvbV9rZXJuZWxfdGhyZWFkKzB4NWMvMHg3NA0KPiBJbnN0cnVjdGlvbiBkdW1wOg0KPiA0
+MWRlMDAxOCAzODIxMDA2MCAzODYwMDAwMSBlODAxMDAxMCA3YzA4MDNhNiA0ZTgwMDAyMCAzYzYy
+ZmZhZSA3ZDQ0NTM3OCANCj4gMzg2MzE3NDggN2QyNTRiNzggNGJjNWY1MWQgNjAwMDAwMDAgPDBm
+ZTAwMDAwPiAzYzYyZmZhZSA3Y2M0MzM3OCAzODYzMTZmOCANCj4gLS0tWyBlbmQgdHJhY2UgYTQx
+YmM4YmQ0MzQ2NTdmMSBdLS0tDQo+IA0KPiBLZXJuZWwgcGFuaWMgLSBub3Qgc3luY2luZzogRmF0
+YWwgZXhjZXB0aW9uDQo+IER1bXBpbmcgZnRyYWNlIGJ1ZmZlcjogDQo+ICAgIChmdHJhY2UgYnVm
+ZmVyIGVtcHR5KQ0KPiBSZWJvb3RpbmcgaW4gMTAgc2Vjb25kcy4uDQo+IA0KPiBUaGlzIHRyYWNl
+IGJhY2sgdG8gdGhlIGJlbG93IGNvZGUgcGF0aDoNCj4gDQo+ICMgZ2RiIC1iYXRjaCB2bWxpbnV4
+IC1leCAnbGlzdCAqKDB4YzAwMDAwMDAwMDUxMTA0MCknDQo+IDB4YzAwMDAwMDAwMDUxMTA0MCBp
+cyBpbiBfX2xpc3RfYWRkX3ZhbGlkIChsaWIvbGlzdF9kZWJ1Zy5jOjI5KS4NCj4gMjQJCQkJImxp
+c3RfYWRkIGNvcnJ1cHRpb24uIG5leHQtPnByZXYgc2hvdWxkIGJlIHByZXYgKCVwKSwgYnV0IHdh
+cyAlcC4gKG5leHQ9JXApLlxuIiwNCj4gMjUJCQkJcHJldiwgbmV4dC0+cHJldiwgbmV4dCkgfHwN
+Cj4gMjYJCSAgICBDSEVDS19EQVRBX0NPUlJVUFRJT04ocHJldi0+bmV4dCAhPSBuZXh0LA0KPiAy
+NwkJCQkibGlzdF9hZGQgY29ycnVwdGlvbi4gcHJldi0+bmV4dCBzaG91bGQgYmUgbmV4dCAoJXAp
+LCBidXQgd2FzICVwLiAocHJldj0lcCkuXG4iLA0KPiAyOAkJCQluZXh0LCBwcmV2LT5uZXh0LCBw
+cmV2KSB8fA0KPiAyOQkJICAgIENIRUNLX0RBVEFfQ09SUlVQVElPTihuZXcgPT0gcHJldiB8fCBu
+ZXcgPT0gbmV4dCwNCj4gMzAJCQkJImxpc3RfYWRkIGRvdWJsZSBhZGQ6IG5ldz0lcCwgcHJldj0l
+cCwgbmV4dD0lcC5cbiIsDQo+IDMxCQkJCW5ldywgcHJldiwgbmV4dCkpDQo+IDMyCQkJcmV0dXJu
+IGZhbHNlOw0KPiAzMwkNCg0KKCtsaW51eC1zY3NpKQ0KDQpIZWxsbyBBYmR1bCwNCg0KUGxlYXNl
+IHJlcG9ydCBTQ1NJIExMRCBpc3N1ZXMgb24gdGhlIGxpbnV4LXNjc2kgbWFpbGluZyBsaXN0Lg0K
+DQpCYXJ0Lg==
