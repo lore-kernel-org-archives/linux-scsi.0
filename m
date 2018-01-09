@@ -1,38 +1,97 @@
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [mkp-scsi:for-next 237/263]
- drivers/scsi/libsas/sas_discover.c:364:6: sparse: symbol
- 'sas_destruct_ports' was not declared. Should it be static?
-Date: Tue, 9 Jan 2018 15:51:58 +0800
-Message-ID: <201801091521.r3DztdJM%fengguang.wu@intel.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCHv2] libsas: Check for completed commands before calling
+ lldd_abort_task()
+Date: Tue, 9 Jan 2018 17:04:28 +0800
+Message-ID: <5A54859C.6000308@huawei.com>
+References: <1515413086-34256-1-git-send-email-hare@suse.de>
+ <5A544075.4010705@huawei.com> <f15f98c9-0e47-a668-0b1f-5ae3321fb52f@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61412 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751978AbeAIHwX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Jan 2018 02:52:23 -0500
-Content-Disposition: inline
+Received: from szxga04-in.huawei.com ([45.249.212.190]:3705 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751329AbeAIJFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Jan 2018 04:05:32 -0500
+In-Reply-To: <f15f98c9-0e47-a668-0b1f-5ae3321fb52f@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Yijing Wang <wangyijing@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-head:   f7c3d0667404295422c9a5d71fd87ca20c770f49
-commit: 99cfdc04c12ea1bc5719bff15f24dae8b5b90da9 [237/263] scsi: libsas: direct call probe and destruct
-reproduce:
-        # apt-get install sparse
-        git checkout 99cfdc04c12ea1bc5719bff15f24dae8b5b90da9
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+To: Hannes Reinecke <hare@suse.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>
 
 
-sparse warnings: (new ones prefixed by >>)
+On 2018/1/9 15:34, Hannes Reinecke wrote:
+> On 01/09/2018 05:09 AM, Jason Yan wrote:
+>> Hannes,
+>>
+>> On 2018/1/8 20:04, Hannes Reinecke wrote:
+>>> The abort handler might be racing with command completion, so the
+>>> task might already be NULL by the time the abort handler is called.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>>> ---
+>>>    drivers/scsi/libsas/sas_scsi_host.c | 22 +++++++++++++++++++---
+>>>    1 file changed, 19 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+>>> b/drivers/scsi/libsas/sas_scsi_host.c
+>>> index 58476b7..08203fb 100644
+>>> --- a/drivers/scsi/libsas/sas_scsi_host.c
+>>> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+>>> @@ -486,18 +486,34 @@ static int sas_queue_reset(struct domain_device
+>>> *dev, int reset_type,
+>>>
+>>>    int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+>>>    {
+>>> -    int res;
+>>> -    struct sas_task *task = TO_SAS_TASK(cmd);
+>>> +    int res = TMF_RESP_FUNC_COMPLETE;
+>>> +    struct sas_task *task;
+>>>        struct Scsi_Host *host = cmd->device->host;
+>>>        struct sas_internal *i = to_sas_internal(host->transportt);
+>>> +    struct domain_device *dev = cmd_to_domain_dev(cmd);
+>>> +    struct sas_ha_struct *ha = dev->port->ha;
+>>> +    unsigned long flags;
+>>>
+>>>        if (!i->dft->lldd_abort_task)
+>>>            return FAILED;
+>>>
+>>> -    res = i->dft->lldd_abort_task(task);
+>>> +    /* Avoid sas_scsi_task_done() interfering */
+>>> +    spin_lock_irqsave(&dev->done_lock, flags);
+>>> +    task = TO_SAS_TASK(cmd);
+>>> +    if (test_bit(SAS_HA_FROZEN, &ha->state)) {
+>>> +        res = TMF_RESP_FUNC_FAILED;
+>>> +        task = NULL;
+>>> +    } else
+>>> +        ASSIGN_SAS_TASK(cmd, NULL);
+>>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
+>>> +    if (task)
+>>> +        res = i->dft->lldd_abort_task(task);
+>>>        if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
+>>>            return SUCCESS;
+>>>
+>>> +    spin_lock_irqsave(&dev->done_lock, flags);
+>>> +    ASSIGN_SAS_TASK(cmd, task);
+>>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
+>>
+>> Why do you assign task back? As I remember, when this cmd dispatch
+>> again, we will create a new task and assign to it again. So should we
+>> end this task here?
+>>
+> We only will create a new task if we decide to retry the command.
+> But if we return FAILED here the command is not retried but rather the
+> SCSI EH is invoked.
+>
 
->> drivers/scsi/libsas/sas_discover.c:364:6: sparse: symbol 'sas_destruct_ports' was not declared. Should it be
+I got it. The SCSI EH will handle this.
 
-Please review and possibly fold the followup patch.
+But when we return SUCCESS above, shall we free the task? I don't see
+that LLDDs free it.
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Jason
+
+> Cheers,
+>
+> Hannes
+>
