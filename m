@@ -1,68 +1,94 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] IB/srp: Fix a sleep-in-invalid-context bug
-Date: Tue, 9 Jan 2018 07:43:02 +0100
-Message-ID: <5c04bb31-1197-85ca-9a4e-5cdedeca96d4@suse.de>
-References: <20180108185011.30018-1-bart.vanassche@wdc.com>
- <20180108185011.30018-5-bart.vanassche@wdc.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCHv2] libsas: Check for completed commands before calling
+ lldd_abort_task()
+Date: Tue, 9 Jan 2018 08:34:59 +0100
+Message-ID: <f15f98c9-0e47-a668-0b1f-5ae3321fb52f@suse.com>
+References: <1515413086-34256-1-git-send-email-hare@suse.de>
+ <5A544075.4010705@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180108185011.30018-5-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from victor.provo.novell.com ([137.65.250.26]:37313 "EHLO
+        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755752AbeAIHfQ (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Tue, 9 Jan 2018 02:35:16 -0500
+In-Reply-To: <5A544075.4010705@huawei.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@mellanox.com>, Doug Ledford <dledford@redhat.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>
 
-On 01/08/2018 07:50 PM, Bart Van Assche wrote:
-> The previous two patches guarantee that srp_queuecommand() does not get
-> invoked while reconnecting occurs. Hence remove the code from
-> srp_queuecommand() that prevents command queueing while reconnecting.
-> This patch avoids that the following can appear in the kernel log:
+On 01/09/2018 05:09 AM, Jason Yan wrote:
+> Hannes,
 > 
-> BUG: sleeping function called from invalid context at kernel/locking/mutex.c:747
-> in_atomic(): 1, irqs_disabled(): 0, pid: 5600, name: scsi_eh_9
-> 1 lock held by scsi_eh_9/5600:
->  #0:  (rcu_read_lock){....}, at: [<00000000cbb798c7>] __blk_mq_run_hw_queue+0xf1/0x1e0
-> Preemption disabled at:
-> [<00000000139badf2>] __blk_mq_delay_run_hw_queue+0x78/0xf0
-> CPU: 9 PID: 5600 Comm: scsi_eh_9 Tainted: G        W        4.15.0-rc4-dbg+ #1
-> Hardware name: Dell Inc. PowerEdge R720/0VWT90, BIOS 2.5.4 01/22/2016
-> Call Trace:
->  dump_stack+0x67/0x99
->  ___might_sleep+0x16a/0x250 [ib_srp]
->  __mutex_lock+0x46/0x9d0
->  srp_queuecommand+0x356/0x420 [ib_srp]
->  scsi_dispatch_cmd+0xf6/0x3f0
->  scsi_queue_rq+0x4a8/0x5f0
->  blk_mq_dispatch_rq_list+0x73/0x440
->  blk_mq_sched_dispatch_requests+0x109/0x1a0
->  __blk_mq_run_hw_queue+0x131/0x1e0
->  __blk_mq_delay_run_hw_queue+0x9a/0xf0
->  blk_mq_run_hw_queue+0xc0/0x1e0
->  blk_mq_start_hw_queues+0x2c/0x40
->  scsi_run_queue+0x18e/0x2d0
->  scsi_run_host_queues+0x22/0x40
->  scsi_error_handler+0x18d/0x5f0
->  kthread+0x11c/0x140
->  ret_from_fork+0x24/0x30
+> On 2018/1/8 20:04, Hannes Reinecke wrote:
+>> The abort handler might be racing with command completion, so the
+>> task might already be NULL by the time the abort handler is called.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>   drivers/scsi/libsas/sas_scsi_host.c | 22 +++++++++++++++++++---
+>>   1 file changed, 19 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+>> b/drivers/scsi/libsas/sas_scsi_host.c
+>> index 58476b7..08203fb 100644
+>> --- a/drivers/scsi/libsas/sas_scsi_host.c
+>> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+>> @@ -486,18 +486,34 @@ static int sas_queue_reset(struct domain_device
+>> *dev, int reset_type,
+>>
+>>   int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+>>   {
+>> -    int res;
+>> -    struct sas_task *task = TO_SAS_TASK(cmd);
+>> +    int res = TMF_RESP_FUNC_COMPLETE;
+>> +    struct sas_task *task;
+>>       struct Scsi_Host *host = cmd->device->host;
+>>       struct sas_internal *i = to_sas_internal(host->transportt);
+>> +    struct domain_device *dev = cmd_to_domain_dev(cmd);
+>> +    struct sas_ha_struct *ha = dev->port->ha;
+>> +    unsigned long flags;
+>>
+>>       if (!i->dft->lldd_abort_task)
+>>           return FAILED;
+>>
+>> -    res = i->dft->lldd_abort_task(task);
+>> +    /* Avoid sas_scsi_task_done() interfering */
+>> +    spin_lock_irqsave(&dev->done_lock, flags);
+>> +    task = TO_SAS_TASK(cmd);
+>> +    if (test_bit(SAS_HA_FROZEN, &ha->state)) {
+>> +        res = TMF_RESP_FUNC_FAILED;
+>> +        task = NULL;
+>> +    } else
+>> +        ASSIGN_SAS_TASK(cmd, NULL);
+>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
+>> +    if (task)
+>> +        res = i->dft->lldd_abort_task(task);
+>>       if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
+>>           return SUCCESS;
+>>
+>> +    spin_lock_irqsave(&dev->done_lock, flags);
+>> +    ASSIGN_SAS_TASK(cmd, task);
+>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
 > 
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Jason Gunthorpe <jgg@mellanox.com>
-> Cc: Doug Ledford <dledford@redhat.com>
-> ---
->  drivers/infiniband/ulp/srp/ib_srp.c | 21 ++-------------------
->  1 file changed, 2 insertions(+), 19 deletions(-)
+> Why do you assign task back? As I remember, when this cmd dispatch
+> again, we will create a new task and assign to it again. So should we
+> end this task here?
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+We only will create a new task if we decide to retry the command.
+But if we return FAILED here the command is not retried but rather the
+SCSI EH is invoked.
 
 Cheers,
 
 Hannes
 -- 
 Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
+hare@suse.com			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
 GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG Nürnberg)
