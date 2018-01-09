@@ -1,58 +1,72 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative execution
-Date: Tue, 9 Jan 2018 11:44:05 -0800
-Message-ID: <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 13/14] megaraid_sas: NVME passthru command support
+Date: Tue, 9 Jan 2018 15:50:44 -0500
+Message-ID: <27ebbe5f-e06b-a800-5518-ec63d65d142a@interlog.com>
+References: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <20180108100531.GA6967@infradead.org>
+ <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
+ <20180109164540.GA11861@infradead.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Kosina <jikos@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Peter Zijlstra <peterz@infradead.org>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Zhang Rui <rui.zhang@intel.com>, Linux-media@vger.ker
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:40302 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757083AbeAIUuw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Jan 2018 15:50:52 -0500
+In-Reply-To: <20180109164540.GA11861@infradead.org>
+Content-Language: en-CA
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@broadcom.com>, linux-nvme@lists.infradead.org, Peter Rivera <peter.rivera@broadcom.com>
 
-On Tue, Jan 9, 2018 at 11:34 AM, Jiri Kosina <jikos@kernel.org> wrote:
-> On Fri, 5 Jan 2018, Dan Williams wrote:
->
-> [ ... snip ... ]
->> Andi Kleen (1):
->>       x86, barrier: stop speculation for failed access_ok
+On 2018-01-09 11:45 AM, Christoph Hellwig wrote:
+> On Tue, Jan 09, 2018 at 10:07:28PM +0530, Kashyap Desai wrote:
+>> Chris -
 >>
->> Dan Williams (13):
->>       x86: implement nospec_barrier()
->>       [media] uvcvideo: prevent bounds-check bypass via speculative execution
->>       carl9170: prevent bounds-check bypass via speculative execution
->>       p54: prevent bounds-check bypass via speculative execution
->>       qla2xxx: prevent bounds-check bypass via speculative execution
->>       cw1200: prevent bounds-check bypass via speculative execution
->>       Thermal/int340x: prevent bounds-check bypass via speculative execution
->>       ipv6: prevent bounds-check bypass via speculative execution
->>       ipv4: prevent bounds-check bypass via speculative execution
->>       vfs, fdtable: prevent bounds-check bypass via speculative execution
->>       net: mpls: prevent bounds-check bypass via speculative execution
->>       udf: prevent bounds-check bypass via speculative execution
->>       userns: prevent bounds-check bypass via speculative execution
+>> Overall NVME support behind MR controller is really a SCSI device. On top
+>> of that, for MegaRaid, NVME device can be part of Virtual Disk and those
+>> drive will not be exposed to the driver. User application may like to talk
+>> to hidden NVME devices (part of VDs). This patch will extend the existing
+>> interface for megaraid product in the same way it is currently supported
+>> for other protocols like SMP, SATA pass-through.
 >>
->> Mark Rutland (4):
->>       asm-generic/barrier: add generic nospec helpers
->>       Documentation: document nospec helpers
->>       arm64: implement nospec_ptr()
->>       arm: implement nospec_ptr()
->
-> So considering the recent publication of [1], how come we all of a sudden
-> don't need the barriers in ___bpf_prog_run(), namely for LD_IMM_DW and
-> LDX_MEM_##SIZEOP, and something comparable for eBPF JIT?
->
-> Is this going to be handled in eBPF in some other way?
->
-> Without that in place, and considering Jann Horn's paper, it would seem
-> like PTI doesn't really lock it down fully, right?
+>> Example - Current smartmon is using megaraid.h (MFI headers) to send SATA
+>> pass-through.
+>>
+>> https://github.com/mirror/smartmontools/blob/master/megaraid.h
+> 
+> And that is exactly the example of why we should have never allowed
+> megaraid any private passthrough ioctls to start with.
 
-Here is the latest (v3) bpf fix:
+Christoph,
+Have you tried to do any serious work with <linux/nvme_ioctl.h> and
+say compared it with FreeBSD and Microsoft's approach? No prize for
+guessing which one is worst (and least extensible). Looks like the
+Linux pass-through was at the end of a ToDo list and was "designed"
+at 5 a.m in the morning.
 
-https://patchwork.ozlabs.org/patch/856645/
+RAID cards need a pass-through that allows them to address one of
+many physical disks behind the virtual disk presented to OS.
+Pass-throughs need to have uncommited room for extra parameters that
+will be passed through as-is to the RAID LLD.
 
-I currently have v2 on my 'nospec' branch and will move that to v3 for
-the next update, unless it goes upstream before then.
+So until Christoph gives an example of how that can be done with
+<linux/nvme_ioctl.h> then I would like to see Christoph's objection
+ignored.
+
+
+And as a maintainer of smartmontools, I would like to point out that
+pretty well all supported RAIDs, on all platforms need specialized
+pass-through code. Start by looking at os_linux.cpp and then at the
+other OSes. And now smartmontools supports NVMe on most platforms
+and at the pass-through level, it is just another one, and not a
+particularly clean one.
+
+IMO Intel had their chance on the pass-through front, and blew it.
+It is now too late to fix it and that job (impossible ?) should not
+fall to MegaRaid maintainers.
+
+Douglas Gilbert
