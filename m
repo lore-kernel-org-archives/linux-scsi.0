@@ -1,100 +1,43 @@
 From: Hannes Reinecke <hare@suse.com>
 Subject: Re: [PATCHv2] libsas: Check for completed commands before calling
  lldd_abort_task()
-Date: Tue, 9 Jan 2018 10:27:17 +0100
-Message-ID: <e3729c0f-9715-d12f-3dce-690e8d24cf6b@suse.com>
+Date: Tue, 9 Jan 2018 10:30:45 +0100
+Message-ID: <b1935687-4d39-3aca-1ee5-01dc513a8735@suse.com>
 References: <1515413086-34256-1-git-send-email-hare@suse.de>
- <5A544075.4010705@huawei.com> <f15f98c9-0e47-a668-0b1f-5ae3321fb52f@suse.com>
- <5A54859C.6000308@huawei.com>
+ <1515431496.3305.62.camel@debian.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:36791 "EHLO
+Received: from smtp.nue.novell.com ([195.135.221.5]:34542 "EHLO
         smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752447AbeAIJ1V (ORCPT
+        with ESMTP id S1752590AbeAIJas (ORCPT
         <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Tue, 9 Jan 2018 04:27:21 -0500
-In-Reply-To: <5A54859C.6000308@huawei.com>
+        Tue, 9 Jan 2018 04:30:48 -0500
+In-Reply-To: <1515431496.3305.62.camel@debian.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>
+To: Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On 01/09/2018 10:04 AM, Jason Yan wrote:
+On 01/08/2018 06:11 PM, Yves-Alexis Perez wrote:
+> On Mon, 2018-01-08 at 13:04 +0100, Hannes Reinecke wrote:
+>> The abort handler might be racing with command completion, so the
+>> task might already be NULL by the time the abort handler is called.
 > 
-> On 2018/1/9 15:34, Hannes Reinecke wrote:
->> On 01/09/2018 05:09 AM, Jason Yan wrote:
->>> Hannes,
->>>
->>> On 2018/1/8 20:04, Hannes Reinecke wrote:
->>>> The abort handler might be racing with command completion, so the
->>>> task might already be NULL by the time the abort handler is called.
->>>>
->>>> Signed-off-by: Hannes Reinecke <hare@suse.com>
->>>> ---
->>>>    drivers/scsi/libsas/sas_scsi_host.c | 22 +++++++++++++++++++---
->>>>    1 file changed, 19 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
->>>> b/drivers/scsi/libsas/sas_scsi_host.c
->>>> index 58476b7..08203fb 100644
->>>> --- a/drivers/scsi/libsas/sas_scsi_host.c
->>>> +++ b/drivers/scsi/libsas/sas_scsi_host.c
->>>> @@ -486,18 +486,34 @@ static int sas_queue_reset(struct domain_device
->>>> *dev, int reset_type,
->>>>
->>>>    int sas_eh_abort_handler(struct scsi_cmnd *cmd)
->>>>    {
->>>> -    int res;
->>>> -    struct sas_task *task = TO_SAS_TASK(cmd);
->>>> +    int res = TMF_RESP_FUNC_COMPLETE;
->>>> +    struct sas_task *task;
->>>>        struct Scsi_Host *host = cmd->device->host;
->>>>        struct sas_internal *i = to_sas_internal(host->transportt);
->>>> +    struct domain_device *dev = cmd_to_domain_dev(cmd);
->>>> +    struct sas_ha_struct *ha = dev->port->ha;
->>>> +    unsigned long flags;
->>>>
->>>>        if (!i->dft->lldd_abort_task)
->>>>            return FAILED;
->>>>
->>>> -    res = i->dft->lldd_abort_task(task);
->>>> +    /* Avoid sas_scsi_task_done() interfering */
->>>> +    spin_lock_irqsave(&dev->done_lock, flags);
->>>> +    task = TO_SAS_TASK(cmd);
->>>> +    if (test_bit(SAS_HA_FROZEN, &ha->state)) {
->>>> +        res = TMF_RESP_FUNC_FAILED;
->>>> +        task = NULL;
->>>> +    } else
->>>> +        ASSIGN_SAS_TASK(cmd, NULL);
->>>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
->>>> +    if (task)
->>>> +        res = i->dft->lldd_abort_task(task);
->>>>        if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
->>>>            return SUCCESS;
->>>>
->>>> +    spin_lock_irqsave(&dev->done_lock, flags);
->>>> +    ASSIGN_SAS_TASK(cmd, task);
->>>> +    spin_unlock_irqrestore(&dev->done_lock, flags);
->>>
->>> Why do you assign task back? As I remember, when this cmd dispatch
->>> again, we will create a new task and assign to it again. So should we
->>> end this task here?
->>>
->> We only will create a new task if we decide to retry the command.
->> But if we return FAILED here the command is not retried but rather the
->> SCSI EH is invoked.
->>
+> Hi,
 > 
-> I got it. The SCSI EH will handle this.
+> I tried the patch on top of 4.15-rc7 (and without the revert of 90965761). I
+> don't have the NULL pointer deref anymore, but the box timeouts after SCSI
+> init. It's not completely dead, but I don't have any meaningful log from the
+> kernel.
 > 
-> But when we return SUCCESS above, shall we free the task? I don't see
-> that LLDDs free it.
-> 
-Hmm. Possibly.
-I'll check.
+Can you try to boot the stock 4.15 kernel (without any patches) with
+scsi_mod.scsi_logging_level=9411
+on the kernel commandline and send me tha output?
+I really would like to see which command fails.
+THX.
 
 Cheers,
 
