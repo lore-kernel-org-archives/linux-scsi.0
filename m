@@ -1,29 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: smartpqi: allow static build ("built-in")
-Date: Mon, 08 Jan 2018 22:31:56 -0500
-Message-ID: <yq1y3l7n1w3.fsf@oracle.com>
-References: <a6c35114c589429c8e44fae02cb8fecd@microsemi.com>
-        <20180102182409.3083-1-steffen.weber@gmail.com>
+Subject: Re: [PATCH 7/9] scsi: bnx2fc: Use zeroing allocator rather than allocator/memset
+Date: Mon, 08 Jan 2018 22:35:16 -0500
+Message-ID: <yq1tvvvn1qj.fsf@oracle.com>
+References: <1514647712-6332-1-git-send-email-himanshujha199640@gmail.com>
+        <1514647712-6332-8-git-send-email-himanshujha199640@gmail.com>
+        <yq1o9mauoz3.fsf@oracle.com>
+        <20180104073831.GA5862@himanshu-Vostro-3559>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41562 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754574AbeAIDcD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2018 22:32:03 -0500
-In-Reply-To: <20180102182409.3083-1-steffen.weber@gmail.com> (Steffen Weber's
-        message of "Tue, 2 Jan 2018 19:24:09 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180104073831.GA5862@himanshu-Vostro-3559> (Himanshu Jha's
+        message of "Thu, 4 Jan 2018 13:08:31 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Himanshu Jha <himanshujha199640@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, aacraid@adaptec.com, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, QLogic-Storage-Upstream@qlogic.com, satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, QLogic-Storage-Upstream@cavium.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Weber <steffen.weber@gmail.com>
-Cc: don.brace@microsemi.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 
 
-Steffen,
+Himanshu,
 
-> If CONFIG_SCSI_SMARTPQI=y then don't build this driver as a module.
+> scsi: qedi: Use zeroing allocator instead of allocator/memset --Resend
+> scsi: mvsas: Use zeroing allocator rather than allocator/memset
+> scsi: fnic: Use zeroing allocator rather than allocator/memset
+> scsi: dpt_i2o: Use zeroing allocator rather than allocator/memset
+> scsi: bnx2fc: Use zeroing allocator rather than allocator/memset --Resend
+>
+> But do I also need to send those mentioned above, which didn't receive
+> any response from you ?
 
-Applied to 4.16/scsi-queue. Thanks!
+I typically only merge cleanup patches if the driver maintainer acks
+them. So you should poke the relevant maintainers.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
