@@ -1,141 +1,172 @@
-From: Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
-Subject: [PATCH v2 2/4] block: Introduce blk_start_wait_if_quiesced() and blk_finish_wait_if_quiesced()
-Date: Wed, 10 Jan 2018 10:18:15 -0800
-Message-ID: <20180110181817.25166-3-bart.vanassche@wdc.com>
-References: <20180110181817.25166-1-bart.vanassche@wdc.com>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20180110181817.25166-1-bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>, Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH] tcmu: Allow reconfig to handle multiple attributes
+Date: Wed, 10 Jan 2018 12:26:13 -0600
+Message-ID: <5A565AC5.7010905@redhat.com>
+References: <20180104161100.15330-1-bryantly@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20180104161100.15330-1-bryantly@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, nab@linux-iscsi.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce functions that allow block drivers to wait while a request
-queue is in the quiesced state (blk-mq) or in the stopped state (legacy
-block layer). The next patch will add calls to these functions in the
-SCSI core.
+On 01/04/2018 10:11 AM, Bryant G. Ly wrote:
+> This patch allows for multiple attributes to be reconfigured
+> and handled all in one call as compared to multiple netlinks.
+> 
+> Example:
+> set attribute dev_reconfig=dev_config=fbo//home/path:dev_size=2147483648
+> 
 
-Signed-off-by: Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
-Cc: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Cc: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Cc: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- block/blk-core.c       |  1 +
- block/blk-mq.c         | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blk-mq.h |  2 ++
- 3 files changed, 67 insertions(+)
+I know I suggested this, but I think I was wrong. If we have to support
+other apps that work in reverse to targetcli+tcmu-runner where the
+tcmu-runner equivalent app sets things up then contacts the kernel,
+let's just not do passthrough operations like this for reconfig. There
+is no need to bring in the kernel.
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index c10b4ce95248..06eaea15bae9 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -287,6 +287,7 @@ void blk_start_queue(struct request_queue *q)
- 	WARN_ON_ONCE(q->mq_ops);
- 
- 	queue_flag_clear(QUEUE_FLAG_STOPPED, q);
-+	wake_up_all(&q->mq_wq);
- 	__blk_run_queue(q);
- }
- EXPORT_SYMBOL(blk_start_queue);
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a05ea7e9b415..87455977ad34 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -247,11 +247,75 @@ void blk_mq_unquiesce_queue(struct request_queue *q)
- 	queue_flag_clear(QUEUE_FLAG_QUIESCED, q);
- 	spin_unlock_irqrestore(q->queue_lock, flags);
- 
-+	wake_up_all(&q->mq_wq);
-+
- 	/* dispatch requests which are inserted during quiescing */
- 	blk_mq_run_hw_queues(q, true);
- }
- EXPORT_SYMBOL_GPL(blk_mq_unquiesce_queue);
- 
-+/**
-+ * blk_start_wait_if_quiesced() - wait if a queue is quiesced (blk-mq) or stopped (legacy block layer)
-+ * @q: Request queue pointer.
-+ *
-+ * Some block drivers, e.g. the SCSI core, can bypass the block layer core
-+ * request submission mechanism. Surround such code with
-+ * blk_start_wait_if_quiesced() / blk_finish_wait_if_quiesced() to avoid that
-+ * request submission can happen while a queue is quiesced or stopped.
-+ *
-+ * Returns with the RCU read lock held (blk-mq) or with q->queue_lock held
-+ * (legacy block layer).
-+ *
-+ * Notes:
-+ * - Every call of this function must be followed by a call of
-+ *   blk_finish_wait_if_quiesced().
-+ * - This function does not support block drivers whose .queue_rq()
-+ *   implementation can sleep (BLK_MQ_F_BLOCKING).
-+ */
-+int blk_start_wait_if_quiesced(struct request_queue *q)
-+{
-+	struct blk_mq_hw_ctx *hctx;
-+	unsigned int i;
-+
-+	might_sleep();
-+
-+	if (q->mq_ops) {
-+		queue_for_each_hw_ctx(q, hctx, i)
-+			WARN_ON(hctx->flags & BLK_MQ_F_BLOCKING);
-+
-+		rcu_read_lock();
-+		while (!blk_queue_dying(q) && blk_queue_quiesced(q)) {
-+			rcu_read_unlock();
-+			wait_event(q->mq_wq, blk_queue_dying(q) ||
-+				   !blk_queue_quiesced(q));
-+			rcu_read_lock();
-+		}
-+	} else {
-+		spin_lock_irq(q->queue_lock);
-+		wait_event_lock_irq(q->mq_wq,
-+				    blk_queue_dying(q) || !blk_queue_stopped(q),
-+				    *q->queue_lock);
-+		q->request_fn_active++;
-+	}
-+	return blk_queue_dying(q) ? -ENODEV : 0;
-+}
-+EXPORT_SYMBOL(blk_start_wait_if_quiesced);
-+
-+/**
-+ * blk_finish_wait_if_quiesced() - counterpart of blk_start_wait_if_quiesced()
-+ * @q: Request queue pointer.
-+ */
-+void blk_finish_wait_if_quiesced(struct request_queue *q)
-+{
-+	if (q->mq_ops) {
-+		rcu_read_unlock();
-+	} else {
-+		q->request_fn_active--;
-+		spin_unlock_irq(q->queue_lock);
-+	}
-+}
-+EXPORT_SYMBOL(blk_finish_wait_if_quiesced);
-+
- void blk_mq_wake_waiters(struct request_queue *q)
- {
- 	struct blk_mq_hw_ctx *hctx;
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 8efcf49796a3..15912cd348b5 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -267,6 +267,8 @@ void blk_mq_start_stopped_hw_queue(struct blk_mq_hw_ctx *hctx, bool async);
- void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async);
- void blk_mq_quiesce_queue(struct request_queue *q);
- void blk_mq_unquiesce_queue(struct request_queue *q);
-+int blk_start_wait_if_quiesced(struct request_queue *q);
-+void blk_finish_wait_if_quiesced(struct request_queue *q);
- void blk_mq_delay_run_hw_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs);
- bool blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async);
- void blk_mq_run_hw_queues(struct request_queue *q, bool async);
--- 
-2.15.1
+For the initial config we can still do it since we have to maintain
+compat, but for major reconfigs like this let's just have targetcli
+contact tcmu-runner, then runner can update the kernel if needed.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So in targetcli and runner copy the check_config stuff, and add a
+reconfig callout that works like it. We then do not have this weird
+kernel passthrough and do not have to worry about the non
+targetcl-tcmu-runner type of model.
+
+
+
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> ---
+>  drivers/target/target_core_user.c     | 92 ++++++++++++++++++++++++++++++++++-
+>  include/uapi/linux/target_core_user.h |  1 +
+>  2 files changed, 92 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 4824abf92ed79..619fae5e865f1 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -152,6 +152,8 @@ struct tcmu_dev {
+>  	char dev_config[TCMU_CONFIG_LEN];
+>  
+>  	int nl_reply_supported;
+> +
+> +	char dev_reconfig[TCMU_CONFIG_LEN * 2];
+>  };
+>  
+>  #define TCMU_DEV(_se_dev) container_of(_se_dev, struct tcmu_dev, se_dev)
+> @@ -1452,6 +1454,10 @@ static int tcmu_netlink_event(struct tcmu_dev *udev, enum tcmu_genl_cmd cmd,
+>  			ret = nla_put_u8(skb, reconfig_attr,
+>  					  *((u8 *)reconfig_data));
+>  			break;
+> +		case TCMU_ATTR_DEV_RECFG:
+> +			pr_err("Put string into netlink and send it\n");
+> +			ret = nla_put_string(skb, reconfig_attr, reconfig_data);
+> +			break;
+>  		default:
+>  			BUG();
+>  		}
+> @@ -1637,7 +1643,7 @@ static void tcmu_destroy_device(struct se_device *dev)
+>  
+>  enum {
+>  	Opt_dev_config, Opt_dev_size, Opt_hw_block_size, Opt_hw_max_sectors,
+> -	Opt_nl_reply_supported, Opt_err,
+> +	Opt_nl_reply_supported, Opt_dev_reconfig, Opt_err,
+>  };
+>  
+>  static match_table_t tokens = {
+> @@ -1646,6 +1652,7 @@ static match_table_t tokens = {
+>  	{Opt_hw_block_size, "hw_block_size=%u"},
+>  	{Opt_hw_max_sectors, "hw_max_sectors=%u"},
+>  	{Opt_nl_reply_supported, "nl_reply_supported=%d"},
+> +	{Opt_dev_reconfig, "dev_reconfig=%s"},
+>  	{Opt_err, NULL}
+>  };
+>  
+> @@ -1731,6 +1738,14 @@ static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
+>  			if (ret < 0)
+>  				pr_err("kstrtoint() failed for nl_reply_supported=\n");
+>  			break;
+> +		case Opt_dev_reconfig:
+> +			arg_p = match_strdup(&args[0]);
+> +			if (!arg_p) {
+> +				ret = -ENOMEM;
+> +				break;
+> +			}
+> +			kfree(arg_p);
+> +			break;
+>  		default:
+>  			break;
+>  		}
+> @@ -1945,12 +1960,87 @@ static ssize_t tcmu_emulate_write_cache_store(struct config_item *item,
+>  }
+>  CONFIGFS_ATTR(tcmu_, emulate_write_cache);
+>  
+> +static ssize_t tcmu_dev_reconfig_show(struct config_item *item, char *page)
+> +{
+> +	struct se_dev_attrib *da = container_of(to_config_group(item),
+> +						struct se_dev_attrib, da_group);
+> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
+> +
+> +	return snprintf(page, PAGE_SIZE, "%s\n", udev->dev_reconfig);
+> +}
+> +
+> +static ssize_t tcmu_dev_reconfig_store(struct config_item *item,
+> +				       const char *page,
+> +				       size_t count)
+> +{
+> +	struct se_dev_attrib *da = container_of(to_config_group(item),
+> +						struct se_dev_attrib, da_group);
+> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
+> +	int token, ret;
+> +	char *orig, *ptr, *opts, *arg_p;
+> +	substring_t args[MAX_OPT_ARGS];
+> +
+> +	/* Check if device has been configured before */
+> +	if (tcmu_dev_configured(udev)) {
+> +		ret = tcmu_netlink_event(udev, TCMU_CMD_RECONFIG_DEVICE,
+> +					 TCMU_ATTR_DEV_RECFG, page);
+> +		if (ret) {
+> +			pr_err("Unable to reconfigure device\n");
+> +			return ret;
+> +		}
+> +
+> +		opts = kstrdup(page, GFP_KERNEL);
+> +		if (!opts)
+> +			return -ENOMEM;
+> +
+> +		orig = opts;
+> +		strcpy(udev->dev_reconfig, opts);
+> +
+> +		while ((ptr = strsep(&opts, ":")) != NULL) {
+
+Some userspace handlers have ":" in their dev_config strings, so this is
+going to incorrectly catch that. That is why we were using ";" to
+separate options.
+
+
+
+> +			if (!*ptr)
+> +				continue;
+> +
+> +			token = match_token(ptr, tokens, args);
+> +			switch (token) {
+> +			case Opt_dev_config:
+> +				if (match_strlcpy(udev->dev_config, &args[0],
+> +						  TCMU_CONFIG_LEN) == 0) {
+> +					pr_err("Could not reconfigure dev_config");
+> +				}
+> +				ret = tcmu_update_uio_info(udev);
+> +				if (ret)
+> +					pr_err("Could not reconfigure dev_config");
+> +				break;
+> +			case Opt_dev_size:
+> +				arg_p = match_strdup(&args[0]);
+> +				if (!arg_p)
+> +					pr_err("Could not reconfigure dev_size");
+> +				ret = kstrtoul(arg_p, 0,
+> +					       (unsigned long *)&udev->dev_size);
+
+If the dev size passed in is invalid this leaves it set in dev_size.
