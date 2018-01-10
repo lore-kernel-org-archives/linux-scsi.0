@@ -1,30 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] libsas: Disable asynchronous aborts for SATA devices
-Date: Wed, 10 Jan 2018 16:40:10 -0500
-Message-ID: <yq1tvvtv1dx.fsf@oracle.com>
-References: <1515512632-115483-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH][scsi-next] scsi: qla2xxx: remove redundant assignment of d
+Date: Wed, 10 Jan 2018 16:50:53 -0500
+Message-ID: <yq1po6hv0w2.fsf@oracle.com>
+References: <20180105155037.17981-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50352 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751606AbeAJVka (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2018 16:40:30 -0500
-In-Reply-To: <1515512632-115483-1-git-send-email-hare@suse.de> (Hannes
-        Reinecke's message of "Tue, 9 Jan 2018 16:43:52 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180105155037.17981-1-colin.king@canonical.com> (Colin King's
+        message of "Fri, 5 Jan 2018 15:50:37 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.com>
 
 
-Hannes,
+Colin,
 
-> Handling CD-ROM devices from libsas is decidedly odd, as libata relies
-> on SCSI EH to be started to figure out that no medium is present.  So
-> we cannot do asynchronous aborts for SATA devices.
+> The initialization of d is redundant as this value is never read
+> and it is overwritten inside the subsequent for-loop.  Remove this
+> redundant assignment.
 
-Applied to 4.15/scsi-fixes. Thank you!
+Applied to 4.16/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
