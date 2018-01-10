@@ -1,49 +1,60 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] libsas: Disable asynchronous aborts for SATA devices
-Date: Wed, 10 Jan 2018 09:51:08 +0100
-Message-ID: <e2733ad7-2d04-005d-c74d-d1fddd0d7dc4@suse.de>
-References: <1515512632-115483-1-git-send-email-hare@suse.de>
- <20180110081514.GA9810@lst.de>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH 13/14] megaraid_sas: NVME passthru command support
+Date: Wed, 10 Jan 2018 15:02:15 +0530
+Message-ID: <e0eb55ccbcae2640530e43327a7b9aab@mail.gmail.com>
+References: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <20180108100531.GA6967@infradead.org> <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
+ <20180109164540.GA11861@infradead.org> <27ebbe5f-e06b-a800-5518-ec63d65d142a@interlog.com>
+ <20180109232305.GH15154@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45745 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753594AbeAJIvK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Jan 2018 03:51:10 -0500
-In-Reply-To: <20180110081514.GA9810@lst.de>
-Content-Language: en-US
+Received: from mail-io0-f182.google.com ([209.85.223.182]:46165 "EHLO
+        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754096AbeAJJcS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2018 04:32:18 -0500
+Received: by mail-io0-f182.google.com with SMTP id z130so21679644ioe.13
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2018 01:32:17 -0800 (PST)
+In-Reply-To: <20180109232305.GH15154@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Yves-Alexis Perez <corsac@debian.org>, Hannes Reinecke <hare@suse.com>
+To: Keith Busch <keith.busch@intel.com>, Douglas Gilbert <dgilbert@interlog.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-On 01/10/2018 09:15 AM, Christoph Hellwig wrote:
-> Looks fine to me for 4.15 and -stable:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> But we really need to fix this properly in the long run.
-> 
-Looked into it, but I'm not sure if we can due to the fundamental
-differences between SCSI and libata EH.
+> -----Original Message-----
+> From: Keith Busch [mailto:keith.busch@intel.com]
+> Sent: Wednesday, January 10, 2018 4:53 AM
+> To: Douglas Gilbert
+> Cc: Christoph Hellwig; Kashyap Desai; Shivasharan Srikanteshwara; Sumit
+> Saxena; Peter Rivera; linux-nvme@lists.infradead.org; linux-
+> scsi@vger.kernel.org
+> Subject: Re: [PATCH 13/14] megaraid_sas: NVME passthru command support
+>
+> On Tue, Jan 09, 2018 at 03:50:44PM -0500, Douglas Gilbert wrote:
+> > Have you tried to do any serious work with <linux/nvme_ioctl.h> and
+> > say compared it with FreeBSD and Microsoft's approach? No prize for
+> > guessing which one is worst (and least extensible). Looks like the
+> > Linux pass-through was at the end of a ToDo list and was "designed"
+> > at 5 a.m in the morning.
+>
+> What the heck are you talking about? FreeBSD's NVMe passthrough is near
+> identical to Linux, and Linux's existed years prior.
+>
+> You're not even touching the nvme subsystem, so why are you copying the
+> linux-nvme mailing list to help you with a non-NVMe device? Please take
+your
+> ignorant and dubious claims elsewhere.
 
-And there really is no way on how we can do async aborts on SATA; as
-soon as we're submitting NCQ commands _all_ commands will be aborted on
-error and we have to pick up the pieces.
+Keith -
 
-We might be handling things a tad better than now (we're always punting
-the abort to a workqueue, only to figure out from the workqueue function
-that we should've invoked SCSI EH proper).
-But I can't really see a better way here.
+As we discussed for mpt3sas driver NVME driver support, there was request
+to add linux-nvme@lists.infradead.org for NVME related discussion.
+https://marc.info/?l=linux-kernel&m=149874673729467&w=2
 
-Cheers,
+As you mentioned, we are not touching NVME subsystem, we can skip to add
+NVME mailing list for future submission w.r.t NVME drive behind MR
+(megaraid_sas) and HBA (mpt3sas).
+All the NVME drives behind MegaRaid controller is SCSI device irrespective
+of transport.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Kashyap
