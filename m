@@ -1,75 +1,43 @@
-From: Long Li <longli@exchange.microsoft.com>
-Subject: [PATCH v2] storvsc: do not assume SG list is continuous when doing
- bounce buffers (for 4.1 and prior stable kernels)
-Date: Wed, 10 Jan 2018 13:21:29 -0700
-Message-ID: <20180110202129.28730-1-longli@exchange.microsoft.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 2/2] scsi: aacraid: Delay for rescan worker needs to be 10 seconds
+Date: Wed, 10 Jan 2018 13:13:10 -0800
+Message-ID: <20180110211310.23876-2-RaghavaAditya.Renukunta@microsemi.com>
+References: <20180110211310.23876-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0077.outbound.protection.outlook.com ([104.47.32.77]:14976
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751438AbeAJVNZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Jan 2018 16:13:25 -0500
+In-Reply-To: <20180110211310.23876-1-RaghavaAditya.Renukunta@microsemi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, esc-teamarcdriversvl@microsemi.com
 
-From: Long Li <longli@microsoft.com>
+The delay for the rescan worker needs to 10 seconds, missed the HZ in
+there.
 
-The original patch was made for stable 4.1 and was Acked on 08/22/2017, but for
-some reason it never made it to the stable tree.
-
-Change from v1:
-Changed comment that this patch is for linux-stable 4.1 and all prior stable
-kernels.
-
-storvsc checks the SG list for gaps before passing them to Hyper-v device.
-If there are gaps, data is copied to a bounce buffer and a continuous data
-buffer is passed to Hyper-V.
-
-The check on gaps assumes SG list is continuous, and not chained. This is
- not always true. Failing the check may result in incorrect I/O data
-passed to the Hyper-v device.
-
-This code path is not used post Linux 4.1.
-
-Signed-off-by: Long Li <longli@microsoft.com>
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-
+Fixes: a1367e4adee207fe (scsi: aacraid: Reschedule host scan in case of failure)
+Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/storvsc_drv.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/aacraid/aacraid.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 6c52d14..14dc5c6 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -584,17 +584,18 @@ static int do_bounce_buffer(struct scatterlist *sgl, unsigned int sg_count)
- 	for (i = 0; i < sg_count; i++) {
- 		if (i == 0) {
- 			/* make sure 1st one does not have hole */
--			if (sgl[i].offset + sgl[i].length != PAGE_SIZE)
-+			if (sgl->offset + sgl->length != PAGE_SIZE)
- 				return i;
- 		} else if (i == sg_count - 1) {
- 			/* make sure last one does not have hole */
--			if (sgl[i].offset != 0)
-+			if (sgl->offset != 0)
- 				return i;
- 		} else {
- 			/* make sure no hole in the middle */
--			if (sgl[i].length != PAGE_SIZE || sgl[i].offset != 0)
-+			if (sgl->length != PAGE_SIZE || sgl->offset != 0)
- 				return i;
- 		}
-+		sgl = sg_next(sgl);
- 	}
- 	return -1;
- }
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3e8bfcf..3ab3231 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1340,7 +1340,7 @@ struct fib {
+ #define AAC_DEVTYPE_ARC_RAW		2
+ #define AAC_DEVTYPE_NATIVE_RAW		3
+ 
+-#define AAC_SAFW_RESCAN_DELAY  10
++#define AAC_SAFW_RESCAN_DELAY		(10 * HZ)
+ 
+ struct aac_hba_map_info {
+ 	__le32	rmw_nexus;		/* nexus for native HBA devices */
 -- 
-2.7.4
+2.9.4
