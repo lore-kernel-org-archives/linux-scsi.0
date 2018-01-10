@@ -1,121 +1,74 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH] uas: Unblock scsi-requests on failure to alloc streams in
- post_reset
-Date: Wed, 10 Jan 2018 19:55:35 +0100
-Message-ID: <22d20ce9-e282-053f-567c-e2ef0af367dc@redhat.com>
-References: <20180110071323.3183-1-hdegoede@redhat.com>
- <1515597815.2578.2.camel@suse.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 13/14] megaraid_sas: NVME passthru command support
+Date: Wed, 10 Jan 2018 15:06:17 -0500
+Message-ID: <d6da790a-8248-c71d-6643-6ae3107989d0@interlog.com>
+References: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <20180108100531.GA6967@infradead.org>
+ <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
+ <1515601333.2745.8.camel@wdc.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:44307 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752180AbeAJSzi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2018 13:55:38 -0500
-Received: by mail-wm0-f67.google.com with SMTP id t8so899633wmc.3
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2018 10:55:37 -0800 (PST)
-In-Reply-To: <1515597815.2578.2.camel@suse.com>
-Content-Language: en-US
+Received: from smtp.infotech.no ([82.134.31.41]:44407 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752348AbeAJUG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Jan 2018 15:06:29 -0500
+In-Reply-To: <1515601333.2745.8.camel@wdc.com>
+Content-Language: en-CA
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, stable@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "shivasharan.srikanteshwara@broadcom.com" <shivasharan.srikanteshwara@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>, "peter.rivera@broadcom.com" <peter.rivera@broadcom.com>
 
-Hi,
+On 2018-01-10 11:22 AM, Bart Van Assche wrote:
+> On Tue, 2018-01-09 at 22:07 +0530, Kashyap Desai wrote:
+>> Overall NVME support behind MR controller is really a SCSI device. On top
+>> of that, for MegaRaid, NVME device can be part of Virtual Disk and those
+>> drive will not be exposed to the driver. User application may like to talk
+>> to hidden NVME devices (part of VDs). This patch will extend the existing
+>> interface for megaraid product in the same way it is currently supported
+>> for other protocols like SMP, SATA pass-through.
+> 
+> It seems to me like there is a contradiction in the above paragraph: if some
+> NVMe devices are not exposed to the driver, how can a user space application
+> ever send NVMe commands to it?
 
-On 10-01-18 16:23, Oliver Neukum wrote:
-> Am Mittwoch, den 10.01.2018, 08:13 +0100 schrieb Hans de Goede:
->> If we return 1 from our post_reset handler, then our disconnect handler
->> will be called immediately afterwards. Since pre_reset blocks all scsi
->> requests our disconnect handler will then hang in the scsi_remove_host
->> call.
-> 
-> Hi Hans,
-> 
-> it seems to me that the diagnosis is spot on. But why do we
-> keep different code paths at all in this case? I do not see
-> the point of not reporting the reset to the SCSI subsystem,
-> even if we are not operational afterwards.
-> So how about something like this?
+I think that he meant that the NVMe physical devices (e.g. SSDs) are not
+exposed to the upper layers (e.g. the SCSI mid-layer and above). The
+SCSI subsystem has a no_uld_attach device flag that lets a LLD attach
+physical devices but the sd driver and hence the block layer do not
+"see" them. The idea is that maintenance programs like smartmontools
+can use them via the bsg or sg drivers. The Megaraid driver code does
+not seem to use no_uld_attach. Does the NVMe subsystem have similar
+"generic" (i.e. non-block) devices accessible to the user space?
 
-Sure, works for me :)
+> Anyway, has it been considered to implement the NVMe support as an NVMe
+> transport driver? The upstream kernel already supports NVMe communication
+> with NVMe PCI devices, NVMe over RDMA and NVMe over FC. If communication to
+> the NVMe devices behind the MegaRaid controller would be implemented as an
+> NVMe transport driver then all functionality of the Linux NVMe driver could
+> be reused, including its sysfs entries.
 
-Regards,
+Broadcom already sell "SAS" HBAs that have "tri-mode" phys. That is a phy
+that can connect to a SAS device (e.g. a SAS expander), a SATA device or a
+NVMe device. Now if I was Broadcom designing a 24 Gbps SAS-4 next generation
+expander I would be thinking of using those tri-mode phys on it. But then
+there is a problem, SAS currently supports 3 protocols: SSP (for SCSI
+storage and enclosure management (SES)), STP (for SATA storage ) and SMP
+(for expander management). The problem is how those NVMe commands, status
+and data cross the wire between the OS HBA (or MegaRaid type controller) and
+an expander. Solving that might need some lateral thinking.
 
-Hans
+On one hand the NVM Express folks seem to have shelved the idea of a SCSI
+to NVMe Translation Layer (SNTL) and have not updated an old white paper
+on the subject. Currently there is no SNTL on Linux (there was but it was
+removed) or FreeBSD but there is one on Windows.
 
+On the other hand I'm informed that recently the same body accepted the
+SES-3 standard pretty much as-is. That is done with the addition of SES
+Send and SES Receive commands to NVME-MI. The library under sg_ses has
+already been modified to use them (by implementing a specialized SNTL).
 
-> 
->  From 4d1e26154bc5d09913bfba34d7adc39cce98d20a Mon Sep 17 00:00:00 2001
-> From: Oliver Neukum <oneukum@suse.com>
-> Date: Wed, 10 Jan 2018 16:16:03 +0100
-> Subject: [PATCH] usb: uas: unconditionally bring back host after reset
-> 
-> Quoting Hans:
-> 
-> If we return 1 from our post_reset handler, then our disconnect handler
-> will be called immediately afterwards. Since pre_reset blocks all scsi
-> requests our disconnect handler will then hang in the scsi_remove_host
-> call.
-> 
-> This is esp. bad because our disconnect handler hanging for ever also
-> stops the USB subsys from enumerating any new USB devices, causes
-> commands
-> like lsusb to hang, etc.
-> 
-> In practice this happens when unplugging some uas devices because the
-> hub
-> code may see the device as needing a warm-reset and calls
-> usb_reset_device
-> before seeing the disconnect. In this case uas_configure_endpoints
-> fails
-> with -ENODEV. We do not want to print an error for this, so this commit
-> also silences the shost_printk for -ENODEV.
-> 
-> ENDQUOTE
-> 
-> However, if we do that we better drop any unconditional execution
-> and report to the SCSI subsystem that we have undergone a reset
-> but we are not operational now.
-> 
-> Signed-off-by: Oliver Neukum <oneukum@suse.com>
-> Reported-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->   Makefile                  | 2 +-
->   drivers/usb/storage/uas.c | 7 +++----
->   2 files changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 5d04c40ee40a..3b1b9695177a 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -1076,20 +1076,19 @@ static int uas_post_reset(struct usb_interface
-> *intf)
->   		return 0;
->   
->   	err = uas_configure_endpoints(devinfo);
-> -	if (err) {
-> +	if (err && err != ENODEV)
->   		shost_printk(KERN_ERR, shost,
->   			     "%s: alloc streams error %d after reset",
->   			     __func__, err);
-> -		return 1;
-> -	}
->   
-> +	/* we must unblock the host in every case lest we deadlock */
->   	spin_lock_irqsave(shost->host_lock, flags);
->   	scsi_report_bus_reset(shost, 0);
->   	spin_unlock_irqrestore(shost->host_lock, flags);
->   
->   	scsi_unblock_requests(shost);
->   
-> -	return 0;
-> +	return err ? 1 : 0;
->   }
->   
->   static int uas_suspend(struct usb_interface *intf, pm_message_t
-> message)
-> -- 
-> 2.13.6
-> 
+Doug Gilbert
