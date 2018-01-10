@@ -1,74 +1,75 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 13/14] megaraid_sas: NVME passthru command support
-Date: Wed, 10 Jan 2018 15:06:17 -0500
-Message-ID: <d6da790a-8248-c71d-6643-6ae3107989d0@interlog.com>
-References: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <20180108100531.GA6967@infradead.org>
- <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
- <1515601333.2745.8.camel@wdc.com>
-Reply-To: dgilbert@interlog.com
+From: Long Li <longli@exchange.microsoft.com>
+Subject: [PATCH v2] storvsc: do not assume SG list is continuous when doing
+ bounce buffers (for 4.1 and prior stable kernels)
+Date: Wed, 10 Jan 2018 13:21:29 -0700
+Message-ID: <20180110202129.28730-1-longli@exchange.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:44407 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752348AbeAJUG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Jan 2018 15:06:29 -0500
-In-Reply-To: <1515601333.2745.8.camel@wdc.com>
-Content-Language: en-CA
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "shivasharan.srikanteshwara@broadcom.com" <shivasharan.srikanteshwara@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>, "peter.rivera@broadcom.com" <peter.rivera@broadcom.com>
 
-On 2018-01-10 11:22 AM, Bart Van Assche wrote:
-> On Tue, 2018-01-09 at 22:07 +0530, Kashyap Desai wrote:
->> Overall NVME support behind MR controller is really a SCSI device. On top
->> of that, for MegaRaid, NVME device can be part of Virtual Disk and those
->> drive will not be exposed to the driver. User application may like to talk
->> to hidden NVME devices (part of VDs). This patch will extend the existing
->> interface for megaraid product in the same way it is currently supported
->> for other protocols like SMP, SATA pass-through.
-> 
-> It seems to me like there is a contradiction in the above paragraph: if some
-> NVMe devices are not exposed to the driver, how can a user space application
-> ever send NVMe commands to it?
+From: Long Li <longli@microsoft.com>
 
-I think that he meant that the NVMe physical devices (e.g. SSDs) are not
-exposed to the upper layers (e.g. the SCSI mid-layer and above). The
-SCSI subsystem has a no_uld_attach device flag that lets a LLD attach
-physical devices but the sd driver and hence the block layer do not
-"see" them. The idea is that maintenance programs like smartmontools
-can use them via the bsg or sg drivers. The Megaraid driver code does
-not seem to use no_uld_attach. Does the NVMe subsystem have similar
-"generic" (i.e. non-block) devices accessible to the user space?
+The original patch was made for stable 4.1 and was Acked on 08/22/2017, but for
+some reason it never made it to the stable tree.
 
-> Anyway, has it been considered to implement the NVMe support as an NVMe
-> transport driver? The upstream kernel already supports NVMe communication
-> with NVMe PCI devices, NVMe over RDMA and NVMe over FC. If communication to
-> the NVMe devices behind the MegaRaid controller would be implemented as an
-> NVMe transport driver then all functionality of the Linux NVMe driver could
-> be reused, including its sysfs entries.
+Change from v1:
+Changed comment that this patch is for linux-stable 4.1 and all prior stable
+kernels.
 
-Broadcom already sell "SAS" HBAs that have "tri-mode" phys. That is a phy
-that can connect to a SAS device (e.g. a SAS expander), a SATA device or a
-NVMe device. Now if I was Broadcom designing a 24 Gbps SAS-4 next generation
-expander I would be thinking of using those tri-mode phys on it. But then
-there is a problem, SAS currently supports 3 protocols: SSP (for SCSI
-storage and enclosure management (SES)), STP (for SATA storage ) and SMP
-(for expander management). The problem is how those NVMe commands, status
-and data cross the wire between the OS HBA (or MegaRaid type controller) and
-an expander. Solving that might need some lateral thinking.
+storvsc checks the SG list for gaps before passing them to Hyper-v device.
+If there are gaps, data is copied to a bounce buffer and a continuous data
+buffer is passed to Hyper-V.
 
-On one hand the NVM Express folks seem to have shelved the idea of a SCSI
-to NVMe Translation Layer (SNTL) and have not updated an old white paper
-on the subject. Currently there is no SNTL on Linux (there was but it was
-removed) or FreeBSD but there is one on Windows.
+The check on gaps assumes SG list is continuous, and not chained. This is
+ not always true. Failing the check may result in incorrect I/O data
+passed to the Hyper-v device.
 
-On the other hand I'm informed that recently the same body accepted the
-SES-3 standard pretty much as-is. That is done with the addition of SES
-Send and SES Receive commands to NVME-MI. The library under sg_ses has
-already been modified to use them (by implementing a specialized SNTL).
+This code path is not used post Linux 4.1.
 
-Doug Gilbert
+Signed-off-by: Long Li <longli@microsoft.com>
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+---
+ drivers/scsi/storvsc_drv.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 6c52d14..14dc5c6 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -584,17 +584,18 @@ static int do_bounce_buffer(struct scatterlist *sgl, unsigned int sg_count)
+ 	for (i = 0; i < sg_count; i++) {
+ 		if (i == 0) {
+ 			/* make sure 1st one does not have hole */
+-			if (sgl[i].offset + sgl[i].length != PAGE_SIZE)
++			if (sgl->offset + sgl->length != PAGE_SIZE)
+ 				return i;
+ 		} else if (i == sg_count - 1) {
+ 			/* make sure last one does not have hole */
+-			if (sgl[i].offset != 0)
++			if (sgl->offset != 0)
+ 				return i;
+ 		} else {
+ 			/* make sure no hole in the middle */
+-			if (sgl[i].length != PAGE_SIZE || sgl[i].offset != 0)
++			if (sgl->length != PAGE_SIZE || sgl->offset != 0)
+ 				return i;
+ 		}
++		sgl = sg_next(sgl);
+ 	}
+ 	return -1;
+ }
+-- 
+2.7.4
