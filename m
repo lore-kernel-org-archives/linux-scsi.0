@@ -1,41 +1,47 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH][scsi-next] scsi: mpt3sas: make function _get_st_from_smid static
-Date: Thu, 11 Jan 2018 16:55:39 +0000
-Message-ID: <20180111165539.1248-1-colin.king@canonical.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH -next] tcmu: fix error return code in
+ tcmu_configure_device()
+Date: Thu, 11 Jan 2018 11:10:52 -0600
+Message-ID: <5A579A9C.3090004@redhat.com>
+References: <1515669145-125352-1-git-send-email-weiyongjun1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1515669145-125352-1-git-send-email-weiyongjun1@huawei.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Wei Yongjun <weiyongjun1@huawei.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On 01/11/2018 05:12 AM, Wei Yongjun wrote:
+> Fix to return error code -ENOMEM from the kzalloc() error handling
+> case instead of 0, as done elsewhere in this function.
+> 
+> Fixes: fabe6a59cc5a ("tcmu: allow max block and global max blocks to be settable")
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> ---
+>  drivers/target/target_core_user.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index bac08bc..2edd242 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -1705,8 +1705,10 @@ static int tcmu_configure_device(struct se_device *dev)
+>  
+>  	udev->data_bitmap = kzalloc(BITS_TO_LONGS(udev->max_blocks) *
+>  				    sizeof(unsigned long), GFP_KERNEL);
+> -	if (!udev->data_bitmap)
+> +	if (!udev->data_bitmap) {
+> +		ret = -ENOMEM;
+>  		goto err_bitmap_alloc;
+> +	}
+>  
+>  	udev->mb_addr = vzalloc(CMDR_SIZE);
+>  	if (!udev->mb_addr) {
+> 
 
-The function _get_st_from_smid is local to the source and does
-not need to be in global scope, so make it static.
+Thanks.
 
-Cleans up sparse warning:
-symbol '_get_st_from_smid' was not declared. Should it be static?
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index a44b9be6e3c5..13d6e4ec3022 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -888,7 +888,7 @@ _base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
- 	return 1;
- }
- 
--struct scsiio_tracker *
-+static struct scsiio_tracker *
- _get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- {
- 	struct scsi_cmnd *cmd;
--- 
-2.15.1
+Acked-by: Mike Christie <mchristi@redhat.com>
