@@ -1,62 +1,94 @@
-From: Vinson Lee <vlee@freedesktop.org>
-Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
-Date: Wed, 10 Jan 2018 16:52:58 -0800
-Message-ID: <CACKvgLFZRHc6691FA_FK5yK89Y-L6RtDEB8eQjkw3fakuugehg@mail.gmail.com>
-References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
- <1515169935.3254.2.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:39734 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752982AbeAKAxk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2018 19:53:40 -0500
-Received: by mail-oi0-f43.google.com with SMTP id t8so598048oie.6
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2018 16:53:39 -0800 (PST)
-In-Reply-To: <1515169935.3254.2.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH 22/38] scsi: Define usercopy region in scsi_sense_cache slab cache
+Date: Wed, 10 Jan 2018 18:02:54 -0800
+Message-ID: <1515636190-24061-23-git-send-email-keescook@chromium.org>
+References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1515636190-24061-1-git-send-email-keescook@chromium.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-kernel@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, Christoph Lameter <cl@linux.com>, "David S. Miller" <davem@davemloft.net>, Laura Abbott <labbott@redhat.com>, Mark Rutland <mark.rutland@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "don.brace@microsemi.com" <don.brace@microsemi.com>
 
-On Fri, Jan 5, 2018 at 8:32 AM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> On Thu, 2018-01-04 at 14:32 -0800, Vinson Lee wrote:
->> HP ProLiant DL360p Gen8 with Smart Array P420i boots to the login
->> prompt and hangs with Linux 4.13 or later. I cannot log in on console
->> or SSH into the machine. Linux 4.12 and older boot fine.
->>
->> I see these messages on the console.
->>
->> [  242.843206] INFO: task scsi_eh_2:465 blocked for more than 120 seconds.
->> [  242.877835]       Not tainted 4.15.0-041500rc6-generic #201712312330
->
-> It seems like something got stuck in the block layer. The traditional way to
-> debug this is to analyze the information that is available under
-> /sys/kernel/debug/block. However, since login is not possible we can't use
-> that approach. Would it be possible for you to check whether this has been
-> resolved in kernel v4.15-rc6, and if not, bisect this?
->
-> Thanks,
->
-> Bart.
+From: David Windsor <dave@nullcore.net>
 
-Hi.
+SCSI sense buffers, stored in struct scsi_cmnd.sense and therefore
+contained in the scsi_sense_cache slab cache, need to be copied to/from
+userspace.
 
-The machine still hangs with Linux 4.15-rc6.
+cache object allocation:
+    drivers/scsi/scsi_lib.c:
+        scsi_select_sense_cache(...):
+            return ... ? scsi_sense_isadma_cache : scsi_sense_cache
 
-I did a bisect. The hang is introduced with Linux 4.13-rc1 commit
-c5cb83bb337c25caae995d992d1cdf9b317f83de "genirq/cpuhotplug: Handle
-managed IRQs on CPU hotplug".
+        scsi_alloc_sense_buffer(...):
+            return kmem_cache_alloc_node(scsi_select_sense_cache(), ...);
 
-There is a startup script that disables hyperthreading by offlining
-sibling CPUs.
+        scsi_init_request(...):
+            ...
+            cmd->sense_buffer = scsi_alloc_sense_buffer(...);
+            ...
+            cmd->req.sense = cmd->sense_buffer
 
-for CPU in $(cut -s -d, -f2
-$SYS_PATH/cpu*/topology/thread_siblings_list | sort -un); do
-    echo 0 > /sys/devices/system/cpu/cpu$CPU/online
-done
+example usage trace:
 
-If the above script is not run, the machine does not hang with Linux 4.13.
+    block/scsi_ioctl.c:
+        (inline from sg_io)
+        blk_complete_sghdr_rq(...):
+            struct scsi_request *req = scsi_req(rq);
+            ...
+            copy_to_user(..., req->sense, len)
 
-Cheers,
-Vinson
+        scsi_cmd_ioctl(...):
+            sg_io(...);
+
+In support of usercopy hardening, this patch defines a region in
+the scsi_sense_cache slab cache in which userspace copy operations
+are allowed.
+
+This region is known as the slab cache's usercopy region. Slab caches
+can now check that each dynamically sized copy operation involving
+cache-managed memory falls entirely within the slab's usercopy region.
+
+Signed-off-by: David Windsor <dave@nullcore.net>
+[kees: adjust commit log, provide usage trace]
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/scsi/scsi_lib.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1cbc497e00bd..164d062c4d94 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -79,14 +79,15 @@ int scsi_init_sense_cache(struct Scsi_Host *shost)
+ 	if (shost->unchecked_isa_dma) {
+ 		scsi_sense_isadma_cache =
+ 			kmem_cache_create("scsi_sense_cache(DMA)",
+-			SCSI_SENSE_BUFFERSIZE, 0,
+-			SLAB_HWCACHE_ALIGN | SLAB_CACHE_DMA, NULL);
++				SCSI_SENSE_BUFFERSIZE, 0,
++				SLAB_HWCACHE_ALIGN | SLAB_CACHE_DMA, NULL);
+ 		if (!scsi_sense_isadma_cache)
+ 			ret = -ENOMEM;
+ 	} else {
+ 		scsi_sense_cache =
+-			kmem_cache_create("scsi_sense_cache",
+-			SCSI_SENSE_BUFFERSIZE, 0, SLAB_HWCACHE_ALIGN, NULL);
++			kmem_cache_create_usercopy("scsi_sense_cache",
++				SCSI_SENSE_BUFFERSIZE, 0, SLAB_HWCACHE_ALIGN,
++				0, SCSI_SENSE_BUFFERSIZE, NULL);
+ 		if (!scsi_sense_cache)
+ 			ret = -ENOMEM;
+ 	}
+-- 
+2.7.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
