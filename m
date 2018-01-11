@@ -1,63 +1,62 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] Change type of third __scsi_queue_insert() argument from int into bool
-Date: Wed, 10 Jan 2018 14:41:45 -0800
-Message-ID: <20180110224145.25986-1-bart.vanassche@wdc.com>
+From: Vinson Lee <vlee@freedesktop.org>
+Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
+Date: Wed, 10 Jan 2018 16:52:58 -0800
+Message-ID: <CACKvgLFZRHc6691FA_FK5yK89Y-L6RtDEB8eQjkw3fakuugehg@mail.gmail.com>
+References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
+ <1515169935.3254.2.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:12399 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751975AbeAJWlq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2018 17:41:46 -0500
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:39734 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752982AbeAKAxk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2018 19:53:40 -0500
+Received: by mail-oi0-f43.google.com with SMTP id t8so598048oie.6
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2018 16:53:39 -0800 (PST)
+In-Reply-To: <1515169935.3254.2.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "don.brace@microsemi.com" <don.brace@microsemi.com>
 
-This patch does not change any functionality but makes the SCSI core
-source code slightly easier to read.
+On Fri, Jan 5, 2018 at 8:32 AM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+> On Thu, 2018-01-04 at 14:32 -0800, Vinson Lee wrote:
+>> HP ProLiant DL360p Gen8 with Smart Array P420i boots to the login
+>> prompt and hangs with Linux 4.13 or later. I cannot log in on console
+>> or SSH into the machine. Linux 4.12 and older boot fine.
+>>
+>> I see these messages on the console.
+>>
+>> [  242.843206] INFO: task scsi_eh_2:465 blocked for more than 120 seconds.
+>> [  242.877835]       Not tainted 4.15.0-041500rc6-generic #201712312330
+>
+> It seems like something got stuck in the block layer. The traditional way to
+> debug this is to analyze the information that is available under
+> /sys/kernel/debug/block. However, since login is not possible we can't use
+> that approach. Would it be possible for you to check whether this has been
+> resolved in kernel v4.15-rc6, and if not, bisect this?
+>
+> Thanks,
+>
+> Bart.
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_lib.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Hi.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1c4d885a1d9e..dad450ccd57b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -164,7 +164,7 @@ static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd)
-  * for a requeue after completion, which should only occur in this
-  * file.
-  */
--static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
-+static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
- {
- 	struct scsi_device *device = cmd->device;
- 	struct request_queue *q = device->request_queue;
-@@ -220,7 +220,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
-  */
- void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- {
--	__scsi_queue_insert(cmd, reason, 1);
-+	__scsi_queue_insert(cmd, reason, true);
- }
- 
- 
-@@ -1015,11 +1015,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 		break;
- 	case ACTION_RETRY:
- 		/* Retry the same command immediately */
--		__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, 0);
-+		__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, false);
- 		break;
- 	case ACTION_DELAYED_RETRY:
- 		/* Retry the same command after a delay */
--		__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, 0);
-+		__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, false);
- 		break;
- 	}
- }
--- 
-2.15.1
+The machine still hangs with Linux 4.15-rc6.
+
+I did a bisect. The hang is introduced with Linux 4.13-rc1 commit
+c5cb83bb337c25caae995d992d1cdf9b317f83de "genirq/cpuhotplug: Handle
+managed IRQs on CPU hotplug".
+
+There is a startup script that disables hyperthreading by offlining
+sibling CPUs.
+
+for CPU in $(cut -s -d, -f2
+$SYS_PATH/cpu*/topology/thread_siblings_list | sort -un); do
+    echo 0 > /sys/devices/system/cpu/cpu$CPU/online
+done
+
+If the above script is not run, the machine does not hang with Linux 4.13.
+
+Cheers,
+Vinson
