@@ -1,47 +1,30 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH -next] tcmu: fix error return code in
- tcmu_configure_device()
-Date: Thu, 11 Jan 2018 11:10:52 -0600
-Message-ID: <5A579A9C.3090004@redhat.com>
-References: <1515669145-125352-1-git-send-email-weiyongjun1@huawei.com>
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 13/14] megaraid_sas: NVME passthru command support
+Date: Thu, 11 Jan 2018 10:46:20 -0700
+Message-ID: <20180111174619.GA2860@localhost.localdomain>
+References: <1515159339-26790-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <20180108100531.GA6967@infradead.org>
+ <35aabb7a8b8ffed4040c5ac01c01fb0a@mail.gmail.com>
+ <1515601333.2745.8.camel@wdc.com>
+ <d6da790a-8248-c71d-6643-6ae3107989d0@interlog.com>
+ <e407e98c266c060412bfa8b64ded18df@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1515669145-125352-1-git-send-email-weiyongjun1@huawei.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Wei Yongjun <weiyongjun1@huawei.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:3310 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934792AbeAKRnR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 Jan 2018 12:43:17 -0500
+Content-Disposition: inline
+In-Reply-To: <e407e98c266c060412bfa8b64ded18df@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Cc: dgilbert@interlog.com, Bart Van Assche <Bart.VanAssche@wdc.com>, hch@infradead.org, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-nvme@lists.infradead.org, Peter Rivera <peter.rivera@broadcom.com>, linux-scsi@vger.kernel.org
 
-On 01/11/2018 05:12 AM, Wei Yongjun wrote:
-> Fix to return error code -ENOMEM from the kzalloc() error handling
-> case instead of 0, as done elsewhere in this function.
-> 
-> Fixes: fabe6a59cc5a ("tcmu: allow max block and global max blocks to be settable")
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> ---
->  drivers/target/target_core_user.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index bac08bc..2edd242 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -1705,8 +1705,10 @@ static int tcmu_configure_device(struct se_device *dev)
->  
->  	udev->data_bitmap = kzalloc(BITS_TO_LONGS(udev->max_blocks) *
->  				    sizeof(unsigned long), GFP_KERNEL);
-> -	if (!udev->data_bitmap)
-> +	if (!udev->data_bitmap) {
-> +		ret = -ENOMEM;
->  		goto err_bitmap_alloc;
-> +	}
->  
->  	udev->mb_addr = vzalloc(CMDR_SIZE);
->  	if (!udev->mb_addr) {
-> 
+On Wed, Jan 10, 2018 at 03:14:40PM -0700, Sathya Prakash Veerichetty wrote:
+> In the case of RAID controllers, all of those drives and RAID volumes
+> are exposed to the OS as generic SCSI devices
 
-Thanks.
-
-Acked-by: Mike Christie <mchristi@redhat.com>
+So even when used as a RAID member, there will be a device handle at
+/dev/sdX for each NVMe device the megaraid controller manages?
