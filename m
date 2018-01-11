@@ -1,76 +1,39 @@
-From: Jiri Kosina <jikos@kernel.org>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Date: Thu, 11 Jan 2018 10:54:55 +0100 (CET)
-Message-ID: <nycvar.YFH.7.76.1801111052310.11852@cbobk.fhfr.pm>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com> <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm> <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com> <20180109205549.osb25c4r2h2n2wqx@treble>
+From: Wei Yongjun <weiyongjun1@huawei.com>
+Subject: [PATCH -next] tcmu: fix error return code in tcmu_configure_device()
+Date: Thu, 11 Jan 2018 11:12:25 +0000
+Message-ID: <1515669145-125352-1-git-send-email-weiyongjun1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <20180109205549.osb25c4r2h2n2wqx@treble>
-Sender: linux-arch-owner@vger.kernel.org
-To: Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, Peter Zijlstra <peterz@infradead.org>, Alan Cox <alan.cox@intel.com>, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Will Deacon <will.deacon@arm.com>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>Zhang Rui <ru>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 9 Jan 2018, Josh Poimboeuf wrote:
+Fix to return error code -ENOMEM from the kzalloc() error handling
+case instead of 0, as done elsewhere in this function.
 
-> On Tue, Jan 09, 2018 at 11:44:05AM -0800, Dan Williams wrote:
-> > On Tue, Jan 9, 2018 at 11:34 AM, Jiri Kosina <jikos@kernel.org> wrote:
-> > > On Fri, 5 Jan 2018, Dan Williams wrote:
-> > >
-> > > [ ... snip ... ]
-> > >> Andi Kleen (1):
-> > >>       x86, barrier: stop speculation for failed access_ok
-> > >>
-> > >> Dan Williams (13):
-> > >>       x86: implement nospec_barrier()
-> > >>       [media] uvcvideo: prevent bounds-check bypass via speculative execution
-> > >>       carl9170: prevent bounds-check bypass via speculative execution
-> > >>       p54: prevent bounds-check bypass via speculative execution
-> > >>       qla2xxx: prevent bounds-check bypass via speculative execution
-> > >>       cw1200: prevent bounds-check bypass via speculative execution
-> > >>       Thermal/int340x: prevent bounds-check bypass via speculative execution
-> > >>       ipv6: prevent bounds-check bypass via speculative execution
-> > >>       ipv4: prevent bounds-check bypass via speculative execution
-> > >>       vfs, fdtable: prevent bounds-check bypass via speculative execution
-> > >>       net: mpls: prevent bounds-check bypass via speculative execution
-> > >>       udf: prevent bounds-check bypass via speculative execution
-> > >>       userns: prevent bounds-check bypass via speculative execution
-> > >>
-> > >> Mark Rutland (4):
-> > >>       asm-generic/barrier: add generic nospec helpers
-> > >>       Documentation: document nospec helpers
-> > >>       arm64: implement nospec_ptr()
-> > >>       arm: implement nospec_ptr()
-> > >
-> > > So considering the recent publication of [1], how come we all of a sudden
-> > > don't need the barriers in ___bpf_prog_run(), namely for LD_IMM_DW and
-> > > LDX_MEM_##SIZEOP, and something comparable for eBPF JIT?
-> > >
-> > > Is this going to be handled in eBPF in some other way?
-> > >
-> > > Without that in place, and considering Jann Horn's paper, it would seem
-> > > like PTI doesn't really lock it down fully, right?
-> > 
-> > Here is the latest (v3) bpf fix:
-> > 
-> > https://patchwork.ozlabs.org/patch/856645/
-> > 
-> > I currently have v2 on my 'nospec' branch and will move that to v3 for
-> > the next update, unless it goes upstream before then.
+Fixes: fabe6a59cc5a ("tcmu: allow max block and global max blocks to be settable")
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/target/target_core_user.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Daniel, I guess you're planning to send this still for 4.15?
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index bac08bc..2edd242 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1705,8 +1705,10 @@ static int tcmu_configure_device(struct se_device *dev)
+ 
+ 	udev->data_bitmap = kzalloc(BITS_TO_LONGS(udev->max_blocks) *
+ 				    sizeof(unsigned long), GFP_KERNEL);
+-	if (!udev->data_bitmap)
++	if (!udev->data_bitmap) {
++		ret = -ENOMEM;
+ 		goto err_bitmap_alloc;
++	}
+ 
+ 	udev->mb_addr = vzalloc(CMDR_SIZE);
+ 	if (!udev->mb_addr) {
 
-> That patch seems specific to CONFIG_BPF_SYSCALL.  Is the bpf() syscall
-> the only attack vector?  Or are there other ways to run bpf programs
-> that we should be worried about?
-
-Seems like Alexei is probably the only person in the whole universe who 
-isn't CCed here ... let's fix that.
-
-Thanks,
-
--- 
-Jiri Kosina
-SUSE Labs
