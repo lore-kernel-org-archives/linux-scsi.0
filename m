@@ -1,50 +1,24 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH -next] scsi: hisi_sas: make local symbol host_attrs static
-Date: Thu, 11 Jan 2018 11:19:13 +0000
-Message-ID: <bc54c7d4-4c78-1fc7-c7aa-5e0560f3c45d@huawei.com>
-References: <1515669238-125768-1-git-send-email-weiyongjun1@huawei.com>
+From: POSTMASTER <bbeau@enit.fr>
+Subject: =?utf-8?Q?V=C3=89RIFIER_ET_RENOUVELER?=
+Date: Thu, 11 Jan 2018 13:02:46 +0100 (CET)
+Message-ID: <652322496.9163481.1515672166213.JavaMail.zimbra@enit.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3777 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932954AbeAKLTh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 Jan 2018 06:19:37 -0500
-In-Reply-To: <1515669238-125768-1-git-send-email-weiyongjun1@huawei.com>
+Received: from smtp-out.enit.fr ([193.50.189.3]:42334 "EHLO smtp-out.enit.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753695AbeAKMNr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 Jan 2018 07:13:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyongjun1@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Jason Yan <yanaijie@huawei.com>
 
-On 11/01/2018 11:13, Wei Yongjun wrote:
-> Fixes the following sparse warning:
->
-> drivers/scsi/hisi_sas/hisi_sas_main.c:1691:25: warning:
->  symbol 'host_attrs' was not declared. Should it be static?
->
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Votre compte Zimbra n=C3=A9cessite une v=C3=A9rification
 
-Acked-by: John Garry <john.garry@huawei.com>
+Pour v=C3=A9rifier et renouveler votre compte Zimbra, cliquez sur ce lien o=
+u copiez-le dans votre navigateur Web pr=C3=A9f=C3=A9r=C3=A9.
 
-> ---
->  drivers/scsi/hisi_sas/hisi_sas_main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index 360ecef..e3e7285 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -1688,7 +1688,7 @@ void hisi_sas_kill_tasklets(struct hisi_hba *hisi_hba)
->  struct scsi_transport_template *hisi_sas_stt;
->  EXPORT_SYMBOL_GPL(hisi_sas_stt);
->
-> -struct device_attribute *host_attrs[] = {
-> +static struct device_attribute *host_attrs[] = {
->  	&dev_attr_phy_event_threshold,
->  	NULL,
->  };
->
->
-> .
->
+V=C3=89RIFIER ET RENOUVELER: http://french-adm-univ-lyon-paris.tripod.com/
+
+Sinc=C3=A8rement,
+L'=C3=A9quipe de compte Zimbra
