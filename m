@@ -1,50 +1,29 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v2 3/4] scsi: Avoid that .queuecommand() gets called for
- a quiesced SCSI device
-Date: Thu, 11 Jan 2018 10:23:51 +0800
-Message-ID: <20180111022341.GA7290@ming.t460p>
-References: <20180110181817.25166-1-bart.vanassche@wdc.com>
- <20180110181817.25166-4-bart.vanassche@wdc.com>
+From: "Active lender@" <elekmach@savba.sk>
+Subject: (unknown)
+Date: Thu, 11 Jan 2018 04:22:04 +0100 (CET)
+Message-ID: <1728277156.35767299.1515640924122.JavaMail.zimbra__32378.7586451092$1515641931$gmane$org@savba.sk>
+Reply-To: "Active lender@" <info@activeslendinggroup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180110181817.25166-4-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Jason Gunthorpe <jgg@mellanox.com>, Doug Ledford <dledford@redhat.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zmta2.savba.sk ([147.213.1.24]:56676 "EHLO zmta2.savba.sk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753131AbeAKDka (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Jan 2018 22:40:30 -0500
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 10, 2018 at 10:18:16AM -0800, Bart Van Assche wrote:
-> Several SCSI transport and LLD drivers surround code that does not
-> tolerate concurrent calls of .queuecommand() with scsi_target_block() /
-> scsi_target_unblock(). These last two functions use
-> blk_mq_quiesce_queue() / blk_mq_unquiesce_queue() for scsi-mq request
-> queues to prevent concurrent .queuecommand() calls. However, that is
+Schöne Grüße,
+          Ich bin Frau Adrian Irene von Active Lenders Darlehensfirma bekannt als Active Lending Loan®. Wir bieten alle Arten von Darlehen bei 1% Zinssatz. Wenn Sie ein Darlehen benötigen, kontaktieren Sie uns bitte mit den folgenden Informationen.
 
-Actually blk_mq_quiesce_queue() is supposed to disable and drain dispatch,
-not for prevent concurrent .queuecommand() calls.
+Bitte füllen Sie das untenstehende Formular aus und senden Sie es so schnell wie möglich zurück.
 
-> not sufficient to prevent .queuecommand() calls from scsi_send_eh_cmnd().
+Benötigte Menge: .........
+Laufzeit des Darlehens: ....
+Der Grund für das Darlehen: .....
 
-Given it is error handling, do we need to prevent the .queuecommand() call
-in scsi_send_eh_cmnd()? Could you share us what the actual issue
-observed is from user view?
-
-> Hence surround the .queuecommand() call from the SCSI error handler with
-> blk_start_wait_if_quiesced() / blk_finish_wait_if_quiesced().
-> 
-> Note: converting the .queuecommand() call in scsi_send_eh_cmnd() into
-> code that calls blk_get_request(), e.g. scsi_execute_req(), is not an
-> option since scsi_send_eh_cmnd() can be called if all requests are
-> allocated and if no requests will make progress without aborting any
-> of these requests.
-
-If we need to prevent the .queuecommand() in scsi_send_eh_cmnd(), what
-do you think of the approach by requeuing the EH command via
-scsi_mq_requeue_cmd()/scsi_requeue_cmd()? And the EH request will be
-dispatched finally when the queue becomes unquiesced or the STOPPED
-is cleared.
-
--- 
-Ming
+Wir freuen uns darauf, Ihnen zu helfen. Kontaktieren Sie uns per E-Mail: contact@activeslendinggroup.com
+Deine
+  Frau Adrian Irene
