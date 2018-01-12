@@ -1,56 +1,37 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH 10/18] qla2xxx: prevent bounds-check bypass via
- speculative execution
-Date: Fri, 12 Jan 2018 07:25:11 -0800
-Message-ID: <1515770711.3922.5.camel@linux.vnet.ibm.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-         <151520104838.32271.7038801336240727574.stgit@dwillia2-desk3.amr.corp.intel.com>
-         <20180106090322.GF4380@kroah.com>
-         <CAPcyv4jQjwa5X6ctO7bU1Z3hfRGRTa6gDO3pSSo_HQHkjg4MFg@mail.gmail.com>
-         <20180112072758.GD25517@kroah.com>
+From: Kim Bell <KimBell@elpasoco.com>
+Subject: RE: ALERT NOTIFICATION !
+Date: Fri, 12 Jan 2018 15:27:35 +0000
+Message-ID: <644A19F09982FF4EB72F5693F702E07401DBA63E0D@EXCH12.epc.com>
+References: <644A19F09982FF4EB72F5693F702E07401DBA63AF6@EXCH12.epc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <20180112072758.GD25517@kroah.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>, Dan Williams <dan.j.williams@intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-arch@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Netdev <netdev@vger.kernel.org>, qla2xxx-upstream@qlogic.com, Thomas Gleixner <tglx@linutronix.de>, Linus Torvalds <torvalds@linux-foundation.org>, Elena Reshetova <elena.reshetova@intel.com>, Alan Cox <alan@linux.intel.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx3.elpasoco.com ([63.145.69.215]:57889 "EHLO
+        elp028.elpasoco.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S933947AbeALPj6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jan 2018 10:39:58 -0500
+In-Reply-To: <644A19F09982FF4EB72F5693F702E07401DBA63AF6@EXCH12.epc.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kim Bell <KimBell@elpasoco.com>
 
-On Fri, 2018-01-12 at 08:27 +0100, Greg KH wrote:
-> On Thu, Jan 11, 2018 at 02:15:12PM -0800, Dan Williams wrote:
-> > 
-> > On Sat, Jan 6, 2018 at 1:03 AM, Greg KH <gregkh@linuxfoundation.org
-> > > wrote:
-> > > 
-> > > On Fri, Jan 05, 2018 at 05:10:48PM -0800, Dan Williams wrote:
-> > > > 
-> > > > Static analysis reports that 'handle' may be a user controlled
-> > > > value that is used as a data dependency to read 'sp' from the
-> > > > 'req->outstanding_cmds' array.Â Â In order to avoid potential
-> > > > leaks of kernel memory values, block speculative execution of
-> > > > the instruction stream that could issue reads based on an
-> > > > invalid value of 'sp'. In this case 'sp' is directly
-> > > > dereferenced later in the function.
-> > > 
-> > > I'm pretty sure that 'handle' comes from the hardware, not from
-> > > userspace, from what I can tell here.Â Â If we want to start
-> > > auditing __iomem data sources, great!Â Â But that's a bigger task,
-> > > and one I don't think we are ready to tackle...
-> > 
-> > I think it falls in the hygiene bucket of shutting off an array
-> > index from a source that could be under attacker control. Should we
-> > leave this one un-patched while we decide if we generally have a
-> > problem with trusting completion 'tags' from hardware? My vote is
-> > patch it for now.
-> 
-> Hah, if you are worried about "tags" from hardware, we have a lot
-> more auditing to do, right?Â 
 
-We'd also have a lot more to do: the assumption would have to be
-malicious hardware and most hardware has access to fairly vital stuff
-directly. Â I really don't think we have to worry about side channel
-attacks from hardware until the direct attack vector is closed.
 
-James
+Helpdesk/IT Service Migration For All Staff/Employee
+
+
+Due to the constant Incident report in 2017, All E-mail accounts are to Migrate to the new OUTLOOK WEB PREMIUM for Faculty Staff and Members,
+
+Ensure you migrate immediately. CLICK <<http://webmail1owa.ukit.me//<http://webmail1owa.ukit.me/>>>  to migrate.
+
+Migrate to access the below:
+·                     Access the new staff directory
+·                     Access your pay slips and P60s
+·                     Update your ID photo
+·                     E-mail and Calendar Flexibility
+·                     Connect mobile number to e-mail for Voicemail
+
+Connected to Microsoft Exchange,
+© 2018 Microsoft Corporation, All rights reserved
