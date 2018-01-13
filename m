@@ -1,55 +1,54 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH -next] tcmu: fix error return code in
- tcmu_configure_device()
-Date: Fri, 12 Jan 2018 21:19:05 -0800
-Message-ID: <1515820745.24576.89.camel@haakon3.daterainc.com>
-References: <1515669145-125352-1-git-send-email-weiyongjun1@huawei.com>
-         <5A579A9C.3090004@redhat.com>
+Subject: Re: A qla2xxx commit cause Linux no response, has not fixed in
+ lastest version 4.15-rc6
+Date: Fri, 12 Jan 2018 21:28:16 -0800
+Message-ID: <1515821296.24576.94.camel@haakon3.daterainc.com>
+References: <BC29A004BA570342A4CC0044A3845572010DCF3E30@H3CMLB12-EX.srv.huawei-3com.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34610 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750728AbeAMFTJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Jan 2018 00:19:09 -0500
-In-Reply-To: <5A579A9C.3090004@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <BC29A004BA570342A4CC0044A3845572010DCF3E30@H3CMLB12-EX.srv.huawei-3com.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Changlimin <changlimin@h3c.com>
+Cc: "quinn.tran@cavium.com" <quinn.tran@cavium.com>, Jifuliang <fuliang_ji@h3c.com>, Zhangguanghui <zhang.guanghui@h3c.com>, Zhangzijian <zhang.zijian@h3c.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Himanshu Madhani <himanshu.madhani@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Thu, 2018-01-11 at 11:10 -0600, Mike Christie wrote:
-> On 01/11/2018 05:12 AM, Wei Yongjun wrote:
-> > Fix to return error code -ENOMEM from the kzalloc() error handling
-> > case instead of 0, as done elsewhere in this function.
-> > 
-> > Fixes: fabe6a59cc5a ("tcmu: allow max block and global max blocks to be settable")
-> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> > ---
-> >  drivers/target/target_core_user.c | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> > index bac08bc..2edd242 100644
-> > --- a/drivers/target/target_core_user.c
-> > +++ b/drivers/target/target_core_user.c
-> > @@ -1705,8 +1705,10 @@ static int tcmu_configure_device(struct se_device *dev)
-> >  
-> >  	udev->data_bitmap = kzalloc(BITS_TO_LONGS(udev->max_blocks) *
-> >  				    sizeof(unsigned long), GFP_KERNEL);
-> > -	if (!udev->data_bitmap)
-> > +	if (!udev->data_bitmap) {
-> > +		ret = -ENOMEM;
-> >  		goto err_bitmap_alloc;
-> > +	}
-> >  
-> >  	udev->mb_addr = vzalloc(CMDR_SIZE);
-> >  	if (!udev->mb_addr) {
-> > 
-> 
-> Thanks.
-> 
-> Acked-by: Mike Christie <mchristi@redhat.com>
+Hi Chang & Co,
 
-Applied.  Thanks Wei + MNC.
+(Adding list + Himanshu CC')
+
+On Sun, 2018-01-07 at 10:21 +0000, Changlimin wrote:
+> Hi,
+> It seems the qla2xxx commit cause Linux no response, has not fixed in lastest version 4.15-rc6.
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=726b85487067d7f5b23495bc33c484b8517c4074 
+> 
+
+Thanks for reporting + including debug log.  :)
+
+> lspci:
+> 0a:00.0 Fibre Channel: QLogic Corp. ISP2532-based 8Gb Fibre Channel to PCI Express HBA (rev 02)
+> 0a:00.1 Fibre Channel: QLogic Corp. ISP2532-based 8Gb Fibre Channel to PCI Express HBA (rev 02)
+> 
+> syslog:
+> qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 8.07.00.38-k.
+> qla2xxx [0000:0a:00.0]-001a: : MSI-X vector count: 32.
+> qla2xxx [0000:0a:00.0]-001d: : Found an ISP2532 irq 16 iobase 0xffffb0d5cc501000.
+> qla2xxx [0000:0a:00.0]-00c6:1: MSI-X: Failed to enable support with 32 vectors, using 26 vectors.
+> scsi host1: qla2xxx
+> qla2xxx [0000:0a:00.0]-00fb:1: QLogic HPAJ764A - HP 8Gb Dual Channel PCI-e 2.0 FC HBA.
+> qla2xxx [0000:0a:00.0]-00fc:1: ISP2532: PCIe (5.0GT/s x8) @ 0000:0a:00.0 hdma+ host#=1 fw=8.03.00 (90d5).
+> qla2xxx [0000:0a:00.1]-001a: : MSI-X vector count: 32.
+> qla2xxx [0000:0a:00.1]-001d: : Found an ISP2532 irq 17 iobase 0xffffb0d5cc5d9000.
+> qla2xxx [0000:0a:00.1]-00c6:2: MSI-X: Failed to enable support with 32 vectors, using 26 vectors.
+> scsi host2: qla2xxx
+> qla2xxx [0000:0a:00.1]-00fb:2: QLogic HPAJ764A - HP 8Gb Dual Channel PCI-e 2.0 FC HBA.
+> qla2xxx [0000:0a:00.1]-00fc:2: ISP2532: PCIe (5.0GT/s x8) @ 0000:0a:00.1 hdma+ host#=2 fw=8.03.00 (90d5).
+> qla2xxx [0000:0a:00.0]-500a:1: LOOP UP detected (8 Gbps).
+> qla2xxx [0000:0a:00.1]-500a:2: LOOP UP detected (8 Gbps).
+> 
+> The attached file is the module log.
+> 
+> Do you have any advice?
+
+Quinn & Himanshu folks, any comments..?
