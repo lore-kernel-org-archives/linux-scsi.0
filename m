@@ -1,55 +1,106 @@
-From: tang.junhui@zte.com.cn
-Subject: how to enlarge value of max_sectors_kb
-Date: Sat, 13 Jan 2018 15:53:24 +0800
-Message-ID: <1515830004-5476-1-git-send-email-tang.junhui@zte.com.cn>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: hare@suse.de, kartilak@cisco.com, sebaddel@cisco.com, linux-scsi@vger.kernel.org
-Cc: linux-block@vger.kernel.org, tang.junhui@zte.com.cn
+From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 4/4] IB/srp: Fix a sleep-in-invalid-context bug
+Date: Sat, 13 Jan 2018 23:42:07 +0800
+Message-ID: <20180113154206.GE8013@ming.t460p>
+References: <20180110181817.25166-1-bart.vanassche@wdc.com>
+ <20180110181817.25166-5-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20180110181817.25166-5-bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>, Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Tang Junhui <tang.junhui@zte.com.cn>
+On Wed, Jan 10, 2018 at 10:18:17AM -0800, Bart Van Assche wrote:
+> The previous two patches guarantee that srp_queuecommand() does not get
+> invoked while reconnecting occurs. Hence remove the code from
+> srp_queuecommand() that prevents command queueing while reconnecting.
+> This patch avoids that the following can appear in the kernel log:
+> 
+> BUG: sleeping function called from invalid context at kernel/locking/mutex.c:747
+> in_atomic(): 1, irqs_disabled(): 0, pid: 5600, name: scsi_eh_9
+> 1 lock held by scsi_eh_9/5600:
+>  #0:  (rcu_read_lock){....}, at: [<00000000cbb798c7>] __blk_mq_run_hw_queue+0xf1/0x1e0
+> Preemption disabled at:
+> [<00000000139badf2>] __blk_mq_delay_run_hw_queue+0x78/0xf0
+> CPU: 9 PID: 5600 Comm: scsi_eh_9 Tainted: G        W        4.15.0-rc4-dbg+ #1
+> Hardware name: Dell Inc. PowerEdge R720/0VWT90, BIOS 2.5.4 01/22/2016
+> Call Trace:
+>  dump_stack+0x67/0x99
+>  ___might_sleep+0x16a/0x250 [ib_srp]
+>  __mutex_lock+0x46/0x9d0
+>  srp_queuecommand+0x356/0x420 [ib_srp]
+>  scsi_dispatch_cmd+0xf6/0x3f0
+>  scsi_queue_rq+0x4a8/0x5f0
+>  blk_mq_dispatch_rq_list+0x73/0x440
+>  blk_mq_sched_dispatch_requests+0x109/0x1a0
+>  __blk_mq_run_hw_queue+0x131/0x1e0
+>  __blk_mq_delay_run_hw_queue+0x9a/0xf0
+>  blk_mq_run_hw_queue+0xc0/0x1e0
+>  blk_mq_start_hw_queues+0x2c/0x40
+>  scsi_run_queue+0x18e/0x2d0
+>  scsi_run_host_queues+0x22/0x40
+>  scsi_error_handler+0x18d/0x5f0
+>  kthread+0x11c/0x140
+>  ret_from_fork+0x24/0x30
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche-Sjgp3cTcYWE@public.gmane.org>
+> Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+> Cc: Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  drivers/infiniband/ulp/srp/ib_srp.c | 21 ++-------------------
+>  1 file changed, 2 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+> index 972d4b3c5223..670f187ecb91 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -2149,7 +2149,6 @@ static void srp_handle_qp_err(struct ib_cq *cq, struct ib_wc *wc,
+>  static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+>  {
+>  	struct srp_target_port *target = host_to_target(shost);
+> -	struct srp_rport *rport = target->rport;
+>  	struct srp_rdma_ch *ch;
+>  	struct srp_request *req;
+>  	struct srp_iu *iu;
+> @@ -2159,16 +2158,6 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+>  	u32 tag;
+>  	u16 idx;
+>  	int len, ret;
+> -	const bool in_scsi_eh = !in_interrupt() && current == shost->ehandler;
+> -
+> -	/*
+> -	 * The SCSI EH thread is the only context from which srp_queuecommand()
+> -	 * can get invoked for blocked devices (SDEV_BLOCK /
+> -	 * SDEV_CREATED_BLOCK). Avoid racing with srp_reconnect_rport() by
+> -	 * locking the rport mutex if invoked from inside the SCSI EH.
+> -	 */
+> -	if (in_scsi_eh)
+> -		mutex_lock(&rport->mutex);
 
-There is a machine with very little max_sectors_kb size:
-[root@ceph151 queue]# pwd
-/sys/block/sdd/queue
-[root@ceph151 queue]# cat max_hw_sectors_kb 
-256
-[root@ceph151 queue]# cat max_sectors_kb 
-256
+This issue is triggered because that the above EH handler context detection is
+wrong since scsi_run_host_queues() from scsi_error_handler() is for
+handling normal requests, see the comment below:
 
-The performance is very low when I run big I/Os.
-I can not modify it directly, I need a little bigger,
-so how can I enlarge it?
+        /*
+         * finally we need to re-initiate requests that may be pending.  we will
+         * have had everything blocked while error handling is taking place, and
+         * now that error recovery is done, we will need to ensure that these
+         * requests are started.
+         */
+        scsi_run_host_queues(shost);
 
-the system info:
+This issue should have been fixed by the following one line change simply:
 
-[root@ceph151 queue]# uname -r
-3.10.0-327.22.2.el7.x86_64
+	in_scsi_eh = !!scmd->eh_action;
 
-[root@ceph151 queue]# lsmod |grep scsi
-scsi_transport_fc      64056  1 lpfc
-scsi_tgt               20027  1 scsi_transport_fc
-
-[root@ceph151 queue]# lsscsi
-[0:0:0:0]    disk    ASR7805  system           V1.0  /dev/sda 
-[0:1:8:0]    disk    ATA      Hitachi HUA72201 JP4O  /dev/sdb 
-[0:1:9:0]    disk    ATA      Hitachi HUA72201 JP4O  /dev/sdc 
-[0:1:10:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdd 
-[0:1:11:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sde 
-[0:1:12:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdf 
-[0:1:13:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdg 
-[0:1:14:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdh 
-[0:1:15:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdi 
-[0:1:16:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdj 
-[0:1:17:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdk 
-[0:1:18:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdl 
-[0:1:19:0]   disk    ATA      Hitachi HUA72201 JP4O  /dev/sdm 
-[0:1:20:0]   disk    TOSHIBA  AL13SEB600       0101  -        
-[0:1:21:0]   disk    TOSHIBA  AL13SEB600       0101  -        
-[0:3:0:0]    enclosu ZTE CORP 720381 EvBd 255  1     - 
-
-Any comment would be wellcome.
-
-Thanks,
-Tang Junhui
+-- 
+Ming
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
