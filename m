@@ -1,43 +1,107 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
-Date: Mon, 15 Jan 2018 11:25:18 -0500
-Message-ID: <1516033518.3900.2.camel@redhat.com>
-References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
-         <1515973240.8994.2.camel@redhat.com> <20180115121659.GA17687@ming.t460p>
-         <1516020679.21554.1.camel@redhat.com>
-         <20180115150135.GA14157@infradead.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: LSF/MM 2018: Call for Proposals
+Date: Mon, 15 Jan 2018 11:39:52 -0500
+Message-ID: <20180115163952.GB26120@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180115150135.GA14157@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Hellwig, Christoph" <hch@infradead.org>
-Cc: Ming Lei <ming.lei@redhat.com>, Vinson Lee <vlee@freedesktop.org>, linux-scsi@vger.kernel.org, Don Brace <don.brace@microsemi.com>, Jens Axboe <axboe@kernel.dk>, Thomas Gleixner <tglx@linutronix.de>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+Sender: owner-linux-mm@kvack.org
+To: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2018-01-15 at 07:01 -0800, Hellwig, Christoph wrote:
-> Laurence, I'm a little confused.  Is this the same issue we just
-> fixed,
-> or is this an issue showing up with the fix?
-> 
-> E.g. what kernel versions or trees are affected?
+The annual Linux Storage, Filesystem and Memory Management (LSF/MM)
+Summit for 2018 will be held from April 23-25 at the Deer Valley
+Lodges in Park City, Utah. LSF/MM is an invitation-only technical
+workshop to map out improvements to the Linux storage, filesystem and
+memory management subsystems that will make their way into the
+mainline kernel within the coming years.
 
-Hello Christoph
+	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
 
-This showed up on a  combined tree of Mikes and Jens (4.15.0-
-rc4.block.dm.4.16) I was testing this weekend but was not apparent on
-the generic upstream 4.15-rc7 from Linus.
-I have to admit that was puzzling me.
+LSF/MM 2018 will be a three day, stand-alone conference with three
+subsystem-specific tracks, cross-track discussions, as well as BoF and
+hacking sessions.
 
-When I removed your commit the issue went away.
+On behalf of the committee I am issuing a call for agenda proposals
+that are suitable for cross-track discussion as well as technical
+subjects for the breakout sessions.
 
-Ming has crafted a fix so that your original commit can remain in and I
-am testing that now against the same tree that was hanging before.
+If advance notice is required for visa applications then please point
+that out in your proposal or request to attend, and submit the topic
+as soon as possible.
 
-Ming has a handle on the issue so I will report back after testing.
+1) Proposals for agenda topics should be sent before January 31st,
+2018 to:
 
-Kernel is building now
+	lsf-pc@lists.linux-foundation.org
 
-Thanks
-Laurence
+and CC the mailing lists that are relevant for the topic in question:
+
+	FS:	linux-fsdevel@vger.kernel.org
+	MM:	linux-mm@kvack.org
+	Block:	linux-block@vger.kernel.org
+	ATA:	linux-ide@vger.kernel.org
+	SCSI:	linux-scsi@vger.kernel.org
+	NVMe:	linux-nvme@lists.infradead.org
+
+Please tag your proposal with [LSF/MM TOPIC] to make it easier to
+track. In addition, please make sure to start a new thread for each
+topic rather than following up to an existing one. Agenda topics and
+attendees will be selected by the program committee, but the final
+agenda will be formed by consensus of the attendees on the day.
+
+2) Requests to attend the summit for those that are not proposing a
+topic should be sent to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Please summarize what expertise you will bring to the meeting, and
+what you would like to discuss. Please also tag your email with
+[LSF/MM ATTEND] and send it as a new thread so there is less chance of
+it getting lost.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes
+at the venue.
+
+For discussion leaders, slides and visualizations are encouraged to
+outline the subject matter and focus the discussions. Please refrain
+from lengthy presentations and talks; the sessions are supposed to be
+interactive, inclusive discussions.
+
+There will be no recording or audio bridge. However, we expect that
+written minutes will be published as we did in previous years:
+
+2017: https://lwn.net/Articles/lsfmm2017/
+
+2016: https://lwn.net/Articles/lsfmm2016/
+
+2015: https://lwn.net/Articles/lsfmm2015/
+
+2014: http://lwn.net/Articles/LSFMM2014/
+
+2013: http://lwn.net/Articles/548089/
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+	Anna Schumaker (Filesystems)
+	Jens Axboe (Storage)
+	Josef Bacik (Filesystems)
+	Martin K. Petersen (Storage)
+	Michal Hocko (MM)
+	Rik van Riel (MM)
+
+Johannes Weiner
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
