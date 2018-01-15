@@ -1,36 +1,43 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] blk_rq_map_user_iov: fix error override
-Date: Mon, 15 Jan 2018 08:50:53 -0700
-Message-ID: <0241d415-dc04-110a-771f-c245d963fec0@kernel.dk>
-References: <20180114220048.8114-1-dgilbert@interlog.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
+Date: Mon, 15 Jan 2018 11:25:18 -0500
+Message-ID: <1516033518.3900.2.camel@redhat.com>
+References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
+         <1515973240.8994.2.camel@redhat.com> <20180115121659.GA17687@ming.t460p>
+         <1516020679.21554.1.camel@redhat.com>
+         <20180115150135.GA14157@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:45660 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965032AbeAOPuz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2018 10:50:55 -0500
-Received: by mail-pf0-f177.google.com with SMTP id a88so6769770pfe.12
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2018 07:50:55 -0800 (PST)
-In-Reply-To: <20180114220048.8114-1-dgilbert@interlog.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180115150135.GA14157@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Hellwig, Christoph" <hch@infradead.org>
+Cc: Ming Lei <ming.lei@redhat.com>, Vinson Lee <vlee@freedesktop.org>, linux-scsi@vger.kernel.org, Don Brace <don.brace@microsemi.com>, Jens Axboe <axboe@kernel.dk>, Thomas Gleixner <tglx@linutronix.de>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: bart.vanassche@wdc.com, dvyukov@google.com
 
-On 1/14/18 3:00 PM, Douglas Gilbert wrote:
-> During stress tests by syzkaller on the sg driver the block layer
-> infrequently returns EINVAL. Closer inspection shows the block
-> layer was trying to return ENOMEM (which is much more
-> understandable) but for some reason overroad that useful error.
+On Mon, 2018-01-15 at 07:01 -0800, Hellwig, Christoph wrote:
+> Laurence, I'm a little confused.  Is this the same issue we just
+> fixed,
+> or is this an issue showing up with the fix?
 > 
-> Patch below does not show this (unchanged) line:
->    ret =__blk_rq_map_user_iov(rq, map_data, &i, gfp_mask, copy);
-> That 'ret' was being overridden when that function failed.
+> E.g. what kernel versions or trees are affected?
 
-Thanks, applied.
+Hello Christoph
 
--- 
-Jens Axboe
+This showed up on a  combined tree of Mikes and Jens (4.15.0-
+rc4.block.dm.4.16) I was testing this weekend but was not apparent on
+the generic upstream 4.15-rc7 from Linus.
+I have to admit that was puzzling me.
+
+When I removed your commit the issue went away.
+
+Ming has crafted a fix so that your original commit can remain in and I
+am testing that now against the same tree that was hanging before.
+
+Ming has a handle on the issue so I will report back after testing.
+
+Kernel is building now
+
+Thanks
+Laurence
