@@ -1,101 +1,147 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
-Date: Sun, 14 Jan 2018 18:40:40 -0500
-Message-ID: <1515973240.8994.2.camel@redhat.com>
-References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: [RFC 0/2] mpt3sas/megaraid_sas : irq poll and load balancing of reply queue
+Date: Mon, 15 Jan 2018 17:42:05 +0530
+Message-ID: <92d894a263bf37152fdae9699ccaccff@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:38720 "EHLO
-        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752383AbeANXkm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Jan 2018 18:40:42 -0500
-Received: by mail-qk0-f175.google.com with SMTP id j185so14970752qkc.5
-        for <linux-scsi@vger.kernel.org>; Sun, 14 Jan 2018 15:40:42 -0800 (PST)
-In-Reply-To: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
+Received: from mail-io0-f178.google.com ([209.85.223.178]:42143 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932793AbeAOMMI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2018 07:12:08 -0500
+Received: by mail-io0-f178.google.com with SMTP id 25so12831702ioj.9
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2018 04:12:07 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vinson Lee <vlee@freedesktop.org>, linux-scsi@vger.kernel.org, Don Brace <don.brace@microsemi.com>
-Cc: "Hellwig, Christoph" <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>
+To: linux-scsi@vger.kernel.org, Peter Rivera <peter.rivera@broadcom.com>
 
-On Thu, 2018-01-04 at 14:32 -0800, Vinson Lee wrote:
-> Hi.
-> 
-> HP ProLiant DL360p Gen8 with Smart Array P420i boots to the login
-> prompt and hangs with Linux 4.13 or later. I cannot log in on console
-> or SSH into the machine. Linux 4.12 and older boot fine.
-> 
-> 
-...
+Hi All -
 
-...
+We have seen cpu lock up issue from fields if system has greater (more
+than 96) logical cpu count.
+SAS3.0 controller (Invader series) supports at max 96 msix vector and
+SAS3.5 product (Ventura) supports at max 128 msix vectors.
 
-This issue bit me for for two straight days.
-I was testing Mike Snitzers combined tree and this commit crept into
-the latest combined tree.
+This may be a generic issue (if PCI device support  completion on multiple
+reply queues). Let me explain it w.r.t to mpt3sas supported h/w just to
+simplify the problem and possible changes to handle such issues. IT HBA
+(mpt3sas) supports multiple reply queues in completion path. Driver
+creates MSI-x vectors for controller as "min of ( FW supported Reply
+queue, Logical CPUs)". If submitter is not interrupted via completion on
+same CPU, there is a loop in the IO path. This behavior can cause
+hard/soft CPU lockups, IO timeout, system sluggish etc.
 
-commit 84676c1f21e8ff54befe985f4f14dc1edc10046b
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Fri Jan 12 10:53:05 2018 +0800
+Example - one CPU (e.g. CPU A) is busy submitting the IOs and another CPU
+(e.g. CPU B) is busy with processing the corresponding IO's reply
+descriptors from reply descriptor queue upon receiving the interrupts from
+HBA. If the CPU A is continuously pumping the IOs then always CPU B (which
+is executing the ISR) will see the valid reply descriptors in the reply
+descriptor queue and it will be continuously processing those reply
+descriptor in a loop without quitting the ISR handler.  Mpt3sas driver
+will exit ISR handler if it finds unused reply descriptor in the reply
+descriptor queue. Since CPU A will be continuously sending the IOs, CPU B
+may always see a valid reply descriptor (posted by HBA Firmware after
+processing the IO) in the reply descriptor queue. In worst case, driver
+will not quit from this loop in the ISR handler. Eventually, CPU lockup
+will be detected by watchdog.
 
-    genirq/affinity: assign vectors to all possible CPUs
-   
-    Currently we assign managed interrupt vectors to all present
-CPUs.  This
-    works fine for systems were we only online/offline CPUs.  But in
-case of
-    systems that support physical CPU hotplug (or the virtualized
-version of
-    it) this means the additional CPUs covered for in the ACPI tables
-or on
-    the command line are not catered for.  To fix this we'd either need
-to
-    introduce new hotplug CPU states just for this case, or we can
-start
-    assining vectors to possible but not present CPUs.
-   
-    Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
-    Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
-    Tested-by: Stefan Haberland <sth@linux.vnet.ibm.com>
-    Fixes: 4b855ad37194 ("blk-mq: Create hctx for each present CPU")
-    Cc: linux-kernel@vger.kernel.org
-    Cc: Thomas Gleixner <tglx@linutronix.de>
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Above mentioned behavior is not common if "rq_affinity" set to 2 or
+affinity_hint is honored by irqbalance as "exact".
+If rq_affinity is set to 2, submitter will be always interrupted via
+completion on same CPU.
+If irqbalance is using "exact" policy, interrupt will be delivered to
+submitter CPU.
 
-Reason I never thought about this being my reason for the latest hang
-is I have used Linus' tree all the way to 4.15-rc7 with no issues.
+Problem statement -
+If CPU counts to MSI-X vectors (reply descriptor Queues) count ratio is
+not 1:1, we still have  exposure of issue explained above and for that we
+don't have any solution.
 
-Vinson reporting it against 4.13 or later was not making sense because
-I had not seen the hang until this weekend.
+Exposure of soft/hard lockup if CPU count is more than MSI-x supported by
+device.
 
-I checked  and its in Linus's tree but its not an issue in the generic
-4.15-rc7 for me.
+If CPUs count to MSI-x vectors count ratio is not 1:1, (Other way, if CPU
+counts to MSI-x vector count ratio is something like X:1, where X > 1)
+then 'exact' irqbalance policy OR rq_affinity = 2 won't help to avoid CPU
+hard/soft lockups. There won't be any one to one mapping between CPU to
+MSI-x vector instead one MSI-x interrupt (or reply descriptor queue) is
+shared with group/set of CPUs and there is a possibility of having a loop
+in the IO path within that CPU group and may observe lockups.
 
-Anyway, its going to possibly bite anybody running HP DL servers with
-HPSA boot devices. I have not tried the workaround below.
->From Vinsons message repeated here
+For example: Consider a system having two NUMA nodes and each node having
+four logical CPUs and also consider that number of MSI-x vectors enabled
+on the HBA is two, then CPUs count to MSI-x vector count ratio as 4:1.
+e.g.
+MSIx vector 0 is affinity to  CPU 0, CPU 1, CPU 2 & CPU 3 of NUMA node 0
+and MSI-x vector 1 is affinity to CPU 4, CPU 5, CPU 6 & CPU 7 of NUMA node
+1.
 
-"The machine still hangs with Linux 4.15-rc6.
+numactl --hardware
+available: 2 nodes (0-1)
+node 0 cpus: 0 1 2 3                                                -->
+MSI-x 0
+node 0 size: 65536 MB
+node 0 free: 63176 MB
+node 1 cpus: 4 5 6 7
+-->MSI-x 1
+node 1 size: 65536 MB
+node 1 free: 63176 MB
 
-I did a bisect. The hang is introduced with Linux 4.13-rc1 commit
-c5cb83bb337c25caae995d992d1cdf9b317f83de "genirq/cpuhotplug: Handle
-managed IRQs on CPU hotplug".
+Assume that user started an application which uses all the CPUs of NUMA
+node 0 for issuing the IOs.
+Only one CPU from affinity list (it can be any cpu since this behavior
+depends upon irqbalance) CPU0 will receive the interrupts from MSIx vector
+0 for all the IOs. Eventually, CPU 0 IO submission percentage will be
+decreasing and ISR processing percentage will be increasing as it is more
+busy with processing the interrupts. Gradually IO submission percentage on
+CPU 0 will be zero and it's ISR processing percentage will be 100
+percentage as IO loop has already formed within the NUMA node 0, i.e. CPU
+1, CPU 2 & CPU 3 will be continuously busy with submitting the heavy IOs
+and only CPU 0 is busy in the ISR path as it always find the valid reply
+descriptor in the reply descriptor queue. Eventually, we will observe the
+hard lockup here.
 
-There is a startup script that disables hyperthreading by offlining
-sibling CPUs.
+Chances of occurring of hard/soft lockups are directly proportional to
+value of X. If value of X is high, then chances of observing CPU lockups
+is high.
 
-for CPU in $(cut -s -d, -f2
-$SYS_PATH/cpu*/topology/thread_siblings_list | sort -un); do
-    echo 0 > /sys/devices/system/cpu/cpu$CPU/online
-done
+Solution -
+Fix - 1 Use IRQ poll interface defined in " irq_poll.c". mpt3sas driver
+will execute ISR routine in Softirq context and it will always quit the
+loop based on budget provided in IRQ poll interface.
 
-If the above script is not run, the machine does not hang with Linux
-4.13.
+In these scenarios( i.e. where CPUs count to MSI-X vectors count ratio is
+X:1 (where X >  1)),  IRQ poll interface will avoid CPU hard lockups due
+to voluntary exit from the reply queue processing based on budget.  Note -
+Only one MSI-x vector is busy doing processing. Irqstat ouput -
 
-Cheers,
-Vinson"
+IRQs / 1 second(s)
+IRQ#  TOTAL  NODE0   NODE1   NODE2   NODE3  NAME
+  44    122871   122871   0       0       0  IR-PCI-MSI-edge
+mpt3sas0-msix0
+  45        0              0           0       0       0  IR-PCI-MSI-edge
+mpt3sas0-msix1
 
-Thanks
-Laurence
+Fix-2 - Above fix will avoid lockups, but there can be some performance
+issue if very few reply queue is busy. Driver should round robin the reply
+queue, so that each reply queue is load balanced.  Irqstat ouput after
+driver does reply queue load balance-
+
+IRQs / 1 second(s)
+IRQ#  TOTAL  NODE0   NODE1   NODE2   NODE3  NAME
+  44  62871  62871       0       0       0  IR-PCI-MSI-edge mpt3sas0-msix0
+  45  62718  62718       0       0       0  IR-PCI-MSI-edge mpt3sas0-msix1
+
+In Summary,
+CPU completing IO which is not contributing to IO submission, may cause
+cpu lockup.
+If CPUs count to MSI-X vector count ratio is X:1 (where X > 1) then using
+irq poll interface, we can avoid the CPU lockups and by equally
+distributing the interrupts among the enabled MSI-x interrupts we can
+avoid performance issues.
+
+We are planning to use both the fixes only if cpu count is more than FW
+supported MSI-x vector.
+Please review and provide your feedback. I have appended both the patches.
+
+Thanks, Kashyap
