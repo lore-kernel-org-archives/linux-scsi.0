@@ -1,68 +1,100 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH] mptfusion: use strlcpy() instead of strncpy()
-Date: Mon, 15 Jan 2018 21:34:35 +0200
-Message-ID: <CAHp75Vc3exQ=EoiQSPqcECF8rkp=yDkP30SCytveQx94bSJK=g@mail.gmail.com>
-References: <1515757619-29651-1-git-send-email-wangxiongfeng2@huawei.com>
- <CAHp75VctB9uRwvEQH=GW65gfOOn4-P7UKNa2OxM0pO7qQjOZrw@mail.gmail.com> <1515769770.3124.3.camel@wdc.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] drivers/scsi/qla2xxx: fix double free bug after firmware
+ timeout
+Date: Mon, 15 Jan 2018 19:58:47 +0000
+Message-ID: <13B82B86-8810-4722-97F9-EC5B862ECC76@cavium.com>
+References: <151603716189.28707.13105191089826357709.stgit@rabbit.intern.cm-ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:42095 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750716AbeAOTeh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2018 14:34:37 -0500
-Received: by mail-qk0-f196.google.com with SMTP id k201so3138372qke.9
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2018 11:34:36 -0800 (PST)
-In-Reply-To: <1515769770.3124.3.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <151603716189.28707.13105191089826357709.stgit@rabbit.intern.cm-ag>
+Content-Language: en-US
+Content-ID: <0D10ED0DEBA34247A4F3CF7DEC64569C@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Max Kellermann <mk@cm4all.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "max.kellermann@gmail.com" <max.kellermann@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "wangxiongfeng2@huawei.com" <wangxiongfeng2@huawei.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "arnd@arndb.de" <arnd@arndb.de>
 
-On Fri, Jan 12, 2018 at 5:09 PM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> On Fri, 2018-01-12 at 15:45 +0200, Andy Shevchenko wrote:
->> On Fri, Jan 12, 2018 at 1:46 PM,  Wang <wangxiongfeng2@huawei.com> wrote:
+Hi Max,=20
 
->> This one is false positive.
+> On Jan 15, 2018, at 9:26 AM, Max Kellermann <mk@cm4all.com> wrote:
+>=20
+> When the qla2xxx firmware is unavailable, eventually
+> qla2x00_sp_timeout() is reached, which calls the timeout function and
+> frees the srb_t instance.
+>=20
+> The timeout function always resolves to qla2x00_async_iocb_timeout(),
+> which invokes another callback function called "done".  All of these
+> qla2x00_*_sp_done() callbacks also free the srb_t instance; after
+> returning to qla2x00_sp_timeout(), it is freed again.
+>=20
+> The fix is to remove the "sp->free(sp)" call from qla2x00_sp_timeout()
+> and add it to those code paths in qla2x00_async_iocb_timeout() which
+> do not already free the object.
+>=20
+> This is how it looks like with KASAN:
+>=20
+> BUG: KASAN: use-after-free in qla2x00_sp_timeout+0x228/0x250
+> Read of size 8 at addr ffff88278147a590 by task swapper/2/0
+>=20
+> Allocated by task 1502:
+>  save_stack+0x33/0xa0
+>  kasan_kmalloc+0xa0/0xd0
+>  kmem_cache_alloc+0xb8/0x1c0
+>  mempool_alloc+0xd6/0x260
+>  qla24xx_async_gnl+0x3c5/0x1100
+>=20
+> Freed by task 0:
+>  save_stack+0x33/0xa0
+>  kasan_slab_free+0x72/0xc0
+>  kmem_cache_free+0x75/0x200
+>  qla24xx_async_gnl_sp_done+0x556/0x9e0
+>  qla2x00_async_iocb_timeout+0x1c7/0x420
+>  qla2x00_sp_timeout+0x16d/0x250
+>  call_timer_fn+0x36/0x200
+>=20
+> The buggy address belongs to the object at ffff88278147a440
+>  which belongs to the cache qla2xxx_srbs of size 344
+> The buggy address is located 336 bytes inside of
+>  344-byte region [ffff88278147a440, ffff88278147a598)
+>=20
+> Signed-off-by: Max Kellermann <mk@cm4all.com>
+> ---
+> drivers/scsi/qla2xxx/qla_init.c |    3 ++-
+> 1 file changed, 2 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index b5b48ddca962..801890564e00 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -58,7 +58,6 @@ qla2x00_sp_timeout(unsigned long __data)
+> 	req->outstanding_cmds[sp->handle] =3D NULL;
+> 	iocb =3D &sp->u.iocb_cmd;
+> 	iocb->timeout(sp);
+> -	sp->free(sp);
+> 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+> }
+>=20
+> @@ -121,9 +120,11 @@ qla2x00_async_iocb_timeout(void *data)
+> 		ea.data[1] =3D lio->u.logio.data[1];
+> 		ea.sp =3D sp;
+> 		qla24xx_handle_plogi_done_event(fcport->vha, &ea);
+> +		sp->free(sp);
+> 		break;
+> 	case SRB_LOGOUT_CMD:
+> 		qlt_logo_completion_handler(fcport, QLA_FUNCTION_TIMEOUT);
+> +		sp->free(sp);
+> 		break;
+> 	case SRB_CT_PTHRU_CMD:
+> 	case SRB_MB_IOCB:
+>=20
 
+We have patch to prevent this double free in 4.16/scsi-queue already.=20
 
->> > +       strlcpy (karg.name, ioc->name, MPT_MAX_NAME);
->> > +       strlcpy (karg.product, ioc->prod_name, MPT_PRODUCT_LENGTH);
->>
->> These two as well.
->
-> But using strlcpy() makes the code easier to read.
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=3D4.=
+16/scsi-queue&id=3D045d6ea200af794ba15515984cff63787a7fc3c0
 
-This is another story, not mentioned in the original commit message.
-
-> Xiongfeng, if you want to continue with this patch, please change the third
-> argument of all strlcpy() calls into a sizeof() expression. That make the
-> code easier to verify.
->
->> > -       strncpy(karg.serial_number, " ", 24);
->> > +       strlcpy(karg.serial_number, " ", 24);
->>
->> This one is interesting indeed.
->> Though the fix would be rather something like
->>
->> memset(&karg.serial_number, " ", 24); // leave 24 for best performance of memset
->> karg.serial_number[24-1] = '\0';
->
-> Does performance really matter in this context?
-
-Nope, but still good to understand this aspect. On some architectures
-unaligned access is expensive.
-
-> How about the following instead:
->
-> snprintf(karg.serial_number, sizeof(karg.serial_number), "%*s", (int)(karg.serial_number) - 1, "");
-
-...and you is talking about "easy to read"?!
-
-So, my view on the patch is:
-1) fix a real issue w/o touching everything around;
-2) (optionally) move to strlcpy() with a correct selling point.
-
--- 
-With Best Regards,
-Andy Shevchenko
+Thanks,
+- Himanshu
