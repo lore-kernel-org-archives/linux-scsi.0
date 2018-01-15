@@ -1,51 +1,43 @@
-From: Max Kellermann <mk@cm4all.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 Subject: Re: [PATCH] drivers/scsi/qla2xxx: fix double free bug after firmware
  timeout
-Date: Mon, 15 Jan 2018 21:37:27 +0100
-Message-ID: <20180115203726.b7igf7rajczllcv7@rabbit.intern.cm-ag>
+Date: Mon, 15 Jan 2018 21:03:50 +0000
+Message-ID: <3C90DA82-B55E-4FEC-916B-112CA1A56BCF@cavium.com>
 References: <151603716189.28707.13105191089826357709.stgit@rabbit.intern.cm-ag>
  <13B82B86-8810-4722-97F9-EC5B862ECC76@cavium.com>
+ <20180115203726.b7igf7rajczllcv7@rabbit.intern.cm-ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nibbler.cm4all.net ([82.165.145.151]:60562 "EHLO
-        nibbler.cm4all.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750710AbeAOUhd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2018 15:37:33 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by nibbler.cm4all.net (Postfix) with ESMTP id A727FC0307
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2018 21:37:27 +0100 (CET)
-Received: from nibbler.cm4all.net ([127.0.0.1])
-        by localhost (nibbler.cm4all.net [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id 5abcTjEmA1lf for <linux-scsi@vger.kernel.org>;
-        Mon, 15 Jan 2018 21:37:27 +0100 (CET)
-Received: from zero.intern.cm-ag (zero.intern.cm-ag [172.30.16.10])
-        by nibbler.cm4all.net (Postfix) with SMTP id 7F93CC032B
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2018 21:37:27 +0100 (CET)
-Content-Disposition: inline
-In-Reply-To: <13B82B86-8810-4722-97F9-EC5B862ECC76@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180115203726.b7igf7rajczllcv7@rabbit.intern.cm-ag>
+Content-Language: en-US
+Content-ID: <C287606EBD2AD2449A236AB1D6EA1D7D@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Max Kellermann <mk@cm4all.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "max.kellermann@gmail.com" <max.kellermann@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Cc: Max Kellermann <mk@cm4all.com>, Greg KH <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "max.kellermann@gmail.com" <max.kellermann@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 2018/01/15 20:58, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com> wrote:
-> We have patch to prevent this double free in 4.16/scsi-queue
-> already.
-
-No, let me repeat: this is a different bug!
-
-Your bug is about the free call after waiting for completion
-synchronously in qla24xx_els_dcmd_iocb(), after it was already freed
-by qla2x00_sp_timeout().
-
-My bug is about free in qla2x00_*_sp_done() and again in
-qla2x00_sp_timeout().  My patch description describes exactly that.
-
-And you know what?  My patch fixes both bugs.  It is superior to the
-one that was merged 4 weeks later, isn't it?
-
-You NACKed my patch 5 weeks ago, and I explained to you that you were
-talking about a different bug, but you never replied to that.
-
-Max
+SGkgTWF4LCANCg0KPiBPbiBKYW4gMTUsIDIwMTgsIGF0IDEyOjM3IFBNLCBNYXggS2VsbGVybWFu
+biA8bWtAY200YWxsLmNvbT4gd3JvdGU6DQo+IA0KPiBPbiAyMDE4LzAxLzE1IDIwOjU4LCAiTWFk
+aGFuaSwgSGltYW5zaHUiIDxIaW1hbnNodS5NYWRoYW5pQGNhdml1bS5jb20+IHdyb3RlOg0KPj4g
+V2UgaGF2ZSBwYXRjaCB0byBwcmV2ZW50IHRoaXMgZG91YmxlIGZyZWUgaW4gNC4xNi9zY3NpLXF1
+ZXVlDQo+PiBhbHJlYWR5Lg0KPiANCj4gTm8sIGxldCBtZSByZXBlYXQ6IHRoaXMgaXMgYSBkaWZm
+ZXJlbnQgYnVnIQ0KPiANCj4gWW91ciBidWcgaXMgYWJvdXQgdGhlIGZyZWUgY2FsbCBhZnRlciB3
+YWl0aW5nIGZvciBjb21wbGV0aW9uDQo+IHN5bmNocm9ub3VzbHkgaW4gcWxhMjR4eF9lbHNfZGNt
+ZF9pb2NiKCksIGFmdGVyIGl0IHdhcyBhbHJlYWR5IGZyZWVkDQo+IGJ5IHFsYTJ4MDBfc3BfdGlt
+ZW91dCgpLg0KPiANCj4gTXkgYnVnIGlzIGFib3V0IGZyZWUgaW4gcWxhMngwMF8qX3NwX2RvbmUo
+KSBhbmQgYWdhaW4gaW4NCj4gcWxhMngwMF9zcF90aW1lb3V0KCkuICBNeSBwYXRjaCBkZXNjcmlw
+dGlvbiBkZXNjcmliZXMgZXhhY3RseSB0aGF0Lg0KPiANCj4gQW5kIHlvdSBrbm93IHdoYXQ/ICBN
+eSBwYXRjaCBmaXhlcyBib3RoIGJ1Z3MuICBJdCBpcyBzdXBlcmlvciB0byB0aGUNCj4gb25lIHRo
+YXQgd2FzIG1lcmdlZCA0IHdlZWtzIGxhdGVyLCBpc24ndCBpdD8NCj4gDQo+IFlvdSBOQUNLZWQg
+bXkgcGF0Y2ggNSB3ZWVrcyBhZ28sIGFuZCBJIGV4cGxhaW5lZCB0byB5b3UgdGhhdCB5b3Ugd2Vy
+ZQ0KPiB0YWxraW5nIGFib3V0IGEgZGlmZmVyZW50IGJ1ZywgYnV0IHlvdSBuZXZlciByZXBsaWVk
+IHRvIHRoYXQuDQo+IA0KPiBNYXgNCg0KVGhhbmtzIGZvciByZWZyZXNoaW5nIG15IG1lbW9yeS4g
+U29ycnkgYWJvdXQgbm90IGdldHRpbmcgYmFjayB0byB5b3UgZWFybGllci4gDQpJIHdhcyBvdXQg
+Zm9yIGNvdXBsZSB3ZWVrcyBzbyBpdCBnb3QgZHJvcHBlZCBvdXQgb2YgbXkgYnVja2V0IGZvciBy
+ZXNwb25zZS4NCg0KSSBkbyBhZ3JlZSB0aGVyZSBpcyBkb3VibGUgZnJlZSBpc3N1ZSBoZXJlLiBJ
+4oCZbGwgZGlzY3VzcyB0aGlzIGludGVybmFsbHkgd2l0aCBmb2xrcyB3aG8gaGFzIA0KZGVlcGVy
+IGhpc3Rvcnkgb2YgdGhpcyBjb2RlIGFuZCB3aWxsIGdldCBiYWNrIHRvIHlvdSBhbmQgc2VlIHdo
+aWNoIGFwcHJvYWNoIHdlIHdhbnQgdG8NCnRha2UuIA0KDQpUaGFua3MsDQotIEhpbWFuc2h1DQoN
+Cg==
