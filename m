@@ -1,107 +1,61 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: LSF/MM 2018: Call for Proposals
-Date: Mon, 15 Jan 2018 11:39:52 -0500
-Message-ID: <20180115163952.GB26120@cmpxchg.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-Sender: owner-linux-mm@kvack.org
-To: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Cc: lsf-pc@lists.linux-foundation.org
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH] scsi: devinfo: fix format of the device list
+Date: Mon, 15 Jan 2018 17:47:23 +0100
+Message-ID: <20180115164723.1943-1-xose.vazquez@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36949 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965497AbeAOQr1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2018 11:47:27 -0500
+Received: by mail-wm0-f65.google.com with SMTP id v71so3251557wmv.2
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2018 08:47:26 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>
 
-The annual Linux Storage, Filesystem and Memory Management (LSF/MM)
-Summit for 2018 will be held from April 23-25 at the Deer Valley
-Lodges in Park City, Utah. LSF/MM is an invitation-only technical
-workshop to map out improvements to the Linux storage, filesystem and
-memory management subsystems that will make their way into the
-mainline kernel within the coming years.
+Replace "" with NULL for product revision level, and
+merge TEXEL duplicate entries.
 
-	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/scsi/scsi_devinfo.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-LSF/MM 2018 will be a three day, stand-alone conference with three
-subsystem-specific tracks, cross-track discussions, as well as BoF and
-hacking sessions.
-
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
-
-If advance notice is required for visa applications then please point
-that out in your proposal or request to attend, and submit the topic
-as soon as possible.
-
-1) Proposals for agenda topics should be sent before January 31st,
-2018 to:
-
-	lsf-pc@lists.linux-foundation.org
-
-and CC the mailing lists that are relevant for the topic in question:
-
-	FS:	linux-fsdevel@vger.kernel.org
-	MM:	linux-mm@kvack.org
-	Block:	linux-block@vger.kernel.org
-	ATA:	linux-ide@vger.kernel.org
-	SCSI:	linux-scsi@vger.kernel.org
-	NVMe:	linux-nvme@lists.infradead.org
-
-Please tag your proposal with [LSF/MM TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one. Agenda topics and
-attendees will be selected by the program committee, but the final
-agenda will be formed by consensus of the attendees on the day.
-
-2) Requests to attend the summit for those that are not proposing a
-topic should be sent to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Please summarize what expertise you will bring to the meeting, and
-what you would like to discuss. Please also tag your email with
-[LSF/MM ATTEND] and send it as a new thread so there is less chance of
-it getting lost.
-
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes
-at the venue.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks; the sessions are supposed to be
-interactive, inclusive discussions.
-
-There will be no recording or audio bridge. However, we expect that
-written minutes will be published as we did in previous years:
-
-2017: https://lwn.net/Articles/lsfmm2017/
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-2013: http://lwn.net/Articles/548089/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-	Anna Schumaker (Filesystems)
-	Jens Axboe (Storage)
-	Josef Bacik (Filesystems)
-	Martin K. Petersen (Storage)
-	Michal Hocko (MM)
-	Rik van Riel (MM)
-
-Johannes Weiner
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index a15eb4d15114..769fdcba61df 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -109,8 +109,8 @@ static struct {
+ 	 * seagate controller, which causes SCSI code to reset bus.
+ 	 */
+ 	{"HP", "C1750A", "3226", BLIST_NOLUN},		/* scanjet iic */
+-	{"HP", "C1790A", "", BLIST_NOLUN},		/* scanjet iip */
+-	{"HP", "C2500A", "", BLIST_NOLUN},		/* scanjet iicx */
++	{"HP", "C1790A", NULL, BLIST_NOLUN},		/* scanjet iip */
++	{"HP", "C2500A", NULL, BLIST_NOLUN},		/* scanjet iicx */
+ 	{"MEDIAVIS", "CDR-H93MV", "1.31", BLIST_NOLUN},	/* locks up */
+ 	{"MICROTEK", "ScanMaker II", "5.61", BLIST_NOLUN},	/* responds to all lun */
+ 	{"MITSUMI", "CD-R CR-2201CS", "6119", BLIST_NOLUN},	/* locks up */
+@@ -120,7 +120,7 @@ static struct {
+ 	{"QUANTUM", "FIREBALL ST4.3S", "0F0C", BLIST_NOLUN},	/* locks up */
+ 	{"RELISYS", "Scorpio", NULL, BLIST_NOLUN},	/* responds to all lun */
+ 	{"SANKYO", "CP525", "6.64", BLIST_NOLUN},	/* causes failed REQ SENSE, extra reset */
+-	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN},
++	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN | BLIST_BORKEN},
+ 	{"transtec", "T5008", "0001", BLIST_NOREPORTLUN },
+ 	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},	/* locks up */
+ 	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
+@@ -255,7 +255,6 @@ static struct {
+ 	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
+ 	{"SUN", "T300", "*", BLIST_SPARSELUN},
+ 	{"SUN", "T4", "*", BLIST_SPARSELUN},
+-	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
+ 	{"Tornado-", "F4", "*", BLIST_NOREPORTLUN},
+ 	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
+ 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
+-- 
+2.14.3
