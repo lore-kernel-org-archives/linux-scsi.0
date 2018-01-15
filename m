@@ -1,160 +1,240 @@
-From: Lars Ellenberg <lars.ellenberg@linbit.com>
-Subject: Re: [Drbd-dev] [PATCH 23/27] drbd: make intelligent use
- of blkdev_issue_zeroout
-Date: Mon, 15 Jan 2018 13:46:35 +0100
-Message-ID: <20180115124635.GA4107@soda.linbit>
-References: <20170405172125.22600-1-hch@lst.de>
-	<20170405172125.22600-24-hch@lst.de>
-	<alpine.LRH.2.11.1801130035010.13147@mail.ewheeler.net>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: HP ProLiant DL360p Gen8 hangs with Linux 4.13+.
+Date: Mon, 15 Jan 2018 07:51:19 -0500
+Message-ID: <1516020679.21554.1.camel@redhat.com>
+References: <CACKvgLEtPRpAS58kn-Skjn65-ZkDK17_cE+OzJodxQ=XvtQPGg@mail.gmail.com>
+         <1515973240.8994.2.camel@redhat.com> <20180115121659.GA17687@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.11.1801130035010.13147@mail.ewheeler.net>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Eric Wheeler <drbd-dev@lists.ewheeler.net>
-Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, martin.petersen@oracle.com, snitzer@redhat.com, philipp.reisner@linbit.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, shli@kernel.org, Christoph Hellwig <hch@lst.de>, agk@redhat.com, drbd-dev@lists.linbit.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:44590 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967216AbeAOMvW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2018 07:51:22 -0500
+Received: by mail-qt0-f193.google.com with SMTP id m59so13986037qte.11
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2018 04:51:21 -0800 (PST)
+In-Reply-To: <20180115121659.GA17687@ming.t460p>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Vinson Lee <vlee@freedesktop.org>, linux-scsi@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "Hellwig, Christoph" <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Thomas Gleixner <tglx@linutronix.de>, linux-kernel@vger.kernel.org
 
-On Sat, Jan 13, 2018 at 12:46:40AM +0000, Eric Wheeler wrote:
-> Hello All,
-> =
+On Mon, 2018-01-15 at 20:17 +0800, Ming Lei wrote:
+> On Sun, Jan 14, 2018 at 06:40:40PM -0500, Laurence Oberman wrote:
+> > On Thu, 2018-01-04 at 14:32 -0800, Vinson Lee wrote:
+> > > Hi.
+> > > 
+> > > HP ProLiant DL360p Gen8 with Smart Array P420i boots to the login
+> > > prompt and hangs with Linux 4.13 or later. I cannot log in on
+> > > console
+> > > or SSH into the machine. Linux 4.12 and older boot fine.
+> > > 
+> > > 
+> > 
+> > ...
+> > 
+> > ...
+> > 
+> > This issue bit me for for two straight days.
+> > I was testing Mike Snitzers combined tree and this commit crept
+> > into
+> > the latest combined tree.
+> > 
+> > commit 84676c1f21e8ff54befe985f4f14dc1edc10046b
+> > Author: Christoph Hellwig <hch@lst.de>
+> > Date:   Fri Jan 12 10:53:05 2018 +0800
+> > 
+> >     genirq/affinity: assign vectors to all possible CPUs
+> >    
+> >     Currently we assign managed interrupt vectors to all present
+> > CPUs.  This
+> >     works fine for systems were we only online/offline CPUs.  But
+> > in
+> > case of
+> >     systems that support physical CPU hotplug (or the virtualized
+> > version of
+> >     it) this means the additional CPUs covered for in the ACPI
+> > tables
+> > or on
+> >     the command line are not catered for.  To fix this we'd either
+> > need
+> > to
+> >     introduce new hotplug CPU states just for this case, or we can
+> > start
+> >     assining vectors to possible but not present CPUs.
+> >    
+> >     Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
+> >     Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
+> >     Tested-by: Stefan Haberland <sth@linux.vnet.ibm.com>
+> >     Fixes: 4b855ad37194 ("blk-mq: Create hctx for each present
+> > CPU")
+> >     Cc: linux-kernel@vger.kernel.org
+> >     Cc: Thomas Gleixner <tglx@linutronix.de>
+> >     Signed-off-by: Christoph Hellwig <hch@lst.de>
+> >     Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> > 
+> > Reason I never thought about this being my reason for the latest
+> > hang
+> > is I have used Linus' tree all the way to 4.15-rc7 with no issues.
+> > 
+> > Vinson reporting it against 4.13 or later was not making sense
+> > because
+> > I had not seen the hang until this weekend.
+> > 
+> > I checked  and its in Linus's tree but its not an issue in the
+> > generic
+> > 4.15-rc7 for me.
+> 
+> Hi Laurence,
+> 
+> Wrt. your issue, I have investigated a bit and found that it is
+> because
+> one irq vector may be assigned to all offline CPUs, and it may not be
+> same with Vinson's.
+> 
+> And the following patch can address your issue, I may prepare a
+> formal
+> version if no one objects this approach.
+> 
+> Thomas, Christoph, could you take a look this patch?
+> 
+> ---
+>  kernel/irq/affinity.c | 69 +++++++++++++++++++++++++++++++++++----
+> ------------
+>  1 file changed, 47 insertions(+), 22 deletions(-)
+> 
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index a37a3b4b6342..dfc1f6a9c488 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -94,6 +94,39 @@ static int get_nodes_in_cpumask(cpumask_var_t
+> *node_to_possible_cpumask,
+>  	return nodes;
+>  }
+>  
+> +/*
+> + * Spread the affinity of @nmsk into @nr_vecs irq vectors, and the
+> + * result is stored to @start_irqmsk.
+> + */
+> +static int irq_vecs_spread_affinity(struct cpumask *irqmsk,
+> +				    int max_irqmsks,
+> +				    struct cpumask *nmsk,
+> +				    int max_ncpus)
+> +{
+> +	int v, ncpus;
+> +	int vecs_to_assign, extra_vecs;
+> +
+> +	/* Calculate the number of cpus per vector */
+> +	ncpus = cpumask_weight(nmsk);
+> +	vecs_to_assign = min(max_ncpus, ncpus);
+> +
+> +	/* Account for rounding errors */
+> +	extra_vecs = ncpus - vecs_to_assign * (ncpus /
+> vecs_to_assign);
+> +
+> +	for (v = 0; v < min(max_irqmsks, vecs_to_assign); v++) {
+> +		int cpus_per_vec = ncpus / vecs_to_assign;
+> +
+> +		/* Account for extra vectors to compensate rounding
+> errors */
+> +		if (extra_vecs) {
+> +			cpus_per_vec++;
+> +			--extra_vecs;
+> +		}
+> +		irq_spread_init_one(irqmsk + v, nmsk, cpus_per_vec);
+> +	}
+> +
+> +	return v;
+> +}
+> +
+>  /**
+>   * irq_create_affinity_masks - Create affinity masks for multiqueue
+> spreading
+>   * @nvecs:	The total number of vectors
+> @@ -104,7 +137,7 @@ static int get_nodes_in_cpumask(cpumask_var_t
+> *node_to_possible_cpumask,
+>  struct cpumask *
+>  irq_create_affinity_masks(int nvecs, const struct irq_affinity
+> *affd)
+>  {
+> -	int n, nodes, cpus_per_vec, extra_vecs, curvec;
+> +	int n, nodes, curvec;
+>  	int affv = nvecs - affd->pre_vectors - affd->post_vectors;
+>  	int last_affv = affv + affd->pre_vectors;
+>  	nodemask_t nodemsk = NODE_MASK_NONE;
+> @@ -154,33 +187,25 @@ irq_create_affinity_masks(int nvecs, const
+> struct irq_affinity *affd)
+>  	}
+>  
+>  	for_each_node_mask(n, nodemsk) {
+> -		int ncpus, v, vecs_to_assign, vecs_per_node;
+> +		int vecs_per_node;
+>  
+>  		/* Spread the vectors per node */
+>  		vecs_per_node = (affv - (curvec - affd-
+> >pre_vectors)) / nodes;
+>  
+> -		/* Get the cpus on this node which are in the mask
+> */
+> -		cpumask_and(nmsk, cpu_possible_mask,
+> node_to_possible_cpumask[n]);
+>  
+> -		/* Calculate the number of cpus per vector */
+> -		ncpus = cpumask_weight(nmsk);
+> -		vecs_to_assign = min(vecs_per_node, ncpus);
+> -
+> -		/* Account for rounding errors */
+> -		extra_vecs = ncpus - vecs_to_assign * (ncpus /
+> vecs_to_assign);
+> -
+> -		for (v = 0; curvec < last_affv && v <
+> vecs_to_assign;
+> -		     curvec++, v++) {
+> -			cpus_per_vec = ncpus / vecs_to_assign;
+> -
+> -			/* Account for extra vectors to compensate
+> rounding errors */
+> -			if (extra_vecs) {
+> -				cpus_per_vec++;
+> -				--extra_vecs;
+> -			}
+> -			irq_spread_init_one(masks + curvec, nmsk,
+> cpus_per_vec);
+> -		}
+> +		/* spread non-online possible cpus */
+> +		cpumask_andnot(nmsk, node_to_possible_cpumask[n],
+> cpu_online_mask);
+> +		irq_vecs_spread_affinity(&masks[curvec], last_affv -
+> curvec,
+> +					 nmsk, vecs_per_node);
+>  
+> +		/*
+> +		 * spread online possible cpus to make sure each
+> vector
+> +		 * can get one online cpu to handle
+> +		 */
+> +		cpumask_and(nmsk, node_to_possible_cpumask[n],
+> cpu_online_mask);
+> +		curvec += irq_vecs_spread_affinity(&masks[curvec],
+> +						   last_affv -
+> curvec,
+> +						   nmsk,
+> vecs_per_node);
+>  		if (curvec >= last_affv)
+>  			break;
+>  		--nodes;
+> -- 
+> 2.9.5
+> 
+> 
 
-> We just noticed that discards to DRBD devices backed by dm-thin devices =
+Hello Ming
 
-> are fully allocating the thin blocks.
-> =
+I will test the patch. I did not spend a lot of time seeing if this
+weekends stalls were an exact match to Vinson, I just knew pulling that
+patch resolved it.
+Perhaps this explains why I was not seeing this on generic 4.15-rc7.
 
-> This behavior does not exist before =
-
-> ee472d83 block: add a flags argument to (__)blkdev_issue_zeroout
-> =
-
-> The problem exists somewhere between
-> [working] c20cfc27 block: stop using blkdev_issue_write_same for zeroing
->   and
-> [broken]  45c21793 drbd: implement REQ_OP_WRITE_ZEROES
-> =
-
-> Note that c20cfc27 works as expected, but 45c21793 discards blocks =
-
-> being zeroed on the dm-thin backing device. All commits between those two =
-
-> produce the following error:
-> =
-
-> blkdiscard: /dev/drbd/by-res/test: BLKDISCARD ioctl failed: Input/output =
-error
-> =
-
-> Also note that issuing a blkdiscard to the backing device directly =
-
-> discards as you would expect. This is just a problem when sending discard=
-s =
-
-> through DRBD.
-> =
-
-> Is there an easy way to solve this in the short term, even if the ultimat=
-e =
-
-> fix is more involved?
-
-> On Wed, 5 Apr 2017, Christoph Hellwig wrote:
-> =
-
-
-commit 0dbed96a3cc9786bc4814dab98a7218753bde934
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Wed Apr 5 19:21:21 2017 +0200
-
-    drbd: make intelligent use of blkdev_issue_zeroout
-
-> > drbd always wants its discard wire operations to zero the blocks, so
-> > use blkdev_issue_zeroout with the BLKDEV_ZERO_UNMAP flag instead of
-> > reinventing it poorly.
-
-> > -/*
-> > - * We *may* ignore the discard-zeroes-data setting, if so configured.
-> > - *
-> > - * Assumption is that it "discard_zeroes_data=3D0" is only because the=
- backend
-> > - * may ignore partial unaligned discards.
-> > - *
-> > - * LVM/DM thin as of at least
-> > - *   LVM version:     2.02.115(2)-RHEL7 (2015-01-28)
-> > - *   Library version: 1.02.93-RHEL7 (2015-01-28)
-> > - *   Driver version:  4.29.0
-> > - * still behaves this way.
-> > - *
-> > - * For unaligned (wrt. alignment and granularity) or too small discard=
-s,
-> > - * we zero-out the initial (and/or) trailing unaligned partial chunks,
-> > - * but discard all the aligned full chunks.
-> > - *
-> > - * At least for LVM/DM thin, the result is effectively "discard_zeroes=
-_data=3D1".
-> > - */
-> > -int drbd_issue_discard_or_zero_out(struct drbd_device *device, sector_=
-t start, unsigned int nr_sectors, bool discard)
-
-
-As I understood it,
-blkdev_issue_zeroout() was supposed to "always try to unmap",
-deprovision, the relevant region, and zero-out any unaligned
-head or tail, just like my work around above was doing.
-
-And that device mapper thin was "about to" learn this, "soon",
-or maybe block core would do the equivalent of my workaround
-described above.
-
-But it then did not.
-
-See also:
-https://www.redhat.com/archives/dm-devel/2017-March/msg00213.html
-https://www.redhat.com/archives/dm-devel/2017-March/msg00226.html
-
-I then did not follow this closely enough anymore,
-and I missed that with recent enough kernel,
-discard on DRBD on dm-thin would fully allocate.
-
-In our out-of-tree module, we had to keep the older code for
-compat reasons, anyways. I will just re-enable our zeroout
-workaround there again.
-
-In tree, either dm-thin learns to do REQ_OP_WRITE_ZEROES "properly",
-so the result in this scenario is what we expect:
-
-  _: unprovisioned, not allocated, returns zero on read anyways
-  *: provisioned, some arbitrary data
-  0: explicitly zeroed:
-
-  |gran|ular|ity |    |    |    |
-  |****|****|____|****|
-     to|-be-|zero|ed
-  |**00|____|____|00**|
-
-(leave unallocated blocks alone,
- de-allocate full blocks just like with discard,
- explicitly zero unaligned head and tail)
-
-Or DRBD will have to resurrect that reinvented zeroout again,
-with exactly those semantics. I did reinvent it for a reason ;)
-
--- =
-
-: Lars Ellenberg
-: LINBIT | Keeping the Digital World Running
-: DRBD -- Heartbeat -- Corosync -- Pacemaker
-: R&D, Integration, Ops, Consulting, Support
-
-DRBD=AE and LINBIT=AE are registered trademarks of LINBIT
+Thanks
+Laurence
