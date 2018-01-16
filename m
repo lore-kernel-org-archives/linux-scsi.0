@@ -1,41 +1,41 @@
-From: Tony Luck <tony.luck@gmail.com>
-Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative execution
-Date: Tue, 16 Jan 2018 11:21:19 -0800
-Message-ID: <CA+8MBbL-ZJhTT7jTKVffS5r_7Qq6b-Af96YiNLrMs7Ndo45WhA@mail.gmail.com>
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com>
- <CA+8MBb+H0FqciBw9nSO9L0fNQtiRvc_1TREitH9z89YxhtyFAQ@mail.gmail.com> <CA+55aFwUspY8DG3hRxZqQaf_n_0OZxGCd=pELc8ZVuBu+058cA@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] A high-performance userspace block
+ driver
+Date: Tue, 16 Jan 2018 15:28:36 -0800
+Message-ID: <1516145316.14734.11.camel@HansenPartnership.com>
+References: <20180116145240.GD30073@bombadil.infradead.org>
+         <20180116232335.GM8249@thunk.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFwUspY8DG3hRxZqQaf_n_0OZxGCd=pELc8ZVuBu+058cA@mail.gmail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>, kernel-hardening@lists.openwall.com, Peter Zijlstra <peterz@infradead.org>, Alan Cox <alan.cox@intel.com>, Will Deacon <will.deacon@arm.com>, Alexei Starovoitov <ast@kernel.org>, Solomon Peachy <pizza@shaftnet.org>, "H. Peter Anvin" <hpa@zytor.com>, Christian Lamparter <chunkeey@googlemail.com>, Elena Reshetova <elena.reshetova@intel.com>, "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, Andi Kleen <ak@linux.intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, the arch/x86 maintainers <x86@kernel.org>, Russell
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20180116232335.GM8249@thunk.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <willy@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf-pc@lists.linux-foundation.org, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jan 13, 2018 at 10:51 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Fri, Jan 12, 2018 at 4:15 PM, Tony Luck <tony.luck@gmail.com> wrote:
-> So your argument depends on "the uarch will actually run the code in
-> order if there are no events that block the pipeline".
+On Tue, 2018-01-16 at 18:23 -0500, Theodore Ts'o wrote:
+> On Tue, Jan 16, 2018 at 06:52:40AM -0800, Matthew Wilcox wrote:
+> > 
+> > 
+> > I see the improvements that Facebook have been making to the nbd
+> > driver, and I think that's a wonderful thing.  Maybe the outcome of
+> > this topic is simply: "Shut up, Matthew, this is good enough".
+> > 
+> > It's clear that there's an appetite for userspace block devices;
+> > not for swap devices or the root device, but for accessing data
+> > that's stored in that silo over there, and I really don't want to
+> > bring that entire mess of CORBA / Go / Rust / whatever into the
+> > kernel to get to it, but it would be really handy to present it as
+> > a block device.
+> 
+> ... and using iSCSI was too painful and heavyweight.
 
-And might be bogus ... I'm a software person not a u-arch expert. That
-sounded good in my head, but the level of parallelism may be greater
-than I can imagine.
+>From what I've seen a reasonable number of storage over IP cloud
+implementations are actually using AoE.  The argument goes that the
+protocol is about ideal (at least as compared to iSCSI or FCoE) and the
+company behind it doesn't seem to want to add any more features that
+would bloat it.
 
-> Or at least it depends on a certain latency of the killing of any OoO
-> execution being low enough that the cache access doesn't even begin.
->
-> I realize that that is very much a particular microarchitectural
-> detail, but it's actually a *big* deal. Do we have a set of rules for
-> what is not a worry, simply because the speculated accesses get killed
-> early enough?
->
-> Apparently "test a register value against a constant" is good enough,
-> assuming that register is also needed for the address of the access.
-
-People who do understand this are working on what can be guaranteed.
-For now don't make big plans based on my ramblings.
-
--Tony
+James
