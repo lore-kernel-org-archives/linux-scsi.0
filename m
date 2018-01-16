@@ -1,49 +1,56 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 7/8] qla2xxx: Add XCB counters to debugfs
-Date: Mon, 15 Jan 2018 20:46:52 -0800
-Message-ID: <20180116044653.20696-8-himanshu.madhani@cavium.com>
+Subject: [PATCH 2/8] qla2xxx: Fix recursion while sending terminate exchange
+Date: Mon, 15 Jan 2018 20:46:47 -0800
+Message-ID: <20180116044653.20696-3-himanshu.madhani@cavium.com>
 References: <20180116044653.20696-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0042.outbound.protection.outlook.com ([104.47.32.42]:19172
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0075.outbound.protection.outlook.com ([104.47.37.75]:7968
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751306AbeAPErK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Jan 2018 23:47:10 -0500
+        id S1751098AbeAPErB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 Jan 2018 23:47:01 -0500
 In-Reply-To: <20180116044653.20696-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Anil Gurumurthy <anil.gurumurthy@cavium.com>
+During error test case where switch port status is toggled
+from enable to disable, following stack trace is seen which
+indicates recursion trying to send terminate exchange.
+This regression was introduced by commit 82de802ad46e
+("scsi: qla2xxx: Preparation for Target MQ.")
 
-Signed-off-by: Anil Gurumurthy <anil.gurumurthy@cavium.com>
+BUG: stack guard page was hit at ffffb96488383ff8 (stack is ffffb96488384000..ffffb96488387fff)
+BUG: stack guard page was hit at ffffb964886c3ff8 (stack is ffffb964886c4000..ffffb964886c7fff)
+kernel stack overflow (double-fault): 0000 [#1] SMP
+qlt_term_ctio_exchange+0x9c/0xb0 [qla2xxx]
+qlt_term_ctio_exchange+0x9c/0xb0 [qla2xxx]
+qlt_term_ctio_exchange+0x9c/0xb0 [qla2xxx]
+qlt_term_ctio_exchange+0x9c/0xb0 [qla2xxx]
+qlt_term_ctio_exchange+0x9c/0xb0 [qla2xxx]
+
+Fixes: 82de802ad46e ("scsi: qla2xxx: Preparation for Target MQ.")
+Cc: <stable@vger.kernel.org> #4.10
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_dfs.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index ddb53db61fd2..0b190082aa8d 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -143,6 +143,15 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 		seq_printf(s, "Current IOCB count[%d]\n", mb[10]);
- 		seq_printf(s, "MAX VP count[%d]\n", mb[11]);
- 		seq_printf(s, "MAX FCF count[%d]\n", mb[12]);
-+		seq_printf(s, "Current free pageable XCB buffer cnt[%d]\n",
-+		    mb[20]);
-+		seq_printf(s, "Original Initiator fast XCB buffer cnt[%d]\n",
-+		    mb[21]);
-+		seq_printf(s, "Current free Initiator fast XCB buffer cnt[%d]\n",
-+		    mb[22]);
-+		seq_printf(s, "Original Target fast XCB buffer cnt[%d]\n",
-+		    mb[23]);
-+
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 0d3c3f647f91..cc80e57675e4 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3756,7 +3756,7 @@ static int qlt_term_ctio_exchange(struct qla_qpair *qpair, void *ctio,
+ 		term = 1;
  
- 	return 0;
+ 	if (term)
+-		qlt_term_ctio_exchange(qpair, ctio, cmd, status);
++		qlt_send_term_exchange(qpair, cmd, &cmd->atio, 1, 0);
+ 
+ 	return term;
+ }
 -- 
 2.12.0
