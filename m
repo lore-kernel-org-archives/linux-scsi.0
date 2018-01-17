@@ -1,29 +1,46 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH][scsi-next] scsi: mpt3sas: make function _get_st_from_smid static
-Date: Wed, 17 Jan 2018 01:02:33 -0500
-Message-ID: <yq1r2qpt43q.fsf@oracle.com>
-References: <20180111165539.1248-1-colin.king@canonical.com>
+Subject: Re: how to enlarge value of max_sectors_kb
+Date: Wed, 17 Jan 2018 01:10:40 -0500
+Message-ID: <yq1mv1dt3q7.fsf@oracle.com>
+References: <1515830004-5476-1-git-send-email-tang.junhui@zte.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35718 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750846AbeAQGCl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 01:02:41 -0500
-In-Reply-To: <20180111165539.1248-1-colin.king@canonical.com> (Colin King's
-        message of "Thu, 11 Jan 2018 16:55:39 +0000")
+Received: from aserp2120.oracle.com ([141.146.126.78]:33896 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbeAQGKt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 01:10:49 -0500
+In-Reply-To: <1515830004-5476-1-git-send-email-tang.junhui@zte.com.cn> (tang
+        junhui's message of "Sat, 13 Jan 2018 15:53:24 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: tang.junhui@zte.com.cn
+Cc: hare@suse.de, kartilak@cisco.com, sebaddel@cisco.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
 
-Colin,
+Tang,
 
-> The function _get_st_from_smid is local to the source and does
-> not need to be in global scope, so make it static.
+> There is a machine with very little max_sectors_kb size:
+> [root@ceph151 queue]# pwd
+> /sys/block/sdd/queue
+> [root@ceph151 queue]# cat max_hw_sectors_kb 
+> 256
+> [root@ceph151 queue]# cat max_sectors_kb 
+> 256
+>
+> The performance is very low when I run big I/Os.
+> I can not modify it directly, I need a little bigger,
+> so how can I enlarge it?
 
-Applied to 4.16/scsi-queue, thanks!
+max_hw_sectors_kb is set based on the DMA transfer capabilities of the
+SCSI controller.
+
+max_sectors_kb is a soft limit for regular filesystem I/O. It can not
+exceed max_hw_sectors_kb since that would violate the hardware
+constraints.
+
+You need to figure out why your controller is limiting the transfer
+size.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
