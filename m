@@ -1,49 +1,176 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [RESEND] megaraid: use ktime_get_real for firmware time
-Date: Wed, 17 Jan 2018 15:48:51 +0100
-Message-ID: <20180117144859.2382521-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Tomas Henzl <thenzl@redhat.com>, Hannes Reinecke <hare@suse.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] [RESEND] scsi: ips: fix firmware timestamps for 32-bit
+Date: Wed, 17 Jan 2018 15:57:36 +0100
+Message-ID: <20180117145749.2712957-1-arnd@arndb.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:59062 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753142AbeAQO6b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 09:58:31 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Yang Hongyang <yanghy@cn.fujitsu.com>, Hannes Reinecke <hare@suse.de>, Finn Thain <fthain@telegraphics.com.au>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-do_gettimeofday() overflows in 2038 on 32-bit architectures and
-is deprecated, so convert this driver to call ktime_get_real()
-directly. This also simplifies the calculation.
+do_gettimeofday() is deprecated since it will stop working in 2038 on
+32-bit platforms. The firmware interface here actually supports times
+until year 25500, so we should use longer timestamps.
+
+Using ktime_get_real_seconds() to get a 64-bit seconds value
+and time64_to_tm() to convert it into the right format also has
+the advantage of greatly simplifying the time management code.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-Sent originally in Nov 2017, no comments. Please apply
+Submitted originally in November 2017. The aacraid@adaptec.com
+apparently bounced. Trying again now with a few people on Cc
+that previously reviewed patches to this driver.
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/ips.c | 78 +++++++++++-------------------------------------------
+ drivers/scsi/ips.h |  2 +-
+ 2 files changed, 17 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 0a85f3c48ef6..97fae28c8374 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -983,7 +983,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	MFI_CAPABILITIES *drv_ops;
- 	u32 scratch_pad_2;
- 	unsigned long flags;
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 67621308eb9c..887843a465e1 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -293,7 +293,7 @@ static void ips_freescb(ips_ha_t *, ips_scb_t *);
+ static void ips_setup_funclist(ips_ha_t *);
+ static void ips_statinit(ips_ha_t *);
+ static void ips_statinit_memio(ips_ha_t *);
+-static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time_t);
++static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time64_t);
+ static void ips_ffdc_reset(ips_ha_t *, int);
+ static void ips_ffdc_time(ips_ha_t *);
+ static uint32_t ips_statupd_copperhead(ips_ha_t *);
+@@ -989,10 +989,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 
+ 	/* FFDC */
+ 	if (le32_to_cpu(ha->subsys->param[3]) & 0x300000) {
+-		struct timeval tv;
+-
+-		do_gettimeofday(&tv);
+-		ha->last_ffdc = tv.tv_sec;
++		ha->last_ffdc = ktime_get_real_seconds();
+ 		ha->reset_count++;
+ 		ips_ffdc_reset(ha, IPS_INTR_IORL);
+ 	}
+@@ -2396,7 +2393,6 @@ static int
+ ips_hainit(ips_ha_t * ha)
+ {
+ 	int i;
 -	struct timeval tv;
-+	ktime_t time;
- 	bool cur_fw_64bit_dma_capable;
  
- 	fusion = instance->ctrl_context;
-@@ -1042,10 +1042,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	IOCInitMessage->HostMSIxVectors = instance->msix_vectors;
- 	IOCInitMessage->HostPageSize = MR_DEFAULT_NVME_PAGE_SHIFT;
+ 	METHOD_TRACE("ips_hainit", 1);
  
+@@ -2411,8 +2407,7 @@ ips_hainit(ips_ha_t * ha)
+ 
+ 	/* Send FFDC */
+ 	ha->reset_count = 1;
 -	do_gettimeofday(&tv);
-+	time = ktime_get_real();
- 	/* Convert to milliseconds as per FW requirement */
--	IOCInitMessage->TimeStamp = cpu_to_le64((tv.tv_sec * 1000) +
--						(tv.tv_usec / 1000));
-+	IOCInitMessage->TimeStamp = cpu_to_le64(ktime_to_ms(time));
+-	ha->last_ffdc = tv.tv_sec;
++	ha->last_ffdc = ktime_get_real_seconds();
+ 	ips_ffdc_reset(ha, IPS_INTR_IORL);
  
- 	init_frame = (struct megasas_init_frame *)cmd->frame;
- 	memset(init_frame, 0, IOC_INIT_FRAME_SIZE);
+ 	if (!ips_read_config(ha, IPS_INTR_IORL)) {
+@@ -2552,12 +2547,9 @@ ips_next(ips_ha_t * ha, int intr)
+ 
+ 	if ((ha->subsys->param[3] & 0x300000)
+ 	    && (ha->scb_activelist.count == 0)) {
+-		struct timeval tv;
+-
+-		do_gettimeofday(&tv);
+-
+-		if (tv.tv_sec - ha->last_ffdc > IPS_SECS_8HOURS) {
+-			ha->last_ffdc = tv.tv_sec;
++		time64_t now = ktime_get_real_seconds();
++		if (now - ha->last_ffdc > IPS_SECS_8HOURS) {
++			ha->last_ffdc = now;
+ 			ips_ffdc_time(ha);
+ 		}
+ 	}
+@@ -5992,59 +5984,21 @@ ips_ffdc_time(ips_ha_t * ha)
+ /*                                                                          */
+ /****************************************************************************/
+ static void
+-ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time_t current_time)
++ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time64_t current_time)
+ {
+-	long days;
+-	long rem;
+-	int i;
+-	int year;
+-	int yleap;
+-	int year_lengths[2] = { IPS_DAYS_NORMAL_YEAR, IPS_DAYS_LEAP_YEAR };
+-	int month_lengths[12][2] = { {31, 31},
+-	{28, 29},
+-	{31, 31},
+-	{30, 30},
+-	{31, 31},
+-	{30, 30},
+-	{31, 31},
+-	{31, 31},
+-	{30, 30},
+-	{31, 31},
+-	{30, 30},
+-	{31, 31}
+-	};
++	struct tm tm;
+ 
+ 	METHOD_TRACE("ips_fix_ffdc_time", 1);
+ 
+-	days = current_time / IPS_SECS_DAY;
+-	rem = current_time % IPS_SECS_DAY;
+-
+-	scb->cmd.ffdc.hour = (rem / IPS_SECS_HOUR);
+-	rem = rem % IPS_SECS_HOUR;
+-	scb->cmd.ffdc.minute = (rem / IPS_SECS_MIN);
+-	scb->cmd.ffdc.second = (rem % IPS_SECS_MIN);
+-
+-	year = IPS_EPOCH_YEAR;
+-	while (days < 0 || days >= year_lengths[yleap = IPS_IS_LEAP_YEAR(year)]) {
+-		int newy;
+-
+-		newy = year + (days / IPS_DAYS_NORMAL_YEAR);
+-		if (days < 0)
+-			--newy;
+-		days -= (newy - year) * IPS_DAYS_NORMAL_YEAR +
+-		    IPS_NUM_LEAP_YEARS_THROUGH(newy - 1) -
+-		    IPS_NUM_LEAP_YEARS_THROUGH(year - 1);
+-		year = newy;
+-	}
+-
+-	scb->cmd.ffdc.yearH = year / 100;
+-	scb->cmd.ffdc.yearL = year % 100;
+-
+-	for (i = 0; days >= month_lengths[i][yleap]; ++i)
+-		days -= month_lengths[i][yleap];
++	time64_to_tm(current_time, 0, &tm);
+ 
+-	scb->cmd.ffdc.month = i + 1;
+-	scb->cmd.ffdc.day = days + 1;
++	scb->cmd.ffdc.hour   = tm.tm_hour;
++	scb->cmd.ffdc.minute = tm.tm_min;
++	scb->cmd.ffdc.second = tm.tm_sec;
++	scb->cmd.ffdc.yearH  = tm.tm_year / 100 + 1900;
++	scb->cmd.ffdc.yearL  = tm.tm_year % 100;
++	scb->cmd.ffdc.month  = tm.tm_mon + 1;
++	scb->cmd.ffdc.day    = tm.tm_mday;
+ }
+ 
+ /****************************************************************************
+diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
+index 366be3b2f9b4..b43a1ae75660 100644
+--- a/drivers/scsi/ips.h
++++ b/drivers/scsi/ips.h
+@@ -1054,7 +1054,7 @@ typedef struct ips_ha {
+    uint8_t            active;
+    int                ioctl_reset;        /* IOCTL Requested Reset Flag */
+    uint16_t           reset_count;        /* number of resets           */
+-   time_t             last_ffdc;          /* last time we sent ffdc info*/
++   time64_t           last_ffdc;          /* last time we sent ffdc info*/
+    uint8_t            slot_num;           /* PCI Slot Number            */
+    int                ioctl_len;          /* size of ioctl buffer       */
+    dma_addr_t         ioctl_busaddr;      /* dma address of ioctl buffer*/
 -- 
 2.9.0
