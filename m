@@ -1,39 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi_debug: delay stress fix
-Date: Wed, 17 Jan 2018 01:00:01 -0500
-Message-ID: <yq1zi5dt47y.fsf@oracle.com>
-References: <20180110215731.4805-1-dgilbert@interlog.com>
-        <20180110215731.4805-2-dgilbert@interlog.com>
+Subject: Re: [PATCH -next] scsi: hisi_sas: make local symbol host_attrs static
+Date: Wed, 17 Jan 2018 01:01:29 -0500
+Message-ID: <yq1vag1t45i.fsf@oracle.com>
+References: <1515669238-125768-1-git-send-email-weiyongjun1@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33760 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750828AbeAQGAX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 01:00:23 -0500
-In-Reply-To: <20180110215731.4805-2-dgilbert@interlog.com> (Douglas Gilbert's
-        message of "Wed, 10 Jan 2018 16:57:31 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <1515669238-125768-1-git-send-email-weiyongjun1@huawei.com> (Wei
+        Yongjun's message of "Thu, 11 Jan 2018 11:13:58 +0000")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Wei Yongjun <weiyongjun1@huawei.com>
+Cc: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, bart.vanassche@sandisk.com, hare@suse.de
 
 
-Doug,
+Wei,
 
-> Introduce a state enum into sdebug_defer objects to indicate which, if
-> any, defer method has been used with the associated command.  Also add
-> 2 bools to indicate which of the defer methods has been
-> initialized. Those objects are re-used but the initialization only
-> needs to be done once. This simplifies command cancellation handling.
+> Fixes the following sparse warning:
 >
-> Now the delay associated with a deferred response of a command cannot
-> be changed (once started) by changing the delay (and ndelay)
-> parameters in sysfs. Command aborts and driver shutdown are still
-> honoured immediately when received.
+> drivers/scsi/hisi_sas/hisi_sas_main.c:1691:25: warning:
+>  symbol 'host_attrs' was not declared. Should it be static?
 
-Applied (by hand, not sure which tree this was cut against?) to
-4.16/scsi-queue.
+Applied to 4.16/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
