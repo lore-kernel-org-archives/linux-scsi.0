@@ -1,59 +1,191 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [RESEND] scsi: esas2r: use ktime_get_real_seconds()
-Date: Wed, 17 Jan 2018 16:14:58 +0100
-Message-ID: <20180117151508.3283064-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:63715 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753657AbeAQPPn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 10:15:43 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH] [RESEND] scsi: fnic: use 64-bit timestamps
+Date: Wed, 17 Jan 2018 16:16:48 +0100
+Message-ID: <20180117151708.3359303-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Vasyl Gomonovych <gomonovych@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Tomas Henzl <thenzl@redhat.com>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-do_gettimeofday() is deprecated because of the y2038 overflow.
-Here, we use the result to pass into a 32-bit field in the firmware,
-which still risks an overflow, but if the firmware is written
-to expect unsigned values, it can at least last until y2106,
-and there is not much we can do about it.
+struct timespec is deprecated since it overflows in 2038 on 32-bit
+architectures, so we should use timespec64 consistently.
 
-This changes do_gettimeofday() to ktime_get_real_seconds(), which
-at least simplifies the code a bit, and avoids the deprecated
-interface. I'm adding a comment about the overflow to document
-what happens.
+I'm slightly adapting the format strings here, to make sure we
+print the nanoseconds with the correct number of leading zeroes.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-Originally submitted in November 2017, no reply so I'm resending
-now, with Thomas and Christoph on Cc, as both have worked on
-this driver in the past.
+Originally submitted in November 2017. Martin asked Satish to
+review my patch, but I never heard back after that, so I'm trying
+again now.
 ---
- drivers/scsi/esas2r/esas2r_init.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/fnic/fnic_debugfs.c |  2 +-
+ drivers/scsi/fnic/fnic_stats.h   |  4 +--
+ drivers/scsi/fnic/fnic_trace.c   | 58 ++++++++++++++++++++--------------------
+ 3 files changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 5b14dd29b764..67b3e3354e3c 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -1223,8 +1223,6 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
- 	case ESAS2R_INIT_MSG_START:
- 	case ESAS2R_INIT_MSG_REINIT:
- 	{
--		struct timeval now;
--		do_gettimeofday(&now);
- 		esas2r_hdebug("CFG init");
- 		esas2r_build_cfg_req(a,
- 				     rq,
-@@ -1233,7 +1231,8 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
- 				     NULL);
- 		ci = (struct atto_vda_cfg_init *)&rq->vrq->cfg.data.init;
- 		ci->sgl_page_size = cpu_to_le32(sgl_page_size);
--		ci->epoch_time = cpu_to_le32(now.tv_sec);
-+		/* firmware interface overflows in y2106 */
-+		ci->epoch_time = cpu_to_le32(ktime_get_real_seconds());
- 		rq->flags |= RF_FAILURE_OK;
- 		a->init_msg = ESAS2R_INIT_MSG_INIT;
- 		break;
+diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+index 9858484dd126..6d3e1cb4fea6 100644
+--- a/drivers/scsi/fnic/fnic_debugfs.c
++++ b/drivers/scsi/fnic/fnic_debugfs.c
+@@ -614,7 +614,7 @@ static ssize_t fnic_reset_stats_write(struct file *file,
+ 			sizeof(struct io_path_stats) - sizeof(u64));
+ 		memset(fw_stats_p+1, 0,
+ 			sizeof(struct fw_stats) - sizeof(u64));
+-		getnstimeofday(&stats->stats_timestamps.last_reset_time);
++		ktime_get_real_ts64(&stats->stats_timestamps.last_reset_time);
+ 	}
+ 
+ 	(*ppos)++;
+diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
+index e007feedbf72..9daa6ada6fa0 100644
+--- a/drivers/scsi/fnic/fnic_stats.h
++++ b/drivers/scsi/fnic/fnic_stats.h
+@@ -18,8 +18,8 @@
+ #define _FNIC_STATS_H_
+ 
+ struct stats_timestamps {
+-	struct timespec last_reset_time;
+-	struct timespec last_read_time;
++	struct timespec64 last_reset_time;
++	struct timespec64 last_read_time;
+ };
+ 
+ struct io_path_stats {
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index 4826f596cb31..abddde11982b 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -111,7 +111,7 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 	int len = 0;
+ 	unsigned long flags;
+ 	char str[KSYM_SYMBOL_LEN];
+-	struct timespec val;
++	struct timespec64 val;
+ 	fnic_trace_data_t *tbp;
+ 
+ 	spin_lock_irqsave(&fnic_trace_lock, flags);
+@@ -129,10 +129,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			/* Convert function pointer to function name */
+ 			if (sizeof(unsigned long) < 8) {
+ 				sprint_symbol(str, tbp->fnaddr.low);
+-				jiffies_to_timespec(tbp->timestamp.low, &val);
++				jiffies_to_timespec64(tbp->timestamp.low, &val);
+ 			} else {
+ 				sprint_symbol(str, tbp->fnaddr.val);
+-				jiffies_to_timespec(tbp->timestamp.val, &val);
++				jiffies_to_timespec64(tbp->timestamp.val, &val);
+ 			}
+ 			/*
+ 			 * Dump trace buffer entry to memory file
+@@ -140,8 +140,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			 */
+ 			len += snprintf(fnic_dbgfs_prt->buffer + len,
+ 				  (trace_max_pages * PAGE_SIZE * 3) - len,
+-				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
+-				  "%16llx %16llx %16llx\n", val.tv_sec,
++				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
++				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
+ 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
+ 				  tbp->data[0], tbp->data[1], tbp->data[2],
+ 				  tbp->data[3], tbp->data[4]);
+@@ -171,10 +171,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			/* Convert function pointer to function name */
+ 			if (sizeof(unsigned long) < 8) {
+ 				sprint_symbol(str, tbp->fnaddr.low);
+-				jiffies_to_timespec(tbp->timestamp.low, &val);
++				jiffies_to_timespec64(tbp->timestamp.low, &val);
+ 			} else {
+ 				sprint_symbol(str, tbp->fnaddr.val);
+-				jiffies_to_timespec(tbp->timestamp.val, &val);
++				jiffies_to_timespec64(tbp->timestamp.val, &val);
+ 			}
+ 			/*
+ 			 * Dump trace buffer entry to memory file
+@@ -182,8 +182,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			 */
+ 			len += snprintf(fnic_dbgfs_prt->buffer + len,
+ 				  (trace_max_pages * PAGE_SIZE * 3) - len,
+-				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
+-				  "%16llx %16llx %16llx\n", val.tv_sec,
++				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
++				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
+ 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
+ 				  tbp->data[0], tbp->data[1], tbp->data[2],
+ 				  tbp->data[3], tbp->data[4]);
+@@ -217,29 +217,29 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ {
+ 	int len = 0;
+ 	int buf_size = debug->buf_size;
+-	struct timespec val1, val2;
++	struct timespec64 val1, val2;
+ 
+-	getnstimeofday(&val1);
++	ktime_get_real_ts64(&val1);
+ 	len = snprintf(debug->debug_buffer + len, buf_size - len,
+ 		"------------------------------------------\n"
+ 		 "\t\tTime\n"
+ 		"------------------------------------------\n");
+ 
+ 	len += snprintf(debug->debug_buffer + len, buf_size - len,
+-		"Current time :          [%ld:%ld]\n"
+-		"Last stats reset time:  [%ld:%ld]\n"
+-		"Last stats read time:   [%ld:%ld]\n"
+-		"delta since last reset: [%ld:%ld]\n"
+-		"delta since last read:  [%ld:%ld]\n",
+-	val1.tv_sec, val1.tv_nsec,
+-	stats->stats_timestamps.last_reset_time.tv_sec,
++		"Current time :          [%lld:%ld]\n"
++		"Last stats reset time:  [%lld:%09ld]\n"
++		"Last stats read time:   [%lld:%ld]\n"
++		"delta since last reset: [%lld:%ld]\n"
++		"delta since last read:  [%lld:%ld]\n",
++	(s64)val1.tv_sec, val1.tv_nsec,
++	(s64)stats->stats_timestamps.last_reset_time.tv_sec,
+ 	stats->stats_timestamps.last_reset_time.tv_nsec,
+-	stats->stats_timestamps.last_read_time.tv_sec,
++	(s64)stats->stats_timestamps.last_read_time.tv_sec,
+ 	stats->stats_timestamps.last_read_time.tv_nsec,
+-	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
+-	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
+-	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
+-	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
++	(s64)timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
++	timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
++	(s64)timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
++	timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
+ 
+ 	stats->stats_timestamps.last_read_time = val1;
+ 
+@@ -403,12 +403,12 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		  "\t\tOther Important Statistics\n"
+ 		  "------------------------------------------\n");
+ 
+-	jiffies_to_timespec(stats->misc_stats.last_isr_time, &val1);
+-	jiffies_to_timespec(stats->misc_stats.last_ack_time, &val2);
++	jiffies_to_timespec64(stats->misc_stats.last_isr_time, &val1);
++	jiffies_to_timespec64(stats->misc_stats.last_ack_time, &val2);
+ 
+ 	len += snprintf(debug->debug_buffer + len, buf_size - len,
+-		  "Last ISR time: %llu (%8lu.%8lu)\n"
+-		  "Last ACK time: %llu (%8lu.%8lu)\n"
++		  "Last ISR time: %llu (%8llu.%09lu)\n"
++		  "Last ACK time: %llu (%8llu.%09lu)\n"
+ 		  "Number of ISRs: %lld\n"
+ 		  "Maximum CQ Entries: %lld\n"
+ 		  "Number of ACK index out of range: %lld\n"
+@@ -425,9 +425,9 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		  "Number of rport not ready: %lld\n"
+ 		  "Number of receive frame errors: %lld\n",
+ 		  (u64)stats->misc_stats.last_isr_time,
+-		  val1.tv_sec, val1.tv_nsec,
++		  (s64)val1.tv_sec, val1.tv_nsec,
+ 		  (u64)stats->misc_stats.last_ack_time,
+-		  val2.tv_sec, val2.tv_nsec,
++		  (s64)val2.tv_sec, val2.tv_nsec,
+ 		  (u64)atomic64_read(&stats->misc_stats.isr_count),
+ 		  (u64)atomic64_read(&stats->misc_stats.max_cq_entries),
+ 		  (u64)atomic64_read(&stats->misc_stats.ack_index_out_of_range),
 -- 
 2.9.0
