@@ -1,37 +1,45 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 0/3] hisi_sas: v2 hw LED support
-Date: Thu, 18 Jan 2018 00:46:51 +0800
-Message-ID: <1516207614-159721-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 3/3] scsi: hisi_sas: fix a bug in hisi_sas_dev_gone()
+Date: Thu, 18 Jan 2018 00:46:54 +0800
+Message-ID: <1516207614-159721-4-git-send-email-john.garry@huawei.com>
+References: <1516207614-159721-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1516207614-159721-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset includes SGPIO support for
-driving LEDs for boards including a SoC (like
-hip07) with v2 hw.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-The SGPIO interface is realised with a CPLD on
-the D05 board which inludes hip07.
+When device gone, NULL pointer can be accessed in
+free_device callback if during SAS controller reset
+as we clear structure sas_dev prior.
 
-Also included in the patchset is a small bug fix
-for device removal.
+Actually we can only set dev_type as SAS_PHY_UNUSED
+and not clear structure sas_dev as all the members
+of structure sas_dev will be re-initialized after
+device found.
 
-Xiang Chen (1):
-  scsi: hisi_sas: fix a bug in hisi_sas_dev_gone()
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Xiaofei Tan (2):
-  devicetree: bindings: scsi: hisi_sas: add LED feature for v2 hw
-  scsi: hisi_sas: directly attached disk LED feature for v2 hw
-
- .../devicetree/bindings/scsi/hisilicon-sas.txt     |  5 ++-
- drivers/scsi/hisi_sas/hisi_sas.h                   |  3 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c              | 21 +++++++++++-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             | 39 ++++++++++++++++++++++
- 4 files changed, 66 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 791462d..2d4dbed 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -796,7 +796,6 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+ 
+ 		hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
+ 		device->lldd_dev = NULL;
+-		memset(sas_dev, 0, sizeof(*sas_dev));
+ 	}
+ 
+ 	if (hisi_hba->hw->free_device)
 -- 
 1.9.1
