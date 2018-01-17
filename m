@@ -1,55 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [ANNOUNCE] Participate at the Linux FAST Summit '18
-Date: Wed, 17 Jan 2018 19:32:36 +0100
-Message-ID: <20180117183236.mspukimlypnf47xw@infradead.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: [LSF/MM TOPIC] Improving Asynchronous SCSI Disk Probing
+Date: Wed, 17 Jan 2018 23:24:35 +0000
+Message-ID: <1516231473.2820.81.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39455 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752268AbeAQSck (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 13:32:40 -0500
-Received: from 77.117.185.35.wireless.dyn.drei.com ([77.117.185.35] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.89 #1 (Red Hat Linux))
-        id 1ebsVr-0004t8-6y
-        for linux-scsi@vger.kernel.org; Wed, 17 Jan 2018 18:32:39 +0000
-Content-Disposition: inline
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:9337 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753054AbeAQXYj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 18:24:39 -0500
+Content-Language: en-US
+Content-ID: <FE54A4D5EB0FD8489A4AA683D3A55D37@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>
 
-We are pleased to announce that the Call for Participation [1] for the
-2018 USENIX Research in Linux File and Storage Technologies Summit (Linux
-FAST Summit '18) [2] is now available.  Linux FAST Summit '18 will take
-place at the Oakland Marriott City Center on February 15 and will be
-co-located with the 16th USENIX Conference on File and Storage Technologies
-(FAST '18) [3].
-
-Linux is one of the most frequently used platforms in file and storage
-research, and FAST is the premier conference for publishing research
-results from the file and storage research community.  This summit will
-bring together key Linux kernel developers and academic researchers.  The
-goal is to provide a forum for presenting and discussing current ideas in
-research with a group of active practitioners in the Linux Kernel.
-
-The format will be a single session of short 25-minute talks with
-5-minute questions and answers, as well as 45-minute Birds-of-a-Feather
-sessions (BoFs).
-
-If you have an idea you'd like to share, or a project in the Linux Kernel
-that you'd like to talk about, please send a 400-word summary of the idea
-or project and a short description of the benefits that would be achieved
-by discussion with kernel practitioners and/or academics to
-linuxfast18chairs@usenix.org.  Submissions are due by Friday, January 26,
-2018.
-
-We look forward to receiving your submissions!
-
-Christoph Hellwig
-Erik Riedel, Dell EMC
-Linux FAST Summit '18 Program Co-Chairs
-linuxfast18chairs@usenix.org
-
-[1] https://www.usenix.org/conference/linuxfastsummit18/call-for-participation
-[2] https://www.usenix.org/conference/linuxfastsummit18
-[3] https://www.usenix.org/conference/fast18
+V2hlbiB0aGUgU0NTSSBzY2FubmluZyBjb2RlIGRpc2NvdmVycyBhIFNDU0kgZGV2aWNlIGl0IGNh
+bGxzIHRoZSBkcml2ZXIgY29yZQ0KZnVuY3Rpb24gZGV2aWNlX2FkZCgpIHRvIGFzc29jaWF0ZSBh
+IFNDU0kgVUxEIHdpdGggdGhlIGRldmljZS4gVGhlIGRyaXZlcg0KY29yZSBpbnZva2VzIHRoZSBw
+cm9iaW5nIGZ1bmN0aW9uIGZvciB0aGUgbWF0Y2hpbmcgU0NTSSBVTFAsIGUuZy4gc2RfcHJvYmUo
+KS4NCkluIG9yZGVyIHRvIG1pbmltaXplIHRoZSB0aW1lIG5lZWRlZCB0byBzY2FuIFNDU0kgdGFy
+Z2V0cyB0aGF0IGhhdmUgYSBsYXJnZQ0KbnVtYmVyIG9mIExVTnMsIHRoZSBTQ1NJIGRpc2sgZHJp
+dmVyIHNjYW5zIExVTnMgYXN5bmNocm9ub3VzbHkgYnkgc3RhcnRpbmcNCnRoZSBhY3R1YWwgcHJv
+YmluZyB3b3JrIGFzeW5jaHJvbm91c2x5IGZyb20gaW5zaWRlIHNkX3Byb2JlKCkNCg0KQW4gdW5m
+b3J0dW5hdGUgYXNwZWN0IG9mIGhvdyBTQ1NJIGRpc2sgcHJvYmluZyB3b3JrcyB0b2RheSBpcyB0
+aGF0IHRoZXJlIGlzDQp1bm5lY2Vzc2FyeSBzZXJpYWxpemF0aW9uIGJldHdlZW4gcHJvYmluZyBh
+bmQgcmVtb3ZhbCBhY3Rpdml0eS4gRm9yIGENCnBvc3NpYmxlIGFwcHJvYWNoIG9mIGhvdyB0byBp
+bmNyZWFzZSBTQ1NJIGRpc2sgcHJvYmluZyBjb25jdXJyZW5jeSwgc2VlIGFsc28NCltQQVRDSF0g
+c2Q6IEluY3JlYXNlIFNDU0kgZGlzayBwcm9iaW5nIGNvbmN1cnJlbmN5LCBsaW51eC1zY3NpIG1h
+aWxpbmcgbGlzdCwNCkRlY2VtYmVyIDIwMTcgKGh0dHBzOi8vd3d3LnNwaW5pY3MubmV0L2xpc3Rz
+L2xpbnV4LXNjc2kvbXNnMTE1NjU3Lmh0bWwpLg0KDQpBIHNlY29uZCB1bmZvcnR1bmF0ZSBhc3Bl
+Y3Qgb2YgU0NTSSBkaXNrIHByb2JpbmcgaXMgdGhhdCBjZXJ0YWluIHJhY2UNCmNvbmRpdGlvbnMg
+aW4gdGhlIGJsb2NrIGxheWVyIGFyZSBoaXQgaWYgcmVtb3ZhbCBzdGFydHMgYmVmb3JlIGFzeW5j
+aHJvbm91cw0KcHJvYmluZyBoYXMgZmluaXNoZWQuIFRoaXMgaXMgYmVjYXVzZSB0aGUgZHJpdmVy
+IGNvcmUgaXMgdW5hd2FyZSB0aGF0IHRoZQ0KU0NTSSBkaXNrIGNvZGUgd29ya3MgYXN5bmNocm9u
+b3VzbHkuDQoNCkFkZGl0aW9uYWxseSwgdGhlIFNDU0kgZGlzayBhc3luY2hyb25vdXMgcHJvYmlu
+ZyBhcHByb2FjaCBpcyBpbmNvbXBhdGlibGUNCndpdGggdGhlIHBvd2VyIG1hbmFnZW1lbnQgY29k
+ZS4gVGhlIHBvd2VyIG1hbmFnZW1lbnQgY29kZSBjYWxscw0Kd2FpdF9mb3JfZGV2aWNlX3Byb2Jl
+KCkgaW4gdGhlIGRyaXZlciBjb3JlIHRvIHdhaXQgZm9yIGRldmljZSBwcm9iaW5nDQphY3Rpdml0
+eSB0byBmaW5pc2guIHdhaXRfZm9yX2RldmljZV9wcm9iZSgpIGhvd2V2ZXIgaXMgdW5hd2FyZSBv
+ZiB0aGUNCmFzeW5jaHJvbm91cyBwcm9iaW5nIGluIHRoZSBTQ1NJIHNkIGRyaXZlciBhbmQgaGVu
+Y2UgZG9lc24ndCB3YWl0IGZvciB0aGUNClNDU0kgc2QgcHJvYmluZyBhY3Rpdml0eSB0byBmaW5p
+c2guDQoNCk15IHByb3Bvc2FsIGlzIHRvIGhvbGQgYSBzZXNzaW9uIHRvIGRpc2N1cyBwb3RlbnRp
+YWwgc29sdXRpb25zIGZvcg0KaW5jcmVhc2luZyBTQ1NJIGRpc2sgcHJvYmluZyBjb25jdXJyZW5j
+eSBpbiBhIHdheSB0aGF0IGlzIGNvbXBhdGlibGUgd2l0aA0KdGhlIGRyaXZlciBjb3JlIGFuZCB0
+aGUgcG93ZXIgbWFuYWdlbWVudCBzdWJzeXN0ZW0u
