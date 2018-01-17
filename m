@@ -1,29 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: devinfo: fix format of the device list
-Date: Wed, 17 Jan 2018 01:37:58 -0500
-Message-ID: <yq1wp0hrnw9.fsf@oracle.com>
-References: <20180115164723.1943-1-xose.vazquez@gmail.com>
+From: Martin Wilck <mwilck@suse.com>
+Subject: Re: [PATCH] scsi: handle ABORTED_COMMAND on Fujitsu ETERNUS
+Date: Wed, 17 Jan 2018 08:32:24 +0100
+Message-ID: <1516174344.3303.1.camel@suse.com>
+References: <20180115201852.15152-1-mwilck@suse.com>
+         <yq1efmpt3hs.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57788 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750801AbeAQGiI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 01:38:08 -0500
-In-Reply-To: <20180115164723.1943-1-xose.vazquez@gmail.com> (Xose Vazquez
-        Perez's message of "Mon, 15 Jan 2018 17:47:23 +0100")
+Received: from victor.provo.novell.com ([137.65.250.26]:38337 "EHLO
+        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750953AbeAQHck (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Wed, 17 Jan 2018 02:32:40 -0500
+In-Reply-To: <yq1efmpt3hs.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, saito.kazuya@jp.fujitsu.com
 
+On Wed, 2018-01-17 at 01:15 -0500, Martin K. Petersen wrote:
+> Martin,
+> 
+> > +		if (!strncmp(scmd->device->vendor, "FUJITSU", 7)
+> > &&
+> > +			   !strncmp(scmd->device->model,
+> > "ETERNUS_DXM", 11) &&
+> 
+> Blacklist, please.
+> 
 
-Xose,
+To make sure I understand correctly:
 
-> Replace "" with NULL for product revision level, and
-> merge TEXEL duplicate entries.
+You'd like to spend a precious BLIST bit for this single device which
+uses vendor-specific ASC/Q?
 
-Applied to 4.16/scsi-queue.
+Regards,
+Martin
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dr. Martin Wilck <mwilck@suse.com>, Tel. +49 (0)911 74053 2107
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
