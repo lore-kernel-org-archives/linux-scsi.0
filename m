@@ -1,46 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: how to enlarge value of max_sectors_kb
-Date: Wed, 17 Jan 2018 01:10:40 -0500
-Message-ID: <yq1mv1dt3q7.fsf@oracle.com>
-References: <1515830004-5476-1-git-send-email-tang.junhui@zte.com.cn>
+Subject: Re: [PATCH v1] mptfusion: Use snprintf() instead of open coded divisions
+Date: Wed, 17 Jan 2018 01:14:21 -0500
+Message-ID: <yq1inc1t3k2.fsf@oracle.com>
+References: <20180115170558.86823-1-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33896 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750794AbeAQGKt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 01:10:49 -0500
-In-Reply-To: <1515830004-5476-1-git-send-email-tang.junhui@zte.com.cn> (tang
-        junhui's message of "Sat, 13 Jan 2018 15:53:24 +0800")
+Received: from userp2130.oracle.com ([156.151.31.86]:45448 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbeAQGO1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 01:14:27 -0500
+In-Reply-To: <20180115170558.86823-1-andriy.shevchenko@linux.intel.com> (Andy
+        Shevchenko's message of "Mon, 15 Jan 2018 19:05:58 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tang.junhui@zte.com.cn
-Cc: hare@suse.de, kartilak@cisco.com, sebaddel@cisco.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 
 
-Tang,
+Andy,
 
-> There is a machine with very little max_sectors_kb size:
-> [root@ceph151 queue]# pwd
-> /sys/block/sdd/queue
-> [root@ceph151 queue]# cat max_hw_sectors_kb 
-> 256
-> [root@ceph151 queue]# cat max_sectors_kb 
-> 256
->
-> The performance is very low when I run big I/Os.
-> I can not modify it directly, I need a little bigger,
-> so how can I enlarge it?
+> Numbers up to 100 snprintf() prints without using a division.
+> Besides that the code looks more readable.
 
-max_hw_sectors_kb is set based on the DMA transfer capabilities of the
-SCSI controller.
-
-max_sectors_kb is a soft limit for regular filesystem I/O. It can not
-exceed max_hw_sectors_kb since that would violate the hardware
-constraints.
-
-You need to figure out why your controller is limiting the transfer
-size.
+Applied to 4.16/scsi-queue (despite not really being a fan of cleaning
+up dead code). Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
