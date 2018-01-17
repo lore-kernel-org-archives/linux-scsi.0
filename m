@@ -1,191 +1,46 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [RESEND] scsi: fnic: use 64-bit timestamps
-Date: Wed, 17 Jan 2018 16:16:48 +0100
-Message-ID: <20180117151708.3359303-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Vasyl Gomonovych <gomonovych@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 1/3] devicetree: bindings: scsi: hisi_sas: add LED feature for v2 hw
+Date: Thu, 18 Jan 2018 00:46:52 +0800
+Message-ID: <1516207614-159721-2-git-send-email-john.garry@huawei.com>
+References: <1516207614-159721-1-git-send-email-john.garry@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga06-in.huawei.com ([45.249.212.32]:38183 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752746AbeAQPyj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jan 2018 10:54:39 -0500
+In-Reply-To: <1516207614-159721-1-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 
-struct timespec is deprecated since it overflows in 2038 on 32-bit
-architectures, so we should use timespec64 consistently.
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-I'm slightly adapting the format strings here, to make sure we
-print the nanoseconds with the correct number of leading zeroes.
+Add directly attached disk LED feature for v2 hw.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
-Originally submitted in November 2017. Martin asked Satish to
-review my patch, but I never heard back after that, so I'm trying
-again now.
----
- drivers/scsi/fnic/fnic_debugfs.c |  2 +-
- drivers/scsi/fnic/fnic_stats.h   |  4 +--
- drivers/scsi/fnic/fnic_trace.c   | 58 ++++++++++++++++++++--------------------
- 3 files changed, 32 insertions(+), 32 deletions(-)
+ Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index 9858484dd126..6d3e1cb4fea6 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -614,7 +614,7 @@ static ssize_t fnic_reset_stats_write(struct file *file,
- 			sizeof(struct io_path_stats) - sizeof(u64));
- 		memset(fw_stats_p+1, 0,
- 			sizeof(struct fw_stats) - sizeof(u64));
--		getnstimeofday(&stats->stats_timestamps.last_reset_time);
-+		ktime_get_real_ts64(&stats->stats_timestamps.last_reset_time);
- 	}
- 
- 	(*ppos)++;
-diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
-index e007feedbf72..9daa6ada6fa0 100644
---- a/drivers/scsi/fnic/fnic_stats.h
-+++ b/drivers/scsi/fnic/fnic_stats.h
-@@ -18,8 +18,8 @@
- #define _FNIC_STATS_H_
- 
- struct stats_timestamps {
--	struct timespec last_reset_time;
--	struct timespec last_read_time;
-+	struct timespec64 last_reset_time;
-+	struct timespec64 last_read_time;
- };
- 
- struct io_path_stats {
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index 4826f596cb31..abddde11982b 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -111,7 +111,7 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 	int len = 0;
- 	unsigned long flags;
- 	char str[KSYM_SYMBOL_LEN];
--	struct timespec val;
-+	struct timespec64 val;
- 	fnic_trace_data_t *tbp;
- 
- 	spin_lock_irqsave(&fnic_trace_lock, flags);
-@@ -129,10 +129,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			/* Convert function pointer to function name */
- 			if (sizeof(unsigned long) < 8) {
- 				sprint_symbol(str, tbp->fnaddr.low);
--				jiffies_to_timespec(tbp->timestamp.low, &val);
-+				jiffies_to_timespec64(tbp->timestamp.low, &val);
- 			} else {
- 				sprint_symbol(str, tbp->fnaddr.val);
--				jiffies_to_timespec(tbp->timestamp.val, &val);
-+				jiffies_to_timespec64(tbp->timestamp.val, &val);
- 			}
- 			/*
- 			 * Dump trace buffer entry to memory file
-@@ -140,8 +140,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			 */
- 			len += snprintf(fnic_dbgfs_prt->buffer + len,
- 				  (trace_max_pages * PAGE_SIZE * 3) - len,
--				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
--				  "%16llx %16llx %16llx\n", val.tv_sec,
-+				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
-+				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
- 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
- 				  tbp->data[0], tbp->data[1], tbp->data[2],
- 				  tbp->data[3], tbp->data[4]);
-@@ -171,10 +171,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			/* Convert function pointer to function name */
- 			if (sizeof(unsigned long) < 8) {
- 				sprint_symbol(str, tbp->fnaddr.low);
--				jiffies_to_timespec(tbp->timestamp.low, &val);
-+				jiffies_to_timespec64(tbp->timestamp.low, &val);
- 			} else {
- 				sprint_symbol(str, tbp->fnaddr.val);
--				jiffies_to_timespec(tbp->timestamp.val, &val);
-+				jiffies_to_timespec64(tbp->timestamp.val, &val);
- 			}
- 			/*
- 			 * Dump trace buffer entry to memory file
-@@ -182,8 +182,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			 */
- 			len += snprintf(fnic_dbgfs_prt->buffer + len,
- 				  (trace_max_pages * PAGE_SIZE * 3) - len,
--				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
--				  "%16llx %16llx %16llx\n", val.tv_sec,
-+				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
-+				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
- 				  val.tv_nsec, str, tbp->host_no, tbp->tag,
- 				  tbp->data[0], tbp->data[1], tbp->data[2],
- 				  tbp->data[3], tbp->data[4]);
-@@ -217,29 +217,29 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- {
- 	int len = 0;
- 	int buf_size = debug->buf_size;
--	struct timespec val1, val2;
-+	struct timespec64 val1, val2;
- 
--	getnstimeofday(&val1);
-+	ktime_get_real_ts64(&val1);
- 	len = snprintf(debug->debug_buffer + len, buf_size - len,
- 		"------------------------------------------\n"
- 		 "\t\tTime\n"
- 		"------------------------------------------\n");
- 
- 	len += snprintf(debug->debug_buffer + len, buf_size - len,
--		"Current time :          [%ld:%ld]\n"
--		"Last stats reset time:  [%ld:%ld]\n"
--		"Last stats read time:   [%ld:%ld]\n"
--		"delta since last reset: [%ld:%ld]\n"
--		"delta since last read:  [%ld:%ld]\n",
--	val1.tv_sec, val1.tv_nsec,
--	stats->stats_timestamps.last_reset_time.tv_sec,
-+		"Current time :          [%lld:%ld]\n"
-+		"Last stats reset time:  [%lld:%09ld]\n"
-+		"Last stats read time:   [%lld:%ld]\n"
-+		"delta since last reset: [%lld:%ld]\n"
-+		"delta since last read:  [%lld:%ld]\n",
-+	(s64)val1.tv_sec, val1.tv_nsec,
-+	(s64)stats->stats_timestamps.last_reset_time.tv_sec,
- 	stats->stats_timestamps.last_reset_time.tv_nsec,
--	stats->stats_timestamps.last_read_time.tv_sec,
-+	(s64)stats->stats_timestamps.last_read_time.tv_sec,
- 	stats->stats_timestamps.last_read_time.tv_nsec,
--	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
--	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
--	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
--	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
-+	(s64)timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
-+	timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
-+	(s64)timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
-+	timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
- 
- 	stats->stats_timestamps.last_read_time = val1;
- 
-@@ -403,12 +403,12 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- 		  "\t\tOther Important Statistics\n"
- 		  "------------------------------------------\n");
- 
--	jiffies_to_timespec(stats->misc_stats.last_isr_time, &val1);
--	jiffies_to_timespec(stats->misc_stats.last_ack_time, &val2);
-+	jiffies_to_timespec64(stats->misc_stats.last_isr_time, &val1);
-+	jiffies_to_timespec64(stats->misc_stats.last_ack_time, &val2);
- 
- 	len += snprintf(debug->debug_buffer + len, buf_size - len,
--		  "Last ISR time: %llu (%8lu.%8lu)\n"
--		  "Last ACK time: %llu (%8lu.%8lu)\n"
-+		  "Last ISR time: %llu (%8llu.%09lu)\n"
-+		  "Last ACK time: %llu (%8llu.%09lu)\n"
- 		  "Number of ISRs: %lld\n"
- 		  "Maximum CQ Entries: %lld\n"
- 		  "Number of ACK index out of range: %lld\n"
-@@ -425,9 +425,9 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- 		  "Number of rport not ready: %lld\n"
- 		  "Number of receive frame errors: %lld\n",
- 		  (u64)stats->misc_stats.last_isr_time,
--		  val1.tv_sec, val1.tv_nsec,
-+		  (s64)val1.tv_sec, val1.tv_nsec,
- 		  (u64)stats->misc_stats.last_ack_time,
--		  val2.tv_sec, val2.tv_nsec,
-+		  (s64)val2.tv_sec, val2.tv_nsec,
- 		  (u64)atomic64_read(&stats->misc_stats.isr_count),
- 		  (u64)atomic64_read(&stats->misc_stats.max_cq_entries),
- 		  (u64)atomic64_read(&stats->misc_stats.ack_index_out_of_range),
+diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+index b6a869f..df3bef7 100644
+--- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
++++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+@@ -8,7 +8,10 @@ Main node required properties:
+ 	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
+ 	(c) "hisilicon,hip07-sas-v2" for v2 hw in hip07 chipset
+   - sas-addr : array of 8 bytes for host SAS address
+-  - reg : Address and length of the SAS register
++  - reg : Contains two regions. The first is the address and length of the SAS
++          register. The second is the address and length of CPLD register for
++          SGPIO control. The second is optional, and should be set only when
++          we use a CPLD for directly attached disk LED control.
+   - hisilicon,sas-syscon: phandle of syscon used for sas control
+   - ctrl-reset-reg : offset to controller reset register in ctrl reg
+   - ctrl-reset-sts-reg : offset to controller reset status register in ctrl reg
 -- 
-2.9.0
+1.9.1
