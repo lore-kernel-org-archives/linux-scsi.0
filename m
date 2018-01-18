@@ -1,46 +1,42 @@
-From: weiping zhang <zwp10758@gmail.com>
-Subject: Re: [RFC PATCH] scsi: sd: add wce_rcd sysfs interface
-Date: Thu, 18 Jan 2018 12:02:00 +0800
-Message-ID: <CAA70yB77hLWphXKUc2QtuJ2OMEFQtSZa6_b7ccaTJR6uyrhKDQ@mail.gmail.com>
-References: <20180117124945.GA7787@bogon.didichuxing.com> <yq1k1wfriav.fsf@oracle.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] tcmu: Fix trailing semicolon
+Date: Thu, 18 Jan 2018 01:23:12 -0800
+Message-ID: <1516267392.24576.246.camel@haakon3.daterainc.com>
+References: <20180116153432.17927-1-luisbg@kernel.org>
+         <f188423f-8d53-ffe8-7d85-48424e15411b@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:37555 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753772AbeARECB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 23:02:01 -0500
-Received: by mail-wm0-f68.google.com with SMTP id v71so19960230wmv.2
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2018 20:02:00 -0800 (PST)
-In-Reply-To: <yq1k1wfriav.fsf@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <f188423f-8d53-ffe8-7d85-48424e15411b@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: mchristi@redhat.com
+Cc: Luis de Bethencourt <luisbg@kernel.org>, linux-kernel@vger.kernel.org, Joe Perches <joe@perches.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: weiping zhang <zhangweiping@didichuxing.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-2018-01-18 10:51 GMT+08:00 Martin K. Petersen <martin.petersen@oracle.com>:
->
-> Hi Weiping,
->
->> add user friendly interface wce_rcd to enable/disable
->> write&read cache. The code base on cache_type, but need short input.
->
-> While I agree that the cache_type interface is somewhat arcane, I don't
-> think that adding a duplicate interface with slightly different
-> semantics is a good idea.
->
-Hi Martin,
+On Tue, 2018-01-16 at 10:25 -0600, Michael Christie wrote:
+> On 01/16/2018 09:34 AM, Luis de Bethencourt wrote:
+> > The trailing semicolon is an empty statement that does no operation.
+> > It is completely stripped out by the compiler. Removing it since it doesn't do
+> > anything.
+> > 
+> > Signed-off-by: Luis de Bethencourt <luisbg@kernel.org>
+> > ---
+> > 
+> > Hi,
+> > 
+> > After fixing the same thing in drivers/staging/rtl8723bs/, Joe Perches
+> > suggested I fix it treewide [0].
+> > 
+> > Best regards 
+> > Luis
+> > 
+> > 
+> > [0] http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2018-January/115410.html
+> > [1] http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2018-January/115390.html
+> > 
+> >  drivers/target/target_core_user.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
 
-How about add new match array for cache_type interface like following:
-static const char * const sd_wce_rcd[] = {"00", "01", "10", "11"};
-if cache_type match one of "sd_cache_type", "sd_wce_rcd", it will
-works as before.
-
-And, for show function, add more info, to show cache status, like following:
-write back
-write cache: on
-read cache: on
-
-
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Applied.  Thanks Luis + MNC.
