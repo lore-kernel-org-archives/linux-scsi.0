@@ -1,70 +1,48 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH] [RESEND] megaraid: use ktime_get_real for firmware time
-Date: Thu, 18 Jan 2018 20:08:08 +0530
-Message-ID: <caab2d1d01798c79e62dd034ca3eafd5@mail.gmail.com>
-References: <20180117144859.2382521-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180117144859.2382521-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, Hannes Reinecke <hare@suse.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Jack Wang <jinpu.wang@profitbricks.com>
+Subject: [PATCH] sd: succeed check_event if device is not removable
+Date: Thu, 18 Jan 2018 17:22:39 +0100
+Message-ID: <1516292559-26649-1-git-send-email-jinpu.wangl@profitbricks.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36641 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933388AbeARQWn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jan 2018 11:22:43 -0500
+Received: by mail-wr0-f193.google.com with SMTP id d9so23156258wre.3
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 08:22:42 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, gi-oh.kim@profitbricks.com, Jack Wang <jinpu.wang@profitbricks.com>
 
------Original Message-----
-From: Arnd Bergmann [mailto:arnd@arndb.de]
-Sent: Wednesday, January 17, 2018 8:19 PM
-To: Kashyap Desai; Sumit Saxena; Shivasharan S; James E.J. Bottomley;
-Martin K. Petersen
-Cc: Arnd Bergmann; Tomas Henzl; Hannes Reinecke;
-megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org
-Subject: [PATCH] [RESEND] megaraid: use ktime_get_real for firmware time
+From: Jack Wang <jinpu.wang@profitbricks.com>
 
-do_gettimeofday() overflows in 2038 on 32-bit architectures and is
-deprecated, so convert this driver to call ktime_get_real() directly. This
-also simplifies the calculation.
+The check_events interface was added for check if device changes,
+mainly for device is removable eg. CDROM
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+In sd_open, it checks if device is removable then check_disk_change.
+
+when the device is not removable, we can simple succeeds the call
+without send TUR.
+
+Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
-Sent originally in Nov 2017, no comments. Please apply
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/sd.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 0a85f3c48ef6..97fae28c8374 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -983,7 +983,7 @@ megasas_ioc_init_fusion(struct megasas_instance
-*instance)
- 	MFI_CAPABILITIES *drv_ops;
- 	u32 scratch_pad_2;
- 	unsigned long flags;
--	struct timeval tv;
-+	ktime_t time;
- 	bool cur_fw_64bit_dma_capable;
-
- 	fusion = instance->ctrl_context;
-@@ -1042,10 +1042,9 @@ megasas_ioc_init_fusion(struct megasas_instance
-*instance)
- 	IOCInitMessage->HostMSIxVectors = instance->msix_vectors;
- 	IOCInitMessage->HostPageSize = MR_DEFAULT_NVME_PAGE_SHIFT;
-
--	do_gettimeofday(&tv);
-+	time = ktime_get_real();
- 	/* Convert to milliseconds as per FW requirement */
--	IOCInitMessage->TimeStamp = cpu_to_le64((tv.tv_sec * 1000) +
--						(tv.tv_usec / 1000));
-+	IOCInitMessage->TimeStamp = cpu_to_le64(ktime_to_ms(time));
-
- 	init_frame = (struct megasas_init_frame *)cmd->frame;
- 	memset(init_frame, 0, IOC_INIT_FRAME_SIZE);
-Looks good to me.
-
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-
---
-2.9.0
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ab75ebd..773ce81 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1576,6 +1576,10 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ 	sdp = sdkp->device;
+ 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_check_events\n"));
+ 
++	if (!sdp->removable) {
++		retval = 0;
++		goto out;
++	}
+ 	/*
+ 	 * If the device is offline, don't send any commands - just pretend as
+ 	 * if the command failed.  If the device ever comes back online, we
+-- 
+2.7.4
