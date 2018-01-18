@@ -1,48 +1,42 @@
-From: Jack Wang <jinpu.wang@profitbricks.com>
-Subject: [PATCH] sd: succeed check_event if device is not removable
-Date: Thu, 18 Jan 2018 17:22:39 +0100
-Message-ID: <1516292559-26649-1-git-send-email-jinpu.wangl@profitbricks.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2] scsi: sd: add new match array for cache_type
+Date: Thu, 18 Jan 2018 08:30:13 -0800
+Message-ID: <1516293013.3014.8.camel@linux.vnet.ibm.com>
+References: <20180118141928.GA28320@bogon.didichuxing.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:36641 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933388AbeARQWn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jan 2018 11:22:43 -0500
-Received: by mail-wr0-f193.google.com with SMTP id d9so23156258wre.3
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 08:22:42 -0800 (PST)
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39548 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755383AbeARQaV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 Jan 2018 11:30:21 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0IGUAL0030563
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 11:30:20 -0500
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2fjvfj0qy7-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 11:30:20 -0500
+Received: from localhost
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Thu, 18 Jan 2018 09:30:19 -0700
+In-Reply-To: <20180118141928.GA28320@bogon.didichuxing.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, gi-oh.kim@profitbricks.com, Jack Wang <jinpu.wang@profitbricks.com>
+To: weiping zhang <zhangweiping@didichuxing.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-From: Jack Wang <jinpu.wang@profitbricks.com>
+On Thu, 2018-01-18 at 22:19 +0800, weiping zhang wrote:
+> -	return sprintf(buf, "%s\n", sd_cache_types[ct]);
+> +	return sprintf(buf, "%s\n%s\nwrite:%s, read:%s\n",
+> sd_cache_types[ct],
+> +			sd_wce_rcd[ct], sdkp->WCE ? "on" : "off",
+> +			sdkp->RCD ? "off" : "on");
 
-The check_events interface was added for check if device changes,
-mainly for device is removable eg. CDROM
+I don't think we can do this.  The output of the cache type in sysfs is
+a user exported ABI.  We'd potentially break it if we add extra stuff.
 
-In sd_open, it checks if device is removable then check_disk_change.
-
-when the device is not removable, we can simple succeeds the call
-without send TUR.
-
-Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
----
- drivers/scsi/sd.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index ab75ebd..773ce81 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1576,6 +1576,10 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
- 	sdp = sdkp->device;
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_check_events\n"));
- 
-+	if (!sdp->removable) {
-+		retval = 0;
-+		goto out;
-+	}
- 	/*
- 	 * If the device is offline, don't send any commands - just pretend as
- 	 * if the command failed.  If the device ever comes back online, we
--- 
-2.7.4
+James
