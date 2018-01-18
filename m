@@ -1,65 +1,88 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: handle ABORTED_COMMAND on Fujitsu ETERNUS
-Date: Thu, 18 Jan 2018 06:24:15 -0800
-Message-ID: <1516285455.3014.2.camel@linux.vnet.ibm.com>
-References: <20180115201852.15152-1-mwilck@suse.com>
-         <yq1efmpt3hs.fsf@oracle.com> <1516174344.3303.1.camel@suse.com>
-         <yq1shb3ring.fsf@oracle.com> <00bbbaed-215a-4af9-1576-1c25008d0e23@suse.de>
+From: weiping zhang <zhangweiping@didichuxing.com>
+Subject: [PATCH v2] scsi: sd: add new match array for cache_type
+Date: Thu, 18 Jan 2018 22:19:32 +0800
+Message-ID: <20180118141928.GA28320@bogon.didichuxing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34150 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756382AbeAROYY (ORCPT
+Received: from mx2.didichuxing.com ([36.110.17.22]:20788 "EHLO
+        BJEXCAS004.didichuxing.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1756417AbeAROfA (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Jan 2018 09:24:24 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0IEO5kI038359
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 09:24:23 -0500
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2fjujqdq15-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 09:24:22 -0500
-Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Thu, 18 Jan 2018 09:24:20 -0500
-In-Reply-To: <00bbbaed-215a-4af9-1576-1c25008d0e23@suse.de>
+        Thu, 18 Jan 2018 09:35:00 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Martin Wilck <mwilck@suse.com>
-Cc: linux-scsi@vger.kernel.org, saito.kazuya@jp.fujitsu.com
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2018-01-18 at 11:17 +0100, Hannes Reinecke wrote:
-> On 01/18/2018 03:43 AM, Martin K. Petersen wrote:
-> > 
-> > 
-> > Martin,
-> > 
-> > > 
-> > > You'd like to spend a precious BLIST bit for this single device
-> > > which uses vendor-specific ASC/Q?
-> > 
-> > I really don't want string comparisons in the regular code paths.
-> > Also not a fan of vendor-specific ASCs. But if you must use them,
-> > please add a flag and trigger on that.
-> > 
-> > Since this is a bit of an unusual check condition combo, we could
-> > entertain whether we should simply always ADD_TO_MLQUEUE on
-> > 0xb/0xc1/0x1. I wonder what would break?
-> > 
-> That's the usual problem I have with vendor-specific sense codes.
-> In general the risk is quite low of different vendors actually using
-> the same code; I guess we can get away with just adding a debug
-> message here and enable it without any vendor check.
-> Then we can reconsider the whole thing once we notice several vendors
-> using the same sense codes.
+Add user friendly command strings sd_wce_rcd to enable/disable
+write&read cache. User can enable both write and read cache by one of
+the following commands:
 
-Murphy's law says that if we rely on Vendors to chose non-overlapping
-numbers we'll end up with a clash fairly quickly ...
+echo 10 > cache_type
+echo "write back" > cache_type
 
-Can't we find a way of doing this in the device_handler?  That way we
-can use vendor specific codes only when we know who the vendor is?
+wce rcd write_cache read_cache
+0   0   off         on
+0   1   off         off
+1   0   on          on
+1   1   on          off
 
-James
+When execute "cat cache_type", it will show more detail info like following:
+write back
+10
+write:on, read:on
+
+Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
+---
+ drivers/scsi/sd.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a028ab3..722e440 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -139,6 +139,15 @@ static const char *sd_cache_types[] = {
+ 	"write back, no read (daft)"
+ };
+ 
++/*
++ * wce rcd write_cache read_cache
++ * 0   0   off         on
++ * 0   1   off         off
++ * 1   0   on          on
++ * 1   1   on          off
++ */
++static const char * const sd_wce_rcd[] = {"00", "01", "10", "11"};
++
+ static void sd_set_flush_flag(struct scsi_disk *sdkp)
+ {
+ 	bool wc = false, fua = false;
+@@ -180,8 +189,11 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 	}
+ 
+ 	ct = sysfs_match_string(sd_cache_types, buf);
+-	if (ct < 0)
+-		return -EINVAL;
++	if (ct < 0) {
++		ct = sysfs_match_string(sd_wce_rcd, buf);
++		if (ct < 0)
++			return -EINVAL;
++	}
+ 
+ 	rcd = ct & 0x01 ? 1 : 0;
+ 	wce = (ct & 0x02) && !sdkp->write_prot ? 1 : 0;
+@@ -282,7 +294,9 @@ cache_type_show(struct device *dev, struct device_attribute *attr, char *buf)
+ 	struct scsi_disk *sdkp = to_scsi_disk(dev);
+ 	int ct = sdkp->RCD + 2*sdkp->WCE;
+ 
+-	return sprintf(buf, "%s\n", sd_cache_types[ct]);
++	return sprintf(buf, "%s\n%s\nwrite:%s, read:%s\n", sd_cache_types[ct],
++			sd_wce_rcd[ct], sdkp->WCE ? "on" : "off",
++			sdkp->RCD ? "off" : "on");
+ }
+ static DEVICE_ATTR_RW(cache_type);
+ 
+-- 
+2.9.4
