@@ -1,36 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: handle ABORTED_COMMAND on Fujitsu ETERNUS
-Date: Wed, 17 Jan 2018 21:43:31 -0500
-Message-ID: <yq1shb3ring.fsf@oracle.com>
-References: <20180115201852.15152-1-mwilck@suse.com>
-        <yq1efmpt3hs.fsf@oracle.com> <1516174344.3303.1.camel@suse.com>
+Subject: Re: [RFC PATCH] scsi: sd: add wce_rcd sysfs interface
+Date: Wed, 17 Jan 2018 21:51:04 -0500
+Message-ID: <yq1k1wfriav.fsf@oracle.com>
+References: <20180117124945.GA7787@bogon.didichuxing.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45512 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752275AbeARCor (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 21:44:47 -0500
-In-Reply-To: <1516174344.3303.1.camel@suse.com> (Martin Wilck's message of
-        "Wed, 17 Jan 2018 08:32:24 +0100")
+Received: from aserp2120.oracle.com ([141.146.126.78]:44842 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750931AbeARCvP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 21:51:15 -0500
+In-Reply-To: <20180117124945.GA7787@bogon.didichuxing.com> (weiping zhang's
+        message of "Wed, 17 Jan 2018 20:49:52 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, saito.kazuya@jp.fujitsu.com
+To: weiping zhang <zhangweiping@didichuxing.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
 
-Martin,
+Hi Weiping,
 
-> You'd like to spend a precious BLIST bit for this single device which
-> uses vendor-specific ASC/Q?
+> add user friendly interface wce_rcd to enable/disable
+> write&read cache. The code base on cache_type, but need short input.
 
-I really don't want string comparisons in the regular code paths. Also
-not a fan of vendor-specific ASCs. But if you must use them, please add
-a flag and trigger on that.
-
-Since this is a bit of an unusual check condition combo, we could
-entertain whether we should simply always ADD_TO_MLQUEUE on
-0xb/0xc1/0x1. I wonder what would break?
+While I agree that the cache_type interface is somewhat arcane, I don't
+think that adding a duplicate interface with slightly different
+semantics is a good idea.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
