@@ -1,49 +1,44 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: [LSF/MM TOPIC] Improving Asynchronous SCSI Disk Probing
-Date: Wed, 17 Jan 2018 23:24:35 +0000
-Message-ID: <1516231473.2820.81.camel@wdc.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] drivers/scsi/qla2xxx: fix double free bug after firmware
+ timeout
+Date: Thu, 18 Jan 2018 01:02:30 +0000
+Message-ID: <E5BBC14A-A0AD-43E1-987E-FA0B17BD9816@cavium.com>
+References: <151603716189.28707.13105191089826357709.stgit@rabbit.intern.cm-ag>
+ <13B82B86-8810-4722-97F9-EC5B862ECC76@cavium.com>
+ <20180115203726.b7igf7rajczllcv7@rabbit.intern.cm-ag>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:9337 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753054AbeAQXYj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 18:24:39 -0500
+Received: from mail-bl2nam02on0073.outbound.protection.outlook.com ([104.47.38.73]:18476
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753054AbeARBCd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jan 2018 20:02:33 -0500
+In-Reply-To: <20180115203726.b7igf7rajczllcv7@rabbit.intern.cm-ag>
 Content-Language: en-US
-Content-ID: <FE54A4D5EB0FD8489A4AA683D3A55D37@namprd04.prod.outlook.com>
+Content-ID: <C153222926540F43853CAD754EF330D4@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>
+To: Max Kellermann <mk@cm4all.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "max.kellermann@gmail.com" <max.kellermann@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-V2hlbiB0aGUgU0NTSSBzY2FubmluZyBjb2RlIGRpc2NvdmVycyBhIFNDU0kgZGV2aWNlIGl0IGNh
-bGxzIHRoZSBkcml2ZXIgY29yZQ0KZnVuY3Rpb24gZGV2aWNlX2FkZCgpIHRvIGFzc29jaWF0ZSBh
-IFNDU0kgVUxEIHdpdGggdGhlIGRldmljZS4gVGhlIGRyaXZlcg0KY29yZSBpbnZva2VzIHRoZSBw
-cm9iaW5nIGZ1bmN0aW9uIGZvciB0aGUgbWF0Y2hpbmcgU0NTSSBVTFAsIGUuZy4gc2RfcHJvYmUo
-KS4NCkluIG9yZGVyIHRvIG1pbmltaXplIHRoZSB0aW1lIG5lZWRlZCB0byBzY2FuIFNDU0kgdGFy
-Z2V0cyB0aGF0IGhhdmUgYSBsYXJnZQ0KbnVtYmVyIG9mIExVTnMsIHRoZSBTQ1NJIGRpc2sgZHJp
-dmVyIHNjYW5zIExVTnMgYXN5bmNocm9ub3VzbHkgYnkgc3RhcnRpbmcNCnRoZSBhY3R1YWwgcHJv
-YmluZyB3b3JrIGFzeW5jaHJvbm91c2x5IGZyb20gaW5zaWRlIHNkX3Byb2JlKCkNCg0KQW4gdW5m
-b3J0dW5hdGUgYXNwZWN0IG9mIGhvdyBTQ1NJIGRpc2sgcHJvYmluZyB3b3JrcyB0b2RheSBpcyB0
-aGF0IHRoZXJlIGlzDQp1bm5lY2Vzc2FyeSBzZXJpYWxpemF0aW9uIGJldHdlZW4gcHJvYmluZyBh
-bmQgcmVtb3ZhbCBhY3Rpdml0eS4gRm9yIGENCnBvc3NpYmxlIGFwcHJvYWNoIG9mIGhvdyB0byBp
-bmNyZWFzZSBTQ1NJIGRpc2sgcHJvYmluZyBjb25jdXJyZW5jeSwgc2VlIGFsc28NCltQQVRDSF0g
-c2Q6IEluY3JlYXNlIFNDU0kgZGlzayBwcm9iaW5nIGNvbmN1cnJlbmN5LCBsaW51eC1zY3NpIG1h
-aWxpbmcgbGlzdCwNCkRlY2VtYmVyIDIwMTcgKGh0dHBzOi8vd3d3LnNwaW5pY3MubmV0L2xpc3Rz
-L2xpbnV4LXNjc2kvbXNnMTE1NjU3Lmh0bWwpLg0KDQpBIHNlY29uZCB1bmZvcnR1bmF0ZSBhc3Bl
-Y3Qgb2YgU0NTSSBkaXNrIHByb2JpbmcgaXMgdGhhdCBjZXJ0YWluIHJhY2UNCmNvbmRpdGlvbnMg
-aW4gdGhlIGJsb2NrIGxheWVyIGFyZSBoaXQgaWYgcmVtb3ZhbCBzdGFydHMgYmVmb3JlIGFzeW5j
-aHJvbm91cw0KcHJvYmluZyBoYXMgZmluaXNoZWQuIFRoaXMgaXMgYmVjYXVzZSB0aGUgZHJpdmVy
-IGNvcmUgaXMgdW5hd2FyZSB0aGF0IHRoZQ0KU0NTSSBkaXNrIGNvZGUgd29ya3MgYXN5bmNocm9u
-b3VzbHkuDQoNCkFkZGl0aW9uYWxseSwgdGhlIFNDU0kgZGlzayBhc3luY2hyb25vdXMgcHJvYmlu
-ZyBhcHByb2FjaCBpcyBpbmNvbXBhdGlibGUNCndpdGggdGhlIHBvd2VyIG1hbmFnZW1lbnQgY29k
-ZS4gVGhlIHBvd2VyIG1hbmFnZW1lbnQgY29kZSBjYWxscw0Kd2FpdF9mb3JfZGV2aWNlX3Byb2Jl
-KCkgaW4gdGhlIGRyaXZlciBjb3JlIHRvIHdhaXQgZm9yIGRldmljZSBwcm9iaW5nDQphY3Rpdml0
-eSB0byBmaW5pc2guIHdhaXRfZm9yX2RldmljZV9wcm9iZSgpIGhvd2V2ZXIgaXMgdW5hd2FyZSBv
-ZiB0aGUNCmFzeW5jaHJvbm91cyBwcm9iaW5nIGluIHRoZSBTQ1NJIHNkIGRyaXZlciBhbmQgaGVu
-Y2UgZG9lc24ndCB3YWl0IGZvciB0aGUNClNDU0kgc2QgcHJvYmluZyBhY3Rpdml0eSB0byBmaW5p
-c2guDQoNCk15IHByb3Bvc2FsIGlzIHRvIGhvbGQgYSBzZXNzaW9uIHRvIGRpc2N1cyBwb3RlbnRp
-YWwgc29sdXRpb25zIGZvcg0KaW5jcmVhc2luZyBTQ1NJIGRpc2sgcHJvYmluZyBjb25jdXJyZW5j
-eSBpbiBhIHdheSB0aGF0IGlzIGNvbXBhdGlibGUgd2l0aA0KdGhlIGRyaXZlciBjb3JlIGFuZCB0
-aGUgcG93ZXIgbWFuYWdlbWVudCBzdWJzeXN0ZW0u
+TWF4LA0KDQo+IE9uIEphbiAxNSwgMjAxOCwgYXQgMTI6MzcgUE0sIE1heCBLZWxsZXJtYW5uIDxt
+a0BjbTRhbGwuY29tPiB3cm90ZToNCj4gDQo+IE9uIDIwMTgvMDEvMTUgMjA6NTgsICJNYWRoYW5p
+LCBIaW1hbnNodSIgPEhpbWFuc2h1Lk1hZGhhbmlAY2F2aXVtLmNvbT4gd3JvdGU6DQo+PiBXZSBo
+YXZlIHBhdGNoIHRvIHByZXZlbnQgdGhpcyBkb3VibGUgZnJlZSBpbiA0LjE2L3Njc2ktcXVldWUN
+Cj4+IGFscmVhZHkuDQo+IA0KPiBObywgbGV0IG1lIHJlcGVhdDogdGhpcyBpcyBhIGRpZmZlcmVu
+dCBidWchDQo+IA0KPiBZb3VyIGJ1ZyBpcyBhYm91dCB0aGUgZnJlZSBjYWxsIGFmdGVyIHdhaXRp
+bmcgZm9yIGNvbXBsZXRpb24NCj4gc3luY2hyb25vdXNseSBpbiBxbGEyNHh4X2Vsc19kY21kX2lv
+Y2IoKSwgYWZ0ZXIgaXQgd2FzIGFscmVhZHkgZnJlZWQNCj4gYnkgcWxhMngwMF9zcF90aW1lb3V0
+KCkuDQo+IA0KPiBNeSBidWcgaXMgYWJvdXQgZnJlZSBpbiBxbGEyeDAwXypfc3BfZG9uZSgpIGFu
+ZCBhZ2FpbiBpbg0KPiBxbGEyeDAwX3NwX3RpbWVvdXQoKS4gIE15IHBhdGNoIGRlc2NyaXB0aW9u
+IGRlc2NyaWJlcyBleGFjdGx5IHRoYXQuDQo+IA0KPiBBbmQgeW91IGtub3cgd2hhdD8gIE15IHBh
+dGNoIGZpeGVzIGJvdGggYnVncy4gIEl0IGlzIHN1cGVyaW9yIHRvIHRoZQ0KPiBvbmUgdGhhdCB3
+YXMgbWVyZ2VkIDQgd2Vla3MgbGF0ZXIsIGlzbid0IGl0Pw0KPiANCj4gWW91IE5BQ0tlZCBteSBw
+YXRjaCA1IHdlZWtzIGFnbywgYW5kIEkgZXhwbGFpbmVkIHRvIHlvdSB0aGF0IHlvdSB3ZXJlDQo+
+IHRhbGtpbmcgYWJvdXQgYSBkaWZmZXJlbnQgYnVnLCBidXQgeW91IG5ldmVyIHJlcGxpZWQgdG8g
+dGhhdC4NCj4gDQo+IE1heA0KDQpKdXN0IHRvIHVwZGF0ZSB5b3UsIHdlIGFyZSB3b3JraW5nIG9u
+IGZpeGluZyB0aGlzIGludGVybmFsbHkgYW5kIHdpbGwgcG9zdA0KcGF0Y2ggc29vbi4gDQoNCkni
+gJlsbCBhZGQgeW91IGFyZSBSZXBvcnRlciBhbmQgcGxlYXNlIHJldmlldyBhbmQgbGV0IHVzIGtu
+b3cgeW91ciBjb21tZW50cy4NCg0KVGhhbmtzLA0KLSBIaW1hbnNodQ0KDQo=
