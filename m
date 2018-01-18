@@ -1,98 +1,65 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] [RESEND] scsi: ips: fix firmware timestamps for 32-bit
-Date: Thu, 18 Jan 2018 14:40:13 +0100
-Message-ID: <CAK8P3a3u=mKsNUBf3fh7FQ2CqWUjWeuKD5DPhpsMEdBX0AGE2g@mail.gmail.com>
-References: <20180117145749.2712957-1-arnd@arndb.de> <alpine.LNX.2.21.1801182000330.3@nippy.intranet>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: handle ABORTED_COMMAND on Fujitsu ETERNUS
+Date: Thu, 18 Jan 2018 06:24:15 -0800
+Message-ID: <1516285455.3014.2.camel@linux.vnet.ibm.com>
+References: <20180115201852.15152-1-mwilck@suse.com>
+         <yq1efmpt3hs.fsf@oracle.com> <1516174344.3303.1.camel@suse.com>
+         <yq1shb3ring.fsf@oracle.com> <00bbbaed-215a-4af9-1576-1c25008d0e23@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:43637 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756283AbeARNkP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jan 2018 08:40:15 -0500
-In-Reply-To: <alpine.LNX.2.21.1801182000330.3@nippy.intranet>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34150 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1756382AbeAROYY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 Jan 2018 09:24:24 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0IEO5kI038359
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 09:24:23 -0500
+Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2fjujqdq15-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2018 09:24:22 -0500
+Received: from localhost
+        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Thu, 18 Jan 2018 09:24:20 -0500
+In-Reply-To: <00bbbaed-215a-4af9-1576-1c25008d0e23@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Yang Hongyang <yanghy@cn.fujitsu.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Martin Wilck <mwilck@suse.com>
+Cc: linux-scsi@vger.kernel.org, saito.kazuya@jp.fujitsu.com
 
-On Thu, Jan 18, 2018 at 10:35 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> On Wed, 17 Jan 2018, Arnd Bergmann wrote:
->
->> do_gettimeofday() is deprecated since it will stop working in 2038 on
->> 32-bit platforms. The firmware interface here actually supports times
->> until year 25500, so we should use longer timestamps.
->>
->
-> I think that reasoning is flawed. If the firmware supports large year
-> values, then fine. The firmware interface is another story.
->
-> If you are simply trying to get rid of the old API, I think you should
-> just say that.
+On Thu, 2018-01-18 at 11:17 +0100, Hannes Reinecke wrote:
+> On 01/18/2018 03:43 AM, Martin K. Petersen wrote:
+> > 
+> > 
+> > Martin,
+> > 
+> > > 
+> > > You'd like to spend a precious BLIST bit for this single device
+> > > which uses vendor-specific ASC/Q?
+> > 
+> > I really don't want string comparisons in the regular code paths.
+> > Also not a fan of vendor-specific ASCs. But if you must use them,
+> > please add a flag and trigger on that.
+> > 
+> > Since this is a bit of an unusual check condition combo, we could
+> > entertain whether we should simply always ADD_TO_MLQUEUE on
+> > 0xb/0xc1/0x1. I wonder what would break?
+> > 
+> That's the usual problem I have with vendor-specific sense codes.
+> In general the risk is quite low of different vendors actually using
+> the same code; I guess we can get away with just adding a debug
+> message here and enable it without any vendor check.
+> Then we can reconsider the whole thing once we notice several vendors
+> using the same sense codes.
 
-It's both: I have no reason to believe that the firmware breaks in
-2038. We can't know the range of the supported centuries, so it
-could break in e.g. 2099, 9999, or 25599 (I should have written
-that last number instead of 25500), but we know what the interface
-supports, and if the firmware breaks earlier, then it can be fixed
-while keeping that interface.
+Murphy's law says that if we rely on Vendors to chose non-overlapping
+numbers we'll end up with a clash fairly quickly ...
 
-In particular, 64-bit architectures work fine already for as long as
-the firmware supports, it's only 32-bit architectures that break
-early.
+Can't we find a way of doing this in the device_handler?  That way we
+can use vendor specific codes only when we know who the vendor is?
 
-I'll try to explain that better in the changelog.
-
->>  /****************************************************************************/
->>  static void
->> -ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time_t current_time)
->> +ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time64_t current_time)
->
-> Does this conversion assume that current_time is always positive? I don't
-> have a problem with that (the existing code seems to fail otherwise) but
-> maybe it should be mentioned in the commit log.
-
-current_time can never be negative, the kernel probably won't even boot
-if that were the case, as too many things rely on a positive time. The resulting
-numbers in ips_fix_ffdc_time() shouldn't change as far as I can tell (except the
-bug you found below).
-
->> -     year = IPS_EPOCH_YEAR;
->> -     while (days < 0 || days >= year_lengths[yleap = IPS_IS_LEAP_YEAR(year)]) {
->> -             int newy;
->> -
->> -             newy = year + (days / IPS_DAYS_NORMAL_YEAR);
->> -             if (days < 0)
->> -                     --newy;
->> -             days -= (newy - year) * IPS_DAYS_NORMAL_YEAR +
->> -                 IPS_NUM_LEAP_YEARS_THROUGH(newy - 1) -
->> -                 IPS_NUM_LEAP_YEARS_THROUGH(year - 1);
->
-> These IPS_ time macros are all unused after this patch except
-> IPS_SECS_8HOURS so the definitions should probably be removed.
-
-Ok, will do.
-
->> -             year = newy;
->> -     }
->> -
->> -     scb->cmd.ffdc.yearH = year / 100;
->> -     scb->cmd.ffdc.yearL = year % 100;
->> -
->> -     for (i = 0; days >= month_lengths[i][yleap]; ++i)
->> -             days -= month_lengths[i][yleap];
->> +     time64_to_tm(current_time, 0, &tm);
->>
->> -     scb->cmd.ffdc.month = i + 1;
->> -     scb->cmd.ffdc.day = days + 1;
->> +     scb->cmd.ffdc.hour   = tm.tm_hour;
->> +     scb->cmd.ffdc.minute = tm.tm_min;
->> +     scb->cmd.ffdc.second = tm.tm_sec;
->> +     scb->cmd.ffdc.yearH  = tm.tm_year / 100 + 1900;
->
-> That looks wrong to me. If tm_year is in units of years not centuries,
-> shouldn't that be,
-
-Good catch, thanks for the review!
-
-      Arnd
+James
