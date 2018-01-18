@@ -1,88 +1,70 @@
-From: weiping zhang <zhangweiping@didichuxing.com>
-Subject: [PATCH v2] scsi: sd: add new match array for cache_type
-Date: Thu, 18 Jan 2018 22:19:32 +0800
-Message-ID: <20180118141928.GA28320@bogon.didichuxing.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH] [RESEND] megaraid: use ktime_get_real for firmware time
+Date: Thu, 18 Jan 2018 20:08:08 +0530
+Message-ID: <caab2d1d01798c79e62dd034ca3eafd5@mail.gmail.com>
+References: <20180117144859.2382521-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.didichuxing.com ([36.110.17.22]:20788 "EHLO
-        BJEXCAS004.didichuxing.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756417AbeAROfA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Jan 2018 09:35:00 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180117144859.2382521-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, Hannes Reinecke <hare@suse.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org
 
-Add user friendly command strings sd_wce_rcd to enable/disable
-write&read cache. User can enable both write and read cache by one of
-the following commands:
+-----Original Message-----
+From: Arnd Bergmann [mailto:arnd@arndb.de]
+Sent: Wednesday, January 17, 2018 8:19 PM
+To: Kashyap Desai; Sumit Saxena; Shivasharan S; James E.J. Bottomley;
+Martin K. Petersen
+Cc: Arnd Bergmann; Tomas Henzl; Hannes Reinecke;
+megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org
+Subject: [PATCH] [RESEND] megaraid: use ktime_get_real for firmware time
 
-echo 10 > cache_type
-echo "write back" > cache_type
+do_gettimeofday() overflows in 2038 on 32-bit architectures and is
+deprecated, so convert this driver to call ktime_get_real() directly. This
+also simplifies the calculation.
 
-wce rcd write_cache read_cache
-0   0   off         on
-0   1   off         off
-1   0   on          on
-1   1   on          off
-
-When execute "cat cache_type", it will show more detail info like following:
-write back
-10
-write:on, read:on
-
-Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/sd.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+Sent originally in Nov 2017, no comments. Please apply
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a028ab3..722e440 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -139,6 +139,15 @@ static const char *sd_cache_types[] = {
- 	"write back, no read (daft)"
- };
- 
-+/*
-+ * wce rcd write_cache read_cache
-+ * 0   0   off         on
-+ * 0   1   off         off
-+ * 1   0   on          on
-+ * 1   1   on          off
-+ */
-+static const char * const sd_wce_rcd[] = {"00", "01", "10", "11"};
-+
- static void sd_set_flush_flag(struct scsi_disk *sdkp)
- {
- 	bool wc = false, fua = false;
-@@ -180,8 +189,11 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 	}
- 
- 	ct = sysfs_match_string(sd_cache_types, buf);
--	if (ct < 0)
--		return -EINVAL;
-+	if (ct < 0) {
-+		ct = sysfs_match_string(sd_wce_rcd, buf);
-+		if (ct < 0)
-+			return -EINVAL;
-+	}
- 
- 	rcd = ct & 0x01 ? 1 : 0;
- 	wce = (ct & 0x02) && !sdkp->write_prot ? 1 : 0;
-@@ -282,7 +294,9 @@ cache_type_show(struct device *dev, struct device_attribute *attr, char *buf)
- 	struct scsi_disk *sdkp = to_scsi_disk(dev);
- 	int ct = sdkp->RCD + 2*sdkp->WCE;
- 
--	return sprintf(buf, "%s\n", sd_cache_types[ct]);
-+	return sprintf(buf, "%s\n%s\nwrite:%s, read:%s\n", sd_cache_types[ct],
-+			sd_wce_rcd[ct], sdkp->WCE ? "on" : "off",
-+			sdkp->RCD ? "off" : "on");
- }
- static DEVICE_ATTR_RW(cache_type);
- 
--- 
-2.9.4
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 0a85f3c48ef6..97fae28c8374 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -983,7 +983,7 @@ megasas_ioc_init_fusion(struct megasas_instance
+*instance)
+ 	MFI_CAPABILITIES *drv_ops;
+ 	u32 scratch_pad_2;
+ 	unsigned long flags;
+-	struct timeval tv;
++	ktime_t time;
+ 	bool cur_fw_64bit_dma_capable;
+
+ 	fusion = instance->ctrl_context;
+@@ -1042,10 +1042,9 @@ megasas_ioc_init_fusion(struct megasas_instance
+*instance)
+ 	IOCInitMessage->HostMSIxVectors = instance->msix_vectors;
+ 	IOCInitMessage->HostPageSize = MR_DEFAULT_NVME_PAGE_SHIFT;
+
+-	do_gettimeofday(&tv);
++	time = ktime_get_real();
+ 	/* Convert to milliseconds as per FW requirement */
+-	IOCInitMessage->TimeStamp = cpu_to_le64((tv.tv_sec * 1000) +
+-						(tv.tv_usec / 1000));
++	IOCInitMessage->TimeStamp = cpu_to_le64(ktime_to_ms(time));
+
+ 	init_frame = (struct megasas_init_frame *)cmd->frame;
+ 	memset(init_frame, 0, IOC_INIT_FRAME_SIZE);
+Looks good to me.
+
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+
+--
+2.9.0
