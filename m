@@ -1,31 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC PATCH] scsi: sd: add wce_rcd sysfs interface
-Date: Wed, 17 Jan 2018 21:51:04 -0500
-Message-ID: <yq1k1wfriav.fsf@oracle.com>
-References: <20180117124945.GA7787@bogon.didichuxing.com>
+Subject: Re: [PATCH] [RESEND] scsi: fnic: use 64-bit timestamps
+Date: Wed, 17 Jan 2018 21:53:51 -0500
+Message-ID: <yq1fu73ri68.fsf@oracle.com>
+References: <20180117151708.3359303-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44842 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750931AbeARCvP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2018 21:51:15 -0500
-In-Reply-To: <20180117124945.GA7787@bogon.didichuxing.com> (weiping zhang's
-        message of "Wed, 17 Jan 2018 20:49:52 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180117151708.3359303-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 17 Jan 2018 16:16:48 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vasyl Gomonovych <gomonovych@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: weiping zhang <zhangweiping@didichuxing.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
 
-Hi Weiping,
+Arnd,
 
-> add user friendly interface wce_rcd to enable/disable
-> write&read cache. The code base on cache_type, but need short input.
+> struct timespec is deprecated since it overflows in 2038 on 32-bit
+> architectures, so we should use timespec64 consistently.
+>
+> I'm slightly adapting the format strings here, to make sure we
+> print the nanoseconds with the correct number of leading zeroes.
 
-While I agree that the cache_type interface is somewhat arcane, I don't
-think that adding a duplicate interface with slightly different
-semantics is a good idea.
+Applied to 4.16/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
