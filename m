@@ -1,38 +1,48 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 2/5] scsi: Add VENDOR_SPECIFIC sense code definitions
-Date: Fri, 19 Jan 2018 18:47:47 +0000
-Message-ID: <1516387666.2968.1.camel@wdc.com>
-References: <20180119151113.80768-1-hare@suse.de>
-         <20180119151113.80768-3-hare@suse.de>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 0/5] qla2xxx: Fixes for FC-NVMe erorr path.
+Date: Fri, 19 Jan 2018 12:29:23 -0800
+Message-ID: <20180119202928.13239-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:16329 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755830AbeASSrv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jan 2018 13:47:51 -0500
-In-Reply-To: <20180119151113.80768-3-hare@suse.de>
-Content-Language: en-US
-Content-ID: <A8031E53572AE24D8D36E6204DAFB9B2@namprd04.prod.outlook.com>
+Received: from mail-sn1nam01on0057.outbound.protection.outlook.com ([104.47.32.57]:13824
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756249AbeASU3i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Jan 2018 15:29:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jth@kernel.org" <jth@kernel.org>, "hare@suse.com" <hare@suse.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: linux-nvme@lists.infradead.org, hch@lst.de, sagi@grimberg.me, james.smart@broadcom.com, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE4LTAxLTE5IGF0IDE2OjExICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IFNvbWUgb2xkZXIgZGV2aWNlcyB3aWxsIHJldHVybiB2ZW5kb3Igc3BlY2lmaWMgc2Vuc2Ug
-Y29kZXMsIHNvDQo+IHdlIHNob3VsZCBiZSBhZGRpbmcgYSBkZWZpbml0aW9uIGZvciBpdC4NCj4g
-DQo+IFNpZ25lZC1vZmYtYnk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4NCj4gLS0t
-DQo+ICBpbmNsdWRlL3Njc2kvc2NzaV9wcm90by5oIHwgMSArDQo+ICAxIGZpbGUgY2hhbmdlZCwg
-MSBpbnNlcnRpb24oKykNCj4gDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3Njc2kvc2NzaV9wcm90
-by5oIGIvaW5jbHVkZS9zY3NpL3Njc2lfcHJvdG8uaA0KPiBpbmRleCAxZGY4ZWZiMGVlMDEuLmMz
-Njg2MDExMTkzMiAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9zY3NpL3Njc2lfcHJvdG8uaA0KPiAr
-KysgYi9pbmNsdWRlL3Njc2kvc2NzaV9wcm90by5oDQo+IEBAIC0yMzYsNiArMjM2LDcgQEAgc3Ry
-dWN0IHNjc2lfdmFybGVuX2NkYl9oZHIgew0KPiAgI2RlZmluZSBVTklUX0FUVEVOVElPTiAgICAg
-IDB4MDYNCj4gICNkZWZpbmUgREFUQV9QUk9URUNUICAgICAgICAweDA3DQo+ICAjZGVmaW5lIEJM
-QU5LX0NIRUNLICAgICAgICAgMHgwOA0KPiArI2RlZmluZSBWRU5ET1JfU1BFQ0lGSUMgICAgIDB4
-MDkNCj4gICNkZWZpbmUgQ09QWV9BQk9SVEVEICAgICAgICAweDBhDQo+ICAjZGVmaW5lIEFCT1JU
-RURfQ09NTUFORCAgICAgMHgwYg0KPiAgI2RlZmluZSBWT0xVTUVfT1ZFUkZMT1cgICAgIDB4MGQN
-Cg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAd2RjLmNvbT4N
-Cg0K
+Hi Christoph,
+
+This series has mostly cleanup and support for devloss timeout in qla2xxx
+driver for FC-NVMe protocol. 
+
+Please consider this series for inclusion in 4.16
+
+Thanks,
+Himanshu
+
+Darren Trapp (3):
+  qla2xxx: Set IIDMA and fcport state before qla_nvme_register_remote()
+  qla2xxx: Add changes for devloss timeout in driver
+  qla2xxx: Restore ZIO threshold setting
+
+Himanshu Madhani (2):
+  qla2xxx: Remove unneeded message and minor cleanup for FC-NVMe
+  qla2xxx: Update driver version to 10.00.00.06-k
+
+ drivers/scsi/qla2xxx/qla_def.h     |   1 +
+ drivers/scsi/qla2xxx/qla_init.c    |  13 ++-
+ drivers/scsi/qla2xxx/qla_isr.c     |   5 +-
+ drivers/scsi/qla2xxx/qla_nvme.c    | 158 +++++++++++++++----------------------
+ drivers/scsi/qla2xxx/qla_nvme.h    |   6 +-
+ drivers/scsi/qla2xxx/qla_target.c  |  13 +--
+ drivers/scsi/qla2xxx/qla_target.h  |   2 +-
+ drivers/scsi/qla2xxx/qla_version.h |   2 +-
+ 8 files changed, 94 insertions(+), 106 deletions(-)
+
+-- 
+2.12.0
