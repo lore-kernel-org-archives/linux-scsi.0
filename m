@@ -1,46 +1,64 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] mpt3sas: fix an out of bound write
-Date: Fri, 19 Jan 2018 16:22:05 +0100
-Message-ID: <20180119152205.5461-1-thenzl@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49138 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755925AbeASPWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Jan 2018 10:22:14 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [PATCH target-pending] iscsi-target: make sure to wake up
+ sleeping login worker
+Date: Fri, 19 Jan 2018 07:46:25 -0800
+Message-ID: <1516376785.3606.37.camel@gmail.com>
+References: <20180119133629.14812-1-fw@strlen.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20180119133629.14812-1-fw@strlen.de>
+Sender: netdev-owner@vger.kernel.org
+To: Florian Westphal <fw@strlen.de>, target-devel@vger.kernel.org
+Cc: mchristi@redhat.com, nab@linux-iscsi.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: kashyap.desai@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, hare@suse.de, Tomas Henzl <thenzl@redhat.com>
 
-cpu_msix_table is allocated to store online cpus, but pci_irq_get_affinity
-may return cpu_possible_mask which is then used to access cpu_msix_table.
-That causes bad user experience.
-Fix limits access to only online cpus, I've also added an additonal test
-to protect from an unlikely change in cpu_online_mask.
+On Fri, 2018-01-19 at 14:36 +0100, Florian Westphal wrote:
+> Mike Christie reports:
+>   Starting in 4.14 iscsi logins will fail around 50% of the time.
+> 
+> Problem appears to be that iscsi_target_sk_data_ready() callback may
+> return without doing anything in case it finds the login work queue
+> is still blocked in sock_recvmsg().
+> 
+> Nicholas Bellinger says:
+>   It would indicate users providing their own ->sk_data_ready() callback
+>   must be responsible for waking up a kthread context blocked on
+>   sock_recvmsg(..., MSG_WAITALL), when a second ->sk_data_ready() is
+>   received before the first sock_recvmsg(..., MSG_WAITALL) completes.
+> 
+> So, do this and invoke the original data_ready() callback -- in
+> case of tcp sockets this takes care of waking the thread.
+> 
+> Disclaimer: I do not understand why this problem did not show up before
+> tcp prequeue removal.
+> 
+> Reported-by: Mike Christie <mchristi@redhat.com>
+> Bisected-by: Mike Christie <mchristi@redhat.com>
+> Tested-by: Mike Christie <mchristi@redhat.com>
+> Diagnosed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> Fixes: e7942d0633c4 ("tcp: remove prequeue support")
+> Signed-off-by: Florian Westphal <fw@strlen.de>
+> ---
+>  drivers/target/iscsi/iscsi_target_nego.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+> index b686e2ce9c0e..3723f8f419aa 100644
+> --- a/drivers/target/iscsi/iscsi_target_nego.c
+> +++ b/drivers/target/iscsi/iscsi_target_nego.c
+> @@ -432,6 +432,9 @@ static void iscsi_target_sk_data_ready(struct sock *sk)
+>  	if (test_and_set_bit(LOGIN_FLAGS_READ_ACTIVE, &conn->login_flags)) {
+>  		write_unlock_bh(&sk->sk_callback_lock);
+>  		pr_debug("Got LOGIN_FLAGS_READ_ACTIVE=1, conn: %p >>>>\n", conn);
+> +		if (WARN_ON(iscsi_target_sk_data_ready == conn->orig_data_ready))
+> +			return;
 
-Fixes: 1d55abc0e98a0bf35f3af80665aac564e3b30572 scsi: mpt3sas: switch to pci_alloc_irq_vectors
+Is this WARN_ON() belonging to this fix ?
+At least make it WARN_ON_ONCE() or pr_err_once()
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 13d6e4ec3..59a87ca32 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2410,8 +2410,11 @@ _base_assign_reply_queues(struct MPT3SAS_ADAPTER *ioc)
- 				continue;
- 			}
- 
--			for_each_cpu(cpu, mask)
-+			for_each_cpu_and(cpu, mask, cpu_online_mask) {
-+				if (cpu >= ioc->cpu_msix_table_sz)
-+					break;
- 				ioc->cpu_msix_table[cpu] = reply_q->msix_index;
-+			}
- 		}
- 		return;
- 	}
--- 
-2.14.3
+> +		conn->orig_data_ready(sk);
+>  		return;
+>  	}
+>  
