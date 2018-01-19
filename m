@@ -1,45 +1,77 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 4/5] qla2xxx: Restore ZIO threshold setting
-Date: Fri, 19 Jan 2018 12:29:27 -0800
-Message-ID: <20180119202928.13239-5-himanshu.madhani@cavium.com>
-References: <20180119202928.13239-1-himanshu.madhani@cavium.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.15-rc8
+Date: Fri, 19 Jan 2018 14:12:25 -0800
+Message-ID: <1516399945.29417.4.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:7344
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932231AbeASU3r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Jan 2018 15:29:47 -0500
-In-Reply-To: <20180119202928.13239-1-himanshu.madhani@cavium.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48680 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756492AbeASWM1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Jan 2018 17:12:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-nvme@lists.infradead.org, hch@lst.de, sagi@grimberg.me, james.smart@broadcom.com, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-From: Darren Trapp <darren.trapp@cavium.com>
+One fix for SAS attached SATA CD-ROMs.  It turns out that the libata
+handling of CD devices relies on the SCSI error handler, so disable
+async aborts (which don't start the error handler) for these devices.
 
-Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Hannes Reinecke (1):
+      scsi: libsas: Disable asynchronous aborts for SATA devices
+
+And the diffstat:
+
+ drivers/scsi/libsas/sas_scsi_host.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/qla2xxx/qla_nvme.c | 5 -----
- 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index a8e81fc14c44..5ee447680ddd 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -464,11 +464,6 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
- 	/* Set chip new ring index. */
- 	WRT_REG_DWORD(req->req_q_in, req->ring_index);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 91795eb56206..eea94aa4091c 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -486,15 +486,28 @@ static int sas_queue_reset(struct domain_device *dev, int reset_type,
  
--	/* Manage unprocessed RIO/ZIO commands in response queue. */
--	if (vha->flags.process_response_queue &&
--	    rsp->ring_ptr->signature != RESPONSE_PROCESSED)
--		qla24xx_process_response_queue(vha, rsp);
--
- queuing_error:
- 	spin_unlock_irqrestore(&qpair->qp_lock, flags);
- 	return rval;
--- 
-2.12.0
+ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+ {
+-	int res;
++	int res = TMF_RESP_FUNC_FAILED;
+ 	struct sas_task *task = TO_SAS_TASK(cmd);
+ 	struct Scsi_Host *host = cmd->device->host;
++	struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
++	unsigned long flags;
+ 
+ 	if (!i->dft->lldd_abort_task)
+ 		return FAILED;
+ 
+-	res = i->dft->lldd_abort_task(task);
++	spin_lock_irqsave(host->host_lock, flags);
++	/* We cannot do async aborts for SATA devices */
++	if (dev_is_sata(dev) && !host->host_eh_scheduled) {
++		spin_unlock_irqrestore(host->host_lock, flags);
++		return FAILED;
++	}
++	spin_unlock_irqrestore(host->host_lock, flags);
++
++	if (task)
++		res = i->dft->lldd_abort_task(task);
++	else
++		SAS_DPRINTK("no task to abort\n");
+ 	if (res == TMF_RESP_FUNC_SUCC || res == TMF_RESP_FUNC_COMPLETE)
+ 		return SUCCESS;
+ 
