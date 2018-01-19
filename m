@@ -1,301 +1,231 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 4/6] mpt3sas: Introduce Base function for cloning.
-Date: Fri, 19 Jan 2018 04:37:40 -0800
-Message-ID: <1516365462-14708-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 5/6] mpt3sas: Introduce function to clone mpi request.
+Date: Fri, 19 Jan 2018 04:37:41 -0800
+Message-ID: <1516365462-14708-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1516365462-14708-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:43794 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755197AbeASMiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jan 2018 07:38:11 -0500
-Received: by mail-qt0-f196.google.com with SMTP id s3so3375523qtb.10
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Jan 2018 04:38:10 -0800 (PST)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:40488 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755197AbeASMiO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jan 2018 07:38:14 -0500
+Received: by mail-qt0-f195.google.com with SMTP id s39so3395931qth.7
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Jan 2018 04:38:14 -0800 (PST)
 In-Reply-To: <1516365462-14708-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-All scsi IO's and config requests data buffer and
-sgl are cloned to system memory in _clone_sg_entries
-before submitting it to Firmware.
+1) Added function _base_clone_mpi_to_sys_mem to clone
+MPI request into system BAR0 mapped region.
+
+2) Seperate out MPI Endpoint IO submissions to function
+_base_put_smid_mpi_ep_scsi_io.
+
+3) MPI EP requests are submitted in two 32 bit MMIO writes.
+from _base_mpi_ep_writeq.
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c   | 212 +++++++++++++++++++++++++++++++++-
- drivers/scsi/mpt3sas/mpt3sas_base.h   |   3 +
- drivers/scsi/mpt3sas/mpt3sas_config.c |   1 +
- 3 files changed, 215 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 131 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 123 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index dc289c0..40a1806 100644
+index 40a1806..0248058 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -126,6 +126,23 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
+@@ -126,6 +126,24 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
  	param_get_int, &mpt3sas_fwfault_debug, 0644);
  
  /**
-+ * _base_clone_to_sys_mem - Writes/copies data to system/BAR0 region
++ * _base_clone_mpi_to_sys_mem - Writes/copies MPI frames
++ *				to system/BAR0 region.
 + *
 + * @dst_iomem: Pointer to the destinaltion location in BAR0 space.
 + * @src: Pointer to the Source data.
 + * @size: Size of data to be copied.
 + */
 +static void
-+_base_clone_to_sys_mem(void *dst_iomem, void *src, u32 size)
++_base_clone_mpi_to_sys_mem(void *dst_iomem, void *src, u32 size)
 +{
 +	int i;
-+	__le32 *src_virt_mem = (__le32 *)(src);
++	__le32 *src_virt_mem = (__le32 *)src;
 +
 +	for (i = 0; i < size/4; i++)
 +		writel(cpu_to_le32(src_virt_mem[i]), dst_iomem + (i * 4));
 +}
 +
 +/**
-  * _base_get_chain - Calculates and Returns virtual chain address
-  *			 for the provided smid in BAR0 space.
+  * _base_clone_to_sys_mem - Writes/copies data to system/BAR0 region
   *
-@@ -219,6 +236,199 @@ _base_get_buffer_phys_bar0(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+  * @dst_iomem: Pointer to the destinaltion location in BAR0 space.
+@@ -3265,6 +3283,29 @@ mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
  }
  
  /**
-+ * _base_get_chain_buffer_dma_to_chain_buffer - Iterates chain
-+ *			lookup list and Provides chain_buffer
-+ *			address for the matching dma address.
-+ *			(Each smid can have 64K starts from 17024)
++ * _base_mpi_ep_writeq - 32 bit write to MMIO
++ * @b: data payload
++ * @addr: address in MMIO space
++ * @writeq_lock: spin lock
 + *
++ * This special handling for MPI EP to take care of 32 bit
++ * environment where its not quarenteed to send the entire word
++ * in one transfer.
++ */
++static inline void
++_base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr,
++					spinlock_t *writeq_lock)
++{
++	unsigned long flags;
++	__u64 data_out = cpu_to_le64(b);
++
++	spin_lock_irqsave(writeq_lock, flags);
++	writel((u32)(data_out), addr);
++	writel((u32)(data_out >> 32), (addr + 4));
++	spin_unlock_irqrestore(writeq_lock, flags);
++}
++
++/**
+  * _base_writeq - 64 bit write to MMIO
+  * @ioc: per adapter object
+  * @b: data payload
+@@ -3296,6 +3337,36 @@ _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
+ #endif
+ 
+ /**
++ * _base_put_smid_mpi_ep_scsi_io - send SCSI_IO request to firmware
 + * @ioc: per adapter object
-+ * @chain_buffer_dma: Chain buffer dma address.
++ * @smid: system request message index
++ * @handle: device handle
 + *
-+ * @Returns - Pointer to chain buffer. Or Null on Failure.
++ * Return nothing.
 + */
-+static void *
-+_base_get_chain_buffer_dma_to_chain_buffer(struct MPT3SAS_ADAPTER *ioc,
-+		dma_addr_t chain_buffer_dma)
++static void
++_base_put_smid_mpi_ep_scsi_io(struct MPT3SAS_ADAPTER *ioc, u16 smid, u16 handle)
 +{
-+	u16 index;
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
++	void *mpi_req_iomem;
++	__le32 *mfp = (__le32 *)mpt3sas_base_get_msg_frame(ioc, smid);
 +
-+	for (index = 0; index < ioc->chain_depth; index++) {
-+		if (ioc->chain_lookup[index].chain_buffer_dma ==
-+				chain_buffer_dma)
-+			return ioc->chain_lookup[index].chain_buffer;
-+	}
-+	pr_info(MPT3SAS_FMT
-+	    "Provided chain_buffer_dma address is not in the lookup list\n",
-+	    ioc->name);
-+	return NULL;
++	_clone_sg_entries(ioc, (void *) mfp, smid);
++	mpi_req_iomem = (void *)ioc->chip +
++			MPI_FRAME_START_OFFSET + (smid * ioc->request_sz);
++	_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
++					ioc->request_sz);
++	descriptor.SCSIIO.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO;
++	descriptor.SCSIIO.MSIxIndex =  _base_get_msix_index(ioc);
++	descriptor.SCSIIO.SMID = cpu_to_le16(smid);
++	descriptor.SCSIIO.DevHandle = cpu_to_le16(handle);
++	descriptor.SCSIIO.LMID = 0;
++	_base_mpi_ep_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
 +}
 +
 +/**
-+ * _clone_sg_entries -	MPI EP's scsiio and config requests
-+ *			are handled here. Base function for
-+ *			double buffering, before submitting
-+ *			the requests.
-+ *
-+ * @ioc: per adapter object.
-+ * @mpi_request: mf request pointer.
-+ * @smid: system request message index.
-+ *
-+ * @Returns: Nothing.
-+ */
-+static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
-+		void *mpi_request, u16 smid)
-+{
-+	Mpi2SGESimple32_t *sgel, *sgel_next;
-+	u32  sgl_flags, sge_chain_count = 0;
-+	bool is_write = 0;
-+	u16 i = 0;
-+	void  *buffer_iomem, *buffer_iomem_phys;
-+	void *buff_ptr, *buff_ptr_phys;
-+	void *dst_chain_addr[MCPU_MAX_CHAINS_PER_IO];
-+	void *src_chain_addr[MCPU_MAX_CHAINS_PER_IO], *dst_addr_phys;
+  * _base_put_smid_scsi_io - send SCSI_IO request to firmware
+  * @ioc: per adapter object
+  * @smid: system request message index
+@@ -3356,7 +3427,23 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	u16 msix_task)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+-	u64 *request = (u64 *)&descriptor;
++	void *mpi_req_iomem;
++	u64 *request;
++
++	if (ioc->is_mcpu_endpoint) {
++		MPI2RequestHeader_t *request_hdr;
++
++		__le32 *mfp = (__le32 *)mpt3sas_base_get_msg_frame(ioc, smid);
++
++		request_hdr = (MPI2RequestHeader_t *)mfp;
++		/* TBD 256 is offset within sys register. */
++		mpi_req_iomem = (void *)ioc->chip + MPI_FRAME_START_OFFSET
++					+ (smid * ioc->request_sz);
++		_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
++							ioc->request_sz);
++	}
++
++	request = (u64 *)&descriptor;
+ 
+ 	descriptor.HighPriority.RequestFlags =
+ 	    MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY;
+@@ -3364,8 +3451,13 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	descriptor.HighPriority.SMID = cpu_to_le16(smid);
+ 	descriptor.HighPriority.LMID = 0;
+ 	descriptor.HighPriority.Reserved1 = 0;
+-	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
+-	    &ioc->scsi_lookup_lock);
++	if (ioc->is_mcpu_endpoint)
++		_base_mpi_ep_writeq(*request,
++				&ioc->chip->RequestDescriptorPostLow,
++				&ioc->scsi_lookup_lock);
++	else
++		_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++		    &ioc->scsi_lookup_lock);
+ }
+ 
+ /**
+@@ -3403,15 +3495,35 @@ static void
+ _base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+-	u64 *request = (u64 *)&descriptor;
++	void *mpi_req_iomem;
++	u64 *request;
 +	MPI2RequestHeader_t *request_hdr;
-+	struct scsi_cmnd *scmd;
-+	struct scatterlist *sg_scmd = NULL;
-+	int is_scsiio_req = 0;
+ 
++	if (ioc->is_mcpu_endpoint) {
++		__le32 *mfp = (__le32 *)mpt3sas_base_get_msg_frame(ioc, smid);
 +
-+	request_hdr = (MPI2RequestHeader_t *) mpi_request;
++		request_hdr = (MPI2RequestHeader_t *)mfp;
 +
-+	if (request_hdr->Function == MPI2_FUNCTION_SCSI_IO_REQUEST) {
-+		Mpi25SCSIIORequest_t *scsiio_request =
-+			(Mpi25SCSIIORequest_t *)mpi_request;
-+		sgel = (Mpi2SGESimple32_t *) &scsiio_request->SGL;
-+		is_scsiio_req = 1;
-+	} else if (request_hdr->Function == MPI2_FUNCTION_CONFIG) {
-+		Mpi2ConfigRequest_t  *config_req =
-+			(Mpi2ConfigRequest_t *)mpi_request;
-+		sgel = (Mpi2SGESimple32_t *) &config_req->PageBufferSGE;
-+	} else
-+		return;
-+
-+	/* From smid we can get scsi_cmd, once we have sg_scmd,
-+	 * we just need to get sg_virt and sg_next to get virual
-+	 * address associated with sgel->Address.
-+	 */
-+
-+	if (is_scsiio_req) {
-+		/* Get scsi_cmd using smid */
-+		scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
-+		if (scmd == NULL) {
-+			pr_err(MPT3SAS_FMT "scmd is NULL\n", ioc->name);
-+			return;
-+		}
-+
-+		/* Get sg_scmd from scmd provided */
-+		sg_scmd = scsi_sglist(scmd);
++		_clone_sg_entries(ioc, (void *) mfp, smid);
++		/* TBD 256 is offset within sys register */
++		mpi_req_iomem = (void *)ioc->chip +
++			MPI_FRAME_START_OFFSET + (smid * ioc->request_sz);
++		_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
++							ioc->request_sz);
 +	}
-+
-+	/*
-+	 * 0 - 255	System register
-+	 * 256 - 4352	MPI Frame. (This is based on maxCredit 32)
-+	 * 4352 - 4864	Reply_free pool (512 byte is reserved
-+	 *		considering maxCredit 32. Reply need extra
-+	 *		room, for mCPU case kept four times of
-+	 *		maxCredit).
-+	 * 4864 - 17152	SGE chain element. (32cmd * 3 chain of
-+	 *		128 byte size = 12288)
-+	 * 17152 - x	Host buffer mapped with smid.
-+	 *		(Each smid can have 64K Max IO.)
-+	 * BAR0+Last 1K MSIX Addr and Data
-+	 * Total size in use 2113664 bytes of 4MB BAR0
-+	 */
-+
-+	buffer_iomem = _base_get_buffer_bar0(ioc, smid);
-+	buffer_iomem_phys = _base_get_buffer_phys_bar0(ioc, smid);
-+
-+	buff_ptr = buffer_iomem;
-+	buff_ptr_phys = buffer_iomem_phys;
-+
-+	if (sgel->FlagsLength &
-+			(MPI2_SGE_FLAGS_HOST_TO_IOC << MPI2_SGE_FLAGS_SHIFT))
-+		is_write = 1;
-+
-+	for (i = 0; i < MPT_MIN_PHYS_SEGMENTS + ioc->facts.MaxChainDepth; i++) {
-+
-+		sgl_flags = (sgel->FlagsLength >> MPI2_SGE_FLAGS_SHIFT);
-+
-+		switch (sgl_flags & MPI2_SGE_FLAGS_ELEMENT_MASK) {
-+		case MPI2_SGE_FLAGS_CHAIN_ELEMENT:
-+			/*
-+			 * Helper function which on passing
-+			 * chain_buffer_dma returns chain_buffer. Get
-+			 * the virtual address for sgel->Address
-+			 */
-+			sgel_next =
-+				_base_get_chain_buffer_dma_to_chain_buffer(ioc,
-+						sgel->Address);
-+			if (sgel_next == NULL)
-+				return;
-+			/*
-+			 * This is coping 128 byte chain
-+			 * frame (not a host buffer)
-+			 */
-+			dst_chain_addr[sge_chain_count] =
-+				_base_get_chain(ioc,
-+					smid, sge_chain_count);
-+			src_chain_addr[sge_chain_count] =
-+						(void *) sgel_next;
-+			dst_addr_phys =
-+				_base_get_chain_phys(ioc,
-+						smid, sge_chain_count);
-+			sgel->Address = (dma_addr_t)dst_addr_phys;
-+			sgel = sgel_next;
-+			sge_chain_count++;
-+			break;
-+		case MPI2_SGE_FLAGS_SIMPLE_ELEMENT:
-+			if (is_write) {
-+				if (is_scsiio_req) {
-+					_base_clone_to_sys_mem(buff_ptr,
-+					    sg_virt(sg_scmd),
-+					    (sgel->FlagsLength & 0x00ffffff));
-+					sgel->Address =
-+						(dma_addr_t)buff_ptr_phys;
-+				} else {
-+					_base_clone_to_sys_mem(buff_ptr,
-+					    ioc->config_vaddr,
-+					    (sgel->FlagsLength & 0x00ffffff));
-+					sgel->Address =
-+					    (dma_addr_t)buff_ptr_phys;
-+				}
-+			}
-+			buff_ptr += (sgel->FlagsLength & 0x00ffffff);
-+			buff_ptr_phys += (sgel->FlagsLength & 0x00ffffff);
-+			if ((sgel->FlagsLength &
-+			    (MPI2_SGE_FLAGS_END_OF_BUFFER
-+					<< MPI2_SGE_FLAGS_SHIFT)))
-+				goto eob_clone_chain;
-+			else {
-+				/*
-+				 * Every single element in MPT will have
-+				 * associated sg_next. Better to sanity that
-+				 * sg_next is not NULL, but it will be a bug
-+				 * if it is null.
-+				 */
-+				if (is_scsiio_req) {
-+					sg_scmd = sg_next(sg_scmd);
-+					if (sg_scmd)
-+						sgel++;
-+					else
-+						goto eob_clone_chain;
-+				}
-+			}
-+			break;
-+		}
-+	}
-+
-+eob_clone_chain:
-+	for (i = 0; i < sge_chain_count; i++) {
-+		if (is_scsiio_req)
-+			_base_clone_to_sys_mem(dst_chain_addr[i],
-+				src_chain_addr[i], ioc->request_sz);
-+	}
-+}
-+
-+/**
-  *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead ioc
-  * @arg: input argument, used to derive ioc
-  *
-@@ -3295,7 +3505,7 @@ _base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++	request = (u64 *)&descriptor;
+ 	descriptor.Default.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_DEFAULT_TYPE;
+ 	descriptor.Default.MSIxIndex =  _base_get_msix_index(ioc);
+ 	descriptor.Default.SMID = cpu_to_le16(smid);
+ 	descriptor.Default.LMID = 0;
+ 	descriptor.Default.DescriptorTypeDependent = 0;
+-	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
+-	    &ioc->scsi_lookup_lock);
++	if (ioc->is_mcpu_endpoint)
++		_base_mpi_ep_writeq(*request,
++				&ioc->chip->RequestDescriptorPostLow,
++				&ioc->scsi_lookup_lock);
++	else
++		_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++				&ioc->scsi_lookup_lock);
+ }
+ 
+ /**
+@@ -3505,7 +3617,7 @@ _base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
  
  /**
   * _base_put_smid_default - Default, primarily used for config pages
-- * use Atomic Request Descriptor
-+ *				use Atomic Request Descriptor
+- *				use Atomic Request Descriptor
++ * use Atomic Request Descriptor
   * @ioc: per adapter object
   * @smid: system request message index
   *
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 2529d25..4fd582b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -95,6 +95,8 @@
- #define MPT_MIN_PHYS_SEGMENTS	16
- #define MPT_KDUMP_MIN_PHYS_SEGMENTS	32
- 
-+#define MCPU_MAX_CHAINS_PER_IO	3
-+
- #ifdef CONFIG_SCSI_MPT3SAS_MAX_SGE
- #define MPT3SAS_SG_DEPTH		CONFIG_SCSI_MPT3SAS_MAX_SGE
- #else
-@@ -1238,6 +1240,7 @@ struct MPT3SAS_ADAPTER {
- 	u16		config_page_sz;
- 	void		*config_page;
- 	dma_addr_t	config_page_dma;
-+	void		*config_vaddr;
- 
- 	/* scsiio request */
- 	u16		hba_queue_depth;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 1c747cf..0dba3c4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -219,6 +219,7 @@ _config_alloc_config_dma_memory(struct MPT3SAS_ADAPTER *ioc,
- 		mem->page = ioc->config_page;
- 		mem->page_dma = ioc->config_page_dma;
- 	}
-+	ioc->config_vaddr = mem->page;
- 	return r;
- }
- 
+@@ -6330,7 +6442,10 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap_atomic;
+ 	} else {
+ 		ioc->put_smid_default = &_base_put_smid_default;
+-		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
++		if (ioc->is_mcpu_endpoint)
++			ioc->put_smid_scsi_io = &_base_put_smid_mpi_ep_scsi_io;
++		else
++			ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
+ 		ioc->put_smid_fast_path = &_base_put_smid_fast_path;
+ 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority;
+ 		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap;
 -- 
 2.5.5
