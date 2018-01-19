@@ -1,42 +1,38 @@
-From: Florian Westphal <fw@strlen.de>
-Subject: Re: [PATCH target-pending] iscsi-target: make sure to wake up
- sleeping login worker
-Date: Fri, 19 Jan 2018 18:26:29 +0100
-Message-ID: <20180119172629.GD21673@breakpoint.cc>
-References: <20180119133629.14812-1-fw@strlen.de>
- <1516376785.3606.37.camel@gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 2/5] scsi: Add VENDOR_SPECIFIC sense code definitions
+Date: Fri, 19 Jan 2018 18:47:47 +0000
+Message-ID: <1516387666.2968.1.camel@wdc.com>
+References: <20180119151113.80768-1-hare@suse.de>
+         <20180119151113.80768-3-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([146.0.238.67]:35010 "EHLO
-        Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756005AbeASR3H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Jan 2018 12:29:07 -0500
-Content-Disposition: inline
-In-Reply-To: <1516376785.3606.37.camel@gmail.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:16329 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755830AbeASSrv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jan 2018 13:47:51 -0500
+In-Reply-To: <20180119151113.80768-3-hare@suse.de>
+Content-Language: en-US
+Content-ID: <A8031E53572AE24D8D36E6204DAFB9B2@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Florian Westphal <fw@strlen.de>, target-devel@vger.kernel.org, mchristi@redhat.com, nab@linux-iscsi.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jth@kernel.org" <jth@kernel.org>, "hare@suse.com" <hare@suse.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Fri, 2018-01-19 at 14:36 +0100, Florian Westphal wrote:
-> > diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-> > index b686e2ce9c0e..3723f8f419aa 100644
-> > --- a/drivers/target/iscsi/iscsi_target_nego.c
-> > +++ b/drivers/target/iscsi/iscsi_target_nego.c
-> > @@ -432,6 +432,9 @@ static void iscsi_target_sk_data_ready(struct sock *sk)
-> >  	if (test_and_set_bit(LOGIN_FLAGS_READ_ACTIVE, &conn->login_flags)) {
-> >  		write_unlock_bh(&sk->sk_callback_lock);
-> >  		pr_debug("Got LOGIN_FLAGS_READ_ACTIVE=1, conn: %p >>>>\n", conn);
-> > +		if (WARN_ON(iscsi_target_sk_data_ready == conn->orig_data_ready))
-> > +			return;
-> 
-> Is this WARN_ON() belonging to this fix ?
-> At least make it WARN_ON_ONCE() or pr_err_once()
-
-Nicholas, I don't know this code at all so it would be good if you could
-give advice here (omit all together, WARN_ON_ONCE, ...).
-
-Thanks!
+T24gRnJpLCAyMDE4LTAxLTE5IGF0IDE2OjExICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IFNvbWUgb2xkZXIgZGV2aWNlcyB3aWxsIHJldHVybiB2ZW5kb3Igc3BlY2lmaWMgc2Vuc2Ug
+Y29kZXMsIHNvDQo+IHdlIHNob3VsZCBiZSBhZGRpbmcgYSBkZWZpbml0aW9uIGZvciBpdC4NCj4g
+DQo+IFNpZ25lZC1vZmYtYnk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4NCj4gLS0t
+DQo+ICBpbmNsdWRlL3Njc2kvc2NzaV9wcm90by5oIHwgMSArDQo+ICAxIGZpbGUgY2hhbmdlZCwg
+MSBpbnNlcnRpb24oKykNCj4gDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3Njc2kvc2NzaV9wcm90
+by5oIGIvaW5jbHVkZS9zY3NpL3Njc2lfcHJvdG8uaA0KPiBpbmRleCAxZGY4ZWZiMGVlMDEuLmMz
+Njg2MDExMTkzMiAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9zY3NpL3Njc2lfcHJvdG8uaA0KPiAr
+KysgYi9pbmNsdWRlL3Njc2kvc2NzaV9wcm90by5oDQo+IEBAIC0yMzYsNiArMjM2LDcgQEAgc3Ry
+dWN0IHNjc2lfdmFybGVuX2NkYl9oZHIgew0KPiAgI2RlZmluZSBVTklUX0FUVEVOVElPTiAgICAg
+IDB4MDYNCj4gICNkZWZpbmUgREFUQV9QUk9URUNUICAgICAgICAweDA3DQo+ICAjZGVmaW5lIEJM
+QU5LX0NIRUNLICAgICAgICAgMHgwOA0KPiArI2RlZmluZSBWRU5ET1JfU1BFQ0lGSUMgICAgIDB4
+MDkNCj4gICNkZWZpbmUgQ09QWV9BQk9SVEVEICAgICAgICAweDBhDQo+ICAjZGVmaW5lIEFCT1JU
+RURfQ09NTUFORCAgICAgMHgwYg0KPiAgI2RlZmluZSBWT0xVTUVfT1ZFUkZMT1cgICAgIDB4MGQN
+Cg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVAd2RjLmNvbT4N
+Cg0K
