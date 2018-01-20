@@ -1,288 +1,77 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 1/3] scsi: aacraid: Implement DropIO sync command
-Date: Fri, 19 Jan 2018 17:01:55 -0800
-Message-ID: <20180120010157.22674-2-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 2/3] scsi: aacraid: Preserve MSIX mode in the OMR register
+Date: Fri, 19 Jan 2018 17:01:56 -0800
+Message-ID: <20180120010157.22674-3-RaghavaAditya.Renukunta@microsemi.com>
 References: <20180120010157.22674-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0076.outbound.protection.outlook.com ([104.47.33.76]:10752
+Received: from mail-bn3nam01on0055.outbound.protection.outlook.com ([104.47.33.55]:25824
         "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756027AbeATBCF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Jan 2018 20:02:05 -0500
+        id S1754766AbeATBCG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Jan 2018 20:02:06 -0500
 In-Reply-To: <20180120010157.22674-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-IOP_RESET takes longer time to complete, if controller
-is in a state where we can bring it back with init struct,
-controller DropIO sync command is implemented.
-
- - If controller is faulted perform standard IOP_RESET in aac_srcv_init.
- - If controller is not faulted get adapter properties and extended
-   properties.
- - Update the sa_firmware variable and determine if DropIO request is
-   supported.
- - Issue DropIO request, and get the number of outstanding commands.
- - If all commands are complete with success (CT_OK), consider IOP_RESET
-   is complete.
- - If any commands timeout, Perform the IOP_RESET.
+Preserve the current MSIX mode value in the OMR before
+rewriting the OMR to initiate the IOP or Soft Reset.
 
 Signed-off-by: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aacraid.h |   4 +
- drivers/scsi/aacraid/src.c     | 167 +++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 163 insertions(+), 8 deletions(-)
+ drivers/scsi/aacraid/src.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 3e8bfcf..784783b 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1528,6 +1528,7 @@ struct aac_bus_info_response {
- #define AAC_COMM_MESSAGE_TYPE3		5
- 
- #define AAC_EXTOPT_SA_FIRMWARE		cpu_to_le32(1<<1)
-+#define AAC_EXTOPT_SOFT_RESET		cpu_to_le32(1<<16)
- 
- /* MSIX context */
- struct aac_msix_ctx {
-@@ -1662,6 +1663,7 @@ struct aac_dev
- 	u8			raw_io_64;
- 	u8			printf_enabled;
- 	u8			in_reset;
-+	u8			in_soft_reset;
- 	u8			msi;
- 	u8			sa_firmware;
- 	int			management_fib_count;
-@@ -2502,6 +2504,7 @@ struct aac_hba_info {
- #define RCV_TEMP_READINGS		0x00000025
- #define GET_COMM_PREFERRED_SETTINGS	0x00000026
- #define IOP_RESET_FW_FIB_DUMP		0x00000034
-+#define DROP_IO			0x00000035
- #define IOP_RESET			0x00001000
- #define IOP_RESET_ALWAYS		0x00001001
- #define RE_INIT_ADAPTER		0x000000ee
-@@ -2537,6 +2540,7 @@ struct aac_hba_info {
- #define	FLASH_UPD_PENDING		0x00002000
- #define	FLASH_UPD_SUCCESS		0x00004000
- #define	FLASH_UPD_FAILED		0x00008000
-+#define	INVALID_OMR			0xffffffff
- #define	FWUPD_TIMEOUT			(5 * 60)
- 
- /*
 diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 0c9361c..df98f37 100644
+index df98f37..b05c3cf 100644
 --- a/drivers/scsi/aacraid/src.c
 +++ b/drivers/scsi/aacraid/src.c
-@@ -255,7 +255,8 @@ static int src_sync_cmd(struct aac_dev *dev, u32 command,
- 	 */
- 	src_writel(dev, MUnit.IDR, INBOUNDDOORBELL_0 << SRC_IDR_SHIFT);
- 
--	if (!dev->sync_mode || command != SEND_SYNCHRONOUS_FIB) {
-+	if ((!dev->sync_mode || command != SEND_SYNCHRONOUS_FIB) &&
-+		!dev->in_soft_reset) {
- 		ok = 0;
- 		start = jiffies;
- 
-@@ -988,6 +989,148 @@ int aac_src_init(struct aac_dev *dev)
- 	return -1;
+@@ -680,6 +680,25 @@ void aac_set_intx_mode(struct aac_dev *dev)
+ 	}
  }
  
-+static int aac_src_wait_sync(struct aac_dev *dev, int *status)
++static void aac_clear_omr(struct aac_dev *dev)
 +{
-+	unsigned long start = jiffies;
-+	unsigned long usecs = 0;
-+	int delay = 5 * HZ;
-+	int rc = 1;
++	u32 omr_value = 0;
 +
-+	while (time_before(jiffies, start+delay)) {
-+		/*
-+		 * Delay 5 microseconds to let Mon960 get info.
-+		 */
-+		udelay(5);
-+
-+		/*
-+		 * Mon960 will set doorbell0 bit when it has completed the
-+		 * command.
-+		 */
-+		if (aac_src_get_sync_status(dev) & OUTBOUNDDOORBELL_0) {
-+			/*
-+			 * Clear: the doorbell.
-+			 */
-+			if (dev->msi_enabled)
-+				aac_src_access_devreg(dev, AAC_CLEAR_SYNC_BIT);
-+			else
-+				src_writel(dev, MUnit.ODR_C,
-+					OUTBOUNDDOORBELL_0 << SRC_ODR_SHIFT);
-+			rc = 0;
-+
-+			break;
-+		}
-+
-+		/*
-+		 * Yield the processor in case we are slow
-+		 */
-+		usecs = 1 * USEC_PER_MSEC;
-+		usleep_range(usecs, usecs + 50);
-+	}
-+	/*
-+	 * Pull the synch status from Mailbox 0.
-+	 */
-+	if (status && !rc) {
-+		status[0] = readl(&dev->IndexRegs->Mailbox[0]);
-+		status[1] = readl(&dev->IndexRegs->Mailbox[1]);
-+		status[2] = readl(&dev->IndexRegs->Mailbox[2]);
-+		status[3] = readl(&dev->IndexRegs->Mailbox[3]);
-+		status[4] = readl(&dev->IndexRegs->Mailbox[4]);
-+	}
-+
-+	return rc;
-+}
-+
-+/**
-+ *  aac_src_soft_reset	-	perform soft reset to speed up
-+ *  access
-+ *
-+ *  Assumptions: That the controller is in a state where we can
-+ *  bring it back to life with an init struct. We can only use
-+ *  fast sync commands, as the timeout is 5 seconds.
-+ *
-+ *  @dev: device to configure
-+ *
-+ */
-+
-+static int aac_src_soft_reset(struct aac_dev *dev)
-+{
-+	u32 status_omr = src_readl(dev, MUnit.OMR);
-+	u32 status[5];
-+	int rc = 1;
-+	int state = 0;
-+	char *state_str[7] = {
-+		"GET_ADAPTER_PROPERTIES Failed",
-+		"GET_ADAPTER_PROPERTIES timeout",
-+		"SOFT_RESET not supported",
-+		"DROP_IO Failed",
-+		"DROP_IO timeout",
-+		"Check Health failed"
-+	};
-+
-+	if (status_omr == INVALID_OMR)
-+		return 1;       // pcie hosed
-+
-+	if (!(status_omr & KERNEL_UP_AND_RUNNING))
-+		return 1;       // not up and running
++	omr_value = src_readl(dev, MUnit.OMR);
 +
 +	/*
-+	 * We go into soft reset mode to allow us to handle response
++	 * Check for PCI Errors or Kernel Panic
 +	 */
-+	dev->in_soft_reset = 1;
-+	dev->msi_enabled = status_omr & AAC_INT_MODE_MSIX;
++	if ((omr_value == INVALID_OMR) || (omr_value & KERNEL_PANIC))
++		omr_value = 0;
 +
-+	/* Get adapter properties */
-+	rc = aac_adapter_sync_cmd(dev, GET_ADAPTER_PROPERTIES, 0, 0, 0,
-+		0, 0, 0, status+0, status+1, status+2, status+3, status+4);
-+	if (rc)
-+		goto out;
-+
-+	state++;
-+	if (aac_src_wait_sync(dev, status)) {
-+		rc = 1;
-+		goto out;
-+	}
-+
-+	state++;
-+	if (!(status[1] & le32_to_cpu(AAC_OPT_EXTENDED) &&
-+		(status[4] & le32_to_cpu(AAC_EXTOPT_SOFT_RESET)))) {
-+		rc = 2;
-+		goto out;
-+	}
-+
-+	if ((status[1] & le32_to_cpu(AAC_OPT_EXTENDED)) &&
-+		(status[4] & le32_to_cpu(AAC_EXTOPT_SA_FIRMWARE)))
-+		dev->sa_firmware = 1;
-+
-+	state++;
-+	rc = aac_adapter_sync_cmd(dev, DROP_IO, 0, 0, 0, 0, 0, 0,
-+		 status+0, status+1, status+2, status+3, status+4);
-+
-+	if (rc)
-+		goto out;
-+
-+	state++;
-+	if (aac_src_wait_sync(dev, status)) {
-+		rc = 3;
-+		goto out;
-+	}
-+
-+	if (status[1])
-+		dev_err(&dev->pdev->dev, "%s: %d outstanding I/O pending\n",
-+			__func__, status[1]);
-+
-+	state++;
-+	rc = aac_src_check_health(dev);
-+
-+out:
-+	dev->in_soft_reset = 0;
-+	dev->msi_enabled = 0;
-+	if (rc)
-+		dev_err(&dev->pdev->dev, "%s: %s status = %d", __func__,
-+			state_str[state], rc);
-+
-+return rc;
++	/*
++	 * Preserve MSIX Value if any
++	 */
++	src_writel(dev, MUnit.OMR, omr_value & AAC_INT_MODE_MSIX);
++	src_readl(dev, MUnit.OMR);
 +}
- /**
-  *  aac_srcv_init	-	initialize an SRCv card
-  *  @dev: device to configure
-@@ -1014,9 +1157,13 @@ int aac_srcv_init(struct aac_dev *dev)
- 	/* Failure to reset here is an option ... */
- 	dev->a_ops.adapter_sync_cmd = src_sync_cmd;
- 	dev->a_ops.adapter_enable_int = aac_src_disable_interrupt;
--	if ((aac_reset_devices || reset_devices) &&
--		!aac_src_restart_adapter(dev, 0, IOP_HWSOFT_RESET))
--		++restart;
-+	if (aac_reset_devices || reset_devices) {
-+		if (aac_src_soft_reset(dev)) {
-+			aac_src_restart_adapter(dev, 0, IOP_HWSOFT_RESET);
-+			++restart;
-+		}
-+	}
 +
- 	/*
- 	 *	Check to see if flash update is running.
- 	 *	Wait for the adapter to be up and running. Wait up to 5 minutes
-@@ -1064,13 +1211,16 @@ int aac_srcv_init(struct aac_dev *dev)
- 		printk(KERN_ERR "%s%d: adapter monitor panic.\n", dev->name, instance);
- 		goto error_iounmap;
- 	}
+ static void aac_dump_fw_fib_iop_reset(struct aac_dev *dev)
+ {
+ 	__le32 supported_options3;
+@@ -740,6 +759,8 @@ static void aac_send_iop_reset(struct aac_dev *dev)
+ 
+ 	aac_set_intx_mode(dev);
+ 
++	aac_clear_omr(dev);
 +
- 	start = jiffies;
- 	/*
- 	 *	Wait for the adapter to be up and running. Wait up to 3 minutes
- 	 */
--	while (!((status = src_readl(dev, MUnit.OMR)) &
--		KERNEL_UP_AND_RUNNING) ||
--		status == 0xffffffff) {
-+	do {
-+		status = src_readl(dev, MUnit.OMR);
-+		if (status == INVALID_OMR)
-+			status = 0;
-+
- 		if ((restart &&
- 		  (status & (KERNEL_PANIC|SELF_TEST_FAILED|MONITOR_PANIC))) ||
- 		  time_after(jiffies, start+HZ*startup_timeout)) {
-@@ -1090,7 +1240,8 @@ int aac_srcv_init(struct aac_dev *dev)
- 			++restart;
- 		}
- 		msleep(1);
--	}
-+	} while (!(status & KERNEL_UP_AND_RUNNING));
-+
- 	if (restart && aac_commit)
- 		aac_commit = 1;
- 	/*
+ 	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
+ 
+ 	msleep(5000);
+@@ -749,6 +770,7 @@ static void aac_send_hardware_soft_reset(struct aac_dev *dev)
+ {
+ 	u_int32_t val;
+ 
++	aac_clear_omr(dev);
+ 	val = readl(((char *)(dev->base) + IBW_SWR_OFFSET));
+ 	val |= 0x01;
+ 	writel(val, ((char *)(dev->base) + IBW_SWR_OFFSET));
 -- 
 2.9.4
