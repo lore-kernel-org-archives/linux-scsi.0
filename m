@@ -1,46 +1,197 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: 3ware: use pci_iounmap instead of iounmap
-Date: Sat, 20 Jan 2018 07:12:22 +0100
-Message-ID: <20180120061222.29166-1-christophe.jaillet@wanadoo.fr>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:27537 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750937AbeATGMt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Jan 2018 01:12:49 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH] blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Sat, 20 Jan 2018 21:48:13 +0800
+Message-ID: <20180120134813.4446-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Laurence Oberman <loberman@redhat.com>, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
-To: aradford@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-'base_addr' has been mapped using 'pci_iomap()'. It should be freed with
-the corresponding 'pci_iounmap()' instead of 'iomap()'.
+This status is returned from driver to block layer if device related
+resource is run out of, but driver can guarantee that IO dispatch is
+triggered in future when the resource is available.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+This patch converts some drivers to use this return value. Meantime
+if driver returns BLK_STS_RESOURCE and S_SCHED_RESTART is marked, run
+queue after 10ms for avoiding IO hang.
+
+Suggested-by: Jens Axboe <axboe@kernel.dk>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: Laurence Oberman <loberman@redhat.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/3w-sas.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/blk-core.c             |  1 +
+ block/blk-mq.c               | 20 ++++++++++++++++----
+ drivers/block/null_blk.c     |  2 +-
+ drivers/block/virtio_blk.c   |  2 +-
+ drivers/block/xen-blkfront.c |  2 +-
+ drivers/scsi/scsi_lib.c      |  6 +++---
+ include/linux/blk_types.h    |  7 +++++++
+ 7 files changed, 30 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index cf9f2a09b47d..231b04dd9076 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -1692,7 +1692,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 		pci_disable_msi(pdev);
- 	scsi_remove_host(host);
- out_iounmap:
--	iounmap(tw_dev->base_addr);
-+	pci_iounmap(pdev, tw_dev->base_addr);
- out_release_mem_region:
- 	pci_release_regions(pdev);
- out_free_device_extension:
-@@ -1738,7 +1738,7 @@ static void twl_remove(struct pci_dev *pdev)
- 		pci_disable_msi(pdev);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a2005a485335..ac4789c5e329 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -145,6 +145,7 @@ static const struct {
+ 	[BLK_STS_MEDIUM]	= { -ENODATA,	"critical medium" },
+ 	[BLK_STS_PROTECTION]	= { -EILSEQ,	"protection" },
+ 	[BLK_STS_RESOURCE]	= { -ENOMEM,	"kernel resource" },
++	[BLK_STS_DEV_RESOURCE]	= { -ENOMEM,	"device resource" },
+ 	[BLK_STS_AGAIN]		= { -EAGAIN,	"nonblocking retry" },
  
- 	/* Free IO remapping */
--	iounmap(tw_dev->base_addr);
-+	pci_iounmap(pdev, tw_dev->base_addr);
+ 	/* device mapper special case, should not leak out: */
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 01f271d40825..6e97e0bf8178 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1169,6 +1169,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 	struct request *rq, *nxt;
+ 	bool no_tag = false;
+ 	int errors, queued;
++	blk_status_t ret = BLK_STS_OK;
  
- 	/* Free up the mem region */
- 	pci_release_regions(pdev);
+ 	if (list_empty(list))
+ 		return false;
+@@ -1181,7 +1182,6 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 	errors = queued = 0;
+ 	do {
+ 		struct blk_mq_queue_data bd;
+-		blk_status_t ret;
+ 
+ 		rq = list_first_entry(list, struct request, queuelist);
+ 		if (!blk_mq_get_driver_tag(rq, &hctx, false)) {
+@@ -1226,7 +1226,8 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 		}
+ 
+ 		ret = q->mq_ops->queue_rq(hctx, &bd);
+-		if (ret == BLK_STS_RESOURCE) {
++		if ((ret == BLK_STS_RESOURCE) ||
++				(ret == BLK_STS_DEV_RESOURCE)) {
+ 			/*
+ 			 * If an I/O scheduler has been configured and we got a
+ 			 * driver tag for the next request already, free it
+@@ -1257,6 +1258,8 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 	 * that is where we will continue on next queue run.
+ 	 */
+ 	if (!list_empty(list)) {
++		bool needs_restart;
++
+ 		spin_lock(&hctx->lock);
+ 		list_splice_init(list, &hctx->dispatch);
+ 		spin_unlock(&hctx->lock);
+@@ -1280,10 +1283,18 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 		 * - Some but not all block drivers stop a queue before
+ 		 *   returning BLK_STS_RESOURCE. Two exceptions are scsi-mq
+ 		 *   and dm-rq.
++		 *
++		 * If drivers return BLK_STS_RESOURCE and S_SCHED_RESTART
++		 * bit is set, run queue after 10ms for avoiding IO hang
++		 * because the queue may be idle and the RESTART mechanism
++		 * can't work any more.
+ 		 */
+-		if (!blk_mq_sched_needs_restart(hctx) ||
++		needs_restart = blk_mq_sched_needs_restart(hctx);
++		if (!needs_restart ||
+ 		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
+ 			blk_mq_run_hw_queue(hctx, true);
++		else if (needs_restart && (ret == BLK_STS_RESOURCE))
++			blk_mq_delay_run_hw_queue(hctx, 10);
+ 	}
+ 
+ 	return (queued + errors) != 0;
+@@ -1764,6 +1775,7 @@ static blk_status_t __blk_mq_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 		*cookie = new_cookie;
+ 		break;
+ 	case BLK_STS_RESOURCE:
++	case BLK_STS_DEV_RESOURCE:
+ 		__blk_mq_requeue_request(rq);
+ 		break;
+ 	default:
+@@ -1826,7 +1838,7 @@ static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 	hctx_lock(hctx, &srcu_idx);
+ 
+ 	ret = __blk_mq_try_issue_directly(hctx, rq, cookie, false);
+-	if (ret == BLK_STS_RESOURCE)
++	if ((ret == BLK_STS_RESOURCE) || (ret == BLK_STS_DEV_RESOURCE))
+ 		blk_mq_sched_insert_request(rq, false, true, false);
+ 	else if (ret != BLK_STS_OK)
+ 		blk_mq_end_request(rq, ret);
+diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
+index 6655893a3a7a..287a09611c0f 100644
+--- a/drivers/block/null_blk.c
++++ b/drivers/block/null_blk.c
+@@ -1230,7 +1230,7 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd)
+ 				return BLK_STS_OK;
+ 			} else
+ 				/* requeue request */
+-				return BLK_STS_RESOURCE;
++				return BLK_STS_DEV_RESOURCE;
+ 		}
+ 	}
+ 
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 68846897d213..79908e6ddbf2 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -276,7 +276,7 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		/* Out of mem doesn't actually happen, since we fall back
+ 		 * to direct descriptors */
+ 		if (err == -ENOMEM || err == -ENOSPC)
+-			return BLK_STS_RESOURCE;
++			return BLK_STS_DEV_RESOURCE;
+ 		return BLK_STS_IOERR;
+ 	}
+ 
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index 891265acb10e..e126e4cac2ca 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -911,7 +911,7 @@ static blk_status_t blkif_queue_rq(struct blk_mq_hw_ctx *hctx,
+ out_busy:
+ 	blk_mq_stop_hw_queue(hctx);
+ 	spin_unlock_irqrestore(&rinfo->ring_lock, flags);
+-	return BLK_STS_RESOURCE;
++	return BLK_STS_DEV_RESOURCE;
+ }
+ 
+ static void blkif_complete_rq(struct request *rq)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d9ca1dfab154..55be2550c555 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2030,9 +2030,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	case BLK_STS_OK:
+ 		break;
+ 	case BLK_STS_RESOURCE:
+-		if (atomic_read(&sdev->device_busy) == 0 &&
+-		    !scsi_device_blocked(sdev))
+-			blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
++		if (atomic_read(&sdev->device_busy) ||
++		    scsi_device_blocked(sdev))
++			ret = BLK_STS_DEV_RESOURCE;
+ 		break;
+ 	default:
+ 		/*
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index c5d3db0d83f8..d76f1744a7ca 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -39,6 +39,13 @@ typedef u8 __bitwise blk_status_t;
+ 
+ #define BLK_STS_AGAIN		((__force blk_status_t)12)
+ 
++/*
++ * This status is returned from driver to block layer if device related
++ * resource is run out of, but driver can guarantee that IO dispatch is
++ * triggered in future when the resource is available.
++ */
++#define BLK_STS_DEV_RESOURCE	((__force blk_status_t)13)
++
+ /**
+  * blk_path_error - returns true if error may be path related
+  * @error: status the request was completed with
 -- 
-2.14.1
+2.9.5
