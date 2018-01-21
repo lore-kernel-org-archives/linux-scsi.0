@@ -1,282 +1,188 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 6/6] mpt3sas: Introduce function to clone mpi reply.
-Date: Sun, 21 Jan 2018 03:01:34 +0800
-Message-ID: <201801210258.QgnweTjs%fengguang.wu@intel.com>
-References: <1516365462-14708-7-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Sun, 21 Jan 2018 08:57:47 +0800
+Message-ID: <20180121005741.GB9684@ming.t460p>
+References: <20180120134813.4446-1-ming.lei@redhat.com>
+ <20180120173001.GA3563@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:51094 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55406 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756422AbeATTBt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 20 Jan 2018 14:01:49 -0500
+        id S1756737AbeAUA6J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 20 Jan 2018 19:58:09 -0500
 Content-Disposition: inline
-In-Reply-To: <1516365462-14708-7-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <20180120173001.GA3563@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-Hi Suganath,
+On Sat, Jan 20, 2018 at 12:30:02PM -0500, Mike Snitzer wrote:
+> On Sat, Jan 20 2018 at  8:48am -0500,
+> Ming Lei <ming.lei@redhat.com> wrote:
+> 
+> > This status is returned from driver to block layer if device related
+> > resource is run out of, but driver can guarantee that IO dispatch is
+> > triggered in future when the resource is available.
+> > 
+> > This patch converts some drivers to use this return value. Meantime
+> > if driver returns BLK_STS_RESOURCE and S_SCHED_RESTART is marked, run
+> > queue after 10ms for avoiding IO hang.
+> > 
+> > Suggested-by: Jens Axboe <axboe@kernel.dk>
+> > Cc: Mike Snitzer <snitzer@redhat.com>
+> > Cc: Laurence Oberman <loberman@redhat.com>
+> > Cc: Bart Van Assche <bart.vanassche@sandisk.com>
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> >  block/blk-core.c             |  1 +
+> >  block/blk-mq.c               | 20 ++++++++++++++++----
+> >  drivers/block/null_blk.c     |  2 +-
+> >  drivers/block/virtio_blk.c   |  2 +-
+> >  drivers/block/xen-blkfront.c |  2 +-
+> >  drivers/scsi/scsi_lib.c      |  6 +++---
+> >  include/linux/blk_types.h    |  7 +++++++
+> >  7 files changed, 30 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/block/blk-mq.c b/block/blk-mq.c
+> > index 01f271d40825..6e97e0bf8178 100644
+> > --- a/block/blk-mq.c
+> > +++ b/block/blk-mq.c
+> > @@ -1226,7 +1226,8 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+> >  		}
+> >  
+> >  		ret = q->mq_ops->queue_rq(hctx, &bd);
+> > -		if (ret == BLK_STS_RESOURCE) {
+> > +		if ((ret == BLK_STS_RESOURCE) ||
+> > +				(ret == BLK_STS_DEV_RESOURCE)) {
+> >  			/*
+> >  			 * If an I/O scheduler has been configured and we got a
+> >  			 * driver tag for the next request already, free it
+> 
+> Just a nit, but this should be on one line.
 
-I love your patch! Perhaps something to improve:
+It is too long, and my editor starts to highlight/complain it, :-)
 
-[auto build test WARNING on scsi/for-next]
-[also build test WARNING on v4.15-rc8 next-20180119]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> > @@ -1764,6 +1775,7 @@ static blk_status_t __blk_mq_issue_directly(struct blk_mq_hw_ctx *hctx,
+> >  		*cookie = new_cookie;
+> >  		break;
+> >  	case BLK_STS_RESOURCE:
+> > +	case BLK_STS_DEV_RESOURCE:
+> >  		__blk_mq_requeue_request(rq);
+> >  		break;
+> >  	default:
+> 
+> It seems the strategy for BLK_STS_DEV_RESOURCE and BLK_STS_RESOURCE is
+> too muddled: calling __blk_mq_requeue_request() for both will cause
+> underlying blk-mq driver to retain the request, won't it?
 
-url:    https://github.com/0day-ci/linux/commits/Suganath-Prabu-S/mpt3sas-Add-PCI-device-ID-for-Andromeda/20180121-002454
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+blk_mq_request_issue_directly() is used by driver(dm-rq) on underlying
+queue, and driver need to deal with underlying queue busy, now we simply
+free the (underlying)request and feedback the busy status to blk-mq via
+dm-rq.
 
+Except for blk_mq_request_issue_directly(), this request need to be
+requeued, and is retained by blk-mq in hctx->dispatch_list.
 
-sparse warnings: (new ones prefixed by >>)
+The difference is that if driver returns BLK_STS_DEV_RESOURCE, the queue
+will be rerun when resource is available, so don't need to run queue after
+a delay for avoiding IO hang explicitly.
 
-   drivers/scsi/mpt3sas/mpt3sas_base.c:148:35: sparse: cast removes address space of expression
-   drivers/scsi/mpt3sas/mpt3sas_base.c:151:16: sparse: cast from restricted __le32
-   drivers/scsi/mpt3sas/mpt3sas_base.c:151:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:151:16: expected unsigned int val
-   drivers/scsi/mpt3sas/mpt3sas_base.c:151:16: got restricted __le32 <noident>
-   drivers/scsi/mpt3sas/mpt3sas_base.c:151:36: sparse: incorrect type in argument 2 (different address spaces) @@ expected void volatile @@ got @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:151:36: expected void volatile
-   drivers/scsi/mpt3sas/mpt3sas_base.c:151:36: got void
-   drivers/scsi/mpt3sas/mpt3sas_base.c:169:24: sparse: cast from restricted __le32
-   drivers/scsi/mpt3sas/mpt3sas_base.c:169:24: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:169:24: expected unsigned int val
-   drivers/scsi/mpt3sas/mpt3sas_base.c:169:24: got restricted __le32 <noident>
-   drivers/scsi/mpt3sas/mpt3sas_base.c:169:64: sparse: incorrect type in argument 2 (different address spaces) @@ expected void volatile @@ got @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:169:64: expected void volatile
-   drivers/scsi/mpt3sas/mpt3sas_base.c:169:64: got void COPYING CREDITS Documentation Kbuild Kconfig MAINTAINERS Makefile README arch block certs crypto drivers firmware fs include init ipc kernel lib mm net samples scripts security sound tools usr virt
-   drivers/scsi/mpt3sas/mpt3sas_base.c:186:24: sparse: cast from restricted __le32
-   drivers/scsi/mpt3sas/mpt3sas_base.c:186:24: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:186:24: expected unsigned int val
-   drivers/scsi/mpt3sas/mpt3sas_base.c:186:24: got restricted __le32 <noident>
-   drivers/scsi/mpt3sas/mpt3sas_base.c:186:64: sparse: incorrect type in argument 2 (different address spaces) @@ expected void volatile @@ got @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:186:64: expected void volatile
-   drivers/scsi/mpt3sas/mpt3sas_base.c:186:64: got void COPYING CREDITS Documentation Kbuild Kconfig MAINTAINERS Makefile README arch block certs crypto drivers firmware fs include init ipc kernel lib mm net samples scripts security sound tools usr virt
-   drivers/scsi/mpt3sas/mpt3sas_base.c:206:24: sparse: cast removes address space of expression
-   drivers/scsi/mpt3sas/mpt3sas_base.c:359:24: sparse: undefined identifier 'mpt3sas_scsih_scsi_lookup_get'
-   drivers/scsi/mpt3sas/mpt3sas_base.c:1208:42: sparse: incorrect type in assignment (different base types) @@ expected unsigned short Event @@ got short Event @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:1209:49: sparse: incorrect type in assignment (different base types) @@ expected unsigned int EventContext @@ got ed int EventContext @@
->> drivers/scsi/mpt3sas/mpt3sas_base.c:1404:75: sparse: incorrect type in argument 2 (different base types) @@ expected restricted __le32 reply @@ got unsigned int [unsrestricted __le32 reply @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:1430:64: sparse: incorrect type in argument 2 (different address spaces) @@ expected void volatile @@ got oid volatile @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:1479:52: sparse: incorrect type in argument 2 (different address spaces) @@ expected void volatile @@ got oid volatile @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3011:32: sparse: cast removes address space of expression
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3359:26: sparse: cast removes address space of expression
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3303:26: sparse: incorrect type in initializer (different base types) @@ expected unsigned long long data_out @@ got g long data_out @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3326:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned long val @@ got restunsigned long val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3326:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned long val @@ got restunsigned long val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3443:34: sparse: cast removes address space of expression
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3303:26: sparse: incorrect type in initializer (different base types) @@ expected unsigned long long data_out @@ got g long data_out @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3326:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned long val @@ got restunsigned long val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3326:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned long val @@ got restunsigned long val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3512:34: sparse: cast removes address space of expression
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3303:26: sparse: incorrect type in initializer (different base types) @@ expected unsigned long long data_out @@ got g long data_out @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3326:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned long val @@ got restunsigned long val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3552:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3574:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3597:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3618:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:3639:16: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:5091:24: sparse: incorrect type in argument 1 (different base types) @@ expected unsigned int val @@ got restrunsigned int val @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:5112:20: sparse: cast to restricted __le16
-   drivers/scsi/mpt3sas/mpt3sas_base.c:5121:20: sparse: cast to restricted __le16
-   drivers/scsi/mpt3sas/mpt3sas_base.c:5135:36: sparse: cast to restricted __le16
-   drivers/scsi/mpt3sas/mpt3sas_base.c:6274:59: sparse: incorrect type in argument 2 (different base types) @@ expected restricted __le32 reply @@ got unsigned int [unsrestricted __le32 reply @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:6319:55: sparse: incorrect type in argument 2 (different address spaces) @@ expected void volatile @@ got oid volatile @@
-   drivers/scsi/mpt3sas/mpt3sas_base.c:359:53: sparse: call with no type!
-   drivers/scsi/mpt3sas/mpt3sas_base.c: In function '_clone_sg_entries':
-   drivers/scsi/mpt3sas/mpt3sas_base.c:359:10: error: implicit declaration of function 'mpt3sas_scsih_scsi_lookup_get'; did you mean
-    scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
-    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    mpt3sas_scsih_issue_locked_tm
-   drivers/scsi/mpt3sas/mpt3sas_base.c:359:8: warning: assignment makes pointer from integer without a cast
-    scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
-    ^
-   cc1: some warnings being treated as errors
+> 
+> > @@ -1826,7 +1838,7 @@ static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+> >  	hctx_lock(hctx, &srcu_idx);
+> >  
+> >  	ret = __blk_mq_try_issue_directly(hctx, rq, cookie, false);
+> > -	if (ret == BLK_STS_RESOURCE)
+> > +	if ((ret == BLK_STS_RESOURCE) || (ret == BLK_STS_DEV_RESOURCE))
+> >  		blk_mq_sched_insert_request(rq, false, true, false);
+> >  	else if (ret != BLK_STS_OK)
+> >  		blk_mq_end_request(rq, ret);
+> 
+> For this normal (non dm-mpath) case the request gets re-inserted;
+> dm-mpath must avoid that.
+> 
+> But with dm-mpath, which instead uses blk_mq_request_issue_directly(),
+> we're driving IO with stacked blk-mq drivers.  If the underlying blk-mq 
+> driver (e.g. scsi-mq or nvme) is made to retain the request, using
+> __blk_mq_issue_directly()'s call to __blk_mq_requeue_request() above,
+> then dm-mpath will not have the ability to requeue the request without
+> conflicting with the underlying blk-mq driver, will it?
 
-vim +1404 drivers/scsi/mpt3sas/mpt3sas_base.c
+No, as I explained, the exception is blk_mq_request_issue_directly(),
+and now dm-rq simply frees it(and in my original version, this request
+is cached for underlying queue, and reused in next dispatch), for others,
+the request is retained in hctx->dispatch_list, and owned by blk-mq.
 
-  1311	
-  1312	/**
-  1313	 * _base_interrupt - MPT adapter (IOC) specific interrupt handler.
-  1314	 * @irq: irq number (not used)
-  1315	 * @bus_id: bus identifier cookie == pointer to MPT_ADAPTER structure
-  1316	 * @r: pt_regs pointer (not used)
-  1317	 *
-  1318	 * Return IRQ_HANDLE if processed, else IRQ_NONE.
-  1319	 */
-  1320	static irqreturn_t
-  1321	_base_interrupt(int irq, void *bus_id)
-  1322	{
-  1323		struct adapter_reply_queue *reply_q = bus_id;
-  1324		union reply_descriptor rd;
-  1325		u32 completed_cmds;
-  1326		u8 request_desript_type;
-  1327		u16 smid;
-  1328		u8 cb_idx;
-  1329		u32 reply;
-  1330		u8 msix_index = reply_q->msix_index;
-  1331		struct MPT3SAS_ADAPTER *ioc = reply_q->ioc;
-  1332		Mpi2ReplyDescriptorsUnion_t *rpf;
-  1333		u8 rc;
-  1334	
-  1335		if (ioc->mask_interrupts)
-  1336			return IRQ_NONE;
-  1337	
-  1338		if (!atomic_add_unless(&reply_q->busy, 1, 1))
-  1339			return IRQ_NONE;
-  1340	
-  1341		rpf = &reply_q->reply_post_free[reply_q->reply_post_host_index];
-  1342		request_desript_type = rpf->Default.ReplyFlags
-  1343		     & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
-  1344		if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED) {
-  1345			atomic_dec(&reply_q->busy);
-  1346			return IRQ_NONE;
-  1347		}
-  1348	
-  1349		completed_cmds = 0;
-  1350		cb_idx = 0xFF;
-  1351		do {
-  1352			rd.word = le64_to_cpu(rpf->Words);
-  1353			if (rd.u.low == UINT_MAX || rd.u.high == UINT_MAX)
-  1354				goto out;
-  1355			reply = 0;
-  1356			smid = le16_to_cpu(rpf->Default.DescriptorTypeDependent1);
-  1357			if (request_desript_type ==
-  1358			    MPI25_RPY_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO_SUCCESS ||
-  1359			    request_desript_type ==
-  1360			    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS ||
-  1361			    request_desript_type ==
-  1362			    MPI26_RPY_DESCRIPT_FLAGS_PCIE_ENCAPSULATED_SUCCESS) {
-  1363				cb_idx = _base_get_cb_idx(ioc, smid);
-  1364				if ((likely(cb_idx < MPT_MAX_CALLBACKS)) &&
-  1365				    (likely(mpt_callbacks[cb_idx] != NULL))) {
-  1366					rc = mpt_callbacks[cb_idx](ioc, smid,
-  1367					    msix_index, 0);
-  1368					if (rc)
-  1369						mpt3sas_base_free_smid(ioc, smid);
-  1370				}
-  1371			} else if (request_desript_type ==
-  1372			    MPI2_RPY_DESCRIPT_FLAGS_ADDRESS_REPLY) {
-  1373				reply = le32_to_cpu(
-  1374				    rpf->AddressReply.ReplyFrameAddress);
-  1375				if (reply > ioc->reply_dma_max_address ||
-  1376				    reply < ioc->reply_dma_min_address)
-  1377					reply = 0;
-  1378				if (smid) {
-  1379					cb_idx = _base_get_cb_idx(ioc, smid);
-  1380					if ((likely(cb_idx < MPT_MAX_CALLBACKS)) &&
-  1381					    (likely(mpt_callbacks[cb_idx] != NULL))) {
-  1382						rc = mpt_callbacks[cb_idx](ioc, smid,
-  1383						    msix_index, reply);
-  1384						if (reply)
-  1385							_base_display_reply_info(ioc,
-  1386							    smid, msix_index, reply);
-  1387						if (rc)
-  1388							mpt3sas_base_free_smid(ioc,
-  1389							    smid);
-  1390					}
-  1391				} else {
-  1392					_base_async_event(ioc, msix_index, reply);
-  1393				}
-  1394	
-  1395				/* reply free queue handling */
-  1396				if (reply) {
-  1397					ioc->reply_free_host_index =
-  1398					    (ioc->reply_free_host_index ==
-  1399					    (ioc->reply_free_queue_depth - 1)) ?
-  1400					    0 : ioc->reply_free_host_index + 1;
-  1401					ioc->reply_free[ioc->reply_free_host_index] =
-  1402					    cpu_to_le32(reply);
-  1403					if (ioc->is_mcpu_endpoint)
-> 1404						_base_clone_reply_to_sys_mem(ioc, reply,
-  1405							ioc->reply_free_host_index);
-  1406					writel(ioc->reply_free_host_index,
-  1407					    &ioc->chip->ReplyFreeHostIndex);
-  1408				}
-  1409			}
-  1410	
-  1411			rpf->Words = cpu_to_le64(ULLONG_MAX);
-  1412			reply_q->reply_post_host_index =
-  1413			    (reply_q->reply_post_host_index ==
-  1414			    (ioc->reply_post_queue_depth - 1)) ? 0 :
-  1415			    reply_q->reply_post_host_index + 1;
-  1416			request_desript_type =
-  1417			    reply_q->reply_post_free[reply_q->reply_post_host_index].
-  1418			    Default.ReplyFlags & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
-  1419			completed_cmds++;
-  1420			/* Update the reply post host index after continuously
-  1421			 * processing the threshold number of Reply Descriptors.
-  1422			 * So that FW can find enough entries to post the Reply
-  1423			 * Descriptors in the reply descriptor post queue.
-  1424			 */
-  1425			if (completed_cmds > ioc->hba_queue_depth/3) {
-  1426				if (ioc->combined_reply_queue) {
-  1427					writel(reply_q->reply_post_host_index |
-  1428							((msix_index  & 7) <<
-  1429							 MPI2_RPHI_MSIX_INDEX_SHIFT),
-  1430					    ioc->replyPostRegisterIndex[msix_index/8]);
-  1431				} else {
-  1432					writel(reply_q->reply_post_host_index |
-  1433							(msix_index <<
-  1434							 MPI2_RPHI_MSIX_INDEX_SHIFT),
-  1435							&ioc->chip->ReplyPostHostIndex);
-  1436				}
-  1437				completed_cmds = 1;
-  1438			}
-  1439			if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
-  1440				goto out;
-  1441			if (!reply_q->reply_post_host_index)
-  1442				rpf = reply_q->reply_post_free;
-  1443			else
-  1444				rpf++;
-  1445		} while (1);
-  1446	
-  1447	 out:
-  1448	
-  1449		if (!completed_cmds) {
-  1450			atomic_dec(&reply_q->busy);
-  1451			return IRQ_NONE;
-  1452		}
-  1453	
-  1454		if (ioc->is_warpdrive) {
-  1455			writel(reply_q->reply_post_host_index,
-  1456			ioc->reply_post_host_index[msix_index]);
-  1457			atomic_dec(&reply_q->busy);
-  1458			return IRQ_HANDLED;
-  1459		}
-  1460	
-  1461		/* Update Reply Post Host Index.
-  1462		 * For those HBA's which support combined reply queue feature
-  1463		 * 1. Get the correct Supplemental Reply Post Host Index Register.
-  1464		 *    i.e. (msix_index / 8)th entry from Supplemental Reply Post Host
-  1465		 *    Index Register address bank i.e replyPostRegisterIndex[],
-  1466		 * 2. Then update this register with new reply host index value
-  1467		 *    in ReplyPostIndex field and the MSIxIndex field with
-  1468		 *    msix_index value reduced to a value between 0 and 7,
-  1469		 *    using a modulo 8 operation. Since each Supplemental Reply Post
-  1470		 *    Host Index Register supports 8 MSI-X vectors.
-  1471		 *
-  1472		 * For other HBA's just update the Reply Post Host Index register with
-  1473		 * new reply host index value in ReplyPostIndex Field and msix_index
-  1474		 * value in MSIxIndex field.
-  1475		 */
-  1476		if (ioc->combined_reply_queue)
-  1477			writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
-  1478				MPI2_RPHI_MSIX_INDEX_SHIFT),
-  1479				ioc->replyPostRegisterIndex[msix_index/8]);
-  1480		else
-  1481			writel(reply_q->reply_post_host_index | (msix_index <<
-  1482				MPI2_RPHI_MSIX_INDEX_SHIFT),
-  1483				&ioc->chip->ReplyPostHostIndex);
-  1484		atomic_dec(&reply_q->busy);
-  1485		return IRQ_HANDLED;
-  1486	}
-  1487	
+> 
+> Or am I'm misunderstanding what __blk_mq_requeue_request() is doing?
+> 
+> dm_mq_queue_rq
+> -> multipath_clone_and_map
+>    -> blk_get_request (scsi_mq)
+>       -> if error, dm-mpath conditionally requeues (w/ or w/o delay)
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Yes, with this patch, most of times blk-mq will run queue w/ delay
+because SCHED_RESTART is set after the 1st STS_RESOURCE from dm-rq
+.queue_rq()
+
+>       -> if BLK_STS_OK then blk_mq_request_issue_directly() gets called
+> -> dm_dispatch_clone_request
+>    -> blk_mq_request_issue_directly
+>       -> __blk_mq_try_issue_directly
+>          -> __blk_mq_issue_directly
+>             -> q->mq_ops->queue_rq (this is the underlying scsi_mq)
+>                -> a BLK_STS_RESOURCE return here is how Bart was able to cause stalls
+
+The stall only happens when SCHED_RESTART is set and the dm-rq queue is
+idle(no any in-flight requests), that is exactly what this patch tries to
+address as suggested by Jens.
+
+>             -> __blk_mq_requeue_request, if BLK_STS_RESOURCE or BLK_STS_DEV_RESOURCE **1
+>    -> (return from blk_mq_request_issue_directly)
+>    -> if BLK_STS_RESOURCE, the dm-mpath request is released using blk_put_request();
+>                            and DM_MAPIO_REQUEUE is returned to dm_mq_queue_rq **2
+
+Right.
+
+> -> if DM_MAPIO_REQUEUE return from map_request()'s call to dm_dispatch_clone_request:
+>    BLK_STS_RESOURCE is returned from dm-mpath's dm_mq_queue_rq
+
+Right.
+
+> 
+> The redundant queueing (both to underlying blk-mq at **1 above, and
+> upper layer blk-mq at **2 above) is what I'm concerned about.
+> 
+> Hope this is clear.
+
+Yeah, it is quite clear.
+
+I also have other dm-mpath specific questions:
+
+1) when any STS_RESOURCE is returned from underlying queue either
+because of blk_get_request() or underlying .queue_rq() for a while,
+will dm-mpath try to switch to other path?
+
+2) what is the basic path switch policy of dm-mpath?
+
+3) is it possible to move the check of 'ti->type->busy' into
+.clone_and_map_rq()? if it is possible, this way might be more
+effective to detect underlying queue busy.
+
+Actually this patch may has another issue: if the default run queue
+delay(in this patch, it is 10ms) is too short, the timer may expire
+before any in-flight underlying request completes, then we may
+dequeue too quick, and sequential IO performance can be hurt too.
+
+But my previous patch in github doesn't have this issue.
+
+	https://github.com/ming1/linux/commit/dfd672c998283a110247152237a9916b8264f3ec
+
+Jens, what do you think of this issue? Or do we need to worry about
+it?
+
+-- 
+Ming
