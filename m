@@ -1,96 +1,22 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: arcmsr: avoid do_gettimeofday
-Date: Mon, 22 Jan 2018 00:12:26 +0100
-Message-ID: <20180121231308.2169692-1-arnd@arndb.de>
+From: "Mrs. MELISSA LEWIS" <melissa500k@e-mail.ua>
+Subject: DONATION OF (EURO 4,000,000.00) CHARITY
+Date: Sun, 21 Jan 2018 15:35:54 -0800
+Message-ID: <201801220002.w0M02f0Z015988__1823.36570364914$1516582738$gmane$org@firewall.wagnerstb.de>
+Reply-To: melissalewis10001@yahoo.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:52473 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750882AbeAUXNT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jan 2018 18:13:19 -0500
+Received: from business-24-134-70-249.pool2.vodafone-ip.de ([24.134.70.249]:42938
+        "EHLO firewall.wagnerstb.de" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750928AbeAVBAe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 21 Jan 2018 20:00:34 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>
-Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Recipients <melissa500k@e-mail.ua>
 
-The arcmsr uses its own implementation of time_to_tm(), along with do_gettimeofday()
-to read the current time. While the algoritm used here is fine in principle, it
-suffers from two problems:
+I am writing to seek your consent to conduct humanitarian projects, I suffer from advanced cancer that prevents me from realizing my dreams. Doctor informed me that my days are numbered because of my health degrading. That is why I want to Send these sum of money to you (EURO 4,000,000.00) Four million Euro so that you can use it to help the Orphanages,homeless and Widows. 35% for you while you use 65% for the project,if you think you can give these poor children and poor widow a glimmer of hope and joy then let me know  by replying to my private email which is melissalewis10001@yahoo.com,Thanks for your cooperation and assistance.
 
-- it assigns the seconds portion of the timeval to a 32-bit unsigned integer that
-  overflows in 2106 even on 64-bit architectures.
-- do_gettimeofday() returns a time_t that overflows in 2038 on all 32-bit systems.
-
-This changes the time retrieval function to ktime_get_real_seconds(), which returns
-a proper 64-bit value, and replaces the open-coded time_to_tm() algorithm with
-a call to the safe time64_to_tm().
-
-I checked way all numbers are indexed and found that months are given in range
-0..11 while the days are in range 1..31, same as 'struct tm', but the year value
-that the firmware expects starts in 2000 while 'struct tm' is based on year 1900,
-so it needs a small adjustment.
-
-Fixes: b416c099472a ("scsi: arcmsr: Add a function to set date and time to firmware")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/arcmsr/arcmsr_hba.c | 37 ++++++++++---------------------------
- 1 file changed, 10 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 47745592cff4..75e828bd30e3 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -3489,8 +3489,9 @@ static int arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
- static void arcmsr_set_iop_datetime(struct timer_list *t)
- {
- 	struct AdapterControlBlock *pacb = from_timer(pacb, t, refresh_timer);
--	unsigned int days, j, i, a, b, c, d, e, m, year, mon, day, hour, min, sec, secs, next_time;
--	struct timeval tv;
-+	unsigned int next_time;
-+	struct tm tm;
-+
- 	union {
- 		struct	{
- 		uint16_t	signature;
-@@ -3506,33 +3507,15 @@ static void arcmsr_set_iop_datetime(struct timer_list *t)
- 		} b;
- 	} datetime;
- 
--	do_gettimeofday(&tv);
--	secs = (u32)(tv.tv_sec - (sys_tz.tz_minuteswest * 60));
--	days = secs / 86400;
--	secs = secs - 86400 * days;
--	j = days / 146097;
--	i = days - 146097 * j;
--	a = i + 719468;
--	b = ( 4 * a + 3 ) / 146097;
--	c = a - ( 146097 * b ) / 4;
--	d = ( 4 * c + 3 ) / 1461 ;
--	e = c - ( 1461 * d ) / 4 ;
--	m = ( 5 * e + 2 ) / 153 ;
--	year = 400 * j + 100 * b + d + m / 10 - 2000;
--	mon = m + 3 - 12 * ( m /10 );
--	day = e - ( 153 * m + 2 ) / 5 + 1;
--	hour = secs / 3600;
--	secs = secs - 3600 * hour;
--	min = secs / 60;
--	sec = secs - 60 * min;
-+	time64_to_tm(ktime_get_real_seconds(), -sys_tz.tz_minuteswest * 60, &tm);
- 
- 	datetime.a.signature = 0x55AA;
--	datetime.a.year = year;
--	datetime.a.month = mon;
--	datetime.a.date = day;
--	datetime.a.hour = hour;
--	datetime.a.minute = min;
--	datetime.a.second = sec;
-+	datetime.a.year = tm.tm_year - 100; /* base 2000 instead of 1900 */
-+	datetime.a.month = tm.tm_mon;
-+	datetime.a.date = tm.tm_mday;
-+	datetime.a.hour = tm.tm_hour;
-+	datetime.a.minute = tm.tm_min;
-+	datetime.a.second = tm.tm_sec;
- 
- 	switch (pacb->adapter_type) {
- 		case ACB_ADAPTER_TYPE_A: {
--- 
-2.9.0
+MELISSA LEWIS
