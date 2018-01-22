@@ -1,40 +1,67 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH 1/5] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Mon, 22 Jan 2018 08:32:42 -0800
-Message-ID: <20180122163242.GB23984@infradead.org>
+Date: Mon, 22 Jan 2018 16:49:54 +0000
+Message-ID: <1516639793.2545.14.camel@sandisk.com>
 References: <20180122033550.27855-1-ming.lei@redhat.com>
- <20180122033550.27855-2-ming.lei@redhat.com>
+         <20180122033550.27855-2-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45431 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbeAVQco (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 11:32:44 -0500
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20180122033550.27855-2-ming.lei@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Language: en-US
+Content-ID: <88713A9BDCEBD04BA95CC23DD3DBEF57@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Laurence Oberman <loberman@redhat.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-> -		if (ret == BLK_STS_RESOURCE) {
-> +		if ((ret == BLK_STS_RESOURCE) || (ret == BLK_STS_DEV_RESOURCE)) {
-
-No need for the inner braces here.
-
-> +	if ((ret == BLK_STS_RESOURCE) || (ret == BLK_STS_DEV_RESOURCE))
-
-Same here.
-
-> +/*
-> + * This status is returned from driver to block layer if device related
-> + * resource is run out of, but driver can guarantee that IO dispatch is
-> + * triggered in future when the resource is available.
-> + */
-> +#define BLK_STS_DEV_RESOURCE	((__force blk_status_t)13)
-
-We'll need some good explanation on BLK_STS_RESOURCE vs
-BLK_STS_DEV_RESOURCE I think.
-
-Except for these nitpicks this looks fine to me.
+T24gTW9uLCAyMDE4LTAxLTIyIGF0IDExOjM1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
+LTEyODAsMTAgKzEyODIsMTggQEAgYm9vbCBibGtfbXFfZGlzcGF0Y2hfcnFfbGlzdChzdHJ1Y3Qg
+cmVxdWVzdF9xdWV1ZSAqcSwgc3RydWN0IGxpc3RfaGVhZCAqbGlzdCwNCj4gIAkJICogLSBTb21l
+IGJ1dCBub3QgYWxsIGJsb2NrIGRyaXZlcnMgc3RvcCBhIHF1ZXVlIGJlZm9yZQ0KPiAgCQkgKiAg
+IHJldHVybmluZyBCTEtfU1RTX1JFU09VUkNFLiBUd28gZXhjZXB0aW9ucyBhcmUgc2NzaS1tcQ0K
+PiAgCQkgKiAgIGFuZCBkbS1ycS4NCj4gKwkJICoNCj4gKwkJICogSWYgZHJpdmVycyByZXR1cm4g
+QkxLX1NUU19SRVNPVVJDRSBhbmQgU19TQ0hFRF9SRVNUQVJUDQo+ICsJCSAqIGJpdCBpcyBzZXQs
+IHJ1biBxdWV1ZSBhZnRlciAxMG1zIGZvciBhdm9pZGluZyBJTyBoYW5nDQo+ICsJCSAqIGJlY2F1
+c2UgdGhlIHF1ZXVlIG1heSBiZSBpZGxlIGFuZCB0aGUgUkVTVEFSVCBtZWNoYW5pc20NCj4gKwkJ
+ICogY2FuJ3Qgd29yayBhbnkgbW9yZS4NCj4gIAkJICovDQo+IC0JCWlmICghYmxrX21xX3NjaGVk
+X25lZWRzX3Jlc3RhcnQoaGN0eCkgfHwNCj4gKwkJbmVlZHNfcmVzdGFydCA9IGJsa19tcV9zY2hl
+ZF9uZWVkc19yZXN0YXJ0KGhjdHgpOw0KPiArCQlpZiAoIW5lZWRzX3Jlc3RhcnQgfHwNCj4gIAkJ
+ICAgIChub190YWcgJiYgbGlzdF9lbXB0eV9jYXJlZnVsKCZoY3R4LT5kaXNwYXRjaF93YWl0LmVu
+dHJ5KSkpDQo+ICAJCQlibGtfbXFfcnVuX2h3X3F1ZXVlKGhjdHgsIHRydWUpOw0KPiArCQllbHNl
+IGlmIChuZWVkc19yZXN0YXJ0ICYmIChyZXQgPT0gQkxLX1NUU19SRVNPVVJDRSkpDQo+ICsJCQli
+bGtfbXFfZGVsYXlfcnVuX2h3X3F1ZXVlKGhjdHgsIDEwKTsNCj4gIAl9DQoNCkluIG15IG9waW5p
+b24gdGhlcmUgYXJlIHR3byBwcm9ibGVtcyB3aXRoIHRoZSBhYm92ZSBjaGFuZ2VzOg0KKiBPbmx5
+IHRoZSBibG9jayBkcml2ZXIgYXV0aG9yIGNhbiBrbm93IHdoYXQgYSBnb29kIGNob2ljZSBpcyBm
+b3IgdGhlIHRpbWUNCiAgYWZ0ZXIgd2hpY2ggdG8gcmVydW4gdGhlIHF1ZXVlLiBTbyBJIHRoaW5r
+IG1vdmluZyB0aGUgcmVydW4gZGVsYXkgKDEwIG1zKQ0KICBjb25zdGFudCBmcm9tIGJsb2NrIGRy
+aXZlcnMgaW50byB0aGUgY29yZSBpcyBhIHN0ZXAgYmFja3dhcmRzIGluc3RlYWQgb2YgYQ0KICBz
+dGVwIGZvcndhcmRzLg0KKiBUaGUgcHVycG9zZSBvZiB0aGUgQkxLX01RX1NfU0NIRURfUkVTVEFS
+VCBmbGFnIGlzIHRvIGRldGVjdCB3aGV0aGVyIG9yIG5vdA0KICBhbnkgb2YgdGhlIHF1ZXVlIHJ1
+bnMgdHJpZ2dlcmVkIGJ5IGZyZWVpbmcgYSB0YWcgaGFwcGVuZWQgY29uY3VycmVudGx5LiBJDQog
+IGRvbid0IHRoaW5rIHRoYXQgdGhlcmUgaXMgYW55IHJlbGF0aW9uc2hpcCBiZXR3ZWVuIHF1ZXVl
+IHJ1bnMgaGFwcGVuaW5nIGFsbA0KICBvciBub3QgY29uY3VycmVudGx5IGFuZCB0aGUgY2hhbmNl
+IHRoYXQgZHJpdmVyIHJlc291cmNlcyBiZWNvbWUgYXZhaWxhYmxlLg0KICBTbyBkZWNpZGluZyB3
+aGV0aGVyIG9yIG5vdCBhIHF1ZXVlIHNob3VsZCBiZSByZXJ1biBiYXNlZCBvbiB0aGUgdmFsdWUg
+b2YNCiAgdGhlIEJMS19NUV9TX1NDSEVEX1JFU1RBUlQgZmxhZyBzZWVtcyB3cm9uZyB0byBtZS4N
+Cg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kv
+c2NzaV9saWIuYw0KPiBpbmRleCBkOWNhMWRmYWIxNTQuLjU1YmUyNTUwYzU1NSAxMDA2NDQNCj4g
+LS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3Njc2lf
+bGliLmMNCj4gQEAgLTIwMzAsOSArMjAzMCw5IEBAIHN0YXRpYyBibGtfc3RhdHVzX3Qgc2NzaV9x
+dWV1ZV9ycShzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwNCj4gIAljYXNlIEJMS19TVFNfT0s6
+DQo+ICAJCWJyZWFrOw0KPiAgCWNhc2UgQkxLX1NUU19SRVNPVVJDRToNCj4gLQkJaWYgKGF0b21p
+Y19yZWFkKCZzZGV2LT5kZXZpY2VfYnVzeSkgPT0gMCAmJg0KPiAtCQkgICAgIXNjc2lfZGV2aWNl
+X2Jsb2NrZWQoc2RldikpDQo+IC0JCQlibGtfbXFfZGVsYXlfcnVuX2h3X3F1ZXVlKGhjdHgsIFND
+U0lfUVVFVUVfREVMQVkpOw0KPiArCQlpZiAoYXRvbWljX3JlYWQoJnNkZXYtPmRldmljZV9idXN5
+KSB8fA0KPiArCQkgICAgc2NzaV9kZXZpY2VfYmxvY2tlZChzZGV2KSkNCj4gKwkJCXJldCA9IEJM
+S19TVFNfREVWX1JFU09VUkNFOw0KPiAgCQlicmVhazsNCj4gIAlkZWZhdWx0Og0KPiAgCQkvKg0K
+DQpUaGUgYWJvdmUgaW50cm9kdWNlcyB0d28gY2hhbmdlcyB0aGF0IGhhdmUgbm90IGJlZW4gbWVu
+dGlvbmVkIGluIHRoZQ0KZGVzY3JpcHRpb24gb2YgdGhpcyBwYXRjaDoNCi0gVGhlIHF1ZXVlIHJl
+cnVubmluZyBkZWxheSBpcyBjaGFuZ2VkIGZyb20gMyBtcyBpbnRvIDEwIG1zLiBXaGVyZSBpcyB0
+aGUNCiAgZXhwbGFuYXRpb24gb2YgdGhpcyBjaGFuZ2U/IERvZXMgdGhpcyBjaGFuZ2UgaGF2ZSBh
+IHBvc2l0aXZlIG9yIG5lZ2F0aXZlDQogIHBlcmZvcm1hbmNlIGltcGFjdD8NCi0gVGhlIGFib3Zl
+IG1vZGlmaWVzIGEgZ3VhcmFudGVlZCBxdWV1ZSByZXJ1biBpbnRvIGEgcXVldWUgcmVydW4gdGhh
+dA0KICBtYXkgb3IgbWF5IG5vdCBoYXBwZW4sIGRlcGVuZGluZyBvbiB3aGV0aGVyIG9yIG5vdCBt
+dWx0aXBsZSB0YWdzIGdldCBmcmVlZA0KICBjb25jdXJyZW50bHkgKHJldHVybiBCTEtfU1RTX0RF
+Vl9SRVNPVVJDRSkuIFNvcnJ5IGJ1dCBJIHRoaW5rIHRoYXQncyB3cm9uZy4NCg0KQmFydC4=
