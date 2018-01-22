@@ -1,104 +1,224 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: Re: [PATCH] scsi: arcmsr: avoid do_gettimeofday
-Date: Mon, 22 Jan 2018 19:06:10 +0800
-Message-ID: <1516619170.4452.3.camel@Centos6.3-64>
-References: <20180121231308.2169692-1-arnd@arndb.de>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: scsi: sg: assorted memory corruptions
+Date: Mon, 22 Jan 2018 12:06:58 +0100
+Message-ID: <CACT4Y+b0pizvOAxtWQ-TGCRAYvHXdv79BAEaXh50W6vF8gBvkQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:40985 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751028AbeAVLG3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 06:06:29 -0500
-Received: by mail-pf0-f195.google.com with SMTP id c6so3749721pfi.8
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2018 03:06:29 -0800 (PST)
-In-Reply-To: <20180121231308.2169692-1-arnd@arndb.de>
+Received: from mail-pg0-f41.google.com ([74.125.83.41]:45176 "EHLO
+        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbeAVLHU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 06:07:20 -0500
+Received: by mail-pg0-f41.google.com with SMTP id c194so6818303pga.12
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2018 03:07:19 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, y2038@lists.linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Ben Hutchings <ben.hutchings@codethink.co.uk>
+Cc: syzkaller <syzkaller@googlegroups.com>
 
-On Mon, 2018-01-22 at 00:12 +0100, Arnd Bergmann wrote:
-> The arcmsr uses its own implementation of time_to_tm(), along with do_gettimeofday()
-> to read the current time. While the algoritm used here is fine in principle, it
-> suffers from two problems:
-> 
-> - it assigns the seconds portion of the timeval to a 32-bit unsigned integer that
->   overflows in 2106 even on 64-bit architectures.
-> - do_gettimeofday() returns a time_t that overflows in 2038 on all 32-bit systems.
-> 
-> This changes the time retrieval function to ktime_get_real_seconds(), which returns
-> a proper 64-bit value, and replaces the open-coded time_to_tm() algorithm with
-> a call to the safe time64_to_tm().
-> 
-> I checked way all numbers are indexed and found that months are given in range
-> 0..11 while the days are in range 1..31, same as 'struct tm', but the year value
-> that the firmware expects starts in 2000 while 'struct tm' is based on year 1900,
-> so it needs a small adjustment.
-> 
-> Fixes: b416c099472a ("scsi: arcmsr: Add a function to set date and time to firmware")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/scsi/arcmsr/arcmsr_hba.c | 37 ++++++++++---------------------------
->  1 file changed, 10 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-> index 47745592cff4..75e828bd30e3 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -3489,8 +3489,9 @@ static int arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
->  static void arcmsr_set_iop_datetime(struct timer_list *t)
->  {
->  	struct AdapterControlBlock *pacb = from_timer(pacb, t, refresh_timer);
-> -	unsigned int days, j, i, a, b, c, d, e, m, year, mon, day, hour, min, sec, secs, next_time;
-> -	struct timeval tv;
-> +	unsigned int next_time;
-> +	struct tm tm;
-> +
->  	union {
->  		struct	{
->  		uint16_t	signature;
-> @@ -3506,33 +3507,15 @@ static void arcmsr_set_iop_datetime(struct timer_list *t)
->  		} b;
->  	} datetime;
->  
-> -	do_gettimeofday(&tv);
-> -	secs = (u32)(tv.tv_sec - (sys_tz.tz_minuteswest * 60));
-> -	days = secs / 86400;
-> -	secs = secs - 86400 * days;
-> -	j = days / 146097;
-> -	i = days - 146097 * j;
-> -	a = i + 719468;
-> -	b = ( 4 * a + 3 ) / 146097;
-> -	c = a - ( 146097 * b ) / 4;
-> -	d = ( 4 * c + 3 ) / 1461 ;
-> -	e = c - ( 1461 * d ) / 4 ;
-> -	m = ( 5 * e + 2 ) / 153 ;
-> -	year = 400 * j + 100 * b + d + m / 10 - 2000;
-> -	mon = m + 3 - 12 * ( m /10 );
-> -	day = e - ( 153 * m + 2 ) / 5 + 1;
-> -	hour = secs / 3600;
-> -	secs = secs - 3600 * hour;
-> -	min = secs / 60;
-> -	sec = secs - 60 * min;
-> +	time64_to_tm(ktime_get_real_seconds(), -sys_tz.tz_minuteswest * 60, &tm);
->  
->  	datetime.a.signature = 0x55AA;
-> -	datetime.a.year = year;
-> -	datetime.a.month = mon;
-> -	datetime.a.date = day;
-> -	datetime.a.hour = hour;
-> -	datetime.a.minute = min;
-> -	datetime.a.second = sec;
-> +	datetime.a.year = tm.tm_year - 100; /* base 2000 instead of 1900 */
-> +	datetime.a.month = tm.tm_mon;
-> +	datetime.a.date = tm.tm_mday;
-> +	datetime.a.hour = tm.tm_hour;
-> +	datetime.a.minute = tm.tm_min;
-> +	datetime.a.second = tm.tm_sec;
->  
->  	switch (pacb->adapter_type) {
->  		case ACB_ADAPTER_TYPE_A: {
+Hello,
 
-This patch works on kernel 4.14.0, thanks Arnd.
+The following program triggers assorted memory corruptions on 4.15-rc9:
+
+// autogenerated by syzkaller (http://github.com/google/syzkaller)
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define SG_NEXT_CMD_LEN 0x2283
+
+int main()
+{
+  int fd = open("/dev/sg0", O_RDWR);
+  long len = 9;
+  ioctl(fd, SG_NEXT_CMD_LEN, &len);
+  char* p = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x47\x00\x00\x24\x00"
+            "\x00\x00\x00\x00\x00\x1c\xbb\xac\x14\x00\xaa\xe0\x00\x00\x01"
+            "\x00\x07\x07\x00\x00\x59\x08\x00\x00\x00\x80\xfe\x7f\x00\x00\x01";
+  write(fd, p, 46);
+  return 0;
+}
+
+Run it in a loop as "while ./a.out; do true; done".  Below are some
+manifestations, but it really looks it smashes heap badly and then it
+manifests in a random way:
+
+
+general protection fault: 0000 [#1] SMP KASAN
+Dumping ftrace buffer:
+   (ftrace buffer empty)
+Modules linked in:
+CPU: 2 PID: 11158 Comm: syz-executor2 Not tainted 4.15.0-rc9+ #65
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+RIP: 0010:find_stack lib/stackdepot.c:173 [inline]
+RIP: 0010:depot_save_stack+0x108/0x440 lib/stackdepot.c:225
+RSP: 0018:ffff88007118ed68 EFLAGS: 00010002
+RAX: 0000000033ae8ebb RBX: 00000000891e24d1 RCX: 0000000000000002
+RDX: 0000000024208bf1 RSI: 0000000001000000 RDI: ffff88007118edc0
+RBP: ffff88007118edb0 R08: 1ffff1000e231d77 R09: ffff88007118edd8
+R10: 00000000e160d61a R11: 00000000f692b9a9 R12: 000000000000000d
+R13: 0000000000000068 R14: 0001800800008008 R15: 00000000000e24d1
+FS:  00000000023e4940(0000) GS:ffff88002db00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000001b9bc25000 CR3: 000000007d476000 CR4: 00000000000026e0
+DR0: 0000000020000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000600
+Call Trace:
+ save_stack+0xa3/0xd0 mm/kasan/kasan.c:453
+ set_track mm/kasan/kasan.c:459 [inline]
+ kasan_slab_free+0x71/0xc0 mm/kasan/kasan.c:524
+ __cache_free mm/slab.c:3488 [inline]
+ kfree+0xc5/0x160 mm/slab.c:3803
+ __mmu_notifier_mm_destroy+0x116/0x1c0 mm/mmu_notifier.c:323
+ mmu_notifier_mm_destroy include/linux/mmu_notifier.h:297 [inline]
+ __mmdrop+0x104/0x3f0 kernel/fork.c:908
+ mmdrop include/linux/sched/mm.h:43 [inline]
+ finish_task_switch+0x44c/0x6f0 kernel/sched/core.c:2671
+ context_switch kernel/sched/core.c:2802 [inline]
+ __schedule+0x842/0x1e10 kernel/sched/core.c:3375
+ schedule+0xe8/0x420 kernel/sched/core.c:3434
+ freezable_schedule include/linux/freezer.h:172 [inline]
+ futex_wait_queue_me+0x3af/0x770 kernel/futex.c:2548
+ futex_wait+0x374/0x9e0 kernel/futex.c:2663
+ do_futex+0xe20/0x2750 kernel/futex.c:3545
+ SYSC_futex kernel/futex.c:3605 [inline]
+ SyS_futex+0x368/0x485 kernel/futex.c:3573
+ entry_SYSCALL_64_fastpath+0x24/0x8c
+RIP: 0033:0x4482b9
+RSP: 002b:0000000000a2f908 EFLAGS: 00000206 ORIG_RAX: 00000000000000ca
+RAX: ffffffffffffffda RBX: 000000000071bea0 RCX: 00000000004482b9
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 000000000071becc
+RBP: 00000000000000bb R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000a2f910 R11: 0000000000000206 R12: 00000000000003b7
+R13: 0000000000000b5a R14: 00000000c59c644d R15: 0000000000000000
+Code: 75 b8 48 89 7d c0 41 81 e7 ff ff 0f 00 4e 8b 34 fd 60 f9 ed 87
+4d 85 f6 74 5e 4d 63 ec 49 c1 e5 03 eb 08 4d 8b 36 4d 85 f6 74 4d <41>
+39 5e 08 75 f2 45 3b 66 0c 75 ec 49 8d 76 18 4c 89 cf 4c 89
+RIP: find_stack lib/stackdepot.c:173 [inline] RSP: ffff88007118ed68
+RIP: depot_save_stack+0x108/0x440 lib/stackdepot.c:225 RSP: ffff88007118ed68
+---[ end trace a25d77609c7bff29 ]---
+
+
+[   71.351814] general protection fault: 0000 [#1] SMP KASAN
+[   71.352992] Modules linked in:
+[   71.353611] CPU: 3 PID: 3724 Comm: bash Not tainted 4.15.0-rc9+ #65
+[   71.354666] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS Bochs 01/01/2011
+[   71.356440] RIP: 0010:thread_group_cputime+0x4b8/0x1000
+[   71.357354] RSP: 0018:ffff88005dbff658 EFLAGS: 00010206
+[   71.358240] RAX: 0000000000000005 RBX: dffffc0000000000 RCX: 1ffff1000cf0b917
+[   71.359403] RDX: ffff88005dbff838 RSI: 1ffff1000bb7ff06 RDI: 0000000000000028
+[   71.360757] RBP: ffff88005dbff800 R08: ffff88005dbff840 R09: ffff88006454a280
+[   71.362314] R10: ffff88006b06e1c0 R11: ffff88006785c1c0 R12: fffffffffffffa70
+[   71.363800] R13: ffff88005dbff830 R14: ffffed000bb7fef3 R15: ffff88005dbff7d8
+[   71.365291] FS:  00007fb375f95700(0000) GS:ffff88006cb80000(0000)
+knlGS:0000000000000000
+[   71.366990] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   71.368198] CR2: 00000000006edbd4 CR3: 00000000637fb002 CR4: 00000000001606e0
+[   71.369710] Call Trace:
+[   71.370259]  ? print_unlock_imbalance_bug+0x70/0x70
+[   71.371297]  ? account_idle_time+0x1b0/0x1b0
+[   71.372292]  ? lock_downgrade+0x8e0/0x8e0
+[   71.373148]  ? lock_downgrade+0x8e0/0x8e0
+[   71.374036]  thread_group_cputime_adjusted+0x6b/0xd0
+[   71.375086]  ? task_cputime_adjusted+0x240/0x240
+[   71.376067]  wait_consider_task+0x1a91/0x38b0
+[   71.376987]  ? graph_lock+0x160/0x160
+[   71.377780]  ? graph_lock+0x160/0x160
+[   71.378568]  ? exit_notify+0xb60/0xb60
+[   71.379381]  ? print_unlock_imbalance_bug+0x70/0x70
+[   71.380420]  ? find_held_lock+0x35/0x1d0
+[   71.381262]  ? lock_acquire+0x1f7/0x4f0
+[   71.382151]  ? do_wait+0x3ba/0x9d0
+[   71.382885]  ? lock_downgrade+0x8e0/0x8e0
+[   71.383743]  ? lock_release+0xaf0/0xaf0
+[   71.384566]  ? add_wait_queue+0x19e/0x230
+[   71.385427]  ? __wake_up_locked_key_bookmark+0x20/0x20
+[   71.386553]  ? task_active_pid_ns+0xd0/0xd0
+[   71.387451]  do_wait+0x45b/0x9d0
+[   71.388155]  ? wait_consider_task+0x38b0/0x38b0
+[   71.389139]  ? tty_vhangup+0x30/0x30
+[   71.389933]  ? find_held_lock+0x35/0x1d0
+[   71.390777]  ? lock_downgrade+0x8e0/0x8e0
+[   71.391634]  ? lock_release+0xaf0/0xaf0
+[   71.392522]  ? do_raw_spin_unlock+0x1f0/0x2d0
+[   71.393487]  kernel_wait4+0x234/0x3b0
+[   71.394289]  ? SyS_waitid+0x50/0x50
+[   71.395041]  ? task_stopped_code+0x190/0x190
+[   71.395957]  ? sigprocmask+0xf4/0x2e0
+[   71.396746]  SYSC_wait4+0x119/0x120
+[   71.397516]  ? kernel_wait4+0x3b0/0x3b0
+[   71.398353]  ? _copy_to_user+0x85/0xd0
+[   71.399169]  ? __sanitizer_cov_trace_const_cmp8+0x18/0x20
+[   71.400318]  ? SyS_rt_sigprocmask+0x1ca/0x240
+[   71.401251]  ? sigprocmask+0x2e0/0x2e0
+[   71.402147]  ? __sanitizer_cov_trace_const_cmp4+0x16/0x20
+[   71.403291]  ? security_file_ioctl+0x95/0xc0
+[   71.404210]  SyS_wait4+0x2c/0x40
+[   71.404913]  entry_SYSCALL_64_fastpath+0x24/0x8c
+[   71.405928] RIP: 0033:0x7fb375671a3e
+[   71.406699] RSP: 002b:00007ffc523ec340 EFLAGS: 00000246 ORIG_RAX:
+000000000000003d
+[   71.408297] RAX: ffffffffffffffda RBX: 00000000ffffffff RCX: 00007fb375671a3e
+[   71.409817] RDX: 000000000000000a RSI: 00007ffc523ec398 RDI: ffffffffffffffff
+[   71.411317] RBP: 0000000000000000 R08: 00000000011c1a48 R09: 0000000000000000
+[   71.412867] R10: 0000000000000000 R11: 0000000000000246 R12: 00000000ffffffff
+[   71.414388] R13: 00000000011abb88 R14: 0000000000000000 R15: 00000000011abd08
+[   71.415888] Code: c0 10 49 39 c6 0f 84 09 01 00 00 48 c1 ef 03 4c
+89 ee 49 89 fe 48 c1 ee 03 49 01 de 49 8d bc 24 b8 05 00 00 48 89 f8
+48 c1 e8 03 <80> 3c 18 00 0f 85 c7 05 00 00 49 8d bc 24 c0 05 00 00 49
+8b 84
+[   71.419966] RIP: thread_group_cputime+0x4b8/0x1000 RSP: ffff88005dbff658
+[   71.421464] ---[ end trace 982cd2844bb6092a ]---
+
+
+
+[  493.794289] BUG: unable to handle kernel paging request at fffff1e03c000220
+[  493.795959] IP: qlist_free_all+0xe4/0x110
+[  493.796893] PGD 0 P4D 0
+[  493.797450] Oops: 0000 [#1] SMP KASAN
+[  493.798274] Modules linked in:
+[  493.798953] CPU: 1 PID: 4273 Comm: a.out Not tainted 4.15.0-rc9+ #65
+[  493.800321] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS Bochs 01/01/2011
+[  493.802005] RIP: 0010:qlist_free_all+0xe4/0x110
+[  493.802960] RSP: 0018:ffff88006ae17cb8 EFLAGS: 00010286
+[  493.804073] RAX: 0001800f0000800f RBX: 0000000000000282 RCX: ffffea0000000000
+[  493.805540] RDX: fffff1e03c000200 RSI: 000077ff80000000 RDI: 0000000000000000
+[  493.807061] RBP: ffff88006ae17ce0 R08: 1ffff1000d5c2f68 R09: ffff880063e60040
+[  493.808562] R10: 1ffff1000c7cc115 R11: 0000000000000001 R12: ffff88006ae17cf0
+[  493.810080] R13: 0001800f0000800f R14: ffffffff86acaf20 R15: 0000000000000000
+[  493.812477] FS:  00000000007e9880(0000) GS:ffff88006ca80000(0000)
+knlGS:0000000000000000
+[  493.813762] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  493.814678] CR2: fffff1e03c000220 CR3: 000000006b812003 CR4: 00000000001606e0
+[  493.815830] Call Trace:
+[  493.816280]  quarantine_reduce+0x141/0x170
+[  493.817011]  kasan_kmalloc+0x99/0xe0
+[  493.817607]  kasan_slab_alloc+0x12/0x20
+[  493.818254]  kmem_cache_alloc+0x10c/0x620
+[  493.818899]  ? map_id_range_down+0x1e6/0x400
+[  493.819585]  getname_flags+0xd0/0x5a0
+[  493.820184]  user_path_at_empty+0x2d/0x50
+[  493.820819]  SyS_access+0x254/0x7b0
+[  493.821399]  ? SyS_faccessat+0x7c0/0x7c0
+[  493.822061]  ? lockdep_sys_exit_thunk+0x16/0x29
+[  493.822814]  ? async_page_fault+0x36/0x60
+[  493.823481]  entry_SYSCALL_64_fastpath+0x24/0x8c
+[  493.824251] RIP: 0033:0x463327
+[  493.824748] RSP: 002b:00007ffe8b588888 EFLAGS: 00000246 ORIG_RAX:
+0000000000000015
+[  493.825938] RAX: ffffffffffffffda RBX: 00000000007ea1f0 RCX: 0000000000463327
+[  493.827132] RDX: 0000000000000004 RSI: 0000000000000000 RDI: 00000000004af1a1
+[  493.828214] RBP: 00007ffe8b588ae8 R08: 00007ffe8b5c1040 R09: 0000000000000000
+[  493.829226] R10: 00000000006c3f20 R11: 0000000000000246 R12: 00007ffe8b588af8
+[  493.830308] R13: 0000000000401d20 R14: 0000000000401db0 R15: 0000000000000000
+[  493.831386] Code: 00 00 00 80 48 01 c2 72 42 48 be 00 00 00 80 ff
+77 00 00 48 01 f2 48 b9 00 00 00 00 00 ea ff ff 48 c1 ea 0c 48 c1 e2
+06 48 01 ca <48> 8b 72 20 48 8d 7e ff 83 e6 01 48 0f 45 d7 48 8b 7a 30
+e9 36
+[  493.834255] RIP: qlist_free_all+0xe4/0x110 RSP: ffff88006ae17cb8
+[  493.835157] CR2: fffff1e03c000220
+[  493.835733] ---[ end trace 1fbd2672ad8e619c ]---
