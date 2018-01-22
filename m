@@ -1,56 +1,104 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Re: [PATCH v2 0/4] fix dma_unmap_sg() parameter in some scsi drivers
-Date: Mon, 22 Jan 2018 15:50:28 +0800
-Message-ID: <c7f7ba3f-9a0f-e251-27f6-0ad582d8a88e@hisilicon.com>
-References: <1515033405-37477-1-git-send-email-chenxiang66@hisilicon.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: Re: [PATCH] scsi: arcmsr: avoid do_gettimeofday
+Date: Mon, 22 Jan 2018 19:06:10 +0800
+Message-ID: <1516619170.4452.3.camel@Centos6.3-64>
+References: <20180121231308.2169692-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:2086 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750828AbeAVHuv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Jan 2018 02:50:51 -0500
-In-Reply-To: <1515033405-37477-1-git-send-email-chenxiang66@hisilicon.com>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:40985 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751028AbeAVLG3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 06:06:29 -0500
+Received: by mail-pf0-f195.google.com with SMTP id c6so3749721pfi.8
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2018 03:06:29 -0800 (PST)
+In-Reply-To: <20180121231308.2169692-1-arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: john.garry@huawei.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, bryantly@linux.vnet.ibm.com, mikecyr@linux.vnet.ibm.com, artur.paszkiewicz@intel.com, dan.j.williams@intel.com, yuxiangl@marvell.com, jgarzik@pobox.com, jack_wang@usish.com, lindar_liu@usish.com, xjtuwjp@gmail.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, y2038@lists.linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi, does anyone notice and review this issue?
+On Mon, 2018-01-22 at 00:12 +0100, Arnd Bergmann wrote:
+> The arcmsr uses its own implementation of time_to_tm(), along with do_gettimeofday()
+> to read the current time. While the algoritm used here is fine in principle, it
+> suffers from two problems:
+> 
+> - it assigns the seconds portion of the timeval to a 32-bit unsigned integer that
+>   overflows in 2106 even on 64-bit architectures.
+> - do_gettimeofday() returns a time_t that overflows in 2038 on all 32-bit systems.
+> 
+> This changes the time retrieval function to ktime_get_real_seconds(), which returns
+> a proper 64-bit value, and replaces the open-coded time_to_tm() algorithm with
+> a call to the safe time64_to_tm().
+> 
+> I checked way all numbers are indexed and found that months are given in range
+> 0..11 while the days are in range 1..31, same as 'struct tm', but the year value
+> that the firmware expects starts in 2000 while 'struct tm' is based on year 1900,
+> so it needs a small adjustment.
+> 
+> Fixes: b416c099472a ("scsi: arcmsr: Add a function to set date and time to firmware")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/scsi/arcmsr/arcmsr_hba.c | 37 ++++++++++---------------------------
+>  1 file changed, 10 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+> index 47745592cff4..75e828bd30e3 100644
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+> @@ -3489,8 +3489,9 @@ static int arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
+>  static void arcmsr_set_iop_datetime(struct timer_list *t)
+>  {
+>  	struct AdapterControlBlock *pacb = from_timer(pacb, t, refresh_timer);
+> -	unsigned int days, j, i, a, b, c, d, e, m, year, mon, day, hour, min, sec, secs, next_time;
+> -	struct timeval tv;
+> +	unsigned int next_time;
+> +	struct tm tm;
+> +
+>  	union {
+>  		struct	{
+>  		uint16_t	signature;
+> @@ -3506,33 +3507,15 @@ static void arcmsr_set_iop_datetime(struct timer_list *t)
+>  		} b;
+>  	} datetime;
+>  
+> -	do_gettimeofday(&tv);
+> -	secs = (u32)(tv.tv_sec - (sys_tz.tz_minuteswest * 60));
+> -	days = secs / 86400;
+> -	secs = secs - 86400 * days;
+> -	j = days / 146097;
+> -	i = days - 146097 * j;
+> -	a = i + 719468;
+> -	b = ( 4 * a + 3 ) / 146097;
+> -	c = a - ( 146097 * b ) / 4;
+> -	d = ( 4 * c + 3 ) / 1461 ;
+> -	e = c - ( 1461 * d ) / 4 ;
+> -	m = ( 5 * e + 2 ) / 153 ;
+> -	year = 400 * j + 100 * b + d + m / 10 - 2000;
+> -	mon = m + 3 - 12 * ( m /10 );
+> -	day = e - ( 153 * m + 2 ) / 5 + 1;
+> -	hour = secs / 3600;
+> -	secs = secs - 3600 * hour;
+> -	min = secs / 60;
+> -	sec = secs - 60 * min;
+> +	time64_to_tm(ktime_get_real_seconds(), -sys_tz.tz_minuteswest * 60, &tm);
+>  
+>  	datetime.a.signature = 0x55AA;
+> -	datetime.a.year = year;
+> -	datetime.a.month = mon;
+> -	datetime.a.date = day;
+> -	datetime.a.hour = hour;
+> -	datetime.a.minute = min;
+> -	datetime.a.second = sec;
+> +	datetime.a.year = tm.tm_year - 100; /* base 2000 instead of 1900 */
+> +	datetime.a.month = tm.tm_mon;
+> +	datetime.a.date = tm.tm_mday;
+> +	datetime.a.hour = tm.tm_hour;
+> +	datetime.a.minute = tm.tm_min;
+> +	datetime.a.second = tm.tm_sec;
+>  
+>  	switch (pacb->adapter_type) {
+>  		case ACB_ADAPTER_TYPE_A: {
 
-ÔÚ 2018/1/4 10:36, chenxiang Ð´µÀ:
-> According to Documentation/DMA-API.txt, all the parameters of dma_unmap_sg()
-> must be the same as those and passed in to the scatter/gather mapping API.
-> But in scsi drivers such as ibmscsi_tgt/iscsi/mvsas/pm8001, the <nents>
-> parameter of dma_unmap_sg() is number of elements after mapping. So fix them.
->
-> Part of the document is as follows:
->
-> 	void
-> 	dma_unmap_sg(struct device *dev, struct scatterlist *sg,
-> 			int nents, enum dma_data_direction direction)
-> 				
-> Unmap the previously mapped scatter/gather list.  All the parameters
-> must be the same as those and passed in to the scatter/gather mapping
-> API.
-> 				
-> Note: <nents> must be the number you passed in, *not* the number of
-> 	DMA address entries returned.
->
-> Chang Log:
-> v1 -> v2:
-> 	Split the patch into small patchset, and one patch per driver;
->
-> chenxiang (4):
->    scsi: ibmvscsis: fix dma_unmap_sg() parameter
->    scsi: isci: fix dma_unmap_sg() parameter
->    scsi: mvsas: fix dma_unmap_sg() parameter
->    scsi: pm8001: fix dma_unmap_sg() parameter
->
->   drivers/scsi/ibmvscsi_tgt/libsrp.c | 6 ++++--
->   drivers/scsi/isci/request.c        | 2 +-
->   drivers/scsi/mvsas/mv_sas.c        | 4 ++--
->   drivers/scsi/pm8001/pm8001_sas.c   | 2 +-
->   4 files changed, 8 insertions(+), 6 deletions(-)
->
+This patch works on kernel 4.14.0, thanks Arnd.
