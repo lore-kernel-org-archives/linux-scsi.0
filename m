@@ -1,47 +1,49 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 2/2] qla2xxx: Fix logo flag for qlt_free_session_done()
-Date: Mon, 22 Jan 2018 12:04:20 -0800
-Message-ID: <20180122200420.19516-3-himanshu.madhani@cavium.com>
+Subject: [PATCH 1/2] qla2xxx: Fix warning reported for req_que_no in qla24xx_async_cmd()
+Date: Mon, 22 Jan 2018 12:04:19 -0800
+Message-ID: <20180122200420.19516-2-himanshu.madhani@cavium.com>
 References: <20180122200420.19516-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0049.outbound.protection.outlook.com ([104.47.37.49]:58289
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0063.outbound.protection.outlook.com ([104.47.32.63]:41325
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751046AbeAVUGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Jan 2018 15:06:33 -0500
+        id S1750891AbeAVUGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Jan 2018 15:06:31 -0500
 In-Reply-To: <20180122200420.19516-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <hmadhani@redhat.com>
+This patch fixes following sparse warning
 
-Commit 3515832cc61467bfb87191a30401de1700e9956a fixed the target
-re-login after session relogin is complete, but missed out the
-qlt_free_session_done() path.
+drivers/scsi/qla2xxx/qla_init.c:1570:44: sparse: incorrect type in assignment
+(different base types)
 
-This patch clears send_els_logo flag in qlt_free_session_done() callback.
-
-Fixes: 3515832cc614 ("scsi: qla2xxx: Reset the logo flag, after target re-login.")
-Signed-off-by: Himanshu Madhani <hmadhani@redhat.com>
+Fixes: 07a21872cf2b ("scsi: qla2xxx: Fix queue ID for async abort with Multiqueue")
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/qla2xxx/qla_init.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index dd8edae4c152..14359656591e 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -988,6 +988,7 @@ void qlt_free_session_done(struct work_struct *work)
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 27e67f7ae18a..5b6f3c53fdcf 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1567,9 +1567,10 @@ qla24xx_async_abort_cmd(srb_t *cmd_sp)
+ 	abt_iocb->u.abt.cmd_hndl = cmd_sp->handle;
  
- 			logo.id = sess->d_id;
- 			logo.cmd_count = 0;
-+			sess->send_els_logo = 0;
- 			qlt_send_first_logo(vha, &logo);
- 		}
+ 	if (vha->flags.qpairs_available && cmd_sp->qpair)
+-		abt_iocb->u.abt.req_que_no = cmd_sp->qpair->req->id;
++		abt_iocb->u.abt.req_que_no =
++		    cpu_to_le16(cmd_sp->qpair->req->id);
+ 	else
+-		abt_iocb->u.abt.req_que_no = vha->req->id;
++		abt_iocb->u.abt.req_que_no = cpu_to_le16(vha->req->id);
  
+ 	sp->done = qla24xx_abort_sp_done;
+ 	abt_iocb->timeout = qla24xx_abort_iocb_timeout;
 -- 
 2.12.0
