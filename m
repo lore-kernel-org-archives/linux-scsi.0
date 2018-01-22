@@ -1,49 +1,25 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 1/2] qla2xxx: Fix warning reported for req_que_no in qla24xx_async_cmd()
-Date: Mon, 22 Jan 2018 12:04:19 -0800
-Message-ID: <20180122200420.19516-2-himanshu.madhani@cavium.com>
-References: <20180122200420.19516-1-himanshu.madhani@cavium.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: FC-NVMe fixes for qla2xxx
+Date: Mon, 22 Jan 2018 20:35:59 +0000
+Message-ID: <BA97BB75-7148-44B0-88FA-7E0B1CFABD35@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0063.outbound.protection.outlook.com ([104.47.32.63]:41325
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0063.outbound.protection.outlook.com ([104.47.42.63]:25611
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750891AbeAVUGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Jan 2018 15:06:31 -0500
-In-Reply-To: <20180122200420.19516-1-himanshu.madhani@cavium.com>
+        id S1751121AbeAVUgA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Jan 2018 15:36:00 -0500
+Content-Language: en-US
+Content-ID: <D3787CCAD153E148B4C6D69131B9FE2E@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This patch fixes following sparse warning
-
-drivers/scsi/qla2xxx/qla_init.c:1570:44: sparse: incorrect type in assignment
-(different base types)
-
-Fixes: 07a21872cf2b ("scsi: qla2xxx: Fix queue ID for async abort with Multiqueue")
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_init.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 27e67f7ae18a..5b6f3c53fdcf 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1567,9 +1567,10 @@ qla24xx_async_abort_cmd(srb_t *cmd_sp)
- 	abt_iocb->u.abt.cmd_hndl = cmd_sp->handle;
- 
- 	if (vha->flags.qpairs_available && cmd_sp->qpair)
--		abt_iocb->u.abt.req_que_no = cmd_sp->qpair->req->id;
-+		abt_iocb->u.abt.req_que_no =
-+		    cpu_to_le16(cmd_sp->qpair->req->id);
- 	else
--		abt_iocb->u.abt.req_que_no = vha->req->id;
-+		abt_iocb->u.abt.req_que_no = cpu_to_le16(vha->req->id);
- 
- 	sp->done = qla24xx_abort_sp_done;
- 	abt_iocb->timeout = qla24xx_abort_iocb_timeout;
--- 
-2.12.0
+SGkgQ2hyaXN0b3BoLCANCg0KSSBoYWQgc3VibWl0dGVkIHNlcmllcyBmb3IgRkMtTlZNRSBmaXhl
+cyBpbiBxbGEyeHh4IGRyaXZlciBvbiBKYW4gMTksIDIwMTguIA0KDQpodHRwOi8vbGlzdHMuaW5m
+cmFkZWFkLm9yZy9waXBlcm1haWwvbGludXgtbnZtZS8yMDE4LUphbnVhcnkvMDE1MDczLmh0bWwN
+Cg0KVGhlIHNlcmllcyB3YXMgY3V0IGFnYWluc3QgTWFydGlu4oCZcyA0LjE2L3Njc2ktcXVldWUg
+dHJlZSBhbmQgSSB3b3VsZCBsaWtlIGhpcyBzZXJpZXMNCnRvIGJlIG1lcmdlZCB2aWEgTWFydGlu
+4oCZcyB0cmVlLiANCg0KUGxlYXNlIHJldmlldy4NCg0KVGhhbmtzLA0KLSBIaW1hbnNodQ0KDQo=
