@@ -1,67 +1,87 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 1/5] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Mon, 22 Jan 2018 16:49:54 +0000
-Message-ID: <1516639793.2545.14.camel@sandisk.com>
-References: <20180122033550.27855-1-ming.lei@redhat.com>
-         <20180122033550.27855-2-ming.lei@redhat.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: scsi: sg: assorted memory corruptions
+Date: Mon, 22 Jan 2018 13:57:49 -0500
+Message-ID: <097921fa-52c5-8b2b-f564-4b24d9720478@interlog.com>
+References: <CACT4Y+b0pizvOAxtWQ-TGCRAYvHXdv79BAEaXh50W6vF8gBvkQ@mail.gmail.com>
+ <1516638634.2545.0.camel@wdc.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180122033550.27855-2-ming.lei@redhat.com>
-Content-Language: en-US
-Content-ID: <88713A9BDCEBD04BA95CC23DD3DBEF57@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "loberman@redhat.com" <loberman@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1516638634.2545.0.camel@wdc.com>
+Content-Language: en-CA
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dvyukov@google.com" <dvyukov@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ben.hutchings@codethink.co.uk" <ben.hutchings@codethink.co.uk>
+Cc: "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE4LTAxLTIyIGF0IDExOjM1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gQEAg
-LTEyODAsMTAgKzEyODIsMTggQEAgYm9vbCBibGtfbXFfZGlzcGF0Y2hfcnFfbGlzdChzdHJ1Y3Qg
-cmVxdWVzdF9xdWV1ZSAqcSwgc3RydWN0IGxpc3RfaGVhZCAqbGlzdCwNCj4gIAkJICogLSBTb21l
-IGJ1dCBub3QgYWxsIGJsb2NrIGRyaXZlcnMgc3RvcCBhIHF1ZXVlIGJlZm9yZQ0KPiAgCQkgKiAg
-IHJldHVybmluZyBCTEtfU1RTX1JFU09VUkNFLiBUd28gZXhjZXB0aW9ucyBhcmUgc2NzaS1tcQ0K
-PiAgCQkgKiAgIGFuZCBkbS1ycS4NCj4gKwkJICoNCj4gKwkJICogSWYgZHJpdmVycyByZXR1cm4g
-QkxLX1NUU19SRVNPVVJDRSBhbmQgU19TQ0hFRF9SRVNUQVJUDQo+ICsJCSAqIGJpdCBpcyBzZXQs
-IHJ1biBxdWV1ZSBhZnRlciAxMG1zIGZvciBhdm9pZGluZyBJTyBoYW5nDQo+ICsJCSAqIGJlY2F1
-c2UgdGhlIHF1ZXVlIG1heSBiZSBpZGxlIGFuZCB0aGUgUkVTVEFSVCBtZWNoYW5pc20NCj4gKwkJ
-ICogY2FuJ3Qgd29yayBhbnkgbW9yZS4NCj4gIAkJICovDQo+IC0JCWlmICghYmxrX21xX3NjaGVk
-X25lZWRzX3Jlc3RhcnQoaGN0eCkgfHwNCj4gKwkJbmVlZHNfcmVzdGFydCA9IGJsa19tcV9zY2hl
-ZF9uZWVkc19yZXN0YXJ0KGhjdHgpOw0KPiArCQlpZiAoIW5lZWRzX3Jlc3RhcnQgfHwNCj4gIAkJ
-ICAgIChub190YWcgJiYgbGlzdF9lbXB0eV9jYXJlZnVsKCZoY3R4LT5kaXNwYXRjaF93YWl0LmVu
-dHJ5KSkpDQo+ICAJCQlibGtfbXFfcnVuX2h3X3F1ZXVlKGhjdHgsIHRydWUpOw0KPiArCQllbHNl
-IGlmIChuZWVkc19yZXN0YXJ0ICYmIChyZXQgPT0gQkxLX1NUU19SRVNPVVJDRSkpDQo+ICsJCQli
-bGtfbXFfZGVsYXlfcnVuX2h3X3F1ZXVlKGhjdHgsIDEwKTsNCj4gIAl9DQoNCkluIG15IG9waW5p
-b24gdGhlcmUgYXJlIHR3byBwcm9ibGVtcyB3aXRoIHRoZSBhYm92ZSBjaGFuZ2VzOg0KKiBPbmx5
-IHRoZSBibG9jayBkcml2ZXIgYXV0aG9yIGNhbiBrbm93IHdoYXQgYSBnb29kIGNob2ljZSBpcyBm
-b3IgdGhlIHRpbWUNCiAgYWZ0ZXIgd2hpY2ggdG8gcmVydW4gdGhlIHF1ZXVlLiBTbyBJIHRoaW5r
-IG1vdmluZyB0aGUgcmVydW4gZGVsYXkgKDEwIG1zKQ0KICBjb25zdGFudCBmcm9tIGJsb2NrIGRy
-aXZlcnMgaW50byB0aGUgY29yZSBpcyBhIHN0ZXAgYmFja3dhcmRzIGluc3RlYWQgb2YgYQ0KICBz
-dGVwIGZvcndhcmRzLg0KKiBUaGUgcHVycG9zZSBvZiB0aGUgQkxLX01RX1NfU0NIRURfUkVTVEFS
-VCBmbGFnIGlzIHRvIGRldGVjdCB3aGV0aGVyIG9yIG5vdA0KICBhbnkgb2YgdGhlIHF1ZXVlIHJ1
-bnMgdHJpZ2dlcmVkIGJ5IGZyZWVpbmcgYSB0YWcgaGFwcGVuZWQgY29uY3VycmVudGx5LiBJDQog
-IGRvbid0IHRoaW5rIHRoYXQgdGhlcmUgaXMgYW55IHJlbGF0aW9uc2hpcCBiZXR3ZWVuIHF1ZXVl
-IHJ1bnMgaGFwcGVuaW5nIGFsbA0KICBvciBub3QgY29uY3VycmVudGx5IGFuZCB0aGUgY2hhbmNl
-IHRoYXQgZHJpdmVyIHJlc291cmNlcyBiZWNvbWUgYXZhaWxhYmxlLg0KICBTbyBkZWNpZGluZyB3
-aGV0aGVyIG9yIG5vdCBhIHF1ZXVlIHNob3VsZCBiZSByZXJ1biBiYXNlZCBvbiB0aGUgdmFsdWUg
-b2YNCiAgdGhlIEJMS19NUV9TX1NDSEVEX1JFU1RBUlQgZmxhZyBzZWVtcyB3cm9uZyB0byBtZS4N
-Cg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kv
-c2NzaV9saWIuYw0KPiBpbmRleCBkOWNhMWRmYWIxNTQuLjU1YmUyNTUwYzU1NSAxMDA2NDQNCj4g
-LS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3Njc2lf
-bGliLmMNCj4gQEAgLTIwMzAsOSArMjAzMCw5IEBAIHN0YXRpYyBibGtfc3RhdHVzX3Qgc2NzaV9x
-dWV1ZV9ycShzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwNCj4gIAljYXNlIEJMS19TVFNfT0s6
-DQo+ICAJCWJyZWFrOw0KPiAgCWNhc2UgQkxLX1NUU19SRVNPVVJDRToNCj4gLQkJaWYgKGF0b21p
-Y19yZWFkKCZzZGV2LT5kZXZpY2VfYnVzeSkgPT0gMCAmJg0KPiAtCQkgICAgIXNjc2lfZGV2aWNl
-X2Jsb2NrZWQoc2RldikpDQo+IC0JCQlibGtfbXFfZGVsYXlfcnVuX2h3X3F1ZXVlKGhjdHgsIFND
-U0lfUVVFVUVfREVMQVkpOw0KPiArCQlpZiAoYXRvbWljX3JlYWQoJnNkZXYtPmRldmljZV9idXN5
-KSB8fA0KPiArCQkgICAgc2NzaV9kZXZpY2VfYmxvY2tlZChzZGV2KSkNCj4gKwkJCXJldCA9IEJM
-S19TVFNfREVWX1JFU09VUkNFOw0KPiAgCQlicmVhazsNCj4gIAlkZWZhdWx0Og0KPiAgCQkvKg0K
-DQpUaGUgYWJvdmUgaW50cm9kdWNlcyB0d28gY2hhbmdlcyB0aGF0IGhhdmUgbm90IGJlZW4gbWVu
-dGlvbmVkIGluIHRoZQ0KZGVzY3JpcHRpb24gb2YgdGhpcyBwYXRjaDoNCi0gVGhlIHF1ZXVlIHJl
-cnVubmluZyBkZWxheSBpcyBjaGFuZ2VkIGZyb20gMyBtcyBpbnRvIDEwIG1zLiBXaGVyZSBpcyB0
-aGUNCiAgZXhwbGFuYXRpb24gb2YgdGhpcyBjaGFuZ2U/IERvZXMgdGhpcyBjaGFuZ2UgaGF2ZSBh
-IHBvc2l0aXZlIG9yIG5lZ2F0aXZlDQogIHBlcmZvcm1hbmNlIGltcGFjdD8NCi0gVGhlIGFib3Zl
-IG1vZGlmaWVzIGEgZ3VhcmFudGVlZCBxdWV1ZSByZXJ1biBpbnRvIGEgcXVldWUgcmVydW4gdGhh
-dA0KICBtYXkgb3IgbWF5IG5vdCBoYXBwZW4sIGRlcGVuZGluZyBvbiB3aGV0aGVyIG9yIG5vdCBt
-dWx0aXBsZSB0YWdzIGdldCBmcmVlZA0KICBjb25jdXJyZW50bHkgKHJldHVybiBCTEtfU1RTX0RF
-Vl9SRVNPVVJDRSkuIFNvcnJ5IGJ1dCBJIHRoaW5rIHRoYXQncyB3cm9uZy4NCg0KQmFydC4=
+On 2018-01-22 11:30 AM, Bart Van Assche wrote:
+> On Mon, 2018-01-22 at 12:06 +0100, Dmitry Vyukov wrote:
+>> general protection fault: 0000 [#1] SMP KASAN
+> 
+> How about the untested patch below?
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index cd9b6ebd7257..04a644b39d79 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -627,6 +627,10 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+>   	mutex_unlock(&sfp->f_mutex);
+>   	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
+>   		"sg_write:   scsi opcode=0x%02x, cmd_size=%d\n", (int) opcode, cmd_size));
+> +	if (cmd_size > sizeof(cmnd)) {
+> +		sg_remove_request(sfp, srp);
+> +		return -EFAULT;
+> +	}
+>   	/* Determine buffer size.  */
+>   	input_size = count - cmd_size;
+>   	mxsize = max(input_size, old_hdr.reply_len);
+> 
+
+Using 'scsi_logging_level -s -T 5' on the sg driver and running the test
+program provided, the cmd_size is 9, just like the ioctl() in his program
+set it to. The sizeof(cmnd) is 252. So I don't know what caused the
+GPF but it wasn't cmd_size being out of bounds.
+
+As for the above patch, did you notice this check in that function:
+
+         if ((!hp->cmdp) || (hp->cmd_len < 6) || (hp->cmd_len > sizeof (cmnd))) {
+                 sg_remove_request(sfp, srp);
+                 return -EMSGSIZE;
+         }
+
+As far as I remember, Dmitry has not indicated in multiple reports
+over several years what /dev/sg0 is. Perhaps it misbehaves when it
+gets a SCSI command in the T10 range (i.e. not vendor specific) with
+a 9 byte cdb length. As far as I'm aware T10 (and the Ansi committee
+before it) have never defined a cdb with an odd length.
+
+For those that are not aware, the sg driver is a relatively thin
+shim over the block layer, the SCSI mid-level, and a low-level
+driver which may have another kernel driver stack underneath it
+(e.g. UAS (USB attached SCSI)). The previous report from syzkaller
+on the sg driver ("scsi: memory leak in sg_start_req") has resulted
+in one accepted patch on the block layer with probably more to
+come in the same area.
+
+Testing the patch Dmitry gave (with some added error checks which
+reported no problems) with the scsi_debug driver supplying /dev/sg0
+I have not seen any problems running that test program. Again
+there might be a very slow memory leak, but if there is I don't
+believe it is in the sg driver.
+
+
+While it's not invalid from a testing perspective, throwing total
+nonsense at a pass-through mechanism, including absurd SCSI commands
+at best will test error paths, but only at a very shallow level.
+Setting up almost valid pass-through scenarios will test error
+paths at a deeper level. Then there are lots of valid pass-through
+scenarios that would be expected not to fail.
+
+Doug Gilbert
