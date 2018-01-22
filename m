@@ -1,69 +1,115 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [LSF/MM TOPIC] Improving Asynchronous SCSI Disk Probing
-Date: Mon, 22 Jan 2018 06:06:01 +0000
-Message-ID: <730B5E23-4387-4C88-A0FE-BA58955825D5@cavium.com>
-References: <1516231473.2820.81.camel@wdc.com>
+From: Viswas G <viswas.g@microsemi.com>
+Subject: RE: PMC(Adaptec) 7805H(7H series) HBA compatibility problem with many
+ Seagate HDDs
+Date: Mon, 22 Jan 2018 06:48:33 +0000
+Message-ID: <37240963b14140f1a5ab4830e647f8d8@microsemi.com>
+References: <20180112111556.570F96001DC@mta-1.openmailbox.org>
+ <CAD+HZHWc5nGS2W7dV7AfbYj5d_HKhgiGyYWr=G7+ZbsCk45xSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0068.outbound.protection.outlook.com ([104.47.36.68]:56130
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0056.outbound.protection.outlook.com ([104.47.32.56]:63024
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750926AbeAVGGD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Jan 2018 01:06:03 -0500
-In-Reply-To: <1516231473.2820.81.camel@wdc.com>
+        id S1751003AbeAVGsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 Jan 2018 01:48:39 -0500
+In-Reply-To: <CAD+HZHWc5nGS2W7dV7AfbYj5d_HKhgiGyYWr=G7+ZbsCk45xSw@mail.gmail.com>
 Content-Language: en-US
-Content-ID: <9AF025EA9FFECD4A91221908403D44AA@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>
+To: Jack Wang <xjtuwjp@gmail.com>, "sonofagun@openmailbox.org" <sonofagun@openmailbox.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Bart,=20
-
-> On Jan 17, 2018, at 3:24 PM, Bart Van Assche <bart.vanassche@wdc.com> wro=
-te:
->=20
-> When the SCSI scanning code discovers a SCSI device it calls the driver c=
-ore
-> function device_add() to associate a SCSI ULD with the device. The driver
-> core invokes the probing function for the matching SCSI ULP, e.g. sd_prob=
-e().
-> In order to minimize the time needed to scan SCSI targets that have a lar=
-ge
-> number of LUNs, the SCSI disk driver scans LUNs asynchronously by startin=
-g
-> the actual probing work asynchronously from inside sd_probe()
->=20
-> An unfortunate aspect of how SCSI disk probing works today is that there =
-is
-> unnecessary serialization between probing and removal activity. For a
-> possible approach of how to increase SCSI disk probing concurrency, see a=
-lso
-> [PATCH] sd: Increase SCSI disk probing concurrency, linux-scsi mailing li=
-st,
-> December 2017 (https://www.spinics.net/lists/linux-scsi/msg115657.html).
->=20
-> A second unfortunate aspect of SCSI disk probing is that certain race
-> conditions in the block layer are hit if removal starts before asynchrono=
-us
-> probing has finished. This is because the driver core is unaware that the
-> SCSI disk code works asynchronously.
->=20
-> Additionally, the SCSI disk asynchronous probing approach is incompatible
-> with the power management code. The power management code calls
-> wait_for_device_probe() in the driver core to wait for device probing
-> activity to finish. wait_for_device_probe() however is unaware of the
-> asynchronous probing in the SCSI sd driver and hence doesn't wait for the
-> SCSI sd probing activity to finish.
->=20
-> My proposal is to hold a session to discus potential solutions for
-> increasing SCSI disk probing concurrency in a way that is compatible with
-> the driver core and the power management subsystem.
-
-We have run into issue with asyc probing and would be interested in the dis=
-cussion.
-
-Thanks,
-- Himanshu
+SGkgc29ub2ZhZ3VuLA0KDQpDYW4geW91IHBsZWFzZSB0cnkgYmVsb3cgY29tbWFuZHMgYW5kIHNo
+YXJlIHRoZSBrZXJuZWwgbG9ncy4NCg0KbGludXgtbHBkczp+ICMgZmluZCAvc3lzIC1pbmFtZSAi
+bG9nZ2luZ19sZXZlbCINCi9zeXMvZGV2aWNlcy9wY2kwMDAwOjgwLzAwMDA6ODA6MDMuMi8wMDAw
+OjgyOjAwLjAvaG9zdDEwL3Njc2lfaG9zdC9ob3N0MTAvbG9nZ2luZ19sZXZlbA0KDQpsaW51eC1s
+cGRzOn4gIyBlY2hvIDB4ZmYgPiAgL3N5cy9kZXZpY2VzL3BjaTAwMDA6ODAvMDAwMDo4MDowMy4y
+LzAwMDA6ODI6MDAuMC9ob3N0MTAvc2NzaV9ob3N0L2hvc3QxMC9sb2dnaW5nX2xldmVsDQoNCkFm
+dGVyIHNldHRpbmcgdGhlIGxvZyBsZXZlbCB0byBveGZmLCBjb25uZWN0IHRoZSBkcml2ZXMgd2l0
+aCB3aGljaCB5b3UgYXJlIGZhY2luZyBpc3N1ZS4NCg0KS2luZGx5IHNoYXJlIHRoZSBsb2dzIGFm
+dGVyIHRoYXQuDQoNClJlZ2FyZHMsDQpWaXN3YXMgRw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQo+IEZyb206IEphY2sgV2FuZyBbbWFpbHRvOnhqdHV3anBAZ21haWwuY29tXQ0KPiBT
+ZW50OiBGcmlkYXksIEphbnVhcnkgMTIsIDIwMTggODo0NiBQTQ0KPiBUbzogc29ub2ZhZ3VuQG9w
+ZW5tYWlsYm94Lm9yZzsgVmlzd2FzIEcgPHZpc3dhcy5nQG1pY3Jvc2VtaS5jb20+DQo+IENjOiBs
+aW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogUE1DKEFkYXB0ZWMpIDc4
+MDVIKDdIIHNlcmllcykgSEJBIGNvbXBhdGliaWxpdHkgcHJvYmxlbSB3aXRoDQo+IG1hbnkgU2Vh
+Z2F0ZSBIRERzDQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4gDQo+ICtjYyBWaXN3YXMgZnJv
+bSBtaWNvcnNlbWkuIG1heWJlIGhlIGNhbiBoZWxwLg0KPiANCj4gMjAxOC0wMS0xMiAxMjoxNSBH
+TVQrMDE6MDAgIDxzb25vZmFndW5Ab3Blbm1haWxib3gub3JnPjoNCj4gPg0KPiA+IEhlbGxvLCB3
+ZSBoYXZlIGEgbG9uZyBzdGFuZGluZyBpc3N1ZSBmb3IgYSBjb3VwbGUgb2YgeWVhcnMgd2l0aCBv
+dXIgU0FTIEhCQS4NCj4gPg0KPiA+IEl0IGhhcHBlbnMgbm8gbWF0dGVyIHdoYXQgZGlzdHJpYnV0
+aW9uIHdlIHVzZShEZWJpYW4sIENlbnRPUywgVWJ1bnR1KS4NCj4gPg0KPiA+IFdoZW4gd2UgYm91
+Z2h0IHRoaXMgSEJBIHdlIGhhZCBhbHJlYWR5IHR3byA1MDBHQiBTZWFnYXRlIFNBUyBIRERzLA0K
+PiBDb25zdGVsbGF0aW9uIEVTLjIgU1QzNTAwNjIwU1MuIFRob3NlIHdlcmUgd29ya2luZyBmaW5l
+IGFzIGV4cGVjdGVkLg0KPiA+IEluIG9yZGVyIHRvIGJhY2sgdXAgU0FUQSBkaXNrcyB3ZSBib3Vn
+aHQgYSBjb3VwbGUgb2YgNFRCIFNlYWdhdGUgU0FTDQo+IEhERHMsIENvbnN0ZWxsYXRpb24gRVMu
+MyBTVDQwMDBOTTAwMjMuDQo+ID4gVW5mb3J0dW5hdGVseSB0aGV5IGRpZCBub3Qgd29yayB3aXRo
+IHRoaXMgSEJBIGV2ZW4gdGhvdWdoIHdlIHVwZGF0ZWQNCj4gYm90aCB0aGUgSEJBIGFuZCB0aGUg
+SEREcyBmaXJtd2FyZSBhIGNvdXBsZSBvZiB0aW1lcyBiYWNrIGluIDIwMTUgOigNCj4gPiBPdXIg
+TFNJIFNBUyBHZW4yIEhCQSBoYWQgbm8gaXNzdWVzIGF0IGFsbCB3aXRoIHRoZSBzYW1lIGRpc2tz
+Li4uDQo+ID4NCj4gPiBBIGNvdXBsZSBvZiB5ZWFycyBhZ28gbXkgYnJvdGhlciBjb250YWN0ZWQg
+UE1DIGFuZCBTZWFnYXRlIGJ1dCB0aGUgaXNzdWUNCj4gcmVtYWlucy4uLiBTaW5jZSB0aGUgaXNz
+dWUgcGVyc2lzdGVkIHRoZXkgd2VyZSBtb3ZlZCB0byB0aGUgTFNJIEhCQS4NCj4gPg0KPiA+IE15
+IGJyb3RoZXIgdGhvdWdodCBpdCB3YXMgYSBjb21wYXRpYmlsaXR5IGlzc3VlIHdpdGggQ29uc3Rl
+bGxhdGlvbiBFUy4zIHNvDQo+IGhlIGJvdWdodCAzIG5ld2VyIFNlYWdhdGUgZGlza3MgaW4gRGVj
+ZW1iZXIuIFRob3NlIGFyZSBFbnRlcnByaXNlIENhcGFjaXR5DQo+IHY1KEVDdjUpIG5vdyBjYWxs
+ZWQgRXhvcyA3RTIuDQo+ID4gVW5mb3J0dW5hdGVseSBub25lIG9mIHRoZW0gd29ya3Mgb24gdGhp
+cyBIQkEhIEFnYWluIG91ciBMU0kgU0FTIEdlbjINCj4gSEJBIGhhZCBubyBpc3N1ZXMgYXQgYWxs
+IHdpdGggdGhlIG5ld2VyIGRpc2tzLi4uDQo+ID4NCj4gPiBJbiBvcmRlciB0byBoYXZlIGEgZGVj
+ZW50IGRpc2sgZm9yIHRoZSBQTUMgSEJBLCB3ZSBib3VnaHQgYSBjb3VwbGUgb2YgMTBLDQo+IDIs
+NSIgVG9zaGliYSBIRERzIHdoaWNoIHN1cHBvcnQgVDFPIERJRiBidXQgaGF2ZSBpdCBpbmFjdGl2
+ZS4gTHVja2lseSB0aG9zZQ0KPiBkaXNrcyB3b3JrZWQgZmluZSENCj4gPg0KPiA+IFRoZSBwcm9i
+bGVtIGlzIHRoYXQgd2UgaGF2ZSA1KDIrMykgU2VhZ2F0ZSA3MjAwIGNsYXNzIGRpc2tzIHRoYXQg
+Y2Fubm90DQo+IHdvcmsgd2l0aCB0aGlzIGNvbnRyb2xsZXIhDQo+ID4gQW55IG5ld2VyIHNlYWdh
+dGUgU0FTIEhERCB3ZSB0cmllZCBhbmQgaGFkIHByb3RlY3Rpb24gaW5mb3JtYXRpb24gKGFrYQ0K
+PiBUMU8gRElGKSBjYW5ub3QgYmUgd3JpdHRlbiBvbiB0aGlzIEhCQSBmb3Igc29tZSByZWFzb24g
+KGV2ZW4gdGhvdWdoIERJRg0KPiB3YXMgbmV2ZXIgYWN0aXZhdGVkKS4NCj4gPiBGb3JtYXR0aW5n
+IHRoZSBkaXNrIGZyb20gdGhlIEhCQSBkaWQgbm90IHNvbHZlIHRoZSBpc3N1ZS4gU28gZGQgYW5k
+IG1rZTJmcw0KPiBhcmUgdW51c2FibGUuIEJvdGggYWx3YXlzIGhhbmcgZXZlbiB0aG91Z2ggdGhl
+IGRpc2sgYW5kIHRoZSBIQkEgYXJlIGluDQo+IGdvb2QgY29uZGl0aW9uLg0KPiA+IFRoZSBhZmZl
+Y3RlZCBkaXNrIHdhcyB0ZXN0ZWQgb24gYWxsIFNBUyBwb3J0cyBidXQgaXQgZmFpbGVkIG1pc2Vy
+YWJseS4NCj4gRGlmZmVyZW50IGNhYmxlcyB3ZXJlIGFsc28gdXNlZCB0byBlbnN1cmUgdGhhdCBu
+byBjYWJsaW5nIGlzc3VlcyBhcmlzZS4NCj4gPg0KPiA+IFRoZSBFUy4zIGRpc2tzIGFyZSB1bmF2
+YWlsYWJsZSBmb3Igbm93IGFzIHRoZXkgaGF2ZSBkYXRhLiBBbnkgcGF0Y2ggd2lsbCBiZQ0KPiBv
+bmx5IHRlc3RlZCB3aXRoIG91ciBFQ3Y1Lg0KPiA+DQo+ID4gSGVyZSBpcyB3aGF0IHdlIGdldCBh
+dCBub3JtYWwgYm9vdCB3aXRoIGRkIChpbnB1dCAvZGV2L3plcm8sIGJsb2NrIDhrIGluDQo+IHRo
+aXMgY2FzZSk6DQo+ID4NCj4gPiBbICAgIDAuMDAwMDAwXSBMaW51eCB2ZXJzaW9uIDQuOS4wLTUt
+YW1kNjQgKGRlYmlhbi1rZXJuZWxAbGlzdHMuZGViaWFuLm9yZykNCj4gKGdjYyB2ZXJzaW9uIDYu
+My4wIDIwMTcwNTE2IChEZWJpYW4gNi4zLjAtMTgpICkgIzEgU01QIERlYmlhbiA0LjkuNjUtDQo+
+IDMrZGViOXUyICgyMDE4LTAxLTA0KQ0KPiA+IFsgICAgMC4wMDAwMDBdIENvbW1hbmQgbGluZTog
+Qk9PVF9JTUFHRT0vYm9vdC92bWxpbnV6LTQuOS4wLTUtYW1kNjQNCj4gcm9vdD1VVUlEPTVlNDc4
+OTNiLTNjNDEtNGVlZi1iNmM4LWM0MDE2ODFlYzE5ZiBybyBxdWlldA0KPiA+IFsgICAgMC42NDQ4
+NTZdIHBjaSAwMDAwOjA2OjAwLjA6IFs5MDA1OjgwODhdIHR5cGUgMDAgY2xhc3MgMHgwMTA3MDAN
+Cj4gPiBbICAgIDAuNjQ0ODY3XSBwY2kgMDAwMDowNjowMC4wOiByZWcgMHgxMDogW21lbSAweGZl
+MjUwMDAwLTB4ZmUyNWZmZmYgNjRiaXRdDQo+ID4gWyAgICAwLjY0NDg3NV0gcGNpIDAwMDA6MDY6
+MDAuMDogcmVnIDB4MTg6IFttZW0gMHhmZTI0MDAwMC0weGZlMjRmZmZmIDY0Yml0XQ0KPiA+IFsg
+ICAgMC42NDQ4ODRdIHBjaSAwMDAwOjA2OjAwLjA6IHJlZyAweDI0OiBbbWVtIDB4ZmUyMDAwMDAt
+MHhmZTIzZmZmZl0NCj4gPiBbICAgIDAuNjQ0ODkwXSBwY2kgMDAwMDowNjowMC4wOiByZWcgMHgz
+MDogW21lbSAweGZlMTAwMDAwLTB4ZmUxZmZmZmYgcHJlZl0NCj4gPiBbICAgIDAuNjQ0OTMzXSBw
+Y2kgMDAwMDowNjowMC4wOiBzdXBwb3J0cyBEMQ0KPiA+IFsgICAgMC42NDQ5MzRdIHBjaSAwMDAw
+OjA2OjAwLjA6IFBNRSMgc3VwcG9ydGVkIGZyb20gRDAgRDEgRDNob3QNCj4gPiBbICAgIDEuMjkw
+MjY2XSBpb21tdTogQWRkaW5nIGRldmljZSAwMDAwOjA2OjAwLjAgdG8gZ3JvdXAgMjINCj4gPiBb
+ICAgIDEuNDQxNjcyXSBwbTgweHggMDAwMDowNjowMC4wOiBwbTgweHg6IGRyaXZlciB2ZXJzaW9u
+IDAuMS4zOA0KPiA+IFsgICAgMi4zMDIyNDBdIHNjc2kgaG9zdDA6IHBtODB4eA0KPiA+IFsgICAg
+Mi44MDI4NTFdIHNhczogcGh5LTA6MSBhZGRlZCB0byBwb3J0LTA6MCwgcGh5X21hc2s6MHgyDQo+
+ICg1MDAwYzUwMCoqKioqKioqKQ0KPiA+IFsgICAgMi44MDI4NThdIHNhczogRE9JTkcgRElTQ09W
+RVJZIG9uIHBvcnQgMCwgcGlkOjE4OQ0KPiA+IFsgICAgMi44NjI4MjJdIHNhczogRE9ORSBESVND
+T1ZFUlkgb24gcG9ydCAwLCBwaWQ6MTg5LCByZXN1bHQ6MA0KPiA+IFsgICAgMi44Nzc0NjddIHNj
+c2kgMDowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAgU0VBR0FURSAgU1QyMDAwTk0wMDQ1ICAgICBO
+MDAzDQo+IFBROiAwIEFOU0k6IDYNCj4gPiBbICAgIDMuNzkyNTAyXSBzZCAwOjA6MDowOiBbc2Ri
+XSAzOTA3MDI5MTY4IDUxMi1ieXRlIGxvZ2ljYWwgYmxvY2tzOiAoMi4wMA0KPiBUQi8xLjgyIFRp
+QikNCj4gPiBbICAgIDMuNzk1MDgwXSBzZCAwOjA6MDowOiBbc2RiXSBXcml0ZSBQcm90ZWN0IGlz
+IG9mZg0KPiA+IFsgICAgMy43OTUwODJdIHNkIDA6MDowOjA6IFtzZGJdIE1vZGUgU2Vuc2U6IGRi
+IDAwIDEwIDA4DQo+ID4gWyAgICAzLjc5Njk5NV0gc2QgMDowOjA6MDogW3NkYl0gV3JpdGUgY2Fj
+aGU6IGVuYWJsZWQsIHJlYWQgY2FjaGU6IGVuYWJsZWQsDQo+IHN1cHBvcnRzIERQTyBhbmQgRlVB
+DQo+ID4gWyAgICAzLjgxMDU0M10gc2QgMDowOjA6MDogW3NkYl0gQXR0YWNoZWQgU0NTSSBkaXNr
+DQo+ID4gWyAgICA4LjE2NDEyMl0gc2QgMDowOjA6MDogQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNn
+MiB0eXBlIDANCj4gPiBbICAzODAuNDg3MTc3XSBzYXM6IEVudGVyIHNhc19zY3NpX3JlY292ZXJf
+aG9zdCBidXN5OiAxNTEgZmFpbGVkOiAxNTENCj4gTG9va3MgYWxsIElPIGp1c3QgY2FuJ3QgZmlu
+aXNoZWQsIGFuZCB3YXMgYWJvcnRlZC4gSSBzdXBwb3NlDQo+IFBNQ1MvbWljcm9zZW1pIGhhdmUg
+Y29tcGF0aWJsZSBsaXN0IGZvciB0aGVpciBIQkEsIGRpZCB5b3UgY2hlY2sgdGhhdD8NCj4gSGF2
+ZSB5b3UgdHJ5IHRoZSBkcml2ZXIgZnJvbSB0aGVpciB3ZWJzaXRlLCBkb2VzIGl0IHdvcms/DQo+
+IGh0dHBzOi8vc3RvcmFnZS5taWNyb3NlbWkuY29tL2VuLXVzL3N1cHBvcnQvc2FzL3Nhcy9hc2Et
+NzgwNWgvDQo+IA0KPiBbc25pcF0NCj4gDQo+IFJlZ2FyZHMsDQo+IEphY2sNCg==
