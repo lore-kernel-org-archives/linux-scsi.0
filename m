@@ -1,72 +1,63 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 1/5] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Wed, 24 Jan 2018 00:59:15 +0800
-Message-ID: <20180123165914.GH13277@ming.t460p>
-References: <20180122033550.27855-2-ming.lei@redhat.com>
-	<1516639793.2545.14.camel@sandisk.com>
-	<20180123005728.GB4411@ming.t460p>
-	<54f0c19c-38aa-e788-f476-492e5a5734c9@wdc.com>
-	<20180123162605.GD13277@ming.t460p>
-	<4cdb2b42-0097-c64a-d9c0-b7a1727c80de@wdc.com>
-	<20180123164109.GF13277@ming.t460p>
-	<1516726030.3339.14.camel@wdc.com>
-	<20180123164951.GG13277@ming.t460p>
-	<1516726441.3339.16.camel@wdc.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH] qla2xxx: Fix memory corruption during hba reset test
+Date: Tue, 23 Jan 2018 11:05:21 -0800
+Message-ID: <20180123190521.11382-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1516726441.3339.16.camel@wdc.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0061.outbound.protection.outlook.com ([104.47.37.61]:47520
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751530AbeAWTF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jan 2018 14:05:29 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-On Tue, Jan 23, 2018 at 04:54:02PM +0000, Bart Van Assche wrote:
-> On Wed, 2018-01-24 at 00:49 +0800, Ming Lei wrote:
-> > On Tue, Jan 23, 2018 at 04:47:11PM +0000, Bart Van Assche wrote:
-> > > On Wed, 2018-01-24 at 00:41 +0800, Ming Lei wrote:
-> > > > Could you explain where to call call_rcu()?  call_rcu() can't be used in
-> > > > IO path at all.
-> > > 
-> > > Can you explain what makes you think that call_rcu() can't be used in the
-> > > I/O path? As you know call_rcu() invokes a function asynchronously. From
-> > > Documentation/RCU/Design/Requirements/Requirements.html:
-> > > 
-> > >   The <tt>call_rcu()</tt> function may be used in a number of
-> > >   situations where neither <tt>synchronize_rcu()</tt> nor
-> > >   <tt>synchronize_rcu_expedited()</tt> would be legal,
-> > >   including within preempt-disable code, <tt>local_bh_disable()</tt> code,
-> > >   interrupt-disable code, and interrupt handlers.
-> > 
-> > OK, suppose it is true, do you want to change most of STS_RESOURCE in
-> > all drivers to this way? Why can't we use the generic and simple approach
-> > in this patch?
-> 
-> Please reread my proposal. I did not propose to change any block drivers.
-> What I proposed is to change the blk_mq_delay_run_hw_queue() implementation
-> such that it uses call_rcu() instead of kblockd_mod_delayed_work_on().
-> That's a generic and simple approach.
+From: Quinn Tran <quinn.tran@cavium.com>
 
-How is that enough to fix the IO hang when driver returns STS_RESOURCE
-and the queue is idle? If you want to follow previous dm-rq's way of
-call blk_mq_delay_run_hw_queue() in .queue_rq(), the same trick need
-to be applied to other drivers too, right?
+This patch fixes memory corrpution while performing
+HBA Reset test.
 
-Unfortunately most of STS_RESOURCE don't use this trick, but they need
-to be handled.
+Following stack trace is seen
 
-The patch of 'blk-mq: introduce BLK_STS_DEV_RESOURCE' can fix all these
-cases.
+[  466.397219] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+[  466.433669] IP: [<ffffffffc06f5dd0>] qlt_free_session_done+0x260/0x5f0 [qla2xxx]
+[  466.467731] PGD 0
+[  466.476718] Oops: 0000 [#1] SMP
 
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+Hi Martin, 
+
+This patch fixes the crash for HBA reset test. From core dump analysis,
+memory corruption was discoverd during session cleanup. To prevent this
+memory corruption, driver needs to wait for session to be deleted and 
+all memory associated with the session released before it can relogin and 
+create new session.
+
+Please apply this patch to 4.16/scsi-queue at your earliest convenience.
+
+Thanks,
+Himanshu
+---
+ drivers/scsi/qla2xxx/qla_os.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 12ee6e02d146..afcb5567998a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3625,6 +3625,8 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	}
+ 	qla2x00_wait_for_hba_ready(base_vha);
+ 
++	qla2x00_wait_for_sess_deletion(base_vha);
++
+ 	/*
+ 	 * if UNLOAD flag is already set, then continue unload,
+ 	 * where it was set first.
 -- 
-Ming
+2.12.0
