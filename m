@@ -1,67 +1,246 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH 1/5] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Tue, 23 Jan 2018 08:17:02 -0800
-Message-ID: <54f0c19c-38aa-e788-f476-492e5a5734c9@wdc.com>
-References: <20180122033550.27855-1-ming.lei@redhat.com>
- <20180122033550.27855-2-ming.lei@redhat.com>
- <1516639793.2545.14.camel@sandisk.com> <20180123005728.GB4411@ming.t460p>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Wed, 24 Jan 2018 00:16:13 +0800
+Message-ID: <20180123161613.14214-1-ming.lei@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:13711 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbeAWQRD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2018 11:17:03 -0500
-In-Reply-To: <20180123005728.GB4411@ming.t460p>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:42672 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750994AbeAWQRH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jan 2018 11:17:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "loberman@redhat.com" <loberman@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Laurence Oberman <loberman@redhat.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 
+This status is returned from driver to block layer if device related
+resource is run out of, but driver can guarantee that IO dispatch will
+be triggered in future when the resource is available.
 
+This patch converts some drivers to use this return value. Meantime
+if driver returns BLK_STS_RESOURCE and S_SCHED_RESTART is marked, run
+queue after 10ms for avoiding IO hang.
 
-On 01/22/18 16:57, Ming Lei wrote:
-> Even though RCU lock is held during dispatch, preemption or interrupt
-> can happen too, so it is simply wrong to depend on the timing to make
-> sure __blk_mq_run_hw_queue() can see the request in this situation.
+Suggested-by: Jens Axboe <axboe@kernel.dk>
+Tested-by: Laurence Oberman <loberman@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: Laurence Oberman <loberman@redhat.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+V3:
+	- fix typo, and improvement document
+	- add tested-by tag
+V2:
+	- add comments on the new introduced status
+	- patch style fix
+	- both are suggested by Chritoph
 
-It is very unlikely that this race will ever be hit because that race 
-exists for less than one microsecond and the smallest timeout that can 
-be specified for delayed queue rerunning is one millisecond. Let's 
-address this race if anyone ever finds a way to hit it.
+ block/blk-core.c             |  1 +
+ block/blk-mq.c               | 19 +++++++++++++++----
+ drivers/block/null_blk.c     |  2 +-
+ drivers/block/virtio_blk.c   |  2 +-
+ drivers/block/xen-blkfront.c |  2 +-
+ drivers/md/dm-rq.c           |  4 ++--
+ drivers/scsi/scsi_lib.c      |  6 +++---
+ include/linux/blk_types.h    | 18 ++++++++++++++++++
+ 8 files changed, 42 insertions(+), 12 deletions(-)
 
->>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->>> index d9ca1dfab154..55be2550c555 100644
->>> --- a/drivers/scsi/scsi_lib.c
->>> +++ b/drivers/scsi/scsi_lib.c
->>> @@ -2030,9 +2030,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->>>   	case BLK_STS_OK:
->>>   		break;
->>>   	case BLK_STS_RESOURCE:
->>> -		if (atomic_read(&sdev->device_busy) == 0 &&
->>> -		    !scsi_device_blocked(sdev))
->>> -			blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
->>> +		if (atomic_read(&sdev->device_busy) ||
->>> +		    scsi_device_blocked(sdev))
->>> +			ret = BLK_STS_DEV_RESOURCE;
->>>   		break;
->>>   	default:
->>>   		/*
->>
->> The above introduces two changes that have not been mentioned in the
->> description of this patch:
->> - The queue rerunning delay is changed from 3 ms into 10 ms. Where is the
->>    explanation of this change? Does this change have a positive or negative
->>    performance impact?
-> 
-> How can that be a issue for SCSI? The rerunning delay is only triggered
-> when there isn't any in-flight requests in SCSI queue.
-
-That change will result in more scsi_queue_rq() calls and hence in 
-higher CPU usage. By how much the CPU usage is increased will depend on 
-the CPU time required by the LLD .queuecommand() callback if that 
-function gets invoked.
-
-Bart.
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a2005a485335..ac4789c5e329 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -145,6 +145,7 @@ static const struct {
+ 	[BLK_STS_MEDIUM]	= { -ENODATA,	"critical medium" },
+ 	[BLK_STS_PROTECTION]	= { -EILSEQ,	"protection" },
+ 	[BLK_STS_RESOURCE]	= { -ENOMEM,	"kernel resource" },
++	[BLK_STS_DEV_RESOURCE]	= { -ENOMEM,	"device resource" },
+ 	[BLK_STS_AGAIN]		= { -EAGAIN,	"nonblocking retry" },
+ 
+ 	/* device mapper special case, should not leak out: */
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 01f271d40825..55c52b9a0f30 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1169,6 +1169,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 	struct request *rq, *nxt;
+ 	bool no_tag = false;
+ 	int errors, queued;
++	blk_status_t ret = BLK_STS_OK;
+ 
+ 	if (list_empty(list))
+ 		return false;
+@@ -1181,7 +1182,6 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 	errors = queued = 0;
+ 	do {
+ 		struct blk_mq_queue_data bd;
+-		blk_status_t ret;
+ 
+ 		rq = list_first_entry(list, struct request, queuelist);
+ 		if (!blk_mq_get_driver_tag(rq, &hctx, false)) {
+@@ -1226,7 +1226,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 		}
+ 
+ 		ret = q->mq_ops->queue_rq(hctx, &bd);
+-		if (ret == BLK_STS_RESOURCE) {
++		if (ret == BLK_STS_RESOURCE || ret == BLK_STS_DEV_RESOURCE) {
+ 			/*
+ 			 * If an I/O scheduler has been configured and we got a
+ 			 * driver tag for the next request already, free it
+@@ -1257,6 +1257,8 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 	 * that is where we will continue on next queue run.
+ 	 */
+ 	if (!list_empty(list)) {
++		bool needs_restart;
++
+ 		spin_lock(&hctx->lock);
+ 		list_splice_init(list, &hctx->dispatch);
+ 		spin_unlock(&hctx->lock);
+@@ -1280,10 +1282,18 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 		 * - Some but not all block drivers stop a queue before
+ 		 *   returning BLK_STS_RESOURCE. Two exceptions are scsi-mq
+ 		 *   and dm-rq.
++		 *
++		 * If drivers return BLK_STS_RESOURCE and S_SCHED_RESTART
++		 * bit is set, run queue after 10ms for avoiding IO hang
++		 * because the queue may be idle and the RESTART mechanism
++		 * can't work any more.
+ 		 */
+-		if (!blk_mq_sched_needs_restart(hctx) ||
++		needs_restart = blk_mq_sched_needs_restart(hctx);
++		if (!needs_restart ||
+ 		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
+ 			blk_mq_run_hw_queue(hctx, true);
++		else if (needs_restart && (ret == BLK_STS_RESOURCE))
++			blk_mq_delay_run_hw_queue(hctx, 10);
+ 	}
+ 
+ 	return (queued + errors) != 0;
+@@ -1764,6 +1774,7 @@ static blk_status_t __blk_mq_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 		*cookie = new_cookie;
+ 		break;
+ 	case BLK_STS_RESOURCE:
++	case BLK_STS_DEV_RESOURCE:
+ 		__blk_mq_requeue_request(rq);
+ 		break;
+ 	default:
+@@ -1826,7 +1837,7 @@ static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+ 	hctx_lock(hctx, &srcu_idx);
+ 
+ 	ret = __blk_mq_try_issue_directly(hctx, rq, cookie, false);
+-	if (ret == BLK_STS_RESOURCE)
++	if (ret == BLK_STS_RESOURCE || ret == BLK_STS_DEV_RESOURCE)
+ 		blk_mq_sched_insert_request(rq, false, true, false);
+ 	else if (ret != BLK_STS_OK)
+ 		blk_mq_end_request(rq, ret);
+diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
+index 6655893a3a7a..287a09611c0f 100644
+--- a/drivers/block/null_blk.c
++++ b/drivers/block/null_blk.c
+@@ -1230,7 +1230,7 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd)
+ 				return BLK_STS_OK;
+ 			} else
+ 				/* requeue request */
+-				return BLK_STS_RESOURCE;
++				return BLK_STS_DEV_RESOURCE;
+ 		}
+ 	}
+ 
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 68846897d213..79908e6ddbf2 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -276,7 +276,7 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		/* Out of mem doesn't actually happen, since we fall back
+ 		 * to direct descriptors */
+ 		if (err == -ENOMEM || err == -ENOSPC)
+-			return BLK_STS_RESOURCE;
++			return BLK_STS_DEV_RESOURCE;
+ 		return BLK_STS_IOERR;
+ 	}
+ 
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index 891265acb10e..e126e4cac2ca 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -911,7 +911,7 @@ static blk_status_t blkif_queue_rq(struct blk_mq_hw_ctx *hctx,
+ out_busy:
+ 	blk_mq_stop_hw_queue(hctx);
+ 	spin_unlock_irqrestore(&rinfo->ring_lock, flags);
+-	return BLK_STS_RESOURCE;
++	return BLK_STS_DEV_RESOURCE;
+ }
+ 
+ static void blkif_complete_rq(struct request *rq)
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index d8519ddd7e1a..bf0b840645cc 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -408,7 +408,7 @@ static blk_status_t dm_dispatch_clone_request(struct request *clone, struct requ
+ 
+ 	clone->start_time = jiffies;
+ 	r = blk_insert_cloned_request(clone->q, clone);
+-	if (r != BLK_STS_OK && r != BLK_STS_RESOURCE)
++	if (r != BLK_STS_OK && r != BLK_STS_RESOURCE && r != BLK_STS_DEV_RESOURCE)
+ 		/* must complete clone in terms of original request */
+ 		dm_complete_request(rq, r);
+ 	return r;
+@@ -500,7 +500,7 @@ static int map_request(struct dm_rq_target_io *tio)
+ 		trace_block_rq_remap(clone->q, clone, disk_devt(dm_disk(md)),
+ 				     blk_rq_pos(rq));
+ 		ret = dm_dispatch_clone_request(clone, rq);
+-		if (ret == BLK_STS_RESOURCE) {
++		if (ret == BLK_STS_RESOURCE || ret == BLK_STS_DEV_RESOURCE) {
+ 			blk_rq_unprep_clone(clone);
+ 			tio->ti->type->release_clone_rq(clone);
+ 			tio->clone = NULL;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d9ca1dfab154..55be2550c555 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2030,9 +2030,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	case BLK_STS_OK:
+ 		break;
+ 	case BLK_STS_RESOURCE:
+-		if (atomic_read(&sdev->device_busy) == 0 &&
+-		    !scsi_device_blocked(sdev))
+-			blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
++		if (atomic_read(&sdev->device_busy) ||
++		    scsi_device_blocked(sdev))
++			ret = BLK_STS_DEV_RESOURCE;
+ 		break;
+ 	default:
+ 		/*
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index c5d3db0d83f8..730a8574d2b7 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -39,6 +39,24 @@ typedef u8 __bitwise blk_status_t;
+ 
+ #define BLK_STS_AGAIN		((__force blk_status_t)12)
+ 
++/*
++ * BLK_STS_DEV_RESOURCE: Block layer and block driver specific status,
++ * which is usually returned from driver to block layer in IO path.
++ *
++ * BLK_STS_DEV_RESOURCE is returned from driver to block layer if device
++ * related resource is run out of, but driver can guarantee that queue
++ * will be rerun in future for dispatching the current request when this
++ * resource is available.
++ *
++ * Difference with BLK_STS_RESOURCE:
++ * If driver isn't sure if the queue can be run again after this kind of
++ * resource is available, please return BLK_STS_RESOURCE, for example,
++ * when memory allocation, DMA Mapping or other system resource allocation
++ * fail and IO can't be submitted to device.
++ *
++ */
++#define BLK_STS_DEV_RESOURCE	((__force blk_status_t)13)
++
+ /**
+  * blk_path_error - returns true if error may be path related
+  * @error: status the request was completed with
+-- 
+2.9.5
