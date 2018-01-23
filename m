@@ -1,59 +1,92 @@
-From: weiping zhang <zwp10758@gmail.com>
-Subject: Re: [PATCH v2] scsi: sd: add new match array for cache_type
-Date: Tue, 23 Jan 2018 22:32:21 +0800
-Message-ID: <CAA70yB5fsJCLYKzQqbEgobzRPGc88mzDYhgSM-UUimNx_SxvMQ@mail.gmail.com>
-References: <20180118141928.GA28320@bogon.didichuxing.com> <yq17eseo9j6.fsf@oracle.com>
- <CAA70yB4EfEywgi-MTJg8b4jhGU_iOCH4UZe7vuA3WBjxz3Hw6g@mail.gmail.com> <yq11sihjucs.fsf@oracle.com>
+From: weiping zhang <zhangweiping@didichuxing.com>
+Subject: [PATCH v3] scsi: sd: add new match array for cache_type
+Date: Tue, 23 Jan 2018 22:44:44 +0800
+Message-ID: <20180123144439.GA15247@localhost.didichuxing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:35675 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751814AbeAWOcX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2018 09:32:23 -0500
-Received: by mail-wm0-f45.google.com with SMTP id r78so2335174wme.0
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2018 06:32:23 -0800 (PST)
-In-Reply-To: <yq11sihjucs.fsf@oracle.com>
+Received: from mx2.didichuxing.com ([36.110.17.22]:13294 "EHLO
+        BJEXCAS002.didichuxing.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751565AbeAWOo7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jan 2018 09:44:59 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: weiping zhang <zhangweiping@didichuxing.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-2018-01-23 8:23 GMT+08:00 Martin K. Petersen <martin.petersen@oracle.com>:
->
-> Hi Weiping,
->
->> currently, there are four combinations as following: "write through",
->> "none", "write back", "write back, no read (daft)"
->>
->> cache_type can control both write and read cache, but for "write
->> through" and "write back" we can not know clearly how to control the
->> read cache.
->
-> That's what I meant by using the term "arcane" and alluding to the fact
-> that this interface is not well enough documented.
->
->> I prefer use words like"w0r1", "w0r0", "w1r1", "w1r0", that "1" means
->> enable, "0" means disable. The user know clearly what they are doing
->> when typing these short words.
->
-> We can't change the existing interface without breaking stuff. We can
-> entertain adding stuff, but I do think that a better solution is to
-> document what's there so the effect of echoing each of the following
-> strings becomes crystal clear:
->
-OK, I'll add more detail comments for these words, but I prefer add new
-stuff like "w0r1", for old user script keep using "write back", for new script
-users can also use "w1r1".
+add user friendly command strings sd_wr_cache to enable/disable
+write&read cache. user can enable both write and read cache by one of
+the following commands:
 
-> static const char *sd_cache_types[] = {
->         "write through", "none", "write back",
->         "write back, no read (daft)"
-> };
->
-> I would also like to see the "temporary" string documented.
+echo w1r1 > cache_type
+echo "write back" > cache_type
 
-OK, add it in V3.
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+sd_wr_cache[] = {"w0r1", "w0r0", "w1r1", "w1r0"};
+for sd_wr_cache 0 means disable, 1 means enable.
+
+Encoding                          | WCE RCD | Write_cache Read_cache
+--------------------------------------------------------------------
+write through              / w0r1 | 0   0   | off         on
+none                       / w0r0 | 0   1   | off         off
+write back                 / w1r1 | 1   0   | on          on
+write back, no read (daft) / w1r0 | 1   1   | on          off
+
+Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
+---
+ drivers/scsi/sd.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a028ab3..ce2fda5 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -134,10 +134,20 @@ static DEFINE_MUTEX(sd_ref_mutex);
+ static struct kmem_cache *sd_cdb_cache;
+ static mempool_t *sd_cdb_pool;
+ 
++/*
++ * Encoding                          | WCE RCD | Write_cache Read_cache
++ * --------------------------------------------------------------------
++ * write through              / w0r1 | 0   0   | off         on
++ * none                       / w0r0 | 0   1   | off         off
++ * write back                 / w1r1 | 1   0   | on          on
++ * write back, no read (daft) / w1r0 | 1   1   | on          off
++ */
+ static const char *sd_cache_types[] = {
+ 	"write through", "none", "write back",
+ 	"write back, no read (daft)"
+ };
++/* 0:disable, 1:enable */
++static const char * const sd_wr_cache[] = {"w0r1", "w0r0", "w1r1", "w1r0"};
+ 
+ static void sd_set_flush_flag(struct scsi_disk *sdkp)
+ {
+@@ -172,6 +182,10 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 		 * it's not worth the risk */
+ 		return -EINVAL;
+ 
++	/*
++	 * for "temporary", we only change request_queue's flag, not send
++	 * any command to disk, so actually disk'cache dosen't changed yet.
++	 */
+ 	if (strncmp(buf, temp, sizeof(temp) - 1) == 0) {
+ 		buf += sizeof(temp) - 1;
+ 		sdkp->cache_override = 1;
+@@ -180,8 +194,11 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 	}
+ 
+ 	ct = sysfs_match_string(sd_cache_types, buf);
+-	if (ct < 0)
+-		return -EINVAL;
++	if (ct < 0) {
++		ct = sysfs_match_string(sd_wr_cache, buf);
++		if (ct < 0)
++			return -EINVAL;
++	}
+ 
+ 	rcd = ct & 0x01 ? 1 : 0;
+ 	wce = (ct & 0x02) && !sdkp->write_prot ? 1 : 0;
+-- 
+2.9.4
