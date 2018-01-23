@@ -1,57 +1,50 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] Remove init_rcu_head() and destroy_rcu_head() calls
-Date: Tue, 23 Jan 2018 15:48:21 -0800
-Message-ID: <20180123234821.25565-1-bart.vanassche@wdc.com>
+Subject: [PATCH] scsi_dh: Document alua_rtpg_queue() arguments
+Date: Tue, 23 Jan 2018 15:50:03 -0800
+Message-ID: <20180123235003.25971-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:22968 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751993AbeAWXsV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2018 18:48:21 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:8955 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752076AbeAWXuE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2018 18:50:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-According to Documentation/RCU/Design/Requirements/Requirements.html
-calling these functions is not necessary for dynamically allocated
-objects:
+Since commit 3a025e1d1c2e ("Add optional check for bad kernel-doc
+comments") building with W=1 causes warnings to appear for issues
+in kernel-doc headers. This patch avoids that the following warnings
+are reported when building with W=1:
 
-        The corresponding <tt>rcu_head</tt> structures that are
-        dynamically allocated are automatically tracked, but
-        <tt>rcu_head</tt> structures allocated on the stack
-        must be initialized with <tt>init_rcu_head_on_stack()</tt>
-        and cleaned up with <tt>destroy_rcu_head_on_stack()</tt>.
-        Similarly, statically allocated non-stack <tt>rcu_head</tt>
-        structures must be initialized with <tt>init_rcu_head()</tt>
-        and cleaned up with <tt>destroy_rcu_head()</tt>.
-
-Hence remove the calls to these functions from the SCSI core.
+drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'pg'
+drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'sdev'
+drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'qdata'
+drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'force'
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/hosts.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index a0a7e4ff255c..7279d3d2e941 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -334,8 +334,6 @@ static void scsi_host_dev_release(struct device *dev)
- 	if (shost->work_q)
- 		destroy_workqueue(shost->work_q);
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 022e421c2185..4b44325d1a82 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -876,6 +876,11 @@ static void alua_rtpg_work(struct work_struct *work)
  
--	destroy_rcu_head(&shost->rcu);
--
- 	if (shost->shost_state == SHOST_CREATED) {
- 		/*
- 		 * Free the shost_dev device name here if scsi_host_alloc()
-@@ -404,7 +402,6 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	INIT_LIST_HEAD(&shost->starved_list);
- 	init_waitqueue_head(&shost->host_wait);
- 	mutex_init(&shost->scan_mutex);
--	init_rcu_head(&shost->rcu);
- 
- 	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
- 	if (index < 0)
+ /**
+  * alua_rtpg_queue() - cause RTPG to be submitted asynchronously
++ * @pg: ALUA port group associated with @sdev.
++ * @sdev: SCSI device for which to submit an RTPG.
++ * @qdata: Information about the callback to invoke after the RTPG.
++ * @force: Whether or not to submit an RTPG if a work item that will submit an
++ *         RTPG already has been scheduled.
+  *
+  * Returns true if and only if alua_rtpg_work() will be called asynchronously.
+  * That function is responsible for calling @qdata->fn().
 -- 
 2.15.1
