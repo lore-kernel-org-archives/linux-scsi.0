@@ -1,29 +1,52 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH] scsi: remove extra white space at the end of the line
-Date: Tue, 23 Jan 2018 00:41:02 +0100
-Message-ID: <2f6e0605-86cb-3f90-96a1-7d1f90871712@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] scsi: sd: add new match array for cache_type
+Date: Mon, 22 Jan 2018 19:23:47 -0500
+Message-ID: <yq11sihjucs.fsf@oracle.com>
+References: <20180118141928.GA28320@bogon.didichuxing.com>
+        <yq17eseo9j6.fsf@oracle.com>
+        <CAA70yB4EfEywgi-MTJg8b4jhGU_iOCH4UZe7vuA3WBjxz3Hw6g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:43176 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751031AbeAVXlF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 18:41:05 -0500
-Received: by mail-wr0-f181.google.com with SMTP id t16so10537361wrc.10
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2018 15:41:04 -0800 (PST)
-Content-Language: en-GB
+Received: from aserp2130.oracle.com ([141.146.126.79]:38084 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbeAWAYA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 19:24:00 -0500
+In-Reply-To: <CAA70yB4EfEywgi-MTJg8b4jhGU_iOCH4UZe7vuA3WBjxz3Hw6g@mail.gmail.com>
+        (weiping zhang's message of "Fri, 19 Jan 2018 12:46:13 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: weiping zhang <zwp10758@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, weiping zhang <zhangweiping@didichuxing.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-Jason Yan wrote:
 
-> My editor always try to remove the extra white space at the end of the
-> line when I make some changes. I'm tired of adjusting them manually.
+Hi Weiping,
 
-A real (trailing) clean up is done with:
-find -type f -exec sed -i 's/[[:cntrl:]]\+$//' {} +
+> currently, there are four combinations as following: "write through",
+> "none", "write back", "write back, no read (daft)"
+>
+> cache_type can control both write and read cache, but for "write
+> through" and "write back" we can not know clearly how to control the
+> read cache.
 
-Trailing spaces, tabs and ^L were deleted from drivers/scsi.
-There is crap in the whole linux tree.
+That's what I meant by using the term "arcane" and alluding to the fact
+that this interface is not well enough documented.
+
+> I prefer use words like"w0r1", "w0r0", "w1r1", "w1r0", that "1" means
+> enable, "0" means disable. The user know clearly what they are doing
+> when typing these short words.
+
+We can't change the existing interface without breaking stuff. We can
+entertain adding stuff, but I do think that a better solution is to
+document what's there so the effect of echoing each of the following
+strings becomes crystal clear:
+
+static const char *sd_cache_types[] = {
+        "write through", "none", "write back",
+        "write back, no read (daft)"
+};
+
+I would also like to see the "temporary" string documented.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
