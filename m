@@ -1,33 +1,46 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] qla2xxx: Fix logo flag for qlt_free_session_done()
-Date: Mon, 22 Jan 2018 20:08:10 -0500
-Message-ID: <yq1607tidqd.fsf@oracle.com>
-References: <20180122200420.19516-1-himanshu.madhani@cavium.com>
-        <20180122200420.19516-3-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54844 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751253AbeAWBIQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 20:08:16 -0500
-In-Reply-To: <20180122200420.19516-3-himanshu.madhani@cavium.com> (Himanshu
-        Madhani's message of "Mon, 22 Jan 2018 12:04:20 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH 1/1] scsi: ufs: Allowing power mode change
+Date: Tue, 23 Jan 2018 17:32:00 +0530
+Message-ID: <1516708920-20620-1-git-send-email-asutoshd@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: subhashj@quicinc.com, cang@codeaurora.org, vivek.gautam@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Yaniv Gardi <ygardi@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
+From: Yaniv Gardi <ygardi@codeaurora.org>
 
-Himanshu,
+Due to M-PHY issues, moving from HS to any other mode or gear or
+even Hibern8 causes some un-predicted behavior of the device.
+This patch fixes this issues.
 
-> Commit 3515832cc61467bfb87191a30401de1700e9956a fixed the target
-> re-login after session relogin is complete, but missed out the
-> qlt_free_session_done() path.
->
-> This patch clears send_els_logo flag in qlt_free_session_done() callback.
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Applied to 4.16/scsi-queue. And please run checkpatch before sending.
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 011c336..d74d529 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4167,9 +4167,13 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
+ 			goto out;
+ 	} while (ret && retries--);
+ 
+-	if (ret)
++	if (ret) {
+ 		/* failed to get the link up... retire */
+ 		goto out;
++	} else {
++		ufshcd_dme_set(hba, UIC_ARG_MIB(TX_LCC_ENABLE), 0);
++		ufshcd_dme_set(hba, UIC_ARG_MIB(TX_LCC_ENABLE), 1);
++	}
+ 
+ 	if (link_startup_again) {
+ 		link_startup_again = false;
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
