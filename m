@@ -1,29 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qedi: Drop cqe response during connection recovery
-Date: Mon, 22 Jan 2018 19:24:40 -0500
-Message-ID: <yq1wp09ifqv.fsf@oracle.com>
-References: <20180119065209.30927-1-manish.rangankar@cavium.com>
+Subject: Re: [PATCH 2/5] scsi: Add VENDOR_SPECIFIC sense code definitions
+Date: Mon, 22 Jan 2018 19:27:44 -0500
+Message-ID: <yq1po61iflr.fsf@oracle.com>
+References: <20180119151113.80768-1-hare@suse.de>
+        <20180119151113.80768-3-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38648 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751038AbeAWAYv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 19:24:51 -0500
-In-Reply-To: <20180119065209.30927-1-manish.rangankar@cavium.com> (Manish
-        Rangankar's message of "Thu, 18 Jan 2018 22:52:09 -0800")
+Received: from aserp2120.oracle.com ([141.146.126.78]:42460 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbeAWA2A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2018 19:28:00 -0500
+In-Reply-To: <20180119151113.80768-3-hare@suse.de> (Hannes Reinecke's message
+        of "Fri, 19 Jan 2018 16:11:10 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Manish Rangankar <manish.rangankar@cavium.com>
-Cc: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
 
-Manish,
+Hannes,
 
-> We get stuck in the loop when firmware sends a cqe response
-> during connection recovery.
+> Some older devices will return vendor specific sense codes, so
+> we should be adding a definition for it.
 
-Applied to 4.16/scsi-queue. Thank you!
+Applied to 4.16/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
