@@ -1,121 +1,58 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 17/19] lpfc: Fix nonrecovery of NVME controller after cable swap.
-Date: Wed, 24 Jan 2018 14:45:46 -0800
-Message-ID: <20180124224548.9530-18-jsmart2021@gmail.com>
+Subject: [PATCH 10/19] lpfc: Fix soft lockup in lpfc worker thread during LIP testing
+Date: Wed, 24 Jan 2018 14:45:39 -0800
+Message-ID: <20180124224548.9530-11-jsmart2021@gmail.com>
 References: <20180124224548.9530-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:35505 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932800AbeAXWqU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 17:46:20 -0500
-Received: by mail-qt0-f193.google.com with SMTP id g14so14672094qti.2
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 14:46:20 -0800 (PST)
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:45264 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933045AbeAXWqM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 17:46:12 -0500
+Received: by mail-qt0-f194.google.com with SMTP id x27so14634390qtm.12
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 14:46:11 -0800 (PST)
 In-Reply-To: <20180124224548.9530-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-In a test that is doing large numbers of cable swaps on the target,
-the nvme controllers wouldn't reconnect.
+During link bounce testing in a point-to-point topology, the
+host may enter a soft lockup on the lpfc_worker thread:
+    Call Trace:
+     lpfc_work_done+0x1f3/0x1390 [lpfc]
+     lpfc_do_work+0x16f/0x180 [lpfc]
+     kthread+0xc7/0xe0
+     ret_from_fork+0x3f/0x70
 
-During the cable swaps, the targets n_port_id would change. This
-information was passed to the nvme-fc transport, in the new remoteport
-registration. However, the nvme-fc transport didn't update the n_port_id
-value in the remoteport struct when it reused an existing structure.
-Later, when a new association was attempted on the remoteport, the
-driver's NVME LS routine would use the stale n_port_id from the remoteport
-struct to address the LS. As the device is no longer at that address,
-the LS would go into never never land.
+The driver was simultaneously setting a combination of flags
+that caused lpfc_do_work()to effectively spin between slow path
+work and new event data, causing the lockup.
 
-Separately, the nvme-fc transport will be corrected to update the
-n_port_id value on a re-registration.
-
-However, for now, there's no reason to use the transports values.
-The private pointer points to the drivers node structure and the
-node structure is up to date. Therefore, revise the LS routine to
-use the drivers data structures for the LS. Augmented the debug
-message for better debugging in the future.
-
-Also removed a duplicate if check that seems to have slipped in.
+Ensure in the typical wq completions, that new event data flags
+are set if the slow path flag is running. The slow path will
+eventually reschedule the wq handling.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 92643ffa79c3..fc6d85f0bfcf 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -241,10 +241,11 @@ lpfc_nvme_cmpl_gen_req(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 	ndlp = (struct lpfc_nodelist *)cmdwqe->context1;
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			 "6047 nvme cmpl Enter "
--			 "Data %p DID %x Xri: %x status %x cmd:%p lsreg:%p "
--			 "bmp:%p ndlp:%p\n",
-+			 "Data %p DID %x Xri: %x status %x reason x%x cmd:%p "
-+			 "lsreg:%p bmp:%p ndlp:%p\n",
- 			 pnvme_lsreq, ndlp ? ndlp->nlp_DID : 0,
- 			 cmdwqe->sli4_xritag, status,
-+			 (wcqe->parameter & 0xffff),
- 			 cmdwqe, pnvme_lsreq, cmdwqe->context3, ndlp);
- 
- 	lpfc_nvmeio_data(phba, "NVME LS  CMPL: xri x%x stat x%x parm x%x\n",
-@@ -419,6 +420,7 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- {
- 	int ret = 0;
- 	struct lpfc_nvme_lport *lport;
-+	struct lpfc_nvme_rport *rport;
- 	struct lpfc_vport *vport;
- 	struct lpfc_nodelist *ndlp;
- 	struct ulp_bde64 *bpl;
-@@ -437,19 +439,18 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 	 */
- 
- 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
-+	rport = (struct lpfc_nvme_rport *)pnvme_rport->private;
- 	vport = lport->vport;
- 
- 	if (vport->load_flag & FC_UNLOADING)
- 		return -ENODEV;
- 
--	if (vport->load_flag & FC_UNLOADING)
--		return -ENODEV;
--
--	ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
-+	/* Need the ndlp.  It is stored in the driver's rport. */
-+	ndlp = rport->ndlp;
- 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
--				 "6051 DID x%06x not an active rport.\n",
--				 pnvme_rport->port_id);
-+				 "6051 Remoteport %p, rport has invalid ndlp. "
-+				 "Failing LS Req\n", pnvme_rport);
- 		return -ENODEV;
- 	}
- 
-@@ -500,8 +501,9 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 
- 	/* Expand print to include key fields. */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--			 "6149 ENTER.  lport %p, rport %p lsreq%p rqstlen:%d "
--			 "rsplen:%d %pad %pad\n",
-+			 "6149 Issue LS Req to DID 0x%06x lport %p, rport %p "
-+			 "lsreq%p rqstlen:%d rsplen:%d %pad %pad\n",
-+			 ndlp->nlp_DID,
- 			 pnvme_lport, pnvme_rport,
- 			 pnvme_lsreq, pnvme_lsreq->rqstlen,
- 			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
-@@ -517,7 +519,7 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 				ndlp, 2, 30, 0);
- 	if (ret != WQE_SUCCESS) {
- 		atomic_inc(&lport->xmt_ls_err);
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
-+		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
- 				 "6052 EXIT. issue ls wqe failed lport %p, "
- 				 "rport %p lsreq%p Status %x DID %x\n",
- 				 pnvme_lport, pnvme_rport, pnvme_lsreq,
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index b159a5c4e388..9265906d956e 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -696,8 +696,9 @@ lpfc_work_done(struct lpfc_hba *phba)
+ 		      phba->hba_flag & HBA_SP_QUEUE_EVT)) {
+ 		if (pring->flag & LPFC_STOP_IOCB_EVENT) {
+ 			pring->flag |= LPFC_DEFERRED_RING_EVENT;
+-			/* Set the lpfc data pending flag */
+-			set_bit(LPFC_DATA_READY, &phba->data_flags);
++			/* Preserve legacy behavior. */
++			if (!(phba->hba_flag & HBA_SP_QUEUE_EVT))
++				set_bit(LPFC_DATA_READY, &phba->data_flags);
+ 		} else {
+ 			if (phba->link_state >= LPFC_LINK_UP ||
+ 			    phba->link_flag & LS_MDS_LOOPBACK) {
 -- 
 2.13.1
