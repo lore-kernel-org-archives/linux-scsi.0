@@ -1,41 +1,53 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 18/19] lpfc: update driver version to 11.4.0.7
-Date: Wed, 24 Jan 2018 14:45:47 -0800
-Message-ID: <20180124224548.9530-19-jsmart2021@gmail.com>
-References: <20180124224548.9530-1-jsmart2021@gmail.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: qla2xxx UBSAN warning in 4.14-rc1
+Date: Thu, 25 Jan 2018 00:18:17 +0200 (EET)
+Message-ID: <alpine.LRH.2.21.1801250012070.28967@math.ut.ee>
+References: <alpine.LRH.2.21.1709181335450.628@math.ut.ee> <1516828413.3987.18.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:46474 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933059AbeAXWqX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 17:46:23 -0500
-Received: by mail-qt0-f196.google.com with SMTP id o35so14611657qtj.13
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 14:46:23 -0800 (PST)
-In-Reply-To: <20180124224548.9530-1-jsmart2021@gmail.com>
+Received: from smtp1.it.da.ut.ee ([193.40.5.66]:53954 "EHLO smtp1.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932845AbeAXWq5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Jan 2018 17:46:57 -0500
+In-Reply-To: <1516828413.3987.18.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>
 
-Update the driver version to 11.4.0.7
+> > Hello, I decided to widen the coverage of my kernel testbed and put some 
+> > FC cards into servers. This one is a PCI-X QLA2340 in HP Proliant DL 380 
+> > G4 (first 64-bit generation of Proliants). I got a UBSAN warning from 
+> > qla2xxx before probing for the firmware.
+> 
+> Would it be possible for you to test the (completely untested) patch below?
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It compiles without warnings and the driver loads without warnings.
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index c232bf0e8998..6f4092cb903e 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+Meanwhile I tried the following patch, also successfully.
+
+However, the same problem is present in qla24xx_mbx_completion (and can 
+also be trivially patched over).
+
+I did not understand the logic of what's goind on with mailboxes - there 
+seem to be up to 32 of them and for some reason, a bitmask is used for 
+iterating over them, with mboxes = ha->mcp->in_mb filtering out some 
+mailboxes, and in_mb bitmap value comes from firmware?
+
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 2fd79129bb2a..7868930ae1c8 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -272,7 +272,7 @@ qla2x00_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
  
--#define LPFC_DRIVER_VERSION "11.4.0.6"
-+#define LPFC_DRIVER_VERSION "11.4.0.7"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
+ 	/* Read all mbox registers? */
+-	mboxes = (1 << ha->mbx_count) - 1;
++	mboxes = (1ULL << ha->mbx_count) - 1;
+ 	if (!ha->mcp)
+ 		ql_dbg(ql_dbg_async, vha, 0x5001, "MBX pointer ERROR.\n");
+ 	else
+
 -- 
-2.13.1
+Meelis Roos (mroos@linux.ee)
