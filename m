@@ -1,61 +1,60 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [LSF/MM TOPIC] Patch Submission process and Handling Internal
- Conflict
-Date: Wed, 24 Jan 2018 19:26:20 +0000
-Message-ID: <1516821978.3987.8.camel@wdc.com>
-References: <1516820744.3073.30.camel@HansenPartnership.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: qla2xxx UBSAN warning in 4.14-rc1
+Date: Wed, 24 Jan 2018 22:35:18 +0200 (EET)
+Message-ID: <alpine.LRH.2.21.1801242234360.28967@math.ut.ee>
+References: <alpine.LRH.2.21.1709181335450.628@math.ut.ee> <79E0683A-42C7-4784-9B6A-1F7C120CA69A@cavium.com> <alpine.LRH.2.21.1711091058150.7113@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1516820744.3073.30.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <1993780F844C1448B784847B6C3B1795@namprd04.prod.outlook.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:38967 "EHLO smtp2.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932072AbeAXUfW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Jan 2018 15:35:22 -0500
+In-Reply-To: <alpine.LRH.2.21.1711091058150.7113@math.ut.ee>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gV2VkLCAyMDE4LTAxLTI0IGF0IDExOjA1IC0wODAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
-DQo+IDIuIEhhbmRsaW5nIEludGVybmFsIENvbmZsaWN0DQo+IA0KPiBNeSBvYnNlcnZhdGlvbiBo
-ZXJlIGlzIHRoYXQgYWN0dWFsbHkgbW9zdCBjb25mbGljdCBpcyBnZW5lcmF0ZWQgYnkgdGhlDQo+
-IHJldmlldyBwcm9jZXNzIChJIGtub3csIGlmIHdlIGluY3JlYXNlIHJldmlld3MgYXMgSSBwcm9w
-b3NlIGluIDEuIHdlJ2xsDQo+IGluY3JlYXNlIGNvbmZsaWN0IG9uIHRoZSBsaXN0cyBvbiB0aGUg
-YmFzaXMgb2YgdGhpcyBvYnNlcnZhdGlvbiksIHNvDQo+IEkndmUgYmVlbiB0aGlua2luZyBhYm91
-dCB3YXlzIHRvIGRlLWVzY2FsYXRlIGl0LiAgVGhlIHByaW5jaXBsZSBpc3N1ZQ0KPiBpcyB0aGF0
-IGEgcmV2aWV3IHdoaWNoIGRvZXNuJ3QganVzdCBzYXkgdGhlIHBhdGNoIGlzIGZpbmUgKG9yIGZp
-bmUNCj4gZXhjZXB0IGZvciBuaXRwaWNrcykgY2FuIGJlIHRha2VuIGFzIGNyaXRpY2lzbSBhbmQg
-Y3JpdGljaXNtIGlzIG9mdGVuDQo+IHByb2Nlc3NlZCBwZXJzb25hbGx5LiAgVGhlIHdheSB5b3Ug
-cGhyYXNlIGNyaXRpY2lzbSBjYW4gaGF2ZSBhIGdyZWF0DQo+IGJlYXJpbmcgb24gdGhlIGFtb3Vu
-dCBvZiBwZXJzb25hbCBpbnN1bHQgdGFrZW4gYnkgdGhlIG90aGVyIHBhcnR5Lg0KPiAgQ29ybnkg
-YXMgaXQgc291bmRzLCB0aGUgMGRheSBib3QgcmVzcG9uc2UgIkhpIFosIEkgbG92ZSB5b3VyIHBh
-dGNoIQ0KPiBQZXJoYXBzIHNvbWV0aGluZyB0byBpbXByb3ZlOiIgaXMgc3BlY2lmaWNhbGx5IHRh
-cmdldHRlZCBhdCB0aGlzDQo+IHByb2JsZW0gYW5kIHNlZW1zIGFjdHVhbGx5IHRvIHdvcmsuICBJ
-IHRoaW5rIHdlIGNvdWxkIGFsbCBiZW5lZml0IGZyb20NCj4gZGlzY3Vzc2luZyBob3cgdG8gZ2l2
-ZSBhbmQgcmVjZWl2ZSBjcml0aWNpc20gaW4gdGhlIGZvcm0gb2YgcGF0Y2gNCj4gcmV2aWV3cyBy
-ZXNwb25zaWJseSwgZXNwZWNpYWxseSBhcyBub3QgZXZlcnlvbmUncyBuYXRpdmUgbGFuZ3VhZ2Ug
-aW4NCj4gRW5nbGlzaCBhbmQgY2VydGFpbiBjb21tb24gbGluZ3Vpc3RpYyBwaHJhc2luZ3MgaW4g
-b3RoZXIgbGFuZ3VhZ2VzIGNhbg0KPiBjb21lIG9mZiBhcyBydWRlIHdoZW4gZGlyZWN0bHkgdHJh
-bnNsYXRlZCB0byBFbmdsaXNoIChSdXNzaWFuIHNwcmluZ3MNCj4gaW1tZWRpYXRlbHkgdG8gbWlu
-ZCBmb3Igc29tZSByZWFzb24gaGVyZSkuICBBbHNvIE5vdGUsIEkgdGhpbmsgZml4aW5nDQo+IHRo
-ZSByZXZpZXcgcHJvYmxlbSB3b3VsZCBzb2x2ZSBtb3N0IG9mIHRoZSBpc3N1ZXMsIHNvIEknbSBu
-b3QgcHJvcG9zaW5nDQo+IGFueXRoaW5nIG1vcmUgZm9ybWFsIGxpa2UgdGhlIGNvZGUgb2YgY29u
-ZmxpY3Qgc3R1ZmYgaW4gdGhlIG1haW4NCj4ga2VybmVsLg0KPiANCj4gV2UgY291bGQgbHVtcCBi
-b3RoIG9mIHRoZXNlIHVuZGVyIGEgc2luZ2xlICJDb21tdW5pdHkgRGlzY3Vzc2lvbiIgdG9waWMN
-Cj4gaWYgdGhlIG9yZ2FuaXplcnMgcHJlZmVyIC4uLiBlc3BlY2lhbGx5IGlmIGFueW9uZSBoYXMg
-YW55IG90aGVyDQo+IGNvbW11bml0eSB0eXBlIGlzc3VlcyB0aGV5J2QgbGlrZSB0byBicmluZyB1
-cC4NCg0KSGVsbG8gSmFtZXMsDQoNCkhvdyBhYm91dCBkaXNjdXNzaW5nIHRoZSBmb2xsb3dpbmcg
-dHdvIGFkZGl0aW9uYWwgdG9waWNzIGR1cmluZyB0aGUgc2FtZSBvcg0KYW5vdGhlciBzZXNzaW9u
-Og0KKiBXZSBhbGwgd2FudCBhIGNvbmNlbnN1cyBhYm91dCB0aGUgY29kZSBhbmQgdGhlIGFsZ29y
-aXRobXMgaW4gdGhlIExpbnV4DQogIGtlcm5lbC4gSG93ZXZlciwgc29tZSBjb250cmlidXRvcnMg
-YXJlIG5vdCBpbnRlcmVzdGVkIGluIHRyeWluZyB0byBzdHJpdmUNCiAgdG93YXJkcyBhIGNvbmNl
-bnN1cy4gSWYgc29tZSBjb250cmlidXRvcnMgZS5nLiByZWNlaXZlIGEgcmVxdWVzdCB0byByZXdv
-cmsNCiAgdGhlaXIgcGF0Y2hlcywgaWYgdGhleSBkb24ndCBsaWtlIHRoYXQgcmVxdWVzdCBhbmQg
-aWYgdGhlIHJldmlld2VyIGlzDQogIHdvcmtpbmcgZm9yIHRoZSBzYW1lIGVtcGxveWVyIHNvbWV0
-aW1lcyB0aGV5IHRyeSB0byB1c2UgdGhlIGNvcnBvcmF0ZQ0KICBoaWVyYXJjaHkgdG8gbWFrZSB0
-aGUgcmV2aWV3ZXIgc2h1dCB1cC4gSSB0aGluayB0aGlzIGlzIGJlaGF2aW9yIHRoYXQgd29ya3MN
-CiAgYWdhaW5zdCB0aGUgbG9uZy10ZXJtIGludGVyZXN0cyBvZiB0aGUgTGludXgga2VybmVsLg0K
-KiBTb21lIG90aGVyIGNvbnRyaWJ1dG9ycyBhcmUgbm90IGludGVyZXN0ZWQgaW4gYWNoaWV2aW5n
-IGEgY29uc2Vuc3VzIGFuZCBkbw0KICBub3QgYXR0ZW1wdCB0byBhZGRyZXNzIHJldmlld2VyIGZl
-ZWRiYWNrIGJ1dCBpbnN0ZWFkIGtlZXAgYXJndWluZyBvciBkbyB3aGF0DQogIHRoZXkgY2FuIHRv
-IGluc3VsdCB0aGUgcmV2aWV3ZXIuDQoNClRoYW5rcywNCg0KQmFydC4=
+> Hello again.
+
+And again...
+> 
+> > > On Sep 18, 2017, at 3:49 AM, Meelis Roos <mroos@linux.ee> wrote:
+> > > 
+> > > Hello, I decided to widen the coverage of my kernel testbed and put some 
+> > > FC cards into servers. This one is a PCI-X QLA2340 in HP Proliant DL 380 
+> > > G4 (first 64-bit generation of Proliants). I got a UBSAN warning from 
+> > > qla2xxx before probing for the firmware.
+> > > 
+> > > This is reproducible with or without firmware being available.
+> > > 
+> > > [    3.905570] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.01-k.
+> > > [    3.905977] qla2xxx 0000:06:02.0: PCI IRQ 78 -> rerouted to legacy IRQ 18
+> > > [    3.906172] qla2xxx [0000:06:02.0]-001d: : Found an ISP2312 irq 18 iobase 0xffffc90000139000.
+> > > [...]
+> > > [    4.180117] ================================================================================
+> > > [    4.180300] UBSAN: Undefined behaviour in drivers/scsi/qla2xxx/qla_isr.c:275:14
+> > > [    4.180464] shift exponent 32 is too large for 32-bit type 'int'
+> > > [    4.180576] CPU: 0 PID: 138 Comm: systemd-udevd Not tainted 4.14.0-rc1-00009-g0666f560b71b #27
+> > > [    4.180741] Hardware name: HP ProLiant DL380 G4, BIOS P51 07/19/2007
+> > > [    4.180849] Call Trace:
+> > > [    4.180961]  dump_stack+0x4e/0x6c
+> > > [    4.181072]  ubsan_epilogue+0xd/0x3b
+> > > [    4.181179]  __ubsan_handle_shift_out_of_bounds+0x112/0x14c
+> > > [    4.181290]  ? try_to_del_timer_sync+0x44/0x68
+> > > [    4.181440]  qla2x00_mbx_completion+0x1c5/0x25d [qla2xxx]
+> > > [    4.182683]  qla2300_intr_handler+0x1ea/0x3bb [qla2xxx]
+> > > [    4.182827]  qla2x00_mailbox_command+0x77b/0x139a [qla2xxx]
+> 
+> [...]
+> 
+> > we’ll take a look at this
+> 
+> How is it going? 4.14 is almost here but it is still unfixed?
+
+4.15 is almost here but nothing seems to have chanmged?
+
+-- 
+Meelis Roos (mroos@linux.ee)
