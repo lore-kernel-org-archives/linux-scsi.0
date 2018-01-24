@@ -1,241 +1,109 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 08/19] lpfc: Fix RQ empty firmware trap
-Date: Wed, 24 Jan 2018 14:45:37 -0800
-Message-ID: <20180124224548.9530-9-jsmart2021@gmail.com>
+Subject: [PATCH 13/19] lpfc: Fix SCSI io host reset causing kernel crash
+Date: Wed, 24 Jan 2018 14:45:42 -0800
+Message-ID: <20180124224548.9530-14-jsmart2021@gmail.com>
 References: <20180124224548.9530-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:42977 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932800AbeAXWqI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 17:46:08 -0500
-Received: by mail-qt0-f196.google.com with SMTP id c2so14618748qtn.9
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 14:46:08 -0800 (PST)
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:38614 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932294AbeAXWqQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 17:46:16 -0500
+Received: by mail-qt0-f193.google.com with SMTP id z10so14662182qti.5
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 14:46:15 -0800 (PST)
 In-Reply-To: <20180124224548.9530-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-When nvme target deferred receive logic waits for exchange
-resources, the corresponding receive buffer is not replenished
-with the hardware. This can result in a lack of asynchronous
-receive buffer resources in the hardware, resulting in a
-"2885 Port Status Event: ... error 1=0x52004a01 ..." message.
+During SCSI error handling escalation to host reset, the SCSI io
+routines were moved off the txcmplq, but the individual io's
+ON_CMPLQ flag wasn't cleared.  Thus, a background thread saw the
+io and attempted to access it as if on the txcmplq.
 
-Correct by replenishing the buffer whenenver the deferred
-logic kicks in.  Update corresponding debug messages and
-statistics as well.
+Clear the flag upon removal.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c  |  6 ++++++
- drivers/scsi/lpfc/lpfc_mem.c   |  8 ++++++--
- drivers/scsi/lpfc/lpfc_nvmet.c | 31 +++++++++++++++++++++----------
- drivers/scsi/lpfc/lpfc_nvmet.h |  7 +++++--
- drivers/scsi/lpfc/lpfc_sli.c   | 12 ++++++++++++
- 5 files changed, 50 insertions(+), 14 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |  4 ++++
+ drivers/scsi/lpfc/lpfc_sli.c  | 13 ++++++++++++-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index d188fb565a32..91df2b4e9fce 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -259,6 +259,12 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 				atomic_read(&tgtp->xmt_abort_rsp),
- 				atomic_read(&tgtp->xmt_abort_rsp_error));
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 851d4e889042..7fc2db968379 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -958,6 +958,7 @@ lpfc_hba_clean_txcmplq(struct lpfc_hba *phba)
+ 	struct lpfc_sli_ring *pring;
+ 	LIST_HEAD(completions);
+ 	int i;
++	struct lpfc_iocbq *piocb, *next_iocb;
  
-+		len += snprintf(buf + len, PAGE_SIZE - len,
-+				"DELAY: ctx %08x  fod %08x wqfull %08x\n",
-+				atomic_read(&tgtp->defer_ctx),
-+				atomic_read(&tgtp->defer_fod),
-+				atomic_read(&tgtp->defer_wqfull));
-+
- 		/* Calculate outstanding IOs */
- 		tot = atomic_read(&tgtp->rcv_fcp_cmd_drop);
- 		tot += atomic_read(&tgtp->xmt_fcp_release);
-diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
-index 56faeb049b4a..60078e61da5e 100644
---- a/drivers/scsi/lpfc/lpfc_mem.c
-+++ b/drivers/scsi/lpfc/lpfc_mem.c
-@@ -755,10 +755,14 @@ lpfc_rq_buf_free(struct lpfc_hba *phba, struct lpfc_dmabuf *mp)
- 	if (rc < 0) {
- 		(rqbp->rqb_free_buffer)(phba, rqb_entry);
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"6409 Cannot post to RQ %d: %x %x\n",
-+				"6409 Cannot post to HRQ %d: %x %x %x "
-+				"DRQ %x %x\n",
- 				rqb_entry->hrq->queue_id,
- 				rqb_entry->hrq->host_index,
--				rqb_entry->hrq->hba_index);
-+				rqb_entry->hrq->hba_index,
-+				rqb_entry->hrq->entry_count,
-+				rqb_entry->drq->host_index,
-+				rqb_entry->drq->hba_index);
- 	} else {
- 		list_add_tail(&rqb_entry->hbuf.list, &rqbp->rqb_buffer_list);
- 		rqbp->buffer_count++;
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 9c2acf90212c..0539585d32d4 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -270,8 +270,6 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
- 					 "NVMET RCV BUSY: xri x%x sz %d "
- 					 "from %06x\n",
- 					 oxid, size, sid);
--			/* defer repost rcv buffer till .defer_rcv callback */
--			ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
- 			atomic_inc(&tgtp->rcv_fcp_cmd_out);
- 			return;
- 		}
-@@ -837,6 +835,7 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
- 		list_add_tail(&nvmewqeq->list, &wq->wqfull_list);
- 		wq->q_flag |= HBA_NVMET_WQFULL;
- 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
-+		atomic_inc(&lpfc_nvmep->defer_wqfull);
- 		return 0;
- 	}
- 
-@@ -975,11 +974,9 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
- 
- 	tgtp = phba->targetport->private;
- 	atomic_inc(&tgtp->rcv_fcp_cmd_defer);
--	if (ctxp->flag & LPFC_NVMET_DEFER_RCV_REPOST)
--		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
--	else
--		nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
--	ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
-+
-+	/* Free the nvmebuf since a new buffer already replaced it */
-+	nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
- }
- 
- static struct nvmet_fc_target_template lpfc_tgttemplate = {
-@@ -1309,6 +1306,9 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
- 		atomic_set(&tgtp->xmt_abort_sol, 0);
- 		atomic_set(&tgtp->xmt_abort_rsp, 0);
- 		atomic_set(&tgtp->xmt_abort_rsp_error, 0);
-+		atomic_set(&tgtp->defer_ctx, 0);
-+		atomic_set(&tgtp->defer_fod, 0);
-+		atomic_set(&tgtp->defer_wqfull, 0);
- 	}
- 	return error;
- }
-@@ -1810,6 +1810,8 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 	lpfc_nvmeio_data(phba, "NVMET FCP  RCV: xri x%x sz %d CPU %02x\n",
- 			 oxid, size, smp_processor_id());
- 
-+	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
-+
- 	if (!ctx_buf) {
- 		/* Queue this NVME IO to process later */
- 		spin_lock_irqsave(&phba->sli4_hba.nvmet_io_wait_lock, iflag);
-@@ -1825,10 +1827,11 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 		lpfc_post_rq_buffer(
- 			phba, phba->sli4_hba.nvmet_mrq_hdr[qno],
- 			phba->sli4_hba.nvmet_mrq_data[qno], 1, qno);
-+
-+		atomic_inc(&tgtp->defer_ctx);
- 		return;
- 	}
- 
--	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
- 	payload = (uint32_t *)(nvmebuf->dbuf.virt);
- 	sid = sli4_sid_from_fc_hdr(fc_hdr);
- 
-@@ -1892,12 +1895,20 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 
- 	/* Processing of FCP command is deferred */
- 	if (rc == -EOVERFLOW) {
-+		/*
-+		 * Post a brand new DMA buffer to RQ and defer
-+		 * freeing rcv buffer till .defer_rcv callback
-+		 */
-+		qno = nvmebuf->idx;
-+		lpfc_post_rq_buffer(
-+			phba, phba->sli4_hba.nvmet_mrq_hdr[qno],
-+			phba->sli4_hba.nvmet_mrq_data[qno], 1, qno);
-+
- 		lpfc_nvmeio_data(phba,
- 				 "NVMET RCV BUSY: xri x%x sz %d from %06x\n",
- 				 oxid, size, sid);
--		/* defer reposting rcv buffer till .defer_rcv callback */
--		ctxp->flag |= LPFC_NVMET_DEFER_RCV_REPOST;
- 		atomic_inc(&tgtp->rcv_fcp_cmd_out);
-+		atomic_inc(&tgtp->defer_fod);
- 		return;
- 	}
- 	ctxp->rqb_buffer = nvmebuf;
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 354cce443c9f..5da35de5ea45 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.h
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -72,7 +72,6 @@ struct lpfc_nvmet_tgtport {
- 	atomic_t xmt_fcp_rsp_aborted;
- 	atomic_t xmt_fcp_rsp_drop;
- 
--
- 	/* Stats counters - lpfc_nvmet_xmt_fcp_abort */
- 	atomic_t xmt_fcp_xri_abort_cqe;
- 	atomic_t xmt_fcp_abort;
-@@ -81,6 +80,11 @@ struct lpfc_nvmet_tgtport {
- 	atomic_t xmt_abort_unsol;
- 	atomic_t xmt_abort_rsp;
- 	atomic_t xmt_abort_rsp_error;
-+
-+	/* Stats counters - defer IO */
-+	atomic_t defer_ctx;
-+	atomic_t defer_fod;
-+	atomic_t defer_wqfull;
- };
- 
- struct lpfc_nvmet_ctx_info {
-@@ -131,7 +135,6 @@ struct lpfc_nvmet_rcv_ctx {
- #define LPFC_NVMET_XBUSY		0x4  /* XB bit set on IO cmpl */
- #define LPFC_NVMET_CTX_RLS		0x8  /* ctx free requested */
- #define LPFC_NVMET_ABTS_RCV		0x10  /* ABTS received on exchange */
--#define LPFC_NVMET_DEFER_RCV_REPOST	0x20  /* repost to RQ on defer rcv */
- #define LPFC_NVMET_DEFER_WQFULL		0x40  /* Waiting on a free WQE */
- 	struct rqb_dmabuf *rqb_buffer;
- 	struct lpfc_nvmet_ctxbuf *ctxbuf;
+ 	if (phba->sli_rev != LPFC_SLI_REV4) {
+ 		for (i = 0; i < psli->num_rings; i++) {
+@@ -983,6 +984,9 @@ lpfc_hba_clean_txcmplq(struct lpfc_hba *phba)
+ 		if (!pring)
+ 			continue;
+ 		spin_lock_irq(&pring->ring_lock);
++		list_for_each_entry_safe(piocb, next_iocb,
++					 &pring->txcmplq, list)
++			piocb->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
+ 		list_splice_init(&pring->txcmplq, &completions);
+ 		pring->txcmplq_cnt = 0;
+ 		spin_unlock_irq(&pring->ring_lock);
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index fbda2fbcbfec..8b2919a553d6 100644
+index 8b2919a553d6..d597e15a1974 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -6535,9 +6535,11 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 	struct lpfc_rqe hrqe;
- 	struct lpfc_rqe drqe;
- 	struct lpfc_rqb *rqbp;
-+	unsigned long flags;
- 	struct rqb_dmabuf *rqb_buffer;
- 	LIST_HEAD(rqb_buf_list);
+@@ -3778,6 +3778,7 @@ lpfc_sli_flush_fcp_rings(struct lpfc_hba *phba)
+ 	struct lpfc_sli *psli = &phba->sli;
+ 	struct lpfc_sli_ring  *pring;
+ 	uint32_t i;
++	struct lpfc_iocbq *piocb, *next_iocb;
  
-+	spin_lock_irqsave(&phba->hbalock, flags);
- 	rqbp = hrq->rqbp;
- 	for (i = 0; i < count; i++) {
- 		/* IF RQ is already full, don't bother */
-@@ -6561,6 +6563,15 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 		drqe.address_hi = putPaddrHigh(rqb_buffer->dbuf.phys);
- 		rc = lpfc_sli4_rq_put(hrq, drq, &hrqe, &drqe);
- 		if (rc < 0) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"6421 Cannot post to HRQ %d: %x %x %x "
-+					"DRQ %x %x\n",
-+					hrq->queue_id,
-+					hrq->host_index,
-+					hrq->hba_index,
-+					hrq->entry_count,
-+					drq->host_index,
-+					drq->hba_index);
- 			rqbp->rqb_free_buffer(phba, rqb_buffer);
- 		} else {
- 			list_add_tail(&rqb_buffer->hbuf.list,
-@@ -6568,6 +6579,7 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 			rqbp->buffer_count++;
- 		}
- 	}
-+	spin_unlock_irqrestore(&phba->hbalock, flags);
- 	return 1;
- }
+ 	spin_lock_irq(&phba->hbalock);
+ 	/* Indicate the I/O queues are flushed */
+@@ -3792,6 +3793,9 @@ lpfc_sli_flush_fcp_rings(struct lpfc_hba *phba)
+ 			spin_lock_irq(&pring->ring_lock);
+ 			/* Retrieve everything on txq */
+ 			list_splice_init(&pring->txq, &txq);
++			list_for_each_entry_safe(piocb, next_iocb,
++						 &pring->txcmplq, list)
++				piocb->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
+ 			/* Retrieve everything on the txcmplq */
+ 			list_splice_init(&pring->txcmplq, &txcmplq);
+ 			pring->txq_cnt = 0;
+@@ -3813,6 +3817,9 @@ lpfc_sli_flush_fcp_rings(struct lpfc_hba *phba)
+ 		spin_lock_irq(&phba->hbalock);
+ 		/* Retrieve everything on txq */
+ 		list_splice_init(&pring->txq, &txq);
++		list_for_each_entry_safe(piocb, next_iocb,
++					 &pring->txcmplq, list)
++			piocb->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
+ 		/* Retrieve everything on the txcmplq */
+ 		list_splice_init(&pring->txcmplq, &txcmplq);
+ 		pring->txq_cnt = 0;
+@@ -3844,6 +3851,7 @@ lpfc_sli_flush_nvme_rings(struct lpfc_hba *phba)
+ 	LIST_HEAD(txcmplq);
+ 	struct lpfc_sli_ring  *pring;
+ 	uint32_t i;
++	struct lpfc_iocbq *piocb, *next_iocb;
  
+ 	if (phba->sli_rev < LPFC_SLI_REV4)
+ 		return;
+@@ -3860,8 +3868,11 @@ lpfc_sli_flush_nvme_rings(struct lpfc_hba *phba)
+ 	for (i = 0; i < phba->cfg_nvme_io_channel; i++) {
+ 		pring = phba->sli4_hba.nvme_wq[i]->pring;
+ 
+-		/* Retrieve everything on the txcmplq */
+ 		spin_lock_irq(&pring->ring_lock);
++		list_for_each_entry_safe(piocb, next_iocb,
++					 &pring->txcmplq, list)
++			piocb->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
++		/* Retrieve everything on the txcmplq */
+ 		list_splice_init(&pring->txcmplq, &txcmplq);
+ 		pring->txcmplq_cnt = 0;
+ 		spin_unlock_irq(&pring->ring_lock);
 -- 
 2.13.1
