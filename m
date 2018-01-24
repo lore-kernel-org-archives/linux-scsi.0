@@ -1,47 +1,78 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 11/19] lpfc: Fix issue_lip if link is disabled
-Date: Wed, 24 Jan 2018 14:45:40 -0800
-Message-ID: <20180124224548.9530-12-jsmart2021@gmail.com>
+Subject: [PATCH 12/19] lpfc: Indicate CONF support in NVMe PRLI
+Date: Wed, 24 Jan 2018 14:45:41 -0800
+Message-ID: <20180124224548.9530-13-jsmart2021@gmail.com>
 References: <20180124224548.9530-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:40589 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932800AbeAXWqN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 17:46:13 -0500
-Received: by mail-qt0-f195.google.com with SMTP id s39so14655158qth.7
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 14:46:13 -0800 (PST)
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35481 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933059AbeAXWqO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 17:46:14 -0500
+Received: by mail-qt0-f196.google.com with SMTP id g14so14671484qti.2
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 14:46:14 -0800 (PST)
 In-Reply-To: <20180124224548.9530-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-The driver ignored checks on whether the link should be
-kept administratively down after a link bounce. Correct the
-checks.
+Revise the NVME PRLI to indicate CONF support.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/lpfc/lpfc_els.c       | 3 ++-
+ drivers/scsi/lpfc/lpfc_hw4.h       | 6 +++---
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 3 ---
+ 3 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index d8064e3ea0ba..b79dad7b8278 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -911,7 +911,12 @@ lpfc_issue_lip(struct Scsi_Host *shost)
- 	LPFC_MBOXQ_t *pmboxq;
- 	int mbxstatus = MBXERR_ERROR;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 234c7c015982..404e1af5e2ab 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2293,10 +2293,11 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		if (phba->nvmet_support) {
+ 			bf_set(prli_tgt, npr_nvme, 1);
+ 			bf_set(prli_disc, npr_nvme, 1);
+-
+ 		} else {
+ 			bf_set(prli_init, npr_nvme, 1);
++			bf_set(prli_conf, npr_nvme, 1);
+ 		}
++
+ 		npr_nvme->word1 = cpu_to_be32(npr_nvme->word1);
+ 		npr_nvme->word4 = cpu_to_be32(npr_nvme->word4);
+ 		elsiocb->iocb_flag |= LPFC_PRLI_NVME_REQ;
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index ef469129fb71..7c3afc3d3121 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -4346,9 +4346,9 @@ struct lpfc_nvme_prli {
+ #define prli_init_SHIFT                 5
+ #define prli_init_MASK                  0x00000001
+ #define prli_init_WORD                  word4
+-#define prli_recov_SHIFT                8
+-#define prli_recov_MASK                 0x00000001
+-#define prli_recov_WORD                 word4
++#define prli_conf_SHIFT                 7
++#define prli_conf_MASK                  0x00000001
++#define prli_conf_WORD                  word4
+ 	uint32_t word5;
+ #define prli_fb_sz_SHIFT                0
+ #define prli_fb_sz_MASK                 0x0000ffff
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index d841aa42f607..bbf1e1342b09 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -2011,9 +2011,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			}
+ 		}
  
-+	/*
-+	 * If the link is offline, disabled or BLOCK_MGMT_IO
-+	 * it doesn't make any sense to allow issue_lip
-+	 */
- 	if ((vport->fc_flag & FC_OFFLINE_MODE) ||
-+	    (phba->hba_flag & LINK_DISABLED) ||
- 	    (phba->sli.sli_flag & LPFC_BLOCK_MGMT_IO))
- 		return -EPERM;
- 
+-		if (bf_get_be32(prli_recov, nvpr))
+-			ndlp->nlp_fcp_info |= NLP_FCP_2_DEVICE;
+-
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
+ 				 "6029 NVME PRLI Cmpl w1 x%08x "
+ 				 "w4 x%08x w5 x%08x flag x%x, "
 -- 
 2.13.1
