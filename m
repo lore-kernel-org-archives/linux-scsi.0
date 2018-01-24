@@ -1,53 +1,46 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: qla2xxx UBSAN warning in 4.14-rc1
-Date: Thu, 25 Jan 2018 00:18:17 +0200 (EET)
-Message-ID: <alpine.LRH.2.21.1801250012070.28967@math.ut.ee>
-References: <alpine.LRH.2.21.1709181335450.628@math.ut.ee> <1516828413.3987.18.camel@wdc.com>
+From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+Subject: [PATCH 1/1] scsi: storvsc: Increase cmd_per_lun for higher speed
+ devices
+Date: Wed, 24 Jan 2018 22:49:57 +0000
+Message-ID: <1516834132-26273-1-git-send-email-mikelley@ntdev.microsoft.com>
+Reply-To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:53954 "EHLO smtp1.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932845AbeAXWq5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Jan 2018 17:46:57 -0500
-In-Reply-To: <1516828413.3987.18.camel@wdc.com>
+Received: from mail-bn3nam01on0092.outbound.protection.outlook.com ([104.47.33.92]:26803
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932845AbeAXWt7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Jan 2018 17:49:59 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>
+To: KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
 
-> > Hello, I decided to widen the coverage of my kernel testbed and put some 
-> > FC cards into servers. This one is a PCI-X QLA2340 in HP Proliant DL 380 
-> > G4 (first 64-bit generation of Proliants). I got a UBSAN warning from 
-> > qla2xxx before probing for the firmware.
-> 
-> Would it be possible for you to test the (completely untested) patch below?
+Increase cmd_per_lun to allow more I/Os in progress per device,
+particularly for NVMe's.  The Hyper-V host side can handle the
+higher count with no issues.
 
-It compiles without warnings and the driver loads without warnings.
+Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Meanwhile I tried the following patch, also successfully.
-
-However, the same problem is present in qla24xx_mbx_completion (and can 
-also be trivially patched over).
-
-I did not understand the logic of what's goind on with mailboxes - there 
-seem to be up to 32 of them and for some reason, a bitmask is used for 
-iterating over them, with mboxes = ha->mcp->in_mb filtering out some 
-mailboxes, and in_mb bitmap value comes from firmware?
-
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 2fd79129bb2a..7868930ae1c8 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -272,7 +272,7 @@ qla2x00_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
- 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
- 
- 	/* Read all mbox registers? */
--	mboxes = (1 << ha->mbx_count) - 1;
-+	mboxes = (1ULL << ha->mbx_count) - 1;
- 	if (!ha->mcp)
- 		ql_dbg(ql_dbg_async, vha, 0x5001, "MBX pointer ERROR.\n");
- 	else
-
--- 
-Meelis Roos (mroos@linux.ee)
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index f3264c4..6205107 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1657,7 +1657,7 @@ static int storvsc_queuecommand(struct Scsi_Host *hos=
+t, struct scsi_cmnd *scmnd)
+ 	.eh_timed_out =3D		storvsc_eh_timed_out,
+ 	.slave_alloc =3D		storvsc_device_alloc,
+ 	.slave_configure =3D	storvsc_device_configure,
+-	.cmd_per_lun =3D		255,
++	.cmd_per_lun =3D		2048,
+ 	.this_id =3D		-1,
+ 	.use_clustering =3D	ENABLE_CLUSTERING,
+ 	/* Make sure we dont get a sg segment crosses a page boundary */
+--=20
+1.8.3.1
