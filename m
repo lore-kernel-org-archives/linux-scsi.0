@@ -1,43 +1,45 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: csiostor: remove redundant assignment to pointer 'ln'
-Date: Wed, 24 Jan 2018 14:58:01 +0000
-Message-ID: <20180124145801.18920-1-colin.king@canonical.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: [PATCH] bnx2fc: Fix check in SCSI completion handler when reqeust has already timed out.
+Date: Wed, 24 Jan 2018 08:07:06 -0800
+Message-ID: <20180124160706.32700-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0060.outbound.protection.outlook.com ([104.47.38.60]:28128
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934021AbeAXQHM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Jan 2018 11:07:12 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-From: Colin Ian King <colin.king@canonical.com>
+When a request times out we set the io_req flag BNX2FC_FLAG_IO_COMPL so
+that if a subsequent completion comes in on that task ID we will ignore
+it.  The issue is that in the check for this flag there is a missing
+return so we will continue to process a request which may have already
+been returned to the ownership of the SCSI layer.  This can cause
+unpredictable results.
 
-The pointer ln is assigned a value that is never read, it is re-assigned
-a new value in the list_for_each loop hence the initialization is
-redundant and can be removed.
+Solution is to add in the missing return.
 
-Cleans up clang warning:
-drivers/scsi/csiostor/csio_lnode.c:117:21: warning: Value stored to 'ln'
-during its initialization is never read
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/csiostor/csio_lnode.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
-index be5ee2d37815..7dbbbb81a1e7 100644
---- a/drivers/scsi/csiostor/csio_lnode.c
-+++ b/drivers/scsi/csiostor/csio_lnode.c
-@@ -114,7 +114,7 @@ static enum csio_ln_ev fwevt_to_lnevt[] = {
- static struct csio_lnode *
- csio_ln_lookup_by_portid(struct csio_hw *hw, uint8_t portid)
- {
--	struct csio_lnode *ln = hw->rln;
-+	struct csio_lnode *ln;
- 	struct list_head *tmp;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 8e2f767147cb..5a645b8b9af1 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1889,6 +1889,7 @@ void bnx2fc_process_scsi_cmd_compl(struct bnx2fc_cmd *io_req,
+ 		/* we will not receive ABTS response for this IO */
+ 		BNX2FC_IO_DBG(io_req, "Timer context finished processing "
+ 			   "this scsi cmd\n");
++		return;
+ 	}
  
- 	/* Match siblings lnode with portid */
+ 	/* Cancel the timeout_work, as we received IO completion */
 -- 
-2.15.1
+2.12.3
