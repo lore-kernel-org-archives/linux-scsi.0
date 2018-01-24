@@ -1,50 +1,42 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] scsi_dh: Document alua_rtpg_queue() arguments
-Date: Tue, 23 Jan 2018 15:50:03 -0800
-Message-ID: <20180123235003.25971-1-bart.vanassche@wdc.com>
+Subject: [PATCH 4/6] qla4xxx: Remove unused symbols
+Date: Tue, 23 Jan 2018 16:33:49 -0800
+Message-ID: <20180124003351.2616-5-bart.vanassche@wdc.com>
+References: <20180124003351.2616-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:8955 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752076AbeAWXuE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2018 18:50:04 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:51749 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752746AbeAXAdx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2018 19:33:53 -0500
+In-Reply-To: <20180124003351.2616-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-Since commit 3a025e1d1c2e ("Add optional check for bad kernel-doc
-comments") building with W=1 causes warnings to appear for issues
-in kernel-doc headers. This patch avoids that the following warnings
-are reported when building with W=1:
-
-drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'pg'
-drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'sdev'
-drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'qdata'
-drivers/scsi/device_handler/scsi_dh_alua.c:867: warning: No description found for parameter 'force'
+Remove a few preprocessor macros that are not used anywhere.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/qla4xxx/ql4_nx.h | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 022e421c2185..4b44325d1a82 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -876,6 +876,11 @@ static void alua_rtpg_work(struct work_struct *work)
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ql4_nx.h
+index 337d9fcf6417..2c098cf9a1ac 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.h
++++ b/drivers/scsi/qla4xxx/ql4_nx.h
+@@ -1022,11 +1022,6 @@ struct qla8xxx_minidump_entry_queue {
+ #define MD_MIU_TEST_AGT_WRDATA_ULO		0x410000B0
+ #define MD_MIU_TEST_AGT_WRDATA_UHI		0x410000B4
  
- /**
-  * alua_rtpg_queue() - cause RTPG to be submitted asynchronously
-+ * @pg: ALUA port group associated with @sdev.
-+ * @sdev: SCSI device for which to submit an RTPG.
-+ * @qdata: Information about the callback to invoke after the RTPG.
-+ * @force: Whether or not to submit an RTPG if a work item that will submit an
-+ *         RTPG already has been scheduled.
-  *
-  * Returns true if and only if alua_rtpg_work() will be called asynchronously.
-  * That function is responsible for calling @qdata->fn().
+-#define MD_MIU_TEST_AGT_RDDATA_LO		0x410000A8
+-#define MD_MIU_TEST_AGT_RDDATA_HI		0x410000AC
+-#define MD_MIU_TEST_AGT_RDDATA_ULO		0x410000B8
+-#define MD_MIU_TEST_AGT_RDDATA_UHI		0x410000BC
+-
+ static const int MD_MIU_TEST_AGT_RDDATA[] = { 0x410000A8,
+ 				0x410000AC, 0x410000B8, 0x410000BC };
+ #endif
 -- 
 2.15.1
