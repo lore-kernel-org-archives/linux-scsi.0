@@ -1,99 +1,32 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] qla2xxx: Avoid triggering undefined behavior in
- qla2x00_mbx_completion()
-Date: Thu, 25 Jan 2018 11:55:34 -0500
-Message-ID: <1516899334.5545.1.camel@redhat.com>
-References: <20180125162429.7962-1-bart.vanassche@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v2 3/4] scsi: Avoid that .queuecommand() gets called for a
+ quiesced SCSI device
+Date: Thu, 25 Jan 2018 17:07:00 +0000
+Message-ID: <1516900017.2726.1.camel@wdc.com>
+References: <20180110181817.25166-1-bart.vanassche@wdc.com>
+         <20180110181817.25166-4-bart.vanassche@wdc.com>
+         <20180111022341.GA7290@ming.t460p> <1515797155.2396.86.camel@wdc.com>
+         <20180113155431.GG8013@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33676 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750992AbeAYQzh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jan 2018 11:55:37 -0500
-Received: by mail-qt0-f196.google.com with SMTP id d8so20875468qtm.0
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Jan 2018 08:55:37 -0800 (PST)
-In-Reply-To: <20180125162429.7962-1-bart.vanassche@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20180113155431.GG8013@ming.t460p>
+Content-Language: en-US
+Content-ID: <FF66AA69D53CD34EA9A5C2252209DB46@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "jgg@mellanox.com" <jgg@mellanox.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Himanshu Madhani <himanshu.madhani@cavium.com>
 
-On Thu, 2018-01-25 at 08:24 -0800, Bart Van Assche wrote:
-> A left shift must shift less than the bit width of the left argument.
-> Avoid triggering undefined behavior if ha->mbx_count == 32.
-> 
-> This patch avoids that UBSAN reports the following complaint:
-> 
-> UBSAN: Undefined behaviour in drivers/scsi/qla2xxx/qla_isr.c:275:14
-> shift exponent 32 is too large for 32-bit type 'int'
-> Call Trace:
->  dump_stack+0x4e/0x6c
->  ubsan_epilogue+0xd/0x3b
->  __ubsan_handle_shift_out_of_bounds+0x112/0x14c
->  qla2x00_mbx_completion+0x1c5/0x25d [qla2xxx]
->  qla2300_intr_handler+0x1ea/0x3bb [qla2xxx]
->  qla2x00_mailbox_command+0x77b/0x139a [qla2xxx]
->  qla2x00_mbx_reg_test+0x83/0x114 [qla2xxx]
->  qla2x00_chip_diag+0x354/0x45f [qla2xxx]
->  qla2x00_initialize_adapter+0x2c2/0xa4e [qla2xxx]
->  qla2x00_probe_one+0x1681/0x392e [qla2xxx]
->  pci_device_probe+0x10b/0x1f1
->  driver_probe_device+0x21f/0x3a4
->  __driver_attach+0xa9/0xe1
->  bus_for_each_dev+0x6e/0xb5
->  driver_attach+0x22/0x3c
->  bus_add_driver+0x1d1/0x2ae
->  driver_register+0x78/0x130
->  __pci_register_driver+0x75/0xa8
->  qla2x00_module_init+0x21b/0x267 [qla2xxx]
->  do_one_initcall+0x5a/0x1e2
->  do_init_module+0x9d/0x285
->  load_module+0x20db/0x38e3
->  SYSC_finit_module+0xa8/0xbc
->  SyS_finit_module+0x9/0xb
->  do_syscall_64+0x77/0x271
->  entry_SYSCALL64_slow_path+0x25/0x25
-> 
-> Reported-by: Meelis Roos <mroos@linux.ee>
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
-> ---
->  drivers/scsi/qla2xxx/qla_isr.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c
-> b/drivers/scsi/qla2xxx/qla_isr.c
-> index 16c43bd9bb83..79f538448364 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -272,7 +272,8 @@ qla2x00_mbx_completion(scsi_qla_host_t *vha,
-> uint16_t mb0)
->  	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
->  
->  	/* Read all mbox registers? */
-> -	mboxes = (1 << ha->mbx_count) - 1;
-> +	WARN_ON_ONCE(ha->mbx_count > 32);
-> +	mboxes = (1ULL << ha->mbx_count) - 1;
->  	if (!ha->mcp)
->  		ql_dbg(ql_dbg_async, vha, 0x5001, "MBX pointer
-> ERROR.\n");
->  	else
-> @@ -2884,7 +2885,8 @@ qla24xx_mbx_completion(scsi_qla_host_t *vha,
-> uint16_t mb0)
->  	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
->  
->  	/* Read all mbox registers? */
-> -	mboxes = (1 << ha->mbx_count) - 1;
-> +	WARN_ON_ONCE(ha->mbx_count > 32);
-> +	mboxes = (1ULL << ha->mbx_count) - 1;
->  	if (!ha->mcp)
->  		ql_dbg(ql_dbg_async, vha, 0x504e, "MBX pointer
-> ERROR.\n");
->  	else
-
-This looks fine to me and I tested the earlier patch suggestion
-supplied by Meelis.
-
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+T24gU2F0LCAyMDE4LTAxLTEzIGF0IDIzOjU0ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gVGhh
+bmtzIGZvciB5b3VyIG1lbnRpb25pbmcsIHRoZW4gSSBjYW4gZmluZCB0aGUgZm9sbG93aW5nIGNv
+bW1lbnQgaW4NCj4gc3JwX3F1ZXVlY29tbWFuZCgpOg0KPiANCj4gCQkvKg0KPiAJCSAqIFRoZSBT
+Q1NJIEVIIHRocmVhZCBpcyB0aGUgb25seSBjb250ZXh0IGZyb20gd2hpY2ggc3JwX3F1ZXVlY29t
+bWFuZCgpDQo+IAkJICogY2FuIGdldCBpbnZva2VkIGZvciBibG9ja2VkIGRldmljZXMgKFNERVZf
+QkxPQ0sgLw0KPiAJCSAqIFNERVZfQ1JFQVRFRF9CTE9DSykuIEF2b2lkIHJhY2luZyB3aXRoIHNy
+cF9yZWNvbm5lY3RfcnBvcnQoKSBieQ0KPiAJCSAqIGxvY2tpbmcgdGhlIHJwb3J0IG11dGV4IGlm
+IGludm9rZWQgZnJvbSBpbnNpZGUgdGhlIFNDU0kgRUguDQo+IAkJICovDQo+IA0KPiBUaGF0IG1l
+YW5zIEVIIHJlcXVlc3QgaXMgYWxsb3dlZCB0byBzZW5kIHRvIGJsb2NrZWQgZGV2aWNlLg0KDQpO
+byB3YXkuIFRoYXQncyBhIGJ1ZyBhbmQgYSBidWcgdGhhdCBuZWVkcyB0byBiZSBmaXhlZC4NCg0K
+QmFydC4=
