@@ -1,76 +1,62 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi_debug: implement IMMED bit
-Date: Wed, 31 Jan 2018 23:01:02 +0000
-Message-ID: <1517439661.7325.15.camel@wdc.com>
-References: <20180130055445.20244-1-dgilbert@interlog.com>
-         <ed3a63f0-2cbb-8fac-fee7-4f08b1e1e8e2@wdc.com>
-         <a59aa2e7-fa26-6e24-9e79-5a14307fb49a@interlog.com>
-         <1517436314.7325.6.camel@wdc.com>
-         <68ee8bca-c5ea-0cc1-d990-2537532d3717@interlog.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [LSF/MM TOPIC] Improving Asynchronous SCSI Disk Probing
+Date: Thu, 25 Jan 2018 19:23:53 +0100
+Message-ID: <3106d9c4-16f0-224f-d838-729ea9166bd4@suse.de>
+References: <1516231473.2820.81.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:48862 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752209AbeAaXBE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2018 18:01:04 -0500
-In-Reply-To: <68ee8bca-c5ea-0cc1-d990-2537532d3717@interlog.com>
+Received: from mx2.suse.de ([195.135.220.15]:43462 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750994AbeAYSXz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Jan 2018 13:23:55 -0500
+In-Reply-To: <1516231473.2820.81.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <33FC9E69E67A04469C125F229BB34886@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gV2VkLCAyMDE4LTAxLTMxIGF0IDE3OjQwIC0wNTAwLCBEb3VnbGFzIEdpbGJlcnQgd3JvdGU6
-DQo+IE9uIDIwMTgtMDEtMzEgMDU6MDUgUE0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBP
-biBXZWQsIDIwMTgtMDEtMzEgYXQgMTU6MjYgLTA1MDAsIERvdWdsYXMgR2lsYmVydCB3cm90ZToN
-Cj4gPiA+IE9uIDIwMTgtMDEtMzEgMTI6MDYgUE0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4g
-PiA+ID4gT24gMDEvMjkvMTggMjE6NTQsIERvdWdsYXMgR2lsYmVydCB3cm90ZToNCj4gPiA+ID4g
-PiArc3RhdGljIGNvbnN0IHN0cnVjdCBvcGNvZGVfaW5mb190IHN5bmNfY2FjaGVfaWFycltdID0g
-ew0KPiA+ID4gPiA+ICsgICAgezAsIDB4OTEsIDAsIEZfTE9OR19ERUxBWSB8IEZfTV9BQ0NFU1Ms
-IHJlc3Bfc3luY19jYWNoZSwgTlVMTCwNCj4gPiA+ID4gPiArICAgICAgICB7MTYsICAweDcsIDB4
-ZmYsIDB4ZmYsIDB4ZmYsIDB4ZmYsIDB4ZmYsIDB4ZmYsIDB4ZmYsIDB4ZmYsDQo+ID4gPiA+IA0K
-PiA+ID4gPiAgICAgICAgICAgICAgICAgICAgIF5eXg0KPiA+ID4gPiBDYW4geW91IGNsYXJpZnkg
-dGhlIGNob2ljZSBvZiAiMHg3IiBpbiB0aGUgYWJvdmU/IEFmdGVyIGhhdmluZyBoYWQgYSBsb29r
-IGF0DQo+ID4gPiA+IFNCQy00IEkgd2FzIGV4cGVjdGluZyAweDIgKHRoZSBtYXNrIGZvciB0aGUg
-SU1NRUQgYml0KSBzaW5jZSBhbGwgb3RoZXIgYml0cyBpbg0KPiA+ID4gPiB0aGF0IGNvbW1hbmQg
-Ynl0ZSBhcmUgZWl0aGVyIHJlc2VydmVkIG9yIG9ic29sZXRlLg0KPiA+ID4gDQo+ID4gPiBBcyBh
-IGdlbmVyYWwgcnVsZSB3aGVuIHlvdSBzZWUgIm9ic29sZXRlIiB0aGF0IG1lYW5zIHRoYXQgZmll
-bGQgd2FzIHVzZWQNCj4gPiA+IGluIGFuIGVhcmxpZXIgc3RhbmRhcmQgKGJpdCAwIHdhcyBSRUxB
-RERSIGFuZCBiaXQgMiB3YXMgU1lOQ19OVikuIFNvDQo+ID4gPiBhcHBsaWNhdGlvbiBjbGllbnRz
-IGNvbXBseWluZyB3aXRoIGVhcmxpZXIgdmVyc2lvbnMgb2YgU0JDIG1pZ2h0IHNldCB0aG9zZQ0K
-PiA+ID4gYml0cy4gSWYgdGhleSBhcmUgc2V0IGFuZCB0aGUgbWFzayBpcyBiZWluZyBlbmZvcmNl
-ZCBJIGNob29zZSB0byBub3QgZmFpbA0KPiA+ID4gdGhlIGNvbW1hbmQgYXMgYW4gaWxsZWdhbCBy
-ZXF1ZXN0LiBCYXNpY2FsbHkgYWNjZXB0IGFuZCBpZ25vcmUuDQo+ID4gDQo+ID4gSSBhZ3JlZSB3
-aXRoIHNldHRpbmcgYml0cyBmb3Igb2Jzb2xldGUgZmxhZ3MuIFRoZSByZWFzb24gSSB3YXMgYXNr
-aW5nIGFib3V0IHRoYXQNCj4gPiBtYXNrIGlzIGJlY2F1c2UgSSBmb3VuZCB0aGUgZm9sbG93aW5n
-IGluIFNCQy00IGZvciBieXRlIDEgb2YgU1lOQ0hST05JWkUgQ0FDSEUoMTYpOg0KPiA+ICogQml0
-cyA3Li4zOiByZXNlcnZlZC4NCj4gPiAqIEJpdCAyOiBvYnNvbGV0ZS4NCj4gPiAqIEJpdCAxOiBJ
-TU1FRC4NCj4gPiAqIEJpdCAwOiByZXNlcnZlZC4NCj4gDQo+IEkgZGlkIHNlZSB0aGUgZGlzY3Jl
-cGFuY3kgYmV0d2VlbiBieXRlIDEgYml0IDAgaW4gU1lOQ0hST05JWkUgQ0FDSEUoMTApDQo+IHdo
-ZXJlIGl0IGlzICJvYnNvbGV0ZSIgYW5kIFNZTkNIUk9OSVpFIENBQ0hFKDE2KSB3aGVyZSBpdCBp
-cyAicmVzZXJ2ZWQiDQo+IGluaXRpYWxseSB0aGlua2luZyBpdCBtaWdodCBiZSBhIHR5cG8uIFNv
-IEkgd2VudCBmb3IgdGhlIG1vcmUgcGVybWlzc2l2ZS4NCj4gSSdtIG5vdyBndWVzc2luZyAoYmVj
-YXVzZSBJIGRvbid0IGhhdmUgdGhlIGRyYWZ0cyBiZXR3ZWVuIFNCQygtMSkgYW5kDQo+IFNCQy0y
-IGFuZCBmb3Igc29tZSByZWFzb24gVDEwIHdhbnRzIHlvdSB0byBiZSBhIG1lbWJlciB0byBkb3du
-bG9hZCBvbGRlcg0KPiBkcmFmdHMpIHRoYXQgUkVMQUREUiB3YXMgcmVtb3ZlZCBiZWZvcmUgU1lO
-Q0hST05JWkUgQ0FDSEUoMTYpIHdhcyBhZGRlZA0KPiAoYXMgdGhlcmUgd2FzIG5vIDY0IExCQSBz
-dXBwb3J0IGluIFNCQy0xKS4gU28gaWYgdGhlcmUgbmV2ZXIgd2FzIGENCj4gcHVibGljbHkgYXZh
-aWxhYmxlIGRyYWZ0IHdoZXJlIFNZTkNIUk9OSVpFIENBQ0hFKDE2KSBoYWQgYSBSRUxBRERSIGJp
-dA0KPiBkZWZpbmVkLCB0aGVuIHdoeSBtYXJrIGl0IGFzIG9ic29sZXRlPyBSZXNlcnZlZCBtZWFu
-cyBhIGxhdGVyDQo+IGRyYWZ0L3N0YW5kYXJkIG1heSB1c2UgdGhhdCBiaXQvZmllbGQuDQo+IA0K
-PiBCVFcgVGhlcmUgaXMgbm8gcmVxdWlyZW1lbnQgZm9yIGEgZGV2aWNlIHNlcnZlciB0byBlbmZv
-cmNlIHRoZSBtYXNrIGFuZA0KPiBtb3N0IGRvbid0IChmcm9tIG15IHRlc3RpbmcpLiBUaGUgbWFz
-ayBpcyBwcm92aWRlZCBhcyBhbiBhaWQgdG8gdGhlDQo+IGFwcGxpY2F0aW9uIGNsaWVudCBhbmQg
-aXMgcmVxdWlyZWQgYnkgdGhlIGltcGxlbWVudGF0aW9uIG9mIFJFUE9SVA0KPiBTVVBQT1JURUQg
-T1BFUkFUSU9OIENPREVTIHdoaWNoIGlzIHdoeSBJIGhhdmUgaXQgaW4gc2NzaV9kZWJ1Zy4gQnkg
-ZGVmYXVsdA0KPiB0aGUgc2NzaV9kZWJ1ZyBkcml2ZXIgZG9lcyBub3QgZW5mb3JjZSB0aGUgbWFz
-ayAoYnV0IGRvZXMgd2hlbiBzdHJpY3Q9MSkuDQo+IA0KPiBBbnl3YXksIGFyZW4ndCB3ZSBzcGxp
-dHRpbmcgaGFpcnMgaGVyZT8gRG9lcyB0aGlzIHJlYWxseSBqdXN0aWZ5IGEgbmV3DQo+IHBhdGNo
-IGJlaW5nIHJvbGxlZD8NCg0KUGVvcGxlIHRydXN0IHlvdSBhcyBhIFNDU0kgZXhwZXJ0IGFuZCBt
-YXkgY29uc2lkZXIgdG8gY29weSBjb2RlIGZyb20gdGhlDQpzY3NpX2RlYnVnLmMgZHJpdmVyIGlu
-IHRoZWlyIG93biBHUEwgZHJpdmVycyBpZiB0aGV5IG5lZWQgc2ltaWxhciBmdW5jdGlvbmFsaXR5
-Lg0KRG8geW91IHRoaW5rIHRoYXQgaXMgc3VmZmljaWVudCBhcyBhIG1vdGl2YXRpb24gdG8gZWRp
-dCBhbmQgcmVwb3N0IHRoaXMgcGF0Y2g/DQoNClRoYW5rcywNCg0KQmFydC4=
+On 01/18/2018 12:24 AM, Bart Van Assche wrote:
+> When the SCSI scanning code discovers a SCSI device it calls the driver core
+> function device_add() to associate a SCSI ULD with the device. The driver
+> core invokes the probing function for the matching SCSI ULP, e.g. sd_probe().
+> In order to minimize the time needed to scan SCSI targets that have a large
+> number of LUNs, the SCSI disk driver scans LUNs asynchronously by starting
+> the actual probing work asynchronously from inside sd_probe()
+> 
+> An unfortunate aspect of how SCSI disk probing works today is that there is
+> unnecessary serialization between probing and removal activity. For a
+> possible approach of how to increase SCSI disk probing concurrency, see also
+> [PATCH] sd: Increase SCSI disk probing concurrency, linux-scsi mailing list,
+> December 2017 (https://www.spinics.net/lists/linux-scsi/msg115657.html).
+> 
+> A second unfortunate aspect of SCSI disk probing is that certain race
+> conditions in the block layer are hit if removal starts before asynchronous
+> probing has finished. This is because the driver core is unaware that the
+> SCSI disk code works asynchronously.
+> 
+> Additionally, the SCSI disk asynchronous probing approach is incompatible
+> with the power management code. The power management code calls
+> wait_for_device_probe() in the driver core to wait for device probing
+> activity to finish. wait_for_device_probe() however is unaware of the
+> asynchronous probing in the SCSI sd driver and hence doesn't wait for the
+> SCSI sd probing activity to finish.
+> 
+> My proposal is to hold a session to discus potential solutions for
+> increasing SCSI disk probing concurrency in a way that is compatible with
+> the driver core and the power management subsystem.
+> 
+Having submitted one attempt to fix this up myself I'd definitely be
+interested in this.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
