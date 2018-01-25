@@ -1,38 +1,79 @@
-From: Mrs Ann Willi <majordavidpatrick01@gmail.com>
-Subject: Your quick response will be highly appreciated.
-Date: Thu, 25 Jan 2018 04:47:55 +0100
-Message-ID: <CACT-WrpJ2tU_hh=DHFb8x3GNa8QQhs4eNrL=VQufnwGbnaCsxg__7293.95354069329$1516851975$gmane$org@mail.gmail.com>
-Reply-To: mrsannwilli11@yahoo.com
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: qla2xxx UBSAN warning in 4.14-rc1
+Date: Thu, 25 Jan 2018 07:25:18 +0000
+Message-ID: <F9C1B65E-B91F-439A-8069-B6D1B060AEBC@cavium.com>
+References: <alpine.LRH.2.21.1709181335450.628@math.ut.ee>
+ <1516828413.3987.18.camel@wdc.com>
+ <alpine.LRH.2.21.1801250012070.28967@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:34607 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933306AbeAYDr5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2018 22:47:57 -0500
-Received: by mail-wr0-f195.google.com with SMTP id 36so6170638wrh.1
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2018 19:47:56 -0800 (PST)
+Received: from mail-bn3nam01on0046.outbound.protection.outlook.com ([104.47.33.46]:37190
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750763AbeAYHZU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Jan 2018 02:25:20 -0500
+In-Reply-To: <alpine.LRH.2.21.1801250012070.28967@math.ut.ee>
+Content-Language: en-US
+Content-ID: <0702E2E31FFBA24DBCC1369265C8F8CA@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
--- 
-Dear Beneficiary
-
-This is to inform you that your Long Time Awaiting Funds amounting in the
-tone of USD$10,400,000.00 {TEN MILLION, FOUR HUNDRED THOUSAND UNITED STATES
-DOLLARS) Which is presently in the custody of a finance house in Germany
-has been approved for immediate delivery to you in your country.
-
-For the purpose of clarification, you are advised to reconfirm the
-requested below information to our direct email address-:
-mrsannwilli11@gmail.com
-
-
-Full Names
-Direct Telephone Numbers
-Physical Address with Zip Code so that there will be no error during
-the delivery of the funds to you in your country of residence.
-
-Your quick response will be highly appreciated.
-
-Mrs Ann Willi
+SGkgTWVlbGlzLCANCg0KPiBPbiBKYW4gMjQsIDIwMTgsIGF0IDI6MTggUE0sIE1lZWxpcyBSb29z
+IDxtcm9vc0BsaW51eC5lZT4gd3JvdGU6DQo+IA0KPj4+IEhlbGxvLCBJIGRlY2lkZWQgdG8gd2lk
+ZW4gdGhlIGNvdmVyYWdlIG9mIG15IGtlcm5lbCB0ZXN0YmVkIGFuZCBwdXQgc29tZSANCj4+PiBG
+QyBjYXJkcyBpbnRvIHNlcnZlcnMuIFRoaXMgb25lIGlzIGEgUENJLVggUUxBMjM0MCBpbiBIUCBQ
+cm9saWFudCBETCAzODAgDQo+Pj4gRzQgKGZpcnN0IDY0LWJpdCBnZW5lcmF0aW9uIG9mIFByb2xp
+YW50cykuIEkgZ290IGEgVUJTQU4gd2FybmluZyBmcm9tIA0KPj4+IHFsYTJ4eHggYmVmb3JlIHBy
+b2JpbmcgZm9yIHRoZSBmaXJtd2FyZS4NCj4+IA0KPj4gV291bGQgaXQgYmUgcG9zc2libGUgZm9y
+IHlvdSB0byB0ZXN0IHRoZSAoY29tcGxldGVseSB1bnRlc3RlZCkgcGF0Y2ggYmVsb3c/DQo+IA0K
+PiBJdCBjb21waWxlcyB3aXRob3V0IHdhcm5pbmdzIGFuZCB0aGUgZHJpdmVyIGxvYWRzIHdpdGhv
+dXQgd2FybmluZ3MuDQo+IA0KPiBNZWFud2hpbGUgSSB0cmllZCB0aGUgZm9sbG93aW5nIHBhdGNo
+LCBhbHNvIHN1Y2Nlc3NmdWxseS4NCj4gDQo+IEhvd2V2ZXIsIHRoZSBzYW1lIHByb2JsZW0gaXMg
+cHJlc2VudCBpbiBxbGEyNHh4X21ieF9jb21wbGV0aW9uIChhbmQgY2FuIA0KPiBhbHNvIGJlIHRy
+aXZpYWxseSBwYXRjaGVkIG92ZXIpLg0KPiANCj4gSSBkaWQgbm90IHVuZGVyc3RhbmQgdGhlIGxv
+Z2ljIG9mIHdoYXQncyBnb2luZCBvbiB3aXRoIG1haWxib3hlcyAtIHRoZXJlIA0KPiBzZWVtIHRv
+IGJlIHVwIHRvIDMyIG9mIHRoZW0gYW5kIGZvciBzb21lIHJlYXNvbiwgYSBiaXRtYXNrIGlzIHVz
+ZWQgZm9yIA0KPiBpdGVyYXRpbmcgb3ZlciB0aGVtLCB3aXRoIG1ib3hlcyA9IGhhLT5tY3AtPmlu
+X21iIGZpbHRlcmluZyBvdXQgc29tZSANCj4gbWFpbGJveGVzLCBhbmQgaW5fbWIgYml0bWFwIHZh
+bHVlIGNvbWVzIGZyb20gZmlybXdhcmU/DQo+IA0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
+c2kvcWxhMnh4eC9xbGFfaXNyLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj4g
+aW5kZXggMmZkNzkxMjliYjJhLi43ODY4OTMwYWUxYzggMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
+c2NzaS9xbGEyeHh4L3FsYV9pc3IuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFf
+aXNyLmMNCj4gQEAgLTI3Miw3ICsyNzIsNyBAQCBxbGEyeDAwX21ieF9jb21wbGV0aW9uKHNjc2lf
+cWxhX2hvc3RfdCAqdmhhLCB1aW50MTZfdCBtYjApDQo+IAlzdHJ1Y3QgZGV2aWNlX3JlZ18yeHh4
+IF9faW9tZW0gKnJlZyA9ICZoYS0+aW9iYXNlLT5pc3A7DQo+IA0KPiAJLyogUmVhZCBhbGwgbWJv
+eCByZWdpc3RlcnM/ICovDQo+IC0JbWJveGVzID0gKDEgPDwgaGEtPm1ieF9jb3VudCkgLSAxOw0K
+PiArCW1ib3hlcyA9ICgxVUxMIDw8IGhhLT5tYnhfY291bnQpIC0gMTsNCj4gCWlmICghaGEtPm1j
+cCkNCj4gCQlxbF9kYmcocWxfZGJnX2FzeW5jLCB2aGEsIDB4NTAwMSwgIk1CWCBwb2ludGVyIEVS
+Uk9SLlxuIik7DQo+IAllbHNlDQo+IA0KPiAtLSANCj4gTWVlbGlzIFJvb3MgKG1yb29zQGxpbnV4
+LmVlKQ0KDQpTaW5jZSBJIGRpZCBjb3VsZCBub3QgZ2V0IGhvbGQgb2YgNEcgYWRhcHRlciBmb3Ig
+dGVzdGluZywgaSB3YXMgbm90IGFibGUgdG8NCmdldCB0byB0aGlzIG9uZSBmaXhlZCBpbiB0aW1l
+LiANCg0KQmFydOKAmXMgY2hhbmdlIGxvb2tzIGdvb2QgYW5kIHdpdGggeW91ciB0ZXN0aW5nIHNo
+b3VsZCBiZSBnb29kIHRvIGluY2x1ZGUuDQoNCkkgYWxzbyBub3RpY2VkIHFsYTI0eHhfbWJ4X2Nv
+bXBsZXRpb24oKSB3aWxsIG5lZWQgdGhpcyBmaXguIEkgd2FzIGFibGUgdG8gY29uZmlybSBpdCBv
+biBteSBzZXR1cCB3aXRoIDE2LzMyRyBhZGFwdGVyLiANCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+c2NzaS9xbGEyeHh4L3FsYV9pc3IuYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYw0K
+aW5kZXggZDFlN2ZkOTA1ZjE2Li5iOTdiMTRhODlhYzMgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Nj
+c2kvcWxhMnh4eC9xbGFfaXNyLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3Iu
+Yw0KQEAgLTI3Miw3ICsyNzIsNyBAQCBxbGEyeDAwX21ieF9jb21wbGV0aW9uKHNjc2lfcWxhX2hv
+c3RfdCAqdmhhLCB1aW50MTZfdCBtYjApDQogICAgICAgIHN0cnVjdCBkZXZpY2VfcmVnXzJ4eHgg
+X19pb21lbSAqcmVnID0gJmhhLT5pb2Jhc2UtPmlzcDsNCg0KICAgICAgICAvKiBSZWFkIGFsbCBt
+Ym94IHJlZ2lzdGVycz8gKi8NCi0gICAgICAgbWJveGVzID0gKDEgPDwgaGEtPm1ieF9jb3VudCkg
+LSAxOw0KKyAgICAgICBtYm94ZXMgPSAoaGEtPm1ieF9jb3VudCAhPSAzMiA/IDFVIDw8IGhhLT5t
+YnhfY291bnQgOiAwKSAtIDFVOw0KICAgICAgICBpZiAoIWhhLT5tY3ApDQogICAgICAgICAgICAg
+ICAgcWxfZGJnKHFsX2RiZ19hc3luYywgdmhhLCAweDUwMDEsICJNQlggcG9pbnRlciBFUlJPUi5c
+biIpOw0KICAgICAgICBlbHNlDQpAQCAtMjg4MSw3ICsyODgxLDcgQEAgcWxhMjR4eF9tYnhfY29t
+cGxldGlvbihzY3NpX3FsYV9ob3N0X3QgKnZoYSwgdWludDE2X3QgbWIwKQ0KICAgICAgICBzdHJ1
+Y3QgZGV2aWNlX3JlZ18yNHh4IF9faW9tZW0gKnJlZyA9ICZoYS0+aW9iYXNlLT5pc3AyNDsNCg0K
+ICAgICAgICAvKiBSZWFkIGFsbCBtYm94IHJlZ2lzdGVycz8gKi8NCi0gICAgICAgbWJveGVzID0g
+KDEgPDwgaGEtPm1ieF9jb3VudCkgLSAxOw0KKyAgICAgICBtYm94ZXMgPSAoaGEtPm1ieF9jb3Vu
+dCAhPSAzMiA/IDFVIDw8IGhhLT5tYnhfY291bnQgOiAwKSAtIDFVOw0KICAgICAgICBpZiAoIWhh
+LT5tY3ApDQogICAgICAgICAgICAgICAgcWxfZGJnKHFsX2RiZ19hc3luYywgdmhhLCAweDUwNGUs
+ICJNQlggcG9pbnRlciBFUlJPUi5cbuKAnSk7DQoNCldvdWxkIHlvdSBjYXJlIHRvIHNlbmQgZm9y
+bWFsIHBhdGNoIGFuZCBhZGQgbXkgQUNLIHRvIGl0Pw0KDQpUaGFua3MgZm9yIGFsbCB0aGUgZWZm
+b3J0IG9uIGdldHRpbmcgdGhpcyB0ZXN0ZWQgb24geW91ciBzZXR1cC4gDQoNClRoYW5rcywNCi0g
+SGltYW5zaHUNCg0K
