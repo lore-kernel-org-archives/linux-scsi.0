@@ -1,111 +1,91 @@
 From: Michal Suchanek <msuchanek@suse.de>
-Subject: [PATCH resend 4/6] cdrom: introduce CDS_DRIVE_ERROR
-Date: Fri, 26 Jan 2018 17:58:38 +0100
-Message-ID: <d92282ad58ca6256a438ef68354f3ae3d1d30162.1516985620.git.msuchanek@suse.de>
+Subject: [PATCH resend 3/6] cdrom: wait for tray to close
+Date: Fri, 26 Jan 2018 17:58:37 +0100
+Message-ID: <03915a2e64f50ec04ea6d8e6f80e36ecf16e4f0f.1516985620.git.msuchanek@suse.de>
 References: <cover.1513263482.git.msuchanek@suse.de>
  <cover.1516985620.git.msuchanek@suse.de>
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:40816 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750730AbeA0Psd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 27 Jan 2018 10:48:33 -0500
 In-Reply-To: <cover.1516985620.git.msuchanek@suse.de>
 In-Reply-To: <cover.1516985620.git.msuchanek@suse.de>
 References: <cover.1516985620.git.msuchanek@suse.de>
-Sender: linux-doc-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Suchanek <msuchanek@suse.de>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Suchanek <msuchanek@suse.de>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-CDS_DRIVE_NOT_READY is used for the state in which CDROM is 'becoming
-ready' (typically analyzing the disc) but also as the fallback when
-nothing else applies. Introduce CDS_DRIVE_ERROR for the fallback case.
+The scsi command to close tray only starts the motor and does not wait
+for the tray to close. Wait until the state chages from TRAY_OPEN so
+users do not race with the tray closing.
+
+This looks like inifinte wait but unless the drive is broken it either
+closes the tray within a few seconds or reports an error when it detects
+the tray is blocked. At worst the wait can be interrupted by user.
 
 Signed-off-by: Michal Suchanek <msuchanek@suse.de>
 ---
- drivers/block/paride/pcd.c |  2 +-
- drivers/cdrom/gdrom.c      |  2 +-
- drivers/ide/ide-cd_ioctl.c | 12 ++++++++----
- drivers/scsi/sr_ioctl.c    |  2 +-
- include/uapi/linux/cdrom.h |  1 +
- 5 files changed, 12 insertions(+), 7 deletions(-)
+v2:
+ - check drive_status exists before using it
+ - rename tray_close -> cdrom_tray_close
+---
+ drivers/cdrom/cdrom.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
-index 7b8c6368beb7..6e00093ff34e 100644
---- a/drivers/block/paride/pcd.c
-+++ b/drivers/block/paride/pcd.c
-@@ -605,7 +605,7 @@ static int pcd_drive_status(struct cdrom_device_info *cdi, int slot_nr)
- 	struct pcd_unit *cd = cdi->handle;
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 89746b3d193f..69e85c902373 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -281,7 +281,9 @@
+ #include <linux/fcntl.h>
+ #include <linux/blkdev.h>
+ #include <linux/times.h>
++#include <linux/delay.h>
+ #include <linux/uaccess.h>
++#include <linux/sched/signal.h>
+ #include <scsi/scsi_request.h>
  
- 	if (pcd_ready_wait(cd, PCD_READY_TMO))
--		return CDS_DRIVE_NOT_READY;
-+		return CDS_DRIVE_ERROR;
- 	if (pcd_atapi(cd, rc_cmd, 8, pcd_scratch, DBMSG("check media")))
- 		return CDS_NO_DISC;
- 	return CDS_DISC_OK;
-diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
-index 6495b03f576c..702f255bbe42 100644
---- a/drivers/cdrom/gdrom.c
-+++ b/drivers/cdrom/gdrom.c
-@@ -390,7 +390,7 @@ static int gdrom_drivestatus(struct cdrom_device_info *cd_info, int ignore)
- 	if (sense == 0)
- 		return CDS_DISC_OK;
- 	if (sense == 0x20)
--		return CDS_DRIVE_NOT_READY;
-+		return CDS_DRIVE_ERROR;
- 	/* default */
- 	return CDS_NO_INFO;
- }
-diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
-index 2acca12b9c94..9a26f50a2092 100644
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -62,9 +62,13 @@ int ide_cdrom_drive_status(struct cdrom_device_info *cdi, int slot_nr)
- 			return CDS_NO_DISC;
- 	}
- 
--	if (sense.sense_key == NOT_READY && sense.asc == 0x04
--			&& sense.ascq == 0x04)
--		return CDS_DISC_OK;
-+	if (sense.sense_key == NOT_READY && sense.asc == 0x04)
-+		switch (sense.ascq) {
-+		case 0x01:
-+			return CDS_DRIVE_NOT_READY;
-+		case 0x04:
-+			return CDS_DISC_OK;
-+		}
- 
- 	/*
- 	 * If not using Mt Fuji extended media tray reports,
-@@ -77,7 +81,7 @@ int ide_cdrom_drive_status(struct cdrom_device_info *cdi, int slot_nr)
- 		else
- 			return CDS_TRAY_OPEN;
- 	}
--	return CDS_DRIVE_NOT_READY;
-+	return CDS_DRIVE_ERROR;
+ /* used to tell the module to turn on full debugging messages */
+@@ -1030,6 +1032,18 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ 	       tracks->cdi, tracks->xa);
  }
  
- /*
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index 2a21f2d48592..7c93f12a9cb8 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -333,7 +333,7 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
- 	else
- 		return CDS_TRAY_OPEN;
++static int cdrom_tray_close(struct cdrom_device_info *cdi)
++{
++	int ret;
++
++	ret = cdi->ops->tray_move(cdi, 0);
++	if (ret || !cdi->ops->drive_status)
++		return ret;
++
++	return poll_event_interruptible(CDS_TRAY_OPEN !=
++			cdi->ops->drive_status(cdi, CDSL_CURRENT), 500);
++}
++
+ static
+ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
+ {
+@@ -1048,7 +1062,9 @@ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
+ 			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
+ 			    cdi->options & CDO_AUTO_CLOSE) {
+ 				cd_dbg(CD_OPEN, "trying to close the tray\n");
+-				ret = cdo->tray_move(cdi, 0);
++				ret = cdrom_tray_close(cdi);
++				if (ret == -ERESTARTSYS)
++					return ret;
+ 				if (ret) {
+ 					cd_dbg(CD_OPEN, "bummer. tried to close the tray but failed.\n");
+ 					/* Ignore the error from the low
+@@ -2312,7 +2328,8 @@ static int cdrom_ioctl_closetray(struct cdrom_device_info *cdi)
  
--	return CDS_DRIVE_NOT_READY;
-+	return CDS_DRIVE_ERROR;
+ 	if (!CDROM_CAN(CDC_CLOSE_TRAY))
+ 		return -ENOSYS;
+-	return cdi->ops->tray_move(cdi, 0);
++
++	return cdrom_tray_close(cdi);
  }
  
- int sr_disk_status(struct cdrom_device_info *cdi)
-diff --git a/include/uapi/linux/cdrom.h b/include/uapi/linux/cdrom.h
-index 2817230148fd..339b1435f44e 100644
---- a/include/uapi/linux/cdrom.h
-+++ b/include/uapi/linux/cdrom.h
-@@ -398,6 +398,7 @@ struct cdrom_generic_command
- #define CDS_TRAY_OPEN		2
- #define CDS_DRIVE_NOT_READY	3
- #define CDS_DISC_OK		4
-+#define CDS_DRIVE_ERROR		5
- 
- /* return values for the CDROM_DISC_STATUS ioctl */
- /* can also return CDS_NO_[INFO|DISC], from above */
+ static int cdrom_ioctl_eject_sw(struct cdrom_device_info *cdi,
 -- 
 2.13.6
-
