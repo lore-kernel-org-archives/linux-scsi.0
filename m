@@ -1,43 +1,64 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 15/19] lpfc: Fix header inclusion in lpfc_nvmet
-Date: Fri, 26 Jan 2018 11:22:35 -0800
-Message-ID: <20180126192239.10727-16-jsmart2021@gmail.com>
-References: <20180126192239.10727-1-jsmart2021@gmail.com>
+Subject: [PATCH 00/13] lpfc new hardware patches for 12.0.0.0
+Date: Fri, 26 Jan 2018 11:31:00 -0800
+Message-ID: <20180126193113.29610-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:41633 "EHLO
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:40924 "EHLO
         mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752876AbeAZTXL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 14:23:11 -0500
-Received: by mail-qt0-f196.google.com with SMTP id i1so3960320qtj.8
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2018 11:23:10 -0800 (PST)
-In-Reply-To: <20180126192239.10727-1-jsmart2021@gmail.com>
+        with ESMTP id S1752895AbeAZTb0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 14:31:26 -0500
+Received: by mail-qt0-f196.google.com with SMTP id s39so4030889qth.7
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2018 11:31:26 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: James Smart <jsmart2021@gmail.com>
 
-The driver was inappropriately pulling in the nvme host's
-nvme.h header. What it really needed was the standard
-<linux/nvme.h> header.
+This patch set adds support for Broadcom's new G7 product that
+supports G4G FC.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The patches were cut against the Martin's 4.16/scsi-queue tree.
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 6dd8535918f6..823b6df0aec7 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -36,7 +36,7 @@
- #include <scsi/scsi_transport_fc.h>
- #include <scsi/fc/fc_fs.h>
- 
--#include <../drivers/nvme/host/nvme.h>
-+#include <linux/nvme.h>
- #include <linux/nvme-fc-driver.h>
- #include <linux/nvme-fc.h>
- 
+The patches are dependent (layered on top of) the lpfc 11.4.0.7
+patchset that was recently posted. See:
+  https://www.spinics.net/lists/linux-scsi/msg116956.html
+
+
+James Smart (13):
+  lpfc: Rework lpfc to allow different sli4 cq and eq handlers
+  lpfc: Rework sli4 doorbell infrastructure
+  lpfc: Add SLI-4 if_type=6 support to the code base
+  lpfc: Add push-to-adapter support to sli4
+  lpfc: Add PCI Ids for if_type=6 hardware
+  lpfc: Add 64G link speed support
+  lpfc: Add if_type=6 support for cycling valid bits
+  lpfc: Enable fw download on if_type=6 devices
+  lpfc: Add embedded data pointers for enhanced performance
+  lpfc: Fix nvme embedded io length on new hardware
+  lpfc: Work around NVME cmd iu SGL type
+  lpfc: update driver version to 12.0.0.0
+  lpfc: Update 12.0.0.0 modified files for 2018 Copyright
+
+ drivers/scsi/lpfc/lpfc.h         |  20 +-
+ drivers/scsi/lpfc/lpfc_attr.c    |  85 +++++--
+ drivers/scsi/lpfc/lpfc_bsg.c     |   6 +-
+ drivers/scsi/lpfc/lpfc_ct.c      |   7 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c |  22 +-
+ drivers/scsi/lpfc/lpfc_debugfs.h |  13 +-
+ drivers/scsi/lpfc/lpfc_els.c     |   5 +
+ drivers/scsi/lpfc/lpfc_hbadisc.c |   1 +
+ drivers/scsi/lpfc/lpfc_hw.h      |  15 +-
+ drivers/scsi/lpfc/lpfc_hw4.h     | 115 ++++++++-
+ drivers/scsi/lpfc/lpfc_ids.h     |   4 +-
+ drivers/scsi/lpfc/lpfc_init.c    | 245 +++++++++++++++---
+ drivers/scsi/lpfc/lpfc_mbox.c    |   4 +
+ drivers/scsi/lpfc/lpfc_nvme.c    |  69 +++--
+ drivers/scsi/lpfc/lpfc_nvmet.c   |  24 ++
+ drivers/scsi/lpfc/lpfc_scsi.c    |   8 +-
+ drivers/scsi/lpfc/lpfc_sli.c     | 535 +++++++++++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_sli4.h    |  30 ++-
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ 19 files changed, 960 insertions(+), 250 deletions(-)
+
 -- 
 2.13.1
