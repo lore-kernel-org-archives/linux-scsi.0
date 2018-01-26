@@ -1,30 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi_debug: Use scsi-mq if it has been enabled
-Date: Fri, 26 Jan 2018 08:58:37 +0100
-Message-ID: <20180126075837.GF2356@lst.de>
-References: <20180124003958.3945-1-bart.vanassche@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41745 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751852AbeAZH6j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Jan 2018 02:58:39 -0500
-Content-Disposition: inline
-In-Reply-To: <20180124003958.3945-1-bart.vanassche@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Huacai Chen <chenhc@lemote.com>
+Subject: [PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
+Date: Fri, 26 Jan 2018 20:53:06 +0800
+Message-ID: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Fuxin Zhang <zhangfx@lemote.com>, linux-scsi@vger.kernel.org, Huacai Chen <chenhc@lemote.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Jan 23, 2018 at 04:39:58PM -0800, Bart Van Assche wrote:
-> Since we want to remove the single queue code from the SCSI core
-> at the appropriate time and since scsi-mq performs better than
-> scsi-sq even when using only a single hardware queue, use scsi-mq
-> if it has been enabled.
+In commit bc73905abf770192 ("[SCSI] lpfc 8.3.16: SLI Additions, updates,
+and code cleanup"), lpfc_memcpy_to_slim() have switched memcpy_toio() to
+__write32_copy() in order to prevent unaligned 64 bit copy. Recently, we
+found that lpfc_memcpy_from_slim() have similar issues, so let it switch
+memcpy_fromio() to __read32_copy().
 
-scsi_debug already always uses scsi-mq if enabled.  The somewhat
-misnamed sdebug_mq_active variable is only used for decoding
-multiqueue tags.  That being said the blk_mq_unique_tag* helpers
-should be safe to use even without blk-mq, so the variable could
-probably just be removed entirely.
+Cc: stable@vger.kernel.org
+Signed-off-by: Huacai Chen <chenhc@lemote.com>
+---
+ drivers/scsi/lpfc/lpfc_compat.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_compat.h b/drivers/scsi/lpfc/lpfc_compat.h
+index 6b32b0a..47d4fad 100644
+--- a/drivers/scsi/lpfc/lpfc_compat.h
++++ b/drivers/scsi/lpfc/lpfc_compat.h
+@@ -91,8 +91,8 @@ lpfc_memcpy_to_slim( void __iomem *dest, void *src, unsigned int bytes)
+ static inline void
+ lpfc_memcpy_from_slim( void *dest, void __iomem *src, unsigned int bytes)
+ {
+-	/* actually returns 1 byte past dest */
+-	memcpy_fromio( dest, src, bytes);
++	/* convert bytes in argument list to word count for copy function */
++	__ioread32_copy(dest, src, bytes / sizeof(uint32_t));
+ }
+ 
+ #endif	/* __BIG_ENDIAN */
+-- 
+2.7.0
