@@ -1,31 +1,107 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi_debug: Use scsi-mq if it has been enabled
-Date: Fri, 26 Jan 2018 16:10:17 +0000
-Message-ID: <1516983017.2651.4.camel@wdc.com>
-References: <20180124003958.3945-1-bart.vanassche@wdc.com>
-         <20180126075837.GF2356@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH] scsi_debug: Simplify request tag decoding
+Date: Fri, 26 Jan 2018 08:52:19 -0800
+Message-ID: <20180126165219.11913-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:13641 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753836AbeAZQKU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 11:10:20 -0500
-In-Reply-To: <20180126075837.GF2356@lst.de>
-Content-Language: en-US
-Content-ID: <5B11EEDF69C10A44982C39CAFAB28265@namprd04.prod.outlook.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:62139 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751112AbeAZQwU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 11:52:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-T24gRnJpLCAyMDE4LTAxLTI2IGF0IDA4OjU4ICswMTAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gc2NzaV9kZWJ1ZyBhbHJlYWR5IGFsd2F5cyB1c2VzIHNjc2ktbXEgaWYgZW5hYmxlZC4g
-IFRoZSBzb21ld2hhdA0KPiBtaXNuYW1lZCBzZGVidWdfbXFfYWN0aXZlIHZhcmlhYmxlIGlzIG9u
-bHkgdXNlZCBmb3IgZGVjb2RpbmcNCj4gbXVsdGlxdWV1ZSB0YWdzLiAgVGhhdCBiZWluZyBzYWlk
-IHRoZSBibGtfbXFfdW5pcXVlX3RhZyogaGVscGVycw0KPiBzaG91bGQgYmUgc2FmZSB0byB1c2Ug
-ZXZlbiB3aXRob3V0IGJsay1tcSwgc28gdGhlIHZhcmlhYmxlIGNvdWxkDQo+IHByb2JhYmx5IGp1
-c3QgYmUgcmVtb3ZlZCBlbnRpcmVseS4NCg0KSGVsbG8gQ2hyaXN0b3BoLA0KDQpSZW1vdmluZyBz
-ZGVidWdfbXFfYWN0aXZlIHNvdW5kcyBsaWtlIGEgZ29vZCBpZGVhIHRvIG1lLiBJIHdpbGwgcmV3
-b3JrIHRoaXMNCnBhdGNoLg0KDQpCYXJ0Lg==
+Since commit 64d513ac31bd ("scsi: use host wide tags by default")
+all SCSI requests have a tag, whether or not scsi-mq is enabled.
+Additionally, it is safe to use blk_mq_unique_tag() and
+blk_mq_unique_tag_to_hwq() for legacy SCSI queues. Since this
+means that the sdebug_mq_active variable is superfluous, remove it.
+
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_debug.c | 37 +++++++++++--------------------------
+ 1 file changed, 11 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index a5986dae9020..7d2ce0cc915a 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -649,7 +649,6 @@ static bool sdebug_any_injecting_opt;
+ static bool sdebug_verbose;
+ static bool have_dif_prot;
+ static bool sdebug_statistics = DEF_STATISTICS;
+-static bool sdebug_mq_active;
+ 
+ static unsigned int sdebug_store_sectors;
+ static sector_t sdebug_capacity;	/* in sectors */
+@@ -3727,20 +3726,13 @@ static int resp_xdwriteread_10(struct scsi_cmnd *scp,
+ 
+ static struct sdebug_queue *get_queue(struct scsi_cmnd *cmnd)
+ {
+-	struct sdebug_queue *sqp = sdebug_q_arr;
++	u32 tag = blk_mq_unique_tag(cmnd->request);
++	u16 hwq = blk_mq_unique_tag_to_hwq(tag);
+ 
+-	if (sdebug_mq_active) {
+-		u32 tag = blk_mq_unique_tag(cmnd->request);
+-		u16 hwq = blk_mq_unique_tag_to_hwq(tag);
+-
+-		if (unlikely(hwq >= submit_queues)) {
+-			pr_warn("Unexpected hwq=%d, apply modulo\n", hwq);
+-			hwq %= submit_queues;
+-		}
+-		pr_debug("tag=%u, hwq=%d\n", tag, hwq);
+-		return sqp + hwq;
+-	} else
+-		return sqp;
++	pr_debug("tag=%#x, hwq=%d\n", tag, hwq);
++	if (WARN_ON_ONCE(hwq >= submit_queues))
++		hwq = 0;
++	return sdebug_q_arr + hwq;
+ }
+ 
+ /* Queued (deferred) command completions converge here. */
+@@ -4587,9 +4579,8 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
+ 		   num_host_resets);
+ 	seq_printf(m, "dix_reads=%d, dix_writes=%d, dif_errors=%d\n",
+ 		   dix_reads, dix_writes, dif_errors);
+-	seq_printf(m, "usec_in_jiffy=%lu, %s=%d, mq_active=%d\n",
+-		   TICK_NSEC / 1000, "statistics", sdebug_statistics,
+-		   sdebug_mq_active);
++	seq_printf(m, "usec_in_jiffy=%lu, statistics=%d\n", TICK_NSEC / 1000,
++		   sdebug_statistics);
+ 	seq_printf(m, "cmnd_count=%d, completions=%d, %s=%d, a_tsf=%d\n",
+ 		   atomic_read(&sdebug_cmnd_count),
+ 		   atomic_read(&sdebug_completions),
+@@ -5612,13 +5603,8 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 				n += scnprintf(b + n, sb - n, "%02x ",
+ 					       (u32)cmd[k]);
+ 		}
+-		if (sdebug_mq_active)
+-			sdev_printk(KERN_INFO, sdp, "%s: tag=%u, cmd %s\n",
+-				    my_name, blk_mq_unique_tag(scp->request),
+-				    b);
+-		else
+-			sdev_printk(KERN_INFO, sdp, "%s: cmd %s\n", my_name,
+-				    b);
++		sdev_printk(KERN_INFO, sdp, "%s: tag=%#x, cmd %s\n", my_name,
++			    blk_mq_unique_tag(scp->request), b);
+ 	}
+ 	if (fake_host_busy(scp))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -5782,8 +5768,7 @@ static int sdebug_driver_probe(struct device * dev)
+ 	}
+ 	/* Decide whether to tell scsi subsystem that we want mq */
+ 	/* Following should give the same answer for each host */
+-	sdebug_mq_active = shost_use_blk_mq(hpnt) && (submit_queues > 1);
+-	if (sdebug_mq_active)
++	if (shost_use_blk_mq(hpnt))
+ 		hpnt->nr_hw_queues = submit_queues;
+ 
+ 	sdbg_host->shost = hpnt;
+-- 
+2.16.0
