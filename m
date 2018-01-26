@@ -1,78 +1,283 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 12/19] lpfc: Indicate CONF support in NVMe PRLI
-Date: Fri, 26 Jan 2018 11:22:32 -0800
-Message-ID: <20180126192239.10727-13-jsmart2021@gmail.com>
+Subject: [PATCH v2 05/19] lpfc: Add WQ Full Logic for NVME Target
+Date: Fri, 26 Jan 2018 11:22:25 -0800
+Message-ID: <20180126192239.10727-6-jsmart2021@gmail.com>
 References: <20180126192239.10727-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:35106 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbeAZTXI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 14:23:08 -0500
-Received: by mail-qt0-f193.google.com with SMTP id g14so4004841qti.2
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2018 11:23:07 -0800 (PST)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:47094 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751609AbeAZTXA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 14:23:00 -0500
+Received: by mail-qt0-f195.google.com with SMTP id o35so3921539qtj.13
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2018 11:23:00 -0800 (PST)
 In-Reply-To: <20180126192239.10727-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Revise the NVME PRLI to indicate CONF support.
+I/O conditions on the nvme target may have the driver submitting
+to a full hardware wq. The hardware wq is a shared resource among
+all nvme controllers. When the driver hit a full wq, it failed the
+io posting back to the nvme-fc transport, which then escalated it
+into errors.
+
+Correct by maintaining a sideband queue within the driver that is
+added to when the WQ full condition is hit, and drained from as soon
+as new WQ space opens up.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c       | 3 ++-
- drivers/scsi/lpfc/lpfc_hw4.h       | 6 +++---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 3 ---
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h  |   1 +
+ drivers/scsi/lpfc/lpfc_nvmet.c | 116 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.h |   1 +
+ drivers/scsi/lpfc/lpfc_sli.c   |   3 ++
+ drivers/scsi/lpfc/lpfc_sli4.h  |   5 +-
+ 5 files changed, 125 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 234c7c015982..404e1af5e2ab 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2293,10 +2293,11 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		if (phba->nvmet_support) {
- 			bf_set(prli_tgt, npr_nvme, 1);
- 			bf_set(prli_disc, npr_nvme, 1);
--
- 		} else {
- 			bf_set(prli_init, npr_nvme, 1);
-+			bf_set(prli_conf, npr_nvme, 1);
- 		}
-+
- 		npr_nvme->word1 = cpu_to_be32(npr_nvme->word1);
- 		npr_nvme->word4 = cpu_to_be32(npr_nvme->word4);
- 		elsiocb->iocb_flag |= LPFC_PRLI_NVME_REQ;
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index ef469129fb71..7c3afc3d3121 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -4346,9 +4346,9 @@ struct lpfc_nvme_prli {
- #define prli_init_SHIFT                 5
- #define prli_init_MASK                  0x00000001
- #define prli_init_WORD                  word4
--#define prli_recov_SHIFT                8
--#define prli_recov_MASK                 0x00000001
--#define prli_recov_WORD                 word4
-+#define prli_conf_SHIFT                 7
-+#define prli_conf_MASK                  0x00000001
-+#define prli_conf_WORD                  word4
- 	uint32_t word5;
- #define prli_fb_sz_SHIFT                0
- #define prli_fb_sz_MASK                 0x0000ffff
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index d841aa42f607..bbf1e1342b09 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -2011,9 +2011,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 			}
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 559f9aa0ed08..3ecf50df93f4 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -254,6 +254,7 @@ void lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba,
+ 			    struct lpfc_nvmet_ctxbuf *ctxp);
+ int lpfc_nvmet_rcv_unsol_abort(struct lpfc_vport *vport,
+ 			       struct fc_frame_header *fc_hdr);
++void lpfc_nvmet_wqfull_process(struct lpfc_hba *phba, struct lpfc_queue *wq);
+ void lpfc_sli_flush_nvme_rings(struct lpfc_hba *phba);
+ void lpfc_nvme_wait_for_io_drain(struct lpfc_hba *phba);
+ void lpfc_sli4_build_dflt_fcf_record(struct lpfc_hba *, struct fcf_record *,
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 7927ac46d345..9c2acf90212c 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -71,6 +71,8 @@ static int lpfc_nvmet_unsol_fcp_issue_abort(struct lpfc_hba *,
+ static int lpfc_nvmet_unsol_ls_issue_abort(struct lpfc_hba *,
+ 					   struct lpfc_nvmet_rcv_ctx *,
+ 					   uint32_t, uint16_t);
++static void lpfc_nvmet_wqfull_flush(struct lpfc_hba *, struct lpfc_queue *,
++				    struct lpfc_nvmet_rcv_ctx *);
  
--		if (bf_get_be32(prli_recov, nvpr))
--			ndlp->nlp_fcp_info |= NLP_FCP_2_DEVICE;
--
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 				 "6029 NVME PRLI Cmpl w1 x%08x "
- 				 "w4 x%08x w5 x%08x flag x%x, "
+ void
+ lpfc_nvmet_defer_release(struct lpfc_hba *phba, struct lpfc_nvmet_rcv_ctx *ctxp)
+@@ -741,7 +743,10 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 	struct lpfc_nvmet_rcv_ctx *ctxp =
+ 		container_of(rsp, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
+ 	struct lpfc_hba *phba = ctxp->phba;
++	struct lpfc_queue *wq;
+ 	struct lpfc_iocbq *nvmewqeq;
++	struct lpfc_sli_ring *pring;
++	unsigned long iflags;
+ 	int rc;
+ 
+ 	if (phba->pport->load_flag & FC_UNLOADING) {
+@@ -820,6 +825,21 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 		return 0;
+ 	}
+ 
++	if (rc == -EBUSY) {
++		/*
++		 * WQ was full, so queue nvmewqeq to be sent after
++		 * WQE release CQE
++		 */
++		ctxp->flag |= LPFC_NVMET_DEFER_WQFULL;
++		wq = phba->sli4_hba.nvme_wq[rsp->hwqid];
++		pring = wq->pring;
++		spin_lock_irqsave(&pring->ring_lock, iflags);
++		list_add_tail(&nvmewqeq->list, &wq->wqfull_list);
++		wq->q_flag |= HBA_NVMET_WQFULL;
++		spin_unlock_irqrestore(&pring->ring_lock, iflags);
++		return 0;
++	}
++
+ 	/* Give back resources */
+ 	atomic_inc(&lpfc_nvmep->xmt_fcp_drop);
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+@@ -851,6 +871,7 @@ lpfc_nvmet_xmt_fcp_abort(struct nvmet_fc_target_port *tgtport,
+ 	struct lpfc_nvmet_rcv_ctx *ctxp =
+ 		container_of(req, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
+ 	struct lpfc_hba *phba = ctxp->phba;
++	struct lpfc_queue *wq;
+ 	unsigned long flags;
+ 
+ 	if (phba->pport->load_flag & FC_UNLOADING)
+@@ -880,6 +901,14 @@ lpfc_nvmet_xmt_fcp_abort(struct nvmet_fc_target_port *tgtport,
+ 	}
+ 	ctxp->flag |= LPFC_NVMET_ABORT_OP;
+ 
++	if (ctxp->flag & LPFC_NVMET_DEFER_WQFULL) {
++		lpfc_nvmet_unsol_fcp_issue_abort(phba, ctxp, ctxp->sid,
++						 ctxp->oxid);
++		wq = phba->sli4_hba.nvme_wq[ctxp->wqeq->hba_wqidx];
++		lpfc_nvmet_wqfull_flush(phba, wq, ctxp);
++		return;
++	}
++
+ 	/* An state of LPFC_NVMET_STE_RCV means we have just received
+ 	 * the NVME command and have not started processing it.
+ 	 * (by issuing any IO WQEs on this exchange yet)
+@@ -1435,16 +1464,103 @@ lpfc_nvmet_rcv_unsol_abort(struct lpfc_vport *vport,
+ 	return 0;
+ }
+ 
++static void
++lpfc_nvmet_wqfull_flush(struct lpfc_hba *phba, struct lpfc_queue *wq,
++			struct lpfc_nvmet_rcv_ctx *ctxp)
++{
++	struct lpfc_sli_ring *pring;
++	struct lpfc_iocbq *nvmewqeq;
++	struct lpfc_iocbq *next_nvmewqeq;
++	unsigned long iflags;
++	struct lpfc_wcqe_complete wcqe;
++	struct lpfc_wcqe_complete *wcqep;
++
++	pring = wq->pring;
++	wcqep = &wcqe;
++
++	/* Fake an ABORT error code back to cmpl routine */
++	memset(wcqep, 0, sizeof(struct lpfc_wcqe_complete));
++	bf_set(lpfc_wcqe_c_status, wcqep, IOSTAT_LOCAL_REJECT);
++	wcqep->parameter = IOERR_ABORT_REQUESTED;
++
++	spin_lock_irqsave(&pring->ring_lock, iflags);
++	list_for_each_entry_safe(nvmewqeq, next_nvmewqeq,
++				 &wq->wqfull_list, list) {
++		if (ctxp) {
++			/* Checking for a specific IO to flush */
++			if (nvmewqeq->context2 == ctxp) {
++				list_del(&nvmewqeq->list);
++				spin_unlock_irqrestore(&pring->ring_lock,
++						       iflags);
++				lpfc_nvmet_xmt_fcp_op_cmp(phba, nvmewqeq,
++							  wcqep);
++				return;
++			}
++			continue;
++		} else {
++			/* Flush all IOs */
++			list_del(&nvmewqeq->list);
++			spin_unlock_irqrestore(&pring->ring_lock, iflags);
++			lpfc_nvmet_xmt_fcp_op_cmp(phba, nvmewqeq, wcqep);
++			spin_lock_irqsave(&pring->ring_lock, iflags);
++		}
++	}
++	if (!ctxp)
++		wq->q_flag &= ~HBA_NVMET_WQFULL;
++	spin_unlock_irqrestore(&pring->ring_lock, iflags);
++}
++
++void
++lpfc_nvmet_wqfull_process(struct lpfc_hba *phba,
++			  struct lpfc_queue *wq)
++{
++#if (IS_ENABLED(CONFIG_NVME_TARGET_FC))
++	struct lpfc_sli_ring *pring;
++	struct lpfc_iocbq *nvmewqeq;
++	unsigned long iflags;
++	int rc;
++
++	/*
++	 * Some WQE slots are available, so try to re-issue anything
++	 * on the WQ wqfull_list.
++	 */
++	pring = wq->pring;
++	spin_lock_irqsave(&pring->ring_lock, iflags);
++	while (!list_empty(&wq->wqfull_list)) {
++		list_remove_head(&wq->wqfull_list, nvmewqeq, struct lpfc_iocbq,
++				 list);
++		spin_unlock_irqrestore(&pring->ring_lock, iflags);
++		rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, nvmewqeq);
++		spin_lock_irqsave(&pring->ring_lock, iflags);
++		if (rc == -EBUSY) {
++			/* WQ was full again, so put it back on the list */
++			list_add(&nvmewqeq->list, &wq->wqfull_list);
++			spin_unlock_irqrestore(&pring->ring_lock, iflags);
++			return;
++		}
++	}
++	wq->q_flag &= ~HBA_NVMET_WQFULL;
++	spin_unlock_irqrestore(&pring->ring_lock, iflags);
++
++#endif
++}
++
+ void
+ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
+ {
+ #if (IS_ENABLED(CONFIG_NVME_TARGET_FC))
+ 	struct lpfc_nvmet_tgtport *tgtp;
++	struct lpfc_queue *wq;
++	uint32_t qidx;
+ 
+ 	if (phba->nvmet_support == 0)
+ 		return;
+ 	if (phba->targetport) {
+ 		tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
++		for (qidx = 0; qidx < phba->cfg_nvme_io_channel; qidx++) {
++			wq = phba->sli4_hba.nvme_wq[qidx];
++			lpfc_nvmet_wqfull_flush(phba, wq, NULL);
++		}
+ 		init_completion(&tgtp->tport_unreg_done);
+ 		nvmet_fc_unregister_targetport(phba->targetport);
+ 		wait_for_completion_timeout(&tgtp->tport_unreg_done, 5);
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
+index 5b32c9e4d4ef..354cce443c9f 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.h
++++ b/drivers/scsi/lpfc/lpfc_nvmet.h
+@@ -132,6 +132,7 @@ struct lpfc_nvmet_rcv_ctx {
+ #define LPFC_NVMET_CTX_RLS		0x8  /* ctx free requested */
+ #define LPFC_NVMET_ABTS_RCV		0x10  /* ABTS received on exchange */
+ #define LPFC_NVMET_DEFER_RCV_REPOST	0x20  /* repost to RQ on defer rcv */
++#define LPFC_NVMET_DEFER_WQFULL		0x40  /* Waiting on a free WQE */
+ 	struct rqb_dmabuf *rqb_buffer;
+ 	struct lpfc_nvmet_ctxbuf *ctxbuf;
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index d08d9b48f6b1..fbda2fbcbfec 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13232,6 +13232,8 @@ lpfc_sli4_fp_handle_rel_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 		if (childwq->queue_id == hba_wqid) {
+ 			lpfc_sli4_wq_release(childwq,
+ 					bf_get(lpfc_wcqe_r_wqe_index, wcqe));
++			if (childwq->q_flag & HBA_NVMET_WQFULL)
++				lpfc_nvmet_wqfull_process(phba, childwq);
+ 			wqid_matched = true;
+ 			break;
+ 		}
+@@ -13950,6 +13952,7 @@ lpfc_sli4_queue_alloc(struct lpfc_hba *phba, uint32_t page_size,
+ 
+ 	INIT_LIST_HEAD(&queue->list);
+ 	INIT_LIST_HEAD(&queue->wq_list);
++	INIT_LIST_HEAD(&queue->wqfull_list);
+ 	INIT_LIST_HEAD(&queue->page_list);
+ 	INIT_LIST_HEAD(&queue->child_list);
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index a9af9980fc43..ac81bfa59278 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -145,6 +145,7 @@ struct lpfc_rqb {
+ struct lpfc_queue {
+ 	struct list_head list;
+ 	struct list_head wq_list;
++	struct list_head wqfull_list;
+ 	enum lpfc_sli4_queue_type type;
+ 	enum lpfc_sli4_queue_subtype subtype;
+ 	struct lpfc_hba *phba;
+@@ -173,9 +174,11 @@ struct lpfc_queue {
+ #define LPFC_EXPANDED_PAGE_SIZE	16384
+ #define LPFC_DEFAULT_PAGE_SIZE	4096
+ 	uint16_t chann;		/* IO channel this queue is associated with */
+-	uint16_t db_format;
++	uint8_t db_format;
+ #define LPFC_DB_RING_FORMAT	0x01
+ #define LPFC_DB_LIST_FORMAT	0x02
++	uint8_t q_flag;
++#define HBA_NVMET_WQFULL	0x1 /* We hit WQ Full condition for NVMET */
+ 	void __iomem *db_regaddr;
+ 	/* For q stats */
+ 	uint32_t q_cnt_1;
 -- 
 2.13.1
