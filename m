@@ -1,145 +1,368 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 08/13] lpfc: Enable fw download on if_type=6 devices
-Date: Fri, 26 Jan 2018 11:31:08 -0800
-Message-ID: <20180126193113.29610-9-jsmart2021@gmail.com>
+Subject: [PATCH 06/13] lpfc: Add 64G link speed support
+Date: Fri, 26 Jan 2018 11:31:06 -0800
+Message-ID: <20180126193113.29610-7-jsmart2021@gmail.com>
 References: <20180126193113.29610-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:39032 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753066AbeAZTbg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 14:31:36 -0500
-Received: by mail-qt0-f195.google.com with SMTP id f4so4016368qtj.6
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2018 11:31:36 -0800 (PST)
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:38503 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753117AbeAZTbe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2018 14:31:34 -0500
+Received: by mail-qt0-f193.google.com with SMTP id z10so4037352qti.5
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2018 11:31:34 -0800 (PST)
 In-Reply-To: <20180126193113.29610-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Current code is very explicit in what it allows to be downloaded.
-The driver checking prevented G7 firmware download. The driver
-checking is unnecessary as the device will validate what it receives.
+The G7 adapter supports 64G link speeds. Add support to the driver.
 
-Revise the firmware download interface checking.
-Added a little debug support in case there is still a failure.
+In addition, a small cleanup to replace the odd bitmap logic with
+a switch case.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h  |  5 +----
- drivers/scsi/lpfc/lpfc_init.c | 44 ++++++++++++++++++++++++++++++-------------
- drivers/scsi/lpfc/lpfc_sli.c  |  1 +
- 3 files changed, 33 insertions(+), 17 deletions(-)
+ drivers/scsi/lpfc/lpfc.h         | 14 +++------
+ drivers/scsi/lpfc/lpfc_attr.c    | 61 ++++++++++++++++++++++++++++------------
+ drivers/scsi/lpfc/lpfc_ct.c      |  5 ++++
+ drivers/scsi/lpfc/lpfc_els.c     |  5 ++++
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  1 +
+ drivers/scsi/lpfc/lpfc_hw.h      | 12 ++++++++
+ drivers/scsi/lpfc/lpfc_hw4.h     |  3 ++
+ drivers/scsi/lpfc/lpfc_init.c    | 17 +++++++++--
+ drivers/scsi/lpfc/lpfc_mbox.c    |  4 +++
+ 9 files changed, 92 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index dba724e1f5ee..be8227dfa086 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -2241,6 +2241,7 @@ struct lpfc_mbx_redisc_fcf_tbl {
-  * command.
-  */
- #define ADD_STATUS_OPERATION_ALREADY_ACTIVE		0x67
-+#define ADD_STATUS_FW_NOT_SUPPORTED			0xEB
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 86ffb9756e65..7aad4a717f13 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -544,16 +544,10 @@ struct unsol_rcv_ct_ctx {
+ #define LPFC_USER_LINK_SPEED_10G	10	/* 10 Gigabaud */
+ #define LPFC_USER_LINK_SPEED_16G	16	/* 16 Gigabaud */
+ #define LPFC_USER_LINK_SPEED_32G	32	/* 32 Gigabaud */
+-#define LPFC_USER_LINK_SPEED_MAX	LPFC_USER_LINK_SPEED_32G
+-#define LPFC_USER_LINK_SPEED_BITMAP  ((1ULL << LPFC_USER_LINK_SPEED_32G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_16G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_10G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_8G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_4G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_2G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_1G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_AUTO))
+-#define LPFC_LINK_SPEED_STRING "0, 1, 2, 4, 8, 10, 16, 32"
++#define LPFC_USER_LINK_SPEED_64G	64	/* 64 Gigabaud */
++#define LPFC_USER_LINK_SPEED_MAX	LPFC_USER_LINK_SPEED_64G
++
++#define LPFC_LINK_SPEED_STRING "0, 1, 2, 4, 8, 10, 16, 32, 64"
  
- struct lpfc_mbx_sli4_config {
- 	struct mbox_header header;
-@@ -4603,10 +4604,6 @@ union lpfc_wqe128 {
- 	struct gen_req64_wqe gen_req;
- };
- 
--#define LPFC_GROUP_OJECT_MAGIC_G5		0xfeaa0001
--#define LPFC_GROUP_OJECT_MAGIC_G6		0xfeaa0003
--#define LPFC_FILE_TYPE_GROUP			0xf7
--#define LPFC_FILE_ID_GROUP			0xa2
- struct lpfc_grp_hdr {
- 	uint32_t size;
- 	uint32_t magic_number;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index ad51bfcd929b..0e05f802bfaa 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -11294,6 +11294,27 @@ lpfc_sli4_get_iocb_cnt(struct lpfc_hba *phba)
+ enum nemb_type {
+ 	nemb_mse = 1,
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 705c42e724c2..ec080de4e7a7 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -4126,23 +4126,32 @@ lpfc_link_speed_store(struct device *dev, struct device_attribute *attr,
+ 	    ((val == LPFC_USER_LINK_SPEED_8G) && !(phba->lmt & LMT_8Gb)) ||
+ 	    ((val == LPFC_USER_LINK_SPEED_10G) && !(phba->lmt & LMT_10Gb)) ||
+ 	    ((val == LPFC_USER_LINK_SPEED_16G) && !(phba->lmt & LMT_16Gb)) ||
+-	    ((val == LPFC_USER_LINK_SPEED_32G) && !(phba->lmt & LMT_32Gb))) {
++	    ((val == LPFC_USER_LINK_SPEED_32G) && !(phba->lmt & LMT_32Gb)) ||
++	    ((val == LPFC_USER_LINK_SPEED_64G) && !(phba->lmt & LMT_64Gb))) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"2879 lpfc_link_speed attribute cannot be set "
+ 				"to %d. Speed is not supported by this port.\n",
+ 				val);
+ 		return -EINVAL;
+ 	}
+-	if (val == LPFC_USER_LINK_SPEED_16G &&
+-		 phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
++	if (val >= LPFC_USER_LINK_SPEED_16G &&
++	    phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3112 lpfc_link_speed attribute cannot be set "
+ 				"to %d. Speed is not supported in loop mode.\n",
+ 				val);
+ 		return -EINVAL;
+ 	}
+-	if ((val >= 0) && (val <= LPFC_USER_LINK_SPEED_MAX) &&
+-	    (LPFC_USER_LINK_SPEED_BITMAP & (1 << val))) {
++
++	switch (val) {
++	case LPFC_USER_LINK_SPEED_AUTO:
++	case LPFC_USER_LINK_SPEED_1G:
++	case LPFC_USER_LINK_SPEED_2G:
++	case LPFC_USER_LINK_SPEED_4G:
++	case LPFC_USER_LINK_SPEED_8G:
++	case LPFC_USER_LINK_SPEED_16G:
++	case LPFC_USER_LINK_SPEED_32G:
++	case LPFC_USER_LINK_SPEED_64G:
+ 		prev_val = phba->cfg_link_speed;
+ 		phba->cfg_link_speed = val;
+ 		if (nolip)
+@@ -4152,13 +4161,17 @@ lpfc_link_speed_store(struct device *dev, struct device_attribute *attr,
+ 		if (err) {
+ 			phba->cfg_link_speed = prev_val;
+ 			return -EINVAL;
+-		} else
+-			return strlen(buf);
++		}
++		return strlen(buf);
++	default:
++		break;
+ 	}
++
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-		"0469 lpfc_link_speed attribute cannot be set to %d, "
+-		"allowed values are ["LPFC_LINK_SPEED_STRING"]\n", val);
++			"0469 lpfc_link_speed attribute cannot be set to %d, "
++			"allowed values are ["LPFC_LINK_SPEED_STRING"]\n", val);
+ 	return -EINVAL;
++
  }
  
- 
-+static void
-+lpfc_log_write_firmware_error(struct lpfc_hba *phba, uint32_t offset,
-+	uint32_t magic_number, uint32_t ftype, uint32_t fid, uint32_t fsize,
-+	const struct firmware *fw)
-+{
-+	if (offset == ADD_STATUS_FW_NOT_SUPPORTED)
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"3030 This firmware version is not supported on "
-+			"this HBA model. Device:%x Magic:%x Type:%x "
-+			"ID:%x Size %d %zd\n",
-+			phba->pcidev->device, magic_number, ftype, fid,
-+			fsize, fw->size);
-+	else
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"3022 FW Download failed. Device:%x Magic:%x Type:%x "
-+			"ID:%x Size %d %zd\n",
-+			phba->pcidev->device, magic_number, ftype, fid,
-+			fsize, fw->size);
-+}
-+
-+
- /**
-  * lpfc_write_firmware - attempt to write a firmware image to the port
-  * @fw: pointer to firmware image returned from request_firmware.
-@@ -11321,20 +11342,10 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- 
- 	magic_number = be32_to_cpu(image->magic_number);
- 	ftype = bf_get_be32(lpfc_grp_hdr_file_type, image);
--	fid = bf_get_be32(lpfc_grp_hdr_id, image),
-+	fid = bf_get_be32(lpfc_grp_hdr_id, image);
- 	fsize = be32_to_cpu(image->size);
- 
- 	INIT_LIST_HEAD(&dma_buffer_list);
--	if ((magic_number != LPFC_GROUP_OJECT_MAGIC_G5 &&
--	     magic_number != LPFC_GROUP_OJECT_MAGIC_G6) ||
--	    ftype != LPFC_FILE_TYPE_GROUP || fsize != fw->size) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"3022 Invalid FW image found. "
--				"Magic:%x Type:%x ID:%x Size %d %zd\n",
--				magic_number, ftype, fid, fsize, fw->size);
--		rc = -EINVAL;
--		goto release_out;
--	}
- 	lpfc_decode_firmware_rev(phba, fwrev, 1);
- 	if (strncmp(fwrev, image->revision, strnlen(image->revision, 16))) {
+ static int lpfc_link_speed = 0;
+@@ -4185,24 +4198,33 @@ lpfc_param_show(link_speed)
+ static int
+ lpfc_link_speed_init(struct lpfc_hba *phba, int val)
+ {
+-	if (val == LPFC_USER_LINK_SPEED_16G && phba->cfg_topology == 4) {
++	if (val >= LPFC_USER_LINK_SPEED_16G && phba->cfg_topology == 4) {
  		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -11375,11 +11386,18 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- 			}
- 			rc = lpfc_wr_object(phba, &dma_buffer_list,
- 				    (fw->size - offset), &offset);
--			if (rc)
-+			if (rc) {
-+				lpfc_log_write_firmware_error(phba, offset,
-+					magic_number, ftype, fid, fsize, fw);
- 				goto release_out;
-+			}
- 		}
- 		rc = offset;
--	}
-+	} else
+ 			"3111 lpfc_link_speed of %d cannot "
+ 			"support loop mode, setting topology to default.\n",
+ 			 val);
+ 		phba->cfg_topology = 0;
+ 	}
+-	if ((val >= 0) && (val <= LPFC_USER_LINK_SPEED_MAX) &&
+-	    (LPFC_USER_LINK_SPEED_BITMAP & (1 << val))) {
++
++	switch (val) {
++	case LPFC_USER_LINK_SPEED_AUTO:
++	case LPFC_USER_LINK_SPEED_1G:
++	case LPFC_USER_LINK_SPEED_2G:
++	case LPFC_USER_LINK_SPEED_4G:
++	case LPFC_USER_LINK_SPEED_8G:
++	case LPFC_USER_LINK_SPEED_16G:
++	case LPFC_USER_LINK_SPEED_32G:
++	case LPFC_USER_LINK_SPEED_64G:
+ 		phba->cfg_link_speed = val;
+ 		return 0;
++	default:
 +		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3029 Skipped Firmware update, Current "
-+				"Version:%s New Version:%s\n",
-+				fwrev, image->revision);
++				"0405 lpfc_link_speed attribute cannot "
++				"be set to %d, allowed values are "
++				"["LPFC_LINK_SPEED_STRING"]\n", val);
++		phba->cfg_link_speed = LPFC_USER_LINK_SPEED_AUTO;
++		return -EINVAL;
+ 	}
+-	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-			"0405 lpfc_link_speed attribute cannot "
+-			"be set to %d, allowed values are "
+-			"["LPFC_LINK_SPEED_STRING"]\n", val);
+-	phba->cfg_link_speed = LPFC_USER_LINK_SPEED_AUTO;
+-	return -EINVAL;
+ }
  
- release_out:
- 	list_for_each_entry_safe(dmabuf, next, &dma_buffer_list, list) {
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index a5d6d8eddd2b..01691a5351bd 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -18876,6 +18876,7 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
- 				"status x%x add_status x%x, mbx status x%x\n",
- 				shdr_status, shdr_add_status, rc);
- 		rc = -ENXIO;
-+		*offset = shdr_add_status;
- 	} else
- 		*offset += wr_object->u.response.actual_write_length;
- 	return rc;
+ static DEVICE_ATTR(lpfc_link_speed, S_IRUGO | S_IWUSR,
+@@ -5734,6 +5756,9 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
+ 		case LPFC_LINK_SPEED_32GHZ:
+ 			fc_host_speed(shost) = FC_PORTSPEED_32GBIT;
+ 			break;
++		case LPFC_LINK_SPEED_64GHZ:
++			fc_host_speed(shost) = FC_PORTSPEED_64GBIT;
++			break;
+ 		default:
+ 			fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 9d20d2c208c7..03a7e13a049d 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -2130,6 +2130,8 @@ lpfc_fdmi_port_attr_support_speed(struct lpfc_vport *vport,
+ 
+ 	ae->un.AttrInt = 0;
+ 	if (!(phba->hba_flag & HBA_FCOE_MODE)) {
++		if (phba->lmt & LMT_64Gb)
++			ae->un.AttrInt |= HBA_PORTSPEED_64GFC;
+ 		if (phba->lmt & LMT_32Gb)
+ 			ae->un.AttrInt |= HBA_PORTSPEED_32GFC;
+ 		if (phba->lmt & LMT_16Gb)
+@@ -2201,6 +2203,9 @@ lpfc_fdmi_port_attr_speed(struct lpfc_vport *vport,
+ 		case LPFC_LINK_SPEED_32GHZ:
+ 			ae->un.AttrInt = HBA_PORTSPEED_32GFC;
+ 			break;
++		case LPFC_LINK_SPEED_64GHZ:
++			ae->un.AttrInt = HBA_PORTSPEED_64GFC;
++			break;
+ 		default:
+ 			ae->un.AttrInt = HBA_PORTSPEED_UNKNOWN;
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index ba896554a14f..09e4eb9fbc69 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5270,6 +5270,9 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
+ 	case LPFC_LINK_SPEED_32GHZ:
+ 		rdp_speed = RDP_PS_32GB;
+ 		break;
++	case LPFC_LINK_SPEED_64GHZ:
++		rdp_speed = RDP_PS_64GB;
++		break;
+ 	default:
+ 		rdp_speed = RDP_PS_UNKNOWN;
+ 		break;
+@@ -5277,6 +5280,8 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
+ 
+ 	desc->info.port_speed.speed = cpu_to_be16(rdp_speed);
+ 
++	if (phba->lmt & LMT_64Gb)
++		rdp_cap |= RDP_PS_64GB;
+ 	if (phba->lmt & LMT_32Gb)
+ 		rdp_cap |= RDP_PS_32GB;
+ 	if (phba->lmt & LMT_16Gb)
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index f5bbac3cadbb..7855afa13568 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -3084,6 +3084,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
+ 		case LPFC_LINK_SPEED_10GHZ:
+ 		case LPFC_LINK_SPEED_16GHZ:
+ 		case LPFC_LINK_SPEED_32GHZ:
++		case LPFC_LINK_SPEED_64GHZ:
+ 			break;
+ 		default:
+ 			phba->fc_linkspeed = LPFC_LINK_SPEED_UNKNOWN;
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index d07d2fcbea34..b91b429fe2df 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -1177,6 +1177,9 @@ struct fc_rdp_link_error_status_desc {
+ #define RDP_PS_8GB             0x0800
+ #define RDP_PS_16GB            0x0400
+ #define RDP_PS_32GB            0x0200
++#define RDP_PS_64GB            0x0100
++#define RDP_PS_128GB           0x0080
++#define RDP_PS_256GB           0x0040
+ 
+ #define RDP_CAP_USER_CONFIGURED 0x0002
+ #define RDP_CAP_UNKNOWN         0x0001
+@@ -2258,6 +2261,9 @@ typedef struct {
+ #define LINK_SPEED_10G  0x10    /* 10 Gigabaud */
+ #define LINK_SPEED_16G  0x11    /* 16 Gigabaud */
+ #define LINK_SPEED_32G  0x14    /* 32 Gigabaud */
++#define LINK_SPEED_64G  0x17    /* 64 Gigabaud */
++#define LINK_SPEED_128G 0x1A    /* 128 Gigabaud */
++#define LINK_SPEED_256G 0x1D    /* 256 Gigabaud */
+ 
+ } INIT_LINK_VAR;
+ 
+@@ -2442,6 +2448,9 @@ typedef struct {
+ #define LMT_10Gb      0x100
+ #define LMT_16Gb      0x200
+ #define LMT_32Gb      0x400
++#define LMT_64Gb      0x800
++#define LMT_128Gb     0x1000
++#define LMT_256Gb     0x2000
+ 	uint32_t rsvd2;
+ 	uint32_t rsvd3;
+ 	uint32_t max_xri;
+@@ -2966,6 +2975,9 @@ struct lpfc_mbx_read_top {
+ #define LPFC_LINK_SPEED_10GHZ	0x40
+ #define LPFC_LINK_SPEED_16GHZ	0x80
+ #define LPFC_LINK_SPEED_32GHZ	0x90
++#define LPFC_LINK_SPEED_64GHZ	0xA0
++#define LPFC_LINK_SPEED_128GHZ	0xB0
++#define LPFC_LINK_SPEED_2568GHZ	0xC0
+ };
+ 
+ /* Structure for MB Command CLEAR_LA (22) */
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 60ccff6fa8b0..0c33510fe75c 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -3961,6 +3961,9 @@ struct lpfc_acqe_fc_la {
+ #define LPFC_FC_LA_SPEED_10G		0xA
+ #define LPFC_FC_LA_SPEED_16G		0x10
+ #define LPFC_FC_LA_SPEED_32G            0x20
++#define LPFC_FC_LA_SPEED_64G            0x21
++#define LPFC_FC_LA_SPEED_128G           0x22
++#define LPFC_FC_LA_SPEED_256G           0x23
+ #define lpfc_acqe_fc_la_topology_SHIFT		16
+ #define lpfc_acqe_fc_la_topology_MASK		0x000000FF
+ #define lpfc_acqe_fc_la_topology_WORD		word0
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 0b8381876ed8..c38d57353edf 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -731,7 +731,9 @@ lpfc_hba_init_link_fc_topology(struct lpfc_hba *phba, uint32_t fc_topology,
+ 	    ((phba->cfg_link_speed == LPFC_USER_LINK_SPEED_16G) &&
+ 	     !(phba->lmt & LMT_16Gb)) ||
+ 	    ((phba->cfg_link_speed == LPFC_USER_LINK_SPEED_32G) &&
+-	     !(phba->lmt & LMT_32Gb))) {
++	     !(phba->lmt & LMT_32Gb)) ||
++	    ((phba->cfg_link_speed == LPFC_USER_LINK_SPEED_64G) &&
++	     !(phba->lmt & LMT_64Gb))) {
+ 		/* Reset link speed to auto */
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_LINK_EVENT,
+ 			"1302 Invalid speed for this board:%d "
+@@ -2274,7 +2276,9 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
+ 		&& descp && descp[0] != '\0')
+ 		return;
+ 
+-	if (phba->lmt & LMT_32Gb)
++	if (phba->lmt & LMT_64Gb)
++		max_speed = 64;
++	else if (phba->lmt & LMT_32Gb)
+ 		max_speed = 32;
+ 	else if (phba->lmt & LMT_16Gb)
+ 		max_speed = 16;
+@@ -4109,6 +4113,8 @@ void lpfc_host_attrib_init(struct Scsi_Host *shost)
+ 				 sizeof fc_host_symbolic_name(shost));
+ 
+ 	fc_host_supported_speeds(shost) = 0;
++	if (phba->lmt & LMT_64Gb)
++		fc_host_supported_speeds(shost) |= FC_PORTSPEED_64GBIT;
+ 	if (phba->lmt & LMT_32Gb)
+ 		fc_host_supported_speeds(shost) |= FC_PORTSPEED_32GBIT;
+ 	if (phba->lmt & LMT_16Gb)
+@@ -4445,6 +4451,9 @@ lpfc_sli4_port_speed_parse(struct lpfc_hba *phba, uint32_t evt_code,
+ 		case LPFC_FC_LA_SPEED_32G:
+ 			port_speed = 32000;
+ 			break;
++		case LPFC_FC_LA_SPEED_64G:
++			port_speed = 64000;
++			break;
+ 		default:
+ 			port_speed = 0;
+ 		}
+@@ -7811,6 +7820,10 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
+ 				phba->cfg_link_speed =
+ 					LPFC_USER_LINK_SPEED_32G;
+ 				break;
++			case LINK_SPEED_64G:
++				phba->cfg_link_speed =
++					LPFC_USER_LINK_SPEED_64G;
++				break;
+ 			case 0xffff:
+ 				phba->cfg_link_speed =
+ 					LPFC_USER_LINK_SPEED_AUTO;
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index 7313ceb0f23b..47c02da11f01 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -557,6 +557,10 @@ lpfc_init_link(struct lpfc_hba * phba,
+ 			mb->un.varInitLnk.link_flags |= FLAGS_LINK_SPEED;
+ 			mb->un.varInitLnk.link_speed = LINK_SPEED_32G;
+ 			break;
++		case LPFC_USER_LINK_SPEED_64G:
++			mb->un.varInitLnk.link_flags |= FLAGS_LINK_SPEED;
++			mb->un.varInitLnk.link_speed = LINK_SPEED_64G;
++			break;
+ 		case LPFC_USER_LINK_SPEED_AUTO:
+ 		default:
+ 			mb->un.varInitLnk.link_speed = LINK_SPEED_AUTO;
 -- 
 2.13.1
