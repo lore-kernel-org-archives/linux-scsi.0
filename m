@@ -1,87 +1,67 @@
-From: Michal Suchanek <msuchanek@suse.de>
-Subject: [PATCH resend 5/6] Documentetion: cdrom: introduce CDS_DRIVE_ERROR
-Date: Fri, 26 Jan 2018 17:58:39 +0100
-Message-ID: <b2855d98b131fec0fa20b505e09636465c46a423.1516985620.git.msuchanek@suse.de>
-References: <cover.1513263482.git.msuchanek@suse.de>
- <cover.1516985620.git.msuchanek@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <cover.1516985620.git.msuchanek@suse.de>
-In-Reply-To: <cover.1516985620.git.msuchanek@suse.de>
-References: <cover.1516985620.git.msuchanek@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Suchanek <msuchanek@suse.de>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Sat, 27 Jan 2018 14:09:20 -0500
+Message-ID: <20180127190920.GA24759@redhat.com>
+References: <20180123161613.14214-1-ming.lei@redhat.com>
+ <1516724659.3339.7.camel@sandisk.com>
+ <20180123163717.GE13277@ming.t460p>
+ <1516726653.3339.20.camel@wdc.com>
+ <20180124033109.GA15945@ming.t460p>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42818 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751533AbeA0TJ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 27 Jan 2018 14:09:26 -0500
+Content-Disposition: inline
+In-Reply-To: <20180124033109.GA15945@ming.t460p>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@kernel.dk, Ming Lei <ming.lei@redhat.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-CDS_DRIVE_NOT_READY is used for the state in which CDROM is 'becoming
-ready' (typically analyzing the disc) but also as the fallback when
-nothing else applies. Introduce CDS_DRIVE_ERROR for the fallback case.
+On Tue, Jan 23 2018 at 10:31pm -0500,
+Ming Lei <ming.lei@redhat.com> wrote:
 
-Signed-off-by: Michal Suchanek <msuchanek@suse.de>
----
- Documentation/cdrom/cdrom-standard.tex | 8 +++++++-
- Documentation/cdrom/ide-cd             | 6 ++++++
- Documentation/ioctl/cdrom.txt          | 1 +
- 3 files changed, 14 insertions(+), 1 deletion(-)
+> On Tue, Jan 23, 2018 at 04:57:34PM +0000, Bart Van Assche wrote:
+> > On Wed, 2018-01-24 at 00:37 +0800, Ming Lei wrote:
+> > > On Tue, Jan 23, 2018 at 04:24:20PM +0000, Bart Van Assche wrote:
+> > > > My opinion about this patch is as follows:
+> > > > * Changing a blk_mq_delay_run_hw_queue() call followed by return
+> > > >   BLK_STS_DEV_RESOURCE into return BLK_STS_RESOURCE is wrong because it changes
+> > > >   a guaranteed queue rerun into a queue rerun that may or may not happen
+> > > >   depending on whether or not multiple queue runs happen simultaneously.
+> > > 
+> > > You may not understand the two:
+> > > 
+> > > 1) it is always safe to return BLK_STS_RESOURCE, which will make sure to
+> > > avoid IO hang by blk_mq_delay_run_hw_queue() or blk_mq_run_hw_queue(),
+> > > and using which one depends on SCHED_RESTART.
+> > > 
+> > > 2) if driver can make sure the queue will be rerun after some resource
+> > > is available, either by itself or by blk-mq, it will return BLK_STS_DEV_RESOURCE
+> > > 
+> > > So what is wrong with this way?
+> > 
+> > Sorry, I swapped BLK_STS_DEV_RESOURCE and BLK_STS_RESOURCE accidentally in my
+> > reply. What I meant is that changing a blk_mq_delay_run_hw_queue() call followed
+> > by return BLK_STS_RESOURCE into BLK_STS_DEV_RESOURCE is wrong and introduces a
+> > race condition in code where there was no race condition.
+> 
+> OK, then no such race you worried about in this patch.
+> 
+> Jens, could you take a look at this patch?
 
-diff --git a/Documentation/cdrom/cdrom-standard.tex b/Documentation/cdrom/cdrom-standard.tex
-index 8f85b0e41046..018284ba696a 100644
---- a/Documentation/cdrom/cdrom-standard.tex
-+++ b/Documentation/cdrom/cdrom-standard.tex
-@@ -371,11 +371,17 @@ $$
- CDS_NO_INFO& no information available\cr
- CDS_NO_DISC& no disc is inserted, tray is closed\cr
- CDS_TRAY_OPEN& tray is opened\cr
--CDS_DRIVE_NOT_READY& something is wrong, tray is moving?\cr
-+CDS_DRIVE_NOT_READY& tray just closed?\cr
- CDS_DISC_OK& a disc is loaded and everything is fine\cr
-+CDS_DRIVE_ERROR& something is wrong\cr
- }
- $$
- 
-+Note: The IDE and SCSI cdroms have a status code 'drive becoming ready' which
-+is typically returned when the drive has just closed and is analyzing the disc.
-+For other cdrom types this state is not reported by the hardware or not
-+implemented by the driver.
-+
- \subsection{$Int\ media_changed(struct\ cdrom_device_info * cdi, int\ disc_nr)$}
- 
- This function is very similar to the original function in $struct\ 
-diff --git a/Documentation/cdrom/ide-cd b/Documentation/cdrom/ide-cd
-index a5f2a7f1ff46..9324a8fd9a39 100644
---- a/Documentation/cdrom/ide-cd
-+++ b/Documentation/cdrom/ide-cd
-@@ -455,6 +455,9 @@ main (int argc, char **argv)
- 		case CDS_DRIVE_NOT_READY:
- 			printf ("Drive Not Ready.\n");
- 			break;
-+		case CDS_DRIVE_ERROR:
-+			printf ("Drive problem.\n");
-+			break;
- 		default:
- 			printf ("This Should not happen!\n");
- 			break;
-@@ -481,6 +484,9 @@ main (int argc, char **argv)
- 			case CDS_NO_INFO:
- 				printf ("No Information available.");
- 				break;
-+			case CDS_DRIVE_ERROR:
-+				printf ("Drive problem.\n");
-+				break;
- 			default:
- 				printf ("This Should not happen!\n");
- 				break;
-diff --git a/Documentation/ioctl/cdrom.txt b/Documentation/ioctl/cdrom.txt
-index a4d62a9d6771..7720d11807c3 100644
---- a/Documentation/ioctl/cdrom.txt
-+++ b/Documentation/ioctl/cdrom.txt
-@@ -700,6 +700,7 @@ CDROM_DRIVE_STATUS		Get tray position, etc.
- 	    CDS_TRAY_OPEN
- 	    CDS_DRIVE_NOT_READY
- 	    CDS_DISC_OK
-+	    CDS_DRIVE_ERROR
- 	    -1			error
- 
- 	error returns:
--- 
-2.13.6
+Hi Jens,
 
+Ming let me know that he successfully tested this V3 patch using both
+your test (fio to both mpath and underlying path) and Bart's (02-mq with
+can_queue in guest).
+
+Would be great if you'd review and verify this fix works for you too.
+
+Ideally we'd get a fix for this regression staged for 4.16 inclusion.
+This V3 patch seems like the best option we have at this point.
+
+Mike
