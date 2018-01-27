@@ -1,47 +1,74 @@
-From: Michal =?UTF-8?B?U3VjaMOhbmVr?= <msuchanek@suse.de>
-Subject: Re: [PATCH resend 0/6] Fix cdrom autoclose
-Date: Sat, 27 Jan 2018 23:53:06 +0100
-Message-ID: <20180127235306.1742edb9@naga.suse.cz>
-References: <cover.1513263482.git.msuchanek@suse.de>
-        <cover.1516985620.git.msuchanek@suse.de>
-        <1516997096.3034.10.camel@linux.vnet.ibm.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Sun, 28 Jan 2018 07:41:57 +0800
+Message-ID: <20180127234151.GA21710@ming.t460p>
+References: <20180123161613.14214-1-ming.lei@redhat.com>
+ <1516724659.3339.7.camel@sandisk.com>
+ <20180123163717.GE13277@ming.t460p>
+ <1516726653.3339.20.camel@wdc.com>
+ <20180124033109.GA15945@ming.t460p>
+ <20180127190920.GA24759@redhat.com>
+ <1517091161.3055.7.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44640 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751785AbeA0W7n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 27 Jan 2018 17:59:43 -0500
-In-Reply-To: <1516997096.3034.10.camel@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1517091161.3055.7.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 26 Jan 2018 12:04:56 -0800
-James Bottomley <jejb@linux.vnet.ibm.com> wrote:
-
-> On Fri, 2018-01-26 at 17:58 +0100, Michal Suchanek wrote:
-> > First time I did not get any feedback for the patches.  
+On Sat, Jan 27, 2018 at 10:12:43PM +0000, Bart Van Assche wrote:
+> On Sat, 2018-01-27 at 14:09 -0500, Mike Snitzer wrote:
+> > Ming let me know that he successfully tested this V3 patch using both
+> > your test (fio to both mpath and underlying path) and Bart's (02-mq with
+> > can_queue in guest).
+> > 
+> > Would be great if you'd review and verify this fix works for you too.
+> > 
+> > Ideally we'd get a fix for this regression staged for 4.16 inclusion.
+> > This V3 patch seems like the best option we have at this point.
 > 
-> This is likely because no-one who might inspect the code saw the
-> patches ... what list are they going to?  I'm on the block, scsi and
-> ide mailing lists and I only saw a doc patch the last time.
+> Hello Mike,
+> 
+> There are several issues with the patch at the start of this thread:
+> - It is an unnecessary change of the block layer API. Queue stalls can
+>   already be addressed with the current block layer API, namely by inserting
+>   a blk_mq_delay_run_hw_queue() call before returning BLK_STS_RESOURCE.
 
-This is what the MAINTAINERS file says:
+Again, both Jens and I concluded that it is a generic issue, which need
+generic solution.
 
-UNIFORM CDROM DRIVER
-M:      Jens Axboe <axboe@kernel.dk>
-W:      http://www.kernel.dk
-S:      Maintained
-F:      Documentation/cdrom/
-F:      drivers/cdrom/cdrom.c
-F:      include/linux/cdrom.h
-F:      include/uapi/linux/cdrom.h
+	https://marc.info/?l=linux-kernel&m=151638176727612&w=2
 
-Maybe adding some mainling lists there would be useful?
+Otherwise, it needs to change the handling on every BLK_STS_RESOURCE in
+drivers, do we really want to do that?
 
-Thanks
+Not mention, the request isn't added to dispatch list yet in .queue_rq(),
+strictly speaking, it is not correct to call blk_mq_delay_run_hw_queue() in
+.queue_rq(), so the current block layer API can't handle it well enough.
 
-Michal
+> - The patch at the start of this thread complicates code further that is
+>   already too complicated, namely the blk-mq core.
+
+That is just your opinion, I don't agree.
+
+> - The patch at the start of this thread introduces a regression in the
+>   SCSI core, namely a queue stall if a request completion occurs concurrently
+>   with the newly added BLK_MQ_S_SCHED_RESTART test in the blk-mq core.
+
+This patch only moves the blk_mq_delay_run_hw_queue() from scsi_queue_rq()
+to blk-mq, again, please explain it in detail how this patch V3 introduces this
+regression on SCSI.
+
+Actually this patch should fix a race on SCSI-MQ, because when scsi_queue_rq()
+call blk_mq_delay_run_hw_queue(), the request isn't in dispatch list yet, so in
+theory this request may not be visible when __blk_mq_run_hw_queue() is run. Don't
+expect the 3ms delay will cover that, it is absolutely fragile to depend on timing
+to deal with the race.
+
+Maybe it can be one LSF/MM topic proposal...
+
+thanks,
+Ming
