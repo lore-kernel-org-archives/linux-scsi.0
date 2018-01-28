@@ -1,93 +1,67 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Sat, 27 Jan 2018 23:58:05 -0500
-Message-ID: <20180128045805.GA27261@redhat.com>
-References: <1516724659.3339.7.camel@sandisk.com>
- <20180123163717.GE13277@ming.t460p>
- <1516726653.3339.20.camel@wdc.com>
- <20180124033109.GA15945@ming.t460p>
- <20180127190920.GA24759@redhat.com>
- <1517091161.3055.7.camel@wdc.com>
- <20180128002356.GA25933@redhat.com>
- <1517100877.3055.23.camel@wdc.com>
- <20180128020312.GA26437@redhat.com>
- <1517108417.3055.33.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1517108417.3055.33.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+From: Corentin Labbe <clabbe@baylibre.com>
+Subject: [PATCH] scsi: aic7xxx: remove really aiclib.c
+Date: Sun, 28 Jan 2018 07:23:54 +0000
+Message-ID: <1517124234-23425-1-git-send-email-clabbe@baylibre.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34947 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751713AbeA1H15 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jan 2018 02:27:57 -0500
+Received: by mail-wm0-f65.google.com with SMTP id r78so28057191wme.0
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Jan 2018 23:27:56 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corentin Labbe <clabbe@baylibre.com>
 
-On Sat, Jan 27 2018 at 10:00pm -0500,
-Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+aiclib.c is unused (and contain no code) since commit 1ff927306e08 ("[SCSI] aic7xxx: remove aiclib.c")
+13 years later, finish the cleaning by remove it from tree.
 
-> On Sat, 2018-01-27 at 21:03 -0500, Mike Snitzer wrote:
-> > You cannot even be forthcoming about the technical merit of a change you
-> > authored (commit 6077c2d70) that I'm left to clean up in the face of
-> > performance bottlenecks it unwittingly introduced?  If you were being
-> > honest: you'd grant that the random delay of 100ms is utterly baseless
-> > (not to mention that kicking the queue like you did is a complete
-> > hack).  So that 100ms delay is what my dm-4.16 commit is talking about.
-> 
-> There are multiple errors in the above:
-> 1. I have already explained in detail why commit 6077c2d70 is (a) correct
->    and (b) essential. See e.g. https://www.redhat.com/archives/dm-devel/2018-January/msg00168.html.
+Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+---
+ drivers/scsi/aic7xxx/aiclib.c | 34 ----------------------------------
+ 1 file changed, 34 deletions(-)
+ delete mode 100644 drivers/scsi/aic7xxx/aiclib.c
 
-And you'd be wrong.  Again.  We've already established that commit
-6077c2d70 is _not_ essential.  Ming's V3, in conjunction with all the
-changes that already went into block and DM for 4.16, prove that.
-
-Yet here you go repeating yourself.  You are clinging to a patch that
-absolutely had no business going in when it did.  And even when
-presented with the reality that it was not the proper way to fix the
-issue you observed you keep going back to it like you cured cancer with
-a single line of code.
-
-> 2. With patch "blk-mq: Avoid that blk_mq_delay_run_hw_queue() introduces
->    unintended delays" applied, there is nothing to clean up anymore since
->    that patch eliminates the queue delays that were triggered by
->    blk_mq_delay_run_hw_queue().
-
-The issue Ming fixed is that your random queue kicks break RESTART on
-dm-mq mpath.
-
-> 3. You know that I'm honest. Suggesting that I'm not is wrong.
-
-No, I trully do _not_ know you're always honest.  You've conflated so
-many details on this topic that it makes me have serious doubts.  You're
-lashing out so much, in defense of your dm_mq_queue_rq delayed queue
-kick, that you're missing there is a genuine generic blk-mq problem that
-is getting fixed in Ming's V3.
-
-> 4. I never claimed that 100ms is the optimal value for the queue
->    rerunning delay. I have already explained to you that I copied that
->    value from older dm-rq code.
-
-And I pointed out to you that you most certainly did _not_ copy the
-value from elsewhere:
-https://www.redhat.com/archives/dm-devel/2018-January/msg00202.html
-
-The specific delay used isn't the issue; the need to kick the queue like
-this is.  Ming's V3 avoids unnecessary kicking.
-
-> > Don't project onto me Bart.  This isn't the first time you've been
-> > completely unprofessional and sadly it likely won't be the last.
-> 
-> The only person who is behaving unprofessionally in this e-mail thread
-> is you.
-
-Bart, the number of emails exchanged on this topic has exhausted
-_everyone_.  Emotions get tense when things don't evolve despite every
-oppotunity for progress to be realized.  When people cling to solutions
-that are no longer relevant.  There is a very real need for progress
-here.  So either get out of the way or suggest a specific series of
-change(s) that you feel better than Ming's V3.
-
-With that, I'll also stop responding to your baiting now and forevermore
-(e.g. "maintainers should this.. and maintainers should not that" or
-"your employer is not investing adequately".  Next time you find
-yourself typing drivel like that: spare us all and hit delete).
+diff --git a/drivers/scsi/aic7xxx/aiclib.c b/drivers/scsi/aic7xxx/aiclib.c
+deleted file mode 100644
+index 828ae3d9a510..000000000000
+--- a/drivers/scsi/aic7xxx/aiclib.c
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/*
+- * Implementation of Utility functions for all SCSI device types.
+- *
+- * Copyright (c) 1997, 1998, 1999 Justin T. Gibbs.
+- * Copyright (c) 1997, 1998 Kenneth D. Merry.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- * 1. Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions, and the following disclaimer,
+- *    without modification, immediately at the beginning of the file.
+- * 2. The name of the author may not be used to endorse or promote products
+- *    derived from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+- * SUCH DAMAGE.
+- *
+- * $FreeBSD: src/sys/cam/scsi/scsi_all.c,v 1.38 2002/09/23 04:56:35 mjacob Exp $
+- * $Id$
+- */
+-
+-#include "aiclib.h"
+-
+-- 
+2.13.6
