@@ -1,60 +1,107 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [PATCH] mpt3sas: fix an out of bound write
-Date: Sun, 28 Jan 2018 22:13:47 +0530
-Message-ID: <CA+RiK67xk2y8R7C0P43Esw9FngCVMPvXeNUVXwiQXoJDSYgMug@mail.gmail.com>
-References: <20180119152205.5461-1-thenzl@redhat.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Sun, 28 Jan 2018 16:57:22 +0000
+Message-ID: <1517158641.3141.12.camel@wdc.com>
+References: <1516724659.3339.7.camel@sandisk.com>
+         <20180123163717.GE13277@ming.t460p> <1516726653.3339.20.camel@wdc.com>
+         <20180124033109.GA15945@ming.t460p> <20180127190920.GA24759@redhat.com>
+         <1517091161.3055.7.camel@wdc.com> <20180128002356.GA25933@redhat.com>
+         <1517100877.3055.23.camel@wdc.com> <20180128020312.GA26437@redhat.com>
+         <1517108417.3055.33.camel@wdc.com> <20180128045805.GA27261@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:43319 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751929AbeA1Qnt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jan 2018 11:43:49 -0500
-Received: by mail-qk0-f195.google.com with SMTP id a5so2782617qkg.10
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2018 08:43:48 -0800 (PST)
-In-Reply-To: <20180119152205.5461-1-thenzl@redhat.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:44627 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751288AbeA1Q52 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jan 2018 11:57:28 -0500
+In-Reply-To: <20180128045805.GA27261@redhat.com>
+Content-Language: en-US
+Content-ID: <37FB07D2C26833469783B5EB4A876712@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Hannes Reinecke <hare@suse.de>
+To: "snitzer@redhat.com" <snitzer@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-Hi,
-Please consider this patch as Ack-by: Suganath Prabu S
-<suganath-prabu.subramani@broadcom.com>
-
-Thanks.
-
-On Fri, Jan 19, 2018 at 8:52 PM, Tomas Henzl <thenzl@redhat.com> wrote:
-> cpu_msix_table is allocated to store online cpus, but pci_irq_get_affinity
-> may return cpu_possible_mask which is then used to access cpu_msix_table.
-> That causes bad user experience.
-> Fix limits access to only online cpus, I've also added an additonal test
-> to protect from an unlikely change in cpu_online_mask.
->
-> Fixes: 1d55abc0e98a0bf35f3af80665aac564e3b30572 scsi: mpt3sas: switch to pci_alloc_irq_vectors
->
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 13d6e4ec3..59a87ca32 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -2410,8 +2410,11 @@ _base_assign_reply_queues(struct MPT3SAS_ADAPTER *ioc)
->                                 continue;
->                         }
->
-> -                       for_each_cpu(cpu, mask)
-> +                       for_each_cpu_and(cpu, mask, cpu_online_mask) {
-> +                               if (cpu >= ioc->cpu_msix_table_sz)
-> +                                       break;
->                                 ioc->cpu_msix_table[cpu] = reply_q->msix_index;
-> +                       }
->                 }
->                 return;
->         }
-> --
-> 2.14.3
->
+T24gU2F0LCAyMDE4LTAxLTI3IGF0IDIzOjU4IC0wNTAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
+IE9uIFNhdCwgSmFuIDI3IDIwMTggYXQgMTA6MDBwbSAtMDUwMCwNCj4gQmFydCBWYW4gQXNzY2hl
+IDxCYXJ0LlZhbkFzc2NoZUB3ZGMuY29tPiB3cm90ZToNCj4gDQo+ID4gT24gU2F0LCAyMDE4LTAx
+LTI3IGF0IDIxOjAzIC0wNTAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+ID4gPiBZb3UgY2Fubm90
+IGV2ZW4gYmUgZm9ydGhjb21pbmcgYWJvdXQgdGhlIHRlY2huaWNhbCBtZXJpdCBvZiBhIGNoYW5n
+ZSB5b3UNCj4gPiA+IGF1dGhvcmVkIChjb21taXQgNjA3N2MyZDcwKSB0aGF0IEknbSBsZWZ0IHRv
+IGNsZWFuIHVwIGluIHRoZSBmYWNlIG9mDQo+ID4gPiBwZXJmb3JtYW5jZSBib3R0bGVuZWNrcyBp
+dCB1bndpdHRpbmdseSBpbnRyb2R1Y2VkPyAgSWYgeW91IHdlcmUgYmVpbmcNCj4gPiA+IGhvbmVz
+dDogeW91J2QgZ3JhbnQgdGhhdCB0aGUgcmFuZG9tIGRlbGF5IG9mIDEwMG1zIGlzIHV0dGVybHkg
+YmFzZWxlc3MNCj4gPiA+IChub3QgdG8gbWVudGlvbiB0aGF0IGtpY2tpbmcgdGhlIHF1ZXVlIGxp
+a2UgeW91IGRpZCBpcyBhIGNvbXBsZXRlDQo+ID4gPiBoYWNrKS4gIFNvIHRoYXQgMTAwbXMgZGVs
+YXkgaXMgd2hhdCBteSBkbS00LjE2IGNvbW1pdCBpcyB0YWxraW5nIGFib3V0Lg0KPiA+IA0KPiA+
+IFRoZXJlIGFyZSBtdWx0aXBsZSBlcnJvcnMgaW4gdGhlIGFib3ZlOg0KPiA+IDEuIEkgaGF2ZSBh
+bHJlYWR5IGV4cGxhaW5lZCBpbiBkZXRhaWwgd2h5IGNvbW1pdCA2MDc3YzJkNzAgaXMgKGEpIGNv
+cnJlY3QNCj4gPiAgICBhbmQgKGIpIGVzc2VudGlhbC4gU2VlIGUuZy4gaHR0cHM6Ly93d3cucmVk
+aGF0LmNvbS9hcmNoaXZlcy9kbS1kZXZlbC8yMDE4LUphbnVhcnkvbXNnMDAxNjguaHRtbC4NCj4g
+DQo+IEFuZCB5b3UnZCBiZSB3cm9uZy4gIEFnYWluLiAgV2UndmUgYWxyZWFkeSBlc3RhYmxpc2hl
+ZCB0aGF0IGNvbW1pdA0KPiA2MDc3YzJkNzAgaXMgX25vdF8gZXNzZW50aWFsLiAgTWluZydzIFYz
+LCBpbiBjb25qdW5jdGlvbiB3aXRoIGFsbCB0aGUNCj4gY2hhbmdlcyB0aGF0IGFscmVhZHkgd2Vu
+dCBpbnRvIGJsb2NrIGFuZCBETSBmb3IgNC4xNiwgcHJvdmUgdGhhdC4NCg0KV2hhdCBJIHdyb3Rl
+IHdhcyByaWdodCB3aGVuIGNvbW1pdCA2MDc3YzJkNzAgZ290IGludHJvZHVjZWQuIE15IGV4cGxh
+bmF0aW9uDQpzaG93cyB0aGF0IGF0IHRoYXQgdGltZSAgd2FzIGJvdGggY29ycmVjdCBhbmQgZXNz
+ZW50aWFsLiBNaW5nJ3MgdjMgaXMgaW4gbXkNCm9waW5pb24gbm90IHJlbGV2YW50IHlldCB0byB0
+aGlzIGRpc2N1c3Npb24gYmVjYXVzZSBpdCBpbnRyb2R1Y2VzIG5ldyBidWdzDQphbmQgc28gZmFy
+IG5vIGF0dGVtcHQgaGFzIGJlZW4gbWFkZSB0byBhZGRyZXNzIHRoZXNlIGJ1Z3MuDQoNCj4gPiAy
+LiBXaXRoIHBhdGNoICJibGstbXE6IEF2b2lkIHRoYXQgYmxrX21xX2RlbGF5X3J1bl9od19xdWV1
+ZSgpIGludHJvZHVjZXMNCj4gPiAgICB1bmludGVuZGVkIGRlbGF5cyIgYXBwbGllZCwgdGhlcmUg
+aXMgbm90aGluZyB0byBjbGVhbiB1cCBhbnltb3JlIHNpbmNlDQo+ID4gICAgdGhhdCBwYXRjaCBl
+bGltaW5hdGVzIHRoZSBxdWV1ZSBkZWxheXMgdGhhdCB3ZXJlIHRyaWdnZXJlZCBieQ0KPiA+ICAg
+IGJsa19tcV9kZWxheV9ydW5faHdfcXVldWUoKS4NCj4gDQo+IFRoZSBpc3N1ZSBNaW5nIGZpeGVk
+IGlzIHRoYXQgeW91ciByYW5kb20gcXVldWUga2lja3MgYnJlYWsgUkVTVEFSVCBvbg0KPiBkbS1t
+cSBtcGF0aC4NCg0KVGhhdCBjb21tZW50IGlzIHRvbyBzaG9ydCB0byBiZSBjb21wcmVoZW5zaWJs
+ZSBmb3IgYW55b25lLiBDYW4geW91IGVsYWJvcmF0ZQ0KdGhpcyBmdXJ0aGVyPw0KDQo+ID4gMy4g
+WW91IGtub3cgdGhhdCBJJ20gaG9uZXN0LiBTdWdnZXN0aW5nIHRoYXQgSSdtIG5vdCBpcyB3cm9u
+Zy4NCj4gDQo+IE5vLCBJIHRydWxseSBkbyBfbm90XyBrbm93IHlvdSdyZSBhbHdheXMgaG9uZXN0
+LiAgWW91J3ZlIGNvbmZsYXRlZCBzbw0KPiBtYW55IGRldGFpbHMgb24gdGhpcyB0b3BpYyB0aGF0
+IGl0IG1ha2VzIG1lIGhhdmUgc2VyaW91cyBkb3VidHMuICBZb3UncmUNCj4gbGFzaGluZyBvdXQg
+c28gbXVjaCwgaW4gZGVmZW5zZSBvZiB5b3VyIGRtX21xX3F1ZXVlX3JxIGRlbGF5ZWQgcXVldWUN
+Cj4ga2ljaywgdGhhdCB5b3UncmUgbWlzc2luZyB0aGVyZSBpcyBhIGdlbnVpbmUgZ2VuZXJpYyBi
+bGstbXEgcHJvYmxlbSB0aGF0DQo+IGlzIGdldHRpbmcgZml4ZWQgaW4gTWluZydzIFYzLg0KPiAN
+Cj4gWyAuLi4gXQ0KPg0KPiBCYXJ0LCB0aGUgbnVtYmVyIG9mIGVtYWlscyBleGNoYW5nZWQgb24g
+dGhpcyB0b3BpYyBoYXMgZXhoYXVzdGVkDQo+IF9ldmVyeW9uZV8uICBFbW90aW9ucyBnZXQgdGVu
+c2Ugd2hlbiB0aGluZ3MgZG9uJ3QgZXZvbHZlIGRlc3BpdGUgZXZlcnkNCj4gb3Bwb3R1bml0eSBm
+b3IgcHJvZ3Jlc3MgdG8gYmUgcmVhbGl6ZWQuICBXaGVuIHBlb3BsZSBjbGluZyB0byBzb2x1dGlv
+bnMNCj4gdGhhdCBhcmUgbm8gbG9uZ2VyIHJlbGV2YW50LiAgVGhlcmUgaXMgYSB2ZXJ5IHJlYWwg
+bmVlZCBmb3IgcHJvZ3Jlc3MNCj4gaGVyZS4gIFNvIGVpdGhlciBnZXQgb3V0IG9mIHRoZSB3YXkg
+b3Igc3VnZ2VzdCBhIHNwZWNpZmljIHNlcmllcyBvZg0KPiBjaGFuZ2UocykgdGhhdCB5b3UgZmVl
+bCBiZXR0ZXIgdGhhbiBNaW5nJ3MgVjMuDQoNCklmIHlvdSBhbmQgTWluZyByZWFsbHkgY2FyZSBh
+Ym91dCB0aGUgYXBwcm9hY2ggaW4gdGhlIHBhdGNoIGF0IHRoZSBzdGFydA0Kb2YgdGhpcyBlLW1h
+aWwgdGhyZWFkLCB3aGF0IGFyZSB5b3Ugd2FpdGluZyBmb3IgdG8gYWRkcmVzcyB0aGUgdGVjaG5p
+Y2FsDQpzaG9ydGNvbWluZ3MgdGhhdCBJIHBvaW50ZWQgb3V0Pw0KDQo+IFdpdGggdGhhdCwgSSds
+bCBhbHNvIHN0b3AgcmVzcG9uZGluZyB0byB5b3VyIGJhaXRpbmcgbm93IGFuZCBmb3JldmVybW9y
+ZQ0KPiAoZS5nLiAibWFpbnRhaW5lcnMgc2hvdWxkIHRoaXMuLiBhbmQgbWFpbnRhaW5lcnMgc2hv
+dWxkIG5vdCB0aGF0IiBvcg0KPiAieW91ciBlbXBsb3llciBpcyBub3QgaW52ZXN0aW5nIGFkZXF1
+YXRlbHkiLiAgTmV4dCB0aW1lIHlvdSBmaW5kDQo+IHlvdXJzZWxmIHR5cGluZyBkcml2ZWwgbGlr
+ZSB0aGF0OiBzcGFyZSB1cyBhbGwgYW5kIGhpdCBkZWxldGUpLg0KDQpNeSBvcGluaW9uIGFib3V0
+IHdoYXQgeW91IHdyb3RlIGluIHRoaXMgYW5kIHRoZSBvdGhlciBlLW1haWxzIHlvdSBzZW50IHRv
+DQptZSBkdXJpbmcgdGhlIHBhc3QgbW9udGhzIGlzIGFzIGZvbGxvd3M6DQoxLiBUaGF0IEkgaGF2
+ZSBhbHdheXMgZG9uZSBteSBiZXN0IHRvIHByb3ZpZGUgYWxsIHRoZSByZWxldmFudCB0ZWNobmlj
+YWwNCiAgIGluZm9ybWF0aW9uLg0KMi4gVGhhdCBteSBmb2N1cyB3YXMgb24gdGhlIHRlY2huaWNh
+bCBhc3BlY3RzIG9mIHRoZSBkaXNjdXNzaW9uLg0KMy4gVGhhdCB5b3UgZGlkIG5vdCB0cnkgdG8g
+cmVhY2ggYSBjb25zZW5zdXMgYnV0IHJhdGhlciB0byBkb21pbmF0ZSB0aGUNCiAgIGRpc2N1c3Np
+b24uDQo0LiBUaGF0IHRoZSB0b25lIG9mIHlvdXIgZS1tYWlscyB3YXMgdmVyeSBhZ2dyZXNzaXZl
+Lg0KNS4gVGhhdCB5b3UgaW5zdWx0ZWQgbWUgc2V2ZXJhbCB0aW1lcyBwZXJzb25hbGx5Lg0KDQpJ
+IGJlbGlldmUgdGhhdCB5b3VyIGJlaGF2aW9yIGlzIGEgdmlvbGF0aW9uIG9mIHRoZSBrZXJuZWwg
+Y29kZSBvZiBjb25mbGljdA0KYW5kIHN1ZmZpY2llbnQgdG8gZmlsZSBhIGNvbXBsYWludCB3aXRo
+IHRoZSBUQUIuIEZyb20NCkRvY3VtZW50YXRpb24vcHJvY2Vzcy9jb2RlLW9mLWNvbmZsaWN0LnJz
+dDoNCg0KIklmIGhvd2V2ZXIsIGFueW9uZSBmZWVscyBwZXJzb25hbGx5IGFidXNlZCwgdGhyZWF0
+ZW5lZCwgb3Igb3RoZXJ3aXNlDQp1bmNvbWZvcnRhYmxlIGR1ZSB0byB0aGlzIHByb2Nlc3MsIHRo
+YXQgaXMgbm90IGFjY2VwdGFibGUuICBJZiBzbywNCnBsZWFzZSBjb250YWN0IHRoZSBMaW51eCBG
+b3VuZGF0aW9uJ3MgVGVjaG5pY2FsIEFkdmlzb3J5IEJvYXJkIFsgLi4uIF0iDQoNCkFkZGl0aW9u
+YWxseSwgc2luY2UgeW91IGFyZSBhIFUuUy4gQ2l0aXplbiwgeW91IHNob3VsZCBrbm93IHRoYXQg
+d2hhdCB5b3UNCndyb3RlIGluIHByZXZpb3VzIGUtbWFpbHMgYW1vdW50cyB0byBsaWJlbC4gQSBx
+dW90ZSBmcm9tIGEgZGVmaW5pdGlvbiBvZg0KbGliZWw6ICJ0byBwdWJsaXNoIGluIHByaW50IChp
+bmNsdWRpbmcgcGljdHVyZXMpLCB3cml0aW5nIG9yIGJyb2FkY2FzdA0KdGhyb3VnaCByYWRpbywg
+dGVsZXZpc2lvbiBvciBmaWxtLCBhbiB1bnRydXRoIGFib3V0IGFub3RoZXIgd2hpY2ggd2lsbCBk
+bw0KaGFybSB0byB0aGF0IHBlcnNvbiBvciBoaXMvaGVyIHJlcHV0YXRpb24sIGJ5IHRlbmRpbmcg
+dG8gYnJpbmcgdGhlIHRhcmdldA0KaW50byByaWRpY3VsZSwgaGF0cmVkLCBzY29ybiBvciBjb250
+ZW1wdCBvZiBvdGhlcnMuIiBZb3Ugc2hvdWxkIGJlIGF3YXJlDQpzaW5jZSBJIGxpdmUgaW4gdGhl
+IFUuUy4gdGhhdCB0aGlzIG1ha2VzIGl0IHBvc3NpYmxlIGZvciBtZSB0byBzdWUgeW91IGZvcg0K
+ZGVmYW1hdGlvbiBhbmQgdG8gYXNrIGZvciBhIGNvbXBlbnNhdGlvbi4NCg0KQmFydC4=
