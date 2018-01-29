@@ -1,203 +1,37 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [RFC 0/2] mpt3sas/megaraid_sas : irq poll and load balancing of
- reply queue
-Date: Mon, 29 Jan 2018 22:22:21 +0530
-Message-ID: <cb00de2c44341233a4327f4fbb90a663@mail.gmail.com>
-References: <92d894a263bf37152fdae9699ccaccff@mail.gmail.com> <0d39a305-854e-32cf-806f-f4c7301c7838@suse.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH resend 1/6] delay: add poll_event_interruptible
+Date: Mon, 29 Jan 2018 17:00:14 +0000
+Message-ID: <1517245212.2687.13.camel@wdc.com>
+References: <cover.1516985620.git.msuchanek@suse.de>
+         <a26ef20e6ff686573a0af16435f20aba186746af.1516985620.git.msuchanek@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:55596 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751072AbeA2QwY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2018 11:52:24 -0500
-Received: by mail-it0-f41.google.com with SMTP id c16so9092023itc.5
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2018 08:52:23 -0800 (PST)
-In-Reply-To: <0d39a305-854e-32cf-806f-f4c7301c7838@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <a26ef20e6ff686573a0af16435f20aba186746af.1516985620.git.msuchanek@suse.de>
+Content-Language: en-US
+Content-ID: <B77D2EA9D59D624F8DAF10C10224ECB8@namprd04.prod.outlook.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "corbet@lwn.net" <corbet@lwn.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "keescook@chromium.org" <keescook@chromium.org>, "msuchanek@suse.de" <msuchanek@suse.de>, "tglx@linutronix.de" <tglx@linutronix.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kstewart@linuxfoundation.org" <kstewart@linuxfoundation.org>, "pombredanne@nexb.com" <pombredanne@nexb.com>, "bp@alien8.de" <bp@alien8.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "christophe.jaillet@wanadoo.fr" <christophe.jaillet@wanadoo.fr>, davem@davemlof
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Peter Rivera <peter.rivera@broadcom.com>
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Monday, January 29, 2018 2:29 PM
-> To: Kashyap Desai; linux-scsi@vger.kernel.org; Peter Rivera
-> Subject: Re: [RFC 0/2] mpt3sas/megaraid_sas : irq poll and load balancing
-> of
-> reply queue
->
-> On 01/15/2018 01:12 PM, Kashyap Desai wrote:
-> > Hi All -
-> >
-> > We have seen cpu lock up issue from fields if system has greater (more
-> > than 96) logical cpu count.
-> > SAS3.0 controller (Invader series) supports at max 96 msix vector and
-> > SAS3.5 product (Ventura) supports at max 128 msix vectors.
-> >
-> > This may be a generic issue (if PCI device support  completion on
-> > multiple reply queues). Let me explain it w.r.t to mpt3sas supported
-> > h/w just to simplify the problem and possible changes to handle such
-> > issues. IT HBA
-> > (mpt3sas) supports multiple reply queues in completion path. Driver
-> > creates MSI-x vectors for controller as "min of ( FW supported Reply
-> > queue, Logical CPUs)". If submitter is not interrupted via completion
-> > on same CPU, there is a loop in the IO path. This behavior can cause
-> > hard/soft CPU lockups, IO timeout, system sluggish etc.
-> >
-> > Example - one CPU (e.g. CPU A) is busy submitting the IOs and another
-> > CPU (e.g. CPU B) is busy with processing the corresponding IO's reply
-> > descriptors from reply descriptor queue upon receiving the interrupts
-> > from HBA. If the CPU A is continuously pumping the IOs then always CPU
-> > B (which is executing the ISR) will see the valid reply descriptors in
-> > the reply descriptor queue and it will be continuously processing
-> > those reply descriptor in a loop without quitting the ISR handler.
-> > Mpt3sas driver will exit ISR handler if it finds unused reply
-> > descriptor in the reply descriptor queue. Since CPU A will be
-> > continuously sending the IOs, CPU B may always see a valid reply
-> > descriptor (posted by HBA Firmware after processing the IO) in the
-> > reply descriptor queue. In worst case, driver will not quit from this
-> > loop in the ISR handler. Eventually, CPU lockup will be detected by
-> watchdog.
-> >
-> > Above mentioned behavior is not common if "rq_affinity" set to 2 or
-> > affinity_hint is honored by irqbalance as "exact".
-> > If rq_affinity is set to 2, submitter will be always interrupted via
-> > completion on same CPU.
-> > If irqbalance is using "exact" policy, interrupt will be delivered to
-> > submitter CPU.
-> >
-> > Problem statement -
-> > If CPU counts to MSI-X vectors (reply descriptor Queues) count ratio
-> > is not 1:1, we still have  exposure of issue explained above and for
-> > that we don't have any solution.
-> >
-> > Exposure of soft/hard lockup if CPU count is more than MSI-x supported
-> > by device.
-> >
-> > If CPUs count to MSI-x vectors count ratio is not 1:1, (Other way, if
-> > CPU counts to MSI-x vector count ratio is something like X:1, where X
-> > > 1) then 'exact' irqbalance policy OR rq_affinity =3D 2 won't help to
-> > avoid CPU hard/soft lockups. There won't be any one to one mapping
-> > between CPU to MSI-x vector instead one MSI-x interrupt (or reply
-> > descriptor queue) is shared with group/set of CPUs and there is a
-> > possibility of having a loop in the IO path within that CPU group and
-> > may
-> observe lockups.
-> >
-> > For example: Consider a system having two NUMA nodes and each node
-> > having four logical CPUs and also consider that number of MSI-x
-> > vectors enabled on the HBA is two, then CPUs count to MSI-x vector coun=
-t
-> ratio as 4:1.
-> > e.g.
-> > MSIx vector 0 is affinity to  CPU 0, CPU 1, CPU 2 & CPU 3 of NUMA node
-> > 0 and MSI-x vector 1 is affinity to CPU 4, CPU 5, CPU 6 & CPU 7 of
-> > NUMA node 1.
-> >
-> > numactl --hardware
-> > available: 2 nodes (0-1)
-> > node 0 cpus: 0 1 2 3                                                -->
-> > MSI-x 0
-> > node 0 size: 65536 MB
-> > node 0 free: 63176 MB
-> > node 1 cpus: 4 5 6 7
-> > -->MSI-x 1
-> > node 1 size: 65536 MB
-> > node 1 free: 63176 MB
-> >
-> > Assume that user started an application which uses all the CPUs of
-> > NUMA node 0 for issuing the IOs.
-> > Only one CPU from affinity list (it can be any cpu since this behavior
-> > depends upon irqbalance) CPU0 will receive the interrupts from MSIx
-> > vector
-> > 0 for all the IOs. Eventually, CPU 0 IO submission percentage will be
-> > decreasing and ISR processing percentage will be increasing as it is
-> > more busy with processing the interrupts. Gradually IO submission
-> > percentage on CPU 0 will be zero and it's ISR processing percentage
-> > will be 100 percentage as IO loop has already formed within the NUMA
-> > node 0, i.e. CPU 1, CPU 2 & CPU 3 will be continuously busy with
-> > submitting the heavy IOs and only CPU 0 is busy in the ISR path as it
-> > always find the valid reply descriptor in the reply descriptor queue.
-> > Eventually, we will observe the hard lockup here.
-> >
-> > Chances of occurring of hard/soft lockups are directly proportional to
-> > value of X. If value of X is high, then chances of observing CPU
-> > lockups is high.
-> >
-> > Solution -
-> > Fix - 1 Use IRQ poll interface defined in " irq_poll.c". mpt3sas
-> > driver will execute ISR routine in Softirq context and it will always
-> > quit the loop based on budget provided in IRQ poll interface.
-> >
-> > In these scenarios( i.e. where CPUs count to MSI-X vectors count ratio
-> > is
-> > X:1 (where X >  1)),  IRQ poll interface will avoid CPU hard lockups
-> > due to voluntary exit from the reply queue processing based on budget.
-> > Note - Only one MSI-x vector is busy doing processing. Irqstat ouput -
-> >
-> > IRQs / 1 second(s)
-> > IRQ#  TOTAL  NODE0   NODE1   NODE2   NODE3  NAME
-> >   44    122871   122871   0       0       0  IR-PCI-MSI-edge
-> > mpt3sas0-msix0
-> >   45        0              0           0       0       0
-> > IR-PCI-MSI-edge
-> > mpt3sas0-msix1
-> >
-> > Fix-2 - Above fix will avoid lockups, but there can be some
-> > performance issue if very few reply queue is busy. Driver should round
-> > robin the reply queue, so that each reply queue is load balanced.
-> > Irqstat ouput after driver does reply queue load balance-
-> >
-> > IRQs / 1 second(s)
-> > IRQ#  TOTAL  NODE0   NODE1   NODE2   NODE3  NAME
-> >   44  62871  62871       0       0       0  IR-PCI-MSI-edge
-> > mpt3sas0-msix0
-> >   45  62718  62718       0       0       0  IR-PCI-MSI-edge
-> > mpt3sas0-msix1
-> >
-> > In Summary,
-> > CPU completing IO which is not contributing to IO submission, may
-> > cause cpu lockup.
-> > If CPUs count to MSI-X vector count ratio is X:1 (where X > 1) then
-> > using irq poll interface, we can avoid the CPU lockups and by equally
-> > distributing the interrupts among the enabled MSI-x interrupts we can
-> > avoid performance issues.
-> >
-> > We are planning to use both the fixes only if cpu count is more than
-> > FW supported MSI-x vector.
-> > Please review and provide your feedback. I have appended both the
-> patches.
-> >
-> Actually, I think we should be discussing this issue at LSF; you are not
-> alone
-> here with this problem, as this could (potentially) hit other drivers,
-> too.
->
-> I think I'll be submitting a topic for this.
->
-> In general I'm all for enabling irq polling in individual drivers, but
-> this should
-> be in addition to the existing code (ie enabled via a module option or
-> somesuch). Enabling it in general has a high risk of performance
-> degradation
-> on slower hardware.
-
-
-Thanks for feedback and considering common solution. Agree that we have
-generic problem for many other drivers as well.
- I see your another thread. We can discuss the same using your latest threa=
-d
-"[LSF/MM TOPIC] irq affinity handling for high CPU count machines"
-
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke		   Teamlead Storage & Networking
-> hare@suse.de			               +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton HRB=
- 21284
-> (AG N=C3=BCrnberg)
+T24gRnJpLCAyMDE4LTAxLTI2IGF0IDE3OjU4ICswMTAwLCBNaWNoYWwgU3VjaGFuZWsgd3JvdGU6
+DQo+IEFkZCBjb252ZW5pZW5jZSBtYWNybyBmb3IgcG9sbGluZyBhbiBldmVudCB0aGF0IGRvZXMg
+bm90IGhhdmUgYQ0KPiB3YWl0cXVldWUuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgU3Vj
+aGFuZWsgPG1zdWNoYW5la0BzdXNlLmRlPg0KPiAtLS0NCj4gIGluY2x1ZGUvbGludXgvZGVsYXku
+aCB8IDEyICsrKysrKysrKysrKw0KPiAgMSBmaWxlIGNoYW5nZWQsIDEyIGluc2VydGlvbnMoKykN
+Cj4gDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2RlbGF5LmggYi9pbmNsdWRlL2xpbnV4
+L2RlbGF5LmgNCj4gaW5kZXggYjc4YmFiNDM5NWQ4Li4zYWU5ZmEzOTU2MjggMTAwNjQ0DQo+IC0t
+LSBhL2luY2x1ZGUvbGludXgvZGVsYXkuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L2RlbGF5LmgN
+Cj4gQEAgLTY0LDQgKzY0LDE2IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBzc2xlZXAodW5zaWduZWQg
+aW50IHNlY29uZHMpDQo+ICAJbXNsZWVwKHNlY29uZHMgKiAxMDAwKTsNCj4gIH0NCj4gIA0KPiAr
+I2RlZmluZSBwb2xsX2V2ZW50X2ludGVycnVwdGlibGUoZXZlbnQsIGludGVydmFsKSAoeyBcDQo+
+ICsJaW50IHJldCA9IDA7IFwNCj4gKwl3aGlsZSAoIShldmVudCkpIHsgXA0KPiArCQlpZiAoc2ln
+bmFsX3BlbmRpbmcoY3VycmVudCkpIHsgXA0KPiArCQkJcmV0ID0gLUVSRVNUQVJUU1lTOyBcDQo+
+ICsJCQlicmVhazsgXA0KPiArCQl9IFwNCj4gKwkJbXNsZWVwX2ludGVycnVwdGlibGUoaW50ZXJ2
+YWwpOyBcDQo+ICsJfSBcDQo+ICsJcmV0OyBcDQo+ICt9KQ0KPiArDQo+ICAjZW5kaWYgLyogZGVm
+aW5lZChfTElOVVhfREVMQVlfSCkgKi8NCg0KU29ycnkgYnV0IEknbSBub3Qgc3VyZSB3ZSBzaG91
+bGQgZW5jb3VyYWdlIG90aGVyIGtlcm5lbCBkZXZlbG9wZXJzIHRvIHVzZQ0KYnVzeS13YWl0aW5n
+IGJ5IGFkZGluZyB0aGUgcG9sbF9ldmVudF9pbnRlcnJ1cHRpYmxlKCkgbWFjcm8gdG8gYSBzeXN0
+ZW0td2lkZQ0KaGVhZGVyIGZpbGUuIENhbiB0aGF0IG1hY3JvIGJlIG1vdmVkIGludG8gYSBDRFJP
+TS1zcGVjaWZpYyAuYyBvciAuaCBmaWxlPw0KDQpUaGFua3MsDQoNCkJhcnQu
