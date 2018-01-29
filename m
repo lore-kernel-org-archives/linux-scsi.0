@@ -1,59 +1,65 @@
-From: Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH 1/1] scsi: ufs: fix exception event handling
-Date: Mon, 29 Jan 2018 10:04:52 +0530
-Message-ID: <1517200492-2941-1-git-send-email-asutoshd@codeaurora.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/19] lpfc: Fix frequency of Release WQE CQEs
+Date: Mon, 29 Jan 2018 08:50:05 +0100
+Message-ID: <5c5143c3-5a80-0283-60fb-1a8753775182@suse.de>
+References: <20180124224548.9530-1-jsmart2021@gmail.com>
+ <20180124224548.9530-2-jsmart2021@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6497 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750819AbeA2EfW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jan 2018 23:35:22 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60822 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751083AbeA2IBy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jan 2018 03:01:54 -0500
+In-Reply-To: <20180124224548.9530-2-jsmart2021@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Maya Erez <merez@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-From: Maya Erez <merez@codeaurora.org>
+On 01/24/2018 11:45 PM, James Smart wrote:
+> The driver controls when the hardware sends completions that
+> communicate consumption of elements from the WQ. This is done by
+> setting a WQEC bit on a WQE.
+> 
+> The current driver sets it on every Nth WQE posting. However, the
+> driver isn't clearing the bit if the WQE is reused. Thus, if the
+> queue depth isn't evenly divisible by N, with enough time, it can
+> be set on every element, creating a lot of overhead and risking
+> CQ full conditions.
+> 
+> Correct by clearing the bit when not setting it on an Nth element.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index 5f5528a12308..149f21f53b13 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -129,6 +129,8 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+>  	/* set consumption flag every once in a while */
+>  	if (!((q->host_index + 1) % q->entry_repost))
+>  		bf_set(wqe_wqec, &wqe->generic.wqe_com, 1);
+> +	else
+> +		bf_set(wqe_wqec, &wqe->generic.wqe_com, 0);
+>  	if (q->phba->sli3_options & LPFC_SLI4_PHWQ_ENABLED)
+>  		bf_set(wqe_wqid, &wqe->generic.wqe_com, q->queue_id);
+>  	lpfc_sli_pcimem_bcopy(wqe, temp_wqe, q->entry_size);
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-The device can set the exception event bit in one of the response UPIU,
-for example to notify the need for urgent BKOPs operation.
-In such a case the host driver calls ufshcd_exception_event_handler to
-handle this notification.
-When trying to check the exception event status (for finding the cause for
-the exception event), the device may be busy with additional SCSI commands
-handling and may not respond within the 100ms timeout.
+Cheers,
 
-To prevent that, we need to block SCSI commands during handling of
-exception events and allow retransmissions of the query requests,
-in case of timeout.
-
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8af2af3..2dd488f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4955,6 +4955,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- 	hba = container_of(work, struct ufs_hba, eeh_work);
- 
- 	pm_runtime_get_sync(hba->dev);
-+	scsi_block_requests(hba->host);
- 	err = ufshcd_get_ee_status(hba, &status);
- 	if (err) {
- 		dev_err(hba->dev, "%s: failed to get exception status %d\n",
-@@ -4968,6 +4969,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- 		ufshcd_bkops_exception_event_handler(hba);
- 
- out:
-+	scsi_unblock_requests(hba->host);
- 	pm_runtime_put_sync(hba->dev);
- 	return;
- }
+Hannes
 -- 
-Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
