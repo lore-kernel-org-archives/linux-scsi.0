@@ -1,94 +1,73 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 12/19] lpfc: Indicate CONF support in NVMe PRLI
-Date: Mon, 29 Jan 2018 09:28:18 +0100
-Message-ID: <87d3690f-70d1-8d77-4219-68cc30dffff4@suse.de>
-References: <20180124224548.9530-1-jsmart2021@gmail.com>
- <20180124224548.9530-13-jsmart2021@gmail.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH 06/13] lpfc: Add 64G link speed support
+Date: Mon, 29 Jan 2018 12:45:47 +0100
+Message-ID: <bdaf0bdc-576d-4052-4e63-238d773b26ce@linux.vnet.ibm.com>
+References: <20180126193113.29610-1-jsmart2021@gmail.com>
+ <20180126193113.29610-7-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43363 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751809AbeA2LXv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jan 2018 06:23:51 -0500
-In-Reply-To: <20180124224548.9530-13-jsmart2021@gmail.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34496 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751321AbeA2Lp6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jan 2018 06:45:58 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0TBjkc4093229
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2018 06:45:58 -0500
+Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2ft0g4xxcf-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2018 06:45:54 -0500
+Received: from localhost
+        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
+        Mon, 29 Jan 2018 11:45:51 -0000
+In-Reply-To: <20180126193113.29610-7-jsmart2021@gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On 01/24/2018 11:45 PM, James Smart wrote:
-> Revise the NVME PRLI to indicate CONF support.
+On 01/26/2018 08:31 PM, James Smart wrote:
+> The G7 adapter supports 64G link speeds. Add support to the driver.
+> 
+> In addition, a small cleanup to replace the odd bitmap logic with
+> a switch case.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_els.c       | 3 ++-
->  drivers/scsi/lpfc/lpfc_hw4.h       | 6 +++---
->  drivers/scsi/lpfc/lpfc_nportdisc.c | 3 ---
->  3 files changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 234c7c015982..404e1af5e2ab 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -2293,10 +2293,11 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
->  		if (phba->nvmet_support) {
->  			bf_set(prli_tgt, npr_nvme, 1);
->  			bf_set(prli_disc, npr_nvme, 1);
-> -
->  		} else {
->  			bf_set(prli_init, npr_nvme, 1);
-> +			bf_set(prli_conf, npr_nvme, 1);
->  		}
-> +
->  		npr_nvme->word1 = cpu_to_be32(npr_nvme->word1);
->  		npr_nvme->word4 = cpu_to_be32(npr_nvme->word4);
->  		elsiocb->iocb_flag |= LPFC_PRLI_NVME_REQ;
-> diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-> index ef469129fb71..7c3afc3d3121 100644
-> --- a/drivers/scsi/lpfc/lpfc_hw4.h
-> +++ b/drivers/scsi/lpfc/lpfc_hw4.h
-> @@ -4346,9 +4346,9 @@ struct lpfc_nvme_prli {
->  #define prli_init_SHIFT                 5
->  #define prli_init_MASK                  0x00000001
->  #define prli_init_WORD                  word4
-> -#define prli_recov_SHIFT                8
-> -#define prli_recov_MASK                 0x00000001
-> -#define prli_recov_WORD                 word4
-> +#define prli_conf_SHIFT                 7
-> +#define prli_conf_MASK                  0x00000001
-> +#define prli_conf_WORD                  word4
->  	uint32_t word5;
->  #define prli_fb_sz_SHIFT                0
->  #define prli_fb_sz_MASK                 0x0000ffff
-> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-> index d841aa42f607..bbf1e1342b09 100644
-> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-> @@ -2011,9 +2011,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
->  			}
->  		}
->  
-> -		if (bf_get_be32(prli_recov, nvpr))
-> -			ndlp->nlp_fcp_info |= NLP_FCP_2_DEVICE;
-> -
->  		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
->  				 "6029 NVME PRLI Cmpl w1 x%08x "
->  				 "w4 x%08x w5 x%08x flag x%x, "
-> 
-If you say so :-)
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+>   9 files changed, 92 insertions(+), 30 deletions(-)
 
-Cheers,
+> diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+> index d07d2fcbea34..b91b429fe2df 100644
+> --- a/drivers/scsi/lpfc/lpfc_hw.h
+> +++ b/drivers/scsi/lpfc/lpfc_hw.h
 
-Hannes
+> @@ -2966,6 +2975,9 @@ struct lpfc_mbx_read_top {
+>   #define LPFC_LINK_SPEED_10GHZ	0x40
+>   #define LPFC_LINK_SPEED_16GHZ	0x80
+>   #define LPFC_LINK_SPEED_32GHZ	0x90
+> +#define LPFC_LINK_SPEED_64GHZ	0xA0
+> +#define LPFC_LINK_SPEED_128GHZ	0xB0
+> +#define LPFC_LINK_SPEED_2568GHZ	0xC0
+                               ^
+typo? 2568 => 256
+
+The new 128 and 256 definitions do not seem to be used in this patch set?
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Mit freundlichen Grüßen / Kind regards
+Steffen Maier
+
+Linux on z Systems Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
