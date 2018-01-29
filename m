@@ -1,22 +1,18 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] [SCSI] sym53c8xx_2: iterator underflow in sym_getsync()
-Date: Mon, 29 Jan 2018 15:51:53 +0100
-Message-ID: <mqda7wwiupi.fsf@linux-x5ow.site>
-References: <20180125141340.GA7299@mwanda>
+Subject: Re: [PATCH] mptfusion: Add bounds check in mptctl_hp_targetinfo()
+Date: Mon, 29 Jan 2018 15:57:49 +0100
+Message-ID: <mqd4ln4iufm.fsf@linux-x5ow.site>
+References: <20180125142727.GA23945@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43379 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751547AbeA2Ovz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jan 2018 09:51:55 -0500
-In-Reply-To: <20180125141340.GA7299@mwanda> (Dan Carpenter's message of "Thu,
-        25 Jan 2018 17:13:40 +0300")
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20180125142727.GA23945@mwanda> (Dan Carpenter's message of "Thu,
+        25 Jan 2018 17:27:27 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
 To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
