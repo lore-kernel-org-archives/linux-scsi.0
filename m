@@ -1,32 +1,36 @@
-From: Corentin Labbe <clabbe@baylibre.com>
-Subject: [PATCH] scsi: remove dead makefile about oktagon files
-Date: Mon, 29 Jan 2018 12:30:16 +0000
-Message-ID: <1517229016-1859-1-git-send-email-clabbe@baylibre.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corentin Labbe <clabbe@baylibre.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] scsi: remove dead makefile about oktagon files
+Date: Mon, 29 Jan 2018 14:46:09 +0100
+Message-ID: <CAMuHMdXSKvP-atL7SzKtwOjgMOmYzTUwAK1i7JYEATZW6t8n=Q@mail.gmail.com>
+References: <1517229016-1859-1-git-send-email-clabbe@baylibre.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:36323 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbeA2NqL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2018 08:46:11 -0500
+In-Reply-To: <1517229016-1859-1-git-send-email-clabbe@baylibre.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Corentin Labbe <clabbe@baylibre.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
 
-Remove line using inexistant files which were removed in
-commit 642978beb483 ("[SCSI] remove m68k NCR53C9x based drivers")
+On Mon, Jan 29, 2018 at 1:30 PM, Corentin Labbe <clabbe@baylibre.com> wrote:
+> Remove line using inexistant files which were removed in
+> commit 642978beb483 ("[SCSI] remove m68k NCR53C9x based drivers")
+>
+> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
 
-Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
----
- drivers/scsi/Makefile | 1 -
- 1 file changed, 1 deletion(-)
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index fcfd28d2884c..de1b3fce936d 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -185,7 +185,6 @@ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
- CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
- zalon7xx-objs	:= zalon.o ncr53c8xx.o
- NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
--oktagon_esp_mod-objs	:= oktagon_esp.o oktagon_io.o
- 
- # Files generated that shall be removed upon make clean
- clean-files :=	53c700_d.h 53c700_u.h
--- 
-2.13.6
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
