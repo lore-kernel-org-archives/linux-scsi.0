@@ -1,47 +1,27 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: [PATCH 2/2] scsi_debug: reset injection flags for every_nth > 0
-Date: Tue, 30 Jan 2018 00:35:52 +0100
-Message-ID: <20180129233552.26702-2-mwilck@suse.com>
-References: <20180129233552.26702-1-mwilck@suse.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: handle special return codes for ABORTED COMMAND
+Date: Mon, 29 Jan 2018 23:39:14 +0000
+Message-ID: <1517269153.2687.61.camel@wdc.com>
+References: <20180129233013.23474-1-mwilck@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:53539 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751778AbeA2Xgd (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Mon, 29 Jan 2018 18:36:33 -0500
-In-Reply-To: <20180129233552.26702-1-mwilck@suse.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:62735 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751539AbeA2XjR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2018 18:39:17 -0500
+In-Reply-To: <20180129233013.23474-1-mwilck@suse.com>
+Content-Language: en-US
+Content-ID: <84F44FAFA9FB98479A7D6E77B3C326CF@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: "mwilck@suse.com" <mwilck@suse.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "xose.vazquez@gmail.com" <xose.vazquez@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-If every_nth > 0, the injection flags must be reset for commands
-that aren't supposed to fail (i.e. that aren't "nth"). Otherwise,
-commands will continue to fail, like in the every_nth < 0 case.
-
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/scsi_debug.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 86c48797381e..820b98853e69 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3988,8 +3988,13 @@ static void clear_queue_stats(void)
- static void setup_inject(struct sdebug_queue *sqp,
- 			 struct sdebug_queued_cmd *sqcp)
- {
--	if ((atomic_read(&sdebug_cmnd_count) % abs(sdebug_every_nth)) > 0)
-+	if ((atomic_read(&sdebug_cmnd_count) % abs(sdebug_every_nth)) > 0) {
-+		if (sdebug_every_nth > 0)
-+			sqcp->inj_recovered = sqcp->inj_transport
-+				= sqcp->inj_dif
-+				= sqcp->inj_dix = sqcp->inj_short = 0;
- 		return;
-+	}
- 	sqcp->inj_recovered = !!(SDEBUG_OPT_RECOVERED_ERR & sdebug_opts);
- 	sqcp->inj_transport = !!(SDEBUG_OPT_TRANSPORT_ERR & sdebug_opts);
- 	sqcp->inj_dif = !!(SDEBUG_OPT_DIF_ERR & sdebug_opts);
--- 
-2.16.1
+T24gVHVlLCAyMDE4LTAxLTMwIGF0IDAwOjMwICswMTAwLCBNYXJ0aW4gV2lsY2sgd3JvdGU6DQo+
+ICsJc3RhdGljIHN0cnVjdCBhYm9ydGVkX2NtZF9ibGlzdCBibGlzdFtdID0gew0KDQpQbGVhc2Ug
+Y29uc2lkZXIgdG8gZGVjbGFyZSB0aGlzIGFycmF5IGNvbnN0Lg0KDQo+ICsJZm9yIChpID0gMDsg
+aSA8IHNpemVvZihibGlzdCkvc2l6ZW9mKHN0cnVjdCBhYm9ydGVkX2NtZF9ibGlzdCk7IGkrKykg
+ew0KDQpIYXZlIHlvdSBjb25zaWRlcmVkIHRvIHVzZSBBUlJBWV9TSVpFKCk/DQoNClRoYW5rcywN
+Cg0KQmFydC4=
