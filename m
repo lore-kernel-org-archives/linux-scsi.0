@@ -1,42 +1,66 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [LSF/MM TOPIC] Two blk-mq related topics
-Date: Mon, 29 Jan 2018 14:00:11 -0700
-Message-ID: <fc833da8-f9de-d577-e1d3-c46d8c061d35@kernel.dk>
-References: <20180129154455.GB17176@ming.t460p>
- <1517259390.3969.41.camel@HansenPartnership.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V4] blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Mon, 29 Jan 2018 21:22:13 +0000
+Message-ID: <1517260932.2687.42.camel@wdc.com>
+References: <20180129203300.50595-1-snitzer@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:46780 "EHLO
-        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751625AbeA2VAQ (ORCPT
-        <rfc822;Linux-scsi@vger.kernel.org>); Mon, 29 Jan 2018 16:00:16 -0500
-Received: by mail-io0-f171.google.com with SMTP id f34so9105871ioi.13
-        for <Linux-scsi@vger.kernel.org>; Mon, 29 Jan 2018 13:00:15 -0800 (PST)
-In-Reply-To: <1517259390.3969.41.camel@HansenPartnership.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20180129203300.50595-1-snitzer@redhat.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <2A6A7D4FF2C53444B0E17E7D08964AFF@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Ming Lei <ming.lei@redhat.com>, lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
 
-On 1/29/18 1:56 PM, James Bottomley wrote:
-> On Mon, 2018-01-29 at 23:46 +0800, Ming Lei wrote:
-> [...]
->> 2. When to enable SCSI_MQ at default again?
-> 
-> I'm not sure there's much to discuss ... I think the basic answer is as
-> soon as Christoph wants to try it again.
-
-FWIW, internally I've been running various IO intensive workloads on
-what is essentially 4.12 upstream with scsi-mq the default (with
-mq-deadline as the scheduler) and comparing IO workloads with a
-previous 4.6 kernel (without scsi-mq), and things are looking
-great.
-
-We're never going to iron out the last kinks with it being off
-by default, I think we should attempt to flip the switch again
-for 4.16.
-
--- 
-Jens Axboe
+T24gTW9uLCAyMDE4LTAxLTI5IGF0IDE1OjMzIC0wNTAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
+ICsJCSAqIElmIGRyaXZlciByZXR1cm5zIEJMS19TVFNfUkVTT1VSQ0UgYW5kIFNDSEVEX1JFU1RB
+UlQNCj4gKwkJICogYml0IGlzIHNldCwgcnVuIHF1ZXVlIGFmdGVyIDEwbXMgdG8gYXZvaWQgSU8g
+c3RhbGxzDQo+ICsJCSAqIHRoYXQgY291bGQgb3RoZXJ3aXNlIG9jY3VyIGlmIHRoZSBxdWV1ZSBp
+cyBpZGxlLg0KPiAgCQkgKi8NCj4gLQkJaWYgKCFibGtfbXFfc2NoZWRfbmVlZHNfcmVzdGFydCho
+Y3R4KSB8fA0KPiArCQluZWVkc19yZXN0YXJ0ID0gYmxrX21xX3NjaGVkX25lZWRzX3Jlc3RhcnQo
+aGN0eCk7DQo+ICsJCWlmICghbmVlZHNfcmVzdGFydCB8fA0KPiAgCQkgICAgKG5vX3RhZyAmJiBs
+aXN0X2VtcHR5X2NhcmVmdWwoJmhjdHgtPmRpc3BhdGNoX3dhaXQuZW50cnkpKSkNCj4gIAkJCWJs
+a19tcV9ydW5faHdfcXVldWUoaGN0eCwgdHJ1ZSk7DQo+ICsJCWVsc2UgaWYgKG5lZWRzX3Jlc3Rh
+cnQgJiYgKHJldCA9PSBCTEtfU1RTX1JFU09VUkNFKSkNCj4gKwkJCWJsa19tcV9kZWxheV9ydW5f
+aHdfcXVldWUoaGN0eCwgQkxLX01RX1FVRVVFX0RFTEFZKTsNCj4gIAl9DQoNClRoZSBhYm92ZSBj
+b2RlIG9ubHkgY2FsbHMgYmxrX21xX2RlbGF5X3J1bl9od19xdWV1ZSgpIGlmIHRoZSBmb2xsb3dp
+bmcgY29uZGl0aW9uDQppcyBtZXQ6ICEoIW5lZWRzX3Jlc3RhcnQgfHwgKG5vX3RhZyAmJiBsaXN0
+X2VtcHR5X2NhcmVmdWwoJmhjdHgtPmRpc3BhdGNoX3dhaXQuZW50cnkpKSkNCiYmIChuZWVkc19y
+ZXN0YXJ0ICYmIChyZXQgPT0gQkxLX1NUU19SRVNPVVJDRSkpLiBUaGF0IGJvb2xlYW4gZXhwcmVz
+c2lvbiBjYW4gYmUNCnNpbXBsaWZpZWQgaW50byB0aGUgZm9sbG93aW5nOiBuZWVkc19yZXN0YXJ0
+ICYmIHJldCA9PSBCTEtfU1RTX1JFU09VUkNFICYmIA0KIShub190YWcgJiYgbGlzdF9lbXB0eV9j
+YXJlZnVsKCZoY3R4LT5kaXNwYXRjaF93YWl0LmVudHJ5KSkuIEZyb20gYmxrLW1xLXNjaGVkLmg6
+DQoNCnN0YXRpYyBpbmxpbmUgYm9vbCBibGtfbXFfc2NoZWRfbmVlZHNfcmVzdGFydChzdHJ1Y3Qg
+YmxrX21xX2h3X2N0eCAqaGN0eCkNCnsNCglyZXR1cm4gdGVzdF9iaXQoQkxLX01RX1NfU0NIRURf
+UkVTVEFSVCwgJmhjdHgtPnN0YXRlKTsNCn0NCg0KSW4gb3RoZXIgd29yZHMsIHRoZSBhYm92ZSBj
+b2RlIHdpbGwgbm90IGNhbGwgYmxrX21xX2RlbGF5X3J1bl9od19xdWV1ZSgpIGlmDQpCTEtfTVFf
+U19TQ0hFRF9SRVNUQVJUIGlzIGNsZWFyZWQgYWZ0ZXIgaXQgZ290IHNldCBhbmQgYmVmb3JlIHRo
+ZSBhYm92ZSBjb2RlIGlzDQpyZWFjaGVkLiBUaGUgQkxLX01RX1NfU0NIRURfUkVTVEFSVCBiaXQg
+Z2V0cyBjbGVhcmVkIGlmIGEgcmVxdWVzdCBjb21wbGV0ZXMNCmNvbmN1cnJlbnRseSB3aXRoIHRo
+ZSBhYm92ZSBjb2RlLiBGcm9tIGJsay1tcS1zY2hlZC5jOg0KDQpzdGF0aWMgYm9vbCBibGtfbXFf
+c2NoZWRfcmVzdGFydF9oY3R4KHN0cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4KQ0Kew0KCWlmICgh
+dGVzdF9iaXQoQkxLX01RX1NfU0NIRURfUkVTVEFSVCwgJmhjdHgtPnN0YXRlKSkNCgkJcmV0dXJu
+IGZhbHNlOw0KDQoJaWYgKGhjdHgtPmZsYWdzICYgQkxLX01RX0ZfVEFHX1NIQVJFRCkgew0KCQlz
+dHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSA9IGhjdHgtPnF1ZXVlOw0KDQoJCWlmICh0ZXN0X2FuZF9j
+bGVhcl9iaXQoQkxLX01RX1NfU0NIRURfUkVTVEFSVCwgJmhjdHgtPnN0YXRlKSkNCgkJCWF0b21p
+Y19kZWMoJnEtPnNoYXJlZF9oY3R4X3Jlc3RhcnQpOw0KCX0gZWxzZQ0KCQljbGVhcl9iaXQoQkxL
+X01RX1NfU0NIRURfUkVTVEFSVCwgJmhjdHgtPnN0YXRlKTsNCg0KCXJldHVybiBibGtfbXFfcnVu
+X2h3X3F1ZXVlKGhjdHgsIHRydWUpOw0KfQ0KDQpUaGUgYWJvdmUgYmxrX21xX3J1bl9od19xdWV1
+ZSgpIGNhbGwgbWF5IGZpbmlzaCBlaXRoZXIgYmVmb3JlIG9yIGFmdGVyDQpibGtfbXFfZGlzcGF0
+Y2hfcnFfbGlzdCgpIGV4YW1pbmVzIHRoZSBCTEtfTVFfU19TQ0hFRF9SRVNUQVJUIGZsYWcuDQoN
+ClRoYXQncyB3aHkgSSB3cm90ZSBpbiBwcmV2aW91cyBlLW1haWxzIHRoYXQgdGhpcyBwYXRjaCBh
+bmQgYWxzbyB0aGUgcHJldmlvdXMNCnZlcnNpb25zIG9mIHRoaXMgcGF0Y2ggY2hhbmdlIGEgc3lz
+dGVtYXRpYyBjYWxsIG9mIGJsa19tcV9kZWxheV9ydW5faHdfcXVldWUoKQ0KaW50byBhIGNhbGwg
+dGhhdCBtYXkgb3IgbWF5IG5vdCBoYXBwZW4sIGRlcGVuZGluZyBvbiB3aGV0aGVyIG9yIG5vdCBh
+IHJlcXVlc3QNCmNvbXBsZXRlcyBjb25jdXJyZW50bHkgd2l0aCByZXF1ZXN0IHF1ZXVlaW5nLiBT
+b3JyeSBidXQgSSB0aGluayB0aGF0IG1lYW5zDQp0aGF0IHRoZSBhYm92ZSBjaGFuZ2UgY29tYmlu
+ZWQgd2l0aCBjaGFuZ2luZyBCTEtfU1RTX1JFU09VUkNFIGludG8NCkJMS19TVFNfREVWX1JFU09V
+UkNFIGlzIHdyb25nIGFuZCB3aHkgSSBleHBlY3QgdGhhdCB0aGlzIHdpbGwgcmVzdWx0IGluDQpz
+cG9yYWRpYyBxdWV1ZSBzdGFsbHMuIEFzIHlvdSBrbm93IHNwb3JhZGljIHF1ZXVlIHN0YWxscyBh
+cmUgYW5ub3lpbmcgYW5kIGhhcmQNCnRvIGRlYnVnLg0KDQpQbGVudHkgb2YgZS1tYWlscyBoYXZl
+IGFscmVhZHkgYmVlbiBleGNoYW5nZWQgYWJvdXQgdmVyc2lvbnMgb25lIHRvIGZvdXIgb2YgdGhp
+cw0KcGF0Y2ggYnV0IHNvIGZhciBub2JvZHkgaGFzIGV2ZW4gdHJpZWQgdG8gY29udHJhZGljdCB0
+aGUgYWJvdmUuDQoNCkJhcnQu
