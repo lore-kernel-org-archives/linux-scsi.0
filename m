@@ -1,39 +1,38 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 09/19] lpfc: Allow set of maximum outstanding SCSI cmd
- limit for a target parameter
-Date: Mon, 29 Jan 2018 09:08:56 +0100
-Message-ID: <08c160c4-ef5b-44ce-c3eb-6d2f23d56ff5@suse.de>
-References: <20180124224548.9530-1-jsmart2021@gmail.com>
- <20180124224548.9530-10-jsmart2021@gmail.com>
+Subject: [LSF/MM TOPIC] irq affinity handling for high CPU count machines
+Date: Mon, 29 Jan 2018 10:08:43 +0100
+Message-ID: <45dc032d-a0ce-816c-d2c5-74c69433bd29@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51416 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51767 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751355AbeA2KXQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jan 2018 05:23:16 -0500
-In-Reply-To: <20180124224548.9530-10-jsmart2021@gmail.com>
+        id S1751361AbeA2KXX (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+        Mon, 29 Jan 2018 05:23:23 -0500
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Kashyap Desai <kashyap.desai@broadcom.com>
 
-On 01/24/2018 11:45 PM, James Smart wrote:
-> Make the attribute writeable.
-> Remove the ramp up to logic as its unnecessary, simply set depth.
-> Add debug message if depth changed, possibly reducing limit, yet
-> our outstanding count has yet to catch up with it.
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc_attr.c |  4 ++--
->  drivers/scsi/lpfc/lpfc_scsi.c | 39 ++++++++++++++++++++++++++++-----------
->  2 files changed, 30 insertions(+), 13 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hi all,
+
+here's a topic which came up on the SCSI ML (cf thread '[RFC 0/2]
+mpt3sas/megaraid_sas: irq poll and load balancing of reply queue').
+
+When doing I/O tests on a machine with more CPUs than MSIx vectors
+provided by the HBA we can easily setup a scenario where one CPU is
+submitting I/O and the other one is completing I/O. Which will result in
+the latter CPU being stuck in the interrupt completion routine for
+basically ever, resulting in the lockup detector kicking in.
+
+How should these situations be handled?
+Should it be made the responsibility of the drivers, ensuring that the
+interrupt completion routine is terminated after a certain time?
+Should it be made the resposibility of the upper layers?
+Should it be the responsibility of the interrupt mapping code?
+Can/should interrupt polling be used in these situations?
 
 Cheers,
 
