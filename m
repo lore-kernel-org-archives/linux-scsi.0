@@ -1,46 +1,47 @@
-From: Mike Snitzer <snitzer@redhat.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH V4] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Mon, 29 Jan 2018 17:14:36 -0500
-Message-ID: <20180129221436.GA6115@redhat.com>
+Date: Mon, 29 Jan 2018 22:22:30 +0000
+Message-ID: <1517264549.2687.59.camel@wdc.com>
 References: <20180129203300.50595-1-snitzer@redhat.com>
- <1517260932.2687.42.camel@wdc.com>
- <20180129214446.GD5744@redhat.com>
- <1517262713.2687.56.camel@wdc.com>
+         <1517260932.2687.42.camel@wdc.com> <20180129214446.GD5744@redhat.com>
+         <1517262713.2687.56.camel@wdc.com> <20180129221436.GA6115@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1517262713.2687.56.camel@wdc.com>
+In-Reply-To: <20180129221436.GA6115@redhat.com>
+Content-Language: en-US
+Content-ID: <D10985656481B1468CC27D3010B76968@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
+To: "snitzer@redhat.com" <snitzer@redhat.com>
 Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 29 2018 at  4:51pm -0500,
-Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-
-> On Mon, 2018-01-29 at 16:44 -0500, Mike Snitzer wrote:
-> > But regardless of which wins the race, the queue will have been run.
-> > Which is all we care about right?
-> 
-> Running the queue is not sufficient. With this patch applied it can happen
-> that the block driver returns BLK_STS_DEV_RESOURCE, that the two or more
-> concurrent queue runs finish before sufficient device resources are available
-> to execute the request and that blk_mq_delay_run_hw_queue() does not get
-> called at all. If no other activity triggers a queue run, e.g. request
-> completion, this will result in a queue stall.
-
-If BLK_STS_DEV_RESOURCE is returned then the driver doesn't need to rely
-on a future queue run.  IIUC, that is the entire premise of
-BLK_STS_DEV_RESOURCE.  If the driver had doubt about whether the
-resource were going to be available in the future it should return
-BLK_STS_RESOURCE.
-
-That may seem like putting a lot on a driver developer (to decide
-between the 2) but I'll again defer to Jens here.  This was the approach
-he was advocating be pursued.
-
-In practice it is working.  Would welcome you testing this V4.
-
-Thanks,
-Mike
+T24gTW9uLCAyMDE4LTAxLTI5IGF0IDE3OjE0IC0wNTAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
+IE9uIE1vbiwgSmFuIDI5IDIwMTggYXQgIDQ6NTFwbSAtMDUwMCwNCj4gQmFydCBWYW4gQXNzY2hl
+IDxCYXJ0LlZhbkFzc2NoZUB3ZGMuY29tPiB3cm90ZToNCj4gDQo+ID4gT24gTW9uLCAyMDE4LTAx
+LTI5IGF0IDE2OjQ0IC0wNTAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+ID4gPiBCdXQgcmVnYXJk
+bGVzcyBvZiB3aGljaCB3aW5zIHRoZSByYWNlLCB0aGUgcXVldWUgd2lsbCBoYXZlIGJlZW4gcnVu
+Lg0KPiA+ID4gV2hpY2ggaXMgYWxsIHdlIGNhcmUgYWJvdXQgcmlnaHQ/DQo+ID4gDQo+ID4gUnVu
+bmluZyB0aGUgcXVldWUgaXMgbm90IHN1ZmZpY2llbnQuIFdpdGggdGhpcyBwYXRjaCBhcHBsaWVk
+IGl0IGNhbiBoYXBwZW4NCj4gPiB0aGF0IHRoZSBibG9jayBkcml2ZXIgcmV0dXJucyBCTEtfU1RT
+X0RFVl9SRVNPVVJDRSwgdGhhdCB0aGUgdHdvIG9yIG1vcmUNCj4gPiBjb25jdXJyZW50IHF1ZXVl
+IHJ1bnMgZmluaXNoIGJlZm9yZSBzdWZmaWNpZW50IGRldmljZSByZXNvdXJjZXMgYXJlIGF2YWls
+YWJsZQ0KPiA+IHRvIGV4ZWN1dGUgdGhlIHJlcXVlc3QgYW5kIHRoYXQgYmxrX21xX2RlbGF5X3J1
+bl9od19xdWV1ZSgpIGRvZXMgbm90IGdldA0KPiA+IGNhbGxlZCBhdCBhbGwuIElmIG5vIG90aGVy
+IGFjdGl2aXR5IHRyaWdnZXJzIGEgcXVldWUgcnVuLCBlLmcuIHJlcXVlc3QNCj4gPiBjb21wbGV0
+aW9uLCB0aGlzIHdpbGwgcmVzdWx0IGluIGEgcXVldWUgc3RhbGwuDQo+IA0KPiBJZiBCTEtfU1RT
+X0RFVl9SRVNPVVJDRSBpcyByZXR1cm5lZCB0aGVuIHRoZSBkcml2ZXIgZG9lc24ndCBuZWVkIHRv
+IHJlbHkNCj4gb24gYSBmdXR1cmUgcXVldWUgcnVuLiAgSUlVQywgdGhhdCBpcyB0aGUgZW50aXJl
+IHByZW1pc2Ugb2YNCj4gQkxLX1NUU19ERVZfUkVTT1VSQ0UuICBJZiB0aGUgZHJpdmVyIGhhZCBk
+b3VidCBhYm91dCB3aGV0aGVyIHRoZQ0KPiByZXNvdXJjZSB3ZXJlIGdvaW5nIHRvIGJlIGF2YWls
+YWJsZSBpbiB0aGUgZnV0dXJlIGl0IHNob3VsZCByZXR1cm4NCj4gQkxLX1NUU19SRVNPVVJDRS4N
+Cj4gDQo+IFRoYXQgbWF5IHNlZW0gbGlrZSBwdXR0aW5nIGEgbG90IG9uIGEgZHJpdmVyIGRldmVs
+b3BlciAodG8gZGVjaWRlDQo+IGJldHdlZW4gdGhlIDIpIGJ1dCBJJ2xsIGFnYWluIGRlZmVyIHRv
+IEplbnMgaGVyZS4gIFRoaXMgd2FzIHRoZSBhcHByb2FjaA0KPiBoZSB3YXMgYWR2b2NhdGluZyBi
+ZSBwdXJzdWVkLg0KDQpIZWxsbyBNaWtlLA0KDQpUaGVyZSB3YXMgYSB0eXBvIGluIG15IHJlcGx5
+OiBJIHNob3VsZCBoYXZlIHJlZmVycmVkIHRvIEJMS19TVFNfUkVTT1VSQ0UNCmluc3RlYWQgb2Yg
+QkxLX1NUU19ERVZfUkVTT1VSQ0UuIFRoZSBjb252ZW50aW9uIGZvciBCTEtfU1RTX0RFVl9SRVNP
+VVJDRSBpcw0KbmFtZWx5IHRoYXQgaWYgLnF1ZXVlX3JxKCkgcmV0dXJucyB0aGF0IHN0YXR1cyBj
+b2RlIHRoYXQgdGhlIGJsb2NrIGRyaXZlcg0KZ3VhcmFudGVlcyB0aGF0IHRoZSBxdWV1ZSB3aWxs
+IGJlIHJlcnVuLg0KDQpCYXJ0Lg==
