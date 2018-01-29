@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 02/19] lpfc: Increase CQ and WQ sizes for SCSI
-Date: Mon, 29 Jan 2018 08:54:08 +0100
-Message-ID: <9989d9c2-5452-a5c8-17ad-0b07f0e540bf@suse.de>
+Subject: Re: [PATCH 13/19] lpfc: Fix SCSI io host reset causing kernel crash
+Date: Mon, 29 Jan 2018 09:29:21 +0100
+Message-ID: <2d7dbb4d-aee2-3f61-50dd-035cc402e4ae@suse.de>
 References: <20180124224548.9530-1-jsmart2021@gmail.com>
- <20180124224548.9530-3-jsmart2021@gmail.com>
+ <20180124224548.9530-14-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52227 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54358 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751569AbeA2KXa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jan 2018 05:23:30 -0500
-In-Reply-To: <20180124224548.9530-3-jsmart2021@gmail.com>
+        id S1750913AbeA2KYD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jan 2018 05:24:03 -0500
+In-Reply-To: <20180124224548.9530-14-jsmart2021@gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,182 +20,21 @@ To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
 On 01/24/2018 11:45 PM, James Smart wrote:
-> Increased CQ and WQ sizes for SCSI FCP, matching those used
-> for NVMe development.
+> During SCSI error handling escalation to host reset, the SCSI io
+> routines were moved off the txcmplq, but the individual io's
+> ON_CMPLQ flag wasn't cleared.  Thus, a background thread saw the
+> io and attempted to access it as if on the txcmplq.
+> 
+> Clear the flag upon removal.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc.h      |  1 +
->  drivers/scsi/lpfc/lpfc_hw4.h  |  3 +++
->  drivers/scsi/lpfc/lpfc_init.c | 30 ++++++++++++++++++++++--------
->  drivers/scsi/lpfc/lpfc_sli.c  |  3 ++-
->  drivers/scsi/lpfc/lpfc_sli4.h |  5 +++++
->  5 files changed, 33 insertions(+), 9 deletions(-)
+>  drivers/scsi/lpfc/lpfc_init.c |  4 ++++
+>  drivers/scsi/lpfc/lpfc_sli.c  | 13 ++++++++++++-
+>  2 files changed, 16 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index 61fb46da05d4..d042f9118e3b 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -760,6 +760,7 @@ struct lpfc_hba {
->  	uint8_t  mds_diags_support;
->  	uint32_t initial_imax;
->  	uint8_t  bbcredit_support;
-> +	uint8_t  enab_exp_wqcq_pages;
->  
->  	/* HBA Config Parameters */
->  	uint32_t cfg_ack0;
-> diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-> index 73c2f6971d2b..ef469129fb71 100644
-> --- a/drivers/scsi/lpfc/lpfc_hw4.h
-> +++ b/drivers/scsi/lpfc/lpfc_hw4.h
-> @@ -3212,6 +3212,9 @@ struct lpfc_sli4_parameters {
->  #define cfg_cqv_SHIFT				14
->  #define cfg_cqv_MASK				0x00000003
->  #define cfg_cqv_WORD				word4
-> +#define cfg_cqpsize_SHIFT			16
-> +#define cfg_cqpsize_MASK			0x000000ff
-> +#define cfg_cqpsize_WORD			word4
->  	uint32_t word5;
->  	uint32_t word6;
->  #define cfg_mqv_SHIFT				14
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index f539c554588c..5b96bf0d3331 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -8011,9 +8011,10 @@ static int
->  lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
->  {
->  	struct lpfc_queue *qdesc;
-> +	uint32_t wqesize;
->  
->  	/* Create Fast Path FCP CQs */
-> -	if (phba->fcp_embed_io)
-> +	if (phba->enab_exp_wqcq_pages)
->  		/* Increase the CQ size when WQEs contain an embedded cdb */
->  		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
->  					      phba->sli4_hba.cq_esize,
-> @@ -8031,15 +8032,18 @@ lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
->  	phba->sli4_hba.fcp_cq[wqidx] = qdesc;
->  
->  	/* Create Fast Path FCP WQs */
-> -	if (phba->fcp_embed_io)
->  		/* Increase the WQ size when WQEs contain an embedded cdb */
-
-Wrong indentation after patching.
-
-> +	if (phba->enab_exp_wqcq_pages) {
-> +		wqesize = (phba->fcp_embed_io) ?
-> +			LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
->  		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
-> -					      LPFC_WQE128_SIZE,
-> +					      wqesize,
->  					      LPFC_WQE_EXP_COUNT);
-> -	else
-> +	} else {
->  		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
->  					      phba->sli4_hba.wq_esize,
->  					      phba->sli4_hba.wq_ecount);
-> +	}
-
-No need for braces here.
-
->  	if (!qdesc) {
->  		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
->  				"0503 Failed allocate fast-path FCP WQ (%d)\n",
-> @@ -10485,6 +10489,12 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
->  	else
->  		phba->fcp_embed_io = 0;
->  
-> +	if ((bf_get(cfg_cqpsize, mbx_sli4_parameters) & LPFC_CQ_16K_PAGE_SZ) &&
-> +	    (bf_get(cfg_wqpsize, mbx_sli4_parameters) & LPFC_WQ_16K_PAGE_SZ) &&
-> +	    (sli4_params->wqsize & LPFC_WQ_SZ128_SUPPORT))
-> +		phba->enab_exp_wqcq_pages = 1;
-> +	else
-> +		phba->enab_exp_wqcq_pages = 0;
->  	/*
->  	 * Check if the SLI port supports MDS Diagnostics
->  	 */
-> @@ -12227,6 +12237,7 @@ int
->  lpfc_fof_queue_create(struct lpfc_hba *phba)
->  {
->  	struct lpfc_queue *qdesc;
-> +	uint32_t wqesize;
->  
->  	/* Create FOF EQ */
->  	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
-> @@ -12240,7 +12251,7 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
->  	if (phba->cfg_fof) {
->  
->  		/* Create OAS CQ */
-> -		if (phba->fcp_embed_io)
-> +		if (phba->enab_exp_wqcq_pages)
->  			qdesc = lpfc_sli4_queue_alloc(phba,
->  						      LPFC_EXPANDED_PAGE_SIZE,
->  						      phba->sli4_hba.cq_esize,
-> @@ -12256,16 +12267,19 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
->  		phba->sli4_hba.oas_cq = qdesc;
->  
->  		/* Create OAS WQ */
-> -		if (phba->fcp_embed_io)
-> +		if (phba->enab_exp_wqcq_pages) {
-> +			wqesize = (phba->fcp_embed_io) ?
-> +				LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
->  			qdesc = lpfc_sli4_queue_alloc(phba,
->  						      LPFC_EXPANDED_PAGE_SIZE,
-> -						      LPFC_WQE128_SIZE,
-> +						      wqesize,
->  						      LPFC_WQE_EXP_COUNT);
-> -		else
-> +		} else {
->  			qdesc = lpfc_sli4_queue_alloc(phba,
->  						      LPFC_DEFAULT_PAGE_SIZE,
->  						      phba->sli4_hba.wq_esize,
->  						      phba->sli4_hba.wq_ecount);
-> +		}
->  		if (!qdesc)
->  			goto out_error;
->  
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 149f21f53b13..d08d9b48f6b1 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -14910,7 +14910,8 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
->  	bf_set(lpfc_mbox_hdr_version, &shdr->request,
->  	       phba->sli4_hba.pc_sli4_params.wqv);
->  
-> -	if (phba->sli4_hba.pc_sli4_params.wqsize & LPFC_WQ_SZ128_SUPPORT)
-> +	if ((phba->sli4_hba.pc_sli4_params.wqsize & LPFC_WQ_SZ128_SUPPORT) ||
-> +	    (wq->page_size > SLI4_PAGE_SIZE))
->  		wq_create_version = LPFC_Q_CREATE_VERSION_1;
->  	else
->  		wq_create_version = LPFC_Q_CREATE_VERSION_0;
-> diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-> index 81fb58e59e60..a9af9980fc43 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli4.h
-> +++ b/drivers/scsi/lpfc/lpfc_sli4.h
-> @@ -485,6 +485,11 @@ struct lpfc_pc_sli4_params {
->  	uint8_t wqpcnt;
->  };
->  
-> +#define LPFC_CQ_4K_PAGE_SZ	0x1
-> +#define LPFC_CQ_16K_PAGE_SZ	0x4
-> +#define LPFC_WQ_4K_PAGE_SZ	0x1
-> +#define LPFC_WQ_16K_PAGE_SZ	0x4
-> +
->  struct lpfc_iov {
->  	uint32_t pf_number;
->  	uint32_t vf_number;
-> 
-Please fix up also the comment in lpfc_init.c:
-
-	/*
-	 * Issue IOs with CDB embedded in WQE to minimized the number
-	 * of DMAs the firmware has to do. Setting this to 1 also forces
-	 * the driver to use 128 bytes WQEs for FCP IOs.
-	 */
-
-Which isn't true anymore.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
