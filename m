@@ -1,18 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 19/19] lpfc: Update modified files for 2018 Copyright
-Date: Mon, 29 Jan 2018 09:35:16 +0100
-Message-ID: <b39ac3cc-df92-81e6-dac9-463b84b61fec@suse.de>
+Subject: Re: [PATCH 02/19] lpfc: Increase CQ and WQ sizes for SCSI
+Date: Mon, 29 Jan 2018 08:54:08 +0100
+Message-ID: <9989d9c2-5452-a5c8-17ad-0b07f0e540bf@suse.de>
 References: <20180124224548.9530-1-jsmart2021@gmail.com>
- <20180124224548.9530-20-jsmart2021@gmail.com>
+ <20180124224548.9530-3-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54067 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52227 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751296AbeA2KX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jan 2018 05:23:59 -0500
-In-Reply-To: <20180124224548.9530-20-jsmart2021@gmail.com>
+        id S1751569AbeA2KXa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jan 2018 05:23:30 -0500
+In-Reply-To: <20180124224548.9530-3-jsmart2021@gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,255 +20,182 @@ To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
 On 01/24/2018 11:45 PM, James Smart wrote:
-> Updated Copyright in files updated 11.4.0.7
+> Increased CQ and WQ sizes for SCSI FCP, matching those used
+> for NVMe development.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc.h           | 2 +-
->  drivers/scsi/lpfc/lpfc_attr.c      | 2 +-
->  drivers/scsi/lpfc/lpfc_crtn.h      | 2 +-
->  drivers/scsi/lpfc/lpfc_els.c       | 2 +-
->  drivers/scsi/lpfc/lpfc_hbadisc.c   | 2 +-
->  drivers/scsi/lpfc/lpfc_hw4.h       | 2 +-
->  drivers/scsi/lpfc/lpfc_init.c      | 2 +-
->  drivers/scsi/lpfc/lpfc_mbox.c      | 2 +-
->  drivers/scsi/lpfc/lpfc_mem.c       | 2 +-
->  drivers/scsi/lpfc/lpfc_nportdisc.c | 4 ++--
->  drivers/scsi/lpfc/lpfc_nvme.c      | 2 +-
->  drivers/scsi/lpfc/lpfc_nvmet.c     | 2 +-
->  drivers/scsi/lpfc/lpfc_nvmet.h     | 2 +-
->  drivers/scsi/lpfc/lpfc_scsi.c      | 2 +-
->  drivers/scsi/lpfc/lpfc_sli.c       | 3 +--
->  drivers/scsi/lpfc/lpfc_sli4.h      | 2 +-
->  drivers/scsi/lpfc/lpfc_version.h   | 2 +-
->  17 files changed, 18 insertions(+), 19 deletions(-)
+>  drivers/scsi/lpfc/lpfc.h      |  1 +
+>  drivers/scsi/lpfc/lpfc_hw4.h  |  3 +++
+>  drivers/scsi/lpfc/lpfc_init.c | 30 ++++++++++++++++++++++--------
+>  drivers/scsi/lpfc/lpfc_sli.c  |  3 ++-
+>  drivers/scsi/lpfc/lpfc_sli4.h |  5 +++++
+>  5 files changed, 33 insertions(+), 9 deletions(-)
 > 
 > diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index d042f9118e3b..9698b9635058 100644
+> index 61fb46da05d4..d042f9118e3b 100644
 > --- a/drivers/scsi/lpfc/lpfc.h
 > +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> index b79dad7b8278..70bd25666243 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-> index 3ecf50df93f4..14a86b5b51e4 100644
-> --- a/drivers/scsi/lpfc/lpfc_crtn.h
-> +++ b/drivers/scsi/lpfc/lpfc_crtn.h
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 404e1af5e2ab..ba896554a14f 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> index 9265906d956e..f5bbac3cadbb 100644
-> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
+> @@ -760,6 +760,7 @@ struct lpfc_hba {
+>  	uint8_t  mds_diags_support;
+>  	uint32_t initial_imax;
+>  	uint8_t  bbcredit_support;
+> +	uint8_t  enab_exp_wqcq_pages;
+>  
+>  	/* HBA Config Parameters */
+>  	uint32_t cfg_ack0;
 > diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-> index 52fe28ae50fa..8685d26e6929 100644
+> index 73c2f6971d2b..ef469129fb71 100644
 > --- a/drivers/scsi/lpfc/lpfc_hw4.h
 > +++ b/drivers/scsi/lpfc/lpfc_hw4.h
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2009-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
+> @@ -3212,6 +3212,9 @@ struct lpfc_sli4_parameters {
+>  #define cfg_cqv_SHIFT				14
+>  #define cfg_cqv_MASK				0x00000003
+>  #define cfg_cqv_WORD				word4
+> +#define cfg_cqpsize_SHIFT			16
+> +#define cfg_cqpsize_MASK			0x000000ff
+> +#define cfg_cqpsize_WORD			word4
+>  	uint32_t word5;
+>  	uint32_t word6;
+>  #define cfg_mqv_SHIFT				14
 > diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 895b1da784ee..04a77c308836 100644
+> index f539c554588c..5b96bf0d3331 100644
 > --- a/drivers/scsi/lpfc/lpfc_init.c
 > +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-> index c32d4a323db2..7313ceb0f23b 100644
-> --- a/drivers/scsi/lpfc/lpfc_mbox.c
-> +++ b/drivers/scsi/lpfc/lpfc_mbox.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
-> index 60078e61da5e..41361662ff08 100644
-> --- a/drivers/scsi/lpfc/lpfc_mem.c
-> +++ b/drivers/scsi/lpfc/lpfc_mem.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-> index bbf1e1342b09..b63179d895e2 100644
-> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-> @@ -1,7 +1,7 @@
-> - /*******************************************************************
-> +/*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-> index fc6d85f0bfcf..527e63c1f1ac 100644
-> --- a/drivers/scsi/lpfc/lpfc_nvme.c
-> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-> index f8863c51ba20..5b9f456a9f5e 100644
-> --- a/drivers/scsi/lpfc/lpfc_nvmet.c
-> +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channsel Host Bus Adapters.                               *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-> index 5da35de5ea45..c1bcef3f103c 100644
-> --- a/drivers/scsi/lpfc/lpfc_nvmet.h
-> +++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index 10c2dc0cf1fa..c595046a521b 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
+> @@ -8011,9 +8011,10 @@ static int
+>  lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
+>  {
+>  	struct lpfc_queue *qdesc;
+> +	uint32_t wqesize;
+>  
+>  	/* Create Fast Path FCP CQs */
+> -	if (phba->fcp_embed_io)
+> +	if (phba->enab_exp_wqcq_pages)
+>  		/* Increase the CQ size when WQEs contain an embedded cdb */
+>  		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
+>  					      phba->sli4_hba.cq_esize,
+> @@ -8031,15 +8032,18 @@ lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
+>  	phba->sli4_hba.fcp_cq[wqidx] = qdesc;
+>  
+>  	/* Create Fast Path FCP WQs */
+> -	if (phba->fcp_embed_io)
+>  		/* Increase the WQ size when WQEs contain an embedded cdb */
+
+Wrong indentation after patching.
+
+> +	if (phba->enab_exp_wqcq_pages) {
+> +		wqesize = (phba->fcp_embed_io) ?
+> +			LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
+>  		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
+> -					      LPFC_WQE128_SIZE,
+> +					      wqesize,
+>  					      LPFC_WQE_EXP_COUNT);
+> -	else
+> +	} else {
+>  		qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
+>  					      phba->sli4_hba.wq_esize,
+>  					      phba->sli4_hba.wq_ecount);
+> +	}
+
+No need for braces here.
+
+>  	if (!qdesc) {
+>  		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+>  				"0503 Failed allocate fast-path FCP WQ (%d)\n",
+> @@ -10485,6 +10489,12 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+>  	else
+>  		phba->fcp_embed_io = 0;
+>  
+> +	if ((bf_get(cfg_cqpsize, mbx_sli4_parameters) & LPFC_CQ_16K_PAGE_SZ) &&
+> +	    (bf_get(cfg_wqpsize, mbx_sli4_parameters) & LPFC_WQ_16K_PAGE_SZ) &&
+> +	    (sli4_params->wqsize & LPFC_WQ_SZ128_SUPPORT))
+> +		phba->enab_exp_wqcq_pages = 1;
+> +	else
+> +		phba->enab_exp_wqcq_pages = 0;
+>  	/*
+>  	 * Check if the SLI port supports MDS Diagnostics
+>  	 */
+> @@ -12227,6 +12237,7 @@ int
+>  lpfc_fof_queue_create(struct lpfc_hba *phba)
+>  {
+>  	struct lpfc_queue *qdesc;
+> +	uint32_t wqesize;
+>  
+>  	/* Create FOF EQ */
+>  	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
+> @@ -12240,7 +12251,7 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
+>  	if (phba->cfg_fof) {
+>  
+>  		/* Create OAS CQ */
+> -		if (phba->fcp_embed_io)
+> +		if (phba->enab_exp_wqcq_pages)
+>  			qdesc = lpfc_sli4_queue_alloc(phba,
+>  						      LPFC_EXPANDED_PAGE_SIZE,
+>  						      phba->sli4_hba.cq_esize,
+> @@ -12256,16 +12267,19 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
+>  		phba->sli4_hba.oas_cq = qdesc;
+>  
+>  		/* Create OAS WQ */
+> -		if (phba->fcp_embed_io)
+> +		if (phba->enab_exp_wqcq_pages) {
+> +			wqesize = (phba->fcp_embed_io) ?
+> +				LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
+>  			qdesc = lpfc_sli4_queue_alloc(phba,
+>  						      LPFC_EXPANDED_PAGE_SIZE,
+> -						      LPFC_WQE128_SIZE,
+> +						      wqesize,
+>  						      LPFC_WQE_EXP_COUNT);
+> -		else
+> +		} else {
+>  			qdesc = lpfc_sli4_queue_alloc(phba,
+>  						      LPFC_DEFAULT_PAGE_SIZE,
+>  						      phba->sli4_hba.wq_esize,
+>  						      phba->sli4_hba.wq_ecount);
+> +		}
+>  		if (!qdesc)
+>  			goto out_error;
+>  
 > diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index d597e15a1974..e97d080e9f65 100644
+> index 149f21f53b13..d08d9b48f6b1 100644
 > --- a/drivers/scsi/lpfc/lpfc_sli.c
 > +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -1,8 +1,7 @@
-> -
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
+> @@ -14910,7 +14910,8 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
+>  	bf_set(lpfc_mbox_hdr_version, &shdr->request,
+>  	       phba->sli4_hba.pc_sli4_params.wqv);
+>  
+> -	if (phba->sli4_hba.pc_sli4_params.wqsize & LPFC_WQ_SZ128_SUPPORT)
+> +	if ((phba->sli4_hba.pc_sli4_params.wqsize & LPFC_WQ_SZ128_SUPPORT) ||
+> +	    (wq->page_size > SLI4_PAGE_SIZE))
+>  		wq_create_version = LPFC_Q_CREATE_VERSION_1;
+>  	else
+>  		wq_create_version = LPFC_Q_CREATE_VERSION_0;
 > diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-> index ac81bfa59278..4545c1fdcb55 100644
+> index 81fb58e59e60..a9af9980fc43 100644
 > --- a/drivers/scsi/lpfc/lpfc_sli4.h
 > +++ b/drivers/scsi/lpfc/lpfc_sli4.h
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2009-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
-> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-> index 6f4092cb903e..3b04ecb17a38 100644
-> --- a/drivers/scsi/lpfc/lpfc_version.h
-> +++ b/drivers/scsi/lpfc/lpfc_version.h
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-> + * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
->   * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
+> @@ -485,6 +485,11 @@ struct lpfc_pc_sli4_params {
+>  	uint8_t wqpcnt;
+>  };
+>  
+> +#define LPFC_CQ_4K_PAGE_SZ	0x1
+> +#define LPFC_CQ_16K_PAGE_SZ	0x4
+> +#define LPFC_WQ_4K_PAGE_SZ	0x1
+> +#define LPFC_WQ_16K_PAGE_SZ	0x4
+> +
+>  struct lpfc_iov {
+>  	uint32_t pf_number;
+>  	uint32_t vf_number;
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Please fix up also the comment in lpfc_init.c:
+
+	/*
+	 * Issue IOs with CDB embedded in WQE to minimized the number
+	 * of DMAs the firmware has to do. Setting this to 1 also forces
+	 * the driver to use 128 bytes WQEs for FCP IOs.
+	 */
+
+Which isn't true anymore.
 
 Cheers,
 
