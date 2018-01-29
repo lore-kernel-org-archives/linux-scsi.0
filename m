@@ -1,66 +1,99 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Mike Snitzer <snitzer@redhat.com>
 Subject: Re: [PATCH V4] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Mon, 29 Jan 2018 21:22:13 +0000
-Message-ID: <1517260932.2687.42.camel@wdc.com>
+Date: Mon, 29 Jan 2018 16:44:46 -0500
+Message-ID: <20180129214446.GD5744@redhat.com>
 References: <20180129203300.50595-1-snitzer@redhat.com>
+ <1517260932.2687.42.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180129203300.50595-1-snitzer@redhat.com>
-Content-Language: en-US
-Content-ID: <2A6A7D4FF2C53444B0E17E7D08964AFF@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37842 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751645AbeA2Vou (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jan 2018 16:44:50 -0500
+Content-Disposition: inline
+In-Reply-To: <1517260932.2687.42.camel@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gTW9uLCAyMDE4LTAxLTI5IGF0IDE1OjMzIC0wNTAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
-ICsJCSAqIElmIGRyaXZlciByZXR1cm5zIEJMS19TVFNfUkVTT1VSQ0UgYW5kIFNDSEVEX1JFU1RB
-UlQNCj4gKwkJICogYml0IGlzIHNldCwgcnVuIHF1ZXVlIGFmdGVyIDEwbXMgdG8gYXZvaWQgSU8g
-c3RhbGxzDQo+ICsJCSAqIHRoYXQgY291bGQgb3RoZXJ3aXNlIG9jY3VyIGlmIHRoZSBxdWV1ZSBp
-cyBpZGxlLg0KPiAgCQkgKi8NCj4gLQkJaWYgKCFibGtfbXFfc2NoZWRfbmVlZHNfcmVzdGFydCho
-Y3R4KSB8fA0KPiArCQluZWVkc19yZXN0YXJ0ID0gYmxrX21xX3NjaGVkX25lZWRzX3Jlc3RhcnQo
-aGN0eCk7DQo+ICsJCWlmICghbmVlZHNfcmVzdGFydCB8fA0KPiAgCQkgICAgKG5vX3RhZyAmJiBs
-aXN0X2VtcHR5X2NhcmVmdWwoJmhjdHgtPmRpc3BhdGNoX3dhaXQuZW50cnkpKSkNCj4gIAkJCWJs
-a19tcV9ydW5faHdfcXVldWUoaGN0eCwgdHJ1ZSk7DQo+ICsJCWVsc2UgaWYgKG5lZWRzX3Jlc3Rh
-cnQgJiYgKHJldCA9PSBCTEtfU1RTX1JFU09VUkNFKSkNCj4gKwkJCWJsa19tcV9kZWxheV9ydW5f
-aHdfcXVldWUoaGN0eCwgQkxLX01RX1FVRVVFX0RFTEFZKTsNCj4gIAl9DQoNClRoZSBhYm92ZSBj
-b2RlIG9ubHkgY2FsbHMgYmxrX21xX2RlbGF5X3J1bl9od19xdWV1ZSgpIGlmIHRoZSBmb2xsb3dp
-bmcgY29uZGl0aW9uDQppcyBtZXQ6ICEoIW5lZWRzX3Jlc3RhcnQgfHwgKG5vX3RhZyAmJiBsaXN0
-X2VtcHR5X2NhcmVmdWwoJmhjdHgtPmRpc3BhdGNoX3dhaXQuZW50cnkpKSkNCiYmIChuZWVkc19y
-ZXN0YXJ0ICYmIChyZXQgPT0gQkxLX1NUU19SRVNPVVJDRSkpLiBUaGF0IGJvb2xlYW4gZXhwcmVz
-c2lvbiBjYW4gYmUNCnNpbXBsaWZpZWQgaW50byB0aGUgZm9sbG93aW5nOiBuZWVkc19yZXN0YXJ0
-ICYmIHJldCA9PSBCTEtfU1RTX1JFU09VUkNFICYmIA0KIShub190YWcgJiYgbGlzdF9lbXB0eV9j
-YXJlZnVsKCZoY3R4LT5kaXNwYXRjaF93YWl0LmVudHJ5KSkuIEZyb20gYmxrLW1xLXNjaGVkLmg6
-DQoNCnN0YXRpYyBpbmxpbmUgYm9vbCBibGtfbXFfc2NoZWRfbmVlZHNfcmVzdGFydChzdHJ1Y3Qg
-YmxrX21xX2h3X2N0eCAqaGN0eCkNCnsNCglyZXR1cm4gdGVzdF9iaXQoQkxLX01RX1NfU0NIRURf
-UkVTVEFSVCwgJmhjdHgtPnN0YXRlKTsNCn0NCg0KSW4gb3RoZXIgd29yZHMsIHRoZSBhYm92ZSBj
-b2RlIHdpbGwgbm90IGNhbGwgYmxrX21xX2RlbGF5X3J1bl9od19xdWV1ZSgpIGlmDQpCTEtfTVFf
-U19TQ0hFRF9SRVNUQVJUIGlzIGNsZWFyZWQgYWZ0ZXIgaXQgZ290IHNldCBhbmQgYmVmb3JlIHRo
-ZSBhYm92ZSBjb2RlIGlzDQpyZWFjaGVkLiBUaGUgQkxLX01RX1NfU0NIRURfUkVTVEFSVCBiaXQg
-Z2V0cyBjbGVhcmVkIGlmIGEgcmVxdWVzdCBjb21wbGV0ZXMNCmNvbmN1cnJlbnRseSB3aXRoIHRo
-ZSBhYm92ZSBjb2RlLiBGcm9tIGJsay1tcS1zY2hlZC5jOg0KDQpzdGF0aWMgYm9vbCBibGtfbXFf
-c2NoZWRfcmVzdGFydF9oY3R4KHN0cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4KQ0Kew0KCWlmICgh
-dGVzdF9iaXQoQkxLX01RX1NfU0NIRURfUkVTVEFSVCwgJmhjdHgtPnN0YXRlKSkNCgkJcmV0dXJu
-IGZhbHNlOw0KDQoJaWYgKGhjdHgtPmZsYWdzICYgQkxLX01RX0ZfVEFHX1NIQVJFRCkgew0KCQlz
-dHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSA9IGhjdHgtPnF1ZXVlOw0KDQoJCWlmICh0ZXN0X2FuZF9j
-bGVhcl9iaXQoQkxLX01RX1NfU0NIRURfUkVTVEFSVCwgJmhjdHgtPnN0YXRlKSkNCgkJCWF0b21p
-Y19kZWMoJnEtPnNoYXJlZF9oY3R4X3Jlc3RhcnQpOw0KCX0gZWxzZQ0KCQljbGVhcl9iaXQoQkxL
-X01RX1NfU0NIRURfUkVTVEFSVCwgJmhjdHgtPnN0YXRlKTsNCg0KCXJldHVybiBibGtfbXFfcnVu
-X2h3X3F1ZXVlKGhjdHgsIHRydWUpOw0KfQ0KDQpUaGUgYWJvdmUgYmxrX21xX3J1bl9od19xdWV1
-ZSgpIGNhbGwgbWF5IGZpbmlzaCBlaXRoZXIgYmVmb3JlIG9yIGFmdGVyDQpibGtfbXFfZGlzcGF0
-Y2hfcnFfbGlzdCgpIGV4YW1pbmVzIHRoZSBCTEtfTVFfU19TQ0hFRF9SRVNUQVJUIGZsYWcuDQoN
-ClRoYXQncyB3aHkgSSB3cm90ZSBpbiBwcmV2aW91cyBlLW1haWxzIHRoYXQgdGhpcyBwYXRjaCBh
-bmQgYWxzbyB0aGUgcHJldmlvdXMNCnZlcnNpb25zIG9mIHRoaXMgcGF0Y2ggY2hhbmdlIGEgc3lz
-dGVtYXRpYyBjYWxsIG9mIGJsa19tcV9kZWxheV9ydW5faHdfcXVldWUoKQ0KaW50byBhIGNhbGwg
-dGhhdCBtYXkgb3IgbWF5IG5vdCBoYXBwZW4sIGRlcGVuZGluZyBvbiB3aGV0aGVyIG9yIG5vdCBh
-IHJlcXVlc3QNCmNvbXBsZXRlcyBjb25jdXJyZW50bHkgd2l0aCByZXF1ZXN0IHF1ZXVlaW5nLiBT
-b3JyeSBidXQgSSB0aGluayB0aGF0IG1lYW5zDQp0aGF0IHRoZSBhYm92ZSBjaGFuZ2UgY29tYmlu
-ZWQgd2l0aCBjaGFuZ2luZyBCTEtfU1RTX1JFU09VUkNFIGludG8NCkJMS19TVFNfREVWX1JFU09V
-UkNFIGlzIHdyb25nIGFuZCB3aHkgSSBleHBlY3QgdGhhdCB0aGlzIHdpbGwgcmVzdWx0IGluDQpz
-cG9yYWRpYyBxdWV1ZSBzdGFsbHMuIEFzIHlvdSBrbm93IHNwb3JhZGljIHF1ZXVlIHN0YWxscyBh
-cmUgYW5ub3lpbmcgYW5kIGhhcmQNCnRvIGRlYnVnLg0KDQpQbGVudHkgb2YgZS1tYWlscyBoYXZl
-IGFscmVhZHkgYmVlbiBleGNoYW5nZWQgYWJvdXQgdmVyc2lvbnMgb25lIHRvIGZvdXIgb2YgdGhp
-cw0KcGF0Y2ggYnV0IHNvIGZhciBub2JvZHkgaGFzIGV2ZW4gdHJpZWQgdG8gY29udHJhZGljdCB0
-aGUgYWJvdmUuDQoNCkJhcnQu
+On Mon, Jan 29 2018 at  4:22pm -0500,
+Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+
+> On Mon, 2018-01-29 at 15:33 -0500, Mike Snitzer wrote:
+> > +		 * If driver returns BLK_STS_RESOURCE and SCHED_RESTART
+> > +		 * bit is set, run queue after 10ms to avoid IO stalls
+> > +		 * that could otherwise occur if the queue is idle.
+> >  		 */
+> > -		if (!blk_mq_sched_needs_restart(hctx) ||
+> > +		needs_restart = blk_mq_sched_needs_restart(hctx);
+> > +		if (!needs_restart ||
+> >  		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
+> >  			blk_mq_run_hw_queue(hctx, true);
+> > +		else if (needs_restart && (ret == BLK_STS_RESOURCE))
+> > +			blk_mq_delay_run_hw_queue(hctx, BLK_MQ_QUEUE_DELAY);
+> >  	}
+> 
+> The above code only calls blk_mq_delay_run_hw_queue() if the following condition
+> is met: !(!needs_restart || (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
+> && (needs_restart && (ret == BLK_STS_RESOURCE)). That boolean expression can be
+> simplified into the following: needs_restart && ret == BLK_STS_RESOURCE && 
+> !(no_tag && list_empty_careful(&hctx->dispatch_wait.entry)). From blk-mq-sched.h:
+> 
+> static inline bool blk_mq_sched_needs_restart(struct blk_mq_hw_ctx *hctx)
+> {
+> 	return test_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state);
+> }
+> 
+> In other words, the above code will not call blk_mq_delay_run_hw_queue() if
+> BLK_MQ_S_SCHED_RESTART is cleared after it got set and before the above code is
+> reached. The BLK_MQ_S_SCHED_RESTART bit gets cleared if a request completes
+> concurrently with the above code. From blk-mq-sched.c:
+> 
+> static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
+> {
+> 	if (!test_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state))
+> 		return false;
+> 
+> 	if (hctx->flags & BLK_MQ_F_TAG_SHARED) {
+> 		struct request_queue *q = hctx->queue;
+> 
+> 		if (test_and_clear_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state))
+> 			atomic_dec(&q->shared_hctx_restart);
+> 	} else
+> 		clear_bit(BLK_MQ_S_SCHED_RESTART, &hctx->state);
+> 
+> 	return blk_mq_run_hw_queue(hctx, true);
+> }
+> 
+> The above blk_mq_run_hw_queue() call may finish either before or after
+> blk_mq_dispatch_rq_list() examines the BLK_MQ_S_SCHED_RESTART flag.
+
+But regardless of which wins the race, the queue will have been run.
+Which is all we care about right?
+
+> That's why I wrote in previous e-mails that this patch and also the previous
+> versions of this patch change a systematic call of blk_mq_delay_run_hw_queue()
+> into a call that may or may not happen, depending on whether or not a request
+> completes concurrently with request queueing. Sorry but I think that means
+> that the above change combined with changing BLK_STS_RESOURCE into
+> BLK_STS_DEV_RESOURCE is wrong and why I expect that this will result in
+> sporadic queue stalls. As you know sporadic queue stalls are annoying and hard
+> to debug.
+> 
+> Plenty of e-mails have already been exchanged about versions one to four of this
+> patch but so far nobody has even tried to contradict the above.
+
+Sure, but we aren't mind-readers.  We're all very open to the idea that
+you have noticed something we haven't.  But until your very helpful
+mail I'm replying to, you hadn't been specific about the race that
+concerned you.  Thanks for sharing.
+
+I'll defer to Jens and/or Ming on whether the race you've raised is of
+concern.  As I said above, I'm inclined to think it doesn't matter who
+wins the race given the queue will be run again.  And when it does it
+may get STS_RESOURCE again, and in that case it may then resort to
+blk_mq_delay_run_hw_queue() in blk_mq_dispatch_rq_list().
+
+Mike
