@@ -1,60 +1,59 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Mon, 29 Jan 2018 10:14:36 +0800
-Message-ID: <20180129021434.GB9822@ming.t460p>
-References: <20180123161613.14214-1-ming.lei@redhat.com>
- <1516724659.3339.7.camel@sandisk.com>
- <20180123163717.GE13277@ming.t460p>
- <1516726653.3339.20.camel@wdc.com>
- <20180124033109.GA15945@ming.t460p>
- <20180127190920.GA24759@redhat.com>
- <1517091161.3055.7.camel@wdc.com>
- <20180128002356.GA25933@redhat.com>
- <1517159028.3141.17.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1517159028.3141.17.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "snitzer@redhat.com" <snitzer@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+From: Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH 1/1] scsi: ufs: fix exception event handling
+Date: Mon, 29 Jan 2018 10:04:52 +0530
+Message-ID: <1517200492-2941-1-git-send-email-asutoshd@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6497 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750819AbeA2EfW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jan 2018 23:35:22 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Maya Erez <merez@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 
-On Sun, Jan 28, 2018 at 05:03:49PM +0000, Bart Van Assche wrote:
-> On Sat, 2018-01-27 at 19:23 -0500, Mike Snitzer wrote:
-> > On Sat, Jan 27 2018 at  5:12pm -0500,
-> > Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> > > - The patch at the start of this thread introduces a regression in the
-> > >   SCSI core, namely a queue stall if a request completion occurs concurrently
-> > >   with the newly added BLK_MQ_S_SCHED_RESTART test in the blk-mq core.
-> > 
-> > And why is this supposed race unique to SCSI core?  
-> 
-> That race is not unique to the SCSI core. It is possible that the patch at
-> the start of this thread introduces the same race in other block drivers
-> but I have not yet tried to verify that.
-> 
-> > Fact is Ming dutifully implemented what Jens suggested.
-> 
-> That's a misleading statement. Jens proposed to introduce a new status code
-> (which he called "NO_DEV_RESOURCE") but did not specify any of the other
-> aspects of Ming's patch. Jens definitely did not ask to introduce new race
-> conditions. See also https://www.spinics.net/lists/kernel/msg2703154.html
+From: Maya Erez <merez@codeaurora.org>
 
-I don't see what is the difference between my patch and Jens's
-suggestion. My patch just introduces new code of "BLK_STS_DEV_RESOURCE"
-which is returned to blk-mq if driver can make sure that queue will be
-run after resource is available, and keep the current code of
-'BLK_STS_RESOURCE', this way is simpler since most of the in-tree
-'BLK_STS_RESOURCE' does need to run queue via
-blk_mq_delay_run_hw_queue(hctx, 10)? Right?
+The device can set the exception event bit in one of the response UPIU,
+for example to notify the need for urgent BKOPs operation.
+In such a case the host driver calls ufshcd_exception_event_handler to
+handle this notification.
+When trying to check the exception event status (for finding the cause for
+the exception event), the device may be busy with additional SCSI commands
+handling and may not respond within the 100ms timeout.
 
-You just mentioned my patch introduces race, but never explained what is
-the race? How is it triggered? When is it?
+To prevent that, we need to block SCSI commands during handling of
+exception events and allow retransmissions of the query requests,
+in case of timeout.
 
-Now it is the 3rd time for me to ask you explain the introduced race in
-my patch V3. Is this your technical way to review/comment patch?
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks,
-Ming
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8af2af3..2dd488f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4955,6 +4955,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 	hba = container_of(work, struct ufs_hba, eeh_work);
+ 
+ 	pm_runtime_get_sync(hba->dev);
++	scsi_block_requests(hba->host);
+ 	err = ufshcd_get_ee_status(hba, &status);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: failed to get exception status %d\n",
+@@ -4968,6 +4969,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 		ufshcd_bkops_exception_event_handler(hba);
+ 
+ out:
++	scsi_unblock_requests(hba->host);
+ 	pm_runtime_put_sync(hba->dev);
+ 	return;
+ }
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
