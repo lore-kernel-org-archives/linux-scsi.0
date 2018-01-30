@@ -1,54 +1,79 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 06/19] lpfc: Fix PRLI handling when topology type changes
-Date: Tue, 30 Jan 2018 15:58:50 -0800
-Message-ID: <20180130235903.5316-7-jsmart2021@gmail.com>
+Subject: [PATCH v3 12/19] lpfc: Indicate CONF support in NVMe PRLI
+Date: Tue, 30 Jan 2018 15:58:56 -0800
+Message-ID: <20180130235903.5316-13-jsmart2021@gmail.com>
 References: <20180130235903.5316-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36612 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753543AbeA3X7W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:22 -0500
-Received: by mail-qk0-f196.google.com with SMTP id d21so12538207qkj.3
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:21 -0800 (PST)
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33809 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754168AbeA3X72 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:28 -0500
+Received: by mail-qt0-f196.google.com with SMTP id a27so19682077qtd.1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:28 -0800 (PST)
 In-Reply-To: <20180130235903.5316-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-The lpfc driver does not discover a target when the topology
-changes from switched-fabric to direct-connect. The target
-rejects the PRLI from the initiator in direct-connect as the
-driver is using the old S_ID from the switched topology.
-
-The driver was inappropriately clearing the VP bit to register the
-VPI, which is what is associated with the S_ID.
-
-Fix by leaving the VP bit set (it was set earlier) and as the VFI
-is being re-registered, set the UPDT bit.
+Revise the NVME PRLI to indicate CONF support.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/lpfc/lpfc_mbox.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c       | 3 ++-
+ drivers/scsi/lpfc/lpfc_hw4.h       | 6 +++---
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 3 ---
+ 3 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 81fb92967b11..c32d4a323db2 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -2170,10 +2170,8 @@ lpfc_reg_vfi(struct lpfcMboxq *mbox, struct lpfc_vport *vport, dma_addr_t phys)
- 	/* Only FC supports upd bit */
- 	if ((phba->sli4_hba.lnk_info.lnk_tp == LPFC_LNK_TYPE_FC) &&
- 	    (vport->fc_flag & FC_VFI_REGISTERED) &&
--	    (!phba->fc_topology_changed)) {
--		bf_set(lpfc_reg_vfi_vp, reg_vfi, 0);
-+	    (!phba->fc_topology_changed))
- 		bf_set(lpfc_reg_vfi_upd, reg_vfi, 1);
--	}
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 234c7c015982..404e1af5e2ab 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2293,10 +2293,11 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		if (phba->nvmet_support) {
+ 			bf_set(prli_tgt, npr_nvme, 1);
+ 			bf_set(prli_disc, npr_nvme, 1);
+-
+ 		} else {
+ 			bf_set(prli_init, npr_nvme, 1);
++			bf_set(prli_conf, npr_nvme, 1);
+ 		}
++
+ 		npr_nvme->word1 = cpu_to_be32(npr_nvme->word1);
+ 		npr_nvme->word4 = cpu_to_be32(npr_nvme->word4);
+ 		elsiocb->iocb_flag |= LPFC_PRLI_NVME_REQ;
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index ef469129fb71..7c3afc3d3121 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -4346,9 +4346,9 @@ struct lpfc_nvme_prli {
+ #define prli_init_SHIFT                 5
+ #define prli_init_MASK                  0x00000001
+ #define prli_init_WORD                  word4
+-#define prli_recov_SHIFT                8
+-#define prli_recov_MASK                 0x00000001
+-#define prli_recov_WORD                 word4
++#define prli_conf_SHIFT                 7
++#define prli_conf_MASK                  0x00000001
++#define prli_conf_WORD                  word4
+ 	uint32_t word5;
+ #define prli_fb_sz_SHIFT                0
+ #define prli_fb_sz_MASK                 0x0000ffff
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index d841aa42f607..bbf1e1342b09 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -2011,9 +2011,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			}
+ 		}
  
- 	bf_set(lpfc_reg_vfi_bbcr, reg_vfi, 0);
- 	bf_set(lpfc_reg_vfi_bbscn, reg_vfi, 0);
+-		if (bf_get_be32(prli_recov, nvpr))
+-			ndlp->nlp_fcp_info |= NLP_FCP_2_DEVICE;
+-
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
+ 				 "6029 NVME PRLI Cmpl w1 x%08x "
+ 				 "w4 x%08x w5 x%08x flag x%x, "
 -- 
 2.13.1
