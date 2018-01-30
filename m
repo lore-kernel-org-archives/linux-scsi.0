@@ -1,55 +1,54 @@
-From: Ming Lei <ming.lei@redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [LSF/MM TOPIC] Two blk-mq related topics
-Date: Tue, 30 Jan 2018 09:27:57 +0800
-Message-ID: <20180130012755.GE17176@ming.t460p>
+Date: Mon, 29 Jan 2018 18:47:18 -0700
+Message-ID: <c8161145-ea67-4c78-98ac-f2b755ec8fb5@kernel.dk>
 References: <20180129154455.GB17176@ming.t460p>
- <20180129204031.GA5499@redhat.com>
+ <1517259390.3969.41.camel@HansenPartnership.com>
+ <fc833da8-f9de-d577-e1d3-c46d8c061d35@kernel.dk>
+ <1517269583.3969.53.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180129204031.GA5499@redhat.com>
+In-Reply-To: <1517269583.3969.53.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Ming Lei <ming.lei@redhat.com>, lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 29, 2018 at 03:40:31PM -0500, Mike Snitzer wrote:
-> On Mon, Jan 29 2018 at 10:46am -0500,
-> Ming Lei <ming.lei@redhat.com> wrote:
->  
-> > 2. When to enable SCSI_MQ at default again?
-> > 
-> > SCSI_MQ is enabled on V3.17 firstly, but disabled at default. In V4.13-rc1,
-> > it is enabled at default, but later the patch is reverted in V4.13-rc7, and
-> > becomes disabled at default too.
-> > 
-> > Now both the original reported PM issue(actually SCSI quiesce) and the
-> > sequential IO performance issue have been addressed. And MQ IO schedulers
-> > are ready too for traditional disks. Are there other issues to be addressed
-> > for enabling SCSI_MQ at default? When can we do that again?
-> > 
-> > Last time, the two issues were reported during V4.13 dev cycle just when it is
-> > enabled at default, that seems if SCSI_MQ isn't enabled at default, it wouldn't
-> > be exposed to run/tested completely & fully.  
-> > 
-> > So if we continue to disable it at default, maybe it can never be exposed to
-> > full test/production environment.
+On 1/29/18 4:46 PM, James Bottomley wrote:
+> On Mon, 2018-01-29 at 14:00 -0700, Jens Axboe wrote:
+>> On 1/29/18 1:56 PM, James Bottomley wrote:
+>>>
+>>> On Mon, 2018-01-29 at 23:46 +0800, Ming Lei wrote:
+>>> [...]
+>>>>
+>>>> 2. When to enable SCSI_MQ at default again?
+>>>
+>>> I'm not sure there's much to discuss ... I think the basic answer
+>>> is as soon as Christoph wants to try it again.
+>>
+>> FWIW, internally I've been running various IO intensive workloads on
+>> what is essentially 4.12 upstream with scsi-mq the default (with
+>> mq-deadline as the scheduler) and comparing IO workloads with a
+>> previous 4.6 kernel (without scsi-mq), and things are looking
+>> great.
+>>
+>> We're never going to iron out the last kinks with it being off
+>> by default, I think we should attempt to flip the switch again
+>> for 4.16.
 > 
-> I was going to propose revisiting this as well.
-> 
-> I'd really like to see all the old .request_fn block core code removed.
+> Absolutely, I agree we turn it on ASAP.  I just don't want to be on the
+> receiving end of Linus' flamethrower because a bug we already had
+> reported against scsi-mq caused problems.  Get confirmation from the
+> original reporters (or as close to it as you can) that their problems
+> are fixed and we're good to go; he won't kick us nearly as hard for new
+> bugs that turn up.
 
-Yeah, that should be a final goal, but may take a bit long.
+I agree, the functional issues definitely have to be verified to be
+resolved. Various performance hitches we can dive into if they
+crop up, but reintroducing some random suspend regression is not
+acceptable.
 
-> 
-> But maybe we take a first step of enabling:
-> CONFIG_SCSI_MQ_DEFAULT=Y
-> CONFIG_DM_MQ_DEFAULT=Y
-
-Maybe you can remove legacy path from DM_RQ first, and take your
-original approach to allow DM/MQ over legacy underlying driver,
-seems we discussed this topic before, :-)
-
-Thanks,
-Ming
+-- 
+Jens Axboe
