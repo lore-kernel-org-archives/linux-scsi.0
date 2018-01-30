@@ -1,41 +1,79 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH V4] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Tue, 30 Jan 2018 11:20:49 +0800
-Message-ID: <CACVXFVPhwAoTLQ++tAPDKyycL9PLPs8h4oCCVfxEBZJp0ToKSg@mail.gmail.com>
-References: <20180129203300.50595-1-snitzer@redhat.com> <1517260932.2687.42.camel@wdc.com>
- <20180129214446.GD5744@redhat.com> <1517262713.2687.56.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1517262713.2687.56.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "snitzer@redhat.com" <snitzer@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+From: Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH 1/1] scsi: ufshcd: fix possible unclocked register access
+Date: Tue, 30 Jan 2018 08:52:25 +0530
+Message-ID: <1517282545-10502-1-git-send-email-asutoshd@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53252 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752076AbeA3DXC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2018 22:23:02 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 
-On Tue, Jan 30, 2018 at 5:51 AM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> On Mon, 2018-01-29 at 16:44 -0500, Mike Snitzer wrote:
->> But regardless of which wins the race, the queue will have been run.
->> Which is all we care about right?
->
-> Running the queue is not sufficient. With this patch applied it can happen
-> that the block driver returns BLK_STS_DEV_RESOURCE, that the two or more
-> concurrent queue runs finish before sufficient device resources are available
-> to execute the request and that blk_mq_delay_run_hw_queue() does not get
-> called at all. If no other activity triggers a queue run, e.g. request
-> completion, this will result in a queue stall.
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-Please see document of BLK_STS_DEV_RESOURCE:
+vendor specific setup_clocks ops may depend on clocks managed by ufshcd
+driver so if the vendor specific setup_clocks callback is called when
+the required clocks are turned off, it results into unclocked register
+access.
 
-+ * BLK_STS_DEV_RESOURCE is returned from driver to block layer if device
-+ * related resource is unavailable, but driver can guarantee that queue
-+ * will be rerun in future once the resource is available (whereby
-+ * dispatching requests).
+This change make sure that required clocks are enabled before vendor
+specific setup_clocks callback is called.
 
-I have explained the SCSI's BLK_STS_DEV_RESOURCE conversion in
-another thread, let's know if you have further concern:
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
 
-https://marc.info/?l=linux-block&m=151727454815018&w=2
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8af2af3..c5ee686 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6763,9 +6763,16 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 	if (list_empty(head))
+ 		goto out;
+ 
+-	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
+-	if (ret)
+-		return ret;
++	/*
++	 * vendor specific setup_clocks ops may depend on clocks managed by
++	 * this standard driver hence call the vendor specific setup_clocks
++	 * before disabling the clocks managed here.
++	 */
++	if (!on) {
++		ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
++		if (ret)
++			return ret;
++	}
+ 
+ 	list_for_each_entry(clki, head, list) {
+ 		if (!IS_ERR_OR_NULL(clki->clk)) {
+@@ -6789,9 +6796,16 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 		}
+ 	}
+ 
+-	ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
+-	if (ret)
+-		return ret;
++	/*
++	 * vendor specific setup_clocks ops may depend on clocks managed by
++	 * this standard driver hence call the vendor specific setup_clocks
++	 * after enabling the clocks managed here.
++	 */
++	if (on) {
++		ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
++		if (ret)
++			return ret;
++	}
+ 
+ out:
+ 	if (ret) {
 -- 
-Ming Lei
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
