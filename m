@@ -1,79 +1,96 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 12/19] lpfc: Indicate CONF support in NVMe PRLI
-Date: Tue, 30 Jan 2018 15:58:56 -0800
-Message-ID: <20180130235903.5316-13-jsmart2021@gmail.com>
+Subject: [PATCH v3 14/19] lpfc: Validate adapter support for SRIU option
+Date: Tue, 30 Jan 2018 15:58:58 -0800
+Message-ID: <20180130235903.5316-15-jsmart2021@gmail.com>
 References: <20180130235903.5316-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33809 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754168AbeA3X72 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:28 -0500
-Received: by mail-qt0-f196.google.com with SMTP id a27so19682077qtd.1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:28 -0800 (PST)
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:37621 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753842AbeA3X7b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:31 -0500
+Received: by mail-qt0-f194.google.com with SMTP id d54so19652873qtd.4
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:31 -0800 (PST)
 In-Reply-To: <20180130235903.5316-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Revise the NVME PRLI to indicate CONF support.
+When using the special option to suppress the response iu, ensure
+the adapter fully supports the feature by checking feature flags
+from the adapter and validating the support when formatting the
+WQE.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/lpfc/lpfc_els.c       | 3 ++-
- drivers/scsi/lpfc/lpfc_hw4.h       | 6 +++---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 3 ---
- 3 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 234c7c015982..404e1af5e2ab 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2293,10 +2293,11 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		if (phba->nvmet_support) {
- 			bf_set(prli_tgt, npr_nvme, 1);
- 			bf_set(prli_disc, npr_nvme, 1);
--
- 		} else {
- 			bf_set(prli_init, npr_nvme, 1);
-+			bf_set(prli_conf, npr_nvme, 1);
- 		}
-+
- 		npr_nvme->word1 = cpu_to_be32(npr_nvme->word1);
- 		npr_nvme->word4 = cpu_to_be32(npr_nvme->word4);
- 		elsiocb->iocb_flag |= LPFC_PRLI_NVME_REQ;
+---
+v2:
+  Add missing snippet that changes check logic before enabling
+  suppression in lpfc_nvmet_prep_fcp_wqe()
+---
+ drivers/scsi/lpfc/lpfc_hw4.h   |  3 +++
+ drivers/scsi/lpfc/lpfc_init.c  | 13 ++++++++++++-
+ drivers/scsi/lpfc/lpfc_nvmet.c |  7 ++++---
+ 3 files changed, 19 insertions(+), 4 deletions(-)
+
 diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index ef469129fb71..7c3afc3d3121 100644
+index 7c3afc3d3121..52fe28ae50fa 100644
 --- a/drivers/scsi/lpfc/lpfc_hw4.h
 +++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -4346,9 +4346,9 @@ struct lpfc_nvme_prli {
- #define prli_init_SHIFT                 5
- #define prli_init_MASK                  0x00000001
- #define prli_init_WORD                  word4
--#define prli_recov_SHIFT                8
--#define prli_recov_MASK                 0x00000001
--#define prli_recov_WORD                 word4
-+#define prli_conf_SHIFT                 7
-+#define prli_conf_MASK                  0x00000001
-+#define prli_conf_WORD                  word4
- 	uint32_t word5;
- #define prli_fb_sz_SHIFT                0
- #define prli_fb_sz_MASK                 0x0000ffff
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index d841aa42f607..bbf1e1342b09 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -2011,9 +2011,6 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 			}
- 		}
+@@ -3293,6 +3293,9 @@ struct lpfc_sli4_parameters {
+ #define cfg_eqdr_SHIFT				8
+ #define cfg_eqdr_MASK				0x00000001
+ #define cfg_eqdr_WORD				word19
++#define cfg_nosr_SHIFT				9
++#define cfg_nosr_MASK				0x00000001
++#define cfg_nosr_WORD				word19
+ #define LPFC_NODELAY_MAX_IO		32
+ };
  
--		if (bf_get_be32(prli_recov, nvpr))
--			ndlp->nlp_fcp_info |= NLP_FCP_2_DEVICE;
--
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 				 "6029 NVME PRLI Cmpl w1 x%08x "
- 				 "w4 x%08x w5 x%08x flag x%x, "
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index aa7872a7b493..f2d2faef8710 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -10473,8 +10473,19 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 		phba->cfg_enable_fc4_type = LPFC_ENABLE_FCP;
+ 	}
+ 
+-	if (bf_get(cfg_xib, mbx_sli4_parameters) && phba->cfg_suppress_rsp)
++	/*
++	 * To support Suppress Response feature we must satisfy 3 conditions.
++	 * lpfc_suppress_rsp module parameter must be set (default).
++	 * In SLI4-Parameters Descriptor:
++	 * Extended Inline Buffers (XIB) must be supported.
++	 * Suppress Response IU Not Supported (SRIUNS) must NOT be supported
++	 * (double negative).
++	 */
++	if (phba->cfg_suppress_rsp && bf_get(cfg_xib, mbx_sli4_parameters) &&
++	    !(bf_get(cfg_nosr, mbx_sli4_parameters)))
+ 		phba->sli.sli_flag |= LPFC_SLI_SUPPRESS_RSP;
++	else
++		phba->cfg_suppress_rsp = 0;
+ 
+ 	if (bf_get(cfg_eqdr, mbx_sli4_parameters))
+ 		phba->sli.sli_flag |= LPFC_SLI_USE_EQDR;
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 0539585d32d4..6dd8535918f6 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -2290,9 +2290,10 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		if (rsp->op == NVMET_FCOP_READDATA_RSP) {
+ 			atomic_inc(&tgtp->xmt_fcp_read_rsp);
+ 			bf_set(wqe_ar, &wqe->fcp_tsend.wqe_com, 1);
+-			if ((ndlp->nlp_flag & NLP_SUPPRESS_RSP) &&
+-			    (rsp->rsplen == 12)) {
+-				bf_set(wqe_sup, &wqe->fcp_tsend.wqe_com, 1);
++			if (rsp->rsplen == LPFC_NVMET_SUCCESS_LEN) {
++				if (ndlp->nlp_flag & NLP_SUPPRESS_RSP)
++					bf_set(wqe_sup,
++					       &wqe->fcp_tsend.wqe_com, 1);
+ 				bf_set(wqe_wqes, &wqe->fcp_tsend.wqe_com, 0);
+ 				bf_set(wqe_irsp, &wqe->fcp_tsend.wqe_com, 0);
+ 				bf_set(wqe_irsplen, &wqe->fcp_tsend.wqe_com, 0);
 -- 
 2.13.1
