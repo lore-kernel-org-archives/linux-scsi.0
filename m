@@ -1,59 +1,52 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 10/19] lpfc: Fix soft lockup in lpfc worker thread during LIP testing
-Date: Tue, 30 Jan 2018 15:58:54 -0800
-Message-ID: <20180130235903.5316-11-jsmart2021@gmail.com>
+Subject: [PATCH v3 01/19] lpfc: Fix frequency of Release WQE CQEs
+Date: Tue, 30 Jan 2018 15:58:45 -0800
+Message-ID: <20180130235903.5316-2-jsmart2021@gmail.com>
 References: <20180130235903.5316-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38740 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753842AbeA3X70 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:26 -0500
-Received: by mail-qt0-f193.google.com with SMTP id z10so19672675qti.5
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:26 -0800 (PST)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:42278 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753556AbeA3X7Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:16 -0500
+Received: by mail-qt0-f195.google.com with SMTP id c2so19622199qtn.9
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:16 -0800 (PST)
 In-Reply-To: <20180130235903.5316-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-During link bounce testing in a point-to-point topology, the
-host may enter a soft lockup on the lpfc_worker thread:
-    Call Trace:
-     lpfc_work_done+0x1f3/0x1390 [lpfc]
-     lpfc_do_work+0x16f/0x180 [lpfc]
-     kthread+0xc7/0xe0
-     ret_from_fork+0x3f/0x70
+The driver controls when the hardware sends completions that
+communicate consumption of elements from the WQ. This is done by
+setting a WQEC bit on a WQE.
 
-The driver was simultaneously setting a combination of flags
-that caused lpfc_do_work()to effectively spin between slow path
-work and new event data, causing the lockup.
+The current driver sets it on every Nth WQE posting. However, the
+driver isn't clearing the bit if the WQE is reused. Thus, if the
+queue depth isn't evenly divisible by N, with enough time, it can
+be set on every element, creating a lot of overhead and risking
+CQ full conditions.
 
-Ensure in the typical wq completions, that new event data flags
-are set if the slow path flag is running. The slow path will
-eventually reschedule the wq handling.
+Correct by clearing the bit when not setting it on an Nth element.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index b159a5c4e388..9265906d956e 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -696,8 +696,9 @@ lpfc_work_done(struct lpfc_hba *phba)
- 		      phba->hba_flag & HBA_SP_QUEUE_EVT)) {
- 		if (pring->flag & LPFC_STOP_IOCB_EVENT) {
- 			pring->flag |= LPFC_DEFERRED_RING_EVENT;
--			/* Set the lpfc data pending flag */
--			set_bit(LPFC_DATA_READY, &phba->data_flags);
-+			/* Preserve legacy behavior. */
-+			if (!(phba->hba_flag & HBA_SP_QUEUE_EVT))
-+				set_bit(LPFC_DATA_READY, &phba->data_flags);
- 		} else {
- 			if (phba->link_state >= LPFC_LINK_UP ||
- 			    phba->link_flag & LS_MDS_LOOPBACK) {
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 5f5528a12308..149f21f53b13 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -129,6 +129,8 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ 	/* set consumption flag every once in a while */
+ 	if (!((q->host_index + 1) % q->entry_repost))
+ 		bf_set(wqe_wqec, &wqe->generic.wqe_com, 1);
++	else
++		bf_set(wqe_wqec, &wqe->generic.wqe_com, 0);
+ 	if (q->phba->sli3_options & LPFC_SLI4_PHWQ_ENABLED)
+ 		bf_set(wqe_wqid, &wqe->generic.wqe_com, q->queue_id);
+ 	lpfc_sli_pcimem_bcopy(wqe, temp_wqe, q->entry_size);
 -- 
 2.13.1
