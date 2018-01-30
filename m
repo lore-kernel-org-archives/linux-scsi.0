@@ -1,63 +1,56 @@
-From: Martin Steigerwald <martin@lichtvoll.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [LSF/MM TOPIC] Two blk-mq related topics
-Date: Tue, 30 Jan 2018 09:33:18 +0100
-Message-ID: <1831727.Vh41F2Boqi@merkaba>
-References: <20180129154455.GB17176@ming.t460p> <1517259390.3969.41.camel@HansenPartnership.com> <20180130012408.GD17176@ming.t460p>
+Date: Tue, 30 Jan 2018 11:08:28 +0100
+Message-ID: <mqdzi4vlkv7.fsf@linux-x5ow.site>
+References: <20180129154455.GB17176@ming.t460p>
+        <1517259390.3969.41.camel@HansenPartnership.com>
+        <fc833da8-f9de-d577-e1d3-c46d8c061d35@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180130012408.GD17176@ming.t460p>
+In-Reply-To: <fc833da8-f9de-d577-e1d3-c46d8c061d35@kernel.dk> (Jens Axboe's
+        message of "Mon, 29 Jan 2018 14:00:11 -0700")
 Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, John Garry <john.garry@huawei.com>, lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ming Lei <ming.lei@redhat.com>, lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, Mel Gorman <mgorman@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Ming Lei - 30.01.18, 02:24:
-> > > SCSI_MQ is enabled on V3.17 firstly, but disabled at default. In
-> > > V4.13-rc1, it is enabled at default, but later the patch is reverted
-> > > in V4.13-rc7, and becomes disabled at default too.
-> > > 
-> > > Now both the original reported PM issue(actually SCSI quiesce) and
-> > > the sequential IO performance issue have been addressed.
-> > 
-> > Is the blocker bug just not closed because no-one thought to do it:
-> > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=178381
-> > 
-> > (we have confirmed that this issue is now fixed with the original
-> > reporter?)
-> 
-> From a developer view, this issue is fixed by the following commit:
-> 3a0a52997(block, scsi: Make SCSI quiesce and resume work reliably),
-> and it is verified by kernel list reporter.
+[+Cc Mel]
+Jens Axboe <axboe@kernel.dk> writes:
+> On 1/29/18 1:56 PM, James Bottomley wrote:
+>> On Mon, 2018-01-29 at 23:46 +0800, Ming Lei wrote:
+>> [...]
+>>> 2. When to enable SCSI_MQ at default again?
+>> 
+>> I'm not sure there's much to discuss ... I think the basic answer is as
+>> soon as Christoph wants to try it again.
+>
+> FWIW, internally I've been running various IO intensive workloads on
+> what is essentially 4.12 upstream with scsi-mq the default (with
+> mq-deadline as the scheduler) and comparing IO workloads with a
+> previous 4.6 kernel (without scsi-mq), and things are looking
+> great.
+>
+> We're never going to iron out the last kinks with it being off
+> by default, I think we should attempt to flip the switch again
+> for 4.16.
 
-I never seen any suspend / hibernate related issues with blk-mq + bfq since 
-then. Using heavily utilized BTRFS dual SSD RAID 1.
+The 4.12 sounds interesting. I remember Mel ran some test with 4.12 as
+we where considering to flip the config option for SLES and it showed
+several road blocks.
 
-% egrep "MQ|BFQ" /boot/config-4.15.0-tp520-btrfstrim+
-CONFIG_POSIX_MQUEUE=y
-CONFIG_POSIX_MQUEUE_SYSCTL=y
-CONFIG_BLK_WBT_MQ=y
-CONFIG_BLK_MQ_PCI=y
-CONFIG_BLK_MQ_VIRTIO=y
-CONFIG_MQ_IOSCHED_DEADLINE=m
-CONFIG_MQ_IOSCHED_KYBER=m
-CONFIG_IOSCHED_BFQ=m
-CONFIG_BFQ_GROUP_IOSCHED=y
-CONFIG_NET_SCH_MQPRIO=m
-# CONFIG_SCSI_MQ_DEFAULT is not set
-# CONFIG_DM_MQ_DEFAULT is not set
-CONFIG_DM_CACHE_SMQ=m
+I'm not sure whether he re-evaluated 4.13/4.14 on his grid though.
 
-% cat /proc/cmdline 
-BOOT_IMAGE=/vmlinuz-4.15.0-tp520-btrfstrim+ root=UUID=[…] ro 
-rootflags=subvol=debian resume=/dev/mapper/sata-swap init=/bin/systemd 
-thinkpad_acpi.fan_control=1 systemd.restore_state=0 scsi_mod.use_blk_mq=1
+But I'm definitively interested in this discussion and can even possibly
+share some benchmark results we did in our FC Lab.
 
-% cat /sys/block/sda/queue/scheduler 
-[bfq] none
-
-Thanks,
+Byte,
+        Johannes
 -- 
-Martin
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
