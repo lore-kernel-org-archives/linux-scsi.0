@@ -1,242 +1,81 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v2] scsi: handle special return codes for ABORTED COMMAND
-Date: Tue, 30 Jan 2018 11:25:25 +0100
-Message-ID: <20180130102525.15782-1-mwilck@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:41755 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751378AbeA3K0K (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Tue, 30 Jan 2018 05:26:10 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [LSF/MM TOPIC] Two blk-mq related topics
+Date: Tue, 30 Jan 2018 10:33:20 +0000
+Message-ID: <f2cf73ae-d645-6a04-5190-3d0cc91c4581@huawei.com>
+References: <20180129154455.GB17176@ming.t460p>
+ <1517259390.3969.41.camel@HansenPartnership.com>
+ <20180130012408.GD17176@ming.t460p>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20180130012408.GD17176@ming.t460p>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: Martin Wilck <mwilck@suse.com>, linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Introduce a new blist flag that indicates the device may return certain
-sense code/ASC/ASCQ combinations that indicate different treatment than
-normal. In particular, some devices need unconditional retry (aka
-ADD_TO_MLQUEUE) under certain conditions; otherwise path failures may be
-falsely detected in the "maybe_retry" case.
+On 30/01/2018 01:24, Ming Lei wrote:
+> On Mon, Jan 29, 2018 at 12:56:30PM -0800, James Bottomley wrote:
+>> On Mon, 2018-01-29 at 23:46 +0800, Ming Lei wrote:
+>> [...]
+>>> 2. When to enable SCSI_MQ at default again?
+>>
+>> I'm not sure there's much to discuss ... I think the basic answer is as
+>> soon as Christoph wants to try it again.
+>
+> I guess Christoph still need to evaluate if there are existed issues or
+> blockers before trying it again. And more input may be got from F2F
+> discussion, IMHO.
+>
+>>
+>>> SCSI_MQ is enabled on V3.17 firstly, but disabled at default. In
+>>> V4.13-rc1, it is enabled at default, but later the patch is reverted
+>>> in V4.13-rc7, and becomes disabled at default too.
+>>>
+>>> Now both the original reported PM issue(actually SCSI quiesce) and
+>>> the sequential IO performance issue have been addressed.
+>>
+>> Is the blocker bug just not closed because no-one thought to do it:
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=178381
+>>
+>> (we have confirmed that this issue is now fixed with the original
+>> reporter?)
+>
+>>From a developer view, this issue is fixed by the following commit:
+> 3a0a52997(block, scsi: Make SCSI quiesce and resume work reliably),
+> and it is verified by kernel list reporter.
+>
+>>
+>> And did the Huawei guy (Jonathan Cameron) confirm his performance issue
+>> was fixed (I don't think I saw email that he did)?
+>
+> Last time I talked with John Garry about the issue, and the merged .get_budget
+> based patch improves much on the IO performance, but there is still a bit gap
+> compared with legacy path. Seems a driver specific issue, remembered that removing
+> a driver's lock can improve performance much.
+>
+> Garry, could you provide further update on this issue?
 
-Because different devices use different sense codes to indicate this
-condition, a single bit is not enough. But we also can't use a bit for
-every possible status code. Therefore the new flag BLIST_ABORTED_CMD_QUIRK
-just indicates that this is a device for which the return code should be
-checked. An extra "blacklist" in scsi_aborted_cmd_quirk() then checks for
-known ASC/ASCQ combinations, and handles them.
+Hi Ming,
 
-When such a combination is encountered for the first time, a message is
-printed. In systems that have several different peripherals using this
-flag, that might lead to a wrong match without a warning. This small risk
-is a compromise between exactness and the excessive resources that would be
-required to check for matching device vendor and model name every time.
-Also, if there were different devices (identified by vendor/model) using
-the same ASC/ASCQ, the code might print stray warnings. But the additional
-effort to required to handle this 100% correctly is hardly justified with
-the current minimal "blacklist".
+ From our testing with experimental changes to our driver to support 
+SCSI mq we were almost getting on par performance with legacy path. But 
+without these MQ was hitting performance (and I would not necessarily 
+say it was a driver issue).
 
-I chose to recycle devinfo flag (1<<11) (former BLIST_INQUIRY_58, free
-since 496c91bbc910) for this purpose rather than extending blist_flags_t to
-64 bit. This could be easily changed of course.
+We can retest from today's mainline and see where we are.
 
-This patch replaces the previously submitted patches
- "scsi: handle ABORTED_COMMAND on Fujitsu ETERNUS" and
- "scsi: Always retry internal target error" (Hannes Reinecke)
+BTW, Have you got performance figures for many other single queue HBAs 
+with and without CONFIG_SCSI_MQ_DEFAULT=Y?
 
-Changes in v2:
- - use ARRAY_SIZE (Bart van Assche)
- - make blist array static const and use separate bitmask for warned flag
-   (Bart van Assche)
- - Fix string comparison for SCSI vendor and model
- - Print warning at scsi_logging_level 0, and improve message formatting
+Thanks,
+John
 
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/scsi_devinfo.c |   4 +-
- drivers/scsi/scsi_error.c   | 111 ++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_devinfo.h |   6 +++
- 3 files changed, 120 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index dfb8da83fa50..39455734d934 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -161,12 +161,14 @@ static struct {
- 	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, storage on LUN 0 */
- 	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, no storage on LUN 0 */
- 	{"EMC",  "Invista", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_REPORTLUN2},
-+	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN
-+	 | BLIST_REPORTLUN2 | BLIST_ABORTED_CMD_QUIRK},
- 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
- 	{"easyRAID", "16P", NULL, BLIST_NOREPORTLUN},
- 	{"easyRAID", "X6P", NULL, BLIST_NOREPORTLUN},
- 	{"easyRAID", "F8", NULL, BLIST_NOREPORTLUN},
- 	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"FUJITSU", "ETERNUS_DXM", "*", BLIST_ABORTED_CMD_QUIRK},
- 	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN | BLIST_INQUIRY_36},
- 	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN | BLIST_INQUIRY_36},
- 	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN | BLIST_INQUIRY_36},
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 62b56de38ae8..d60568f71047 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -26,6 +26,7 @@
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- #include <linux/jiffies.h>
-+#include <linux/bitmap.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -39,6 +40,7 @@
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_dh.h>
- #include <scsi/sg.h>
-+#include <scsi/scsi_devinfo.h>
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -432,6 +434,112 @@ static void scsi_report_sense(struct scsi_device *sdev,
- 	}
- }
- 
-+struct aborted_cmd_blist {
-+	u8 asc;
-+	u8 ascq;
-+	int retval;
-+	const char *vendor;
-+	const char *model;
-+};
-+
-+/**
-+ * scsi_strcmp - Compare space-padded string with reference string
-+ * @device_str:	vendor or model field of struct scsi_device,
-+ *		possibly space-padded
-+ * @ref_str:	reference string to compare with
-+ * @len:	max size of device_str: 8 for vendor, 16 for model
-+ *
-+ * Return value:
-+ *	-1, 0, or 1, like strcmp().
-+ */
-+static int scsi_strcmp(const char *device_str, const char *ref_str, int len)
-+{
-+	int ref_len = strlen(ref_str);
-+	int r, i;
-+
-+	WARN_ON(ref_len > len);
-+	r = strncmp(device_str, ref_str, min(ref_len, len));
-+	if (r != 0)
-+		return r;
-+
-+	for (i = ref_len; i < strnlen(device_str, len); i++)
-+		if (device_str[i] != ' ')
-+			return 1;
-+	return 0;
-+}
-+
-+/**
-+ * scsi_aborted_cmd_quirk - Handle special return codes for ABORTED COMMAND
-+ * @sdev:	SCSI device that returned ABORTED COMMAND.
-+ * @sshdr:	Sense data
-+ *
-+ * Return value:
-+ *	SUCCESS or FAILED or NEEDS_RETRY or ADD_TO_MLQUEUE
-+ *
-+ * Notes:
-+ *	This is only called for devices that have the blist flag
-+ *      BLIST_ABORTED_CMD_QUIRK set.
-+ */
-+static int scsi_aborted_cmd_quirk(const struct scsi_device *sdev,
-+				  const struct scsi_sense_hdr *sshdr)
-+{
-+	static const struct aborted_cmd_blist blist[] = {
-+		/*
-+		 * 44/00: SYMMETRIX uses this code for a variety of internal
-+		 * issues, all of which can be recovered by retry
-+		 */
-+		{ 0x44, 0x00, ADD_TO_MLQUEUE, "EMC", "SYMMETRIX" },
-+		/*
-+		 * c1/01: This is used by ETERNUS to indicate the
-+		 * command should be retried unconditionally
-+		 */
-+		{ 0xc1, 0x01, ADD_TO_MLQUEUE, "FUJITSU", "ETERNUS_DXM" }
-+	};
-+	const struct aborted_cmd_blist *found;
-+	int ret = NEEDS_RETRY, i;
-+	static DECLARE_BITMAP(warned, ARRAY_SIZE(blist));
-+
-+	for (i = 0; i < ARRAY_SIZE(blist); i++) {
-+		if (sshdr->asc == blist[i].asc &&
-+		    sshdr->ascq == blist[i].ascq)
-+			break;
-+	}
-+
-+	if (i >= ARRAY_SIZE(blist))
-+		return ret;
-+
-+	found = &blist[i];
-+	ret = found->retval;
-+	if (test_and_set_bit(BIT(i), warned))
-+		return ret;
-+
-+	/*
-+	 * When we encounter a known ASC/ASCQ combination, it may or may not
-+	 * match the device for which this combination is known.
-+	 * Warn only once for each known ASC/ASCQ combination.
-+	 * We can't afford making a string comparison every time in the
-+	 * SCSI command return path, and a wrong match here is expected to be
-+	 * non-fatal.
-+	 */
-+	if (!scsi_strcmp(sdev->vendor, found->vendor, 8) &&
-+	    !scsi_strcmp(sdev->model, found->model, 16)) {
-+		SCSI_LOG_ERROR_RECOVERY(2,
-+			sdev_printk(KERN_INFO, sdev,
-+				    "special retcode %s for ABORTED COMMAND %02x/%02x (expected)",
-+				    scsi_mlreturn_string(ret),
-+				    sshdr->asc, sshdr->ascq));
-+	} else {
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "special retcode %s for ABORTED COMMAND %02x/%02x\n",
-+			    scsi_mlreturn_string(ret),
-+			    sshdr->asc, sshdr->ascq);
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "(UNEXPECTED from  \"%.8s:%.16s\", please inform linux-scsi@vger.kernel.org)\n",
-+			    sdev->vendor, sdev->model);
-+	}
-+	return ret;
-+}
-+
- /**
-  * scsi_check_sense - Examine scsi cmd sense
-  * @scmd:	Cmd to have sense checked.
-@@ -503,6 +611,9 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (sshdr.asc == 0x10) /* DIF */
- 			return SUCCESS;
- 
-+		if (sdev->sdev_bflags & BLIST_ABORTED_CMD_QUIRK)
-+			return scsi_aborted_cmd_quirk(sdev, &sshdr);
-+
- 		return NEEDS_RETRY;
- 	case NOT_READY:
- 	case UNIT_ATTENTION:
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index ea67c32e870e..1f5ed53040ab 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -28,6 +28,12 @@
- #define BLIST_LARGELUN		((__force blist_flags_t)(1 << 9))
- /* override additional length field */
- #define BLIST_INQUIRY_36	((__force blist_flags_t)(1 << 10))
-+/*
-+ * Device uses special return codes for ABORTED COMMAND
-+ * This flag must go together with matching status handling code in
-+ * scsi_aborted_cmd_quirk()
-+ */
-+#define BLIST_ABORTED_CMD_QUIRK	((__force blist_flags_t)(1 << 11))
- /* do not do automatic start on add */
- #define BLIST_NOSTARTONADD	((__force blist_flags_t)(1 << 12))
- /* try REPORT_LUNS even for SCSI-2 devs (if HBA supports more than 8 LUNs) */
--- 
-2.16.1
+>
+> Thanks,
+> Ming
+>
+> .
+>
