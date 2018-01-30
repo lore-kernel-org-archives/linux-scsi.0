@@ -1,42 +1,242 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 18/19] lpfc: update driver version to 11.4.0.7
-Date: Tue, 30 Jan 2018 15:59:02 -0800
-Message-ID: <20180130235903.5316-19-jsmart2021@gmail.com>
+Subject: [PATCH v3 08/19] lpfc: Fix RQ empty firmware trap
+Date: Tue, 30 Jan 2018 15:58:52 -0800
+Message-ID: <20180130235903.5316-9-jsmart2021@gmail.com>
 References: <20180130235903.5316-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33603 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753842AbeA3X7f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:35 -0500
-Received: by mail-qk0-f196.google.com with SMTP id i141so12532494qke.0
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:35 -0800 (PST)
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35597 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754161AbeA3X7Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:24 -0500
+Received: by mail-qt0-f196.google.com with SMTP id g14so19675505qti.2
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:24 -0800 (PST)
 In-Reply-To: <20180130235903.5316-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Update the driver version to 11.4.0.7
+When nvme target deferred receive logic waits for exchange
+resources, the corresponding receive buffer is not replenished
+with the hardware. This can result in a lack of asynchronous
+receive buffer resources in the hardware, resulting in a
+"2885 Port Status Event: ... error 1=0x52004a01 ..." message.
+
+Correct by replenishing the buffer whenenver the deferred
+logic kicks in.  Update corresponding debug messages and
+statistics as well.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_attr.c  |  6 ++++++
+ drivers/scsi/lpfc/lpfc_mem.c   |  8 ++++++--
+ drivers/scsi/lpfc/lpfc_nvmet.c | 31 +++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_nvmet.h |  7 +++++--
+ drivers/scsi/lpfc/lpfc_sli.c   | 12 ++++++++++++
+ 5 files changed, 50 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index c232bf0e8998..6f4092cb903e 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index d188fb565a32..91df2b4e9fce 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -259,6 +259,12 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 				atomic_read(&tgtp->xmt_abort_rsp),
+ 				atomic_read(&tgtp->xmt_abort_rsp_error));
  
--#define LPFC_DRIVER_VERSION "11.4.0.6"
-+#define LPFC_DRIVER_VERSION "11.4.0.7"
- #define LPFC_DRIVER_NAME		"lpfc"
++		len += snprintf(buf + len, PAGE_SIZE - len,
++				"DELAY: ctx %08x  fod %08x wqfull %08x\n",
++				atomic_read(&tgtp->defer_ctx),
++				atomic_read(&tgtp->defer_fod),
++				atomic_read(&tgtp->defer_wqfull));
++
+ 		/* Calculate outstanding IOs */
+ 		tot = atomic_read(&tgtp->rcv_fcp_cmd_drop);
+ 		tot += atomic_read(&tgtp->xmt_fcp_release);
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index 56faeb049b4a..60078e61da5e 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -755,10 +755,14 @@ lpfc_rq_buf_free(struct lpfc_hba *phba, struct lpfc_dmabuf *mp)
+ 	if (rc < 0) {
+ 		(rqbp->rqb_free_buffer)(phba, rqb_entry);
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"6409 Cannot post to RQ %d: %x %x\n",
++				"6409 Cannot post to HRQ %d: %x %x %x "
++				"DRQ %x %x\n",
+ 				rqb_entry->hrq->queue_id,
+ 				rqb_entry->hrq->host_index,
+-				rqb_entry->hrq->hba_index);
++				rqb_entry->hrq->hba_index,
++				rqb_entry->hrq->entry_count,
++				rqb_entry->drq->host_index,
++				rqb_entry->drq->hba_index);
+ 	} else {
+ 		list_add_tail(&rqb_entry->hbuf.list, &rqbp->rqb_buffer_list);
+ 		rqbp->buffer_count++;
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 9c2acf90212c..0539585d32d4 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -270,8 +270,6 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
+ 					 "NVMET RCV BUSY: xri x%x sz %d "
+ 					 "from %06x\n",
+ 					 oxid, size, sid);
+-			/* defer repost rcv buffer till .defer_rcv callback */
+-			ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
+ 			atomic_inc(&tgtp->rcv_fcp_cmd_out);
+ 			return;
+ 		}
+@@ -837,6 +835,7 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 		list_add_tail(&nvmewqeq->list, &wq->wqfull_list);
+ 		wq->q_flag |= HBA_NVMET_WQFULL;
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
++		atomic_inc(&lpfc_nvmep->defer_wqfull);
+ 		return 0;
+ 	}
  
- /* Used for SLI 2/3 */
+@@ -975,11 +974,9 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
+ 
+ 	tgtp = phba->targetport->private;
+ 	atomic_inc(&tgtp->rcv_fcp_cmd_defer);
+-	if (ctxp->flag & LPFC_NVMET_DEFER_RCV_REPOST)
+-		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
+-	else
+-		nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
+-	ctxp->flag &= ~LPFC_NVMET_DEFER_RCV_REPOST;
++
++	/* Free the nvmebuf since a new buffer already replaced it */
++	nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
+ }
+ 
+ static struct nvmet_fc_target_template lpfc_tgttemplate = {
+@@ -1309,6 +1306,9 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
+ 		atomic_set(&tgtp->xmt_abort_sol, 0);
+ 		atomic_set(&tgtp->xmt_abort_rsp, 0);
+ 		atomic_set(&tgtp->xmt_abort_rsp_error, 0);
++		atomic_set(&tgtp->defer_ctx, 0);
++		atomic_set(&tgtp->defer_fod, 0);
++		atomic_set(&tgtp->defer_wqfull, 0);
+ 	}
+ 	return error;
+ }
+@@ -1810,6 +1810,8 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 	lpfc_nvmeio_data(phba, "NVMET FCP  RCV: xri x%x sz %d CPU %02x\n",
+ 			 oxid, size, smp_processor_id());
+ 
++	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
++
+ 	if (!ctx_buf) {
+ 		/* Queue this NVME IO to process later */
+ 		spin_lock_irqsave(&phba->sli4_hba.nvmet_io_wait_lock, iflag);
+@@ -1825,10 +1827,11 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 		lpfc_post_rq_buffer(
+ 			phba, phba->sli4_hba.nvmet_mrq_hdr[qno],
+ 			phba->sli4_hba.nvmet_mrq_data[qno], 1, qno);
++
++		atomic_inc(&tgtp->defer_ctx);
+ 		return;
+ 	}
+ 
+-	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+ 	payload = (uint32_t *)(nvmebuf->dbuf.virt);
+ 	sid = sli4_sid_from_fc_hdr(fc_hdr);
+ 
+@@ -1892,12 +1895,20 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 
+ 	/* Processing of FCP command is deferred */
+ 	if (rc == -EOVERFLOW) {
++		/*
++		 * Post a brand new DMA buffer to RQ and defer
++		 * freeing rcv buffer till .defer_rcv callback
++		 */
++		qno = nvmebuf->idx;
++		lpfc_post_rq_buffer(
++			phba, phba->sli4_hba.nvmet_mrq_hdr[qno],
++			phba->sli4_hba.nvmet_mrq_data[qno], 1, qno);
++
+ 		lpfc_nvmeio_data(phba,
+ 				 "NVMET RCV BUSY: xri x%x sz %d from %06x\n",
+ 				 oxid, size, sid);
+-		/* defer reposting rcv buffer till .defer_rcv callback */
+-		ctxp->flag |= LPFC_NVMET_DEFER_RCV_REPOST;
+ 		atomic_inc(&tgtp->rcv_fcp_cmd_out);
++		atomic_inc(&tgtp->defer_fod);
+ 		return;
+ 	}
+ 	ctxp->rqb_buffer = nvmebuf;
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
+index 354cce443c9f..5da35de5ea45 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.h
++++ b/drivers/scsi/lpfc/lpfc_nvmet.h
+@@ -72,7 +72,6 @@ struct lpfc_nvmet_tgtport {
+ 	atomic_t xmt_fcp_rsp_aborted;
+ 	atomic_t xmt_fcp_rsp_drop;
+ 
+-
+ 	/* Stats counters - lpfc_nvmet_xmt_fcp_abort */
+ 	atomic_t xmt_fcp_xri_abort_cqe;
+ 	atomic_t xmt_fcp_abort;
+@@ -81,6 +80,11 @@ struct lpfc_nvmet_tgtport {
+ 	atomic_t xmt_abort_unsol;
+ 	atomic_t xmt_abort_rsp;
+ 	atomic_t xmt_abort_rsp_error;
++
++	/* Stats counters - defer IO */
++	atomic_t defer_ctx;
++	atomic_t defer_fod;
++	atomic_t defer_wqfull;
+ };
+ 
+ struct lpfc_nvmet_ctx_info {
+@@ -131,7 +135,6 @@ struct lpfc_nvmet_rcv_ctx {
+ #define LPFC_NVMET_XBUSY		0x4  /* XB bit set on IO cmpl */
+ #define LPFC_NVMET_CTX_RLS		0x8  /* ctx free requested */
+ #define LPFC_NVMET_ABTS_RCV		0x10  /* ABTS received on exchange */
+-#define LPFC_NVMET_DEFER_RCV_REPOST	0x20  /* repost to RQ on defer rcv */
+ #define LPFC_NVMET_DEFER_WQFULL		0x40  /* Waiting on a free WQE */
+ 	struct rqb_dmabuf *rqb_buffer;
+ 	struct lpfc_nvmet_ctxbuf *ctxbuf;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index fbda2fbcbfec..8b2919a553d6 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -6535,9 +6535,11 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 	struct lpfc_rqe hrqe;
+ 	struct lpfc_rqe drqe;
+ 	struct lpfc_rqb *rqbp;
++	unsigned long flags;
+ 	struct rqb_dmabuf *rqb_buffer;
+ 	LIST_HEAD(rqb_buf_list);
+ 
++	spin_lock_irqsave(&phba->hbalock, flags);
+ 	rqbp = hrq->rqbp;
+ 	for (i = 0; i < count; i++) {
+ 		/* IF RQ is already full, don't bother */
+@@ -6561,6 +6563,15 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 		drqe.address_hi = putPaddrHigh(rqb_buffer->dbuf.phys);
+ 		rc = lpfc_sli4_rq_put(hrq, drq, &hrqe, &drqe);
+ 		if (rc < 0) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"6421 Cannot post to HRQ %d: %x %x %x "
++					"DRQ %x %x\n",
++					hrq->queue_id,
++					hrq->host_index,
++					hrq->hba_index,
++					hrq->entry_count,
++					drq->host_index,
++					drq->hba_index);
+ 			rqbp->rqb_free_buffer(phba, rqb_buffer);
+ 		} else {
+ 			list_add_tail(&rqb_buffer->hbuf.list,
+@@ -6568,6 +6579,7 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 			rqbp->buffer_count++;
+ 		}
+ 	}
++	spin_unlock_irqrestore(&phba->hbalock, flags);
+ 	return 1;
+ }
+ 
 -- 
 2.13.1
