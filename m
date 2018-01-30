@@ -1,44 +1,54 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Tue, 30 Jan 2018 03:37:38 +0000
-Message-ID: <1517283456.12842.2.camel@wdc.com>
-References: <1516724659.3339.7.camel@sandisk.com>
-         <20180123163717.GE13277@ming.t460p> <1516726653.3339.20.camel@wdc.com>
-         <20180124033109.GA15945@ming.t460p> <20180127190920.GA24759@redhat.com>
-         <1517091161.3055.7.camel@wdc.com> <20180127234151.GA21710@ming.t460p>
-         <1517244510.2687.10.camel@wdc.com> <20180130010701.GC17176@ming.t460p>
-         <1517274681.2687.68.camel@wdc.com> <20180130033118.GF17176@ming.t460p>
+Date: Tue, 30 Jan 2018 11:42:13 +0800
+Message-ID: <20180130034212.GG17176@ming.t460p>
+References: <1516726653.3339.20.camel@wdc.com>
+	<20180124033109.GA15945@ming.t460p>
+	<20180127190920.GA24759@redhat.com>
+	<1517091161.3055.7.camel@wdc.com>
+	<20180127234151.GA21710@ming.t460p>
+	<1517244510.2687.10.camel@wdc.com>
+	<20180130010701.GC17176@ming.t460p>
+	<1517274681.2687.68.camel@wdc.com>
+	<20180130033118.GF17176@ming.t460p>
+	<1517283456.12842.2.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:56969 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752076AbeA3Dhm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2018 22:37:42 -0500
-In-Reply-To: <20180130033118.GF17176@ming.t460p>
-Content-Language: en-US
-Content-ID: <EE6312B26A5C5744AAD68C6F2D393891@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1517283456.12842.2.camel@wdc.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-T24gVHVlLCAyMDE4LTAxLTMwIGF0IDExOjMxICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gUGxl
-YXNlIHRha2UgYSBsb29rIGF0IGRyaXZlcnMsIHdoZW4gQkxLX1NUU19SRVNPVVJDRSBpcyByZXR1
-cm5lZCwgd2hvDQo+IHdpbGwgY2FsbCBibGtfbXFfZGVsYXlfcnVuX2h3X3F1ZXVlKCkgZm9yIGRy
-aXZlcnM/DQoNCkFzIHlvdSBrbm93IHRoZSBTQ1NJIGFuZCBkbSBkcml2ZXJzIGluIGtlcm5lbCB2
-NC4xNSBhbHJlYWR5IGNhbGwgdGhhdCBmdW5jdGlvbg0Kd2hlbmV2ZXIgbmVjZXNzYXJ5Lg0KDQo+
-ID4gDQo+ID4gPiBbIC4uLiBdIExhdGVyLCB5b3UgYWRtaXR0ZWQgeW91IHVuZGVyc3Rvb2QgdGhl
-IHBhdGNoIHdyb25nLiBbIC4uLiBdDQo+ID4gDQo+ID4gVGhhdCdzIG5vbnNlbnNlLiBJIG5ldmVy
-IHdyb3RlIHRoYXQuDQo+IA0KPiBCZWxpZXZlIGl0IG9yIG5vdCwgZm9sbG93cyB0aGUgbGluayBh
-bmQgeW91ciByZXBseToNCj4gDQo+IAlodHRwczovL21hcmMuaW5mby8/bD1kbS1kZXZlbCZtPTE1
-MTY3MjY5NDUwODM4OSZ3PTINCj4gDQo+ID4gU28gd2hhdCBpcyB3cm9uZyB3aXRoIHRoaXMgd2F5
-Pw0KPiA+IFNvcnJ5LCBJIHN3YXBwZWQgQkxLX1NUU19ERVZfUkVTT1VSQ0UgYW5kIEJMS19TVFNf
-UkVTT1VSQ0UgYWNjaWRlbnRhbGx5IGluIG15DQo+ID4gcmVwbHkuIFdoYXQgSSBtZWFudCBpcyB0
-aGF0IGNoYW5naW5nIGEgYmxrX21xX2RlbGF5X3J1bl9od19xdWV1ZSgpIGNhbGwgZm9sbG93ZWQN
-Cj4gPiBieSByZXR1cm4gQkxLX1NUU19SRVNPVVJDRSBpbnRvIEJMS19TVFNfREVWX1JFU09VUkNF
-IGlzIHdyb25nIGFuZCBpbnRyb2R1Y2VzIGENCj4gPiByYWNlIGNvbmRpdGlvbiBpbiBjb2RlIHdo
-ZXJlIHRoZXJlIHdhcyBubyByYWNlIGNvbmRpdGlvbi4NCg0KVGhhdCBtZWFudCB0aGF0IEkgbWFk
-ZSBhIG1pc3Rha2UgKHR5cG8pIHdoaWxlIHR5cGluZyB0aGUgcmVwbHkgYW5kIG5vdGhpbmcgZWxz
-ZS4NCg0KQmFydC4=
+On Tue, Jan 30, 2018 at 03:37:38AM +0000, Bart Van Assche wrote:
+> On Tue, 2018-01-30 at 11:31 +0800, Ming Lei wrote:
+> > Please take a look at drivers, when BLK_STS_RESOURCE is returned, who
+> > will call blk_mq_delay_run_hw_queue() for drivers?
+> 
+> As you know the SCSI and dm drivers in kernel v4.15 already call that function
+> whenever necessary.
+
+We have concluded that it is generic issue which need generic solution[1].
+
+[1] https://marc.info/?l=linux-kernel&m=151638176727612&w=2
+
+[ming@ming linux]$ git grep -n BLK_STS_RESOURCE ./drivers/ | wc -l
+43
+
+Almost every driver need this kind of change if BLK_STS_RESOURCE is returned
+from IO path. And the failure can be caused by kmalloc(GFP_ATOMIC), DMA Mapping,
+or what ever.
+
+Thanks,
+Ming
