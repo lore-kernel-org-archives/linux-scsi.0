@@ -1,72 +1,63 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [PATCH 1/1] scsi: ufs-qcom: remove broken hci version quirk
-Date: Tue, 30 Jan 2018 12:24:50 +0530
-Message-ID: <525ba25a-b699-3bb3-df06-4b3ff165d42a@codeaurora.org>
-References: <1517287281-8622-1-git-send-email-asutoshd@codeaurora.org>
- <1cbfdeb0-084d-8f8b-ed66-d00fbed4a968@codeaurora.org>
+From: Martin Steigerwald <martin@lichtvoll.de>
+Subject: Re: [LSF/MM TOPIC] Two blk-mq related topics
+Date: Tue, 30 Jan 2018 09:33:18 +0100
+Message-ID: <1831727.Vh41F2Boqi@merkaba>
+References: <20180129154455.GB17176@ming.t460p> <1517259390.3969.41.camel@HansenPartnership.com> <20180130012408.GD17176@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59008 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751576AbeA3Gy5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 01:54:57 -0500
-In-Reply-To: <1cbfdeb0-084d-8f8b-ed66-d00fbed4a968@codeaurora.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20180130012408.GD17176@ming.t460p>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, John Garry <john.garry@huawei.com>, lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 
-On 1/30/2018 11:33 AM, Vivek Gautam wrote:
-> Hi Asutosh,
+Ming Lei - 30.01.18, 02:24:
+> > > SCSI_MQ is enabled on V3.17 firstly, but disabled at default. In
+> > > V4.13-rc1, it is enabled at default, but later the patch is reverted
+> > > in V4.13-rc7, and becomes disabled at default too.
+> > > 
+> > > Now both the original reported PM issue(actually SCSI quiesce) and
+> > > the sequential IO performance issue have been addressed.
+> > 
+> > Is the blocker bug just not closed because no-one thought to do it:
+> > 
+> > https://bugzilla.kernel.org/show_bug.cgi?id=178381
+> > 
+> > (we have confirmed that this issue is now fixed with the original
+> > reporter?)
 > 
-> 
-> On 1/30/2018 10:11 AM, Asutosh Das wrote:
->> From: Subhash Jadavani <subhashj@codeaurora.org>
->>
->> UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION is only applicable for QCOM UFS host
->> controller version 2.x.y and this has been fixed from version 3.x.y
->> onwards, hence this change removes this quirk for version 3.x.y onwards.
->>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> ---
-> 
-> This patch and all other ufs patches that you have posted recently,
-> do they all fall under one 'ufs-qcom fixes' patch series for fixes that
-> we would want to do?
-> If it is so, then please club them together in a series, so that
-> it's easy for reviewers and maintainers to review, and keep track
-> of all the patches that can get-in after the reviews.
-> If they belong to two or more separate patch-series then please
-> create such patch series.
-> It's difficult to read through a lot of [PATCH 1/1] ... patch.
-Sure Vivek - Makes sense. Will resend it.
+> From a developer view, this issue is fixed by the following commit:
+> 3a0a52997(block, scsi: Make SCSI quiesce and resume work reliably),
+> and it is verified by kernel list reporter.
 
-> 
-> Regards
-> Vivek
-> 
->>   drivers/scsi/ufs/ufs-qcom.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
->> index 2b38db2..221820a 100644
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
->> @@ -1098,7 +1098,7 @@ static void ufs_qcom_advertise_quirks(struct 
->> ufs_hba *hba)
->>           hba->quirks |= UFSHCD_QUIRK_BROKEN_LCC;
->>       }
->> -    if (host->hw_ver.major >= 0x2) {
->> +    if (host->hw_ver.major == 0x2) {
->>           hba->quirks |= UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION;
->>           if (!ufs_qcom_cap_qunipro(host))
-> 
+I never seen any suspend / hibernate related issues with blk-mq + bfq since 
+then. Using heavily utilized BTRFS dual SSD RAID 1.
 
+% egrep "MQ|BFQ" /boot/config-4.15.0-tp520-btrfstrim+
+CONFIG_POSIX_MQUEUE=y
+CONFIG_POSIX_MQUEUE_SYSCTL=y
+CONFIG_BLK_WBT_MQ=y
+CONFIG_BLK_MQ_PCI=y
+CONFIG_BLK_MQ_VIRTIO=y
+CONFIG_MQ_IOSCHED_DEADLINE=m
+CONFIG_MQ_IOSCHED_KYBER=m
+CONFIG_IOSCHED_BFQ=m
+CONFIG_BFQ_GROUP_IOSCHED=y
+CONFIG_NET_SCH_MQPRIO=m
+# CONFIG_SCSI_MQ_DEFAULT is not set
+# CONFIG_DM_MQ_DEFAULT is not set
+CONFIG_DM_CACHE_SMQ=m
 
+% cat /proc/cmdline 
+BOOT_IMAGE=/vmlinuz-4.15.0-tp520-btrfstrim+ root=UUID=[…] ro 
+rootflags=subvol=debian resume=/dev/mapper/sata-swap init=/bin/systemd 
+thinkpad_acpi.fan_control=1 systemd.restore_state=0 scsi_mod.use_blk_mq=1
+
+% cat /sys/block/sda/queue/scheduler 
+[bfq] none
+
+Thanks,
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+Martin
