@@ -1,54 +1,169 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Tue, 30 Jan 2018 11:42:13 +0800
-Message-ID: <20180130034212.GG17176@ming.t460p>
-References: <1516726653.3339.20.camel@wdc.com>
-	<20180124033109.GA15945@ming.t460p>
-	<20180127190920.GA24759@redhat.com>
-	<1517091161.3055.7.camel@wdc.com>
-	<20180127234151.GA21710@ming.t460p>
-	<1517244510.2687.10.camel@wdc.com>
-	<20180130010701.GC17176@ming.t460p>
-	<1517274681.2687.68.camel@wdc.com>
-	<20180130033118.GF17176@ming.t460p>
-	<1517283456.12842.2.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1517283456.12842.2.camel@wdc.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "hch@infradead.org" <hch@infradead.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
+From: Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH 1/1] scsi: ufs: add reference counting for scsi block requests
+Date: Tue, 30 Jan 2018 09:48:08 +0530
+Message-ID: <1517285888-29433-1-git-send-email-asutoshd@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Asutosh Das <asutoshd@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 30, 2018 at 03:37:38AM +0000, Bart Van Assche wrote:
-> On Tue, 2018-01-30 at 11:31 +0800, Ming Lei wrote:
-> > Please take a look at drivers, when BLK_STS_RESOURCE is returned, who
-> > will call blk_mq_delay_run_hw_queue() for drivers?
-> 
-> As you know the SCSI and dm drivers in kernel v4.15 already call that function
-> whenever necessary.
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-We have concluded that it is generic issue which need generic solution[1].
+Currently we call the scsi_block_requests()/scsi_unblock_requests()
+whenever we want to block/unblock scsi requests but as there is no
+reference counting, nesting of these calls could leave us in undesired
+state sometime. Consider following call flow sequence:
+1. func1() calls scsi_block_requests() but calls func2() before
+   calling scsi_unblock_requests()
+2. func2() calls scsi_block_requests()
+3. func2() calls scsi_unblock_requests()
+4. func1() calls scsi_unblock_requests()
 
-[1] https://marc.info/?l=linux-kernel&m=151638176727612&w=2
+As there is no reference counting, we will have scsi requests unblocked
+after #3 instead of it to be unblocked only after #4. Though we may not
+have failures seen with this, we might run into some failures in future.
+Better solution would be to fix this by adding reference counting.
 
-[ming@ming linux]$ git grep -n BLK_STS_RESOURCE ./drivers/ | wc -l
-43
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 44 +++++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  5 +++++
+ 2 files changed, 42 insertions(+), 7 deletions(-)
 
-Almost every driver need this kind of change if BLK_STS_RESOURCE is returned
-from IO path. And the failure can be caused by kmalloc(GFP_ATOMIC), DMA Mapping,
-or what ever.
-
-Thanks,
-Ming
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8af2af3..a9ebc8d 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -264,6 +264,36 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+ 	}
+ }
+ 
++void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
++{
++	unsigned long flags;
++	bool unblock = false;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	hba->scsi_block_reqs_cnt--;
++	unblock = !hba->scsi_block_reqs_cnt;
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	if (unblock)
++		scsi_unblock_requests(hba->host);
++}
++EXPORT_SYMBOL(ufshcd_scsi_unblock_requests);
++
++static inline void __ufshcd_scsi_block_requests(struct ufs_hba *hba)
++{
++	if (!hba->scsi_block_reqs_cnt++)
++		scsi_block_requests(hba->host);
++}
++
++void ufshcd_scsi_block_requests(struct ufs_hba *hba)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	__ufshcd_scsi_block_requests(hba);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++}
++EXPORT_SYMBOL(ufshcd_scsi_block_requests);
++
+ /* replace non-printable or non-ASCII characters with spaces */
+ static inline void ufshcd_remove_non_printable(char *val)
+ {
+@@ -1079,12 +1109,12 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ 	 * make sure that there are no outstanding requests when
+ 	 * clock scaling is in progress
+ 	 */
+-	scsi_block_requests(hba->host);
++	ufshcd_scsi_block_requests(hba);
+ 	down_write(&hba->clk_scaling_lock);
+ 	if (ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+ 		ret = -EBUSY;
+ 		up_write(&hba->clk_scaling_lock);
+-		scsi_unblock_requests(hba->host);
++		ufshcd_scsi_unblock_requests(hba);
+ 	}
+ 
+ 	return ret;
+@@ -1093,7 +1123,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
+ {
+ 	up_write(&hba->clk_scaling_lock);
+-	scsi_unblock_requests(hba->host);
++	ufshcd_scsi_unblock_requests(hba);
+ }
+ 
+ /**
+@@ -1413,7 +1443,7 @@ static void ufshcd_ungate_work(struct work_struct *work)
+ 		hba->clk_gating.is_suspended = false;
+ 	}
+ unblock_reqs:
+-	scsi_unblock_requests(hba->host);
++	ufshcd_scsi_unblock_requests(hba);
+ }
+ 
+ /**
+@@ -1469,7 +1499,7 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 * work and to enable clocks.
+ 		 */
+ 	case CLKS_OFF:
+-		scsi_block_requests(hba->host);
++		__ufshcd_scsi_block_requests(hba);
+ 		hba->clk_gating.state = REQ_CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+@@ -5178,7 +5208,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 
+ out:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	scsi_unblock_requests(hba->host);
++	ufshcd_scsi_unblock_requests(hba);
+ 	ufshcd_release(hba);
+ 	pm_runtime_put_sync(hba->dev);
+ }
+@@ -5280,7 +5310,7 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
+ 		/* handle fatal errors only when link is functional */
+ 		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
+ 			/* block commands from scsi mid-layer */
+-			scsi_block_requests(hba->host);
++			__ufshcd_scsi_block_requests(hba);
+ 
+ 			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED;
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 1332e54..84f4175 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -498,6 +498,7 @@ struct ufs_stats {
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+  *  device is known or not.
++ * @scsi_block_reqs_cnt: reference counting for scsi block requests
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -679,6 +680,7 @@ struct ufs_hba {
+ 
+ 	struct rw_semaphore clk_scaling_lock;
+ 	struct ufs_desc_size desc_size;
++	int scsi_block_reqs_cnt;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
+@@ -851,6 +853,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
+ 
+ u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba);
+ 
++void ufshcd_scsi_block_requests(struct ufs_hba *hba);
++void ufshcd_scsi_unblock_requests(struct ufs_hba *hba);
++
+ /* Wrapper functions for safely calling variant operations */
+ static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
+ {
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
