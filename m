@@ -1,122 +1,73 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 17/19] lpfc: Fix nonrecovery of NVME controller after cable swap.
-Date: Tue, 30 Jan 2018 15:59:01 -0800
-Message-ID: <20180130235903.5316-18-jsmart2021@gmail.com>
+Subject: [PATCH v3 07/19] lpfc: Fix IO failure during hba reset testing with nvme io.
+Date: Tue, 30 Jan 2018 15:58:51 -0800
+Message-ID: <20180130235903.5316-8-jsmart2021@gmail.com>
 References: <20180130235903.5316-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:35614 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754177AbeA3X7e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:34 -0500
-Received: by mail-qt0-f193.google.com with SMTP id g14so19675862qti.2
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:34 -0800 (PST)
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:36485 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753556AbeA3X7X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:23 -0500
+Received: by mail-qt0-f196.google.com with SMTP id z11so19667747qtm.3
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:23 -0800 (PST)
 In-Reply-To: <20180130235903.5316-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-In a test that is doing large numbers of cable swaps on the target,
-the nvme controllers wouldn't reconnect.
+A stress test repeatedly resetting the adapter while performing
+io would eventually report I/O failures and missing nvme namespaces.
 
-During the cable swaps, the targets n_port_id would change. This
-information was passed to the nvme-fc transport, in the new remoteport
-registration. However, the nvme-fc transport didn't update the n_port_id
-value in the remoteport struct when it reused an existing structure.
-Later, when a new association was attempted on the remoteport, the
-driver's NVME LS routine would use the stale n_port_id from the remoteport
-struct to address the LS. As the device is no longer at that address,
-the LS would go into never never land.
+The driver was setting the nvmefc_fcp_req->private pointer to NULL
+during the IO completion routine before upcalling done().
+If the transport was also running an abort for that IO, the driver
+would fail the abort with message 6140. Failing the abort is not
+allowed by the nvme-fc transport, as it mandates that the io must be
+returned back to the transport. As that does not happen, the transport
+controller delete has an outstanding reference and can't complete
+teardown.
 
-Separately, the nvme-fc transport will be corrected to update the
-n_port_id value on a re-registration.
+The NULL-ing of the private pointer should be done only when the io
+is considered complete. It's complete when the adapter returns the
+exchange with the "exchange busy" flag clear.
 
-However, for now, there's no reason to use the transports values.
-The private pointer points to the drivers node structure and the
-node structure is up to date. Therefore, revise the LS routine to
-use the drivers data structures for the LS. Augmented the debug
-message for better debugging in the future.
-
-Also removed a duplicate if check that seems to have slipped in.
+Move the NULL'ing of the structure to the done case. This leaves the
+io contexts set while it is busy and until the subsequent XRI_ABORTED
+completion which returns the exchange is received.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+v3:
+  Address review comment that preferred to continue to NULL if the
+  io did complete in order to protect stale conditions. After review,
+  we agreed, thus the above change.
+---
+ drivers/scsi/lpfc/lpfc_nvme.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index c6e5b9972585..6327f858c4c8 100644
+index 81e3a4f10c3c..c6e5b9972585 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -241,10 +241,11 @@ lpfc_nvme_cmpl_gen_req(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 	ndlp = (struct lpfc_nodelist *)cmdwqe->context1;
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			 "6047 nvme cmpl Enter "
--			 "Data %p DID %x Xri: %x status %x cmd:%p lsreg:%p "
--			 "bmp:%p ndlp:%p\n",
-+			 "Data %p DID %x Xri: %x status %x reason x%x cmd:%p "
-+			 "lsreg:%p bmp:%p ndlp:%p\n",
- 			 pnvme_lsreq, ndlp ? ndlp->nlp_DID : 0,
- 			 cmdwqe->sli4_xritag, status,
-+			 (wcqe->parameter & 0xffff),
- 			 cmdwqe, pnvme_lsreq, cmdwqe->context3, ndlp);
+@@ -980,14 +980,14 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 			phba->cpucheck_cmpl_io[lpfc_ncmd->cpu]++;
+ 	}
+ #endif
+-	freqpriv = nCmd->private;
+-	freqpriv->nvme_buf = NULL;
  
- 	lpfc_nvmeio_data(phba, "NVME LS  CMPL: xri x%x stat x%x parm x%x\n",
-@@ -419,6 +420,7 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- {
- 	int ret = 0;
- 	struct lpfc_nvme_lport *lport;
-+	struct lpfc_nvme_rport *rport;
- 	struct lpfc_vport *vport;
- 	struct lpfc_nodelist *ndlp;
- 	struct ulp_bde64 *bpl;
-@@ -437,19 +439,18 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
+ 	/* NVME targets need completion held off until the abort exchange
+ 	 * completes unless the NVME Rport is getting unregistered.
  	 */
  
- 	lport = (struct lpfc_nvme_lport *)pnvme_lport->private;
-+	rport = (struct lpfc_nvme_rport *)pnvme_rport->private;
- 	vport = lport->vport;
- 
- 	if (vport->load_flag & FC_UNLOADING)
- 		return -ENODEV;
- 
--	if (vport->load_flag & FC_UNLOADING)
--		return -ENODEV;
--
--	ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
-+	/* Need the ndlp.  It is stored in the driver's rport. */
-+	ndlp = rport->ndlp;
- 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
--				 "6051 DID x%06x not an active rport.\n",
--				 pnvme_rport->port_id);
-+				 "6051 Remoteport %p, rport has invalid ndlp. "
-+				 "Failing LS Req\n", pnvme_rport);
- 		return -ENODEV;
+ 	if (!(lpfc_ncmd->flags & LPFC_SBUF_XBUSY)) {
++		freqpriv = nCmd->private;
++		freqpriv->nvme_buf = NULL;
+ 		nCmd->done(nCmd);
+ 		lpfc_ncmd->nvmeCmd = NULL;
  	}
- 
-@@ -500,8 +501,9 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 
- 	/* Expand print to include key fields. */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--			 "6149 ENTER.  lport %p, rport %p lsreq%p rqstlen:%d "
--			 "rsplen:%d %pad %pad\n",
-+			 "6149 Issue LS Req to DID 0x%06x lport %p, rport %p "
-+			 "lsreq%p rqstlen:%d rsplen:%d %pad %pad\n",
-+			 ndlp->nlp_DID,
- 			 pnvme_lport, pnvme_rport,
- 			 pnvme_lsreq, pnvme_lsreq->rqstlen,
- 			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
-@@ -517,7 +519,7 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 				ndlp, 2, 30, 0);
- 	if (ret != WQE_SUCCESS) {
- 		atomic_inc(&lport->xmt_ls_err);
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
-+		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
- 				 "6052 EXIT. issue ls wqe failed lport %p, "
- 				 "rport %p lsreq%p Status %x DID %x\n",
- 				 pnvme_lport, pnvme_rport, pnvme_lsreq,
 -- 
 2.13.1
