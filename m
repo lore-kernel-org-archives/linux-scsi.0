@@ -1,79 +1,61 @@
-From: Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH 1/1] scsi: ufshcd: fix possible unclocked register access
-Date: Tue, 30 Jan 2018 08:52:25 +0530
-Message-ID: <1517282545-10502-1-git-send-email-asutoshd@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53252 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752076AbeA3DXC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2018 22:23:02 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V3] blk-mq: introduce BLK_STS_DEV_RESOURCE
+Date: Tue, 30 Jan 2018 11:31:19 +0800
+Message-ID: <20180130033118.GF17176@ming.t460p>
+References: <1516724659.3339.7.camel@sandisk.com>
+ <20180123163717.GE13277@ming.t460p>
+ <1516726653.3339.20.camel@wdc.com>
+ <20180124033109.GA15945@ming.t460p>
+ <20180127190920.GA24759@redhat.com>
+ <1517091161.3055.7.camel@wdc.com>
+ <20180127234151.GA21710@ming.t460p>
+ <1517244510.2687.10.camel@wdc.com>
+ <20180130010701.GC17176@ming.t460p>
+ <1517274681.2687.68.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1517274681.2687.68.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+On Tue, Jan 30, 2018 at 01:11:22AM +0000, Bart Van Assche wrote:
+> On Tue, 2018-01-30 at 09:07 +0800, Ming Lei wrote:
+> > On Mon, Jan 29, 2018 at 04:48:31PM +0000, Bart Van Assche wrote:
+> > > - It is easy to fix this race inside the block layer, namely by using
+> > >   call_rcu() inside the blk_mq_delay_run_hw_queue() implementation to
+> > >   postpone the queue rerunning until after the request has been added back to
+> > >   the dispatch list.
+> > 
+> > It is just easy to say, can you cook a patch and fix all drivers first?
+> 
+> Please reread what I wrote. I proposed to change the blk_mq_delay_run_hw_queue()
+> IMPLEMENTATION such that the callers do not have to be modified.
 
-vendor specific setup_clocks ops may depend on clocks managed by ufshcd
-driver so if the vendor specific setup_clocks callback is called when
-the required clocks are turned off, it results into unclocked register
-access.
+Please take a look at drivers, when BLK_STS_RESOURCE is returned, who
+will call blk_mq_delay_run_hw_queue() for drivers?
 
-This change make sure that required clocks are enabled before vendor
-specific setup_clocks callback is called.
+> 
+> > [ ... ] Later, you admitted you understood the patch wrong. [ ... ]
+> 
+> That's nonsense. I never wrote that.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
+Believe it or not, follows the link and your reply:
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8af2af3..c5ee686 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6763,9 +6763,16 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 	if (list_empty(head))
- 		goto out;
- 
--	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
--	if (ret)
--		return ret;
-+	/*
-+	 * vendor specific setup_clocks ops may depend on clocks managed by
-+	 * this standard driver hence call the vendor specific setup_clocks
-+	 * before disabling the clocks managed here.
-+	 */
-+	if (!on) {
-+		ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	list_for_each_entry(clki, head, list) {
- 		if (!IS_ERR_OR_NULL(clki->clk)) {
-@@ -6789,9 +6796,16 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 		}
- 	}
- 
--	ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
--	if (ret)
--		return ret;
-+	/*
-+	 * vendor specific setup_clocks ops may depend on clocks managed by
-+	 * this standard driver hence call the vendor specific setup_clocks
-+	 * after enabling the clocks managed here.
-+	 */
-+	if (on) {
-+		ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
-+		if (ret)
-+			return ret;
-+	}
- 
- out:
- 	if (ret) {
+	https://marc.info/?l=dm-devel&m=151672694508389&w=2
+
+> So what is wrong with this way?
+
+>Sorry, I swapped BLK_STS_DEV_RESOURCE and BLK_STS_RESOURCE accidentally in my
+>reply. What I meant is that changing a blk_mq_delay_run_hw_queue() call followed
+>by return BLK_STS_RESOURCE into BLK_STS_DEV_RESOURCE is wrong and introduces a
+>race condition in code where there was no race condition.
+>
+>Bart.
+
+
 -- 
-Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+Ming
