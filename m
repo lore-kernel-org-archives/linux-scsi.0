@@ -1,75 +1,64 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 00/19] lpfc updates for 11.4.0.7
-Date: Tue, 30 Jan 2018 15:58:44 -0800
-Message-ID: <20180130235903.5316-1-jsmart2021@gmail.com>
+Subject: [PATCH v3 03/19] lpfc: move placement of target destroy on driver detach
+Date: Tue, 30 Jan 2018 15:58:47 -0800
+Message-ID: <20180130235903.5316-4-jsmart2021@gmail.com>
+References: <20180130235903.5316-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:34805 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752936AbeA3X7Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:16 -0500
-Received: by mail-qt0-f171.google.com with SMTP id a27so19681575qtd.1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:15 -0800 (PST)
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:36603 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753543AbeA3X7T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 18:59:19 -0500
+Received: by mail-qk0-f195.google.com with SMTP id d21so12538065qkj.3
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 15:59:18 -0800 (PST)
+In-Reply-To: <20180130235903.5316-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-This patch set provides a number of fixes for the driver.
+Ensure nvme localports/targetports are torn down before
+dismantling the adapter sli interface on driver detachment.
+This aids leaving interfaces live while nvme may be making
+callbacks to abort it.
 
-The patches were cut against the Martin's 4.16/scsi-queue tree.
-There are no outside dependencies and are expected to be pulled
-via Martins tree.
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-
-v2:
-  respin patch 14 "lpfc: Validate adapter support for SRIU option"
-    for snippet that was missing
-
-v3:
-  Responded to review comments from Hannes
-  Updated Copyright string used in load banner
-
-
-James Smart (19):
-  lpfc: Fix frequency of Release WQE CQEs
-  lpfc: Increase CQ and WQ sizes for SCSI
-  lpfc: move placement of target destroy on driver detach
-  lpfc: correct debug counters for abort
-  lpfc: Add WQ Full Logic for NVME Target
-  lpfc: Fix PRLI handling when topology type changes
-  lpfc: Fix IO failure during hba reset testing with nvme io.
-  lpfc: Fix RQ empty firmware trap
-  lpfc: Allow set of maximum outstanding SCSI cmd limit for a target
-    parameter
-  lpfc: Fix soft lockup in lpfc worker thread during LIP testing
-  lpfc: Fix issue_lip if link is disabled
-  lpfc: Indicate CONF support in NVMe PRLI
-  lpfc: Fix SCSI io host reset causing kernel crash
-  lpfc: Validate adapter support for SRIU option
-  lpfc: Fix header inclusion in lpfc_nvmet
-  lpfc: Treat SCSI Write operation Underruns as an error
-  lpfc: Fix nonrecovery of NVME controller after cable swap.
-  lpfc: update driver version to 11.4.0.7
-  lpfc: Update 11.4.0.7 modified files for 2018 Copyright
-
- drivers/scsi/lpfc/lpfc.h           |   3 +-
- drivers/scsi/lpfc/lpfc_attr.c      |  17 +++-
- drivers/scsi/lpfc/lpfc_crtn.h      |   3 +-
- drivers/scsi/lpfc/lpfc_els.c       |   5 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c   |   7 +-
- drivers/scsi/lpfc/lpfc_hw4.h       |  14 +++-
- drivers/scsi/lpfc/lpfc_init.c      |  69 +++++++++++-----
- drivers/scsi/lpfc/lpfc_mbox.c      |   6 +-
- drivers/scsi/lpfc/lpfc_mem.c       |  10 ++-
- drivers/scsi/lpfc/lpfc_nportdisc.c |   7 +-
- drivers/scsi/lpfc/lpfc_nvme.c      |  30 +++----
- drivers/scsi/lpfc/lpfc_nvmet.c     | 162 +++++++++++++++++++++++++++++++++----
- drivers/scsi/lpfc/lpfc_nvmet.h     |  10 ++-
- drivers/scsi/lpfc/lpfc_scsi.c      |  49 +++++++----
- drivers/scsi/lpfc/lpfc_sli.c       |  36 ++++++++-
- drivers/scsi/lpfc/lpfc_sli4.h      |  12 ++-
- drivers/scsi/lpfc/lpfc_version.h   |   8 +-
- 17 files changed, 341 insertions(+), 107 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 40ffa0111142..bff5c95cf5df 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11503,13 +11503,6 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
+ 	/* Remove FC host and then SCSI host with the physical port */
+ 	fc_remove_host(shost);
+ 	scsi_remove_host(shost);
+-	/*
+-	 * Bring down the SLI Layer. This step disables all interrupts,
+-	 * clears the rings, discards all mailbox commands, and resets
+-	 * the HBA FCoE function.
+-	 */
+-	lpfc_debugfs_terminate(vport);
+-	lpfc_sli4_hba_unset(phba);
+ 
+ 	/* Perform ndlp cleanup on the physical port.  The nvme and nvmet
+ 	 * localports are destroyed after to cleanup all transport memory.
+@@ -11518,6 +11511,13 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
+ 	lpfc_nvmet_destroy_targetport(phba);
+ 	lpfc_nvme_destroy_localport(vport);
+ 
++	/*
++	 * Bring down the SLI Layer. This step disables all interrupts,
++	 * clears the rings, discards all mailbox commands, and resets
++	 * the HBA FCoE function.
++	 */
++	lpfc_debugfs_terminate(vport);
++	lpfc_sli4_hba_unset(phba);
+ 
+ 	lpfc_stop_hba_timers(phba);
+ 	spin_lock_irq(&phba->hbalock);
 -- 
 2.13.1
