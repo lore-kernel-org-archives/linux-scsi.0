@@ -1,47 +1,60 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [dm-devel] [PATCH v5] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Tue, 30 Jan 2018 20:22:27 -0700
-Message-ID: <d563628f-687d-c463-7e7e-d85a52cdf25b@kernel.dk>
-References: <20180130142459.52668-1-snitzer@redhat.com>
- <43ac2314-c98d-bb76-0dfb-171d15cc5fd8@wdc.com>
- <7baf8e0f-7a15-4529-c32b-4ce0ee172598@kernel.dk>
- <1517368861.4421.2.camel@wdc.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3] scsi: sd: add new match array for cache_type
+Date: Tue, 30 Jan 2018 22:22:41 -0500
+Message-ID: <yq1lggeempq.fsf@oracle.com>
+References: <20180123144439.GA15247@localhost.didichuxing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:41941 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751700AbeAaDWb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 22:22:31 -0500
-Received: by mail-pf0-f172.google.com with SMTP id c6so11206960pfi.8
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2018 19:22:31 -0800 (PST)
-In-Reply-To: <1517368861.4421.2.camel@wdc.com>
-Content-Language: en-US
+Received: from userp2120.oracle.com ([156.151.31.85]:59726 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751494AbeAaDWw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 22:22:52 -0500
+In-Reply-To: <20180123144439.GA15247@localhost.didichuxing.com> (weiping
+        zhang's message of "Tue, 23 Jan 2018 22:44:44 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "snitzer@redhat.com" <snitzer@redhat.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+To: weiping zhang <zhangweiping@didichuxing.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-On 1/30/18 8:21 PM, Bart Van Assche wrote:
-> On Tue, 2018-01-30 at 20:17 -0700, Jens Axboe wrote:
->> BLK_STS_RESOURCE should always be safe to return, and it should work
->> the same as STS_DEV_RESOURCE, except it may cause an extra queue
->> run.
->>
->> Well written drivers should use STS_DEV_RESOURCE where it makes
->> sense.
-> 
-> Hello Jens,
-> 
-> I would appreciate it if other names would be chosen than BLK_STS_RESOURCE
-> and BLK_STS_DEV_RESOURCE, e.g. names that directly refer to the fact that
-> one of the two status codes causes the queue to be rerun and the other not.
-> I'm afraid that the currently chosen names will cause confusion.
 
-DEV_RESOURCE is pretty clear I think, but I agree that STS_RESOURCE
-could perhaps be better. STS_SYSTEM_RESOURCE? It makes the distinction
-a bit clearer.
+Weiping,
+
+> add user friendly command strings sd_wr_cache to enable/disable
+> write&read cache. user can enable both write and read cache by one of
+> the following commands:
+
+I remain unconvinced that introducing redundant option strings is a
+benefit.
+
+These shorthand forms may seem obvious to you, but not to everyone
+else. Adding to the murkiness is that fact that write cache must be
+*enabled* and read cache *disabled* in the protocol. The fact that the
+??rN and RCD columns below contain inverse values just emphasizes that
+point that "0" and "1" are not a particularly good interface either.
+
+It is also confusing that the existing longhand forms will be printed
+when the user subsequently queries the state instead of what they used
+to toggle it.
+
+
+This, however, is pretty much what I was looking for:
+
+> Encoding                          | WCE RCD | Write_cache Read_cache
+> --------------------------------------------------------------------
+> write through              / w0r1 | 0   0   | off         on
+> none                       / w0r0 | 0   1   | off         off
+> write back                 / w1r1 | 1   0   | on          on
+> write back, no read (daft) / w1r0 | 1   1   | on          off
+
+Please drop the w?r? options and submit a patch with this table and a
+note about the "temporary" prefix. Put it in
+Documentation/scsi/sd-parameters.txt or something to that effect.
+
+Bonus points for also documenting the remaining sd sysfs attributes and
+their options.
+
+Thanks!
 
 -- 
-Jens Axboe
+Martin K. Petersen	Oracle Linux Engineering
