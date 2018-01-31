@@ -1,29 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: remove dead makefile about oktagon files
-Date: Tue, 30 Jan 2018 21:56:32 -0500
-Message-ID: <yq1372mg2hr.fsf@oracle.com>
-References: <1517229016-1859-1-git-send-email-clabbe@baylibre.com>
+Subject: Re: [PATCH] scsi_dh: Document alua_rtpg_queue() arguments
+Date: Tue, 30 Jan 2018 21:58:23 -0500
+Message-ID: <yq1y3keenu8.fsf@oracle.com>
+References: <20180123235003.25971-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50444 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752029AbeAaC4h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 21:56:37 -0500
-In-Reply-To: <1517229016-1859-1-git-send-email-clabbe@baylibre.com> (Corentin
-        Labbe's message of "Mon, 29 Jan 2018 12:30:16 +0000")
+Received: from userp2130.oracle.com ([156.151.31.86]:38736 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751800AbeAaC6g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 21:58:36 -0500
+In-Reply-To: <20180123235003.25971-1-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Tue, 23 Jan 2018 15:50:03 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 
-Corentin,
+Bart,
 
-> Remove line using inexistant files which were removed in
-> commit 642978beb483 ("[SCSI] remove m68k NCR53C9x based drivers")
+> Since commit 3a025e1d1c2e ("Add optional check for bad kernel-doc
+> comments") building with W=1 causes warnings to appear for issues
+> in kernel-doc headers. This patch avoids that the following warnings
+> are reported when building with W=1:
 
-Applied to 4.16/scsi-fixes, thank you.
+Applied to 4.16/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
