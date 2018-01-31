@@ -1,51 +1,117 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [LSF/MM TOPIC] KPTI effect on IO performance
-Date: Wed, 31 Jan 2018 16:23:32 +0800
-Message-ID: <20180131082331.GA25888@ming.t460p>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: Simplify request tag decoding
+Date: Wed, 31 Jan 2018 08:41:30 -0500
+Message-ID: <8e8335c3-d53a-475a-075d-9b852817a160@interlog.com>
+References: <20180126165219.11913-1-bart.vanassche@wdc.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33344 "EHLO mx1.redhat.com"
+Received: from smtp.infotech.no ([82.134.31.41]:60285 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751534AbeAaIXq (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-        Wed, 31 Jan 2018 03:23:46 -0500
-Content-Disposition: inline
+        id S1752337AbeAaNlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Jan 2018 08:41:37 -0500
+In-Reply-To: <20180126165219.11913-1-bart.vanassche@wdc.com>
+Content-Language: en-CA
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-Hi All,
+On 2018-01-26 11:52 AM, Bart Van Assche wrote:
+> Since commit 64d513ac31bd ("scsi: use host wide tags by default")
+> all SCSI requests have a tag, whether or not scsi-mq is enabled.
+> Additionally, it is safe to use blk_mq_unique_tag() and
+> blk_mq_unique_tag_to_hwq() for legacy SCSI queues. Since this
+> means that the sdebug_mq_active variable is superfluous, remove it.
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
 
-After KPTI is merged, there is extra load introduced to context switch
-between user space and kernel space. It is observed on my laptop that one
-syscall takes extra ~0.15us[1] compared with 'nopti'.
+Ack-ed by Douglas Gilbert <dgilbert@interlog.com>
 
-IO performance is affected too, it is observed that IOPS drops by 32% in
-my test[2] on null_blk compared with 'nopti':
-
-randread IOPS on latest linus tree:
--------------------------------------------------
-| randread IOPS     | randread IOPS with 'nopti'|	
-------------------------------------------------
-| 928K              | 1372K                     |	
-------------------------------------------------
-
-
-Two paths are affected, one is IO submission(read, write,... syscall),
-another is the IO completion path in which interrupt may be triggered
-from user space, and context switch is needed.
-
-So is there something we can do for decreasing the effect on IO performance?
-
-This effect may make Hannes's issue[3] worse, and maybe 'irq poll' should be
-used more widely for all high performance IO device, even some optimization
-should be considered for KPTI's effect.
-
-
-[1] http://people.redhat.com/minlei/tests/tools/syscall_speed.c
-[2] http://people.redhat.com/minlei/tests/tools/null_perf
-[3] [LSF/MM TOPIC] irq affinity handling for high CPU count machines
-	https://marc.info/?t=151722156800002&r=1&w=2
-
-Thanks,
-Ming
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> ---
+>   drivers/scsi/scsi_debug.c | 37 +++++++++++--------------------------
+>   1 file changed, 11 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index a5986dae9020..7d2ce0cc915a 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -649,7 +649,6 @@ static bool sdebug_any_injecting_opt;
+>   static bool sdebug_verbose;
+>   static bool have_dif_prot;
+>   static bool sdebug_statistics = DEF_STATISTICS;
+> -static bool sdebug_mq_active;
+>   
+>   static unsigned int sdebug_store_sectors;
+>   static sector_t sdebug_capacity;	/* in sectors */
+> @@ -3727,20 +3726,13 @@ static int resp_xdwriteread_10(struct scsi_cmnd *scp,
+>   
+>   static struct sdebug_queue *get_queue(struct scsi_cmnd *cmnd)
+>   {
+> -	struct sdebug_queue *sqp = sdebug_q_arr;
+> +	u32 tag = blk_mq_unique_tag(cmnd->request);
+> +	u16 hwq = blk_mq_unique_tag_to_hwq(tag);
+>   
+> -	if (sdebug_mq_active) {
+> -		u32 tag = blk_mq_unique_tag(cmnd->request);
+> -		u16 hwq = blk_mq_unique_tag_to_hwq(tag);
+> -
+> -		if (unlikely(hwq >= submit_queues)) {
+> -			pr_warn("Unexpected hwq=%d, apply modulo\n", hwq);
+> -			hwq %= submit_queues;
+> -		}
+> -		pr_debug("tag=%u, hwq=%d\n", tag, hwq);
+> -		return sqp + hwq;
+> -	} else
+> -		return sqp;
+> +	pr_debug("tag=%#x, hwq=%d\n", tag, hwq);
+> +	if (WARN_ON_ONCE(hwq >= submit_queues))
+> +		hwq = 0;
+> +	return sdebug_q_arr + hwq;
+>   }
+>   
+>   /* Queued (deferred) command completions converge here. */
+> @@ -4587,9 +4579,8 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
+>   		   num_host_resets);
+>   	seq_printf(m, "dix_reads=%d, dix_writes=%d, dif_errors=%d\n",
+>   		   dix_reads, dix_writes, dif_errors);
+> -	seq_printf(m, "usec_in_jiffy=%lu, %s=%d, mq_active=%d\n",
+> -		   TICK_NSEC / 1000, "statistics", sdebug_statistics,
+> -		   sdebug_mq_active);
+> +	seq_printf(m, "usec_in_jiffy=%lu, statistics=%d\n", TICK_NSEC / 1000,
+> +		   sdebug_statistics);
+>   	seq_printf(m, "cmnd_count=%d, completions=%d, %s=%d, a_tsf=%d\n",
+>   		   atomic_read(&sdebug_cmnd_count),
+>   		   atomic_read(&sdebug_completions),
+> @@ -5612,13 +5603,8 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+>   				n += scnprintf(b + n, sb - n, "%02x ",
+>   					       (u32)cmd[k]);
+>   		}
+> -		if (sdebug_mq_active)
+> -			sdev_printk(KERN_INFO, sdp, "%s: tag=%u, cmd %s\n",
+> -				    my_name, blk_mq_unique_tag(scp->request),
+> -				    b);
+> -		else
+> -			sdev_printk(KERN_INFO, sdp, "%s: cmd %s\n", my_name,
+> -				    b);
+> +		sdev_printk(KERN_INFO, sdp, "%s: tag=%#x, cmd %s\n", my_name,
+> +			    blk_mq_unique_tag(scp->request), b);
+>   	}
+>   	if (fake_host_busy(scp))
+>   		return SCSI_MLQUEUE_HOST_BUSY;
+> @@ -5782,8 +5768,7 @@ static int sdebug_driver_probe(struct device * dev)
+>   	}
+>   	/* Decide whether to tell scsi subsystem that we want mq */
+>   	/* Following should give the same answer for each host */
+> -	sdebug_mq_active = shost_use_blk_mq(hpnt) && (submit_queues > 1);
+> -	if (sdebug_mq_active)
+> +	if (shost_use_blk_mq(hpnt))
+>   		hpnt->nr_hw_queues = submit_queues;
+>   
+>   	sdbg_host->shost = hpnt;
+> 
