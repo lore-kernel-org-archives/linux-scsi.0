@@ -1,117 +1,150 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: Simplify request tag decoding
-Date: Wed, 31 Jan 2018 08:41:30 -0500
-Message-ID: <8e8335c3-d53a-475a-075d-9b852817a160@interlog.com>
-References: <20180126165219.11913-1-bart.vanassche@wdc.com>
-Reply-To: dgilbert@interlog.com
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [LSF/MM TOPIC] Patch Submission process and Handling Internal
+ Conflict
+Date: Wed, 31 Jan 2018 10:21:55 -0600
+Message-ID: <f560f236-9bee-4aa7-9455-3a548f765edb@sandeen.net>
+References: <1516820744.3073.30.camel@HansenPartnership.com>
+ <c4598a9a-6995-d67a-dd1c-8e946470eeb4@oracle.com>
+ <1516829760.3073.43.camel@HansenPartnership.com>
+ <20180124234347.GA11926@magnolia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:60285 "EHLO smtp.infotech.no"
+Received: from sandeen.net ([63.231.237.45]:47624 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752337AbeAaNlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Jan 2018 08:41:37 -0500
-In-Reply-To: <20180126165219.11913-1-bart.vanassche@wdc.com>
-Content-Language: en-CA
+        id S1753958AbeAaQV5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Jan 2018 11:21:57 -0500
+In-Reply-To: <20180124234347.GA11926@magnolia>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Kravetz <mike.kravetz@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-scsi <linux-scsi@vger.kernel.org>, lsf-pc@lists.linux-foundation.org
 
-On 2018-01-26 11:52 AM, Bart Van Assche wrote:
-> Since commit 64d513ac31bd ("scsi: use host wide tags by default")
-> all SCSI requests have a tag, whether or not scsi-mq is enabled.
-> Additionally, it is safe to use blk_mq_unique_tag() and
-> blk_mq_unique_tag_to_hwq() for legacy SCSI queues. Since this
-> means that the sdebug_mq_active variable is superfluous, remove it.
+On 1/24/18 5:43 PM, Darrick J. Wong wrote:
+> On Wed, Jan 24, 2018 at 01:36:00PM -0800, James Bottomley wrote:
+>> On Wed, 2018-01-24 at 11:20 -0800, Mike Kravetz wrote:
+>>> On 01/24/2018 11:05 AM, James Bottomley wrote:
+>>>>
+>>>> I've got two community style topics, which should probably be
+>>>> discussed
+>>>> in the plenary
+>>>>
+>>>> 1. Patch Submission Process
+>>>>
+>>>> Today we don't have a uniform patch submission process across
+>>>> Storage, Filesystems and MM.  The question is should we (or at
+>>>> least should we adhere to some minimal standards).  The standard
+>>>> we've been trying to hold to in SCSI is one review per accepted
+>>>> non-trivial patch.  For us, it's useful because it encourages
+>>>> driver writers to review each other's patches rather than just
+>>>> posting and then complaining their patch hasn't gone in.  I can
+>>>> certainly think of a couple of bugs I've had to chase in mm where
+>>>> the underlying patches would have benefited from review, so I'd
+>>>> like to discuss making the one review per non-trival patch our base
+>>>> minimum standard across the whole of LSF/MM; it would certainly
+>>>> serve to improve our Reviewed-by statistics.
+>>>
+>>> Well, the mm track at least has some discussion of this last year:
+>>> https://lwn.net/Articles/718212/
+>>
+>> The pushback in your session was mandating reviews would mean slowing
+>> patch acceptance or possibly causing the dropping of patches that
+>> couldn't get reviewed.  Michal did say that XFS didn't have the
+>> problem, however there not being XFS people in the room, discussion
+>> stopped there.
 > 
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Douglas Gilbert <dgilbert@interlog.com>
-
-Ack-ed by Douglas Gilbert <dgilbert@interlog.com>
-
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> ---
->   drivers/scsi/scsi_debug.c | 37 +++++++++++--------------------------
->   1 file changed, 11 insertions(+), 26 deletions(-)
+> I actually /was/ lurking in the session, but a year later I have more
+> thoughts:
 > 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index a5986dae9020..7d2ce0cc915a 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -649,7 +649,6 @@ static bool sdebug_any_injecting_opt;
->   static bool sdebug_verbose;
->   static bool have_dif_prot;
->   static bool sdebug_statistics = DEF_STATISTICS;
-> -static bool sdebug_mq_active;
->   
->   static unsigned int sdebug_store_sectors;
->   static sector_t sdebug_capacity;	/* in sectors */
-> @@ -3727,20 +3726,13 @@ static int resp_xdwriteread_10(struct scsi_cmnd *scp,
->   
->   static struct sdebug_queue *get_queue(struct scsi_cmnd *cmnd)
->   {
-> -	struct sdebug_queue *sqp = sdebug_q_arr;
-> +	u32 tag = blk_mq_unique_tag(cmnd->request);
-> +	u16 hwq = blk_mq_unique_tag_to_hwq(tag);
->   
-> -	if (sdebug_mq_active) {
-> -		u32 tag = blk_mq_unique_tag(cmnd->request);
-> -		u16 hwq = blk_mq_unique_tag_to_hwq(tag);
-> -
-> -		if (unlikely(hwq >= submit_queues)) {
-> -			pr_warn("Unexpected hwq=%d, apply modulo\n", hwq);
-> -			hwq %= submit_queues;
-> -		}
-> -		pr_debug("tag=%u, hwq=%d\n", tag, hwq);
-> -		return sqp + hwq;
-> -	} else
-> -		return sqp;
-> +	pr_debug("tag=%#x, hwq=%d\n", tag, hwq);
-> +	if (WARN_ON_ONCE(hwq >= submit_queues))
-> +		hwq = 0;
-> +	return sdebug_q_arr + hwq;
->   }
->   
->   /* Queued (deferred) command completions converge here. */
-> @@ -4587,9 +4579,8 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
->   		   num_host_resets);
->   	seq_printf(m, "dix_reads=%d, dix_writes=%d, dif_errors=%d\n",
->   		   dix_reads, dix_writes, dif_errors);
-> -	seq_printf(m, "usec_in_jiffy=%lu, %s=%d, mq_active=%d\n",
-> -		   TICK_NSEC / 1000, "statistics", sdebug_statistics,
-> -		   sdebug_mq_active);
-> +	seq_printf(m, "usec_in_jiffy=%lu, statistics=%d\n", TICK_NSEC / 1000,
-> +		   sdebug_statistics);
->   	seq_printf(m, "cmnd_count=%d, completions=%d, %s=%d, a_tsf=%d\n",
->   		   atomic_read(&sdebug_cmnd_count),
->   		   atomic_read(&sdebug_completions),
-> @@ -5612,13 +5603,8 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
->   				n += scnprintf(b + n, sb - n, "%02x ",
->   					       (u32)cmd[k]);
->   		}
-> -		if (sdebug_mq_active)
-> -			sdev_printk(KERN_INFO, sdp, "%s: tag=%u, cmd %s\n",
-> -				    my_name, blk_mq_unique_tag(scp->request),
-> -				    b);
-> -		else
-> -			sdev_printk(KERN_INFO, sdp, "%s: cmd %s\n", my_name,
-> -				    b);
-> +		sdev_printk(KERN_INFO, sdp, "%s: tag=%#x, cmd %s\n", my_name,
-> +			    blk_mq_unique_tag(scp->request), b);
->   	}
->   	if (fake_host_busy(scp))
->   		return SCSI_MLQUEUE_HOST_BUSY;
-> @@ -5782,8 +5768,7 @@ static int sdebug_driver_probe(struct device * dev)
->   	}
->   	/* Decide whether to tell scsi subsystem that we want mq */
->   	/* Following should give the same answer for each host */
-> -	sdebug_mq_active = shost_use_blk_mq(hpnt) && (submit_queues > 1);
-> -	if (sdebug_mq_active)
-> +	if (shost_use_blk_mq(hpnt))
->   		hpnt->nr_hw_queues = submit_queues;
->   
->   	sdbg_host->shost = hpnt;
+> Now that I've been maintainer for more than a year I feel more confident
+> in actually talking about our review processes, though I can only speak
+> about my own experiences and hope the other xfs developers chime in if
+> they choose.
+
+<everything Darrick says sounds pretty much spot on and more eloquent
+than I'm likely to provide, but here goes... >
+
+Mandating reviews certainly can slow down patch acceptance, though I'd
+expect that any good maintainer will be doing at least cursory review
+before commit; when the maintainer writes patches themselves, they /are/
+then at the mercy of others for an RVB: tag.  That hasn't in general
+been a huge problem for us, though things do sometimes require a bit of
+poking and prodding.  But I think that's a feature not a bug.  Obtaining
+at least one meaningful review means that someone else has at least
+some familiarity with the new code.
+
+In the XFS community, in reality we have only about 4 kernelspace
+reviewers, with a /very/ long tail of onesey-twosies; since v4.12:
+
+<lots of 1's>
+      2     Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+      2     Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+      3     Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+      4     Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+      6     Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+      6     Reviewed-by: Jan Kara <jack@suse.cz>
+     10     Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+     60     Reviewed-by: Christoph Hellwig <hch@lst.de>
+    104     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    109     Reviewed-by: Brian Foster <bfoster@redhat.com>
+    208     Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+In userspace things look a little different in the same time period:
+
+      1     Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+      1     Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+      1     Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+      3     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+     11     Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+     12     Reviewed-by: Christoph Hellwig <hch@lst.de>
+     25     Reviewed-by: Brian Foster <bfoster@redhat.com>
+     37     Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+     44     Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Unsurprisingly(?) the maintainers still bear a lot of the review burden, but
+the same workhorse rock stars are clearly present.  In reality it's something
+we need to work on, to try to get more people participating in meaningful review,
+both to speed up the cycle and to grow community knowledge.
+
+Another thing that Darrick and I have bounced around a little bit is
+the adequacy of email for significant review of large feature patchsets.
+On the one hand, we'd like centralized review with archives, because
+that's useful to future code archaeologists.  On the other hand, I can't
+help but think that something like Github's ability to mark up 
+comments line by line would have some advantages, particularly for
+brand new code.
+
+
+
+As for the question of conflict, I'm not sure what to say...  The XFS
+development team has been lucky(?) to have been living in relative peace
+and harmony for the past few years.  Speaking for myself, I try to
+be aware of getting too nitpicky or enforcing preferences vs. requirements,
+and I make an effort to reach out and check in with patch submitters
+to keep things calibrated.  Having the dedicated #xfs channel helps here,
+I think, for higher bandwidth communication about issues when needed.
+I have no doubt that I've annoyed Darrick or Dave or Brian from time to
+time (Dave usually makes this very obvious ;)) but we try to talk to each
+other like humans and it seems to work out ok in the long run.
+
+An expectation of 100% review surely helps here as well; if only 20%
+of patches get reviewed, the reviews may stick out like criticism.  If
+the expectation is that everything is meaningfully reviewed, nobody is
+surprised by feedback when it comes.
+
+> I'd show up, so long as this wasn't scheduled against something else.
+> (IOWs, yes please.)
+
+As would I (if I'm invited) :)  As xfsprogs maintainer I probably have
+some useful insights to our submit/review/commit cycle as well.
+
+Thanks,
+-Eric
+
+> --D
+> 
+>> James
+>>
 > 
