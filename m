@@ -1,53 +1,54 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v5] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Wed, 31 Jan 2018 11:33:49 +0800
-Message-ID: <20180131033348.GA9985@ming.t460p>
-References: <20180130142459.52668-1-snitzer@redhat.com>
-	<43ac2314-c98d-bb76-0dfb-171d15cc5fd8@wdc.com>
-	<7baf8e0f-7a15-4529-c32b-4ce0ee172598@kernel.dk>
-	<1517368861.4421.2.camel@wdc.com>
-	<d563628f-687d-c463-7e7e-d85a52cdf25b@kernel.dk>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 0/6] Six qla2xxx and qla4xxx patches
+Date: Wed, 31 Jan 2018 05:57:55 +0000
+Message-ID: <9E0BB966-2EF3-47A4-9517-2966957B4F9A@cavium.com>
+References: <20180124003351.2616-1-bart.vanassche@wdc.com>
+ <yq1tvv2enju.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <d563628f-687d-c463-7e7e-d85a52cdf25b@kernel.dk>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: "snitzer@redhat.com" <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0051.outbound.protection.outlook.com ([104.47.36.51]:43392
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751289AbeAaF54 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Jan 2018 00:57:56 -0500
+In-Reply-To: <yq1tvv2enju.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <AC8E1C34ADDBD34B88F065E0BC4E55DD@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 30, 2018 at 08:22:27PM -0700, Jens Axboe wrote:
-> On 1/30/18 8:21 PM, Bart Van Assche wrote:
-> > On Tue, 2018-01-30 at 20:17 -0700, Jens Axboe wrote:
-> >> BLK_STS_RESOURCE should always be safe to return, and it should work
-> >> the same as STS_DEV_RESOURCE, except it may cause an extra queue
-> >> run.
-> >>
-> >> Well written drivers should use STS_DEV_RESOURCE where it makes
-> >> sense.
-> > 
-> > Hello Jens,
-> > 
-> > I would appreciate it if other names would be chosen than BLK_STS_RESOURCE
-> > and BLK_STS_DEV_RESOURCE, e.g. names that directly refer to the fact that
-> > one of the two status codes causes the queue to be rerun and the other not.
-> > I'm afraid that the currently chosen names will cause confusion.
-> 
-> DEV_RESOURCE is pretty clear I think, but I agree that STS_RESOURCE
-> could perhaps be better. STS_SYSTEM_RESOURCE? It makes the distinction
+Hi Martin,=20
 
-I guess it still can't cover all, for example, .queue_rq() may not
-submit rq to hardware successfully because of tansport busy, such FC,..
+> On Jan 30, 2018, at 7:04 PM, Martin K. Petersen <martin.petersen@oracle.c=
+om> wrote:
+>=20
+>=20
+> Bart,
+>=20
+>> The patches in this series are what I came up with after having analyzed
+>> the source code of the qla[24]xxx drivers with several source code analy=
+sis
+>> tools (scripts/kernel-doc, gcc, sparse and smatch). None of the patches =
+in
+>> this series have been tested. Yet I'm asking you to consider at least th=
+e
+>> first patch of this series for kernel v4.16 because it fixes a locking b=
+ug
+>> in one of the SCSI patches queued for kernel v4.16.
+>=20
+> Himanshu and team: Please review!
+>=20
 
--- 
-Ming
+Series looks good
+
+Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+
+> --=20
+> Martin K. Petersen	Oracle Linux Engineering
+
+Thanks,
+- Himanshu
