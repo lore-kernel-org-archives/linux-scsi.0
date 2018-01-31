@@ -1,46 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 4.14+ merge
- window
-Date: Wed, 31 Jan 2018 12:16:36 -0800
-Message-ID: <1517429796.3344.10.camel@HansenPartnership.com>
-References: <1517420549.3937.67.camel@HansenPartnership.com>
-         <CA+55aFy4YfNEKiDipUXM_KYR5wen-8hmOp7B7t+=boq14EgdJA@mail.gmail.com>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
+ channel for I/O requests
+Date: Wed, 31 Jan 2018 20:22:58 +0000
+Message-ID: <MWHPR21MB084683CD3983777444DC0F77CEFB0@MWHPR21MB0846.namprd21.prod.outlook.com>
+References: <1516831913-26013-1-git-send-email-mikelley@ntdev.microsoft.com>
+ <DM5PR2101MB1030445CF939E0C6A3BE3AC7DCE20@DM5PR2101MB1030.namprd21.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60530 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752171AbeAaUQh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Jan 2018 15:16:37 -0500
-In-Reply-To: <CA+55aFy4YfNEKiDipUXM_KYR5wen-8hmOp7B7t+=boq14EgdJA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <DM5PR2101MB1030445CF939E0C6A3BE3AC7DCE20@DM5PR2101MB1030.namprd21.prod.outlook.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>, KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 2018-01-31 at 11:29 -0800, Linus Torvalds wrote:
-> On Wed, Jan 31, 2018 at 9:42 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > 
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-
-> > misc
-> 
-> Ok, now I did indeed get that
-> 
->   gpg: Can't check signature: unknown pubkey algorithm
-> 
-> because of your fancy new key. But making git use gpg2 indeed fixes
-> it, since I have a recent enough version.
-> 
-> Let's see if anybody else even notices. I don't think lots of people
-> look at the signatures.
+> Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
+> channel for I/O requests
+>=20
+> Updated/corrected two email addresses ...
+>=20
+> > -----Original Message-----
+> > From: Michael Kelley (EOSG)
+> > Sent: Wednesday, January 24, 2018 2:14 PM
+> > To: KY Srinivasan <kys@microsoft.com>; Stephen Hemminger
+> > <sthemmin@microsoft.com>; martin.petersen@oracle.com;
+> > longi@microsoft.com; JBottomley@odin.com;
+> > devel@linuxdriverproject.org; linux-kernel@vger.kernel.org;
+> > linux-scsi@vger.kernel.org
+> > Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
+> > Subject: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
+> > channel for I/O requests
+> >
+> > Update the algorithm in storvsc_do_io to look for a channel starting
+> > with the current CPU + 1 and wrap around (within the current NUMA
+> > node). This spreads VMbus interrupts more evenly across CPUs. Previous
+> > code always started with first CPU in the current NUMA node, skewing
+> > the interrupt load to that CPU.
+> >
+> > Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+> > ---
+> >  drivers/scsi/storvsc_drv.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> > index e07907d..f3264c4 100644
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -1310,7 +1310,8 @@ static int storvsc_do_io(struct hv_device *device=
+,
+> >  			 */
+> >  			cpumask_and(&alloced_mask, &stor_device-
+> >alloced_cpus,
+> >
+> cpumask_of_node(cpu_to_node(q_num)));
+> > -			for_each_cpu(tgt_cpu, &alloced_mask) {
+> > +			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
+> > +					outgoing_channel->target_cpu + 1) {
 
-Great! thanks for being the guinea pig.  At least we know the theory is
-now tested.
+Does it work when target_cpu is the last CPU on the system?
 
-Regards,
+Otherwise, looking good.
 
-James
+> >  				if (tgt_cpu !=3D outgoing_channel->target_cpu)
+> {
+> >  					outgoing_channel =3D
+> >  					stor_device->stor_chns[tgt_cpu];
+> > --
+> > 1.8.3.1
