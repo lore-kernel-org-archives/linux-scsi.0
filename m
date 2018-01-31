@@ -1,114 +1,36 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: [PATCH] scsi: mpt3sas: fix oops in error handlers after shutdown/unload
-Date: Wed, 31 Jan 2018 17:00:00 -0200
-Message-ID: <1517425200-19126-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: mpt3sas: fix oops in error handlers after
+ shutdown/unload
+Date: Wed, 31 Jan 2018 19:06:01 +0000
+Message-ID: <1517425560.7325.2.camel@wdc.com>
+References: <1517425200-19126-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47580 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750742AbeAaTAh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Jan 2018 14:00:37 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0VIxM1Y086408
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2018 14:00:34 -0500
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2fuhgmnfhx-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2018 14:00:21 -0500
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Wed, 31 Jan 2018 12:00:20 -0700
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:22495 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751163AbeAaTGF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2018 14:06:05 -0500
+In-Reply-To: <1517425200-19126-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Content-Language: en-US
+Content-ID: <358AF9C889076642BCD45ED1C1909CF3@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-This patch adds checks for 'ioc->remove_host' in the SCSI error
-handlers, so not to access pointers/resources potentially freed
-in the PCI shutdown/module unload path.  The error handlers may
-be invoked after shutdown/unload, depending on other components.
-
-This problem was observed with kexec on a system with a mpt3sas
-based adapter and an infiniband adapter which takes long enough
-to shutdown.  The mpt3sas driver finished shuttting down, which
-disabled interruption handling, thus some running commands have
-not finished and timed out.  Since the system was still running,
-waiting for the infiniband adapter to shut down, the scsi error
-handler for task abort of mpt3sas was invoked, and hit the oops
-because 'ioc->scsi_lookup' was NULL.
-
-During patch testing, a different oops happens if host reset is
-reached (when it eventually calls 'mpt3sas_base_get_iocstate()').
-
-The device reset and target reset handlers do not cause oopses,
-but print a misleading message of host reset in progress, thus
-fix those too.
-
-Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index b258f21..3c4e47c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3007,6 +3007,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 		goto out;
- 	}
- 
-+	if (ioc->remove_host) {
-+		scmd->result = DID_NO_CONNECT << 16;
-+		scmd->scsi_done(scmd);
-+		r = SUCCESS;
-+		goto out;
-+	}
-+
- 	/* search for the command */
- 	smid = _scsih_scsi_lookup_find_by_scmd(ioc, scmd);
- 	if (!smid) {
-@@ -3069,6 +3076,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 		goto out;
- 	}
- 
-+	if (ioc->remove_host) {
-+		scmd->result = DID_NO_CONNECT << 16;
-+		scmd->scsi_done(scmd);
-+		r = SUCCESS;
-+		goto out;
-+	}
-+
- 	/* for hidden raid components obtain the volume_handle */
- 	handle = 0;
- 	if (sas_device_priv_data->sas_target->flags &
-@@ -3131,6 +3145,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 		goto out;
- 	}
- 
-+	if (ioc->remove_host) {
-+		scmd->result = DID_NO_CONNECT << 16;
-+		scmd->scsi_done(scmd);
-+		r = SUCCESS;
-+		goto out;
-+	}
-+
- 	/* for hidden raid components obtain the volume_handle */
- 	handle = 0;
- 	if (sas_device_priv_data->sas_target->flags &
-@@ -3179,6 +3200,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 	    ioc->name, scmd);
- 	scsi_print_command(scmd);
- 
-+	if (ioc->remove_host) {
-+		scmd->result = DID_NO_CONNECT << 16;
-+		scmd->scsi_done(scmd);
-+		r = FAILED;
-+		goto out;
-+	}
-+
- 	if (ioc->is_driver_loading) {
- 		pr_info(MPT3SAS_FMT "Blocking the host reset\n",
- 		    ioc->name);
--- 
-1.8.3.1
+T24gV2VkLCAyMDE4LTAxLTMxIGF0IDE3OjAwIC0wMjAwLCBNYXVyaWNpbyBGYXJpYSBkZSBPbGl2
+ZWlyYSB3cm90ZToNCj4gVGhpcyBwcm9ibGVtIHdhcyBvYnNlcnZlZCB3aXRoIGtleGVjIG9uIGEg
+c3lzdGVtIHdpdGggYSBtcHQzc2FzDQo+IGJhc2VkIGFkYXB0ZXIgYW5kIGFuIGluZmluaWJhbmQg
+YWRhcHRlciB3aGljaCB0YWtlcyBsb25nIGVub3VnaA0KPiB0byBzaHV0ZG93bi4gIFRoZSBtcHQz
+c2FzIGRyaXZlciBmaW5pc2hlZCBzaHV0dHRpbmcgZG93biwgd2hpY2gNCj4gZGlzYWJsZWQgaW50
+ZXJydXB0aW9uIGhhbmRsaW5nLCB0aHVzIHNvbWUgcnVubmluZyBjb21tYW5kcyBoYXZlDQo+IG5v
+dCBmaW5pc2hlZCBhbmQgdGltZWQgb3V0LiAgU2luY2UgdGhlIHN5c3RlbSB3YXMgc3RpbGwgcnVu
+bmluZywNCj4gd2FpdGluZyBmb3IgdGhlIGluZmluaWJhbmQgYWRhcHRlciB0byBzaHV0IGRvd24s
+IHRoZSBzY3NpIGVycm9yDQo+IGhhbmRsZXIgZm9yIHRhc2sgYWJvcnQgb2YgbXB0M3NhcyB3YXMg
+aW52b2tlZCwgYW5kIGhpdCB0aGUgb29wcw0KPiBiZWNhdXNlICdpb2MtPnNjc2lfbG9va3VwJyB3
+YXMgTlVMTC4NCg0KU29ycnkgYnV0IEkgdGhpbmsgdGhpcyBwYXRjaCBpbnRyb2R1Y2VzIG5ldyBy
+YWNlIGNvbmRpdGlvbnMuIEhhdmUgeW91DQpjb25zaWRlcmVkIHRvIG1vZGlmeSB0aGUgbXB0M3Nh
+cyBkcml2ZXIgc3VjaCB0aGF0IGludGVycnVwdHMgYXJlIG9ubHkNCmRpc2FibGVkIGFmdGVyIGFs
+bCBjb21tYW5kcyBoYXZlIGZpbmlzaGVkPw0KDQpUaGFua3MsDQoNCkJhcnQu
