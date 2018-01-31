@@ -1,26 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] [SCSI] sym53c8xx_2: iterator underflow in sym_getsync()
-Date: Tue, 30 Jan 2018 21:29:55 -0500
-Message-ID: <yq1k1vyg3q4.fsf@oracle.com>
-References: <20180125141340.GA7299@mwanda>
+Subject: Re: [PATCH] qla2xxx: Avoid triggering undefined behavior in qla2x00_mbx_completion()
+Date: Tue, 30 Jan 2018 21:33:59 -0500
+Message-ID: <yq1bmhag3jc.fsf@oracle.com>
+References: <20180125162429.7962-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20180125141340.GA7299@mwanda> (Dan Carpenter's message of "Thu,
-        25 Jan 2018 17:13:40 +0300")
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:57062 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752532AbeAaCoO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 21:44:14 -0500
+In-Reply-To: <20180125162429.7962-1-bart.vanassche@wdc.com> (Bart Van Assche's
+        message of "Thu, 25 Jan 2018 08:24:29 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Himanshu Madhani <himanshu.madhani@cavium.com>
 
 
-Dan,
+Bart,
 
-> We wanted to exit the loop with "div" set to zero, but instead, if we
-> don't hit the break then "div" is -1 when we finish the loop.  It
-> leads to an array underflow a few lines later.
+> A left shift must shift less than the bit width of the left argument.
+> Avoid triggering undefined behavior if ha->mbx_count == 32.
 
-Applied to 4.16/scsi-fixes, thanks!
+Applied to 4.16/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
