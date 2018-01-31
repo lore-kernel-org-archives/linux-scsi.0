@@ -1,75 +1,71 @@
-From: Michal =?UTF-8?B?U3VjaMOhbmVr?= <msuchanek@suse.de>
-Subject: Re: [PATCH resend 3/6] cdrom: wait for tray to close
-Date: Wed, 31 Jan 2018 19:20:27 +0100
-Message-ID: <20180131192027.070196c1@kitsune.suse.cz>
-References: <cover.1516985620.git.msuchanek@suse.de>
-        <03915a2e64f50ec04ea6d8e6f80e36ecf16e4f0f.1516985620.git.msuchanek@suse.de>
-        <1517245546.2687.17.camel@wdc.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] scsi: storvsc: Increase cmd_per_lun for higher speed
+ devices
+Date: Wed, 31 Jan 2018 18:34:23 +0000
+Message-ID: <DM5PR2101MB088845B6127BBC3BC0B36F4CA0FB0@DM5PR2101MB0888.namprd21.prod.outlook.com>
+References: <1516834132-26273-1-git-send-email-mikelley@ntdev.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1517245546.2687.17.camel@wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "corbet@lwn.net" <corbet@lwn.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "keescook@chromium.org" <keescook@chromium.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kstewart@linuxfoundation.org" <kstewart@linuxfoundation.org>, "pombredanne@nexb.com" <pombredanne@nexb.com>, "bp@alien8.de" <bp@alien8.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "christophe.jaillet@wanadoo.fr" <christophe.jaillet@wanadoo.fr>, "davem@davemloft.net" <davem@davemloft.net>, linux-doc@
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1516834132-26273-1-git-send-email-mikelley@ntdev.microsoft.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>, Stephen
+ Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 29 Jan 2018 17:05:47 +0000
-Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
 
-> On Fri, 2018-01-26 at 17:58 +0100, Michal Suchanek wrote:
-> > +static int cdrom_tray_close(struct cdrom_device_info *cdi)
-> > +{
-> > +	int ret;
-> > +
-> > +	ret = cdi->ops->tray_move(cdi, 0);
-> > +	if (ret || !cdi->ops->drive_status)
-> > +		return ret;
-> > +
-> > +	return poll_event_interruptible(CDS_TRAY_OPEN !=
-> > +			cdi->ops->drive_status(cdi, CDSL_CURRENT),
-> > 500); +}
-> > +
-> >  static
-> >  int open_for_common(struct cdrom_device_info *cdi, tracktype
-> > *tracks) {
-> > @@ -1048,7 +1062,9 @@ int open_for_common(struct cdrom_device_info
-> > *cdi, tracktype *tracks) if (CDROM_CAN(CDC_CLOSE_TRAY) &&
-> >  			    cdi->options & CDO_AUTO_CLOSE) {
-> >  				cd_dbg(CD_OPEN, "trying to close
-> > the tray\n");
-> > -				ret = cdo->tray_move(cdi, 0);
-> > +				ret = cdrom_tray_close(cdi);
-> > +				if (ret == -ERESTARTSYS)
-> > +					return ret;
-> >  				if (ret) {
-> >  					cd_dbg(CD_OPEN, "bummer.
-> > tried to close the tray but failed.\n"); /* Ignore the error from
-> > the low @@ -2312,7 +2328,8 @@ static int
-> > cdrom_ioctl_closetray(struct cdrom_device_info *cdi) 
-> >  	if (!CDROM_CAN(CDC_CLOSE_TRAY))
-> >  		return -ENOSYS;
-> > -	return cdi->ops->tray_move(cdi, 0);
-> > +
-> > +	return cdrom_tray_close(cdi);
-> >  }  
+
+> -----Original Message-----
+> From: Michael Kelley (EOSG)
+> Sent: Wednesday, January 24, 2018 2:50 PM
+> To: KY Srinivasan <kys@microsoft.com>; Stephen Hemminger
+> <sthemmin@microsoft.com>; martin.petersen@oracle.com; Long Li
+> <longli@microsoft.com>; jejb@linux.vnet.ibm.com;
+> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; linux-
+> scsi@vger.kernel.org
+> Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
+> Subject: [PATCH 1/1] scsi: storvsc: Increase cmd_per_lun for higher speed
+> devices
 > 
-> So this patch changes code that does not wait into code that
-> potentially waits forever? Sorry but I don't think that's ideal.
-> Please make sure that after a certain time (a few seconds?) the loop
-> finishes.
+> Increase cmd_per_lun to allow more I/Os in progress per device,
+> particularly for NVMe's.  The Hyper-V host side can handle the
+> higher count with no issues.
+> 
+> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
 
-The problem is that few seconds does not cut it. We are waiting for a
-mechanical tray or CD changer to move. On non-broken hardware the tray
-either closes or an error is reported within a few seconds. For the
-timeout to not race with the event we are waiting for it must be much
-longer, though.
+Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
+Acked-by: K. Y. Srinivasan <kys@microsoft.com>
 
-Also note that this code is only invoked when the user specifically
-requested that the tray gets closed automatically which is off by
-default.
+Thanks,
 
-Thanks
-
-Michal
+K. Y
+> ---
+>  drivers/scsi/storvsc_drv.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index f3264c4..6205107 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1657,7 +1657,7 @@ static int storvsc_queuecommand(struct Scsi_Host
+> *host, struct scsi_cmnd *scmnd)
+>  	.eh_timed_out =		storvsc_eh_timed_out,
+>  	.slave_alloc =		storvsc_device_alloc,
+>  	.slave_configure =	storvsc_device_configure,
+> -	.cmd_per_lun =		255,
+> +	.cmd_per_lun =		2048,
+>  	.this_id =		-1,
+>  	.use_clustering =	ENABLE_CLUSTERING,
+>  	/* Make sure we dont get a sg segment crosses a page boundary */
+> --
+> 1.8.3.1
