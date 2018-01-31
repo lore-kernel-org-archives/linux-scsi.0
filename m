@@ -1,32 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] mpt3sas: fix an out of bound write
-Date: Tue, 30 Jan 2018 21:12:02 -0500
-Message-ID: <yq1a7wuhj4d.fsf@oracle.com>
-References: <20180119152205.5461-1-thenzl@redhat.com>
+Subject: Re: [PATCH] qla2xxx: Fix memory corruption during hba reset test
+Date: Tue, 30 Jan 2018 21:15:06 -0500
+Message-ID: <yq1607ihiz9.fsf@oracle.com>
+References: <20180123190521.11382-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:52610 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752333AbeAaCMO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 21:12:14 -0500
-In-Reply-To: <20180119152205.5461-1-thenzl@redhat.com> (Tomas Henzl's message
-        of "Fri, 19 Jan 2018 16:22:05 +0100")
+Received: from userp2130.oracle.com ([156.151.31.86]:42646 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbeAaCPO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2018 21:15:14 -0500
+In-Reply-To: <20180123190521.11382-1-himanshu.madhani@cavium.com> (Himanshu
+        Madhani's message of "Tue, 23 Jan 2018 11:05:21 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, hare@suse.de
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Tomas,
+Himanshu,
 
-> cpu_msix_table is allocated to store online cpus, but
-> pci_irq_get_affinity may return cpu_possible_mask which is then used
-> to access cpu_msix_table. That causes bad user experience.  Fix
-> limits access to only online cpus, I've also added an additonal test
-> to protect from an unlikely change in cpu_online_mask.
+> This patch fixes memory corrpution while performing
+> HBA Reset test.
 
-Applied to 4.16/scsi-fixes. Thanks!
+Applied to 4.16/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
