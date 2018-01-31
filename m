@@ -1,100 +1,52 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
- channel for I/O requests
-Date: Wed, 31 Jan 2018 21:22:02 +0000
-Message-ID: <MWHPR21MB0846771D9A9BCD5A5ACA2E51CEFB0@MWHPR21MB0846.namprd21.prod.outlook.com>
-References: <1516831913-26013-1-git-send-email-mikelley@ntdev.microsoft.com>
- <DM5PR2101MB1030445CF939E0C6A3BE3AC7DCE20@DM5PR2101MB1030.namprd21.prod.outlook.com>
- <MWHPR21MB084683CD3983777444DC0F77CEFB0@MWHPR21MB0846.namprd21.prod.outlook.com>
- <DM5PR2101MB103010D03B9F6DBF15985814DCFB0@DM5PR2101MB1030.namprd21.prod.outlook.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi_debug: implement IMMED bit
+Date: Wed, 31 Jan 2018 22:05:15 +0000
+Message-ID: <1517436314.7325.6.camel@wdc.com>
+References: <20180130055445.20244-1-dgilbert@interlog.com>
+         <ed3a63f0-2cbb-8fac-fee7-4f08b1e1e8e2@wdc.com>
+         <a59aa2e7-fa26-6e24-9e79-5a14307fb49a@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0113.outbound.protection.outlook.com ([104.47.32.113]:61353
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753219AbeAaVWH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Jan 2018 16:22:07 -0500
-In-Reply-To: <DM5PR2101MB103010D03B9F6DBF15985814DCFB0@DM5PR2101MB1030.namprd21.prod.outlook.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:41753 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753295AbeAaWFS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2018 17:05:18 -0500
+In-Reply-To: <a59aa2e7-fa26-6e24-9e79-5a14307fb49a@interlog.com>
 Content-Language: en-US
+Content-ID: <9622C1602792A248B4E9E8E6ABD0197E@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>, KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
+Cc: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-> Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
-> channel for I/O requests
->=20
-> > From: Long Li
-> > Sent: Wednesday, January 31, 2018 12:23 PM
-> > To: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>; KY
-> > Srinivasan <kys@microsoft.com>; Stephen Hemminger
-> > <sthemmin@microsoft.com>; martin.petersen@oracle.com;
-> > devel@linuxdriverproject.org; linux-kernel@vger.kernel.org;
-> > linux-scsi@vger.kernel.org; James E . J . Bottomley
-> > <jejb@linux.vnet.ibm.com>
-> > Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking
-> > a channel for I/O requests
-> >
-> > > Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when
-> > > picking a channel for I/O requests
-> > >
-> > > Updated/corrected two email addresses ...
-> > >
-> > > > -----Original Message-----
-> > > > From: Michael Kelley (EOSG)
-> > > > Sent: Wednesday, January 24, 2018 2:14 PM
-> > > > To: KY Srinivasan <kys@microsoft.com>; Stephen Hemminger
-> > > > <sthemmin@microsoft.com>; martin.petersen@oracle.com;
-> > > > longi@microsoft.com; JBottomley@odin.com;
-> > > > devel@linuxdriverproject.org; linux-kernel@vger.kernel.org;
-> > > > linux-scsi@vger.kernel.org
-> > > > Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
-> > > > Subject: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking
-> > > > a channel for I/O requests
-> > > >
-> > > > Update the algorithm in storvsc_do_io to look for a channel
-> > > > starting with the current CPU + 1 and wrap around (within the
-> > > > current NUMA node). This spreads VMbus interrupts more evenly
-> > > > across CPUs. Previous code always started with first CPU in the
-> > > > current NUMA node, skewing the interrupt load to that CPU.
-> > > >
-> > > > Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-
-Reviewed-by: Long Li <longli@microsoft.com>
-
-> > > > ---
-> > > >  drivers/scsi/storvsc_drv.c | 3 ++-
-> > > >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > > >
-> > > > diff --git a/drivers/scsi/storvsc_drv.c
-> > > > b/drivers/scsi/storvsc_drv.c index e07907d..f3264c4 100644
-> > > > --- a/drivers/scsi/storvsc_drv.c
-> > > > +++ b/drivers/scsi/storvsc_drv.c
-> > > > @@ -1310,7 +1310,8 @@ static int storvsc_do_io(struct hv_device
-> *device,
-> > > >  			 */
-> > > >  			cpumask_and(&alloced_mask, &stor_device-
-> alloced_cpus,
-> > > >
-> > > cpumask_of_node(cpu_to_node(q_num)));
-> > > > -			for_each_cpu(tgt_cpu, &alloced_mask) {
-> > > > +			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
-> > > > +					outgoing_channel->target_cpu + 1) {
-> >
-> > Does it work when target_cpu is the last CPU on the system?
-> >
-> > Otherwise, looking good.
->=20
-> Yes, it works.  for_each_cpu_wrap() correctly wraps in the case where the
-> 3rd parameter ('start') is one past the end of the mask.  Arguably, we
-> shouldn't rely on that, and should do the wrap to 0 before calling
-> for_each_cpu_wrap().
->=20
-> >
-> > > >  				if (tgt_cpu !=3D outgoing_channel->target_cpu)
-> > > {
-> > > >  					outgoing_channel =3D
-> > > >  					stor_device->stor_chns[tgt_cpu];
-> > > > --
-> > > > 1.8.3.1
+T24gV2VkLCAyMDE4LTAxLTMxIGF0IDE1OjI2IC0wNTAwLCBEb3VnbGFzIEdpbGJlcnQgd3JvdGU6
+DQo+IE9uIDIwMTgtMDEtMzEgMTI6MDYgUE0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBP
+biAwMS8yOS8xOCAyMTo1NCwgRG91Z2xhcyBHaWxiZXJ0IHdyb3RlOg0KPiA+ID4gK3N0YXRpYyBj
+b25zdCBzdHJ1Y3Qgb3Bjb2RlX2luZm9fdCBzeW5jX2NhY2hlX2lhcnJbXSA9IHsNCj4gPiA+ICsg
+ICAgezAsIDB4OTEsIDAsIEZfTE9OR19ERUxBWSB8IEZfTV9BQ0NFU1MsIHJlc3Bfc3luY19jYWNo
+ZSwgTlVMTCwNCj4gPiA+ICsgICAgICAgIHsxNiwgIDB4NywgMHhmZiwgMHhmZiwgMHhmZiwgMHhm
+ZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwNCj4gPiANCj4gPiAgICAgICAgICAgICAgICAgICAg
+Xl5eDQo+ID4gQ2FuIHlvdSBjbGFyaWZ5IHRoZSBjaG9pY2Ugb2YgIjB4NyIgaW4gdGhlIGFib3Zl
+PyBBZnRlciBoYXZpbmcgaGFkIGEgbG9vayBhdCANCj4gPiBTQkMtNCBJIHdhcyBleHBlY3Rpbmcg
+MHgyICh0aGUgbWFzayBmb3IgdGhlIElNTUVEIGJpdCkgc2luY2UgYWxsIG90aGVyIGJpdHMgaW4g
+DQo+ID4gdGhhdCBjb21tYW5kIGJ5dGUgYXJlIGVpdGhlciByZXNlcnZlZCBvciBvYnNvbGV0ZS4N
+Cj4gDQo+IEFzIGEgZ2VuZXJhbCBydWxlIHdoZW4geW91IHNlZSAib2Jzb2xldGUiIHRoYXQgbWVh
+bnMgdGhhdCBmaWVsZCB3YXMgdXNlZA0KPiBpbiBhbiBlYXJsaWVyIHN0YW5kYXJkIChiaXQgMCB3
+YXMgUkVMQUREUiBhbmQgYml0IDIgd2FzIFNZTkNfTlYpLiBTbw0KPiBhcHBsaWNhdGlvbiBjbGll
+bnRzIGNvbXBseWluZyB3aXRoIGVhcmxpZXIgdmVyc2lvbnMgb2YgU0JDIG1pZ2h0IHNldCB0aG9z
+ZQ0KPiBiaXRzLiBJZiB0aGV5IGFyZSBzZXQgYW5kIHRoZSBtYXNrIGlzIGJlaW5nIGVuZm9yY2Vk
+IEkgY2hvb3NlIHRvIG5vdCBmYWlsDQo+IHRoZSBjb21tYW5kIGFzIGFuIGlsbGVnYWwgcmVxdWVz
+dC4gQmFzaWNhbGx5IGFjY2VwdCBhbmQgaWdub3JlLg0KDQpJIGFncmVlIHdpdGggc2V0dGluZyBi
+aXRzIGZvciBvYnNvbGV0ZSBmbGFncy4gVGhlIHJlYXNvbiBJIHdhcyBhc2tpbmcgYWJvdXQgdGhh
+dA0KbWFzayBpcyBiZWNhdXNlIEkgZm91bmQgdGhlIGZvbGxvd2luZyBpbiBTQkMtNCBmb3IgYnl0
+ZSAxIG9mIFNZTkNIUk9OSVpFIENBQ0hFKDE2KToNCiogQml0cyA3Li4zOiByZXNlcnZlZC4NCiog
+Qml0IDI6IG9ic29sZXRlLg0KKiBCaXQgMTogSU1NRUQuDQoqIEJpdCAwOiByZXNlcnZlZC4NCg0K
+PiA+ID4gLSAgICByZXR1cm4gMDsNCj4gPiA+ICsgICAgcmV0dXJuIChjbWRbMV0gJiAweDEpID8g
+U0RFR19SRVNfSU1NRURfTUFTSyA6IDA7IC8qIGNoZWNrIElNTUVEIGJpdCAqLw0KPiA+IA0KPiA+
+IFNob3VsZG4ndCB0aGUgbWFzayAweDIgYmUgdXNlZCB0byBjaGVjayBmb3IgdGhlIElNTUVEIGJp
+dD8NCj4gDQo+IFRoYXQgY29tbWVudCBuZWVkcyBhIGxpdHRsZSBtb3JlIGNvbnRleHQ6DQoNClNv
+cnJ5LCBJIGNvbmZ1c2VkIGJ5dGUgMSBvZiB0aGUgU1RBUlQgU1RPUCBjb21tYW5kIHdpdGggdGhh
+dCBvZiB0aGUgU1lOQ0hST05JWkUNCkNBQ0hFIGNvbW1hbmQgc28gcGxlYXNlIGlnbm9yZSB0aGUg
+YWJvdmUgY29tbWVudC4NCg0KQmFydC4=
