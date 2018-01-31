@@ -1,70 +1,64 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
- channel for I/O requests
-Date: Wed, 31 Jan 2018 20:22:58 +0000
-Message-ID: <MWHPR21MB084683CD3983777444DC0F77CEFB0@MWHPR21MB0846.namprd21.prod.outlook.com>
-References: <1516831913-26013-1-git-send-email-mikelley@ntdev.microsoft.com>
- <DM5PR2101MB1030445CF939E0C6A3BE3AC7DCE20@DM5PR2101MB1030.namprd21.prod.outlook.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: implement IMMED bit
+Date: Wed, 31 Jan 2018 15:26:14 -0500
+Message-ID: <a59aa2e7-fa26-6e24-9e79-5a14307fb49a@interlog.com>
+References: <20180130055445.20244-1-dgilbert@interlog.com>
+ <ed3a63f0-2cbb-8fac-fee7-4f08b1e1e8e2@wdc.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <DM5PR2101MB1030445CF939E0C6A3BE3AC7DCE20@DM5PR2101MB1030.namprd21.prod.outlook.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>, KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:33713 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751296AbeAaU0Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Jan 2018 15:26:25 -0500
+In-Reply-To: <ed3a63f0-2cbb-8fac-fee7-4f08b1e1e8e2@wdc.com>
+Content-Language: en-CA
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hare@suse.de
 
-> Subject: RE: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
-> channel for I/O requests
->=20
-> Updated/corrected two email addresses ...
->=20
-> > -----Original Message-----
-> > From: Michael Kelley (EOSG)
-> > Sent: Wednesday, January 24, 2018 2:14 PM
-> > To: KY Srinivasan <kys@microsoft.com>; Stephen Hemminger
-> > <sthemmin@microsoft.com>; martin.petersen@oracle.com;
-> > longi@microsoft.com; JBottomley@odin.com;
-> > devel@linuxdriverproject.org; linux-kernel@vger.kernel.org;
-> > linux-scsi@vger.kernel.org
-> > Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
-> > Subject: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
-> > channel for I/O requests
-> >
-> > Update the algorithm in storvsc_do_io to look for a channel starting
-> > with the current CPU + 1 and wrap around (within the current NUMA
-> > node). This spreads VMbus interrupts more evenly across CPUs. Previous
-> > code always started with first CPU in the current NUMA node, skewing
-> > the interrupt load to that CPU.
-> >
-> > Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-> > ---
-> >  drivers/scsi/storvsc_drv.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > index e07907d..f3264c4 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -1310,7 +1310,8 @@ static int storvsc_do_io(struct hv_device *device=
-,
-> >  			 */
-> >  			cpumask_and(&alloced_mask, &stor_device-
-> >alloced_cpus,
-> >
-> cpumask_of_node(cpu_to_node(q_num)));
-> > -			for_each_cpu(tgt_cpu, &alloced_mask) {
-> > +			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
-> > +					outgoing_channel->target_cpu + 1) {
+On 2018-01-31 12:06 PM, Bart Van Assche wrote:
+> On 01/29/18 21:54, Douglas Gilbert wrote:
+>> +static const struct opcode_info_t sync_cache_iarr[] = {
+>> +    {0, 0x91, 0, F_LONG_DELAY | F_M_ACCESS, resp_sync_cache, NULL,
+>> +        {16,  0x7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+>                    ^^^
+> Can you clarify the choice of "0x7" in the above? After having had a look at 
+> SBC-4 I was expecting 0x2 (the mask for the IMMED bit) since all other bits in 
+> that command byte are either reserved or obsolete.
 
-Does it work when target_cpu is the last CPU on the system?
+As a general rule when you see "obsolete" that means that field was used
+in an earlier standard (bit 0 was RELADDR and bit 2 was SYNC_NV). So
+application clients complying with earlier versions of SBC might set those
+bits. If they are set and the mask is being enforced I choose to not fail
+the command as an illegal request. Basically accept and ignore.
 
-Otherwise, looking good.
+>> -    return 0;
+>> +    return (cmd[1] & 0x1) ? SDEG_RES_IMMED_MASK : 0; /* check IMMED bit */
+> 
+> Shouldn't the mask 0x2 be used to check for the IMMED bit?
 
-> >  				if (tgt_cpu !=3D outgoing_channel->target_cpu)
-> {
-> >  					outgoing_channel =3D
-> >  					stor_device->stor_chns[tgt_cpu];
-> > --
-> > 1.8.3.1
+That comment needs a little more context:
+
+@@ -1597,7 +1614,7 @@ static int resp_start_stop(struct scsi_cmnd * scp,
+         }
+         stop = !(cmd[4] & 1);
+         atomic_xchg(&devip->stopped, stop);
+-       return 0;
++       return (cmd[1] & 0x1) ? SDEG_RES_IMMED_MASK : 0; /* check IMMED bit */
+
+
+For START STOP UNIT the IMMED flag is byte 1, bit 0. So that code
+is correct IMO.
+
+
+And for SYNCHRONIZE CACHE(10 and 16) the IMMED flag is byte 1 bit 1
+so the corresponding return statement is:
+
++       return (cmd[1] & 0x2) ? SDEG_RES_IMMED_MASK : 0; /* check IMMED bit */
+
+
+Doug Gilbert
