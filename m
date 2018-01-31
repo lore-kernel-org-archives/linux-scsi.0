@@ -1,71 +1,114 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] scsi: storvsc: Increase cmd_per_lun for higher speed
- devices
-Date: Wed, 31 Jan 2018 18:34:23 +0000
-Message-ID: <DM5PR2101MB088845B6127BBC3BC0B36F4CA0FB0@DM5PR2101MB0888.namprd21.prod.outlook.com>
-References: <1516834132-26273-1-git-send-email-mikelley@ntdev.microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1516834132-26273-1-git-send-email-mikelley@ntdev.microsoft.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>, Stephen
- Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH] scsi: mpt3sas: fix oops in error handlers after shutdown/unload
+Date: Wed, 31 Jan 2018 17:00:00 -0200
+Message-ID: <1517425200-19126-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47580 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750742AbeAaTAh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Jan 2018 14:00:37 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0VIxM1Y086408
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2018 14:00:34 -0500
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2fuhgmnfhx-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2018 14:00:21 -0500
+Received: from localhost
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Wed, 31 Jan 2018 12:00:20 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
+This patch adds checks for 'ioc->remove_host' in the SCSI error
+handlers, so not to access pointers/resources potentially freed
+in the PCI shutdown/module unload path.  The error handlers may
+be invoked after shutdown/unload, depending on other components.
 
+This problem was observed with kexec on a system with a mpt3sas
+based adapter and an infiniband adapter which takes long enough
+to shutdown.  The mpt3sas driver finished shuttting down, which
+disabled interruption handling, thus some running commands have
+not finished and timed out.  Since the system was still running,
+waiting for the infiniband adapter to shut down, the scsi error
+handler for task abort of mpt3sas was invoked, and hit the oops
+because 'ioc->scsi_lookup' was NULL.
 
-> -----Original Message-----
-> From: Michael Kelley (EOSG)
-> Sent: Wednesday, January 24, 2018 2:50 PM
-> To: KY Srinivasan <kys@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; martin.petersen@oracle.com; Long Li
-> <longli@microsoft.com>; jejb@linux.vnet.ibm.com;
-> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; linux-
-> scsi@vger.kernel.org
-> Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
-> Subject: [PATCH 1/1] scsi: storvsc: Increase cmd_per_lun for higher speed
-> devices
-> 
-> Increase cmd_per_lun to allow more I/Os in progress per device,
-> particularly for NVMe's.  The Hyper-V host side can handle the
-> higher count with no issues.
-> 
-> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+During patch testing, a different oops happens if host reset is
+reached (when it eventually calls 'mpt3sas_base_get_iocstate()').
 
-Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+The device reset and target reset handlers do not cause oopses,
+but print a misleading message of host reset in progress, thus
+fix those too.
 
-Thanks,
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-K. Y
-> ---
->  drivers/scsi/storvsc_drv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index f3264c4..6205107 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1657,7 +1657,7 @@ static int storvsc_queuecommand(struct Scsi_Host
-> *host, struct scsi_cmnd *scmnd)
->  	.eh_timed_out =		storvsc_eh_timed_out,
->  	.slave_alloc =		storvsc_device_alloc,
->  	.slave_configure =	storvsc_device_configure,
-> -	.cmd_per_lun =		255,
-> +	.cmd_per_lun =		2048,
->  	.this_id =		-1,
->  	.use_clustering =	ENABLE_CLUSTERING,
->  	/* Make sure we dont get a sg segment crosses a page boundary */
-> --
-> 1.8.3.1
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index b258f21..3c4e47c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3007,6 +3007,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 		goto out;
+ 	}
+ 
++	if (ioc->remove_host) {
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		r = SUCCESS;
++		goto out;
++	}
++
+ 	/* search for the command */
+ 	smid = _scsih_scsi_lookup_find_by_scmd(ioc, scmd);
+ 	if (!smid) {
+@@ -3069,6 +3076,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 		goto out;
+ 	}
+ 
++	if (ioc->remove_host) {
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		r = SUCCESS;
++		goto out;
++	}
++
+ 	/* for hidden raid components obtain the volume_handle */
+ 	handle = 0;
+ 	if (sas_device_priv_data->sas_target->flags &
+@@ -3131,6 +3145,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 		goto out;
+ 	}
+ 
++	if (ioc->remove_host) {
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		r = SUCCESS;
++		goto out;
++	}
++
+ 	/* for hidden raid components obtain the volume_handle */
+ 	handle = 0;
+ 	if (sas_device_priv_data->sas_target->flags &
+@@ -3179,6 +3200,13 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	    ioc->name, scmd);
+ 	scsi_print_command(scmd);
+ 
++	if (ioc->remove_host) {
++		scmd->result = DID_NO_CONNECT << 16;
++		scmd->scsi_done(scmd);
++		r = FAILED;
++		goto out;
++	}
++
+ 	if (ioc->is_driver_loading) {
+ 		pr_info(MPT3SAS_FMT "Blocking the host reset\n",
+ 		    ioc->name);
+-- 
+1.8.3.1
