@@ -1,50 +1,135 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 2/2] qla2xxx: Fix incorrect handle for abort IOCB
-Date: Thu, 1 Feb 2018 10:33:18 -0800
-Message-ID: <20180201183318.587-3-himanshu.madhani@cavium.com>
+Subject: [PATCH 1/2] qla2xxx: Fix double free bug after firmware timeout
+Date: Thu, 1 Feb 2018 10:33:17 -0800
+Message-ID: <20180201183318.587-2-himanshu.madhani@cavium.com>
 References: <20180201183318.587-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0061.outbound.protection.outlook.com ([104.47.33.61]:41024
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0078.outbound.protection.outlook.com ([104.47.40.78]:26720
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751567AbeBASdi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Feb 2018 13:33:38 -0500
+        id S1751567AbeBASdt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Feb 2018 13:33:49 -0500
 In-Reply-To: <20180201183318.587-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-This patch fixes incorrect handle used for abort IOCB.
+From: Quinn Tran <quinn.tran@cavium.com>
 
-Fixes: b027a5ace443 ("scsi: qla2xxx: Fix queue ID for async abort with Multiqueue")
-Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
+This patch is based on Max's original patch.
+
+When the qla2xxx firmware is unavailable, eventually
+qla2x00_sp_timeout() is reached, which calls the timeout function and
+frees the srb_t instance.
+
+The timeout function always resolves to qla2x00_async_iocb_timeout(),
+which invokes another callback function called "done".  All of these
+qla2x00_*_sp_done() callbacks also free the srb_t instance; after
+returning to qla2x00_sp_timeout(), it is freed again.
+
+The fix is to remove the "sp->free(sp)" call from qla2x00_sp_timeout()
+and add it to those code paths in qla2x00_async_iocb_timeout() which
+do not already free the object.
+
+This is how it looks like with KASAN:
+
+BUG: KASAN: use-after-free in qla2x00_sp_timeout+0x228/0x250
+Read of size 8 at addr ffff88278147a590 by task swapper/2/0
+
+Allocated by task 1502:
+save_stack+0x33/0xa0
+kasan_kmalloc+0xa0/0xd0
+kmem_cache_alloc+0xb8/0x1c0
+mempool_alloc+0xd6/0x260
+qla24xx_async_gnl+0x3c5/0x1100
+
+Freed by task 0:
+save_stack+0x33/0xa0
+kasan_slab_free+0x72/0xc0
+kmem_cache_free+0x75/0x200
+qla24xx_async_gnl_sp_done+0x556/0x9e0
+qla2x00_async_iocb_timeout+0x1c7/0x420
+qla2x00_sp_timeout+0x16d/0x250
+call_timer_fn+0x36/0x200
+
+The buggy address belongs to the object at ffff88278147a440
+which belongs to the cache qla2xxx_srbs of size 344
+The buggy address is located 336 bytes inside of
+344-byte region [ffff88278147a440, ffff88278147a598)
+
+Reported-by: Max Kellermann <mk@cm4all.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: Max Kellermann <mk@cm4all.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 23 +++--------------------
+ 1 file changed, 3 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 1b62e943ec49..8d00d559bd26 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -3275,12 +3275,11 @@ qla24xx_abort_iocb(srb_t *sp, struct abort_entry_24xx *abt_iocb)
- 	memset(abt_iocb, 0, sizeof(struct abort_entry_24xx));
- 	abt_iocb->entry_type = ABORT_IOCB_TYPE;
- 	abt_iocb->entry_count = 1;
--	abt_iocb->handle =
--	     cpu_to_le32(MAKE_HANDLE(aio->u.abt.req_que_no,
--		 aio->u.abt.cmd_hndl));
-+	abt_iocb->handle = cpu_to_le32(MAKE_HANDLE(req->id, sp->handle));
- 	abt_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
- 	abt_iocb->handle_to_abort =
--	    cpu_to_le32(MAKE_HANDLE(req->id, aio->u.abt.cmd_hndl));
-+	    cpu_to_le32(MAKE_HANDLE(aio->u.abt.req_que_no,
-+				    aio->u.abt.cmd_hndl));
- 	abt_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
- 	abt_iocb->port_id[1] = sp->fcport->d_id.b.area;
- 	abt_iocb->port_id[2] = sp->fcport->d_id.b.domain;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index aececf664654..2dea1129d396 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -59,8 +59,6 @@ qla2x00_sp_timeout(struct timer_list *t)
+ 	req->outstanding_cmds[sp->handle] = NULL;
+ 	iocb = &sp->u.iocb_cmd;
+ 	iocb->timeout(sp);
+-	if (sp->type != SRB_ELS_DCMD)
+-		sp->free(sp);
+ 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+ }
+ 
+@@ -102,7 +100,6 @@ qla2x00_async_iocb_timeout(void *data)
+ 	srb_t *sp = data;
+ 	fc_port_t *fcport = sp->fcport;
+ 	struct srb_iocb *lio = &sp->u.iocb_cmd;
+-	struct event_arg ea;
+ 
+ 	if (fcport) {
+ 		ql_dbg(ql_dbg_disc, fcport->vha, 0x2071,
+@@ -117,25 +114,13 @@ qla2x00_async_iocb_timeout(void *data)
+ 
+ 	switch (sp->type) {
+ 	case SRB_LOGIN_CMD:
+-		if (!fcport)
+-			break;
+ 		/* Retry as needed. */
+ 		lio->u.logio.data[0] = MBS_COMMAND_ERROR;
+ 		lio->u.logio.data[1] = lio->u.logio.flags & SRB_LOGIN_RETRIED ?
+ 			QLA_LOGIO_LOGIN_RETRIED : 0;
+-		memset(&ea, 0, sizeof(ea));
+-		ea.event = FCME_PLOGI_DONE;
+-		ea.fcport = sp->fcport;
+-		ea.data[0] = lio->u.logio.data[0];
+-		ea.data[1] = lio->u.logio.data[1];
+-		ea.sp = sp;
+-		qla24xx_handle_plogi_done_event(fcport->vha, &ea);
++		sp->done(sp, QLA_FUNCTION_TIMEOUT);
+ 		break;
+ 	case SRB_LOGOUT_CMD:
+-		if (!fcport)
+-			break;
+-		qlt_logo_completion_handler(fcport, QLA_FUNCTION_TIMEOUT);
+-		break;
+ 	case SRB_CT_PTHRU_CMD:
+ 	case SRB_MB_IOCB:
+ 	case SRB_NACK_PLOGI:
+@@ -235,12 +220,10 @@ static void
+ qla2x00_async_logout_sp_done(void *ptr, int res)
+ {
+ 	srb_t *sp = ptr;
+-	struct srb_iocb *lio = &sp->u.iocb_cmd;
+ 
+ 	sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
+-	if (!test_bit(UNLOADING, &sp->vha->dpc_flags))
+-		qla2x00_post_async_logout_done_work(sp->vha, sp->fcport,
+-		    lio->u.logio.data);
++	sp->fcport->login_gen++;
++	qlt_logo_completion_handler(sp->fcport, res);
+ 	sp->free(sp);
+ }
+ 
 -- 
 2.12.0
