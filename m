@@ -1,135 +1,76 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 1/2] qla2xxx: Fix double free bug after firmware timeout
-Date: Thu, 1 Feb 2018 10:33:17 -0800
-Message-ID: <20180201183318.587-2-himanshu.madhani@cavium.com>
-References: <20180201183318.587-1-himanshu.madhani@cavium.com>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: mpt3sas: fix oops in error handlers after
+ shutdown/unload
+Date: Thu, 1 Feb 2018 17:54:57 -0200
+Message-ID: <087b2636-5bc7-2771-774b-6808756e7315@linux.vnet.ibm.com>
+References: <1517425200-19126-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+ <1517425560.7325.2.camel@wdc.com>
+ <6abeeab8-00f8-3a8f-2ccd-21aaefac65fc@linux.vnet.ibm.com>
+ <1517439544.7325.13.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0078.outbound.protection.outlook.com ([104.47.40.78]:26720
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751567AbeBASdt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Feb 2018 13:33:49 -0500
-In-Reply-To: <20180201183318.587-1-himanshu.madhani@cavium.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54946 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754904AbeBATzJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 14:55:09 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w11Js9MZ058469
+        for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2018 14:55:08 -0500
+Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2fv7xrm3pr-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Feb 2018 14:55:08 -0500
+Received: from localhost
+        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Thu, 1 Feb 2018 14:55:07 -0500
+In-Reply-To: <1517439544.7325.13.camel@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-From: Quinn Tran <quinn.tran@cavium.com>
+On 01/31/2018 08:59 PM, Bart Van Assche wrote:
+> On Wed, 2018-01-31 at 17:48 -0200, Mauricio Faria de Oliveira wrote:
+>> On 01/31/2018 05:06 PM, Bart Van Assche wrote:
+>>> Sorry but I think this patch introduces new race conditions. Have you
 
-This patch is based on Max's original patch.
+>> Can you detail the race conditions? As far as I can see, the only race
+>> condition would be when an error handler is invoked very close in time
+>> to the shutdown/unload handler, and as such miss the 'ioc->remove_host'
+>> assignment (thus it continues running anyway, and hit the oops).
 
-When the qla2xxx firmware is unavailable, eventually
-qla2x00_sp_timeout() is reached, which calls the timeout function and
-frees the srb_t instance.
+> That's indeed the race I was referring to. [snip]
 
-The timeout function always resolves to qla2x00_async_iocb_timeout(),
-which invokes another callback function called "done".  All of these
-qla2x00_*_sp_done() callbacks also free the srb_t instance; after
-returning to qla2x00_sp_timeout(), it is freed again.
+Okay.  I'm not sure that point invalidates this patch; let me explain.
 
-The fix is to remove the "sp->free(sp)" call from qla2x00_sp_timeout()
-and add it to those code paths in qla2x00_async_iocb_timeout() which
-do not already free the object.
+First, IMHO that problem already exists in mpt3sas as it is now.
 
-This is how it looks like with KASAN:
+There are 17 checks for 'ioc->remove_host' to return early, in the
+same manner.  AFAIK, those are subject to this same race condition.
 
-BUG: KASAN: use-after-free in qla2x00_sp_timeout+0x228/0x250
-Read of size 8 at addr ffff88278147a590 by task swapper/2/0
+   $ grep -r 'ioc->remove_host[^=]*$' drivers/scsi/mpt3sas/ | wc -l
+   17
 
-Allocated by task 1502:
-save_stack+0x33/0xa0
-kasan_kmalloc+0xa0/0xd0
-kmem_cache_alloc+0xb8/0x1c0
-mempool_alloc+0xd6/0x260
-qla24xx_async_gnl+0x3c5/0x1100
+Second, I don't think this patch makes the driver any worse.
 
-Freed by task 0:
-save_stack+0x33/0xa0
-kasan_slab_free+0x72/0xc0
-kmem_cache_free+0x75/0x200
-qla24xx_async_gnl_sp_done+0x556/0x9e0
-qla2x00_async_iocb_timeout+0x1c7/0x420
-qla2x00_sp_timeout+0x16d/0x250
-call_timer_fn+0x36/0x200
+Even with the potential race condition (which already exists elsewhere
+in the driver), it reduces the chance to hit an oops from _every time_
+to only when the race condition occurs _and_ the error handler looses.
 
-The buggy address belongs to the object at ffff88278147a440
-which belongs to the cache qla2xxx_srbs of size 344
-The buggy address is located 336 bytes inside of
-344-byte region [ffff88278147a440, ffff88278147a598)
+So, even not being completely safe (like other parts of the driver),
+it still does help.
 
-Reported-by: Max Kellermann <mk@cm4all.com>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: Max Kellermann <mk@cm4all.com>
----
- drivers/scsi/qla2xxx/qla_init.c | 23 +++--------------------
- 1 file changed, 3 insertions(+), 20 deletions(-)
+> BTW, are you aware that your patch
+> does not seem to apply on Martin's tree (the fixes branch of
+> git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git):
+ > [snip]
+> Can you rebase this patch on top of Martin's tree?
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index aececf664654..2dea1129d396 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -59,8 +59,6 @@ qla2x00_sp_timeout(struct timer_list *t)
- 	req->outstanding_cmds[sp->handle] = NULL;
- 	iocb = &sp->u.iocb_cmd;
- 	iocb->timeout(sp);
--	if (sp->type != SRB_ELS_DCMD)
--		sp->free(sp);
- 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
- }
- 
-@@ -102,7 +100,6 @@ qla2x00_async_iocb_timeout(void *data)
- 	srb_t *sp = data;
- 	fc_port_t *fcport = sp->fcport;
- 	struct srb_iocb *lio = &sp->u.iocb_cmd;
--	struct event_arg ea;
- 
- 	if (fcport) {
- 		ql_dbg(ql_dbg_disc, fcport->vha, 0x2071,
-@@ -117,25 +114,13 @@ qla2x00_async_iocb_timeout(void *data)
- 
- 	switch (sp->type) {
- 	case SRB_LOGIN_CMD:
--		if (!fcport)
--			break;
- 		/* Retry as needed. */
- 		lio->u.logio.data[0] = MBS_COMMAND_ERROR;
- 		lio->u.logio.data[1] = lio->u.logio.flags & SRB_LOGIN_RETRIED ?
- 			QLA_LOGIO_LOGIN_RETRIED : 0;
--		memset(&ea, 0, sizeof(ea));
--		ea.event = FCME_PLOGI_DONE;
--		ea.fcport = sp->fcport;
--		ea.data[0] = lio->u.logio.data[0];
--		ea.data[1] = lio->u.logio.data[1];
--		ea.sp = sp;
--		qla24xx_handle_plogi_done_event(fcport->vha, &ea);
-+		sp->done(sp, QLA_FUNCTION_TIMEOUT);
- 		break;
- 	case SRB_LOGOUT_CMD:
--		if (!fcport)
--			break;
--		qlt_logo_completion_handler(fcport, QLA_FUNCTION_TIMEOUT);
--		break;
- 	case SRB_CT_PTHRU_CMD:
- 	case SRB_MB_IOCB:
- 	case SRB_NACK_PLOGI:
-@@ -235,12 +220,10 @@ static void
- qla2x00_async_logout_sp_done(void *ptr, int res)
- {
- 	srb_t *sp = ptr;
--	struct srb_iocb *lio = &sp->u.iocb_cmd;
- 
- 	sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
--	if (!test_bit(UNLOADING, &sp->vha->dpc_flags))
--		qla2x00_post_async_logout_done_work(sp->vha, sp->fcport,
--		    lio->u.logio.data);
-+	sp->fcport->login_gen++;
-+	qlt_logo_completion_handler(sp->fcport, res);
- 	sp->free(sp);
- }
- 
--- 
-2.12.0
+Yes, sure. I'll rebase, test, and send v2. Thanks for the pointer.
+
+cheers,
+Mauricio
