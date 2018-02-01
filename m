@@ -1,52 +1,94 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: scsi: sg: assorted memory corruptions
-Date: Thu, 1 Feb 2018 17:21:12 +0100
-Message-ID: <CACT4Y+ZEJ9_no0uQSXO66iyyUeJLn_zbPBEey62YkuzOEUMP2w@mail.gmail.com>
-References: <CACT4Y+b0pizvOAxtWQ-TGCRAYvHXdv79BAEaXh50W6vF8gBvkQ@mail.gmail.com>
- <1516638634.2545.0.camel@wdc.com> <097921fa-52c5-8b2b-f564-4b24d9720478@interlog.com>
- <CACT4Y+aEx0ie3qjx6afCYV2vN7gYii0uupKWPXaNTnWUmhdHQw@mail.gmail.com>
- <c0a7ec39-e357-9db6-cf12-ff9c46259f26@interlog.com> <CACT4Y+bObXrFiB0Qn+nfkD8DZRiVck1GJ5U9UeQz+-y85gh70Q@mail.gmail.com>
- <1517501859.3417.67.camel@codethink.co.uk>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH v4 00/10] ufs: sysfs: read-only access to device descriptors, attributes and flags
+Date: Thu, 01 Feb 2018 10:48:53 -0600
+Message-ID: <87y3kck64q.fsf@xmission.com>
+References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1517501859.3417.67.camel@codethink.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ben Hutchings <ben.hutchings@codethink.co.uk>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
-Cc: Doug Gilbert <dgilbert@interlog.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
+        (Stanislav Nijnikov's message of "Thu, 1 Feb 2018 18:15:36 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org, alex.lemberg@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 1, 2018 at 5:17 PM, Ben Hutchings
-<ben.hutchings@codethink.co.uk> wrote:
-> On Thu, 2018-02-01 at 08:04 +0100, Dmitry Vyukov wrote:
->> On Thu, Feb 1, 2018 at 7:03 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
->> > On 2018-01-30 07:22 AM, Dmitry Vyukov wrote:
-> [...]
->> > > [1:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     2.0.  /dev/sr0   /dev/sg1
->> > >
->> > > # readlink /sys/class/scsi_generic/sg0
->> > >
->> > > ../../devices/pci0000:00/0000:00:01.1/ata1/host0/target0:0:0/0:0:0:0/scsi_generic/sg0
->> > >
->> > > # cat /sys/class/scsi_generic/sg0/device/vendor
->> > > ATA
->> >
->> >
->> > ^^^^^
->> > That subsystem is the culprit IMO, most likely libata.
->> >
->> > Until you can show this test failing on something other than an
->> > ATA disk, then I will treat this issue as closed.
->>
->> Hi Doug,
->>
->> Why is bug in ATA not a bug? Is it long unused by everybody? I've got
->> it by running qemu with default flags...
+
+Can you please clarify the naming, at least as far as saying scsi/ufs.
+
+Universal Flash Storage is not the same thing as all as the Unix File
+System which has been using the acronym ufs for much longer.
+
+I saw this patchset and I was wondering what in the world does a
+filesystem need with sysfs entries.
+
+Eric
+
+
+Stanislav Nijnikov <stanislav.nijnikov@wdc.com> writes:
+
+> This patch introduces sysfs entries that will provide read-only access to
+> device management data that could be received with UFS query requests.
+> User-space applications will be able to read UFS device descriptors,
+> flags and attributes. This will allow to get full UFS device configuration
+> and its status. The descriptors are provided as set of files representing
+> its parameters. The flags are using "true"/"false" representation of
+> their value. The attributes are shown as hexadecimal value. The
+> descriptors, attributes and flags are placed in separate subfolders under
+> the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
+> string descriptor subfolder contains five string descriptors defined by
+> UFS specification 2.1. The LUN specific descriptor and attribute are 
+> placed under corresponding SCSI device sysfs entries
+> (/sys/class/scsi_device/*/device/).
+> In addition the patch presents an additional field in the
+> scsi_host_template structure - struct attribute_group **sdev_group.
+> This field allows to define groups of attributes. It will provide an
+> ability to use binary attributes in addition to device attributes and
+> to group them under subfolders if necessary.
 >
-> If the bug is in libata then it's not on Doug to fix it since he's only
-> maintaining sg.
-
-
-Then I think we need to CC ata maintainers rather than treat it as closed.
-+Tejun, linux-ide@, you can see full thread here:
-https://groups.google.com/forum/#!topic/syzkaller/9RNr9Gu0MyY
+> Changelog:
+> v3 -> v4
+> Additional patch the introduces default attributes group for the
+> existing ufs sysfs entries (rpm_lvl and spm_lvl)
+> The ufs_sysfs_read_desc_param function calls to ufshcd_read_desc_param
+> insted of ufshcd_query_descriptor_retry to avoid code duplication.
+> The code was updated to remove the checkpatch error "ERROR: Macros 
+> with complex values should be enclosed in parentheses"
+> Added "_" to macros parameters to remove "#undef DEVICE_CLASS"
+> The legal information was updated to satisfy the SPDX requirements
+> The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+>
+> v2 -> v3
+> The Makefile is updated to make ufs-sysfs.c part of the ufshcd module.
+> The unnecessary EXPORT_SYMBOL were removed
+> Added a legal info header to the new files
+> The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+>
+> v1 -> v2
+> Provided additional description for the changes
+>
+> Stanislav Nijnikov (10):
+>   ufs: sysfs: attribute group for existing sysfs entries.
+>   ufs: sysfs: device descriptor
+>   ufs: sysfs: interconnect descriptor
+>   ufs: sysfs: geometry descriptor
+>   ufs: sysfs: health descriptor
+>   ufs: sysfs: power descriptor
+>   ufs: sysfs: string descriptors
+>   ufs: sysfs: unit descriptor
+>   ufs: sysfs: flags
+>   ufs: sysfs: attributes
+>
+>  Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
+>  drivers/scsi/scsi_sysfs.c                  |  14 +
+>  drivers/scsi/ufs/Makefile                  |   3 +-
+>  drivers/scsi/ufs/ufs-sysfs.c               | 757 +++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-sysfs.h               |  25 +
+>  drivers/scsi/ufs/ufs.h                     | 115 ++++-
+>  drivers/scsi/ufs/ufshcd.c                  | 218 ++------
+>  drivers/scsi/ufs/ufshcd.h                  |  34 ++
+>  include/scsi/scsi_host.h                   |   6 +
+>  9 files changed, 1785 insertions(+), 191 deletions(-)
+>  create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
+>  create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
+>  create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
