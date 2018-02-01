@@ -1,78 +1,184 @@
 From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v4 00/10] ufs: sysfs: read-only access to device descriptors, attributes and flags
-Date: Thu,  1 Feb 2018 18:15:36 +0200
-Message-ID: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: [PATCH v4 05/10] ufs: sysfs: health descriptor
+Date: Thu,  1 Feb 2018 18:15:41 +0200
+Message-ID: <1517501746-19075-6-git-send-email-stanislav.nijnikov@wdc.com>
+References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org
 Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch introduces sysfs entries that will provide read-only access to
-device management data that could be received with UFS query requests.
-User-space applications will be able to read UFS device descriptors,
-flags and attributes. This will allow to get full UFS device configuration
-and its status. The descriptors are provided as set of files representing
-its parameters. The flags are using "true"/"false" representation of
-their value. The attributes are shown as hexadecimal value. The
-descriptors, attributes and flags are placed in separate subfolders under
-the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
-string descriptor subfolder contains five string descriptors defined by
-UFS specification 2.1. The LUN specific descriptor and attribute are 
-placed under corresponding SCSI device sysfs entries
-(/sys/class/scsi_device/*/device/).
-In addition the patch presents an additional field in the
-scsi_host_template structure - struct attribute_group **sdev_group.
-This field allows to define groups of attributes. It will provide an
-ability to use binary attributes in addition to device attributes and
-to group them under subfolders if necessary.
+This patch introduces a sysfs group entry for the UFS health descriptor
+parameters. The group adds "health_descriptor" folder under the UFS driver
+sysfs entry (/sys/bus/platform/drivers/ufshcd/*). The parameters are shown
+as hexadecimal numbers. The full information about the parameters could be
+found at UFS specifications 2.1.
 
-Changelog:
-v3 -> v4
-Additional patch the introduces default attributes group for the
-existing ufs sysfs entries (rpm_lvl and spm_lvl)
-The ufs_sysfs_read_desc_param function calls to ufshcd_read_desc_param
-insted of ufshcd_query_descriptor_retry to avoid code duplication.
-The code was updated to remove the checkpatch error "ERROR: Macros 
-with complex values should be enclosed in parentheses"
-Added "_" to macros parameters to remove "#undef DEVICE_CLASS"
-The legal information was updated to satisfy the SPDX requirements
-The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 
-v2 -> v3
-The Makefile is updated to make ufs-sysfs.c part of the ufshcd module.
-The unnecessary EXPORT_SYMBOL were removed
-Added a legal info header to the new files
-The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Documentation/ABI/testing/sysfs-driver-ufs | 28 ++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 20 ++++++++++++++++++++
+ drivers/scsi/ufs/ufs.h                     | 11 +++++++++++
+ drivers/scsi/ufs/ufshcd.c                  |  8 ++++++++
+ drivers/scsi/ufs/ufshcd.h                  |  1 +
+ 5 files changed, 68 insertions(+)
 
-v1 -> v2
-Provided additional description for the changes
-
-Stanislav Nijnikov (10):
-  ufs: sysfs: attribute group for existing sysfs entries.
-  ufs: sysfs: device descriptor
-  ufs: sysfs: interconnect descriptor
-  ufs: sysfs: geometry descriptor
-  ufs: sysfs: health descriptor
-  ufs: sysfs: power descriptor
-  ufs: sysfs: string descriptors
-  ufs: sysfs: unit descriptor
-  ufs: sysfs: flags
-  ufs: sysfs: attributes
-
- Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
- drivers/scsi/scsi_sysfs.c                  |  14 +
- drivers/scsi/ufs/Makefile                  |   3 +-
- drivers/scsi/ufs/ufs-sysfs.c               | 757 +++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.h               |  25 +
- drivers/scsi/ufs/ufs.h                     | 115 ++++-
- drivers/scsi/ufs/ufshcd.c                  | 218 ++------
- drivers/scsi/ufs/ufshcd.h                  |  34 ++
- include/scsi/scsi_host.h                   |   6 +
- 9 files changed, 1785 insertions(+), 191 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
- create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
- create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
-
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 6ea7613..ddb012b 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -413,3 +413,31 @@ Description:	This file shows the memory capacity adjustment factor for
+ 		descriptor parameters. The full information about the
+ 		descriptor could be found at UFS specifications 2.1.
+ 		The file is read only.
++
++
++What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/eol_info
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows preend of life information. This is one
++		of the UFS health descriptor parameters. The full
++		information about the descriptor could be found at
++		UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/life_time_estimation_a
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows indication of the device life time
++		(method a). This is one of the UFS health descriptor
++		parameters. The full information about the descriptor
++		could be found at UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/life_time_estimation_b
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows indication of the device life time
++		(method b). This is one of the UFS health descriptor
++		parameters. The full information about the descriptor
++		could be found at UFS specifications 2.1.
++		The file is read only.
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 6427804..1c89009 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -364,11 +364,31 @@ static const struct attribute_group ufs_sysfs_geometry_descriptor_group = {
+ 	.attrs = ufs_sysfs_geometry_descriptor,
+ };
+ 
++#define UFS_HEALTH_DESC_PARAM(_name, _uname, _size)                     \
++	UFS_DESC_PARAM(_name, _uname, HEALTH, _size)
++
++UFS_HEALTH_DESC_PARAM(eol_info, _EOL_INFO, BYTE);
++UFS_HEALTH_DESC_PARAM(life_time_estimation_a, _LIFE_TIME_EST_A, BYTE);
++UFS_HEALTH_DESC_PARAM(life_time_estimation_b, _LIFE_TIME_EST_B, BYTE);
++
++static struct attribute *ufs_sysfs_health_descriptor[] = {
++	&dev_attr_eol_info.attr,
++	&dev_attr_life_time_estimation_a.attr,
++	&dev_attr_life_time_estimation_b.attr,
++	NULL,
++};
++
++static const struct attribute_group ufs_sysfs_health_descriptor_group = {
++	.name = "health_descriptor",
++	.attrs = ufs_sysfs_health_descriptor,
++};
++
+ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_default_group,
+ 	&ufs_sysfs_device_descriptor_group,
+ 	&ufs_sysfs_interconnect_descriptor_group,
+ 	&ufs_sysfs_geometry_descriptor_group,
++	&ufs_sysfs_health_descriptor_group,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 04d41c8..6bfeedb 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -154,6 +154,7 @@ enum desc_idn {
+ 	QUERY_DESC_IDN_RFU_1		= 0x6,
+ 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
+ 	QUERY_DESC_IDN_POWER		= 0x8,
++	QUERY_DESC_IDN_HEALTH           = 0x9,
+ 	QUERY_DESC_IDN_MAX,
+ };
+ 
+@@ -169,6 +170,7 @@ enum ufs_desc_def_size {
+ 	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
+ 	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
+ 	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
++	QUERY_DESC_HEALTH_DEF_SIZE		= 0x25,
+ };
+ 
+ /* Unit descriptor parameters offsets in bytes*/
+@@ -274,6 +276,15 @@ enum geometry_desc_param {
+ 	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
+ };
+ 
++/* Health descriptor parameters offsets in bytes*/
++enum health_desc_param {
++	HEALTH_DESC_PARAM_LEN			= 0x0,
++	HEALTH_DESC_PARAM_TYPE			= 0x1,
++	HEALTH_DESC_PARAM_EOL_INFO		= 0x2,
++	HEALTH_DESC_PARAM_LIFE_TIME_EST_A	= 0x3,
++	HEALTH_DESC_PARAM_LIFE_TIME_EST_B	= 0x4,
++};
++
+ /*
+  * Logical Unit Write Protect
+  * 00h: LU not write protected
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 540a431..b88fcf7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2966,6 +2966,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
+ 	case QUERY_DESC_IDN_STRING:
+ 		*desc_len = QUERY_DESC_MAX_SIZE;
+ 		break;
++	case QUERY_DESC_IDN_HEALTH:
++		*desc_len = hba->desc_size.hlth_desc;
++		break;
+ 	case QUERY_DESC_IDN_RFU_0:
+ 	case QUERY_DESC_IDN_RFU_1:
+ 		*desc_len = 0;
+@@ -6277,6 +6280,10 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
+ 		&hba->desc_size.geom_desc);
+ 	if (err)
+ 		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
++		&hba->desc_size.hlth_desc);
++	if (err)
++		hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+ }
+ 
+ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+@@ -6287,6 +6294,7 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+ 	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+ 	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
+ 	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 38c307d..515c6e6 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -229,6 +229,7 @@ struct ufs_desc_size {
+ 	int interc_desc;
+ 	int unit_desc;
+ 	int conf_desc;
++	int hlth_desc;
+ };
+ 
+ /**
 -- 
 2.7.4
