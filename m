@@ -1,41 +1,78 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] qedi: Fix truncation of name and secret
-Date: Thu, 1 Feb 2018 15:59:46 +0000
-Message-ID: <1517500776.2746.11.camel@wdc.com>
-References: <20180201065734.20441-1-nilesh.javali@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:58732 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751722AbeBAP7u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 10:59:50 -0500
-In-Reply-To: <20180201065734.20441-1-nilesh.javali@cavium.com>
-Content-Language: en-US
-Content-ID: <3E01F990F830A04F9AAEA62A85DBB7B7@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Subject: [PATCH v4 00/10] ufs: sysfs: read-only access to device descriptors, attributes and flags
+Date: Thu,  1 Feb 2018 18:15:36 +0200
+Message-ID: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org
+Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "nilesh.javali@cavium.com" <nilesh.javali@cavium.com>, "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>
 
-T24gV2VkLCAyMDE4LTAxLTMxIGF0IDIyOjU3IC0wODAwLCBOaWxlc2ggSmF2YWxpIHdyb3RlOg0K
-PiBBZGp1c3QgdGhlIE5VTEwgYnl0ZSBhZGRlZCBieSBzbnByaW50Zi4NCg0KSGVsbG8gTmlsZXNo
-LA0KDQpTb3JyeSBidXQgbmVpdGhlciB0aGUgdGl0bGUgbm9yIHRoZSBkZXNjcmlwdGlvbiBvZiB0
-aGlzIHBhdGNoIG1ha2UgY2xlYXIgd2hhdA0KdGhlIGludGVudGlvbiBvZiB0aGlzIHBhdGNoIGlz
-LiBQbGVhc2UgZGVzY3JpYmUgdGhpcyBtb3JlIGNsZWFybHkuDQoNCj4gQEAgLTE4NDAsNyArMTg0
-MCw3IEBAIHN0YXRpYyBzc2l6ZV90IHFlZGlfc2hvd19ib290X2luaV9pbmZvKHZvaWQgKmRhdGEs
-IGludCB0eXBlLCBjaGFyICpidWYpDQo+ICANCj4gIAlzd2l0Y2ggKHR5cGUpIHsNCj4gIAljYXNl
-IElTQ1NJX0JPT1RfSU5JX0lOSVRJQVRPUl9OQU1FOg0KPiAtCQlyYyA9IHNucHJpbnRmKHN0ciwg
-TlZNX0lTQ1NJX0NGR19JU0NTSV9OQU1FX01BWF9MRU4sICIlc1xuIiwNCj4gKwkJcmMgPSBzbnBy
-aW50ZihzdHIsIE5WTV9JU0NTSV9DRkdfSVNDU0lfTkFNRV9NQVhfTEVOICsgMSwgIiVzIiwNCj4g
-IAkJCSAgICAgIGluaXRpYXRvci0+aW5pdGlhdG9yX25hbWUuYnl0ZSk7DQo+ICAJCWJyZWFrOw0K
-PiAgCWRlZmF1bHQ6DQoNClRoZSBmdW5jdGlvbiBxZWRpX3Nob3dfYm9vdF9pbmlfaW5mbygpIGlz
-IHVzZWQgdG8gZXhwb3J0IGluZm9ybWF0aW9uIHRocm91Z2gNCnN5c2ZzLiBVc2VycyBleHBlY3Qg
-QVNDSUkgZGF0YSBpbiBzeXNmcyB0byBiZSB0ZXJtaW5hdGVkIHdpdGggYSBuZXdsaW5lLiBTbyBJ
-DQp0aGluayByZW1vdmluZyB0aGUgdHJhaWxpbmcgbmV3bGluZSBpcyB3cm9uZy4gQWRkaXRpb25h
-bGx5LCBhbiBleHBsYW5hdGlvbiBvZg0Kd2h5IHlvdSB0aGluayB0aGF0IHRoZSBzZWNvbmQgYXJn
-dW1lbnQgb2YgdGhlIHNucHJpbnRmKCkgY2FsbCBzaG91bGQgYmUNCmluY3JlYXNlZCBpcyBtaXNz
-aW5nLiBBbmQgc2luY2UgYnVmIHBvaW50cyBhdCBhIGJ1ZmZlciBvZiBzaXplIFBBR0VfU0laRSwN
-CmhhdmUgeW91IGNvbnNpZGVyIHRvIGNoYW5nZSB0aGUgc2Vjb25kIHNucHJpbnRmKCkgYXJndW1l
-bnQgaW50byBQQUdFX1NJWkU/DQoNClRoYW5rcywNCg0KQmFydC4=
+This patch introduces sysfs entries that will provide read-only access to
+device management data that could be received with UFS query requests.
+User-space applications will be able to read UFS device descriptors,
+flags and attributes. This will allow to get full UFS device configuration
+and its status. The descriptors are provided as set of files representing
+its parameters. The flags are using "true"/"false" representation of
+their value. The attributes are shown as hexadecimal value. The
+descriptors, attributes and flags are placed in separate subfolders under
+the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
+string descriptor subfolder contains five string descriptors defined by
+UFS specification 2.1. The LUN specific descriptor and attribute are 
+placed under corresponding SCSI device sysfs entries
+(/sys/class/scsi_device/*/device/).
+In addition the patch presents an additional field in the
+scsi_host_template structure - struct attribute_group **sdev_group.
+This field allows to define groups of attributes. It will provide an
+ability to use binary attributes in addition to device attributes and
+to group them under subfolders if necessary.
+
+Changelog:
+v3 -> v4
+Additional patch the introduces default attributes group for the
+existing ufs sysfs entries (rpm_lvl and spm_lvl)
+The ufs_sysfs_read_desc_param function calls to ufshcd_read_desc_param
+insted of ufshcd_query_descriptor_retry to avoid code duplication.
+The code was updated to remove the checkpatch error "ERROR: Macros 
+with complex values should be enclosed in parentheses"
+Added "_" to macros parameters to remove "#undef DEVICE_CLASS"
+The legal information was updated to satisfy the SPDX requirements
+The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+
+v2 -> v3
+The Makefile is updated to make ufs-sysfs.c part of the ufshcd module.
+The unnecessary EXPORT_SYMBOL were removed
+Added a legal info header to the new files
+The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+
+v1 -> v2
+Provided additional description for the changes
+
+Stanislav Nijnikov (10):
+  ufs: sysfs: attribute group for existing sysfs entries.
+  ufs: sysfs: device descriptor
+  ufs: sysfs: interconnect descriptor
+  ufs: sysfs: geometry descriptor
+  ufs: sysfs: health descriptor
+  ufs: sysfs: power descriptor
+  ufs: sysfs: string descriptors
+  ufs: sysfs: unit descriptor
+  ufs: sysfs: flags
+  ufs: sysfs: attributes
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c                  |  14 +
+ drivers/scsi/ufs/Makefile                  |   3 +-
+ drivers/scsi/ufs/ufs-sysfs.c               | 757 +++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.h               |  25 +
+ drivers/scsi/ufs/ufs.h                     | 115 ++++-
+ drivers/scsi/ufs/ufshcd.c                  | 218 ++------
+ drivers/scsi/ufs/ufshcd.h                  |  34 ++
+ include/scsi/scsi_host.h                   |   6 +
+ 9 files changed, 1785 insertions(+), 191 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
+
+-- 
+2.7.4
