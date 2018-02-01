@@ -1,79 +1,67 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: scsi: sg: assorted memory corruptions
-Date: Thu, 1 Feb 2018 08:04:52 +0100
-Message-ID: <CACT4Y+bObXrFiB0Qn+nfkD8DZRiVck1GJ5U9UeQz+-y85gh70Q@mail.gmail.com>
-References: <CACT4Y+b0pizvOAxtWQ-TGCRAYvHXdv79BAEaXh50W6vF8gBvkQ@mail.gmail.com>
- <1516638634.2545.0.camel@wdc.com> <097921fa-52c5-8b2b-f564-4b24d9720478@interlog.com>
- <CACT4Y+aEx0ie3qjx6afCYV2vN7gYii0uupKWPXaNTnWUmhdHQw@mail.gmail.com> <c0a7ec39-e357-9db6-cf12-ff9c46259f26@interlog.com>
+From: Weiping Zhang <zwp10758@gmail.com>
+Subject: Re: [PATCH v3] scsi: sd: add new match array for cache_type
+Date: Thu, 1 Feb 2018 22:15:06 +0800
+Message-ID: <CAA70yB6th1UGHyTcpF0aFCP2H=TjXc6-kafQQ4xj1sCRtDt1XQ@mail.gmail.com>
+References: <20180123144439.GA15247@localhost.didichuxing.com> <yq1lggeempq.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c0a7ec39-e357-9db6-cf12-ff9c46259f26@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ben.hutchings@codethink.co.uk" <ben.hutchings@codethink.co.uk>, "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:40331 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750985AbeBAOPH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 09:15:07 -0500
+Received: by mail-wm0-f68.google.com with SMTP id v123so5954865wmd.5
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Feb 2018 06:15:07 -0800 (PST)
+In-Reply-To: <yq1lggeempq.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: weiping zhang <zhangweiping@didichuxing.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-On Thu, Feb 1, 2018 at 7:03 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
-> On 2018-01-30 07:22 AM, Dmitry Vyukov wrote:
->>
->> Uh, I've answered this a week ago, but did not notice that Doug
->> dropped everybody from CC. Reporting to all.
->>
->> On Mon, Jan 22, 2018 at 8:16 PM, Douglas Gilbert <dgilbert@interlog.com>
->> wrote:
->>>
->>> On 2018-01-22 02:06 PM, Dmitry Vyukov wrote:
->>>>
->>>>
->>>> On Mon, Jan 22, 2018 at 7:57 PM, Douglas Gilbert <dgilbert@interlog.com>
->>>
->>> Please show me the output of 'lsscsi -g' on your test machine.
->>> /dev/sg0 is often associated with /dev/sda which is often a SATA
->>> SSD (or a virtualized one) that holds the root file system.
->>> With the sg pass-through driver it is relatively easy to write
->>> random (user provided data) over the root file system which will
->>> almost certainly "root" the system.
->>
->>
->>
->> This is pretty standard qemu vm started with:
->>
->> qemu-system-x86_64 -hda wheezy.img -net user,host=10.0.2.10 -net nic
->> -nographic -kernel arch/x86/boot/bzImage -append "console=ttyS0
->> root=/dev/sda earlyprintk=serial " -m 2G -smp 4
->>
->> # lsscsi -g
->> [0:0:0:0]    disk    ATA      QEMU HARDDISK    0     /dev/sda   /dev/sg0
+2018-01-31 11:22 GMT+08:00 Martin K. Petersen <martin.petersen@oracle.com>:
 >
+> Weiping,
 >
-> With lk 4.15.0-rc9 I can run your test program (with some additions, see
-> attachment) for 30 minutes against a scsi_debug simulated disk. You can
-> easily replicate this test just run 'modprobe scsi_debug' and a third
-> line should appear in your lsscsi output. The new device will most likely
-> be /dev/sg2 .
+>> add user friendly command strings sd_wr_cache to enable/disable
+>> write&read cache. user can enable both write and read cache by one of
+>> the following commands:
 >
-> With lk 4.15.0 (release) running against a SAS SSD (SEAGATE ST200FM0073),
-> the test has  been running 20 minutes and counting without problems. That
-> is using a LSI HBA with the mpt3sas driver.
+> I remain unconvinced that introducing redundant option strings is a
+> benefit.
 >
->> [1:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     2.0.  /dev/sr0   /dev/sg1
->>
->> # readlink /sys/class/scsi_generic/sg0
->>
->> ../../devices/pci0000:00/0000:00:01.1/ata1/host0/target0:0:0/0:0:0:0/scsi_generic/sg0
->>
->> # cat /sys/class/scsi_generic/sg0/device/vendor
->> ATA
+> These shorthand forms may seem obvious to you, but not to everyone
+> else. Adding to the murkiness is that fact that write cache must be
+> *enabled* and read cache *disabled* in the protocol. The fact that the
+> ??rN and RCD columns below contain inverse values just emphasizes that
+> point that "0" and "1" are not a particularly good interface either.
 >
+> It is also confusing that the existing longhand forms will be printed
+> when the user subsequently queries the state instead of what they used
+> to toggle it.
 >
-> ^^^^^
-> That subsystem is the culprit IMO, most likely libata.
+Yes, indeed.
 >
-> Until you can show this test failing on something other than an
-> ATA disk, then I will treat this issue as closed.
+> This, however, is pretty much what I was looking for:
+>
+>> Encoding                          | WCE RCD | Write_cache Read_cache
+>> --------------------------------------------------------------------
+>> write through              / w0r1 | 0   0   | off         on
+>> none                       / w0r0 | 0   1   | off         off
+>> write back                 / w1r1 | 1   0   | on          on
+>> write back, no read (daft) / w1r0 | 1   1   | on          off
+>
+> Please drop the w?r? options and submit a patch with this table and a
+> note about the "temporary" prefix. Put it in
+> Documentation/scsi/sd-parameters.txt or something to that effect.
+>
+It's ok for me.
+> Bonus points for also documenting the remaining sd sysfs attributes and
+> their options.
+I'll try.
 
-Hi Doug,
-
-Why is bug in ATA not a bug? Is it long unused by everybody? I've got
-it by running qemu with default flags...
+Thanks
+>
+> Thanks!
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
