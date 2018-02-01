@@ -1,94 +1,113 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH v4 00/10] ufs: sysfs: read-only access to device descriptors, attributes and flags
-Date: Thu, 01 Feb 2018 10:48:53 -0600
-Message-ID: <87y3kck64q.fsf@xmission.com>
-References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [LSF/MM TOPIC] irq affinity handling for high CPU count machines
+Date: Thu, 1 Feb 2018 22:29:22 +0530
+Message-ID: <a6bf37e1aa2c45ef725c4cc1a7f57af9@mail.gmail.com>
+References: <45dc032d-a0ce-816c-d2c5-74c69433bd29@suse.de> <20180201150532.GA31930@ming.t460p>
+ <0f650f4b-aa7f-bf52-2ecb-582761b4937f@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
-        (Stanislav Nijnikov's message of "Thu, 1 Feb 2018 18:15:36 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org, alex.lemberg@wdc.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f45.google.com ([209.85.214.45]:34412 "EHLO
+        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752395AbeBAQ7Z (ORCPT
+        <rfc822;Linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 11:59:25 -0500
+Received: by mail-it0-f45.google.com with SMTP id m11-v6so551065iti.1
+        for <Linux-scsi@vger.kernel.org>; Thu, 01 Feb 2018 08:59:24 -0800 (PST)
+In-Reply-To: <0f650f4b-aa7f-bf52-2ecb-582761b4937f@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>
+Cc: lsf-pc@lists.linux-foundation.org, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org
 
-
-Can you please clarify the naming, at least as far as saying scsi/ufs.
-
-Universal Flash Storage is not the same thing as all as the Unix File
-System which has been using the acronym ufs for much longer.
-
-I saw this patchset and I was wondering what in the world does a
-filesystem need with sysfs entries.
-
-Eric
-
-
-Stanislav Nijnikov <stanislav.nijnikov@wdc.com> writes:
-
-> This patch introduces sysfs entries that will provide read-only access to
-> device management data that could be received with UFS query requests.
-> User-space applications will be able to read UFS device descriptors,
-> flags and attributes. This will allow to get full UFS device configuration
-> and its status. The descriptors are provided as set of files representing
-> its parameters. The flags are using "true"/"false" representation of
-> their value. The attributes are shown as hexadecimal value. The
-> descriptors, attributes and flags are placed in separate subfolders under
-> the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
-> string descriptor subfolder contains five string descriptors defined by
-> UFS specification 2.1. The LUN specific descriptor and attribute are 
-> placed under corresponding SCSI device sysfs entries
-> (/sys/class/scsi_device/*/device/).
-> In addition the patch presents an additional field in the
-> scsi_host_template structure - struct attribute_group **sdev_group.
-> This field allows to define groups of attributes. It will provide an
-> ability to use binary attributes in addition to device attributes and
-> to group them under subfolders if necessary.
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Thursday, February 1, 2018 9:50 PM
+> To: Ming Lei
+> Cc: lsf-pc@lists.linux-foundation.org; linux-scsi@vger.kernel.org; linux-
+> nvme@lists.infradead.org; Kashyap Desai
+> Subject: Re: [LSF/MM TOPIC] irq affinity handling for high CPU count
+> machines
 >
-> Changelog:
-> v3 -> v4
-> Additional patch the introduces default attributes group for the
-> existing ufs sysfs entries (rpm_lvl and spm_lvl)
-> The ufs_sysfs_read_desc_param function calls to ufshcd_read_desc_param
-> insted of ufshcd_query_descriptor_retry to avoid code duplication.
-> The code was updated to remove the checkpatch error "ERROR: Macros 
-> with complex values should be enclosed in parentheses"
-> Added "_" to macros parameters to remove "#undef DEVICE_CLASS"
-> The legal information was updated to satisfy the SPDX requirements
-> The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+> On 02/01/2018 04:05 PM, Ming Lei wrote:
+> > Hello Hannes,
+> >
+> > On Mon, Jan 29, 2018 at 10:08:43AM +0100, Hannes Reinecke wrote:
+> >> Hi all,
+> >>
+> >> here's a topic which came up on the SCSI ML (cf thread '[RFC 0/2]
+> >> mpt3sas/megaraid_sas: irq poll and load balancing of reply queue').
+> >>
+> >> When doing I/O tests on a machine with more CPUs than MSIx vectors
+> >> provided by the HBA we can easily setup a scenario where one CPU is
+> >> submitting I/O and the other one is completing I/O. Which will result
+> >> in the latter CPU being stuck in the interrupt completion routine for
+> >> basically ever, resulting in the lockup detector kicking in.
+> >
+> > Today I am looking at one megaraid_sas related issue, and found
+> > pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) is used in the driver, so
+> > looks each reply queue has been handled by more than one CPU if there
+> > are more CPUs than MSIx vectors in the system, which is done by
+> > generic irq affinity code, please see kernel/irq/affinity.c.
+
+Yes. That is a problematic area. If CPU and MSI-x(reply queue) is 1:1
+mapped, we don't have any issue.
+
+> >
+> > Also IMO each reply queue may be treated as blk-mq's hw queue, then
+> > megaraid may benefit from blk-mq's MQ framework, but one annoying
+> > thing is that both legacy and blk-mq path need to be handled inside
+> > driver.
+
+Both MR and IT driver is (due to H/W design.) is using blk-mq frame work bu=
+t
+it is really  a single h/w queue.
+IT and MR HBA has single submission queue and multiple reply queue.
+
+> >
+> The megaraid driver is a really strange beast;, having layered two
+> different
+> interfaces (the 'legacy' MFI interface and that from from
+> mpt3sas) on top of each other.
+> I had been thinking of converting it to scsi-mq, too (as my mpt3sas patch
+> finally went in), but I'm not sure if we can benefit from it as we're
+> still be
+> bound by the HBA-wide tag pool.
+> It's on my todo list, albeit pretty far down :-)
+
+Hannes, this is typically same in both MR (megaraid_sas) and IT (mpt3sas).
+Both the driver is using shared HBA-wide tag pool.
+Both MR and IT driver use request->tag to get command from free pool.
+
 >
-> v2 -> v3
-> The Makefile is updated to make ufs-sysfs.c part of the ufshcd module.
-> The unnecessary EXPORT_SYMBOL were removed
-> Added a legal info header to the new files
-> The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
+> >>
+> >> How should these situations be handled?
+> >> Should it be made the responsibility of the drivers, ensuring that
+> >> the interrupt completion routine is terminated after a certain time?
+> >> Should it be made the resposibility of the upper layers?
+> >> Should it be the responsibility of the interrupt mapping code?
+> >> Can/should interrupt polling be used in these situations?
+> >
+> > Yeah, I guess interrupt polling may improve these situations,
+> > especially KPTI introduces some extra cost in interrupt handling.
+> >
+> The question is not so much if one should be doing irq polling, but rathe=
+r
+> if we
+> can come up with some guidance or even infrastructure to make this happen
+> automatically.
+> Having to rely on individual drivers to get this right is probably not th=
+e
+> best
+> option.
 >
-> v1 -> v2
-> Provided additional description for the changes
+> Cheers,
 >
-> Stanislav Nijnikov (10):
->   ufs: sysfs: attribute group for existing sysfs entries.
->   ufs: sysfs: device descriptor
->   ufs: sysfs: interconnect descriptor
->   ufs: sysfs: geometry descriptor
->   ufs: sysfs: health descriptor
->   ufs: sysfs: power descriptor
->   ufs: sysfs: string descriptors
->   ufs: sysfs: unit descriptor
->   ufs: sysfs: flags
->   ufs: sysfs: attributes
->
->  Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
->  drivers/scsi/scsi_sysfs.c                  |  14 +
->  drivers/scsi/ufs/Makefile                  |   3 +-
->  drivers/scsi/ufs/ufs-sysfs.c               | 757 +++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufs-sysfs.h               |  25 +
->  drivers/scsi/ufs/ufs.h                     | 115 ++++-
->  drivers/scsi/ufs/ufshcd.c                  | 218 ++------
->  drivers/scsi/ufs/ufshcd.h                  |  34 ++
->  include/scsi/scsi_host.h                   |   6 +
->  9 files changed, 1785 insertions(+), 191 deletions(-)
->  create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
->  create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
->  create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
+> Hannes
+> --
+> Dr. Hannes Reinecke		   Teamlead Storage & Networking
+> hare@suse.de			               +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton HRB=
+ 21284
+> (AG N=C3=BCrnberg)
