@@ -1,41 +1,50 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 0/2] qla2xxx: Bug fixes for driver
-Date: Thu, 1 Feb 2018 10:33:16 -0800
-Message-ID: <20180201183318.587-1-himanshu.madhani@cavium.com>
+Subject: [PATCH 2/2] qla2xxx: Fix incorrect handle for abort IOCB
+Date: Thu, 1 Feb 2018 10:33:18 -0800
+Message-ID: <20180201183318.587-3-himanshu.madhani@cavium.com>
+References: <20180201183318.587-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0050.outbound.protection.outlook.com ([104.47.32.50]:41303
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0061.outbound.protection.outlook.com ([104.47.33.61]:41024
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751567AbeBASdZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Feb 2018 13:33:25 -0500
+        id S1751567AbeBASdi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Feb 2018 13:33:38 -0500
+In-Reply-To: <20180201183318.587-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-Hi Martin, 
+This patch fixes incorrect handle used for abort IOCB.
 
-These are couple of bug fixes for the driver. 
+Fixes: b027a5ace443 ("scsi: qla2xxx: Fix queue ID for async abort with Multiqueue")
+Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_iocb.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Patch#1 is the issue reported by Max using KASAN tool.
-Patch#2 fixes use of wrong queue handle for abort IOCB. 
-
-Please apply them to 4.16/scsi-fixes at your earliest convenience.
-
-Thanks,
-Himanshu 
-
-Himanshu Madhani (1):
-  qla2xxx: Fix incorrect handle for abort IOCB
-
-Quinn Tran (1):
-  qla2xxx: Fix double free bug after firmware timeout
-
- drivers/scsi/qla2xxx/qla_init.c | 23 +++--------------------
- drivers/scsi/qla2xxx/qla_iocb.c |  7 +++----
- 2 files changed, 6 insertions(+), 24 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 1b62e943ec49..8d00d559bd26 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -3275,12 +3275,11 @@ qla24xx_abort_iocb(srb_t *sp, struct abort_entry_24xx *abt_iocb)
+ 	memset(abt_iocb, 0, sizeof(struct abort_entry_24xx));
+ 	abt_iocb->entry_type = ABORT_IOCB_TYPE;
+ 	abt_iocb->entry_count = 1;
+-	abt_iocb->handle =
+-	     cpu_to_le32(MAKE_HANDLE(aio->u.abt.req_que_no,
+-		 aio->u.abt.cmd_hndl));
++	abt_iocb->handle = cpu_to_le32(MAKE_HANDLE(req->id, sp->handle));
+ 	abt_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+ 	abt_iocb->handle_to_abort =
+-	    cpu_to_le32(MAKE_HANDLE(req->id, aio->u.abt.cmd_hndl));
++	    cpu_to_le32(MAKE_HANDLE(aio->u.abt.req_que_no,
++				    aio->u.abt.cmd_hndl));
+ 	abt_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 	abt_iocb->port_id[1] = sp->fcport->d_id.b.area;
+ 	abt_iocb->port_id[2] = sp->fcport->d_id.b.domain;
 -- 
 2.12.0
