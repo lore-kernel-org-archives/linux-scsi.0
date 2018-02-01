@@ -1,107 +1,80 @@
-From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v4 03/10] ufs: sysfs: interconnect descriptor
-Date: Thu,  1 Feb 2018 18:15:39 +0200
-Message-ID: <1517501746-19075-4-git-send-email-stanislav.nijnikov@wdc.com>
-References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org
-Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [LSF/MM TOPIC] irq affinity handling for high CPU count machines
+Date: Thu, 1 Feb 2018 17:20:26 +0100
+Message-ID: <0f650f4b-aa7f-bf52-2ecb-582761b4937f@suse.de>
+References: <45dc032d-a0ce-816c-d2c5-74c69433bd29@suse.de>
+ <20180201150532.GA31930@ming.t460p>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:56285 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752330AbeBAQU2 (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+        Thu, 1 Feb 2018 11:20:28 -0500
+In-Reply-To: <20180201150532.GA31930@ming.t460p>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Kashyap Desai <kashyap.desai@broadcom.com>
 
-This patch introduces a sysfs group entry for the UFS interconnect
-descriptor parameters. The group adds "interconnect_descriptor" folder
-under the UFS driver sysfs entry (/sys/bus/platform/drivers/ufshcd/*).
-The parameters are shown as hexadecimal numbers. The full information
-about the parameters could be found at UFS specifications 2.1.
+On 02/01/2018 04:05 PM, Ming Lei wrote:
+> Hello Hannes,
+> 
+> On Mon, Jan 29, 2018 at 10:08:43AM +0100, Hannes Reinecke wrote:
+>> Hi all,
+>>
+>> here's a topic which came up on the SCSI ML (cf thread '[RFC 0/2]
+>> mpt3sas/megaraid_sas: irq poll and load balancing of reply queue').
+>>
+>> When doing I/O tests on a machine with more CPUs than MSIx vectors
+>> provided by the HBA we can easily setup a scenario where one CPU is
+>> submitting I/O and the other one is completing I/O. Which will result in
+>> the latter CPU being stuck in the interrupt completion routine for
+>> basically ever, resulting in the lockup detector kicking in.
+> 
+> Today I am looking at one megaraid_sas related issue, and found
+> pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) is used in the driver, so looks
+> each reply queue has been handled by more than one CPU if there are more
+> CPUs than MSIx vectors in the system, which is done by generic irq affinity
+> code, please see kernel/irq/affinity.c.
+> 
+> Also IMO each reply queue may be treated as blk-mq's hw queue, then
+> megaraid may benefit from blk-mq's MQ framework, but one annoying thing is
+> that both legacy and blk-mq path need to be handled inside driver.
+> 
+The megaraid driver is a really strange beast;, having layered two
+different interfaces (the 'legacy' MFI interface and that from from
+mpt3sas) on top of each other.
+I had been thinking of converting it to scsi-mq, too (as my mpt3sas
+patch finally went in), but I'm not sure if we can benefit from it as
+we're still be bound by the HBA-wide tag pool.
+It's on my todo list, albeit pretty far down :-)
 
-Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+>>
+>> How should these situations be handled?
+>> Should it be made the responsibility of the drivers, ensuring that the
+>> interrupt completion routine is terminated after a certain time?
+>> Should it be made the resposibility of the upper layers?
+>> Should it be the responsibility of the interrupt mapping code?
+>> Can/should interrupt polling be used in these situations?
+> 
+> Yeah, I guess interrupt polling may improve these situations, especially
+> KPTI introduces some extra cost in interrupt handling.
+> 
+The question is not so much if one should be doing irq polling, but
+rather if we can come up with some guidance or even infrastructure to
+make this happen automatically.
+Having to rely on individual drivers to get this right is probably not
+the best option.
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- Documentation/ABI/testing/sysfs-driver-ufs | 19 +++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.c               | 18 ++++++++++++++++++
- drivers/scsi/ufs/ufs.h                     |  8 ++++++++
- 3 files changed, 45 insertions(+)
+Cheers,
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 8da7b84..099e6fa 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -221,3 +221,22 @@ Description:	This file shows the command maximum timeout for a change
- 		parameters. The full information about the descriptor could
- 		be found at UFS specifications 2.1.
- 		The file is read only.
-+
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/interconnect_descriptor/unipro_version
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the MIPI UniPro version number in BCD format.
-+		This is one of the UFS interconnect descriptor parameters.
-+		The full information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/interconnect_descriptor/mphy_version
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the MIPI M-PHY version number in BCD format.
-+		This is one of the UFS interconnect descriptor parameters.
-+		The full information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 372e281..460378b 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -264,9 +264,27 @@ static const struct attribute_group ufs_sysfs_device_descriptor_group = {
- 	.attrs = ufs_sysfs_device_descriptor,
- };
- 
-+#define UFS_INTERCONNECT_DESC_PARAM(_name, _uname, _size)                     \
-+	UFS_DESC_PARAM(_name, _uname, INTERCONNECT, _size)
-+
-+UFS_INTERCONNECT_DESC_PARAM(unipro_version, _UNIPRO_VER, WORD);
-+UFS_INTERCONNECT_DESC_PARAM(mphy_version, _MPHY_VER, WORD);
-+
-+static struct attribute *ufs_sysfs_interconnect_descriptor[] = {
-+	&dev_attr_unipro_version.attr,
-+	&dev_attr_mphy_version.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group ufs_sysfs_interconnect_descriptor_group = {
-+	.name = "interconnect_descriptor",
-+	.attrs = ufs_sysfs_interconnect_descriptor,
-+};
-+
- static const struct attribute_group *ufs_sysfs_groups[] = {
- 	&ufs_sysfs_default_group,
- 	&ufs_sysfs_device_descriptor_group,
-+	&ufs_sysfs_interconnect_descriptor_group,
- 	NULL,
- };
- 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 6ae1e08..773c049 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -230,6 +230,14 @@ enum device_desc_param {
- 	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
- };
- 
-+/* Interconnect descriptor parameters offsets in bytes*/
-+enum interconnect_desc_param {
-+	INTERCONNECT_DESC_PARAM_LEN		= 0x0,
-+	INTERCONNECT_DESC_PARAM_TYPE		= 0x1,
-+	INTERCONNECT_DESC_PARAM_UNIPRO_VER	= 0x2,
-+	INTERCONNECT_DESC_PARAM_MPHY_VER	= 0x4,
-+};
-+
- /*
-  * Logical Unit Write Protect
-  * 00h: LU not write protected
+Hannes
 -- 
-2.7.4
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
