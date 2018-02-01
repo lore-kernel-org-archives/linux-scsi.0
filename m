@@ -1,7 +1,7 @@
 From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v4 04/10] ufs: sysfs: geometry descriptor
-Date: Thu,  1 Feb 2018 18:15:40 +0200
-Message-ID: <1517501746-19075-5-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: [PATCH v4 01/10] ufs: sysfs: attribute group for existing sysfs entries.
+Date: Thu,  1 Feb 2018 18:15:37 +0200
+Message-ID: <1517501746-19075-2-git-send-email-stanislav.nijnikov@wdc.com>
 References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
@@ -10,347 +10,442 @@ To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfounda
 Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch introduces a sysfs group entry for the UFS geometry descriptor
-parameters. The group adds "geometry_descriptor" folder under the UFS
-driver sysfs entry (/sys/bus/platform/drivers/ufshcd/*). The parameters
-are shown as hexadecimal numbers. The full information about the parameters
-could be found at UFS specifications 2.1.
+This patch introduces attribute group to show existing sysfs entries.
 
 Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 173 +++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.c               |  84 ++++++++++++++
- drivers/scsi/ufs/ufs.h                     |  36 ++++++
- 3 files changed, 293 insertions(+)
+ drivers/scsi/ufs/Makefile    |   3 +-
+ drivers/scsi/ufs/ufs-sysfs.c | 164 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.h |  22 ++++++
+ drivers/scsi/ufs/ufshcd.c    | 156 ++--------------------------------------
+ drivers/scsi/ufs/ufshcd.h    |   2 +
+ 5 files changed, 194 insertions(+), 153 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 099e6fa..6ea7613 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -240,3 +240,176 @@ Description:	This file shows the MIPI M-PHY version number in BCD format.
- 		The full information about the descriptor could be found at
- 		UFS specifications 2.1.
- 		The file is read only.
-+
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/raw_device_capacity
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the total memory quantity available to
-+		the user to configure the device logical units. This is one
-+		of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/max_number_of_luns
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the maximum number of logical units
-+		supported by the UFS device. This is one of the UFS
-+		geometry descriptor parameters. The full information about
-+		the descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/segment_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the segment size. This is one of the UFS
-+		geometry descriptor parameters. The full information about
-+		the descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/allocation_unit_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the allocation unit size. This is one of
-+		the UFS geometry descriptor parameters. The full information
-+		about the descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/min_addressable_block_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the minimum addressable block size. This
-+		is one of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at UFS
-+		specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/optimal_read_block_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the optimal read block size. This is one
-+		of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at UFS
-+		specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/optimal_write_block_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the optimal write block size. This is one
-+		of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at UFS
-+		specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/max_in_buffer_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the maximum data-in buffer size. This
-+		is one of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at UFS
-+		specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/max_out_buffer_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the maximum data-out buffer size. This
-+		is one of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at UFS
-+		specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/rpmb_rw_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the maximum number of RPMB frames allowed
-+		in Security Protocol In/Out. This is one of the UFS geometry
-+		descriptor parameters. The full information about the
-+		descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/dyn_capacity_resource_policy
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the dynamic capacity resource policy. This
-+		is one of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/data_ordering
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows support for out-of-order data transfer.
-+		This is one of the UFS geometry descriptor parameters.
-+		The full information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/max_number_of_contexts
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows maximum available number of contexts which
-+		are supported by the device. This is one of the UFS geometry
-+		descriptor parameters. The full information about the
-+		descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/sys_data_tag_unit_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows system data tag unit size. This is one of
-+		the UFS geometry descriptor parameters. The full information
-+		about the descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/sys_data_tag_resource_size
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows maximum storage area size allocated by
-+		the device to handle system data by the tagging mechanism.
-+		This is one of the UFS geometry descriptor parameters.
-+		The full information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/secure_removal_types
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows supported secure removal types. This is
-+		one of the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/memory_types
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows supported memory types. This is one of
-+		the UFS geometry descriptor parameters. The full
-+		information about the descriptor could be found at
-+		UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/*_memory_max_alloc_units
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the maximum number of allocation units for
-+		different memory types (system code, non persistent,
-+		enhanced type 1-4). This is one of the UFS geometry
-+		descriptor parameters. The full information about the
-+		descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/*_memory_capacity_adjustment_factor
-+Date:		February 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows the memory capacity adjustment factor for
-+		different memory types (system code, non persistent,
-+		enhanced type 1-4). This is one of the UFS geometry
-+		descriptor parameters. The full information about the
-+		descriptor could be found at UFS specifications 2.1.
-+		The file is read only.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 9310c6c..918f579 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -3,6 +3,7 @@
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+-obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
++obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
++ufshcd-core-objs := ufshcd.o ufs-sysfs.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
 diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 460378b..6427804 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
+new file mode 100644
+index 0000000..cc68a90
+--- /dev/null
 +++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -281,10 +281,94 @@ static const struct attribute_group ufs_sysfs_interconnect_descriptor_group = {
- 	.attrs = ufs_sysfs_interconnect_descriptor,
- };
- 
-+#define UFS_GEOMETRY_DESC_PARAM(_name, _uname, _size)                         \
-+	UFS_DESC_PARAM(_name, _uname, GEOMETRY, _size)
+@@ -0,0 +1,164 @@
++//SPDX-License-Identifier: GPL-2.0-only
++//Copyright (C) 2018 Western Digital Corporation
++//This program is free software; you can redistribute it and/or modify it
++//under the terms of the GNU General Public License as published by the
++//Free Software Foundation; version 2.
++//
++//This program is distributed in the hope that it will be useful, but
++//WITHOUT ANY WARRANTY; without even the implied warranty of
++//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++//General Public License for more details.
 +
-+UFS_GEOMETRY_DESC_PARAM(raw_device_capacity, _DEV_CAP, QWORD);
-+UFS_GEOMETRY_DESC_PARAM(max_number_of_luns, _MAX_NUM_LUN, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(segment_size, _SEG_SIZE, DWORD);
-+UFS_GEOMETRY_DESC_PARAM(allocation_unit_size, _ALLOC_UNIT_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(min_addressable_block_size, _MIN_BLK_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(optimal_read_block_size, _OPT_RD_BLK_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(optimal_write_block_size, _OPT_WR_BLK_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(max_in_buffer_size, _MAX_IN_BUF_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(max_out_buffer_size, _MAX_OUT_BUF_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(rpmb_rw_size, _RPMB_RW_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(dyn_capacity_resource_policy, _DYN_CAP_RSRC_PLC, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(data_ordering, _DATA_ORDER, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(max_number_of_contexts, _MAX_NUM_CTX, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(sys_data_tag_unit_size, _TAG_UNIT_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(sys_data_tag_resource_size, _TAG_RSRC_SIZE, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(secure_removal_types, _SEC_RM_TYPES, BYTE);
-+UFS_GEOMETRY_DESC_PARAM(memory_types, _MEM_TYPES, WORD);
-+UFS_GEOMETRY_DESC_PARAM(sys_code_memory_max_alloc_units,
-+	_SCM_MAX_NUM_UNITS, DWORD);
-+UFS_GEOMETRY_DESC_PARAM(sys_code_memory_capacity_adjustment_factor,
-+	_SCM_CAP_ADJ_FCTR, WORD);
-+UFS_GEOMETRY_DESC_PARAM(non_persist_memory_max_alloc_units,
-+	_NPM_MAX_NUM_UNITS, DWORD);
-+UFS_GEOMETRY_DESC_PARAM(non_persist_memory_capacity_adjustment_factor,
-+	_NPM_CAP_ADJ_FCTR, WORD);
-+UFS_GEOMETRY_DESC_PARAM(enh1_memory_max_alloc_units,
-+	_ENM1_MAX_NUM_UNITS, DWORD);
-+UFS_GEOMETRY_DESC_PARAM(enh1_memory_capacity_adjustment_factor,
-+	_ENM1_CAP_ADJ_FCTR, WORD);
-+UFS_GEOMETRY_DESC_PARAM(enh2_memory_max_alloc_units,
-+	_ENM2_MAX_NUM_UNITS, DWORD);
-+UFS_GEOMETRY_DESC_PARAM(enh2_memory_capacity_adjustment_factor,
-+	_ENM2_CAP_ADJ_FCTR, WORD);
-+UFS_GEOMETRY_DESC_PARAM(enh3_memory_max_alloc_units,
-+	_ENM3_MAX_NUM_UNITS, DWORD);
-+UFS_GEOMETRY_DESC_PARAM(enh3_memory_capacity_adjustment_factor,
-+	_ENM3_CAP_ADJ_FCTR, WORD);
-+UFS_GEOMETRY_DESC_PARAM(enh4_memory_max_alloc_units,
-+	_ENM4_MAX_NUM_UNITS, DWORD);
-+UFS_GEOMETRY_DESC_PARAM(enh4_memory_capacity_adjustment_factor,
-+	_ENM4_CAP_ADJ_FCTR, WORD);
++#include <linux/err.h>
++#include <linux/string.h>
 +
-+static struct attribute *ufs_sysfs_geometry_descriptor[] = {
-+	&dev_attr_raw_device_capacity.attr,
-+	&dev_attr_max_number_of_luns.attr,
-+	&dev_attr_segment_size.attr,
-+	&dev_attr_allocation_unit_size.attr,
-+	&dev_attr_min_addressable_block_size.attr,
-+	&dev_attr_optimal_read_block_size.attr,
-+	&dev_attr_optimal_write_block_size.attr,
-+	&dev_attr_max_in_buffer_size.attr,
-+	&dev_attr_max_out_buffer_size.attr,
-+	&dev_attr_rpmb_rw_size.attr,
-+	&dev_attr_dyn_capacity_resource_policy.attr,
-+	&dev_attr_data_ordering.attr,
-+	&dev_attr_max_number_of_contexts.attr,
-+	&dev_attr_sys_data_tag_unit_size.attr,
-+	&dev_attr_sys_data_tag_resource_size.attr,
-+	&dev_attr_secure_removal_types.attr,
-+	&dev_attr_memory_types.attr,
-+	&dev_attr_sys_code_memory_max_alloc_units.attr,
-+	&dev_attr_sys_code_memory_capacity_adjustment_factor.attr,
-+	&dev_attr_non_persist_memory_max_alloc_units.attr,
-+	&dev_attr_non_persist_memory_capacity_adjustment_factor.attr,
-+	&dev_attr_enh1_memory_max_alloc_units.attr,
-+	&dev_attr_enh1_memory_capacity_adjustment_factor.attr,
-+	&dev_attr_enh2_memory_max_alloc_units.attr,
-+	&dev_attr_enh2_memory_capacity_adjustment_factor.attr,
-+	&dev_attr_enh3_memory_max_alloc_units.attr,
-+	&dev_attr_enh3_memory_capacity_adjustment_factor.attr,
-+	&dev_attr_enh4_memory_max_alloc_units.attr,
-+	&dev_attr_enh4_memory_capacity_adjustment_factor.attr,
++#include "ufs-sysfs.h"
++
++static const char *ufschd_uic_link_state_to_string(
++			enum uic_link_state state)
++{
++	switch (state) {
++	case UIC_LINK_OFF_STATE:	return "OFF";
++	case UIC_LINK_ACTIVE_STATE:	return "ACTIVE";
++	case UIC_LINK_HIBERN8_STATE:	return "HIBERN8";
++	default:			return "UNKNOWN";
++	}
++}
++
++static const char *ufschd_ufs_dev_pwr_mode_to_string(
++			enum ufs_dev_pwr_mode state)
++{
++	switch (state) {
++	case UFS_ACTIVE_PWR_MODE:	return "ACTIVE";
++	case UFS_SLEEP_PWR_MODE:	return "SLEEP";
++	case UFS_POWERDOWN_PWR_MODE:	return "POWERDOWN";
++	default:			return "UNKNOWN";
++	}
++}
++
++static inline ssize_t ufs_sysfs_pm_lvl_store(struct device *dev,
++					     struct device_attribute *attr,
++					     const char *buf, size_t count,
++					     bool rpm)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned long flags, value;
++
++	if (kstrtoul(buf, 0, &value))
++		return -EINVAL;
++
++	if (value >= UFS_PM_LVL_MAX)
++		return -EINVAL;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	if (rpm)
++		hba->rpm_lvl = value;
++	else
++		hba->spm_lvl = value;
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	return count;
++}
++
++static ssize_t rpm_lvl_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int curr_len;
++	u8 lvl;
++
++	curr_len = snprintf(buf, PAGE_SIZE,
++			    "\nCurrent Runtime PM level [%d] => dev_state [%s] link_state [%s]\n",
++			    hba->rpm_lvl,
++			    ufschd_ufs_dev_pwr_mode_to_string(
++				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
++			    ufschd_uic_link_state_to_string(
++				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
++
++	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
++			     "\nAll available Runtime PM levels info:\n");
++	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
++		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
++				     "\tRuntime PM level [%d] => dev_state [%s] link_state [%s]\n",
++				    lvl,
++				    ufschd_ufs_dev_pwr_mode_to_string(
++					ufs_pm_lvl_states[lvl].dev_state),
++				    ufschd_uic_link_state_to_string(
++					ufs_pm_lvl_states[lvl].link_state));
++
++	return curr_len;
++}
++
++static ssize_t rpm_lvl_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, true);
++}
++
++static ssize_t spm_lvl_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int curr_len;
++	u8 lvl;
++
++	curr_len = snprintf(buf, PAGE_SIZE,
++			    "\nCurrent System PM level [%d] => dev_state [%s] link_state [%s]\n",
++			    hba->spm_lvl,
++			    ufschd_ufs_dev_pwr_mode_to_string(
++				ufs_pm_lvl_states[hba->spm_lvl].dev_state),
++			    ufschd_uic_link_state_to_string(
++				ufs_pm_lvl_states[hba->spm_lvl].link_state));
++
++	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
++			     "\nAll available System PM levels info:\n");
++	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
++		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
++				     "\tSystem PM level [%d] => dev_state [%s] link_state [%s]\n",
++				    lvl,
++				    ufschd_ufs_dev_pwr_mode_to_string(
++					ufs_pm_lvl_states[lvl].dev_state),
++				    ufschd_uic_link_state_to_string(
++					ufs_pm_lvl_states[lvl].link_state));
++
++	return curr_len;
++}
++
++static ssize_t spm_lvl_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, false);
++}
++
++static DEVICE_ATTR_RW(rpm_lvl);
++static DEVICE_ATTR_RW(spm_lvl);
++
++static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
++	&dev_attr_rpm_lvl.attr,
++	&dev_attr_spm_lvl.attr,
++	NULL
++};
++
++static const struct attribute_group ufs_sysfs_default_group = {
++	.attrs = ufs_sysfs_ufshcd_attrs,
++};
++
++static const struct attribute_group *ufs_sysfs_groups[] = {
++	&ufs_sysfs_default_group,
 +	NULL,
 +};
 +
-+static const struct attribute_group ufs_sysfs_geometry_descriptor_group = {
-+	.name = "geometry_descriptor",
-+	.attrs = ufs_sysfs_geometry_descriptor,
-+};
++void ufs_sysfs_add_nodes(struct device *dev)
++{
++	int ret;
 +
- static const struct attribute_group *ufs_sysfs_groups[] = {
- 	&ufs_sysfs_default_group,
- 	&ufs_sysfs_device_descriptor_group,
- 	&ufs_sysfs_interconnect_descriptor_group,
-+	&ufs_sysfs_geometry_descriptor_group,
- 	NULL,
- };
- 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 773c049..04d41c8 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -238,6 +238,42 @@ enum interconnect_desc_param {
- 	INTERCONNECT_DESC_PARAM_MPHY_VER	= 0x4,
- };
- 
-+/* Geometry descriptor parameters offsets in bytes*/
-+enum geometry_desc_param {
-+	GEOMETRY_DESC_PARAM_LEN			= 0x0,
-+	GEOMETRY_DESC_PARAM_TYPE		= 0x1,
-+	GEOMETRY_DESC_PARAM_DEV_CAP		= 0x4,
-+	GEOMETRY_DESC_PARAM_MAX_NUM_LUN		= 0xC,
-+	GEOMETRY_DESC_PARAM_SEG_SIZE		= 0xD,
-+	GEOMETRY_DESC_PARAM_ALLOC_UNIT_SIZE	= 0x11,
-+	GEOMETRY_DESC_PARAM_MIN_BLK_SIZE	= 0x12,
-+	GEOMETRY_DESC_PARAM_OPT_RD_BLK_SIZE	= 0x13,
-+	GEOMETRY_DESC_PARAM_OPT_WR_BLK_SIZE	= 0x14,
-+	GEOMETRY_DESC_PARAM_MAX_IN_BUF_SIZE	= 0x15,
-+	GEOMETRY_DESC_PARAM_MAX_OUT_BUF_SIZE	= 0x16,
-+	GEOMETRY_DESC_PARAM_RPMB_RW_SIZE	= 0x17,
-+	GEOMETRY_DESC_PARAM_DYN_CAP_RSRC_PLC	= 0x18,
-+	GEOMETRY_DESC_PARAM_DATA_ORDER		= 0x19,
-+	GEOMETRY_DESC_PARAM_MAX_NUM_CTX		= 0x1A,
-+	GEOMETRY_DESC_PARAM_TAG_UNIT_SIZE	= 0x1B,
-+	GEOMETRY_DESC_PARAM_TAG_RSRC_SIZE	= 0x1C,
-+	GEOMETRY_DESC_PARAM_SEC_RM_TYPES	= 0x1D,
-+	GEOMETRY_DESC_PARAM_MEM_TYPES		= 0x1E,
-+	GEOMETRY_DESC_PARAM_SCM_MAX_NUM_UNITS	= 0x20,
-+	GEOMETRY_DESC_PARAM_SCM_CAP_ADJ_FCTR	= 0x24,
-+	GEOMETRY_DESC_PARAM_NPM_MAX_NUM_UNITS	= 0x26,
-+	GEOMETRY_DESC_PARAM_NPM_CAP_ADJ_FCTR	= 0x2A,
-+	GEOMETRY_DESC_PARAM_ENM1_MAX_NUM_UNITS	= 0x2C,
-+	GEOMETRY_DESC_PARAM_ENM1_CAP_ADJ_FCTR	= 0x30,
-+	GEOMETRY_DESC_PARAM_ENM2_MAX_NUM_UNITS	= 0x32,
-+	GEOMETRY_DESC_PARAM_ENM2_CAP_ADJ_FCTR	= 0x36,
-+	GEOMETRY_DESC_PARAM_ENM3_MAX_NUM_UNITS	= 0x38,
-+	GEOMETRY_DESC_PARAM_ENM3_CAP_ADJ_FCTR	= 0x3C,
-+	GEOMETRY_DESC_PARAM_ENM4_MAX_NUM_UNITS	= 0x3E,
-+	GEOMETRY_DESC_PARAM_ENM4_CAP_ADJ_FCTR	= 0x42,
-+	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
-+};
++	ret = sysfs_create_groups(&dev->kobj, ufs_sysfs_groups);
++	if (ret)
++		dev_err(dev,
++			"%s: sysfs groups creation failed (err = %d)\n",
++			__func__, ret);
++}
 +
- /*
-  * Logical Unit Write Protect
-  * 00h: LU not write protected
++void ufs_sysfs_remove_nodes(struct device *dev)
++{
++	sysfs_remove_groups(&dev->kobj, ufs_sysfs_groups);
++}
+diff --git a/drivers/scsi/ufs/ufs-sysfs.h b/drivers/scsi/ufs/ufs-sysfs.h
+new file mode 100644
+index 0000000..c53c039
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-sysfs.h
+@@ -0,0 +1,22 @@
++/*SPDX-License-Identifier: GPL-2.0-only
++ *Copyright (C) 2018 Western Digital Corporation
++ *This program is free software; you can redistribute it and/or modify it
++ *under the terms of the GNU General Public License as published by the
++ *Free Software Foundation; version 2.
++ *
++ *This program is distributed in the hope that it will be useful, but
++ *WITHOUT ANY WARRANTY; without even the implied warranty of
++ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ *General Public License for more details.
++ */
++
++#ifndef __UFS_SYSFS_H__
++#define __UFS_SYSFS_H__
++
++#include <linux/sysfs.h>
++
++#include "ufshcd.h"
++
++void ufs_sysfs_add_nodes(struct device *dev);
++void ufs_sysfs_remove_nodes(struct device *dev);
++#endif
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index a355d98..e7621a0a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -44,6 +44,7 @@
+ #include "ufshcd.h"
+ #include "ufs_quirks.h"
+ #include "unipro.h"
++#include "ufs-sysfs.h"
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/ufs.h>
+@@ -150,7 +151,7 @@ enum {
+ #define ufshcd_is_ufs_dev_poweroff(h) \
+ 	((h)->curr_dev_pwr_mode == UFS_POWERDOWN_PWR_MODE)
+ 
+-static struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
++struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
+ 	{UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
+ 	{UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
+ 	{UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE},
+@@ -813,28 +814,6 @@ static inline bool ufshcd_is_hba_active(struct ufs_hba *hba)
+ 		? false : true;
+ }
+ 
+-static const char *ufschd_uic_link_state_to_string(
+-			enum uic_link_state state)
+-{
+-	switch (state) {
+-	case UIC_LINK_OFF_STATE:	return "OFF";
+-	case UIC_LINK_ACTIVE_STATE:	return "ACTIVE";
+-	case UIC_LINK_HIBERN8_STATE:	return "HIBERN8";
+-	default:			return "UNKNOWN";
+-	}
+-}
+-
+-static const char *ufschd_ufs_dev_pwr_mode_to_string(
+-			enum ufs_dev_pwr_mode state)
+-{
+-	switch (state) {
+-	case UFS_ACTIVE_PWR_MODE:	return "ACTIVE";
+-	case UFS_SLEEP_PWR_MODE:	return "SLEEP";
+-	case UFS_POWERDOWN_PWR_MODE:	return "POWERDOWN";
+-	default:			return "UNKNOWN";
+-	}
+-}
+-
+ u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
+ {
+ 	/* HCI version 1.0 and 1.1 supports UniPro 1.41 */
+@@ -7585,133 +7564,6 @@ int ufshcd_runtime_idle(struct ufs_hba *hba)
+ }
+ EXPORT_SYMBOL(ufshcd_runtime_idle);
+ 
+-static inline ssize_t ufshcd_pm_lvl_store(struct device *dev,
+-					   struct device_attribute *attr,
+-					   const char *buf, size_t count,
+-					   bool rpm)
+-{
+-	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	unsigned long flags, value;
+-
+-	if (kstrtoul(buf, 0, &value))
+-		return -EINVAL;
+-
+-	if (value >= UFS_PM_LVL_MAX)
+-		return -EINVAL;
+-
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (rpm)
+-		hba->rpm_lvl = value;
+-	else
+-		hba->spm_lvl = value;
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	return count;
+-}
+-
+-static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
+-		struct device_attribute *attr, char *buf)
+-{
+-	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	int curr_len;
+-	u8 lvl;
+-
+-	curr_len = snprintf(buf, PAGE_SIZE,
+-			    "\nCurrent Runtime PM level [%d] => dev_state [%s] link_state [%s]\n",
+-			    hba->rpm_lvl,
+-			    ufschd_ufs_dev_pwr_mode_to_string(
+-				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
+-			    ufschd_uic_link_state_to_string(
+-				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
+-
+-	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-			     "\nAll available Runtime PM levels info:\n");
+-	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+-		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-				     "\tRuntime PM level [%d] => dev_state [%s] link_state [%s]\n",
+-				    lvl,
+-				    ufschd_ufs_dev_pwr_mode_to_string(
+-					ufs_pm_lvl_states[lvl].dev_state),
+-				    ufschd_uic_link_state_to_string(
+-					ufs_pm_lvl_states[lvl].link_state));
+-
+-	return curr_len;
+-}
+-
+-static ssize_t ufshcd_rpm_lvl_store(struct device *dev,
+-		struct device_attribute *attr, const char *buf, size_t count)
+-{
+-	return ufshcd_pm_lvl_store(dev, attr, buf, count, true);
+-}
+-
+-static void ufshcd_add_rpm_lvl_sysfs_nodes(struct ufs_hba *hba)
+-{
+-	hba->rpm_lvl_attr.show = ufshcd_rpm_lvl_show;
+-	hba->rpm_lvl_attr.store = ufshcd_rpm_lvl_store;
+-	sysfs_attr_init(&hba->rpm_lvl_attr.attr);
+-	hba->rpm_lvl_attr.attr.name = "rpm_lvl";
+-	hba->rpm_lvl_attr.attr.mode = 0644;
+-	if (device_create_file(hba->dev, &hba->rpm_lvl_attr))
+-		dev_err(hba->dev, "Failed to create sysfs for rpm_lvl\n");
+-}
+-
+-static ssize_t ufshcd_spm_lvl_show(struct device *dev,
+-		struct device_attribute *attr, char *buf)
+-{
+-	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	int curr_len;
+-	u8 lvl;
+-
+-	curr_len = snprintf(buf, PAGE_SIZE,
+-			    "\nCurrent System PM level [%d] => dev_state [%s] link_state [%s]\n",
+-			    hba->spm_lvl,
+-			    ufschd_ufs_dev_pwr_mode_to_string(
+-				ufs_pm_lvl_states[hba->spm_lvl].dev_state),
+-			    ufschd_uic_link_state_to_string(
+-				ufs_pm_lvl_states[hba->spm_lvl].link_state));
+-
+-	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-			     "\nAll available System PM levels info:\n");
+-	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+-		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-				     "\tSystem PM level [%d] => dev_state [%s] link_state [%s]\n",
+-				    lvl,
+-				    ufschd_ufs_dev_pwr_mode_to_string(
+-					ufs_pm_lvl_states[lvl].dev_state),
+-				    ufschd_uic_link_state_to_string(
+-					ufs_pm_lvl_states[lvl].link_state));
+-
+-	return curr_len;
+-}
+-
+-static ssize_t ufshcd_spm_lvl_store(struct device *dev,
+-		struct device_attribute *attr, const char *buf, size_t count)
+-{
+-	return ufshcd_pm_lvl_store(dev, attr, buf, count, false);
+-}
+-
+-static void ufshcd_add_spm_lvl_sysfs_nodes(struct ufs_hba *hba)
+-{
+-	hba->spm_lvl_attr.show = ufshcd_spm_lvl_show;
+-	hba->spm_lvl_attr.store = ufshcd_spm_lvl_store;
+-	sysfs_attr_init(&hba->spm_lvl_attr.attr);
+-	hba->spm_lvl_attr.attr.name = "spm_lvl";
+-	hba->spm_lvl_attr.attr.mode = 0644;
+-	if (device_create_file(hba->dev, &hba->spm_lvl_attr))
+-		dev_err(hba->dev, "Failed to create sysfs for spm_lvl\n");
+-}
+-
+-static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba)
+-{
+-	ufshcd_add_rpm_lvl_sysfs_nodes(hba);
+-	ufshcd_add_spm_lvl_sysfs_nodes(hba);
+-}
+-
+-static inline void ufshcd_remove_sysfs_nodes(struct ufs_hba *hba)
+-{
+-	device_remove_file(hba->dev, &hba->rpm_lvl_attr);
+-	device_remove_file(hba->dev, &hba->spm_lvl_attr);
+-}
+-
+ /**
+  * ufshcd_shutdown - shutdown routine
+  * @hba: per adapter instance
+@@ -7749,7 +7601,7 @@ EXPORT_SYMBOL(ufshcd_shutdown);
+  */
+ void ufshcd_remove(struct ufs_hba *hba)
+ {
+-	ufshcd_remove_sysfs_nodes(hba);
++	ufs_sysfs_remove_nodes(hba->dev);
+ 	scsi_remove_host(hba->host);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+@@ -7996,7 +7848,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	ufshcd_set_ufs_dev_active(hba);
+ 
+ 	async_schedule(ufshcd_async_scan, hba);
+-	ufshcd_add_sysfs_nodes(hba);
++	ufs_sysfs_add_nodes(hba->dev);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 1332e54..53e2779 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -985,4 +985,6 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
+ 		hba->vops->dbg_register_dump(hba);
+ }
+ 
++extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
++
+ #endif /* End of Header */
 -- 
 2.7.4
