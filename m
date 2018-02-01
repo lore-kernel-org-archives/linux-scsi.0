@@ -1,53 +1,56 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [PATCH] test-case
-Date: Thu, 1 Feb 2018 18:18:54 -0200
-Message-ID: <20c33ceb-6517-aa2a-1dab-0f403f0cd4f0@linux.vnet.ibm.com>
-References: <1517425200-19126-1-git-send-email-mauricfo@linux.vnet.ibm.com>
- <1517426684-23050-1-git-send-email-mauricfo@linux.vnet.ibm.com>
- <1517439022.7325.9.camel@wdc.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: Re: [LSF/MM TOPIC] KPTI effect on IO performance
+Date: Thu, 1 Feb 2018 13:51:49 -0800
+Message-ID: <7dc44387-a232-d610-2a18-b51b095ef9c4@wdc.com>
+References: <20180131082331.GA25888@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43020 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754703AbeBAUTG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 15:19:06 -0500
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w11KIpPU012066
-        for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2018 15:19:06 -0500
-Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2fv9tmg09x-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Feb 2018 15:19:04 -0500
-Received: from localhost
-        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Thu, 1 Feb 2018 15:19:04 -0500
-In-Reply-To: <1517439022.7325.9.camel@wdc.com>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:50012 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751826AbeBAVvz (ORCPT
+        <rfc822;Linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 16:51:55 -0500
+In-Reply-To: <20180131082331.GA25888@ming.t460p>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Ming Lei <ming.lei@redhat.com>, lsf-pc@lists.linux-foundation.org, Linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
 
-On 01/31/2018 08:50 PM, Bart Van Assche wrote:
-> I think it would be useful to have some variant of the above code in the kernel
-> tree. Are you familiar with the fault injection framework (see also
-> <linux/fault-inject.h> and Documentation/fault-injection/fault-injection.txt)?
+On 01/31/18 00:23, Ming Lei wrote:
+> After KPTI is merged, there is extra load introduced to context switch
+> between user space and kernel space. It is observed on my laptop that one
+> syscall takes extra ~0.15us[1] compared with 'nopti'.
+> 
+> IO performance is affected too, it is observed that IOPS drops by 32% in
+> my test[2] on null_blk compared with 'nopti':
+> 
+> randread IOPS on latest linus tree:
+> -------------------------------------------------
+> | randread IOPS     | randread IOPS with 'nopti'|	
+> ------------------------------------------------
+> | 928K              | 1372K                     |	
+> ------------------------------------------------
+> 
+> 
+> Two paths are affected, one is IO submission(read, write,... syscall),
+> another is the IO completion path in which interrupt may be triggered
+> from user space, and context switch is needed.
+> 
+> So is there something we can do for decreasing the effect on IO performance?
+> 
+> This effect may make Hannes's issue[3] worse, and maybe 'irq poll' should be
+> used more widely for all high performance IO device, even some optimization
+> should be considered for KPTI's effect.
 
-No, not yet.  That's very interesting.
+For what kind of workload would you like to improve I/O performance? 
+Desktop-style workloads where the only third party code is the code that 
+runs in the webbrowser and in the e-mail client or datacenter workloads 
+where code from multiple customers runs on the same server? I'm asking 
+this because the per-task KPTI work seems very useful to me for 
+improving I/O performance for desktop-style workloads. I'm not sure 
+however whether that work will be as useful for datacenter workloads. 
+See also Willy Tarreau, [PATCH RFC 0/4] Per-task PTI activation 
+(https://lkml.org/lkml/2018/1/8/568).
 
-> Do you think that framework would be appropriate for controlling whether or not
-> the above code gets executed?
-
-Yes, apparently it might be done w/ fail attributes to control the
-wait-loop in the shutdown/unload hook, whether to call scsi_done(),
-and whether to fail an error handler so it escalates to the next.
-
-I'd be happy to take a look at it, if you/others are interested.
-(just to make sure it does not end up rejected later because of
-others' opinion. :-)
-
-cheers,
-Mauricio
+Bart.
