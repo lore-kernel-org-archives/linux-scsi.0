@@ -1,222 +1,103 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [RFC 0/2] mpt3sas/megaraid_sas : irq poll and load balancing of
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [RFC 0/2] mpt3sas/megaraid_sas : irq poll and load balancing of
  reply queue
-Date: Fri, 2 Feb 2018 17:08:12 +0530
-Message-ID: <2975c654e4a4d0c1fdfc3a1d4e86eb1d@mail.gmail.com>
-References: <92d894a263bf37152fdae9699ccaccff@mail.gmail.com> <20180202101343.GA21241@ming.t460p>
+Date: Fri, 2 Feb 2018 20:52:56 +0800
+Message-ID: <20180202125251.GA25020@ming.t460p>
+References: <92d894a263bf37152fdae9699ccaccff@mail.gmail.com>
+ <20180202101343.GA21241@ming.t460p>
+ <2975c654e4a4d0c1fdfc3a1d4e86eb1d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:39588 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751017AbeBBLiP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2018 06:38:15 -0500
-Received: by mail-it0-f54.google.com with SMTP id c80so1476091itb.4
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Feb 2018 03:38:14 -0800 (PST)
-In-Reply-To: <20180202101343.GA21241@ming.t460p>
+Received: from mx1.redhat.com ([209.132.183.28]:45280 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751968AbeBBMxN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Feb 2018 07:53:13 -0500
+Content-Disposition: inline
+In-Reply-To: <2975c654e4a4d0c1fdfc3a1d4e86eb1d@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
+To: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: linux-scsi@vger.kernel.org, Peter Rivera <peter.rivera@broadcom.com>
 
-> -----Original Message-----
-> From: Ming Lei [mailto:ming.lei@redhat.com]
-> Sent: Friday, February 2, 2018 3:44 PM
-> To: Kashyap Desai
-> Cc: linux-scsi@vger.kernel.org; Peter Rivera
-> Subject: Re: [RFC 0/2] mpt3sas/megaraid_sas : irq poll and load
-balancing of
-> reply queue
->
-> Hi Kashyap,
->
-> On Mon, Jan 15, 2018 at 05:42:05PM +0530, Kashyap Desai wrote:
-> > Hi All -
-> >
-> > We have seen cpu lock up issue from fields if system has greater (more
-> > than 96) logical cpu count.
-> > SAS3.0 controller (Invader series) supports at max 96 msix vector and
-> > SAS3.5 product (Ventura) supports at max 128 msix vectors.
-> >
-> > This may be a generic issue (if PCI device support  completion on
-> > multiple reply queues). Let me explain it w.r.t to mpt3sas supported
-> > h/w just to simplify the problem and possible changes to handle such
-> > issues. IT HBA
-> > (mpt3sas) supports multiple reply queues in completion path. Driver
-> > creates MSI-x vectors for controller as "min of ( FW supported Reply
-> > queue, Logical CPUs)". If submitter is not interrupted via completion
-> > on same CPU, there is a loop in the IO path. This behavior can cause
-> > hard/soft CPU lockups, IO timeout, system sluggish etc.
->
-> As I mentioned in another thread, this issue may be solved by SCSI_MQ
-via
-> mapping reply queue into hctx of blk_mq, together with
-> QUEUE_FLAG_SAME_FORCE, especially you have set 'smp_affinity_enable' as
-> 1 at default already, then pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) can
-do IRQ
-> vectors spread on CPUs perfectly for you.
->
-> But the following Hannes's patch is required for the conversion.
->
-> 	https://marc.info/?l=linux-block&m=149130770004507&w=2
->
+Hi Kashyap,
 
-Hi Ming -
+On Fri, Feb 02, 2018 at 05:08:12PM +0530, Kashyap Desai wrote:
+> > -----Original Message-----
+> > From: Ming Lei [mailto:ming.lei@redhat.com]
+> > Sent: Friday, February 2, 2018 3:44 PM
+> > To: Kashyap Desai
+> > Cc: linux-scsi@vger.kernel.org; Peter Rivera
+> > Subject: Re: [RFC 0/2] mpt3sas/megaraid_sas : irq poll and load
+> balancing of
+> > reply queue
+> >
+> > Hi Kashyap,
+> >
+> > On Mon, Jan 15, 2018 at 05:42:05PM +0530, Kashyap Desai wrote:
+> > > Hi All -
+> > >
+> > > We have seen cpu lock up issue from fields if system has greater (more
+> > > than 96) logical cpu count.
+> > > SAS3.0 controller (Invader series) supports at max 96 msix vector and
+> > > SAS3.5 product (Ventura) supports at max 128 msix vectors.
+> > >
+> > > This may be a generic issue (if PCI device support  completion on
+> > > multiple reply queues). Let me explain it w.r.t to mpt3sas supported
+> > > h/w just to simplify the problem and possible changes to handle such
+> > > issues. IT HBA
+> > > (mpt3sas) supports multiple reply queues in completion path. Driver
+> > > creates MSI-x vectors for controller as "min of ( FW supported Reply
+> > > queue, Logical CPUs)". If submitter is not interrupted via completion
+> > > on same CPU, there is a loop in the IO path. This behavior can cause
+> > > hard/soft CPU lockups, IO timeout, system sluggish etc.
+> >
+> > As I mentioned in another thread, this issue may be solved by SCSI_MQ
+> via
+> > mapping reply queue into hctx of blk_mq, together with
+> > QUEUE_FLAG_SAME_FORCE, especially you have set 'smp_affinity_enable' as
+> > 1 at default already, then pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) can
+> do IRQ
+> > vectors spread on CPUs perfectly for you.
+> >
+> > But the following Hannes's patch is required for the conversion.
+> >
+> > 	https://marc.info/?l=linux-block&m=149130770004507&w=2
+> >
+> 
+> Hi Ming -
+> 
+> I gone through thread discussing "support host-wide tagset". Below Link
+> has latest reply on that thread.
+> https://marc.info/?l=linux-block&m=149132580511346&w=2
+> 
+> I think, there is a confusion over mpt3sas and megaraid_sas h/w behavior.
+> Broadcom/LSI HBA and MR h/w has only one h/w queue for submission but
+> there are multiple reply queue.
 
-I gone through thread discussing "support host-wide tagset". Below Link
-has latest reply on that thread.
-https://marc.info/?l=linux-block&m=149132580511346&w=2
+That shouldn't be a problem, you still can submit to same hw queue in
+all submission paths(all hw queues) just like the current implementation.
 
-I think, there is a confusion over mpt3sas and megaraid_sas h/w behavior.
-Broadcom/LSI HBA and MR h/w has only one h/w queue for submission but
-there are multiple reply queue.
-Even though I include Hannes' patch for host-side tagset, problem
-described in this RFC will not be resolved.  In fact, tagset can also
-provide same results if completion queue is less than online CPU. Don't
-you think ? OR I am missing anything ?
+> Even though I include Hannes' patch for host-side tagset, problem
+> described in this RFC will not be resolved.  In fact, tagset can also
+> provide same results if completion queue is less than online CPU. Don't
+> you think ? OR I am missing anything ?
 
-We don't have problem in submission path.  Current problem is MSI-x to
-more than one  CPU can cause I/O loop. This is visible, if we have higher
-number of online CPUs.
+If reply queue is less than online CPU, more than one CPU may be mapped
+to some(or all) of hw queue, but the completion is only handled on one of
+the mapped CPUs, and can be done on the request's submission CPU via the
+queue flag of QUEUE_FLAG_SAME_FORCE, please see __blk_mq_complete_request().
+Or do you have other requirement except for completing request on its
+submission CPU?
 
-> >
-> > Example - one CPU (e.g. CPU A) is busy submitting the IOs and another
-> > CPU (e.g. CPU B) is busy with processing the corresponding IO's reply
-> > descriptors from reply descriptor queue upon receiving the interrupts
-> > from HBA. If the CPU A is continuously pumping the IOs then always CPU
-> > B (which is executing the ISR) will see the valid reply descriptors in
-> > the reply descriptor queue and it will be continuously processing
-> > those reply descriptor in a loop without quitting the ISR handler.
-> > Mpt3sas driver will exit ISR handler if it finds unused reply
-> > descriptor in the reply descriptor queue. Since CPU A will be
-> > continuously sending the IOs, CPU B may always see a valid reply
-> > descriptor (posted by HBA Firmware after processing the IO) in the
-> > reply descriptor queue. In worst case, driver will not quit from this
-> > loop in the ISR handler. Eventually, CPU lockup will be detected by
-> watchdog.
-> >
-> > Above mentioned behavior is not common if "rq_affinity" set to 2 or
-> > affinity_hint is honored by irqbalance as "exact".
-> > If rq_affinity is set to 2, submitter will be always interrupted via
-> > completion on same CPU.
-> > If irqbalance is using "exact" policy, interrupt will be delivered to
-> > submitter CPU.
->
-> Now you have used pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) to get msix
-> vector number, the irq affinity can't be changed by userspace any more.
->
-> >
-> > Problem statement -
-> > If CPU counts to MSI-X vectors (reply descriptor Queues) count ratio
-> > is not 1:1, we still have  exposure of issue explained above and for
-> > that we don't have any solution.
-> >
-> > Exposure of soft/hard lockup if CPU count is more than MSI-x supported
-> > by device.
-> >
-> > If CPUs count to MSI-x vectors count ratio is not 1:1, (Other way, if
-> > CPU counts to MSI-x vector count ratio is something like X:1, where X
-> > > 1) then 'exact' irqbalance policy OR rq_affinity = 2 won't help to
-> > avoid CPU hard/soft lockups. There won't be any one to one mapping
-> > between CPU to MSI-x vector instead one MSI-x interrupt (or reply
-> > descriptor queue) is shared with group/set of CPUs and there is a
-> > possibility of having a loop in the IO path within that CPU group and
-may
-> observe lockups.
-> >
-> > For example: Consider a system having two NUMA nodes and each node
-> > having four logical CPUs and also consider that number of MSI-x
-> > vectors enabled on the HBA is two, then CPUs count to MSI-x vector
-count
-> ratio as 4:1.
-> > e.g.
-> > MSIx vector 0 is affinity to  CPU 0, CPU 1, CPU 2 & CPU 3 of NUMA node
-> > 0 and MSI-x vector 1 is affinity to CPU 4, CPU 5, CPU 6 & CPU 7 of
-> > NUMA node 1.
-> >
-> > numactl --hardware
-> > available: 2 nodes (0-1)
-> > node 0 cpus: 0 1 2 3
--->
-> > MSI-x 0
-> > node 0 size: 65536 MB
-> > node 0 free: 63176 MB
-> > node 1 cpus: 4 5 6 7
-> > -->MSI-x 1
-> > node 1 size: 65536 MB
-> > node 1 free: 63176 MB
-> >
-> > Assume that user started an application which uses all the CPUs of
-> > NUMA node 0 for issuing the IOs.
-> > Only one CPU from affinity list (it can be any cpu since this behavior
-> > depends upon irqbalance) CPU0 will receive the interrupts from MSIx
-> > vector
-> > 0 for all the IOs. Eventually, CPU 0 IO submission percentage will be
-> > decreasing and ISR processing percentage will be increasing as it is
-> > more busy with processing the interrupts. Gradually IO submission
-> > percentage on CPU 0 will be zero and it's ISR processing percentage
-> > will be 100 percentage as IO loop has already formed within the NUMA
-> > node 0, i.e. CPU 1, CPU 2 & CPU 3 will be continuously busy with
-> > submitting the heavy IOs and only CPU 0 is busy in the ISR path as it
-> > always find the valid reply descriptor in the reply descriptor queue.
-> > Eventually, we will observe the hard lockup here.
-> >
-> > Chances of occurring of hard/soft lockups are directly proportional to
-> > value of X. If value of X is high, then chances of observing CPU
-> > lockups is high.
-> >
-> > Solution -
-> > Fix - 1 Use IRQ poll interface defined in " irq_poll.c". mpt3sas
-> > driver will execute ISR routine in Softirq context and it will always
-> > quit the loop based on budget provided in IRQ poll interface.
-> >
-> > In these scenarios( i.e. where CPUs count to MSI-X vectors count ratio
-> > is
-> > X:1 (where X >  1)),  IRQ poll interface will avoid CPU hard lockups
-> > due to voluntary exit from the reply queue processing based on budget.
-> > Note - Only one MSI-x vector is busy doing processing. Irqstat ouput -
-> >
-> > IRQs / 1 second(s)
-> > IRQ#  TOTAL  NODE0   NODE1   NODE2   NODE3  NAME
-> >   44    122871   122871   0       0       0  IR-PCI-MSI-edge
-> > mpt3sas0-msix0
-> >   45        0              0           0       0       0
-IR-PCI-MSI-edge
-> > mpt3sas0-msix1
-> >
-> > Fix-2 - Above fix will avoid lockups, but there can be some
-> > performance issue if very few reply queue is busy. Driver should round
-> > robin the reply queue, so that each reply queue is load balanced.
-> > Irqstat ouput after driver does reply queue load balance-
-> >
-> > IRQs / 1 second(s)
-> > IRQ#  TOTAL  NODE0   NODE1   NODE2   NODE3  NAME
-> >   44  62871  62871       0       0       0  IR-PCI-MSI-edge
-mpt3sas0-msix0
-> >   45  62718  62718       0       0       0  IR-PCI-MSI-edge
-mpt3sas0-msix1
-> >
-> > In Summary,
-> > CPU completing IO which is not contributing to IO submission, may
-> > cause cpu lockup.
-> > If CPUs count to MSI-X vector count ratio is X:1 (where X > 1) then
-> > using irq poll interface, we can avoid the CPU lockups and by equally
-> > distributing the interrupts among the enabled MSI-x interrupts we can
-> > avoid performance issues.
-> >
-> > We are planning to use both the fixes only if cpu count is more than
-> > FW supported MSI-x vector.
-> > Please review and provide your feedback. I have appended both the
-> patches.
-> >
->
-> Please take a look at pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) and
-> SCSI_MQ/blk_mq, you issue can be solved without much difficulty.
->
-> One annoying thing is that SCSI driver has to support both MQ and non-MQ
-> path. Long time ago, I submitted patch to support force-MQ in driver,
-but it is
-> rejected.
->
-> Thanks,
-> Ming
+> 
+> We don't have problem in submission path.  Current problem is MSI-x to
+> more than one  CPU can cause I/O loop. This is visible, if we have higher
+> number of online CPUs.
+
+Yeah, I know, as I mentioned above, your requirement of completing
+request on its submission CPU can be met with current SCSI_MQ without
+much difficulty.
+
+Thanks,
+Ming
