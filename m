@@ -1,121 +1,42 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [PATCH 1/1] scsi: ufs: make sure all interrupts are processed
-Date: Fri, 2 Feb 2018 08:53:09 +0530
-Message-ID: <6ca20a27-3c10-bf0e-35e7-542b7ab77356@codeaurora.org>
-References: <1517288066-13171-1-git-send-email-asutoshd@codeaurora.org>
- <DM5PR04MB1085C5039CA525D6FB77DBE3FCFB0@DM5PR04MB1085.namprd04.prod.outlook.com>
+From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v4 02/10] ufs: sysfs: device descriptor
+Date: Fri, 2 Feb 2018 08:17:35 +0100
+Message-ID: <20180202071735.GC9314@kroah.com>
+References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
+ <1517501746-19075-3-git-send-email-stanislav.nijnikov@wdc.com>
+ <1517531145.2746.26.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41762 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751530AbeBBDXQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 22:23:16 -0500
-In-Reply-To: <DM5PR04MB1085C5039CA525D6FB77DBE3FCFB0@DM5PR04MB1085.namprd04.prod.outlook.com>
-Content-Language: en-US
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38536 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbeBBHRi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2018 02:17:38 -0500
+Content-Disposition: inline
+In-Reply-To: <1517531145.2746.26.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Avri Altman <Avri.Altman@wdc.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>
 
-On 1/31/2018 1:09 PM, Avri Altman wrote:
-> Hi,
-> Can you elaborate how this can even happen?
-> Isn't the interrupt aggregation capability should attend for those cases?
+On Fri, Feb 02, 2018 at 12:25:46AM +0000, Bart Van Assche wrote:
+> On Thu, 2018-02-01 at 18:15 +0200, Stanislav Nijnikov wrote:
+> > +enum ufs_desc_param_size {
+> > +	UFS_PARAM_BYTE_SIZE	= 1,
+> > +	UFS_PARAM_WORD_SIZE	= 2,
+> > +	UFS_PARAM_DWORD_SIZE	= 4,
+> > +	UFS_PARAM_QWORD_SIZE	= 8,
+> > +};
 > 
-> Thanks,
-> Avri
-> 
->> -----Original Message-----
->> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->> owner@vger.kernel.org] On Behalf Of Asutosh Das
->> Sent: Tuesday, January 30, 2018 6:54 AM
->> To: subhashj@codeaurora.org; cang@codeaurora.org;
->> vivek.gautam@codeaurora.org; rnayak@codeaurora.org;
->> vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;
->> martin.petersen@oracle.com
->> Cc: linux-scsi@vger.kernel.org; Venkat Gopalakrishnan
->> <venkatg@codeaurora.org>; Asutosh Das <asutoshd@codeaurora.org>; open
->> list <linux-kernel@vger.kernel.org>
->> Subject: [PATCH 1/1] scsi: ufs: make sure all interrupts are processed
->>
->> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->>
->> As multiple requests are submitted to the ufs host controller in parallel there
->> could be instances where the command completion interrupt arrives later for a
->> request that is already processed earlier as the corresponding doorbell was
->> cleared when handling the previous interrupt. Read the interrupt status in a
->> loop after processing the received interrupt to catch such interrupts and handle
->> it.
->>
->> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> ---
->>   drivers/scsi/ufs/ufshcd.c | 27 +++++++++++++++++++--------
->>   1 file changed, 19 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
->> 8af2af3..58d81de 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -5357,19 +5357,30 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
->>   	u32 intr_status, enabled_intr_status;
->>   	irqreturn_t retval = IRQ_NONE;
->>   	struct ufs_hba *hba = __hba;
->> +	int retries = hba->nutrs;
->>
->>   	spin_lock(hba->host->host_lock);
->>   	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
->> -	enabled_intr_status =
->> -		intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
->>
->> -	if (intr_status)
->> -		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
->> +	/*
->> +	 * There could be max of hba->nutrs reqs in flight and in worst case
->> +	 * if the reqs get finished 1 by 1 after the interrupt status is
->> +	 * read, make sure we handle them by checking the interrupt status
->> +	 * again in a loop until we process all of the reqs before returning.
->> +	 */
->> +	do {
->> +		enabled_intr_status =
->> +			intr_status & ufshcd_readl(hba,
->> REG_INTERRUPT_ENABLE);
->> +		if (intr_status)
->> +			ufshcd_writel(hba, intr_status,
->> REG_INTERRUPT_STATUS);
->> +		if (enabled_intr_status) {
->> +			ufshcd_sl_intr(hba, enabled_intr_status);
->> +			retval = IRQ_HANDLED;
->> +		}
->> +
->> +		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
->> +	} while (intr_status && --retries);
->>
->> -	if (enabled_intr_status) {
->> -		ufshcd_sl_intr(hba, enabled_intr_status);
->> -		retval = IRQ_HANDLED;
->> -	}
->>   	spin_unlock(hba->host->host_lock);
->>   	return retval;
->>   }
->> --
->> Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center,
->> Inc.
->> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
->> Foundation Collaborative Project.
-> 
+> Please do not copy bad naming choices from the Windows kernel into the Linux
+> kernel. Using names like WORD / DWORD / QWORD is much less readable than using
+> the numeric constants 2, 4, 8. Hence my proposal to leave out the above enum
+> completely.
 
-Hi
-yes - interrupt aggregation makes sense here. But there were some 
-performance concerns with it; well, I don't have the data to back that 
-up now though.
-However, I can code it up and check it.
-Will post it in some time.
+Are you sure those do not come from the spec itself?  It's been a while
+since I last read it, but for some reason I remember those types of
+names being in there.  But I might be confusing specs here.
 
--asd
+thanks,
 
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+greg k-h
