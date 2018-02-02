@@ -1,143 +1,106 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 4/6] scsi: qedf: fix LTO-enabled build
-Date: Fri,  2 Feb 2018 14:12:18 +0100
-Message-ID: <20180202131225.1658853-5-arnd@arndb.de>
+Subject: [PATCH 5/6] scsi: qedi: fix building with LTO
+Date: Fri,  2 Feb 2018 14:12:19 +0100
+Message-ID: <20180202131225.1658853-6-arnd@arndb.de>
 References: <20180202131225.1658853-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:61939 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752018AbeBBNNd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2018 08:13:33 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180202131225.1658853-1-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, QLogic-Storage-Upstream@cavium.com, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Nicolas Pitre <nico@linaro.org>, Andi Kleen <ak@linux.intel.com>, Arnd Bergmann <arnd@arndb.de>, Chad Dupuis <chad.dupuis@cavium.com>, Nilesh Javali <nilesh.javali@cavium.com>, linux-kernel@vger.kernel.org
+Cc: Nicolas Pitre <nico@linaro.org>, Andi Kleen <ak@linux.intel.com>, Arnd Bergmann <arnd@arndb.de>, Manish Rangankar <Manish.Rangankar@cavium.com>, Tomer Tayar <Tomer.Tayar@cavium.com>, "David S. Miller" <davem@davemloft.net>, Ariel Elior <Ariel.Elior@cavium.com>, Arun Easi <arun.easi@cavium.com>, Nilesh Javali <nilesh.javali@cavium.com>, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-The prototype for qedf_dbg_fops/qedf_debugfs_ops doesn't match the definition,
-which causes the final link to fail with link-time optimizations:
+When link-time optimizations are enabled, qedi fails to build because
+of mismatched prototypes:
 
-drivers/scsi/qedf/qedf_main.c:34: error: type of 'qedf_dbg_fops' does not match original declaration [-Werror=lto-type-mismatch]
- extern struct file_operations qedf_dbg_fops;
+drivers/scsi/qedi/qedi_gbl.h:27:37: error: type of 'qedi_dbg_fops' does not match original declaration [-Werror=lto-type-mismatch]
+ extern const struct file_operations qedi_dbg_fops;
+                                     ^
+drivers/scsi/qedi/qedi_debugfs.c:239:30: note: 'qedi_dbg_fops' was previously declared here
+ const struct file_operations qedi_dbg_fops[] = {
+                              ^
+drivers/scsi/qedi/qedi_gbl.h:26:32: error: type of 'qedi_debugfs_ops' does not match original declaration [-Werror=lto-type-mismatch]
+ extern struct qedi_debugfs_ops qedi_debugfs_ops;
+                                ^
+drivers/scsi/qedi/qedi_debugfs.c:102:25: note: 'qedi_debugfs_ops' was previously declared here
+ struct qedi_debugfs_ops qedi_debugfs_ops[] = {
 
-drivers/scsi/qedf/qedf_debugfs.c:443: note: 'qedf_dbg_fops' was previously declared here
- const struct file_operations qedf_dbg_fops[] = {
-
-drivers/scsi/qedf/qedf_main.c:33: error: type of 'qedf_debugfs_ops' does not match original declaration [-Werror=lto-type-mismatch]
- extern struct qedf_debugfs_ops qedf_debugfs_ops;
-
-drivers/scsi/qedf/qedf_debugfs.c:102: note: 'qedf_debugfs_ops' was previously declared here
- struct qedf_debugfs_ops qedf_debugfs_ops[] = {
-
-This corrects the prototype and moves it into a shared header file where it
-belongs. The file operations can also be marked 'const' like the
-qedf_debugfs_ops.
+This changes the declaration to match the definition, and adapts the
+users as necessary. Since both array can be constant here, I'm adding
+the 'const' everywhere for consistency.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/qedf/qedf_dbg.h     | 17 ++++++++++-------
- drivers/scsi/qedf/qedf_debugfs.c |  6 +++---
- drivers/scsi/qedf/qedf_main.c    |  8 +++-----
- 3 files changed, 16 insertions(+), 15 deletions(-)
+ drivers/scsi/qedi/qedi_dbg.h     | 2 +-
+ drivers/scsi/qedi/qedi_debugfs.c | 4 ++--
+ drivers/scsi/qedi/qedi_gbl.h     | 4 ++--
+ drivers/scsi/qedi/qedi_main.c    | 4 ++--
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_dbg.h b/drivers/scsi/qedf/qedf_dbg.h
-index 50083cae84c3..77c27e888969 100644
---- a/drivers/scsi/qedf/qedf_dbg.h
-+++ b/drivers/scsi/qedf/qedf_dbg.h
-@@ -116,6 +116,14 @@ extern int qedf_create_sysfs_attr(struct Scsi_Host *shost,
- extern void qedf_remove_sysfs_attr(struct Scsi_Host *shost,
- 				    struct sysfs_bin_attrs *iter);
- 
-+struct qedf_debugfs_ops {
-+	char *name;
-+	struct qedf_list_of_funcs *qedf_funcs;
-+};
-+
-+extern const struct qedf_debugfs_ops qedf_debugfs_ops[];
-+extern const struct file_operations qedf_dbg_fops[];
-+
- #ifdef CONFIG_DEBUG_FS
- /* DebugFS related code */
- struct qedf_list_of_funcs {
-@@ -123,11 +131,6 @@ struct qedf_list_of_funcs {
- 	ssize_t (*oper_func)(struct qedf_dbg_ctx *qedf);
- };
- 
--struct qedf_debugfs_ops {
--	char *name;
--	struct qedf_list_of_funcs *qedf_funcs;
--};
--
- #define qedf_dbg_fileops(drv, ops) \
- { \
- 	.owner  = THIS_MODULE, \
-@@ -147,8 +150,8 @@ struct qedf_debugfs_ops {
+diff --git a/drivers/scsi/qedi/qedi_dbg.h b/drivers/scsi/qedi/qedi_dbg.h
+index c55572badfb0..358f40567849 100644
+--- a/drivers/scsi/qedi/qedi_dbg.h
++++ b/drivers/scsi/qedi/qedi_dbg.h
+@@ -134,7 +134,7 @@ struct qedi_debugfs_ops {
  }
  
- extern void qedf_dbg_host_init(struct qedf_dbg_ctx *qedf,
--				struct qedf_debugfs_ops *dops,
--				struct file_operations *fops);
-+				const struct qedf_debugfs_ops *dops,
-+				const struct file_operations *fops);
- extern void qedf_dbg_host_exit(struct qedf_dbg_ctx *qedf);
- extern void qedf_dbg_init(char *drv_name);
- extern void qedf_dbg_exit(void);
-diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-index 2b1ef3075e93..c539a7ae3a7e 100644
---- a/drivers/scsi/qedf/qedf_debugfs.c
-+++ b/drivers/scsi/qedf/qedf_debugfs.c
-@@ -23,8 +23,8 @@ static struct dentry *qedf_dbg_root;
-  **/
+ void qedi_dbg_host_init(struct qedi_dbg_ctx *qedi,
+-			struct qedi_debugfs_ops *dops,
++			const struct qedi_debugfs_ops *dops,
+ 			const struct file_operations *fops);
+ void qedi_dbg_host_exit(struct qedi_dbg_ctx *qedi);
+ void qedi_dbg_init(char *drv_name);
+diff --git a/drivers/scsi/qedi/qedi_debugfs.c b/drivers/scsi/qedi/qedi_debugfs.c
+index fd8a1eea3163..fd914ca4149a 100644
+--- a/drivers/scsi/qedi/qedi_debugfs.c
++++ b/drivers/scsi/qedi/qedi_debugfs.c
+@@ -19,7 +19,7 @@ static struct dentry *qedi_dbg_root;
+ 
  void
- qedf_dbg_host_init(struct qedf_dbg_ctx *qedf,
--		    struct qedf_debugfs_ops *dops,
--		    struct file_operations *fops)
-+		    const struct qedf_debugfs_ops *dops,
-+		    const struct file_operations *fops)
+ qedi_dbg_host_init(struct qedi_dbg_ctx *qedi,
+-		   struct qedi_debugfs_ops *dops,
++		   const struct qedi_debugfs_ops *dops,
+ 		   const struct file_operations *fops)
  {
  	char host_dirname[32];
- 	struct dentry *file_dentry = NULL;
-@@ -99,7 +99,7 @@ qedf_dbg_exit(void)
- 	qedf_dbg_root = NULL;
- }
+@@ -99,7 +99,7 @@ static struct qedi_list_of_funcs qedi_dbg_do_not_recover_ops[] = {
+ 	{ NULL, NULL }
+ };
  
--struct qedf_debugfs_ops qedf_debugfs_ops[] = {
-+const struct qedf_debugfs_ops qedf_debugfs_ops[] = {
- 	{ "fp_int", NULL },
+-struct qedi_debugfs_ops qedi_debugfs_ops[] = {
++const struct qedi_debugfs_ops qedi_debugfs_ops[] = {
+ 	{ "gbl_ctx", NULL },
+ 	{ "do_not_recover", qedi_dbg_do_not_recover_ops},
  	{ "io_trace", NULL },
- 	{ "debug", NULL },
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index ccd9a08ea030..284ccb566b19 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -23,6 +23,7 @@
- #include <linux/if_vlan.h>
- #include <linux/cpu.h>
- #include "qedf.h"
-+#include "qedf_dbg.h"
- #include <uapi/linux/pci_regs.h>
+diff --git a/drivers/scsi/qedi/qedi_gbl.h b/drivers/scsi/qedi/qedi_gbl.h
+index f5b5a31999aa..a2aa06ed1620 100644
+--- a/drivers/scsi/qedi/qedi_gbl.h
++++ b/drivers/scsi/qedi/qedi_gbl.h
+@@ -23,8 +23,8 @@ extern uint qedi_io_tracing;
+ extern struct scsi_host_template qedi_host_template;
+ extern struct iscsi_transport qedi_iscsi_transport;
+ extern const struct qed_iscsi_ops *qedi_ops;
+-extern struct qedi_debugfs_ops qedi_debugfs_ops;
+-extern const struct file_operations qedi_dbg_fops;
++extern const struct qedi_debugfs_ops qedi_debugfs_ops[];
++extern const struct file_operations qedi_dbg_fops[];
+ extern struct device_attribute *qedi_shost_attrs[];
  
- const struct qed_fcoe_ops *qed_ops;
-@@ -30,9 +31,6 @@ const struct qed_fcoe_ops *qed_ops;
- static int qedf_probe(struct pci_dev *pdev, const struct pci_device_id *id);
- static void qedf_remove(struct pci_dev *pdev);
- 
--extern struct qedf_debugfs_ops qedf_debugfs_ops;
--extern struct file_operations qedf_dbg_fops;
--
- /*
-  * Driver module parameters.
-  */
-@@ -3155,8 +3153,8 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ int qedi_alloc_sq(struct qedi_ctx *qedi, struct qedi_endpoint *ep);
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 029e2e69b29f..e992f9d3ef00 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2303,8 +2303,8 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
  	}
  
  #ifdef CONFIG_DEBUG_FS
--	qedf_dbg_host_init(&(qedf->dbg_ctx), &qedf_debugfs_ops,
--			    &qedf_dbg_fops);
-+	qedf_dbg_host_init(&(qedf->dbg_ctx), qedf_debugfs_ops,
-+			    qedf_dbg_fops);
+-	qedi_dbg_host_init(&qedi->dbg_ctx, &qedi_debugfs_ops,
+-			   &qedi_dbg_fops);
++	qedi_dbg_host_init(&qedi->dbg_ctx, qedi_debugfs_ops,
++			   qedi_dbg_fops);
  #endif
- 
- 	/* Start LL2 */
+ 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
+ 		  "QLogic FastLinQ iSCSI Module qedi %s, FW %d.%d.%d.%d\n",
 -- 
 2.9.0
