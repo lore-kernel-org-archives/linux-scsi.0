@@ -1,43 +1,92 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [dm-devel] [PATCH V4] blk-mq: introduce BLK_STS_DEV_RESOURCE
-Date: Fri, 2 Feb 2018 00:53:51 +0000
-Message-ID: <1517532830.2746.43.camel@wdc.com>
-References: <20180129203300.50595-1-snitzer@redhat.com>
-         <1517260932.2687.42.camel@wdc.com> <20180129214446.GD5744@redhat.com>
-         <1517262713.2687.56.camel@wdc.com>
-         <23155.45114.317289.396546@quad.stoffel.home>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [LSF/MM TOPIC] irq affinity handling for high CPU count machines
+Date: Fri, 2 Feb 2018 09:55:35 +0800
+Message-ID: <20180202015534.GD19173@ming.t460p>
+References: <45dc032d-a0ce-816c-d2c5-74c69433bd29@suse.de>
+ <20180201150532.GA31930@ming.t460p>
+ <0f650f4b-aa7f-bf52-2ecb-582761b4937f@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:27084 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751669AbeBBAxz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 19:53:55 -0500
-In-Reply-To: <23155.45114.317289.396546@quad.stoffel.home>
-Content-Language: en-US
-Content-ID: <8C660C0FD4E81840BCBE4EC4CDE7EF08@namprd04.prod.outlook.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39654 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752376AbeBBBzq (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+        Thu, 1 Feb 2018 20:55:46 -0500
+Content-Disposition: inline
+In-Reply-To: <0f650f4b-aa7f-bf52-2ecb-582761b4937f@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "john@stoffel.org" <john@stoffel.org>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>
 
-T24gVGh1LCAyMDE4LTAyLTAxIGF0IDE5OjI2IC0wNTAwLCBKb2huIFN0b2ZmZWwgd3JvdGU6DQo+
-IERvZXNuJ3QgdGhpcyBhcmd1ZSB0aGF0IHlvdSByZWFsbHkgd2FudCBzb21lIHNvcnQgb2YgY29t
-cGxldGlvbnMgdG8gYmUNCj4gcnVuIGluIHRoaXMgY2FzZSBpbnN0ZWFkPyAgSW5zdGVhZCBvZiBi
-dXN5IGxvb3Bpbmcgb3Igd2FpdGluZyBmb3IgYQ0KPiBzZXQgYW1vdW50IG9mIHRpbWUsIGp1c3Qg
-ZmlyZSBvZmYgYSBjYWxsYmFjayB0byBydW4gb25jZSB5b3UgaGF2ZSB0aGUNCj4gcmVzb3VyY2Vz
-IGF2YWlsYWJsZSwgbm8/DQoNCkhlbGxvIEpvaG4sDQoNClJlcnVubmluZyB0aGUgcXVldWUgd2hl
-biB0aGUgcmVzb3VyY2Ugd2UgcmFuIG91dCBvZiBpcyBhdmFpbGFibGUgYWdhaW4gd291bGQNCmJl
-IGlkZWFsLiBIb3dldmVyLCBJJ20gbm90IHN1cmUgaXQgaXMgcG9zc2libGUgdG8gaW1wbGVtZW50
-IHRoaXMuIElmIGEgZHJpdmVyDQpwZXJmb3JtcyBtZW1vcnkgYWxsb2NhdGlvbiB3aGlsZSBleGVj
-dXRpbmcgYSByZXF1ZXN0IGFuZCBrbWFsbG9jKCkgcmV0dXJucw0KLUVOT01FTSB0aGVuIEkgZG9u
-J3Qga25vdyB3aGljaCBtZWNoYW5pc20gc2hvdWxkIGJlIHVzZWQgdG8gdHJpZ2dlciBhIHF1ZXVl
-DQpyZXJ1biB3aGVuIHN1ZmZpY2llbnQgbWVtb3J5IGlzIGF2YWlsYWJsZSBhZ2Fpbi4NCg0KQW5v
-dGhlciBleGFtcGxlIGlzIHRoZSBTQ1NJIHN1YnN5c3RlbS4gSWYgYSB0aGUgLnF1ZXVlY29tbWFu
-ZCgpIGltcGxlbWVudGF0aW9uDQpvZiBhIFNDU0kgTExEIHJldHVybnMgU0NTSV9NTFFVRVVFXypf
-QlVTWSBiZWNhdXNlIGEgY2VydGFpbiBIQkEgY29uZGl0aW9uDQpvY2N1cnJlZCBhbmQgdGhlIEhC
-QSBkb2VzIG5vdCB0cmlnZ2VyIGFuIGludGVycnVwdCB3aGVuIHRoYXQgY29uZGl0aW9uIGlzDQpj
-bGVhcmVkLCBob3cgdG8gZmlndXJlIG91dCB3aGV0aGVyIG9yIG5vdCBhIHJlcXVlc3QgY2FuIGJl
-IGV4ZWN1dGVkIG90aGVyIHRoYW4NCmJ5IHJldHJ5aW5nLCB3aGljaCBtZWFucyByZXJ1bm5pbmcg
-dGhlIHF1ZXVlPw0KDQpUaGFua3MsDQoNCkJhcnQu
+Hello Hannes,
+
+On Thu, Feb 01, 2018 at 05:20:26PM +0100, Hannes Reinecke wrote:
+> On 02/01/2018 04:05 PM, Ming Lei wrote:
+> > Hello Hannes,
+> > 
+> > On Mon, Jan 29, 2018 at 10:08:43AM +0100, Hannes Reinecke wrote:
+> >> Hi all,
+> >>
+> >> here's a topic which came up on the SCSI ML (cf thread '[RFC 0/2]
+> >> mpt3sas/megaraid_sas: irq poll and load balancing of reply queue').
+> >>
+> >> When doing I/O tests on a machine with more CPUs than MSIx vectors
+> >> provided by the HBA we can easily setup a scenario where one CPU is
+> >> submitting I/O and the other one is completing I/O. Which will result in
+> >> the latter CPU being stuck in the interrupt completion routine for
+> >> basically ever, resulting in the lockup detector kicking in.
+> > 
+> > Today I am looking at one megaraid_sas related issue, and found
+> > pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) is used in the driver, so looks
+> > each reply queue has been handled by more than one CPU if there are more
+> > CPUs than MSIx vectors in the system, which is done by generic irq affinity
+> > code, please see kernel/irq/affinity.c.
+> > 
+> > Also IMO each reply queue may be treated as blk-mq's hw queue, then
+> > megaraid may benefit from blk-mq's MQ framework, but one annoying thing is
+> > that both legacy and blk-mq path need to be handled inside driver.
+> > 
+> The megaraid driver is a really strange beast;, having layered two
+> different interfaces (the 'legacy' MFI interface and that from from
+> mpt3sas) on top of each other.
+> I had been thinking of converting it to scsi-mq, too (as my mpt3sas
+> patch finally went in), but I'm not sure if we can benefit from it as
+> we're still be bound by the HBA-wide tag pool.
+
+Actually current SCSI_MQ works at this mode of HBA-wide tag pool too,
+please see scsi_host_queue_ready() which is called in scsi_queue_rq(),
+same with scsi_mq_get_budget().
+
+Seems it is weird for real MQ cases, even the tag is allocated from
+per-hctx tags, the host wide queue depth still need to be respected,
+finally it is just like HBA-wide tag pool.
+
+That is something which need to discuss too.
+
+Also I remembered you posted the patch for sharing tags among hctx,
+that should help to convert reply queues into scsi_mq/blk_mq's hctx.
+
+> It's on my todo list, albeit pretty far down :-)
+> 
+> >>
+> >> How should these situations be handled?
+> >> Should it be made the responsibility of the drivers, ensuring that the
+> >> interrupt completion routine is terminated after a certain time?
+> >> Should it be made the resposibility of the upper layers?
+> >> Should it be the responsibility of the interrupt mapping code?
+> >> Can/should interrupt polling be used in these situations?
+> > 
+> > Yeah, I guess interrupt polling may improve these situations, especially
+> > KPTI introduces some extra cost in interrupt handling.
+> > 
+> The question is not so much if one should be doing irq polling, but
+> rather if we can come up with some guidance or even infrastructure to
+> make this happen automatically.
+> Having to rely on individual drivers to get this right is probably not
+> the best option.
+
+Agree.
+
+Thanks,
+Ming
