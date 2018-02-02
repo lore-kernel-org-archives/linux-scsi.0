@@ -1,99 +1,121 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [LSF/MM TOPIC] irq affinity handling for high CPU count machines
-Date: Fri, 2 Feb 2018 10:02:36 +0800
-Message-ID: <20180202020235.GE19173@ming.t460p>
-References: <45dc032d-a0ce-816c-d2c5-74c69433bd29@suse.de>
- <20180201150532.GA31930@ming.t460p>
- <0f650f4b-aa7f-bf52-2ecb-582761b4937f@suse.de>
- <a6bf37e1aa2c45ef725c4cc1a7f57af9@mail.gmail.com>
+From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Subject: Re: [PATCH 1/1] scsi: ufs: make sure all interrupts are processed
+Date: Fri, 2 Feb 2018 08:53:09 +0530
+Message-ID: <6ca20a27-3c10-bf0e-35e7-542b7ab77356@codeaurora.org>
+References: <1517288066-13171-1-git-send-email-asutoshd@codeaurora.org>
+ <DM5PR04MB1085C5039CA525D6FB77DBE3FCFB0@DM5PR04MB1085.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38638 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751827AbeBBCCq (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-        Thu, 1 Feb 2018 21:02:46 -0500
-Content-Disposition: inline
-In-Reply-To: <a6bf37e1aa2c45ef725c4cc1a7f57af9@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:41762 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbeBBDXQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Feb 2018 22:23:16 -0500
+In-Reply-To: <DM5PR04MB1085C5039CA525D6FB77DBE3FCFB0@DM5PR04MB1085.namprd04.prod.outlook.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linux-foundation.org, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org
+To: Avri Altman <Avri.Altman@wdc.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 
-Hello Kashyap,
-
-On Thu, Feb 01, 2018 at 10:29:22PM +0530, Kashyap Desai wrote:
-> > -----Original Message-----
-> > From: Hannes Reinecke [mailto:hare@suse.de]
-> > Sent: Thursday, February 1, 2018 9:50 PM
-> > To: Ming Lei
-> > Cc: lsf-pc@lists.linux-foundation.org; linux-scsi@vger.kernel.org; linux-
-> > nvme@lists.infradead.org; Kashyap Desai
-> > Subject: Re: [LSF/MM TOPIC] irq affinity handling for high CPU count
-> > machines
-> >
-> > On 02/01/2018 04:05 PM, Ming Lei wrote:
-> > > Hello Hannes,
-> > >
-> > > On Mon, Jan 29, 2018 at 10:08:43AM +0100, Hannes Reinecke wrote:
-> > >> Hi all,
-> > >>
-> > >> here's a topic which came up on the SCSI ML (cf thread '[RFC 0/2]
-> > >> mpt3sas/megaraid_sas: irq poll and load balancing of reply queue').
-> > >>
-> > >> When doing I/O tests on a machine with more CPUs than MSIx vectors
-> > >> provided by the HBA we can easily setup a scenario where one CPU is
-> > >> submitting I/O and the other one is completing I/O. Which will result
-> > >> in the latter CPU being stuck in the interrupt completion routine for
-> > >> basically ever, resulting in the lockup detector kicking in.
-> > >
-> > > Today I am looking at one megaraid_sas related issue, and found
-> > > pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) is used in the driver, so
-> > > looks each reply queue has been handled by more than one CPU if there
-> > > are more CPUs than MSIx vectors in the system, which is done by
-> > > generic irq affinity code, please see kernel/irq/affinity.c.
+On 1/31/2018 1:09 PM, Avri Altman wrote:
+> Hi,
+> Can you elaborate how this can even happen?
+> Isn't the interrupt aggregation capability should attend for those cases?
 > 
-> Yes. That is a problematic area. If CPU and MSI-x(reply queue) is 1:1
-> mapped, we don't have any issue.
-
-I guess the problematic area is similar with the following link:
-
-	https://marc.info/?l=linux-kernel&m=151748144730409&w=2
-
-otherwise could you explain a bit about the area?
-
+> Thanks,
+> Avri
 > 
-> > >
-> > > Also IMO each reply queue may be treated as blk-mq's hw queue, then
-> > > megaraid may benefit from blk-mq's MQ framework, but one annoying
-> > > thing is that both legacy and blk-mq path need to be handled inside
-> > > driver.
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Asutosh Das
+>> Sent: Tuesday, January 30, 2018 6:54 AM
+>> To: subhashj@codeaurora.org; cang@codeaurora.org;
+>> vivek.gautam@codeaurora.org; rnayak@codeaurora.org;
+>> vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;
+>> martin.petersen@oracle.com
+>> Cc: linux-scsi@vger.kernel.org; Venkat Gopalakrishnan
+>> <venkatg@codeaurora.org>; Asutosh Das <asutoshd@codeaurora.org>; open
+>> list <linux-kernel@vger.kernel.org>
+>> Subject: [PATCH 1/1] scsi: ufs: make sure all interrupts are processed
+>>
+>> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+>>
+>> As multiple requests are submitted to the ufs host controller in parallel there
+>> could be instances where the command completion interrupt arrives later for a
+>> request that is already processed earlier as the corresponding doorbell was
+>> cleared when handling the previous interrupt. Read the interrupt status in a
+>> loop after processing the received interrupt to catch such interrupts and handle
+>> it.
+>>
+>> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> ---
+>>   drivers/scsi/ufs/ufshcd.c | 27 +++++++++++++++++++--------
+>>   1 file changed, 19 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+>> 8af2af3..58d81de 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -5357,19 +5357,30 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>>   	u32 intr_status, enabled_intr_status;
+>>   	irqreturn_t retval = IRQ_NONE;
+>>   	struct ufs_hba *hba = __hba;
+>> +	int retries = hba->nutrs;
+>>
+>>   	spin_lock(hba->host->host_lock);
+>>   	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>> -	enabled_intr_status =
+>> -		intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>>
+>> -	if (intr_status)
+>> -		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+>> +	/*
+>> +	 * There could be max of hba->nutrs reqs in flight and in worst case
+>> +	 * if the reqs get finished 1 by 1 after the interrupt status is
+>> +	 * read, make sure we handle them by checking the interrupt status
+>> +	 * again in a loop until we process all of the reqs before returning.
+>> +	 */
+>> +	do {
+>> +		enabled_intr_status =
+>> +			intr_status & ufshcd_readl(hba,
+>> REG_INTERRUPT_ENABLE);
+>> +		if (intr_status)
+>> +			ufshcd_writel(hba, intr_status,
+>> REG_INTERRUPT_STATUS);
+>> +		if (enabled_intr_status) {
+>> +			ufshcd_sl_intr(hba, enabled_intr_status);
+>> +			retval = IRQ_HANDLED;
+>> +		}
+>> +
+>> +		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>> +	} while (intr_status && --retries);
+>>
+>> -	if (enabled_intr_status) {
+>> -		ufshcd_sl_intr(hba, enabled_intr_status);
+>> -		retval = IRQ_HANDLED;
+>> -	}
+>>   	spin_unlock(hba->host->host_lock);
+>>   	return retval;
+>>   }
+>> --
+>> Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center,
+>> Inc.
+>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
+>> Foundation Collaborative Project.
 > 
-> Both MR and IT driver is (due to H/W design.) is using blk-mq frame work but
-> it is really  a single h/w queue.
-> IT and MR HBA has single submission queue and multiple reply queue.
 
-It should have been covered by MQ, but just we need to share tags among
-hctxs, like what Hannes posted long time ago.
+Hi
+yes - interrupt aggregation makes sense here. But there were some 
+performance concerns with it; well, I don't have the data to back that 
+up now though.
+However, I can code it up and check it.
+Will post it in some time.
 
-> 
-> > >
-> > The megaraid driver is a really strange beast;, having layered two
-> > different
-> > interfaces (the 'legacy' MFI interface and that from from
-> > mpt3sas) on top of each other.
-> > I had been thinking of converting it to scsi-mq, too (as my mpt3sas patch
-> > finally went in), but I'm not sure if we can benefit from it as we're
-> > still be
-> > bound by the HBA-wide tag pool.
-> > It's on my todo list, albeit pretty far down :-)
-> 
-> Hannes, this is typically same in both MR (megaraid_sas) and IT (mpt3sas).
-> Both the driver is using shared HBA-wide tag pool.
-> Both MR and IT driver use request->tag to get command from free pool.
+-asd
 
-Seems a generic thing, same with HPSA too.
-
-
-Thanks,
-Ming
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
