@@ -1,47 +1,63 @@
-From: "Rev:Tony  HARRIES" <"ww."@royal.ocn.ne.jp>
-Subject: CONTACT DHL OFFICE IMMEDIATELY FOR DELIVERY OF YOUR ATM MASTERCARD
-Date: Sat, 3 Feb 2018 13:01:11 +0900 (JST)
-Message-ID: <1661828092.117277614.1517630471576.JavaMail.root@royal.ocn.ne.jp>
-Reply-To: "UNITED NATION " <united.nation.registration@hotmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mbkd0338.ocn.ad.jp ([153.149.236.39]:46343 "EHLO
-        mbkd0338.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751796AbeBCEGG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2018 23:06:06 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH 0/5] blk-mq/scsi-mq: support global tags & introduce force_blk_mq
+Date: Sat,  3 Feb 2018 12:21:07 +0800
+Message-ID: <20180203042112.15239-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Attention; Beneficiary,
+Hi All,
 
-This is to official inform you that we have been having meetings for the past three (3) weeks which ended two days ago with MR. JIM YONG KIM the Former world bank president and other seven continent presidents on the congress we treated on solution to scam victim problems.
+This patchset supports global tags which was started by Hannes originally:
 
-Note: we have decided to contact you following the reports we received from anti-fraud international monitoring group your name/email has been submitted to us therefore the united nations have agreed to compensate you with the sum of (USD$1.5 Million) this compensation is also including international business that failed you in past due to government problems etc.
+	https://marc.info/?l=linux-block&m=149132580511346&w=2
 
-We have arranged your payment through our ATM MasterCard and deposited it in DHL Office to deliver it to you which is the latest instruction from the Former World Bank president MR. JIM YONG KIM, For your information’s, the delivery charges already paid by U.N treasury, the only money you will send to DHL office Benin Republic is $165 dollars for security keeping fee, U.N coordinator already paid for others charges fees for delivery except the security keeping fee, the director of DHL refused to collect the security keeping fee from U.N treasury because Direct of DHL office said they don’t know exactly time you will contact them to reconfirm your details to avoid counting demurrage.
+Also inroduce 'force_blk_mq' to 'struct scsi_host_template', so that
+driver can avoid to support two IO paths(legacy and blk-mq), especially
+recent discusion mentioned that SCSI_MQ will be enabled at default soon.
 
-Therefore be advice to contact DHL Office agent Benin. Rev: Tony harries who is in position to post your ATM MasterCard, contact DHL Office  immediately with the bellow email & phone number  as listed below.
+	https://marc.info/?l=linux-scsi&m=151727684915589&w=2
 
-Contact name: Rev:Tony  HARRIES
-Email:(post.dhlbenin.service@outlook.com )
-Tell: +229-98787436
+With the above two changes, it should be easier to convert SCSI drivers'
+reply queue into blk-mq's hctx, then the automatic irq affinity issue can
+be solved easily, please see detailed descrption in commit log.
 
-Make sure you reconfirmed DHL Office your details ASAP as stated below to avoid wrong delivery.
+Also drivers may require to complete request on the submission CPU
+for avoiding hard/soft deadlock, which can be done easily with blk_mq
+too.
 
-Your full name..........
-Home address:.........
-Your country...........
-Your city..............
-Telephone......
-Occupation:.......
-Age:………………..
+	https://marc.info/?t=151601851400001&r=1&w=2
 
+The final patch uses the introduced 'force_blk_mq' to fix virtio_scsi
+so that IO hang issue can be avoided inside legacy IO path, this issue is
+a bit generic, at least HPSA/virtio-scsi are found broken with v4.15+.
 
-Let us know as soon as possible you receive your ATM MasterCard for proper verifications.
+Thanks
+Ming
 
-Regards,
-MR Paul Ogie.
-DEPUTY SECRETARY-GENERAL (U.N)
-Benin Republic.
+Ming Lei (5):
+  blk-mq: tags: define several fields of tags as pointer
+  blk-mq: introduce BLK_MQ_F_GLOBAL_TAGS
+  block: null_blk: introduce module parameter of 'g_global_tags'
+  scsi: introduce force_blk_mq
+  scsi: virtio_scsi: fix IO hang by irq vector automatic affinity
+
+ block/bfq-iosched.c        |  4 +--
+ block/blk-mq-debugfs.c     | 11 ++++----
+ block/blk-mq-sched.c       |  2 +-
+ block/blk-mq-tag.c         | 67 +++++++++++++++++++++++++++++-----------------
+ block/blk-mq-tag.h         | 15 ++++++++---
+ block/blk-mq.c             | 31 ++++++++++++++++-----
+ block/blk-mq.h             |  3 ++-
+ block/kyber-iosched.c      |  2 +-
+ drivers/block/null_blk.c   |  6 +++++
+ drivers/scsi/hosts.c       |  1 +
+ drivers/scsi/virtio_scsi.c | 59 +++-------------------------------------
+ include/linux/blk-mq.h     |  2 ++
+ include/scsi/scsi_host.h   |  3 +++
+ 13 files changed, 105 insertions(+), 101 deletions(-)
+
+-- 
+2.9.5
