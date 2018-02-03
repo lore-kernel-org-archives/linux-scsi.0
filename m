@@ -1,43 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI postmerge updates for the 4.15+ merge window
-Date: Fri, 02 Feb 2018 19:17:12 +0100
-Message-ID: <1517595432.3137.24.camel@HansenPartnership.com>
+From: "Rev:Tony  HARRIES" <"ww."@royal.ocn.ne.jp>
+Subject: CONTACT DHL OFFICE IMMEDIATELY FOR DELIVERY OF YOUR ATM MASTERCARD
+Date: Sat, 3 Feb 2018 13:01:11 +0900 (JST)
+Message-ID: <1661828092.117277614.1517630471576.JavaMail.root@royal.ocn.ne.jp>
+Reply-To: "UNITED NATION " <united.nation.registration@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50094 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753039AbeBBSRR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2018 13:17:17 -0500
+Received: from mbkd0338.ocn.ad.jp ([153.149.236.39]:46343 "EHLO
+        mbkd0338.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751796AbeBCEGG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2018 23:06:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This is a set of three patches that depended on mq and zone changes in
-the block tree (now upstream).
+Attention; Beneficiary,
 
-The patch is available here:
+This is to official inform you that we have been having meetings for the past three (3) weeks which ended two days ago with MR. JIM YONG KIM the Former world bank president and other seven continent presidents on the congress we treated on solution to scam victim problems.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-postmerge
+Note: we have decided to contact you following the reports we received from anti-fraud international monitoring group your name/email has been submitted to us therefore the united nations have agreed to compensate you with the sum of (USD$1.5 Million) this compensation is also including international business that failed you in past due to government problems etc.
 
-The short changelog is:
+We have arranged your payment through our ATM MasterCard and deposited it in DHL Office to deliver it to you which is the latest instruction from the Former World Bank president MR. JIM YONG KIM, For your information’s, the delivery charges already paid by U.N treasury, the only money you will send to DHL office Benin Republic is $165 dollars for security keeping fee, U.N coordinator already paid for others charges fees for delivery except the security keeping fee, the director of DHL refused to collect the security keeping fee from U.N treasury because Direct of DHL office said they don’t know exactly time you will contact them to reconfirm your details to avoid counting demurrage.
 
-Bart Van Assche (1):
-      scsi: scsi-mq-debugfs: Show more information
+Therefore be advice to contact DHL Office agent Benin. Rev: Tony harries who is in position to post your ATM MasterCard, contact DHL Office  immediately with the bellow email & phone number  as listed below.
 
-Damien Le Moal (2):
-      scsi: sd: Remove zone write locking
-      scsi: sd_zbc: Initialize device request queue zoned data
+Contact name: Rev:Tony  HARRIES
+Email:(post.dhlbenin.service@outlook.com )
+Tell: +229-98787436
 
-And the diffstat:
+Make sure you reconfirmed DHL Office your details ASAP as stated below to avoid wrong delivery.
 
- drivers/scsi/scsi_debugfs.c |  40 +++++++-
- drivers/scsi/sd.c           |  41 +-------
- drivers/scsi/sd.h           |  11 ---
- drivers/scsi/sd_zbc.c       | 235 +++++++++++++++++++++++++++-----------------
- include/scsi/scsi_cmnd.h    |   3 +-
- 5 files changed, 187 insertions(+), 143 deletions(-)
+Your full name..........
+Home address:.........
+Your country...........
+Your city..............
+Telephone......
+Occupation:.......
+Age:………………..
 
-James
+
+Let us know as soon as possible you receive your ATM MasterCard for proper verifications.
+
+Regards,
+MR Paul Ogie.
+DEPUTY SECRETARY-GENERAL (U.N)
+Benin Republic.
