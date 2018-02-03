@@ -1,47 +1,44 @@
-From: "Rev:Tony  HARRIES" <"ww."@royal.ocn.ne.jp>
-Subject: CONTACT DHL OFFICE IMMEDIATELY FOR DELIVERY OF YOUR ATM MASTERCARD
-Date: Sat, 3 Feb 2018 21:04:48 +0900 (JST)
-Message-ID: <1810150088.117665438.1517659488233.JavaMail.root@royal.ocn.ne.jp>
-Reply-To: "UNITED NATION " <united.nation.registration@hotmail.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Request for input on new options for scsi_debug driver
+Date: Sat, 03 Feb 2018 11:54:14 -0500
+Message-ID: <1517676854.18584.2.camel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mbkd0137.ocn.ad.jp ([153.149.230.38]:44974 "EHLO
-        mbkd0137.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750744AbeBCMEz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2018 07:04:55 -0500
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:41051 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752400AbeBCQyQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2018 11:54:16 -0500
+Received: by mail-qt0-f169.google.com with SMTP id r13so1318020qtm.8
+        for <linux-scsi@vger.kernel.org>; Sat, 03 Feb 2018 08:54:16 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert <dgilbert@interlog.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Attention; Beneficiary,
+Hello
 
-This is to official inform you that we have been having meetings for the past three (3) weeks which ended two days ago with MR. JIM YONG KIM the Former world bank president and other seven continent presidents on the congress we treated on solution to scam victim problems.
+During various fault injection scenarios it would be useful to be able
+to pick a specific starting sector and number of follow on sectors
+where a MEDIUM ERROR for reads would be returned against a scsi-debug
+device.
 
-Note: we have decided to contact you following the reports we received from anti-fraud international monitoring group your name/email has been submitted to us therefore the united nations have agreed to compensate you with the sum of (USD$1.5 Million) this compensation is also including international business that failed you in past due to government problems etc.
+Right now this only works against sector 0x1234 and OPT_MEDIUM_ERR_NUM
+follow on sectors.
+However during testing of md-raid and other scenarios I wanted more
+flexibility.
 
-We have arranged your payment through our ATM MasterCard and deposited it in DHL Office to deliver it to you which is the latest instruction from the Former World Bank president MR. JIM YONG KIM, For your information$B!G(Bs, the delivery charges already paid by U.N treasury, the only money you will send to DHL office Benin Republic is $165 dollars for security keeping fee, U.N coordinator already paid for others charges fees for delivery except the security keeping fee, the director of DHL refused to collect the security keeping fee from U.N treasury because Direct of DHL office said they don$B!G(Bt know exactly time you will contact them to reconfirm your details to avoid counting demurrage.
+The idea is add 2 new parameters:
+medium_error_start
+medium_error_count
 
-Therefore be advice to contact DHL Office agent Benin. Rev: Tony harries who is in position to post your ATM MasterCard, contact DHL Office  immediately with the bellow email & phone number  as listed below.
+If medium_error_start is set then we don't use the default of
+OPT_MEDIUM_ERR_ADDR, but use that set value.
+If medium_error_count is set we use that value otherwise default to
+OPT_MEDIUM_ERR_NUM.
 
-Contact name: Rev:Tony  HARRIES
-Email:(post.dhlbenin.service@outlook.com )
-Tell: +229-98787436
+Should I send a patch for this, wanted to find out if this would be
+acceptable before I waste anybody's time having to review.
 
-Make sure you reconfirmed DHL Office your details ASAP as stated below to avoid wrong delivery.
-
-Your full name..........
-Home address:.........
-Your country...........
-Your city..............
-Telephone......
-Occupation:.......
-Age:$B!D!D!D!D!D!D(B..
-
-
-Let us know as soon as possible you receive your ATM MasterCard for proper verifications.
-
-Regards,
-MR Paul Ogie.
-DEPUTY SECRETARY-GENERAL (U.N)
-Benin Republic.
+Regards
+Laurence Oberman
