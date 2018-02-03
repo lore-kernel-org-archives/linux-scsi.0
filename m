@@ -1,182 +1,47 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 5/5] scsi: virtio_scsi: fix IO hang by irq vector automatic affinity
-Date: Sat,  3 Feb 2018 12:21:12 +0800
-Message-ID: <20180203042112.15239-6-ming.lei@redhat.com>
-References: <20180203042112.15239-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180203042112.15239-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>, Ming Lei <ming.lei@redhat.com>
+From: "Rev:Tony  HARRIES" <"ww."@royal.ocn.ne.jp>
+Subject: CONTACT DHL OFFICE IMMEDIATELY FOR DELIVERY OF YOUR ATM MASTERCARD
+Date: Sat, 3 Feb 2018 21:04:48 +0900 (JST)
+Message-ID: <1810150088.117665438.1517659488233.JavaMail.root@royal.ocn.ne.jp>
+Reply-To: "UNITED NATION " <united.nation.registration@hotmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mbkd0137.ocn.ad.jp ([153.149.230.38]:44974 "EHLO
+        mbkd0137.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750744AbeBCMEz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2018 07:04:55 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Now 84676c1f21e8ff5(genirq/affinity: assign vectors to all possible CPUs)
-has been merged to V4.16-rc, and it is easy to allocate all offline CPUs
-for some irq vectors, this can't be avoided even though the allocation
-is improved.
+Attention; Beneficiary,
 
-For example, on a 8cores VM, 4~7 are not-present/offline, 4 queues of
-virtio-scsi, the irq affinity assigned can become the following shape:
+This is to official inform you that we have been having meetings for the past three (3) weeks which ended two days ago with MR. JIM YONG KIM the Former world bank president and other seven continent presidents on the congress we treated on solution to scam victim problems.
 
-	irq 36, cpu list 0-7
-	irq 37, cpu list 0-7
-	irq 38, cpu list 0-7
-	irq 39, cpu list 0-1
-	irq 40, cpu list 4,6
-	irq 41, cpu list 2-3
-	irq 42, cpu list 5,7
+Note: we have decided to contact you following the reports we received from anti-fraud international monitoring group your name/email has been submitted to us therefore the united nations have agreed to compensate you with the sum of (USD$1.5 Million) this compensation is also including international business that failed you in past due to government problems etc.
 
-Then IO hang is triggered in case of non-SCSI_MQ.
+We have arranged your payment through our ATM MasterCard and deposited it in DHL Office to deliver it to you which is the latest instruction from the Former World Bank president MR. JIM YONG KIM, For your information’s, the delivery charges already paid by U.N treasury, the only money you will send to DHL office Benin Republic is $165 dollars for security keeping fee, U.N coordinator already paid for others charges fees for delivery except the security keeping fee, the director of DHL refused to collect the security keeping fee from U.N treasury because Direct of DHL office said they don’t know exactly time you will contact them to reconfirm your details to avoid counting demurrage.
 
-Given storage IO is always C/S model, there isn't such issue with SCSI_MQ(blk-mq),
-because no IO can be submitted to one hw queue if the hw queue hasn't online
-CPUs.
+Therefore be advice to contact DHL Office agent Benin. Rev: Tony harries who is in position to post your ATM MasterCard, contact DHL Office  immediately with the bellow email & phone number  as listed below.
 
-Fix this issue by forcing to use blk_mq.
+Contact name: Rev:Tony  HARRIES
+Email:(post.dhlbenin.service@outlook.com )
+Tell: +229-98787436
 
-BTW, I have been used virtio-scsi(scsi_mq) for several years, and it has
-been quite stable, so it shouldn't cause extra risk.
+Make sure you reconfirmed DHL Office your details ASAP as stated below to avoid wrong delivery.
 
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Arun Easi <arun.easi@cavium.com>
-Cc: Omar Sandoval <osandov@fb.com>,
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-Cc: Christoph Hellwig <hch@lst.de>,
-Cc: Don Brace <don.brace@microsemi.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Peter Rivera <peter.rivera@broadcom.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Laurence Oberman <loberman@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 59 +++-------------------------------------------
- 1 file changed, 3 insertions(+), 56 deletions(-)
+Your full name..........
+Home address:.........
+Your country...........
+Your city..............
+Telephone......
+Occupation:.......
+Age:………………..
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 7c28e8d4955a..54e3a0f6844c 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -91,9 +91,6 @@ struct virtio_scsi_vq {
- struct virtio_scsi_target_state {
- 	seqcount_t tgt_seq;
- 
--	/* Count of outstanding requests. */
--	atomic_t reqs;
--
- 	/* Currently active virtqueue for requests sent to this target. */
- 	struct virtio_scsi_vq *req_vq;
- };
-@@ -152,8 +149,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- 	struct virtio_scsi_cmd *cmd = buf;
- 	struct scsi_cmnd *sc = cmd->sc;
- 	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
--	struct virtio_scsi_target_state *tgt =
--				scsi_target(sc->device)->hostdata;
- 
- 	dev_dbg(&sc->device->sdev_gendev,
- 		"cmd %p response %u status %#02x sense_len %u\n",
-@@ -210,8 +205,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- 	}
- 
- 	sc->scsi_done(sc);
--
--	atomic_dec(&tgt->reqs);
- }
- 
- static void virtscsi_vq_done(struct virtio_scsi *vscsi,
-@@ -580,10 +573,7 @@ static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
- 					struct scsi_cmnd *sc)
- {
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	struct virtio_scsi_target_state *tgt =
--				scsi_target(sc->device)->hostdata;
- 
--	atomic_inc(&tgt->reqs);
- 	return virtscsi_queuecommand(vscsi, &vscsi->req_vqs[0], sc);
- }
- 
-@@ -596,55 +586,11 @@ static struct virtio_scsi_vq *virtscsi_pick_vq_mq(struct virtio_scsi *vscsi,
- 	return &vscsi->req_vqs[hwq];
- }
- 
--static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
--					       struct virtio_scsi_target_state *tgt)
--{
--	struct virtio_scsi_vq *vq;
--	unsigned long flags;
--	u32 queue_num;
--
--	local_irq_save(flags);
--	if (atomic_inc_return(&tgt->reqs) > 1) {
--		unsigned long seq;
--
--		do {
--			seq = read_seqcount_begin(&tgt->tgt_seq);
--			vq = tgt->req_vq;
--		} while (read_seqcount_retry(&tgt->tgt_seq, seq));
--	} else {
--		/* no writes can be concurrent because of atomic_t */
--		write_seqcount_begin(&tgt->tgt_seq);
--
--		/* keep previous req_vq if a reader just arrived */
--		if (unlikely(atomic_read(&tgt->reqs) > 1)) {
--			vq = tgt->req_vq;
--			goto unlock;
--		}
--
--		queue_num = smp_processor_id();
--		while (unlikely(queue_num >= vscsi->num_queues))
--			queue_num -= vscsi->num_queues;
--		tgt->req_vq = vq = &vscsi->req_vqs[queue_num];
-- unlock:
--		write_seqcount_end(&tgt->tgt_seq);
--	}
--	local_irq_restore(flags);
--
--	return vq;
--}
--
- static int virtscsi_queuecommand_multi(struct Scsi_Host *sh,
- 				       struct scsi_cmnd *sc)
- {
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	struct virtio_scsi_target_state *tgt =
--				scsi_target(sc->device)->hostdata;
--	struct virtio_scsi_vq *req_vq;
--
--	if (shost_use_blk_mq(sh))
--		req_vq = virtscsi_pick_vq_mq(vscsi, sc);
--	else
--		req_vq = virtscsi_pick_vq(vscsi, tgt);
-+	struct virtio_scsi_vq *req_vq = virtscsi_pick_vq_mq(vscsi, sc);
- 
- 	return virtscsi_queuecommand(vscsi, req_vq, sc);
- }
-@@ -775,7 +721,6 @@ static int virtscsi_target_alloc(struct scsi_target *starget)
- 		return -ENOMEM;
- 
- 	seqcount_init(&tgt->tgt_seq);
--	atomic_set(&tgt->reqs, 0);
- 	tgt->req_vq = &vscsi->req_vqs[0];
- 
- 	starget->hostdata = tgt;
-@@ -823,6 +768,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
- 	.target_alloc = virtscsi_target_alloc,
- 	.target_destroy = virtscsi_target_destroy,
- 	.track_queue_depth = 1,
-+	.force_blk_mq = 1,
- };
- 
- static struct scsi_host_template virtscsi_host_template_multi = {
-@@ -844,6 +790,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
- 	.target_destroy = virtscsi_target_destroy,
- 	.map_queues = virtscsi_map_queues,
- 	.track_queue_depth = 1,
-+	.force_blk_mq = 1,
- };
- 
- #define virtscsi_config_get(vdev, fld) \
--- 
-2.9.5
+
+Let us know as soon as possible you receive your ATM MasterCard for proper verifications.
+
+Regards,
+MR Paul Ogie.
+DEPUTY SECRETARY-GENERAL (U.N)
+Benin Republic.
