@@ -1,59 +1,85 @@
-From: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-Subject: RE: [PATCH v4 02/10] ufs: sysfs: device descriptor
-Date: Sun, 4 Feb 2018 09:03:25 +0000
-Message-ID: <DM2PR0401MB0975F2D6C2E2CF3E0A3AB6209AFF0@DM2PR0401MB0975.namprd04.prod.outlook.com>
-References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
-         <1517501746-19075-3-git-send-email-stanislav.nijnikov@wdc.com>
-         <1517531145.2746.26.camel@wdc.com> <20180202071735.GC9314@kroah.com>
- <1517589119.2675.19.camel@wdc.com>
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: scsi: sg: assorted memory corruptions
+Date: Sun, 4 Feb 2018 01:07:10 -0800
+Message-ID: <20180204090710.GA607@zzz.localdomain>
+References: <CACT4Y+b0pizvOAxtWQ-TGCRAYvHXdv79BAEaXh50W6vF8gBvkQ@mail.gmail.com>
+ <1516638634.2545.0.camel@wdc.com>
+ <097921fa-52c5-8b2b-f564-4b24d9720478@interlog.com>
+ <CACT4Y+aEx0ie3qjx6afCYV2vN7gYii0uupKWPXaNTnWUmhdHQw@mail.gmail.com>
+ <c0a7ec39-e357-9db6-cf12-ff9c46259f26@interlog.com>
+ <CACT4Y+bObXrFiB0Qn+nfkD8DZRiVck1GJ5U9UeQz+-y85gh70Q@mail.gmail.com>
+ <1517501859.3417.67.camel@codethink.co.uk>
+ <CACT4Y+ZEJ9_no0uQSXO66iyyUeJLn_zbPBEey62YkuzOEUMP2w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:24128 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750818AbeBDJDb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Feb 2018 04:03:31 -0500
-In-Reply-To: <1517589119.2675.19.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CACT4Y+ZEJ9_no0uQSXO66iyyUeJLn_zbPBEey62YkuzOEUMP2w@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: Ben Hutchings <ben.hutchings@codethink.co.uk>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Alex Lemberg <Alex.Lemberg@wdc.com>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCYXJ0IFZhbiBBc3NjaGUNCj4g
-U2VudDogRnJpZGF5LCBGZWJydWFyeSAyLCAyMDE4IDY6MzIgUE0NCj4gVG86IGdyZWdraEBsaW51
-eGZvdW5kYXRpb24ub3JnDQo+IENjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXgt
-a2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gamFlZ2V1a0BrZXJuZWwub3JnOyBBbGV4IExlbWJl
-cmcgPEFsZXguTGVtYmVyZ0B3ZGMuY29tPjsgU3RhbmlzbGF2DQo+IE5pam5pa292IDxTdGFuaXNs
-YXYuTmlqbmlrb3ZAd2RjLmNvbT4NCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NCAwMi8xMF0gdWZz
-OiBzeXNmczogZGV2aWNlIGRlc2NyaXB0b3INCj4gDQo+IE9uIEZyaSwgMjAxOC0wMi0wMiBhdCAw
-ODoxNyArMDEwMCwgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmcgd3JvdGU6DQo+ID4gT24gRnJp
-LCBGZWIgMDIsIDIwMTggYXQgMTI6MjU6NDZBTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdyb3Rl
-Og0KPiA+ID4gT24gVGh1LCAyMDE4LTAyLTAxIGF0IDE4OjE1ICswMjAwLCBTdGFuaXNsYXYgTmlq
-bmlrb3Ygd3JvdGU6DQo+ID4gPiA+ICtlbnVtIHVmc19kZXNjX3BhcmFtX3NpemUgew0KPiA+ID4g
-PiArCVVGU19QQVJBTV9CWVRFX1NJWkUJPSAxLA0KPiA+ID4gPiArCVVGU19QQVJBTV9XT1JEX1NJ
-WkUJPSAyLA0KPiA+ID4gPiArCVVGU19QQVJBTV9EV09SRF9TSVpFCT0gNCwNCj4gPiA+ID4gKwlV
-RlNfUEFSQU1fUVdPUkRfU0laRQk9IDgsDQo+ID4gPiA+ICt9Ow0KPiA+ID4NCj4gPiA+IFBsZWFz
-ZSBkbyBub3QgY29weSBiYWQgbmFtaW5nIGNob2ljZXMgZnJvbSB0aGUgV2luZG93cyBrZXJuZWwg
-aW50bw0KPiA+ID4gdGhlIExpbnV4IGtlcm5lbC4gVXNpbmcgbmFtZXMgbGlrZSBXT1JEIC8gRFdP
-UkQgLyBRV09SRCBpcyBtdWNoIGxlc3MNCj4gPiA+IHJlYWRhYmxlIHRoYW4gdXNpbmcgdGhlIG51
-bWVyaWMgY29uc3RhbnRzIDIsIDQsIDguIEhlbmNlIG15IHByb3Bvc2FsDQo+ID4gPiB0byBsZWF2
-ZSBvdXQgdGhlIGFib3ZlIGVudW0gY29tcGxldGVseS4NCj4gPg0KPiA+IEFyZSB5b3Ugc3VyZSB0
-aG9zZSBkbyBub3QgY29tZSBmcm9tIHRoZSBzcGVjIGl0c2VsZj8gIEl0J3MgYmVlbiBhDQo+ID4g
-d2hpbGUgc2luY2UgSSBsYXN0IHJlYWQgaXQsIGJ1dCBmb3Igc29tZSByZWFzb24gSSByZW1lbWJl
-ciB0aG9zZSB0eXBlcw0KPiA+IG9mIG5hbWVzIGJlaW5nIGluIHRoZXJlLiAgQnV0IEkgbWlnaHQg
-YmUgY29uZnVzaW5nIHNwZWNzIGhlcmUuDQo+IA0KPiBIZWxsbyBHcmVnLA0KPiANCj4gVGhhdCdz
-IGEgZ29vZCBxdWVzdGlvbi4gSG93ZXZlciwgYSBxdWljayBzZWFyY2ggb24gdGhlIEludGVybmV0
-IGZvciB0aGUNCj4gc2VhcmNoIHBocmFzZSAiVW5pdmVyc2FsIEZsYXNoIFN0b3JhZ2UiICJxd29y
-ZCIgZGlkIG5vdCB5aWVsZCBhbnkgcmVzdWx0cw0KPiBhYm91dCBVRlMgaW4gdGhlIGZpcnN0IHRl
-biBzZWFyY2ggaGl0cy4gQW5kIEkgaGF2ZW4ndCBmb3VuZCBhbnkgcmVmZXJlbmNlcyB0bw0KPiB0
-aGUgRFdPUkQgLyBRV09SRCB0ZXJtaW5vbG9neSBpbiB0aGUgIlVOSVZFUlNBTCBGTEFTSCBTVE9S
-QUdFIEhPU1QNCj4gQ09OVFJPTExFUiBJTlRFUkZBQ0UgKFVGU0hDSSksIFVOSUZJRUQgTUVNT1JZ
-IEVYVEVOU0lPTiwgVmVyc2lvbg0KPiAxLjEiIGRvY3VtZW50IGVpdGhlci4gTWF5YmUgdGhhdCBt
-ZWFucyB0aGF0IEkgd2FzIGxvb2tpbmcgYXQgdGhlIHdyb25nDQo+IGRvY3VtZW50Pw0KPiANCj4g
-VGhhbmtzLA0KPiANCj4gQmFydC4NCj4gDQo+IA0KVGhlIFVGUyBzcGVjIDIuMSBzcGVjaWZpZXMg
-c2l6ZSBhcyBmaXJzdCBsZXR0ZXIgaW4gbmFtZXMgb2YgdGhlIGRlc2NyaXB0b3IgcGFyYW1ldGVy
-cyBhbmQgYXR0cmlidXRlcyAoZS5nLiBiRGV2aWNlQ2xhc3MsIHdTcGVjVmVyc2lvbiwgZFBTQU1h
-eERhdGFTaXplLCBxVG90YWxSYXdEZXZpY2VDYXBhY2l0eSwgLi4uKS4gQnV0IHVzYWdlIG9mIHRo
-ZSBlbnVtIGNvdWxkIGJlIGVhc2lseSByZW1vdmVkLg0KDQpSZWdhcmRzDQpTdGFuaXNsYXYNCg0K
+On Thu, Feb 01, 2018 at 05:21:12PM +0100, 'Dmitry Vyukov' via syzkaller wrote:
+> On Thu, Feb 1, 2018 at 5:17 PM, Ben Hutchings
+> <ben.hutchings@codethink.co.uk> wrote:
+> > On Thu, 2018-02-01 at 08:04 +0100, Dmitry Vyukov wrote:
+> >> On Thu, Feb 1, 2018 at 7:03 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
+> >> > On 2018-01-30 07:22 AM, Dmitry Vyukov wrote:
+> > [...]
+> >> > > [1:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     2.0.  /dev/sr0   /dev/sg1
+> >> > >
+> >> > > # readlink /sys/class/scsi_generic/sg0
+> >> > >
+> >> > > ../../devices/pci0000:00/0000:00:01.1/ata1/host0/target0:0:0/0:0:0:0/scsi_generic/sg0
+> >> > >
+> >> > > # cat /sys/class/scsi_generic/sg0/device/vendor
+> >> > > ATA
+> >> >
+> >> >
+> >> > ^^^^^
+> >> > That subsystem is the culprit IMO, most likely libata.
+> >> >
+> >> > Until you can show this test failing on something other than an
+> >> > ATA disk, then I will treat this issue as closed.
+> >>
+> >> Hi Doug,
+> >>
+> >> Why is bug in ATA not a bug? Is it long unused by everybody? I've got
+> >> it by running qemu with default flags...
+> >
+> > If the bug is in libata then it's not on Doug to fix it since he's only
+> > maintaining sg.
+> 
+> 
+> Then I think we need to CC ata maintainers rather than treat it as closed.
+> +Tejun, linux-ide@, you can see full thread here:
+> https://groups.google.com/forum/#!topic/syzkaller/9RNr9Gu0MyY
+> 
+
+To get memory corruption it's actually sufficient just to submit "1-byte" reads;
+there's no need for the SG_NEXT_CMD_LEN ioctl or anything:
+
+	#include <fcntl.h>
+	#include <unistd.h>
+
+	int main()
+	{
+		int fd = open("/dev/sg0", O_RDWR);
+		char buf[43] = { [36] = 0x08 /* READ_6 */ };
+
+		for (;;)
+			write(fd, buf, sizeof(buf));
+	}
+
+(where /dev/sg0 is the default QEMU disk type, "82371SB PIIX3 IDE")
+
+The SCSI command descriptor block is the 6 bytes at indices 36-41, so index 42
+is the only data byte.
+
+Also this is a different bug from the crash in ata_bmdma_fill_sg() which is
+fixed by "libata: fix length validation of ATAPI-relayed SCSI commands".
+
+I'm guessing the driver is DMA'ing to somewhere it shouldn't be...
+
+Eric
