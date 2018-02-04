@@ -1,51 +1,112 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: All scsi_debug devices in the scsi_debug driver share the same RAM
- space
-Date: Sat, 03 Feb 2018 14:43:12 -0500
-Message-ID: <1517686992.18584.8.camel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: [PATCH] libata: fix length validation of ATAPI-relayed SCSI commands
+Date: Sat,  3 Feb 2018 20:30:56 -0800
+Message-ID: <20180204043056.16466-1-ebiggers3@gmail.com>
+References: <001a114aa95cfa4339055cd4e8e0@google.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:37166 "EHLO
-        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752026AbeBCTnQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2018 14:43:16 -0500
-Received: by mail-qk0-f182.google.com with SMTP id z65so365712qka.4
-        for <linux-scsi@vger.kernel.org>; Sat, 03 Feb 2018 11:43:16 -0800 (PST)
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:42683 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750744AbeBDEdT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2018 23:33:19 -0500
+In-Reply-To: <001a114aa95cfa4339055cd4e8e0@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: John Pittman <jpittman@redhat.com>, Jon Magrini <jmagrini@redhat.com>
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com, Mark Lord <mlord@pobox.com>, Eric Biggers <ebiggers@google.com>
 
-Hello Doug
+From: Eric Biggers <ebiggers@google.com>
 
-I had emailed you earlier about this issue forgetting to copy others.
+syzkaller reported a crash in ata_bmdma_fill_sg() when writing to
+/dev/sg1.  The immediate cause was that the ATA command's scatterlist
+was not DMA-mapped, which causes 'pi - 1' to underflow, resulting in a
+write to 'qc->ap->bmdma_prd[0xffffffff]'.
 
-All test devices in the scsi_debug driver share the same ram space so
-we cannot really have individual devices for testing stuff like md-
-raid.
+Strangely though, the flag ATA_QCFLAG_DMAMAP was set in qc->flags.  The
+root cause is that when __ata_scsi_queuecmd() is preparing to relay a
+SCSI command to an ATAPI device, it doesn't correctly validate the CDB
+length before copying it into the 16-byte buffer 'cdb' in 'struct
+ata_queued_cmd'.  Namely, it validates the fixed CDB length expected
+based on the SCSI opcode but not the actual CDB length, which can be
+larger due to the use of the SG_NEXT_CMD_LEN ioctl.  Since 'flags' is
+the next member in ata_queued_cmd, a buffer overflow corrupts it.
 
-I bumped into this a few times already and I think it would be useful
-to make each device an individual RAM entry so we can create multiple
-unique devices.
+Fix it by requiring that the actual CDB length be <= 16 (ATAPI_CDB_LEN).
 
-Of course this means also now having to maybe start using attributes
-for each device do we can selectively choose which devices get the
-fault injections.
+[Really it seems the length should be required to be <= dev->cdb_len,
+but the current behavior seems to have been intentionally introduced by
+commit 607126c2a21c ("libata-scsi: be tolerant of 12-byte ATAPI commands
+in 16-byte CDBs") to work around a userspace bug in mplayer.  Probably
+the workaround is no longer needed (mplayer was fixed in 2007), but
+continuing to allow lengths to up 16 appears harmless for now.]
 
-I know its adding complexity here but wanted to get input about the
-possibility of changing this.
+Here's a reproducer that works in QEMU when /dev/sg1 refers to the
+CD-ROM drive that qemu-system-x86_64 creates by default:
 
-For a particular fault injection case this morning I had to use 5
-regular drives and 1 scsi-debug drive to inject faults to reproduce an
-md-raid issue.
+    #include <fcntl.h>
+    #include <sys/ioctl.h>
+    #include <unistd.h>
 
-I also wanted a different start sector and range and sent an earlier
-patch for that.
+    #define SG_NEXT_CMD_LEN 0x2283
 
-So is this something worth considering ?
-If so, i will start working on it.
+    int main()
+    {
+	    char buf[53] = { [36] = 0x7e, [52] = 0x02 };
+	    int fd = open("/dev/sg1", O_RDWR);
+	    ioctl(fd, SG_NEXT_CMD_LEN, &(int){ 17 });
+	    write(fd, buf, sizeof(buf));
+    }
 
-Regards
-Laurence
+The crash was:
+
+    BUG: unable to handle kernel paging request at ffff8cb97db37ffc
+    IP: ata_bmdma_fill_sg drivers/ata/libata-sff.c:2623 [inline]
+    IP: ata_bmdma_qc_prep+0xa4/0xc0 drivers/ata/libata-sff.c:2727
+    PGD fb6c067 P4D fb6c067 PUD 0
+    Oops: 0002 [#1] SMP
+    CPU: 1 PID: 150 Comm: syz_ata_bmdma_q Not tainted 4.15.0-next-20180202 #99
+    Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.0-20171110_100015-anatol 04/01/2014
+    [...]
+    Call Trace:
+     ata_qc_issue+0x100/0x1d0 drivers/ata/libata-core.c:5421
+     ata_scsi_translate+0xc9/0x1a0 drivers/ata/libata-scsi.c:2024
+     __ata_scsi_queuecmd drivers/ata/libata-scsi.c:4326 [inline]
+     ata_scsi_queuecmd+0x8c/0x210 drivers/ata/libata-scsi.c:4375
+     scsi_dispatch_cmd+0xa2/0xe0 drivers/scsi/scsi_lib.c:1727
+     scsi_request_fn+0x24c/0x530 drivers/scsi/scsi_lib.c:1865
+     __blk_run_queue_uncond block/blk-core.c:412 [inline]
+     __blk_run_queue+0x3a/0x60 block/blk-core.c:432
+     blk_execute_rq_nowait+0x93/0xc0 block/blk-exec.c:78
+     sg_common_write.isra.7+0x272/0x5a0 drivers/scsi/sg.c:806
+     sg_write+0x1ef/0x340 drivers/scsi/sg.c:677
+     __vfs_write+0x31/0x160 fs/read_write.c:480
+     vfs_write+0xa7/0x160 fs/read_write.c:544
+     SYSC_write fs/read_write.c:589 [inline]
+     SyS_write+0x4d/0xc0 fs/read_write.c:581
+     do_syscall_64+0x5e/0x110 arch/x86/entry/common.c:287
+     entry_SYSCALL_64_after_hwframe+0x21/0x86
+
+Fixes: 607126c2a21c ("libata-scsi: be tolerant of 12-byte ATAPI commands in 16-byte CDBs")
+Reported-by: syzbot+1ff6f9fcc3c35f1c72a95e26528c8e7e3276e4da@syzkaller.appspotmail.com
+Cc: <stable@vger.kernel.org> # v2.6.24+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ drivers/ata/libata-scsi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 66be961c93a4e..47d421666451c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4309,7 +4309,9 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+ 		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
+ 			/* relay SCSI command to ATAPI device */
+ 			int len = COMMAND_SIZE(scsi_op);
+-			if (unlikely(len > scmd->cmd_len || len > dev->cdb_len))
++			if (unlikely(len > scmd->cmd_len ||
++				     len > dev->cdb_len ||
++				     scmd->cmd_len > ATAPI_CDB_LEN))
+ 				goto bad_cdb_len;
+ 
+ 			xlat_func = atapi_xlat;
+-- 
+2.16.1
