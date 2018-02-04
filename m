@@ -1,88 +1,77 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: scsi: sg: assorted memory corruptions
-Date: Sun, 4 Feb 2018 12:10:58 +0100
-Message-ID: <CACT4Y+av=1SmyN8m+F26Xs3DLmd7zLgTB6OWX0MC3gVkiqRpNg@mail.gmail.com>
-References: <CACT4Y+b0pizvOAxtWQ-TGCRAYvHXdv79BAEaXh50W6vF8gBvkQ@mail.gmail.com>
- <1516638634.2545.0.camel@wdc.com> <097921fa-52c5-8b2b-f564-4b24d9720478@interlog.com>
- <CACT4Y+aEx0ie3qjx6afCYV2vN7gYii0uupKWPXaNTnWUmhdHQw@mail.gmail.com>
- <c0a7ec39-e357-9db6-cf12-ff9c46259f26@interlog.com> <CACT4Y+bObXrFiB0Qn+nfkD8DZRiVck1GJ5U9UeQz+-y85gh70Q@mail.gmail.com>
- <1517501859.3417.67.camel@codethink.co.uk> <CACT4Y+ZEJ9_no0uQSXO66iyyUeJLn_zbPBEey62YkuzOEUMP2w@mail.gmail.com>
- <20180204090710.GA607@zzz.localdomain>
+From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v4 02/10] ufs: sysfs: device descriptor
+Date: Sun, 4 Feb 2018 11:44:42 +0100
+Message-ID: <20180204104442.GA7519@kroah.com>
+References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
+ <1517501746-19075-3-git-send-email-stanislav.nijnikov@wdc.com>
+ <1517531145.2746.26.camel@wdc.com>
+ <20180202071735.GC9314@kroah.com>
+ <1517589119.2675.19.camel@wdc.com>
+ <DM2PR0401MB0975F2D6C2E2CF3E0A3AB6209AFF0@DM2PR0401MB0975.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20180204090710.GA607@zzz.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Eric Biggers <ebiggers3@gmail.com>
-Cc: Ben Hutchings <ben.hutchings@codethink.co.uk>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44150 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750821AbeBDL3G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Feb 2018 06:29:06 -0500
+Content-Disposition: inline
+In-Reply-To: <DM2PR0401MB0975F2D6C2E2CF3E0A3AB6209AFF0@DM2PR0401MB0975.namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Alex Lemberg <Alex.Lemberg@wdc.com>
 
-On Sun, Feb 4, 2018 at 10:07 AM, Eric Biggers <ebiggers3@gmail.com> wrote:
-> On Thu, Feb 01, 2018 at 05:21:12PM +0100, 'Dmitry Vyukov' via syzkaller wrote:
->> On Thu, Feb 1, 2018 at 5:17 PM, Ben Hutchings
->> <ben.hutchings@codethink.co.uk> wrote:
->> > On Thu, 2018-02-01 at 08:04 +0100, Dmitry Vyukov wrote:
->> >> On Thu, Feb 1, 2018 at 7:03 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
->> >> > On 2018-01-30 07:22 AM, Dmitry Vyukov wrote:
->> > [...]
->> >> > > [1:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     2.0.  /dev/sr0   /dev/sg1
->> >> > >
->> >> > > # readlink /sys/class/scsi_generic/sg0
->> >> > >
->> >> > > ../../devices/pci0000:00/0000:00:01.1/ata1/host0/target0:0:0/0:0:0:0/scsi_generic/sg0
->> >> > >
->> >> > > # cat /sys/class/scsi_generic/sg0/device/vendor
->> >> > > ATA
->> >> >
->> >> >
->> >> > ^^^^^
->> >> > That subsystem is the culprit IMO, most likely libata.
->> >> >
->> >> > Until you can show this test failing on something other than an
->> >> > ATA disk, then I will treat this issue as closed.
->> >>
->> >> Hi Doug,
->> >>
->> >> Why is bug in ATA not a bug? Is it long unused by everybody? I've got
->> >> it by running qemu with default flags...
->> >
->> > If the bug is in libata then it's not on Doug to fix it since he's only
->> > maintaining sg.
->>
->>
->> Then I think we need to CC ata maintainers rather than treat it as closed.
->> +Tejun, linux-ide@, you can see full thread here:
->> https://groups.google.com/forum/#!topic/syzkaller/9RNr9Gu0MyY
->>
->
-> To get memory corruption it's actually sufficient just to submit "1-byte" reads;
-> there's no need for the SG_NEXT_CMD_LEN ioctl or anything:
->
->         #include <fcntl.h>
->         #include <unistd.h>
->
->         int main()
->         {
->                 int fd = open("/dev/sg0", O_RDWR);
->                 char buf[43] = { [36] = 0x08 /* READ_6 */ };
->
->                 for (;;)
->                         write(fd, buf, sizeof(buf));
->         }
->
-> (where /dev/sg0 is the default QEMU disk type, "82371SB PIIX3 IDE")
->
-> The SCSI command descriptor block is the 6 bytes at indices 36-41, so index 42
-> is the only data byte.
->
-> Also this is a different bug from the crash in ata_bmdma_fill_sg() which is
-> fixed by "libata: fix length validation of ATAPI-relayed SCSI commands".
->
-> I'm guessing the driver is DMA'ing to somewhere it shouldn't be...
+On Sun, Feb 04, 2018 at 09:03:25AM +0000, Stanislav Nijnikov wrote:
+> > -----Original Message-----
+> > From: Bart Van Assche
+> > Sent: Friday, February 2, 2018 6:32 PM
+> > To: gregkh@linuxfoundation.org
+> > Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > jaegeuk@kernel.org; Alex Lemberg <Alex.Lemberg@wdc.com>; Stanislav
+> > Nijnikov <Stanislav.Nijnikov@wdc.com>
+> > Subject: Re: [PATCH v4 02/10] ufs: sysfs: device descriptor
+> > 
+> > On Fri, 2018-02-02 at 08:17 +0100, gregkh@linuxfoundation.org wrote:
+> > > On Fri, Feb 02, 2018 at 12:25:46AM +0000, Bart Van Assche wrote:
+> > > > On Thu, 2018-02-01 at 18:15 +0200, Stanislav Nijnikov wrote:
+> > > > > +enum ufs_desc_param_size {
+> > > > > +	UFS_PARAM_BYTE_SIZE	= 1,
+> > > > > +	UFS_PARAM_WORD_SIZE	= 2,
+> > > > > +	UFS_PARAM_DWORD_SIZE	= 4,
+> > > > > +	UFS_PARAM_QWORD_SIZE	= 8,
+> > > > > +};
+> > > >
+> > > > Please do not copy bad naming choices from the Windows kernel into
+> > > > the Linux kernel. Using names like WORD / DWORD / QWORD is much less
+> > > > readable than using the numeric constants 2, 4, 8. Hence my proposal
+> > > > to leave out the above enum completely.
+> > >
+> > > Are you sure those do not come from the spec itself?  It's been a
+> > > while since I last read it, but for some reason I remember those types
+> > > of names being in there.  But I might be confusing specs here.
+> > 
+> > Hello Greg,
+> > 
+> > That's a good question. However, a quick search on the Internet for the
+> > search phrase "Universal Flash Storage" "qword" did not yield any results
+> > about UFS in the first ten search hits. And I haven't found any references to
+> > the DWORD / QWORD terminology in the "UNIVERSAL FLASH STORAGE HOST
+> > CONTROLLER INTERFACE (UFSHCI), UNIFIED MEMORY EXTENSION, Version
+> > 1.1" document either. Maybe that means that I was looking at the wrong
+> > document?
+> > 
+> > Thanks,
+> > 
+> > Bart.
+> > 
+> > 
+> The UFS spec 2.1 specifies size as first letter in names of the descriptor parameters and attributes (e.g. bDeviceClass, wSpecVersion, dPSAMaxDataSize, qTotalRawDeviceCapacity, ...). But usage of the enum could be easily removed.
 
-It would be good to add KASAN checks to the DMA code that issues
-transfers. This is another case where a silent memory corruption
-causes dozens of assorted crashes all over the kernel. If we add
-checks, KASAN would pinpoint the exact stack that issues the bad
-command. This may be the simplest way to debug this bug as well. I've
-filed https://bugzilla.kernel.org/show_bug.cgi?id=198661 for this.
+It matches the naming scheme of the spec, so in my opinion, it's fine
+as-is.  But as I'm not the author here, it's up to you what you want to
+use, you have to maintain this, not me :)
+
+thanks,
+
+greg k-h
