@@ -1,70 +1,104 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity issue
-Date: Mon, 5 Feb 2018 18:54:35 +0000
-Message-ID: <1fdeb97688f64a90bb1d8d30d175e6e7@microsemi.com>
+Subject: RE: [PATCH V2 7/8] scsi: hpsa: call hpsa_hba_inquiry() after adding
+ host
+Date: Mon, 5 Feb 2018 18:55:11 +0000
+Message-ID: <7cd6ea234585450f972a5cdd73961e97@microsemi.com>
 References: <20180205152035.15016-1-ming.lei@redhat.com>
-         <20180205152035.15016-9-ming.lei@redhat.com>
- <1517846290.11655.6.camel@redhat.com>
+ <20180205152035.15016-8-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0042.outbound.protection.outlook.com ([104.47.37.42]:21248
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0084.outbound.protection.outlook.com ([104.47.36.84]:49633
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753576AbeBESyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Feb 2018 13:54:43 -0500
-In-Reply-To: <1517846290.11655.6.camel@redhat.com>
+        id S1753640AbeBESzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Feb 2018 13:55:21 -0500
+In-Reply-To: <20180205152035.15016-8-ming.lei@redhat.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>
+To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBMYXVyZW5jZSBPYmVybWFuIFtt
-YWlsdG86bG9iZXJtYW5AcmVkaGF0LmNvbV0NCj4gU2VudDogTW9uZGF5LCBGZWJydWFyeSAwNSwg
-MjAxOCA5OjU4IEFNDQo+IFRvOiBNaW5nIExlaSA8bWluZy5sZWlAcmVkaGF0LmNvbT47IEplbnMg
-QXhib2UgPGF4Ym9lQGtlcm5lbC5kaz47IGxpbnV4LQ0KPiBibG9ja0B2Z2VyLmtlcm5lbC5vcmc7
-IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz47IE1pa2UgU25pdHplcg0KPiA8
-c25pdHplckByZWRoYXQuY29tPjsgRG9uIEJyYWNlIDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4N
-Cj4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBIYW5uZXMgUmVpbmVja2UgPGhhcmVA
-c3VzZS5kZT47IEFydW4gRWFzaQ0KPiA8YXJ1bi5lYXNpQGNhdml1bS5jb20+OyBPbWFyIFNhbmRv
-dmFsIDxvc2FuZG92QGZiLmNvbT47IE1hcnRpbiBLIC4NCj4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRl
-cnNlbkBvcmFjbGUuY29tPjsgSmFtZXMgQm90dG9tbGV5DQo+IDxqYW1lcy5ib3R0b21sZXlAaGFu
-c2VucGFydG5lcnNoaXAuY29tPjsgQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ow0KPiBE
-b24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPjsgS2FzaHlhcCBEZXNhaQ0KPiA8a2Fz
-aHlhcC5kZXNhaUBicm9hZGNvbS5jb20+OyBQZXRlciBSaXZlcmEgPHBldGVyLnJpdmVyYUBicm9h
-ZGNvbS5jb20+Ow0KPiBQYW9sbyBCb256aW5pIDxwYm9uemluaUByZWRoYXQuY29tPg0KPiBTdWJq
-ZWN0OiBSZTogW1BBVENIIFYyIDgvOF0gc2NzaTogaHBzYTogdXNlIGJsa19tcSB0byBzb2x2ZSBp
-cnEgYWZmaW5pdHkgaXNzdWUNCj4gDQo+IEVYVEVSTkFMIEVNQUlMDQo+IA0KPiANCj4gT24gTW9u
-LCAyMDE4LTAyLTA1IGF0IDIzOjIwICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gPiBUaGlzIHBh
-dGNoIHVzZXMgLmZvcmNlX2Jsa19tcSB0byBkcml2ZSBIUFNBIHZpYSBTQ1NJX01RLCBtZWFudGlt
-ZQ0KPiA+IG1hcHMNCj4gPiBlYWNoIHJlcGx5IHF1ZXVlIHRvIGJsa19tcSdzIGh3IHF1ZXVlLCB0
-aGVuIC5xdWV1ZWNvbW1hbmQgY2FuIGFsd2F5cw0KPiA+IGNob29zZSB0aGUgaHcgcXVldWUgYXMg
-dGhlIHJlcGx5IHF1ZXVlLiBBbmQgaWYgbm8gYW55IG9ubGluZSBDUFUgaXMNCj4gPiBtYXBwZWQg
-dG8gb25lIGh3IHF1ZXVlLCByZXF1ZXN0IGNhbid0IGJlIHN1Ym1pdHRlZCB0byB0aGlzIGh3IHF1
-ZXVlDQo+ID4gYXQgYWxsLCBmaW5hbGx5IHRoZSBpcnEgYWZmaW5pdHkgaXNzdWUgaXMgc29sdmVk
-Lg0KPiA+DQo+ID4gQ2M6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KPiA+IENjOiBB
-cnVuIEVhc2kgPGFydW4uZWFzaUBjYXZpdW0uY29tPg0KPiA+IENjOiBPbWFyIFNhbmRvdmFsIDxv
-c2FuZG92QGZiLmNvbT4sDQo+ID4gQ2M6ICJNYXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0aW4ucGV0
-ZXJzZW5Ab3JhY2xlLmNvbT4sDQo+ID4gQ2M6IEphbWVzIEJvdHRvbWxleSA8amFtZXMuYm90dG9t
-bGV5QGhhbnNlbnBhcnRuZXJzaGlwLmNvbT4sDQo+ID4gQ2M6IENocmlzdG9waCBIZWxsd2lnIDxo
-Y2hAbHN0LmRlPiwNCj4gPiBDYzogRG9uIEJyYWNlIDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4N
-Cj4gPiBDYzogS2FzaHlhcCBEZXNhaSA8a2FzaHlhcC5kZXNhaUBicm9hZGNvbS5jb20+DQo+ID4g
-Q2M6IFBldGVyIFJpdmVyYSA8cGV0ZXIucml2ZXJhQGJyb2FkY29tLmNvbT4NCj4gPiBDYzogUGFv
-bG8gQm9uemluaSA8cGJvbnppbmlAcmVkaGF0LmNvbT4NCj4gPiBDYzogTWlrZSBTbml0emVyIDxz
-bml0emVyQHJlZGhhdC5jb20+DQo+ID4gVGVzdGVkLWJ5OiBMYXVyZW5jZSBPYmVybWFuIDxsb2Jl
-cm1hbkByZWRoYXQuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IE1pbmcgTGVpIDxtaW5nLmxlaUBy
-ZWRoYXQuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5jIHwgNTEgKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLQ0KPiBUaGlzIGlzIGEgY3JpdGlj
-YWwgaXNzdWUgb24gdGhlIEhQU0EgYmVjYXVzZSBMaW51cyBhbHJlYWR5IGhhcyB0aGUNCj4gb3Jp
-Z2luYWwgY29tbWl0IHRoYXQgY2F1c2VzIHRoZSBzeXN0ZW0gdG8gZmFpbCB0byBib290Lg0KPiAN
-Cj4gQWxsIG15IHRlc3Rpbmcgd2FzIG9uIERMMzgwIEc3IHNlcnZlcnMgd2l0aDoNCj4gDQo+IEhl
-d2xldHQtUGFja2FyZCBDb21wYW55IFNtYXJ0IEFycmF5IEc2IGNvbnRyb2xsZXJzDQo+IFZlbmRv
-cjogSFAgICAgICAgTW9kZWw6IFA0MTBpICAgICAgICAgICAgUmV2OiA2LjY0DQo+IA0KPiBNaW5n
-J3MgcGF0Y2ggZml4ZXMgdGhpcyBzbyB3ZSBuZWVkIHRvIHRyeSBtb3ZlIHRoaXMgYWxvbmcuDQo+
-IA0KPiBJIGhhdmUgYSBETDM4MCBHOCBhcyB3ZWxsIHdoaWNoIGlzIGFsc28gbGlrZWx5IGV4cG9z
-ZWQgaGVyZSBhbmQgSSBhZGRlZA0KPiAgRG9uIEJyYWNlIGZvciBGWUkgdG8gdGhpcyBsaXN0Lg0K
-PiANCj4gVGhhbmtzIE1pbmcNCg0KVGVzdGVkLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNy
-b3NlbWkuY29tPg0KUDQ0MSwgUDQzMSwgUDgzMGksIEgyNDANCg0KQWNrZWQtYnk6IERvbiBCcmFj
-ZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+DQoNCg0KDQo=
+
+
+> -----Original Message-----
+> From: Ming Lei [mailto:ming.lei@redhat.com]
+> Sent: Monday, February 05, 2018 9:21 AM
+> To: Jens Axboe <axboe@kernel.dk>; linux-block@vger.kernel.org; Christoph
+> Hellwig <hch@infradead.org>; Mike Snitzer <snitzer@redhat.com>
+> Cc: linux-scsi@vger.kernel.org; Hannes Reinecke <hare@suse.de>; Arun Easi
+> <arun.easi@cavium.com>; Omar Sandoval <osandov@fb.com>; Martin K .
+> Petersen <martin.petersen@oracle.com>; James Bottomley
+> <james.bottomley@hansenpartnership.com>; Christoph Hellwig <hch@lst.de>;
+> Don Brace <don.brace@microsemi.com>; Kashyap Desai
+> <kashyap.desai@broadcom.com>; Peter Rivera <peter.rivera@broadcom.com>;
+> Paolo Bonzini <pbonzini@redhat.com>; Laurence Oberman
+> <loberman@redhat.com>; Ming Lei <ming.lei@redhat.com>
+> Subject: [PATCH V2 7/8] scsi: hpsa: call hpsa_hba_inquiry() after adding =
+host
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> So that we can decide the default reply queue by the map created
+> during adding host.
+>=20
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Arun Easi <arun.easi@cavium.com>
+> Cc: Omar Sandoval <osandov@fb.com>,
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+> Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
+> Cc: Christoph Hellwig <hch@lst.de>,
+> Cc: Don Brace <don.brace@microsemi.com>
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Peter Rivera <peter.rivera@broadcom.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Mike Snitzer <snitzer@redhat.com>
+> Tested-by: Laurence Oberman <loberman@redhat.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/hpsa.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 287e5eb0723f..443eabf63a9f 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -8691,12 +8691,9 @@ static int hpsa_init_one(struct pci_dev *pdev, con=
+st
+> struct pci_device_id *ent)
+>         /* Disable discovery polling.*/
+>         h->discovery_polling =3D 0;
+>=20
+> -
+>         /* Turn the interrupts on so we can service requests */
+>         h->access.set_intr_mask(h, HPSA_INTR_ON);
+>=20
+> -       hpsa_hba_inquiry(h);
+> -
+>         h->lastlogicals =3D kzalloc(sizeof(*(h->lastlogicals)), GFP_KERNE=
+L);
+>         if (!h->lastlogicals)
+>                 dev_info(&h->pdev->dev,
+> @@ -8707,6 +8704,8 @@ static int hpsa_init_one(struct pci_dev *pdev, cons=
+t
+> struct pci_device_id *ent)
+>         if (rc)
+>                 goto clean7; /* perf, sg, cmd, irq, shost, pci, lu, aer/h=
+ */
+>=20
+> +       hpsa_hba_inquiry(h);
+> +
+>         /* Monitor the controller for firmware lockups */
+>         h->heartbeat_sample_interval =3D HEARTBEAT_SAMPLE_INTERVAL;
+>         INIT_DELAYED_WORK(&h->monitor_ctlr_work, hpsa_monitor_ctlr_worker=
+);
+> --
+> 2.9.5
+
+Tested-by: Don Brace <don.brace@microsemi.com>
+P441, P431, P830i, H240
+
+Acked-by: Don Brace <don.brace@microsemi.com>
