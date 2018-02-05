@@ -1,204 +1,33 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity
- issue
-Date: Mon, 05 Feb 2018 10:58:10 -0500
-Message-ID: <1517846290.11655.6.camel@redhat.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity issue
+Date: Mon, 5 Feb 2018 16:07:20 +0000
+Message-ID: <1abf74156ac846d0938c0f56382181c0@microsemi.com>
 References: <20180205152035.15016-1-ming.lei@redhat.com>
          <20180205152035.15016-9-ming.lei@redhat.com>
+ <1517846290.11655.6.camel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180205152035.15016-9-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam03on0041.outbound.protection.outlook.com ([104.47.42.41]:56384
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753078AbeBEQHa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Feb 2018 11:07:30 -0500
+In-Reply-To: <1517846290.11655.6.camel@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Laurence Oberman <loberman@redhat.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-On Mon, 2018-02-05 at 23:20 +0800, Ming Lei wrote:
-> This patch uses .force_blk_mq to drive HPSA via SCSI_MQ, meantime
-> maps
-> each reply queue to blk_mq's hw queue, then .queuecommand can always
-> choose the hw queue as the reply queue. And if no any online CPU is
-> mapped to one hw queue, request can't be submitted to this hw queue
-> at all, finally the irq affinity issue is solved.
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Arun Easi <arun.easi@cavium.com>
-> Cc: Omar Sandoval <osandov@fb.com>,
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-> Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-> Cc: Christoph Hellwig <hch@lst.de>,
-> Cc: Don Brace <don.brace@microsemi.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Peter Rivera <peter.rivera@broadcom.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/scsi/hpsa.c | 51 ++++++++++++++++++++++++++++++++++---------
-> --------
->  1 file changed, 34 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 443eabf63a9f..e517a4c74a28 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -51,6 +51,7 @@
->  #include <linux/jiffies.h>
->  #include <linux/percpu-defs.h>
->  #include <linux/percpu.h>
-> +#include <linux/blk-mq-pci.h>
->  #include <asm/unaligned.h>
->  #include <asm/div64.h>
->  #include "hpsa_cmd.h"
-> @@ -956,6 +957,13 @@ static struct device_attribute
-> *hpsa_shost_attrs[] = {
->  #define HPSA_NRESERVED_CMDS	(HPSA_CMDS_RESERVED_FOR_DRIVER +\
->  				 HPSA_MAX_CONCURRENT_PASSTHRUS)
->  
-> +static int hpsa_map_queues(struct Scsi_Host *shost)
-> +{
-> +        struct ctlr_info *h = shost_to_hba(shost);
-> +
-> +        return blk_mq_pci_map_queues(&shost->tag_set, h->pdev);
-> +}
-> +
->  static struct scsi_host_template hpsa_driver_template = {
->  	.module			= THIS_MODULE,
->  	.name			= HPSA,
-> @@ -974,10 +982,13 @@ static struct scsi_host_template
-> hpsa_driver_template = {
->  #ifdef CONFIG_COMPAT
->  	.compat_ioctl		= hpsa_compat_ioctl,
->  #endif
-> +	.map_queues = hpsa_map_queues,
->  	.sdev_attrs = hpsa_sdev_attrs,
->  	.shost_attrs = hpsa_shost_attrs,
->  	.max_sectors = 1024,
->  	.no_write_same = 1,
-> +	.force_blk_mq = 1,
-> +	.host_tagset = 1,
->  };
->  
->  static inline u32 next_command(struct ctlr_info *h, u8 q)
-> @@ -1045,11 +1056,7 @@ static void set_performant_mode(struct
-> ctlr_info *h, struct CommandList *c,
->  		c->busaddr |= 1 | (h->blockFetchTable[c-
-> >Header.SGList] << 1);
->  		if (unlikely(!h->msix_vectors))
->  			return;
-> -		if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -			c->Header.ReplyQueue =
-> -				raw_smp_processor_id() % h-
-> >nreply_queues;
-> -		else
-> -			c->Header.ReplyQueue = reply_queue % h-
-> >nreply_queues;
-> +		c->Header.ReplyQueue = reply_queue;
->  	}
->  }
->  
-> @@ -1063,10 +1070,7 @@ static void
-> set_ioaccel1_performant_mode(struct ctlr_info *h,
->  	 * Tell the controller to post the reply to the queue for
-> this
->  	 * processor.  This seems to give the best I/O throughput.
->  	 */
-> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -		cp->ReplyQueue = smp_processor_id() % h-
-> >nreply_queues;
-> -	else
-> -		cp->ReplyQueue = reply_queue % h->nreply_queues;
-> +	cp->ReplyQueue = reply_queue;
->  	/*
->  	 * Set the bits in the address sent down to include:
->  	 *  - performant mode bit (bit 0)
-> @@ -1087,10 +1091,7 @@ static void
-> set_ioaccel2_tmf_performant_mode(struct ctlr_info *h,
->  	/* Tell the controller to post the reply to the queue for
-> this
->  	 * processor.  This seems to give the best I/O throughput.
->  	 */
-> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -		cp->reply_queue = smp_processor_id() % h-
-> >nreply_queues;
-> -	else
-> -		cp->reply_queue = reply_queue % h->nreply_queues;
-> +	cp->reply_queue = reply_queue;
->  	/* Set the bits in the address sent down to include:
->  	 *  - performant mode bit not used in ioaccel mode 2
->  	 *  - pull count (bits 0-3)
-> @@ -1109,10 +1110,7 @@ static void
-> set_ioaccel2_performant_mode(struct ctlr_info *h,
->  	 * Tell the controller to post the reply to the queue for
-> this
->  	 * processor.  This seems to give the best I/O throughput.
->  	 */
-> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -		cp->reply_queue = smp_processor_id() % h-
-> >nreply_queues;
-> -	else
-> -		cp->reply_queue = reply_queue % h->nreply_queues;
-> +	cp->reply_queue = reply_queue;
->  	/*
->  	 * Set the bits in the address sent down to include:
->  	 *  - performant mode bit not used in ioaccel mode 2
-> @@ -1152,11 +1150,27 @@ static void
-> dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
->  		h->heartbeat_sample_interval =
-> HEARTBEAT_SAMPLE_INTERVAL;
->  }
->  
-> +static unsigned get_reply_queue(struct ctlr_info *h, struct
-> CommandList *c)
-> +{
-> +	struct scsi_cmnd *cmd = c->scsi_cmd;
-> +	int *map;
-> +
-> +	if (cmd && cmd->request) {
-> +		u32 tag = blk_mq_unique_tag(cmd->request);
-> +		return blk_mq_unique_tag_to_hwq(tag);
-> +	}
-> +
-> +	map = h->scsi_host->tag_set.mq_map;
-> +	return map[raw_smp_processor_id()];
-> +}
-> +
->  static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
->  	struct CommandList *c, int reply_queue)
->  {
->  	dial_down_lockup_detection_during_fw_flash(h, c);
->  	atomic_inc(&h->commands_outstanding);
-> +
-> +	reply_queue = get_reply_queue(h, c);
->  	switch (c->cmd_type) {
->  	case CMD_IOACCEL1:
->  		set_ioaccel1_performant_mode(h, c, reply_queue);
-> @@ -5781,6 +5795,9 @@ static int hpsa_scsi_add_host(struct ctlr_info
-> *h)
->  {
->  	int rv;
->  
-> +	/* map reply queue to blk_mq hw queue */
-> +	h->scsi_host->nr_hw_queues = h->msix_vectors;
-> +
->  	rv = scsi_add_host(h->scsi_host, &h->pdev->dev);
->  	if (rv) {
->  		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
-
-This is a critical issue on the HPSA because Linus already has the
-original commit that causes the system to fail to boot.
-
-All my testing was on DL380 G7 servers with:
-
-Hewlett-Packard Company Smart Array G6 controllers 
-Vendor: HP       Model: P410i            Rev: 6.64
-
-Ming's patch fixes this so we need to try move this along.
-
-I have a DL380 G8 as well which is also likely exposed here and I added
- Don Brace for FYI to this list.
-
-Thanks Ming
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBUaGlzIGlzIGEgY3JpdGljYWwgaXNzdWUg
+b24gdGhlIEhQU0EgYmVjYXVzZSBMaW51cyBhbHJlYWR5IGhhcyB0aGUNCj4gb3JpZ2luYWwgY29t
+bWl0IHRoYXQgY2F1c2VzIHRoZSBzeXN0ZW0gdG8gZmFpbCB0byBib290Lg0KPiANCj4gQWxsIG15
+IHRlc3Rpbmcgd2FzIG9uIERMMzgwIEc3IHNlcnZlcnMgd2l0aDoNCj4gDQo+IEhld2xldHQtUGFj
+a2FyZCBDb21wYW55IFNtYXJ0IEFycmF5IEc2IGNvbnRyb2xsZXJzDQo+IFZlbmRvcjogSFAgICAg
+ICAgTW9kZWw6IFA0MTBpICAgICAgICAgICAgUmV2OiA2LjY0DQo+IA0KPiBNaW5nJ3MgcGF0Y2gg
+Zml4ZXMgdGhpcyBzbyB3ZSBuZWVkIHRvIHRyeSBtb3ZlIHRoaXMgYWxvbmcuDQo+IA0KPiBJIGhh
+dmUgYSBETDM4MCBHOCBhcyB3ZWxsIHdoaWNoIGlzIGFsc28gbGlrZWx5IGV4cG9zZWQgaGVyZSBh
+bmQgSSBhZGRlZA0KPiAgRG9uIEJyYWNlIGZvciBGWUkgdG8gdGhpcyBsaXN0Lg0KPiANCj4gVGhh
+bmtzIE1pbmcNCg0KUnVubmluZyBzb21lIHRlc3RzIG5vdy4NCg==
