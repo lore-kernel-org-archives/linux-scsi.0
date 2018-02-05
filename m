@@ -1,7 +1,7 @@
 From: Don Brace <don.brace@microsemi.com>
 Subject: RE: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity issue
-Date: Mon, 5 Feb 2018 16:07:20 +0000
-Message-ID: <1abf74156ac846d0938c0f56382181c0@microsemi.com>
+Date: Mon, 5 Feb 2018 18:54:35 +0000
+Message-ID: <1fdeb97688f64a90bb1d8d30d175e6e7@microsemi.com>
 References: <20180205152035.15016-1-ming.lei@redhat.com>
          <20180205152035.15016-9-ming.lei@redhat.com>
  <1517846290.11655.6.camel@redhat.com>
@@ -9,11 +9,11 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0041.outbound.protection.outlook.com ([104.47.42.41]:56384
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0042.outbound.protection.outlook.com ([104.47.37.42]:21248
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753078AbeBEQHa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Feb 2018 11:07:30 -0500
+        id S1753576AbeBESyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Feb 2018 13:54:43 -0500
 In-Reply-To: <1517846290.11655.6.camel@redhat.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
@@ -21,13 +21,50 @@ List-Id: linux-scsi@vger.kernel.org
 To: Laurence Oberman <loberman@redhat.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBUaGlzIGlzIGEgY3JpdGljYWwgaXNzdWUg
-b24gdGhlIEhQU0EgYmVjYXVzZSBMaW51cyBhbHJlYWR5IGhhcyB0aGUNCj4gb3JpZ2luYWwgY29t
-bWl0IHRoYXQgY2F1c2VzIHRoZSBzeXN0ZW0gdG8gZmFpbCB0byBib290Lg0KPiANCj4gQWxsIG15
-IHRlc3Rpbmcgd2FzIG9uIERMMzgwIEc3IHNlcnZlcnMgd2l0aDoNCj4gDQo+IEhld2xldHQtUGFj
-a2FyZCBDb21wYW55IFNtYXJ0IEFycmF5IEc2IGNvbnRyb2xsZXJzDQo+IFZlbmRvcjogSFAgICAg
-ICAgTW9kZWw6IFA0MTBpICAgICAgICAgICAgUmV2OiA2LjY0DQo+IA0KPiBNaW5nJ3MgcGF0Y2gg
-Zml4ZXMgdGhpcyBzbyB3ZSBuZWVkIHRvIHRyeSBtb3ZlIHRoaXMgYWxvbmcuDQo+IA0KPiBJIGhh
-dmUgYSBETDM4MCBHOCBhcyB3ZWxsIHdoaWNoIGlzIGFsc28gbGlrZWx5IGV4cG9zZWQgaGVyZSBh
-bmQgSSBhZGRlZA0KPiAgRG9uIEJyYWNlIGZvciBGWUkgdG8gdGhpcyBsaXN0Lg0KPiANCj4gVGhh
-bmtzIE1pbmcNCg0KUnVubmluZyBzb21lIHRlc3RzIG5vdy4NCg==
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBMYXVyZW5jZSBPYmVybWFuIFtt
+YWlsdG86bG9iZXJtYW5AcmVkaGF0LmNvbV0NCj4gU2VudDogTW9uZGF5LCBGZWJydWFyeSAwNSwg
+MjAxOCA5OjU4IEFNDQo+IFRvOiBNaW5nIExlaSA8bWluZy5sZWlAcmVkaGF0LmNvbT47IEplbnMg
+QXhib2UgPGF4Ym9lQGtlcm5lbC5kaz47IGxpbnV4LQ0KPiBibG9ja0B2Z2VyLmtlcm5lbC5vcmc7
+IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz47IE1pa2UgU25pdHplcg0KPiA8
+c25pdHplckByZWRoYXQuY29tPjsgRG9uIEJyYWNlIDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4N
+Cj4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBIYW5uZXMgUmVpbmVja2UgPGhhcmVA
+c3VzZS5kZT47IEFydW4gRWFzaQ0KPiA8YXJ1bi5lYXNpQGNhdml1bS5jb20+OyBPbWFyIFNhbmRv
+dmFsIDxvc2FuZG92QGZiLmNvbT47IE1hcnRpbiBLIC4NCj4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRl
+cnNlbkBvcmFjbGUuY29tPjsgSmFtZXMgQm90dG9tbGV5DQo+IDxqYW1lcy5ib3R0b21sZXlAaGFu
+c2VucGFydG5lcnNoaXAuY29tPjsgQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ow0KPiBE
+b24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPjsgS2FzaHlhcCBEZXNhaQ0KPiA8a2Fz
+aHlhcC5kZXNhaUBicm9hZGNvbS5jb20+OyBQZXRlciBSaXZlcmEgPHBldGVyLnJpdmVyYUBicm9h
+ZGNvbS5jb20+Ow0KPiBQYW9sbyBCb256aW5pIDxwYm9uemluaUByZWRoYXQuY29tPg0KPiBTdWJq
+ZWN0OiBSZTogW1BBVENIIFYyIDgvOF0gc2NzaTogaHBzYTogdXNlIGJsa19tcSB0byBzb2x2ZSBp
+cnEgYWZmaW5pdHkgaXNzdWUNCj4gDQo+IEVYVEVSTkFMIEVNQUlMDQo+IA0KPiANCj4gT24gTW9u
+LCAyMDE4LTAyLTA1IGF0IDIzOjIwICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gPiBUaGlzIHBh
+dGNoIHVzZXMgLmZvcmNlX2Jsa19tcSB0byBkcml2ZSBIUFNBIHZpYSBTQ1NJX01RLCBtZWFudGlt
+ZQ0KPiA+IG1hcHMNCj4gPiBlYWNoIHJlcGx5IHF1ZXVlIHRvIGJsa19tcSdzIGh3IHF1ZXVlLCB0
+aGVuIC5xdWV1ZWNvbW1hbmQgY2FuIGFsd2F5cw0KPiA+IGNob29zZSB0aGUgaHcgcXVldWUgYXMg
+dGhlIHJlcGx5IHF1ZXVlLiBBbmQgaWYgbm8gYW55IG9ubGluZSBDUFUgaXMNCj4gPiBtYXBwZWQg
+dG8gb25lIGh3IHF1ZXVlLCByZXF1ZXN0IGNhbid0IGJlIHN1Ym1pdHRlZCB0byB0aGlzIGh3IHF1
+ZXVlDQo+ID4gYXQgYWxsLCBmaW5hbGx5IHRoZSBpcnEgYWZmaW5pdHkgaXNzdWUgaXMgc29sdmVk
+Lg0KPiA+DQo+ID4gQ2M6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KPiA+IENjOiBB
+cnVuIEVhc2kgPGFydW4uZWFzaUBjYXZpdW0uY29tPg0KPiA+IENjOiBPbWFyIFNhbmRvdmFsIDxv
+c2FuZG92QGZiLmNvbT4sDQo+ID4gQ2M6ICJNYXJ0aW4gSy4gUGV0ZXJzZW4iIDxtYXJ0aW4ucGV0
+ZXJzZW5Ab3JhY2xlLmNvbT4sDQo+ID4gQ2M6IEphbWVzIEJvdHRvbWxleSA8amFtZXMuYm90dG9t
+bGV5QGhhbnNlbnBhcnRuZXJzaGlwLmNvbT4sDQo+ID4gQ2M6IENocmlzdG9waCBIZWxsd2lnIDxo
+Y2hAbHN0LmRlPiwNCj4gPiBDYzogRG9uIEJyYWNlIDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4N
+Cj4gPiBDYzogS2FzaHlhcCBEZXNhaSA8a2FzaHlhcC5kZXNhaUBicm9hZGNvbS5jb20+DQo+ID4g
+Q2M6IFBldGVyIFJpdmVyYSA8cGV0ZXIucml2ZXJhQGJyb2FkY29tLmNvbT4NCj4gPiBDYzogUGFv
+bG8gQm9uemluaSA8cGJvbnppbmlAcmVkaGF0LmNvbT4NCj4gPiBDYzogTWlrZSBTbml0emVyIDxz
+bml0emVyQHJlZGhhdC5jb20+DQo+ID4gVGVzdGVkLWJ5OiBMYXVyZW5jZSBPYmVybWFuIDxsb2Jl
+cm1hbkByZWRoYXQuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IE1pbmcgTGVpIDxtaW5nLmxlaUBy
+ZWRoYXQuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5jIHwgNTEgKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLQ0KPiBUaGlzIGlzIGEgY3JpdGlj
+YWwgaXNzdWUgb24gdGhlIEhQU0EgYmVjYXVzZSBMaW51cyBhbHJlYWR5IGhhcyB0aGUNCj4gb3Jp
+Z2luYWwgY29tbWl0IHRoYXQgY2F1c2VzIHRoZSBzeXN0ZW0gdG8gZmFpbCB0byBib290Lg0KPiAN
+Cj4gQWxsIG15IHRlc3Rpbmcgd2FzIG9uIERMMzgwIEc3IHNlcnZlcnMgd2l0aDoNCj4gDQo+IEhl
+d2xldHQtUGFja2FyZCBDb21wYW55IFNtYXJ0IEFycmF5IEc2IGNvbnRyb2xsZXJzDQo+IFZlbmRv
+cjogSFAgICAgICAgTW9kZWw6IFA0MTBpICAgICAgICAgICAgUmV2OiA2LjY0DQo+IA0KPiBNaW5n
+J3MgcGF0Y2ggZml4ZXMgdGhpcyBzbyB3ZSBuZWVkIHRvIHRyeSBtb3ZlIHRoaXMgYWxvbmcuDQo+
+IA0KPiBJIGhhdmUgYSBETDM4MCBHOCBhcyB3ZWxsIHdoaWNoIGlzIGFsc28gbGlrZWx5IGV4cG9z
+ZWQgaGVyZSBhbmQgSSBhZGRlZA0KPiAgRG9uIEJyYWNlIGZvciBGWUkgdG8gdGhpcyBsaXN0Lg0K
+PiANCj4gVGhhbmtzIE1pbmcNCg0KVGVzdGVkLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNy
+b3NlbWkuY29tPg0KUDQ0MSwgUDQzMSwgUDgzMGksIEgyNDANCg0KQWNrZWQtYnk6IERvbiBCcmFj
+ZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+DQoNCg0KDQo=
