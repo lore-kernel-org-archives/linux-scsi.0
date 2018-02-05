@@ -1,47 +1,74 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: [PATCH 2/2] scsi_debug: reset injection flags for every_nth > 0
-Date: Mon,  5 Feb 2018 15:17:40 +0100
-Message-ID: <20180205141740.32418-2-mwilck@suse.com>
-References: <20180205141740.32418-1-mwilck@suse.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: All scsi_debug devices in the scsi_debug driver share the same
+ RAM space
+Date: Mon, 05 Feb 2018 09:32:31 -0500
+Message-ID: <1517841151.11655.1.camel@redhat.com>
+References: <1517686992.18584.8.camel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:46558 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753109AbeBEOSY (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Mon, 5 Feb 2018 09:18:24 -0500
-In-Reply-To: <20180205141740.32418-1-mwilck@suse.com>
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:34799 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752612AbeBEOcd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Feb 2018 09:32:33 -0500
+Received: by mail-qk0-f180.google.com with SMTP id m130so7790902qke.1
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Feb 2018 06:32:33 -0800 (PST)
+In-Reply-To: <1517686992.18584.8.camel@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.com>
+To: dgilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: John Pittman <jpittman@redhat.com>, Jon Magrini <jmagrini@redhat.com>
 
-If every_nth > 0, the injection flags must be reset for commands
-that aren't supposed to fail (i.e. that aren't "nth"). Otherwise,
-commands will continue to fail, like in the every_nth < 0 case.
+On Sat, 2018-02-03 at 14:43 -0500, Laurence Oberman wrote:
+> Hello Doug
+> 
+> I had emailed you earlier about this issue forgetting to copy others.
+> 
+> All test devices in the scsi_debug driver share the same ram space so
+> we cannot really have individual devices for testing stuff like md-
+> raid.
+> 
+> I bumped into this a few times already and I think it would be useful
+> to make each device an individual RAM entry so we can create multiple
+> unique devices.
+> 
+> Of course this means also now having to maybe start using attributes
+> for each device do we can selectively choose which devices get the
+> fault injections.
+> 
+> I know its adding complexity here but wanted to get input about the
+> possibility of changing this.
+> 
+> For a particular fault injection case this morning I had to use 5
+> regular drives and 1 scsi-debug drive to inject faults to reproduce
+> an
+> md-raid issue.
+> 
+> I also wanted a different start sector and range and sent an earlier
+> patch for that.
+> 
+> So is this something worth considering ?
+> If so, i will start working on it.
+> 
+> Regards
+> Laurence
+> 
+> 
+> 
+> 
 
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/scsi_debug.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+I chatted with Doug about this.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 86c48797381e..820b98853e69 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3988,8 +3988,13 @@ static void clear_queue_stats(void)
- static void setup_inject(struct sdebug_queue *sqp,
- 			 struct sdebug_queued_cmd *sqcp)
- {
--	if ((atomic_read(&sdebug_cmnd_count) % abs(sdebug_every_nth)) > 0)
-+	if ((atomic_read(&sdebug_cmnd_count) % abs(sdebug_every_nth)) > 0) {
-+		if (sdebug_every_nth > 0)
-+			sqcp->inj_recovered = sqcp->inj_transport
-+				= sqcp->inj_dif
-+				= sqcp->inj_dix = sqcp->inj_short = 0;
- 		return;
-+	}
- 	sqcp->inj_recovered = !!(SDEBUG_OPT_RECOVERED_ERR & sdebug_opts);
- 	sqcp->inj_transport = !!(SDEBUG_OPT_TRANSPORT_ERR & sdebug_opts);
- 	sqcp->inj_dif = !!(SDEBUG_OPT_DIF_ERR & sdebug_opts);
--- 
-2.16.1
+Seems that many of the use cases for scsi_debug involved creating high
+count devices for testing etc. so having each with its own ram space
+could land up chewing a bunch of memory.
+
+I am going to drop this idea for now, but the patch I sent for the
+choice of sector for MEDIUM errors and count is very useful so I hope
+that one gets accepted.
+That patch changes nothing if the two new parameters are not set so
+should be low risk for acceptance.
+
+Thanks
+Laurence
