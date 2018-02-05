@@ -1,144 +1,218 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 2/5] blk-mq: introduce BLK_MQ_F_GLOBAL_TAGS
-Date: Mon, 5 Feb 2018 18:35:03 +0800
-Message-ID: <20180205103502.GC32558@ming.t460p>
-References: <20180203042112.15239-1-ming.lei@redhat.com>
- <20180203042112.15239-3-ming.lei@redhat.com>
- <2dafa42d-b4cf-d693-517f-5423fb006fcc@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Can Guo <cang@codeaurora.org>
+Subject: [PATCH] scsi: ufs-qcom: add number of lanes per direction
+Date: Mon,  5 Feb 2018 20:02:07 +0800
+Message-ID: <20180205121021.11012-1-cang@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40006 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751705AbeBEKf2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Feb 2018 05:35:28 -0500
-Content-Disposition: inline
-In-Reply-To: <2dafa42d-b4cf-d693-517f-5423fb006fcc@suse.de>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35654 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752574AbeBEMKf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Feb 2018 07:10:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+To: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Can Guo <cang@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Noa Rubens <noag@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Maya Erez <merez@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-On Mon, Feb 05, 2018 at 07:54:29AM +0100, Hannes Reinecke wrote:
-> On 02/03/2018 05:21 AM, Ming Lei wrote:
-> > Quite a few HBAs(such as HPSA, megaraid, mpt3sas, ..) support multiple
-> > reply queues, but tags is often HBA wide.
-> > 
-> > These HBAs have switched to use pci_alloc_irq_vectors(PCI_IRQ_AFFINITY)
-> > for automatic affinity assignment.
-> > 
-> > Now 84676c1f21e8ff5(genirq/affinity: assign vectors to all possible CPUs)
-> > has been merged to V4.16-rc, and it is easy to allocate all offline CPUs
-> > for some irq vectors, this can't be avoided even though the allocation
-> > is improved.
-> > 
-> > So all these drivers have to avoid to ask HBA to complete request in
-> > reply queue which hasn't online CPUs assigned, and HPSA has been broken
-> > with v4.15+:
-> > 
-> > 	https://marc.info/?l=linux-kernel&m=151748144730409&w=2
-> > 
-> > This issue can be solved generically and easily via blk_mq(scsi_mq) multiple
-> > hw queue by mapping each reply queue into hctx, but one tricky thing is
-> > the HBA wide(instead of hw queue wide) tags.
-> > 
-> > This patch is based on the following Hannes's patch:
-> > 
-> > 	https://marc.info/?l=linux-block&m=149132580511346&w=2
-> > 
-> > One big difference with Hannes's is that this patch only makes the tags sbitmap
-> > and active_queues data structure HBA wide, and others are kept as NUMA locality,
-> > such as request, hctx, tags, ...
-> > 
-> > The following patch will support global tags on null_blk, also the performance
-> > data is provided, no obvious performance loss is observed when the whole
-> > hw queue depth is same.
-> > 
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Cc: Arun Easi <arun.easi@cavium.com>
-> > Cc: Omar Sandoval <osandov@fb.com>,
-> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-> > Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-> > Cc: Christoph Hellwig <hch@lst.de>,
-> > Cc: Don Brace <don.brace@microsemi.com>
-> > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> > Cc: Peter Rivera <peter.rivera@broadcom.com>
-> > Cc: Laurence Oberman <loberman@redhat.com>
-> > Cc: Mike Snitzer <snitzer@redhat.com>
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  block/blk-mq-debugfs.c |  1 +
-> >  block/blk-mq-sched.c   |  2 +-
-> >  block/blk-mq-tag.c     | 23 ++++++++++++++++++-----
-> >  block/blk-mq-tag.h     |  5 ++++-
-> >  block/blk-mq.c         | 29 ++++++++++++++++++++++++-----
-> >  block/blk-mq.h         |  3 ++-
-> >  include/linux/blk-mq.h |  2 ++
-> >  7 files changed, 52 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-> > index 0dfafa4b655a..0f0fafe03f5d 100644
-> > --- a/block/blk-mq-debugfs.c
-> > +++ b/block/blk-mq-debugfs.c
-> > @@ -206,6 +206,7 @@ static const char *const hctx_flag_name[] = {
-> >  	HCTX_FLAG_NAME(SHOULD_MERGE),
-> >  	HCTX_FLAG_NAME(TAG_SHARED),
-> >  	HCTX_FLAG_NAME(SG_MERGE),
-> > +	HCTX_FLAG_NAME(GLOBAL_TAGS),
-> >  	HCTX_FLAG_NAME(BLOCKING),
-> >  	HCTX_FLAG_NAME(NO_SCHED),
-> >  };
-> > diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-> > index 55c0a745b427..191d4bc95f0e 100644
-> > --- a/block/blk-mq-sched.c
-> > +++ b/block/blk-mq-sched.c
-> > @@ -495,7 +495,7 @@ static int blk_mq_sched_alloc_tags(struct request_queue *q,
-> >  	int ret;
-> >  
-> >  	hctx->sched_tags = blk_mq_alloc_rq_map(set, hctx_idx, q->nr_requests,
-> > -					       set->reserved_tags);
-> > +					       set->reserved_tags, false);
-> >  	if (!hctx->sched_tags)
-> >  		return -ENOMEM;
-> >  
-> > diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-> > index 571797dc36cb..66377d09eaeb 100644
-> > --- a/block/blk-mq-tag.c
-> > +++ b/block/blk-mq-tag.c
-> > @@ -379,9 +379,11 @@ static struct blk_mq_tags *blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
-> >  	return NULL;
-> >  }
-> >  
-> > -struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
-> > +struct blk_mq_tags *blk_mq_init_tags(struct blk_mq_tag_set *set,
-> > +				     unsigned int total_tags,
-> >  				     unsigned int reserved_tags,
-> > -				     int node, int alloc_policy)
-> > +				     int node, int alloc_policy,
-> > +				     bool global_tag)
-> >  {
-> >  	struct blk_mq_tags *tags;
-> >  
-> > @@ -397,6 +399,14 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
-> >  	tags->nr_tags = total_tags;
-> >  	tags->nr_reserved_tags = reserved_tags;
-> >  
-> > +	WARN_ON(global_tag && !set->global_tags);
-> > +	if (global_tag && set->global_tags) {
-> > +		tags->bitmap_tags = set->global_tags->bitmap_tags;
-> > +		tags->breserved_tags = set->global_tags->breserved_tags;
-> > +		tags->active_queues = set->global_tags->active_queues;
-> > +		tags->global_tags = true;
-> > +		return tags;
-> > +	}
-> >  	tags->bitmap_tags = &tags->__bitmap_tags;
-> >  	tags->breserved_tags = &tags->__breserved_tags;
-> >  	tags->active_queues = &tags->__active_queues;
-> Do we really need the 'global_tag' flag here?
-> Can't we just rely on the ->global_tags pointer to be set?
+From: Gilad Broner <gbroner@codeaurora.org>
 
-The same code is used for creating scheduler tags too, so the parameter
-of 'global_tag' has to be introduced.
+Different platforms may have different number of lanes for the UFS link.
+Add parameter to device tree specifying how many lanes should be
+configured for the UFS link. And don't print err message for clocks
+that are optional, this leads to unnecessary confusion about failure.
 
-Thanks,
-Ming
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 5357919..4cee3f9 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -31,6 +31,9 @@ Optional properties:
+ 			  defined or a value in the array is "0" then it is assumed
+ 			  that the frequency is set by the parent clock or a
+ 			  fixed rate clock source.
++- lanes-per-direction:	number of lanes available per direction - either 1 or 2.
++			Note that it is assume same number of lanes is used both directions at once.
++			If not specified, default is 2 lanes per direction.
+ 
+ Note: If above properties are not defined it can be assumed that the supply
+ regulators or clocks are always on.
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 4cdffa4..84d37e9 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -50,13 +50,10 @@ static int ufs_qcom_host_clk_get(struct device *dev,
+ 	int err = 0;
+ 
+ 	clk = devm_clk_get(dev, name);
+-	if (IS_ERR(clk)) {
++	if (IS_ERR(clk))
+ 		err = PTR_ERR(clk);
+-		dev_err(dev, "%s: failed to get %s err %d",
+-				__func__, name, err);
+-	} else {
++	else
+ 		*clk_out = clk;
+-	}
+ 
+ 	return err;
+ }
+@@ -78,9 +75,11 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+ 	if (!host->is_lane_clks_enabled)
+ 		return;
+ 
+-	clk_disable_unprepare(host->tx_l1_sync_clk);
++	if (host->tx_l1_sync_clk)
++		clk_disable_unprepare(host->tx_l1_sync_clk);
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+-	clk_disable_unprepare(host->rx_l1_sync_clk);
++	if (host->rx_l1_sync_clk)
++		clk_disable_unprepare(host->rx_l1_sync_clk);
+ 	clk_disable_unprepare(host->rx_l0_sync_clk);
+ 
+ 	host->is_lane_clks_enabled = false;
+@@ -104,21 +103,21 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ 	if (err)
+ 		goto disable_rx_l0;
+ 
+-	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
+-		host->rx_l1_sync_clk);
+-	if (err)
+-		goto disable_tx_l0;
++	if (host->hba->lanes_per_direction > 1) {
++		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
++			host->rx_l1_sync_clk);
++		if (err)
++			goto disable_tx_l0;
+ 
+-	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+-		host->tx_l1_sync_clk);
+-	if (err)
+-		goto disable_rx_l1;
++		/* The tx lane1 clk could be muxed, hence keep this optional */
++		if (host->tx_l1_sync_clk)
++			ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
++						 host->tx_l1_sync_clk);
++	}
+ 
+ 	host->is_lane_clks_enabled = true;
+ 	goto out;
+ 
+-disable_rx_l1:
+-	clk_disable_unprepare(host->rx_l1_sync_clk);
+ disable_tx_l0:
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+ disable_rx_l0:
+@@ -134,21 +133,34 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 
+ 	err = ufs_qcom_host_clk_get(dev,
+ 			"rx_lane0_sync_clk", &host->rx_l0_sync_clk);
+-	if (err)
++	if (err) {
++		dev_err(dev, "%s: failed to get rx_lane0_sync_clk, err %d",
++				__func__, err);
+ 		goto out;
++	}
+ 
+ 	err = ufs_qcom_host_clk_get(dev,
+ 			"tx_lane0_sync_clk", &host->tx_l0_sync_clk);
+-	if (err)
++	if (err) {
++		dev_err(dev, "%s: failed to get tx_lane0_sync_clk, err %d",
++				__func__, err);
+ 		goto out;
++	}
+ 
+-	err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
+-		&host->rx_l1_sync_clk);
+-	if (err)
+-		goto out;
++	/* In case of single lane per direction, don't read lane1 clocks */
++	if (host->hba->lanes_per_direction > 1) {
++		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
++			&host->rx_l1_sync_clk);
++		if (err) {
++			dev_err(dev, "%s: failed to get rx_lane1_sync_clk, err %d",
++					__func__, err);
++			goto out;
++		}
+ 
+-	err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+-		&host->tx_l1_sync_clk);
++		/* The tx lane1 clk could be muxed, hence keep this optional */
++		ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
++					&host->tx_l1_sync_clk);
++	}
+ out:
+ 	return err;
+ }
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index b0ade73..b9e1ecd 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -39,6 +39,7 @@
+ 
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
++#include <linux/of.h>
+ 
+ #include "ufshcd.h"
+ #include "unipro.h"
+@@ -74,6 +75,8 @@
+ /* Interrupt aggregation default timeout, unit: 40us */
+ #define INT_AGGR_DEF_TO	0x02
+ 
++#define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
++
+ #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+ 	({                                                              \
+ 		int _ret;                                               \
+@@ -5530,6 +5533,21 @@ static struct devfreq_dev_profile ufs_devfreq_profile = {
+ 	.get_dev_status	= ufshcd_devfreq_get_dev_status,
+ };
+ 
++static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
++{
++	struct device *dev = hba->dev;
++	int ret;
++
++	ret = of_property_read_u32(dev->of_node, "lanes-per-direction",
++		&hba->lanes_per_direction);
++	if (ret) {
++		dev_dbg(hba->dev,
++			"%s: failed to read lanes-per-direction, ret=%d\n",
++			__func__, ret);
++		hba->lanes_per_direction = UFSHCD_DEFAULT_LANES_PER_DIRECTION;
++	}
++}
++
+ /**
+  * ufshcd_init - Driver initialization routine
+  * @hba: per-adapter instance
+@@ -5553,6 +5571,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	hba->mmio_base = mmio_base;
+ 	hba->irq = irq;
+ 
++	ufshcd_init_lanes_per_dir(hba);
++
+ 	err = ufshcd_hba_init(hba);
+ 	if (err)
+ 		goto out_error;
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index c40a0e7..3d9bdc7 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -500,6 +500,9 @@ struct ufs_hba {
+ 
+ 	bool wlun_dev_clr_ua;
+ 
++	/* Number of lanes available (1 or 2) for Rx/Tx */
++	u32 lanes_per_direction;
++
+ 	struct ufs_pa_layer_attr pwr_info;
+ 	struct ufs_pwr_mode_info max_pwr_info;
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
