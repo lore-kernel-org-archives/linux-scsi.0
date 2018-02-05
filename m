@@ -1,98 +1,61 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v4 01/10] ufs: sysfs: attribute group for existing sysfs
- entries.
-Date: Sun, 4 Feb 2018 14:15:15 +0100
-Message-ID: <20180204131515.GA2977@kroah.com>
-References: <1517501746-19075-1-git-send-email-stanislav.nijnikov@wdc.com>
- <1517501746-19075-2-git-send-email-stanislav.nijnikov@wdc.com>
- <20180201165923.GA12838@kroah.com>
- <DM2PR0401MB097509D74E03449B0FA616249AFF0@DM2PR0401MB0975.namprd04.prod.outlook.com>
- <20180204123343.GA940@kroah.com>
- <DM2PR0401MB0975383CF11F3932BB5DA77E9AFF0@DM2PR0401MB0975.namprd04.prod.outlook.com>
+From: Adam Bennett <abennett72@gmail.com>
+Subject: [Solved] Re: SSD being put to sleep during boot-up when laptop on
+ battery
+Date: Sun, 4 Feb 2018 21:33:05 -0500
+Message-ID: <cf496ae3-391e-cb9c-7e71-387c51be9a72@gmail.com>
+References: <Pine.LNX.4.44L0.1712251124400.9922-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58646 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750868AbeBDNdP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Feb 2018 08:33:15 -0500
-Content-Disposition: inline
-In-Reply-To: <DM2PR0401MB0975383CF11F3932BB5DA77E9AFF0@DM2PR0401MB0975.namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1712251124400.9922-100000@netrider.rowland.org>
+Content-Language: en-US
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, Alex Lemberg <Alex.Lemberg@wdc.com>
 
-On Sun, Feb 04, 2018 at 01:09:09PM +0000, Stanislav Nijnikov wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> > Sent: Sunday, February 4, 2018 2:34 PM
-> > To: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-> > Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > jaegeuk@kernel.org; Alex Lemberg <Alex.Lemberg@wdc.com>
-> > Subject: Re: [PATCH v4 01/10] ufs: sysfs: attribute group for existing sysfs
-> > entries.
-> > 
-> > On Sun, Feb 04, 2018 at 12:29:06PM +0000, Stanislav Nijnikov wrote:
-> > > > > +	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > > > > +			     "\nAll available Runtime PM levels info:\n");
-> > > > > +	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> > > > > +		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > > > > +				     "\tRuntime PM level [%d] => dev_state
-> > > > [%s] link_state [%s]\n",
-> > > > > +				    lvl,
-> > > > > +				    ufschd_ufs_dev_pwr_mode_to_string(
-> > > > > +					ufs_pm_lvl_states[lvl].dev_state),
-> > > > > +				    ufschd_uic_link_state_to_string(
-> > > > > +					ufs_pm_lvl_states[lvl].link_state));
-> > > > > +
-> > > >
-> > > > sysfs if "one value per file", not "random text that someone has to
-> > > > parse per file" please.
-> > > >
-> > > > Huge hint, if you ever care about checking the size of the sysfs
-> > > > buffer you are writing into, you are doing something really really wrong.
-> > > >
-> > > Hi Greg
-> > > It's the existing code, added by:
-> > > commit 09690d5a6ae1b7e4cb5ac429c311b99d09352c12
-> > > Author: subhashj@codeaurora.org <subhashj@codeaurora.org>
-> > > Date:   Thu Dec 22 18:41:00 2016 -0800
-> > >
-> > >     scsi: ufs: provide sysfs attribute to select the PM level
-> > >
-> > >     This patch provides the sysfs attribute to choose the power management
-> > >     level for UFS runtime and system suspend.
-> > >
-> > >     Reviewed-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> > >     Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> > >     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> > >
-> > > I just moved it to an another file and changed the sysfs entries
-> > > creation by Jaegeuk Kim' request. At the moment the entry shows the PM
-> > > level, the device state, the link state and all possible PM levels. Do you
-> > want me to change it?
-> > 
-> > Ah, you are just moving this code around.  Ok, that's fine for this patch, but
-> > please fix it up as part of this patch series because this isn't an acceptable
-> > sysfs file at all.  If it were documented that would be a lot more obvious as to
-> > just how wrong it was :(
-> > 
-> > And, as it wasn't documented, you can change it as it's obvious no one used it
-> > :)
-> > 
-> > thanks,
-> > 
-> > greg k-h
->  
-> Can I fix these entries not in this patchset? As long as I know they are used and I
-> would prefer that change of the existing sysfs entries behavior be related to a
-> separate patch.
+The problem was resolved upon upgrading laptop-mode-tools to 1.72.2.
 
-Ok, but it's nice to at least hope that someone will fix it up soon :)
+Adam
 
-thanks,
 
-greg k-h
+On 12/25/2017 11:29 AM, Alan Stern wrote:
+> On Sun, 24 Dec 2017, Adam Bennett wrote:
+>
+>> Alan,
+>>
+>> I have a Dell Precision 7520 with an Samsung SSD in addition to an NVMe
+>> drive.  I'm currently running 4.14.8 but have seen the below problem
+>> since I moved from 4.9 to 4.13.
+>>
+>> When I boot without AC plugged in, the SSD is stopped almost immediately
+>> in the boot process, not allowing the boot to continue.
+>>
+>> I can boot on fine on AC.  When I unplug the cord, I see the "Stopping
+>> disk" message, and the system is unresponsive until I plug the AC back in.
+>>
+>> I initially thought the problem was in user-space, but I set up
+>> laptop-mode-tools to keep "control" as "on", and the problem still
+>> persists.  Also, I don't see the issue in 4.9.
+> It's entirely possible that the problem does lie in userspace, during
+> boot-up.  Don't forget that your initramfs image could be causing this;
+> have you tried to rebuild it with the new laptop settings?
+>
+>> I have temporarily worked around the problem by returning from
+>> sd_suspend_runtime without calling sd_suspend_common in sd.c (obviously
+>> not the true fix).
+>>
+>> I have tried a number of searches, and couldn't find any bug reports of
+>> this nature, but I'm not that in-tune with the linux development process
+>> to have searched all the correct places.
+> This should be sent to the linux-pm and linux-scsi mailing lists
+> (CC'ed).
+>
+>> I'd like to help track this problem down, do you have any suggestions or
+>> is there some additional details I could provide?
+> You can try bisecting between the 4.9 and 4.13 kernels to find the
+> commit which first caused the problem.
+>
+> Alan Stern
+>
