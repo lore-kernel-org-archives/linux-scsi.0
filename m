@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V2 5/8] scsi: introduce force_blk_mq
-Date: Mon,  5 Feb 2018 23:20:32 +0800
-Message-ID: <20180205152035.15016-6-ming.lei@redhat.com>
+Subject: [PATCH V2 6/8] scsi: virtio_scsi: fix IO hang by irq vector automatic affinity
+Date: Mon,  5 Feb 2018 23:20:33 +0800
+Message-ID: <20180205152035.15016-7-ming.lei@redhat.com>
 References: <20180205152035.15016-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20180205152035.15016-1-ming.lei@redhat.com>
@@ -10,45 +10,32 @@ To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
->From scsi driver view, it is a bit troublesome to support both blk-mq
-and non-blk-mq at the same time, especially when drivers need to support
-multi hw-queue.
-
-This patch introduces 'force_blk_mq' to scsi_host_template so that drivers
-can provide blk-mq only support, so driver code can avoid the trouble
-for supporting both.
-
-This patch may clean up driver a lot by providing blk-mq only support, espeically
-it is easier to convert multiple reply queues into blk_mq's MQ for the following
-purposes:
-
-1) use blk_mq multiple hw queue to deal with allocated irq vectors of all offline
-CPU affinity[1]:
-
-	[1] https://marc.info/?l=linux-kernel&m=151748144730409&w=2
-
 Now 84676c1f21e8ff5(genirq/affinity: assign vectors to all possible CPUs)
 has been merged to V4.16-rc, and it is easy to allocate all offline CPUs
 for some irq vectors, this can't be avoided even though the allocation
 is improved.
 
-So all these drivers have to avoid to ask HBA to complete request in
-reply queue which hasn't online CPUs assigned.
+For example, on a 8cores VM, 4~7 are not-present/offline, 4 queues of
+virtio-scsi, the irq affinity assigned can become the following shape:
 
-This issue can be solved generically and easily via blk_mq(scsi_mq) multiple
-hw queue by mapping each reply queue into hctx.
+	irq 36, cpu list 0-7
+	irq 37, cpu list 0-7
+	irq 38, cpu list 0-7
+	irq 39, cpu list 0-1
+	irq 40, cpu list 4,6
+	irq 41, cpu list 2-3
+	irq 42, cpu list 5,7
 
-2) some drivers[1] require to complete request in the submission CPU for
-avoiding hard/soft lockup, which is easily done with blk_mq, so not necessary
-to reinvent wheels for solving the problem.
+Then IO hang is triggered in case of non-SCSI_MQ.
 
-	[2] https://marc.info/?t=151601851400001&r=1&w=2
+Given storage IO is always C/S model, there isn't such issue with SCSI_MQ(blk-mq),
+because no IO can be submitted to one hw queue if the hw queue hasn't online
+CPUs.
 
-Sovling the above issues for non-MQ path may not be easy, or introduce
-unnecessary work, especially we plan to enable SCSI_MQ soon as discussed
-recently[3]:
+Fix this issue by forcing to use blk_mq.
 
-	[3] https://marc.info/?l=linux-scsi&m=151727684915589&w=2
+BTW, I have been used virtio-scsi(scsi_mq) for several years, and it has
+been quite stable, so it shouldn't cause extra risk.
 
 Cc: Arun Easi <arun.easi@cavium.com>
 Cc: Omar Sandoval <osandov@fb.com>,
@@ -58,40 +45,138 @@ Cc: Christoph Hellwig <hch@lst.de>,
 Cc: Don Brace <don.brace@microsemi.com>
 Cc: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: Peter Rivera <peter.rivera@broadcom.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Mike Snitzer <snitzer@redhat.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Laurence Oberman <loberman@redhat.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/hosts.c     | 1 +
- include/scsi/scsi_host.h | 3 +++
- 2 files changed, 4 insertions(+)
+ drivers/scsi/virtio_scsi.c | 59 +++-------------------------------------------
+ 1 file changed, 3 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index fe3a0da3ec97..c75cebd7911d 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -471,6 +471,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 		shost->dma_boundary = 0xffffffff;
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 7c28e8d4955a..54e3a0f6844c 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -91,9 +91,6 @@ struct virtio_scsi_vq {
+ struct virtio_scsi_target_state {
+ 	seqcount_t tgt_seq;
  
- 	shost->use_blk_mq = scsi_use_blk_mq;
-+	shost->use_blk_mq = scsi_use_blk_mq || !!shost->hostt->force_blk_mq;
+-	/* Count of outstanding requests. */
+-	atomic_t reqs;
+-
+ 	/* Currently active virtqueue for requests sent to this target. */
+ 	struct virtio_scsi_vq *req_vq;
+ };
+@@ -152,8 +149,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ 	struct virtio_scsi_cmd *cmd = buf;
+ 	struct scsi_cmnd *sc = cmd->sc;
+ 	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
+-	struct virtio_scsi_target_state *tgt =
+-				scsi_target(sc->device)->hostdata;
  
- 	device_initialize(&shost->shost_gendev);
- 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index f6623f887ee4..d67b2eaff8f1 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -452,6 +452,9 @@ struct scsi_host_template {
- 	/* True if the controller does not support WRITE SAME */
- 	unsigned no_write_same:1;
+ 	dev_dbg(&sc->device->sdev_gendev,
+ 		"cmd %p response %u status %#02x sense_len %u\n",
+@@ -210,8 +205,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ 	}
  
-+	/* True if the low-level driver supports blk-mq only */
-+	unsigned force_blk_mq:1;
-+
- 	/*
- 	 * Countdown for host blocking with no commands outstanding.
- 	 */
+ 	sc->scsi_done(sc);
+-
+-	atomic_dec(&tgt->reqs);
+ }
+ 
+ static void virtscsi_vq_done(struct virtio_scsi *vscsi,
+@@ -580,10 +573,7 @@ static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
+ 					struct scsi_cmnd *sc)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+-	struct virtio_scsi_target_state *tgt =
+-				scsi_target(sc->device)->hostdata;
+ 
+-	atomic_inc(&tgt->reqs);
+ 	return virtscsi_queuecommand(vscsi, &vscsi->req_vqs[0], sc);
+ }
+ 
+@@ -596,55 +586,11 @@ static struct virtio_scsi_vq *virtscsi_pick_vq_mq(struct virtio_scsi *vscsi,
+ 	return &vscsi->req_vqs[hwq];
+ }
+ 
+-static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+-					       struct virtio_scsi_target_state *tgt)
+-{
+-	struct virtio_scsi_vq *vq;
+-	unsigned long flags;
+-	u32 queue_num;
+-
+-	local_irq_save(flags);
+-	if (atomic_inc_return(&tgt->reqs) > 1) {
+-		unsigned long seq;
+-
+-		do {
+-			seq = read_seqcount_begin(&tgt->tgt_seq);
+-			vq = tgt->req_vq;
+-		} while (read_seqcount_retry(&tgt->tgt_seq, seq));
+-	} else {
+-		/* no writes can be concurrent because of atomic_t */
+-		write_seqcount_begin(&tgt->tgt_seq);
+-
+-		/* keep previous req_vq if a reader just arrived */
+-		if (unlikely(atomic_read(&tgt->reqs) > 1)) {
+-			vq = tgt->req_vq;
+-			goto unlock;
+-		}
+-
+-		queue_num = smp_processor_id();
+-		while (unlikely(queue_num >= vscsi->num_queues))
+-			queue_num -= vscsi->num_queues;
+-		tgt->req_vq = vq = &vscsi->req_vqs[queue_num];
+- unlock:
+-		write_seqcount_end(&tgt->tgt_seq);
+-	}
+-	local_irq_restore(flags);
+-
+-	return vq;
+-}
+-
+ static int virtscsi_queuecommand_multi(struct Scsi_Host *sh,
+ 				       struct scsi_cmnd *sc)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+-	struct virtio_scsi_target_state *tgt =
+-				scsi_target(sc->device)->hostdata;
+-	struct virtio_scsi_vq *req_vq;
+-
+-	if (shost_use_blk_mq(sh))
+-		req_vq = virtscsi_pick_vq_mq(vscsi, sc);
+-	else
+-		req_vq = virtscsi_pick_vq(vscsi, tgt);
++	struct virtio_scsi_vq *req_vq = virtscsi_pick_vq_mq(vscsi, sc);
+ 
+ 	return virtscsi_queuecommand(vscsi, req_vq, sc);
+ }
+@@ -775,7 +721,6 @@ static int virtscsi_target_alloc(struct scsi_target *starget)
+ 		return -ENOMEM;
+ 
+ 	seqcount_init(&tgt->tgt_seq);
+-	atomic_set(&tgt->reqs, 0);
+ 	tgt->req_vq = &vscsi->req_vqs[0];
+ 
+ 	starget->hostdata = tgt;
+@@ -823,6 +768,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.target_alloc = virtscsi_target_alloc,
+ 	.target_destroy = virtscsi_target_destroy,
+ 	.track_queue_depth = 1,
++	.force_blk_mq = 1,
+ };
+ 
+ static struct scsi_host_template virtscsi_host_template_multi = {
+@@ -844,6 +790,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.target_destroy = virtscsi_target_destroy,
+ 	.map_queues = virtscsi_map_queues,
+ 	.track_queue_depth = 1,
++	.force_blk_mq = 1,
+ };
+ 
+ #define virtscsi_config_get(vdev, fld) \
 -- 
 2.9.5
