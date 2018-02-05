@@ -1,218 +1,48 @@
-From: Can Guo <cang@codeaurora.org>
-Subject: [PATCH] scsi: ufs-qcom: add number of lanes per direction
-Date: Mon,  5 Feb 2018 20:02:07 +0800
-Message-ID: <20180205121021.11012-1-cang@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35654 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752574AbeBEMKf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Feb 2018 07:10:35 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH 1/1] scsi: ufs: make sure all interrupts are processed
+Date: Mon, 5 Feb 2018 12:57:18 +0000
+Message-ID: <DM5PR04MB10856D45C7281AC736D328B7FCFE0@DM5PR04MB1085.namprd04.prod.outlook.com>
+References: <1517288066-13171-1-git-send-email-asutoshd@codeaurora.org>
+ <DM5PR04MB1085C5039CA525D6FB77DBE3FCFB0@DM5PR04MB1085.namprd04.prod.outlook.com>
+ <6ca20a27-3c10-bf0e-35e7-542b7ab77356@codeaurora.org>
+ <b336fa7b-e79e-95b8-ea21-7b1e2b01677d@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <b336fa7b-e79e-95b8-ea21-7b1e2b01677d@codeaurora.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Asutosh Das (asd)" <asutoshd@codeaurora.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Can Guo <cang@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Noa Rubens <noag@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Maya Erez <merez@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-From: Gilad Broner <gbroner@codeaurora.org>
-
-Different platforms may have different number of lanes for the UFS link.
-Add parameter to device tree specifying how many lanes should be
-configured for the UFS link. And don't print err message for clocks
-that are optional, this leads to unnecessary confusion about failure.
-
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
-
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index 5357919..4cee3f9 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -31,6 +31,9 @@ Optional properties:
- 			  defined or a value in the array is "0" then it is assumed
- 			  that the frequency is set by the parent clock or a
- 			  fixed rate clock source.
-+- lanes-per-direction:	number of lanes available per direction - either 1 or 2.
-+			Note that it is assume same number of lanes is used both directions at once.
-+			If not specified, default is 2 lanes per direction.
- 
- Note: If above properties are not defined it can be assumed that the supply
- regulators or clocks are always on.
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 4cdffa4..84d37e9 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -50,13 +50,10 @@ static int ufs_qcom_host_clk_get(struct device *dev,
- 	int err = 0;
- 
- 	clk = devm_clk_get(dev, name);
--	if (IS_ERR(clk)) {
-+	if (IS_ERR(clk))
- 		err = PTR_ERR(clk);
--		dev_err(dev, "%s: failed to get %s err %d",
--				__func__, name, err);
--	} else {
-+	else
- 		*clk_out = clk;
--	}
- 
- 	return err;
- }
-@@ -78,9 +75,11 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
- 	if (!host->is_lane_clks_enabled)
- 		return;
- 
--	clk_disable_unprepare(host->tx_l1_sync_clk);
-+	if (host->tx_l1_sync_clk)
-+		clk_disable_unprepare(host->tx_l1_sync_clk);
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
--	clk_disable_unprepare(host->rx_l1_sync_clk);
-+	if (host->rx_l1_sync_clk)
-+		clk_disable_unprepare(host->rx_l1_sync_clk);
- 	clk_disable_unprepare(host->rx_l0_sync_clk);
- 
- 	host->is_lane_clks_enabled = false;
-@@ -104,21 +103,21 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto disable_rx_l0;
- 
--	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
--		host->rx_l1_sync_clk);
--	if (err)
--		goto disable_tx_l0;
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
-+			host->rx_l1_sync_clk);
-+		if (err)
-+			goto disable_tx_l0;
- 
--	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
--		host->tx_l1_sync_clk);
--	if (err)
--		goto disable_rx_l1;
-+		/* The tx lane1 clk could be muxed, hence keep this optional */
-+		if (host->tx_l1_sync_clk)
-+			ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
-+						 host->tx_l1_sync_clk);
-+	}
- 
- 	host->is_lane_clks_enabled = true;
- 	goto out;
- 
--disable_rx_l1:
--	clk_disable_unprepare(host->rx_l1_sync_clk);
- disable_tx_l0:
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
- disable_rx_l0:
-@@ -134,21 +133,34 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 
- 	err = ufs_qcom_host_clk_get(dev,
- 			"rx_lane0_sync_clk", &host->rx_l0_sync_clk);
--	if (err)
-+	if (err) {
-+		dev_err(dev, "%s: failed to get rx_lane0_sync_clk, err %d",
-+				__func__, err);
- 		goto out;
-+	}
- 
- 	err = ufs_qcom_host_clk_get(dev,
- 			"tx_lane0_sync_clk", &host->tx_l0_sync_clk);
--	if (err)
-+	if (err) {
-+		dev_err(dev, "%s: failed to get tx_lane0_sync_clk, err %d",
-+				__func__, err);
- 		goto out;
-+	}
- 
--	err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
--		&host->rx_l1_sync_clk);
--	if (err)
--		goto out;
-+	/* In case of single lane per direction, don't read lane1 clocks */
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
-+			&host->rx_l1_sync_clk);
-+		if (err) {
-+			dev_err(dev, "%s: failed to get rx_lane1_sync_clk, err %d",
-+					__func__, err);
-+			goto out;
-+		}
- 
--	err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
--		&host->tx_l1_sync_clk);
-+		/* The tx lane1 clk could be muxed, hence keep this optional */
-+		ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
-+					&host->tx_l1_sync_clk);
-+	}
- out:
- 	return err;
- }
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b0ade73..b9e1ecd 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -39,6 +39,7 @@
- 
- #include <linux/async.h>
- #include <linux/devfreq.h>
-+#include <linux/of.h>
- 
- #include "ufshcd.h"
- #include "unipro.h"
-@@ -74,6 +75,8 @@
- /* Interrupt aggregation default timeout, unit: 40us */
- #define INT_AGGR_DEF_TO	0x02
- 
-+#define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
-+
- #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
- 	({                                                              \
- 		int _ret;                                               \
-@@ -5530,6 +5533,21 @@ static struct devfreq_dev_profile ufs_devfreq_profile = {
- 	.get_dev_status	= ufshcd_devfreq_get_dev_status,
- };
- 
-+static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
-+{
-+	struct device *dev = hba->dev;
-+	int ret;
-+
-+	ret = of_property_read_u32(dev->of_node, "lanes-per-direction",
-+		&hba->lanes_per_direction);
-+	if (ret) {
-+		dev_dbg(hba->dev,
-+			"%s: failed to read lanes-per-direction, ret=%d\n",
-+			__func__, ret);
-+		hba->lanes_per_direction = UFSHCD_DEFAULT_LANES_PER_DIRECTION;
-+	}
-+}
-+
- /**
-  * ufshcd_init - Driver initialization routine
-  * @hba: per-adapter instance
-@@ -5553,6 +5571,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	hba->mmio_base = mmio_base;
- 	hba->irq = irq;
- 
-+	ufshcd_init_lanes_per_dir(hba);
-+
- 	err = ufshcd_hba_init(hba);
- 	if (err)
- 		goto out_error;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c40a0e7..3d9bdc7 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -500,6 +500,9 @@ struct ufs_hba {
- 
- 	bool wlun_dev_clr_ua;
- 
-+	/* Number of lanes available (1 or 2) for Rx/Tx */
-+	u32 lanes_per_direction;
-+
- 	struct ufs_pa_layer_attr pwr_info;
- 	struct ufs_pwr_mode_info max_pwr_info;
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+DQoNCj4gPj4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+PiBGcm9tOiBsaW51eC1z
+Y3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+ID4+PiBvd25l
+ckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBBc3V0b3NoIERhcw0KPiA+Pj4gU2VudDog
+VHVlc2RheSwgSmFudWFyeSAzMCwgMjAxOCA2OjU0IEFNDQo+ID4+PiBUbzogc3ViaGFzaGpAY29k
+ZWF1cm9yYS5vcmc7IGNhbmdAY29kZWF1cm9yYS5vcmc7DQo+ID4+PiB2aXZlay5nYXV0YW1AY29k
+ZWF1cm9yYS5vcmc7IHJuYXlha0Bjb2RlYXVyb3JhLm9yZzsNCj4gPj4+IHZpbmhvbGlrYXR0aUBn
+bWFpbC5jb207IGplamJAbGludXgudm5ldC5pYm0uY29tOw0KPiA+Pj4gbWFydGluLnBldGVyc2Vu
+QG9yYWNsZS5jb20NCj4gPj4+IENjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgVmVua2F0
+IEdvcGFsYWtyaXNobmFuDQo+ID4+PiA8dmVua2F0Z0Bjb2RlYXVyb3JhLm9yZz47IEFzdXRvc2gg
+RGFzIDxhc3V0b3NoZEBjb2RlYXVyb3JhLm9yZz47DQo+ID4+PiBvcGVuIGxpc3QgPGxpbnV4LWtl
+cm5lbEB2Z2VyLmtlcm5lbC5vcmc+DQo+ID4+PiBTdWJqZWN0OiBbUEFUQ0ggMS8xXSBzY3NpOiB1
+ZnM6IG1ha2Ugc3VyZSBhbGwgaW50ZXJydXB0cyBhcmUNCj4gPj4+IHByb2Nlc3NlZA0KPiA+Pj4N
+Cj4gPj4+IEZyb206IFZlbmthdCBHb3BhbGFrcmlzaG5hbiA8dmVua2F0Z0Bjb2RlYXVyb3JhLm9y
+Zz4NCj4gPj4+DQo+ID4+PiBBcyBtdWx0aXBsZSByZXF1ZXN0cyBhcmUgc3VibWl0dGVkIHRvIHRo
+ZSB1ZnMgaG9zdCBjb250cm9sbGVyIGluDQo+ID4+PiBwYXJhbGxlbCB0aGVyZSBjb3VsZCBiZSBp
+bnN0YW5jZXMgd2hlcmUgdGhlIGNvbW1hbmQgY29tcGxldGlvbg0KPiA+Pj4gaW50ZXJydXB0IGFy
+cml2ZXMgbGF0ZXIgZm9yIGEgcmVxdWVzdCB0aGF0IGlzIGFscmVhZHkgcHJvY2Vzc2VkDQo+ID4+
+PiBlYXJsaWVyIGFzIHRoZSBjb3JyZXNwb25kaW5nIGRvb3JiZWxsIHdhcyBjbGVhcmVkIHdoZW4g
+aGFuZGxpbmcgdGhlDQo+ID4+PiBwcmV2aW91cyBpbnRlcnJ1cHQuIFJlYWQgdGhlIGludGVycnVw
+dCBzdGF0dXMgaW4gYSBsb29wIGFmdGVyDQo+ID4+PiBwcm9jZXNzaW5nIHRoZSByZWNlaXZlZCBp
+bnRlcnJ1cHQgdG8gY2F0Y2ggc3VjaCBpbnRlcnJ1cHRzIGFuZA0KPiA+Pj4gaGFuZGxlIGl0Lg0K
+PiA+Pj4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IFZlbmthdCBHb3BhbGFrcmlzaG5hbiA8dmVua2F0
+Z0Bjb2RlYXVyb3JhLm9yZz4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IEFzdXRvc2ggRGFzIDxhc3V0
+b3NoZEBjb2RlYXVyb3JhLm9yZz4NClRlc3RlZC1ieTogYXZyaS5hbHRtYW5Ad2RjLmNvbQ0KDQpU
+ZXN0ZWQgb24ga2lyaW45NjAgKG1hdGU5KSAgYW5kIG1zbTg5OTggKGh0YzExKSwgYm90aCB3aGVy
+ZSBpbnRlcnJ1cHQgYWdncmVnYXRpb24gaXMgbm90IGFsbG93ZWQuDQoNCkFzIGEgc2lkZSBub3Rl
+LCBJIG5vdGljZWQgdGhhdCB0aGlzIHBhdGNoIGlzIHBhcnQgb2Ygc2V2ZXJhbCBwYXRjaGVzLCBm
+aXhpbmcgc29tZSBxY29tLXN0YWZmLg0KTWF5YmUgeW91IHdhbnQgdG8gcHV0IHRoZW0gYWxsIGlu
+IGEgcGF0Y2hzZXQ/DQoNClRoYW5rcywNCkF2cmkNCg==
