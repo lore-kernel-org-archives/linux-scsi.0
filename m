@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V2 4/8] block: null_blk: introduce module parameter of 'g_global_tags'
-Date: Mon,  5 Feb 2018 23:20:31 +0800
-Message-ID: <20180205152035.15016-5-ming.lei@redhat.com>
+Subject: [PATCH V2 5/8] scsi: introduce force_blk_mq
+Date: Mon,  5 Feb 2018 23:20:32 +0800
+Message-ID: <20180205152035.15016-6-ming.lei@redhat.com>
 References: <20180205152035.15016-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20180205152035.15016-1-ming.lei@redhat.com>
@@ -10,22 +10,45 @@ To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch introduces the parameter of 'g_global_tags' so that we can
-test this feature by null_blk easiy.
+>From scsi driver view, it is a bit troublesome to support both blk-mq
+and non-blk-mq at the same time, especially when drivers need to support
+multi hw-queue.
 
-Not see obvious performance drop with global_tags when the whole hw
-depth is kept as same:
+This patch introduces 'force_blk_mq' to scsi_host_template so that drivers
+can provide blk-mq only support, so driver code can avoid the trouble
+for supporting both.
 
-1) no 'global_tags', each hw queue depth is 1, and 4 hw queues
-modprobe null_blk queue_mode=2 nr_devices=4 shared_tags=1 global_tags=0 submit_queues=4 hw_queue_depth=1
+This patch may clean up driver a lot by providing blk-mq only support, espeically
+it is easier to convert multiple reply queues into blk_mq's MQ for the following
+purposes:
 
-2) 'global_tags', global hw queue depth is 4, and 4 hw queues
-modprobe null_blk queue_mode=2 nr_devices=4 shared_tags=1 global_tags=1 submit_queues=4 hw_queue_depth=4
+1) use blk_mq multiple hw queue to deal with allocated irq vectors of all offline
+CPU affinity[1]:
 
-3) fio test done in above two settings:
-   fio --bs=4k --size=512G  --rw=randread --norandommap --direct=1 --ioengine=libaio --iodepth=4 --runtime=$RUNTIME --group_reporting=1  --name=nullb0 --filename=/dev/nullb0 --name=nullb1 --filename=/dev/nullb1 --name=nullb2 --filename=/dev/nullb2 --name=nullb3 --filename=/dev/nullb3
+	[1] https://marc.info/?l=linux-kernel&m=151748144730409&w=2
 
-1M IOPS can be reached in both above tests which is done in one VM.
+Now 84676c1f21e8ff5(genirq/affinity: assign vectors to all possible CPUs)
+has been merged to V4.16-rc, and it is easy to allocate all offline CPUs
+for some irq vectors, this can't be avoided even though the allocation
+is improved.
+
+So all these drivers have to avoid to ask HBA to complete request in
+reply queue which hasn't online CPUs assigned.
+
+This issue can be solved generically and easily via blk_mq(scsi_mq) multiple
+hw queue by mapping each reply queue into hctx.
+
+2) some drivers[1] require to complete request in the submission CPU for
+avoiding hard/soft lockup, which is easily done with blk_mq, so not necessary
+to reinvent wheels for solving the problem.
+
+	[2] https://marc.info/?t=151601851400001&r=1&w=2
+
+Sovling the above issues for non-MQ path may not be easy, or introduce
+unnecessary work, especially we plan to enable SCSI_MQ soon as discussed
+recently[3]:
+
+	[3] https://marc.info/?l=linux-scsi&m=151727684915589&w=2
 
 Cc: Arun Easi <arun.easi@cavium.com>
 Cc: Omar Sandoval <osandov@fb.com>,
@@ -36,36 +59,39 @@ Cc: Don Brace <don.brace@microsemi.com>
 Cc: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: Peter Rivera <peter.rivera@broadcom.com>
 Cc: Mike Snitzer <snitzer@redhat.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Laurence Oberman <loberman@redhat.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/block/null_blk.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/hosts.c     | 1 +
+ include/scsi/scsi_host.h | 3 +++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index 287a09611c0f..ad0834efad42 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -163,6 +163,10 @@ static int g_submit_queues = 1;
- module_param_named(submit_queues, g_submit_queues, int, S_IRUGO);
- MODULE_PARM_DESC(submit_queues, "Number of submission queues");
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index fe3a0da3ec97..c75cebd7911d 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -471,6 +471,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 		shost->dma_boundary = 0xffffffff;
  
-+static int g_global_tags = 0;
-+module_param_named(global_tags, g_global_tags, int, S_IRUGO);
-+MODULE_PARM_DESC(global_tags, "All submission queues share one tags");
+ 	shost->use_blk_mq = scsi_use_blk_mq;
++	shost->use_blk_mq = scsi_use_blk_mq || !!shost->hostt->force_blk_mq;
+ 
+ 	device_initialize(&shost->shost_gendev);
+ 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index f6623f887ee4..d67b2eaff8f1 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -452,6 +452,9 @@ struct scsi_host_template {
+ 	/* True if the controller does not support WRITE SAME */
+ 	unsigned no_write_same:1;
+ 
++	/* True if the low-level driver supports blk-mq only */
++	unsigned force_blk_mq:1;
 +
- static int g_home_node = NUMA_NO_NODE;
- module_param_named(home_node, g_home_node, int, S_IRUGO);
- MODULE_PARM_DESC(home_node, "Home node for the device");
-@@ -1622,6 +1626,8 @@ static int null_init_tag_set(struct nullb *nullb, struct blk_mq_tag_set *set)
- 	set->flags = BLK_MQ_F_SHOULD_MERGE;
- 	if (g_no_sched)
- 		set->flags |= BLK_MQ_F_NO_SCHED;
-+	if (g_global_tags)
-+		set->flags |= BLK_MQ_F_GLOBAL_TAGS;
- 	set->driver_data = NULL;
- 
- 	if ((nullb && nullb->dev->blocking) || g_blocking)
+ 	/*
+ 	 * Countdown for host blocking with no commands outstanding.
+ 	 */
 -- 
 2.9.5
