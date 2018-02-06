@@ -1,86 +1,49 @@
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V2 4/8] block: null_blk: introduce module parameter of
- 'g_global_tags'
-Date: Tue, 6 Feb 2018 13:43:10 -0800
-Message-ID: <20180206214310.GE16027@vader.DHCP.thefacebook.com>
-References: <20180205152035.15016-1-ming.lei@redhat.com>
- <20180205152035.15016-5-ming.lei@redhat.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [PATCH] scsi: qedf: remove redundant initialization of
+ 'fcport'
+Date: Tue, 6 Feb 2018 16:58:53 -0500 (EST)
+Message-ID: <alpine.OSX.2.00.1802061658320.3555@administrators-MacBook-Pro.local>
+References: <20180206140316.31453-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180205152035.15016-5-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20180206140316.31453-1-colin.king@canonical.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: QLogic-Storage-Upstream@cavium.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 05, 2018 at 11:20:31PM +0800, Ming Lei wrote:
-> This patch introduces the parameter of 'g_global_tags' so that we can
-> test this feature by null_blk easiy.
-> 
-> Not see obvious performance drop with global_tags when the whole hw
-> depth is kept as same:
-> 
-> 1) no 'global_tags', each hw queue depth is 1, and 4 hw queues
-> modprobe null_blk queue_mode=2 nr_devices=4 shared_tags=1 global_tags=0 submit_queues=4 hw_queue_depth=1
-> 
-> 2) 'global_tags', global hw queue depth is 4, and 4 hw queues
-> modprobe null_blk queue_mode=2 nr_devices=4 shared_tags=1 global_tags=1 submit_queues=4 hw_queue_depth=4
-> 
-> 3) fio test done in above two settings:
->    fio --bs=4k --size=512G  --rw=randread --norandommap --direct=1 --ioengine=libaio --iodepth=4 --runtime=$RUNTIME --group_reporting=1  --name=nullb0 --filename=/dev/nullb0 --name=nullb1 --filename=/dev/nullb1 --name=nullb2 --filename=/dev/nullb2 --name=nullb3 --filename=/dev/nullb3
-> 
-> 1M IOPS can be reached in both above tests which is done in one VM.
-> 
-> Cc: Arun Easi <arun.easi@cavium.com>
-> Cc: Omar Sandoval <osandov@fb.com>,
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-> Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-> Cc: Christoph Hellwig <hch@lst.de>,
-> Cc: Don Brace <don.brace@microsemi.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Peter Rivera <peter.rivera@broadcom.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-The module parameter is just called "global_tags", not "g_global_tags",
-right? The subject should say the former.
+On Tue, 6 Feb 2018, 9:03am, Colin King wrote:
 
-Otherwise,
-
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Pointer fcport is initialized with a value that is never read, it is
+> re-assigned a new value later on, hence the initialization is redundant
+> and can be removed.
+> 
+> Cleans up clang warning:
+> drivers/scsi/qedf/qedf_io.c:920:21: warning: Value stored to 'fcport'
+> during its initialization is never read
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
->  drivers/block/null_blk.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+>  drivers/scsi/qedf/qedf_io.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-> index 287a09611c0f..ad0834efad42 100644
-> --- a/drivers/block/null_blk.c
-> +++ b/drivers/block/null_blk.c
-> @@ -163,6 +163,10 @@ static int g_submit_queues = 1;
->  module_param_named(submit_queues, g_submit_queues, int, S_IRUGO);
->  MODULE_PARM_DESC(submit_queues, "Number of submission queues");
->  
-> +static int g_global_tags = 0;
-> +module_param_named(global_tags, g_global_tags, int, S_IRUGO);
-> +MODULE_PARM_DESC(global_tags, "All submission queues share one tags");
-> +
->  static int g_home_node = NUMA_NO_NODE;
->  module_param_named(home_node, g_home_node, int, S_IRUGO);
->  MODULE_PARM_DESC(home_node, "Home node for the device");
-> @@ -1622,6 +1626,8 @@ static int null_init_tag_set(struct nullb *nullb, struct blk_mq_tag_set *set)
->  	set->flags = BLK_MQ_F_SHOULD_MERGE;
->  	if (g_no_sched)
->  		set->flags |= BLK_MQ_F_NO_SCHED;
-> +	if (g_global_tags)
-> +		set->flags |= BLK_MQ_F_GLOBAL_TAGS;
->  	set->driver_data = NULL;
->  
->  	if ((nullb && nullb->dev->blocking) || g_blocking)
-> -- 
-> 2.9.5
+> diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+> index b15e69586a36..50a50c4249d0 100644
+> --- a/drivers/scsi/qedf/qedf_io.c
+> +++ b/drivers/scsi/qedf/qedf_io.c
+> @@ -917,7 +917,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
+>  	struct qedf_ctx *qedf = lport_priv(lport);
+>  	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+>  	struct fc_rport_libfc_priv *rp = rport->dd_data;
+> -	struct qedf_rport *fcport = rport->dd_data;
+> +	struct qedf_rport *fcport;
+>  	struct qedf_ioreq *io_req;
+>  	int rc = 0;
+>  	int rval;
 > 
+
+Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
