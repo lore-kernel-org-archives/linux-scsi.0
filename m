@@ -1,74 +1,51 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH/RFC 0/6] Allow compile-testing NO_DMA
-Date: Tue, 6 Feb 2018 16:16:47 +0100
-Message-ID: <CAK8P3a2rW8-3QNnKyw9tBenYfd+AWXT2KH16N+g=+eLzHLd2WA@mail.gmail.com>
-References: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V2 1/2] qedi: Fix truncation of CHAP name and secret
+Date: Tue, 6 Feb 2018 15:23:41 +0000
+Message-ID: <1517930620.3934.12.camel@wdc.com>
+References: <20180206131219.18184-1-nilesh.javali@cavium.com>
+         <20180206131219.18184-2-nilesh.javali@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1517912092-15470-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Cc: linux-arch <linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:IOMMU DRIVERS" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:49562 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752064AbeBFPXp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 10:23:45 -0500
+In-Reply-To: <20180206131219.18184-2-nilesh.javali@cavium.com>
+Content-Language: en-US
+Content-ID: <1DC38CD6C3109B499E310AD932FAD2C5@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "nilesh.javali@cavium.com" <nilesh.javali@cavium.com>, "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>
 
-On Tue, Feb 6, 2018 at 11:14 AM, Geert Uytterhoeven
-<geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> wrote:
->         Hi all,
->
-> If NO_DMA=y, get_dma_ops() returns a reference to the non-existing
-> symbol bad_dma_ops, thus causing a link failure if it is ever used.
->
-> The intention of this is twofold:
->   1. To catch users of the DMA API on systems that do no support the DMA
->      mapping API,
->   2. To avoid building drivers that cannot work on such systems anyway.
->
-> However, the disadvantage is that we have to keep on adding dependencies
-> on HAS_DMA all over the place.
->
-> Thanks to the COMPILE_TEST symbol, lots of drivers now depend on one or
-> more platform dependencies (that imply HAS_DMA) || COMPILE_TEST, thus
-> already covering intention #2.  Having to add an explicit dependency on
-> HAS_DMA here is cumbersome, and hinders compile-testing.
->
-> Hence I think the time is ripe to reconsider the link failure.
-> This patch series:
->   - Changes get_dma_ops() to return NULL instead,
->   - Adds a few more dummies to enable compile-testing,
->   - Removes dependencies on HAS_DMA for symbols that already have
->     platform dependencies implying HAS_DMA.
->
-> Note that adding more platform dependencies and/or dependencies on
-> COMPILE_TEST is encouraged!
->
-> This may make life harder for UML, though, as UML usually satisfies all
-> other platform dependencies for HAS_DMA.  Similarly, HAS_IOMEM is even
-> more complicated.  Can/do we want to do something similar for
-> HAS_IOMEM?
->
-> This series is against my current local tree, which has a few more
-> "depends on HAS_DMA" than upstream.  Of course I will rebase, and split
-> the last patch per subsystem, if this RFC is welcomed positively.
->
-> Compile-tested with allmodconfig and allyesconfig for m68k/sun3.
-
-David Woodhouse has been looking at some other structures with indirect
-pointers (kvm_x86_ops) to reduce the overhead that was added for
-avoiding speculative execution of those pointers. I wonder if there are
-any dma_map_ops operations that are in a fastpath that needs a similar
-optimization. If yes, we might want to think about how to do that part
-first to avoid rewriting the same code more than once.
-
-Otherwise, your approach seems fine.
-
-       Arnd
+T24gVHVlLCAyMDE4LTAyLTA2IGF0IDA1OjEyIC0wODAwLCBOaWxlc2ggSmF2YWxpIHdyb3RlOg0K
+PiBGcm9tOiBBbmRyZXcgVmFzcXVleiA8YW5kcmV3LnZhc3F1ZXpAY2F2aXVtLmNvbT4NCj4gDQo+
+IFRoZSBkYXRhIGluIE5WUkFNIGlzIG5vdCBndWFyYW50ZWVkIHRvIGJlIE5VTCB0ZXJtaW5hdGVk
+Lg0KPiBDb3B5IHRoZSBkYXRhIHVwdG8gdGhlIGVsZW1lbnQgc2l6ZSBvciB0byB0aGUgZmlyc3Qg
+TlVMDQo+IGluIHRoZSBieXRlLXN0cmVhbSBhbmQgdGhlbiBhcHBlbmQgYSBOVUwuDQo+IA0KPiBT
+aWduZWQtb2ZmLWJ5OiBBbmRyZXcgVmFzcXVleiA8YW5kcmV3LnZhc3F1ZXpAY2F2aXVtLmNvbT4N
+Cj4gU2lnbmVkLW9mZi1ieTogTmlsZXNoIEphdmFsaSA8bmlsZXNoLmphdmFsaUBjYXZpdW0uY29t
+Pg0KPiAtLS0NCj4gIGRyaXZlcnMvc2NzaS9xZWRpL3FlZGlfbWFpbi5jIHwgNDUgKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDMz
+IGluc2VydGlvbnMoKyksIDEyIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvc2NzaS9xZWRpL3FlZGlfbWFpbi5jIGIvZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9tYWluLmMN
+Cj4gaW5kZXggODgwOGYwZC4uZjNkZDQzOCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Fl
+ZGkvcWVkaV9tYWluLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9tYWluLmMNCj4g
+QEAgLTE3MDUsNiArMTcwNSwyNyBAQCB2b2lkIHFlZGlfcmVzZXRfaG9zdF9tdHUoc3RydWN0IHFl
+ZGlfY3R4ICpxZWRpLCB1MTYgbXR1KQ0KPiAgCXFlZGlfb3BzLT5sbDItPnN0YXJ0KHFlZGktPmNk
+ZXYsICZwYXJhbXMpOw0KPiAgfQ0KPiAgDQo+ICtzdGF0aWMgc3NpemVfdA0KPiArcWVkaV9zaG93
+X2NvcHlfZGF0YShjaGFyICpidWYsIHNpemVfdCBzaXplLCB1OCAqZGF0YSkNCj4gK3sNCj4gKwlz
+aXplX3QgaTsNCj4gKw0KPiArCWlmICghZGF0YSkNCj4gKwkJcmV0dXJuIHNwcmludGYoYnVmLCAi
+XG4iKTsNCj4gKw0KPiArCS8qDQo+ICsJICogRGF0YSBub3QgZ3VhcmFudGVlZCB0byBiZSBOVUwg
+dGVybWluYXRlZC4gQ29weSB1bnRpbCBOVUwgZm91bmQgb3INCj4gKwkgKiBjb21wbGV0ZSBjb3B5
+IGRvbmUuDQo+ICsJICovDQo+ICsJZm9yIChpID0gMDsgaSA8IHNpemUgJiYgZGF0YVtpXTsgaSsr
+KQ0KPiArCQlidWZbaV0gPSBkYXRhW2ldOw0KPiArCS8qIERhdGEgY29weSBjb21wbGV0ZSwgYXBw
+ZW5kIE5FV0xJTkUgYW5kIE5VTCB0ZXJtaW5hdG9yLiAqLw0KPiArCWJ1ZltpXSA9ICdcbic7DQo+
+ICsJYnVmW2kgKyAxXSA9ICdcMCc7DQo+ICsJcmV0dXJuIHN0cmxlbihidWYpOw0KPiArfQ0KDQpD
+YW4gdGhlIGJvZHkgb2YgdGhlIGFib3ZlIGZ1bmN0aW9uIGJlIGNoYW5nZWQgaW50byB0aGUgZm9s
+bG93aW5nLCB3aGljaCBpcyBtdWNoDQpzaG9ydGVyPw0KDQpzcHJpbnRmKGJ1ZiwgIiUuKnMiLCAo
+aW50KXNpemUsIGRhdGEgPyA6ICIiKQ0KDQpBZGRpdGlvbmFsbHksIGFyZSB5b3UgYXdhcmUgdGhh
+dCBzeXNmcyBzaG93IGNhbGxiYWNrcyBkbyBub3QgaGF2ZSB0byB0ZXJtaW5hdGUNCmRhdGEgd2l0
+aCAnXDAnPw0KDQpUaGFua3MsDQoNCkJhcnQuDQoNCg0K
