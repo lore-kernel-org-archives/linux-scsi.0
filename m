@@ -1,100 +1,49 @@
-From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH/RFC 4/6] mm: Add NO_DMA dummies for DMA pool API
-Date: Tue,  6 Feb 2018 11:14:50 +0100
-Message-ID: <1517912092-15470-5-git-send-email-geert@linux-m68k.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH/RFC 5/6] scsi: Add NO_DMA dummies for SCSI DMA mapping API
+Date: Tue,  6 Feb 2018 11:14:51 +0100
+Message-ID: <1517912092-15470-6-git-send-email-geert@linux-m68k.org>
 References: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1517912092-15470-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
-Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from baptiste.telenet-ops.be ([195.130.132.51]:46884 "EHLO
+        baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752556AbeBFKPD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 05:15:03 -0500
+In-Reply-To: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Arnd Bergmann <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Richard Weinberger <richard@nod.at>
+Cc: Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, iommu@lists.linux-foundation.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 
-Add dummies for dma{,m}_pool_{create,destroy,alloc,free}(), to allow
-compile-testing if NO_DMA=y.
+Add dummies for scsi_dma_{,un}map(), to allow compile-testing if
+NO_DMA=y.
 
 This prevents the following from showing up later:
 
-    ERROR: "dma_pool_destroy" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "dma_pool_free" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "dma_pool_alloc" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "dma_pool_create" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "dma_pool_destroy" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
-    ERROR: "dma_pool_free" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
-    ERROR: "dma_pool_alloc" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
-    ERROR: "dma_pool_create" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
-    ERROR: "dma_pool_alloc" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
-    ERROR: "dma_pool_free" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
-    ERROR: "dma_pool_create" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
-    ERROR: "dma_pool_destroy" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
+    ERROR: "scsi_dma_unmap" [drivers/firewire/firewire-sbp2.ko] undefined!
+    ERROR: "scsi_dma_map" [drivers/firewire/firewire-sbp2.ko] undefined!
 
-Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 ---
- include/linux/dmapool.h | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+ include/scsi/scsi_cmnd.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/include/linux/dmapool.h b/include/linux/dmapool.h
-index 53ba737505df31c7..adeb5e56c3ad73a8 100644
---- a/include/linux/dmapool.h
-+++ b/include/linux/dmapool.h
-@@ -16,6 +16,7 @@
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index d8d4a902a88dedbc..6a123d1dd2f80624 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -171,8 +171,13 @@ extern void scsi_kunmap_atomic_sg(void *virt);
  
- struct device;
+ extern int scsi_init_io(struct scsi_cmnd *cmd);
  
-+#ifdef CONFIG_HAS_DMA
- struct dma_pool *dma_pool_create(const char *name, struct device *dev, 
- 			size_t size, size_t align, size_t allocation);
++#ifdef CONFIG_SCSI_DMA
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
++#else /* !CONFIG_SCSI_DMA */
++static inline int scsi_dma_map(struct scsi_cmnd *cmd) { return -ENOSYS; }
++static inline void scsi_dma_unmap(struct scsi_cmnd *cmd) { }
++#endif /* !CONFIG_SCSI_DMA */
  
-@@ -23,6 +24,17 @@ void dma_pool_destroy(struct dma_pool *pool);
- 
- void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
- 		     dma_addr_t *handle);
-+void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t addr);
-+#else /* !CONFIG_HAS_DMA */
-+static inline struct dma_pool *dma_pool_create(const char *name,
-+	struct device *dev, size_t size, size_t align, size_t allocation)
-+{ return NULL; }
-+static inline void dma_pool_destroy(struct dma_pool *pool) { }
-+static inline void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
-+				   dma_addr_t *handle) { return NULL; }
-+static inline void dma_pool_free(struct dma_pool *pool, void *vaddr,
-+				 dma_addr_t addr) { }
-+#endif /* !CONFIG_HAS_DMA */
- 
- static inline void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
- 				    dma_addr_t *handle)
-@@ -30,14 +42,19 @@ static inline void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
- 	return dma_pool_alloc(pool, mem_flags | __GFP_ZERO, handle);
- }
- 
--void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t addr);
--
- /*
-  * Managed DMA pool
-  */
-+#ifdef CONFIG_HAS_DMA
- struct dma_pool *dmam_pool_create(const char *name, struct device *dev,
- 				  size_t size, size_t align, size_t allocation);
- void dmam_pool_destroy(struct dma_pool *pool);
-+#else /* !CONFIG_HAS_DMA */
-+static inline struct dma_pool *dmam_pool_create(const char *name,
-+	struct device *dev, size_t size, size_t align, size_t allocation)
-+{ return NULL; }
-+static inline void dmam_pool_destroy(struct dma_pool *pool) { }
-+#endif /* !CONFIG_HAS_DMA */
- 
- #endif
- 
+ static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
+ {
 -- 
 2.7.4
