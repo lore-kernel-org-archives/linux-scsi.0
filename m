@@ -1,49 +1,182 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH V2 4/8] block: null_blk: introduce module parameter of
- 'g_global_tags'
-Date: Mon, 5 Feb 2018 20:26:33 +0000
-Message-ID: <892b0510b3254668a1a1e5c5fb2f84c2@microsemi.com>
+From: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Subject: Re: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity issue
+Date: Tue, 6 Feb 2018 10:18:19 +0800
+Message-ID: <bce37b1a-6faf-a661-19cd-ef583f19f280@hisilicon.com>
 References: <20180205152035.15016-1-ming.lei@redhat.com>
- <20180205152035.15016-5-ming.lei@redhat.com>
+ <20180205152035.15016-9-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180205152035.15016-5-ming.lei@redhat.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5175 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752461AbeBFCS5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Feb 2018 21:18:57 -0500
+In-Reply-To: <20180205152035.15016-9-ming.lei@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 
-> This patch introduces the parameter of 'g_global_tags' so that we can
-> test this feature by null_blk easiy.
->=20
-> Not see obvious performance drop with global_tags when the whole hw
-> depth is kept as same:
->=20
-> 1) no 'global_tags', each hw queue depth is 1, and 4 hw queues
-> modprobe null_blk queue_mode=3D2 nr_devices=3D4 shared_tags=3D1 global_ta=
-gs=3D0
-> submit_queues=3D4 hw_queue_depth=3D1
->=20
-> 2) 'global_tags', global hw queue depth is 4, and 4 hw queues
-> modprobe null_blk queue_mode=3D2 nr_devices=3D4 shared_tags=3D1 global_ta=
-gs=3D1
-> submit_queues=3D4 hw_queue_depth=3D4
->=20
-> 3) fio test done in above two settings:
->    fio --bs=3D4k --size=3D512G  --rw=3Drandread --norandommap --direct=3D=
-1 --
-> ioengine=3Dlibaio --iodepth=3D4 --runtime=3D$RUNTIME --group_reporting=3D=
-1  --
-> name=3Dnullb0 --filename=3D/dev/nullb0 --name=3Dnullb1 --filename=3D/dev/=
-nullb1 --
-> name=3Dnullb2 --filename=3D/dev/nullb2 --name=3Dnullb3 --filename=3D/dev/=
-nullb3
->=20
-> 1M IOPS can be reached in both above tests which is done in one VM.
->=20
-I am getting 1.1M IOPS for both cases.
+在 2018/2/5 23:20, Ming Lei 写道:
+> This patch uses .force_blk_mq to drive HPSA via SCSI_MQ, meantime maps
+> each reply queue to blk_mq's hw queue, then .queuecommand can always
+> choose the hw queue as the reply queue. And if no any online CPU is
+> mapped to one hw queue, request can't be submitted to this hw queue
+> at all, finally the irq affinity issue is solved.
+>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Arun Easi <arun.easi@cavium.com>
+> Cc: Omar Sandoval <osandov@fb.com>,
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+> Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
+> Cc: Christoph Hellwig <hch@lst.de>,
+> Cc: Don Brace <don.brace@microsemi.com>
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Peter Rivera <peter.rivera@broadcom.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Mike Snitzer <snitzer@redhat.com>
+> Tested-by: Laurence Oberman <loberman@redhat.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>   drivers/scsi/hpsa.c | 51 ++++++++++++++++++++++++++++++++++-----------------
+>   1 file changed, 34 insertions(+), 17 deletions(-)
+>
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 443eabf63a9f..e517a4c74a28 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -51,6 +51,7 @@
+>   #include <linux/jiffies.h>
+>   #include <linux/percpu-defs.h>
+>   #include <linux/percpu.h>
+> +#include <linux/blk-mq-pci.h>
+>   #include <asm/unaligned.h>
+>   #include <asm/div64.h>
+>   #include "hpsa_cmd.h"
+> @@ -956,6 +957,13 @@ static struct device_attribute *hpsa_shost_attrs[] = {
+>   #define HPSA_NRESERVED_CMDS	(HPSA_CMDS_RESERVED_FOR_DRIVER +\
+>   				 HPSA_MAX_CONCURRENT_PASSTHRUS)
+>   
+> +static int hpsa_map_queues(struct Scsi_Host *shost)
+> +{
+> +        struct ctlr_info *h = shost_to_hba(shost);
+> +
+> +        return blk_mq_pci_map_queues(&shost->tag_set, h->pdev);
+> +}
+> +
 
-Tested-by: Don Brace <don.brace@microsemi.com>
+Hi Lei Ming,
+It is okay to use blk_mq_pci_map_queue to solve automatic irq affinity 
+issue when the first interrupt vector for queues is 0.
+But if the first interrupt vector for queues is not 0,  we seems 
+couldn't use blk_mq_pci_map_queue directly,
+such as blk_mq_virtio_map_queues, it realizes a interface itself. Is it 
+possible to provide a general interface for those
+situations?
+
+
+>   static struct scsi_host_template hpsa_driver_template = {
+>   	.module			= THIS_MODULE,
+>   	.name			= HPSA,
+> @@ -974,10 +982,13 @@ static struct scsi_host_template hpsa_driver_template = {
+>   #ifdef CONFIG_COMPAT
+>   	.compat_ioctl		= hpsa_compat_ioctl,
+>   #endif
+> +	.map_queues = hpsa_map_queues,
+>   	.sdev_attrs = hpsa_sdev_attrs,
+>   	.shost_attrs = hpsa_shost_attrs,
+>   	.max_sectors = 1024,
+>   	.no_write_same = 1,
+> +	.force_blk_mq = 1,
+> +	.host_tagset = 1,
+>   };
+>   
+>   static inline u32 next_command(struct ctlr_info *h, u8 q)
+> @@ -1045,11 +1056,7 @@ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c,
+>   		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
+>   		if (unlikely(!h->msix_vectors))
+>   			return;
+> -		if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+> -			c->Header.ReplyQueue =
+> -				raw_smp_processor_id() % h->nreply_queues;
+> -		else
+> -			c->Header.ReplyQueue = reply_queue % h->nreply_queues;
+> +		c->Header.ReplyQueue = reply_queue;
+>   	}
+>   }
+>   
+> @@ -1063,10 +1070,7 @@ static void set_ioaccel1_performant_mode(struct ctlr_info *h,
+>   	 * Tell the controller to post the reply to the queue for this
+>   	 * processor.  This seems to give the best I/O throughput.
+>   	 */
+> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+> -		cp->ReplyQueue = smp_processor_id() % h->nreply_queues;
+> -	else
+> -		cp->ReplyQueue = reply_queue % h->nreply_queues;
+> +	cp->ReplyQueue = reply_queue;
+>   	/*
+>   	 * Set the bits in the address sent down to include:
+>   	 *  - performant mode bit (bit 0)
+> @@ -1087,10 +1091,7 @@ static void set_ioaccel2_tmf_performant_mode(struct ctlr_info *h,
+>   	/* Tell the controller to post the reply to the queue for this
+>   	 * processor.  This seems to give the best I/O throughput.
+>   	 */
+> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+> -		cp->reply_queue = smp_processor_id() % h->nreply_queues;
+> -	else
+> -		cp->reply_queue = reply_queue % h->nreply_queues;
+> +	cp->reply_queue = reply_queue;
+>   	/* Set the bits in the address sent down to include:
+>   	 *  - performant mode bit not used in ioaccel mode 2
+>   	 *  - pull count (bits 0-3)
+> @@ -1109,10 +1110,7 @@ static void set_ioaccel2_performant_mode(struct ctlr_info *h,
+>   	 * Tell the controller to post the reply to the queue for this
+>   	 * processor.  This seems to give the best I/O throughput.
+>   	 */
+> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+> -		cp->reply_queue = smp_processor_id() % h->nreply_queues;
+> -	else
+> -		cp->reply_queue = reply_queue % h->nreply_queues;
+> +	cp->reply_queue = reply_queue;
+>   	/*
+>   	 * Set the bits in the address sent down to include:
+>   	 *  - performant mode bit not used in ioaccel mode 2
+> @@ -1152,11 +1150,27 @@ static void dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
+>   		h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+>   }
+>   
+> +static unsigned get_reply_queue(struct ctlr_info *h, struct CommandList *c)
+> +{
+> +	struct scsi_cmnd *cmd = c->scsi_cmd;
+> +	int *map;
+> +
+> +	if (cmd && cmd->request) {
+> +		u32 tag = blk_mq_unique_tag(cmd->request);
+> +		return blk_mq_unique_tag_to_hwq(tag);
+> +	}
+> +
+> +	map = h->scsi_host->tag_set.mq_map;
+> +	return map[raw_smp_processor_id()];
+> +}
+> +
+>   static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
+>   	struct CommandList *c, int reply_queue)
+>   {
+>   	dial_down_lockup_detection_during_fw_flash(h, c);
+>   	atomic_inc(&h->commands_outstanding);
+> +
+> +	reply_queue = get_reply_queue(h, c);
+>   	switch (c->cmd_type) {
+>   	case CMD_IOACCEL1:
+>   		set_ioaccel1_performant_mode(h, c, reply_queue);
+> @@ -5781,6 +5795,9 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
+>   {
+>   	int rv;
+>   
+> +	/* map reply queue to blk_mq hw queue */
+> +	h->scsi_host->nr_hw_queues = h->msix_vectors;
+> +
+>   	rv = scsi_add_host(h->scsi_host, &h->pdev->dev);
+>   	if (rv) {
+>   		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
