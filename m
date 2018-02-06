@@ -1,41 +1,87 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v5 08/11] scsi: host template attribute groups
-Date: Tue, 6 Feb 2018 19:06:12 +0000
-Message-ID: <1517943971.2905.8.camel@wdc.com>
-References: <1517933183-30892-1-git-send-email-stanislav.nijnikov@wdc.com>
-         <1517933183-30892-9-git-send-email-stanislav.nijnikov@wdc.com>
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V2 5/8] scsi: introduce force_blk_mq
+Date: Tue, 6 Feb 2018 12:20:43 -0800
+Message-ID: <20180206202043.GB16027@vader.DHCP.thefacebook.com>
+References: <20180205152035.15016-1-ming.lei@redhat.com>
+ <20180205152035.15016-6-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1517933183-30892-9-git-send-email-stanislav.nijnikov@wdc.com>
-Content-Language: en-US
-Content-ID: <6C49288F27522E4092D9B678CCBDAFAE@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-Cc: Alex Lemberg <Alex.Lemberg@wdc.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180205152035.15016-6-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTAyLTA2IGF0IDE4OjA2ICswMjAwLCBTdGFuaXNsYXYgTmlqbmlrb3Ygd3Jv
-dGU6DQo+ICsJaWYgKHNkZXYtPmhvc3QtPmhvc3R0LT5zZGV2X2dyb3Vwcykgew0KPiArCQllcnJv
-ciA9IHN5c2ZzX2NyZWF0ZV9ncm91cHMoJnNkZXYtPnNkZXZfZ2VuZGV2LmtvYmosDQo+ICsJCQlz
-ZGV2LT5ob3N0LT5ob3N0dC0+c2Rldl9ncm91cHMpOw0KPiArCQkJaWYgKGVycm9yKQ0KPiArCQkJ
-CXJldHVybiBlcnJvcjsNCj4gKwl9DQoNClBsZWFzZSBmb2xsb3cgdGhlIGluZGVudGF0aW9uIHN0
-eWxlIHRoYXQgaXMgdXNlZCBlbHNld2hlcmUgaW4gdGhlIGtlcm5lbCBhbmQNCm1vdmUgdGhlIHNk
-ZXYtPmhvc3QtPmhvc3R0LT5zZGV2X2dyb3VwcyBhcmd1bWVudCB0byB0aGUgcmlnaHQgc3VjaCB0
-aGF0IGl0DQpzdGFydHMgb25lIHBvc2l0aW9uIHRvIHRoZSByaWdodCBvZiB0aGUgc3lzZnNfY3Jl
-YXRlX2dyb3VwcygpIG9wZW5pbmcNCnBhcmVudGhlc2lzLiBQbGVhc2UgYWxzbyBpbmRlbnQgdGhl
-IGlmIChlcnJvcikgc3RhdGVtZW50IGNvcnJlY3RseS4NCg0KPiBAQCAtMTMyNiw2ICsxMzMzLDEx
-IEBAIHZvaWQgX19zY3NpX3JlbW92ZV9kZXZpY2Uoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KQ0K
-PiAgCWlmIChzZGV2LT5zZGV2X3N0YXRlID09IFNERVZfREVMKQ0KPiAgCQlyZXR1cm47DQo+ICAN
-Cj4gKwlpZiAoc2Rldi0+aG9zdC0+aG9zdHQtPnNkZXZfZ3JvdXBzKSB7DQo+ICsJCXN5c2ZzX3Jl
-bW92ZV9ncm91cHMoJnNkZXYtPnNkZXZfZ2VuZGV2LmtvYmosDQo+ICsJCQlzZGV2LT5ob3N0LT5o
-b3N0dC0+c2Rldl9ncm91cHMpOw0KPiArCX0NCg0KSWYgc2Rldi0+aXNfdmlzaWJsZSBpcyBmYWxz
-ZSB0aGVuIHRoZSBkZXZpY2VfYWRkKCkgY2FsbCBmb3Igc2Rldi0+c2Rldl9nZW5kZXYNCm1heSBo
-YXZlIGZhaWxlZCBzbyBjYWxsaW5nIHN5c2ZzX3JlbW92ZV9ncm91cHMoKSBpcyBub3QgbmVjZXNz
-YXJ5LiBQbGVhc2UgbW92ZQ0KdGhpcyBjYWxsIGRvd24gdG8ganVzdCBiZWZvcmUgdGhlIGRldmlj
-ZV9kZWwoZGV2KSBzaW5jZSB0aGF0IGNhbGwgYWxzbyByZW1vdmVzDQpzeXNmcyBhdHRyaWJ1dGVz
-LiBBZGRpdGlvbmFsbHksIEkgdGhpbmsgdGhhdCBjaGVja3BhdGNoIHdpbGwgY29tcGxhaW4gYWJv
-dXQgdGhlDQphYm92ZSBjb2RlIGFuZCB3aWxsIHJlcG9ydCB0aGF0IGJyYWNlcyBhcmUgbm90IG5l
-Y2Vzc2FyeSBmb3Igc2luZ2xlLWxpbmUNCnN0YXRlbWVudHM/DQoNClRoYW5rcywNCg0KQmFydC4N
-Cg0KDQoNCg==
+On Mon, Feb 05, 2018 at 11:20:32PM +0800, Ming Lei wrote:
+> From scsi driver view, it is a bit troublesome to support both blk-mq
+> and non-blk-mq at the same time, especially when drivers need to support
+> multi hw-queue.
+> 
+> This patch introduces 'force_blk_mq' to scsi_host_template so that drivers
+> can provide blk-mq only support, so driver code can avoid the trouble
+> for supporting both.
+> 
+> This patch may clean up driver a lot by providing blk-mq only support, espeically
+> it is easier to convert multiple reply queues into blk_mq's MQ for the following
+> purposes:
+> 
+> 1) use blk_mq multiple hw queue to deal with allocated irq vectors of all offline
+> CPU affinity[1]:
+> 
+> 	[1] https://marc.info/?l=linux-kernel&m=151748144730409&w=2
+> 
+> Now 84676c1f21e8ff5(genirq/affinity: assign vectors to all possible CPUs)
+> has been merged to V4.16-rc, and it is easy to allocate all offline CPUs
+> for some irq vectors, this can't be avoided even though the allocation
+> is improved.
+> 
+> So all these drivers have to avoid to ask HBA to complete request in
+> reply queue which hasn't online CPUs assigned.
+> 
+> This issue can be solved generically and easily via blk_mq(scsi_mq) multiple
+> hw queue by mapping each reply queue into hctx.
+> 
+> 2) some drivers[1] require to complete request in the submission CPU for
+> avoiding hard/soft lockup, which is easily done with blk_mq, so not necessary
+> to reinvent wheels for solving the problem.
+> 
+> 	[2] https://marc.info/?t=151601851400001&r=1&w=2
+> 
+> Sovling the above issues for non-MQ path may not be easy, or introduce
+> unnecessary work, especially we plan to enable SCSI_MQ soon as discussed
+> recently[3]:
+> 
+> 	[3] https://marc.info/?l=linux-scsi&m=151727684915589&w=2
+> 
+> Cc: Arun Easi <arun.easi@cavium.com>
+> Cc: Omar Sandoval <osandov@fb.com>,
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+> Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
+> Cc: Christoph Hellwig <hch@lst.de>,
+> Cc: Don Brace <don.brace@microsemi.com>
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Peter Rivera <peter.rivera@broadcom.com>
+> Cc: Mike Snitzer <snitzer@redhat.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Tested-by: Laurence Oberman <loberman@redhat.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/hosts.c     | 1 +
+>  include/scsi/scsi_host.h | 3 +++
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index fe3a0da3ec97..c75cebd7911d 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -471,6 +471,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>  		shost->dma_boundary = 0xffffffff;
+>  
+>  	shost->use_blk_mq = scsi_use_blk_mq;
+
+Not sure if this is a patch formatting issue, but this old line wasn't
+deleted.
+
+> +	shost->use_blk_mq = scsi_use_blk_mq || !!shost->hostt->force_blk_mq;
