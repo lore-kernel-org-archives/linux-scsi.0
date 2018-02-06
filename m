@@ -1,182 +1,134 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Re: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity issue
-Date: Tue, 6 Feb 2018 10:18:19 +0800
-Message-ID: <bce37b1a-6faf-a661-19cd-ef583f19f280@hisilicon.com>
-References: <20180205152035.15016-1-ming.lei@redhat.com>
- <20180205152035.15016-9-ming.lei@redhat.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH 0/5] blk-mq/scsi-mq: support global tags & introduce force_blk_mq
+Date: Tue, 6 Feb 2018 11:33:50 +0530
+Message-ID: <4c8162129f2a09dca2d1e7eefd61e272@mail.gmail.com>
+References: <20180203042112.15239-1-ming.lei@redhat.com> <07c1f41e-de7c-5e3d-1a2d-0cd7af7b46df@suse.de>
+ <528c93de0aac9010e274847ab1ae0328@mail.gmail.com> <20180205101734.GA32558@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5175 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752461AbeBFCS5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Feb 2018 21:18:57 -0500
-In-Reply-To: <20180205152035.15016-9-ming.lei@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20180205101734.GA32558@ming.t460p>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 
-在 2018/2/5 23:20, Ming Lei 写道:
-> This patch uses .force_blk_mq to drive HPSA via SCSI_MQ, meantime maps
-> each reply queue to blk_mq's hw queue, then .queuecommand can always
-> choose the hw queue as the reply queue. And if no any online CPU is
-> mapped to one hw queue, request can't be submitted to this hw queue
-> at all, finally the irq affinity issue is solved.
+> > We still have more than one reply queue ending up completion one CPU.
 >
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Arun Easi <arun.easi@cavium.com>
-> Cc: Omar Sandoval <osandov@fb.com>,
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-> Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-> Cc: Christoph Hellwig <hch@lst.de>,
-> Cc: Don Brace <don.brace@microsemi.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Peter Rivera <peter.rivera@broadcom.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->   drivers/scsi/hpsa.c | 51 ++++++++++++++++++++++++++++++++++-----------------
->   1 file changed, 34 insertions(+), 17 deletions(-)
+> pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) has to be used, that means
+> smp_affinity_enable has to be set as 1, but seems it is the default
+setting.
 >
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 443eabf63a9f..e517a4c74a28 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -51,6 +51,7 @@
->   #include <linux/jiffies.h>
->   #include <linux/percpu-defs.h>
->   #include <linux/percpu.h>
-> +#include <linux/blk-mq-pci.h>
->   #include <asm/unaligned.h>
->   #include <asm/div64.h>
->   #include "hpsa_cmd.h"
-> @@ -956,6 +957,13 @@ static struct device_attribute *hpsa_shost_attrs[] = {
->   #define HPSA_NRESERVED_CMDS	(HPSA_CMDS_RESERVED_FOR_DRIVER +\
->   				 HPSA_MAX_CONCURRENT_PASSTHRUS)
->   
-> +static int hpsa_map_queues(struct Scsi_Host *shost)
-> +{
-> +        struct ctlr_info *h = shost_to_hba(shost);
-> +
-> +        return blk_mq_pci_map_queues(&shost->tag_set, h->pdev);
-> +}
-> +
+> Please see kernel/irq/affinity.c, especially irq_calc_affinity_vectors()
+which
+> figures out an optimal number of vectors, and the computation is based
+on
+> cpumask_weight(cpu_possible_mask) now. If all offline CPUs are mapped to
+> some of reply queues, these queues won't be active(no request submitted
+to
+> these queues). The mechanism of PCI_IRQ_AFFINITY basically makes sure
+that
+> more than one irq vector won't be handled by one same CPU, and the irq
+> vector spread is done in irq_create_affinity_masks().
+>
+> > Try to reduce MSI-x vector of megaraid_sas or mpt3sas driver via
+> > module parameter to simulate the issue. We need more number of Online
+> > CPU than reply-queue.
+>
+> IMO, you don't need to simulate the issue, pci_alloc_irq_vectors(
+> PCI_IRQ_AFFINITY) will handle that for you. You can dump the returned
+irq
+> vector number, num_possible_cpus()/num_online_cpus() and each irq
+> vector's affinity assignment.
+>
+> > We may see completion redirected to original CPU because of
+> > "QUEUE_FLAG_SAME_FORCE", but ISR of low level driver can keep one CPU
+> > busy in local ISR routine.
+>
+> Could you dump each irq vector's affinity assignment of your megaraid in
+your
+> test?
 
-Hi Lei Ming,
-It is okay to use blk_mq_pci_map_queue to solve automatic irq affinity 
-issue when the first interrupt vector for queues is 0.
-But if the first interrupt vector for queues is not 0,  we seems 
-couldn't use blk_mq_pci_map_queue directly,
-such as blk_mq_virtio_map_queues, it realizes a interface itself. Is it 
-possible to provide a general interface for those
-situations?
+To quickly reproduce, I restricted to single MSI-x vector on megaraid_sas
+driver.  System has total 16 online CPUs.
+
+Output of affinity hints.
+kernel version:
+Linux rhel7.3 4.15.0-rc1+ #2 SMP Mon Feb 5 12:13:34 EST 2018 x86_64 x86_64
+x86_64 GNU/Linux
+PCI name is 83:00.0, dump its irq affinity:
+irq 105, cpu list 0-3,8-11
+
+Affinity mask is created properly, but only CPU-0 is overloaded with
+interrupt processing.
+
+# numactl --hardware
+available: 2 nodes (0-1)
+node 0 cpus: 0 1 2 3 8 9 10 11
+node 0 size: 47861 MB
+node 0 free: 46516 MB
+node 1 cpus: 4 5 6 7 12 13 14 15
+node 1 size: 64491 MB
+node 1 free: 62805 MB
+node distances:
+node   0   1
+  0:  10  21
+  1:  21  10
+
+Output of  system activities (sar).  (gnice is 100% and it is consumed in
+megaraid_sas ISR routine.)
 
 
->   static struct scsi_host_template hpsa_driver_template = {
->   	.module			= THIS_MODULE,
->   	.name			= HPSA,
-> @@ -974,10 +982,13 @@ static struct scsi_host_template hpsa_driver_template = {
->   #ifdef CONFIG_COMPAT
->   	.compat_ioctl		= hpsa_compat_ioctl,
->   #endif
-> +	.map_queues = hpsa_map_queues,
->   	.sdev_attrs = hpsa_sdev_attrs,
->   	.shost_attrs = hpsa_shost_attrs,
->   	.max_sectors = 1024,
->   	.no_write_same = 1,
-> +	.force_blk_mq = 1,
-> +	.host_tagset = 1,
->   };
->   
->   static inline u32 next_command(struct ctlr_info *h, u8 q)
-> @@ -1045,11 +1056,7 @@ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c,
->   		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
->   		if (unlikely(!h->msix_vectors))
->   			return;
-> -		if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -			c->Header.ReplyQueue =
-> -				raw_smp_processor_id() % h->nreply_queues;
-> -		else
-> -			c->Header.ReplyQueue = reply_queue % h->nreply_queues;
-> +		c->Header.ReplyQueue = reply_queue;
->   	}
->   }
->   
-> @@ -1063,10 +1070,7 @@ static void set_ioaccel1_performant_mode(struct ctlr_info *h,
->   	 * Tell the controller to post the reply to the queue for this
->   	 * processor.  This seems to give the best I/O throughput.
->   	 */
-> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -		cp->ReplyQueue = smp_processor_id() % h->nreply_queues;
-> -	else
-> -		cp->ReplyQueue = reply_queue % h->nreply_queues;
-> +	cp->ReplyQueue = reply_queue;
->   	/*
->   	 * Set the bits in the address sent down to include:
->   	 *  - performant mode bit (bit 0)
-> @@ -1087,10 +1091,7 @@ static void set_ioaccel2_tmf_performant_mode(struct ctlr_info *h,
->   	/* Tell the controller to post the reply to the queue for this
->   	 * processor.  This seems to give the best I/O throughput.
->   	 */
-> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -		cp->reply_queue = smp_processor_id() % h->nreply_queues;
-> -	else
-> -		cp->reply_queue = reply_queue % h->nreply_queues;
-> +	cp->reply_queue = reply_queue;
->   	/* Set the bits in the address sent down to include:
->   	 *  - performant mode bit not used in ioaccel mode 2
->   	 *  - pull count (bits 0-3)
-> @@ -1109,10 +1110,7 @@ static void set_ioaccel2_performant_mode(struct ctlr_info *h,
->   	 * Tell the controller to post the reply to the queue for this
->   	 * processor.  This seems to give the best I/O throughput.
->   	 */
-> -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> -		cp->reply_queue = smp_processor_id() % h->nreply_queues;
-> -	else
-> -		cp->reply_queue = reply_queue % h->nreply_queues;
-> +	cp->reply_queue = reply_queue;
->   	/*
->   	 * Set the bits in the address sent down to include:
->   	 *  - performant mode bit not used in ioaccel mode 2
-> @@ -1152,11 +1150,27 @@ static void dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
->   		h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
->   }
->   
-> +static unsigned get_reply_queue(struct ctlr_info *h, struct CommandList *c)
-> +{
-> +	struct scsi_cmnd *cmd = c->scsi_cmd;
-> +	int *map;
-> +
-> +	if (cmd && cmd->request) {
-> +		u32 tag = blk_mq_unique_tag(cmd->request);
-> +		return blk_mq_unique_tag_to_hwq(tag);
-> +	}
-> +
-> +	map = h->scsi_host->tag_set.mq_map;
-> +	return map[raw_smp_processor_id()];
-> +}
-> +
->   static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
->   	struct CommandList *c, int reply_queue)
->   {
->   	dial_down_lockup_detection_during_fw_flash(h, c);
->   	atomic_inc(&h->commands_outstanding);
-> +
-> +	reply_queue = get_reply_queue(h, c);
->   	switch (c->cmd_type) {
->   	case CMD_IOACCEL1:
->   		set_ioaccel1_performant_mode(h, c, reply_queue);
-> @@ -5781,6 +5795,9 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
->   {
->   	int rv;
->   
-> +	/* map reply queue to blk_mq hw queue */
-> +	h->scsi_host->nr_hw_queues = h->msix_vectors;
-> +
->   	rv = scsi_add_host(h->scsi_host, &h->pdev->dev);
->   	if (rv) {
->   		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
+12:44:40 PM     CPU      %usr     %nice      %sys   %iowait    %steal
+%irq     %soft    %guest    %gnice     %idle
+12:44:41 PM     all         6.03      0.00        29.98      0.00
+0.00         0.00        0.00        0.00        0.00         63.99
+12:44:41 PM       0         0.00      0.00         0.00        0.00
+0.00         0.00        0.00        0.00       100.00         0
+
+
+In my test, I used rq_affinity is set to 2. (QUEUE_FLAG_SAME_FORCE). I
+also used " host_tagset" V2 patch set for megaraid_sas.
+
+Using RFC requested in -
+"https://marc.info/?l=linux-scsi&m=151601833418346&w=2 " lockup is avoided
+(you can noticed that gnice is shifted to softirq. Even though it is 100%
+consumed, There is always exit for existing completion loop due to
+irqpoll_weight  @irq_poll_init().
+
+Average:        CPU      %usr     %nice      %sys   %iowait    %steal
+%irq     %soft    %guest    %gnice     %idle
+Average:        all          4.25      0.00        21.61      0.00
+0.00      0.00         6.61           0.00      0.00     67.54
+Average:          0           0.00      0.00         0.00      0.00
+0.00      0.00       100.00        0.00      0.00      0.00
+
+
+Hope this clarifies. We need different fix to avoid lockups. Can we
+consider using irq poll interface if #CPU is more than Reply queue/MSI-x.
+?
+
+>
+> And the following script can do it easily, and the pci path (the 1st
+column of
+> lspci output) need to be passed, such as: 00:1c.4,
+>
+> #!/bin/sh
+> if [ $# -ge 1 ]; then
+>     PCID=$1
+> else
+>     PCID=`lspci | grep "Non-Volatile memory" | cut -c1-7` fi PCIP=`find
+> /sys/devices -name *$PCID | grep pci` IRQS=`ls $PCIP/msi_irqs`
+>
+> echo "kernel version: "
+> uname -a
+>
+> echo "PCI name is $PCID, dump its irq affinity:"
+> for IRQ in $IRQS; do
+>     CPUS=`cat /proc/irq/$IRQ/smp_affinity_list`
+>     echo "\tirq $IRQ, cpu list $CPUS"
+> done
+>
+>
+> Thanks,
+> Ming
