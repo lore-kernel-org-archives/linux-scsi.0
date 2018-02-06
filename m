@@ -1,164 +1,38 @@
 From: Nilesh Javali <nilesh.javali@cavium.com>
-Subject: [PATCH 2/2] qedi: Cleanup local str variable
-Date: Tue, 6 Feb 2018 05:12:19 -0800
-Message-ID: <20180206131219.18184-3-nilesh.javali@cavium.com>
-References: <20180206131219.18184-1-nilesh.javali@cavium.com>
+Subject: [PATCH 0/2] Code cleanup and bug fix for truncated CHAP name and secret
+Date: Tue, 6 Feb 2018 05:12:17 -0800
+Message-ID: <20180206131219.18184-1-nilesh.javali@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0064.outbound.protection.outlook.com ([104.47.40.64]:52352
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0079.outbound.protection.outlook.com ([104.47.32.79]:4706
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752987AbeBFNM1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 6 Feb 2018 08:12:27 -0500
-In-Reply-To: <20180206131219.18184-1-nilesh.javali@cavium.com>
+        id S1752987AbeBFNMX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 6 Feb 2018 08:12:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
 Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
----
- drivers/scsi/qedi/qedi_main.c | 43 ++++++++++++++++++++-----------------------
- 1 file changed, 20 insertions(+), 23 deletions(-)
+Bart, Lee,
+This patch set consists of v2 solution for the bug fix for CHAP name and secret.
+Please review and let know the comments.
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index f3dd438..701bc72 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1756,7 +1756,6 @@ static ssize_t qedi_show_boot_eth_info(void *data, int type, char *buf)
- {
- 	struct qedi_ctx *qedi = data;
- 	struct nvm_iscsi_initiator *initiator;
--	char *str = buf;
- 	int rc = 1;
- 	u32 ipv6_en, dhcp_en, ip_len;
- 	struct nvm_iscsi_block *block;
-@@ -1790,32 +1789,32 @@ static ssize_t qedi_show_boot_eth_info(void *data, int type, char *buf)
- 
- 	switch (type) {
- 	case ISCSI_BOOT_ETH_IP_ADDR:
--		rc = snprintf(str, ip_len, fmt, ip);
-+		rc = snprintf(buf, ip_len, fmt, ip);
- 		break;
- 	case ISCSI_BOOT_ETH_SUBNET_MASK:
--		rc = snprintf(str, ip_len, fmt, sub);
-+		rc = snprintf(buf, ip_len, fmt, sub);
- 		break;
- 	case ISCSI_BOOT_ETH_GATEWAY:
--		rc = snprintf(str, ip_len, fmt, gw);
-+		rc = snprintf(buf, ip_len, fmt, gw);
- 		break;
- 	case ISCSI_BOOT_ETH_FLAGS:
--		rc = snprintf(str, 3, "%hhd\n",
-+		rc = snprintf(buf, 3, "%hhd\n",
- 			      SYSFS_FLAG_FW_SEL_BOOT);
- 		break;
- 	case ISCSI_BOOT_ETH_INDEX:
--		rc = snprintf(str, 3, "0\n");
-+		rc = snprintf(buf, 3, "0\n");
- 		break;
- 	case ISCSI_BOOT_ETH_MAC:
--		rc = sysfs_format_mac(str, qedi->mac, ETH_ALEN);
-+		rc = sysfs_format_mac(buf, qedi->mac, ETH_ALEN);
- 		break;
- 	case ISCSI_BOOT_ETH_VLAN:
--		rc = snprintf(str, 12, "%d\n",
-+		rc = snprintf(buf, 12, "%d\n",
- 			      GET_FIELD2(initiator->generic_cont0,
- 					 NVM_ISCSI_CFG_INITIATOR_VLAN));
- 		break;
- 	case ISCSI_BOOT_ETH_ORIGIN:
- 		if (dhcp_en)
--			rc = snprintf(str, 3, "3\n");
-+			rc = snprintf(buf, 3, "3\n");
- 		break;
- 	default:
- 		rc = 0;
-@@ -1851,7 +1850,6 @@ static ssize_t qedi_show_boot_ini_info(void *data, int type, char *buf)
- {
- 	struct qedi_ctx *qedi = data;
- 	struct nvm_iscsi_initiator *initiator;
--	char *str = buf;
- 	int rc;
- 	struct nvm_iscsi_block *block;
- 
-@@ -1863,7 +1861,7 @@ static ssize_t qedi_show_boot_ini_info(void *data, int type, char *buf)
- 
- 	switch (type) {
- 	case ISCSI_BOOT_INI_INITIATOR_NAME:
--		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
-+		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
- 					 initiator->initiator_name.byte);
- 		break;
- 	default:
-@@ -1892,7 +1890,6 @@ static umode_t qedi_ini_get_attr_visibility(void *data, int type)
- qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
- 			char *buf, enum qedi_nvm_tgts idx)
- {
--	char *str = buf;
- 	int rc = 1;
- 	u32 ctrl_flags, ipv6_en, chap_en, mchap_en, ip_len;
- 	struct nvm_iscsi_block *block;
-@@ -1931,48 +1928,48 @@ static umode_t qedi_ini_get_attr_visibility(void *data, int type)
- 
- 	switch (type) {
- 	case ISCSI_BOOT_TGT_NAME:
--		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
-+		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
- 					 block->target[idx].target_name.byte);
- 		break;
- 	case ISCSI_BOOT_TGT_IP_ADDR:
- 		if (ipv6_en)
--			rc = snprintf(str, ip_len, "%pI6\n",
-+			rc = snprintf(buf, ip_len, "%pI6\n",
- 				      block->target[idx].ipv6_addr.byte);
- 		else
--			rc = snprintf(str, ip_len, "%pI4\n",
-+			rc = snprintf(buf, ip_len, "%pI4\n",
- 				      block->target[idx].ipv4_addr.byte);
- 		break;
- 	case ISCSI_BOOT_TGT_PORT:
--		rc = snprintf(str, 12, "%d\n",
-+		rc = snprintf(buf, 12, "%d\n",
- 			      GET_FIELD2(block->target[idx].generic_cont0,
- 					 NVM_ISCSI_CFG_TARGET_TCP_PORT));
- 		break;
- 	case ISCSI_BOOT_TGT_LUN:
--		rc = snprintf(str, 22, "%.*d\n",
-+		rc = snprintf(buf, 22, "%.*d\n",
- 			      block->target[idx].lun.value[1],
- 			      block->target[idx].lun.value[0]);
- 		break;
- 	case ISCSI_BOOT_TGT_CHAP_NAME:
--		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
-+		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
- 					 chap_name);
- 		break;
- 	case ISCSI_BOOT_TGT_CHAP_SECRET:
--		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
-+		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
- 					 chap_secret);
- 		break;
- 	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
--		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
-+		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
- 					 mchap_name);
- 		break;
- 	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
--		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
-+		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
- 					 mchap_secret);
- 		break;
- 	case ISCSI_BOOT_TGT_FLAGS:
--		rc = snprintf(str, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
-+		rc = snprintf(buf, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
- 		break;
- 	case ISCSI_BOOT_TGT_NIC_ASSOC:
--		rc = snprintf(str, 3, "0\n");
-+		rc = snprintf(buf, 3, "0\n");
- 		break;
- 	default:
- 		rc = 0;
+Martin,
+Please consider below patch set for next 'scsi-fixes' submission.
+
+Thanks,
+Nilesh
+
+Andrew Vasquez (1):
+  qedi: Fix truncation of CHAP name and secret
+
+Nilesh Javali (1):
+  qedi: Cleanup local str variable
+
+ drivers/scsi/qedi/qedi_main.c | 76 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 47 insertions(+), 29 deletions(-)
+
 -- 
 1.8.3.1
