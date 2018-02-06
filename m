@@ -1,7 +1,7 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH/RFC 3/6] usb: gadget: Add NO_DMA dummies for DMA mapping API
-Date: Tue,  6 Feb 2018 11:14:49 +0100
-Message-ID: <1517912092-15470-4-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH/RFC 4/6] mm: Add NO_DMA dummies for DMA pool API
+Date: Tue,  6 Feb 2018 11:14:50 +0100
+Message-ID: <1517912092-15470-5-git-send-email-geert@linux-m68k.org>
 References: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,52 +21,80 @@ To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.sz
 Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add dummies for usb_gadget_{,un}map_request{,_by_dev}(), to allow
+Add dummies for dma{,m}_pool_{create,destroy,alloc,free}(), to allow
 compile-testing if NO_DMA=y.
 
 This prevents the following from showing up later:
 
-    ERROR: "usb_gadget_unmap_request_by_dev" [drivers/usb/renesas_usbhs/renesas_usbhs.ko] undefined!
-    ERROR: "usb_gadget_map_request_by_dev" [drivers/usb/renesas_usbhs/renesas_usbhs.ko] undefined!
-    ERROR: "usb_gadget_map_request" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "usb_gadget_unmap_request" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "usb_gadget_map_request" [drivers/usb/gadget/udc/renesas_usb3.ko] undefined!
-    ERROR: "usb_gadget_unmap_request" [drivers/usb/gadget/udc/renesas_usb3.ko] undefined!
+    ERROR: "dma_pool_destroy" [drivers/usb/mtu3/mtu3.ko] undefined!
+    ERROR: "dma_pool_free" [drivers/usb/mtu3/mtu3.ko] undefined!
+    ERROR: "dma_pool_alloc" [drivers/usb/mtu3/mtu3.ko] undefined!
+    ERROR: "dma_pool_create" [drivers/usb/mtu3/mtu3.ko] undefined!
+    ERROR: "dma_pool_destroy" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+    ERROR: "dma_pool_free" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+    ERROR: "dma_pool_alloc" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+    ERROR: "dma_pool_create" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+    ERROR: "dma_pool_alloc" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
+    ERROR: "dma_pool_free" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
+    ERROR: "dma_pool_create" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
+    ERROR: "dma_pool_destroy" [drivers/mailbox/bcm-pdc-mailbox.ko] undefined!
 
 Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 ---
- include/linux/usb/gadget.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ include/linux/dmapool.h | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/usb/gadget.h b/include/linux/usb/gadget.h
-index 66a5cff7ee142d6a..b68e7f9b210be122 100644
---- a/include/linux/usb/gadget.h
-+++ b/include/linux/usb/gadget.h
-@@ -805,6 +805,7 @@ int usb_otg_descriptor_init(struct usb_gadget *gadget,
+diff --git a/include/linux/dmapool.h b/include/linux/dmapool.h
+index 53ba737505df31c7..adeb5e56c3ad73a8 100644
+--- a/include/linux/dmapool.h
++++ b/include/linux/dmapool.h
+@@ -16,6 +16,7 @@
  
- /* utility to simplify map/unmap of usb_requests to/from DMA */
+ struct device;
  
-+#ifdef	CONFIG_HAS_DMA
- extern int usb_gadget_map_request_by_dev(struct device *dev,
- 		struct usb_request *req, int is_in);
- extern int usb_gadget_map_request(struct usb_gadget *gadget,
-@@ -814,6 +815,17 @@ extern void usb_gadget_unmap_request_by_dev(struct device *dev,
- 		struct usb_request *req, int is_in);
- extern void usb_gadget_unmap_request(struct usb_gadget *gadget,
- 		struct usb_request *req, int is_in);
++#ifdef CONFIG_HAS_DMA
+ struct dma_pool *dma_pool_create(const char *name, struct device *dev, 
+ 			size_t size, size_t align, size_t allocation);
+ 
+@@ -23,6 +24,17 @@ void dma_pool_destroy(struct dma_pool *pool);
+ 
+ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+ 		     dma_addr_t *handle);
++void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t addr);
 +#else /* !CONFIG_HAS_DMA */
-+static inline int usb_gadget_map_request_by_dev(struct device *dev,
-+		struct usb_request *req, int is_in) { return -ENOSYS; }
-+static inline int usb_gadget_map_request(struct usb_gadget *gadget,
-+		struct usb_request *req, int is_in) { return -ENOSYS; }
-+
-+static inline void usb_gadget_unmap_request_by_dev(struct device *dev,
-+		struct usb_request *req, int is_in) { }
-+static inline void usb_gadget_unmap_request(struct usb_gadget *gadget,
-+		struct usb_request *req, int is_in) { }
++static inline struct dma_pool *dma_pool_create(const char *name,
++	struct device *dev, size_t size, size_t align, size_t allocation)
++{ return NULL; }
++static inline void dma_pool_destroy(struct dma_pool *pool) { }
++static inline void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
++				   dma_addr_t *handle) { return NULL; }
++static inline void dma_pool_free(struct dma_pool *pool, void *vaddr,
++				 dma_addr_t addr) { }
 +#endif /* !CONFIG_HAS_DMA */
  
- /*-------------------------------------------------------------------------*/
+ static inline void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
+ 				    dma_addr_t *handle)
+@@ -30,14 +42,19 @@ static inline void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
+ 	return dma_pool_alloc(pool, mem_flags | __GFP_ZERO, handle);
+ }
+ 
+-void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t addr);
+-
+ /*
+  * Managed DMA pool
+  */
++#ifdef CONFIG_HAS_DMA
+ struct dma_pool *dmam_pool_create(const char *name, struct device *dev,
+ 				  size_t size, size_t align, size_t allocation);
+ void dmam_pool_destroy(struct dma_pool *pool);
++#else /* !CONFIG_HAS_DMA */
++static inline struct dma_pool *dmam_pool_create(const char *name,
++	struct device *dev, size_t size, size_t align, size_t allocation)
++{ return NULL; }
++static inline void dmam_pool_destroy(struct dma_pool *pool) { }
++#endif /* !CONFIG_HAS_DMA */
+ 
+ #endif
  
 -- 
 2.7.4
