@@ -1,110 +1,136 @@
-From: "Javali, Nilesh" <Nilesh.Javali@cavium.com>
-Subject: Re: [PATCH] qedi: Fix truncation of name and secret
-Date: Tue, 6 Feb 2018 07:11:27 +0000
-Message-ID: <D69F4C24.28881%nilesh.javali@cavium.com>
-References: <20180201065734.20441-1-nilesh.javali@cavium.com>
- <a8cbb894-63d9-ebb8-6ac0-c59118b08c61@suse.com>
- <37d8588f-5e80-5a5c-3e73-90555ee06ceb@suse.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH 0/5] blk-mq/scsi-mq: support global tags & introduce
+ force_blk_mq
+Date: Tue, 6 Feb 2018 16:04:58 +0800
+Message-ID: <20180206080452.GA14651@ming.t460p>
+References: <20180203042112.15239-1-ming.lei@redhat.com>
+ <07c1f41e-de7c-5e3d-1a2d-0cd7af7b46df@suse.de>
+ <528c93de0aac9010e274847ab1ae0328@mail.gmail.com>
+ <20180205101734.GA32558@ming.t460p>
+ <4c8162129f2a09dca2d1e7eefd61e272@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0077.outbound.protection.outlook.com ([104.47.41.77]:5088
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750974AbeBFHL3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 6 Feb 2018 02:11:29 -0500
-In-Reply-To: <37d8588f-5e80-5a5c-3e73-90555ee06ceb@suse.com>
-Content-Language: en-US
-Content-ID: <1C18CD40A0A5844FAA4340E6C3520679@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4c8162129f2a09dca2d1e7eefd61e272@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "cleech@redhat.com" <cleech@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>
+
+Hi Kashyap,
+
+On Tue, Feb 06, 2018 at 11:33:50AM +0530, Kashyap Desai wrote:
+> > > We still have more than one reply queue ending up completion one CPU.
+> >
+> > pci_alloc_irq_vectors(PCI_IRQ_AFFINITY) has to be used, that means
+> > smp_affinity_enable has to be set as 1, but seems it is the default
+> setting.
+> >
+> > Please see kernel/irq/affinity.c, especially irq_calc_affinity_vectors()
+> which
+> > figures out an optimal number of vectors, and the computation is based
+> on
+> > cpumask_weight(cpu_possible_mask) now. If all offline CPUs are mapped to
+> > some of reply queues, these queues won't be active(no request submitted
+> to
+> > these queues). The mechanism of PCI_IRQ_AFFINITY basically makes sure
+> that
+> > more than one irq vector won't be handled by one same CPU, and the irq
+> > vector spread is done in irq_create_affinity_masks().
+> >
+> > > Try to reduce MSI-x vector of megaraid_sas or mpt3sas driver via
+> > > module parameter to simulate the issue. We need more number of Online
+> > > CPU than reply-queue.
+> >
+> > IMO, you don't need to simulate the issue, pci_alloc_irq_vectors(
+> > PCI_IRQ_AFFINITY) will handle that for you. You can dump the returned
+> irq
+> > vector number, num_possible_cpus()/num_online_cpus() and each irq
+> > vector's affinity assignment.
+> >
+> > > We may see completion redirected to original CPU because of
+> > > "QUEUE_FLAG_SAME_FORCE", but ISR of low level driver can keep one CPU
+> > > busy in local ISR routine.
+> >
+> > Could you dump each irq vector's affinity assignment of your megaraid in
+> your
+> > test?
+> 
+> To quickly reproduce, I restricted to single MSI-x vector on megaraid_sas
+> driver.  System has total 16 online CPUs.
+
+I suggest you don't do the restriction of single MSI-x vector, and just
+use the device supported number of msi-x vector.
+
+> 
+> Output of affinity hints.
+> kernel version:
+> Linux rhel7.3 4.15.0-rc1+ #2 SMP Mon Feb 5 12:13:34 EST 2018 x86_64 x86_64
+> x86_64 GNU/Linux
+> PCI name is 83:00.0, dump its irq affinity:
+> irq 105, cpu list 0-3,8-11
+
+In this case, which CPU is selected for handling the interrupt is
+decided by interrupt controller, and it is easy to cause CPU overload
+if interrupt controller always selects one same CPU to handle the irq.
+
+> 
+> Affinity mask is created properly, but only CPU-0 is overloaded with
+> interrupt processing.
+> 
+> # numactl --hardware
+> available: 2 nodes (0-1)
+> node 0 cpus: 0 1 2 3 8 9 10 11
+> node 0 size: 47861 MB
+> node 0 free: 46516 MB
+> node 1 cpus: 4 5 6 7 12 13 14 15
+> node 1 size: 64491 MB
+> node 1 free: 62805 MB
+> node distances:
+> node   0   1
+>   0:  10  21
+>   1:  21  10
+> 
+> Output of  system activities (sar).  (gnice is 100% and it is consumed in
+> megaraid_sas ISR routine.)
+> 
+> 
+> 12:44:40 PM     CPU      %usr     %nice      %sys   %iowait    %steal
+> %irq     %soft    %guest    %gnice     %idle
+> 12:44:41 PM     all         6.03      0.00        29.98      0.00
+> 0.00         0.00        0.00        0.00        0.00         63.99
+> 12:44:41 PM       0         0.00      0.00         0.00        0.00
+> 0.00         0.00        0.00        0.00       100.00         0
+> 
+> 
+> In my test, I used rq_affinity is set to 2. (QUEUE_FLAG_SAME_FORCE). I
+> also used " host_tagset" V2 patch set for megaraid_sas.
+> 
+> Using RFC requested in -
+> "https://marc.info/?l=linux-scsi&m=151601833418346&w=2 " lockup is avoided
+> (you can noticed that gnice is shifted to softirq. Even though it is 100%
+> consumed, There is always exit for existing completion loop due to
+> irqpoll_weight  @irq_poll_init().
+> 
+> Average:        CPU      %usr     %nice      %sys   %iowait    %steal
+> %irq     %soft    %guest    %gnice     %idle
+> Average:        all          4.25      0.00        21.61      0.00
+> 0.00      0.00         6.61           0.00      0.00     67.54
+> Average:          0           0.00      0.00         0.00      0.00
+> 0.00      0.00       100.00        0.00      0.00      0.00
+> 
+> 
+> Hope this clarifies. We need different fix to avoid lockups. Can we
+> consider using irq poll interface if #CPU is more than Reply queue/MSI-x.
+> ?
+
+Please use the device's supported msi-x vectors number, and see if there
+is this issue. If there is, you can use irq poll too, which isn't contradictory
+with the blk-mq approach taken by this patchset.
+
+Hope I clarifies too, :-)
 
 
-On 2/6/18, 12:51 AM, "Lee Duncan" <lduncan@suse.com> wrote:
-
->On 02/05/2018 11:15 AM, Lee Duncan wrote:
->> On 01/31/2018 10:57 PM, Nilesh Javali wrote:
->>> Adjust the NULL byte added by snprintf.
->>>
->>> Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
->>> ---
->>>  drivers/scsi/qedi/qedi_main.c | 12 ++++++------
->>>  1 file changed, 6 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/scsi/qedi/qedi_main.c
->>>b/drivers/scsi/qedi/qedi_main.c
->>> index cccc34a..cf8badb 100644
->>> --- a/drivers/scsi/qedi/qedi_main.c
->>> +++ b/drivers/scsi/qedi/qedi_main.c
->>> @@ -1840,7 +1840,7 @@ static ssize_t qedi_show_boot_ini_info(void
->>>*data, int type, char *buf)
->>> =20
->>>  	switch (type) {
->>>  	case ISCSI_BOOT_INI_INITIATOR_NAME:
->>> -		rc =3D snprintf(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN, "%s\n",
->>> +		rc =3D snprintf(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN + 1, "%s",
->>>  			      initiator->initiator_name.byte);
->>>  		break;
->>>  	default:
->>> @@ -1908,7 +1908,7 @@ static umode_t qedi_ini_get_attr_visibility(void
->>>*data, int type)
->>> =20
->>>  	switch (type) {
->>>  	case ISCSI_BOOT_TGT_NAME:
->>> -		rc =3D snprintf(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN, "%s\n",
->>> +		rc =3D snprintf(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN + 1, "%s",
->>>  			      block->target[idx].target_name.byte);
->>>  		break;
->>>  	case ISCSI_BOOT_TGT_IP_ADDR:
->>> @@ -1930,19 +1930,19 @@ static umode_t
->>>qedi_ini_get_attr_visibility(void *data, int type)
->>>  			      block->target[idx].lun.value[0]);
->>>  		break;
->>>  	case ISCSI_BOOT_TGT_CHAP_NAME:
->>> -		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN, "%s\n",
->>> +		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN + 1, "%s",
->>>  			      chap_name);
->>>  		break;
->>>  	case ISCSI_BOOT_TGT_CHAP_SECRET:
->>> -		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN, "%s\n",
->>> +		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN + 1, "%s",
->>>  			      chap_secret);
->>>  		break;
->>>  	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
->>> -		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN, "%s\n",
->>> +		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN + 1, "%s",
->>>  			      mchap_name);
->>>  		break;
->>>  	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
->>> -		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN, "%s\n",
->>> +		rc =3D snprintf(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN + 1, "%s",
->>>  			      mchap_secret);
->>>  		break;
->>>  	case ISCSI_BOOT_TGT_FLAGS:
->>>
->>=20
->> Reviewed-by: Lee Duncan <lduncan@suse.com>
->>=20
->
->Assuming you address Bart's comments.
->--=20
->Lee Duncan
->SUSE Labs
-
-Bart, Lee,
-
-Thanks for the review and comments. Please ignore the current patch.
-
-The data in NVRAM is not guaranteed to be NUL terminated.
-Hence in V2 solution, the data would be copied upto the element size or to
-the first NUL
-in the byte-stream and then append a NUL.
-
-I would post V2 of the solution shortly.
-
-
-Thanks,
-Nilesh
+Thanks, 
+Ming
