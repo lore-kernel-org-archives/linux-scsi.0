@@ -1,185 +1,63 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity issue
-Date: Tue, 6 Feb 2018 17:51:41 +0800
-Message-ID: <20180206095135.GA15518@ming.t460p>
-References: <20180205152035.15016-1-ming.lei@redhat.com>
- <20180205152035.15016-9-ming.lei@redhat.com>
- <38210970-dfa3-9bac-124c-92065b10f4b3@suse.de>
+From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Subject: [PATCH/RFC 1/6] dma-mapping: Convert NO_DMA get_dma_ops() into a real
+	dummy
+Date: Tue,  6 Feb 2018 11:14:47 +0100
+Message-ID: <1517912092-15470-2-git-send-email-geert@linux-m68k.org>
+References: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <38210970-dfa3-9bac-124c-92065b10f4b3@suse.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1517912092-15470-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
+Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 06, 2018 at 09:39:26AM +0100, Hannes Reinecke wrote:
-> On 02/05/2018 04:20 PM, Ming Lei wrote:
-> > This patch uses .force_blk_mq to drive HPSA via SCSI_MQ, meantime maps
-> > each reply queue to blk_mq's hw queue, then .queuecommand can always
-> > choose the hw queue as the reply queue. And if no any online CPU is
-> > mapped to one hw queue, request can't be submitted to this hw queue
-> > at all, finally the irq affinity issue is solved.
-> > 
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Cc: Arun Easi <arun.easi@cavium.com>
-> > Cc: Omar Sandoval <osandov@fb.com>,
-> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-> > Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-> > Cc: Christoph Hellwig <hch@lst.de>,
-> > Cc: Don Brace <don.brace@microsemi.com>
-> > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> > Cc: Peter Rivera <peter.rivera@broadcom.com>
-> > Cc: Paolo Bonzini <pbonzini@redhat.com>
-> > Cc: Mike Snitzer <snitzer@redhat.com>
-> > Tested-by: Laurence Oberman <loberman@redhat.com>
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  drivers/scsi/hpsa.c | 51 ++++++++++++++++++++++++++++++++++-----------------
-> >  1 file changed, 34 insertions(+), 17 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index 443eabf63a9f..e517a4c74a28 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -51,6 +51,7 @@
-> >  #include <linux/jiffies.h>
-> >  #include <linux/percpu-defs.h>
-> >  #include <linux/percpu.h>
-> > +#include <linux/blk-mq-pci.h>
-> >  #include <asm/unaligned.h>
-> >  #include <asm/div64.h>
-> >  #include "hpsa_cmd.h"
-> > @@ -956,6 +957,13 @@ static struct device_attribute *hpsa_shost_attrs[] = {
-> >  #define HPSA_NRESERVED_CMDS	(HPSA_CMDS_RESERVED_FOR_DRIVER +\
-> >  				 HPSA_MAX_CONCURRENT_PASSTHRUS)
-> >  
-> > +static int hpsa_map_queues(struct Scsi_Host *shost)
-> > +{
-> > +        struct ctlr_info *h = shost_to_hba(shost);
-> > +
-> > +        return blk_mq_pci_map_queues(&shost->tag_set, h->pdev);
-> > +}
-> > +
-> >  static struct scsi_host_template hpsa_driver_template = {
-> >  	.module			= THIS_MODULE,
-> >  	.name			= HPSA,
-> > @@ -974,10 +982,13 @@ static struct scsi_host_template hpsa_driver_template = {
-> >  #ifdef CONFIG_COMPAT
-> >  	.compat_ioctl		= hpsa_compat_ioctl,
-> >  #endif
-> > +	.map_queues = hpsa_map_queues,
-> >  	.sdev_attrs = hpsa_sdev_attrs,
-> >  	.shost_attrs = hpsa_shost_attrs,
-> >  	.max_sectors = 1024,
-> >  	.no_write_same = 1,
-> > +	.force_blk_mq = 1,
-> > +	.host_tagset = 1,
-> >  };
-> >  
-> >  static inline u32 next_command(struct ctlr_info *h, u8 q)
-> > @@ -1045,11 +1056,7 @@ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c,
-> >  		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
-> >  		if (unlikely(!h->msix_vectors))
-> >  			return;
-> > -		if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> > -			c->Header.ReplyQueue =
-> > -				raw_smp_processor_id() % h->nreply_queues;
-> > -		else
-> > -			c->Header.ReplyQueue = reply_queue % h->nreply_queues;
-> > +		c->Header.ReplyQueue = reply_queue;
-> >  	}
-> >  }
-> >  
-> > @@ -1063,10 +1070,7 @@ static void set_ioaccel1_performant_mode(struct ctlr_info *h,
-> >  	 * Tell the controller to post the reply to the queue for this
-> >  	 * processor.  This seems to give the best I/O throughput.
-> >  	 */
-> > -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> > -		cp->ReplyQueue = smp_processor_id() % h->nreply_queues;
-> > -	else
-> > -		cp->ReplyQueue = reply_queue % h->nreply_queues;
-> > +	cp->ReplyQueue = reply_queue;
-> >  	/*
-> >  	 * Set the bits in the address sent down to include:
-> >  	 *  - performant mode bit (bit 0)
-> > @@ -1087,10 +1091,7 @@ static void set_ioaccel2_tmf_performant_mode(struct ctlr_info *h,
-> >  	/* Tell the controller to post the reply to the queue for this
-> >  	 * processor.  This seems to give the best I/O throughput.
-> >  	 */
-> > -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> > -		cp->reply_queue = smp_processor_id() % h->nreply_queues;
-> > -	else
-> > -		cp->reply_queue = reply_queue % h->nreply_queues;
-> > +	cp->reply_queue = reply_queue;
-> >  	/* Set the bits in the address sent down to include:
-> >  	 *  - performant mode bit not used in ioaccel mode 2
-> >  	 *  - pull count (bits 0-3)
-> > @@ -1109,10 +1110,7 @@ static void set_ioaccel2_performant_mode(struct ctlr_info *h,
-> >  	 * Tell the controller to post the reply to the queue for this
-> >  	 * processor.  This seems to give the best I/O throughput.
-> >  	 */
-> > -	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-> > -		cp->reply_queue = smp_processor_id() % h->nreply_queues;
-> > -	else
-> > -		cp->reply_queue = reply_queue % h->nreply_queues;
-> > +	cp->reply_queue = reply_queue;
-> >  	/*
-> >  	 * Set the bits in the address sent down to include:
-> >  	 *  - performant mode bit not used in ioaccel mode 2
-> > @@ -1152,11 +1150,27 @@ static void dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
-> >  		h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
-> >  }
-> >  
-> > +static unsigned get_reply_queue(struct ctlr_info *h, struct CommandList *c)
-> > +{
-> > +	struct scsi_cmnd *cmd = c->scsi_cmd;
-> > +	int *map;
-> > +
-> > +	if (cmd && cmd->request) {
-> > +		u32 tag = blk_mq_unique_tag(cmd->request);
-> > +		return blk_mq_unique_tag_to_hwq(tag);
-> > +	}
-> > +
-> > +	map = h->scsi_host->tag_set.mq_map;
-> > +	return map[raw_smp_processor_id()];
-> > +}
-> > +
-> >  static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
-> >  	struct CommandList *c, int reply_queue)
-> >  {
-> >  	dial_down_lockup_detection_during_fw_flash(h, c);
-> >  	atomic_inc(&h->commands_outstanding);
-> > +
-> > +	reply_queue = get_reply_queue(h, c);
-> >  	switch (c->cmd_type) {
-> >  	case CMD_IOACCEL1:
-> >  		set_ioaccel1_performant_mode(h, c, reply_queue);
-> > @@ -5781,6 +5795,9 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
-> >  {
-> >  	int rv;
-> >  
-> > +	/* map reply queue to blk_mq hw queue */
-> > +	h->scsi_host->nr_hw_queues = h->msix_vectors;
-> > +
-> >  	rv = scsi_add_host(h->scsi_host, &h->pdev->dev);
-> >  	if (rv) {
-> >  		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
-> > 
-> I really wonder why we need to call 'raw_smp_processor' here; typically
-> the queue should be encoded in the tag, so it would be better to call
-> blk_mq_unique_tag()/blk_mq_unique_tag_to_hwq() here to get the hardware
-> queue.
+If NO_DMA=y, get_dma_ops() returns a reference to the
+non-existing symbol bad_dma_ops, thus causing a link failure if it is
+ever used.
 
-HPSA may send internal command(no any request attached) to HBA directly,
-that is why raw_smp_processor() is used here. As you saw in patch 7, command
-can be submitted to HBA even before adding scsi host...
+Make get_dma_ops() return NULL instead, to avoid the link failure.
+This allows to improve compile-testing, and limits the need to keep on
+sprinkling dependencies on HAS_DMA all over the place.
 
-I admit it is ugly, but that should be something we can survive, at least blk-mq
-provides one simply approach to get the correct(or default) hw/reply queue for
-submission req. 
+Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+---
+ include/linux/dma-mapping.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Thanks,
-Ming
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 34fe8463d10ea3be..d78d7541f784875b 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -212,14 +212,14 @@ static inline void set_dma_ops(struct device *dev,
+ }
+ #else
+ /*
+- * Define the dma api to allow compilation but not linking of
+- * dma dependent code.  Code that depends on the dma-mapping
+- * API needs to set 'depends on HAS_DMA' in its Kconfig
++ * Define the dma api to allow compilation of dma dependent code.
++ * Code that depends on the dma-mapping API needs to set 'depends on HAS_DMA'
++ * in its Kconfig, unless it already depends on <something> || COMPILE_TEST,
++ * where <something> guarantuees the availability of the dma-mapping API.
+  */
+-extern const struct dma_map_ops bad_dma_ops;
+ static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
+ {
+-	return &bad_dma_ops;
++	return NULL;
+ }
+ #endif
+ 
+-- 
+2.7.4
