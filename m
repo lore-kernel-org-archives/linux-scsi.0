@@ -1,140 +1,164 @@
-From: Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [PATCH/RFC 0/6] Allow compile-testing NO_DMA
-Date: Tue, 6 Feb 2018 13:05:44 +0000
-Message-ID: <c68d8b8b-dc46-2066-0341-558f57ad113f@arm.com>
-References: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
+From: Nilesh Javali <nilesh.javali@cavium.com>
+Subject: [PATCH 2/2] qedi: Cleanup local str variable
+Date: Tue, 6 Feb 2018 05:12:19 -0800
+Message-ID: <20180206131219.18184-3-nilesh.javali@cavium.com>
+References: <20180206131219.18184-1-nilesh.javali@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
-Content-Language: en-GB
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Arnd Bergmann <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Richard Weinberger <richard@nod.at>
-Cc: Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, iommu@lists.linux-foundation.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0064.outbound.protection.outlook.com ([104.47.40.64]:52352
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752987AbeBFNM1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 6 Feb 2018 08:12:27 -0500
+In-Reply-To: <20180206131219.18184-1-nilesh.javali@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-On 06/02/18 10:14, Geert Uytterhoeven wrote:
-> 	Hi all,
-> 
-> If NO_DMA=y, get_dma_ops() returns a reference to the non-existing
-> symbol bad_dma_ops, thus causing a link failure if it is ever used.
-> 
-> The intention of this is twofold:
->    1. To catch users of the DMA API on systems that do no support the DMA
->       mapping API,
->    2. To avoid building drivers that cannot work on such systems anyway.
-> 
-> However, the disadvantage is that we have to keep on adding dependencies
-> on HAS_DMA all over the place.
-> 
-> Thanks to the COMPILE_TEST symbol, lots of drivers now depend on one or
-> more platform dependencies (that imply HAS_DMA) || COMPILE_TEST, thus
-> already covering intention #2.  Having to add an explicit dependency on
-> HAS_DMA here is cumbersome, and hinders compile-testing.
-> 
-> Hence I think the time is ripe to reconsider the link failure.
-> This patch series:
->    - Changes get_dma_ops() to return NULL instead,
->    - Adds a few more dummies to enable compile-testing,
->    - Removes dependencies on HAS_DMA for symbols that already have
->      platform dependencies implying HAS_DMA.
-> 
-> Note that adding more platform dependencies and/or dependencies on
-> COMPILE_TEST is encouraged!
-> 
-> This may make life harder for UML, though, as UML usually satisfies all
-> other platform dependencies for HAS_DMA.  Similarly, HAS_IOMEM is even
-> more complicated.  Can/do we want to do something similar for
-> HAS_IOMEM?
+Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
+---
+ drivers/scsi/qedi/qedi_main.c | 43 ++++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 23 deletions(-)
 
-It looks like we have only one real arch (score) without IOMEM, and two 
-(s390 and tile) where it is possible to configure out, so it does seem 
-like a reasonable feature to assume. Maybe we could have something like 
-asm-generic/no-io.h to provide an "unimplemented" version of those 
-interfaces.
-
-Anyway, for this series:
-
-Acked-by: Robin Murphy <robin.murphy@arm.com>
-
-Thanks,
-Robin.
-
-> This series is against my current local tree, which has a few more
-> "depends on HAS_DMA" than upstream.  Of course I will rebase, and split
-> the last patch per subsystem, if this RFC is welcomed positively.
-> 
-> Compile-tested with allmodconfig and allyesconfig for m68k/sun3.
-> 
-> Thanks for your comments!
-> 
-> Geert Uytterhoeven (6):
->    [RFC] dma-mapping: Convert NO_DMA get_dma_ops() into a real dummy
->    [RFC] dma-coherent: Add NO_DMA dummies for managed DMA API
->    [RFC] usb: gadget: Add NO_DMA dummies for DMA mapping API
->    [RFC] mm: Add NO_DMA dummies for DMA pool API
->    [RFC] scsi: Add NO_DMA dummies for SCSI DMA mapping API
->    [RFC] Treewide: Remove depends on HAS_DMA in case of platform
->      dependency
-> 
->   drivers/ata/Kconfig                             |  2 --
->   drivers/crypto/Kconfig                          | 14 +++------
->   drivers/firewire/Kconfig                        |  1 -
->   drivers/fpga/Kconfig                            |  1 -
->   drivers/gpu/ipu-v3/Kconfig                      |  1 -
->   drivers/i2c/busses/Kconfig                      |  3 --
->   drivers/iio/adc/Kconfig                         |  3 --
->   drivers/iommu/Kconfig                           |  5 ++--
->   drivers/lightnvm/Kconfig                        |  2 +-
->   drivers/mailbox/Kconfig                         |  2 --
->   drivers/media/pci/dt3155/Kconfig                |  1 -
->   drivers/media/pci/solo6x10/Kconfig              |  1 -
->   drivers/media/pci/sta2x11/Kconfig               |  1 -
->   drivers/media/pci/tw5864/Kconfig                |  1 -
->   drivers/media/pci/tw686x/Kconfig                |  1 -
->   drivers/media/platform/Kconfig                  | 40 ++++++++-----------------
->   drivers/media/platform/am437x/Kconfig           |  2 +-
->   drivers/media/platform/atmel/Kconfig            |  4 +--
->   drivers/media/platform/blackfin/Kconfig         |  1 -
->   drivers/media/platform/davinci/Kconfig          |  6 ----
->   drivers/media/platform/marvell-ccic/Kconfig     |  3 +-
->   drivers/media/platform/rcar-vin/Kconfig         |  2 +-
->   drivers/media/platform/soc_camera/Kconfig       |  3 +-
->   drivers/media/platform/sti/c8sectpfe/Kconfig    |  2 +-
->   drivers/mmc/host/Kconfig                        | 10 ++-----
->   drivers/mtd/nand/Kconfig                        |  8 ++---
->   drivers/mtd/spi-nor/Kconfig                     |  2 +-
->   drivers/net/ethernet/amd/Kconfig                |  2 +-
->   drivers/net/ethernet/apm/xgene-v2/Kconfig       |  1 -
->   drivers/net/ethernet/apm/xgene/Kconfig          |  1 -
->   drivers/net/ethernet/arc/Kconfig                |  6 ++--
->   drivers/net/ethernet/broadcom/Kconfig           |  2 --
->   drivers/net/ethernet/calxeda/Kconfig            |  2 +-
->   drivers/net/ethernet/hisilicon/Kconfig          |  2 +-
->   drivers/net/ethernet/marvell/Kconfig            |  8 ++---
->   drivers/net/ethernet/mellanox/mlxsw/Kconfig     |  2 +-
->   drivers/net/ethernet/renesas/Kconfig            |  2 --
->   drivers/net/ethernet/socionext/Kconfig          |  4 +--
->   drivers/net/wireless/broadcom/brcm80211/Kconfig |  1 -
->   drivers/net/wireless/quantenna/qtnfmac/Kconfig  |  2 +-
->   drivers/remoteproc/Kconfig                      |  1 -
->   drivers/scsi/hisi_sas/Kconfig                   |  2 +-
->   drivers/spi/Kconfig                             | 12 ++------
->   drivers/staging/media/davinci_vpfe/Kconfig      |  1 -
->   drivers/staging/media/omap4iss/Kconfig          |  1 -
->   drivers/staging/vc04_services/Kconfig           |  1 -
->   drivers/tty/serial/Kconfig                      |  4 ---
->   drivers/usb/gadget/udc/Kconfig                  |  4 +--
->   drivers/usb/mtu3/Kconfig                        |  2 +-
->   drivers/video/fbdev/Kconfig                     |  3 +-
->   include/linux/dma-mapping.h                     | 19 ++++++++----
->   include/linux/dmapool.h                         | 21 +++++++++++--
->   include/linux/usb/gadget.h                      | 12 ++++++++
->   include/scsi/scsi_cmnd.h                        |  5 ++++
->   sound/soc/bcm/Kconfig                           |  3 +-
->   sound/soc/kirkwood/Kconfig                      |  1 -
->   sound/soc/pxa/Kconfig                           |  1 -
->   sound/soc/qcom/Kconfig                          |  6 ++--
->   58 files changed, 108 insertions(+), 148 deletions(-)
-> 
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index f3dd438..701bc72 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1756,7 +1756,6 @@ static ssize_t qedi_show_boot_eth_info(void *data, int type, char *buf)
+ {
+ 	struct qedi_ctx *qedi = data;
+ 	struct nvm_iscsi_initiator *initiator;
+-	char *str = buf;
+ 	int rc = 1;
+ 	u32 ipv6_en, dhcp_en, ip_len;
+ 	struct nvm_iscsi_block *block;
+@@ -1790,32 +1789,32 @@ static ssize_t qedi_show_boot_eth_info(void *data, int type, char *buf)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_ETH_IP_ADDR:
+-		rc = snprintf(str, ip_len, fmt, ip);
++		rc = snprintf(buf, ip_len, fmt, ip);
+ 		break;
+ 	case ISCSI_BOOT_ETH_SUBNET_MASK:
+-		rc = snprintf(str, ip_len, fmt, sub);
++		rc = snprintf(buf, ip_len, fmt, sub);
+ 		break;
+ 	case ISCSI_BOOT_ETH_GATEWAY:
+-		rc = snprintf(str, ip_len, fmt, gw);
++		rc = snprintf(buf, ip_len, fmt, gw);
+ 		break;
+ 	case ISCSI_BOOT_ETH_FLAGS:
+-		rc = snprintf(str, 3, "%hhd\n",
++		rc = snprintf(buf, 3, "%hhd\n",
+ 			      SYSFS_FLAG_FW_SEL_BOOT);
+ 		break;
+ 	case ISCSI_BOOT_ETH_INDEX:
+-		rc = snprintf(str, 3, "0\n");
++		rc = snprintf(buf, 3, "0\n");
+ 		break;
+ 	case ISCSI_BOOT_ETH_MAC:
+-		rc = sysfs_format_mac(str, qedi->mac, ETH_ALEN);
++		rc = sysfs_format_mac(buf, qedi->mac, ETH_ALEN);
+ 		break;
+ 	case ISCSI_BOOT_ETH_VLAN:
+-		rc = snprintf(str, 12, "%d\n",
++		rc = snprintf(buf, 12, "%d\n",
+ 			      GET_FIELD2(initiator->generic_cont0,
+ 					 NVM_ISCSI_CFG_INITIATOR_VLAN));
+ 		break;
+ 	case ISCSI_BOOT_ETH_ORIGIN:
+ 		if (dhcp_en)
+-			rc = snprintf(str, 3, "3\n");
++			rc = snprintf(buf, 3, "3\n");
+ 		break;
+ 	default:
+ 		rc = 0;
+@@ -1851,7 +1850,6 @@ static ssize_t qedi_show_boot_ini_info(void *data, int type, char *buf)
+ {
+ 	struct qedi_ctx *qedi = data;
+ 	struct nvm_iscsi_initiator *initiator;
+-	char *str = buf;
+ 	int rc;
+ 	struct nvm_iscsi_block *block;
+ 
+@@ -1863,7 +1861,7 @@ static ssize_t qedi_show_boot_ini_info(void *data, int type, char *buf)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_INI_INITIATOR_NAME:
+-		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
++		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
+ 					 initiator->initiator_name.byte);
+ 		break;
+ 	default:
+@@ -1892,7 +1890,6 @@ static umode_t qedi_ini_get_attr_visibility(void *data, int type)
+ qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
+ 			char *buf, enum qedi_nvm_tgts idx)
+ {
+-	char *str = buf;
+ 	int rc = 1;
+ 	u32 ctrl_flags, ipv6_en, chap_en, mchap_en, ip_len;
+ 	struct nvm_iscsi_block *block;
+@@ -1931,48 +1928,48 @@ static umode_t qedi_ini_get_attr_visibility(void *data, int type)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_TGT_NAME:
+-		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
++		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
+ 					 block->target[idx].target_name.byte);
+ 		break;
+ 	case ISCSI_BOOT_TGT_IP_ADDR:
+ 		if (ipv6_en)
+-			rc = snprintf(str, ip_len, "%pI6\n",
++			rc = snprintf(buf, ip_len, "%pI6\n",
+ 				      block->target[idx].ipv6_addr.byte);
+ 		else
+-			rc = snprintf(str, ip_len, "%pI4\n",
++			rc = snprintf(buf, ip_len, "%pI4\n",
+ 				      block->target[idx].ipv4_addr.byte);
+ 		break;
+ 	case ISCSI_BOOT_TGT_PORT:
+-		rc = snprintf(str, 12, "%d\n",
++		rc = snprintf(buf, 12, "%d\n",
+ 			      GET_FIELD2(block->target[idx].generic_cont0,
+ 					 NVM_ISCSI_CFG_TARGET_TCP_PORT));
+ 		break;
+ 	case ISCSI_BOOT_TGT_LUN:
+-		rc = snprintf(str, 22, "%.*d\n",
++		rc = snprintf(buf, 22, "%.*d\n",
+ 			      block->target[idx].lun.value[1],
+ 			      block->target[idx].lun.value[0]);
+ 		break;
+ 	case ISCSI_BOOT_TGT_CHAP_NAME:
+-		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
+ 					 chap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_CHAP_SECRET:
+-		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
++		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
+ 					 chap_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
+-		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
+ 					 mchap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
+-		rc = qedi_show_copy_data(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
++		rc = qedi_show_copy_data(buf, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
+ 					 mchap_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_FLAGS:
+-		rc = snprintf(str, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
++		rc = snprintf(buf, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
+ 		break;
+ 	case ISCSI_BOOT_TGT_NIC_ASSOC:
+-		rc = snprintf(str, 3, "0\n");
++		rc = snprintf(buf, 3, "0\n");
+ 		break;
+ 	default:
+ 		rc = 0;
+-- 
+1.8.3.1
