@@ -1,89 +1,92 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 198689] New: Setro has no effect for SCSI device
-Date: Tue, 06 Feb 2018 08:18:00 +0000
-Message-ID: <bug-198689-11613@https.bugzilla.kernel.org/>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V2 8/8] scsi: hpsa: use blk_mq to solve irq affinity issue
+Date: Tue, 6 Feb 2018 16:23:54 +0800
+Message-ID: <20180206082353.GB14651@ming.t460p>
+References: <20180205152035.15016-1-ming.lei@redhat.com>
+ <20180205152035.15016-9-ming.lei@redhat.com>
+ <bce37b1a-6faf-a661-19cd-ef583f19f280@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:60766 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752183AbeBFISC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 03:18:02 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 9D3212874E
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Feb 2018 08:18:01 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:58942 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751835AbeBFIYP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 6 Feb 2018 03:24:15 -0500
+Content-Disposition: inline
+In-Reply-To: <bce37b1a-6faf-a661-19cd-ef583f19f280@hisilicon.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=198689
+Hello chenxiang,
 
-            Bug ID: 198689
-           Summary: Setro has no effect for SCSI device
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: all
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: AACRAID
-          Assignee: scsi_drivers-aacraid@kernel-bugs.osdl.org
-          Reporter: yzlining@foxmail.com
-        Regression: No
+On Tue, Feb 06, 2018 at 10:18:19AM +0800, chenxiang (M) wrote:
+> 在 2018/2/5 23:20, Ming Lei 写道:
+> > This patch uses .force_blk_mq to drive HPSA via SCSI_MQ, meantime maps
+> > each reply queue to blk_mq's hw queue, then .queuecommand can always
+> > choose the hw queue as the reply queue. And if no any online CPU is
+> > mapped to one hw queue, request can't be submitted to this hw queue
+> > at all, finally the irq affinity issue is solved.
+> > 
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Cc: Arun Easi <arun.easi@cavium.com>
+> > Cc: Omar Sandoval <osandov@fb.com>,
+> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+> > Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
+> > Cc: Christoph Hellwig <hch@lst.de>,
+> > Cc: Don Brace <don.brace@microsemi.com>
+> > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> > Cc: Peter Rivera <peter.rivera@broadcom.com>
+> > Cc: Paolo Bonzini <pbonzini@redhat.com>
+> > Cc: Mike Snitzer <snitzer@redhat.com>
+> > Tested-by: Laurence Oberman <loberman@redhat.com>
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> >   drivers/scsi/hpsa.c | 51 ++++++++++++++++++++++++++++++++++-----------------
+> >   1 file changed, 34 insertions(+), 17 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index 443eabf63a9f..e517a4c74a28 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -51,6 +51,7 @@
+> >   #include <linux/jiffies.h>
+> >   #include <linux/percpu-defs.h>
+> >   #include <linux/percpu.h>
+> > +#include <linux/blk-mq-pci.h>
+> >   #include <asm/unaligned.h>
+> >   #include <asm/div64.h>
+> >   #include "hpsa_cmd.h"
+> > @@ -956,6 +957,13 @@ static struct device_attribute *hpsa_shost_attrs[] = {
+> >   #define HPSA_NRESERVED_CMDS	(HPSA_CMDS_RESERVED_FOR_DRIVER +\
+> >   				 HPSA_MAX_CONCURRENT_PASSTHRUS)
+> > +static int hpsa_map_queues(struct Scsi_Host *shost)
+> > +{
+> > +        struct ctlr_info *h = shost_to_hba(shost);
+> > +
+> > +        return blk_mq_pci_map_queues(&shost->tag_set, h->pdev);
+> > +}
+> > +
+> 
+> Hi Lei Ming,
+> It is okay to use blk_mq_pci_map_queue to solve automatic irq affinity issue
+> when the first interrupt vector for queues is 0.
+> But if the first interrupt vector for queues is not 0,  we seems couldn't
+> use blk_mq_pci_map_queue directly,
+> such as blk_mq_virtio_map_queues, it realizes a interface itself. Is it
+> possible to provide a general interface for those
+> situations?
 
-Hi,
-We found a problem when using SCSI device.
+I guess it isn't necessary to do that, as you see .map_queues has been
+introduced to 'scsi_host_template' for dealing driver specific irq
+vector difference, such as, virtio-pci, 'irq_affinity' is needed for
+excluding 'pre_vectors' which should serve as virtio config vector.
 
-Setting the read-only attribute to scsi disk by calling "ioctl(fd, BLKROSET,
-&ro)"
-only block the first write operation.
+But that should belong to another topic about implementing generic
+.map_queues interface, and seems not related with this patch, since
+the usage of blk_mq_pci_map_queues() in this patch is correct.
 
-In detail:
-1: set ioctl(fd, BLKROSET, &ro)
-2: dd to the block device(as /dev/sdc), write failed
-3: dd to the block device again, write successed
-
-Above operation can be reproduced by following script:
-
-#! /bin/bash
-DEV=$1
-[[ "$DEV" =~ ^/dev/sd ]] || echo "Need a scsi device to reproduce"
-blockdev --setro $DEV
-echo $DEV getro is [ $(blockdev --getro $DEV) ]
-dd if=/dev/zero of=$DEV count=1
-echo $DEV getro is [ $(blockdev --getro $1) ]
-dd if=/dev/zero of=$DEV count=1
-
-Environment:
-  - Kernel: ALL
-  We reproduced this problem in following kernel version: 4.15 4.10, 3.10.
-  And by reference source, we think the problem exist in all versions.
-  - Driver: SCSI
-  it exists only when using SCSI disks, and xen-blk，virtio-blk do not have such
-a 
-  problem
-
-Here is a test result:
-# uname -r
-4.15.0+
-
-# ./reproduce.sh /dev/sda
-/dev/sda getro is [ 1 ]
-dd: writing to ‘/dev/sda’: Operation not permitted
-1+0 records in
-0+0 records out
-0 bytes (0 B) copied, 0.000258806 s, 0.0 kB/s
-/dev/sda getro is [ 0 ]
-1+0 records in
-1+0 records out
-512 bytes (512 B) copied, 0.000321595 s, 1.6 MB/s
-
----
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Thanks,
+Ming
