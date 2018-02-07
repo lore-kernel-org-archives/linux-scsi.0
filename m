@@ -1,36 +1,42 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 01/13] lpfc: Rework lpfc to allow different sli4 cq
- and eq handlers
-Date: Wed, 7 Feb 2018 10:01:32 +0100
-Message-ID: <20180207090132.bvbiv62hintpesft@linux-x5ow.site>
+Subject: Re: [PATCH v2 02/13] lpfc: Rework sli4 doorbell infrastructure
+Date: Wed, 7 Feb 2018 10:13:25 +0100
+Message-ID: <20180207091325.m6aelluglam5u77i@linux-x5ow.site>
 References: <20180207022851.11800-1-jsmart2021@gmail.com>
- <20180207022851.11800-2-jsmart2021@gmail.com>
+ <20180207022851.11800-3-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46156 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47177 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752829AbeBGJBe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 04:01:34 -0500
+        id S1753814AbeBGJN1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Feb 2018 04:13:27 -0500
 Content-Disposition: inline
-In-Reply-To: <20180207022851.11800-2-jsmart2021@gmail.com>
+In-Reply-To: <20180207022851.11800-3-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-I first though of renameing:
-lpfc_sli4_eq_clr_intr -> lpfc_sli4_t2_eq_clr_intr 
-lpfc_sli4_eq_release -> lpfc_sli4_t2_eq_release 
-lpfc_sli4_cq_release -> lpfc_sli4_t2_cq_release 
+> diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+> index 0c0cbe296fed..e2f06c92c4dd 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli4.h
+> +++ b/drivers/scsi/lpfc/lpfc_sli4.h
+> @@ -569,7 +569,8 @@ struct lpfc_sli4_hba {
+>  	/* IF type 0, BAR 0 and if type 2, BAR 0 doorbell register memory map */
+>  	void __iomem *RQDBregaddr;	/* RQ_DOORBELL register */
+>  	void __iomem *WQDBregaddr;	/* WQ_DOORBELL register */
+> -	void __iomem *EQCQDBregaddr;	/* EQCQ_DOORBELL register */
+> +	void __iomem *CQDBregaddr;	/* CQ_DOORBELL register */
+> +	void __iomem *EQDBregaddr;	/* EQ_DOORBELL register */
+>  	void __iomem *MQDBregaddr;	/* MQ_DOORBELL register */
+>  	void __iomem *BMBXregaddr;	/* BootStrap MBX register */
 
-and then make lpfc_sli4_eq_clr_intr, etc... wrappers over the new function
-pointers so and you could keep the callsites, but then you'd have to change
-the callsites anyways as the function prototype will need to change.
-
-So looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+Although CQDBregaddr, EQDBregaddr, BMBXregaddr, etc... really look ugly and
+this would've been the perfect chance to change it ;-)
 
 -- 
 Johannes Thumshirn                                          Storage
