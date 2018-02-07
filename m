@@ -1,15 +1,15 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: storvsc: Spread interrupts when picking a
- channel for I/O requests
-Date: Tue, 06 Feb 2018 19:39:17 -0500
-Message-ID: <yq160793a6i.fsf@oracle.com>
-References: <1516831913-26013-1-git-send-email-mikelley@ntdev.microsoft.com>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Increase cmd_per_lun for higher speed
+ devices
+Date: Tue, 06 Feb 2018 19:39:46 -0500
+Message-ID: <yq1y3k51vl9.fsf@oracle.com>
+References: <1516834132-26273-1-git-send-email-mikelley@ntdev.microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1516831913-26013-1-git-send-email-mikelley@ntdev.microsoft.com>
- (Michael Kelley's message of "Wed, 24 Jan 2018 22:14:08 +0000")
+In-Reply-To: <1516834132-26273-1-git-send-email-mikelley@ntdev.microsoft.com>
+ (Michael Kelley's message of "Wed, 24 Jan 2018 22:49:57 +0000")
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -20,19 +20,17 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-Cc: Stephen Hemminger <sthemmin@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "JBottomley@odin.com" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "longi@microsoft.com" <longi@microsoft.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Stephen Hemminger <sthemmin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
 Michael,
 
-> Update the algorithm in storvsc_do_io to look for a channel starting
-> with the current CPU + 1 and wrap around (within the current NUMA
-> node). This spreads VMbus interrupts more evenly across CPUs. Previous
-> code always started with first CPU in the current NUMA node, skewing
-> the interrupt load to that CPU.
+> Increase cmd_per_lun to allow more I/Os in progress per device,
+> particularly for NVMe's.  The Hyper-V host side can handle the higher
+> count with no issues.
 
-Applied to 4.16/scsi-fixes. Thanks!
+Applied to 4.16/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
