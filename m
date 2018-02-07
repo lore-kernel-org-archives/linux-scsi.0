@@ -1,42 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv3 0/4] Deprecate DAC960 driver
-Date: Tue, 06 Feb 2018 20:08:51 -0500
-Message-ID: <yq1lgg51u8s.fsf@oracle.com>
-References: <20180124080801.82630-1-hare@suse.de>
+Subject: Re: [PATCH] scsi_debug: Simplify request tag decoding
+Date: Tue, 06 Feb 2018 20:13:44 -0500
+Message-ID: <yq1fu6d1u0n.fsf@oracle.com>
+References: <20180126165219.11913-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:32790 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932164AbeBGBJG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 20:09:06 -0500
-In-Reply-To: <20180124080801.82630-1-hare@suse.de> (Hannes Reinecke's message
-        of "Wed, 24 Jan 2018 09:07:57 +0100")
+Received: from aserp2120.oracle.com ([141.146.126.78]:47688 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932244AbeBGBOJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 20:14:09 -0500
+In-Reply-To: <20180126165219.11913-1-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Fri, 26 Jan 2018 08:52:19 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
 
-Hannes,
+Bart,
 
-> as we're trying to get rid of the remaining request_fn drivers here's
-> a patchset to move the DAC960 driver to the SCSI stack.  As per
-> request from hch I've split up the driver into two new SCSI drivers
-> called 'myrb' and 'myrs'.
->
-> The 'myrb' driver only supports the earlier (V1) firmware interface,
-> which doesn't have a SCSI interface for the logical drives; for those
-> I've added a (pretty rudimentary, admittedly) SCSI translation for
-> them.
->
-> The 'myrs' driver supports the newer (V2) firmware interface, which is
-> SCSI based and doesn't need the translation layer.
->
-> And the weird proc interface from DAC960 has been converted to sysfs
-> attributes.
+> Since commit 64d513ac31bd ("scsi: use host wide tags by default") all
+> SCSI requests have a tag, whether or not scsi-mq is enabled.
+> Additionally, it is safe to use blk_mq_unique_tag() and
+> blk_mq_unique_tag_to_hwq() for legacy SCSI queues. Since this means
+> that the sdebug_mq_active variable is superfluous, remove it.
 
-Thanks for doing this. I merged these into 4.17/scsi-queue.
+Applied to 4.17/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
