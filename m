@@ -1,29 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] qla2xxx: Bug fixes for driver
-Date: Tue, 06 Feb 2018 19:45:23 -0500
-Message-ID: <yq1tvut1vbw.fsf@oracle.com>
-References: <20180201183318.587-1-himanshu.madhani@cavium.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V2 2/8] blk-mq: introduce BLK_MQ_F_GLOBAL_TAGS
+Date: Wed, 7 Feb 2018 08:43:13 +0800
+Message-ID: <20180207004311.GA13470@ming.t460p>
+References: <20180205152035.15016-1-ming.lei@redhat.com>
+ <20180205152035.15016-3-ming.lei@redhat.com>
+ <398c755a-ada6-1e60-9562-51b69476e55d@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60276 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754148AbeBGApa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 19:45:30 -0500
-In-Reply-To: <20180201183318.587-1-himanshu.madhani@cavium.com> (Himanshu
-        Madhani's message of "Thu, 1 Feb 2018 10:33:16 -0800")
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55192 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932106AbeBGAwk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 6 Feb 2018 19:52:40 -0500
+Content-Disposition: inline
+In-Reply-To: <398c755a-ada6-1e60-9562-51b69476e55d@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
 
+On Tue, Feb 06, 2018 at 04:18:20PM -0700, Jens Axboe wrote:
+> On 2/5/18 8:20 AM, Ming Lei wrote:
+...
+> 
+> GLOBAL implies that it's, strangely enough, global. That isn't really the
+> case. Why not call this BLK_MQ_F_HOST_TAGS or something like that? I'd
+> welcome better names, but global doesn't seem to be a great choice.
+> 
+> BLK_MQ_F_SET_TAGS?
 
-Himanshu,
+Good point, I am fine with either BLK_MQ_F_HOST_TAGS or BLK_MQ_F_SET_TAGS,
+will update in V3.
 
-> Patch#1 is the issue reported by Max using KASAN tool.
-> Patch#2 fixes use of wrong queue handle for abort IOCB. 
-
-Applied to 4.16/scsi-fixes, thank you!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+Ming
