@@ -1,32 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_debug: Simplify request tag decoding
-Date: Tue, 06 Feb 2018 20:13:44 -0500
-Message-ID: <yq1fu6d1u0n.fsf@oracle.com>
-References: <20180126165219.11913-1-bart.vanassche@wdc.com>
+Subject: Re: [PATCH] scsi_debug: Add two new parameters to scsi_debug driver
+Date: Tue, 06 Feb 2018 20:20:26 -0500
+Message-ID: <yq1bmh11tph.fsf@oracle.com>
+References: <1517683115-4690-1-git-send-email-loberman@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47688 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:55388 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932244AbeBGBOJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 20:14:09 -0500
-In-Reply-To: <20180126165219.11913-1-bart.vanassche@wdc.com> (Bart Van
-        Assche's message of "Fri, 26 Jan 2018 08:52:19 -0800")
+        with ESMTP id S1754189AbeBGBUe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 20:20:34 -0500
+In-Reply-To: <1517683115-4690-1-git-send-email-loberman@redhat.com> (Laurence
+        Oberman's message of "Sat, 3 Feb 2018 13:38:35 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+To: Laurence Oberman <loberman@redhat.com>
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com
 
 
-Bart,
+Laurence,
 
-> Since commit 64d513ac31bd ("scsi: use host wide tags by default") all
-> SCSI requests have a tag, whether or not scsi-mq is enabled.
-> Additionally, it is safe to use blk_mq_unique_tag() and
-> blk_mq_unique_tag_to_hwq() for legacy SCSI queues. Since this means
-> that the sdebug_mq_active variable is superfluous, remove it.
-
-Applied to 4.17/scsi-queue. Thanks!
+The patch description needs to go before the "---" separator. I fixed it
+up.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
