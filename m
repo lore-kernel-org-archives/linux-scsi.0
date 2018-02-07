@@ -1,288 +1,42 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH v2 1/3] scsi: aacraid: Implement DropIO sync command
-Date: Wed, 7 Feb 2018 08:40:56 -0800
-Message-ID: <20180207164058.29598-2-RaghavaAditya.Renukunta@microsemi.com>
-References: <20180207164058.29598-1-RaghavaAditya.Renukunta@microsemi.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V2 2/8] blk-mq: introduce BLK_MQ_F_GLOBAL_TAGS
+Date: Wed, 7 Feb 2018 16:59:24 +0000
+Message-ID: <1518022762.2870.20.camel@wdc.com>
+References: <20180205152035.15016-1-ming.lei@redhat.com>
+         <20180205152035.15016-3-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0068.outbound.protection.outlook.com ([104.47.36.68]:34357
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754378AbeBGQlO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 11:41:14 -0500
-In-Reply-To: <20180207164058.29598-1-RaghavaAditya.Renukunta@microsemi.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:26383 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754231AbeBGQ7a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 11:59:30 -0500
+In-Reply-To: <20180205152035.15016-3-ming.lei@redhat.com>
+Content-Language: en-US
+Content-ID: <EF0F674A2796384D8FE7F0DA79F5C122@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: Scott.Benesh@microsemi.com, esc-teamarcdriversvl@microsemi.com
+To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "pbonzini@redhat.com" <pbonzini@redhat.com>, "arun.easi@cavium.com" <arun.easi@cavium.com>, "osandov@fb.com" <osandov@fb.com>, "loberman@redhat.com" <loberman@redhat.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "peter.rivera@broadcom.com" <peter.rivera@broadcom.com>
 
-IOP_RESET takes longer time to complete, if controller
-is in a state where we can bring it back with init struct,
-controller DropIO sync command is implemented.
-
- - If controller is faulted perform standard IOP_RESET in aac_srcv_init.
- - If controller is not faulted get adapter properties and extended
-   properties.
- - Update the sa_firmware variable and determine if DropIO request is
-   supported.
- - Issue DropIO request, and get the number of outstanding commands.
- - If all commands are complete with success (CT_OK), consider IOP_RESET
-   is complete.
- - If any commands timeout, Perform the IOP_RESET.
-
-Signed-off-by: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
-
----
-Changes in V2:
-Re based on Linus Master
-
- drivers/scsi/aacraid/aacraid.h |   4 +
- drivers/scsi/aacraid/src.c     | 161 +++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 159 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 0095fcb..c3fdec9 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1528,6 +1528,7 @@ struct aac_bus_info_response {
- #define AAC_COMM_MESSAGE_TYPE3		5
- 
- #define AAC_EXTOPT_SA_FIRMWARE		cpu_to_le32(1<<1)
-+#define AAC_EXTOPT_SOFT_RESET		cpu_to_le32(1<<16)
- 
- /* MSIX context */
- struct aac_msix_ctx {
-@@ -1662,6 +1663,7 @@ struct aac_dev
- 	u8			raw_io_64;
- 	u8			printf_enabled;
- 	u8			in_reset;
-+	u8			in_soft_reset;
- 	u8			msi;
- 	u8			sa_firmware;
- 	int			management_fib_count;
-@@ -2504,6 +2506,7 @@ struct aac_hba_info {
- #define RCV_TEMP_READINGS		0x00000025
- #define GET_COMM_PREFERRED_SETTINGS	0x00000026
- #define IOP_RESET_FW_FIB_DUMP		0x00000034
-+#define DROP_IO			0x00000035
- #define IOP_RESET			0x00001000
- #define IOP_RESET_ALWAYS		0x00001001
- #define RE_INIT_ADAPTER		0x000000ee
-@@ -2539,6 +2542,7 @@ struct aac_hba_info {
- #define	FLASH_UPD_PENDING		0x00002000
- #define	FLASH_UPD_SUCCESS		0x00004000
- #define	FLASH_UPD_FAILED		0x00008000
-+#define	INVALID_OMR			0xffffffff
- #define	FWUPD_TIMEOUT			(5 * 60)
- 
- /*
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index fde6b6a..de48845 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -255,7 +255,8 @@ static int src_sync_cmd(struct aac_dev *dev, u32 command,
- 	 */
- 	src_writel(dev, MUnit.IDR, INBOUNDDOORBELL_0 << SRC_IDR_SHIFT);
- 
--	if (!dev->sync_mode || command != SEND_SYNCHRONOUS_FIB) {
-+	if ((!dev->sync_mode || command != SEND_SYNCHRONOUS_FIB) &&
-+		!dev->in_soft_reset) {
- 		ok = 0;
- 		start = jiffies;
- 
-@@ -992,6 +993,148 @@ int aac_src_init(struct aac_dev *dev)
- 	return -1;
- }
- 
-+static int aac_src_wait_sync(struct aac_dev *dev, int *status)
-+{
-+	unsigned long start = jiffies;
-+	unsigned long usecs = 0;
-+	int delay = 5 * HZ;
-+	int rc = 1;
-+
-+	while (time_before(jiffies, start+delay)) {
-+		/*
-+		 * Delay 5 microseconds to let Mon960 get info.
-+		 */
-+		udelay(5);
-+
-+		/*
-+		 * Mon960 will set doorbell0 bit when it has completed the
-+		 * command.
-+		 */
-+		if (aac_src_get_sync_status(dev) & OUTBOUNDDOORBELL_0) {
-+			/*
-+			 * Clear: the doorbell.
-+			 */
-+			if (dev->msi_enabled)
-+				aac_src_access_devreg(dev, AAC_CLEAR_SYNC_BIT);
-+			else
-+				src_writel(dev, MUnit.ODR_C,
-+					OUTBOUNDDOORBELL_0 << SRC_ODR_SHIFT);
-+			rc = 0;
-+
-+			break;
-+		}
-+
-+		/*
-+		 * Yield the processor in case we are slow
-+		 */
-+		usecs = 1 * USEC_PER_MSEC;
-+		usleep_range(usecs, usecs + 50);
-+	}
-+	/*
-+	 * Pull the synch status from Mailbox 0.
-+	 */
-+	if (status && !rc) {
-+		status[0] = readl(&dev->IndexRegs->Mailbox[0]);
-+		status[1] = readl(&dev->IndexRegs->Mailbox[1]);
-+		status[2] = readl(&dev->IndexRegs->Mailbox[2]);
-+		status[3] = readl(&dev->IndexRegs->Mailbox[3]);
-+		status[4] = readl(&dev->IndexRegs->Mailbox[4]);
-+	}
-+
-+	return rc;
-+}
-+
-+/**
-+ *  aac_src_soft_reset	-	perform soft reset to speed up
-+ *  access
-+ *
-+ *  Assumptions: That the controller is in a state where we can
-+ *  bring it back to life with an init struct. We can only use
-+ *  fast sync commands, as the timeout is 5 seconds.
-+ *
-+ *  @dev: device to configure
-+ *
-+ */
-+
-+static int aac_src_soft_reset(struct aac_dev *dev)
-+{
-+	u32 status_omr = src_readl(dev, MUnit.OMR);
-+	u32 status[5];
-+	int rc = 1;
-+	int state = 0;
-+	char *state_str[7] = {
-+		"GET_ADAPTER_PROPERTIES Failed",
-+		"GET_ADAPTER_PROPERTIES timeout",
-+		"SOFT_RESET not supported",
-+		"DROP_IO Failed",
-+		"DROP_IO timeout",
-+		"Check Health failed"
-+	};
-+
-+	if (status_omr == INVALID_OMR)
-+		return 1;       // pcie hosed
-+
-+	if (!(status_omr & KERNEL_UP_AND_RUNNING))
-+		return 1;       // not up and running
-+
-+	/*
-+	 * We go into soft reset mode to allow us to handle response
-+	 */
-+	dev->in_soft_reset = 1;
-+	dev->msi_enabled = status_omr & AAC_INT_MODE_MSIX;
-+
-+	/* Get adapter properties */
-+	rc = aac_adapter_sync_cmd(dev, GET_ADAPTER_PROPERTIES, 0, 0, 0,
-+		0, 0, 0, status+0, status+1, status+2, status+3, status+4);
-+	if (rc)
-+		goto out;
-+
-+	state++;
-+	if (aac_src_wait_sync(dev, status)) {
-+		rc = 1;
-+		goto out;
-+	}
-+
-+	state++;
-+	if (!(status[1] & le32_to_cpu(AAC_OPT_EXTENDED) &&
-+		(status[4] & le32_to_cpu(AAC_EXTOPT_SOFT_RESET)))) {
-+		rc = 2;
-+		goto out;
-+	}
-+
-+	if ((status[1] & le32_to_cpu(AAC_OPT_EXTENDED)) &&
-+		(status[4] & le32_to_cpu(AAC_EXTOPT_SA_FIRMWARE)))
-+		dev->sa_firmware = 1;
-+
-+	state++;
-+	rc = aac_adapter_sync_cmd(dev, DROP_IO, 0, 0, 0, 0, 0, 0,
-+		 status+0, status+1, status+2, status+3, status+4);
-+
-+	if (rc)
-+		goto out;
-+
-+	state++;
-+	if (aac_src_wait_sync(dev, status)) {
-+		rc = 3;
-+		goto out;
-+	}
-+
-+	if (status[1])
-+		dev_err(&dev->pdev->dev, "%s: %d outstanding I/O pending\n",
-+			__func__, status[1]);
-+
-+	state++;
-+	rc = aac_src_check_health(dev);
-+
-+out:
-+	dev->in_soft_reset = 0;
-+	dev->msi_enabled = 0;
-+	if (rc)
-+		dev_err(&dev->pdev->dev, "%s: %s status = %d", __func__,
-+			state_str[state], rc);
-+
-+return rc;
-+}
- /**
-  *  aac_srcv_init	-	initialize an SRCv card
-  *  @dev: device to configure
-@@ -1021,8 +1164,10 @@ int aac_srcv_init(struct aac_dev *dev)
- 
- 	if (dev->init_reset) {
- 		dev->init_reset = false;
--		if (!aac_src_restart_adapter(dev, 0, IOP_HWSOFT_RESET))
-+		if (aac_src_soft_reset(dev)) {
-+			aac_src_restart_adapter(dev, 0, IOP_HWSOFT_RESET);
- 			++restart;
-+		}
- 	}
- 
- 	/*
-@@ -1072,13 +1217,16 @@ int aac_srcv_init(struct aac_dev *dev)
- 		printk(KERN_ERR "%s%d: adapter monitor panic.\n", dev->name, instance);
- 		goto error_iounmap;
- 	}
-+
- 	start = jiffies;
- 	/*
- 	 *	Wait for the adapter to be up and running. Wait up to 3 minutes
- 	 */
--	while (!((status = src_readl(dev, MUnit.OMR)) &
--		KERNEL_UP_AND_RUNNING) ||
--		status == 0xffffffff) {
-+	do {
-+		status = src_readl(dev, MUnit.OMR);
-+		if (status == INVALID_OMR)
-+			status = 0;
-+
- 		if ((restart &&
- 		  (status & (KERNEL_PANIC|SELF_TEST_FAILED|MONITOR_PANIC))) ||
- 		  time_after(jiffies, start+HZ*startup_timeout)) {
-@@ -1098,7 +1246,8 @@ int aac_srcv_init(struct aac_dev *dev)
- 			++restart;
- 		}
- 		msleep(1);
--	}
-+	} while (!(status & KERNEL_UP_AND_RUNNING));
-+
- 	if (restart && aac_commit)
- 		aac_commit = 1;
- 	/*
--- 
-2.9.4
+T24gTW9uLCAyMDE4LTAyLTA1IGF0IDIzOjIwICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gZGlm
+ZiAtLWdpdCBhL2Jsb2NrL2Jsay1tcS1zY2hlZC5jIGIvYmxvY2svYmxrLW1xLXNjaGVkLmMNCj4g
+aW5kZXggNTVjMGE3NDViNDI3Li4zODViYmVjNzM4MDQgMTAwNjQ0DQo+IC0tLSBhL2Jsb2NrL2Js
+ay1tcS1zY2hlZC5jDQo+ICsrKyBiL2Jsb2NrL2Jsay1tcS1zY2hlZC5jDQo+IEBAIC04MSw2ICs4
+MSwxNyBAQCBzdGF0aWMgYm9vbCBibGtfbXFfc2NoZWRfcmVzdGFydF9oY3R4KHN0cnVjdCBibGtf
+bXFfaHdfY3R4ICpoY3R4KQ0KPiAgCX0gZWxzZQ0KPiAgCQljbGVhcl9iaXQoQkxLX01RX1NfU0NI
+RURfUkVTVEFSVCwgJmhjdHgtPnN0YXRlKTsNCj4gIA0KPiArCS8qIG5lZWQgdG8gcmVzdGFydCBh
+bGwgaHcgcXVldWVzIGZvciBnbG9iYWwgdGFncyAqLw0KPiArCWlmIChoY3R4LT5mbGFncyAmIEJM
+S19NUV9GX0dMT0JBTF9UQUdTKSB7DQo+ICsJCXN0cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4MjsN
+Cj4gKwkJaW50IGk7DQo+ICsNCj4gKwkJcXVldWVfZm9yX2VhY2hfaHdfY3R4KGhjdHgtPnF1ZXVl
+LCBoY3R4MiwgaSkNCj4gKwkJCWlmIChibGtfbXFfcnVuX2h3X3F1ZXVlKGhjdHgyLCB0cnVlKSkN
+Cj4gKwkJCQlyZXR1cm4gdHJ1ZTsNCj4gKwkJcmV0dXJuIGZhbHNlOw0KPiArCX0NCj4gKw0KPiAg
+CXJldHVybiBibGtfbXFfcnVuX2h3X3F1ZXVlKGhjdHgsIHRydWUpOw0KPiAgfQ0KDQpUaGlzIG5l
+dyBsb29wIGxvb2tzIG1pc3BsYWNlZCB0byBtZS4gSWYgYm90aCB0aGUgQkxLX01RX0ZfR0xPQkFM
+X1RBR1MgYW5kIHRoZQ0KQkxLX01RX0ZfVEFHX1NIQVJFRCBmbGFncyBhcmUgc2V0IHRoZW4gdGhl
+IG91dGVyIGxvb3AgaW4gYmxrX21xX3NjaGVkX3Jlc3RhcnQoKQ0KYW5kIHRoZSBpbm5lciBsb29w
+IGluIGJsa19tcV9zY2hlZF9yZXN0YXJ0X2hjdHgoKSB3aWxsIGNhdXNlIG1vcmUgY2FsbHMgb2YN
+CmJsa19tcV9ydW5faHdfcXVldWUoKSB0aGFuIG5lY2Vzc2FyeS4gSGF2ZSB5b3UgY29uc2lkZXJl
+ZCB0byBtZXJnZSB0aGUgYWJvdmUNCmxvb3AgaW50byBibGtfbXFfc2NoZWRfcmVzdGFydCgpPw0K
+DQpUaGFua3MsDQoNCkJhcnQuDQoNCg0K
