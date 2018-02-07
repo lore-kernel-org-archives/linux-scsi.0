@@ -1,27 +1,56 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 03/13] lpfc: Add SLI-4 if_type=6 support to the code
- base
-Date: Wed, 7 Feb 2018 10:17:09 +0100
-Message-ID: <20180207091709.z3wdcgeqrcygr7sb@linux-x5ow.site>
+Subject: Re: [PATCH v2 04/13] lpfc: Add push-to-adapter support to sli4
+Date: Wed, 7 Feb 2018 10:51:57 +0100
+Message-ID: <20180207095157.zejjbq6a7eeqmosx@linux-x5ow.site>
 References: <20180207022851.11800-1-jsmart2021@gmail.com>
- <20180207022851.11800-4-jsmart2021@gmail.com>
+ <20180207022851.11800-5-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47569 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50371 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753117AbeBGJRK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 04:17:10 -0500
+        id S1751269AbeBGJv7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Feb 2018 04:51:59 -0500
 Content-Disposition: inline
-In-Reply-To: <20180207022851.11800-4-jsmart2021@gmail.com>
+In-Reply-To: <20180207022851.11800-5-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> +	if ((if_type == LPFC_SLI_INTF_IF_TYPE_6) &&
+> +	    (pci_resource_start(pdev, PCI_64BIT_BAR4))) {
+
+The above contains a lot of unneeded parenthesis.
+
+[...]
+
+> +			/* Enable combined writes for DPP aperture */
+> +			pg_addr = (unsigned long)(wq->dpp_regaddr) & PAGE_MASK;
+> +#ifdef CONFIG_X86
+> +			rc = set_memory_wc(pg_addr, 1);
+> +			if (rc) {
+> +				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+> +						"3272 Cannot setup Combined "
+> +						"Write on WQ[%d] - disable DPP\n",
+> +						wq->queue_id);
+> +				phba->cfg_enable_dpp = 0;
+> +			}
+> +#else
+> +			phba->cfg_enable_dpp = 0;
+> +#endif
+> +		} else
+> +			wq->db_regaddr = phba->sli4_hba.WQDBregaddr;
+
+I don't really like the set_memory_wc() call here. Neither do I like the ifdef
+CONFIG_X86 special casing.
+
+If you really need write combining, can't you at least use ioremap_wc()?
+
+Thanks,
+	Johannes
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
