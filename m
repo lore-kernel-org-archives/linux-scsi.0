@@ -1,27 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_debug: Add two new parameters to scsi_debug driver
-Date: Tue, 06 Feb 2018 20:20:26 -0500
-Message-ID: <yq1bmh11tph.fsf@oracle.com>
-References: <1517683115-4690-1-git-send-email-loberman@redhat.com>
+Subject: Re: [PATCH] scsi: libfc: remove redundant initialization of 'disc'
+Date: Tue, 06 Feb 2018 20:26:23 -0500
+Message-ID: <yq1y3k5zj28.fsf@oracle.com>
+References: <20180206142157.32001-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55388 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754189AbeBGBUe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 20:20:34 -0500
-In-Reply-To: <1517683115-4690-1-git-send-email-loberman@redhat.com> (Laurence
-        Oberman's message of "Sat, 3 Feb 2018 13:38:35 -0500")
+Received: from userp2120.oracle.com ([156.151.31.85]:42296 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754189AbeBGB0c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 20:26:32 -0500
+In-Reply-To: <20180206142157.32001-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 6 Feb 2018 14:21:57 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
-Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com
+To: Colin King <colin.king@canonical.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Laurence,
+Colin,
 
-The patch description needs to go before the "---" separator. I fixed it
-up.
+> Pointer disc is being intializated a value that is never read and then
+> re-assigned the same value later on, hence the initialization is redundant
+> and can be removed.
+
+Applied to 4.17/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
