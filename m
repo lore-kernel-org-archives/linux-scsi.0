@@ -1,153 +1,247 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [V1 3/6] mpt3sas: Introduce API's to get BAR0 mapped buffer  address.
-Date: Wed,  7 Feb 2018 02:51:47 -0800
-Message-ID: <1518000710-17256-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [V1 5/6] mpt3sas: Introduce function to clone mpi request.
+Date: Wed,  7 Feb 2018 02:51:49 -0800
+Message-ID: <1518000710-17256-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:37710 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753785AbeBGKwR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 05:52:17 -0500
-Received: by mail-qt0-f195.google.com with SMTP id s27so607398qts.4
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2018 02:52:16 -0800 (PST)
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:43361 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753614AbeBGKwX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 05:52:23 -0500
+Received: by mail-qt0-f193.google.com with SMTP id m11so591708qtn.10
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2018 02:52:23 -0800 (PST)
 In-Reply-To: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-For MPI Endpoint/Mcpu, Driver should double buffer data buffer/sgl's.
- This is normally copied from host to internal memory of IOC by
- DMA engine of PCI Device. Since the interface to DMA from host
- to mCPU is not present for Mcpu/MPI Endpoint device,
- Driver does double copy of those buffer directly to the mCPU
- memory region via BAR-0 region.
+1) Added function _base_clone_mpi_to_sys_mem to clone
+MPI request into system BAR0 mapped region.
 
- Introduced API's to calculate and return BAR0 mapped
- host buffer's physical and virtual address for the provided smid
+2) Separate out MPI Endpoint IO submissions to function
+_base_put_smid_mpi_ep_scsi_io.
+
+3) MPI EP requests are submitted in two 32 bit MMIO writes.
+from _base_mpi_ep_writeq.
+
+ For 32 bit Arch,_base_writeq function is identical
+to _base_mpi_ep_writeq, Removed duplicate code as suggested.
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 93 +++++++++++++++++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_base.h |  2 +
- 2 files changed, 95 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 140 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 125 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index f45da9a..36f1242 100644
+index c41c65b..52effd1 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -126,6 +126,99 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
+@@ -126,6 +126,25 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
  	param_get_int, &mpt3sas_fwfault_debug, 0644);
  
  /**
-+ * _base_get_chain - Calculates and Returns virtual chain address
-+ *			 for the provided smid in BAR0 space.
++ * _base_clone_mpi_to_sys_mem - Writes/copies MPI frames
++ *				to system/BAR0 region.
 + *
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ * @sge_chain_count: Scatter gather chain count.
-+ *
-+ * @Return: chain address.
++ * @dst_iomem: Pointer to the destinaltion location in BAR0 space.
++ * @src: Pointer to the Source data.
++ * @size: Size of data to be copied.
 + */
-+static inline void __iomem*
-+_base_get_chain(struct MPT3SAS_ADAPTER *ioc, u16 smid,
-+		u8 sge_chain_count)
++static void
++_base_clone_mpi_to_sys_mem(void *dst_iomem, void *src, u32 size)
 +{
-+	void __iomem *base_chain, *chain_virt;
-+	u16 cmd_credit = ioc->facts.RequestCredit + 1;
++	int i;
++	u32 *src_virt_mem = (u32 *)src;
 +
-+	base_chain  = (void __iomem *)ioc->chip + MPI_FRAME_START_OFFSET +
-+		(cmd_credit * ioc->request_sz) +
-+		REPLY_FREE_POOL_SIZE;
-+	chain_virt = base_chain + (smid * ioc->facts.MaxChainDepth *
-+			ioc->request_sz) + (sge_chain_count * ioc->request_sz);
-+	return chain_virt;
++	for (i = 0; i < size/4; i++)
++		writel((u32)src_virt_mem[i],
++				(void __iomem *)dst_iomem + (i * 4));
 +}
 +
 +/**
-+ * _base_get_chain_phys - Calculates and Returns physical address
-+ *			in BAR0 for scatter gather chains, for
-+ *			the provided smid.
-+ *
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ * @sge_chain_count: Scatter gather chain count.
-+ *
-+ * @Return - Physical chain address.
-+ */
-+static inline void *
-+_base_get_chain_phys(struct MPT3SAS_ADAPTER *ioc, u16 smid,
-+		u8 sge_chain_count)
-+{
-+	void *base_chain_phys, *chain_phys;
-+	u16 cmd_credit = ioc->facts.RequestCredit + 1;
-+
-+	base_chain_phys  = (void *)ioc->chip_phys + MPI_FRAME_START_OFFSET +
-+		(cmd_credit * ioc->request_sz) +
-+		REPLY_FREE_POOL_SIZE;
-+	chain_phys = base_chain_phys + (smid * ioc->facts.MaxChainDepth *
-+			ioc->request_sz) + (sge_chain_count * ioc->request_sz);
-+	return chain_phys;
-+}
-+
-+/**
-+ * _base_get_buffer_bar0 - Calculates and Returns BAR0 mapped Host
-+ *			buffer address for the provided smid.
-+ *			(Each smid can have 64K starts from 17024)
-+ *
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * @Returns - Pointer to buffer location in BAR0.
-+ */
-+
-+static void __iomem *
-+_base_get_buffer_bar0(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-+{
-+	u16 cmd_credit = ioc->facts.RequestCredit + 1;
-+	// Added extra 1 to reach end of chain.
-+	void __iomem *chain_end = _base_get_chain(ioc,
-+			cmd_credit + 1,
-+			ioc->facts.MaxChainDepth);
-+	return chain_end + (smid * 64 * 1024);
-+}
-+
-+/**
-+ * _base_get_buffer_phys_bar0 - Calculates and Returns BAR0 mapped
-+ *		Host buffer Physical address for the provided smid.
-+ *		(Each smid can have 64K starts from 17024)
-+ *
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * @Returns - Pointer to buffer location in BAR0.
-+ */
-+static void *
-+_base_get_buffer_phys_bar0(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-+{
-+	u16 cmd_credit = ioc->facts.RequestCredit + 1;
-+	void *chain_end_phys = _base_get_chain_phys(ioc,
-+			cmd_credit + 1,
-+			ioc->facts.MaxChainDepth);
-+	return chain_end_phys + (smid * 64 * 1024);
-+}
-+
-+/**
-  *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead ioc
-  * @arg: input argument, used to derive ioc
+  * _base_clone_to_sys_mem - Writes/copies data to system/BAR0 region
   *
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 897394d..2529d25 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -120,6 +120,8 @@
- #define MPT3SAS_NVME_QUEUE_DEPTH	128
- #define MPT_NAME_LENGTH			32	/* generic length of strings */
- #define MPT_STRING_LENGTH		64
-+#define MPI_FRAME_START_OFFSET		256
-+#define REPLY_FREE_POOL_SIZE		512 /*(32 maxcredix *4)*(4 times)*/
+  * @dst_iomem: Pointer to the destinaltion location in BAR0 space.
+@@ -3268,6 +3287,29 @@ mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ }
  
- #define MPT_MAX_CALLBACKS		32
+ /**
++ * _base_mpi_ep_writeq - 32 bit write to MMIO
++ * @b: data payload
++ * @addr: address in MMIO space
++ * @writeq_lock: spin lock
++ *
++ * This special handling for MPI EP to take care of 32 bit
++ * environment where its not quarenteed to send the entire word
++ * in one transfer.
++ */
++static inline void
++_base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr,
++					spinlock_t *writeq_lock)
++{
++	unsigned long flags;
++	__u64 data_out = cpu_to_le64(b);
++
++	spin_lock_irqsave(writeq_lock, flags);
++	writel((u32)(data_out), addr);
++	writel((u32)(data_out >> 32), (addr + 4));
++	spin_unlock_irqrestore(writeq_lock, flags);
++}
++
++/**
+  * _base_writeq - 64 bit write to MMIO
+  * @ioc: per adapter object
+  * @b: data payload
+@@ -3288,17 +3330,41 @@ _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
+ static inline void
+ _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
+ {
+-	unsigned long flags;
+-	__u64 data_out = cpu_to_le64(b);
+-
+-	spin_lock_irqsave(writeq_lock, flags);
+-	writel((u32)(data_out), addr);
+-	writel((u32)(data_out >> 32), (addr + 4));
+-	spin_unlock_irqrestore(writeq_lock, flags);
++	_base_mpi_ep_writeq(b, addr, writeq_lock);
+ }
+ #endif
  
+ /**
++ * _base_put_smid_mpi_ep_scsi_io - send SCSI_IO request to firmware
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @handle: device handle
++ *
++ * Return nothing.
++ */
++static void
++_base_put_smid_mpi_ep_scsi_io(struct MPT3SAS_ADAPTER *ioc, u16 smid, u16 handle)
++{
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
++	void *mpi_req_iomem;
++	__le32 *mfp = (__le32 *)mpt3sas_base_get_msg_frame(ioc, smid);
++
++	_clone_sg_entries(ioc, (void *) mfp, smid);
++	mpi_req_iomem = (void *)ioc->chip +
++			MPI_FRAME_START_OFFSET + (smid * ioc->request_sz);
++	_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
++					ioc->request_sz);
++	descriptor.SCSIIO.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO;
++	descriptor.SCSIIO.MSIxIndex =  _base_get_msix_index(ioc);
++	descriptor.SCSIIO.SMID = cpu_to_le16(smid);
++	descriptor.SCSIIO.DevHandle = cpu_to_le16(handle);
++	descriptor.SCSIIO.LMID = 0;
++	_base_mpi_ep_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
++}
++
++/**
+  * _base_put_smid_scsi_io - send SCSI_IO request to firmware
+  * @ioc: per adapter object
+  * @smid: system request message index
+@@ -3359,7 +3425,23 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	u16 msix_task)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+-	u64 *request = (u64 *)&descriptor;
++	void *mpi_req_iomem;
++	u64 *request;
++
++	if (ioc->is_mcpu_endpoint) {
++		MPI2RequestHeader_t *request_hdr;
++
++		__le32 *mfp = (__le32 *)mpt3sas_base_get_msg_frame(ioc, smid);
++
++		request_hdr = (MPI2RequestHeader_t *)mfp;
++		/* TBD 256 is offset within sys register. */
++		mpi_req_iomem = (void *)ioc->chip + MPI_FRAME_START_OFFSET
++					+ (smid * ioc->request_sz);
++		_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
++							ioc->request_sz);
++	}
++
++	request = (u64 *)&descriptor;
+ 
+ 	descriptor.HighPriority.RequestFlags =
+ 	    MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY;
+@@ -3367,8 +3449,13 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	descriptor.HighPriority.SMID = cpu_to_le16(smid);
+ 	descriptor.HighPriority.LMID = 0;
+ 	descriptor.HighPriority.Reserved1 = 0;
+-	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
+-	    &ioc->scsi_lookup_lock);
++	if (ioc->is_mcpu_endpoint)
++		_base_mpi_ep_writeq(*request,
++				&ioc->chip->RequestDescriptorPostLow,
++				&ioc->scsi_lookup_lock);
++	else
++		_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++		    &ioc->scsi_lookup_lock);
+ }
+ 
+ /**
+@@ -3406,15 +3493,35 @@ static void
+ _base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+-	u64 *request = (u64 *)&descriptor;
++	void *mpi_req_iomem;
++	u64 *request;
++	MPI2RequestHeader_t *request_hdr;
++
++	if (ioc->is_mcpu_endpoint) {
++		__le32 *mfp = (__le32 *)mpt3sas_base_get_msg_frame(ioc, smid);
++
++		request_hdr = (MPI2RequestHeader_t *)mfp;
+ 
++		_clone_sg_entries(ioc, (void *) mfp, smid);
++		/* TBD 256 is offset within sys register */
++		mpi_req_iomem = (void *)ioc->chip +
++			MPI_FRAME_START_OFFSET + (smid * ioc->request_sz);
++		_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
++							ioc->request_sz);
++	}
++	request = (u64 *)&descriptor;
+ 	descriptor.Default.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_DEFAULT_TYPE;
+ 	descriptor.Default.MSIxIndex =  _base_get_msix_index(ioc);
+ 	descriptor.Default.SMID = cpu_to_le16(smid);
+ 	descriptor.Default.LMID = 0;
+ 	descriptor.Default.DescriptorTypeDependent = 0;
+-	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
+-	    &ioc->scsi_lookup_lock);
++	if (ioc->is_mcpu_endpoint)
++		_base_mpi_ep_writeq(*request,
++				&ioc->chip->RequestDescriptorPostLow,
++				&ioc->scsi_lookup_lock);
++	else
++		_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++				&ioc->scsi_lookup_lock);
+ }
+ 
+ /**
+@@ -3508,7 +3615,7 @@ _base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ 
+ /**
+  * _base_put_smid_default - Default, primarily used for config pages
+- *				use Atomic Request Descriptor
++ * use Atomic Request Descriptor
+  * @ioc: per adapter object
+  * @smid: system request message index
+  *
+@@ -6333,7 +6440,10 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap_atomic;
+ 	} else {
+ 		ioc->put_smid_default = &_base_put_smid_default;
+-		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
++		if (ioc->is_mcpu_endpoint)
++			ioc->put_smid_scsi_io = &_base_put_smid_mpi_ep_scsi_io;
++		else
++			ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
+ 		ioc->put_smid_fast_path = &_base_put_smid_fast_path;
+ 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority;
+ 		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap;
 -- 
 2.5.5
