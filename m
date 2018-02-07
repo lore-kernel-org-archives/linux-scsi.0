@@ -1,92 +1,110 @@
-From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [V1 6/6] mpt3sas: Introduce function to clone mpi reply.
-Date: Wed,  7 Feb 2018 02:51:50 -0800
-Message-ID: <1518000710-17256-7-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [LSF/MM TOPIC] Two blk-mq related topics
+Date: Wed, 7 Feb 2018 10:55:03 +0000
+Message-ID: <712f97fe-633a-3e4c-8ae0-c8c1bbbb16c6@huawei.com>
+References: <20180129154455.GB17176@ming.t460p>
+ <1517259390.3969.41.camel@HansenPartnership.com>
+ <20180130012408.GD17176@ming.t460p>
+ <f2cf73ae-d645-6a04-5190-3d0cc91c4581@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:43212 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753840AbeBGKw0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 05:52:26 -0500
-Received: by mail-qk0-f193.google.com with SMTP id y204so481387qkb.10
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2018 02:52:26 -0800 (PST)
-In-Reply-To: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Received: from szxga06-in.huawei.com ([45.249.212.32]:34391 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753478AbeBGKz1 (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+        Wed, 7 Feb 2018 05:55:27 -0500
+In-Reply-To: <f2cf73ae-d645-6a04-5190-3d0cc91c4581@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+To: Ming Lei <ming.lei@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-block@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-nvme@lists.infradead.org, Linux-scsi@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
 
-If the posted request has an error of any type, the IOC writes
-a Reply message into a host-based system reply message frame.
-This functions clone it in the BAR0 mapped region.
+On 30/01/2018 10:33, John Garry wrote:
+> On 30/01/2018 01:24, Ming Lei wrote:
+>> On Mon, Jan 29, 2018 at 12:56:30PM -0800, James Bottomley wrote:
+>>> On Mon, 2018-01-29 at 23:46 +0800, Ming Lei wrote:
+>>> [...]
+>>>> 2. When to enable SCSI_MQ at default again?
+>>>
+>>> I'm not sure there's much to discuss ... I think the basic answer is as
+>>> soon as Christoph wants to try it again.
+>>
+>> I guess Christoph still need to evaluate if there are existed issues or
+>> blockers before trying it again. And more input may be got from F2F
+>> discussion, IMHO.
+>>
+>>>
+>>>> SCSI_MQ is enabled on V3.17 firstly, but disabled at default. In
+>>>> V4.13-rc1, it is enabled at default, but later the patch is reverted
+>>>> in V4.13-rc7, and becomes disabled at default too.
+>>>>
+>>>> Now both the original reported PM issue(actually SCSI quiesce) and
+>>>> the sequential IO performance issue have been addressed.
+>>>
+>>> Is the blocker bug just not closed because no-one thought to do it:
+>>>
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=178381
+>>>
+>>> (we have confirmed that this issue is now fixed with the original
+>>> reporter?)
+>>
+>>> From a developer view, this issue is fixed by the following commit:
+>> 3a0a52997(block, scsi: Make SCSI quiesce and resume work reliably),
+>> and it is verified by kernel list reporter.
+>>
+>>>
+>>> And did the Huawei guy (Jonathan Cameron) confirm his performance issue
+>>> was fixed (I don't think I saw email that he did)?
+>>
+>> Last time I talked with John Garry about the issue, and the merged
+>> .get_budget
+>> based patch improves much on the IO performance, but there is still a
+>> bit gap
+>> compared with legacy path. Seems a driver specific issue, remembered
+>> that removing
+>> a driver's lock can improve performance much.
+>>
+>> Garry, could you provide further update on this issue?
+>
+> Hi Ming,
+>
+> From our testing with experimental changes to our driver to support SCSI
+> mq we were almost getting on par performance with legacy path. But
+> without these MQ was hitting performance (and I would not necessarily
+> say it was a driver issue).
+>
+> We can retest from today's mainline and see where we are.
+>
+> BTW, Have you got performance figures for many other single queue HBAs
+> with and without CONFIG_SCSI_MQ_DEFAULT=Y?
 
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 37 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 36 insertions(+), 1 deletion(-)
+We finally got around to retesting this (on hisi_sas controller). So the 
+results are generally ok, in that we are now not seeing such big 
+performance drops in our hardware for enabling SCSI MQ - in some 
+scenarios the performance is better. Generally fio rw mode is better.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 52effd1..1c29286 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -126,6 +126,33 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
- 	param_get_int, &mpt3sas_fwfault_debug, 0644);
- 
- /**
-+ * _base_clone_reply_to_sys_mem - copies reply to reply free iomem
-+ *				  in BAR0 space.
-+ *
-+ * @ioc: per adapter object
-+ * @reply: reply message frame(lower 32bit addr)
-+ * @index: System request message index.
-+ *
-+ * @Returns - Nothing
-+ */
-+static void
-+_base_clone_reply_to_sys_mem(struct MPT3SAS_ADAPTER *ioc, u32 reply,
-+		u32 index)
-+{
-+	/*
-+	 * 256 is offset within sys register.
-+	 * 256 offset MPI frame starts. Max MPI frame supported is 32.
-+	 * 32 * 128 = 4K. From here, Clone of reply free for mcpu starts
-+	 */
-+	u16 cmd_credit = ioc->facts.RequestCredit + 1;
-+	void __iomem *reply_free_iomem = (void __iomem *)ioc->chip +
-+			MPI_FRAME_START_OFFSET +
-+			(cmd_credit * ioc->request_sz) + (index * sizeof(u32));
-+
-+	writel(reply, reply_free_iomem);
-+}
-+
-+/**
-  * _base_clone_mpi_to_sys_mem - Writes/copies MPI frames
-  *				to system/BAR0 region.
-  *
-@@ -1400,6 +1427,10 @@ _base_interrupt(int irq, void *bus_id)
- 				    0 : ioc->reply_free_host_index + 1;
- 				ioc->reply_free[ioc->reply_free_host_index] =
- 				    cpu_to_le32(reply);
-+				if (ioc->is_mcpu_endpoint)
-+					_base_clone_reply_to_sys_mem(ioc,
-+						cpu_to_le32(reply),
-+						ioc->reply_free_host_index);
- 				writel(ioc->reply_free_host_index,
- 				    &ioc->chip->ReplyFreeHostIndex);
- 			}
-@@ -6242,8 +6273,12 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
- 	/* initialize Reply Free Queue */
- 	for (i = 0, reply_address = (u32)ioc->reply_dma ;
- 	    i < ioc->reply_free_queue_depth ; i++, reply_address +=
--	    ioc->reply_sz)
-+	    ioc->reply_sz) {
- 		ioc->reply_free[i] = cpu_to_le32(reply_address);
-+		if (ioc->is_mcpu_endpoint)
-+			_base_clone_reply_to_sys_mem(ioc,
-+					(__le32)reply_address, i);
-+	}
- 
- 	/* initialize reply queues */
- 	if (ioc->is_driver_loading)
--- 
-2.5.5
+Anyway, for what it's worth, it's a green light from us to set SCSI MQ 
+on by default.
+
+John
+
+>
+> Thanks,
+> John
+>
+>>
+>> Thanks,
+>> Ming
+>>
+>> .
+>>
+>
+>
+> _______________________________________________
+> Linuxarm mailing list
+> Linuxarm@huawei.com
+> http://hulk.huawei.com/mailman/listinfo/linuxarm
+>
+> .
+>
