@@ -1,304 +1,174 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [V1 4/6] mpt3sas: Introduce Base function for cloning.
-Date: Wed,  7 Feb 2018 02:51:48 -0800
-Message-ID: <1518000710-17256-5-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [V1 0/6] mpt3sas: Adding MPI Endpoint device support.
+Date: Wed,  7 Feb 2018 02:51:44 -0800
+Message-ID: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:39304 "EHLO
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35532 "EHLO
         mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753913AbeBGKwU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 05:52:20 -0500
-Received: by mail-qt0-f196.google.com with SMTP id f4so599884qtj.6
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2018 02:52:20 -0800 (PST)
-In-Reply-To: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        with ESMTP id S1753905AbeBGKwH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 05:52:07 -0500
+Received: by mail-qt0-f196.google.com with SMTP id g14so612926qti.2
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2018 02:52:07 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-All scsi IO's and config requests data buffer and
-sgl are cloned to system memory in _clone_sg_entries
-before submitting it to Firmware.
+V1 Change info:
 
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c   | 215 +++++++++++++++++++++++++++++++++-
- drivers/scsi/mpt3sas/mpt3sas_base.h   |   3 +
- drivers/scsi/mpt3sas/mpt3sas_config.c |   1 +
- 3 files changed, 218 insertions(+), 1 deletion(-)
+* Few sparse warning fixes over initial patch set.
+* For 32 bit Arch,_base_writeq function is identical
+to _base_mpi_ep_writeq, Removed duplicate code as suggested by Martin.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 36f1242..c41c65b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -126,6 +126,24 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
- 	param_get_int, &mpt3sas_fwfault_debug, 0644);
- 
- /**
-+ * _base_clone_to_sys_mem - Writes/copies data to system/BAR0 region
-+ *
-+ * @dst_iomem: Pointer to the destinaltion location in BAR0 space.
-+ * @src: Pointer to the Source data.
-+ * @size: Size of data to be copied.
-+ */
-+static void
-+_base_clone_to_sys_mem(void __iomem *dst_iomem, void *src, u32 size)
-+{
-+	int i;
-+	u32 *src_virt_mem = (u32 *)(src);
-+
-+	for (i = 0; i < size/4; i++)
-+		writel((u32)src_virt_mem[i],
-+			(void __iomem *)dst_iomem + (i * 4));
-+}
-+
-+/**
-  * _base_get_chain - Calculates and Returns virtual chain address
-  *			 for the provided smid in BAR0 space.
-  *
-@@ -219,6 +237,201 @@ _base_get_buffer_phys_bar0(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- }
- 
- /**
-+ * _base_get_chain_buffer_dma_to_chain_buffer - Iterates chain
-+ *			lookup list and Provides chain_buffer
-+ *			address for the matching dma address.
-+ *			(Each smid can have 64K starts from 17024)
-+ *
-+ * @ioc: per adapter object
-+ * @chain_buffer_dma: Chain buffer dma address.
-+ *
-+ * @Returns - Pointer to chain buffer. Or Null on Failure.
-+ */
-+static void *
-+_base_get_chain_buffer_dma_to_chain_buffer(struct MPT3SAS_ADAPTER *ioc,
-+		dma_addr_t chain_buffer_dma)
-+{
-+	u16 index;
-+
-+	for (index = 0; index < ioc->chain_depth; index++) {
-+		if (ioc->chain_lookup[index].chain_buffer_dma ==
-+				chain_buffer_dma)
-+			return ioc->chain_lookup[index].chain_buffer;
-+	}
-+	pr_info(MPT3SAS_FMT
-+	    "Provided chain_buffer_dma address is not in the lookup list\n",
-+	    ioc->name);
-+	return NULL;
-+}
-+
-+/**
-+ * _clone_sg_entries -	MPI EP's scsiio and config requests
-+ *			are handled here. Base function for
-+ *			double buffering, before submitting
-+ *			the requests.
-+ *
-+ * @ioc: per adapter object.
-+ * @mpi_request: mf request pointer.
-+ * @smid: system request message index.
-+ *
-+ * @Returns: Nothing.
-+ */
-+static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
-+		void *mpi_request, u16 smid)
-+{
-+	Mpi2SGESimple32_t *sgel, *sgel_next;
-+	u32  sgl_flags, sge_chain_count = 0;
-+	bool is_write = 0;
-+	u16 i = 0;
-+	void __iomem *buffer_iomem;
-+	void  *buffer_iomem_phys;
-+	void __iomem *buff_ptr;
-+	void *buff_ptr_phys;
-+	void __iomem *dst_chain_addr[MCPU_MAX_CHAINS_PER_IO];
-+	void *src_chain_addr[MCPU_MAX_CHAINS_PER_IO], *dst_addr_phys;
-+	MPI2RequestHeader_t *request_hdr;
-+	struct scsi_cmnd *scmd;
-+	struct scatterlist *sg_scmd = NULL;
-+	int is_scsiio_req = 0;
-+
-+	request_hdr = (MPI2RequestHeader_t *) mpi_request;
-+
-+	if (request_hdr->Function == MPI2_FUNCTION_SCSI_IO_REQUEST) {
-+		Mpi25SCSIIORequest_t *scsiio_request =
-+			(Mpi25SCSIIORequest_t *)mpi_request;
-+		sgel = (Mpi2SGESimple32_t *) &scsiio_request->SGL;
-+		is_scsiio_req = 1;
-+	} else if (request_hdr->Function == MPI2_FUNCTION_CONFIG) {
-+		Mpi2ConfigRequest_t  *config_req =
-+			(Mpi2ConfigRequest_t *)mpi_request;
-+		sgel = (Mpi2SGESimple32_t *) &config_req->PageBufferSGE;
-+	} else
-+		return;
-+
-+	/* From smid we can get scsi_cmd, once we have sg_scmd,
-+	 * we just need to get sg_virt and sg_next to get virual
-+	 * address associated with sgel->Address.
-+	 */
-+
-+	if (is_scsiio_req) {
-+		/* Get scsi_cmd using smid */
-+		scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
-+		if (scmd == NULL) {
-+			pr_err(MPT3SAS_FMT "scmd is NULL\n", ioc->name);
-+			return;
-+		}
-+
-+		/* Get sg_scmd from scmd provided */
-+		sg_scmd = scsi_sglist(scmd);
-+	}
-+
-+	/*
-+	 * 0 - 255	System register
-+	 * 256 - 4352	MPI Frame. (This is based on maxCredit 32)
-+	 * 4352 - 4864	Reply_free pool (512 byte is reserved
-+	 *		considering maxCredit 32. Reply need extra
-+	 *		room, for mCPU case kept four times of
-+	 *		maxCredit).
-+	 * 4864 - 17152	SGE chain element. (32cmd * 3 chain of
-+	 *		128 byte size = 12288)
-+	 * 17152 - x	Host buffer mapped with smid.
-+	 *		(Each smid can have 64K Max IO.)
-+	 * BAR0+Last 1K MSIX Addr and Data
-+	 * Total size in use 2113664 bytes of 4MB BAR0
-+	 */
-+
-+	buffer_iomem = _base_get_buffer_bar0(ioc, smid);
-+	buffer_iomem_phys = _base_get_buffer_phys_bar0(ioc, smid);
-+
-+	buff_ptr = buffer_iomem;
-+	buff_ptr_phys = buffer_iomem_phys;
-+
-+	if (sgel->FlagsLength &
-+			(MPI2_SGE_FLAGS_HOST_TO_IOC << MPI2_SGE_FLAGS_SHIFT))
-+		is_write = 1;
-+
-+	for (i = 0; i < MPT_MIN_PHYS_SEGMENTS + ioc->facts.MaxChainDepth; i++) {
-+
-+		sgl_flags = (sgel->FlagsLength >> MPI2_SGE_FLAGS_SHIFT);
-+
-+		switch (sgl_flags & MPI2_SGE_FLAGS_ELEMENT_MASK) {
-+		case MPI2_SGE_FLAGS_CHAIN_ELEMENT:
-+			/*
-+			 * Helper function which on passing
-+			 * chain_buffer_dma returns chain_buffer. Get
-+			 * the virtual address for sgel->Address
-+			 */
-+			sgel_next =
-+				_base_get_chain_buffer_dma_to_chain_buffer(ioc,
-+						sgel->Address);
-+			if (sgel_next == NULL)
-+				return;
-+			/*
-+			 * This is coping 128 byte chain
-+			 * frame (not a host buffer)
-+			 */
-+			dst_chain_addr[sge_chain_count] =
-+				_base_get_chain(ioc,
-+					smid, sge_chain_count);
-+			src_chain_addr[sge_chain_count] =
-+						(void *) sgel_next;
-+			dst_addr_phys =
-+				_base_get_chain_phys(ioc,
-+						smid, sge_chain_count);
-+			sgel->Address = (dma_addr_t)dst_addr_phys;
-+			sgel = sgel_next;
-+			sge_chain_count++;
-+			break;
-+		case MPI2_SGE_FLAGS_SIMPLE_ELEMENT:
-+			if (is_write) {
-+				if (is_scsiio_req) {
-+					_base_clone_to_sys_mem(buff_ptr,
-+					    sg_virt(sg_scmd),
-+					    (sgel->FlagsLength & 0x00ffffff));
-+					sgel->Address =
-+						(dma_addr_t)buff_ptr_phys;
-+				} else {
-+					_base_clone_to_sys_mem(buff_ptr,
-+					    ioc->config_vaddr,
-+					    (sgel->FlagsLength & 0x00ffffff));
-+					sgel->Address =
-+					    (dma_addr_t)buff_ptr_phys;
-+				}
-+			}
-+			buff_ptr += (sgel->FlagsLength & 0x00ffffff);
-+			buff_ptr_phys += (sgel->FlagsLength & 0x00ffffff);
-+			if ((sgel->FlagsLength &
-+			    (MPI2_SGE_FLAGS_END_OF_BUFFER
-+					<< MPI2_SGE_FLAGS_SHIFT)))
-+				goto eob_clone_chain;
-+			else {
-+				/*
-+				 * Every single element in MPT will have
-+				 * associated sg_next. Better to sanity that
-+				 * sg_next is not NULL, but it will be a bug
-+				 * if it is null.
-+				 */
-+				if (is_scsiio_req) {
-+					sg_scmd = sg_next(sg_scmd);
-+					if (sg_scmd)
-+						sgel++;
-+					else
-+						goto eob_clone_chain;
-+				}
-+			}
-+			break;
-+		}
-+	}
-+
-+eob_clone_chain:
-+	for (i = 0; i < sge_chain_count; i++) {
-+		if (is_scsiio_req)
-+			_base_clone_to_sys_mem(dst_chain_addr[i],
-+				src_chain_addr[i], ioc->request_sz);
-+	}
-+}
-+
-+/**
-  *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead ioc
-  * @arg: input argument, used to derive ioc
-  *
-@@ -3295,7 +3508,7 @@ _base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- 
- /**
-  * _base_put_smid_default - Default, primarily used for config pages
-- * use Atomic Request Descriptor
-+ *				use Atomic Request Descriptor
-  * @ioc: per adapter object
-  * @smid: system request message index
-  *
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 2529d25..4fd582b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -95,6 +95,8 @@
- #define MPT_MIN_PHYS_SEGMENTS	16
- #define MPT_KDUMP_MIN_PHYS_SEGMENTS	32
- 
-+#define MCPU_MAX_CHAINS_PER_IO	3
-+
- #ifdef CONFIG_SCSI_MPT3SAS_MAX_SGE
- #define MPT3SAS_SG_DEPTH		CONFIG_SCSI_MPT3SAS_MAX_SGE
- #else
-@@ -1238,6 +1240,7 @@ struct MPT3SAS_ADAPTER {
- 	u16		config_page_sz;
- 	void		*config_page;
- 	dma_addr_t	config_page_dma;
-+	void		*config_vaddr;
- 
- 	/* scsiio request */
- 	u16		hba_queue_depth;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 1c747cf..0dba3c4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -219,6 +219,7 @@ _config_alloc_config_dma_memory(struct MPT3SAS_ADAPTER *ioc,
- 		mem->page = ioc->config_page;
- 		mem->page_dma = ioc->config_page_dma;
- 	}
-+	ioc->config_vaddr = mem->page;
- 	return r;
- }
- 
+Andromeda is a PCIe switch, and it has a dedicated management
+ CPU (mCPU), nonvolatile flash memory, RAM etc... and
+ Linux kernel runs on mCPU. MPI Endpoint driver is the
+ management driver for Andromeda.
+
+The Plx Manager driver running on mCPU synthesizes a
+ virtual/Synthetic MPI End point to host.
+Synthetic MPI End point is emulated IT firmware running on
+ Linux operating system, which interfaces with PLX management 
+ driver.
+
+PLX Management driver integrates IOCFW in same driver binary.
+At the end of Plx_Mgr driver load, it initializes IOC FW as well.
+Current implementation is single instance
+ of IOC FW (as it supports only one host). 
+
+ PLX management driver will provide required resources 
+and infrastructure for Synthetic MPI End point.
+
+Existing PLXManagement driver will reserve virtual slot for
+ MPI end point. currently, Virtual slot number 29 is reserved
+ for MPI end point. 
+
+Synthetic device in management driver will be marked as
+ new type “PLX_DEV_TYPE_SYNTH_MPI_EP”. PLXmanagement driver
+ will interface with Synthetic MPI Endpoint for any
+ communication happening on PLX_DEV_TYPE_SYNTH_MPI_EP device
+ type from host.
+
+Link between host and PLX C2 is in below diagram.
+
+                                 _______________
+ _______________                |               |
+|               |               |               |
+| PLX C2        |===============|    HOST       |
+| PCI -         |===============|   MACHINE	|
+|  SWITCH       |             	|               |
+|_______________|               |               |
+        ||                      |_______________|
+	||
+	||
+ _______||______
+|               |
+|  MCPU         |
+|               |
+|_______________|
+
+
+
+ After MPI end point implementation -
+(Host will see dedicated Virtual SLOT as MPI End point.)
+In Below single line is logical channel for MPI Endpoint
+                                 _______________
+ _______________                |               |
+|               |               |               |
+| PLX C2        |===============|   HOST        |
+| PCI -         |===============|   MACHINE     |
+|  SWITCH       |               |               |
+|               |               |  -----------	|
+|_______________|---------------| | IT DRIVER | |
+        ||  |			|  -----------  |
+        ||  |			|_______________|
+        ||  |
+        ||  |
+ _______||__|___________
+|       ||  |           |
+|      MCPU |           |
+|        ___|____   	|
+|	| PLX MGR|	|
+|	| DRIVER |  	|
+|	|________|  	|
+|           |	 	|
+|        ___|_____	|
+|	|	  |	|
+|	|IOC FW   |	|
+|       |_________|	|
+|_______________________|
+
+PLXmanagement driver will create MPI end point based on
+ device table definition. PLXManagement driver will also
+ populate Synthetic device tree based on Device Table 
+ for each host.  
+
+>From host it will be seen as IT HBA (Simplified version of SAS2/MPI2)
+(PCI Device, in which emulated IT FW running on mCPU behind Synthetic
+ endpoint of PCISWITCH). For host it is considered as actual
+ Physical Device.
+
+PLX Management driver provide interface to do DMA from mCPU to Host
+ using “MCPU Response Data Buffer“ method. DMA from Host to mCPU using
+ “MCPU Response Data Buffer” is not possible.
+
+Why DMA from host to mCPU is not possible using Responsebuffer ?
+ MCPU Response buffer is not really for reading from host
+ (reading will work, but answer TLP will not come back to the CSR FIFO,
+ but will go to the MCPU root complex - which could be an
+ unexpected read completion!
+
+Existing host driver (mpt2sas) will not work
+ for MPI end point. As the interface to DMA from host to mCPU is
+ not present for Mcpu/MPI Endpoint device, To overcome this
+ Driver should do double copy of those buffer directly to the
+ mCPU memory region via BAR-0 region.
+
+The host BAR0 region is divided into different group to serve Host
+ assisted DMA.
+
+ 0    - 255     System register(Doorbell, Host Interrupt etc)
+ 256  - 4352    MPI Frame. (This is based on maxCredit 32)
+ 4352 - 4864    Reply_free pool (512 byte is reserved considering
+                maxCredit 32. Reply needsextra room, for mCPU case
+                kept four times of maxCredit)
+ 4864 -17152    SGE chain element.
+                (32 command * 3 chain of 128 byte size = 12288)
+ 17152 -x       Host buffer mapped with smid.
+                (Each smid can have 64K Max IO.)
+BAR0+Last 1K    MSIX Addr and DataTotalsize in use 2113664 bytes
+                of 4MB BAR0 MPI end point module of PLX management
+                driver must be aware of regions above.
+
+SGE and Host buffer details will be available in MPI frame.
+
+Each PCI packets coming from host on MPI end point will end up in
+ mCPU PLXmanagement driver. We can consider this as front end for IOC FW.
+ PLXManagementdriver will call IOC front end API which will be the entry
+ point in IOC FW module. Once PLX management calls relevant callbackfrom
+ IOC FW, rest of the processing will behandled within IOC FW. 
+ IOC FW should release TLP packet as soon as possible to avoid any
+ TLP timeout.
+
+Suganath Prabu S (6):
+  mpt3sas: Add PCI device ID for Andromeda.
+  mpt3sas: Configure reply post queue depth, DMA and sgl      tablesize.
+  mpt3sas: Introduce API's to get BAR0 mapped buffer      address.
+  mpt3sas: Introduce Base function for cloning.
+  mpt3sas: Introduce function to clone mpi request.
+  mpt3sas: Introduce function to clone mpi reply.
+
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h             |    1 +
+ drivers/scsi/mpt3sas/mpt3sas_base.c              |  528 ++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h              |    6 +
+ drivers/scsi/mpt3sas/mpt3sas_config.c            |    1 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c             |   54 +-
+ 16 files changed, 540 insertions(+), 9291 deletions(-)
+
+Thanks,
+Suganath Prabu S
 -- 
 2.5.5
