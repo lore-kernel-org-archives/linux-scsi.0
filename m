@@ -1,20 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 10/13] lpfc: Fix nvme embedded io length on new
- hardware
-Date: Wed, 7 Feb 2018 11:32:39 +0100
-Message-ID: <20180207103239.v3wfwr4dkvwmnrxa@linux-x5ow.site>
+Subject: Re: [PATCH v2 11/13] lpfc: Work around NVME cmd iu SGL type
+Date: Wed, 7 Feb 2018 11:39:12 +0100
+Message-ID: <20180207103912.b5ls6dxmgskpx67u@linux-x5ow.site>
 References: <20180207022851.11800-1-jsmart2021@gmail.com>
- <20180207022851.11800-11-jsmart2021@gmail.com>
+ <20180207022851.11800-12-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54346 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54951 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753703AbeBGKcl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 05:32:41 -0500
+        id S1753702AbeBGKjO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Feb 2018 05:39:14 -0500
 Content-Disposition: inline
-In-Reply-To: <20180207022851.11800-11-jsmart2021@gmail.com>
+In-Reply-To: <20180207022851.11800-12-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
