@@ -1,35 +1,164 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH V2 2/8] blk-mq: introduce BLK_MQ_F_GLOBAL_TAGS
-Date: Wed, 7 Feb 2018 08:09:21 -0800
-Message-ID: <7c7062b9-5333-6530-8561-35936a51240e@wdc.com>
-References: <20180205152035.15016-1-ming.lei@redhat.com>
- <20180205152035.15016-3-ming.lei@redhat.com>
- <398c755a-ada6-1e60-9562-51b69476e55d@kernel.dk>
+From: Nilesh Javali <nilesh.javali@cavium.com>
+Subject: [PATCH v3 2/2] qedi: Cleanup local str variable
+Date: Wed, 7 Feb 2018 08:12:36 -0800
+Message-ID: <20180207161236.12975-3-nilesh.javali@cavium.com>
+References: <20180207161236.12975-1-nilesh.javali@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:29450 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754656AbeBGQJW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 11:09:22 -0500
-In-Reply-To: <398c755a-ada6-1e60-9562-51b69476e55d@kernel.dk>
-Content-Language: en-US
+Received: from mail-cys01nam02on0061.outbound.protection.outlook.com ([104.47.37.61]:18030
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754557AbeBGQMp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Feb 2018 11:12:45 -0500
+In-Reply-To: <20180207161236.12975-1-nilesh.javali@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-On 02/06/18 15:18, Jens Axboe wrote:
-> GLOBAL implies that it's, strangely enough, global. That isn't really the
-> case. Why not call this BLK_MQ_F_HOST_TAGS or something like that? I'd
-> welcome better names, but global doesn't seem to be a great choice.
-> 
-> BLK_MQ_F_SET_TAGS?
+Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
+---
+ drivers/scsi/qedi/qedi_main.c | 43 ++++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 23 deletions(-)
 
-I like the name BLK_MQ_F_HOST_TAGS because it refers how these tags will 
-be used by SCSI LLDs, namely as a host-wide tag set.
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index deaed93..47c45a5 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1735,7 +1735,6 @@ static ssize_t qedi_show_boot_eth_info(void *data, int type, char *buf)
+ {
+ 	struct qedi_ctx *qedi = data;
+ 	struct nvm_iscsi_initiator *initiator;
+-	char *str = buf;
+ 	int rc = 1;
+ 	u32 ipv6_en, dhcp_en, ip_len;
+ 	struct nvm_iscsi_block *block;
+@@ -1769,32 +1768,32 @@ static ssize_t qedi_show_boot_eth_info(void *data, int type, char *buf)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_ETH_IP_ADDR:
+-		rc = snprintf(str, ip_len, fmt, ip);
++		rc = snprintf(buf, ip_len, fmt, ip);
+ 		break;
+ 	case ISCSI_BOOT_ETH_SUBNET_MASK:
+-		rc = snprintf(str, ip_len, fmt, sub);
++		rc = snprintf(buf, ip_len, fmt, sub);
+ 		break;
+ 	case ISCSI_BOOT_ETH_GATEWAY:
+-		rc = snprintf(str, ip_len, fmt, gw);
++		rc = snprintf(buf, ip_len, fmt, gw);
+ 		break;
+ 	case ISCSI_BOOT_ETH_FLAGS:
+-		rc = snprintf(str, 3, "%hhd\n",
++		rc = snprintf(buf, 3, "%hhd\n",
+ 			      SYSFS_FLAG_FW_SEL_BOOT);
+ 		break;
+ 	case ISCSI_BOOT_ETH_INDEX:
+-		rc = snprintf(str, 3, "0\n");
++		rc = snprintf(buf, 3, "0\n");
+ 		break;
+ 	case ISCSI_BOOT_ETH_MAC:
+-		rc = sysfs_format_mac(str, qedi->mac, ETH_ALEN);
++		rc = sysfs_format_mac(buf, qedi->mac, ETH_ALEN);
+ 		break;
+ 	case ISCSI_BOOT_ETH_VLAN:
+-		rc = snprintf(str, 12, "%d\n",
++		rc = snprintf(buf, 12, "%d\n",
+ 			      GET_FIELD2(initiator->generic_cont0,
+ 					 NVM_ISCSI_CFG_INITIATOR_VLAN));
+ 		break;
+ 	case ISCSI_BOOT_ETH_ORIGIN:
+ 		if (dhcp_en)
+-			rc = snprintf(str, 3, "3\n");
++			rc = snprintf(buf, 3, "3\n");
+ 		break;
+ 	default:
+ 		rc = 0;
+@@ -1830,7 +1829,6 @@ static ssize_t qedi_show_boot_ini_info(void *data, int type, char *buf)
+ {
+ 	struct qedi_ctx *qedi = data;
+ 	struct nvm_iscsi_initiator *initiator;
+-	char *str = buf;
+ 	int rc;
+ 	struct nvm_iscsi_block *block;
+ 
+@@ -1842,7 +1840,7 @@ static ssize_t qedi_show_boot_ini_info(void *data, int type, char *buf)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_INI_INITIATOR_NAME:
+-		rc = sprintf(str, "%.*s\n", NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
+ 			     initiator->initiator_name.byte);
+ 		break;
+ 	default:
+@@ -1871,7 +1869,6 @@ static umode_t qedi_ini_get_attr_visibility(void *data, int type)
+ qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
+ 			char *buf, enum qedi_nvm_tgts idx)
+ {
+-	char *str = buf;
+ 	int rc = 1;
+ 	u32 ctrl_flags, ipv6_en, chap_en, mchap_en, ip_len;
+ 	struct nvm_iscsi_block *block;
+@@ -1910,48 +1907,48 @@ static umode_t qedi_ini_get_attr_visibility(void *data, int type)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_TGT_NAME:
+-		rc = sprintf(str, "%.*s\n", NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
+ 			     block->target[idx].target_name.byte);
+ 		break;
+ 	case ISCSI_BOOT_TGT_IP_ADDR:
+ 		if (ipv6_en)
+-			rc = snprintf(str, ip_len, "%pI6\n",
++			rc = snprintf(buf, ip_len, "%pI6\n",
+ 				      block->target[idx].ipv6_addr.byte);
+ 		else
+-			rc = snprintf(str, ip_len, "%pI4\n",
++			rc = snprintf(buf, ip_len, "%pI4\n",
+ 				      block->target[idx].ipv4_addr.byte);
+ 		break;
+ 	case ISCSI_BOOT_TGT_PORT:
+-		rc = snprintf(str, 12, "%d\n",
++		rc = snprintf(buf, 12, "%d\n",
+ 			      GET_FIELD2(block->target[idx].generic_cont0,
+ 					 NVM_ISCSI_CFG_TARGET_TCP_PORT));
+ 		break;
+ 	case ISCSI_BOOT_TGT_LUN:
+-		rc = snprintf(str, 22, "%.*d\n",
++		rc = snprintf(buf, 22, "%.*d\n",
+ 			      block->target[idx].lun.value[1],
+ 			      block->target[idx].lun.value[0]);
+ 		break;
+ 	case ISCSI_BOOT_TGT_CHAP_NAME:
+-		rc = sprintf(str, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
+ 			     chap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_CHAP_SECRET:
+-		rc = sprintf(str, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
+ 			     chap_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
+-		rc = sprintf(str, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
+ 			     mchap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
+-		rc = sprintf(str, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
+ 			     mchap_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_FLAGS:
+-		rc = snprintf(str, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
++		rc = snprintf(buf, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
+ 		break;
+ 	case ISCSI_BOOT_TGT_NIC_ASSOC:
+-		rc = snprintf(str, 3, "0\n");
++		rc = snprintf(buf, 3, "0\n");
+ 		break;
+ 	default:
+ 		rc = 0;
+-- 
+1.8.3.1
