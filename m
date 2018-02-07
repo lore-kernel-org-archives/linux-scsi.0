@@ -1,34 +1,35 @@
-From: Nilesh Javali <nilesh.javali@cavium.com>
-Subject: [PATCH v3 0/2] Code cleanup and bug fix for truncated CHAP name and secret
-Date: Wed, 7 Feb 2018 08:12:34 -0800
-Message-ID: <20180207161236.12975-1-nilesh.javali@cavium.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [PATCH 6/6] scsi: qedf: use correct strncpy() size
+Date: Wed, 7 Feb 2018 11:26:43 -0500 (EST)
+Message-ID: <alpine.OSX.2.00.1802071126080.1466@administrators-MacBook-Pro.local>
+References: <20180202131225.1658853-1-arnd@arndb.de> <20180202131225.1658853-7-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0081.outbound.protection.outlook.com ([104.47.32.81]:3008
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754166AbeBGQMl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 11:12:41 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180202131225.1658853-7-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, QLogic-Storage-Upstream@cavium.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Nicolas Pitre <nico@linaro.org>, Andi Kleen <ak@linux.intel.com>, Saurav Kashyap <saurav.kashyap@cavium.com>, Arun Easi <arun.easi@cavium.com>, Nilesh Javali <nilesh.javali@cavium.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-Martin,
-Please consider below patch set for next 'scsi-fixes' submission.
 
-Thanks,
-Nilesh
+On Fri, 2 Feb 2018, 8:12am, Arnd Bergmann wrote:
 
-Andrew Vasquez (1):
-  qedi: Fix truncation of CHAP name and secret
+> gcc-8 warns during link-time optimization that the strncpy() call
+> passes the size of the source buffer rather than the destination:
+> 
+> drivers/scsi/qedf/qedf_dbg.c: In function 'qedf_uevent_emit':
+> include/linux/string.h:253: error: 'strncpy' specified bound depends on the length of the source argument [-Werror=stringop-overflow=]
+> 
+> This changes it to strscpy() with the correct length, guaranteeing
+> a properly nul-terminated string of the right size.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/scsi/qedf/qedf_dbg.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
 
-Nilesh Javali (1):
-  qedi: Cleanup local str variable
+Reasonable security precaution.
 
- drivers/scsi/qedi/qedi_main.c | 55 ++++++++++++++++++++-----------------------
- 1 file changed, 26 insertions(+), 29 deletions(-)
-
--- 
-1.8.3.1
+Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
