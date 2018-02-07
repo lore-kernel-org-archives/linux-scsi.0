@@ -1,522 +1,373 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 04/13] lpfc: Add push-to-adapter support to sli4
-Date: Tue,  6 Feb 2018 18:28:42 -0800
-Message-ID: <20180207022851.11800-5-jsmart2021@gmail.com>
+Subject: [PATCH v2 06/13] lpfc: Add 64G link speed support
+Date: Tue,  6 Feb 2018 18:28:44 -0800
+Message-ID: <20180207022851.11800-7-jsmart2021@gmail.com>
 References: <20180207022851.11800-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:43691 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752758AbeBGC3D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 21:29:03 -0500
-Received: by mail-oi0-f65.google.com with SMTP id 4so2915963ois.10
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Feb 2018 18:29:03 -0800 (PST)
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:38957 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752537AbeBGC3F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 21:29:05 -0500
+Received: by mail-ot0-f194.google.com with SMTP id f18so3769579otf.6
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Feb 2018 18:29:04 -0800 (PST)
 In-Reply-To: <20180207022851.11800-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-New if_type=6 adapters support an additional BAR that provides
-apertures to allow direct WQE to adapter push support - termed
-Direct Packet Push (DPP). WQ creation differs slightly to ask for
-a WQ to be DPP-ized. When submitting a WQE to a DPP WQ, it is
-submitted to the host memory for the WQ normally, but is also
-written by the host cpu directly to a BAR aperture.  Write buffer
-coalescing in hardware is (hopefully) turned on, enabling single
-pci write operation support. The doorbell is thing rung to indicate
-the WQE is available and was pushed to the aperture.
+The G7 adapter supports 64G link speeds. Add support to the driver.
 
-This patch:
-- Updates the WQ Create commands for the DPP options
-- Adds the bar mapping for if_type=6 DPP bar
-- Adds the WQE pushing to the DDP aperture received from WQ create
-- Adds a new module parameter to disable DPP operation if desired.
-  Default is enabled.
+In addition, a small cleanup to replace the odd bitmap logic with
+a switch case.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
+
 ---
- drivers/scsi/lpfc/lpfc.h      |   3 +-
- drivers/scsi/lpfc/lpfc_attr.c |  10 ++
- drivers/scsi/lpfc/lpfc_hw4.h  |  31 ++++++
- drivers/scsi/lpfc/lpfc_init.c |  18 ++++
- drivers/scsi/lpfc/lpfc_sli.c  | 234 +++++++++++++++++++++++++++---------------
- drivers/scsi/lpfc/lpfc_sli4.h |  16 ++-
- 6 files changed, 225 insertions(+), 87 deletions(-)
+v2:
+  address review comment of typo in define name. Define wasn't used
+  anywhere yet.
+---
+ drivers/scsi/lpfc/lpfc.h         | 14 +++------
+ drivers/scsi/lpfc/lpfc_attr.c    | 61 ++++++++++++++++++++++++++++------------
+ drivers/scsi/lpfc/lpfc_ct.c      |  5 ++++
+ drivers/scsi/lpfc/lpfc_els.c     |  5 ++++
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  1 +
+ drivers/scsi/lpfc/lpfc_hw.h      | 12 ++++++++
+ drivers/scsi/lpfc/lpfc_hw4.h     |  3 ++
+ drivers/scsi/lpfc/lpfc_init.c    | 17 +++++++++--
+ drivers/scsi/lpfc/lpfc_mbox.c    |  4 +++
+ 9 files changed, 92 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 9698b9635058..86ffb9756e65 100644
+index 86ffb9756e65..7aad4a717f13 100644
 --- a/drivers/scsi/lpfc/lpfc.h
 +++ b/drivers/scsi/lpfc/lpfc.h
-@@ -840,7 +840,8 @@ struct lpfc_hba {
- 	uint32_t cfg_enable_SmartSAN;
- 	uint32_t cfg_enable_mds_diags;
- 	uint32_t cfg_enable_fc4_type;
--	uint32_t cfg_enable_bbcr;	/*Enable BB Credit Recovery*/
-+	uint32_t cfg_enable_bbcr;	/* Enable BB Credit Recovery */
-+	uint32_t cfg_enable_dpp;	/* Enable Direct Packet Push */
- 	uint32_t cfg_xri_split;
- #define LPFC_ENABLE_FCP  1
- #define LPFC_ENABLE_NVME 2
+@@ -544,16 +544,10 @@ struct unsol_rcv_ct_ctx {
+ #define LPFC_USER_LINK_SPEED_10G	10	/* 10 Gigabaud */
+ #define LPFC_USER_LINK_SPEED_16G	16	/* 16 Gigabaud */
+ #define LPFC_USER_LINK_SPEED_32G	32	/* 32 Gigabaud */
+-#define LPFC_USER_LINK_SPEED_MAX	LPFC_USER_LINK_SPEED_32G
+-#define LPFC_USER_LINK_SPEED_BITMAP  ((1ULL << LPFC_USER_LINK_SPEED_32G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_16G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_10G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_8G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_4G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_2G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_1G) | \
+-				     (1 << LPFC_USER_LINK_SPEED_AUTO))
+-#define LPFC_LINK_SPEED_STRING "0, 1, 2, 4, 8, 10, 16, 32"
++#define LPFC_USER_LINK_SPEED_64G	64	/* 64 Gigabaud */
++#define LPFC_USER_LINK_SPEED_MAX	LPFC_USER_LINK_SPEED_64G
++
++#define LPFC_LINK_SPEED_STRING "0, 1, 2, 4, 8, 10, 16, 32, 64"
+ 
+ enum nemb_type {
+ 	nemb_mse = 1,
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 70bd25666243..705c42e724c2 100644
+index 705c42e724c2..ec080de4e7a7 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -5204,6 +5204,14 @@ LPFC_ATTR_R(enable_mds_diags, 0, 0, 1, "Enable MDS Diagnostics");
-  */
- LPFC_BBCR_ATTR_RW(enable_bbcr, 1, 0, 1, "Enable BBC Recovery");
- 
-+/*
-+ * lpfc_enable_dpp: Enable DPP on G7
-+ *       0  = DPP on G7 disabled
-+ *       1  = DPP on G7 enabled (default)
-+ * Value range is [0,1]. Default value is 1.
-+ */
-+LPFC_ATTR_RW(enable_dpp, 1, 0, 1, "Enable Direct Packet Push");
-+
- struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_nvme_info,
- 	&dev_attr_bg_info,
-@@ -5312,6 +5320,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_lpfc_xlane_supported,
- 	&dev_attr_lpfc_enable_mds_diags,
- 	&dev_attr_lpfc_enable_bbcr,
-+	&dev_attr_lpfc_enable_dpp,
- 	NULL,
- };
- 
-@@ -6324,6 +6333,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	lpfc_fcp_io_channel_init(phba, lpfc_fcp_io_channel);
- 	lpfc_nvme_io_channel_init(phba, lpfc_nvme_io_channel);
- 	lpfc_enable_bbcr_init(phba, lpfc_enable_bbcr);
-+	lpfc_enable_dpp_init(phba, lpfc_enable_dpp);
- 
- 	if (phba->sli_rev != LPFC_SLI_REV4) {
- 		/* NVME only supported on SLI4 */
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 93fd9fd10a0f..60ccff6fa8b0 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -1372,6 +1372,15 @@ struct lpfc_mbx_wq_create {
- #define lpfc_mbx_wq_create_page_size_MASK	0x000000FF
- #define lpfc_mbx_wq_create_page_size_WORD	word1
- #define LPFC_WQ_PAGE_SIZE_4096	0x1
-+#define lpfc_mbx_wq_create_dpp_req_SHIFT	15
-+#define lpfc_mbx_wq_create_dpp_req_MASK		0x00000001
-+#define lpfc_mbx_wq_create_dpp_req_WORD		word1
-+#define lpfc_mbx_wq_create_doe_SHIFT		14
-+#define lpfc_mbx_wq_create_doe_MASK		0x00000001
-+#define lpfc_mbx_wq_create_doe_WORD		word1
-+#define lpfc_mbx_wq_create_toe_SHIFT		13
-+#define lpfc_mbx_wq_create_toe_MASK		0x00000001
-+#define lpfc_mbx_wq_create_toe_WORD		word1
- #define lpfc_mbx_wq_create_wqe_size_SHIFT	8
- #define lpfc_mbx_wq_create_wqe_size_MASK	0x0000000F
- #define lpfc_mbx_wq_create_wqe_size_WORD	word1
-@@ -1400,6 +1409,28 @@ struct lpfc_mbx_wq_create {
- #define lpfc_mbx_wq_create_db_format_MASK	0x0000FFFF
- #define lpfc_mbx_wq_create_db_format_WORD	word2
- 		} response;
-+		struct {
-+			uint32_t word0;
-+#define lpfc_mbx_wq_create_dpp_rsp_SHIFT	31
-+#define lpfc_mbx_wq_create_dpp_rsp_MASK		0x00000001
-+#define lpfc_mbx_wq_create_dpp_rsp_WORD		word0
-+#define lpfc_mbx_wq_create_v1_q_id_SHIFT	0
-+#define lpfc_mbx_wq_create_v1_q_id_MASK		0x0000FFFF
-+#define lpfc_mbx_wq_create_v1_q_id_WORD		word0
-+			uint32_t word1;
-+#define lpfc_mbx_wq_create_v1_bar_set_SHIFT	0
-+#define lpfc_mbx_wq_create_v1_bar_set_MASK	0x0000000F
-+#define lpfc_mbx_wq_create_v1_bar_set_WORD	word1
-+			uint32_t doorbell_offset;
-+			uint32_t word3;
-+#define lpfc_mbx_wq_create_dpp_id_SHIFT		16
-+#define lpfc_mbx_wq_create_dpp_id_MASK		0x0000001F
-+#define lpfc_mbx_wq_create_dpp_id_WORD		word3
-+#define lpfc_mbx_wq_create_dpp_bar_SHIFT	0
-+#define lpfc_mbx_wq_create_dpp_bar_MASK		0x0000000F
-+#define lpfc_mbx_wq_create_dpp_bar_WORD		word3
-+			uint32_t dpp_offset;
-+		} response_1;
- 	} u;
- };
- 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 0d51ecb7317f..2710b43710aa 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -9611,6 +9611,24 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
- 		}
+@@ -4126,23 +4126,32 @@ lpfc_link_speed_store(struct device *dev, struct device_attribute *attr,
+ 	    ((val == LPFC_USER_LINK_SPEED_8G) && !(phba->lmt & LMT_8Gb)) ||
+ 	    ((val == LPFC_USER_LINK_SPEED_10G) && !(phba->lmt & LMT_10Gb)) ||
+ 	    ((val == LPFC_USER_LINK_SPEED_16G) && !(phba->lmt & LMT_16Gb)) ||
+-	    ((val == LPFC_USER_LINK_SPEED_32G) && !(phba->lmt & LMT_32Gb))) {
++	    ((val == LPFC_USER_LINK_SPEED_32G) && !(phba->lmt & LMT_32Gb)) ||
++	    ((val == LPFC_USER_LINK_SPEED_64G) && !(phba->lmt & LMT_64Gb))) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"2879 lpfc_link_speed attribute cannot be set "
+ 				"to %d. Speed is not supported by this port.\n",
+ 				val);
+ 		return -EINVAL;
  	}
- 
-+	if ((if_type == LPFC_SLI_INTF_IF_TYPE_6) &&
-+	    (pci_resource_start(pdev, PCI_64BIT_BAR4))) {
-+		/*
-+		 * Map SLI4 if type 6 HBA DPP Register base to a kernel
-+		 * virtual address and setup the registers.
-+		 */
-+		phba->pci_bar2_map = pci_resource_start(pdev, PCI_64BIT_BAR4);
-+		bar2map_len = pci_resource_len(pdev, PCI_64BIT_BAR4);
-+		phba->sli4_hba.dpp_regs_memmap_p =
-+				ioremap(phba->pci_bar2_map, bar2map_len);
-+		if (!phba->sli4_hba.dpp_regs_memmap_p) {
-+			dev_err(&pdev->dev,
-+			   "ioremap failed for SLI4 HBA dpp registers.\n");
-+			goto out_iounmap_ctrl;
-+		}
-+		phba->pci_bar4_memmap_p = phba->sli4_hba.dpp_regs_memmap_p;
-+	}
+-	if (val == LPFC_USER_LINK_SPEED_16G &&
+-		 phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
++	if (val >= LPFC_USER_LINK_SPEED_16G &&
++	    phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3112 lpfc_link_speed attribute cannot be set "
+ 				"to %d. Speed is not supported in loop mode.\n",
+ 				val);
+ 		return -EINVAL;
+ 	}
+-	if ((val >= 0) && (val <= LPFC_USER_LINK_SPEED_MAX) &&
+-	    (LPFC_USER_LINK_SPEED_BITMAP & (1 << val))) {
 +
- 	/* Set up the EQ/CQ register handeling functions now */
- 	switch (if_type) {
- 	case LPFC_SLI_INTF_IF_TYPE_0:
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 3bff1f9c5df7..1b07e61fb7bd 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -35,6 +35,9 @@
- #include <scsi/scsi_transport_fc.h>
- #include <scsi/fc/fc_fs.h>
- #include <linux/aer.h>
-+#ifdef CONFIG_X86
-+#include <asm/set_memory.h>
-+#endif
- 
- #include <linux/nvme-fc-driver.h>
- 
-@@ -112,6 +115,8 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
- 	struct lpfc_register doorbell;
- 	uint32_t host_index;
- 	uint32_t idx;
-+	uint32_t i = 0;
-+	uint8_t *tmp;
- 
- 	/* sanity check on queue memory */
- 	if (unlikely(!q))
-@@ -133,7 +138,18 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
- 	if (q->phba->sli3_options & LPFC_SLI4_PHWQ_ENABLED)
- 		bf_set(wqe_wqid, &wqe->generic.wqe_com, q->queue_id);
- 	lpfc_sli_pcimem_bcopy(wqe, temp_wqe, q->entry_size);
--	/* ensure WQE bcopy flushed before doorbell write */
-+	if (q->dpp_enable && q->phba->cfg_enable_dpp) {
-+		/* write to DPP aperture taking advatage of Combined Writes */
-+		tmp = (uint8_t *)wqe;
-+#ifdef CONFIG_64BIT
-+		for (i = 0; i < q->entry_size; i += sizeof(uint64_t))
-+			writeq(*((uint64_t *)(tmp + i)), q->dpp_regaddr + i);
-+#else
-+		for (i = 0; i < q->entry_size; i += sizeof(uint32_t))
-+			writel(*((uint32_t *)(tmp + i)), q->dpp_regaddr + i);
-+#endif
-+	}
-+	/* ensure WQE bcopy and DPP flushed before doorbell write */
- 	wmb();
- 
- 	/* Update the host index before invoking device */
-@@ -144,9 +160,18 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
- 	/* Ring Doorbell */
- 	doorbell.word0 = 0;
- 	if (q->db_format == LPFC_DB_LIST_FORMAT) {
--		bf_set(lpfc_wq_db_list_fm_num_posted, &doorbell, 1);
--		bf_set(lpfc_wq_db_list_fm_index, &doorbell, host_index);
--		bf_set(lpfc_wq_db_list_fm_id, &doorbell, q->queue_id);
-+		if (q->dpp_enable && q->phba->cfg_enable_dpp) {
-+			bf_set(lpfc_if6_wq_db_list_fm_num_posted, &doorbell, 1);
-+			bf_set(lpfc_if6_wq_db_list_fm_dpp, &doorbell, 1);
-+			bf_set(lpfc_if6_wq_db_list_fm_dpp_id, &doorbell,
-+			    q->dpp_id);
-+			bf_set(lpfc_if6_wq_db_list_fm_id, &doorbell,
-+			    q->queue_id);
-+		} else {
-+			bf_set(lpfc_wq_db_list_fm_num_posted, &doorbell, 1);
-+			bf_set(lpfc_wq_db_list_fm_index, &doorbell, host_index);
-+			bf_set(lpfc_wq_db_list_fm_id, &doorbell, q->queue_id);
++	switch (val) {
++	case LPFC_USER_LINK_SPEED_AUTO:
++	case LPFC_USER_LINK_SPEED_1G:
++	case LPFC_USER_LINK_SPEED_2G:
++	case LPFC_USER_LINK_SPEED_4G:
++	case LPFC_USER_LINK_SPEED_8G:
++	case LPFC_USER_LINK_SPEED_16G:
++	case LPFC_USER_LINK_SPEED_32G:
++	case LPFC_USER_LINK_SPEED_64G:
+ 		prev_val = phba->cfg_link_speed;
+ 		phba->cfg_link_speed = val;
+ 		if (nolip)
+@@ -4152,13 +4161,17 @@ lpfc_link_speed_store(struct device *dev, struct device_attribute *attr,
+ 		if (err) {
+ 			phba->cfg_link_speed = prev_val;
+ 			return -EINVAL;
+-		} else
+-			return strlen(buf);
 +		}
- 	} else if (q->db_format == LPFC_DB_RING_FORMAT) {
- 		bf_set(lpfc_wq_db_ring_fm_num_posted, &doorbell, 1);
- 		bf_set(lpfc_wq_db_ring_fm_id, &doorbell, q->queue_id);
-@@ -15023,6 +15048,9 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
- 	void __iomem *bar_memmap_p;
- 	uint32_t db_offset;
- 	uint16_t pci_barset;
-+	uint8_t dpp_barset;
-+	uint32_t dpp_offset;
-+	unsigned long pg_addr;
- 	uint8_t wq_create_version;
- 
- 	/* sanity check on queue memory */
-@@ -15056,38 +15084,13 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
- 	else
- 		wq_create_version = LPFC_Q_CREATE_VERSION_0;
- 
--	switch (wq_create_version) {
--	case LPFC_Q_CREATE_VERSION_0:
--		switch (wq->entry_size) {
--		default:
--		case 64:
--			/* Nothing to do, version 0 ONLY supports 64 byte */
--			page = wq_create->u.request.page;
--			break;
--		case 128:
--			if (!(phba->sli4_hba.pc_sli4_params.wqsize &
--			    LPFC_WQ_SZ128_SUPPORT)) {
--				status = -ERANGE;
--				goto out;
--			}
--			/* If we get here the HBA MUST also support V1 and
--			 * we MUST use it
--			 */
--			bf_set(lpfc_mbox_hdr_version, &shdr->request,
--			       LPFC_Q_CREATE_VERSION_1);
- 
--			bf_set(lpfc_mbx_wq_create_wqe_count,
--			       &wq_create->u.request_1, wq->entry_count);
--			bf_set(lpfc_mbx_wq_create_wqe_size,
--			       &wq_create->u.request_1,
--			       LPFC_WQ_WQE_SIZE_128);
--			bf_set(lpfc_mbx_wq_create_page_size,
--			       &wq_create->u.request_1,
--			       LPFC_WQ_PAGE_SIZE_4096);
--			page = wq_create->u.request_1.page;
--			break;
--		}
--		break;
-+	if (phba->sli4_hba.pc_sli4_params.wqsize & LPFC_WQ_SZ128_SUPPORT)
-+		wq_create_version = LPFC_Q_CREATE_VERSION_1;
-+	else
-+		wq_create_version = LPFC_Q_CREATE_VERSION_0;
-+
-+	switch (wq_create_version) {
- 	case LPFC_Q_CREATE_VERSION_1:
- 		bf_set(lpfc_mbx_wq_create_wqe_count, &wq_create->u.request_1,
- 		       wq->entry_count);
-@@ -15102,24 +15105,21 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
- 			       LPFC_WQ_WQE_SIZE_64);
- 			break;
- 		case 128:
--			if (!(phba->sli4_hba.pc_sli4_params.wqsize &
--				LPFC_WQ_SZ128_SUPPORT)) {
--				status = -ERANGE;
--				goto out;
--			}
- 			bf_set(lpfc_mbx_wq_create_wqe_size,
- 			       &wq_create->u.request_1,
- 			       LPFC_WQ_WQE_SIZE_128);
- 			break;
- 		}
-+		/* Request DPP by default */
-+		bf_set(lpfc_mbx_wq_create_dpp_req, &wq_create->u.request_1, 1);
- 		bf_set(lpfc_mbx_wq_create_page_size,
- 		       &wq_create->u.request_1,
- 		       (wq->page_size / SLI4_PAGE_SIZE));
- 		page = wq_create->u.request_1.page;
- 		break;
- 	default:
--		status = -ERANGE;
--		goto out;
-+		page = wq_create->u.request.page;
++		return strlen(buf);
++	default:
 +		break;
  	}
++
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-		"0469 lpfc_link_speed attribute cannot be set to %d, "
+-		"allowed values are ["LPFC_LINK_SPEED_STRING"]\n", val);
++			"0469 lpfc_link_speed attribute cannot be set to %d, "
++			"allowed values are ["LPFC_LINK_SPEED_STRING"]\n", val);
+ 	return -EINVAL;
++
+ }
  
- 	list_for_each_entry(dmabuf, &wq->page_list, list) {
-@@ -15143,52 +15143,120 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
- 		status = -ENXIO;
- 		goto out;
+ static int lpfc_link_speed = 0;
+@@ -4185,24 +4198,33 @@ lpfc_param_show(link_speed)
+ static int
+ lpfc_link_speed_init(struct lpfc_hba *phba, int val)
+ {
+-	if (val == LPFC_USER_LINK_SPEED_16G && phba->cfg_topology == 4) {
++	if (val >= LPFC_USER_LINK_SPEED_16G && phba->cfg_topology == 4) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 			"3111 lpfc_link_speed of %d cannot "
+ 			"support loop mode, setting topology to default.\n",
+ 			 val);
+ 		phba->cfg_topology = 0;
  	}
--	wq->queue_id = bf_get(lpfc_mbx_wq_create_q_id, &wq_create->u.response);
+-	if ((val >= 0) && (val <= LPFC_USER_LINK_SPEED_MAX) &&
+-	    (LPFC_USER_LINK_SPEED_BITMAP & (1 << val))) {
 +
-+	if (wq_create_version == LPFC_Q_CREATE_VERSION_0)
-+		wq->queue_id = bf_get(lpfc_mbx_wq_create_q_id,
-+					&wq_create->u.response);
-+	else
-+		wq->queue_id = bf_get(lpfc_mbx_wq_create_v1_q_id,
-+					&wq_create->u.response_1);
-+
- 	if (wq->queue_id == 0xFFFF) {
- 		status = -ENXIO;
- 		goto out;
++	switch (val) {
++	case LPFC_USER_LINK_SPEED_AUTO:
++	case LPFC_USER_LINK_SPEED_1G:
++	case LPFC_USER_LINK_SPEED_2G:
++	case LPFC_USER_LINK_SPEED_4G:
++	case LPFC_USER_LINK_SPEED_8G:
++	case LPFC_USER_LINK_SPEED_16G:
++	case LPFC_USER_LINK_SPEED_32G:
++	case LPFC_USER_LINK_SPEED_64G:
+ 		phba->cfg_link_speed = val;
+ 		return 0;
++	default:
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"0405 lpfc_link_speed attribute cannot "
++				"be set to %d, allowed values are "
++				"["LPFC_LINK_SPEED_STRING"]\n", val);
++		phba->cfg_link_speed = LPFC_USER_LINK_SPEED_AUTO;
++		return -EINVAL;
  	}
--	if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE) {
--		wq->db_format = bf_get(lpfc_mbx_wq_create_db_format,
--				       &wq_create->u.response);
--		if ((wq->db_format != LPFC_DB_LIST_FORMAT) &&
--		    (wq->db_format != LPFC_DB_RING_FORMAT)) {
--			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--					"3265 WQ[%d] doorbell format not "
--					"supported: x%x\n", wq->queue_id,
--					wq->db_format);
--			status = -EINVAL;
--			goto out;
--		}
--		pci_barset = bf_get(lpfc_mbx_wq_create_bar_set,
--				    &wq_create->u.response);
--		bar_memmap_p = lpfc_dual_chute_pci_bar_map(phba, pci_barset);
--		if (!bar_memmap_p) {
--			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--					"3263 WQ[%d] failed to memmap pci "
--					"barset:x%x\n", wq->queue_id,
--					pci_barset);
--			status = -ENOMEM;
--			goto out;
--		}
--		db_offset = wq_create->u.response.doorbell_offset;
--		if ((db_offset != LPFC_ULP0_WQ_DOORBELL) &&
--		    (db_offset != LPFC_ULP1_WQ_DOORBELL)) {
--			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--					"3252 WQ[%d] doorbell offset not "
--					"supported: x%x\n", wq->queue_id,
--					db_offset);
--			status = -EINVAL;
--			goto out;
--		}
--		wq->db_regaddr = bar_memmap_p + db_offset;
--		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--				"3264 WQ[%d]: barset:x%x, offset:x%x, "
--				"format:x%x\n", wq->queue_id, pci_barset,
--				db_offset, wq->db_format);
-+
-+	wq->db_format = LPFC_DB_LIST_FORMAT;
-+	if (wq_create_version == LPFC_Q_CREATE_VERSION_0) {
-+		if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE) {
-+			wq->db_format = bf_get(lpfc_mbx_wq_create_db_format,
-+					       &wq_create->u.response);
-+			if ((wq->db_format != LPFC_DB_LIST_FORMAT) &&
-+			    (wq->db_format != LPFC_DB_RING_FORMAT)) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+						"3265 WQ[%d] doorbell format "
-+						"not supported: x%x\n",
-+						wq->queue_id, wq->db_format);
-+				status = -EINVAL;
-+				goto out;
-+			}
-+			pci_barset = bf_get(lpfc_mbx_wq_create_bar_set,
-+					    &wq_create->u.response);
-+			bar_memmap_p = lpfc_dual_chute_pci_bar_map(phba,
-+								   pci_barset);
-+			if (!bar_memmap_p) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+						"3263 WQ[%d] failed to memmap "
-+						"pci barset:x%x\n",
-+						wq->queue_id, pci_barset);
-+				status = -ENOMEM;
-+				goto out;
-+			}
-+			db_offset = wq_create->u.response.doorbell_offset;
-+			if ((db_offset != LPFC_ULP0_WQ_DOORBELL) &&
-+			    (db_offset != LPFC_ULP1_WQ_DOORBELL)) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+						"3252 WQ[%d] doorbell offset "
-+						"not supported: x%x\n",
-+						wq->queue_id, db_offset);
-+				status = -EINVAL;
-+				goto out;
-+			}
-+			wq->db_regaddr = bar_memmap_p + db_offset;
-+			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+					"3264 WQ[%d]: barset:x%x, offset:x%x, "
-+					"format:x%x\n", wq->queue_id,
-+					pci_barset, db_offset, wq->db_format);
-+		} else
-+			wq->db_regaddr = phba->sli4_hba.WQDBregaddr;
- 	} else {
--		wq->db_format = LPFC_DB_LIST_FORMAT;
--		wq->db_regaddr = phba->sli4_hba.WQDBregaddr;
-+		/* Check if DPP was honored by the firmware */
-+		wq->dpp_enable = bf_get(lpfc_mbx_wq_create_dpp_rsp,
-+				    &wq_create->u.response_1);
-+		if (wq->dpp_enable) {
-+			pci_barset = bf_get(lpfc_mbx_wq_create_v1_bar_set,
-+					    &wq_create->u.response_1);
-+			bar_memmap_p = lpfc_dual_chute_pci_bar_map(phba,
-+								   pci_barset);
-+			if (!bar_memmap_p) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+						"3267 WQ[%d] failed to memmap "
-+						"pci barset:x%x\n",
-+						wq->queue_id, pci_barset);
-+				status = -ENOMEM;
-+				goto out;
-+			}
-+			db_offset = wq_create->u.response_1.doorbell_offset;
-+			wq->db_regaddr = bar_memmap_p + db_offset;
-+			wq->dpp_id = bf_get(lpfc_mbx_wq_create_dpp_id,
-+					    &wq_create->u.response_1);
-+			dpp_barset = bf_get(lpfc_mbx_wq_create_dpp_bar,
-+					    &wq_create->u.response_1);
-+			bar_memmap_p = lpfc_dual_chute_pci_bar_map(phba,
-+								   dpp_barset);
-+			if (!bar_memmap_p) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+						"3268 WQ[%d] failed to memmap "
-+						"pci barset:x%x\n",
-+						wq->queue_id, dpp_barset);
-+				status = -ENOMEM;
-+				goto out;
-+			}
-+			dpp_offset = wq_create->u.response_1.dpp_offset;
-+			wq->dpp_regaddr = bar_memmap_p + dpp_offset;
-+			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+					"3271 WQ[%d]: barset:x%x, offset:x%x, "
-+					"dpp_id:x%x dpp_barset:x%x "
-+					"dpp_offset:x%x\n",
-+					wq->queue_id, pci_barset, db_offset,
-+					wq->dpp_id, dpp_barset, dpp_offset);
-+
-+			/* Enable combined writes for DPP aperture */
-+			pg_addr = (unsigned long)(wq->dpp_regaddr) & PAGE_MASK;
-+#ifdef CONFIG_X86
-+			rc = set_memory_wc(pg_addr, 1);
-+			if (rc) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+						"3272 Cannot setup Combined "
-+						"Write on WQ[%d] - disable DPP\n",
-+						wq->queue_id);
-+				phba->cfg_enable_dpp = 0;
-+			}
-+#else
-+			phba->cfg_enable_dpp = 0;
-+#endif
-+		} else
-+			wq->db_regaddr = phba->sli4_hba.WQDBregaddr;
- 	}
- 	wq->pring = kzalloc(sizeof(struct lpfc_sli_ring), GFP_KERNEL);
- 	if (wq->pring == NULL) {
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 33838b4b28d9..708167b309bd 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -180,6 +180,10 @@ struct lpfc_queue {
- 	uint8_t q_flag;
- #define HBA_NVMET_WQFULL	0x1 /* We hit WQ Full condition for NVMET */
- 	void __iomem *db_regaddr;
-+	uint16_t dpp_enable;
-+	uint16_t dpp_id;
-+	void __iomem *dpp_regaddr;
-+
- 	/* For q stats */
- 	uint32_t q_cnt_1;
- 	uint32_t q_cnt_2;
-@@ -524,11 +528,17 @@ struct lpfc_vector_map_info {
- /* SLI4 HBA data structure entries */
- struct lpfc_sli4_hba {
- 	void __iomem *conf_regs_memmap_p; /* Kernel memory mapped address for
--					     PCI BAR0, config space registers */
-+					   * config space registers
-+					   */
- 	void __iomem *ctrl_regs_memmap_p; /* Kernel memory mapped address for
--					     PCI BAR1, control registers */
-+					   * control registers
-+					   */
- 	void __iomem *drbl_regs_memmap_p; /* Kernel memory mapped address for
--					     PCI BAR2, doorbell registers */
-+					   * doorbell registers
-+					   */
-+	void __iomem *dpp_regs_memmap_p;  /* Kernel memory mapped address for
-+					   * dpp registers
-+					   */
- 	union {
- 		struct {
- 			/* IF Type 0, BAR 0 PCI cfg space reg mem map */
+-	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-			"0405 lpfc_link_speed attribute cannot "
+-			"be set to %d, allowed values are "
+-			"["LPFC_LINK_SPEED_STRING"]\n", val);
+-	phba->cfg_link_speed = LPFC_USER_LINK_SPEED_AUTO;
+-	return -EINVAL;
+ }
+ 
+ static DEVICE_ATTR(lpfc_link_speed, S_IRUGO | S_IWUSR,
+@@ -5734,6 +5756,9 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
+ 		case LPFC_LINK_SPEED_32GHZ:
+ 			fc_host_speed(shost) = FC_PORTSPEED_32GBIT;
+ 			break;
++		case LPFC_LINK_SPEED_64GHZ:
++			fc_host_speed(shost) = FC_PORTSPEED_64GBIT;
++			break;
+ 		default:
+ 			fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 9d20d2c208c7..03a7e13a049d 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -2130,6 +2130,8 @@ lpfc_fdmi_port_attr_support_speed(struct lpfc_vport *vport,
+ 
+ 	ae->un.AttrInt = 0;
+ 	if (!(phba->hba_flag & HBA_FCOE_MODE)) {
++		if (phba->lmt & LMT_64Gb)
++			ae->un.AttrInt |= HBA_PORTSPEED_64GFC;
+ 		if (phba->lmt & LMT_32Gb)
+ 			ae->un.AttrInt |= HBA_PORTSPEED_32GFC;
+ 		if (phba->lmt & LMT_16Gb)
+@@ -2201,6 +2203,9 @@ lpfc_fdmi_port_attr_speed(struct lpfc_vport *vport,
+ 		case LPFC_LINK_SPEED_32GHZ:
+ 			ae->un.AttrInt = HBA_PORTSPEED_32GFC;
+ 			break;
++		case LPFC_LINK_SPEED_64GHZ:
++			ae->un.AttrInt = HBA_PORTSPEED_64GFC;
++			break;
+ 		default:
+ 			ae->un.AttrInt = HBA_PORTSPEED_UNKNOWN;
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index ba896554a14f..09e4eb9fbc69 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5270,6 +5270,9 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
+ 	case LPFC_LINK_SPEED_32GHZ:
+ 		rdp_speed = RDP_PS_32GB;
+ 		break;
++	case LPFC_LINK_SPEED_64GHZ:
++		rdp_speed = RDP_PS_64GB;
++		break;
+ 	default:
+ 		rdp_speed = RDP_PS_UNKNOWN;
+ 		break;
+@@ -5277,6 +5280,8 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
+ 
+ 	desc->info.port_speed.speed = cpu_to_be16(rdp_speed);
+ 
++	if (phba->lmt & LMT_64Gb)
++		rdp_cap |= RDP_PS_64GB;
+ 	if (phba->lmt & LMT_32Gb)
+ 		rdp_cap |= RDP_PS_32GB;
+ 	if (phba->lmt & LMT_16Gb)
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index f5bbac3cadbb..7855afa13568 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -3084,6 +3084,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
+ 		case LPFC_LINK_SPEED_10GHZ:
+ 		case LPFC_LINK_SPEED_16GHZ:
+ 		case LPFC_LINK_SPEED_32GHZ:
++		case LPFC_LINK_SPEED_64GHZ:
+ 			break;
+ 		default:
+ 			phba->fc_linkspeed = LPFC_LINK_SPEED_UNKNOWN;
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index d07d2fcbea34..cf83322cd4fe 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -1177,6 +1177,9 @@ struct fc_rdp_link_error_status_desc {
+ #define RDP_PS_8GB             0x0800
+ #define RDP_PS_16GB            0x0400
+ #define RDP_PS_32GB            0x0200
++#define RDP_PS_64GB            0x0100
++#define RDP_PS_128GB           0x0080
++#define RDP_PS_256GB           0x0040
+ 
+ #define RDP_CAP_USER_CONFIGURED 0x0002
+ #define RDP_CAP_UNKNOWN         0x0001
+@@ -2258,6 +2261,9 @@ typedef struct {
+ #define LINK_SPEED_10G  0x10    /* 10 Gigabaud */
+ #define LINK_SPEED_16G  0x11    /* 16 Gigabaud */
+ #define LINK_SPEED_32G  0x14    /* 32 Gigabaud */
++#define LINK_SPEED_64G  0x17    /* 64 Gigabaud */
++#define LINK_SPEED_128G 0x1A    /* 128 Gigabaud */
++#define LINK_SPEED_256G 0x1D    /* 256 Gigabaud */
+ 
+ } INIT_LINK_VAR;
+ 
+@@ -2442,6 +2448,9 @@ typedef struct {
+ #define LMT_10Gb      0x100
+ #define LMT_16Gb      0x200
+ #define LMT_32Gb      0x400
++#define LMT_64Gb      0x800
++#define LMT_128Gb     0x1000
++#define LMT_256Gb     0x2000
+ 	uint32_t rsvd2;
+ 	uint32_t rsvd3;
+ 	uint32_t max_xri;
+@@ -2966,6 +2975,9 @@ struct lpfc_mbx_read_top {
+ #define LPFC_LINK_SPEED_10GHZ	0x40
+ #define LPFC_LINK_SPEED_16GHZ	0x80
+ #define LPFC_LINK_SPEED_32GHZ	0x90
++#define LPFC_LINK_SPEED_64GHZ	0xA0
++#define LPFC_LINK_SPEED_128GHZ	0xB0
++#define LPFC_LINK_SPEED_256GHZ	0xC0
+ };
+ 
+ /* Structure for MB Command CLEAR_LA (22) */
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 60ccff6fa8b0..0c33510fe75c 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -3961,6 +3961,9 @@ struct lpfc_acqe_fc_la {
+ #define LPFC_FC_LA_SPEED_10G		0xA
+ #define LPFC_FC_LA_SPEED_16G		0x10
+ #define LPFC_FC_LA_SPEED_32G            0x20
++#define LPFC_FC_LA_SPEED_64G            0x21
++#define LPFC_FC_LA_SPEED_128G           0x22
++#define LPFC_FC_LA_SPEED_256G           0x23
+ #define lpfc_acqe_fc_la_topology_SHIFT		16
+ #define lpfc_acqe_fc_la_topology_MASK		0x000000FF
+ #define lpfc_acqe_fc_la_topology_WORD		word0
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 2710b43710aa..c1d7436cca4a 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -731,7 +731,9 @@ lpfc_hba_init_link_fc_topology(struct lpfc_hba *phba, uint32_t fc_topology,
+ 	    ((phba->cfg_link_speed == LPFC_USER_LINK_SPEED_16G) &&
+ 	     !(phba->lmt & LMT_16Gb)) ||
+ 	    ((phba->cfg_link_speed == LPFC_USER_LINK_SPEED_32G) &&
+-	     !(phba->lmt & LMT_32Gb))) {
++	     !(phba->lmt & LMT_32Gb)) ||
++	    ((phba->cfg_link_speed == LPFC_USER_LINK_SPEED_64G) &&
++	     !(phba->lmt & LMT_64Gb))) {
+ 		/* Reset link speed to auto */
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_LINK_EVENT,
+ 			"1302 Invalid speed for this board:%d "
+@@ -2274,7 +2276,9 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
+ 		&& descp && descp[0] != '\0')
+ 		return;
+ 
+-	if (phba->lmt & LMT_32Gb)
++	if (phba->lmt & LMT_64Gb)
++		max_speed = 64;
++	else if (phba->lmt & LMT_32Gb)
+ 		max_speed = 32;
+ 	else if (phba->lmt & LMT_16Gb)
+ 		max_speed = 16;
+@@ -4109,6 +4113,8 @@ void lpfc_host_attrib_init(struct Scsi_Host *shost)
+ 				 sizeof fc_host_symbolic_name(shost));
+ 
+ 	fc_host_supported_speeds(shost) = 0;
++	if (phba->lmt & LMT_64Gb)
++		fc_host_supported_speeds(shost) |= FC_PORTSPEED_64GBIT;
+ 	if (phba->lmt & LMT_32Gb)
+ 		fc_host_supported_speeds(shost) |= FC_PORTSPEED_32GBIT;
+ 	if (phba->lmt & LMT_16Gb)
+@@ -4445,6 +4451,9 @@ lpfc_sli4_port_speed_parse(struct lpfc_hba *phba, uint32_t evt_code,
+ 		case LPFC_FC_LA_SPEED_32G:
+ 			port_speed = 32000;
+ 			break;
++		case LPFC_FC_LA_SPEED_64G:
++			port_speed = 64000;
++			break;
+ 		default:
+ 			port_speed = 0;
+ 		}
+@@ -7811,6 +7820,10 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
+ 				phba->cfg_link_speed =
+ 					LPFC_USER_LINK_SPEED_32G;
+ 				break;
++			case LINK_SPEED_64G:
++				phba->cfg_link_speed =
++					LPFC_USER_LINK_SPEED_64G;
++				break;
+ 			case 0xffff:
+ 				phba->cfg_link_speed =
+ 					LPFC_USER_LINK_SPEED_AUTO;
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index 7313ceb0f23b..47c02da11f01 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -557,6 +557,10 @@ lpfc_init_link(struct lpfc_hba * phba,
+ 			mb->un.varInitLnk.link_flags |= FLAGS_LINK_SPEED;
+ 			mb->un.varInitLnk.link_speed = LINK_SPEED_32G;
+ 			break;
++		case LPFC_USER_LINK_SPEED_64G:
++			mb->un.varInitLnk.link_flags |= FLAGS_LINK_SPEED;
++			mb->un.varInitLnk.link_speed = LINK_SPEED_64G;
++			break;
+ 		case LPFC_USER_LINK_SPEED_AUTO:
+ 		default:
+ 			mb->un.varInitLnk.link_speed = LINK_SPEED_AUTO;
 -- 
 2.13.1
