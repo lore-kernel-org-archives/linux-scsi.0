@@ -1,36 +1,165 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 13/13] lpfc: Update 12.0.0.0 modified files for 2018
- Copyright
-Date: Wed, 7 Feb 2018 11:50:33 +0100
-Message-ID: <20180207105033.hxybx4fohe6ogez7@linux-x5ow.site>
-References: <20180207022851.11800-1-jsmart2021@gmail.com>
- <20180207022851.11800-14-jsmart2021@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [V1 2/6] mpt3sas: Configure reply post queue depth, DMA and sgl  tablesize.
+Date: Wed,  7 Feb 2018 02:51:46 -0800
+Message-ID: <1518000710-17256-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+References: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56068 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753424AbeBGKuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 05:50:35 -0500
-Content-Disposition: inline
-In-Reply-To: <20180207022851.11800-14-jsmart2021@gmail.com>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:38751 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753785AbeBGKwO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2018 05:52:14 -0500
+Received: by mail-qt0-f196.google.com with SMTP id z10so608087qti.5
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2018 02:52:13 -0800 (PST)
+In-Reply-To: <1518000710-17256-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This configures shost max sector to 128, single reply descriptor
+post queue, sgl table size to 16 and 32 bit DMA for MPI Endpoint
+and it supports 64K as max IO.
 
-Although I'd change the subject to:
-"lpfc: Change Copyright of Update 12.0.0.0 modified files to 2018" 
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 47 +++++++++++++++++++++++-------------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 40 ++++++++++++++++++------------
+ 2 files changed, 54 insertions(+), 33 deletions(-)
 
-Reads easier for the non-native english speaker (like me).
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 13d6e4e..f45da9a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2214,6 +2214,9 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ 	struct sysinfo s;
+ 	u64 consistent_dma_mask;
+ 
++	if (ioc->is_mcpu_endpoint)
++		goto try_32bit;
++
+ 	if (ioc->dma_mask)
+ 		consistent_dma_mask = DMA_BIT_MASK(64);
+ 	else
+@@ -2232,6 +2235,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ 		}
+ 	}
+ 
++ try_32bit:
+ 	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))
+ 	    && !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
+ 		ioc->base_add_sg_single = &_base_add_sg_single_32;
+@@ -3887,17 +3891,21 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		sg_tablesize = min_t(unsigned short, sg_tablesize,
+ 		   MPT_KDUMP_MIN_PHYS_SEGMENTS);
+ 
+-	if (sg_tablesize < MPT_MIN_PHYS_SEGMENTS)
+-		sg_tablesize = MPT_MIN_PHYS_SEGMENTS;
+-	else if (sg_tablesize > MPT_MAX_PHYS_SEGMENTS) {
+-		sg_tablesize = min_t(unsigned short, sg_tablesize,
+-				      SG_MAX_SEGMENTS);
+-		pr_warn(MPT3SAS_FMT
+-		 "sg_tablesize(%u) is bigger than kernel"
+-		 " defined SG_CHUNK_SIZE(%u)\n", ioc->name,
+-		 sg_tablesize, MPT_MAX_PHYS_SEGMENTS);
++	if (ioc->is_mcpu_endpoint)
++		ioc->shost->sg_tablesize = MPT_MIN_PHYS_SEGMENTS;
++	else {
++		if (sg_tablesize < MPT_MIN_PHYS_SEGMENTS)
++			sg_tablesize = MPT_MIN_PHYS_SEGMENTS;
++		else if (sg_tablesize > MPT_MAX_PHYS_SEGMENTS) {
++			sg_tablesize = min_t(unsigned short, sg_tablesize,
++					SG_MAX_SEGMENTS);
++			pr_warn(MPT3SAS_FMT
++				"sg_tablesize(%u) is bigger than kernel "
++				"defined SG_CHUNK_SIZE(%u)\n", ioc->name,
++				sg_tablesize, MPT_MAX_PHYS_SEGMENTS);
++		}
++		ioc->shost->sg_tablesize = sg_tablesize;
+ 	}
+-	ioc->shost->sg_tablesize = sg_tablesize;
+ 
+ 	ioc->internal_depth = min_t(int, (facts->HighPriorityCredit + (5)),
+ 		(facts->RequestCredit / 4));
+@@ -3982,13 +3990,18 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	/* reply free queue sizing - taking into account for 64 FW events */
+ 	ioc->reply_free_queue_depth = ioc->hba_queue_depth + 64;
+ 
+-	/* calculate reply descriptor post queue depth */
+-	ioc->reply_post_queue_depth = ioc->hba_queue_depth +
+-				ioc->reply_free_queue_depth +  1 ;
+-	/* align the reply post queue on the next 16 count boundary */
+-	if (ioc->reply_post_queue_depth % 16)
+-		ioc->reply_post_queue_depth += 16 -
+-		(ioc->reply_post_queue_depth % 16);
++	/* mCPU manage single counters for simplicity */
++	if (ioc->is_mcpu_endpoint)
++		ioc->reply_post_queue_depth = ioc->reply_free_queue_depth;
++	else {
++		/* calculate reply descriptor post queue depth */
++		ioc->reply_post_queue_depth = ioc->hba_queue_depth +
++			ioc->reply_free_queue_depth +  1;
++		/* align the reply post queue on the next 16 count boundary */
++		if (ioc->reply_post_queue_depth % 16)
++			ioc->reply_post_queue_depth += 16 -
++				(ioc->reply_post_queue_depth % 16);
++	}
+ 
+ 	if (ioc->reply_post_queue_depth >
+ 	    facts->MaxReplyDescriptorPostQueueDepth) {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index bde3c6f..5e52679 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -10521,26 +10521,34 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->transportt = mpt3sas_transport_template;
+ 	shost->unique_id = ioc->id;
+ 
+-	if (max_sectors != 0xFFFF) {
+-		if (max_sectors < 64) {
+-			shost->max_sectors = 64;
+-			pr_warn(MPT3SAS_FMT "Invalid value %d passed " \
+-			    "for max_sectors, range is 64 to 32767. Assigning "
+-			    "value of 64.\n", ioc->name, max_sectors);
+-		} else if (max_sectors > 32767) {
+-			shost->max_sectors = 32767;
+-			pr_warn(MPT3SAS_FMT "Invalid value %d passed " \
+-			    "for max_sectors, range is 64 to 32767. Assigning "
+-			    "default value of 32767.\n", ioc->name,
+-			    max_sectors);
+-		} else {
+-			shost->max_sectors = max_sectors & 0xFFFE;
+-			pr_info(MPT3SAS_FMT
++	if (ioc->is_mcpu_endpoint) {
++		/* mCPU MPI support 64K max IO */
++		shost->max_sectors = 128;
++		pr_info(MPT3SAS_FMT
+ 				"The max_sectors value is set to %d\n",
+ 				ioc->name, shost->max_sectors);
++	} else {
++		if (max_sectors != 0xFFFF) {
++			if (max_sectors < 64) {
++				shost->max_sectors = 64;
++				pr_warn(MPT3SAS_FMT "Invalid value %d passed " \
++				    "for max_sectors, range is 64 to 32767. " \
++				    "Assigning value of 64.\n", \
++				    ioc->name, max_sectors);
++			} else if (max_sectors > 32767) {
++				shost->max_sectors = 32767;
++				pr_warn(MPT3SAS_FMT "Invalid value %d passed " \
++				    "for max_sectors, range is 64 to 32767." \
++				    "Assigning default value of 32767.\n", \
++				    ioc->name, max_sectors);
++			} else {
++				shost->max_sectors = max_sectors & 0xFFFE;
++				pr_info(MPT3SAS_FMT
++					"The max_sectors value is set to %d\n",
++					ioc->name, shost->max_sectors);
++			}
+ 		}
+ 	}
+-
+ 	/* register EEDP capabilities with SCSI layer */
+ 	if (prot_mask > 0)
+ 		scsi_host_set_prot(shost, prot_mask);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.5.5
