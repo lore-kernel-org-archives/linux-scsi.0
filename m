@@ -1,59 +1,40 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V2 2/8] blk-mq: introduce BLK_MQ_F_GLOBAL_TAGS
-Date: Tue, 6 Feb 2018 16:18:20 -0700
-Message-ID: <398c755a-ada6-1e60-9562-51b69476e55d@kernel.dk>
-References: <20180205152035.15016-1-ming.lei@redhat.com>
- <20180205152035.15016-3-ming.lei@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/3] scsi: aacraid: Multi controller Kdump IOP reset handling
+Date: Tue, 06 Feb 2018 19:21:15 -0500
+Message-ID: <yq1vaf93b0k.fsf@oracle.com>
+References: <20180120010157.22674-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180205152035.15016-3-ming.lei@redhat.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:51726 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932106AbeBGAV0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Feb 2018 19:21:26 -0500
+In-Reply-To: <20180120010157.22674-1-RaghavaAditya.Renukunta@microsemi.com>
+        (Raghava Aditya Renukunta's message of "Fri, 19 Jan 2018 17:01:54
+        -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Scott.Benesh@microsemi.com, tom.white@microsemi.com, aacraid@microsemi.com, "Guilherme G . Piccoli" <gpiccoli@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-On 2/5/18 8:20 AM, Ming Lei wrote:
-> Quite a few HBAs(such as HPSA, megaraid, mpt3sas, ..) support multiple
-> reply queues, but tags is often HBA wide.
-> 
-> These HBAs have switched to use pci_alloc_irq_vectors(PCI_IRQ_AFFINITY)
-> for automatic affinity assignment.
-> 
-> Now 84676c1f21e8ff5(genirq/affinity: assign vectors to all possible CPUs)
-> has been merged to V4.16-rc, and it is easy to allocate all offline CPUs
-> for some irq vectors, this can't be avoided even though the allocation
-> is improved.
-> 
-> So all these drivers have to avoid to ask HBA to complete request in
-> reply queue which hasn't online CPUs assigned, and HPSA has been broken
-> with v4.15+:
-> 
-> 	https://marc.info/?l=linux-kernel&m=151748144730409&w=2
-> 
-> This issue can be solved generically and easily via blk_mq(scsi_mq) multiple
-> hw queue by mapping each reply queue into hctx, but one tricky thing is
-> the HBA wide(instead of hw queue wide) tags.
-> 
-> This patch is based on the following Hannes's patch:
-> 
-> 	https://marc.info/?l=linux-block&m=149132580511346&w=2
-> 
-> One big difference with Hannes's is that this patch only makes the tags sbitmap
-> and active_queues data structure HBA wide, and others are kept as NUMA locality,
-> such as request, hctx, tags, ...
-> 
-> The following patch will support global tags on null_blk, also the performance
-> data is provided, no obvious performance loss is observed when the whole
-> hw queue depth is same.
 
-GLOBAL implies that it's, strangely enough, global. That isn't really the
-case. Why not call this BLK_MQ_F_HOST_TAGS or something like that? I'd
-welcome better names, but global doesn't seem to be a great choice.
+Raghava,
 
-BLK_MQ_F_SET_TAGS?
+> During Kdump aacraid controller IOP reset is invoked, IOP reset
+> takes approx 40 seconds to bring the controller back up and running.
+> with timeout of 120 seconds and anything more than 2 controllers
+> will cause kdump to timeout.
+>
+> This patchset implements a new reset mechanism called DropIO, that
+> induces the fw to drop any pending IO in the fw and making the reset
+> process quicker.
+
+This series doesn't apply to my impending 4.17/scsi-queue. Since the
+latter won't exist until Linus releases rc1, please respin against
+current linus/master and resubmit.
+
+Thanks!
 
 -- 
-Jens Axboe
+Martin K. Petersen	Oracle Linux Engineering
