@@ -1,83 +1,42 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH v2 3/3] scsi: aacraid: Auto detect INTx or MSIx mode during sync cmd processing
-Date: Wed, 7 Feb 2018 08:40:58 -0800
-Message-ID: <20180207164058.29598-4-RaghavaAditya.Renukunta@microsemi.com>
-References: <20180207164058.29598-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH v2 0/3] scsi: aacraid: Multi controller Kdump IOP reset handling
+Date: Wed, 7 Feb 2018 08:40:55 -0800
+Message-ID: <20180207164058.29598-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0053.outbound.protection.outlook.com ([104.47.37.53]:50906
+Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:10320
         "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754546AbeBGQlR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 11:41:17 -0500
-In-Reply-To: <20180207164058.29598-1-RaghavaAditya.Renukunta@microsemi.com>
+        id S1754378AbeBGQlM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Feb 2018 11:41:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: Scott.Benesh@microsemi.com, esc-teamarcdriversvl@microsemi.com
 
-During sync command processing if legacy INTx status indicates
-command is not completed, sample the MSIx register and check if
-it indicates command completion, set controller MSIx enabled flag.
+During Kdump aacraid controller IOP reset is invoked, IOP reset
+takes approx 40 seconds to bring the controller back up and running.
+with timeout of 120 seconds and anything more than 2 controllers
+will cause kdump to timeout.
 
-Signed-off-by: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+This patchset implements a new reset mechanism called DropIO, that
+induces the fw to drop any pending IO in the fw and making the reset
+process quicker.
 
----
-Changes in V2:
-Re based on Linus Master
+Changes in v2:
+Respun patchset against Linus Master
+Added Dave Carroll's reviewed-by tags
 
- drivers/scsi/aacraid/aacraid.h |  1 +
- drivers/scsi/aacraid/src.c     | 22 ++++++++++++++++------
- 2 files changed, 17 insertions(+), 6 deletions(-)
+Raghava Aditya Renukunta (3):
+  scsi: aacraid: Implement DropIO sync command
+  scsi: aacraid: Preserve MSIX mode in the OMR register
+  scsi: aacraid: Auto detect INTx or MSIx mode during sync cmd
+    processing
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index c3fdec9..29bf1e6 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1231,6 +1231,7 @@ struct src_registers {
- 
- #define SRC_ODR_SHIFT		12
- #define SRC_IDR_SHIFT		9
-+#define SRC_MSI_READ_MASK	0x1000
- 
- typedef void (*fib_callback)(void *ctxt, struct fib *fibctx);
- 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 09b82d3..3122389f 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -1405,13 +1405,23 @@ void aac_src_access_devreg(struct aac_dev *dev, int mode)
- 
- static int aac_src_get_sync_status(struct aac_dev *dev)
- {
-+	int msix_val = 0;
-+	int legacy_val = 0;
- 
--	int val;
-+	msix_val = src_readl(dev, MUnit.ODR_MSI) & SRC_MSI_READ_MASK ? 1 : 0;
- 
--	if (dev->msi_enabled)
--		val = src_readl(dev, MUnit.ODR_MSI) & 0x1000 ? 1 : 0;
--	else
--		val = src_readl(dev, MUnit.ODR_R) >> SRC_ODR_SHIFT;
-+	if (!dev->msi_enabled) {
-+		/*
-+		 * if Legacy int status indicates cmd is not complete
-+		 * sample MSIx register to see if it indiactes cmd complete,
-+		 * if yes set the controller in MSIx mode and consider cmd
-+		 * completed
-+		 */
-+		legacy_val = src_readl(dev, MUnit.ODR_R) >> SRC_ODR_SHIFT;
-+		if (!(legacy_val & 1) && msix_val)
-+			dev->msi_enabled = 1;
-+		return legacy_val;
-+	}
- 
--	return val;
-+	return msix_val;
- }
+ drivers/scsi/aacraid/aacraid.h |   5 +
+ drivers/scsi/aacraid/src.c     | 205 ++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 198 insertions(+), 12 deletions(-)
+
 -- 
 2.9.4
