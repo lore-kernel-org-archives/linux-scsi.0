@@ -1,74 +1,42 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 1/1] scsi: ufs: fix exception event handling
-Date: Thu, 08 Feb 2018 09:53:21 -0800
-Message-ID: <6c0b3d7d1c38ecb993125bc8e2b85799@codeaurora.org>
-References: <1517200492-2941-1-git-send-email-asutoshd@codeaurora.org>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH v3 1/2] qedi: Fix truncation of CHAP name and secret
+Date: Thu, 8 Feb 2018 11:39:43 -0800
+Message-ID: <5f0261b4-4a5d-a4e2-4c36-7897deb2bf55@suse.com>
+References: <20180207161236.12975-1-nilesh.javali@cavium.com>
+ <20180207161236.12975-2-nilesh.javali@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50568 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752448AbeBHRxX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2018 12:53:23 -0500
-In-Reply-To: <1517200492-2941-1-git-send-email-asutoshd@codeaurora.org>
+Received: from mx2.suse.de ([195.135.220.15]:43500 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752255AbeBHTjs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 8 Feb 2018 14:39:48 -0500
+In-Reply-To: <20180207161236.12975-2-nilesh.javali@cavium.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Asutosh Das <asutoshd@codeaurora.org>
-Cc: cang@codeaurora.org, vivek.gautam@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Maya Erez <merez@codeaurora.org>, linux-kernel@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+To: Nilesh Javali <nilesh.javali@cavium.com>, martin.petersen@oracle.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-On 2018-01-28 20:34, Asutosh Das wrote:
-> From: Maya Erez <merez@codeaurora.org>
+On 02/07/2018 08:12 AM, Nilesh Javali wrote:
+> From: Andrew Vasquez <andrew.vasquez@cavium.com>
 > 
-> The device can set the exception event bit in one of the response UPIU,
-> for example to notify the need for urgent BKOPs operation.
-> In such a case the host driver calls ufshcd_exception_event_handler to
-> handle this notification.
-> When trying to check the exception event status (for finding the cause 
-> for
-> the exception event), the device may be busy with additional SCSI 
-> commands
-> handling and may not respond within the 100ms timeout.
+> The data in NVRAM is not guaranteed to be NUL terminated.
+> Since snprintf expects byte-stream to accommodate null byte,
+> the CHAP secret is truncated.
+> Use sprintf instead of snprintf to fix the truncation of
+> CHAP name and secret.
 > 
-> To prevent that, we need to block SCSI commands during handling of
-> exception events and allow retransmissions of the query requests,
-> in case of timeout.
-> 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Maya Erez <merez@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> Signed-off-by: Andrew Vasquez <andrew.vasquez@cavium.com>
+> Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/qedi/qedi_main.c | 24 ++++++++++++------------
+>  1 file changed, 12 insertions(+), 12 deletions(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 8af2af3..2dd488f 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4955,6 +4955,7 @@ static void
-> ufshcd_exception_event_handler(struct work_struct *work)
->  	hba = container_of(work, struct ufs_hba, eeh_work);
-> 
->  	pm_runtime_get_sync(hba->dev);
-> +	scsi_block_requests(hba->host);
->  	err = ufshcd_get_ee_status(hba, &status);
->  	if (err) {
->  		dev_err(hba->dev, "%s: failed to get exception status %d\n",
-> @@ -4968,6 +4969,7 @@ static void
-> ufshcd_exception_event_handler(struct work_struct *work)
->  		ufshcd_bkops_exception_event_handler(hba);
-> 
->  out:
-> +	scsi_unblock_requests(hba->host);
->  	pm_runtime_put_sync(hba->dev);
->  	return;
->  }
+> ...
 
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Lee Duncan <lduncan@suse.com>
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Lee Duncan
