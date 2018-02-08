@@ -1,15 +1,15 @@
 From: Chris Leech <cleech@redhat.com>
 Subject: Re: [PATCH] libiscsi: ensure session spin lock usage consistent
-Date: Wed, 7 Feb 2018 20:36:45 -0800
-Message-ID: <20180208043645.GG27465@straylight.hirudinean.org>
+Date: Wed, 7 Feb 2018 21:17:50 -0800
+Message-ID: <20180208051750.GA30332@straylight.hirudinean.org>
 References: <20180205191323.5274-1-lduncan@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52980 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36816 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750815AbeBHEgr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Feb 2018 23:36:47 -0500
+        id S1750847AbeBHFRw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 8 Feb 2018 00:17:52 -0500
 Content-Disposition: inline
 In-Reply-To: <20180205191323.5274-1-lduncan@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,44 +17,20 @@ List-Id: linux-scsi@vger.kernel.org
 To: Lee Duncan <lduncan@suse.com>
 Cc: linux-scsi@vger.kernel.org, hare@suse.de
 
+I overlooked it by mentally swapping out the session->lock in the patch
+for session->frwd_lock from the warning when looking at this, but what
+kernel was this patch built against?  It doesn't have the
+frwd_lock/back_lock split stuff.
+
+- Chris
+
 On Mon, Feb 05, 2018 at 11:13:23AM -0800, Lee Duncan wrote:
 > The libiscsi code was using both spin_lock()/spin_unlock()
 > and spin_lock_bh()/spin_unlock_bh() on its session lock.
 > In addition, lock validation found that libiscsi.c was
 > taking a HARDIRQ-unsafe lock while holding an HARDIRQ-
 > irq-safe lock:
-
-Lee and I have exchanged a few mails off-list, but I don't think these
-changes are the right thing to address the lockdep warning here.
-
-I've managed to reproduce this by exporting a scsi_debug lun over iSCSI
-and running fio traffic on a lockdep enabled initiator.
-
-The deadlock that lockdep is worried about is:
-
->   Possible interrupt unsafe locking scenario:
->
->        CPU0                    CPU1
->        ----                    ----
->   lock(&(&session->frwd_lock)->rlock);
->                                local_irq_disable();
->                                lock(&(&q->__queue_lock)->rlock);
->                                lock(&(&session->frwd_lock)->rlock);
->   <Interrupt>
->     lock(&(&q->__queue_lock)->rlock);
 > 
->  *** DEADLOCK ***
-
-Which I don't think can actually happen unless the queue_lock is being
-taken in hardirq context by any of the iSCSI drivers, but lockdep can't
-know that.  But it does make me wonder if we can do less in
-iscsi_eh_cmd_timed_out while interrupts are blocked.
-
-Lee, I'm going to test with your patch applied and see what lockdep
-kicks out.
-
-- Chris
- 
 > > [ 2528.738454] =====================================================
 > > [ 2528.744679] WARNING: HARDIRQ-safe -> HARDIRQ-unsafe lock order detected
 > > [ 2528.749891] 4.15.0-00006-g4548e6f42022-dirty #418 Not tainted
