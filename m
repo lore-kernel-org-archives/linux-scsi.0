@@ -1,225 +1,829 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/5] blk-mq/scsi-mq: support global tags & introduce
- force_blk_mq
-Date: Thu, 8 Feb 2018 08:00:29 +0100
-Message-ID: <35778fd9-ede6-ed3d-4b13-27fb35ede9bd@suse.de>
-References: <20180203042112.15239-1-ming.lei@redhat.com>
- <07c1f41e-de7c-5e3d-1a2d-0cd7af7b46df@suse.de>
- <528c93de0aac9010e274847ab1ae0328@mail.gmail.com>
- <20180205101734.GA32558@ming.t460p>
- <4c8162129f2a09dca2d1e7eefd61e272@mail.gmail.com>
- <20180206080452.GA14651@ming.t460p>
- <b0b6dae90e4525f91459d450c01c4204@mail.gmail.com>
- <20180206123148.GA29378@ming.t460p>
- <8cf1036167ec5fb58c1d2f70bbb0b678@mail.gmail.com>
- <4c934478-a9c1-2f66-83f2-982b85c4e6cc@suse.de>
- <20180207122257.GA16633@ming.t460p>
- <95b8ea33c79b84188e4a54b4e5fcd7b6@mail.gmail.com>
+From: Riku Voipio <riku.voipio@linaro.org>
+Subject: Re: [PATCH v7 1/5] scsi: ufs: add Hisilicon ufs driver code
+Date: Thu, 8 Feb 2018 15:19:31 +0200
+Message-ID: <CAAqcGHkZr0F5vqLvP+OkTw1VOMGWn0+H5eOpV3WQxN3xgKFu-g@mail.gmail.com>
+References: <20180106095117.67907-1-liwei213@huawei.com> <20180106095117.67907-2-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <95b8ea33c79b84188e4a54b4e5fcd7b6@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36070 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750876AbeBHNTe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2018 08:19:34 -0500
+Received: by mail-lf0-f68.google.com with SMTP id t79so6372922lfe.3
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Feb 2018 05:19:33 -0800 (PST)
+In-Reply-To: <20180106095117.67907-2-liwei213@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Li Wei <liwei213@huawei.com>
+Cc: xuwei5@hisilicon.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, Arnd Bergmann <arnd@arndb.de>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, devicetree@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-scsi@vger.kernel.org, zangleigang@hisilicon.com, gengjianfeng@hisilicon.com, Guodong Xu <guodong.xu@linaro.org>, Zhangfei Gao <zhangfei.gao@linaro.org>, fengbaopeng@hisilicon.com
 
-On 02/07/2018 03:14 PM, Kashyap Desai wrote:
->> -----Original Message-----
->> From: Ming Lei [mailto:ming.lei@redhat.com]
->> Sent: Wednesday, February 7, 2018 5:53 PM
->> To: Hannes Reinecke
->> Cc: Kashyap Desai; Jens Axboe; linux-block@vger.kernel.org; Christoph
->> Hellwig; Mike Snitzer; linux-scsi@vger.kernel.org; Arun Easi; Omar
-> Sandoval;
->> Martin K . Petersen; James Bottomley; Christoph Hellwig; Don Brace;
-> Peter
->> Rivera; Paolo Bonzini; Laurence Oberman
->> Subject: Re: [PATCH 0/5] blk-mq/scsi-mq: support global tags & introduce
->> force_blk_mq
->>
->> On Wed, Feb 07, 2018 at 07:50:21AM +0100, Hannes Reinecke wrote:
->>> Hi all,
->>>
->>> [ .. ]
->>>>>
->>>>> Could you share us your patch for enabling global_tags/MQ on
->>>> megaraid_sas
->>>>> so that I can reproduce your test?
->>>>>
->>>>>> See below perf top data. "bt_iter" is consuming 4 times more CPU.
->>>>>
->>>>> Could you share us what the IOPS/CPU utilization effect is after
->>>> applying the
->>>>> patch V2? And your test script?
->>>> Regarding CPU utilization, I need to test one more time. Currently
->>>> system is in used.
->>>>
->>>> I run below fio test on total 24 SSDs expander attached.
->>>>
->>>> numactl -N 1 fio jbod.fio --rw=randread --iodepth=64 --bs=4k
->>>> --ioengine=libaio --rw=randread
->>>>
->>>> Performance dropped from 1.6 M IOPs to 770K IOPs.
->>>>
->>> This is basically what we've seen with earlier iterations.
->>
->> Hi Hannes,
->>
->> As I mentioned in another mail[1], Kashyap's patch has a big issue,
-> which
->> causes only reply queue 0 used.
->>
->> [1] https://marc.info/?l=linux-scsi&m=151793204014631&w=2
->>
->> So could you guys run your performance test again after fixing the
-> patch?
-> 
-> Ming -
-> 
-> I tried after change you requested.  Performance drop is still unresolved.
-> From 1.6 M IOPS to 770K IOPS.
-> 
-> See below data. All 24 reply queue is in used correctly.
-> 
-> IRQs / 1 second(s)
-> IRQ#  TOTAL  NODE0   NODE1  NAME
->  360  16422      0   16422  IR-PCI-MSI 70254653-edge megasas
->  364  15980      0   15980  IR-PCI-MSI 70254657-edge megasas
->  362  15979      0   15979  IR-PCI-MSI 70254655-edge megasas
->  345  15696      0   15696  IR-PCI-MSI 70254638-edge megasas
->  341  15659      0   15659  IR-PCI-MSI 70254634-edge megasas
->  369  15656      0   15656  IR-PCI-MSI 70254662-edge megasas
->  359  15650      0   15650  IR-PCI-MSI 70254652-edge megasas
->  358  15596      0   15596  IR-PCI-MSI 70254651-edge megasas
->  350  15574      0   15574  IR-PCI-MSI 70254643-edge megasas
->  342  15532      0   15532  IR-PCI-MSI 70254635-edge megasas
->  344  15527      0   15527  IR-PCI-MSI 70254637-edge megasas
->  346  15485      0   15485  IR-PCI-MSI 70254639-edge megasas
->  361  15482      0   15482  IR-PCI-MSI 70254654-edge megasas
->  348  15467      0   15467  IR-PCI-MSI 70254641-edge megasas
->  368  15463      0   15463  IR-PCI-MSI 70254661-edge megasas
->  354  15420      0   15420  IR-PCI-MSI 70254647-edge megasas
->  351  15378      0   15378  IR-PCI-MSI 70254644-edge megasas
->  352  15377      0   15377  IR-PCI-MSI 70254645-edge megasas
->  356  15348      0   15348  IR-PCI-MSI 70254649-edge megasas
->  337  15344      0   15344  IR-PCI-MSI 70254630-edge megasas
->  343  15320      0   15320  IR-PCI-MSI 70254636-edge megasas
->  355  15266      0   15266  IR-PCI-MSI 70254648-edge megasas
->  335  15247      0   15247  IR-PCI-MSI 70254628-edge megasas
->  363  15233      0   15233  IR-PCI-MSI 70254656-edge megasas
-> 
-> 
-> Average:        CPU      %usr     %nice      %sys   %iowait    %steal
-> %irq     %soft    %guest    %gnice     %idle
-> Average:         18      3.80      0.00     14.78     10.08      0.00
-> 0.00      4.01      0.00      0.00     67.33
-> Average:         19      3.26      0.00     15.35     10.62      0.00
-> 0.00      4.03      0.00      0.00     66.74
-> Average:         20      3.42      0.00     14.57     10.67      0.00
-> 0.00      3.84      0.00      0.00     67.50
-> Average:         21      3.19      0.00     15.60     10.75      0.00
-> 0.00      4.16      0.00      0.00     66.30
-> Average:         22      3.58      0.00     15.15     10.66      0.00
-> 0.00      3.51      0.00      0.00     67.11
-> Average:         23      3.34      0.00     15.36     10.63      0.00
-> 0.00      4.17      0.00      0.00     66.50
-> Average:         24      3.50      0.00     14.58     10.93      0.00
-> 0.00      3.85      0.00      0.00     67.13
-> Average:         25      3.20      0.00     14.68     10.86      0.00
-> 0.00      4.31      0.00      0.00     66.95
-> Average:         26      3.27      0.00     14.80     10.70      0.00
-> 0.00      3.68      0.00      0.00     67.55
-> Average:         27      3.58      0.00     15.36     10.80      0.00
-> 0.00      3.79      0.00      0.00     66.48
-> Average:         28      3.46      0.00     15.17     10.46      0.00
-> 0.00      3.32      0.00      0.00     67.59
-> Average:         29      3.34      0.00     14.42     10.72      0.00
-> 0.00      3.34      0.00      0.00     68.18
-> Average:         30      3.34      0.00     15.08     10.70      0.00
-> 0.00      3.89      0.00      0.00     66.99
-> Average:         31      3.26      0.00     15.33     10.47      0.00
-> 0.00      3.33      0.00      0.00     67.61
-> Average:         32      3.21      0.00     14.80     10.61      0.00
-> 0.00      3.70      0.00      0.00     67.67
-> Average:         33      3.40      0.00     13.88     10.55      0.00
-> 0.00      4.02      0.00      0.00     68.15
-> Average:         34      3.74      0.00     17.41     10.61      0.00
-> 0.00      4.51      0.00      0.00     63.73
-> Average:         35      3.35      0.00     14.37     10.74      0.00
-> 0.00      3.84      0.00      0.00     67.71
-> Average:         36      0.54      0.00      1.77      0.00      0.00
-> 0.00      0.00      0.00      0.00     97.69
-> ..
-> Average:         54      3.60      0.00     15.17     10.39      0.00
-> 0.00      4.22      0.00      0.00     66.62
-> Average:         55      3.33      0.00     14.85     10.55      0.00
-> 0.00      3.96      0.00      0.00     67.31
-> Average:         56      3.40      0.00     15.19     10.54      0.00
-> 0.00      3.74      0.00      0.00     67.13
-> Average:         57      3.41      0.00     13.98     10.78      0.00
-> 0.00      4.10      0.00      0.00     67.73
-> Average:         58      3.32      0.00     15.16     10.52      0.00
-> 0.00      4.01      0.00      0.00     66.99
-> Average:         59      3.17      0.00     15.80     10.35      0.00
-> 0.00      3.86      0.00      0.00     66.80
-> Average:         60      3.00      0.00     14.63     10.59      0.00
-> 0.00      3.97      0.00      0.00     67.80
-> Average:         61      3.34      0.00     14.70     10.66      0.00
-> 0.00      4.32      0.00      0.00     66.97
-> Average:         62      3.34      0.00     15.29     10.56      0.00
-> 0.00      3.89      0.00      0.00     66.92
-> Average:         63      3.29      0.00     14.51     10.72      0.00
-> 0.00      3.85      0.00      0.00     67.62
-> Average:         64      3.48      0.00     15.31     10.65      0.00
-> 0.00      3.97      0.00      0.00     66.60
-> Average:         65      3.34      0.00     14.36     10.80      0.00
-> 0.00      4.11      0.00      0.00     67.39
-> Average:         66      3.13      0.00     14.94     10.70      0.00
-> 0.00      4.10      0.00      0.00     67.13
-> Average:         67      3.06      0.00     15.56     10.69      0.00
-> 0.00      3.82      0.00      0.00     66.88
-> Average:         68      3.33      0.00     14.98     10.61      0.00
-> 0.00      3.81      0.00      0.00     67.27
-> Average:         69      3.20      0.00     15.43     10.70      0.00
-> 0.00      3.82      0.00      0.00     66.85
-> Average:         70      3.34      0.00     17.14     10.59      0.00
-> 0.00      3.00      0.00      0.00     65.92
-> Average:         71      3.41      0.00     14.94     10.56      0.00
-> 0.00      3.41      0.00      0.00     67.69
-> 
-> Perf top -
-> 
->   64.33%  [kernel]            [k] bt_iter
->    4.86%  [kernel]            [k] blk_mq_queue_tag_busy_iter
->    4.23%  [kernel]            [k] _find_next_bit
->    2.40%  [kernel]            [k] native_queued_spin_lock_slowpath
->    1.09%  [kernel]            [k] sbitmap_any_bit_set
->    0.71%  [kernel]            [k] sbitmap_queue_clear
->    0.63%  [kernel]            [k] find_next_bit
->    0.54%  [kernel]            [k] _raw_spin_lock_irqsave
-> 
-Ah. So we're spending quite some time in trying to find a free tag.
-I guess this is due to every queue starting at the same position trying
-to find a free tag, which inevitably leads to a contention.
+On 6 January 2018 at 11:51, Li Wei <liwei213@huawei.com> wrote:
+> add Hisilicon ufs driver code.
+>
+> Signed-off-by: Li Wei <liwei213@huawei.com>
+> Signed-off-by: Geng Jianfeng <gengjianfeng@hisilicon.com>
+> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+> Signed-off-by: Yu Jianfeng <steven.yujianfeng@hisilicon.com>
 
-Can't we lay out the pointers so that each queue starts looking for free
-bits at a _different_ location?
+Tested this on 4.15 on Hikey 960. Works, but notice the inline comment
+below about
+MODULE_DEVICE_TABLE for this driver.
 
-IE if we evenly spread the initial position for each queue and use a
-round-robin algorithm we should be getting better results, methinks.
+Tested-by: Riku Voipio <riku.voipio@linaro.org>
 
-I'll give it a go once the hickups with converting megaraid_sas to
-embedded commands are done with :-(
+> ---
+>  drivers/scsi/ufs/Kconfig    |   9 +
+>  drivers/scsi/ufs/Makefile   |   1 +
+>  drivers/scsi/ufs/ufs-hisi.c | 621 ++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-hisi.h | 116 +++++++++
+>  4 files changed, 747 insertions(+)
+>  create mode 100644 drivers/scsi/ufs/ufs-hisi.c
+>  create mode 100644 drivers/scsi/ufs/ufs-hisi.h
+>
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index e27b4d4e6ae2..e09fe6ab3572 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -100,3 +100,12 @@ config SCSI_UFS_QCOM
+>
+>           Select this if you have UFS controller on QCOM chipset.
+>           If unsure, say N.
+> +
+> +config SCSI_UFS_HISI
+> +       tristate "Hisilicon specific hooks to UFS controller platform driver"
+> +       depends on (ARCH_HISI || COMPILE_TEST) && SCSI_UFSHCD_PLATFORM
+> +       ---help---
+> +         This selects the Hisilicon specific additions to UFSHCD platform driver.
+> +
+> +         Select this if you have UFS controller on Hisilicon chipset.
+> +         If unsure, say N.
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 9310c6c83041..2e40fcd5f8b3 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -3,6 +3,7 @@
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+> +obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+>  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+> diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+> new file mode 100644
+> index 000000000000..2f3326cc016c
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-hisi.c
+> @@ -0,0 +1,621 @@
+> +/*
+> + * HiSilicon Hixxxx UFS Driver
+> + *
+> + * Copyright (c) 2016-2017 Linaro Ltd.
+> + * Copyright (c) 2016-2017 HiSilicon Technologies Co., Ltd.
+> + *
+> + * Released under the GPLv2 only.
+> + * SPDX-License-Identifier: GPL-2.0
+> + */
+> +
+> +#include <linux/time.h>
+> +#include <linux/of.h>
+> +#include <linux/of_address.h>
+> +#include <linux/dma-mapping.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/reset.h>
+> +
+> +#include "ufshcd.h"
+> +#include "ufshcd-pltfrm.h"
+> +#include "unipro.h"
+> +#include "ufs-hisi.h"
+> +#include "ufshci.h"
+> +
+> +static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
+> +{
+> +       int err = 0;
+> +       u32 tx_fsm_val_0 = 0;
+> +       u32 tx_fsm_val_1 = 0;
+> +       unsigned long timeout = jiffies + msecs_to_jiffies(HBRN8_POLL_TOUT_MS);
+> +
+> +       do {
+> +               err = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE, 0),
+> +                                     &tx_fsm_val_0);
+> +               err |= ufshcd_dme_get(hba,
+> +                   UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE, 1), &tx_fsm_val_1);
+> +               if (err || (tx_fsm_val_0 == TX_FSM_HIBERN8 &&
+> +                       tx_fsm_val_1 == TX_FSM_HIBERN8))
+> +                       break;
+> +
+> +               /* sleep for max. 200us */
+> +               usleep_range(100, 200);
+> +       } while (time_before(jiffies, timeout));
+> +
+> +       /*
+> +        * we might have scheduled out for long during polling so
+> +        * check the state again.
+> +        */
+> +       if (time_after(jiffies, timeout)) {
+> +               err = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE, 0),
+> +                                    &tx_fsm_val_0);
+> +               err |= ufshcd_dme_get(hba,
+> +                UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE, 1), &tx_fsm_val_1);
+> +       }
+> +
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: unable to get TX_FSM_STATE, err %d\n",
+> +                       __func__, err);
+> +       } else if (tx_fsm_val_0 != TX_FSM_HIBERN8 ||
+> +                        tx_fsm_val_1 != TX_FSM_HIBERN8) {
+> +               err = -1;
+> +               dev_err(hba->dev, "%s: invalid TX_FSM_STATE, lane0 = %d, lane1 = %d\n",
+> +                       __func__, tx_fsm_val_0, tx_fsm_val_1);
+> +       }
+> +
+> +       return err;
+> +}
+> +
+> +static void ufs_hi3660_clk_init(struct ufs_hba *hba)
+> +{
+> +       struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+> +
+> +       ufs_sys_ctrl_clr_bits(host, BIT_SYSCTRL_REF_CLOCK_EN, PHY_CLK_CTRL);
+> +       if (ufs_sys_ctrl_readl(host, PHY_CLK_CTRL) & BIT_SYSCTRL_REF_CLOCK_EN)
+> +               mdelay(1);
+> +       /* use abb clk */
+> +       ufs_sys_ctrl_clr_bits(host, BIT_UFS_REFCLK_SRC_SEl, UFS_SYSCTRL);
+> +       ufs_sys_ctrl_clr_bits(host, BIT_UFS_REFCLK_ISO_EN, PHY_ISO_EN);
+> +       /* open mphy ref clk */
+> +       ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_REF_CLOCK_EN, PHY_CLK_CTRL);
+> +}
+> +
+> +static void ufs_hi3660_soc_init(struct ufs_hba *hba)
+> +{
+> +       struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+> +       u32 reg;
+> +
+> +       if (!IS_ERR(host->rst))
+> +               reset_control_assert(host->rst);
+> +
+> +       /* HC_PSW powerup */
+> +       ufs_sys_ctrl_set_bits(host, BIT_UFS_PSW_MTCMOS_EN, PSW_POWER_CTRL);
+> +       udelay(10);
+> +       /* notify PWR ready */
+> +       ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_PWR_READY, HC_LP_CTRL);
+> +       ufs_sys_ctrl_writel(host, MASK_UFS_DEVICE_RESET | 0,
+> +               UFS_DEVICE_RESET_CTRL);
+> +
+> +       reg = ufs_sys_ctrl_readl(host, PHY_CLK_CTRL);
+> +       reg = (reg & ~MASK_SYSCTRL_CFG_CLOCK_FREQ) | UFS_FREQ_CFG_CLK;
+> +       /* set cfg clk freq */
+> +       ufs_sys_ctrl_writel(host, reg, PHY_CLK_CTRL);
+> +       /* set ref clk freq */
+> +       ufs_sys_ctrl_clr_bits(host, MASK_SYSCTRL_REF_CLOCK_SEL, PHY_CLK_CTRL);
+> +       /* bypass ufs clk gate */
+> +       ufs_sys_ctrl_set_bits(host, MASK_UFS_CLK_GATE_BYPASS,
+> +                                                CLOCK_GATE_BYPASS);
+> +       ufs_sys_ctrl_set_bits(host, MASK_UFS_SYSCRTL_BYPASS, UFS_SYSCTRL);
+> +
+> +       /* open psw clk */
+> +       ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_PSW_CLK_EN, PSW_CLK_CTRL);
+> +       /* disable ufshc iso */
+> +       ufs_sys_ctrl_clr_bits(host, BIT_UFS_PSW_ISO_CTRL, PSW_POWER_CTRL);
+> +       /* disable phy iso */
+> +       ufs_sys_ctrl_clr_bits(host, BIT_UFS_PHY_ISO_CTRL, PHY_ISO_EN);
+> +       /* notice iso disable */
+> +       ufs_sys_ctrl_clr_bits(host, BIT_SYSCTRL_LP_ISOL_EN, HC_LP_CTRL);
+> +
+> +       if (!IS_ERR(host->assert))
+> +               reset_control_deassert(host->assert);
+> +
+> +       /* disable lp_reset_n */
+> +       ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_LP_RESET_N, RESET_CTRL_EN);
+> +       mdelay(1);
+> +
+> +       ufs_sys_ctrl_writel(host, MASK_UFS_DEVICE_RESET | BIT_UFS_DEVICE_RESET,
+> +               UFS_DEVICE_RESET_CTRL);
+> +
+> +       msleep(20);
+> +
+> +       /*
+> +        * enable the fix of linereset recovery,
+> +        * and enable rx_reset/tx_rest beat
+> +        * enable ref_clk_en override(bit5) &
+> +        * override value = 1(bit4), with mask
+> +        */
+> +       ufs_sys_ctrl_writel(host, 0x03300330, UFS_DEVICE_RESET_CTRL);
+> +
+> +       if (!IS_ERR(host->rst))
+> +               reset_control_deassert(host->rst);
+> +}
+> +
+> +static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
+> +{
+> +       int err;
+> +       uint32_t value;
+> +       uint32_t reg;
+> +
+> +       /* Unipro VS_mphy_disable */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD0C1, 0x0), 0x1);
+> +       /* PA_HSSeries */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x156A, 0x0), 0x2);
+> +       /* MPHY CBRATESEL */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8114, 0x0), 0x1);
+> +       /* MPHY CBOVRCTRL2 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8121, 0x0), 0x2D);
+> +       /* MPHY CBOVRCTRL3 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8122, 0x0), 0x1);
+> +       /* Unipro VS_MphyCfgUpdt */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
+> +       /* MPHY RXOVRCTRL4 rx0 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x800D, 0x4), 0x58);
+> +       /* MPHY RXOVRCTRL4 rx1 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x800D, 0x5), 0x58);
+> +       /* MPHY RXOVRCTRL5 rx0 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x800E, 0x4), 0xB);
+> +       /* MPHY RXOVRCTRL5 rx1 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x800E, 0x5), 0xB);
+> +       /* MPHY RXSQCONTROL rx0 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8009, 0x4), 0x1);
+> +       /* MPHY RXSQCONTROL rx1 */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8009, 0x5), 0x1);
+> +       /* Unipro VS_MphyCfgUpdt */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
+> +
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8113, 0x0), 0x1);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
+> +
+> +       /* Tactive RX */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x4), 0x7);
+> +       /* Tactive RX */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x5), 0x7);
+> +
+> +       /* Gear3 Synclength */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0095, 0x4), 0x4F);
+> +       /* Gear3 Synclength */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0095, 0x5), 0x4F);
+> +       /* Gear2 Synclength */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0094, 0x4), 0x4F);
+> +       /* Gear2 Synclength */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0094, 0x5), 0x4F);
+> +       /* Gear1 Synclength */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008B, 0x4), 0x4F);
+> +       /* Gear1 Synclength */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008B, 0x5), 0x4F);
+> +       /* Thibernate Tx */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x000F, 0x0), 0x5);
+> +       /* Thibernate Tx */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x000F, 0x1), 0x5);
+> +
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
+> +       /* Unipro VS_mphy_disable */
+> +       ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(0xD0C1, 0x0), &value);
+> +       if (value != 0x1)
+> +               dev_info(hba->dev,
+> +                   "Warring!!! Unipro VS_mphy_disable is 0x%x\n", value);
+> +
+> +       /* Unipro VS_mphy_disable */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD0C1, 0x0), 0x0);
+> +       err = ufs_hisi_check_hibern8(hba);
+> +       if (err)
+> +               dev_err(hba->dev, "ufs_hisi_check_hibern8 error\n");
+> +
+> +       ufshcd_writel(hba, UFS_HCLKDIV_NORMAL_VALUE, UFS_REG_HCLKDIV);
+> +
+> +       /* disable auto H8 */
+> +       reg = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +       reg = reg & (~UFS_AHIT_AH8ITV_MASK);
+> +       ufshcd_writel(hba, reg, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +
+> +       /* Unipro PA_Local_TX_LCC_Enable */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x155E, 0x0), 0x0);
+> +       /* close Unipro VS_Mk2ExtnSupport */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD0AB, 0x0), 0x0);
+> +       ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(0xD0AB, 0x0), &value);
+> +       if (value != 0) {
+> +               /* Ensure close success */
+> +               dev_info(hba->dev, "WARN: close VS_Mk2ExtnSupport failed\n");
+> +       }
+> +
+> +       return err;
+> +}
+> +
+> +static int ufs_hisi_link_startup_post_change(struct ufs_hba *hba)
+> +{
+> +       struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+> +
+> +       /* Unipro DL_AFC0CreditThreshold */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x2044), 0x0);
+> +       /* Unipro DL_TC0OutAckThreshold */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x2045), 0x0);
+> +       /* Unipro DL_TC0TXFCThreshold */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x2040), 0x9);
+> +
+> +       /* not bypass ufs clk gate */
+> +       ufs_sys_ctrl_clr_bits(host, MASK_UFS_CLK_GATE_BYPASS,
+> +                                               CLOCK_GATE_BYPASS);
+> +       ufs_sys_ctrl_clr_bits(host, MASK_UFS_SYSCRTL_BYPASS,
+> +                                               UFS_SYSCTRL);
+> +
+> +       /* select received symbol cnt */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd09a), 0x80000000);
+> +        /* reset counter0 and enable */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd09c), 0x00000005);
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_hi3660_link_startup_notify(struct ufs_hba *hba,
+> +                                         enum ufs_notify_change_status status)
+> +{
+> +       int err = 0;
+> +
+> +       switch (status) {
+> +       case PRE_CHANGE:
+> +               err = ufs_hisi_link_startup_pre_change(hba);
+> +               break;
+> +       case POST_CHANGE:
+> +               err = ufs_hisi_link_startup_post_change(hba);
+> +               break;
+> +       default:
+> +               break;
+> +       }
+> +
+> +       return err;
+> +}
+> +
+> +struct ufs_hisi_dev_params {
+> +       u32 pwm_rx_gear; /* pwm rx gear to work in */
+> +       u32 pwm_tx_gear; /* pwm tx gear to work in */
+> +       u32 hs_rx_gear;  /* hs rx gear to work in */
+> +       u32 hs_tx_gear;  /* hs tx gear to work in */
+> +       u32 rx_lanes;    /* number of rx lanes */
+> +       u32 tx_lanes;    /* number of tx lanes */
+> +       u32 rx_pwr_pwm;  /* rx pwm working pwr */
+> +       u32 tx_pwr_pwm;  /* tx pwm working pwr */
+> +       u32 rx_pwr_hs;   /* rx hs working pwr */
+> +       u32 tx_pwr_hs;   /* tx hs working pwr */
+> +       u32 hs_rate;     /* rate A/B to work in HS */
+> +       u32 desired_working_mode;
+> +};
+> +
+> +static int ufs_hisi_get_pwr_dev_param(
+> +                                   struct ufs_hisi_dev_params *hisi_param,
+> +                                   struct ufs_pa_layer_attr *dev_max,
+> +                                   struct ufs_pa_layer_attr *agreed_pwr)
+> +{
+> +       int min_hisi_gear;
+> +       int min_dev_gear;
+> +       bool is_dev_sup_hs = false;
+> +       bool is_hisi_max_hs = false;
+> +
+> +       if (dev_max->pwr_rx == FASTAUTO_MODE || dev_max->pwr_rx == FAST_MODE)
+> +               is_dev_sup_hs = true;
+> +
+> +       if (hisi_param->desired_working_mode == FAST) {
+> +               is_hisi_max_hs = true;
+> +               min_hisi_gear = min_t(u32, hisi_param->hs_rx_gear,
+> +                                      hisi_param->hs_tx_gear);
+> +       } else {
+> +               min_hisi_gear = min_t(u32, hisi_param->pwm_rx_gear,
+> +                                      hisi_param->pwm_tx_gear);
+> +       }
+> +
+> +       /*
+> +        * device doesn't support HS but
+> +        * hisi_param->desired_working_mode is HS,
+> +        * thus device and hisi_param don't agree
+> +        */
+> +       if (!is_dev_sup_hs && is_hisi_max_hs) {
+> +               pr_err("%s: device not support HS\n", __func__);
+> +               return -ENOTSUPP;
+> +       } else if (is_dev_sup_hs && is_hisi_max_hs) {
+> +               /*
+> +                * since device supports HS, it supports FAST_MODE.
+> +                * since hisi_param->desired_working_mode is also HS
+> +                * then final decision (FAST/FASTAUTO) is done according
+> +                * to hisi_params as it is the restricting factor
+> +                */
+> +               agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
+> +                       hisi_param->rx_pwr_hs;
+> +       } else {
+> +               /*
+> +                * here hisi_param->desired_working_mode is PWM.
+> +                * it doesn't matter whether device supports HS or PWM,
+> +                * in both cases hisi_param->desired_working_mode will
+> +                * determine the mode
+> +                */
+> +               agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
+> +                       hisi_param->rx_pwr_pwm;
+> +       }
+> +
+> +       /*
+> +        * we would like tx to work in the minimum number of lanes
+> +        * between device capability and vendor preferences.
+> +        * the same decision will be made for rx
+> +        */
+> +       agreed_pwr->lane_tx =
+> +               min_t(u32, dev_max->lane_tx, hisi_param->tx_lanes);
+> +       agreed_pwr->lane_rx =
+> +               min_t(u32, dev_max->lane_rx, hisi_param->rx_lanes);
+> +
+> +       /* device maximum gear is the minimum between device rx and tx gears */
+> +       min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
+> +
+> +       /*
+> +        * if both device capabilities and vendor pre-defined preferences are
+> +        * both HS or both PWM then set the minimum gear to be the chosen
+> +        * working gear.
+> +        * if one is PWM and one is HS then the one that is PWM get to decide
+> +        * what is the gear, as it is the one that also decided previously what
+> +        * pwr the device will be configured to.
+> +        */
+> +       if ((is_dev_sup_hs && is_hisi_max_hs) ||
+> +           (!is_dev_sup_hs && !is_hisi_max_hs))
+> +               agreed_pwr->gear_rx = agreed_pwr->gear_tx =
+> +                       min_t(u32, min_dev_gear, min_hisi_gear);
+> +       else
+> +               agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_hisi_gear;
+> +
+> +       agreed_pwr->hs_rate = hisi_param->hs_rate;
+> +
+> +       pr_info("ufs final power mode: gear = %d, lane = %d, pwr = %d, rate = %d\n",
+> +               agreed_pwr->gear_rx, agreed_pwr->lane_rx, agreed_pwr->pwr_rx,
+> +               agreed_pwr->hs_rate);
+> +       return 0;
+> +}
+> +
+> +static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
+> +{
+> +       hisi_param->rx_lanes = UFS_HISI_LIMIT_NUM_LANES_RX;
+> +       hisi_param->tx_lanes = UFS_HISI_LIMIT_NUM_LANES_TX;
+> +       hisi_param->hs_rx_gear = UFS_HISI_LIMIT_HSGEAR_RX;
+> +       hisi_param->hs_tx_gear = UFS_HISI_LIMIT_HSGEAR_TX;
+> +       hisi_param->pwm_rx_gear = UFS_HISI_LIMIT_PWMGEAR_RX;
+> +       hisi_param->pwm_tx_gear = UFS_HISI_LIMIT_PWMGEAR_TX;
+> +       hisi_param->rx_pwr_pwm = UFS_HISI_LIMIT_RX_PWR_PWM;
+> +       hisi_param->tx_pwr_pwm = UFS_HISI_LIMIT_TX_PWR_PWM;
+> +       hisi_param->rx_pwr_hs = UFS_HISI_LIMIT_RX_PWR_HS;
+> +       hisi_param->tx_pwr_hs = UFS_HISI_LIMIT_TX_PWR_HS;
+> +       hisi_param->hs_rate = UFS_HISI_LIMIT_HS_RATE;
+> +       hisi_param->desired_working_mode = UFS_HISI_LIMIT_DESIRED_MODE;
+> +}
+> +
+> +static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+> +{
+> +       /* update */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
+> +       /* PA_TxSkip */
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x155c), 0x0);
+> +       /*PA_PWRModeUserData0 = 8191, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x15b0), 8191);
+> +       /*PA_PWRModeUserData1 = 65535, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x15b1), 65535);
+> +       /*PA_PWRModeUserData2 = 32767, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x15b2), 32767);
+> +       /*DME_FC0ProtectionTimeOutVal = 8191, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd041), 8191);
+> +       /*DME_TC0ReplayTimeOutVal = 65535, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd042), 65535);
+> +       /*DME_AFC0ReqTimeOutVal = 32767, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd043), 32767);
+> +       /*PA_PWRModeUserData3 = 8191, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x15b3), 8191);
+> +       /*PA_PWRModeUserData4 = 65535, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x15b4), 65535);
+> +       /*PA_PWRModeUserData5 = 32767, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x15b5), 32767);
+> +       /*DME_FC1ProtectionTimeOutVal = 8191, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd044), 8191);
+> +       /*DME_TC1ReplayTimeOutVal = 65535, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd045), 65535);
+> +       /*DME_AFC1ReqTimeOutVal = 32767, default is 0*/
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xd046), 32767);
+> +}
+> +
+> +static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
+> +                                      enum ufs_notify_change_status status,
+> +                                      struct ufs_pa_layer_attr *dev_max_params,
+> +                                      struct ufs_pa_layer_attr *dev_req_params)
+> +{
+> +       struct ufs_hisi_dev_params ufs_hisi_cap;
+> +       int ret = 0;
+> +
+> +       if (!dev_req_params) {
+> +               dev_err(hba->dev,
+> +                           "%s: incoming dev_req_params is NULL\n", __func__);
+> +               ret = -EINVAL;
+> +               goto out;
+> +       }
+> +
+> +       switch (status) {
+> +       case PRE_CHANGE:
+> +               ufs_hisi_set_dev_cap(&ufs_hisi_cap);
+> +               ret = ufs_hisi_get_pwr_dev_param(
+> +                       &ufs_hisi_cap, dev_max_params, dev_req_params);
+> +               if (ret) {
+> +                       dev_err(hba->dev,
+> +                           "%s: failed to determine capabilities\n", __func__);
+> +                       goto out;
+> +               }
+> +
+> +               ufs_hisi_pwr_change_pre_change(hba);
+> +               break;
+> +       case POST_CHANGE:
+> +               break;
+> +       default:
+> +               ret = -EINVAL;
+> +               break;
+> +       }
+> +out:
+> +       return ret;
+> +}
+> +
+> +static int ufs_hisi_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+> +{
+> +       struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+> +
+> +       if (ufshcd_is_runtime_pm(pm_op))
+> +               return 0;
+> +
+> +       if (host->in_suspend) {
+> +               WARN_ON(1);
+> +               return 0;
+> +       }
+> +
+> +       ufs_sys_ctrl_clr_bits(host, BIT_SYSCTRL_REF_CLOCK_EN, PHY_CLK_CTRL);
+> +       udelay(10);
+> +       /* set ref_dig_clk override of PHY PCS to 0 */
+> +       ufs_sys_ctrl_writel(host, 0x00100000, UFS_DEVICE_RESET_CTRL);
+> +
+> +       host->in_suspend = true;
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_hisi_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+> +{
+> +       struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+> +
+> +       if (!host->in_suspend)
+> +               return 0;
+> +
+> +       /* set ref_dig_clk override of PHY PCS to 1 */
+> +       ufs_sys_ctrl_writel(host, 0x00100010, UFS_DEVICE_RESET_CTRL);
+> +       udelay(10);
+> +       ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_REF_CLOCK_EN, PHY_CLK_CTRL);
+> +
+> +       host->in_suspend = false;
+> +       return 0;
+> +}
+> +
+> +static int ufs_hisi_get_resource(struct ufs_hisi_host *host)
+> +{
+> +       struct resource *mem_res;
+> +       struct device *dev = host->hba->dev;
+> +       struct platform_device *pdev = to_platform_device(dev);
+> +
+> +       /* get resource of ufs sys ctrl */
+> +       mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> +       host->ufs_sys_ctrl = devm_ioremap_resource(dev, mem_res);
+> +       if (IS_ERR(host->ufs_sys_ctrl))
+> +               return PTR_ERR(host->ufs_sys_ctrl);
+> +
+> +       return 0;
+> +}
+> +
+> +static void ufs_hisi_set_pm_lvl(struct ufs_hba *hba)
+> +{
+> +       hba->rpm_lvl = UFS_PM_LVL_1;
+> +       hba->spm_lvl = UFS_PM_LVL_3;
+> +}
+> +
+> +/**
+> + * ufs_hisi_init_common
+> + * @hba: host controller instance
+> + */
+> +static int ufs_hisi_init_common(struct ufs_hba *hba)
+> +{
+> +       int err = 0;
+> +       struct device *dev = hba->dev;
+> +       struct ufs_hisi_host *host;
+> +
+> +       host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+> +       if (!host)
+> +               return -ENOMEM;
+> +
+> +       host->hba = hba;
+> +       ufshcd_set_variant(hba, host);
+> +
+> +       host->rst = devm_reset_control_get(dev, "rst");
+> +       host->assert = devm_reset_control_get(dev, "assert");
+> +
+> +       ufs_hisi_set_pm_lvl(hba);
+> +
+> +       err = ufs_hisi_get_resource(host);
+> +       if (err) {
+> +               ufshcd_set_variant(hba, NULL);
+> +               return err;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int ufs_hi3660_init(struct ufs_hba *hba)
+> +{
+> +       int ret = 0;
+> +       struct device *dev = hba->dev;
+> +
+> +       ret = ufs_hisi_init_common(hba);
+> +       if (ret) {
+> +               dev_err(dev, "%s: ufs common init fail\n", __func__);
+> +               return ret;
+> +       }
+> +
+> +       ufs_hi3660_clk_init(hba);
+> +
+> +       ufs_hi3660_soc_init(hba);
+> +
+> +       return 0;
+> +}
+> +
+> +static struct ufs_hba_variant_ops ufs_hba_hisi_vops = {
+> +       .name = "hi3660",
+> +       .init = ufs_hi3660_init,
+> +       .link_startup_notify = ufs_hi3660_link_startup_notify,
+> +       .pwr_change_notify = ufs_hi3660_pwr_change_notify,
+> +       .suspend = ufs_hisi_suspend,
+> +       .resume = ufs_hisi_resume,
+> +};
+> +
+> +static int ufs_hisi_probe(struct platform_device *pdev)
+> +{
+> +       return ufshcd_pltfrm_init(pdev, &ufs_hba_hisi_vops);
+> +}
+> +
+> +static int ufs_hisi_remove(struct platform_device *pdev)
+> +{
+> +       struct ufs_hba *hba =  platform_get_drvdata(pdev);
+> +
+> +       ufshcd_remove(hba);
+> +       return 0;
+> +}
+> +
+> +static const struct of_device_id ufs_hisi_of_match[] = {
+> +       { .compatible = "hisilicon,hi3660-ufs" },
+> +       {},
+> +};
+> +
 
-Cheers,
+I think for modules this needs:
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+MODULE_DEVICE_TABLE(of, ufs_hisi_of_match);
+
+> +static const struct dev_pm_ops ufs_hisi_pm_ops = {
+> +       .suspend        = ufshcd_pltfrm_suspend,
+> +       .resume         = ufshcd_pltfrm_resume,
+> +       .runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+> +       .runtime_resume  = ufshcd_pltfrm_runtime_resume,
+> +       .runtime_idle    = ufshcd_pltfrm_runtime_idle,
+> +};
+> +
+> +static struct platform_driver ufs_hisi_pltform = {
+> +       .probe  = ufs_hisi_probe,
+> +       .remove = ufs_hisi_remove,
+> +       .shutdown = ufshcd_pltfrm_shutdown,
+> +       .driver = {
+> +               .name   = "ufshcd-hisi",
+> +               .pm     = &ufs_hisi_pm_ops,
+> +               .of_match_table = of_match_ptr(ufs_hisi_of_match),
+> +       },
+> +};
+> +module_platform_driver(ufs_hisi_pltform);
+> +
+> +MODULE_LICENSE("GPL");
+> +MODULE_ALIAS("platform:ufshcd-hisi");
+> +MODULE_DESCRIPTION("HiSilicon Hixxxx UFS Driver");
+> diff --git a/drivers/scsi/ufs/ufs-hisi.h b/drivers/scsi/ufs/ufs-hisi.h
+> new file mode 100644
+> index 000000000000..ca5deb7ac338
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-hisi.h
+> @@ -0,0 +1,116 @@
+> +/*
+> + * Copyright (c) 2017, HiSilicon. All rights reserved.
+> + *
+> + * Released under the GPLv2 only.
+> + * SPDX-License-Identifier: GPL-2.0
+> + */
+> +
+> +#ifndef UFS_HISI_H_
+> +#define UFS_HISI_H_
+> +
+> +#define HBRN8_POLL_TOUT_MS     1000
+> +
+> +/*
+> + * ufs sysctrl specific define
+> + */
+> +#define PSW_POWER_CTRL (0x04)
+> +#define PHY_ISO_EN     (0x08)
+> +#define HC_LP_CTRL     (0x0C)
+> +#define PHY_CLK_CTRL   (0x10)
+> +#define PSW_CLK_CTRL   (0x14)
+> +#define CLOCK_GATE_BYPASS      (0x18)
+> +#define RESET_CTRL_EN  (0x1C)
+> +#define UFS_SYSCTRL    (0x5C)
+> +#define UFS_DEVICE_RESET_CTRL  (0x60)
+> +
+> +#define BIT_UFS_PSW_ISO_CTRL           (1 << 16)
+> +#define BIT_UFS_PSW_MTCMOS_EN          (1 << 0)
+> +#define BIT_UFS_REFCLK_ISO_EN          (1 << 16)
+> +#define BIT_UFS_PHY_ISO_CTRL           (1 << 0)
+> +#define BIT_SYSCTRL_LP_ISOL_EN         (1 << 16)
+> +#define BIT_SYSCTRL_PWR_READY          (1 << 8)
+> +#define BIT_SYSCTRL_REF_CLOCK_EN       (1 << 24)
+> +#define MASK_SYSCTRL_REF_CLOCK_SEL     (0x3 << 8)
+> +#define MASK_SYSCTRL_CFG_CLOCK_FREQ    (0xFF)
+> +#define UFS_FREQ_CFG_CLK                (0x39)
+> +#define BIT_SYSCTRL_PSW_CLK_EN         (1 << 4)
+> +#define MASK_UFS_CLK_GATE_BYPASS       (0x3F)
+> +#define BIT_SYSCTRL_LP_RESET_N         (1 << 0)
+> +#define BIT_UFS_REFCLK_SRC_SEl         (1 << 0)
+> +#define MASK_UFS_SYSCRTL_BYPASS                (0x3F << 16)
+> +#define MASK_UFS_DEVICE_RESET          (0x1 << 16)
+> +#define BIT_UFS_DEVICE_RESET           (0x1)
+> +
+> +/*
+> + * M-TX Configuration Attributes for Hixxxx
+> + */
+> +#define MPHY_TX_FSM_STATE      0x41
+> +#define TX_FSM_HIBERN8 0x1
+> +
+> +/*
+> + * Hixxxx UFS HC specific Registers
+> + */
+> +enum {
+> +       UFS_REG_OCPTHRTL = 0xc0,
+> +       UFS_REG_OOCPR    = 0xc4,
+> +
+> +       UFS_REG_CDACFG   = 0xd0,
+> +       UFS_REG_CDATX1   = 0xd4,
+> +       UFS_REG_CDATX2   = 0xd8,
+> +       UFS_REG_CDARX1   = 0xdc,
+> +       UFS_REG_CDARX2   = 0xe0,
+> +       UFS_REG_CDASTA   = 0xe4,
+> +
+> +       UFS_REG_LBMCFG   = 0xf0,
+> +       UFS_REG_LBMSTA   = 0xf4,
+> +       UFS_REG_UFSMODE  = 0xf8,
+> +
+> +       UFS_REG_HCLKDIV  = 0xfc,
+> +};
+> +
+> +/* AHIT - Auto-Hibernate Idle Timer */
+> +#define UFS_AHIT_AH8ITV_MASK   0x3FF
+> +
+> +/* REG UFS_REG_OCPTHRTL definition */
+> +#define UFS_HCLKDIV_NORMAL_VALUE       0xE4
+> +
+> +/* vendor specific pre-defined parameters */
+> +#define SLOW   1
+> +#define FAST   2
+> +
+> +#define UFS_HISI_LIMIT_NUM_LANES_RX    2
+> +#define UFS_HISI_LIMIT_NUM_LANES_TX    2
+> +#define UFS_HISI_LIMIT_HSGEAR_RX       UFS_HS_G3
+> +#define UFS_HISI_LIMIT_HSGEAR_TX       UFS_HS_G3
+> +#define UFS_HISI_LIMIT_PWMGEAR_RX      UFS_PWM_G4
+> +#define UFS_HISI_LIMIT_PWMGEAR_TX      UFS_PWM_G4
+> +#define UFS_HISI_LIMIT_RX_PWR_PWM      SLOW_MODE
+> +#define UFS_HISI_LIMIT_TX_PWR_PWM      SLOW_MODE
+> +#define UFS_HISI_LIMIT_RX_PWR_HS       FAST_MODE
+> +#define UFS_HISI_LIMIT_TX_PWR_HS       FAST_MODE
+> +#define UFS_HISI_LIMIT_HS_RATE PA_HS_MODE_B
+> +#define UFS_HISI_LIMIT_DESIRED_MODE    FAST
+> +
+> +struct ufs_hisi_host {
+> +       struct ufs_hba *hba;
+> +       void __iomem *ufs_sys_ctrl;
+> +
+> +       struct reset_control    *rst;
+> +       struct reset_control    *assert;
+> +
+> +       uint64_t caps;
+> +
+> +       bool in_suspend;
+> +};
+> +
+> +#define ufs_sys_ctrl_writel(host, val, reg)                                    \
+> +       writel((val), (host)->ufs_sys_ctrl + (reg))
+> +#define ufs_sys_ctrl_readl(host, reg) readl((host)->ufs_sys_ctrl + (reg))
+> +#define ufs_sys_ctrl_set_bits(host, mask, reg)                                 \
+> +       ufs_sys_ctrl_writel(                                                   \
+> +               (host), ((mask) | (ufs_sys_ctrl_readl((host), (reg)))), (reg))
+> +#define ufs_sys_ctrl_clr_bits(host, mask, reg)                                 \
+> +       ufs_sys_ctrl_writel((host),                                            \
+> +                           ((~(mask)) & (ufs_sys_ctrl_readl((host), (reg)))), \
+> +                           (reg))
+> +#endif /* UFS_HISI_H_ */
+> --
+> 2.15.0
+>
