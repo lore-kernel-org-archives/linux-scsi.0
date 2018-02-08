@@ -1,34 +1,49 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH v3 2/2] qedi: Cleanup local str variable
-Date: Thu, 8 Feb 2018 11:40:20 -0800
-Message-ID: <d3c4ce1b-dc8f-c712-5b96-7f4d2acdc940@suse.com>
-References: <20180207161236.12975-1-nilesh.javali@cavium.com>
- <20180207161236.12975-3-nilesh.javali@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43527 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752126AbeBHTkZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 8 Feb 2018 14:40:25 -0500
-In-Reply-To: <20180207161236.12975-3-nilesh.javali@cavium.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Long Li <longli@exchange.microsoft.com>
+Subject: [PATCH] scsi: storvsc: missing error code in storvsc_probe()
+Date: Thu,  8 Feb 2018 16:50:40 -0700
+Message-ID: <20180208235040.5803-1-longli@exchange.microsoft.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Long Li <longli@microsoft.com>, Dan Carpenter <dan.carpenter@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Nilesh Javali <nilesh.javali@cavium.com>, martin.petersen@oracle.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-On 02/07/2018 08:12 AM, Nilesh Javali wrote:
-> Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
-> ---
->  drivers/scsi/qedi/qedi_main.c | 43 ++++++++++++++++++++-----------------------
->  1 file changed, 20 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-> ...
+From: Long Li <longli@microsoft.com>
 
-Signed-off-by: Lee Duncan <lduncan@suse.com>
+This patch backports upstream commit ca8dc694045e9aa248e9916e0f614deb0494cb3d
+for 4.14-stable.
+
+commit ca8dc694045e9aa248e9916e0f614deb0494cb3d:
+
+We should set the error code if fc_remote_port_add() fails.
+
+Cc: <stable@vger.kernel.org> #v4.12+
+Fixes: daf0cd445a21 ("scsi: storvsc: Add support for FC rport.")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Cathy Avery <cavery@redhat.com>
+Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 5e7200f..c17ccb9 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1826,8 +1826,10 @@ static int storvsc_probe(struct hv_device *device,
+ 		fc_host_node_name(host) = stor_device->node_name;
+ 		fc_host_port_name(host) = stor_device->port_name;
+ 		stor_device->rport = fc_remote_port_add(host, 0, &ids);
+-		if (!stor_device->rport)
++		if (!stor_device->rport) {
++			ret = -ENOMEM;
+ 			goto err_out3;
++		}
+ 	}
+ #endif
+ 	return 0;
 -- 
-Lee Duncan
-SUSE Labs
+2.7.4
