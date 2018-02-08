@@ -1,45 +1,74 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 1/5] blk-mq: tags: define several fields of tags as
- pointer
-Date: Thu, 8 Feb 2018 17:34:19 +0000
-Message-ID: <1518111257.3611.33.camel@wdc.com>
-References: <20180203042112.15239-1-ming.lei@redhat.com>
-         <20180203042112.15239-2-ming.lei@redhat.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH 1/1] scsi: ufs: fix exception event handling
+Date: Thu, 08 Feb 2018 09:53:21 -0800
+Message-ID: <6c0b3d7d1c38ecb993125bc8e2b85799@codeaurora.org>
+References: <1517200492-2941-1-git-send-email-asutoshd@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20180203042112.15239-2-ming.lei@redhat.com>
-Content-Language: en-US
-Content-ID: <AE7DF10F05096F4CA207DA53772577AD@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "pbonzini@redhat.com" <pbonzini@redhat.com>, "arun.easi@cavium.com" <arun.easi@cavium.com>, "osandov@fb.com" <osandov@fb.com>, "loberman@redhat.com" <loberman@redhat.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "peter.rivera@broadcom.com" <peter.rivera@broadcom.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50568 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752448AbeBHRxX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2018 12:53:23 -0500
+In-Reply-To: <1517200492-2941-1-git-send-email-asutoshd@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Asutosh Das <asutoshd@codeaurora.org>
+Cc: cang@codeaurora.org, vivek.gautam@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Maya Erez <merez@codeaurora.org>, linux-kernel@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-T24gU2F0LCAyMDE4LTAyLTAzIGF0IDEyOjIxICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gZGlm
-ZiAtLWdpdCBhL2Jsb2NrL2Jsay1tcS10YWcuaCBiL2Jsb2NrL2Jsay1tcS10YWcuaA0KPiBpbmRl
-eCA2MWRlYWIwYjVhNWEuLmE2ODMyM2ZhMGMwMiAxMDA2NDQNCj4gLS0tIGEvYmxvY2svYmxrLW1x
-LXRhZy5oDQo+ICsrKyBiL2Jsb2NrL2Jsay1tcS10YWcuaA0KPiBAQCAtMTEsMTAgKzExLDE0IEBA
-IHN0cnVjdCBibGtfbXFfdGFncyB7DQo+ICAJdW5zaWduZWQgaW50IG5yX3RhZ3M7DQo+ICAJdW5z
-aWduZWQgaW50IG5yX3Jlc2VydmVkX3RhZ3M7DQo+ICANCj4gLQlhdG9taWNfdCBhY3RpdmVfcXVl
-dWVzOw0KPiArCWF0b21pY190ICphY3RpdmVfcXVldWVzOw0KPiArCWF0b21pY190IF9fYWN0aXZl
-X3F1ZXVlczsNCj4gIA0KPiAtCXN0cnVjdCBzYml0bWFwX3F1ZXVlIGJpdG1hcF90YWdzOw0KPiAt
-CXN0cnVjdCBzYml0bWFwX3F1ZXVlIGJyZXNlcnZlZF90YWdzOw0KPiArCXN0cnVjdCBzYml0bWFw
-X3F1ZXVlICpiaXRtYXBfdGFnczsNCj4gKwlzdHJ1Y3Qgc2JpdG1hcF9xdWV1ZSAqYnJlc2VydmVk
-X3RhZ3M7DQo+ICsNCj4gKwlzdHJ1Y3Qgc2JpdG1hcF9xdWV1ZSBfX2JpdG1hcF90YWdzOw0KPiAr
-CXN0cnVjdCBzYml0bWFwX3F1ZXVlIF9fYnJlc2VydmVkX3RhZ3M7DQo+ICANCj4gIAlzdHJ1Y3Qg
-cmVxdWVzdCAqKnJxczsNCj4gIAlzdHJ1Y3QgcmVxdWVzdCAqKnN0YXRpY19ycXM7DQoNClRoaXMg
-aXMgZ2V0dGluZyB1Z2x5OiBtdWx0aXBsZSBwb2ludGVycyB0aGF0IGVpdGhlciBhbGwgcG9pbnQg
-YXQgYW4gZWxlbWVudA0KaW5zaWRlIHN0cnVjdCBibGtfbXFfdGFncyBvciBhbGwgcG9pbnQgYXQg
-YSBtZW1iZXIgb3V0c2lkZSBibGtfbXFfdGFncy4gSGF2ZQ0KeW91IGNvbnNpZGVyZWQgdG8gaW50
-cm9kdWNlIGEgbmV3IHN0cnVjdHVyZSBmb3IgdGhlc2UgbWVtYmVycyAoYWN0aXZlX3F1ZXVlcywN
-CmJpdG1hcF90YWdzIGFuZCBicmVzZXJ2ZWRfdGFncykgc3VjaCB0aGF0IG9ubHkgYSBzaW5nbGUg
-bmV3IHBvaW50ZXIgaGFzIHRvDQpiZSBpbnRyb2R1Y2VkIGluIHN0cnVjdCBibGtfbXFfdGFncz8g
-QWRkaXRpb25hbGx5LCB3aHkgZG9lcyBldmVyeQ0KYmxrX21xX3RhZ3MgaW5zdGFuY2UgaGF2ZSBp
-dHMgb3duIHN0YXRpY19ycXMgYXJyYXkgaWYgdGFncyBhcmUgc2hhcmVkDQphY3Jvc3MgaGFyZHdh
-cmUgcXVldWVzPyBibGtfbXFfZ2V0X3RhZygpIGFsbG9jYXRlcyBhIHRhZyBlaXRoZXIgZnJvbQ0K
-Yml0bWFwX3RhZ3Mgb3IgZnJvbSBicmVzZXJ2ZWRfdGFncy4gU28gaWYgdGhlc2UgdGFnIHNldHMg
-YXJlIHNoYXJlZCBJDQpkb24ndCB0aGluayB0aGF0IGl0IGlzIG5lY2Vzc2FyeSB0byBoYXZlIG9u
-ZSBzdGF0aWNfcnFzIGFycmF5IHBlciBzdHJ1Y3QNCmJsa19tcV90YWdzIGluc3RhbmNlLg0KDQpU
-aGFua3MsDQoNCkJhcnQuDQoNCg0KDQo=
+On 2018-01-28 20:34, Asutosh Das wrote:
+> From: Maya Erez <merez@codeaurora.org>
+> 
+> The device can set the exception event bit in one of the response UPIU,
+> for example to notify the need for urgent BKOPs operation.
+> In such a case the host driver calls ufshcd_exception_event_handler to
+> handle this notification.
+> When trying to check the exception event status (for finding the cause 
+> for
+> the exception event), the device may be busy with additional SCSI 
+> commands
+> handling and may not respond within the 100ms timeout.
+> 
+> To prevent that, we need to block SCSI commands during handling of
+> exception events and allow retransmissions of the query requests,
+> in case of timeout.
+> 
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Maya Erez <merez@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 8af2af3..2dd488f 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -4955,6 +4955,7 @@ static void
+> ufshcd_exception_event_handler(struct work_struct *work)
+>  	hba = container_of(work, struct ufs_hba, eeh_work);
+> 
+>  	pm_runtime_get_sync(hba->dev);
+> +	scsi_block_requests(hba->host);
+>  	err = ufshcd_get_ee_status(hba, &status);
+>  	if (err) {
+>  		dev_err(hba->dev, "%s: failed to get exception status %d\n",
+> @@ -4968,6 +4969,7 @@ static void
+> ufshcd_exception_event_handler(struct work_struct *work)
+>  		ufshcd_bkops_exception_event_handler(hba);
+> 
+>  out:
+> +	scsi_unblock_requests(hba->host);
+>  	pm_runtime_put_sync(hba->dev);
+>  	return;
+>  }
+
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
