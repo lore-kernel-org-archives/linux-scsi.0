@@ -1,49 +1,49 @@
-From: Long Li <longli@exchange.microsoft.com>
-Subject: [PATCH] scsi: storvsc: missing error code in storvsc_probe()
-Date: Thu,  8 Feb 2018 16:50:40 -0700
-Message-ID: <20180208235040.5803-1-longli@exchange.microsoft.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>, Dan Carpenter <dan.carpenter@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH] scsi: ufs-qcom: add number of lanes per direction
+Date: Thu, 8 Feb 2018 20:29:15 -0600
+Message-ID: <20180209022915.2kki7avsia2k7tjp@rob-hp-laptop>
+References: <20180205121021.11012-1-cang@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:40610 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752111AbeBIC3R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2018 21:29:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20180205121021.11012-1-cang@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Can Guo <cang@codeaurora.org>
+Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Noa Rubens <noag@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Maya Erez <merez@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-From: Long Li <longli@microsoft.com>
+On Mon, Feb 05, 2018 at 08:02:07PM +0800, Can Guo wrote:
+> From: Gilad Broner <gbroner@codeaurora.org>
+> 
+> Different platforms may have different number of lanes for the UFS link.
+> Add parameter to device tree specifying how many lanes should be
+> configured for the UFS link. And don't print err message for clocks
+> that are optional, this leads to unnecessary confusion about failure.
+> 
+> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> index 5357919..4cee3f9 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> @@ -31,6 +31,9 @@ Optional properties:
+>  			  defined or a value in the array is "0" then it is assumed
+>  			  that the frequency is set by the parent clock or a
+>  			  fixed rate clock source.
+> +- lanes-per-direction:	number of lanes available per direction - either 1 or 2.
+> +			Note that it is assume same number of lanes is used both directions at once.
 
-This patch backports upstream commit ca8dc694045e9aa248e9916e0f614deb0494cb3d
-for 4.14-stable.
+Seems reasonable until someone does not make things symmetrical. We 
+should design for that case.
 
-commit ca8dc694045e9aa248e9916e0f614deb0494cb3d:
-
-We should set the error code if fc_remote_port_add() fails.
-
-Cc: <stable@vger.kernel.org> #v4.12+
-Fixes: daf0cd445a21 ("scsi: storvsc: Add support for FC rport.")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Cathy Avery <cavery@redhat.com>
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 5e7200f..c17ccb9 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1826,8 +1826,10 @@ static int storvsc_probe(struct hv_device *device,
- 		fc_host_node_name(host) = stor_device->node_name;
- 		fc_host_port_name(host) = stor_device->port_name;
- 		stor_device->rport = fc_remote_port_add(host, 0, &ids);
--		if (!stor_device->rport)
-+		if (!stor_device->rport) {
-+			ret = -ENOMEM;
- 			goto err_out3;
-+		}
- 	}
- #endif
- 	return 0;
--- 
-2.7.4
+> +			If not specified, default is 2 lanes per direction.
+>  
+>  Note: If above properties are not defined it can be assumed that the supply
+>  regulators or clocks are always on.
