@@ -1,32 +1,30 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: rescan-scsi-bus causes arcmsr death
-Date: Fri, 9 Feb 2018 20:39:39 +0000
-Message-ID: <1518208777.2871.40.camel@wdc.com>
-References: <5A7DFD68.6070704@gblabs.co.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] scsi: mpt3sas: fix oops in error handlers after shutdown/unload
+Date: Fri, 09 Feb 2018 18:22:52 -0500
+Message-ID: <yq1r2ptvjcj.fsf@oracle.com>
+References: <1517523386-9868-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:6975 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750993AbeBIUjl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2018 15:39:41 -0500
-In-Reply-To: <5A7DFD68.6070704@gblabs.co.uk>
-Content-Language: en-US
-Content-ID: <17A9F78B99AB1146BC622FFED220C304@namprd04.prod.outlook.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:35424 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753203AbeBIXXD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2018 18:23:03 -0500
+In-Reply-To: <1517523386-9868-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+        (Mauricio Faria de Oliveira's message of "Thu, 1 Feb 2018 20:16:26
+        -0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "alex.r@gblabs.co.uk" <alex.r@gblabs.co.uk>
-Cc: "ching2048@areca.com.tw" <ching2048@areca.com.tw>, "tom@gblabs.co.uk" <tom@gblabs.co.uk>
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dougmill@linux.vnet.ibm.com
 
-T24gRnJpLCAyMDE4LTAyLTA5IGF0IDE5OjU4ICswMDAwLCBBbGV4IFJpY2htYW4gd3JvdGU6DQo+
-IEZlYiAgOSAxMTo1NTowNSBTcGFjZSBrZXJuZWw6IFs1ODgwMS45NDM0NjBdIEJVRzogc2NoZWR1
-bGluZyB3aGlsZSANCj4gYXRvbWljOiBrc29mdGlycWQvMTkvODUvMHgwMDAwMDEwMA0KPiBbIC4u
-LiBdDQo+IEZlYiAgOSAxMTo1NTowNSBTcGFjZSBrZXJuZWw6IFs1ODgwMS45NDM1NDZdICBbPGZm
-ZmZmZmZmYWYwYjE0ZTc+XSANCj4gbXNsZWVwKzB4MzcvMHg1MA0KPiBGZWIgIDkgMTE6NTU6MDUg
-U3BhY2Uga2VybmVsOiBbNTg4MDEuOTQzNTUyXSAgWzxmZmZmZmZmZmMwMzQyYWYyPl0gDQo+IGFy
-Y21zcl9xdWV1ZV9jb21tYW5kKzB4ODIvMHhmNDAgW2FyY21zcl0NCj4gWyAuLi4gXQ0KDQooK0No
-aW5nIEh1YW5nKQ0KDQpBIFNDU0kgLnF1ZXVlY29tbWFuZCgpIGltcGxlbWVudGF0aW9uIG11c3Qg
-bm90IHNsZWVwIHNvIEkgdGhpbmsgdGhpcyBpcyBhDQpkcml2ZXIgYnVnLiBTaW5jZSBJJ20gbm90
-IGZhbWlsaWFyIHdpdGggdGhlIGFyY21zciBkcml2ZXIgSSBoYXZlIENDJ2VkIENoaW5nDQpIdWFu
-Zy4gSSBob3BlIHRoYXQgaGUgd2lsbCBiZSBhYmxlIHRvIGhlbHAgeW91Lg0KDQpCYXJ0Lg0K
+
+> This patch adds checks for 'ioc->remove_host' in the SCSI error
+> handlers, so not to access pointers/resources potentially freed
+> in the PCI shutdown/module unload path.  The error handlers may
+> be invoked after shutdown/unload, depending on other components.
+
+Broadcom folks: Please review!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
