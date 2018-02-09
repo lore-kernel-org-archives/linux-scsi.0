@@ -1,82 +1,32 @@
-From: Dave Carroll <david.carroll@microsemi.com>
-Subject: RE: [PATCH] aacraid: fix shutdown crash when init fails
-Date: Fri, 9 Feb 2018 20:13:07 +0000
-Message-ID: <039b9fe9bd414b0baee38f19e0b4288d@microsemi.com>
-References: <alpine.LRH.2.21.1802082158280.7112@math.ut.ee>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: rescan-scsi-bus causes arcmsr death
+Date: Fri, 9 Feb 2018 20:39:39 +0000
+Message-ID: <1518208777.2871.40.camel@wdc.com>
+References: <5A7DFD68.6070704@gblabs.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0062.outbound.protection.outlook.com ([104.47.34.62]:58592
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752218AbeBIUNM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Feb 2018 15:13:12 -0500
-In-Reply-To: <alpine.LRH.2.21.1802082158280.7112@math.ut.ee>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:6975 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750993AbeBIUjl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2018 15:39:41 -0500
+In-Reply-To: <5A7DFD68.6070704@gblabs.co.uk>
 Content-Language: en-US
+Content-ID: <17A9F78B99AB1146BC622FFED220C304@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "alex.r@gblabs.co.uk" <alex.r@gblabs.co.uk>
+Cc: "ching2048@areca.com.tw" <ching2048@areca.com.tw>, "tom@gblabs.co.uk" <tom@gblabs.co.uk>
 
-> -----Original Message-----
-> From: mroos@math.ut.ee [mailto:mroos@math.ut.ee] On Behalf Of Meelis
-> Roos
-> Sent: Thursday, February 08, 2018 11:58 PM
-> To: linux-scsi@vger.kernel.org; dl-esc-Aacraid Linux Driver
-> <aacraid@microsemi.com>
-> Subject: [PATCH] aacraid: fix shutdown crash when init fails
->=20
->=20
-> When aacraid init fails with "AAC0: adapter self-test failed.", shutdown =
-leads to
-> UBSAN warning and then oops:
->=20
-> [154316.118423]
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> [154316.118508] UBSAN: Undefined behaviour in drivers/scsi/scsi_lib.c:232=
-8:27
-> [154316.118566] member access within null pointer of type 'struct Scsi_Ho=
-st'
-> [154316.118631] CPU: 2 PID: 14530 Comm: reboot Tainted: G        W       =
- 4.15.0-
-> dirty #89
-> [154316.118701] Hardware name: Hewlett Packard HP NetServer/HP System
-> Board, BIOS 4.06.46 PW 06/25/2003 [154316.118774] Call Trace:
-> [154316.118848]  dump_stack+0x48/0x65
-> [154316.118916]  ubsan_epilogue+0xe/0x40 [154316.118976]
-> __ubsan_handle_type_mismatch+0xfb/0x180
-> [154316.119043]  scsi_block_requests+0x20/0x30 [154316.119135]
-> aac_shutdown+0x18/0x40 [aacraid] [154316.119196]
-> pci_device_shutdown+0x33/0x50 [154316.119269]
-> device_shutdown+0x18a/0x390 [...] [154316.123435] BUG: unable to handle
-> kernel NULL pointer dereference at 000000f4 [154316.123515] IP:
-> scsi_block_requests+0xa/0x30
->=20
-> This is because aac_shutdown() does
->=20
->         struct Scsi_Host *shost =3D pci_get_drvdata(dev);
->         scsi_block_requests(shost);
->=20
-> and that assumes shost has been assigned with pci_set_drvdata().
->=20
-> However, pci_set_drvdata(pdev, shost) is done in aac_probe_one() far afte=
-r
-> bailing out with error from calling the init function
-> ((*aac_drivers[index].init)(aac)), and when the init function fails, no e=
-rror is
-> returned from aac_probe_one() so PCI layer assumes there is driver attach=
-ed,
-> and tries to shut it down later.
->=20
-> Fix it by returning error from aac_probe_one() when card-specific init fu=
-nction
-> fails.
->=20
-> This fixes reboot on my HP NetRAID-4M with dead battery.
->=20
-> Signed-off-by: Meelis Roos <mroos@linux.ee>
-
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+T24gRnJpLCAyMDE4LTAyLTA5IGF0IDE5OjU4ICswMDAwLCBBbGV4IFJpY2htYW4gd3JvdGU6DQo+
+IEZlYiAgOSAxMTo1NTowNSBTcGFjZSBrZXJuZWw6IFs1ODgwMS45NDM0NjBdIEJVRzogc2NoZWR1
+bGluZyB3aGlsZSANCj4gYXRvbWljOiBrc29mdGlycWQvMTkvODUvMHgwMDAwMDEwMA0KPiBbIC4u
+LiBdDQo+IEZlYiAgOSAxMTo1NTowNSBTcGFjZSBrZXJuZWw6IFs1ODgwMS45NDM1NDZdICBbPGZm
+ZmZmZmZmYWYwYjE0ZTc+XSANCj4gbXNsZWVwKzB4MzcvMHg1MA0KPiBGZWIgIDkgMTE6NTU6MDUg
+U3BhY2Uga2VybmVsOiBbNTg4MDEuOTQzNTUyXSAgWzxmZmZmZmZmZmMwMzQyYWYyPl0gDQo+IGFy
+Y21zcl9xdWV1ZV9jb21tYW5kKzB4ODIvMHhmNDAgW2FyY21zcl0NCj4gWyAuLi4gXQ0KDQooK0No
+aW5nIEh1YW5nKQ0KDQpBIFNDU0kgLnF1ZXVlY29tbWFuZCgpIGltcGxlbWVudGF0aW9uIG11c3Qg
+bm90IHNsZWVwIHNvIEkgdGhpbmsgdGhpcyBpcyBhDQpkcml2ZXIgYnVnLiBTaW5jZSBJJ20gbm90
+IGZhbWlsaWFyIHdpdGggdGhlIGFyY21zciBkcml2ZXIgSSBoYXZlIENDJ2VkIENoaW5nDQpIdWFu
+Zy4gSSBob3BlIHRoYXQgaGUgd2lsbCBiZSBhYmxlIHRvIGhlbHAgeW91Lg0KDQpCYXJ0Lg0K
