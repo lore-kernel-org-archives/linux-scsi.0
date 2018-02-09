@@ -1,118 +1,161 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target updates for v4.16-rc1
-Date: Fri, 09 Feb 2018 10:43:39 -0800
-Message-ID: <1518201819.24576.356.camel@haakon3.daterainc.com>
+From: Alex Richman <alex.r@gblabs.co.uk>
+Subject: rescan-scsi-bus causes arcmsr death
+Date: Fri, 9 Feb 2018 19:58:32 +0000
+Message-ID: <5A7DFD68.6070704@gblabs.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 61.239-255-62.static.virginmediabusiness.co.uk ([62.255.239.61]:53335
+        "EHLO office.gblabs.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750909AbeBIT6f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2018 14:58:35 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Tom Sheldon <tom@gblabs.co.uk>
 
-Hi Linus,
+Hi,
 
-Here are the target-pending updates for v4.16-rc1.  Please go ahead and
-pull from:
+We're seeing an odd rare interaction between rescan-scsi-bus and arcmsr, 
+which manifests as these log messages, then a hang/panic:
+Feb  9 18:51:19 Space kernel: [ 2624.283565] arcmsr: abort 
+scsi_cmnd(0xffff8807d06cc900), cmnd[0x8a,0x 0,0x 0,0x 0,0x 0,0x 1,0x 
+8,0xc0,0x2b,0xe8,0x 0,0x 0], scsi_id = 0x 0, scsi_lun = 0x 0.
+Feb  9 18:51:19 Space kernel: [ 2624.283604] arcmsr0: to abort 
+command(0xffff8807d06cc900), ccb = 0xffff881058b11180
+Feb  9 18:51:21 Space kernel: [ 2625.924838] arcmsr0: abort ccb = 
+0xffff881058b11180 not done yet, do not force aborting command!
+--- Snip many more ---
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+On the (seemingly less common) occasion that it panics rather than 
+hangs, it looks like this:
+Feb  9 11:55:05 Space kernel: [58801.943419] arcmsr9: abort 
+scsi_cmnd(0xffff881027968900), cmnd[0x 0,0x 0,0x 0,0x 0,0x 0,0x 0,0x 
+0,0x 0,0x 0,0x 0,0x 0,0x 0], scsi_id = 0x 0, scsi_lun = 0x 0.
+Feb  9 11:55:05 Space kernel: [58801.943427] arcmsr9: to abort 
+command(0xffff881027968900), ccb = 0xffff88085864a580
+Feb  9 11:55:05 Space kernel: [58801.943429] arcmsr9: scsi id = 0 lun = 
+0 ccb = '0xffff88085864a580' polling a done ccb, abort successfully
+Feb  9 11:55:05 Space kernel: [58801.943460] BUG: scheduling while 
+atomic: ksoftirqd/19/85/0x00000100
+Feb  9 11:55:05 Space kernel: [58801.943463] Modules linked in: xfs 
+libcrc32c mlx4_ib ib_sa ib_mad ib_core ib_addr mlx4_en mlx4_core 
+myri10ge bonding target_core_mod configfs ip6table_filter ip6_tables 
+iptable_filter ip_tables ebtable_nat ebtables x_tables dm_crypt 
+ipmi_ssif x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm 
+crct10dif_pclmul crc32_pclmul ghash_clmulni_intel aesni_intel aes_x86_64 
+lrw gf128mul glue_helper ablk_helper cryptd sb_edac microcode edac_core 
+lpc_ich ioatdma tpm_tis ipmi_si ipmi_msghandler 8250_fintek mac_hid nfsd 
+auth_rpcgss pcspkr nfs_acl nfs lockd grace sunrpc fscache ext2 mlx5_core 
+raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor 
+async_tx xor raid6_pq raid1 raid0 multipath linear vxlan ip6_udp_tunnel 
+udp_tunnel bcache hid_generic igb isci usbhid i2c_algo_bit libsas ahci 
+dca hid libahci ptp scsi_transport_sas pps_core arcmsr(OE) [last 
+unloaded: mlx4_core]
+Feb  9 11:55:05 Space kernel: [58801.943511] CPU: 19 PID: 85 Comm: 
+ksoftirqd/19 Tainted: G           OE  3.19.0-21-spacev3 #160915
+Feb  9 11:55:05 Space kernel: [58801.943512] Hardware name: GBLabs 
+Space+/X9DRH-7TF/7F/iTF/iF, BIOS 3.2  06/04/2015
+Feb  9 11:55:05 Space kernel: [58801.943514]  ffff88105bd13a08 
+ffff88105bd13948 ffffffffaf6e521c 0000000000000000
+Feb  9 11:55:05 Space kernel: [58801.943516]  ffff88107fcf29c0 
+ffff88105bd13958 ffffffffaf6dfa07 ffff88105bd139c8
+Feb  9 11:55:05 Space kernel: [58801.943517]  ffffffffaf6e84fc 
+ffff88105bcb41a0 00000000000129c0 ffff88105bd13fd8
+Feb  9 11:55:05 Space kernel: [58801.943519] Call Trace:
+Feb  9 11:55:05 Space kernel: [58801.943528]  [<ffffffffaf6e521c>] 
+dump_stack+0x45/0x57
+Feb  9 11:55:05 Space kernel: [58801.943533]  [<ffffffffaf6dfa07>] 
+__schedule_bug+0x4b/0x59
+Feb  9 11:55:05 Space kernel: [58801.943535]  [<ffffffffaf6e84fc>] 
+__schedule+0x75c/0x780
+Feb  9 11:55:05 Space kernel: [58801.943537]  [<ffffffffaf6e8549>] 
+schedule+0x29/0x70
+Feb  9 11:55:05 Space kernel: [58801.943540]  [<ffffffffaf6eb45b>] 
+schedule_timeout+0x10b/0x210
+Feb  9 11:55:05 Space kernel: [58801.943544]  [<ffffffffaf0b0180>] ? 
+internal_add_timer+0x80/0x80
+Feb  9 11:55:05 Space kernel: [58801.943546]  [<ffffffffaf0b14e7>] 
+msleep+0x37/0x50
+Feb  9 11:55:05 Space kernel: [58801.943552]  [<ffffffffc0342af2>] 
+arcmsr_queue_command+0x82/0xf40 [arcmsr]
+Feb  9 11:55:05 Space kernel: [58801.943553]  [<ffffffffaf6e2637>] ? 
+__slab_free+0x101/0x2c1
+Feb  9 11:55:05 Space kernel: [58801.943555]  [<ffffffffaf6e2637>] ? 
+__slab_free+0x101/0x2c1
+Feb  9 11:55:05 Space kernel: [58801.943561]  [<ffffffffaf4bae0f>] 
+scsi_dispatch_cmd+0xaf/0x310
+Feb  9 11:55:05 Space kernel: [58801.943563]  [<ffffffffaf4bdca0>] 
+scsi_request_fn+0x4f0/0x7e0
+Feb  9 11:55:05 Space kernel: [58801.943566]  [<ffffffffaf31ecf7>] 
+__blk_run_queue+0x37/0x50
+Feb  9 11:55:05 Space kernel: [58801.943568]  [<ffffffffaf31ed86>] 
+blk_run_queue+0x26/0x40
+Feb  9 11:55:05 Space kernel: [58801.943570]  [<ffffffffaf4ba970>] 
+scsi_run_queue+0x230/0x2d0
+Feb  9 11:55:05 Space kernel: [58801.943572]  [<ffffffffaf4b311d>] ? 
+scsi_put_command+0x7d/0xd0
+Feb  9 11:55:05 Space kernel: [58801.943575]  [<ffffffffaf4bb992>] 
+scsi_end_request+0x142/0x1e0
+Feb  9 11:55:05 Space kernel: [58801.943576]  [<ffffffffaf4be119>] 
+scsi_io_completion+0x109/0x6b0
+Feb  9 11:55:05 Space kernel: [58801.943578]  [<ffffffffaf4b36ff>] 
+scsi_finish_command+0xcf/0x130
+Feb  9 11:55:05 Space kernel: [58801.943580]  [<ffffffffaf4bd787>] 
+scsi_softirq_done+0x137/0x160
+Feb  9 11:55:05 Space kernel: [58801.943583]  [<ffffffffaf328f13>] 
+blk_done_softirq+0x83/0xa0
+Feb  9 11:55:05 Space kernel: [58801.943587]  [<ffffffffaf060aa4>] 
+__do_softirq+0xe4/0x270
+Feb  9 11:55:05 Space kernel: [58801.943588]  [<ffffffffaf060c59>] 
+run_ksoftirqd+0x29/0x40
+Feb  9 11:55:05 Space kernel: [58801.943593]  [<ffffffffaf07d7f3>] 
+smpboot_thread_fn+0x143/0x1b0
+Feb  9 11:55:05 Space kernel: [58801.943596]  [<ffffffffaf07d6b0>] ? 
+SyS_setgroups+0x180/0x180
+Feb  9 11:55:05 Space kernel: [58801.943598]  [<ffffffffaf079a02>] 
+kthread+0xd2/0xf0
+Feb  9 11:55:05 Space kernel: [58801.943600]  [<ffffffffaf079930>] ? 
+kthread_create_on_node+0x1c0/0x1c0
+Feb  9 11:55:05 Space kernel: [58801.943602]  [<ffffffffaf6ec618>] 
+ret_from_fork+0x58/0x90
+Feb  9 11:55:05 Space kernel: [58801.943604]  [<ffffffffaf079930>] ? 
+kthread_create_on_node+0x1c0/0x1c0
 
-The highlights include:
+We originally saw this in the wild very rarely, but have now replicated 
+it fairly reliably on an internal test system.  The basic overview seems 
+to be:
+1) Start an ton of simultaneous rescan-scsi-bus processes in a loop.
+2) Apply a large load to the block device.  It doesn't seem to matter 
+exactly what this load is, but anecdotally the error seems to occur more 
+quickly when reading/writing lots of small files rather than a few big 
+files.
+3) ???
+4) arcmsr shits the bed.
 
-- Numerous target-core-user improvements related to queue full and timeout handling. (MNC)
-- Prevent target-core-user corruption when invalid data page is requested. (MNC)
-- Add target-core device action configfs attributes to allow user-space to
-  trigger events separate from existing attributes exposed to end-users. (MNC)
-- Fix iscsi-target NULL pointer dereference 4.6+ regression in CHAP error path.
-  (David Disseldorp)
-- Avoid target-core backend UNMAP callbacks if range is zero. (Andrei Vagin)
-- Fix a iscsi-target 4.14+ regression related multiple PDU logins, that
-  was exposed due to removal of TCP prequeue support. (Florian Westphal + MNC)
+This has happened on a few different software/hardware flavours out in 
+the field, but on this particular test system we're using:
+  - kernel 3.19
+  - arcmsr v1.30.0X.20-20150342 (notably we've also seen this on 
+v1.30.0X.27-20170206 in the field)
+  - ARC-1883LP Raid Controller
+  - Supermicro 12G SAS Backplane
+  - 8x Samsung SAS SSDs (MZILS480HCGR/003)
 
-Also, there is a iser-target bug still being worked on for post -rc1
-code to address a long standing issue resulting in persistent
-ib_post_send() failures, for RNICs with small max_send_sge.  
+Other details:
+  - There seems to be about ~30 gap where the entire system hangs just 
+before the arcmsr abort errors show up in the logs.
+  - Previously (and out in the field) we have LVM in the storage stack 
+(BD -> LVM -> XFS), but we've also replicated this with just XFS (or 
+EXT4) directly on the BD.
 
-Thank you,
+Any ideas?
 
---nab
+Many thanks,
+- Alex.
 
-Andrei Vagin (1):
-  target: don't call an unmap callback if a range length is zero
 
-David Disseldorp (1):
-  target/iscsi: avoid NULL dereference in CHAP auth error path
-
-Florian Westphal (1):
-  iscsi-target: make sure to wake up sleeping login worker
-
-Luis de Bethencourt (1):
-  tcmu: Fix trailing semicolon
-
-Markus Elfring (7):
-  sbp-target: Delete an error message for a failed memory allocation in
-    three functions
-  target: tcm_loop: Delete an error message for a failed memory
-    allocation in four functions
-  target: tcm_loop: Improve a size determination in two functions
-  target: tcm_loop: Combine substrings for 26 messages
-  target: tcm_loop: Delete two unnecessary variable initialisations in
-    tcm_loop_issue_tmr()
-  target: tcm_loop: Delete an unnecessary return statement in
-    tcm_loop_submission_work()
-  target: tcm_loop: Use seq_puts() in tcm_loop_show_info()
-
-Mike Christie (19):
-  tcmu: merge common block release code
-  tcmu: split unmap_thread_fn
-  tcmu: fix unmap thread race
-  tcmu: move expired command completion to unmap thread
-  tcmu: remove commands_lock
-  tcmu: release blocks for partially setup cmds
-  tcmu: simplify scatter_data_area error handling
-  tcmu: fix free block calculation
-  tcmu: prep queue_cmd_ring to be used by unmap wq
-  tcmu: simplify dbi thresh handling
-  tcmu: don't block submitting context for block waits
-  tcmu: make ring buffer timer configurable
-  tcmu: allow max block and global max blocks to be settable
-  tcmu: prevent corruption when invalid data page requested
-  target: add SAM_STAT_BUSY sense reason
-  target_core_user: add cmd id to broken ring message
-  target core: add device action configfs files
-  tcmu: allow userspace to reset ring
-  tcmu: fix cmd user after free
-
-Rasmus Villemoes (1):
-  target-core: don't use "const char*" for a buffer that is written to
-
-Varun Prakash (1):
-  cxgbit: call neigh_event_send() to update MAC address
-
-Wei Yongjun (1):
-  tcmu: fix error return code in tcmu_configure_device()
-
-Xiubo Li (1):
-  tcmu: clean up the scatter helper
-
-tangwenji (2):
-  tcmu: fix page addr in tcmu_flush_dcache_range
-  target: fix destroy device in target_configure_device
-
- drivers/target/iscsi/cxgbit/cxgbit_cm.c  |   3 +
- drivers/target/iscsi/iscsi_target_auth.c |   3 +-
- drivers/target/iscsi/iscsi_target_nego.c |   3 +
- drivers/target/loopback/tcm_loop.c       | 145 ++---
- drivers/target/sbp/sbp_target.c          |  13 +-
- drivers/target/target_core_configfs.c    |   6 +
- drivers/target/target_core_device.c      |   4 +-
- drivers/target/target_core_fabric_lib.c  |   6 +-
- drivers/target/target_core_internal.h    |   3 +-
- drivers/target/target_core_pr.c          |   4 +-
- drivers/target/target_core_sbc.c         |   8 +-
- drivers/target/target_core_transport.c   |   3 +
- drivers/target/target_core_user.c        | 983 ++++++++++++++++++++++---------
- include/target/target_core_backend.h     |   1 +
- include/target/target_core_base.h        |   2 +
- 15 files changed, 798 insertions(+), 389 deletions(-)
+-- 
+Alex Richman
+alex.r@gblabs.co.uk
