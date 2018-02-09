@@ -1,26 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 0/2] Code cleanup and bug fix for truncated CHAP name and secret
-Date: Fri, 09 Feb 2018 18:34:41 -0500
-Message-ID: <yq1inb5visu.fsf@oracle.com>
-References: <20180207161236.12975-1-nilesh.javali@cavium.com>
+Subject: Re: [PATCH] aacraid: fix shutdown crash when init fails
+Date: Fri, 09 Feb 2018 18:39:27 -0500
+Message-ID: <yq17erlvikw.fsf@oracle.com>
+References: <alpine.LRH.2.21.1802082158280.7112@math.ut.ee>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57330 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:33172 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753142AbeBIXev (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2018 18:34:51 -0500
-In-Reply-To: <20180207161236.12975-1-nilesh.javali@cavium.com> (Nilesh
-        Javali's message of "Wed, 7 Feb 2018 08:12:34 -0800")
+        with ESMTP id S1752521AbeBIXjl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2018 18:39:41 -0500
+In-Reply-To: <alpine.LRH.2.21.1802082158280.7112@math.ut.ee> (Meelis Roos's
+        message of "Fri, 9 Feb 2018 08:57:44 +0200 (EET)")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nilesh Javali <nilesh.javali@cavium.com>
-Cc: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
+To: Meelis Roos <mroos@linux.ee>
+Cc: linux-scsi@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 
 
-Nilesh,
+Meelis,
 
-> Please consider below patch set for next 'scsi-fixes' submission.
+> When aacraid init fails with "AAC0: adapter self-test failed.",
+> shutdown leads to UBSAN warning and then oops:
 
 Applied to 4.16/scsi-fixes. Thank you!
 
