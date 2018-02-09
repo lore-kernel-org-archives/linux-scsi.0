@@ -1,26 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/6] scsi: sym53c416: avoid section mismatch with LTO
-Date: Fri, 09 Feb 2018 18:47:58 -0500
-Message-ID: <yq1tvupu3m9.fsf@oracle.com>
-References: <20180202131225.1658853-1-arnd@arndb.de>
-        <20180202131225.1658853-4-arnd@arndb.de>
+Subject: Re: [PATCH] scsi: pmcraid: remove redundant initializations of pointer 'ioadl'
+Date: Fri, 09 Feb 2018 18:52:51 -0500
+Message-ID: <yq1lgg1u3e4.fsf@oracle.com>
+References: <20180206143410.32210-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180202131225.1658853-4-arnd@arndb.de> (Arnd Bergmann's message
-        of "Fri, 2 Feb 2018 14:12:17 +0100")
+In-Reply-To: <20180206143410.32210-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 6 Feb 2018 14:34:10 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Nicolas Pitre <nico@linaro.org>, Andi Kleen <ak@linux.intel.com>, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arnd,
+Colin,
 
-> Building with link time optimizations produces a false-postive section
-> mismatch warning:
+> There are several occurrances where pointer ioadl is initialized with a
+> value that is never read and where it is re-assigned a new value later
+> on, hence the initialization is redundant and can be removed.
 
-Applied to 4.17/scsi-queue, thanks!
+Applied to 4.17/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
