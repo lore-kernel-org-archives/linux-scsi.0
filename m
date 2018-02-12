@@ -1,500 +1,557 @@
 From: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-Subject: RE: [PATCH v5 01/11] scsi: ufs: sysfs: attribute group for existing
- sysfs entries.
-Date: Mon, 12 Feb 2018 11:06:23 +0000
-Message-ID: <CY1PR0401MB09696392A231353F0ED0DD359AF70@CY1PR0401MB0969.namprd04.prod.outlook.com>
+Subject: RE: [PATCH v5 02/11] scsi: ufs: sysfs: device descriptor
+Date: Mon, 12 Feb 2018 11:21:26 +0000
+Message-ID: <CY1PR0401MB0969E1C484E519EBB3F714309AF70@CY1PR0401MB0969.namprd04.prod.outlook.com>
 References: <1517933183-30892-1-git-send-email-stanislav.nijnikov@wdc.com>
- <1517933183-30892-2-git-send-email-stanislav.nijnikov@wdc.com>
- <20180212010602.GC44666@jaegeuk-macbookpro.roam.corp.google.com>
+ <1517933183-30892-3-git-send-email-stanislav.nijnikov@wdc.com>
+ <20180212010738.GD44666@jaegeuk-macbookpro.roam.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180212010602.GC44666@jaegeuk-macbookpro.roam.corp.google.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:49880 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754091AbeBLLV3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2018 06:21:29 -0500
+In-Reply-To: <20180212010738.GD44666@jaegeuk-macbookpro.roam.corp.google.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jaegeuk Kim <jaegeuk@kernel.org>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Alex Lemberg <Alex.Lemberg@wdc.com>
-List-Id: linux-scsi@vger.kernel.org
 
 
 
 > -----Original Message-----
 > From: Jaegeuk Kim [mailto:jaegeuk@kernel.org]
-> Sent: Monday, February 12, 2018 3:06 AM
+> Sent: Monday, February 12, 2018 3:08 AM
 > To: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
 > Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
 > gregkh@linuxfoundation.org; Alex Lemberg <Alex.Lemberg@wdc.com>
-> Subject: Re: [PATCH v5 01/11] scsi: ufs: sysfs: attribute group for exist=
-ing
-> sysfs entries.
+> Subject: Re: [PATCH v5 02/11] scsi: ufs: sysfs: device descriptor
 >=20
 > On 02/06, Stanislav Nijnikov wrote:
-> > This patch introduces attribute group to show existing sysfs entries.
+> > This patch introduces a sysfs group entry for the UFS device
+> > descriptor parameters. The group adds "device_descriptor" folder under
+> > the UFS driver sysfs entry (/sys/bus/platform/drivers/ufshcd/*). The
+> > parameters are shown as hexadecimal numbers. The full information
+> > about the parameters could be found at UFS specifications 2.1.
 > >
 > > Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 > > ---
-> >  drivers/scsi/ufs/Makefile    |   3 +-
-> >  drivers/scsi/ufs/ufs-sysfs.c | 156
-> > +++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/scsi/ufs/ufs-sysfs.h |  14 ++++
-> >  drivers/scsi/ufs/ufshcd.c    | 156 ++---------------------------------=
---------
-> >  drivers/scsi/ufs/ufshcd.h    |   2 +
-> >  5 files changed, 178 insertions(+), 153 deletions(-)  create mode
-> > 100644 drivers/scsi/ufs/ufs-sysfs.c  create mode 100644
-> > drivers/scsi/ufs/ufs-sysfs.h
+> >  Documentation/ABI/testing/sysfs-driver-ufs | 223
+> +++++++++++++++++++++++++++++
+> >  drivers/scsi/ufs/ufs-sysfs.c               | 116 +++++++++++++++
+> >  drivers/scsi/ufs/ufs.h                     |   8 ++
+> >  drivers/scsi/ufs/ufshcd.c                  |  12 +-
+> >  drivers/scsi/ufs/ufshcd.h                  |   6 +
+> >  5 files changed, 359 insertions(+), 6 deletions(-)  create mode
+> > 100644 Documentation/ABI/testing/sysfs-driver-ufs
 > >
-> > diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> > index 9310c6c..918f579 100644
-> > --- a/drivers/scsi/ufs/Makefile
-> > +++ b/drivers/scsi/ufs/Makefile
-> > @@ -3,6 +3,7 @@
-> >  obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) +=3D tc-dwc-g210-pci.o ufshcd-
-> dwc.o
-> > tc-dwc-g210.o
-> >  obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) +=3D tc-dwc-g210-pltfrm.o
-> > ufshcd-dwc.o tc-dwc-g210.o
-> >  obj-$(CONFIG_SCSI_UFS_QCOM) +=3D ufs-qcom.o
-> > -obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd.o
-> > +obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd-core.o ufshcd-core-objs :=3D
-> > +ufshcd.o ufs-sysfs.o
-> >  obj-$(CONFIG_SCSI_UFSHCD_PCI) +=3D ufshcd-pci.o
-> >  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) +=3D ufshcd-pltfrm.o diff --git
-> > a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c new file
-> > mode 100644 index 0000000..ce8dcb6
+> > diff --git a/Documentation/ABI/testing/sysfs-driver-ufs
+> > b/Documentation/ABI/testing/sysfs-driver-ufs
+> > new file mode 100644
+> > index 0000000..8da7b84
 > > --- /dev/null
+> > +++ b/Documentation/ABI/testing/sysfs-driver-ufs
+> > @@ -0,0 +1,223 @@
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/device_type
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the device type. This is one of the UFS
+> > +		device descriptor parameters. The full information about
+> > +		the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/device_class
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the device class. This is one of the UFS
+> > +		device descriptor parameters. The full information about
+> > +		the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/device_sub_
+> class
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the UFS storage subclass. This is one of
+> > +		the UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/protocol
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the protocol supported by an UFS device.
+> > +		This is one of the UFS device descriptor parameters.
+> > +		The full information about the descriptor could be found
+> > +		at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/number_of_
+> luns
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows number of logical units. This is one of
+> > +		the UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/number_of_
+> wluns
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows number of well known logical units.
+> > +		This is one of the UFS device descriptor parameters.
+> > +		The full information about the descriptor could be found
+> > +		at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/boot_enable
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows value that indicates whether the device i=
+s
+> > +		enabled for boot. This is one of the UFS device descriptor
+> > +		parameters. The full information about the descriptor could
+> > +		be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/descriptor_a
+> ccess_enable
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows value that indicates whether the device
+> > +		descriptor could be read after partial initialization phase
+> > +		of the boot sequence. This is one of the UFS device
+> descriptor
+> > +		parameters. The full information about the descriptor could
+> > +		be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/initial_powe
+> r_mode
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows value that defines the power mode after
+> > +		device initialization or hardware reset. This is one of
+> > +		the UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/high_priority
+> _lun
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the high priority lun. This is one of
+> > +		the UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/secure_rem
+> oval_type
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the secure removal type. This is one of
+> > +		the UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/support_sec
+> urity_lun
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows whether the security lun is supported.
+> > +		This is one of the UFS device descriptor parameters.
+> > +		The full information about the descriptor could be found
+> > +		at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/bkops_termi
+> nation_latency
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the background operations termination
+> > +		latency. This is one of the UFS device descriptor parameters.
+> > +		The full information about the descriptor could be found
+> > +		at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/initial_active
+> _icc_level
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the initial active ICC level. This is one
+> > +		of the UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/specification
+> _version
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the specification version. This is one
+> > +		of the UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/manufacturi
+> ng_date
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the manufacturing date in BCD format.
+> > +		This is one of the UFS device descriptor parameters.
+> > +		The full information about the descriptor could be found
+> > +		at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/manufacture
+> r_id
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the manufacturee ID. This is one of the
+> > +		UFS device descriptor parameters. The full information about
+> > +		the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/rtt_capabilit
+> y
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the maximum number of outstanding RTTs
+> > +		supported by the device. This is one of the UFS device
+> > +		descriptor parameters. The full information about
+> > +		the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/rtc_update
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the frequency and method of the realtime
+> > +		clock update. This is one of the UFS device descriptor
+> > +		parameters. The full information about the descriptor
+> > +		could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/ufs_features
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows which features are supported by the devic=
+e.
+> > +		This is one of the UFS device descriptor parameters.
+> > +		The full information about the descriptor could be
+> > +		found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/ffu_timeout
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the FFU timeout. This is one of the
+> > +		UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/queue_dept
+> h
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the device queue depth. This is one of th=
+e
+> > +		UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/device_versi
+> on
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the device version. This is one of the
+> > +		UFS device descriptor parameters. The full information
+> > +		about the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/number_of_
+> secure_wpa
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows number of secure write protect areas
+> > +		supported by the device. This is one of the UFS device
+> > +		descriptor parameters. The full information about
+> > +		the descriptor could be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/psa_max_da
+> ta_size
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the maximum amount of data that may be
+> > +		written during the pre-soldering phase of the PSA flow.
+> > +		This is one of the UFS device descriptor parameters.
+> > +		The full information about the descriptor could be found
+> > +		at UFS specifications 2.1.
+> > +		The file is read only.
+> > +
+> > +What:
+> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/psa_state_ti
+> meout
+> > +Date:		February 2018
+> > +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> > +Description:	This file shows the command maximum timeout for a change
+> > +		in PSA state. This is one of the UFS device descriptor
+> > +		parameters. The full information about the descriptor could
+> > +		be found at UFS specifications 2.1.
+> > +		The file is read only.
+> > diff --git a/drivers/scsi/ufs/ufs-sysfs.c
+> > b/drivers/scsi/ufs/ufs-sysfs.c index ce8dcb6..aa2779a 100644
+> > --- a/drivers/scsi/ufs/ufs-sysfs.c
 > > +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> > @@ -0,0 +1,156 @@
-> > +// SPDX-License-Identifier: GPL-2.0-only // Copyright (C) 2018
-> > +Western Digital Corporation
-> > +
-> > +#include <linux/err.h>
-> > +#include <linux/string.h>
-> > +
-> > +#include "ufs-sysfs.h"
-> > +
-> > +static const char *ufschd_uic_link_state_to_string(
-> > +			enum uic_link_state state)
+> > @@ -3,7 +3,9 @@
+> >
+> >  #include <linux/err.h>
+> >  #include <linux/string.h>
+> > +#include <asm/unaligned.h>
+> >
+> > +#include "ufs.h"
+> >  #include "ufs-sysfs.h"
+> >
+> >  static const char *ufschd_uic_link_state_to_string( @@ -134,8
+> > +136,122 @@ static const struct attribute_group ufs_sysfs_default_group
+> =3D {
+> >  	.attrs =3D ufs_sysfs_ufshcd_attrs,
+> >  };
+> >
+> > +static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+> > +				  enum desc_idn desc_id,
+> > +				  u8 desc_index,
+> > +				  u8 param_offset,
+> > +				  u8 *sysfs_buf,
+> > +				  u8 param_size)
 > > +{
-> > +	switch (state) {
-> > +	case UIC_LINK_OFF_STATE:	return "OFF";
-> > +	case UIC_LINK_ACTIVE_STATE:	return "ACTIVE";
-> > +	case UIC_LINK_HIBERN8_STATE:	return "HIBERN8";
-> > +	default:			return "UNKNOWN";
-> > +	}
-> > +}
+> > +	u8 desc_buf[8] =3D {0};
+> > +	int ret;
 > > +
-> > +static const char *ufschd_ufs_dev_pwr_mode_to_string(
-> > +			enum ufs_dev_pwr_mode state)
-> > +{
-> > +	switch (state) {
-> > +	case UFS_ACTIVE_PWR_MODE:	return "ACTIVE";
-> > +	case UFS_SLEEP_PWR_MODE:	return "SLEEP";
-> > +	case UFS_POWERDOWN_PWR_MODE:	return "POWERDOWN";
-> > +	default:			return "UNKNOWN";
-> > +	}
-> > +}
-> > +
-> > +static inline ssize_t ufs_sysfs_pm_lvl_store(struct device *dev,
-> > +					     struct device_attribute *attr,
-> > +					     const char *buf, size_t count,
-> > +					     bool rpm)
-> > +{
-> > +	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> > +	unsigned long flags, value;
-> > +
-> > +	if (kstrtoul(buf, 0, &value))
+> > +	if (param_size > 8)
 > > +		return -EINVAL;
 > > +
-> > +	if (value >=3D UFS_PM_LVL_MAX)
+> > +	ret =3D ufshcd_read_desc_param(hba, desc_id, desc_index,
+> > +				param_offset, desc_buf, param_size);
+> > +	if (ret)
 > > +		return -EINVAL;
+> > +	switch (param_size) {
+> > +	case 1:
+> > +		ret =3D sprintf(sysfs_buf, "0x%02X\n", *desc_buf);
+> > +		break;
+> > +	case 2:
+> > +		ret =3D sprintf(sysfs_buf, "0x%04X\n",
+> > +			get_unaligned_be16(desc_buf));
+> > +		break;
+> > +	case 4:
+> > +		ret =3D sprintf(sysfs_buf, "0x%08X\n",
+> > +			get_unaligned_be32(desc_buf));
+> > +		break;
+> > +	case 8:
+> > +		ret =3D sprintf(sysfs_buf, "0x%016llX\n",
+> > +			get_unaligned_be64(desc_buf));
+> > +		break;
+> > +	}
 > > +
-> > +	spin_lock_irqsave(hba->host->host_lock, flags);
-> > +	if (rpm)
-> > +		hba->rpm_lvl =3D value;
-> > +	else
-> > +		hba->spm_lvl =3D value;
-> > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > +	return count;
+> > +	return ret;
 > > +}
 > > +
-> > +static ssize_t rpm_lvl_show(struct device *dev,
-> > +		struct device_attribute *attr, char *buf) {
-> > +	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> > +	int curr_len;
-> > +	u8 lvl;
+> > +#define UFS_DESC_PARAM(_name, _puname, _duname, _size)
+> 		\
+> > +static ssize_t _name##_show(struct device *dev,
+> 	\
+> > +	struct device_attribute *attr, char *buf)			\
+> > +{									\
+> > +	struct ufs_hba *hba =3D dev_get_drvdata(dev);			\
+> > +	return ufs_sysfs_read_desc_param(hba,
+> QUERY_DESC_IDN_##_duname,	\
+> > +		0, _duname##_DESC_PARAM##_puname, buf, _size);
+> 	\
+> > +}									\
+> > +static DEVICE_ATTR_RO(_name)
 > > +
-> > +	curr_len =3D snprintf(buf, PAGE_SIZE,
-> > +			    "\nCurrent Runtime PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > +			    hba->rpm_lvl,
-> > +			    ufschd_ufs_dev_pwr_mode_to_string(
-> > +				ufs_pm_lvl_states[hba-
-> >rpm_lvl].dev_state),
-> > +			    ufschd_uic_link_state_to_string(
-> > +				ufs_pm_lvl_states[hba-
-> >rpm_lvl].link_state));
+> > +#define UFS_DEVICE_DESC_PARAM(_name, _uname, _size)
+> 		\
+> > +	UFS_DESC_PARAM(_name, _uname, DEVICE, _size)
+> > +
+> > +UFS_DEVICE_DESC_PARAM(device_type, _DEVICE_TYPE, 1);
+> > +UFS_DEVICE_DESC_PARAM(device_class, _DEVICE_CLASS, 1);
+> > +UFS_DEVICE_DESC_PARAM(device_sub_class, _DEVICE_SUB_CLASS, 1);
+> > +UFS_DEVICE_DESC_PARAM(protocol, _PRTCL, 1);
+> > +UFS_DEVICE_DESC_PARAM(number_of_luns, _NUM_LU, 1);
+> > +UFS_DEVICE_DESC_PARAM(number_of_wluns, _NUM_WLU, 1);
+> > +UFS_DEVICE_DESC_PARAM(boot_enable, _BOOT_ENBL, 1);
+> > +UFS_DEVICE_DESC_PARAM(descriptor_access_enable,
+> _DESC_ACCSS_ENBL, 1);
+> > +UFS_DEVICE_DESC_PARAM(initial_power_mode, _INIT_PWR_MODE, 1);
+> > +UFS_DEVICE_DESC_PARAM(high_priority_lun, _HIGH_PR_LUN, 1);
+> > +UFS_DEVICE_DESC_PARAM(secure_removal_type, _SEC_RMV_TYPE, 1);
+> > +UFS_DEVICE_DESC_PARAM(support_security_lun, _SEC_LU, 1);
+> > +UFS_DEVICE_DESC_PARAM(bkops_termination_latency,
+> _BKOP_TERM_LT, 1);
+> > +UFS_DEVICE_DESC_PARAM(initial_active_icc_level, _ACTVE_ICC_LVL, 1);
+> > +UFS_DEVICE_DESC_PARAM(specification_version, _SPEC_VER, 2);
+> > +UFS_DEVICE_DESC_PARAM(manufacturing_date, _MANF_DATE, 2);
+> > +UFS_DEVICE_DESC_PARAM(manufacturer_id, _MANF_ID, 2);
+> > +UFS_DEVICE_DESC_PARAM(rtt_capability, _RTT_CAP, 1);
+> > +UFS_DEVICE_DESC_PARAM(rtc_update, _FRQ_RTC, 2);
+> > +UFS_DEVICE_DESC_PARAM(ufs_features, _UFS_FEAT, 1);
+> > +UFS_DEVICE_DESC_PARAM(ffu_timeout, _FFU_TMT, 1);
+> > +UFS_DEVICE_DESC_PARAM(queue_depth, _Q_DPTH, 1);
+> > +UFS_DEVICE_DESC_PARAM(device_version, _DEV_VER, 2);
+> > +UFS_DEVICE_DESC_PARAM(number_of_secure_wpa, _NUM_SEC_WPA,
+> 1);
+> > +UFS_DEVICE_DESC_PARAM(psa_max_data_size, _PSA_MAX_DATA, 4);
+> > +UFS_DEVICE_DESC_PARAM(psa_state_timeout, _PSA_TMT, 1);
 >=20
-> If there is no objection regarding to backward compatibility, can we also=
- clean
-> this up by adding multiple entries having single string each, as Greg
-> recommended?
+> Could you add this case as well?
 >=20
-> For example,
+> DEVICE_DESC_PARAM_PRDCT_REV		=3D 0x2A,
 >=20
-> /rpm_level
-> 1
->=20
-> /rpm_dev_state
-> ACTIVE
->=20
-> /rpm_link_state
-> HIBERN8
->=20
-> /spm_level
-> 2
->=20
-> /spm_dev_state
-> SLEEP
->=20
-> /spm_link_state
-> ACTIVE
->=20
-> /avail_dev_states
-> 0:ACTIVE 1:ACTIVE 2:SLEEP 3:SLEEP 4:POWERDOWN 5:POWERDOWN
->=20
-> /avail_link_states
-> 0:ACTIVE 1:HIBERN8 2:ACTIVE 3:HIBERN8 4:HIBERN8 5:OFF
->=20
-> Thanks,
->=20
-Hi,
-We are planning to fix this in a separate patch.
+
+This value was omitted intentionally. It holds an index of the string descr=
+iptor with the
+product revision. There are 4 more such fields in the device descriptor:
+ - DEVICE_DESC_PARAM_MANF_NAME =3D 0x14
+ - DEVICE_DESC_PARAM_PRDCT_NAME  =3D 0x15,
+ - DEVICE_DESC_PARAM_SN =3D 0x16,
+ - DEVICE_DESC_PARAM_OEM_ID  =3D 0x17,
+The indexes itself don't provide any useful information to users and the
+corresponding strings are shown by the string descriptors (see "[PATCH v5 0=
+7/11]=20
+scsi: ufs: sysfs: string descriptors")
 
 Regards
 
 > > +
-> > +	curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > +			     "\nAll available Runtime PM levels info:\n");
-> > +	for (lvl =3D UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> > +		curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > +				     "\tRuntime PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > +				    lvl,
-> > +				    ufschd_ufs_dev_pwr_mode_to_string(
-> > +					ufs_pm_lvl_states[lvl].dev_state),
-> > +				    ufschd_uic_link_state_to_string(
-> > +					ufs_pm_lvl_states[lvl].link_state));
-> > +
-> > +	return curr_len;
-> > +}
-> > +
-> > +static ssize_t rpm_lvl_store(struct device *dev,
-> > +		struct device_attribute *attr, const char *buf, size_t count) {
-> > +	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, true); }
-> > +
-> > +static ssize_t spm_lvl_show(struct device *dev,
-> > +		struct device_attribute *attr, char *buf) {
-> > +	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> > +	int curr_len;
-> > +	u8 lvl;
-> > +
-> > +	curr_len =3D snprintf(buf, PAGE_SIZE,
-> > +			    "\nCurrent System PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > +			    hba->spm_lvl,
-> > +			    ufschd_ufs_dev_pwr_mode_to_string(
-> > +				ufs_pm_lvl_states[hba-
-> >spm_lvl].dev_state),
-> > +			    ufschd_uic_link_state_to_string(
-> > +				ufs_pm_lvl_states[hba-
-> >spm_lvl].link_state));
-> > +
-> > +	curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > +			     "\nAll available System PM levels info:\n");
-> > +	for (lvl =3D UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> > +		curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > +				     "\tSystem PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > +				    lvl,
-> > +				    ufschd_ufs_dev_pwr_mode_to_string(
-> > +					ufs_pm_lvl_states[lvl].dev_state),
-> > +				    ufschd_uic_link_state_to_string(
-> > +					ufs_pm_lvl_states[lvl].link_state));
-> > +
-> > +	return curr_len;
-> > +}
-> > +
-> > +static ssize_t spm_lvl_store(struct device *dev,
-> > +		struct device_attribute *attr, const char *buf, size_t count) {
-> > +	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, false); }
-> > +
-> > +static DEVICE_ATTR_RW(rpm_lvl);
-> > +static DEVICE_ATTR_RW(spm_lvl);
-> > +
-> > +static struct attribute *ufs_sysfs_ufshcd_attrs[] =3D {
-> > +	&dev_attr_rpm_lvl.attr,
-> > +	&dev_attr_spm_lvl.attr,
-> > +	NULL
-> > +};
-> > +
-> > +static const struct attribute_group ufs_sysfs_default_group =3D {
-> > +	.attrs =3D ufs_sysfs_ufshcd_attrs,
-> > +};
-> > +
-> > +static const struct attribute_group *ufs_sysfs_groups[] =3D {
-> > +	&ufs_sysfs_default_group,
+> > +static struct attribute *ufs_sysfs_device_descriptor[] =3D {
+> > +	&dev_attr_device_type.attr,
+> > +	&dev_attr_device_class.attr,
+> > +	&dev_attr_device_sub_class.attr,
+> > +	&dev_attr_protocol.attr,
+> > +	&dev_attr_number_of_luns.attr,
+> > +	&dev_attr_number_of_wluns.attr,
+> > +	&dev_attr_boot_enable.attr,
+> > +	&dev_attr_descriptor_access_enable.attr,
+> > +	&dev_attr_initial_power_mode.attr,
+> > +	&dev_attr_high_priority_lun.attr,
+> > +	&dev_attr_secure_removal_type.attr,
+> > +	&dev_attr_support_security_lun.attr,
+> > +	&dev_attr_bkops_termination_latency.attr,
+> > +	&dev_attr_initial_active_icc_level.attr,
+> > +	&dev_attr_specification_version.attr,
+> > +	&dev_attr_manufacturing_date.attr,
+> > +	&dev_attr_manufacturer_id.attr,
+> > +	&dev_attr_rtt_capability.attr,
+> > +	&dev_attr_rtc_update.attr,
+> > +	&dev_attr_ufs_features.attr,
+> > +	&dev_attr_ffu_timeout.attr,
+> > +	&dev_attr_queue_depth.attr,
+> > +	&dev_attr_device_version.attr,
+> > +	&dev_attr_number_of_secure_wpa.attr,
+> > +	&dev_attr_psa_max_data_size.attr,
+> > +	&dev_attr_psa_state_timeout.attr,
 > > +	NULL,
 > > +};
 > > +
-> > +void ufs_sysfs_add_nodes(struct device *dev) {
-> > +	int ret;
+> > +static const struct attribute_group ufs_sysfs_device_descriptor_group =
+=3D {
+> > +	.name =3D "device_descriptor",
+> > +	.attrs =3D ufs_sysfs_device_descriptor, };
 > > +
-> > +	ret =3D sysfs_create_groups(&dev->kobj, ufs_sysfs_groups);
-> > +	if (ret)
-> > +		dev_err(dev,
-> > +			"%s: sysfs groups creation failed (err =3D %d)\n",
-> > +			__func__, ret);
-> > +}
-> > +
-> > +void ufs_sysfs_remove_nodes(struct device *dev) {
-> > +	sysfs_remove_groups(&dev->kobj, ufs_sysfs_groups); }
-> > diff --git a/drivers/scsi/ufs/ufs-sysfs.h
-> > b/drivers/scsi/ufs/ufs-sysfs.h new file mode 100644 index
-> > 0000000..4a984ca
-> > --- /dev/null
-> > +++ b/drivers/scsi/ufs/ufs-sysfs.h
-> > @@ -0,0 +1,14 @@
-> > +/* SPDX-License-Identifier: GPL-2.0-only
-> > + * Copyright (C) 2018 Western Digital Corporation  */
-> > +
-> > +#ifndef __UFS_SYSFS_H__
-> > +#define __UFS_SYSFS_H__
-> > +
-> > +#include <linux/sysfs.h>
-> > +
-> > +#include "ufshcd.h"
-> > +
-> > +void ufs_sysfs_add_nodes(struct device *dev); void
-> > +ufs_sysfs_remove_nodes(struct device *dev); #endif
+> >  static const struct attribute_group *ufs_sysfs_groups[] =3D {
+> >  	&ufs_sysfs_default_group,
+> > +	&ufs_sysfs_device_descriptor_group,
+> >  	NULL,
+> >  };
+> >
+> > diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h index
+> > 54deeb7..6ae1e08 100644
+> > --- a/drivers/scsi/ufs/ufs.h
+> > +++ b/drivers/scsi/ufs/ufs.h
+> > @@ -220,6 +220,14 @@ enum device_desc_param {
+> >  	DEVICE_DESC_PARAM_UD_LEN		=3D 0x1B,
+> >  	DEVICE_DESC_PARAM_RTT_CAP		=3D 0x1C,
+> >  	DEVICE_DESC_PARAM_FRQ_RTC		=3D 0x1D,
+> > +	DEVICE_DESC_PARAM_UFS_FEAT		=3D 0x1F,
+> > +	DEVICE_DESC_PARAM_FFU_TMT		=3D 0x20,
+> > +	DEVICE_DESC_PARAM_Q_DPTH		=3D 0x21,
+> > +	DEVICE_DESC_PARAM_DEV_VER		=3D 0x22,
+> > +	DEVICE_DESC_PARAM_NUM_SEC_WPA		=3D 0x24,
+> > +	DEVICE_DESC_PARAM_PSA_MAX_DATA		=3D 0x25,
+> > +	DEVICE_DESC_PARAM_PSA_TMT		=3D 0x29,
+> > +	DEVICE_DESC_PARAM_PRDCT_REV		=3D 0x2A,
+> >  };
+> >
+> >  /*
 > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index a355d98..e7621a0a 100644
+> > index e7621a0a..540a431 100644
 > > --- a/drivers/scsi/ufs/ufshcd.c
 > > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -44,6 +44,7 @@
-> >  #include "ufshcd.h"
-> >  #include "ufs_quirks.h"
-> >  #include "unipro.h"
-> > +#include "ufs-sysfs.h"
-> >
-> >  #define CREATE_TRACE_POINTS
-> >  #include <trace/events/ufs.h>
-> > @@ -150,7 +151,7 @@ enum {
-> >  #define ufshcd_is_ufs_dev_poweroff(h) \
-> >  	((h)->curr_dev_pwr_mode =3D=3D UFS_POWERDOWN_PWR_MODE)
-> >
-> > -static struct ufs_pm_lvl_states ufs_pm_lvl_states[] =3D {
-> > +struct ufs_pm_lvl_states ufs_pm_lvl_states[] =3D {
-> >  	{UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
-> >  	{UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
-> >  	{UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE}, @@ -813,28
-> +814,6 @@
-> > static inline bool ufshcd_is_hba_active(struct ufs_hba *hba)
-> >  		? false : true;
-> >  }
-> >
-> > -static const char *ufschd_uic_link_state_to_string(
-> > -			enum uic_link_state state)
-> > -{
-> > -	switch (state) {
-> > -	case UIC_LINK_OFF_STATE:	return "OFF";
-> > -	case UIC_LINK_ACTIVE_STATE:	return "ACTIVE";
-> > -	case UIC_LINK_HIBERN8_STATE:	return "HIBERN8";
-> > -	default:			return "UNKNOWN";
-> > -	}
-> > -}
-> > -
-> > -static const char *ufschd_ufs_dev_pwr_mode_to_string(
-> > -			enum ufs_dev_pwr_mode state)
-> > -{
-> > -	switch (state) {
-> > -	case UFS_ACTIVE_PWR_MODE:	return "ACTIVE";
-> > -	case UFS_SLEEP_PWR_MODE:	return "SLEEP";
-> > -	case UFS_POWERDOWN_PWR_MODE:	return "POWERDOWN";
-> > -	default:			return "UNKNOWN";
-> > -	}
-> > -}
-> > -
-> >  u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)  {
-> >  	/* HCI version 1.0 and 1.1 supports UniPro 1.41 */ @@ -7585,133
-> > +7564,6 @@ int ufshcd_runtime_idle(struct ufs_hba *hba)  }
-> > EXPORT_SYMBOL(ufshcd_runtime_idle);
-> >
-> > -static inline ssize_t ufshcd_pm_lvl_store(struct device *dev,
-> > -					   struct device_attribute *attr,
-> > -					   const char *buf, size_t count,
-> > -					   bool rpm)
-> > -{
-> > -	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> > -	unsigned long flags, value;
-> > -
-> > -	if (kstrtoul(buf, 0, &value))
-> > -		return -EINVAL;
-> > -
-> > -	if (value >=3D UFS_PM_LVL_MAX)
-> > -		return -EINVAL;
-> > -
-> > -	spin_lock_irqsave(hba->host->host_lock, flags);
-> > -	if (rpm)
-> > -		hba->rpm_lvl =3D value;
-> > -	else
-> > -		hba->spm_lvl =3D value;
-> > -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > -	return count;
-> > -}
-> > -
-> > -static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
-> > -		struct device_attribute *attr, char *buf)
-> > -{
-> > -	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> > -	int curr_len;
-> > -	u8 lvl;
-> > -
-> > -	curr_len =3D snprintf(buf, PAGE_SIZE,
-> > -			    "\nCurrent Runtime PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > -			    hba->rpm_lvl,
-> > -			    ufschd_ufs_dev_pwr_mode_to_string(
-> > -				ufs_pm_lvl_states[hba-
-> >rpm_lvl].dev_state),
-> > -			    ufschd_uic_link_state_to_string(
-> > -				ufs_pm_lvl_states[hba-
-> >rpm_lvl].link_state));
-> > -
-> > -	curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > -			     "\nAll available Runtime PM levels info:\n");
-> > -	for (lvl =3D UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> > -		curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > -				     "\tRuntime PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > -				    lvl,
-> > -				    ufschd_ufs_dev_pwr_mode_to_string(
-> > -					ufs_pm_lvl_states[lvl].dev_state),
-> > -				    ufschd_uic_link_state_to_string(
-> > -					ufs_pm_lvl_states[lvl].link_state));
-> > -
-> > -	return curr_len;
-> > -}
-> > -
-> > -static ssize_t ufshcd_rpm_lvl_store(struct device *dev,
-> > -		struct device_attribute *attr, const char *buf, size_t count)
-> > -{
-> > -	return ufshcd_pm_lvl_store(dev, attr, buf, count, true);
-> > -}
-> > -
-> > -static void ufshcd_add_rpm_lvl_sysfs_nodes(struct ufs_hba *hba) -{
-> > -	hba->rpm_lvl_attr.show =3D ufshcd_rpm_lvl_show;
-> > -	hba->rpm_lvl_attr.store =3D ufshcd_rpm_lvl_store;
-> > -	sysfs_attr_init(&hba->rpm_lvl_attr.attr);
-> > -	hba->rpm_lvl_attr.attr.name =3D "rpm_lvl";
-> > -	hba->rpm_lvl_attr.attr.mode =3D 0644;
-> > -	if (device_create_file(hba->dev, &hba->rpm_lvl_attr))
-> > -		dev_err(hba->dev, "Failed to create sysfs for rpm_lvl\n");
-> > -}
-> > -
-> > -static ssize_t ufshcd_spm_lvl_show(struct device *dev,
-> > -		struct device_attribute *attr, char *buf)
-> > -{
-> > -	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> > -	int curr_len;
-> > -	u8 lvl;
-> > -
-> > -	curr_len =3D snprintf(buf, PAGE_SIZE,
-> > -			    "\nCurrent System PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > -			    hba->spm_lvl,
-> > -			    ufschd_ufs_dev_pwr_mode_to_string(
-> > -				ufs_pm_lvl_states[hba-
-> >spm_lvl].dev_state),
-> > -			    ufschd_uic_link_state_to_string(
-> > -				ufs_pm_lvl_states[hba-
-> >spm_lvl].link_state));
-> > -
-> > -	curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > -			     "\nAll available System PM levels info:\n");
-> > -	for (lvl =3D UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> > -		curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> > -				     "\tSystem PM level [%d] =3D> dev_state
-> [%s] link_state [%s]\n",
-> > -				    lvl,
-> > -				    ufschd_ufs_dev_pwr_mode_to_string(
-> > -					ufs_pm_lvl_states[lvl].dev_state),
-> > -				    ufschd_uic_link_state_to_string(
-> > -					ufs_pm_lvl_states[lvl].link_state));
-> > -
-> > -	return curr_len;
-> > -}
-> > -
-> > -static ssize_t ufshcd_spm_lvl_store(struct device *dev,
-> > -		struct device_attribute *attr, const char *buf, size_t count)
-> > -{
-> > -	return ufshcd_pm_lvl_store(dev, attr, buf, count, false);
-> > -}
-> > -
-> > -static void ufshcd_add_spm_lvl_sysfs_nodes(struct ufs_hba *hba) -{
-> > -	hba->spm_lvl_attr.show =3D ufshcd_spm_lvl_show;
-> > -	hba->spm_lvl_attr.store =3D ufshcd_spm_lvl_store;
-> > -	sysfs_attr_init(&hba->spm_lvl_attr.attr);
-> > -	hba->spm_lvl_attr.attr.name =3D "spm_lvl";
-> > -	hba->spm_lvl_attr.attr.mode =3D 0644;
-> > -	if (device_create_file(hba->dev, &hba->spm_lvl_attr))
-> > -		dev_err(hba->dev, "Failed to create sysfs for spm_lvl\n");
-> > -}
-> > -
-> > -static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba) -{
-> > -	ufshcd_add_rpm_lvl_sysfs_nodes(hba);
-> > -	ufshcd_add_spm_lvl_sysfs_nodes(hba);
-> > -}
-> > -
-> > -static inline void ufshcd_remove_sysfs_nodes(struct ufs_hba *hba) -{
-> > -	device_remove_file(hba->dev, &hba->rpm_lvl_attr);
-> > -	device_remove_file(hba->dev, &hba->spm_lvl_attr);
-> > -}
-> > -
-> >  /**
-> >   * ufshcd_shutdown - shutdown routine
-> >   * @hba: per adapter instance
-> > @@ -7749,7 +7601,7 @@ EXPORT_SYMBOL(ufshcd_shutdown);
+> > @@ -2989,12 +2989,12 @@
+> EXPORT_SYMBOL(ufshcd_map_desc_id_to_length);
+> >   *
+> >   * Return 0 in case of success, non-zero otherwise
 > >   */
-> >  void ufshcd_remove(struct ufs_hba *hba)  {
-> > -	ufshcd_remove_sysfs_nodes(hba);
-> > +	ufs_sysfs_remove_nodes(hba->dev);
-> >  	scsi_remove_host(hba->host);
-> >  	/* disable interrupts */
-> >  	ufshcd_disable_intr(hba, hba->intr_mask); @@ -7996,7 +7848,7 @@
-> int
-> > ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int
-> irq)
-> >  	ufshcd_set_ufs_dev_active(hba);
-> >
-> >  	async_schedule(ufshcd_async_scan, hba);
-> > -	ufshcd_add_sysfs_nodes(hba);
-> > +	ufs_sysfs_add_nodes(hba->dev);
-> >
-> >  	return 0;
-> >
+> > -static int ufshcd_read_desc_param(struct ufs_hba *hba,
+> > -				  enum desc_idn desc_id,
+> > -				  int desc_index,
+> > -				  u8 param_offset,
+> > -				  u8 *param_read_buf,
+> > -				  u8 param_size)
+> > +int ufshcd_read_desc_param(struct ufs_hba *hba,
+> > +			   enum desc_idn desc_id,
+> > +			   int desc_index,
+> > +			   u8 param_offset,
+> > +			   u8 *param_read_buf,
+> > +			   u8 param_size)
+> >  {
+> >  	int ret;
+> >  	u8 *desc_buf;
 > > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index 1332e54..53e2779 100644
+> > index 53e2779..38c307d 100644
 > > --- a/drivers/scsi/ufs/ufshcd.h
 > > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -985,4 +985,6 @@ static inline void
-> ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
-> >  		hba->vops->dbg_register_dump(hba);
-> >  }
+> > @@ -841,6 +841,12 @@ static inline bool ufshcd_is_hs_mode(struct
+> > ufs_pa_layer_attr *pwr_info)  }
 > >
-> > +extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-> > +
-> >  #endif /* End of Header */
+> >  /* Expose Query-Request API */
+> > +int ufshcd_read_desc_param(struct ufs_hba *hba,
+> > +			   enum desc_idn desc_id,
+> > +			   int desc_index,
+> > +			   u8 param_offset,
+> > +			   u8 *param_read_buf,
+> > +			   u8 param_size);
+> >  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+> >  	enum flag_idn idn, bool *flag_res);
+> >  int ufshcd_hold(struct ufs_hba *hba, bool async);
 > > --
 > > 2.7.4
