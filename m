@@ -1,346 +1,478 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 0/5] blk-mq/scsi-mq: support global tags & introduce
- force_blk_mq
-Date: Sun, 11 Feb 2018 13:31:11 +0800
-Message-ID: <20180211053102.GA15507@ming.t460p>
-References: <8cf1036167ec5fb58c1d2f70bbb0b678@mail.gmail.com>
- <4c934478-a9c1-2f66-83f2-982b85c4e6cc@suse.de>
- <20180207122257.GA16633@ming.t460p>
- <95b8ea33c79b84188e4a54b4e5fcd7b6@mail.gmail.com>
- <35778fd9-ede6-ed3d-4b13-27fb35ede9bd@suse.de>
- <20180208165313.GA31725@ming.t460p>
- <14c596572dcf99c4343c7eba65a7c427@mail.gmail.com>
- <20180209053107.GA30909@ming.t460p>
- <50c2ea693cd9923b53e2eb0ffd2b143e@mail.gmail.com>
- <20180210010057.GA2543@ming.t460p>
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [PATCH v5 01/11] scsi: ufs: sysfs: attribute group for existing
+ sysfs entries.
+Date: Sun, 11 Feb 2018 17:06:02 -0800
+Message-ID: <20180212010602.GC44666@jaegeuk-macbookpro.roam.corp.google.com>
+References: <1517933183-30892-1-git-send-email-stanislav.nijnikov@wdc.com>
+ <1517933183-30892-2-git-send-email-stanislav.nijnikov@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:57370 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932266AbeBLBGE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 11 Feb 2018 20:06:04 -0500
 Content-Disposition: inline
-In-Reply-To: <20180210010057.GA2543@ming.t460p>
-Sender: linux-block-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@cavium.com>, Omar Sandoval <osandov@fb.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, Peter Rivera <peter.rivera@broadcom.com>, Paolo Bonzini <pbonzini@redhat.com>, Laurence Oberman <loberman@redhat.com>
+In-Reply-To: <1517933183-30892-2-git-send-email-stanislav.nijnikov@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, alex.lemberg@wdc.com
 
-On Sat, Feb 10, 2018 at 09:00:57AM +0800, Ming Lei wrote:
-> Hi Kashyap,
+On 02/06, Stanislav Nijnikov wrote:
+> This patch introduces attribute group to show existing sysfs entries.
 > 
-> On Fri, Feb 09, 2018 at 02:12:16PM +0530, Kashyap Desai wrote:
-> > > -----Original Message-----
-> > > From: Ming Lei [mailto:ming.lei@redhat.com]
-> > > Sent: Friday, February 9, 2018 11:01 AM
-> > > To: Kashyap Desai
-> > > Cc: Hannes Reinecke; Jens Axboe; linux-block@vger.kernel.org; Christoph
-> > > Hellwig; Mike Snitzer; linux-scsi@vger.kernel.org; Arun Easi; Omar
-> > Sandoval;
-> > > Martin K . Petersen; James Bottomley; Christoph Hellwig; Don Brace;
-> > Peter
-> > > Rivera; Paolo Bonzini; Laurence Oberman
-> > > Subject: Re: [PATCH 0/5] blk-mq/scsi-mq: support global tags & introduce
-> > > force_blk_mq
-> > >
-> > > On Fri, Feb 09, 2018 at 10:28:23AM +0530, Kashyap Desai wrote:
-> > > > > -----Original Message-----
-> > > > > From: Ming Lei [mailto:ming.lei@redhat.com]
-> > > > > Sent: Thursday, February 8, 2018 10:23 PM
-> > > > > To: Hannes Reinecke
-> > > > > Cc: Kashyap Desai; Jens Axboe; linux-block@vger.kernel.org;
-> > > > > Christoph Hellwig; Mike Snitzer; linux-scsi@vger.kernel.org; Arun
-> > > > > Easi; Omar
-> > > > Sandoval;
-> > > > > Martin K . Petersen; James Bottomley; Christoph Hellwig; Don Brace;
-> > > > Peter
-> > > > > Rivera; Paolo Bonzini; Laurence Oberman
-> > > > > Subject: Re: [PATCH 0/5] blk-mq/scsi-mq: support global tags &
-> > > > > introduce force_blk_mq
-> > > > >
-> > > > > On Thu, Feb 08, 2018 at 08:00:29AM +0100, Hannes Reinecke wrote:
-> > > > > > On 02/07/2018 03:14 PM, Kashyap Desai wrote:
-> > > > > > >> -----Original Message-----
-> > > > > > >> From: Ming Lei [mailto:ming.lei@redhat.com]
-> > > > > > >> Sent: Wednesday, February 7, 2018 5:53 PM
-> > > > > > >> To: Hannes Reinecke
-> > > > > > >> Cc: Kashyap Desai; Jens Axboe; linux-block@vger.kernel.org;
-> > > > > > >> Christoph Hellwig; Mike Snitzer; linux-scsi@vger.kernel.org;
-> > > > > > >> Arun Easi; Omar
-> > > > > > > Sandoval;
-> > > > > > >> Martin K . Petersen; James Bottomley; Christoph Hellwig; Don
-> > > > > > >> Brace;
-> > > > > > > Peter
-> > > > > > >> Rivera; Paolo Bonzini; Laurence Oberman
-> > > > > > >> Subject: Re: [PATCH 0/5] blk-mq/scsi-mq: support global tags &
-> > > > > > >> introduce force_blk_mq
-> > > > > > >>
-> > > > > > >> On Wed, Feb 07, 2018 at 07:50:21AM +0100, Hannes Reinecke
-> > wrote:
-> > > > > > >>> Hi all,
-> > > > > > >>>
-> > > > > > >>> [ .. ]
-> > > > > > >>>>>
-> > > > > > >>>>> Could you share us your patch for enabling global_tags/MQ on
-> > > > > > >>>> megaraid_sas
-> > > > > > >>>>> so that I can reproduce your test?
-> > > > > > >>>>>
-> > > > > > >>>>>> See below perf top data. "bt_iter" is consuming 4 times
-> > > > > > >>>>>> more
-> > > > CPU.
-> > > > > > >>>>>
-> > > > > > >>>>> Could you share us what the IOPS/CPU utilization effect is
-> > > > > > >>>>> after
-> > > > > > >>>> applying the
-> > > > > > >>>>> patch V2? And your test script?
-> > > > > > >>>> Regarding CPU utilization, I need to test one more time.
-> > > > > > >>>> Currently system is in used.
-> > > > > > >>>>
-> > > > > > >>>> I run below fio test on total 24 SSDs expander attached.
-> > > > > > >>>>
-> > > > > > >>>> numactl -N 1 fio jbod.fio --rw=randread --iodepth=64 --bs=4k
-> > > > > > >>>> --ioengine=libaio --rw=randread
-> > > > > > >>>>
-> > > > > > >>>> Performance dropped from 1.6 M IOPs to 770K IOPs.
-> > > > > > >>>>
-> > > > > > >>> This is basically what we've seen with earlier iterations.
-> > > > > > >>
-> > > > > > >> Hi Hannes,
-> > > > > > >>
-> > > > > > >> As I mentioned in another mail[1], Kashyap's patch has a big
-> > > > > > >> issue,
-> > > > > > > which
-> > > > > > >> causes only reply queue 0 used.
-> > > > > > >>
-> > > > > > >> [1] https://marc.info/?l=linux-scsi&m=151793204014631&w=2
-> > > > > > >>
-> > > > > > >> So could you guys run your performance test again after fixing
-> > > > > > >> the
-> > > > > > > patch?
-> > > > > > >
-> > > > > > > Ming -
-> > > > > > >
-> > > > > > > I tried after change you requested.  Performance drop is still
-> > > > unresolved.
-> > > > > > > From 1.6 M IOPS to 770K IOPS.
-> > > > > > >
-> > > > > > > See below data. All 24 reply queue is in used correctly.
-> > > > > > >
-> > > > > > > IRQs / 1 second(s)
-> > > > > > > IRQ#  TOTAL  NODE0   NODE1  NAME
-> > > > > > >  360  16422      0   16422  IR-PCI-MSI 70254653-edge megasas
-> > > > > > >  364  15980      0   15980  IR-PCI-MSI 70254657-edge megasas
-> > > > > > >  362  15979      0   15979  IR-PCI-MSI 70254655-edge megasas
-> > > > > > >  345  15696      0   15696  IR-PCI-MSI 70254638-edge megasas
-> > > > > > >  341  15659      0   15659  IR-PCI-MSI 70254634-edge megasas
-> > > > > > >  369  15656      0   15656  IR-PCI-MSI 70254662-edge megasas
-> > > > > > >  359  15650      0   15650  IR-PCI-MSI 70254652-edge megasas
-> > > > > > >  358  15596      0   15596  IR-PCI-MSI 70254651-edge megasas
-> > > > > > >  350  15574      0   15574  IR-PCI-MSI 70254643-edge megasas
-> > > > > > >  342  15532      0   15532  IR-PCI-MSI 70254635-edge megasas
-> > > > > > >  344  15527      0   15527  IR-PCI-MSI 70254637-edge megasas
-> > > > > > >  346  15485      0   15485  IR-PCI-MSI 70254639-edge megasas
-> > > > > > >  361  15482      0   15482  IR-PCI-MSI 70254654-edge megasas
-> > > > > > >  348  15467      0   15467  IR-PCI-MSI 70254641-edge megasas
-> > > > > > >  368  15463      0   15463  IR-PCI-MSI 70254661-edge megasas
-> > > > > > >  354  15420      0   15420  IR-PCI-MSI 70254647-edge megasas
-> > > > > > >  351  15378      0   15378  IR-PCI-MSI 70254644-edge megasas
-> > > > > > >  352  15377      0   15377  IR-PCI-MSI 70254645-edge megasas
-> > > > > > >  356  15348      0   15348  IR-PCI-MSI 70254649-edge megasas
-> > > > > > >  337  15344      0   15344  IR-PCI-MSI 70254630-edge megasas
-> > > > > > >  343  15320      0   15320  IR-PCI-MSI 70254636-edge megasas
-> > > > > > >  355  15266      0   15266  IR-PCI-MSI 70254648-edge megasas
-> > > > > > >  335  15247      0   15247  IR-PCI-MSI 70254628-edge megasas
-> > > > > > >  363  15233      0   15233  IR-PCI-MSI 70254656-edge megasas
-> > > > > > >
-> > > > > > >
-> > > > > > > Average:        CPU      %usr     %nice      %sys   %iowait
-> > > > %steal
-> > > > > > > %irq     %soft    %guest    %gnice     %idle
-> > > > > > > Average:         18      3.80      0.00     14.78     10.08
-> > > > 0.00
-> > > > > > > 0.00      4.01      0.00      0.00     67.33
-> > > > > > > Average:         19      3.26      0.00     15.35     10.62
-> > > > 0.00
-> > > > > > > 0.00      4.03      0.00      0.00     66.74
-> > > > > > > Average:         20      3.42      0.00     14.57     10.67
-> > > > 0.00
-> > > > > > > 0.00      3.84      0.00      0.00     67.50
-> > > > > > > Average:         21      3.19      0.00     15.60     10.75
-> > > > 0.00
-> > > > > > > 0.00      4.16      0.00      0.00     66.30
-> > > > > > > Average:         22      3.58      0.00     15.15     10.66
-> > > > 0.00
-> > > > > > > 0.00      3.51      0.00      0.00     67.11
-> > > > > > > Average:         23      3.34      0.00     15.36     10.63
-> > > > 0.00
-> > > > > > > 0.00      4.17      0.00      0.00     66.50
-> > > > > > > Average:         24      3.50      0.00     14.58     10.93
-> > > > 0.00
-> > > > > > > 0.00      3.85      0.00      0.00     67.13
-> > > > > > > Average:         25      3.20      0.00     14.68     10.86
-> > > > 0.00
-> > > > > > > 0.00      4.31      0.00      0.00     66.95
-> > > > > > > Average:         26      3.27      0.00     14.80     10.70
-> > > > 0.00
-> > > > > > > 0.00      3.68      0.00      0.00     67.55
-> > > > > > > Average:         27      3.58      0.00     15.36     10.80
-> > > > 0.00
-> > > > > > > 0.00      3.79      0.00      0.00     66.48
-> > > > > > > Average:         28      3.46      0.00     15.17     10.46
-> > > > 0.00
-> > > > > > > 0.00      3.32      0.00      0.00     67.59
-> > > > > > > Average:         29      3.34      0.00     14.42     10.72
-> > > > 0.00
-> > > > > > > 0.00      3.34      0.00      0.00     68.18
-> > > > > > > Average:         30      3.34      0.00     15.08     10.70
-> > > > 0.00
-> > > > > > > 0.00      3.89      0.00      0.00     66.99
-> > > > > > > Average:         31      3.26      0.00     15.33     10.47
-> > > > 0.00
-> > > > > > > 0.00      3.33      0.00      0.00     67.61
-> > > > > > > Average:         32      3.21      0.00     14.80     10.61
-> > > > 0.00
-> > > > > > > 0.00      3.70      0.00      0.00     67.67
-> > > > > > > Average:         33      3.40      0.00     13.88     10.55
-> > > > 0.00
-> > > > > > > 0.00      4.02      0.00      0.00     68.15
-> > > > > > > Average:         34      3.74      0.00     17.41     10.61
-> > > > 0.00
-> > > > > > > 0.00      4.51      0.00      0.00     63.73
-> > > > > > > Average:         35      3.35      0.00     14.37     10.74
-> > > > 0.00
-> > > > > > > 0.00      3.84      0.00      0.00     67.71
-> > > > > > > Average:         36      0.54      0.00      1.77      0.00
-> > > > 0.00
-> > > > > > > 0.00      0.00      0.00      0.00     97.69
-> > > > > > > ..
-> > > > > > > Average:         54      3.60      0.00     15.17     10.39
-> > > > 0.00
-> > > > > > > 0.00      4.22      0.00      0.00     66.62
-> > > > > > > Average:         55      3.33      0.00     14.85     10.55
-> > > > 0.00
-> > > > > > > 0.00      3.96      0.00      0.00     67.31
-> > > > > > > Average:         56      3.40      0.00     15.19     10.54
-> > > > 0.00
-> > > > > > > 0.00      3.74      0.00      0.00     67.13
-> > > > > > > Average:         57      3.41      0.00     13.98     10.78
-> > > > 0.00
-> > > > > > > 0.00      4.10      0.00      0.00     67.73
-> > > > > > > Average:         58      3.32      0.00     15.16     10.52
-> > > > 0.00
-> > > > > > > 0.00      4.01      0.00      0.00     66.99
-> > > > > > > Average:         59      3.17      0.00     15.80     10.35
-> > > > 0.00
-> > > > > > > 0.00      3.86      0.00      0.00     66.80
-> > > > > > > Average:         60      3.00      0.00     14.63     10.59
-> > > > 0.00
-> > > > > > > 0.00      3.97      0.00      0.00     67.80
-> > > > > > > Average:         61      3.34      0.00     14.70     10.66
-> > > > 0.00
-> > > > > > > 0.00      4.32      0.00      0.00     66.97
-> > > > > > > Average:         62      3.34      0.00     15.29     10.56
-> > > > 0.00
-> > > > > > > 0.00      3.89      0.00      0.00     66.92
-> > > > > > > Average:         63      3.29      0.00     14.51     10.72
-> > > > 0.00
-> > > > > > > 0.00      3.85      0.00      0.00     67.62
-> > > > > > > Average:         64      3.48      0.00     15.31     10.65
-> > > > 0.00
-> > > > > > > 0.00      3.97      0.00      0.00     66.60
-> > > > > > > Average:         65      3.34      0.00     14.36     10.80
-> > > > 0.00
-> > > > > > > 0.00      4.11      0.00      0.00     67.39
-> > > > > > > Average:         66      3.13      0.00     14.94     10.70
-> > > > 0.00
-> > > > > > > 0.00      4.10      0.00      0.00     67.13
-> > > > > > > Average:         67      3.06      0.00     15.56     10.69
-> > > > 0.00
-> > > > > > > 0.00      3.82      0.00      0.00     66.88
-> > > > > > > Average:         68      3.33      0.00     14.98     10.61
-> > > > 0.00
-> > > > > > > 0.00      3.81      0.00      0.00     67.27
-> > > > > > > Average:         69      3.20      0.00     15.43     10.70
-> > > > 0.00
-> > > > > > > 0.00      3.82      0.00      0.00     66.85
-> > > > > > > Average:         70      3.34      0.00     17.14     10.59
-> > > > 0.00
-> > > > > > > 0.00      3.00      0.00      0.00     65.92
-> > > > > > > Average:         71      3.41      0.00     14.94     10.56
-> > > > 0.00
-> > > > > > > 0.00      3.41      0.00      0.00     67.69
-> > > > > > >
-> > > > > > > Perf top -
-> > > > > > >
-> > > > > > >   64.33%  [kernel]            [k] bt_iter
-> > > > > > >    4.86%  [kernel]            [k] blk_mq_queue_tag_busy_iter
-> > > > > > >    4.23%  [kernel]            [k] _find_next_bit
-> > > > > > >    2.40%  [kernel]            [k]
-> > native_queued_spin_lock_slowpath
-> > > > > > >    1.09%  [kernel]            [k] sbitmap_any_bit_set
-> > > > > > >    0.71%  [kernel]            [k] sbitmap_queue_clear
-> > > > > > >    0.63%  [kernel]            [k] find_next_bit
-> > > > > > >    0.54%  [kernel]            [k] _raw_spin_lock_irqsave
-> > > > > > >
-> > > > > > Ah. So we're spending quite some time in trying to find a free
-> > tag.
-> > > > > > I guess this is due to every queue starting at the same position
-> > > > > > trying to find a free tag, which inevitably leads to a contention.
-> > > > >
-> > > > > IMO, the above trace means that blk_mq_in_flight() may be the
-> > > > bottleneck,
-> > > > > and looks not related with tag allocation.
-> > > > >
-> > > > > Kashyap, could you run your performance test again after disabling
-> > > > iostat by
-> > > > > the following command on all test devices and killing all utilities
-> > > > which may
-> > > > > read iostat(/proc/diskstats, ...)?
-> > > > >
-> > > > > 	echo 0 > /sys/block/sdN/queue/iostat
-> > > >
-> > > > Ming - After changing iostat = 0 , I see performance issue is
-> > resolved.
-> > > >
-> > > > Below is perf top output after iostats = 0
-> > > >
-> > > >
-> > > >   23.45%  [kernel]             [k] bt_iter
-> > > >    2.27%  [kernel]             [k] blk_mq_queue_tag_busy_iter
-> > > >    2.18%  [kernel]             [k] _find_next_bit
-> > > >    2.06%  [megaraid_sas]       [k] complete_cmd_fusion
-> > > >    1.87%  [kernel]             [k] clflush_cache_range
-> > > >    1.70%  [kernel]             [k] dma_pte_clear_level
-> > > >    1.56%  [kernel]             [k] __domain_mapping
-> > > >    1.55%  [kernel]             [k] sbitmap_queue_clear
-> > > >    1.30%  [kernel]             [k] gup_pgd_range
-> > >
-> > > Hi Kashyap,
-> > >
-> > > Thanks for your test and update.
-> > >
-> > > Looks blk_mq_queue_tag_busy_iter() is still sampled by perf even though
-> > > iostats is disabled, and I guess there may be utilities which are
-> > reading iostats
-> > > a bit frequently.
-> > 
-> > I  will be doing some more testing and post you my findings.
+> Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> ---
+>  drivers/scsi/ufs/Makefile    |   3 +-
+>  drivers/scsi/ufs/ufs-sysfs.c | 156 +++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-sysfs.h |  14 ++++
+>  drivers/scsi/ufs/ufshcd.c    | 156 ++-----------------------------------------
+>  drivers/scsi/ufs/ufshcd.h    |   2 +
+>  5 files changed, 178 insertions(+), 153 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
+>  create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
 > 
-> I will find sometime this weekend to see if I can cook a patch to
-> address this issue of io accounting.
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 9310c6c..918f579 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -3,6 +3,7 @@
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+> -obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+> +obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+> +ufshcd-core-objs := ufshcd.o ufs-sysfs.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> new file mode 100644
+> index 0000000..ce8dcb6
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -0,0 +1,156 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +// Copyright (C) 2018 Western Digital Corporation
+> +
+> +#include <linux/err.h>
+> +#include <linux/string.h>
+> +
+> +#include "ufs-sysfs.h"
+> +
+> +static const char *ufschd_uic_link_state_to_string(
+> +			enum uic_link_state state)
+> +{
+> +	switch (state) {
+> +	case UIC_LINK_OFF_STATE:	return "OFF";
+> +	case UIC_LINK_ACTIVE_STATE:	return "ACTIVE";
+> +	case UIC_LINK_HIBERN8_STATE:	return "HIBERN8";
+> +	default:			return "UNKNOWN";
+> +	}
+> +}
+> +
+> +static const char *ufschd_ufs_dev_pwr_mode_to_string(
+> +			enum ufs_dev_pwr_mode state)
+> +{
+> +	switch (state) {
+> +	case UFS_ACTIVE_PWR_MODE:	return "ACTIVE";
+> +	case UFS_SLEEP_PWR_MODE:	return "SLEEP";
+> +	case UFS_POWERDOWN_PWR_MODE:	return "POWERDOWN";
+> +	default:			return "UNKNOWN";
+> +	}
+> +}
+> +
+> +static inline ssize_t ufs_sysfs_pm_lvl_store(struct device *dev,
+> +					     struct device_attribute *attr,
+> +					     const char *buf, size_t count,
+> +					     bool rpm)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	unsigned long flags, value;
+> +
+> +	if (kstrtoul(buf, 0, &value))
+> +		return -EINVAL;
+> +
+> +	if (value >= UFS_PM_LVL_MAX)
+> +		return -EINVAL;
+> +
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if (rpm)
+> +		hba->rpm_lvl = value;
+> +	else
+> +		hba->spm_lvl = value;
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +	return count;
+> +}
+> +
+> +static ssize_t rpm_lvl_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	int curr_len;
+> +	u8 lvl;
+> +
+> +	curr_len = snprintf(buf, PAGE_SIZE,
+> +			    "\nCurrent Runtime PM level [%d] => dev_state [%s] link_state [%s]\n",
+> +			    hba->rpm_lvl,
+> +			    ufschd_ufs_dev_pwr_mode_to_string(
+> +				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
+> +			    ufschd_uic_link_state_to_string(
+> +				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
 
-Hi Kashyap,
+If there is no objection regarding to backward compatibility, can we also
+clean this up by adding multiple entries having single string each, as Greg
+recommended?
 
-Please test the top 5 patches in the following tree to see if
-megaraid_sas's performance is OK:
+For example,
 
-	https://github.com/ming1/linux/commits/v4.15-for-next-global-tags-v2
+/rpm_level
+1
 
-This tree is made by adding these 5 patches against patchset V2.
+/rpm_dev_state
+ACTIVE
 
-If possible, please provide us the performance data without these
-patches and with these patches, together with perf trace.
+/rpm_link_state
+HIBERN8
 
-The top 5 patches are for addressing the io accounting issue, and which
-should be the main reason for your performance drop, even lockup in
-megaraid_sas's ISR, IMO.
+/spm_level
+2
+
+/spm_dev_state
+SLEEP
+
+/spm_link_state
+ACTIVE
+
+/avail_dev_states
+0:ACTIVE 1:ACTIVE 2:SLEEP 3:SLEEP 4:POWERDOWN 5:POWERDOWN
+
+/avail_link_states
+0:ACTIVE 1:HIBERN8 2:ACTIVE 3:HIBERN8 4:HIBERN8 5:OFF
 
 Thanks,
-Ming
+
+> +
+> +	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> +			     "\nAll available Runtime PM levels info:\n");
+> +	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+> +		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> +				     "\tRuntime PM level [%d] => dev_state [%s] link_state [%s]\n",
+> +				    lvl,
+> +				    ufschd_ufs_dev_pwr_mode_to_string(
+> +					ufs_pm_lvl_states[lvl].dev_state),
+> +				    ufschd_uic_link_state_to_string(
+> +					ufs_pm_lvl_states[lvl].link_state));
+> +
+> +	return curr_len;
+> +}
+> +
+> +static ssize_t rpm_lvl_store(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, true);
+> +}
+> +
+> +static ssize_t spm_lvl_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	int curr_len;
+> +	u8 lvl;
+> +
+> +	curr_len = snprintf(buf, PAGE_SIZE,
+> +			    "\nCurrent System PM level [%d] => dev_state [%s] link_state [%s]\n",
+> +			    hba->spm_lvl,
+> +			    ufschd_ufs_dev_pwr_mode_to_string(
+> +				ufs_pm_lvl_states[hba->spm_lvl].dev_state),
+> +			    ufschd_uic_link_state_to_string(
+> +				ufs_pm_lvl_states[hba->spm_lvl].link_state));
+> +
+> +	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> +			     "\nAll available System PM levels info:\n");
+> +	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+> +		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> +				     "\tSystem PM level [%d] => dev_state [%s] link_state [%s]\n",
+> +				    lvl,
+> +				    ufschd_ufs_dev_pwr_mode_to_string(
+> +					ufs_pm_lvl_states[lvl].dev_state),
+> +				    ufschd_uic_link_state_to_string(
+> +					ufs_pm_lvl_states[lvl].link_state));
+> +
+> +	return curr_len;
+> +}
+> +
+> +static ssize_t spm_lvl_store(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, false);
+> +}
+> +
+> +static DEVICE_ATTR_RW(rpm_lvl);
+> +static DEVICE_ATTR_RW(spm_lvl);
+> +
+> +static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+> +	&dev_attr_rpm_lvl.attr,
+> +	&dev_attr_spm_lvl.attr,
+> +	NULL
+> +};
+> +
+> +static const struct attribute_group ufs_sysfs_default_group = {
+> +	.attrs = ufs_sysfs_ufshcd_attrs,
+> +};
+> +
+> +static const struct attribute_group *ufs_sysfs_groups[] = {
+> +	&ufs_sysfs_default_group,
+> +	NULL,
+> +};
+> +
+> +void ufs_sysfs_add_nodes(struct device *dev)
+> +{
+> +	int ret;
+> +
+> +	ret = sysfs_create_groups(&dev->kobj, ufs_sysfs_groups);
+> +	if (ret)
+> +		dev_err(dev,
+> +			"%s: sysfs groups creation failed (err = %d)\n",
+> +			__func__, ret);
+> +}
+> +
+> +void ufs_sysfs_remove_nodes(struct device *dev)
+> +{
+> +	sysfs_remove_groups(&dev->kobj, ufs_sysfs_groups);
+> +}
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.h b/drivers/scsi/ufs/ufs-sysfs.h
+> new file mode 100644
+> index 0000000..4a984ca
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-sysfs.h
+> @@ -0,0 +1,14 @@
+> +/* SPDX-License-Identifier: GPL-2.0-only
+> + * Copyright (C) 2018 Western Digital Corporation
+> + */
+> +
+> +#ifndef __UFS_SYSFS_H__
+> +#define __UFS_SYSFS_H__
+> +
+> +#include <linux/sysfs.h>
+> +
+> +#include "ufshcd.h"
+> +
+> +void ufs_sysfs_add_nodes(struct device *dev);
+> +void ufs_sysfs_remove_nodes(struct device *dev);
+> +#endif
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index a355d98..e7621a0a 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -44,6 +44,7 @@
+>  #include "ufshcd.h"
+>  #include "ufs_quirks.h"
+>  #include "unipro.h"
+> +#include "ufs-sysfs.h"
+>  
+>  #define CREATE_TRACE_POINTS
+>  #include <trace/events/ufs.h>
+> @@ -150,7 +151,7 @@ enum {
+>  #define ufshcd_is_ufs_dev_poweroff(h) \
+>  	((h)->curr_dev_pwr_mode == UFS_POWERDOWN_PWR_MODE)
+>  
+> -static struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
+> +struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
+>  	{UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
+>  	{UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
+>  	{UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE},
+> @@ -813,28 +814,6 @@ static inline bool ufshcd_is_hba_active(struct ufs_hba *hba)
+>  		? false : true;
+>  }
+>  
+> -static const char *ufschd_uic_link_state_to_string(
+> -			enum uic_link_state state)
+> -{
+> -	switch (state) {
+> -	case UIC_LINK_OFF_STATE:	return "OFF";
+> -	case UIC_LINK_ACTIVE_STATE:	return "ACTIVE";
+> -	case UIC_LINK_HIBERN8_STATE:	return "HIBERN8";
+> -	default:			return "UNKNOWN";
+> -	}
+> -}
+> -
+> -static const char *ufschd_ufs_dev_pwr_mode_to_string(
+> -			enum ufs_dev_pwr_mode state)
+> -{
+> -	switch (state) {
+> -	case UFS_ACTIVE_PWR_MODE:	return "ACTIVE";
+> -	case UFS_SLEEP_PWR_MODE:	return "SLEEP";
+> -	case UFS_POWERDOWN_PWR_MODE:	return "POWERDOWN";
+> -	default:			return "UNKNOWN";
+> -	}
+> -}
+> -
+>  u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
+>  {
+>  	/* HCI version 1.0 and 1.1 supports UniPro 1.41 */
+> @@ -7585,133 +7564,6 @@ int ufshcd_runtime_idle(struct ufs_hba *hba)
+>  }
+>  EXPORT_SYMBOL(ufshcd_runtime_idle);
+>  
+> -static inline ssize_t ufshcd_pm_lvl_store(struct device *dev,
+> -					   struct device_attribute *attr,
+> -					   const char *buf, size_t count,
+> -					   bool rpm)
+> -{
+> -	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	unsigned long flags, value;
+> -
+> -	if (kstrtoul(buf, 0, &value))
+> -		return -EINVAL;
+> -
+> -	if (value >= UFS_PM_LVL_MAX)
+> -		return -EINVAL;
+> -
+> -	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	if (rpm)
+> -		hba->rpm_lvl = value;
+> -	else
+> -		hba->spm_lvl = value;
+> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -	return count;
+> -}
+> -
+> -static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
+> -		struct device_attribute *attr, char *buf)
+> -{
+> -	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	int curr_len;
+> -	u8 lvl;
+> -
+> -	curr_len = snprintf(buf, PAGE_SIZE,
+> -			    "\nCurrent Runtime PM level [%d] => dev_state [%s] link_state [%s]\n",
+> -			    hba->rpm_lvl,
+> -			    ufschd_ufs_dev_pwr_mode_to_string(
+> -				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
+> -			    ufschd_uic_link_state_to_string(
+> -				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
+> -
+> -	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> -			     "\nAll available Runtime PM levels info:\n");
+> -	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+> -		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> -				     "\tRuntime PM level [%d] => dev_state [%s] link_state [%s]\n",
+> -				    lvl,
+> -				    ufschd_ufs_dev_pwr_mode_to_string(
+> -					ufs_pm_lvl_states[lvl].dev_state),
+> -				    ufschd_uic_link_state_to_string(
+> -					ufs_pm_lvl_states[lvl].link_state));
+> -
+> -	return curr_len;
+> -}
+> -
+> -static ssize_t ufshcd_rpm_lvl_store(struct device *dev,
+> -		struct device_attribute *attr, const char *buf, size_t count)
+> -{
+> -	return ufshcd_pm_lvl_store(dev, attr, buf, count, true);
+> -}
+> -
+> -static void ufshcd_add_rpm_lvl_sysfs_nodes(struct ufs_hba *hba)
+> -{
+> -	hba->rpm_lvl_attr.show = ufshcd_rpm_lvl_show;
+> -	hba->rpm_lvl_attr.store = ufshcd_rpm_lvl_store;
+> -	sysfs_attr_init(&hba->rpm_lvl_attr.attr);
+> -	hba->rpm_lvl_attr.attr.name = "rpm_lvl";
+> -	hba->rpm_lvl_attr.attr.mode = 0644;
+> -	if (device_create_file(hba->dev, &hba->rpm_lvl_attr))
+> -		dev_err(hba->dev, "Failed to create sysfs for rpm_lvl\n");
+> -}
+> -
+> -static ssize_t ufshcd_spm_lvl_show(struct device *dev,
+> -		struct device_attribute *attr, char *buf)
+> -{
+> -	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	int curr_len;
+> -	u8 lvl;
+> -
+> -	curr_len = snprintf(buf, PAGE_SIZE,
+> -			    "\nCurrent System PM level [%d] => dev_state [%s] link_state [%s]\n",
+> -			    hba->spm_lvl,
+> -			    ufschd_ufs_dev_pwr_mode_to_string(
+> -				ufs_pm_lvl_states[hba->spm_lvl].dev_state),
+> -			    ufschd_uic_link_state_to_string(
+> -				ufs_pm_lvl_states[hba->spm_lvl].link_state));
+> -
+> -	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> -			     "\nAll available System PM levels info:\n");
+> -	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+> -		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> -				     "\tSystem PM level [%d] => dev_state [%s] link_state [%s]\n",
+> -				    lvl,
+> -				    ufschd_ufs_dev_pwr_mode_to_string(
+> -					ufs_pm_lvl_states[lvl].dev_state),
+> -				    ufschd_uic_link_state_to_string(
+> -					ufs_pm_lvl_states[lvl].link_state));
+> -
+> -	return curr_len;
+> -}
+> -
+> -static ssize_t ufshcd_spm_lvl_store(struct device *dev,
+> -		struct device_attribute *attr, const char *buf, size_t count)
+> -{
+> -	return ufshcd_pm_lvl_store(dev, attr, buf, count, false);
+> -}
+> -
+> -static void ufshcd_add_spm_lvl_sysfs_nodes(struct ufs_hba *hba)
+> -{
+> -	hba->spm_lvl_attr.show = ufshcd_spm_lvl_show;
+> -	hba->spm_lvl_attr.store = ufshcd_spm_lvl_store;
+> -	sysfs_attr_init(&hba->spm_lvl_attr.attr);
+> -	hba->spm_lvl_attr.attr.name = "spm_lvl";
+> -	hba->spm_lvl_attr.attr.mode = 0644;
+> -	if (device_create_file(hba->dev, &hba->spm_lvl_attr))
+> -		dev_err(hba->dev, "Failed to create sysfs for spm_lvl\n");
+> -}
+> -
+> -static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba)
+> -{
+> -	ufshcd_add_rpm_lvl_sysfs_nodes(hba);
+> -	ufshcd_add_spm_lvl_sysfs_nodes(hba);
+> -}
+> -
+> -static inline void ufshcd_remove_sysfs_nodes(struct ufs_hba *hba)
+> -{
+> -	device_remove_file(hba->dev, &hba->rpm_lvl_attr);
+> -	device_remove_file(hba->dev, &hba->spm_lvl_attr);
+> -}
+> -
+>  /**
+>   * ufshcd_shutdown - shutdown routine
+>   * @hba: per adapter instance
+> @@ -7749,7 +7601,7 @@ EXPORT_SYMBOL(ufshcd_shutdown);
+>   */
+>  void ufshcd_remove(struct ufs_hba *hba)
+>  {
+> -	ufshcd_remove_sysfs_nodes(hba);
+> +	ufs_sysfs_remove_nodes(hba->dev);
+>  	scsi_remove_host(hba->host);
+>  	/* disable interrupts */
+>  	ufshcd_disable_intr(hba, hba->intr_mask);
+> @@ -7996,7 +7848,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>  	ufshcd_set_ufs_dev_active(hba);
+>  
+>  	async_schedule(ufshcd_async_scan, hba);
+> -	ufshcd_add_sysfs_nodes(hba);
+> +	ufs_sysfs_add_nodes(hba->dev);
+>  
+>  	return 0;
+>  
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 1332e54..53e2779 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -985,4 +985,6 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
+>  		hba->vops->dbg_register_dump(hba);
+>  }
+>  
+> +extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+> +
+>  #endif /* End of Header */
+> -- 
+> 2.7.4
