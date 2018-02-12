@@ -1,201 +1,223 @@
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH] mpt3sas: Do not use 32-bit atomic request descriptor for Ventura controllers
-Date: Sun, 11 Feb 2018 21:47:50 -0800
-Message-ID: <1518414470-2056-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: RE: [PATCH v2] scsi: mpt3sas: fix oops in error handlers after shutdown/unload
+Date: Mon, 12 Feb 2018 11:58:53 +0530
+Message-ID: <2fd5c995219c5e07ef04765f67b9b8a7@mail.gmail.com>
+References: <1517523386-9868-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:39104 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751309AbeBLFsO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2018 00:48:14 -0500
-Received: by mail-qk0-f193.google.com with SMTP id z197so302029qkb.6
-        for <linux-scsi@vger.kernel.org>; Sun, 11 Feb 2018 21:48:14 -0800 (PST)
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:46850 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932396AbeBLG24 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2018 01:28:56 -0500
+Received: by mail-pl0-f65.google.com with SMTP id x2so609388plr.13
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Feb 2018 22:28:55 -0800 (PST)
+In-Reply-To: <1517523386-9868-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sreekanth.reddy@broadcom.com, sathya.prakash@broadcom.com, kashyap.desai@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com
+Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dougmill@linux.vnet.ibm.com
 
-From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Mauricio,
 
-Problem Statement:
-Sending I/O through 32 bit descriptors to Ventura series of controller
-results in IO timeout on certain conditions.
- 
-This error only occurs on systems with high I/O activity on
-Ventura series controllers.
-  
-Changes in this patch will prevent driver from using 32 bit descriptor
-and use 64 bit Descriptors.
+Instead of returning the scmd with DID_NO_CONNECT in TM path, can we wait
+for some time (10 seconds) in shutdown/unload path for the outstanding
+commands to complete and even then the scmds are outstanding then return
+all the outstanding scmds with DID_NO_CONNECT in the shutdown/unload path
+itself as shown below,
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 121 ------------------------------------
- drivers/scsi/mpt3sas/mpt3sas_base.h |   1 -
- 2 files changed, 122 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 13d6e4e..6051469 100644
+----
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 13d6e4e..f62ce50 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3108,116 +3108,6 @@ _base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+@@ -6294,14 +6294,14 @@ _base_reset_handler(struct MPT3SAS_ADAPTER *ioc,
+int reset_phase)
  }
- 
+
  /**
--* _base_put_smid_scsi_io_atomic - send SCSI_IO request to firmware using
--*   Atomic Request Descriptor
--* @ioc: per adapter object
--* @smid: system request message index
--* @handle: device handle, unused in this function, for function type match
--*
--* Return nothing.
--*/
--static void
--_base_put_smid_scsi_io_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
--	u16 handle)
--{
--	Mpi26AtomicRequestDescriptor_t descriptor;
--	u32 *request = (u32 *)&descriptor;
--
--	descriptor.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO;
--	descriptor.MSIxIndex = _base_get_msix_index(ioc);
--	descriptor.SMID = cpu_to_le16(smid);
--
--	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
--}
--
--/**
-- * _base_put_smid_fast_path_atomic - send fast path request to firmware
-- * using Atomic Request Descriptor
-- * @ioc: per adapter object
-- * @smid: system request message index
-- * @handle: device handle, unused in this function, for function type match
-- * Return nothing
-- */
--static void
--_base_put_smid_fast_path_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
--	u16 handle)
--{
--	Mpi26AtomicRequestDescriptor_t descriptor;
--	u32 *request = (u32 *)&descriptor;
--
--	descriptor.RequestFlags = MPI25_REQ_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO;
--	descriptor.MSIxIndex = _base_get_msix_index(ioc);
--	descriptor.SMID = cpu_to_le16(smid);
--
--	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
--}
--
--/**
-- * _base_put_smid_hi_priority_atomic - send Task Management request to
-- * firmware using Atomic Request Descriptor
-- * @ioc: per adapter object
-- * @smid: system request message index
-- * @msix_task: msix_task will be same as msix of IO incase of task abort else 0
-- *
-- * Return nothing.
-- */
--static void
--_base_put_smid_hi_priority_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
--	u16 msix_task)
--{
--	Mpi26AtomicRequestDescriptor_t descriptor;
--	u32 *request = (u32 *)&descriptor;
--
--	descriptor.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY;
--	descriptor.MSIxIndex = msix_task;
--	descriptor.SMID = cpu_to_le16(smid);
--
--	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
--}
--
--/**
-- * _base_put_smid_nvme_encap_atomic - send NVMe encapsulated request to
-- *   firmware using Atomic Request Descriptor
-- * @ioc: per adapter object
-- * @smid: system request message index
-- *
-- * Return nothing.
-- */
--static void
--_base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
--{
--	Mpi26AtomicRequestDescriptor_t descriptor;
--	u32 *request = (u32 *)&descriptor;
--
--	descriptor.RequestFlags = MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
--	descriptor.MSIxIndex = _base_get_msix_index(ioc);
--	descriptor.SMID = cpu_to_le16(smid);
--
--	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
--}
--
--/**
-- * _base_put_smid_default - Default, primarily used for config pages
-- * use Atomic Request Descriptor
-- * @ioc: per adapter object
-- * @smid: system request message index
-- *
-- * Return nothing.
-- */
--static void
--_base_put_smid_default_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
--{
--	Mpi26AtomicRequestDescriptor_t descriptor;
--	u32 *request = (u32 *)&descriptor;
--
--	descriptor.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_DEFAULT_TYPE;
--	descriptor.MSIxIndex = _base_get_msix_index(ioc);
--	descriptor.SMID = cpu_to_le16(smid);
--
--	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
--}
--
--/**
-  * _base_display_OEMs_branding - Display branding string
-  * @ioc: per adapter object
+- * _wait_for_commands_to_complete - reset controller
++ * mpt3sas_wait_for_commands_to_complete - reset controller
+  * @ioc: Pointer to MPT_ADAPTER structure
   *
-@@ -5071,8 +4961,6 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc)
- 	if ((facts->IOCCapabilities &
- 	      MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE) && (!reset_devices))
- 		ioc->rdpq_array_capable = 1;
--	if (facts->IOCCapabilities & MPI26_IOCFACTS_CAPABILITY_ATOMIC_REQ)
--		ioc->atomic_desc_capable = 1;
- 	facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
- 	facts->IOCRequestFrameSize =
- 	    le16_to_cpu(mpi_reply.IOCRequestFrameSize);
-@@ -6006,20 +5894,11 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 		break;
+  * This function is waiting 10s for all pending commands to complete
+  * prior to putting controller in reset.
+  */
+-static void
+-_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
++void
++mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	u32 ioc_state;
+
+@@ -6374,7 +6374,7 @@ mpt3sas_base_hard_reset_handler(struct
+MPT3SAS_ADAPTER *ioc,
+ 			is_fault = 1;
  	}
- 
--	if (ioc->atomic_desc_capable) {
--		ioc->put_smid_default = &_base_put_smid_default_atomic;
--		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io_atomic;
--		ioc->put_smid_fast_path = &_base_put_smid_fast_path_atomic;
--		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority_atomic;
--		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap_atomic;
--	} else {
- 		ioc->put_smid_default = &_base_put_smid_default;
- 		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
- 		ioc->put_smid_fast_path = &_base_put_smid_fast_path;
- 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority;
- 		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap;
--	}
--
- 
- 	/*
- 	 * These function pointers for other requests that don't
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 789bc42..3324392 100644
+ 	_base_reset_handler(ioc, MPT3_IOC_PRE_RESET);
+-	_wait_for_commands_to_complete(ioc);
++	mpt3sas_wait_for_commands_to_complete(ioc);
+ 	_base_mask_interrupts(ioc);
+ 	r = _base_make_ioc_ready(ioc, type);
+ 	if (r)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h
+b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 789bc42..99ccf83 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1348,7 +1348,6 @@ struct MPT3SAS_ADAPTER {
- 	void		*device_remove_in_progress;
- 	u16		device_remove_in_progress_sz;
- 	u8		is_gen35_ioc;
--	u8		atomic_desc_capable;
- 	PUT_SMID_IO_FP_HIP put_smid_scsi_io;
- 	PUT_SMID_IO_FP_HIP put_smid_fast_path;
- 	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
--- 
-2.5.5
+@@ -1433,6 +1433,9 @@ void mpt3sas_base_update_missing_delay(struct
+MPT3SAS_ADAPTER *ioc,
+
+ int mpt3sas_port_enable(struct MPT3SAS_ADAPTER *ioc);
+
++void
++mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc);
++
+
+ /* scsih shared API */
+ struct scsi_cmnd *mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER
+*ioc,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 74fca18..458709e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4453,7 +4453,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER
+*ioc)
+ 		st = scsi_cmd_priv(scmd);
+ 		mpt3sas_base_clear_st(ioc, st);
+ 		scsi_dma_unmap(scmd);
+-		if (ioc->pci_error_recovery)
++		if (ioc->pci_error_recovery || ioc->remove_host)
+ 			scmd->result = DID_NO_CONNECT << 16;
+ 		else
+ 			scmd->result = DID_RESET << 16;
+@@ -9739,6 +9739,10 @@ static void scsih_remove(struct pci_dev *pdev)
+ 	unsigned long flags;
+
+ 	ioc->remove_host = 1;
++
++	mpt3sas_wait_for_commands_to_complete(ioc);
++	_scsih_flush_running_cmds(ioc);
++
+ 	_scsih_fw_event_cleanup_queue(ioc);
+
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+@@ -9815,6 +9819,10 @@ scsih_shutdown(struct pci_dev *pdev)
+ 	unsigned long flags;
+
+ 	ioc->remove_host = 1;
++
++	mpt3sas_wait_for_commands_to_complete(ioc);
++	_scsih_flush_running_cmds(ioc);
++
+ 	_scsih_fw_event_cleanup_queue(ioc);
+
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+---
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Mauricio Faria de
+Oliveira
+Sent: Friday, February 2, 2018 3:46 AM
+To: linux-scsi@vger.kernel.org; Bart.VanAssche@wdc.com
+Cc: sathya.prakash@broadcom.com; chaitra.basappa@broadcom.com;
+suganath-prabu.subramani@broadcom.com; jejb@linux.vnet.ibm.com;
+martin.petersen@oracle.com; dougmill@linux.vnet.ibm.com
+Subject: [PATCH v2] scsi: mpt3sas: fix oops in error handlers after
+shutdown/unload
+
+This patch adds checks for 'ioc->remove_host' in the SCSI error handlers,
+so not to access pointers/resources potentially freed in the PCI
+shutdown/module unload path.  The error handlers may be invoked after
+shutdown/unload, depending on other components.
+
+This problem was observed with kexec on a system with a mpt3sas based
+adapter and an infiniband adapter which takes long enough to shutdown:
+
+The mpt3sas driver finished shutting down / disabled interrupt handling,
+thus some commands have not finished and timed out.
+
+Since the system was still running (waiting for the infiniband adapter to
+shutdown), the scsi error handler for task abort of mpt3sas was invoked,
+and hit an oops -- either in scsih_abort() because 'ioc->scsi_lookup' was
+NULL (without commit dbec4c9040ed
+("scsi: mpt3sas: lockless command submission")), or later up in
+scsih_host_reset() (with or without that commit), because it eventually
+called mpt3sas_base_get_iocstate().
+
+After that commit, the oops in scsih_abort() does not occur anymore
+(_scsih_scsi_lookup_find_by_scmd() is no longer called), but that commit
+is too big and out of the scope of linux-stable, where this patch might
+help, so still go for the changes.
+
+Also, this might help to prevent similar errors in the future, in case
+code changes and possibly tries to access freed stuff.
+
+Note the fix in scsih_host_reset() is still important anyway.
+
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+---
+v2:
+ - rebase on top of mkp/scsi.git's fixes branch
+ - insert check for 'ioc->remove_host' in existing
+   checks which already set DID_NO_CONNECT instead
+   of duplicating that code. (helps with backports)
+ - update commit message about that commit.
+
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 74fca18..5ab3caf 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2835,7 +2835,8 @@ int mpt3sas_scsih_issue_locked_tm(struct
+MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	_scsih_tm_display_info(ioc, scmd);
+
+ 	sas_device_priv_data = scmd->device->hostdata;
+-	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
++	if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
++	    ioc->remove_host) {
+ 		sdev_printk(KERN_INFO, scmd->device,
+ 			"device been deleted! scmd(%p)\n", scmd);
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -2898,7 +2899,8 @@ int mpt3sas_scsih_issue_locked_tm(struct
+MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	_scsih_tm_display_info(ioc, scmd);
+
+ 	sas_device_priv_data = scmd->device->hostdata;
+-	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
++	if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
++	    ioc->remove_host) {
+ 		sdev_printk(KERN_INFO, scmd->device,
+ 			"device been deleted! scmd(%p)\n", scmd);
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -2961,7 +2963,8 @@ int mpt3sas_scsih_issue_locked_tm(struct
+MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	_scsih_tm_display_info(ioc, scmd);
+
+ 	sas_device_priv_data = scmd->device->hostdata;
+-	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
++	if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
++	    ioc->remove_host) {
+ 		starget_printk(KERN_INFO, starget, "target been deleted!
+scmd(%p)\n",
+ 			scmd);
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -3019,7 +3022,7 @@ int mpt3sas_scsih_issue_locked_tm(struct
+MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	    ioc->name, scmd);
+ 	scsi_print_command(scmd);
+
+-	if (ioc->is_driver_loading) {
++	if (ioc->is_driver_loading || ioc->remove_host) {
+ 		pr_info(MPT3SAS_FMT "Blocking the host reset\n",
+ 		    ioc->name);
+ 		r = FAILED;
+--
+1.8.3.1
