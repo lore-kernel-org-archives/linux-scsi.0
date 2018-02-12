@@ -1,147 +1,67 @@
-From: Manish Rangankar <manish.rangankar@cavium.com>
-Subject: [PATCH] qla4xxx: skip error recovery in case of register disconnect.
-Date: Sun, 11 Feb 2018 22:48:41 -0800
-Message-ID: <20180212064841.24503-1-manish.rangankar@cavium.com>
+From: Philippe Ombredanne <pombredanne@nexb.com>
+Subject: Re: [PATCH v5 01/11] scsi: ufs: sysfs: attribute group for existing
+ sysfs entries.
+Date: Mon, 12 Feb 2018 10:31:52 +0100
+Message-ID: <CAOFm3uFHiOm9nfM=PGcynDigJpxg3Ou3_j5kHf4xhbergc6JwQ@mail.gmail.com>
+References: <1517933183-30892-1-git-send-email-stanislav.nijnikov@wdc.com>
+ <1517933183-30892-2-git-send-email-stanislav.nijnikov@wdc.com> <20180212010602.GC44666@jaegeuk-macbookpro.roam.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0075.outbound.protection.outlook.com ([104.47.36.75]:19863
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751332AbeBLGsp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Feb 2018 01:48:45 -0500
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33759 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933233AbeBLJcd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2018 04:32:33 -0500
+Received: by mail-wm0-f67.google.com with SMTP id x4so7879586wmc.0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Feb 2018 01:32:33 -0800 (PST)
+In-Reply-To: <20180212010602.GC44666@jaegeuk-macbookpro.roam.corp.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
+To: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, alex.lemberg@wdc.com, Russell King <rmk@armlinux.org.uk>, Christoph Hellwig <hch@infradead.org>, Thomas Gleixner <tglx@linutronix.de>
 
-A system crashes when continuously removing/re-adding
-the storage controller.
+Dear Stanislav,
 
-Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
----
- drivers/scsi/qla4xxx/ql4_def.h |  2 ++
- drivers/scsi/qla4xxx/ql4_os.c  | 46 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 48 insertions(+)
+On Mon, Feb 12, 2018 at 2:06 AM, Jaegeuk Kim <jaegeuk@kernel.org> wrote:
+> On 02/06, Stanislav Nijnikov wrote:
+>> This patch introduces attribute group to show existing sysfs entries.
+>>
+>> Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index fc23371..817f312 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -168,6 +168,8 @@
- #define DEV_DB_NON_PERSISTENT	0
- #define DEV_DB_PERSISTENT	1
- 
-+#define QL4_ISP_REG_DISCONNECT 0xffffffffU
-+
- #define COPY_ISID(dst_isid, src_isid) {			\
- 	int i, j;					\
- 	for (i = 0, j = ISID_SIZE - 1; i < ISID_SIZE;)	\
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 2b8a8ce..efaa7f1 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -262,6 +262,24 @@ static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
- 
- static struct scsi_transport_template *qla4xxx_scsi_transport;
- 
-+static int qla4xxx_isp_check_reg(struct scsi_qla_host *ha)
-+{
-+	u32 reg_val = 0;
-+	int rval = QLA_SUCCESS;
-+
-+	if (is_qla8022(ha))
-+		reg_val = readl(&ha->qla4_82xx_reg->host_status);
-+	else if (is_qla8032(ha) || is_qla8042(ha))
-+		reg_val = qla4_8xxx_rd_direct(ha, QLA8XXX_PEG_ALIVE_COUNTER);
-+	else
-+		reg_val = readw(&ha->reg->ctrl_status);
-+
-+	if (reg_val == QL4_ISP_REG_DISCONNECT)
-+		rval = QLA_ERROR;
-+
-+	return rval;
-+}
-+
- static int qla4xxx_send_ping(struct Scsi_Host *shost, uint32_t iface_num,
- 			     uint32_t iface_type, uint32_t payload_size,
- 			     uint32_t pid, struct sockaddr *dst_addr)
-@@ -9188,10 +9206,17 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
- 	struct srb *srb = NULL;
- 	int ret = SUCCESS;
- 	int wait = 0;
-+	int rval;
- 
- 	ql4_printk(KERN_INFO, ha, "scsi%ld:%d:%llu: Abort command issued cmd=%p, cdb=0x%x\n",
- 		   ha->host_no, id, lun, cmd, cmd->cmnd[0]);
- 
-+	rval = qla4xxx_isp_check_reg(ha);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_INFO, ha, "PCI/Register disconnect, exiting.\n");
-+		return FAILED;
-+	}
-+
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	srb = (struct srb *) CMD_SP(cmd);
- 	if (!srb) {
-@@ -9243,6 +9268,7 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
- 	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
- 	struct ddb_entry *ddb_entry = cmd->device->hostdata;
- 	int ret = FAILED, stat;
-+	int rval;
- 
- 	if (!ddb_entry)
- 		return ret;
-@@ -9262,6 +9288,12 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
- 		      cmd, jiffies, cmd->request->timeout / HZ,
- 		      ha->dpc_flags, cmd->result, cmd->allowed));
- 
-+	rval = qla4xxx_isp_check_reg(ha);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_INFO, ha, "PCI/Register disconnect, exiting.\n");
-+		return FAILED;
-+	}
-+
- 	/* FIXME: wait for hba to go online */
- 	stat = qla4xxx_reset_lun(ha, ddb_entry, cmd->device->lun);
- 	if (stat != QLA_SUCCESS) {
-@@ -9305,6 +9337,7 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
- 	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
- 	struct ddb_entry *ddb_entry = cmd->device->hostdata;
- 	int stat, ret;
-+	int rval;
- 
- 	if (!ddb_entry)
- 		return FAILED;
-@@ -9322,6 +9355,12 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
- 		      ha->host_no, cmd, jiffies, cmd->request->timeout / HZ,
- 		      ha->dpc_flags, cmd->result, cmd->allowed));
- 
-+	rval = qla4xxx_isp_check_reg(ha);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_INFO, ha, "PCI/Register disconnect, exiting.\n");
-+		return FAILED;
-+	}
-+
- 	stat = qla4xxx_reset_target(ha, ddb_entry);
- 	if (stat != QLA_SUCCESS) {
- 		starget_printk(KERN_INFO, scsi_target(cmd->device),
-@@ -9376,9 +9415,16 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
- {
- 	int return_status = FAILED;
- 	struct scsi_qla_host *ha;
-+	int rval;
- 
- 	ha = to_qla_host(cmd->device->host);
- 
-+	rval = qla4xxx_isp_check_reg(ha);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_INFO, ha, "PCI/Register disconnect, exiting.\n");
-+		return FAILED;
-+	}
-+
- 	if ((is_qla8032(ha) || is_qla8042(ha)) && ql4xdontresethba)
- 		qla4_83xx_set_idc_dontreset(ha);
- 
+<snip>
+
+>> --- /dev/null
+>> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+>> @@ -0,0 +1,156 @@
+>> +// SPDX-License-Identifier: GPL-2.0-only
+
+I commend you for using license ids here. But there is an issue with
+your attempt to use the latest and greatest license ids from SPDX:
+GPL-2.0-only is not a documented license id in our doc [1]
+Until this is updated (help welcomed including patching a few 10K+
+files) , this should be GPL-2.0 instead to avoid confusion and keep
+things homogeneous and tidy.
+
+FYI, using only the doc as the reference was brought forward by
+Russell King and Christoph Hellwig and in particular with this:
+
+On Thu, Nov 9, 2017 at 5:44 PM, Russell King <rmk@armlinux.org.uk> wrote:
+
+> I'd be more comfortable if we could have something in the kernel tree
+> that identifies the SPDX tags and their meaning, maybe with the
+> _standard_ file header for that license included, so there is no
+> argument about what any particular SPDX tag means.
+
+Based on this, Thomas Gleixner updated the doc alright following this
+important point. So, in case of doubt the doc should be the reference
+for this and nothing else. And if there are issue with the doc, then
+we can fix it with a patch ;)
+
+CC: Russell King <rmk@armlinux.org.uk>
+CC: Christoph Hellwig <hch@infradead.org>
+CC: Thomas Gleixner <tglx@linutronix.de>
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/license-rules.rst
 -- 
-1.8.3.1
+Cordially
+Philippe Ombredanne
