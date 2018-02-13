@@ -1,39 +1,75 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH] qla2xxx: Fix NULL pointer crash due to active timer for
- ABTS
-Date: Tue, 13 Feb 2018 18:13:55 +0000
-Message-ID: <8AA80006-774D-4189-9BDF-7410E705D26F@cavium.com>
-References: <20180212182814.4541-1-himanshu.madhani@cavium.com>
- <1518518327.3592.6.camel@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v3 00/13] lpfc new hardware patches for 12.0.0.0
+Date: Tue, 13 Feb 2018 11:34:44 -0800
+Message-ID: <20180213193457.21206-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0061.outbound.protection.outlook.com ([104.47.32.61]:14698
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S965158AbeBMSN5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Feb 2018 13:13:57 -0500
-In-Reply-To: <1518518327.3592.6.camel@suse.de>
-Content-Language: en-US
-Content-ID: <581C8692519C4C4FB2DBBF864F24307E@namprd07.prod.outlook.com>
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:45275 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965625AbeBMTfa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 14:35:30 -0500
+Received: by mail-qk0-f179.google.com with SMTP id g2so2777513qkd.12
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2018 11:35:29 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>
 
-SGkgSm9oYW5uZXMsIA0KDQo+IE9uIEZlYiAxMywgMjAxOCwgYXQgMjozOCBBTSwgSm9oYW5uZXMg
-VGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2UuZGU+IHdyb3RlOg0KPiANCj4gVGhhbmtzIEhpbWFu
-c2h1LA0KPiBSZXZpZXdlZC1ieTogSm9oYW5uZXMgVGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2Uu
-ZGU+DQo+IA0KPiBEbyB5b3UgaGFwcGVuIHRvIGtub3cgd2hpY2ggY29tbWl0IGl0IGFjdHVhbGx5
-IGZpeGVzPw0KPiANCg0KVGhhbmtzIGZvciBhc2tpbmcgKEkgZGlkIG5vdCBhZGQgZml4ZXMgY29t
-bWl0IElEIGJlY2F1c2UgaXQgd2FzIHByZSA0Lngga2VybmVsKSANCg0KSGVyZeKAmXMgY29tbWl0
-IGlkIDQ0NDBlNDZkNWRiN2I0NDVhOTYxYTg0NDQ0ODQ5YjJhMzFmYTdmZDEgd2hpY2ggaXMgZml4
-ZWQgYnkgdGhpcyBwYXRjaC4NCg0KPiAtLSANCj4gSm9oYW5uZXMgVGh1bXNoaXJuICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgU3RvcmFnZQ0KPiBqdGh1DQo+IG1zaGly
-bkBzdXNlLmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4
-OQ0KPiBTVVNFDQo+IExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZw0K
-PiBHRjogRmVsaXggSW1lbmTDtnJmZmVyLCBKYW5lDQo+IFNtaXRoYXJkLCBHcmFoYW0gTm9ydG9u
-DQo+IEhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQ0KPiBLZXkgZmluZ2VycHJpbnQgPSBFQzM4DQo+
-IDlDQUIgQzJDNCBGMjVEIDg2MDAgRDBEMCAwMzkzIDk2OUQgMkQ3NiAwODUwDQoNClRoYW5rcywN
-Ci0gSGltYW5zaHUNCg0K
+This patch set adds support for Broadcom's new G7 product that
+supports G4G FC.
+
+The patches were cut against the Martin's 4.17/scsi-queue tree.
+
+v2:
+ Address comments:
+   patch 1, 2, 4, 7: patch description typos
+   patch 6: typo on 256GBit speed define
+
+v3:
+ Add review tags
+ Address comments:
+   patch 4: parens, replace set_memory_wc by ioremap_wc
+   patch 6: reformat strings
+   patch 9: parens
+   patch 13: patch title
+ patch 5: add missing snippet for default id string
+ patch 9, 11: log print condensed to line
+
+
+James Smart (13):
+  lpfc: Rework lpfc to allow different sli4 cq and eq handlers
+  lpfc: Rework sli4 doorbell infrastructure
+  lpfc: Add SLI-4 if_type=6 support to the code base
+  lpfc: Add push-to-adapter support to sli4
+  lpfc: Add PCI Ids for if_type=6 hardware
+  lpfc: Add 64G link speed support
+  lpfc: Add if_type=6 support for cycling valid bits
+  lpfc: Enable fw download on if_type=6 devices
+  lpfc: Add embedded data pointers for enhanced performance
+  lpfc: Fix nvme embedded io length on new hardware
+  lpfc: Work around NVME cmd iu SGL type
+  lpfc: update driver version to 12.0.0.0
+  lpfc: Change Copyright of 12.0.0.0 modified files to 2018
+
+ drivers/scsi/lpfc/lpfc.h         |  20 +-
+ drivers/scsi/lpfc/lpfc_attr.c    |  90 +++++--
+ drivers/scsi/lpfc/lpfc_bsg.c     |   6 +-
+ drivers/scsi/lpfc/lpfc_ct.c      |   7 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c |  22 +-
+ drivers/scsi/lpfc/lpfc_debugfs.h |  13 +-
+ drivers/scsi/lpfc/lpfc_els.c     |   5 +
+ drivers/scsi/lpfc/lpfc_hbadisc.c |   1 +
+ drivers/scsi/lpfc/lpfc_hw.h      |  15 +-
+ drivers/scsi/lpfc/lpfc_hw4.h     | 115 ++++++++-
+ drivers/scsi/lpfc/lpfc_ids.h     |   4 +-
+ drivers/scsi/lpfc/lpfc_init.c    | 246 ++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_mbox.c    |   4 +
+ drivers/scsi/lpfc/lpfc_nvme.c    |  69 ++++--
+ drivers/scsi/lpfc/lpfc_nvmet.c   |  24 ++
+ drivers/scsi/lpfc/lpfc_scsi.c    |   8 +-
+ drivers/scsi/lpfc/lpfc_sli.c     | 519 +++++++++++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_sli4.h    |  30 ++-
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ 19 files changed, 950 insertions(+), 250 deletions(-)
+
+-- 
+2.13.1
