@@ -1,75 +1,39 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH] libsas: Fix kernel-doc headers
-Date: Tue, 13 Feb 2018 09:49:14 -0800
-Message-ID: <37878dc7-1000-9046-b29c-99bbd95ff326@wdc.com>
-References: <20180212184500.26562-1-bart.vanassche@wdc.com>
- <34669efa-8426-97f8-5054-03e3bfd7e922@huawei.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] qla2xxx: Fix NULL pointer crash due to active timer for
+ ABTS
+Date: Tue, 13 Feb 2018 18:13:55 +0000
+Message-ID: <8AA80006-774D-4189-9BDF-7410E705D26F@cavium.com>
+References: <20180212182814.4541-1-himanshu.madhani@cavium.com>
+ <1518518327.3592.6.camel@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:19644 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965426AbeBMRtV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 12:49:21 -0500
-In-Reply-To: <34669efa-8426-97f8-5054-03e3bfd7e922@huawei.com>
+Received: from mail-sn1nam01on0061.outbound.protection.outlook.com ([104.47.32.61]:14698
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965158AbeBMSN5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Feb 2018 13:13:57 -0500
+In-Reply-To: <1518518327.3592.6.camel@suse.de>
 Content-Language: en-US
+Content-ID: <581C8692519C4C4FB2DBBF864F24307E@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 02/13/18 02:17, John Garry wrote:
-> On 12/02/2018 18:45, Bart Van Assche wrote:
->> [ ... ]
->> -/**
->> +/*
->>   * sas_init_disc -- initialize the discovery struct in the port
->>   * @port: pointer to struct port
-> 
-> I wonder why you get no complaint that @disc argument is not mentioned, 
-
-Hello John,
-
-Since I was not sure how to document the 'disc' argument I changed /** 
-into /* to make the kernel-doc tool skip the sas_init_disc() function. 
-Any suggestion for how to document the 'disc' argument would be welcome.
-
->>
->> -/**
->> +/*
->>   * sas_configure_parent -- configure routing table of parent
->> - * parent: parent expander
->> - * child: child expander
->> - * sas_addr: SAS port identifier of device directly attached to child
->> + * @parent: parent expander
->> + * @child: child expander
->> + * @sas_addr: SAS port identifier of device directly attached to child
-> 
-> and no mention of @include here
-
-Also for the 'include' argument, a suggestion of how to document it 
-would be welcome.
-
->>  /**
->>   * sas_revalidate_domain -- revalidate the domain
-> 
-> This function name seems incorrect. [ ... ]  And I would write "port domain device"
-
-Thanks, will fix.
-
->> -/**
->> +/*
-> 
-> If the build does not complain about this for W=1, then should we 
-> include it? I ask, as I see many other instances of "/**". I don't mind 
-> cleaning them up in a separate patch.
-
-The kernel-doc tool only analyzes function headers that start with 
-"/**". Any changes of "/**" into "/*" mean that I did not know how to 
-document the arguments about which the kernel-doc tool complained that 
-documentation was missing.
-
-Thanks,
-
-Bart.
+SGkgSm9oYW5uZXMsIA0KDQo+IE9uIEZlYiAxMywgMjAxOCwgYXQgMjozOCBBTSwgSm9oYW5uZXMg
+VGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2UuZGU+IHdyb3RlOg0KPiANCj4gVGhhbmtzIEhpbWFu
+c2h1LA0KPiBSZXZpZXdlZC1ieTogSm9oYW5uZXMgVGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2Uu
+ZGU+DQo+IA0KPiBEbyB5b3UgaGFwcGVuIHRvIGtub3cgd2hpY2ggY29tbWl0IGl0IGFjdHVhbGx5
+IGZpeGVzPw0KPiANCg0KVGhhbmtzIGZvciBhc2tpbmcgKEkgZGlkIG5vdCBhZGQgZml4ZXMgY29t
+bWl0IElEIGJlY2F1c2UgaXQgd2FzIHByZSA0Lngga2VybmVsKSANCg0KSGVyZeKAmXMgY29tbWl0
+IGlkIDQ0NDBlNDZkNWRiN2I0NDVhOTYxYTg0NDQ0ODQ5YjJhMzFmYTdmZDEgd2hpY2ggaXMgZml4
+ZWQgYnkgdGhpcyBwYXRjaC4NCg0KPiAtLSANCj4gSm9oYW5uZXMgVGh1bXNoaXJuICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgU3RvcmFnZQ0KPiBqdGh1DQo+IG1zaGly
+bkBzdXNlLmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4
+OQ0KPiBTVVNFDQo+IExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZw0K
+PiBHRjogRmVsaXggSW1lbmTDtnJmZmVyLCBKYW5lDQo+IFNtaXRoYXJkLCBHcmFoYW0gTm9ydG9u
+DQo+IEhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQ0KPiBLZXkgZmluZ2VycHJpbnQgPSBFQzM4DQo+
+IDlDQUIgQzJDNCBGMjVEIDg2MDAgRDBEMCAwMzkzIDk2OUQgMkQ3NiAwODUwDQoNClRoYW5rcywN
+Ci0gSGltYW5zaHUNCg0K
