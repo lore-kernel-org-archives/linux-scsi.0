@@ -1,50 +1,107 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] scsi: ata: don't reset three times if device is offline
- for SAS host
-Date: Tue, 13 Feb 2018 06:27:38 -0800
-Message-ID: <20180213142738.GJ695913@devbig577.frc2.facebook.com>
-References: <1516800025-193614-1-git-send-email-chenxiang66@hisilicon.com>
- <20180212165146.GU695913@devbig577.frc2.facebook.com>
- <b3701a9b-3bf2-a979-cf75-c3dcdfaa1a89@hisilicon.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] scsi: myrs: Add Mylex RAID controller (SCSI interface)
+Date: Tue, 13 Feb 2018 17:37:27 +0300
+Message-ID: <20180213143727.GA21178@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:45071 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933612AbeBMO1m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 09:27:42 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:49042 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933716AbeBMOrl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 09:47:41 -0500
 Content-Disposition: inline
-In-Reply-To: <b3701a9b-3bf2-a979-cf75-c3dcdfaa1a89@hisilicon.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Cc: martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com
+To: hare@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+Hello Hannes Reinecke,
 
-On Tue, Feb 13, 2018 at 09:44:53AM +0800, chenxiang (M) wrote:
-> For those drivers using libsas,  i think they have the same issue.
-> It takes about 1 minute to
-> recover but actually device is gone, so this recover is useless for
-> this scenario (when enter EH,
-> all normal IOs are blocked actually, so it will cause normal IOs are
-> blocked one more minute which
-> user doesn't want to).
+The patch 8a8606895947: "scsi: myrs: Add Mylex RAID controller (SCSI
+interface)" from Jan 24, 2018, leads to the following static checker
+warning:
 
-Right, it'd block other devices sharing the port.  Doesn't sas map
-each ata device to its own port tho?
+	drivers/scsi/myrs.c:479 myrs_get_event()
+	warn: right shifting more than type allows 16 vs 16
 
-> Actually in sas_ata_hard_reset, there are two situations returned
-> -ENODEV which represent device is gone:
-> - LLDD directly returns -ENODEV through lldd_I_T_nexus_reset;
-> - It sends SMP DISCOVER to check local phy in smp_ata_check_ready,
-> and find it is gone;
+drivers/scsi/myrs.c
+   461  static unsigned char
+   462  myrs_get_event(myrs_hba *cs, unsigned short event_num,
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
 
-So, if there are real consequences, we can definitely add a way to
-short-circuit the recovery logic but let's do that by adding proper
-signaling rathr than testing for driver type.
+   463                 myrs_event *event_buf)
+   464  {
+   465          struct pci_dev *pdev = cs->pdev;
+   466          dma_addr_t event_addr;
+   467          myrs_cmdblk *cmd_blk = &cs->mcmd_blk;
+   468          myrs_cmd_mbox *mbox = &cmd_blk->mbox;
+   469          myrs_sgl *sgl;
+   470          unsigned char status;
+   471  
+   472          event_addr = dma_map_single(&pdev->dev, event_buf,
+   473                                      sizeof(myrs_event), DMA_FROM_DEVICE);
+   474          if (dma_mapping_error(&pdev->dev, event_addr))
+   475                  return DAC960_V2_AbnormalCompletion;
+   476  
+   477          mbox->GetEvent.opcode = DAC960_V2_IOCTL;
+   478          mbox->GetEvent.dma_size = sizeof(myrs_event);
+   479          mbox->GetEvent.evnum_upper = event_num >> 16;
+                                             ^^^^^^^^^^^^^^^
 
-Thanks.
+This is always going to be zero.
 
--- 
-tejun
+   480          mbox->GetEvent.ctlr_num = 0;
+   481          mbox->GetEvent.ioctl_opcode = DAC960_V2_GetEvent;
+   482          mbox->GetEvent.evnum_lower = event_num & 0xFFFF;
+   483          sgl = &mbox->GetEvent.dma_addr;
+   484          sgl->sge[0].sge_addr = event_addr;
+   485          sgl->sge[0].sge_count = mbox->GetEvent.dma_size;
+   486          myrs_exec_cmd(cs, cmd_blk);
+   487          status = cmd_blk->status;
+   488          dma_unmap_single(&pdev->dev, event_addr,
+   489                           sizeof(myrs_event), DMA_FROM_DEVICE);
+   490  
+   491          return status;
+   492  }
+
+This warning is probably a false positive which you can ignore but what
+made me question it was looking at the caller:
+
+drivers/scsi/myrs.c
+  2222  static void myrs_monitor(struct work_struct *work)
+  2223  {
+  2224          myrs_hba *cs = container_of(work, myrs_hba, monitor_work.work);
+  2225          struct Scsi_Host *shost = cs->host;
+  2226          myrs_ctlr_info *info = cs->ctlr_info;
+  2227          unsigned int epoch = cs->fwstat_buf->epoch;
+  2228          unsigned long interval = MYRS_PRIMARY_MONITOR_INTERVAL;
+  2229          unsigned char status;
+  2230  
+  2231          dev_dbg(&shost->shost_gendev, "monitor tick\n");
+  2232  
+  2233          status = myrs_get_fwstatus(cs);
+  2234  
+  2235          if (cs->needs_update) {
+  2236                  cs->needs_update = false;
+  2237                  mutex_lock(&cs->cinfo_mutex);
+  2238                  status = myrs_get_ctlr_info(cs);
+  2239                  mutex_unlock(&cs->cinfo_mutex);
+  2240          }
+  2241          if (cs->fwstat_buf->next_evseq - cs->next_evseq > 0) {
+  2242                  status = myrs_get_event(cs, cs->next_evseq,
+                                                    ^^^^^^^^^^^^^^
+This is an int.
+
+  2243                                          cs->event_buf);
+  2244                  if (status == DAC960_V2_NormalCompletion) {
+  2245                          myrs_log_event(cs, cs->event_buf);
+  2246                          cs->next_evseq++;
+                                ^^^^^^^^^^^^^^^^
+And I guess this is where we set cs->next_evseq.
+
+  2247                          interval = 1;
+  2248                  }
+  2249          }
+
+regards,
+dan carpenter
