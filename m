@@ -1,41 +1,115 @@
-From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Subject: Re: UFS writing request failure handling
-Date: Tue, 13 Feb 2018 15:18:32 +0000
-Message-ID: <6adc73db15b84425805a6adc09c2bfcf@SIWEX5A.sing.micron.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] megaraid_sas: Do not use 32-bit atomic request descriptor
+ for Ventura controllers
+Date: Tue, 13 Feb 2018 16:39:45 +0100
+Message-ID: <33177f37-bf7d-caa8-b302-525d35a06ec7@redhat.com>
+References: <1518413940-1657-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:35800 "EHLO
-        mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964851AbeBMPSh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 10:18:37 -0500
-Content-Language: en-US
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50112 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933594AbeBMPjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Feb 2018 10:39:47 -0500
+In-Reply-To: <1518413940-1657-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Content-Language: en-MW
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, stable@vger.kernel.org
 
-SGkgQmFydA0KVGhhbmtzIGZvciB5b3VyIGFuc3dlci4NCkkgbG9va2VkIGF0IFNDU0kgY29yZSBz
-b3VyY2UgY29kZXMgdGhlc2UgZGF5cywgVUZTIGFsc28gZm9sbG93cyBTQ1NJIGNvcmUgZXJyb3Ig
-aGFuZGxpbmcuDQpUaGVyZSBpcyBhbHJlYWR5IHJlLWlzc3VlIGJlaGF2aW9yLCBhbmQgYXNzaWdu
-IDUgcmV0cmllcyBmb3IgZWFjaCBVRlMgcmVxdWVzdCBpZiB0aGVyZSBpcyBlcnJvci4NCg0KPg0K
-Pk9uIDAyLzEyLzE4IDA0OjIxLCBCZWFuIEh1byAoYmVhbmh1bykgd3JvdGUNCj4+IEkgYW0gbG9v
-a2luZyBhdCBVRlMgZXJyb3IgaGFuZGxpbmcsIGJ1dCBJIGRpZG4ndCBub3RpY2UgcmUtaXNzdWVz
-DQo+PiByZXF1ZXN0cyB3aXRoIFVUUCBlcnJvciB0byB0aGUgaG9zdCBjb250cm9sbGVyLiBBY2Nv
-cmRpbmcgVUZTIGhvc3QNCj4+IHNwZWMsICJob3N0IHNvZnR3YXJlIGVpdGhlciBjb21wbGV0ZXMg
-dGhlIHJlcXVlc3QgdGhhdCBoYWQgdGhlIGVycm9yDQo+PiBhbmQgcmVxdWVzdHMgc3RpbGwgb3V0
-c3RhbmRpbmcgd2l0aCBlcnJvciB0byBoaWdoZXIgbGV2ZWwgc29mdHdhcmUsIG9yDQo+PiByZS1p
-c3N1ZXMgdGhlc2UgcmVxdWVzdHMgdG8gdGhlIGhvc3QgY29udHJvbGxlciIuIEZvciB0aGUgbGF0
-ZXN0IExpbnV4DQo+PiBVRlMgZHJpdmVyLCBpdCBiZWxvbmdzIHRvIGZvcm1lciBvbmU/IElmIEkg
-YW0gd3JvbmcsIHBsZWFzZSBjb3JyZWN0DQo+PiBtZS4NCj4NCj5IZWxsbyBCZWFuLA0KPg0KPkkn
-bSBhZnJhaWQgdGhhdCByZWlzc3VpbmcgYSBmYWlsZWQgd3JpdGUgZm9yZXZlciBjb3VsZCBjYXVz
-ZSBhbiBpbmZpbml0ZSBsb29wIHRoYXQNCj5tYWtlcyBlLmcuIHVzZXIgc3BhY2UgcHJvY2Vzc2Vz
-IHVua2lsbGFibGUgb3IgdGhhdCBjb3VsZCBjYXVzZSBhbiBvcmRlcmx5DQo+c3lzdGVtIHNodXRk
-b3duIHRvIGhhbmcuIEknbSBub3Qgc3VyZSB0aGF0IHdlIHdhbnQgc3VjaCBiZWhhdmlvci4NCj4N
-Cj5JZiB5b3Ugd2FudCB0byBsZWFybiBtb3JlIGFib3V0IGhvdyB0aGUgU0NTSSBjb3JlIGhhbmRs
-ZXMgZmFpbGVkIHdyaXRlcywNCj5wbGVhc2UgaGF2ZSBhIGxvb2sgYXQgc2NzaV9kZWNpZGVfZGlz
-cG9zaXRpb24oKS4gQSBwb3NzaWJsZSBhcHByb2FjaCB0bw0KPm1vZGlmeSB0aGUgZXJyb3IgaGFu
-ZGxpbmcgYmVoYXZpb3IgaXMgdG8gc3RhY2sgYSBkbSBkcml2ZXIgb24gdG9wIG9mIHRoZSBTQ1NJ
-DQo+Y29yZSB0aGF0IGltcGxlbWVudHMgdGhlIGRlc2lyZWQgYmVoYXZpb3IuDQo+DQo+QmFydC4N
-Cg==
+On 02/12/2018 06:39 AM, Shivasharan S wrote:
+> Problem Statement:
+> Sending I/O through 32 bit descriptors to Ventura series of controller
+> results in IO timeout on certain conditions.
+>  
+> This error only occurs on systems with high I/O activity on
+> Ventura series controllers.
+>   
+> Changes in this patch will prevent driver from using 32 bit descriptor
+> and use 64 bit Descriptors.
+>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 37 ++++++++++-------------------
+>  1 file changed, 12 insertions(+), 25 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index 073ced07e662..09f2bdb14b0a 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -226,26 +226,21 @@ static void
+>  megasas_fire_cmd_fusion(struct megasas_instance *instance,
+>  		union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc)
+>  {
+> -	if (instance->adapter_type == VENTURA_SERIES)
+> -		writel(le32_to_cpu(req_desc->u.low),
+> -			&instance->reg_set->inbound_single_queue_port);
+> -	else {
+>  #if defined(writeq) && defined(CONFIG_64BIT)
+> -		u64 req_data = (((u64)le32_to_cpu(req_desc->u.high) << 32) |
+> -				le32_to_cpu(req_desc->u.low));
+> +	u64 req_data = (((u64)le32_to_cpu(req_desc->u.high) << 32) |
+> +		le32_to_cpu(req_desc->u.low));
+>  
+> -		writeq(req_data, &instance->reg_set->inbound_low_queue_port);
+> +	writeq(req_data, &instance->reg_set->inbound_low_queue_port);
+>  #else
+> -		unsigned long flags;
+> -		spin_lock_irqsave(&instance->hba_lock, flags);
+> -		writel(le32_to_cpu(req_desc->u.low),
+> -			&instance->reg_set->inbound_low_queue_port);
+> -		writel(le32_to_cpu(req_desc->u.high),
+> -			&instance->reg_set->inbound_high_queue_port);
+> -		mmiowb();
+> -		spin_unlock_irqrestore(&instance->hba_lock, flags);
+> +	unsigned long flags;
+> +	spin_lock_irqsave(&instance->hba_lock, flags);
+> +	writel(le32_to_cpu(req_desc->u.low),
+> +		&instance->reg_set->inbound_low_queue_port);
+> +	writel(le32_to_cpu(req_desc->u.high),
+> +		&instance->reg_set->inbound_high_queue_port);
+> +	mmiowb();
+> +	spin_unlock_irqrestore(&instance->hba_lock, flags);
+>  #endif
+> -	}
+>  }
+>  
+>  /**
+> @@ -982,7 +977,6 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+>  	const char *sys_info;
+>  	MFI_CAPABILITIES *drv_ops;
+>  	u32 scratch_pad_2;
+> -	unsigned long flags;
+>  	ktime_t time;
+>  	bool cur_fw_64bit_dma_capable;
+>  
+> @@ -1121,14 +1115,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+>  			break;
+>  	}
+>  
+> -	/* For Ventura also IOC INIT required 64 bit Descriptor write. */
+> -	spin_lock_irqsave(&instance->hba_lock, flags);
+> -	writel(le32_to_cpu(req_desc.u.low),
+> -	       &instance->reg_set->inbound_low_queue_port);
+> -	writel(le32_to_cpu(req_desc.u.high),
+> -	       &instance->reg_set->inbound_high_queue_port);
+> -	mmiowb();
+> -	spin_unlock_irqrestore(&instance->hba_lock, flags);
+> +	megasas_fire_cmd_fusion(instance, &req_desc);
+>  
+>  	wait_and_poll(instance, cmd, MFI_POLL_TIMEOUT_SECS);
+>  
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+Please also remove the text
+ * Ventura supports 32 bit Descriptor.
+ * Prior to Ventura (12G) MR controller supports 64 bit Descriptor.
+from the function description (not urgent may happen later)
+
+Thanks,
+Tomas
