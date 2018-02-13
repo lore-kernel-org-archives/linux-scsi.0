@@ -1,284 +1,178 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 09/13] lpfc: Add embedded data pointers for enhanced performance
-Date: Tue, 13 Feb 2018 11:34:53 -0800
-Message-ID: <20180213193457.21206-10-jsmart2021@gmail.com>
-References: <20180213193457.21206-1-jsmart2021@gmail.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] qla2xxx: Fix NULL pointer crash due to active timer for
+ ABTS
+Date: Tue, 13 Feb 2018 20:07:17 +0000
+Message-ID: <D5F291AA-462A-4B27-A1B6-3CD50FF42D44@cavium.com>
+References: <20180212182814.4541-1-himanshu.madhani@cavium.com>
+ <4a757a57-5d44-2e70-dbe3-3b969d5588fd@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:40735 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965477AbeBMTfo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 14:35:44 -0500
-Received: by mail-qt0-f196.google.com with SMTP id c19so4922640qtm.7
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2018 11:35:44 -0800 (PST)
-In-Reply-To: <20180213193457.21206-1-jsmart2021@gmail.com>
+Received: from mail-by2nam03on0056.outbound.protection.outlook.com ([104.47.42.56]:30573
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965574AbeBMUHT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Feb 2018 15:07:19 -0500
+In-Reply-To: <4a757a57-5d44-2e70-dbe3-3b969d5588fd@huawei.com>
+Content-Language: en-US
+Content-ID: <89FB2618D9912745A1EFE2937B737F2B@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: John Garry <john.garry@huawei.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The current driver isn't taking advantage of a performance hint whereby
-the initial data buffer descriptor can be placed in the WQE as well as
-the SGL.
+Hi John,=20
 
-Add the logic to detect support for the feature and to use it when
-supported.
+> On Feb 13, 2018, at 2:54 AM, John Garry <john.garry@huawei.com> wrote:
+>=20
+> On 12/02/2018 18:28, Himanshu Madhani wrote:
+>> This patch fixes NULL pointer crash due to active timer running
+>> for abort IOCB.
+>>=20
+>>> From crash dump analysis it was discoverd that get_next_timer_interrupt=
+()
+>> encountered a corrupted entry on the timer list.
+>>=20
+>> #9 [ffff95e1f6f0fd40] page_fault at ffffffff914fe8f8
+>>    [exception RIP: get_next_timer_interrupt+440]
+>>    RIP: ffffffff90ea3088  RSP: ffff95e1f6f0fdf0  RFLAGS: 00010013
+>>    RAX: ffff95e1f6451028  RBX: 000218e2389e5f40  RCX: 00000001232ad600
+>>    RDX: 0000000000000001  RSI: ffff95e1f6f0fdf0  RDI: 0000000001232ad6
+>>    RBP: ffff95e1f6f0fe40   R8: ffff95e1f6451188   R9: 0000000000000001
+>>    R10: 0000000000000016  R11: 0000000000000016  R12: 00000001232ad5f6
+>>    R13: ffff95e1f6450000  R14: ffff95e1f6f0fdf8  R15: ffff95e1f6f0fe10
+>>    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+>>=20
+>> Looking at the assembly of get_next_timer_interrupt(), address came
+>> from %r8 (ffff95e1f6451188) which is pointing to list_head with single
+>> entry at ffff95e5ff621178.
+>>=20
+>> 0xffffffff90ea307a <get_next_timer_interrupt+426>:      mov    (%r8),%rd=
+x
+>> 0xffffffff90ea307d <get_next_timer_interrupt+429>:      cmp    %r8,%rdx
+>> 0xffffffff90ea3080 <get_next_timer_interrupt+432>:      je     0xfffffff=
+f90ea30a7 <get_next_timer_interrupt+471>
+>> 0xffffffff90ea3082 <get_next_timer_interrupt+434>:      nopw   0x0(%rax,=
+%rax,1)
+>> 0xffffffff90ea3088 <get_next_timer_interrupt+440>:      testb  $0x1,0x18=
+(%rdx)
+>>=20
+>> crash> rd ffff95e1f6451188 10
+>> ffff95e1f6451188:  ffff95e5ff621178 ffff95e5ff621178   x.b.....x.b.....
+>> ffff95e1f6451198:  ffff95e1f6451198 ffff95e1f6451198   ..E.......E.....
+>> ffff95e1f64511a8:  ffff95e1f64511a8 ffff95e1f64511a8   ..E.......E.....
+>> ffff95e1f64511b8:  ffff95e77cf509a0 ffff95e77cf509a0   ...|.......|....
+>> ffff95e1f64511c8:  ffff95e1f64511c8 ffff95e1f64511c8   ..E.......E.....
+>>=20
+>> crash> rd ffff95e5ff621178 10
+>> ffff95e5ff621178:  0000000000000001 ffff95e15936aa00   ..........6Y....
+>> ffff95e5ff621188:  0000000000000000 00000000ffffffff   ................
+>> ffff95e5ff621198:  00000000000000a0 0000000000000010   ................
+>> ffff95e5ff6211a8:  ffff95e5ff621198 000000000000000c   ..b.............
+>> ffff95e5ff6211b8:  00000f5800000000 ffff95e751f8d720   ....X... ..Q....
+>>=20
+>> ffff95e5ff621178 belongs to freed mempool object at ffff95e5ff621080.
+>>=20
+>> CACHE            NAME                 OBJSIZE  ALLOCATED     TOTAL  SLAB=
+S  SSIZE
+>> ffff95dc7fd74d00 mnt_cache                384      19785     24948    59=
+4    16k
+>>   SLAB              MEMORY            NODE  TOTAL  ALLOCATED  FREE
+>>   ffffdc5dabfd8800  ffff95e5ff620000     1     42         29    13
+>>   FREE / [ALLOCATED]
+>>    ffff95e5ff621080  (cpu 6 cache)
+>>=20
+>> Examining the contents of that memory reveals a pointer to a constant
+>> string in the driver, "abort\0", which is set by qla24xx_async_abort_cmd=
+().
+>>=20
+>> crash> rd ffffffffc059277c 20
+>> ffffffffc059277c:  6e490074726f6261 0074707572726574   abort.Interrupt.
+>> ffffffffc059278c:  00676e696c6c6f50 6920726576697244   Polling.Driver i
+>> ffffffffc059279c:  646f6d207325206e 6974736554000a65   n %s mode..Testi
+>> ffffffffc05927ac:  636976656420676e 786c252074612065   ng device at %lx
+>> ffffffffc05927bc:  6b63656843000a2e 646f727020676e69   ...Checking prod
+>> ffffffffc05927cc:  6f20444920746375 0a2e706968632066   uct ID of chip..
+>> ffffffffc05927dc:  5120646e756f4600 204130303232414c   .Found QLA2200A
+>> ffffffffc05927ec:  43000a2e70696843 20676e696b636568   Chip...Checking
+>> ffffffffc05927fc:  65786f626c69616d 6c636e69000a2e73   mailboxes...incl
+>> ffffffffc059280c:  756e696c2f656475 616d2d616d642f78   ude/linux/dma-ma
+>>=20
+>> crash> struct -ox srb_iocb
+>> struct srb_iocb {
+>>           union {
+>>               struct {...} logio;
+>>               struct {...} els_logo;
+>>               struct {...} tmf;
+>>               struct {...} fxiocb;
+>>               struct {...} abt;
+>>               struct ct_arg ctarg;
+>>               struct {...} mbx;
+>>               struct {...} nack;
+>>    [0x0 ] } u;
+>>    [0xb8] struct timer_list timer;
+>>    [0x108] void (*timeout)(void *);
+>> }
+>> SIZE: 0x110
+>>=20
+>> crash> ! bc
+>> ibase=3D16
+>> obase=3D10
+>> B8+40
+>> F8
+>>=20
+>> The object is a srb_t, and at offset 0xf8 within that structure
+>> (i.e. ffff95e5ff621080 + f8 -> ffff95e5ff621178) is a struct timer_list.
+>>=20
+>> Cc: <stable@vger.stable.com> #4.4+
+>> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+>> ---
+>> Hi Martin,
+>>=20
+>> This patch addresses crash due to NULL pointer access because driver
+>> left active timer running for abort IOCB.
+>>=20
+>> Please apply this patch to 4.16/scsi-fixes at your earliest convenience.
+>>=20
+>> Thanks,
+>> Himanshu
+>> ---
+>> drivers/scsi/qla2xxx/qla_init.c | 1 +
+>> 1 file changed, 1 insertion(+)
+>>=20
+>> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_=
+init.c
+>> index 2dea1129d396..04870621e712 100644
+>> --- a/drivers/scsi/qla2xxx/qla_init.c
+>> +++ b/drivers/scsi/qla2xxx/qla_init.c
+>> @@ -1527,6 +1527,7 @@ qla24xx_abort_sp_done(void *ptr, int res)
+>> 	srb_t *sp =3D ptr;
+>> 	struct srb_iocb *abt =3D &sp->u.iocb_cmd;
+>>=20
+>> +	del_timer(&sp->u.iocb_cmd.timer);
+>=20
+> Hi,
+>=20
+> I am not familiar with this code. But I note that this abort seems to be =
+"asynchronous" (I see it's setup in qla24xx_async_abort_cmd()), so do you n=
+eed the "sync" variant of del_timer() for safety? This would be to ensure t=
+he timeout has not actually occurred and is racing with the "done" callback=
+?
+>=20
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
+You do have a point here. I need to investigate your suggestion and see if =
+we need to go with =93sync=94 variant. I=92ll update you shortly.
 
----
-v3:
-  remove unneeded parens
-  combined 6422 msg on 1 line
----
- drivers/scsi/lpfc/lpfc.h       |  2 ++
- drivers/scsi/lpfc/lpfc_hw4.h   |  3 +++
- drivers/scsi/lpfc/lpfc_init.c  | 20 ++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_nvme.c  | 18 ++++++++++++++++++
- drivers/scsi/lpfc/lpfc_nvmet.c | 24 ++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_scsi.c  |  8 ++++++--
- drivers/scsi/lpfc/lpfc_sli.c   | 25 +++++++++++++++++++++----
- 7 files changed, 94 insertions(+), 6 deletions(-)
+> Thanks,
+> John
+>=20
+>> 	complete(&abt->u.abt.comp);
+>> }
+>>=20
+>>=20
+>=20
+>=20
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 7aad4a717f13..9136a59b1c5b 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -840,6 +840,8 @@ struct lpfc_hba {
- #define LPFC_ENABLE_FCP  1
- #define LPFC_ENABLE_NVME 2
- #define LPFC_ENABLE_BOTH 3
-+	uint32_t nvme_embed_pbde;
-+	uint32_t fcp_embed_pbde;
- 	uint32_t io_channel_irqs;	/* number of irqs for io channels */
- 	struct nvmet_fc_target_port *targetport;
- 	lpfc_vpd_t vpd;		/* vital product data */
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index be8227dfa086..ed5e870c58c3 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -4226,6 +4226,9 @@ struct wqe_common {
- #define wqe_irsp_SHIFT        4
- #define wqe_irsp_MASK         0x00000001
- #define wqe_irsp_WORD         word11
-+#define wqe_pbde_SHIFT        5
-+#define wqe_pbde_MASK         0x00000001
-+#define wqe_pbde_WORD         word11
- #define wqe_sup_SHIFT         6
- #define wqe_sup_MASK          0x00000001
- #define wqe_sup_WORD          word11
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index fc452ffa73bc..f8af3adee21a 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -10607,6 +10607,19 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 		phba->cfg_enable_fc4_type = LPFC_ENABLE_FCP;
- 	}
- 
-+	/* Only embed PBDE for if_type 6 */
-+	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
-+	    LPFC_SLI_INTF_IF_TYPE_6) {
-+		phba->fcp_embed_pbde = 1;
-+		phba->nvme_embed_pbde = 1;
-+	}
-+
-+	/* PBDE support requires xib be set */
-+	if (!bf_get(cfg_xib, mbx_sli4_parameters)) {
-+		phba->fcp_embed_pbde = 0;
-+		phba->nvme_embed_pbde = 0;
-+	}
-+
- 	/*
- 	 * To support Suppress Response feature we must satisfy 3 conditions.
- 	 * lpfc_suppress_rsp module parameter must be set (default).
-@@ -10638,6 +10651,13 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	else
- 		phba->fcp_embed_io = 0;
- 
-+	lpfc_printf_log(phba, KERN_INFO, LOG_INIT | LOG_NVME,
-+			"6422 XIB %d: FCP %d %d NVME %d %d %d\n",
-+			bf_get(cfg_xib, mbx_sli4_parameters),
-+			phba->fcp_embed_pbde, phba->fcp_embed_io,
-+			phba->nvme_support, phba->nvme_embed_pbde,
-+			phba->cfg_suppress_rsp);
-+
- 	if ((bf_get(cfg_cqpsize, mbx_sli4_parameters) & LPFC_CQ_16K_PAGE_SZ) &&
- 	    (bf_get(cfg_wqpsize, mbx_sli4_parameters) & LPFC_WQ_16K_PAGE_SZ) &&
- 	    (sli4_params->wqsize & LPFC_WQ_SZ128_SUPPORT))
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 3a103d0895a2..5a1a6e24a27f 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -1170,6 +1170,7 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
- 	struct sli4_sge *sgl = lpfc_ncmd->nvme_sgl;
- 	struct scatterlist *data_sg;
- 	struct sli4_sge *first_data_sgl;
-+	struct ulp_bde64 *bde;
- 	dma_addr_t physaddr;
- 	uint32_t num_bde = 0;
- 	uint32_t dma_len;
-@@ -1237,7 +1238,24 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
- 			data_sg = sg_next(data_sg);
- 			sgl++;
- 		}
-+		if (phba->nvme_embed_pbde) {
-+			/* Use PBDE support for first SGL only, offset == 0 */
-+			/* Words 13-15 */
-+			bde = (struct ulp_bde64 *)
-+				&wqe->words[13];
-+			bde->addrLow = first_data_sgl->addr_lo;
-+			bde->addrHigh = first_data_sgl->addr_hi;
-+			bde->tus.f.bdeSize =
-+				le32_to_cpu(first_data_sgl->sge_len);
-+			bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
-+			bde->tus.w = cpu_to_le32(bde->tus.w);
-+			bf_set(wqe_pbde, &wqe->generic.wqe_com, 1);
-+		} else
-+			bf_set(wqe_pbde, &wqe->generic.wqe_com, 0);
-+
- 	} else {
-+		bf_set(wqe_pbde, &wqe->generic.wqe_com, 0);
-+
- 		/* For this clause to be valid, the payload_length
- 		 * and sg_cnt must zero.
- 		 */
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index a332a6638b1b..a4a32d7ec248 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -2150,9 +2150,11 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 	struct lpfc_iocbq *nvmewqe;
- 	struct scatterlist *sgel;
- 	union lpfc_wqe128 *wqe;
-+	struct ulp_bde64 *bde;
- 	uint32_t *txrdy;
- 	dma_addr_t physaddr;
- 	int i, cnt;
-+	int do_pbde;
- 	int xc = 1;
- 
- 	if (!lpfc_is_link_up(phba)) {
-@@ -2243,6 +2245,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		/* Word 7 */
- 		bf_set(wqe_pu, &wqe->fcp_tsend.wqe_com, 1);
- 		bf_set(wqe_cmnd, &wqe->fcp_tsend.wqe_com, CMD_FCP_TSEND64_WQE);
-+		do_pbde = 0;
- 
- 		/* Word 8 */
- 		wqe->fcp_tsend.wqe_com.abort_tag = nvmewqe->iotag;
-@@ -2355,6 +2358,10 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		bf_set(wqe_ar, &wqe->fcp_treceive.wqe_com, 0);
- 		bf_set(wqe_cmnd, &wqe->fcp_treceive.wqe_com,
- 		       CMD_FCP_TRECEIVE64_WQE);
-+		if (phba->nvme_embed_pbde)
-+			do_pbde = 1;
-+		else
-+			do_pbde = 0;
- 
- 		/* Word 8 */
- 		wqe->fcp_treceive.wqe_com.abort_tag = nvmewqe->iotag;
-@@ -2438,6 +2445,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		bf_set(wqe_pu, &wqe->fcp_trsp.wqe_com, 0);
- 		bf_set(wqe_ag, &wqe->fcp_trsp.wqe_com, 1);
- 		bf_set(wqe_cmnd, &wqe->fcp_trsp.wqe_com, CMD_FCP_TRSP64_WQE);
-+		do_pbde = 0;
- 
- 		/* Word 8 */
- 		wqe->fcp_trsp.wqe_com.abort_tag = nvmewqe->iotag;
-@@ -2508,9 +2516,25 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 			bf_set(lpfc_sli4_sge_last, sgl, 1);
- 		sgl->word2 = cpu_to_le32(sgl->word2);
- 		sgl->sge_len = cpu_to_le32(cnt);
-+		if (do_pbde && i == 0) {
-+			bde = (struct ulp_bde64 *)&wqe->words[13];
-+			memset(bde, 0, sizeof(struct ulp_bde64));
-+			/* Words 13-15  (PBDE)*/
-+			bde->addrLow = sgl->addr_lo;
-+			bde->addrHigh = sgl->addr_hi;
-+			bde->tus.f.bdeSize =
-+				le32_to_cpu(sgl->sge_len);
-+			bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
-+			bde->tus.w = cpu_to_le32(bde->tus.w);
-+		}
- 		sgl++;
- 		ctxp->offset += cnt;
- 	}
-+
-+	if (do_pbde)
-+		bf_set(wqe_pbde, &wqe->generic.wqe_com, 1);
-+	else
-+		bf_set(wqe_pbde, &wqe->generic.wqe_com, 0);
- 	ctxp->state = LPFC_NVMET_STE_DATA;
- 	ctxp->entry_cnt++;
- 	return nvmewqe;
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index c595046a521b..fb81e8a8fb1c 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -3304,8 +3304,12 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
- 			dma_offset += dma_len;
- 			sgl++;
- 		}
--		/* setup the performance hint (first data BDE) if enabled */
--		if (phba->sli3_options & LPFC_SLI4_PERFH_ENABLED) {
-+		/*
-+		 * Setup the first Payload BDE. For FCoE we just key off
-+		 * Performance Hints, for FC we utilize fcp_embed_pbde.
-+		 */
-+		if ((phba->sli3_options & LPFC_SLI4_PERFH_ENABLED) ||
-+		    phba->fcp_embed_pbde) {
- 			bde = (struct ulp_bde64 *)
- 					&(iocb_cmd->unsli3.sli3Words[5]);
- 			bde->addrLow = first_data_sgl->addr_lo;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index c2f4d9437e37..8cffe52e00af 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -6963,10 +6963,15 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 				"0378 No support for fcpi mode.\n");
- 		ftr_rsp++;
- 	}
--	if (bf_get(lpfc_mbx_rq_ftr_rsp_perfh, &mqe->un.req_ftrs))
--		phba->sli3_options |= LPFC_SLI4_PERFH_ENABLED;
--	else
--		phba->sli3_options &= ~LPFC_SLI4_PERFH_ENABLED;
-+
-+	/* Performance Hints are ONLY for FCoE */
-+	if (phba->hba_flag & HBA_FCOE_MODE) {
-+		if (bf_get(lpfc_mbx_rq_ftr_rsp_perfh, &mqe->un.req_ftrs))
-+			phba->sli3_options |= LPFC_SLI4_PERFH_ENABLED;
-+		else
-+			phba->sli3_options &= ~LPFC_SLI4_PERFH_ENABLED;
-+	}
-+
- 	/*
- 	 * If the port cannot support the host's requested features
- 	 * then turn off the global config parameters to disable the
-@@ -9068,6 +9073,12 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
- 		}
- 		/* Note, word 10 is already initialized to 0 */
- 
-+		/* Don't set PBDE for Perf hints, just fcp_embed_pbde */
-+		if (phba->fcp_embed_pbde)
-+			bf_set(wqe_pbde, &wqe->fcp_iwrite.wqe_com, 1);
-+		else
-+			bf_set(wqe_pbde, &wqe->fcp_iwrite.wqe_com, 0);
-+
- 		if (phba->fcp_embed_io) {
- 			struct lpfc_scsi_buf *lpfc_cmd;
- 			struct sli4_sge *sgl;
-@@ -9127,6 +9138,12 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
- 		}
- 		/* Note, word 10 is already initialized to 0 */
- 
-+		/* Don't set PBDE for Perf hints, just fcp_embed_pbde */
-+		if (phba->fcp_embed_pbde)
-+			bf_set(wqe_pbde, &wqe->fcp_iread.wqe_com, 1);
-+		else
-+			bf_set(wqe_pbde, &wqe->fcp_iread.wqe_com, 0);
-+
- 		if (phba->fcp_embed_io) {
- 			struct lpfc_scsi_buf *lpfc_cmd;
- 			struct sli4_sge *sgl;
--- 
-2.13.1
+Thanks,
+- Himanshu
