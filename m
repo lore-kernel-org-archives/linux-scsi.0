@@ -1,45 +1,104 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH][scsi-next] scsi: myrb: remove shadowed and unassigned variable ldev_num
-Date: Wed, 14 Feb 2018 16:23:41 +0000
-Message-ID: <20180214162341.335-1-colin.king@canonical.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] libsas: Fix kernel-doc headers
+Date: Wed, 14 Feb 2018 16:29:39 +0000
+Message-ID: <409ec182-c8bc-50e9-cd12-14abac4f8621@huawei.com>
+References: <20180212184500.26562-1-bart.vanassche@wdc.com>
+ <34669efa-8426-97f8-5054-03e3bfd7e922@huawei.com>
+ <37878dc7-1000-9046-b29c-99bbd95ff326@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41907 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032204AbeBNQXo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Feb 2018 11:23:44 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:37434 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1032397AbeBNQ34 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Feb 2018 11:29:56 -0500
+In-Reply-To: <37878dc7-1000-9046-b29c-99bbd95ff326@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+On 13/02/2018 17:49, Bart Van Assche wrote:
+> On 02/13/18 02:17, John Garry wrote:
+>> On 12/02/2018 18:45, Bart Van Assche wrote:
+>>> [ ... ]
+>>> -/**
+>>> +/*
+>>>   * sas_init_disc -- initialize the discovery struct in the port
+>>>   * @port: pointer to struct port
+>>
+>> I wonder why you get no complaint that @disc argument is not mentioned,
+>
 
-A lower-scoped variable ldev_num is never assigned and is shadowing
-the higher scoped iterator ldev_num and should be removed to avoid
-using garbage ldev_num values.
+Hi Bart,
 
-Detected by CoverityScan, CID#1465226 ("Uninitialized scalar variable")
+> Hello John,
+>
+> Since I was not sure how to document the 'disc' argument I changed /**
+> into /* to make the kernel-doc tool skip the sas_init_disc() function.
+> Any suggestion for how to document the 'disc' argument would be welcome.
 
-Fixes: dd47c1072226 ("scsi: myrb: Add Mylex RAID controller (block interface)")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/myrb.c | 1 -
- 1 file changed, 1 deletion(-)
+I see now.
 
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index 973a2250208f..65ade4d37b33 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -422,7 +422,6 @@ static unsigned short myrb_get_ldev_info(myrb_hba *cb)
- 		myrb_ldev_info *old = NULL;
- 		myrb_ldev_info *new = cb->ldev_info_buf[ldev_num];
- 		struct scsi_device *sdev;
--		unsigned short ldev_num;
- 		myrb_devstate old_state = DAC960_V1_Device_Offline;
- 
- 		sdev = scsi_device_lookup(shost, myrb_logical_channel(shost),
--- 
-2.15.1
+For this @disc pointer, I would just write "port discovery structure".
+
+In fact I think that we could just change the code to accept the @port 
+argument, as the @disc argument is the port->disc. But that's another job.
+
+>
+>>>
+>>> -/**
+>>> +/*
+>>>   * sas_configure_parent -- configure routing table of parent
+>>> - * parent: parent expander
+>>> - * child: child expander
+>>> - * sas_addr: SAS port identifier of device directly attached to child
+>>> + * @parent: parent expander
+>>> + * @child: child expander
+>>> + * @sas_addr: SAS port identifier of device directly attached to child
+>>
+>> and no mention of @include here
+>
+> Also for the 'include' argument, a suggestion of how to document it
+> would be welcome.
+
+To be honest, I am not so fimilar with this specific part of the code.
+
+As I see, the @include argument is to flag whether we want to setup or 
+tear down a routing for parent (upstream) expander device.
+
+I am not 100% sure on this so you could stick with making it a 
+non-kerneldoc comments. It is static.
+
+>
+>>>  /**
+>>>   * sas_revalidate_domain -- revalidate the domain
+>>
+>> This function name seems incorrect. [ ... ]  And I would write "port
+>> domain device"
+>
+> Thanks, will fix.
+>
+>>> -/**
+>>> +/*
+>>
+>> If the build does not complain about this for W=1, then should we
+>> include it? I ask, as I see many other instances of "/**". I don't
+>> mind cleaning them up in a separate patch.
+>
+> The kernel-doc tool only analyzes function headers that start with
+> "/**". Any changes of "/**" into "/*" mean that I did not know how to
+> document the arguments about which the kernel-doc tool complained that
+> documentation was missing.
+>
+> Thanks,
+>
+> Bart.
+>
+> .
+
+Regards,
+John
+
+>
