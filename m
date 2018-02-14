@@ -1,49 +1,64 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] qla2xxx: Fix NULL pointer crash due to active timer for
- ABTS
-Date: Wed, 14 Feb 2018 09:27:32 +0100
-Message-ID: <1518596852.24629.2.camel@suse.de>
-References: <20180212182814.4541-1-himanshu.madhani@cavium.com>
-         <1518518327.3592.6.camel@suse.de>
-         <8AA80006-774D-4189-9BDF-7410E705D26F@cavium.com>
+Subject: Re: [PATCH v3 04/13] lpfc: Add push-to-adapter support to sli4
+Date: Wed, 14 Feb 2018 10:30:52 +0100
+Message-ID: <20180214093052.eywwbg36gjnfirnz@linux-x5ow.site>
+References: <20180213193457.21206-1-jsmart2021@gmail.com>
+ <20180213193457.21206-5-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46855 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53499 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754556AbeBNI1e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Feb 2018 03:27:34 -0500
-In-Reply-To: <8AA80006-774D-4189-9BDF-7410E705D26F@cavium.com>
+        id S966688AbeBNJaz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Feb 2018 04:30:55 -0500
+Content-Disposition: inline
+In-Reply-To: <20180213193457.21206-5-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Tue, 2018-02-13 at 18:13 +0000, Madhani, Himanshu wrote:
-> Thanks for asking (I did not add fixes commit ID because it was pre
-> 4.x kernel) 
-> 
-> Here’s commit id 4440e46d5db7b445a961a84444849b2a31fa7fd1 which is
-> fixed by this patch.
+On Tue, Feb 13, 2018 at 11:34:48AM -0800, James Smart wrote:
+[...]
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index 3bff1f9c5df7..5e03b2c969e5 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -35,6 +35,9 @@
+>  #include <scsi/scsi_transport_fc.h>
+>  #include <scsi/fc/fc_fs.h>
+>  #include <linux/aer.h>
+> +#ifdef CONFIG_X86
+> +#include <asm/set_memory.h>
+> +#endif
 
-Thanks for the info. In general having a 
-Fixes: 4440e46d5db7 ("[SCSI] qla2xxx: Add IOCB Abort command
-asynchronous handling.")
-line is extremly valuable as many distributions have automation in
-place to check whether a fix for a backport arrived upstream.
+Not needed anymore now you've killed set_memory_wc(), isn't it?
+
+[...]
+
+> +	if (q->dpp_enable && q->phba->cfg_enable_dpp) {
+> +		/* write to DPP aperture taking advatage of Combined Writes */
+> +		tmp = (uint8_t *)wqe;
+> +#ifdef CONFIG_64BIT
+> +		for (i = 0; i < q->entry_size; i += sizeof(uint64_t))
+> +			writeq(*((uint64_t *)(tmp + i)), q->dpp_regaddr + i);
+> +#else
+> +		for (i = 0; i < q->entry_size; i += sizeof(uint32_t))
+> +			writel(*((uint32_t *)(tmp + i)), q->dpp_regaddr + i);
+> +#endif
+> +	}
+> +	/* ensure WQE bcopy and DPP flushed before doorbell write */
+
+Any reason you can't use writeq() on 32 Bit as well? There's a compat version
+in linux/io-64-nonatomic-hi-lo.h.
 
 Thanks,
 	Johannes
-
 -- 
-Johannes Thumshirn                                          Storage
-jthu
-mshirn@suse.de                                +49 911 74053 689
-SUSE
-LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane
-Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38
-9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N�rnberg
+GF: Felix Imend�rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N�rnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
