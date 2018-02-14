@@ -1,125 +1,175 @@
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Subject: [PATCH] scsi: qla2xxx: Use dma_pool_zalloc()
-Date: Thu, 15 Feb 2018 01:22:13 +0530
-Message-ID: <20180214195212.GA6291@jordon-HP-15-Notebook-PC>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] qla2xxx: Fix NULL pointer crash due to active timer for
+ ABTS
+Date: Wed, 14 Feb 2018 19:58:21 +0000
+Message-ID: <7950650B-C0D6-41A1-8ABB-BEC816E99615@cavium.com>
+References: <20180212182814.4541-1-himanshu.madhani@cavium.com>
+ <4a757a57-5d44-2e70-dbe3-3b969d5588fd@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:35671 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162994AbeBNTu4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Feb 2018 14:50:56 -0500
-Received: by mail-pl0-f67.google.com with SMTP id o11so5489855pls.2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2018 11:50:56 -0800 (PST)
-Content-Disposition: inline
+Received: from mail-cys01nam02on0073.outbound.protection.outlook.com ([104.47.37.73]:38720
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1030626AbeBNT6X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Feb 2018 14:58:23 -0500
+In-Reply-To: <4a757a57-5d44-2e70-dbe3-3b969d5588fd@huawei.com>
+Content-Language: en-US
+Content-ID: <ABD1082BCFF31E49BA2F7E545A785741@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Use dma_pool_zalloc() instead of dma_pool_alloc + memset
+Hi John,
 
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
----
- drivers/scsi/qla2xxx/qla_bsg.c    |  3 +--
- drivers/scsi/qla2xxx/qla_iocb.c   | 10 ++--------
- drivers/scsi/qla2xxx/qla_target.c |  5 +----
- 3 files changed, 4 insertions(+), 14 deletions(-)
+> On Feb 13, 2018, at 2:54 AM, John Garry <john.garry@huawei.com> wrote:
+>=20
+> On 12/02/2018 18:28, Himanshu Madhani wrote:
+>> This patch fixes NULL pointer crash due to active timer running
+>> for abort IOCB.
+>>=20
+>>> From crash dump analysis it was discoverd that get_next_timer_interrupt=
+()
+>> encountered a corrupted entry on the timer list.
+>>=20
+>> #9 [ffff95e1f6f0fd40] page_fault at ffffffff914fe8f8
+>>    [exception RIP: get_next_timer_interrupt+440]
+>>    RIP: ffffffff90ea3088  RSP: ffff95e1f6f0fdf0  RFLAGS: 00010013
+>>    RAX: ffff95e1f6451028  RBX: 000218e2389e5f40  RCX: 00000001232ad600
+>>    RDX: 0000000000000001  RSI: ffff95e1f6f0fdf0  RDI: 0000000001232ad6
+>>    RBP: ffff95e1f6f0fe40   R8: ffff95e1f6451188   R9: 0000000000000001
+>>    R10: 0000000000000016  R11: 0000000000000016  R12: 00000001232ad5f6
+>>    R13: ffff95e1f6450000  R14: ffff95e1f6f0fdf8  R15: ffff95e1f6f0fe10
+>>    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+>>=20
+>> Looking at the assembly of get_next_timer_interrupt(), address came
+>> from %r8 (ffff95e1f6451188) which is pointing to list_head with single
+>> entry at ffff95e5ff621178.
+>>=20
+>> 0xffffffff90ea307a <get_next_timer_interrupt+426>:      mov    (%r8),%rd=
+x
+>> 0xffffffff90ea307d <get_next_timer_interrupt+429>:      cmp    %r8,%rdx
+>> 0xffffffff90ea3080 <get_next_timer_interrupt+432>:      je     0xfffffff=
+f90ea30a7 <get_next_timer_interrupt+471>
+>> 0xffffffff90ea3082 <get_next_timer_interrupt+434>:      nopw   0x0(%rax,=
+%rax,1)
+>> 0xffffffff90ea3088 <get_next_timer_interrupt+440>:      testb  $0x1,0x18=
+(%rdx)
+>>=20
+>> crash> rd ffff95e1f6451188 10
+>> ffff95e1f6451188:  ffff95e5ff621178 ffff95e5ff621178   x.b.....x.b.....
+>> ffff95e1f6451198:  ffff95e1f6451198 ffff95e1f6451198   ..E.......E.....
+>> ffff95e1f64511a8:  ffff95e1f64511a8 ffff95e1f64511a8   ..E.......E.....
+>> ffff95e1f64511b8:  ffff95e77cf509a0 ffff95e77cf509a0   ...|.......|....
+>> ffff95e1f64511c8:  ffff95e1f64511c8 ffff95e1f64511c8   ..E.......E.....
+>>=20
+>> crash> rd ffff95e5ff621178 10
+>> ffff95e5ff621178:  0000000000000001 ffff95e15936aa00   ..........6Y....
+>> ffff95e5ff621188:  0000000000000000 00000000ffffffff   ................
+>> ffff95e5ff621198:  00000000000000a0 0000000000000010   ................
+>> ffff95e5ff6211a8:  ffff95e5ff621198 000000000000000c   ..b.............
+>> ffff95e5ff6211b8:  00000f5800000000 ffff95e751f8d720   ....X... ..Q....
+>>=20
+>> ffff95e5ff621178 belongs to freed mempool object at ffff95e5ff621080.
+>>=20
+>> CACHE            NAME                 OBJSIZE  ALLOCATED     TOTAL  SLAB=
+S  SSIZE
+>> ffff95dc7fd74d00 mnt_cache                384      19785     24948    59=
+4    16k
+>>   SLAB              MEMORY            NODE  TOTAL  ALLOCATED  FREE
+>>   ffffdc5dabfd8800  ffff95e5ff620000     1     42         29    13
+>>   FREE / [ALLOCATED]
+>>    ffff95e5ff621080  (cpu 6 cache)
+>>=20
+>> Examining the contents of that memory reveals a pointer to a constant
+>> string in the driver, "abort\0", which is set by qla24xx_async_abort_cmd=
+().
+>>=20
+>> crash> rd ffffffffc059277c 20
+>> ffffffffc059277c:  6e490074726f6261 0074707572726574   abort.Interrupt.
+>> ffffffffc059278c:  00676e696c6c6f50 6920726576697244   Polling.Driver i
+>> ffffffffc059279c:  646f6d207325206e 6974736554000a65   n %s mode..Testi
+>> ffffffffc05927ac:  636976656420676e 786c252074612065   ng device at %lx
+>> ffffffffc05927bc:  6b63656843000a2e 646f727020676e69   ...Checking prod
+>> ffffffffc05927cc:  6f20444920746375 0a2e706968632066   uct ID of chip..
+>> ffffffffc05927dc:  5120646e756f4600 204130303232414c   .Found QLA2200A
+>> ffffffffc05927ec:  43000a2e70696843 20676e696b636568   Chip...Checking
+>> ffffffffc05927fc:  65786f626c69616d 6c636e69000a2e73   mailboxes...incl
+>> ffffffffc059280c:  756e696c2f656475 616d2d616d642f78   ude/linux/dma-ma
+>>=20
+>> crash> struct -ox srb_iocb
+>> struct srb_iocb {
+>>           union {
+>>               struct {...} logio;
+>>               struct {...} els_logo;
+>>               struct {...} tmf;
+>>               struct {...} fxiocb;
+>>               struct {...} abt;
+>>               struct ct_arg ctarg;
+>>               struct {...} mbx;
+>>               struct {...} nack;
+>>    [0x0 ] } u;
+>>    [0xb8] struct timer_list timer;
+>>    [0x108] void (*timeout)(void *);
+>> }
+>> SIZE: 0x110
+>>=20
+>> crash> ! bc
+>> ibase=3D16
+>> obase=3D10
+>> B8+40
+>> F8
+>>=20
+>> The object is a srb_t, and at offset 0xf8 within that structure
+>> (i.e. ffff95e5ff621080 + f8 -> ffff95e5ff621178) is a struct timer_list.
+>>=20
+>> Cc: <stable@vger.stable.com> #4.4+
+>> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+>> ---
+>> Hi Martin,
+>>=20
+>> This patch addresses crash due to NULL pointer access because driver
+>> left active timer running for abort IOCB.
+>>=20
+>> Please apply this patch to 4.16/scsi-fixes at your earliest convenience.
+>>=20
+>> Thanks,
+>> Himanshu
+>> ---
+>> drivers/scsi/qla2xxx/qla_init.c | 1 +
+>> 1 file changed, 1 insertion(+)
+>>=20
+>> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_=
+init.c
+>> index 2dea1129d396..04870621e712 100644
+>> --- a/drivers/scsi/qla2xxx/qla_init.c
+>> +++ b/drivers/scsi/qla2xxx/qla_init.c
+>> @@ -1527,6 +1527,7 @@ `(void *ptr, int res)
+>> 	srb_t *sp =3D ptr;
+>> 	struct srb_iocb *abt =3D &sp->u.iocb_cmd;
+>>=20
+>> +	del_timer(&sp->u.iocb_cmd.timer);
+>=20
+> Hi,
+>=20
+> I am not familiar with this code. But I note that this abort seems to be =
+"asynchronous" (I see it's setup in qla24xx_async_abort_cmd()), so do you n=
+eed the "sync" variant of del_timer() for safety? This would be to ensure t=
+he timeout has not actually occurred and is racing with the "done" callback=
+?
+>=20
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index e2d5d3c..c11a89b 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -1035,7 +1035,7 @@
- 	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
- 		bsg_job->request_payload.sg_cnt, fw_buf, data_len);
+after reviewing code for the usage of timer i see that qla24xx_async_abort_=
+cmd() would not be adding timer back even though the call is
+asynchronous. I think its safe to use only del_timer().=20
 
--	mn = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &mn_dma);
-+	mn = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &mn_dma);
- 	if (!mn) {
- 		ql_log(ql_log_warn, vha, 0x7036,
- 		    "DMA alloc failed for fw buffer.\n");
-@@ -1046,7 +1046,6 @@
- 	flag = bsg_request->rqst_data.h_vendor.vendor_cmd[1];
- 	fw_ver = le32_to_cpu(*((uint32_t *)((uint32_t *)fw_buf + 2)));
+> Thanks,
+> John
+>=20
+>> 	complete(&abt->u.abt.comp);
+>> }
 
--	memset(mn, 0, sizeof(struct access_chip_84xx));
- 	mn->entry_type = VERIFY_CHIP_IOCB_TYPE;
- 	mn->entry_count = 1;
-
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 1b62e94..1796866 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -1203,7 +1203,6 @@ struct fw_dif_context {
- 	uint32_t		dif_bytes;
- 	uint8_t			bundling = 1;
- 	uint16_t		blk_size;
--	uint8_t			*clr_ptr;
- 	struct crc_context	*crc_ctx_pkt = NULL;
- 	struct qla_hw_data	*ha;
- 	uint8_t			additional_fcpcdb_len;
-@@ -1245,15 +1244,11 @@ struct fw_dif_context {
-
- 	/* Allocate CRC context from global pool */
- 	crc_ctx_pkt = sp->u.scmd.ctx =
--	    dma_pool_alloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
-+	    dma_pool_zalloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
-
- 	if (!crc_ctx_pkt)
- 		goto crc_queuing_error;
-
--	/* Zero out CTX area. */
--	clr_ptr = (uint8_t *)crc_ctx_pkt;
--	memset(clr_ptr, 0, sizeof(*crc_ctx_pkt));
--
- 	crc_ctx_pkt->crc_ctx_dma = crc_ctx_dma;
-
- 	sp->flags |= SRB_CRC_CTX_DMA_VALID;
-@@ -3067,7 +3062,7 @@ struct fw_dif_context {
- 		}
-
- 		memset(ctx, 0, sizeof(struct ct6_dsd));
--		ctx->fcp_cmnd = dma_pool_alloc(ha->fcp_cmnd_dma_pool,
-+		ctx->fcp_cmnd = dma_pool_zalloc(ha->fcp_cmnd_dma_pool,
- 			GFP_ATOMIC, &ctx->fcp_cmnd_dma);
- 		if (!ctx->fcp_cmnd) {
- 			ql_log(ql_log_fatal, vha, 0x3011,
-@@ -3120,7 +3115,6 @@ struct fw_dif_context {
- 		host_to_fcp_swap((uint8_t *)&cmd_pkt->lun, sizeof(cmd_pkt->lun));
-
- 		/* build FCP_CMND IU */
--		memset(ctx->fcp_cmnd, 0, sizeof(struct fcp_cmnd));
- 		int_to_scsilun(cmd->device->lun, &ctx->fcp_cmnd->lun);
- 		ctx->fcp_cmnd->additional_cdb_len = additional_cdb_len;
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index fc89af8..17ab939 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2871,7 +2871,6 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
- 	uint32_t		data_bytes;
- 	uint32_t		dif_bytes;
- 	uint8_t			bundling = 1;
--	uint8_t			*clr_ptr;
- 	struct crc_context	*crc_ctx_pkt = NULL;
- 	struct qla_hw_data	*ha;
- 	struct ctio_crc2_to_fw	*pkt;
-@@ -3000,14 +2999,12 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
-
- 	/* Allocate CRC context from global pool */
- 	crc_ctx_pkt = cmd->ctx =
--	    dma_pool_alloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
-+	    dma_pool_zalloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
-
- 	if (!crc_ctx_pkt)
- 		goto crc_queuing_error;
-
- 	/* Zero out CTX area. */
--	clr_ptr = (uint8_t *)crc_ctx_pkt;
--	memset(clr_ptr, 0, sizeof(*crc_ctx_pkt));
-
- 	crc_ctx_pkt->crc_ctx_dma = crc_ctx_dma;
- 	INIT_LIST_HEAD(&crc_ctx_pkt->dsd_list);
---
-1.9.1
+Thanks,
+- Himanshu
