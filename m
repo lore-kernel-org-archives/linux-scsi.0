@@ -1,36 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Fwd: All scsi_debug devices in the scsi_debug driver share the same RAM space
-Date: Tue, 13 Feb 2018 21:14:45 -0500
-Message-ID: <yq11shoqpuy.fsf@oracle.com>
-References: <1517686992.18584.8.camel@redhat.com>
-        <1517841151.11655.1.camel@redhat.com>
-        <CAM4Jq_43+JrSTvXsq7kgRLikqHb2iwFMYKTBuQjQ5h2Dn1ka+A@mail.gmail.com>
-        <CAM4Jq_5yHhEWU6hvUfJVnCpyCk0QPMHhZ7cY3Eum540124ukeQ@mail.gmail.com>
+Subject: Re: [bug report] scsi: myrs: Add Mylex RAID controller (SCSI interface)
+Date: Tue, 13 Feb 2018 21:22:45 -0500
+Message-ID: <yq1wozgpax6.fsf@oracle.com>
+References: <20180213143727.GA21178@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57914 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:35418 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966429AbeBNCOu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 21:14:50 -0500
-In-Reply-To: <CAM4Jq_5yHhEWU6hvUfJVnCpyCk0QPMHhZ7cY3Eum540124ukeQ@mail.gmail.com>
-        (Lukas Herbolt's message of "Mon, 12 Feb 2018 16:04:59 +0100")
+        with ESMTP id S966382AbeBNCWv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2018 21:22:51 -0500
+In-Reply-To: <20180213143727.GA21178@mwanda> (Dan Carpenter's message of "Tue,
+        13 Feb 2018 17:37:27 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lukas Herbolt <lherbolt@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: hare@suse.de
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org
 
 
-Lukas,
+Hannes,
 
-> I like the idea to have an option to separate the memory area for
-> different LUNs, while keeping the current behavior as default.
+> The patch 8a8606895947: "scsi: myrs: Add Mylex RAID controller (SCSI
+> interface)" from Jan 24, 2018, leads to the following static checker
+> warning:
 
-As the name implies, scsi_debug is mostly a tool for debugging the SCSI
-stack.
-
-If you care about storing data, why not simply use target in loopback
-mode?
+I dropped the two Mylex patches from 4.17/scsi-queue for now. Please fix
+the issues reported and repost.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
