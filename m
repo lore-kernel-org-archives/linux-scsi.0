@@ -1,25 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 06/13] lpfc: Add 64G link speed support
-Date: Wed, 14 Feb 2018 10:40:36 +0100
-Message-ID: <20180214094036.zsn7dzrqigugiyga@linux-x5ow.site>
+Subject: Re: [PATCH v3 09/13] lpfc: Add embedded data pointers for enhanced
+ performance
+Date: Wed, 14 Feb 2018 10:40:54 +0100
+Message-ID: <20180214094054.ohwiahfxz4lytc2u@linux-x5ow.site>
 References: <20180213193457.21206-1-jsmart2021@gmail.com>
- <20180213193457.21206-7-jsmart2021@gmail.com>
+ <20180213193457.21206-10-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54198 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54229 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966503AbeBNJki (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Feb 2018 04:40:38 -0500
+        id S966503AbeBNJk4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Feb 2018 04:40:56 -0500
 Content-Disposition: inline
-In-Reply-To: <20180213193457.21206-7-jsmart2021@gmail.com>
+In-Reply-To: <20180213193457.21206-10-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Looks good,
+Thanks James,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
