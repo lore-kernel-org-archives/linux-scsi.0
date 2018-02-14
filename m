@@ -1,104 +1,44 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] libsas: Fix kernel-doc headers
-Date: Wed, 14 Feb 2018 16:29:39 +0000
-Message-ID: <409ec182-c8bc-50e9-cd12-14abac4f8621@huawei.com>
-References: <20180212184500.26562-1-bart.vanassche@wdc.com>
- <34669efa-8426-97f8-5054-03e3bfd7e922@huawei.com>
- <37878dc7-1000-9046-b29c-99bbd95ff326@wdc.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [V1] mpt3sas: Do not use 32-bit atomic request descriptor for
+ Ventura controllers.
+Date: Wed, 14 Feb 2018 18:07:47 +0100
+Message-ID: <fcff8324-229c-7c24-432e-c303128be77e@redhat.com>
+References: <1518603397-3941-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:37434 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1032397AbeBNQ34 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Feb 2018 11:29:56 -0500
-In-Reply-To: <37878dc7-1000-9046-b29c-99bbd95ff326@wdc.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58846 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1033141AbeBNRHt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Feb 2018 12:07:49 -0500
+In-Reply-To: <1518603397-3941-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Content-Language: en-MW
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com
 
-On 13/02/2018 17:49, Bart Van Assche wrote:
-> On 02/13/18 02:17, John Garry wrote:
->> On 12/02/2018 18:45, Bart Van Assche wrote:
->>> [ ... ]
->>> -/**
->>> +/*
->>>   * sas_init_disc -- initialize the discovery struct in the port
->>>   * @port: pointer to struct port
->>
->> I wonder why you get no complaint that @disc argument is not mentioned,
+On 02/14/2018 11:16 AM, Suganath Prabu S wrote:
+> Problem Statement: Sending I/O through 32 bit descriptors to
+>  Ventura series of controller results in IO timeout on certain conditions.
 >
-
-Hi Bart,
-
-> Hello John,
+> This error only occurs on systems with high I/O activity on
+> Ventura series controllers.
 >
-> Since I was not sure how to document the 'disc' argument I changed /**
-> into /* to make the kernel-doc tool skip the sas_init_disc() function.
-> Any suggestion for how to document the 'disc' argument would be welcome.
-
-I see now.
-
-For this @disc pointer, I would just write "port discovery structure".
-
-In fact I think that we could just change the code to accept the @port 
-argument, as the @disc argument is the port->disc. But that's another job.
-
+> Changes in this patch will prevent driver from using 32 bit descriptor
+> and use 64 bit Descriptors
 >
->>>
->>> -/**
->>> +/*
->>>   * sas_configure_parent -- configure routing table of parent
->>> - * parent: parent expander
->>> - * child: child expander
->>> - * sas_addr: SAS port identifier of device directly attached to child
->>> + * @parent: parent expander
->>> + * @child: child expander
->>> + * @sas_addr: SAS port identifier of device directly attached to child
->>
->> and no mention of @include here
+> V1 Change set:
+> 1) In this patch removed callbacks as suggested by Hannes.
 >
-> Also for the 'include' argument, a suggestion of how to document it
-> would be welcome.
+> Note:
+>  This patch Should be applied on top of
+> https://www.spinics.net/lists/linux-scsi/msg117405.html
+> "Adding MPI Endpoint device support" patches.
+>
+> Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-To be honest, I am not so fimilar with this specific part of the code.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-As I see, the @include argument is to flag whether we want to setup or 
-tear down a routing for parent (upstream) expander device.
-
-I am not 100% sure on this so you could stick with making it a 
-non-kerneldoc comments. It is static.
-
->
->>>  /**
->>>   * sas_revalidate_domain -- revalidate the domain
->>
->> This function name seems incorrect. [ ... ]  And I would write "port
->> domain device"
->
-> Thanks, will fix.
->
->>> -/**
->>> +/*
->>
->> If the build does not complain about this for W=1, then should we
->> include it? I ask, as I see many other instances of "/**". I don't
->> mind cleaning them up in a separate patch.
->
-> The kernel-doc tool only analyzes function headers that start with
-> "/**". Any changes of "/**" into "/*" mean that I did not know how to
-> document the arguments about which the kernel-doc tool complained that
-> documentation was missing.
->
-> Thanks,
->
-> Bart.
->
-> .
-
-Regards,
-John
-
->
+Tomas
