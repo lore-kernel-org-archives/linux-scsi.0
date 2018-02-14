@@ -1,103 +1,129 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH v1] scsi: mpt3sas: Use lo_hi_writeq() helper
-Date: Wed, 14 Feb 2018 12:01:30 -0800
-Message-ID: <1518638490.3223.37.camel@linux.vnet.ibm.com>
-References: <20180214181034.36529-1-andriy.shevchenko@linux.intel.com>
-         <1518637235.3223.32.camel@linux.vnet.ibm.com>
-         <1518637717.22495.344.camel@linux.intel.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: [PATCH v2] scsi: qla2xxx: Use dma_pool_zalloc()
+Date: Thu, 15 Feb 2018 01:40:38 +0530
+Message-ID: <20180214201038.GA6578@jordon-HP-15-Notebook-PC>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42484 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S967798AbeBNUC3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Feb 2018 15:02:29 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1EK2IH2020067
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2018 15:02:28 -0500
-Received: from e15.ny.us.ibm.com (e15.ny.us.ibm.com [129.33.205.205])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2g4te13ckh-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2018 15:02:21 -0500
-Received: from localhost
-        by e15.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Wed, 14 Feb 2018 15:01:36 -0500
-In-Reply-To: <1518637717.22495.344.camel@linux.intel.com>
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:42826 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031318AbeBNUJW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Feb 2018 15:09:22 -0500
+Received: by mail-pl0-f68.google.com with SMTP id 31so3630155ple.9
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2018 12:09:21 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2018-02-14 at 21:48 +0200, Andy Shevchenko wrote:
-> On Wed, 2018-02-14 at 11:40 -0800, James Bottomley wrote:
-> > 
-> > On Wed, 2018-02-14 at 20:10 +0200, Andy Shevchenko wrote:
-> > > 
-> > > Since we have a writeq() for 32-bit architectures as provided by
-> > > IO
-> > > non-atomic helpers, there is no need to open code it.
-> > > 
-> > > Moreover sparse complains about this:
-> > > 
-> > > drivers/scsi/mpt3sas/mpt3sas_base.c:2975:16: expected unsigned
-> > > long
-> > > long val
-> > > drivers/scsi/mpt3sas/mpt3sas_base.c:2975:16: got restricted
-> > > __le64
-> > > <noident>
-> > > 
-> > > Fixing this by replacing custom writeq() with one provided by
-> > > io-64-nonatomic-lo-hi.h header.
-> > > 
-> 
-> > 
-> > > 
-> > > -#if defined(writeq) && defined(CONFIG_64BIT)
-> > > -static inline void
-> > > -_base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t
-> > > *writeq_lock)
-> > > -{
-> > > -	writeq(cpu_to_le64(b), addr);
-> > > -}
-> > > -#else
-> > >  static inline void
-> > >  _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t
-> > > *writeq_lock)
-> > >  {
-> > > @@ -2985,11 +2979,9 @@ _base_writeq(__u64 b, volatile void
-> > > __iomem
-> > > *addr, spinlock_t *writeq_lock)
-> > >  	__u64 data_out = cpu_to_le64(b);
-> > >  
-> > >  	spin_lock_irqsave(writeq_lock, flags);
-> > > -	writel((u32)(data_out), addr);
-> > > -	writel((u32)(data_out >> 32), (addr + 4));
-> > > +	writeq(data_out, addr);
-> > >  	spin_unlock_irqrestore(writeq_lock, flags);
-> > >  }
-> > > -#endif
-> > 
-> > This would rather defeat the purpose of the original code, I think.
-> 
-> James, TBH, I don't see any value of that lock. What it's protecting
-> from? simultaneous thread doing writeq()? But this is pointless if at
-> the same time you will have writel() to the device.
+Use dma_pool_zalloc() instead of dma_pool_alloc + memset
 
-The lock prevents two threads doing an interleaved write to this
-specific address which could be caused by two threads writing to the
-same address.  If I remember correctly the firmware hangs in that case.
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+---
 
-> For my opinion perhaps complete removal of the custom writeq() and
-> replacing it by just writeq() with enabled non-atomic helpers will do
-> the job.
-> 
-> The code is very old, and I have no idea why it's done this (strange)
-> way.
+v2: Remove extra line and comment
 
-The write seems to trigger starting the engine on the HBA if you look
-at the code, which is why it must be written completely and in order.
- It's equivalent to a mailbox post.
+ drivers/scsi/qla2xxx/qla_bsg.c    |  3 +--
+ drivers/scsi/qla2xxx/qla_iocb.c   | 10 ++--------
+ drivers/scsi/qla2xxx/qla_target.c |  7 +------
+ 3 files changed, 4 insertions(+), 16 deletions(-)
 
-James
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index e2d5d3c..c11a89b 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1035,7 +1035,7 @@
+ 	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+ 		bsg_job->request_payload.sg_cnt, fw_buf, data_len);
+
+-	mn = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &mn_dma);
++	mn = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &mn_dma);
+ 	if (!mn) {
+ 		ql_log(ql_log_warn, vha, 0x7036,
+ 		    "DMA alloc failed for fw buffer.\n");
+@@ -1046,7 +1046,6 @@
+ 	flag = bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+ 	fw_ver = le32_to_cpu(*((uint32_t *)((uint32_t *)fw_buf + 2)));
+
+-	memset(mn, 0, sizeof(struct access_chip_84xx));
+ 	mn->entry_type = VERIFY_CHIP_IOCB_TYPE;
+ 	mn->entry_count = 1;
+
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 1b62e94..1796866 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1203,7 +1203,6 @@ struct fw_dif_context {
+ 	uint32_t		dif_bytes;
+ 	uint8_t			bundling = 1;
+ 	uint16_t		blk_size;
+-	uint8_t			*clr_ptr;
+ 	struct crc_context	*crc_ctx_pkt = NULL;
+ 	struct qla_hw_data	*ha;
+ 	uint8_t			additional_fcpcdb_len;
+@@ -1245,15 +1244,11 @@ struct fw_dif_context {
+
+ 	/* Allocate CRC context from global pool */
+ 	crc_ctx_pkt = sp->u.scmd.ctx =
+-	    dma_pool_alloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
++	    dma_pool_zalloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
+
+ 	if (!crc_ctx_pkt)
+ 		goto crc_queuing_error;
+
+-	/* Zero out CTX area. */
+-	clr_ptr = (uint8_t *)crc_ctx_pkt;
+-	memset(clr_ptr, 0, sizeof(*crc_ctx_pkt));
+-
+ 	crc_ctx_pkt->crc_ctx_dma = crc_ctx_dma;
+
+ 	sp->flags |= SRB_CRC_CTX_DMA_VALID;
+@@ -3067,7 +3062,7 @@ struct fw_dif_context {
+ 		}
+
+ 		memset(ctx, 0, sizeof(struct ct6_dsd));
+-		ctx->fcp_cmnd = dma_pool_alloc(ha->fcp_cmnd_dma_pool,
++		ctx->fcp_cmnd = dma_pool_zalloc(ha->fcp_cmnd_dma_pool,
+ 			GFP_ATOMIC, &ctx->fcp_cmnd_dma);
+ 		if (!ctx->fcp_cmnd) {
+ 			ql_log(ql_log_fatal, vha, 0x3011,
+@@ -3120,7 +3115,6 @@ struct fw_dif_context {
+ 		host_to_fcp_swap((uint8_t *)&cmd_pkt->lun, sizeof(cmd_pkt->lun));
+
+ 		/* build FCP_CMND IU */
+-		memset(ctx->fcp_cmnd, 0, sizeof(struct fcp_cmnd));
+ 		int_to_scsilun(cmd->device->lun, &ctx->fcp_cmnd->lun);
+ 		ctx->fcp_cmnd->additional_cdb_len = additional_cdb_len;
+
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index fc89af8..3b52bcd 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2871,7 +2871,6 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
+ 	uint32_t		data_bytes;
+ 	uint32_t		dif_bytes;
+ 	uint8_t			bundling = 1;
+-	uint8_t			*clr_ptr;
+ 	struct crc_context	*crc_ctx_pkt = NULL;
+ 	struct qla_hw_data	*ha;
+ 	struct ctio_crc2_to_fw	*pkt;
+@@ -3000,15 +2999,11 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
+
+ 	/* Allocate CRC context from global pool */
+ 	crc_ctx_pkt = cmd->ctx =
+-	    dma_pool_alloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
++	    dma_pool_zalloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
+
+ 	if (!crc_ctx_pkt)
+ 		goto crc_queuing_error;
+
+-	/* Zero out CTX area. */
+-	clr_ptr = (uint8_t *)crc_ctx_pkt;
+-	memset(clr_ptr, 0, sizeof(*crc_ctx_pkt));
+-
+ 	crc_ctx_pkt->crc_ctx_dma = crc_ctx_dma;
+ 	INIT_LIST_HEAD(&crc_ctx_pkt->dsd_list);
+
+--
+1.9.1
