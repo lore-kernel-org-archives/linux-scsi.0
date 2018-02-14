@@ -1,165 +1,608 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v2] scsi_debug: call resp_*() function after setting host_scribble
-Date: Wed, 14 Feb 2018 11:05:57 +0100
-Message-ID: <20180214100557.30717-1-mwilck@suse.com>
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [V1] mpt3sas: Do not use 32-bit atomic request descriptor for Ventura controllers.
+Date: Wed, 14 Feb 2018 02:16:37 -0800
+Message-ID: <1518603397-3941-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:50151 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966959AbeBNKGl (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Wed, 14 Feb 2018 05:06:41 -0500
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:41260 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966996AbeBNKQ4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Feb 2018 05:16:56 -0500
+Received: by mail-qk0-f174.google.com with SMTP id h129so6033286qke.8
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2018 02:16:56 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, chaitra.basappa@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-Error injection in scsi_debug (e.g. opts=16, SDEBUG_OPT_TRANSPORT_ERR)
-currently doesn't work correctly because the test for sqcp in
-resp_read_dt0() and similar resp_*() functions always fails.
-sqcp is set from cmnd->host_scribble, which is set in schedule_resp(), which
-is called from scsi_debug_queuecommand() after calling the resp_* function.
+Problem Statement: Sending I/O through 32 bit descriptors to
+ Ventura series of controller results in IO timeout on certain conditions.
 
-Defer calling resp_*() until after cmnd->host_scribble is
-set in schedule_resp().
+This error only occurs on systems with high I/O activity on
+Ventura series controllers.
 
-Fixes: c483739430f1 "scsi_debug: add multiple queue support"
+Changes in this patch will prevent driver from using 32 bit descriptor
+and use 64 bit Descriptors
 
-Changes in v2: Adapted to code changes after 80c49563e250
-	"scsi: scsi_debug: implement IMMED bit"
+V1 Change set:
+1) In this patch removed callbacks as suggested by Hannes.
 
-Notes about this adaptation:
+Note:
+ This patch Should be applied on top of
+https://www.spinics.net/lists/linux-scsi/msg117405.html
+"Adding MPI Endpoint device support" patches.
 
-The "flags &= ~F_LONG_DELAY" statement in scsi_debug_queuecommand()
-from 80c49563e250 had no effect. Dropped it.
-Because we call the resp_*() function later now, the code flow in
-schedule_resp() is slightly different now for the IMMED case - instead of
-falling through to the "respond_in_thread" label immediately, the command will
-be put in the work queue with zero delay.
-
-Signed-off-by: Martin Wilck <mwilck@suse.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/scsi_debug.c | 53 +++++++++++++++++++++++++++++------------------
- 1 file changed, 33 insertions(+), 20 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 169 ++++---------------------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  11 +-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  22 ++--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     |  20 ++--
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |   8 +-
+ 6 files changed, 54 insertions(+), 178 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 905501075ec6..26ce022dd6f4 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4315,7 +4315,10 @@ static void setup_inject(struct sdebug_queue *sqp,
-  * SCSI_MLQUEUE_HOST_BUSY if temporarily out of resources.
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 1c29286..d7ecdf3 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1227,7 +1227,7 @@ _base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
+ 	ack_request->EventContext = mpi_reply->EventContext;
+ 	ack_request->VF_ID = 0;  /* TODO */
+ 	ack_request->VP_ID = 0;
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 
+  out:
+ 
+@@ -3420,15 +3420,15 @@ _base_put_smid_scsi_io(struct MPT3SAS_ADAPTER *ioc, u16 smid, u16 handle)
+ }
+ 
+ /**
+- * _base_put_smid_fast_path - send fast path request to firmware
++ * mpt3sas_base_put_smid_fast_path - send fast path request to firmware
+  * @ioc: per adapter object
+  * @smid: system request message index
+  * @handle: device handle
+  *
+  * Return nothing.
   */
- static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
--			 int scsi_result, int delta_jiff, int ndelay)
-+			 int scsi_result,
-+			 int (*pfp)(struct scsi_cmnd *,
-+				    struct sdebug_dev_info *),
-+			 int delta_jiff, int ndelay)
+-static void
+-_base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++void
++mpt3sas_base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	u16 handle)
  {
- 	unsigned long iflags;
- 	int k, num_in_q, qdepth, inject;
-@@ -4331,9 +4334,6 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 	}
- 	sdp = cmnd->device;
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+@@ -3445,14 +3445,14 @@ _base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ }
  
--	if (unlikely(sdebug_verbose && scsi_result))
--		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
--			    __func__, scsi_result);
- 	if (delta_jiff == 0)
- 		goto respond_in_thread;
+ /**
+- * _base_put_smid_hi_priority - send Task Management request to firmware
++ * mpt3sas_base_put_smid_hi_priority - send Task Management request to firmware
+  * @ioc: per adapter object
+  * @smid: system request message index
+  * @msix_task: msix_task will be same as msix of IO incase of task abort else 0.
+  * Return nothing.
+  */
+-static void
+-_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++void
++mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	u16 msix_task)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+@@ -3490,15 +3490,15 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ }
  
-@@ -4388,7 +4388,6 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 	sqcp = &sqp->qc_arr[k];
- 	sqcp->a_cmnd = cmnd;
- 	cmnd->host_scribble = (unsigned char *)sqcp;
--	cmnd->result = scsi_result;
- 	sd_dp = sqcp->sd_dp;
- 	spin_unlock_irqrestore(&sqp->qc_lock, iflags);
- 	if (unlikely(sdebug_every_nth && sdebug_any_injecting_opt))
-@@ -4398,6 +4397,22 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 		if (sd_dp == NULL)
- 			return SCSI_MLQUEUE_HOST_BUSY;
- 	}
-+
-+	cmnd->result = pfp != NULL ? pfp(cmnd, devip) : 0;
-+	if (cmnd->result & SDEG_RES_IMMED_MASK) {
-+		/*
-+		 * This is the F_DELAY_OVERR case. No delay.
-+		 */
-+		cmnd->result &= ~SDEG_RES_IMMED_MASK;
-+		delta_jiff = ndelay = 0;
-+	}
-+	if (cmnd->result == 0 && scsi_result != 0)
-+		cmnd->result = scsi_result;
-+
-+	if (unlikely(sdebug_verbose && cmnd->result))
-+		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
-+			    __func__, cmnd->result);
-+
- 	if (delta_jiff > 0 || ndelay > 0) {
- 		ktime_t kt;
+ /**
+- * _base_put_smid_nvme_encap - send NVMe encapsulated request to
++ * mpt3sas_base_put_smid_nvme_encap - send NVMe encapsulated request to
+  *  firmware
+  * @ioc: per adapter object
+  * @smid: system request message index
+  *
+  * Return nothing.
+  */
+-static void
+-_base_put_smid_nvme_encap(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++void
++mpt3sas_base_put_smid_nvme_encap(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+ 	u64 *request = (u64 *)&descriptor;
+@@ -3514,14 +3514,14 @@ _base_put_smid_nvme_encap(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ }
  
-@@ -4440,7 +4455,10 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 	return 0;
+ /**
+- * _base_put_smid_default - Default, primarily used for config pages
++ * mpt3sas_base_put_smid_default - Default, primarily used for config pages
+  * @ioc: per adapter object
+  * @smid: system request message index
+  *
+  * Return nothing.
+  */
+-static void
+-_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++void
++mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	Mpi2RequestDescriptorUnion_t descriptor;
+ 	void *mpi_req_iomem;
+@@ -3556,116 +3556,6 @@ _base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ }
  
- respond_in_thread:	/* call back to mid-layer using invocation thread */
--	cmnd->result = scsi_result;
-+	cmnd->result = pfp != NULL ? pfp(cmnd, devip) : 0;
-+	cmnd->result &= ~SDEG_RES_IMMED_MASK;
-+	if (cmnd->result == 0 && scsi_result != 0)
-+		cmnd->result = scsi_result;
- 	cmnd->scsi_done(cmnd);
+ /**
+-* _base_put_smid_scsi_io_atomic - send SCSI_IO request to firmware using
+-*   Atomic Request Descriptor
+-* @ioc: per adapter object
+-* @smid: system request message index
+-* @handle: device handle, unused in this function, for function type match
+-*
+-* Return nothing.
+-*/
+-static void
+-_base_put_smid_scsi_io_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+-	u16 handle)
+-{
+-	Mpi26AtomicRequestDescriptor_t descriptor;
+-	u32 *request = (u32 *)&descriptor;
+-
+-	descriptor.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO;
+-	descriptor.MSIxIndex = _base_get_msix_index(ioc);
+-	descriptor.SMID = cpu_to_le16(smid);
+-
+-	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
+-}
+-
+-/**
+- * _base_put_smid_fast_path_atomic - send fast path request to firmware
+- * using Atomic Request Descriptor
+- * @ioc: per adapter object
+- * @smid: system request message index
+- * @handle: device handle, unused in this function, for function type match
+- * Return nothing
+- */
+-static void
+-_base_put_smid_fast_path_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+-	u16 handle)
+-{
+-	Mpi26AtomicRequestDescriptor_t descriptor;
+-	u32 *request = (u32 *)&descriptor;
+-
+-	descriptor.RequestFlags = MPI25_REQ_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO;
+-	descriptor.MSIxIndex = _base_get_msix_index(ioc);
+-	descriptor.SMID = cpu_to_le16(smid);
+-
+-	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
+-}
+-
+-/**
+- * _base_put_smid_hi_priority_atomic - send Task Management request to
+- * firmware using Atomic Request Descriptor
+- * @ioc: per adapter object
+- * @smid: system request message index
+- * @msix_task: msix_task will be same as msix of IO incase of task abort else 0
+- *
+- * Return nothing.
+- */
+-static void
+-_base_put_smid_hi_priority_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+-	u16 msix_task)
+-{
+-	Mpi26AtomicRequestDescriptor_t descriptor;
+-	u32 *request = (u32 *)&descriptor;
+-
+-	descriptor.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY;
+-	descriptor.MSIxIndex = msix_task;
+-	descriptor.SMID = cpu_to_le16(smid);
+-
+-	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
+-}
+-
+-/**
+- * _base_put_smid_nvme_encap_atomic - send NVMe encapsulated request to
+- *   firmware using Atomic Request Descriptor
+- * @ioc: per adapter object
+- * @smid: system request message index
+- *
+- * Return nothing.
+- */
+-static void
+-_base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+-{
+-	Mpi26AtomicRequestDescriptor_t descriptor;
+-	u32 *request = (u32 *)&descriptor;
+-
+-	descriptor.RequestFlags = MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
+-	descriptor.MSIxIndex = _base_get_msix_index(ioc);
+-	descriptor.SMID = cpu_to_le16(smid);
+-
+-	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
+-}
+-
+-/**
+- * _base_put_smid_default - Default, primarily used for config pages
+- * use Atomic Request Descriptor
+- * @ioc: per adapter object
+- * @smid: system request message index
+- *
+- * Return nothing.
+- */
+-static void
+-_base_put_smid_default_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+-{
+-	Mpi26AtomicRequestDescriptor_t descriptor;
+-	u32 *request = (u32 *)&descriptor;
+-
+-	descriptor.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_DEFAULT_TYPE;
+-	descriptor.MSIxIndex = _base_get_msix_index(ioc);
+-	descriptor.SMID = cpu_to_le16(smid);
+-
+-	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
+-}
+-
+-/**
+  * _base_display_OEMs_branding - Display branding string
+  * @ioc: per adapter object
+  *
+@@ -5243,7 +5133,7 @@ mpt3sas_base_sas_iounit_control(struct MPT3SAS_ADAPTER *ioc,
+ 	    mpi_request->Operation == MPI2_SAS_OP_PHY_LINK_RESET)
+ 		ioc->ioc_link_reset_in_progress = 1;
+ 	init_completion(&ioc->base_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->base_cmds.done,
+ 	    msecs_to_jiffies(10000));
+ 	if ((mpi_request->Operation == MPI2_SAS_OP_PHY_HARD_RESET ||
+@@ -5343,7 +5233,7 @@ mpt3sas_base_scsi_enclosure_processor(struct MPT3SAS_ADAPTER *ioc,
+ 	ioc->base_cmds.smid = smid;
+ 	memcpy(request, mpi_request, sizeof(Mpi2SepReply_t));
+ 	init_completion(&ioc->base_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->base_cmds.done,
+ 	    msecs_to_jiffies(10000));
+ 	if (!(ioc->base_cmds.status & MPT3_CMD_COMPLETE)) {
+@@ -5528,8 +5418,6 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc)
+ 	if ((facts->IOCCapabilities &
+ 	      MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE) && (!reset_devices))
+ 		ioc->rdpq_array_capable = 1;
+-	if (facts->IOCCapabilities & MPI26_IOCFACTS_CAPABILITY_ATOMIC_REQ)
+-		ioc->atomic_desc_capable = 1;
+ 	facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
+ 	facts->IOCRequestFrameSize =
+ 	    le16_to_cpu(mpi_reply.IOCRequestFrameSize);
+@@ -5771,7 +5659,7 @@ _base_send_port_enable(struct MPT3SAS_ADAPTER *ioc)
+ 	mpi_request->Function = MPI2_FUNCTION_PORT_ENABLE;
+ 
+ 	init_completion(&ioc->port_enable_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->port_enable_cmds.done, 300*HZ);
+ 	if (!(ioc->port_enable_cmds.status & MPT3_CMD_COMPLETE)) {
+ 		pr_err(MPT3SAS_FMT "%s: timeout\n",
+@@ -5834,7 +5722,7 @@ mpt3sas_port_enable(struct MPT3SAS_ADAPTER *ioc)
+ 	memset(mpi_request, 0, sizeof(Mpi2PortEnableRequest_t));
+ 	mpi_request->Function = MPI2_FUNCTION_PORT_ENABLE;
+ 
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
  	return 0;
  }
-@@ -5628,6 +5646,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 	struct sdebug_dev_info *devip;
- 	u8 *cmd = scp->cmnd;
- 	int (*r_pfp)(struct scsi_cmnd *, struct sdebug_dev_info *);
-+	int (*pfp)(struct scsi_cmnd *, struct sdebug_dev_info *) = NULL;
- 	int k, na;
- 	int errsts = 0;
- 	u32 flags;
-@@ -5749,19 +5768,13 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 			return 0;	/* ignore command: make trouble */
+ 
+@@ -5953,7 +5841,7 @@ _base_event_notification(struct MPT3SAS_ADAPTER *ioc)
+ 		mpi_request->EventMasks[i] =
+ 		    cpu_to_le32(ioc->event_masks[i]);
+ 	init_completion(&ioc->base_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->base_cmds.done, 30*HZ);
+ 	if (!(ioc->base_cmds.status & MPT3_CMD_COMPLETE)) {
+ 		pr_err(MPT3SAS_FMT "%s: timeout\n",
+@@ -6467,23 +6355,10 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 		break;
  	}
- 	if (likely(oip->pfp))
--		errsts = oip->pfp(scp, devip);	/* calls a resp_* function */
--	else if (r_pfp)	/* if leaf function ptr NULL, try the root's */
--		errsts = r_pfp(scp, devip);
--	if (errsts & SDEG_RES_IMMED_MASK) {
--		errsts &= ~SDEG_RES_IMMED_MASK;
--		flags |= F_DELAY_OVERR;
--		flags &= ~F_LONG_DELAY;
+ 
+-	if (ioc->atomic_desc_capable) {
+-		ioc->put_smid_default = &_base_put_smid_default_atomic;
+-		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io_atomic;
+-		ioc->put_smid_fast_path = &_base_put_smid_fast_path_atomic;
+-		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority_atomic;
+-		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap_atomic;
+-	} else {
+-		ioc->put_smid_default = &_base_put_smid_default;
+-		if (ioc->is_mcpu_endpoint)
+-			ioc->put_smid_scsi_io = &_base_put_smid_mpi_ep_scsi_io;
+-		else
+-			ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
+-		ioc->put_smid_fast_path = &_base_put_smid_fast_path;
+-		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority;
+-		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap;
 -	}
 -
-+		pfp = oip->pfp;	/* calls a resp_* function */
++	if (ioc->is_mcpu_endpoint)
++		ioc->put_smid_scsi_io = &_base_put_smid_mpi_ep_scsi_io;
 +	else
-+		pfp = r_pfp;    /* if leaf function ptr NULL, try the root's */
++		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
  
- fini:
- 	if (F_DELAY_OVERR & flags)
--		return schedule_resp(scp, devip, errsts, 0, 0);
-+		return schedule_resp(scp, devip, errsts, pfp, 0, 0);
- 	else if ((sdebug_jdelay || sdebug_ndelay) && (flags & F_LONG_DELAY)) {
- 		/*
- 		 * If any delay is active, want F_LONG_DELAY to be at least 1
-@@ -5771,14 +5784,14 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		int jdelay = (sdebug_jdelay < 2) ? 1 : sdebug_jdelay;
+ 	/*
+ 	 * These function pointers for other requests that don't
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 4fd582b..68bffae 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1354,12 +1354,7 @@ struct MPT3SAS_ADAPTER {
+ 	void		*device_remove_in_progress;
+ 	u16		device_remove_in_progress_sz;
+ 	u8		is_gen35_ioc;
+-	u8		atomic_desc_capable;
+ 	PUT_SMID_IO_FP_HIP put_smid_scsi_io;
+-	PUT_SMID_IO_FP_HIP put_smid_fast_path;
+-	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
+-	PUT_SMID_DEFAULT put_smid_default;
+-	PUT_SMID_DEFAULT put_smid_nvme_encap;
  
- 		jdelay = mult_frac(USER_HZ * jdelay, HZ, USER_HZ);
--		return schedule_resp(scp, devip, errsts, jdelay, 0);
-+		return schedule_resp(scp, devip, errsts, pfp, jdelay, 0);
- 	} else
--		return schedule_resp(scp, devip, errsts, sdebug_jdelay,
-+		return schedule_resp(scp, devip, errsts, pfp, sdebug_jdelay,
- 				     sdebug_ndelay);
- check_cond:
--	return schedule_resp(scp, devip, check_condition_result, 0, 0);
-+	return schedule_resp(scp, devip, check_condition_result, NULL, 0, 0);
- err_out:
--	return schedule_resp(scp, NULL, DID_NO_CONNECT << 16, 0, 0);
-+	return schedule_resp(scp, NULL, DID_NO_CONNECT << 16, NULL, 0, 0);
+ };
+ 
+@@ -1400,6 +1395,12 @@ void *mpt3sas_base_get_pcie_sgl(struct MPT3SAS_ADAPTER *ioc, u16 smid);
+ dma_addr_t mpt3sas_base_get_pcie_sgl_dma(struct MPT3SAS_ADAPTER *ioc, u16 smid);
+ void mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc);
+ 
++void mpt3sas_base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++	u16 handle);
++void mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++	u16 msix_task);
++void mpt3sas_base_put_smid_nvme_encap(struct MPT3SAS_ADAPTER *ioc, u16 smid);
++void mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid);
+ /* hi-priority queue */
+ u16 mpt3sas_base_get_smid_hpr(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
+ u16 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index 0dba3c4..e87c76a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -403,7 +403,7 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 	memcpy(config_request, mpi_request, sizeof(Mpi2ConfigRequest_t));
+ 	_config_display_some_debug(ioc, smid, "config_request", NULL);
+ 	init_completion(&ioc->config_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->config_cmds.done, timeout*HZ);
+ 	if (!(ioc->config_cmds.status & MPT3_CMD_COMPLETE)) {
+ 		pr_err(MPT3SAS_FMT "%s: timeout\n",
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 1a6cddd..9e95227 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -820,7 +820,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
+-		ioc->put_smid_nvme_encap(ioc, smid);
++		mpt3sas_base_put_smid_nvme_encap(ioc, smid);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_SCSI_IO_REQUEST:
+@@ -845,7 +845,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST)
+ 			ioc->put_smid_scsi_io(ioc, smid, device_handle);
+ 		else
+-			ioc->put_smid_default(ioc, smid);
++			mpt3sas_base_put_smid_default(ioc, smid);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_SCSI_TASK_MGMT:
+@@ -882,7 +882,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		    tm_request->DevHandle));
+ 		ioc->build_sg_mpi(ioc, psge, data_out_dma, data_out_sz,
+ 		    data_in_dma, data_in_sz);
+-		ioc->put_smid_hi_priority(ioc, smid, 0);
++		mpt3sas_base_put_smid_hi_priority(ioc, smid, 0);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_SMP_PASSTHROUGH:
+@@ -913,7 +913,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		}
+ 		ioc->build_sg(ioc, psge, data_out_dma, data_out_sz, data_in_dma,
+ 		    data_in_sz);
+-		ioc->put_smid_default(ioc, smid);
++		mpt3sas_base_put_smid_default(ioc, smid);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_SATA_PASSTHROUGH:
+@@ -928,7 +928,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		}
+ 		ioc->build_sg(ioc, psge, data_out_dma, data_out_sz, data_in_dma,
+ 		    data_in_sz);
+-		ioc->put_smid_default(ioc, smid);
++		mpt3sas_base_put_smid_default(ioc, smid);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_FW_DOWNLOAD:
+@@ -936,7 +936,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 	{
+ 		ioc->build_sg(ioc, psge, data_out_dma, data_out_sz, data_in_dma,
+ 		    data_in_sz);
+-		ioc->put_smid_default(ioc, smid);
++		mpt3sas_base_put_smid_default(ioc, smid);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_TOOLBOX:
+@@ -951,7 +951,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 			ioc->build_sg_mpi(ioc, psge, data_out_dma, data_out_sz,
+ 				data_in_dma, data_in_sz);
+ 		}
+-		ioc->put_smid_default(ioc, smid);
++		mpt3sas_base_put_smid_default(ioc, smid);
+ 		break;
+ 	}
+ 	case MPI2_FUNCTION_SAS_IO_UNIT_CONTROL:
+@@ -970,7 +970,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 	default:
+ 		ioc->build_sg_mpi(ioc, psge, data_out_dma, data_out_sz,
+ 		    data_in_dma, data_in_sz);
+-		ioc->put_smid_default(ioc, smid);
++		mpt3sas_base_put_smid_default(ioc, smid);
+ 		break;
+ 	}
+ 
+@@ -1601,7 +1601,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
+ 			cpu_to_le32(ioc->product_specific[buffer_type][i]);
+ 
+ 	init_completion(&ioc->ctl_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->ctl_cmds.done,
+ 	    MPT3_IOCTL_DEFAULT_TIMEOUT*HZ);
+ 
+@@ -1948,7 +1948,7 @@ mpt3sas_send_diag_release(struct MPT3SAS_ADAPTER *ioc, u8 buffer_type,
+ 	mpi_request->VP_ID = 0;
+ 
+ 	init_completion(&ioc->ctl_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->ctl_cmds.done,
+ 	    MPT3_IOCTL_DEFAULT_TIMEOUT*HZ);
+ 
+@@ -2215,7 +2215,7 @@ _ctl_diag_read_buffer(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
+ 	mpi_request->VP_ID = 0;
+ 
+ 	init_completion(&ioc->ctl_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->ctl_cmds.done,
+ 	    MPT3_IOCTL_DEFAULT_TIMEOUT*HZ);
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 5e52679..50efccd 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2679,7 +2679,7 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	int_to_scsilun(lun, (struct scsi_lun *)mpi_request->LUN);
+ 	mpt3sas_scsih_set_tm_flag(ioc, handle);
+ 	init_completion(&ioc->tm_cmds.done);
+-	ioc->put_smid_hi_priority(ioc, smid, msix_task);
++	mpt3sas_base_put_smid_hi_priority(ioc, smid, msix_task);
+ 	wait_for_completion_timeout(&ioc->tm_cmds.done, timeout*HZ);
+ 	if (!(ioc->tm_cmds.status & MPT3_CMD_COMPLETE)) {
+ 		pr_err(MPT3SAS_FMT "%s: timeout\n",
+@@ -3638,7 +3638,7 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	mpi_request->DevHandle = cpu_to_le16(handle);
+ 	mpi_request->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET;
+ 	set_bit(handle, ioc->device_remove_in_progress);
+-	ioc->put_smid_hi_priority(ioc, smid, 0);
++	mpt3sas_base_put_smid_hi_priority(ioc, smid, 0);
+ 	mpt3sas_trigger_master(ioc, MASTER_TRIGGER_DEVICE_REMOVAL);
+ 
+ out:
+@@ -3739,7 +3739,7 @@ _scsih_tm_tr_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 	mpi_request->Function = MPI2_FUNCTION_SAS_IO_UNIT_CONTROL;
+ 	mpi_request->Operation = MPI2_SAS_OP_REMOVE_DEVICE;
+ 	mpi_request->DevHandle = mpi_request_tm->DevHandle;
+-	ioc->put_smid_default(ioc, smid_sas_ctrl);
++	mpt3sas_base_put_smid_default(ioc, smid_sas_ctrl);
+ 
+ 	return _scsih_check_for_pending_tm(ioc, smid);
+ }
+@@ -3834,7 +3834,7 @@ _scsih_tm_tr_volume_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	mpi_request->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
+ 	mpi_request->DevHandle = cpu_to_le16(handle);
+ 	mpi_request->TaskType = MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET;
+-	ioc->put_smid_hi_priority(ioc, smid, 0);
++	mpt3sas_base_put_smid_hi_priority(ioc, smid, 0);
  }
  
- static struct scsi_host_template sdebug_driver_template = {
+ /**
+@@ -3926,7 +3926,7 @@ _scsih_issue_delayed_event_ack(struct MPT3SAS_ADAPTER *ioc, u16 smid, u16 event,
+ 	ack_request->EventContext = event_context;
+ 	ack_request->VF_ID = 0;  /* TODO */
+ 	ack_request->VP_ID = 0;
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ }
+ 
+ /**
+@@ -3983,7 +3983,7 @@ _scsih_issue_delayed_sas_io_unit_ctrl(struct MPT3SAS_ADAPTER *ioc,
+ 	mpi_request->Function = MPI2_FUNCTION_SAS_IO_UNIT_CONTROL;
+ 	mpi_request->Operation = MPI2_SAS_OP_REMOVE_DEVICE;
+ 	mpi_request->DevHandle = handle;
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ }
+ 
+ /**
+@@ -4712,12 +4712,12 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		if (sas_target_priv_data->flags & MPT_TARGET_FASTPATH_IO) {
+ 			mpi_request->IoFlags = cpu_to_le16(scmd->cmd_len |
+ 			    MPI25_SCSIIO_IOFLAGS_FAST_PATH);
+-			ioc->put_smid_fast_path(ioc, smid, handle);
++			mpt3sas_base_put_smid_fast_path(ioc, smid, handle);
+ 		} else
+ 			ioc->put_smid_scsi_io(ioc, smid,
+ 			    le16_to_cpu(mpi_request->DevHandle));
+ 	} else
+-		ioc->put_smid_default(ioc, smid);
++		mpt3sas_base_put_smid_default(ioc, smid);
+ 	return 0;
+ 
+  out:
+@@ -7606,7 +7606,7 @@ _scsih_ir_fastpath(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phys_disk_num)
+ 	    handle, phys_disk_num));
+ 
+ 	init_completion(&ioc->scsih_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->scsih_cmds.done, 10*HZ);
+ 
+ 	if (!(ioc->scsih_cmds.status & MPT3_CMD_COMPLETE)) {
+@@ -9697,7 +9697,7 @@ _scsih_ir_shutdown(struct MPT3SAS_ADAPTER *ioc)
+ 	if (!ioc->hide_ir_msg)
+ 		pr_info(MPT3SAS_FMT "IR shutdown (sending)\n", ioc->name);
+ 	init_completion(&ioc->scsih_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->scsih_cmds.done, 10*HZ);
+ 
+ 	if (!(ioc->scsih_cmds.status & MPT3_CMD_COMPLETE)) {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index d3940c5..3a143bb 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -392,7 +392,7 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
+ 		"report_manufacture - send to sas_addr(0x%016llx)\n",
+ 		ioc->name, (unsigned long long)sas_address));
+ 	init_completion(&ioc->transport_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->transport_cmds.done, 10*HZ);
+ 
+ 	if (!(ioc->transport_cmds.status & MPT3_CMD_COMPLETE)) {
+@@ -1198,7 +1198,7 @@ _transport_get_expander_phy_error_log(struct MPT3SAS_ADAPTER *ioc,
+ 		ioc->name, (unsigned long long)phy->identify.sas_address,
+ 		phy->number));
+ 	init_completion(&ioc->transport_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->transport_cmds.done, 10*HZ);
+ 
+ 	if (!(ioc->transport_cmds.status & MPT3_CMD_COMPLETE)) {
+@@ -1514,7 +1514,7 @@ _transport_expander_phy_control(struct MPT3SAS_ADAPTER *ioc,
+ 		ioc->name, (unsigned long long)phy->identify.sas_address,
+ 		phy->number, phy_operation));
+ 	init_completion(&ioc->transport_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->transport_cmds.done, 10*HZ);
+ 
+ 	if (!(ioc->transport_cmds.status & MPT3_CMD_COMPLETE)) {
+@@ -2014,7 +2014,7 @@ _transport_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 		"%s - sending smp request\n", ioc->name, __func__));
+ 
+ 	init_completion(&ioc->transport_cmds.done);
+-	ioc->put_smid_default(ioc, smid);
++	mpt3sas_base_put_smid_default(ioc, smid);
+ 	wait_for_completion_timeout(&ioc->transport_cmds.done, 10*HZ);
+ 
+ 	if (!(ioc->transport_cmds.status & MPT3_CMD_COMPLETE)) {
 -- 
-2.16.1
+2.5.5
