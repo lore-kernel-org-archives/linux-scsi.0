@@ -1,120 +1,49 @@
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2] megaraid_sas: Do not use 32-bit atomic request descriptor for Ventura controllers
-Date: Wed, 14 Feb 2018 00:10:52 -0800
-Message-ID: <1518595852-1490-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] qla2xxx: Fix NULL pointer crash due to active timer for
+ ABTS
+Date: Wed, 14 Feb 2018 09:27:32 +0100
+Message-ID: <1518596852.24629.2.camel@suse.de>
+References: <20180212182814.4541-1-himanshu.madhani@cavium.com>
+         <1518518327.3592.6.camel@suse.de>
+         <8AA80006-774D-4189-9BDF-7410E705D26F@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36020 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754589AbeBNILG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Feb 2018 03:11:06 -0500
-Received: by mail-qk0-f196.google.com with SMTP id 15so25660942qkl.3
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2018 00:11:06 -0800 (PST)
+Received: from mx2.suse.de ([195.135.220.15]:46855 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754556AbeBNI1e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Feb 2018 03:27:34 -0500
+In-Reply-To: <8AA80006-774D-4189-9BDF-7410E705D26F@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, stable@vger.kernel.org
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Problem Statement:
-Sending I/O through 32 bit descriptors to Ventura series of controller
-results in IO timeout on certain conditions.
+On Tue, 2018-02-13 at 18:13 +0000, Madhani, Himanshu wrote:
+> Thanks for asking (I did not add fixes commit ID because it was pre
+> 4.x kernel) 
+> 
+> Here’s commit id 4440e46d5db7b445a961a84444849b2a31fa7fd1 which is
+> fixed by this patch.
 
-This error only occurs on systems with high I/O activity on
-Ventura series controllers.
+Thanks for the info. In general having a 
+Fixes: 4440e46d5db7 ("[SCSI] qla2xxx: Add IOCB Abort command
+asynchronous handling.")
+line is extremly valuable as many distributions have automation in
+place to check whether a fix for a backport arrived upstream.
 
-Changes in this patch will prevent driver from using 32 bit descriptor
-and use 64 bit Descriptors.
+Thanks,
+	Johannes
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
----
-Changes in v2:
-Removed below text from function description:
- * Ventura supports 32 bit Descriptor.
- * Prior to Ventura (12G) MR controller supports 64 bit Descriptor.
-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 42 ++++++++++-------------------
- 1 file changed, 14 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 073ced07e662..dc8e850fbfd2 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -216,36 +216,30 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
- /**
-  * megasas_fire_cmd_fusion -	Sends command to the FW
-  * @instance:			Adapter soft state
-- * @req_desc:			32bit or 64bit Request descriptor
-+ * @req_desc:			64bit Request descriptor
-  *
-- * Perform PCI Write. Ventura supports 32 bit Descriptor.
-- * Prior to Ventura (12G) MR controller supports 64 bit Descriptor.
-+ * Perform PCI Write.
-  */
- 
- static void
- megasas_fire_cmd_fusion(struct megasas_instance *instance,
- 		union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc)
- {
--	if (instance->adapter_type == VENTURA_SERIES)
--		writel(le32_to_cpu(req_desc->u.low),
--			&instance->reg_set->inbound_single_queue_port);
--	else {
- #if defined(writeq) && defined(CONFIG_64BIT)
--		u64 req_data = (((u64)le32_to_cpu(req_desc->u.high) << 32) |
--				le32_to_cpu(req_desc->u.low));
-+	u64 req_data = (((u64)le32_to_cpu(req_desc->u.high) << 32) |
-+		le32_to_cpu(req_desc->u.low));
- 
--		writeq(req_data, &instance->reg_set->inbound_low_queue_port);
-+	writeq(req_data, &instance->reg_set->inbound_low_queue_port);
- #else
--		unsigned long flags;
--		spin_lock_irqsave(&instance->hba_lock, flags);
--		writel(le32_to_cpu(req_desc->u.low),
--			&instance->reg_set->inbound_low_queue_port);
--		writel(le32_to_cpu(req_desc->u.high),
--			&instance->reg_set->inbound_high_queue_port);
--		mmiowb();
--		spin_unlock_irqrestore(&instance->hba_lock, flags);
-+	unsigned long flags;
-+	spin_lock_irqsave(&instance->hba_lock, flags);
-+	writel(le32_to_cpu(req_desc->u.low),
-+		&instance->reg_set->inbound_low_queue_port);
-+	writel(le32_to_cpu(req_desc->u.high),
-+		&instance->reg_set->inbound_high_queue_port);
-+	mmiowb();
-+	spin_unlock_irqrestore(&instance->hba_lock, flags);
- #endif
--	}
- }
- 
- /**
-@@ -982,7 +976,6 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	const char *sys_info;
- 	MFI_CAPABILITIES *drv_ops;
- 	u32 scratch_pad_2;
--	unsigned long flags;
- 	ktime_t time;
- 	bool cur_fw_64bit_dma_capable;
- 
-@@ -1121,14 +1114,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 			break;
- 	}
- 
--	/* For Ventura also IOC INIT required 64 bit Descriptor write. */
--	spin_lock_irqsave(&instance->hba_lock, flags);
--	writel(le32_to_cpu(req_desc.u.low),
--	       &instance->reg_set->inbound_low_queue_port);
--	writel(le32_to_cpu(req_desc.u.high),
--	       &instance->reg_set->inbound_high_queue_port);
--	mmiowb();
--	spin_unlock_irqrestore(&instance->hba_lock, flags);
-+	megasas_fire_cmd_fusion(instance, &req_desc);
- 
- 	wait_and_poll(instance, cmd, MFI_POLL_TIMEOUT_SECS);
- 
 -- 
-2.16.1
+Johannes Thumshirn                                          Storage
+jthu
+mshirn@suse.de                                +49 911 74053 689
+SUSE
+LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane
+Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38
+9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
