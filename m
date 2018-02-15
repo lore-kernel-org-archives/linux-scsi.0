@@ -1,27 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v6 00/11] ufs: sysfs: read-only access to device
-Date: Thu, 15 Feb 2018 18:44:56 -0500
-Message-ID: <yq17erdlsw7.fsf@oracle.com>
-References: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: Re: [PATCH v2] megaraid_sas: Do not use 32-bit atomic request descriptor for Ventura controllers
+Date: Thu, 15 Feb 2018 18:51:33 -0500
+Message-ID: <yq1y3jtke0q.fsf@oracle.com>
+References: <1518595852-1490-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
-        (Stanislav Nijnikov's message of "Thu, 15 Feb 2018 14:14:00 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org, Bart.VanAssche@wdc.com, alex.lemberg@wdc.com
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1518595852-1490-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+        (Shivasharan S.'s message of "Wed, 14 Feb 2018 00:10:52 -0800")
+Sender: stable-owner@vger.kernel.org
+To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Stanislav,
+Shivasharan,
 
-> This patch introduces sysfs entries that will provide read-only access to
-> device management data that could be received with UFS query requests.
-> User-space applications will be able to read UFS device descriptors,
-> flags and attributes.
+> Sending I/O through 32 bit descriptors to Ventura series of controller
+> results in IO timeout on certain conditions.
 
-Applied to 4.17/scsi-queue. Thank you!
+Applied to 4.16/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
