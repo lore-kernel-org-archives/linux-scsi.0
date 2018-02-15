@@ -1,101 +1,81 @@
 From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v6 00/11] ufs: sysfs: read-only access to device
-Date: Thu, 15 Feb 2018 14:14:00 +0200
-Message-ID: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: [PATCH v6 08/11] scsi: host template attribute groups
+Date: Thu, 15 Feb 2018 14:14:08 +0200
+Message-ID: <1518696851-6730-9-git-send-email-stanislav.nijnikov@wdc.com>
+References: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org, Bart.VanAssche@wdc.com
 Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch introduces sysfs entries that will provide read-only access to
-device management data that could be received with UFS query requests.
-User-space applications will be able to read UFS device descriptors,
-flags and attributes. This will allow to get full UFS device configuration
-and its status. The descriptors are provided as set of files representing
-its parameters. The flags are using "true"/"false" representation of
-their value. The attributes are shown as hexadecimal value. The
-descriptors, attributes and flags are placed in separate subfolders under
-the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
-string descriptor subfolder contains five string descriptors defined by
-UFS specification 2.1. The LUN specific descriptor and attribute are 
-placed under corresponding SCSI device sysfs entries
-(/sys/class/scsi_device/*/device/).
-In addition the patch presents an additional field in the
-scsi_host_template structure - struct attribute_group **sdev_group.
+The patch introduces an additional field in the scsi_host_template
+structure - struct attribute_group **sdev_group.
 This field allows to define groups of attributes. It will provide an
-ability to use binary attributes in addition to device attributes and
+ability to use binary attributes as well as device attributes and
 to group them under subfolders if necessary.
 
-Changelog:
-v5 -> v6
-The sysfs_remove_groups call is moved inside of the sdev->is_visible
-if case
-Identation of the changes in the drivers/scsi/scsi_sysfs.c file is
-fixed
-The SPDX license id is changed from "GPL-2.0-only" to "GPL-2.0"
+Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/scsi_sysfs.c | 12 ++++++++++++
+ include/scsi/scsi_host.h  |  6 ++++++
+ 2 files changed, 18 insertions(+)
 
-v4 -> v5
-Added "scsi: " to clarify the patch naming
-The scsi: ufs: sysfs: unit descriptor was split to two patches
-"scsi: host template attribute groups" and "scsi: ufs: sysfs: unit
-descriptor"
-The "const" modificator was added to the sdev_groups member type and
-all corresponding data structures. The type conversions in the relative
-calls of sysfs_create_groups/sysfs_remove_groups were cleared.
-The ufs_desc_param_size enumeration was replaced with numeric constants
-The UFS_LUN_ATTRIBUTE macro was removed
-The be*_to_cpu function calls were replaced with corresponding 
-get_unaligned_be* calls
-The legal information was cut leaving only the SPDX line and the
-copyright information
-
-v3 -> v4
-Additional patch that introduces default attributes group for the
-existing ufs sysfs entries (rpm_lvl and spm_lvl)
-The ufs_sysfs_read_desc_param function calls to ufshcd_read_desc_param
-insted of ufshcd_query_descriptor_retry to avoid code duplication.
-The code was updated to remove the checkpatch error "ERROR: Macros 
-with complex values should be enclosed in parentheses"
-Added "_" to macros parameters to remove "#undef DEVICE_CLASS"
-The legal information was updated to satisfy the SPDX requirements
-The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
-
-v2 -> v3
-The Makefile is updated to make ufs-sysfs.c part of the ufshcd module.
-The unnecessary EXPORT_SYMBOL were removed
-Added a legal info header to the new files
-The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
-
-v1 -> v2
-Provided additional description for the changes
-
-Stanislav Nijnikov (11):
-  scsi: ufs: sysfs: attribute group for existing sysfs entries.
-  scsi: ufs: sysfs: device descriptor
-  scsi: ufs: sysfs: interconnect descriptor
-  scsi: ufs: sysfs: geometry descriptor
-  scsi: ufs: sysfs: health descriptor
-  scsi: ufs: sysfs: power descriptor
-  scsi: ufs: sysfs: string descriptors
-  scsi: host template attribute groups
-  scsi: ufs: sysfs: unit descriptor
-  scsi: ufs: sysfs: flags
-  scsi: ufs: sysfs: attributes
-
- Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
- drivers/scsi/scsi_sysfs.c                  |  12 +
- drivers/scsi/ufs/Makefile                  |   3 +-
- drivers/scsi/ufs/ufs-sysfs.c               | 739 ++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.h               |  17 +
- drivers/scsi/ufs/ufs.h                     | 115 ++++-
- drivers/scsi/ufs/ufshcd.c                  | 218 ++------
- drivers/scsi/ufs/ufshcd.h                  |  34 ++
- include/scsi/scsi_host.h                   |   6 +
- 9 files changed, 1757 insertions(+), 191 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
- create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
- create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
-
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index cbc0fe2..d608759 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1309,6 +1309,13 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 		}
+ 	}
+ 
++	if (sdev->host->hostt->sdev_groups) {
++		error = sysfs_create_groups(&sdev->sdev_gendev.kobj,
++				sdev->host->hostt->sdev_groups);
++		if (error)
++			return error;
++	}
++
+ 	scsi_autopm_put_device(sdev);
+ 	return error;
+ }
+@@ -1326,6 +1333,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	if (sdev->sdev_state == SDEV_DEL)
+ 		return;
+ 
++
+ 	if (sdev->is_visible) {
+ 		/*
+ 		 * If scsi_internal_target_block() is running concurrently,
+@@ -1348,6 +1356,10 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		if (res != 0)
+ 			return;
+ 
++		if (sdev->host->hostt->sdev_groups)
++			sysfs_remove_groups(&sdev->sdev_gendev.kobj,
++					sdev->host->hostt->sdev_groups);
++
+ 		bsg_unregister_queue(sdev->request_queue);
+ 		device_unregister(&sdev->sdev_dev);
+ 		transport_remove_device(dev);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 1a1df0d..1931758 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -477,6 +477,12 @@ struct scsi_host_template {
+ 	struct device_attribute **sdev_attrs;
+ 
+ 	/*
++	 * Pointer to the SCSI device attribute groups for this host,
++	 * NULL terminated.
++	 */
++	const struct attribute_group **sdev_groups;
++
++	/*
+ 	 * List of hosts per template.
+ 	 *
+ 	 * This is only for use by scsi_module.c for legacy templates.
 -- 
 2.7.4
