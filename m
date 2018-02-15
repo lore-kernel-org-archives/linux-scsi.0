@@ -1,49 +1,54 @@
-From: lynn.dixon@dedicatedaccounts.com
-Subject: Targeted B2B Companies Emails List
-Date: Thu, 15 Feb 2018 15:02:30 +0000
-Message-ID: <001a11458fb446099a056541843f@google.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: [PATCH] scsi: pmcraid: Use dma_pool_zalloc()
+Date: Thu, 15 Feb 2018 20:44:38 +0530
+Message-ID: <20180215151438.GA8253@jordon-HP-15-Notebook-PC>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f71.google.com ([209.85.214.71]:41213 "EHLO
-        mail-it0-f71.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033703AbeBOPCa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Feb 2018 10:02:30 -0500
-Received: by mail-it0-f71.google.com with SMTP id g125so447455ita.6
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2018 07:02:30 -0800 (PST)
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:46902 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033584AbeBOPNU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Feb 2018 10:13:20 -0500
+Received: by mail-pl0-f67.google.com with SMTP id x19so1877504plr.13
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2018 07:13:20 -0800 (PST)
+Received: from jordon-HP-15-Notebook-PC ([183.82.18.32])
+        by smtp.gmail.com with ESMTPSA id j3sm40363091pfj.180.2018.02.15.07.13.17
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Thu, 15 Feb 2018 07:13:18 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-SGksDQoNCkkgd2FzIHdvbmRlcmluZyBpZiB5b3Ugd291bGQgYmUgaW50ZXJlc3RlZCBpbiB0YXJn
-ZXRpbmcgYSBjdXN0b21pemVkIGxpc3QgIA0Kb2YgeW91ciBjb21wZXRpdG9ycyBFbmQgVXNlcnMg
-SW5zdGFsbCBCYXNlIGZvciB5b3VyIHVwY29taW5nIE1hcmtldGluZyAgDQpTdHJhdGVneS4NCg0K
-4oCiIEVSUC0gSkQgRWR3YXJkcywgSW5mb3IgQmFhbiwgU0FQLCBFeGFjdCBTb2Z0d2FyZSwgTmV0
-U3VpdGUsIFBlb3BsZVNvZnQsICANCmV0Yy4NCuKAoiBDUk0tIFNhbGVzZm9yY2UsIE1TIER5bmFt
-aWNzLCBOZXRTdWl0ZSwgU2llYmVsLCBUZXJhZGF0YSwgRXBpY29yLCBJbmZvciwgIA0KQ0RDIFNv
-ZnR3YXJlLCBldGMuDQrigKIgRW5naW5lZXJpbmcgU29mdHdhcmUtIEF1dG9kZXNrLCBTaWVtZW5z
-IFBMTSwgQWRvYmUsIEF1dG9DQUQsIE1BWUEsIFJldml0LCAgDQpTb2xpZCB3b3JrcywgUFRDLCBN
-QURDQUQsIGV0Yy4NCuKAoiBDbG91ZCBDb21wdXRpbmctIEFtYXpvbiwgUmFjayBTcGFjZSwgR29v
-Z2xlIEFQUFMsIEh5cGVyLVYsIE5ldEFwcCwgZXRjLg0K4oCiIFN0b3JhZ2UgYXBwbGljYXRpb24g
-LSBOZXRBcHAsIEVNQywgQ2l0cml4LCBIUCwgQnJvY2FkZSwgREVMTCwgZXRjLg0K4oCiIFNlY3Vy
-aXR5IFNvZnR3YXJlLSBTeW1hbnRlYywgTWNBZmVlLCBJQk0sIFJpdmVyYmVkLCBUYWJiZXJnLCBD
-b21tdmF1bHQsICANCkp1bmlwZXIgTmV0d29ya3MsIEY1LCBldGMuDQrigKIgTmV0d29ya2luZy0g
-QnJvY2FkZSwgU3ltYW50ZWMsIEF2YXlhLCBDaXNjbywgU2hvcmV0ZWwsIGV0Yy4NCuKAoiBNZWRp
-Y2FsIFNvZnR3YXJlLSBOZXh0R2VuLCBBbGwgU2NyaXB0cywgRU1SLCBNY0tlc3NvbiwgUHJhY3Rp
-Y2UgRnVzaW9uLCAgDQplQ2xpbmljYWwgV29ya3MsIGV0Yy4NCuKAoiBBY2NvdW50aW5nIFNvZnR3
-YXJlLSBTYWdlLCBQZWFjaHRyZWUsIFRpbWJlcmxpbmUsIE1TIER5bmFtaWNzLCBOZXRTdWl0ZSwg
-IA0KRGVsdGVrLCBMYXdzb24sIFF1aWNrQm9va3MsIGV0Yy4NCuKAoiBCdXNpbmVzcyBJbnRlbGxp
-Z2VuY2UtIFNBUCBCdXNpbmVzcyBPYmplY3RzLCBNaWNyb3N0cmF0ZXJneSwgVGliY28sICANCk1p
-Y3Jvc29mdCBCSSwgUWxpa1RlY2gsIEluZm9ybWF0aW9uIEJ1aWxkZXJzLCBldGMuDQpXZSBwcm92
-aWRlIGRhdGEgYWNyb3NzIHRoZSBnbG9iZSAtIE5vcnRoIEFtZXJpY2EsIEVNRUEsIEFzaWEgUGFj
-aWZpYyBhbmQgIA0KTEFUQU0uIFdlIHByb3ZpZGUgdGhlIGRlY2lzaW9uIE1ha2VycyBjb250YWN0
-cyBsaWtlIENJTywgQ1RPLCBDSVNPLCBJVCBWUCwgIA0KSVQgRGlyZWN0b3IsIElUIG1hbmFnZXIs
-IElUIGhlYWQsIGV0Yy4NCg0KUGxlYXNlIHJldmlldyBhbmQgbGV0IG1lIGtub3cgaWYgeW91IGFy
-ZSBsb29raW5nIGZvciBhbnkgdHlwZSBvZiBsaXN0IGFuZCAgDQp3ZSBjYW4gc2VydmljZSB5b3Uu
-DQoNCklmIHlvdSBhcmUgaW50ZXJlc3RlZCwgbGV0IG1lIGtub3cgeW91ciB0YXJnZXRlZCBnZW9n
-cmFwaHkgc28gdGhhdCBJIHdpbGwgIA0KZ2V0IGJhY2sgdG8geW91IHdpdGggdGhlIGNvdW50cyBh
-bmQgbW9yZSBpbmZvcm1hdGlvbi4NCg0KQXdhaXQgeW91ciByZXNwb25zZSENClRoYW5rcywNCkx5
-bm4gRGl4b24NCk1hcmtldGluZyBFeGVjdXRpdmUNCg0KICBJZiB5b3UgYXJlIG5vdCBpbnRlcmVz
-dGVkIGluIHJlY2VpdmluZyBmdXJ0aGVyIGVtYWlscywgcGxlYXNlIGFuc3dlciBiYWNrICANCndp
-dGggIm92ZXJsb29rIiBpbiB0aGUgdGl0bGUuDQo=
+Use dma_pool_zalloc() instead of dma_pool_alloc + memset
+
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+---
+ drivers/scsi/pmcraid.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 201c8de..7535161 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4716,7 +4716,7 @@ static int pmcraid_allocate_control_blocks(struct pmcraid_instance *pinstance)
+
+ 	for (i = 0; i < PMCRAID_MAX_CMD; i++) {
+ 		pinstance->cmd_list[i]->ioa_cb =
+-			dma_pool_alloc(
++			dma_pool_zalloc(
+ 				pinstance->control_pool,
+ 				GFP_KERNEL,
+ 				&(pinstance->cmd_list[i]->ioa_cb_bus_addr));
+@@ -4725,8 +4725,6 @@ static int pmcraid_allocate_control_blocks(struct pmcraid_instance *pinstance)
+ 			pmcraid_release_control_blocks(pinstance, i);
+ 			return -ENOMEM;
+ 		}
+-		memset(pinstance->cmd_list[i]->ioa_cb, 0,
+-			sizeof(struct pmcraid_control_block));
+ 	}
+ 	return 0;
+ }
+--
+1.9.1
