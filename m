@@ -1,57 +1,101 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] scsi: mpt3sas: fix oops in error handlers after
- shutdown/unload
-Date: Thu, 15 Feb 2018 10:10:41 -0200
-Message-ID: <46d49afa-2e27-fe98-7040-fddc5891f122@linux.vnet.ibm.com>
-References: <1517523386-9868-1-git-send-email-mauricfo@linux.vnet.ibm.com>
- <2fd5c995219c5e07ef04765f67b9b8a7@mail.gmail.com>
- <c2d58b10-b927-4a06-5edf-69f9fdb05bbd@linux.vnet.ibm.com>
- <91f269efc5383e1d946f1ab793ad046b@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:33488 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967889AbeBOMKu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 15 Feb 2018 07:10:50 -0500
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1FCAehc099151
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2018 07:10:50 -0500
-Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2g55sfa5p8-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2018 07:10:48 -0500
-Received: from localhost
-        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Thu, 15 Feb 2018 07:10:47 -0500
-In-Reply-To: <91f269efc5383e1d946f1ab793ad046b@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Subject: [PATCH v6 00/11] ufs: sysfs: read-only access to device
+Date: Thu, 15 Feb 2018 14:14:00 +0200
+Message-ID: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org, Bart.VanAssche@wdc.com
+Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dougmill@linux.vnet.ibm.com
 
-Hi Sreekanth,
+This patch introduces sysfs entries that will provide read-only access to
+device management data that could be received with UFS query requests.
+User-space applications will be able to read UFS device descriptors,
+flags and attributes. This will allow to get full UFS device configuration
+and its status. The descriptors are provided as set of files representing
+its parameters. The flags are using "true"/"false" representation of
+their value. The attributes are shown as hexadecimal value. The
+descriptors, attributes and flags are placed in separate subfolders under
+the UFS device sysfs entry (/sys/bus/platform/drivers/ufshcd/*/). The
+string descriptor subfolder contains five string descriptors defined by
+UFS specification 2.1. The LUN specific descriptor and attribute are 
+placed under corresponding SCSI device sysfs entries
+(/sys/class/scsi_device/*/device/).
+In addition the patch presents an additional field in the
+scsi_host_template structure - struct attribute_group **sdev_group.
+This field allows to define groups of attributes. It will provide an
+ability to use binary attributes in addition to device attributes and
+to group them under subfolders if necessary.
 
-On 02/15/2018 03:48 AM, Sreekanth Reddy wrote:
-> During the shutdown time, I don't want the outstanding IOs to timeout due to
-> disabling of interrupts and go the TM path. So I wanted to clear out all the
-> Outstanding IOs in the shutdown path itself instead of clearing them in TM
-> path.
+Changelog:
+v5 -> v6
+The sysfs_remove_groups call is moved inside of the sdev->is_visible
+if case
+Identation of the changes in the drivers/scsi/scsi_sysfs.c file is
+fixed
+The SPDX license id is changed from "GPL-2.0-only" to "GPL-2.0"
 
-Ah. I see. I didn't realize that. Good catch.
+v4 -> v5
+Added "scsi: " to clarify the patch naming
+The scsi: ufs: sysfs: unit descriptor was split to two patches
+"scsi: host template attribute groups" and "scsi: ufs: sysfs: unit
+descriptor"
+The "const" modificator was added to the sdev_groups member type and
+all corresponding data structures. The type conversions in the relative
+calls of sysfs_create_groups/sysfs_remove_groups were cleared.
+The ufs_desc_param_size enumeration was replaced with numeric constants
+The UFS_LUN_ATTRIBUTE macro was removed
+The be*_to_cpu function calls were replaced with corresponding 
+get_unaligned_be* calls
+The legal information was cut leaving only the SPDX line and the
+copyright information
 
-> But if there are already some TMs are outstanding while initiating the
-> shutdown operation then your patch looks good to me.
+v3 -> v4
+Additional patch that introduces default attributes group for the
+existing ufs sysfs entries (rpm_lvl and spm_lvl)
+The ufs_sysfs_read_desc_param function calls to ufshcd_read_desc_param
+insted of ufshcd_query_descriptor_retry to avoid code duplication.
+The code was updated to remove the checkpatch error "ERROR: Macros 
+with complex values should be enclosed in parentheses"
+Added "_" to macros parameters to remove "#undef DEVICE_CLASS"
+The legal information was updated to satisfy the SPDX requirements
+The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
 
-Ok. Thanks for the review.
+v2 -> v3
+The Makefile is updated to make ufs-sysfs.c part of the ufshcd module.
+The unnecessary EXPORT_SYMBOL were removed
+Added a legal info header to the new files
+The date in Documentation/ABI/testing/sysfs-driver-ufs was updated.
 
-> May be can you include my set of changes along with your solution?
+v1 -> v2
+Provided additional description for the changes
 
-Sure. I'll send a v3 with both parts and due credit.
+Stanislav Nijnikov (11):
+  scsi: ufs: sysfs: attribute group for existing sysfs entries.
+  scsi: ufs: sysfs: device descriptor
+  scsi: ufs: sysfs: interconnect descriptor
+  scsi: ufs: sysfs: geometry descriptor
+  scsi: ufs: sysfs: health descriptor
+  scsi: ufs: sysfs: power descriptor
+  scsi: ufs: sysfs: string descriptors
+  scsi: host template attribute groups
+  scsi: ufs: sysfs: unit descriptor
+  scsi: ufs: sysfs: flags
+  scsi: ufs: sysfs: attributes
 
-cheers,
-Mauricio
+ Documentation/ABI/testing/sysfs-driver-ufs | 804 +++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c                  |  12 +
+ drivers/scsi/ufs/Makefile                  |   3 +-
+ drivers/scsi/ufs/ufs-sysfs.c               | 739 ++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.h               |  17 +
+ drivers/scsi/ufs/ufs.h                     | 115 ++++-
+ drivers/scsi/ufs/ufshcd.c                  | 218 ++------
+ drivers/scsi/ufs/ufshcd.h                  |  34 ++
+ include/scsi/scsi_host.h                   |   6 +
+ 9 files changed, 1757 insertions(+), 191 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.c
+ create mode 100644 drivers/scsi/ufs/ufs-sysfs.h
+
+-- 
+2.7.4
