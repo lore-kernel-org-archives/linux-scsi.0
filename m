@@ -1,91 +1,174 @@
-From: Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH/RFC 6/6] Treewide: Remove depends on HAS_DMA in case of
-	platform dependency
-Date: Thu, 15 Feb 2018 15:19:28 +0200
-Message-ID: <87inay8k67.fsf@linux.intel.com>
-References: <1517912092-15470-1-git-send-email-geert@linux-m68k.org>
-	<1517912092-15470-7-git-send-email-geert@linux-m68k.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v2] scsi_debug: call resp_*() function after setting
+ host_scribble
+Date: Thu, 15 Feb 2018 09:26:06 -0500
+Message-ID: <f24207ab-0ada-ebc1-31af-84746a1cac5c@interlog.com>
+References: <20180214100557.30717-1-mwilck@suse.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============6548238951608519728=="
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1517912092-15470-7-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
-Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-List-Id: linux-scsi@vger.kernel.org
-
---===============6548238951608519728==
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> writes:
-
-> Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
-> symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
-> In most cases this other symbol is an architecture or platform specific
-> symbol, or PCI.
->
-> Generic symbols and drivers without platform dependencies keep their
-> dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
-> cannot work anyway.
->
-> This simplifies the dependencies, and allows to improve compile-testing.
->
-> Notes:
->   - FSL_FMAN keeps its dependency on HAS_DMA, as it calls set_dma_ops(),
->     which does not exist if HAS_DMA=3Dn (Do we need a dummy? The use of
->     set_dma_ops() in this driver is questionable),
->   - SND_SOC_LPASS_IPQ806X and SND_SOC_LPASS_PLATFORM loose their
->     dependency on HAS_DMA, as they are selected from
->     SND_SOC_APQ8016_SBC.
->
-> Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-
-for drivers/usb/gadget/:
-
-Acked-by: Felipe Balbi <felipe.balbi-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-
-=2D-=20
-balbi
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAlqFiOAACgkQzL64meEa
-mQa2SxAAlW7lfUK0u4wYfEIEW/sDVDlt29tyJK/30ID1+B19bg9EdnpVFrWhOHj4
-VdVg82aK/45YbuAxQKzlZIZcoR0eURUQRJqxFoBNkodNjwY8R90bhrFW4SaQc0zA
-kjYCQAvRdA7qSEQay5sztWYaS+0GGotISvA33R0vvZVi8V+r6oOkLVPLH5B6UVPe
-AR4pB3o+Fwis8tPxeRF6+nSFhoVCVPjSmGPiXDjm8MWdPs0gbzkfkANvIgt3G+Sd
-lzCyf2wgnoKC1rOG7UuYH2179+7RlhezvXhcu4NCpm2wuq1CsU5mIR5CjyyuY6m3
-M9q1/AS6+5e/GatadYanyCCy070sqls81cx66UEROgsMTXVw8wal/O39rjHp2+8L
-rbAGQ7KmcxfSFi+Kk8+6G0eOrgWr7Q1ykego9Hd2PPIG0jD/Z/g2n97yTlUydCUo
-0WR9PQO+QqjGJ1wku66da03oD7VuvZoDAKJeuriJo1Ipm9tiJVfsW6hAvfWzf5Md
-SvX/jwxzMk6/ackrcvf9lSjNh50794AUurx3Rpz6QzJaaheXCfAhzGyaykQZuwSj
-+wY0omxCN/ywb70XUPZNHhhCfoa7Fnq9EqlbW2HU1jodS7I0Tu2Lr69ZKN7vMlcN
-0qCcIKPDR/xug7mpYXISyToppKjn+uCb8EUkSTb/IUVBER9h4ww=
-=988a
------END PGP SIGNATURE-----
---=-=-=--
-
---===============6548238951608519728==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:58137 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033052AbeBOO0S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 15 Feb 2018 09:26:18 -0500
+In-Reply-To: <20180214100557.30717-1-mwilck@suse.com>
+Content-Language: en-CA
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Martin Wilck <mwilck@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
+On 2018-02-14 05:05 AM, Martin Wilck wrote:
+> Error injection in scsi_debug (e.g. opts=16, SDEBUG_OPT_TRANSPORT_ERR)
+> currently doesn't work correctly because the test for sqcp in
+> resp_read_dt0() and similar resp_*() functions always fails.
+> sqcp is set from cmnd->host_scribble, which is set in schedule_resp(), which
+> is called from scsi_debug_queuecommand() after calling the resp_* function.
+> 
+> Defer calling resp_*() until after cmnd->host_scribble is
+> set in schedule_resp().
+> 
+> Fixes: c483739430f1 "scsi_debug: add multiple queue support"
+> 
+> Changes in v2: Adapted to code changes after 80c49563e250
+> 	"scsi: scsi_debug: implement IMMED bit"
+> 
+> Notes about this adaptation:
+> 
+> The "flags &= ~F_LONG_DELAY" statement in scsi_debug_queuecommand()
+> from 80c49563e250 had no effect. Dropped it.
+> Because we call the resp_*() function later now, the code flow in
+> schedule_resp() is slightly different now for the IMMED case - instead of
+> falling through to the "respond_in_thread" label immediately, the command will
+> be put in the work queue with zero delay.
+> 
+> Signed-off-by: Martin Wilck <mwilck@suse.com>
+Ack-ed by: Douglas Gilbert <dgilbert@interlog.com>
 
---===============6548238951608519728==--
+> ---
+>   drivers/scsi/scsi_debug.c | 53 +++++++++++++++++++++++++++++------------------
+>   1 file changed, 33 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 905501075ec6..26ce022dd6f4 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -4315,7 +4315,10 @@ static void setup_inject(struct sdebug_queue *sqp,
+>    * SCSI_MLQUEUE_HOST_BUSY if temporarily out of resources.
+>    */
+>   static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+> -			 int scsi_result, int delta_jiff, int ndelay)
+> +			 int scsi_result,
+> +			 int (*pfp)(struct scsi_cmnd *,
+> +				    struct sdebug_dev_info *),
+> +			 int delta_jiff, int ndelay)
+>   {
+>   	unsigned long iflags;
+>   	int k, num_in_q, qdepth, inject;
+> @@ -4331,9 +4334,6 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+>   	}
+>   	sdp = cmnd->device;
+>   
+> -	if (unlikely(sdebug_verbose && scsi_result))
+> -		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
+> -			    __func__, scsi_result);
+>   	if (delta_jiff == 0)
+>   		goto respond_in_thread;
+>   
+> @@ -4388,7 +4388,6 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+>   	sqcp = &sqp->qc_arr[k];
+>   	sqcp->a_cmnd = cmnd;
+>   	cmnd->host_scribble = (unsigned char *)sqcp;
+> -	cmnd->result = scsi_result;
+>   	sd_dp = sqcp->sd_dp;
+>   	spin_unlock_irqrestore(&sqp->qc_lock, iflags);
+>   	if (unlikely(sdebug_every_nth && sdebug_any_injecting_opt))
+> @@ -4398,6 +4397,22 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+>   		if (sd_dp == NULL)
+>   			return SCSI_MLQUEUE_HOST_BUSY;
+>   	}
+> +
+> +	cmnd->result = pfp != NULL ? pfp(cmnd, devip) : 0;
+> +	if (cmnd->result & SDEG_RES_IMMED_MASK) {
+> +		/*
+> +		 * This is the F_DELAY_OVERR case. No delay.
+> +		 */
+> +		cmnd->result &= ~SDEG_RES_IMMED_MASK;
+> +		delta_jiff = ndelay = 0;
+> +	}
+> +	if (cmnd->result == 0 && scsi_result != 0)
+> +		cmnd->result = scsi_result;
+> +
+> +	if (unlikely(sdebug_verbose && cmnd->result))
+> +		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
+> +			    __func__, cmnd->result);
+> +
+>   	if (delta_jiff > 0 || ndelay > 0) {
+>   		ktime_t kt;
+>   
+> @@ -4440,7 +4455,10 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+>   	return 0;
+>   
+>   respond_in_thread:	/* call back to mid-layer using invocation thread */
+> -	cmnd->result = scsi_result;
+> +	cmnd->result = pfp != NULL ? pfp(cmnd, devip) : 0;
+> +	cmnd->result &= ~SDEG_RES_IMMED_MASK;
+> +	if (cmnd->result == 0 && scsi_result != 0)
+> +		cmnd->result = scsi_result;
+>   	cmnd->scsi_done(cmnd);
+>   	return 0;
+>   }
+> @@ -5628,6 +5646,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+>   	struct sdebug_dev_info *devip;
+>   	u8 *cmd = scp->cmnd;
+>   	int (*r_pfp)(struct scsi_cmnd *, struct sdebug_dev_info *);
+> +	int (*pfp)(struct scsi_cmnd *, struct sdebug_dev_info *) = NULL;
+>   	int k, na;
+>   	int errsts = 0;
+>   	u32 flags;
+> @@ -5749,19 +5768,13 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+>   			return 0;	/* ignore command: make trouble */
+>   	}
+>   	if (likely(oip->pfp))
+> -		errsts = oip->pfp(scp, devip);	/* calls a resp_* function */
+> -	else if (r_pfp)	/* if leaf function ptr NULL, try the root's */
+> -		errsts = r_pfp(scp, devip);
+> -	if (errsts & SDEG_RES_IMMED_MASK) {
+> -		errsts &= ~SDEG_RES_IMMED_MASK;
+> -		flags |= F_DELAY_OVERR;
+> -		flags &= ~F_LONG_DELAY;
+> -	}
+> -
+> +		pfp = oip->pfp;	/* calls a resp_* function */
+> +	else
+> +		pfp = r_pfp;    /* if leaf function ptr NULL, try the root's */
+>   
+>   fini:
+>   	if (F_DELAY_OVERR & flags)
+> -		return schedule_resp(scp, devip, errsts, 0, 0);
+> +		return schedule_resp(scp, devip, errsts, pfp, 0, 0);
+>   	else if ((sdebug_jdelay || sdebug_ndelay) && (flags & F_LONG_DELAY)) {
+>   		/*
+>   		 * If any delay is active, want F_LONG_DELAY to be at least 1
+> @@ -5771,14 +5784,14 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+>   		int jdelay = (sdebug_jdelay < 2) ? 1 : sdebug_jdelay;
+>   
+>   		jdelay = mult_frac(USER_HZ * jdelay, HZ, USER_HZ);
+> -		return schedule_resp(scp, devip, errsts, jdelay, 0);
+> +		return schedule_resp(scp, devip, errsts, pfp, jdelay, 0);
+>   	} else
+> -		return schedule_resp(scp, devip, errsts, sdebug_jdelay,
+> +		return schedule_resp(scp, devip, errsts, pfp, sdebug_jdelay,
+>   				     sdebug_ndelay);
+>   check_cond:
+> -	return schedule_resp(scp, devip, check_condition_result, 0, 0);
+> +	return schedule_resp(scp, devip, check_condition_result, NULL, 0, 0);
+>   err_out:
+> -	return schedule_resp(scp, NULL, DID_NO_CONNECT << 16, 0, 0);
+> +	return schedule_resp(scp, NULL, DID_NO_CONNECT << 16, NULL, 0, 0);
+>   }
+>   
+>   static struct scsi_host_template sdebug_driver_template = {
+> 
