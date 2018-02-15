@@ -1,50 +1,49 @@
 From: Souptick Joarder <jrdr.linux@gmail.com>
-Subject: [PATCH] scsi: mvsas: Use dma_pool_zalloc()
-Date: Thu, 15 Feb 2018 21:28:39 +0530
-Message-ID: <20180215155839.GA8967@jordon-HP-15-Notebook-PC>
+Subject: [PATCH] scsi: megaraid: Use dma_pool_zalloc()
+Date: Thu, 15 Feb 2018 21:55:06 +0530
+Message-ID: <20180215162506.GA9306@jordon-HP-15-Notebook-PC>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:38713 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424925AbeBOP5X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Feb 2018 10:57:23 -0500
-Received: by mail-pg0-f68.google.com with SMTP id l24so74577pgc.5
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2018 07:57:23 -0800 (PST)
-Received: from jordon-HP-15-Notebook-PC ([183.82.18.32])
-        by smtp.gmail.com with ESMTPSA id n25sm40952094pfk.152.2018.02.15.07.57.19
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 15 Feb 2018 07:57:20 -0800 (PST)
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:45529 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1424203AbeBOQXt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Feb 2018 11:23:49 -0500
+Received: by mail-pg0-f67.google.com with SMTP id e11so117464pgq.12
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2018 08:23:49 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com
+Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 
 Use dma_pool_zalloc() instead of dma_pool_alloc + memset
 
 Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
 ---
- drivers/scsi/mvsas/mv_sas.c | 3 +--
+ drivers/scsi/megaraid/megaraid_sas_base.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index cff43bd..d00d37d 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -790,12 +790,11 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
- 	slot->n_elem = n_elem;
- 	slot->slot_tag = tag;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index a71ee67..905ea36 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4022,7 +4022,7 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
 
--	slot->buf = dma_pool_alloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
-+	slot->buf = dma_pool_zalloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
- 	if (!slot->buf) {
- 		rc = -ENOMEM;
- 		goto err_out_tag;
- 	}
--	memset(slot->buf, 0, MVS_SLOT_BUF_SZ);
+ 		cmd = instance->cmd_list[i];
 
- 	tei.task = task;
- 	tei.hdr = &mvi->slot[tag];
+-		cmd->frame = dma_pool_alloc(instance->frame_dma_pool,
++		cmd->frame = dma_pool_zalloc(instance->frame_dma_pool,
+ 					    GFP_KERNEL, &cmd->frame_phys_addr);
+
+ 		cmd->sense = dma_pool_alloc(instance->sense_dma_pool,
+@@ -4038,7 +4038,6 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
+ 			return -ENOMEM;
+ 		}
+
+-		memset(cmd->frame, 0, instance->mfi_frame_size);
+ 		cmd->frame->io.context = cpu_to_le32(cmd->index);
+ 		cmd->frame->io.pad_0 = 0;
+ 		if ((instance->adapter_type == MFI_SERIES) && reset_devices)
 --
 1.9.1
