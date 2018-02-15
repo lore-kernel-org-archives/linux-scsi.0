@@ -1,24 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch RESEND] atp870u: 64 bit bug in atp885_init()
-Date: Thu, 15 Feb 2018 18:44:19 -0500
-Message-ID: <yq1bmgplsx8.fsf@oracle.com>
-References: <20151209102453.GE3173@mwanda>
+Subject: Re: [PATCH v6 00/11] ufs: sysfs: read-only access to device
+Date: Thu, 15 Feb 2018 18:44:56 -0500
+Message-ID: <yq17erdlsw7.fsf@oracle.com>
+References: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20151209102453.GE3173@mwanda> (Dan Carpenter's message of "Wed,
-        14 Feb 2018 15:02:31 +0300")
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
+        (Stanislav Nijnikov's message of "Thu, 15 Feb 2018 14:14:00 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, jaegeuk@kernel.org, Bart.VanAssche@wdc.com, alex.lemberg@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-> On 64 bit CPUs there is a memory corruption bug on probe().  It should
-> be a u32 pointer instead of an unsigned long pointer or we write past
-> the end of the setupdata[] array.
+Stanislav,
 
-Ondrej, please review!
+> This patch introduces sysfs entries that will provide read-only access to
+> device management data that could be received with UFS query requests.
+> User-space applications will be able to read UFS device descriptors,
+> flags and attributes.
+
+Applied to 4.17/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
