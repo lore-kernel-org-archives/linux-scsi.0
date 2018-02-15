@@ -1,7 +1,7 @@
 From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v6 05/11] scsi: ufs: sysfs: health descriptor
-Date: Thu, 15 Feb 2018 14:14:05 +0200
-Message-ID: <1518696851-6730-6-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: [PATCH v6 10/11] scsi: ufs: sysfs: flags
+Date: Thu, 15 Feb 2018 14:14:10 +0200
+Message-ID: <1518696851-6730-11-git-send-email-stanislav.nijnikov@wdc.com>
 References: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
@@ -10,174 +10,174 @@ To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfounda
 Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch introduces a sysfs group entry for the UFS health descriptor
-parameters. The group adds "health_descriptor" folder under the UFS driver
-sysfs entry (/sys/bus/platform/drivers/ufshcd/*). The parameters are shown
-as hexadecimal numbers. The full information about the parameters could be
+This patch introduces a sysfs group entry for the UFS flags. The group adds
+"flags" folder under the UFS driver sysfs entry
+(/sys/bus/platform/drivers/ufshcd/*). The flags are shown as boolean value
+("true" or "false"). The full information about the UFS flags could be
 found at UFS specifications 2.1.
 
 Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 28 ++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.c               | 20 ++++++++++++++++++++
- drivers/scsi/ufs/ufs.h                     | 11 +++++++++++
- drivers/scsi/ufs/ufshcd.c                  |  8 ++++++++
- drivers/scsi/ufs/ufshcd.h                  |  1 +
- 5 files changed, 68 insertions(+)
+ Documentation/ABI/testing/sysfs-driver-ufs | 65 ++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 39 ++++++++++++++++++
+ drivers/scsi/ufs/ufs.h                     | 14 +++++--
+ 3 files changed, 115 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 6ea7613..ddb012b 100644
+index 57c6a90..f4f49e2 100644
 --- a/Documentation/ABI/testing/sysfs-driver-ufs
 +++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -413,3 +413,31 @@ Description:	This file shows the memory capacity adjustment factor for
- 		descriptor parameters. The full information about the
- 		descriptor could be found at UFS specifications 2.1.
+@@ -598,3 +598,68 @@ Description:	This file shows the granularity of the LUN. This is one of
+ 		the UFS unit descriptor parameters. The full information
+ 		about the descriptor could be found at UFS specifications 2.1.
  		The file is read only.
 +
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/eol_info
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/device_init
 +Date:		February 2018
 +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows preend of life information. This is one
-+		of the UFS health descriptor parameters. The full
-+		information about the descriptor could be found at
++Description:	This file shows the device init status. The full information
++		about the flag could be found at UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/permanent_wpe
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows whether permanent write protection is enabled.
++		The full information about the flag could be found at
 +		UFS specifications 2.1.
 +		The file is read only.
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/life_time_estimation_a
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/power_on_wpe
 +Date:		February 2018
 +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows indication of the device life time
-+		(method a). This is one of the UFS health descriptor
-+		parameters. The full information about the descriptor
-+		could be found at UFS specifications 2.1.
++Description:	This file shows whether write protection is enabled on all
++		logical units configured as power on write protected. The
++		full information about the flag could be found at
++		UFS specifications 2.1.
 +		The file is read only.
 +
-+What:		/sys/bus/platform/drivers/ufshcd/*/health_descriptor/life_time_estimation_b
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/bkops_enable
 +Date:		February 2018
 +Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shows indication of the device life time
-+		(method b). This is one of the UFS health descriptor
-+		parameters. The full information about the descriptor
-+		could be found at UFS specifications 2.1.
++Description:	This file shows whether the device background operations are
++		enabled. The full information about the flag could be
++		found at UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/life_span_mode_enable
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows whether the device life span mode is enabled.
++		The full information about the flag could be found at
++		UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/phy_resource_removal
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows whether physical resource removal is enable.
++		The full information about the flag could be found at
++		UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/busy_rtc
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows whether the device is executing internal
++		operation related to real time clock. The full information
++		about the flag could be found at UFS specifications 2.1.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/disable_fw_update
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows whether the device FW update is permanently
++		disabled. The full information about the flag could be found
++		at UFS specifications 2.1.
 +		The file is read only.
 diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index ecd3dcb..c4f18b0 100644
+index cd4d9d0..a09a8a2e 100644
 --- a/drivers/scsi/ufs/ufs-sysfs.c
 +++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -349,11 +349,31 @@ static const struct attribute_group ufs_sysfs_geometry_descriptor_group = {
- 	.attrs = ufs_sysfs_geometry_descriptor,
+@@ -538,6 +538,44 @@ static const struct attribute_group ufs_sysfs_string_descriptors_group = {
+ 	.attrs = ufs_sysfs_string_descriptors,
  };
  
-+#define UFS_HEALTH_DESC_PARAM(_name, _uname, _size)			\
-+	UFS_DESC_PARAM(_name, _uname, HEALTH, _size)
++#define UFS_FLAG(_name, _uname)						\
++static ssize_t _name##_show(struct device *dev,				\
++	struct device_attribute *attr, char *buf)			\
++{									\
++	bool flag;							\
++	struct ufs_hba *hba = dev_get_drvdata(dev);			\
++	if (ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,		\
++		QUERY_FLAG_IDN##_uname, &flag))				\
++		return -EINVAL;						\
++	return sprintf(buf, "%s\n", flag ? "true" : "false");		\
++}									\
++static DEVICE_ATTR_RO(_name)
 +
-+UFS_HEALTH_DESC_PARAM(eol_info, _EOL_INFO, 1);
-+UFS_HEALTH_DESC_PARAM(life_time_estimation_a, _LIFE_TIME_EST_A, 1);
-+UFS_HEALTH_DESC_PARAM(life_time_estimation_b, _LIFE_TIME_EST_B, 1);
++UFS_FLAG(device_init, _FDEVICEINIT);
++UFS_FLAG(permanent_wpe, _PERMANENT_WPE);
++UFS_FLAG(power_on_wpe, _PWR_ON_WPE);
++UFS_FLAG(bkops_enable, _BKOPS_EN);
++UFS_FLAG(life_span_mode_enable, _LIFE_SPAN_MODE_ENABLE);
++UFS_FLAG(phy_resource_removal, _FPHYRESOURCEREMOVAL);
++UFS_FLAG(busy_rtc, _BUSY_RTC);
++UFS_FLAG(disable_fw_update, _PERMANENTLY_DISABLE_FW_UPDATE);
 +
-+static struct attribute *ufs_sysfs_health_descriptor[] = {
-+	&dev_attr_eol_info.attr,
-+	&dev_attr_life_time_estimation_a.attr,
-+	&dev_attr_life_time_estimation_b.attr,
++static struct attribute *ufs_sysfs_device_flags[] = {
++	&dev_attr_device_init.attr,
++	&dev_attr_permanent_wpe.attr,
++	&dev_attr_power_on_wpe.attr,
++	&dev_attr_bkops_enable.attr,
++	&dev_attr_life_span_mode_enable.attr,
++	&dev_attr_phy_resource_removal.attr,
++	&dev_attr_busy_rtc.attr,
++	&dev_attr_disable_fw_update.attr,
 +	NULL,
 +};
 +
-+static const struct attribute_group ufs_sysfs_health_descriptor_group = {
-+	.name = "health_descriptor",
-+	.attrs = ufs_sysfs_health_descriptor,
++static const struct attribute_group ufs_sysfs_flags_group = {
++	.name = "flags",
++	.attrs = ufs_sysfs_device_flags,
 +};
-+
+ 
  static const struct attribute_group *ufs_sysfs_groups[] = {
  	&ufs_sysfs_default_group,
- 	&ufs_sysfs_device_descriptor_group,
- 	&ufs_sysfs_interconnect_descriptor_group,
- 	&ufs_sysfs_geometry_descriptor_group,
-+	&ufs_sysfs_health_descriptor_group,
+@@ -547,6 +585,7 @@ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_health_descriptor_group,
+ 	&ufs_sysfs_power_descriptor_group,
+ 	&ufs_sysfs_string_descriptors_group,
++	&ufs_sysfs_flags_group,
  	NULL,
  };
  
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 04d41c8..6bfeedb 100644
+index 7387059..df5e73e 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -154,6 +154,7 @@ enum desc_idn {
- 	QUERY_DESC_IDN_RFU_1		= 0x6,
- 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
- 	QUERY_DESC_IDN_POWER		= 0x8,
-+	QUERY_DESC_IDN_HEALTH           = 0x9,
- 	QUERY_DESC_IDN_MAX,
+@@ -130,9 +130,17 @@ enum {
+ 
+ /* Flag idn for Query Requests*/
+ enum flag_idn {
+-	QUERY_FLAG_IDN_FDEVICEINIT      = 0x01,
+-	QUERY_FLAG_IDN_PWR_ON_WPE	= 0x03,
+-	QUERY_FLAG_IDN_BKOPS_EN         = 0x04,
++	QUERY_FLAG_IDN_FDEVICEINIT			= 0x01,
++	QUERY_FLAG_IDN_PERMANENT_WPE			= 0x02,
++	QUERY_FLAG_IDN_PWR_ON_WPE			= 0x03,
++	QUERY_FLAG_IDN_BKOPS_EN				= 0x04,
++	QUERY_FLAG_IDN_LIFE_SPAN_MODE_ENABLE		= 0x05,
++	QUERY_FLAG_IDN_PURGE_ENABLE			= 0x06,
++	QUERY_FLAG_IDN_RESERVED2			= 0x07,
++	QUERY_FLAG_IDN_FPHYRESOURCEREMOVAL		= 0x08,
++	QUERY_FLAG_IDN_BUSY_RTC				= 0x09,
++	QUERY_FLAG_IDN_RESERVED3			= 0x0A,
++	QUERY_FLAG_IDN_PERMANENTLY_DISABLE_FW_UPDATE	= 0x0B,
  };
  
-@@ -169,6 +170,7 @@ enum ufs_desc_def_size {
- 	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
- 	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
- 	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
-+	QUERY_DESC_HEALTH_DEF_SIZE		= 0x25,
- };
- 
- /* Unit descriptor parameters offsets in bytes*/
-@@ -274,6 +276,15 @@ enum geometry_desc_param {
- 	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
- };
- 
-+/* Health descriptor parameters offsets in bytes*/
-+enum health_desc_param {
-+	HEALTH_DESC_PARAM_LEN			= 0x0,
-+	HEALTH_DESC_PARAM_TYPE			= 0x1,
-+	HEALTH_DESC_PARAM_EOL_INFO		= 0x2,
-+	HEALTH_DESC_PARAM_LIFE_TIME_EST_A	= 0x3,
-+	HEALTH_DESC_PARAM_LIFE_TIME_EST_B	= 0x4,
-+};
-+
- /*
-  * Logical Unit Write Protect
-  * 00h: LU not write protected
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 540a431..b88fcf7 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2966,6 +2966,9 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
- 	case QUERY_DESC_IDN_STRING:
- 		*desc_len = QUERY_DESC_MAX_SIZE;
- 		break;
-+	case QUERY_DESC_IDN_HEALTH:
-+		*desc_len = hba->desc_size.hlth_desc;
-+		break;
- 	case QUERY_DESC_IDN_RFU_0:
- 	case QUERY_DESC_IDN_RFU_1:
- 		*desc_len = 0;
-@@ -6277,6 +6280,10 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
- 		&hba->desc_size.geom_desc);
- 	if (err)
- 		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-+	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
-+		&hba->desc_size.hlth_desc);
-+	if (err)
-+		hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
- }
- 
- static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
-@@ -6287,6 +6294,7 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
- 	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
- 	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
- 	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-+	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
- }
- 
- /**
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 38c307d..515c6e6 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -229,6 +229,7 @@ struct ufs_desc_size {
- 	int interc_desc;
- 	int unit_desc;
- 	int conf_desc;
-+	int hlth_desc;
- };
- 
- /**
+ /* Attribute idn for Query requests */
 -- 
 2.7.4
