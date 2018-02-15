@@ -1,7 +1,7 @@
 From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH v6 08/11] scsi: host template attribute groups
-Date: Thu, 15 Feb 2018 14:14:08 +0200
-Message-ID: <1518696851-6730-9-git-send-email-stanislav.nijnikov@wdc.com>
+Subject: [PATCH v6 03/11] scsi: ufs: sysfs: interconnect descriptor
+Date: Thu, 15 Feb 2018 14:14:03 +0200
+Message-ID: <1518696851-6730-4-git-send-email-stanislav.nijnikov@wdc.com>
 References: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1518696851-6730-1-git-send-email-stanislav.nijnikov@wdc.com>
@@ -10,72 +10,97 @@ To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfounda
 Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The patch introduces an additional field in the scsi_host_template
-structure - struct attribute_group **sdev_group.
-This field allows to define groups of attributes. It will provide an
-ability to use binary attributes as well as device attributes and
-to group them under subfolders if necessary.
+This patch introduces a sysfs group entry for the UFS interconnect
+descriptor parameters. The group adds "interconnect_descriptor" folder
+under the UFS driver sysfs entry (/sys/bus/platform/drivers/ufshcd/*).
+The parameters are shown as hexadecimal numbers. The full information
+about the parameters could be found at UFS specifications 2.1.
 
 Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/scsi/scsi_sysfs.c | 12 ++++++++++++
- include/scsi/scsi_host.h  |  6 ++++++
- 2 files changed, 18 insertions(+)
+ Documentation/ABI/testing/sysfs-driver-ufs | 19 +++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 18 ++++++++++++++++++
+ drivers/scsi/ufs/ufs.h                     |  8 ++++++++
+ 3 files changed, 45 insertions(+)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index cbc0fe2..d608759 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1309,6 +1309,13 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 		}
- 	}
- 
-+	if (sdev->host->hostt->sdev_groups) {
-+		error = sysfs_create_groups(&sdev->sdev_gendev.kobj,
-+				sdev->host->hostt->sdev_groups);
-+		if (error)
-+			return error;
-+	}
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 8da7b84..099e6fa 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -221,3 +221,22 @@ Description:	This file shows the command maximum timeout for a change
+ 		parameters. The full information about the descriptor could
+ 		be found at UFS specifications 2.1.
+ 		The file is read only.
 +
- 	scsi_autopm_put_device(sdev);
- 	return error;
- }
-@@ -1326,6 +1333,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	if (sdev->sdev_state == SDEV_DEL)
- 		return;
- 
 +
- 	if (sdev->is_visible) {
- 		/*
- 		 * If scsi_internal_target_block() is running concurrently,
-@@ -1348,6 +1356,10 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		if (res != 0)
- 			return;
- 
-+		if (sdev->host->hostt->sdev_groups)
-+			sysfs_remove_groups(&sdev->sdev_gendev.kobj,
-+					sdev->host->hostt->sdev_groups);
++What:		/sys/bus/platform/drivers/ufshcd/*/interconnect_descriptor/unipro_version
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows the MIPI UniPro version number in BCD format.
++		This is one of the UFS interconnect descriptor parameters.
++		The full information about the descriptor could be found at
++		UFS specifications 2.1.
++		The file is read only.
 +
- 		bsg_unregister_queue(sdev->request_queue);
- 		device_unregister(&sdev->sdev_dev);
- 		transport_remove_device(dev);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 1a1df0d..1931758 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -477,6 +477,12 @@ struct scsi_host_template {
- 	struct device_attribute **sdev_attrs;
++What:		/sys/bus/platform/drivers/ufshcd/*/interconnect_descriptor/mphy_version
++Date:		February 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shows the MIPI M-PHY version number in BCD format.
++		This is one of the UFS interconnect descriptor parameters.
++		The full information about the descriptor could be found at
++		UFS specifications 2.1.
++		The file is read only.
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 440b94e..ba229d9 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -249,9 +249,27 @@ static const struct attribute_group ufs_sysfs_device_descriptor_group = {
+ 	.attrs = ufs_sysfs_device_descriptor,
+ };
  
- 	/*
-+	 * Pointer to the SCSI device attribute groups for this host,
-+	 * NULL terminated.
-+	 */
-+	const struct attribute_group **sdev_groups;
++#define UFS_INTERCONNECT_DESC_PARAM(_name, _uname, _size)		\
++	UFS_DESC_PARAM(_name, _uname, INTERCONNECT, _size)
 +
-+	/*
- 	 * List of hosts per template.
- 	 *
- 	 * This is only for use by scsi_module.c for legacy templates.
++UFS_INTERCONNECT_DESC_PARAM(unipro_version, _UNIPRO_VER, 2);
++UFS_INTERCONNECT_DESC_PARAM(mphy_version, _MPHY_VER, 2);
++
++static struct attribute *ufs_sysfs_interconnect_descriptor[] = {
++	&dev_attr_unipro_version.attr,
++	&dev_attr_mphy_version.attr,
++	NULL,
++};
++
++static const struct attribute_group ufs_sysfs_interconnect_descriptor_group = {
++	.name = "interconnect_descriptor",
++	.attrs = ufs_sysfs_interconnect_descriptor,
++};
++
+ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_default_group,
+ 	&ufs_sysfs_device_descriptor_group,
++	&ufs_sysfs_interconnect_descriptor_group,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 6ae1e08..773c049 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -230,6 +230,14 @@ enum device_desc_param {
+ 	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
+ };
+ 
++/* Interconnect descriptor parameters offsets in bytes*/
++enum interconnect_desc_param {
++	INTERCONNECT_DESC_PARAM_LEN		= 0x0,
++	INTERCONNECT_DESC_PARAM_TYPE		= 0x1,
++	INTERCONNECT_DESC_PARAM_UNIPRO_VER	= 0x2,
++	INTERCONNECT_DESC_PARAM_MPHY_VER	= 0x4,
++};
++
+ /*
+  * Logical Unit Write Protect
+  * 00h: LU not write protected
 -- 
 2.7.4
