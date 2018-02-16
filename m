@@ -1,176 +1,586 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v4 02/13] lpfc: Rework sli4 doorbell infrastructure
-Date: Fri, 16 Feb 2018 09:28:16 -0800
-Message-ID: <20180216172827.3739-3-jsmart2021@gmail.com>
+Subject: [PATCH v4 03/13] lpfc: Add SLI-4 if_type=6 support to the code base
+Date: Fri, 16 Feb 2018 09:28:17 -0800
+Message-ID: <20180216172827.3739-4-jsmart2021@gmail.com>
 References: <20180216172827.3739-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:41285 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755623AbeBPRaR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:30:17 -0500
-Received: by mail-pl0-f68.google.com with SMTP id k8so2023472pli.8
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:30:17 -0800 (PST)
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:38017 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755761AbeBPRau (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:30:50 -0500
+Received: by mail-pl0-f67.google.com with SMTP id h10so2027694plt.5
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:30:49 -0800 (PST)
 In-Reply-To: <20180216172827.3739-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Up until now, all SLI-4 devices had the same doorbells at the same
-bar locations. With newer hardware, there are now independent EQ and
-CQ doorbells and the bar locations differ.
+New hardware supports a SLI-4 interface, but with a new if_type
+variant of 6.
 
-Prepare the code for new hardware by separating the eq/cq doorbell into
-separate components. The components can be set based on if_type.
+If_type=6 has a different PCI BAR map, separate EQ/CQ doorbells,
+and some changes in doorbell formats.
+
+Add the changes for the if_type into headers, adapter initialization
+and control flows. Add new eq and cq handlers.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 20 ++++++++++++++------
- drivers/scsi/lpfc/lpfc_debugfs.h | 11 ++++++-----
- drivers/scsi/lpfc/lpfc_init.c    |  9 ++++++---
- drivers/scsi/lpfc/lpfc_sli.c     |  8 ++++----
- drivers/scsi/lpfc/lpfc_sli4.h    |  3 ++-
- 5 files changed, 32 insertions(+), 19 deletions(-)
+ drivers/scsi/lpfc/lpfc_bsg.c  |   4 +-
+ drivers/scsi/lpfc/lpfc_hw4.h  |  54 ++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_init.c | 120 +++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/lpfc/lpfc_sli.c  | 120 ++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_sli4.h |   3 ++
+ 5 files changed, 275 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 17ea3bb04266..308303d501cf 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -3944,10 +3944,15 @@ lpfc_idiag_drbacc_read_reg(struct lpfc_hba *phba, char *pbuffer,
- 		return 0;
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index d89816222b23..8b33b652226b 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -3867,7 +3867,7 @@ lpfc_bsg_sli_cfg_read_cmd_ext(struct lpfc_hba *phba, struct bsg_job *job,
+ 				"ext_buf_cnt:%d\n", ext_buf_cnt);
+ 	} else {
+ 		/* sanity check on interface type for support */
+-		if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
++		if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) <
+ 		    LPFC_SLI_INTF_IF_TYPE_2) {
+ 			rc = -ENODEV;
+ 			goto job_error;
+@@ -4053,7 +4053,7 @@ lpfc_bsg_sli_cfg_write_cmd_ext(struct lpfc_hba *phba, struct bsg_job *job,
+ 				"ext_buf_cnt:%d\n", ext_buf_cnt);
+ 	} else {
+ 		/* sanity check on interface type for support */
+-		if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
++		if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) <
+ 		    LPFC_SLI_INTF_IF_TYPE_2)
+ 			return -ENODEV;
+ 		/* nemb_tp == nemb_hbd */
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 8685d26e6929..93fd9fd10a0f 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -84,6 +84,7 @@ struct lpfc_sli_intf {
+ #define LPFC_SLI_INTF_IF_TYPE_0		0
+ #define LPFC_SLI_INTF_IF_TYPE_1		1
+ #define LPFC_SLI_INTF_IF_TYPE_2		2
++#define LPFC_SLI_INTF_IF_TYPE_6		6
+ #define lpfc_sli_intf_sli_family_SHIFT		8
+ #define lpfc_sli_intf_sli_family_MASK		0x0000000F
+ #define lpfc_sli_intf_sli_family_WORD		word0
+@@ -731,11 +732,13 @@ struct lpfc_register {
+  * register sets depending on the UCNA Port's reported if_type
+  * value.  For UCNA ports running SLI4 and if_type 0, they reside in
+  * BAR4.  For UCNA ports running SLI4 and if_type 2, they reside in
+- * BAR0.  The offsets are the same so the driver must account for
+- * any base address difference.
++ * BAR0.  For FC ports running SLI4 and if_type 6, they reside in
++ * BAR2. The offsets and base address are different,  so the driver
++ * has to compute the register addresses accordingly
+  */
+ #define LPFC_ULP0_RQ_DOORBELL		0x00A0
+ #define LPFC_ULP1_RQ_DOORBELL		0x00C0
++#define LPFC_IF6_RQ_DOORBELL		0x0080
+ #define lpfc_rq_db_list_fm_num_posted_SHIFT	24
+ #define lpfc_rq_db_list_fm_num_posted_MASK	0x00FF
+ #define lpfc_rq_db_list_fm_num_posted_WORD	word0
+@@ -770,6 +773,20 @@ struct lpfc_register {
+ #define lpfc_wq_db_ring_fm_id_MASK              0xFFFF
+ #define lpfc_wq_db_ring_fm_id_WORD              word0
  
- 	switch (drbregid) {
--	case LPFC_DRB_EQCQ:
--		len += snprintf(pbuffer+len, LPFC_DRB_ACC_BUF_SIZE-len,
--				"EQCQ-DRB-REG: 0x%08x\n",
--				readl(phba->sli4_hba.EQCQDBregaddr));
-+	case LPFC_DRB_EQ:
-+		len += snprintf(pbuffer + len, LPFC_DRB_ACC_BUF_SIZE-len,
-+				"EQ-DRB-REG: 0x%08x\n",
-+				readl(phba->sli4_hba.EQDBregaddr));
-+		break;
-+	case LPFC_DRB_CQ:
-+		len += snprintf(pbuffer + len, LPFC_DRB_ACC_BUF_SIZE - len,
-+				"CQ-DRB-REG: 0x%08x\n",
-+				readl(phba->sli4_hba.CQDBregaddr));
- 		break;
- 	case LPFC_DRB_MQ:
- 		len += snprintf(pbuffer+len, LPFC_DRB_ACC_BUF_SIZE-len,
-@@ -4086,8 +4091,11 @@ lpfc_idiag_drbacc_write(struct file *file, const char __user *buf,
- 	    idiag.cmd.opcode == LPFC_IDIAG_CMD_DRBACC_ST ||
- 	    idiag.cmd.opcode == LPFC_IDIAG_CMD_DRBACC_CL) {
- 		switch (drb_reg_id) {
--		case LPFC_DRB_EQCQ:
--			drb_reg = phba->sli4_hba.EQCQDBregaddr;
-+		case LPFC_DRB_EQ:
-+			drb_reg = phba->sli4_hba.EQDBregaddr;
-+			break;
-+		case LPFC_DRB_CQ:
-+			drb_reg = phba->sli4_hba.CQDBregaddr;
- 			break;
- 		case LPFC_DRB_MQ:
- 			drb_reg = phba->sli4_hba.MQDBregaddr;
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
-index c4edd87bfc65..12fbf498a7ce 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.h
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.h
-@@ -126,12 +126,13 @@
- #define LPFC_DRB_ACC_WR_CMD_ARG 2
- #define LPFC_DRB_ACC_BUF_SIZE 256
++#define LPFC_IF6_WQ_DOORBELL		0x0040
++#define lpfc_if6_wq_db_list_fm_num_posted_SHIFT	24
++#define lpfc_if6_wq_db_list_fm_num_posted_MASK	0x00FF
++#define lpfc_if6_wq_db_list_fm_num_posted_WORD	word0
++#define lpfc_if6_wq_db_list_fm_dpp_SHIFT	23
++#define lpfc_if6_wq_db_list_fm_dpp_MASK		0x0001
++#define lpfc_if6_wq_db_list_fm_dpp_WORD		word0
++#define lpfc_if6_wq_db_list_fm_dpp_id_SHIFT	16
++#define lpfc_if6_wq_db_list_fm_dpp_id_MASK	0x001F
++#define lpfc_if6_wq_db_list_fm_dpp_id_WORD	word0
++#define lpfc_if6_wq_db_list_fm_id_SHIFT		0
++#define lpfc_if6_wq_db_list_fm_id_MASK		0xFFFF
++#define lpfc_if6_wq_db_list_fm_id_WORD		word0
++
+ #define LPFC_EQCQ_DOORBELL		0x0120
+ #define lpfc_eqcq_doorbell_se_SHIFT		31
+ #define lpfc_eqcq_doorbell_se_MASK		0x0001
+@@ -805,6 +822,38 @@ struct lpfc_register {
+ #define LPFC_CQID_HI_FIELD_SHIFT		10
+ #define LPFC_EQID_HI_FIELD_SHIFT		9
  
--#define LPFC_DRB_EQCQ 1
--#define LPFC_DRB_MQ   2
--#define LPFC_DRB_WQ   3
--#define LPFC_DRB_RQ   4
-+#define LPFC_DRB_EQ   1
-+#define LPFC_DRB_CQ   2
-+#define LPFC_DRB_MQ   3
-+#define LPFC_DRB_WQ   4
-+#define LPFC_DRB_RQ   5
++#define LPFC_IF6_CQ_DOORBELL			0x00C0
++#define lpfc_if6_cq_doorbell_se_SHIFT		31
++#define lpfc_if6_cq_doorbell_se_MASK		0x0001
++#define lpfc_if6_cq_doorbell_se_WORD		word0
++#define LPFC_IF6_CQ_SOLICIT_ENABLE_OFF		0
++#define LPFC_IF6_CQ_SOLICIT_ENABLE_ON		1
++#define lpfc_if6_cq_doorbell_arm_SHIFT		29
++#define lpfc_if6_cq_doorbell_arm_MASK		0x0001
++#define lpfc_if6_cq_doorbell_arm_WORD		word0
++#define lpfc_if6_cq_doorbell_num_released_SHIFT	16
++#define lpfc_if6_cq_doorbell_num_released_MASK	0x1FFF
++#define lpfc_if6_cq_doorbell_num_released_WORD	word0
++#define lpfc_if6_cq_doorbell_cqid_SHIFT		0
++#define lpfc_if6_cq_doorbell_cqid_MASK		0xFFFF
++#define lpfc_if6_cq_doorbell_cqid_WORD		word0
++
++#define LPFC_IF6_EQ_DOORBELL			0x0120
++#define lpfc_if6_eq_doorbell_io_SHIFT		31
++#define lpfc_if6_eq_doorbell_io_MASK		0x0001
++#define lpfc_if6_eq_doorbell_io_WORD		word0
++#define LPFC_IF6_EQ_INTR_OVERRIDE_OFF		0
++#define LPFC_IF6_EQ_INTR_OVERRIDE_ON		1
++#define lpfc_if6_eq_doorbell_arm_SHIFT		29
++#define lpfc_if6_eq_doorbell_arm_MASK		0x0001
++#define lpfc_if6_eq_doorbell_arm_WORD		word0
++#define lpfc_if6_eq_doorbell_num_released_SHIFT	16
++#define lpfc_if6_eq_doorbell_num_released_MASK	0x1FFF
++#define lpfc_if6_eq_doorbell_num_released_WORD	word0
++#define lpfc_if6_eq_doorbell_eqid_SHIFT		0
++#define lpfc_if6_eq_doorbell_eqid_MASK		0x0FFF
++#define lpfc_if6_eq_doorbell_eqid_WORD		word0
++
+ #define LPFC_BMBX			0x0160
+ #define lpfc_bmbx_addr_SHIFT		2
+ #define lpfc_bmbx_addr_MASK		0x3FFFFFFF
+@@ -817,6 +866,7 @@ struct lpfc_register {
+ #define lpfc_bmbx_rdy_WORD		word0
  
--#define LPFC_DRB_MAX  4
-+#define LPFC_DRB_MAX  5
- 
- #define IDIAG_DRBACC_REGID_INDX 0
- #define IDIAG_DRBACC_VALUE_INDX 1
+ #define LPFC_MQ_DOORBELL			0x0140
++#define LPFC_IF6_MQ_DOORBELL			0x0160
+ #define lpfc_mq_doorbell_num_posted_SHIFT	16
+ #define lpfc_mq_doorbell_num_posted_MASK	0x3FFF
+ #define lpfc_mq_doorbell_num_posted_WORD	word0
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index e24dca2b3f2f..b2cf8eb99008 100644
+index b2cf8eb99008..0d51ecb7317f 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7430,8 +7430,9 @@ lpfc_sli4_bar0_register_memmap(struct lpfc_hba *phba, uint32_t if_type)
- 		phba->sli4_hba.WQDBregaddr =
- 			phba->sli4_hba.conf_regs_memmap_p +
- 						LPFC_ULP0_WQ_DOORBELL;
--		phba->sli4_hba.EQCQDBregaddr =
-+		phba->sli4_hba.CQDBregaddr =
- 			phba->sli4_hba.conf_regs_memmap_p + LPFC_EQCQ_DOORBELL;
-+		phba->sli4_hba.EQDBregaddr = phba->sli4_hba.CQDBregaddr;
- 		phba->sli4_hba.MQDBregaddr =
- 			phba->sli4_hba.conf_regs_memmap_p + LPFC_MQ_DOORBELL;
+@@ -1761,7 +1761,7 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
+ 	int rc;
+ 	uint32_t intr_mode;
+ 
+-	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
++	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
+ 	    LPFC_SLI_INTF_IF_TYPE_2) {
+ 		/*
+ 		 * On error status condition, driver need to wait for port
+@@ -1892,6 +1892,7 @@ lpfc_handle_eratt_s4(struct lpfc_hba *phba)
+ 		break;
+ 
+ 	case LPFC_SLI_INTF_IF_TYPE_2:
++	case LPFC_SLI_INTF_IF_TYPE_6:
+ 		pci_rd_rc1 = lpfc_readl(
+ 				phba->sli4_hba.u.if_type2.STATUSregaddr,
+ 				&portstat_reg.word0);
+@@ -6018,7 +6019,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 		return -ENOMEM;
+ 
+ 	/* IF Type 2 ports get initialized now. */
+-	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
++	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
+ 	    LPFC_SLI_INTF_IF_TYPE_2) {
+ 		rc = lpfc_pci_function_reset(phba);
+ 		if (unlikely(rc)) {
+@@ -7348,6 +7349,7 @@ lpfc_sli4_post_status_check(struct lpfc_hba *phba)
+ 			}
+ 			break;
+ 		case LPFC_SLI_INTF_IF_TYPE_2:
++		case LPFC_SLI_INTF_IF_TYPE_6:
+ 			/* Final checks.  The port status should be clean. */
+ 			if (lpfc_readl(phba->sli4_hba.u.if_type2.STATUSregaddr,
+ 				&reg_data.word0) ||
+@@ -7438,6 +7440,28 @@ lpfc_sli4_bar0_register_memmap(struct lpfc_hba *phba, uint32_t if_type)
  		phba->sli4_hba.BMBXregaddr =
-@@ -7488,8 +7489,10 @@ lpfc_sli4_bar2_register_memmap(struct lpfc_hba *phba, uint32_t vf)
- 	phba->sli4_hba.WQDBregaddr = (phba->sli4_hba.drbl_regs_memmap_p +
- 				vf * LPFC_VFR_PAGE_SIZE +
- 					LPFC_ULP0_WQ_DOORBELL);
--	phba->sli4_hba.EQCQDBregaddr = (phba->sli4_hba.drbl_regs_memmap_p +
--				vf * LPFC_VFR_PAGE_SIZE + LPFC_EQCQ_DOORBELL);
-+	phba->sli4_hba.CQDBregaddr = (phba->sli4_hba.drbl_regs_memmap_p +
-+				vf * LPFC_VFR_PAGE_SIZE +
-+					LPFC_EQCQ_DOORBELL);
-+	phba->sli4_hba.EQDBregaddr = phba->sli4_hba.CQDBregaddr;
- 	phba->sli4_hba.MQDBregaddr = (phba->sli4_hba.drbl_regs_memmap_p +
- 				vf * LPFC_VFR_PAGE_SIZE + LPFC_MQ_DOORBELL);
- 	phba->sli4_hba.BMBXregaddr = (phba->sli4_hba.drbl_regs_memmap_p +
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index f91caae6489a..f4db7d486431 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -310,7 +310,7 @@ lpfc_sli4_eq_clr_intr(struct lpfc_queue *q)
- 	bf_set(lpfc_eqcq_doorbell_eqid_hi, &doorbell,
- 		(q->queue_id >> LPFC_EQID_HI_FIELD_SHIFT));
- 	bf_set(lpfc_eqcq_doorbell_eqid_lo, &doorbell, q->queue_id);
--	writel(doorbell.word0, q->phba->sli4_hba.EQCQDBregaddr);
-+	writel(doorbell.word0, q->phba->sli4_hba.EQDBregaddr);
+ 			phba->sli4_hba.conf_regs_memmap_p + LPFC_BMBX;
+ 		break;
++	case LPFC_SLI_INTF_IF_TYPE_6:
++		phba->sli4_hba.u.if_type2.EQDregaddr =
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_EQ_DELAY_OFFSET;
++		phba->sli4_hba.u.if_type2.ERR1regaddr =
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_ER1_OFFSET;
++		phba->sli4_hba.u.if_type2.ERR2regaddr =
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_ER2_OFFSET;
++		phba->sli4_hba.u.if_type2.CTRLregaddr =
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_CTL_OFFSET;
++		phba->sli4_hba.u.if_type2.STATUSregaddr =
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_STA_OFFSET;
++		phba->sli4_hba.PSMPHRregaddr =
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_SEM_OFFSET;
++		phba->sli4_hba.BMBXregaddr =
++			phba->sli4_hba.conf_regs_memmap_p + LPFC_BMBX;
++		break;
+ 	case LPFC_SLI_INTF_IF_TYPE_1:
+ 	default:
+ 		dev_printk(KERN_ERR, &phba->pcidev->dev,
+@@ -7451,20 +7475,43 @@ lpfc_sli4_bar0_register_memmap(struct lpfc_hba *phba, uint32_t if_type)
+  * lpfc_sli4_bar1_register_memmap - Set up SLI4 BAR1 register memory map.
+  * @phba: pointer to lpfc hba data structure.
+  *
+- * This routine is invoked to set up SLI4 BAR1 control status register (CSR)
+- * memory map.
++ * This routine is invoked to set up SLI4 BAR1 register memory map.
+  **/
+ static void
+-lpfc_sli4_bar1_register_memmap(struct lpfc_hba *phba)
++lpfc_sli4_bar1_register_memmap(struct lpfc_hba *phba, uint32_t if_type)
+ {
+-	phba->sli4_hba.PSMPHRregaddr = phba->sli4_hba.ctrl_regs_memmap_p +
+-		LPFC_SLIPORT_IF0_SMPHR;
+-	phba->sli4_hba.ISRregaddr = phba->sli4_hba.ctrl_regs_memmap_p +
+-		LPFC_HST_ISR0;
+-	phba->sli4_hba.IMRregaddr = phba->sli4_hba.ctrl_regs_memmap_p +
+-		LPFC_HST_IMR0;
+-	phba->sli4_hba.ISCRregaddr = phba->sli4_hba.ctrl_regs_memmap_p +
+-		LPFC_HST_ISCR0;
++	switch (if_type) {
++	case LPFC_SLI_INTF_IF_TYPE_0:
++		phba->sli4_hba.PSMPHRregaddr =
++			phba->sli4_hba.ctrl_regs_memmap_p +
++			LPFC_SLIPORT_IF0_SMPHR;
++		phba->sli4_hba.ISRregaddr = phba->sli4_hba.ctrl_regs_memmap_p +
++			LPFC_HST_ISR0;
++		phba->sli4_hba.IMRregaddr = phba->sli4_hba.ctrl_regs_memmap_p +
++			LPFC_HST_IMR0;
++		phba->sli4_hba.ISCRregaddr = phba->sli4_hba.ctrl_regs_memmap_p +
++			LPFC_HST_ISCR0;
++		break;
++	case LPFC_SLI_INTF_IF_TYPE_6:
++		phba->sli4_hba.RQDBregaddr = phba->sli4_hba.drbl_regs_memmap_p +
++			LPFC_IF6_RQ_DOORBELL;
++		phba->sli4_hba.WQDBregaddr = phba->sli4_hba.drbl_regs_memmap_p +
++			LPFC_IF6_WQ_DOORBELL;
++		phba->sli4_hba.CQDBregaddr = phba->sli4_hba.drbl_regs_memmap_p +
++			LPFC_IF6_CQ_DOORBELL;
++		phba->sli4_hba.EQDBregaddr = phba->sli4_hba.drbl_regs_memmap_p +
++			LPFC_IF6_EQ_DOORBELL;
++		phba->sli4_hba.MQDBregaddr = phba->sli4_hba.drbl_regs_memmap_p +
++			LPFC_IF6_MQ_DOORBELL;
++		break;
++	case LPFC_SLI_INTF_IF_TYPE_2:
++	case LPFC_SLI_INTF_IF_TYPE_1:
++	default:
++		dev_err(&phba->pcidev->dev,
++			   "FATAL - unsupported SLI4 interface type - %d\n",
++			   if_type);
++		break;
++	}
  }
  
  /**
-@@ -360,10 +360,10 @@ lpfc_sli4_eq_release(struct lpfc_queue *q, bool arm)
- 	bf_set(lpfc_eqcq_doorbell_eqid_hi, &doorbell,
- 			(q->queue_id >> LPFC_EQID_HI_FIELD_SHIFT));
- 	bf_set(lpfc_eqcq_doorbell_eqid_lo, &doorbell, q->queue_id);
--	writel(doorbell.word0, q->phba->sli4_hba.EQCQDBregaddr);
+@@ -7729,7 +7776,7 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
+ 
+ 	/* Update link speed if forced link speed is supported */
+ 	if_type = bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf);
+-	if (if_type == LPFC_SLI_INTF_IF_TYPE_2) {
++	if (if_type >= LPFC_SLI_INTF_IF_TYPE_2) {
+ 		forced_link_speed =
+ 			bf_get(lpfc_mbx_rd_conf_link_speed, rd_config);
+ 		if (forced_link_speed) {
+@@ -7789,7 +7836,7 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
+ 		phba->cfg_hba_queue_depth = length;
+ 	}
+ 
+-	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
++	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) <
+ 	    LPFC_SLI_INTF_IF_TYPE_2)
+ 		goto read_cfg_out;
+ 
+@@ -7903,6 +7950,7 @@ lpfc_setup_endian_order(struct lpfc_hba *phba)
+ 		}
+ 		mempool_free(mboxq, phba->mbox_mem_pool);
+ 		break;
++	case LPFC_SLI_INTF_IF_TYPE_6:
+ 	case LPFC_SLI_INTF_IF_TYPE_2:
+ 	case LPFC_SLI_INTF_IF_TYPE_1:
+ 	default:
+@@ -9314,6 +9362,7 @@ lpfc_pci_function_reset(struct lpfc_hba *phba)
+ 		}
+ 		break;
+ 	case LPFC_SLI_INTF_IF_TYPE_2:
++	case LPFC_SLI_INTF_IF_TYPE_6:
+ wait:
+ 		/*
+ 		 * Poll the Port Status Register and wait for RDY for
+@@ -9469,7 +9518,7 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
+ 	} else {
+ 		phba->pci_bar0_map = pci_resource_start(pdev, 1);
+ 		bar0map_len = pci_resource_len(pdev, 1);
+-		if (if_type == LPFC_SLI_INTF_IF_TYPE_2) {
++		if (if_type >= LPFC_SLI_INTF_IF_TYPE_2) {
+ 			dev_printk(KERN_ERR, &pdev->dev,
+ 			   "FATAL - No BAR0 mapping for SLI4, if_type 2\n");
+ 			goto out;
+@@ -9506,13 +9555,32 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
+ 			}
+ 			phba->pci_bar2_memmap_p =
+ 					 phba->sli4_hba.ctrl_regs_memmap_p;
+-			lpfc_sli4_bar1_register_memmap(phba);
++			lpfc_sli4_bar1_register_memmap(phba, if_type);
+ 		} else {
+ 			error = -ENOMEM;
+ 			goto out_iounmap_conf;
+ 		}
+ 	}
+ 
++	if ((if_type == LPFC_SLI_INTF_IF_TYPE_6) &&
++	    (pci_resource_start(pdev, PCI_64BIT_BAR2))) {
++		/*
++		 * Map SLI4 if type 6 HBA Doorbell Register base to a kernel
++		 * virtual address and setup the registers.
++		 */
++		phba->pci_bar1_map = pci_resource_start(pdev, PCI_64BIT_BAR2);
++		bar1map_len = pci_resource_len(pdev, PCI_64BIT_BAR2);
++		phba->sli4_hba.drbl_regs_memmap_p =
++				ioremap(phba->pci_bar1_map, bar1map_len);
++		if (!phba->sli4_hba.drbl_regs_memmap_p) {
++			dev_err(&pdev->dev,
++			   "ioremap failed for SLI4 HBA doorbell registers.\n");
++			goto out_iounmap_conf;
++		}
++		phba->pci_bar2_memmap_p = phba->sli4_hba.drbl_regs_memmap_p;
++		lpfc_sli4_bar1_register_memmap(phba, if_type);
++	}
++
+ 	if (if_type == LPFC_SLI_INTF_IF_TYPE_0) {
+ 		if (pci_resource_start(pdev, PCI_64BIT_BAR4)) {
+ 			/*
+@@ -9544,10 +9612,20 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
+ 	}
+ 
+ 	/* Set up the EQ/CQ register handeling functions now */
+-	if (if_type <= LPFC_SLI_INTF_IF_TYPE_2) {
++	switch (if_type) {
++	case LPFC_SLI_INTF_IF_TYPE_0:
++	case LPFC_SLI_INTF_IF_TYPE_2:
+ 		phba->sli4_hba.sli4_eq_clr_intr = lpfc_sli4_eq_clr_intr;
+ 		phba->sli4_hba.sli4_eq_release = lpfc_sli4_eq_release;
+ 		phba->sli4_hba.sli4_cq_release = lpfc_sli4_cq_release;
++		break;
++	case LPFC_SLI_INTF_IF_TYPE_6:
++		phba->sli4_hba.sli4_eq_clr_intr = lpfc_sli4_if6_eq_clr_intr;
++		phba->sli4_hba.sli4_eq_release = lpfc_sli4_if6_eq_release;
++		phba->sli4_hba.sli4_cq_release = lpfc_sli4_if6_cq_release;
++		break;
++	default:
++		break;
+ 	}
+ 
+ 	return 0;
+@@ -9584,6 +9662,10 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
+ 	case LPFC_SLI_INTF_IF_TYPE_2:
+ 		iounmap(phba->sli4_hba.conf_regs_memmap_p);
+ 		break;
++	case LPFC_SLI_INTF_IF_TYPE_6:
++		iounmap(phba->sli4_hba.drbl_regs_memmap_p);
++		iounmap(phba->sli4_hba.conf_regs_memmap_p);
++		break;
+ 	case LPFC_SLI_INTF_IF_TYPE_1:
+ 	default:
+ 		dev_printk(KERN_ERR, &phba->pcidev->dev,
+@@ -11288,7 +11370,7 @@ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
+ 	const struct firmware *fw;
+ 
+ 	/* Only supported on SLI4 interface type 2 for now */
+-	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
++	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) <
+ 	    LPFC_SLI_INTF_IF_TYPE_2)
+ 		return -EPERM;
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index f4db7d486431..3bff1f9c5df7 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -314,6 +314,25 @@ lpfc_sli4_eq_clr_intr(struct lpfc_queue *q)
+ }
+ 
+ /**
++ * lpfc_sli4_if6_eq_clr_intr - Turn off interrupts from this EQ
++ * @q: The Event Queue to disable interrupts
++ *
++ **/
++inline void
++lpfc_sli4_if6_eq_clr_intr(struct lpfc_queue *q)
++{
++	struct lpfc_register doorbell;
++
++	doorbell.word0 = 0;
++	bf_set(lpfc_eqcq_doorbell_eqci, &doorbell, 1);
++	bf_set(lpfc_eqcq_doorbell_qt, &doorbell, LPFC_QUEUE_TYPE_EVENT);
++	bf_set(lpfc_eqcq_doorbell_eqid_hi, &doorbell,
++		(q->queue_id >> LPFC_EQID_HI_FIELD_SHIFT));
++	bf_set(lpfc_eqcq_doorbell_eqid_lo, &doorbell, q->queue_id);
 +	writel(doorbell.word0, q->phba->sli4_hba.EQDBregaddr);
- 	/* PCI read to flush PCI pipeline on re-arming for INTx mode */
- 	if ((q->phba->intr_type == INTx) && (arm == LPFC_QUEUE_REARM))
--		readl(q->phba->sli4_hba.EQCQDBregaddr);
++}
++
++/**
+  * lpfc_sli4_eq_release - Indicates the host has finished processing an EQ
+  * @q: The Event Queue that the host has completed processing for.
+  * @arm: Indicates whether the host wants to arms this CQ.
+@@ -368,6 +387,55 @@ lpfc_sli4_eq_release(struct lpfc_queue *q, bool arm)
+ }
+ 
+ /**
++ * lpfc_sli4_if6_eq_release - Indicates the host has finished processing an EQ
++ * @q: The Event Queue that the host has completed processing for.
++ * @arm: Indicates whether the host wants to arms this CQ.
++ *
++ * This routine will mark all Event Queue Entries on @q, from the last
++ * known completed entry to the last entry that was processed, as completed
++ * by clearing the valid bit for each completion queue entry. Then it will
++ * notify the HBA, by ringing the doorbell, that the EQEs have been processed.
++ * The internal host index in the @q will be updated by this routine to indicate
++ * that the host has finished processing the entries. The @arm parameter
++ * indicates that the queue should be rearmed when ringing the doorbell.
++ *
++ * This function will return the number of EQEs that were popped.
++ **/
++uint32_t
++lpfc_sli4_if6_eq_release(struct lpfc_queue *q, bool arm)
++{
++	uint32_t released = 0;
++	struct lpfc_eqe *temp_eqe;
++	struct lpfc_register doorbell;
++
++	/* sanity check on queue memory */
++	if (unlikely(!q))
++		return 0;
++
++	/* while there are valid entries */
++	while (q->hba_index != q->host_index) {
++		temp_eqe = q->qe[q->host_index].eqe;
++		bf_set_le32(lpfc_eqe_valid, temp_eqe, 0);
++		released++;
++		q->host_index = ((q->host_index + 1) % q->entry_count);
++	}
++	if (unlikely(released == 0 && !arm))
++		return 0;
++
++	/* ring doorbell for number popped */
++	doorbell.word0 = 0;
++	if (arm)
++		bf_set(lpfc_if6_eq_doorbell_arm, &doorbell, 1);
++	bf_set(lpfc_if6_eq_doorbell_num_released, &doorbell, released);
++	bf_set(lpfc_if6_eq_doorbell_eqid, &doorbell, q->queue_id);
++	writel(doorbell.word0, q->phba->sli4_hba.EQDBregaddr);
++	/* PCI read to flush PCI pipeline on re-arming for INTx mode */
++	if ((q->phba->intr_type == INTx) && (arm == LPFC_QUEUE_REARM))
 +		readl(q->phba->sli4_hba.EQDBregaddr);
- 	return released;
++	return released;
++}
++
++/**
+  * lpfc_sli4_cq_get - Gets the next valid CQE from a CQ
+  * @q: The Completion Queue to get the first valid CQE from
+  *
+@@ -458,6 +526,51 @@ lpfc_sli4_cq_release(struct lpfc_queue *q, bool arm)
  }
  
-@@ -453,7 +453,7 @@ lpfc_sli4_cq_release(struct lpfc_queue *q, bool arm)
- 	bf_set(lpfc_eqcq_doorbell_cqid_hi, &doorbell,
- 			(q->queue_id >> LPFC_CQID_HI_FIELD_SHIFT));
- 	bf_set(lpfc_eqcq_doorbell_cqid_lo, &doorbell, q->queue_id);
--	writel(doorbell.word0, q->phba->sli4_hba.EQCQDBregaddr);
+ /**
++ * lpfc_sli4_if6_cq_release - Indicates the host has finished processing a CQ
++ * @q: The Completion Queue that the host has completed processing for.
++ * @arm: Indicates whether the host wants to arms this CQ.
++ *
++ * This routine will mark all Completion queue entries on @q, from the last
++ * known completed entry to the last entry that was processed, as completed
++ * by clearing the valid bit for each completion queue entry. Then it will
++ * notify the HBA, by ringing the doorbell, that the CQEs have been processed.
++ * The internal host index in the @q will be updated by this routine to indicate
++ * that the host has finished processing the entries. The @arm parameter
++ * indicates that the queue should be rearmed when ringing the doorbell.
++ *
++ * This function will return the number of CQEs that were released.
++ **/
++uint32_t
++lpfc_sli4_if6_cq_release(struct lpfc_queue *q, bool arm)
++{
++	uint32_t released = 0;
++	struct lpfc_cqe *temp_qe;
++	struct lpfc_register doorbell;
++
++	/* sanity check on queue memory */
++	if (unlikely(!q))
++		return 0;
++	/* while there are valid entries */
++	while (q->hba_index != q->host_index) {
++		temp_qe = q->qe[q->host_index].cqe;
++		bf_set_le32(lpfc_cqe_valid, temp_qe, 0);
++		released++;
++		q->host_index = ((q->host_index + 1) % q->entry_count);
++	}
++	if (unlikely(released == 0 && !arm))
++		return 0;
++
++	/* ring doorbell for number popped */
++	doorbell.word0 = 0;
++	if (arm)
++		bf_set(lpfc_if6_cq_doorbell_arm, &doorbell, 1);
++	bf_set(lpfc_if6_cq_doorbell_num_released, &doorbell, released);
++	bf_set(lpfc_if6_cq_doorbell_cqid, &doorbell, q->queue_id);
 +	writel(doorbell.word0, q->phba->sli4_hba.CQDBregaddr);
- 	return released;
- }
++	return released;
++}
++
++/**
+  * lpfc_sli4_rq_put - Put a Receive Buffer Queue Entry on a Receive Queue
+  * @q: The Header Receive Queue to operate on.
+  * @wqe: The Receive Queue Entry to put on the Receive queue.
+@@ -2331,7 +2444,7 @@ lpfc_sli4_unreg_rpi_cmpl_clr(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	if (pmb->u.mb.mbxCommand == MBX_UNREG_LOGIN) {
+ 		if (phba->sli_rev == LPFC_SLI_REV4 &&
+ 		    (bf_get(lpfc_sli_intf_if_type,
+-		     &phba->sli4_hba.sli_intf) ==
++		     &phba->sli4_hba.sli_intf) >=
+ 		     LPFC_SLI_INTF_IF_TYPE_2)) {
+ 			if (ndlp) {
+ 				lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
+@@ -8792,7 +8905,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 					iocbq->context2)->virt);
+ 		if_type = bf_get(lpfc_sli_intf_if_type,
+ 					&phba->sli4_hba.sli_intf);
+-		if (if_type == LPFC_SLI_INTF_IF_TYPE_2) {
++		if (if_type >= LPFC_SLI_INTF_IF_TYPE_2) {
+ 			if (pcmd && (*pcmd == ELS_CMD_FLOGI ||
+ 				*pcmd == ELS_CMD_SCR ||
+ 				*pcmd == ELS_CMD_FDISC ||
+@@ -9089,7 +9202,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
  
+ 		if_type = bf_get(lpfc_sli_intf_if_type,
+ 					&phba->sli4_hba.sli_intf);
+-		if (if_type == LPFC_SLI_INTF_IF_TYPE_2) {
++		if (if_type >= LPFC_SLI_INTF_IF_TYPE_2) {
+ 			if (iocbq->vport->fc_flag & FC_PT2PT) {
+ 				bf_set(els_rsp64_sp, &wqe->xmit_els_rsp, 1);
+ 				bf_set(els_rsp64_sid, &wqe->xmit_els_rsp,
+@@ -11673,6 +11786,7 @@ lpfc_sli4_eratt_read(struct lpfc_hba *phba)
+ 		}
+ 		break;
+ 	case LPFC_SLI_INTF_IF_TYPE_2:
++	case LPFC_SLI_INTF_IF_TYPE_6:
+ 		if (lpfc_readl(phba->sli4_hba.u.if_type2.STATUSregaddr,
+ 			&portstat_reg.word0) ||
+ 			lpfc_readl(phba->sli4_hba.PSMPHRregaddr,
 diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 0c0cbe296fed..e2f06c92c4dd 100644
+index e2f06c92c4dd..33838b4b28d9 100644
 --- a/drivers/scsi/lpfc/lpfc_sli4.h
 +++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -569,7 +569,8 @@ struct lpfc_sli4_hba {
- 	/* IF type 0, BAR 0 and if type 2, BAR 0 doorbell register memory map */
- 	void __iomem *RQDBregaddr;	/* RQ_DOORBELL register */
- 	void __iomem *WQDBregaddr;	/* WQ_DOORBELL register */
--	void __iomem *EQCQDBregaddr;	/* EQCQ_DOORBELL register */
-+	void __iomem *CQDBregaddr;	/* CQ_DOORBELL register */
-+	void __iomem *EQDBregaddr;	/* EQ_DOORBELL register */
- 	void __iomem *MQDBregaddr;	/* MQ_DOORBELL register */
- 	void __iomem *BMBXregaddr;	/* BootStrap MBX register */
- 
+@@ -856,6 +856,9 @@ int lpfc_sli4_init_vpi(struct lpfc_vport *);
+ inline void lpfc_sli4_eq_clr_intr(struct lpfc_queue *);
+ uint32_t lpfc_sli4_cq_release(struct lpfc_queue *, bool);
+ uint32_t lpfc_sli4_eq_release(struct lpfc_queue *, bool);
++inline void lpfc_sli4_if6_eq_clr_intr(struct lpfc_queue *q);
++uint32_t lpfc_sli4_if6_cq_release(struct lpfc_queue *q, bool arm);
++uint32_t lpfc_sli4_if6_eq_release(struct lpfc_queue *q, bool arm);
+ void lpfc_sli4_fcfi_unreg(struct lpfc_hba *, uint16_t);
+ int lpfc_sli4_fcf_scan_read_fcf_rec(struct lpfc_hba *, uint16_t);
+ int lpfc_sli4_fcf_rr_read_fcf_rec(struct lpfc_hba *, uint16_t);
 -- 
 2.13.1
