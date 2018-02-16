@@ -1,54 +1,134 @@
 From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: [PATCH v3 0/2] scsi: mpt3sas: prevent oops in the shutdown/unload path
-Date: Fri, 16 Feb 2018 20:39:56 -0200
-Message-ID: <1518820798-21018-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH 2/2] scsi: mpt3sas: wait for and flush running commands on shutdown/unload
+Date: Fri, 16 Feb 2018 20:39:58 -0200
+Message-ID: <1518820798-21018-3-git-send-email-mauricfo@linux.vnet.ibm.com>
+References: <1518820798-21018-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60290 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750797AbeBPWkI (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43972 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750819AbeBPWkP (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Feb 2018 17:40:08 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1GMdHLC058473
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 17:40:08 -0500
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2g62ybv3jp-1
+        Fri, 16 Feb 2018 17:40:15 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1GMdG4S030006
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 17:40:15 -0500
+Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2g67yq0j0d-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 17:40:08 -0500
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 17:40:14 -0500
 Received: from localhost
-        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Fri, 16 Feb 2018 17:40:06 -0500
+        Fri, 16 Feb 2018 17:40:14 -0500
+In-Reply-To: <1518820798-21018-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Bart.VanAssche@wdc.com, sreekanth.reddy@broadcom.com
 Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dougmill@linux.vnet.ibm.com
 
-The first patch prevents the SCSI error handlers to run once the shutdown/unload
-path starts.  This avoids an oops at least in the host reset handler, on kernels
-with a recent patch, and also in the abort handler on kernels without that patch.
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-The second patch goes a step further, and prevents the SCSI error handlers to be
-called for SCSI IO commands running at the shutdown/unload time (in case adapter
-interrupts are disabled before they complete) by finishing them.
+This patch finishes all outstanding SCSI IO commands (but not other
+commands, e.g., task management) in the shutdown and unload paths.
 
-Notice the second patch only affects SCSI IO commands. Other command types, e.g.,
-Task Manangement Functions, which are running at the shutdown/unload time still
-must be handled separately -- this is also covered in patch 1.
+It first waits for the commands to complete (this is done after
+setting 'ioc->remove_host = 1 ', which prevents new commands to
+be queued) then it flushes commands that might still be running.
 
-The patchset is v3 as PATCH 1/2 is identical to its v2 submission, and PATCH 2/2
-has been added (in its first version).
+This avoids triggering error handling (e.g., abort command) for
+all commands possibly completed by the adapter after interrupts
+disabled.
 
-Thanks to Sreekanth Reddy and Bart Van Assche for review and contributions.
-
-Mauricio Faria de Oliveira (2):
-  scsi: mpt3sas: fix oops in error handlers after shutdown/unload
-  scsi: mpt3sas: wait for and flush running commands on shutdown/unload
-
+Suggested-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Tested-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+[mauricfo: introduced something in commit message.]
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+---
  drivers/scsi/mpt3sas/mpt3sas_base.c  |  8 ++++----
  drivers/scsi/mpt3sas/mpt3sas_base.h  |  3 +++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 21 ++++++++++++++++-----
- 3 files changed, 23 insertions(+), 9 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 +++++++++-
+ 3 files changed, 16 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 59a87ca..0aafbfd 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -6297,14 +6297,14 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
+ }
+ 
+ /**
+- * _wait_for_commands_to_complete - reset controller
++ * mpt3sas_wait_for_commands_to_complete - reset controller
+  * @ioc: Pointer to MPT_ADAPTER structure
+  *
+  * This function is waiting 10s for all pending commands to complete
+  * prior to putting controller in reset.
+  */
+-static void
+-_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
++void
++mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	u32 ioc_state;
+ 
+@@ -6377,7 +6377,7 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
+ 			is_fault = 1;
+ 	}
+ 	_base_reset_handler(ioc, MPT3_IOC_PRE_RESET);
+-	_wait_for_commands_to_complete(ioc);
++	mpt3sas_wait_for_commands_to_complete(ioc);
+ 	_base_mask_interrupts(ioc);
+ 	r = _base_make_ioc_ready(ioc, type);
+ 	if (r)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 789bc42..99ccf83 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1433,6 +1433,9 @@ void mpt3sas_base_update_missing_delay(struct MPT3SAS_ADAPTER *ioc,
+ 
+ int mpt3sas_port_enable(struct MPT3SAS_ADAPTER *ioc);
+ 
++void
++mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc);
++
+ 
+ /* scsih shared API */
+ struct scsi_cmnd *mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 5ab3caf..c2ea13c7 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4456,7 +4456,7 @@ static int _scsih_set_satl_pending(struct scsi_cmnd *scmd, bool pending)
+ 		st = scsi_cmd_priv(scmd);
+ 		mpt3sas_base_clear_st(ioc, st);
+ 		scsi_dma_unmap(scmd);
+-		if (ioc->pci_error_recovery)
++		if (ioc->pci_error_recovery || ioc->remove_host)
+ 			scmd->result = DID_NO_CONNECT << 16;
+ 		else
+ 			scmd->result = DID_RESET << 16;
+@@ -9742,6 +9742,10 @@ static void scsih_remove(struct pci_dev *pdev)
+ 	unsigned long flags;
+ 
+ 	ioc->remove_host = 1;
++
++	mpt3sas_wait_for_commands_to_complete(ioc);
++	_scsih_flush_running_cmds(ioc);
++
+ 	_scsih_fw_event_cleanup_queue(ioc);
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+@@ -9818,6 +9822,10 @@ static void scsih_remove(struct pci_dev *pdev)
+ 	unsigned long flags;
+ 
+ 	ioc->remove_host = 1;
++
++	mpt3sas_wait_for_commands_to_complete(ioc);
++	_scsih_flush_running_cmds(ioc);
++
+ 	_scsih_fw_event_cleanup_queue(ioc);
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
 -- 
 1.8.3.1
