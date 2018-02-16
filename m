@@ -1,146 +1,285 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v4 08/13] lpfc: Enable fw download on if_type=6 devices
-Date: Fri, 16 Feb 2018 09:28:22 -0800
-Message-ID: <20180216172827.3739-9-jsmart2021@gmail.com>
+Subject: [PATCH v4 09/13] lpfc: Add embedded data pointers for enhanced performance
+Date: Fri, 16 Feb 2018 09:28:23 -0800
+Message-ID: <20180216172827.3739-10-jsmart2021@gmail.com>
 References: <20180216172827.3739-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:43807 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161052AbeBPRc2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:32:28 -0500
-Received: by mail-pl0-f67.google.com with SMTP id f4so2024215plr.10
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:32:28 -0800 (PST)
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:41503 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162044AbeBPRdB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:33:01 -0500
+Received: by mail-pl0-f68.google.com with SMTP id k8so2027677pli.8
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:33:00 -0800 (PST)
 In-Reply-To: <20180216172827.3739-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Current code is very explicit in what it allows to be downloaded.
-The driver checking prevented G7 firmware download. The driver
-checking is unnecessary as the device will validate what it receives.
+The current driver isn't taking advantage of a performance hint whereby
+the initial data buffer descriptor can be placed in the WQE as well as
+the SGL.
 
-Revise the firmware download interface checking.
-Added a little debug support in case there is still a failure.
+Add the logic to detect support for the feature and to use it when
+supported.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/lpfc/lpfc_hw4.h  |  5 +----
- drivers/scsi/lpfc/lpfc_init.c | 44 ++++++++++++++++++++++++++++++-------------
- drivers/scsi/lpfc/lpfc_sli.c  |  1 +
- 3 files changed, 33 insertions(+), 17 deletions(-)
 
+---
+v3:
+  remove unneeded parens
+  combined 6422 msg on 1 line
+---
+ drivers/scsi/lpfc/lpfc.h       |  2 ++
+ drivers/scsi/lpfc/lpfc_hw4.h   |  3 +++
+ drivers/scsi/lpfc/lpfc_init.c  | 20 ++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvme.c  | 18 ++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.c | 24 ++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_scsi.c  |  8 ++++++--
+ drivers/scsi/lpfc/lpfc_sli.c   | 25 +++++++++++++++++++++----
+ 7 files changed, 94 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 7aad4a717f13..9136a59b1c5b 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -840,6 +840,8 @@ struct lpfc_hba {
+ #define LPFC_ENABLE_FCP  1
+ #define LPFC_ENABLE_NVME 2
+ #define LPFC_ENABLE_BOTH 3
++	uint32_t nvme_embed_pbde;
++	uint32_t fcp_embed_pbde;
+ 	uint32_t io_channel_irqs;	/* number of irqs for io channels */
+ 	struct nvmet_fc_target_port *targetport;
+ 	lpfc_vpd_t vpd;		/* vital product data */
 diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index dba724e1f5ee..be8227dfa086 100644
+index be8227dfa086..ed5e870c58c3 100644
 --- a/drivers/scsi/lpfc/lpfc_hw4.h
 +++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -2241,6 +2241,7 @@ struct lpfc_mbx_redisc_fcf_tbl {
-  * command.
-  */
- #define ADD_STATUS_OPERATION_ALREADY_ACTIVE		0x67
-+#define ADD_STATUS_FW_NOT_SUPPORTED			0xEB
- 
- struct lpfc_mbx_sli4_config {
- 	struct mbox_header header;
-@@ -4603,10 +4604,6 @@ union lpfc_wqe128 {
- 	struct gen_req64_wqe gen_req;
- };
- 
--#define LPFC_GROUP_OJECT_MAGIC_G5		0xfeaa0001
--#define LPFC_GROUP_OJECT_MAGIC_G6		0xfeaa0003
--#define LPFC_FILE_TYPE_GROUP			0xf7
--#define LPFC_FILE_ID_GROUP			0xa2
- struct lpfc_grp_hdr {
- 	uint32_t size;
- 	uint32_t magic_number;
+@@ -4226,6 +4226,9 @@ struct wqe_common {
+ #define wqe_irsp_SHIFT        4
+ #define wqe_irsp_MASK         0x00000001
+ #define wqe_irsp_WORD         word11
++#define wqe_pbde_SHIFT        5
++#define wqe_pbde_MASK         0x00000001
++#define wqe_pbde_WORD         word11
+ #define wqe_sup_SHIFT         6
+ #define wqe_sup_MASK          0x00000001
+ #define wqe_sup_WORD          word11
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 96a37e4e127d..af92c3c681f7 100644
+index af92c3c681f7..ecb42cae71f2 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -11297,6 +11297,27 @@ lpfc_sli4_get_iocb_cnt(struct lpfc_hba *phba)
- }
+@@ -10608,6 +10608,19 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 		phba->cfg_enable_fc4_type = LPFC_ENABLE_FCP;
+ 	}
  
- 
-+static void
-+lpfc_log_write_firmware_error(struct lpfc_hba *phba, uint32_t offset,
-+	uint32_t magic_number, uint32_t ftype, uint32_t fid, uint32_t fsize,
-+	const struct firmware *fw)
-+{
-+	if (offset == ADD_STATUS_FW_NOT_SUPPORTED)
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"3030 This firmware version is not supported on "
-+			"this HBA model. Device:%x Magic:%x Type:%x "
-+			"ID:%x Size %d %zd\n",
-+			phba->pcidev->device, magic_number, ftype, fid,
-+			fsize, fw->size);
-+	else
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"3022 FW Download failed. Device:%x Magic:%x Type:%x "
-+			"ID:%x Size %d %zd\n",
-+			phba->pcidev->device, magic_number, ftype, fid,
-+			fsize, fw->size);
-+}
++	/* Only embed PBDE for if_type 6 */
++	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
++	    LPFC_SLI_INTF_IF_TYPE_6) {
++		phba->fcp_embed_pbde = 1;
++		phba->nvme_embed_pbde = 1;
++	}
 +
++	/* PBDE support requires xib be set */
++	if (!bf_get(cfg_xib, mbx_sli4_parameters)) {
++		phba->fcp_embed_pbde = 0;
++		phba->nvme_embed_pbde = 0;
++	}
 +
- /**
-  * lpfc_write_firmware - attempt to write a firmware image to the port
-  * @fw: pointer to firmware image returned from request_firmware.
-@@ -11324,20 +11345,10 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
+ 	/*
+ 	 * To support Suppress Response feature we must satisfy 3 conditions.
+ 	 * lpfc_suppress_rsp module parameter must be set (default).
+@@ -10639,6 +10652,13 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 	else
+ 		phba->fcp_embed_io = 0;
  
- 	magic_number = be32_to_cpu(image->magic_number);
- 	ftype = bf_get_be32(lpfc_grp_hdr_file_type, image);
--	fid = bf_get_be32(lpfc_grp_hdr_id, image),
-+	fid = bf_get_be32(lpfc_grp_hdr_id, image);
- 	fsize = be32_to_cpu(image->size);
- 
- 	INIT_LIST_HEAD(&dma_buffer_list);
--	if ((magic_number != LPFC_GROUP_OJECT_MAGIC_G5 &&
--	     magic_number != LPFC_GROUP_OJECT_MAGIC_G6) ||
--	    ftype != LPFC_FILE_TYPE_GROUP || fsize != fw->size) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"3022 Invalid FW image found. "
--				"Magic:%x Type:%x ID:%x Size %d %zd\n",
--				magic_number, ftype, fid, fsize, fw->size);
--		rc = -EINVAL;
--		goto release_out;
--	}
- 	lpfc_decode_firmware_rev(phba, fwrev, 1);
- 	if (strncmp(fwrev, image->revision, strnlen(image->revision, 16))) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -11378,11 +11389,18 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- 			}
- 			rc = lpfc_wr_object(phba, &dma_buffer_list,
- 				    (fw->size - offset), &offset);
--			if (rc)
-+			if (rc) {
-+				lpfc_log_write_firmware_error(phba, offset,
-+					magic_number, ftype, fid, fsize, fw);
- 				goto release_out;
-+			}
++	lpfc_printf_log(phba, KERN_INFO, LOG_INIT | LOG_NVME,
++			"6422 XIB %d: FCP %d %d NVME %d %d %d\n",
++			bf_get(cfg_xib, mbx_sli4_parameters),
++			phba->fcp_embed_pbde, phba->fcp_embed_io,
++			phba->nvme_support, phba->nvme_embed_pbde,
++			phba->cfg_suppress_rsp);
++
+ 	if ((bf_get(cfg_cqpsize, mbx_sli4_parameters) & LPFC_CQ_16K_PAGE_SZ) &&
+ 	    (bf_get(cfg_wqpsize, mbx_sli4_parameters) & LPFC_WQ_16K_PAGE_SZ) &&
+ 	    (sli4_params->wqsize & LPFC_WQ_SZ128_SUPPORT))
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 3a103d0895a2..5a1a6e24a27f 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -1170,6 +1170,7 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
+ 	struct sli4_sge *sgl = lpfc_ncmd->nvme_sgl;
+ 	struct scatterlist *data_sg;
+ 	struct sli4_sge *first_data_sgl;
++	struct ulp_bde64 *bde;
+ 	dma_addr_t physaddr;
+ 	uint32_t num_bde = 0;
+ 	uint32_t dma_len;
+@@ -1237,7 +1238,24 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
+ 			data_sg = sg_next(data_sg);
+ 			sgl++;
  		}
- 		rc = offset;
--	}
-+	} else
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3029 Skipped Firmware update, Current "
-+				"Version:%s New Version:%s\n",
-+				fwrev, image->revision);
++		if (phba->nvme_embed_pbde) {
++			/* Use PBDE support for first SGL only, offset == 0 */
++			/* Words 13-15 */
++			bde = (struct ulp_bde64 *)
++				&wqe->words[13];
++			bde->addrLow = first_data_sgl->addr_lo;
++			bde->addrHigh = first_data_sgl->addr_hi;
++			bde->tus.f.bdeSize =
++				le32_to_cpu(first_data_sgl->sge_len);
++			bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
++			bde->tus.w = cpu_to_le32(bde->tus.w);
++			bf_set(wqe_pbde, &wqe->generic.wqe_com, 1);
++		} else
++			bf_set(wqe_pbde, &wqe->generic.wqe_com, 0);
++
+ 	} else {
++		bf_set(wqe_pbde, &wqe->generic.wqe_com, 0);
++
+ 		/* For this clause to be valid, the payload_length
+ 		 * and sg_cnt must zero.
+ 		 */
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index a332a6638b1b..a4a32d7ec248 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -2150,9 +2150,11 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 	struct lpfc_iocbq *nvmewqe;
+ 	struct scatterlist *sgel;
+ 	union lpfc_wqe128 *wqe;
++	struct ulp_bde64 *bde;
+ 	uint32_t *txrdy;
+ 	dma_addr_t physaddr;
+ 	int i, cnt;
++	int do_pbde;
+ 	int xc = 1;
  
- release_out:
- 	list_for_each_entry_safe(dmabuf, next, &dma_buffer_list, list) {
+ 	if (!lpfc_is_link_up(phba)) {
+@@ -2243,6 +2245,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		/* Word 7 */
+ 		bf_set(wqe_pu, &wqe->fcp_tsend.wqe_com, 1);
+ 		bf_set(wqe_cmnd, &wqe->fcp_tsend.wqe_com, CMD_FCP_TSEND64_WQE);
++		do_pbde = 0;
+ 
+ 		/* Word 8 */
+ 		wqe->fcp_tsend.wqe_com.abort_tag = nvmewqe->iotag;
+@@ -2355,6 +2358,10 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		bf_set(wqe_ar, &wqe->fcp_treceive.wqe_com, 0);
+ 		bf_set(wqe_cmnd, &wqe->fcp_treceive.wqe_com,
+ 		       CMD_FCP_TRECEIVE64_WQE);
++		if (phba->nvme_embed_pbde)
++			do_pbde = 1;
++		else
++			do_pbde = 0;
+ 
+ 		/* Word 8 */
+ 		wqe->fcp_treceive.wqe_com.abort_tag = nvmewqe->iotag;
+@@ -2438,6 +2445,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		bf_set(wqe_pu, &wqe->fcp_trsp.wqe_com, 0);
+ 		bf_set(wqe_ag, &wqe->fcp_trsp.wqe_com, 1);
+ 		bf_set(wqe_cmnd, &wqe->fcp_trsp.wqe_com, CMD_FCP_TRSP64_WQE);
++		do_pbde = 0;
+ 
+ 		/* Word 8 */
+ 		wqe->fcp_trsp.wqe_com.abort_tag = nvmewqe->iotag;
+@@ -2508,9 +2516,25 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 			bf_set(lpfc_sli4_sge_last, sgl, 1);
+ 		sgl->word2 = cpu_to_le32(sgl->word2);
+ 		sgl->sge_len = cpu_to_le32(cnt);
++		if (do_pbde && i == 0) {
++			bde = (struct ulp_bde64 *)&wqe->words[13];
++			memset(bde, 0, sizeof(struct ulp_bde64));
++			/* Words 13-15  (PBDE)*/
++			bde->addrLow = sgl->addr_lo;
++			bde->addrHigh = sgl->addr_hi;
++			bde->tus.f.bdeSize =
++				le32_to_cpu(sgl->sge_len);
++			bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
++			bde->tus.w = cpu_to_le32(bde->tus.w);
++		}
+ 		sgl++;
+ 		ctxp->offset += cnt;
+ 	}
++
++	if (do_pbde)
++		bf_set(wqe_pbde, &wqe->generic.wqe_com, 1);
++	else
++		bf_set(wqe_pbde, &wqe->generic.wqe_com, 0);
+ 	ctxp->state = LPFC_NVMET_STE_DATA;
+ 	ctxp->entry_cnt++;
+ 	return nvmewqe;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index c595046a521b..fb81e8a8fb1c 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -3304,8 +3304,12 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
+ 			dma_offset += dma_len;
+ 			sgl++;
+ 		}
+-		/* setup the performance hint (first data BDE) if enabled */
+-		if (phba->sli3_options & LPFC_SLI4_PERFH_ENABLED) {
++		/*
++		 * Setup the first Payload BDE. For FCoE we just key off
++		 * Performance Hints, for FC we utilize fcp_embed_pbde.
++		 */
++		if ((phba->sli3_options & LPFC_SLI4_PERFH_ENABLED) ||
++		    phba->fcp_embed_pbde) {
+ 			bde = (struct ulp_bde64 *)
+ 					&(iocb_cmd->unsli3.sli3Words[5]);
+ 			bde->addrLow = first_data_sgl->addr_lo;
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 6735959f21cf..dc5208021603 100644
+index dc5208021603..0e8d28fa0f2d 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -18876,6 +18876,7 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
- 				"status x%x add_status x%x, mbx status x%x\n",
- 				shdr_status, shdr_add_status, rc);
- 		rc = -ENXIO;
-+		*offset = shdr_add_status;
- 	} else
- 		*offset += wr_object->u.response.actual_write_length;
- 	return rc;
+@@ -6963,10 +6963,15 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 				"0378 No support for fcpi mode.\n");
+ 		ftr_rsp++;
+ 	}
+-	if (bf_get(lpfc_mbx_rq_ftr_rsp_perfh, &mqe->un.req_ftrs))
+-		phba->sli3_options |= LPFC_SLI4_PERFH_ENABLED;
+-	else
+-		phba->sli3_options &= ~LPFC_SLI4_PERFH_ENABLED;
++
++	/* Performance Hints are ONLY for FCoE */
++	if (phba->hba_flag & HBA_FCOE_MODE) {
++		if (bf_get(lpfc_mbx_rq_ftr_rsp_perfh, &mqe->un.req_ftrs))
++			phba->sli3_options |= LPFC_SLI4_PERFH_ENABLED;
++		else
++			phba->sli3_options &= ~LPFC_SLI4_PERFH_ENABLED;
++	}
++
+ 	/*
+ 	 * If the port cannot support the host's requested features
+ 	 * then turn off the global config parameters to disable the
+@@ -9068,6 +9073,12 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 		}
+ 		/* Note, word 10 is already initialized to 0 */
+ 
++		/* Don't set PBDE for Perf hints, just fcp_embed_pbde */
++		if (phba->fcp_embed_pbde)
++			bf_set(wqe_pbde, &wqe->fcp_iwrite.wqe_com, 1);
++		else
++			bf_set(wqe_pbde, &wqe->fcp_iwrite.wqe_com, 0);
++
+ 		if (phba->fcp_embed_io) {
+ 			struct lpfc_scsi_buf *lpfc_cmd;
+ 			struct sli4_sge *sgl;
+@@ -9127,6 +9138,12 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 		}
+ 		/* Note, word 10 is already initialized to 0 */
+ 
++		/* Don't set PBDE for Perf hints, just fcp_embed_pbde */
++		if (phba->fcp_embed_pbde)
++			bf_set(wqe_pbde, &wqe->fcp_iread.wqe_com, 1);
++		else
++			bf_set(wqe_pbde, &wqe->fcp_iread.wqe_com, 0);
++
+ 		if (phba->fcp_embed_io) {
+ 			struct lpfc_scsi_buf *lpfc_cmd;
+ 			struct sli4_sge *sgl;
 -- 
 2.13.1
