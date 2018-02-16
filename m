@@ -1,75 +1,79 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: Re: [PATCH v3 04/13] lpfc: Add push-to-adapter support to sli4
-Date: Fri, 16 Feb 2018 08:53:44 -0800
-Message-ID: <e1da721e-8ec4-9e57-9fb2-9141514e8785@gmail.com>
-References: <20180213193457.21206-1-jsmart2021@gmail.com>
- <20180213193457.21206-5-jsmart2021@gmail.com>
- <20180214093052.eywwbg36gjnfirnz@linux-x5ow.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v4 00/13] lpfc new hardware patches for 12.0.0.0
+Date: Fri, 16 Feb 2018 09:28:14 -0800
+Message-ID: <20180216172827.3739-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:40853 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161532AbeBPQxt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 11:53:49 -0500
-Received: by mail-pl0-f67.google.com with SMTP id g18so1972518plo.7
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 08:53:49 -0800 (PST)
-In-Reply-To: <20180214093052.eywwbg36gjnfirnz@linux-x5ow.site>
-Content-Language: en-US
+Received: from mail-pl0-f43.google.com ([209.85.160.43]:39504 "EHLO
+        mail-pl0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752448AbeBPR32 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:29:28 -0500
+Received: by mail-pl0-f43.google.com with SMTP id s13so2025541plq.6
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:29:28 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>
 
-On 2/14/2018 1:30 AM, Johannes Thumshirn wrote:
-> On Tue, Feb 13, 2018 at 11:34:48AM -0800, James Smart wrote:
-> [...]
->> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
->> index 3bff1f9c5df7..5e03b2c969e5 100644
->> --- a/drivers/scsi/lpfc/lpfc_sli.c
->> +++ b/drivers/scsi/lpfc/lpfc_sli.c
->> @@ -35,6 +35,9 @@
->>   #include <scsi/scsi_transport_fc.h>
->>   #include <scsi/fc/fc_fs.h>
->>   #include <linux/aer.h>
->> +#ifdef CONFIG_X86
->> +#include <asm/set_memory.h>
->> +#endif
-> 
-> Not needed anymore now you've killed set_memory_wc(), isn't it?
+This patch set adds support for Broadcom's new G7 product that
+supports G4G FC.
 
-Agree... but, we've done more timing and it turns out the ioremap_wc() 
-on X86 isn't behaving quite the same as set_memory_wc().  Works, but 
-it's actually slower. I think ioremap_wc() is additionally making it 
-cacheable, which seems to be delaying the postings to the io bus (even 
-if wc) until the memory barrier. While the set_memory_wc() seems to 
-flush as soon as the cacheline is filled.
+The patches were cut against the Martin's 4.17/scsi-queue tree.
 
-Given everything we've seen so far - I'm going back to using 
-set_memory_wc() as it's the fastest latency option we've measured.
+v2:
+ Address comments:
+   patch 1, 2, 4, 7: patch description typos
+   patch 6: typo on 256GBit speed define
+
+v3:
+ Add review tags
+ Address comments:
+   patch 4: parens, replace set_memory_wc by ioremap_wc
+   patch 6: reformat strings
+   patch 9: parens
+   patch 13: patch title
+ patch 5: add missing snippet for default id string
+ patch 9, 11: log print condensed to line
+
+v4:
+ Add review tags
+ patch4: revert to using set_memory_wc
 
 
-> 
-> [...]
-> 
->> +	if (q->dpp_enable && q->phba->cfg_enable_dpp) {
->> +		/* write to DPP aperture taking advatage of Combined Writes */
->> +		tmp = (uint8_t *)wqe;
->> +#ifdef CONFIG_64BIT
->> +		for (i = 0; i < q->entry_size; i += sizeof(uint64_t))
->> +			writeq(*((uint64_t *)(tmp + i)), q->dpp_regaddr + i);
->> +#else
->> +		for (i = 0; i < q->entry_size; i += sizeof(uint32_t))
->> +			writel(*((uint32_t *)(tmp + i)), q->dpp_regaddr + i);
->> +#endif
->> +	}
->> +	/* ensure WQE bcopy and DPP flushed before doorbell write */
-> 
-> Any reason you can't use writeq() on 32 Bit as well? There's a compat version
-> in linux/io-64-nonatomic-hi-lo.h.
+James Smart (13):
+  lpfc: Rework lpfc to allow different sli4 cq and eq handlers
+  lpfc: Rework sli4 doorbell infrastructure
+  lpfc: Add SLI-4 if_type=6 support to the code base
+  lpfc: Add push-to-adapter support to sli4
+  lpfc: Add PCI Ids for if_type=6 hardware
+  lpfc: Add 64G link speed support
+  lpfc: Add if_type=6 support for cycling valid bits
+  lpfc: Enable fw download on if_type=6 devices
+  lpfc: Add embedded data pointers for enhanced performance
+  lpfc: Fix nvme embedded io length on new hardware
+  lpfc: Work around NVME cmd iu SGL type
+  lpfc: update driver version to 12.0.0.0
+  lpfc: Change Copyright of 12.0.0.0 modified files to 2018
 
-We actually ran into issues on the existence of writeq() on a 32bit 
-platform. Thus this code block.
+ drivers/scsi/lpfc/lpfc.h         |  20 +-
+ drivers/scsi/lpfc/lpfc_attr.c    |  86 +++++--
+ drivers/scsi/lpfc/lpfc_bsg.c     |   6 +-
+ drivers/scsi/lpfc/lpfc_ct.c      |   7 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c |  22 +-
+ drivers/scsi/lpfc/lpfc_debugfs.h |  13 +-
+ drivers/scsi/lpfc/lpfc_els.c     |   5 +
+ drivers/scsi/lpfc/lpfc_hbadisc.c |   1 +
+ drivers/scsi/lpfc/lpfc_hw.h      |  15 +-
+ drivers/scsi/lpfc/lpfc_hw4.h     | 115 ++++++++-
+ drivers/scsi/lpfc/lpfc_ids.h     |   4 +-
+ drivers/scsi/lpfc/lpfc_init.c    | 247 +++++++++++++++---
+ drivers/scsi/lpfc/lpfc_mbox.c    |   4 +
+ drivers/scsi/lpfc/lpfc_nvme.c    |  69 +++--
+ drivers/scsi/lpfc/lpfc_nvmet.c   |  24 ++
+ drivers/scsi/lpfc/lpfc_scsi.c    |   8 +-
+ drivers/scsi/lpfc/lpfc_sli.c     | 535 +++++++++++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_sli4.h    |  30 ++-
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ 19 files changed, 963 insertions(+), 250 deletions(-)
 
--- james
+-- 
+2.13.1
