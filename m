@@ -1,74 +1,451 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v4 05/13] lpfc: Add PCI Ids for if_type=6 hardware
-Date: Fri, 16 Feb 2018 09:28:19 -0800
-Message-ID: <20180216172827.3739-6-jsmart2021@gmail.com>
+Subject: [PATCH v4 07/13] lpfc: Add if_type=6 support for cycling valid bits
+Date: Fri, 16 Feb 2018 09:28:21 -0800
+Message-ID: <20180216172827.3739-8-jsmart2021@gmail.com>
 References: <20180216172827.3739-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:38073 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161052AbeBPRbg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:31:36 -0500
-Received: by mail-pl0-f67.google.com with SMTP id h10so2028860plt.5
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:31:36 -0800 (PST)
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:44247 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161052AbeBPRcO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2018 12:32:14 -0500
+Received: by mail-pg0-f67.google.com with SMTP id l4so771278pgp.11
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2018 09:32:14 -0800 (PST)
 In-Reply-To: <20180216172827.3739-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Add PCI ids for the new G7 adapter
+Traditional SLI4 required the driver to clear Valid bits on
+EQEs and CQEs after consuming them.
+
+The new if_type=6 hardware will cycle the value for what is
+valid on each queue itteration. The driver no longer has to
+touch the valid bits. This also means all the cpu cache
+dirtying and perhaps flush/refill's done by the hardware
+in accessing the EQ/CQ elements is eliminated.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
 ---
-v3:
-  Add default adapter id string for G7 adapter
----
- drivers/scsi/lpfc/lpfc_hw.h   | 1 +
- drivers/scsi/lpfc/lpfc_ids.h  | 2 ++
- drivers/scsi/lpfc/lpfc_init.c | 3 +++
- 3 files changed, 6 insertions(+)
+ drivers/scsi/lpfc/lpfc_hw4.h  | 18 ++++++++--
+ drivers/scsi/lpfc/lpfc_init.c | 11 +++++++
+ drivers/scsi/lpfc/lpfc_sli.c  | 77 +++++++++++++++++++++++++++++++++++--------
+ drivers/scsi/lpfc/lpfc_sli4.h |  3 ++
+ 4 files changed, 92 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index bdc1f184f67a..d07d2fcbea34 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -1580,6 +1580,7 @@ struct lpfc_fdmi_reg_portattr {
- #define PCI_DEVICE_ID_LANCER_FCOE   0xe260
- #define PCI_DEVICE_ID_LANCER_FCOE_VF 0xe268
- #define PCI_DEVICE_ID_LANCER_G6_FC  0xe300
-+#define PCI_DEVICE_ID_LANCER_G7_FC  0xf400
- #define PCI_DEVICE_ID_SAT_SMB       0xf011
- #define PCI_DEVICE_ID_SAT_MID       0xf015
- #define PCI_DEVICE_ID_RFLY          0xf095
-diff --git a/drivers/scsi/lpfc/lpfc_ids.h b/drivers/scsi/lpfc/lpfc_ids.h
-index 0ba3733eb36d..329c8d28869c 100644
---- a/drivers/scsi/lpfc/lpfc_ids.h
-+++ b/drivers/scsi/lpfc/lpfc_ids.h
-@@ -116,6 +116,8 @@ const struct pci_device_id lpfc_id_table[] = {
- 		PCI_ANY_ID, PCI_ANY_ID, },
- 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_LANCER_G6_FC,
- 		PCI_ANY_ID, PCI_ANY_ID, },
-+	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_LANCER_G7_FC,
-+		PCI_ANY_ID, PCI_ANY_ID, },
- 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_SKYHAWK,
- 		PCI_ANY_ID, PCI_ANY_ID, },
- 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_SKYHAWK_VF,
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 0c33510fe75c..dba724e1f5ee 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -1040,6 +1040,9 @@ struct eq_context {
+ #define lpfc_eq_context_valid_SHIFT	29
+ #define lpfc_eq_context_valid_MASK	0x00000001
+ #define lpfc_eq_context_valid_WORD	word0
++#define lpfc_eq_context_autovalid_SHIFT 28
++#define lpfc_eq_context_autovalid_MASK  0x00000001
++#define lpfc_eq_context_autovalid_WORD  word0
+ 	uint32_t word1;
+ #define lpfc_eq_context_count_SHIFT	26
+ #define lpfc_eq_context_count_MASK	0x00000003
+@@ -1173,6 +1176,9 @@ struct cq_context {
+ #define LPFC_CQ_CNT_512		0x1
+ #define LPFC_CQ_CNT_1024	0x2
+ #define LPFC_CQ_CNT_WORD7	0x3
++#define lpfc_cq_context_autovalid_SHIFT 15
++#define lpfc_cq_context_autovalid_MASK  0x00000001
++#define lpfc_cq_context_autovalid_WORD  word0
+ 	uint32_t word1;
+ #define lpfc_cq_eq_id_SHIFT		22	/* Version 0 Only */
+ #define lpfc_cq_eq_id_MASK		0x000000FF
+@@ -1231,9 +1237,9 @@ struct lpfc_mbx_cq_create_set {
+ #define lpfc_mbx_cq_create_set_cqe_size_SHIFT	25
+ #define lpfc_mbx_cq_create_set_cqe_size_MASK	0x00000003
+ #define lpfc_mbx_cq_create_set_cqe_size_WORD	word1
+-#define lpfc_mbx_cq_create_set_auto_SHIFT	15
+-#define lpfc_mbx_cq_create_set_auto_MASK	0x0000001
+-#define lpfc_mbx_cq_create_set_auto_WORD	word1
++#define lpfc_mbx_cq_create_set_autovalid_SHIFT	15
++#define lpfc_mbx_cq_create_set_autovalid_MASK	0x0000001
++#define lpfc_mbx_cq_create_set_autovalid_WORD	word1
+ #define lpfc_mbx_cq_create_set_nodelay_SHIFT	14
+ #define lpfc_mbx_cq_create_set_nodelay_MASK	0x00000001
+ #define lpfc_mbx_cq_create_set_nodelay_WORD	word1
+@@ -3288,6 +3294,9 @@ struct lpfc_sli4_parameters {
+ #define cfg_sli_hint_2_MASK			0x0000001f
+ #define cfg_sli_hint_2_WORD			word1
+ 	uint32_t word2;
++#define cfg_eqav_SHIFT				31
++#define cfg_eqav_MASK				0x00000001
++#define cfg_eqav_WORD				word2
+ 	uint32_t word3;
+ 	uint32_t word4;
+ #define cfg_cqv_SHIFT				14
+@@ -3296,6 +3305,9 @@ struct lpfc_sli4_parameters {
+ #define cfg_cqpsize_SHIFT			16
+ #define cfg_cqpsize_MASK			0x000000ff
+ #define cfg_cqpsize_WORD			word4
++#define cfg_cqav_SHIFT				31
++#define cfg_cqav_MASK				0x00000001
++#define cfg_cqav_WORD				word4
+ 	uint32_t word5;
+ 	uint32_t word6;
+ #define cfg_mqv_SHIFT				14
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 5f0c63bb0a4d..2e723cdd2c1a 100644
+index 576ab7ec7e9d..96a37e4e127d 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2473,6 +2473,9 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
- 	case PCI_DEVICE_ID_LANCER_G6_FC:
- 		m = (typeof(m)){"LPe32000", "PCIe", "Fibre Channel Adapter"};
- 		break;
-+	case PCI_DEVICE_ID_LANCER_G7_FC:
-+		m = (typeof(m)){"LPe36000", "PCIe", "Fibre Channel Adapter"};
-+		break;
- 	case PCI_DEVICE_ID_SKYHAWK:
- 	case PCI_DEVICE_ID_SKYHAWK_VF:
- 		oneConnect = 1;
+@@ -8063,6 +8063,7 @@ lpfc_alloc_nvme_wq_cq(struct lpfc_hba *phba, int wqidx)
+ 				wqidx);
+ 		return 1;
+ 	}
++	qdesc->qe_valid = 1;
+ 	phba->sli4_hba.nvme_cq[wqidx] = qdesc;
+ 
+ 	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_EXPANDED_PAGE_SIZE,
+@@ -8100,6 +8101,7 @@ lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
+ 			"0499 Failed allocate fast-path FCP CQ (%d)\n", wqidx);
+ 		return 1;
+ 	}
++	qdesc->qe_valid = 1;
+ 	phba->sli4_hba.fcp_cq[wqidx] = qdesc;
+ 
+ 	/* Create Fast Path FCP WQs */
+@@ -8293,6 +8295,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 					"0497 Failed allocate EQ (%d)\n", idx);
+ 			goto out_error;
+ 		}
++		qdesc->qe_valid = 1;
+ 		phba->sli4_hba.hba_eq[idx] = qdesc;
+ 	}
+ 
+@@ -8318,6 +8321,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 					"CQ Set (%d)\n", idx);
+ 				goto out_error;
+ 			}
++			qdesc->qe_valid = 1;
+ 			phba->sli4_hba.nvmet_cqset[idx] = qdesc;
+ 		}
+ 	}
+@@ -8335,6 +8339,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 				"0500 Failed allocate slow-path mailbox CQ\n");
+ 		goto out_error;
+ 	}
++	qdesc->qe_valid = 1;
+ 	phba->sli4_hba.mbx_cq = qdesc;
+ 
+ 	/* Create slow-path ELS Complete Queue */
+@@ -8346,6 +8351,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 				"0501 Failed allocate slow-path ELS CQ\n");
+ 		goto out_error;
+ 	}
++	qdesc->qe_valid = 1;
+ 	phba->sli4_hba.els_cq = qdesc;
+ 
+ 
+@@ -8391,6 +8397,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 					"6079 Failed allocate NVME LS CQ\n");
+ 			goto out_error;
+ 		}
++		qdesc->qe_valid = 1;
+ 		phba->sli4_hba.nvmels_cq = qdesc;
+ 
+ 		/* Create NVME LS Work Queue */
+@@ -10569,6 +10576,8 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 	sli4_params->mqv = bf_get(cfg_mqv, mbx_sli4_parameters);
+ 	sli4_params->wqv = bf_get(cfg_wqv, mbx_sli4_parameters);
+ 	sli4_params->rqv = bf_get(cfg_rqv, mbx_sli4_parameters);
++	sli4_params->eqav = bf_get(cfg_eqav, mbx_sli4_parameters);
++	sli4_params->cqav = bf_get(cfg_cqav, mbx_sli4_parameters);
+ 	sli4_params->wqsize = bf_get(cfg_wqsize, mbx_sli4_parameters);
+ 	sli4_params->sgl_pages_max = bf_get(cfg_sgl_page_cnt,
+ 					    mbx_sli4_parameters);
+@@ -12387,6 +12396,7 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
+ 	if (!qdesc)
+ 		goto out_error;
+ 
++	qdesc->qe_valid = 1;
+ 	phba->sli4_hba.fof_eq = qdesc;
+ 
+ 	if (phba->cfg_fof) {
+@@ -12405,6 +12415,7 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
+ 		if (!qdesc)
+ 			goto out_error;
+ 
++		qdesc->qe_valid = 1;
+ 		phba->sli4_hba.oas_cq = qdesc;
+ 
+ 		/* Create OAS WQ */
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 4c316829923c..6735959f21cf 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -288,16 +288,18 @@ lpfc_sli4_mq_release(struct lpfc_queue *q)
+ static struct lpfc_eqe *
+ lpfc_sli4_eq_get(struct lpfc_queue *q)
+ {
++	struct lpfc_hba *phba;
+ 	struct lpfc_eqe *eqe;
+ 	uint32_t idx;
+ 
+ 	/* sanity check on queue memory */
+ 	if (unlikely(!q))
+ 		return NULL;
++	phba = q->phba;
+ 	eqe = q->qe[q->hba_index].eqe;
+ 
+ 	/* If the next EQE is not valid then we are done */
+-	if (!bf_get_le32(lpfc_eqe_valid, eqe))
++	if (bf_get_le32(lpfc_eqe_valid, eqe) != q->qe_valid)
+ 		return NULL;
+ 	/* If the host has not yet processed the next entry then we are done */
+ 	idx = ((q->hba_index + 1) % q->entry_count);
+@@ -305,6 +307,10 @@ lpfc_sli4_eq_get(struct lpfc_queue *q)
+ 		return NULL;
+ 
+ 	q->hba_index = idx;
++	/* if the index wrapped around, toggle the valid bit */
++	if (phba->sli4_hba.pc_sli4_params.eqav && !q->hba_index)
++		q->qe_valid = (q->qe_valid) ? 0 : 1;
++
+ 
+ 	/*
+ 	 * insert barrier for instruction interlock : data from the hardware
+@@ -376,17 +382,21 @@ uint32_t
+ lpfc_sli4_eq_release(struct lpfc_queue *q, bool arm)
+ {
+ 	uint32_t released = 0;
++	struct lpfc_hba *phba;
+ 	struct lpfc_eqe *temp_eqe;
+ 	struct lpfc_register doorbell;
+ 
+ 	/* sanity check on queue memory */
+ 	if (unlikely(!q))
+ 		return 0;
++	phba = q->phba;
+ 
+ 	/* while there are valid entries */
+ 	while (q->hba_index != q->host_index) {
+-		temp_eqe = q->qe[q->host_index].eqe;
+-		bf_set_le32(lpfc_eqe_valid, temp_eqe, 0);
++		if (!phba->sli4_hba.pc_sli4_params.eqav) {
++			temp_eqe = q->qe[q->host_index].eqe;
++			bf_set_le32(lpfc_eqe_valid, temp_eqe, 0);
++		}
+ 		released++;
+ 		q->host_index = ((q->host_index + 1) % q->entry_count);
+ 	}
+@@ -430,17 +440,21 @@ uint32_t
+ lpfc_sli4_if6_eq_release(struct lpfc_queue *q, bool arm)
+ {
+ 	uint32_t released = 0;
++	struct lpfc_hba *phba;
+ 	struct lpfc_eqe *temp_eqe;
+ 	struct lpfc_register doorbell;
+ 
+ 	/* sanity check on queue memory */
+ 	if (unlikely(!q))
+ 		return 0;
++	phba = q->phba;
+ 
+ 	/* while there are valid entries */
+ 	while (q->hba_index != q->host_index) {
+-		temp_eqe = q->qe[q->host_index].eqe;
+-		bf_set_le32(lpfc_eqe_valid, temp_eqe, 0);
++		if (!phba->sli4_hba.pc_sli4_params.eqav) {
++			temp_eqe = q->qe[q->host_index].eqe;
++			bf_set_le32(lpfc_eqe_valid, temp_eqe, 0);
++		}
+ 		released++;
+ 		q->host_index = ((q->host_index + 1) % q->entry_count);
+ 	}
+@@ -472,23 +486,28 @@ lpfc_sli4_if6_eq_release(struct lpfc_queue *q, bool arm)
+ static struct lpfc_cqe *
+ lpfc_sli4_cq_get(struct lpfc_queue *q)
+ {
++	struct lpfc_hba *phba;
+ 	struct lpfc_cqe *cqe;
+ 	uint32_t idx;
+ 
+ 	/* sanity check on queue memory */
+ 	if (unlikely(!q))
+ 		return NULL;
++	phba = q->phba;
++	cqe = q->qe[q->hba_index].cqe;
+ 
+ 	/* If the next CQE is not valid then we are done */
+-	if (!bf_get_le32(lpfc_cqe_valid, q->qe[q->hba_index].cqe))
++	if (bf_get_le32(lpfc_cqe_valid, cqe) != q->qe_valid)
+ 		return NULL;
+ 	/* If the host has not yet processed the next entry then we are done */
+ 	idx = ((q->hba_index + 1) % q->entry_count);
+ 	if (idx == q->host_index)
+ 		return NULL;
+ 
+-	cqe = q->qe[q->hba_index].cqe;
+ 	q->hba_index = idx;
++	/* if the index wrapped around, toggle the valid bit */
++	if (phba->sli4_hba.pc_sli4_params.cqav && !q->hba_index)
++		q->qe_valid = (q->qe_valid) ? 0 : 1;
+ 
+ 	/*
+ 	 * insert barrier for instruction interlock : data from the hardware
+@@ -521,16 +540,21 @@ uint32_t
+ lpfc_sli4_cq_release(struct lpfc_queue *q, bool arm)
+ {
+ 	uint32_t released = 0;
++	struct lpfc_hba *phba;
+ 	struct lpfc_cqe *temp_qe;
+ 	struct lpfc_register doorbell;
+ 
+ 	/* sanity check on queue memory */
+ 	if (unlikely(!q))
+ 		return 0;
++	phba = q->phba;
++
+ 	/* while there are valid entries */
+ 	while (q->hba_index != q->host_index) {
+-		temp_qe = q->qe[q->host_index].cqe;
+-		bf_set_le32(lpfc_cqe_valid, temp_qe, 0);
++		if (!phba->sli4_hba.pc_sli4_params.cqav) {
++			temp_qe = q->qe[q->host_index].cqe;
++			bf_set_le32(lpfc_cqe_valid, temp_qe, 0);
++		}
+ 		released++;
+ 		q->host_index = ((q->host_index + 1) % q->entry_count);
+ 	}
+@@ -569,16 +593,21 @@ uint32_t
+ lpfc_sli4_if6_cq_release(struct lpfc_queue *q, bool arm)
+ {
+ 	uint32_t released = 0;
++	struct lpfc_hba *phba;
+ 	struct lpfc_cqe *temp_qe;
+ 	struct lpfc_register doorbell;
+ 
+ 	/* sanity check on queue memory */
+ 	if (unlikely(!q))
+ 		return 0;
++	phba = q->phba;
++
+ 	/* while there are valid entries */
+ 	while (q->hba_index != q->host_index) {
+-		temp_qe = q->qe[q->host_index].cqe;
+-		bf_set_le32(lpfc_cqe_valid, temp_qe, 0);
++		if (!phba->sli4_hba.pc_sli4_params.cqav) {
++			temp_qe = q->qe[q->host_index].cqe;
++			bf_set_le32(lpfc_cqe_valid, temp_qe, 0);
++		}
+ 		released++;
+ 		q->host_index = ((q->host_index + 1) % q->entry_count);
+ 	}
+@@ -7372,6 +7401,7 @@ lpfc_sli4_mbox_completions_pending(struct lpfc_hba *phba)
+ 	struct lpfc_queue *mcq;
+ 	struct lpfc_mcqe *mcqe;
+ 	bool pending_completions = false;
++	uint8_t	qe_valid;
+ 
+ 	if (unlikely(!phba) || (phba->sli_rev != LPFC_SLI_REV4))
+ 		return false;
+@@ -7380,7 +7410,8 @@ lpfc_sli4_mbox_completions_pending(struct lpfc_hba *phba)
+ 
+ 	mcq = phba->sli4_hba.mbx_cq;
+ 	idx = mcq->hba_index;
+-	while (bf_get_le32(lpfc_cqe_valid, mcq->qe[idx].cqe)) {
++	qe_valid = mcq->qe_valid;
++	while (bf_get_le32(lpfc_cqe_valid, mcq->qe[idx].cqe) == qe_valid) {
+ 		mcqe = (struct lpfc_mcqe *)mcq->qe[idx].cqe;
+ 		if (bf_get_le32(lpfc_trailer_completed, mcqe) &&
+ 		    (!bf_get_le32(lpfc_trailer_async, mcqe))) {
+@@ -7390,6 +7421,10 @@ lpfc_sli4_mbox_completions_pending(struct lpfc_hba *phba)
+ 		idx = (idx + 1) % mcq->entry_count;
+ 		if (mcq->hba_index == idx)
+ 			break;
++
++		/* if the index wrapped around, toggle the valid bit */
++		if (phba->sli4_hba.pc_sli4_params.cqav && !idx)
++			qe_valid = (qe_valid) ? 0 : 1;
+ 	}
+ 	return pending_completions;
+ 
+@@ -8263,7 +8298,7 @@ lpfc_sli_issue_mbox_s4(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
+ 	} else if (flag == MBX_POLL) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
+ 				"(%d):2542 Try to issue mailbox command "
+-				"x%x (x%x/x%x) synchronously ahead of async"
++				"x%x (x%x/x%x) synchronously ahead of async "
+ 				"mailbox command queue: x%x x%x\n",
+ 				mboxq->vport ? mboxq->vport->vpi : 0,
+ 				mboxq->u.mb.mbxCommand,
+@@ -14340,11 +14375,21 @@ lpfc_eq_create(struct lpfc_hba *phba, struct lpfc_queue *eq, uint32_t imax)
+ 			 LPFC_MBOX_OPCODE_EQ_CREATE,
+ 			 length, LPFC_SLI4_MBX_EMBED);
+ 	eq_create = &mbox->u.mqe.un.eq_create;
++	shdr = (union lpfc_sli4_cfg_shdr *) &eq_create->header.cfg_shdr;
+ 	bf_set(lpfc_mbx_eq_create_num_pages, &eq_create->u.request,
+ 	       eq->page_count);
+ 	bf_set(lpfc_eq_context_size, &eq_create->u.request.context,
+ 	       LPFC_EQE_SIZE);
+ 	bf_set(lpfc_eq_context_valid, &eq_create->u.request.context, 1);
++
++	/* Use version 2 of CREATE_EQ if eqav is set */
++	if (phba->sli4_hba.pc_sli4_params.eqav) {
++		bf_set(lpfc_mbox_hdr_version, &shdr->request,
++		       LPFC_Q_CREATE_VERSION_2);
++		bf_set(lpfc_eq_context_autovalid, &eq_create->u.request.context,
++		       phba->sli4_hba.pc_sli4_params.eqav);
++	}
++
+ 	/* don't setup delay multiplier using EQ_CREATE */
+ 	dmult = 0;
+ 	bf_set(lpfc_eq_context_delay_multi, &eq_create->u.request.context,
+@@ -14389,7 +14434,6 @@ lpfc_eq_create(struct lpfc_hba *phba, struct lpfc_queue *eq, uint32_t imax)
+ 	mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+ 	mbox->context1 = NULL;
+ 	rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
+-	shdr = (union lpfc_sli4_cfg_shdr *) &eq_create->header.cfg_shdr;
+ 	shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
+ 	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
+ 	if (shdr_status || shdr_add_status || rc) {
+@@ -14472,6 +14516,8 @@ lpfc_cq_create(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 		       (cq->page_size / SLI4_PAGE_SIZE));
+ 		bf_set(lpfc_cq_eq_id_2, &cq_create->u.request.context,
+ 		       eq->queue_id);
++		bf_set(lpfc_cq_context_autovalid, &cq_create->u.request.context,
++		       phba->sli4_hba.pc_sli4_params.cqav);
+ 	} else {
+ 		bf_set(lpfc_cq_eq_id, &cq_create->u.request.context,
+ 		       eq->queue_id);
+@@ -14643,6 +14689,9 @@ lpfc_cq_create_set(struct lpfc_hba *phba, struct lpfc_queue **cqp,
+ 			       &cq_set->u.request, 0);
+ 			bf_set(lpfc_mbx_cq_create_set_num_cq,
+ 			       &cq_set->u.request, numcq);
++			bf_set(lpfc_mbx_cq_create_set_autovalid,
++			       &cq_set->u.request,
++			       phba->sli4_hba.pc_sli4_params.cqav);
+ 			switch (cq->entry_count) {
+ 			case 2048:
+ 			case 4096:
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 708167b309bd..cf64aca82bd0 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -216,6 +216,7 @@ struct lpfc_queue {
+ 	struct work_struct spwork;
+ 
+ 	uint64_t isr_timestamp;
++	uint8_t	qe_valid;
+ 	struct lpfc_queue *assoc_qp;
+ 	union sli4_qe qe[1];	/* array to index entries (must be last) */
+ };
+@@ -486,6 +487,8 @@ struct lpfc_pc_sli4_params {
+ 	uint8_t mqv;
+ 	uint8_t wqv;
+ 	uint8_t rqv;
++	uint8_t eqav;
++	uint8_t cqav;
+ 	uint8_t wqsize;
+ #define LPFC_WQ_SZ64_SUPPORT	1
+ #define LPFC_WQ_SZ128_SUPPORT	2
 -- 
 2.13.1
