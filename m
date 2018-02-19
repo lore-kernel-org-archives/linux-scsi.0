@@ -1,65 +1,72 @@
-From: Vaibhav Jain <vaibhav@linux.vnet.ibm.com>
-Subject: [PATCH] scsi: cxlflash: Select SCSI_SCAN_ASYNC
-Date: Mon, 19 Feb 2018 12:40:37 +0530
-Message-ID: <20180219071037.27938-1-vaibhav@linux.vnet.ibm.com>
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: "Manoj N . Kumar" <manoj@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "Matthew R . Ochs" <mrochs@linux.vnet.ibm.com>, Vaibhav Jain <vaibhav@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v8 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
+Date: Mon, 19 Feb 2018 10:57:30 +0100
+Message-ID: <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
+References: <20180213101412.5717-1-liwei213@huawei.com>
+ <20180213101412.5717-3-liwei213@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20180213101412.5717-3-liwei213@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Li Wei <liwei213@huawei.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Eric Anholt <eric@anholt.net>, Krzysztof Kozlowski <krzk@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Kevin Hilman <khilman@baylibre.com>, zangleigang@hisilicon.com, Wei Xu <xuwei5@hisilicon.com>, Zhangfei Gao <zhangfei.gao@linaro.org>, Thierry Reding <treding@nvidia.com>, DTML <devicetree@vger.kernel.org>, "Fengbaopeng (kevin,
+ Kirin Solution Dept)" <fengbaopeng@hisilicon.com>, Rob Herring <robh+dt@kernel.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Guodong Xu <guodong.xu@linaro.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The cxlflash driver uses "Asynchronous SCSI scanning" enabled by
-CONFIG_SCSI_SCAN_ASYNC. Without this enabled the modprobe of cxlflash
-module gets hung with following backtrace:
+On Tue, Feb 13, 2018 at 11:14 AM, Li Wei <liwei213@huawei.com> wrote:
+> add ufs node document for Hisilicon.
+>
+> Signed-off-by: Li Wei <liwei213@huawei.com>
+> ---
+>  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 37 ++++++++++++++++++++++
+>  1 file changed, 37 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
 
-Call Trace:
- __switch_to+0x2cc/0x470
- __schedule+0x288/0xab0
- schedule+0x40/0xc0
- schedule_timeout+0x254/0x4f0
- wait_for_common+0xdc/0x260
- flush_work+0x140/0x2a0
- work_on_cpu+0x88/0xb0
- pci_device_probe+0x1d0/0x220
- driver_probe_device+0x408/0x5b0
- __driver_attach+0x16c/0x1a0
- bus_for_each_dev+0xb8/0x110
- driver_attach+0x3c/0x60
- bus_add_driver+0x1d8/0x370
- driver_register+0x9c/0x180
- __pci_register_driver+0x74/0xa0
- init_cxlflash+0x158/0x1cc
- do_one_initcall+0x68/0x1e0
- do_init_module+0x90/0x254
- load_module+0x2f8c/0x3720
- SyS_finit_module+0xcc/0x140
- system_call+0x58/0x6c
 
-Signed-off-by: Vaibhav Jain <vaibhav@linux.vnet.ibm.com>
----
- drivers/scsi/cxlflash/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+I'm pretty sure we've discussed it before, but can you make this so that
+the generic properties are part of the ufshcd binding, and you refer to it
+from here, only describing in what ways the hisi ufs binding differs from
+the standard?
 
-diff --git a/drivers/scsi/cxlflash/Kconfig b/drivers/scsi/cxlflash/Kconfig
-index a011c5dbf214..f054c1b0fff3 100644
---- a/drivers/scsi/cxlflash/Kconfig
-+++ b/drivers/scsi/cxlflash/Kconfig
-@@ -6,6 +6,7 @@ config CXLFLASH
- 	tristate "Support for IBM CAPI Flash"
- 	depends on PCI && SCSI && CXL && EEH
- 	select IRQ_POLL
-+	select SCSI_SCAN_ASYNC
- 	default m
- 	help
- 	  Allows CAPI Accelerated IO to Flash
--- 
-2.14.3
+> diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> new file mode 100644
+> index 000000000000..0d21b57496cf
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> @@ -0,0 +1,37 @@
+> +* Hisilicon Universal Flash Storage (UFS) Host Controller
+> +
+> +UFS nodes are defined to describe on-chip UFS hardware macro.
+> +Each UFS Host Controller should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible list, contains one of the following -
+> +                                       "hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
+> +                                       host controller present on Hi36xx chipset.
+> +- reg               : should contain UFS register address space & UFS SYS CTRL register address,
+> +- interrupt-parent  : interrupt device
+> +- interrupts        : interrupt number
+> +- clocks               : List of phandle and clock specifier pairs
+> +- clock-names       : List of clock input name strings sorted in the same
+> +                                       order as the clocks property. "ref_clk", "phy_clk" is optional
+
+The clock names sound generic enough, should we have both in the
+generic binding?
+
+> +- resets            : reset node register, one reset the clk and the other reset the controller
+> +- reset-names       : describe reset node register
+
+This looks incomplete. What is the name of the reset line supposed to be?
+I'd also suggest you document it in the ufshcd binding instead.
+
+      Arnd
