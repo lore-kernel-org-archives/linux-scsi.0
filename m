@@ -1,14 +1,8 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: cxlflash: Select SCSI_SCAN_ASYNC
-Date: Tue, 20 Feb 2018 21:23:01 -0600
-Message-ID: <20180221032301.GA58304@p8tul1-build.aus.stglabs.ibm.com>
-References: <20180219071037.27938-1-vaibhav@linux.vnet.ibm.com>
- <87sh9wrqd8.fsf@concordia.ellerman.id.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 00/38] cxlflash: OpenCXL transport support
+Date: Thu, 22 Feb 2018 16:20:10 -0600
+Message-ID: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Disposition: inline
-In-Reply-To: <87sh9wrqd8.fsf@concordia.ellerman.id.au>
 List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
  <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
 List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
@@ -19,63 +13,76 @@ List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
 Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
 Sender: "Linuxppc-dev"
  <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: linux-scsi@vger.kernel.org, Vaibhav Jain <vaibhav@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, "Manoj N . Kumar" <manoj@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 20, 2018 at 07:56:35PM +1100, Michael Ellerman wrote:
-> Vaibhav Jain <vaibhav@linux.vnet.ibm.com> writes:
-> 
-> > The cxlflash driver uses "Asynchronous SCSI scanning" enabled by
-> > CONFIG_SCSI_SCAN_ASYNC. Without this enabled the modprobe of cxlflash
-> > module gets hung with following backtrace:
-> >
-> > Call Trace:
-> >  __switch_to+0x2cc/0x470
-> >  __schedule+0x288/0xab0
-> >  schedule+0x40/0xc0
-> >  schedule_timeout+0x254/0x4f0
-> >  wait_for_common+0xdc/0x260
-> >  flush_work+0x140/0x2a0
-> >  work_on_cpu+0x88/0xb0
-> >  pci_device_probe+0x1d0/0x220
-> >  driver_probe_device+0x408/0x5b0
-> >  __driver_attach+0x16c/0x1a0
-> >  bus_for_each_dev+0xb8/0x110
-> >  driver_attach+0x3c/0x60
-> >  bus_add_driver+0x1d8/0x370
-> >  driver_register+0x9c/0x180
-> >  __pci_register_driver+0x74/0xa0
-> >  init_cxlflash+0x158/0x1cc
-> >  do_one_initcall+0x68/0x1e0
-> >  do_init_module+0x90/0x254
-> >  load_module+0x2f8c/0x3720
-> >  SyS_finit_module+0xcc/0x140
-> >  system_call+0x58/0x6c
-> 
-> Why does it "hang"? That's kind of bizarre, I would expect either a
-> build or runtime failure if a feature the driver requires is missing.
-> 
+This patch series adds OpenCXL support to the cxlflash driver. With
+this support, new devices using the OpenCXL transport will be supported
+by the cxlflash driver along with the existing CXL devices. An effort is
+made to keep this transport specific function independent of the existing
+core driver that communicates with the AFU.
 
-It hangs due to a bug in the driver. I briefly looked at it several
-months back before getting distracted with other items. IIRC there
-was an issue with the state machine.
+The first three patches contain a minor fix and staging improvements.
 
-> > diff --git a/drivers/scsi/cxlflash/Kconfig b/drivers/scsi/cxlflash/Kconfig
-> > index a011c5dbf214..f054c1b0fff3 100644
-> > --- a/drivers/scsi/cxlflash/Kconfig
-> > +++ b/drivers/scsi/cxlflash/Kconfig
-> > @@ -6,6 +6,7 @@ config CXLFLASH
-> >  	tristate "Support for IBM CAPI Flash"
-> >  	depends on PCI && SCSI && CXL && EEH
-> >  	select IRQ_POLL
-> > +	select SCSI_SCAN_ASYNC
-> 
-> It's user configurable, so it's rude to select it. It can also be
-> disabled on the kernel command line, so this seems like a fragile
-> solution.
->
-I think Vaibhav's intention here was to avoid the hang while the bug
-is still present - I believe he has encountered it several times recently.
+This series is intended for 4.17 and is bisectable.
 
-The proper solution would be to fix the bug.
+Matthew R. Ochs (1):
+  cxlflash: Avoid clobbering context control register value
+
+Uma Krishnan (37):
+  cxlflash: Preserve number of interrupts for master contexts
+  cxlflash: Add argument identifier names
+  cxlflash: Introduce OpenCXL backend
+  cxlflash: Hardware AFU for OpenCXL
+  cxlflash: Read host function configuration
+  cxlflash: Setup function acTag range
+  cxlflash: Read host AFU configuration
+  cxlflash: Setup AFU acTag range
+  cxlflash: Setup AFU PASID
+  cxlflash: Adapter context support for OpenCXL
+  cxlflash: Use IDR to manage adapter contexts
+  cxlflash: Support adapter file descriptors for OpenCXL
+  cxlflash: Support adapter context discovery
+  cxlflash: Support image reload policy modification
+  cxlflash: MMIO map the AFU
+  cxlflash: Support starting an adapter context
+  cxlflash: Support process specific mappings
+  cxlflash: Support AFU state toggling
+  cxlflash: Support reading adapter VPD data
+  cxlflash: Setup function OpenCXL link
+  cxlflash: Setup OpenCXL transaction layer
+  cxlflash: Support process element lifecycle
+  cxlflash: Support AFU interrupt management
+  cxlflash: Support AFU interrupt mapping and registration
+  cxlflash: Support starting user contexts
+  cxlflash: Support adapter context polling
+  cxlflash: Support adapter context reading
+  cxlflash: Support adapter context mmap and release
+  cxlflash: Support file descriptor mapping
+  cxlflash: Introduce object handle fop
+  cxlflash: Setup LISNs for user contexts
+  cxlflash: Setup LISNs for master contexts
+  cxlflash: Update synchronous interrupt status bits
+  cxlflash: Introduce OCXL context state machine
+  cxlflash: Register for translation errors
+  cxlflash: Support AFU reset
+  cxlflash: Enable OpenCXL operations
+
+ drivers/scsi/cxlflash/Kconfig     |    2 +-
+ drivers/scsi/cxlflash/Makefile    |    2 +-
+ drivers/scsi/cxlflash/backend.h   |   50 +-
+ drivers/scsi/cxlflash/common.h    |   10 +-
+ drivers/scsi/cxlflash/cxl_hw.c    |   13 +
+ drivers/scsi/cxlflash/main.c      |   55 +-
+ drivers/scsi/cxlflash/main.h      |    1 +
+ drivers/scsi/cxlflash/ocxl_hw.c   | 1428 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/cxlflash/ocxl_hw.h   |   76 ++
+ drivers/scsi/cxlflash/sislite.h   |   41 +-
+ drivers/scsi/cxlflash/superpipe.c |   14 +
+ 11 files changed, 1644 insertions(+), 48 deletions(-)
+ create mode 100644 drivers/scsi/cxlflash/ocxl_hw.c
+ create mode 100644 drivers/scsi/cxlflash/ocxl_hw.h
+
+-- 
+2.1.0
