@@ -1,8 +1,8 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 01/38] cxlflash: Preserve number of interrupts for master
- contexts
-Date: Thu, 22 Feb 2018 16:21:34 -0600
-Message-ID: <1519338094-51819-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 02/38] cxlflash: Avoid clobbering context control register
+ value
+Date: Thu, 22 Feb 2018 16:22:07 -0600
+Message-ID: <1519338127-51856-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -20,75 +20,64 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The number of interrupts requested for user contexts are stored in the
-context specific structures and utilized to manage the interrupts. For the
-master contexts, this number is only used once and therefore not saved.
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-To prepare for future commits where the number of interrupts will be
-required in more than one place, preserve the value in the master context
-structure.
+The SISLite specification originally defined the context control
+register with a single field of bits to represent the LISN and
+also stipulated that the register reset value be 0. The cxlflash
+driver took advantage of this when programming the LISN for the
+master contexts via an unconditional write - no other bits were
+preserved.
 
+When unmap support was added, SISLite was updated to define bit
+0 of the context control register as a way for the AFU to notify
+the context owner that unmap operations were supported. Thus the
+assumptions under which the register is setup changed and the
+existing unconditional write is clobbering the unmap state for
+master contexts. This is presently not an issue due to the order
+in which the context control register is programmed in relation to
+the unmap bit being queried but should be addressed to avoid a
+future regression in the event this code is moved elsewhere.
+
+To remedy this issue, preserve the bits when programming the LISN
+field in the context control register. Since the LISN will now be
+programmed using a read value, assert that the initial state of the
+LISN field is as described in SISLite (0).
+
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h |  1 +
- drivers/scsi/cxlflash/main.c   | 11 ++++++++---
- 2 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/cxlflash/main.c    | 5 ++++-
+ drivers/scsi/cxlflash/sislite.h | 1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 102fd26..5d7ca01 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -211,6 +211,7 @@ struct hwq {
- 	struct sisl_ctrl_map __iomem *ctrl_map;		/* MC control map */
- 	ctx_hndl_t ctx_hndl;	/* master's context handle */
- 	u32 index;		/* Index of this hwq */
-+	int num_irqs;		/* Numer of interrupts requested for context */
- 	struct list_head pending_cmds;	/* Commands pending completion */
- 
- 	atomic_t hsq_credits;
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index d8fe7ab8..3d3e003 100644
+index 3d3e003..b83a55a 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -1911,7 +1911,7 @@ static enum undo_level init_intr(struct cxlflash_cfg *cfg,
- 	int rc = 0;
- 	enum undo_level level = UNDO_NOOP;
- 	bool is_primary_hwq = (hwq->index == PRIMARY_HWQ);
--	int num_irqs = is_primary_hwq ? 3 : 2;
-+	int num_irqs = hwq->num_irqs;
+@@ -1303,7 +1303,10 @@ static void afu_err_intr_init(struct afu *afu)
+ 	for (i = 0; i < afu->num_hwqs; i++) {
+ 		hwq = get_hwq(afu, i);
  
- 	rc = cfg->ops->allocate_afu_irqs(ctx, num_irqs);
- 	if (unlikely(rc)) {
-@@ -1965,16 +1965,20 @@ static int init_mc(struct cxlflash_cfg *cfg, u32 index)
- 	struct device *dev = &cfg->dev->dev;
- 	struct hwq *hwq = get_hwq(cfg->afu, index);
- 	int rc = 0;
-+	int num_irqs;
- 	enum undo_level level;
- 
- 	hwq->afu = cfg->afu;
- 	hwq->index = index;
- 	INIT_LIST_HEAD(&hwq->pending_cmds);
- 
--	if (index == PRIMARY_HWQ)
-+	if (index == PRIMARY_HWQ) {
- 		ctx = cfg->ops->get_context(cfg->dev, cfg->afu_cookie);
--	else
-+		num_irqs = 3;
-+	} else {
- 		ctx = cfg->ops->dev_context_init(cfg->dev, cfg->afu_cookie);
-+		num_irqs = 2;
-+	}
- 	if (IS_ERR_OR_NULL(ctx)) {
- 		rc = -ENOMEM;
- 		goto err1;
-@@ -1982,6 +1986,7 @@ static int init_mc(struct cxlflash_cfg *cfg, u32 index)
- 
- 	WARN_ON(hwq->ctx_cookie);
- 	hwq->ctx_cookie = ctx;
-+	hwq->num_irqs = num_irqs;
- 
- 	/* Set it up as a master with the CXL */
- 	cfg->ops->set_master(ctx);
+-		writeq_be(SISL_MSI_SYNC_ERROR, &hwq->host_map->ctx_ctrl);
++		reg = readq_be(&hwq->host_map->ctx_ctrl);
++		WARN_ON((reg & SISL_CTX_CTRL_LISN_MASK) != 0);
++		reg |= SISL_MSI_SYNC_ERROR;
++		writeq_be(reg, &hwq->host_map->ctx_ctrl);
+ 		writeq_be(SISL_ISTATUS_MASK, &hwq->host_map->intr_mask);
+ 	}
+ }
+diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
+index bedf1ce..d8940f1 100644
+--- a/drivers/scsi/cxlflash/sislite.h
++++ b/drivers/scsi/cxlflash/sislite.h
+@@ -284,6 +284,7 @@ struct sisl_host_map {
+ 	__be64 cmd_room;
+ 	__be64 ctx_ctrl;	/* least significant byte or b56:63 is LISN# */
+ #define SISL_CTX_CTRL_UNMAP_SECTOR	0x8000000000000000ULL /* b0 */
++#define SISL_CTX_CTRL_LISN_MASK		(0xFFULL)
+ 	__be64 mbox_w;		/* restricted use */
+ 	__be64 sq_start;	/* Submission Queue (R/W): write sequence and */
+ 	__be64 sq_end;		/* inclusion semantics are the same as RRQ    */
 -- 
 2.1.0
