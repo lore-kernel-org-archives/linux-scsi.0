@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 37/38] cxlflash: Support AFU reset
-Date: Thu, 22 Feb 2018 16:28:31 -0600
-Message-ID: <1519338511-53121-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 38/38] cxlflash: Enable OpenCXL operations
+Date: Thu, 22 Feb 2018 16:28:45 -0600
+Message-ID: <1519338525-53157-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,51 +19,54 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The cxlflash core driver resets the AFU when the master contexts are
-created in the initialization or recovery paths. Today, the OCXL
-provider service to perform this operation is pending implementation.
-To avoid a crash due to a missing fop, log an error once and return
-success to continue with execution.
+This commit enables the OpenCXL operations for the OpenCXL devices.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/scsi/cxlflash/main.c | 9 +++++++--
+ drivers/scsi/cxlflash/main.h | 1 +
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index dc45ed2..8a1a9fc 100644
---- a/drivers/scsi/cxlflash/ocxl_hw.c
-+++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -468,6 +468,22 @@ static int ocxlflash_stop_context(void *ctx_cookie)
- }
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 8c55fcd..42a95b7 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3168,7 +3168,8 @@ static struct dev_dependent_vals dev_corsa_vals = { CXLFLASH_MAX_SECTORS,
+ static struct dev_dependent_vals dev_flash_gt_vals = { CXLFLASH_MAX_SECTORS,
+ 					CXLFLASH_NOTIFY_SHUTDOWN };
+ static struct dev_dependent_vals dev_briard_vals = { CXLFLASH_MAX_SECTORS,
+-					CXLFLASH_NOTIFY_SHUTDOWN };
++					(CXLFLASH_NOTIFY_SHUTDOWN |
++					CXLFLASH_OCXL_DEV) };
  
- /**
-+ * ocxlflash_afu_reset() - reset the AFU
-+ * @ctx_cookie:	Adapter context.
-+ */
-+static int ocxlflash_afu_reset(void *ctx_cookie)
-+{
-+	struct ocxlflash_context *ctx = ctx_cookie;
-+	struct device *dev = ctx->hw_afu->dev;
+ /*
+  * PCI device binding table
+@@ -3679,9 +3680,13 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 
+ 	cfg->init_state = INIT_STATE_NONE;
+ 	cfg->dev = pdev;
+-	cfg->ops = &cxlflash_cxl_ops;
+ 	cfg->cxl_fops = cxlflash_cxl_fops;
+ 
++	if (ddv->flags & CXLFLASH_OCXL_DEV)
++		cfg->ops = &cxlflash_ocxl_ops;
++	else
++		cfg->ops = &cxlflash_cxl_ops;
 +
-+	/* Pending implementation from OCXL transport services */
-+	dev_err_once(dev, "%s: afu_reset() fop not supported\n", __func__);
-+
-+	/* Silently return success until it is implemented */
-+	return 0;
-+}
-+
-+/**
-  * ocxlflash_set_master() - sets the context as master
-  * @ctx_cookie:	Adapter context to set as master.
-  */
-@@ -1393,6 +1409,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.get_irq_objhndl	= ocxlflash_get_irq_objhndl,
- 	.start_context		= ocxlflash_start_context,
- 	.stop_context		= ocxlflash_stop_context,
-+	.afu_reset		= ocxlflash_afu_reset,
- 	.set_master		= ocxlflash_set_master,
- 	.get_context		= ocxlflash_get_context,
- 	.dev_context_init	= ocxlflash_dev_context_init,
+ 	/*
+ 	 * Promoted LUNs move to the top of the LUN table. The rest stay on
+ 	 * the bottom half. The bottom half grows from the end (index = 255),
+diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
+index ba0108a..6f1be62 100644
+--- a/drivers/scsi/cxlflash/main.h
++++ b/drivers/scsi/cxlflash/main.h
+@@ -97,6 +97,7 @@ struct dev_dependent_vals {
+ 	u64 flags;
+ #define CXLFLASH_NOTIFY_SHUTDOWN	0x0000000000000001ULL
+ #define CXLFLASH_WWPN_VPD_REQUIRED	0x0000000000000002ULL
++#define CXLFLASH_OCXL_DEV		0x0000000000000004ULL
+ };
+ 
+ struct asyc_intr_info {
 -- 
 2.1.0
