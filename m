@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 26/38] cxlflash: Support starting user contexts
-Date: Thu, 22 Feb 2018 16:26:56 -0600
-Message-ID: <1519338416-52723-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 27/38] cxlflash: Support adapter context polling
+Date: Thu, 22 Feb 2018 16:27:04 -0600
+Message-ID: <1519338424-52759-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,175 +19,128 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-User contexts request interrupts and are started using the "start work"
-interface. Populate the start_work() fop to allocate and map interrupts
-before starting the user context. As part of starting the context, update
-the user process identification logic to properly derive the data required
-by the SPA. Also, introduce a skeleton interrupt handler using a bitmap,
-flag, and spinlock to track interrupts. This handler will be expanded in
-future commits.
+The cxlflash userspace API requires that users be able to poll the adapter
+context for any pending events or interrupts from the AFU. Support polling
+on various events by implementing the AFU poll fop using a waitqueue.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 99 ++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/cxlflash/ocxl_hw.h |  3 ++
- 2 files changed, 100 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/ocxl_hw.c | 57 +++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/cxlflash/ocxl_hw.h |  2 ++
+ 2 files changed, 57 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index 3b28c2a..4ca4a72 100644
+index 4ca4a72..3297934 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -318,7 +318,9 @@ static int start_context(struct ocxlflash_context *ctx)
- 	void *link_token = afu->link_token;
- 	struct device *dev = afu->dev;
- 	bool master = ctx->master;
-+	struct mm_struct *mm;
- 	int rc = 0;
-+	u32 pid;
+@@ -16,6 +16,7 @@
+ #include <linux/idr.h>
+ #include <linux/module.h>
+ #include <linux/mount.h>
++#include <linux/poll.h>
  
- 	if (master) {
- 		ctx->psn_size = acfg->global_mmio_size;
-@@ -328,9 +330,16 @@ static int start_context(struct ocxlflash_context *ctx)
- 		ctx->psn_phys = afu->ppmmio_phys + (ctx->pe * ctx->psn_size);
+ #include <misc/ocxl.h>
+ 
+@@ -452,6 +453,7 @@ static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
  	}
  
-+	/* pid and mm not set for master contexts */
-+	if (master) {
-+		pid = 0;
-+		mm = NULL;
-+	} else {
-+		pid = current->mm->context.id;
-+		mm = current->mm;
-+	}
+ 	spin_lock_init(&ctx->slock);
++	init_waitqueue_head(&ctx->wq);
  
--	/* pid, tid, amr and mm are zeroes/NULL for a kernel context */
--	rc = ocxl_link_add_pe(link_token, ctx->pe, 0, 0, 0, NULL, NULL, NULL);
-+	rc = ocxl_link_add_pe(link_token, ctx->pe, pid, 0, 0, mm, NULL, NULL);
- 	if (unlikely(rc)) {
- 		dev_err(dev, "%s: ocxl_link_add_pe failed rc=%d\n",
- 			__func__, rc);
-@@ -442,10 +451,14 @@ static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
- 		goto err2;
- 	}
- 
-+	spin_lock_init(&ctx->slock);
-+
  	ctx->pe = rc;
  	ctx->master = false;
- 	ctx->mapping = NULL;
- 	ctx->hw_afu = afu;
-+	ctx->irq_bitmap = 0;
-+	ctx->pending_irq = false;
- out:
- 	return ctx;
- err2:
-@@ -948,6 +961,87 @@ static void *ocxlflash_fops_get_context(struct file *file)
- 	return file->private_data;
+@@ -884,10 +886,57 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
+ 	goto out;
  }
  
 +/**
-+ * ocxlflash_afu_irq() - interrupt handler for user contexts
-+ * @irq:	Interrupt number.
-+ * @data:	Private data provided at interrupt registration, the context.
++ * ctx_event_pending() - check for any event pending on the context
++ * @ctx:	Context to be checked.
 + *
-+ * Return: Always return IRQ_HANDLED.
++ * Return: true if there is an event pending, false if none pending
 + */
-+static irqreturn_t ocxlflash_afu_irq(int irq, void *data)
++static inline bool ctx_event_pending(struct ocxlflash_context *ctx)
 +{
-+	struct ocxlflash_context *ctx = data;
-+	struct device *dev = ctx->hw_afu->dev;
-+	int i;
++	if (ctx->pending_irq)
++		return true;
 +
-+	dev_dbg(dev, "%s: Interrupt raised for pe %i virq %i\n",
-+		__func__, ctx->pe, irq);
-+
-+	for (i = 0; i < ctx->num_irqs; i++) {
-+		if (ctx->irqs[i].virq == irq)
-+			break;
-+	}
-+	if (unlikely(i >= ctx->num_irqs)) {
-+		dev_err(dev, "%s: Received AFU IRQ out of range\n", __func__);
-+		goto out;
-+	}
-+
-+	spin_lock(&ctx->slock);
-+	set_bit(i - 1, &ctx->irq_bitmap);
-+	ctx->pending_irq = true;
-+	spin_unlock(&ctx->slock);
-+out:
-+	return IRQ_HANDLED;
++	return false;
 +}
 +
 +/**
-+ * ocxlflash_start_work() - start a user context
-+ * @ctx_cookie:	Context to be started.
-+ * @num_irqs:	Number of interrupts requested.
++ * afu_poll() - poll the AFU for events on the context
++ * @file:	File associated with the adapter context.
++ * @poll:	Poll structure from the user.
 + *
-+ * Return: 0 on success, -errno on failure
++ * Return: poll mask
 + */
-+static int ocxlflash_start_work(void *ctx_cookie, u64 num_irqs)
++static unsigned int afu_poll(struct file *file, struct poll_table_struct *poll)
 +{
-+	struct ocxlflash_context *ctx = ctx_cookie;
-+	struct ocxl_hw_afu *afu = ctx->hw_afu;
-+	struct device *dev = afu->dev;
-+	char *name;
-+	int rc = 0;
-+	int i;
++	struct ocxlflash_context *ctx = file->private_data;
++	struct device *dev = ctx->hw_afu->dev;
++	ulong lock_flags;
++	int mask = 0;
 +
-+	rc = alloc_afu_irqs(ctx, num_irqs);
-+	if (unlikely(rc < 0)) {
-+		dev_err(dev, "%s: alloc_afu_irqs failed rc=%d\n", __func__, rc);
-+		goto out;
-+	}
++	poll_wait(file, &ctx->wq, poll);
 +
-+	for (i = 0; i < num_irqs; i++) {
-+		name = kasprintf(GFP_KERNEL, "ocxlflash-%s-pe%i-%i",
-+				 dev_name(dev), ctx->pe, i);
-+		rc = afu_map_irq(0, ctx, i, ocxlflash_afu_irq, ctx, name);
-+		kfree(name);
-+		if (unlikely(rc < 0)) {
-+			dev_err(dev, "%s: afu_map_irq failed rc=%d\n",
-+				__func__, rc);
-+			goto err;
-+		}
-+	}
++	spin_lock_irqsave(&ctx->slock, lock_flags);
++	if (ctx_event_pending(ctx))
++		mask |= POLLIN | POLLRDNORM;
++	else
++		mask |= POLLERR;
++	spin_unlock_irqrestore(&ctx->slock, lock_flags);
 +
-+	rc = start_context(ctx);
-+	if (unlikely(rc)) {
-+		dev_err(dev, "%s: start_context failed rc=%d\n", __func__, rc);
-+		goto err;
-+	}
-+out:
-+	return rc;
-+err:
-+	for (i = i-1; i >= 0; i--)
-+		afu_unmap_irq(0, ctx, i, ctx);
-+	free_afu_irqs(ctx);
-+	goto out;
++	dev_dbg(dev, "%s: Poll wait completed for pe %i mask %i\n",
++		__func__, ctx->pe, mask);
++
++	return mask;
 +}
 +
- /* Backend ops to ocxlflash services */
- const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.module			= THIS_MODULE,
-@@ -970,4 +1064,5 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.destroy_afu		= ocxlflash_destroy_afu,
- 	.get_fd			= ocxlflash_get_fd,
- 	.fops_get_context	= ocxlflash_fops_get_context,
-+	.start_work		= ocxlflash_start_work,
+ static const struct file_operations ocxl_afu_fops = {
+ 	.owner		= THIS_MODULE,
++	.poll		= afu_poll,
  };
+ 
++#define PATCH_FOPS(NAME)						\
++	do { if (!fops->NAME) fops->NAME = ocxl_afu_fops.NAME; } while (0)
++
+ /**
+  * ocxlflash_get_fd() - get file descriptor for an adapter context
+  * @ctx_cookie:	Adapter context.
+@@ -925,8 +974,10 @@ static struct file *ocxlflash_get_fd(void *ctx_cookie,
+ 	}
+ 	fdtmp = rc;
+ 
+-	/* Use default ops if there is no fops */
+-	if (!fops)
++	/* Patch the file ops that are not defined */
++	if (fops) {
++		PATCH_FOPS(poll);
++	} else /* Use default ops */
+ 		fops = (struct file_operations *)&ocxl_afu_fops;
+ 
+ 	name = kasprintf(GFP_KERNEL, "ocxlflash:%d", ctx->pe);
+@@ -990,6 +1041,8 @@ static irqreturn_t ocxlflash_afu_irq(int irq, void *data)
+ 	set_bit(i - 1, &ctx->irq_bitmap);
+ 	ctx->pending_irq = true;
+ 	spin_unlock(&ctx->slock);
++
++	wake_up_all(&ctx->wq);
+ out:
+ 	return IRQ_HANDLED;
+ }
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
-index 53c2d33..c7cbf67 100644
+index c7cbf67..bdf9422 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.h
 +++ b/drivers/scsi/cxlflash/ocxl_hw.h
-@@ -54,6 +54,9 @@ struct ocxlflash_context {
- 	phys_addr_t psn_phys;		/* Process mapping */
+@@ -55,6 +55,8 @@ struct ocxlflash_context {
  	u64 psn_size;			/* Process mapping size */
  
-+	spinlock_t slock;		/* Protects irq/fault/event updates */
+ 	spinlock_t slock;		/* Protects irq/fault/event updates */
++	wait_queue_head_t wq;		/* Wait queue for poll and interrupts */
++
  	struct ocxlflash_irqs *irqs;	/* Pointer to array of structures */
  	int num_irqs;			/* Number of interrupts */
-+	bool pending_irq;		/* Pending interrupt on the context */
-+	ulong irq_bitmap;		/* Bits indicating pending irq num */
- };
+ 	bool pending_irq;		/* Pending interrupt on the context */
 -- 
 2.1.0
