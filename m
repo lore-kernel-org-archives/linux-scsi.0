@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 25/38] cxlflash: Support AFU interrupt mapping and registration
-Date: Thu, 22 Feb 2018 16:26:48 -0600
-Message-ID: <1519338408-52687-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 26/38] cxlflash: Support starting user contexts
+Date: Thu, 22 Feb 2018 16:26:56 -0600
+Message-ID: <1519338416-52723-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,168 +19,175 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add support to map and unmap the irq space and manage irq registrations
-with the kernel for each allocated AFU interrupt. Also support mapping
-the physical trigger page to obtain an effective address that will be
-provided to the cxlflash core in a future commit.
+User contexts request interrupts and are started using the "start work"
+interface. Populate the start_work() fop to allocate and map interrupts
+before starting the user context. As part of starting the context, update
+the user process identification logic to properly derive the data required
+by the SPA. Also, introduce a skeleton interrupt handler using a bitmap,
+flag, and spinlock to track interrupts. This handler will be expanded in
+future commits.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 120 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/cxlflash/ocxl_hw.h |   2 +
- 2 files changed, 122 insertions(+)
+ drivers/scsi/cxlflash/ocxl_hw.c | 99 ++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/cxlflash/ocxl_hw.h |  3 ++
+ 2 files changed, 100 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index acba10f..3b28c2a 100644
+index 3b28c2a..4ca4a72 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -186,6 +186,124 @@ static int ocxlflash_process_element(void *ctx_cookie)
+@@ -318,7 +318,9 @@ static int start_context(struct ocxlflash_context *ctx)
+ 	void *link_token = afu->link_token;
+ 	struct device *dev = afu->dev;
+ 	bool master = ctx->master;
++	struct mm_struct *mm;
+ 	int rc = 0;
++	u32 pid;
+ 
+ 	if (master) {
+ 		ctx->psn_size = acfg->global_mmio_size;
+@@ -328,9 +330,16 @@ static int start_context(struct ocxlflash_context *ctx)
+ 		ctx->psn_phys = afu->ppmmio_phys + (ctx->pe * ctx->psn_size);
+ 	}
+ 
++	/* pid and mm not set for master contexts */
++	if (master) {
++		pid = 0;
++		mm = NULL;
++	} else {
++		pid = current->mm->context.id;
++		mm = current->mm;
++	}
+ 
+-	/* pid, tid, amr and mm are zeroes/NULL for a kernel context */
+-	rc = ocxl_link_add_pe(link_token, ctx->pe, 0, 0, 0, NULL, NULL, NULL);
++	rc = ocxl_link_add_pe(link_token, ctx->pe, pid, 0, 0, mm, NULL, NULL);
+ 	if (unlikely(rc)) {
+ 		dev_err(dev, "%s: ocxl_link_add_pe failed rc=%d\n",
+ 			__func__, rc);
+@@ -442,10 +451,14 @@ static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
+ 		goto err2;
+ 	}
+ 
++	spin_lock_init(&ctx->slock);
++
+ 	ctx->pe = rc;
+ 	ctx->master = false;
+ 	ctx->mapping = NULL;
+ 	ctx->hw_afu = afu;
++	ctx->irq_bitmap = 0;
++	ctx->pending_irq = false;
+ out:
+ 	return ctx;
+ err2:
+@@ -948,6 +961,87 @@ static void *ocxlflash_fops_get_context(struct file *file)
+ 	return file->private_data;
  }
  
- /**
-+ * afu_map_irq() - map the interrupt of the adapter context
-+ * @flags:	Flags.
-+ * @ctx:	Adapter context.
-+ * @num:	Per-context AFU interrupt number.
-+ * @handler:	Interrupt handler to register.
-+ * @cookie:	Interrupt handler private data.
-+ * @name:	Name of the interrupt.
++/**
++ * ocxlflash_afu_irq() - interrupt handler for user contexts
++ * @irq:	Interrupt number.
++ * @data:	Private data provided at interrupt registration, the context.
++ *
++ * Return: Always return IRQ_HANDLED.
++ */
++static irqreturn_t ocxlflash_afu_irq(int irq, void *data)
++{
++	struct ocxlflash_context *ctx = data;
++	struct device *dev = ctx->hw_afu->dev;
++	int i;
++
++	dev_dbg(dev, "%s: Interrupt raised for pe %i virq %i\n",
++		__func__, ctx->pe, irq);
++
++	for (i = 0; i < ctx->num_irqs; i++) {
++		if (ctx->irqs[i].virq == irq)
++			break;
++	}
++	if (unlikely(i >= ctx->num_irqs)) {
++		dev_err(dev, "%s: Received AFU IRQ out of range\n", __func__);
++		goto out;
++	}
++
++	spin_lock(&ctx->slock);
++	set_bit(i - 1, &ctx->irq_bitmap);
++	ctx->pending_irq = true;
++	spin_unlock(&ctx->slock);
++out:
++	return IRQ_HANDLED;
++}
++
++/**
++ * ocxlflash_start_work() - start a user context
++ * @ctx_cookie:	Context to be started.
++ * @num_irqs:	Number of interrupts requested.
 + *
 + * Return: 0 on success, -errno on failure
 + */
-+static int afu_map_irq(u64 flags, struct ocxlflash_context *ctx, int num,
-+		       irq_handler_t handler, void *cookie, char *name)
++static int ocxlflash_start_work(void *ctx_cookie, u64 num_irqs)
 +{
++	struct ocxlflash_context *ctx = ctx_cookie;
 +	struct ocxl_hw_afu *afu = ctx->hw_afu;
 +	struct device *dev = afu->dev;
-+	struct ocxlflash_irqs *irq;
-+	void __iomem *vtrig;
-+	u32 virq;
++	char *name;
 +	int rc = 0;
++	int i;
 +
-+	if (num < 0 || num >= ctx->num_irqs) {
-+		dev_err(dev, "%s: Interrupt %d not allocated\n", __func__, num);
-+		rc = -ENOENT;
++	rc = alloc_afu_irqs(ctx, num_irqs);
++	if (unlikely(rc < 0)) {
++		dev_err(dev, "%s: alloc_afu_irqs failed rc=%d\n", __func__, rc);
 +		goto out;
 +	}
 +
-+	irq = &ctx->irqs[num];
-+	virq = irq_create_mapping(NULL, irq->hwirq);
-+	if (unlikely(!virq)) {
-+		dev_err(dev, "%s: irq_create_mapping failed\n", __func__);
-+		rc = -ENOMEM;
-+		goto out;
++	for (i = 0; i < num_irqs; i++) {
++		name = kasprintf(GFP_KERNEL, "ocxlflash-%s-pe%i-%i",
++				 dev_name(dev), ctx->pe, i);
++		rc = afu_map_irq(0, ctx, i, ocxlflash_afu_irq, ctx, name);
++		kfree(name);
++		if (unlikely(rc < 0)) {
++			dev_err(dev, "%s: afu_map_irq failed rc=%d\n",
++				__func__, rc);
++			goto err;
++		}
 +	}
 +
-+	rc = request_irq(virq, handler, 0, name, cookie);
++	rc = start_context(ctx);
 +	if (unlikely(rc)) {
-+		dev_err(dev, "%s: request_irq failed rc=%d\n", __func__, rc);
-+		goto err1;
++		dev_err(dev, "%s: start_context failed rc=%d\n", __func__, rc);
++		goto err;
 +	}
-+
-+	vtrig = ioremap(irq->ptrig, PAGE_SIZE);
-+	if (unlikely(!vtrig)) {
-+		dev_err(dev, "%s: Trigger page mapping failed\n", __func__);
-+		rc = -ENOMEM;
-+		goto err2;
-+	}
-+
-+	irq->virq = virq;
-+	irq->vtrig = vtrig;
 +out:
 +	return rc;
-+err2:
-+	free_irq(virq, cookie);
-+err1:
-+	irq_dispose_mapping(virq);
++err:
++	for (i = i-1; i >= 0; i--)
++		afu_unmap_irq(0, ctx, i, ctx);
++	free_afu_irqs(ctx);
 +	goto out;
 +}
 +
-+/**
-+ * ocxlflash_map_afu_irq() - map the interrupt of the adapter context
-+ * @ctx_cookie:	Adapter context.
-+ * @num:	Per-context AFU interrupt number.
-+ * @handler:	Interrupt handler to register.
-+ * @cookie:	Interrupt handler private data.
-+ * @name:	Name of the interrupt.
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+static int ocxlflash_map_afu_irq(void *ctx_cookie, int num,
-+				 irq_handler_t handler, void *cookie,
-+				 char *name)
-+{
-+	return afu_map_irq(0, ctx_cookie, num, handler, cookie, name);
-+}
-+
-+/**
-+ * afu_unmap_irq() - unmap the interrupt
-+ * @flags:	Flags.
-+ * @ctx:	Adapter context.
-+ * @num:	Per-context AFU interrupt number.
-+ * @cookie:	Interrupt handler private data.
-+ */
-+static void afu_unmap_irq(u64 flags, struct ocxlflash_context *ctx, int num,
-+			  void *cookie)
-+{
-+	struct ocxl_hw_afu *afu = ctx->hw_afu;
-+	struct device *dev = afu->dev;
-+	struct ocxlflash_irqs *irq;
-+
-+	if (num < 0 || num >= ctx->num_irqs) {
-+		dev_err(dev, "%s: Interrupt %d not allocated\n", __func__, num);
-+		return;
-+	}
-+
-+	irq = &ctx->irqs[num];
-+	if (irq->vtrig)
-+		iounmap(irq->vtrig);
-+
-+	if (irq_find_mapping(NULL, irq->hwirq)) {
-+		free_irq(irq->virq, cookie);
-+		irq_dispose_mapping(irq->virq);
-+	}
-+
-+	memset(irq, 0, sizeof(*irq));
-+}
-+
-+/**
-+ * ocxlflash_unmap_afu_irq() - unmap the interrupt
-+ * @ctx_cookie:	Adapter context.
-+ * @num:	Per-context AFU interrupt number.
-+ * @cookie:	Interrupt handler private data.
-+ */
-+static void ocxlflash_unmap_afu_irq(void *ctx_cookie, int num, void *cookie)
-+{
-+	return afu_unmap_irq(0, ctx_cookie, num, cookie);
-+}
-+
-+/**
-  * start_context() - local routine to start a context
-  * @ctx:	Adapter context to be started.
-  *
-@@ -836,6 +954,8 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.psa_map		= ocxlflash_psa_map,
- 	.psa_unmap		= ocxlflash_psa_unmap,
- 	.process_element	= ocxlflash_process_element,
-+	.map_afu_irq		= ocxlflash_map_afu_irq,
-+	.unmap_afu_irq		= ocxlflash_unmap_afu_irq,
- 	.start_context		= ocxlflash_start_context,
- 	.stop_context		= ocxlflash_stop_context,
- 	.set_master		= ocxlflash_set_master,
+ /* Backend ops to ocxlflash services */
+ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.module			= THIS_MODULE,
+@@ -970,4 +1064,5 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.destroy_afu		= ocxlflash_destroy_afu,
+ 	.get_fd			= ocxlflash_get_fd,
+ 	.fops_get_context	= ocxlflash_fops_get_context,
++	.start_work		= ocxlflash_start_work,
+ };
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
-index c889368..53c2d33 100644
+index 53c2d33..c7cbf67 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.h
 +++ b/drivers/scsi/cxlflash/ocxl_hw.h
-@@ -16,7 +16,9 @@
+@@ -54,6 +54,9 @@ struct ocxlflash_context {
+ 	phys_addr_t psn_phys;		/* Process mapping */
+ 	u64 psn_size;			/* Process mapping size */
  
- struct ocxlflash_irqs {
- 	int hwirq;
-+	u32 virq;
- 	u64 ptrig;
-+	void __iomem *vtrig;
++	spinlock_t slock;		/* Protects irq/fault/event updates */
+ 	struct ocxlflash_irqs *irqs;	/* Pointer to array of structures */
+ 	int num_irqs;			/* Number of interrupts */
++	bool pending_irq;		/* Pending interrupt on the context */
++	ulong irq_bitmap;		/* Bits indicating pending irq num */
  };
- 
- /* OpenCXL hardware AFU associated with the host */
 -- 
 2.1.0
