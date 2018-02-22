@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 38/38] cxlflash: Enable OpenCXL operations
-Date: Thu, 22 Feb 2018 16:28:45 -0600
-Message-ID: <1519338525-53157-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 15/38] cxlflash: Support image reload policy modification
+Date: Thu, 22 Feb 2018 16:24:40 -0600
+Message-ID: <1519338280-52326-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,54 +19,57 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This commit enables the OpenCXL operations for the OpenCXL devices.
+On a PERST, the AFU image can be reloaded or left intact. Provide means to
+set this image reload policy.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 9 +++++++--
- drivers/scsi/cxlflash/main.h | 1 +
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/ocxl_hw.c | 13 +++++++++++++
+ drivers/scsi/cxlflash/ocxl_hw.h |  1 +
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 8c55fcd..42a95b7 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -3168,7 +3168,8 @@ static struct dev_dependent_vals dev_corsa_vals = { CXLFLASH_MAX_SECTORS,
- static struct dev_dependent_vals dev_flash_gt_vals = { CXLFLASH_MAX_SECTORS,
- 					CXLFLASH_NOTIFY_SHUTDOWN };
- static struct dev_dependent_vals dev_briard_vals = { CXLFLASH_MAX_SECTORS,
--					CXLFLASH_NOTIFY_SHUTDOWN };
-+					(CXLFLASH_NOTIFY_SHUTDOWN |
-+					CXLFLASH_OCXL_DEV) };
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
+index 2dab547..6f78e71 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.c
++++ b/drivers/scsi/cxlflash/ocxl_hw.c
+@@ -252,6 +252,18 @@ static int ocxlflash_release_context(void *ctx_cookie)
+ }
  
- /*
-  * PCI device binding table
-@@ -3679,9 +3680,13 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 
- 	cfg->init_state = INIT_STATE_NONE;
- 	cfg->dev = pdev;
--	cfg->ops = &cxlflash_cxl_ops;
- 	cfg->cxl_fops = cxlflash_cxl_fops;
- 
-+	if (ddv->flags & CXLFLASH_OCXL_DEV)
-+		cfg->ops = &cxlflash_ocxl_ops;
-+	else
-+		cfg->ops = &cxlflash_cxl_ops;
+ /**
++ * ocxlflash_perst_reloads_same_image() - sets the image reload policy
++ * @afu_cookie:	Hardware AFU associated with the host.
++ * @image:	Whether to load the same image on PERST.
++ */
++static void ocxlflash_perst_reloads_same_image(void *afu_cookie, bool image)
++{
++	struct ocxl_hw_afu *afu = afu_cookie;
 +
- 	/*
- 	 * Promoted LUNs move to the top of the LUN table. The rest stay on
- 	 * the bottom half. The bottom half grows from the end (index = 255),
-diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
-index ba0108a..6f1be62 100644
---- a/drivers/scsi/cxlflash/main.h
-+++ b/drivers/scsi/cxlflash/main.h
-@@ -97,6 +97,7 @@ struct dev_dependent_vals {
- 	u64 flags;
- #define CXLFLASH_NOTIFY_SHUTDOWN	0x0000000000000001ULL
- #define CXLFLASH_WWPN_VPD_REQUIRED	0x0000000000000002ULL
-+#define CXLFLASH_OCXL_DEV		0x0000000000000004ULL
- };
++	afu->perst_same_image = image;
++}
++
++/**
+  * ocxlflash_destroy_afu() - destroy the AFU structure
+  * @afu_cookie:	AFU to be freed.
+  */
+@@ -493,6 +505,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.get_context		= ocxlflash_get_context,
+ 	.dev_context_init	= ocxlflash_dev_context_init,
+ 	.release_context	= ocxlflash_release_context,
++	.perst_reloads_same_image = ocxlflash_perst_reloads_same_image,
+ 	.create_afu		= ocxlflash_create_afu,
+ 	.destroy_afu		= ocxlflash_destroy_afu,
+ 	.get_fd			= ocxlflash_get_fd,
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
+index 7f234b1..6d6e323 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.h
++++ b/drivers/scsi/cxlflash/ocxl_hw.h
+@@ -17,6 +17,7 @@ struct ocxl_hw_afu {
+ 	struct ocxlflash_context *ocxl_ctx; /* Host context */
+ 	struct pci_dev *pdev;		/* PCI device */
+ 	struct device *dev;		/* Generic device */
++	bool perst_same_image;		/* Same image loaded on perst */
  
- struct asyc_intr_info {
+ 	struct ocxl_fn_config fcfg;	/* DVSEC config of the function */
+ 	struct ocxl_afu_config acfg;	/* AFU configuration data */
 -- 
 2.1.0
