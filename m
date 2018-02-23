@@ -1,91 +1,45 @@
-From: "liwei (CM)" <liwei213@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjggMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZz?=
- =?utf-8?Q?:_add_document_for_hisi-ufs?=
-Date: Fri, 23 Feb 2018 08:35:54 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA56267@DGGEMM506-MBS.china.huawei.com>
-References: <20180213101412.5717-1-liwei213@huawei.com>
- <20180213101412.5717-3-liwei213@huawei.com>
- <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
-Content-Language: zh-CN
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Mark Rutland <mark.rutland@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, "xuwei (O)" <xuwei5@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Kevin Hilman <khilman@baylibre.com>, zangleigang <zangleigang@hisilicon.com>, Krzysztof Kozlowski <krzk@kernel.org>, Zhangfei Gao <zhangfei.gao@linaro.org>, Thierry Reding <treding@nvidia.com>, DTML <devicetree@vger.kernel.org>, "Fengbaopeng (kevin,
- Kirin Solution Dept)" <fengbaopeng@hisilicon.com>, Rob Herring <robh+dt@kernel.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Guodong Xu <guodong.xu@linaro.org>, Martin K. Pet
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH 04/38] cxlflash: Introduce OpenCXL backend
+Date: Fri, 23 Feb 2018 13:36:37 -0600
+Message-ID: <115B47D4-5BB4-45F2-8A7A-3176C9F1EA60@linux.vnet.ibm.com>
+References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1519338163-51928-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <abe97ecd-7162-c812-816d-268321916bff@au1.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <abe97ecd-7162-c812-816d-268321916bff@au1.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIEFybmQNCg0KU29ycnkgbGF0ZSBmb3IgeW91Lg0KVGhlIGZvbGxvd2luZyB0d28gc3VnZ2Vz
-dGlvbnMgd2UgaGF2ZSByZWFsbHkgZGlzY3Vzc2VkDQpodHRwczovL2xrbWwub3JnL2xrbWwvMjAx
-Ny8xMS8zMC8xMDc3DQoNCi0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCuWPkeS7tuS6ujogYXJuZGJl
-cmdtYW5uQGdtYWlsLmNvbSBbbWFpbHRvOmFybmRiZXJnbWFubkBnbWFpbC5jb21dIOS7o+ihqCBB
-cm5kIEJlcmdtYW5uDQrlj5HpgIHml7bpl7Q6IDIwMTjlubQy5pyIMTnml6UgMTc6NTgNCuaUtuS7
-tuS6ujogbGl3ZWkgKENNKQ0K5oqE6YCBOiBSb2IgSGVycmluZzsgTWFyayBSdXRsYW5kOyB4dXdl
-aSAoTyk7IENhdGFsaW4gTWFyaW5hczsgV2lsbCBEZWFjb247IFZpbmF5YWsgSG9saWthdHRpOyBK
-YW1lcyBFLkouIEJvdHRvbWxleTsgTWFydGluIEsuIFBldGVyc2VuOyBLZXZpbiBIaWxtYW47IEdy
-ZWdvcnkgQ0xFTUVOVDsgVGhvbWFzIFBldGF6em9uaTsgTWFzYWhpcm8gWWFtYWRhOyBSaWt1IFZv
-aXBpbzsgVGhpZXJyeSBSZWRpbmc7IEtyenlzenRvZiBLb3psb3dza2k7IEVyaWMgQW5ob2x0OyBE
-VE1MOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyBMaW51eCBBUk07IGxpbnV4LXNjc2k7IHph
-bmdsZWlnYW5nOyBHZW5namlhbmZlbmc7IEd1b2RvbmcgWHU7IFpoYW5nZmVpIEdhbzsgRmVuZ2Jh
-b3BlbmcgKGtldmluLCBLaXJpbiBTb2x1dGlvbiBEZXB0KQ0K5Li76aKYOiBSZTogW1BBVENIIHY4
-IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYWRkIGRvY3VtZW50IGZvciBoaXNpLXVmcw0K
-DQpPbiBUdWUsIEZlYiAxMywgMjAxOCBhdCAxMToxNCBBTSwgTGkgV2VpIDxsaXdlaTIxM0BodWF3
-ZWkuY29tPiB3cm90ZToNCj4gYWRkIHVmcyBub2RlIGRvY3VtZW50IGZvciBIaXNpbGljb24uDQo+
-DQo+IFNpZ25lZC1vZmYtYnk6IExpIFdlaSA8bGl3ZWkyMTNAaHVhd2VpLmNvbT4NCj4gLS0tDQo+
-ICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dCB8IDM3
-IA0KPiArKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMzcgaW5zZXJ0
-aW9ucygrKQ0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9i
-aW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0DQoNCg0KSSdtIHByZXR0eSBzdXJlIHdlJ3ZlIGRpc2N1
-c3NlZCBpdCBiZWZvcmUsIGJ1dCBjYW4geW91IG1ha2UgdGhpcyBzbyB0aGF0IHRoZSBnZW5lcmlj
-IHByb3BlcnRpZXMgYXJlIHBhcnQgb2YgdGhlIHVmc2hjZCBiaW5kaW5nLCBhbmQgeW91IHJlZmVy
-IHRvIGl0IGZyb20gaGVyZSwgb25seSBkZXNjcmliaW5nIGluIHdoYXQgd2F5cyB0aGUgaGlzaSB1
-ZnMgYmluZGluZyBkaWZmZXJzIGZyb20gdGhlIHN0YW5kYXJkPw0KDQo+IGRpZmYgLS1naXQgYS9E
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dCANCj4gYi9E
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPiBuZXcg
-ZmlsZSBtb2RlIDEwMDY0NA0KPiBpbmRleCAwMDAwMDAwMDAwMDAuLjBkMjFiNTc0OTZjZg0KPiAt
-LS0gL2Rldi9udWxsDQo+ICsrKyBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91
-ZnMvdWZzLWhpc2kudHh0DQo+IEBAIC0wLDAgKzEsMzcgQEANCj4gKyogSGlzaWxpY29uIFVuaXZl
-cnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhvc3QgQ29udHJvbGxlcg0KPiArDQo+ICtVRlMgbm9k
-ZXMgYXJlIGRlZmluZWQgdG8gZGVzY3JpYmUgb24tY2hpcCBVRlMgaGFyZHdhcmUgbWFjcm8uDQo+
-ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xsZXIgc2hvdWxkIGhhdmUgaXRzIG93biBub2RlLg0KPiAr
-DQo+ICtSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiArLSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBh
-dGlibGUgbGlzdCwgY29udGFpbnMgb25lIG9mIHRoZSBmb2xsb3dpbmcgLQ0KPiArICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImhpc2lsaWNvbixoaTM2NjAtdWZzIiwgImpl
-ZGVjLHVmcy0xLjEiIGZvciBoaXNpIHVmcw0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgaG9zdCBjb250cm9sbGVyIHByZXNlbnQgb24gSGkzNnh4IGNoaXBzZXQuDQo+
-ICstIHJlZyAgICAgICAgICAgICAgIDogc2hvdWxkIGNvbnRhaW4gVUZTIHJlZ2lzdGVyIGFkZHJl
-c3Mgc3BhY2UgJiBVRlMgU1lTIENUUkwgcmVnaXN0ZXIgYWRkcmVzcywNCj4gKy0gaW50ZXJydXB0
-LXBhcmVudCAgOiBpbnRlcnJ1cHQgZGV2aWNlDQo+ICstIGludGVycnVwdHMgICAgICAgIDogaW50
-ZXJydXB0IG51bWJlcg0KPiArLSBjbG9ja3MgICAgICAgICAgICAgICA6IExpc3Qgb2YgcGhhbmRs
-ZSBhbmQgY2xvY2sgc3BlY2lmaWVyIHBhaXJzDQo+ICstIGNsb2NrLW5hbWVzICAgICAgIDogTGlz
-dCBvZiBjbG9jayBpbnB1dCBuYW1lIHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQo+ICsgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBvcmRlciBhcyB0aGUgY2xvY2tzIHBy
-b3BlcnR5LiANCj4gKyJyZWZfY2xrIiwgInBoeV9jbGsiIGlzIG9wdGlvbmFsDQoNClRoZSBjbG9j
-ayBuYW1lcyBzb3VuZCBnZW5lcmljIGVub3VnaCwgc2hvdWxkIHdlIGhhdmUgYm90aCBpbiB0aGUg
-Z2VuZXJpYyBiaW5kaW5nPw0KDQoicmVmX2NsayIgaXMgaW4gdGhlIHVmc2hjZC1wbHRmcm0gYmlu
-ZGluZywgYnV0ICJwaHlfY2xrIiBpcyBub3Q7IHdoYXQgZG8geW91IG1lYW4gaXMgdGhhdCB0aGVz
-ZSB0d28gZG9uJ3QgbmVlZCB0byBkb2N1bWVudCBoZXJlPw0KDQo+ICstIHJlc2V0cyAgICAgICAg
-ICAgIDogcmVzZXQgbm9kZSByZWdpc3Rlciwgb25lIHJlc2V0IHRoZSBjbGsgYW5kIHRoZSBvdGhl
-ciByZXNldCB0aGUgY29udHJvbGxlcg0KPiArLSByZXNldC1uYW1lcyAgICAgICA6IGRlc2NyaWJl
-IHJlc2V0IG5vZGUgcmVnaXN0ZXINCg0KVGhpcyBsb29rcyBpbmNvbXBsZXRlLiBXaGF0IGlzIHRo
-ZSBuYW1lIG9mIHRoZSByZXNldCBsaW5lIHN1cHBvc2VkIHRvIGJlPw0KSSdkIGFsc28gc3VnZ2Vz
-dCB5b3UgZG9jdW1lbnQgaXQgaW4gdGhlIHVmc2hjZCBiaW5kaW5nIGluc3RlYWQuDQoNCkFzIGRp
-c2N1c3NlZCBpbiBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNy8xMS8zMC8xMDc3Ow0KSWYgZG9j
-dW1lbnQgaXQgaW4gdGhlIHVmc2hjZCBiaW5kaW5nLCBJIHRoaW5rIGl0IG5lZWRzIHNvbWUgY29k
-ZXMgdG8gcGFyc2UgdGhlbSBpbiB1ZnNoY2QuYy91ZnNoY2QtcGx0ZnJtLmMsIGJ1dCBJIHRoaW5r
-IHRoZXNlIGNvZGVzIG1heSBub3QgYmUgYXBwbGljYWJsZSB0byBvdGhlciBTT0MgbWFudWZhY3R1
-cmVycy4NCg0KICAgICAgQXJuZA0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5l
-bEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4v
-bGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+
+> On Feb 22, 2018, at 10:28 PM, Andrew Donnellan =
+<andrew.donnellan@au1.ibm.com> wrote:
+>=20
+> On 23/02/18 09:22, Uma Krishnan wrote:
+>> Add initial infrastructure to support a new cxlflash transport, =
+OpenCXL.
+>> Claim a dependency on OpenCXL (OCXL) and add a new file, ocxl_hw.c, =
+which
+>> will host the backend routines that are specific to OpenCXL.
+>> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+>=20
+> Is it necessary to depend on OCXL in all cases? IMHO it should be =
+possible to build a cxl-only version without ocxl, though I don't feel =
+very strongly on this.
+
+I thought through this and did not feel it is necessary to distinguish =
+right now. I will look at adding this in the future. Thanks Andrew !=
