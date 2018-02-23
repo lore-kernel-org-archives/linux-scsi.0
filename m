@@ -1,16 +1,15 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: Re: [PATCH 04/38] cxlflash: Introduce OpenCXL backend
-Date: Fri, 23 Feb 2018 13:36:37 -0600
-Message-ID: <115B47D4-5BB4-45F2-8A7A-3176C9F1EA60@linux.vnet.ibm.com>
+Subject: Re: [PATCH 00/38] cxlflash: OpenCXL transport support
+Date: Fri, 23 Feb 2018 13:38:23 -0600
+Message-ID: <F0F5C6BC-8519-43F3-AD70-4380C059D0A8@linux.vnet.ibm.com>
 References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1519338163-51928-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <abe97ecd-7162-c812-816d-268321916bff@au1.ibm.com>
+ <2d8f0a69-5fef-d027-1456-1a9088c2333b@au1.ibm.com>
 Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
 Content-Type: text/plain;
 	charset=us-ascii
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <abe97ecd-7162-c812-816d-268321916bff@au1.ibm.com>
+In-Reply-To: <2d8f0a69-5fef-d027-1456-1a9088c2333b@au1.ibm.com>
 List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
  <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
 List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
@@ -26,20 +25,21 @@ Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Mart
 List-Id: linux-scsi@vger.kernel.org
 
 
-> On Feb 22, 2018, at 10:28 PM, Andrew Donnellan =
+> On Feb 22, 2018, at 10:13 PM, Andrew Donnellan =
 <andrew.donnellan@au1.ibm.com> wrote:
 >=20
-> On 23/02/18 09:22, Uma Krishnan wrote:
->> Add initial infrastructure to support a new cxlflash transport, =
-OpenCXL.
->> Claim a dependency on OpenCXL (OCXL) and add a new file, ocxl_hw.c, =
-which
->> will host the backend routines that are specific to OpenCXL.
->> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> On 23/02/18 09:20, Uma Krishnan wrote:
+>> This patch series adds OpenCXL support to the cxlflash driver. With
+>> this support, new devices using the OpenCXL transport will be =
+supported
+>> by the cxlflash driver along with the existing CXL devices. An effort =
+is
+>> made to keep this transport specific function independent of the =
+existing
+>> core driver that communicates with the AFU.
 >=20
-> Is it necessary to depend on OCXL in all cases? IMHO it should be =
-possible to build a cxl-only version without ocxl, though I don't feel =
-very strongly on this.
+> It's "OpenCAPI" for the standard, and "ocxl" for the driver - I'd =
+rather not add "OpenCXL" to our already somewhat confusing proliferation =
+of names :)
 
-I thought through this and did not feel it is necessary to distinguish =
-right now. I will look at adding this in the future. Thanks Andrew !=
+I agree. :) I will fix it in V2. Thanks for the feedback.=
