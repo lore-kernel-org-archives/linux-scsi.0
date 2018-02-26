@@ -1,52 +1,119 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: Re: [PATCH 00/38] cxlflash: OpenCXL transport support
-Date: Fri, 23 Feb 2018 12:05:56 -0600
-Message-ID: <49A29C0A-75E2-4604-835A-095D319DC006@linux.vnet.ibm.com>
-References: <1519338010-51782-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <2d8f0a69-5fef-d027-1456-1a9088c2333b@au1.ibm.com>
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Content-Type: text/html;
-	charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <2d8f0a69-5fef-d027-1456-1a9088c2333b@au1.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
+From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Subject: Re: [PATCH 9/9] scsi: ufs: Add clock ungating to a separate workqueue
+Date: Mon, 26 Feb 2018 09:25:14 +0530
+Message-ID: <68880931-6f39-1ffc-92f6-f3b90cec396c@codeaurora.org>
+References: <cover.1519120988.git.asutoshd@codeaurora.org>
+ <1c92a979dce897db920d9b9a625923d64cba2266.1519120988.git.asutoshd@codeaurora.org>
+ <CANiq72==rFxaw7+ZQv41Zbr+-fJvHiQVzVucrRFpUzrQtN750w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CANiq72==rFxaw7+ZQv41Zbr+-fJvHiQVzVucrRFpUzrQtN750w@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Vijay Viswanath <vviswana@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-<html><head></head><body dir=3D"auto" style=3D"word-wrap: break-word; =
--webkit-nbsp-mode: space; line-break: after-white-space;" =
-class=3D"ApplePlainTextBody"><div dir=3D"auto" style=3D"word-wrap: =
-break-word; -webkit-nbsp-mode: space; line-break: after-white-space;" =
-class=3D"ApplePlainTextBody"><div dir=3D"auto" style=3D"word-wrap: =
-break-word; -webkit-nbsp-mode: space; line-break: after-white-space;" =
-class=3D"ApplePlainTextBody"><div =
-class=3D"ApplePlainTextBody"><br><blockquote type=3D"cite">On Feb 22, =
-2018, at 10:13 PM, Andrew Donnellan &lt;andrew.donnellan@au1.ibm.com&gt; =
-wrote:<br><br>On 23/02/18 09:20, Uma Krishnan wrote:<br><blockquote =
-type=3D"cite">This patch series adds OpenCXL support to the cxlflash =
-driver. With<br>this support, new devices using the OpenCXL transport =
-will be supported<br>by the cxlflash driver along with the existing CXL =
-devices. An effort is<br>made to keep this transport specific function =
-independent of the existing<br>core driver that communicates with the =
-AFU.<br></blockquote><br>It's "OpenCAPI" for the standard, and "ocxl" =
-for the driver - I'd rather not add "OpenCXL" to our already somewhat =
-confusing proliferation of names :)<br><br></blockquote><br>I agree. I =
-will fix it in V2. Thanks for the feedback.<br><br><blockquote =
-type=3D"cite">I'll try to review as much of the ocxl-specific stuff as I =
-can get to, though I'm a bit busy with the OpenCAPI skiboot work and =
-reviewing the libocxl userspace library at the =
-moment.<br><br><br>Andrew<br><br>-- <br>Andrew Donnellan =
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;OzLabs, ADL Canberra<br>andrew.donnellan@au1.ibm.com &nbsp;IBM =
-Australia Limited<br></blockquote><br></div></div></div></body></html>=
+On 2/24/2018 5:27 AM, Miguel Ojeda wrote:
+> On Wed, Feb 21, 2018 at 5:56 AM, Asutosh Das <asutoshd@codeaurora.org> wrote:
+>> From: Vijay Viswanath <vviswana@codeaurora.org>
+>>
+>> UFS driver can receive a request during memory reclaim by kswapd.
+>> So when ufs driver puts the ungate work in queue, and if there are no
+>> idle workers, kthreadd is invoked to create a new kworker. Since
+>> kswapd task holds a mutex which kthreadd also needs, this can cause
+>> a deadlock situation. So ungate work must be done in a separate
+>> work queue with WQ__RECLAIM flag enabled.Such a workqueue will have
+> 
+> WQ_MEM_RECLAIM here. Also space after dot.
+> 
+>> a rescue thread which will be called when the above deadlock
+>> condition is possible.
+>>
+>> Signed-off-by: Vijay Viswanath <vviswana@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> ---
+>>   drivers/scsi/ufs/ufshcd.c | 10 +++++++++-
+>>   drivers/scsi/ufs/ufshcd.h |  1 +
+>>   2 files changed, 10 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 6541e1d..bb3382a 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -1503,7 +1503,8 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+>>                  hba->clk_gating.state = REQ_CLKS_ON;
+>>                  trace_ufshcd_clk_gating(dev_name(hba->dev),
+>>                                          hba->clk_gating.state);
+>> -               schedule_work(&hba->clk_gating.ungate_work);
+>> +               queue_work(hba->clk_gating.clk_gating_workq,
+>> +                          &hba->clk_gating.ungate_work);
+>>                  /*
+>>                   * fall through to check if we should wait for this
+>>                   * work to be done or not.
+>> @@ -1689,6 +1690,8 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
+>>
+>>   static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+>>   {
+>> +       char wq_name[sizeof("ufs_clk_gating_00")];
+>> +
+>>          if (!ufshcd_is_clkgating_allowed(hba))
+>>                  return;
+>>
+>> @@ -1696,6 +1699,10 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+>>          INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
+>>          INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
+>>
+>> +       snprintf(wq_name, ARRAY_SIZE(wq_name), "ufs_clk_gating_%d",
+>> +                hba->host->host_no);
+>> +       hba->clk_gating.clk_gating_workq = create_singlethread_workqueue(wq_name);
+> 
+> Shouldn't this be alloc_ordered_workqueue() with WQ_MEM_RECLAIM then?
+> (create_singlethread_workqueue() and friends are deprecated).
+> 
+> Cheers,
+> Miguel
+> 
+>> +
+>>          hba->clk_gating.is_enabled = true;
+>>
+>>          hba->clk_gating.delay_attr.show = ufshcd_clkgate_delay_show;
+>> @@ -1723,6 +1730,7 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+>>          device_remove_file(hba->dev, &hba->clk_gating.enable_attr);
+>>          cancel_work_sync(&hba->clk_gating.ungate_work);
+>>          cancel_delayed_work_sync(&hba->clk_gating.gate_work);
+>> +       destroy_workqueue(hba->clk_gating.clk_gating_workq);
+>>   }
+>>
+>>   /* Must be called with host lock acquired */
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 4385741..570c33e 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -361,6 +361,7 @@ struct ufs_clk_gating {
+>>          struct device_attribute enable_attr;
+>>          bool is_enabled;
+>>          int active_reqs;
+>> +       struct workqueue_struct *clk_gating_workq;
+>>   };
+>>
+>>   struct ufs_saved_pwr_info {
+>> --
+>> Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc.
+>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+>>
+
+Hi Miguel
+Thanks for the review.
+
+I'll check this and put up the changes in v2.
+
+
+-asd
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
