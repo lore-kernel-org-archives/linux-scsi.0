@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 36/38] cxlflash: Register for translation errors
-Date: Mon, 26 Feb 2018 16:24:49 -0600
-Message-ID: <1519683889-18052-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 37/38] cxlflash: Support AFU reset
+Date: Mon, 26 Feb 2018 16:24:56 -0600
+Message-ID: <1519683896-18088-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,100 +19,52 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-While enabling a context on the link, a predefined callback can be
-registered with the OCXL provider services to be notified on translation
-errors. These errors can in turn be passed back to the user on a read
-operation.
+The cxlflash core driver resets the AFU when the master contexts are
+created in the initialization or recovery paths. Today, the OCXL
+provider service to perform this operation is pending implementation.
+To avoid a crash due to a missing fop, log an error once and return
+success to continue with execution.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 31 +++++++++++++++++++++++++++++--
- drivers/scsi/cxlflash/ocxl_hw.h |  4 ++++
- 2 files changed, 33 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/ocxl_hw.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index d707e4c..9356672 100644
+index 9356672..3c311f3 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -335,6 +335,25 @@ static u64 ocxlflash_get_irq_objhndl(void *ctx_cookie, int irq)
+@@ -468,6 +468,22 @@ static int ocxlflash_stop_context(void *ctx_cookie)
  }
  
  /**
-+ * ocxlflash_xsl_fault() - callback when translation error is triggered
-+ * @data:	Private data provided at callback registration, the context.
-+ * @addr:	Address that triggered the error.
-+ * @dsisr:	Value of dsisr register.
++ * ocxlflash_afu_reset() - reset the AFU
++ * @ctx_cookie:	Adapter context.
 + */
-+static void ocxlflash_xsl_fault(void *data, u64 addr, u64 dsisr)
++static int ocxlflash_afu_reset(void *ctx_cookie)
 +{
-+	struct ocxlflash_context *ctx = data;
++	struct ocxlflash_context *ctx = ctx_cookie;
++	struct device *dev = ctx->hw_afu->dev;
 +
-+	spin_lock(&ctx->slock);
-+	ctx->fault_addr = addr;
-+	ctx->fault_dsisr = dsisr;
-+	ctx->pending_fault = true;
-+	spin_unlock(&ctx->slock);
++	/* Pending implementation from OCXL transport services */
++	dev_err_once(dev, "%s: afu_reset() fop not supported\n", __func__);
 +
-+	wake_up_all(&ctx->wq);
++	/* Silently return success until it is implemented */
++	return 0;
 +}
 +
 +/**
-  * start_context() - local routine to start a context
-  * @ctx:	Adapter context to be started.
-  *
-@@ -378,7 +397,8 @@ static int start_context(struct ocxlflash_context *ctx)
- 		mm = current->mm;
- 	}
- 
--	rc = ocxl_link_add_pe(link_token, ctx->pe, pid, 0, 0, mm, NULL, NULL);
-+	rc = ocxl_link_add_pe(link_token, ctx->pe, pid, 0, 0, mm,
-+			      ocxlflash_xsl_fault, ctx);
- 	if (unlikely(rc)) {
- 		dev_err(dev, "%s: ocxl_link_add_pe failed rc=%d\n",
- 			__func__, rc);
-@@ -512,6 +532,7 @@ static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
- 	ctx->hw_afu = afu;
- 	ctx->irq_bitmap = 0;
- 	ctx->pending_irq = false;
-+	ctx->pending_fault = false;
- out:
- 	return ctx;
- err2:
-@@ -957,7 +978,7 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
+  * ocxlflash_set_master() - sets the context as master
+  * @ctx_cookie:	Adapter context to set as master.
   */
- static inline bool ctx_event_pending(struct ocxlflash_context *ctx)
- {
--	if (ctx->pending_irq)
-+	if (ctx->pending_irq || ctx->pending_fault)
- 		return true;
- 
- 	return false;
-@@ -1062,6 +1083,12 @@ static ssize_t afu_read(struct file *file, char __user *buf, size_t count,
- 		event.irq.irq = bit + 1;
- 		if (bitmap_empty(&ctx->irq_bitmap, ctx->num_irqs))
- 			ctx->pending_irq = false;
-+	} else if (ctx->pending_fault) {
-+		event.header.size += sizeof(struct cxl_event_data_storage);
-+		event.header.type = CXL_EVENT_DATA_STORAGE;
-+		event.fault.addr = ctx->fault_addr;
-+		event.fault.dsisr = ctx->fault_dsisr;
-+		ctx->pending_fault = false;
- 	}
- 
- 	spin_unlock_irqrestore(&ctx->slock, lock_flags);
-diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
-index a4f3b90..eb1c24a 100644
---- a/drivers/scsi/cxlflash/ocxl_hw.h
-+++ b/drivers/scsi/cxlflash/ocxl_hw.h
-@@ -69,4 +69,8 @@ struct ocxlflash_context {
- 	int num_irqs;			/* Number of interrupts */
- 	bool pending_irq;		/* Pending interrupt on the context */
- 	ulong irq_bitmap;		/* Bits indicating pending irq num */
-+
-+	u64 fault_addr;			/* Address that triggered the fault */
-+	u64 fault_dsisr;		/* Value of dsisr register at fault */
-+	bool pending_fault;		/* Pending translation fault */
- };
+@@ -1393,6 +1409,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.get_irq_objhndl	= ocxlflash_get_irq_objhndl,
+ 	.start_context		= ocxlflash_start_context,
+ 	.stop_context		= ocxlflash_stop_context,
++	.afu_reset		= ocxlflash_afu_reset,
+ 	.set_master		= ocxlflash_set_master,
+ 	.get_context		= ocxlflash_get_context,
+ 	.dev_context_init	= ocxlflash_dev_context_init,
 -- 
 2.1.0
