@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 04/38] cxlflash: Introduce OCXL backend
-Date: Mon, 26 Feb 2018 16:20:14 -0600
-Message-ID: <1519683614-16894-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 05/38] cxlflash: Hardware AFU for OCXL
+Date: Mon, 26 Feb 2018 16:20:25 -0600
+Message-ID: <1519683625-16930-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,65 +19,162 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add initial infrastructure to support a new cxlflash transport, OCXL.
+When an adapter is initialized, transport specific configuration and MMIO
+mapping details need to be saved. For CXL, this data is managed by the
+underlying kernel module. To maintain a separation between the cxlflash
+core and underlying transports, introduce a new structure to store data
+specific to the OCXL AFU.
 
-Claim a dependency on OCXL and add a new file, ocxl_hw.c, which will host
-the backend routines that are specific to OCXL.
+Initially only the pointers to underlying PCI and generic devices are
+added to this new structure - it will be expanded further in future
+commits. Services to create and destroy this hardware AFU are added and
+integrated in the probe and exit paths of the driver.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/Kconfig   |  2 +-
- drivers/scsi/cxlflash/Makefile  |  2 +-
  drivers/scsi/cxlflash/backend.h |  1 +
- drivers/scsi/cxlflash/ocxl_hw.c | 22 ++++++++++++++++++++++
- 4 files changed, 25 insertions(+), 2 deletions(-)
- create mode 100644 drivers/scsi/cxlflash/ocxl_hw.c
+ drivers/scsi/cxlflash/cxl_hw.c  |  6 ++++++
+ drivers/scsi/cxlflash/main.c    |  9 +++++++--
+ drivers/scsi/cxlflash/ocxl_hw.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/cxlflash/ocxl_hw.h | 19 +++++++++++++++++++
+ 5 files changed, 73 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/scsi/cxlflash/ocxl_hw.h
 
-diff --git a/drivers/scsi/cxlflash/Kconfig b/drivers/scsi/cxlflash/Kconfig
-index a011c5d..e2a3a1b 100644
---- a/drivers/scsi/cxlflash/Kconfig
-+++ b/drivers/scsi/cxlflash/Kconfig
-@@ -4,7 +4,7 @@
- 
- config CXLFLASH
- 	tristate "Support for IBM CAPI Flash"
--	depends on PCI && SCSI && CXL && EEH
-+	depends on PCI && SCSI && CXL && OCXL && EEH
- 	select IRQ_POLL
- 	default m
- 	help
-diff --git a/drivers/scsi/cxlflash/Makefile b/drivers/scsi/cxlflash/Makefile
-index 7ec3f6b..5124c68 100644
---- a/drivers/scsi/cxlflash/Makefile
-+++ b/drivers/scsi/cxlflash/Makefile
-@@ -1,2 +1,2 @@
- obj-$(CONFIG_CXLFLASH) += cxlflash.o
--cxlflash-y += main.o superpipe.o lunmgt.o vlun.o cxl_hw.o
-+cxlflash-y += main.o superpipe.o lunmgt.o vlun.o cxl_hw.o ocxl_hw.o
 diff --git a/drivers/scsi/cxlflash/backend.h b/drivers/scsi/cxlflash/backend.h
-index 7b72149..a60f051 100644
+index a60f051..f675bcb 100644
 --- a/drivers/scsi/cxlflash/backend.h
 +++ b/drivers/scsi/cxlflash/backend.h
-@@ -13,6 +13,7 @@
-  */
+@@ -36,6 +36,7 @@ struct cxlflash_backend_ops {
+ 	int (*allocate_afu_irqs)(void *ctx_cookie, int num);
+ 	void (*free_afu_irqs)(void *ctx_cookie);
+ 	void * (*create_afu)(struct pci_dev *dev);
++	void (*destroy_afu)(void *afu_cookie);
+ 	struct file * (*get_fd)(void *ctx_cookie, struct file_operations *fops,
+ 				int *fd);
+ 	void * (*fops_get_context)(struct file *file);
+diff --git a/drivers/scsi/cxlflash/cxl_hw.c b/drivers/scsi/cxlflash/cxl_hw.c
+index db1cada..a1d6d12 100644
+--- a/drivers/scsi/cxlflash/cxl_hw.c
++++ b/drivers/scsi/cxlflash/cxl_hw.c
+@@ -110,6 +110,11 @@ static void *cxlflash_create_afu(struct pci_dev *dev)
+ 	return cxl_pci_to_afu(dev);
+ }
  
- extern const struct cxlflash_backend_ops cxlflash_cxl_ops;
-+extern const struct cxlflash_backend_ops cxlflash_ocxl_ops;
++static void cxlflash_destroy_afu(void *afu)
++{
++	/* Dummy fop for cxl */
++}
++
+ static struct file *cxlflash_get_fd(void *ctx_cookie,
+ 				    struct file_operations *fops, int *fd)
+ {
+@@ -160,6 +165,7 @@ const struct cxlflash_backend_ops cxlflash_cxl_ops = {
+ 	.allocate_afu_irqs	= cxlflash_allocate_afu_irqs,
+ 	.free_afu_irqs		= cxlflash_free_afu_irqs,
+ 	.create_afu		= cxlflash_create_afu,
++	.destroy_afu		= cxlflash_destroy_afu,
+ 	.get_fd			= cxlflash_get_fd,
+ 	.fops_get_context	= cxlflash_fops_get_context,
+ 	.start_work		= cxlflash_start_work,
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index b83a55a..5d754d1 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -971,6 +971,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 	case INIT_STATE_AFU:
+ 		term_afu(cfg);
+ 	case INIT_STATE_PCI:
++		cfg->ops->destroy_afu(cfg->afu_cookie);
+ 		pci_disable_device(pdev);
+ 	case INIT_STATE_NONE:
+ 		free_mem(cfg);
+@@ -3689,8 +3690,6 @@ static int cxlflash_probe(struct pci_dev *pdev,
  
- struct cxlflash_backend_ops {
- 	struct module *module;
+ 	pci_set_drvdata(pdev, cfg);
+ 
+-	cfg->afu_cookie = cfg->ops->create_afu(pdev);
+-
+ 	rc = init_pci(cfg);
+ 	if (rc) {
+ 		dev_err(dev, "%s: init_pci failed rc=%d\n", __func__, rc);
+@@ -3698,6 +3697,12 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	}
+ 	cfg->init_state = INIT_STATE_PCI;
+ 
++	cfg->afu_cookie = cfg->ops->create_afu(pdev);
++	if (unlikely(!cfg->afu_cookie)) {
++		dev_err(dev, "%s: create_afu failed\n", __func__);
++		goto out_remove;
++	}
++
+ 	rc = init_afu(cfg);
+ 	if (rc && !wq_has_sleeper(&cfg->reset_waitq)) {
+ 		dev_err(dev, "%s: init_afu failed rc=%d\n", __func__, rc);
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-new file mode 100644
-index 0000000..58a3182
---- /dev/null
+index 58a3182..e3a0a9b 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -0,0 +1,22 @@
+@@ -15,8 +15,48 @@
+ #include <misc/ocxl.h>
+ 
+ #include "backend.h"
++#include "ocxl_hw.h"
++
++/**
++ * ocxlflash_destroy_afu() - destroy the AFU structure
++ * @afu_cookie:	AFU to be freed.
++ */
++static void ocxlflash_destroy_afu(void *afu_cookie)
++{
++	struct ocxl_hw_afu *afu = afu_cookie;
++
++	if (!afu)
++		return;
++
++	kfree(afu);
++}
++
++/**
++ * ocxlflash_create_afu() - create the AFU for OCXL
++ * @pdev:	PCI device associated with the host.
++ *
++ * Return: AFU on success, NULL on failure
++ */
++static void *ocxlflash_create_afu(struct pci_dev *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct ocxl_hw_afu *afu;
++
++	afu = kzalloc(sizeof(*afu), GFP_KERNEL);
++	if (unlikely(!afu)) {
++		dev_err(dev, "%s: HW AFU allocation failed\n", __func__);
++		goto out;
++	}
++
++	afu->pdev = pdev;
++	afu->dev = dev;
++out:
++	return afu;
++}
+ 
+ /* Backend ops to ocxlflash services */
+ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.module			= THIS_MODULE,
++	.create_afu		= ocxlflash_create_afu,
++	.destroy_afu		= ocxlflash_destroy_afu,
+ };
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
+new file mode 100644
+index 0000000..c7e5c4d
+--- /dev/null
++++ b/drivers/scsi/cxlflash/ocxl_hw.h
+@@ -0,0 +1,19 @@
 +/*
 + * CXL Flash Device Driver
 + *
 + * Written by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>, IBM Corporation
-+ *             Uma Krishnan <ukrishn@linux.vnet.ibm.com>, IBM Corporation
++ *	       Uma Krishnan <ukrishn@linux.vnet.ibm.com>, IBM Corporation
 + *
 + * Copyright (C) 2018 IBM Corporation
 + *
@@ -87,13 +184,10 @@ index 0000000..58a3182
 + * 2 of the License, or (at your option) any later version.
 + */
 +
-+#include <misc/ocxl.h>
-+
-+#include "backend.h"
-+
-+/* Backend ops to ocxlflash services */
-+const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
-+	.module			= THIS_MODULE,
++/* OCXL hardware AFU associated with the host */
++struct ocxl_hw_afu {
++	struct pci_dev *pdev;		/* PCI device */
++	struct device *dev;		/* Generic device */
 +};
 -- 
 2.1.0
