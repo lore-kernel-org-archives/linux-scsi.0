@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 20/38] cxlflash: Support reading adapter VPD data
-Date: Mon, 26 Feb 2018 16:22:50 -0600
-Message-ID: <1519683770-17474-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 21/38] cxlflash: Setup function OCXL link
+Date: Mon, 26 Feb 2018 16:22:57 -0600
+Message-ID: <1519683777-17510-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,47 +19,90 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use the PCI VPD services to support reading the VPD data of the
-underlying adapter.
+After reading and modifying the function configuration, setup the OCXL
+link using the OCXL provider services. The link is released when the
+adapter is unconfigured.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/scsi/cxlflash/ocxl_hw.c | 25 ++++++++++++++++++++++---
+ drivers/scsi/cxlflash/ocxl_hw.h |  1 +
+ 2 files changed, 23 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index 364e7a5..a1d58fc 100644
+index a1d58fc..ea2906d 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -324,6 +324,20 @@ static void ocxlflash_perst_reloads_same_image(void *afu_cookie, bool image)
+@@ -412,11 +412,28 @@ static int ocxlflash_config_fn(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
+ 	ocxl_config_set_actag(pdev, fcfg->dvsec_function_pos, base, enabled);
+ 	dev_dbg(dev, "%s: Function acTag range base=%u enabled=%u\n",
+ 		__func__, base, enabled);
++
++	rc = ocxl_link_setup(pdev, 0, &afu->link_token);
++	if (unlikely(rc)) {
++		dev_err(dev, "%s: ocxl_link_setup failed rc=%d\n",
++			__func__, rc);
++		goto out;
++	}
+ out:
+ 	return rc;
  }
  
  /**
-+ * ocxlflash_read_adapter_vpd() - reads the adapter VPD
++ * ocxlflash_unconfig_fn() - unconfigure the host function
 + * @pdev:	PCI device associated with the host.
-+ * @buf:	Buffer to get the VPD data.
-+ * @count:	Size of buffer (maximum bytes that can be read).
-+ *
-+ * Return: size of VPD on success, -errno on failure
++ * @afu:	AFU associated with the host.
 + */
-+static ssize_t ocxlflash_read_adapter_vpd(struct pci_dev *pdev, void *buf,
-+					  size_t count)
++static void ocxlflash_unconfig_fn(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
 +{
-+	return pci_read_vpd(pdev, 0, count, buf);
++	ocxl_link_release(pdev, afu->link_token);
 +}
 +
 +/**
-  * ocxlflash_unconfig_afu() - unconfigure the AFU
+  * ocxlflash_map_mmio() - map the AFU MMIO space
   * @afu: AFU associated with the host.
-  */
-@@ -650,6 +664,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.dev_context_init	= ocxlflash_dev_context_init,
- 	.release_context	= ocxlflash_release_context,
- 	.perst_reloads_same_image = ocxlflash_perst_reloads_same_image,
-+	.read_adapter_vpd	= ocxlflash_read_adapter_vpd,
- 	.create_afu		= ocxlflash_create_afu,
- 	.destroy_afu		= ocxlflash_destroy_afu,
- 	.get_fd			= ocxlflash_get_fd,
+  *
+@@ -552,7 +569,7 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
+ 	if (unlikely(rc)) {
+ 		dev_err(dev, "%s: AFU configuration failed rc=%d\n",
+ 			__func__, rc);
+-		goto err1;
++		goto err2;
+ 	}
+ 
+ 	ctx = ocxlflash_dev_context_init(pdev, afu);
+@@ -560,15 +577,17 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
+ 		rc = PTR_ERR(ctx);
+ 		dev_err(dev, "%s: ocxlflash_dev_context_init failed rc=%d\n",
+ 			__func__, rc);
+-		goto err2;
++		goto err3;
+ 	}
+ 
+ 	idr_init(&afu->idr);
+ 	afu->ocxl_ctx = ctx;
+ out:
+ 	return afu;
+-err2:
++err3:
+ 	ocxlflash_unconfig_afu(afu);
++err2:
++	ocxlflash_unconfig_fn(pdev, afu);
+ err1:
+ 	kfree(afu);
+ 	afu = NULL;
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
+index 18f402a..4d43650 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.h
++++ b/drivers/scsi/cxlflash/ocxl_hw.h
+@@ -31,6 +31,7 @@ struct ocxl_hw_afu {
+ 	phys_addr_t gmmio_phys;		/* Global AFU MMIO space */
+ 	void __iomem *gmmio_virt;	/* Global MMIO map */
+ 
++	void *link_token;		/* Link token for the SPA */
+ 	struct idr idr;			/* IDR to manage contexts */
+ 	int max_pasid;			/* Maximum number of contexts */
+ };
 -- 
 2.1.0
