@@ -1,47 +1,47 @@
-From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH] scsi: core: fix two wrong indentation cases
-Date: Mon, 26 Feb 2018 15:59:16 +0800
-Message-ID: <1519631956-1775-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] scsi: lpfc: use memcpy_toio instead of writeq
+Date: Mon, 26 Feb 2018 10:03:58 +0100
+Message-ID: <CAK8P3a1gsKOL=2epyvwnWe5LbZ0L+vHVuM5zfz3gS25ptQ2UrQ@mail.gmail.com>
+References: <20180223153700.2186058-1-arnd@arndb.de> <mqdsh9p9yl3.fsf@linux-x5ow.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <mqdsh9p9yl3.fsf@linux-x5ow.site>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-No functional changes. Just fix two wrong indentation cases in
-scsi_finish_command and scsi_decide_disposition.
+On Sun, Feb 25, 2018 at 11:02 AM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
+>> 32-bit architectures generally cannot use writeq(), so we now get a build
+>> failure for the lpfc driver:
+>>
+>> drivers/scsi/lpfc/lpfc_sli.c: In function 'lpfc_sli4_wq_put':
+>> drivers/scsi/lpfc/lpfc_sli.c:145:4: error: implicit declaration of function 'writeq'; did you mean 'writeb'? [-Werror=implicit-function-declaration]
+> Hi Arnd,
+> why can't we use the writeq() from 'io-64-nonatomic-lo-hi.h'? I always
+> thought these are compat versions for 32 Bit archs and even asked James
+> to do so, what's why he did the change in the first place.
 
-Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
----
- drivers/scsi/scsi.c       | 2 +-
- drivers/scsi/scsi_error.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+That could work as well, if someone can figure out what the correct incantation
+is that works on big-endian 32-bit architectures. I think the simplest
+version that
+works everywhere would be
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a7e4fba..4c60c26 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -231,7 +231,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
- 				"(result %x)\n", cmd->result));
- 
- 	good_bytes = scsi_bufflen(cmd);
--        if (!blk_rq_is_passthrough(cmd->request)) {
-+	if (!blk_rq_is_passthrough(cmd->request)) {
- 		int old_good_bytes = good_bytes;
- 		drv = scsi_cmd_to_driver(cmd);
- 		if (drv->done)
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d042915..96066d1 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1888,7 +1888,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	}
- 	return FAILED;
- 
--      maybe_retry:
-+maybe_retry:
- 
- 	/* we requeue for retry because the error was retryable, and
- 	 * the request was not marked fast fail.  Note that above,
--- 
-2.7.4
+lo_hi_writeq(__le32_to_cpup(__le32 __force *)p) |
+(u64)__le32_to_cpup(__le32 __force *)p +1) << 32));
+
+but this is ugly as hell and makes my head spin. I definitely would't want that
+applied without being tested properly first on a variety of architectures.
+
+There are three variants that I'd prefer over that:
+
+- use memcpy_toio() and change the x86 implementation to guarantee aligned
+  word aligned accesses on the output if at all possible (which seems to be
+  a good idea anyway)
+- use a loop around __raw_writeq()/__raw_writel() depending on CONFIG_64BIT
+- add generic memcpy_toio_32() and memcpy_toio_64() helpers in linux/io.h
+  and use those.
+
+       Arnd
