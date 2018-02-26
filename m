@@ -1,37 +1,47 @@
 From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH] scsi: core: use blk_mq_requeue_request in __scsi_queue_insert
-Date: Mon, 26 Feb 2018 15:58:52 +0800
-Message-ID: <1519631932-1730-1-git-send-email-jianchao.w.wang@oracle.com>
+Subject: [PATCH] scsi: core: fix two wrong indentation cases
+Date: Mon, 26 Feb 2018 15:59:16 +0800
+Message-ID: <1519631956-1775-1-git-send-email-jianchao.w.wang@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In scsi core, __scsi_queue_insert should just put request back on
-the queue and retry using the same command as before. However, for
-blk-mq, scsi_mq_requeue_cmd is employed here which will unprepare
-the request. To align with the semantics of __scsi_queue_insert,
-just use blk_mq_requeue_request with kick_requeue_list == true.
+No functional changes. Just fix two wrong indentation cases in
+scsi_finish_command and scsi_decide_disposition.
 
-Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
 ---
- drivers/scsi/scsi_lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi.c       | 2 +-
+ drivers/scsi/scsi_error.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a86df9c..06d8110 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -191,7 +191,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
- 	 */
- 	cmd->result = 0;
- 	if (q->mq_ops) {
--		scsi_mq_requeue_cmd(cmd);
-+		blk_mq_requeue_request(cmd->request, true);
- 		return;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index a7e4fba..4c60c26 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -231,7 +231,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 				"(result %x)\n", cmd->result));
+ 
+ 	good_bytes = scsi_bufflen(cmd);
+-        if (!blk_rq_is_passthrough(cmd->request)) {
++	if (!blk_rq_is_passthrough(cmd->request)) {
+ 		int old_good_bytes = good_bytes;
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d042915..96066d1 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1888,7 +1888,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
  	}
- 	spin_lock_irqsave(q->queue_lock, flags);
+ 	return FAILED;
+ 
+-      maybe_retry:
++maybe_retry:
+ 
+ 	/* we requeue for retry because the error was retryable, and
+ 	 * the request was not marked fast fail.  Note that above,
 -- 
 2.7.4
