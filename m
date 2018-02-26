@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 18/38] cxlflash: Support process specific mappings
-Date: Mon, 26 Feb 2018 16:22:36 -0600
-Message-ID: <1519683756-17402-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 19/38] cxlflash: Support AFU state toggling
+Date: Mon, 26 Feb 2018 16:22:42 -0600
+Message-ID: <1519683763-17438-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,56 +19,47 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Once the context is started, the assigned MMIO space can be mapped
-and unmapped. Provide means to map and unmap the context MMIO space.
+The AFU should be enabled following a successful configuration and
+disabled near the end of the cleanup path.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/scsi/cxlflash/ocxl_hw.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index f1c55ce..67f0252 100644
+index 67f0252..364e7a5 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -151,6 +151,28 @@ static struct file *ocxlflash_getfile(struct device *dev, const char *name,
- }
+@@ -342,12 +342,18 @@ static void ocxlflash_unconfig_afu(struct ocxl_hw_afu *afu)
+ static void ocxlflash_destroy_afu(void *afu_cookie)
+ {
+ 	struct ocxl_hw_afu *afu = afu_cookie;
++	int pos;
  
- /**
-+ * ocxlflash_psa_map() - map the process specific MMIO space
-+ * @ctx_cookie:	Adapter context for which the mapping needs to be done.
-+ *
-+ * Return: MMIO pointer of the mapped region
-+ */
-+static void __iomem *ocxlflash_psa_map(void *ctx_cookie)
-+{
-+	struct ocxlflash_context *ctx = ctx_cookie;
+ 	if (!afu)
+ 		return;
+ 
+ 	ocxlflash_release_context(afu->ocxl_ctx);
+ 	idr_destroy(&afu->idr);
 +
-+	return ioremap(ctx->psn_phys, ctx->psn_size);
-+}
++	/* Disable the AFU */
++	pos = afu->acfg.dvsec_afu_control_pos;
++	ocxl_config_set_afu_state(afu->pdev, pos, 0);
 +
-+/**
-+ * ocxlflash_psa_unmap() - unmap the process specific MMIO space
-+ * @addr:	MMIO pointer to unmap.
-+ */
-+static void ocxlflash_psa_unmap(void __iomem *addr)
-+{
-+	iounmap(addr);
-+}
+ 	ocxlflash_unconfig_afu(afu);
+ 	kfree(afu);
+ }
+@@ -492,6 +498,9 @@ static int ocxlflash_config_afu(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
+ 			__func__, rc);
+ 		goto out;
+ 	}
 +
-+/**
-  * ocxlflash_process_element() - get process element of the adapter context
-  * @ctx_cookie:	Adapter context associated with the process element.
-  *
-@@ -610,6 +632,8 @@ static void *ocxlflash_fops_get_context(struct file *file)
- /* Backend ops to ocxlflash services */
- const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.module			= THIS_MODULE,
-+	.psa_map		= ocxlflash_psa_map,
-+	.psa_unmap		= ocxlflash_psa_unmap,
- 	.process_element	= ocxlflash_process_element,
- 	.start_context		= ocxlflash_start_context,
- 	.set_master		= ocxlflash_set_master,
++	/* Enable the AFU */
++	ocxl_config_set_afu_state(pdev, acfg->dvsec_afu_control_pos, 1);
+ out:
+ 	return rc;
+ }
 -- 
 2.1.0
