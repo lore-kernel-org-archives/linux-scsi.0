@@ -1,41 +1,77 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
 Subject: Re: [PATCH] scsi: core: use blk_mq_requeue_request in
  __scsi_queue_insert
-Date: Tue, 27 Feb 2018 03:08:19 +0000
-Message-ID: <1519700898.3120.3.camel@wdc.com>
+Date: Tue, 27 Feb 2018 11:28:46 +0800
+Message-ID: <3b6ca136-ba62-3eca-6eca-d191490b7754@oracle.com>
 References: <1519631932-1730-1-git-send-email-jianchao.w.wang@oracle.com>
+ <1519700898.3120.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1519631932-1730-1-git-send-email-jianchao.w.wang@oracle.com>
+In-Reply-To: <1519700898.3120.3.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <2C7A9CF06C4305409D8B56C96812A786@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jianchao.w.wang@oracle.com" <jianchao.w.wang@oracle.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE4LTAyLTI2IGF0IDE1OjU4ICswODAwLCBKaWFuY2hhbyBXYW5nIHdyb3RlOg0K
-PiBJbiBzY3NpIGNvcmUsIF9fc2NzaV9xdWV1ZV9pbnNlcnQgc2hvdWxkIGp1c3QgcHV0IHJlcXVl
-c3QgYmFjayBvbg0KPiB0aGUgcXVldWUgYW5kIHJldHJ5IHVzaW5nIHRoZSBzYW1lIGNvbW1hbmQg
-YXMgYmVmb3JlLiBIb3dldmVyLCBmb3INCj4gYmxrLW1xLCBzY3NpX21xX3JlcXVldWVfY21kIGlz
-IGVtcGxveWVkIGhlcmUgd2hpY2ggd2lsbCB1bnByZXBhcmUNCj4gdGhlIHJlcXVlc3QuIFRvIGFs
-aWduIHdpdGggdGhlIHNlbWFudGljcyBvZiBfX3Njc2lfcXVldWVfaW5zZXJ0LA0KPiBqdXN0IHVz
-ZSBibGtfbXFfcmVxdWV1ZV9yZXF1ZXN0IHdpdGgga2lja19yZXF1ZXVlX2xpc3QgPT0gdHJ1ZS4N
-Cj4gDQo+IENjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCj4gU2lnbmVkLW9mZi1i
-eTogSmlhbmNoYW8gV2FuZyA8amlhbmNoYW8udy53YW5nQG9yYWNsZS5jb20+DQo+IC0tLQ0KPiAg
-ZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgfCAyICstDQo+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNl
-cnRpb24oKyksIDEgZGVsZXRpb24oLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
-c2NzaV9saWIuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+IGluZGV4IGE4NmRmOWMuLjA2
-ZDgxMTAgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+ICsrKyBiL2Ry
-aXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+IEBAIC0xOTEsNyArMTkxLDcgQEAgc3RhdGljIHZvaWQg
-X19zY3NpX3F1ZXVlX2luc2VydChzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsIGludCByZWFzb24sIGJv
-b2wgdW5idXN5KQ0KPiAgCSAqLw0KPiAgCWNtZC0+cmVzdWx0ID0gMDsNCj4gIAlpZiAocS0+bXFf
-b3BzKSB7DQo+IC0JCXNjc2lfbXFfcmVxdWV1ZV9jbWQoY21kKTsNCj4gKwkJYmxrX21xX3JlcXVl
-dWVfcmVxdWVzdChjbWQtPnJlcXVlc3QsIHRydWUpOw0KPiAgCQlyZXR1cm47DQo+ICAJfQ0KPiAg
-CXNwaW5fbG9ja19pcnFzYXZlKHEtPnF1ZXVlX2xvY2ssIGZsYWdzKTsNCg0KSSB0aGluayB0aGlz
-IHBhdGNoIHdpbGwgYnJlYWsgdGhlIGNvZGUgaW4gdGhlIGFhY3JhaWQgZHJpdmVyIHRoYXQgaXRl
-cmF0ZXMNCm92ZXIgc2Rldi0+Y21kX2xpc3QgYmVjYXVzZSBjb21tYW5kcyBhcmUgYWRkZWQgdG8g
-YW5kIHJlbW92ZWQgZnJvbSB0aGF0DQpsaXN0IGluIHRoZSBwcmVwIC8gdW5wcmVwIGNvZGUuDQoN
-CkJhcnQu
+Hi Bart
+
+Thanks for your kindly response.
+
+On 02/27/2018 11:08 AM, Bart Van Assche wrote:
+> On Mon, 2018-02-26 at 15:58 +0800, Jianchao Wang wrote:
+>> In scsi core, __scsi_queue_insert should just put request back on
+>> the queue and retry using the same command as before. However, for
+>> blk-mq, scsi_mq_requeue_cmd is employed here which will unprepare
+>> the request. To align with the semantics of __scsi_queue_insert,
+>> just use blk_mq_requeue_request with kick_requeue_list == true.
+>>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+>> ---
+>>  drivers/scsi/scsi_lib.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index a86df9c..06d8110 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -191,7 +191,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+>>  	 */
+>>  	cmd->result = 0;
+>>  	if (q->mq_ops) {
+>> -		scsi_mq_requeue_cmd(cmd);
+>> +		blk_mq_requeue_request(cmd->request, true);
+>>  		return;
+>>  	}
+>>  	spin_lock_irqsave(q->queue_lock, flags);
+> 
+> I think this patch will break the code in the aacraid driver that iterates
+> over sdev->cmd_list because commands are added to and removed from that
+> list in the prep / unprep code.
+
+If that is true, what if aacraid driver uses block legacy instead of blk-mq ?
+w/ blk-mq disabled, __scsi_queue_insert just requeue the request with blk_requeue_request.
+
+__scsi_queue_insert
+...
+	if (q->mq_ops) {
+		scsi_mq_requeue_cmd(cmd);
+		return;
+	}
+	spin_lock_irqsave(q->queue_lock, flags);
+	blk_requeue_request(q, cmd->request);
+	kblockd_schedule_work(&device->requeue_work);
+	spin_unlock_irqrestore(q->queue_lock, flags);
+...
+
+no prep/unprep code there for block legacy code.
+
+Thanks
+Jianchao
+
+> 
+> Bart.
+> 
