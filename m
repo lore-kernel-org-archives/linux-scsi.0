@@ -1,42 +1,55 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH] scsi: core: use blk_mq_requeue_request in
- __scsi_queue_insert
-Date: Tue, 27 Feb 2018 13:15:10 +0800
-Message-ID: <478f40f1-d86c-ee5f-daaf-6332b67fe721@oracle.com>
-References: <1519631932-1730-1-git-send-email-jianchao.w.wang@oracle.com>
- <1519700898.3120.3.camel@wdc.com>
- <3b6ca136-ba62-3eca-6eca-d191490b7754@oracle.com>
- <1519702875.3120.7.camel@wdc.com>
- <db9c47e6-d8ea-1e9e-609a-ff1b1db3769c@oracle.com>
- <1519708355.3120.9.camel@wdc.com>
+From: cang@codeaurora.org
+Subject: Re: [PATCH] scsi: ufs-qcom: add number of lanes per direction
+Date: Tue, 27 Feb 2018 13:22:11 +0800
+Message-ID: <f52a0ca12ca45b41467959ee7b5601fe@codeaurora.org>
+References: <20180205121021.11012-1-cang@codeaurora.org>
+ <20180209022915.2kki7avsia2k7tjp@rob-hp-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1519708355.3120.9.camel@wdc.com>
-Content-Language: en-US
+In-Reply-To: <20180209022915.2kki7avsia2k7tjp@rob-hp-laptop>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
+To: Rob Herring <robh@kernel.org>
+Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Noa Rubens <noag@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Maya Erez <merez@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Bart
-
-Thanks for your kindly response.
-
-On 02/27/2018 01:12 PM, Bart Van Assche wrote:
-> On Tue, 2018-02-27 at 12:00 +0800, jianchao.wang wrote:
->> On the other hand, this patch is to align the actions between blk-mq and block
->> legacy code in __scsi_queue_insert.
+On 2018-02-09 10:29, Rob Herring wrote:
+> On Mon, Feb 05, 2018 at 08:02:07PM +0800, Can Guo wrote:
+>> From: Gilad Broner <gbroner@codeaurora.org>
+>> 
+>> Different platforms may have different number of lanes for the UFS 
+>> link.
+>> Add parameter to device tree specifying how many lanes should be
+>> configured for the UFS link. And don't print err message for clocks
+>> that are optional, this leads to unnecessary confusion about failure.
+>> 
+>> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> 
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt 
+>> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> index 5357919..4cee3f9 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> @@ -31,6 +31,9 @@ Optional properties:
+>>  			  defined or a value in the array is "0" then it is assumed
+>>  			  that the frequency is set by the parent clock or a
+>>  			  fixed rate clock source.
+>> +- lanes-per-direction:	number of lanes available per direction - 
+>> either 1 or 2.
+>> +			Note that it is assume same number of lanes is used both 
+>> directions at once.
 > 
-> Hello Jianchao,
+> Seems reasonable until someone does not make things symmetrical. We
+> should design for that case.
 > 
-> Since the legacy SCSI core unpreps an reprepares a request when requeuing it I
-> think your patch does not align the blk-mq and legacy block layer actions but
-> instead makes the behavior of the two code paths different.
-> 
-
-Can you share more details about this ? 
-
-Thanks 
-Jianchao 
+You are right, I will make changes like using lanes-tx and lanes-rx for 
+Tx/Rx links for asymmetrial senarios and upload V2 patch
+>> +			If not specified, default is 2 lanes per direction.
+>> 
+>>  Note: If above properties are not defined it can be assumed that the 
+>> supply
+>>  regulators or clocks are always on.
