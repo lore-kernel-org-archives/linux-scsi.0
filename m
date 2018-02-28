@@ -1,31 +1,51 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: ufs-qcom: add number of lanes for Tx and Rx links
-Date: Tue, 27 Feb 2018 21:23:44 -0500
-Message-ID: <yq1sh9l4ztb.fsf@oracle.com>
-References: <20180227055500.10416-1-cang@codeaurora.org>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: [PATCH] scsi: core: use blk_mq_requeue_request in
+ __scsi_queue_insert
+Date: Wed, 28 Feb 2018 10:25:10 +0800
+Message-ID: <449a5591-252d-e1f9-967b-d9c530f1f788@oracle.com>
+References: <1519631932-1730-1-git-send-email-jianchao.w.wang@oracle.com>
+ <1519700898.3120.3.camel@wdc.com>
+ <3b6ca136-ba62-3eca-6eca-d191490b7754@oracle.com>
+ <1519702875.3120.7.camel@wdc.com>
+ <db9c47e6-d8ea-1e9e-609a-ff1b1db3769c@oracle.com>
+ <1519708355.3120.9.camel@wdc.com>
+ <478f40f1-d86c-ee5f-daaf-6332b67fe721@oracle.com>
+ <1519751213.23791.3.camel@wdc.com> <1519751913.23791.6.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180227055500.10416-1-cang@codeaurora.org> (Can Guo's message
-        of "Tue, 27 Feb 2018 13:46:17 +0800")
+In-Reply-To: <1519751913.23791.6.camel@wdc.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Can Guo <cang@codeaurora.org>
-Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Amit Nischal <anischal@codeaurora.org>, Maya Erez <merez@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Bart
 
-Can,
+Thanks for your kindly response and precious time to review this.
 
-> Different platforms may have different number of lanes for the UFS
-> Tx/Rx links. Add parameter to device tree specifying how many lanes
-> should be configured for the UFS Tx/Rx links. And don't print err
-> message for clocks that are optional, this leads to unnecessary
-> confusion about failure.
+On 02/28/2018 01:18 AM, Bart Van Assche wrote:
+> On Tue, 2018-02-27 at 17:06 +0000, Bart Van Assche wrote:
+>> On Tue, 2018-02-27 at 13:15 +0800, jianchao.wang wrote:
+>>> Can you share more details about this ? 
+>>
+>> After having had another look, I think your patch is fine.
+> 
+> (replying to my own e-mail)
+> 
+> What I think is fine in your patch is that it skips the unprep and reprep
+> when requeueing. However, there is a put_device(&sdev->sdev_gendev) call
+> in scsi_mq_requeue_cmd() and your patch causes that put_device() call to
+> be skipped when requeueing. An explanation is needed in the commit message
+> why you think that removing that put_device() call is fine.
 
-Does not apply to 4.17/scsi-queue. Please rebase and repost.
+Your concern is right.
+For the block legacy path in scsi core, the get_device(&sdev->sdev_gendev) is in prep.
+So when it requeue the request w/ RQF_DONTPREP, the reference will not be got again.
+However, for blk-mq patch in scsi core, the get_device(&sdev->sdev_gendev) in .get_budget,
+so put_device is still needed here.
 
-Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks for your directive.
+Jianchao
