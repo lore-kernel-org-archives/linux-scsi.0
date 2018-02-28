@@ -1,42 +1,41 @@
-From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH V2] scsi: core: use blk_mq_requeue_request in __scsi_queue_insert
-Date: Wed, 28 Feb 2018 16:55:13 +0800
-Message-ID: <1519808113-2863-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V2] scsi: core: use blk_mq_requeue_request in
+ __scsi_queue_insert
+Date: Wed, 28 Feb 2018 17:52:39 +0000
+Message-ID: <1519840355.2777.8.camel@wdc.com>
+References: <1519808113-2863-1-git-send-email-jianchao.w.wang@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1519808113-2863-1-git-send-email-jianchao.w.wang@oracle.com>
+Content-Language: en-US
+Content-ID: <9124CAE3631E75419285C1CF6FB0460D@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Bart.VanAssche@wdc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jianchao.w.wang@oracle.com" <jianchao.w.wang@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-In scsi core, __scsi_queue_insert should just put request back on
-the queue and retry using the same command as before. However, for
-blk-mq, scsi_mq_requeue_cmd is employed here which will unprepare
-the request. To align with the semantics of __scsi_queue_insert,
-use blk_mq_requeue_request with kick_requeue_list == true and put
-the reference of scsi_device.
-
-V1 -> V2:
- - add put_device on scsi_device->sdev_gendev
-
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
----
- drivers/scsi/scsi_lib.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a86df9c..6fa7b0c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -191,7 +191,8 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
- 	 */
- 	cmd->result = 0;
- 	if (q->mq_ops) {
--		scsi_mq_requeue_cmd(cmd);
-+		blk_mq_requeue_request(cmd->request, true);
-+		put_device(&device->sdev_gendev);
- 		return;
- 	}
- 	spin_lock_irqsave(q->queue_lock, flags);
--- 
-2.7.4
+T24gV2VkLCAyMDE4LTAyLTI4IGF0IDE2OjU1ICswODAwLCBKaWFuY2hhbyBXYW5nIHdyb3RlOg0K
+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kvc2Nz
+aV9saWIuYw0KPiBpbmRleCBhODZkZjljLi42ZmE3YjBjIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJz
+L3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiBAQCAt
+MTkxLDcgKzE5MSw4IEBAIHN0YXRpYyB2b2lkIF9fc2NzaV9xdWV1ZV9pbnNlcnQoc3RydWN0IHNj
+c2lfY21uZCAqY21kLCBpbnQgcmVhc29uLCBib29sIHVuYnVzeSkNCj4gIAkgKi8NCj4gIAljbWQt
+PnJlc3VsdCA9IDA7DQo+ICAJaWYgKHEtPm1xX29wcykgew0KPiAtCQlzY3NpX21xX3JlcXVldWVf
+Y21kKGNtZCk7DQo+ICsJCWJsa19tcV9yZXF1ZXVlX3JlcXVlc3QoY21kLT5yZXF1ZXN0LCB0cnVl
+KTsNCj4gKwkJcHV0X2RldmljZSgmZGV2aWNlLT5zZGV2X2dlbmRldik7DQo+ICAJCXJldHVybjsN
+Cj4gIAl9DQo+ICAJc3Bpbl9sb2NrX2lycXNhdmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOw0KDQpB
+bnlvbmUgd2hvIHNlZXMgdGhlIHB1dF9kZXZpY2UoKSBjYWxsIHRoYXQgZm9sbG93cyB0aGUgYmxr
+X21xX3JlcXVldWVfcmVxdWVzdCgpDQpjYWxsIHdpbGwgd29uZGVyIHdoeSB0aGF0IGNhbGwgb2Nj
+dXJzIHRoZXJlLiBTbyBJIHRoaW5rIHdlIG5lZWQgYSBjb21tZW50IGFib3ZlDQp0aGF0IGNhbGwg
+dGhhdCBleHBsYWlucyB3aGVyZSB0aGUgbWF0Y2hpbmcgZ2V0X2RldmljZSgpIGNhbGwgaXMuDQoN
+CkZvciB0aGUgbGVnYWN5IGNvZGUgcGF0aCwgdGhlcmUgaXMgYSBnZXRfZGV2aWNlKCkgY2FsbCBp
+biBzY3NpX3ByZXBfZm4oKSBidXQgbm8NCnB1dF9kZXZpY2UoKSBjYWxsIGluIHNjc2lfdW5wcmVw
+X2ZuKCkgLSB0aGUgbWF0Y2hpbmcgcHV0X2RldmljZSgpIGNhbGxzIG9jY3VyIGluDQpzY3NpX2Vu
+ZF9yZXF1ZXN0KCkgYW5kIGFmdGVyIGJsa19yZXF1ZXVlX3JlcXVlc3QoKS4NCg0KRm9yIHNjc2kt
+bXEgaG93ZXZlciB0aGVyZSBpcyBhIGdldF9kZXZpY2UoKSBjYWxsIGluIHNjc2lfbXFfZ2V0X2J1
+ZGdldCgpIGFuZCBhDQpwdXRfZGV2aWNlKCkgY2FsbCBpbiBzY3NpX21xX3B1dF9idWRnZXQoKS4g
+U28gd2h5IGRvIHdlIG5lZWQgdGhlIHB1dF9kZXZpY2UoKQ0KY2FsbHMgYWZ0ZXIgYmxrX21xX3Jl
+cXVldWVfcmVxdWVzdCgpIGFuZCBpbiB0aGUgbXEgcGF0aCBmb3Igc2NzaV9lbmRfcmVxdWVzdCgp
+Pw0KDQpUaGFua3MsDQoNCkJhcnQuDQoNCg0K
