@@ -1,25 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: core: fix two wrong indentation cases
-Date: Tue, 27 Feb 2018 21:58:21 -0500
-Message-ID: <yq1fu5l4y7m.fsf@oracle.com>
-References: <1519631956-1775-1-git-send-email-jianchao.w.wang@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Jianchao Wang <jianchao.w.wang@oracle.com>
+Subject: [PATCH V2] scsi: core: use blk_mq_requeue_request in __scsi_queue_insert
+Date: Wed, 28 Feb 2018 16:55:13 +0800
+Message-ID: <1519808113-2863-1-git-send-email-jianchao.w.wang@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1519631956-1775-1-git-send-email-jianchao.w.wang@oracle.com>
-        (Jianchao Wang's message of "Mon, 26 Feb 2018 15:59:16 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jianchao Wang <jianchao.w.wang@oracle.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: Bart.VanAssche@wdc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
+In scsi core, __scsi_queue_insert should just put request back on
+the queue and retry using the same command as before. However, for
+blk-mq, scsi_mq_requeue_cmd is employed here which will unprepare
+the request. To align with the semantics of __scsi_queue_insert,
+use blk_mq_requeue_request with kick_requeue_list == true and put
+the reference of scsi_device.
 
-Jianchao,
+V1 -> V2:
+ - add put_device on scsi_device->sdev_gendev
 
-> No functional changes. Just fix two wrong indentation cases in
-> scsi_finish_command and scsi_decide_disposition.
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+---
+ drivers/scsi/scsi_lib.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Applied to 4.17/scsi-queue, thanks!
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a86df9c..6fa7b0c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -191,7 +191,8 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+ 	 */
+ 	cmd->result = 0;
+ 	if (q->mq_ops) {
+-		scsi_mq_requeue_cmd(cmd);
++		blk_mq_requeue_request(cmd->request, true);
++		put_device(&device->sdev_gendev);
+ 		return;
+ 	}
+ 	spin_lock_irqsave(q->queue_lock, flags);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.4
