@@ -1,48 +1,229 @@
-From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-Subject: Re:[PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
-Date: Thu, 1 Mar 2018 13:59:16 +0800
-Message-ID: <tencent_3B2D19AE6395B45001767B9B@qq.com>
-References: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
-Sender: stable-owner@vger.kernel.org
-To: =?utf-8?B?SmFtZXMgU21hcnQ=?= <james.smart@broadcom.com>, =?utf-8?B?RGljayBLZW5uZWR5?= <dick.kennedy@broadcom.com>
-Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
+From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Subject: [PATCH] scsi: ufs: sysfs: reworking of the rpm_lvl and spm_lvl entries
+Date: Thu,  1 Mar 2018 12:48:06 +0200
+Message-ID: <1519901286-17496-2-git-send-email-stanislav.nijnikov@wdc.com>
+References: <1519901286-17496-1-git-send-email-stanislav.nijnikov@wdc.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1519901286-17496-1-git-send-email-stanislav.nijnikov@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, subhashj@codeaurora.org
+Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-UGluZz8NCiANCi0tLS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0t
-LS0NCkZyb206ICAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsNCkRhdGU6ICBG
-cmksIEphbiAyNiwgMjAxOCAwODo1MyBQTQ0KVG86ICAiSmFtZXMgU21hcnQiPGphbWVzLnNt
-YXJ0QGJyb2FkY29tLmNvbT47ICJEaWNrIEtlbm5lZHkiPGRpY2sua2VubmVkeUBicm9hZGNv
-bS5jb20+Ow0KQ2M6ICAiSmFtZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5l
-dC5pYm0uY29tPjsgIk1hcnRpbiBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFj
-bGUuY29tPjsgIkZ1eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgtc2Nz
-aSI8bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+OyAiSHVhY2FpIENoZW4iPGNoZW5oY0Bs
-ZW1vdGUuY29tPjsgInN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQpTdWJqZWN0
-OiAgW1BBVENIXSBzY3NpOiBscGZjOiBTd2l0Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9fcmVh
-ZDMyX2NvcHkoKQ0KIA0KSW4gY29tbWl0IGJjNzM5MDVhYmY3NzAxOTIgKCJbU0NTSV0gbHBm
-YyA4LjMuMTY6IFNMSSBBZGRpdGlvbnMsIHVwZGF0ZXMsDQphbmQgY29kZSBjbGVhbnVwIiks
-IGxwZmNfbWVtY3B5X3RvX3NsaW0oKSBoYXZlIHN3aXRjaGVkIG1lbWNweV90b2lvKCkgdG8N
-Cl9fd3JpdGUzMl9jb3B5KCkgaW4gb3JkZXIgdG8gcHJldmVudCB1bmFsaWduZWQgNjQgYml0
-IGNvcHkuIFJlY2VudGx5LCB3ZQ0KZm91bmQgdGhhdCBscGZjX21lbWNweV9mcm9tX3NsaW0o
-KSBoYXZlIHNpbWlsYXIgaXNzdWVzLCBzbyBsZXQgaXQgc3dpdGNoDQptZW1jcHlfZnJvbWlv
-KCkgdG8gX19yZWFkMzJfY29weSgpLg0KDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0K
-U2lnbmVkLW9mZi1ieTogSHVhY2FpIENoZW4gPGNoZW5oY0BsZW1vdGUuY29tPg0KLS0tDQog
-ZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaCB8IDQgKystLQ0KIDEgZmlsZSBjaGFu
-Z2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9k
-cml2ZXJzL3Njc2kvbHBmYy9scGZjX2NvbXBhdC5oIGIvZHJpdmVycy9zY3NpL2xwZmMvbHBm
-Y19jb21wYXQuaA0KaW5kZXggNmIzMmIwYS4uNDdkNGZhZCAxMDA2NDQNCi0tLSBhL2RyaXZl
-cnMvc2NzaS9scGZjL2xwZmNfY29tcGF0LmgNCisrKyBiL2RyaXZlcnMvc2NzaS9scGZjL2xw
-ZmNfY29tcGF0LmgNCkBAIC05MSw4ICs5MSw4IEBAIGxwZmNfbWVtY3B5X3RvX3NsaW0oIHZv
-aWQgX19pb21lbSAqZGVzdCwgdm9pZCAqc3JjLCB1bnNpZ25lZCBpbnQgYnl0ZXMpDQogc3Rh
-dGljIGlubGluZSB2b2lkDQogbHBmY19tZW1jcHlfZnJvbV9zbGltKCB2b2lkICpkZXN0LCB2
-b2lkIF9faW9tZW0gKnNyYywgdW5zaWduZWQgaW50IGJ5dGVzKQ0KIHsNCi0JLyogYWN0dWFs
-bHkgcmV0dXJucyAxIGJ5dGUgcGFzdCBkZXN0ICovDQotCW1lbWNweV9mcm9taW8oIGRlc3Qs
-IHNyYywgYnl0ZXMpOw0KKwkvKiBjb252ZXJ0IGJ5dGVzIGluIGFyZ3VtZW50IGxpc3QgdG8g
-d29yZCBjb3VudCBmb3IgY29weSBmdW5jdGlvbiAqLw0KKwlfX2lvcmVhZDMyX2NvcHkoZGVz
-dCwgc3JjLCBieXRlcyAvIHNpemVvZih1aW50MzJfdCkpOw0KIH0NCiANCiAjZW5kaWYJLyog
-X19CSUdfRU5ESUFOICovDQotLSANCjIuNy4w
+Read from these files will return the integed value of the chosen power
+management level now. Separate entries were added to show the target
+UFS device and UIC link states. The description of the possible power
+managements levels was added to the ABI file. The on-write behaviour of
+these entries wasn't changed.
+
+Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+---
+ Documentation/ABI/testing/sysfs-driver-ufs | 67 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 92 +++++++++++++++---------------
+ 2 files changed, 114 insertions(+), 45 deletions(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 07f1c2f..83735f7 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -802,3 +802,70 @@ Description:	This file shows the The amount of physical memory needed
+ 		the particular logical unit. The full information about
+ 		the attribute could be found at UFS specifications 2.1.
+ 		The file is read only.
++
++
++What:		/sys/bus/platform/drivers/ufshcd/*/rpm_lvl
++Date:		September 2014
++Contact:	Subhash Jadavani <subhashj@codeaurora.org>
++Description:	This entry could be used to set or show the UFS device
++		runtime power management level. The current driver
++		implementation supports 6 levels with next target states:
++		0 - an UFS device will stay active, an UIC link will
++		stay active
++		1 - an UFS device will stay active, an UIC link will
++		hibernate
++		2 - an UFS device will moved to sleep, an UIC link will
++		stay active
++		3 - an UFS device will moved to sleep, an UIC link will
++		hibernate
++		4 - an UFS device will be powered off, an UIC link will
++		hibernate
++		5 - an UFS device will be powered off, an UIC link will
++		be powered off
++
++What:		/sys/bus/platform/drivers/ufshcd/*/rpm_target_dev_state
++Date:		February 2018
++Contact:	Subhash Jadavani <subhashj@codeaurora.org>
++Description:	This entry shows the target power mode of an UFS device
++		for the chosen runtime power management level.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/rpm_target_link_state
++Date:		February 2018
++Contact:	Subhash Jadavani <subhashj@codeaurora.org>
++Description:	This entry shows the target state of an UFS UIC link
++		for the chosen runtime power management level.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/spm_lvl
++Date:		September 2014
++Contact:	Subhash Jadavani <subhashj@codeaurora.org>
++Description:	This entry could be used to set or show the UFS device
++		system power management level. The current driver
++		implementation supports 6 levels with next target states:
++		0 - an UFS device will stay active, an UIC link will
++		stay active
++		1 - an UFS device will stay active, an UIC link will
++		hibernate
++		2 - an UFS device will moved to sleep, an UIC link will
++		stay active
++		3 - an UFS device will moved to sleep, an UIC link will
++		hibernate
++		4 - an UFS device will be powered off, an UIC link will
++		hibernate
++		5 - an UFS device will be powered off, an UIC link will
++		be powered off
++
++What:		/sys/bus/platform/drivers/ufshcd/*/spm_target_dev_state
++Date:		February 2018
++Contact:	Subhash Jadavani <subhashj@codeaurora.org>
++Description:	This entry shows the target power mode of an UFS device
++		for the chosen system power management level.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/spm_target_link_state
++Date:		February 2018
++Contact:	Subhash Jadavani <subhashj@codeaurora.org>
++Description:	This entry shows the target state of an UFS UIC link
++		for the chosen system power management level.
++		The file is read only.
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index cd7174d..4ff9e0b 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -57,29 +57,8 @@ static ssize_t rpm_lvl_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	int curr_len;
+-	u8 lvl;
+-
+-	curr_len = snprintf(buf, PAGE_SIZE,
+-			    "\nCurrent Runtime PM level [%d] => dev_state [%s] link_state [%s]\n",
+-			    hba->rpm_lvl,
+-			    ufschd_ufs_dev_pwr_mode_to_string(
+-				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
+-			    ufschd_uic_link_state_to_string(
+-				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
+-
+-	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-			     "\nAll available Runtime PM levels info:\n");
+-	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+-		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-				     "\tRuntime PM level [%d] => dev_state [%s] link_state [%s]\n",
+-				    lvl,
+-				    ufschd_ufs_dev_pwr_mode_to_string(
+-					ufs_pm_lvl_states[lvl].dev_state),
+-				    ufschd_uic_link_state_to_string(
+-					ufs_pm_lvl_states[lvl].link_state));
+-
+-	return curr_len;
++
++	return sprintf(buf, "%d\n", hba->rpm_lvl);
+ }
+ 
+ static ssize_t rpm_lvl_store(struct device *dev,
+@@ -88,33 +67,30 @@ static ssize_t rpm_lvl_store(struct device *dev,
+ 	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, true);
+ }
+ 
++static ssize_t rpm_target_dev_state_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sprintf(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
++			ufs_pm_lvl_states[hba->rpm_lvl].dev_state));
++}
++
++static ssize_t rpm_target_link_state_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sprintf(buf, "%s\n", ufschd_uic_link_state_to_string(
++			ufs_pm_lvl_states[hba->rpm_lvl].link_state));
++}
++
+ static ssize_t spm_lvl_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	int curr_len;
+-	u8 lvl;
+-
+-	curr_len = snprintf(buf, PAGE_SIZE,
+-			    "\nCurrent System PM level [%d] => dev_state [%s] link_state [%s]\n",
+-			    hba->spm_lvl,
+-			    ufschd_ufs_dev_pwr_mode_to_string(
+-				ufs_pm_lvl_states[hba->spm_lvl].dev_state),
+-			    ufschd_uic_link_state_to_string(
+-				ufs_pm_lvl_states[hba->spm_lvl].link_state));
+ 
+-	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-			     "\nAll available System PM levels info:\n");
+-	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+-		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+-				     "\tSystem PM level [%d] => dev_state [%s] link_state [%s]\n",
+-				    lvl,
+-				    ufschd_ufs_dev_pwr_mode_to_string(
+-					ufs_pm_lvl_states[lvl].dev_state),
+-				    ufschd_uic_link_state_to_string(
+-					ufs_pm_lvl_states[lvl].link_state));
+-
+-	return curr_len;
++	return sprintf(buf, "%d\n", hba->spm_lvl);
+ }
+ 
+ static ssize_t spm_lvl_store(struct device *dev,
+@@ -123,12 +99,38 @@ static ssize_t spm_lvl_store(struct device *dev,
+ 	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, false);
+ }
+ 
++static ssize_t spm_target_dev_state_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sprintf(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
++				ufs_pm_lvl_states[hba->spm_lvl].dev_state));
++}
++
++static ssize_t spm_target_link_state_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sprintf(buf, "%s\n", ufschd_uic_link_state_to_string(
++				ufs_pm_lvl_states[hba->spm_lvl].link_state));
++}
++
+ static DEVICE_ATTR_RW(rpm_lvl);
++static DEVICE_ATTR_RO(rpm_target_dev_state);
++static DEVICE_ATTR_RO(rpm_target_link_state);
+ static DEVICE_ATTR_RW(spm_lvl);
++static DEVICE_ATTR_RO(spm_target_dev_state);
++static DEVICE_ATTR_RO(spm_target_link_state);
+ 
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_rpm_lvl.attr,
++	&dev_attr_rpm_target_dev_state.attr,
++	&dev_attr_rpm_target_link_state.attr,
+ 	&dev_attr_spm_lvl.attr,
++	&dev_attr_spm_target_dev_state.attr,
++	&dev_attr_spm_target_link_state.attr,
+ 	NULL
+ };
+ 
+-- 
+2.7.4
