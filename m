@@ -1,72 +1,60 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V2] scsi: core: use blk_mq_requeue_request in
- __scsi_queue_insert
-Date: Thu, 1 Mar 2018 17:43:46 +0000
-Message-ID: <1519926225.2675.6.camel@wdc.com>
-References: <1519808113-2863-1-git-send-email-jianchao.w.wang@oracle.com>
-         <1519840355.2777.8.camel@wdc.com>
-         <624cedc6-9658-7b76-9c63-61c30fdfe6be@oracle.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 1/8] dt-bindings: scsi: hisi_sas: add an property of
+ signal attenuation
+Date: Thu, 1 Mar 2018 15:40:10 -0600
+Message-ID: <20180301214010.ptcaoah756z5xias@rob-hp-laptop>
+References: <1519067611-206638-1-git-send-email-john.garry@huawei.com>
+ <1519067611-206638-2-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <624cedc6-9658-7b76-9c63-61c30fdfe6be@oracle.com>
-Content-Language: en-US
-Content-ID: <F357BBC82A598C48B98BC46D935190DE@namprd04.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <1519067611-206638-2-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jianchao.w.wang@oracle.com" <jianchao.w.wang@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, mark.rutland@arm.com, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE4LTAzLTAxIGF0IDA5OjU3ICswODAwLCBqaWFuY2hhby53YW5nIHdyb3RlOg0K
-PiBPbiAwMy8wMS8yMDE4IDAxOjUyIEFNLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6DQo+ID4gT24g
-V2VkLCAyMDE4LTAyLTI4IGF0IDE2OjU1ICswODAwLCBKaWFuY2hhbyBXYW5nIHdyb3RlOg0KPiA+
-ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIGIvZHJpdmVycy9zY3NpL3Nj
-c2lfbGliLmMNCj4gPiA+IGluZGV4IGE4NmRmOWMuLjZmYTdiMGMgMTAwNjQ0DQo+ID4gPiAtLS0g
-YS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+ID4gKysrIGIvZHJpdmVycy9zY3NpL3Njc2lf
-bGliLmMNCj4gPiA+IEBAIC0xOTEsNyArMTkxLDggQEAgc3RhdGljIHZvaWQgX19zY3NpX3F1ZXVl
-X2luc2VydChzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsIGludCByZWFzb24sIGJvb2wgdW5idXN5KQ0K
-PiA+ID4gIAkgKi8NCj4gPiA+ICAJY21kLT5yZXN1bHQgPSAwOw0KPiA+ID4gIAlpZiAocS0+bXFf
-b3BzKSB7DQo+ID4gPiAtCQlzY3NpX21xX3JlcXVldWVfY21kKGNtZCk7DQo+ID4gPiArCQlibGtf
-bXFfcmVxdWV1ZV9yZXF1ZXN0KGNtZC0+cmVxdWVzdCwgdHJ1ZSk7DQo+ID4gPiArCQlwdXRfZGV2
-aWNlKCZkZXZpY2UtPnNkZXZfZ2VuZGV2KTsNCj4gPiA+ICAJCXJldHVybjsNCj4gPiA+ICAJfQ0K
-PiA+ID4gIAlzcGluX2xvY2tfaXJxc2F2ZShxLT5xdWV1ZV9sb2NrLCBmbGFncyk7DQo+ID4gDQo+
-ID4gQW55b25lIHdobyBzZWVzIHRoZSBwdXRfZGV2aWNlKCkgY2FsbCB0aGF0IGZvbGxvd3MgdGhl
-IGJsa19tcV9yZXF1ZXVlX3JlcXVlc3QoKQ0KPiA+IGNhbGwgd2lsbCB3b25kZXIgd2h5IHRoYXQg
-Y2FsbCBvY2N1cnMgdGhlcmUuIFNvIEkgdGhpbmsgd2UgbmVlZCBhIGNvbW1lbnQgYWJvdmUNCj4g
-PiB0aGF0IGNhbGwgdGhhdCBleHBsYWlucyB3aGVyZSB0aGUgbWF0Y2hpbmcgZ2V0X2RldmljZSgp
-IGNhbGwgaXMuDQo+IA0KPiBZZXMsIEkgd2lsbCBhZGQgdGhpcy4NCj4gDQo+ID4gRm9yIHRoZSBs
-ZWdhY3kgY29kZSBwYXRoLCB0aGVyZSBpcyBhIGdldF9kZXZpY2UoKSBjYWxsIGluIHNjc2lfcHJl
-cF9mbigpIGJ1dCBubw0KPiA+IHB1dF9kZXZpY2UoKSBjYWxsIGluIHNjc2lfdW5wcmVwX2ZuKCkg
-LSB0aGUgbWF0Y2hpbmcgcHV0X2RldmljZSgpIGNhbGxzIG9jY3VyIGluDQo+ID4gc2NzaV9lbmRf
-cmVxdWVzdCgpIGFuZCBhZnRlciBibGtfcmVxdWV1ZV9yZXF1ZXN0KCkuDQo+ID4gDQo+ID4gRm9y
-IHNjc2ktbXEgaG93ZXZlciB0aGVyZSBpcyBhIGdldF9kZXZpY2UoKSBjYWxsIGluIHNjc2lfbXFf
-Z2V0X2J1ZGdldCgpIGFuZCBhDQo+ID4gcHV0X2RldmljZSgpIGNhbGwgaW4gc2NzaV9tcV9wdXRf
-YnVkZ2V0KCkuIFNvIHdoeSBkbyB3ZSBuZWVkIHRoZSBwdXRfZGV2aWNlKCkNCj4gPiBjYWxscyBh
-ZnRlciBibGtfbXFfcmVxdWV1ZV9yZXF1ZXN0KCkgYW5kIGluIHRoZSBtcSBwYXRoIGZvciBzY3Np
-X2VuZF9yZXF1ZXN0KCk/DQo+ID4gDQo+IA0KPiBGcm9tIHRoZSBzb3VyY2UgY29kZSwgd2Uga25v
-dyB0aGUgc2NzaV9tcV9nZXRfYnVkZ2V0IHdpbGwgYmUgaW52b2tlZCBldmVyeSB0aW1lDQo+IHdo
-ZW4gd2UgaXNzdWUgYSByZXF1ZXN0LiBCdXQgc2NzaV9tcV9wdXRfYnVkZ2V0IGlzIGp1c3QgaW4g
-dGhlIGZhaWwgcGF0aC4NCj4gDQo+IHNjc2lfcXVldWVfcnEgLy8gaWYgYW55IGVycm9yDQo+ICAg
-LT4gc2NzaV9tcV9wdXRfYnVkZ2V0DQo+IA0KPiBibGtfbXFfZGlzcGF0Y2hfcnFfbGlzdCAvLyBp
-ZiBubyBkcml2ZXIgdGFncw0KPiAgIC0+IGJsa19tcV9wdXRfZGlzcGF0Y2hfYnVkZ2V0DQo+ICAg
-ICAtPiBzY3NpX21xX3B1dF9idWRnZXQNCj4gYmxrX21xX2RvX2Rpc3BhdGNoX3NjaGVkL2Jsa19t
-cV9kb19kaXNwYXRjaF9jdHggLy8gaWYgbm8gcmVxdWVzdHMNCj4gICAtPiBibGtfbXFfcHV0X2Rp
-c3BhdGNoX2J1ZGdldA0KPiAgICAgLT4gc2NzaV9tcV9wdXRfYnVkZ2V0DQo+IA0KPiBTbyB3ZSBo
-YXZlIHRvIGFkZCBwdXRfZGV2aWNlIGFmdGVyIGJsa19tcV9yZXF1ZXVlX3JlcXVlc3QoKSBhbmQg
-aW4NCj4gc2NzaV9lbmRfcmVxdWVzdCgpIHRvIG1hdGNoIHRoZSBzY3NpX21xX2dldF9idWRnZXQu
-DQoNCkhlbGxvIEppYW5jaGFvLA0KDQpZZXMsIHRoZSBibG9jayBsYXllciBjb3JlIGd1YXJhbnRl
-ZXMgdGhhdCBzY3NpX21xX2dldF9idWRnZXQoKSB3aWxsIGJlIGNhbGxlZA0KYmVmb3JlIHNjc2lf
-cXVldWVfcnEoKS4gSSB0aGluayB0aGUgZnVsbCBwaWN0dXJlIGlzIGFzIGZvbGxvd3M6DQoqIEJl
-Zm9yZSBzY3NpX3F1ZXVlX3JxKCkgY2FsbHMgLnF1ZXVlY29tbWFuZCgpLCBnZXRfZGV2aWNlKCkg
-aXMgY2FsbGVkIGZvciB0aGUNCiAgU0NTSSBkZXZpY2UgYW5kIHRoZSBkZXZpY2UsIHRhcmdldCBh
-bmQgaG9zdCBidXN5IGNvdW50ZXJzIGFyZSBpbmNyZW1lbnRlZC4NCiogSWYgdGhlIFNDU0kgY29y
-ZSBkZWNpZGVzIHRvIHJlcXVldWUgYSBjb21tYW5kLCBzY3NpX3F1ZXVlX2luc2VydCgpIGNhdXNl
-cw0KICBfX3Njc2lfcXVldWVfaW5zZXJ0KCkgdG8gY2FsbCBzY3NpX2RldmljZV91bmJ1c3koKS4g
-VGhhdCBsYXN0IGZ1bmN0aW9uDQogIGRlY3JlYXNlcyB0aGUgZGV2aWNlLCB0YXJnZXQgYW5kIGhv
-c3QgYnVzeSBjb3VudGVycyBidXQgbm90IHB1dF9kZXZpY2Uoc2RldikuDQogIEhlbmNlIHRoZSBu
-ZWVkIGZvciBhIHNlcGFyYXRlIHB1dF9kZXZpY2UoKSBjYWxsIGFmdGVyIHJlcXVldWluZy4NCg0K
-SXQncyB1bmZvcnR1bmF0ZSB0aGF0IHRoZSBTQ1NJIGNvcmUgYmVjYW1lIHNvIGFzeW1tZXRyaWMu
-IEFueXdheSwgc2luY2UgSSBhbQ0Kbm93IGNvbnZpbmNlZCB0aGF0IHRoaXMgcGF0Y2ggaXMgY29y
-cmVjdCwgZmVlbCBmcmVlIHRvIGFkZDoNCg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8
-YmFydC52YW5hc3NjaGVAd2RjLmNvbT4NCg0KDQo=
+On Tue, Feb 20, 2018 at 03:13:24AM +0800, John Garry wrote:
+> From: Xiaofei Tan <tanxiaofei@huawei.com>
+> 
+> For some new boards with hip07 chipset we are required to
+> set PHY config registers differently. The hw property which
+> determines how to set these registers is in the PHY signal
+> attenuation readings.
+> 
+> This patch add an devicetree property, signal-attenuation, which
+> is used to describe the signal attenuation of an board.
+> 
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Mark Rutland <mark.rutland@arm.com>
+> Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+> index df3bef7..bd32ecd 100644
+> --- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+> +++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+> @@ -53,6 +53,13 @@ Main node required properties:
+>  Optional main node properties:
+>   - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
+>  			    "am-max-transmissions" limitation.
+> + - signal-attenuation : array of 3 32-bit values, containing de-emphasis,
+
+Needs a vendor prefix.
+
+> +		preshoot, and boost attenuation readings for the board. They
+> +		are used to describe the signal attenuation of the board. These
+> +		values' range is 7600 to 12400, and used to represent -24dB to
+> +		24dB.
+> +		The formula is "y = (x-10000)/10000". For example, 10478
+> +		means 4.78dB.
+>  
+>  Example:
+>  	sas0: sas@c1000000 {
+> -- 
+> 1.9.1
+> 
