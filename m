@@ -1,60 +1,104 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 1/8] dt-bindings: scsi: hisi_sas: add an property of
- signal attenuation
-Date: Thu, 1 Mar 2018 15:40:10 -0600
-Message-ID: <20180301214010.ptcaoah756z5xias@rob-hp-laptop>
-References: <1519067611-206638-1-git-send-email-john.garry@huawei.com>
- <1519067611-206638-2-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1519067611-206638-2-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, mark.rutland@arm.com, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH] sd_zbc: Fix potential memory leak
+Date: Fri,  2 Mar 2018 07:19:28 +0900
+Message-ID: <20180301221928.29028-1-damien.lemoal@wdc.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 20, 2018 at 03:13:24AM +0800, John Garry wrote:
-> From: Xiaofei Tan <tanxiaofei@huawei.com>
-> 
-> For some new boards with hip07 chipset we are required to
-> set PHY config registers differently. The hw property which
-> determines how to set these registers is in the PHY signal
-> attenuation readings.
-> 
-> This patch add an devicetree property, signal-attenuation, which
-> is used to describe the signal attenuation of an board.
-> 
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Mark Rutland <mark.rutland@arm.com>
-> Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->  Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> index df3bef7..bd32ecd 100644
-> --- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> +++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> @@ -53,6 +53,13 @@ Main node required properties:
->  Optional main node properties:
->   - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
->  			    "am-max-transmissions" limitation.
-> + - signal-attenuation : array of 3 32-bit values, containing de-emphasis,
+Rework sd_zbc_check_zone_size() to avoid a memory leak due to an early
+return if sd_zbc_report_zones() fails.
 
-Needs a vendor prefix.
+Reported-by: David.butterfield <david.butterfield@wdc.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/scsi/sd_zbc.c | 35 +++++++++++++++--------------------
+ 1 file changed, 15 insertions(+), 20 deletions(-)
 
-> +		preshoot, and boost attenuation readings for the board. They
-> +		are used to describe the signal attenuation of the board. These
-> +		values' range is 7600 to 12400, and used to represent -24dB to
-> +		24dB.
-> +		The formula is "y = (x-10000)/10000". For example, 10478
-> +		means 4.78dB.
->  
->  Example:
->  	sas0: sas@c1000000 {
-> -- 
-> 1.9.1
-> 
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 14174f26af98..ec55a255d1a2 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -366,7 +366,7 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf)
+  */
+ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ {
+-	u64 zone_blocks;
++	u64 zone_blocks = 0;
+ 	sector_t block = 0;
+ 	unsigned char *buf;
+ 	unsigned char *rec;
+@@ -384,10 +384,8 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 
+ 	/* Do a report zone to get the same field */
+ 	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
+-	if (ret) {
+-		zone_blocks = 0;
+-		goto out;
+-	}
++	if (ret)
++		goto out_free;
+ 
+ 	same = buf[4] & 0x0f;
+ 	if (same > 0) {
+@@ -427,7 +425,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 			ret = sd_zbc_report_zones(sdkp, buf,
+ 						  SD_ZBC_BUF_SIZE, block);
+ 			if (ret)
+-				return ret;
++				goto out_free;
+ 		}
+ 
+ 	} while (block < sdkp->capacity);
+@@ -435,35 +433,32 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 	zone_blocks = sdkp->zone_blocks;
+ 
+ out:
+-	kfree(buf);
+-
+ 	if (!zone_blocks) {
+ 		if (sdkp->first_scan)
+ 			sd_printk(KERN_NOTICE, sdkp,
+ 				  "Devices with non constant zone "
+ 				  "size are not supported\n");
+-		return -ENODEV;
+-	}
+-
+-	if (!is_power_of_2(zone_blocks)) {
++		ret = -ENODEV;
++	} else if (!is_power_of_2(zone_blocks)) {
+ 		if (sdkp->first_scan)
+ 			sd_printk(KERN_NOTICE, sdkp,
+ 				  "Devices with non power of 2 zone "
+ 				  "size are not supported\n");
+-		return -ENODEV;
+-	}
+-
+-	if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
++		ret = -ENODEV;
++	} else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
+ 		if (sdkp->first_scan)
+ 			sd_printk(KERN_NOTICE, sdkp,
+ 				  "Zone size too large\n");
+-		return -ENODEV;
++		ret = -ENODEV;
++	} else {
++		sdkp->zone_blocks = zone_blocks;
++		sdkp->zone_shift = ilog2(zone_blocks);
+ 	}
+ 
+-	sdkp->zone_blocks = zone_blocks;
+-	sdkp->zone_shift = ilog2(zone_blocks);
++out_free:
++	kfree(buf);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ /**
+-- 
+2.14.3
