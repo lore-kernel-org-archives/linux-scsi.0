@@ -1,31 +1,185 @@
-From: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: [PATCH] scsi: ufs: sysfs: reworking of the rpm_lvl and spm_lvl entries
-Date: Thu,  1 Mar 2018 12:48:05 +0200
-Message-ID: <1519901286-17496-1-git-send-email-stanislav.nijnikov@wdc.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: mpt3sas: clarify mmio pointer types
+Date: Thu,  1 Mar 2018 14:07:07 +0100
+Message-ID: <20180301130729.3278022-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, subhashj@codeaurora.org
-Cc: alex.lemberg@wdc.com, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The functions related to the rpm_lvl and spm_lvl sysfs entries were moved to
-a separate file as part of UFS device management patchset. During the review
-phase I was pointed that these entries implementaion could be improved.
-The each file output was split to three parts:
-    rmp_lvl - rpm_lvl, rpm_target_dev_state, rpm_target_link_state
-    smp_lvl - spm_lvl, spm_target_dev_state, spm_target_link_state.
-Each new entry has a single value output and doesn't reqire additional 
-parsing.
-The information about new entries and possible power management levels was
-added to the corresponding ABI file.
-The on-write behaviour of these entries wasn't changed.
+The newly added code mixes up phys_addr_t/resource_size_t with dma_addr_t
+and void pointers, as seen from these compiler warning:
 
-Stanislav Nijnikov (1):
-  scsi: ufs: sysfs: reworking of the rpm_lvl and spm_lvl entries
+drivers/scsi/mpt3sas/mpt3sas_base.c: In function '_base_get_chain_phys':
+drivers/scsi/mpt3sas/mpt3sas_base.c:235:21: error: cast to pointer from integer of different size [-Werror=int-to-pointer-cast]
+  base_chain_phys  = (void *)ioc->chip_phys + MPI_FRAME_START_OFFSET +
+                     ^
+drivers/scsi/mpt3sas/mpt3sas_base.c: In function '_clone_sg_entries':
+drivers/scsi/mpt3sas/mpt3sas_base.c:427:20: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]
+    sgel->Address = (dma_addr_t)dst_addr_phys;
+                    ^
+drivers/scsi/mpt3sas/mpt3sas_base.c:438:7: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]
+       (dma_addr_t)buff_ptr_phys;
+       ^
+drivers/scsi/mpt3sas/mpt3sas_base.c:444:10: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]
+          (dma_addr_t)buff_ptr_phys;
 
- Documentation/ABI/testing/sysfs-driver-ufs | 67 ++++++++++++++++++++++
- drivers/scsi/ufs/ufs-sysfs.c               | 92 +++++++++++++++---------------
- 2 files changed, 114 insertions(+), 45 deletions(-)
+Both dma_addr_t and phys_addr_t may be wider than a pointer, so we must
+avoid the conversion to pointer types. This also helps readability.
 
+A second problem is treating MMIO addresses from a 'struct resource'
+as addresses that can be used for DMA on that device. In almost all
+cases, those are the same, but on some of the more obscure architectures,
+PCI memory address 0 is mapped into the CPU address space at a nonzero
+offset. I don't have a good fix for that, so I'm adding a comment here,
+plus a WARN_ON() that triggers whenever the phys_addr_t number is
+outside of the low 32-bit address space and causes a straight overflow
+when assigned to the 32-bit sgel->Address.
+
+Fixes: 182ac784b41f ("scsi: mpt3sas: Introduce Base function for cloning.")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 42 ++++++++++++++++++++-----------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h |  2 +-
+ 2 files changed, 24 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 9f2434e59b40..61f93a134956 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -225,14 +225,14 @@ _base_get_chain(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+  *
+  * @Return - Physical chain address.
+  */
+-static inline void *
++static inline phys_addr_t
+ _base_get_chain_phys(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 		u8 sge_chain_count)
+ {
+-	void *base_chain_phys, *chain_phys;
++	phys_addr_t base_chain_phys, chain_phys;
+ 	u16 cmd_credit = ioc->facts.RequestCredit + 1;
+ 
+-	base_chain_phys  = (void *)ioc->chip_phys + MPI_FRAME_START_OFFSET +
++	base_chain_phys  = ioc->chip_phys + MPI_FRAME_START_OFFSET +
+ 		(cmd_credit * ioc->request_sz) +
+ 		REPLY_FREE_POOL_SIZE;
+ 	chain_phys = base_chain_phys + (smid * ioc->facts.MaxChainDepth *
+@@ -272,11 +272,11 @@ _base_get_buffer_bar0(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+  *
+  * @Returns - Pointer to buffer location in BAR0.
+  */
+-static void *
++static phys_addr_t
+ _base_get_buffer_phys_bar0(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	u16 cmd_credit = ioc->facts.RequestCredit + 1;
+-	void *chain_end_phys = _base_get_chain_phys(ioc,
++	phys_addr_t chain_end_phys = _base_get_chain_phys(ioc,
+ 			cmd_credit + 1,
+ 			ioc->facts.MaxChainDepth);
+ 	return chain_end_phys + (smid * 64 * 1024);
+@@ -330,11 +330,12 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 	bool is_write = 0;
+ 	u16 i = 0;
+ 	void __iomem *buffer_iomem;
+-	void  *buffer_iomem_phys;
++	phys_addr_t buffer_iomem_phys;
+ 	void __iomem *buff_ptr;
+-	void *buff_ptr_phys;
++	phys_addr_t buff_ptr_phys;
+ 	void __iomem *dst_chain_addr[MCPU_MAX_CHAINS_PER_IO];
+-	void *src_chain_addr[MCPU_MAX_CHAINS_PER_IO], *dst_addr_phys;
++	void *src_chain_addr[MCPU_MAX_CHAINS_PER_IO];
++	phys_addr_t dst_addr_phys;
+ 	MPI2RequestHeader_t *request_hdr;
+ 	struct scsi_cmnd *scmd;
+ 	struct scatterlist *sg_scmd = NULL;
+@@ -391,6 +392,7 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	buff_ptr = buffer_iomem;
+ 	buff_ptr_phys = buffer_iomem_phys;
++	WARN_ON(buff_ptr_phys > U32_MAX);
+ 
+ 	if (sgel->FlagsLength &
+ 			(MPI2_SGE_FLAGS_HOST_TO_IOC << MPI2_SGE_FLAGS_SHIFT))
+@@ -421,10 +423,10 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 					smid, sge_chain_count);
+ 			src_chain_addr[sge_chain_count] =
+ 						(void *) sgel_next;
+-			dst_addr_phys =
+-				_base_get_chain_phys(ioc,
++			dst_addr_phys = _base_get_chain_phys(ioc,
+ 						smid, sge_chain_count);
+-			sgel->Address = (dma_addr_t)dst_addr_phys;
++			WARN_ON(dst_addr_phys > U32_MAX);
++			sgel->Address = (u32)dst_addr_phys;
+ 			sgel = sgel_next;
+ 			sge_chain_count++;
+ 			break;
+@@ -434,14 +436,16 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 					_base_clone_to_sys_mem(buff_ptr,
+ 					    sg_virt(sg_scmd),
+ 					    (sgel->FlagsLength & 0x00ffffff));
+-					sgel->Address =
+-						(dma_addr_t)buff_ptr_phys;
++					/*
++					 * FIXME: this relies on a a zero
++					 * PCI mem_offset.
++					 */
++					sgel->Address = (u32)buff_ptr_phys;
+ 				} else {
+ 					_base_clone_to_sys_mem(buff_ptr,
+ 					    ioc->config_vaddr,
+ 					    (sgel->FlagsLength & 0x00ffffff));
+-					sgel->Address =
+-					    (dma_addr_t)buff_ptr_phys;
++					sgel->Address = (u32)buff_ptr_phys;
+ 				}
+ 			}
+ 			buff_ptr += (sgel->FlagsLength & 0x00ffffff);
+@@ -2941,7 +2945,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	u32 pio_sz;
+ 	int i, r = 0;
+ 	u64 pio_chip = 0;
+-	u64 chip_phys = 0;
++	phys_addr_t chip_phys = 0;
+ 	struct adapter_reply_queue *reply_q;
+ 
+ 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n",
+@@ -2989,7 +2993,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 			if (memap_sz)
+ 				continue;
+ 			ioc->chip_phys = pci_resource_start(pdev, i);
+-			chip_phys = (u64)ioc->chip_phys;
++			chip_phys = ioc->chip_phys;
+ 			memap_sz = pci_resource_len(pdev, i);
+ 			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
+ 		}
+@@ -3064,8 +3068,8 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 		    "IO-APIC enabled"),
+ 		    pci_irq_vector(ioc->pdev, reply_q->msix_index));
+ 
+-	pr_info(MPT3SAS_FMT "iomem(0x%016llx), mapped(0x%p), size(%d)\n",
+-	    ioc->name, (unsigned long long)chip_phys, ioc->chip, memap_sz);
++	pr_info(MPT3SAS_FMT "iomem(%pap), mapped(0x%p), size(%d)\n",
++	    ioc->name, &chip_phys, ioc->chip, memap_sz);
+ 	pr_info(MPT3SAS_FMT "ioport(0x%016llx), size(%d)\n",
+ 	    ioc->name, (unsigned long long)pio_chip, pio_sz);
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index df8233c1e1c1..ae36d8fb2f2b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1103,7 +1103,7 @@ struct MPT3SAS_ADAPTER {
+ 	char		tmp_string[MPT_STRING_LENGTH];
+ 	struct pci_dev	*pdev;
+ 	Mpi2SystemInterfaceRegs_t __iomem *chip;
+-	resource_size_t	chip_phys;
++	phys_addr_t	chip_phys;
+ 	int		logging_level;
+ 	int		fwfault_debug;
+ 	u8		ir_firmware;
 -- 
-2.7.4
+2.9.0
