@@ -1,72 +1,48 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH V2] scsi: core: use blk_mq_requeue_request in
- __scsi_queue_insert
-Date: Thu, 1 Mar 2018 09:57:54 +0800
-Message-ID: <624cedc6-9658-7b76-9c63-61c30fdfe6be@oracle.com>
-References: <1519808113-2863-1-git-send-email-jianchao.w.wang@oracle.com>
- <1519840355.2777.8.camel@wdc.com>
+From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
+Subject: Re:[PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
+Date: Thu, 1 Mar 2018 13:59:16 +0800
+Message-ID: <tencent_3B2D19AE6395B45001767B9B@qq.com>
+References: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1519840355.2777.8.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
+Sender: stable-owner@vger.kernel.org
+To: =?utf-8?B?SmFtZXMgU21hcnQ=?= <james.smart@broadcom.com>, =?utf-8?B?RGljayBLZW5uZWR5?= <dick.kennedy@broadcom.com>
+Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Bart
-
-Thanks for your precious time to review this and kindly detailed response.
-
-On 03/01/2018 01:52 AM, Bart Van Assche wrote:
-> On Wed, 2018-02-28 at 16:55 +0800, Jianchao Wang wrote:
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index a86df9c..6fa7b0c 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -191,7 +191,8 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
->>  	 */
->>  	cmd->result = 0;
->>  	if (q->mq_ops) {
->> -		scsi_mq_requeue_cmd(cmd);
->> +		blk_mq_requeue_request(cmd->request, true);
->> +		put_device(&device->sdev_gendev);
->>  		return;
->>  	}
->>  	spin_lock_irqsave(q->queue_lock, flags);
-> 
-> Anyone who sees the put_device() call that follows the blk_mq_requeue_request()
-> call will wonder why that call occurs there. So I think we need a comment above
-> that call that explains where the matching get_device() call is.
-
-Yes, I will add this.
-
-> For the legacy code path, there is a get_device() call in scsi_prep_fn() but no
-> put_device() call in scsi_unprep_fn() - the matching put_device() calls occur in
-> scsi_end_request() and after blk_requeue_request().
-> 
-> For scsi-mq however there is a get_device() call in scsi_mq_get_budget() and a
-> put_device() call in scsi_mq_put_budget(). So why do we need the put_device()
-> calls after blk_mq_requeue_request() and in the mq path for scsi_end_request()?
-> 
-
->From the source code, we know the scsi_mq_get_budget will be invoked every time when we issue a request.
-But scsi_mq_put_budget is just in the fail path.
-
-scsi_queue_rq // if any error
-  -> scsi_mq_put_budget
-
-blk_mq_dispatch_rq_list // if no driver tags
-  -> blk_mq_put_dispatch_budget
-    -> scsi_mq_put_budget
-blk_mq_do_dispatch_sched/blk_mq_do_dispatch_ctx // if no requests
-  -> blk_mq_put_dispatch_budget
-    -> scsi_mq_put_budget
-
-So we have to add put_device after  blk_mq_requeue_request() and in scsi_end_request() to match the
-scsi_mq_get_budget.
-
-Thanks
-Jianchao
+UGluZz8NCiANCi0tLS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0t
+LS0NCkZyb206ICAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsNCkRhdGU6ICBG
+cmksIEphbiAyNiwgMjAxOCAwODo1MyBQTQ0KVG86ICAiSmFtZXMgU21hcnQiPGphbWVzLnNt
+YXJ0QGJyb2FkY29tLmNvbT47ICJEaWNrIEtlbm5lZHkiPGRpY2sua2VubmVkeUBicm9hZGNv
+bS5jb20+Ow0KQ2M6ICAiSmFtZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5l
+dC5pYm0uY29tPjsgIk1hcnRpbiBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFj
+bGUuY29tPjsgIkZ1eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgtc2Nz
+aSI8bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+OyAiSHVhY2FpIENoZW4iPGNoZW5oY0Bs
+ZW1vdGUuY29tPjsgInN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQpTdWJqZWN0
+OiAgW1BBVENIXSBzY3NpOiBscGZjOiBTd2l0Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9fcmVh
+ZDMyX2NvcHkoKQ0KIA0KSW4gY29tbWl0IGJjNzM5MDVhYmY3NzAxOTIgKCJbU0NTSV0gbHBm
+YyA4LjMuMTY6IFNMSSBBZGRpdGlvbnMsIHVwZGF0ZXMsDQphbmQgY29kZSBjbGVhbnVwIiks
+IGxwZmNfbWVtY3B5X3RvX3NsaW0oKSBoYXZlIHN3aXRjaGVkIG1lbWNweV90b2lvKCkgdG8N
+Cl9fd3JpdGUzMl9jb3B5KCkgaW4gb3JkZXIgdG8gcHJldmVudCB1bmFsaWduZWQgNjQgYml0
+IGNvcHkuIFJlY2VudGx5LCB3ZQ0KZm91bmQgdGhhdCBscGZjX21lbWNweV9mcm9tX3NsaW0o
+KSBoYXZlIHNpbWlsYXIgaXNzdWVzLCBzbyBsZXQgaXQgc3dpdGNoDQptZW1jcHlfZnJvbWlv
+KCkgdG8gX19yZWFkMzJfY29weSgpLg0KDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0K
+U2lnbmVkLW9mZi1ieTogSHVhY2FpIENoZW4gPGNoZW5oY0BsZW1vdGUuY29tPg0KLS0tDQog
+ZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaCB8IDQgKystLQ0KIDEgZmlsZSBjaGFu
+Z2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9k
+cml2ZXJzL3Njc2kvbHBmYy9scGZjX2NvbXBhdC5oIGIvZHJpdmVycy9zY3NpL2xwZmMvbHBm
+Y19jb21wYXQuaA0KaW5kZXggNmIzMmIwYS4uNDdkNGZhZCAxMDA2NDQNCi0tLSBhL2RyaXZl
+cnMvc2NzaS9scGZjL2xwZmNfY29tcGF0LmgNCisrKyBiL2RyaXZlcnMvc2NzaS9scGZjL2xw
+ZmNfY29tcGF0LmgNCkBAIC05MSw4ICs5MSw4IEBAIGxwZmNfbWVtY3B5X3RvX3NsaW0oIHZv
+aWQgX19pb21lbSAqZGVzdCwgdm9pZCAqc3JjLCB1bnNpZ25lZCBpbnQgYnl0ZXMpDQogc3Rh
+dGljIGlubGluZSB2b2lkDQogbHBmY19tZW1jcHlfZnJvbV9zbGltKCB2b2lkICpkZXN0LCB2
+b2lkIF9faW9tZW0gKnNyYywgdW5zaWduZWQgaW50IGJ5dGVzKQ0KIHsNCi0JLyogYWN0dWFs
+bHkgcmV0dXJucyAxIGJ5dGUgcGFzdCBkZXN0ICovDQotCW1lbWNweV9mcm9taW8oIGRlc3Qs
+IHNyYywgYnl0ZXMpOw0KKwkvKiBjb252ZXJ0IGJ5dGVzIGluIGFyZ3VtZW50IGxpc3QgdG8g
+d29yZCBjb3VudCBmb3IgY29weSBmdW5jdGlvbiAqLw0KKwlfX2lvcmVhZDMyX2NvcHkoZGVz
+dCwgc3JjLCBieXRlcyAvIHNpemVvZih1aW50MzJfdCkpOw0KIH0NCiANCiAjZW5kaWYJLyog
+X19CSUdfRU5ESUFOICovDQotLSANCjIuNy4w
