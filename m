@@ -1,61 +1,42 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2 1/8] dt-bindings: scsi: hisi_sas: add an property of
- signal attenuation
-Date: Fri, 2 Mar 2018 16:10:41 +0000
-Message-ID: <7f62130c-723a-c9ab-533b-48e8addf3dba@huawei.com>
-References: <1520003182-26277-1-git-send-email-john.garry@huawei.com>
- <1520003182-26277-2-git-send-email-john.garry@huawei.com>
- <CAL_JsqJNxxyBDk_u=Wf2vGbgwa7act2NNc+zmxP7Ne80bFGqRA@mail.gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V3] scsi: core: use blk_mq_requeue_request in
+ __scsi_queue_insert
+Date: Fri, 2 Mar 2018 16:31:33 +0000
+Message-ID: <1520008291.2855.7.camel@wdc.com>
+References: <1519961474-15236-1-git-send-email-jianchao.w.wang@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAL_JsqJNxxyBDk_u=Wf2vGbgwa7act2NNc+zmxP7Ne80bFGqRA@mail.gmail.com>
+In-Reply-To: <1519961474-15236-1-git-send-email-jianchao.w.wang@oracle.com>
+Content-Language: en-US
+Content-ID: <34E3BA2ED5E63C429BC5BF0DC23876A6@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh+dt@kernel.org>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mark Rutland <mark.rutland@arm.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, Linuxarm <linuxarm@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Xiaofei Tan <tanxiaofei@huawei.com>
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jianchao.w.wang@oracle.com" <jianchao.w.wang@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/03/2018 15:57, Rob Herring wrote:
-> On Fri, Mar 2, 2018 at 9:06 AM, John Garry <john.garry@huawei.com> wrote:
->> > From: Xiaofei Tan <tanxiaofei@huawei.com>
->> >
->> > For some new boards with hip07 chipset we are required to
->> > set PHY config registers differently. The hw property which
->> > determines how to set these registers is in the PHY signal
->> > attenuation readings.
->> >
->> > This patch add an devicetree property, hisi-signal-attenuation,
->> > which is used to describe the signal attenuation of an board.
->> >
->> > Cc: Rob Herring <robh+dt@kernel.org>
->> > Cc: Mark Rutland <mark.rutland@arm.com>
->> > Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
->> > Signed-off-by: John Garry <john.garry@huawei.com>
->> > ---
->> >  Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 7 +++++++
->> >  1 file changed, 7 insertions(+)
->> >
->> > diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
->> > index df3bef7..6f6876a 100644
->> > --- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
->> > +++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
->> > @@ -53,6 +53,13 @@ Main node required properties:
->> >  Optional main node properties:
->> >   - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
->> >                             "am-max-transmissions" limitation.
->> > + - hisi-signal-attenuation : array of 3 32-bit values, containing de-emphasis,
-> The format for vendor prefixes is: <vendor prefix>,property-name
->
-> And should only be ones defined in vendor-prefixes.txt
-
-Hi Rob,
-
-To save a v4, that would be "hisilicon,signal-attenuation", right?
-
-Thanks,
-John
-
->
->> > +               preshoot, and boost attenuation readings for the board. They
->> > +               are used to describe the signal attenuation of the board. These
+T24gRnJpLCAyMDE4LTAzLTAyIGF0IDExOjMxICswODAwLCBKaWFuY2hhbyBXYW5nIHdyb3RlOg0K
+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kvc2Nz
+aV9saWIuYw0KPiBpbmRleCBhODZkZjljLi5kMmYxODM4IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJz
+L3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiBAQCAt
+MTkxLDcgKzE5MSwxMyBAQCBzdGF0aWMgdm9pZCBfX3Njc2lfcXVldWVfaW5zZXJ0KHN0cnVjdCBz
+Y3NpX2NtbmQgKmNtZCwgaW50IHJlYXNvbiwgYm9vbCB1bmJ1c3kpDQo+ICAJICovDQo+ICAJY21k
+LT5yZXN1bHQgPSAwOw0KPiAgCWlmIChxLT5tcV9vcHMpIHsNCj4gLQkJc2NzaV9tcV9yZXF1ZXVl
+X2NtZChjbWQpOw0KPiArCQkvKg0KPiArCQkgKiBzY3NpX2RldmljZS5zZGV2X2dlbmRldiB3aWxs
+IGJlIGdldCBldmVyeSB0aW1lIGluIC5nZXRfYnVkZ2V0IGFuZA0KPiArCQkgKiBiZSBwdXQgaW4g
+c2NzaV9lbmRfcmVxdWVzdC4gSGVuY2Ugd2UgbmVlZCB0byBwdXQgdGhlIHJlZmVyZW5jZQ0KPiAr
+CQkgKiBoZXJlIHdoZW4gd2UgZGVjaWRlIHRvIHJlcXVldWUgcmVxdWVzdC4NCj4gKwkJICovDQo+
+ICsJCWJsa19tcV9yZXF1ZXVlX3JlcXVlc3QoY21kLT5yZXF1ZXN0LCB0cnVlKTsNCj4gKwkJcHV0
+X2RldmljZSgmZGV2aWNlLT5zZGV2X2dlbmRldik7DQo+ICAJCXJldHVybjsNCj4gIAl9DQo+ICAJ
+c3Bpbl9sb2NrX2lycXNhdmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOw0KDQpQbGVhc2UgY29uc2lk
+ZXIgdG8gY2hhbmdlIHRoZSBuZXcgY29tbWVudCBpbnRvIHNvbWV0aGluZyBsaWtlIHRoZSBmb2xs
+b3dpbmc6DQoiQmVmb3JlIGEgU0NTSSBjb21tYW5kIGlzIGRpc3BhdGNoZWQsIGdldF9kZXZpY2Uo
+JnNkZXYtPnNkZXZfZ2VuZGV2KSBpcyBjYWxsZWQNCmFuZCB0aGUgaG9zdCwgdGFyZ2V0IGFuZCBk
+ZXZpY2UgYnVzeSBjb3VudGVycyBhcmUgaW5jcmVhc2VkLiBTaW5jZSByZXF1ZXVpbmcgYQ0KcmVx
+dWVzdCBjYXVzZXMgdGhlc2UgYWN0aW9ucyB0byBiZSByZXBlYXRlZCBhbmQgc2luY2Ugc2NzaV9k
+ZXZpY2VfdW5idXN5KCkgaGFzDQphbHJlYWR5IGJlZW4gY2FsbGVkLCBwdXRfZGV2aWNlKCZkZXZp
+Y2UtPnNkZXZfZ2VuZGV2KSBtdXN0IHN0aWxsIGJlIGNhbGxlZC4gQ2FsbA0KcHV0X2RldmljZSgp
+IGFmdGVyIGJsa19tcV9yZXF1ZXVlX3JlcXVlc3QoKSB0byBhdm9pZCB0aGF0IHJlbW92YWwgb2Yg
+dGhlIFNDU0kNCmRldmljZSBjYW4gc3RhcnQgYmVmb3JlIHJlcXVldWVpbmcgaGFzIGhhcHBlbmVk
+LiINCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg==
