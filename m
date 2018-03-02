@@ -1,55 +1,43 @@
-From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH V3] scsi: core: use blk_mq_requeue_request in __scsi_queue_insert
-Date: Fri,  2 Mar 2018 11:31:14 +0800
-Message-ID: <1519961474-15236-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Ganesh Mahendran <opensource.ganesh@gmail.com>
+Subject: Re: [PATCH] scsi_lib: increase {host|target|device}_busy count after
+ dispatch cmd
+Date: Fri, 2 Mar 2018 12:56:26 +0800
+Message-ID: <CADAEsF8OySXKpqBmN-Vi+8md=RpHAyUghO99UnrwJRdD72yWCQ@mail.gmail.com>
+References: <1496655478-4039-1-git-send-email-opensource.ganesh@gmail.com> <1519945861.2675.9.camel@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1519945861.2675.9.camel@sandisk.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Bart.VanAssche@wdc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In scsi core, __scsi_queue_insert should just put request back on
-the queue and retry using the same command as before. However, for
-blk-mq, scsi_mq_requeue_cmd is employed here which will unprepare
-the request. To align with the semantics of __scsi_queue_insert,
-use blk_mq_requeue_request with kick_requeue_list == true and put
-the reference of scsi_device.
+Hi, Bart:
 
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+2018-03-02 7:11 GMT+08:00 Bart Van Assche <Bart.VanAssche@wdc.com>:
+> On Mon, 2017-06-05 at 17:37 +0800, Ganesh Mahendran wrote:
+>> In android system, when there are lots of threads running. Thread A
+>> holding *host_busy* count is easily to be preempted, and if at the
+>> same time, thread B set *host_blocked*, then all other threads will
+>> be io blocked.
+>
+> Hello Ganesh,
+>
+> Have you considered to insert preempt_disable() and preempt_enable() calls
+> where necessary to achieve the same effect? I think that would result in a
+> much less intrusive patch.
 
----
-Changelog:
-V2 -> V3:
- - add commit to explain why we need a put_device in
-   __scsi_queue_insert
- - add reviewed-by
+Yes, preempt_disable()preempt_enable will also achieve the same effect.
+But I just think preempt_disable()preempt_enable may be a little heavy for
+this problem which can be fixed by increaseing {host|target|device}_busy count
+after dispatch cmd.
 
-V1 -> V2:
- - add put_device on scsi_device->sdev_gendev
+Thanks.
 
- drivers/scsi/scsi_lib.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a86df9c..d2f1838 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -191,7 +191,13 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
- 	 */
- 	cmd->result = 0;
- 	if (q->mq_ops) {
--		scsi_mq_requeue_cmd(cmd);
-+		/*
-+		 * scsi_device.sdev_gendev will be get every time in .get_budget and
-+		 * be put in scsi_end_request. Hence we need to put the reference
-+		 * here when we decide to requeue request.
-+		 */
-+		blk_mq_requeue_request(cmd->request, true);
-+		put_device(&device->sdev_gendev);
- 		return;
- 	}
- 	spin_lock_irqsave(q->queue_lock, flags);
--- 
-2.7.4
+>
+> Thanks,
+>
+> Bart.
+>
+>
