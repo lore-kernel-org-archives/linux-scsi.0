@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 6/8] scsi: hisi_sas: remove unused variable hisi_sas_devices.running_req
-Date: Fri, 2 Mar 2018 23:06:20 +0800
-Message-ID: <1520003182-26277-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 2/8] scsi: hisi_sas: support the property of signal attenuation for v2 hw
+Date: Fri, 2 Mar 2018 23:06:16 +0800
+Message-ID: <1520003182-26277-3-git-send-email-john.garry@huawei.com>
 References: <1520003182-26277-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,89 +9,94 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1520003182-26277-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-The structure element hisi_sas_devices.running_req to count how
-many commands are active is in effect only ever written in the
-code, so remove it.
+The register SAS_PHY_CTRL is configured according to signal quality.
+The signal quality is calculated by signal attenuation of hardware
+physical link. It may be different for different PCB layout.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+So, in order to give better support to new board, this patch add
+support to reading the devicetree property, hisi-signal-attenuation.
+Of course, we still keep an default value in driver to adapt old
+board.
+
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       | 1 -
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 9 ---------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 3 ---
- 3 files changed, 13 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 39 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e7fd287..d1153e8 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -175,7 +175,6 @@ struct hisi_sas_device {
- 	struct hisi_sas_dq	*dq;
- 	struct list_head	list;
- 	u64 attached_phy;
--	atomic64_t running_req;
- 	enum sas_device_type	dev_type;
- 	int device_id;
- 	int sata_idx;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9ff8790..88ad8d4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -200,8 +200,6 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 4ccb61e..3a0b4ed 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -406,6 +406,17 @@ struct hisi_sas_err_record_v2 {
+ 	__le32 dma_rx_err_type;
+ };
  
- 	if (task) {
- 		struct device *dev = hisi_hba->dev;
--		struct domain_device *device = task->dev;
--		struct hisi_sas_device *sas_dev = device->lldd_dev;
- 
- 		if (!task->lldd_task)
- 			return;
-@@ -213,9 +211,6 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 				dma_unmap_sg(dev, task->scatter,
- 					     task->num_scatter,
- 					     task->data_dir);
--
--		if (sas_dev)
--			atomic64_dec(&sas_dev->running_req);
++struct signal_attenuation_s {
++	u32 de_emphasis;
++	u32 preshoot;
++	u32 boost;
++};
++
++struct sig_atten_lu_s {
++	const struct signal_attenuation_s *att;
++	u32 sas_phy_ctrl;
++};
++
+ static const struct hisi_sas_hw_error one_bit_ecc_errors[] = {
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_DQE_ECC_1B_OFF),
+@@ -1130,9 +1141,16 @@ static void phys_try_accept_stp_links_v2_hw(struct hisi_hba *hisi_hba)
  	}
+ }
  
- 	if (slot->buf)
-@@ -431,8 +426,6 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
++static const struct signal_attenuation_s x6000 = {9200, 0, 10476};
++static const struct sig_atten_lu_s sig_atten_lu[] = {
++	{ &x6000, 0x3016a68 },
++};
++
+ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = hisi_hba->dev;
++	u32 sas_phy_ctrl = 0x30b9908;
++	u32 signal[3];
+ 	int i;
  
- 	dq->slot_prep = slot;
--
--	atomic64_inc(&sas_dev->running_req);
- 	++(*pass);
+ 	/* Global registers init */
+@@ -1176,9 +1194,28 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ 	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
+ 	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
  
- 	return 0;
-@@ -1517,8 +1510,6 @@ static int hisi_sas_query_task(struct sas_task *task)
- 
- 	dq->slot_prep = slot;
- 
--	atomic64_inc(&sas_dev->running_req);
--
- 	/* send abort command to the chip */
- 	hisi_hba->hw->start_delivery(dq);
- 	spin_unlock_irqrestore(&dq->lock, flags_dq);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 2eb8980..8dd0e6a6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1407,9 +1407,6 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
- 	}
- 
- out:
--	if (sas_dev)
--		atomic64_dec(&sas_dev->running_req);
--
- 	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 	sts = ts->stat;
- 
++	/* Get sas_phy_ctrl value to deal with TX FFE issue. */
++	if (!device_property_read_u32_array(dev, "hisi-signal-attenuation",
++					    signal, ARRAY_SIZE(signal))) {
++		for (i = 0; i < ARRAY_SIZE(sig_atten_lu); i++) {
++			const struct sig_atten_lu_s *lookup = &sig_atten_lu[i];
++			const struct signal_attenuation_s *att = lookup->att;
++
++			if ((signal[0] == att->de_emphasis) &&
++			    (signal[1] == att->preshoot) &&
++			    (signal[2] == att->boost)) {
++				sas_phy_ctrl = lookup->sas_phy_ctrl;
++				break;
++			}
++		}
++
++		if (i == ARRAY_SIZE(sig_atten_lu))
++			dev_warn(dev, "unknown signal attenuation values, using default PHY ctrl config\n");
++	}
++
+ 	for (i = 0; i < hisi_hba->n_phy; i++) {
+ 		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x855);
+-		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, 0x30b9908);
++		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, sas_phy_ctrl);
+ 		hisi_sas_phy_write32(hisi_hba, i, SL_TOUT_CFG, 0x7d7d7d7d);
+ 		hisi_sas_phy_write32(hisi_hba, i, SL_CONTROL, 0x0);
+ 		hisi_sas_phy_write32(hisi_hba, i, TXID_AUTO, 0x2);
 -- 
 1.9.1
