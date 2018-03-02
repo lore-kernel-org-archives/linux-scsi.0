@@ -1,45 +1,77 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi_lib: increase {host|target|device}_busy count after
- dispatch cmd
-Date: Fri, 2 Mar 2018 05:12:36 +0000
-Message-ID: <1519967555.25932.3.camel@wdc.com>
-References: <1496655478-4039-1-git-send-email-opensource.ganesh@gmail.com>
-         <1519945861.2675.9.camel@sandisk.com>
-         <CADAEsF8OySXKpqBmN-Vi+8md=RpHAyUghO99UnrwJRdD72yWCQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Can Guo <cang@codeaurora.org>
+Subject: [PATCH v1] scsi: ufs: add 2 lane support
+Date: Fri,  2 Mar 2018 16:18:08 +0800
+Message-ID: <20180302082346.8188-1-cang@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CADAEsF8OySXKpqBmN-Vi+8md=RpHAyUghO99UnrwJRdD72yWCQ@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <6930C493EC1BC64093922311B04894FA@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "opensource.ganesh@gmail.com" <opensource.ganesh@gmail.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hch@lst.de" <hch@lst.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Can Guo <cang@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE4LTAzLTAyIGF0IDEyOjU2ICswODAwLCBHYW5lc2ggTWFoZW5kcmFuIHdyb3Rl
-Og0KPiAyMDE4LTAzLTAyIDc6MTEgR01UKzA4OjAwIEJhcnQgVmFuIEFzc2NoZSA8QmFydC5WYW5B
-c3NjaGVAd2RjLmNvbT46DQo+ID4gT24gTW9uLCAyMDE3LTA2LTA1IGF0IDE3OjM3ICswODAwLCBH
-YW5lc2ggTWFoZW5kcmFuIHdyb3RlOg0KPiA+ID4gSW4gYW5kcm9pZCBzeXN0ZW0sIHdoZW4gdGhl
-cmUgYXJlIGxvdHMgb2YgdGhyZWFkcyBydW5uaW5nLiBUaHJlYWQgQQ0KPiA+ID4gaG9sZGluZyAq
-aG9zdF9idXN5KiBjb3VudCBpcyBlYXNpbHkgdG8gYmUgcHJlZW1wdGVkLCBhbmQgaWYgYXQgdGhl
-DQo+ID4gPiBzYW1lIHRpbWUsIHRocmVhZCBCIHNldCAqaG9zdF9ibG9ja2VkKiwgdGhlbiBhbGwg
-b3RoZXIgdGhyZWFkcyB3aWxsDQo+ID4gPiBiZSBpbyBibG9ja2VkLg0KPiA+IA0KPiA+IEhhdmUg
-eW91IGNvbnNpZGVyZWQgdG8gaW5zZXJ0IHByZWVtcHRfZGlzYWJsZSgpIGFuZCBwcmVlbXB0X2Vu
-YWJsZSgpIGNhbGxzDQo+ID4gd2hlcmUgbmVjZXNzYXJ5IHRvIGFjaGlldmUgdGhlIHNhbWUgZWZm
-ZWN0PyBJIHRoaW5rIHRoYXQgd291bGQgcmVzdWx0IGluIGENCj4gPiBtdWNoIGxlc3MgaW50cnVz
-aXZlIHBhdGNoLg0KPiANCj4gWWVzLCBwcmVlbXB0X2Rpc2FibGUoKXByZWVtcHRfZW5hYmxlIHdp
-bGwgYWxzbyBhY2hpZXZlIHRoZSBzYW1lIGVmZmVjdC4NCj4gQnV0IEkganVzdCB0aGluayBwcmVl
-bXB0X2Rpc2FibGUoKXByZWVtcHRfZW5hYmxlIG1heSBiZSBhIGxpdHRsZSBoZWF2eSBmb3INCj4g
-dGhpcyBwcm9ibGVtIHdoaWNoIGNhbiBiZSBmaXhlZCBieSBpbmNyZWFzZWluZyB7aG9zdHx0YXJn
-ZXR8ZGV2aWNlfV9idXN5IGNvdW50DQo+IGFmdGVyIGRpc3BhdGNoIGNtZC4NCg0KSGVsbG8gR2Fu
-ZXNoLA0KDQpJZiB0aGUge2hvc3QsdGFyZ2V0LGRldmljZX1fYnVzeSBjb3VudHMgd291bGQgYmUg
-aW5jcmVhc2VkIGFmdGVyIGRpc3BhdGNoLA0KY291bGQgdGhhdCByZXN1bHQgaW4gc2NzaV9kZXZp
-Y2VfdW5idXN5KCkgYmVpbmcgY2FsbGVkIGZyb20gdGhlIGNvbXBsZXRpb24NCnBhdGggYmVmb3Jl
-IHRoZXNlIGNvdW50cyBoYXZlIGJlZW4gaW5jcmVhc2VkPw0KDQpBZGRpdGlvbmFsbHksIGhhdmUg
-eW91IG5vdGljZWQgdGhhdCB5b3VyIHBhdGNoIGRvZXMgbm90IGFwcGx5IGFueW1vcmUgdG8NCnJl
-Y2VudCBrZXJuZWxzIHNpbmNlIHNvbWUgb2YgdGhlIGNvdW50ZXJzIGFyZSBub3cgaW5jcmVhc2Vk
-IGZyb20gaW5zaWRlDQpzY3NpX21xX2dldF9idWRnZXQoKSwgYSBmdW5jdGlvbiB0aGF0IGlzIGNh
-bGxlZCBmcm9tIGluc2lkZSB0aGUgYmxvY2sgbGF5ZXI/DQoNClRoYW5rcywNCg0KQmFydC4NCg0K
-DQo=
+From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+
+Qcom ufs controller v3.1.0 supports 2 lanes, add support
+to configure 2 lanes during phy initialization.
+
+Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 2b38db2..51889ad 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -113,10 +113,10 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+ 	if (!host->is_lane_clks_enabled)
+ 		return;
+ 
+-	if (host->hba->lanes_per_direction > 1)
++	if (host->tx_l1_sync_clk)
+ 		clk_disable_unprepare(host->tx_l1_sync_clk);
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+-	if (host->hba->lanes_per_direction > 1)
++	if (host->rx_l1_sync_clk)
+ 		clk_disable_unprepare(host->rx_l1_sync_clk);
+ 	clk_disable_unprepare(host->rx_l0_sync_clk);
+ 
+@@ -147,18 +147,15 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ 		if (err)
+ 			goto disable_tx_l0;
+ 
+-		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+-			host->tx_l1_sync_clk);
+-		if (err)
+-			goto disable_rx_l1;
++		/* The tx lane1 clk could be muxed, hence keep this optional */
++		if (host->tx_l1_sync_clk)
++			ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
++						 host->tx_l1_sync_clk);
+ 	}
+ 
+ 	host->is_lane_clks_enabled = true;
+ 	goto out;
+ 
+-disable_rx_l1:
+-	if (host->hba->lanes_per_direction > 1)
+-		clk_disable_unprepare(host->rx_l1_sync_clk);
+ disable_tx_l0:
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+ disable_rx_l0:
+@@ -189,8 +186,9 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 		if (err)
+ 			goto out;
+ 
+-		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+-			&host->tx_l1_sync_clk);
++		/* The tx lane1 clk could be muxed, hence keep this optional */
++		ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
++					&host->tx_l1_sync_clk);
+ 	}
+ out:
+ 	return err;
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
