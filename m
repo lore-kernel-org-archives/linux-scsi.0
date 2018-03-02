@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 2/8] scsi: hisi_sas: support the property of signal attenuation for v2 hw
-Date: Fri, 2 Mar 2018 23:06:16 +0800
-Message-ID: <1520003182-26277-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 3/8] scsi: hisi_sas: fix the issue of link rate inconsistency
+Date: Fri, 2 Mar 2018 23:06:17 +0800
+Message-ID: <1520003182-26277-4-git-send-email-john.garry@huawei.com>
 References: <1520003182-26277-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,89 +14,128 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-The register SAS_PHY_CTRL is configured according to signal quality.
-The signal quality is calculated by signal attenuation of hardware
-physical link. It may be different for different PCB layout.
+In sysfs, there are two files about minimum linkrate, and also
+two files for maximum linkrate. Take maximum linkrate example,
+maximum_linkrate_hw is read-only and indicated by the register
+HARD_PHY_LINKRATE, and maximum_linkrate is read-write and
+corresponding to the register PROG_PHY_LINK_RATE.
 
-So, in order to give better support to new board, this patch add
-support to reading the devicetree property, hisi-signal-attenuation.
-Of course, we still keep an default value in driver to adapt old
-board.
+But in the function phy_up_v*_hw(), we get *_linkrate value from
+HARD_PHY_LINKRATE. It is not right. This patch is to fix this issue.
+
+Unreferenced PHY-interrupt enum is also removed for v3 hw.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 39 +++++++++++++++++++++++++++++++++-
- 1 file changed, 38 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  1 -
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  8 +-------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +------------
+ 4 files changed, 4 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 2d4dbed..9d16372 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -683,6 +683,8 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+ 
+ 	phy->hisi_hba = hisi_hba;
+ 	phy->port = NULL;
++	phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
++	phy->maximum_linkrate = hisi_hba->hw->phy_get_max_linkrate();
+ 	sas_phy->enabled = (phy_no < hisi_hba->n_phy) ? 1 : 0;
+ 	sas_phy->class = SAS;
+ 	sas_phy->iproto = SAS_PROTOCOL_ALL;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 679e76f..38bbda9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -873,7 +873,6 @@ static void phy_set_linkrate_v1_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 	sas_phy->phy->maximum_linkrate = max;
+ 	sas_phy->phy->minimum_linkrate = min;
+ 
+-	min -= SAS_LINK_RATE_1_5_GBPS;
+ 	max -= SAS_LINK_RATE_1_5_GBPS;
+ 
+ 	for (i = 0; i <= max; i++)
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 4ccb61e..3a0b4ed 100644
+index 3a0b4ed..edd0c89 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -406,6 +406,17 @@ struct hisi_sas_err_record_v2 {
- 	__le32 dma_rx_err_type;
- };
+@@ -1603,7 +1603,6 @@ static void phy_set_linkrate_v2_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 	sas_phy->phy->maximum_linkrate = max;
+ 	sas_phy->phy->minimum_linkrate = min;
  
-+struct signal_attenuation_s {
-+	u32 de_emphasis;
-+	u32 preshoot;
-+	u32 boost;
-+};
-+
-+struct sig_atten_lu_s {
-+	const struct signal_attenuation_s *att;
-+	u32 sas_phy_ctrl;
-+};
-+
- static const struct hisi_sas_hw_error one_bit_ecc_errors[] = {
- 	{
- 		.irq_msk = BIT(SAS_ECC_INTR_DQE_ECC_1B_OFF),
-@@ -1130,9 +1141,16 @@ static void phys_try_accept_stp_links_v2_hw(struct hisi_hba *hisi_hba)
- 	}
- }
+-	min -= SAS_LINK_RATE_1_5_GBPS;
+ 	max -= SAS_LINK_RATE_1_5_GBPS;
  
-+static const struct signal_attenuation_s x6000 = {9200, 0, 10476};
-+static const struct sig_atten_lu_s sig_atten_lu[] = {
-+	{ &x6000, 0x3016a68 },
-+};
-+
- static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ 	for (i = 0; i <= max; i++)
+@@ -2684,7 +2683,7 @@ static int prep_abort_v2_hw(struct hisi_hba *hisi_hba,
+ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
  {
+ 	int i, res = IRQ_HANDLED;
+-	u32 port_id, link_rate, hard_phy_linkrate;
++	u32 port_id, link_rate;
+ 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
  	struct device *dev = hisi_hba->dev;
-+	u32 sas_phy_ctrl = 0x30b9908;
-+	u32 signal[3];
- 	int i;
+@@ -2723,11 +2722,6 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 	}
  
- 	/* Global registers init */
-@@ -1176,9 +1194,28 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
- 	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
+ 	sas_phy->linkrate = link_rate;
+-	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
+-						HARD_PHY_LINKRATE);
+-	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
+-	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
+-
+ 	sas_phy->oob_mode = SAS_OOB_MODE;
+ 	memcpy(sas_phy->attached_sas_addr, &id->sas_addr, SAS_ADDR_SIZE);
+ 	dev_info(dev, "phyup: phy%d link_rate=%d\n", phy_no, link_rate);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index a1f1868..1ee95ab 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -340,12 +340,6 @@ struct hisi_sas_err_record_v3 {
+ #define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
+ #define HISI_SAS_MSI_COUNT_V3_HW 32
  
-+	/* Get sas_phy_ctrl value to deal with TX FFE issue. */
-+	if (!device_property_read_u32_array(dev, "hisi-signal-attenuation",
-+					    signal, ARRAY_SIZE(signal))) {
-+		for (i = 0; i < ARRAY_SIZE(sig_atten_lu); i++) {
-+			const struct sig_atten_lu_s *lookup = &sig_atten_lu[i];
-+			const struct signal_attenuation_s *att = lookup->att;
-+
-+			if ((signal[0] == att->de_emphasis) &&
-+			    (signal[1] == att->preshoot) &&
-+			    (signal[2] == att->boost)) {
-+				sas_phy_ctrl = lookup->sas_phy_ctrl;
-+				break;
-+			}
-+		}
-+
-+		if (i == ARRAY_SIZE(sig_atten_lu))
-+			dev_warn(dev, "unknown signal attenuation values, using default PHY ctrl config\n");
-+	}
-+
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
- 		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x855);
--		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, 0x30b9908);
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, sas_phy_ctrl);
- 		hisi_sas_phy_write32(hisi_hba, i, SL_TOUT_CFG, 0x7d7d7d7d);
- 		hisi_sas_phy_write32(hisi_hba, i, SL_CONTROL, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, TXID_AUTO, 0x2);
+-enum {
+-	HISI_SAS_PHY_PHY_UPDOWN,
+-	HISI_SAS_PHY_CHNL_INT,
+-	HISI_SAS_PHY_INT_NR
+-};
+-
+ #define DIR_NO_DATA 0
+ #define DIR_TO_INI 1
+ #define DIR_TO_DEVICE 2
+@@ -1121,7 +1115,7 @@ static int prep_abort_v3_hw(struct hisi_hba *hisi_hba,
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+-	u32 context, port_id, link_rate, hard_phy_linkrate;
++	u32 context, port_id, link_rate;
+ 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 	struct device *dev = hisi_hba->dev;
+@@ -1139,10 +1133,6 @@ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 		goto end;
+ 	}
+ 	sas_phy->linkrate = link_rate;
+-	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
+-						HARD_PHY_LINKRATE);
+-	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
+-	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
+ 	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
+ 
+ 	/* Check for SATA dev */
+@@ -1864,7 +1854,6 @@ static void phy_set_linkrate_v3_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 	sas_phy->phy->maximum_linkrate = max;
+ 	sas_phy->phy->minimum_linkrate = min;
+ 
+-	min -= SAS_LINK_RATE_1_5_GBPS;
+ 	max -= SAS_LINK_RATE_1_5_GBPS;
+ 
+ 	for (i = 0; i <= max; i++)
 -- 
 1.9.1
