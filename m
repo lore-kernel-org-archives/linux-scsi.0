@@ -1,43 +1,45 @@
-From: Ganesh Mahendran <opensource.ganesh@gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] scsi_lib: increase {host|target|device}_busy count after
  dispatch cmd
-Date: Fri, 2 Mar 2018 12:56:26 +0800
-Message-ID: <CADAEsF8OySXKpqBmN-Vi+8md=RpHAyUghO99UnrwJRdD72yWCQ@mail.gmail.com>
-References: <1496655478-4039-1-git-send-email-opensource.ganesh@gmail.com> <1519945861.2675.9.camel@sandisk.com>
+Date: Fri, 2 Mar 2018 05:12:36 +0000
+Message-ID: <1519967555.25932.3.camel@wdc.com>
+References: <1496655478-4039-1-git-send-email-opensource.ganesh@gmail.com>
+         <1519945861.2675.9.camel@sandisk.com>
+         <CADAEsF8OySXKpqBmN-Vi+8md=RpHAyUghO99UnrwJRdD72yWCQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1519945861.2675.9.camel@sandisk.com>
+In-Reply-To: <CADAEsF8OySXKpqBmN-Vi+8md=RpHAyUghO99UnrwJRdD72yWCQ@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <6930C493EC1BC64093922311B04894FA@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "opensource.ganesh@gmail.com" <opensource.ganesh@gmail.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hch@lst.de" <hch@lst.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi, Bart:
-
-2018-03-02 7:11 GMT+08:00 Bart Van Assche <Bart.VanAssche@wdc.com>:
-> On Mon, 2017-06-05 at 17:37 +0800, Ganesh Mahendran wrote:
->> In android system, when there are lots of threads running. Thread A
->> holding *host_busy* count is easily to be preempted, and if at the
->> same time, thread B set *host_blocked*, then all other threads will
->> be io blocked.
->
-> Hello Ganesh,
->
-> Have you considered to insert preempt_disable() and preempt_enable() calls
-> where necessary to achieve the same effect? I think that would result in a
-> much less intrusive patch.
-
-Yes, preempt_disable()preempt_enable will also achieve the same effect.
-But I just think preempt_disable()preempt_enable may be a little heavy for
-this problem which can be fixed by increaseing {host|target|device}_busy count
-after dispatch cmd.
-
-Thanks.
-
->
-> Thanks,
->
-> Bart.
->
->
+T24gRnJpLCAyMDE4LTAzLTAyIGF0IDEyOjU2ICswODAwLCBHYW5lc2ggTWFoZW5kcmFuIHdyb3Rl
+Og0KPiAyMDE4LTAzLTAyIDc6MTEgR01UKzA4OjAwIEJhcnQgVmFuIEFzc2NoZSA8QmFydC5WYW5B
+c3NjaGVAd2RjLmNvbT46DQo+ID4gT24gTW9uLCAyMDE3LTA2LTA1IGF0IDE3OjM3ICswODAwLCBH
+YW5lc2ggTWFoZW5kcmFuIHdyb3RlOg0KPiA+ID4gSW4gYW5kcm9pZCBzeXN0ZW0sIHdoZW4gdGhl
+cmUgYXJlIGxvdHMgb2YgdGhyZWFkcyBydW5uaW5nLiBUaHJlYWQgQQ0KPiA+ID4gaG9sZGluZyAq
+aG9zdF9idXN5KiBjb3VudCBpcyBlYXNpbHkgdG8gYmUgcHJlZW1wdGVkLCBhbmQgaWYgYXQgdGhl
+DQo+ID4gPiBzYW1lIHRpbWUsIHRocmVhZCBCIHNldCAqaG9zdF9ibG9ja2VkKiwgdGhlbiBhbGwg
+b3RoZXIgdGhyZWFkcyB3aWxsDQo+ID4gPiBiZSBpbyBibG9ja2VkLg0KPiA+IA0KPiA+IEhhdmUg
+eW91IGNvbnNpZGVyZWQgdG8gaW5zZXJ0IHByZWVtcHRfZGlzYWJsZSgpIGFuZCBwcmVlbXB0X2Vu
+YWJsZSgpIGNhbGxzDQo+ID4gd2hlcmUgbmVjZXNzYXJ5IHRvIGFjaGlldmUgdGhlIHNhbWUgZWZm
+ZWN0PyBJIHRoaW5rIHRoYXQgd291bGQgcmVzdWx0IGluIGENCj4gPiBtdWNoIGxlc3MgaW50cnVz
+aXZlIHBhdGNoLg0KPiANCj4gWWVzLCBwcmVlbXB0X2Rpc2FibGUoKXByZWVtcHRfZW5hYmxlIHdp
+bGwgYWxzbyBhY2hpZXZlIHRoZSBzYW1lIGVmZmVjdC4NCj4gQnV0IEkganVzdCB0aGluayBwcmVl
+bXB0X2Rpc2FibGUoKXByZWVtcHRfZW5hYmxlIG1heSBiZSBhIGxpdHRsZSBoZWF2eSBmb3INCj4g
+dGhpcyBwcm9ibGVtIHdoaWNoIGNhbiBiZSBmaXhlZCBieSBpbmNyZWFzZWluZyB7aG9zdHx0YXJn
+ZXR8ZGV2aWNlfV9idXN5IGNvdW50DQo+IGFmdGVyIGRpc3BhdGNoIGNtZC4NCg0KSGVsbG8gR2Fu
+ZXNoLA0KDQpJZiB0aGUge2hvc3QsdGFyZ2V0LGRldmljZX1fYnVzeSBjb3VudHMgd291bGQgYmUg
+aW5jcmVhc2VkIGFmdGVyIGRpc3BhdGNoLA0KY291bGQgdGhhdCByZXN1bHQgaW4gc2NzaV9kZXZp
+Y2VfdW5idXN5KCkgYmVpbmcgY2FsbGVkIGZyb20gdGhlIGNvbXBsZXRpb24NCnBhdGggYmVmb3Jl
+IHRoZXNlIGNvdW50cyBoYXZlIGJlZW4gaW5jcmVhc2VkPw0KDQpBZGRpdGlvbmFsbHksIGhhdmUg
+eW91IG5vdGljZWQgdGhhdCB5b3VyIHBhdGNoIGRvZXMgbm90IGFwcGx5IGFueW1vcmUgdG8NCnJl
+Y2VudCBrZXJuZWxzIHNpbmNlIHNvbWUgb2YgdGhlIGNvdW50ZXJzIGFyZSBub3cgaW5jcmVhc2Vk
+IGZyb20gaW5zaWRlDQpzY3NpX21xX2dldF9idWRnZXQoKSwgYSBmdW5jdGlvbiB0aGF0IGlzIGNh
+bGxlZCBmcm9tIGluc2lkZSB0aGUgYmxvY2sgbGF5ZXI/DQoNClRoYW5rcywNCg0KQmFydC4NCg0K
+DQo=
