@@ -1,14 +1,14 @@
 From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: [PATCH AUTOSEL for 4.14 59/84] scsi: devinfo: apply to HP XP the same
- flags as Hitachi VSP
-Date: Sat, 3 Mar 2018 22:26:34 +0000
-Message-ID: <20180303222518.26271-59-alexander.levin@microsoft.com>
-References: <20180303222518.26271-1-alexander.levin@microsoft.com>
+Subject: [PATCH AUTOSEL for 4.15 075/102] scsi: devinfo: apply to HP XP the
+ same flags as Hitachi VSP
+Date: Sat, 3 Mar 2018 22:24:53 +0000
+Message-ID: <20180303222318.26006-75-alexander.levin@microsoft.com>
+References: <20180303222318.26006-1-alexander.levin@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180303222518.26271-1-alexander.levin@microsoft.com>
+In-Reply-To: <20180303222318.26006-1-alexander.levin@microsoft.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
@@ -43,7 +43,7 @@ Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 42f0a1a6f689..cfc095f45e26 100644
+index b12e226eb448..0a17b9e5dc35 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
 @@ -181,7 +181,7 @@ static struct {
