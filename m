@@ -1,42 +1,56 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
 Subject: Re: [PATCH V3] scsi: core: use blk_mq_requeue_request in
  __scsi_queue_insert
-Date: Fri, 2 Mar 2018 16:31:33 +0000
-Message-ID: <1520008291.2855.7.camel@wdc.com>
+Date: Sat, 3 Mar 2018 09:41:40 +0800
+Message-ID: <e867f55a-a027-4658-1e11-50a65f383626@oracle.com>
 References: <1519961474-15236-1-git-send-email-jianchao.w.wang@oracle.com>
+ <1520008291.2855.7.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1519961474-15236-1-git-send-email-jianchao.w.wang@oracle.com>
+In-Reply-To: <1520008291.2855.7.camel@wdc.com>
 Content-Language: en-US
-Content-ID: <34E3BA2ED5E63C429BC5BF0DC23876A6@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jianchao.w.wang@oracle.com" <jianchao.w.wang@oracle.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE4LTAzLTAyIGF0IDExOjMxICswODAwLCBKaWFuY2hhbyBXYW5nIHdyb3RlOg0K
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kvc2Nz
-aV9saWIuYw0KPiBpbmRleCBhODZkZjljLi5kMmYxODM4IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJz
-L3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiBAQCAt
-MTkxLDcgKzE5MSwxMyBAQCBzdGF0aWMgdm9pZCBfX3Njc2lfcXVldWVfaW5zZXJ0KHN0cnVjdCBz
-Y3NpX2NtbmQgKmNtZCwgaW50IHJlYXNvbiwgYm9vbCB1bmJ1c3kpDQo+ICAJICovDQo+ICAJY21k
-LT5yZXN1bHQgPSAwOw0KPiAgCWlmIChxLT5tcV9vcHMpIHsNCj4gLQkJc2NzaV9tcV9yZXF1ZXVl
-X2NtZChjbWQpOw0KPiArCQkvKg0KPiArCQkgKiBzY3NpX2RldmljZS5zZGV2X2dlbmRldiB3aWxs
-IGJlIGdldCBldmVyeSB0aW1lIGluIC5nZXRfYnVkZ2V0IGFuZA0KPiArCQkgKiBiZSBwdXQgaW4g
-c2NzaV9lbmRfcmVxdWVzdC4gSGVuY2Ugd2UgbmVlZCB0byBwdXQgdGhlIHJlZmVyZW5jZQ0KPiAr
-CQkgKiBoZXJlIHdoZW4gd2UgZGVjaWRlIHRvIHJlcXVldWUgcmVxdWVzdC4NCj4gKwkJICovDQo+
-ICsJCWJsa19tcV9yZXF1ZXVlX3JlcXVlc3QoY21kLT5yZXF1ZXN0LCB0cnVlKTsNCj4gKwkJcHV0
-X2RldmljZSgmZGV2aWNlLT5zZGV2X2dlbmRldik7DQo+ICAJCXJldHVybjsNCj4gIAl9DQo+ICAJ
-c3Bpbl9sb2NrX2lycXNhdmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOw0KDQpQbGVhc2UgY29uc2lk
-ZXIgdG8gY2hhbmdlIHRoZSBuZXcgY29tbWVudCBpbnRvIHNvbWV0aGluZyBsaWtlIHRoZSBmb2xs
-b3dpbmc6DQoiQmVmb3JlIGEgU0NTSSBjb21tYW5kIGlzIGRpc3BhdGNoZWQsIGdldF9kZXZpY2Uo
-JnNkZXYtPnNkZXZfZ2VuZGV2KSBpcyBjYWxsZWQNCmFuZCB0aGUgaG9zdCwgdGFyZ2V0IGFuZCBk
-ZXZpY2UgYnVzeSBjb3VudGVycyBhcmUgaW5jcmVhc2VkLiBTaW5jZSByZXF1ZXVpbmcgYQ0KcmVx
-dWVzdCBjYXVzZXMgdGhlc2UgYWN0aW9ucyB0byBiZSByZXBlYXRlZCBhbmQgc2luY2Ugc2NzaV9k
-ZXZpY2VfdW5idXN5KCkgaGFzDQphbHJlYWR5IGJlZW4gY2FsbGVkLCBwdXRfZGV2aWNlKCZkZXZp
-Y2UtPnNkZXZfZ2VuZGV2KSBtdXN0IHN0aWxsIGJlIGNhbGxlZC4gQ2FsbA0KcHV0X2RldmljZSgp
-IGFmdGVyIGJsa19tcV9yZXF1ZXVlX3JlcXVlc3QoKSB0byBhdm9pZCB0aGF0IHJlbW92YWwgb2Yg
-dGhlIFNDU0kNCmRldmljZSBjYW4gc3RhcnQgYmVmb3JlIHJlcXVldWVpbmcgaGFzIGhhcHBlbmVk
-LiINCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg==
+Hi Bart
+
+Thanks for your kindly response and directive.
+
+On 03/03/2018 12:31 AM, Bart Van Assche wrote:
+> On Fri, 2018-03-02 at 11:31 +0800, Jianchao Wang wrote:
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index a86df9c..d2f1838 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -191,7 +191,13 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+>>  	 */
+>>  	cmd->result = 0;
+>>  	if (q->mq_ops) {
+>> -		scsi_mq_requeue_cmd(cmd);
+>> +		/*
+>> +		 * scsi_device.sdev_gendev will be get every time in .get_budget and
+>> +		 * be put in scsi_end_request. Hence we need to put the reference
+>> +		 * here when we decide to requeue request.
+>> +		 */
+>> +		blk_mq_requeue_request(cmd->request, true);
+>> +		put_device(&device->sdev_gendev);
+>>  		return;
+>>  	}
+>>  	spin_lock_irqsave(q->queue_lock, flags);
+> 
+> Please consider to change the new comment into something like the following:
+> "Before a SCSI command is dispatched, get_device(&sdev->sdev_gendev) is called
+> and the host, target and device busy counters are increased. Since requeuing a
+> request causes these actions to be repeated and since scsi_device_unbusy() has
+> already been called, put_device(&device->sdev_gendev) must still be called. Call
+> put_device() after blk_mq_requeue_request() to avoid that removal of the SCSI
+> device can start before requeueing has happened."
+
+Yes, your comment is more detailed and clearly.
+
+Sincerely
+Jianchao
