@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 2/8] scsi: hisi_sas: support the property of signal attenuation for v2 hw
-Date: Mon, 5 Mar 2018 22:48:44 +0800
-Message-ID: <1520261330-204596-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 1/8] dt-bindings: scsi: hisi_sas: add an property of signal attenuation
+Date: Mon, 5 Mar 2018 22:48:43 +0800
+Message-ID: <1520261330-204596-2-git-send-email-john.garry@huawei.com>
 References: <1520261330-204596-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,89 +14,39 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-The register SAS_PHY_CTRL is configured according to signal quality.
-The signal quality is calculated by signal attenuation of hardware
-physical link. It may be different for different PCB layout.
+For some new boards with hip07 chipset we are required to
+set PHY config registers differently. The hw property which
+determines how to set these registers is in the PHY signal
+attenuation readings.
 
-So, in order to give better support to new board, this patch add
-support to reading the devicetree property, "hisilicon,signal-attenuation".
-Of course, we still keep an default value in driver to adapt old
-board.
+This patch add an devicetree property, "hisilicon,signal-attenuation",
+which is used to describe the signal attenuation of an board.
 
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 39 +++++++++++++++++++++++++++++++++-
- 1 file changed, 38 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 4ccb61e..42b3fd6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -406,6 +406,17 @@ struct hisi_sas_err_record_v2 {
- 	__le32 dma_rx_err_type;
- };
+diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+index df3bef7..8c6659e 100644
+--- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
++++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+@@ -53,6 +53,13 @@ Main node required properties:
+ Optional main node properties:
+  - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
+ 			    "am-max-transmissions" limitation.
++ - hisilicon,signal-attenuation : array of 3 32-bit values, containing de-emphasis,
++		preshoot, and boost attenuation readings for the board. They
++		are used to describe the signal attenuation of the board. These
++		values' range is 7600 to 12400, and used to represent -24dB to
++		24dB.
++		The formula is "y = (x-10000)/10000". For example, 10478
++		means 4.78dB.
  
-+struct signal_attenuation_s {
-+	u32 de_emphasis;
-+	u32 preshoot;
-+	u32 boost;
-+};
-+
-+struct sig_atten_lu_s {
-+	const struct signal_attenuation_s *att;
-+	u32 sas_phy_ctrl;
-+};
-+
- static const struct hisi_sas_hw_error one_bit_ecc_errors[] = {
- 	{
- 		.irq_msk = BIT(SAS_ECC_INTR_DQE_ECC_1B_OFF),
-@@ -1130,9 +1141,16 @@ static void phys_try_accept_stp_links_v2_hw(struct hisi_hba *hisi_hba)
- 	}
- }
- 
-+static const struct signal_attenuation_s x6000 = {9200, 0, 10476};
-+static const struct sig_atten_lu_s sig_atten_lu[] = {
-+	{ &x6000, 0x3016a68 },
-+};
-+
- static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = hisi_hba->dev;
-+	u32 sas_phy_ctrl = 0x30b9908;
-+	u32 signal[3];
- 	int i;
- 
- 	/* Global registers init */
-@@ -1176,9 +1194,28 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
- 	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
- 
-+	/* Get sas_phy_ctrl value to deal with TX FFE issue. */
-+	if (!device_property_read_u32_array(dev, "hisilicon,signal-attenuation",
-+					    signal, ARRAY_SIZE(signal))) {
-+		for (i = 0; i < ARRAY_SIZE(sig_atten_lu); i++) {
-+			const struct sig_atten_lu_s *lookup = &sig_atten_lu[i];
-+			const struct signal_attenuation_s *att = lookup->att;
-+
-+			if ((signal[0] == att->de_emphasis) &&
-+			    (signal[1] == att->preshoot) &&
-+			    (signal[2] == att->boost)) {
-+				sas_phy_ctrl = lookup->sas_phy_ctrl;
-+				break;
-+			}
-+		}
-+
-+		if (i == ARRAY_SIZE(sig_atten_lu))
-+			dev_warn(dev, "unknown signal attenuation values, using default PHY ctrl config\n");
-+	}
-+
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
- 		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x855);
--		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, 0x30b9908);
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, sas_phy_ctrl);
- 		hisi_sas_phy_write32(hisi_hba, i, SL_TOUT_CFG, 0x7d7d7d7d);
- 		hisi_sas_phy_write32(hisi_hba, i, SL_CONTROL, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, TXID_AUTO, 0x2);
+ Example:
+ 	sas0: sas@c1000000 {
 -- 
 1.9.1
