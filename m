@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 1/4] scsi: hpsa: Use memdup_user() rather than duplicating its
- implementation
-Date: Mon, 5 Mar 2018 09:31:35 +0100
-Message-ID: <1feebb55-05f4-a4f7-b478-efa57639c431@users.sourceforge.net>
+Subject: [PATCH 2/4] scsi: hpsa: Less function calls in
+ hpsa_big_passthru_ioctl() after error detection
+Date: Mon, 5 Mar 2018 09:32:31 +0100
+Message-ID: <e53f792c-0062-1b7a-a914-fa5f62b9a5c9@users.sourceforge.net>
 References: <f013341a-e3b2-69a7-4918-8bb3d109f0cc@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -16,43 +16,90 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 4 Mar 2018 21:19:52 +0100
+Date: Sun, 4 Mar 2018 22:00:19 +0100
 
-* Reuse existing functionality from memdup_user() instead of keeping
-  duplicate source code.
+The function "kfree" was called in a few cases by
+the hpsa_big_passthru_ioctl() function during error handling
+even if the passed variable contained a null pointer.
 
-  This issue was detected by using the Coccinelle software.
+* Adjust jump targets.
 
-* Return directly after this function call failed at the beginning.
+* Delete two initialisations and a check (for the local variable "buff")
+  which became unnecessary with this refactoring.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/scsi/hpsa.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ drivers/scsi/hpsa.c | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5293e6827ce5..b35248becef9 100644
+index b35248becef9..45177ead811f 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6390,15 +6390,10 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		return -EINVAL;
- 	if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
--	ioc = kmalloc(sizeof(*ioc), GFP_KERNEL);
--	if (!ioc) {
--		status = -ENOMEM;
--		goto cleanup1;
--	}
--	if (copy_from_user(ioc, argp, sizeof(*ioc))) {
--		status = -EFAULT;
--		goto cleanup1;
--	}
-+	ioc = memdup_user(argp, sizeof(*ioc));
-+	if (IS_ERR(ioc))
-+		return PTR_ERR(ioc);
-+
+@@ -6377,8 +6377,8 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ {
+ 	BIG_IOCTL_Command_struct *ioc;
+ 	struct CommandList *c;
+-	unsigned char **buff = NULL;
+-	int *buff_size = NULL;
++	unsigned char **buff;
++	int *buff_size;
+ 	u64 temp64;
+ 	BYTE sg_used = 0;
+ 	int status = 0;
+@@ -6397,26 +6397,26 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
  	if ((ioc->buf_size < 1) &&
  	    (ioc->Request.Type.Direction != XFER_NONE)) {
  		status = -EINVAL;
+-		goto cleanup1;
++		goto free_ioc;
+ 	}
+ 	/* Check kmalloc limits  using all SGs */
+ 	if (ioc->malloc_size > MAX_KMALLOC_SIZE) {
+ 		status = -EINVAL;
+-		goto cleanup1;
++		goto free_ioc;
+ 	}
+ 	if (ioc->buf_size > ioc->malloc_size * SG_ENTRIES_IN_CMD) {
+ 		status = -EINVAL;
+-		goto cleanup1;
+-	}
+-	buff = kzalloc(SG_ENTRIES_IN_CMD * sizeof(char *), GFP_KERNEL);
+-	if (!buff) {
+-		status = -ENOMEM;
+-		goto cleanup1;
++		goto free_ioc;
+ 	}
+ 	buff_size = kmalloc(SG_ENTRIES_IN_CMD * sizeof(int), GFP_KERNEL);
+ 	if (!buff_size) {
+ 		status = -ENOMEM;
+-		goto cleanup1;
++		goto free_ioc;
++	}
++	buff = kzalloc(SG_ENTRIES_IN_CMD * sizeof(char *), GFP_KERNEL);
++	if (!buff) {
++		status = -ENOMEM;
++		goto free_buff_size;
+ 	}
+ 	left = ioc->buf_size;
+ 	data_ptr = ioc->buf;
+@@ -6501,14 +6501,16 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ cleanup0:
+ 	cmd_free(h, c);
+ cleanup1:
+-	if (buff) {
++	{
+ 		int i;
+ 
+ 		for (i = 0; i < sg_used; i++)
+ 			kfree(buff[i]);
+ 		kfree(buff);
+ 	}
++free_buff_size:
+ 	kfree(buff_size);
++free_ioc:
+ 	kfree(ioc);
+ 	return status;
+ }
 -- 
 2.16.2
