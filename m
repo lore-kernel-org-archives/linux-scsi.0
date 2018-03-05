@@ -1,60 +1,31 @@
-From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-Subject: Re:[PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
-Date: Mon, 5 Mar 2018 14:56:51 +0800
-Message-ID: <tencent_75DC38C65689608F38146CF0@qq.com>
-References: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
-        <tencent_3B2D19AE6395B45001767B9B@qq.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 0/4] SCSI-HPSA: Adjustments for hpsa_big_passthru_ioctl()
+Date: Mon, 5 Mar 2018 09:30:15 +0100
+Message-ID: <f013341a-e3b2-69a7-4918-8bb3d109f0cc@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <tencent_3B2D19AE6395B45001767B9B@qq.com>
-Sender: stable-owner@vger.kernel.org
-To: =?utf-8?B?SmFtZXMgU21hcnQ=?= <james.smart@broadcom.com>, =?utf-8?B?RGljayBLZW5uZWR5?= <dick.kennedy@broadcom.com>
-Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-GB
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Don Brace <don.brace@microsemi.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Tm8gb25lIGhhcyB0aGUgc2FtZSBwcm9ibGVtPyBPciB0aGlzIHBhdGNoIG5lZWQgaW1wcm92
-ZT8NCg0KSHVhY2FpDQogDQotLS0tLS0tLS0tLS0tLS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0t
-LS0tLS0tLS0tDQpGcm9tOiAgIumZiOWNjuaJjSI8Y2hlbmhjQGxlbW90ZS5jb20+Ow0KRGF0
-ZTogIFRodSwgTWFyIDEsIDIwMTggMDE6NTkgUE0NClRvOiAgIkphbWVzIFNtYXJ0IjxqYW1l
-cy5zbWFydEBicm9hZGNvbS5jb20+OyAiRGljayBLZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJv
-YWRjb20uY29tPjsNCkNjOiAgIkphbWVzIEUgLiBKIC4gQm90dG9tbGV5IjxqZWpiQGxpbnV4
-LnZuZXQuaWJtLmNvbT47ICJNYXJ0aW4gSyAuIFBldGVyc2VuIjxtYXJ0aW4ucGV0ZXJzZW5A
-b3JhY2xlLmNvbT47ICJGdXhpbiBaaGFuZyI8emhhbmdmeEBsZW1vdGUuY29tPjsgImxpbnV4
-LXNjc2kiPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgInN0YWJsZSI8c3RhYmxlQHZn
-ZXIua2VybmVsLm9yZz47DQpTdWJqZWN0OiAgUmU6W1BBVENIXSBzY3NpOiBscGZjOiBTd2l0
-Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9fcmVhZDMyX2NvcHkoKQ0KIA0KUGluZz8NCiANCi0t
-LS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCkZyb206ICAi
-SHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsNCkRhdGU6ICBGcmksIEphbiAyNiwg
-MjAxOCAwODo1MyBQTQ0KVG86ICAiSmFtZXMgU21hcnQiPGphbWVzLnNtYXJ0QGJyb2FkY29t
-LmNvbT47ICJEaWNrIEtlbm5lZHkiPGRpY2sua2VubmVkeUBicm9hZGNvbS5jb20+Ow0KQ2M6
-ICAiSmFtZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5ldC5pYm0uY29tPjsg
-Ik1hcnRpbiBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgIkZ1
-eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgtc2NzaSI8bGludXgtc2Nz
-aUB2Z2VyLmtlcm5lbC5vcmc+OyAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsg
-InN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQpTdWJqZWN0OiAgW1BBVENIXSBz
-Y3NpOiBscGZjOiBTd2l0Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9fcmVhZDMyX2NvcHkoKQ0K
-IA0KSW4gY29tbWl0IGJjNzM5MDVhYmY3NzAxOTIgKCJbU0NTSV0gbHBmYyA4LjMuMTY6IFNM
-SSBBZGRpdGlvbnMsIHVwZGF0ZXMsDQphbmQgY29kZSBjbGVhbnVwIiksIGxwZmNfbWVtY3B5
-X3RvX3NsaW0oKSBoYXZlIHN3aXRjaGVkIG1lbWNweV90b2lvKCkgdG8NCl9fd3JpdGUzMl9j
-b3B5KCkgaW4gb3JkZXIgdG8gcHJldmVudCB1bmFsaWduZWQgNjQgYml0IGNvcHkuIFJlY2Vu
-dGx5LCB3ZQ0KZm91bmQgdGhhdCBscGZjX21lbWNweV9mcm9tX3NsaW0oKSBoYXZlIHNpbWls
-YXIgaXNzdWVzLCBzbyBsZXQgaXQgc3dpdGNoDQptZW1jcHlfZnJvbWlvKCkgdG8gX19yZWFk
-MzJfY29weSgpLg0KDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KU2lnbmVkLW9mZi1i
-eTogSHVhY2FpIENoZW4gPGNoZW5oY0BsZW1vdGUuY29tPg0KLS0tDQogZHJpdmVycy9zY3Np
-L2xwZmMvbHBmY19jb21wYXQuaCB8IDQgKystLQ0KIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2Vy
-dGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
-bHBmYy9scGZjX2NvbXBhdC5oIGIvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaA0K
-aW5kZXggNmIzMmIwYS4uNDdkNGZhZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9scGZj
-L2xwZmNfY29tcGF0LmgNCisrKyBiL2RyaXZlcnMvc2NzaS9scGZjL2xwZmNfY29tcGF0LmgN
-CkBAIC05MSw4ICs5MSw4IEBAIGxwZmNfbWVtY3B5X3RvX3NsaW0oIHZvaWQgX19pb21lbSAq
-ZGVzdCwgdm9pZCAqc3JjLCB1bnNpZ25lZCBpbnQgYnl0ZXMpDQogc3RhdGljIGlubGluZSB2
-b2lkDQogbHBmY19tZW1jcHlfZnJvbV9zbGltKCB2b2lkICpkZXN0LCB2b2lkIF9faW9tZW0g
-KnNyYywgdW5zaWduZWQgaW50IGJ5dGVzKQ0KIHsNCi0JLyogYWN0dWFsbHkgcmV0dXJucyAx
-IGJ5dGUgcGFzdCBkZXN0ICovDQotCW1lbWNweV9mcm9taW8oIGRlc3QsIHNyYywgYnl0ZXMp
-Ow0KKwkvKiBjb252ZXJ0IGJ5dGVzIGluIGFyZ3VtZW50IGxpc3QgdG8gd29yZCBjb3VudCBm
-b3IgY29weSBmdW5jdGlvbiAqLw0KKwlfX2lvcmVhZDMyX2NvcHkoZGVzdCwgc3JjLCBieXRl
-cyAvIHNpemVvZih1aW50MzJfdCkpOw0KIH0NCiANCiAjZW5kaWYJLyogX19CSUdfRU5ESUFO
-ICovDQotLSANCjIuNy4w
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 5 Mar 2018 09:14:32 +0100
+
+A few update suggestions were taken into account
+from static source code analysis.
+
+Markus Elfring (4):
+  Use memdup_user() rather than duplicating its implementation
+  Less function calls in hpsa_big_passthru_ioctl() after error detection
+  Delete an unnecessary initialisation
+  Move a variable assignment
+
+ drivers/scsi/hpsa.c | 44 +++++++++++++++++++++-----------------------
+ 1 file changed, 21 insertions(+), 23 deletions(-)
+
+-- 
+2.16.2
