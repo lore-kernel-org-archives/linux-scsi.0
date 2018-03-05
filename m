@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 3/4] scsi: hpsa: Delete an unnecessary initialisation in
+Subject: [PATCH 4/4] scsi: hpsa: Move a variable assignment in
  hpsa_big_passthru_ioctl()
-Date: Mon, 5 Mar 2018 09:33:36 +0100
-Message-ID: <c8183b17-d228-5bac-938f-16e751726d81@users.sourceforge.net>
+Date: Mon, 5 Mar 2018 09:34:36 +0100
+Message-ID: <b82cc1e8-bea0-c899-6a11-6b54732bdb6f@users.sourceforge.net>
 References: <f013341a-e3b2-69a7-4918-8bb3d109f0cc@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -16,28 +16,37 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 4 Mar 2018 22:02:10 +0100
+Date: Sun, 4 Mar 2018 22:16:05 +0100
 
-The variable "status" will be set to an appropriate value a bit later.
-Thus omit the explicit initialisation at the beginning.
+Move an assignment for the local variable "sg_used" so that its setting
+will only be performed after corresponding memory allocations succeeded
+by this function.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/scsi/hpsa.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 45177ead811f..86d371ab39e7 100644
+index 86d371ab39e7..bb6df194ac31 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6381,7 +6381,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+@@ -6380,7 +6380,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	unsigned char **buff;
  	int *buff_size;
  	u64 temp64;
- 	BYTE sg_used = 0;
--	int status = 0;
-+	int status;
+-	BYTE sg_used = 0;
++	BYTE sg_used;
+ 	int status;
  	u32 left;
  	u32 sz;
- 	BYTE __user *data_ptr;
+@@ -6420,6 +6420,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	}
+ 	left = ioc->buf_size;
+ 	data_ptr = ioc->buf;
++	sg_used = 0;
+ 	while (left) {
+ 		sz = (left > ioc->malloc_size) ? ioc->malloc_size : left;
+ 		buff_size[sg_used] = sz;
 -- 
 2.16.2
