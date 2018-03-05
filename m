@@ -1,52 +1,107 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 4/4] scsi: hpsa: Move a variable assignment in
- hpsa_big_passthru_ioctl()
-Date: Mon, 5 Mar 2018 09:34:36 +0100
-Message-ID: <b82cc1e8-bea0-c899-6a11-6b54732bdb6f@users.sourceforge.net>
-References: <f013341a-e3b2-69a7-4918-8bb3d109f0cc@users.sourceforge.net>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH 1/1] scsi: ufs: Add support for Auto-Hibernate Idle Timer
+Date: Mon, 5 Mar 2018 15:08:27 +0200
+Message-ID: <4403f748-b7c6-7996-f44d-4a2775d2ffa6@intel.com>
+References: <1518782464-28847-1-git-send-email-adrian.hunter@intel.com>
+ <1518782464-28847-2-git-send-email-adrian.hunter@intel.com>
+ <DM5PR04MB10857B795CCBBD945062DCCDFCC90@DM5PR04MB1085.namprd04.prod.outlook.com>
+ <5b6cc5c9-0045-9270-fec7-29ac6d0b4fcb@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f013341a-e3b2-69a7-4918-8bb3d109f0cc@users.sourceforge.net>
-Content-Language: en-GB
+In-Reply-To: <5b6cc5c9-0045-9270-fec7-29ac6d0b4fcb@intel.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Don Brace <don.brace@microsemi.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+To: Avri Altman <Avri.Altman@wdc.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Michal Potomski <michalx.potomski@intel.com>, Szymon Mielczarek <szymonx.mielczarek@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 4 Mar 2018 22:16:05 +0100
+On 19/02/18 08:35, Adrian Hunter wrote:
+> On 18/02/18 11:45, Avri Altman wrote:
+>>
+>>
+>>> -----Original Message-----
+>>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>>> owner@vger.kernel.org] On Behalf Of Adrian Hunter
+>>> Sent: Friday, February 16, 2018 2:01 PM
+>>> To: Vinayak Holikatti <vinholikatti@gmail.com>; Martin K. Petersen
+>>> <martin.petersen@oracle.com>; James E.J. Bottomley
+>>> <jejb@linux.vnet.ibm.com>
+>>> Cc: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>; Jaegeuk Kim
+>>> <jaegeuk@kernel.org>; Bart Van Assche <Bart.VanAssche@wdc.com>; linux-
+>>> scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Michal Potomski
+>>> <michalx.potomski@intel.com>; Szymon Mielczarek
+>>> <szymonx.mielczarek@intel.com>
+>>> Subject: [PATCH 1/1] scsi: ufs: Add support for Auto-Hibernate Idle Timer
+>>>
+>>> UFS host controllers may support an autonomous power management
+>>> feature called the Auto-Hibernate Idle Timer. The timer is set to the number
+>>> of microseconds of idle time before the UFS host controller will
+>>> autonomously put the link into Hibernate state. That will save power at the
+>>> expense of increased latency. Any access to the host controller interface
+>>> registers will automatically put the link out of Hibernate state. So once
+>>> configured, the feature is transparent to the driver.
+>>>
+>>> Expose the Auto-Hibernate Idle Timer value via SysFS to allow users to
+>>> choose between power efficiency or lower latency. Set a default value of
+>>> 150 ms.
+>>>
+>>> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+>>> ---
+>>>  Documentation/ABI/testing/sysfs-driver-ufs | 15 ++++++
+>>>  drivers/scsi/ufs/ufs-sysfs.c               | 77 ++++++++++++++++++++++++++++++
+>>>  drivers/scsi/ufs/ufshcd.c                  | 26 ++++++++++
+>>>  drivers/scsi/ufs/ufshcd.h                  |  3 ++
+>>>  drivers/scsi/ufs/ufshci.h                  |  7 +++
+>>>  5 files changed, 128 insertions(+)
+>>>
+>>> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs
+>>> b/Documentation/ABI/testing/sysfs-driver-ufs
+>>> index 07f1c2f8dbfc..c7f9441079eb 100644
+>>> --- a/Documentation/ABI/testing/sysfs-driver-ufs
+>>> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
+>>> @@ -1,3 +1,18 @@
+>>> +What:		/sys/bus/*/drivers/ufshcd/*/auto_hibern8
+>>> +Date:		February 2018
+>>> +Contact:	linux-scsi@vger.kernel.org
+>>> +Description:
+>>> +		This file contains the auto-hibernate idle timer setting of a
+>>> +		UFS host controller. A value of '-1' means auto-hibernate is
+>>> not
+>>> +		supported. A value of '0' means auto-hibernate is not
+>>> enabled.
+>>> +		Otherwise the value is the number of microseconds of idle
+>>> time
+>>> +		before the UFS host controller will autonomously put the link
+>>> +		into hibernate state. That will save power at the expense of
+>>> +		increased latency. Note that the hardware supports 10-bit
+>>> values
+>>> +		with a power-of-ten multiplier which allows a maximum
+>>> value of
+>>> +		102300000. Refer to the UFS Host Controller Interface
+>>> +		specification for more details.
+>>> +
+>>>  What:
+>>> 	/sys/bus/platform/drivers/ufshcd/*/device_descriptor/device_type
+>>>  Date:		February 2018
+>>>  Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+>>> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c index
+>>> cd7174d2d225..a0e38776dc92 100644
 
-Move an assignment for the local variable "sg_used" so that its setting
-will only be performed after corresponding memory allocations succeeded
-by this function.
+SNIP
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/hpsa.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+>>> @@ -7843,6 +7863,12 @@ int ufshcd_init(struct ufs_hba *hba, void
+>>> __iomem *mmio_base, unsigned int irq)
+>>>  						UFS_SLEEP_PWR_MODE,
+>>>  						UIC_LINK_HIBERN8_STATE);
+>>>
+>>> +	/* Set the default auto-hiberate idle timer value to 150 ms */
+>> Your commit said you are setting an idle timer in microseconds,  Better use usec to avoid confusion? 
+> 
+> As the SysFS documentation says "Note that the hardware supports 10-bit
+> values with a power-of-ten multiplier ... Refer to the UFS Host Controller
+> Interface specification for more details.", so 150,000 us is still a value
+> of 150 with a power-of-ten multiplier of 3.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 86d371ab39e7..bb6df194ac31 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6380,7 +6380,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 	unsigned char **buff;
- 	int *buff_size;
- 	u64 temp64;
--	BYTE sg_used = 0;
-+	BYTE sg_used;
- 	int status;
- 	u32 left;
- 	u32 sz;
-@@ -6420,6 +6420,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 	}
- 	left = ioc->buf_size;
- 	data_ptr = ioc->buf;
-+	sg_used = 0;
- 	while (left) {
- 		sz = (left > ioc->malloc_size) ? ioc->malloc_size : left;
- 		buff_size[sg_used] = sz;
--- 
-2.16.2
+Are there any other comments?
