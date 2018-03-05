@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 6/8] scsi: hisi_sas: remove unused variable hisi_sas_devices.running_req
-Date: Mon, 5 Mar 2018 22:48:48 +0800
-Message-ID: <1520261330-204596-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 4/8] scsi: hisi_sas: fix the issue of setting linkrate register
+Date: Mon, 5 Mar 2018 22:48:46 +0800
+Message-ID: <1520261330-204596-5-git-send-email-john.garry@huawei.com>
 References: <1520261330-204596-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,89 +9,77 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1520261330-204596-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-The structure element hisi_sas_devices.running_req to count how
-many commands are active is in effect only ever written in the
-code, so remove it.
+It is not right to set the register PROG_PHY_LINK_RATE while PHY
+is still enabled. So if we want to change PHY linkrate, we need to
+disable PHY before setting the register PROG_PHY_LINK_RATE, and then
+start-up PHY. This patch is to fix this issue.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       | 1 -
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 9 ---------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 3 ---
- 3 files changed, 13 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 5 +++--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 5 +++--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 5 +++--
+ 3 files changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e7fd287..d1153e8 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -175,7 +175,6 @@ struct hisi_sas_device {
- 	struct hisi_sas_dq	*dq;
- 	struct list_head	list;
- 	u64 attached_phy;
--	atomic64_t running_req;
- 	enum sas_device_type	dev_type;
- 	int device_id;
- 	int sata_idx;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9ff8790..88ad8d4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -200,8 +200,6 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 
- 	if (task) {
- 		struct device *dev = hisi_hba->dev;
--		struct domain_device *device = task->dev;
--		struct hisi_sas_device *sas_dev = device->lldd_dev;
- 
- 		if (!task->lldd_task)
- 			return;
-@@ -213,9 +211,6 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 				dma_unmap_sg(dev, task->scatter,
- 					     task->num_scatter,
- 					     task->data_dir);
--
--		if (sas_dev)
--			atomic64_dec(&sas_dev->running_req);
- 	}
- 
- 	if (slot->buf)
-@@ -431,8 +426,6 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
- 	dq->slot_prep = slot;
--
--	atomic64_inc(&sas_dev->running_req);
- 	++(*pass);
- 
- 	return 0;
-@@ -1517,8 +1510,6 @@ static int hisi_sas_query_task(struct sas_task *task)
- 
- 	dq->slot_prep = slot;
- 
--	atomic64_inc(&sas_dev->running_req);
--
- 	/* send abort command to the chip */
- 	hisi_hba->hw->start_delivery(dq);
- 	spin_unlock_irqrestore(&dq->lock, flags_dq);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 2eb8980..8dd0e6a6 100644
+index 38bbda9..2eb8980 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1407,9 +1407,6 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
- 	}
+@@ -881,10 +881,11 @@ static void phy_set_linkrate_v1_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 	prog_phy_link_rate &= ~0xff;
+ 	prog_phy_link_rate |= rate_mask;
  
- out:
--	if (sas_dev)
--		atomic64_dec(&sas_dev->running_req);
++	disable_phy_v1_hw(hisi_hba, phy_no);
++	msleep(100);
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PROG_PHY_LINK_RATE,
+ 			prog_phy_link_rate);
 -
- 	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 	sts = ts->stat;
+-	phy_hard_reset_v1_hw(hisi_hba, phy_no);
++	start_phy_v1_hw(hisi_hba, phy_no);
+ }
  
+ static int get_wideport_bitmap_v1_hw(struct hisi_hba *hisi_hba, int port_id)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 67be346..bd1a48a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1611,10 +1611,11 @@ static void phy_set_linkrate_v2_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 	prog_phy_link_rate &= ~0xff;
+ 	prog_phy_link_rate |= rate_mask;
+ 
++	disable_phy_v2_hw(hisi_hba, phy_no);
++	msleep(100);
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PROG_PHY_LINK_RATE,
+ 			prog_phy_link_rate);
+-
+-	phy_hard_reset_v2_hw(hisi_hba, phy_no);
++	start_phy_v2_hw(hisi_hba, phy_no);
+ }
+ 
+ static int get_wideport_bitmap_v2_hw(struct hisi_hba *hisi_hba, int port_id)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 1ee95ab..8da9de7 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1862,10 +1862,11 @@ static void phy_set_linkrate_v3_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 	prog_phy_link_rate &= ~0xff;
+ 	prog_phy_link_rate |= rate_mask;
+ 
++	disable_phy_v3_hw(hisi_hba, phy_no);
++	msleep(100);
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PROG_PHY_LINK_RATE,
+ 			prog_phy_link_rate);
+-
+-	phy_hard_reset_v3_hw(hisi_hba, phy_no);
++	start_phy_v3_hw(hisi_hba, phy_no);
+ }
+ 
+ static void interrupt_disable_v3_hw(struct hisi_hba *hisi_hba)
 -- 
 1.9.1
