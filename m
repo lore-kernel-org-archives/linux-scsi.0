@@ -1,223 +1,60 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: RE: [PATCH] scsi: mpt3sas: clarify mmio pointer types
-Date: Mon, 5 Mar 2018 12:15:32 +0530
-Message-ID: <b167c3fe8fe7736d39a1843439ecb2ce@mail.gmail.com>
-References: <20180301130729.3278022-1-arnd@arndb.de>
+From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
+Subject: Re:[PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
+Date: Mon, 5 Mar 2018 14:56:51 +0800
+Message-ID: <tencent_75DC38C65689608F38146CF0@qq.com>
+References: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
+        <tencent_3B2D19AE6395B45001767B9B@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180301130729.3278022-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <tencent_3B2D19AE6395B45001767B9B@qq.com>
+Sender: stable-owner@vger.kernel.org
+To: =?utf-8?B?SmFtZXMgU21hcnQ=?= <james.smart@broadcom.com>, =?utf-8?B?RGljayBLZW5uZWR5?= <dick.kennedy@broadcom.com>
+Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Arnd Bergmann [mailto:arnd@arndb.de]
-Sent: Thursday, March 1, 2018 6:37 PM
-To: Suganath Prabu S; Sathya Prakash; Chaitra P B; James E.J. Bottomley;
-Martin K. Petersen
-Cc: Arnd Bergmann; Hannes Reinecke; Sreekanth Reddy;
-MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: mpt3sas: clarify mmio pointer types
-
-The newly added code mixes up phys_addr_t/resource_size_t with dma_addr_t
-and void pointers, as seen from these compiler warning:
-
-drivers/scsi/mpt3sas/mpt3sas_base.c: In function '_base_get_chain_phys':
-drivers/scsi/mpt3sas/mpt3sas_base.c:235:21: error: cast to pointer from
-integer of different size [-Werror=int-to-pointer-cast]
-  base_chain_phys  = (void *)ioc->chip_phys + MPI_FRAME_START_OFFSET +
-                     ^
-drivers/scsi/mpt3sas/mpt3sas_base.c: In function '_clone_sg_entries':
-drivers/scsi/mpt3sas/mpt3sas_base.c:427:20: error: cast from pointer to
-integer of different size [-Werror=pointer-to-int-cast]
-    sgel->Address = (dma_addr_t)dst_addr_phys;
-                    ^
-drivers/scsi/mpt3sas/mpt3sas_base.c:438:7: error: cast from pointer to
-integer of different size [-Werror=pointer-to-int-cast]
-       (dma_addr_t)buff_ptr_phys;
-       ^
-drivers/scsi/mpt3sas/mpt3sas_base.c:444:10: error: cast from pointer to
-integer of different size [-Werror=pointer-to-int-cast]
-          (dma_addr_t)buff_ptr_phys;
-
-Both dma_addr_t and phys_addr_t may be wider than a pointer, so we must
-avoid the conversion to pointer types. This also helps readability.
-
-A second problem is treating MMIO addresses from a 'struct resource'
-as addresses that can be used for DMA on that device. In almost all cases,
-those are the same, but on some of the more obscure architectures, PCI
-memory address 0 is mapped into the CPU address space at a nonzero offset.
-I don't have a good fix for that, so I'm adding a comment here, plus a
-WARN_ON() that triggers whenever the phys_addr_t number is outside of the
-low 32-bit address space and causes a straight overflow when assigned to
-the 32-bit sgel->Address.
-
-Fixes: 182ac784b41f ("scsi: mpt3sas: Introduce Base function for
-cloning.")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 42
-++++++++++++++++++++-----------------
- drivers/scsi/mpt3sas/mpt3sas_base.h |  2 +-
- 2 files changed, 24 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
-b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 9f2434e59b40..61f93a134956 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -225,14 +225,14 @@ _base_get_chain(struct MPT3SAS_ADAPTER *ioc, u16
-smid,
-  *
-  * @Return - Physical chain address.
-  */
--static inline void *
-+static inline phys_addr_t
- _base_get_chain_phys(struct MPT3SAS_ADAPTER *ioc, u16 smid,
- 		u8 sge_chain_count)
- {
--	void *base_chain_phys, *chain_phys;
-+	phys_addr_t base_chain_phys, chain_phys;
- 	u16 cmd_credit = ioc->facts.RequestCredit + 1;
-
--	base_chain_phys  = (void *)ioc->chip_phys + MPI_FRAME_START_OFFSET
-+
-+	base_chain_phys  = ioc->chip_phys + MPI_FRAME_START_OFFSET +
- 		(cmd_credit * ioc->request_sz) +
- 		REPLY_FREE_POOL_SIZE;
- 	chain_phys = base_chain_phys + (smid * ioc->facts.MaxChainDepth *
-@@ -272,11 +272,11 @@ _base_get_buffer_bar0(struct MPT3SAS_ADAPTER *ioc,
-u16 smid)
-  *
-  * @Returns - Pointer to buffer location in BAR0.
-  */
--static void *
-+static phys_addr_t
- _base_get_buffer_phys_bar0(struct MPT3SAS_ADAPTER *ioc, u16 smid)  {
- 	u16 cmd_credit = ioc->facts.RequestCredit + 1;
--	void *chain_end_phys = _base_get_chain_phys(ioc,
-+	phys_addr_t chain_end_phys = _base_get_chain_phys(ioc,
- 			cmd_credit + 1,
- 			ioc->facts.MaxChainDepth);
- 	return chain_end_phys + (smid * 64 * 1024); @@ -330,11 +330,12 @@
-static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
- 	bool is_write = 0;
- 	u16 i = 0;
- 	void __iomem *buffer_iomem;
--	void  *buffer_iomem_phys;
-+	phys_addr_t buffer_iomem_phys;
- 	void __iomem *buff_ptr;
--	void *buff_ptr_phys;
-+	phys_addr_t buff_ptr_phys;
- 	void __iomem *dst_chain_addr[MCPU_MAX_CHAINS_PER_IO];
--	void *src_chain_addr[MCPU_MAX_CHAINS_PER_IO], *dst_addr_phys;
-+	void *src_chain_addr[MCPU_MAX_CHAINS_PER_IO];
-+	phys_addr_t dst_addr_phys;
- 	MPI2RequestHeader_t *request_hdr;
- 	struct scsi_cmnd *scmd;
- 	struct scatterlist *sg_scmd = NULL;
-@@ -391,6 +392,7 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER
-*ioc,
-
- 	buff_ptr = buffer_iomem;
- 	buff_ptr_phys = buffer_iomem_phys;
-+	WARN_ON(buff_ptr_phys > U32_MAX);
-
- 	if (sgel->FlagsLength &
- 			(MPI2_SGE_FLAGS_HOST_TO_IOC <<
-MPI2_SGE_FLAGS_SHIFT)) @@ -421,10 +423,10 @@ static void
-_clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
- 					smid, sge_chain_count);
- 			src_chain_addr[sge_chain_count] =
- 						(void *) sgel_next;
--			dst_addr_phys =
--				_base_get_chain_phys(ioc,
-+			dst_addr_phys = _base_get_chain_phys(ioc,
- 						smid, sge_chain_count);
--			sgel->Address = (dma_addr_t)dst_addr_phys;
-+			WARN_ON(dst_addr_phys > U32_MAX);
-+			sgel->Address = (u32)dst_addr_phys;
- 			sgel = sgel_next;
- 			sge_chain_count++;
- 			break;
-@@ -434,14 +436,16 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER
-*ioc,
- 					_base_clone_to_sys_mem(buff_ptr,
- 					    sg_virt(sg_scmd),
- 					    (sgel->FlagsLength &
-0x00ffffff));
--					sgel->Address =
--						(dma_addr_t)buff_ptr_phys;
-+					/*
-+					 * FIXME: this relies on a a zero
-+					 * PCI mem_offset.
-+					 */
-+					sgel->Address =
-(u32)buff_ptr_phys;
- 				} else {
- 					_base_clone_to_sys_mem(buff_ptr,
- 					    ioc->config_vaddr,
- 					    (sgel->FlagsLength &
-0x00ffffff));
--					sgel->Address =
--					    (dma_addr_t)buff_ptr_phys;
-+					sgel->Address =
-(u32)buff_ptr_phys;
- 				}
- 			}
- 			buff_ptr += (sgel->FlagsLength & 0x00ffffff); @@
--2941,7 +2945,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 	u32 pio_sz;
- 	int i, r = 0;
- 	u64 pio_chip = 0;
--	u64 chip_phys = 0;
-+	phys_addr_t chip_phys = 0;
- 	struct adapter_reply_queue *reply_q;
-
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", @@ -2989,7 +2993,7 @@
-mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 			if (memap_sz)
- 				continue;
- 			ioc->chip_phys = pci_resource_start(pdev, i);
--			chip_phys = (u64)ioc->chip_phys;
-+			chip_phys = ioc->chip_phys;
- 			memap_sz = pci_resource_len(pdev, i);
- 			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
- 		}
-@@ -3064,8 +3068,8 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER
-*ioc)
- 		    "IO-APIC enabled"),
- 		    pci_irq_vector(ioc->pdev, reply_q->msix_index));
-
--	pr_info(MPT3SAS_FMT "iomem(0x%016llx), mapped(0x%p), size(%d)\n",
--	    ioc->name, (unsigned long long)chip_phys, ioc->chip,
-memap_sz);
-+	pr_info(MPT3SAS_FMT "iomem(%pap), mapped(0x%p), size(%d)\n",
-+	    ioc->name, &chip_phys, ioc->chip, memap_sz);
- 	pr_info(MPT3SAS_FMT "ioport(0x%016llx), size(%d)\n",
- 	    ioc->name, (unsigned long long)pio_chip, pio_sz);
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h
-b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index df8233c1e1c1..ae36d8fb2f2b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1103,7 +1103,7 @@ struct MPT3SAS_ADAPTER {
- 	char		tmp_string[MPT_STRING_LENGTH];
- 	struct pci_dev	*pdev;
- 	Mpi2SystemInterfaceRegs_t __iomem *chip;
--	resource_size_t	chip_phys;
-+	phys_addr_t	chip_phys;
- 	int		logging_level;
- 	int		fwfault_debug;
- 	u8		ir_firmware;
---
-2.9.0
-
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-
-Thanks,
-Sreekanth
+Tm8gb25lIGhhcyB0aGUgc2FtZSBwcm9ibGVtPyBPciB0aGlzIHBhdGNoIG5lZWQgaW1wcm92
+ZT8NCg0KSHVhY2FpDQogDQotLS0tLS0tLS0tLS0tLS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0t
+LS0tLS0tLS0tDQpGcm9tOiAgIumZiOWNjuaJjSI8Y2hlbmhjQGxlbW90ZS5jb20+Ow0KRGF0
+ZTogIFRodSwgTWFyIDEsIDIwMTggMDE6NTkgUE0NClRvOiAgIkphbWVzIFNtYXJ0IjxqYW1l
+cy5zbWFydEBicm9hZGNvbS5jb20+OyAiRGljayBLZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJv
+YWRjb20uY29tPjsNCkNjOiAgIkphbWVzIEUgLiBKIC4gQm90dG9tbGV5IjxqZWpiQGxpbnV4
+LnZuZXQuaWJtLmNvbT47ICJNYXJ0aW4gSyAuIFBldGVyc2VuIjxtYXJ0aW4ucGV0ZXJzZW5A
+b3JhY2xlLmNvbT47ICJGdXhpbiBaaGFuZyI8emhhbmdmeEBsZW1vdGUuY29tPjsgImxpbnV4
+LXNjc2kiPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgInN0YWJsZSI8c3RhYmxlQHZn
+ZXIua2VybmVsLm9yZz47DQpTdWJqZWN0OiAgUmU6W1BBVENIXSBzY3NpOiBscGZjOiBTd2l0
+Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9fcmVhZDMyX2NvcHkoKQ0KIA0KUGluZz8NCiANCi0t
+LS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCkZyb206ICAi
+SHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsNCkRhdGU6ICBGcmksIEphbiAyNiwg
+MjAxOCAwODo1MyBQTQ0KVG86ICAiSmFtZXMgU21hcnQiPGphbWVzLnNtYXJ0QGJyb2FkY29t
+LmNvbT47ICJEaWNrIEtlbm5lZHkiPGRpY2sua2VubmVkeUBicm9hZGNvbS5jb20+Ow0KQ2M6
+ICAiSmFtZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5ldC5pYm0uY29tPjsg
+Ik1hcnRpbiBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgIkZ1
+eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgtc2NzaSI8bGludXgtc2Nz
+aUB2Z2VyLmtlcm5lbC5vcmc+OyAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsg
+InN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQpTdWJqZWN0OiAgW1BBVENIXSBz
+Y3NpOiBscGZjOiBTd2l0Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9fcmVhZDMyX2NvcHkoKQ0K
+IA0KSW4gY29tbWl0IGJjNzM5MDVhYmY3NzAxOTIgKCJbU0NTSV0gbHBmYyA4LjMuMTY6IFNM
+SSBBZGRpdGlvbnMsIHVwZGF0ZXMsDQphbmQgY29kZSBjbGVhbnVwIiksIGxwZmNfbWVtY3B5
+X3RvX3NsaW0oKSBoYXZlIHN3aXRjaGVkIG1lbWNweV90b2lvKCkgdG8NCl9fd3JpdGUzMl9j
+b3B5KCkgaW4gb3JkZXIgdG8gcHJldmVudCB1bmFsaWduZWQgNjQgYml0IGNvcHkuIFJlY2Vu
+dGx5LCB3ZQ0KZm91bmQgdGhhdCBscGZjX21lbWNweV9mcm9tX3NsaW0oKSBoYXZlIHNpbWls
+YXIgaXNzdWVzLCBzbyBsZXQgaXQgc3dpdGNoDQptZW1jcHlfZnJvbWlvKCkgdG8gX19yZWFk
+MzJfY29weSgpLg0KDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KU2lnbmVkLW9mZi1i
+eTogSHVhY2FpIENoZW4gPGNoZW5oY0BsZW1vdGUuY29tPg0KLS0tDQogZHJpdmVycy9zY3Np
+L2xwZmMvbHBmY19jb21wYXQuaCB8IDQgKystLQ0KIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2Vy
+dGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
+bHBmYy9scGZjX2NvbXBhdC5oIGIvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaA0K
+aW5kZXggNmIzMmIwYS4uNDdkNGZhZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9scGZj
+L2xwZmNfY29tcGF0LmgNCisrKyBiL2RyaXZlcnMvc2NzaS9scGZjL2xwZmNfY29tcGF0LmgN
+CkBAIC05MSw4ICs5MSw4IEBAIGxwZmNfbWVtY3B5X3RvX3NsaW0oIHZvaWQgX19pb21lbSAq
+ZGVzdCwgdm9pZCAqc3JjLCB1bnNpZ25lZCBpbnQgYnl0ZXMpDQogc3RhdGljIGlubGluZSB2
+b2lkDQogbHBmY19tZW1jcHlfZnJvbV9zbGltKCB2b2lkICpkZXN0LCB2b2lkIF9faW9tZW0g
+KnNyYywgdW5zaWduZWQgaW50IGJ5dGVzKQ0KIHsNCi0JLyogYWN0dWFsbHkgcmV0dXJucyAx
+IGJ5dGUgcGFzdCBkZXN0ICovDQotCW1lbWNweV9mcm9taW8oIGRlc3QsIHNyYywgYnl0ZXMp
+Ow0KKwkvKiBjb252ZXJ0IGJ5dGVzIGluIGFyZ3VtZW50IGxpc3QgdG8gd29yZCBjb3VudCBm
+b3IgY29weSBmdW5jdGlvbiAqLw0KKwlfX2lvcmVhZDMyX2NvcHkoZGVzdCwgc3JjLCBieXRl
+cyAvIHNpemVvZih1aW50MzJfdCkpOw0KIH0NCiANCiAjZW5kaWYJLyogX19CSUdfRU5ESUFO
+ICovDQotLSANCjIuNy4w
