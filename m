@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 1/8] dt-bindings: scsi: hisi_sas: add an property of signal attenuation
-Date: Mon, 5 Mar 2018 22:48:43 +0800
-Message-ID: <1520261330-204596-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 5/8] scsi: hisi_sas: increase timer expire of internal abort task
+Date: Mon, 5 Mar 2018 22:48:47 +0800
+Message-ID: <1520261330-204596-6-git-send-email-john.garry@huawei.com>
 References: <1520261330-204596-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,39 +14,42 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-For some new boards with hip07 chipset we are required to
-set PHY config registers differently. The hw property which
-determines how to set these registers is in the PHY signal
-attenuation readings.
+The current 110ms expiry time is not long enough for the internal
+abort task.
 
-This patch add an devicetree property, "hisilicon,signal-attenuation",
-which is used to describe the signal attenuation of an board.
+The reason is that the internal abort task could be blocked in HW
+if the HW is retrying to set up link. The internal abort task will
+be executed only when the retry process finished.
 
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Mark Rutland <mark.rutland@arm.com>
+The maximum time is 5s for the retry of setting up link. So, the timer
+expire should be more than 5s. This patch increases it from 110ms to 6s.
+
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-index df3bef7..8c6659e 100644
---- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-+++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-@@ -53,6 +53,13 @@ Main node required properties:
- Optional main node properties:
-  - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
- 			    "am-max-transmissions" limitation.
-+ - hisilicon,signal-attenuation : array of 3 32-bit values, containing de-emphasis,
-+		preshoot, and boost attenuation readings for the board. They
-+		are used to describe the signal attenuation of the board. These
-+		values' range is 7600 to 12400, and used to represent -24dB to
-+		24dB.
-+		The formula is "y = (x-10000)/10000". For example, 10478
-+		means 4.78dB.
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 9d16372..9ff8790 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -871,6 +871,7 @@ static void hisi_sas_tmf_timedout(struct timer_list *t)
  
- Example:
- 	sas0: sas@c1000000 {
+ #define TASK_TIMEOUT 20
+ #define TASK_RETRY 3
++#define INTERNAL_ABORT_TIMEOUT 6
+ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
+ 					   void *parameter, u32 para_len,
+ 					   struct hisi_sas_tmf_task *tmf)
+@@ -1574,7 +1575,7 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 	task->task_proto = device->tproto;
+ 	task->task_done = hisi_sas_task_done;
+ 	task->slow_task->timer.function = hisi_sas_tmf_timedout;
+-	task->slow_task->timer.expires = jiffies + msecs_to_jiffies(110);
++	task->slow_task->timer.expires = jiffies + INTERNAL_ABORT_TIMEOUT*HZ;
+ 	add_timer(&task->slow_task->timer);
+ 
+ 	res = hisi_sas_internal_abort_task_exec(hisi_hba, sas_dev->device_id,
 -- 
 1.9.1
