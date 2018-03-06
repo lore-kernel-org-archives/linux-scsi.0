@@ -1,52 +1,76 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v3 5/8] scsi: hisi_sas: increase timer expire of internal
- abort task
-Date: Tue, 6 Mar 2018 12:30:06 +0000
-Message-ID: <c2a60f8b-8332-df6f-6bfd-147817208dee@huawei.com>
-References: <1520261330-204596-1-git-send-email-john.garry@huawei.com>
- <1520261330-204596-6-git-send-email-john.garry@huawei.com>
- <3983d075-af2e-5c69-2708-51db8a6b79cb@suse.de>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: [PATCH V4] scsi: core: use blk_mq_requeue_request in
+ __scsi_queue_insert
+Date: Tue, 6 Mar 2018 22:39:38 +0800
+Message-ID: <46a8136a-3dbb-0b73-4dfe-2a44a860dbe7@oracle.com>
+References: <1520042049-8874-1-git-send-email-jianchao.w.wang@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3983d075-af2e-5c69-2708-51db8a6b79cb@suse.de>
+In-Reply-To: <1520042049-8874-1-git-send-email-jianchao.w.wang@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: Bart.VanAssche@wdc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/03/2018 11:23, Hannes Reinecke wrote:
-> On 03/05/2018 03:48 PM, John Garry wrote:
->> From: Xiaofei Tan <tanxiaofei@huawei.com>
->>
->> The current 110ms expiry time is not long enough for the internal
->> abort task.
->>
->> The reason is that the internal abort task could be blocked in HW
->> if the HW is retrying to set up link. The internal abort task will
->> be executed only when the retry process finished.
->>
-> Hmm. That sounds weird.
-> I would have expected that a link retrain will force a device reset,
-> after which no tasks should be active on the target.
-> Consequently the succeeding abort task will be a no-op.
-> Care to clarify?
->
+Hi Martin
 
-Hi Hannes,
+Can you take your precious time to review this ?
 
-It sounds like you're talking about TMF task abort, right? This patch is 
-related to controller internal abort function.
+Thanks in advice.
+Jianchao
 
-Our HW supports internal abort, where any pending queued commands in the 
-controller can be aborted, so they will not be executed. When a disk is 
-removed or a nexus reset are times when we issue such a command.
-
-Thanks very much,
-John
-
-> Cheers,
->
-> Hannes
->
+On 03/03/2018 09:54 AM, Jianchao Wang wrote:
+> In scsi core, __scsi_queue_insert should just put request back on
+> the queue and retry using the same command as before. However, for
+> blk-mq, scsi_mq_requeue_cmd is employed here which will unprepare
+> the request. To align with the semantics of __scsi_queue_insert,
+> use blk_mq_requeue_request with kick_requeue_list == true and put
+> the reference of scsi_device.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+> ---
+> Changelog:
+> V3 -> V4:
+>  - modify the comment and make it more clearly
+> 
+> V2 -> V3:
+>  - add comment to explain why we need a put_device in
+>    __scsi_queue_insert
+>  - add reviewed-by
+> 
+> V1 -> V2:
+>  - add put_device on scsi_device->sdev_gendev
+>  drivers/scsi/scsi_lib.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index a86df9c..6ce33f6 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -191,7 +191,19 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+>  	 */
+>  	cmd->result = 0;
+>  	if (q->mq_ops) {
+> -		scsi_mq_requeue_cmd(cmd);
+> +		/*
+> +		 * Before a SCSI command is dispatched,
+> +		 * get_device(&sdev->sdev_gendev) is called and the host,
+> +		 * target and device busy counters are increased. Since
+> +		 * requeuing a request causes these actions to be repeated and
+> +		 * since scsi_device_unbusy() has already been called,
+> +		 * put_device(&device->sdev_gendev) must still be called. Call
+> +		 * put_device() after blk_mq_requeue_request() to avoid that
+> +		 * removal of the SCSI device can start before requeueing has
+> +		 * happened.
+> +		 */
+> +		blk_mq_requeue_request(cmd->request, true);
+> +		put_device(&device->sdev_gendev);
+>  		return;
+>  	}
+>  	spin_lock_irqsave(q->queue_lock, flags);
+> 
