@@ -1,39 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 00/38] cxlflash: OCXL transport support
-Date: Tue, 06 Mar 2018 13:01:54 -0500
-Message-ID: <yq18tb5rskt.fsf@oracle.com>
-References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: mpt3sas: clarify mmio pointer types
+Date: Tue, 06 Mar 2018 13:09:15 -0500
+Message-ID: <yq1zi3lqdo4.fsf@oracle.com>
+References: <20180301130729.3278022-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- (Uma Krishnan's message of "Mon, 26 Feb 2018 16:18:33 -0600")
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180301130729.3278022-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Thu, 1 Mar 2018 14:07:07 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-> This patch series adds OCXL support to the cxlflash driver. With this
-> support, new devices using the OCXL transport will be supported by the
-> cxlflash driver along with the existing CXL devices. An effort is made
-> to keep this transport specific function independent of the existing
-> core driver that communicates with the AFU.
+Arnd,
 
-This one has been sitting for a week without any reviews. Andrew, when
-will you have time to take a look?
+> The newly added code mixes up phys_addr_t/resource_size_t with dma_addr_t
+> and void pointers, as seen from these compiler warning:
 
-Being a pretty big chunk of code, I would like to merge it sooner rather
-than later. Or we can postpone until 4.18, of course.
+Applied to 4.17/scsi-queue. Thanks for fixing this up!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
