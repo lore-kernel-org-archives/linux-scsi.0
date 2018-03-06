@@ -1,76 +1,39 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH V4] scsi: core: use blk_mq_requeue_request in
- __scsi_queue_insert
-Date: Tue, 6 Mar 2018 22:39:38 +0800
-Message-ID: <46a8136a-3dbb-0b73-4dfe-2a44a860dbe7@oracle.com>
-References: <1520042049-8874-1-git-send-email-jianchao.w.wang@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 00/38] cxlflash: OCXL transport support
+Date: Tue, 06 Mar 2018 13:01:54 -0500
+Message-ID: <yq18tb5rskt.fsf@oracle.com>
+References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1520042049-8874-1-git-send-email-jianchao.w.wang@oracle.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Bart.VanAssche@wdc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ (Uma Krishnan's message of "Mon, 26 Feb 2018 16:18:33 -0600")
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Martin
 
-Can you take your precious time to review this ?
+> This patch series adds OCXL support to the cxlflash driver. With this
+> support, new devices using the OCXL transport will be supported by the
+> cxlflash driver along with the existing CXL devices. An effort is made
+> to keep this transport specific function independent of the existing
+> core driver that communicates with the AFU.
 
-Thanks in advice.
-Jianchao
+This one has been sitting for a week without any reviews. Andrew, when
+will you have time to take a look?
 
-On 03/03/2018 09:54 AM, Jianchao Wang wrote:
-> In scsi core, __scsi_queue_insert should just put request back on
-> the queue and retry using the same command as before. However, for
-> blk-mq, scsi_mq_requeue_cmd is employed here which will unprepare
-> the request. To align with the semantics of __scsi_queue_insert,
-> use blk_mq_requeue_request with kick_requeue_list == true and put
-> the reference of scsi_device.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
-> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
-> ---
-> Changelog:
-> V3 -> V4:
->  - modify the comment and make it more clearly
-> 
-> V2 -> V3:
->  - add comment to explain why we need a put_device in
->    __scsi_queue_insert
->  - add reviewed-by
-> 
-> V1 -> V2:
->  - add put_device on scsi_device->sdev_gendev
->  drivers/scsi/scsi_lib.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index a86df9c..6ce33f6 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -191,7 +191,19 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
->  	 */
->  	cmd->result = 0;
->  	if (q->mq_ops) {
-> -		scsi_mq_requeue_cmd(cmd);
-> +		/*
-> +		 * Before a SCSI command is dispatched,
-> +		 * get_device(&sdev->sdev_gendev) is called and the host,
-> +		 * target and device busy counters are increased. Since
-> +		 * requeuing a request causes these actions to be repeated and
-> +		 * since scsi_device_unbusy() has already been called,
-> +		 * put_device(&device->sdev_gendev) must still be called. Call
-> +		 * put_device() after blk_mq_requeue_request() to avoid that
-> +		 * removal of the SCSI device can start before requeueing has
-> +		 * happened.
-> +		 */
-> +		blk_mq_requeue_request(cmd->request, true);
-> +		put_device(&device->sdev_gendev);
->  		return;
->  	}
->  	spin_lock_irqsave(q->queue_lock, flags);
-> 
+Being a pretty big chunk of code, I would like to merge it sooner rather
+than later. Or we can postpone until 4.18, of course.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
