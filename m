@@ -1,42 +1,85 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2] scsi: ufs-qcom: add number of lanes for Tx and Rx
- links
-Date: Mon, 5 Mar 2018 16:02:00 -0600
-Message-ID: <20180305220200.rah223rn4ndq7hd4@rob-hp-laptop>
-References: <20180227055500.10416-1-cang@codeaurora.org>
+From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
+Subject: Re: [PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
+Date: Tue, 6 Mar 2018 09:19:26 +0800
+Message-ID: <tencent_148DBED7281A4A736A477643@qq.com>
+References: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
+        <tencent_3B2D19AE6395B45001767B9B@qq.com>
+        <tencent_75DC38C65689608F38146CF0@qq.com>
+        <b8699e17-bab9-f977-8034-05897c2812f4@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180227055500.10416-1-cang@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Can Guo <cang@codeaurora.org>
-Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Gilad Broner <gbroner@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Amit Nischal <anischal@codeaurora.org>, Maya Erez <merez@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <b8699e17-bab9-f977-8034-05897c2812f4@broadcom.com>
+Sender: stable-owner@vger.kernel.org
+To: =?utf-8?B?SmFtZXMgU21hcnQ=?= <james.smart@broadcom.com>, =?utf-8?B?RGljayBLZW5uZWR5?= <dick.kennedy@broadcom.com>
+Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 27, 2018 at 01:46:17PM +0800, Can Guo wrote:
-> From: Gilad Broner <gbroner@codeaurora.org>
-> 
-> Different platforms may have different number of lanes for the UFS Tx/Rx
-> links. Add parameter to device tree specifying how many lanes should be
-> configured for the UFS Tx/Rx links. And don't print err message for clocks
-> that are optional, this leads to unnecessary confusion about failure.
-> 
-> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> ---
-> 
-> Changes since v1:
-> 	- Change commit subject for better description.
-> 	- Incorporated Rob's review comments to use lanes-tx and lanes-rx
-> 	  to handle asymmetric Tx/Rx links.
-> 
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  4 ++
-
-Reviewed-by: Rob Herring <robh@kernel.org>
-
->  drivers/scsi/ufs/ufs-qcom.c                        | 65 +++++++++++++---------
->  drivers/scsi/ufs/ufshcd.c                          | 29 ++++++++++
->  drivers/scsi/ufs/ufshcd.h                          |  5 ++
->  4 files changed, 78 insertions(+), 25 deletions(-)
+SGksIEphbWVzLA0KDQpBdCBsZWFzdCBvbiBNSVBTIChMb29uZ3Nvbi0zKSwgd2UgZm91bmQg
+dGhhdCB0aGlzIHBhdGNoIGlzIG5lY2Vzc2FyeS4NCiANCkh1YWNhaQ0KDQotLS0tLS0tLS0t
+LS0tLS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIkphbWVzIFNt
+YXJ0IjxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+Ow0KRGF0ZTogIE1vbiwgTWFyIDUsIDIw
+MTggMTE6MzcgUE0NClRvOiAgIumZiOWNjuaJjSI8Y2hlbmhjQGxlbW90ZS5jb20+OyAiRGlj
+ayBLZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJvYWRjb20uY29tPjsNCkNjOiAgIkphbWVzIEUg
+LiBKIC4gQm90dG9tbGV5IjxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT47ICJNYXJ0aW4gSyAu
+IFBldGVyc2VuIjxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47ICJGdXhpbiBaaGFuZyI8
+emhhbmdmeEBsZW1vdGUuY29tPjsgImxpbnV4LXNjc2kiPGxpbnV4LXNjc2lAdmdlci5rZXJu
+ZWwub3JnPjsgInN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQpTdWJqZWN0OiAg
+UmU6IFtQQVRDSF0gc2NzaTogbHBmYzogU3dpdGNoIG1lbWNweV9mcm9taW8oKSB0byBfX3Jl
+YWQzMl9jb3B5KCkNCiANCg0KT24gMy80LzIwMTggMTA6NTYgUE0sIOmZiOWNjuaJjSB3cm90
+ZToNCj4gTm8gb25lIGhhcyB0aGUgc2FtZSBwcm9ibGVtPyBPciB0aGlzIHBhdGNoIG5lZWQg
+aW1wcm92ZT8NCj4NCj4gSHVhY2FpDQo+ICAgDQo+IC0tLS0tLS0tLS0tLS0tLS0tLSBPcmln
+aW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCj4gRnJvbTogICLpmYjljY7miY0iPGNoZW5oY0Bs
+ZW1vdGUuY29tPjsNCj4gRGF0ZTogIFRodSwgTWFyIDEsIDIwMTggMDE6NTkgUE0NCj4gVG86
+ICAiSmFtZXMgU21hcnQiPGphbWVzLnNtYXJ0QGJyb2FkY29tLmNvbT47ICJEaWNrIEtlbm5l
+ZHkiPGRpY2sua2VubmVkeUBicm9hZGNvbS5jb20+Ow0KPiBDYzogICJKYW1lcyBFIC4gSiAu
+IEJvdHRvbWxleSI8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyAiTWFydGluIEsgLiBQZXRl
+cnNlbiI8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyAiRnV4aW4gWmhhbmciPHpoYW5n
+ZnhAbGVtb3RlLmNvbT47ICJsaW51eC1zY3NpIjxsaW51eC1zY3NpQHZnZXIua2VybmVsLm9y
+Zz47ICJzdGFibGUiPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+Ow0KPiBTdWJqZWN0OiAgUmU6
+W1BBVENIXSBzY3NpOiBscGZjOiBTd2l0Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9fcmVhZDMy
+X2NvcHkoKQ0KPiAgIA0KPiBQaW5nPw0KPiAgIA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0gT3Jp
+Z2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEZyb206ICAiSHVhY2FpIENoZW4iPGNoZW5o
+Y0BsZW1vdGUuY29tPjsNCj4gRGF0ZTogIEZyaSwgSmFuIDI2LCAyMDE4IDA4OjUzIFBNDQo+
+IFRvOiAgIkphbWVzIFNtYXJ0IjxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+OyAiRGljayBL
+ZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJvYWRjb20uY29tPjsNCj4gQ2M6ICAiSmFtZXMgRSAu
+IEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5ldC5pYm0uY29tPjsgIk1hcnRpbiBLIC4g
+UGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgIkZ1eGluIFpoYW5nIjx6
+aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgtc2NzaSI8bGludXgtc2NzaUB2Z2VyLmtlcm5l
+bC5vcmc+OyAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsgInN0YWJsZSI8c3Rh
+YmxlQHZnZXIua2VybmVsLm9yZz47DQo+IFN1YmplY3Q6ICBbUEFUQ0hdIHNjc2k6IGxwZmM6
+IFN3aXRjaCBtZW1jcHlfZnJvbWlvKCkgdG8gX19yZWFkMzJfY29weSgpDQo+ICAgDQo+IElu
+IGNvbW1pdCBiYzczOTA1YWJmNzcwMTkyICgiW1NDU0ldIGxwZmMgOC4zLjE2OiBTTEkgQWRk
+aXRpb25zLCB1cGRhdGVzLA0KPiBhbmQgY29kZSBjbGVhbnVwIiksIGxwZmNfbWVtY3B5X3Rv
+X3NsaW0oKSBoYXZlIHN3aXRjaGVkIG1lbWNweV90b2lvKCkgdG8NCj4gX193cml0ZTMyX2Nv
+cHkoKSBpbiBvcmRlciB0byBwcmV2ZW50IHVuYWxpZ25lZCA2NCBiaXQgY29weS4gUmVjZW50
+bHksIHdlDQo+IGZvdW5kIHRoYXQgbHBmY19tZW1jcHlfZnJvbV9zbGltKCkgaGF2ZSBzaW1p
+bGFyIGlzc3Vlcywgc28gbGV0IGl0IHN3aXRjaA0KPiBtZW1jcHlfZnJvbWlvKCkgdG8gX19y
+ZWFkMzJfY29weSgpLg0KPg0KPiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KPiBTaWdu
+ZWQtb2ZmLWJ5OiBIdWFjYWkgQ2hlbiA8Y2hlbmhjQGxlbW90ZS5jb20+DQo+IC0tLQ0KPiAg
+IGRyaXZlcnMvc2NzaS9scGZjL2xwZmNfY29tcGF0LmggfCA0ICsrLS0NCj4gICAxIGZpbGUg
+Y2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPg0KPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaCBiL2RyaXZlcnMvc2NzaS9s
+cGZjL2xwZmNfY29tcGF0LmgNCj4gaW5kZXggNmIzMmIwYS4uNDdkNGZhZCAxMDA2NDQNCj4g
+LS0tIGEvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaA0KPiArKysgYi9kcml2ZXJz
+L3Njc2kvbHBmYy9scGZjX2NvbXBhdC5oDQo+IEBAIC05MSw4ICs5MSw4IEBAIGxwZmNfbWVt
+Y3B5X3RvX3NsaW0oIHZvaWQgX19pb21lbSAqZGVzdCwgdm9pZCAqc3JjLCB1bnNpZ25lZCBp
+bnQgYnl0ZXMpDQo+ICAgc3RhdGljIGlubGluZSB2b2lkDQo+ICAgbHBmY19tZW1jcHlfZnJv
+bV9zbGltKCB2b2lkICpkZXN0LCB2b2lkIF9faW9tZW0gKnNyYywgdW5zaWduZWQgaW50IGJ5
+dGVzKQ0KPiAgIHsNCj4gLQkvKiBhY3R1YWxseSByZXR1cm5zIDEgYnl0ZSBwYXN0IGRlc3Qg
+Ki8NCj4gLQltZW1jcHlfZnJvbWlvKCBkZXN0LCBzcmMsIGJ5dGVzKTsNCj4gKwkvKiBjb252
+ZXJ0IGJ5dGVzIGluIGFyZ3VtZW50IGxpc3QgdG8gd29yZCBjb3VudCBmb3IgY29weSBmdW5j
+dGlvbiAqLw0KPiArCV9faW9yZWFkMzJfY29weShkZXN0LCBzcmMsIGJ5dGVzIC8gc2l6ZW9m
+KHVpbnQzMl90KSk7DQo+ICAgfQ0KPiAgIA0KPiAgICNlbmRpZgkvKiBfX0JJR19FTkRJQU4g
+Ki8NCg0KSHVhY2FpLA0KDQpOb3RlOiB0aGUgb3JpZ2luYWwgY2hhbmdlIHdhcyA3IHlycyBh
+Z28gYW5kIHdlJ3ZlIGhhZCBubyByZXBvcnRzIG9mIA0KaXNzdWVzLiBidXQuLi4uDQoNClRo
+aXMgY2hhbmdlIGRpZG4ndCBsb29rIG5lY2Vzc2FyeSBhcyB0aGUgbWVtY3B5X1hYWGlvKCkg
+c2hvdWxkIGFsbG93IA0KYnl0ZSBhbGlnbm1lbnRzIGFuZCBieXRlLWJhc2VkIGxlbmd0aHMu
+IFdoaWNoIG1lYW5zIHRoZSBvcmlnaW5hbCBwYXRjaCANCmFsc28gd2Fzbid0IG5lY2Vzc2Fy
+eSwgd2hpY2ggaW1wbGllcyB0aGF0IHRoZSBwbGF0Zm9ybSB0aGF0IGhhZCB0aGUgDQppc3N1
+ZXMgaGFzIGFuIGFwaSByZXN0cmljdGlvbiBub3Qgbm9ybWFsbHkgZm91bmQgb24gdGhlIG90
+aGVyIHBsYXRmb3Jtcy4NCg0KSSBoYXZlIG5vIHByb2JsZW0gd2l0aCB0aGUgY2hhbmdlIHRo
+b3VnaC4NCg0KLS0gamFtZXMNCg0KU2lnbmVkLW9mZi1ieTogSmFtZXMgU21hcnQgIDxqYW1l
+cy5zbWFydEBicm9hZGNvbS5jb20+
