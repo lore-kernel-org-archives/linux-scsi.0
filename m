@@ -1,56 +1,31 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 6/6] lib/scatterlist: Drop order argument from
  sgl_free_n_order
-Date: Wed, 7 Mar 2018 17:33:12 +0000
-Message-ID: <1520443990.2890.30.camel@wdc.com>
+Date: Wed, 07 Mar 2018 10:30:15 -0800
+Message-ID: <1520447415.5558.12.camel@HansenPartnership.com>
 References: <20180307124712.14963-1-tvrtko.ursulin@linux.intel.com>
          <20180307124712.14963-7-tvrtko.ursulin@linux.intel.com>
-         <1520439817.2890.21.camel@wdc.com>
-         <37786476-a4e8-ce70-abff-35d99413fa68@ursulin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <37786476-a4e8-ce70-abff-35d99413fa68@ursulin.net>
-Content-Language: en-US
-Content-ID: <716F71403F90FA419317DEE404AFB44D@namprd04.prod.outlook.com>
+In-Reply-To: <20180307124712.14963-7-tvrtko.ursulin@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tursulin@ursulin.net" <tursulin@ursulin.net>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tvrtko.ursulin@intel.com" <tvrtko.ursulin@intel.com>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+To: Tvrtko Ursulin <tursulin@ursulin.net>, linux-kernel@vger.kernel.org
+Cc: Tvrtko Ursulin <tvrtko.ursulin@intel.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@kernel.dk>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE4LTAzLTA3IGF0IDE3OjIzICswMDAwLCBUdnJ0a28gVXJzdWxpbiB3cm90ZToN
-Cj4gT2sgSSBndWVzcyBteSBtYWluIHF1ZXN0aW9ucyBhcmUgdGhlIG9uZXMgZnJvbSB0aGUgY292
-ZXIgbGV0dGVyIC0gd2hlcmUgDQo+IGlzIHRoaXMgQVBJIGdvaW5nIGFuZCB3aHkgZGlkIGl0IGdl
-dCBpbiBhIGJpdCBvZiBhIGZ1bmt5IHN0YXRlPyBCZWNhdXNlIA0KPiBpdCBkb2Vzbid0IGxvb2sg
-ZnVsbHkgdGhvdWdodCB0aHJvdWdoIGFuZCB0ZXN0ZWQgdG8gbWUuDQoNCkZ1bmt5IHN0YXRlPyBO
-b3QgZnVsbHkgdGVzdGVkPyBFeGNlcHQgZm9yIHRoZSBlcnJvciBwYXRocyBhbmQgdXBwZXIgbGVu
-Z3RoDQpsaW1pdHMgdGhlIHNnbCBhbGxvY2F0aW9uIGFuZCBmcmVlaW5nIGZ1bmN0aW9ucyBoYXZl
-IGJlZW4gdGVzdGVkIHRob3JvdWdobHkuDQoNCj4gTXkgbW90aXZhdGlvbiBpcyB0aGF0IEkgd291
-bGQgbGlrZSB0byBleHRlbmQgaXQgdG8gYWRkIA0KPiBzZ2xfYWxsb2Nfb3JkZXJfbWluX21heCwg
-d2hpY2ggdGFrZXMgbWluIG9yZGVyIGFuZCBtYXggb3JkZXIsIGFuZCANCj4gYWxsb2NhdGVzIGFz
-IGxhcmdlIGNodW5rcyBhcyBpdCBjYW4gZ2l2ZW4gdGhvc2UgY29uc3RyYWludHMuIFRoaXMgaXMg
-DQo+IHNvbWV0aGluZyB3ZSBoYXZlIGluIGk5MTUgYW5kIGNvdWxkIHRoZW4gZHJvcCBvdXIgaW1w
-bGVtZW50YXRpb24gYW5kIHVzZSANCj4gdGhlIGxpYnJhcnkgZnVuY3Rpb24uDQoNClRoYXQgc291
-bmRzIHVzZWZ1bCB0byBtZS4NCg0KPiBCdXQgSSBhbHNvIHdhbnRlZCB0byByZWZhY3RvciBzZ2xf
-YWxsb2Nfb3JkZXIgdG8gYmVuZWZpdCBmcm9tIHRoZSANCj4gZXhpc3RpbmcgY2hhaW5lZCBzdHJ1
-Y3Qgc2NhdHRlcmxpc3QgYWxsb2NhdG9yLiBCdXQgU0dMIEFQSSBkb2VzIG5vdCANCj4gZW1iZWQg
-aW50byBzdHJ1Y3Qgc2dfdGFibGUsIG5laXRoZXIgaXQgY2FycmllcyBleHBsaWNpdGx5IHRoZSBu
-dW1iZXIgb2YgDQo+IG5lbnRzIGFsbG9jYXRlZCwgbWFraW5nIGl0IGltcG9zc2libGUgdG8gY29y
-cmVjdGx5IGZyZWUgd2l0aCBleGlzdGluZyANCj4gc2dfZnJlZV90YWJsZS4NCg0KSXQgaXMgb24g
-cHVycG9zZSB0aGF0IHNnbF9hbGxvY19vcmRlcigpIHJldHVybnMgYSBzdHJ1Y3Qgc2NhdHRlcmxp
-c3QNCmluc3RlYWQgb2YgYW55IHN0cnVjdHVyZSBidWlsdCBvbiB0b3Agb2Ygc3RydWN0IHNjYXR0
-ZXJsaXN0LiBJZiB5b3UgaGF2ZQ0KYSBsb29rIGF0IHRoZSBzZ2xfYWxsb2MqKCkgY2FsbGVycyB0
-aGVuIHlvdSB3aWxsIHNlZSB0aGF0IG5vbnRyaXZpYWwNCmNoYW5nZXMgaW4gdGhlc2UgY2FsbGVy
-cyBhcmUgcmVxdWlyZWQgdG8gbWFrZSB0aGVtIHVzZSBzb21ldGhpbmcgZWxzZSB0aGFuDQphIHN0
-cnVjdCBzY2F0dGVybGlzdCBwb2ludGVyLiBCdXQgaWYgeW91IHdvdWxkIGxpa2UgdG8gcmV3b3Jr
-IHRob3NlIGNhbGxlcnMNCnRoYXQncyBmaW5lIHdpdGggbWUuIEkgY2FuIGhlbHAgd2l0aCByZXZp
-ZXdpbmcgdGhlIGNvZGUgSSdtIGZhbWlsaWFyIHdpdGguDQoNCj4gQWxzbyBJIGFtIG5vdCBzdXJl
-IGlmIGEgc2luZ2xlIGdmcCBhcmd1bWVudCB0byBzZ2xfYWxsb2Nfb3JkZXIgaXMgdGhlIA0KPiBy
-aWdodCB0aGluZyB0byBkby4gSSBoYXZlIGEgZmVlbGluZyB5b3UgZWl0aGVyIG5lZWQgdG8gaWdu
-b3JlIGl0IGZvciANCj4ga21hbGxvY19hcnJheSwgb3IgcGFzcyBpbiB0d28gZ2ZwX3QgYXJndW1l
-bnRzIHRvIGJlIHVzZWQgZm9yIG1ldGFkYXRhIA0KPiBhbmQgYmFja2luZyBzdG9yYWdlIHJlc3Bl
-Y3RpdmVseS4NCg0KSWYgdGhlcmUgaXMgYSBjYWxsZXIgdGhhdCBuZWVkcyB0aGlzIGZlZWwgZnJl
-ZSB0byBtYWtlIHRoaXMgY2hhbmdlLiBCdXQNCnBsZWFzZSBkb24ndCBtYWtlIHRoaXMgY2hhbmdl
-IGJlZm9yZSB0aGVyZSBpcyBhIGNhbGxlciB0aGF0IG5lZWRzIGl0Lg0KDQpUaGFua3MsDQoNCkJh
-cnQuDQoNCg0K
+On Wed, 2018-03-07 at 12:47 +0000, Tvrtko Ursulin wrote:
+> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+
+Firstly, I don't see any justifiable benefit to churning this API, so
+why bother? but secondly this:
+
+> We can derive the order from sg->length and so do not need to pass it
+> in explicitly.
+
+Is wrong.  I can have a length 2 scatterlist that crosses a page
+boundary, but I can also have one within a single page, so the order
+cannot be deduced from the length.
+
+James
