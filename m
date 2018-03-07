@@ -1,97 +1,50 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 06/10] scsi: hisi_sas: remove unused variable hisi_sas_devices.running_req
-Date: Wed, 7 Mar 2018 20:25:10 +0800
-Message-ID: <1520425514-205565-7-git-send-email-john.garry@huawei.com>
-References: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Jianchao Wang <jianchao.w.wang@oracle.com>
+Subject: [PATCH] scsi: iscsi_tcp: set BDI_CAP_STABLE_WRITES when data digest enabled
+Date: Wed,  7 Mar 2018 20:29:03 +0800
+Message-ID: <1520425743-1923-1-git-send-email-jianchao.w.wang@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com, hare@suse.de
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+To: lduncan@suse.com, cleech@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+iscsi tcp will first send out data, then calculate and send data
+digest. If we don't have BDI_CAP_STABLE_WRITES, the page cache will
+be written in spite of the on going writeback. Consequently, wrong
+digest will be got and sent to target.
 
-The structure element hisi_sas_devices.running_req to count how
-many commands are active is in effect only ever written in the
-code, so remove it.
+To fix this, set BDI_CAP_STABLE_WRITES when data digest is enabled
+in iscsi_tcp .slave_configure callback.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       | 1 -
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 9 ---------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 3 ---
- 3 files changed, 13 deletions(-)
+ drivers/scsi/iscsi_tcp.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e7fd287..d1153e8 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -175,7 +175,6 @@ struct hisi_sas_device {
- 	struct hisi_sas_dq	*dq;
- 	struct list_head	list;
- 	u64 attached_phy;
--	atomic64_t running_req;
- 	enum sas_device_type	dev_type;
- 	int device_id;
- 	int sata_idx;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9ff8790..88ad8d4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -200,8 +200,6 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 6198559..261c686 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -37,6 +37,7 @@
+ #include <linux/kfifo.h>
+ #include <linux/scatterlist.h>
+ #include <linux/module.h>
++#include <linux/backing-dev.h>
+ #include <net/tcp.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+@@ -954,6 +955,12 @@ static int iscsi_sw_tcp_slave_alloc(struct scsi_device *sdev)
  
- 	if (task) {
- 		struct device *dev = hisi_hba->dev;
--		struct domain_device *device = task->dev;
--		struct hisi_sas_device *sas_dev = device->lldd_dev;
- 
- 		if (!task->lldd_task)
- 			return;
-@@ -213,9 +211,6 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 				dma_unmap_sg(dev, task->scatter,
- 					     task->num_scatter,
- 					     task->data_dir);
--
--		if (sas_dev)
--			atomic64_dec(&sas_dev->running_req);
- 	}
- 
- 	if (slot->buf)
-@@ -431,8 +426,6 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
- 	dq->slot_prep = slot;
--
--	atomic64_inc(&sas_dev->running_req);
- 	++(*pass);
- 
+ static int iscsi_sw_tcp_slave_configure(struct scsi_device *sdev)
+ {
++	struct iscsi_sw_tcp_host *tcp_sw_host = iscsi_host_priv(sdev->host);
++	struct iscsi_session *session = tcp_sw_host->session;
++	struct iscsi_conn *conn = session->leadconn;
++
++	if (conn->datadgst_en)
++		sdev->request_queue->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
+ 	blk_queue_bounce_limit(sdev->request_queue, BLK_BOUNCE_ANY);
+ 	blk_queue_dma_alignment(sdev->request_queue, 0);
  	return 0;
-@@ -1517,8 +1510,6 @@ static int hisi_sas_query_task(struct sas_task *task)
- 
- 	dq->slot_prep = slot;
- 
--	atomic64_inc(&sas_dev->running_req);
--
- 	/* send abort command to the chip */
- 	hisi_hba->hw->start_delivery(dq);
- 	spin_unlock_irqrestore(&dq->lock, flags_dq);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 2eb8980..8dd0e6a6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1407,9 +1407,6 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
- 	}
- 
- out:
--	if (sas_dev)
--		atomic64_dec(&sas_dev->running_req);
--
- 	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 	sts = ts->stat;
- 
 -- 
-1.9.1
+2.7.4
