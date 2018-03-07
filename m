@@ -1,124 +1,66 @@
-From: Arvind Yadav <arvind.yadav.cs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] scsi: scsi_transport_iscsi: use put_device() instead of kfree()
-Date: Wed,  7 Mar 2018 17:07:33 +0530
-Message-ID: <a77739e256b044c2e125e106165efc751ce4a0f6.1520422535.git.arvind.yadav.cs@gmail.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v4 07/10] scsi: hisi_sas: fix return value of hisi_sas_task_prep()
+Date: Wed, 7 Mar 2018 20:25:11 +0800
+Message-ID: <1520425514-205565-8-git-send-email-john.garry@huawei.com>
+References: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBD76TE7NVICBBME677KAKGQE4EESF3A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Never directly free @dev after calling device_register(), even
-if it returned an error! Always use put_device() to give up the
-reference initialized.
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+It is an implicit regulation that error code that function returned
+should be negative. But hisi_sas_task_prep() doesn't follow this.
+This may cause problems in the upper layer code.
+
+For example, in sas_expander.c of libsas, smp_execute_task_sg() may
+return the number of bytes of underrun. It will be conflicted with
+the scenaio lldd_execute_task() return an positive error code.
+
+This patch change the return value from SAS_PHY_DOWN to -ECOMM in
+hisi_sas_task_prep().
+
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 27 +++++++++++++--------------
- 1 file changed, 13 insertions(+), 14 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index f4b52b4..aacb7ab 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -221,8 +221,10 @@ struct iscsi_endpoint *
- 	ep->dev.class = &iscsi_endpoint_class;
- 	dev_set_name(&ep->dev, "ep-%llu", (unsigned long long) id);
- 	err = device_register(&ep->dev);
--        if (err)
--                goto free_ep;
-+	if (err) {
-+		put_device(&ep->dev);
-+		return NULL;
-+	}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 88ad8d4..dff9723 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -316,7 +316,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 		 */
+ 		if (device->dev_type != SAS_SATA_DEV)
+ 			task->task_done(task);
+-		return SAS_PHY_DOWN;
++		return -ECOMM;
+ 	}
  
- 	err = sysfs_create_group(&ep->dev.kobj, &iscsi_endpoint_group);
- 	if (err)
-@@ -235,10 +237,6 @@ struct iscsi_endpoint *
- unregister_dev:
- 	device_unregister(&ep->dev);
- 	return NULL;
--
--free_ep:
--	kfree(ep);
--	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_endpoint);
+ 	if (DEV_IS_GONE(sas_dev)) {
+@@ -327,7 +327,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 			dev_info(dev, "task prep: device %016llx not ready\n",
+ 				 SAS_ADDR(device->sas_addr));
  
-@@ -783,7 +781,7 @@ struct iscsi_iface *
+-		return SAS_PHY_DOWN;
++		return -ECOMM;
+ 	}
  
- free_iface:
- 	put_device(iface->dev.parent);
--	kfree(iface);
-+	put_device(&iface->dev);
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_iface);
-@@ -1260,7 +1258,7 @@ struct iscsi_bus_flash_session *
- 	return fnode_sess;
+ 	port = to_hisi_sas_port(sas_port);
+@@ -337,7 +337,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 			 "SATA/STP" : "SAS",
+ 			 device->port->id);
  
- free_fnode_sess:
--	kfree(fnode_sess);
-+	put_device(&fnode_sess->dev);
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_flashnode_sess);
-@@ -1308,7 +1306,7 @@ struct iscsi_bus_flash_conn *
- 	return fnode_conn;
+-		return SAS_PHY_DOWN;
++		return -ECOMM;
+ 	}
  
- free_fnode_conn:
--	kfree(fnode_conn);
-+	put_device(&fnode_conn->dev);
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_flashnode_conn);
-@@ -2268,6 +2266,8 @@ struct iscsi_cls_conn *
- 
- release_parent_ref:
- 	put_device(&session->dev);
-+	put_device(&conn->dev);
-+	conn = NULL;
- free_conn:
- 	kfree(conn);
- 	return NULL;
-@@ -4420,8 +4420,10 @@ struct scsi_transport_template *
- 	priv->dev.class = &iscsi_transport_class;
- 	dev_set_name(&priv->dev, "%s", tt->name);
- 	err = device_register(&priv->dev);
--	if (err)
--		goto free_priv;
-+	if (err) {
-+		put_device(&priv->dev);
-+		return NULL;
-+	}
- 
- 	err = sysfs_create_group(&priv->dev.kobj, &iscsi_transport_group);
- 	if (err)
-@@ -4456,9 +4458,6 @@ struct scsi_transport_template *
- unregister_dev:
- 	device_unregister(&priv->dev);
- 	return NULL;
--free_priv:
--	kfree(priv);
--	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_register_transport);
- 
+ 	if (!sas_protocol_ata(task->task_proto)) {
 -- 
 1.9.1
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
