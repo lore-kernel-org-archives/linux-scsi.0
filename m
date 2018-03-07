@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 10/10] scsi: hisi_sas: add v3 hw MODULE_DEVICE_TABLE()
-Date: Wed, 7 Mar 2018 20:25:14 +0800
-Message-ID: <1520425514-205565-11-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 05/10] scsi: hisi_sas: increase timer expire of internal abort task
+Date: Wed, 7 Mar 2018 20:25:09 +0800
+Message-ID: <1520425514-205565-6-git-send-email-john.garry@huawei.com>
 References: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,39 +9,47 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com, hare@suse.de
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-Export device table of v3 hw to userspace, or auto probe will fail
-for v3 hw.
+The current 110ms expiry time is not long enough for the internal
+abort task.
 
-Also change the module alias to include "pci", instead of "platform".
+The reason is that the internal abort task could be blocked in HW
+if the HW is retrying to set up link. The internal abort task will
+be executed only when the retry process finished.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+The maximum time is 5s for the retry of setting up link. So, the timer
+expire should be more than 5s. This patch increases it from 110ms to 6s.
+
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 ++-
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 5ce5ef2c..6f3e5ba 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2394,6 +2394,7 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
- 	{ PCI_VDEVICE(HUAWEI, 0xa230), hip08 },
- 	{}
- };
-+MODULE_DEVICE_TABLE(pci, sas_v3_pci_table);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 9d16372..9ff8790 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -871,6 +871,7 @@ static void hisi_sas_tmf_timedout(struct timer_list *t)
  
- static const struct pci_error_handlers hisi_sas_err_handler = {
- 	.error_detected	= hisi_sas_error_detected_v3_hw,
-@@ -2416,4 +2417,4 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
- MODULE_DESCRIPTION("HISILICON SAS controller v3 hw driver based on pci device");
--MODULE_ALIAS("platform:" DRV_NAME);
-+MODULE_ALIAS("pci:" DRV_NAME);
+ #define TASK_TIMEOUT 20
+ #define TASK_RETRY 3
++#define INTERNAL_ABORT_TIMEOUT 6
+ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
+ 					   void *parameter, u32 para_len,
+ 					   struct hisi_sas_tmf_task *tmf)
+@@ -1574,7 +1575,7 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 	task->task_proto = device->tproto;
+ 	task->task_done = hisi_sas_task_done;
+ 	task->slow_task->timer.function = hisi_sas_tmf_timedout;
+-	task->slow_task->timer.expires = jiffies + msecs_to_jiffies(110);
++	task->slow_task->timer.expires = jiffies + INTERNAL_ABORT_TIMEOUT*HZ;
+ 	add_timer(&task->slow_task->timer);
+ 
+ 	res = hisi_sas_internal_abort_task_exec(hisi_hba, sas_dev->device_id,
 -- 
 1.9.1
