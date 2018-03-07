@@ -1,68 +1,56 @@
-From: Tvrtko Ursulin <tursulin@ursulin.net>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH 6/6] lib/scatterlist: Drop order argument from
  sgl_free_n_order
-Date: Wed, 7 Mar 2018 17:23:21 +0000
-Message-ID: <37786476-a4e8-ce70-abff-35d99413fa68@ursulin.net>
+Date: Wed, 7 Mar 2018 17:33:12 +0000
+Message-ID: <1520443990.2890.30.camel@wdc.com>
 References: <20180307124712.14963-1-tvrtko.ursulin@linux.intel.com>
- <20180307124712.14963-7-tvrtko.ursulin@linux.intel.com>
- <1520439817.2890.21.camel@wdc.com>
+         <20180307124712.14963-7-tvrtko.ursulin@linux.intel.com>
+         <1520439817.2890.21.camel@wdc.com>
+         <37786476-a4e8-ce70-abff-35d99413fa68@ursulin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1520439817.2890.21.camel@wdc.com>
+In-Reply-To: <37786476-a4e8-ce70-abff-35d99413fa68@ursulin.net>
 Content-Language: en-US
+Content-ID: <716F71403F90FA419317DEE404AFB44D@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tursulin@ursulin.net" <tursulin@ursulin.net>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tvrtko.ursulin@intel.com" <tvrtko.ursulin@intel.com>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-On 07/03/18 16:23, Bart Van Assche wrote:
-> On Wed, 2018-03-07 at 12:47 +0000, Tvrtko Ursulin wrote:
->> We can derive the order from sg->length and so do not need to pass it in
->> explicitly. Rename the function to sgl_free_n.
-> 
-> Using get_order() to compute the order looks fine to me but this patch will
-> have to rebased in order to address the comments on the previous patches.
-
-Ok I guess my main questions are the ones from the cover letter - where 
-is this API going and why did it get in a bit of a funky state? Because 
-it doesn't look fully thought through and tested to me.
-
-My motivation is that I would like to extend it to add 
-sgl_alloc_order_min_max, which takes min order and max order, and 
-allocates as large chunks as it can given those constraints. This is 
-something we have in i915 and could then drop our implementation and use 
-the library function.
-
-But I also wanted to refactor sgl_alloc_order to benefit from the 
-existing chained struct scatterlist allocator. But SGL API does not 
-embed into struct sg_table, neither it carries explicitly the number of 
-nents allocated, making it impossible to correctly free with existing 
-sg_free_table.
-
-Another benefit of using the existing sg allocator would be that for 
-large allocation you don't depend on the availability of contiguous 
-chunks like you do with kmalloc_array.
-
-For instance if in another reply you mentioned 4GiB allocations are a 
-possibility. If you use order 0 that means you need 1M nents, which can 
-be something like 32 bytes each and you need a 32MiB kmalloc for the 
-nents array and thats quite big. If you would be able to reuse the 
-existing sg_alloc_table infrastructure (I have patches which extract it 
-if you don't want to deal with struct sg_table), you would benefit from 
-PAGE_SIZE allocations.
-
-Also I am not sure if a single gfp argument to sgl_alloc_order is the 
-right thing to do. I have a feeling you either need to ignore it for 
-kmalloc_array, or pass in two gfp_t arguments to be used for metadata 
-and backing storage respectively.
-
-So I have many questions regarding the current state and future 
-direction, but essentially would like to make it usable for other 
-drivers, like i915, as well.
-
-Regards,
-
-Tvrtko
+T24gV2VkLCAyMDE4LTAzLTA3IGF0IDE3OjIzICswMDAwLCBUdnJ0a28gVXJzdWxpbiB3cm90ZToN
+Cj4gT2sgSSBndWVzcyBteSBtYWluIHF1ZXN0aW9ucyBhcmUgdGhlIG9uZXMgZnJvbSB0aGUgY292
+ZXIgbGV0dGVyIC0gd2hlcmUgDQo+IGlzIHRoaXMgQVBJIGdvaW5nIGFuZCB3aHkgZGlkIGl0IGdl
+dCBpbiBhIGJpdCBvZiBhIGZ1bmt5IHN0YXRlPyBCZWNhdXNlIA0KPiBpdCBkb2Vzbid0IGxvb2sg
+ZnVsbHkgdGhvdWdodCB0aHJvdWdoIGFuZCB0ZXN0ZWQgdG8gbWUuDQoNCkZ1bmt5IHN0YXRlPyBO
+b3QgZnVsbHkgdGVzdGVkPyBFeGNlcHQgZm9yIHRoZSBlcnJvciBwYXRocyBhbmQgdXBwZXIgbGVu
+Z3RoDQpsaW1pdHMgdGhlIHNnbCBhbGxvY2F0aW9uIGFuZCBmcmVlaW5nIGZ1bmN0aW9ucyBoYXZl
+IGJlZW4gdGVzdGVkIHRob3JvdWdobHkuDQoNCj4gTXkgbW90aXZhdGlvbiBpcyB0aGF0IEkgd291
+bGQgbGlrZSB0byBleHRlbmQgaXQgdG8gYWRkIA0KPiBzZ2xfYWxsb2Nfb3JkZXJfbWluX21heCwg
+d2hpY2ggdGFrZXMgbWluIG9yZGVyIGFuZCBtYXggb3JkZXIsIGFuZCANCj4gYWxsb2NhdGVzIGFz
+IGxhcmdlIGNodW5rcyBhcyBpdCBjYW4gZ2l2ZW4gdGhvc2UgY29uc3RyYWludHMuIFRoaXMgaXMg
+DQo+IHNvbWV0aGluZyB3ZSBoYXZlIGluIGk5MTUgYW5kIGNvdWxkIHRoZW4gZHJvcCBvdXIgaW1w
+bGVtZW50YXRpb24gYW5kIHVzZSANCj4gdGhlIGxpYnJhcnkgZnVuY3Rpb24uDQoNClRoYXQgc291
+bmRzIHVzZWZ1bCB0byBtZS4NCg0KPiBCdXQgSSBhbHNvIHdhbnRlZCB0byByZWZhY3RvciBzZ2xf
+YWxsb2Nfb3JkZXIgdG8gYmVuZWZpdCBmcm9tIHRoZSANCj4gZXhpc3RpbmcgY2hhaW5lZCBzdHJ1
+Y3Qgc2NhdHRlcmxpc3QgYWxsb2NhdG9yLiBCdXQgU0dMIEFQSSBkb2VzIG5vdCANCj4gZW1iZWQg
+aW50byBzdHJ1Y3Qgc2dfdGFibGUsIG5laXRoZXIgaXQgY2FycmllcyBleHBsaWNpdGx5IHRoZSBu
+dW1iZXIgb2YgDQo+IG5lbnRzIGFsbG9jYXRlZCwgbWFraW5nIGl0IGltcG9zc2libGUgdG8gY29y
+cmVjdGx5IGZyZWUgd2l0aCBleGlzdGluZyANCj4gc2dfZnJlZV90YWJsZS4NCg0KSXQgaXMgb24g
+cHVycG9zZSB0aGF0IHNnbF9hbGxvY19vcmRlcigpIHJldHVybnMgYSBzdHJ1Y3Qgc2NhdHRlcmxp
+c3QNCmluc3RlYWQgb2YgYW55IHN0cnVjdHVyZSBidWlsdCBvbiB0b3Agb2Ygc3RydWN0IHNjYXR0
+ZXJsaXN0LiBJZiB5b3UgaGF2ZQ0KYSBsb29rIGF0IHRoZSBzZ2xfYWxsb2MqKCkgY2FsbGVycyB0
+aGVuIHlvdSB3aWxsIHNlZSB0aGF0IG5vbnRyaXZpYWwNCmNoYW5nZXMgaW4gdGhlc2UgY2FsbGVy
+cyBhcmUgcmVxdWlyZWQgdG8gbWFrZSB0aGVtIHVzZSBzb21ldGhpbmcgZWxzZSB0aGFuDQphIHN0
+cnVjdCBzY2F0dGVybGlzdCBwb2ludGVyLiBCdXQgaWYgeW91IHdvdWxkIGxpa2UgdG8gcmV3b3Jr
+IHRob3NlIGNhbGxlcnMNCnRoYXQncyBmaW5lIHdpdGggbWUuIEkgY2FuIGhlbHAgd2l0aCByZXZp
+ZXdpbmcgdGhlIGNvZGUgSSdtIGZhbWlsaWFyIHdpdGguDQoNCj4gQWxzbyBJIGFtIG5vdCBzdXJl
+IGlmIGEgc2luZ2xlIGdmcCBhcmd1bWVudCB0byBzZ2xfYWxsb2Nfb3JkZXIgaXMgdGhlIA0KPiBy
+aWdodCB0aGluZyB0byBkby4gSSBoYXZlIGEgZmVlbGluZyB5b3UgZWl0aGVyIG5lZWQgdG8gaWdu
+b3JlIGl0IGZvciANCj4ga21hbGxvY19hcnJheSwgb3IgcGFzcyBpbiB0d28gZ2ZwX3QgYXJndW1l
+bnRzIHRvIGJlIHVzZWQgZm9yIG1ldGFkYXRhIA0KPiBhbmQgYmFja2luZyBzdG9yYWdlIHJlc3Bl
+Y3RpdmVseS4NCg0KSWYgdGhlcmUgaXMgYSBjYWxsZXIgdGhhdCBuZWVkcyB0aGlzIGZlZWwgZnJl
+ZSB0byBtYWtlIHRoaXMgY2hhbmdlLiBCdXQNCnBsZWFzZSBkb24ndCBtYWtlIHRoaXMgY2hhbmdl
+IGJlZm9yZSB0aGVyZSBpcyBhIGNhbGxlciB0aGF0IG5lZWRzIGl0Lg0KDQpUaGFua3MsDQoNCkJh
+cnQuDQoNCg0K
