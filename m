@@ -1,63 +1,102 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 0/10] hisi_sas: support x6000 board and some misc changes
-Date: Wed, 7 Mar 2018 20:25:04 +0800
-Message-ID: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 02/10] scsi: hisi_sas: support the property of signal attenuation for v2 hw
+Date: Wed, 7 Mar 2018 20:25:06 +0800
+Message-ID: <1520425514-205565-3-git-send-email-john.garry@huawei.com>
+References: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com, hare@suse.de
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset primarily adds support for the Huawei x6000 board,
-which includes hip07 chipset. Unfortunately, due to some board
-layout differences with our development board, we need to set
-a PHY-related register differently for optimal signal quality. As
-such, a signal attenuation property is added to describe the
-differences in the boards and allow the PHY register to be set
-appropriately.
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-In addition to this above features, some misc changes are added for:
-- PHY linkrate sysfs interface
-- linkrate set function
-- internal abort timer timeout increase
-- add module device id tabe for v3 hw
-- register init setting changes
+The register SAS_PHY_CTRL is configured according to signal quality.
+The signal quality is calculated by signal attenuation of hardware
+physical link. It may be different for different PCB layout.
 
-Differences to v3:
-- address comments from Hannes on patch #8:
-  https://marc.info/?l=linux-scsi&m=152033924615703&w=2
-- add patch for module Id table and some register
-  setting for v3 HW.
+So, in order to give better support to new board, this patch add
+support to reading the devicetree property, "hisilicon,signal-attenuation".
+Of course, we still keep an default value in driver to adapt old
+board.
 
-Differences to v2:
-- rename dt binding property name to "hisilicon,signal-attenuation"
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 39 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
 
-Differences to v1:
-- rename dt binding property name to include "hisi-" prefix
-
-Xiang Chen (3):
-  scsi: hisi_sas: remove unused variable hisi_sas_devices.running_req
-  scsi: hisi_sas: Code cleanup and minor bug fixes
-  scsi: hisi_sas: add v3 hw MODULE_DEVICE_TABLE()
-
-Xiaofei Tan (7):
-  dt-bindings: scsi: hisi_sas: add an property of signal attenuation
-  scsi: hisi_sas: support the property of signal attenuation for v2 hw
-  scsi: hisi_sas: fix the issue of link rate inconsistency
-  scsi: hisi_sas: fix the issue of setting linkrate register
-  scsi: hisi_sas: increase timer expire of internal abort task
-  scsi: hisi_sas: fix return value of hisi_sas_task_prep()
-  scsi: hisi_sas: modify some register config for hip08
-
- .../devicetree/bindings/scsi/hisilicon-sas.txt     |  7 +++
- drivers/scsi/hisi_sas/hisi_sas.h                   |  1 -
- drivers/scsi/hisi_sas/hisi_sas_main.c              | 34 +++++-----
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             | 13 ++--
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             | 62 ++++++++++++++-----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c             | 72 ++++++++++------------
- 6 files changed, 109 insertions(+), 80 deletions(-)
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 4ccb61e..42b3fd6 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -406,6 +406,17 @@ struct hisi_sas_err_record_v2 {
+ 	__le32 dma_rx_err_type;
+ };
+ 
++struct signal_attenuation_s {
++	u32 de_emphasis;
++	u32 preshoot;
++	u32 boost;
++};
++
++struct sig_atten_lu_s {
++	const struct signal_attenuation_s *att;
++	u32 sas_phy_ctrl;
++};
++
+ static const struct hisi_sas_hw_error one_bit_ecc_errors[] = {
+ 	{
+ 		.irq_msk = BIT(SAS_ECC_INTR_DQE_ECC_1B_OFF),
+@@ -1130,9 +1141,16 @@ static void phys_try_accept_stp_links_v2_hw(struct hisi_hba *hisi_hba)
+ 	}
+ }
+ 
++static const struct signal_attenuation_s x6000 = {9200, 0, 10476};
++static const struct sig_atten_lu_s sig_atten_lu[] = {
++	{ &x6000, 0x3016a68 },
++};
++
+ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = hisi_hba->dev;
++	u32 sas_phy_ctrl = 0x30b9908;
++	u32 signal[3];
+ 	int i;
+ 
+ 	/* Global registers init */
+@@ -1176,9 +1194,28 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ 	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
+ 	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
+ 
++	/* Get sas_phy_ctrl value to deal with TX FFE issue. */
++	if (!device_property_read_u32_array(dev, "hisilicon,signal-attenuation",
++					    signal, ARRAY_SIZE(signal))) {
++		for (i = 0; i < ARRAY_SIZE(sig_atten_lu); i++) {
++			const struct sig_atten_lu_s *lookup = &sig_atten_lu[i];
++			const struct signal_attenuation_s *att = lookup->att;
++
++			if ((signal[0] == att->de_emphasis) &&
++			    (signal[1] == att->preshoot) &&
++			    (signal[2] == att->boost)) {
++				sas_phy_ctrl = lookup->sas_phy_ctrl;
++				break;
++			}
++		}
++
++		if (i == ARRAY_SIZE(sig_atten_lu))
++			dev_warn(dev, "unknown signal attenuation values, using default PHY ctrl config\n");
++	}
++
+ 	for (i = 0; i < hisi_hba->n_phy; i++) {
+ 		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x855);
+-		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, 0x30b9908);
++		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, sas_phy_ctrl);
+ 		hisi_sas_phy_write32(hisi_hba, i, SL_TOUT_CFG, 0x7d7d7d7d);
+ 		hisi_sas_phy_write32(hisi_hba, i, SL_CONTROL, 0x0);
+ 		hisi_sas_phy_write32(hisi_hba, i, TXID_AUTO, 0x2);
 -- 
 1.9.1
