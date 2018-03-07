@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 03/10] scsi: hisi_sas: fix the issue of link rate inconsistency
-Date: Wed, 7 Mar 2018 20:25:07 +0800
-Message-ID: <1520425514-205565-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 01/10] dt-bindings: scsi: hisi_sas: add an property of signal attenuation
+Date: Wed, 7 Mar 2018 20:25:05 +0800
+Message-ID: <1520425514-205565-2-git-send-email-john.garry@huawei.com>
 References: <1520425514-205565-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,128 +14,39 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-In sysfs, there are two files about minimum linkrate, and also
-two files for maximum linkrate. Take maximum linkrate example,
-maximum_linkrate_hw is read-only and indicated by the register
-HARD_PHY_LINKRATE, and maximum_linkrate is read-write and
-corresponding to the register PROG_PHY_LINK_RATE.
+For some new boards with hip07 chipset we are required to
+set PHY config registers differently. The hw property which
+determines how to set these registers is in the PHY signal
+attenuation readings.
 
-But in the function phy_up_v*_hw(), we get *_linkrate value from
-HARD_PHY_LINKRATE. It is not right. This patch is to fix this issue.
+This patch add an devicetree property, "hisilicon,signal-attenuation",
+which is used to describe the signal attenuation of an board.
 
-Unreferenced PHY-interrupt enum is also removed for v3 hw.
-
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  2 ++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  1 -
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  8 +-------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +------------
- 4 files changed, 4 insertions(+), 20 deletions(-)
+ Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 2d4dbed..9d16372 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -683,6 +683,8 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+index df3bef7..8c6659e 100644
+--- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
++++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+@@ -53,6 +53,13 @@ Main node required properties:
+ Optional main node properties:
+  - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
+ 			    "am-max-transmissions" limitation.
++ - hisilicon,signal-attenuation : array of 3 32-bit values, containing de-emphasis,
++		preshoot, and boost attenuation readings for the board. They
++		are used to describe the signal attenuation of the board. These
++		values' range is 7600 to 12400, and used to represent -24dB to
++		24dB.
++		The formula is "y = (x-10000)/10000". For example, 10478
++		means 4.78dB.
  
- 	phy->hisi_hba = hisi_hba;
- 	phy->port = NULL;
-+	phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
-+	phy->maximum_linkrate = hisi_hba->hw->phy_get_max_linkrate();
- 	sas_phy->enabled = (phy_no < hisi_hba->n_phy) ? 1 : 0;
- 	sas_phy->class = SAS;
- 	sas_phy->iproto = SAS_PROTOCOL_ALL;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 679e76f..38bbda9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -873,7 +873,6 @@ static void phy_set_linkrate_v1_hw(struct hisi_hba *hisi_hba, int phy_no,
- 	sas_phy->phy->maximum_linkrate = max;
- 	sas_phy->phy->minimum_linkrate = min;
- 
--	min -= SAS_LINK_RATE_1_5_GBPS;
- 	max -= SAS_LINK_RATE_1_5_GBPS;
- 
- 	for (i = 0; i <= max; i++)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 42b3fd6..67be346 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1603,7 +1603,6 @@ static void phy_set_linkrate_v2_hw(struct hisi_hba *hisi_hba, int phy_no,
- 	sas_phy->phy->maximum_linkrate = max;
- 	sas_phy->phy->minimum_linkrate = min;
- 
--	min -= SAS_LINK_RATE_1_5_GBPS;
- 	max -= SAS_LINK_RATE_1_5_GBPS;
- 
- 	for (i = 0; i <= max; i++)
-@@ -2684,7 +2683,7 @@ static int prep_abort_v2_hw(struct hisi_hba *hisi_hba,
- static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- {
- 	int i, res = IRQ_HANDLED;
--	u32 port_id, link_rate, hard_phy_linkrate;
-+	u32 port_id, link_rate;
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	struct device *dev = hisi_hba->dev;
-@@ -2723,11 +2722,6 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	}
- 
- 	sas_phy->linkrate = link_rate;
--	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
--						HARD_PHY_LINKRATE);
--	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
--	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
--
- 	sas_phy->oob_mode = SAS_OOB_MODE;
- 	memcpy(sas_phy->attached_sas_addr, &id->sas_addr, SAS_ADDR_SIZE);
- 	dev_info(dev, "phyup: phy%d link_rate=%d\n", phy_no, link_rate);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index a1f1868..1ee95ab 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -340,12 +340,6 @@ struct hisi_sas_err_record_v3 {
- #define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
- #define HISI_SAS_MSI_COUNT_V3_HW 32
- 
--enum {
--	HISI_SAS_PHY_PHY_UPDOWN,
--	HISI_SAS_PHY_CHNL_INT,
--	HISI_SAS_PHY_INT_NR
--};
--
- #define DIR_NO_DATA 0
- #define DIR_TO_INI 1
- #define DIR_TO_DEVICE 2
-@@ -1121,7 +1115,7 @@ static int prep_abort_v3_hw(struct hisi_hba *hisi_hba,
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- {
- 	int i, res = 0;
--	u32 context, port_id, link_rate, hard_phy_linkrate;
-+	u32 context, port_id, link_rate;
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	struct device *dev = hisi_hba->dev;
-@@ -1139,10 +1133,6 @@ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 		goto end;
- 	}
- 	sas_phy->linkrate = link_rate;
--	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
--						HARD_PHY_LINKRATE);
--	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
--	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
- 	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
- 
- 	/* Check for SATA dev */
-@@ -1864,7 +1854,6 @@ static void phy_set_linkrate_v3_hw(struct hisi_hba *hisi_hba, int phy_no,
- 	sas_phy->phy->maximum_linkrate = max;
- 	sas_phy->phy->minimum_linkrate = min;
- 
--	min -= SAS_LINK_RATE_1_5_GBPS;
- 	max -= SAS_LINK_RATE_1_5_GBPS;
- 
- 	for (i = 0; i <= max; i++)
+ Example:
+ 	sas0: sas@c1000000 {
 -- 
 1.9.1
