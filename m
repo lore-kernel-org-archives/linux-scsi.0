@@ -1,67 +1,52 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [RFC PATCH] scsi: ufs: Add specific callback for setting DMA mask
-Date: Thu, 08 Mar 2018 14:33:46 +0530
-Message-ID: <1520499826-19352-1-git-send-email-alim.akhtar@samsung.com>
-References: <CGME20180308091429epcas1p24da59df5f8872ee4c851898f78dec85b@epcas1p2.samsung.com>
+From: Tvrtko Ursulin <tursulin@ursulin.net>
+Subject: Re: [PATCH 6/6] lib/scatterlist: Drop order argument from
+ sgl_free_n_order
+Date: Thu, 8 Mar 2018 07:59:33 +0000
+Message-ID: <faa56419-bdce-c539-5eee-5e180c62b0a5@ursulin.net>
+References: <20180307124712.14963-1-tvrtko.ursulin@linux.intel.com>
+ <20180307124712.14963-7-tvrtko.ursulin@linux.intel.com>
+ <1520447415.5558.12.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1520447415.5558.12.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vinholikatti@gmail.com, subhashj@codeaurora.org, devicetree@vger.kernel.org, shaik.ameer@samsung.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org
+Cc: Tvrtko Ursulin <tvrtko.ursulin@intel.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@kernel.dk>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Currently DMA mask for UFS HCI is set by reading CAP register's
-[64AS] bit. Some HCI controller like Exynos support 36-bit bus address.
-This works perfectly fine with DMA mask set as 64 in case there is no
-IOMMU attached to HCI.
-In case if HCI is behind an IOMMU, setting DMA mask as 64 bit won't
-work as HCI has only 36bit addressing and SMMU has created mapping of
-64 bit and as the device truncates the address, its mapping will not
-be found by iommu.
-To resolve such issues, let the variant driver sets its own DMA mask.
+Hi,
 
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 3 +++
- drivers/scsi/ufs/ufshcd.h | 2 ++
- 2 files changed, 5 insertions(+)
+On 07/03/18 18:30, James Bottomley wrote:
+> On Wed, 2018-03-07 at 12:47 +0000, Tvrtko Ursulin wrote:
+>> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+> 
+> Firstly, I don't see any justifiable benefit to churning this API, so
+> why bother? but secondly this:
 
-I am not sure if there are other ways available to handle such cases.
-The IOMMU I am talking about is arm-smmu and it DT binding does not
-give much idea about handling such cases.
+Primarily because I wanted to extend sgl_alloc_order slightly in order 
+to be able to use it from i915. And then in the process noticed a couple 
+of bugs in the implementation, type inconsistencies and unused exported 
+symbols. That gave me a feeling API could actually use a bit of work.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a355d98..9a1374e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7781,6 +7781,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
-  */
- static int ufshcd_set_dma_mask(struct ufs_hba *hba)
- {
-+	if (hba->vops && hba->vops->set_dam_mask)
-+		return bha->vops->set_dma_mask(hba);
-+
- 	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
- 		if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
- 			return 0;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 1332e54..89c6dae 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -297,6 +297,7 @@ struct ufs_pwr_mode_info {
-  * @resume: called during host controller PM callback
-  * @dbg_register_dump: used to dump controller debug information
-  * @phy_initialization: used to initialize phys
-+ * @set_dma_mask: used to set variant specific DMA mask
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -325,6 +326,7 @@ struct ufs_hba_variant_ops {
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
- 	int	(*phy_initialization)(struct ufs_hba *);
-+	int	(*set_dma_mask)(struct ufs_hba *hba);
- };
- 
- /* clock gating state  */
--- 
-2.7.4
+>> We can derive the order from sg->length and so do not need to pass it
+>> in explicitly.
+> 
+> Is wrong.  I can have a length 2 scatterlist that crosses a page
+> boundary, but I can also have one within a single page, so the order
+> cannot be deduced from the length.
+
+sgl_alloc_order never does this.
+
+However there is a different bug in my patch relating to the last entry 
+which can have shorter length from the rest. So get_order on the last 
+entry is incorrect - I have to store the deduced order and carry it over.
+
+In which case it may even make sense to refactor sgl_alloc_order a bit 
+more to avoid wastage on the last entry with high order allocations.
+
+Regards,
+
+Tvrtko
