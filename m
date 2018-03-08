@@ -1,67 +1,120 @@
 From: Stephen Kitt <steve@sk2.org>
-Subject: Re: [PATCH] aic7xxx/aic79xx: remove VLAs
-Date: Thu, 8 Mar 2018 21:50:19 +0100
-Message-ID: <20180308215019.399ebdb4@heffalump.sk2.org>
-References: <20180308132225.13229-1-steve@sk2.org>
-	<CAGXu5jK=JhBFHBGpbWF46DC3-QMruiB0qqz1z+njcK2h7jVU9w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/EbA69GcKFcB.rXi1iSj5RD0"; protocol="application/pgp-signature"
-Return-path: <kernel-hardening-return-12261-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
+Subject: [PATCH v2] aic7xxx/aic79xx: remove VLAs
+Date: Thu,  8 Mar 2018 21:51:58 +0100
+Message-ID: <20180308205158.5130-1-steve@sk2.org>
+References: <CAGXu5jK=JhBFHBGpbWF46DC3-QMruiB0qqz1z+njcK2h7jVU9w@mail.gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <CAGXu5jK=JhBFHBGpbWF46DC3-QMruiB0qqz1z+njcK2h7jVU9w@mail.gmail.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: hare <hare@suse.com>, linux-scsi@vger.kernel.org, Kernel Hardening <kernel-hardening@lists.openwall.com>, LKML <linux-kernel@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hare@suse.com, keescook@chromium.org
+Cc: linux-scsi@vger.kernel.org, kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org, Stephen Kitt <steve@sk2.org>
 List-Id: linux-scsi@vger.kernel.org
 
---Sig_/EbA69GcKFcB.rXi1iSj5RD0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+In preparation to enabling -Wvla, remove VLAs and replace them with
+fixed-length arrays instead.
 
-On Thu, 8 Mar 2018 11:52:25 -0800, Kees Cook <keescook@chromium.org> wrote:
-> On Thu, Mar 8, 2018 at 5:22 AM, Stephen Kitt <steve@sk2.org> wrote:
-> > -static const int num_critical_sections =3D sizeof(critical_sections)
-> > -                                      / sizeof(*critical_sections);
-> > +#define NUM_CRITICAL_SECTIONS 14 =20
->=20
-> The compiler doesn't treat "const" as a literal, hence the need to
-> change this. However, you can still use the sizeof (actually, this is
-> exactly ARRAY_SIZE()). Perhaps:
->=20
-> #define NUM_CRITICAL_SECTIONS ARRAY_SIZE(critical_sections)
->=20
-> ?
->=20
-> Otherwise, looks great!
+The arrays fixed here, using the number of constant sections, aren't
+really VLAs, but they appear so to the compiler. Replace the array
+sizes with a pre-processor-level constant instead using ARRAY_SIZE.
 
-Thanks, v2 incoming...
+This was prompted by https://lkml.org/lkml/2018/3/7/621
 
-Regards,
+Signed-off-by: Stephen Kitt <steve@sk2.org>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c        | 8 ++++----
+ drivers/scsi/aic7xxx/aic79xx_seq.h_shipped | 3 +--
+ drivers/scsi/aic7xxx/aic7xxx_core.c        | 8 ++++----
+ drivers/scsi/aic7xxx/aic7xxx_seq.h_shipped | 3 +--
+ drivers/scsi/aic7xxx/aicasm/aicasm.c       | 3 +--
+ 5 files changed, 11 insertions(+), 14 deletions(-)
 
-Stephen
-
---Sig_/EbA69GcKFcB.rXi1iSj5RD0
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEnPVX/hPLkMoq7x0ggNMC9Yhtg5wFAlqhogsACgkQgNMC9Yht
-g5y+vxAAhYiZaRdCTRVxuCtpCt3PtJk1fq4D+RwtPbQjYdM1ZNm5H7DN1tL7Qac/
-vP8pnMh3jjU2s2+3lKth3SsM/3izj4KsHFk2XXZjncSIHZddvOhGOpYzGVSNRs97
-CKl1JxeTzt+7IaT8u7bxT8sSoIuhMqpXAT+y0YjlG4ljFWpZ23wZ6AxD2EIhDrLi
-wddbrvzGHMohAFYg+m4gM7E6SPx/N4dwFaW3ZD1bALvB284OIa0lkWrPQJLNI0m3
-JahA6OgzrQkHm8qqwGQPyKWY1JC0nTm/euF387AnklyE9v7pjB0uRk6Muj7Yle55
-yN4bKnXfFbQH1ANmbBMfvkIUTZESXaViPweHr3RbmbnMtEpvVkxt04qAOp7mhvBL
-qoICxTDE4C1mTHrehCnCjmA095owv+ZJc7TBZGPyvKlBscQh8KBNiJ/b3mXlrTPV
-RlLhOt9+oG/Sug/6J+30gYLV5CRJCAQK0H//zmeCKfKIq5Gtefm2CfX1Z+FiXTzM
-nREDdG1Pqg0Q+Flh7Yyz7DRY2MYe91cprj1ZsWbl+jmy89ds1iIXR3Q+s2011N8T
-/8QR4vIflUsVgaQoIkKyRqp4bAKxj83oN/vXvAauwTEfNfb0bAoeqAzesfBmc6M9
-2xHL145DPD1fth4l4PFNsaYdgeYkw1ZnqAEy1TUTaQSbFKDoB3I=
-=xGd9
------END PGP SIGNATURE-----
-
---Sig_/EbA69GcKFcB.rXi1iSj5RD0--
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index b560f396ee99..034f4eebb160 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -9338,9 +9338,9 @@ ahd_dumpseq(struct ahd_softc* ahd)
+ static void
+ ahd_loadseq(struct ahd_softc *ahd)
+ {
+-	struct	cs cs_table[num_critical_sections];
+-	u_int	begin_set[num_critical_sections];
+-	u_int	end_set[num_critical_sections];
++	struct	cs cs_table[NUM_CRITICAL_SECTIONS];
++	u_int	begin_set[NUM_CRITICAL_SECTIONS];
++	u_int	end_set[NUM_CRITICAL_SECTIONS];
+ 	const struct patch *cur_patch;
+ 	u_int	cs_count;
+ 	u_int	cur_cs;
+@@ -9456,7 +9456,7 @@ ahd_loadseq(struct ahd_softc *ahd)
+ 		 * Move through the CS table until we find a CS
+ 		 * that might apply to this instruction.
+ 		 */
+-		for (; cur_cs < num_critical_sections; cur_cs++) {
++		for (; cur_cs < NUM_CRITICAL_SECTIONS; cur_cs++) {
+ 			if (critical_sections[cur_cs].end <= i) {
+ 				if (begin_set[cs_count] == TRUE
+ 				 && end_set[cs_count] == FALSE) {
+diff --git a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
+index 4b51e232392f..fd64a950ee44 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
++++ b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
+@@ -1186,5 +1186,4 @@ static const struct cs {
+ 	{ 759, 763 }
+ };
+ 
+-static const int num_critical_sections = sizeof(critical_sections)
+-				       / sizeof(*critical_sections);
++#define NUM_CRITICAL_SECTIONS ARRAY_SIZE(critical_sections)
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 6612ff3b2e83..e97eceacf522 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -6848,9 +6848,9 @@ ahc_dumpseq(struct ahc_softc* ahc)
+ static int
+ ahc_loadseq(struct ahc_softc *ahc)
+ {
+-	struct	cs cs_table[num_critical_sections];
+-	u_int	begin_set[num_critical_sections];
+-	u_int	end_set[num_critical_sections];
++	struct	cs cs_table[NUM_CRITICAL_SECTIONS];
++	u_int	begin_set[NUM_CRITICAL_SECTIONS];
++	u_int	end_set[NUM_CRITICAL_SECTIONS];
+ 	const struct patch *cur_patch;
+ 	u_int	cs_count;
+ 	u_int	cur_cs;
+@@ -6915,7 +6915,7 @@ ahc_loadseq(struct ahc_softc *ahc)
+ 		 * Move through the CS table until we find a CS
+ 		 * that might apply to this instruction.
+ 		 */
+-		for (; cur_cs < num_critical_sections; cur_cs++) {
++		for (; cur_cs < NUM_CRITICAL_SECTIONS; cur_cs++) {
+ 			if (critical_sections[cur_cs].end <= i) {
+ 				if (begin_set[cs_count] == TRUE
+ 				 && end_set[cs_count] == FALSE) {
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_seq.h_shipped b/drivers/scsi/aic7xxx/aic7xxx_seq.h_shipped
+index 07e93fbae706..f37362bc8ece 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_seq.h_shipped
++++ b/drivers/scsi/aic7xxx/aic7xxx_seq.h_shipped
+@@ -1304,5 +1304,4 @@ static const struct cs {
+ 	{ 875, 877 }
+ };
+ 
+-static const int num_critical_sections = sizeof(critical_sections)
+-				       / sizeof(*critical_sections);
++#define NUM_CRITICAL_SECTIONS ARRAY_SIZE(critical_sections)
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm.c b/drivers/scsi/aic7xxx/aicasm/aicasm.c
+index 21ac265280bf..5f474e490f3e 100644
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm.c
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm.c
+@@ -451,8 +451,7 @@ output_code()
+ 	fprintf(ofile, "\n};\n\n");
+ 
+ 	fprintf(ofile,
+-"static const int num_critical_sections = sizeof(critical_sections)\n"
+-"				       / sizeof(*critical_sections);\n");
++	"#define NUM_CRITICAL_SECTIONS ARRAY_SIZE(critical_sections)\n");
+ 
+ 	fprintf(stderr, "%s: %d instructions used\n", appname, instrcount);
+ }
+-- 
+2.11.0
