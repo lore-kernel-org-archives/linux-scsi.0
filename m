@@ -1,46 +1,91 @@
-From: Tvrtko Ursulin <tursulin@ursulin.net>
-Subject: Re: [PATCH 6/6] lib/scatterlist: Drop order argument from
- sgl_free_n_order
-Date: Thu, 8 Mar 2018 17:06:36 +0000
-Message-ID: <b07f8f6b-4264-d1d1-1e14-b22932130ac4@ursulin.net>
-References: <20180307124712.14963-1-tvrtko.ursulin@linux.intel.com>
- <20180307124712.14963-7-tvrtko.ursulin@linux.intel.com>
- <1520447415.5558.12.camel@HansenPartnership.com>
- <faa56419-bdce-c539-5eee-5e180c62b0a5@ursulin.net>
- <1520524591.2809.0.camel@wdc.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH] aic7xxx/aic79xx: remove VLAs
+Date: Thu, 8 Mar 2018 11:52:25 -0800
+Message-ID: <CAGXu5jK=JhBFHBGpbWF46DC3-QMruiB0qqz1z+njcK2h7jVU9w@mail.gmail.com>
+References: <20180308132225.13229-1-steve@sk2.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1520524591.2809.0.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tvrtko.ursulin@intel.com" <tvrtko.ursulin@intel.com>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <kernel-hardening-return-12255-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
+Sender: keescook@google.com
+In-Reply-To: <20180308132225.13229-1-steve@sk2.org>
+To: Stephen Kitt <steve@sk2.org>
+Cc: hare <hare@suse.com>, linux-scsi@vger.kernel.org, Kernel Hardening <kernel-hardening@lists.openwall.com>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Mar 8, 2018 at 5:22 AM, Stephen Kitt <steve@sk2.org> wrote:
+> In preparation to enabling -Wvla, remove VLAs and replace them with
+> fixed-length arrays instead.
+>
+> The arrays fixed here, using the number of constant sections, aren't
+> really VLAs, but they appear so to the compiler. Since we know at
+> build-time how many critical sections there are, we might as well use
+> a pre-processor-level constant instead.
+>
+> This was prompted by https://lkml.org/lkml/2018/3/7/621
+>
+> Signed-off-by: Stephen Kitt <steve@sk2.org>
+> ---
+>  drivers/scsi/aic7xxx/aic79xx_core.c        | 8 ++++----
+>  drivers/scsi/aic7xxx/aic79xx_seq.h_shipped | 3 +--
+>  drivers/scsi/aic7xxx/aic7xxx_core.c        | 8 ++++----
+>  drivers/scsi/aic7xxx/aic7xxx_seq.h_shipped | 3 +--
+>  drivers/scsi/aic7xxx/aicasm/aicasm.c       | 6 ++++--
+>  5 files changed, 14 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+> index b560f396ee99..034f4eebb160 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_core.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+> @@ -9338,9 +9338,9 @@ ahd_dumpseq(struct ahd_softc* ahd)
+>  static void
+>  ahd_loadseq(struct ahd_softc *ahd)
+>  {
+> -       struct  cs cs_table[num_critical_sections];
+> -       u_int   begin_set[num_critical_sections];
+> -       u_int   end_set[num_critical_sections];
+> +       struct  cs cs_table[NUM_CRITICAL_SECTIONS];
+> +       u_int   begin_set[NUM_CRITICAL_SECTIONS];
+> +       u_int   end_set[NUM_CRITICAL_SECTIONS];
+>         const struct patch *cur_patch;
+>         u_int   cs_count;
+>         u_int   cur_cs;
+> @@ -9456,7 +9456,7 @@ ahd_loadseq(struct ahd_softc *ahd)
+>                  * Move through the CS table until we find a CS
+>                  * that might apply to this instruction.
+>                  */
+> -               for (; cur_cs < num_critical_sections; cur_cs++) {
+> +               for (; cur_cs < NUM_CRITICAL_SECTIONS; cur_cs++) {
+>                         if (critical_sections[cur_cs].end <= i) {
+>                                 if (begin_set[cs_count] == TRUE
+>                                  && end_set[cs_count] == FALSE) {
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
+> index 4b51e232392f..20fb9ca9e271 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
+> +++ b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
+> @@ -1186,5 +1186,4 @@ static const struct cs {
+>         { 759, 763 }
+>  };
+>
+> -static const int num_critical_sections = sizeof(critical_sections)
+> -                                      / sizeof(*critical_sections);
+> +#define NUM_CRITICAL_SECTIONS 14
 
-On 08/03/18 15:56, Bart Van Assche wrote:
-> On Thu, 2018-03-08 at 07:59 +0000, Tvrtko Ursulin wrote:
->> However there is a different bug in my patch relating to the last entry
->> which can have shorter length from the rest. So get_order on the last
->> entry is incorrect - I have to store the deduced order and carry it over.
-> 
-> Will that work if there is only one entry in the list and if it is a short
-> entry?
+The compiler doesn't treat "const" as a literal, hence the need to
+change this. However, you can still use the sizeof (actually, this is
+exactly ARRAY_SIZE()). Perhaps:
 
-Yeah, needs more work. I especially don't like that case (as in any 
-other with a final short chunk) wasting memory. So it would need more 
-refactoring to make it possible.
+#define NUM_CRITICAL_SECTIONS ARRAY_SIZE(critical_sections)
 
-It did work in my internal tree where sgl_alloc_order was extended to 
-become sgl_alloc_order_min_max, and as such uses a smaller order for 
-smaller chunks.
+?
 
-This patch can be dropped for now but the earlier ones are still valid I 
-think. On those one I think we have some opens on how to proceed so if 
-you could reply there, where applicable, that would be great.
+Otherwise, looks great!
 
-Regards,
+-Kees
 
-Tvrtko
+-- 
+Kees Cook
+Pixel Security
