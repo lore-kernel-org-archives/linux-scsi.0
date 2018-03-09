@@ -1,94 +1,95 @@
 From: Stephen Kitt <steve@sk2.org>
-Subject: VLA removal, device_handler and COMMAND_SIZE
-Date: Fri, 9 Mar 2018 23:29:33 +0100
-Message-ID: <20180309232933.14e39858@heffalump.sk2.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/ND1RoT20ph5rx/6uVsD0LuU"; protocol="application/pgp-signature"
-Return-path: <kernel-hardening-return-12342-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
-To: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kernel Hardening <kernel-hardening@lists.openwall.com>
+Subject: [PATCH] device_handler: remove VLAs
+Date: Fri,  9 Mar 2018 23:32:11 +0100
+Message-ID: <20180309223211.20473-1-steve@sk2.org>
+References: <20180309232933.14e39858@heffalump.sk2.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180309232933.14e39858@heffalump.sk2.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hare@suse.com, axboe@kernel.dk, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Stephen Kitt <steve@sk2.org>
 List-Id: linux-scsi@vger.kernel.org
 
---Sig_/ND1RoT20ph5rx/6uVsD0LuU
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+In preparation to enabling -Wvla, remove VLAs and replace them with
+fixed-length arrays instead.
 
-Hi,
+scsi_dh_{alua,emc,rdac} use variable-length array declarations to
+store command blocks, with the appropriate size as determined by
+COMMAND_SIZE. This patch replaces these with fixed-sized arrays using
+MAX_COMMAND_SIZE, so that the array size can be determined at compile
+time.
 
-I=E2=80=99ve been looking into removing some VLAs from device_handler drive=
-rs,
-prompted by https://lkml.org/lkml/2018/3/7/621
+This was prompted by https://lkml.org/lkml/2018/3/7/621
 
-The uses in question here are quite straightforward, e.g. in
-drivers/scsi/device_handler/scsi_dh_alua.c:
+Signed-off-by: Stephen Kitt <steve@sk2.org>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++----
+ drivers/scsi/device_handler/scsi_dh_emc.c  | 2 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-	u8 cdb[COMMAND_SIZE(MAINTENANCE_IN)];
-
-There=E2=80=99s no trivial way of keeping the compiler happy with -Wvla tho=
-ugh here,
-at least not while keeping the behaviour strictly identical. I=E2=80=99ve c=
-ome up
-with two approaches, and I=E2=80=99m curious whether they=E2=80=99re approp=
-riate or if
-there=E2=80=99s a better way...
-
-The first approach is to use MAX_COMMAND_SIZE instead; this wastes a few
-bytes on the stack here and there, and stays reasonably maintainable.
-
-The second approach might be symptomatic of a twisted mind, and involves
-replacing COMMAND_SIZE so that it can be calculated at compile time when the
-opcode is known:
-
-/*
- * SCSI command sizes are as follows, in bytes, for fixed size commands, per
- * group: 6, 10, 10, 12, 16, 12, 10, 10. The top three bits of an opcode
- * determine its group.
- * The size table is encoded into a 32-bit value by subtracting each value
- * from 16, resulting in a value of 1715488362
- * (6 << 28 + 6 << 24 + 4 << 20 + 0 << 16 + 4 << 12 + 6 << 8 + 6 << 4 + 10).
- * Command group 3 is reserved and should never be used.
- */
-#define COMMAND_SIZE(opcode) \
-       (16 - (15 & (1715488362 >> (4 * (((opcode) >> 5) & 7)))))
-
-
-This has the side-effect of making some of the call sites more complex, and
-the macro itself isn=E2=80=99t the most maintainer-friendly. It does mean w=
-e can drop
-BLK_SCSI_REQUEST from drivers/target/Kconfig so it=E2=80=99s not all bad...
-
-Both patches will follow in reply to this email, I=E2=80=99ll let more fami=
-liar
-developers judge which is appropriate (if any).
-
-Regards,
-
-Stephen
-
---Sig_/ND1RoT20ph5rx/6uVsD0LuU
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEnPVX/hPLkMoq7x0ggNMC9Yhtg5wFAlqjCs0ACgkQgNMC9Yht
-g5zk6A//RgjRyD4aFvyZl/eCAy/q6gNM2ocvJzRHBsHKaNPlTEx5vEkjAZYHntoV
-tnRf/nmiNrq5OLzfH7IDig0/P6IAh9WZBQKyO5RSL/NDqSKny6+M5grxTN8+hLl6
-D+ODmC8MOvQmtwIfu3zj/OGNCvZmEfqW//DAg/v6QgHKMQtwhxXRoh7BqOlMt/Qm
-f+27uE5BdPoOrXwJ7AcMBy4xHm7RvSpuUMUkOTpIEe4DvnqCMQK3wDjpvSLqJcv5
-m7toKh3D5neVqL6jLKykWb1+4L0EQUokd4i0LCcp69evzT21MqwAyvHpLyBSS+EN
-AW9mX017A1OY/nraKEhbV84jlWh0LggMe9rzHoBqNLOEtJ7F3/7RBasnEIYQs3vj
-s03GFz3qc82X0gX9MF1e6SgkvpRlSHEexvph2mMC2bGw9qRnoU2iwOhptM4LzB1t
-D+YZ+XG8vOQ97TlT0BEIpuKsZCOJFcWW3rdl1kc4/s2F04daCdBWTVCYbPJZi767
-uub1reBwy8U1LNr9ZhtS0LnghY+VGOzeeiZTMboIv0895ERgWbTR6M84xJcBoyOh
-Kb7mxjH1dG2kqdp0RJLrFY32rXZuswvO1Fwl+GfDKXy0Dx5XUxfLU1BY8zcaBly9
-BNtHLwOx/F9UkQqTp5CbQvBNQuvAjOi8k/IQkdckph9H/DKBsgE=
-=b4fl
------END PGP SIGNATURE-----
-
---Sig_/ND1RoT20ph5rx/6uVsD0LuU--
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 4b44325d1a82..982a52528a1c 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -138,12 +138,12 @@ static void release_port_group(struct kref *kref)
+ static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
+ 		       int bufflen, struct scsi_sense_hdr *sshdr, int flags)
+ {
+-	u8 cdb[COMMAND_SIZE(MAINTENANCE_IN)];
++	u8 cdb[MAX_COMMAND_SIZE];
+ 	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+ 		REQ_FAILFAST_DRIVER;
+ 
+ 	/* Prepare the command. */
+-	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_IN));
++	memset(cdb, 0x0, MAX_COMMAND_SIZE);
+ 	cdb[0] = MAINTENANCE_IN;
+ 	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+ 		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+@@ -166,7 +166,7 @@ static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
+ static int submit_stpg(struct scsi_device *sdev, int group_id,
+ 		       struct scsi_sense_hdr *sshdr)
+ {
+-	u8 cdb[COMMAND_SIZE(MAINTENANCE_OUT)];
++	u8 cdb[MAX_COMMAND_SIZE];
+ 	unsigned char stpg_data[8];
+ 	int stpg_len = 8;
+ 	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+@@ -178,7 +178,7 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
+ 	put_unaligned_be16(group_id, &stpg_data[6]);
+ 
+ 	/* Prepare the command. */
+-	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_OUT));
++	memset(cdb, 0x0, MAX_COMMAND_SIZE);
+ 	cdb[0] = MAINTENANCE_OUT;
+ 	cdb[1] = MO_SET_TARGET_PGS;
+ 	put_unaligned_be32(stpg_len, &cdb[6]);
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index 6a2792f3a37e..95c47909a58f 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -249,7 +249,7 @@ static int send_trespass_cmd(struct scsi_device *sdev,
+ 			    struct clariion_dh_data *csdev)
+ {
+ 	unsigned char *page22;
+-	unsigned char cdb[COMMAND_SIZE(MODE_SELECT)];
++	unsigned char cdb[MAX_COMMAND_SIZE];
+ 	int err, res = SCSI_DH_OK, len;
+ 	struct scsi_sense_hdr sshdr;
+ 	u64 req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index 7af31a1247ee..d27fabae8ddd 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -533,7 +533,7 @@ static void send_mode_select(struct work_struct *work)
+ 	int err = SCSI_DH_OK, retry_cnt = RDAC_RETRY_COUNT;
+ 	struct rdac_queue_data *tmp, *qdata;
+ 	LIST_HEAD(list);
+-	unsigned char cdb[COMMAND_SIZE(MODE_SELECT_10)];
++	unsigned char cdb[MAX_COMMAND_SIZE];
+ 	struct scsi_sense_hdr sshdr;
+ 	unsigned int data_size;
+ 	u64 req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+-- 
+2.11.0
