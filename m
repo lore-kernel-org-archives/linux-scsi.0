@@ -1,7 +1,7 @@
 From: Stephen Kitt <steve@sk2.org>
-Subject: [PATCH] device_handler: remove VLAs
-Date: Fri,  9 Mar 2018 23:32:11 +0100
-Message-ID: <20180309223211.20473-1-steve@sk2.org>
+Subject: [PATCH] scsi: resolve COMMAND_SIZE at compile time
+Date: Fri,  9 Mar 2018 23:33:55 +0100
+Message-ID: <20180309223355.21222-1-steve@sk2.org>
 References: <20180309232933.14e39858@heffalump.sk2.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180309232933.14e39858@heffalump.sk2.org>
@@ -10,86 +10,82 @@ To: hare@suse.com, axboe@kernel.dk, jejb@linux.vnet.ibm.com, martin.petersen@ora
 Cc: linux-scsi@vger.kernel.org, kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Stephen Kitt <steve@sk2.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In preparation to enabling -Wvla, remove VLAs and replace them with
-fixed-length arrays instead.
+COMMAND_SIZE currently uses an array of values in block/scsi_ioctl.c.
+A number of device_handler functions use this to initialise arrays,
+and this is flagged by -Wvla.
 
-scsi_dh_{alua,emc,rdac} use variable-length array declarations to
-store command blocks, with the appropriate size as determined by
-COMMAND_SIZE. This patch replaces these with fixed-sized arrays using
-MAX_COMMAND_SIZE, so that the array size can be determined at compile
-time.
+This patch replaces COMMAND_SIZE with a variant using a formula which
+can be resolved at compile time in cases where the opcode is fixed,
+resolving the array size and avoiding the VLA. The downside is that
+the code is less maintainable and that some call sites end up having
+more complex generated code.
+
+Since scsi_command_size_tbl is dropped, we can remove the dependency
+on BLK_SCSI_REQUEST from drivers/target/Kconfig.
 
 This was prompted by https://lkml.org/lkml/2018/3/7/621
 
 Signed-off-by: Stephen Kitt <steve@sk2.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++----
- drivers/scsi/device_handler/scsi_dh_emc.c  | 2 +-
- drivers/scsi/device_handler/scsi_dh_rdac.c | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ block/scsi_ioctl.c         |  8 --------
+ drivers/target/Kconfig     |  1 -
+ include/scsi/scsi_common.h | 13 +++++++++++--
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 4b44325d1a82..982a52528a1c 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -138,12 +138,12 @@ static void release_port_group(struct kref *kref)
- static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
- 		       int bufflen, struct scsi_sense_hdr *sshdr, int flags)
- {
--	u8 cdb[COMMAND_SIZE(MAINTENANCE_IN)];
-+	u8 cdb[MAX_COMMAND_SIZE];
- 	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
- 		REQ_FAILFAST_DRIVER;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 60b471f8621b..b9e176e537be 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -41,14 +41,6 @@ struct blk_cmd_filter {
  
- 	/* Prepare the command. */
--	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_IN));
-+	memset(cdb, 0x0, MAX_COMMAND_SIZE);
- 	cdb[0] = MAINTENANCE_IN;
- 	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
- 		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
-@@ -166,7 +166,7 @@ static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
- static int submit_stpg(struct scsi_device *sdev, int group_id,
- 		       struct scsi_sense_hdr *sshdr)
- {
--	u8 cdb[COMMAND_SIZE(MAINTENANCE_OUT)];
-+	u8 cdb[MAX_COMMAND_SIZE];
- 	unsigned char stpg_data[8];
- 	int stpg_len = 8;
- 	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-@@ -178,7 +178,7 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
- 	put_unaligned_be16(group_id, &stpg_data[6]);
+ static struct blk_cmd_filter blk_default_cmd_filter;
  
- 	/* Prepare the command. */
--	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_OUT));
-+	memset(cdb, 0x0, MAX_COMMAND_SIZE);
- 	cdb[0] = MAINTENANCE_OUT;
- 	cdb[1] = MO_SET_TARGET_PGS;
- 	put_unaligned_be32(stpg_len, &cdb[6]);
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 6a2792f3a37e..95c47909a58f 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -249,7 +249,7 @@ static int send_trespass_cmd(struct scsi_device *sdev,
- 			    struct clariion_dh_data *csdev)
- {
- 	unsigned char *page22;
--	unsigned char cdb[COMMAND_SIZE(MODE_SELECT)];
-+	unsigned char cdb[MAX_COMMAND_SIZE];
- 	int err, res = SCSI_DH_OK, len;
- 	struct scsi_sense_hdr sshdr;
- 	u64 req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 7af31a1247ee..d27fabae8ddd 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -533,7 +533,7 @@ static void send_mode_select(struct work_struct *work)
- 	int err = SCSI_DH_OK, retry_cnt = RDAC_RETRY_COUNT;
- 	struct rdac_queue_data *tmp, *qdata;
- 	LIST_HEAD(list);
--	unsigned char cdb[COMMAND_SIZE(MODE_SELECT_10)];
-+	unsigned char cdb[MAX_COMMAND_SIZE];
- 	struct scsi_sense_hdr sshdr;
- 	unsigned int data_size;
- 	u64 req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+-/* Command group 3 is reserved and should never be used.  */
+-const unsigned char scsi_command_size_tbl[8] =
+-{
+-	6, 10, 10, 12,
+-	16, 12, 10, 10
+-};
+-EXPORT_SYMBOL(scsi_command_size_tbl);
+-
+ #include <scsi/sg.h>
+ 
+ static int sg_get_version(int __user *p)
+diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+index 4c44d7bed01a..b5f05b60cf06 100644
+--- a/drivers/target/Kconfig
++++ b/drivers/target/Kconfig
+@@ -4,7 +4,6 @@ menuconfig TARGET_CORE
+ 	depends on SCSI && BLOCK
+ 	select CONFIGFS_FS
+ 	select CRC_T10DIF
+-	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
+ 	select SGL_ALLOC
+ 	default n
+ 	help
+diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
+index 731ac09ed231..48d950666376 100644
+--- a/include/scsi/scsi_common.h
++++ b/include/scsi/scsi_common.h
+@@ -15,8 +15,17 @@ scsi_varlen_cdb_length(const void *hdr)
+ 	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
+ }
+ 
+-extern const unsigned char scsi_command_size_tbl[8];
+-#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
++/*
++ * SCSI command sizes are as follows, in bytes, for fixed size commands, per
++ * group: 6, 10, 10, 12, 16, 12, 10, 10. The top three bits of an opcode
++ * determine its group.
++ * The size table is encoded into a 32-bit value by subtracting each value
++ * from 16, resulting in a value of 1715488362
++ * (6 << 28 + 6 << 24 + 4 << 20 + 0 << 16 + 4 << 12 + 6 << 8 + 6 << 4 + 10).
++ * Command group 3 is reserved and should never be used.
++ */
++#define COMMAND_SIZE(opcode) \
++	(16 - (15 & (1715488362 >> (4 * (((opcode) >> 5) & 7)))))
+ 
+ static inline unsigned
+ scsi_command_size(const unsigned char *cmnd)
 -- 
 2.11.0
