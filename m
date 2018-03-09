@@ -1,49 +1,33 @@
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Subject: Re: [PATCH v2 00/38] cxlflash: OCXL transport support
-Date: Fri, 9 Mar 2018 16:08:12 +1100
-Message-ID: <6d69dab9-7f8d-0f4c-d276-d5cf2e882df6@au1.ibm.com>
-References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <yq18tb5rskt.fsf@oracle.com>
+From: Tom Bogendoerfer <tsbogend@alpha.franken.de>
+Subject: Re: [PATCH] scsi: jazz_esp, sun3x_esp: Pass struct device pointer in
+ dma calls
+Date: Fri, 9 Mar 2018 11:52:49 +0100
+Message-ID: <20180309105249.GA6536@alpha.franken.de>
+References: <S1751161AbeCGG4v/20180307065653Z+38@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <yq18tb5rskt.fsf@oracle.com>
-Content-Language: en-AU
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <S1751161AbeCGG4v/20180307065653Z+38@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/03/18 05:01, Martin K. Petersen wrote:
+On Wed, Mar 07, 2018 at 05:56:41PM +1100, Finn Thain wrote:
+> In jazz_esp and sun3x_esp, the esp_driver_ops methods pass esp->dev
+> in dma api calls as if it was a pointer to a struct device. But
+> it actually points to a struct platform_device. Fix this.
 > 
->> This patch series adds OCXL support to the cxlflash driver. With this
->> support, new devices using the OCXL transport will be supported by the
->> cxlflash driver along with the existing CXL devices. An effort is made
->> to keep this transport specific function independent of the existing
->> core driver that communicates with the AFU.
-> 
-> This one has been sitting for a week without any reviews. Andrew, when
-> will you have time to take a look? >
-> Being a pretty big chunk of code, I would like to merge it sooner rather
-> than later. Or we can postpone until 4.18, of course.
-> 
+> Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-Slowly getting through it, though as of next Friday I'll be disappearing 
-from the face of the earth for 3 weeks and I'm not sure I'll be finished 
-by then.
+Looks good.
 
-Fred: could you take a look at this series if you have spare cycles?
+Reviewed-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+
+Thomas.
 
 -- 
-Andrew Donnellan              OzLabs, ADL Canberra
-andrew.donnellan@au1.ibm.com  IBM Australia Limited
+Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
+good idea.                                                [ RFC1925, 2.3 ]
