@@ -1,80 +1,31 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: ERROR: "scsi_device_from_queue"
- [drivers/md/dm-multipath.ko] undefined!
-Date: Mon, 12 Mar 2018 11:40:16 -0400
-Message-ID: <20180312154016.GA29395@redhat.com>
-References: <201803110354.yaesL1Mi%fengguang.wu@intel.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] device_handler: remove VLAs
+Date: Mon, 12 Mar 2018 15:41:26 +0000
+Message-ID: <1520869285.3469.13.camel@wdc.com>
+References: <20180309232933.14e39858@heffalump.sk2.org>
+         <20180309223211.20473-1-steve@sk2.org> <1520635688.2907.17.camel@wdc.com>
+         <20180310141422.3a8c451f@heffalump.sk2.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <201803110354.yaesL1Mi%fengguang.wu@intel.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: hare@suse.de, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
-Cc: dm-devel@redhat.com, kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180310141422.3a8c451f@heffalump.sk2.org>
+Content-Language: en-US
+Content-ID: <B0DD18BB1A20EC49A68831DE9DF44737@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "steve@sk2.org" <steve@sk2.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Mar 10 2018 at  2:29pm -0500,
-kbuild test robot <fengguang.wu@intel.com> wrote:
-
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
-> head:   3266b5bd97eaa72793df0b6e5a106c69ccc166c4
-> commit: 8d47e65948ddea4398892946d9e50778a316b397 dm mpath: remove unnecessary NVMe branching in favor of scsi_dh checks
-> date:   4 days ago
-> config: x86_64-randconfig-x004-201810 (attached as .config)
-> compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
-> reproduce:
->         git checkout 8d47e65948ddea4398892946d9e50778a316b397
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
-> 
-> All errors (new ones prefixed by >>):
-> 
-> >> ERROR: "scsi_device_from_queue" [drivers/md/dm-multipath.ko] undefined!
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
-This error is due to CONFIG_SCSI not being set.
-
-DM commit 8d47e6594 ("dm mpath: remove unnecessary NVMe branching in
-favor of scsi_dh checks") updated dm-mpath.c to call
-scsi_device_from_queue() to determine if a device is SCSI.
-
-The following patch fixes the buildbot reported case when CONFIG_SCSI
-isn't set... but it is unclear if this is the best way forward.  I don't
-want to make CONFIG_DM_MULTIPATH depend on CONFIG_SCSI, as such we
-either need the following patch or the equivalent in a dm-mpath.c
-wrapper.
-
-Thoughts?
-
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 7ae177c..d6bcc96 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -333,7 +333,14 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
- extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
- void scsi_attach_vpd(struct scsi_device *sdev);
- 
-+#ifdef CONFIG_SCSI
- extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
-+#else
-+static inline struct scsi_device *scsi_device_from_queue(struct request_queue *q)
-+{
-+	return NULL;
-+}
-+#endif
- extern int __must_check scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
- extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
+T24gU2F0LCAyMDE4LTAzLTEwIGF0IDE0OjE0ICswMTAwLCBTdGVwaGVuIEtpdHQgd3JvdGU6DQo+
+IFRoZSB0d28gcGF0Y2hlcyBJIHNlbnQgd2VyZSBzdXBwb3NlZCB0byBiZSBhbHRlcm5hdGl2ZSBz
+b2x1dGlvbnM7IHNlZQ0KPiBodHRwczovL21hcmMuaW5mby8/bD1saW51eC1zY3NpJm09MTUyMDYz
+NjcxMDA1Mjk1Jnc9MiBmb3IgdGhlIGludHJvZHVjdGlvbiAoSQ0KPiBzZWVtIHRvIGhhdmUgbWVz
+c2VkIHVwIHRoZSBoZWFkZXJzLCBzbyB0aGUgbWFpbHMgZGlkbuKAmXQgZW5kIHVwIHRocmVhZGVk
+DQo+IHByb3Blcmx5KS4NCg0KVGhlIHR3byBwYXRjaGVzIGFycml2ZWQgaW4gbXkgaW5ib3ggc2V2
+ZXJhbCBtaW51dGVzIGJlZm9yZSB0aGUgY292ZXIgbGV0dGVyLiBJbg0KdGhlIGUtbWFpbCBoZWFk
+ZXIgb2YgdGhlIGNvdmVyIGxldHRlciBJIGZvdW5kIHRoZSBmb2xsb3dpbmc6DQoNClgtR3JleWxp
+c3Q6IGRlbGF5ZWQgMTgxMCBzZWNvbmRzIGJ5IHBvc3RncmV5LTEuMjcgYXQgdmdlci5rZXJuZWwu
+b3JnOyBGcmksIDA5IE1hciAyMDE4IDE4OjA1OjA4IEVTVA0KDQpEb2VzIHRoaXMgbWVhbiB0aGF0
+IHRoZSBkZWxheSBoYXBwZW5lZCBkdWUgdG8gdmdlciBzZXJ2ZXIncyBhbnRpLXNwYW0gYWxnb3Jp
+dGhtPw0KDQpCYXJ0Lg0KDQoNCg0K
