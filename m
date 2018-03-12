@@ -1,43 +1,72 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
-Date: Mon, 12 Mar 2018 11:45:53 -0700
-Message-ID: <CA+55aFww=otC4Wv40enadF+9NAyWG4Hotzjvv2EKb+_wGFui-w@mail.gmail.com>
-References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com> <20180312030834.GC8631@eros>
+From: Stephen Kitt <steve@sk2.org>
+Subject: Re: [PATCH] device_handler: remove VLAs
+Date: Mon, 12 Mar 2018 20:26:44 +0100
+Message-ID: <20180312202644.5594421e@heffalump.sk2.org>
+References: <20180309232933.14e39858@heffalump.sk2.org>
+	<20180309223211.20473-1-steve@sk2.org>
+	<1520635688.2907.17.camel@wdc.com>
+	<20180310141422.3a8c451f@heffalump.sk2.org>
+	<1520869285.3469.13.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180312030834.GC8631@eros>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Tobin C. Harding" <tobin@apporbit.com>, Arthur Marsh <arthur.marsh@internode.on.net>
-Cc: Salvatore Mesoraca <s.mesoraca16@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, kernelnewbies@kernelnewbies.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/Q4hJWW478X8YOM=u9FIG7am"; protocol="application/pgp-signature"
+Return-path: <kernel-hardening-return-12478-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
+In-Reply-To: <1520869285.3469.13.camel@wdc.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Mar 11, 2018 at 8:08 PM, Tobin C. Harding <tobin@apporbit.com> wrote:
->
-> I think we are going to see a recurring theme here.  MAX_MAILBOXES==64
-> so this patch adds 1536 bytes to the stack on a 64 bit machine or 768
-> bytes on a 32 bit machine.
+--Sig_/Q4hJWW478X8YOM=u9FIG7am
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Yeah, that's a bit excessive. It probably works, but one or two of
-those allocations will make the kernel stack really tight, so in
-general I really would suggest using kmalloc() instead, or figuring
-out some way to simply shrink the data structures.
+On Mon, 12 Mar 2018 15:41:26 +0000, Bart Van Assche <Bart.VanAssche@wdc.com>
+wrote:
+> On Sat, 2018-03-10 at 14:14 +0100, Stephen Kitt wrote:
+> > The two patches I sent were supposed to be alternative solutions; see
+> > https://marc.info/?l=3Dlinux-scsi&m=3D152063671005295&w=3D2 for the
+> > introduction (I seem to have messed up the headers, so the mails didn=
+=E2=80=99t
+> > end up threaded properly). =20
+>=20
+> The two patches arrived in my inbox several minutes before the cover
+> letter. In the e-mail header of the cover letter I found the following:
+>=20
+> X-Greylist: delayed 1810 seconds by postgrey-1.27 at vger.kernel.org; Fri,
+> 09 Mar 2018 18:05:08 EST
+>=20
+> Does this mean that the delay happened due to vger server's anti-spam
+> algorithm?
 
-That said, I wonder if the solution to this particular driver is
-"delete it". Because the hardware is truly ancient and nobody sane
-would use it any more.
+That=E2=80=99s right, the greylisting part of its anti-spam measures.
 
-The last patch that seemed to come from an actual _user_ finding a
-problem was in 2008 (commit 20c09df7eb9c: "[SCSI] eata: fix the data
-buffer accessors conversion regression"). And even then it apparently
-took a year for people to have noticed the breakage.
+Regards,
 
-But because the person who reported that problem is still around, I'll
-just add him to the cc, just in case.
+Stephen
 
-Arthur Marsh, you have the dubious honor and distinction of being the
-only person to have apparently used that driver in the last ten years.
-Do you still have hardware using that? Because maybe it's really time
-to retire that driver.
+--Sig_/Q4hJWW478X8YOM=u9FIG7am
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-                   Linus
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEnPVX/hPLkMoq7x0ggNMC9Yhtg5wFAlqm1HQACgkQgNMC9Yht
+g5w4Pg//XsoJ53FkY+BpdO4+B9OJz3sNmy8OJi+HGqMzhLpHeTp/5JKyCQI0J+6M
+kHXrYkl76mRyYSnh4Dx/YEaq99igksN9B6mu21Y/y0ZNIveO1ItEnzux3D9K2/K0
+M1ErDbD0rbpt14dkhbY4rn7dvmsLY26mmXEqdd9Kc2hiI4BqxTyI1IOYARswrpyk
+jYHglsKtBsgUvloVAsLa7DIjuW7Fk/usA7aoZp2xJenKYVEmRbJDDvb3QOjS13eO
+SKfWS8a6+viID7GbvADcGEGy0QdWe1I69qSAhkI5zlHZGaPM/dCCJmvJxRZ8JVks
+F+Tl2obuWptRJe3muSLNg6y3XkNH18lvPRUC/AHR5wah9ZX3Hlx0gyudcztIw9FF
+Ui1BgDmUyZC9hLgoXNKGGve/U3IEXs7wVV/EpxOfqvVnpmi/d566zv8ltRjRRa4F
+f0IxclNOBEwlP0H1rEODKopdMSxTRMpvxLHDQr8ejOr6v7OkOW69UK5xIFpX8N7T
+59YK14HbjUav7cjB9JnYTcS+4f3/rsubLYKS8y+DELIGskPEGKNkaiXlQINQ/3E8
+09VegkFiaiQM1tCOvq3JXSGKnW/kUrGaAMBsAHdHJaZLjGD01i3tymcjf8eHQaTK
+cWrpE98iLC1fqoIIY2Z6HnF65PURaUepKhlrQuERwbpSPGYx/C8=
+=huhw
+-----END PGP SIGNATURE-----
+
+--Sig_/Q4hJWW478X8YOM=u9FIG7am--
