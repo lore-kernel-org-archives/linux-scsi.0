@@ -1,111 +1,43 @@
-From: Salvatore Mesoraca <s.mesoraca16@gmail.com>
-Subject: [PATCH v3] scsi: eata: drop VLAs in reorder()
-Date: Mon, 12 Mar 2018 18:28:34 +0100
-Message-ID: <1520875714-16903-1-git-send-email-s.mesoraca16@gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
+Date: Mon, 12 Mar 2018 11:45:53 -0700
+Message-ID: <CA+55aFww=otC4Wv40enadF+9NAyWG4Hotzjvv2EKb+_wGFui-w@mail.gmail.com>
+References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com> <20180312030834.GC8631@eros>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180312030834.GC8631@eros>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: kernel-hardening@lists.openwall.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Tobin C. Harding" <tobin@apporbit.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, Salvatore Mesoraca <s.mesoraca16@gmail.com>, valdis.kletnieks@vt.edu
+To: "Tobin C. Harding" <tobin@apporbit.com>, Arthur Marsh <arthur.marsh@internode.on.net>
+Cc: Salvatore Mesoraca <s.mesoraca16@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, kernelnewbies@kernelnewbies.org
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid 3 VLAs[1] by using a single dinamically allocated array
-and some helper variables: we don't need 3 arrays.
+On Sun, Mar 11, 2018 at 8:08 PM, Tobin C. Harding <tobin@apporbit.com> wrote:
+>
+> I think we are going to see a recurring theme here.  MAX_MAILBOXES==64
+> so this patch adds 1536 bytes to the stack on a 64 bit machine or 768
+> bytes on a 32 bit machine.
 
-[1] https://lkml.org/lkml/2018/3/7/621
+Yeah, that's a bit excessive. It probably works, but one or two of
+those allocations will make the kernel stack really tight, so in
+general I really would suggest using kmalloc() instead, or figuring
+out some way to simply shrink the data structures.
 
-Signed-off-by: Salvatore Mesoraca <s.mesoraca16@gmail.com>
----
- drivers/scsi/eata.c | 40 ++++++++++++++++++++++++++--------------
- 1 file changed, 26 insertions(+), 14 deletions(-)
+That said, I wonder if the solution to this particular driver is
+"delete it". Because the hardware is truly ancient and nobody sane
+would use it any more.
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 6501c33..8ba44b7 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -2091,12 +2091,14 @@ static void sort(unsigned long sk[], unsigned int da[], unsigned int n,
- static int reorder(struct hostdata *ha, unsigned long cursec,
- 		   unsigned int ihdlr, unsigned int il[], unsigned int n_ready)
- {
-+	int overlap;
- 	struct scsi_cmnd *SCpnt;
- 	struct mscp *cpp;
- 	unsigned int k, n;
- 	unsigned int rev = 0, s = 1, r = 1;
--	unsigned int input_only = 1, overlap = 0;
--	unsigned long sl[n_ready], pl[n_ready], ll[n_ready];
-+	unsigned int input_only = 1;
-+	unsigned long *sl;
-+	unsigned long sl_zero, sl_cur, sl_prev, ll_cur, ll_prev;
- 	unsigned long maxsec = 0, minsec = ULONG_MAX, seek = 0, iseek = 0;
- 	unsigned long ioseek = 0;
- 
-@@ -2115,6 +2117,12 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
- 	if (n_ready <= 1)
- 		return 0;
- 
-+	overlap = -ENOMEM;
-+	sl = kmalloc_array(n_ready, sizeof(*sl), GFP_ATOMIC);
-+	if (!sl)
-+		goto out;
-+	overlap = 0;
-+
- 	for (n = 0; n < n_ready; n++) {
- 		k = il[n];
- 		cpp = &ha->cp[k];
-@@ -2164,31 +2172,33 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
- 	if (!((rev && r) || (!rev && s)))
- 		sort(sl, il, n_ready, rev);
- 
-+	sl_zero = sl[0];
-+
- 	if (!input_only)
- 		for (n = 0; n < n_ready; n++) {
- 			k = il[n];
- 			cpp = &ha->cp[k];
- 			SCpnt = cpp->SCpnt;
--			ll[n] = blk_rq_sectors(SCpnt->request);
--			pl[n] = SCpnt->serial_number;
-+			ll_cur = blk_rq_sectors(SCpnt->request);
-+			sl_cur = sl[n];
-+			sl[n] = SCpnt->serial_number;
- 
--			if (!n)
--				continue;
--
--			if ((sl[n] == sl[n - 1])
--			    || (!rev && ((sl[n - 1] + ll[n - 1]) > sl[n]))
--			    || (rev && ((sl[n] + ll[n]) > sl[n - 1])))
-+			if (n && ((sl_cur == sl_prev)
-+				  || (!rev && ((sl_prev + ll_prev) > sl_cur))
-+				  || (rev && ((sl_cur + ll_cur) > sl_prev))))
- 				overlap = 1;
-+			ll_prev = ll_cur;
-+			sl_prev = sl_cur;
- 		}
- 
- 	if (overlap)
--		sort(pl, il, n_ready, 0);
-+		sort(sl, il, n_ready, 0);
- 
- 	if (link_statistics) {
--		if (cursec > sl[0])
--			iseek = cursec - sl[0];
-+		if (cursec > sl_zero)
-+			iseek = cursec - sl_zero;
- 		else
--			iseek = sl[0] - cursec;
-+			iseek = sl_zero - cursec;
- 		batchcount++;
- 		readycount += n_ready;
- 		seeknosort += seek / 1024;
-@@ -2225,6 +2235,8 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
- 			     YESNO(overlap), cpp->din);
- 		}
- #endif
-+	kfree(sl);
-+out:
- 	return overlap;
- }
- 
--- 
-1.9.1
+The last patch that seemed to come from an actual _user_ finding a
+problem was in 2008 (commit 20c09df7eb9c: "[SCSI] eata: fix the data
+buffer accessors conversion regression"). And even then it apparently
+took a year for people to have noticed the breakage.
+
+But because the person who reported that problem is still around, I'll
+just add him to the cc, just in case.
+
+Arthur Marsh, you have the dubious honor and distinction of being the
+only person to have apparently used that driver in the last ten years.
+Do you still have hardware using that? Because maybe it's really time
+to retire that driver.
+
+                   Linus
