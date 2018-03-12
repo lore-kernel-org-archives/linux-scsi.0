@@ -1,59 +1,47 @@
-From: "Tobin C. Harding" <tobin@apporbit.com>
-Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
-Date: Mon, 12 Mar 2018 14:08:34 +1100
-Message-ID: <20180312030834.GC8631@eros>
-References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] device_handler: remove VLAs
+Date: Mon, 12 Mar 2018 07:25:08 +0100
+Message-ID: <7cd80595-ca17-0474-5870-6d7c0429db7a@suse.de>
+References: <20180309232933.14e39858@heffalump.sk2.org>
+ <20180309223211.20473-1-steve@sk2.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com>
+In-Reply-To: <20180309223211.20473-1-steve@sk2.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Salvatore Mesoraca <s.mesoraca16@gmail.com>
-Cc: linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, Linus Torvalds <torvalds@linux-foundation.org>, kernelnewbies@kernelnewbies.org
+To: Stephen Kitt <steve@sk2.org>, hare@suse.com, axboe@kernel.dk, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Adding kernel newbies to CC because I pose a few noob questions :)
-Adding Linus to CC because I quoted him.
-
-On Sun, Mar 11, 2018 at 10:06:58PM +0100, Salvatore Mesoraca wrote:
-> n_ready will always be less than or equal to MAX_MAILBOXES.
-> So we avoid a VLA[1] and use fixed-length arrays instead.
+On 03/09/2018 11:32 PM, Stephen Kitt wrote:
+> In preparation to enabling -Wvla, remove VLAs and replace them with
+> fixed-length arrays instead.
 > 
-> [1] https://lkml.org/lkml/2018/3/7/621
+> scsi_dh_{alua,emc,rdac} use variable-length array declarations to
+> store command blocks, with the appropriate size as determined by
+> COMMAND_SIZE. This patch replaces these with fixed-sized arrays using
+> MAX_COMMAND_SIZE, so that the array size can be determined at compile
+> time.
 > 
-> Signed-off-by: Salvatore Mesoraca <s.mesoraca16@gmail.com>
+> This was prompted by https://lkml.org/lkml/2018/3/7/621
+> 
+> Signed-off-by: Stephen Kitt <steve@sk2.org>
 > ---
->  drivers/scsi/eata.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++----
+>  drivers/scsi/device_handler/scsi_dh_emc.c  | 2 +-
+>  drivers/scsi/device_handler/scsi_dh_rdac.c | 2 +-
+>  3 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-> index 6501c33..202cd17 100644
-> --- a/drivers/scsi/eata.c
-> +++ b/drivers/scsi/eata.c
-> @@ -2096,7 +2096,7 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
->  	unsigned int k, n;
->  	unsigned int rev = 0, s = 1, r = 1;
->  	unsigned int input_only = 1, overlap = 0;
-> -	unsigned long sl[n_ready], pl[n_ready], ll[n_ready];
-> +	unsigned long sl[MAX_MAILBOXES], pl[MAX_MAILBOXES], ll[MAX_MAILBOXES];
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-I think we are going to see a recurring theme here.  MAX_MAILBOXES==64
-so this patch adds 1536 bytes to the stack on a 64 bit machine or 768
-bytes on a 32 bit machine.  Linus already commented on another VLA
-removal patch that 768 was a lot of stack space.  That comment did,
-however say 'deep in some transfer call chain'.  I don't know what a
-'transfer call chain' (the transfer bit) is but is there some heuristic
-we can use to know how deep is deep?  Or more to the point, is there some
-heuristic we can use to know what is an acceptable amount of stack space
-to use?
+Cheers,
 
-As far as this patch is concerned wouldn't a kmalloc (with GFP_ATOMIC)
-be ok?  We are in an interrupt handler, can we assume that since IO has
-just occurred that the IO will be so slow comparatively that a memory
-allocation will be quick.  (assuming IO since eata.c only requests a
-single irq line.)
-
-
-thanks,
-Tobin.
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
