@@ -1,60 +1,111 @@
 From: Salvatore Mesoraca <s.mesoraca16@gmail.com>
-Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
-Date: Mon, 12 Mar 2018 11:11:15 +0100
-Message-ID: <CAJHCu1KGAmuayemK-KxW7djNJ-asO8pG=6Yt9D=129rhTrhKLA@mail.gmail.com>
-References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com> <20180312030834.GC8631@eros>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH v2] scsi: eata: drop VLA in reorder()
+Date: Mon, 12 Mar 2018 13:48:57 +0100
+Message-ID: <1520858937-3582-1-git-send-email-s.mesoraca16@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180312030834.GC8631@eros>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Tobin C. Harding" <tobin@apporbit.com>
-Cc: linux-kernel@vger.kernel.org, Kernel Hardening <kernel-hardening@lists.openwall.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, Linus Torvalds <torvalds@linux-foundation.org>, kernelnewbies@kernelnewbies.org
+To: linux-kernel@vger.kernel.org
+Cc: kernel-hardening@lists.openwall.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Tobin C. Harding" <tobin@apporbit.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, Salvatore Mesoraca <s.mesoraca16@gmail.com>, valdis.kletnieks@vt.edu
 List-Id: linux-scsi@vger.kernel.org
 
-2018-03-12 4:08 GMT+01:00 Tobin C. Harding <tobin@apporbit.com>:
-> Adding kernel newbies to CC because I pose a few noob questions :)
-> Adding Linus to CC because I quoted him.
->
-> On Sun, Mar 11, 2018 at 10:06:58PM +0100, Salvatore Mesoraca wrote:
->> n_ready will always be less than or equal to MAX_MAILBOXES.
->> So we avoid a VLA[1] and use fixed-length arrays instead.
->>
->> [1] https://lkml.org/lkml/2018/3/7/621
->>
->> Signed-off-by: Salvatore Mesoraca <s.mesoraca16@gmail.com>
->> ---
->>  drivers/scsi/eata.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
->> index 6501c33..202cd17 100644
->> --- a/drivers/scsi/eata.c
->> +++ b/drivers/scsi/eata.c
->> @@ -2096,7 +2096,7 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
->>       unsigned int k, n;
->>       unsigned int rev = 0, s = 1, r = 1;
->>       unsigned int input_only = 1, overlap = 0;
->> -     unsigned long sl[n_ready], pl[n_ready], ll[n_ready];
->> +     unsigned long sl[MAX_MAILBOXES], pl[MAX_MAILBOXES], ll[MAX_MAILBOXES];
->
-> I think we are going to see a recurring theme here.  MAX_MAILBOXES==64
-> so this patch adds 1536 bytes to the stack on a 64 bit machine or 768
-> bytes on a 32 bit machine.  Linus already commented on another VLA
-> removal patch that 768 was a lot of stack space.  That comment did,
-> however say 'deep in some transfer call chain'.  I don't know what a
-> 'transfer call chain' (the transfer bit) is but is there some heuristic
-> we can use to know how deep is deep?  Or more to the point, is there some
-> heuristic we can use to know what is an acceptable amount of stack space
-> to use?
->
-> As far as this patch is concerned wouldn't a kmalloc (with GFP_ATOMIC)
-> be ok?  We are in an interrupt handler, can we assume that since IO has
-> just occurred that the IO will be so slow comparatively that a memory
-> allocation will be quick.  (assuming IO since eata.c only requests a
-> single irq line.)
+Avoid 3 VLAs[1] by using a single dinamically allocated array
+and some helper variables: we don't need 3 arrays.
 
-Yes, I think you are right. I'll change it in v2.
-Thank you very much,
+[1] https://lkml.org/lkml/2018/3/7/621
 
-Salvatore
+Signed-off-by: Salvatore Mesoraca <s.mesoraca16@gmail.com>
+---
+ drivers/scsi/eata.c | 40 ++++++++++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index 6501c33..8ba44b7 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -2091,12 +2091,14 @@ static void sort(unsigned long sk[], unsigned int da[], unsigned int n,
+ static int reorder(struct hostdata *ha, unsigned long cursec,
+ 		   unsigned int ihdlr, unsigned int il[], unsigned int n_ready)
+ {
++	int overlap;
+ 	struct scsi_cmnd *SCpnt;
+ 	struct mscp *cpp;
+ 	unsigned int k, n;
+ 	unsigned int rev = 0, s = 1, r = 1;
+-	unsigned int input_only = 1, overlap = 0;
+-	unsigned long sl[n_ready], pl[n_ready], ll[n_ready];
++	unsigned int input_only = 1;
++	unsigned long *sl;
++	unsigned long sl_zero, sl_cur, sl_prev, ll_cur, ll_prev;
+ 	unsigned long maxsec = 0, minsec = ULONG_MAX, seek = 0, iseek = 0;
+ 	unsigned long ioseek = 0;
+ 
+@@ -2115,6 +2117,12 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
+ 	if (n_ready <= 1)
+ 		return 0;
+ 
++	overlap = -ENOMEM;
++	sl = kcalloc(n_ready, sizeof(*sl), GFP_ATOMIC);
++	if (!sl)
++		goto out;
++	overlap = 0;
++
+ 	for (n = 0; n < n_ready; n++) {
+ 		k = il[n];
+ 		cpp = &ha->cp[k];
+@@ -2164,31 +2172,33 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
+ 	if (!((rev && r) || (!rev && s)))
+ 		sort(sl, il, n_ready, rev);
+ 
++	sl_zero = sl[0];
++
+ 	if (!input_only)
+ 		for (n = 0; n < n_ready; n++) {
+ 			k = il[n];
+ 			cpp = &ha->cp[k];
+ 			SCpnt = cpp->SCpnt;
+-			ll[n] = blk_rq_sectors(SCpnt->request);
+-			pl[n] = SCpnt->serial_number;
++			ll_cur = blk_rq_sectors(SCpnt->request);
++			sl_cur = sl[n];
++			sl[n] = SCpnt->serial_number;
+ 
+-			if (!n)
+-				continue;
+-
+-			if ((sl[n] == sl[n - 1])
+-			    || (!rev && ((sl[n - 1] + ll[n - 1]) > sl[n]))
+-			    || (rev && ((sl[n] + ll[n]) > sl[n - 1])))
++			if (n && ((sl_cur == sl_prev)
++				  || (!rev && ((sl_prev + ll_prev) > sl_cur))
++				  || (rev && ((sl_cur + ll_cur) > sl_prev))))
+ 				overlap = 1;
++			ll_prev = ll_cur;
++			sl_prev = sl_cur;
+ 		}
+ 
+ 	if (overlap)
+-		sort(pl, il, n_ready, 0);
++		sort(sl, il, n_ready, 0);
+ 
+ 	if (link_statistics) {
+-		if (cursec > sl[0])
+-			iseek = cursec - sl[0];
++		if (cursec > sl_zero)
++			iseek = cursec - sl_zero;
+ 		else
+-			iseek = sl[0] - cursec;
++			iseek = sl_zero - cursec;
+ 		batchcount++;
+ 		readycount += n_ready;
+ 		seeknosort += seek / 1024;
+@@ -2225,6 +2235,8 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
+ 			     YESNO(overlap), cpp->din);
+ 		}
+ #endif
++	kfree(sl);
++out:
+ 	return overlap;
+ }
+ 
+-- 
+1.9.1
