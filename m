@@ -1,111 +1,80 @@
-From: Salvatore Mesoraca <s.mesoraca16@gmail.com>
-Subject: [PATCH v2] scsi: eata: drop VLA in reorder()
-Date: Mon, 12 Mar 2018 13:48:57 +0100
-Message-ID: <1520858937-3582-1-git-send-email-s.mesoraca16@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: kernel-hardening@lists.openwall.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Tobin C. Harding" <tobin@apporbit.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, Salvatore Mesoraca <s.mesoraca16@gmail.com>, valdis.kletnieks@vt.edu
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: ERROR: "scsi_device_from_queue"
+ [drivers/md/dm-multipath.ko] undefined!
+Date: Mon, 12 Mar 2018 11:40:16 -0400
+Message-ID: <20180312154016.GA29395@redhat.com>
+References: <201803110354.yaesL1Mi%fengguang.wu@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <201803110354.yaesL1Mi%fengguang.wu@intel.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: hare@suse.de, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com, kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid 3 VLAs[1] by using a single dinamically allocated array
-and some helper variables: we don't need 3 arrays.
+On Sat, Mar 10 2018 at  2:29pm -0500,
+kbuild test robot <fengguang.wu@intel.com> wrote:
 
-[1] https://lkml.org/lkml/2018/3/7/621
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
+> head:   3266b5bd97eaa72793df0b6e5a106c69ccc166c4
+> commit: 8d47e65948ddea4398892946d9e50778a316b397 dm mpath: remove unnecessary NVMe branching in favor of scsi_dh checks
+> date:   4 days ago
+> config: x86_64-randconfig-x004-201810 (attached as .config)
+> compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
+> reproduce:
+>         git checkout 8d47e65948ddea4398892946d9e50778a316b397
+>         # save the attached .config to linux build tree
+>         make ARCH=x86_64 
+> 
+> All errors (new ones prefixed by >>):
+> 
+> >> ERROR: "scsi_device_from_queue" [drivers/md/dm-multipath.ko] undefined!
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-Signed-off-by: Salvatore Mesoraca <s.mesoraca16@gmail.com>
----
- drivers/scsi/eata.c | 40 ++++++++++++++++++++++++++--------------
- 1 file changed, 26 insertions(+), 14 deletions(-)
+This error is due to CONFIG_SCSI not being set.
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 6501c33..8ba44b7 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -2091,12 +2091,14 @@ static void sort(unsigned long sk[], unsigned int da[], unsigned int n,
- static int reorder(struct hostdata *ha, unsigned long cursec,
- 		   unsigned int ihdlr, unsigned int il[], unsigned int n_ready)
- {
-+	int overlap;
- 	struct scsi_cmnd *SCpnt;
- 	struct mscp *cpp;
- 	unsigned int k, n;
- 	unsigned int rev = 0, s = 1, r = 1;
--	unsigned int input_only = 1, overlap = 0;
--	unsigned long sl[n_ready], pl[n_ready], ll[n_ready];
-+	unsigned int input_only = 1;
-+	unsigned long *sl;
-+	unsigned long sl_zero, sl_cur, sl_prev, ll_cur, ll_prev;
- 	unsigned long maxsec = 0, minsec = ULONG_MAX, seek = 0, iseek = 0;
- 	unsigned long ioseek = 0;
+DM commit 8d47e6594 ("dm mpath: remove unnecessary NVMe branching in
+favor of scsi_dh checks") updated dm-mpath.c to call
+scsi_device_from_queue() to determine if a device is SCSI.
+
+The following patch fixes the buildbot reported case when CONFIG_SCSI
+isn't set... but it is unclear if this is the best way forward.  I don't
+want to make CONFIG_DM_MULTIPATH depend on CONFIG_SCSI, as such we
+either need the following patch or the equivalent in a dm-mpath.c
+wrapper.
+
+Thoughts?
+
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 7ae177c..d6bcc96 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -333,7 +333,14 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+ extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+ void scsi_attach_vpd(struct scsi_device *sdev);
  
-@@ -2115,6 +2117,12 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
- 	if (n_ready <= 1)
- 		return 0;
- 
-+	overlap = -ENOMEM;
-+	sl = kcalloc(n_ready, sizeof(*sl), GFP_ATOMIC);
-+	if (!sl)
-+		goto out;
-+	overlap = 0;
-+
- 	for (n = 0; n < n_ready; n++) {
- 		k = il[n];
- 		cpp = &ha->cp[k];
-@@ -2164,31 +2172,33 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
- 	if (!((rev && r) || (!rev && s)))
- 		sort(sl, il, n_ready, rev);
- 
-+	sl_zero = sl[0];
-+
- 	if (!input_only)
- 		for (n = 0; n < n_ready; n++) {
- 			k = il[n];
- 			cpp = &ha->cp[k];
- 			SCpnt = cpp->SCpnt;
--			ll[n] = blk_rq_sectors(SCpnt->request);
--			pl[n] = SCpnt->serial_number;
-+			ll_cur = blk_rq_sectors(SCpnt->request);
-+			sl_cur = sl[n];
-+			sl[n] = SCpnt->serial_number;
- 
--			if (!n)
--				continue;
--
--			if ((sl[n] == sl[n - 1])
--			    || (!rev && ((sl[n - 1] + ll[n - 1]) > sl[n]))
--			    || (rev && ((sl[n] + ll[n]) > sl[n - 1])))
-+			if (n && ((sl_cur == sl_prev)
-+				  || (!rev && ((sl_prev + ll_prev) > sl_cur))
-+				  || (rev && ((sl_cur + ll_cur) > sl_prev))))
- 				overlap = 1;
-+			ll_prev = ll_cur;
-+			sl_prev = sl_cur;
- 		}
- 
- 	if (overlap)
--		sort(pl, il, n_ready, 0);
-+		sort(sl, il, n_ready, 0);
- 
- 	if (link_statistics) {
--		if (cursec > sl[0])
--			iseek = cursec - sl[0];
-+		if (cursec > sl_zero)
-+			iseek = cursec - sl_zero;
- 		else
--			iseek = sl[0] - cursec;
-+			iseek = sl_zero - cursec;
- 		batchcount++;
- 		readycount += n_ready;
- 		seeknosort += seek / 1024;
-@@ -2225,6 +2235,8 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
- 			     YESNO(overlap), cpp->din);
- 		}
- #endif
-+	kfree(sl);
-+out:
- 	return overlap;
- }
- 
--- 
-1.9.1
++#ifdef CONFIG_SCSI
+ extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
++#else
++static inline struct scsi_device *scsi_device_from_queue(struct request_queue *q)
++{
++	return NULL;
++}
++#endif
+ extern int __must_check scsi_device_get(struct scsi_device *);
+ extern void scsi_device_put(struct scsi_device *);
+ extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
