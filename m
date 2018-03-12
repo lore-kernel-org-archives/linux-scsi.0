@@ -1,67 +1,60 @@
-From: valdis.kletnieks@vt.edu
+From: Salvatore Mesoraca <s.mesoraca16@gmail.com>
 Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
-Date: Mon, 12 Mar 2018 02:36:38 -0400
-Message-ID: <134937.1520836598@turing-police.cc.vt.edu>
-References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com>
- <20180312030834.GC8631@eros>
+Date: Mon, 12 Mar 2018 11:11:15 +0100
+Message-ID: <CAJHCu1KGAmuayemK-KxW7djNJ-asO8pG=6Yt9D=129rhTrhKLA@mail.gmail.com>
+References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com> <20180312030834.GC8631@eros>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1520836598_3502P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-hardening-return-12418-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
-Sender: Valdis Kletnieks <valdis@vt.edu>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180312030834.GC8631@eros>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Tobin C. Harding" <tobin@apporbit.com>
-Cc: Salvatore Mesoraca <s.mesoraca16@gmail.com>, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, Linus Torvalds <torvalds@linux-foundation.org>, kernelnewbies@kernelnewbies.org
+Cc: linux-kernel@vger.kernel.org, Kernel Hardening <kernel-hardening@lists.openwall.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, Linus Torvalds <torvalds@linux-foundation.org>, kernelnewbies@kernelnewbies.org
 List-Id: linux-scsi@vger.kernel.org
 
---==_Exmh_1520836598_3502P
-Content-Type: text/plain; charset=us-ascii
-
-On Mon, 12 Mar 2018 14:08:34 +1100, "Tobin C. Harding" said:
-
+2018-03-12 4:08 GMT+01:00 Tobin C. Harding <tobin@apporbit.com>:
+> Adding kernel newbies to CC because I pose a few noob questions :)
+> Adding Linus to CC because I quoted him.
+>
+> On Sun, Mar 11, 2018 at 10:06:58PM +0100, Salvatore Mesoraca wrote:
+>> n_ready will always be less than or equal to MAX_MAILBOXES.
+>> So we avoid a VLA[1] and use fixed-length arrays instead.
+>>
+>> [1] https://lkml.org/lkml/2018/3/7/621
+>>
+>> Signed-off-by: Salvatore Mesoraca <s.mesoraca16@gmail.com>
+>> ---
+>>  drivers/scsi/eata.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+>> index 6501c33..202cd17 100644
+>> --- a/drivers/scsi/eata.c
+>> +++ b/drivers/scsi/eata.c
+>> @@ -2096,7 +2096,7 @@ static int reorder(struct hostdata *ha, unsigned long cursec,
+>>       unsigned int k, n;
+>>       unsigned int rev = 0, s = 1, r = 1;
+>>       unsigned int input_only = 1, overlap = 0;
+>> -     unsigned long sl[n_ready], pl[n_ready], ll[n_ready];
+>> +     unsigned long sl[MAX_MAILBOXES], pl[MAX_MAILBOXES], ll[MAX_MAILBOXES];
+>
+> I think we are going to see a recurring theme here.  MAX_MAILBOXES==64
+> so this patch adds 1536 bytes to the stack on a 64 bit machine or 768
+> bytes on a 32 bit machine.  Linus already commented on another VLA
 > removal patch that 768 was a lot of stack space.  That comment did,
 > however say 'deep in some transfer call chain'.  I don't know what a
 > 'transfer call chain' (the transfer bit) is but is there some heuristic
 > we can use to know how deep is deep?  Or more to the point, is there some
 > heuristic we can use to know what is an acceptable amount of stack space
 > to use?
+>
+> As far as this patch is concerned wouldn't a kmalloc (with GFP_ATOMIC)
+> be ok?  We are in an interrupt handler, can we assume that since IO has
+> just occurred that the IO will be so slow comparatively that a memory
+> allocation will be quick.  (assuming IO since eata.c only requests a
+> single irq line.)
 
-The canonical "why we put kernel stacks on a diet" configuration:
+Yes, I think you are right. I'll change it in v2.
+Thank you very much,
 
-Imagine a bunch of ISCSI targets - with IPSec wrapping the connection.
-Arranged into a software RAID5. With LVM. With encryption on the LV.  With XFS
-on the encrypted LV.  And then the in-kernel sharing it out over NFS. With
-more IPSec wrapping the  NFS TCP connection.
-
-Oh, and I/O interrupts, just for fun.  And most of all of that has to fit their *entire*
-stack chain into 2 4K pages.  Suddenly, that 768 bytes is taking close to 10% of
-*all* of the stack that all of that call chain has to share.
-
-And I see that patch is against scsi/eata.c - which means it can plausibly end up
-sharing that stack scenario above starting at 'software raid5'.
-
-(For bonus points, the alert reader is invited to figure out which stack each of the
-above actually ends up on.  No, it isn't split across enough stacks that taking
-768 bytes out of any of them is acceptable.. :)
-
---==_Exmh_1520836598_3502P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Comment: Exmh version 2.8.0 04/21/2017
-
-iQEVAwUBWqYf9o0DS38y7CIcAQLwGwgAsbjEunB2hZFHsWdo75SIaBMf5iCRpt18
-8TZdZJwgBLqT/6mndzwmwc4DynfPCoxsE+fNsfTcTumGNiqWiBVPKM9YQhCvkdu4
-Iygpn6H23C6pgSzExzwNuGGstGyVh9fLsiLBiU07aFQA0ReINi9XZGZscrrDbO2T
-cr4XIuJ0onTJX7367zOGBDNrFVfpO9ZJby7Zjy/1FL6XPg7IV6lUz4ciYAK2tcbv
-0gb6AQdDSyz3BJcEorYoLc1wmdEBAiJ/UjGYL8c6V4O7jazhNl0pMn2HWuhupqKE
-HhlMt5TyCpt6fHYgSQqiNPidq5fvmqWut4bKY3EZwRf8YKUMHgNeAQ==
-=jNqk
------END PGP SIGNATURE-----
-
---==_Exmh_1520836598_3502P--
+Salvatore
