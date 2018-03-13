@@ -1,50 +1,28 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH][next] scsi: lpfc: make several unions static, fix
- non-ANSI prototype
-Date: Tue, 13 Mar 2018 09:29:34 -0700
-Message-ID: <566b5646-80a8-bca3-5f35-d78a97960ed2@broadcom.com>
-References: <20180313120849.30128-1-colin.king@canonical.com>
+From: Salvatore Mesoraca <s.mesoraca16@gmail.com>
+Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
+Date: Tue, 13 Mar 2018 23:04:21 +0100
+Message-ID: <CAJHCu1+XPPmCcrP+89zc9Lg7k_t78LzfJbY7aC8Mt+ANeuVWdA@mail.gmail.com>
+References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com>
+ <20180312030834.GC8631@eros> <CA+55aFww=otC4Wv40enadF+9NAyWG4Hotzjvv2EKb+_wGFui-w@mail.gmail.com>
+ <yq1y3iwem87.fsf@oracle.com> <20180313090540.GA4810@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180313120849.30128-1-colin.king@canonical.com>
-Content-Language: en-US
+In-Reply-To: <20180313090540.GA4810@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, "Tobin C. Harding" <tobin@apporbit.com>, Arthur Marsh <arthur.marsh@internode.on.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, kernelnewbies@kernelnewbies.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/13/2018 5:08 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+2018-03-13 10:05 GMT+01:00 Christoph Hellwig <hch@infradead.org>:
+> On Mon, Mar 12, 2018 at 10:35:36PM -0400, Martin K. Petersen wrote:
+>> No objections to Salvatore's patch but I have a slight affinity for
+>> retiring unused code over patching it. So unless there are objections...
 >
-> There are several unions that are local to the source and do not need
-> to be in global scope, so make them static. Also add in a missing void
-> parameter to functions lpfc_nvme_cmd_template and
-> lpfc_nvmet_cmd_template to clean up non-ANSI warning.
->
-> Cleans up sparse warnings:
-> drivers/scsi/lpfc/lpfc_nvme.c:68:19: warning: symbol
-> 'lpfc_iread_cmd_template' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvme.c:69:19: warning: symbol
-> 'lpfc_iwrite_cmd_template' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvme.c:70:19: warning: symbol
-> 'lpfc_icmnd_cmd_template' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvme.c:74:24: warning: non-ANSI function
-> 'lpfc_tsend_cmd_template' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvmet.c:78:19: warning: symbol
-> 'lpfc_treceive_cmd_template' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvmet.c:79:19: warning: symbol
-> 'lpfc_trsp_cmd_template' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvmet.c:83:25: warning: non-ANSI function
-> declaration of function 'lpfc_nvmet_cmd_template'
->
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/scsi/lpfc/lpfc_nvme.c  | 8 ++++----
->   drivers/scsi/lpfc/lpfc_nvmet.c | 8 ++++----
->   2 files changed, 8 insertions(+), 8 deletions(-)
->
->
+> Lets kill it.  And the not DMA capable eata_pio driver with it for
+> good riddance.
 
-Signed-off-by:   James Smart <james.smart@broadcom.com>
+Good, I'll send a patch to remove eata & friends.
+Thank you for your time,
+
+Salvatore
