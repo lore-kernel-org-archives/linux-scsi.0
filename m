@@ -1,85 +1,95 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH][next] scsi: lpfc: make several unions static, fix non-ANSI prototype
-Date: Tue, 13 Mar 2018 12:08:49 +0000
-Message-ID: <20180313120849.30128-1-colin.king@canonical.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [Possible REGRESSION, 4.16-rc4] Error updating SMART data during
+ runtime and could not connect to lvmetad at some boot attempts
+Date: Tue, 13 Mar 2018 22:32:28 +0800
+Message-ID: <20180313143222.GA10883@ming.t460p>
+References: <27165802.vQ9JbjrmvU@merkaba>
+ <f6e73c8e-1186-744b-c856-2c56ceeeab10@redhat.com>
+ <2276139.2HCKFmVDEL@merkaba>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <2276139.2HCKFmVDEL@merkaba>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Martin Steigerwald <martin@lichtvoll.de>
+Cc: Hans de Goede <hdegoede@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Thorsten Leemhuis <regressions@leemhuis.info>, Tejun Heo <tj@kernel.org>, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, Mar 13, 2018 at 02:08:23PM +0100, Martin Steigerwald wrote:
+> Hans de Goede - 11.03.18, 15:37:
+> > Hi Martin,
+> > 
+> > On 11-03-18 09:20, Martin Steigerwald wrote:
+> > > Hello.
+> > > 
+> > > Since 4.16-rc4 (upgraded from 4.15.2 which worked) I have an issue
+> > > with SMART checks occassionally failing like this:
+> > > 
+> > > smartd[28017]: Device: /dev/sdb [SAT], is in SLEEP mode, suspending checks
+> > > udisksd[24408]: Error performing housekeeping for drive
+> > > /org/freedesktop/UDisks2/drives/INTEL_SSDSA2CW300G3_[…]: Error updating
+> > > SMART data: Error sending ATA command CHECK POWER MODE: Unexpected sense
+> > > data returned:#0120000: 0e 09 0c 00  00 00 ff 00  00 00 00 00  00 00 50
+> > > 00    ..............P.#0120010: 00 00 00 00  00 00 00 00  00 00 00 00  00
+> > > 00 00 00    ................#012 (g-io-error-quark, 0) merkaba
+> > > udisksd[24408]: Error performing housekeeping for drive
+> > > /org/freedesktop/UDisks2/drives/Crucial_CT480M500SSD3_[…]: Error updating
+> > > SMART dat a: Error sending ATA command CHECK POWER MODE: Unexpected sense
+> > > data returned:#0120000: 01 00 1d 00  00 00 0e 09  0c 00 00 00  ff 00 00
+> > > 00    ................#0120010: 00 0 0 00 00  50 00 00 00  00 00 00 00 
+> > > 00 00 00 00    ....P...........#012 (g-io-error-quark, 0)
+> > > 
+> > > (Intel SSD is connected via SATA, Crucial via mSATA in a ThinkPad T520)
+> > > 
+> > > However when I then check manually with smartctl -a | -x | -H the device
+> > > reports SMART data just fine.
+> > > 
+> > > As smartd correctly detects that device is in sleep mode, this may be an
+> > > userspace issue in udisksd.
+> > > 
+> > > Also at some boot attempts the boot hangs with a message like "could not
+> > > connect to lvmetad, scanning manually for devices". I use BTRFS RAID 1
+> > > on to LVs (each on one of the SSDs). A configuration that requires a
+> > > manual
+> > > adaption to InitRAMFS in order to boot (basically vgchange -ay before
+> > > btrfs device scan).
+> > > 
+> > > I wonder whether that has to do with the new SATA LPM policy stuff, but as
+> > > I had issues with
+> > > 
+> > >   3 => Medium power with Device Initiated PM enabled
+> > > 
+> > > (machine did not boot, which could also have been caused by me
+> > > accidentally
+> > > removing all TCP/IP network support in the kernel with that setting)
+> > > 
+> > > I set it back to
+> > > 
+> > > CONFIG_SATA_MOBILE_LPM_POLICY=0
+> > > 
+> > > (firmware settings)
+> > 
+> > Right, so at that settings the LPM policy changes are effectively
+> > disabled and cannot explain your SMART issues.
+> 
+> Yes, I now good a photo of one of those boot failures I mentioned, at it seems 
+> to be related to blk-mq, as the backtrace contains "blk_mq_terminate_expired".
+> 
+> I add the screenshot to my bug report.
+> 
+> [Possible REGRESSION, 4.16-rc4] Error updating SMART data during runtime and 
+> boot failures with blk_mq_terminate_expired in backtrace
+> https://bugzilla.kernel.org/show_bug.cgi?id=199077
+> 
+> Hans, I will test your LPM policy horkage for Crucial m500 patch at a later 
+> time. I first wanted to add the photo of the boot failure to the bug report.
+> 
+> Ming and Bart, I added you to cc, cause I had to do with you about another 
+> blk-mq report, please feel free to adapt.
 
-There are several unions that are local to the source and do not need
-to be in global scope, so make them static. Also add in a missing void
-parameter to functions lpfc_nvme_cmd_template and
-lpfc_nvmet_cmd_template to clean up non-ANSI warning.
+Looks RIP points to scsi_times_out+0x17/0x1d0, maybe a SCSI regression?
 
-Cleans up sparse warnings:
-drivers/scsi/lpfc/lpfc_nvme.c:68:19: warning: symbol
-'lpfc_iread_cmd_template' was not declared. Should it be static?
-drivers/scsi/lpfc/lpfc_nvme.c:69:19: warning: symbol
-'lpfc_iwrite_cmd_template' was not declared. Should it be static?
-drivers/scsi/lpfc/lpfc_nvme.c:70:19: warning: symbol
-'lpfc_icmnd_cmd_template' was not declared. Should it be static?
-drivers/scsi/lpfc/lpfc_nvme.c:74:24: warning: non-ANSI function
-'lpfc_tsend_cmd_template' was not declared. Should it be static?
-drivers/scsi/lpfc/lpfc_nvmet.c:78:19: warning: symbol
-'lpfc_treceive_cmd_template' was not declared. Should it be static?
-drivers/scsi/lpfc/lpfc_nvmet.c:79:19: warning: symbol
-'lpfc_trsp_cmd_template' was not declared. Should it be static?
-drivers/scsi/lpfc/lpfc_nvmet.c:83:25: warning: non-ANSI function
-declaration of function 'lpfc_nvmet_cmd_template'
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/lpfc/lpfc_nvme.c  | 8 ++++----
- drivers/scsi/lpfc/lpfc_nvmet.c | 8 ++++----
- 2 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 52dd9479b538..378dca40ca20 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -65,13 +65,13 @@ lpfc_release_nvme_buf(struct lpfc_hba *, struct lpfc_nvme_buf *);
- 
- static struct nvme_fc_port_template lpfc_nvme_template;
- 
--union lpfc_wqe128 lpfc_iread_cmd_template;
--union lpfc_wqe128 lpfc_iwrite_cmd_template;
--union lpfc_wqe128 lpfc_icmnd_cmd_template;
-+static union lpfc_wqe128 lpfc_iread_cmd_template;
-+static union lpfc_wqe128 lpfc_iwrite_cmd_template;
-+static union lpfc_wqe128 lpfc_icmnd_cmd_template;
- 
- /* Setup WQE templates for NVME IOs */
- void
--lpfc_nvme_cmd_template()
-+lpfc_nvme_cmd_template(void)
- {
- 	union lpfc_wqe128 *wqe;
- 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 07f89524c320..7271c9d885dd 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -74,13 +74,13 @@ static int lpfc_nvmet_unsol_ls_issue_abort(struct lpfc_hba *,
- static void lpfc_nvmet_wqfull_flush(struct lpfc_hba *, struct lpfc_queue *,
- 				    struct lpfc_nvmet_rcv_ctx *);
- 
--union lpfc_wqe128 lpfc_tsend_cmd_template;
--union lpfc_wqe128 lpfc_treceive_cmd_template;
--union lpfc_wqe128 lpfc_trsp_cmd_template;
-+static union lpfc_wqe128 lpfc_tsend_cmd_template;
-+static union lpfc_wqe128 lpfc_treceive_cmd_template;
-+static union lpfc_wqe128 lpfc_trsp_cmd_template;
- 
- /* Setup WQE templates for NVME IOs */
- void
--lpfc_nvmet_cmd_template()
-+lpfc_nvmet_cmd_template(void)
- {
- 	union lpfc_wqe128 *wqe;
- 
--- 
-2.15.1
+Thanks,
+Ming
