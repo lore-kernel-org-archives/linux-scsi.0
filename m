@@ -1,102 +1,85 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH] scsi: resolve COMMAND_SIZE at compile time
-Date: Tue, 13 Mar 2018 11:34:31 +0000
-Message-ID: <a66f8abb84444cf79b818011667bc825@AcuMS.aculab.com>
-References: <20180309232933.14e39858@heffalump.sk2.org>
- <20180309223355.21222-1-steve@sk2.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][next] scsi: lpfc: make several unions static, fix non-ANSI prototype
+Date: Tue, 13 Mar 2018 12:08:49 +0000
+Message-ID: <20180313120849.30128-1-colin.king@canonical.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180309223355.21222-1-steve@sk2.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: 'Stephen Kitt' <steve@sk2.org>, "hare@suse.com" <hare@suse.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stephen Kitt
-> Sent: 09 March 2018 22:34
-> 
-> COMMAND_SIZE currently uses an array of values in block/scsi_ioctl.c.
-> A number of device_handler functions use this to initialise arrays,
-> and this is flagged by -Wvla.
-> 
-> This patch replaces COMMAND_SIZE with a variant using a formula which
-> can be resolved at compile time in cases where the opcode is fixed,
-> resolving the array size and avoiding the VLA. The downside is that
-> the code is less maintainable and that some call sites end up having
-> more complex generated code.
-> 
-> Since scsi_command_size_tbl is dropped, we can remove the dependency
-> on BLK_SCSI_REQUEST from drivers/target/Kconfig.
-> 
-> This was prompted by https://lkml.org/lkml/2018/3/7/621
-> 
-> Signed-off-by: Stephen Kitt <steve@sk2.org>
-> ---
->  block/scsi_ioctl.c         |  8 --------
->  drivers/target/Kconfig     |  1 -
->  include/scsi/scsi_common.h | 13 +++++++++++--
->  3 files changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-> index 60b471f8621b..b9e176e537be 100644
-> --- a/block/scsi_ioctl.c
-> +++ b/block/scsi_ioctl.c
-> @@ -41,14 +41,6 @@ struct blk_cmd_filter {
-> 
->  static struct blk_cmd_filter blk_default_cmd_filter;
-> 
-> -/* Command group 3 is reserved and should never be used.  */
-> -const unsigned char scsi_command_size_tbl[8] =
-> -{
-> -	6, 10, 10, 12,
-> -	16, 12, 10, 10
-> -};
-> -EXPORT_SYMBOL(scsi_command_size_tbl);
-> -
->  #include <scsi/sg.h>
-> 
->  static int sg_get_version(int __user *p)
-> diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-> index 4c44d7bed01a..b5f05b60cf06 100644
-> --- a/drivers/target/Kconfig
-> +++ b/drivers/target/Kconfig
-> @@ -4,7 +4,6 @@ menuconfig TARGET_CORE
->  	depends on SCSI && BLOCK
->  	select CONFIGFS_FS
->  	select CRC_T10DIF
-> -	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
->  	select SGL_ALLOC
->  	default n
->  	help
-> diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-> index 731ac09ed231..48d950666376 100644
-> --- a/include/scsi/scsi_common.h
-> +++ b/include/scsi/scsi_common.h
-> @@ -15,8 +15,17 @@ scsi_varlen_cdb_length(const void *hdr)
->  	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
->  }
-> 
-> -extern const unsigned char scsi_command_size_tbl[8];
-> -#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
-> +/*
-> + * SCSI command sizes are as follows, in bytes, for fixed size commands, per
-> + * group: 6, 10, 10, 12, 16, 12, 10, 10. The top three bits of an opcode
-> + * determine its group.
-> + * The size table is encoded into a 32-bit value by subtracting each value
-> + * from 16, resulting in a value of 1715488362
-> + * (6 << 28 + 6 << 24 + 4 << 20 + 0 << 16 + 4 << 12 + 6 << 8 + 6 << 4 + 10).
-> + * Command group 3 is reserved and should never be used.
-> + */
-> +#define COMMAND_SIZE(opcode) \
-> +	(16 - (15 & (1715488362 >> (4 * (((opcode) >> 5) & 7)))))
+From: Colin Ian King <colin.king@canonical.com>
 
-Why not:
-	(6 + (15 & (0x446a6440u ....
+There are several unions that are local to the source and do not need
+to be in global scope, so make them static. Also add in a missing void
+parameter to functions lpfc_nvme_cmd_template and
+lpfc_nvmet_cmd_template to clean up non-ANSI warning.
 
-Specifying the constant in hex makes it more obvious.
-It is a shame about the 16, but an offset is easier than the negate.
+Cleans up sparse warnings:
+drivers/scsi/lpfc/lpfc_nvme.c:68:19: warning: symbol
+'lpfc_iread_cmd_template' was not declared. Should it be static?
+drivers/scsi/lpfc/lpfc_nvme.c:69:19: warning: symbol
+'lpfc_iwrite_cmd_template' was not declared. Should it be static?
+drivers/scsi/lpfc/lpfc_nvme.c:70:19: warning: symbol
+'lpfc_icmnd_cmd_template' was not declared. Should it be static?
+drivers/scsi/lpfc/lpfc_nvme.c:74:24: warning: non-ANSI function
+'lpfc_tsend_cmd_template' was not declared. Should it be static?
+drivers/scsi/lpfc/lpfc_nvmet.c:78:19: warning: symbol
+'lpfc_treceive_cmd_template' was not declared. Should it be static?
+drivers/scsi/lpfc/lpfc_nvmet.c:79:19: warning: symbol
+'lpfc_trsp_cmd_template' was not declared. Should it be static?
+drivers/scsi/lpfc/lpfc_nvmet.c:83:25: warning: non-ANSI function
+declaration of function 'lpfc_nvmet_cmd_template'
 
-	David
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/lpfc/lpfc_nvme.c  | 8 ++++----
+ drivers/scsi/lpfc/lpfc_nvmet.c | 8 ++++----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 52dd9479b538..378dca40ca20 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -65,13 +65,13 @@ lpfc_release_nvme_buf(struct lpfc_hba *, struct lpfc_nvme_buf *);
+ 
+ static struct nvme_fc_port_template lpfc_nvme_template;
+ 
+-union lpfc_wqe128 lpfc_iread_cmd_template;
+-union lpfc_wqe128 lpfc_iwrite_cmd_template;
+-union lpfc_wqe128 lpfc_icmnd_cmd_template;
++static union lpfc_wqe128 lpfc_iread_cmd_template;
++static union lpfc_wqe128 lpfc_iwrite_cmd_template;
++static union lpfc_wqe128 lpfc_icmnd_cmd_template;
+ 
+ /* Setup WQE templates for NVME IOs */
+ void
+-lpfc_nvme_cmd_template()
++lpfc_nvme_cmd_template(void)
+ {
+ 	union lpfc_wqe128 *wqe;
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 07f89524c320..7271c9d885dd 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -74,13 +74,13 @@ static int lpfc_nvmet_unsol_ls_issue_abort(struct lpfc_hba *,
+ static void lpfc_nvmet_wqfull_flush(struct lpfc_hba *, struct lpfc_queue *,
+ 				    struct lpfc_nvmet_rcv_ctx *);
+ 
+-union lpfc_wqe128 lpfc_tsend_cmd_template;
+-union lpfc_wqe128 lpfc_treceive_cmd_template;
+-union lpfc_wqe128 lpfc_trsp_cmd_template;
++static union lpfc_wqe128 lpfc_tsend_cmd_template;
++static union lpfc_wqe128 lpfc_treceive_cmd_template;
++static union lpfc_wqe128 lpfc_trsp_cmd_template;
+ 
+ /* Setup WQE templates for NVME IOs */
+ void
+-lpfc_nvmet_cmd_template()
++lpfc_nvmet_cmd_template(void)
+ {
+ 	union lpfc_wqe128 *wqe;
+ 
+-- 
+2.15.1
