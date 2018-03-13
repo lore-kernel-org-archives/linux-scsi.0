@@ -1,72 +1,80 @@
-From: Stephen Kitt <steve@sk2.org>
-Subject: Re: [PATCH] device_handler: remove VLAs
-Date: Mon, 12 Mar 2018 20:26:44 +0100
-Message-ID: <20180312202644.5594421e@heffalump.sk2.org>
-References: <20180309232933.14e39858@heffalump.sk2.org>
-	<20180309223211.20473-1-steve@sk2.org>
-	<1520635688.2907.17.camel@wdc.com>
-	<20180310141422.3a8c451f@heffalump.sk2.org>
-	<1520869285.3469.13.camel@wdc.com>
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
+Date: Tue, 13 Mar 2018 11:14:52 +1030
+Message-ID: <52aee09d-ba14-666b-8482-a4e7b6ef8889@internode.on.net>
+References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com>
+ <20180312030834.GC8631@eros>
+ <CA+55aFww=otC4Wv40enadF+9NAyWG4Hotzjvv2EKb+_wGFui-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/Q4hJWW478X8YOM=u9FIG7am"; protocol="application/pgp-signature"
-Return-path: <kernel-hardening-return-12478-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
-In-Reply-To: <1520869285.3469.13.camel@wdc.com>
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFww=otC4Wv40enadF+9NAyWG4Hotzjvv2EKb+_wGFui-w@mail.gmail.com>
+Content-Language: en-AU
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, "Tobin C. Harding" <tobin@apporbit.com>
+Cc: Salvatore Mesoraca <s.mesoraca16@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, kernelnewbies@kernelnewbies.org
 List-Id: linux-scsi@vger.kernel.org
 
---Sig_/Q4hJWW478X8YOM=u9FIG7am
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 12 Mar 2018 15:41:26 +0000, Bart Van Assche <Bart.VanAssche@wdc.com>
-wrote:
-> On Sat, 2018-03-10 at 14:14 +0100, Stephen Kitt wrote:
-> > The two patches I sent were supposed to be alternative solutions; see
-> > https://marc.info/?l=3Dlinux-scsi&m=3D152063671005295&w=3D2 for the
-> > introduction (I seem to have messed up the headers, so the mails didn=
-=E2=80=99t
-> > end up threaded properly). =20
->=20
-> The two patches arrived in my inbox several minutes before the cover
-> letter. In the e-mail header of the cover letter I found the following:
->=20
-> X-Greylist: delayed 1810 seconds by postgrey-1.27 at vger.kernel.org; Fri,
-> 09 Mar 2018 18:05:08 EST
->=20
-> Does this mean that the delay happened due to vger server's anti-spam
-> algorithm?
 
-That=E2=80=99s right, the greylisting part of its anti-spam measures.
+Linus Torvalds wrote on 13/03/18 05:15:
+> On Sun, Mar 11, 2018 at 8:08 PM, Tobin C. Harding <tobin@apporbit.com> wrote:
+>>
+>> I think we are going to see a recurring theme here.  MAX_MAILBOXES==64
+>> so this patch adds 1536 bytes to the stack on a 64 bit machine or 768
+>> bytes on a 32 bit machine.
+> 
+> Yeah, that's a bit excessive. It probably works, but one or two of
+> those allocations will make the kernel stack really tight, so in
+> general I really would suggest using kmalloc() instead, or figuring
+> out some way to simply shrink the data structures.
+> 
+> That said, I wonder if the solution to this particular driver is
+> "delete it". Because the hardware is truly ancient and nobody sane
+> would use it any more.
+> 
+> The last patch that seemed to come from an actual _user_ finding a
+> problem was in 2008 (commit 20c09df7eb9c: "[SCSI] eata: fix the data
+> buffer accessors conversion regression"). And even then it apparently
+> took a year for people to have noticed the breakage.
+> 
+> But because the person who reported that problem is still around, I'll
+> just add him to the cc, just in case.
+> 
+> Arthur Marsh, you have the dubious honor and distinction of being the
+> only person to have apparently used that driver in the last ten years.
+> Do you still have hardware using that? Because maybe it's really time
+> to retire that driver.
+> 
+>                     Linus
+> 
 
-Regards,
+Hi Linus and maintainers, thanks for the courtesy email and all the help 
+with the driver.
 
-Stephen
+I am unable to make use of the driver any more due to failed hardware.
 
---Sig_/Q4hJWW478X8YOM=u9FIG7am
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+The DPT2044W SCSI controller and the IBM disk from May 1998 last 
+officially ran on 7 August 2017. I was had previously been able to get 
+the data off it and disconnected the controller and disk following 
+recurring problems with booting.
 
------BEGIN PGP SIGNATURE-----
+Aug  7 16:40:24 localhost kernel: [  105.098705] sd 0:0:6:0: [sda] 
+Synchronizing SCSI cache
+Aug  7 16:40:24 localhost kernel: [  105.233166] EATA0: IRQ 11 mapped to 
+IO-APIC IRQ 18.
+Aug  7 16:40:24 localhost kernel: [  105.233475] EATA/DMA 2.0x: 
+Copyright (C) 1994-2003 Dario Ballabio.
+Aug  7 16:40:24 localhost kernel: [  105.233485] EATA config options -> 
+tm:1, lc:y, mq:16, rs:y, et:n, ip:n, ep:n, pp:y.
+Aug  7 16:40:24 localhost kernel: [  105.233492] EATA0: 2.0C, PCI 
+0x9010, IRQ 18, BMST, SG 122, MB 64.
+Aug  7 16:40:24 localhost kernel: [  105.233499] EATA0: wide SCSI 
+support enabled, max_id 16, max_lun 8.
+Aug  7 16:40:24 localhost kernel: [  105.233505] EATA0: SCSI channel 0 
+enabled, host target ID 7.
+Aug  7 16:40:24 localhost kernel: [  105.233521] scsi host0: EATA/DMA 
+2.0x rev. 8.10.00
 
-iQIzBAEBCgAdFiEEnPVX/hPLkMoq7x0ggNMC9Yhtg5wFAlqm1HQACgkQgNMC9Yht
-g5w4Pg//XsoJ53FkY+BpdO4+B9OJz3sNmy8OJi+HGqMzhLpHeTp/5JKyCQI0J+6M
-kHXrYkl76mRyYSnh4Dx/YEaq99igksN9B6mu21Y/y0ZNIveO1ItEnzux3D9K2/K0
-M1ErDbD0rbpt14dkhbY4rn7dvmsLY26mmXEqdd9Kc2hiI4BqxTyI1IOYARswrpyk
-jYHglsKtBsgUvloVAsLa7DIjuW7Fk/usA7aoZp2xJenKYVEmRbJDDvb3QOjS13eO
-SKfWS8a6+viID7GbvADcGEGy0QdWe1I69qSAhkI5zlHZGaPM/dCCJmvJxRZ8JVks
-F+Tl2obuWptRJe3muSLNg6y3XkNH18lvPRUC/AHR5wah9ZX3Hlx0gyudcztIw9FF
-Ui1BgDmUyZC9hLgoXNKGGve/U3IEXs7wVV/EpxOfqvVnpmi/d566zv8ltRjRRa4F
-f0IxclNOBEwlP0H1rEODKopdMSxTRMpvxLHDQr8ejOr6v7OkOW69UK5xIFpX8N7T
-59YK14HbjUav7cjB9JnYTcS+4f3/rsubLYKS8y+DELIGskPEGKNkaiXlQINQ/3E8
-09VegkFiaiQM1tCOvq3JXSGKnW/kUrGaAMBsAHdHJaZLjGD01i3tymcjf8eHQaTK
-cWrpE98iLC1fqoIIY2Z6HnF65PURaUepKhlrQuERwbpSPGYx/C8=
-=huhw
------END PGP SIGNATURE-----
-
---Sig_/Q4hJWW478X8YOM=u9FIG7am--
+Arthur Marsh.
