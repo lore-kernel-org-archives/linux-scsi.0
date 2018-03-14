@@ -1,28 +1,91 @@
-From: Salvatore Mesoraca <s.mesoraca16@gmail.com>
-Subject: Re: [PATCH] scsi: eata: drop VLA in reorder()
-Date: Tue, 13 Mar 2018 23:04:21 +0100
-Message-ID: <CAJHCu1+XPPmCcrP+89zc9Lg7k_t78LzfJbY7aC8Mt+ANeuVWdA@mail.gmail.com>
-References: <1520802418-17284-1-git-send-email-s.mesoraca16@gmail.com>
- <20180312030834.GC8631@eros> <CA+55aFww=otC4Wv40enadF+9NAyWG4Hotzjvv2EKb+_wGFui-w@mail.gmail.com>
- <yq1y3iwem87.fsf@oracle.com> <20180313090540.GA4810@infradead.org>
+From: "liwei (CM)" <liwei213@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjggMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZz?=
+ =?utf-8?Q?:_add_document_for_hisi-ufs?=
+Date: Wed, 14 Mar 2018 02:17:51 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA57B80@DGGEMM506-MBS.china.huawei.com>
+References: <20180213101412.5717-1-liwei213@huawei.com>
+ <20180213101412.5717-3-liwei213@huawei.com>
+ <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180313090540.GA4810@infradead.org>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, "Tobin C. Harding" <tobin@apporbit.com>, Arthur Marsh <arthur.marsh@internode.on.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Dario Ballabio <ballabio_dario@emc.com>, Kees Cook <keescook@chromium.org>, kernelnewbies@kernelnewbies.org
+To: "liwei (CM)" <liwei213@huawei.com>, Arnd Bergmann <arnd@arndb.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "xuwei (O)" <xuwei5@huawei.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, DTML <devicetree@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ARM <linux-arm-kernel@li>
 List-Id: linux-scsi@vger.kernel.org
 
-2018-03-13 10:05 GMT+01:00 Christoph Hellwig <hch@infradead.org>:
-> On Mon, Mar 12, 2018 at 10:35:36PM -0400, Martin K. Petersen wrote:
->> No objections to Salvatore's patch but I have a slight affinity for
->> retiring unused code over patching it. So unless there are objections...
->
-> Lets kill it.  And the not DMA capable eata_pio driver with it for
-> good riddance.
-
-Good, I'll send a patch to remove eata & friends.
-Thank you for your time,
-
-Salvatore
+SGnvvIxBcm5kDQoNClNvcnJ5IHRvIGJvdGhlciB5b3UgYWdhaW4sIHBsZWFzZSB0YWtlIHRoZSB0
+aW1lIHRvIHJldmlldyB0aGUgcGF0Y2guIEFyZSB0aGVyZSBhbnkgb3RoZXIgc3VnZ2VzdGlvbnM/
+DQpMb29raW5nIGZvcndhcmQgdG8geW91ciByZXBseS4NCg0KVGhhbmtzIQ0KDQoNCg0KLS0tLS3p
+gq7ku7bljp/ku7YtLS0tLQ0K5Y+R5Lu25Lq6OiBsaXdlaSAoQ00pIA0K5Y+R6YCB5pe26Ze0OiAy
+MDE45bm0MuaciDIz5pelIDE2OjM2DQrmlLbku7bkuro6ICdBcm5kIEJlcmdtYW5uJw0K5oqE6YCB
+OiBSb2IgSGVycmluZzsgTWFyayBSdXRsYW5kOyB4dXdlaSAoTyk7IENhdGFsaW4gTWFyaW5hczsg
+V2lsbCBEZWFjb247IFZpbmF5YWsgSG9saWthdHRpOyBKYW1lcyBFLkouIEJvdHRvbWxleTsgTWFy
+dGluIEsuIFBldGVyc2VuOyBLZXZpbiBIaWxtYW47IEdyZWdvcnkgQ0xFTUVOVDsgVGhvbWFzIFBl
+dGF6em9uaTsgTWFzYWhpcm8gWWFtYWRhOyBSaWt1IFZvaXBpbzsgVGhpZXJyeSBSZWRpbmc7IEty
+enlzenRvZiBLb3psb3dza2k7IERUTUw7IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7IExpbnV4
+IEFSTTsgbGludXgtc2NzaTsgemFuZ2xlaWdhbmc7IEdlbmdqaWFuZmVuZzsgR3VvZG9uZyBYdTsg
+WmhhbmdmZWkgR2FvOyBGZW5nYmFvcGVuZyAoa2V2aW4sIEtpcmluIFNvbHV0aW9uIERlcHQpDQrk
+uLvpopg6IOetlOWkjTogW1BBVENIIHY4IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYWRk
+IGRvY3VtZW50IGZvciBoaXNpLXVmcw0KDQpIaSwgQXJuZA0KDQpTb3JyeSBsYXRlIGZvciB5b3Uu
+DQpUaGUgZm9sbG93aW5nIHR3byBzdWdnZXN0aW9ucyB3ZSBoYXZlIHJlYWxseSBkaXNjdXNzZWQN
+Cmh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE3LzExLzMwLzEwNzcNCg0KLS0tLS3pgq7ku7bljp/k
+u7YtLS0tLQ0K5Y+R5Lu25Lq6OiBhcm5kYmVyZ21hbm5AZ21haWwuY29tIFttYWlsdG86YXJuZGJl
+cmdtYW5uQGdtYWlsLmNvbV0g5Luj6KGoIEFybmQgQmVyZ21hbm4NCuWPkemAgeaXtumXtDogMjAx
+OOW5tDLmnIgxOeaXpSAxNzo1OA0K5pS25Lu25Lq6OiBsaXdlaSAoQ00pDQrmioTpgIE6IFJvYiBI
+ZXJyaW5nOyBNYXJrIFJ1dGxhbmQ7IHh1d2VpIChPKTsgQ2F0YWxpbiBNYXJpbmFzOyBXaWxsIERl
+YWNvbjsgVmluYXlhayBIb2xpa2F0dGk7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBNYXJ0aW4gSy4g
+UGV0ZXJzZW47IEtldmluIEhpbG1hbjsgR3JlZ29yeSBDTEVNRU5UOyBUaG9tYXMgUGV0YXp6b25p
+OyBNYXNhaGlybyBZYW1hZGE7IFJpa3UgVm9pcGlvOyBUaGllcnJ5IFJlZGluZzsgS3J6eXN6dG9m
+IEtvemxvd3NraTsgRXJpYyBBbmhvbHQ7IERUTUw7IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7
+IExpbnV4IEFSTTsgbGludXgtc2NzaTsgemFuZ2xlaWdhbmc7IEdlbmdqaWFuZmVuZzsgR3VvZG9u
+ZyBYdTsgWmhhbmdmZWkgR2FvOyBGZW5nYmFvcGVuZyAoa2V2aW4sIEtpcmluIFNvbHV0aW9uIERl
+cHQpDQrkuLvpopg6IFJlOiBbUEFUQ0ggdjggMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBh
+ZGQgZG9jdW1lbnQgZm9yIGhpc2ktdWZzDQoNCk9uIFR1ZSwgRmViIDEzLCAyMDE4IGF0IDExOjE0
+IEFNLCBMaSBXZWkgPGxpd2VpMjEzQGh1YXdlaS5jb20+IHdyb3RlOg0KPiBhZGQgdWZzIG5vZGUg
+ZG9jdW1lbnQgZm9yIEhpc2lsaWNvbi4NCj4NCj4gU2lnbmVkLW9mZi1ieTogTGkgV2VpIDxsaXdl
+aTIxM0BodWF3ZWkuY29tPg0KPiAtLS0NCj4gIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
+aW5ncy91ZnMvdWZzLWhpc2kudHh0IHwgMzcgDQo+ICsrKysrKysrKysrKysrKysrKysrKysNCj4g
+IDEgZmlsZSBjaGFuZ2VkLCAzNyBpbnNlcnRpb25zKCspDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQg
+RG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlzaS50eHQNCg0KDQpJ
+J20gcHJldHR5IHN1cmUgd2UndmUgZGlzY3Vzc2VkIGl0IGJlZm9yZSwgYnV0IGNhbiB5b3UgbWFr
+ZSB0aGlzIHNvIHRoYXQgdGhlIGdlbmVyaWMgcHJvcGVydGllcyBhcmUgcGFydCBvZiB0aGUgdWZz
+aGNkIGJpbmRpbmcsIGFuZCB5b3UgcmVmZXIgdG8gaXQgZnJvbSBoZXJlLCBvbmx5IGRlc2NyaWJp
+bmcgaW4gd2hhdCB3YXlzIHRoZSBoaXNpIHVmcyBiaW5kaW5nIGRpZmZlcnMgZnJvbSB0aGUgc3Rh
+bmRhcmQ/DQoNCj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5n
+cy91ZnMvdWZzLWhpc2kudHh0IA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5n
+cy91ZnMvdWZzLWhpc2kudHh0DQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0DQo+IGluZGV4IDAwMDAw
+MDAwMDAwMC4uMGQyMWI1NzQ5NmNmDQo+IC0tLSAvZGV2L251bGwNCj4gKysrIGIvRG9jdW1lbnRh
+dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlzaS50eHQNCj4gQEAgLTAsMCArMSwz
+NyBAQA0KPiArKiBIaXNpbGljb24gVW5pdmVyc2FsIEZsYXNoIFN0b3JhZ2UgKFVGUykgSG9zdCBD
+b250cm9sbGVyDQo+ICsNCj4gK1VGUyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmliZSBvbi1j
+aGlwIFVGUyBoYXJkd2FyZSBtYWNyby4NCj4gK0VhY2ggVUZTIEhvc3QgQ29udHJvbGxlciBzaG91
+bGQgaGF2ZSBpdHMgb3duIG5vZGUuDQo+ICsNCj4gK1JlcXVpcmVkIHByb3BlcnRpZXM6DQo+ICst
+IGNvbXBhdGlibGUgICAgICAgIDogY29tcGF0aWJsZSBsaXN0LCBjb250YWlucyBvbmUgb2YgdGhl
+IGZvbGxvd2luZyAtDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAi
+aGlzaWxpY29uLGhpMzY2MC11ZnMiLCAiamVkZWMsdWZzLTEuMSIgZm9yIGhpc2kgdWZzDQo+ICsg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBob3N0IGNvbnRyb2xsZXIgcHJl
+c2VudCBvbiBIaTM2eHggY2hpcHNldC4NCj4gKy0gcmVnICAgICAgICAgICAgICAgOiBzaG91bGQg
+Y29udGFpbiBVRlMgcmVnaXN0ZXIgYWRkcmVzcyBzcGFjZSAmIFVGUyBTWVMgQ1RSTCByZWdpc3Rl
+ciBhZGRyZXNzLA0KPiArLSBpbnRlcnJ1cHQtcGFyZW50ICA6IGludGVycnVwdCBkZXZpY2UNCj4g
+Ky0gaW50ZXJydXB0cyAgICAgICAgOiBpbnRlcnJ1cHQgbnVtYmVyDQo+ICstIGNsb2NrcyAgICAg
+ICAgICAgICAgIDogTGlzdCBvZiBwaGFuZGxlIGFuZCBjbG9jayBzcGVjaWZpZXIgcGFpcnMNCj4g
+Ky0gY2xvY2stbmFtZXMgICAgICAgOiBMaXN0IG9mIGNsb2NrIGlucHV0IG5hbWUgc3RyaW5ncyBz
+b3J0ZWQgaW4gdGhlIHNhbWUNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIG9yZGVyIGFzIHRoZSBjbG9ja3MgcHJvcGVydHkuIA0KPiArInJlZl9jbGsiLCAicGh5X2Ns
+ayIgaXMgb3B0aW9uYWwNCg0KVGhlIGNsb2NrIG5hbWVzIHNvdW5kIGdlbmVyaWMgZW5vdWdoLCBz
+aG91bGQgd2UgaGF2ZSBib3RoIGluIHRoZSBnZW5lcmljIGJpbmRpbmc/DQoNCiJyZWZfY2xrIiBp
+cyBpbiB0aGUgdWZzaGNkLXBsdGZybSBiaW5kaW5nLCBidXQgInBoeV9jbGsiIGlzIG5vdDsgd2hh
+dCBkbyB5b3UgbWVhbiBpcyB0aGF0IHRoZXNlIHR3byBkb24ndCBuZWVkIHRvIGRvY3VtZW50IGhl
+cmU/DQoNCj4gKy0gcmVzZXRzICAgICAgICAgICAgOiByZXNldCBub2RlIHJlZ2lzdGVyLCBvbmUg
+cmVzZXQgdGhlIGNsayBhbmQgdGhlIG90aGVyIHJlc2V0IHRoZSBjb250cm9sbGVyDQo+ICstIHJl
+c2V0LW5hbWVzICAgICAgIDogZGVzY3JpYmUgcmVzZXQgbm9kZSByZWdpc3Rlcg0KDQpUaGlzIGxv
+b2tzIGluY29tcGxldGUuIFdoYXQgaXMgdGhlIG5hbWUgb2YgdGhlIHJlc2V0IGxpbmUgc3VwcG9z
+ZWQgdG8gYmU/DQpJJ2QgYWxzbyBzdWdnZXN0IHlvdSBkb2N1bWVudCBpdCBpbiB0aGUgdWZzaGNk
+IGJpbmRpbmcgaW5zdGVhZC4NCg0KQXMgZGlzY3Vzc2VkIGluIGh0dHBzOi8vbGttbC5vcmcvbGtt
+bC8yMDE3LzExLzMwLzEwNzc7DQpJZiBkb2N1bWVudCBpdCBpbiB0aGUgdWZzaGNkIGJpbmRpbmcs
+IEkgdGhpbmsgaXQgbmVlZHMgc29tZSBjb2RlcyB0byBwYXJzZSB0aGVtIGluIHVmc2hjZC5jL3Vm
+c2hjZC1wbHRmcm0uYywgYnV0IEkgdGhpbmsgdGhlc2UgY29kZXMgbWF5IG5vdCBiZSBhcHBsaWNh
+YmxlIHRvIG90aGVyIFNPQyBtYW51ZmFjdHVyZXJzLg0KDQogICAgICBBcm5kDQo=
