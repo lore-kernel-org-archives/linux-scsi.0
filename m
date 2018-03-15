@@ -1,50 +1,60 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH] scsi: devinfo: remove DF arrays from HP
-Date: Thu, 15 Mar 2018 19:01:49 +0100
-Message-ID: <20180315180149.30560-1-xose.vazquez@gmail.com>
+From: Long Li <longli@exchange.microsoft.com>
+Subject: [PATCH] storvsc: Set up correct queue depth values for IDE devices
+Date: Thu, 15 Mar 2018 16:52:23 -0700
+Message-ID: <20180315235223.19844-1-longli@exchange.microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-Cc: Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, SCSI ML <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Takahiro Yasui <takahiro.yasui@hitachivantara.com>, device-mapper development <dm-devel@redhat.com>, Mike Christie <mchristi@redhat.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Anthony Cheung <anthony.cheung@hpe.com>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Matthias did confirm that there are no such devices.
+From: Long Li <longli@microsoft.com>
 
-Cc: Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>
-Cc: Anthony Cheung <anthony.cheung@hpe.com>
-Cc: Takahiro Yasui <takahiro.yasui@hitachivantara.com>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Unlike SCSI and FC, we don't use multiple channels for IDE. So set queue depth
+correctly for IDE.
+
+Also set the correct cmd_per_lun for all devices.
+
+Signed-off-by: Long Li <longli@microsoft.com>
 ---
- drivers/scsi/scsi_devinfo.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/storvsc_drv.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index f3b117246d47..b119b5bfb4d3 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -187,8 +187,6 @@ static struct {
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
- 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
- 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
--	{"HP", "DF400", "*", BLIST_REPORTLUN2},
--	{"HP", "DF500", "*", BLIST_REPORTLUN2},
- 	{"HP", "OP-C-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "3380-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "3390-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 8c51d628b52e..fba170640e9c 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1722,15 +1722,19 @@ static int storvsc_probe(struct hv_device *device,
+ 		max_targets = STORVSC_MAX_TARGETS;
+ 		max_channels = STORVSC_MAX_CHANNELS;
+ 		/*
+-		 * On Windows8 and above, we support sub-channels for storage.
++		 * On Windows8 and above, we support sub-channels for storage
++		 * on SCSI and FC controllers.
+ 		 * The number of sub-channels offerred is based on the number of
+ 		 * VCPUs in the guest.
+ 		 */
+-		max_sub_channels = (num_cpus / storvsc_vcpus_per_sub_channel);
++		if (!dev_is_ide)
++			max_sub_channels =
++				num_cpus / storvsc_vcpus_per_sub_channel;
+ 	}
+ 
+ 	scsi_driver.can_queue = (max_outstanding_req_per_channel *
+ 				 (max_sub_channels + 1));
++	scsi_driver.cmd_per_lun = scsi_driver.can_queue;
+ 
+ 	host = scsi_host_alloc(&scsi_driver,
+ 			       sizeof(struct hv_host_device));
 -- 
-2.14.3
+2.14.1
