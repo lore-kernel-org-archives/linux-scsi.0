@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 0/4] scsi: arcmsr: Support Areca thunderbolt devices
- hot-plug
-Date: Thu, 15 Mar 2018 14:25:29 +0800
-Message-ID: <1521095129.31371.25.camel@Centos6.3-64>
+Subject: [PATCH 1/4] scsi: arcmsr: Rename ACB_F_BUS_HANG_ON to
+ ACB_F_ADAPTER_REMOVED for adapter hot-plug
+Date: Thu, 15 Mar 2018 14:26:15 +0800
+Message-ID: <1521095175.31371.26.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -14,11 +14,26 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-This patch series are against to mkp's 4.17/scsi-queue.
+Rename ACB_F_BUS_HANG_ON to ACB_F_ADAPTER_REMOVED for adapter hot-plug.
 
-1. Rename ACB_F_BUS_HANG_ON to ACB_F_ADAPTER_REMOVED for adapter hot-plug
-2. Handle adapter removed due to thunderbolt cable disconnection.
-3. Sleep to avoid CPU stuck too long for waiting adapter ready
-4. Change driver version to v1.40.00.05-20180309
-
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
+
+diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+index f375f35..842b77a 100755
+--- a/drivers/scsi/arcmsr/arcmsr.h
++++ b/drivers/scsi/arcmsr/arcmsr.h
+@@ -779,12 +779,12 @@ struct AdapterControlBlock
+ /* message clear rqbuffer */
+ #define ACB_F_MESSAGE_WQBUFFER_READED   0x0040
+ #define ACB_F_BUS_RESET               	0x0080
+-#define ACB_F_BUS_HANG_ON		0x0800/* need hardware reset bus */
+ 
+ #define ACB_F_IOP_INITED              	0x0100
+ /* iop init */
+ #define ACB_F_ABORT			0x0200
+ #define ACB_F_FIRMWARE_TRAP           	0x0400
++#define ACB_F_ADAPTER_REMOVED		0x0800
+ #define ACB_F_MSG_GET_CONFIG		0x1000
+ 	struct CommandControlBlock *	pccb_pool[ARCMSR_MAX_FREECCB_NUM];
+ 	/* used for memory free */
