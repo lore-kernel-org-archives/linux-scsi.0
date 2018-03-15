@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 1/4] scsi: arcmsr: Rename ACB_F_BUS_HANG_ON to
- ACB_F_ADAPTER_REMOVED for adapter hot-plug
-Date: Thu, 15 Mar 2018 14:26:15 +0800
-Message-ID: <1521095175.31371.26.camel@Centos6.3-64>
+Subject: [PATCH 2/4] scsi: arcmsr: Handle adapter removed due to
+ thunderbolt cable disconnection.
+Date: Thu, 15 Mar 2018 14:33:36 +0800
+Message-ID: <1521095616.31371.30.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -14,26 +14,133 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-Rename ACB_F_BUS_HANG_ON to ACB_F_ADAPTER_REMOVED for adapter hot-plug.
+Handle adapter removed due to thunderbolt cable disconnection.
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
-diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
-index f375f35..842b77a 100755
---- a/drivers/scsi/arcmsr/arcmsr.h
-+++ b/drivers/scsi/arcmsr/arcmsr.h
-@@ -779,12 +779,12 @@ struct AdapterControlBlock
- /* message clear rqbuffer */
- #define ACB_F_MESSAGE_WQBUFFER_READED   0x0040
- #define ACB_F_BUS_RESET               	0x0080
--#define ACB_F_BUS_HANG_ON		0x0800/* need hardware reset bus */
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 75e828b..2f52c53 100755
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1446,12 +1446,80 @@ static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
+ 	}
+ }
  
- #define ACB_F_IOP_INITED              	0x0100
- /* iop init */
- #define ACB_F_ABORT			0x0200
- #define ACB_F_FIRMWARE_TRAP           	0x0400
-+#define ACB_F_ADAPTER_REMOVED		0x0800
- #define ACB_F_MSG_GET_CONFIG		0x1000
- 	struct CommandControlBlock *	pccb_pool[ARCMSR_MAX_FREECCB_NUM];
- 	/* used for memory free */
++static void arcmsr_remove_scsi_devices(struct AdapterControlBlock *acb)
++{
++	char *acb_dev_map = (char *)acb->device_map;
++	int target, lun, i;
++	struct scsi_device *psdev;
++	struct CommandControlBlock *ccb;
++	char temp;
++
++	for (i = 0; i < acb->maxFreeCCB; i++) {
++		ccb = acb->pccb_pool[i];
++		if (ccb->startdone == ARCMSR_CCB_START) {
++			ccb->pcmd->result = DID_NO_CONNECT << 16;
++			arcmsr_pci_unmap_dma(ccb);
++			ccb->pcmd->scsi_done(ccb->pcmd);
++		}
++	}
++	for (target = 0; target < ARCMSR_MAX_TARGETID; target++) {
++		temp = *acb_dev_map;
++		if (temp) {
++			for (lun = 0; lun < ARCMSR_MAX_TARGETLUN; lun++) {
++				if (temp & 1) {
++					psdev = scsi_device_lookup(acb->host,
++						0, target, lun);
++					if (psdev != NULL) {
++						scsi_remove_device(psdev);
++						scsi_device_put(psdev);
++					}
++				}
++				temp >>= 1;
++			}
++			*acb_dev_map = 0;
++		}
++		acb_dev_map++;
++	}
++}
++
++static void arcmsr_free_pcidev(struct AdapterControlBlock *acb)
++{
++	struct pci_dev *pdev;
++	struct Scsi_Host *host;
++
++	host = acb->host;
++	arcmsr_free_sysfs_attr(acb);
++	scsi_remove_host(host);
++	flush_work(&acb->arcmsr_do_message_isr_bh);
++	del_timer_sync(&acb->eternal_timer);
++	if (set_date_time)
++		del_timer_sync(&acb->refresh_timer);
++	pdev = acb->pdev;
++	arcmsr_free_irq(pdev, acb);
++	arcmsr_free_ccb_pool(acb);
++	arcmsr_free_mu(acb);
++	arcmsr_unmap_pciregion(acb);
++	pci_release_regions(pdev);
++	scsi_host_put(host);
++	pci_disable_device(pdev);
++}
++
+ static void arcmsr_remove(struct pci_dev *pdev)
+ {
+ 	struct Scsi_Host *host = pci_get_drvdata(pdev);
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *) host->hostdata;
+ 	int poll_count = 0;
++	uint16_t dev_id;
++
++	pci_read_config_word(pdev, PCI_DEVICE_ID, &dev_id);
++	if (dev_id == 0xffff) {
++		acb->acb_flags &= ~ACB_F_IOP_INITED;
++		acb->acb_flags |= ACB_F_ADAPTER_REMOVED;
++		arcmsr_remove_scsi_devices(acb);
++		arcmsr_free_pcidev(acb);
++		return;
++	}
+ 	arcmsr_free_sysfs_attr(acb);
+ 	scsi_remove_host(host);
+ 	flush_work(&acb->arcmsr_do_message_isr_bh);
+@@ -1499,6 +1567,8 @@ static void arcmsr_shutdown(struct pci_dev *pdev)
+ 	struct Scsi_Host *host = pci_get_drvdata(pdev);
+ 	struct AdapterControlBlock *acb =
+ 		(struct AdapterControlBlock *)host->hostdata;
++	if (acb->acb_flags & ACB_F_ADAPTER_REMOVED)
++		return;
+ 	del_timer_sync(&acb->eternal_timer);
+ 	if (set_date_time)
+ 		del_timer_sync(&acb->refresh_timer);
+@@ -2931,6 +3001,12 @@ static int arcmsr_queue_command_lck(struct scsi_cmnd *cmd,
+ 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
+ 	struct CommandControlBlock *ccb;
+ 	int target = cmd->device->id;
++
++	if (acb->acb_flags & ACB_F_ADAPTER_REMOVED) {
++		cmd->result = (DID_NO_CONNECT << 16);
++		cmd->scsi_done(cmd);
++		return 0;
++	}
+ 	cmd->scsi_done = done;
+ 	cmd->host_scribble = NULL;
+ 	cmd->result = 0;
+@@ -4177,6 +4253,8 @@ static int arcmsr_bus_reset(struct scsi_cmnd *cmd)
+ 	int retry_count = 0;
+ 	int rtn = FAILED;
+ 	acb = (struct AdapterControlBlock *) cmd->device->host->hostdata;
++	if (acb->acb_flags & ACB_F_ADAPTER_REMOVED)
++		return SUCCESS;
+ 	pr_notice("arcmsr: executing bus reset eh.....num_resets = %d,"
+ 		" num_aborts = %d \n", acb->num_resets, acb->num_aborts);
+ 	acb->num_resets++;
+@@ -4243,6 +4321,8 @@ static int arcmsr_abort(struct scsi_cmnd *cmd)
+ 	int rtn = FAILED;
+ 	uint32_t intmask_org;
+ 
++	if (acb->acb_flags & ACB_F_ADAPTER_REMOVED)
++		return SUCCESS;
+ 	printk(KERN_NOTICE
+ 		"arcmsr%d: abort device command of scsi id = %d lun = %d\n",
+ 		acb->host->host_no, cmd->device->id, (u32)cmd->device->lun);
