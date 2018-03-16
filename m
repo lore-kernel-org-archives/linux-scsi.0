@@ -1,8 +1,8 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 13/21] mmc: Remove depends on HAS_DMA in case of platform
+Subject: [PATCH v2 21/21] usb: Remove depends on HAS_DMA in case of platform
 	dependency
-Date: Fri, 16 Mar 2018 14:51:46 +0100
-Message-ID: <1521208314-4783-14-git-send-email-geert@linux-m68k.org>
+Date: Fri, 16 Mar 2018 14:51:54 +0100
+Message-ID: <1521208314-4783-22-git-send-email-geert@linux-m68k.org>
 References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -36,84 +36,51 @@ This simplifies the dependencies, and allows to improve compile-testing.
 Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+Acked-by: Felipe Balbi <felipe.balbi-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> [drivers/usb/gadget/]
 ---
 v2:
   - Add Reviewed-by, Acked-by,
   - Drop RFC state,
   - Split per subsystem.
 ---
- drivers/mmc/host/Kconfig | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/usb/gadget/udc/Kconfig | 4 ++--
+ drivers/usb/mtu3/Kconfig       | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/mmc/host/Kconfig b/drivers/mmc/host/Kconfig
-index 620c2d90a646f387..f6d43348b4a3e5d4 100644
---- a/drivers/mmc/host/Kconfig
-+++ b/drivers/mmc/host/Kconfig
-@@ -358,7 +358,6 @@ config MMC_MESON_MX_SDIO
- 	tristate "Amlogic Meson6/Meson8/Meson8b SD/MMC Host Controller support"
- 	depends on ARCH_MESON || COMPILE_TEST
- 	depends on COMMON_CLK
--	depends on HAS_DMA
- 	depends on OF
- 	help
- 	  This selects support for the SD/MMC Host Controller on
-@@ -401,7 +400,6 @@ config MMC_OMAP
+diff --git a/drivers/usb/gadget/udc/Kconfig b/drivers/usb/gadget/udc/Kconfig
+index 0875d38476ee9395..9c3b4f86965e80c7 100644
+--- a/drivers/usb/gadget/udc/Kconfig
++++ b/drivers/usb/gadget/udc/Kconfig
+@@ -179,7 +179,7 @@ config USB_R8A66597
  
- config MMC_OMAP_HS
- 	tristate "TI OMAP High Speed Multimedia Card Interface support"
--	depends on HAS_DMA
- 	depends on ARCH_OMAP2PLUS || ARCH_KEYSTONE || COMPILE_TEST
+ config USB_RENESAS_USBHS_UDC
+ 	tristate 'Renesas USBHS controller'
+-	depends on USB_RENESAS_USBHS && HAS_DMA
++	depends on USB_RENESAS_USBHS
  	help
- 	  This selects the TI OMAP High Speed Multimedia card Interface.
-@@ -511,7 +509,6 @@ config MMC_DAVINCI
+ 	   Renesas USBHS is a discrete USB host and peripheral controller chip
+ 	   that supports both full and high speed USB 2.0 data transfers.
+@@ -192,7 +192,7 @@ config USB_RENESAS_USBHS_UDC
+ config USB_RENESAS_USB3
+ 	tristate 'Renesas USB3.0 Peripheral controller'
+ 	depends on ARCH_RENESAS || COMPILE_TEST
+-	depends on EXTCON && HAS_DMA
++	depends on EXTCON
+ 	help
+ 	   Renesas USB3.0 Peripheral controller is a USB peripheral controller
+ 	   that supports super, high, and full speed USB 3.0 data transfers.
+diff --git a/drivers/usb/mtu3/Kconfig b/drivers/usb/mtu3/Kconfig
+index 25cd61947beea51e..c0c0eb88e5eafc74 100644
+--- a/drivers/usb/mtu3/Kconfig
++++ b/drivers/usb/mtu3/Kconfig
+@@ -2,7 +2,7 @@
  
- config MMC_GOLDFISH
- 	tristate "goldfish qemu Multimedia Card Interface support"
--	depends on HAS_DMA
- 	depends on GOLDFISH || COMPILE_TEST
+ config USB_MTU3
+ 	tristate "MediaTek USB3 Dual Role controller"
+-	depends on EXTCON && (USB || USB_GADGET) && HAS_DMA
++	depends on EXTCON && (USB || USB_GADGET)
+ 	depends on ARCH_MEDIATEK || COMPILE_TEST
+ 	select USB_XHCI_MTK if USB_SUPPORT && USB_XHCI_HCD
  	help
- 	  This selects the Goldfish Multimedia card Interface emulation
-@@ -605,7 +602,7 @@ config MMC_SDHI
- 
- config MMC_SDHI_SYS_DMAC
- 	tristate "DMA for SDHI SD/SDIO controllers using SYS-DMAC"
--	depends on MMC_SDHI && HAS_DMA
-+	depends on MMC_SDHI
- 	default MMC_SDHI if (SUPERH || ARM)
- 	help
- 	  This provides DMA support for SDHI SD/SDIO controllers
-@@ -615,7 +612,7 @@ config MMC_SDHI_SYS_DMAC
- config MMC_SDHI_INTERNAL_DMAC
- 	tristate "DMA for SDHI SD/SDIO controllers using on-chip bus mastering"
- 	depends on ARM64 || COMPILE_TEST
--	depends on MMC_SDHI && HAS_DMA
-+	depends on MMC_SDHI
- 	default MMC_SDHI if ARM64
- 	help
- 	  This provides DMA support for SDHI SD/SDIO controllers
-@@ -688,7 +685,6 @@ config MMC_CAVIUM_THUNDERX
- 
- config MMC_DW
- 	tristate "Synopsys DesignWare Memory Card Interface"
--	depends on HAS_DMA
- 	depends on ARC || ARM || ARM64 || MIPS || COMPILE_TEST
- 	help
- 	  This selects support for the Synopsys DesignWare Mobile Storage IP
-@@ -758,7 +754,6 @@ config MMC_DW_ZX
- 
- config MMC_SH_MMCIF
- 	tristate "SuperH Internal MMCIF support"
--	depends on HAS_DMA
- 	depends on SUPERH || ARCH_RENESAS || COMPILE_TEST
- 	help
- 	  This selects the MMC Host Interface controller (MMCIF) found in various
-@@ -878,7 +873,6 @@ config MMC_TOSHIBA_PCI
- config MMC_BCM2835
- 	tristate "Broadcom BCM2835 SDHOST MMC Controller support"
- 	depends on ARCH_BCM2835 || COMPILE_TEST
--	depends on HAS_DMA
- 	help
- 	  This selects the BCM2835 SDHOST MMC controller. If you have
- 	  a BCM2835 platform with SD or MMC devices, say Y or M here.
 -- 
 2.7.4
