@@ -1,8 +1,8 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 14/21] mtd: Remove depends on HAS_DMA in case of platform
+Subject: [PATCH v2 19/21] spi: Remove depends on HAS_DMA in case of platform
 	dependency
-Date: Fri, 16 Mar 2018 14:51:47 +0100
-Message-ID: <1521208314-4783-15-git-send-email-geert@linux-m68k.org>
+Date: Fri, 16 Mar 2018 14:51:52 +0100
+Message-ID: <1521208314-4783-20-git-send-email-geert@linux-m68k.org>
 References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -40,79 +40,89 @@ Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
 v2:
   - Add Reviewed-by, Acked-by,
   - Drop RFC state,
-  - Drop new dependency of MTD_NAND_MARVELL on HAS_DMA,
   - Split per subsystem.
 ---
- drivers/mtd/nand/Kconfig    | 8 ++------
- drivers/mtd/spi-nor/Kconfig | 2 +-
- 2 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/spi/Kconfig | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/mtd/nand/Kconfig b/drivers/mtd/nand/Kconfig
-index 736ac887303c88ba..55a2f8a2fa90cd87 100644
---- a/drivers/mtd/nand/Kconfig
-+++ b/drivers/mtd/nand/Kconfig
-@@ -46,7 +46,7 @@ config MTD_NAND_DENALI
- config MTD_NAND_DENALI_PCI
-         tristate "Support Denali NAND controller on Intel Moorestown"
- 	select MTD_NAND_DENALI
--	depends on HAS_DMA && PCI
-+	depends on PCI
-         help
-           Enable the driver for NAND flash on Intel Moorestown, using the
-           Denali NAND controller core.
-@@ -184,7 +184,6 @@ config MTD_NAND_S3C2410_CLKSTOP
- config MTD_NAND_TANGO
- 	tristate "NAND Flash support for Tango chips"
- 	depends on ARCH_TANGO || COMPILE_TEST
--	depends on HAS_DMA
- 	help
- 	  Enables the NAND Flash controller on Tango chips.
+diff --git a/drivers/spi/Kconfig b/drivers/spi/Kconfig
+index 603783976b8152d4..7bd3a94f58511c41 100644
+--- a/drivers/spi/Kconfig
++++ b/drivers/spi/Kconfig
+@@ -71,7 +71,6 @@ config SPI_ARMADA_3700
  
-@@ -328,7 +327,7 @@ config MTD_NAND_MARVELL
- 	tristate "NAND controller support on Marvell boards"
- 	depends on PXA3xx || ARCH_MMP || PLAT_ORION || ARCH_MVEBU || \
- 		   COMPILE_TEST
--	depends on HAS_IOMEM && HAS_DMA
-+	depends on HAS_IOMEM
- 	help
- 	  This enables the NAND flash controller driver for Marvell boards,
- 	  including:
-@@ -490,7 +489,6 @@ config MTD_NAND_SH_FLCTL
- 	tristate "Support for NAND on Renesas SuperH FLCTL"
- 	depends on SUPERH || COMPILE_TEST
- 	depends on HAS_IOMEM
+ config SPI_ATMEL
+ 	tristate "Atmel SPI Controller"
 -	depends on HAS_DMA
+ 	depends on (ARCH_AT91 || AVR32 || COMPILE_TEST)
  	help
- 	  Several Renesas SuperH CPU has FLCTL. This option enables support
- 	  for NAND Flash using FLCTL.
-@@ -558,7 +556,6 @@ config MTD_NAND_SUNXI
- config MTD_NAND_HISI504
- 	tristate "Support for NAND controller on Hisilicon SoC Hip04"
- 	depends on ARCH_HISI || COMPILE_TEST
--	depends on HAS_DMA
- 	help
- 	  Enables support for NAND controller on Hisilicon SoC Hip04.
+ 	  This selects a driver for the Atmel SPI Controller, present on
+@@ -252,7 +251,6 @@ config SPI_EFM32
  
-@@ -572,7 +569,6 @@ config MTD_NAND_QCOM
- config MTD_NAND_MTK
- 	tristate "Support for NAND controller on MTK SoCs"
- 	depends on ARCH_MEDIATEK || COMPILE_TEST
+ config SPI_EP93XX
+ 	tristate "Cirrus Logic EP93xx SPI controller"
+-	depends on HAS_DMA
+ 	depends on ARCH_EP93XX || COMPILE_TEST
+ 	help
+ 	  This enables using the Cirrus EP93xx SPI controller in master
+@@ -374,7 +372,6 @@ config SPI_FSL_SPI
+ config SPI_FSL_DSPI
+ 	tristate "Freescale DSPI controller"
+ 	select REGMAP_MMIO
+-	depends on HAS_DMA
+ 	depends on SOC_VF610 || SOC_LS1021A || ARCH_LAYERSCAPE || M5441x || COMPILE_TEST
+ 	help
+ 	  This enables support for the Freescale DSPI controller in master
+@@ -450,7 +447,6 @@ config SPI_OMAP_UWIRE
+ 
+ config SPI_OMAP24XX
+ 	tristate "McSPI driver for OMAP"
+-	depends on HAS_DMA
+ 	depends on ARCH_OMAP2PLUS || COMPILE_TEST
+ 	select SG_SPLIT
+ 	help
+@@ -459,7 +455,6 @@ config SPI_OMAP24XX
+ 
+ config SPI_TI_QSPI
+ 	tristate "DRA7xxx QSPI controller support"
+-	depends on HAS_DMA
+ 	depends on ARCH_OMAP2PLUS || COMPILE_TEST
+ 	help
+ 	  QSPI master controller for DRA7xxx used for flash devices.
+@@ -488,7 +483,6 @@ config SPI_PIC32
+ config SPI_PIC32_SQI
+ 	tristate "Microchip PIC32 Quad SPI driver"
+ 	depends on MACH_PIC32 || COMPILE_TEST
 -	depends on HAS_DMA
  	help
- 	  Enables support for NAND controller on MTK SoCs.
- 	  This controller is found on mt27xx, mt81xx, mt65xx SoCs.
-diff --git a/drivers/mtd/spi-nor/Kconfig b/drivers/mtd/spi-nor/Kconfig
-index 89da88e591215db1..c493b8230a38c059 100644
---- a/drivers/mtd/spi-nor/Kconfig
-+++ b/drivers/mtd/spi-nor/Kconfig
-@@ -71,7 +71,7 @@ config SPI_FSL_QUADSPI
- config SPI_HISI_SFC
- 	tristate "Hisilicon SPI-NOR Flash Controller(SFC)"
- 	depends on ARCH_HISI || COMPILE_TEST
--	depends on HAS_IOMEM && HAS_DMA
-+	depends on HAS_IOMEM
+ 	  SPI driver for PIC32 Quad SPI controller.
+ 
+@@ -591,7 +585,7 @@ config SPI_SC18IS602
+ 
+ config SPI_SH_MSIOF
+ 	tristate "SuperH MSIOF SPI controller"
+-	depends on HAVE_CLK && HAS_DMA
++	depends on HAVE_CLK
+ 	depends on ARCH_SHMOBILE || ARCH_RENESAS || COMPILE_TEST
  	help
- 	  This enables support for hisilicon SPI-NOR flash controller.
+ 	  SPI driver for SuperH and SH Mobile MSIOF blocks.
+@@ -669,7 +663,7 @@ config SPI_MXS
+ config SPI_TEGRA114
+ 	tristate "NVIDIA Tegra114 SPI Controller"
+ 	depends on (ARCH_TEGRA && TEGRA20_APB_DMA) || COMPILE_TEST
+-	depends on RESET_CONTROLLER && HAS_DMA
++	depends on RESET_CONTROLLER
+ 	help
+ 	  SPI driver for NVIDIA Tegra114 SPI Controller interface. This controller
+ 	  is different than the older SoCs SPI controller and also register interface
+@@ -687,7 +681,7 @@ config SPI_TEGRA20_SFLASH
+ config SPI_TEGRA20_SLINK
+ 	tristate "Nvidia Tegra20/Tegra30 SLINK Controller"
+ 	depends on (ARCH_TEGRA && TEGRA20_APB_DMA) || COMPILE_TEST
+-	depends on RESET_CONTROLLER && HAS_DMA
++	depends on RESET_CONTROLLER
+ 	help
+ 	  SPI driver for Nvidia Tegra20/Tegra30 SLINK Controller interface.
  
 -- 
 2.7.4
