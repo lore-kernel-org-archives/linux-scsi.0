@@ -1,8 +1,7 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 1/5] dma-mapping: Convert NO_DMA get_dma_ops() into a real
-	dummy
-Date: Fri, 16 Mar 2018 14:25:40 +0100
-Message-ID: <1521206744-1504-2-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH v2 3/5] usb: gadget: Add NO_DMA dummies for DMA mapping API
+Date: Fri, 16 Mar 2018 14:25:42 +0100
+Message-ID: <1521206744-1504-4-git-send-email-geert@linux-m68k.org>
 References: <1521206744-1504-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,48 +21,59 @@ To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.sz
 Cc: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-If NO_DMA=y, get_dma_ops() returns a reference to the
-non-existing symbol bad_dma_ops, thus causing a link failure if it is
-ever used.
+Add dummies for usb_gadget_{,un}map_request{,_by_dev}(), to allow
+compile-testing if NO_DMA=y.
 
-Make get_dma_ops() return NULL instead, to avoid the link failure.
-This allows to improve compile-testing, and limits the need to keep on
-sprinkling dependencies on HAS_DMA all over the place.
+This prevents the following from showing up later:
+
+    ERROR: "usb_gadget_unmap_request_by_dev" [drivers/usb/renesas_usbhs/renesas_usbhs.ko] undefined!
+    ERROR: "usb_gadget_map_request_by_dev" [drivers/usb/renesas_usbhs/renesas_usbhs.ko] undefined!
+    ERROR: "usb_gadget_map_request" [drivers/usb/mtu3/mtu3.ko] undefined!
+    ERROR: "usb_gadget_unmap_request" [drivers/usb/mtu3/mtu3.ko] undefined!
+    ERROR: "usb_gadget_map_request" [drivers/usb/gadget/udc/renesas_usb3.ko] undefined!
+    ERROR: "usb_gadget_unmap_request" [drivers/usb/gadget/udc/renesas_usb3.ko] undefined!
 
 Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+Acked-by: Felipe Balbi <felipe.balbi-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
 v2:
   - Add Reviewed-by, Acked-by,
   - Drop RFC state.
 ---
- include/linux/dma-mapping.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ include/linux/usb/gadget.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index eb9eab4ecd6d7a05..5ea7eec83c0fbb82 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -212,14 +212,14 @@ static inline void set_dma_ops(struct device *dev,
- }
- #else
- /*
-- * Define the dma api to allow compilation but not linking of
-- * dma dependent code.  Code that depends on the dma-mapping
-- * API needs to set 'depends on HAS_DMA' in its Kconfig
-+ * Define the dma api to allow compilation of dma dependent code.
-+ * Code that depends on the dma-mapping API needs to set 'depends on HAS_DMA'
-+ * in its Kconfig, unless it already depends on <something> || COMPILE_TEST,
-+ * where <something> guarantuees the availability of the dma-mapping API.
-  */
--extern const struct dma_map_ops bad_dma_ops;
- static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
- {
--	return &bad_dma_ops;
-+	return NULL;
- }
- #endif
+diff --git a/include/linux/usb/gadget.h b/include/linux/usb/gadget.h
+index 66a5cff7ee142d6a..b68e7f9b210be122 100644
+--- a/include/linux/usb/gadget.h
++++ b/include/linux/usb/gadget.h
+@@ -805,6 +805,7 @@ int usb_otg_descriptor_init(struct usb_gadget *gadget,
+ 
+ /* utility to simplify map/unmap of usb_requests to/from DMA */
+ 
++#ifdef	CONFIG_HAS_DMA
+ extern int usb_gadget_map_request_by_dev(struct device *dev,
+ 		struct usb_request *req, int is_in);
+ extern int usb_gadget_map_request(struct usb_gadget *gadget,
+@@ -814,6 +815,17 @@ extern void usb_gadget_unmap_request_by_dev(struct device *dev,
+ 		struct usb_request *req, int is_in);
+ extern void usb_gadget_unmap_request(struct usb_gadget *gadget,
+ 		struct usb_request *req, int is_in);
++#else /* !CONFIG_HAS_DMA */
++static inline int usb_gadget_map_request_by_dev(struct device *dev,
++		struct usb_request *req, int is_in) { return -ENOSYS; }
++static inline int usb_gadget_map_request(struct usb_gadget *gadget,
++		struct usb_request *req, int is_in) { return -ENOSYS; }
++
++static inline void usb_gadget_unmap_request_by_dev(struct device *dev,
++		struct usb_request *req, int is_in) { }
++static inline void usb_gadget_unmap_request(struct usb_gadget *gadget,
++		struct usb_request *req, int is_in) { }
++#endif /* !CONFIG_HAS_DMA */
+ 
+ /*-------------------------------------------------------------------------*/
  
 -- 
 2.7.4
