@@ -1,73 +1,65 @@
-From: Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>
-Subject: Re: [PATCH v2 00/21] Allow compile-testing NO_DMA (drivers)
-Date: Fri, 16 Mar 2018 22:23:17 +0100
-Message-ID: <20180316212317.7d5rri3p25hpmx44@ninjato>
-References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
+From: Martin Steigerwald <martin@lichtvoll.de>
+Subject: Re: [PATCH] Change synchronize_rcu() in scsi_device_quiesce() into synchronize_sched()
+Date: Fri, 16 Mar 2018 22:42:40 +0100
+Message-ID: <1890027.S58v862tbq@merkaba>
+References: <20180316173516.3048-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============4452806862283032698=="
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1521208314-4783-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matias Bjorling <mb-VR7NuqX4VJ8tq7phqP6ubQ@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20180316173516.3048-1-bart.vanassche@wdc.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hello Bart.
 
---===============4452806862283032698==
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="jn72qj2wgis6yzej"
-Content-Disposition: inline
+What is this one about?
 
+Fix for the regression I (and others?) reported?¹
 
---jn72qj2wgis6yzej
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+[1] [Bug 199077] [Possible REGRESSION, 4.16-rc4] Error updating SMART data 
+during runtime and boot failures with blk_mq_terminate_expired in backtrace
 
+https://bugzilla.kernel.org/show_bug.cgi?id=199077
 
-> To avoid allmodconfig/allyesconfig regressions on NO_DMA=y platforms,
-> this (drivers) series should be applied after the previous (core)
-> series (but not many people may notice/care ;-)
+Thanks,
+Martin
 
-I still don't get if there is a dependency on the core patches. I.e.
-shall I apply the subsystem patch now by myself or do you want to push
-the series after the core patch and need my ack here?
-
-
---jn72qj2wgis6yzej
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlqsNcAACgkQFA3kzBSg
-KbZoeA/+NmqFAw+9cAaOVzf/+nl/mZIFlENg9U18xEPNRmtBUBLBVqxRPuFqBhxm
-XA8XO+eUOvtG3pBePwHGQbaFDdSgsvkDateYYp7yUUvssQaROgG8OT+cOyZvSLUw
-x6f1R2+fPNGVC2r8ilpYr9xubYlAsT1Uc9IFJ8gKJK3xceYDxMxvlAQGYaXL8GbT
-tglbckIXElRlToMLTZnS5HEau7PuQUnJkPZ4LmKND8b0JQT5Q40x7PPVo7fnwD5r
-xzDhzfniBrs4XJuIaQsYwcGL7v2bnLLL7X8w2Y7mQeoVi2hRSau8KDMi56fyQq7Y
-SCd4kmBCyn1R7WUzb2p4feuv4W1FJkZIFS9dJq188EhrHR07Tq18N7YLRNufyVmu
-zf4q7vC/KEeUOG0agyU/DJvr4Mymef8ieC+NBq9fejxl/7Y2sIeJOC8O6MDusfH8
-it0UgQpUmALewJxPfiEtMjNk4K5c+Cn2syy7gESZN8vBt0oV+7F2UvKNCzot3pMO
-+TEiMPiOb4ILXKZMXpnwr3YPAwYqTuoqz5xVxvuCYICEww7Q1nHL83PTGJYGHDgm
-tP5tEHSTvmviNdwk3DCIvG4vQCZiolzb8nsrxHKIheXZQiCgfVjUTK3nV/l4/0nx
-q6LaetLOaZIc8CRlKpGx6WnvD0N6i+oeWeyaBIdunKLFLi/oCwY=
-=65ZV
------END PGP SIGNATURE-----
-
---jn72qj2wgis6yzej--
-
---===============4452806862283032698==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Bart Van Assche - 16.03.18, 18:35:
+> Since blk_queue_enter() uses rcu_read_lock_sched() scsi_device_quiesce()
+> must use synchronize_sched().
+> 
+> Reported-by: Tejun Heo <tj@kernel.org>
+> Fixes: 3a0a529971ec ("block, scsi: Make SCSI quiesce and resume work
+> reliably") Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Oleksandr Natalenko <oleksandr@natalenko.name>
+> Cc: Martin Steigerwald <martin@lichtvoll.de>
+> Cc: stable@vger.kernel.org # v4.15
+> ---
+>  drivers/scsi/scsi_lib.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 1d83f29aee74..0b99ee2fbbb5 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -3014,7 +3014,7 @@ scsi_device_quiesce(struct scsi_device *sdev)
+>  	 * unfreeze even if the queue was already frozen before this function
+>  	 * was called. See also https://lwn.net/Articles/573497/.
+>  	 */
+> -	synchronize_rcu();
+> +	synchronize_sched();
+>  	blk_mq_unfreeze_queue(q);
+> 
+>  	mutex_lock(&sdev->state_mutex);
 
 
---===============4452806862283032698==--
+-- 
+Martin
