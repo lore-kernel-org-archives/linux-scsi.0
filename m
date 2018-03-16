@@ -1,86 +1,61 @@
-From: <gregkh@linuxfoundation.org>
-Subject: Patch "scsi: dh: add new rdac devices" has been added to the 4.14-stable tree
-Date: Fri, 16 Mar 2018 15:46:54 +0100
-Message-ID: <15212116149662@kroah.com>
+From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Subject: [PATCH v2 16/21] remoteproc: Remove depends on HAS_DMA in case of
+	platform dependency
+Date: Fri, 16 Mar 2018 14:51:49 +0100
+Message-ID: <1521208314-4783-17-git-send-email-geert@linux-m68k.org>
+References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: xose.vazquez@gmail.com, alexander.levin@microsoft.com, christophe.varoqui@opensvc.com, dm-devel@redhat.com, gregkh@linuxfoundation.org, hare@suse.de, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, ng-eseries-upstream-maintainers@netapp.com
-Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1521208314-4783-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Liam Girdwood <lgirdwood-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>, Alan Tull <atull-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Moritz Fischer <mdf-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, Jonathan Cameron <jic23-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Matias Bjorling <mb-VR7NuqX4VJ8tq7phqP6ubQ@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mauro
+Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-spi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
+symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
+In most cases this other symbol is an architecture or platform specific
+symbol, or PCI.
 
-This is a note to let you know that I've just added the patch titled
+Generic symbols and drivers without platform dependencies keep their
+dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
+cannot work anyway.
 
-    scsi: dh: add new rdac devices
+This simplifies the dependencies, and allows to improve compile-testing.
 
-to the 4.14-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-The filename of the patch is:
-     scsi-dh-add-new-rdac-devices.patch
-and it can be found in the queue-4.14 subdirectory.
-
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From foo@baz Fri Mar 16 15:43:17 CET 2018
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Date: Fri, 17 Nov 2017 22:05:13 +0100
-Subject: scsi: dh: add new rdac devices
-
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-
-
-[ Upstream commit 4b3aec2bbbce1c35f50e7475a9fd78d24b9ea4ea ]
-
-Add IBM 3542 and 3552, arrays: FAStT200 and FAStT500.
-
-Add full STK OPENstorage family, arrays: 9176, D173, D178, D210, D220,
-D240 and D280.
-
-Add STK BladeCtlr family, arrays: B210, B220, B240 and B280.
-
-These changes were done in multipath-tools time ago.
-
-Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
 ---
- drivers/scsi/scsi_dh.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+v2:
+  - Add Reviewed-by, Acked-by,
+  - Drop RFC state,
+  - Split per subsystem.
+---
+ drivers/remoteproc/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -56,10 +56,13 @@ static const struct scsi_dh_blist scsi_d
- 	{"IBM", "1815",			"rdac", },
- 	{"IBM", "1818",			"rdac", },
- 	{"IBM", "3526",			"rdac", },
-+	{"IBM", "3542",			"rdac", },
-+	{"IBM", "3552",			"rdac", },
- 	{"SGI", "TP9",			"rdac", },
- 	{"SGI", "IS",			"rdac", },
--	{"STK", "OPENstorage D280",	"rdac", },
-+	{"STK", "OPENstorage",		"rdac", },
- 	{"STK", "FLEXLINE 380",		"rdac", },
-+	{"STK", "BladeCtlr",		"rdac", },
- 	{"SUN", "CSM",			"rdac", },
- 	{"SUN", "LCSM100",		"rdac", },
- 	{"SUN", "STK6580_6780",		"rdac", },
-
-
-Patches currently in stable-queue which might be from xose.vazquez@gmail.com are
-
-queue-4.14/scsi-devinfo-apply-to-hp-xp-the-same-flags-as-hitachi-vsp.patch
-queue-4.14/scsi-dh-add-new-rdac-devices.patch
+diff --git a/drivers/remoteproc/Kconfig b/drivers/remoteproc/Kconfig
+index b609e1d3654ba65f..b60d8132113de0f7 100644
+--- a/drivers/remoteproc/Kconfig
++++ b/drivers/remoteproc/Kconfig
+@@ -23,7 +23,6 @@ config IMX_REMOTEPROC
+ 
+ config OMAP_REMOTEPROC
+ 	tristate "OMAP remoteproc support"
+-	depends on HAS_DMA
+ 	depends on ARCH_OMAP4 || SOC_OMAP5
+ 	depends on OMAP_IOMMU
+ 	select MAILBOX
+-- 
+2.7.4
