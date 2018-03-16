@@ -1,238 +1,79 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: Re: [PATCH] scsi: ufs: sysfs: reworking of the rpm_lvl and spm_lvl
- entries
-Date: Fri, 16 Mar 2018 16:19:08 +0200
-Message-ID: <fbea3b00-7497-cb3f-746f-65f793677568@intel.com>
-References: <1519901286-17496-1-git-send-email-stanislav.nijnikov@wdc.com>
- <1519901286-17496-2-git-send-email-stanislav.nijnikov@wdc.com>
+From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Subject: [PATCH v2 09/21] iommu: Remove depends on HAS_DMA in case of platform
+	dependency
+Date: Fri, 16 Mar 2018 14:51:42 +0100
+Message-ID: <1521208314-4783-10-git-send-email-geert@linux-m68k.org>
+References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1519901286-17496-2-git-send-email-stanislav.nijnikov@wdc.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, subhashj@codeaurora.org
-Cc: alex.lemberg@wdc.com
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1521208314-4783-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Liam Girdwood <lgirdwood-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>, Alan Tull <atull-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Moritz Fischer <mdf-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, Jonathan Cameron <jic23-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Matias Bjorling <mb-VR7NuqX4VJ8tq7phqP6ubQ@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mauro
+Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-spi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/03/18 12:48, Stanislav Nijnikov wrote:
-> Read from these files will return the integed value of the chosen power
-> management level now. Separate entries were added to show the target
-> UFS device and UIC link states. The description of the possible power
-> managements levels was added to the ABI file. The on-write behaviour of
-> these entries wasn't changed.
-> 
-> Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
+symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
+In most cases this other symbol is an architecture or platform specific
+symbol, or PCI.
 
-Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+Generic symbols and drivers without platform dependencies keep their
+dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
+cannot work anyway.
 
-> ---
->  Documentation/ABI/testing/sysfs-driver-ufs | 67 ++++++++++++++++++++++
->  drivers/scsi/ufs/ufs-sysfs.c               | 92 +++++++++++++++---------------
->  2 files changed, 114 insertions(+), 45 deletions(-)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-> index 07f1c2f..83735f7 100644
-> --- a/Documentation/ABI/testing/sysfs-driver-ufs
-> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
-> @@ -802,3 +802,70 @@ Description:	This file shows the The amount of physical memory needed
->  		the particular logical unit. The full information about
->  		the attribute could be found at UFS specifications 2.1.
->  		The file is read only.
-> +
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/rpm_lvl
-> +Date:		September 2014
-> +Contact:	Subhash Jadavani <subhashj@codeaurora.org>
-> +Description:	This entry could be used to set or show the UFS device
-> +		runtime power management level. The current driver
-> +		implementation supports 6 levels with next target states:
-> +		0 - an UFS device will stay active, an UIC link will
-> +		stay active
-> +		1 - an UFS device will stay active, an UIC link will
-> +		hibernate
-> +		2 - an UFS device will moved to sleep, an UIC link will
-> +		stay active
-> +		3 - an UFS device will moved to sleep, an UIC link will
-> +		hibernate
-> +		4 - an UFS device will be powered off, an UIC link will
-> +		hibernate
-> +		5 - an UFS device will be powered off, an UIC link will
-> +		be powered off
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/rpm_target_dev_state
-> +Date:		February 2018
-> +Contact:	Subhash Jadavani <subhashj@codeaurora.org>
-> +Description:	This entry shows the target power mode of an UFS device
-> +		for the chosen runtime power management level.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/rpm_target_link_state
-> +Date:		February 2018
-> +Contact:	Subhash Jadavani <subhashj@codeaurora.org>
-> +Description:	This entry shows the target state of an UFS UIC link
-> +		for the chosen runtime power management level.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/spm_lvl
-> +Date:		September 2014
-> +Contact:	Subhash Jadavani <subhashj@codeaurora.org>
-> +Description:	This entry could be used to set or show the UFS device
-> +		system power management level. The current driver
-> +		implementation supports 6 levels with next target states:
-> +		0 - an UFS device will stay active, an UIC link will
-> +		stay active
-> +		1 - an UFS device will stay active, an UIC link will
-> +		hibernate
-> +		2 - an UFS device will moved to sleep, an UIC link will
-> +		stay active
-> +		3 - an UFS device will moved to sleep, an UIC link will
-> +		hibernate
-> +		4 - an UFS device will be powered off, an UIC link will
-> +		hibernate
-> +		5 - an UFS device will be powered off, an UIC link will
-> +		be powered off
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/spm_target_dev_state
-> +Date:		February 2018
-> +Contact:	Subhash Jadavani <subhashj@codeaurora.org>
-> +Description:	This entry shows the target power mode of an UFS device
-> +		for the chosen system power management level.
-> +		The file is read only.
-> +
-> +What:		/sys/bus/platform/drivers/ufshcd/*/spm_target_link_state
-> +Date:		February 2018
-> +Contact:	Subhash Jadavani <subhashj@codeaurora.org>
-> +Description:	This entry shows the target state of an UFS UIC link
-> +		for the chosen system power management level.
-> +		The file is read only.
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index cd7174d..4ff9e0b 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -57,29 +57,8 @@ static ssize_t rpm_lvl_show(struct device *dev,
->  		struct device_attribute *attr, char *buf)
->  {
->  	struct ufs_hba *hba = dev_get_drvdata(dev);
-> -	int curr_len;
-> -	u8 lvl;
-> -
-> -	curr_len = snprintf(buf, PAGE_SIZE,
-> -			    "\nCurrent Runtime PM level [%d] => dev_state [%s] link_state [%s]\n",
-> -			    hba->rpm_lvl,
-> -			    ufschd_ufs_dev_pwr_mode_to_string(
-> -				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
-> -			    ufschd_uic_link_state_to_string(
-> -				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
-> -
-> -	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> -			     "\nAll available Runtime PM levels info:\n");
-> -	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> -		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> -				     "\tRuntime PM level [%d] => dev_state [%s] link_state [%s]\n",
-> -				    lvl,
-> -				    ufschd_ufs_dev_pwr_mode_to_string(
-> -					ufs_pm_lvl_states[lvl].dev_state),
-> -				    ufschd_uic_link_state_to_string(
-> -					ufs_pm_lvl_states[lvl].link_state));
-> -
-> -	return curr_len;
-> +
-> +	return sprintf(buf, "%d\n", hba->rpm_lvl);
->  }
->  
->  static ssize_t rpm_lvl_store(struct device *dev,
-> @@ -88,33 +67,30 @@ static ssize_t rpm_lvl_store(struct device *dev,
->  	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, true);
->  }
->  
-> +static ssize_t rpm_target_dev_state_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	return sprintf(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
-> +			ufs_pm_lvl_states[hba->rpm_lvl].dev_state));
-> +}
-> +
-> +static ssize_t rpm_target_link_state_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	return sprintf(buf, "%s\n", ufschd_uic_link_state_to_string(
-> +			ufs_pm_lvl_states[hba->rpm_lvl].link_state));
-> +}
-> +
->  static ssize_t spm_lvl_show(struct device *dev,
->  		struct device_attribute *attr, char *buf)
->  {
->  	struct ufs_hba *hba = dev_get_drvdata(dev);
-> -	int curr_len;
-> -	u8 lvl;
-> -
-> -	curr_len = snprintf(buf, PAGE_SIZE,
-> -			    "\nCurrent System PM level [%d] => dev_state [%s] link_state [%s]\n",
-> -			    hba->spm_lvl,
-> -			    ufschd_ufs_dev_pwr_mode_to_string(
-> -				ufs_pm_lvl_states[hba->spm_lvl].dev_state),
-> -			    ufschd_uic_link_state_to_string(
-> -				ufs_pm_lvl_states[hba->spm_lvl].link_state));
->  
-> -	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> -			     "\nAll available System PM levels info:\n");
-> -	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> -		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> -				     "\tSystem PM level [%d] => dev_state [%s] link_state [%s]\n",
-> -				    lvl,
-> -				    ufschd_ufs_dev_pwr_mode_to_string(
-> -					ufs_pm_lvl_states[lvl].dev_state),
-> -				    ufschd_uic_link_state_to_string(
-> -					ufs_pm_lvl_states[lvl].link_state));
-> -
-> -	return curr_len;
-> +	return sprintf(buf, "%d\n", hba->spm_lvl);
->  }
->  
->  static ssize_t spm_lvl_store(struct device *dev,
-> @@ -123,12 +99,38 @@ static ssize_t spm_lvl_store(struct device *dev,
->  	return ufs_sysfs_pm_lvl_store(dev, attr, buf, count, false);
->  }
->  
-> +static ssize_t spm_target_dev_state_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	return sprintf(buf, "%s\n", ufschd_ufs_dev_pwr_mode_to_string(
-> +				ufs_pm_lvl_states[hba->spm_lvl].dev_state));
-> +}
-> +
-> +static ssize_t spm_target_link_state_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	return sprintf(buf, "%s\n", ufschd_uic_link_state_to_string(
-> +				ufs_pm_lvl_states[hba->spm_lvl].link_state));
-> +}
-> +
->  static DEVICE_ATTR_RW(rpm_lvl);
-> +static DEVICE_ATTR_RO(rpm_target_dev_state);
-> +static DEVICE_ATTR_RO(rpm_target_link_state);
->  static DEVICE_ATTR_RW(spm_lvl);
-> +static DEVICE_ATTR_RO(spm_target_dev_state);
-> +static DEVICE_ATTR_RO(spm_target_link_state);
->  
->  static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
->  	&dev_attr_rpm_lvl.attr,
-> +	&dev_attr_rpm_target_dev_state.attr,
-> +	&dev_attr_rpm_target_link_state.attr,
->  	&dev_attr_spm_lvl.attr,
-> +	&dev_attr_spm_target_dev_state.attr,
-> +	&dev_attr_spm_target_link_state.attr,
->  	NULL
->  };
->  
-> 
+This simplifies the dependencies, and allows to improve compile-testing.
+
+Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+---
+v2:
+  - Add Reviewed-by, Acked-by,
+  - Drop RFC state,
+  - Split per subsystem.
+---
+ drivers/iommu/Kconfig | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index f3a21343e636a8f2..32e91398c0555272 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -23,7 +23,7 @@ config IOMMU_IO_PGTABLE
+ config IOMMU_IO_PGTABLE_LPAE
+ 	bool "ARMv7/v8 Long Descriptor Format"
+ 	select IOMMU_IO_PGTABLE
+-	depends on HAS_DMA && (ARM || ARM64 || (COMPILE_TEST && !GENERIC_ATOMIC64))
++	depends on ARM || ARM64 || (COMPILE_TEST && !GENERIC_ATOMIC64)
+ 	help
+ 	  Enable support for the ARM long descriptor pagetable format.
+ 	  This allocator supports 4K/2M/1G, 16K/32M and 64K/512M page
+@@ -42,7 +42,7 @@ config IOMMU_IO_PGTABLE_LPAE_SELFTEST
+ config IOMMU_IO_PGTABLE_ARMV7S
+ 	bool "ARMv7/v8 Short Descriptor Format"
+ 	select IOMMU_IO_PGTABLE
+-	depends on HAS_DMA && (ARM || ARM64 || COMPILE_TEST)
++	depends on ARM || ARM64 || COMPILE_TEST
+ 	help
+ 	  Enable support for the ARM Short-descriptor pagetable format.
+ 	  This supports 32-bit virtual and physical addresses mapped using
+@@ -374,7 +374,6 @@ config QCOM_IOMMU
+ 	# Note: iommu drivers cannot (yet?) be built as modules
+ 	bool "Qualcomm IOMMU Support"
+ 	depends on ARCH_QCOM || (COMPILE_TEST && !GENERIC_ATOMIC64)
+-	depends on HAS_DMA
+ 	select IOMMU_API
+ 	select IOMMU_IO_PGTABLE_LPAE
+ 	select ARM_DMA_USE_IOMMU
+-- 
+2.7.4
