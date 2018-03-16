@@ -1,8 +1,8 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 19/21] spi: Remove depends on HAS_DMA in case of platform
-	dependency
-Date: Fri, 16 Mar 2018 14:51:52 +0100
-Message-ID: <1521208314-4783-20-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH v2 05/21] firewire: Remove depends on HAS_DMA in case of
+	platform dependency
+Date: Fri, 16 Mar 2018 14:51:38 +0100
+Message-ID: <1521208314-4783-6-git-send-email-geert@linux-m68k.org>
 References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -42,87 +42,18 @@ v2:
   - Drop RFC state,
   - Split per subsystem.
 ---
- drivers/spi/Kconfig | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/firewire/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/spi/Kconfig b/drivers/spi/Kconfig
-index 603783976b8152d4..7bd3a94f58511c41 100644
---- a/drivers/spi/Kconfig
-+++ b/drivers/spi/Kconfig
-@@ -71,7 +71,6 @@ config SPI_ARMADA_3700
- 
- config SPI_ATMEL
- 	tristate "Atmel SPI Controller"
+diff --git a/drivers/firewire/Kconfig b/drivers/firewire/Kconfig
+index 145974f9662b63e6..4199849e37585181 100644
+--- a/drivers/firewire/Kconfig
++++ b/drivers/firewire/Kconfig
+@@ -1,5 +1,4 @@
+ menu "IEEE 1394 (FireWire) support"
 -	depends on HAS_DMA
- 	depends on (ARCH_AT91 || AVR32 || COMPILE_TEST)
- 	help
- 	  This selects a driver for the Atmel SPI Controller, present on
-@@ -252,7 +251,6 @@ config SPI_EFM32
- 
- config SPI_EP93XX
- 	tristate "Cirrus Logic EP93xx SPI controller"
--	depends on HAS_DMA
- 	depends on ARCH_EP93XX || COMPILE_TEST
- 	help
- 	  This enables using the Cirrus EP93xx SPI controller in master
-@@ -374,7 +372,6 @@ config SPI_FSL_SPI
- config SPI_FSL_DSPI
- 	tristate "Freescale DSPI controller"
- 	select REGMAP_MMIO
--	depends on HAS_DMA
- 	depends on SOC_VF610 || SOC_LS1021A || ARCH_LAYERSCAPE || M5441x || COMPILE_TEST
- 	help
- 	  This enables support for the Freescale DSPI controller in master
-@@ -450,7 +447,6 @@ config SPI_OMAP_UWIRE
- 
- config SPI_OMAP24XX
- 	tristate "McSPI driver for OMAP"
--	depends on HAS_DMA
- 	depends on ARCH_OMAP2PLUS || COMPILE_TEST
- 	select SG_SPLIT
- 	help
-@@ -459,7 +455,6 @@ config SPI_OMAP24XX
- 
- config SPI_TI_QSPI
- 	tristate "DRA7xxx QSPI controller support"
--	depends on HAS_DMA
- 	depends on ARCH_OMAP2PLUS || COMPILE_TEST
- 	help
- 	  QSPI master controller for DRA7xxx used for flash devices.
-@@ -488,7 +483,6 @@ config SPI_PIC32
- config SPI_PIC32_SQI
- 	tristate "Microchip PIC32 Quad SPI driver"
- 	depends on MACH_PIC32 || COMPILE_TEST
--	depends on HAS_DMA
- 	help
- 	  SPI driver for PIC32 Quad SPI controller.
- 
-@@ -591,7 +585,7 @@ config SPI_SC18IS602
- 
- config SPI_SH_MSIOF
- 	tristate "SuperH MSIOF SPI controller"
--	depends on HAVE_CLK && HAS_DMA
-+	depends on HAVE_CLK
- 	depends on ARCH_SHMOBILE || ARCH_RENESAS || COMPILE_TEST
- 	help
- 	  SPI driver for SuperH and SH Mobile MSIOF blocks.
-@@ -669,7 +663,7 @@ config SPI_MXS
- config SPI_TEGRA114
- 	tristate "NVIDIA Tegra114 SPI Controller"
- 	depends on (ARCH_TEGRA && TEGRA20_APB_DMA) || COMPILE_TEST
--	depends on RESET_CONTROLLER && HAS_DMA
-+	depends on RESET_CONTROLLER
- 	help
- 	  SPI driver for NVIDIA Tegra114 SPI Controller interface. This controller
- 	  is different than the older SoCs SPI controller and also register interface
-@@ -687,7 +681,7 @@ config SPI_TEGRA20_SFLASH
- config SPI_TEGRA20_SLINK
- 	tristate "Nvidia Tegra20/Tegra30 SLINK Controller"
- 	depends on (ARCH_TEGRA && TEGRA20_APB_DMA) || COMPILE_TEST
--	depends on RESET_CONTROLLER && HAS_DMA
-+	depends on RESET_CONTROLLER
- 	help
- 	  SPI driver for Nvidia Tegra20/Tegra30 SLINK Controller interface.
- 
+ 	depends on PCI || COMPILE_TEST
+ 	# firewire-core does not depend on PCI but is
+ 	# not useful without PCI controller driver
 -- 
 2.7.4
