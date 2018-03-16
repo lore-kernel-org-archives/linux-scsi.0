@@ -1,8 +1,8 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 08/21] iio: adc: Remove depends on HAS_DMA in case of
+Subject: [PATCH v2 03/21] crypto: Remove depends on HAS_DMA in case of
 	platform dependency
-Date: Fri, 16 Mar 2018 14:51:41 +0100
-Message-ID: <1521208314-4783-9-git-send-email-geert@linux-m68k.org>
+Date: Fri, 16 Mar 2018 14:51:36 +0100
+Message-ID: <1521208314-4783-4-git-send-email-geert@linux-m68k.org>
 References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -42,28 +42,96 @@ v2:
   - Drop RFC state,
   - Split per subsystem.
 ---
- drivers/iio/adc/Kconfig | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/crypto/Kconfig | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/iio/adc/Kconfig b/drivers/iio/adc/Kconfig
-index 72bc2b71765ae2ff..57f46e88f5c2536e 100644
---- a/drivers/iio/adc/Kconfig
-+++ b/drivers/iio/adc/Kconfig
-@@ -158,7 +158,6 @@ config AT91_SAMA5D2_ADC
- 	tristate "Atmel AT91 SAMA5D2 ADC"
- 	depends on ARCH_AT91 || COMPILE_TEST
- 	depends on HAS_IOMEM
--	depends on HAS_DMA
- 	select IIO_TRIGGERED_BUFFER
+diff --git a/drivers/crypto/Kconfig b/drivers/crypto/Kconfig
+index 4b741b83e23ff4de..3d27da7a430c0bc2 100644
+--- a/drivers/crypto/Kconfig
++++ b/drivers/crypto/Kconfig
+@@ -419,7 +419,7 @@ config CRYPTO_DEV_EXYNOS_RNG
+ config CRYPTO_DEV_S5P
+ 	tristate "Support for Samsung S5PV210/Exynos crypto accelerator"
+ 	depends on ARCH_S5PV210 || ARCH_EXYNOS || COMPILE_TEST
+-	depends on HAS_IOMEM && HAS_DMA
++	depends on HAS_IOMEM
+ 	select CRYPTO_AES
+ 	select CRYPTO_BLKCIPHER
  	help
- 	  Say yes here to build support for Atmel SAMA5D2 ADC which is
-@@ -647,7 +646,6 @@ config SD_ADC_MODULATOR
- config STM32_ADC_CORE
- 	tristate "STMicroelectronics STM32 adc core"
- 	depends on ARCH_STM32 || COMPILE_TEST
+@@ -473,7 +473,6 @@ config CRYPTO_DEV_BFIN_CRC
+ 
+ config CRYPTO_DEV_ATMEL_AUTHENC
+ 	tristate "Support for Atmel IPSEC/SSL hw accelerator"
+-	depends on HAS_DMA
+ 	depends on ARCH_AT91 || COMPILE_TEST
+ 	select CRYPTO_AUTHENC
+ 	select CRYPTO_DEV_ATMEL_AES
+@@ -486,7 +485,6 @@ config CRYPTO_DEV_ATMEL_AUTHENC
+ 
+ config CRYPTO_DEV_ATMEL_AES
+ 	tristate "Support for Atmel AES hw accelerator"
+-	depends on HAS_DMA
+ 	depends on ARCH_AT91 || COMPILE_TEST
+ 	select CRYPTO_AES
+ 	select CRYPTO_AEAD
+@@ -501,7 +499,6 @@ config CRYPTO_DEV_ATMEL_AES
+ 
+ config CRYPTO_DEV_ATMEL_TDES
+ 	tristate "Support for Atmel DES/TDES hw accelerator"
+-	depends on HAS_DMA
+ 	depends on ARCH_AT91 || COMPILE_TEST
+ 	select CRYPTO_DES
+ 	select CRYPTO_BLKCIPHER
+@@ -515,7 +512,6 @@ config CRYPTO_DEV_ATMEL_TDES
+ 
+ config CRYPTO_DEV_ATMEL_SHA
+ 	tristate "Support for Atmel SHA hw accelerator"
+-	depends on HAS_DMA
+ 	depends on ARCH_AT91 || COMPILE_TEST
+ 	select CRYPTO_HASH
+ 	help
+@@ -581,7 +577,8 @@ config CRYPTO_DEV_CAVIUM_ZIP
+ 
+ config CRYPTO_DEV_QCE
+ 	tristate "Qualcomm crypto engine accelerator"
+-	depends on (ARCH_QCOM || COMPILE_TEST) && HAS_DMA && HAS_IOMEM
++	depends on ARCH_QCOM || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	select CRYPTO_AES
+ 	select CRYPTO_DES
+ 	select CRYPTO_ECB
+@@ -605,7 +602,6 @@ source "drivers/crypto/vmx/Kconfig"
+ config CRYPTO_DEV_IMGTEC_HASH
+ 	tristate "Imagination Technologies hardware hash accelerator"
+ 	depends on MIPS || COMPILE_TEST
+-	depends on HAS_DMA
+ 	select CRYPTO_MD5
+ 	select CRYPTO_SHA1
+ 	select CRYPTO_SHA256
+@@ -657,7 +653,6 @@ config CRYPTO_DEV_ROCKCHIP
+ 
+ config CRYPTO_DEV_MEDIATEK
+ 	tristate "MediaTek's EIP97 Cryptographic Engine driver"
+-	depends on HAS_DMA
+ 	depends on (ARM && ARCH_MEDIATEK) || COMPILE_TEST
+ 	select CRYPTO_AES
+ 	select CRYPTO_AEAD
+@@ -695,7 +690,7 @@ source "drivers/crypto/stm32/Kconfig"
+ 
+ config CRYPTO_DEV_SAFEXCEL
+ 	tristate "Inside Secure's SafeXcel cryptographic engine driver"
+-	depends on HAS_DMA && OF
++	depends on OF
+ 	depends on (ARM64 && ARCH_MVEBU) || (COMPILE_TEST && 64BIT)
+ 	select CRYPTO_AES
+ 	select CRYPTO_BLKCIPHER
+@@ -713,7 +708,6 @@ config CRYPTO_DEV_SAFEXCEL
+ config CRYPTO_DEV_ARTPEC6
+ 	tristate "Support for Axis ARTPEC-6/7 hardware crypto acceleration."
+ 	depends on ARM && (ARCH_ARTPEC || COMPILE_TEST)
 -	depends on HAS_DMA
  	depends on OF
- 	depends on REGULATOR
- 	select IIO_BUFFER
+ 	select CRYPTO_AEAD
+ 	select CRYPTO_AES
 -- 
 2.7.4
