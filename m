@@ -1,13 +1,11 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 3/5] usb: gadget: Add NO_DMA dummies for DMA mapping API
-Date: Fri, 16 Mar 2018 14:25:42 +0100
-Message-ID: <1521206744-1504-4-git-send-email-geert@linux-m68k.org>
-References: <1521206744-1504-1-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH v2 0/5] Allow compile-testing NO_DMA (core)
+Date: Fri, 16 Mar 2018 14:25:39 +0100
+Message-ID: <1521206744-1504-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1521206744-1504-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -21,59 +19,70 @@ To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.sz
 Cc: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add dummies for usb_gadget_{,un}map_request{,_by_dev}(), to allow
-compile-testing if NO_DMA=y.
+	Hi all,
 
-This prevents the following from showing up later:
+If NO_DMA=y, get_dma_ops() returns a reference to the non-existing
+symbol bad_dma_ops, thus causing a link failure if it is ever used.
 
-    ERROR: "usb_gadget_unmap_request_by_dev" [drivers/usb/renesas_usbhs/renesas_usbhs.ko] undefined!
-    ERROR: "usb_gadget_map_request_by_dev" [drivers/usb/renesas_usbhs/renesas_usbhs.ko] undefined!
-    ERROR: "usb_gadget_map_request" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "usb_gadget_unmap_request" [drivers/usb/mtu3/mtu3.ko] undefined!
-    ERROR: "usb_gadget_map_request" [drivers/usb/gadget/udc/renesas_usb3.ko] undefined!
-    ERROR: "usb_gadget_unmap_request" [drivers/usb/gadget/udc/renesas_usb3.ko] undefined!
+The intention of this is twofold:
+  1. To catch users of the DMA API on systems that do no support the DMA
+     mapping API,
+  2. To avoid building drivers that cannot work on such systems anyway.
 
-Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
-Acked-by: Felipe Balbi <felipe.balbi-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
----
-v2:
+However, the disadvantage is that we have to keep on adding dependencies
+on HAS_DMA all over the place.
+
+Thanks to the COMPILE_TEST symbol, lots of drivers now depend on one or
+more platform dependencies (that imply HAS_DMA) || COMPILE_TEST, thus
+already covering intention #2.  Having to add an explicit dependency on
+HAS_DMA here is cumbersome, and hinders compile-testing.
+
+Hence I think the time is ripe to reconsider the link failure.
+This patch series:
+  - Changes get_dma_ops() to return NULL instead,
+  - Adds a few more dummies to enable compile-testing.
+
+A follow-up patch series will:
+  - Remove dependencies on HAS_DMA for symbols that already have
+    platform dependencies implying HAS_DMA.
+
+Changes compared to v1:
   - Add Reviewed-by, Acked-by,
-  - Drop RFC state.
----
- include/linux/usb/gadget.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+  - Group NO_DMA-stubs for the DMA pool API under a single #ifdef,
+  - Split the big Kconfig patch in per-subsystem patches, split-off in a
+    follow-up series.
 
-diff --git a/include/linux/usb/gadget.h b/include/linux/usb/gadget.h
-index 66a5cff7ee142d6a..b68e7f9b210be122 100644
---- a/include/linux/usb/gadget.h
-+++ b/include/linux/usb/gadget.h
-@@ -805,6 +805,7 @@ int usb_otg_descriptor_init(struct usb_gadget *gadget,
- 
- /* utility to simplify map/unmap of usb_requests to/from DMA */
- 
-+#ifdef	CONFIG_HAS_DMA
- extern int usb_gadget_map_request_by_dev(struct device *dev,
- 		struct usb_request *req, int is_in);
- extern int usb_gadget_map_request(struct usb_gadget *gadget,
-@@ -814,6 +815,17 @@ extern void usb_gadget_unmap_request_by_dev(struct device *dev,
- 		struct usb_request *req, int is_in);
- extern void usb_gadget_unmap_request(struct usb_gadget *gadget,
- 		struct usb_request *req, int is_in);
-+#else /* !CONFIG_HAS_DMA */
-+static inline int usb_gadget_map_request_by_dev(struct device *dev,
-+		struct usb_request *req, int is_in) { return -ENOSYS; }
-+static inline int usb_gadget_map_request(struct usb_gadget *gadget,
-+		struct usb_request *req, int is_in) { return -ENOSYS; }
-+
-+static inline void usb_gadget_unmap_request_by_dev(struct device *dev,
-+		struct usb_request *req, int is_in) { }
-+static inline void usb_gadget_unmap_request(struct usb_gadget *gadget,
-+		struct usb_request *req, int is_in) { }
-+#endif /* !CONFIG_HAS_DMA */
- 
- /*-------------------------------------------------------------------------*/
- 
+This series is against v4.16-rc5. It can also be found at
+https://git.kernel.org/pub/scm/linux/kernel/git/geert/linux-m68k.git/log/?h=no-dma-compile-testing-v2
+
+It has been compile-tested with allmodconfig and allyesconfig for
+m68k/sun3, and has received attention from the kbuild test robot.
+
+Thanks!
+
+Geert Uytterhoeven (5):
+  dma-mapping: Convert NO_DMA get_dma_ops() into a real dummy
+  dma-coherent: Add NO_DMA dummies for managed DMA API
+  usb: gadget: Add NO_DMA dummies for DMA mapping API
+  mm: Add NO_DMA dummies for DMA pool API
+  scsi: Add NO_DMA dummies for SCSI DMA mapping API
+
+ include/linux/dma-mapping.h | 19 ++++++++++++++-----
+ include/linux/dmapool.h     | 30 +++++++++++++++++++++++-------
+ include/linux/usb/gadget.h  | 12 ++++++++++++
+ include/scsi/scsi_cmnd.h    |  5 +++++
+ 4 files changed, 54 insertions(+), 12 deletions(-)
+
 -- 
 2.7.4
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
