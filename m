@@ -1,8 +1,8 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 07/21] i2c: Remove depends on HAS_DMA in case of platform
-	dependency
-Date: Fri, 16 Mar 2018 14:51:40 +0100
-Message-ID: <1521208314-4783-8-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH v2 08/21] iio: adc: Remove depends on HAS_DMA in case of
+	platform dependency
+Date: Fri, 16 Mar 2018 14:51:41 +0100
+Message-ID: <1521208314-4783-9-git-send-email-geert@linux-m68k.org>
 References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -42,36 +42,28 @@ v2:
   - Drop RFC state,
   - Split per subsystem.
 ---
- drivers/i2c/busses/Kconfig | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/iio/adc/Kconfig | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index e2954fb86d659f36..2ce9bbd5d56ed06a 100644
---- a/drivers/i2c/busses/Kconfig
-+++ b/drivers/i2c/busses/Kconfig
-@@ -725,7 +725,6 @@ config I2C_MPC
- config I2C_MT65XX
- 	tristate "MediaTek I2C adapter"
- 	depends on ARCH_MEDIATEK || COMPILE_TEST
+diff --git a/drivers/iio/adc/Kconfig b/drivers/iio/adc/Kconfig
+index 72bc2b71765ae2ff..57f46e88f5c2536e 100644
+--- a/drivers/iio/adc/Kconfig
++++ b/drivers/iio/adc/Kconfig
+@@ -158,7 +158,6 @@ config AT91_SAMA5D2_ADC
+ 	tristate "Atmel AT91 SAMA5D2 ADC"
+ 	depends on ARCH_AT91 || COMPILE_TEST
+ 	depends on HAS_IOMEM
 -	depends on HAS_DMA
+ 	select IIO_TRIGGERED_BUFFER
  	help
- 	  This selects the MediaTek(R) Integrated Inter Circuit bus driver
- 	  for MT65xx and MT81xx.
-@@ -903,7 +902,6 @@ config I2C_SH7760
- 
- config I2C_SH_MOBILE
- 	tristate "SuperH Mobile I2C Controller"
+ 	  Say yes here to build support for Atmel SAMA5D2 ADC which is
+@@ -647,7 +646,6 @@ config SD_ADC_MODULATOR
+ config STM32_ADC_CORE
+ 	tristate "STMicroelectronics STM32 adc core"
+ 	depends on ARCH_STM32 || COMPILE_TEST
 -	depends on HAS_DMA
- 	depends on ARCH_SHMOBILE || ARCH_RENESAS || COMPILE_TEST
- 	help
- 	  If you say yes to this option, support will be included for the
-@@ -1106,7 +1104,6 @@ config I2C_XLP9XX
- 
- config I2C_RCAR
- 	tristate "Renesas R-Car I2C Controller"
--	depends on HAS_DMA
- 	depends on ARCH_RENESAS || COMPILE_TEST
- 	select I2C_SLAVE
- 	help
+ 	depends on OF
+ 	depends on REGULATOR
+ 	select IIO_BUFFER
 -- 
 2.7.4
