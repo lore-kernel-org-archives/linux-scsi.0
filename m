@@ -1,8 +1,8 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 20/21] staging: vc04_services: Remove depends on HAS_DMA in
-	case of platform dependency
-Date: Fri, 16 Mar 2018 14:51:53 +0100
-Message-ID: <1521208314-4783-21-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH v2 14/21] mtd: Remove depends on HAS_DMA in case of platform
+	dependency
+Date: Fri, 16 Mar 2018 14:51:47 +0100
+Message-ID: <1521208314-4783-15-git-send-email-geert@linux-m68k.org>
 References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -40,21 +40,79 @@ Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
 v2:
   - Add Reviewed-by, Acked-by,
   - Drop RFC state,
+  - Drop new dependency of MTD_NAND_MARVELL on HAS_DMA,
   - Split per subsystem.
 ---
- drivers/staging/vc04_services/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/mtd/nand/Kconfig    | 8 ++------
+ drivers/mtd/spi-nor/Kconfig | 2 +-
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/vc04_services/Kconfig b/drivers/staging/vc04_services/Kconfig
-index f5aaf7d629f0fae9..98064ce2c2b47c7f 100644
---- a/drivers/staging/vc04_services/Kconfig
-+++ b/drivers/staging/vc04_services/Kconfig
-@@ -1,6 +1,5 @@
- menuconfig BCM_VIDEOCORE
- 	tristate "Broadcom VideoCore support"
+diff --git a/drivers/mtd/nand/Kconfig b/drivers/mtd/nand/Kconfig
+index 736ac887303c88ba..55a2f8a2fa90cd87 100644
+--- a/drivers/mtd/nand/Kconfig
++++ b/drivers/mtd/nand/Kconfig
+@@ -46,7 +46,7 @@ config MTD_NAND_DENALI
+ config MTD_NAND_DENALI_PCI
+         tristate "Support Denali NAND controller on Intel Moorestown"
+ 	select MTD_NAND_DENALI
+-	depends on HAS_DMA && PCI
++	depends on PCI
+         help
+           Enable the driver for NAND flash on Intel Moorestown, using the
+           Denali NAND controller core.
+@@ -184,7 +184,6 @@ config MTD_NAND_S3C2410_CLKSTOP
+ config MTD_NAND_TANGO
+ 	tristate "NAND Flash support for Tango chips"
+ 	depends on ARCH_TANGO || COMPILE_TEST
 -	depends on HAS_DMA
- 	depends on OF
- 	depends on RASPBERRYPI_FIRMWARE || (COMPILE_TEST && !RASPBERRYPI_FIRMWARE)
- 	default y
+ 	help
+ 	  Enables the NAND Flash controller on Tango chips.
+ 
+@@ -328,7 +327,7 @@ config MTD_NAND_MARVELL
+ 	tristate "NAND controller support on Marvell boards"
+ 	depends on PXA3xx || ARCH_MMP || PLAT_ORION || ARCH_MVEBU || \
+ 		   COMPILE_TEST
+-	depends on HAS_IOMEM && HAS_DMA
++	depends on HAS_IOMEM
+ 	help
+ 	  This enables the NAND flash controller driver for Marvell boards,
+ 	  including:
+@@ -490,7 +489,6 @@ config MTD_NAND_SH_FLCTL
+ 	tristate "Support for NAND on Renesas SuperH FLCTL"
+ 	depends on SUPERH || COMPILE_TEST
+ 	depends on HAS_IOMEM
+-	depends on HAS_DMA
+ 	help
+ 	  Several Renesas SuperH CPU has FLCTL. This option enables support
+ 	  for NAND Flash using FLCTL.
+@@ -558,7 +556,6 @@ config MTD_NAND_SUNXI
+ config MTD_NAND_HISI504
+ 	tristate "Support for NAND controller on Hisilicon SoC Hip04"
+ 	depends on ARCH_HISI || COMPILE_TEST
+-	depends on HAS_DMA
+ 	help
+ 	  Enables support for NAND controller on Hisilicon SoC Hip04.
+ 
+@@ -572,7 +569,6 @@ config MTD_NAND_QCOM
+ config MTD_NAND_MTK
+ 	tristate "Support for NAND controller on MTK SoCs"
+ 	depends on ARCH_MEDIATEK || COMPILE_TEST
+-	depends on HAS_DMA
+ 	help
+ 	  Enables support for NAND controller on MTK SoCs.
+ 	  This controller is found on mt27xx, mt81xx, mt65xx SoCs.
+diff --git a/drivers/mtd/spi-nor/Kconfig b/drivers/mtd/spi-nor/Kconfig
+index 89da88e591215db1..c493b8230a38c059 100644
+--- a/drivers/mtd/spi-nor/Kconfig
++++ b/drivers/mtd/spi-nor/Kconfig
+@@ -71,7 +71,7 @@ config SPI_FSL_QUADSPI
+ config SPI_HISI_SFC
+ 	tristate "Hisilicon SPI-NOR Flash Controller(SFC)"
+ 	depends on ARCH_HISI || COMPILE_TEST
+-	depends on HAS_IOMEM && HAS_DMA
++	depends on HAS_IOMEM
+ 	help
+ 	  This enables support for hisilicon SPI-NOR flash controller.
+ 
 -- 
 2.7.4
