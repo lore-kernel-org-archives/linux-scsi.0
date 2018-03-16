@@ -1,7 +1,8 @@
 From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Subject: [PATCH v2 2/5] dma-coherent: Add NO_DMA dummies for managed DMA API
-Date: Fri, 16 Mar 2018 14:25:41 +0100
-Message-ID: <1521206744-1504-3-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH v2 1/5] dma-mapping: Convert NO_DMA get_dma_ops() into a real
+	dummy
+Date: Fri, 16 Mar 2018 14:25:40 +0100
+Message-ID: <1521206744-1504-2-git-send-email-geert@linux-m68k.org>
 References: <1521206744-1504-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,16 +22,13 @@ To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.sz
 Cc: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add dummies for dmam_{alloc,free}_coherent(), to allow compile-testing
-if NO_DMA=y.
+If NO_DMA=y, get_dma_ops() returns a reference to the
+non-existing symbol bad_dma_ops, thus causing a link failure if it is
+ever used.
 
-This prevents the following from showing up later:
-
-    ERROR: "dmam_alloc_coherent" [drivers/net/ethernet/arc/arc_emac.ko] undefined!
-    ERROR: "dmam_free_coherent" [drivers/net/ethernet/apm/xgene/xgene-enet.ko] undefined!
-    ERROR: "dmam_alloc_coherent" [drivers/net/ethernet/apm/xgene/xgene-enet.ko] undefined!
-    ERROR: "dmam_alloc_coherent" [drivers/mtd/nand/hisi504_nand.ko] undefined!
-    ERROR: "dmam_alloc_coherent" [drivers/mmc/host/dw_mmc.ko] undefined!
+Make get_dma_ops() return NULL instead, to avoid the link failure.
+This allows to improve compile-testing, and limits the need to keep on
+sprinkling dependencies on HAS_DMA all over the place.
 
 Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
@@ -40,32 +38,32 @@ v2:
   - Add Reviewed-by, Acked-by,
   - Drop RFC state.
 ---
- include/linux/dma-mapping.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ include/linux/dma-mapping.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index 5ea7eec83c0fbb82..94f41846b933fca7 100644
+index eb9eab4ecd6d7a05..5ea7eec83c0fbb82 100644
 --- a/include/linux/dma-mapping.h
 +++ b/include/linux/dma-mapping.h
-@@ -776,10 +776,19 @@ static inline void dma_deconfigure(struct device *dev) {}
+@@ -212,14 +212,14 @@ static inline void set_dma_ops(struct device *dev,
+ }
+ #else
  /*
-  * Managed DMA API
+- * Define the dma api to allow compilation but not linking of
+- * dma dependent code.  Code that depends on the dma-mapping
+- * API needs to set 'depends on HAS_DMA' in its Kconfig
++ * Define the dma api to allow compilation of dma dependent code.
++ * Code that depends on the dma-mapping API needs to set 'depends on HAS_DMA'
++ * in its Kconfig, unless it already depends on <something> || COMPILE_TEST,
++ * where <something> guarantuees the availability of the dma-mapping API.
   */
-+#ifdef CONFIG_HAS_DMA
- extern void *dmam_alloc_coherent(struct device *dev, size_t size,
- 				 dma_addr_t *dma_handle, gfp_t gfp);
- extern void dmam_free_coherent(struct device *dev, size_t size, void *vaddr,
- 			       dma_addr_t dma_handle);
-+#else /* !CONFIG_HAS_DMA */
-+static inline void *dmam_alloc_coherent(struct device *dev, size_t size,
-+					dma_addr_t *dma_handle, gfp_t gfp)
-+{ return NULL; }
-+static inline void dmam_free_coherent(struct device *dev, size_t size,
-+				      void *vaddr, dma_addr_t dma_handle) { }
-+#endif /* !CONFIG_HAS_DMA */
-+
- extern void *dmam_alloc_attrs(struct device *dev, size_t size,
- 			      dma_addr_t *dma_handle, gfp_t gfp,
- 			      unsigned long attrs);
+-extern const struct dma_map_ops bad_dma_ops;
+ static inline const struct dma_map_ops *get_dma_ops(struct device *dev)
+ {
+-	return &bad_dma_ops;
++	return NULL;
+ }
+ #endif
+ 
 -- 
 2.7.4
