@@ -1,40 +1,68 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH] Change synchronize_rcu() in scsi_device_quiesce() into
- synchronize_sched()
-Date: Fri, 16 Mar 2018 14:51:43 -0700
-Message-ID: <c95b659b-164e-48f7-2033-30fb8f66462f@wdc.com>
-References: <20180316173516.3048-1-bart.vanassche@wdc.com>
- <1890027.S58v862tbq@merkaba>
+From: arvindY <arvind.yadav.cs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] scsi: scsi_transport_iscsi: use put_device() instead of
+ kfree()
+Date: Sat, 17 Mar 2018 15:07:52 +0530
+Message-ID: <5AACE1F0.1080109@gmail.com>
+References: <a77739e256b044c2e125e106165efc751ce4a0f6.1520422535.git.arvind.yadav.cs@gmail.com>
+ <20180315174448.GB32176@straylight.hirudinean.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1890027.S58v862tbq@merkaba>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Martin Steigerwald <martin@lichtvoll.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Return-path: <open-iscsi+bncBD76TE7NVICBB56DWPKQKGQEPWKU3OQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20180315174448.GB32176-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/16/18 14:42, Martin Steigerwald wrote:
-> What is this one about?
-> 
-> Fix for the regression I (and others?) reported?¹
-> 
-> [1] [Bug 199077] [Possible REGRESSION, 4.16-rc4] Error updating SMART data
-> during runtime and boot failures with blk_mq_terminate_expired in backtrace
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=199077
 
-Hello Martin,
 
-This patch is a fix for the fix for the bug that you and others had 
-reported. See also "I/O hangs after resuming from suspend-to-ram" 
-(https://marc.info/?l=linux-block&m=150340235201348).
+On Thursday 15 March 2018 11:14 PM, Chris Leech wrote:
+> On Wed, Mar 07, 2018 at 05:07:33PM +0530, Arvind Yadav wrote:
+>> Never directly free @dev after calling device_register(), even
+>> if it returned an error! Always use put_device() to give up the
+>> reference initialized.
+>>
+>> Signed-off-by: Arvind Yadav <arvind.yadav.cs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> ---
+>>   drivers/scsi/scsi_transport_iscsi.c | 27 +++++++++++++--------------
+>>   1 file changed, 13 insertions(+), 14 deletions(-)
+>>
+>> @@ -783,7 +781,7 @@ struct iscsi_iface *
+>>   
+>>   free_iface:
+>>   	put_device(iface->dev.parent);
+>> -	kfree(iface);
+>> +	put_device(&iface->dev);
+>>   	return NULL;
+>>   }
+>>   EXPORT_SYMBOL_GPL(iscsi_create_iface);
+> Am I reading the device code correctly that the parent reference is only
+> released in the unregister path (device_unregister calls device_del) and
+> so the manual put_device on the parent here is still correct?
+>
+> Just want to make sure that's still needed with the call to put_device.
+The manual put_device on the parent is not correct.
+This should be removed for here. we should call
+put_device(&iface->dev) only and It'll released
+parent reference.
 
-This patch fixes an API violation. For those users for which suspend and 
-resume works fine with commit 3a0a529971ec applied it should still work 
-fine with this patch applied since this patch may cause 
-scsi_device_quiesce() to wait longer.
+> Other than that question, I this all looks good.
+> Thanks.
+>
+> Signed-off-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>
 
-Bart.
+~arvind
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
