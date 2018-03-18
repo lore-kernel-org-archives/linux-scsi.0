@@ -1,76 +1,80 @@
-From: Jonathan Cameron <jic23@kernel.org>
-Subject: Re: [PATCH v2 08/21] iio: adc: Remove depends on HAS_DMA in case of
- platform dependency
-Date: Sat, 17 Mar 2018 16:42:41 +0000
-Message-ID: <20180317164241.6fbad835@archlinux>
-References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
- <1521208314-4783-9-git-send-email-geert@linux-m68k.org>
+From: <gregkh@linuxfoundation.org>
+Subject: Patch "scsi: devinfo: apply to HP XP the same flags as Hitachi VSP" has been added to the 4.9-stable tree
+Date: Sun, 18 Mar 2018 17:04:34 +0100
+Message-ID: <152138907413383@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1521208314-4783-9-git-send-email-geert@linux-m68k.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>, Wolfram Sang <wsa@the-dreams.de>, linux-iio@vger.kernel.org, linux-fpga@vger.kernel.org, linux-remoteproc@vger.kernel.org, alsa-devel@alsa-project.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Eric Anholt <eric@anholt.net>, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, linux-i2c@vger.kernel.org, linux1394-devel@lists.sourceforge.net, Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Stefan Wahren <stefan.wahren@i2se.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, Richard Weinberger <richard@nod.at>, Joerg Roedel <joro@8bytes.org>, Jassi Brar <jassisinghbrar@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, linux-serial@vger.kernel.org, Matias Bjorling <mb@lightn>
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: xose.vazquez@gmail.com, Matthias.Rudolph@hitachivantara.com, alexander.levin@microsoft.com, gregkh@linuxfoundation.org, hare@suse.de, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, takahiro.yasui@hds.com
+Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 16 Mar 2018 14:51:41 +0100
-Geert Uytterhoeven <geert@linux-m68k.org> wrote:
 
-> Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
-> symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
-> In most cases this other symbol is an architecture or platform specific
-> symbol, or PCI.
-> 
-> Generic symbols and drivers without platform dependencies keep their
-> dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
-> cannot work anyway.
-> 
-> This simplifies the dependencies, and allows to improve compile-testing.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Reviewed-by: Mark Brown <broonie@kernel.org>
-> Acked-by: Robin Murphy <robin.murphy@arm.com>
-Great.
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+This is a note to let you know that I've just added the patch titled
 
-Thanks for doing this - this has been annoying for a long time :)
+    scsi: devinfo: apply to HP XP the same flags as Hitachi VSP
 
-> ---
-> v2:
->   - Add Reviewed-by, Acked-by,
->   - Drop RFC state,
->   - Split per subsystem.
-> ---
->  drivers/iio/adc/Kconfig | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/iio/adc/Kconfig b/drivers/iio/adc/Kconfig
-> index 72bc2b71765ae2ff..57f46e88f5c2536e 100644
-> --- a/drivers/iio/adc/Kconfig
-> +++ b/drivers/iio/adc/Kconfig
-> @@ -158,7 +158,6 @@ config AT91_SAMA5D2_ADC
->  	tristate "Atmel AT91 SAMA5D2 ADC"
->  	depends on ARCH_AT91 || COMPILE_TEST
->  	depends on HAS_IOMEM
-> -	depends on HAS_DMA
->  	select IIO_TRIGGERED_BUFFER
->  	help
->  	  Say yes here to build support for Atmel SAMA5D2 ADC which is
-> @@ -647,7 +646,6 @@ config SD_ADC_MODULATOR
->  config STM32_ADC_CORE
->  	tristate "STMicroelectronics STM32 adc core"
->  	depends on ARCH_STM32 || COMPILE_TEST
-> -	depends on HAS_DMA
->  	depends on OF
->  	depends on REGULATOR
->  	select IIO_BUFFER
+to the 4.9-stable tree which can be found at:
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+
+The filename of the patch is:
+     scsi-devinfo-apply-to-hp-xp-the-same-flags-as-hitachi-vsp.patch
+and it can be found in the queue-4.9 subdirectory.
+
+If you, or anyone else, feels it should not be added to the stable tree,
+please let <stable@vger.kernel.org> know about it.
+
+
+>From foo@baz Sun Mar 18 16:55:33 CET 2018
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Date: Fri, 17 Nov 2017 21:31:36 +0100
+Subject: scsi: devinfo: apply to HP XP the same flags as Hitachi VSP
+
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+
+
+[ Upstream commit b369a0471503130cfc74f9f62071db97f48948c3 ]
+
+Commit 56f3d383f37b ("scsi: scsi_devinfo: Add TRY_VPD_PAGES to HITACHI
+OPEN-V blacklist entry") modified some Hitachi entries:
+
+    HITACHI is always supporting VPD pages, even though it's claiming to
+    support SCSI Revision 3 only.
+
+The same should have been done also for HP-rebranded.
+
+[mkp: checkpatch and tweaked commit message]
+
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Takahiro Yasui <takahiro.yasui@hds.com>
+Cc: Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/scsi_devinfo.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -180,7 +180,7 @@ static struct {
+ 	{"HITACHI", "6586-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HITACHI", "6588-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
+-	{"HP", "OPEN-", "*", BLIST_REPORTLUN2}, /* HP XP Arrays */
++	{"HP", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES}, /* HP XP Arrays */
+ 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+ 	{"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+
+
+Patches currently in stable-queue which might be from xose.vazquez@gmail.com are
+
+queue-4.9/scsi-devinfo-apply-to-hp-xp-the-same-flags-as-hitachi-vsp.patch
+queue-4.9/scsi-dh-add-new-rdac-devices.patch
