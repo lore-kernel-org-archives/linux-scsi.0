@@ -1,46 +1,86 @@
-From: Martin Steigerwald <martin@lichtvoll.de>
-Subject: Re: [PATCH] Change synchronize_rcu() in scsi_device_quiesce() into synchronize_sched()
-Date: Mon, 19 Mar 2018 10:02:18 +0100
-Message-ID: <23066547.s73LNzlmaa@merkaba>
-References: <20180316173516.3048-1-bart.vanassche@wdc.com> <1890027.S58v862tbq@merkaba> <c95b659b-164e-48f7-2033-30fb8f66462f@wdc.com>
+From: <gregkh@linuxfoundation.org>
+Subject: Patch "scsi: dh: add new rdac devices" has been added to the 4.4-stable tree
+Date: Mon, 19 Mar 2018 10:09:53 +0100
+Message-ID: <152145059314711@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <c95b659b-164e-48f7-2033-30fb8f66462f@wdc.com>
 Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Tejun Heo <tj@kernel.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, stable@vger.kernel.org
+To: xose.vazquez@gmail.com, alexander.levin@microsoft.com, christophe.varoqui@opensvc.com, dm-devel@redhat.com, gregkh@linuxfoundation.org, hare@suse.de, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, ng-eseries-upstream-maintainers@netapp.com
+Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Bart.
 
-Bart Van Assche - 16.03.18, 22:51:
-> On 03/16/18 14:42, Martin Steigerwald wrote:
-> > What is this one about?
-> > 
-> > Fix for the regression I (and others?) reported?¹
-> > 
-> > [1] [Bug 199077] [Possible REGRESSION, 4.16-rc4] Error updating SMART data
-> > during runtime and boot failures with blk_mq_terminate_expired in
-> > backtrace
-> > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=199077
-[…]
-> This patch is a fix for the fix for the bug that you and others had
-> reported. See also "I/O hangs after resuming from suspend-to-ram"
-> (https://marc.info/?l=linux-block&m=150340235201348).
-> 
-> This patch fixes an API violation. For those users for which suspend and
-> resume works fine with commit 3a0a529971ec applied it should still work
-> fine with this patch applied since this patch may cause
-> scsi_device_quiesce() to wait longer.
+This is a note to let you know that I've just added the patch titled
 
-Okay, so if I understand you correctly, this is not related to the regression 
-I mentioned above.
+    scsi: dh: add new rdac devices
 
-Testing anyway.
+to the 4.4-stable tree which can be found at:
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
-Thanks,
--- 
-Martin
+The filename of the patch is:
+     scsi-dh-add-new-rdac-devices.patch
+and it can be found in the queue-4.4 subdirectory.
+
+If you, or anyone else, feels it should not be added to the stable tree,
+please let <stable@vger.kernel.org> know about it.
+
+
+>From foo@baz Mon Mar 19 09:58:12 CET 2018
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Date: Fri, 17 Nov 2017 22:05:13 +0100
+Subject: scsi: dh: add new rdac devices
+
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+
+
+[ Upstream commit 4b3aec2bbbce1c35f50e7475a9fd78d24b9ea4ea ]
+
+Add IBM 3542 and 3552, arrays: FAStT200 and FAStT500.
+
+Add full STK OPENstorage family, arrays: 9176, D173, D178, D210, D220,
+D240 and D280.
+
+Add STK BladeCtlr family, arrays: B210, B220, B240 and B280.
+
+These changes were done in multipath-tools time ago.
+
+Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/scsi_dh.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -56,10 +56,13 @@ static const struct scsi_dh_blist scsi_d
+ 	{"IBM", "1815",			"rdac", },
+ 	{"IBM", "1818",			"rdac", },
+ 	{"IBM", "3526",			"rdac", },
++	{"IBM", "3542",			"rdac", },
++	{"IBM", "3552",			"rdac", },
+ 	{"SGI", "TP9",			"rdac", },
+ 	{"SGI", "IS",			"rdac", },
+-	{"STK", "OPENstorage D280",	"rdac", },
++	{"STK", "OPENstorage",		"rdac", },
+ 	{"STK", "FLEXLINE 380",		"rdac", },
++	{"STK", "BladeCtlr",		"rdac", },
+ 	{"SUN", "CSM",			"rdac", },
+ 	{"SUN", "LCSM100",		"rdac", },
+ 	{"SUN", "STK6580_6780",		"rdac", },
+
+
+Patches currently in stable-queue which might be from xose.vazquez@gmail.com are
+
+queue-4.4/scsi-devinfo-apply-to-hp-xp-the-same-flags-as-hitachi-vsp.patch
+queue-4.4/scsi-dh-add-new-rdac-devices.patch
