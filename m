@@ -1,39 +1,73 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: [PATCH] Change synchronize_rcu() in scsi_device_quiesce() into
- synchronize_sched()
-Date: Mon, 19 Mar 2018 10:02:25 -0700
-Message-ID: <20180319170225.GC519464@devbig577.frc2.facebook.com>
-References: <20180316173516.3048-1-bart.vanassche@wdc.com>
- <20180319143147.GF2943022@devbig577.frc2.facebook.com>
- <1521472566.2776.6.camel@wdc.com>
- <20180319152144.GM2943022@devbig577.frc2.facebook.com>
- <1521476333.2776.9.camel@wdc.com>
- <20180319162921.GS2943022@devbig577.frc2.facebook.com>
- <1521478664.2776.12.camel@wdc.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.4 099/134] scsi: dh: add new rdac devices
+Date: Mon, 19 Mar 2018 19:06:22 +0100
+Message-ID: <20180319171903.540737197@linuxfoundation.org>
+References: <20180319171849.024066323@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1521478664.2776.12.camel@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin@lichtvoll.de" <martin@lichtvoll.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20180319171849.024066323@linuxfoundation.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Xose Vazquez Perez <xose.vazquez@gmail.com>, stable@vger.kernel.org, Sasha Levin <alexander.levin@microsoft.com>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hey,
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
-On Mon, Mar 19, 2018 at 04:57:45PM +0000, Bart Van Assche wrote:
-> For synchronization primitives that wait having a stronger synchronization
-> primitive nested inside a more relaxed one can lead to a deadlock. But since
-> the rcu read lock primitives do not wait it could be safe to use that kind
-> of nesting with RCU. Do you perhaps know whether any documentation is
-> available about that kind of nesting or whether it is already used elsewhere
-> in the kernel?
+------------------
 
-Oh, we nest them all the time.  They're like (and sometimes literally
-are) preempt_disable() and don't care about nest ordering.
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Thanks.
 
--- 
-tejun
+[ Upstream commit 4b3aec2bbbce1c35f50e7475a9fd78d24b9ea4ea ]
+
+Add IBM 3542 and 3552, arrays: FAStT200 and FAStT500.
+
+Add full STK OPENstorage family, arrays: 9176, D173, D178, D210, D220,
+D240 and D280.
+
+Add STK BladeCtlr family, arrays: B210, B220, B240 and B280.
+
+These changes were done in multipath-tools time ago.
+
+Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/scsi_dh.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -56,10 +56,13 @@ static const struct scsi_dh_blist scsi_d
+ 	{"IBM", "1815",			"rdac", },
+ 	{"IBM", "1818",			"rdac", },
+ 	{"IBM", "3526",			"rdac", },
++	{"IBM", "3542",			"rdac", },
++	{"IBM", "3552",			"rdac", },
+ 	{"SGI", "TP9",			"rdac", },
+ 	{"SGI", "IS",			"rdac", },
+-	{"STK", "OPENstorage D280",	"rdac", },
++	{"STK", "OPENstorage",		"rdac", },
+ 	{"STK", "FLEXLINE 380",		"rdac", },
++	{"STK", "BladeCtlr",		"rdac", },
+ 	{"SUN", "CSM",			"rdac", },
+ 	{"SUN", "LCSM100",		"rdac", },
+ 	{"SUN", "STK6580_6780",		"rdac", },
