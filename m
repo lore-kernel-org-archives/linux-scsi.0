@@ -1,7 +1,7 @@
 From: <gregkh@linuxfoundation.org>
-Subject: Patch "scsi: devinfo: apply to HP XP the same flags as Hitachi VSP" has been added to the 4.4-stable tree
-Date: Mon, 19 Mar 2018 10:09:53 +0100
-Message-ID: <1521450593166224@kroah.com>
+Subject: Patch "scsi: devinfo: apply to HP XP the same flags as Hitachi VSP" has been added to the 3.18-stable tree
+Date: Mon, 19 Mar 2018 10:13:22 +0100
+Message-ID: <152145080255205@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
@@ -16,18 +16,18 @@ This is a note to let you know that I've just added the patch titled
 
     scsi: devinfo: apply to HP XP the same flags as Hitachi VSP
 
-to the 4.4-stable tree which can be found at:
+to the 3.18-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
      scsi-devinfo-apply-to-hp-xp-the-same-flags-as-hitachi-vsp.patch
-and it can be found in the queue-4.4 subdirectory.
+and it can be found in the queue-3.18 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
 please let <stable@vger.kernel.org> know about it.
 
 
->From foo@baz Mon Mar 19 09:58:12 CET 2018
+>From foo@baz Mon Mar 19 10:11:52 CET 2018
 From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 Date: Fri, 17 Nov 2017 21:31:36 +0100
 Subject: scsi: devinfo: apply to HP XP the same flags as Hitachi VSP
@@ -76,5 +76,4 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 Patches currently in stable-queue which might be from xose.vazquez@gmail.com are
 
-queue-4.4/scsi-devinfo-apply-to-hp-xp-the-same-flags-as-hitachi-vsp.patch
-queue-4.4/scsi-dh-add-new-rdac-devices.patch
+queue-3.18/scsi-devinfo-apply-to-hp-xp-the-same-flags-as-hitachi-vsp.patch
