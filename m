@@ -1,14 +1,14 @@
 From: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 01/21] ASoC: Remove depends on HAS_DMA in case of
+Subject: Re: [PATCH v2 19/21] spi: Remove depends on HAS_DMA in case of
 	platform dependency
-Date: Sun, 18 Mar 2018 17:54:11 -0700
-Message-ID: <20180319005411.GY2186@sirena.org.uk>
+Date: Sun, 18 Mar 2018 17:54:34 -0700
+Message-ID: <20180319005434.GZ2186@sirena.org.uk>
 References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
-	<1521208314-4783-2-git-send-email-geert@linux-m68k.org>
+	<1521208314-4783-20-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============8250706146855282102=="
+Content-Type: multipart/mixed; boundary="===============4617477949797652146=="
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1521208314-4783-2-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+In-Reply-To: <1521208314-4783-20-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -23,17 +23,17 @@ Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wolfram S
 List-Id: linux-scsi@vger.kernel.org
 
 
---===============8250706146855282102==
+--===============4617477949797652146==
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="oWEYV0WmY9Kcrzh0"
+	protocol="application/pgp-signature"; boundary="rYRijwbmzeJBcrGE"
 Content-Disposition: inline
 
 
---oWEYV0WmY9Kcrzh0
+--rYRijwbmzeJBcrGE
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-On Fri, Mar 16, 2018 at 02:51:34PM +0100, Geert Uytterhoeven wrote:
+On Fri, Mar 16, 2018 at 02:51:52PM +0100, Geert Uytterhoeven wrote:
 > Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
 > symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
 > In most cases this other symbol is an architecture or platform specific
@@ -41,30 +41,28 @@ On Fri, Mar 16, 2018 at 02:51:34PM +0100, Geert Uytterhoeven wrote:
 
 Acked-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Thanks again for doing this work, it's really good to see!
-
---oWEYV0WmY9Kcrzh0
+--rYRijwbmzeJBcrGE
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlqvCjIACgkQJNaLcl1U
-h9CLbQf/Tg+dhuRMVvi1udWCp1BJUGB8Vd88otJVfjSSf1BIoBvw4XV7xrP7HUJH
-V98MDQfrlLGW8qtZFHhsjmz4+NsOu9t5y7+2UjwDXtoq/dZT9TmgxeJc7lwl3zZS
-qaIe8HYUK8KmKWhwDW/YJbYX7oUSO+G6SZvUOVVq7UFU03iCATTKU8/N4+Ckixxb
-QzTdPkgsvrz2xVe5SjvUWJPTZ0Jl4b8WsLE3+i65FYqhlyiWQqTxyEtNRlbfUtKq
-tcPXSUwsstpVqf3fsRI4n50J0xynVIeoIT9urJ0ZXjlgjg0r5jFkxYuXByUax8xw
-XbixoPLIKcJ26u2e3uGs+EZnaQ0iCw==
-=p8oA
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlqvCkoACgkQJNaLcl1U
+h9BMigf9GUiHnb+8UvcX70O+PBqRtvv8ENPWuJqF1yPy6LrCjn3P3iOQCW8q7Xa1
+d06amrO7NytpkLP5/ubGHCmQ+IeET/5pneEyPrRxwwT0mjGNnxfjw4g8JUMHM5Lr
+kfeBhpFWCkvffVxFQdE89iCYTYvScqDzXqe3rPepUE2o635Ptf7AdhUAYtqp4Ym7
+7Q5VJmJKN8cyzyIfvnmz2FMMJtWxHfW7DjyE1+bcNKhGHdJAh2bM9jCiXALMJ+Sg
+9yMqTzY5D5xE27zy1L/5ZkN0iKt/1+xx5xVV1t87RJwqNoEW6IG5RZbwbPYKNv4/
+9x+b1IRk+1OTqCZbHgO+4OzYqk638g==
+=KKog
 -----END PGP SIGNATURE-----
 
---oWEYV0WmY9Kcrzh0--
+--rYRijwbmzeJBcrGE--
 
---===============8250706146855282102==
+--===============4617477949797652146==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
 
---===============8250706146855282102==--
+--===============4617477949797652146==--
