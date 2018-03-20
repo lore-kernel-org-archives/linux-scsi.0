@@ -1,25 +1,49 @@
-From: okaya@codeaurora.org
-Subject: Re: [PATCH v4 3/7] scsi: dpt_i2o: eliminate duplicate barriers on
- weakly-ordered archs
-Date: Tue, 20 Mar 2018 08:13:30 -0400
-Message-ID: <fe8fe164a7b3c4372c3e12d43a6e48c2@codeaurora.org>
-References: <1521514207-10695-1-git-send-email-okaya@codeaurora.org>
- <1521514207-10695-4-git-send-email-okaya@codeaurora.org>
- <20180320102304.GA21265@infradead.org>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: [PATCH V3 0/1] scsi: ufs: Add support for Auto-Hibernate Idle Timer
+Date: Tue, 20 Mar 2018 15:07:37 +0200
+Message-ID: <1521551258-4027-1-git-send-email-adrian.hunter@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180320102304.GA21265@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, timur@codeaurora.org, sulrich@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Alim Akhtar <alim.akhtar@samsung.com>, Alex Lemberg <Alex.Lemberg@sandisk.com>, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-03-20 06:23, Christoph Hellwig wrote:
-> This is a basically unmaintained driver for historic hardware, and not 
-> the
-> right place for micro-optimizations.
+Hi
 
-Sure, I can drop this on the next version.
+Here is V3, now re-based on top of patch "scsi: ufs: sysfs:reworking of the
+rpm_lvl and spm_lvl entries".
+
+Michał Potomski has previously sent a patch for Auto-Hibernate, but this
+patch is slightly different, based on the latest ufs-sysfs changes, it also
+takes care to restore auto-hibernate during resume, and otherwise avoids
+updating the register if the device is runtime suspended.  Also a default
+value of 150ms is set.
+
+
+Changes in V3:
+
+	Return -EOPNOTSUPP from auto_hibern8_show() if Auto-Hibernate
+	is not supported.
+
+Changes in V2:
+
+	Re-based on top of (yet to be applied) patch "scsi: ufs: sysfs:
+	reworking of the rpm_lvl and spm_lvl entries"
+
+
+Adrian Hunter (1):
+      scsi: ufs: Add support for Auto-Hibernate Idle Timer
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 15 ++++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 77 ++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c                  | 26 ++++++++++
+ drivers/scsi/ufs/ufshcd.h                  |  3 ++
+ drivers/scsi/ufs/ufshci.h                  |  7 +++
+ 5 files changed, 128 insertions(+)
+
+
+Regards
+Adrian
