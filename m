@@ -1,58 +1,43 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3.18 53/68] scsi: devinfo: apply to HP XP the same flags as Hitachi VSP
-Date: Mon, 19 Mar 2018 19:06:31 +0100
-Message-ID: <20180319171835.301256869@linuxfoundation.org>
-References: <20180319171827.899658615@linuxfoundation.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: [PATCH v4 1/7] scsi: hpsa: Eliminate duplicate barriers on weakly-ordered archs
+Date: Mon, 19 Mar 2018 22:50:01 -0400
+Message-ID: <1521514207-10695-2-git-send-email-okaya@codeaurora.org>
+References: <1521514207-10695-1-git-send-email-okaya@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180319171827.899658615@linuxfoundation.org>
+In-Reply-To: <1521514207-10695-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Takahiro Yasui <takahiro.yasui@hds.com>, Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Sasha Levin <alexander.levin@microsoft.com>
+To: linux-scsi@vger.kernel.org, timur@codeaurora.org, sulrich@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sinan Kaya <okaya@codeaurora.org>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-3.18-stable review patch.  If anyone has any objections, please let me know.
+Code includes wmb() followed by writel(). writel() already has a
+barrier on some architectures like arm64.
 
-------------------
+This ends up CPU observing two barriers back to back before executing
+the register write.
 
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Since code already has an explicit barrier call, changing writel() to
+writel_relaxed().
 
-
-[ Upstream commit b369a0471503130cfc74f9f62071db97f48948c3 ]
-
-Commit 56f3d383f37b ("scsi: scsi_devinfo: Add TRY_VPD_PAGES to HITACHI
-OPEN-V blacklist entry") modified some Hitachi entries:
-
-    HITACHI is always supporting VPD pages, even though it's claiming to
-    support SCSI Revision 3 only.
-
-The same should have been done also for HP-rebranded.
-
-[mkp: checkpatch and tweaked commit message]
-
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Takahiro Yasui <takahiro.yasui@hds.com>
-Cc: Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/scsi/scsi_devinfo.c |    2 +-
+ drivers/scsi/hpsa.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -180,7 +180,7 @@ static struct {
- 	{"HITACHI", "6586-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HITACHI", "6588-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
--	{"HP", "OPEN-", "*", BLIST_REPORTLUN2}, /* HP XP Arrays */
-+	{"HP", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES}, /* HP XP Arrays */
- 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
- 	{"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 018f980..c7d7e6a 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -599,7 +599,7 @@ static unsigned long SA5_ioaccel_mode1_completed(struct ctlr_info *h, u8 q)
+ 		 * but with current driver design this is easiest.
+ 		 */
+ 		wmb();
+-		writel((q << 24) | rq->current_entry, h->vaddr +
++		writel_relaxed((q << 24) | rq->current_entry, h->vaddr +
+ 				IOACCEL_MODE1_CONSUMER_INDEX);
+ 		atomic_dec(&h->commands_outstanding);
+ 	}
+-- 
+2.7.4
