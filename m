@@ -1,7 +1,7 @@
 From: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
 Subject: Re: [PATCH v2 08/38] cxlflash: Read host AFU configuration
-Date: Thu, 22 Mar 2018 16:52:39 +0100
-Message-ID: <11ba4bac-838a-06b2-0b5d-4da8903c13d1@linux.vnet.ibm.com>
+Date: Thu, 22 Mar 2018 17:08:37 +0100
+Message-ID: <3e9e68ae-d1d3-9ba6-75d8-f4d8a3e3c407@linux.vnet.ibm.com>
 References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
  <1519683660-17039-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
@@ -9,7 +9,7 @@ Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1519683660-17039-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Content-Language: fr
+Content-Language: en-US
 List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
  <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
 List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
@@ -34,9 +34,6 @@ Le 26/02/2018 à 23:21, Uma Krishnan a écrit :
 > Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 > Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 > ---
-
-Reviewed-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
-
 >   drivers/scsi/cxlflash/ocxl_hw.c | 34 ++++++++++++++++++++++++++++++++++
 >   drivers/scsi/cxlflash/ocxl_hw.h |  1 +
 >   2 files changed, 35 insertions(+)
@@ -66,6 +63,20 @@ Reviewed-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
 > +
 > +	/* Read AFU config at index 0 */
 > +	rc = ocxl_config_read_afu(pdev, fcfg, acfg, 0);
+
+
+Looking at other patches around this one, there's really the assumption 
+that we have only one AFU (which is fine). So similar to another 
+comment, we could harden that the AFU image really looks like what we 
+expect. Here, we read the config at index 0. Just a suggestion that 
+ocxl_fn_config gives you the maximum index of AFUs for the function
+	ocxl_fn_config->max_afu_index
+
+So it should be 0 for cxlflash.
+
+   Fred
+
+
 > +	if (unlikely(rc)) {
 > +		dev_err(dev, "%s: ocxl_config_read_afu failed rc=%d\n",
 > +			__func__, rc);
