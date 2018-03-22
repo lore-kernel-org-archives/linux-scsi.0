@@ -1,14 +1,14 @@
 From: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 11/38] cxlflash: Adapter context support for OCXL
-Date: Thu, 22 Mar 2018 17:32:02 +0100
-Message-ID: <dd4d89b2-a3f0-1dd9-105b-66d5899db8c0@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 12/38] cxlflash: Use IDR to manage adapter contexts
+Date: Thu, 22 Mar 2018 17:40:44 +0100
+Message-ID: <ae514fa6-9c55-5247-2531-579d5ca84079@linux.vnet.ibm.com>
 References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1519683703-17149-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1519683712-17186-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1519683703-17149-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+In-Reply-To: <1519683712-17186-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Content-Language: fr
 List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
  <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
@@ -27,172 +27,110 @@ List-Id: linux-scsi@vger.kernel.org
 
 
 Le 26/02/2018 à 23:21, Uma Krishnan a écrit :
-> Add support to create and release the adapter contexts for OCXL and
-> provide means to specify certain contexts as a master.
-> 
-> The existing cxlflash core has a design requirement that each host will
-> have a single host context available by default. To satisfy this
-> requirement, one host adapter context is created when the hardware AFU is
-> initialized. This is returned by the get_context() fop.
+> A range of PASIDs are used as identifiers for the adapter contexts. These
+> contexts may be destroyed and created randomly. Use an IDR to keep track
+> of contexts that are in use and assign a unique identifier to new ones.
 > 
 > Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 > Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 > ---
-
-Reviewed-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
-
->   drivers/scsi/cxlflash/ocxl_hw.c | 90 +++++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/cxlflash/ocxl_hw.h |  6 +++
->   2 files changed, 96 insertions(+)
+>   drivers/scsi/cxlflash/ocxl_hw.c | 20 ++++++++++++++++++--
+>   drivers/scsi/cxlflash/ocxl_hw.h |  2 ++
+>   2 files changed, 20 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-> index bd86eef..d75b873 100644
+> index d75b873..6472210 100644
 > --- a/drivers/scsi/cxlflash/ocxl_hw.c
 > +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-> @@ -18,6 +18,80 @@
->   #include "ocxl_hw.h"
-> 
->   /**
-> + * ocxlflash_set_master() - sets the context as master
-> + * @ctx_cookie:	Adapter context to set as master.
-> + */
-> +static void ocxlflash_set_master(void *ctx_cookie)
-> +{
-> +	struct ocxlflash_context *ctx = ctx_cookie;
-> +
-> +	ctx->master = true;
-> +}
-> +
-> +/**
-> + * ocxlflash_get_context() - obtains the context associated with the host
-> + * @pdev:	PCI device associated with the host.
-> + * @afu_cookie:	Hardware AFU associated with the host.
-> + *
-> + * Return: returns the pointer to host adapter context
-> + */
-> +static void *ocxlflash_get_context(struct pci_dev *pdev, void *afu_cookie)
-> +{
-> +	struct ocxl_hw_afu *afu = afu_cookie;
-> +
-> +	return afu->ocxl_ctx;
-> +}
-> +
-> +/**
-> + * ocxlflash_dev_context_init() - allocate and initialize an adapter context
-> + * @pdev:	PCI device associated with the host.
-> + * @afu_cookie:	Hardware AFU associated with the host.
-> + *
-> + * Return: returns the adapter context on success, ERR_PTR on failure
-> + */
-> +static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
-> +{
-> +	struct ocxl_hw_afu *afu = afu_cookie;
-> +	struct device *dev = afu->dev;
-> +	struct ocxlflash_context *ctx;
-> +	int rc;
-> +
-> +	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
-> +	if (unlikely(!ctx)) {
-> +		dev_err(dev, "%s: Context allocation failed\n", __func__);
-> +		rc = -ENOMEM;
-> +		goto err;
-> +	}
-> +
-> +	ctx->master = false;
-> +	ctx->hw_afu = afu;
-> +out:
-> +	return ctx;
-> +err:
-> +	ctx = ERR_PTR(rc);
-> +	goto out;
-> +}
-> +
-> +/**
-> + * ocxlflash_release_context() - releases an adapter context
-> + * @ctx_cookie:	Adapter context to be released.
-> + *
-> + * Return: 0 on success, -errno on failure
-> + */
-> +static int ocxlflash_release_context(void *ctx_cookie)
-> +{
-> +	struct ocxlflash_context *ctx = ctx_cookie;
-> +	int rc = 0;
-> +
-> +	if (!ctx)
-> +		goto out;
-> +
-> +	kfree(ctx);
-> +out:
-> +	return rc;
-> +}
-> +
-> +/**
->    * ocxlflash_destroy_afu() - destroy the AFU structure
->    * @afu_cookie:	AFU to be freed.
+> @@ -12,6 +12,8 @@
+>    * 2 of the License, or (at your option) any later version.
 >    */
-> @@ -28,6 +102,7 @@ static void ocxlflash_destroy_afu(void *afu_cookie)
->   	if (!afu)
->   		return;
 > 
-> +	ocxlflash_release_context(afu->ocxl_ctx);
->   	kfree(afu);
->   }
-> 
-> @@ -127,6 +202,7 @@ static int ocxlflash_config_afu(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
->   static void *ocxlflash_create_afu(struct pci_dev *pdev)
->   {
->   	struct device *dev = &pdev->dev;
-> +	struct ocxlflash_context *ctx;
->   	struct ocxl_hw_afu *afu;
->   	int rc;
-> 
-> @@ -152,6 +228,16 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
->   			__func__, rc);
->   		goto err1;
->   	}
+> +#include <linux/idr.h>
 > +
-> +	ctx = ocxlflash_dev_context_init(pdev, afu);
-> +	if (IS_ERR(ctx)) {
-> +		rc = PTR_ERR(ctx);
-> +		dev_err(dev, "%s: ocxlflash_dev_context_init failed rc=%d\n",
-> +			__func__, rc);
+>   #include <misc/ocxl.h>
+> 
+>   #include "backend.h"
+> @@ -60,14 +62,25 @@ static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
+>   	if (unlikely(!ctx)) {
+>   		dev_err(dev, "%s: Context allocation failed\n", __func__);
+>   		rc = -ENOMEM;
+> -		goto err;
 > +		goto err1;
 > +	}
 > +
-> +	afu->ocxl_ctx = ctx;
+> +	idr_preload(GFP_KERNEL);
+> +	rc = idr_alloc(&afu->idr, ctx, 0, afu->max_pasid, GFP_NOWAIT);
+> +	idr_preload_end();
+
+
+I believe we can call idr_alloc(... GFP_KERNEL) directly in that
+context now.
+
+
+> +	if (unlikely(rc < 0)) {
+> +		dev_err(dev, "%s: idr_alloc failed rc=%d\n", __func__, rc);
+> +		goto err2;
+>   	}
+> 
+> +	ctx->pe = rc;
+>   	ctx->master = false;
+>   	ctx->hw_afu = afu;
+>   out:
+>   	return ctx;
+> -err:
+> +err2:
+> +	kfree(ctx);
+> +err1:
+>   	ctx = ERR_PTR(rc);
+>   	goto out;
+>   }
+> @@ -86,6 +99,7 @@ static int ocxlflash_release_context(void *ctx_cookie)
+>   	if (!ctx)
+>   		goto out;
+> 
+> +	idr_remove(&ctx->hw_afu->idr, ctx->pe);
+>   	kfree(ctx);
+>   out:
+>   	return rc;
+> @@ -103,6 +117,7 @@ static void ocxlflash_destroy_afu(void *afu_cookie)
+>   		return;
+> 
+>   	ocxlflash_release_context(afu->ocxl_ctx);
+> +	idr_destroy(&afu->idr);
+>   	kfree(afu);
+>   }
+> 
+> @@ -237,6 +252,7 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
+>   		goto err1;
+>   	}
+> 
+> +	idr_init(&afu->idr);
+
+You initialize the IDR too late. ocxlflash_dev_context_init() was called 
+just above and allocated a PE.
+
+   Fred
+
+
+>   	afu->ocxl_ctx = ctx;
 >   out:
 >   	return afu;
->   err1:
-> @@ -163,6 +249,10 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
->   /* Backend ops to ocxlflash services */
->   const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
->   	.module			= THIS_MODULE,
-> +	.set_master		= ocxlflash_set_master,
-> +	.get_context		= ocxlflash_get_context,
-> +	.dev_context_init	= ocxlflash_dev_context_init,
-> +	.release_context	= ocxlflash_release_context,
->   	.create_afu		= ocxlflash_create_afu,
->   	.destroy_afu		= ocxlflash_destroy_afu,
->   };
 > diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
-> index a6f7796..de43c04 100644
+> index de43c04..0381682 100644
 > --- a/drivers/scsi/cxlflash/ocxl_hw.h
 > +++ b/drivers/scsi/cxlflash/ocxl_hw.h
-> @@ -14,6 +14,7 @@
+> @@ -26,10 +26,12 @@ struct ocxl_hw_afu {
+>   	int afu_actag_base;		/* AFU acTag base */
+>   	int afu_actag_enabled;		/* AFU acTag number enabled */
 > 
->   /* OCXL hardware AFU associated with the host */
->   struct ocxl_hw_afu {
-> +	struct ocxlflash_context *ocxl_ctx; /* Host context */
->   	struct pci_dev *pdev;		/* PCI device */
->   	struct device *dev;		/* Generic device */
-> 
-> @@ -27,3 +28,8 @@ struct ocxl_hw_afu {
-> 
+> +	struct idr idr;			/* IDR to manage contexts */
 >   	int max_pasid;			/* Maximum number of contexts */
 >   };
-> +
-> +struct ocxlflash_context {
-> +	struct ocxl_hw_afu *hw_afu;	/* HW AFU back pointer */
-> +	bool master;			/* Whether this is a master context */
-> +};
+> 
+>   struct ocxlflash_context {
+>   	struct ocxl_hw_afu *hw_afu;	/* HW AFU back pointer */
+>   	bool master;			/* Whether this is a master context */
+> +	int pe;				/* Process element */
+>   };
 > 
