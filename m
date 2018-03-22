@@ -1,35 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufs: sysfs: reworking of the rpm_lvl and spm_lvl entries
-Date: Wed, 21 Mar 2018 21:23:43 -0400
-Message-ID: <yq14ll8rjhc.fsf@oracle.com>
-References: <1519901286-17496-1-git-send-email-stanislav.nijnikov@wdc.com>
-        <1519901286-17496-2-git-send-email-stanislav.nijnikov@wdc.com>
-        <fbea3b00-7497-cb3f-746f-65f793677568@intel.com>
+Subject: Re: [PATCH V3 0/1] scsi: ufs: Add support for Auto-Hibernate Idle Timer
+Date: Wed, 21 Mar 2018 21:24:11 -0400
+Message-ID: <yq1zi30q4w4.fsf@oracle.com>
+References: <1521551258-4027-1-git-send-email-adrian.hunter@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <fbea3b00-7497-cb3f-746f-65f793677568@intel.com> (Adrian Hunter's
-        message of "Fri, 16 Mar 2018 16:19:08 +0200")
+In-Reply-To: <1521551258-4027-1-git-send-email-adrian.hunter@intel.com>
+        (Adrian Hunter's message of "Tue, 20 Mar 2018 15:07:37 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, subhashj@codeaurora.org, alex.lemberg@wdc.com
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Alim Akhtar <alim.akhtar@samsung.com>, Alex Lemberg <Alex.Lemberg@sandisk.com>, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
 Adrian,
 
-> On 01/03/18 12:48, Stanislav Nijnikov wrote:
->> Read from these files will return the integed value of the chosen power
->> management level now. Separate entries were added to show the target
->> UFS device and UIC link states. The description of the possible power
->> managements levels was added to the ABI file. The on-write behaviour of
->> these entries wasn't changed.
->> 
->> Signed-off-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+> Here is V3, now re-based on top of patch "scsi: ufs: sysfs:reworking of t=
+he
+> rpm_lvl and spm_lvl entries".
 >
-> Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+> Micha=C5=82 Potomski has previously sent a patch for Auto-Hibernate, but =
+this
+> patch is slightly different, based on the latest ufs-sysfs changes, it al=
+so
+> takes care to restore auto-hibernate during resume, and otherwise avoids
+> updating the register if the device is runtime suspended.  Also a default
+> value of 150ms is set.
 
 Applied to 4.17/scsi-queue. Thank you!
 
--- 
+--=20
 Martin K. Petersen	Oracle Linux Engineering
