@@ -1,43 +1,40 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [trivial PATCH V2] treewide: Align function definition
- open/close braces
-Date: Thu, 22 Mar 2018 09:37:20 -0400
-Message-ID: <20180322093720.2254cfbb@gandalf.local.home>
-References: <5ccbbf083e26bddfb4ea4f819ed62347ce266f39.1521669820.git.joe@perches.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v2] scsi: ufs: add trace event for ufs upiu
+Date: Thu, 22 Mar 2018 14:15:34 +0000
+Message-ID: <562b08c355de2fe594b0a236172f43289154a6e7.camel@wdc.com>
+References: <1521719439-2251-1-git-send-email-ohad.sharabi@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <5ccbbf083e26bddfb4ea4f819ed62347ce266f39.1521669820.git.joe@perches.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, Alexandre Belloni <alexandre.belloni@bootlin.com>, x86@kernel.org, Xiubo Li <Xiubo.Lee@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Jeff Layton <jlayton@kernel.org>, Will Deacon <will.deacon@arm.com>, Timur Tabi <timur@tabi.org>, dri-devel@lists.freedesktop.org, Liam Girdwood <lgirdwood@gmail.com>, "J. Bruce Fields" <bfields@fieldses.org>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "H. Peter
- Anvin" <hpa@zytor.com>, linux-acpi@vger.kernel.org, linux-rtc@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Paul Moore <paul@paul-moore.com>, linux-scsi@vger.kernel.org, "Darrick J.
- Wong" <darrick.wong@oracle.com>, Dept-GELinuxNICDev@cavium.com, Mark Fasheh <mark@fasheh.com>, Sathya Prakash <sathya.prakash@broadcom.com>, amd-gfx@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Darren Hart <dvhart@infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1521719439-2251-1-git-send-email-ohad.sharabi@sandisk.com>
+Content-Language: en-US
+Content-ID: <4EE5CF9BD7C0F042AAEA7D18E66581B8@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ohad Sharabi <Ohad.Sharabi@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Alex Lemberg <Alex.Lemberg@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMSBNYXIgMjAxOCAxNTowOTozMiAtMDcwMApKb2UgUGVyY2hlcyA8am9lQHBlcmNo
-ZXMuY29tPiB3cm90ZToKCj4gZGlmZiAtLWdpdCBhL2tlcm5lbC90cmFjZS90cmFjZV9wcmludGsu
-YyBiL2tlcm5lbC90cmFjZS90cmFjZV9wcmludGsuYwo+IGluZGV4IGFkMWQ2MTY0ZTk0Ni4uNTBm
-NDRiN2IyYjMyIDEwMDY0NAo+IC0tLSBhL2tlcm5lbC90cmFjZS90cmFjZV9wcmludGsuYwo+ICsr
-KyBiL2tlcm5lbC90cmFjZS90cmFjZV9wcmludGsuYwo+IEBAIC0xOTYsNyArMTk2LDcgQEAgc3Ry
-dWN0IG5vdGlmaWVyX2Jsb2NrIG1vZHVsZV90cmFjZV9icHJpbnRrX2Zvcm1hdF9uYiA9IHsKPiAg
-fTsKPiAgCj4gIGludCBfX3RyYWNlX2JwcmludGsodW5zaWduZWQgbG9uZyBpcCwgY29uc3QgY2hh
-ciAqZm10LCAuLi4pCj4gLSB7Cj4gK3sKPiAgCWludCByZXQ7Cj4gIAl2YV9saXN0IGFwOwo+ICAK
-PiBAQCAtMjE0LDcgKzIxNCw3IEBAIGludCBfX3RyYWNlX2JwcmludGsodW5zaWduZWQgbG9uZyBp
-cCwgY29uc3QgY2hhciAqZm10LCAuLi4pCj4gIEVYUE9SVF9TWU1CT0xfR1BMKF9fdHJhY2VfYnBy
-aW50ayk7Cj4gIAo+ICBpbnQgX19mdHJhY2VfdmJwcmludGsodW5zaWduZWQgbG9uZyBpcCwgY29u
-c3QgY2hhciAqZm10LCB2YV9saXN0IGFwKQo+IC0gewo+ICt7Cj4gIAlpZiAodW5saWtlbHkoIWZt
-dCkpCj4gIAkJcmV0dXJuIDA7Cj4gIAoKQWNrZWQtYnk6IFN0ZXZlbiBSb3N0ZWR0IChWTXdhcmUp
-IDxyb3N0ZWR0QGdvb2RtaXMub3JnPgoKLS0gU3RldmUKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxA
-bGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxt
-YW4vbGlzdGluZm8vZHJpLWRldmVsCg==
+T24gVGh1LCAyMDE4LTAzLTIyIGF0IDEzOjUwICswMjAwLCBPaGFkIFNoYXJhYmkgd3JvdGU6DQo+
+ICtzdGF0aWMgdm9pZCB1ZnNoY2RfYWRkX2NtZF91cGl1X3RyYWNlKHN0cnVjdCB1ZnNfaGJhICpo
+YmEsIHVuc2lnbmVkIGludCB0YWcsDQo+ICsJCWNvbnN0IGNoYXIgKnN0cikNCj4gK3sNCj4gKwlz
+dHJ1Y3QgdXRwX3VwaXVfcmVxICpycSA9IGhiYS0+bHJiW3RhZ10udWNkX3JlcV9wdHI7DQo+ICsN
+Cj4gKwl0cmFjZV91ZnNoY2RfdXBpdShkZXZfbmFtZShoYmEtPmRldiksIHN0ciwgKHU4ICopJnJx
+LT5oZWFkZXIsDQo+ICsJCQkodTggKikmcnEtPnNjLmNkYik7DQo+ICt9DQo+ICsNCj4gK3N0YXRp
+YyB2b2lkIHVmc2hjZF9hZGRfcXVlcnlfdXBpdV90cmFjZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB1
+bnNpZ25lZCBpbnQgdGFnLA0KPiArCQljb25zdCBjaGFyICpzdHIpDQo+ICt7DQo+ICsJc3RydWN0
+IHV0cF91cGl1X3JlcSAqcnEgPSBoYmEtPmxyYlt0YWddLnVjZF9yZXFfcHRyOw0KPiArDQo+ICsJ
+dHJhY2VfdWZzaGNkX3VwaXUoZGV2X25hbWUoaGJhLT5kZXYpLCBzdHIsICh1OCAqKSZycS0+aGVh
+ZGVyLA0KPiArCQkJKHU4ICopJnJxLT5xcik7DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyB2b2lkIHVm
+c2hjZF9hZGRfdG1fdXBpdV90cmFjZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB1bnNpZ25lZCBpbnQg
+dGFnLA0KPiArCQljb25zdCBjaGFyICpzdHIpDQo+ICt7DQo+ICsJc3RydWN0IHV0cF90YXNrX3Jl
+cV9kZXNjICpkZXNjcDsNCj4gKwlzdHJ1Y3QgdXRwX3VwaXVfdGFza19yZXEgKnRhc2tfcmVxOw0K
+PiArCWludCBvZmYgPSAoaW50KXRhZyAtIGhiYS0+bnV0cnM7DQo+ICsNCj4gKwlkZXNjcCA9ICZo
+YmEtPnV0bXJkbF9iYXNlX2FkZHJbb2ZmXTsNCj4gKwl0YXNrX3JlcSA9IChzdHJ1Y3QgdXRwX3Vw
+aXVfdGFza19yZXEgKilkZXNjcC0+dGFza19yZXFfdXBpdTsNCj4gKwl0cmFjZV91ZnNoY2RfdXBp
+dShkZXZfbmFtZShoYmEtPmRldiksIHN0ciwgKHU4ICopJnRhc2tfcmVxLT5oZWFkZXIsDQo+ICsJ
+CQkodTggKikmdGFza19yZXEtPmlucHV0X3BhcmFtMSk7DQo+ICt9DQoNCkNhbiB0aGUgdHJhY2Vf
+dWZzaGNkX3VwaXUoKSBkZWZpbml0aW9uIGJlIGNoYW5nZWQgc3VjaCB0aGF0IHRoZSB0aGlyZCBh
+bmQNCmZvdXJ0aCBhcmd1bWVudCBhcmUgZGVjbGFyZWQgYXMgJ3ZvaWQgKicgc3VjaCB0aGF0IHRo
+ZSB1Z2x5ICcodTggKiknIGNhc3RzDQpjYW4gYmUgbGVmdCBvdXQgZnJvbSB0aGUgY2FsbGVycz8N
+Cg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg==
