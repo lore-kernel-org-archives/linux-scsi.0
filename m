@@ -1,40 +1,128 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v2] scsi: ufs: add trace event for ufs upiu
-Date: Thu, 22 Mar 2018 14:15:34 +0000
-Message-ID: <562b08c355de2fe594b0a236172f43289154a6e7.camel@wdc.com>
-References: <1521719439-2251-1-git-send-email-ohad.sharabi@sandisk.com>
+From: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 06/38] cxlflash: Read host function configuration
+Date: Thu, 22 Mar 2018 16:43:15 +0100
+Message-ID: <152ca9dd-ef12-8ba3-23a0-abbc532b7cf4@linux.vnet.ibm.com>
+References: <1519683513-16731-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1519683641-16967-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1521719439-2251-1-git-send-email-ohad.sharabi@sandisk.com>
-Content-Language: en-US
-Content-ID: <4EE5CF9BD7C0F042AAEA7D18E66581B8@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ohad Sharabi <Ohad.Sharabi@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Alex Lemberg <Alex.Lemberg@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1519683641-16967-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Content-Language: fr
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE4LTAzLTIyIGF0IDEzOjUwICswMjAwLCBPaGFkIFNoYXJhYmkgd3JvdGU6DQo+
-ICtzdGF0aWMgdm9pZCB1ZnNoY2RfYWRkX2NtZF91cGl1X3RyYWNlKHN0cnVjdCB1ZnNfaGJhICpo
-YmEsIHVuc2lnbmVkIGludCB0YWcsDQo+ICsJCWNvbnN0IGNoYXIgKnN0cikNCj4gK3sNCj4gKwlz
-dHJ1Y3QgdXRwX3VwaXVfcmVxICpycSA9IGhiYS0+bHJiW3RhZ10udWNkX3JlcV9wdHI7DQo+ICsN
-Cj4gKwl0cmFjZV91ZnNoY2RfdXBpdShkZXZfbmFtZShoYmEtPmRldiksIHN0ciwgKHU4ICopJnJx
-LT5oZWFkZXIsDQo+ICsJCQkodTggKikmcnEtPnNjLmNkYik7DQo+ICt9DQo+ICsNCj4gK3N0YXRp
-YyB2b2lkIHVmc2hjZF9hZGRfcXVlcnlfdXBpdV90cmFjZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB1
-bnNpZ25lZCBpbnQgdGFnLA0KPiArCQljb25zdCBjaGFyICpzdHIpDQo+ICt7DQo+ICsJc3RydWN0
-IHV0cF91cGl1X3JlcSAqcnEgPSBoYmEtPmxyYlt0YWddLnVjZF9yZXFfcHRyOw0KPiArDQo+ICsJ
-dHJhY2VfdWZzaGNkX3VwaXUoZGV2X25hbWUoaGJhLT5kZXYpLCBzdHIsICh1OCAqKSZycS0+aGVh
-ZGVyLA0KPiArCQkJKHU4ICopJnJxLT5xcik7DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyB2b2lkIHVm
-c2hjZF9hZGRfdG1fdXBpdV90cmFjZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB1bnNpZ25lZCBpbnQg
-dGFnLA0KPiArCQljb25zdCBjaGFyICpzdHIpDQo+ICt7DQo+ICsJc3RydWN0IHV0cF90YXNrX3Jl
-cV9kZXNjICpkZXNjcDsNCj4gKwlzdHJ1Y3QgdXRwX3VwaXVfdGFza19yZXEgKnRhc2tfcmVxOw0K
-PiArCWludCBvZmYgPSAoaW50KXRhZyAtIGhiYS0+bnV0cnM7DQo+ICsNCj4gKwlkZXNjcCA9ICZo
-YmEtPnV0bXJkbF9iYXNlX2FkZHJbb2ZmXTsNCj4gKwl0YXNrX3JlcSA9IChzdHJ1Y3QgdXRwX3Vw
-aXVfdGFza19yZXEgKilkZXNjcC0+dGFza19yZXFfdXBpdTsNCj4gKwl0cmFjZV91ZnNoY2RfdXBp
-dShkZXZfbmFtZShoYmEtPmRldiksIHN0ciwgKHU4ICopJnRhc2tfcmVxLT5oZWFkZXIsDQo+ICsJ
-CQkodTggKikmdGFza19yZXEtPmlucHV0X3BhcmFtMSk7DQo+ICt9DQoNCkNhbiB0aGUgdHJhY2Vf
-dWZzaGNkX3VwaXUoKSBkZWZpbml0aW9uIGJlIGNoYW5nZWQgc3VjaCB0aGF0IHRoZSB0aGlyZCBh
-bmQNCmZvdXJ0aCBhcmd1bWVudCBhcmUgZGVjbGFyZWQgYXMgJ3ZvaWQgKicgc3VjaCB0aGF0IHRo
-ZSB1Z2x5ICcodTggKiknIGNhc3RzDQpjYW4gYmUgbGVmdCBvdXQgZnJvbSB0aGUgY2FsbGVycz8N
-Cg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg==
+
+
+Le 26/02/2018 à 23:20, Uma Krishnan a écrit :
+> Per the OCXL specification, the underlying host can have multiple AFUs
+> per function with each function supporting its own configuration. The host
+> function configuration is read on the initialization path to evaluate the
+> number of functions present and identify the features and configuration of
+> the functions present. This data is cached for use in later configuration
+> steps. Note that for the OCXL hardware supported by the cxlflash driver,
+> only one AFU per function is expected.
+> 
+> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> ---
+
+Reviewed-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
+
+
+>   drivers/scsi/cxlflash/ocxl_hw.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/cxlflash/ocxl_hw.h |  2 ++
+>   2 files changed, 43 insertions(+)
+> 
+> diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
+> index e3a0a9b..dc32a73 100644
+> --- a/drivers/scsi/cxlflash/ocxl_hw.c
+> +++ b/drivers/scsi/cxlflash/ocxl_hw.c
+> @@ -32,6 +32,35 @@ static void ocxlflash_destroy_afu(void *afu_cookie)
+>   }
+> 
+>   /**
+> + * ocxlflash_config_fn() - configure the host function
+> + * @pdev:	PCI device associated with the host.
+> + * @afu:	AFU associated with the host.
+> + *
+> + * Return: 0 on success, -errno on failure
+> + */
+> +static int ocxlflash_config_fn(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
+> +{
+> +	struct ocxl_fn_config *fcfg = &afu->fcfg;
+> +	struct device *dev = &pdev->dev;
+> +	int rc = 0;
+> +
+> +	/* Read DVSEC config of the function */
+> +	rc = ocxl_config_read_function(pdev, fcfg);
+> +	if (unlikely(rc)) {
+> +		dev_err(dev, "%s: ocxl_config_read_function failed rc=%d\n",
+> +			__func__, rc);
+> +		goto out;
+> +	}
+> +
+> +	/* Only one AFU per function is supported by ocxlflash */
+> +	if (fcfg->max_afu_index != 0)
+> +		dev_warn(dev, "%s: Unexpected AFU index value %d\n",
+> +			 __func__, fcfg->max_afu_index);
+> +out:
+> +	return rc;
+> +}
+> +
+> +/**
+>    * ocxlflash_create_afu() - create the AFU for OCXL
+>    * @pdev:	PCI device associated with the host.
+>    *
+> @@ -41,6 +70,7 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
+>   {
+>   	struct device *dev = &pdev->dev;
+>   	struct ocxl_hw_afu *afu;
+> +	int rc;
+> 
+>   	afu = kzalloc(sizeof(*afu), GFP_KERNEL);
+>   	if (unlikely(!afu)) {
+> @@ -50,8 +80,19 @@ static void *ocxlflash_create_afu(struct pci_dev *pdev)
+> 
+>   	afu->pdev = pdev;
+>   	afu->dev = dev;
+> +
+> +	rc = ocxlflash_config_fn(pdev, afu);
+> +	if (unlikely(rc)) {
+> +		dev_err(dev, "%s: Function configuration failed rc=%d\n",
+> +			__func__, rc);
+> +		goto err1;
+> +	}
+>   out:
+>   	return afu;
+> +err1:
+> +	kfree(afu);
+> +	afu = NULL;
+> +	goto out;
+>   }
+> 
+>   /* Backend ops to ocxlflash services */
+> diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
+> index c7e5c4d..658f420 100644
+> --- a/drivers/scsi/cxlflash/ocxl_hw.h
+> +++ b/drivers/scsi/cxlflash/ocxl_hw.h
+> @@ -16,4 +16,6 @@
+>   struct ocxl_hw_afu {
+>   	struct pci_dev *pdev;		/* PCI device */
+>   	struct device *dev;		/* Generic device */
+> +
+> +	struct ocxl_fn_config fcfg;	/* DVSEC config of the function */
+>   };
+> 
