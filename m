@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/8] scsi: hisi_sas: update RAS feature for later revision of v3 HW
-Date: Sat, 24 Mar 2018 00:05:09 +0800
-Message-ID: <1521821115-120040-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 3/8] scsi: hisi_sas: delete timer when removing hisi_sas driver
+Date: Sat, 24 Mar 2018 00:05:10 +0800
+Message-ID: <1521821115-120040-4-git-send-email-john.garry@huawei.com>
 References: <1521821115-120040-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,156 +9,62 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1521821115-120040-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-There is an modification for later revision of v3 hw. More HW errors
-are reported through RAS interrupt. These errors were originally
-reported only through MSI.
+Delete timer for v1 and v3 hw when removing hisi_sas driver.
 
-When report to RAS, some combinations are done to port AXI errors and
-FIFO OMIT errors. For example, each port has 4 AXI errors, and they are
-combined to one when report to RAS.
-
-This patch does two things.
-1. Enable RAS interrupt of these errors and handle them in PCI
-error handlers.
-2. Disable MSI interrupts of these errors for this later revision hw.
-
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: Xiang chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 60 ++++++++++++++++++++++++++++++++--
- 1 file changed, 58 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 3 +++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 3 ---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +++
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 49c1fa6..a216795 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -2177,6 +2177,9 @@ int hisi_sas_remove(struct platform_device *pdev)
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct Scsi_Host *shost = sha->core.shost;
+ 
++	if (timer_pending(&hisi_hba->timer))
++		del_timer(&hisi_hba->timer);
++
+ 	sas_unregister_ha(sha);
+ 	sas_remove_host(sha->core.shost);
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 89b9505..bed6afb 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -3599,9 +3599,6 @@ static int hisi_sas_v2_remove(struct platform_device *pdev)
+ 	struct sas_ha_struct *sha = platform_get_drvdata(pdev);
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 
+-	if (timer_pending(&hisi_hba->timer))
+-		del_timer(&hisi_hba->timer);
+-
+ 	hisi_sas_kill_tasklets(hisi_hba);
+ 
+ 	return hisi_sas_remove(pdev);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 6f3e5ba..df5414a 100644
+index df5414a..efe64bc 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -216,6 +216,9 @@
- #define SAS_RAS_INTR1			(RAS_BASE + 0x04)
- #define SAS_RAS_INTR0_MASK		(RAS_BASE + 0x08)
- #define SAS_RAS_INTR1_MASK		(RAS_BASE + 0x0c)
-+#define CFG_SAS_RAS_INTR_MASK		(RAS_BASE + 0x1c)
-+#define SAS_RAS_INTR2			(RAS_BASE + 0x20)
-+#define SAS_RAS_INTR2_MASK		(RAS_BASE + 0x24)
+@@ -2183,6 +2183,9 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct Scsi_Host *shost = sha->core.shost;
  
- /* HW dma structures */
- /* Delivery queue header */
-@@ -392,6 +395,7 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
- 
- static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- {
-+	struct pci_dev *pdev = hisi_hba->pci_dev;
- 	int i;
- 
- 	/* Global registers init */
-@@ -409,7 +413,10 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, 0xffffffff);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0xfefefefe);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0xfefefefe);
--	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xfffe20ff);
-+	if (pdev->revision >= 0x21)
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xffff7fff);
-+	else
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xfffe20ff);
- 	hisi_sas_write32(hisi_hba, CHNL_PHYUPDOWN_INT_MSK, 0x0);
- 	hisi_sas_write32(hisi_hba, CHNL_ENT_INT_MSK, 0x0);
- 	hisi_sas_write32(hisi_hba, HGC_COM_INT_MSK, 0x0);
-@@ -428,7 +435,12 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xffffffff);
- 		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
--		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xff87ffff);
-+		if (pdev->revision >= 0x21)
-+			hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK,
-+					0xffffffff);
-+		else
-+			hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK,
-+					0xff87ffff);
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0xffffbfe);
- 		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
-@@ -503,6 +515,8 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 	/* RAS registers init */
- 	hisi_sas_write32(hisi_hba, SAS_RAS_INTR0_MASK, 0x0);
- 	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1_MASK, 0x0);
-+	hisi_sas_write32(hisi_hba, SAS_RAS_INTR2_MASK, 0x0);
-+	hisi_sas_write32(hisi_hba, CFG_SAS_RAS_INTR_MASK, 0x0);
- }
- 
- static void config_phy_opt_mode_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-@@ -1319,6 +1333,13 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
- 						     CHL_INT1);
- 		u32 irq_value2 = hisi_sas_phy_read32(hisi_hba, phy_no,
- 						     CHL_INT2);
-+		u32 irq_msk1 = hisi_sas_phy_read32(hisi_hba, phy_no,
-+							CHL_INT1_MSK);
-+		u32 irq_msk2 = hisi_sas_phy_read32(hisi_hba, phy_no,
-+							CHL_INT2_MSK);
++	if (timer_pending(&hisi_hba->timer))
++		del_timer(&hisi_hba->timer);
 +
-+		irq_value1 &= ~irq_msk1;
-+		irq_value2 &= ~irq_msk2;
- 
- 		if ((irq_msk & (4 << (phy_no * 4))) &&
- 						irq_value1) {
-@@ -1448,6 +1469,7 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk | 0x1df00);
- 
- 	irq_value = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	irq_value &= ~irq_msk;
- 
- 	for (i = 0; i < ARRAY_SIZE(fatal_axi_error); i++) {
- 		const struct hisi_sas_hw_error *error = &fatal_axi_error[i];
-@@ -2222,6 +2244,29 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	{ .irq_msk = BIT(31), .msg = "DMAC7_RX_POISON" },
- };
- 
-+static const struct hisi_sas_hw_error sas_ras_intr2_nfe[] = {
-+	{ .irq_msk = BIT(0), .msg = "DMAC0_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(1), .msg = "DMAC1_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(2), .msg = "DMAC2_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(3), .msg = "DMAC3_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(4), .msg = "DMAC4_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(5), .msg = "DMAC5_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(6), .msg = "DMAC6_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(7), .msg = "DMAC7_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(8), .msg = "DMAC0_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(9), .msg = "DMAC1_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(10), .msg = "DMAC2_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(11), .msg = "DMAC3_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(12), .msg = "DMAC4_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(13), .msg = "DMAC5_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(14), .msg = "DMAC6_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(15), .msg = "DMAC7_FIFO_OMIT_ERR" },
-+	{ .irq_msk = BIT(16), .msg = "HGC_RLSE_SLOT_UNMATCH" },
-+	{ .irq_msk = BIT(17), .msg = "HGC_LM_ADD_FCH_LIST_ERR" },
-+	{ .irq_msk = BIT(18), .msg = "HGC_AXI_BUS_ERR" },
-+	{ .irq_msk = BIT(19), .msg = "HGC_FIFO_OMIT_ERR" },
-+};
-+
- static bool process_non_fatal_error_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = hisi_hba->dev;
-@@ -2252,6 +2297,17 @@ static bool process_non_fatal_error_v3_hw(struct hisi_hba *hisi_hba)
- 	}
- 	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1, irq_value);
- 
-+	irq_value = hisi_sas_read32(hisi_hba, SAS_RAS_INTR2);
-+	for (i = 0; i < ARRAY_SIZE(sas_ras_intr2_nfe); i++) {
-+		ras_error = &sas_ras_intr2_nfe[i];
-+		if (ras_error->irq_msk & irq_value) {
-+			dev_warn(dev, "SAS_RAS_INTR2: %s(irq_value=0x%x) found.\n",
-+					ras_error->msg, irq_value);
-+			need_reset = true;
-+		}
-+	}
-+	hisi_sas_write32(hisi_hba, SAS_RAS_INTR2, irq_value);
-+
- 	return need_reset;
- }
+ 	sas_unregister_ha(sha);
+ 	sas_remove_host(sha->core.shost);
  
 -- 
 1.9.1
