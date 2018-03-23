@@ -1,12 +1,14 @@
 From: Long Li <longli@linuxonhyperv.com>
-Subject: [PATCH 1/3] Vmbus: Add function to report available ring buffer to
- write in total ring size percentage
-Date: Thu, 22 Mar 2018 17:15:36 -0700
-Message-ID: <20180323001538.31876-1-longli@linuxonhyperv.com>
+Subject: [PATCH 2/3] Netvsc: Use the vmbus functiton to calculate ring buffer
+ percentage
+Date: Thu, 22 Mar 2018 17:15:37 -0700
+Message-ID: <20180323001538.31876-2-longli@linuxonhyperv.com>
+References: <20180323001538.31876-1-longli@linuxonhyperv.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20180323001538.31876-1-longli@linuxonhyperv.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -21,67 +23,93 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Long Li <longli@microsoft.com>
 
-Netvsc has a similar function to calculate how much ring buffer in
-percentage is available to write. This function is useful for storvsc and
-other vmbus devices.
+In Vmbus, we have defined a function to calculate available ring buffer
+percentage to write.
 
-Define a similar function in vmbus to be used by storvsc.
+Use that function and remove duplicate netvsc code.
 
 Signed-off-by: Long Li <longli@microsoft.com>
 ---
- drivers/hv/ring_buffer.c |  2 ++
- include/linux/hyperv.h   | 12 ++++++++++++
- 2 files changed, 14 insertions(+)
+ drivers/net/hyperv/netvsc.c     | 17 +++--------------
+ drivers/net/hyperv/netvsc_drv.c |  3 ---
+ 2 files changed, 3 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/hv/ring_buffer.c b/drivers/hv/ring_buffer.c
-index 8699bb969e7e..3c836c099a8f 100644
---- a/drivers/hv/ring_buffer.c
-+++ b/drivers/hv/ring_buffer.c
-@@ -227,6 +227,8 @@ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
- 	ring_info->ring_buffer->feature_bits.value = 1;
+diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+index 0265d703eb03..8af0069e4d8c 100644
+--- a/drivers/net/hyperv/netvsc.c
++++ b/drivers/net/hyperv/netvsc.c
+@@ -31,7 +31,6 @@
+ #include <linux/vmalloc.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/prefetch.h>
+-#include <linux/reciprocal_div.h>
  
- 	ring_info->ring_size = page_cnt << PAGE_SHIFT;
-+	ring_info->ring_size_div10_reciprocal =
-+		reciprocal_value(ring_info->ring_size / 10);
- 	ring_info->ring_datasize = ring_info->ring_size -
- 		sizeof(struct hv_ring_buffer);
+ #include <asm/sync_bitops.h>
  
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 2048f3c3b68a..eb7204851089 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -36,6 +36,7 @@
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
- #include <linux/interrupt.h>
-+#include <linux/reciprocal_div.h>
+@@ -590,17 +589,6 @@ void netvsc_device_remove(struct hv_device *device)
+ #define RING_AVAIL_PERCENT_HIWATER 20
+ #define RING_AVAIL_PERCENT_LOWATER 10
  
- #define MAX_PAGE_BUFFER_COUNT				32
- #define MAX_MULTIPAGE_BUFFER_COUNT			32 /* 128K */
-@@ -121,6 +122,7 @@ struct hv_ring_buffer {
- struct hv_ring_buffer_info {
- 	struct hv_ring_buffer *ring_buffer;
- 	u32 ring_size;			/* Include the shared header */
-+	struct reciprocal_value ring_size_div10_reciprocal;
- 	spinlock_t ring_lock;
+-/*
+- * Get the percentage of available bytes to write in the ring.
+- * The return value is in range from 0 to 100.
+- */
+-static u32 hv_ringbuf_avail_percent(const struct hv_ring_buffer_info *ring_info)
+-{
+-	u32 avail_write = hv_get_bytes_to_write(ring_info);
+-
+-	return reciprocal_divide(avail_write  * 100, netvsc_ring_reciprocal);
+-}
+-
+ static inline void netvsc_free_send_slot(struct netvsc_device *net_device,
+ 					 u32 index)
+ {
+@@ -649,7 +637,8 @@ static void netvsc_send_tx_complete(struct netvsc_device *net_device,
+ 		wake_up(&net_device->wait_drain);
  
- 	u32 ring_datasize;		/* < ring_size */
-@@ -155,6 +157,16 @@ static inline u32 hv_get_bytes_to_write(const struct hv_ring_buffer_info *rbi)
- 	return write;
- }
+ 	if (netif_tx_queue_stopped(netdev_get_tx_queue(ndev, q_idx)) &&
+-	    (hv_ringbuf_avail_percent(&channel->outbound) > RING_AVAIL_PERCENT_HIWATER ||
++	    (hv_get_avail_to_write_percent(&channel->outbound) >
++	     RING_AVAIL_PERCENT_HIWATER ||
+ 	     queue_sends < 1)) {
+ 		netif_tx_wake_queue(netdev_get_tx_queue(ndev, q_idx));
+ 		ndev_ctx->eth_stats.wake_queue++;
+@@ -757,7 +746,7 @@ static inline int netvsc_send_pkt(
+ 	struct netdev_queue *txq = netdev_get_tx_queue(ndev, packet->q_idx);
+ 	u64 req_id;
+ 	int ret;
+-	u32 ring_avail = hv_ringbuf_avail_percent(&out_channel->outbound);
++	u32 ring_avail = hv_get_avail_to_write_percent(&out_channel->outbound);
  
-+static inline u32 hv_get_avail_to_write_percent(
-+		const struct hv_ring_buffer_info *rbi)
-+{
-+	u32 avail_write = hv_get_bytes_to_write(rbi);
-+
-+	return reciprocal_divide(
-+			(avail_write  << 3) + (avail_write << 1),
-+			rbi->ring_size_div10_reciprocal);
-+}
-+
- /*
-  * VMBUS version is 32 bit entity broken up into
-  * two 16 bit quantities: major_number. minor_number.
+ 	nvmsg.hdr.msg_type = NVSP_MSG1_TYPE_SEND_RNDIS_PKT;
+ 	if (skb)
+diff --git a/drivers/net/hyperv/netvsc_drv.c b/drivers/net/hyperv/netvsc_drv.c
+index faea0be18924..b0b1c2fd2b7b 100644
+--- a/drivers/net/hyperv/netvsc_drv.c
++++ b/drivers/net/hyperv/netvsc_drv.c
+@@ -35,7 +35,6 @@
+ #include <linux/slab.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netpoll.h>
+-#include <linux/reciprocal_div.h>
+ 
+ #include <net/arp.h>
+ #include <net/route.h>
+@@ -55,7 +54,6 @@ static unsigned int ring_size __ro_after_init = 128;
+ module_param(ring_size, uint, S_IRUGO);
+ MODULE_PARM_DESC(ring_size, "Ring buffer size (# of pages)");
+ unsigned int netvsc_ring_bytes __ro_after_init;
+-struct reciprocal_value netvsc_ring_reciprocal __ro_after_init;
+ 
+ static const u32 default_msg = NETIF_MSG_DRV | NETIF_MSG_PROBE |
+ 				NETIF_MSG_LINK | NETIF_MSG_IFUP |
+@@ -2186,7 +2184,6 @@ static int __init netvsc_drv_init(void)
+ 			ring_size);
+ 	}
+ 	netvsc_ring_bytes = ring_size * PAGE_SIZE;
+-	netvsc_ring_reciprocal = reciprocal_value(netvsc_ring_bytes);
+ 
+ 	ret = vmbus_driver_register(&netvsc_drv);
+ 	if (ret)
 -- 
 2.14.1
