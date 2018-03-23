@@ -1,154 +1,91 @@
-From: Long Li <longli@linuxonhyperv.com>
-Subject: [PATCH 3/3] Storvsc: Select channel based on available percentage of
- ring buffer to write
-Date: Thu, 22 Mar 2018 17:15:38 -0700
-Message-ID: <20180323001538.31876-3-longli@linuxonhyperv.com>
-References: <20180323001538.31876-1-longli@linuxonhyperv.com>
+From: "liwei (CM)" <liwei213@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjggMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZz?=
+ =?utf-8?Q?:_add_document_for_hisi-ufs?=
+Date: Fri, 23 Mar 2018 02:22:33 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA584ED@DGGEMM506-MBS.china.huawei.com>
+References: <20180213101412.5717-1-liwei213@huawei.com>
+ <20180213101412.5717-3-liwei213@huawei.com>
+ <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20180323001538.31876-1-longli@linuxonhyperv.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
+Content-Language: zh-CN
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "xuwei (O)" <xuwei5@huawei.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, Eric Anholt <eric@anholt.net>, DTML <devicetree@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>
-
-This is a best effort for estimating on how busy the ring buffer is for
-that channel, based on available buffer to write in percentage. It is still
-possible that at the time of actual ring buffer write, the space may not be
-available due to other processes may be writing at the time.
-
-Selecting a channel based on how full it is can reduce the possibility that
-a ring buffer write will fail, and avoid the situation a channel is over
-busy.
-
-Now it's possible that storvsc can use a smaller ring buffer size
-(e.g. 40k bytes) to take advantage of cache locality.
-
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 62 +++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 50 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index a2ec0bc9e9fa..96681c4f75cb 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -395,6 +395,12 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
- 
- module_param(storvsc_vcpus_per_sub_channel, int, S_IRUGO);
- MODULE_PARM_DESC(storvsc_vcpus_per_sub_channel, "Ratio of VCPUs to subchannels");
-+
-+static int ring_avail_percent_lowater = 10;
-+module_param(ring_avail_percent_lowater, int, S_IRUGO);
-+MODULE_PARM_DESC(ring_avail_percent_lowater,
-+		"Select a channel if available ring size > this in percent");
-+
- /*
-  * Timeout in seconds for all devices managed by this driver.
-  */
-@@ -1285,9 +1291,9 @@ static int storvsc_do_io(struct hv_device *device,
- {
- 	struct storvsc_device *stor_device;
- 	struct vstor_packet *vstor_packet;
--	struct vmbus_channel *outgoing_channel;
-+	struct vmbus_channel *outgoing_channel, *channel;
- 	int ret = 0;
--	struct cpumask alloced_mask;
-+	struct cpumask alloced_mask, other_numa_mask;
- 	int tgt_cpu;
- 
- 	vstor_packet = &request->vstor_packet;
-@@ -1301,22 +1307,53 @@ static int storvsc_do_io(struct hv_device *device,
- 	/*
- 	 * Select an an appropriate channel to send the request out.
- 	 */
--
- 	if (stor_device->stor_chns[q_num] != NULL) {
- 		outgoing_channel = stor_device->stor_chns[q_num];
--		if (outgoing_channel->target_cpu == smp_processor_id()) {
-+		if (outgoing_channel->target_cpu == q_num) {
- 			/*
- 			 * Ideally, we want to pick a different channel if
- 			 * available on the same NUMA node.
- 			 */
- 			cpumask_and(&alloced_mask, &stor_device->alloced_cpus,
- 				    cpumask_of_node(cpu_to_node(q_num)));
--			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
--					outgoing_channel->target_cpu + 1) {
--				if (tgt_cpu != outgoing_channel->target_cpu) {
--					outgoing_channel =
--					stor_device->stor_chns[tgt_cpu];
--					break;
-+
-+			for_each_cpu_wrap(tgt_cpu, &alloced_mask, q_num + 1) {
-+				if (tgt_cpu == q_num)
-+					continue;
-+				channel = stor_device->stor_chns[tgt_cpu];
-+				if (hv_get_avail_to_write_percent(
-+							&channel->outbound)
-+						> ring_avail_percent_lowater) {
-+					outgoing_channel = channel;
-+					goto found_channel;
-+				}
-+			}
-+
-+			/*
-+			 * All the othe channels on the same NUMA node are
-+			 * busy. Try to use the channel with the current CPU
-+			 */
-+			if (hv_get_avail_to_write_percent(
-+						&outgoing_channel->outbound)
-+					> ring_avail_percent_lowater)
-+				goto found_channel;
-+
-+			/*
-+			 * If we reach here, all the channels on the current
-+			 * NUMA node are busy. Try to find a channel in
-+			 * other NUMA nodes
-+			 */
-+			cpumask_andnot(&other_numa_mask,
-+					&stor_device->alloced_cpus,
-+					cpumask_of_node(cpu_to_node(q_num)));
-+
-+			for_each_cpu(tgt_cpu, &other_numa_mask) {
-+				channel = stor_device->stor_chns[tgt_cpu];
-+				if (hv_get_avail_to_write_percent(
-+							&channel->outbound)
-+						> ring_avail_percent_lowater) {
-+					outgoing_channel = channel;
-+					goto found_channel;
- 				}
- 			}
- 		}
-@@ -1324,7 +1361,7 @@ static int storvsc_do_io(struct hv_device *device,
- 		outgoing_channel = get_og_chn(stor_device, q_num);
- 	}
- 
--
-+found_channel:
- 	vstor_packet->flags |= REQUEST_COMPLETION_FLAG;
- 
- 	vstor_packet->vm_srb.length = (sizeof(struct vmscsi_request) -
-@@ -1733,7 +1770,8 @@ static int storvsc_probe(struct hv_device *device,
- 	}
- 
- 	scsi_driver.can_queue = (max_outstanding_req_per_channel *
--				 (max_sub_channels + 1));
-+				 (max_sub_channels + 1)) *
-+				 (100 - ring_avail_percent_lowater) / 100;
- 
- 	host = scsi_host_alloc(&scsi_driver,
- 			       sizeof(struct hv_host_device));
--- 
-2.14.1
+SGksIEFybmQNClNvcnJ5IHRvIGJvdGhlciB5b3UgYWdhaW4sIHBsZWFzZSB0YWtlIHRoZSB0aW1l
+IHRvIHJldmlldyB0aGUgcGF0Y2guIEFyZSB0aGVyZSBhbnkgb3RoZXIgc3VnZ2VzdGlvbnM/DQpM
+b29raW5nIGZvcndhcmQgdG8geW91ciByZXBseS4NCg0KLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0K
+5Y+R5Lu25Lq6OiBhcm5kYmVyZ21hbm5AZ21haWwuY29tIFttYWlsdG86YXJuZGJlcmdtYW5uQGdt
+YWlsLmNvbV0g5Luj6KGoIEFybmQgQmVyZ21hbm4NCuWPkemAgeaXtumXtDogMjAxOOW5tDLmnIgx
+OeaXpSAxNzo1OA0K5pS25Lu25Lq6OiBsaXdlaSAoQ00pDQrmioTpgIE6IFJvYiBIZXJyaW5nOyBN
+YXJrIFJ1dGxhbmQ7IHh1d2VpIChPKTsgQ2F0YWxpbiBNYXJpbmFzOyBXaWxsIERlYWNvbjsgVmlu
+YXlhayBIb2xpa2F0dGk7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBNYXJ0aW4gSy4gUGV0ZXJzZW47
+IEtldmluIEhpbG1hbjsgR3JlZ29yeSBDTEVNRU5UOyBUaG9tYXMgUGV0YXp6b25pOyBNYXNhaGly
+byBZYW1hZGE7IFJpa3UgVm9pcGlvOyBUaGllcnJ5IFJlZGluZzsgS3J6eXN6dG9mIEtvemxvd3Nr
+aTsgRXJpYyBBbmhvbHQ7IERUTUw7IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7IExpbnV4IEFS
+TTsgbGludXgtc2NzaTsgemFuZ2xlaWdhbmc7IEdlbmdqaWFuZmVuZzsgR3VvZG9uZyBYdTsgWmhh
+bmdmZWkgR2FvOyBGZW5nYmFvcGVuZyAoa2V2aW4sIEtpcmluIFNvbHV0aW9uIERlcHQpDQrkuLvp
+opg6IFJlOiBbUEFUQ0ggdjggMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1l
+bnQgZm9yIGhpc2ktdWZzDQoNCk9uIFR1ZSwgRmViIDEzLCAyMDE4IGF0IDExOjE0IEFNLCBMaSBX
+ZWkgPGxpd2VpMjEzQGh1YXdlaS5jb20+IHdyb3RlOg0KPiBhZGQgdWZzIG5vZGUgZG9jdW1lbnQg
+Zm9yIEhpc2lsaWNvbi4NCj4NCj4gU2lnbmVkLW9mZi1ieTogTGkgV2VpIDxsaXdlaTIxM0BodWF3
+ZWkuY29tPg0KPiAtLS0NCj4gIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMv
+dWZzLWhpc2kudHh0IHwgMzcgDQo+ICsrKysrKysrKysrKysrKysrKysrKysNCj4gIDEgZmlsZSBj
+aGFuZ2VkLCAzNyBpbnNlcnRpb25zKCspDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRh
+dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlzaS50eHQNCg0KDQpJJ20gcHJldHR5
+IHN1cmUgd2UndmUgZGlzY3Vzc2VkIGl0IGJlZm9yZSwgYnV0IGNhbiB5b3UgbWFrZSB0aGlzIHNv
+IHRoYXQgdGhlIGdlbmVyaWMgcHJvcGVydGllcyBhcmUgcGFydCBvZiB0aGUgdWZzaGNkIGJpbmRp
+bmcsIGFuZCB5b3UgcmVmZXIgdG8gaXQgZnJvbSBoZXJlLCBvbmx5IGRlc2NyaWJpbmcgaW4gd2hh
+dCB3YXlzIHRoZSBoaXNpIHVmcyBiaW5kaW5nIGRpZmZlcnMgZnJvbSB0aGUgc3RhbmRhcmQ/DQoN
+Cj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZz
+LWhpc2kudHh0IA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZz
+LWhpc2kudHh0DQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0DQo+IGluZGV4IDAwMDAwMDAwMDAwMC4u
+MGQyMWI1NzQ5NmNmDQo+IC0tLSAvZGV2L251bGwNCj4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlzaS50eHQNCj4gQEAgLTAsMCArMSwzNyBAQA0KPiAr
+KiBIaXNpbGljb24gVW5pdmVyc2FsIEZsYXNoIFN0b3JhZ2UgKFVGUykgSG9zdCBDb250cm9sbGVy
+DQo+ICsNCj4gK1VGUyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmliZSBvbi1jaGlwIFVGUyBo
+YXJkd2FyZSBtYWNyby4NCj4gK0VhY2ggVUZTIEhvc3QgQ29udHJvbGxlciBzaG91bGQgaGF2ZSBp
+dHMgb3duIG5vZGUuDQo+ICsNCj4gK1JlcXVpcmVkIHByb3BlcnRpZXM6DQo+ICstIGNvbXBhdGli
+bGUgICAgICAgIDogY29tcGF0aWJsZSBsaXN0LCBjb250YWlucyBvbmUgb2YgdGhlIGZvbGxvd2lu
+ZyAtDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiaGlzaWxpY29u
+LGhpMzY2MC11ZnMiLCAiamVkZWMsdWZzLTEuMSIgZm9yIGhpc2kgdWZzDQo+ICsgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBob3N0IGNvbnRyb2xsZXIgcHJlc2VudCBvbiBI
+aTM2eHggY2hpcHNldC4NCj4gKy0gcmVnICAgICAgICAgICAgICAgOiBzaG91bGQgY29udGFpbiBV
+RlMgcmVnaXN0ZXIgYWRkcmVzcyBzcGFjZSAmIFVGUyBTWVMgQ1RSTCByZWdpc3RlciBhZGRyZXNz
+LA0KPiArLSBpbnRlcnJ1cHQtcGFyZW50ICA6IGludGVycnVwdCBkZXZpY2UNCj4gKy0gaW50ZXJy
+dXB0cyAgICAgICAgOiBpbnRlcnJ1cHQgbnVtYmVyDQo+ICstIGNsb2NrcyAgICAgICAgICAgICAg
+IDogTGlzdCBvZiBwaGFuZGxlIGFuZCBjbG9jayBzcGVjaWZpZXIgcGFpcnMNCj4gKy0gY2xvY2st
+bmFtZXMgICAgICAgOiBMaXN0IG9mIGNsb2NrIGlucHV0IG5hbWUgc3RyaW5ncyBzb3J0ZWQgaW4g
+dGhlIHNhbWUNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG9yZGVy
+IGFzIHRoZSBjbG9ja3MgcHJvcGVydHkuIA0KPiArInJlZl9jbGsiLCAicGh5X2NsayIgaXMgb3B0
+aW9uYWwNCg0KVGhlIGNsb2NrIG5hbWVzIHNvdW5kIGdlbmVyaWMgZW5vdWdoLCBzaG91bGQgd2Ug
+aGF2ZSBib3RoIGluIHRoZSBnZW5lcmljIGJpbmRpbmc/DQoNCkRvIHlvdSBtZWFuIHRoYXQgYWRk
+IGEgInBoeV9jbGsiIHRvIHVmc2hjZC1wbHRmcm0gJ3MgYmluZGluZ3M/IA0KQXQgcHJlc2VudCwg
+aXQgc2VlbXMgdGhhdCBpbiB0aGUgaW1wbGVtZW50YXRpb24gb2YgZ2VuZXJpYyBjb2RlLCBhcGFy
+dCBmcm9tICJyZWZfY2xrIiBtYXkgaGF2ZSBzcGVjaWFsIHByb2Nlc3NpbmcsIG90aGVyIGNsayB3
+aWxsIG5vdCBoYXZlIHNwZWNpYWwgcHJvY2Vzc2luZyBhbmQgc2ltcGx5IHBhcnNlIGFuZCBlbmFi
+bGU7DQpSZWZlcnJpbmcgdG8gdWZzLXFjb20gYmluZGluZywgSSB0aGluayAicGh5X2NsayIgY2Fu
+IGJlIG5hbWVkICJpZmFjZV9jbGsiLCB0aGlzICJpZmFjZV9jbGsiIGV4aXN0cyBpbiB1ZnNoY2Qt
+cGx0ZnJtIGJpbmRpbmdzO0lmIHNvLCAicmVmX2NsayIsICJpZmFjZV9jbGsiIGFyZSBib3RoIGlu
+IHRoZSBnZW5lcmljIGJpbmRpbmcsd2Ugd2lsbCByZW1vdmUgdGhlbSBoZXJlLiBJcyB0aGF0IG9r
+YXk/DQoNCj4gKy0gcmVzZXRzICAgICAgICAgICAgOiByZXNldCBub2RlIHJlZ2lzdGVyLCBvbmUg
+cmVzZXQgdGhlIGNsayBhbmQgdGhlIG90aGVyIHJlc2V0IHRoZSBjb250cm9sbGVyDQo+ICstIHJl
+c2V0LW5hbWVzICAgICAgIDogZGVzY3JpYmUgcmVzZXQgbm9kZSByZWdpc3Rlcg0KDQpUaGlzIGxv
+b2tzIGluY29tcGxldGUuIFdoYXQgaXMgdGhlIG5hbWUgb2YgdGhlIHJlc2V0IGxpbmUgc3VwcG9z
+ZWQgdG8gYmU/DQpJJ2QgYWxzbyBzdWdnZXN0IHlvdSBkb2N1bWVudCBpdCBpbiB0aGUgdWZzaGNk
+IGJpbmRpbmcgaW5zdGVhZC4NCg0KVGhlICJyc3QiIGNvcnJlc3BvbmRzIHRvIHJlc2V0IHRoZSB3
+aG9sZSBVRlMgSVAsIGFuZCAiIGFyc3QgIiBvbmx5IHJlc2V0IHRoZSBBUEIvQVhJIGJ1cy4gRGlz
+Y3Vzc2VkIHdpdGggb3VyIHNvYyBjb2xsZWFndWVzIHRoYXQgImFyc3QiIGlzIGFzc2VydCBieSBk
+ZWZhdWx0IGFuZCBuZWVkcyB0byBkZWFzc2VydCAuDQpCdXQgSSB0aGluayBpdCBtYXkgYmUgZGlm
+ZmljdWx0IHRvIGFkZCB0aGlzIHRvIGNvbW1vbiBjb2RlLCBvciBpdCBtYXkgbm90IGJlIG5lY2Vz
+c2FyeTsgDQpPdGhlciBtYW51ZmFjdHVyZXJzIG1heSBub3QgbmVlZCB0byBkbyB0aGlzIHNvYyBp
+bml0IGJlY2F1c2UgdGhleSBwcm9iYWJseSBhbHJlYWR5IGRvbmUgaW4gdGhlIGJvb3Rsb2FkZXIg
+cGhhc2UuIEV2ZW4gaWYgdGhleSBuZWVkIHRvIGRvIGl0LCBpdCdzIHByb2JhYmx5IGRpZmZlcmVu
+dCBmcm9tIHVzLg0KV2UgbmVlZCB0byBtYWtlIHN1cmUgdGhhdCBvdXIgdWZzIHdvcmtzIGV2ZW4g
+aWYgbm90IGRvIHNvYyBpbml0IGR1cmluZyB0aGUgYm9vdGxvYWRlciBwaGFzZS4NCg0KDQoNCg0K
+ICAgICAgQXJuZA0K
