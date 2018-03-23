@@ -1,47 +1,27 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/8] scsi: hisi_sas: use dma_zalloc_coherent()
-Date: Sat, 24 Mar 2018 00:05:11 +0800
-Message-ID: <1521821115-120040-5-git-send-email-john.garry@huawei.com>
-References: <1521821115-120040-1-git-send-email-john.garry@huawei.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] target: Use WARNON_NON_RT(!irqs_disabled())
+Date: Fri, 23 Mar 2018 16:25:25 +0000
+Message-ID: <1521822325.2535.5.camel@wdc.com>
+References: <20180321153854.GB24312@kernel.org>
+         <CA+55aFwKN_JijmCt=0S4jF8KzGPmoKNbuYF59va7U4ziJLLryA@mail.gmail.com>
+         <20180322093745.GC4229@kernel.org>
+         <20180323155513.dwbgvblenlji33as@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1521821115-120040-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <20180323155513.dwbgvblenlji33as@linutronix.de>
+Content-Language: en-US
+Content-ID: <0E43EC1815970742906861AF2E51524A@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+To: "bigeasy@linutronix.de" <bigeasy@linutronix.de>, "acme@kernel.org" <acme@kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "daniel@bristot.me" <daniel@bristot.me>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "rostedt@goodmis.org" <rostedt@goodmis.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "williams@redhat.com" <williams@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lclaudio@redhat.com" <lclaudio@redhat.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-rt-users@vger.kernel.org" <linux-rt-users@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
-
-This is a warning coming from Coccinelle, and need to use
-new interface dma_zalloc_coherent() instead of
-dma_alloc_coherent()/memset().
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a216795..9563dfa 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1822,13 +1822,11 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 		goto err_out;
- 
- 	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
--	hisi_hba->itct = dma_alloc_coherent(dev, s, &hisi_hba->itct_dma,
-+	hisi_hba->itct = dma_zalloc_coherent(dev, s, &hisi_hba->itct_dma,
- 					    GFP_KERNEL);
- 	if (!hisi_hba->itct)
- 		goto err_out;
- 
--	memset(hisi_hba->itct, 0, s);
--
- 	hisi_hba->slot_info = devm_kcalloc(dev, max_command_entries,
- 					   sizeof(struct hisi_sas_slot),
- 					   GFP_KERNEL);
--- 
-1.9.1
+T24gRnJpLCAyMDE4LTAzLTIzIGF0IDE2OjU1ICswMTAwLCBTZWJhc3RpYW4gQW5kcnplaiBTaWV3
+aW9yIHdyb3RlOg0KPiBJIGFtIGdvaW5nIHRha2UgdGhpcyBpbnRvIC1SVCB0cmVlIGZvciBub3cg
+dW50aWwgd2UgaGF2ZSBkaWZmZXJlbnQNCj4gc29sdXRpb24uDQoNCkhhdmUgeW91IGNvbnNpZGVy
+ZWQgdG8gZGVsZXRlIHRoZSBXQVJOX09OX09OQ0UoIWlycXNfZGlzYWJsZWQoKSkgc3RhdGVtZW50
+Pw0KSSB0aGluayB0aGF0IGNoZWNrIGR1cGxpY2F0ZXMgZnVuY3Rpb25hbGl0eSB0aGF0IGFscmVh
+ZHkgZXhpc3RzIGluIGxvY2tkZXANCnNpbmNlIGxvY2tkZXAgaXMgYWxyZWFkeSBhYmxlIHRvIGRl
+dGVjdCBzcGlubG9jayB1c2UgaW5jb25zaXN0ZW5jaWVzLg0KDQpCYXJ0Lg0KDQoNCg==
