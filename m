@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 22/41] cxlflash: Setup OCXL transaction layer
-Date: Mon, 26 Mar 2018 11:33:28 -0500
-Message-ID: <1522082008-58266-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 23/41] cxlflash: Support process element lifecycle
+Date: Mon, 26 Mar 2018 11:33:35 -0500
+Message-ID: <1522082015-58303-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,38 +19,118 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The first function of the link needs to configure the transaction layer
-between the host and device. This is accomplished by a call to the OCXL
-provider services.
+As part of the context lifecycle, the associated process element within
+the Shared Process Area (SPA) of the link must be updated. Each process
+is defined by various parameters (pid, tid, PASID mm) that are stored in
+the SPA upon starting a context and invalidated when a context is stopped.
+
+Use the OCXL provider services to configure the SPA with the appropriate
+data that is unique to the process when starting a context. Initially only
+kernel contexts are supported and therefore these process values are not
+applicable. Note that the OCXL service used has an optional callback for
+translation fault error notification. While not used here, it will be
+expanded in a future commit.
+
+Also add a service to stop a context by terminating the corresponding
+PASID and remove the process element from the SPA.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/cxlflash/ocxl_hw.c | 52 +++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 50 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index 67517f8..db612bd 100644
+index db612bd..8d21f94 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -422,8 +422,18 @@ static int ocxlflash_config_fn(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
- 			__func__, rc);
- 		goto out;
+@@ -189,7 +189,7 @@ static int ocxlflash_process_element(void *ctx_cookie)
+  * start_context() - local routine to start a context
+  * @ctx:	Adapter context to be started.
+  *
+- * Assign the context specific MMIO space.
++ * Assign the context specific MMIO space, add and enable the PE.
+  *
+  * Return: 0 on success, -errno on failure
+  */
+@@ -197,7 +197,10 @@ static int start_context(struct ocxlflash_context *ctx)
+ {
+ 	struct ocxl_hw_afu *afu = ctx->hw_afu;
+ 	struct ocxl_afu_config *acfg = &afu->acfg;
++	void *link_token = afu->link_token;
++	struct device *dev = afu->dev;
+ 	bool master = ctx->master;
++	int rc = 0;
+ 
+ 	if (master) {
+ 		ctx->psn_size = acfg->global_mmio_size;
+@@ -207,7 +210,16 @@ static int start_context(struct ocxlflash_context *ctx)
+ 		ctx->psn_phys = afu->ppmmio_phys + (ctx->pe * ctx->psn_size);
  	}
+ 
+-	return 0;
 +
-+	rc = ocxl_config_set_TL(pdev, fcfg->dvsec_tl_pos);
++	/* pid, tid, amr and mm are zeroes/NULL for a kernel context */
++	rc = ocxl_link_add_pe(link_token, ctx->pe, 0, 0, 0, NULL, NULL, NULL);
 +	if (unlikely(rc)) {
-+		dev_err(dev, "%s: ocxl_config_set_TL failed rc=%d\n",
++		dev_err(dev, "%s: ocxl_link_add_pe failed rc=%d\n",
 +			__func__, rc);
-+		goto err;
++		goto out;
 +	}
- out:
- 	return rc;
-+err:
-+	ocxl_link_release(pdev, afu->link_token);
-+	goto out;
++out:
++	return rc;
  }
  
  /**
+@@ -224,6 +236,41 @@ static int ocxlflash_start_context(void *ctx_cookie)
+ }
+ 
+ /**
++ * ocxlflash_stop_context() - stop a context
++ * @ctx_cookie:	Adapter context to be stopped.
++ *
++ * Return: 0 on success, -errno on failure
++ */
++static int ocxlflash_stop_context(void *ctx_cookie)
++{
++	struct ocxlflash_context *ctx = ctx_cookie;
++	struct ocxl_hw_afu *afu = ctx->hw_afu;
++	struct ocxl_afu_config *acfg = &afu->acfg;
++	struct pci_dev *pdev = afu->pdev;
++	struct device *dev = afu->dev;
++	int rc;
++
++	rc = ocxl_config_terminate_pasid(pdev, acfg->dvsec_afu_control_pos,
++					 ctx->pe);
++	if (unlikely(rc)) {
++		dev_err(dev, "%s: ocxl_config_terminate_pasid failed rc=%d\n",
++			__func__, rc);
++		/* If EBUSY, PE could be referenced in future by the AFU */
++		if (rc == -EBUSY)
++			goto out;
++	}
++
++	rc = ocxl_link_remove_pe(afu->link_token, ctx->pe);
++	if (unlikely(rc)) {
++		dev_err(dev, "%s: ocxl_link_remove_pe failed rc=%d\n",
++			__func__, rc);
++		goto out;
++	}
++out:
++	return rc;
++}
++
++/**
+  * ocxlflash_set_master() - sets the context as master
+  * @ctx_cookie:	Adapter context to set as master.
+  */
+@@ -696,6 +743,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.psa_unmap		= ocxlflash_psa_unmap,
+ 	.process_element	= ocxlflash_process_element,
+ 	.start_context		= ocxlflash_start_context,
++	.stop_context		= ocxlflash_stop_context,
+ 	.set_master		= ocxlflash_set_master,
+ 	.get_context		= ocxlflash_get_context,
+ 	.dev_context_init	= ocxlflash_dev_context_init,
 -- 
 2.1.0
