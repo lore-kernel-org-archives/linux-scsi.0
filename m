@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 19/41] cxlflash: Support AFU state toggling
-Date: Mon, 26 Mar 2018 11:33:05 -0500
-Message-ID: <1522081985-58155-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 20/41] cxlflash: Support reading adapter VPD data
+Date: Mon, 26 Mar 2018 11:33:14 -0500
+Message-ID: <1522081994-58192-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,48 +19,47 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The AFU should be enabled following a successful configuration and
-disabled near the end of the cleanup path.
+Use the PCI VPD services to support reading the VPD data of the
+underlying adapter.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Reviewed-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/cxlflash/ocxl_hw.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index 73b0b10..3042057 100644
+index 3042057..a2f04d3 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -342,12 +342,18 @@ static void ocxlflash_unconfig_afu(struct ocxl_hw_afu *afu)
- static void ocxlflash_destroy_afu(void *afu_cookie)
- {
- 	struct ocxl_hw_afu *afu = afu_cookie;
-+	int pos;
- 
- 	if (!afu)
- 		return;
- 
- 	ocxlflash_release_context(afu->ocxl_ctx);
- 	idr_destroy(&afu->idr);
-+
-+	/* Disable the AFU */
-+	pos = afu->acfg.dvsec_afu_control_pos;
-+	ocxl_config_set_afu_state(afu->pdev, pos, 0);
-+
- 	ocxlflash_unconfig_afu(afu);
- 	kfree(afu);
+@@ -324,6 +324,20 @@ static void ocxlflash_perst_reloads_same_image(void *afu_cookie, bool image)
  }
-@@ -499,6 +505,9 @@ static int ocxlflash_config_afu(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
- 			__func__, rc);
- 		goto out;
- 	}
+ 
+ /**
++ * ocxlflash_read_adapter_vpd() - reads the adapter VPD
++ * @pdev:	PCI device associated with the host.
++ * @buf:	Buffer to get the VPD data.
++ * @count:	Size of buffer (maximum bytes that can be read).
++ *
++ * Return: size of VPD on success, -errno on failure
++ */
++static ssize_t ocxlflash_read_adapter_vpd(struct pci_dev *pdev, void *buf,
++					  size_t count)
++{
++	return pci_read_vpd(pdev, 0, count, buf);
++}
 +
-+	/* Enable the AFU */
-+	ocxl_config_set_afu_state(pdev, acfg->dvsec_afu_control_pos, 1);
- out:
- 	return rc;
- }
++/**
+  * ocxlflash_unconfig_afu() - unconfigure the AFU
+  * @afu: AFU associated with the host.
+  */
+@@ -658,6 +672,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.dev_context_init	= ocxlflash_dev_context_init,
+ 	.release_context	= ocxlflash_release_context,
+ 	.perst_reloads_same_image = ocxlflash_perst_reloads_same_image,
++	.read_adapter_vpd	= ocxlflash_read_adapter_vpd,
+ 	.create_afu		= ocxlflash_create_afu,
+ 	.destroy_afu		= ocxlflash_destroy_afu,
+ 	.get_fd			= ocxlflash_get_fd,
 -- 
 2.1.0
