@@ -1,7 +1,8 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 39/41] cxlflash: Synchronize reset and remove ops
-Date: Mon, 26 Mar 2018 11:35:27 -0500
-Message-ID: <1522082127-58900-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 40/41] cxlflash: Remove commmands from pending list on
+ timeout
+Date: Mon, 26 Mar 2018 11:35:34 -0500
+Message-ID: <1522082134-58938-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,48 +20,88 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The following Oops can be encountered if a device removal or system
-shutdown is initiated while an EEH recovery is in process:
+The following Oops can occur if an internal command sent to the AFU does
+not complete within the timeout:
 
-[c000000ff2f479c0] c008000015256f18 cxlflash_pci_slot_reset+0xa0/0x100
-                                      [cxlflash]
-[c000000ff2f47a30] c00800000dae22e0 cxl_pci_slot_reset+0x168/0x290 [cxl]
-[c000000ff2f47ae0] c00000000003ef1c eeh_report_reset+0xec/0x170
-[c000000ff2f47b20] c00000000003d0b8 eeh_pe_dev_traverse+0x98/0x170
-[c000000ff2f47bb0] c00000000003f80c eeh_handle_normal_event+0x56c/0x580
-[c000000ff2f47c60] c00000000003fba4 eeh_handle_event+0x2a4/0x338
-[c000000ff2f47d10] c0000000000400b8 eeh_event_handler+0x1f8/0x200
-[c000000ff2f47dc0] c00000000013da48 kthread+0x1a8/0x1b0
-[c000000ff2f47e30] c00000000000b528 ret_from_kernel_thread+0x5c/0xb4
+[c000000ff101b810] c008000016020d94 term_mc+0xfc/0x1b0 [cxlflash]
+[c000000ff101b8a0] c008000016020fb0 term_afu+0x168/0x280 [cxlflash]
+[c000000ff101b930] c0080000160232ec cxlflash_pci_error_detected+0x184/0x230
+                                       [cxlflash]
+[c000000ff101b9e0] c00800000d95d468 cxl_vphb_error_detected+0x90/0x150[cxl]
+[c000000ff101ba20] c00800000d95f27c cxl_pci_error_detected+0xa4/0x240 [cxl]
+[c000000ff101bac0] c00000000003eaf8 eeh_report_error+0xd8/0x1b0
+[c000000ff101bb20] c00000000003d0b8 eeh_pe_dev_traverse+0x98/0x170
+[c000000ff101bbb0] c00000000003f438 eeh_handle_normal_event+0x198/0x580
+[c000000ff101bc60] c00000000003fba4 eeh_handle_event+0x2a4/0x338
+[c000000ff101bd10] c0000000000400b8 eeh_event_handler+0x1f8/0x200
+[c000000ff101bdc0] c00000000013da48 kthread+0x1a8/0x1b0
+[c000000ff101be30] c00000000000b528 ret_from_kernel_thread+0x5c/0xb4
 
-The remove handler frees AFU memory while the EEH recovery is in progress,
-leading to a race condition. This can result in a crash if the recovery
-thread tries to access this memory.
+When an internal command times out, the command buffer is freed while it
+is still in the pending commands list of the context. This corrupts the
+list and when the context is cleaned up, a crash is encountered.
 
-To resolve this issue, the cxlflash remove handler will evaluate the
-device state and yield to any active reset or probing threads.
+To resolve this issue, when an AFU command or TMF command times out, the
+command should be deleted from the hardware queue pending command list
+before freeing the buffer.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/cxlflash/main.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 42a95b7..dfe7648 100644
+index dfe7648..c920328 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -946,9 +946,9 @@ static void cxlflash_remove(struct pci_dev *pdev)
- 		return;
+@@ -473,6 +473,7 @@ static int send_tmf(struct cxlflash_cfg *cfg, struct scsi_device *sdev,
+ 	struct afu_cmd *cmd = NULL;
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct hwq *hwq = get_hwq(afu, PRIMARY_HWQ);
++	bool needs_deletion = false;
+ 	char *buf = NULL;
+ 	ulong lock_flags;
+ 	int rc = 0;
+@@ -527,6 +528,7 @@ static int send_tmf(struct cxlflash_cfg *cfg, struct scsi_device *sdev,
+ 	if (!to) {
+ 		dev_err(dev, "%s: TMF timed out\n", __func__);
+ 		rc = -ETIMEDOUT;
++		needs_deletion = true;
+ 	} else if (cmd->cmd_aborted) {
+ 		dev_err(dev, "%s: TMF aborted\n", __func__);
+ 		rc = -EAGAIN;
+@@ -537,6 +539,12 @@ static int send_tmf(struct cxlflash_cfg *cfg, struct scsi_device *sdev,
  	}
- 
--	/* If a Task Management Function is active, wait for it to complete
--	 * before continuing with remove.
--	 */
-+	/* Yield to running recovery threads before continuing with remove */
-+	wait_event(cfg->reset_waitq, cfg->state != STATE_RESET &&
-+				     cfg->state != STATE_PROBING);
- 	spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
- 	if (cfg->tmf_active)
- 		wait_event_interruptible_lock_irq(cfg->tmf_waitq,
+ 	cfg->tmf_active = false;
+ 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
++
++	if (needs_deletion) {
++		spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
++		list_del(&cmd->list);
++		spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
++	}
+ out:
+ 	kfree(buf);
+ 	return rc;
+@@ -2284,6 +2292,7 @@ static int send_afu_cmd(struct afu *afu, struct sisl_ioarcb *rcb)
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct afu_cmd *cmd = NULL;
+ 	struct hwq *hwq = get_hwq(afu, PRIMARY_HWQ);
++	ulong lock_flags;
+ 	char *buf = NULL;
+ 	int rc = 0;
+ 	int nretry = 0;
+@@ -2329,6 +2338,11 @@ static int send_afu_cmd(struct afu *afu, struct sisl_ioarcb *rcb)
+ 	case -ETIMEDOUT:
+ 		rc = afu->context_reset(hwq);
+ 		if (rc) {
++			/* Delete the command from pending_cmds list */
++			spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
++			list_del(&cmd->list);
++			spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
++
+ 			cxlflash_schedule_async_reset(cfg);
+ 			break;
+ 		}
 -- 
 2.1.0
