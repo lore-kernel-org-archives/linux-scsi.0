@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 34/41] cxlflash: Update synchronous interrupt status bits
-Date: Mon, 26 Mar 2018 11:34:55 -0500
-Message-ID: <1522082095-58712-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 35/41] cxlflash: Introduce OCXL context state machine
+Date: Mon, 26 Mar 2018 11:35:00 -0500
+Message-ID: <1522082100-58750-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,68 +19,183 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The SISLite specification has been updated to define new synchronous
-interrupt status bits. These bits are set by the AFU when a given PASID or
-EA is bad and a synchronous interrupt is triggered.
-
-The SISLite header file is updated to support these new bits. Note that
-there are also some formatting updates to some of the existing bits to
-allow all of the definitions to line up uniformly.
+In order to protect the OCXL hardware contexts from getting clobbered,
+a simple state machine is added to indicate when a context is in open,
+close or start state. The expected states are validated throughout the
+code to prevent illegal operations on a context. A mutex is added to
+protect writes to the context state field.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/sislite.h | 35 +++++++++++++++++++++--------------
- 1 file changed, 21 insertions(+), 14 deletions(-)
+ drivers/scsi/cxlflash/ocxl_hw.c | 59 ++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/cxlflash/ocxl_hw.h |  8 ++++++
+ 2 files changed, 64 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
-index c08b9d3..874abce 100644
---- a/drivers/scsi/cxlflash/sislite.h
-+++ b/drivers/scsi/cxlflash/sislite.h
-@@ -258,23 +258,30 @@ struct sisl_host_map {
- 				 * exit since there is no way to tell which
- 				 * command caused the error.
- 				 */
--#define SISL_ISTATUS_PERM_ERR_CMDROOM    0x0010ULL	/* b59, user error */
--#define SISL_ISTATUS_PERM_ERR_RCB_READ   0x0008ULL	/* b60, user error */
--#define SISL_ISTATUS_PERM_ERR_SA_WRITE   0x0004ULL	/* b61, user error */
--#define SISL_ISTATUS_PERM_ERR_RRQ_WRITE  0x0002ULL	/* b62, user error */
-+#define SISL_ISTATUS_PERM_ERR_LISN_3_EA		0x0400ULL /* b53, user error */
-+#define SISL_ISTATUS_PERM_ERR_LISN_2_EA		0x0200ULL /* b54, user error */
-+#define SISL_ISTATUS_PERM_ERR_LISN_1_EA		0x0100ULL /* b55, user error */
-+#define SISL_ISTATUS_PERM_ERR_LISN_3_PASID	0x0080ULL /* b56, user error */
-+#define SISL_ISTATUS_PERM_ERR_LISN_2_PASID	0x0040ULL /* b57, user error */
-+#define SISL_ISTATUS_PERM_ERR_LISN_1_PASID	0x0020ULL /* b58, user error */
-+#define SISL_ISTATUS_PERM_ERR_CMDROOM		0x0010ULL /* b59, user error */
-+#define SISL_ISTATUS_PERM_ERR_RCB_READ		0x0008ULL /* b60, user error */
-+#define SISL_ISTATUS_PERM_ERR_SA_WRITE		0x0004ULL /* b61, user error */
-+#define SISL_ISTATUS_PERM_ERR_RRQ_WRITE		0x0002ULL /* b62, user error */
- 	/* Page in wait accessing RCB/IOASA/RRQ is reported in b63.
- 	 * Same error in data/LXT/RHT access is reported via IOASA.
- 	 */
--#define SISL_ISTATUS_TEMP_ERR_PAGEIN     0x0001ULL	/* b63, can be generated
--							 * only when AFU auto
--							 * retry is disabled.
--							 * If user can determine
--							 * the command that
--							 * caused the error, it
--							 * can be retried.
--							 */
--#define SISL_ISTATUS_UNMASK  (0x001FULL)	/* 1 means unmasked */
--#define SISL_ISTATUS_MASK    ~(SISL_ISTATUS_UNMASK)	/* 1 means masked */
-+#define SISL_ISTATUS_TEMP_ERR_PAGEIN		0x0001ULL /* b63, can only be
-+							   * generated when AFU
-+							   * auto retry is
-+							   * disabled. If user
-+							   * can determine the
-+							   * command that caused
-+							   * the error, it can
-+							   * be retried.
-+							   */
-+#define SISL_ISTATUS_UNMASK	(0x07FFULL)		/* 1 means unmasked */
-+#define SISL_ISTATUS_MASK	~(SISL_ISTATUS_UNMASK)	/* 1 means masked */
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
+index f77f4d7..89d3d89 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.c
++++ b/drivers/scsi/cxlflash/ocxl_hw.c
+@@ -163,6 +163,16 @@ static struct file *ocxlflash_getfile(struct device *dev, const char *name,
+ static void __iomem *ocxlflash_psa_map(void *ctx_cookie)
+ {
+ 	struct ocxlflash_context *ctx = ctx_cookie;
++	struct device *dev = ctx->hw_afu->dev;
++
++	mutex_lock(&ctx->state_mutex);
++	if (ctx->state != STARTED) {
++		dev_err(dev, "%s: Context not started, state=%d\n", __func__,
++			ctx->state);
++		mutex_unlock(&ctx->state_mutex);
++		return NULL;
++	}
++	mutex_unlock(&ctx->state_mutex);
  
- 	__be64 intr_clear;
- 	__be64 intr_mask;
+ 	return ioremap(ctx->psn_phys, ctx->psn_size);
+ }
+@@ -343,6 +353,14 @@ static int start_context(struct ocxlflash_context *ctx)
+ 	int rc = 0;
+ 	u32 pid;
+ 
++	mutex_lock(&ctx->state_mutex);
++	if (ctx->state != OPENED) {
++		dev_err(dev, "%s: Context state invalid, state=%d\n",
++			__func__, ctx->state);
++		rc = -EINVAL;
++		goto out;
++	}
++
+ 	if (master) {
+ 		ctx->psn_size = acfg->global_mmio_size;
+ 		ctx->psn_phys = afu->gmmio_phys;
+@@ -366,7 +384,10 @@ static int start_context(struct ocxlflash_context *ctx)
+ 			__func__, rc);
+ 		goto out;
+ 	}
++
++	ctx->state = STARTED;
+ out:
++	mutex_unlock(&ctx->state_mutex);
+ 	return rc;
+ }
+ 
+@@ -396,7 +417,15 @@ static int ocxlflash_stop_context(void *ctx_cookie)
+ 	struct ocxl_afu_config *acfg = &afu->acfg;
+ 	struct pci_dev *pdev = afu->pdev;
+ 	struct device *dev = afu->dev;
+-	int rc;
++	enum ocxlflash_ctx_state state;
++	int rc = 0;
++
++	mutex_lock(&ctx->state_mutex);
++	state = ctx->state;
++	ctx->state = CLOSED;
++	mutex_unlock(&ctx->state_mutex);
++	if (state != STARTED)
++		goto out;
+ 
+ 	rc = ocxl_config_terminate_pasid(pdev, acfg->dvsec_afu_control_pos,
+ 					 ctx->pe);
+@@ -474,7 +503,9 @@ static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
+ 
+ 	spin_lock_init(&ctx->slock);
+ 	init_waitqueue_head(&ctx->wq);
++	mutex_init(&ctx->state_mutex);
+ 
++	ctx->state = OPENED;
+ 	ctx->pe = rc;
+ 	ctx->master = false;
+ 	ctx->mapping = NULL;
+@@ -499,11 +530,23 @@ static void *ocxlflash_dev_context_init(struct pci_dev *pdev, void *afu_cookie)
+ static int ocxlflash_release_context(void *ctx_cookie)
+ {
+ 	struct ocxlflash_context *ctx = ctx_cookie;
++	struct device *dev;
+ 	int rc = 0;
+ 
+ 	if (!ctx)
+ 		goto out;
+ 
++	dev = ctx->hw_afu->dev;
++	mutex_lock(&ctx->state_mutex);
++	if (ctx->state >= STARTED) {
++		dev_err(dev, "%s: Context in use, state=%d\n", __func__,
++			ctx->state);
++		mutex_unlock(&ctx->state_mutex);
++		rc = -EBUSY;
++		goto out;
++	}
++	mutex_unlock(&ctx->state_mutex);
++
+ 	idr_remove(&ctx->hw_afu->idr, ctx->pe);
+ 	ocxlflash_release_mapping(ctx);
+ 	kfree(ctx);
+@@ -947,7 +990,7 @@ static unsigned int afu_poll(struct file *file, struct poll_table_struct *poll)
+ 	spin_lock_irqsave(&ctx->slock, lock_flags);
+ 	if (ctx_event_pending(ctx))
+ 		mask |= POLLIN | POLLRDNORM;
+-	else
++	else if (ctx->state == CLOSED)
+ 		mask |= POLLERR;
+ 	spin_unlock_irqrestore(&ctx->slock, lock_flags);
+ 
+@@ -990,7 +1033,7 @@ static ssize_t afu_read(struct file *file, char __user *buf, size_t count,
+ 	for (;;) {
+ 		prepare_to_wait(&ctx->wq, &event_wait, TASK_INTERRUPTIBLE);
+ 
+-		if (ctx_event_pending(ctx))
++		if (ctx_event_pending(ctx) || (ctx->state == CLOSED))
+ 			break;
+ 
+ 		if (file->f_flags & O_NONBLOCK) {
+@@ -1076,12 +1119,22 @@ static int ocxlflash_mmap_fault(struct vm_fault *vmf)
+ {
+ 	struct vm_area_struct *vma = vmf->vma;
+ 	struct ocxlflash_context *ctx = vma->vm_file->private_data;
++	struct device *dev = ctx->hw_afu->dev;
+ 	u64 mmio_area, offset;
+ 
+ 	offset = vmf->pgoff << PAGE_SHIFT;
+ 	if (offset >= ctx->psn_size)
+ 		return VM_FAULT_SIGBUS;
+ 
++	mutex_lock(&ctx->state_mutex);
++	if (ctx->state != STARTED) {
++		dev_err(dev, "%s: Context not started, state=%d\n",
++			__func__, ctx->state);
++		mutex_unlock(&ctx->state_mutex);
++		return VM_FAULT_SIGBUS;
++	}
++	mutex_unlock(&ctx->state_mutex);
++
+ 	mmio_area = ctx->psn_phys;
+ 	mmio_area += offset;
+ 
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
+index acd2801..1829e55 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.h
++++ b/drivers/scsi/cxlflash/ocxl_hw.h
+@@ -46,6 +46,12 @@ struct ocxl_hw_afu {
+ 	bool is_present;		/* Function has AFUs defined */
+ };
+ 
++enum ocxlflash_ctx_state {
++	CLOSED,
++	OPENED,
++	STARTED
++};
++
+ struct ocxlflash_context {
+ 	struct ocxl_hw_afu *hw_afu;	/* HW AFU back pointer */
+ 	struct address_space *mapping;	/* Mapping for pseudo filesystem */
+@@ -57,6 +63,8 @@ struct ocxlflash_context {
+ 
+ 	spinlock_t slock;		/* Protects irq/fault/event updates */
+ 	wait_queue_head_t wq;		/* Wait queue for poll and interrupts */
++	struct mutex state_mutex;	/* Mutex to update context state */
++	enum ocxlflash_ctx_state state;	/* Context state */
+ 
+ 	struct ocxlflash_irqs *irqs;	/* Pointer to array of structures */
+ 	int num_irqs;			/* Number of interrupts */
 -- 
 2.1.0
