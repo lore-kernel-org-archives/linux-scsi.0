@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 23/41] cxlflash: Support process element lifecycle
-Date: Mon, 26 Mar 2018 11:33:35 -0500
-Message-ID: <1522082015-58303-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 24/41] cxlflash: Support AFU interrupt management
+Date: Mon, 26 Mar 2018 11:33:41 -0500
+Message-ID: <1522082021-58341-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,118 +19,164 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-As part of the context lifecycle, the associated process element within
-the Shared Process Area (SPA) of the link must be updated. Each process
-is defined by various parameters (pid, tid, PASID mm) that are stored in
-the SPA upon starting a context and invalidated when a context is stopped.
-
-Use the OCXL provider services to configure the SPA with the appropriate
-data that is unique to the process when starting a context. Initially only
-kernel contexts are supported and therefore these process values are not
-applicable. Note that the OCXL service used has an optional callback for
-translation fault error notification. While not used here, it will be
-expanded in a future commit.
-
-Also add a service to stop a context by terminating the corresponding
-PASID and remove the process element from the SPA.
+Add support to allocate and free AFU interrupts using the OCXL provider
+services. The trigger page returned upon successful allocation will be
+mapped and exposed to the cxlflash core in a future commit.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 52 +++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 50 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/ocxl_hw.c | 104 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/cxlflash/ocxl_hw.h |  10 ++++
+ 2 files changed, 114 insertions(+)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index db612bd..8d21f94 100644
+index 8d21f94..75351c3 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -189,7 +189,7 @@ static int ocxlflash_process_element(void *ctx_cookie)
-  * start_context() - local routine to start a context
-  * @ctx:	Adapter context to be started.
-  *
-- * Assign the context specific MMIO space.
-+ * Assign the context specific MMIO space, add and enable the PE.
-  *
-  * Return: 0 on success, -errno on failure
-  */
-@@ -197,7 +197,10 @@ static int start_context(struct ocxlflash_context *ctx)
- {
- 	struct ocxl_hw_afu *afu = ctx->hw_afu;
- 	struct ocxl_afu_config *acfg = &afu->acfg;
-+	void *link_token = afu->link_token;
-+	struct device *dev = afu->dev;
- 	bool master = ctx->master;
-+	int rc = 0;
- 
- 	if (master) {
- 		ctx->psn_size = acfg->global_mmio_size;
-@@ -207,7 +210,16 @@ static int start_context(struct ocxlflash_context *ctx)
- 		ctx->psn_phys = afu->ppmmio_phys + (ctx->pe * ctx->psn_size);
- 	}
- 
--	return 0;
-+
-+	/* pid, tid, amr and mm are zeroes/NULL for a kernel context */
-+	rc = ocxl_link_add_pe(link_token, ctx->pe, 0, 0, 0, NULL, NULL, NULL);
-+	if (unlikely(rc)) {
-+		dev_err(dev, "%s: ocxl_link_add_pe failed rc=%d\n",
-+			__func__, rc);
-+		goto out;
-+	}
-+out:
-+	return rc;
+@@ -385,6 +385,108 @@ static ssize_t ocxlflash_read_adapter_vpd(struct pci_dev *pdev, void *buf,
  }
  
  /**
-@@ -224,6 +236,41 @@ static int ocxlflash_start_context(void *ctx_cookie)
- }
- 
- /**
-+ * ocxlflash_stop_context() - stop a context
-+ * @ctx_cookie:	Adapter context to be stopped.
-+ *
-+ * Return: 0 on success, -errno on failure
++ * free_afu_irqs() - internal service to free interrupts
++ * @ctx:	Adapter context.
 + */
-+static int ocxlflash_stop_context(void *ctx_cookie)
++static void free_afu_irqs(struct ocxlflash_context *ctx)
 +{
-+	struct ocxlflash_context *ctx = ctx_cookie;
 +	struct ocxl_hw_afu *afu = ctx->hw_afu;
-+	struct ocxl_afu_config *acfg = &afu->acfg;
-+	struct pci_dev *pdev = afu->pdev;
 +	struct device *dev = afu->dev;
-+	int rc;
++	int i;
 +
-+	rc = ocxl_config_terminate_pasid(pdev, acfg->dvsec_afu_control_pos,
-+					 ctx->pe);
-+	if (unlikely(rc)) {
-+		dev_err(dev, "%s: ocxl_config_terminate_pasid failed rc=%d\n",
-+			__func__, rc);
-+		/* If EBUSY, PE could be referenced in future by the AFU */
-+		if (rc == -EBUSY)
-+			goto out;
++	if (!ctx->irqs) {
++		dev_err(dev, "%s: Interrupts not allocated\n", __func__);
++		return;
 +	}
 +
-+	rc = ocxl_link_remove_pe(afu->link_token, ctx->pe);
-+	if (unlikely(rc)) {
-+		dev_err(dev, "%s: ocxl_link_remove_pe failed rc=%d\n",
-+			__func__, rc);
-+		goto out;
-+	}
-+out:
-+	return rc;
++	for (i = ctx->num_irqs; i >= 0; i--)
++		ocxl_link_free_irq(afu->link_token, ctx->irqs[i].hwirq);
++
++	kfree(ctx->irqs);
++	ctx->irqs = NULL;
 +}
 +
 +/**
-  * ocxlflash_set_master() - sets the context as master
-  * @ctx_cookie:	Adapter context to set as master.
++ * alloc_afu_irqs() - internal service to allocate interrupts
++ * @ctx:	Context associated with the request.
++ * @num:	Number of interrupts requested.
++ *
++ * Return: 0 on success, -errno on failure
++ */
++static int alloc_afu_irqs(struct ocxlflash_context *ctx, int num)
++{
++	struct ocxl_hw_afu *afu = ctx->hw_afu;
++	struct device *dev = afu->dev;
++	struct ocxlflash_irqs *irqs;
++	u64 addr;
++	int rc = 0;
++	int hwirq;
++	int i;
++
++	if (ctx->irqs) {
++		dev_err(dev, "%s: Interrupts already allocated\n", __func__);
++		rc = -EEXIST;
++		goto out;
++	}
++
++	if (num > OCXL_MAX_IRQS) {
++		dev_err(dev, "%s: Too many interrupts num=%d\n", __func__, num);
++		rc = -EINVAL;
++		goto out;
++	}
++
++	irqs = kcalloc(num, sizeof(*irqs), GFP_KERNEL);
++	if (unlikely(!irqs)) {
++		dev_err(dev, "%s: Context irqs allocation failed\n", __func__);
++		rc = -ENOMEM;
++		goto out;
++	}
++
++	for (i = 0; i < num; i++) {
++		rc = ocxl_link_irq_alloc(afu->link_token, &hwirq, &addr);
++		if (unlikely(rc)) {
++			dev_err(dev, "%s: ocxl_link_irq_alloc failed rc=%d\n",
++				__func__, rc);
++			goto err;
++		}
++
++		irqs[i].hwirq = hwirq;
++		irqs[i].ptrig = addr;
++	}
++
++	ctx->irqs = irqs;
++	ctx->num_irqs = num;
++out:
++	return rc;
++err:
++	for (i = i-1; i >= 0; i--)
++		ocxl_link_free_irq(afu->link_token, irqs[i].hwirq);
++	kfree(irqs);
++	goto out;
++}
++
++/**
++ * ocxlflash_allocate_afu_irqs() - allocates the requested number of interrupts
++ * @ctx_cookie:	Context associated with the request.
++ * @num:	Number of interrupts requested.
++ *
++ * Return: 0 on success, -errno on failure
++ */
++static int ocxlflash_allocate_afu_irqs(void *ctx_cookie, int num)
++{
++	return alloc_afu_irqs(ctx_cookie, num);
++}
++
++/**
++ * ocxlflash_free_afu_irqs() - frees the interrupts of an adapter context
++ * @ctx_cookie:	Adapter context.
++ */
++static void ocxlflash_free_afu_irqs(void *ctx_cookie)
++{
++	free_afu_irqs(ctx_cookie);
++}
++
++/**
+  * ocxlflash_unconfig_afu() - unconfigure the AFU
+  * @afu: AFU associated with the host.
   */
-@@ -696,6 +743,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.psa_unmap		= ocxlflash_psa_unmap,
- 	.process_element	= ocxlflash_process_element,
- 	.start_context		= ocxlflash_start_context,
-+	.stop_context		= ocxlflash_stop_context,
- 	.set_master		= ocxlflash_set_master,
- 	.get_context		= ocxlflash_get_context,
- 	.dev_context_init	= ocxlflash_dev_context_init,
+@@ -750,6 +852,8 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
+ 	.release_context	= ocxlflash_release_context,
+ 	.perst_reloads_same_image = ocxlflash_perst_reloads_same_image,
+ 	.read_adapter_vpd	= ocxlflash_read_adapter_vpd,
++	.allocate_afu_irqs	= ocxlflash_allocate_afu_irqs,
++	.free_afu_irqs		= ocxlflash_free_afu_irqs,
+ 	.create_afu		= ocxlflash_create_afu,
+ 	.destroy_afu		= ocxlflash_destroy_afu,
+ 	.get_fd			= ocxlflash_get_fd,
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
+index 09fa94c..85b3fad 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.h
++++ b/drivers/scsi/cxlflash/ocxl_hw.h
+@@ -12,6 +12,13 @@
+  * 2 of the License, or (at your option) any later version.
+  */
+ 
++#define OCXL_MAX_IRQS	4	/* Max interrupts per process */
++
++struct ocxlflash_irqs {
++	int hwirq;
++	u64 ptrig;
++};
++
+ /* OCXL hardware AFU associated with the host */
+ struct ocxl_hw_afu {
+ 	struct ocxlflash_context *ocxl_ctx; /* Host context */
+@@ -45,4 +52,7 @@ struct ocxlflash_context {
+ 
+ 	phys_addr_t psn_phys;		/* Process mapping */
+ 	u64 psn_size;			/* Process mapping size */
++
++	struct ocxlflash_irqs *irqs;	/* Pointer to array of structures */
++	int num_irqs;			/* Number of interrupts */
+ };
 -- 
 2.1.0
