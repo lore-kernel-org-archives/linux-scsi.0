@@ -1,104 +1,109 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 41/41] cxlflash: Handle spurious interrupts
-Date: Mon, 26 Mar 2018 11:35:42 -0500
-Message-ID: <1522082142-58975-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH net-next] qed*: Utilize FW 8.33.11.0
+Date: Mon, 26 Mar 2018 15:18:27 -0600
+Message-ID: <20180326211827.GG15554@ziepe.ca>
+References: <1522083732-26560-1-git-send-email-Michal.Kalderon@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1522083732-26560-1-git-send-email-Michal.Kalderon@cavium.com>
+Sender: netdev-owner@vger.kernel.org
+To: Michal Kalderon <Michal.Kalderon@cavium.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Tomer Tayar <Tomer.Tayar@cavium.com>, Manish Rangankar <Manish.Rangankar@cavium.com>, Ariel Elior <Ariel.Elior@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The following Oops can occur when there is heavy I/O traffic and the host
-is reset by a tool such as sg_reset.
+On Mon, Mar 26, 2018 at 08:02:12PM +0300, Michal Kalderon wrote:
+> This FW contains several fixes and features
+> 
+> RDMA Features
+> - SRQ support
+> - XRC support
+> - Memory window support
+> - RDMA low latency queue support
+> - RDMA bonding support
+> 
+> RDMA bug fixes
+> - RDMA remote invalidate during retransmit fix
+> - iWARP MPA connect interop issue with RTR fix
+> - iWARP Legacy DPM support
+> - Fix MPA reject flow
+> - iWARP error handling
+> - RQ WQE validation checks
+> 
+> MISC
+> - Fix some HSI types endianity
+> - New Restriction: vlan insertion in core_tx_bd_data can't be set
+>   for LB packets
+> 
+> ETH
+> - HW QoS offload support
+> - Fix vlan, dcb and sriov flow of VF sending a packet with
+>   inband VLAN tag instead of default VLAN
+> - Allow GRE version 1 offloads in RX flow
+> - Allow VXLAN steering
+> 
+> iSCSI / FcoE
+> - Fix bd availability checking flow
+> - Support 256th sge proerly in iscsi/fcoe retransmit
+> - Performance improvement
+> - Fix handle iSCSI command arrival with AHS and with immediate
+> - Fix ipv6 traffic class configuration
+> 
+> DEBUG
+> - Update debug utilities
+> 
+> Advance version number
+> 
+> Signed-off-by: Michal Kalderon <Michal.Kalderon@cavium.com>
+> Signed-off-by: Tomer Tayar <Tomer.Tayar@cavium.com>
+> Signed-off-by: Manish Rangankar <Manish.Rangankar@cavium.com>
+> Signed-off-by: Ariel Elior <Ariel.Elior@cavium.com>
+>  drivers/infiniband/hw/qedr/main.c                  |    1 +
+>  drivers/infiniband/hw/qedr/qedr.h                  |    2 +
+>  drivers/infiniband/hw/qedr/qedr_hsi_rdma.h         |    4 +-
+>  drivers/infiniband/hw/qedr/verbs.c                 |    4 +-
+>  drivers/net/ethernet/qlogic/qed/qed.h              |    2 +-
+>  drivers/net/ethernet/qlogic/qed/qed_debug.c        |  415 +++--
+>  drivers/net/ethernet/qlogic/qed/qed_dev.c          |    4 +-
+>  drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 1892 ++++++++++----------
+>  .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    |  103 +-
+>  drivers/net/ethernet/qlogic/qed/qed_iwarp.c        |    7 -
+>  drivers/net/ethernet/qlogic/qed/qed_l2.c           |    2 +-
+>  drivers/net/ethernet/qlogic/qed/qed_ll2.c          |   13 -
+>  drivers/net/ethernet/qlogic/qede/qede.h            |    2 +-
+>  drivers/scsi/qedf/qedf_version.h                   |    4 +-
+>  drivers/scsi/qedi/qedi_version.h                   |    4 +-
+>  include/linux/qed/common_hsi.h                     |    2 +-
+>  include/linux/qed/eth_common.h                     |    2 +-
+>  include/linux/qed/iscsi_common.h                   |    4 +-
+>  include/linux/qed/rdma_common.h                    |    2 +
+>  include/linux/qed/roce_common.h                    |    3 +
+>  20 files changed, 1319 insertions(+), 1153 deletions(-)
+> 
+> diff --git a/drivers/infiniband/hw/qedr/main.c b/drivers/infiniband/hw/qedr/main.c
+> index db4bf97..7dbbe6d 100644
+> +++ b/drivers/infiniband/hw/qedr/main.c
+> @@ -51,6 +51,7 @@
+>  MODULE_DESCRIPTION("QLogic 40G/100G ROCE Driver");
+>  MODULE_AUTHOR("QLogic Corporation");
+>  MODULE_LICENSE("Dual BSD/GPL");
+> +MODULE_VERSION(QEDR_MODULE_VERSION);
+>  
+>  #define QEDR_WQ_MULTIPLIER_DFT	(3)
+>  
+> diff --git a/drivers/infiniband/hw/qedr/qedr.h b/drivers/infiniband/hw/qedr/qedr.h
+> index 86d4511..ab0d411 100644
+> +++ b/drivers/infiniband/hw/qedr/qedr.h
+> @@ -43,6 +43,8 @@
+>  #include "qedr_hsi_rdma.h"
+>  
+>  #define QEDR_NODE_DESC "QLogic 579xx RoCE HCA"
+> +#define QEDR_MODULE_VERSION "8.33.11.20"
+> +
 
-[c000200fff3fbc90] c00800001690117c process_cmd_doneq+0x104/0x500
-                                       [cxlflash] (unreliable)
-[c000200fff3fbd80] c008000016901648 cxlflash_rrq_irq+0xd0/0x150 [cxlflash]
-[c000200fff3fbde0] c000000000193130 __handle_irq_event_percpu+0xa0/0x310
-[c000200fff3fbea0] c0000000001933d8 handle_irq_event_percpu+0x38/0x90
-[c000200fff3fbee0] c000000000193494 handle_irq_event+0x64/0xb0
-[c000200fff3fbf10] c000000000198ea0 handle_fasteoi_irq+0xc0/0x230
-[c000200fff3fbf40] c00000000019182c generic_handle_irq+0x4c/0x70
-[c000200fff3fbf60] c00000000001794c __do_irq+0x7c/0x1c0
-[c000200fff3fbf90] c00000000002a390 call_do_irq+0x14/0x24
-[c000200e5828fab0] c000000000017b2c do_IRQ+0x9c/0x130
-[c000200e5828fb00] c000000000009b04 h_virt_irq_common+0x114/0x120
+I thought we had a general prohibition against versions like this in
+mainline drivers? And what does this hunk have to do with supporting
+new firmware?
 
-When a context is reset, the pending commands are flushed and the AFU
-is notified. Before the AFU handles this request there could be command
-completion interrupts queued to PHB which are yet to be delivered to the
-context. In this scenario, a context could receive an interrupt for a
-command that has been flushed, leading to a possible crash when the memory
-for the flushed command is accessed.
-
-To resolve this problem, a boolean will indicate if the hardware queue is
-ready to process interrupts or not. This can be evaluated in the interrupt
-handler before proessing an interrupt.
-
-Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
----
- drivers/scsi/cxlflash/common.h |  1 +
- drivers/scsi/cxlflash/main.c   | 11 +++++++++++
- 2 files changed, 12 insertions(+)
-
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index b69fd32..3556b1d 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -224,6 +224,7 @@ struct hwq {
- 	u64 *hrrq_end;
- 	u64 *hrrq_curr;
- 	bool toggle;
-+	bool hrrq_online;
- 
- 	s64 room;
- 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index c920328..a24d7e6 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -801,6 +801,10 @@ static void term_mc(struct cxlflash_cfg *cfg, u32 index)
- 		WARN_ON(cfg->ops->release_context(hwq->ctx_cookie));
- 	hwq->ctx_cookie = NULL;
- 
-+	spin_lock_irqsave(&hwq->hrrq_slock, lock_flags);
-+	hwq->hrrq_online = false;
-+	spin_unlock_irqrestore(&hwq->hrrq_slock, lock_flags);
-+
- 	spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
- 	flush_pending_cmds(hwq);
- 	spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
-@@ -1475,6 +1479,12 @@ static irqreturn_t cxlflash_rrq_irq(int irq, void *data)
- 
- 	spin_lock_irqsave(&hwq->hrrq_slock, hrrq_flags);
- 
-+	/* Silently drop spurious interrupts when queue is not online */
-+	if (!hwq->hrrq_online) {
-+		spin_unlock_irqrestore(&hwq->hrrq_slock, hrrq_flags);
-+		return IRQ_HANDLED;
-+	}
-+
- 	if (afu_is_irqpoll_enabled(afu)) {
- 		irq_poll_sched(&hwq->irqpoll);
- 		spin_unlock_irqrestore(&hwq->hrrq_slock, hrrq_flags);
-@@ -1781,6 +1791,7 @@ static int init_global(struct cxlflash_cfg *cfg)
- 
- 		writeq_be((u64) hwq->hrrq_start, &hmap->rrq_start);
- 		writeq_be((u64) hwq->hrrq_end, &hmap->rrq_end);
-+		hwq->hrrq_online = true;
- 
- 		if (afu_is_sq_cmd_mode(afu)) {
- 			writeq_be((u64)hwq->hsq_start, &hmap->sq_start);
--- 
-2.1.0
+Jason
