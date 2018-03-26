@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 38/41] cxlflash: Enable OCXL operations
-Date: Mon, 26 Mar 2018 11:35:21 -0500
-Message-ID: <1522082121-58862-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 39/41] cxlflash: Synchronize reset and remove ops
+Date: Mon, 26 Mar 2018 11:35:27 -0500
+Message-ID: <1522082127-58900-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,55 +19,48 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This commit enables the OCXL operations for the OCXL devices.
+The following Oops can be encountered if a device removal or system
+shutdown is initiated while an EEH recovery is in process:
+
+[c000000ff2f479c0] c008000015256f18 cxlflash_pci_slot_reset+0xa0/0x100
+                                      [cxlflash]
+[c000000ff2f47a30] c00800000dae22e0 cxl_pci_slot_reset+0x168/0x290 [cxl]
+[c000000ff2f47ae0] c00000000003ef1c eeh_report_reset+0xec/0x170
+[c000000ff2f47b20] c00000000003d0b8 eeh_pe_dev_traverse+0x98/0x170
+[c000000ff2f47bb0] c00000000003f80c eeh_handle_normal_event+0x56c/0x580
+[c000000ff2f47c60] c00000000003fba4 eeh_handle_event+0x2a4/0x338
+[c000000ff2f47d10] c0000000000400b8 eeh_event_handler+0x1f8/0x200
+[c000000ff2f47dc0] c00000000013da48 kthread+0x1a8/0x1b0
+[c000000ff2f47e30] c00000000000b528 ret_from_kernel_thread+0x5c/0xb4
+
+The remove handler frees AFU memory while the EEH recovery is in progress,
+leading to a race condition. This can result in a crash if the recovery
+thread tries to access this memory.
+
+To resolve this issue, the cxlflash remove handler will evaluate the
+device state and yield to any active reset or probing threads.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 9 +++++++--
- drivers/scsi/cxlflash/main.h | 1 +
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 8c55fcd..42a95b7 100644
+index 42a95b7..dfe7648 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -3168,7 +3168,8 @@ static struct dev_dependent_vals dev_corsa_vals = { CXLFLASH_MAX_SECTORS,
- static struct dev_dependent_vals dev_flash_gt_vals = { CXLFLASH_MAX_SECTORS,
- 					CXLFLASH_NOTIFY_SHUTDOWN };
- static struct dev_dependent_vals dev_briard_vals = { CXLFLASH_MAX_SECTORS,
--					CXLFLASH_NOTIFY_SHUTDOWN };
-+					(CXLFLASH_NOTIFY_SHUTDOWN |
-+					CXLFLASH_OCXL_DEV) };
+@@ -946,9 +946,9 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 		return;
+ 	}
  
- /*
-  * PCI device binding table
-@@ -3679,9 +3680,13 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 
- 	cfg->init_state = INIT_STATE_NONE;
- 	cfg->dev = pdev;
--	cfg->ops = &cxlflash_cxl_ops;
- 	cfg->cxl_fops = cxlflash_cxl_fops;
- 
-+	if (ddv->flags & CXLFLASH_OCXL_DEV)
-+		cfg->ops = &cxlflash_ocxl_ops;
-+	else
-+		cfg->ops = &cxlflash_cxl_ops;
-+
- 	/*
- 	 * Promoted LUNs move to the top of the LUN table. The rest stay on
- 	 * the bottom half. The bottom half grows from the end (index = 255),
-diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
-index ba0108a..6f1be62 100644
---- a/drivers/scsi/cxlflash/main.h
-+++ b/drivers/scsi/cxlflash/main.h
-@@ -97,6 +97,7 @@ struct dev_dependent_vals {
- 	u64 flags;
- #define CXLFLASH_NOTIFY_SHUTDOWN	0x0000000000000001ULL
- #define CXLFLASH_WWPN_VPD_REQUIRED	0x0000000000000002ULL
-+#define CXLFLASH_OCXL_DEV		0x0000000000000004ULL
- };
- 
- struct asyc_intr_info {
+-	/* If a Task Management Function is active, wait for it to complete
+-	 * before continuing with remove.
+-	 */
++	/* Yield to running recovery threads before continuing with remove */
++	wait_event(cfg->reset_waitq, cfg->state != STATE_RESET &&
++				     cfg->state != STATE_PROBING);
+ 	spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
+ 	if (cfg->tmf_active)
+ 		wait_event_interruptible_lock_irq(cfg->tmf_waitq,
 -- 
 2.1.0
