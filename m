@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 09/41] cxlflash: Setup AFU acTag range
-Date: Mon, 26 Mar 2018 11:31:36 -0500
-Message-ID: <1522081896-57783-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 10/41] cxlflash: Setup AFU PASID
+Date: Mon, 26 Mar 2018 11:31:44 -0500
+Message-ID: <1522081904-57820-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,62 +19,43 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The OCXL specification supports distributing acTags amongst different
-AFUs and functions on the link. As cxlflash devices are expected to only
-support a single AFU per function, the entire range that was assigned to
-the function is also assigned to the AFU.
+Per the OCXL specification, the maximum PASID supported by the AFU is
+indicated by a field within the configuration space. Similar to acTags,
+implementations can choose to use any sub-range of PASID within their
+assigned range. For cxlflash, the entire range is used.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 Reviewed-by: Frederic Barrat <fbarrat@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/ocxl_hw.c | 13 +++++++++++++
- drivers/scsi/cxlflash/ocxl_hw.h |  2 ++
- 2 files changed, 15 insertions(+)
+ drivers/scsi/cxlflash/ocxl_hw.c | 3 +++
+ drivers/scsi/cxlflash/ocxl_hw.h | 1 +
+ 2 files changed, 4 insertions(+)
 
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index 11399cf..105712b 100644
+index 105712b..44688af 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.c
 +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -92,6 +92,9 @@ static int ocxlflash_config_afu(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
- 	struct ocxl_afu_config *acfg = &afu->acfg;
- 	struct ocxl_fn_config *fcfg = &afu->fcfg;
- 	struct device *dev = &pdev->dev;
-+	int count;
-+	int base;
-+	int pos;
- 	int rc = 0;
- 
- 	/* This HW AFU function does not have any AFUs defined */
-@@ -105,6 +108,16 @@ static int ocxlflash_config_afu(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
- 			__func__, rc);
- 		goto out;
- 	}
+@@ -118,6 +118,9 @@ static int ocxlflash_config_afu(struct pci_dev *pdev, struct ocxl_hw_afu *afu)
+ 	dev_dbg(dev, "%s: acTag base=%d enabled=%d\n", __func__, base, count);
+ 	afu->afu_actag_base = base;
+ 	afu->afu_actag_enabled = count;
++	afu->max_pasid = 1 << acfg->pasid_supported_log;
 +
-+	/* Only one AFU per function is supported, so actag_base is same */
-+	base = afu->fn_actag_base;
-+	count = min_t(int, acfg->actag_supported, afu->fn_actag_enabled);
-+	pos = acfg->dvsec_afu_control_pos;
-+
-+	ocxl_config_set_afu_actag(pdev, pos, base, count);
-+	dev_dbg(dev, "%s: acTag base=%d enabled=%d\n", __func__, base, count);
-+	afu->afu_actag_base = base;
-+	afu->afu_actag_enabled = count;
++	ocxl_config_set_afu_pasid(pdev, pos, 0, acfg->pasid_supported_log);
  out:
  	return rc;
  }
 diff --git a/drivers/scsi/cxlflash/ocxl_hw.h b/drivers/scsi/cxlflash/ocxl_hw.h
-index c9b2843..21803b5 100644
+index 21803b5..46de75b 100644
 --- a/drivers/scsi/cxlflash/ocxl_hw.h
 +++ b/drivers/scsi/cxlflash/ocxl_hw.h
-@@ -22,6 +22,8 @@ struct ocxl_hw_afu {
+@@ -25,5 +25,6 @@ struct ocxl_hw_afu {
+ 	int afu_actag_base;		/* AFU acTag base */
+ 	int afu_actag_enabled;		/* AFU acTag number enabled */
  
- 	int fn_actag_base;		/* Function acTag base */
- 	int fn_actag_enabled;		/* Function acTag number enabled */
-+	int afu_actag_base;		/* AFU acTag base */
-+	int afu_actag_enabled;		/* AFU acTag number enabled */
- 
++	int max_pasid;			/* Maximum number of contexts */
  	bool is_present;		/* Function has AFUs defined */
  };
 -- 
