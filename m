@@ -1,146 +1,162 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: =?UTF-8?B?UmU6IOetlOWkjTogW1BBVENIIHY4IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYQ==?=
-        =?UTF-8?B?ZGQgZG9jdW1lbnQgZm9yIGhpc2ktdWZz?=
-Date: Mon, 26 Mar 2018 11:14:09 +0200
-Message-ID: <CAK8P3a3NdHLDf2vOMyZ1qcWNW1Jg5T47qR0qWhWEeDn+90S4ug@mail.gmail.com>
-References: <20180213101412.5717-1-liwei213@huawei.com> <20180213101412.5717-3-liwei213@huawei.com>
- <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com> <1699CE87DE933F49876AD744B5DC140FA584ED@DGGEMM506-MBS.china.huawei.com>
+From: "liwei (CM)" <liwei213@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2OCAyLzVdIGR0LWJpbmRpbmdzOiBz?=
+ =?utf-8?Q?csi:_ufs:_add_document_for_hisi-ufs?=
+Date: Mon, 26 Mar 2018 10:26:10 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA58798@DGGEMM506-MBS.china.huawei.com>
+References: <20180213101412.5717-1-liwei213@huawei.com>
+ <20180213101412.5717-3-liwei213@huawei.com>
+ <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
+ <1699CE87DE933F49876AD744B5DC140FA584ED@DGGEMM506-MBS.china.huawei.com>
+ <CAK8P3a3NdHLDf2vOMyZ1qcWNW1Jg5T47qR0qWhWEeDn+90S4ug@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1699CE87DE933F49876AD744B5DC140FA584ED@DGGEMM506-MBS.china.huawei.com>
+In-Reply-To: <CAK8P3a3NdHLDf2vOMyZ1qcWNW1Jg5T47qR0qWhWEeDn+90S4ug@mail.gmail.com>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: "liwei (CM)" <liwei213@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
 Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "xuwei (O)" <xuwei5@huawei.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, Eric Anholt <eric@anholt.net>, DTML <devicetree@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 23, 2018 at 3:22 AM, liwei (CM) <liwei213@huawei.com> wrote:
->> diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
->> b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
->> new file mode 100644
->> index 000000000000..0d21b57496cf
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
->> @@ -0,0 +1,37 @@
->> +* Hisilicon Universal Flash Storage (UFS) Host Controller
->> +
->> +UFS nodes are defined to describe on-chip UFS hardware macro.
->> +Each UFS Host Controller should have its own node.
->> +
->> +Required properties:
->> +- compatible        : compatible list, contains one of the following -
->> +                                       "hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
->> +                                       host controller present on Hi36xx chipset.
->> +- reg               : should contain UFS register address space & UFS SYS CTRL register address,
->> +- interrupt-parent  : interrupt device
->> +- interrupts        : interrupt number
->> +- clocks               : List of phandle and clock specifier pairs
->> +- clock-names       : List of clock input name strings sorted in the same
->> +                                       order as the clocks property.
->> +"ref_clk", "phy_clk" is optional
->
-> The clock names sound generic enough, should we have both in the generic binding?
->
-> Do you mean that add a "phy_clk" to ufshcd-pltfrm 's bindings?
-> At present, it seems that in the implementation of generic code, apart from "ref_clk" may have special processing, other clk will not have special processing and simply parse and enable;
-> Referring to ufs-qcom binding, I think "phy_clk" can be named "iface_clk", this "iface_clk" exists in ufshcd-pltfrm bindings;If so, "ref_clk", "iface_clk" are both in the generic binding,we will remove them here. Is that okay?
-
-I'm looking at the generic binding again, and it seems we never quite
-managed to fix
-some minor problems with it. See below for a possible way to clarify it.
-
->> +- resets            : reset node register, one reset the clk and the other reset the controller
->> +- reset-names       : describe reset node register
->
-> This looks incomplete. What is the name of the reset line supposed to be?
-> I'd also suggest you document it in the ufshcd binding instead.
->
-> The "rst" corresponds to reset the whole UFS IP, and " arst " only reset the APB/AXI bus. Discussed with our soc colleagues that "arst" is assert by default and needs to deassert .
-> But I think it may be difficult to add this to common code, or it may not be necessary;
-> Other manufacturers may not need to do this soc init because they probably already done in the bootloader phase. Even if they need to do it, it's probably different from us.
-> We need to make sure that our ufs works even if not do soc init during the bootloader phase.
-
-In the suggested patch below, I have documented one "rst" line that is used to
-reset the ufshcd device. The second reset line as I understand now is used in
-a rather nonstandard way and gets asserted only while setting up the additional
-registers for your glue logic, so that one seems better left documented in your
-own binding.
-
-I've added a "jedec,ufshci-3.0" compatible string, which appears to be
-the latest
-version of the ufshci itself, and I've documented four clocks that are
-already used
-by the qualcomm variant of the platform device. Please have a look at the below,
-and see if we need additional changes or clarifications. With this, most of your
-binding can get folded into the common document, so you just need to explain
-the private compatible string, the larger register area, and the
-additional reset line.
-
-      Arnd
-
-commit a945e9bc823521253c9ff5a061f22a2aa7fd335e
-Author: Arnd Bergmann <arnd@arndb.de>
-Date:   Mon Mar 26 11:07:46 2018 +0200
-
-    ufshcd: clarify some parts of the documentation
-
-    Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index c39dfef76a18..bc90a7d8385b 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -4,8 +4,10 @@ UFSHC nodes are defined to describe on-chip UFS host
-controllers.
- Each UFS controller instance should have its own node.
-
- Required properties:
--- compatible           : must contain "jedec,ufs-1.1" or "jedec,ufs-2.0", may
--                         also list one or more of the following:
-+- compatible           : must contain "jedec,ufs-1.1", "jedec,ufs-2.0",
-+                         or "jedec,ufshci-3.0", and may also list one
-+                         or more of the following, as well as others
-+                         specified in derived bindings:
-                                          "qcom,msm8994-ufshc"
-                                          "qcom,msm8996-ufshc"
-                                          "qcom,ufshc"
-@@ -32,7 +34,20 @@ Optional properties:
-
- - clocks                : List of phandle and clock specifier pairs
- - clock-names           : List of clock input name strings sorted in the same
--                          order as the clocks property.
-+                          order as the clocks property. Standard
-clocks include:
-+       "core_clk"      : The clock associated with the ufshcd IP block
-+       "ref_clk"       : The reference clock for the external
-interface to the device,
-+                         typically operating at 19.2 MHz.
-+       "iface_clk"     : The clock for the CPU-side interface to the
-ufshcd memory
-+                         mapped registers
-+       "bus_clk"       : The interface clock for bus master data
-transfers on to
-+                         main memory.
-+
-+- resets               : List of specifiers of associated reset lines
-+- reset-names          : An idenfifier for each reset line. The name
-"rst" should
-+                         be used for the line that resets the ufshci
-block during
-+                         startup.
-+
- - freq-table-hz                : Array of <min max> operating
-frequencies stored in the same
-                           order as the clocks property. If this property is not
-                          defined or a value in the array is "0" then
-it is assumed
-@@ -63,6 +78,8 @@ Example:
-
-                clocks = <&core 0>, <&ref 0>, <&iface 0>;
-                clock-names = "core_clk", "ref_clk", "iface_clk";
-+               resets = <&reset 0 1>;
-+               reset-names = "rst";
-                freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
-                phys = <&ufsphy1>;
-                phy-names = "ufsphy";
+SGksIEFybmQNCg0KLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0K5Y+R5Lu25Lq6OiBhcm5kYmVyZ21h
+bm5AZ21haWwuY29tIFttYWlsdG86YXJuZGJlcmdtYW5uQGdtYWlsLmNvbV0g5Luj6KGoIEFybmQg
+QmVyZ21hbm4NCuWPkemAgeaXtumXtDogMjAxOOW5tDPmnIgyNuaXpSAxNzoxNA0K5pS25Lu25Lq6
+OiBsaXdlaSAoQ00pDQrmioTpgIE6IFJvYiBIZXJyaW5nOyBNYXJrIFJ1dGxhbmQ7IHh1d2VpIChP
+KTsgQ2F0YWxpbiBNYXJpbmFzOyBXaWxsIERlYWNvbjsgVmluYXlhayBIb2xpa2F0dGk7IEphbWVz
+IEUuSi4gQm90dG9tbGV5OyBNYXJ0aW4gSy4gUGV0ZXJzZW47IEtldmluIEhpbG1hbjsgR3JlZ29y
+eSBDTEVNRU5UOyBUaG9tYXMgUGV0YXp6b25pOyBNYXNhaGlybyBZYW1hZGE7IFJpa3UgVm9pcGlv
+OyBUaGllcnJ5IFJlZGluZzsgS3J6eXN6dG9mIEtvemxvd3NraTsgRXJpYyBBbmhvbHQ7IERUTUw7
+IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7IExpbnV4IEFSTTsgbGludXgtc2NzaTsgemFuZ2xl
+aWdhbmc7IEdlbmdqaWFuZmVuZzsgR3VvZG9uZyBYdTsgWmhhbmdmZWkgR2FvOyBGZW5nYmFvcGVu
+ZyAoa2V2aW4sIEtpcmluIFNvbHV0aW9uIERlcHQpOyBZYW5pdiBHYXJkaQ0K5Li76aKYOiBSZTog
+562U5aSNOiBbUEFUQ0ggdjggMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1l
+bnQgZm9yIGhpc2ktdWZzDQoNCk9uIEZyaSwgTWFyIDIzLCAyMDE4IGF0IDM6MjIgQU0sIGxpd2Vp
+IChDTSkgPGxpd2VpMjEzQGh1YXdlaS5jb20+IHdyb3RlOg0KPj4gZGlmZiAtLWdpdCBhL0RvY3Vt
+ZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0DQo+PiBiL0RvY3Vt
+ZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0DQo+PiBuZXcgZmls
+ZSBtb2RlIDEwMDY0NA0KPj4gaW5kZXggMDAwMDAwMDAwMDAwLi4wZDIxYjU3NDk2Y2YNCj4+IC0t
+LSAvZGV2L251bGwNCj4+ICsrKyBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91
+ZnMvdWZzLWhpc2kudHh0DQo+PiBAQCAtMCwwICsxLDM3IEBADQo+PiArKiBIaXNpbGljb24gVW5p
+dmVyc2FsIEZsYXNoIFN0b3JhZ2UgKFVGUykgSG9zdCBDb250cm9sbGVyDQo+PiArDQo+PiArVUZT
+IG5vZGVzIGFyZSBkZWZpbmVkIHRvIGRlc2NyaWJlIG9uLWNoaXAgVUZTIGhhcmR3YXJlIG1hY3Jv
+Lg0KPj4gK0VhY2ggVUZTIEhvc3QgQ29udHJvbGxlciBzaG91bGQgaGF2ZSBpdHMgb3duIG5vZGUu
+DQo+PiArDQo+PiArUmVxdWlyZWQgcHJvcGVydGllczoNCj4+ICstIGNvbXBhdGlibGUgICAgICAg
+IDogY29tcGF0aWJsZSBsaXN0LCBjb250YWlucyBvbmUgb2YgdGhlIGZvbGxvd2luZyAtDQo+PiAr
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImhpc2lsaWNvbixoaTM2NjAt
+dWZzIiwgImplZGVjLHVmcy0xLjEiIGZvciBoaXNpIHVmcw0KPj4gKyAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIGhvc3QgY29udHJvbGxlciBwcmVzZW50IG9uIEhpMzZ4eCBj
+aGlwc2V0Lg0KPj4gKy0gcmVnICAgICAgICAgICAgICAgOiBzaG91bGQgY29udGFpbiBVRlMgcmVn
+aXN0ZXIgYWRkcmVzcyBzcGFjZSAmIFVGUyBTWVMgQ1RSTCByZWdpc3RlciBhZGRyZXNzLA0KPj4g
+Ky0gaW50ZXJydXB0LXBhcmVudCAgOiBpbnRlcnJ1cHQgZGV2aWNlDQo+PiArLSBpbnRlcnJ1cHRz
+ICAgICAgICA6IGludGVycnVwdCBudW1iZXINCj4+ICstIGNsb2NrcyAgICAgICAgICAgICAgIDog
+TGlzdCBvZiBwaGFuZGxlIGFuZCBjbG9jayBzcGVjaWZpZXIgcGFpcnMNCj4+ICstIGNsb2NrLW5h
+bWVzICAgICAgIDogTGlzdCBvZiBjbG9jayBpbnB1dCBuYW1lIHN0cmluZ3Mgc29ydGVkIGluIHRo
+ZSBzYW1lDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgb3JkZXIg
+YXMgdGhlIGNsb2NrcyBwcm9wZXJ0eS4NCj4+ICsicmVmX2NsayIsICJwaHlfY2xrIiBpcyBvcHRp
+b25hbA0KPg0KPiBUaGUgY2xvY2sgbmFtZXMgc291bmQgZ2VuZXJpYyBlbm91Z2gsIHNob3VsZCB3
+ZSBoYXZlIGJvdGggaW4gdGhlIGdlbmVyaWMgYmluZGluZz8NCj4NCj4gRG8geW91IG1lYW4gdGhh
+dCBhZGQgYSAicGh5X2NsayIgdG8gdWZzaGNkLXBsdGZybSAncyBiaW5kaW5ncz8NCj4gQXQgcHJl
+c2VudCwgaXQgc2VlbXMgdGhhdCBpbiB0aGUgaW1wbGVtZW50YXRpb24gb2YgZ2VuZXJpYyBjb2Rl
+LCBhcGFydCANCj4gZnJvbSAicmVmX2NsayIgbWF5IGhhdmUgc3BlY2lhbCBwcm9jZXNzaW5nLCBv
+dGhlciBjbGsgd2lsbCBub3QgaGF2ZSBzcGVjaWFsIHByb2Nlc3NpbmcgYW5kIHNpbXBseSBwYXJz
+ZSBhbmQgZW5hYmxlOyBSZWZlcnJpbmcgdG8gdWZzLXFjb20gYmluZGluZywgSSB0aGluayAicGh5
+X2NsayIgY2FuIGJlIG5hbWVkICJpZmFjZV9jbGsiLCB0aGlzICJpZmFjZV9jbGsiIGV4aXN0cyBp
+biB1ZnNoY2QtcGx0ZnJtIGJpbmRpbmdzO0lmIHNvLCAicmVmX2NsayIsICJpZmFjZV9jbGsiIGFy
+ZSBib3RoIGluIHRoZSBnZW5lcmljIGJpbmRpbmcsd2Ugd2lsbCByZW1vdmUgdGhlbSBoZXJlLiBJ
+cyB0aGF0IG9rYXk/DQoNCkknbSBsb29raW5nIGF0IHRoZSBnZW5lcmljIGJpbmRpbmcgYWdhaW4s
+IGFuZCBpdCBzZWVtcyB3ZSBuZXZlciBxdWl0ZSBtYW5hZ2VkIHRvIGZpeCBzb21lIG1pbm9yIHBy
+b2JsZW1zIHdpdGggaXQuIFNlZSBiZWxvdyBmb3IgYSBwb3NzaWJsZSB3YXkgdG8gY2xhcmlmeSBp
+dC4NCg0KcGh5X2NsayBpcyBhY3R1YWxseSBnaXZlbiB0byB0aGUgcGh5LiBCdXQgYXMgcHJldmlv
+dXNseSBtZW50aW9uZWQgLCB3ZSBkbyBub3QgaGF2ZSBhIHNlcGFyYXRlIHBoeSB0byBjb25maWd1
+cmUgOyBUaGUgY2xrcyBpbiB0aGUgcGF0Y2ggeW91IGdpdmUgYXBwZWFyIHRvIGJlIHVuc3VpdGFi
+bGUgZm9yIGRlc2NyaWJpbmcgdGhpcyAuDQpIZXJlIHdlIGNhbid0IGRlc2NyaWJlIHBoeV9jbGsg
+aW4gdGhlIG5vZGUgInVmc3BoeTE6IHVmc3BoeUBmYzU5NzAwMCIgbGlrZSBxY29tLiBTbyBjYW4g
+d2UgcHV0IGl0IGhlcmUgaW4gb3VyIG93biBiaW5kaW5nIGxpa2UgdGhpcz8NCg0KPj4gKy0gcmVz
+ZXRzICAgICAgICAgICAgOiByZXNldCBub2RlIHJlZ2lzdGVyLCBvbmUgcmVzZXQgdGhlIGNsayBh
+bmQgdGhlIG90aGVyIHJlc2V0IHRoZSBjb250cm9sbGVyDQo+PiArLSByZXNldC1uYW1lcyAgICAg
+ICA6IGRlc2NyaWJlIHJlc2V0IG5vZGUgcmVnaXN0ZXINCj4NCj4gVGhpcyBsb29rcyBpbmNvbXBs
+ZXRlLiBXaGF0IGlzIHRoZSBuYW1lIG9mIHRoZSByZXNldCBsaW5lIHN1cHBvc2VkIHRvIGJlPw0K
+PiBJJ2QgYWxzbyBzdWdnZXN0IHlvdSBkb2N1bWVudCBpdCBpbiB0aGUgdWZzaGNkIGJpbmRpbmcg
+aW5zdGVhZC4NCj4NCj4gVGhlICJyc3QiIGNvcnJlc3BvbmRzIHRvIHJlc2V0IHRoZSB3aG9sZSBV
+RlMgSVAsIGFuZCAiIGFyc3QgIiBvbmx5IHJlc2V0IHRoZSBBUEIvQVhJIGJ1cy4gRGlzY3Vzc2Vk
+IHdpdGggb3VyIHNvYyBjb2xsZWFndWVzIHRoYXQgImFyc3QiIGlzIGFzc2VydCBieSBkZWZhdWx0
+IGFuZCBuZWVkcyB0byBkZWFzc2VydCAuDQo+IEJ1dCBJIHRoaW5rIGl0IG1heSBiZSBkaWZmaWN1
+bHQgdG8gYWRkIHRoaXMgdG8gY29tbW9uIGNvZGUsIG9yIGl0IG1heSANCj4gbm90IGJlIG5lY2Vz
+c2FyeTsgT3RoZXIgbWFudWZhY3R1cmVycyBtYXkgbm90IG5lZWQgdG8gZG8gdGhpcyBzb2MgaW5p
+dCBiZWNhdXNlIHRoZXkgcHJvYmFibHkgYWxyZWFkeSBkb25lIGluIHRoZSBib290bG9hZGVyIHBo
+YXNlLiBFdmVuIGlmIHRoZXkgbmVlZCB0byBkbyBpdCwgaXQncyBwcm9iYWJseSBkaWZmZXJlbnQg
+ZnJvbSB1cy4NCj4gV2UgbmVlZCB0byBtYWtlIHN1cmUgdGhhdCBvdXIgdWZzIHdvcmtzIGV2ZW4g
+aWYgbm90IGRvIHNvYyBpbml0IGR1cmluZyB0aGUgYm9vdGxvYWRlciBwaGFzZS4NCg0KSW4gdGhl
+IHN1Z2dlc3RlZCBwYXRjaCBiZWxvdywgSSBoYXZlIGRvY3VtZW50ZWQgb25lICJyc3QiIGxpbmUg
+dGhhdCBpcyB1c2VkIHRvIHJlc2V0IHRoZSB1ZnNoY2QgZGV2aWNlLiBUaGUgc2Vjb25kIHJlc2V0
+IGxpbmUgYXMgSSB1bmRlcnN0YW5kIG5vdyBpcyB1c2VkIGluIGEgcmF0aGVyIG5vbnN0YW5kYXJk
+IHdheSBhbmQgZ2V0cyBhc3NlcnRlZCBvbmx5IHdoaWxlIHNldHRpbmcgdXAgdGhlIGFkZGl0aW9u
+YWwgcmVnaXN0ZXJzIGZvciB5b3VyIGdsdWUgbG9naWMsIHNvIHRoYXQgb25lIHNlZW1zIGJldHRl
+ciBsZWZ0IGRvY3VtZW50ZWQgaW4geW91ciBvd24gYmluZGluZy4NCg0KWWVzLCB0aGUgc2Vjb25k
+IHJlc2V0IGxpbmUgaXMgdXNlZCBpbiBhIHJhdGhlciBub25zdGFuZGFyZCB3YXkgLCBpZiByc3Qg
+d2lsbCBpbnRvIHRoZSBjb21tb24gZG9jdW1lbnQsICxJIHdpbGwgbGVmdCB0aGUgc2Vjb25kIHJl
+c2V0IGxpbmUgZG9jdW1lbnRlZCBpbiBvdXIgb3duIGJpbmRpbmcuDQoNCkkndmUgYWRkZWQgYSAi
+amVkZWMsdWZzaGNpLTMuMCIgY29tcGF0aWJsZSBzdHJpbmcsIHdoaWNoIGFwcGVhcnMgdG8gYmUg
+dGhlIGxhdGVzdCB2ZXJzaW9uIG9mIHRoZSB1ZnNoY2kgaXRzZWxmLCBhbmQgSSd2ZSBkb2N1bWVu
+dGVkIGZvdXIgY2xvY2tzIHRoYXQgYXJlIGFscmVhZHkgdXNlZCBieSB0aGUgcXVhbGNvbW0gdmFy
+aWFudCBvZiB0aGUgcGxhdGZvcm0gZGV2aWNlLiBQbGVhc2UgaGF2ZSBhIGxvb2sgYXQgdGhlIGJl
+bG93LCBhbmQgc2VlIGlmIHdlIG5lZWQgYWRkaXRpb25hbCBjaGFuZ2VzIG9yIGNsYXJpZmljYXRp
+b25zLiBXaXRoIHRoaXMsIG1vc3Qgb2YgeW91ciBiaW5kaW5nIGNhbiBnZXQgZm9sZGVkIGludG8g
+dGhlIGNvbW1vbiBkb2N1bWVudCwgc28geW91IGp1c3QgbmVlZCB0byBleHBsYWluIHRoZSBwcml2
+YXRlIGNvbXBhdGlibGUgc3RyaW5nLCB0aGUgbGFyZ2VyIHJlZ2lzdGVyIGFyZWEsIGFuZCB0aGUg
+YWRkaXRpb25hbCByZXNldCBsaW5lLg0KDQogICAgICBBcm5kDQoNCmNvbW1pdCBhOTQ1ZTliYzgy
+MzUyMTI1M2M5ZmY1YTA2MWYyMmEyYWE3ZmQzMzVlDQpBdXRob3I6IEFybmQgQmVyZ21hbm4gPGFy
+bmRAYXJuZGIuZGU+DQpEYXRlOiAgIE1vbiBNYXIgMjYgMTE6MDc6NDYgMjAxOCArMDIwMA0KDQog
+ICAgdWZzaGNkOiBjbGFyaWZ5IHNvbWUgcGFydHMgb2YgdGhlIGRvY3VtZW50YXRpb24NCg0KICAg
+IFNpZ25lZC1vZmYtYnk6IEFybmQgQmVyZ21hbm4gPGFybmRAYXJuZGIuZGU+DQoNCmRpZmYgLS1n
+aXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0u
+dHh0DQpiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzaGNkLXBsdGZy
+bS50eHQNCmluZGV4IGMzOWRmZWY3NmExOC4uYmM5MGE3ZDgzODViIDEwMDY0NA0KLS0tIGEvRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnNoY2QtcGx0ZnJtLnR4dA0KKysr
+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnNoY2QtcGx0ZnJtLnR4
+dA0KQEAgLTQsOCArNCwxMCBAQCBVRlNIQyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmliZSBv
+bi1jaGlwIFVGUyBob3N0IGNvbnRyb2xsZXJzLg0KIEVhY2ggVUZTIGNvbnRyb2xsZXIgaW5zdGFu
+Y2Ugc2hvdWxkIGhhdmUgaXRzIG93biBub2RlLg0KDQogUmVxdWlyZWQgcHJvcGVydGllczoNCi0t
+IGNvbXBhdGlibGUgICAgICAgICAgIDogbXVzdCBjb250YWluICJqZWRlYyx1ZnMtMS4xIiBvciAi
+amVkZWMsdWZzLTIuMCIsIG1heQ0KLSAgICAgICAgICAgICAgICAgICAgICAgICBhbHNvIGxpc3Qg
+b25lIG9yIG1vcmUgb2YgdGhlIGZvbGxvd2luZzoNCistIGNvbXBhdGlibGUgICAgICAgICAgIDog
+bXVzdCBjb250YWluICJqZWRlYyx1ZnMtMS4xIiwgImplZGVjLHVmcy0yLjAiLA0KKyAgICAgICAg
+ICAgICAgICAgICAgICAgICBvciAiamVkZWMsdWZzaGNpLTMuMCIsIGFuZCBtYXkgYWxzbyBsaXN0
+IG9uZQ0KKyAgICAgICAgICAgICAgICAgICAgICAgICBvciBtb3JlIG9mIHRoZSBmb2xsb3dpbmcs
+IGFzIHdlbGwgYXMgb3RoZXJzDQorICAgICAgICAgICAgICAgICAgICAgICAgIHNwZWNpZmllZCBp
+biBkZXJpdmVkIGJpbmRpbmdzOg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgInFjb20sbXNtODk5NC11ZnNoYyINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICJxY29tLG1zbTg5OTYtdWZzaGMiDQogICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAicWNvbSx1ZnNoYyINCkBAIC0zMiw3ICszNCwyMCBAQCBPcHRp
+b25hbCBwcm9wZXJ0aWVzOg0KDQogLSBjbG9ja3MgICAgICAgICAgICAgICAgOiBMaXN0IG9mIHBo
+YW5kbGUgYW5kIGNsb2NrIHNwZWNpZmllciBwYWlycw0KIC0gY2xvY2stbmFtZXMgICAgICAgICAg
+IDogTGlzdCBvZiBjbG9jayBpbnB1dCBuYW1lIHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQot
+ICAgICAgICAgICAgICAgICAgICAgICAgICBvcmRlciBhcyB0aGUgY2xvY2tzIHByb3BlcnR5Lg0K
+KyAgICAgICAgICAgICAgICAgICAgICAgICAgb3JkZXIgYXMgdGhlIGNsb2NrcyBwcm9wZXJ0eS4g
+U3RhbmRhcmQNCmNsb2NrcyBpbmNsdWRlOg0KKyAgICAgICAiY29yZV9jbGsiICAgICAgOiBUaGUg
+Y2xvY2sgYXNzb2NpYXRlZCB3aXRoIHRoZSB1ZnNoY2QgSVAgYmxvY2sNCisgICAgICAgInJlZl9j
+bGsiICAgICAgIDogVGhlIHJlZmVyZW5jZSBjbG9jayBmb3IgdGhlIGV4dGVybmFsDQppbnRlcmZh
+Y2UgdG8gdGhlIGRldmljZSwNCisgICAgICAgICAgICAgICAgICAgICAgICAgdHlwaWNhbGx5IG9w
+ZXJhdGluZyBhdCAxOS4yIE1Iei4NCisgICAgICAgImlmYWNlX2NsayIgICAgIDogVGhlIGNsb2Nr
+IGZvciB0aGUgQ1BVLXNpZGUgaW50ZXJmYWNlIHRvIHRoZQ0KdWZzaGNkIG1lbW9yeQ0KKyAgICAg
+ICAgICAgICAgICAgICAgICAgICBtYXBwZWQgcmVnaXN0ZXJzDQorICAgICAgICJidXNfY2xrIiAg
+ICAgICA6IFRoZSBpbnRlcmZhY2UgY2xvY2sgZm9yIGJ1cyBtYXN0ZXIgZGF0YQ0KdHJhbnNmZXJz
+IG9uIHRvDQorICAgICAgICAgICAgICAgICAgICAgICAgIG1haW4gbWVtb3J5Lg0KKw0KKy0gcmVz
+ZXRzICAgICAgICAgICAgICAgOiBMaXN0IG9mIHNwZWNpZmllcnMgb2YgYXNzb2NpYXRlZCByZXNl
+dCBsaW5lcw0KKy0gcmVzZXQtbmFtZXMgICAgICAgICAgOiBBbiBpZGVuZmlmaWVyIGZvciBlYWNo
+IHJlc2V0IGxpbmUuIFRoZSBuYW1lDQoicnN0IiBzaG91bGQNCisgICAgICAgICAgICAgICAgICAg
+ICAgICAgYmUgdXNlZCBmb3IgdGhlIGxpbmUgdGhhdCByZXNldHMgdGhlIHVmc2hjaQ0KYmxvY2sg
+ZHVyaW5nDQorICAgICAgICAgICAgICAgICAgICAgICAgIHN0YXJ0dXAuDQorDQogLSBmcmVxLXRh
+YmxlLWh6ICAgICAgICAgICAgICAgIDogQXJyYXkgb2YgPG1pbiBtYXg+IG9wZXJhdGluZw0KZnJl
+cXVlbmNpZXMgc3RvcmVkIGluIHRoZSBzYW1lDQogICAgICAgICAgICAgICAgICAgICAgICAgICBv
+cmRlciBhcyB0aGUgY2xvY2tzIHByb3BlcnR5LiBJZiB0aGlzIHByb3BlcnR5IGlzIG5vdA0KICAg
+ICAgICAgICAgICAgICAgICAgICAgICBkZWZpbmVkIG9yIGEgdmFsdWUgaW4gdGhlIGFycmF5IGlz
+ICIwIiB0aGVuIGl0IGlzIGFzc3VtZWQgQEAgLTYzLDYgKzc4LDggQEAgRXhhbXBsZToNCg0KICAg
+ICAgICAgICAgICAgIGNsb2NrcyA9IDwmY29yZSAwPiwgPCZyZWYgMD4sIDwmaWZhY2UgMD47DQog
+ICAgICAgICAgICAgICAgY2xvY2stbmFtZXMgPSAiY29yZV9jbGsiLCAicmVmX2NsayIsICJpZmFj
+ZV9jbGsiOw0KKyAgICAgICAgICAgICAgIHJlc2V0cyA9IDwmcmVzZXQgMCAxPjsNCisgICAgICAg
+ICAgICAgICByZXNldC1uYW1lcyA9ICJyc3QiOw0KICAgICAgICAgICAgICAgIGZyZXEtdGFibGUt
+aHogPSA8MTAwMDAwMDAwIDIwMDAwMDAwMD4sIDwwIDA+LCA8MCAwPjsNCiAgICAgICAgICAgICAg
+ICBwaHlzID0gPCZ1ZnNwaHkxPjsNCiAgICAgICAgICAgICAgICBwaHktbmFtZXMgPSAidWZzcGh5
+IjsNCg==
