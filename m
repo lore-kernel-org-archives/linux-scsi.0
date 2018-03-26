@@ -1,109 +1,37 @@
-From: Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH net-next] qed*: Utilize FW 8.33.11.0
-Date: Mon, 26 Mar 2018 15:18:27 -0600
-Message-ID: <20180326211827.GG15554@ziepe.ca>
-References: <1522083732-26560-1-git-send-email-Michal.Kalderon@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v3] scsi: ufs: add trace event for ufs upiu
+Date: Mon, 26 Mar 2018 22:48:53 +0000
+Message-ID: <1522104532.3102.24.camel@wdc.com>
+References: <1521961684-13588-1-git-send-email-ohad.sharabi@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1522083732-26560-1-git-send-email-Michal.Kalderon@cavium.com>
-Sender: netdev-owner@vger.kernel.org
-To: Michal Kalderon <Michal.Kalderon@cavium.com>
-Cc: davem@davemloft.net, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Tomer Tayar <Tomer.Tayar@cavium.com>, Manish Rangankar <Manish.Rangankar@cavium.com>, Ariel Elior <Ariel.Elior@cavium.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1521961684-13588-1-git-send-email-ohad.sharabi@sandisk.com>
+Content-Language: en-US
+Content-ID: <A3087C897FB9304282B568755AC539C0@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ohad Sharabi <Ohad.Sharabi@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Alex Lemberg <Alex.Lemberg@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Mar 26, 2018 at 08:02:12PM +0300, Michal Kalderon wrote:
-> This FW contains several fixes and features
-> 
-> RDMA Features
-> - SRQ support
-> - XRC support
-> - Memory window support
-> - RDMA low latency queue support
-> - RDMA bonding support
-> 
-> RDMA bug fixes
-> - RDMA remote invalidate during retransmit fix
-> - iWARP MPA connect interop issue with RTR fix
-> - iWARP Legacy DPM support
-> - Fix MPA reject flow
-> - iWARP error handling
-> - RQ WQE validation checks
-> 
-> MISC
-> - Fix some HSI types endianity
-> - New Restriction: vlan insertion in core_tx_bd_data can't be set
->   for LB packets
-> 
-> ETH
-> - HW QoS offload support
-> - Fix vlan, dcb and sriov flow of VF sending a packet with
->   inband VLAN tag instead of default VLAN
-> - Allow GRE version 1 offloads in RX flow
-> - Allow VXLAN steering
-> 
-> iSCSI / FcoE
-> - Fix bd availability checking flow
-> - Support 256th sge proerly in iscsi/fcoe retransmit
-> - Performance improvement
-> - Fix handle iSCSI command arrival with AHS and with immediate
-> - Fix ipv6 traffic class configuration
-> 
-> DEBUG
-> - Update debug utilities
-> 
-> Advance version number
-> 
-> Signed-off-by: Michal Kalderon <Michal.Kalderon@cavium.com>
-> Signed-off-by: Tomer Tayar <Tomer.Tayar@cavium.com>
-> Signed-off-by: Manish Rangankar <Manish.Rangankar@cavium.com>
-> Signed-off-by: Ariel Elior <Ariel.Elior@cavium.com>
->  drivers/infiniband/hw/qedr/main.c                  |    1 +
->  drivers/infiniband/hw/qedr/qedr.h                  |    2 +
->  drivers/infiniband/hw/qedr/qedr_hsi_rdma.h         |    4 +-
->  drivers/infiniband/hw/qedr/verbs.c                 |    4 +-
->  drivers/net/ethernet/qlogic/qed/qed.h              |    2 +-
->  drivers/net/ethernet/qlogic/qed/qed_debug.c        |  415 +++--
->  drivers/net/ethernet/qlogic/qed/qed_dev.c          |    4 +-
->  drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 1892 ++++++++++----------
->  .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    |  103 +-
->  drivers/net/ethernet/qlogic/qed/qed_iwarp.c        |    7 -
->  drivers/net/ethernet/qlogic/qed/qed_l2.c           |    2 +-
->  drivers/net/ethernet/qlogic/qed/qed_ll2.c          |   13 -
->  drivers/net/ethernet/qlogic/qede/qede.h            |    2 +-
->  drivers/scsi/qedf/qedf_version.h                   |    4 +-
->  drivers/scsi/qedi/qedi_version.h                   |    4 +-
->  include/linux/qed/common_hsi.h                     |    2 +-
->  include/linux/qed/eth_common.h                     |    2 +-
->  include/linux/qed/iscsi_common.h                   |    4 +-
->  include/linux/qed/rdma_common.h                    |    2 +
->  include/linux/qed/roce_common.h                    |    3 +
->  20 files changed, 1319 insertions(+), 1153 deletions(-)
-> 
-> diff --git a/drivers/infiniband/hw/qedr/main.c b/drivers/infiniband/hw/qedr/main.c
-> index db4bf97..7dbbe6d 100644
-> +++ b/drivers/infiniband/hw/qedr/main.c
-> @@ -51,6 +51,7 @@
->  MODULE_DESCRIPTION("QLogic 40G/100G ROCE Driver");
->  MODULE_AUTHOR("QLogic Corporation");
->  MODULE_LICENSE("Dual BSD/GPL");
-> +MODULE_VERSION(QEDR_MODULE_VERSION);
->  
->  #define QEDR_WQ_MULTIPLIER_DFT	(3)
->  
-> diff --git a/drivers/infiniband/hw/qedr/qedr.h b/drivers/infiniband/hw/qedr/qedr.h
-> index 86d4511..ab0d411 100644
-> +++ b/drivers/infiniband/hw/qedr/qedr.h
-> @@ -43,6 +43,8 @@
->  #include "qedr_hsi_rdma.h"
->  
->  #define QEDR_NODE_DESC "QLogic 579xx RoCE HCA"
-> +#define QEDR_MODULE_VERSION "8.33.11.20"
-> +
-
-I thought we had a general prohibition against versions like this in
-mainline drivers? And what does this hunk have to do with supporting
-new firmware?
-
-Jason
+T24gU3VuLCAyMDE4LTAzLTI1IGF0IDEwOjA4ICswMzAwLCBPaGFkIFNoYXJhYmkgd3JvdGU6DQo+
+IEFkZCBVRlMgUHJvdG9jb2wgSW5mb3JtYXRpb24gVW5pdHModXBpdSkgdHJhY2UgZXZlbnRzIGZv
+ciB1ZnMgZHJpdmVyLA0KPiB1c2VkIHRvIHRyYWNlIHZhcmlvdXMgdWZzIHRyYW5zYWN0aW9uIHR5
+cGVzLSBjb21tYW5kLCB0YXNrLW1hbmFnZW1lbnQNCj4gYW5kIGRldmljZSBtYW5hZ2VtZW50Lg0K
+PiBUaGUgdHJhY2UtcG9pbnQgZm9ybWF0IGlzIGdlbmVyaWMgYW5kIGNhbiBiZSBlYXNpbHkgYWRh
+cHRlZCB0byB0cmFjZQ0KPiBvdGhlciB1cGl1cyBpZiBuZWVkZWQuDQo+IEN1cnJlbnRseSB0cmFj
+aW5nIHVmcyB0cmFuc2FjdGlvbiBvZiB0eXBlICdkZXZpY2UgbWFuYWdlbWVudCcsIHdoaWNoDQo+
+IHRoaXMgcGF0Y2ggaW50cm9kdWNlLCBjYW5ub3QgYmUgb2J0YWluZWQgZnJvbSBhbnkgb3RoZXIg
+dHJhY2UuDQo+IERldmljZSBtYW5hZ2VtZW50IHRyYW5zYWN0aW9ucyBhcmUgdXNlZCBmb3IgY29t
+bXVuaWNhdGlvbiB3aXRoIHRoZQ0KPiBkZXZpY2Ugc3VjaCBhcyByZWFkaW5nIGFuZCB3cml0aW5n
+IGRlc2NyaXB0b3Igb3IgYXR0cmlidXRlcyBldGMuDQo+IA0KPiB2Mi0+djM6DQo+ICAgICAtIG1v
+ZGlmeSBhcmdzIDMsNCBvZiB0cmFjZV91ZnNoY2RfdXBpdSB0byBiZSB2b2lkICoNCj4gDQo+IHYx
+LT52MjoNCj4gICAgIC0gc3BsaXQgdG8gdHJhbnNhY3Rpb24gc3BlY2lmaWMgZnVuY3Rpb25zIChm
+aXggd2FybmluZ3MgYW5kIHNpbXBsaWZpZXMNCj4gICAgICAgY29kZSkNCj4gICAgIC0gYWRkaW5n
+IHRyYWNlcyB3aGVuIHNlbmRpbmcgcXVlcnkgY29tbWFuZA0KDQpUaGUgY2hhbmdlbG9nIGZvciBh
+IHBhdGNoIHNob3VsZCBhcHBlYXIgdW5kZXIgdGhlIHRocmVlIGh5cGhlbnMgc3VjaCB0aGF0IGl0
+DQpnZXRzIGRpc2NhcmRlZCBhdXRvbWF0aWNhbGx5IGJ5IHRvb2xzIGxpa2UgImdpdCBhbSIuIE1h
+cnRpbiB3aWxsIGhhdmUgdG8NCnJlbW92ZSB0aGUgYWJvdmUgY2hhbmdlbG9nIG1hbnVhbGx5LiBB
+bnl3YXk6DQoNClJldmlld2VkLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdk
+Yy5jb20+DQoNCg0KDQoNCg==
