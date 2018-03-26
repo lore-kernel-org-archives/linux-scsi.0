@@ -1,37 +1,26 @@
-From: Ross Lagerwall <ross.lagerwall@citrix.com>
-Subject: [PATCH] scsi: devinfo: Add Microsoft iSCSI target to 1024 sector blacklist
-Date: Mon, 26 Mar 2018 14:56:51 +0100
-Message-ID: <20180326135651.8193-1-ross.lagerwall@citrix.com>
+From: Arnaldo Carvalho de Melo <acme@kernel.org>
+Subject: Re: [PATCH] target: Use WARNON_NON_RT(!irqs_disabled())
+Date: Mon, 26 Mar 2018 11:21:36 -0300
+Message-ID: <20180326142136.GD18897@kernel.org>
+References: <20180321153854.GB24312@kernel.org>
+ <CA+55aFwKN_JijmCt=0S4jF8KzGPmoKNbuYF59va7U4ziJLLryA@mail.gmail.com>
+ <20180322093745.GC4229@kernel.org>
+ <20180323155513.dwbgvblenlji33as@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180323155513.dwbgvblenlji33as@linutronix.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ross Lagerwall <ross.lagerwall@citrix.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, linux-rt-users <linux-rt-users@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Daniel Bristot de Oliveira <daniel@bristot.me>, Luis Claudio =?iso-8859-1?Q?R=2E_Gon=E7alves?= <lclaudio@redhat.com>, Clark Williams <williams@redhat.com>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The Windows Server 2016 iSCSI target doesn't work with the Linux kernel
-initiator since the kernel started sending larger requests by default,
-nor does it implement the block limits VPD page. Apply the sector limit
-workaround for these targets.
+Em Fri, Mar 23, 2018 at 04:55:13PM +0100, Sebastian Andrzej Siewior escreveu:
+> Arnaldo, please do "[PATCH RT]" while sending patches. Then the bots
+> don't complain if it applies but does not compile on !RT kernel (or so
+> I've been told).
 
-Signed-off-by: Ross Lagerwall <ross.lagerwall@citrix.com>
----
- drivers/scsi/scsi_devinfo.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Ok, I'll try to remember that for future patches.
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index f3b1172..5cb748a 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -213,7 +213,7 @@ static struct {
- 	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
- 	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
- 	{"MICROP", "4110", NULL, BLIST_NOTQ},
--	{"MSFT", "Virtual HD", NULL, BLIST_NO_RSOC},
-+	{"MSFT", "Virtual HD", NULL, BLIST_MAX_1024 | BLIST_NO_RSOC},
- 	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
- 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
- 	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--- 
-2.9.5
+- Arnaldo
