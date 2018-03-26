@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v3 31/41] cxlflash: Introduce object handle fop
-Date: Mon, 26 Mar 2018 11:34:35 -0500
-Message-ID: <1522082075-58601-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v3 32/41] cxlflash: Setup LISNs for user contexts
+Date: Mon, 26 Mar 2018 11:34:42 -0500
+Message-ID: <1522082082-58638-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,94 +19,92 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-OCXL requires that AFUs use an opaque object handle to represent
-an AFU interrupt. The specification does not provide a common means
-to communicate the object handle to the AFU - each AFU must define
-this within the AFU specification. To support this model, the object
-handle must be passed back to the core driver as it manages the AFU
-specification (SISLite) for cxlflash. Note that for Power systems,
-the object handle is the effective address of the trigger page.
+The SISLite specification has been updated for OCXL to support
+communicating data to generate AFU interrupts to the AFU. This includes
+a new capability bit that is advertised for OCXL AFUs and new registers
+to hold the object handle and translation PASID of each interrupt. For
+Power, the object handle is the mapped trigger page. Note that because
+these mappings are kernel only, the PASID of a kernel context must be
+used to satisfy the translation.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/backend.h |  1 +
- drivers/scsi/cxlflash/cxl_hw.c  |  7 +++++++
- drivers/scsi/cxlflash/ocxl_hw.c | 18 ++++++++++++++++++
- 3 files changed, 26 insertions(+)
+ drivers/scsi/cxlflash/common.h    |  5 +++++
+ drivers/scsi/cxlflash/sislite.h   |  5 +++++
+ drivers/scsi/cxlflash/superpipe.c | 14 ++++++++++++++
+ 3 files changed, 24 insertions(+)
 
-diff --git a/drivers/scsi/cxlflash/backend.h b/drivers/scsi/cxlflash/backend.h
-index f675bcb..bcd8a6c 100644
---- a/drivers/scsi/cxlflash/backend.h
-+++ b/drivers/scsi/cxlflash/backend.h
-@@ -23,6 +23,7 @@ struct cxlflash_backend_ops {
- 	int (*map_afu_irq)(void *ctx_cookie, int num, irq_handler_t handler,
- 			   void *cookie, char *name);
- 	void (*unmap_afu_irq)(void *ctx_cookie, int num, void *cookie);
-+	u64 (*get_irq_objhndl)(void *ctx_cookie, int irq);
- 	int (*start_context)(void *ctx_cookie);
- 	int (*stop_context)(void *ctx_cookie);
- 	int (*afu_reset)(void *ctx_cookie);
-diff --git a/drivers/scsi/cxlflash/cxl_hw.c b/drivers/scsi/cxlflash/cxl_hw.c
-index a1d6d12..b42da88 100644
---- a/drivers/scsi/cxlflash/cxl_hw.c
-+++ b/drivers/scsi/cxlflash/cxl_hw.c
-@@ -49,6 +49,12 @@ static void cxlflash_unmap_afu_irq(void *ctx_cookie, int num, void *cookie)
- 	cxl_unmap_afu_irq(ctx_cookie, num, cookie);
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index d7fccea..b69fd32 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -273,6 +273,11 @@ static inline bool afu_has_cap(struct afu *afu, u64 cap)
+ 	return afu_cap & cap;
  }
  
-+static u64 cxlflash_get_irq_objhndl(void *ctx_cookie, int irq)
++static inline bool afu_is_ocxl_lisn(struct afu *afu)
 +{
-+	/* Dummy fop for cxl */
-+	return 0;
++	return afu_has_cap(afu, SISL_INTVER_CAP_OCXL_LISN);
 +}
 +
- static int cxlflash_start_context(void *ctx_cookie)
+ static inline bool afu_is_afu_debug(struct afu *afu)
  {
- 	return cxl_start_context(ctx_cookie, 0, NULL);
-@@ -153,6 +159,7 @@ const struct cxlflash_backend_ops cxlflash_cxl_ops = {
- 	.process_element	= cxlflash_process_element,
- 	.map_afu_irq		= cxlflash_map_afu_irq,
- 	.unmap_afu_irq		= cxlflash_unmap_afu_irq,
-+	.get_irq_objhndl	= cxlflash_get_irq_objhndl,
- 	.start_context		= cxlflash_start_context,
- 	.stop_context		= cxlflash_stop_context,
- 	.afu_reset		= cxlflash_afu_reset,
-diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index 4bbc1d1..f77f4d7 100644
---- a/drivers/scsi/cxlflash/ocxl_hw.c
-+++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -308,6 +308,23 @@ static void ocxlflash_unmap_afu_irq(void *ctx_cookie, int num, void *cookie)
- }
+ 	return afu_has_cap(afu, SISL_INTVER_CAP_AFU_DEBUG);
+diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
+index d8940f1..c08b9d3 100644
+--- a/drivers/scsi/cxlflash/sislite.h
++++ b/drivers/scsi/cxlflash/sislite.h
+@@ -310,6 +310,10 @@ struct sisl_ctrl_map {
+ #define SISL_CTX_CAP_WRITE_CMD         0x0000000000000002ULL /* afu_rc 0x21 */
+ #define SISL_CTX_CAP_READ_CMD          0x0000000000000001ULL /* afu_rc 0x21 */
+ 	__be64 mbox_r;
++	__be64 lisn_pasid[2];
++	/* pasid _a arg must be ULL */
++#define SISL_LISN_PASID(_a, _b)	(((_a) << 32) | (_b))
++	__be64 lisn_ea[3];
+ };
  
- /**
-+ * ocxlflash_get_irq_objhndl() - get the object handle for an interrupt
-+ * @ctx_cookie:	Context associated with the interrupt.
-+ * @irq:	Interrupt number.
-+ *
-+ * Return: effective address of the mapped region
-+ */
-+static u64 ocxlflash_get_irq_objhndl(void *ctx_cookie, int irq)
-+{
-+	struct ocxlflash_context *ctx = ctx_cookie;
+ /* single copy global regs */
+@@ -416,6 +420,7 @@ struct sisl_global_regs {
+ #define SISL_INTVER_CAP_RESERVED_CMD_MODE_B	0x100000000000ULL
+ #define SISL_INTVER_CAP_LUN_PROVISION		0x080000000000ULL
+ #define SISL_INTVER_CAP_AFU_DEBUG		0x040000000000ULL
++#define SISL_INTVER_CAP_OCXL_LISN		0x020000000000ULL
+ };
+ 
+ #define CXLFLASH_NUM_FC_PORTS_PER_BANK	2	/* fixed # of ports per bank */
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 2fe79df..04a3bf9 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -269,6 +269,7 @@ static int afu_attach(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
+ 	int rc = 0;
+ 	struct hwq *hwq = get_hwq(afu, PRIMARY_HWQ);
+ 	u64 val;
++	int i;
+ 
+ 	/* Unlock cap and restrict user to read/write cmds in translated mode */
+ 	readq_be(&ctrl_map->mbox_r);
+@@ -282,6 +283,19 @@ static int afu_attach(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
+ 		goto out;
+ 	}
+ 
++	if (afu_is_ocxl_lisn(afu)) {
++		/* Set up the LISN effective address for each interrupt */
++		for (i = 0; i < ctxi->irqs; i++) {
++			val = cfg->ops->get_irq_objhndl(ctxi->ctx, i);
++			writeq_be(val, &ctrl_map->lisn_ea[i]);
++		}
 +
-+	if (irq < 0 || irq >= ctx->num_irqs)
-+		return 0;
++		/* Use primary HWQ PASID as identifier for all interrupts */
++		val = hwq->ctx_hndl;
++		writeq_be(SISL_LISN_PASID(val, val), &ctrl_map->lisn_pasid[0]);
++		writeq_be(SISL_LISN_PASID(0UL, val), &ctrl_map->lisn_pasid[1]);
++	}
 +
-+	return (__force u64)ctx->irqs[irq].vtrig;
-+}
-+
-+/**
-  * start_context() - local routine to start a context
-  * @ctx:	Adapter context to be started.
-  *
-@@ -1301,6 +1318,7 @@ const struct cxlflash_backend_ops cxlflash_ocxl_ops = {
- 	.process_element	= ocxlflash_process_element,
- 	.map_afu_irq		= ocxlflash_map_afu_irq,
- 	.unmap_afu_irq		= ocxlflash_unmap_afu_irq,
-+	.get_irq_objhndl	= ocxlflash_get_irq_objhndl,
- 	.start_context		= ocxlflash_start_context,
- 	.stop_context		= ocxlflash_stop_context,
- 	.set_master		= ocxlflash_set_master,
+ 	/* Set up MMIO registers pointing to the RHT */
+ 	writeq_be((u64)ctxi->rht_start, &ctrl_map->rht_start);
+ 	val = SISL_RHT_CNT_ID((u64)MAX_RHT_PER_CONTEXT, (u64)(hwq->ctx_hndl));
 -- 
 2.1.0
