@@ -1,112 +1,79 @@
-From: "liwei (CM)" <liwei213@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTogW1BBVENIIHY4IDIvNV0gZHQtYmlu?=
- =?utf-8?Q?dings:_scsi:_ufs:_add_document_for_hisi-ufs?=
-Date: Tue, 27 Mar 2018 06:15:15 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA588AD@DGGEMM506-MBS.china.huawei.com>
-References: <20180213101412.5717-1-liwei213@huawei.com>
- <20180213101412.5717-3-liwei213@huawei.com>
- <CAK8P3a2b3rLHyM+vMppCkAR3VYbhw-b0LpuWfLCqjs7z9n+hyw@mail.gmail.com>
- <1699CE87DE933F49876AD744B5DC140FA584ED@DGGEMM506-MBS.china.huawei.com>
- <CAK8P3a3NdHLDf2vOMyZ1qcWNW1Jg5T47qR0qWhWEeDn+90S4ug@mail.gmail.com>
- <1699CE87DE933F49876AD744B5DC140FA58798@DGGEMM506-MBS.china.huawei.com>
- <CAK8P3a29sDaEj=iTkru-3mc9NpjNvZos3Z+h5UsT1cAeULoGHw@mail.gmail.com>
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Subject: Re: [Bug 199003] console stalled, cause Hard LOCKUP.
+Date: Tue, 27 Mar 2018 19:37:40 +0900
+Message-ID: <20180327103740.GA4872@jagdpanzerIV>
+References: <bug-199003-14532@https.bugzilla.kernel.org/>
+ <bug-199003-14532-IBTfRpvy7t@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: zh-CN
+Content-Disposition: inline
+In-Reply-To: <bug-199003-14532-IBTfRpvy7t@https.bugzilla.kernel.org/>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "liwei (CM)" <liwei213@huawei.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "xuwei (O)" <xuwei5@huawei.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, Eric Anholt <eric@anholt.net>, DTML <devicetree@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: sergey.senozhatsky@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIEFybmQNCg0KQXQgcHJlc2VudCBvdXIgdWZzIG1vZHVsZSBtYWlubHkgaGFzIGZvdXIgY2xv
-Y2tzIGZyb20gdGhlIG91dHNpZGU6DQpoY2xrX3VmczogICAgIG1haW4gY2xvY2sgb2YgdWZzIGNv
-bnRyb2xsZXIgLGZyZXEgaXMgMjA3LjVNSHogDQpjZmdfcGh5X2NsazogIGNvbmZpZ3VyYXRpb24g
-Y2xvY2sgb2YgTVBIWSwgZnJlcSBpcyA1MS44NzVNSHoNCnJlZl9waHlfY2xrOiAgcmVmZXJlbmNl
-IGNsb2NrIG9mIE1QSFkgZnJvbSBQTVUsIGZyZXEgaXMgMTkuMk1Ieg0KcmVmX2lvX2NsazogICAg
-cmVmZXJlbmNlIGNsb2NrIGZvciB0aGUgZXh0ZXJuYWwgaW50ZXJmYWNlIHRvIHRoZSBkZXZpY2Us
-IGZyZXEgaXMgMTkuMk1Ieg0KDQpXZSBjb250cm9sIHR3byBjbG9ja3MgInJlZl9pb19jbGsiIGFu
-ZCAiY2ZnX3BoeV9jbGsiIGluIHRoZSBkcml2ZXIgYmVjYXVzZSB0aGUgb3RoZXIgdHdvIGFyZSBj
-b250cm9sbGVkIGJ5IG1haW4gY2xvY2sgbW9kdWxlIGFuZCBwbXUuIA0KZm9yIHRoaXMgcGF0Y2gs
-IGNmZ19waHlfY2xrIGNvcnJlc3BvbmRzIHRvICJwaHlfY2xrIiwgcmVmX2lvX2NsayBjb3JyZXNw
-b25kcyB0byAicmVmX2NsayIuDQoNClNvIHRoZSBjbGtzIGluIHRoZSBwYXRjaCB5b3UgZ2l2ZSBh
-cHBlYXIgdG8gYmUgdW5zdWl0YWJsZSBmb3IgZGVzY3JpYmluZyB0aGlzIC5BbmQgdGhlIGZvbGxv
-d2luZyBjbGtzIG9mIHFjb20gYXJlIGludGVybmFsIGNsb2NrPyANCldlIGRpZG4ndCBkZXNjcmli
-ZSBvciBwYXkgYXR0ZW50aW9uIHRvIHRoZSBjbG9jayBpbnNpZGUgdGhlIHVmcyBtb2R1bGUuDQoN
-ClBIWSB0byBjb250cm9sbGVyIHN5bWJvbCBzeW5jaHJvbml6YXRpb24gY2xvY2tzOg0KICAgICAg
-ICAicnhfbGFuZTBfc3luY19jbGsiIC0gUlggTGFuZSAwDQogICAgICAgICJyeF9sYW5lMV9zeW5j
-X2NsayIgLSBSWCBMYW5lIDENCiAgICAgICAgInR4X2xhbmUwX3N5bmNfY2xrIiAtIFRYIExhbmUg
-MA0KICAgICAgICAidHhfbGFuZTFfc3luY19jbGsiIC0gVFggTGFuZSAxDQoNCg0KLS0tLS3pgq7k
-u7bljp/ku7YtLS0tLQ0K5Y+R5Lu25Lq6OiBsaXdlaSAoQ00pIA0K5Y+R6YCB5pe26Ze0OiAyMDE4
-5bm0M+aciDI25pelIDIwOjAyDQrmlLbku7bkuro6ICdBcm5kIEJlcmdtYW5uJw0K5oqE6YCBOiBS
-b2IgSGVycmluZzsgTWFyayBSdXRsYW5kOyB4dXdlaSAoTyk7IENhdGFsaW4gTWFyaW5hczsgV2ls
-bCBEZWFjb247IFZpbmF5YWsgSG9saWthdHRpOyBKYW1lcyBFLkouIEJvdHRvbWxleTsgTWFydGlu
-IEsuIFBldGVyc2VuOyBLZXZpbiBIaWxtYW47IEdyZWdvcnkgQ0xFTUVOVDsgVGhvbWFzIFBldGF6
-em9uaTsgTWFzYWhpcm8gWWFtYWRhOyBSaWt1IFZvaXBpbzsgVGhpZXJyeSBSZWRpbmc7IEtyenlz
-enRvZiBLb3psb3dza2k7IEVyaWMgQW5ob2x0OyBEVE1MOyBMaW51eCBLZXJuZWwgTWFpbGluZyBM
-aXN0OyBMaW51eCBBUk07IGxpbnV4LXNjc2k7IHphbmdsZWlnYW5nOyBHZW5namlhbmZlbmc7IEd1
-b2RvbmcgWHU7IFpoYW5nZmVpIEdhbzsgRmVuZ2Jhb3BlbmcgKGtldmluLCBLaXJpbiBTb2x1dGlv
-biBEZXB0KTsgWWFuaXYgR2FyZGkNCuS4u+mimDog562U5aSNOiDnrZTlpI06IOetlOWkjTogW1BB
-VENIIHY4IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYWRkIGRvY3VtZW50IGZvciBoaXNp
-LXVmcw0KDQpIaSwgQXJuZA0KDQpJJ2xsIGFzayBvdXIgc29jIGNvbGxlYWd1ZXMgZm9yIGhlbHAg
-YW5kIGdpdmUgYSBkZXRhaWxlZCBhbmQgYWNjdXJhdGUgZXhwbGFuYXRpb24gYW9zcC4NCg0KVGhh
-bmtzIQ0KDQoNCi0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCuWPkeS7tuS6ujogYXJuZGJlcmdtYW5u
-QGdtYWlsLmNvbSBbbWFpbHRvOmFybmRiZXJnbWFubkBnbWFpbC5jb21dIOS7o+ihqCBBcm5kIEJl
-cmdtYW5uDQrlj5HpgIHml7bpl7Q6IDIwMTjlubQz5pyIMjbml6UgMTg6NDINCuaUtuS7tuS6ujog
-bGl3ZWkgKENNKQ0K5oqE6YCBOiBSb2IgSGVycmluZzsgTWFyayBSdXRsYW5kOyB4dXdlaSAoTyk7
-IENhdGFsaW4gTWFyaW5hczsgV2lsbCBEZWFjb247IFZpbmF5YWsgSG9saWthdHRpOyBKYW1lcyBF
-LkouIEJvdHRvbWxleTsgTWFydGluIEsuIFBldGVyc2VuOyBLZXZpbiBIaWxtYW47IEdyZWdvcnkg
-Q0xFTUVOVDsgVGhvbWFzIFBldGF6em9uaTsgTWFzYWhpcm8gWWFtYWRhOyBSaWt1IFZvaXBpbzsg
-VGhpZXJyeSBSZWRpbmc7IEtyenlzenRvZiBLb3psb3dza2k7IEVyaWMgQW5ob2x0OyBEVE1MOyBM
-aW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyBMaW51eCBBUk07IGxpbnV4LXNjc2k7IHphbmdsZWln
-YW5nOyBHZW5namlhbmZlbmc7IEd1b2RvbmcgWHU7IFpoYW5nZmVpIEdhbzsgRmVuZ2Jhb3Blbmcg
-KGtldmluLCBLaXJpbiBTb2x1dGlvbiBEZXB0KTsgWWFuaXYgR2FyZGkNCuS4u+mimDogUmU6IOet
-lOWkjTog562U5aSNOiBbUEFUQ0ggdjggMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQg
-ZG9jdW1lbnQgZm9yIGhpc2ktdWZzDQoNCk9uIE1vbiwgTWFyIDI2LCAyMDE4IGF0IDEyOjI2IFBN
-LCBsaXdlaSAoQ00pIDxsaXdlaTIxM0BodWF3ZWkuY29tPiB3cm90ZToNCj4g5Y+R5Lu25Lq6OiBh
-cm5kYmVyZ21hbm5AZ21haWwuY29tIFttYWlsdG86YXJuZGJlcmdtYW5uQGdtYWlsLmNvbV0g5Luj
-6KGoIEFybmQgDQo+IEJlcmdtYW5uDQo+ID4g5Li76aKYOiBSZTog562U5aSNOiBbUEFUQ0ggdjgg
-Mi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9jdW1lbnQgZm9yIA0KPiA+IGhpc2kt
-dWZzIE9uIEZyaSwgTWFyIDIzLCAyMDE4IGF0IDM6MjIgQU0sIGxpd2VpIChDTSkgPGxpd2VpMjEz
-QGh1YXdlaS5jb20+IHdyb3RlOg0KPiA+PiBUaGUgY2xvY2sgbmFtZXMgc291bmQgZ2VuZXJpYyBl
-bm91Z2gsIHNob3VsZCB3ZSBoYXZlIGJvdGggaW4gdGhlIGdlbmVyaWMgYmluZGluZz8NCj4gPj4N
-Cj4gPj4gRG8geW91IG1lYW4gdGhhdCBhZGQgYSAicGh5X2NsayIgdG8gdWZzaGNkLXBsdGZybSAn
-cyBiaW5kaW5ncz8NCj4gPj4gQXQgcHJlc2VudCwgaXQgc2VlbXMgdGhhdCBpbiB0aGUgaW1wbGVt
-ZW50YXRpb24gb2YgZ2VuZXJpYyBjb2RlLCANCj4gPj4gYXBhcnQgZnJvbSAicmVmX2NsayIgbWF5
-IGhhdmUgc3BlY2lhbCBwcm9jZXNzaW5nLCBvdGhlciBjbGsgd2lsbCANCj4gPj4gbm90IGhhdmUg
-c3BlY2lhbCBwcm9jZXNzaW5nIGFuZCBzaW1wbHkgcGFyc2UgYW5kIGVuYWJsZTsgUmVmZXJyaW5n
-IA0KPiA+PiB0byB1ZnMtcWNvbSBiaW5kaW5nLCBJIHRoaW5rICJwaHlfY2xrIiBjYW4gYmUgbmFt
-ZWQgImlmYWNlX2NsayIsIA0KPiA+PiB0aGlzICJpZmFjZV9jbGsiIGV4aXN0cyBpbiB1ZnNoY2Qt
-cGx0ZnJtIGJpbmRpbmdzO0lmIHNvLCAicmVmX2NsayIsICJpZmFjZV9jbGsiIGFyZSBib3RoIGlu
-IHRoZSBnZW5lcmljIGJpbmRpbmcsd2Ugd2lsbCByZW1vdmUgdGhlbSBoZXJlLiBJcyB0aGF0IG9r
-YXk/DQo+DQo+ID4gSSdtIGxvb2tpbmcgYXQgdGhlIGdlbmVyaWMgYmluZGluZyBhZ2FpbiwgYW5k
-IGl0IHNlZW1zIHdlIG5ldmVyIA0KPiA+IHF1aXRlIG1hbmFnZWQgdG8gZml4IHNvbWUgbWlub3Ig
-cHJvYmxlbXMgd2l0aCBpdC4gU2VlIGJlbG93IGZvciBhIHBvc3NpYmxlIHdheSB0byBjbGFyaWZ5
-IGl0Lg0KPg0KPiBwaHlfY2xrIGlzIGFjdHVhbGx5IGdpdmVuIHRvIHRoZSBwaHkuIEJ1dCBhcyBw
-cmV2aW91c2x5IG1lbnRpb25lZCAsIHdlIA0KPiBkbyBub3QgaGF2ZSBhIHNlcGFyYXRlIHBoeSB0
-byBjb25maWd1cmUgOyBUaGUgY2xrcyBpbiB0aGUgcGF0Y2ggeW91IA0KPiBnaXZlIGFwcGVhciB0
-byBiZSB1bnN1aXRhYmxlIGZvciBkZXNjcmliaW5nIHRoaXMgLg0KPiBIZXJlIHdlIGNhbid0IGRl
-c2NyaWJlIHBoeV9jbGsgaW4gdGhlIG5vZGUgInVmc3BoeTE6IHVmc3BoeUBmYzU5NzAwMCIgbGlr
-ZSBxY29tLg0KPiBTbyBjYW4gd2UgcHV0IGl0IGhlcmUgaW4gb3VyIG93biBiaW5kaW5nIGxpa2Ug
-dGhpcz8NCg0KSSB0aGluayB0aGUgY29uY2VwdCBvZiBoYXZpbmcgYSBwaHkgY2xrIGlzIGdlbmVy
-aWMgZW5vdWdoIHRoYXQgaXQncyBiZXR0ZXIgdG8gaGF2ZSB0aGF0IGluIHRoZSBjb21tb24gcGFy
-dCwgb3RoZXJzIHdpbGwgc3VyZWx5IGhhdmUgdGhlIHNhbWUgdGhpbmcsIGFuZCBpbiB0aGlzIGNh
-c2UsIHFjb20gd291bGQgYmUgdGhlIGV4Y2VwdGlvbiB0aGF0IGRvZXMgbm90IHVzZSBvbmUuDQoN
-ClRoZXJlIGFyZSBhcHBhcmVudGx5IGEgY291cGxlIG9mIHRoaW5ncyByZWxhdGVkIHRvIHRoZSBw
-aHkgdGhhdCBtYXkgb3IgbWF5IG5vdCByZXF1aXJlIGEgY2xrOg0KDQotIHJlZl9jbGs6IFRoZSBy
-ZWZlcmVuY2UgY2xvY2sgb24gdGhlIG1pcGkgYnVzLCB0aGlzIGlzIHdoYXQgcWNvbSBoYXZlLCB0
-aGlzIHdvdWxkDQogIGJlIHRoZSAxOS4yIE1IeiBjbG9jayBzaWduYWwuDQotIG9uZSBjbG9jayB0
-byBkcml2ZSB0aGUgbG9naWMgYmxvY2sgZm9yIHRoZSBQSFkgaXRzZWxmLCBpZiBpdCBpcyBpbmNs
-dWRlZCB3aXRoaW4NCiAgdGhlIHNhbWUgbG9naWNhbCBwb3J0aW9uIG9mIGFuIFNvQyBhcyB0aGUg
-dWZzaGNkLCBidXQgdXNlcyBhIHNlcGFyYXRlIGNsb2NrLg0KLSBMb29raW5nIGF0IHRoZSBBbmRy
-b2lkIGtlcm5lbCBhcyBkaXN0cmlidXRlZCBieSBnb29nbGUvcXVhbGNvbW0sIHRoZXkgaGF2ZQ0K
-ICBmb3VyIHNlcGFyYXRlIGNsb2NrcyBkZXNjcmliZWQgYXMNCg0KICAgIFBIWSB0byBjb250cm9s
-bGVyIHN5bWJvbCBzeW5jaHJvbml6YXRpb24gY2xvY2tzOg0KICAgICAgICAicnhfbGFuZTBfc3lu
-Y19jbGsiIC0gUlggTGFuZSAwDQogICAgICAgICJyeF9sYW5lMV9zeW5jX2NsayIgLSBSWCBMYW5l
-IDENCiAgICAgICAgInR4X2xhbmUwX3N5bmNfY2xrIiAtIFRYIExhbmUgMA0KICAgICAgICAidHhf
-bGFuZTFfc3luY19jbGsiIC0gVFggTGFuZSAxDQoNCldoaWNoIG9mIHRoZSBhYm92ZSB3b3VsZCB5
-b3VyIHBoeV9jbGsgcmVmZXIgdG8/DQoNCiAgICAgICBBcm5kDQoNClsxXSBodHRwczovL2FuZHJv
-aWQuZ29vZ2xlc291cmNlLmNvbS9rZXJuZWwvbXNtLysvYW5kcm9pZC1tc20tYnVsbGhlYWQtMy4x
-MC1tYXJzaG1hbGxvdy1kci9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vm
-c2hjZC1wbHRmcm0udHh0P2F1dG9kaXZlPTAlMkYlMkYlMkYlMkYlMkYNCg==
+I'll Cc blockdev
+
+On (03/27/18 08:36), bugzilla-daemon@bugzilla.kernel.org wrote:
+> > --- Comment #17 from sergey.senozhatsky.work@gmail.com ---
+> > On (03/26/18 13:05), bugzilla-daemon@bugzilla.kernel.org wrote:
+> > > Therefore the serial console is actually pretty fast. It seems that the
+> > > deadline
+> > > 10ms-per-character is not in the game here.
+> > 
+> > As the name suggests this is dmesg - content of logbuf. We can't tell
+> > anything about serial consoles speed from it.
+> 
+> Grrr, you are right. It would be interesting to see the output from
+> the serial port as well.
+> 
+> Anyway, it does not change the fact that printing so many same lines is
+> useless. The throttling still would make sense and probably would
+> solve the problem.
+
+You are right.
+
+Looking at backtraces (https://bugzilla.kernel.org/attachment.cgi?id=274953&action=edit)
+there *probably* was just one CPU doing all printk-s and all printouts. And
+there was one CPU waiting for that printing CPU to unlock the queue spin_lock.
+
+The printing CPU was looping in scsi_request_fn() picking up requests
+and calling sdev_printk() for each of them, because the device was
+offline. Given that serial console is not very fast, that we called
+serial console under queue spin_lock and the number of printks called,
+it was enough to lockup the CPU which was spining on queue spin_lock and
+to hard lockup the system.
+
+scsi_request_fn() does unlock the queue lock later, but not in that
+!scsi_device_online(sdev) error case.
+
+scsi_request_fn()
+{
+	for (;;) {
+		int rtn;
+		/*
+		 * get next queueable request.  We do this early to make sure
+		 * that the request is fully prepared even if we cannot
+		 * accept it.
+		 */
+		req = blk_peek_request(q);
+		if (!req)
+			break;
+
+		if (unlikely(!scsi_device_online(sdev))) {
+			sdev_printk(KERN_ERR, sdev,
+				    "rejecting I/O to offline device\n");
+			scsi_kill_request(req, q);
+			continue;
+			^^^^^^^^^ still under spinlock
+		}
+}
+
+I'd probably just unlock/lock queue lock, rather than ratelimit printk-s,
+before `continue'. Dunno.
+
+James, Martin, what do you think?
+
+	-ss
