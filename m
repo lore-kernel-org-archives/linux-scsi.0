@@ -1,38 +1,52 @@
-From: "bigeasy@linutronix.de" <bigeasy@linutronix.de>
-Subject: Re: [PATCH 1/2] target: drop spin_lock_assert() + irqs_disabled()
- combo checks
-Date: Wed, 28 Mar 2018 17:14:33 +0200
-Message-ID: <20180328151433.elhw6kgxdxq6fn6b@linutronix.de>
-References: <20180321153854.GB24312@kernel.org>
- <CA+55aFwKN_JijmCt=0S4jF8KzGPmoKNbuYF59va7U4ziJLLryA@mail.gmail.com>
- <20180322093745.GC4229@kernel.org>
- <20180323155513.dwbgvblenlji33as@linutronix.de>
- <1521822325.2535.5.camel@wdc.com>
- <CA+55aFxVkuntSektVmwXktzvfEezdDTAM_zj4DJdp3qJxWf8aA@mail.gmail.com>
- <20180323171736.bcyi2oiolge4l6hl@linutronix.de>
- <20180326111359.180f1604@gandalf.local.home>
- <20180328101553.uduqsdbxwnxrhl7a@linutronix.de>
- <c9f5df1e54bb2bd8f3f0aef86a55deb11888a6a4.camel@wdc.com>
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3 39/41] cxlflash: Synchronize reset and remove ops
+Date: Wed, 28 Mar 2018 09:43:32 -0500
+Message-ID: <20180328144332.GA61145@p8tul1-build.aus.stglabs.ibm.com>
+References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1522082127-58900-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 Content-Disposition: inline
-In-Reply-To: <c9f5df1e54bb2bd8f3f0aef86a55deb11888a6a4.camel@wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "rostedt@goodmis.org" <rostedt@goodmis.org>, "daniel@bristot.me" <daniel@bristot.me>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "acme@kernel.org" <acme@kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "williams@redhat.com" <williams@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lclaudio@redhat.com" <lclaudio@redhat.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-rt-users@vger.kernel.org" <linux-rt-users@vger.kernel.org>
+In-Reply-To: <1522082127-58900-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-03-28 15:05:41 [+0000], Bart Van Assche wrote:
-> The names of the two functions touched by patch 1/2 start with a double
-> underscore. That by itself is already a hint that these should be called with
-> a lock held (I know that this is not a universal convention in the Linux
-> kernel). I'm fine either way - either with patch 1/2 as posted or patch 1/2
-> with the above comment added.
+On Mon, Mar 26, 2018 at 11:35:27AM -0500, Uma Krishnan wrote:
+> The following Oops can be encountered if a device removal or system
+> shutdown is initiated while an EEH recovery is in process:
+> 
+> [c000000ff2f479c0] c008000015256f18 cxlflash_pci_slot_reset+0xa0/0x100
+>                                       [cxlflash]
+> [c000000ff2f47a30] c00800000dae22e0 cxl_pci_slot_reset+0x168/0x290 [cxl]
+> [c000000ff2f47ae0] c00000000003ef1c eeh_report_reset+0xec/0x170
+> [c000000ff2f47b20] c00000000003d0b8 eeh_pe_dev_traverse+0x98/0x170
+> [c000000ff2f47bb0] c00000000003f80c eeh_handle_normal_event+0x56c/0x580
+> [c000000ff2f47c60] c00000000003fba4 eeh_handle_event+0x2a4/0x338
+> [c000000ff2f47d10] c0000000000400b8 eeh_event_handler+0x1f8/0x200
+> [c000000ff2f47dc0] c00000000013da48 kthread+0x1a8/0x1b0
+> [c000000ff2f47e30] c00000000000b528 ret_from_kernel_thread+0x5c/0xb4
+> 
+> The remove handler frees AFU memory while the EEH recovery is in progress,
+> leading to a race condition. This can result in a crash if the recovery
+> thread tries to access this memory.
+> 
+> To resolve this issue, the cxlflash remove handler will evaluate the
+> device state and yield to any active reset or probing threads.
+> 
+> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
-Okay. In that case let me update 1/2.
-But 2/2 with the comment as Steven suggested is still a no no for you?
+Looks good!
 
-> Bart.
-
-Sebastian
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
