@@ -1,13 +1,15 @@
 From: Long Li <longli@linuxonhyperv.com>
-Subject: [Resend Patch 1/3] Vmbus: Add function to report available ring
- buffer to write in total ring size percentage
-Date: Tue, 27 Mar 2018 17:48:38 -0700
-Message-ID: <20180328004840.22787-1-longli@linuxonhyperv.com>
+Subject: [Resend Patch 3/3] Storvsc: Select channel based on available
+ percentage of ring buffer to write
+Date: Tue, 27 Mar 2018 17:48:40 -0700
+Message-ID: <20180328004840.22787-3-longli@linuxonhyperv.com>
+References: <20180328004840.22787-1-longli@linuxonhyperv.com>
 Reply-To: longli@microsoft.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20180328004840.22787-1-longli@linuxonhyperv.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -22,67 +24,132 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Long Li <longli@microsoft.com>
 
-Netvsc has a function to calculate how much ring buffer in percentage is
-available to write. This function is also useful for storvsc and other
-vmbus devices.
+This is a best effort for estimating on how busy the ring buffer is for
+that channel, based on available buffer to write in percentage. It is still
+possible that at the time of actual ring buffer write, the space may not be
+available due to other processes may be writing at the time.
 
-Define a similar function in vmbus to be used by other vmbus devices.
+Selecting a channel based on how full it is can reduce the possibility that
+a ring buffer write will fail, and avoid the situation a channel is over
+busy.
+
+Now it's possible that storvsc can use a smaller ring buffer size
+(e.g. 40k bytes) to take advantage of cache locality.
 
 Signed-off-by: Long Li <longli@microsoft.com>
 ---
- drivers/hv/ring_buffer.c |  2 ++
- include/linux/hyperv.h   | 12 ++++++++++++
- 2 files changed, 14 insertions(+)
+ drivers/scsi/storvsc_drv.c | 62 +++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 50 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/hv/ring_buffer.c b/drivers/hv/ring_buffer.c
-index 8699bb969e7e..3c836c099a8f 100644
---- a/drivers/hv/ring_buffer.c
-+++ b/drivers/hv/ring_buffer.c
-@@ -227,6 +227,8 @@ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
- 	ring_info->ring_buffer->feature_bits.value = 1;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index a2ec0bc9e9fa..b1a87072b3ab 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -395,6 +395,12 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
  
- 	ring_info->ring_size = page_cnt << PAGE_SHIFT;
-+	ring_info->ring_size_div10_reciprocal =
-+		reciprocal_value(ring_info->ring_size / 10);
- 	ring_info->ring_datasize = ring_info->ring_size -
- 		sizeof(struct hv_ring_buffer);
- 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 2048f3c3b68a..eb7204851089 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -36,6 +36,7 @@
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
- #include <linux/interrupt.h>
-+#include <linux/reciprocal_div.h>
- 
- #define MAX_PAGE_BUFFER_COUNT				32
- #define MAX_MULTIPAGE_BUFFER_COUNT			32 /* 128K */
-@@ -121,6 +122,7 @@ struct hv_ring_buffer {
- struct hv_ring_buffer_info {
- 	struct hv_ring_buffer *ring_buffer;
- 	u32 ring_size;			/* Include the shared header */
-+	struct reciprocal_value ring_size_div10_reciprocal;
- 	spinlock_t ring_lock;
- 
- 	u32 ring_datasize;		/* < ring_size */
-@@ -155,6 +157,16 @@ static inline u32 hv_get_bytes_to_write(const struct hv_ring_buffer_info *rbi)
- 	return write;
- }
- 
-+static inline u32 hv_get_avail_to_write_percent(
-+		const struct hv_ring_buffer_info *rbi)
-+{
-+	u32 avail_write = hv_get_bytes_to_write(rbi);
+ module_param(storvsc_vcpus_per_sub_channel, int, S_IRUGO);
+ MODULE_PARM_DESC(storvsc_vcpus_per_sub_channel, "Ratio of VCPUs to subchannels");
 +
-+	return reciprocal_divide(
-+			(avail_write  << 3) + (avail_write << 1),
-+			rbi->ring_size_div10_reciprocal);
-+}
++static int ring_avail_percent_lowater = 10;
++module_param(ring_avail_percent_lowater, int, S_IRUGO);
++MODULE_PARM_DESC(ring_avail_percent_lowater,
++		"Select a channel if available ring size > this in percent");
 +
  /*
-  * VMBUS version is 32 bit entity broken up into
-  * two 16 bit quantities: major_number. minor_number.
+  * Timeout in seconds for all devices managed by this driver.
+  */
+@@ -1285,9 +1291,9 @@ static int storvsc_do_io(struct hv_device *device,
+ {
+ 	struct storvsc_device *stor_device;
+ 	struct vstor_packet *vstor_packet;
+-	struct vmbus_channel *outgoing_channel;
++	struct vmbus_channel *outgoing_channel, *channel;
+ 	int ret = 0;
+-	struct cpumask alloced_mask;
++	struct cpumask alloced_mask, other_numa_mask;
+ 	int tgt_cpu;
+ 
+ 	vstor_packet = &request->vstor_packet;
+@@ -1301,22 +1307,53 @@ static int storvsc_do_io(struct hv_device *device,
+ 	/*
+ 	 * Select an an appropriate channel to send the request out.
+ 	 */
+-
+ 	if (stor_device->stor_chns[q_num] != NULL) {
+ 		outgoing_channel = stor_device->stor_chns[q_num];
+-		if (outgoing_channel->target_cpu == smp_processor_id()) {
++		if (outgoing_channel->target_cpu == q_num) {
+ 			/*
+ 			 * Ideally, we want to pick a different channel if
+ 			 * available on the same NUMA node.
+ 			 */
+ 			cpumask_and(&alloced_mask, &stor_device->alloced_cpus,
+ 				    cpumask_of_node(cpu_to_node(q_num)));
+-			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
+-					outgoing_channel->target_cpu + 1) {
+-				if (tgt_cpu != outgoing_channel->target_cpu) {
+-					outgoing_channel =
+-					stor_device->stor_chns[tgt_cpu];
+-					break;
++
++			for_each_cpu_wrap(tgt_cpu, &alloced_mask, q_num + 1) {
++				if (tgt_cpu == q_num)
++					continue;
++				channel = stor_device->stor_chns[tgt_cpu];
++				if (hv_get_avail_to_write_percent(
++							&channel->outbound)
++						> ring_avail_percent_lowater) {
++					outgoing_channel = channel;
++					goto found_channel;
++				}
++			}
++
++			/*
++			 * All the other channels on the same NUMA node are
++			 * busy. Try to use the channel on the current CPU
++			 */
++			if (hv_get_avail_to_write_percent(
++						&outgoing_channel->outbound)
++					> ring_avail_percent_lowater)
++				goto found_channel;
++
++			/*
++			 * If we reach here, all the channels on the current
++			 * NUMA node are busy. Try to find a channel in
++			 * other NUMA nodes
++			 */
++			cpumask_andnot(&other_numa_mask,
++					&stor_device->alloced_cpus,
++					cpumask_of_node(cpu_to_node(q_num)));
++
++			for_each_cpu(tgt_cpu, &other_numa_mask) {
++				channel = stor_device->stor_chns[tgt_cpu];
++				if (hv_get_avail_to_write_percent(
++							&channel->outbound)
++						> ring_avail_percent_lowater) {
++					outgoing_channel = channel;
++					goto found_channel;
+ 				}
+ 			}
+ 		}
+@@ -1324,7 +1361,7 @@ static int storvsc_do_io(struct hv_device *device,
+ 		outgoing_channel = get_og_chn(stor_device, q_num);
+ 	}
+ 
+-
++found_channel:
+ 	vstor_packet->flags |= REQUEST_COMPLETION_FLAG;
+ 
+ 	vstor_packet->vm_srb.length = (sizeof(struct vmscsi_request) -
+@@ -1733,7 +1770,8 @@ static int storvsc_probe(struct hv_device *device,
+ 	}
+ 
+ 	scsi_driver.can_queue = (max_outstanding_req_per_channel *
+-				 (max_sub_channels + 1));
++				 (max_sub_channels + 1)) *
++				 (100 - ring_avail_percent_lowater) / 100;
+ 
+ 	host = scsi_host_alloc(&scsi_driver,
+ 			       sizeof(struct hv_host_device));
 -- 
 2.14.1
