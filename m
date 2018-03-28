@@ -1,50 +1,65 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 00/41] cxlflash: OCXL transport support and
- miscellaneous fixes
-Date: Wed, 28 Mar 2018 17:34:31 -0400
-Message-ID: <yq1o9j7j34o.fsf@oracle.com>
-References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: SCSI generic (sg) regression in stable kernels
+Date: Wed, 28 Mar 2018 17:37:24 -0400
+Message-ID: <f0c7acd8-42e4-1896-6323-7807ff4f8007@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- (Uma Krishnan's message of "Mon, 26 Mar 2018 11:29:19 -0500")
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: stable <stable@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sasha Levin <alexander.levin@microsoft.com>
+Cc: Ben Hutchings <ben.hutchings@codethink.co.uk>, linux-scsi <linux-scsi@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bart.vanassche@wdc.com>, Eric Dumazet <edumazet@google.com>, Andrey Konovalov <andreyknvl@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
+The SCSI generic driver is currently broken in the 3.18, 4.1, 4.4, and
+4.9 stable kernels.  This is the problematic commit:
 
-Uma,
+109bade9c625 ("scsi: sg: use standard lists for sg_requests")
 
-> This patch series adds OCXL support to the cxlflash driver. With this
-> support, new devices using the OCXL transport will be supported by the
-> cxlflash driver along with the existing CXL devices. An effort is made
-> to keep this transport specific function independent of the existing
-> core driver that communicates with the AFU.
->
-> The first three patches contain a minor fix and staging improvements.
->
-> This series is intended for 4.17 and is bisectable.
+(all commit ids are from upstream git, not stable.git)
 
-Something this big really needs to be submitted around rc2/rc3. It's way
-too late in the cycle to ensure proper zeroday coverage for all these
-commits.
+There have already been a number of fixes backported to -stable to fix
+problems introduced by that commit:
 
-I have started a 4.18/scsi-queue branch to hold this series for now.
-The 4.18 branch will be rebased once 4.17rc1 is out in a few weeks. Your
-changes won't show up in for-next until then either.
+bd46fc406b30 ("scsi: sg: off by one in sg_ioctl()")
+4759df905a47 ("scsi: sg: factor out sg_fill_request_table()")
+3e0097499839 ("scsi: sg: fixup infoleak when using SG_GET_REQUEST_TABLE")
+587c3c9f286c ("scsi: sg: Re-fix off by one in sg_fill_request_table()")
+
+I am not sure why 109bade9c625 was added to -stable to begin with.  My
+guess is that the "infoleak" fix was flagged as being appropriate for
+-stable, and it depended on the original commit 109bade9c625.  But if
+you take a close look, the original commit 109bade9c625 is what
+introduced the infoleak in the first place.  Or maybe there was some
+other reason.  But I digress.
+
+There is one more fix for 109bade9c625 that has not yet been backported:
+
+48ae8484e9fc ("scsi: sg: don't return bogus Sg_requests")
+
+Without the fix above, sg oopses as soon as I try to use it.  So please
+add 48ae8484e9fc to -stable.
+
+The following -stable kernels already have 48ae8484e9fc:
+4.14.31
+4.15.14
+
+The following -stable kernels need 48ae8484e9fc:
+3.18.102
+4.1.51
+4.4.125
+4.9.91
+
+The following -stable kernels are not affected because they have not had
+the problematic commit backported:
+3.2.101
+3.16.56
+
+Related bugzilla:
+https://bugzilla.kernel.org/show_bug.cgi?id=198081
+
 
 Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Tony Battersby
+Cybernetics
