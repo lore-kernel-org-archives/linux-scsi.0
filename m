@@ -1,34 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC PATCH] mpt3sas: mpt3sas_scsih_enclosure_find_by_handle can be static
-Date: Wed, 28 Mar 2018 17:54:35 -0400
-Message-ID: <yq1370jj278.fsf@oracle.com>
-References: <1521540956-42347-1-git-send-email-chaitra.basappa@broadcom.com>
-        <20180320210652.GA40906@xian>
-        <289588bbff4dc0d35e519d0c4d4282da78cc6121.camel@wdc.com>
+Subject: Re: [Resend Patch 1/3] Vmbus: Add function to report available ring
+ buffer to write in total ring size percentage
+Date: Wed, 28 Mar 2018 18:00:11 -0400
+Message-ID: <yq1y3ibhndg.fsf@oracle.com>
+References: <20180328004840.22787-1-longli@linuxonhyperv.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <289588bbff4dc0d35e519d0c4d4282da78cc6121.camel@wdc.com> (Bart
-        Van Assche's message of "Tue, 27 Mar 2018 18:55:19 +0000")
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "lkp@intel.com" <lkp@intel.com>, "kbuild-all@01.org" <kbuild-all@01.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "jaco@uls.co.za" <jaco@uls.co.za>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20180328004840.22787-1-longli@linuxonhyperv.com> (Long Li's
+ message of "Tue, 27 Mar 2018 17:48:38 -0700")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@linuxonhyperv.com>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, netdev@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Bart,
+Long,
 
-> Are you aware that if the 0-day test infrastructure suggests an improvement
-> for a patch that the patch that that improvement applies to gets ignored
-> unless either the patch is reposted with the improvement applied or that it
-> is explained why the suggested improvement is inappropriate?
+> Netvsc has a function to calculate how much ring buffer in percentage is
+> available to write. This function is also useful for storvsc and other
+> vmbus devices.
 
-Correct. I don't apply anything that causes a 0-day warning. The patch
-will be closed with "Changes Required" status in patchwork.
-
-Always build patch submissions to linux-scsi with:
-
-	make C=1 CF="-D__CHECK_ENDIAN__"
+What is the submission strategy for this series? Do you expect it to go
+through net or scsi? If the latter, I'll need an ack from davem.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
