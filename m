@@ -1,56 +1,44 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH v3 41/41] cxlflash: Handle spurious interrupts
-Date: Wed, 28 Mar 2018 10:03:02 -0500
-Message-ID: <20180328150302.GC61145@p8tul1-build.aus.stglabs.ibm.com>
-References: <1522081759-57431-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1522082142-58975-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: Re: [PATCH 1/2] target: drop spin_lock_assert() + irqs_disabled()
+ combo checks
+Date: Wed, 28 Mar 2018 08:31:38 -0700
+Message-ID: <86c1243e-8733-c94d-d8ff-5c299b8266a6@wdc.com>
+References: <20180321153854.GB24312@kernel.org>
+ <CA+55aFwKN_JijmCt=0S4jF8KzGPmoKNbuYF59va7U4ziJLLryA@mail.gmail.com>
+ <20180322093745.GC4229@kernel.org>
+ <20180323155513.dwbgvblenlji33as@linutronix.de>
+ <1521822325.2535.5.camel@wdc.com>
+ <CA+55aFxVkuntSektVmwXktzvfEezdDTAM_zj4DJdp3qJxWf8aA@mail.gmail.com>
+ <20180323171736.bcyi2oiolge4l6hl@linutronix.de>
+ <20180326111359.180f1604@gandalf.local.home>
+ <20180328101553.uduqsdbxwnxrhl7a@linutronix.de>
+ <c9f5df1e54bb2bd8f3f0aef86a55deb11888a6a4.camel@wdc.com>
+ <20180328151433.elhw6kgxdxq6fn6b@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Disposition: inline
-In-Reply-To: <1522082142-58975-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180328151433.elhw6kgxdxq6fn6b@linutronix.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "bigeasy@linutronix.de" <bigeasy@linutronix.de>
+Cc: "rostedt@goodmis.org" <rostedt@goodmis.org>, "daniel@bristot.me" <daniel@bristot.me>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "acme@kernel.org" <acme@kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "williams@redhat.com" <williams@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lclaudio@redhat.com" <lclaudio@redhat.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-rt-users@vger.kernel.org" <linux-rt-users@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Mar 26, 2018 at 11:35:42AM -0500, Uma Krishnan wrote:
-> The following Oops can occur when there is heavy I/O traffic and the host
-> is reset by a tool such as sg_reset.
+On 03/28/18 08:14, bigeasy@linutronix.de wrote:
+> On 2018-03-28 15:05:41 [+0000], Bart Van Assche wrote:
+>> The names of the two functions touched by patch 1/2 start with a double
+>> underscore. That by itself is already a hint that these should be called with
+>> a lock held (I know that this is not a universal convention in the Linux
+>> kernel). I'm fine either way - either with patch 1/2 as posted or patch 1/2
+>> with the above comment added.
 > 
-> [c000200fff3fbc90] c00800001690117c process_cmd_doneq+0x104/0x500
->                                        [cxlflash] (unreliable)
-> [c000200fff3fbd80] c008000016901648 cxlflash_rrq_irq+0xd0/0x150 [cxlflash]
-> [c000200fff3fbde0] c000000000193130 __handle_irq_event_percpu+0xa0/0x310
-> [c000200fff3fbea0] c0000000001933d8 handle_irq_event_percpu+0x38/0x90
-> [c000200fff3fbee0] c000000000193494 handle_irq_event+0x64/0xb0
-> [c000200fff3fbf10] c000000000198ea0 handle_fasteoi_irq+0xc0/0x230
-> [c000200fff3fbf40] c00000000019182c generic_handle_irq+0x4c/0x70
-> [c000200fff3fbf60] c00000000001794c __do_irq+0x7c/0x1c0
-> [c000200fff3fbf90] c00000000002a390 call_do_irq+0x14/0x24
-> [c000200e5828fab0] c000000000017b2c do_IRQ+0x9c/0x130
-> [c000200e5828fb00] c000000000009b04 h_virt_irq_common+0x114/0x120
-> 
-> When a context is reset, the pending commands are flushed and the AFU
-> is notified. Before the AFU handles this request there could be command
-> completion interrupts queued to PHB which are yet to be delivered to the
-> context. In this scenario, a context could receive an interrupt for a
-> command that has been flushed, leading to a possible crash when the memory
-> for the flushed command is accessed.
-> 
-> To resolve this problem, a boolean will indicate if the hardware queue is
-> ready to process interrupts or not. This can be evaluated in the interrupt
-> handler before proessing an interrupt.
-> 
-> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> Okay. In that case let me update 1/2.
+> But 2/2 with the comment as Steven suggested is still a no no for you?
 
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Although I'm not enthusiast about patch 2/2, if others agree with that 
+patch I'm fine with that patch being sent upstream.
+
+Thanks,
+
+Bart.
