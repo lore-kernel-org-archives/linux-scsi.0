@@ -1,62 +1,50 @@
 From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] scsi: devinfo: Add Microsoft iSCSI target to 1024 sector
- blacklist
-Date: Wed, 28 Mar 2018 22:33:05 +0000
-Message-ID: <MWHPR2101MB0729E7680EDB0EE4886AAED1CEA30@MWHPR2101MB0729.namprd21.prod.outlook.com>
-References: <20180326135651.8193-1-ross.lagerwall@citrix.com>
- <yq17epvj2f1.fsf@oracle.com>
+Subject: RE: [Resend Patch 1/3] Vmbus: Add function to report available ring
+ buffer to write in total ring size percentage
+Date: Wed, 28 Mar 2018 22:42:45 +0000
+Message-ID: <MWHPR2101MB072958DDC25845615C3B1ADCCEA30@MWHPR2101MB0729.namprd21.prod.outlook.com>
+References: <20180328004840.22787-1-longli@linuxonhyperv.com>
+ <yq1y3ibhndg.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq17epvj2f1.fsf@oracle.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <yq1y3ibhndg.fsf@oracle.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, KY Srinivasan <kys@microsoft.com>
-Cc: Ross Lagerwall <ross.lagerwall@citrix.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Long Li <longli@linuxonhyperv.com>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> Subject: Re: [PATCH] scsi: devinfo: Add Microsoft iSCSI target to 1024 se=
-ctor
-> blacklist
->=20
->=20
-> Long, KY: Please confirm.
->=20
-> > The Windows Server 2016 iSCSI target doesn't work with the Linux
-> > kernel initiator since the kernel started sending larger requests by
-> > default, nor does it implement the block limits VPD page. Apply the
-> > sector limit workaround for these targets.
-> >
-> > Signed-off-by: Ross Lagerwall <ross.lagerwall@citrix.com>
-> > ---
-> >  drivers/scsi/scsi_devinfo.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-> > index f3b1172..5cb748a 100644
-> > --- a/drivers/scsi/scsi_devinfo.c
-> > +++ b/drivers/scsi/scsi_devinfo.c
-> > @@ -213,7 +213,7 @@ static struct {
-> >  	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
-> >  	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
-> >  	{"MICROP", "4110", NULL, BLIST_NOTQ},
-> > -	{"MSFT", "Virtual HD", NULL, BLIST_NO_RSOC},
-> > +	{"MSFT", "Virtual HD", NULL, BLIST_MAX_1024 | BLIST_NO_RSOC},
+> Subject: Re: [Resend Patch 1/3] Vmbus: Add function to report available ring
+> buffer to write in total ring size percentage
+> 
+> 
+> Long,
+> 
+> > Netvsc has a function to calculate how much ring buffer in percentage
+> > is available to write. This function is also useful for storvsc and
+> > other vmbus devices.
+> 
+> What is the submission strategy for this series? Do you expect it to go
+> through net or scsi? If the latter, I'll need an ack from davem.
 
-Ross,
+Martin,
 
-What about storage_channel_properties.max_transfer_bytes returned from VSTO=
-R_OPERATION_QUERY_PROPERTIES (in storvsc_channel_init())
+I hope this patch set goes through SCSI, because it's purpose is to improve storvsc.
 
-Does it return correctly the maximum transfer size for iSCSI?
+If this strategy is not possible, I can resubmit the 1st two patches to net, and the 3rd patch to scsi after the 1st two are merged.
 
-Long=20
+Long
 
-> >  	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
-> >  	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
-> >  	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN |
-> BLIST_SINGLELUN},
->=20
+> 
 > --
 > Martin K. Petersen	Oracle Linux Engineering
