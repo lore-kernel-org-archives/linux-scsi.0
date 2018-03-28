@@ -1,79 +1,88 @@
-From: Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH net-next] qed*: Utilize FW 8.33.11.0
-Date: Tue, 27 Mar 2018 16:27:16 -0600
-Message-ID: <20180327222716.GA3918@ziepe.ca>
-References: <1522083732-26560-1-git-send-email-Michal.Kalderon@cavium.com>
- <20180326211827.GG15554@ziepe.ca>
- <CY1PR0701MB201259F4DC154EFA6AE90E6F88AC0@CY1PR0701MB2012.namprd07.prod.outlook.com>
- <20180327175024.GD1877@mtr-leonro.local>
+From: Long Li <longli@linuxonhyperv.com>
+Subject: [Resend Patch 1/3] Vmbus: Add function to report available ring
+ buffer to write in total ring size percentage
+Date: Tue, 27 Mar 2018 17:48:38 -0700
+Message-ID: <20180328004840.22787-1-longli@linuxonhyperv.com>
+Reply-To: longli@microsoft.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180327175024.GD1877@mtr-leonro.local>
-Sender: netdev-owner@vger.kernel.org
-To: Leon Romanovsky <leon@kernel.org>
-Cc: "Kalderon, Michal" <Michal.Kalderon@cavium.com>, "davem@davemloft.net" <davem@davemloft.net>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Tayar, Tomer" <Tomer.Tayar@cavium.com>, "Rangankar, Manish" <Manish.Rangankar@cavium.com>, "Elior, Ariel" <Ariel.Elior@cavium.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 27, 2018 at 08:50:24PM +0300, Leon Romanovsky wrote:
-> On Tue, Mar 27, 2018 at 05:41:51PM +0000, Kalderon, Michal wrote:
-> > > From: Jason Gunthorpe [mailto:jgg@ziepe.ca]
-> > > Sent: Tuesday, March 27, 2018 12:18 AM
-> > > > diff --git a/drivers/infiniband/hw/qedr/main.c
-> > > > b/drivers/infiniband/hw/qedr/main.c
-> > > > index db4bf97..7dbbe6d 100644
-> > > > +++ b/drivers/infiniband/hw/qedr/main.c
-> > > > @@ -51,6 +51,7 @@
-> > > >  MODULE_DESCRIPTION("QLogic 40G/100G ROCE Driver");
-> > > > MODULE_AUTHOR("QLogic Corporation");  MODULE_LICENSE("Dual
-> > > BSD/GPL");
-> > > > +MODULE_VERSION(QEDR_MODULE_VERSION);
-> > > >
-> > > >  #define QEDR_WQ_MULTIPLIER_DFT	(3)
-> > > >
-> > > > diff --git a/drivers/infiniband/hw/qedr/qedr.h
-> > > > b/drivers/infiniband/hw/qedr/qedr.h
-> > > > index 86d4511..ab0d411 100644
-> > > > +++ b/drivers/infiniband/hw/qedr/qedr.h
-> > > > @@ -43,6 +43,8 @@
-> > > >  #include "qedr_hsi_rdma.h"
-> > > >
-> > > >  #define QEDR_NODE_DESC "QLogic 579xx RoCE HCA"
-> > > > +#define QEDR_MODULE_VERSION "8.33.11.20"
-> > > > +
-> > >
-> > > I thought we had a general prohibition against versions like
-> > > this in mainline drivers? And what does this hunk have to do
-> > > with supporting new firmware?
-> > >
-> > I'm assuming you refer only to rdma in regards to version
-> > prohibition right ? as looking at all other vendors (including
-> > Mellanox) all have module versions under net/ why is rdma
-> > different in this way ?  I now searched back mails on the topic
-> > and found an email from Leon where he stated: " I am strongly
-> > against module versions. You should rely on official kernel
-> > version."  But it's not always the inbox driver that is installed
-> > or probed, the kernel version is not enough.  Given different
-> > distros, vanilla kernels, out of box drivers, etc... it is
-> > essential for us that based on logs And modinfo we can determine
-> > the qed* drivers that are running.
-> 
-> We actually stopped to maintain driver versions, just ensure that inbox,
-> upstream and MLNX_OFED have different names.
-> 
-> The discussion thread is here
-> https://lists.linuxfoundation.org/pipermail/ksummit-discuss/2017-June/004426.html
-> https://lists.linuxfoundation.org/pipermail/ksummit-discuss/2017-June/004441.html
+From: Long Li <longli@microsoft.com>
 
-Hmm, Linus pretty clearly said No to MODULE_VERSION and related.
+Netvsc has a function to calculate how much ring buffer in percentage is
+available to write. This function is also useful for storvsc and other
+vmbus devices.
 
-So I can't take this hunk, and you shouldn't do in ethernet either, I
-guess.
+Define a similar function in vmbus to be used by other vmbus devices.
 
-Honestly the idea that this version will somehow have meaning in the
-distro kernels is pretty far fetched. You think distros will backport
-patches changing version # in any way that will make some kind of
-sense?
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/hv/ring_buffer.c |  2 ++
+ include/linux/hyperv.h   | 12 ++++++++++++
+ 2 files changed, 14 insertions(+)
 
-Jason
+diff --git a/drivers/hv/ring_buffer.c b/drivers/hv/ring_buffer.c
+index 8699bb969e7e..3c836c099a8f 100644
+--- a/drivers/hv/ring_buffer.c
++++ b/drivers/hv/ring_buffer.c
+@@ -227,6 +227,8 @@ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
+ 	ring_info->ring_buffer->feature_bits.value = 1;
+ 
+ 	ring_info->ring_size = page_cnt << PAGE_SHIFT;
++	ring_info->ring_size_div10_reciprocal =
++		reciprocal_value(ring_info->ring_size / 10);
+ 	ring_info->ring_datasize = ring_info->ring_size -
+ 		sizeof(struct hv_ring_buffer);
+ 
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 2048f3c3b68a..eb7204851089 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -36,6 +36,7 @@
+ #include <linux/device.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/interrupt.h>
++#include <linux/reciprocal_div.h>
+ 
+ #define MAX_PAGE_BUFFER_COUNT				32
+ #define MAX_MULTIPAGE_BUFFER_COUNT			32 /* 128K */
+@@ -121,6 +122,7 @@ struct hv_ring_buffer {
+ struct hv_ring_buffer_info {
+ 	struct hv_ring_buffer *ring_buffer;
+ 	u32 ring_size;			/* Include the shared header */
++	struct reciprocal_value ring_size_div10_reciprocal;
+ 	spinlock_t ring_lock;
+ 
+ 	u32 ring_datasize;		/* < ring_size */
+@@ -155,6 +157,16 @@ static inline u32 hv_get_bytes_to_write(const struct hv_ring_buffer_info *rbi)
+ 	return write;
+ }
+ 
++static inline u32 hv_get_avail_to_write_percent(
++		const struct hv_ring_buffer_info *rbi)
++{
++	u32 avail_write = hv_get_bytes_to_write(rbi);
++
++	return reciprocal_divide(
++			(avail_write  << 3) + (avail_write << 1),
++			rbi->ring_size_div10_reciprocal);
++}
++
+ /*
+  * VMBUS version is 32 bit entity broken up into
+  * two 16 bit quantities: major_number. minor_number.
+-- 
+2.14.1
