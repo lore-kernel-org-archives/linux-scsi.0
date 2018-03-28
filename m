@@ -1,118 +1,59 @@
-From: Long Li <longli@linuxonhyperv.com>
-Subject: [Resend Patch 2/3] Netvsc: Use the vmbus functiton to calculate ring buffer percentage
-Date: Tue, 27 Mar 2018 17:48:39 -0700
-Message-ID: <20180328004840.22787-2-longli@linuxonhyperv.com>
-References: <20180328004840.22787-1-longli@linuxonhyperv.com>
-Reply-To: longli@microsoft.com
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Subject: Re: =?utf-8?B?562U5aSNOiBSZTogW1BBVENI?= =?utf-8?Q?=5D?= scsi:
+ Replace sdev_printk with printk_deferred to avoid
+Date: Wed, 28 Mar 2018 11:44:22 +0900
+Message-ID: <20180328024422.GA1352@jagdpanzerIV>
+References: <199ab05df000f2e8b5497a7aaecd0951321aadae.camel@wdc.com>
+ <201803281029555635678@zte.com.cn>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180328004840.22787-1-longli@linuxonhyperv.com>
+Content-Disposition: inline
+In-Reply-To: <201803281029555635678@zte.com.cn>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>
+To: wen.yang99@zte.com.cn
+Cc: Bart.VanAssche@wdc.com, sergey.senozhatsky.work@gmail.com, pmladek@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jiang.biao2@zte.com.cn, zhong.weidong@zte.com.cn, tan.hu@zte.com.cn
 List-Id: linux-scsi@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>
+On (03/28/18 10:29), wen.yang99@zte.com.cn wrote:
+>    Hello Bart,
+>
+>    We have a detailed discussion of the problem.
+>    Sergey Senozhatsky, Petr and many people have made a lot of efforts about
+>    it.
+>    Please see this link:
+>    https://bugzilla.kernel.org/show_bug.cgi?id=199003
+>
+>    1, Petr suggests that it should be modified in this way:
+>    IMHO, printing the same message so many times is useless. Therefore
+>    some throttling would make sense. If we want to keep sdev_printk(),
 
-In Vmbus, we have defined a function to calculate available ring buffer
-percentage to write.
+The thing with retelimiting is that - yes, we do less printks but we still
+do them under queue spin_lock.
 
-Use that function and remove netvsc's private version.
+So I was thinking about something like below [a quick-n-dirty workaround]
 
-Signed-off-by: Long Li <longli@microsoft.com>
 ---
- drivers/net/hyperv/hyperv_net.h |  1 -
- drivers/net/hyperv/netvsc.c     | 17 +++--------------
- drivers/net/hyperv/netvsc_drv.c |  3 ---
- 3 files changed, 3 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/hyperv/hyperv_net.h b/drivers/net/hyperv/hyperv_net.h
-index cd538d5a7986..a0199ab13d67 100644
---- a/drivers/net/hyperv/hyperv_net.h
-+++ b/drivers/net/hyperv/hyperv_net.h
-@@ -189,7 +189,6 @@ struct netvsc_device;
- struct net_device_context;
+ drivers/scsi/scsi_lib.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0dfec0dedd5e..6c930fbdd24c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1825,9 +1825,13 @@ static void scsi_request_fn(struct request_queue *q)
+ 			break;
  
- extern u32 netvsc_ring_bytes;
--extern struct reciprocal_value netvsc_ring_reciprocal;
+ 		if (unlikely(!scsi_device_online(sdev))) {
++			scsi_kill_request(req, q);
++			spin_unlock_irq(q->queue_lock);
++
+ 			sdev_printk(KERN_ERR, sdev,
+ 				    "rejecting I/O to offline device\n");
+-			scsi_kill_request(req, q);
++
++			spin_lock_irq(q->queue_lock);
+ 			continue;
+ 		}
  
- struct netvsc_device *netvsc_device_add(struct hv_device *device,
- 					const struct netvsc_device_info *info);
-diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
-index 0265d703eb03..8af0069e4d8c 100644
---- a/drivers/net/hyperv/netvsc.c
-+++ b/drivers/net/hyperv/netvsc.c
-@@ -31,7 +31,6 @@
- #include <linux/vmalloc.h>
- #include <linux/rtnetlink.h>
- #include <linux/prefetch.h>
--#include <linux/reciprocal_div.h>
- 
- #include <asm/sync_bitops.h>
- 
-@@ -590,17 +589,6 @@ void netvsc_device_remove(struct hv_device *device)
- #define RING_AVAIL_PERCENT_HIWATER 20
- #define RING_AVAIL_PERCENT_LOWATER 10
- 
--/*
-- * Get the percentage of available bytes to write in the ring.
-- * The return value is in range from 0 to 100.
-- */
--static u32 hv_ringbuf_avail_percent(const struct hv_ring_buffer_info *ring_info)
--{
--	u32 avail_write = hv_get_bytes_to_write(ring_info);
--
--	return reciprocal_divide(avail_write  * 100, netvsc_ring_reciprocal);
--}
--
- static inline void netvsc_free_send_slot(struct netvsc_device *net_device,
- 					 u32 index)
- {
-@@ -649,7 +637,8 @@ static void netvsc_send_tx_complete(struct netvsc_device *net_device,
- 		wake_up(&net_device->wait_drain);
- 
- 	if (netif_tx_queue_stopped(netdev_get_tx_queue(ndev, q_idx)) &&
--	    (hv_ringbuf_avail_percent(&channel->outbound) > RING_AVAIL_PERCENT_HIWATER ||
-+	    (hv_get_avail_to_write_percent(&channel->outbound) >
-+	     RING_AVAIL_PERCENT_HIWATER ||
- 	     queue_sends < 1)) {
- 		netif_tx_wake_queue(netdev_get_tx_queue(ndev, q_idx));
- 		ndev_ctx->eth_stats.wake_queue++;
-@@ -757,7 +746,7 @@ static inline int netvsc_send_pkt(
- 	struct netdev_queue *txq = netdev_get_tx_queue(ndev, packet->q_idx);
- 	u64 req_id;
- 	int ret;
--	u32 ring_avail = hv_ringbuf_avail_percent(&out_channel->outbound);
-+	u32 ring_avail = hv_get_avail_to_write_percent(&out_channel->outbound);
- 
- 	nvmsg.hdr.msg_type = NVSP_MSG1_TYPE_SEND_RNDIS_PKT;
- 	if (skb)
-diff --git a/drivers/net/hyperv/netvsc_drv.c b/drivers/net/hyperv/netvsc_drv.c
-index faea0be18924..b0b1c2fd2b7b 100644
---- a/drivers/net/hyperv/netvsc_drv.c
-+++ b/drivers/net/hyperv/netvsc_drv.c
-@@ -35,7 +35,6 @@
- #include <linux/slab.h>
- #include <linux/rtnetlink.h>
- #include <linux/netpoll.h>
--#include <linux/reciprocal_div.h>
- 
- #include <net/arp.h>
- #include <net/route.h>
-@@ -55,7 +54,6 @@ static unsigned int ring_size __ro_after_init = 128;
- module_param(ring_size, uint, S_IRUGO);
- MODULE_PARM_DESC(ring_size, "Ring buffer size (# of pages)");
- unsigned int netvsc_ring_bytes __ro_after_init;
--struct reciprocal_value netvsc_ring_reciprocal __ro_after_init;
- 
- static const u32 default_msg = NETIF_MSG_DRV | NETIF_MSG_PROBE |
- 				NETIF_MSG_LINK | NETIF_MSG_IFUP |
-@@ -2186,7 +2184,6 @@ static int __init netvsc_drv_init(void)
- 			ring_size);
- 	}
- 	netvsc_ring_bytes = ring_size * PAGE_SIZE;
--	netvsc_ring_reciprocal = reciprocal_value(netvsc_ring_bytes);
- 
- 	ret = vmbus_driver_register(&netvsc_drv);
- 	if (ret)
--- 
-2.14.1
