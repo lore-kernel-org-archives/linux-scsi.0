@@ -1,99 +1,167 @@
-From: Wen Yang <wen.yang99@zte.com.cn>
-Subject: [PATCH] scsi: Introduce sdev_printk_ratelimited to throttle frequent printk
-Date: Wed, 28 Mar 2018 16:43:04 +0800
-Message-ID: <1522226584-137056-1-git-send-email-wen.yang99@zte.com.cn>
+From: Ohad Sharabi <ohad.sharabi@sandisk.com>
+Subject: [PATCH v3] scsi: ufs: add trace event for ufs upiu
+Date: Wed, 28 Mar 2018 12:42:18 +0300
+Message-ID: <1522230138-27674-1-git-send-email-ohad.sharabi@sandisk.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart.VanAssche@wdc.com, pmladek@suse.com, sergey.senozhatsky.work@gmail.com, tj@kernel.org, jiang.biao2@zte.com.cn, zhong.weidong@zte.com.cn, wen.yang99@zte.com.cn, Tan Hu <tan.hu@zte.com.cn>
+To: stanislav.nijnikov@wdc.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, gregkh@linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.com, Ohad Sharabi <ohad.sharabi@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
-There would be so many same lines printed by frequent prink if one 
-disk went wrong, like,
-[  546.185242] sd 0:1:0:0: rejecting I/O to offline device
-[  546.185258] sd 0:1:0:0: rejecting I/O to offline device
-[  546.185280] sd 0:1:0:0: rejecting I/O to offline device
-[  546.185307] sd 0:1:0:0: rejecting I/O to offline device
-[  546.185334] sd 0:1:0:0: rejecting I/O to offline device
-[  546.185364] sd 0:1:0:0: rejecting I/O to offline device
-[  546.185390] sd 0:1:0:0: rejecting I/O to offline device
-[  546.185410] sd 0:1:0:0: rejecting I/O to offline device
-For slow serial console, the frequent prink may block the printk, and 
-if spin_lock was acquired before the printk like in scsi_request_fn,
-that could trigger the watchdog.
+Add UFS Protocol Information Units(upiu) trace events for ufs driver,
+used to trace various ufs transaction types- command, task-management
+and device management.
+The trace-point format is generic and can be easily adapted to trace
+other upius if needed.
+Currently tracing ufs transaction of type 'device management', which
+this patch introduce, cannot be obtained from any other trace.
+Device management transactions are used for communication with the
+device such as reading and writing descriptor or attributes etc.
 
-Relative disscussion can be found here,
-https://bugzilla.kernel.org/show_bug.cgi?id=199003
-And Petr brought the idea to throttle the frequent printk here, it's 
-useless to print the same lines frequently after all.
- 
-Suggested-by: Petr Mladek <pmladek@suse.com>
-Suggested-by: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-Signed-off-by: Jiang Biao <jiang.biao2@zte.com.cn>
-Signed-off-by: Tan Hu <tan.hu@zte.com.cn>
-CC: BartVanAssche <Bart.VanAssche@wdc.com>
-CC: Petr Mladek <pmladek@suse.com>
-CC: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-CC: Martin K. Petersen <martin.petersen@oracle.com>
-CC: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-CC: Tejun Heo <tj@kernel.org>
+Signed-off-by: Ohad Sharabi <ohad.sharabi@sandisk.com>
+Reviewed-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 ---
- drivers/scsi/scsi_lib.c    |  6 +++---
- include/scsi/scsi_device.h | 10 ++++++++++
- 2 files changed, 13 insertions(+), 3 deletions(-)
+v2->v3:
+    - modify args 3,4 of trace_ufshcd_upiu to be void *
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index c84f931..f77e801 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1301,7 +1301,7 @@ static int scsi_setup_cmnd(struct scsi_device *sdev, struct request *req)
- 			 * commands.  The device must be brought online
- 			 * before trying any recovery commands.
- 			 */
--			sdev_printk(KERN_ERR, sdev,
-+			sdev_printk_ratelimited(KERN_ERR, sdev,
- 				    "rejecting I/O to offline device\n");
- 			ret = BLKPREP_KILL;
- 			break;
-@@ -1310,7 +1310,7 @@ static int scsi_setup_cmnd(struct scsi_device *sdev, struct request *req)
- 			 * If the device is fully deleted, we refuse to
- 			 * process any commands as well.
- 			 */
--			sdev_printk(KERN_ERR, sdev,
-+			sdev_printk_ratelimited(KERN_ERR, sdev,
- 				    "rejecting I/O to dead device\n");
- 			ret = BLKPREP_KILL;
- 			break;
-@@ -1802,7 +1802,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			break;
+v1->v2:
+    - split to transaction specific functions (fix warnings and simplifies
+      code)
+    - adding traces when sending query command
+
+ drivers/scsi/ufs/ufshcd.c  | 40 ++++++++++++++++++++++++++++++++++++++++
+ include/trace/events/ufs.h | 27 +++++++++++++++++++++++++++
+ 2 files changed, 67 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c7da2c1..23ffaed 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -274,6 +274,35 @@ static inline void ufshcd_remove_non_printable(char *val)
+ 		*val = ' ';
+ }
  
- 		if (unlikely(!scsi_device_online(sdev))) {
--			sdev_printk(KERN_ERR, sdev,
-+			sdev_printk_ratelimited(KERN_ERR, sdev,
- 				    "rejecting I/O to offline device\n");
- 			scsi_kill_request(req, q);
- 			continue;
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 7ae177c..378d3f2 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -249,6 +249,16 @@ struct scsi_device {
- #define sdev_printk(l, sdev, fmt, a...)				\
- 	sdev_prefix_printk(l, sdev, NULL, fmt, ##a)
- 
-+#define sdev_printk_ratelimited(l, sdev, fmt, a...)			\
-+({									\
-+	static DEFINE_RATELIMIT_STATE(_rs,				\
-+				      DEFAULT_RATELIMIT_INTERVAL,	\
-+				      DEFAULT_RATELIMIT_BURST);		\
-+									\
-+	if (__ratelimit(&_rs))						\
-+		sdev_prefix_printk(l, sdev, NULL, fmt, ##a);		\
-+})
++static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
++		const char *str)
++{
++	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
 +
- __printf(3, 4) void
- scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
++	trace_ufshcd_upiu(dev_name(hba->dev), str, &rq->header, &rq->sc.cdb);
++}
++
++static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba, unsigned int tag,
++		const char *str)
++{
++	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
++
++	trace_ufshcd_upiu(dev_name(hba->dev), str, &rq->header, &rq->qr);
++}
++
++static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
++		const char *str)
++{
++	struct utp_task_req_desc *descp;
++	struct utp_upiu_task_req *task_req;
++	int off = (int)tag - hba->nutrs;
++
++	descp = &hba->utmrdl_base_addr[off];
++	task_req = (struct utp_upiu_task_req *)descp->task_req_upiu;
++	trace_ufshcd_upiu(dev_name(hba->dev), str, &task_req->header,
++			&task_req->input_param1);
++}
++
+ static void ufshcd_add_command_trace(struct ufs_hba *hba,
+ 		unsigned int tag, const char *str)
+ {
+@@ -283,6 +312,9 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
+ 	struct ufshcd_lrb *lrbp;
+ 	int transfer_len = -1;
  
++	/* trace UPIU also */
++	ufshcd_add_cmd_upiu_trace(hba, tag, str);
++
+ 	if (!trace_ufshcd_command_enabled())
+ 		return;
+ 
+@@ -2584,6 +2616,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 
+ 	hba->dev_cmd.complete = &wait;
+ 
++	ufshcd_add_query_upiu_trace(hba, tag, "query_send");
+ 	/* Make sure descriptors are ready before ringing the doorbell */
+ 	wmb();
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+@@ -2593,6 +2626,9 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 
+ 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+ 
++	ufshcd_add_query_upiu_trace(hba, tag,
++			err ? "query_complete_err" : "query_complete");
++
+ out_put_tag:
+ 	ufshcd_put_dev_cmd_tag(hba, tag);
+ 	wake_up(&hba->dev_cmd.tag_wq);
+@@ -5464,11 +5500,14 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 
++	ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_send");
++
+ 	/* wait until the task management command is completed */
+ 	err = wait_event_timeout(hba->tm_wq,
+ 			test_bit(free_slot, &hba->tm_condition),
+ 			msecs_to_jiffies(TM_CMD_TIMEOUT));
+ 	if (!err) {
++		ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_complete_err");
+ 		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
+ 				__func__, tm_function);
+ 		if (ufshcd_clear_tm_cmd(hba, free_slot))
+@@ -5477,6 +5516,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 		err = -ETIMEDOUT;
+ 	} else {
+ 		err = ufshcd_task_req_compl(hba, free_slot, tm_response);
++		ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_complete");
+ 	}
+ 
+ 	clear_bit(free_slot, &hba->tm_condition);
+diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+index bf6f826..f8260e5 100644
+--- a/include/trace/events/ufs.h
++++ b/include/trace/events/ufs.h
+@@ -257,6 +257,33 @@
+ 	)
+ );
+ 
++TRACE_EVENT(ufshcd_upiu,
++	TP_PROTO(const char *dev_name, const char *str, void *hdr, void *tsf),
++
++	TP_ARGS(dev_name, str, hdr, tsf),
++
++	TP_STRUCT__entry(
++		__string(dev_name, dev_name)
++		__string(str, str)
++		__array(unsigned char, hdr, 12)
++		__array(unsigned char, tsf, 16)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__assign_str(str, str);
++		memcpy(__entry->hdr, hdr, sizeof(__entry->hdr));
++		memcpy(__entry->tsf, tsf, sizeof(__entry->tsf));
++	),
++
++	TP_printk(
++		"%s: %s: HDR:%s, CDB:%s",
++		__get_str(str), __get_str(dev_name),
++		__print_hex(__entry->hdr, sizeof(__entry->hdr)),
++		__print_hex(__entry->tsf, sizeof(__entry->tsf))
++	)
++);
++
+ #endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ) */
+ 
+ /* This part must be outside protection */
 -- 
-1.8.3.1
+1.9.1
