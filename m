@@ -1,44 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: devinfo: Add Microsoft iSCSI target to 1024 sector blacklist
-Date: Wed, 28 Mar 2018 17:49:54 -0400
-Message-ID: <yq17epvj2f1.fsf@oracle.com>
-References: <20180326135651.8193-1-ross.lagerwall@citrix.com>
+Subject: Re: [RFC PATCH] mpt3sas: mpt3sas_scsih_enclosure_find_by_handle can be static
+Date: Wed, 28 Mar 2018 17:54:35 -0400
+Message-ID: <yq1370jj278.fsf@oracle.com>
+References: <1521540956-42347-1-git-send-email-chaitra.basappa@broadcom.com>
+        <20180320210652.GA40906@xian>
+        <289588bbff4dc0d35e519d0c4d4282da78cc6121.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180326135651.8193-1-ross.lagerwall@citrix.com> (Ross
-        Lagerwall's message of "Mon, 26 Mar 2018 14:56:51 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Long Li <longli@microsoft.com>, KY Srinivasan <kys@microsoft.com>
-Cc: Ross Lagerwall <ross.lagerwall@citrix.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <289588bbff4dc0d35e519d0c4d4282da78cc6121.camel@wdc.com> (Bart
+        Van Assche's message of "Tue, 27 Mar 2018 18:55:19 +0000")
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "lkp@intel.com" <lkp@intel.com>, "kbuild-all@01.org" <kbuild-all@01.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "jaco@uls.co.za" <jaco@uls.co.za>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Long, KY: Please confirm.
+Bart,
 
-> The Windows Server 2016 iSCSI target doesn't work with the Linux kernel
-> initiator since the kernel started sending larger requests by default,
-> nor does it implement the block limits VPD page. Apply the sector limit
-> workaround for these targets.
->
-> Signed-off-by: Ross Lagerwall <ross.lagerwall@citrix.com>
-> ---
->  drivers/scsi/scsi_devinfo.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-> index f3b1172..5cb748a 100644
-> --- a/drivers/scsi/scsi_devinfo.c
-> +++ b/drivers/scsi/scsi_devinfo.c
-> @@ -213,7 +213,7 @@ static struct {
->  	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
->  	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
->  	{"MICROP", "4110", NULL, BLIST_NOTQ},
-> -	{"MSFT", "Virtual HD", NULL, BLIST_NO_RSOC},
-> +	{"MSFT", "Virtual HD", NULL, BLIST_MAX_1024 | BLIST_NO_RSOC},
->  	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
->  	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
->  	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+> Are you aware that if the 0-day test infrastructure suggests an improvement
+> for a patch that the patch that that improvement applies to gets ignored
+> unless either the patch is reposted with the improvement applied or that it
+> is explained why the suggested improvement is inappropriate?
+
+Correct. I don't apply anything that causes a 0-day warning. The patch
+will be closed with "Changes Required" status in patchwork.
+
+Always build patch submissions to linux-scsi with:
+
+	make C=1 CF="-D__CHECK_ENDIAN__"
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
