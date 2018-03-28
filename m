@@ -1,37 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [Resend Patch 1/3] Vmbus: Add function to report available ring
- buffer to write in total ring size percentage
-Date: Wed, 28 Mar 2018 18:00:11 -0400
-Message-ID: <yq1y3ibhndg.fsf@oracle.com>
-References: <20180328004840.22787-1-longli@linuxonhyperv.com>
+Subject: Re: [PATCH v3] scsi: ufs: add trace event for ufs upiu
+Date: Wed, 28 Mar 2018 18:03:28 -0400
+Message-ID: <yq1tvszhn7z.fsf@oracle.com>
+References: <1522230138-27674-1-git-send-email-ohad.sharabi@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20180328004840.22787-1-longli@linuxonhyperv.com> (Long Li's
- message of "Tue, 27 Mar 2018 17:48:38 -0700")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@linuxonhyperv.com>
-Cc: Stephen Hemminger <sthemmin@microsoft.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, netdev@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1522230138-27674-1-git-send-email-ohad.sharabi@sandisk.com>
+        (Ohad Sharabi's message of "Wed, 28 Mar 2018 12:42:18 +0300")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ohad Sharabi <ohad.sharabi@sandisk.com>
+Cc: stanislav.nijnikov@wdc.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alex.lemberg@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Long,
+Ohad,
 
-> Netvsc has a function to calculate how much ring buffer in percentage is
-> available to write. This function is also useful for storvsc and other
-> vmbus devices.
+> Add UFS Protocol Information Units(upiu) trace events for ufs driver,
+> used to trace various ufs transaction types- command, task-management
+> and device management.  The trace-point format is generic and can be
+> easily adapted to trace other upius if needed.  Currently tracing ufs
+> transaction of type 'device management', which this patch introduce,
+> cannot be obtained from any other trace.  Device management
+> transactions are used for communication with the device such as
+> reading and writing descriptor or attributes etc.
 
-What is the submission strategy for this series? Do you expect it to go
-through net or scsi? If the latter, I'll need an ack from davem.
+Applied to 4.17/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
