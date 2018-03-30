@@ -1,24 +1,65 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH 03/15] mpt3sas: Add sanity checks for scsi tracker before
- accessing it.
-Date: Fri, 30 Mar 2018 04:59:17 -0700
-Message-ID: <20180330115917.GA30423@infradead.org>
+  accessing it.
+Date: Fri, 30 Mar 2018 15:54:47 +0000
+Message-ID: <58ffec864d302644d243b41df7cb71ea6c1addc5.camel@wdc.com>
 References: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
- <1522402644-3016-4-git-send-email-chaitra.basappa@broadcom.com>
+         <1522402644-3016-4-git-send-email-chaitra.basappa@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <1522402644-3016-4-git-send-email-chaitra.basappa@broadcom.com>
+Content-Language: en-US
+Content-ID: <719A1D0F0C67A348A65774C3FAC7A13D@namprd04.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, suganath-prabu.subramani@broadcom.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com
+To: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Cc: "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 30, 2018 at 03:07:12PM +0530, Chaitra P B wrote:
-> Check scsi tracker for NULL before accessing it.
-> And in some places there are possibilities for getting valid st
-> but still other fields are not set.
-
-Please explain how that could ever happen.  You should never see
-a scsi_cmnd without the device pointer.
+T24gRnJpLCAyMDE4LTAzLTMwIGF0IDE1OjA3ICswNTMwLCBDaGFpdHJhIFAgQiB3cm90ZToNCj4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfY3RsLmMgYi9kcml2ZXJz
+L3Njc2kvbXB0M3Nhcy9tcHQzc2FzX2N0bC5jDQo+IGluZGV4IGMxYjE3ZDYuLjJmMjdkNWMgMTAw
+NjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfY3RsLmMNCj4gKysrIGIv
+ZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19jdGwuYw0KPiBAQCAtNTkwLDcgKzU5MCw4IEBA
+IF9jdGxfc2V0X3Rhc2tfbWlkKHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYywgc3RydWN0IG1w
+dDNfaW9jdGxfY29tbWFuZCAqa2FyZywNCj4gIAkJc3RydWN0IHNjc2lpb190cmFja2VyICpzdDsN
+Cj4gIA0KPiAgCQlzY21kID0gbXB0M3Nhc19zY3NpaF9zY3NpX2xvb2t1cF9nZXQoaW9jLCBzbWlk
+KTsNCj4gLQkJaWYgKCFzY21kKQ0KPiArCQlpZiAoc2NtZCA9PSBOVUxMIHx8IHNjbWQtPmRldmlj
+ZSA9PSBOVUxMIHx8DQo+ICsJCQkJc2NtZC0+ZGV2aWNlLT5ob3N0ZGF0YSA9PSBOVUxMKQ0KPiAg
+CQkJY29udGludWU7DQo+ICAJCWlmIChsdW4gIT0gc2NtZC0+ZGV2aWNlLT5sdW4pDQo+ICAJCQlj
+b250aW51ZTsNCg0KSXMgX2N0bF9zZXRfdGFza19taWQoKSBhbHdheXMgY2FsbGVkIGZyb20gdGhl
+IEkvTyBjb21wbGV0aW9uIHBhdGg/IEFzDQpDaHJpc3RvcGggYWxyZWFkeSB3cm90ZSwgdGhlc2Ug
+Y2hlY2tzIGRvIG5vdCBtYWtlIHNlbnNlIGluIHRoZSBjb21wbGV0aW9uDQpwYXRoLg0KDQo+IEBA
+IC02MDAsNiArNjAxLDggQEAgX2N0bF9zZXRfdGFza19taWQoc3RydWN0IE1QVDNTQVNfQURBUFRF
+UiAqaW9jLCBzdHJ1Y3QgbXB0M19pb2N0bF9jb21tYW5kICprYXJnLA0KPiAgCQlpZiAocHJpdl9k
+YXRhLT5zYXNfdGFyZ2V0LT5oYW5kbGUgIT0gaGFuZGxlKQ0KPiAgCQkJY29udGludWU7DQo+ICAJ
+CXN0ID0gc2NzaV9jbWRfcHJpdihzY21kKTsNCj4gKwkJaWYgKCghc3QpIHx8IChzdC0+c21pZCA9
+PSAwKSkNCj4gKwkJCWNvbnRpbnVlOw0KPiAgCQl0bV9yZXF1ZXN0LT5UYXNrTUlEID0gY3B1X3Rv
+X2xlMTYoc3QtPnNtaWQpOw0KPiAgCQlmb3VuZCA9IDE7DQo+ICAJfQ0KDQpTaW5jZSB0aGUgSS9P
+IHN1Ym1pc3Npb24gcGF0aCBndWFyYW50ZWVzIHRoYXQgc3QtPnNtaWQgIT0gMCwgaG93IGNvdWxk
+DQpzdC0+c21pZCBldmVyIGJlIHplcm8gaW4gdGhlIEkvTyBjb21wbGV0aW9uIHBhdGg/DQoNCj4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYyBiL2RyaXZl
+cnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYw0KPiBpbmRleCBjOWNjZTY1Li42YjFhYWEw
+IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMNCj4g
+KysrIGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jDQo+IEBAIC0xNDY1LDcg
+KzE0NjUsNyBAQCBtcHQzc2FzX3Njc2loX3Njc2lfbG9va3VwX2dldChzdHJ1Y3QgTVBUM1NBU19B
+REFQVEVSICppb2MsIHUxNiBzbWlkKQ0KPiAgCQlzY21kID0gc2NzaV9ob3N0X2ZpbmRfdGFnKGlv
+Yy0+c2hvc3QsIHVuaXF1ZV90YWcpOw0KPiAgCQlpZiAoc2NtZCkgew0KPiAgCQkJc3QgPSBzY3Np
+X2NtZF9wcml2KHNjbWQpOw0KPiAtCQkJaWYgKHN0LT5jYl9pZHggPT0gMHhGRikNCj4gKwkJCWlm
+ICgoIXN0KSB8fCAoc3QtPmNiX2lkeCA9PSAweEZGKSB8fCAoc3QtPnNtaWQgPT0gMCkpDQo+ICAJ
+CQkJc2NtZCA9IE5VTEw7DQo+ICAJCX0NCj4gIAl9DQo+IEBAIC00NDUxLDYgKzQ0NTEsMTMgQEAg
+X3Njc2loX2ZsdXNoX3J1bm5pbmdfY21kcyhzdHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MpDQo+
+ICAJCWNvdW50Kys7DQo+ICAJCV9zY3NpaF9zZXRfc2F0bF9wZW5kaW5nKHNjbWQsIGZhbHNlKTsN
+Cj4gIAkJc3QgPSBzY3NpX2NtZF9wcml2KHNjbWQpOw0KPiArCQkvKg0KPiArCQkgKiBJdCBtYXkg
+YmUgcG9zc2libGUgdGhhdCBTQ1NJIHNjbWQgZ290IHByZXBhcmVkIGJ5IFNNTA0KPiArCQkgKiBi
+dXQgaXQgaGFzIG5vdCBpc3N1ZWQgdG8gdGhlIGRyaXZlciwgZm9yIHRoZXNlIHR5cGUgb2YNCj4g
+KwkJICogc2NtZCdzIGRvbid0IGRvIGFueXRoaW5nIg0KPiArCQkgKi8NCj4gKwkJaWYgKHN0ICYm
+IHN0LT5zbWlkID09IDApDQo+ICsJCQljb250aW51ZTsNCg0KVGhpcyBzZWVtcyB3cm9uZyB0byBt
+ZS4gSWYgYSBTQ1NJIGNvbW1hbmQgaGFzIG5vdCBiZWVuIHN1Ym1pdHRlZCB0byB0aGUNCmZpcm13
+YXJlIHNraXBwaW5nIGl0IGluIHRoaXMgZnVuY3Rpb24gd2lsbCBpbnRyb2R1Y2UgYSBkZWxheSBi
+ZWNhdXNlIHRoZQ0KY29tbWFuZCB3aWxsIG9ubHkgYmUgY29tcGxldGVkIGFmdGVyIGl0IGhhcyB0
+aW1lZCBvdXQgYW5kIGFmdGVyIHRoZSBTQ1NJDQplcnJvciBoYW5kbGVyIGhhcyBmaW5pc2hlZCBp
+dHMgcHJvY2Vzc2luZy4gSSB0aGluayBpdCdzIGJldHRlciB0byBjb21wbGV0ZQ0KdGhlIGNvbW1h
+bmQgZnJvbSB0aGlzIGZ1bmN0aW9uIGluc3RlYWQgb2Ygd2FpdGluZyB1bnRpbCBmb3IgdGhlIFND
+U0kgZXJyb3INCmhhbmRsZXIuDQoNCkJhcnQuDQoNCg0KDQoNCg0K
