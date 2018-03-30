@@ -1,7 +1,7 @@
 From: Chaitra P B <chaitra.basappa@broadcom.com>
-Subject: [PATCH 03/15] mpt3sas: Add sanity checks for scsi tracker before  accessing it.
-Date: Fri, 30 Mar 2018 15:07:12 +0530
-Message-ID: <1522402644-3016-4-git-send-email-chaitra.basappa@broadcom.com>
+Subject: [PATCH 02/15] mpt3sas: Pre-allocate RDPQ Array at driver boot time.
+Date: Fri, 30 Mar 2018 15:07:11 +0530
+Message-ID: <1522402644-3016-3-git-send-email-chaitra.basappa@broadcom.com>
 References: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
@@ -10,66 +10,147 @@ To: linux-scsi@vger.kernel.org, stable@vger.kernel.org
 Cc: suganath-prabu.subramani@broadcom.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Check scsi tracker for NULL before accessing it.
-And in some places there are possibilities for getting valid st
-but still other fields are not set.
+Instead of allocating RDPQ array (This stores the address's of each RDPQ
+pools) at run time, now it will be allocated once during driver load time
+and same will be reused during host reset operation also (instead of
+allocating & freeing this buffer on the fly during every host reset
+operation) and then freed during driver unload.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 5 ++++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 9 ++++++++-
- 2 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 57 +++++++++++++++++++++++--------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h |  3 ++
+ 2 files changed, 38 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index c1b17d6..2f27d5c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -590,7 +590,8 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command *karg,
- 		struct scsiio_tracker *st;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 4767690..a79c6df 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -4159,7 +4159,14 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 			}
+ 		} while (ioc->rdpq_array_enable &&
+ 			   (++i < ioc->reply_queue_count));
+-
++		if (ioc->reply_post_free_array &&
++			ioc->rdpq_array_enable) {
++			dma_pool_free(ioc->reply_post_free_array_dma_pool,
++				ioc->reply_post_free_array,
++				ioc->reply_post_free_array_dma);
++			ioc->reply_post_free_array = NULL;
++		}
++		dma_pool_destroy(ioc->reply_post_free_array_dma_pool);
+ 		dma_pool_destroy(ioc->reply_post_free_dma_pool);
+ 		kfree(ioc->reply_post);
+ 	}
+@@ -4209,7 +4216,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	struct mpt3sas_facts *facts;
+ 	u16 max_sge_elements;
+ 	u16 chains_needed_per_io;
+-	u32 sz, total_sz, reply_post_free_sz;
++	u32 sz, total_sz, reply_post_free_sz, reply_post_free_array_sz;
+ 	u32 retry_sz;
+ 	u16 max_request_credit, nvme_blocks_needed;
+ 	unsigned short sg_tablesize;
+@@ -4681,6 +4688,28 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->name, (unsigned long long)ioc->reply_free_dma));
+ 	total_sz += sz;
  
- 		scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
--		if (!scmd)
-+		if (scmd == NULL || scmd->device == NULL ||
-+				scmd->device->hostdata == NULL)
- 			continue;
- 		if (lun != scmd->device->lun)
- 			continue;
-@@ -600,6 +601,8 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command *karg,
- 		if (priv_data->sas_target->handle != handle)
- 			continue;
- 		st = scsi_cmd_priv(scmd);
-+		if ((!st) || (st->smid == 0))
-+			continue;
- 		tm_request->TaskMID = cpu_to_le16(st->smid);
- 		found = 1;
++	if (ioc->rdpq_array_enable) {
++		reply_post_free_array_sz = ioc->reply_queue_count *
++		    sizeof(Mpi2IOCInitRDPQArrayEntry);
++		ioc->reply_post_free_array_dma_pool =
++		    dma_pool_create("reply_post_free_array pool",
++		    &ioc->pdev->dev, reply_post_free_array_sz, 16, 0);
++		if (!ioc->reply_post_free_array_dma_pool) {
++			dinitprintk(ioc,
++			    pr_info(MPT3SAS_FMT "reply_post_free_array pool: "
++			    "dma_pool_create failed\n", ioc->name));
++			goto out;
++		}
++		ioc->reply_post_free_array =
++		    dma_pool_alloc(ioc->reply_post_free_array_dma_pool,
++		    GFP_KERNEL, &ioc->reply_post_free_array_dma);
++		if (!ioc->reply_post_free_array) {
++			dinitprintk(ioc,
++			    pr_info(MPT3SAS_FMT "reply_post_free_array pool: "
++			    "dma_pool_alloc failed\n", ioc->name));
++			goto out;
++		}
++	}
+ 	ioc->config_page_sz = 512;
+ 	ioc->config_page = pci_alloc_consistent(ioc->pdev,
+ 	    ioc->config_page_sz, &ioc->config_page_dma);
+@@ -5487,8 +5516,6 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
+ 	ktime_t current_time;
+ 	u16 ioc_status;
+ 	u32 reply_post_free_array_sz = 0;
+-	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
+-	dma_addr_t reply_post_free_array_dma;
+ 
+ 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
+ 	    __func__));
+@@ -5522,23 +5549,14 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
+ 	if (ioc->rdpq_array_enable) {
+ 		reply_post_free_array_sz = ioc->reply_queue_count *
+ 		    sizeof(Mpi2IOCInitRDPQArrayEntry);
+-		reply_post_free_array = pci_alloc_consistent(ioc->pdev,
+-			reply_post_free_array_sz, &reply_post_free_array_dma);
+-		if (!reply_post_free_array) {
+-			pr_err(MPT3SAS_FMT
+-			"reply_post_free_array: pci_alloc_consistent failed\n",
+-			ioc->name);
+-			r = -ENOMEM;
+-			goto out;
+-		}
+-		memset(reply_post_free_array, 0, reply_post_free_array_sz);
++		memset(ioc->reply_post_free_array, 0, reply_post_free_array_sz);
+ 		for (i = 0; i < ioc->reply_queue_count; i++)
+-			reply_post_free_array[i].RDPQBaseAddress =
++			ioc->reply_post_free_array[i].RDPQBaseAddress =
+ 			    cpu_to_le64(
+ 				(u64)ioc->reply_post[i].reply_post_free_dma);
+ 		mpi_request.MsgFlags = MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE;
+ 		mpi_request.ReplyDescriptorPostQueueAddress =
+-		    cpu_to_le64((u64)reply_post_free_array_dma);
++		    cpu_to_le64((u64)ioc->reply_post_free_array_dma);
+ 	} else {
+ 		mpi_request.ReplyDescriptorPostQueueAddress =
+ 		    cpu_to_le64((u64)ioc->reply_post[0].reply_post_free_dma);
+@@ -5568,7 +5586,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
+ 	if (r != 0) {
+ 		pr_err(MPT3SAS_FMT "%s: handshake failed (r=%d)\n",
+ 		    ioc->name, __func__, r);
+-		goto out;
++		return r;
  	}
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index c9cce65..6b1aaa0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1465,7 +1465,7 @@ mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- 		scmd = scsi_host_find_tag(ioc->shost, unique_tag);
- 		if (scmd) {
- 			st = scsi_cmd_priv(scmd);
--			if (st->cb_idx == 0xFF)
-+			if ((!st) || (st->cb_idx == 0xFF) || (st->smid == 0))
- 				scmd = NULL;
- 		}
+ 
+ 	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
+@@ -5578,11 +5596,6 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
+ 		r = -EIO;
  	}
-@@ -4451,6 +4451,13 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
- 		count++;
- 		_scsih_set_satl_pending(scmd, false);
- 		st = scsi_cmd_priv(scmd);
-+		/*
-+		 * It may be possible that SCSI scmd got prepared by SML
-+		 * but it has not issued to the driver, for these type of
-+		 * scmd's don't do anything"
-+		 */
-+		if (st && st->smid == 0)
-+			continue;
- 		mpt3sas_base_clear_st(ioc, st);
- 		scsi_dma_unmap(scmd);
- 		if (ioc->pci_error_recovery)
+ 
+-out:
+-	if (reply_post_free_array)
+-		pci_free_consistent(ioc->pdev, reply_post_free_array_sz,
+-				    reply_post_free_array,
+-				    reply_post_free_array_dma);
+ 	return r;
+ }
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 58b38bd..5977993 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1315,6 +1315,9 @@ struct MPT3SAS_ADAPTER {
+ 	u8		rdpq_array_enable;
+ 	u8		rdpq_array_enable_assigned;
+ 	struct dma_pool *reply_post_free_dma_pool;
++	struct dma_pool *reply_post_free_array_dma_pool;
++	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array;
++	dma_addr_t reply_post_free_array_dma;
+ 	u8		reply_queue_count;
+ 	struct list_head reply_queue_list;
+ 
 -- 
 1.8.3.1
