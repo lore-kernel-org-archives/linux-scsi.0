@@ -1,55 +1,475 @@
-From: "Zephaniah E. Loss-Cutler-Hull" <warp@aehallh.com>
-Subject: Re: General protection fault with use_blk_mq=1.
-Date: Thu, 29 Mar 2018 22:43:16 -0700
-Message-ID: <c74c49e4-8b34-4361-a4ad-b4e9de2110a6@aehallh.com>
-References: <7d8a9c62-7d3e-879c-5b5b-30707f04553e@aehallh.com>
- <ae71cc99-02f1-2b42-bb76-d6e28d61ca21@kernel.dk>
- <b347896e-f770-8987-ad90-a595a5fa926a@aehallh.com>
- <735c5d75-eacf-8ed2-ba9b-9ff4b0b5290d@kernel.dk>
- <882A26D2-BEB8-4CE3-B132-0DE31BFD5D28@linaro.org>
- <0a96375b-5a2e-e828-fa1f-a14af192be4c@aehallh.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0a96375b-5a2e-e828-fa1f-a14af192be4c@aehallh.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>
-Cc: "Zephaniah E. Loss-Cutler-Hull" <warp-spam_kernel@aehallh.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, linux-scsi@vger.kernel.org
+From: Chaitra P B <chaitra.basappa@broadcom.com>
+Subject: [PATCH 01/15] mpt3sas: Fixed warnings.
+Date: Fri, 30 Mar 2018 15:07:10 +0530
+Message-ID: <1522402644-3016-2-git-send-email-chaitra.basappa@broadcom.com>
+References: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Cc: suganath-prabu.subramani@broadcom.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/29/2018 02:12 AM, Zephaniah E. Loss-Cutler-Hull wrote:
-> On 03/28/2018 10:13 PM, Paolo Valente wrote:
->> In addition, the outcome of your attempt without
->> CONFIG_DEBUG_BLK_CGROUP would give us useful bisection information:
->> - if no failure occurs, then the issue is likely to be confined in
->> that debugging code (which, on the bright side, is likely to be of
->> occasional interest, for only a handful of developers)
->> - if the issue still shows up, then we may have new hints on this odd
->> failure
->>
->> Finally, consider that this issue has been reported to disappear from
->> 4.16 [1], and, as a plus, that the service quality of BFQ had a
->> further boost exactly from 4.16.
-> 
-> I look forward to that either way then.
->>
->> Looking forward to your feedback, in case you try BFQ without
->> CONFIG_DEBUG_BLK_CGROUP,
-> 
-> I'm running that now, judging from the past if it survives until
-> tomorrow evening then we're good, so I should hopefully know in the next
-> day.
+This patch fixes sparse warnings observed during compilation.
 
-Alright, I now have an uptime of over 20 hours, with
-scsi_mod.use_blk_mq=1 dm_mod.use_blk_mq=1
+Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h     |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 57 +++++++++++++++++-------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  6 ++--
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 11 +++---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 59 +++++++++++++++-----------------
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  3 +-
+ 6 files changed, 73 insertions(+), 65 deletions(-)
 
-I did upgrade from 4.15.13 to 4.15.14 in the process, but a quick look
-at the changes doesn't have anything jump out at me as impacting this.
-
-So I'm reasonably comfortable stating that disabling
-CONFIG_DEBUG_BLK_CGROUP was sufficient to render this stable.
-
-Regards,
-Zephaniah E. Loss-Cutler-Hull.
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+index 948a3ba..6213ce6 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+@@ -75,7 +75,7 @@
+ 
+ typedef struct _MPI2_SCSI_IO_CDB_EEDP32 {
+ 	U8 CDB[20];		/*0x00 */
+-	U32 PrimaryReferenceTag;	/*0x14 */
++	__be32 PrimaryReferenceTag;	/*0x14 */
+ 	U16 PrimaryApplicationTag;	/*0x18 */
+ 	U16 PrimaryApplicationTagMask;	/*0x1A */
+ 	U32 TransferLength;	/*0x1C */
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 0a0e7aa..4767690 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -394,13 +394,14 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 	buff_ptr_phys = buffer_iomem_phys;
+ 	WARN_ON(buff_ptr_phys > U32_MAX);
+ 
+-	if (sgel->FlagsLength &
++	if (le32_to_cpu(sgel->FlagsLength) &
+ 			(MPI2_SGE_FLAGS_HOST_TO_IOC << MPI2_SGE_FLAGS_SHIFT))
+ 		is_write = 1;
+ 
+ 	for (i = 0; i < MPT_MIN_PHYS_SEGMENTS + ioc->facts.MaxChainDepth; i++) {
+ 
+-		sgl_flags = (sgel->FlagsLength >> MPI2_SGE_FLAGS_SHIFT);
++		sgl_flags =
++		    (le32_to_cpu(sgel->FlagsLength) >> MPI2_SGE_FLAGS_SHIFT);
+ 
+ 		switch (sgl_flags & MPI2_SGE_FLAGS_ELEMENT_MASK) {
+ 		case MPI2_SGE_FLAGS_CHAIN_ELEMENT:
+@@ -411,7 +412,7 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 			 */
+ 			sgel_next =
+ 				_base_get_chain_buffer_dma_to_chain_buffer(ioc,
+-						sgel->Address);
++						le32_to_cpu(sgel->Address));
+ 			if (sgel_next == NULL)
+ 				return;
+ 			/*
+@@ -426,7 +427,7 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 			dst_addr_phys = _base_get_chain_phys(ioc,
+ 						smid, sge_chain_count);
+ 			WARN_ON(dst_addr_phys > U32_MAX);
+-			sgel->Address = (u32)dst_addr_phys;
++			sgel->Address = cpu_to_le32((u32)dst_addr_phys);
+ 			sgel = sgel_next;
+ 			sge_chain_count++;
+ 			break;
+@@ -435,22 +436,28 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
+ 				if (is_scsiio_req) {
+ 					_base_clone_to_sys_mem(buff_ptr,
+ 					    sg_virt(sg_scmd),
+-					    (sgel->FlagsLength & 0x00ffffff));
++					    (le32_to_cpu(sgel->FlagsLength) &
++					    0x00ffffff));
+ 					/*
+ 					 * FIXME: this relies on a a zero
+ 					 * PCI mem_offset.
+ 					 */
+-					sgel->Address = (u32)buff_ptr_phys;
++					sgel->Address =
++					    cpu_to_le32((u32)buff_ptr_phys);
+ 				} else {
+ 					_base_clone_to_sys_mem(buff_ptr,
+ 					    ioc->config_vaddr,
+-					    (sgel->FlagsLength & 0x00ffffff));
+-					sgel->Address = (u32)buff_ptr_phys;
++					    (le32_to_cpu(sgel->FlagsLength) &
++					    0x00ffffff));
++					sgel->Address =
++					    cpu_to_le32((u32)buff_ptr_phys);
+ 				}
+ 			}
+-			buff_ptr += (sgel->FlagsLength & 0x00ffffff);
+-			buff_ptr_phys += (sgel->FlagsLength & 0x00ffffff);
+-			if ((sgel->FlagsLength &
++			buff_ptr += (le32_to_cpu(sgel->FlagsLength) &
++			    0x00ffffff);
++			buff_ptr_phys += (le32_to_cpu(sgel->FlagsLength) &
++			    0x00ffffff);
++			if ((le32_to_cpu(sgel->FlagsLength) &
+ 			    (MPI2_SGE_FLAGS_END_OF_BUFFER
+ 					<< MPI2_SGE_FLAGS_SHIFT)))
+ 				goto eob_clone_chain;
+@@ -1433,7 +1440,7 @@ _base_interrupt(int irq, void *bus_id)
+ 				    cpu_to_le32(reply);
+ 				if (ioc->is_mcpu_endpoint)
+ 					_base_clone_reply_to_sys_mem(ioc,
+-						cpu_to_le32(reply),
++						reply,
+ 						ioc->reply_free_host_index);
+ 				writel(ioc->reply_free_host_index,
+ 				    &ioc->chip->ReplyFreeHostIndex);
+@@ -3040,8 +3047,9 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 		}
+ 
+ 		for (i = 0; i < ioc->combined_reply_index_count; i++) {
+-			ioc->replyPostRegisterIndex[i] = (resource_size_t *)
+-			     ((u8 *)&ioc->chip->Doorbell +
++			ioc->replyPostRegisterIndex[i] =
++			    (volatile void __iomem *)
++			     ((u8 __force *)&ioc->chip->Doorbell +
+ 			     MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET +
+ 			     (i * MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET));
+ 		}
+@@ -3336,7 +3344,7 @@ _base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr,
+ 					spinlock_t *writeq_lock)
+ {
+ 	unsigned long flags;
+-	__u64 data_out = cpu_to_le64(b);
++	__u64 data_out = b;
+ 
+ 	spin_lock_irqsave(writeq_lock, flags);
+ 	writel((u32)(data_out), addr);
+@@ -3359,7 +3367,7 @@ _base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr,
+ static inline void
+ _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
+ {
+-	writeq(cpu_to_le64(b), addr);
++	writeq(b, addr);
+ }
+ #else
+ static inline void
+@@ -3386,7 +3394,7 @@ _base_put_smid_mpi_ep_scsi_io(struct MPT3SAS_ADAPTER *ioc, u16 smid, u16 handle)
+ 	__le32 *mfp = (__le32 *)mpt3sas_base_get_msg_frame(ioc, smid);
+ 
+ 	_clone_sg_entries(ioc, (void *) mfp, smid);
+-	mpi_req_iomem = (void *)ioc->chip +
++	mpi_req_iomem = (void __force *)ioc->chip +
+ 			MPI_FRAME_START_OFFSET + (smid * ioc->request_sz);
+ 	_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
+ 					ioc->request_sz);
+@@ -3470,7 +3478,8 @@ mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 
+ 		request_hdr = (MPI2RequestHeader_t *)mfp;
+ 		/* TBD 256 is offset within sys register. */
+-		mpi_req_iomem = (void *)ioc->chip + MPI_FRAME_START_OFFSET
++		mpi_req_iomem = (void __force *)ioc->chip
++					+ MPI_FRAME_START_OFFSET
+ 					+ (smid * ioc->request_sz);
+ 		_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
+ 							ioc->request_sz);
+@@ -3539,7 +3548,7 @@ mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ 
+ 		_clone_sg_entries(ioc, (void *) mfp, smid);
+ 		/* TBD 256 is offset within sys register */
+-		mpi_req_iomem = (void *)ioc->chip +
++		mpi_req_iomem = (void __force *)ioc->chip +
+ 			MPI_FRAME_START_OFFSET + (smid * ioc->request_sz);
+ 		_base_clone_mpi_to_sys_mem(mpi_req_iomem, (void *)mfp,
+ 							ioc->request_sz);
+@@ -4999,7 +5008,7 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
+ 
+ 	/* send message 32-bits at a time */
+ 	for (i = 0, failed = 0; i < request_bytes/4 && !failed; i++) {
+-		writel(cpu_to_le32(request[i]), &ioc->chip->Doorbell);
++		writel((u32)(request[i]), &ioc->chip->Doorbell);
+ 		if ((_base_wait_for_doorbell_ack(ioc, 5)))
+ 			failed = 1;
+ 	}
+@@ -5020,7 +5029,7 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
+ 	}
+ 
+ 	/* read the first two 16-bits, it gives the total length of the reply */
+-	reply[0] = le16_to_cpu(readl(&ioc->chip->Doorbell)
++	reply[0] = (u16)(readl(&ioc->chip->Doorbell)
+ 	    & MPI2_DOORBELL_DATA_MASK);
+ 	writel(0, &ioc->chip->HostInterruptStatus);
+ 	if ((_base_wait_for_doorbell_int(ioc, 5))) {
+@@ -5029,7 +5038,7 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
+ 			ioc->name, __LINE__);
+ 		return -EFAULT;
+ 	}
+-	reply[1] = le16_to_cpu(readl(&ioc->chip->Doorbell)
++	reply[1] = (u16)(readl(&ioc->chip->Doorbell)
+ 	    & MPI2_DOORBELL_DATA_MASK);
+ 	writel(0, &ioc->chip->HostInterruptStatus);
+ 
+@@ -5043,7 +5052,7 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
+ 		if (i >=  reply_bytes/2) /* overflow case */
+ 			readl(&ioc->chip->Doorbell);
+ 		else
+-			reply[i] = le16_to_cpu(readl(&ioc->chip->Doorbell)
++			reply[i] = (u16)(readl(&ioc->chip->Doorbell)
+ 			    & MPI2_DOORBELL_DATA_MASK);
+ 		writel(0, &ioc->chip->HostInterruptStatus);
+ 	}
+@@ -6169,7 +6178,7 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->reply_free[i] = cpu_to_le32(reply_address);
+ 		if (ioc->is_mcpu_endpoint)
+ 			_base_clone_reply_to_sys_mem(ioc,
+-					(__le32)reply_address, i);
++					reply_address, i);
+ 	}
+ 
+ 	/* initialize reply queues */
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 4de0251..58b38bd 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -829,8 +829,8 @@ struct _sc_list {
+  */
+ struct _event_ack_list {
+ 	struct list_head list;
+-	u16     Event;
+-	u32     EventContext;
++	U16     Event;
++	U32     EventContext;
+ };
+ 
+ /**
+@@ -1321,7 +1321,7 @@ struct MPT3SAS_ADAPTER {
+ 	u8		combined_reply_queue;
+ 	u8		combined_reply_index_count;
+ 	/* reply post register index */
+-	resource_size_t	**replyPostRegisterIndex;
++	volatile void __iomem	**replyPostRegisterIndex;
+ 
+ 	struct list_head delayed_tr_list;
+ 	struct list_head delayed_tr_volume_list;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index d3cb387..c1b17d6 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -297,7 +297,7 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 			nvme_error_reply =
+ 			    (Mpi26NVMeEncapsulatedErrorReply_t *)mpi_reply;
+ 			sz = min_t(u32, NVME_ERROR_RESPONSE_SIZE,
+-			    le32_to_cpu(nvme_error_reply->ErrorResponseCount));
++			    le16_to_cpu(nvme_error_reply->ErrorResponseCount));
+ 			sense_data = mpt3sas_base_get_sense_buffer(ioc, smid);
+ 			memcpy(ioc->ctl_cmds.sense, sense_data, sz);
+ 		}
+@@ -803,12 +803,13 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		 * Build the PRPs and set direction bits.
+ 		 * Send the request.
+ 		 */
+-		nvme_encap_request->ErrorResponseBaseAddress = ioc->sense_dma &
+-		    0xFFFFFFFF00000000;
++		nvme_encap_request->ErrorResponseBaseAddress =
++		    cpu_to_le64(ioc->sense_dma & 0xFFFFFFFF00000000UL);
+ 		nvme_encap_request->ErrorResponseBaseAddress |=
+-		    (U64)mpt3sas_base_get_sense_buffer_dma(ioc, smid);
++		   cpu_to_le64(le32_to_cpu(
++		   mpt3sas_base_get_sense_buffer_dma(ioc, smid)));
+ 		nvme_encap_request->ErrorResponseAllocationLength =
+-						NVME_ERROR_RESPONSE_SIZE;
++					cpu_to_le16(NVME_ERROR_RESPONSE_SIZE);
+ 		memset(ioc->ctl_cmds.sense, 0, NVME_ERROR_RESPONSE_SIZE);
+ 		ioc->build_nvme_prp(ioc, smid, nvme_encap_request,
+ 		    data_out_dma, data_out_sz, data_in_dma, data_in_sz);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 50efccd..c9cce65 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -157,8 +157,8 @@ MODULE_PARM_DESC(prot_mask, " host protection capabilities mask, def=7 ");
+ 
+ 
+ /* raid transport support */
+-struct raid_template *mpt3sas_raid_template;
+-struct raid_template *mpt2sas_raid_template;
++static struct raid_template *mpt3sas_raid_template;
++static struct raid_template *mpt2sas_raid_template;
+ 
+ 
+ /**
+@@ -3722,7 +3722,7 @@ _scsih_tm_tr_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 		if (!delayed_sc)
+ 			return _scsih_check_for_pending_tm(ioc, smid);
+ 		INIT_LIST_HEAD(&delayed_sc->list);
+-		delayed_sc->handle = mpi_request_tm->DevHandle;
++		delayed_sc->handle = le16_to_cpu(mpi_request_tm->DevHandle);
+ 		list_add_tail(&delayed_sc->list, &ioc->delayed_sc_list);
+ 		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+ 		    "DELAYED:sc:handle(0x%04x), (open)\n",
+@@ -3900,8 +3900,8 @@ _scsih_tm_volume_tr_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+  * Context - processed in interrupt context.
+  */
+ static void
+-_scsih_issue_delayed_event_ack(struct MPT3SAS_ADAPTER *ioc, u16 smid, u16 event,
+-				u32 event_context)
++_scsih_issue_delayed_event_ack(struct MPT3SAS_ADAPTER *ioc, u16 smid, U16 event,
++				U32 event_context)
+ {
+ 	Mpi2EventAckRequest_t *ack_request;
+ 	int i = smid - ioc->internal_smid;
+@@ -3976,13 +3976,13 @@ _scsih_issue_delayed_sas_io_unit_ctrl(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	dewtprintk(ioc, pr_info(MPT3SAS_FMT
+ 	    "sc_send:handle(0x%04x), (open), smid(%d), cb(%d)\n",
+-	    ioc->name, le16_to_cpu(handle), smid,
++	    ioc->name, handle, smid,
+ 	    ioc->tm_sas_control_cb_idx));
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+ 	memset(mpi_request, 0, sizeof(Mpi2SasIoUnitControlRequest_t));
+ 	mpi_request->Function = MPI2_FUNCTION_SAS_IO_UNIT_CONTROL;
+ 	mpi_request->Operation = MPI2_SAS_OP_REMOVE_DEVICE;
+-	mpi_request->DevHandle = handle;
++	mpi_request->DevHandle = cpu_to_le16(handle);
+ 	mpt3sas_base_put_smid_default(ioc, smid);
+ }
+ 
+@@ -6105,7 +6105,7 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
+ 	if (sas_device_pg0.EnclosureHandle) {
+ 		encl_pg0_rc = mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
+ 		    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
+-		    sas_device_pg0.EnclosureHandle);
++		    le16_to_cpu(sas_device_pg0.EnclosureHandle));
+ 		if (encl_pg0_rc)
+ 			pr_info(MPT3SAS_FMT
+ 			    "Enclosure Pg0 read failed for handle(0x%04x)\n",
+@@ -6914,7 +6914,7 @@ _scsih_pcie_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	if (pcie_device->enclosure_handle != 0)
+ 		pcie_device->slot = le16_to_cpu(pcie_device_pg0.Slot);
+ 
+-	if (le16_to_cpu(pcie_device_pg0.Flags) &
++	if (le32_to_cpu(pcie_device_pg0.Flags) &
+ 	    MPI26_PCIEDEV0_FLAGS_ENCL_LEVEL_VALID) {
+ 		pcie_device->enclosure_level = pcie_device_pg0.EnclosureLevel;
+ 		memcpy(&pcie_device->connector_name[0],
+@@ -8361,8 +8361,9 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
+-		if ((sas_device->sas_address == sas_device_pg0->SASAddress) &&
+-			(sas_device->slot == sas_device_pg0->Slot)) {
++		if ((sas_device->sas_address == le64_to_cpu(
++		    sas_device_pg0->SASAddress)) && (sas_device->slot ==
++		    le16_to_cpu(sas_device_pg0->Slot))) {
+ 			sas_device->responding = 1;
+ 			starget = sas_device->starget;
+ 			if (starget && starget->hostdata) {
+@@ -8374,7 +8375,7 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
+ 			if (starget) {
+ 				starget_printk(KERN_INFO, starget,
+ 				    "handle(0x%04x), sas_addr(0x%016llx)\n",
+-				    sas_device_pg0->DevHandle,
++				    le16_to_cpu(sas_device_pg0->DevHandle),
+ 				    (unsigned long long)
+ 				    sas_device->sas_address);
+ 
+@@ -8386,7 +8387,7 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
+ 					 sas_device->enclosure_logical_id,
+ 					 sas_device->slot);
+ 			}
+-			if (sas_device_pg0->Flags &
++			if (le16_to_cpu(sas_device_pg0->Flags) &
+ 			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+ 				sas_device->enclosure_level =
+ 				   sas_device_pg0->EnclosureLevel;
+@@ -8400,14 +8401,16 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
+ 			_scsih_get_enclosure_logicalid_chassis_slot(ioc,
+ 			    sas_device_pg0, sas_device);
+ 
+-			if (sas_device->handle == sas_device_pg0->DevHandle)
++			if (sas_device->handle == le16_to_cpu(
++			    sas_device_pg0->DevHandle))
+ 				goto out;
+ 			pr_info("\thandle changed from(0x%04x)!!!\n",
+ 			    sas_device->handle);
+-			sas_device->handle = sas_device_pg0->DevHandle;
++			sas_device->handle = le16_to_cpu(
++			    sas_device_pg0->DevHandle);
+ 			if (sas_target_priv_data)
+ 				sas_target_priv_data->handle =
+-					sas_device_pg0->DevHandle;
++				    le16_to_cpu(sas_device_pg0->DevHandle);
+ 			goto out;
+ 		}
+ 	}
+@@ -8446,15 +8449,10 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
+ 		    MPI2_IOCSTATUS_MASK;
+ 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
+ 			break;
+-		handle = sas_device_pg0.DevHandle =
+-				le16_to_cpu(sas_device_pg0.DevHandle);
++		handle = le16_to_cpu(sas_device_pg0.DevHandle);
+ 		device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
+ 		if (!(_scsih_is_end_device(device_info)))
+ 			continue;
+-		sas_device_pg0.SASAddress =
+-				le64_to_cpu(sas_device_pg0.SASAddress);
+-		sas_device_pg0.Slot = le16_to_cpu(sas_device_pg0.Slot);
+-		sas_device_pg0.Flags = le16_to_cpu(sas_device_pg0.Flags);
+ 		_scsih_mark_responding_sas_device(ioc, &sas_device_pg0);
+ 	}
+ 
+@@ -8484,8 +8482,9 @@ _scsih_mark_responding_pcie_device(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
+ 	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list) {
+-		if ((pcie_device->wwid == pcie_device_pg0->WWID) &&
+-		    (pcie_device->slot == pcie_device_pg0->Slot)) {
++		if ((pcie_device->wwid == le64_to_cpu(pcie_device_pg0->WWID))
++		    && (pcie_device->slot == le16_to_cpu(
++		    pcie_device_pg0->Slot))) {
+ 			pcie_device->responding = 1;
+ 			starget = pcie_device->starget;
+ 			if (starget && starget->hostdata) {
+@@ -8520,14 +8519,16 @@ _scsih_mark_responding_pcie_device(struct MPT3SAS_ADAPTER *ioc,
+ 				pcie_device->connector_name[0] = '\0';
+ 			}
+ 
+-			if (pcie_device->handle == pcie_device_pg0->DevHandle)
++			if (pcie_device->handle == le16_to_cpu(
++			    pcie_device_pg0->DevHandle))
+ 				goto out;
+ 			pr_info("\thandle changed from(0x%04x)!!!\n",
+ 			    pcie_device->handle);
+-			pcie_device->handle = pcie_device_pg0->DevHandle;
++			pcie_device->handle = le16_to_cpu(
++			    pcie_device_pg0->DevHandle);
+ 			if (sas_target_priv_data)
+ 				sas_target_priv_data->handle =
+-				    pcie_device_pg0->DevHandle;
++				    le16_to_cpu(pcie_device_pg0->DevHandle);
+ 			goto out;
+ 		}
+ 	}
+@@ -8576,10 +8577,6 @@ _scsih_search_responding_pcie_devices(struct MPT3SAS_ADAPTER *ioc)
+ 		device_info = le32_to_cpu(pcie_device_pg0.DeviceInfo);
+ 		if (!(_scsih_is_nvme_device(device_info)))
+ 			continue;
+-		pcie_device_pg0.WWID = le64_to_cpu(pcie_device_pg0.WWID),
+-		pcie_device_pg0.Slot = le16_to_cpu(pcie_device_pg0.Slot);
+-		pcie_device_pg0.Flags = le32_to_cpu(pcie_device_pg0.Flags);
+-		pcie_device_pg0.DevHandle = handle;
+ 		_scsih_mark_responding_pcie_device(ioc, &pcie_device_pg0);
+ 	}
+ out:
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+index 6bfcee4..45aa949 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+@@ -177,7 +177,8 @@ mpt3sas_init_warpdrive_properties(struct MPT3SAS_ADAPTER *ioc,
+ 		if (mpt3sas_config_get_phys_disk_pg0(ioc, &mpi_reply,
+ 		    &pd_pg0, MPI2_PHYSDISK_PGAD_FORM_PHYSDISKNUM,
+ 		    vol_pg0->PhysDisk[count].PhysDiskNum) ||
+-		    pd_pg0.DevHandle == MPT3SAS_INVALID_DEVICE_HANDLE) {
++		    le16_to_cpu(pd_pg0.DevHandle) ==
++		    MPT3SAS_INVALID_DEVICE_HANDLE) {
+ 			pr_info(MPT3SAS_FMT "WarpDrive : Direct IO is "
+ 			    "disabled for the drive with handle(0x%04x) member"
+ 			    "handle retrieval failed for member number=%d\n",
+-- 
+1.8.3.1
