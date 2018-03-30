@@ -1,7 +1,7 @@
 From: Chaitra P B <chaitra.basappa@broadcom.com>
-Subject: [PATCH 10/15] mpt3sas: Cache enclosure pages during enclosure add.
-Date: Fri, 30 Mar 2018 15:07:19 +0530
-Message-ID: <1522402644-3016-11-git-send-email-chaitra.basappa@broadcom.com>
+Subject: [PATCH 11/15] mpt3sas: Report Firmware Package Version from HBA  Driver.
+Date: Fri, 30 Mar 2018 15:07:20 +0530
+Message-ID: <1522402644-3016-12-git-send-email-chaitra.basappa@broadcom.com>
 References: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
@@ -10,568 +10,166 @@ To: linux-scsi@vger.kernel.org, stable@vger.kernel.org
 Cc: suganath-prabu.subramani@broadcom.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In function _scsih_add_device,
-for each device connected to an enclosure, driver reads the
-enclosure page(To get details like enclosure handle,
-enclosure logical ID, enclosure level etc.)
-
-With this patch, instead of reading enclosure page everytime,
-driver maintains a list for enclosure device(During enclosure
-add event, enclosure device is added to the list and removed
-from the list on delete events) and uses the enclosure page
-from the list.
+Added function _base_display_fwpkg_version, which sends FWUpload
+request to pull FW package version from FW Image Header.
+Now driver prints FW package version in addition to FW
+version if the PackageVersion is valid.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  |  22 +++
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  14 ++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 297 ++++++++++++++++++++++++-----------
- 3 files changed, 237 insertions(+), 96 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 115 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h |   1 +
+ 2 files changed, 114 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 3f3f0f0..dca0782 100644
+index dca0782..94c69aa 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4087,6 +4087,27 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
+@@ -3825,6 +3825,111 @@ _base_display_OEMs_branding(struct MPT3SAS_ADAPTER *ioc)
  }
  
  /**
-+ * mpt3sas_free_enclosure_list - release memory
++ * _base_display_fwpkg_version - sends FWUpload request to pull FWPkg
++ *				version from FW Image Header.
 + * @ioc: per adapter object
 + *
-+ * Free memory allocated during encloure add.
-+ *
-+ * Return nothing.
++ * Returns 0 for success, non-zero for failure.
 + */
-+void
-+mpt3sas_free_enclosure_list(struct MPT3SAS_ADAPTER *ioc)
++	static int
++_base_display_fwpkg_version(struct MPT3SAS_ADAPTER *ioc)
 +{
-+	struct _enclosure_node *enclosure_dev, *enclosure_dev_next;
++	Mpi2FWImageHeader_t *FWImgHdr;
++	Mpi25FWUploadRequest_t *mpi_request;
++	Mpi2FWUploadReply_t mpi_reply;
++	int r = 0;
++	void *fwpkg_data = NULL;
++	dma_addr_t fwpkg_data_dma;
++	u16 smid, ioc_status;
++	size_t data_length;
 +
-+	/* Free enclosure list */
-+	list_for_each_entry_safe(enclosure_dev,
-+			enclosure_dev_next, &ioc->enclosure_list, list) {
-+		list_del(&enclosure_dev->list);
-+		kfree(enclosure_dev);
++	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
++				__func__));
++
++	if (ioc->base_cmds.status & MPT3_CMD_PENDING) {
++		pr_err(MPT3SAS_FMT "%s: internal command already in use\n",
++				ioc->name, __func__);
++		return -EAGAIN;
 +	}
-+}
 +
-+/**
-  * _base_release_memory_pools - release memory
-  * @ioc: per adapter object
-  *
-@@ -6667,6 +6688,7 @@ mpt3sas_base_detach(struct MPT3SAS_ADAPTER *ioc)
- 	mpt3sas_base_stop_watchdog(ioc);
- 	mpt3sas_base_free_resources(ioc);
- 	_base_release_memory_pools(ioc);
-+	mpt3sas_free_enclosure_list(ioc);
- 	pci_set_drvdata(ioc->pdev, NULL);
- 	kfree(ioc->cpu_msix_table);
- 	if (ioc->is_warpdrive)
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index a0fca8a..6f3329e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -741,6 +741,17 @@ struct _sas_node {
- 	struct list_head sas_port_list;
- };
- 
++	data_length = sizeof(Mpi2FWImageHeader_t);
++	fwpkg_data = pci_alloc_consistent(ioc->pdev, data_length,
++			&fwpkg_data_dma);
++	if (!fwpkg_data) {
++		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
++				ioc->name, __FILE__, __LINE__, __func__);
++		return -ENOMEM;
++	}
 +
-+/**
-+ * struct _enclosure_node - enclosure information
-+ * @list: list of enclosures
-+ * @pg0: enclosure pg0;
-+ */
-+struct _enclosure_node {
-+	struct list_head list;
-+	Mpi2SasEnclosurePage0_t pg0;
-+};
-+
- /**
-  * enum reset_type - reset state
-  * @FORCE_BIG_HAMMER: issue diagnostic reset
-@@ -1013,6 +1024,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @iounit_pg8: static iounit page 8
-  * @sas_hba: sas host object
-  * @sas_expander_list: expander object list
-+ * @enclosure_list: enclosure object list
-  * @sas_node_lock:
-  * @sas_device_list: sas device object list
-  * @sas_device_init_list: sas device object list (used only at init time)
-@@ -1218,6 +1230,7 @@ struct MPT3SAS_ADAPTER {
- 	/* sas hba, expander, and device list */
- 	struct _sas_node sas_hba;
- 	struct list_head sas_expander_list;
-+	struct list_head enclosure_list;
- 	spinlock_t	sas_node_lock;
- 	struct list_head sas_device_list;
- 	struct list_head sas_device_init_list;
-@@ -1391,6 +1404,7 @@ int mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_base_detach(struct MPT3SAS_ADAPTER *ioc);
- int mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc);
-+void mpt3sas_free_enclosure_list(struct MPT3SAS_ADAPTER *ioc);
- int mpt3sas_base_hard_reset_handler(struct MPT3SAS_ADAPTER *ioc,
- 	enum reset_type type);
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 9d7099d..dabeeaf 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1362,6 +1362,30 @@ mpt3sas_scsih_expander_find_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- }
- 
- /**
-+ * mpt3sas_scsih_enclosure_find_by_handle - exclosure device search
-+ * @ioc: per adapter object
-+ * @handle: enclosure handle (assigned by firmware)
-+ * Context: Calling function should acquire ioc->sas_device_lock
-+ *
-+ * This searches for enclosure device based on handle, then returns the
-+ * enclosure object.
-+ */
-+static struct _enclosure_node *
-+mpt3sas_scsih_enclosure_find_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
-+{
-+	struct _enclosure_node *enclosure_dev, *r;
-+
-+	r = NULL;
-+	list_for_each_entry(enclosure_dev, &ioc->enclosure_list, list) {
-+		if (le16_to_cpu(enclosure_dev->pg0.EnclosureHandle) != handle)
-+			continue;
-+		r = enclosure_dev;
++	smid = mpt3sas_base_get_smid(ioc, ioc->base_cb_idx);
++	if (!smid) {
++		pr_err(MPT3SAS_FMT "%s: failed obtaining a smid\n",
++				ioc->name, __func__);
++		r = -EAGAIN;
 +		goto out;
 +	}
++
++	ioc->base_cmds.status = MPT3_CMD_PENDING;
++	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	ioc->base_cmds.smid = smid;
++	memset(mpi_request, 0, sizeof(Mpi25FWUploadRequest_t));
++	mpi_request->Function = MPI2_FUNCTION_FW_UPLOAD;
++	mpi_request->ImageType = MPI2_FW_UPLOAD_ITYPE_FW_FLASH;
++	mpi_request->ImageSize = data_length;
++	ioc->build_sg(ioc, &mpi_request->SGL, 0, 0, fwpkg_data_dma,
++			data_length);
++	init_completion(&ioc->base_cmds.done);
++	mpt3sas_base_put_smid_default(ioc, smid);
++	/* Wait for 15 seconds */
++	wait_for_completion_timeout(&ioc->base_cmds.done,
++			FW_IMG_HDR_READ_TIMEOUT*HZ);
++	pr_info(MPT3SAS_FMT "%s: complete\n",
++			ioc->name, __func__);
++	if (!(ioc->base_cmds.status & MPT3_CMD_COMPLETE)) {
++		pr_err(MPT3SAS_FMT "%s: timeout\n",
++				ioc->name, __func__);
++		_debug_dump_mf(mpi_request,
++				sizeof(Mpi25FWUploadRequest_t)/4);
++		r = -ETIME;
++	} else {
++		memset(&mpi_reply, 0, sizeof(Mpi2FWUploadReply_t));
++		if (ioc->base_cmds.status & MPT3_CMD_REPLY_VALID) {
++			memcpy(&mpi_reply, ioc->base_cmds.reply,
++					sizeof(Mpi2FWUploadReply_t));
++			ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++						MPI2_IOCSTATUS_MASK;
++			if (ioc_status == MPI2_IOCSTATUS_SUCCESS) {
++				FWImgHdr = (Mpi2FWImageHeader_t *)fwpkg_data;
++				FWImgHdr->PackageVersion.Word =
++				    le32_to_cpu(FWImgHdr->PackageVersion.Word);
++				if (FWImgHdr->PackageVersion.Word) {
++					pr_info(MPT3SAS_FMT "FW Package Version"
++					"(%02d.%02d.%02d.%02d)\n",
++					ioc->name,
++					((FWImgHdr->PackageVersion.Word)
++							& 0xFF000000) >> 24,
++					((FWImgHdr->PackageVersion.Word)
++							& 0x00FF0000) >> 16,
++					((FWImgHdr->PackageVersion.Word)
++							& 0x0000FF00) >> 8,
++					(FWImgHdr->PackageVersion.Word)
++							& 0x000000FF);
++				}
++			} else {
++				_debug_dump_mf(&mpi_reply,
++						sizeof(Mpi2FWUploadReply_t)/4);
++			}
++		}
++	}
++	ioc->base_cmds.status = MPT3_CMD_NOT_USED;
 +out:
++	if (fwpkg_data)
++		pci_free_consistent(ioc->pdev, data_length, fwpkg_data,
++				fwpkg_data_dma);
 +	return r;
 +}
-+/**
-  * mpt3sas_scsih_expander_find_by_sas_address - expander device search
-  * @ioc: per adapter object
-  * @sas_address: sas address
-@@ -5616,10 +5640,10 @@ static int
- _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- {
- 	struct _sas_node *sas_expander;
-+	struct _enclosure_node *enclosure_dev;
- 	Mpi2ConfigReply_t mpi_reply;
- 	Mpi2ExpanderPage0_t expander_pg0;
- 	Mpi2ExpanderPage1_t expander_pg1;
--	Mpi2SasEnclosurePage0_t enclosure_pg0;
- 	u32 ioc_status;
- 	u16 parent_handle;
- 	u64 sas_address, sas_address_parent = 0;
-@@ -5741,11 +5765,12 @@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	}
- 
- 	if (sas_expander->enclosure_handle) {
--		if (!(mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
--		    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
--		   sas_expander->enclosure_handle)))
-+		enclosure_dev =
-+			mpt3sas_scsih_enclosure_find_by_handle(ioc,
-+						sas_expander->enclosure_handle);
-+		if (enclosure_dev)
- 			sas_expander->enclosure_logical_id =
--			    le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
-+			    le64_to_cpu(enclosure_dev->pg0.EnclosureLogicalID);
- 	}
- 
- 	_scsih_expander_node_add(ioc, sas_expander);
-@@ -5889,52 +5914,6 @@ _scsih_check_access_status(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- }
- 
- /**
-- * _scsih_get_enclosure_logicalid_chassis_slot - get device's
-- *			EnclosureLogicalID and ChassisSlot information.
-- * @ioc: per adapter object
-- * @sas_device_pg0: SAS device page0
-- * @sas_device: per sas device object
-- *
-- * Returns nothing.
-- */
--static void
--_scsih_get_enclosure_logicalid_chassis_slot(struct MPT3SAS_ADAPTER *ioc,
--	Mpi2SasDevicePage0_t *sas_device_pg0, struct _sas_device *sas_device)
--{
--	Mpi2ConfigReply_t mpi_reply;
--	Mpi2SasEnclosurePage0_t enclosure_pg0;
--
--	if (!sas_device_pg0 || !sas_device)
--		return;
--
--	sas_device->enclosure_handle =
--	    le16_to_cpu(sas_device_pg0->EnclosureHandle);
--	sas_device->is_chassis_slot_valid = 0;
--
--	if (!le16_to_cpu(sas_device_pg0->EnclosureHandle))
--		return;
--
--	if (mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
--	    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
--	    le16_to_cpu(sas_device_pg0->EnclosureHandle))) {
--		pr_err(MPT3SAS_FMT
--		    "Enclosure Pg0 read failed for handle(0x%04x)\n",
--		    ioc->name, le16_to_cpu(sas_device_pg0->EnclosureHandle));
--		return;
--	}
--
--	sas_device->enclosure_logical_id =
--	    le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
--
--	if (le16_to_cpu(enclosure_pg0.Flags) &
--	    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
--		sas_device->is_chassis_slot_valid = 1;
--		sas_device->chassis_slot = enclosure_pg0.ChassisSlot;
--	}
--}
--
--
--/**
-  * _scsih_check_device - checking device responsiveness
-  * @ioc: per adapter object
-  * @parent_sas_address: sas address of parent expander or sas host
-@@ -5951,6 +5930,7 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2ConfigReply_t mpi_reply;
- 	Mpi2SasDevicePage0_t sas_device_pg0;
- 	struct _sas_device *sas_device;
-+	struct _enclosure_node *enclosure_dev = NULL;
- 	u32 ioc_status;
- 	unsigned long flags;
- 	u64 sas_address;
-@@ -6005,8 +5985,21 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 			sas_device->connector_name[0] = '\0';
- 		}
- 
--		_scsih_get_enclosure_logicalid_chassis_slot(ioc,
--		    &sas_device_pg0, sas_device);
-+		sas_device->enclosure_handle =
-+				le16_to_cpu(sas_device_pg0.EnclosureHandle);
-+		sas_device->is_chassis_slot_valid = 0;
-+		enclosure_dev = mpt3sas_scsih_enclosure_find_by_handle(ioc,
-+						sas_device->enclosure_handle);
-+		if (enclosure_dev) {
-+			sas_device->enclosure_logical_id =
-+			    le64_to_cpu(enclosure_dev->pg0.EnclosureLogicalID);
-+			if (le16_to_cpu(enclosure_dev->pg0.Flags) &
-+			    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
-+				sas_device->is_chassis_slot_valid = 1;
-+				sas_device->chassis_slot =
-+					enclosure_dev->pg0.ChassisSlot;
-+			}
-+		}
- 	}
- 
- 	/* check if device is present */
-@@ -6053,12 +6046,11 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
- {
- 	Mpi2ConfigReply_t mpi_reply;
- 	Mpi2SasDevicePage0_t sas_device_pg0;
--	Mpi2SasEnclosurePage0_t enclosure_pg0;
- 	struct _sas_device *sas_device;
-+	struct _enclosure_node *enclosure_dev = NULL;
- 	u32 ioc_status;
- 	u64 sas_address;
- 	u32 device_info;
--	int encl_pg0_rc = -1;
- 
- 	if ((mpt3sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
- 	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle))) {
-@@ -6104,12 +6096,12 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
- 	}
- 
- 	if (sas_device_pg0.EnclosureHandle) {
--		encl_pg0_rc = mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
--		    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
--		    le16_to_cpu(sas_device_pg0.EnclosureHandle));
--		if (encl_pg0_rc)
--			pr_info(MPT3SAS_FMT
--			    "Enclosure Pg0 read failed for handle(0x%04x)\n",
-+		enclosure_dev =
-+			mpt3sas_scsih_enclosure_find_by_handle(ioc,
-+			    le16_to_cpu(sas_device_pg0.EnclosureHandle));
-+		if (enclosure_dev == NULL)
-+			pr_info(MPT3SAS_FMT "Enclosure handle(0x%04x)"
-+			    "doesn't match with enclosure device!\n",
- 			    ioc->name, sas_device_pg0.EnclosureHandle);
- 	}
- 
-@@ -6150,18 +6142,16 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
- 		sas_device->enclosure_level = 0;
- 		sas_device->connector_name[0] = '\0';
- 	}
--
--	/* get enclosure_logical_id & chassis_slot */
-+	/* get enclosure_logical_id & chassis_slot*/
- 	sas_device->is_chassis_slot_valid = 0;
--	if (encl_pg0_rc == 0) {
-+	if (enclosure_dev) {
- 		sas_device->enclosure_logical_id =
--		    le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
--
--		if (le16_to_cpu(enclosure_pg0.Flags) &
-+		    le64_to_cpu(enclosure_dev->pg0.EnclosureLogicalID);
-+		if (le16_to_cpu(enclosure_dev->pg0.Flags) &
- 		    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
- 			sas_device->is_chassis_slot_valid = 1;
- 			sas_device->chassis_slot =
--			    enclosure_pg0.ChassisSlot;
-+					enclosure_dev->pg0.ChassisSlot;
- 		}
- 	}
- 
-@@ -6843,8 +6833,8 @@ _scsih_pcie_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	Mpi26PCIeDevicePage0_t pcie_device_pg0;
- 	Mpi26PCIeDevicePage2_t pcie_device_pg2;
- 	Mpi2ConfigReply_t mpi_reply;
--	Mpi2SasEnclosurePage0_t enclosure_pg0;
- 	struct _pcie_device *pcie_device;
-+	struct _enclosure_node *enclosure_dev;
- 	u32 pcie_device_type;
- 	u32 ioc_status;
- 	u64 wwid;
-@@ -6926,13 +6916,14 @@ _scsih_pcie_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	}
- 
- 	/* get enclosure_logical_id */
--	if (pcie_device->enclosure_handle &&
--		!(mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
--			&enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
--			pcie_device->enclosure_handle)))
--		pcie_device->enclosure_logical_id =
--			le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
--
-+	if (pcie_device->enclosure_handle) {
-+		enclosure_dev =
-+			mpt3sas_scsih_enclosure_find_by_handle(ioc,
-+						pcie_device->enclosure_handle);
-+		if (enclosure_dev)
-+			pcie_device->enclosure_logical_id =
-+			    le64_to_cpu(enclosure_dev->pg0.EnclosureLogicalID);
-+	}
- 	/* TODO -- Add device name once FW supports it */
- 	if (mpt3sas_config_get_pcie_device_pg2(ioc, &mpi_reply,
- 		&pcie_device_pg2, MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle)) {
-@@ -7318,10 +7309,61 @@ static void
- _scsih_sas_enclosure_dev_status_change_event(struct MPT3SAS_ADAPTER *ioc,
- 	struct fw_event_work *fw_event)
- {
-+	Mpi2ConfigReply_t mpi_reply;
-+	struct _enclosure_node *enclosure_dev = NULL;
-+	Mpi2EventDataSasEnclDevStatusChange_t *event_data =
-+		(Mpi2EventDataSasEnclDevStatusChange_t *)fw_event->event_data;
-+	int rc;
-+
- 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
- 		_scsih_sas_enclosure_dev_status_change_event_debug(ioc,
- 		     (Mpi2EventDataSasEnclDevStatusChange_t *)
- 		     fw_event->event_data);
-+	if (ioc->shost_recovery)
-+		return;
-+
-+	event_data->EnclosureHandle = le16_to_cpu(event_data->EnclosureHandle);
-+
-+	if (event_data->EnclosureHandle)
-+		enclosure_dev =
-+			mpt3sas_scsih_enclosure_find_by_handle(ioc,
-+						event_data->EnclosureHandle);
-+	switch (event_data->ReasonCode) {
-+	case MPI2_EVENT_SAS_ENCL_RC_ADDED:
-+		if (!enclosure_dev) {
-+			enclosure_dev =
-+				kzalloc(sizeof(struct _enclosure_node),
-+					GFP_KERNEL);
-+			if (!enclosure_dev) {
-+				pr_info(MPT3SAS_FMT
-+					"failure at %s:%d/%s()!\n", ioc->name,
-+					__FILE__, __LINE__, __func__);
-+				return;
-+			}
-+			rc = mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
-+				&enclosure_dev->pg0,
-+				MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
-+				event_data->EnclosureHandle);
-+
-+			if (rc || (le16_to_cpu(mpi_reply.IOCStatus) &
-+						MPI2_IOCSTATUS_MASK)) {
-+				kfree(enclosure_dev);
-+				return;
-+			}
-+
-+			list_add_tail(&enclosure_dev->list,
-+							&ioc->enclosure_list);
-+		}
-+		break;
-+	case MPI2_EVENT_SAS_ENCL_RC_NOT_RESPONDING:
-+		if (enclosure_dev) {
-+			list_del(&enclosure_dev->list);
-+			kfree(enclosure_dev);
-+		}
-+		break;
-+	default:
-+		break;
-+	}
- }
- 
- /**
-@@ -8398,8 +8440,18 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
- 	struct MPT3SAS_TARGET *sas_target_priv_data = NULL;
- 	struct scsi_target *starget;
- 	struct _sas_device *sas_device = NULL;
-+	struct _enclosure_node *enclosure_dev = NULL;
- 	unsigned long flags;
- 
-+	if (sas_device_pg0->EnclosureHandle) {
-+		enclosure_dev =
-+			mpt3sas_scsih_enclosure_find_by_handle(ioc,
-+					sas_device_pg0->EnclosureHandle);
-+		if (enclosure_dev == NULL)
-+			pr_info(MPT3SAS_FMT "Enclosure handle(0x%04x)"
-+			    "doesn't match with enclosure device!\n",
-+			    ioc->name, sas_device_pg0->EnclosureHandle);
-+	}
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
- 		if ((sas_device->sas_address == le64_to_cpu(
-@@ -8439,8 +8491,19 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
- 				sas_device->connector_name[0] = '\0';
- 			}
- 
--			_scsih_get_enclosure_logicalid_chassis_slot(ioc,
--			    sas_device_pg0, sas_device);
-+			sas_device->enclosure_handle =
-+				le16_to_cpu(sas_device_pg0->EnclosureHandle);
-+			sas_device->is_chassis_slot_valid = 0;
-+			if (enclosure_dev) {
-+				sas_device->enclosure_logical_id = le64_to_cpu(
-+					enclosure_dev->pg0.EnclosureLogicalID);
-+				if (le16_to_cpu(enclosure_dev->pg0.Flags) &
-+				    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
-+					sas_device->is_chassis_slot_valid = 1;
-+					sas_device->chassis_slot =
-+						enclosure_dev->pg0.ChassisSlot;
-+				}
-+			}
- 
- 			if (sas_device->handle == le16_to_cpu(
- 			    sas_device_pg0->DevHandle))
-@@ -8460,6 +8523,52 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
- }
- 
- /**
-+ * _scsih_create_enclosure_list_after_reset - Free Existing list,
-+ *	And create enclosure list by scanning all Enclosure Page(0)s
-+ * @ioc: per adapter object
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_create_enclosure_list_after_reset(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct _enclosure_node *enclosure_dev;
-+	Mpi2ConfigReply_t mpi_reply;
-+	u16 enclosure_handle;
-+	int rc;
-+
-+	/* Free existing enclosure list */
-+	mpt3sas_free_enclosure_list(ioc);
-+
-+	/* Re constructing enclosure list after reset*/
-+	enclosure_handle = 0xFFFF;
-+	do {
-+		enclosure_dev =
-+			kzalloc(sizeof(struct _enclosure_node), GFP_KERNEL);
-+		if (!enclosure_dev) {
-+			pr_err(MPT3SAS_FMT
-+				"failure at %s:%d/%s()!\n", ioc->name,
-+				__FILE__, __LINE__, __func__);
-+			return;
-+		}
-+		rc = mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
-+				&enclosure_dev->pg0,
-+				MPI2_SAS_ENCLOS_PGAD_FORM_GET_NEXT_HANDLE,
-+				enclosure_handle);
-+
-+		if (rc || (le16_to_cpu(mpi_reply.IOCStatus) &
-+						MPI2_IOCSTATUS_MASK)) {
-+			kfree(enclosure_dev);
-+			return;
-+		}
-+		list_add_tail(&enclosure_dev->list,
-+						&ioc->enclosure_list);
-+		enclosure_handle =
-+			le16_to_cpu(enclosure_dev->pg0.EnclosureHandle);
-+	} while (1);
-+}
 +
 +/**
-  * _scsih_search_responding_sas_devices -
+  * _base_display_ioc_capabilities - Disply IOC's capabilities.
   * @ioc: per adapter object
   *
-@@ -8771,22 +8880,16 @@ _scsih_mark_responding_expander(struct MPT3SAS_ADAPTER *ioc,
- {
- 	struct _sas_node *sas_expander = NULL;
- 	unsigned long flags;
--	int i, encl_pg0_rc = -1;
--	Mpi2ConfigReply_t mpi_reply;
--	Mpi2SasEnclosurePage0_t enclosure_pg0;
-+	int i;
-+	struct _enclosure_node *enclosure_dev = NULL;
- 	u16 handle = le16_to_cpu(expander_pg0->DevHandle);
-+	u16 enclosure_handle = le16_to_cpu(expander_pg0->EnclosureHandle);
- 	u64 sas_address = le64_to_cpu(expander_pg0->SASAddress);
+@@ -6359,12 +6464,18 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
+  skip_init_reply_post_host_index:
  
--	if (le16_to_cpu(expander_pg0->EnclosureHandle)) {
--		encl_pg0_rc = mpt3sas_config_get_enclosure_pg0(ioc, &mpi_reply,
--		    &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
--		    le16_to_cpu(expander_pg0->EnclosureHandle));
--		if (encl_pg0_rc)
--			pr_info(MPT3SAS_FMT
--			    "Enclosure Pg0 read failed for handle(0x%04x)\n",
--			    ioc->name,
--			    le16_to_cpu(expander_pg0->EnclosureHandle));
--	}
-+	if (enclosure_handle)
-+		enclosure_dev =
-+			mpt3sas_scsih_enclosure_find_by_handle(ioc,
-+							enclosure_handle);
+ 	_base_unmask_interrupts(ioc);
++
++	if (ioc->hba_mpi_version_belonged != MPI2_VERSION) {
++		r = _base_display_fwpkg_version(ioc);
++		if (r)
++			return r;
++	}
++
++	_base_static_config_pages(ioc);
+ 	r = _base_event_notification(ioc);
+ 	if (r)
+ 		return r;
  
- 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
- 	list_for_each_entry(sas_expander, &ioc->sas_expander_list, list) {
-@@ -8794,12 +8897,12 @@ _scsih_mark_responding_expander(struct MPT3SAS_ADAPTER *ioc,
- 			continue;
- 		sas_expander->responding = 1;
- 
--		if (!encl_pg0_rc)
-+		if (enclosure_dev) {
- 			sas_expander->enclosure_logical_id =
--			    le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
+-	_base_static_config_pages(ioc);
 -
--		sas_expander->enclosure_handle =
--		    le16_to_cpu(expander_pg0->EnclosureHandle);
-+			    le64_to_cpu(enclosure_dev->pg0.EnclosureLogicalID);
-+			sas_expander->enclosure_handle =
-+			    le16_to_cpu(expander_pg0->EnclosureHandle);
-+		}
+ 	if (ioc->is_driver_loading) {
  
- 		if (sas_expander->handle == handle)
- 			goto out;
-@@ -9321,6 +9424,7 @@ mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
- 		if ((!ioc->is_driver_loading) && !(disable_discovery > 0 &&
- 		    !ioc->sas_hba.num_phys)) {
- 			_scsih_prep_device_scan(ioc);
-+			_scsih_create_enclosure_list_after_reset(ioc);
- 			_scsih_search_responding_sas_devices(ioc);
- 			_scsih_search_responding_pcie_devices(ioc);
- 			_scsih_search_responding_raid_devices(ioc);
-@@ -10544,6 +10648,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_LIST_HEAD(&ioc->sas_device_list);
- 	INIT_LIST_HEAD(&ioc->sas_device_init_list);
- 	INIT_LIST_HEAD(&ioc->sas_expander_list);
-+	INIT_LIST_HEAD(&ioc->enclosure_list);
- 	INIT_LIST_HEAD(&ioc->pcie_device_list);
- 	INIT_LIST_HEAD(&ioc->pcie_device_init_list);
- 	INIT_LIST_HEAD(&ioc->fw_event_list);
+ 		if (ioc->is_warpdrive && ioc->manu_pg10.OEMIdentifier
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 6f3329e..20fe90d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -138,6 +138,7 @@
+ #define MAX_CHAIN_ELEMT_SZ		16
+ #define DEFAULT_NUM_FWCHAIN_ELEMTS	8
+ 
++#define FW_IMG_HDR_READ_TIMEOUT	15
+ /*
+  * NVMe defines
+  */
 -- 
 1.8.3.1
