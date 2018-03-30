@@ -1,57 +1,64 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v3] scsi: Introduce sdev_printk_ratelimited to throttle
- frequent printk
-Date: Tue, 3 Apr 2018 17:12:02 +0800
-Message-ID: <5AC34562.6030207@huawei.com>
-References: <1522735480-159023-1-git-send-email-wen.yang99@zte.com.cn>
+From: Michael Ellerman <michael@ellerman.id.au>
+Subject: Re: Recent kernels fail to boot on POWER8 with multipath
+	SCSI
+Date: Fri, 30 Mar 2018 20:04:28 +1100
+Message-ID: <87fu4iylwj.fsf@concordia.ellerman.id.au>
+References: <20180329083909.GA15766@fergus.ozlabs.ibm.com>
+	<20180329151654.GA3839@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1522735480-159023-1-git-send-email-wen.yang99@zte.com.cn>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Wen Yang <wen.yang99@zte.com.cn>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart.VanAssche@wdc.com, pmladek@suse.com, sergey.senozhatsky.work@gmail.com, tj@kernel.org, jiang.biao2@zte.com.cn, zhong.weidong@zte.com.cn, Tan Hu <tan.hu@zte.com.cn>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20180329151654.GA3839@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Mike Snitzer <snitzer@redhat.com>, Paul Mackerras <paulus@ozlabs.org>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Mike,
 
-On 2018/4/3 14:04, Wen Yang wrote:
-> There would be so many same lines printed by frequent printk if one
-> disk went wrong, like,
-> [  546.185242] sd 0:1:0:0: rejecting I/O to offline device
-> [  546.185258] sd 0:1:0:0: rejecting I/O to offline device
-> [  546.185280] sd 0:1:0:0: rejecting I/O to offline device
-> [  546.185307] sd 0:1:0:0: rejecting I/O to offline device
-> [  546.185334] sd 0:1:0:0: rejecting I/O to offline device
-> [  546.185364] sd 0:1:0:0: rejecting I/O to offline device
-> [  546.185390] sd 0:1:0:0: rejecting I/O to offline device
-> [  546.185410] sd 0:1:0:0: rejecting I/O to offline device
-> For slow serial console, the frequent printk may be blocked for a
-> long time, and if any spin_lock has been acquired before the printk
-> like in scsi_request_fn, watchdog could be triggered.
->
-> Related disscussion can be found here,
-> https://bugzilla.kernel.org/show_bug.cgi?id=199003
-> And Petr brought the idea to throttle the frequent printk, it's
-> useless to print the same lines frequently after all.
->
-> v2: fix some typos
-> v3: limit the print only for the same device
->
-> Suggested-by: Petr Mladek<pmladek@suse.com>
-> Suggested-by: Sergey Senozhatsky<sergey.senozhatsky.work@gmail.com>
-> Signed-off-by: Wen Yang<wen.yang99@zte.com.cn>
-> Signed-off-by: Jiang Biao<jiang.biao2@zte.com.cn>
-> Signed-off-by: Tan Hu<tan.hu@zte.com.cn>
-> Reviewed-by: Bart Van Assche<bart.vanassche@wdc.com>
-> CC: BartVanAssche<Bart.VanAssche@wdc.com>
-> CC: Petr Mladek<pmladek@suse.com>
-> CC: Sergey Senozhatsky<sergey.senozhatsky.work@gmail.com>
-> CC: Martin K. Petersen<martin.petersen@oracle.com>
-> CC: "James E.J. Bottomley"<jejb@linux.vnet.ibm.com>
-> CC: Tejun Heo<tj@kernel.org>
-> CC: JasonYan<yanaijie@huawei.com>
+Paul's AFK so I tried the patch you sent.
 
-In my machine it works fine.
+Mike Snitzer <snitzer@redhat.com> writes:
+> On Thu, Mar 29 2018 at  4:39am -0400,
+> Paul Mackerras <paulus@ozlabs.org> wrote:
+>> Since commit 8d47e65948dd ("dm mpath: remove unnecessary NVMe
+>> branching in favor of scsi_dh checks", 2018-03-05), upstream kernels
+>> fail to boot on my POWER8 box which has multipath SCSI disks.  The
+>> host adapters are IPR and the userspace is CentOS 7.
+...
+>
+> Please try this patch, it'll likely fix your issues:
+>
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index dbddcdc5a4ec..746dd8a75b4a 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -887,7 +887,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+>  
+>  	q = bdev_get_queue(p->path.dev->bdev);
+>  	attached_handler_name = scsi_dh_attached_handler_name(q, GFP_KERNEL);
+> -	if (attached_handler_name) {
+> +	if (attached_handler_name || m->hw_handler_name) {
+>  		INIT_DELAYED_WORK(&p->activate_path, activate_path_work);
+>  		r = setup_scsi_dh(p->path.dev->bdev, m, attached_handler_name, &ti->error);
+>  		if (r) {
 
-Tested-by: Jason Yan <yanaijie@huawei.com>
+And it does indeed fix the problem. The system boots happily with no warnings.
+
+If you like here's a:
+
+  Tested-by: Michael Ellerman <mpe@ellerman.id.au>
+
+Any prospect of getting that patch to Linus before the 4.16 release? Yes
+I realise that's in ~36 hours :)
+
+cheers
