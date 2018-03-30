@@ -1,58 +1,76 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 00/15] mpt3sas: Enhancements and Defect fixes.
-Date: Fri, 30 Mar 2018 11:58:40 +0200
-Message-ID: <20180330095840.GB18657@kroah.com>
-References: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: Recent kernels fail to boot on POWER8 with multipath
+	SCSI
+Date: Fri, 30 Mar 2018 07:49:27 -0400
+Message-ID: <20180330114926.GA7000@redhat.com>
+References: <20180329083909.GA15766@fergus.ozlabs.ibm.com>
+	<20180329151654.GA3839@redhat.com>
+	<87fu4iylwj.fsf@concordia.ellerman.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
-Sender: stable-owner@vger.kernel.org
-To: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, suganath-prabu.subramani@broadcom.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com
+In-Reply-To: <87fu4iylwj.fsf@concordia.ellerman.id.au>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Michael Ellerman <michael@ellerman.id.au>
+Cc: Paul Mackerras <paulus@ozlabs.org>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 30, 2018 at 03:07:09PM +0530, Chaitra P B wrote:
-> Chaitra P B (15):
->   mpt3sas: Fixed warnings.
->   mpt3sas: Pre-allocate RDPQ Array at driver boot time.
->   mpt3sas: Add sanity checks for scsi tracker before accessing it.
->   mpt3sas: Lockless access for chain buffers.
->   mpt3sas: Optimize I/O memory consumption in driver.
->   mpt3sas: Enhanced handling of Sense Buffer.
->   mpt3sas: Added support for SAS Device Discovery Error Event.
->   mpt3sas: Increase event log buffer to support 24 port HBA's.
->   mpt3sas: Allow processing of events during driver unload.
->   mpt3sas: Cache enclosure pages during enclosure add.
->   mpt3sas: Report Firmware Package Version from HBA Driver.
->   mpt3sas: Update MPI Headers
->   mpt3sas: For NVME device, issue a protocol level reset instead of
->     hot reset and use TM timeout value exposed in PCIe Device Page  2.
->   mpt3sas: fix possible memory leak.
->   mpt3sas: Update driver version "25.100.00.00"
+On Fri, Mar 30 2018 at  5:04P -0400,
+Michael Ellerman <michael@ellerman.id.au> wrote:
+
+> Hi Mike,
 > 
->  drivers/scsi/mpt3sas/mpi/mpi2.h          |   9 +-
->  drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  30 +-
->  drivers/scsi/mpt3sas/mpi/mpi2_init.h     |   2 +-
->  drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |   7 +-
->  drivers/scsi/mpt3sas/mpt3sas_base.c      | 484 ++++++++++++++++++++++-------
->  drivers/scsi/mpt3sas/mpt3sas_base.h      |  62 +++-
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  38 ++-
->  drivers/scsi/mpt3sas/mpt3sas_ctl.h       |   2 +-
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 503 +++++++++++++++++++++----------
->  drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |   3 +-
->  10 files changed, 840 insertions(+), 300 deletions(-)
+> Paul's AFK so I tried the patch you sent.
 > 
-> -- 
-> 1.8.3.1
+> Mike Snitzer <snitzer@redhat.com> writes:
+> > On Thu, Mar 29 2018 at  4:39am -0400,
+> > Paul Mackerras <paulus@ozlabs.org> wrote:
+> >> Since commit 8d47e65948dd ("dm mpath: remove unnecessary NVMe
+> >> branching in favor of scsi_dh checks", 2018-03-05), upstream kernels
+> >> fail to boot on my POWER8 box which has multipath SCSI disks.  The
+> >> host adapters are IPR and the userspace is CentOS 7.
+> ...
+> >
+> > Please try this patch, it'll likely fix your issues:
+> >
+> > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> > index dbddcdc5a4ec..746dd8a75b4a 100644
+> > --- a/drivers/md/dm-mpath.c
+> > +++ b/drivers/md/dm-mpath.c
+> > @@ -887,7 +887,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+> >  
+> >  	q = bdev_get_queue(p->path.dev->bdev);
+> >  	attached_handler_name = scsi_dh_attached_handler_name(q, GFP_KERNEL);
+> > -	if (attached_handler_name) {
+> > +	if (attached_handler_name || m->hw_handler_name) {
+> >  		INIT_DELAYED_WORK(&p->activate_path, activate_path_work);
+> >  		r = setup_scsi_dh(p->path.dev->bdev, m, attached_handler_name, &ti->error);
+> >  		if (r) {
+> 
+> And it does indeed fix the problem. The system boots happily with no warnings.
 
+Great, thanks for verifying.
 
-<formletter>
+> If you like here's a:
+> 
+>   Tested-by: Michael Ellerman <mpe@ellerman.id.au>
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read:
-    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to do this properly.
+Already sent to Linus and included.
 
-</formletter>
+> Any prospect of getting that patch to Linus before the 4.16 release? Yes
+> I realise that's in ~36 hours :)
+
+Please, see upstream commit e457edf0b21c873be827b7c2f6b8e1545485c415
+
+Thanks,
+Mike
