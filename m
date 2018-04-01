@@ -1,75 +1,101 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Wakko Warner <wakko@animx.eu.org>
 Subject: Re: 4.15.14 crash with iscsi target and dvd
-Date: Sun, 1 Apr 2018 16:51:54 +0000
-Message-ID: <321881c736938279fbd3787b9dd4f8b87188bda9.camel@wdc.com>
+Date: Sun, 1 Apr 2018 14:27:23 -0400
+Message-ID: <20180401182723.GA31755@animx.eu.org>
 References: <20180331015903.GA29398@animx.eu.org>
-         <CAFLxGvzbA9XzXLsH56iyqYkitrSnBbOzD977u4266=w5zw0jNg@mail.gmail.com>
-         <20180331221252.GA25573@animx.eu.org>
-         <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
-         <20180401113721.GA8471@animx.eu.org>
-         <44e142c66ee48606a877af37077f9a6dd8a522dc.camel@wdc.com>
-         <20180401162421.GA25011@animx.eu.org>
+ <CAFLxGvzbA9XzXLsH56iyqYkitrSnBbOzD977u4266=w5zw0jNg@mail.gmail.com>
+ <20180331221252.GA25573@animx.eu.org>
+ <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
+ <20180401113721.GA8471@animx.eu.org>
+ <20180401163604.GB25011@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="_002_321881c736938279fbd3787b9dd4f8b87188bda9camelwdccom_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180401162421.GA25011@animx.eu.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20180401163604.GB25011@animx.eu.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "wakko@animx.eu.org" <wakko@animx.eu.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
---_002_321881c736938279fbd3787b9dd4f8b87188bda9camelwdccom_
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <FACCB28BC8496948BDBBB2BDD5D36DE7@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Wakko Warner wrote:
+> Wakko Warner wrote:
+> > Bart Van Assche wrote:
+> > > On Sat, 2018-03-31 at 18:12 -0400, Wakko Warner wrote:
+> > > > Richard Weinberger wrote:
+> > > > > On Sat, Mar 31, 2018 at 3:59 AM, Wakko Warner <wakko@animx.eu.org> wrote:
+> > > > > > I reported this before but noone responded.
+> > > > > 
+> > > > > Because you're sending only to LKML.
+> > > > > CC'ing storage folks.
+> > > > 
+> > > > Thank you.  I wasn't sure who I needed to send it to.
+> > > 
+> > > Can you share the output of lsscsi? I would like to know whether or not you
+> > > are using a (S)ATA CDROM.
+> > 
+> > >From the target:
+> > [4:0:0:0]    cd/dvd  ATAPI    iHAS224   B      GL05  /dev/sr0 
+> > [5:0:0:0]    cd/dvd  ATAPI    iHAS422   8      4L11  /dev/sr1 
+> > [6:0:0:0]    cd/dvd  PBDS     DVD+-RW DH-16W1S 2D14  /dev/sr2 
+> > 
+> > >From the initiator:
+> > [19:0:0:0]   cd/dvd  ATAPI    iHAS224   B      GL05  /dev/sr1
+> > [19:0:0:1]   cd/dvd  ATAPI    iHAS422   8      4L11  /dev/sr2
+> > [19:0:0:2]   cd/dvd  PBDS     DVD+-RW DH-16W1S 2D14  /dev/sr3
+> > 
+> > 
+> > I tested 4.14.32 last night with the same oops.  4.9.91 works fine.
+> > >From the initiator, if I do cat /dev/sr1 > /dev/null it works.  If I mount
+> > /dev/sr1 and then do find -type f | xargs cat > /dev/null the target
+> > crashes.  I'm using the builtin iscsi target with pscsi.  I can burn from
+> > the initiator with out problems.  I'll test other kernels between 4.9 and
+> > 4.14.
+> 
+> So I've tested 4.x.y where x one of 10 11 12 14 15 and y is the latest patch
+> (except for 4.15 which was 1 behind)
+> Each of these kernels crash within seconds or immediate of doing find -type
+> f | xargs cat > /dev/null from the initiator.
 
-T24gU3VuLCAyMDE4LTA0LTAxIGF0IDEyOjI0IC0wNDAwLCBXYWtrbyBXYXJuZXIgd3JvdGU6DQo+
-IFdoYXQgZG8geW91IGVuYWJsZSBpbiB0aGUga2VybmVsIHRvIGdldCB0aG9zZSBsb2NraW5nIG1l
-c3NhZ2VzPw0KDQpIZWxsbyBXYWtrbywNCg0KSSBoYXZlIGF0dGFjaGVkIHRoZSBzY3JpcHQgdG8g
-dGhpcyBlLW1haWwgdGhhdCBJIHVzZSB0byBlbmFibGUgYSBidW5jaCBvZg0Ka2VybmVsIGRlYnVn
-Z2luZyBvcHRpb25zLiBQbGVhc2Ugbm90ZSB0aGF0IGVuYWJsaW5nIHRoZXNlIG9wdGlvbnMsDQpl
-c3BlY2lhbGx5IGxvY2tkZXAgYW5kIGthc2FuLCB3aWxsIHNsb3cgZG93biB0aGUga2VybmVsLg0K
-DQpCYXJ0Lg0KDQoNCg0K
+I tried 4.10.0.  It doesn't completely lockup the system, but the device
+that was used hangs.  So from the initiator, it's /dev/sr1 and from the
+target it's /dev/sr0.  Attempting to read /dev/sr0 after the oops causes the
+process to hang in D state.
 
---_002_321881c736938279fbd3787b9dd4f8b87188bda9camelwdccom_
-Content-Type: application/x-shellscript;
-	name="enable-kernel-debugging-options"
-Content-Description: enable-kernel-debugging-options
-Content-Disposition: attachment; filename="enable-kernel-debugging-options";
-	size=1593; creation-date="Sun, 01 Apr 2018 16:51:54 GMT";
-	modification-date="Sun, 01 Apr 2018 16:51:54 GMT"
-Content-ID: <5B0863FBC4753A40A3539AD58C064DFE@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-IyEvYmluL2Jhc2gKCm9wdGlvbnM9KAogICAgQ09ORklHX0JMS19ERUJVR19GUwogICAgQ09ORklH
-X0RFQlVHX0FUT01JQ19TTEVFUAogICAgQ09ORklHX0RFQlVHX0JPT1RfUEFSQU1TCiAgICBDT05G
-SUdfREVCVUdfQlVHVkVSQk9TRQogICAgQ09ORklHX0RFQlVHX0ZTCiAgICBDT05GSUdfREVCVUdf
-SU5GTwogICAgQ09ORklHX0RFQlVHX0lORk9fRFdBUkY0CiAgICBDT05GSUdfREVCVUdfSU5GT19S
-RURVQ0VECiAgICBDT05GSUdfREVCVUdfS0VSTkVMCiAgICBDT05GSUdfREVCVUdfS01FTUxFQUsK
-ICAgIENPTkZJR19ERUJVR19MSVNUCiAgICBDT05GSUdfREVCVUdfTE9DS19BTExPQwogICAgQ09O
-RklHX0RFQlVHX01VVEVYRVMKICAgIENPTkZJR19ERUJVR19PQkpFQ1RTCiAgICBDT05GSUdfREVC
-VUdfT0JKRUNUU19SQ1VfSEVBRAogICAgQ09ORklHX0RFQlVHX1BBR0VBTExPQwogICAgQ09ORklH
-X0RFQlVHX1BFUl9DUFVfTUFQUwogICAgQ09ORklHX0RFQlVHX1BJX0xJU1QKICAgIENPTkZJR19E
-RUJVR19QUkVFTVBUCiAgICBDT05GSUdfREVCVUdfUFJFRU1QVF9WT0xVTlRBUlkKICAgIENPTkZJ
-R19ERUJVR19TRwogICAgQ09ORklHX0RFQlVHX1NQSU5MT0NLCiAgICBDT05GSUdfREVCVUdfU1RB
-Q0tPVkVSRkxPVwogICAgQ09ORklHX0RFQlVHX1NUQUNLX1VTQUdFCiAgICBDT05GSUdfREVURUNU
-X0hVTkdfVEFTSwogICAgQ09ORklHX0RZTkFNSUNfREVCVUcKICAgIENPTkZJR19IQVJETE9DS1VQ
-X0RFVEVDVE9SCiAgICBDT05GSUdfS0FTQU4KICAgIENPTkZJR19NQUdJQ19TWVNSUQogICAgQ09O
-RklHX1BSRUVNUFQKICAgIENPTkZJR19QUk9WRV9MT0NLSU5HCiAgICBDT05GSUdfUFJPVkVfUkNV
-CiAgICBDT05GSUdfU0NIRURfREVCVUcKICAgIENPTkZJR19TTFVCCiAgICBDT05GSUdfU0xVQl9E
-RUJVR19PTgogICAgQ09ORklHX1dRX1dBVENIRE9HCikKCnVzYWdlKCkgewogICAgZWNobyAiVXNh
-Z2U6ICQoYmFzZW5hbWUgIiQwIikgWy10XSIKICAgIGV4aXQgMQp9Cgp0ZXN0X29wdGlvbnMoKSB7
-CiAgICBmb3IgbyBpbiAiJHtvcHRpb25zW0BdfSI7IGRvCglncmVwIC13ICIkbyIgLmNvbmZpZyB8
-fCBlY2hvICI/Pz8gJG8iCiAgICBkb25lCn0KCnNldF92YXIoKSB7CiAgICBpZiBncmVwIC1xdyAi
-JDEiIC5jb25maWc7IHRoZW4KICAgICAgICBzZWQgLWkgInMvXlwoXHwjIFwpJDFcKCBcfD1cKS4q
-LyQxPSQyLyIgLmNvbmZpZwogICAgZWxzZQogICAgICAgIGVjaG8gIiQxPSQyIiA+PiAuY29uZmln
-CiAgICBmaQp9CgplbmFibGUoKSB7CiAgICBzZXRfdmFyICIkMSIgeQp9CgpzZXRfb3B0aW9ucygp
-IHsKICAgIGZvciBvIGluICIke29wdGlvbnNbQF19IjsgZG8KCWVuYWJsZSAiJG8iCiAgICBkb25l
-CiAgICBzZXRfdmFyIENPTkZJR19MT0NBTFZFUlNJT04gJyItZGJnIicKfQoKd2hpbGUgWyAkIyAt
-Z3QgMCBdICYmIFsgIiQxIiAhPSAiLS0iIF07IGRvCiAgICBjYXNlICIkMSIgaW4KCS10KSB0ZXN0
-PTE7IHNoaWZ0OyBicmVhazs7CgkqKSB1c2FnZTs7CiAgICBlc2FjCmRvbmUKCmlmIFsgLW4gIiR0
-ZXN0IiBdOyB0aGVuCiAgICB0ZXN0X29wdGlvbnMKZWxzZQogICAgc2V0X29wdGlvbnMKZmkK
-
---_002_321881c736938279fbd3787b9dd4f8b87188bda9camelwdccom_--
+Here's the oops.  There was also another line that was not seen in the newer
+kernels.
+[ 323.105044] ------------[ cut here ]------------
+[ 323.105057] WARNING: CPU: 0 PID: 0 at /usr/src/linux/dist/4.10/drivers/scsi/scsi_lib.c:1043 scsi_init_io+0x143/0x1f0 [scsi_mod]
+[ 323.105058] Modules linked in: iscsi_target_mod af_packet tcm_loop vhost_scsi vhost target_core_file target_core_iblock target_core_pscsi target_core_mod nfsd exportfs dummy bridge stp llc ib_iser rdma_cm iw_cm ib_cm ib_core ipv6 iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi netconsole configfs sr_mod cdrom sd_mod sg adt7475 hwmon_vid coretemp x86_pkg_temp_thermal kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel pcbc snd_hda_codec_realtek snd_hda_codec_generic nouveau video led_class drm_kms_helper cfbfillrect syscopyarea cfbimgblt sysfillrect sysimgblt fb_sys_fops cfbcopyarea ttm drm snd_hda_intel agpgart snd_hda_codec snd_hda_core snd_pcm_oss igb snd_mixer_oss aesni_intel snd_pcm aes_x86_64 hwmon snd_timer crypto_simd i2c_algo_bit mptsas snd
+  glue_helper
+[ 323.105089]  mpt3sas i2c_core mptscsih soundcore ahci mptbase raid_class libahci scsi_transport_sas libata scsi_mod button wmi hed unix
+[ 323.105097] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.10.0 #1
+[ 323.105098] Hardware name: Dell Inc. Precision T5610/0WN7Y6, BIOS A16 02/05/2018
+[ 323.105100] Call Trace:
+[ 323.105101]  <IRQ>
+[ 323.105105]  ? dump_stack+0x46/0x5a
+[ 323.105107]  ? __warn+0xb4/0xd0
+[ 323.105110]  ? scsi_init_io+0x143/0x1f0 [scsi_mod]
+[ 323.105113]  ? scsi_setup_cmnd+0x4c/0x140 [scsi_mod]
+[ 323.105115]  ? scsi_prep_fn+0xe3/0x170 [scsi_mod]
+[ 323.105118]  ? swiotlb_unmap_sg_attrs+0x44/0x60
+[ 323.105119]  ? blk_peek_request+0x130/0x200
+[ 323.105122]  ? scsi_request_fn+0x2b/0x510 [scsi_mod]
+[ 323.105124]  ? __blk_run_queue+0x2a/0x40
+[ 323.105126]  ? blk_run_queue+0x1c/0x30
+[ 323.105129]  ? scsi_run_queue+0x229/0x2b0 [scsi_mod]
+[ 323.105131]  ? scsi_io_completion+0x3d6/0x5c0 [scsi_mod]
+[ 323.105133]  ? blk_done_softirq+0x67/0x80
+[ 323.105135]  ? __do_softirq+0xdb/0x200
+[ 323.105137]  ? irq_exit+0xa3/0xb0
+[ 323.105139]  ? do_IRQ+0x45/0xc0
+[ 323.105141]  ? common_interrupt+0x7c/0x7c
+[ 323.105142]  </IRQ>
+[ 323.105145]  ? cpuidle_enter_state+0x144/0x1f0
+[ 323.105146]  ? cpuidle_enter_state+0x139/0x1f0
+[ 323.105148]  ? do_idle+0xd3/0x190
+[ 323.105150]  ? cpu_startup_entry+0x14/0x20
+[ 323.105152]  ? start_kernel+0x391/0x399
+[ 323.105154]  ? start_cpu+0x14/0x14
+[ 323.105155] ---[ end trace f38cc734e4921bdc ]---
+[ 323.105157] blk_peek_request: bad return=-22
