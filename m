@@ -1,97 +1,36 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: Re: [PATCH v1] scsi: ufs: add 2 lane support
-Date: Mon, 2 Apr 2018 15:30:49 +0530
-Message-ID: <2af3023d-caaf-4b62-e2ba-fc3cb56b331c@codeaurora.org>
-References: <20180302082346.8188-1-cang@codeaurora.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: hosts: remove redundant assingment of
+ shost->use_blk_mq
+Date: Mon, 2 Apr 2018 13:53:08 +0000
+Message-ID: <4c62b8f8da1175ddcdcdf0a234dacbf620d73060.camel@wdc.com>
+References: <20180402093749.6862-1-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180302082346.8188-1-cang@codeaurora.org>
+In-Reply-To: <20180402093749.6862-1-jthumshirn@suse.de>
 Content-Language: en-US
+Content-ID: <7D2C8ED04C72AA439465242D7ADE66DD@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Can Guo <cang@codeaurora.org>, subhashj@codeaurora.org, asutoshd@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+To: "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Can,
-
-
-On 3/2/2018 1:48 PM, Can Guo wrote:
-> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->
-> Qcom ufs controller v3.1.0 supports 2 lanes, add support
-> to configure 2 lanes during phy initialization.
->
-> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> ---
->   drivers/scsi/ufs/ufs-qcom.c | 20 +++++++++-----------
->   1 file changed, 9 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 2b38db2..51889ad 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -113,10 +113,10 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
->   	if (!host->is_lane_clks_enabled)
->   		return;
->   
-> -	if (host->hba->lanes_per_direction > 1)
-> +	if (host->tx_l1_sync_clk)
->   		clk_disable_unprepare(host->tx_l1_sync_clk);
->   	clk_disable_unprepare(host->tx_l0_sync_clk);
-> -	if (host->hba->lanes_per_direction > 1)
-> +	if (host->rx_l1_sync_clk)
->   		clk_disable_unprepare(host->rx_l1_sync_clk);
->   	clk_disable_unprepare(host->rx_l0_sync_clk);
->   
-> @@ -147,18 +147,15 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
->   		if (err)
->   			goto disable_tx_l0;
->   
-> -		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
-> -			host->tx_l1_sync_clk);
-> -		if (err)
-> -			goto disable_rx_l1;
-> +		/* The tx lane1 clk could be muxed, hence keep this optional */
-
-You need a similar change for "rx_l1_sync_clk" also.
-And also get rid of 'lanes_per_direction' flag as well for 
-ufs_qcom_enable_lane_clks()
-and ufs_qcom_init_lane_clks() too, as you are doing in 
-ufs_qcom_disable_lane_clks().
-
-> +		if (host->tx_l1_sync_clk)
-> +			ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
-> +						 host->tx_l1_sync_clk);
->   	}
->   
->   	host->is_lane_clks_enabled = true;
->   	goto out;
->   
-> -disable_rx_l1:
-> -	if (host->hba->lanes_per_direction > 1)
-> -		clk_disable_unprepare(host->rx_l1_sync_clk);
->   disable_tx_l0:
->   	clk_disable_unprepare(host->tx_l0_sync_clk);
->   disable_rx_l0:
-> @@ -189,8 +186,9 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
->   		if (err)
->   			goto out;
->   
-> -		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
-> -			&host->tx_l1_sync_clk);
-> +		/* The tx lane1 clk could be muxed, hence keep this optional */
-> +		ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
-> +					&host->tx_l1_sync_clk);
-
-same here.
-
-Best regards
-Vivek
-
->   	}
->   out:
->   	return err;
+T24gTW9uLCAyMDE4LTA0LTAyIGF0IDExOjM3ICswMjAwLCBKb2hhbm5lcyBUaHVtc2hpcm4gd3Jv
+dGU6DQo+IENvdmVyaXR5IHJlcG9ydHMgdGhhdCB3ZSdyZSBhc3NpZ25pbmcgc2hvc3QtPnVzZV9i
+bGtfbXEgdHdpY2UuIFRoaXMNCj4gbG9va3MgbGlrZSB0aGUgcmVzdWx0IG9mIGEgYmFkIG1lcmdl
+IG9mIGNvbW1pdCAyZjMxMTE1ZTk0MGMgKCJzY3NpOg0KPiBjb3JlOiBpbnRyb2R1Y2UgZm9yY2Vf
+YmxrX21xIikNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEpvaGFubmVzIFRodW1zaGlybiA8anRodW1z
+aGlybkBzdXNlLmRlPg0KPiAtLS0NCj4gIGRyaXZlcnMvc2NzaS9ob3N0cy5jIHwgMSAtDQo+ICAx
+IGZpbGUgY2hhbmdlZCwgMSBkZWxldGlvbigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+c2NzaS9ob3N0cy5jIGIvZHJpdmVycy9zY3NpL2hvc3RzLmMNCj4gaW5kZXggZWYyMmIyNzVkMDUw
+Li5jMzZmMmE0NGU1ZWQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9ob3N0cy5jDQo+ICsr
+KyBiL2RyaXZlcnMvc2NzaS9ob3N0cy5jDQo+IEBAIC00NzMsNyArNDczLDYgQEAgc3RydWN0IFNj
+c2lfSG9zdCAqc2NzaV9ob3N0X2FsbG9jKHN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUgKnNodCwg
+aW50IHByaXZzaXplKQ0KPiAgCWVsc2UNCj4gIAkJc2hvc3QtPmRtYV9ib3VuZGFyeSA9IDB4ZmZm
+ZmZmZmY7DQo+ICANCj4gLQlzaG9zdC0+dXNlX2Jsa19tcSA9IHNjc2lfdXNlX2Jsa19tcTsNCj4g
+IAlzaG9zdC0+dXNlX2Jsa19tcSA9IHNjc2lfdXNlX2Jsa19tcSB8fCBzaG9zdC0+aG9zdHQtPmZv
+cmNlX2Jsa19tcTsNCj4gIA0KPiAgCWRldmljZV9pbml0aWFsaXplKCZzaG9zdC0+c2hvc3RfZ2Vu
+ZGV2KTsNCg0KQSBzaW1pbGFyIHBhdGNoIGhhcyBhbHJlYWR5IGJlZW4gcXVldWVkIGJ5IE1hcnRp
+bi4gU2VlIGFsc28NCmh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMTAzMTM1Njkv
+Lg0KDQpCYXJ0Lg0KDQoNCg==
