@@ -1,77 +1,119 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Subject: Re: [PATCH 03/15] mpt3sas: Add sanity checks for scsi tracker before
  accessing it.
-Date: Mon, 2 Apr 2018 15:25:55 +0000
-Message-ID: <a4ec673d5dbd62e05bbc8c777de5e4a080c62336.camel@wdc.com>
+Date: Tue, 3 Apr 2018 10:11:18 +0530
+Message-ID: <CAK=zhgqoJW0ASfQv4C4J=X9zXyuUhVdk-68xv=vFfHA_NSmLTg@mail.gmail.com>
 References: <1522402644-3016-1-git-send-email-chaitra.basappa@broadcom.com>
-         <1522402644-3016-4-git-send-email-chaitra.basappa@broadcom.com>
-         <20180330115917.GA30423@infradead.org>
-         <CAK=zhgosiBbQbdn2xnAffgRtzMEzp8_FLpSmY3m+XxwHuBCwNg@mail.gmail.com>
+ <1522402644-3016-4-git-send-email-chaitra.basappa@broadcom.com>
+ <20180330115917.GA30423@infradead.org> <CAK=zhgosiBbQbdn2xnAffgRtzMEzp8_FLpSmY3m+XxwHuBCwNg@mail.gmail.com>
+ <a4ec673d5dbd62e05bbc8c777de5e4a080c62336.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CAK=zhgosiBbQbdn2xnAffgRtzMEzp8_FLpSmY3m+XxwHuBCwNg@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <6F07AA5E214928449C34683DE35E4D84@namprd04.prod.outlook.com>
+In-Reply-To: <a4ec673d5dbd62e05bbc8c777de5e4a080c62336.camel@wdc.com>
 Sender: stable-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>
-Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE4LTA0LTAyIGF0IDExOjUzICswNTMwLCBTcmVla2FudGggUmVkZHkgd3JvdGU6
-DQo+IE9uIEZyaSwgTWFyIDMwLCAyMDE4IGF0IDU6MjkgUE0sIENocmlzdG9waCBIZWxsd2lnIDxo
-Y2hAaW5mcmFkZWFkLm9yZz4gd3JvdGU6DQo+ID4gT24gRnJpLCBNYXIgMzAsIDIwMTggYXQgMDM6
-MDc6MTJQTSArMDUzMCwgQ2hhaXRyYSBQIEIgd3JvdGU6DQo+ID4gPiBDaGVjayBzY3NpIHRyYWNr
-ZXIgZm9yIE5VTEwgYmVmb3JlIGFjY2Vzc2luZyBpdC4NCj4gPiA+IEFuZCBpbiBzb21lIHBsYWNl
-cyB0aGVyZSBhcmUgcG9zc2liaWxpdGllcyBmb3IgZ2V0dGluZyB2YWxpZCBzdA0KPiA+ID4gYnV0
-IHN0aWxsIG90aGVyIGZpZWxkcyBhcmUgbm90IHNldC4NCj4gPiANCj4gPiBQbGVhc2UgZXhwbGFp
-biBob3cgdGhhdCBjb3VsZCBldmVyIGhhcHBlbi4gIFlvdSBzaG91bGQgbmV2ZXIgc2VlDQo+ID4g
-YSBzY3NpX2NtbmQgd2l0aG91dCB0aGUgZGV2aWNlIHBvaW50ZXIuDQo+IA0KPiBDaHJpcywNCj4g
-DQo+IEhlcmUgaXMgb25lIGV4YW1wbGUsIER1cmluZyBIb3N0IHJlc2V0IG9wZXJhdGlvbiB0aW1l
-IGRyaXZlciB3aWxsDQo+IGZsdXNoIG91dCBhbGwgdGhlIG91dHN0YW5kaW5nIElPJ3MgdG8gdGhl
-IFNNTCBpbiBiZWxvdyBmdW5jdGlvbiwNCj4gDQo+IHN0YXRpYyB2b2lkDQo+IF9zY3NpaF9mbHVz
-aF9ydW5uaW5nX2NtZHMoc3RydWN0IE1QVDNTQVNfQURBUFRFUiAqaW9jKQ0KPiB7DQo+ICAgICAg
-ICAgc3RydWN0IHNjc2lfY21uZCAqc2NtZDsNCj4gICAgICAgICBzdHJ1Y3Qgc2NzaWlvX3RyYWNr
-ZXIgKnN0Ow0KPiAgICAgICAgIHUxNiBzbWlkOw0KPiAgICAgICAgIGludCBjb3VudCA9IDA7DQo+
-IA0KPiBbU1JdIEhlcmUgZHJpdmVyIGlzIGxvb3Bpbmcgc3RhcnRpbmcgZnJvbSBzbWlkIG9uZSB0
-byBIQkEgcXVldWUgZGVwdGguDQo+ICAgICAgICAgZm9yIChzbWlkID0gMTsgc21pZCA8PSBpb2Mt
-PnNjc2lpb19kZXB0aDsgc21pZCsrKSB7DQo+IA0KPiBbU1JdIFNvbWUgdGltZXMgaXQgaXMgcG9z
-c2libGUgdGhhdCBzY3NpX2NtbmQgbWlnaHQgaGF2ZSBjcmVhdGVkIGF0DQo+IFNNTCBidXQgaXQg
-bWlnaHQgbm90IGJlIGlzc3VlZCB0byB0aGUgZHJpdmVyIGFzIGhvc3QgcmVzZXQgb3BlcmF0aW9u
-DQo+IGlzIGdvaW5nIG9uLCBTbyBoZXJlIHdlIHdpbGwgZ2V0IG5vbi1OVUxMIHNjbWQuDQo+ICAg
-ICAgICAgICAgICAgICBzY21kID0gbXB0M3Nhc19zY3NpaF9zY3NpX2xvb2t1cF9nZXQoaW9jLCBz
-bWlkKTsNCj4gICAgICAgICAgICAgICAgIGlmICghc2NtZCkNCj4gICAgICAgICAgICAgICAgICAg
-ICAgICAgY29udGludWU7DQo+ICAgICAgICAgICAgICAgICBjb3VudCsrOw0KPiAgICAgICAgICAg
-ICAgICAgX3Njc2loX3NldF9zYXRsX3BlbmRpbmcoc2NtZCwgZmFsc2UpOw0KPiBbU1JdIEhlcmUg
-d2UgYXJlIHRyeWluZyB0byBnZXQgdGhlIHNjc2kgdHJhY2tlciAnc3QnIGZvciB0aGUgYWJvdmUN
-Cj4gc2NtZCAod2hpY2ggaXMgbm90IHJlY2VpdmVkIGJ5IHRoZSBkcml2ZXIpIGFuZCBzbyBmaWVs
-ZHMgb2YgdGhpcyAnc3QnDQo+IGFyZSB1bmluaXRpYWxpemVkLg0KPiAgICAgICAgICAgICAgICAg
-c3QgPSBzY3NpX2NtZF9wcml2KHNjbWQpOw0KPiBbU1JdIEFuZCBoZXJlIHdlIGFyZSB0cnlpbmcg
-dG8gY2xlYXIgdGhlIHNjc2kgdHJhY2tlciAnc3QnIHdoaWNoIGlzDQo+IG5vdCB5ZXQgYWxsIGlu
-aXRpYWxpemVkIGJ5IHRoZSBkcml2ZXIsIGluIG90aGVyIHRlcm1zIHdlIGFyZSB0cnlpbmcgdG8N
-Cj4gZmx1c2ggb3V0IHRoZSBzY21kIGNvbW1hbmQgd2hpY2ggaXMgbm90IHlldCBhbGwgcmVjZWl2
-ZWQgYnkgdGhlDQo+IGRyaXZlci4NCj4gICAgICAgICAgICAgICAgIG1wdDNzYXNfYmFzZV9jbGVh
-cl9zdChpb2MsIHN0KTsNCj4gICAgICAgICAgICAgICAgIHNjc2lfZG1hX3VubWFwKHNjbWQpOw0K
-PiAgICAgICAgICAgICAgICAgaWYgKGlvYy0+cGNpX2Vycm9yX3JlY292ZXJ5IHx8IGlvYy0+cmVt
-b3ZlX2hvc3QpDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIHNjbWQtPnJlc3VsdCA9IERJRF9O
-T19DT05ORUNUIDw8IDE2Ow0KPiAgICAgICAgICAgICAgICAgZWxzZQ0KPiAgICAgICAgICAgICAg
-ICAgICAgICAgICBzY21kLT5yZXN1bHQgPSBESURfUkVTRVQgPDwgMTY7DQo+ICAgICAgICAgICAg
-ICAgICBzY21kLT5zY3NpX2RvbmUoc2NtZCk7DQo+ICAgICAgICAgfQ0KPiAgICAgICAgIGR0bXBy
-aW50ayhpb2MsIHByX2luZm8oTVBUM1NBU19GTVQgImNvbXBsZXRpbmcgJWQgY21kc1xuIiwNCj4g
-ICAgICAgICAgICAgaW9jLT5uYW1lLCBjb3VudCkpOw0KPiB9DQoNCkhlbGxvIFNyZWVrYW50aCwN
-Cg0KRnJvbSBtcHQzc2FzX3Njc2loX3Njc2lfbG9va3VwX2dldCgpOg0KDQoJCQlzdCA9IHNjc2lf
-Y21kX3ByaXYoc2NtZCk7DQoJCQlpZiAoc3QtPmNiX2lkeCA9PSAweEZGKQ0KCQkJCXNjbWQgPSBO
-VUxMOw0KDQpGcm9tIG1wdDNzYXNfYmFzZV9nZXRfc21pZCgpLCBtcHQzc2FzX2Jhc2VfZ2V0X3Nt
-aWRfc2NzaWlvKCkgYW5kDQptcHQzc2FzX2Jhc2VfZ2V0X3NtaWRfaHByKCk6DQoNCglyZXF1ZXN0
-LT5jYl9pZHggPSBjYl9pZHg7DQoNCkNhbiBfc2NzaWhfZmx1c2hfcnVubmluZ19jbWRzKCkgYmUg
-ZXhlY3V0ZWQgY29uY3VycmVudGx5IHdpdGggc2NzaWhfcWNtZCgpPw0KSW4gb3RoZXIgd29yZHMs
-IGNhbiBpdCBoYXBwZW4gdGhhdCBtcHQzc2FzX3Njc2loX3Njc2lfbG9va3VwX2dldCgpIHNlZXMg
-dGhhdA0Kc3QtPmNiX2lkeCA9PSAweGZmIGp1c3QgYmVmb3JlIHNjc2loX3FjbWQoKSBhc3NpZ25z
-IGEgdmFsdWUgdG8gLmNiX2lkeD8gQ2FuDQp0aGlzIGNhdXNlIF9zY3NpaF9mbHVzaF9ydW5uaW5n
-X2NtZHMoKSB0byBza2lwIGNvbW1hbmRzIHRoYXQgaXQgc2hvdWxkbid0DQpza2lwPw0KDQpDYW4g
-aXQgaGFwcGVuIHRoYXQgX3Njc2loX2ZsdXNoX3J1bm5pbmdfY21kcygpIGNhbGxzIC5zY3NpX2Rv
-bmUoKSBmb3IgYSBTQ1NJDQpjb21tYW5kIGp1c3QgYWZ0ZXIgc2NzaWhfcWNtZCgpIHRyYW5zZmVy
-cmVkIGNvbnRyb2wgZm9yIHRoYXQgY29tbWFuZCB0byB0aGUNCmZpcm13YXJlPyBDYW4gdGhhdCBj
-YXVzZSAuc2NzaV9kb25lKCkgdG8gYmUgY2FsbGVkIHR3aWNlIGZvciB0aGUgc2FtZSBjb21tYW5k
-Pw0KDQpUaGFua3MsDQoNCkJhcnQuDQoNCg0K
+On Mon, Apr 2, 2018 at 8:55 PM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+> On Mon, 2018-04-02 at 11:53 +0530, Sreekanth Reddy wrote:
+>> On Fri, Mar 30, 2018 at 5:29 PM, Christoph Hellwig <hch@infradead.org> wrote:
+>> > On Fri, Mar 30, 2018 at 03:07:12PM +0530, Chaitra P B wrote:
+>> > > Check scsi tracker for NULL before accessing it.
+>> > > And in some places there are possibilities for getting valid st
+>> > > but still other fields are not set.
+>> >
+>> > Please explain how that could ever happen.  You should never see
+>> > a scsi_cmnd without the device pointer.
+>>
+>> Chris,
+>>
+>> Here is one example, During Host reset operation time driver will
+>> flush out all the outstanding IO's to the SML in below function,
+>>
+>> static void
+>> _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
+>> {
+>>         struct scsi_cmnd *scmd;
+>>         struct scsiio_tracker *st;
+>>         u16 smid;
+>>         int count = 0;
+>>
+>> [SR] Here driver is looping starting from smid one to HBA queue depth.
+>>         for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
+>>
+>> [SR] Some times it is possible that scsi_cmnd might have created at
+>> SML but it might not be issued to the driver as host reset operation
+>> is going on, So here we will get non-NULL scmd.
+>>                 scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
+>>                 if (!scmd)
+>>                         continue;
+>>                 count++;
+>>                 _scsih_set_satl_pending(scmd, false);
+>> [SR] Here we are trying to get the scsi tracker 'st' for the above
+>> scmd (which is not received by the driver) and so fields of this 'st'
+>> are uninitialized.
+>>                 st = scsi_cmd_priv(scmd);
+>> [SR] And here we are trying to clear the scsi tracker 'st' which is
+>> not yet all initialized by the driver, in other terms we are trying to
+>> flush out the scmd command which is not yet all received by the
+>> driver.
+>>                 mpt3sas_base_clear_st(ioc, st);
+>>                 scsi_dma_unmap(scmd);
+>>                 if (ioc->pci_error_recovery || ioc->remove_host)
+>>                         scmd->result = DID_NO_CONNECT << 16;
+>>                 else
+>>                         scmd->result = DID_RESET << 16;
+>>                 scmd->scsi_done(scmd);
+>>         }
+>>         dtmprintk(ioc, pr_info(MPT3SAS_FMT "completing %d cmds\n",
+>>             ioc->name, count));
+>> }
+>
+> Hello Sreekanth,
+>
+> From mpt3sas_scsih_scsi_lookup_get():
+>
+>                         st = scsi_cmd_priv(scmd);
+>                         if (st->cb_idx == 0xFF)
+>                                 scmd = NULL;
+>
+> From mpt3sas_base_get_smid(), mpt3sas_base_get_smid_scsiio() and
+> mpt3sas_base_get_smid_hpr():
+>
+>         request->cb_idx = cb_idx;
+>
+> Can _scsih_flush_running_cmds() be executed concurrently with scsih_qcmd()?
+
+[SR] No, driver calls _scsih_flush_running_cmds during Host reset time
+and during host reset time driver will set 'ioc->shost_recovery' flag.
+So in the scsih_qcmd() driver will return the incoming SCSI cmds with
+"SCSI_MLQUEUE_HOST_BUSY" whenever 'ioc->shost_recovery' flag is set as
+shown below,
+
+/* host recovery or link resets sent via IOCTLs */
+        if (ioc->shost_recovery || ioc->ioc_link_reset_in_progress)
+                return SCSI_MLQUEUE_HOST_BUSY;
+
+> In other words, can it happen that mpt3sas_scsih_scsi_lookup_get() sees that
+> st->cb_idx == 0xff just before scsih_qcmd() assigns a value to .cb_idx? Can
+> this cause _scsih_flush_running_cmds() to skip commands that it shouldn't
+> skip?
+[SR] No, it won't happen. as I explained above during host reset time
+driver return the incoming SCSI commands with host busy status and
+_scsih_flush_running_cmds called during the host reset time.
+
+>
+> Can it happen that _scsih_flush_running_cmds() calls .scsi_done() for a SCSI
+> command just after scsih_qcmd() transferred control for that command to the
+> firmware? Can that cause .scsi_done() to be called twice for the same command?
+[SR] No, while _scsih_flush_running_cmds() function is getting
+executed no SCSI commands are issued to the firmware.
+
+>
+> Thanks,
+>
+> Bart.
+>
+>
