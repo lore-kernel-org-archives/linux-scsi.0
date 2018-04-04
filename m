@@ -1,127 +1,109 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
 Subject: Re: [PATCH] scsi: Fix failed request error code
-Date: Wed, 4 Apr 2018 09:35:51 +0200
-Message-ID: <20180404093551.52d322db@pentland.suse.de>
+Date: Wed, 4 Apr 2018 07:39:45 +0000
+Message-ID: <c660d394-a412-4b44-82e9-d50121aacd52@wdc.com>
 References: <20180404065138.25534-1-damien.lemoal@wdc.com>
-        <20180404085730.2df015c3@pentland.suse.de>
-        <2726d8cc-6661-9934-cca4-abcdaa2199ba@wdc.com>
+ <20180404085730.2df015c3@pentland.suse.de>
+ <2726d8cc-6661-9934-cca4-abcdaa2199ba@wdc.com>
+ <20180404093551.52d322db@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <2726d8cc-6661-9934-cca4-abcdaa2199ba@wdc.com>
+In-Reply-To: <20180404093551.52d322db@pentland.suse.de>
+Content-Language: en-US
+Content-ID: <A0B3FF96FA92894DA7DD8324AC366117@namprd04.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@wdc.com>
+To: Hannes Reinecke <hare@suse.de>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 4 Apr 2018 07:06:58 +0000
-Damien Le Moal <Damien.LeMoal@wdc.com> wrote:
-
-> Hannes,
-> 
-> On 4/4/18 15:57, Hannes Reinecke wrote:
-> > On Wed,  4 Apr 2018 15:51:38 +0900
-> > Damien Le Moal <damien.lemoal@wdc.com> wrote:
-> >   
-> >> With the introduction of commit e39a97353e53 ("scsi: core: return
-> >> BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()"), a command
-> >> that failed with hostbyte=DID_OK and driverbyte=DRIVER_SENSE but
-> >> lacking additional sense information will have a return code set to
-> >> BLK_STS_OK. This results in the request issuer to see successful
-> >> request execution despite the failure. An example of such case is
-> >> an unaligned write on a host managed ZAC disk connected to a SAS
-> >> HBA with a malfunctioning SAT. The unaligned write command gets
-> >> aborted but has no additional sense information.
-> >>
-> >> sd 10:0:0:0: [sde] tag#3905 FAILED Result: hostbyte=DID_OK
-> >> driverbyte=DRIVER_SENSE sd 10:0:0:0: [sde] tag#3905 Sense Key :
-> >> Aborted Command [current] sd 10:0:0:0: [sde] tag#3905 Add. Sense:
-> >> No additional sense information sd 10:0:0:0: [sde] tag#3905 CDB:
-> >> Write(16) 8a 00 00 00 00 00 02 0c 00 01 00 00 00 01 00 00
-> >> print_req_error: I/O error, dev sde, sector 274726920
-> >>
-> >> In scsi_io_completion(), sense key handling to not change the
-> >> request error code and success being reported to the issuer.
-> >>
-> >> Fix this by making sure that the error code always indicates an
-> >> error if scsi_io_completion() decide that the action to be taken
-> >> for a failed command is to not retry it and terminate it
-> >> immediately (ACTION_FAIL) .
-> >>
-> >> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> >> Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in
-> >> __scsi_error_from_host_byte()") Cc: Hannes Reinecke <hare@suse.com>
-> >> Cc: <stable@vger.kernel.org>
-> >> ---
-> >>  drivers/scsi/scsi_lib.c | 9 +++++++++
-> >>  1 file changed, 9 insertions(+)
-> >>
-> >> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> >> index c84f931388f2..87579bfcc186 100644
-> >> --- a/drivers/scsi/scsi_lib.c
-> >> +++ b/drivers/scsi/scsi_lib.c
-> >> @@ -1002,6 +1002,15 @@ void scsi_io_completion(struct scsi_cmnd
-> >> *cmd, unsigned int good_bytes) scsi_print_command(cmd);
-> >>  			}
-> >>  		}
-> >> +		/*
-> >> +		 * The command failed and should not be retried.
-> >> If the host
-> >> +		 * byte is DID_OK, then
-> >> __scsi_error_from_host_byte() returned
-> >> +		 * BLK_STS_OK and error indicates a success. Make
-> >> sure to not
-> >> +		 * use that as the completion code and always
-> >> return an
-> >> +		 * I/O error.
-> >> +		 */
-> >> +		if (error == BLK_STS_OK)
-> >> +			error = BLK_STS_IOERR;
-> >>  		if (!scsi_end_request(req, error,
-> >> blk_rq_err_bytes(req), 0)) return;
-> >>  		/*FALLTHRU*/  
-> > 
-> > That looks wrong.
-> > Shouldn't __scsi_error_from_host_byte() return the correct status
-> > here?  
-> 
-> My drive said:
-> 
-> sd 10:0:0:0: [sde] tag#3905 FAILED Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> sd 10:0:0:0: [sde] tag#3905 Sense Key : Aborted Command [current]
-> sd 10:0:0:0: [sde] tag#3905 Add. Sense: No additional sense
-> information sd 10:0:0:0: [sde] tag#3905 CDB: Write(16) 8a 00 00 00 00
-> 00 02 0c 00 01 00 00 00 01 00 00
-> 
-> Since hostbyte is DID_OK, __scsi_error_from_host_byte() returns
-> BLK_STS_OK. The HBA fails to give sense data, so the ABORTED_COMMAND
-> case in scsi_io_completion() "switch (sshdr.sense_key)" does nothing
-> and error stays equal to success. scsi_end_request() gets called with
-> that and dd sees a success...
-> 
-> There are also plenty of other sense keys cases where error is not
-> changed despite the fact that error can be BLK_STS_SUCCESS (in fact, I
-> think this is likely the most common case since an command failure
-> with hostbyte=DID_OK and driverbyte=DRIVER_SENSE is probably the most
-> common one.
-> 
-> My patch is a bit of a hammer and makes sure that an ACTION_FAIL
-> request is completed as a failure... Am I getting all this wrong ?
-> 
-
-Just checked with the code, and send a new patch.
-Which I find a bit clearer.
-
-Fact is that __scsi_error_from_host_byte() is not sufficient to
-evaluate the return code, so taking its return value with any further
-checks is indeed wrong.
-But then it never said so on the boilerplate of
-__scsi_error_from_host_byte() ...
-
-So please do check the 'v2' version of the patch.
-
-Cheers,
-
-Hannes
+SGFubmVzLA0KDQpPbiA0LzQvMTggMTY6MzUsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToNCj4gT24g
+V2VkLCA0IEFwciAyMDE4IDA3OjA2OjU4ICswMDAwDQo+IERhbWllbiBMZSBNb2FsIDxEYW1pZW4u
+TGVNb2FsQHdkYy5jb20+IHdyb3RlOg0KPiANCj4+IEhhbm5lcywNCj4+DQo+PiBPbiA0LzQvMTgg
+MTU6NTcsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToNCj4+PiBPbiBXZWQsICA0IEFwciAyMDE4IDE1
+OjUxOjM4ICswOTAwDQo+Pj4gRGFtaWVuIExlIE1vYWwgPGRhbWllbi5sZW1vYWxAd2RjLmNvbT4g
+d3JvdGU6DQo+Pj4gICANCj4+Pj4gV2l0aCB0aGUgaW50cm9kdWN0aW9uIG9mIGNvbW1pdCBlMzlh
+OTczNTNlNTMgKCJzY3NpOiBjb3JlOiByZXR1cm4NCj4+Pj4gQkxLX1NUU19PSyBmb3IgRElEX09L
+IGluIF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIiksIGEgY29tbWFuZA0KPj4+PiB0aGF0
+IGZhaWxlZCB3aXRoIGhvc3RieXRlPURJRF9PSyBhbmQgZHJpdmVyYnl0ZT1EUklWRVJfU0VOU0Ug
+YnV0DQo+Pj4+IGxhY2tpbmcgYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbiB3aWxsIGhhdmUg
+YSByZXR1cm4gY29kZSBzZXQgdG8NCj4+Pj4gQkxLX1NUU19PSy4gVGhpcyByZXN1bHRzIGluIHRo
+ZSByZXF1ZXN0IGlzc3VlciB0byBzZWUgc3VjY2Vzc2Z1bA0KPj4+PiByZXF1ZXN0IGV4ZWN1dGlv
+biBkZXNwaXRlIHRoZSBmYWlsdXJlLiBBbiBleGFtcGxlIG9mIHN1Y2ggY2FzZSBpcw0KPj4+PiBh
+biB1bmFsaWduZWQgd3JpdGUgb24gYSBob3N0IG1hbmFnZWQgWkFDIGRpc2sgY29ubmVjdGVkIHRv
+IGEgU0FTDQo+Pj4+IEhCQSB3aXRoIGEgbWFsZnVuY3Rpb25pbmcgU0FULiBUaGUgdW5hbGlnbmVk
+IHdyaXRlIGNvbW1hbmQgZ2V0cw0KPj4+PiBhYm9ydGVkIGJ1dCBoYXMgbm8gYWRkaXRpb25hbCBz
+ZW5zZSBpbmZvcm1hdGlvbi4NCj4+Pj4NCj4+Pj4gc2QgMTA6MDowOjA6IFtzZGVdIHRhZyMzOTA1
+IEZBSUxFRCBSZXN1bHQ6IGhvc3RieXRlPURJRF9PSw0KPj4+PiBkcml2ZXJieXRlPURSSVZFUl9T
+RU5TRSBzZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUgU2Vuc2UgS2V5IDoNCj4+Pj4gQWJvcnRl
+ZCBDb21tYW5kIFtjdXJyZW50XSBzZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUgQWRkLiBTZW5z
+ZToNCj4+Pj4gTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbiBzZCAxMDowOjA6MDogW3Nk
+ZV0gdGFnIzM5MDUgQ0RCOg0KPj4+PiBXcml0ZSgxNikgOGEgMDAgMDAgMDAgMDAgMDAgMDIgMGMg
+MDAgMDEgMDAgMDAgMDAgMDEgMDAgMDANCj4+Pj4gcHJpbnRfcmVxX2Vycm9yOiBJL08gZXJyb3Is
+IGRldiBzZGUsIHNlY3RvciAyNzQ3MjY5MjANCj4+Pj4NCj4+Pj4gSW4gc2NzaV9pb19jb21wbGV0
+aW9uKCksIHNlbnNlIGtleSBoYW5kbGluZyB0byBub3QgY2hhbmdlIHRoZQ0KPj4+PiByZXF1ZXN0
+IGVycm9yIGNvZGUgYW5kIHN1Y2Nlc3MgYmVpbmcgcmVwb3J0ZWQgdG8gdGhlIGlzc3Vlci4NCj4+
+Pj4NCj4+Pj4gRml4IHRoaXMgYnkgbWFraW5nIHN1cmUgdGhhdCB0aGUgZXJyb3IgY29kZSBhbHdh
+eXMgaW5kaWNhdGVzIGFuDQo+Pj4+IGVycm9yIGlmIHNjc2lfaW9fY29tcGxldGlvbigpIGRlY2lk
+ZSB0aGF0IHRoZSBhY3Rpb24gdG8gYmUgdGFrZW4NCj4+Pj4gZm9yIGEgZmFpbGVkIGNvbW1hbmQg
+aXMgdG8gbm90IHJldHJ5IGl0IGFuZCB0ZXJtaW5hdGUgaXQNCj4+Pj4gaW1tZWRpYXRlbHkgKEFD
+VElPTl9GQUlMKSAuDQo+Pj4+DQo+Pj4+IFNpZ25lZC1vZmYtYnk6IERhbWllbiBMZSBNb2FsIDxk
+YW1pZW4ubGVtb2FsQHdkYy5jb20+DQo+Pj4+IEZpeGVzOiBlMzlhOTczNTNlNTMgKCJzY3NpOiBj
+b3JlOiByZXR1cm4gQkxLX1NUU19PSyBmb3IgRElEX09LIGluDQo+Pj4+IF9fc2NzaV9lcnJvcl9m
+cm9tX2hvc3RfYnl0ZSgpIikgQ2M6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4NCj4+
+Pj4gQ2M6IDxzdGFibGVAdmdlci5rZXJuZWwub3JnPg0KPj4+PiAtLS0NCj4+Pj4gIGRyaXZlcnMv
+c2NzaS9zY3NpX2xpYi5jIHwgOSArKysrKysrKysNCj4+Pj4gIDEgZmlsZSBjaGFuZ2VkLCA5IGlu
+c2VydGlvbnMoKykNCj4+Pj4NCj4+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX2xp
+Yi5jIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj4+Pj4gaW5kZXggYzg0ZjkzMTM4OGYyLi44
+NzU3OWJmY2MxODYgMTAwNjQ0DQo+Pj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+
+Pj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+Pj4+IEBAIC0xMDAyLDYgKzEwMDIs
+MTUgQEAgdm9pZCBzY3NpX2lvX2NvbXBsZXRpb24oc3RydWN0IHNjc2lfY21uZA0KPj4+PiAqY21k
+LCB1bnNpZ25lZCBpbnQgZ29vZF9ieXRlcykgc2NzaV9wcmludF9jb21tYW5kKGNtZCk7DQo+Pj4+
+ICAJCQl9DQo+Pj4+ICAJCX0NCj4+Pj4gKwkJLyoNCj4+Pj4gKwkJICogVGhlIGNvbW1hbmQgZmFp
+bGVkIGFuZCBzaG91bGQgbm90IGJlIHJldHJpZWQuDQo+Pj4+IElmIHRoZSBob3N0DQo+Pj4+ICsJ
+CSAqIGJ5dGUgaXMgRElEX09LLCB0aGVuDQo+Pj4+IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0
+ZSgpIHJldHVybmVkDQo+Pj4+ICsJCSAqIEJMS19TVFNfT0sgYW5kIGVycm9yIGluZGljYXRlcyBh
+IHN1Y2Nlc3MuIE1ha2UNCj4+Pj4gc3VyZSB0byBub3QNCj4+Pj4gKwkJICogdXNlIHRoYXQgYXMg
+dGhlIGNvbXBsZXRpb24gY29kZSBhbmQgYWx3YXlzDQo+Pj4+IHJldHVybiBhbg0KPj4+PiArCQkg
+KiBJL08gZXJyb3IuDQo+Pj4+ICsJCSAqLw0KPj4+PiArCQlpZiAoZXJyb3IgPT0gQkxLX1NUU19P
+SykNCj4+Pj4gKwkJCWVycm9yID0gQkxLX1NUU19JT0VSUjsNCj4+Pj4gIAkJaWYgKCFzY3NpX2Vu
+ZF9yZXF1ZXN0KHJlcSwgZXJyb3IsDQo+Pj4+IGJsa19ycV9lcnJfYnl0ZXMocmVxKSwgMCkpIHJl
+dHVybjsNCj4+Pj4gIAkJLypGQUxMVEhSVSovICANCj4+Pg0KPj4+IFRoYXQgbG9va3Mgd3Jvbmcu
+DQo+Pj4gU2hvdWxkbid0IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIHJldHVybiB0aGUg
+Y29ycmVjdCBzdGF0dXMNCj4+PiBoZXJlPyAgDQo+Pg0KPj4gTXkgZHJpdmUgc2FpZDoNCj4+DQo+
+PiBzZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUgRkFJTEVEIFJlc3VsdDogaG9zdGJ5dGU9RElE
+X09LDQo+PiBkcml2ZXJieXRlPURSSVZFUl9TRU5TRQ0KPj4gc2QgMTA6MDowOjA6IFtzZGVdIHRh
+ZyMzOTA1IFNlbnNlIEtleSA6IEFib3J0ZWQgQ29tbWFuZCBbY3VycmVudF0NCj4+IHNkIDEwOjA6
+MDowOiBbc2RlXSB0YWcjMzkwNSBBZGQuIFNlbnNlOiBObyBhZGRpdGlvbmFsIHNlbnNlDQo+PiBp
+bmZvcm1hdGlvbiBzZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUgQ0RCOiBXcml0ZSgxNikgOGEg
+MDAgMDAgMDAgMDANCj4+IDAwIDAyIDBjIDAwIDAxIDAwIDAwIDAwIDAxIDAwIDAwDQo+Pg0KPj4g
+U2luY2UgaG9zdGJ5dGUgaXMgRElEX09LLCBfX3Njc2lfZXJyb3JfZnJvbV9ob3N0X2J5dGUoKSBy
+ZXR1cm5zDQo+PiBCTEtfU1RTX09LLiBUaGUgSEJBIGZhaWxzIHRvIGdpdmUgc2Vuc2UgZGF0YSwg
+c28gdGhlIEFCT1JURURfQ09NTUFORA0KPj4gY2FzZSBpbiBzY3NpX2lvX2NvbXBsZXRpb24oKSAi
+c3dpdGNoIChzc2hkci5zZW5zZV9rZXkpIiBkb2VzIG5vdGhpbmcNCj4+IGFuZCBlcnJvciBzdGF5
+cyBlcXVhbCB0byBzdWNjZXNzLiBzY3NpX2VuZF9yZXF1ZXN0KCkgZ2V0cyBjYWxsZWQgd2l0aA0K
+Pj4gdGhhdCBhbmQgZGQgc2VlcyBhIHN1Y2Nlc3MuLi4NCj4+DQo+PiBUaGVyZSBhcmUgYWxzbyBw
+bGVudHkgb2Ygb3RoZXIgc2Vuc2Uga2V5cyBjYXNlcyB3aGVyZSBlcnJvciBpcyBub3QNCj4+IGNo
+YW5nZWQgZGVzcGl0ZSB0aGUgZmFjdCB0aGF0IGVycm9yIGNhbiBiZSBCTEtfU1RTX1NVQ0NFU1Mg
+KGluIGZhY3QsIEkNCj4+IHRoaW5rIHRoaXMgaXMgbGlrZWx5IHRoZSBtb3N0IGNvbW1vbiBjYXNl
+IHNpbmNlIGFuIGNvbW1hbmQgZmFpbHVyZQ0KPj4gd2l0aCBob3N0Ynl0ZT1ESURfT0sgYW5kIGRy
+aXZlcmJ5dGU9RFJJVkVSX1NFTlNFIGlzIHByb2JhYmx5IHRoZSBtb3N0DQo+PiBjb21tb24gb25l
+Lg0KPj4NCj4+IE15IHBhdGNoIGlzIGEgYml0IG9mIGEgaGFtbWVyIGFuZCBtYWtlcyBzdXJlIHRo
+YXQgYW4gQUNUSU9OX0ZBSUwNCj4+IHJlcXVlc3QgaXMgY29tcGxldGVkIGFzIGEgZmFpbHVyZS4u
+LiBBbSBJIGdldHRpbmcgYWxsIHRoaXMgd3JvbmcgPw0KPj4NCj4gDQo+IEp1c3QgY2hlY2tlZCB3
+aXRoIHRoZSBjb2RlLCBhbmQgc2VuZCBhIG5ldyBwYXRjaC4NCj4gV2hpY2ggSSBmaW5kIGEgYml0
+IGNsZWFyZXIuDQo+IA0KPiBGYWN0IGlzIHRoYXQgX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRl
+KCkgaXMgbm90IHN1ZmZpY2llbnQgdG8NCj4gZXZhbHVhdGUgdGhlIHJldHVybiBjb2RlLCBzbyB0
+YWtpbmcgaXRzIHJldHVybiB2YWx1ZSB3aXRoIGFueSBmdXJ0aGVyDQo+IGNoZWNrcyBpcyBpbmRl
+ZWQgd3JvbmcuDQo+IEJ1dCB0aGVuIGl0IG5ldmVyIHNhaWQgc28gb24gdGhlIGJvaWxlcnBsYXRl
+IG9mDQo+IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIC4uLg0KPiANCj4gU28gcGxlYXNl
+IGRvIGNoZWNrIHRoZSAndjInIHZlcnNpb24gb2YgdGhlIHBhdGNoLg0KPiANCg0KSXQgZml4ZXMg
+dGhlIHBhcnRpY3VsYXIgcHJvYmxlbSBJIGFtIHNlZWluZy4NCkJ1dCBsb29raW5nIG1vcmUgYXQg
+dGhpcyBjb2RlLCBpc24ndCB0aGVyZSBhIHByb2JsZW0gd2l0aA0Kc3NoZHIuc2Vuc2Vfa2V5ID09
+IFJFQ09WRVJFRF9FUlJPUiA/DQoNCmlmIChzZW5zZV92YWxpZCAmJiAoc3NoZHIuc2Vuc2Vfa2V5
+ID09IFJFQ09WRVJFRF9FUlJPUikpIHsNCgkuLi4NCglyZXN1bHQgPSAwOw0KICAgICAgICAvKiBm
+b3IgcGFzc3Rocm91Z2ggZXJyb3IgbWF5IGJlIHNldCAqLw0KICAgICAgICBlcnJvciA9IEJMS19T
+VFNfT0s7DQp9DQoNClRoZW4gdGhlIGVycm9yIHdpbGwgYmUgY2hhbmdlZCB3cm9uZ2x5IHRvIEJM
+S19TVFNfSU9FUlIuDQoNCk15IG9yaWdpbmFsIGNoYW5nZSBoYWQgdGhlIHNhbWUgcHJvYmxlbS4N
+Cg0KDQotLSANCkRhbWllbiBMZSBNb2FsLA0KV2VzdGVybiBEaWdpdGFs
