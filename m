@@ -1,120 +1,133 @@
-From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH] scsi: Fix failed request error code
-Date: Wed, 4 Apr 2018 07:51:37 +0000
-Message-ID: <5b73786b-7284-6212-775b-014e5a1d7ba7@wdc.com>
-References: <20180404065138.25534-1-damien.lemoal@wdc.com>
- <20180404085730.2df015c3@pentland.suse.de>
- <2726d8cc-6661-9934-cca4-abcdaa2199ba@wdc.com>
- <20180404093551.52d322db@pentland.suse.de>
- <c660d394-a412-4b44-82e9-d50121aacd52@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 2/2] sd_zbc: Avoid errors due to sd_zbc_setup() execution
+Date: Wed,  4 Apr 2018 17:54:18 +0900
+Message-ID: <20180404085418.29205-3-damien.lemoal@wdc.com>
+References: <20180404085418.29205-1-damien.lemoal@wdc.com>
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <c660d394-a412-4b44-82e9-d50121aacd52@wdc.com>
-Content-Language: en-US
-Content-ID: <E332484229638F4AA514CD2B78D0BF67@namprd04.prod.outlook.com>
+In-Reply-To: <20180404085418.29205-1-damien.lemoal@wdc.com>
 Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCk9uIDQvNC8xOCAxNjozOSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+IEhhbm5lcywNCj4g
-DQo+IE9uIDQvNC8xOCAxNjozNSwgSGFubmVzIFJlaW5lY2tlIHdyb3RlOg0KPj4gT24gV2VkLCA0
-IEFwciAyMDE4IDA3OjA2OjU4ICswMDAwDQo+PiBEYW1pZW4gTGUgTW9hbCA8RGFtaWVuLkxlTW9h
-bEB3ZGMuY29tPiB3cm90ZToNCj4+DQo+Pj4gSGFubmVzLA0KPj4+DQo+Pj4gT24gNC80LzE4IDE1
-OjU3LCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6DQo+Pj4+IE9uIFdlZCwgIDQgQXByIDIwMTggMTU6
-NTE6MzggKzA5MDANCj4+Pj4gRGFtaWVuIExlIE1vYWwgPGRhbWllbi5sZW1vYWxAd2RjLmNvbT4g
-d3JvdGU6DQo+Pj4+ICAgDQo+Pj4+PiBXaXRoIHRoZSBpbnRyb2R1Y3Rpb24gb2YgY29tbWl0IGUz
-OWE5NzM1M2U1MyAoInNjc2k6IGNvcmU6IHJldHVybg0KPj4+Pj4gQkxLX1NUU19PSyBmb3IgRElE
-X09LIGluIF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIiksIGEgY29tbWFuZA0KPj4+Pj4g
-dGhhdCBmYWlsZWQgd2l0aCBob3N0Ynl0ZT1ESURfT0sgYW5kIGRyaXZlcmJ5dGU9RFJJVkVSX1NF
-TlNFIGJ1dA0KPj4+Pj4gbGFja2luZyBhZGRpdGlvbmFsIHNlbnNlIGluZm9ybWF0aW9uIHdpbGwg
-aGF2ZSBhIHJldHVybiBjb2RlIHNldCB0bw0KPj4+Pj4gQkxLX1NUU19PSy4gVGhpcyByZXN1bHRz
-IGluIHRoZSByZXF1ZXN0IGlzc3VlciB0byBzZWUgc3VjY2Vzc2Z1bA0KPj4+Pj4gcmVxdWVzdCBl
-eGVjdXRpb24gZGVzcGl0ZSB0aGUgZmFpbHVyZS4gQW4gZXhhbXBsZSBvZiBzdWNoIGNhc2UgaXMN
-Cj4+Pj4+IGFuIHVuYWxpZ25lZCB3cml0ZSBvbiBhIGhvc3QgbWFuYWdlZCBaQUMgZGlzayBjb25u
-ZWN0ZWQgdG8gYSBTQVMNCj4+Pj4+IEhCQSB3aXRoIGEgbWFsZnVuY3Rpb25pbmcgU0FULiBUaGUg
-dW5hbGlnbmVkIHdyaXRlIGNvbW1hbmQgZ2V0cw0KPj4+Pj4gYWJvcnRlZCBidXQgaGFzIG5vIGFk
-ZGl0aW9uYWwgc2Vuc2UgaW5mb3JtYXRpb24uDQo+Pj4+Pg0KPj4+Pj4gc2QgMTA6MDowOjA6IFtz
-ZGVdIHRhZyMzOTA1IEZBSUxFRCBSZXN1bHQ6IGhvc3RieXRlPURJRF9PSw0KPj4+Pj4gZHJpdmVy
-Ynl0ZT1EUklWRVJfU0VOU0Ugc2QgMTA6MDowOjA6IFtzZGVdIHRhZyMzOTA1IFNlbnNlIEtleSA6
-DQo+Pj4+PiBBYm9ydGVkIENvbW1hbmQgW2N1cnJlbnRdIHNkIDEwOjA6MDowOiBbc2RlXSB0YWcj
-MzkwNSBBZGQuIFNlbnNlOg0KPj4+Pj4gTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbiBz
-ZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUgQ0RCOg0KPj4+Pj4gV3JpdGUoMTYpIDhhIDAwIDAw
-IDAwIDAwIDAwIDAyIDBjIDAwIDAxIDAwIDAwIDAwIDAxIDAwIDAwDQo+Pj4+PiBwcmludF9yZXFf
-ZXJyb3I6IEkvTyBlcnJvciwgZGV2IHNkZSwgc2VjdG9yIDI3NDcyNjkyMA0KPj4+Pj4NCj4+Pj4+
-IEluIHNjc2lfaW9fY29tcGxldGlvbigpLCBzZW5zZSBrZXkgaGFuZGxpbmcgdG8gbm90IGNoYW5n
-ZSB0aGUNCj4+Pj4+IHJlcXVlc3QgZXJyb3IgY29kZSBhbmQgc3VjY2VzcyBiZWluZyByZXBvcnRl
-ZCB0byB0aGUgaXNzdWVyLg0KPj4+Pj4NCj4+Pj4+IEZpeCB0aGlzIGJ5IG1ha2luZyBzdXJlIHRo
-YXQgdGhlIGVycm9yIGNvZGUgYWx3YXlzIGluZGljYXRlcyBhbg0KPj4+Pj4gZXJyb3IgaWYgc2Nz
-aV9pb19jb21wbGV0aW9uKCkgZGVjaWRlIHRoYXQgdGhlIGFjdGlvbiB0byBiZSB0YWtlbg0KPj4+
-Pj4gZm9yIGEgZmFpbGVkIGNvbW1hbmQgaXMgdG8gbm90IHJldHJ5IGl0IGFuZCB0ZXJtaW5hdGUg
-aXQNCj4+Pj4+IGltbWVkaWF0ZWx5IChBQ1RJT05fRkFJTCkgLg0KPj4+Pj4NCj4+Pj4+IFNpZ25l
-ZC1vZmYtYnk6IERhbWllbiBMZSBNb2FsIDxkYW1pZW4ubGVtb2FsQHdkYy5jb20+DQo+Pj4+PiBG
-aXhlczogZTM5YTk3MzUzZTUzICgic2NzaTogY29yZTogcmV0dXJuIEJMS19TVFNfT0sgZm9yIERJ
-RF9PSyBpbg0KPj4+Pj4gX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRlKCkiKSBDYzogSGFubmVz
-IFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPg0KPj4+Pj4gQ2M6IDxzdGFibGVAdmdlci5rZXJuZWwu
-b3JnPg0KPj4+Pj4gLS0tDQo+Pj4+PiAgZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgfCA5ICsrKysr
-KysrKw0KPj4+Pj4gIDEgZmlsZSBjaGFuZ2VkLCA5IGluc2VydGlvbnMoKykNCj4+Pj4+DQo+Pj4+
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kvc2Nz
-aV9saWIuYw0KPj4+Pj4gaW5kZXggYzg0ZjkzMTM4OGYyLi44NzU3OWJmY2MxODYgMTAwNjQ0DQo+
-Pj4+PiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPj4+Pj4gKysrIGIvZHJpdmVycy9z
-Y3NpL3Njc2lfbGliLmMNCj4+Pj4+IEBAIC0xMDAyLDYgKzEwMDIsMTUgQEAgdm9pZCBzY3NpX2lv
-X2NvbXBsZXRpb24oc3RydWN0IHNjc2lfY21uZA0KPj4+Pj4gKmNtZCwgdW5zaWduZWQgaW50IGdv
-b2RfYnl0ZXMpIHNjc2lfcHJpbnRfY29tbWFuZChjbWQpOw0KPj4+Pj4gIAkJCX0NCj4+Pj4+ICAJ
-CX0NCj4+Pj4+ICsJCS8qDQo+Pj4+PiArCQkgKiBUaGUgY29tbWFuZCBmYWlsZWQgYW5kIHNob3Vs
-ZCBub3QgYmUgcmV0cmllZC4NCj4+Pj4+IElmIHRoZSBob3N0DQo+Pj4+PiArCQkgKiBieXRlIGlz
-IERJRF9PSywgdGhlbg0KPj4+Pj4gX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRlKCkgcmV0dXJu
-ZWQNCj4+Pj4+ICsJCSAqIEJMS19TVFNfT0sgYW5kIGVycm9yIGluZGljYXRlcyBhIHN1Y2Nlc3Mu
-IE1ha2UNCj4+Pj4+IHN1cmUgdG8gbm90DQo+Pj4+PiArCQkgKiB1c2UgdGhhdCBhcyB0aGUgY29t
-cGxldGlvbiBjb2RlIGFuZCBhbHdheXMNCj4+Pj4+IHJldHVybiBhbg0KPj4+Pj4gKwkJICogSS9P
-IGVycm9yLg0KPj4+Pj4gKwkJICovDQo+Pj4+PiArCQlpZiAoZXJyb3IgPT0gQkxLX1NUU19PSykN
-Cj4+Pj4+ICsJCQllcnJvciA9IEJMS19TVFNfSU9FUlI7DQo+Pj4+PiAgCQlpZiAoIXNjc2lfZW5k
-X3JlcXVlc3QocmVxLCBlcnJvciwNCj4+Pj4+IGJsa19ycV9lcnJfYnl0ZXMocmVxKSwgMCkpIHJl
-dHVybjsNCj4+Pj4+ICAJCS8qRkFMTFRIUlUqLyAgDQo+Pj4+DQo+Pj4+IFRoYXQgbG9va3Mgd3Jv
-bmcuDQo+Pj4+IFNob3VsZG4ndCBfX3Njc2lfZXJyb3JfZnJvbV9ob3N0X2J5dGUoKSByZXR1cm4g
-dGhlIGNvcnJlY3Qgc3RhdHVzDQo+Pj4+IGhlcmU/ICANCj4+Pg0KPj4+IE15IGRyaXZlIHNhaWQ6
-DQo+Pj4NCj4+PiBzZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUgRkFJTEVEIFJlc3VsdDogaG9z
-dGJ5dGU9RElEX09LDQo+Pj4gZHJpdmVyYnl0ZT1EUklWRVJfU0VOU0UNCj4+PiBzZCAxMDowOjA6
-MDogW3NkZV0gdGFnIzM5MDUgU2Vuc2UgS2V5IDogQWJvcnRlZCBDb21tYW5kIFtjdXJyZW50XQ0K
-Pj4+IHNkIDEwOjA6MDowOiBbc2RlXSB0YWcjMzkwNSBBZGQuIFNlbnNlOiBObyBhZGRpdGlvbmFs
-IHNlbnNlDQo+Pj4gaW5mb3JtYXRpb24gc2QgMTA6MDowOjA6IFtzZGVdIHRhZyMzOTA1IENEQjog
-V3JpdGUoMTYpIDhhIDAwIDAwIDAwIDAwDQo+Pj4gMDAgMDIgMGMgMDAgMDEgMDAgMDAgMDAgMDEg
-MDAgMDANCj4+Pg0KPj4+IFNpbmNlIGhvc3RieXRlIGlzIERJRF9PSywgX19zY3NpX2Vycm9yX2Zy
-b21faG9zdF9ieXRlKCkgcmV0dXJucw0KPj4+IEJMS19TVFNfT0suIFRoZSBIQkEgZmFpbHMgdG8g
-Z2l2ZSBzZW5zZSBkYXRhLCBzbyB0aGUgQUJPUlRFRF9DT01NQU5EDQo+Pj4gY2FzZSBpbiBzY3Np
-X2lvX2NvbXBsZXRpb24oKSAic3dpdGNoIChzc2hkci5zZW5zZV9rZXkpIiBkb2VzIG5vdGhpbmcN
-Cj4+PiBhbmQgZXJyb3Igc3RheXMgZXF1YWwgdG8gc3VjY2Vzcy4gc2NzaV9lbmRfcmVxdWVzdCgp
-IGdldHMgY2FsbGVkIHdpdGgNCj4+PiB0aGF0IGFuZCBkZCBzZWVzIGEgc3VjY2Vzcy4uLg0KPj4+
-DQo+Pj4gVGhlcmUgYXJlIGFsc28gcGxlbnR5IG9mIG90aGVyIHNlbnNlIGtleXMgY2FzZXMgd2hl
-cmUgZXJyb3IgaXMgbm90DQo+Pj4gY2hhbmdlZCBkZXNwaXRlIHRoZSBmYWN0IHRoYXQgZXJyb3Ig
-Y2FuIGJlIEJMS19TVFNfU1VDQ0VTUyAoaW4gZmFjdCwgSQ0KPj4+IHRoaW5rIHRoaXMgaXMgbGlr
-ZWx5IHRoZSBtb3N0IGNvbW1vbiBjYXNlIHNpbmNlIGFuIGNvbW1hbmQgZmFpbHVyZQ0KPj4+IHdp
-dGggaG9zdGJ5dGU9RElEX09LIGFuZCBkcml2ZXJieXRlPURSSVZFUl9TRU5TRSBpcyBwcm9iYWJs
-eSB0aGUgbW9zdA0KPj4+IGNvbW1vbiBvbmUuDQo+Pj4NCj4+PiBNeSBwYXRjaCBpcyBhIGJpdCBv
-ZiBhIGhhbW1lciBhbmQgbWFrZXMgc3VyZSB0aGF0IGFuIEFDVElPTl9GQUlMDQo+Pj4gcmVxdWVz
-dCBpcyBjb21wbGV0ZWQgYXMgYSBmYWlsdXJlLi4uIEFtIEkgZ2V0dGluZyBhbGwgdGhpcyB3cm9u
-ZyA/DQo+Pj4NCj4+DQo+PiBKdXN0IGNoZWNrZWQgd2l0aCB0aGUgY29kZSwgYW5kIHNlbmQgYSBu
-ZXcgcGF0Y2guDQo+PiBXaGljaCBJIGZpbmQgYSBiaXQgY2xlYXJlci4NCj4+DQo+PiBGYWN0IGlz
-IHRoYXQgX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRlKCkgaXMgbm90IHN1ZmZpY2llbnQgdG8N
-Cj4+IGV2YWx1YXRlIHRoZSByZXR1cm4gY29kZSwgc28gdGFraW5nIGl0cyByZXR1cm4gdmFsdWUg
-d2l0aCBhbnkgZnVydGhlcg0KPj4gY2hlY2tzIGlzIGluZGVlZCB3cm9uZy4NCj4+IEJ1dCB0aGVu
-IGl0IG5ldmVyIHNhaWQgc28gb24gdGhlIGJvaWxlcnBsYXRlIG9mDQo+PiBfX3Njc2lfZXJyb3Jf
-ZnJvbV9ob3N0X2J5dGUoKSAuLi4NCj4+DQo+PiBTbyBwbGVhc2UgZG8gY2hlY2sgdGhlICd2Micg
-dmVyc2lvbiBvZiB0aGUgcGF0Y2guDQo+Pg0KPiANCj4gSXQgZml4ZXMgdGhlIHBhcnRpY3VsYXIg
-cHJvYmxlbSBJIGFtIHNlZWluZy4NCj4gQnV0IGxvb2tpbmcgbW9yZSBhdCB0aGlzIGNvZGUsIGlz
-bid0IHRoZXJlIGEgcHJvYmxlbSB3aXRoDQo+IHNzaGRyLnNlbnNlX2tleSA9PSBSRUNPVkVSRURf
-RVJST1IgPw0KPiANCj4gaWYgKHNlbnNlX3ZhbGlkICYmIChzc2hkci5zZW5zZV9rZXkgPT0gUkVD
-T1ZFUkVEX0VSUk9SKSkgew0KPiAJLi4uDQo+IAlyZXN1bHQgPSAwOw0KPiAgICAgICAgIC8qIGZv
-ciBwYXNzdGhyb3VnaCBlcnJvciBtYXkgYmUgc2V0ICovDQo+ICAgICAgICAgZXJyb3IgPSBCTEtf
-U1RTX09LOw0KPiB9DQo+IA0KPiBUaGVuIHRoZSBlcnJvciB3aWxsIGJlIGNoYW5nZWQgd3Jvbmds
-eSB0byBCTEtfU1RTX0lPRVJSLg0KPiANCj4gTXkgb3JpZ2luYWwgY2hhbmdlIGhhZCB0aGUgc2Ft
-ZSBwcm9ibGVtLg0KDQpJZ25vcmUuIEl0IGRvZXMgbm90IGdvIHRocm91Z2ggdGhlIGNoYW5nZSBp
-biB0aGF0IGNhc2UgdGhhbmtzIHRvOg0KCWlmICghKGJsa19ycV9ieXRlcyhyZXEpID09IDAgJiYg
-ZXJyb3IpICYmDQogICAgICAgICAgICAhc2NzaV9lbmRfcmVxdWVzdChyZXEsIGVycm9yLCBnb29k
-X2J5dGVzLCAwKSkNCg0KICAgICAgICAgICAgICAgIHJldHVybjsNCkFzc3VtaW5nIHRoZSBSRUNP
-VkVSRURfRVJST1IgaGFzIG5vIGxlZnQgb3ZlciBieXRlcy4gT3RoZXJ3aXNlLCBpdCBnb2VzDQp0
-aHJvdWdoIHJlcXVldWUuIEJvdGggY2FzZXMgYmVpbmcgYmVmb3JlIHRoZSBlcnJvciBjb2RlIG92
-ZXJ3cml0ZSwgbm8NCnByb2JsZW0uDQoNClRoYW5rcyAhDQoNCi0tIA0KRGFtaWVuIExlIE1vYWws
-DQpXZXN0ZXJuIERpZ2l0YWw=
+From: Bart Van Assche <bart.vanassche@wdc.com>
+
+Since SCSI scanning occurs asynchronously, since sd_revalidate_disk()
+is called from sd_probe_async() and since sd_revalidate_disk() calls
+sd_zbc_read_zones() it can happen that sd_zbc_read_zones() is called
+concurrently with operations referencing a drive zone bitmaps and number
+of zones. Make sure that this race does not cause failures when
+revalidate does not detect any change by making the following changes to
+sd_zbc_setup():
+- Ensure that sd_zbc_setup_seq_zones_bitmap() does not change any
+  ZBC metadata in the request queue.
+- Only modify the ZBC information in the request queue that has
+  changed. If the number of zones has changed, update q->nr_zones,
+  q->seq_zones_wlock and q->seq_zones_bitmap. If the type of some
+  zones has changed but not the number of zones, only update the
+  zone type information.
+
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+[Damien] Updated commit message and changed nr_zones/bitmap swap order.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/scsi/sd_zbc.c | 45 +++++++++++++++++++++++++++------------------
+ 1 file changed, 27 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index b59454ed5087..39ddbe92769c 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -551,14 +551,13 @@ static sector_t sd_zbc_get_seq_zones(struct scsi_disk *sdkp, unsigned char *buf,
+ }
+ 
+ /**
+- * sd_zbc_setup_seq_zones_bitmap - Initialize the disk seq zone bitmap.
++ * sd_zbc_setup_seq_zones_bitmap - Initialize a seq zone bitmap.
+  * @sdkp: target disk
+  *
+  * Allocate a zone bitmap and initialize it by identifying sequential zones.
+  */
+-static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
++static unsigned long *sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
+ {
+-	struct request_queue *q = sdkp->disk->queue;
+ 	unsigned long *seq_zones_bitmap;
+ 	sector_t lba = 0;
+ 	unsigned char *buf;
+@@ -566,7 +565,7 @@ static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
+ 
+ 	seq_zones_bitmap = sd_zbc_alloc_zone_bitmap(sdkp);
+ 	if (!seq_zones_bitmap)
+-		return -ENOMEM;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
+ 	if (!buf)
+@@ -589,12 +588,9 @@ static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
+ 	kfree(buf);
+ 	if (ret) {
+ 		kfree(seq_zones_bitmap);
+-		return ret;
++		return ERR_PTR(ret);
+ 	}
+-
+-	q->seq_zones_bitmap = seq_zones_bitmap;
+-
+-	return 0;
++	return seq_zones_bitmap;
+ }
+ 
+ static void sd_zbc_cleanup(struct scsi_disk *sdkp)
+@@ -630,24 +626,37 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
+ 	 * of zones changed.
+ 	 */
+ 	if (sdkp->nr_zones != q->nr_zones) {
++		struct request_queue *q = sdkp->disk->queue;
++		unsigned long *seq_zones_wlock = NULL, *seq_zones_bitmap = NULL;
++		size_t zone_bitmap_size;
+ 
+-		sd_zbc_cleanup(sdkp);
+-
+-		q->nr_zones = sdkp->nr_zones;
+ 		if (sdkp->nr_zones) {
+-			q->seq_zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
+-			if (!q->seq_zones_wlock) {
++			seq_zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
++			if (!seq_zones_wlock) {
+ 				ret = -ENOMEM;
+ 				goto err;
+ 			}
+ 
+-			ret = sd_zbc_setup_seq_zones_bitmap(sdkp);
+-			if (ret) {
+-				sd_zbc_cleanup(sdkp);
++			seq_zones_bitmap = sd_zbc_setup_seq_zones_bitmap(sdkp);
++			if (IS_ERR(seq_zones_bitmap)) {
++				ret = PTR_ERR(seq_zones_bitmap);
++				kfree(seq_zones_wlock);
+ 				goto err;
+ 			}
+ 		}
+-
++		zone_bitmap_size = BITS_TO_LONGS(sdkp->nr_zones) *
++			sizeof(unsigned long);
++		if (q->nr_zones != sdkp->nr_zones) {
++			swap(q->seq_zones_wlock, seq_zones_wlock);
++			swap(q->seq_zones_bitmap, seq_zones_bitmap);
++			q->nr_zones = sdkp->nr_zones;
++		} else if (memcmp(q->seq_zones_bitmap, seq_zones_bitmap,
++				  zone_bitmap_size) != 0) {
++			memcpy(q->seq_zones_bitmap, seq_zones_bitmap,
++			       zone_bitmap_size);
++		}
++		kfree(seq_zones_wlock);
++		kfree(seq_zones_bitmap);
+ 	}
+ 
+ 	return 0;
+-- 
+2.14.3
