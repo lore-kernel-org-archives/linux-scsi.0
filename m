@@ -1,87 +1,60 @@
-From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH] scsi: Fix failed request error code
-Date: Wed, 4 Apr 2018 07:06:58 +0000
-Message-ID: <2726d8cc-6661-9934-cca4-abcdaa2199ba@wdc.com>
-References: <20180404065138.25534-1-damien.lemoal@wdc.com>
- <20180404085730.2df015c3@pentland.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2] scsi: Fix failed request error code
+Date: Wed,  4 Apr 2018 09:27:34 +0200
+Message-ID: <20180404072734.21718-1-hare@suse.de>
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180404085730.2df015c3@pentland.suse.de>
-Content-Language: en-US
-Content-ID: <71A8F26240579740A6651F991D7839D4@namprd04.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Damien Le Moal <damien.lemoal@wdc.com>, Hannes Reinecke <hare@suse.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGFubmVzLA0KDQpPbiA0LzQvMTggMTU6NTcsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToNCj4gT24g
-V2VkLCAgNCBBcHIgMjAxOCAxNTo1MTozOCArMDkwMA0KPiBEYW1pZW4gTGUgTW9hbCA8ZGFtaWVu
-LmxlbW9hbEB3ZGMuY29tPiB3cm90ZToNCj4gDQo+PiBXaXRoIHRoZSBpbnRyb2R1Y3Rpb24gb2Yg
-Y29tbWl0IGUzOWE5NzM1M2U1MyAoInNjc2k6IGNvcmU6IHJldHVybg0KPj4gQkxLX1NUU19PSyBm
-b3IgRElEX09LIGluIF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIiksIGEgY29tbWFuZA0K
-Pj4gdGhhdCBmYWlsZWQgd2l0aCBob3N0Ynl0ZT1ESURfT0sgYW5kIGRyaXZlcmJ5dGU9RFJJVkVS
-X1NFTlNFIGJ1dA0KPj4gbGFja2luZyBhZGRpdGlvbmFsIHNlbnNlIGluZm9ybWF0aW9uIHdpbGwg
-aGF2ZSBhIHJldHVybiBjb2RlIHNldCB0bw0KPj4gQkxLX1NUU19PSy4gVGhpcyByZXN1bHRzIGlu
-IHRoZSByZXF1ZXN0IGlzc3VlciB0byBzZWUgc3VjY2Vzc2Z1bA0KPj4gcmVxdWVzdCBleGVjdXRp
-b24gZGVzcGl0ZSB0aGUgZmFpbHVyZS4gQW4gZXhhbXBsZSBvZiBzdWNoIGNhc2UgaXMgYW4NCj4+
-IHVuYWxpZ25lZCB3cml0ZSBvbiBhIGhvc3QgbWFuYWdlZCBaQUMgZGlzayBjb25uZWN0ZWQgdG8g
-YSBTQVMgSEJBDQo+PiB3aXRoIGEgbWFsZnVuY3Rpb25pbmcgU0FULiBUaGUgdW5hbGlnbmVkIHdy
-aXRlIGNvbW1hbmQgZ2V0cyBhYm9ydGVkDQo+PiBidXQgaGFzIG5vIGFkZGl0aW9uYWwgc2Vuc2Ug
-aW5mb3JtYXRpb24uDQo+Pg0KPj4gc2QgMTA6MDowOjA6IFtzZGVdIHRhZyMzOTA1IEZBSUxFRCBS
-ZXN1bHQ6IGhvc3RieXRlPURJRF9PSw0KPj4gZHJpdmVyYnl0ZT1EUklWRVJfU0VOU0Ugc2QgMTA6
-MDowOjA6IFtzZGVdIHRhZyMzOTA1IFNlbnNlIEtleSA6DQo+PiBBYm9ydGVkIENvbW1hbmQgW2N1
-cnJlbnRdIHNkIDEwOjA6MDowOiBbc2RlXSB0YWcjMzkwNSBBZGQuIFNlbnNlOiBObw0KPj4gYWRk
-aXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbiBzZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUgQ0RC
-Og0KPj4gV3JpdGUoMTYpIDhhIDAwIDAwIDAwIDAwIDAwIDAyIDBjIDAwIDAxIDAwIDAwIDAwIDAx
-IDAwIDAwDQo+PiBwcmludF9yZXFfZXJyb3I6IEkvTyBlcnJvciwgZGV2IHNkZSwgc2VjdG9yIDI3
-NDcyNjkyMA0KPj4NCj4+IEluIHNjc2lfaW9fY29tcGxldGlvbigpLCBzZW5zZSBrZXkgaGFuZGxp
-bmcgdG8gbm90IGNoYW5nZSB0aGUgcmVxdWVzdA0KPj4gZXJyb3IgY29kZSBhbmQgc3VjY2VzcyBi
-ZWluZyByZXBvcnRlZCB0byB0aGUgaXNzdWVyLg0KPj4NCj4+IEZpeCB0aGlzIGJ5IG1ha2luZyBz
-dXJlIHRoYXQgdGhlIGVycm9yIGNvZGUgYWx3YXlzIGluZGljYXRlcyBhbiBlcnJvcg0KPj4gaWYg
-c2NzaV9pb19jb21wbGV0aW9uKCkgZGVjaWRlIHRoYXQgdGhlIGFjdGlvbiB0byBiZSB0YWtlbiBm
-b3IgYQ0KPj4gZmFpbGVkIGNvbW1hbmQgaXMgdG8gbm90IHJldHJ5IGl0IGFuZCB0ZXJtaW5hdGUg
-aXQgaW1tZWRpYXRlbHkNCj4+IChBQ1RJT05fRkFJTCkgLg0KPj4NCj4+IFNpZ25lZC1vZmYtYnk6
-IERhbWllbiBMZSBNb2FsIDxkYW1pZW4ubGVtb2FsQHdkYy5jb20+DQo+PiBGaXhlczogZTM5YTk3
-MzUzZTUzICgic2NzaTogY29yZTogcmV0dXJuIEJMS19TVFNfT0sgZm9yIERJRF9PSyBpbg0KPj4g
-X19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRlKCkiKSBDYzogSGFubmVzIFJlaW5lY2tlIDxoYXJl
-QHN1c2UuY29tPg0KPj4gQ2M6IDxzdGFibGVAdmdlci5rZXJuZWwub3JnPg0KPj4gLS0tDQo+PiAg
-ZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgfCA5ICsrKysrKysrKw0KPj4gIDEgZmlsZSBjaGFuZ2Vk
-LCA5IGluc2VydGlvbnMoKykNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lf
-bGliLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPj4gaW5kZXggYzg0ZjkzMTM4OGYyLi44
-NzU3OWJmY2MxODYgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPj4g
-KysrIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCj4+IEBAIC0xMDAyLDYgKzEwMDIsMTUgQEAg
-dm9pZCBzY3NpX2lvX2NvbXBsZXRpb24oc3RydWN0IHNjc2lfY21uZCAqY21kLA0KPj4gdW5zaWdu
-ZWQgaW50IGdvb2RfYnl0ZXMpIHNjc2lfcHJpbnRfY29tbWFuZChjbWQpOw0KPj4gIAkJCX0NCj4+
-ICAJCX0NCj4+ICsJCS8qDQo+PiArCQkgKiBUaGUgY29tbWFuZCBmYWlsZWQgYW5kIHNob3VsZCBu
-b3QgYmUgcmV0cmllZC4gSWYNCj4+IHRoZSBob3N0DQo+PiArCQkgKiBieXRlIGlzIERJRF9PSywg
-dGhlbg0KPj4gX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRlKCkgcmV0dXJuZWQNCj4+ICsJCSAq
-IEJMS19TVFNfT0sgYW5kIGVycm9yIGluZGljYXRlcyBhIHN1Y2Nlc3MuIE1ha2UNCj4+IHN1cmUg
-dG8gbm90DQo+PiArCQkgKiB1c2UgdGhhdCBhcyB0aGUgY29tcGxldGlvbiBjb2RlIGFuZCBhbHdh
-eXMgcmV0dXJuDQo+PiBhbg0KPj4gKwkJICogSS9PIGVycm9yLg0KPj4gKwkJICovDQo+PiArCQlp
-ZiAoZXJyb3IgPT0gQkxLX1NUU19PSykNCj4+ICsJCQllcnJvciA9IEJMS19TVFNfSU9FUlI7DQo+
-PiAgCQlpZiAoIXNjc2lfZW5kX3JlcXVlc3QocmVxLCBlcnJvciwNCj4+IGJsa19ycV9lcnJfYnl0
-ZXMocmVxKSwgMCkpIHJldHVybjsNCj4+ICAJCS8qRkFMTFRIUlUqLw0KPiANCj4gVGhhdCBsb29r
-cyB3cm9uZy4NCj4gU2hvdWxkbid0IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIHJldHVy
-biB0aGUgY29ycmVjdCBzdGF0dXMgaGVyZT8NCg0KTXkgZHJpdmUgc2FpZDoNCg0Kc2QgMTA6MDow
-OjA6IFtzZGVdIHRhZyMzOTA1IEZBSUxFRCBSZXN1bHQ6IGhvc3RieXRlPURJRF9PSw0KZHJpdmVy
-Ynl0ZT1EUklWRVJfU0VOU0UNCnNkIDEwOjA6MDowOiBbc2RlXSB0YWcjMzkwNSBTZW5zZSBLZXkg
-OiBBYm9ydGVkIENvbW1hbmQgW2N1cnJlbnRdDQpzZCAxMDowOjA6MDogW3NkZV0gdGFnIzM5MDUg
-QWRkLiBTZW5zZTogTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbg0Kc2QgMTA6MDowOjA6
-IFtzZGVdIHRhZyMzOTA1IENEQjogV3JpdGUoMTYpIDhhIDAwIDAwIDAwIDAwIDAwIDAyIDBjIDAw
-IDAxDQowMCAwMCAwMCAwMSAwMCAwMA0KDQpTaW5jZSBob3N0Ynl0ZSBpcyBESURfT0ssIF9fc2Nz
-aV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIHJldHVybnMNCkJMS19TVFNfT0suIFRoZSBIQkEgZmFp
-bHMgdG8gZ2l2ZSBzZW5zZSBkYXRhLCBzbyB0aGUgQUJPUlRFRF9DT01NQU5EDQpjYXNlIGluIHNj
-c2lfaW9fY29tcGxldGlvbigpICJzd2l0Y2ggKHNzaGRyLnNlbnNlX2tleSkiIGRvZXMgbm90aGlu
-ZyBhbmQNCmVycm9yIHN0YXlzIGVxdWFsIHRvIHN1Y2Nlc3MuIHNjc2lfZW5kX3JlcXVlc3QoKSBn
-ZXRzIGNhbGxlZCB3aXRoIHRoYXQNCmFuZCBkZCBzZWVzIGEgc3VjY2Vzcy4uLg0KDQpUaGVyZSBh
-cmUgYWxzbyBwbGVudHkgb2Ygb3RoZXIgc2Vuc2Uga2V5cyBjYXNlcyB3aGVyZSBlcnJvciBpcyBu
-b3QNCmNoYW5nZWQgZGVzcGl0ZSB0aGUgZmFjdCB0aGF0IGVycm9yIGNhbiBiZSBCTEtfU1RTX1NV
-Q0NFU1MgKGluIGZhY3QsIEkNCnRoaW5rIHRoaXMgaXMgbGlrZWx5IHRoZSBtb3N0IGNvbW1vbiBj
-YXNlIHNpbmNlIGFuIGNvbW1hbmQgZmFpbHVyZSB3aXRoDQpob3N0Ynl0ZT1ESURfT0sgYW5kIGRy
-aXZlcmJ5dGU9RFJJVkVSX1NFTlNFIGlzIHByb2JhYmx5IHRoZSBtb3N0IGNvbW1vbiBvbmUuDQoN
-Ck15IHBhdGNoIGlzIGEgYml0IG9mIGEgaGFtbWVyIGFuZCBtYWtlcyBzdXJlIHRoYXQgYW4gQUNU
-SU9OX0ZBSUwgcmVxdWVzdA0KaXMgY29tcGxldGVkIGFzIGEgZmFpbHVyZS4uLiBBbSBJIGdldHRp
-bmcgYWxsIHRoaXMgd3JvbmcgPw0KDQpCZXN0Lg0KDQotLSANCkRhbWllbiBMZSBNb2FsLA0KV2Vz
-dGVybiBEaWdpdGFs
+With the introduction of commit e39a97353e53 ("scsi: core: return
+BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()"), a command that
+failed with hostbyte=DID_OK and driverbyte=DRIVER_SENSE but lacking
+additional sense information will have a return code set to BLK_STS_OK.
+This results in the request issuer to see successful request execution
+despite the failure. An example of such case is an unaligned write on a
+host managed ZAC disk connected to a SAS HBA with a malfunctioning SAT.
+The unaligned write command gets aborted but has no additional sense
+information.
+
+sd 10:0:0:0: [sde] tag#3905 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 10:0:0:0: [sde] tag#3905 Sense Key : Aborted Command [current]
+sd 10:0:0:0: [sde] tag#3905 Add. Sense: No additional sense information
+sd 10:0:0:0: [sde] tag#3905 CDB: Write(16) 8a 00 00 00 00 00 02 0c 00 01 00 00 00 01 00 00
+print_req_error: I/O error, dev sde, sector 274726920
+
+In scsi_io_completion(), sense key handling to not change the request
+error code and success being reported to the issuer.
+
+Fix this by making sure that the error code always indicates an error
+if scsi_io_completion() decide that the action to be taken for a failed
+command is to not retry it and terminate it immediately (ACTION_FAIL) .
+
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()")
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_lib.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 393f9db8f41b..9389c41e2829 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -905,6 +905,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		goto requeue;
+ 
+ 	error = __scsi_error_from_host_byte(cmd, result);
++	/*
++	 * If the hostbyte was DID_OK, but the sense code is valid
++	 * we always should set BLK_STS_IOERR.
++	 */
++	if (error == BLK_STS_OK && sense_valid)
++		error = BLK_STS_IOERR;
+ 
+ 	if (host_byte(result) == DID_RESET) {
+ 		/* Third party bus reset or reset for error recovery
+-- 
+2.12.3
