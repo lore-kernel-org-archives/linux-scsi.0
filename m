@@ -1,44 +1,72 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
 Subject: Re: [PATCHv2] scsi: Fix failed request error code
-Date: Wed, 4 Apr 2018 15:44:10 +0000
-Message-ID: <f81bc46b8e0f95123f13f4298c902206954e551c.camel@wdc.com>
+Date: Wed, 4 Apr 2018 11:44:38 -0400
+Message-ID: <f4e05a27-7f17-6dea-f1e5-748441f9d16b@interlog.com>
 References: <20180404072734.21718-1-hare@suse.de>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20180404072734.21718-1-hare@suse.de>
-Content-Language: en-US
-Content-ID: <46CA1752C86D694CB9D9BED44F4B5CE7@namprd04.prod.outlook.com>
+Content-Language: en-CA
 Sender: stable-owner@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Damien Le Moal <damien.lemoal@wdc.com>, Hannes Reinecke <hare@suse.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE4LTA0LTA0IGF0IDA5OjI3ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYyBiL2RyaXZlcnMvc2NzaS9z
-Y3NpX2xpYi5jDQo+IGluZGV4IDM5M2Y5ZGI4ZjQxYi4uOTM4OWM0MWUyODI5IDEwMDY0NA0KPiAt
-LS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9s
-aWIuYw0KPiBAQCAtOTA1LDYgKzkwNSwxMiBAQCB2b2lkIHNjc2lfaW9fY29tcGxldGlvbihzdHJ1
-Y3Qgc2NzaV9jbW5kICpjbWQsIHVuc2lnbmVkIGludCBnb29kX2J5dGVzKQ0KPiAgCQlnb3RvIHJl
-cXVldWU7DQo+ICANCj4gIAllcnJvciA9IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZShjbWQs
-IHJlc3VsdCk7DQo+ICsJLyoNCj4gKwkgKiBJZiB0aGUgaG9zdGJ5dGUgd2FzIERJRF9PSywgYnV0
-IHRoZSBzZW5zZSBjb2RlIGlzIHZhbGlkDQo+ICsJICogd2UgYWx3YXlzIHNob3VsZCBzZXQgQkxL
-X1NUU19JT0VSUi4NCj4gKwkgKi8NCj4gKwlpZiAoZXJyb3IgPT0gQkxLX1NUU19PSyAmJiBzZW5z
-ZV92YWxpZCkNCj4gKwkJZXJyb3IgPSBCTEtfU1RTX0lPRVJSOw0KPiAgDQo+ICAJaWYgKGhvc3Rf
-Ynl0ZShyZXN1bHQpID09IERJRF9SRVNFVCkgew0KPiAgCQkvKiBUaGlyZCBwYXJ0eSBidXMgcmVz
-ZXQgb3IgcmVzZXQgZm9yIGVycm9yIHJlY292ZXJ5DQoNCl9fc2NzaV9lcnJvcl9mcm9tX2hvc3Rf
-Ynl0ZSgpIGhhcyB0d28gY2FsbGVycy4gV2h5IGRvZXMgdGhpcyBwYXRjaCBvbmx5DQp1cGRhdGUg
-b25lIG9mIHRoZXNlIHR3byBjYWxsZXJzPw0KDQpSZWdhcmRpbmcgY29tbWl0IGUzOWE5NzM1M2U1
-MywgdGhlIGRlc2NyaXB0aW9uIG9mIHRoYXQgY29tbWl0IGlzIGFzIGZvbGxvd3M6DQoiV2hlbiBj
-b252ZXJ0aW5nIF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIHRvIEJMS19TVFMgZXJyb3Ig
-Y29kZXMgdGhlDQpjYXNlIERJRF9PSyB3YXMgZm9yZ290dGVuLCByZXN1bHRpbmcgaW4gaXQgYWx3
-YXlzIHJldHVybmluZyBhbiBlcnJvci4iDQpIb3dldmVyLCB0aGUgY29tbWVudCBhYm92ZSB0aGF0
-IGZ1bmN0aW9uIHJlYWRzIGFzIGZvbGxvd3M6ICJ0cmFuc2xhdGUgU0NTSQ0KZXJyb3IgY29kZSBp
-bnRvIGVycm5vIi4gSWYgSSBoYXZlIGEgbG9vayBhdCB0aGUgdjQuMTIgU0NTSSBjb3JlIChiZWZv
-cmUgdGhlDQpibGtzdGF0dXNfdCBjb252ZXJzaW9uKSB0aGVuIEkgc2VlIHRoYXQgX19zY3NpX2Vy
-cm9yX2Zyb21faG9zdF9ieXRlKCkgbmV2ZXINCnJldHVybnMgMC4gVGhhdCBtZWFucyB0aGF0IHRo
-ZSBkZXNjcmlwdGlvbiBvZiBjb21taXQgZTM5YTk3MzUzZTUzICgic2NzaToNCmNvcmU6IHJldHVy
-biBCTEtfU1RTX09LIGZvciBESURfT0sgaW4gX19zY3NpX2Vycm9yX2Zyb21faG9zdF9ieXRlKCki
-KSBpcw0Kd3JvbmcuIERvZXMgdGhhdCBtZWFuIHRoYXQgY29tbWl0IGUzOWE5NzM1M2U1MyBzaG91
-bGQgYmUgcmV2ZXJ0ZWQ/DQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQo=
+On 2018-04-04 03:27 AM, Hannes Reinecke wrote:
+> With the introduction of commit e39a97353e53 ("scsi: core: return
+> BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()"), a command that
+> failed with hostbyte=DID_OK and driverbyte=DRIVER_SENSE but lacking
+> additional sense information will have a return code set to BLK_STS_OK.
+> This results in the request issuer to see successful request execution
+> despite the failure. An example of such case is an unaligned write on a
+> host managed ZAC disk connected to a SAS HBA with a malfunctioning SAT.
+> The unaligned write command gets aborted but has no additional sense
+> information.
+> 
+> sd 10:0:0:0: [sde] tag#3905 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> sd 10:0:0:0: [sde] tag#3905 Sense Key : Aborted Command [current]
+> sd 10:0:0:0: [sde] tag#3905 Add. Sense: No additional sense information
+> sd 10:0:0:0: [sde] tag#3905 CDB: Write(16) 8a 00 00 00 00 00 02 0c 00 01 00 00 00 01 00 00
+> print_req_error: I/O error, dev sde, sector 274726920
+> 
+> In scsi_io_completion(), sense key handling to not change the request
+> error code and success being reported to the issuer.
+> 
+> Fix this by making sure that the error code always indicates an error
+> if scsi_io_completion() decide that the action to be taken for a failed
+> command is to not retry it and terminate it immediately (ACTION_FAIL) .
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()")
+> Cc: <stable@vger.kernel.org>
+> ---
+>   drivers/scsi/scsi_lib.c | 6 ++++++
+>   1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 393f9db8f41b..9389c41e2829 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -905,6 +905,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>   		goto requeue;
+>   
+>   	error = __scsi_error_from_host_byte(cmd, result);
+> +	/*
+> +	 * If the hostbyte was DID_OK, but the sense code is valid
+> +	 * we always should set BLK_STS_IOERR.
+> +	 */
+> +	if (error == BLK_STS_OK && sense_valid)
+
+&& !sense_deferred
+
+Doug Gilbert
+
+> +		error = BLK_STS_IOERR;
+>   
+>   	if (host_byte(result) == DID_RESET) {
+>   		/* Third party bus reset or reset for error recovery
+> 
