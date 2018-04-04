@@ -1,38 +1,63 @@
-From: Xidong Wang <wangxidong_97@163.com>
-Subject: [PATCH 1/1] scsi:mvsas:fix memory leak
-Date: Wed,  4 Apr 2018 10:37:52 +0800
-Message-ID: <1522809472-11749-1-git-send-email-wangxidong_97@163.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jack Wang <jinpu.wang@profitbricks.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
-Cc: Kees Cook <keescook@chromium.org>, Pan Bian <bianpan2016@163.com>, Xidong Wang <wangxidong_97@163.com>, Romain Perier <romain.perier@collabora.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH] scsi: Fix failed request error code
+Date: Wed,  4 Apr 2018 15:51:38 +0900
+Message-ID: <20180404065138.25534-1-damien.lemoal@wdc.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In function mvs_pci_init(), the memory allocated by
-scsi_host_alloc() is not released on the error path that mvi,
-which holds the return value of mvs_pci_alloc(), is NULL.
-This will result in a memory leak bug.
+With the introduction of commit e39a97353e53 ("scsi: core: return
+BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()"), a command that
+failed with hostbyte=DID_OK and driverbyte=DRIVER_SENSE but lacking
+additional sense information will have a return code set to BLK_STS_OK.
+This results in the request issuer to see successful request execution
+despite the failure. An example of such case is an unaligned write on a
+host managed ZAC disk connected to a SAS HBA with a malfunctioning SAT.
+The unaligned write command gets aborted but has no additional sense
+information.
 
-Signed-off-by: Xidong Wang <wangxidong_97@163.com>
+sd 10:0:0:0: [sde] tag#3905 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 10:0:0:0: [sde] tag#3905 Sense Key : Aborted Command [current]
+sd 10:0:0:0: [sde] tag#3905 Add. Sense: No additional sense information
+sd 10:0:0:0: [sde] tag#3905 CDB: Write(16) 8a 00 00 00 00 00 02 0c 00 01 00 00 00 01 00 00
+print_req_error: I/O error, dev sde, sector 274726920
+
+In scsi_io_completion(), sense key handling to not change the request
+error code and success being reported to the issuer.
+
+Fix this by making sure that the error code always indicates an error
+if scsi_io_completion() decide that the action to be taken for a failed
+command is to not retry it and terminate it immediately (ACTION_FAIL) .
+
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()")
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/mvsas/mv_init.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_lib.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 8c91637..936b8ef 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -370,8 +370,10 @@ static struct mvs_info *mvs_pci_alloc(struct pci_dev *pdev,
- 	mvi = kzalloc(sizeof(*mvi) +
- 		(1L << mvs_chips[ent->driver_data].slot_width) *
- 		sizeof(struct mvs_slot_info), GFP_KERNEL);
--	if (!mvi)
-+	if (!mvi) {
-+		scsi_host_put(shost);
- 		return NULL;
-+	}
- 
- 	mvi->pdev = pdev;
- 	mvi->dev = &pdev->dev;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c84f931388f2..87579bfcc186 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1002,6 +1002,15 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				scsi_print_command(cmd);
+ 			}
+ 		}
++		/*
++		 * The command failed and should not be retried. If the host
++		 * byte is DID_OK, then __scsi_error_from_host_byte() returned
++		 * BLK_STS_OK and error indicates a success. Make sure to not
++		 * use that as the completion code and always return an
++		 * I/O error.
++		 */
++		if (error == BLK_STS_OK)
++			error = BLK_STS_IOERR;
+ 		if (!scsi_end_request(req, error, blk_rq_err_bytes(req), 0))
+ 			return;
+ 		/*FALLTHRU*/
 -- 
-2.7.4
+2.14.3
