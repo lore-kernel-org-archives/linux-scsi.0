@@ -1,67 +1,114 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH v2] Fix DID_OK handling in __scsi_error_from_host_byte()
-Date: Wed, 4 Apr 2018 12:54:24 -0700
-Message-ID: <d964a314-77c8-5804-6795-6065a63899e4@suse.com>
-References: <20180404175355.15982-1-bart.vanassche@wdc.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Wed, 4 Apr 2018 13:21:53 -0700
+Message-ID: <CAGXu5jLwyot++C2EXs+032Lz5WdG65GsEJ-Q55rfhSbkG1Nh+A@mail.gmail.com>
+References: <10360653.ov98egbaqx@natalenko.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180404175355.15982-1-bart.vanassche@wdc.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Douglas Gilbert <dgilbert@interlog.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <10360653.ov98egbaqx@natalenko.name>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/04/2018 10:53 AM, Bart Van Assche wrote:
-> Commit e39a97353e53 modified __scsi_error_from_host_byte() such
-> that that function translates DID_OK into BLK_STS_OK. However,
-> the description of that commit is wrong: it mentions that commit
-> 2a842acab109 introduced a bug in __scsi_error_from_host_byte()
-> although that commit did not change the behavior of that function.
-> Additionally, commit e39a97353e53 introduced a severe bug: it causes
-> commands that fail with hostbyte=DID_OK and driverbyte=DRIVER_SENSE
-> to be completed with BLK_STS_OK. Fix __scsi_error_from_host_byte()
-> by only translating good status values into BLK_STS_OK.
-> 
-> Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()")
-> Reported-by: Damien Le Moal <damien.lemoal@wdc.com>
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Douglas Gilbert <dgilbert@interlog.com>
-> Cc: Damien Le Moal <damien.lemoal@wdc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: stable@vger.kernel.org
-> ---
-> 
-> Changes compared to v1:
-> - Modified __scsi_error_from_host_byte() such that it again returns
->   BLK_STS_OK for CONDITION MET and other result codes that represent
->   success.
-> 
->  drivers/scsi/scsi_lib.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 74a39db57d49..1496b34af409 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -736,7 +736,13 @@ static blk_status_t __scsi_error_from_host_byte(struct scsi_cmnd *cmd,
->  {
->  	switch (host_byte(result)) {
->  	case DID_OK:
-> -		return BLK_STS_OK;
-> +		/*
-> +		 * Also check the other bytes than the status byte in result
-> +		 * to handle the case when a SCSI LLD sets result to
-> +		 * DRIVER_SENSE << 24 without setting SAM_STAT_CHECK_CONDITION.
-> +		 */
-> +		return scsi_status_is_good(result) && (result & ~0xff) == 0 ?
-> +			BLK_STS_OK : BLK_STS_IOERR;
->  	case DID_TRANSPORT_FAILFAST:
->  		return BLK_STS_TRANSPORT;
->  	case DID_TARGET_FAILURE:
-> 
+On Wed, Apr 4, 2018 at 12:07 PM, Oleksandr Natalenko
+<oleksandr@natalenko.name> wrote:
+> With v4.16 I get the following dump while using smartctl:
+> [...]
+> [  261.262135] Bad or missing usercopy whitelist? Kernel memory exposure
+> attempt detected from SLUB object 'scsi_sense_cache' (offset 94, size 22)!
+> [...]
+> [  261.345976] Call Trace:
+> [  261.350620]  __check_object_size+0x130/0x1a0
+> [  261.355775]  sg_io+0x269/0x3f0
+> [  261.360729]  ? path_lookupat+0xaa/0x1f0
+> [  261.364027]  ? current_time+0x18/0x70
+> [  261.366684]  scsi_cmd_ioctl+0x257/0x410
+> [  261.369871]  ? xfs_bmapi_read+0x1c3/0x340 [xfs]
+> [  261.372231]  sd_ioctl+0xbf/0x1a0 [sd_mod]
+> [  261.375456]  blkdev_ioctl+0x8ca/0x990
+> [  261.381156]  ? read_null+0x10/0x10
+> [  261.384984]  block_ioctl+0x39/0x40
+> [  261.388739]  do_vfs_ioctl+0xa4/0x630
+> [  261.392624]  ? vfs_write+0x164/0x1a0
+> [  261.396658]  SyS_ioctl+0x74/0x80
+> [  261.399563]  do_syscall_64+0x74/0x190
+> [  261.402685]  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+This is:
+
+sg_io+0x269/0x3f0:
+blk_complete_sghdr_rq at block/scsi_ioctl.c:280
+ (inlined by) sg_io at block/scsi_ioctl.c:376
+
+which is:
+
+        if (req->sense_len && hdr->sbp) {
+                int len = min((unsigned int) hdr->mx_sb_len, req->sense_len);
+
+                if (!copy_to_user(hdr->sbp, req->sense, len))
+                        hdr->sb_len_wr = len;
+                else
+                        ret = -EFAULT;
+        }
+
+> [...]
+> I can easily reproduce it with a qemu VM and 2 virtual SCSI disks by calling
+> smartctl in a loop and doing some usual background I/O. The warning is
+> triggered within 3 minutes or so (not instantly).
+>
+> Initially, it was produced on my server after a kernel update (because disks
+> are monitored with smartctl via Zabbix).
+>
+> Looks like the thing was introduced with
+> 0afe76e88c57d91ef5697720aed380a339e3df70.
+>
+> Any idea how to deal with this please? If needed, I can provide any additional
+> info, and also I'm happy/ready to test any proposed patches.
+
+Interesting, and a little confusing. So, what's strange here is that
+the scsi_sense_cache already has a full whitelist:
+
+                       kmem_cache_create_usercopy("scsi_sense_cache",
+                               SCSI_SENSE_BUFFERSIZE, 0, SLAB_HWCACHE_ALIGN,
+                               0, SCSI_SENSE_BUFFERSIZE, NULL);
+
+Arg 2 is the buffer size, arg 5 is the whitelist offset (0), and the
+whitelist size (same as arg2). In other words, the entire buffer
+should be whitelisted.
+
+include/scsi/scsi_cmnd.h says:
+
+#define SCSI_SENSE_BUFFERSIZE  96
+
+That means scsi_sense_cache should be 96 bytes in size? But a 22 byte
+read starting at offset 94 happened? That seems like a 20 byte read
+beyond the end of the SLUB object? Though if it were reading past the
+actual end of the object, I'd expect the hardened usercopy BUG (rather
+than the WARN) to kick in. Ah, it looks like
+/sys/kernel/slab/scsi_sense_cache/slab_size shows this to be 128 bytes
+of actual allocation, so the 20 bytes doesn't strictly overlap another
+object (hence no BUG):
+
+/sys/kernel/slab/scsi_sense_cache# grep . object_size usersize slab_size
+object_size:96
+usersize:96
+slab_size:128
+
+Ah, right, due to SLAB_HWCACHE_ALIGN, the allocation is rounded up to
+the next cache line size, so there's 32 bytes of padding to reach 128.
+
+James or Martin, is this over-read "expected" behavior? i.e. does the
+sense cache buffer usage ever pull the ugly trick of silently
+expanding its allocation into the space the slab allocator has given
+it? If not, this looks like a real bug.
+
+What I don't see is how req->sense is _not_ at offset 0 in the
+scsi_sense_cache object...
+
+-Kees
+
+-- 
+Kees Cook
+Pixel Security
