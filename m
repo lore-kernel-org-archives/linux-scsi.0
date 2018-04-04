@@ -1,68 +1,37 @@
-From: Oleksandr Natalenko <oleksandr@natalenko.name>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Wed, 04 Apr 2018 23:34:56 +0200
-Message-ID: <6a6ba6c98cad6adf5dbd1cc4eaba47fa@natalenko.name>
-References: <10360653.ov98egbaqx@natalenko.name>
- <CAGXu5jLwyot++C2EXs+032Lz5WdG65GsEJ-Q55rfhSbkG1Nh+A@mail.gmail.com>
- <3265889.eu5sbW8aRz@natalenko.name>
- <CAGXu5jL++CEmLzFtGMVMhGWBzHpsRNJPTsEoc7Pw1dP--=azCA@mail.gmail.com>
+From: Dave Carroll <david.carroll@microsemi.com>
+Subject: RE: aacraid code passes GFP_DMA32 to kmalloc this will not work
+Date: Wed, 4 Apr 2018 21:56:08 +0000
+Message-ID: <905a71ae9a5049c7994cedfdc6d64ef1@microsemi.com>
+References: <258be5fa-f930-bc5e-d8a0-3d6b5bee0a8b@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jL++CEmLzFtGMVMhGWBzHpsRNJPTsEoc7Pw1dP--=azCA@mail.gmail.com>
+In-Reply-To: <258be5fa-f930-bc5e-d8a0-3d6b5bee0a8b@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, keescook@google.com
+To: Hans de Goede <hdegoede@redhat.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi.
-
-04.04.2018 23:25, Kees Cook wrote:
->> Actually, I can trigger a BUG too:
->> 
->> [  129.259213] usercopy: Kernel memory exposure attempt detected from 
->> SLUB
->> object 'scsi_sense_cache' (offset 119, size 22)!
-> 
-> Wow, yeah, that's totally outside the slub object_size. How did you
-> trigger this? Just luck or something specific?
-
-Just luck, I suppose. It usually comes after the first warning if you 
-wait long enough (maybe, a couple of extra minutes).
-
-To give you an idea regarding variety of offsets, I've summarised kernel 
-log from the server:
-
-$ sudo journalctl -kb | grep "Kernel memory exposure attempt detected" | 
-grep -oE 'offset [0-9]+, size [0-9]+' | sort | uniq -c
-       9 offset 107, size 22
-       6 offset 108, size 22
-       8 offset 109, size 22
-       7 offset 110, size 22
-       5 offset 111, size 22
-       5 offset 112, size 22
-       2 offset 113, size 22
-       2 offset 114, size 22
-       1 offset 115, size 22
-       1 offset 116, size 22
-       1 offset 119, size 22
-       1 offset 85, size 22
-
-> I'd really like to understand how the buffer position can be
-> changing... I'd expect that to break all kinds of things (i.e.
-> free()ing the slab later would break too...)
-
-I haven't checked the code yet, but the first thing that comes to my 
-mind is some uninitialised variable. Just guessing here, though.
-
-> Thanks for the report! I hope someone more familiar with sg_io() can
-> help explain the changing buffer offset... :P
-
-Hopefully, SCSI people are Cc'ed here properly…
-
-Thanks!
-
-Regards,
-   Oleksandr
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5zIGRlIEdvZWRlIFttYWls
+dG86aGRlZ29lZGVAcmVkaGF0LmNvbV0NCj4gU2VudDogVGh1cnNkYXksIE1hcmNoIDI5LCAyMDE4
+IDg6NTEgQU0NCj4gVG86IGRsLWVzYy1BYWNyYWlkIExpbnV4IERyaXZlciA8YWFjcmFpZEBtaWNy
+b3NlbWkuY29tPjsgSmFtZXMgRS5KLg0KPiBCb3R0b21sZXkgPGplamJAbGludXgudm5ldC5pYm0u
+Y29tPjsgTWFydGluIEsuIFBldGVyc2VuDQo+IDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47
+IFNDU0kgZGV2ZWxvcG1lbnQgbGlzdCA8bGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnPjsg
+TGludXggS2VybmVsIE1haWxpbmcgTGlzdCA8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZz4N
+Cj4gU3ViamVjdDogYWFjcmFpZCBjb2RlIHBhc3NlcyBHRlBfRE1BMzIgdG8ga21hbGxvYyB0aGlz
+IHdpbGwgbm90IHdvcmsNCj4gDQo+IA0KPiBIaSBBbGwsDQo+IA0KPiBTaW5jZSBJIG1hZGUgdGhl
+IHNhbWUgbWlzdGFrZSBteXNlbGYgSSd2ZSBkb25lIGEgcXVpY2sgZ3JlcCBmb3INCj4gR0ZQX0RN
+QTMyIGluIHRoZSBrZXJuZWwgYW5kIGRyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJsLmMgY2Ft
+ZSB1cCBhcyBhDQo+IHJlc3VsdCBvZiB0aGlzIGdyZXAsIGl0IGRvZXM6DQo+IA0KPiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICBwID0ga21hbGxvYyhzZ19jb3VudFtpXSwgR0ZQX0tF
+Uk5FTHxHRlBfRE1BMzIpOw0KPiANCj4gQnV0IGttYWxsb2MgYWx3YXlzIHJldHVybnMgbWVtb3J5
+IGZyb20gdGhlIG5vcm1hbCBtZW1vcnktem9uZSwgaWYgeW91IG5lZWQNCj4gbWVtb3J5IGZyb20g
+YSBzcGVjaWZpYyBtZW1vcnktem9uZSBsaWtlIHRoZQ0KPiBETUEzMiB6b25lLCB5b3UgbXVzdCB1
+c2UgdGhlIGRtYSBhbGxvY2F0aW9uIGZ1bmN0aW9ucyAod2hpY2ggZnJvbSBhIHF1aWNrDQo+IGds
+YW5jZSBhdCB0aGUgY29kZSBzZWVtcyBhcHByb3ByaWF0ZSBoZXJlKSBvciBkaXJlY3RseSBjYWxs
+IGFsbG9jX3BhZ2Ugb3INCj4gX19nZXRfZnJlZV9wYWdlLg0KDQpIaSBIYW5zLA0KDQpJIGRpZCBy
+dW4gaW50byB0aGlzIGlzc3VlIG15c2VsZiByZWNlbnRseSAuLi4gVGhhbmtzIGZvciBhIHJlbWlu
+ZGVyIHRvIHNlbmQgaW4gYSBwYXRjaCB0bw0KY29ycmVjdCB0aGlzLg0KDQotRGF2ZQ0KPiANCj4g
+UmVnYXJkcywNCj4gDQo+IEhhbnMNCg==
