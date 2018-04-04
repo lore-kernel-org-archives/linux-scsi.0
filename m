@@ -1,68 +1,34 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: 4.15.14 crash with iscsi target and dvd
-Date: Tue, 3 Apr 2018 17:03:24 +0000
-Message-ID: <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
-References: <20180331015903.GA29398@animx.eu.org>
-         <CAFLxGvzbA9XzXLsH56iyqYkitrSnBbOzD977u4266=w5zw0jNg@mail.gmail.com>
-         <20180331221252.GA25573@animx.eu.org>
-         <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
-         <20180401113721.GA8471@animx.eu.org> <20180401163604.GB25011@animx.eu.org>
-         <20180401182723.GA31755@animx.eu.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Xidong Wang <wangxidong_97@163.com>
+Subject: [PATCH 1/1] scsi: mvsas:fix memory leak
+Date: Wed,  4 Apr 2018 10:15:20 +0800
+Message-ID: <1522808120-11432-1-git-send-email-wangxidong_97@163.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180401182723.GA31755@animx.eu.org>
-Content-Language: en-US
-Content-ID: <975FE1C936EAA14D9160DD23BCD90BCE@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "wakko@animx.eu.org" <wakko@animx.eu.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jack Wang <jinpu.wang@profitbricks.com>, Johannes Thumshirn <jthumshirn@suse.de>, Peter Senna Tschudin <peter.senna@collabora.com>, Hannes Reinecke <hare@suse.de>
+Cc: Kees Cook <keescook@chromium.org>, Pan Bian <bianpan2016@163.com>, Xidong Wang <wangxidong_97@163.com>, Romain Perier <romain.perier@collabora.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU3VuLCAyMDE4LTA0LTAxIGF0IDE0OjI3IC0wNDAwLCBXYWtrbyBXYXJuZXIgd3JvdGU6DQo+
-IFdha2tvIFdhcm5lciB3cm90ZToNCj4gPiBXYWtrbyBXYXJuZXIgd3JvdGU6DQo+ID4gPiBJIHRl
-c3RlZCA0LjE0LjMyIGxhc3QgbmlnaHQgd2l0aCB0aGUgc2FtZSBvb3BzLiAgNC45LjkxIHdvcmtz
-IGZpbmUuDQo+ID4gPiBGcm9tIHRoZSBpbml0aWF0b3IsIGlmIEkgZG8gY2F0IC9kZXYvc3IxID4g
-L2Rldi9udWxsIGl0IHdvcmtzLiAgSWYgSSBtb3VudA0KPiA+ID4gL2Rldi9zcjEgYW5kIHRoZW4g
-ZG8gZmluZCAtdHlwZSBmIHwgeGFyZ3MgY2F0ID4gL2Rldi9udWxsIHRoZSB0YXJnZXQNCj4gPiA+
-IGNyYXNoZXMuICBJJ20gdXNpbmcgdGhlIGJ1aWx0aW4gaXNjc2kgdGFyZ2V0IHdpdGggcHNjc2ku
-ICBJIGNhbiBidXJuIGZyb20NCj4gPiA+IHRoZSBpbml0aWF0b3Igd2l0aCBvdXQgcHJvYmxlbXMu
-ICBJJ2xsIHRlc3Qgb3RoZXIga2VybmVscyBiZXR3ZWVuIDQuOSBhbmQNCj4gPiA+IDQuMTQuDQo+
-ID4gDQo+ID4gU28gSSd2ZSB0ZXN0ZWQgNC54Lnkgd2hlcmUgeCBvbmUgb2YgMTAgMTEgMTIgMTQg
-MTUgYW5kIHkgaXMgdGhlIGxhdGVzdCBwYXRjaA0KPiA+IChleGNlcHQgZm9yIDQuMTUgd2hpY2gg
-d2FzIDEgYmVoaW5kKQ0KPiA+IEVhY2ggb2YgdGhlc2Uga2VybmVscyBjcmFzaCB3aXRoaW4gc2Vj
-b25kcyBvciBpbW1lZGlhdGUgb2YgZG9pbmcgZmluZCAtdHlwZQ0KPiA+IGYgfCB4YXJncyBjYXQg
-PiAvZGV2L251bGwgZnJvbSB0aGUgaW5pdGlhdG9yLg0KPiANCj4gSSB0cmllZCA0LjEwLjAuICBJ
-dCBkb2Vzbid0IGNvbXBsZXRlbHkgbG9ja3VwIHRoZSBzeXN0ZW0sIGJ1dCB0aGUgZGV2aWNlDQo+
-IHRoYXQgd2FzIHVzZWQgaGFuZ3MuICBTbyBmcm9tIHRoZSBpbml0aWF0b3IsIGl0J3MgL2Rldi9z
-cjEgYW5kIGZyb20gdGhlDQo+IHRhcmdldCBpdCdzIC9kZXYvc3IwLiAgQXR0ZW1wdGluZyB0byBy
-ZWFkIC9kZXYvc3IwIGFmdGVyIHRoZSBvb3BzIGNhdXNlcyB0aGUNCj4gcHJvY2VzcyB0byBoYW5n
-IGluIEQgc3RhdGUuDQoNCkhlbGxvIFdha2tvLA0KDQpUaGFuayB5b3UgZm9yIGhhdmluZyBuYXJy
-b3dlZCBkb3duIHRoaXMgZnVydGhlci4gSSB0aGluayB0aGF0IHlvdSBlbmNvdW50ZXJlZA0KYSBy
-ZWdyZXNzaW9uIGVpdGhlciBpbiB0aGUgYmxvY2sgbGF5ZXIgY29yZSBvciBpbiB0aGUgU0NTSSBj
-b3JlLiBVbmZvcnR1bmF0ZWx5DQp0aGUgbnVtYmVyIG9mIGNoYW5nZXMgYmV0d2VlbiBrZXJuZWwg
-dmVyc2lvbnMgdjQuOSBhbmQgdjQuMTAgaW4gdGhlc2UgdHdvDQpzdWJzeXN0ZW1zIGlzIGh1Z2Uu
-IEkgc2VlIHR3byBwb3NzaWJsZSB3YXlzIGZvcndhcmQ6DQotIEVpdGhlciB0aGF0IHlvdSBwZXJm
-b3JtIGEgYmlzZWN0IHRvIGlkZW50aWZ5IHRoZSBwYXRjaCB0aGF0IGludHJvZHVjZWQgdGhpcw0K
-ICByZWdyZXNzaW9uLiBIb3dldmVyLCBJJ20gbm90IHN1cmUgd2hldGhlciB5b3UgYXJlIGZhbWls
-aWFyIHdpdGggdGhlIGJpc2VjdA0KICBwcm9jZXNzLg0KLSBPciB0aGF0IHlvdSBpZGVudGlmeSB0
-aGUgY29tbWFuZCB0aGF0IHRyaWdnZXJzIHRoaXMgY3Jhc2ggc3VjaCB0aGF0IG90aGVycw0KICBj
-YW4gcmVwcm9kdWNlIHRoaXMgaXNzdWUgd2l0aG91dCBuZWVkaW5nIGFjY2VzcyB0byB5b3VyIHNl
-dHVwLg0KDQpIb3cgYWJvdXQgcmVwcm9kdWNpbmcgdGhpcyBjcmFzaCB3aXRoIHRoZSBiZWxvdyBw
-YXRjaCBhcHBsaWVkIG9uIHRvcCBvZg0Ka2VybmVsIHY0LjE1Lng/IFRoZSBhZGRpdGlvbmFsIG91
-dHB1dCBzZW50IGJ5IHRoaXMgcGF0Y2ggdG8gdGhlIHN5c3RlbSBsb2cNCnNob3VsZCBhbGxvdyB1
-cyB0byByZXByb2R1Y2UgdGhpcyBpc3N1ZSBieSBzdWJtaXR0aW5nIHRoZSBzYW1lIFNDU0kgY29t
-bWFuZA0Kd2l0aCBzZ19yYXcuDQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQpTdWJqZWN0OiBbUEFU
-Q0hdIFJlcG9ydCBjb21tYW5kcyB3aXRoIG5vIHBoeXNpY2FsIHNlZ21lbnRzIGluIHRoZSBzeXN0
-ZW0gbG9nDQoNCi0tLQ0KIGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIHwgNCArKystDQogMSBmaWxl
-IGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KaW5kZXgg
-NmI2YTY3MDVmNmU1Li43NGEzOWRiNTdkNDkgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2Nz
-aV9saWIuYw0KKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCkBAIC0xMDkzLDggKzEwOTMs
-MTAgQEAgaW50IHNjc2lfaW5pdF9pbyhzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQpDQogCWJvb2wgaXNf
-bXEgPSAocnEtPm1xX2N0eCAhPSBOVUxMKTsNCiAJaW50IGVycm9yID0gQkxLUFJFUF9LSUxMOw0K
-IA0KLQlpZiAoV0FSTl9PTl9PTkNFKCFibGtfcnFfbnJfcGh5c19zZWdtZW50cyhycSkpKQ0KKwlp
-ZiAoV0FSTl9PTl9PTkNFKCFibGtfcnFfbnJfcGh5c19zZWdtZW50cyhycSkpKSB7DQorCQlzY3Np
-X3ByaW50X2NvbW1hbmQoY21kKTsNCiAJCWdvdG8gZXJyX2V4aXQ7DQorCX0NCiANCiAJZXJyb3Ig
-PSBzY3NpX2luaXRfc2d0YWJsZShycSwgJmNtZC0+c2RiKTsNCiAJaWYgKGVycm9yKQ0K
+In function mvs_pci_init(), the memory allocated by
+scsi_host_alloc() is not released on the error path that mvi,
+which holds the return value of mvs_pci_alloc(), is NULL.
+This will result in a memory leak bug.
+
+Signed-off-by: Xidong Wang <wangxidong_97@163.com>
+---
+ drivers/scsi/mvsas/mv_init.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 8c91637..bde4b50 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -371,6 +371,7 @@ static struct mvs_info *mvs_pci_alloc(struct pci_dev *pdev,
+ 		(1L << mvs_chips[ent->driver_data].slot_width) *
+ 		sizeof(struct mvs_slot_info), GFP_KERNEL);
+ 	if (!mvi)
++		scsi_host_put(shost);
+ 		return NULL;
+ 
+ 	mvi->pdev = pdev;
+-- 
+2.7.4
