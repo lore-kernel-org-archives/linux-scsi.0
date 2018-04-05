@@ -1,47 +1,63 @@
-From: Rob Herring <robherring2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 00/21] Allow compile-testing NO_DMA (drivers)
-Date: Wed, 4 Apr 2018 19:32:53 -0500
-Message-ID: <CAL_JsqJMppYaz31Gg8BH2OaAxs56dnjZ4y+nzBBp-Tt2odaqCw@mail.gmail.com>
-References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: 4.15.14 crash with iscsi target and dvd
+Date: Wed, 4 Apr 2018 20:26:05 -0400
+Message-ID: <20180405002605.GC10487@animx.eu.org>
+References: <20180331015903.GA29398@animx.eu.org>
+ <CAFLxGvzbA9XzXLsH56iyqYkitrSnBbOzD977u4266=w5zw0jNg@mail.gmail.com>
+ <20180331221252.GA25573@animx.eu.org>
+ <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
+ <20180401113721.GA8471@animx.eu.org>
+ <20180401163604.GB25011@animx.eu.org>
+ <20180401182723.GA31755@animx.eu.org>
+ <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1521208314-4783-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" <linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-ALSA <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Linux I2C <linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:SERIAL DRIVERS" <linux-serial@>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 16, 2018 at 8:51 AM, Geert Uytterhoeven
-<geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> wrote:
->         Hi all,
->
-> If NO_DMA=y, get_dma_ops() returns a reference to the non-existing
-> symbol bad_dma_ops, thus causing a link failure if it is ever used.
->
-> The intention of this is twofold:
->   1. To catch users of the DMA API on systems that do no support the DMA
->      mapping API,
->   2. To avoid building drivers that cannot work on such systems anyway.
->
-> However, the disadvantage is that we have to keep on adding dependencies
-> on HAS_DMA all over the place.
->
-> Thanks to the COMPILE_TEST symbol, lots of drivers now depend on one or
-> more platform dependencies (that imply HAS_DMA) || COMPILE_TEST, thus
-> already covering intention #2.  Having to add an explicit dependency on
-> HAS_DMA here is cumbersome, and hinders compile-testing.
+Bart Van Assche wrote:
+> On Sun, 2018-04-01 at 14:27 -0400, Wakko Warner wrote:
+> > Wakko Warner wrote:
+> > > Wakko Warner wrote:
+> > > > I tested 4.14.32 last night with the same oops.  4.9.91 works fine.
+> > > > From the initiator, if I do cat /dev/sr1 > /dev/null it works.  If I mount
+> > > > /dev/sr1 and then do find -type f | xargs cat > /dev/null the target
+> > > > crashes.  I'm using the builtin iscsi target with pscsi.  I can burn from
+> > > > the initiator with out problems.  I'll test other kernels between 4.9 and
+> > > > 4.14.
+> > > 
+> > > So I've tested 4.x.y where x one of 10 11 12 14 15 and y is the latest patch
+> > > (except for 4.15 which was 1 behind)
+> > > Each of these kernels crash within seconds or immediate of doing find -type
+> > > f | xargs cat > /dev/null from the initiator.
+> > 
+> > I tried 4.10.0.  It doesn't completely lockup the system, but the device
+> > that was used hangs.  So from the initiator, it's /dev/sr1 and from the
+> > target it's /dev/sr0.  Attempting to read /dev/sr0 after the oops causes the
+> > process to hang in D state.
+> 
+> Hello Wakko,
+> 
+> Thank you for having narrowed down this further. I think that you encountered
+> a regression either in the block layer core or in the SCSI core. Unfortunately
+> the number of changes between kernel versions v4.9 and v4.10 in these two
+> subsystems is huge. I see two possible ways forward:
+> - Either that you perform a bisect to identify the patch that introduced this
+>   regression. However, I'm not sure whether you are familiar with the bisect
+>   process.
+> - Or that you identify the command that triggers this crash such that others
+>   can reproduce this issue without needing access to your setup.
+> 
+> How about reproducing this crash with the below patch applied on top of
+> kernel v4.15.x? The additional output sent by this patch to the system log
+> should allow us to reproduce this issue by submitting the same SCSI command
+> with sg_raw.
 
-The same can be said for CONFIG_IOMEM and CONFIG_OF. Any plans to
-remove those too? CONFIG_IOMEM is mostly just a !CONFIG_UM option.
-
-Rob
+Sorry for not getting back in touch.  My internet was down.  I haven't tried
+the patch yet.  I'll try to get to that tomorrow.  The system with the issue
+is busy and I can't reboot it right now.
