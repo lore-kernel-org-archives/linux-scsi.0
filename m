@@ -1,47 +1,19 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3 1/3] Revert "scsi: core: return BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()"
-Date: Thu,  5 Apr 2018 10:32:59 -0700
-Message-ID: <20180405173301.13186-2-bart.vanassche@wdc.com>
-References: <20180405173301.13186-1-bart.vanassche@wdc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 1/3] Revert "scsi: core: return BLK_STS_OK for
+        DID_OK in __scsi_error_from_host_byte()"
+Date: Thu, 5 Apr 2018 19:34:32 +0200
+Message-ID: <20180405173432.GA11009@lst.de>
+References: <20180405173301.13186-1-bart.vanassche@wdc.com> <20180405173301.13186-2-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180405173301.13186-1-bart.vanassche@wdc.com>
+Content-Disposition: inline
+In-Reply-To: <20180405173301.13186-2-bart.vanassche@wdc.com>
 Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Douglas Gilbert <dgilbert@interlog.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Lee Duncan <lduncan@suse.com>, stable@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Douglas Gilbert <dgilbert@interlog.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Lee Duncan <lduncan@suse.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The description of commit e39a97353e53 is wrong: it mentions that
-commit 2a842acab109 introduced a bug in __scsi_error_from_host_byte()
-although that commit did not change the behavior of that function.
-Additionally, commit e39a97353e53 introduced a bug: it causes commands
-that fail with hostbyte=DID_OK and driverbyte=DRIVER_SENSE to be
-completed with BLK_STS_OK. Hence revert that commit.
+Looks good:
 
-Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in __scsi_error_from_host_byte()")
-Reported-by: Damien Le Moal <damien.lemoal@wdc.com>
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Lee Duncan <lduncan@suse.com>
-Cc: stable@vger.kernel.org
----
- drivers/scsi/scsi_lib.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1d83f29aee74..c0e4ae733cce 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -733,8 +733,6 @@ static blk_status_t __scsi_error_from_host_byte(struct scsi_cmnd *cmd,
- 		int result)
- {
- 	switch (host_byte(result)) {
--	case DID_OK:
--		return BLK_STS_OK;
- 	case DID_TRANSPORT_FAILFAST:
- 		return BLK_STS_TRANSPORT;
- 	case DID_TARGET_FAILURE:
--- 
-2.16.2
+Reviewed-by: Christoph Hellwig <hch@lst.de>
