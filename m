@@ -1,19 +1,50 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 1/3] Revert "scsi: core: return BLK_STS_OK for
-        DID_OK in __scsi_error_from_host_byte()"
-Date: Thu, 5 Apr 2018 19:34:32 +0200
-Message-ID: <20180405173432.GA11009@lst.de>
-References: <20180405173301.13186-1-bart.vanassche@wdc.com> <20180405173301.13186-2-bart.vanassche@wdc.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Thu, 5 Apr 2018 11:52:31 -0700
+Message-ID: <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
+References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5jLwyot++C2EXs+032Lz5WdG65GsEJ-Q55rfhSbkG1Nh+A@mail.gmail.com>
+ <3265889.eu5sbW8aRz@natalenko.name> <CAGXu5jL++CEmLzFtGMVMhGWBzHpsRNJPTsEoc7Pw1dP--=azCA@mail.gmail.com>
+ <7fc01f67a561ce1fad676fc34c2249e7@natalenko.name> <CAGXu5jKhiE512yQXp90M+Wie=8RkpMZT-Yi_9BgjfKwibP433g@mail.gmail.com>
+ <dee9721a530576e667881d86bbec351b@natalenko.name> <08e06234c81fac30ccff5a2695d02f2a@natalenko.name>
+ <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180405173301.13186-2-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Douglas Gilbert <dgilbert@interlog.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Lee Duncan <lduncan@suse.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good:
+[forcing non-HTML and resending...]
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Thu, Apr 5, 2018 at 7:33 AM, Oleksandr Natalenko
+<oleksandr@natalenko.name> wrote:
+>
+> 05.04.2018 16:32, Oleksandr Natalenko wrote:
+>>
+>> "-hda sda.img -hdb sda.img"
+>
+>
+> "-hda sda.img -hdb sdb.img", of course, I don't pass the same disk twice
+
+Okay. My qemu gets mad about that and wants the format=raw argument,
+so I'm using:
+
+-drive file=sda.img,format=raw \
+-drive file=sdb.img,format=raw \
+
+How are you running your smartctl? I'm doing this now:
+
+[1]   Running                 while :; do
+    ( smartctl -a /dev/sda; smartctl -a /dev/sdb ) > /dev/null;
+done &
+
+I assume I'm missing something from your .config, but since I don't
+boot with an initramfs, I had to tweak it a bit. I'll try again...
+
+-Kees
+
+-- 
+Kees Cook
+Pixel Security
