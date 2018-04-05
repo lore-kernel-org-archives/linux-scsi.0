@@ -1,43 +1,47 @@
-From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH 2/2] sd_zbc: Avoid errors due to sd_zbc_setup() execution
-Date: Wed, 4 Apr 2018 23:59:17 +0000
-Message-ID: <38c49c99-65d6-5f87-052c-3e6f18c66091@wdc.com>
-References: <20180404085418.29205-1-damien.lemoal@wdc.com>
- <20180404085418.29205-3-damien.lemoal@wdc.com>
- <0c4335c249964000ecd94acbc27e9e58aaff6f7e.camel@wdc.com>
+From: Rob Herring <robherring2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 00/21] Allow compile-testing NO_DMA (drivers)
+Date: Wed, 4 Apr 2018 19:32:53 -0500
+Message-ID: <CAL_JsqJMppYaz31Gg8BH2OaAxs56dnjZ4y+nzBBp-Tt2odaqCw@mail.gmail.com>
+References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <0c4335c249964000ecd94acbc27e9e58aaff6f7e.camel@wdc.com>
-Content-Language: en-US
-Content-ID: <BD537561F461B74B9695C3673A39CC34@namprd04.prod.outlook.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>, "hare@suse.com" <hare@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1521208314-4783-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" <linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-ALSA <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Linux I2C <linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:SERIAL DRIVERS" <linux-serial@>
 List-Id: linux-scsi@vger.kernel.org
 
-QmFydCwNCg0KT24gNC81LzE4IDAwOjIyLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6DQo+IE9uIFdl
-ZCwgMjAxOC0wNC0wNCBhdCAxNzo1NCArMDkwMCwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+PiBT
-aW5jZSBTQ1NJIHNjYW5uaW5nIG9jY3VycyBhc3luY2hyb25vdXNseSwgc2luY2Ugc2RfcmV2YWxp
-ZGF0ZV9kaXNrKCkNCj4+IGlzIGNhbGxlZCBmcm9tIHNkX3Byb2JlX2FzeW5jKCkgYW5kIHNpbmNl
-IHNkX3JldmFsaWRhdGVfZGlzaygpIGNhbGxzDQo+PiBzZF96YmNfcmVhZF96b25lcygpIGl0IGNh
-biBoYXBwZW4gdGhhdCBzZF96YmNfcmVhZF96b25lcygpIGlzIGNhbGxlZA0KPj4gY29uY3VycmVu
-dGx5IHdpdGggb3BlcmF0aW9ucyByZWZlcmVuY2luZyBhIGRyaXZlIHpvbmUgYml0bWFwcyBhbmQg
-bnVtYmVyDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeXl5e
-Xl5eXl5eXl5eXl5eXl5eXg0KPiANCj4gU2hvdWxkICJhIiBiZSBjaGFuZ2VkIGludG8gInRoZSI/
-DQoNClllcy4NCg0KDQo+PiBbRGFtaWVuXSBVcGRhdGVkIGNvbW1pdCBtZXNzYWdlIGFuZCBjaGFu
-Z2VkIG5yX3pvbmVzL2JpdG1hcCBzd2FwIG9yZGVyLg0KPiANCj4gVXBkYXRpbmcgdGhlIG51bWJl
-ciBvZiB6b25lcyBhZnRlciBoYXZpbmcgdXBkYXRlZCB0aGUgYml0bWFwIHBvaW50ZXJzIGlzIG5v
-dA0KPiBzdWZmaWNpZW50IHRvIGF2b2lkIHRyb3VibGUgaWYgdGhlIG51bWJlciBvZiB6b25lcyBh
-cyByZXBvcnRlZCBieSB0aGUgZHJpdmUNCj4gY2hhbmdlcyB3aGlsZSBJL08gaXMgaW4gcHJvZ3Jl
-c3MuIFdpdGggdGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24gaWYgdGhlDQo+IG51bWJlciBvZiB6
-b25lcyBjaGFuZ2VzIHRoZSBzZXFfem9uZXNfYml0bWFwIGlzIGNsZWFyZWQuIENhbiB0aGlzIGNh
-dXNlDQo+IHRyb3VibGUgZm9yIHRoZSBtcS1kZWFkbGluZSBzY2hlZHVsZXI/IEFkZGl0aW9uYWxs
-eSwgQ1BVcyBvdGhlciB0aGFuIHg4NiBjYW4NCj4gcmVvcmRlciBzdG9yZSBvcGVyYXRpb25zLiBF
-dmVuIHdvcnNlLCBhIENQVSBjb3VsZCBjYWNoZSB0aGUgem9uZSBiaXRtYXANCj4gcG9pbnRlcnMg
-d2hpY2ggbWVhbnMgdGhhdCBhdCBsZWFzdCBSQ1UgcHJvdGVjdGlvbiArIGtmcmVlX3JjdSgpIGlz
-IG5lZWRlZCB0bw0KPiBhdm9pZCB0cm91YmxlLiBJIHRoaW5rIHdlIGVpdGhlciBzaG91bGQgaGFu
-ZGxlIHRoaXMgY2FzZSBwcm9wZXJseSBvciBpc3N1ZSBhDQo+IGtlcm5lbCB3YXJuaW5nLg0KDQpP
-Sy4gTGV0J3Mgd29yayBvbiB0aGF0Lg0KDQoNCi0tIA0KRGFtaWVuIExlIE1vYWwsDQpXZXN0ZXJu
-IERpZ2l0YWw=
+On Fri, Mar 16, 2018 at 8:51 AM, Geert Uytterhoeven
+<geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> wrote:
+>         Hi all,
+>
+> If NO_DMA=y, get_dma_ops() returns a reference to the non-existing
+> symbol bad_dma_ops, thus causing a link failure if it is ever used.
+>
+> The intention of this is twofold:
+>   1. To catch users of the DMA API on systems that do no support the DMA
+>      mapping API,
+>   2. To avoid building drivers that cannot work on such systems anyway.
+>
+> However, the disadvantage is that we have to keep on adding dependencies
+> on HAS_DMA all over the place.
+>
+> Thanks to the COMPILE_TEST symbol, lots of drivers now depend on one or
+> more platform dependencies (that imply HAS_DMA) || COMPILE_TEST, thus
+> already covering intention #2.  Having to add an explicit dependency on
+> HAS_DMA here is cumbersome, and hinders compile-testing.
+
+The same can be said for CONFIG_IOMEM and CONFIG_OF. Any plans to
+remove those too? CONFIG_IOMEM is mostly just a !CONFIG_UM option.
+
+Rob
