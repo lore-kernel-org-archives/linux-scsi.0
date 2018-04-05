@@ -1,50 +1,64 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Thu, 5 Apr 2018 11:52:31 -0700
-Message-ID: <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
-References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5jLwyot++C2EXs+032Lz5WdG65GsEJ-Q55rfhSbkG1Nh+A@mail.gmail.com>
- <3265889.eu5sbW8aRz@natalenko.name> <CAGXu5jL++CEmLzFtGMVMhGWBzHpsRNJPTsEoc7Pw1dP--=azCA@mail.gmail.com>
- <7fc01f67a561ce1fad676fc34c2249e7@natalenko.name> <CAGXu5jKhiE512yQXp90M+Wie=8RkpMZT-Yi_9BgjfKwibP433g@mail.gmail.com>
- <dee9721a530576e667881d86bbec351b@natalenko.name> <08e06234c81fac30ccff5a2695d02f2a@natalenko.name>
- <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH] scsi: devinfo: Add Microsoft iSCSI target to 1024 sector
+ blacklist
+Date: Thu, 5 Apr 2018 19:52:32 +0000
+Message-ID: <MW2PR2101MB1113040CF411696D9674B6D6A0BB0@MW2PR2101MB1113.namprd21.prod.outlook.com>
+References: <20180326135651.8193-1-ross.lagerwall@citrix.com>
+ <yq17epvj2f1.fsf@oracle.com>
+ <MWHPR2101MB0729E7680EDB0EE4886AAED1CEA30@MWHPR2101MB0729.namprd21.prod.outlook.com>
+ <2b7a3146-e2e4-699f-5633-13d8b568786d@citrix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
+In-Reply-To: <2b7a3146-e2e4-699f-5633-13d8b568786d@citrix.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Ross Lagerwall <ross.lagerwall@citrix.com>, Long Li <longli@microsoft.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Matt Kurjanowicz <mattkur@microsoft.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-[forcing non-HTML and resending...]
-
-On Thu, Apr 5, 2018 at 7:33 AM, Oleksandr Natalenko
-<oleksandr@natalenko.name> wrote:
->
-> 05.04.2018 16:32, Oleksandr Natalenko wrote:
->>
->> "-hda sda.img -hdb sda.img"
->
->
-> "-hda sda.img -hdb sdb.img", of course, I don't pass the same disk twice
-
-Okay. My qemu gets mad about that and wants the format=raw argument,
-so I'm using:
-
--drive file=sda.img,format=raw \
--drive file=sdb.img,format=raw \
-
-How are you running your smartctl? I'm doing this now:
-
-[1]   Running                 while :; do
-    ( smartctl -a /dev/sda; smartctl -a /dev/sdb ) > /dev/null;
-done &
-
-I assume I'm missing something from your .config, but since I don't
-boot with an initramfs, I had to tweak it a bit. I'll try again...
-
--Kees
-
--- 
-Kees Cook
-Pixel Security
+K01hdHQNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBSb3NzIExhZ2Vy
+d2FsbCA8cm9zcy5sYWdlcndhbGxAY2l0cml4LmNvbT4NCj4gU2VudDogVGh1cnNkYXksIEFwcmls
+IDUsIDIwMTggOTo1OCBBTQ0KPiBUbzogTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+OyBN
+YXJ0aW4gSy4gUGV0ZXJzZW4NCj4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgS1kgU3Jp
+bml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+IENjOiBKYW1lcyBFLkouIEJvdHRvbWxleSA8
+amVqYkBsaW51eC52bmV0LmlibS5jb20+OyBsaW51eC0NCj4gc2NzaUB2Z2VyLmtlcm5lbC5vcmc7
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gc2Nz
+aTogZGV2aW5mbzogQWRkIE1pY3Jvc29mdCBpU0NTSSB0YXJnZXQgdG8gMTAyNCBzZWN0b3INCj4g
+YmxhY2tsaXN0DQo+IA0KPiBPbiAwMy8yOC8yMDE4IDExOjMzIFBNLCBMb25nIExpIHdyb3RlOg0K
+PiA+PiBTdWJqZWN0OiBSZTogW1BBVENIXSBzY3NpOiBkZXZpbmZvOiBBZGQgTWljcm9zb2Z0IGlT
+Q1NJIHRhcmdldCB0byAxMDI0DQo+IHNlY3Rvcg0KPiA+PiBibGFja2xpc3QNCj4gPj4NCj4gPj4N
+Cj4gPj4gTG9uZywgS1k6IFBsZWFzZSBjb25maXJtLg0KPiA+Pg0KPiA+Pj4gVGhlIFdpbmRvd3Mg
+U2VydmVyIDIwMTYgaVNDU0kgdGFyZ2V0IGRvZXNuJ3Qgd29yayB3aXRoIHRoZSBMaW51eA0KPiA+
+Pj4ga2VybmVsIGluaXRpYXRvciBzaW5jZSB0aGUga2VybmVsIHN0YXJ0ZWQgc2VuZGluZyBsYXJn
+ZXIgcmVxdWVzdHMgYnkNCj4gPj4+IGRlZmF1bHQsIG5vciBkb2VzIGl0IGltcGxlbWVudCB0aGUg
+YmxvY2sgbGltaXRzIFZQRCBwYWdlLiBBcHBseSB0aGUNCj4gPj4+IHNlY3RvciBsaW1pdCB3b3Jr
+YXJvdW5kIGZvciB0aGVzZSB0YXJnZXRzLg0KPiA+Pj4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IFJv
+c3MgTGFnZXJ3YWxsIDxyb3NzLmxhZ2Vyd2FsbEBjaXRyaXguY29tPg0KPiA+Pj4gLS0tDQo+ID4+
+PiAgIGRyaXZlcnMvc2NzaS9zY3NpX2RldmluZm8uYyB8IDIgKy0NCj4gPj4+ICAgMSBmaWxlIGNo
+YW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+ID4+Pg0KPiA+Pj4gZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX2RldmluZm8uYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2Rl
+dmluZm8uYw0KPiA+Pj4gaW5kZXggZjNiMTE3Mi4uNWNiNzQ4YSAxMDA2NDQNCj4gPj4+IC0tLSBh
+L2RyaXZlcnMvc2NzaS9zY3NpX2RldmluZm8uYw0KPiA+Pj4gKysrIGIvZHJpdmVycy9zY3NpL3Nj
+c2lfZGV2aW5mby5jDQo+ID4+PiBAQCAtMjEzLDcgKzIxMyw3IEBAIHN0YXRpYyBzdHJ1Y3Qgew0K
+PiA+Pj4gICAJeyJNZWRpb24iLCAiRmxhc2ggWEwgIE1NQy9TRCIsICIyLjZEIiwgQkxJU1RfRk9S
+Q0VMVU59LA0KPiA+Pj4gICAJeyJNZWdhUkFJRCIsICJMRCIsIE5VTEwsIEJMSVNUX0ZPUkNFTFVO
+fSwNCj4gPj4+ICAgCXsiTUlDUk9QIiwgIjQxMTAiLCBOVUxMLCBCTElTVF9OT1RRfSwNCj4gPj4+
+IC0JeyJNU0ZUIiwgIlZpcnR1YWwgSEQiLCBOVUxMLCBCTElTVF9OT19SU09DfSwNCj4gPj4+ICsJ
+eyJNU0ZUIiwgIlZpcnR1YWwgSEQiLCBOVUxMLCBCTElTVF9NQVhfMTAyNCB8IEJMSVNUX05PX1JT
+T0N9LA0KPiA+DQo+ID4gUm9zcywNCj4gPg0KPiA+IFdoYXQgYWJvdXQgc3RvcmFnZV9jaGFubmVs
+X3Byb3BlcnRpZXMubWF4X3RyYW5zZmVyX2J5dGVzIHJldHVybmVkDQo+IGZyb20gVlNUT1JfT1BF
+UkFUSU9OX1FVRVJZX1BST1BFUlRJRVMgKGluIHN0b3J2c2NfY2hhbm5lbF9pbml0KCkpDQo+ID4N
+Cj4gPiBEb2VzIGl0IHJldHVybiBjb3JyZWN0bHkgdGhlIG1heGltdW0gdHJhbnNmZXIgc2l6ZSBm
+b3IgaVNDU0k/DQo+ID4NCj4gDQo+IEkgcHJlc3VtZSB5b3UncmUgcmVmZXJyaW5nIHRvIHRoZSBI
+eXBlci1WIHZpcnR1YWwgc3RvcmFnZSBkcml2ZXI/IFRoaXMNCj4gaGFzIG5vdGhpbmcgdG8gZG8g
+d2l0aCB0aGF0IG1vZHVsZSAtLSBJIGRvbid0IGV2ZW4gaGF2ZSBpdCBjb21waWxlZCBpbi4NCj4g
+SXQncyBqdXN0IHNpbXBseSB0aGUgTGludXgga2VybmVsIGluaXRpYXRvciBjb25uZWN0aW5nIG92
+ZXIgcGxhaW4NCj4gc29mdHdhcmUgaVNDU0kgdG8gYSBXaW5kb3dzIFNlcnZlciAyMDE2IGlTQ1NJ
+IHRhcmdldC4NCj4gDQo+IFRoaXMgaXMgZWFzeSBlbm91Z2ggdG8gcmVwcm9kdWNlLiBKdXN0IHNl
+dCB1cCBhIFdpbmRvd3MgU2VydmVyIDIwMTYNCj4gdGFyZ2V0IGFuZCB0cnkgYW5kIHVzZSBpdCBm
+cm9tIExpbnV4LiBZb3UgZ2V0IEkvTyBlcnJvcnMgYXMgc29vbiBhcyB5b3UNCj4gdHJ5IGFuZCBm
+b3JtYXQgdGhlIGRpc2suDQoNCkFkZGluZyBNYXR0IGZvciB2aXNpYmlsaXR5LiBSb3NzLCB3ZSBh
+cmUgZmluZSB3aXRoIGJsYWNrbGlzdGluZyBmb3Igbm93Lg0KDQpLLiBZIA0KPiANCj4gQ2hlZXJz
+LA0KPiAtLQ0KPiBSb3NzIExhZ2Vyd2FsbA0K
