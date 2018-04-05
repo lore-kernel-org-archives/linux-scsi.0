@@ -1,56 +1,86 @@
-From: Damien Le Moal <Damien.LeMoal@wdc.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH v2] Fix DID_OK handling in __scsi_error_from_host_byte()
-Date: Thu, 5 Apr 2018 02:28:52 +0000
-Message-ID: <1522895330.12356.8.camel@wdc.com>
+Date: Thu, 5 Apr 2018 08:43:18 +0200
+Message-ID: <20180405084318.380ab452@pentland.suse.de>
 References: <20180404175355.15982-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20180404175355.15982-1-bart.vanassche@wdc.com>
-Content-Language: en-US
-Content-ID: <A2E171432A9CA7419679785A812133A5@namprd04.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "hare@suse.com" <hare@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Damien Le Moal <damien.lemoal@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE4LTA0LTA0IGF0IDEwOjUzIC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IENvbW1pdCBlMzlhOTczNTNlNTMgbW9kaWZpZWQgX19zY3NpX2Vycm9yX2Zyb21faG9zdF9i
-eXRlKCkgc3VjaA0KPiB0aGF0IHRoYXQgZnVuY3Rpb24gdHJhbnNsYXRlcyBESURfT0sgaW50byBC
-TEtfU1RTX09LLiBIb3dldmVyLA0KPiB0aGUgZGVzY3JpcHRpb24gb2YgdGhhdCBjb21taXQgaXMg
-d3Jvbmc6IGl0IG1lbnRpb25zIHRoYXQgY29tbWl0DQo+IDJhODQyYWNhYjEwOSBpbnRyb2R1Y2Vk
-IGEgYnVnIGluIF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpDQo+IGFsdGhvdWdoIHRoYXQg
-Y29tbWl0IGRpZCBub3QgY2hhbmdlIHRoZSBiZWhhdmlvciBvZiB0aGF0IGZ1bmN0aW9uLg0KPiBB
-ZGRpdGlvbmFsbHksIGNvbW1pdCBlMzlhOTczNTNlNTMgaW50cm9kdWNlZCBhIHNldmVyZSBidWc6
-IGl0IGNhdXNlcw0KPiBjb21tYW5kcyB0aGF0IGZhaWwgd2l0aCBob3N0Ynl0ZT1ESURfT0sgYW5k
-IGRyaXZlcmJ5dGU9RFJJVkVSX1NFTlNFDQo+IHRvIGJlIGNvbXBsZXRlZCB3aXRoIEJMS19TVFNf
-T0suIEZpeCBfX3Njc2lfZXJyb3JfZnJvbV9ob3N0X2J5dGUoKQ0KPiBieSBvbmx5IHRyYW5zbGF0
-aW5nIGdvb2Qgc3RhdHVzIHZhbHVlcyBpbnRvIEJMS19TVFNfT0suDQo+IA0KPiBGaXhlczogZTM5
-YTk3MzUzZTUzICgic2NzaTogY29yZTogcmV0dXJuIEJMS19TVFNfT0sgZm9yIERJRF9PSyBpbg0K
-PiBfX3Njc2lfZXJyb3JfZnJvbV9ob3N0X2J5dGUoKSIpDQo+IFJlcG9ydGVkLWJ5OiBEYW1pZW4g
-TGUgTW9hbCA8ZGFtaWVuLmxlbW9hbEB3ZGMuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZh
-biBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdkYy5jb20+DQo+IENjOiBIYW5uZXMgUmVpbmVja2Ug
-PGhhcmVAc3VzZS5jb20+DQo+IENjOiBEb3VnbGFzIEdpbGJlcnQgPGRnaWxiZXJ0QGludGVybG9n
-LmNvbT4NCj4gQ2M6IERhbWllbiBMZSBNb2FsIDxkYW1pZW4ubGVtb2FsQHdkYy5jb20+DQo+IENj
-OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5l
-bC5vcmcNCj4gLS0tDQo+IA0KPiBDaGFuZ2VzIGNvbXBhcmVkIHRvIHYxOg0KPiAtIE1vZGlmaWVk
-IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZSgpIHN1Y2ggdGhhdCBpdCBhZ2FpbiByZXR1cm5z
-DQo+ICAgQkxLX1NUU19PSyBmb3IgQ09ORElUSU9OIE1FVCBhbmQgb3RoZXIgcmVzdWx0IGNvZGVz
-IHRoYXQgcmVwcmVzZW50DQo+ICAgc3VjY2Vzcy4NCj4gDQo+ICBkcml2ZXJzL3Njc2kvc2NzaV9s
-aWIuYyB8IDggKysrKysrKy0NCj4gIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKyksIDEg
-ZGVsZXRpb24oLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYyBi
-L2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+IGluZGV4IDc0YTM5ZGI1N2Q0OS4uMTQ5NmIzNGFm
-NDA5IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2
-ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiBAQCAtNzM2LDcgKzczNiwxMyBAQCBzdGF0aWMgYmxrX3N0
-YXR1c190IF9fc2NzaV9lcnJvcl9mcm9tX2hvc3RfYnl0ZShzdHJ1Y3QNCj4gc2NzaV9jbW5kICpj
-bWQsDQo+ICB7DQo+ICAJc3dpdGNoIChob3N0X2J5dGUocmVzdWx0KSkgew0KPiAgCWNhc2UgRElE
-X09LOg0KPiAtCQlyZXR1cm4gQkxLX1NUU19PSzsNCj4gKwkJLyoNCj4gKwkJICogQWxzbyBjaGVj
-ayB0aGUgb3RoZXIgYnl0ZXMgdGhhbiB0aGUgc3RhdHVzIGJ5dGUgaW4NCj4gcmVzdWx0DQo+ICsJ
-CSAqIHRvIGhhbmRsZSB0aGUgY2FzZSB3aGVuIGEgU0NTSSBMTEQgc2V0cyByZXN1bHQgdG8NCj4g
-KwkJICogRFJJVkVSX1NFTlNFIDw8IDI0IHdpdGhvdXQgc2V0dGluZw0KPiBTQU1fU1RBVF9DSEVD
-S19DT05ESVRJT04uDQo+ICsJCSAqLw0KPiArCQlyZXR1cm4gc2NzaV9zdGF0dXNfaXNfZ29vZChy
-ZXN1bHQpICYmIChyZXN1bHQgJiB+MHhmZikgPT0gMA0KPiA/DQo+ICsJCQlCTEtfU1RTX09LIDog
-QkxLX1NUU19JT0VSUjsNCg0KVGhpcyBmaXhlcyB0aGUgcHJvYmxlbSBvbiBteSBzeXN0ZW0uDQoN
-ClRlc3RlZC1ieTogRGFtaWVuIExlIE1vYWwgPGRhbWllbi5sZW1vYWxAd2RjLmNvbT4NCg0KLS0g
-DQpEYW1pZW4gTGUgTW9hbA0KV2VzdGVybiBEaWdpdGFs
+On Wed,  4 Apr 2018 10:53:55 -0700
+"Bart Van Assche" <bart.vanassche@wdc.com> wrote:
+
+> Commit e39a97353e53 modified __scsi_error_from_host_byte() such
+> that that function translates DID_OK into BLK_STS_OK. However,
+> the description of that commit is wrong: it mentions that commit
+> 2a842acab109 introduced a bug in __scsi_error_from_host_byte()
+> although that commit did not change the behavior of that function.
+> Additionally, commit e39a97353e53 introduced a severe bug: it causes
+> commands that fail with hostbyte=DID_OK and driverbyte=DRIVER_SENSE
+> to be completed with BLK_STS_OK. Fix __scsi_error_from_host_byte()
+> by only translating good status values into BLK_STS_OK.
+> 
+> Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in
+> __scsi_error_from_host_byte()") Reported-by: Damien Le Moal
+> <damien.lemoal@wdc.com> Signed-off-by: Bart Van Assche
+> <bart.vanassche@wdc.com> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Cc: Damien Le Moal <damien.lemoal@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: stable@vger.kernel.org
+> ---
+> 
+> Changes compared to v1:
+> - Modified __scsi_error_from_host_byte() such that it again returns
+>   BLK_STS_OK for CONDITION MET and other result codes that represent
+>   success.
+> 
+>  drivers/scsi/scsi_lib.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 74a39db57d49..1496b34af409 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -736,7 +736,13 @@ static blk_status_t
+> __scsi_error_from_host_byte(struct scsi_cmnd *cmd, {
+>  	switch (host_byte(result)) {
+>  	case DID_OK:
+> -		return BLK_STS_OK;
+> +		/*
+> +		 * Also check the other bytes than the status byte
+> in result
+> +		 * to handle the case when a SCSI LLD sets result to
+> +		 * DRIVER_SENSE << 24 without setting
+> SAM_STAT_CHECK_CONDITION.
+> +		 */
+> +		return scsi_status_is_good(result) && (result &
+> ~0xff) == 0 ?
+> +			BLK_STS_OK : BLK_STS_IOERR;
+>  	case DID_TRANSPORT_FAILFAST:
+>  		return BLK_STS_TRANSPORT;
+>  	case DID_TARGET_FAILURE:
+
+And a further nit-pick: the function is called
+__scsi_error_from_host_byte(), so it's only logical that it would only
+check the host_byte().
+What's wrong is the _usage_ here; after calling
+__scsi_error_from_host_byte() we need to check if the _other_ bits of
+the results are non-zero to end up with a valid result.
+
+Hence I would advocate to either rename this function
+(__scsi_error_from_result() ?) or evaluate the remaining bits outside
+this function.
+
+But I would advocate for the former; otherwise the same issue will crop
+up again in the future.
+
+Cheers,
+
+Hannes
