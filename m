@@ -1,36 +1,47 @@
-From: Oleksandr Natalenko <oleksandr@natalenko.name>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Thu, 05 Apr 2018 11:56:06 +0200
-Message-ID: <7fc01f67a561ce1fad676fc34c2249e7@natalenko.name>
-References: <10360653.ov98egbaqx@natalenko.name>
- <CAGXu5jLwyot++C2EXs+032Lz5WdG65GsEJ-Q55rfhSbkG1Nh+A@mail.gmail.com>
- <3265889.eu5sbW8aRz@natalenko.name>
- <CAGXu5jL++CEmLzFtGMVMhGWBzHpsRNJPTsEoc7Pw1dP--=azCA@mail.gmail.com>
+From: David Disseldorp <ddiss@suse.de>
+Subject: Re: [PATCH 1/1] target:separate tx/rx cmd_puds
+Date: Thu, 5 Apr 2018 13:12:12 +0200
+Message-ID: <20180405131212.3f26339d@suse.de>
+References: <1521625963-657195-1-git-send-email-zhangzhuoyu@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jL++CEmLzFtGMVMhGWBzHpsRNJPTsEoc7Pw1dP--=azCA@mail.gmail.com>
+In-Reply-To: <1521625963-657195-1-git-send-email-zhangzhuoyu@cmss.chinamobile.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, keescook@google.com
+To: Zhang Zhuoyu <zhangzhuoyu@cmss.chinamobile.com>
+Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi.
+Hi,
 
-04.04.2018 23:25, Kees Cook wrote:
-> Thanks for the report! I hope someone more familiar with sg_io() can
-> help explain the changing buffer offset... :P
+The commit summary has a typo (cmd_puds). That said, this change
+isn't iSCSI specific, so using "pdu" here doesn't make much sense IMO.
 
-Also, FYI, I kept the server running with smartctl periodically invoked, 
-and it was still triggering BUGs, however, I consider them to be more or 
-less harmless until the server got stuck with high I/O wait this morning 
-after next smartctl invocation. So, it isn't harmless, it seems…
+On Wed, 21 Mar 2018 17:52:43 +0800, Zhang Zhuoyu wrote:
 
-It could be unrelated, of course, since the journal didn't give me any 
-hint (or a stack trace) on what happened, thus I'll monitor how things 
-behave without smartctl too.
+> Separate tx/rx cmd_pdus in order to distinguish LUN read/write IOPS.
+> 
+> Signed-off-by: Zhang Zhuoyu <zhangzhuoyu@cmss.chinamobile.com>
+> ---
+>  drivers/target/target_core_stat.c      | 26 ++++++++++++++++++++++----
+>  drivers/target/target_core_transport.c | 11 ++++++++++-
+>  include/target/target_core_base.h      |  3 ++-
+>  3 files changed, 34 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
+> index f0db91e..9099494 100644
+> --- a/drivers/target/target_core_stat.c
+> +++ b/drivers/target/target_core_stat.c
+> @@ -706,7 +722,8 @@ static ssize_t target_stat_tgt_port_hs_in_cmds_show(struct config_item *item,
+>  CONFIGFS_ATTR_RO(target_stat_tgt_port_, indx);
+>  CONFIGFS_ATTR_RO(target_stat_tgt_port_, name);
+>  CONFIGFS_ATTR_RO(target_stat_tgt_port_, port_index);
+> -CONFIGFS_ATTR_RO(target_stat_tgt_port_, in_cmds);
+> +CONFIGFS_ATTR_RO(target_stat_tgt_port_, tx_cmds);
+> +CONFIGFS_ATTR_RO(target_stat_tgt_port_, rx_cmds);
 
-Regards,
-   Oleksandr
+I don't think the in_cmds metric should be deleted here. It could be
+calculated on the fly via tx_cmds + rx_cmds + nodata_cmds.
+
+Cheers, David
