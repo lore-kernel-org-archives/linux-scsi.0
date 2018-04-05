@@ -1,47 +1,73 @@
-From: David Disseldorp <ddiss@suse.de>
-Subject: Re: [PATCH 1/1] target:separate tx/rx cmd_puds
-Date: Thu, 5 Apr 2018 13:12:12 +0200
-Message-ID: <20180405131212.3f26339d@suse.de>
-References: <1521625963-657195-1-git-send-email-zhangzhuoyu@cmss.chinamobile.com>
+From: Jaco Kroon <jaco@uls.co.za>
+Subject: Re: *** SPAM *** Re: [RFC PATCH] mpt3sas:
+ mpt3sas_scsih_enclosure_find_by_handle can be static
+Date: Thu, 5 Apr 2018 13:43:55 +0200
+Message-ID: <8e5f96f8-0072-25b8-6403-6f93d4836131@uls.co.za>
+References: <1521540956-42347-1-git-send-email-chaitra.basappa@broadcom.com>
+ <20180320210652.GA40906@xian>
+ <289588bbff4dc0d35e519d0c4d4282da78cc6121.camel@wdc.com>
+ <yq1370jj278.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1521625963-657195-1-git-send-email-zhangzhuoyu@cmss.chinamobile.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Zhang Zhuoyu <zhangzhuoyu@cmss.chinamobile.com>
-Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1370jj278.fsf@oracle.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "lkp@intel.com" <lkp@intel.com>, "kbuild-all@01.org" <kbuild-all@01.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Hi,
 
-The commit summary has a typo (cmd_puds). That said, this change
-isn't iSCSI specific, so using "pdu" here doesn't make much sense IMO.
+Further to that, in the second last hunk there is a very clear
+functionality change:
 
-On Wed, 21 Mar 2018 17:52:43 +0800, Zhang Zhuoyu wrote:
+@@ -8756,12 +8859,12 @@ _scsih_mark_responding_expander(struct
+MPT3SAS_ADAPTER *ioc,
+                        continue;
+                sas_expander->responding = 1;
 
-> Separate tx/rx cmd_pdus in order to distinguish LUN read/write IOPS.
-> 
-> Signed-off-by: Zhang Zhuoyu <zhangzhuoyu@cmss.chinamobile.com>
-> ---
->  drivers/target/target_core_stat.c      | 26 ++++++++++++++++++++++----
->  drivers/target/target_core_transport.c | 11 ++++++++++-
->  include/target/target_core_base.h      |  3 ++-
->  3 files changed, 34 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-> index f0db91e..9099494 100644
-> --- a/drivers/target/target_core_stat.c
-> +++ b/drivers/target/target_core_stat.c
-> @@ -706,7 +722,8 @@ static ssize_t target_stat_tgt_port_hs_in_cmds_show(struct config_item *item,
->  CONFIGFS_ATTR_RO(target_stat_tgt_port_, indx);
->  CONFIGFS_ATTR_RO(target_stat_tgt_port_, name);
->  CONFIGFS_ATTR_RO(target_stat_tgt_port_, port_index);
-> -CONFIGFS_ATTR_RO(target_stat_tgt_port_, in_cmds);
-> +CONFIGFS_ATTR_RO(target_stat_tgt_port_, tx_cmds);
-> +CONFIGFS_ATTR_RO(target_stat_tgt_port_, rx_cmds);
+-               if (!encl_pg0_rc)
++               if (enclosure_dev) {
+                        sas_expander->enclosure_logical_id =
+-                           le64_to_cpu(enclosure_pg0.EnclosureLogicalID);
+-
+-               sas_expander->enclosure_handle =
+-                   le16_to_cpu(expander_pg0->EnclosureHandle);
++                           le64_to_cpu(enclosure_dev->pg
+0.EnclosureLogicalID);
++                       sas_expander->enclosure_handle =
++                           le16_to_cpu(expander_pg0->EnclosureHandle);
++               }
 
-I don't think the in_cmds metric should be deleted here. It could be
-calculated on the fly via tx_cmds + rx_cmds + nodata_cmds.
+                if (sas_expander->handle == handle)
+                        goto out;
 
-Cheers, David
+Note that the assignment to sas_expander->enclosure_handle is now
+dependent on enclosure_dev being non-NULL.
+
+Busy applying the patch to 4.16 - and now I have no idea whether that
+functionality change should be part of the change or not.  Having worked
+through the rest of the patch it seems good otherwise (Keeping in mind
+that I'm not familiar with the code in question, nor do I normally work
+on kernel code, and this is definitely the first time I took a peek
+anywhere near the IO subsystem).
+
+Kind Regards,
+Jaco
+
+On 28/03/2018 23:54, Martin K. Petersen wrote:
+> Bart,
+>
+>> Are you aware that if the 0-day test infrastructure suggests an improvement
+>> for a patch that the patch that that improvement applies to gets ignored
+>> unless either the patch is reposted with the improvement applied or that it
+>> is explained why the suggested improvement is inappropriate?
+> Correct. I don't apply anything that causes a 0-day warning. The patch
+> will be closed with "Changes Required" status in patchwork.
+>
+> Always build patch submissions to linux-scsi with:
+>
+> 	make C=1 CF="-D__CHECK_ENDIAN__"
+>
