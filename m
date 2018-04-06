@@ -1,39 +1,56 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] qla2xxx: correctly shift host byte
-Date: Fri, 6 Apr 2018 15:33:30 +0000
-Message-ID: <222067aa244e369343101a4df9efab1ebd1b918c.camel@wdc.com>
-References: <20180406075222.7358-1-jthumshirn@suse.de>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH] scsi: scsi_dh: replace too broad "TP9" string
+	with the exact models
+Date: Sat,  7 Apr 2018 00:47:23 +0200
+Message-ID: <20180406224723.25414-1-xose.vazquez@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180406075222.7358-1-jthumshirn@suse.de>
-Content-Language: en-US
-Content-ID: <C3F8BA0CE0D8EA42AD08B49828DBF996@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, DM ML <dm-devel@redhat.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE4LTA0LTA2IGF0IDA5OjUyICswMjAwLCBKb2hhbm5lcyBUaHVtc2hpcm4gd3Jv
-dGU6DQo+IFRoZSBob3N0IGJ5dGUgaGFzIHRvIGJlIHNoaWZ0ZWQgYnkgMTYgbm90IDYuDQo+IA0K
-PiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT4N
-Cj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMgfCAyICstDQo+ICAxIGZp
-bGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCj4gDQo+IGRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfaXNyLmMNCj4gaW5kZXggODlmOTNlYmQ4MTlkLi40OWQ2N2UxZDU3MWYgMTAwNjQ0DQo+
-IC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYw0KPiArKysgYi9kcml2ZXJzL3Nj
-c2kvcWxhMnh4eC9xbGFfaXNyLmMNCj4gQEAgLTIzNjgsNyArMjM2OCw3IEBAIHFsYTI1eHhfcHJv
-Y2Vzc19iaWRpcl9zdGF0dXNfaW9jYihzY3NpX3FsYV9ob3N0X3QgKnZoYSwgdm9pZCAqcGt0LA0K
-PiAgCWJzZ19qb2ItPnJlcGx5X2xlbiA9IHNpemVvZihzdHJ1Y3QgZmNfYnNnX3JlcGx5KTsNCj4g
-IAkvKiBBbHdheXMgcmV0dXJuIERJRF9PSywgYnNnIHdpbGwgc2VuZCB0aGUgdmVuZG9yIHNwZWNp
-ZmljIHJlc3BvbnNlDQo+ICAJICogaW4gdGhpcyBjYXNlIG9ubHkgKi8NCj4gLQlzcC0+ZG9uZShz
-cCwgRElEX09LIDw8IDYpOw0KPiArCXNwLT5kb25lKHNwLCBESURfT0sgPDwgMTYpOw0KPiAgDQo+
-ICB9DQoNCkhlbGxvIEpvaGFubmVzLA0KDQpIYWQgeW91IG5vdGljZWQgdGhlIGZvbGxvd2luZyBz
-dGF0ZW1lbnRzPyBJIHRoaW5rIHRoZSAiPDwgMSIgc2hvdWxkIGJlIHJlbW92ZWQNCmZyb20gdGhl
-c2Ugc3RhdGVtZW50cy4NCg0KJCBnaXQgZ3JlcCAnU0FNX1NUQVQuKjw8IDEnDQpkcml2ZXJzL3Nj
-c2kvcWxhMnh4eC9xbGFfaXNyLmM6ICAgICAgICAgY21kLT5yZXN1bHQgfD0gU0FNX1NUQVRfQ0hF
-Q0tfQ09ORElUSU9OIDw8IDE7DQpkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmM6ICAgICAg
-ICAgY21kLT5yZXN1bHQgfD0gU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OIDw8IDE7DQpkcml2ZXJz
-L3Njc2kvcWxhMnh4eC9xbGFfaXNyLmM6ICAgICAgICAgY21kLT5yZXN1bHQgfD0gU0FNX1NUQVRf
-Q0hFQ0tfQ09ORElUSU9OIDw8IDE7DQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQoNCg0K
+SGI/TP9100 is not a RDAC array:
+    ^^^
+https://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=blob;f=libmultipath/hwtable.c;h=88b4700beb1d8940008020fbe4c3cd97d62f4a56;hb=HEAD#l235
+
+This reverts partially the 35204772ea034b380bc9d8942699dc03898e5c13 commit
+
+Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: DM ML <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/scsi/scsi_dh.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index b88b5dbbc444..d2fc6521f8ad 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -58,7 +58,10 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
+ 	{"IBM", "3526",			"rdac", },
+ 	{"IBM", "3542",			"rdac", },
+ 	{"IBM", "3552",			"rdac", },
+-	{"SGI", "TP9",			"rdac", },
++	{"SGI", "TP9300",		"rdac"},
++	{"SGI", "TP9400",		"rdac"},
++	{"SGI", "TP9500",		"rdac"},
++	{"SGI", "TP9700",		"rdac"},
+ 	{"SGI", "IS",			"rdac", },
+ 	{"STK", "OPENstorage",		"rdac", },
+ 	{"STK", "FLEXLINE 380",		"rdac", },
+-- 
+2.14.3
