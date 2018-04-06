@@ -1,123 +1,34 @@
-From: Petr Mladek <pmladek@suse.com>
-Subject: Re: =?utf-8?B?562U5aSNOiBSZTogW1BBVENIIHYy?=
- =?utf-8?Q?=5D_scsi=3A_Introduc?= =?utf-8?Q?e?= sdev_printk_ratelimited to
- throttlefrequent printk
-Date: Fri, 6 Apr 2018 10:49:01 +0200
-Message-ID: <20180406084901.3353tnfbup6gblfx@pathway.suse.cz>
-References: <20180402021032.GE3795@jagdpanzerIV>
- <201804031419435288297@zte.com.cn>
- <20180406083016.weuoemmcgvgxlcxy@pathway.suse.cz>
+From: David Disseldorp <ddiss@suse.de>
+Subject: Re: [PATCH 1/1] target:separate tx/rx cmd_puds
+Date: Fri, 6 Apr 2018 14:09:34 +0200
+Message-ID: <20180406140934.2dfafd45@suse.de>
+References: <1521625963-657195-1-git-send-email-zhangzhuoyu@cmss.chinamobile.com>
+        <20180405131212.3f26339d@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180406083016.weuoemmcgvgxlcxy@pathway.suse.cz>
+In-Reply-To: <20180405131212.3f26339d@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: wen.yang99@zte.com.cn
-Cc: sergey.senozhatsky.work@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart.VanAssche@wdc.com, tj@kernel.org, jiang.biao2@zte.com.cn, zhong.weidong@zte.com.cn, tan.hu@zte.com.cn
+To: Zhang Zhuoyu <zhangzhuoyu@cmss.chinamobile.com>
+Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri 2018-04-06 10:30:16, Petr Mladek wrote:
-> On Tue 2018-04-03 14:19:43, wen.yang99@zte.com.cn wrote:
-> > On the other hand，queue_lock is big, looping doing something under spinlock 
-> > 
-> > may locked many things and taking a long time, may cause some problems.
-> > 
-> > So This code needs to be optimized later:
-> > 
-> > scsi_request_fn()
-> > {
-> > 	for (;;) {
-> > 		int rtn;
-> > 		/*
-> > 		 * get next queueable request.  We do this early to make sure
-> > 		 * that the request is fully prepared even if we cannot
-> > 		 * accept it.
-> > 		 */
-> > 
-> > 		req = blk_peek_request(q);
-> > 
-> > 		if (!req)
-> > 			break;
-> > 
-> > 		if (unlikely(!scsi_device_online(sdev))) {
-> > 			sdev_printk(KERN_ERR, sdev,
-> > 				    "rejected I/O to offline device\n");
-> > 			scsi_kill_request(req, q);
-> > 			continue;
-> > 
-> > 			^^^^^^^^^ still under spinlock
-> > 		}
+On Thu, 5 Apr 2018 13:12:12 +0200, David Disseldorp wrote:
+
+> > -CONFIGFS_ATTR_RO(target_stat_tgt_port_, in_cmds);
+> > +CONFIGFS_ATTR_RO(target_stat_tgt_port_, tx_cmds);
+> > +CONFIGFS_ATTR_RO(target_stat_tgt_port_, rx_cmds);  
 > 
-> I wonder if the following might be the best solution after all:
-> 
-> 		if (unlikely(!scsi_device_online(sdev))) {
-> 			scsi_kill_request(req, q);
-> 
-> 			/*
-> 			 * printk() might take a while on slow consoles.
-> 			 * Prevent solftlockups by releasing the lock.
-> 			 */
-> 			spin_unlock_irq(q->queue_lock);
-> 			sdev_printk(KERN_ERR, sdev,
-> 				    "rejecting I/O to offline device\n");
-> 			spin_lock_irq(q->queue_lock);
-> 			continue;
-> 		}
-> 
-> I see that the lock is released also in several other situations.
-> Therefore it looks safe. Also handling too many requests without
-> releasing the lock seems to be a bad idea in general. I think
-> that this solution was already suggested earlier.
+> I don't think the in_cmds metric should be deleted here. It could be
+> calculated on the fly via tx_cmds + rx_cmds + nodata_cmds.
 
-Just to be sure. Is it safe to kill first few requests and proceed
-the others?
+@Zhang Zhuoyu: How about something like the following?
+https://git.samba.org/?p=ddiss/linux.git;a=commitdiff;h=73723ccf433424721830797d70cfb88d4596e0fc
 
-I wonder if the device could actually get online without releasing
-the queue lock. If not, we normally killed all requests.
+...this keeps the in_cmds metric, and renames tx/rx_cmds read/write_cmds
+respectively. read/write_cmds is still a bit ambiguous, as it refers to
+the command data direction rather than SCSI READ/WRITE CDBs, but IMO
+it's clearer, and more consistent with the read/write_mbytes metrics.
 
-I wonder if a local flag might actually help to reduce the number
-of messages but keep the existing behavior. I mean something like
-
-static void scsi_request_fn(struct request_queue *q)
-{
-	struct scsi_device *sdev = q->queuedata;
-			   ^^^^^
-			   The device is the same for each request
-			   in this queue.
-
-
-	struct request *req;
-+	bool offline_reported = false;
-
-	/*
-	 * To start with, we keep looping until the queue is empty, or until
-	 * the host is no longer able to accept any more requests.
-	 */
-	shost = sdev->host;
-	for (;;) {
-		int rtn;
-		req = blk_peek_request(q);
-		if (!req)
-			break;
-
-		if (unlikely(!scsi_device_online(sdev))) {
-+			if (!offline_reported) {
-				sdev_printk(KERN_ERR, sdev,
-					"rejecting I/O to offline device\n");
-+				offline_reported = true;
-+			}
-			scsi_kill_request(req, q);
-			continue;
-		}
-
-
-Please, note that I am not familiar with the scsi code. I am involved
-because this is printk related. Unfortunately, we could not make
-printk() faster. The main principle is to get messages on the console
-ASAP. Nobody knows when the system might die and any message might
-be important.
-
-Best Regards,
-Petr
+Cheers, David
