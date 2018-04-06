@@ -1,64 +1,59 @@
-From: Oleksandr Natalenko <oleksandr@natalenko.name>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Fri, 06 Apr 2018 08:21:35 +0200
-Message-ID: <1e9fb351f60a9bfe36d2f0974e5237eb@natalenko.name>
-References: <10360653.ov98egbaqx@natalenko.name>
- <CAGXu5jLwyot++C2EXs+032Lz5WdG65GsEJ-Q55rfhSbkG1Nh+A@mail.gmail.com>
- <3265889.eu5sbW8aRz@natalenko.name>
- <CAGXu5jL++CEmLzFtGMVMhGWBzHpsRNJPTsEoc7Pw1dP--=azCA@mail.gmail.com>
- <7fc01f67a561ce1fad676fc34c2249e7@natalenko.name>
- <CAGXu5jKhiE512yQXp90M+Wie=8RkpMZT-Yi_9BgjfKwibP433g@mail.gmail.com>
- <dee9721a530576e667881d86bbec351b@natalenko.name>
- <08e06234c81fac30ccff5a2695d02f2a@natalenko.name>
- <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
- <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH v3 1/3] Revert "scsi: core: return BLK_STS_OK for DID_OK
+ in __scsi_error_from_host_byte()"
+Date: Fri, 6 Apr 2018 08:30:27 +0200
+Message-ID: <20180406083027.0d72a023@pentland.suse.de>
+References: <20180405173301.13186-1-bart.vanassche@wdc.com>
+        <20180405173301.13186-2-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, keescook@google.com
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20180405173301.13186-2-bart.vanassche@wdc.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Lee Duncan <lduncan@suse.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi.
+On Thu,  5 Apr 2018 10:32:59 -0700
+Bart Van Assche <bart.vanassche@wdc.com> wrote:
 
-05.04.2018 20:52, Kees Cook wrote:
-> Okay. My qemu gets mad about that and wants the format=raw argument,
-> so I'm using:
+> The description of commit e39a97353e53 is wrong: it mentions that
+> commit 2a842acab109 introduced a bug in __scsi_error_from_host_byte()
+> although that commit did not change the behavior of that function.
+> Additionally, commit e39a97353e53 introduced a bug: it causes commands
+> that fail with hostbyte=DID_OK and driverbyte=DRIVER_SENSE to be
+> completed with BLK_STS_OK. Hence revert that commit.
 > 
-> -drive file=sda.img,format=raw \
-> -drive file=sdb.img,format=raw \
+> Fixes: e39a97353e53 ("scsi: core: return BLK_STS_OK for DID_OK in
+> __scsi_error_from_host_byte()") Reported-by: Damien Le Moal
+> <damien.lemoal@wdc.com> Signed-off-by: Bart Van Assche
+> <bart.vanassche@wdc.com> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Cc: Damien Le Moal <damien.lemoal@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Lee Duncan <lduncan@suse.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/scsi/scsi_lib.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> How are you running your smartctl? I'm doing this now:
-> 
-> [1]   Running                 while :; do
->     ( smartctl -a /dev/sda; smartctl -a /dev/sdb ) > /dev/null;
-> done &
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 1d83f29aee74..c0e4ae733cce 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -733,8 +733,6 @@ static blk_status_t
+> __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+>  {
+>  	switch (host_byte(result)) {
+> -	case DID_OK:
+> -		return BLK_STS_OK;
+>  	case DID_TRANSPORT_FAILFAST:
+>  		return BLK_STS_TRANSPORT;
+>  	case DID_TARGET_FAILURE:
 
-Yes, so do I.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-> I assume I'm missing something from your .config, but since I don't
-> boot with an initramfs, I had to tweak it a bit. I'll try again...
+Cheers,
 
-Let me, maybe, describe, what both the VM and the server have in common:
-
-1. have 4 CPUs
-2. are EFI-based
-3. use blk-mq with BFQ scheduler (it is set up via udev rule during 
-boot)
-4. have zswap enabled
-5. have 2 SATA disks with RAID10 on top of it (layout f2)
-6. have LUKS on top of the RAID, and LVM on top of the LUKS
-
-VM has machine type "q35", BTW.
-
-Do you think something of what's mentioned above is relevant for the 
-code path in question?
-
-Thanks.
-
-Regards,
-   Oleksandr
+Hannes
