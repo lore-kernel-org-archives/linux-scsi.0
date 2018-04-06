@@ -1,7 +1,7 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] qla2xxx: correctly shift host byte
-Date: Fri, 6 Apr 2018 15:01:20 +0000
-Message-ID: <0753246e70d16062b87930b2b75eec31a4bb88eb.camel@wdc.com>
+Date: Fri, 6 Apr 2018 15:33:30 +0000
+Message-ID: <222067aa244e369343101a4df9efab1ebd1b918c.camel@wdc.com>
 References: <20180406075222.7358-1-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,7 +9,7 @@ Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180406075222.7358-1-jthumshirn@suse.de>
 Content-Language: en-US
-Content-ID: <BA62C0CAA3EFE342B049CA7E48FB72C1@namprd04.prod.outlook.com>
+Content-ID: <C3F8BA0CE0D8EA42AD08B49828DBF996@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>
@@ -29,7 +29,11 @@ PiAgCWJzZ19qb2ItPnJlcGx5X2xlbiA9IHNpemVvZihzdHJ1Y3QgZmNfYnNnX3JlcGx5KTsNCj4g
 IAkvKiBBbHdheXMgcmV0dXJuIERJRF9PSywgYnNnIHdpbGwgc2VuZCB0aGUgdmVuZG9yIHNwZWNp
 ZmljIHJlc3BvbnNlDQo+ICAJICogaW4gdGhpcyBjYXNlIG9ubHkgKi8NCj4gLQlzcC0+ZG9uZShz
 cCwgRElEX09LIDw8IDYpOw0KPiArCXNwLT5kb25lKHNwLCBESURfT0sgPDwgMTYpOw0KPiAgDQo+
-ICB9DQoNClBsZWFzZSBtZW50aW9uIGluIHRoZSBkZXNjcmlwdGlvbiBvZiB0aGlzIHBhdGNoIHRo
-YXQgdGhpcyBwYXRjaCBkb2VzIG5vdA0KY2hhbmdlIGFueSBmdW5jdGlvbmFsaXR5IGJlY2F1c2Ug
-RElEX09LID09IDAuIEFueXdheToNCg0KUmV2aWV3ZWQtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFy
-dC52YW5hc3NjaGVAd2RjLmNvbT4NCg0KDQo=
+ICB9DQoNCkhlbGxvIEpvaGFubmVzLA0KDQpIYWQgeW91IG5vdGljZWQgdGhlIGZvbGxvd2luZyBz
+dGF0ZW1lbnRzPyBJIHRoaW5rIHRoZSAiPDwgMSIgc2hvdWxkIGJlIHJlbW92ZWQNCmZyb20gdGhl
+c2Ugc3RhdGVtZW50cy4NCg0KJCBnaXQgZ3JlcCAnU0FNX1NUQVQuKjw8IDEnDQpkcml2ZXJzL3Nj
+c2kvcWxhMnh4eC9xbGFfaXNyLmM6ICAgICAgICAgY21kLT5yZXN1bHQgfD0gU0FNX1NUQVRfQ0hF
+Q0tfQ09ORElUSU9OIDw8IDE7DQpkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmM6ICAgICAg
+ICAgY21kLT5yZXN1bHQgfD0gU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OIDw8IDE7DQpkcml2ZXJz
+L3Njc2kvcWxhMnh4eC9xbGFfaXNyLmM6ICAgICAgICAgY21kLT5yZXN1bHQgfD0gU0FNX1NUQVRf
+Q0hFQ0tfQ09ORElUSU9OIDw8IDE7DQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQoNCg0K
