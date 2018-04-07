@@ -1,81 +1,54 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 01/10] staging: fnic2 add initialization
-Date: Sat, 7 Apr 2018 08:09:01 +0200
-Message-ID: <20180407060901.GA18744@kroah.com>
-References: <20180405211519.GA12584@osmithde-lnx.cisco.com>
- <20180405211644.GB12584@osmithde-lnx.cisco.com>
- <20180406050752.GC27591@kroah.com>
- <20180406220010.GA23478@osmithde-lnx.cisco.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: 4.15.14 crash with iscsi target and dvd
+Date: Sat, 7 Apr 2018 12:53:36 -0400
+Message-ID: <20180407165335.GA2515@animx.eu.org>
+References: <CAFLxGvzbA9XzXLsH56iyqYkitrSnBbOzD977u4266=w5zw0jNg@mail.gmail.com>
+ <20180331221252.GA25573@animx.eu.org>
+ <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
+ <20180401113721.GA8471@animx.eu.org>
+ <20180401163604.GB25011@animx.eu.org>
+ <20180401182723.GA31755@animx.eu.org>
+ <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
+ <20180406014644.GA16112@animx.eu.org>
+ <20180406020651.GB16112@animx.eu.org>
+ <fb0640c203409a84ab1bfbbc41078a5416138ad2.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180406220010.GA23478@osmithde-lnx.cisco.com>
+In-Reply-To: <fb0640c203409a84ab1bfbbc41078a5416138ad2.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Oliver Smith-Denny <osmithde@cisco.com>
-Cc: Sesidhar Baddela <sebaddel@cisco.com>, Gian Carlo Boffa <gcboffa@cisco.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Apr 06, 2018 at 03:00:11PM -0700, Oliver Smith-Denny wrote:
-> On Fri, Apr 06, 2018 at 07:07:52AM +0200, Greg Kroah-Hartman wrote:
-> > Why is this a drivers/staging/ driver at all?  What is keeping you from
-> > getting this merged into the "proper" place in the kernel?
-> > 
-> > If you have a staging driver, you have to have a TODO file in the
-> > directory listing what is keeping this in the staging section.
+Bart Van Assche wrote:
+> On Thu, 2018-04-05 at 22:06 -0400, Wakko Warner wrote:
+> > I know now why scsi_print_command isn't doing anything.  cmd->cmnd is null.
+> > I added a dev_printk in scsi_print_command where the 2 if statements return.
+> > Logs:
+> > [  29.866415] sr 3:0:0:0: cmd->cmnd is NULL
 > 
-> Sorry Greg, we do have a TODO file in the directory, but it was
-> part of patch 10/10. I can move that to be part of patch 01/10.
+> That's something that should never happen. As one can see in
+> scsi_setup_scsi_cmnd() and scsi_setup_fs_cmnd() both functions initialize
+> that pointer. Since I have not yet been able to reproduce myself what you
+> reported, would it be possible for you to bisect this issue? You will need
+> to follow something like the following procedure (see also
+> https://git-scm.com/docs/git-bisect):
 
-Ah, I missed that, sorry.
+After doing 3 successful compiles with good/bad, I got this error and was
+not able to compile any more kernels:
+  CC      scripts/mod/devicetable-offsets.s
+scripts/mod/empty.c:1:0: error: code model kernel does not support PIC mode
+ /* empty file to figure out endianness / word size */
+ 
+scripts/mod/devicetable-offsets.c:1:0: error: code model kernel does not support PIC mode
+ #include <linux/kbuild.h>
+ 
+scripts/Makefile.build:153: recipe for target 'scripts/mod/devicetable-offsets.s' failed
 
-> We think that this driver is a drivers/staging driver because
-> there are some changes we want to make before submitting
-> the driver to the "proper" place. Specifically, we want to
-> change how we allocate memory (move from a static allocation
-> to a mempool scenario), which will require some other code
-> changes.
+I don't think it found the bad commit.
 
-Why not just take a week and do that?  I can't take any new patches
-until 4.17-rc1 is out anyway.
-
-> Also, we want to investigate if we need to change our locking schema.
-
-Again, why not just take the time to do that?
-
-> We think that making this driver part of the drivers/staging community
-> will allow interested people to try the driver in its current state
-> and offer up ideas as to its continued development.
-
-Have you asked the scsi developers what they think about this?
-
-And why not copy the staging developer mailing list on this patch
-series?
-
-> If you think that this driver doesn't belong in the
-> drivers/staging community, we are happy to explore getting
-> the driver fully ready on our side and getting it into the
-> "proper" place.
-
-I'll take anything in staging as long as it has the correct license and
-builds, that's not an issue :)  But I do want to get agreement from the
-SCSI maintainers that this is ok to have in this part of the kernel as
-sometimes it can cause merge issues if there are core api changes.
-
-> > Please read the documentation on how to properly use SPDX tags on kernel
-> > files.  This needs to be the first line of the file.
-> 
-> Thanks Greg, I fixed the SPDX tags and removed all the boilerplate,
-> including the LICENSE file. Also, I have updated the MAINTAINERS
-> file, which accidentally slipped by my first patch set. If you
-> think that drivers/staging is a good temporary home for this
-> driver, then I will send another patchset with the changes,
-> as well as the changes from your other replies to patch 02/10
-> and patch 03/10.
-
-A respin of this would be nice, and again, I can't do anything with it
-until 4.17-rc1 is out.
-
-thanks,
-
-greg k-h
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
