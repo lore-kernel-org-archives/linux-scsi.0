@@ -1,54 +1,81 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: 4.15.14 crash with iscsi target and dvd
-Date: Sat, 7 Apr 2018 02:06:39 +0000
-Message-ID: <a631d319b0123a0f90b68e44a7df19dffb253751.camel@wdc.com>
-References: <CAFLxGvzbA9XzXLsH56iyqYkitrSnBbOzD977u4266=w5zw0jNg@mail.gmail.com>
-         <20180331221252.GA25573@animx.eu.org>
-         <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
-         <20180401113721.GA8471@animx.eu.org> <20180401163604.GB25011@animx.eu.org>
-         <20180401182723.GA31755@animx.eu.org>
-         <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
-         <20180406014644.GA16112@animx.eu.org> <20180406020651.GB16112@animx.eu.org>
-         <fb0640c203409a84ab1bfbbc41078a5416138ad2.camel@wdc.com>
-         <20180407010334.GA11092@animx.eu.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 01/10] staging: fnic2 add initialization
+Date: Sat, 7 Apr 2018 08:09:01 +0200
+Message-ID: <20180407060901.GA18744@kroah.com>
+References: <20180405211519.GA12584@osmithde-lnx.cisco.com>
+ <20180405211644.GB12584@osmithde-lnx.cisco.com>
+ <20180406050752.GC27591@kroah.com>
+ <20180406220010.GA23478@osmithde-lnx.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180407010334.GA11092@animx.eu.org>
-Content-Language: en-US
-Content-ID: <1273440D4C884042A0676C85A025C9AE@namprd04.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <20180406220010.GA23478@osmithde-lnx.cisco.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "wakko@animx.eu.org" <wakko@animx.eu.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: Oliver Smith-Denny <osmithde@cisco.com>
+Cc: Sesidhar Baddela <sebaddel@cisco.com>, Gian Carlo Boffa <gcboffa@cisco.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE4LTA0LTA2IGF0IDIxOjAzIC0wNDAwLCBXYWtrbyBXYXJuZXIgd3JvdGU6DQo+
-IEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBPbiBUaHUsIDIwMTgtMDQtMDUgYXQgMjI6MDYg
-LTA0MDAsIFdha2tvIFdhcm5lciB3cm90ZToNCj4gPiA+IEkga25vdyBub3cgd2h5IHNjc2lfcHJp
-bnRfY29tbWFuZCBpc24ndCBkb2luZyBhbnl0aGluZy4gIGNtZC0+Y21uZCBpcyBudWxsLg0KPiA+
-ID4gSSBhZGRlZCBhIGRldl9wcmludGsgaW4gc2NzaV9wcmludF9jb21tYW5kIHdoZXJlIHRoZSAy
-IGlmIHN0YXRlbWVudHMgcmV0dXJuLg0KPiA+ID4gTG9nczoNCj4gPiA+IFsgIDI5Ljg2NjQxNV0g
-c3IgMzowOjA6MDogY21kLT5jbW5kIGlzIE5VTEwNCj4gPiANCj4gPiBUaGF0J3Mgc29tZXRoaW5n
-IHRoYXQgc2hvdWxkIG5ldmVyIGhhcHBlbi4gQXMgb25lIGNhbiBzZWUgaW4NCj4gPiBzY3NpX3Nl
-dHVwX3Njc2lfY21uZCgpIGFuZCBzY3NpX3NldHVwX2ZzX2NtbmQoKSBib3RoIGZ1bmN0aW9ucyBp
-bml0aWFsaXplDQo+ID4gdGhhdCBwb2ludGVyLiBTaW5jZSBJIGhhdmUgbm90IHlldCBiZWVuIGFi
-bGUgdG8gcmVwcm9kdWNlIG15c2VsZiB3aGF0IHlvdQ0KPiA+IHJlcG9ydGVkLCB3b3VsZCBpdCBi
-ZSBwb3NzaWJsZSBmb3IgeW91IHRvIGJpc2VjdCB0aGlzIGlzc3VlPyBZb3Ugd2lsbCBuZWVkDQo+
-ID4gdG8gZm9sbG93IHNvbWV0aGluZyBsaWtlIHRoZSBmb2xsb3dpbmcgcHJvY2VkdXJlIChzZWUg
-YWxzbw0KPiA+IGh0dHBzOi8vZ2l0LXNjbS5jb20vZG9jcy9naXQtYmlzZWN0KToNCj4gPiANCj4g
-PiBnaXQgY2xvbmUgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0
-L3RvcnZhbGRzL2xpbnV4LmdpdA0KPiA+IGdpdCBiaXNlY3Qgc3RhcnQNCj4gPiBnaXQgYmlzZWN0
-IGJhZCB2NC4xMA0KPiA+IGdpdCBiaXNlY3QgZ29vZCB2NC45DQo+ID4gDQo+ID4gYW5kIHRoZW4g
-YnVpbGQgdGhlIGtlcm5lbCwgaW5zdGFsbCBpdCwgYm9vdCB0aGUga2VybmVsIGFuZCB0ZXN0IGl0
-Lg0KPiA+IERlcGVuZGluZyBvbiB0aGUgcmVzdWx0LCBydW4gZWl0aGVyIGdpdCBiaXNlY3QgYmFk
-IG9yIGdpdCBiaXNlY3QgZ29vZCBhbmQNCj4gPiBrZWVwIGdvaW5nIHVudGlsIGdpdCBiaXNlY3Qg
-Y29tZXMgdG8gYSBjb25jbHVzaW9uLiBUaGlzIGNhbiB0YWtlIGFuIGhvdXIgb3INCj4gPiBtb3Jl
-Lg0KPiANCj4gSSBoYXZlIDEgcXVlc3Rpb24uICBTaG91bGQgbWFrZSBjbGVhbiBiZSBkb25lIGJl
-dHdlZW4gdGVzdHM/ICBNeSBib3gNCj4gY29tcGlsZXMgdGhlIHdob2xlIGtlcm5lbCBpbiAyIG1p
-bnV0ZXMuDQoNCklmIHlvdSB0cnVzdCB0aGF0IHRoZSBidWlsZCBzeXN0ZW0gd2lsbCBmaWd1cmUg
-b3V0IGFsbCBkZXBlbmRlbmNpZXMgdGhlbg0KcnVubmluZyBtYWtlIGNsZWFuIGlzIG5vdCBuZWNl
-c3NhcnkuIFBlcnNvbmFsbHkgSSBhbHdheXMgcnVuIG1ha2UgY2xlYW4NCmR1cmluZyBhIGJpc2Vj
-dCBiZWZvcmUgcmVidWlsZGluZyB0aGUga2VybmVsIGJlY2F1c2UgaWYgYSBoZWFkZXIgZmlsZSBo
-YXMNCmNoYW5nZWQgaW4gZS5nLiB0aGUgYmxvY2sgbGF5ZXIgYSBodWdlIG51bWJlciBvZiBmaWxl
-cyBoYXMgdG8gYmUgcmVidWlsdA0KYW55d2F5Lg0KDQpCYXJ0Lg0KDQoNCg==
+On Fri, Apr 06, 2018 at 03:00:11PM -0700, Oliver Smith-Denny wrote:
+> On Fri, Apr 06, 2018 at 07:07:52AM +0200, Greg Kroah-Hartman wrote:
+> > Why is this a drivers/staging/ driver at all?  What is keeping you from
+> > getting this merged into the "proper" place in the kernel?
+> > 
+> > If you have a staging driver, you have to have a TODO file in the
+> > directory listing what is keeping this in the staging section.
+> 
+> Sorry Greg, we do have a TODO file in the directory, but it was
+> part of patch 10/10. I can move that to be part of patch 01/10.
+
+Ah, I missed that, sorry.
+
+> We think that this driver is a drivers/staging driver because
+> there are some changes we want to make before submitting
+> the driver to the "proper" place. Specifically, we want to
+> change how we allocate memory (move from a static allocation
+> to a mempool scenario), which will require some other code
+> changes.
+
+Why not just take a week and do that?  I can't take any new patches
+until 4.17-rc1 is out anyway.
+
+> Also, we want to investigate if we need to change our locking schema.
+
+Again, why not just take the time to do that?
+
+> We think that making this driver part of the drivers/staging community
+> will allow interested people to try the driver in its current state
+> and offer up ideas as to its continued development.
+
+Have you asked the scsi developers what they think about this?
+
+And why not copy the staging developer mailing list on this patch
+series?
+
+> If you think that this driver doesn't belong in the
+> drivers/staging community, we are happy to explore getting
+> the driver fully ready on our side and getting it into the
+> "proper" place.
+
+I'll take anything in staging as long as it has the correct license and
+builds, that's not an issue :)  But I do want to get agreement from the
+SCSI maintainers that this is ok to have in this part of the kernel as
+sometimes it can cause merge issues if there are core api changes.
+
+> > Please read the documentation on how to properly use SPDX tags on kernel
+> > files.  This needs to be the first line of the file.
+> 
+> Thanks Greg, I fixed the SPDX tags and removed all the boilerplate,
+> including the LICENSE file. Also, I have updated the MAINTAINERS
+> file, which accidentally slipped by my first patch set. If you
+> think that drivers/staging is a good temporary home for this
+> driver, then I will send another patchset with the changes,
+> as well as the changes from your other replies to patch 02/10
+> and patch 03/10.
+
+A respin of this would be nice, and again, I can't do anything with it
+until 4.17-rc1 is out.
+
+thanks,
+
+greg k-h
