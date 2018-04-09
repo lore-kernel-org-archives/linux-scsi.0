@@ -1,28 +1,46 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Mon, 9 Apr 2018 16:03:12 -0700
-Message-ID: <CAGXu5jKPynuv61n=h3Fn8eLmxwG3+V+9XXHRfmV9MQ9+RrcKYQ@mail.gmail.com>
-References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
- <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
- <2679696.GDoj5zcZOu@natalenko.name> <CAGXu5jLG9ia+zBNcPt+q+BpJayoUuYwXitOgeHmh=7sPp-s87A@mail.gmail.com>
- <51a7e805058ef7f35b226cbbf0ccc4ff@natalenko.name> <CAGXu5jKRrdYjuyLSvc4k4mqttkM7zw-96poQ1GYqRRgPqZFOYQ@mail.gmail.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH] iscsi: respond to netlink with unicast when appropriate
+Date: Mon, 9 Apr 2018 16:03:33 -0700
+Message-ID: <a75c870a-6189-3982-d2bd-2199362a3c61@suse.com>
+References: <20180409221528.67880-1-cleech@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jKRrdYjuyLSvc4k4mqttkM7zw-96poQ1GYqRRgPqZFOYQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org, paolo.valente@linaro.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20180409221528.67880-1-cleech@redhat.com>
+Content-Language: en-US
+Sender: netdev-owner@vger.kernel.org
+To: Chris Leech <cleech@redhat.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, open-iscsi@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Apr 9, 2018 at 1:30 PM, Kees Cook <keescook@chromium.org> wrote:
-> Ah! dm-crypt too. I'll see if I can get that added easily to my tests.
+On 04/09/2018 03:15 PM, Chris Leech wrote:
+> Instead of always multicasting responses, send a unicast netlink message
+> directed at the correct pid.  This will be needed if we ever want to
+> support multiple userspace processes interacting with the kernel over
+> iSCSI netlink simultaneously.  Limitations can currently be seen if you
+> attempt to run multiple iscsistart commands in parallel.
+> 
+> We've fixed up the userspace issues in iscsistart that prevented
+> multiple instances from running, so now attempts to speed up booting by
+> bringing up multiple iscsi sessions at once in the initramfs are just
+> running into misrouted responses that this fixes.
 
-Quick update: I added dm-crypt (with XFS on top) and it hung my system
-almost immediately. I got no warnings at all, though.
+As you may know, I disagree with running multiple iscsistart-s at the
+same time, since that's what iscsid is for.
 
--Kees
+Never the less, I believe we _should_ be able to have multiple processes
+talking to the kernel target code, so I agree with these changes.
 
+> 
+> Signed-off-by: Chris Leech <cleech@redhat.com>
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c | 29 ++++++++++++++++++-----------
+>  1 file changed, 18 insertions(+), 11 deletions(-)
+> 
+> ... (diffs removed to save electrons)
+> 
+
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 -- 
-Kees Cook
-Pixel Security
+Lee Duncan
+SUSE Labs
