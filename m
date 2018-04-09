@@ -1,14 +1,14 @@
 From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: [PATCH AUTOSEL for 3.18 077/101] scsi: devinfo: fix format of the
+Subject: [PATCH AUTOSEL for 4.4 128/162] scsi: devinfo: fix format of the
  device list
-Date: Mon, 9 Apr 2018 00:41:36 +0000
-Message-ID: <20180409004042.164920-27-alexander.levin@microsoft.com>
-References: <20180409004042.164920-1-alexander.levin@microsoft.com>
+Date: Mon, 9 Apr 2018 00:29:25 +0000
+Message-ID: <20180409002738.163941-128-alexander.levin@microsoft.com>
+References: <20180409002738.163941-1-alexander.levin@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180409004042.164920-1-alexander.levin@microsoft.com>
+In-Reply-To: <20180409002738.163941-1-alexander.levin@microsoft.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -34,7 +34,7 @@ Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
  1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 90abf7f5289d..2f994edce4c4 100644
+index 6b61b09b3226..9a25e798e195 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
 @@ -108,8 +108,8 @@ static struct {
@@ -59,7 +59,7 @@ ra reset */
  	{"transtec", "T5008", "0001", BLIST_NOREPORTLUN },
  	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},	/* locks up */
  	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
-@@ -248,7 +248,6 @@ static struct {
+@@ -249,7 +249,6 @@ static struct {
  	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
  	{"SUN", "T300", "*", BLIST_SPARSELUN},
  	{"SUN", "T4", "*", BLIST_SPARSELUN},
