@@ -1,41 +1,58 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 01/10] staging: fnic2 add initialization
-Date: Mon, 09 Apr 2018 16:57:16 -0400
-Message-ID: <yq1r2no3xoz.fsf@oracle.com>
-References: <20180405211519.GA12584@osmithde-lnx.cisco.com>
-        <20180405211644.GB12584@osmithde-lnx.cisco.com>
-        <20180406050752.GC27591@kroah.com>
-        <20180406220010.GA23478@osmithde-lnx.cisco.com>
-        <20180407060901.GA18744@kroah.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: 4.15.14 crash with iscsi target and dvd
+Date: Mon, 9 Apr 2018 21:30:11 +0000
+Message-ID: <f9467e78ce05446e7a89f06713c36fb638d1b6ad.camel@wdc.com>
+References: <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
+         <20180401113721.GA8471@animx.eu.org> <20180401163604.GB25011@animx.eu.org>
+         <20180401182723.GA31755@animx.eu.org>
+         <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
+         <20180406014644.GA16112@animx.eu.org> <20180406020651.GB16112@animx.eu.org>
+         <fb0640c203409a84ab1bfbbc41078a5416138ad2.camel@wdc.com>
+         <20180407165335.GA2515@animx.eu.org>
+         <1ff8d234cc565ba9701ce31899fca5faa597e050.camel@wdc.com>
+         <20180408160254.GA22869@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180407060901.GA18744@kroah.com> (Greg Kroah-Hartman's message
-        of "Sat, 7 Apr 2018 08:09:01 +0200")
+In-Reply-To: <20180408160254.GA22869@animx.eu.org>
+Content-Language: en-US
+Content-ID: <C98B9809A64A8347B903667442CD7287@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Oliver Smith-Denny <osmithde@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Gian Carlo Boffa <gcboffa@cisco.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "wakko@animx.eu.org" <wakko@animx.eu.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-Greg,
-
->> If you think that this driver doesn't belong in the drivers/staging
->> community, we are happy to explore getting the driver fully ready on
->> our side and getting it into the "proper" place.
->
-> I'll take anything in staging as long as it has the correct license and
-> builds, that's not an issue :)  But I do want to get agreement from the
-> SCSI maintainers that this is ok to have in this part of the kernel as
-> sometimes it can cause merge issues if there are core api changes.
-
-This is the first I hear of fnic2.
-
-My initial questions are: Why is a new driver necessary? Why can't the
-existing fnic driver be extended? And if it can't, what can be shared
-between the two drivers?
-
-A good place to have that discussion would be on linux-scsi...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+T24gU3VuLCAyMDE4LTA0LTA4IGF0IDEyOjAyIC0wNDAwLCBXYWtrbyBXYXJuZXIgd3JvdGU6DQo+
+IEkgZmluaXNoZWQgd2l0aCBnaXQgYmlzZWN0LiAgSGVyZSdzIHRoZSBvdXRwdXQ6DQo+IDg0Yzg1
+OTA2NDZkNWIzNTgwNGJhYzYwZWI1OGIxNDU4MzliNTg5M2UgaXMgdGhlIGZpcnN0IGJhZCBjb21t
+aXQNCj4gY29tbWl0IDg0Yzg1OTA2NDZkNWIzNTgwNGJhYzYwZWI1OGIxNDU4MzliNTg5M2UNCj4g
+QXV0aG9yOiBNaW5nIExlaSA8dG9tLmxlaW1pbmdAZ21haWwuY29tPg0KPiBEYXRlOiAgIEZyaSBO
+b3YgMTEgMjA6MDU6MzIgMjAxNiArMDgwMA0KPiANCj4gICAgIHRhcmdldDogYXZvaWQgYWNjZXNz
+aW5nIC5iaV92Y250IGRpcmVjdGx5DQo+ICAgICANCj4gICAgIFdoZW4gdGhlIGJpbyBpcyBmdWxs
+LCBiaW9fYWRkX3BjX3BhZ2UoKSB3aWxsIHJldHVybiB6ZXJvLA0KPiAgICAgc28gdXNlIHRoaXMg
+aW5mb3JtYXRpb24gdGVsbCB3aGVuIHRoZSBiaW8gaXMgZnVsbC4NCj4gICAgIA0KPiAgICAgQWxz
+byByZXBsYWNlIGFjY2VzcyB0byAuYmlfdmNudCBmb3IgcHJfZGVidWcoKSB3aXRoIGJpb19zZWdt
+ZW50cygpLg0KPiAgICAgDQo+ICAgICBSZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhj
+aEBsc3QuZGU+DQo+ICAgICBTaWduZWQtb2ZmLWJ5OiBNaW5nIExlaSA8dG9tLmxlaW1pbmdAZ21h
+aWwuY29tPg0KPiAgICAgUmV2aWV3ZWQtYnk6IFNhZ2kgR3JpbWJlcmcgPHNhZ2lAZ3JpbWJlcmcu
+bWU+DQo+ICAgICBTaWduZWQtb2ZmLWJ5OiBKZW5zIEF4Ym9lIDxheGJvZUBmYi5jb20+DQo+IA0K
+PiA6MDQwMDAwIDA0MDAwMCBhM2ViYmI3MWM1MmVlNGViOGMzYmU0ZDAzM2I4MTE3OTIxMWJmNzA0
+IGRlMzlhMzI4ZGJkMWIxODUxOTk0NmIzYWQ0NmQ5MzAyODg2ZTBkZDAgTSAgICAgIGRyaXZlcnMN
+Cj4gDQo+IEkgZGlkIGEgZGlmZiBiZXR3ZWVuIEhFQUReIGFuZCBIRUFEIGFuZCBtYW51YWxseSBw
+YXRjaGVkIHRoZSBmaWxlIGZyb20NCj4gNC4xNS4xNC4gIEl0J3Mgbm90IGFuIGV4YWN0IHJldmVy
+dC4gIEknbSBydW5uaW5nIGl0IG5vdyBhbmQgaXQncyB3b3JraW5nLg0KPiBJJ2xsIGRvIGEgYmV0
+dGVyIHRlc3QgbGF0ZXIgb24uICBIZXJlJ3MgdGhlIHBhdGNoOg0KPiANCj4gLS0tIGEvZHJpdmVy
+cy90YXJnZXQvdGFyZ2V0X2NvcmVfcHNjc2kuYwkyMDE4LTAyLTA0IDE0OjMxOjMxLjA3NzMxNjYx
+NyAtMDUwMA0KPiArKysgYi9kcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV9wc2NzaS5jCTIwMTgt
+MDQtMDggMTE6NDM6NDkuNTg4NjQxMzc0IC0wNDAwDQo+IEBAIC05MTUsNyArOTE1LDkgQEANCj4g
+IAkJCQkJYmlvLCBwYWdlLCBieXRlcywgb2ZmKTsNCj4gIAkJCXByX2RlYnVnKCJQU0NTSTogYmlv
+LT5iaV92Y250OiAlZCBucl92ZWNzOiAlZFxuIiwNCj4gIAkJCQliaW9fc2VnbWVudHMoYmlvKSwg
+bnJfdmVjcyk7DQo+IC0JCQlpZiAocmMgIT0gYnl0ZXMpIHsNCj4gKwkJCWlmIChyYyAhPSBieXRl
+cykNCj4gKwkJCQlnb3RvIGZhaWw7DQo+ICsJCQlpZiAoYmlvLT5iaV92Y250ID4gbnJfdmVjcykg
+ew0KPiAgCQkJCXByX2RlYnVnKCJQU0NTSTogUmVhY2hlZCBiaW8tPmJpX3ZjbnQgbWF4OiINCj4g
+IAkJCQkJIiAlZCBpOiAlZCBiaW86ICVwLCBhbGxvY2F0aW5nIGFub3RoZXIiDQo+ICAJCQkJCSIg
+YmlvXG4iLCBiaW8tPmJpX3ZjbnQsIGksIGJpbyk7DQoNCkhlbGxvIE1pbmcsDQoNCkNhbiB5b3Ug
+aGF2ZSBhIGxvb2sgYXQgdGhpcz8gVGhlIHN0YXJ0IG9mIHRoaXMgZS1tYWlsIHRocmVhZCBpcyBh
+dmFpbGFibGUgYXQNCmh0dHBzOi8vd3d3Lm1haWwtYXJjaGl2ZS5jb20vbGludXgtc2NzaUB2Z2Vy
+Lmtlcm5lbC5vcmcvbXNnNzI1NzQuaHRtbC4NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg0K
