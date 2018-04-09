@@ -1,71 +1,58 @@
-From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: [PATCH AUTOSEL for 4.15 070/189] scsi: devinfo: fix format of the
- device list
-Date: Mon, 9 Apr 2018 00:17:40 +0000
-Message-ID: <20180409001637.162453-70-alexander.levin@microsoft.com>
-References: <20180409001637.162453-1-alexander.levin@microsoft.com>
+From: Petr Mladek <pmladek@suse.com>
+Subject: Re: =?utf-8?B?562U5aSNOiBSZTog562U5aSNOiBS?=
+ =?utf-8?Q?e=3A_=5BPATCH_v2=5D_scsi?= =?utf-8?Q?=3A?= Introduce
+ sdev_printk_ratelimited tothrottlefrequent printk
+Date: Mon, 9 Apr 2018 10:59:44 +0200
+Message-ID: <20180409085944.3bxu5cnvnfj43zs7@pathway.suse.cz>
+References: <20180406084901.3353tnfbup6gblfx@pathway.suse.cz>
+ <201804091013439214247@zte.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180409001637.162453-1-alexander.levin@microsoft.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <201804091013439214247@zte.com.cn>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, Sasha Levin <Alexander.Levin@microsoft.com>
+To: wen.yang99@zte.com.cn
+Cc: sergey.senozhatsky.work@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart.VanAssche@wdc.com, tj@kernel.org, jiang.biao2@zte.com.cn, zhong.weidong@zte.com.cn, tan.hu@zte.com.cn
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+On Mon 2018-04-09 10:13:43, wen.yang99@zte.com.cn wrote:
+> That's a good idea, but it only solves part of the problem.
+>  loopping printks under spinlock, there's two path:
+> one path is: 
 
-[ Upstream commit 3f884a0a8bdf28cfd1e9987d54d83350096cdd46 ]
+> scsi_request_fn -->  loop ->  blk_peek_request-> scsi_prep_fn -> scsi_prep_state_check -> sdev_printk
 
-Replace "" with NULL for product revision level, and merge TEXEL
-duplicate entries.
+> another path is:
 
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
----
- drivers/scsi/scsi_devinfo.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+> scsi_request_fn -->  loop ->  sdev_printk
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 0a17b9e5dc35..6d976db33d9f 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -108,8 +108,8 @@ static struct {
- 	 * seagate controller, which causes SCSI code to reset bus.
- 	 */
- 	{"HP", "C1750A", "3226", BLIST_NOLUN},		/* scanjet iic */
--	{"HP", "C1790A", "", BLIST_NOLUN},		/* scanjet iip */
--	{"HP", "C2500A", "", BLIST_NOLUN},		/* scanjet iicx */
-+	{"HP", "C1790A", NULL, BLIST_NOLUN},		/* scanjet iip */
-+	{"HP", "C2500A", NULL, BLIST_NOLUN},		/* scanjet iicx */
- 	{"MEDIAVIS", "CDR-H93MV", "1.31", BLIST_NOLUN},	/* locks up */
- 	{"MICROTEK", "ScanMaker II", "5.61", BLIST_NOLUN},	/* responds to all lun=
- */
- 	{"MITSUMI", "CD-R CR-2201CS", "6119", BLIST_NOLUN},	/* locks up */
-@@ -119,7 +119,7 @@ static struct {
- 	{"QUANTUM", "FIREBALL ST4.3S", "0F0C", BLIST_NOLUN},	/* locks up */
- 	{"RELISYS", "Scorpio", NULL, BLIST_NOLUN},	/* responds to all lun */
- 	{"SANKYO", "CP525", "6.64", BLIST_NOLUN},	/* causes failed REQ SENSE, ext=
-ra reset */
--	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN},
-+	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN | BLIST_BORKEN},
- 	{"transtec", "T5008", "0001", BLIST_NOREPORTLUN },
- 	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},	/* locks up */
- 	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
-@@ -255,7 +255,6 @@ static struct {
- 	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
- 	{"SUN", "T300", "*", BLIST_SPARSELUN},
- 	{"SUN", "T4", "*", BLIST_SPARSELUN},
--	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
- 	{"Tornado-", "F4", "*", BLIST_NOREPORTLUN},
- 	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
- 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
---=20
-2.15.1
+Is this message redundant? It seems to be printed in the same
+situations as the messages in scsi_prep_state_check().
+
+In fact, there seems to be a mismatch. scsi_request_fn() prints
+about offline device also for sdev->sdev_state == SDEV_DEL.
+While scsi_prep_state_check() prints about a dead device
+in this case.
+
+Would it make sense to remove the redundant dev_printk() from
+scsi_request_fn()?
+
+
+Then we could add a flag into struct scsi_device that
+would remember if we already printed the error in
+scsi_prep_state_check() for the given device. It could
+be used to print the error only once.
+
+The flag might be scsi_device_state value for which
+we printed the error last time. We would need to reset
+it scsi_prep_state_check() see another state.
+
+It is a bit hairy but it really does not make much sense
+to print the same error message thousand times.
+
+Best Regards,
+Petr
+
+PS: Your mail was again strangely formatted. Please, send
+mails in plain text format (no html).
