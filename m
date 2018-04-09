@@ -1,58 +1,125 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: 4.15.14 crash with iscsi target and dvd
-Date: Mon, 9 Apr 2018 21:30:11 +0000
-Message-ID: <f9467e78ce05446e7a89f06713c36fb638d1b6ad.camel@wdc.com>
-References: <b68bf187c9cde1c36489fc5ab2187ca8750a1292.camel@wdc.com>
-         <20180401113721.GA8471@animx.eu.org> <20180401163604.GB25011@animx.eu.org>
-         <20180401182723.GA31755@animx.eu.org>
-         <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
-         <20180406014644.GA16112@animx.eu.org> <20180406020651.GB16112@animx.eu.org>
-         <fb0640c203409a84ab1bfbbc41078a5416138ad2.camel@wdc.com>
-         <20180407165335.GA2515@animx.eu.org>
-         <1ff8d234cc565ba9701ce31899fca5faa597e050.camel@wdc.com>
-         <20180408160254.GA22869@animx.eu.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180408160254.GA22869@animx.eu.org>
-Content-Language: en-US
-Content-ID: <C98B9809A64A8347B903667442CD7287@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "wakko@animx.eu.org" <wakko@animx.eu.org>
+From: Chris Leech <cleech@redhat.com>
+Subject: [PATCH] iscsi: respond to netlink with unicast when appropriate
+Date: Mon,  9 Apr 2018 15:15:28 -0700
+Message-ID: <20180409221528.67880-1-cleech@redhat.com>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Lee Duncan <lduncan@suse.com>, open-iscsi@googlegroups.com
+Cc: Chris Leech <cleech@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU3VuLCAyMDE4LTA0LTA4IGF0IDEyOjAyIC0wNDAwLCBXYWtrbyBXYXJuZXIgd3JvdGU6DQo+
-IEkgZmluaXNoZWQgd2l0aCBnaXQgYmlzZWN0LiAgSGVyZSdzIHRoZSBvdXRwdXQ6DQo+IDg0Yzg1
-OTA2NDZkNWIzNTgwNGJhYzYwZWI1OGIxNDU4MzliNTg5M2UgaXMgdGhlIGZpcnN0IGJhZCBjb21t
-aXQNCj4gY29tbWl0IDg0Yzg1OTA2NDZkNWIzNTgwNGJhYzYwZWI1OGIxNDU4MzliNTg5M2UNCj4g
-QXV0aG9yOiBNaW5nIExlaSA8dG9tLmxlaW1pbmdAZ21haWwuY29tPg0KPiBEYXRlOiAgIEZyaSBO
-b3YgMTEgMjA6MDU6MzIgMjAxNiArMDgwMA0KPiANCj4gICAgIHRhcmdldDogYXZvaWQgYWNjZXNz
-aW5nIC5iaV92Y250IGRpcmVjdGx5DQo+ICAgICANCj4gICAgIFdoZW4gdGhlIGJpbyBpcyBmdWxs
-LCBiaW9fYWRkX3BjX3BhZ2UoKSB3aWxsIHJldHVybiB6ZXJvLA0KPiAgICAgc28gdXNlIHRoaXMg
-aW5mb3JtYXRpb24gdGVsbCB3aGVuIHRoZSBiaW8gaXMgZnVsbC4NCj4gICAgIA0KPiAgICAgQWxz
-byByZXBsYWNlIGFjY2VzcyB0byAuYmlfdmNudCBmb3IgcHJfZGVidWcoKSB3aXRoIGJpb19zZWdt
-ZW50cygpLg0KPiAgICAgDQo+ICAgICBSZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhj
-aEBsc3QuZGU+DQo+ICAgICBTaWduZWQtb2ZmLWJ5OiBNaW5nIExlaSA8dG9tLmxlaW1pbmdAZ21h
-aWwuY29tPg0KPiAgICAgUmV2aWV3ZWQtYnk6IFNhZ2kgR3JpbWJlcmcgPHNhZ2lAZ3JpbWJlcmcu
-bWU+DQo+ICAgICBTaWduZWQtb2ZmLWJ5OiBKZW5zIEF4Ym9lIDxheGJvZUBmYi5jb20+DQo+IA0K
-PiA6MDQwMDAwIDA0MDAwMCBhM2ViYmI3MWM1MmVlNGViOGMzYmU0ZDAzM2I4MTE3OTIxMWJmNzA0
-IGRlMzlhMzI4ZGJkMWIxODUxOTk0NmIzYWQ0NmQ5MzAyODg2ZTBkZDAgTSAgICAgIGRyaXZlcnMN
-Cj4gDQo+IEkgZGlkIGEgZGlmZiBiZXR3ZWVuIEhFQUReIGFuZCBIRUFEIGFuZCBtYW51YWxseSBw
-YXRjaGVkIHRoZSBmaWxlIGZyb20NCj4gNC4xNS4xNC4gIEl0J3Mgbm90IGFuIGV4YWN0IHJldmVy
-dC4gIEknbSBydW5uaW5nIGl0IG5vdyBhbmQgaXQncyB3b3JraW5nLg0KPiBJJ2xsIGRvIGEgYmV0
-dGVyIHRlc3QgbGF0ZXIgb24uICBIZXJlJ3MgdGhlIHBhdGNoOg0KPiANCj4gLS0tIGEvZHJpdmVy
-cy90YXJnZXQvdGFyZ2V0X2NvcmVfcHNjc2kuYwkyMDE4LTAyLTA0IDE0OjMxOjMxLjA3NzMxNjYx
-NyAtMDUwMA0KPiArKysgYi9kcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV9wc2NzaS5jCTIwMTgt
-MDQtMDggMTE6NDM6NDkuNTg4NjQxMzc0IC0wNDAwDQo+IEBAIC05MTUsNyArOTE1LDkgQEANCj4g
-IAkJCQkJYmlvLCBwYWdlLCBieXRlcywgb2ZmKTsNCj4gIAkJCXByX2RlYnVnKCJQU0NTSTogYmlv
-LT5iaV92Y250OiAlZCBucl92ZWNzOiAlZFxuIiwNCj4gIAkJCQliaW9fc2VnbWVudHMoYmlvKSwg
-bnJfdmVjcyk7DQo+IC0JCQlpZiAocmMgIT0gYnl0ZXMpIHsNCj4gKwkJCWlmIChyYyAhPSBieXRl
-cykNCj4gKwkJCQlnb3RvIGZhaWw7DQo+ICsJCQlpZiAoYmlvLT5iaV92Y250ID4gbnJfdmVjcykg
-ew0KPiAgCQkJCXByX2RlYnVnKCJQU0NTSTogUmVhY2hlZCBiaW8tPmJpX3ZjbnQgbWF4OiINCj4g
-IAkJCQkJIiAlZCBpOiAlZCBiaW86ICVwLCBhbGxvY2F0aW5nIGFub3RoZXIiDQo+ICAJCQkJCSIg
-YmlvXG4iLCBiaW8tPmJpX3ZjbnQsIGksIGJpbyk7DQoNCkhlbGxvIE1pbmcsDQoNCkNhbiB5b3Ug
-aGF2ZSBhIGxvb2sgYXQgdGhpcz8gVGhlIHN0YXJ0IG9mIHRoaXMgZS1tYWlsIHRocmVhZCBpcyBh
-dmFpbGFibGUgYXQNCmh0dHBzOi8vd3d3Lm1haWwtYXJjaGl2ZS5jb20vbGludXgtc2NzaUB2Z2Vy
-Lmtlcm5lbC5vcmcvbXNnNzI1NzQuaHRtbC4NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg0K
+Instead of always multicasting responses, send a unicast netlink message
+directed at the correct pid.  This will be needed if we ever want to
+support multiple userspace processes interacting with the kernel over
+iSCSI netlink simultaneously.  Limitations can currently be seen if you
+attempt to run multiple iscsistart commands in parallel.
+
+We've fixed up the userspace issues in iscsistart that prevented
+multiple instances from running, so now attempts to speed up booting by
+bringing up multiple iscsi sessions at once in the initramfs are just
+running into misrouted responses that this fixes.
+
+Signed-off-by: Chris Leech <cleech@redhat.com>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 29 ++++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index f4b52b44b966..65f6c94f2e9b 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2322,6 +2322,12 @@ iscsi_multicast_skb(struct sk_buff *skb, uint32_t group, gfp_t gfp)
+ 	return nlmsg_multicast(nls, skb, 0, group, gfp);
+ }
+ 
++static int
++iscsi_unicast_skb(struct sk_buff *skb, u32 portid)
++{
++	return nlmsg_unicast(nls, skb, portid);
++}
++
+ int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
+ 		   char *data, uint32_t data_size)
+ {
+@@ -2524,14 +2530,11 @@ void iscsi_ping_comp_event(uint32_t host_no, struct iscsi_transport *transport,
+ EXPORT_SYMBOL_GPL(iscsi_ping_comp_event);
+ 
+ static int
+-iscsi_if_send_reply(uint32_t group, int seq, int type, int done, int multi,
+-		    void *payload, int size)
++iscsi_if_send_reply(u32 portid, int type, void *payload, int size)
+ {
+ 	struct sk_buff	*skb;
+ 	struct nlmsghdr	*nlh;
+ 	int len = nlmsg_total_size(size);
+-	int flags = multi ? NLM_F_MULTI : 0;
+-	int t = done ? NLMSG_DONE : type;
+ 
+ 	skb = alloc_skb(len, GFP_ATOMIC);
+ 	if (!skb) {
+@@ -2539,10 +2542,9 @@ iscsi_if_send_reply(uint32_t group, int seq, int type, int done, int multi,
+ 		return -ENOMEM;
+ 	}
+ 
+-	nlh = __nlmsg_put(skb, 0, 0, t, (len - sizeof(*nlh)), 0);
+-	nlh->nlmsg_flags = flags;
++	nlh = __nlmsg_put(skb, 0, 0, type, (len - sizeof(*nlh)), 0);
+ 	memcpy(nlmsg_data(nlh), payload, size);
+-	return iscsi_multicast_skb(skb, group, GFP_ATOMIC);
++	return iscsi_unicast_skb(skb, portid);
+ }
+ 
+ static int
+@@ -3470,6 +3472,7 @@ static int
+ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ {
+ 	int err = 0;
++	u32 portid;
+ 	struct iscsi_uevent *ev = nlmsg_data(nlh);
+ 	struct iscsi_transport *transport = NULL;
+ 	struct iscsi_internal *priv;
+@@ -3490,10 +3493,12 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 	if (!try_module_get(transport->owner))
+ 		return -EINVAL;
+ 
++	portid = NETLINK_CB(skb).portid;
++
+ 	switch (nlh->nlmsg_type) {
+ 	case ISCSI_UEVENT_CREATE_SESSION:
+ 		err = iscsi_if_create_session(priv, ep, ev,
+-					      NETLINK_CB(skb).portid,
++					      portid,
+ 					      ev->u.c_session.initial_cmdsn,
+ 					      ev->u.c_session.cmds_max,
+ 					      ev->u.c_session.queue_depth);
+@@ -3506,7 +3511,7 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 		}
+ 
+ 		err = iscsi_if_create_session(priv, ep, ev,
+-					NETLINK_CB(skb).portid,
++					portid,
+ 					ev->u.c_bound_session.initial_cmdsn,
+ 					ev->u.c_bound_session.cmds_max,
+ 					ev->u.c_bound_session.queue_depth);
+@@ -3664,6 +3669,8 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ static void
+ iscsi_if_rx(struct sk_buff *skb)
+ {
++	u32 portid = NETLINK_CB(skb).portid;
++
+ 	mutex_lock(&rx_queue_mutex);
+ 	while (skb->len >= NLMSG_HDRLEN) {
+ 		int err;
+@@ -3699,8 +3706,8 @@ iscsi_if_rx(struct sk_buff *skb)
+ 				break;
+ 			if (ev->type == ISCSI_UEVENT_GET_CHAP && !err)
+ 				break;
+-			err = iscsi_if_send_reply(group, nlh->nlmsg_seq,
+-				nlh->nlmsg_type, 0, 0, ev, sizeof(*ev));
++			err = iscsi_if_send_reply(portid, nlh->nlmsg_type,
++						  ev, sizeof(*ev));
+ 		} while (err < 0 && err != -ECONNREFUSED && err != -ESRCH);
+ 		skb_pull(skb, rlen);
+ 	}
+-- 
+2.14.3
