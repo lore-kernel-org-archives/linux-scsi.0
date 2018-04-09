@@ -1,24 +1,36 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Correct setting of
- SAM_STAT_CHECK_CONDITION
-Date: Mon, 9 Apr 2018 14:14:44 +0000
-Message-ID: <bc811b8b6b80fc83b3ce6238806f55b268e89c17.camel@wdc.com>
-References: <20180409123922.854-1-jthumshirn@suse.de>
+From: Oleksandr Natalenko <oleksandr@natalenko.name>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Mon, 09 Apr 2018 17:54:33 +0200
+Message-ID: <20ba00cdfd1428aff13b7ea4cb42b03c@natalenko.name>
+References: <10360653.ov98egbaqx@natalenko.name>
+ <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
+ <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
+ <2679696.GDoj5zcZOu@natalenko.name> <20180409093520.GB10405@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180409123922.854-1-jthumshirn@suse.de>
-Content-Language: en-US
-Content-ID: <8A6248908028AD4EA32BE6B289904722@namprd04.prod.outlook.com>
+In-Reply-To: <20180409093520.GB10405@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hare@suse.de" <hare@suse.de>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Kees Cook <keescook@chromium.org>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org, paolo.valente@linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE4LTA0LTA5IGF0IDE0OjM5ICswMjAwLCBKb2hhbm5lcyBUaHVtc2hpcm4gd3Jv
-dGU6DQo+IEJhcnQgcmVwb3J0cyB0aGF0IGluIHFsYV9pc3IuYydzIHFsYTJ4MDBfaGFuZGxlX2Rp
-Zl9lcnJvciB3ZSdyZQ0KPiB3cm9uZ2x5IHNoaWZ0aW5nIHRoZSBTQU1fU1RBVF9DSEVDS19DT05E
-SVRJT04gYnkgb25lIGluc3RlYWQgb2YNCj4gZGlyZWN0bHkgT1JpbmcgaXQgb250byB0aGUgU0NT
-SSBjb21tYW5kJ3MgcmVzdWx0Lg0KDQpSZXZpZXdlZC1ieTogQmFydCBWYW4gQXNzY2hlIDxiYXJ0
-LnZhbmFzc2NoZUB3ZGMuY29tPg0KDQoNCg==
+Hi.
+
+09.04.2018 11:35, Christoph Hellwig wrote:
+> I really can't make sense of that report.
+
+Sorry, I have nothing to add there so far, I just see the symptom of 
+something going wrong in the ioctl code path that is invoked by 
+smartctl, but I have no idea what's the minimal environment to reproduce 
+it. I'll try to collect more info.
+
+> And I'm also curious why
+> you think 17cb960f29c2 should change anything for that code path.
+
+Maybe, I've just mis-read that code.
+
+Regards,
+   Oleksandr
