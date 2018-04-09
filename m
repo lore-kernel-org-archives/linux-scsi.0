@@ -1,14 +1,14 @@
 From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: [PATCH AUTOSEL for 4.14 059/161] scsi: devinfo: fix format of the
+Subject: [PATCH AUTOSEL for 3.18 077/101] scsi: devinfo: fix format of the
  device list
-Date: Mon, 9 Apr 2018 00:20:34 +0000
-Message-ID: <20180409001936.162706-59-alexander.levin@microsoft.com>
-References: <20180409001936.162706-1-alexander.levin@microsoft.com>
+Date: Mon, 9 Apr 2018 00:41:36 +0000
+Message-ID: <20180409004042.164920-27-alexander.levin@microsoft.com>
+References: <20180409004042.164920-1-alexander.levin@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180409001936.162706-1-alexander.levin@microsoft.com>
+In-Reply-To: <20180409004042.164920-1-alexander.levin@microsoft.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -34,10 +34,10 @@ Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
  1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index cfc095f45e26..ea947a7c2596 100644
+index 90abf7f5289d..2f994edce4c4 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
-@@ -109,8 +109,8 @@ static struct {
+@@ -108,8 +108,8 @@ static struct {
  	 * seagate controller, which causes SCSI code to reset bus.
  	 */
  	{"HP", "C1750A", "3226", BLIST_NOLUN},		/* scanjet iic */
@@ -49,7 +49,7 @@ index cfc095f45e26..ea947a7c2596 100644
  	{"MICROTEK", "ScanMaker II", "5.61", BLIST_NOLUN},	/* responds to all lun=
  */
  	{"MITSUMI", "CD-R CR-2201CS", "6119", BLIST_NOLUN},	/* locks up */
-@@ -120,7 +120,7 @@ static struct {
+@@ -119,7 +119,7 @@ static struct {
  	{"QUANTUM", "FIREBALL ST4.3S", "0F0C", BLIST_NOLUN},	/* locks up */
  	{"RELISYS", "Scorpio", NULL, BLIST_NOLUN},	/* responds to all lun */
  	{"SANKYO", "CP525", "6.64", BLIST_NOLUN},	/* causes failed REQ SENSE, ext=
@@ -59,7 +59,7 @@ ra reset */
  	{"transtec", "T5008", "0001", BLIST_NOREPORTLUN },
  	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},	/* locks up */
  	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
-@@ -255,7 +255,6 @@ static struct {
+@@ -248,7 +248,6 @@ static struct {
  	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
  	{"SUN", "T300", "*", BLIST_SPARSELUN},
  	{"SUN", "T4", "*", BLIST_SPARSELUN},
