@@ -1,17 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Mon, 9 Apr 2018 11:35:20 +0200
-Message-ID: <20180409093520.GB10405@lst.de>
-References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com> <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com> <2679696.GDoj5zcZOu@natalenko.name>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] qla2xxx: correctly shift host byte
+Date: Mon, 9 Apr 2018 14:17:22 +0200
+Message-ID: <20180409121722.zijiq63mo56ovewg@linux-x5ow.site>
+References: <20180406075222.7358-1-jthumshirn@suse.de>
+ <0753246e70d16062b87930b2b75eec31a4bb88eb.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <2679696.GDoj5zcZOu@natalenko.name>
+In-Reply-To: <0753246e70d16062b87930b2b75eec31a4bb88eb.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc: Kees Cook <keescook@chromium.org>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org, paolo.valente@linaro.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-I really can't make sense of that report.  And I'm also curious why
-you think 17cb960f29c2 should change anything for that code path.
+On Fri, Apr 06, 2018 at 03:01:20PM +0000, Bart Van Assche wrote:
+> Please mention in the description of this patch that this patch does not
+> change any functionality because DID_OK == 0. Anyway:
+> 
+> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+
+I'll do. Thanks for the review.
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
