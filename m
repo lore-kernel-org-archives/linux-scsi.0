@@ -1,36 +1,89 @@
-From: Oleksandr Natalenko <oleksandr@natalenko.name>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Mon, 09 Apr 2018 17:54:33 +0200
-Message-ID: <20ba00cdfd1428aff13b7ea4cb42b03c@natalenko.name>
-References: <10360653.ov98egbaqx@natalenko.name>
- <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
- <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
- <2679696.GDoj5zcZOu@natalenko.name> <20180409093520.GB10405@lst.de>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH 1/1] scsi/ufs: qcom: Don't enable PHY_QCOM_UFS by default
+Date: Mon, 9 Apr 2018 09:51:27 -0700
+Message-ID: <20180409165127.GK453@tuxbook-pro>
+References: <20180409132404.20876-1-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180409093520.GB10405@lst.de>
+Content-Disposition: inline
+In-Reply-To: <20180409132404.20876-1-vivek.gautam@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Kees Cook <keescook@chromium.org>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org, paolo.valente@linaro.org
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: martin.petersen@oracle.com, kishon@ti.com, jejb@linux.vnet.ibm.com, subhashj@codeaurora.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi.
+On Mon 09 Apr 06:24 PDT 2018, Vivek Gautam wrote:
 
-09.04.2018 11:35, Christoph Hellwig wrote:
-> I really can't make sense of that report.
+> While we try to transition from a separate ufs phy driver to a
+> more integrated qmp phy driver, don't let SCSI_UFS_QCOM to
+> enable PHY_QCOM_UFS config by default.
+> The users should enable this in their defconfigs.
+> Also add inline definitions for couple of functions -
+> a) ufs_qcom_phy_set_tx_lane_enable()
+> b) void ufs_qcom_phy_save_controller_version()
+> to enable clean build for SCSI_UFS_QCOM.
+> 
+> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/Kconfig         |  1 -
+>  include/linux/phy/phy-qcom-ufs.h | 15 ++++++++++++++-
+>  2 files changed, 14 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index e27b4d4e6ae2..7e8898b6eb67 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -91,7 +91,6 @@ config SCSI_UFS_DWC_TC_PLATFORM
+>  config SCSI_UFS_QCOM
+>  	tristate "QCOM specific hooks to UFS controller platform driver"
+>  	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
+> -	select PHY_QCOM_UFS
 
-Sorry, I have nothing to add there so far, I just see the symptom of 
-something going wrong in the ioctl code path that is invoked by 
-smartctl, but I have no idea what's the minimal environment to reproduce 
-it. I'll try to collect more info.
+As you're depending on function in the UFS phy, which can be compiled as
+a module you might end up in a configuration where UFS_QCOM is builtin
+and the PHY_QCOM_UFS is module, which will fail to link.
 
-> And I'm also curious why
-> you think 17cb960f29c2 should change anything for that code path.
+So you need to make this:
 
-Maybe, I've just mis-read that code.
+	depends on PHY_QCOM_UFS || PHY_QCOM_UFS=n
+
+In which case we say that if PHY_QCOM_UFS is a module UFS_QCOM must be a
+module and if PHY_QCOM_UFS is not compiled in UFS_QCOM can be either
+builtin or a module.
+
+>  	help
+>  	  This selects the QCOM specific additions to UFSHCD platform driver.
+>  	  UFS host on QCOM needs some vendor specific configuration before
+> diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
+> index 0a2c18a9771d..1388c2a2965e 100644
+> --- a/include/linux/phy/phy-qcom-ufs.h
+> +++ b/include/linux/phy/phy-qcom-ufs.h
+> @@ -31,8 +31,21 @@ void ufs_qcom_phy_enable_dev_ref_clk(struct phy *phy);
+>   */
+>  void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
+>  
+> +#if IS_ENABLED(CONFIG_PHY_QCOM_UFS)
+>  int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
+>  void ufs_qcom_phy_save_controller_version(struct phy *phy,
+> -			u8 major, u16 minor, u16 step);
+> +					  u8 major, u16 minor, u16 step);
+> +#else
+> +static inline int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes)
+> +{
+> +	return -ENOSYS;
+> +}
+> +
+> +static inline void ufs_qcom_phy_save_controller_version(struct phy *phy,
+> +							u8 major, u16 minor,
+> +							u16 step)
+> +{
+> +}
+> +#endif /* PHY_QCOM_UFS */
+
+What's the timeline for getting rid of the references to these
+functions? I presume that code depending on these being here will
+compile but won't actually work?
 
 Regards,
-   Oleksandr
+Bjorn
