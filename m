@@ -1,125 +1,28 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: [PATCH] iscsi: respond to netlink with unicast when appropriate
-Date: Mon,  9 Apr 2018 15:15:28 -0700
-Message-ID: <20180409221528.67880-1-cleech@redhat.com>
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Lee Duncan <lduncan@suse.com>, open-iscsi@googlegroups.com
-Cc: Chris Leech <cleech@redhat.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Mon, 9 Apr 2018 16:03:12 -0700
+Message-ID: <CAGXu5jKPynuv61n=h3Fn8eLmxwG3+V+9XXHRfmV9MQ9+RrcKYQ@mail.gmail.com>
+References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
+ <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
+ <2679696.GDoj5zcZOu@natalenko.name> <CAGXu5jLG9ia+zBNcPt+q+BpJayoUuYwXitOgeHmh=7sPp-s87A@mail.gmail.com>
+ <51a7e805058ef7f35b226cbbf0ccc4ff@natalenko.name> <CAGXu5jKRrdYjuyLSvc4k4mqttkM7zw-96poQ1GYqRRgPqZFOYQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGXu5jKRrdYjuyLSvc4k4mqttkM7zw-96poQ1GYqRRgPqZFOYQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org, paolo.valente@linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-Instead of always multicasting responses, send a unicast netlink message
-directed at the correct pid.  This will be needed if we ever want to
-support multiple userspace processes interacting with the kernel over
-iSCSI netlink simultaneously.  Limitations can currently be seen if you
-attempt to run multiple iscsistart commands in parallel.
+On Mon, Apr 9, 2018 at 1:30 PM, Kees Cook <keescook@chromium.org> wrote:
+> Ah! dm-crypt too. I'll see if I can get that added easily to my tests.
 
-We've fixed up the userspace issues in iscsistart that prevented
-multiple instances from running, so now attempts to speed up booting by
-bringing up multiple iscsi sessions at once in the initramfs are just
-running into misrouted responses that this fixes.
+Quick update: I added dm-crypt (with XFS on top) and it hung my system
+almost immediately. I got no warnings at all, though.
 
-Signed-off-by: Chris Leech <cleech@redhat.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 29 ++++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+-Kees
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index f4b52b44b966..65f6c94f2e9b 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2322,6 +2322,12 @@ iscsi_multicast_skb(struct sk_buff *skb, uint32_t group, gfp_t gfp)
- 	return nlmsg_multicast(nls, skb, 0, group, gfp);
- }
- 
-+static int
-+iscsi_unicast_skb(struct sk_buff *skb, u32 portid)
-+{
-+	return nlmsg_unicast(nls, skb, portid);
-+}
-+
- int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
- 		   char *data, uint32_t data_size)
- {
-@@ -2524,14 +2530,11 @@ void iscsi_ping_comp_event(uint32_t host_no, struct iscsi_transport *transport,
- EXPORT_SYMBOL_GPL(iscsi_ping_comp_event);
- 
- static int
--iscsi_if_send_reply(uint32_t group, int seq, int type, int done, int multi,
--		    void *payload, int size)
-+iscsi_if_send_reply(u32 portid, int type, void *payload, int size)
- {
- 	struct sk_buff	*skb;
- 	struct nlmsghdr	*nlh;
- 	int len = nlmsg_total_size(size);
--	int flags = multi ? NLM_F_MULTI : 0;
--	int t = done ? NLMSG_DONE : type;
- 
- 	skb = alloc_skb(len, GFP_ATOMIC);
- 	if (!skb) {
-@@ -2539,10 +2542,9 @@ iscsi_if_send_reply(uint32_t group, int seq, int type, int done, int multi,
- 		return -ENOMEM;
- 	}
- 
--	nlh = __nlmsg_put(skb, 0, 0, t, (len - sizeof(*nlh)), 0);
--	nlh->nlmsg_flags = flags;
-+	nlh = __nlmsg_put(skb, 0, 0, type, (len - sizeof(*nlh)), 0);
- 	memcpy(nlmsg_data(nlh), payload, size);
--	return iscsi_multicast_skb(skb, group, GFP_ATOMIC);
-+	return iscsi_unicast_skb(skb, portid);
- }
- 
- static int
-@@ -3470,6 +3472,7 @@ static int
- iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- {
- 	int err = 0;
-+	u32 portid;
- 	struct iscsi_uevent *ev = nlmsg_data(nlh);
- 	struct iscsi_transport *transport = NULL;
- 	struct iscsi_internal *priv;
-@@ -3490,10 +3493,12 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 	if (!try_module_get(transport->owner))
- 		return -EINVAL;
- 
-+	portid = NETLINK_CB(skb).portid;
-+
- 	switch (nlh->nlmsg_type) {
- 	case ISCSI_UEVENT_CREATE_SESSION:
- 		err = iscsi_if_create_session(priv, ep, ev,
--					      NETLINK_CB(skb).portid,
-+					      portid,
- 					      ev->u.c_session.initial_cmdsn,
- 					      ev->u.c_session.cmds_max,
- 					      ev->u.c_session.queue_depth);
-@@ -3506,7 +3511,7 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 		}
- 
- 		err = iscsi_if_create_session(priv, ep, ev,
--					NETLINK_CB(skb).portid,
-+					portid,
- 					ev->u.c_bound_session.initial_cmdsn,
- 					ev->u.c_bound_session.cmds_max,
- 					ev->u.c_bound_session.queue_depth);
-@@ -3664,6 +3669,8 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- static void
- iscsi_if_rx(struct sk_buff *skb)
- {
-+	u32 portid = NETLINK_CB(skb).portid;
-+
- 	mutex_lock(&rx_queue_mutex);
- 	while (skb->len >= NLMSG_HDRLEN) {
- 		int err;
-@@ -3699,8 +3706,8 @@ iscsi_if_rx(struct sk_buff *skb)
- 				break;
- 			if (ev->type == ISCSI_UEVENT_GET_CHAP && !err)
- 				break;
--			err = iscsi_if_send_reply(group, nlh->nlmsg_seq,
--				nlh->nlmsg_type, 0, 0, ev, sizeof(*ev));
-+			err = iscsi_if_send_reply(portid, nlh->nlmsg_type,
-+						  ev, sizeof(*ev));
- 		} while (err < 0 && err != -ECONNREFUSED && err != -ESRCH);
- 		skb_pull(skb, rlen);
- 	}
 -- 
-2.14.3
+Kees Cook
+Pixel Security
