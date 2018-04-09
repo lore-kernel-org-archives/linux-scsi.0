@@ -1,67 +1,72 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH 1/1] scsi/ufs: qcom: Don't enable PHY_QCOM_UFS by default
-Date: Mon,  9 Apr 2018 18:54:04 +0530
-Message-ID: <20180409132404.20876-1-vivek.gautam@codeaurora.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: qla2xxx: Correct setting of
+ SAM_STAT_CHECK_CONDITION
+Date: Mon, 9 Apr 2018 15:56:45 +0200
+Message-ID: <bac29060-8106-fe43-21b4-dabd6e5f5ab2@suse.de>
+References: <20180409123922.854-1-jthumshirn@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180409123922.854-1-jthumshirn@suse.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, kishon@ti.com
-Cc: jejb@linux.vnet.ibm.com, subhashj@codeaurora.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Himanshu Madhani <himanshu.madhani@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-While we try to transition from a separate ufs phy driver to a
-more integrated qmp phy driver, don't let SCSI_UFS_QCOM to
-enable PHY_QCOM_UFS config by default.
-The users should enable this in their defconfigs.
-Also add inline definitions for couple of functions -
-a) ufs_qcom_phy_set_tx_lane_enable()
-b) void ufs_qcom_phy_save_controller_version()
-to enable clean build for SCSI_UFS_QCOM.
+On 04/09/2018 02:39 PM, Johannes Thumshirn wrote:
+> Bart reports that in qla_isr.c's qla2x00_handle_dif_error we're
+> wrongly shifting the SAM_STAT_CHECK_CONDITION by one instead of
+> directly ORing it onto the SCSI command's result.
+> 
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Reported-by: Bart Van Assche <Bart.VanAssche@wdc.com>
+> Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_isr.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> index 49d67e1d571f..ed6cdfea00b4 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -2195,7 +2195,7 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
+>  		    0x10, 0x1);
+>  		set_driver_byte(cmd, DRIVER_SENSE);
+>  		set_host_byte(cmd, DID_ABORT);
+> -		cmd->result |= SAM_STAT_CHECK_CONDITION << 1;
+> +		cmd->result |= SAM_STAT_CHECK_CONDITION;
+>  		return 1;
+>  	}
+>  
+> @@ -2205,7 +2205,7 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
+>  		    0x10, 0x3);
+>  		set_driver_byte(cmd, DRIVER_SENSE);
+>  		set_host_byte(cmd, DID_ABORT);
+> -		cmd->result |= SAM_STAT_CHECK_CONDITION << 1;
+> +		cmd->result |= SAM_STAT_CHECK_CONDITION;
+>  		return 1;
+>  	}
+>  
+> @@ -2215,7 +2215,7 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
+>  		    0x10, 0x2);
+>  		set_driver_byte(cmd, DRIVER_SENSE);
+>  		set_host_byte(cmd, DID_ABORT);
+> -		cmd->result |= SAM_STAT_CHECK_CONDITION << 1;
+> +		cmd->result |= SAM_STAT_CHECK_CONDITION;
+>  		return 1;
+>  	}
+>  
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
----
- drivers/scsi/ufs/Kconfig         |  1 -
- include/linux/phy/phy-qcom-ufs.h | 15 ++++++++++++++-
- 2 files changed, 14 insertions(+), 2 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index e27b4d4e6ae2..7e8898b6eb67 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -91,7 +91,6 @@ config SCSI_UFS_DWC_TC_PLATFORM
- config SCSI_UFS_QCOM
- 	tristate "QCOM specific hooks to UFS controller platform driver"
- 	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
--	select PHY_QCOM_UFS
- 	help
- 	  This selects the QCOM specific additions to UFSHCD platform driver.
- 	  UFS host on QCOM needs some vendor specific configuration before
-diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
-index 0a2c18a9771d..1388c2a2965e 100644
---- a/include/linux/phy/phy-qcom-ufs.h
-+++ b/include/linux/phy/phy-qcom-ufs.h
-@@ -31,8 +31,21 @@ void ufs_qcom_phy_enable_dev_ref_clk(struct phy *phy);
-  */
- void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
- 
-+#if IS_ENABLED(CONFIG_PHY_QCOM_UFS)
- int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
- void ufs_qcom_phy_save_controller_version(struct phy *phy,
--			u8 major, u16 minor, u16 step);
-+					  u8 major, u16 minor, u16 step);
-+#else
-+static inline int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes)
-+{
-+	return -ENOSYS;
-+}
-+
-+static inline void ufs_qcom_phy_save_controller_version(struct phy *phy,
-+							u8 major, u16 minor,
-+							u16 step)
-+{
-+}
-+#endif /* PHY_QCOM_UFS */
- 
- #endif /* PHY_QCOM_UFS_H_ */
+Hannes
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
