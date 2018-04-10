@@ -1,107 +1,70 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: Re: [PATCH 1/1] scsi/ufs: qcom: Don't enable PHY_QCOM_UFS by default
-Date: Tue, 10 Apr 2018 12:01:19 +0530
-Message-ID: <fa02c578-a89e-7934-2e88-d3728957ab71@codeaurora.org>
-References: <20180409132404.20876-1-vivek.gautam@codeaurora.org>
- <20180409165127.GK453@tuxbook-pro>
- <2588cd12-081a-5fad-7ef5-af78b18168eb@codeaurora.org>
- <20180409200904.GL453@tuxbook-pro>
+From: Oleksandr Natalenko <oleksandr@natalenko.name>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Tue, 10 Apr 2018 08:35:25 +0200
+Message-ID: <3d7b5a707e216e19eb3defe0586bfbc8@natalenko.name>
+References: <10360653.ov98egbaqx@natalenko.name>
+ <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
+ <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
+ <2679696.GDoj5zcZOu@natalenko.name>
+ <CAGXu5jLG9ia+zBNcPt+q+BpJayoUuYwXitOgeHmh=7sPp-s87A@mail.gmail.com>
+ <51a7e805058ef7f35b226cbbf0ccc4ff@natalenko.name>
+ <CAGXu5jKRrdYjuyLSvc4k4mqttkM7zw-96poQ1GYqRRgPqZFOYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180409200904.GL453@tuxbook-pro>
-Content-Language: en-US
+In-Reply-To: <CAGXu5jKRrdYjuyLSvc4k4mqttkM7zw-96poQ1GYqRRgPqZFOYQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: martin.petersen@oracle.com, kishon@ti.com, jejb@linux.vnet.ibm.com, subhashj@codeaurora.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org, paolo.valente@linaro.org, keescook@google.com
 List-Id: linux-scsi@vger.kernel.org
 
+Hi.
 
+09.04.2018 22:30, Kees Cook wrote:
+>> echo 1 | tee /sys/block/sd*/queue/nr_requests
+> 
+> I can't get this below "4".
 
-On 4/10/2018 1:39 AM, Bjorn Andersson wrote:
-> On Mon 09 Apr 10:38 PDT 2018, Vivek Gautam wrote:
->> On 4/9/2018 10:21 PM, Bjorn Andersson wrote:
->>> On Mon 09 Apr 06:24 PDT 2018, Vivek Gautam wrote:
-> [..]
->>>> diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
->>>> index 0a2c18a9771d..1388c2a2965e 100644
->>>> --- a/include/linux/phy/phy-qcom-ufs.h
->>>> +++ b/include/linux/phy/phy-qcom-ufs.h
->>>> @@ -31,8 +31,21 @@ void ufs_qcom_phy_enable_dev_ref_clk(struct phy *phy);
->>>>     */
->>>>    void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
->>>> +#if IS_ENABLED(CONFIG_PHY_QCOM_UFS)
->>>>    int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
->>>>    void ufs_qcom_phy_save_controller_version(struct phy *phy,
->>>> -			u8 major, u16 minor, u16 step);
->>>> +					  u8 major, u16 minor, u16 step);
->>>> +#else
->>>> +static inline int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes)
->>>> +{
->>>> +	return -ENOSYS;
->>>> +}
->>>> +
->>>> +static inline void ufs_qcom_phy_save_controller_version(struct phy *phy,
->>>> +							u8 major, u16 minor,
->>>> +							u16 step)
->>>> +{
->>>> +}
->>>> +#endif /* PHY_QCOM_UFS */
->>> What's the timeline for getting rid of the references to these
->>> functions? I presume that code depending on these being here will
->>> compile but won't actually work?
->> Yes, these inline definitions are just to keep ufs-qcom happy with the
->> direct
->> calls that it makes to these functions.
->> As you would know these couple of functions are just used by the 20nm phy.
->> However, we don't have any platform yet in the upstream that enables this
->> phy.
->> I am hoping that we will eventually get rid of these functions when we
->> further
->> clean up ufs-qcom driver.
->>
-> I see, but that means that we're calling this function with a struct phy
-> that might not be a struct ufs_qcom_phy and as such a defconfig with
-> both enabled will have undefined outcome for the migrated phys.
+Oops, yeah. It cannot be less than BLKDEV_MIN_RQ (which is 4), so it is 
+enforced explicitly in queue_requests_store(). It is the same for me.
 
-No, we will have to add support for separate phys as sdm845 has phy per 
-each lane,
-and the older struct phy will exist alongside.
-We will call this function only with the older phy pointer.
+>> echo 1 | tee /sys/block/sd*/device/queue_depth
+> 
+> I've got this now too.
+> Ah! dm-crypt too. I'll see if I can get that added easily to my tests.
+> And XFS! You love your corner cases. ;)
 
-> In particular we do expect that the same kernel will boot on db820c and
-> sdm845-mtp, so we will have to enable support for the 14nm & 20nm phy
-> driver (and we don't want random crashes because someone happened to
-> enable it).
+Yeah, so far this wonderful configuration has allowed me to uncover a 
+bunch of bugs, and see, we are not done yet ;).
 
-Right, so we create new struct phy while keeping older one intact to 
-keep the
-ufs-qcom work with both - ufs_qcom_phy and qmp_phy.
-Some of the controller drivers, such as usb/dwc3/ keep support for old 
-and new phys,
-although there the difference is between generic phy and the usb-phy.
-So, I am assuming that if we want to keep ufs-qcom on platforms using 20nm,
-14nm and 10nm phys happy, we will have to keep the phys separately for 
-sometime.
-What do you say about it?
+> Two other questions, since you can reproduce this easily:
+> - does it reproduce _without_ hardened usercopy? (I would assume yes,
+> but you'd just not get any warning until the hangs started.) If it
+> does reproduce without hardened usercopy, then a new bisect run could
+> narrow the search even more.
 
-On db820c, we can still work with the ufs_qcom_phy.
+Looks like it cannot be disabled via kernel cmdline, so I have to 
+re-compile the kernel, right? I can certainly do that anyway.
 
-Regards
-Vivek
->
->
-> So either we add the 10nm support to the existing driver or I think we
-> should migrate, at least, the 14nm support to the QMP driver (and mark
-> the remaining 20nm BROKEN for now).
->
-> Regardless of the path chosen this should be cleaned up to the point
-> where all three phys are supported.
->
-> Regards,
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> - does it reproduce with Linus's current tree?
+
+Will try this too.
+
+> What would imply missing locking, yes? Yikes. But I'd expect
+> use-after-free or something, or bad data, not having the pointer slip
+> forward?
+
+I still think this has something to do with blk-mq re-queuing capability 
+and how BFQ implements it, because there are no sings of issue popping 
+up with Kyber so far.
+
+> Quick update: I added dm-crypt (with XFS on top) and it hung my system
+> almost immediately. I got no warnings at all, though.
+
+Did your system hang on smartctl hammering too? Have you got some stack 
+traces to compare with mine ones?
+
+Regards,
+   Oleksandr
