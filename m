@@ -1,52 +1,43 @@
-From: Oleksandr Natalenko <oleksandr@natalenko.name>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Tue, 10 Apr 2018 15:47:41 +0200
-Message-ID: <d31189fc94392eb733c1e310ac1ec498@natalenko.name>
-References: <10360653.ov98egbaqx@natalenko.name>
- <CAGXu5jL8oLV2xvjBVYv_SNXr74LdgpXEmU7K+cLYpD7jh2chgw@mail.gmail.com>
- <CAGXu5j+mVc6O_=GOF3YQmS4QZxeFgVPQtMxNH8sjBAhpJLjm9w@mail.gmail.com>
- <2679696.GDoj5zcZOu@natalenko.name>
- <CAGXu5jLG9ia+zBNcPt+q+BpJayoUuYwXitOgeHmh=7sPp-s87A@mail.gmail.com>
- <51a7e805058ef7f35b226cbbf0ccc4ff@natalenko.name>
- <CAGXu5jKRrdYjuyLSvc4k4mqttkM7zw-96poQ1GYqRRgPqZFOYQ@mail.gmail.com>
- <3d7b5a707e216e19eb3defe0586bfbc8@natalenko.name>
+From: Sasha Levin <Alexander.Levin@microsoft.com>
+Subject: Re: [PATCH v1 03/15] mpt3sas: Add sanity checks for scsi tracker
+ before  accessing it.
+Date: Tue, 10 Apr 2018 13:49:18 +0000
+Message-ID: <DM5PR2101MB1032206651FBFD0BB9C33A46FBBE0@DM5PR2101MB1032.namprd21.prod.outlook.com>
+References: <1522943197-5408-4-git-send-email-chaitra.basappa@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3d7b5a707e216e19eb3defe0586bfbc8@natalenko.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org, paolo.valente@linaro.org, keescook@google.com
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1522943197-5408-4-git-send-email-chaitra.basappa@broadcom.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Sasha Levin <Alexander.Levin@microsoft.com>, Chaitra P B <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi.
+Hi,
 
-10.04.2018 08:35, Oleksandr Natalenko wrote:
->> - does it reproduce _without_ hardened usercopy? (I would assume yes,
->> but you'd just not get any warning until the hangs started.) If it
->> does reproduce without hardened usercopy, then a new bisect run could
->> narrow the search even more.
-> 
-> Looks like it cannot be disabled via kernel cmdline, so I have to
-> re-compile the kernel, right? I can certainly do that anyway.
+[This is an automated email]
 
-Okay, I've recompiled the kernel without hardened usercopy:
+This commit has been processed by the -stable helper bot and determined
+to be a high probability candidate for -stable trees. (score: 28.7865)
 
-[root@archlinux ~]# zgrep USERCOPY /proc/config.gz
-CONFIG_X86_INTEL_USERCOPY=y
-CONFIG_HAVE_HARDENED_USERCOPY_ALLOCATOR=y
-# CONFIG_HARDENED_USERCOPY is not set
+The bot has tested the following trees: v4.16.1, v4.15.16, v4.14.33, v4.9.9=
+3, v4.4.127.
 
-and I cannot reproduce the issue anymore. I/O doesn't hang regardless of 
-how long I hammer it.
+v4.16.1: Build OK!
+v4.15.16: Failed to apply! Possible dependencies:
+    dbec4c9040ed ("scsi: mpt3sas: lockless command submission")
 
-Eeeh? Maybe, this is a matter of some cleanup code path once the 
-warn/bug condition is hit with hardening enabled? I'm just guessing here 
-again.
+v4.14.33: Failed to apply! Possible dependencies:
+    dbec4c9040ed ("scsi: mpt3sas: lockless command submission")
 
-Will work towards checking Linus' master branch now…
+v4.9.93: Failed to apply! Possible dependencies:
+    dbec4c9040ed ("scsi: mpt3sas: lockless command submission")
 
-Regards,
-   Oleksandr
+v4.4.127: Failed to apply! Possible dependencies:
+    dbec4c9040ed ("scsi: mpt3sas: lockless command submission")
+
+
+Please let us know if you'd like to have this patch included in a stable tr=
+ee.
