@@ -1,38 +1,43 @@
-From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH] scsi: qla2xxx: reduce the time granularity of qla2x00_eh_wait_on_command
-Date: Tue, 10 Apr 2018 16:48:35 +0800
-Message-ID: <1523350115-4026-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH 1/2] scsi: st: Replace GFP_ATOMIC with GFP_KERNEL in st_probe
+Date: Tue, 10 Apr 2018 20:37:59 +0800
+Message-ID: <1523363879-31242-1-git-send-email-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kai.Makisara@kolumbus.fi, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-If the cmd has not be returned after aborted by qla2x00_eh_abort,
-we have to wait for it. However, the time is 1000ms at least currently.
-If there are a lot cmds need to be aborted, the delay could be long
-enough to lead to panic due to such as hung task, ocfs2 heartbeat,
-etc, just before scsi recovery works.
-Change the granularity to 1ms, even though more context switches
-would be introduced, but it should be ok as it is not hot path.
+st_probe() is never called in atomic context.
 
-Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+st_probe() is only set as ".probe" in struct scsi_driver.
+
+Despite never getting called from atomic context,
+st_probe() calls kzalloc() with GFP_ATOMIC,
+which does not sleep for allocation.
+GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL,
+which can sleep and improve the possibility of sucessful allocation.
+
+This is found by a static analysis tool named DCNS written by myself.
+And I also manually check it.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 2 +-
+ drivers/scsi/st.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5c5dcca4..9f52ad9 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1072,7 +1072,7 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
- static int
- qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
- {
--#define ABORT_POLLING_PERIOD	1000
-+#define ABORT_POLLING_PERIOD	1
- #define ABORT_WAIT_ITER		((2 * 1000) / (ABORT_POLLING_PERIOD))
- 	unsigned long wait_iter = ABORT_WAIT_ITER;
- 	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 94e402e..1da42f3 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4290,7 +4290,7 @@ static int st_probe(struct device *dev)
+ 		goto out_buffer_free;
+ 	}
+ 
+-	tpnt = kzalloc(sizeof(struct scsi_tape), GFP_ATOMIC);
++	tpnt = kzalloc(sizeof(struct scsi_tape), GFP_KERNEL);
+ 	if (tpnt == NULL) {
+ 		sdev_printk(KERN_ERR, SDp,
+ 			    "st: Can't allocate device descriptor.\n");
 -- 
-2.7.4
+1.9.1
