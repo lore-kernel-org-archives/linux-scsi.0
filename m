@@ -1,34 +1,31 @@
 From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: Re: [PATCH v1 14/15] mpt3sas: fix possible memory leak.
-Date: Tue, 10 Apr 2018 13:49:20 +0000
-Message-ID: <DM5PR2101MB1032E7EF8D8EEBAC0BD6DEEFFBBE0@DM5PR2101MB1032.namprd21.prod.outlook.com>
-References: <1522943197-5408-15-git-send-email-chaitra.basappa@broadcom.com>
+Subject: Re: [PATCH v3 1/3] Revert "scsi: core: return BLK_STS_OK for DID_OK
+ in __scsi_error_from_host_byte()"
+Date: Tue, 10 Apr 2018 13:49:25 +0000
+Message-ID: <DM5PR2101MB103238DFFB89F207C9459B41FBBE0@DM5PR2101MB1032.namprd21.prod.outlook.com>
+References: <20180405173301.13186-2-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1522943197-5408-15-git-send-email-chaitra.basappa@broadcom.com>
+In-Reply-To: <20180405173301.13186-2-bart.vanassche@wdc.com>
 Content-Language: en-US
 Sender: stable-owner@vger.kernel.org
-To: Sasha Levin <Alexander.Levin@microsoft.com>, Chaitra P B <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Sasha Levin <Alexander.Levin@microsoft.com>, Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Douglas Gilbert <dgilbert@interlog.com>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Lee Duncan <lduncan@suse.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>"stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Hi,
 
 [This is an automated email]
 
-This commit has been processed by the -stable helper bot and determined
-to be a high probability candidate for -stable trees. (score: 12.9808)
+This commit has been processed because it contains a "Fixes:" tag,
+fixing commit: e39a97353e53 scsi: core: return BLK_STS_OK for DID_OK in __s=
+csi_error_from_host_byte().
 
-The bot has tested the following trees: v4.16.1, v4.15.16, v4.14.33, v4.9.9=
-3, v4.4.127.
+The bot has also determined it's probably a bug fixing patch. (score: 94.67=
+57)
+
+The bot has tested the following trees: v4.16.1.
 
 v4.16.1: Build OK!
-v4.15.16: Build OK!
-v4.14.33: Build OK!
-v4.9.93: Build OK!
-v4.4.127: Build OK!
-
-Please let us know if you'd like to have this patch included in a stable tr=
-ee.
