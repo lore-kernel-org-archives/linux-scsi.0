@@ -1,27 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: devinfo: Add Microsoft iSCSI target to 1024 sector blacklist
-Date: Mon, 09 Apr 2018 22:07:42 -0400
-Message-ID: <yq1woxf24r5.fsf@oracle.com>
-References: <20180326135651.8193-1-ross.lagerwall@citrix.com>
+Subject: Re: [PATCH 0/8] hisi_sas: some misc changes
+Date: Mon, 09 Apr 2018 22:57:47 -0400
+Message-ID: <yq1lgdv22fo.fsf@oracle.com>
+References: <1521821115-120040-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180326135651.8193-1-ross.lagerwall@citrix.com> (Ross
-        Lagerwall's message of "Mon, 26 Mar 2018 14:56:51 +0100")
+In-Reply-To: <1521821115-120040-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Sat, 24 Mar 2018 00:05:07 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ross Lagerwall <ross.lagerwall@citrix.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Ross,
+John,
 
-> The Windows Server 2016 iSCSI target doesn't work with the Linux
-> kernel initiator since the kernel started sending larger requests by
-> default, nor does it implement the block limits VPD page. Apply the
-> sector limit workaround for these targets.
+> This patchset introduces some minor, more trivial patches, some of
+> which have been sitting on our internal dev branch for a while.
 
-Applied to 4.17/scsi-fixes, thank you!
+Applied to 4.18/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
