@@ -1,85 +1,108 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: 4.15.14 crash with iscsi target and dvd
-Date: Wed, 11 Apr 2018 20:52:18 -0400
-Message-ID: <20180412005218.GA12237@animx.eu.org>
-References: <595a10cfb387e6b2ab4d2053b84fed9b3da9e079.camel@wdc.com>
- <20180406014644.GA16112@animx.eu.org>
- <20180406020651.GB16112@animx.eu.org>
- <fb0640c203409a84ab1bfbbc41078a5416138ad2.camel@wdc.com>
- <20180407165335.GA2515@animx.eu.org>
- <1ff8d234cc565ba9701ce31899fca5faa597e050.camel@wdc.com>
- <20180408160254.GA22869@animx.eu.org>
- <f9467e78ce05446e7a89f06713c36fb638d1b6ad.camel@wdc.com>
- <20180409233436.GC6450@ming.t460p>
- <20180411004525.GA9107@animx.eu.org>
+From: cang@codeaurora.org
+Subject: Re: [PATCH v1] scsi: ufs: add 2 lane support
+Date: Thu, 12 Apr 2018 13:48:18 +0800
+Message-ID: <37eafb7dad5926029b5d9993c6749c2d@codeaurora.org>
+References: <20180302082346.8188-1-cang@codeaurora.org>
+ <2af3023d-caaf-4b62-e2ba-fc3cb56b331c@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180411004525.GA9107@animx.eu.org>
+In-Reply-To: <2af3023d-caaf-4b62-e2ba-fc3cb56b331c@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Wakko Warner wrote:
-> Ming Lei wrote:
-> > Sure, thanks for your sharing.
-> > 
-> > Wakko, could you test the following patch and see if there is any
-> > difference?
-> > 
-> > --
-> > diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-> > index 0d99b242e82e..6147178f1f37 100644
-> > --- a/drivers/target/target_core_pscsi.c
-> > +++ b/drivers/target/target_core_pscsi.c
-> > @@ -888,7 +888,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-> >  		if (len > 0 && data_len > 0) {
-> >  			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
-> >  			bytes = min(bytes, data_len);
-> > -
-> > + new_bio:
-> >  			if (!bio) {
-> >  				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
-> >  				nr_pages -= nr_vecs;
-> > @@ -931,6 +931,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-> >  				 * be allocated with pscsi_get_bio() above.
-> >  				 */
-> >  				bio = NULL;
-> > +				goto new_bio;
-> >  			}
-> >  
-> >  			data_len -= bytes;
+On 2018-04-02 18:00, Vivek Gautam wrote:
+> Hi Can,
 > 
-> Sorry for the delay.  I reverted my change, added this one.  I didn't
-> reboot, I just unloaded and loaded this one.
-> Note: /dev/sr1 as seen from the initiator is /dev/sr0 (physical disc) on the
-> target.
 > 
-> Doesn't crash, however on the initiator I see this:
-> [9273849.707777] ISO 9660 Extensions: RRIP_1991A
-> [9273863.359718] scsi_io_completion: 13 callbacks suppressed
-> [9273863.359788] sr 26:0:0:0: [sr1] tag#1 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-> [9273863.359909] sr 26:0:0:0: [sr1] tag#1 Sense Key : 0x2 [current] 
-> [9273863.359974] sr 26:0:0:0: [sr1] tag#1 ASC=0x8 ASCQ=0x0 
-> [9273863.360036] sr 26:0:0:0: [sr1] tag#1 CDB: opcode=0x28 28 00 00 22 f6 96 00 00 80 00
-> [9273863.360116] blk_update_request: 13 callbacks suppressed
-> [9273863.360177] blk_update_request: I/O error, dev sr1, sector 9165400
-> [9273875.864648] sr 26:0:0:0: [sr1] tag#1 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-> [9273875.864738] sr 26:0:0:0: [sr1] tag#1 Sense Key : 0x2 [current] 
-> [9273875.864801] sr 26:0:0:0: [sr1] tag#1 ASC=0x8 ASCQ=0x0 
-> [9273875.864890] sr 26:0:0:0: [sr1] tag#1 CDB: opcode=0x28 28 00 00 22 f7 16 00 00 80 00
-> [9273875.864971] blk_update_request: I/O error, dev sr1, sector 9165912
+> On 3/2/2018 1:48 PM, Can Guo wrote:
+>> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+>> 
+>> Qcom ufs controller v3.1.0 supports 2 lanes, add support
+>> to configure 2 lanes during phy initialization.
+>> 
+>> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> ---
+>>   drivers/scsi/ufs/ufs-qcom.c | 20 +++++++++-----------
+>>   1 file changed, 9 insertions(+), 11 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+>> index 2b38db2..51889ad 100644
+>> --- a/drivers/scsi/ufs/ufs-qcom.c
+>> +++ b/drivers/scsi/ufs/ufs-qcom.c
+>> @@ -113,10 +113,10 @@ static void ufs_qcom_disable_lane_clks(struct 
+>> ufs_qcom_host *host)
+>>   	if (!host->is_lane_clks_enabled)
+>>   		return;
+>>   -	if (host->hba->lanes_per_direction > 1)
+>> +	if (host->tx_l1_sync_clk)
+>>   		clk_disable_unprepare(host->tx_l1_sync_clk);
+>>   	clk_disable_unprepare(host->tx_l0_sync_clk);
+>> -	if (host->hba->lanes_per_direction > 1)
+>> +	if (host->rx_l1_sync_clk)
+>>   		clk_disable_unprepare(host->rx_l1_sync_clk);
+>>   	clk_disable_unprepare(host->rx_l0_sync_clk);
+>>   @@ -147,18 +147,15 @@ static int ufs_qcom_enable_lane_clks(struct 
+>> ufs_qcom_host *host)
+>>   		if (err)
+>>   			goto disable_tx_l0;
+>>   -		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+>> -			host->tx_l1_sync_clk);
+>> -		if (err)
+>> -			goto disable_rx_l1;
+>> +		/* The tx lane1 clk could be muxed, hence keep this optional */
+> 
+> You need a similar change for "rx_l1_sync_clk" also.
+> And also get rid of 'lanes_per_direction' flag as well for
+> ufs_qcom_enable_lane_clks()
+> and ufs_qcom_init_lane_clks() too, as you are doing in
+> ufs_qcom_disable_lane_clks().
+> 
 
-Just FYI: The jobs that I do that uses the disc over iscsi didn't cause any
-kernel messages on either system (except for the informational when the disc
-was mounted)
+Sure, got it.
 
-I have a dumb question though.  Could the label be placed just after the
-'if' statement instead of before it?  bio is set to null and the 'if'
-statement checks if it's null, which it always would be after the goto.
+Thanks
+Can
 
--- 
- Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
- million bugs.
+>> +		if (host->tx_l1_sync_clk)
+>> +			ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+>> +						 host->tx_l1_sync_clk);
+>>   	}
+>>     	host->is_lane_clks_enabled = true;
+>>   	goto out;
+>>   -disable_rx_l1:
+>> -	if (host->hba->lanes_per_direction > 1)
+>> -		clk_disable_unprepare(host->rx_l1_sync_clk);
+>>   disable_tx_l0:
+>>   	clk_disable_unprepare(host->tx_l0_sync_clk);
+>>   disable_rx_l0:
+>> @@ -189,8 +186,9 @@ static int ufs_qcom_init_lane_clks(struct 
+>> ufs_qcom_host *host)
+>>   		if (err)
+>>   			goto out;
+>>   -		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+>> -			&host->tx_l1_sync_clk);
+>> +		/* The tx lane1 clk could be muxed, hence keep this optional */
+>> +		ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+>> +					&host->tx_l1_sync_clk);
+> 
+> same here.
+> 
+> Best regards
+> Vivek
+> 
+
+Shall do as well.
+
+Thanks
+Can
+
+>>   	}
+>>   out:
+>>   	return err;
