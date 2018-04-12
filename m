@@ -1,108 +1,50 @@
-From: cang@codeaurora.org
-Subject: Re: [PATCH v1] scsi: ufs: add 2 lane support
-Date: Thu, 12 Apr 2018 13:48:18 +0800
-Message-ID: <37eafb7dad5926029b5d9993c6749c2d@codeaurora.org>
-References: <20180302082346.8188-1-cang@codeaurora.org>
- <2af3023d-caaf-4b62-e2ba-fc3cb56b331c@codeaurora.org>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: [PATCH] scsi: qla2xxx: reduce the time granularity of
+ qla2x00_eh_wait_on_command
+Date: Thu, 12 Apr 2018 17:00:09 +0800
+Message-ID: <69351cce-2d2f-11d6-27b6-01d0d90a2e59@oracle.com>
+References: <1523350115-4026-1-git-send-email-jianchao.w.wang@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2af3023d-caaf-4b62-e2ba-fc3cb56b331c@codeaurora.org>
+In-Reply-To: <1523350115-4026-1-git-send-email-jianchao.w.wang@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-04-02 18:00, Vivek Gautam wrote:
-> Hi Can,
-> 
-> 
-> On 3/2/2018 1:48 PM, Can Guo wrote:
->> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->> 
->> Qcom ufs controller v3.1.0 supports 2 lanes, add support
->> to configure 2 lanes during phy initialization.
->> 
->> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->>   drivers/scsi/ufs/ufs-qcom.c | 20 +++++++++-----------
->>   1 file changed, 9 insertions(+), 11 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
->> index 2b38db2..51889ad 100644
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
->> @@ -113,10 +113,10 @@ static void ufs_qcom_disable_lane_clks(struct 
->> ufs_qcom_host *host)
->>   	if (!host->is_lane_clks_enabled)
->>   		return;
->>   -	if (host->hba->lanes_per_direction > 1)
->> +	if (host->tx_l1_sync_clk)
->>   		clk_disable_unprepare(host->tx_l1_sync_clk);
->>   	clk_disable_unprepare(host->tx_l0_sync_clk);
->> -	if (host->hba->lanes_per_direction > 1)
->> +	if (host->rx_l1_sync_clk)
->>   		clk_disable_unprepare(host->rx_l1_sync_clk);
->>   	clk_disable_unprepare(host->rx_l0_sync_clk);
->>   @@ -147,18 +147,15 @@ static int ufs_qcom_enable_lane_clks(struct 
->> ufs_qcom_host *host)
->>   		if (err)
->>   			goto disable_tx_l0;
->>   -		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
->> -			host->tx_l1_sync_clk);
->> -		if (err)
->> -			goto disable_rx_l1;
->> +		/* The tx lane1 clk could be muxed, hence keep this optional */
-> 
-> You need a similar change for "rx_l1_sync_clk" also.
-> And also get rid of 'lanes_per_direction' flag as well for
-> ufs_qcom_enable_lane_clks()
-> and ufs_qcom_init_lane_clks() too, as you are doing in
-> ufs_qcom_disable_lane_clks().
-> 
+Would anyone please take a review on this ?
 
-Sure, got it.
+Thanks in advance
+Jianchao
 
-Thanks
-Can
-
->> +		if (host->tx_l1_sync_clk)
->> +			ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
->> +						 host->tx_l1_sync_clk);
->>   	}
->>     	host->is_lane_clks_enabled = true;
->>   	goto out;
->>   -disable_rx_l1:
->> -	if (host->hba->lanes_per_direction > 1)
->> -		clk_disable_unprepare(host->rx_l1_sync_clk);
->>   disable_tx_l0:
->>   	clk_disable_unprepare(host->tx_l0_sync_clk);
->>   disable_rx_l0:
->> @@ -189,8 +186,9 @@ static int ufs_qcom_init_lane_clks(struct 
->> ufs_qcom_host *host)
->>   		if (err)
->>   			goto out;
->>   -		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
->> -			&host->tx_l1_sync_clk);
->> +		/* The tx lane1 clk could be muxed, hence keep this optional */
->> +		ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
->> +					&host->tx_l1_sync_clk);
+On 04/10/2018 04:48 PM, Jianchao Wang wrote:
+> If the cmd has not be returned after aborted by qla2x00_eh_abort,
+> we have to wait for it. However, the time is 1000ms at least currently.
+> If there are a lot cmds need to be aborted, the delay could be long
+> enough to lead to panic due to such as hung task, ocfs2 heartbeat,
+> etc, just before scsi recovery works.
+> Change the granularity to 1ms, even though more context switches
+> would be introduced, but it should be ok as it is not hot path.
 > 
-> same here.
+> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_os.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Best regards
-> Vivek
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 5c5dcca4..9f52ad9 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -1072,7 +1072,7 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
+>  static int
+>  qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
+>  {
+> -#define ABORT_POLLING_PERIOD	1000
+> +#define ABORT_POLLING_PERIOD	1
+>  #define ABORT_WAIT_ITER		((2 * 1000) / (ABORT_POLLING_PERIOD))
+>  	unsigned long wait_iter = ABORT_WAIT_ITER;
+>  	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
 > 
-
-Shall do as well.
-
-Thanks
-Can
-
->>   	}
->>   out:
->>   	return err;
