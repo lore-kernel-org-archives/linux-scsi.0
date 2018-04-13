@@ -1,91 +1,31 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] scsi_transport_srp: Fix shost to rport translation
-Date: Fri, 13 Apr 2018 08:11:07 +0200
-Message-ID: <20180413081107.6b034df9@pentland.suse.de>
+Date: Fri, 13 Apr 2018 12:40:45 +0000
+Message-ID: <c01a20b2b9b8f15a6def5e0a8af90977dbf7ed86.camel@wdc.com>
 References: <20180412193207.13253-1-bart.vanassche@wdc.com>
+         <20180413081107.6b034df9@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180412193207.13253-1-bart.vanassche@wdc.com>
+In-Reply-To: <20180413081107.6b034df9@pentland.suse.de>
+Content-Language: en-US
+Content-ID: <244BEF7C8F1FB9489C4173FBEA8C70E0@namprd04.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jason Gunthorpe <jgg@mellanox.com>, Doug Ledford <dledford@redhat.com>, Laurence Oberman <loberman@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "jgg@mellanox.com" <jgg@mellanox.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "loberman@redhat.com" <loberman@redhat.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 12 Apr 2018 13:32:07 -0600
-"Bart Van Assche" <bart.vanassche@wdc.com> wrote:
-
-> Since an SRP remote port is attached as a child to shost->shost_gendev
-> and as the only child, the translation from the shost pointer into an
-> rport pointer must happen by looking up the shost child that is an
-> rport. This patch fixes the following KASAN complaint:
-> 
-> BUG: KASAN: slab-out-of-bounds in srp_timed_out+0x57/0x110
-> [scsi_transport_srp] Read of size 4 at addr ffff880035d3fcc0 by task
-> kworker/1:0H/19
-> 
-> CPU: 1 PID: 19 Comm: kworker/1:0H Not tainted 4.16.0-rc3-dbg+ #1
-> Workqueue: kblockd blk_mq_timeout_work
-> Call Trace:
-> dump_stack+0x85/0xc7
-> print_address_description+0x65/0x270
-> kasan_report+0x231/0x350
-> srp_timed_out+0x57/0x110 [scsi_transport_srp]
-> scsi_times_out+0xc7/0x3f0 [scsi_mod]
-> blk_mq_terminate_expired+0xc2/0x140
-> bt_iter+0xbc/0xd0
-> blk_mq_queue_tag_busy_iter+0x1c7/0x350
-> blk_mq_timeout_work+0x325/0x3f0
-> process_one_work+0x441/0xa50
-> worker_thread+0x76/0x6c0
-> kthread+0x1b2/0x1d0
-> ret_from_fork+0x24/0x30
-> 
-> Fixes: e68ca75200fe ("scsi_transport_srp: Reduce failover time")
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: Jason Gunthorpe <jgg@mellanox.com>
-> Cc: Doug Ledford <dledford@redhat.com>
-> Cc: Laurence Oberman <loberman@redhat.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/scsi/scsi_transport_srp.c | 19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_srp.c
-> b/drivers/scsi/scsi_transport_srp.c index 36f6190931bc..0d0515615847
-> 100644 --- a/drivers/scsi/scsi_transport_srp.c
-> +++ b/drivers/scsi/scsi_transport_srp.c
-> @@ -51,6 +51,8 @@ struct srp_internal {
->  	struct transport_container rport_attr_cont;
->  };
->  
-> +static int scsi_is_srp_rport(const struct device *dev);
-> +
->  #define to_srp_internal(tmpl) container_of(tmpl, struct
-> srp_internal, t) 
->  #define	dev_to_rport(d)	container_of(d, struct
-> srp_rport, dev) @@ -60,9 +62,24 @@ static inline struct Scsi_Host
-> *rport_to_shost(struct srp_rport *r) return
-> dev_to_shost(r->dev.parent); }
->  
-> +static int find_child_rport(struct device *dev, void *data)
-> +{
-> +	struct device **child = data;
-> +
-> +	if (scsi_is_srp_rport(dev)) {
-> +		WARN_ON_ONCE(*child);
-> +		*child = dev;
-> +	}
-> +	return 0;
-> +}
-> +
-Huh?
-
-Why not have 'static struct device *find_child_rport() ?
-
-Cheers,
-
-Hannes
+T24gRnJpLCAyMDE4LTA0LTEzIGF0IDA4OjExICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIFRodSwgMTIgQXByIDIwMTggMTM6MzI6MDcgLTA2MDANCj4gIkJhcnQgVmFuIEFzc2No
+ZSIgPGJhcnQudmFuYXNzY2hlQHdkYy5jb20+IHdyb3RlOg0KPiA+ICtzdGF0aWMgaW50IGZpbmRf
+Y2hpbGRfcnBvcnQoc3RydWN0IGRldmljZSAqZGV2LCB2b2lkICpkYXRhKQ0KPiA+ICt7DQo+ID4g
+KwlzdHJ1Y3QgZGV2aWNlICoqY2hpbGQgPSBkYXRhOw0KPiA+ICsNCj4gPiArCWlmIChzY3NpX2lz
+X3NycF9ycG9ydChkZXYpKSB7DQo+ID4gKwkJV0FSTl9PTl9PTkNFKCpjaGlsZCk7DQo+ID4gKwkJ
+KmNoaWxkID0gZGV2Ow0KPiA+ICsJfQ0KPiA+ICsJcmV0dXJuIDA7DQo+ID4gK30NCj4gPiArDQo+
+IA0KPiBXaHkgbm90IGhhdmUgJ3N0YXRpYyBzdHJ1Y3QgZGV2aWNlICpmaW5kX2NoaWxkX3Jwb3J0
+KCkgPw0KDQpIZWxsbyBIYW5uZXMsDQoNClRoZSBmdW5jdGlvbiBkZXZpY2VfZm9yX2VhY2hfY2hp
+bGQoKSBleHBlY3RzIHRvIGJlIHBhc3NlZCBhIGludCAoKikoc3RydWN0IGRldmljZSAqLA0Kdm9p
+ZCAqKSBwb2ludGVyLiBJcyB0aGVyZSBwZXJoYXBzIGFub3RoZXIgZnVuY3Rpb24gZm9yIGl0ZXJh
+dGluZyBvdmVyIGRldmljZSBjaGlsZHJlbg0KdGhhdCBhY2NlcHRzIGEgZnVuY3Rpb24gdGhhdCBy
+ZXR1cm5zIGEgcG9pbnRlcj8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg0K
