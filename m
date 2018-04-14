@@ -1,223 +1,112 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [Resend Patch 3/3] Storvsc: Select channel based on available
- percentage of ring buffer to write
-Date: Sat, 14 Apr 2018 00:25:38 +0000
-Message-ID: <MWHPR2101MB07297FFF2901EA6D7ED1173ECEB20@MWHPR2101MB0729.namprd21.prod.outlook.com>
-References: <20180328004840.22787-1-longli@linuxonhyperv.com>
- <20180328004840.22787-3-longli@linuxonhyperv.com>
- <DM5PR2101MB1030EEAC92D8CF826480A6B2DCB30@DM5PR2101MB1030.namprd21.prod.outlook.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: 4.15.14 crash with iscsi target and dvd
+Date: Sat, 14 Apr 2018 17:34:08 -0400
+Message-ID: <20180414213408.GA3148@animx.eu.org>
+References: <fb0640c203409a84ab1bfbbc41078a5416138ad2.camel@wdc.com>
+ <20180407165335.GA2515@animx.eu.org>
+ <1ff8d234cc565ba9701ce31899fca5faa597e050.camel@wdc.com>
+ <20180408160254.GA22869@animx.eu.org>
+ <f9467e78ce05446e7a89f06713c36fb638d1b6ad.camel@wdc.com>
+ <20180409233436.GC6450@ming.t460p>
+ <20180411004525.GA9107@animx.eu.org>
+ <20180412100751.GB4697@ming.t460p>
+ <20180413014302.GA3891@animx.eu.org>
+ <20180413015551.GA12601@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <DM5PR2101MB1030EEAC92D8CF826480A6B2DCB30@DM5PR2101MB1030.namprd21.prod.outlook.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>, KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180413015551.GA12601@ming.t460p>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "richard.weinberger@gmail.com" <richard.weinberger@gmail.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> Subject: RE: [Resend Patch 3/3] Storvsc: Select channel based on available
-> percentage of ring buffer to write
+Ming Lei wrote:
+> On Thu, Apr 12, 2018 at 09:43:02PM -0400, Wakko Warner wrote:
+> > Ming Lei wrote:
+> > > On Tue, Apr 10, 2018 at 08:45:25PM -0400, Wakko Warner wrote:
+> > > > Sorry for the delay.  I reverted my change, added this one.  I didn't
+> > > > reboot, I just unloaded and loaded this one.
+> > > > Note: /dev/sr1 as seen from the initiator is /dev/sr0 (physical disc) on the
+> > > > target.
+> > > > 
+> > > > Doesn't crash, however on the initiator I see this:
+> > > > [9273849.707777] ISO 9660 Extensions: RRIP_1991A
+> > > > [9273863.359718] scsi_io_completion: 13 callbacks suppressed
+> > > > [9273863.359788] sr 26:0:0:0: [sr1] tag#1 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
+> > > > [9273863.359909] sr 26:0:0:0: [sr1] tag#1 Sense Key : 0x2 [current] 
+> > > > [9273863.359974] sr 26:0:0:0: [sr1] tag#1 ASC=0x8 ASCQ=0x0 
+> > > > [9273863.360036] sr 26:0:0:0: [sr1] tag#1 CDB: opcode=0x28 28 00 00 22 f6 96 00 00 80 00
+> > > > [9273863.360116] blk_update_request: 13 callbacks suppressed
+> > > > [9273863.360177] blk_update_request: I/O error, dev sr1, sector 9165400
+> > > > [9273875.864648] sr 26:0:0:0: [sr1] tag#1 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
+> > > > [9273875.864738] sr 26:0:0:0: [sr1] tag#1 Sense Key : 0x2 [current] 
+> > > > [9273875.864801] sr 26:0:0:0: [sr1] tag#1 ASC=0x8 ASCQ=0x0 
+> > > > [9273875.864890] sr 26:0:0:0: [sr1] tag#1 CDB: opcode=0x28 28 00 00 22 f7 16 00 00 80 00
+> > > > [9273875.864971] blk_update_request: I/O error, dev sr1, sector 9165912
+> > > > 
+> > > > To cause this, I mounted the dvd as seen in the first line and ran this
+> > > > command: find /cdrom2 -type f | xargs -tn1 cat > /dev/null
+> > > > I did some various tests.  Each test was done after umount and mount to
+> > > > clear the cache.
+> > > > cat <file> > /dev/null causes the message.
+> > > > dd if=<file> of=/dev/null bs=2048 doesn't
+> > > > 	using bs=4096 doesn't
+> > > > 	using bs=64k doesn't
+> > > > 	using bs=128k does
+> > > > cat uses a blocksize of 128k.
+> > > > 
+> > > > The following was done without being mounted.
+> > > > ddrescue -f -f /dev/sr1 /dev/null 
+> > > > 	doesn't cause the message
+> > > > dd if=/dev/sr1 of=/dev/null bs=128k
+> > > > 	doesn't cause the message
+> > > > using bs=256k causes the message once:
+> > > > [9275916.857409] sr 27:0:0:0: [sr1] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
+> > > > [9275916.857482] sr 27:0:0:0: [sr1] tag#0 Sense Key : 0x2 [current] 
+> > > > [9275916.857520] sr 27:0:0:0: [sr1] tag#0 ASC=0x8 ASCQ=0x0 
+> > > > [9275916.857556] sr 27:0:0:0: [sr1] tag#0 CDB: opcode=0x28 28 00 00 00 00 00 00 00 80 00
+> > > > [9275916.857614] blk_update_request: I/O error, dev sr1, sector 0
+> > > > 
+> > > > If I access the disc from the target natively either by mounting and
+> > > > accessing files or working with the device directly (ie dd) no errors are
+> > > > logged on the target.
+> > > 
+> > > OK, thanks for your test.
+> > > 
+> > > Could you test the following patch and see if there is still the failure
+> > > message?
+> > > 
+> > > diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> > > index 0d99b242e82e..6137287b52fb 100644
+> > > --- a/drivers/target/target_core_pscsi.c
+> > > +++ b/drivers/target/target_core_pscsi.c
+> > > @@ -913,9 +913,11 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+> > >  
+> > >  			rc = bio_add_pc_page(pdv->pdv_sd->request_queue,
+> > >  					bio, page, bytes, off);
+> > > +			if (rc != bytes)
+> > > +				goto fail;
+> > >  			pr_debug("PSCSI: bio->bi_vcnt: %d nr_vecs: %d\n",
+> > >  				bio_segments(bio), nr_vecs);
+> > > -			if (rc != bytes) {
+> > > +			if (/*rc != bytes*/0) {
+> > >  				pr_debug("PSCSI: Reached bio->bi_vcnt max:"
+> > >  					" %d i: %d bio: %p, allocating another"
+> > >  					" bio\n", bio->bi_vcnt, i, bio);
+> > 
+> > Target doesn't crash but the errors on the initiator are still there.
 > 
-> > -----Original Message-----
-> > From: linux-kernel-owner@vger.kernel.org
-> > <linux-kernel-owner@vger.kernel.org> On Behalf Of Long Li
-> > Sent: Tuesday, March 27, 2018 5:49 PM
-> > To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> > <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>;
-> > James E . J . Bottomley <JBottomley@odin.com>; Martin K . Petersen
-> > <martin.petersen@oracle.com>; devel@linuxdriverproject.org; linux-
-> > scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > netdev@vger.kernel.org
-> > Cc: Long Li <longli@microsoft.com>
-> > Subject: [Resend Patch 3/3] Storvsc: Select channel based on available
-> > percentage of ring buffer to write
-> >
-> > From: Long Li <longli@microsoft.com>
-> >
-> > This is a best effort for estimating on how busy the ring buffer is
-> > for that channel, based on available buffer to write in percentage. It
-> > is still possible that at the time of actual ring buffer write, the
-> > space may not be available due to other processes may be writing at the
-> time.
-> >
-> > Selecting a channel based on how full it is can reduce the possibility
-> > that a ring buffer write will fail, and avoid the situation a channel
-> > is over busy.
-> >
-> > Now it's possible that storvsc can use a smaller ring buffer size
-> > (e.g. 40k bytes) to take advantage of cache locality.
-> >
-> > Signed-off-by: Long Li <longli@microsoft.com>
-> > ---
-> >  drivers/scsi/storvsc_drv.c | 62
-> > +++++++++++++++++++++++++++++++++++++---------
-> >  1 file changed, 50 insertions(+), 12 deletions(-)
-> >
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > index a2ec0bc9e9fa..b1a87072b3ab 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -395,6 +395,12 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size,
-> "Ring
-> > buffer size (bytes)");
-> >
-> >  module_param(storvsc_vcpus_per_sub_channel, int, S_IRUGO);
-> > MODULE_PARM_DESC(storvsc_vcpus_per_sub_channel, "Ratio of VCPUs
-> to
-> > subchannels");
-> > +
-> > +static int ring_avail_percent_lowater = 10;
+> OK, then this error log isn't related with my commit, because the patch
+> I sent to you in last email is to revert my commit simply.
 > 
-> Reserving 10% of each ring buffer by default seems like more than is needed
-> in the storvsc driver.  That would be about 4Kbytes for the 40K ring buffer
-> you suggest, and even more for a ring buffer of 128K.  Each outgoing record is
-> only about 344 bytes (I'd have to check exactly).  With the new channel
-> selection algorithm below, the only time we use a channel that is already
-> below the low water mark is when no channel could be found that is above
-> the low water mark.   There could be a case of two or more threads deciding
-> that a channel is above the low water mark at the same time and both
-> choosing it, but that's likely to be rare.  So it seems like we could set the
+> But the following patch is one correct fix for your crash.
+> 
+> https://marc.info/?l=linux-kernel&m=152331690727052&w=2
 
-It's not rare for two processes checking on the same channel at the same time, when running multiple processes I/O workload. The CPU to channel is not 1:1 mapping.
+Ok, that'll be the one I used.  Do you know when it'll go upstream?
 
-> default low water mark to 5 percent or even 3 percent, which will let more of
-> the ring buffer be used, and let a channel be assigned according to the
-> algorithm, rather than falling through to the default because all channels
-> appear to be "full".
-
-It seems it's not about how big ring buffer is, e.g. even you have a ring buffer of infinite size, it won't help with performance if it's getting queued all the time, while other ring buffers are near empty. It's more about how multiple ring buffers are getting utilized in a reasonable and balanced way. Testing shows 10 is a good choice, while 3 is prone to return BUSY and trigger block layer retry.
-
-> 
-> > +module_param(ring_avail_percent_lowater, int, S_IRUGO);
-> > +MODULE_PARM_DESC(ring_avail_percent_lowater,
-> > +		"Select a channel if available ring size > this in percent");
-> > +
-> >  /*
-> >   * Timeout in seconds for all devices managed by this driver.
-> >   */
-> > @@ -1285,9 +1291,9 @@ static int storvsc_do_io(struct hv_device
-> > *device,  {
-> >  	struct storvsc_device *stor_device;
-> >  	struct vstor_packet *vstor_packet;
-> > -	struct vmbus_channel *outgoing_channel;
-> > +	struct vmbus_channel *outgoing_channel, *channel;
-> >  	int ret = 0;
-> > -	struct cpumask alloced_mask;
-> > +	struct cpumask alloced_mask, other_numa_mask;
-> >  	int tgt_cpu;
-> >
-> >  	vstor_packet = &request->vstor_packet; @@ -1301,22 +1307,53 @@
-> > static int storvsc_do_io(struct hv_device *device,
-> >  	/*
-> >  	 * Select an an appropriate channel to send the request out.
-> >  	 */
-> > -
-> >  	if (stor_device->stor_chns[q_num] != NULL) {
-> >  		outgoing_channel = stor_device->stor_chns[q_num];
-> > -		if (outgoing_channel->target_cpu == smp_processor_id()) {
-> > +		if (outgoing_channel->target_cpu == q_num) {
-> >  			/*
-> >  			 * Ideally, we want to pick a different channel if
-> >  			 * available on the same NUMA node.
-> >  			 */
-> >  			cpumask_and(&alloced_mask, &stor_device-
-> >alloced_cpus,
-> >
-> cpumask_of_node(cpu_to_node(q_num)));
-> > -			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
-> > -					outgoing_channel->target_cpu + 1) {
-> > -				if (tgt_cpu != outgoing_channel->target_cpu)
-> {
-> > -					outgoing_channel =
-> > -					stor_device->stor_chns[tgt_cpu];
-> > -					break;
-> > +
-> > +			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
-> q_num + 1) {
-> > +				if (tgt_cpu == q_num)
-> > +					continue;
-> > +				channel = stor_device->stor_chns[tgt_cpu];
-> > +				if (hv_get_avail_to_write_percent(
-> > +							&channel->outbound)
-> > +						> ring_avail_percent_lowater)
-> {
-> > +					outgoing_channel = channel;
-> > +					goto found_channel;
-> > +				}
-> > +			}
-> > +
-> > +			/*
-> > +			 * All the other channels on the same NUMA node
-> are
-> > +			 * busy. Try to use the channel on the current CPU
-> > +			 */
-> > +			if (hv_get_avail_to_write_percent(
-> > +						&outgoing_channel-
-> >outbound)
-> > +					> ring_avail_percent_lowater)
-> > +				goto found_channel;
-> > +
-> > +			/*
-> > +			 * If we reach here, all the channels on the current
-> > +			 * NUMA node are busy. Try to find a channel in
-> > +			 * other NUMA nodes
-> > +			 */
-> > +			cpumask_andnot(&other_numa_mask,
-> > +					&stor_device->alloced_cpus,
-> > +
-> 	cpumask_of_node(cpu_to_node(q_num)));
-> > +
-> > +			for_each_cpu(tgt_cpu, &other_numa_mask) {
-> > +				channel = stor_device->stor_chns[tgt_cpu];
-> > +				if (hv_get_avail_to_write_percent(
-> > +							&channel->outbound)
-> > +						> ring_avail_percent_lowater)
-> {
-> > +					outgoing_channel = channel;
-> > +					goto found_channel;
-> >  				}
-> >  			}
-> >  		}
-> > @@ -1324,7 +1361,7 @@ static int storvsc_do_io(struct hv_device *device,
-> >  		outgoing_channel = get_og_chn(stor_device, q_num);
-> >  	}
-> >
-> > -
-> > +found_channel:
-> >  	vstor_packet->flags |= REQUEST_COMPLETION_FLAG;
-> >
-> >  	vstor_packet->vm_srb.length = (sizeof(struct vmscsi_request) - @@
-> > -1733,7 +1770,8 @@ static int storvsc_probe(struct hv_device *device,
-> >  	}
-> >
-> >  	scsi_driver.can_queue = (max_outstanding_req_per_channel *
-> > -				 (max_sub_channels + 1));
-> > +				 (max_sub_channels + 1)) *
-> > +				 (100 - ring_avail_percent_lowater) / 100;
-> 
-> A minor nit, but the use of parentheses here is inconsistent.  There's a set of
-> parens around the first two expressions to explicitly code the associativity,
-> but not a set to encompass the third term, which must be processed before
-> the fourth one is.  C does multiplication and division with left to right
-> associativity, so the result is as intended.
-> But if we're depending on C's default associativity, then that set of parens
-> around the first two expression really isn't needed, and one wonders why
-> they are there.
-> 
-> Michael
-> 
-> >
-> >  	host = scsi_host_alloc(&scsi_driver,
-> >  			       sizeof(struct hv_host_device));
-> > --
-> > 2.14.1
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
