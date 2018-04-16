@@ -1,51 +1,34 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [RESEND PATCH v1 1/2] trace: events: scsi: Add tag in SCSI trace
- events
-Date: Mon, 16 Apr 2018 21:20:30 +0000
-Message-ID: <796550a7b71c9675ee9a3d5cc05c968938080254.camel@wdc.com>
-References: <97d36126b86443f680aacfac23b0a04e@SIWEX5A.sing.micron.com>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [RESEND PATCH v1 1/2] trace: events: scsi: Add tag in SCSI
+ trace events
+Date: Mon, 16 Apr 2018 17:24:47 -0400
+Message-ID: <20180416172447.5166f854@gandalf.local.home>
+References: <4650cbf668fd4853ad98dba834141e08@SIWEX5A.sing.micron.com>
+        <bee7c8b15b7cec3d4b1442f414e766539fac2491.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <97d36126b86443f680aacfac23b0a04e@SIWEX5A.sing.micron.com>
-Content-Language: en-US
-Content-ID: <AA52DD459046F8438BC272ACAC3A1AC9@namprd04.prod.outlook.com>
+In-Reply-To: <bee7c8b15b7cec3d4b1442f414e766539fac2491.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "beanhuo@micron.com" <beanhuo@micron.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "rostedt@goodmis.org" <rostedt@goodmis.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mingo@redhad.com" <mingo@redhad.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "rajatja@google.com" <rajatja@google.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "beanhuo@micron.com" <beanhuo@micron.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mingo@redhad.com" <mingo@redhad.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "rajatja@google.com" <rajatja@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gTW9uLCAyMDE4LTA0LTE2IGF0IDIxOjEwICswMDAwLCBCZWFuIEh1byAoYmVhbmh1bykgd3Jv
-dGU6DQo+IEhpLCBCYXJ0DQo+IA0KPiA+IG1pbmdvQHJlZGhhZC5jb207IGxpbnV4LWJsb2NrQHZn
-ZXIua2VybmVsLm9yZzsgcmFqYXRqYUBnb29nbGUuY29tDQo+ID4gU3ViamVjdDogW0VYVF0gUmU6
-IFtSRVNFTkQgUEFUQ0ggdjEgMS8yXSB0cmFjZTogZXZlbnRzOiBzY3NpOiBBZGQgdGFnIGluIFND
-U0kNCj4gPiB0cmFjZSBldmVudHMNCj4gPiANCj4gPiBPbiBNb24sIDIwMTgtMDQtMTYgYXQgMTQ6
-MzEgKzAwMDAsIEJlYW4gSHVvIChiZWFuaHVvKSB3cm90ZToNCj4gPiA+ICAJVFBfcHJpbnRrKCJo
-b3N0X25vPSV1IGNoYW5uZWw9JXUgaWQ9JXUgbHVuPSV1IGRhdGFfc2dsPSV1DQo+ID4gDQo+ID4g
-cHJvdF9zZ2w9JXUiIFwNCj4gPiA+IC0JCSAgIiBwcm90X29wPSVzIGNtbmQ9KCVzICVzIHJhdz0l
-cykiLA0KPiA+ID4gKwkJICAiIHByb3Rfb3A9JXMgdGFnPSVkIGNtbmQ9KCVzICVzIHJhdz0lcyki
-LA0KPiA+ID4gDQo+ID4gPiBbIC4uLiBdDQo+ID4gPiAgCVRQX3ByaW50aygiaG9zdF9ubz0ldSBj
-aGFubmVsPSV1IGlkPSV1IGx1bj0ldSBkYXRhX3NnbD0ldQ0KPiA+IA0KPiA+IHByb3Rfc2dsPSV1
-IiBcDQo+ID4gPiAtCQkgICIgcHJvdF9vcD0lcyBjbW5kPSglcyAlcyByYXc9JXMpIHJ0bj0lZCIs
-DQo+ID4gPiArCQkgICIgcHJvdF9vcD0lcyB0YWc9JWQgY21uZD0oJXMgJXMgcmF3PSVzKSBydG49
-JWQiLA0KPiA+ID4gWyAuLi4gXQ0KPiA+ID4gIAlUUF9wcmludGsoImhvc3Rfbm89JXUgY2hhbm5l
-bD0ldSBpZD0ldSBsdW49JXUgZGF0YV9zZ2w9JXUgIiBcDQo+ID4gPiAtCQkgICJwcm90X3NnbD0l
-dSBwcm90X29wPSVzIGNtbmQ9KCVzICVzIHJhdz0lcykNCj4gPiANCj4gPiByZXN1bHQ9KGRyaXZl
-cj0iIFwNCj4gPiA+IC0JCSAgIiVzIGhvc3Q9JXMgbWVzc2FnZT0lcyBzdGF0dXM9JXMpIiwNCj4g
-PiA+ICsJCSAgInByb3Rfc2dsPSV1IHByb3Rfb3A9JXMgdGFnPSVkIGNtbmQ9KCVzICVzIHJhdz0l
-cykgIiBcDQo+ID4gPiArCQkgICJyZXN1bHQ9KGRyaXZlcj0lcyBob3N0PSVzIG1lc3NhZ2U9JXMg
-c3RhdHVzPSVzKSIsDQo+ID4gDQo+ID4gV2hpY2ggdG9vbHMgcHJvY2VzcyB0aGVzZSBzdHJpbmdz
-PyBIYXMgaXQgYmVlbiB2ZXJpZmllZCB3aGV0aGVyIG9yIG5vdCB0aGUNCj4gPiB0b29scyB0aGF0
-IHByb2Nlc3MgdGhlc2Ugc3RyaW5ncyBzdGlsbCB3b3JrIGZpbmUgd2l0aCB0aGlzIHBhdGNoIGFw
-cGxpZWQ/DQo+ID4gDQo+IA0KPiBJIGRvbid0IHVzZSBvbmUgY2VydGFpbiBzcGVjaWFsIHRvb2wg
-dG8gYW5hbHl6ZSB0aGlzIHN0cmluZywgSSBhbSB1c2luZyBmdHJhY2Ugd2l0aCBldmVudC4NCj4g
-V2l0aCB0YWcgaW5mb3JtYXRpb24sIEkgY2FuIHNlZSBob3cgbWFueSB0YXNrcyBpbiBzdG9yYWdl
-IGRldmljZSBhbmQgZWFzaWx5IHRvIHRyYWNlIGVhY2ggcmVxdWVzdA0KPiB1bmRlciBtdWx0aXBs
-ZSB0aHJlYWQgd29ya2xvYWQuIA0KPiBFdmVudCB0aGVyZSBpcyBzb21lb25lIHdobyB1c2luZyBj
-ZXJ0YWluIHRvb2wgdG8gYW5hbHl6ZSB0aGlzIHN0cmluZywgYWZ0ZXIgYWRkaW5nIGFkZGl0aW9u
-YWwNCj4gdGFnIHByaW50b3V0LCBpbiBteSBvcGluaW9uLCB0aGV5IGFyZSBoYXBweSB0byBzZWUg
-aXQgdGhlcmUuIA0KDQpTaW5jZSB5b3Ugd2FudCB0byBjaGFuZ2UgdGhlc2Ugc3RyaW5ncyBpdCBp
-cyB5b3VyIGpvYiB0byBkZXRlcm1pbmUgd2hpY2gNCnVzZXIgc3BhY2UgdG9vbHMgcGFyc2UgdGhl
-c2Ugc3RyaW5ncyBhbmQgYWxzbyB3aGV0aGVyIG9yIG5vdCB0aGlzIGNoYW5nZQ0Kd2lsbCBicmVh
-ayBhbnkgb2YgdGhlc2UgdG9vbHMuDQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQoNCg==
+On Mon, 16 Apr 2018 20:49:12 +0000
+Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+
+> Which tools process these strings? Has it been verified whether or not
+> the tools that process these strings still work fine with this patch
+> applied?
+
+Ideally, tools shouldn't process trace event strings, but I'm sure some
+do. :-/
+
+Getting libtraceevent out as a library is a high priority of mine, and
+hopefully I should get something out in a couple of months.
+
+Ideally, tools should parse the raw data and then new fields will not
+affect them.
+
+-- Steve
