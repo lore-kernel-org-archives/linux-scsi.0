@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 06/12] memstick: don't call blk_queue_bounce_limit
-Date: Mon, 16 Apr 2018 10:50:26 +0200
-Message-ID: <20180416085032.7367-7-hch@lst.de>
+Subject: [PATCH 07/12] scsi: reduce use of block bounce buffers
+Date: Mon, 16 Apr 2018 10:50:27 +0200
+Message-ID: <20180416085032.7367-8-hch@lst.de>
 References: <20180416085032.7367-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,65 +21,57 @@ To: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-ar
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-All in-tree host drivers set up a proper dma mask and use the dma-mapping
-helpers.  This means they will be able to deal with any address that we
-are throwing at them.
+We can rely on the dma-mapping code to handle any DMA limits that is
+bigger than the ISA DMA mask for us (either using an iommu or swiotlb),
+so remove setting the block layer bounce limit for anything but the
+unchecked_isa_dma case, or the bouncing for highmem pages.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/memstick/core/ms_block.c    | 5 -----
- drivers/memstick/core/mspro_block.c | 5 -----
- 2 files changed, 10 deletions(-)
+ drivers/scsi/scsi_lib.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/memstick/core/ms_block.c b/drivers/memstick/core/ms_block.c
-index 57b13dfbd21e..b2d025f42d14 100644
---- a/drivers/memstick/core/ms_block.c
-+++ b/drivers/memstick/core/ms_block.c
-@@ -2096,12 +2096,8 @@ static int msb_init_disk(struct memstick_dev *card)
- 	struct msb_data *msb = memstick_get_drvdata(card);
- 	struct memstick_host *host = card->host;
- 	int rc;
--	u64 limit = BLK_BOUNCE_HIGH;
- 	unsigned long capacity;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0dfec0dedd5e..ebe2cbb48b80 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2142,27 +2142,6 @@ static int scsi_map_queues(struct blk_mq_tag_set *set)
+ 	return blk_mq_map_queues(set);
+ }
  
--	if (host->dev.dma_mask && *(host->dev.dma_mask))
--		limit = *(host->dev.dma_mask);
+-static u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
+-{
+-	struct device *host_dev;
+-	u64 bounce_limit = 0xffffffff;
 -
- 	mutex_lock(&msb_disk_lock);
- 	msb->disk_id = idr_alloc(&msb_disk_idr, card, 0, 256, GFP_KERNEL);
- 	mutex_unlock(&msb_disk_lock);
-@@ -2123,7 +2119,6 @@ static int msb_init_disk(struct memstick_dev *card)
- 
- 	msb->queue->queuedata = card;
- 
--	blk_queue_bounce_limit(msb->queue, limit);
- 	blk_queue_max_hw_sectors(msb->queue, MS_BLOCK_MAX_PAGES);
- 	blk_queue_max_segments(msb->queue, MS_BLOCK_MAX_SEGS);
- 	blk_queue_max_segment_size(msb->queue,
-diff --git a/drivers/memstick/core/mspro_block.c b/drivers/memstick/core/mspro_block.c
-index 8897962781bb..a2fadc605750 100644
---- a/drivers/memstick/core/mspro_block.c
-+++ b/drivers/memstick/core/mspro_block.c
-@@ -1175,12 +1175,8 @@ static int mspro_block_init_disk(struct memstick_dev *card)
- 	struct mspro_sys_info *sys_info = NULL;
- 	struct mspro_sys_attr *s_attr = NULL;
- 	int rc, disk_id;
--	u64 limit = BLK_BOUNCE_HIGH;
- 	unsigned long capacity;
- 
--	if (host->dev.dma_mask && *(host->dev.dma_mask))
--		limit = *(host->dev.dma_mask);
+-	if (shost->unchecked_isa_dma)
+-		return BLK_BOUNCE_ISA;
+-	/*
+-	 * Platforms with virtual-DMA translation
+-	 * hardware have no practical limit.
+-	 */
+-	if (!PCI_DMA_BUS_IS_PHYS)
+-		return BLK_BOUNCE_ANY;
 -
- 	for (rc = 0; msb->attr_group.attrs[rc]; ++rc) {
- 		s_attr = mspro_from_sysfs_attr(msb->attr_group.attrs[rc]);
+-	host_dev = scsi_get_device(shost);
+-	if (host_dev && host_dev->dma_mask)
+-		bounce_limit = (u64)dma_max_pfn(host_dev) << PAGE_SHIFT;
+-
+-	return bounce_limit;
+-}
+-
+ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ {
+ 	struct device *dev = shost->dma_dev;
+@@ -2182,7 +2161,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 	}
  
-@@ -1219,7 +1215,6 @@ static int mspro_block_init_disk(struct memstick_dev *card)
+ 	blk_queue_max_hw_sectors(q, shost->max_sectors);
+-	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
++	if (shost->unchecked_isa_dma)
++		blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
+ 	blk_queue_segment_boundary(q, shost->dma_boundary);
+ 	dma_set_seg_boundary(dev, shost->dma_boundary);
  
- 	msb->queue->queuedata = card;
- 
--	blk_queue_bounce_limit(msb->queue, limit);
- 	blk_queue_max_hw_sectors(msb->queue, MSPRO_BLOCK_MAX_PAGES);
- 	blk_queue_max_segments(msb->queue, MSPRO_BLOCK_MAX_SEGS);
- 	blk_queue_max_segment_size(msb->queue,
 -- 
 2.17.0
