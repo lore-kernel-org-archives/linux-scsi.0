@@ -1,107 +1,67 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH v2] block: ratelimite pr_err on IO path
-Date: Mon, 16 Apr 2018 14:36:31 +0530
-Message-ID: <CAK=zhgrT7UA8h84cCOcbkdH-wsL32_H=WLawNMgW89Vtmcu5WA@mail.gmail.com>
-References: <1523524915-25170-1-git-send-email-jinpu.wangl@profitbricks.com>
- <yq1y3hsunnt.fsf@oracle.com> <CAMGffEkaTLLEs+i-EWUmo-Y8KSNBeyth63L1hXxP++PBcPPXbg@mail.gmail.com>
- <yq1bment539.fsf@oracle.com> <CAMGffEkbXORH+baoVRD4fOLk=hV6P-oXRpobM6A+o_fCADkbdQ@mail.gmail.com>
+From: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH 08/12] mmc: reduce use of block bounce buffers
+Date: Mon, 16 Apr 2018 11:51:23 +0100
+Message-ID: <2067b808-65b3-e4d9-e376-1062abc1542f@arm.com>
+References: <20180416085032.7367-1-hch@lst.de>
+	<20180416085032.7367-9-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAMGffEkbXORH+baoVRD4fOLk=hV6P-oXRpobM6A+o_fCADkbdQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jinpu Wang <jinpu.wang@profitbricks.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20180416085032.7367-9-hch-jcswGhMUV9g@public.gmane.org>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Apr 16, 2018 at 1:46 PM, Jinpu Wang <jinpu.wang@profitbricks.com> wrote:
-> On Fri, Apr 13, 2018 at 6:59 PM, Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
->>
->> Jinpu,
->>
->> [CC:ed the mpt3sas maintainers]
->>
->> The ratelimit patch is just an attempt to treat the symptom, not the
->> cause.
-> Agree. If we can fix the root cause, it will be great.
->>
->>> Thanks for asking, we updated mpt3sas driver which enables DIX support
->>> (prot_mask=0x7f), all disks are SATA SSDs, no DIF support.
->>> After reboot, kernel reports the IO errors from all the drives behind
->>> HBA, seems for almost every read IO, which turns the system unusable:
->>> [   13.079375] sda: ref tag error at location 0 (rcvd 143196159)
->>> [   13.079989] sda: ref tag error at location 937702912 (rcvd 143196159)
->>> [   13.080233] sda: ref tag error at location 937703072 (rcvd 143196159)
->>> [   13.080407] sda: ref tag error at location 0 (rcvd 143196159)
->>> [   13.080594] sda: ref tag error at location 8 (rcvd 143196159)
->>
->> That sounds like a bug in the mpt3sas driver or firmware. I guess the
->> HBA could conceivably be operating a SATA device as DIX Type 0 and strip
->> the PI on the drive side. But that doesn't seem to be a particularly
->> useful mode of operation.
->>
->> Jinpu: Which firmware are you running? Also, please send us the output
->> of:
->>
->>         sg_readcap -l /dev/sda
->>         sg_inq -x /dev/sda
->>         sg_vpd /dev/sda
->>
-> Disks are INTEL SSDSC2BX48, directly attached to HBA.
-> LSISAS3008: FWVersion(13.00.00.00), ChipRevision(0x02), BiosVersion(08.11.00.00)
-> mpt3sas_cm2: Protocol=(Initiator,Target),
-> Capabilities=(TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set
-> Full,NCQ)
->
-> jwang@x:~$ sudo sg_vpd /dev/sdz
-> Supported VPD pages VPD page:
->   Supported VPD pages [sv]
->   Unit serial number [sn]
->   Device identification [di]
->   Mode page policy [mpp]
->   ATA information (SAT) [ai]
->   Block limits (SBC) [bl]
->   Block device characteristics (SBC) [bdc]
->   Logical block provisioning (SBC) [lbpv]
-> jwang@x:~$ sudo sg_inq -x /dev/sdz
-> VPD INQUIRY: extended INQUIRY data page
->     inquiry: field in cdb illegal (page not supported)
-> jwang@x:~$ sudo sg_readcap -l /dev/sdz
-> Read Capacity results:
->    Protection: prot_en=0, p_type=0, p_i_exponent=0
->    Logical block provisioning: lbpme=1, lbprz=1
->    Last logical block address=937703087 (0x37e436af), Number of
-> logical blocks=937703088
->    Logical block length=512 bytes
->    Logical blocks per physical block exponent=3 [so physical block
-> length=4096 bytes]
->    Lowest aligned logical block address=0
-> Hence:
->    Device size: 480103981056 bytes, 457862.8 MiB, 480.10 GB
->
->
->> Broadcom: How is DIX supposed to work for SATA drives behind an mpt3sas
->> controller?
+On 16/04/18 09:50, Christoph Hellwig wrote:
+> We can rely on the dma-mapping code to handle any DMA limits that is
+> bigger than the ISA DMA mask for us (either using an iommu or swiotlb),
+> so remove setting the block layer bounce limit for anything but bouncing
+> for highmem pages.
+> 
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> ---
+>   drivers/mmc/core/queue.c | 7 ++-----
+>   1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
+> index 56e9a803db21..60a02a763d01 100644
+> --- a/drivers/mmc/core/queue.c
+> +++ b/drivers/mmc/core/queue.c
+> @@ -351,17 +351,14 @@ static const struct blk_mq_ops mmc_mq_ops = {
+>   static void mmc_setup_queue(struct mmc_queue *mq, struct mmc_card *card)
+>   {
+>   	struct mmc_host *host = card->host;
+> -	u64 limit = BLK_BOUNCE_HIGH;
+> -
+> -	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
+> -		limit = (u64)dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
+>   
+>   	blk_queue_flag_set(QUEUE_FLAG_NONROT, mq->queue);
+>   	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, mq->queue);
+>   	if (mmc_can_erase(card))
+>   		mmc_queue_setup_discard(mq->queue, card);
+>   
+> -	blk_queue_bounce_limit(mq->queue, limit);
+> +	if (!mmc_dev(host)->dma_mask || !mmc_dev(host)->dma_mask)
 
-[Sreekanth] Current Upstream mpt3sas driver doesn't have DIX support
-capabilities,
-it supports only DIF feature.
+I'm almost surprised that GCC doesn't warn about "x || x", but 
+nevertheless I think you've lost a "*" here...
 
+Robin.
 
-Thanks,
-Sreekanth
->>
->> --
->> Martin K. Petersen      Oracle Linux Engineering
->
->
-> Thanks!
->
-> --
-> Jack Wang
-> Linux Kernel Developer
->
-> ProfitBricks GmbH
-> Greifswalder Str. 207
-> D - 10405 Berlin
+> +		blk_queue_bounce_limit(mq->queue, BLK_BOUNCE_HIGH);
+>   	blk_queue_max_hw_sectors(mq->queue,
+>   		min(host->max_blk_count, host->max_req_size / 512));
+>   	blk_queue_max_segments(mq->queue, host->max_segs);
+> 
