@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 05/12] sata_nv: don't use block layer bounce buffers
-Date: Mon, 16 Apr 2018 10:50:25 +0200
-Message-ID: <20180416085032.7367-6-hch@lst.de>
+Subject: [PATCH 06/12] memstick: don't call blk_queue_bounce_limit
+Date: Mon, 16 Apr 2018 10:50:26 +0200
+Message-ID: <20180416085032.7367-7-hch@lst.de>
 References: <20180416085032.7367-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,102 +21,65 @@ To: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-ar
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-sata_nv sets the block bounce limit to the reduce dma mask for ATAPI
-devices, which means that the iommu or swiotlb already take care of
-the bounce buffering, and the block bouncing can be removed.
+All in-tree host drivers set up a proper dma mask and use the dma-mapping
+helpers.  This means they will be able to deal with any address that we
+are throwing at them.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/ata/sata_nv.c | 62 +++++++++++++++++--------------------------
- 1 file changed, 24 insertions(+), 38 deletions(-)
+ drivers/memstick/core/ms_block.c    | 5 -----
+ drivers/memstick/core/mspro_block.c | 5 -----
+ 2 files changed, 10 deletions(-)
 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 8c683ddd0f58..b6e9ad6d33c9 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -740,32 +740,16 @@ static int nv_adma_slave_config(struct scsi_device *sdev)
- 	sdev1 = ap->host->ports[1]->link.device[0].sdev;
- 	if ((port0->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
- 	    (port1->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
--		/** We have to set the DMA mask to 32-bit if either port is in
--		    ATAPI mode, since they are on the same PCI device which is
--		    used for DMA mapping. If we set the mask we also need to set
--		    the bounce limit on both ports to ensure that the block
--		    layer doesn't feed addresses that cause DMA mapping to
--		    choke. If either SCSI device is not allocated yet, it's OK
--		    since that port will discover its correct setting when it
--		    does get allocated.
--		    Note: Setting 32-bit mask should not fail. */
--		if (sdev0)
--			blk_queue_bounce_limit(sdev0->request_queue,
--					       ATA_DMA_MASK);
--		if (sdev1)
--			blk_queue_bounce_limit(sdev1->request_queue,
--					       ATA_DMA_MASK);
+diff --git a/drivers/memstick/core/ms_block.c b/drivers/memstick/core/ms_block.c
+index 57b13dfbd21e..b2d025f42d14 100644
+--- a/drivers/memstick/core/ms_block.c
++++ b/drivers/memstick/core/ms_block.c
+@@ -2096,12 +2096,8 @@ static int msb_init_disk(struct memstick_dev *card)
+ 	struct msb_data *msb = memstick_get_drvdata(card);
+ 	struct memstick_host *host = card->host;
+ 	int rc;
+-	u64 limit = BLK_BOUNCE_HIGH;
+ 	unsigned long capacity;
+ 
+-	if (host->dev.dma_mask && *(host->dev.dma_mask))
+-		limit = *(host->dev.dma_mask);
 -
--		dma_set_mask(&pdev->dev, ATA_DMA_MASK);
-+		/*
-+		 * We have to set the DMA mask to 32-bit if either port is in
-+		 * ATAPI mode, since they are on the same PCI device which is
-+		 * used for DMA mapping.  If either SCSI device is not allocated
-+		 * yet, it's OK since that port will discover its correct
-+		 * setting when it does get allocated.
-+		 */
-+		rc = dma_set_mask(&pdev->dev, ATA_DMA_MASK);
- 	} else {
--		/** This shouldn't fail as it was set to this value before */
--		dma_set_mask(&pdev->dev, pp->adma_dma_mask);
--		if (sdev0)
--			blk_queue_bounce_limit(sdev0->request_queue,
--					       pp->adma_dma_mask);
--		if (sdev1)
--			blk_queue_bounce_limit(sdev1->request_queue,
--					       pp->adma_dma_mask);
-+		rc = dma_set_mask(&pdev->dev, pp->adma_dma_mask);
- 	}
+ 	mutex_lock(&msb_disk_lock);
+ 	msb->disk_id = idr_alloc(&msb_disk_idr, card, 0, 256, GFP_KERNEL);
+ 	mutex_unlock(&msb_disk_lock);
+@@ -2123,7 +2119,6 @@ static int msb_init_disk(struct memstick_dev *card)
  
- 	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
-@@ -1131,12 +1115,11 @@ static int nv_adma_port_start(struct ata_port *ap)
+ 	msb->queue->queuedata = card;
  
- 	VPRINTK("ENTER\n");
+-	blk_queue_bounce_limit(msb->queue, limit);
+ 	blk_queue_max_hw_sectors(msb->queue, MS_BLOCK_MAX_PAGES);
+ 	blk_queue_max_segments(msb->queue, MS_BLOCK_MAX_SEGS);
+ 	blk_queue_max_segment_size(msb->queue,
+diff --git a/drivers/memstick/core/mspro_block.c b/drivers/memstick/core/mspro_block.c
+index 8897962781bb..a2fadc605750 100644
+--- a/drivers/memstick/core/mspro_block.c
++++ b/drivers/memstick/core/mspro_block.c
+@@ -1175,12 +1175,8 @@ static int mspro_block_init_disk(struct memstick_dev *card)
+ 	struct mspro_sys_info *sys_info = NULL;
+ 	struct mspro_sys_attr *s_attr = NULL;
+ 	int rc, disk_id;
+-	u64 limit = BLK_BOUNCE_HIGH;
+ 	unsigned long capacity;
  
--	/* Ensure DMA mask is set to 32-bit before allocating legacy PRD and
--	   pad buffers */
--	rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
--	if (rc)
--		return rc;
--	rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-+	/*
-+	 * Ensure DMA mask is set to 32-bit before allocating legacy PRD and
-+	 * pad buffers.
-+	 */
-+	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 	if (rc)
- 		return rc;
+-	if (host->dev.dma_mask && *(host->dev.dma_mask))
+-		limit = *(host->dev.dma_mask);
+-
+ 	for (rc = 0; msb->attr_group.attrs[rc]; ++rc) {
+ 		s_attr = mspro_from_sysfs_attr(msb->attr_group.attrs[rc]);
  
-@@ -1156,13 +1139,16 @@ static int nv_adma_port_start(struct ata_port *ap)
- 	pp->notifier_clear_block = pp->gen_block +
- 	       NV_ADMA_NOTIFIER_CLEAR + (4 * ap->port_no);
+@@ -1219,7 +1215,6 @@ static int mspro_block_init_disk(struct memstick_dev *card)
  
--	/* Now that the legacy PRD and padding buffer are allocated we can
--	   safely raise the DMA mask to allocate the CPB/APRD table.
--	   These are allowed to fail since we store the value that ends up
--	   being used to set as the bounce limit in slave_config later if
--	   needed. */
--	dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
--	dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
-+	/*
-+	 * Now that the legacy PRD and padding buffer are allocated we can
-+	 * try to raise the DMA mask to allocate the CPB/APRD table.
-+	 */
-+	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-+	if (rc) {
-+		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-+		if (rc)
-+			return rc;
-+	}
- 	pp->adma_dma_mask = *dev->dma_mask;
+ 	msb->queue->queuedata = card;
  
- 	mem = dmam_alloc_coherent(dev, NV_ADMA_PORT_PRIV_DMA_SZ,
+-	blk_queue_bounce_limit(msb->queue, limit);
+ 	blk_queue_max_hw_sectors(msb->queue, MSPRO_BLOCK_MAX_PAGES);
+ 	blk_queue_max_segments(msb->queue, MSPRO_BLOCK_MAX_SEGS);
+ 	blk_queue_max_segment_size(msb->queue,
 -- 
 2.17.0
