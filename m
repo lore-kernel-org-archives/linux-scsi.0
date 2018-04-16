@@ -1,79 +1,41 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 08/12] mmc: reduce use of block bounce buffers (fwd)
-Date: Mon, 16 Apr 2018 21:11:46 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1804162110510.3044@hadrien>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: Re: [RESEND PATCH v1 1/2] trace: events: scsi: Add tag in SCSI trace
+ events
+Date: Mon, 16 Apr 2018 20:27:13 +0000
+Message-ID: <5b2fdd1b29b54590889194eba90debfb@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, kbuild-all@01.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, "rostedt@goodmis.org" <rostedt@goodmis.org>, "rajatja@google.com" <rajatja@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mingo@redhad.com" <mingo@redhad.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-There is a duplicated test on line 360.
-
-julia
-
----------- Forwarded message ----------
-Date: Mon, 16 Apr 2018 23:04:18 +0800
-From: kbuild test robot <lkp@intel.com>
-To: kbuild@01.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 08/12] mmc: reduce use of block bounce buffers
-
-CC: kbuild-all@01.org
-In-Reply-To: <20180416085032.7367-9-hch@lst.de>
-References: <20180416085032.7367-9-hch@lst.de>
-TO: Christoph Hellwig <hch@lst.de>
-CC: iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-
-Hi Christoph,
-
-I love your patch! Perhaps something to improve:
-
-[auto build test WARNING on linus/master]
-[also build test WARNING on v4.17-rc1 next-20180416]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Christoph-Hellwig/iscsi_tcp-don-t-set-a-bounce-limit/20180416-172618
-:::::: branch date: 6 hours ago
-:::::: commit date: 6 hours ago
-
->> drivers/mmc/core/queue.c:360:5-29: duplicated argument to && or ||
-
-# https://github.com/0day-ci/linux/commit/6620a69f0eea8e8b7586f08f721c95a336022497
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout 6620a69f0eea8e8b7586f08f721c95a336022497
-vim +360 drivers/mmc/core/queue.c
-
-81196976 Adrian Hunter     2017-11-29  350
-c8b5fd03 Adrian Hunter     2017-09-22  351  static void mmc_setup_queue(struct mmc_queue *mq, struct mmc_card *card)
-c8b5fd03 Adrian Hunter     2017-09-22  352  {
-c8b5fd03 Adrian Hunter     2017-09-22  353  	struct mmc_host *host = card->host;
-c8b5fd03 Adrian Hunter     2017-09-22  354
-8b904b5b Bart Van Assche   2018-03-07  355  	blk_queue_flag_set(QUEUE_FLAG_NONROT, mq->queue);
-8b904b5b Bart Van Assche   2018-03-07  356  	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, mq->queue);
-c8b5fd03 Adrian Hunter     2017-09-22  357  	if (mmc_can_erase(card))
-c8b5fd03 Adrian Hunter     2017-09-22  358  		mmc_queue_setup_discard(mq->queue, card);
-c8b5fd03 Adrian Hunter     2017-09-22  359
-6620a69f Christoph Hellwig 2018-04-16 @360  	if (!mmc_dev(host)->dma_mask || !mmc_dev(host)->dma_mask)
-6620a69f Christoph Hellwig 2018-04-16  361  		blk_queue_bounce_limit(mq->queue, BLK_BOUNCE_HIGH);
-c8b5fd03 Adrian Hunter     2017-09-22  362  	blk_queue_max_hw_sectors(mq->queue,
-c8b5fd03 Adrian Hunter     2017-09-22  363  		min(host->max_blk_count, host->max_req_size / 512));
-c8b5fd03 Adrian Hunter     2017-09-22  364  	blk_queue_max_segments(mq->queue, host->max_segs);
-c8b5fd03 Adrian Hunter     2017-09-22  365  	blk_queue_max_segment_size(mq->queue, host->max_seg_size);
-c8b5fd03 Adrian Hunter     2017-09-22  366
-1e8e55b6 Adrian Hunter     2017-11-29  367  	INIT_WORK(&mq->recovery_work, mmc_mq_recovery_handler);
-81196976 Adrian Hunter     2017-11-29  368  	INIT_WORK(&mq->complete_work, mmc_blk_mq_complete_work);
-81196976 Adrian Hunter     2017-11-29  369
-81196976 Adrian Hunter     2017-11-29  370  	mutex_init(&mq->complete_lock);
-81196976 Adrian Hunter     2017-11-29  371
-81196976 Adrian Hunter     2017-11-29  372  	init_waitqueue_head(&mq->wait);
-81196976 Adrian Hunter     2017-11-29  373  }
-81196976 Adrian Hunter     2017-11-29  374
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Pj4+IFRoaXMgcGF0Y2ggaXMgbm90IGFjY2VwdGFibGUgYmVjYXVzZSBpdCBhZGRzIHN1cHBvcnQg
+Zm9yIHRhZyB0cmFjaW5nDQo+Pj4gdG8gdGhlIGxlZ2FjeSBibG9jayBsYXllciBvbmx5LiBBbnkg
+cGF0Y2ggdGhhdCBhZGRzIGEgbmV3IGZlYXR1cmUgdG8NCj4+PiB0aGUgbGVnYWN5IGJsb2NrIGxh
+eWVyIG11c3QgYWxzbyBhZGQgaXQgdG8gYmxrLW1xLg0KPj4+DQo+PiBUbyBiZSBob25lc3QsIEkg
+ZG9uJ3QgdW5kZXJzdGFuZCB5b3VyIHBvaW50LCBjYW4geW91IGdpdmUgbWUgbW9yZQ0KPmV4cGxh
+bmF0aW9uPw0KPg0KPlRoZSBsZWdhY3kgYmxvY2sgbGF5ZXIgd2lsbCBiZSByZW1vdmVkIGFzIHNv
+b24gYXMgYmxrLW1xIHByb3ZpZGVzIGFsbCB0aGUNCj5mdW5jdGlvbmFsaXR5IG9mIHRoZSBsZWdh
+Y3kgYmxvY2sgbGF5ZXIgYW5kIGFzIHNvb24gYXMgaXQgcGVyZm9ybXMgYXQgbGVhc3QgYXMNCj53
+ZWxsIGFzIHRoZSBsZWdhY3kgYmxvY2sgbGF5ZXIgZm9yIGFsbCB1c2UgY2FzZXMuIElmIG5ldyBm
+ZWF0dXJlcyBhcmUgYWRkZWQgdG8NCj50aGUgbGVnYWN5IGJsb2NrIGxheWVyIGJ1dCBub3QgdG8g
+YmxrLW1xIHRoYXQgcHJldmVudHMgcmVtb3ZhbCBvZiB0aGUgbGVnYWN5DQo+YmxvY2sgbGF5ZXIu
+IEhlbmNlIHRoZSByZXF1aXJlbWVudCBJIGV4cGxhaW5lZCBpbiBteSBwcmV2aW91cyBlLW1haWwu
+DQo+DQo+QmFydC4NCg0KVGhhbmtzIGZvciB5b3VyIGluZm9ybWF0aW9uLg0KSSBoYXZlIHNldmVy
+YWwgcXVlc3Rpb25zIGFnYWluLg0KV2hlbiB0aGUgbGVnYWN5IGJsb2NrIGxheWVyIHdpbGwgYmUg
+cmVwbGFjZWQgYnkgYmxrLW1xPyANCkFuZCAiaW5jbHVkZS90cmVjZS9ldmVudC9ibG9jay5oIC4u
+IHNjc2kuaCIgd2lsbCBhbHNvIGJlIGNoYW5nZWQ/IA0KRG8geW91IGhhdmUgdGhlIHJlbGF0ZWQg
+Z2l0IHJlcCBvciBtYWlsIGxpc3QgYWJvdXQgdGhpcyB0b3BpYz8NCk1heWJlIHRoaXMgaXMgZ3Jl
+YXQgYmlnIGNoYW5nZSwgSSBhbSB2ZXJ5IGludGVyZXN0ZWQgaW4gdGhhdC4gQW5kIHdhbnQgdG8g
+aGF2ZSBhIGxvb2sgYXQuDQoNCkJ5IHRoZSB3YXksIHRoZXNlIHBhdGNoZXMgYXJlIG5vdCB0byBh
+ZGQgbmV3IGZlYXR1cmUsIHRoZXkgYXJlIGp1c3QgdG8gYWRkIHByaW50IHRhZyBhbG9uZyB3aXRo
+IHRoZSBvdGhlciBleGlzdA0KUHJpbnRlZCByZXF1ZXN0IHBhcmFtZXRlcnMuICBUaGUgYmxrLW1x
+IGlzIG5vdyBzdGlsbCB1c2luZyAiaW5jbHVkZS90cmFjZS9ldmV0L2Jsb2NrLmgiIGRlZmluZWQg
+dHJhY2UgZXZlbnRzLg0KDQpGb3IgZXhhbXBsZTogDQp2b2lkIGJsa19tcV9zdGFydF9yZXF1ZXN0
+KHN0cnVjdCByZXF1ZXN0ICpycSkgIA0Kew0KLi4uDQouLi4NCnRyYWNlX2Jsb2NrX3JxX2lzc3Vl
+KHEsIHJxKTsNCi4uLg0KLi4uDQp9DQpEbyB5b3UgbWVhbiB0aGF0IHRoaXMgd2lsbCBhbHNvIGJl
+IHJlbW92ZWQvcmVwbGFjZWQgYnkgc29tZW9uZSBlbHNlPw0KDQpCZWFuIEh1bw0K
