@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 04/12] DAC960: don't use block layer bounce buffers
-Date: Mon, 16 Apr 2018 10:50:24 +0200
-Message-ID: <20180416085032.7367-5-hch@lst.de>
+Subject: [PATCH 05/12] sata_nv: don't use block layer bounce buffers
+Date: Mon, 16 Apr 2018 10:50:25 +0200
+Message-ID: <20180416085032.7367-6-hch@lst.de>
 References: <20180416085032.7367-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,61 +21,102 @@ To: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-ar
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-DAC960 just sets the block bounce limit to the dma mask, which means
-that the iommu or swiotlb already take care of the bounce buffering,
-and the block bouncing can be removed.
+sata_nv sets the block bounce limit to the reduce dma mask for ATAPI
+devices, which means that the iommu or swiotlb already take care of
+the bounce buffering, and the block bouncing can be removed.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/block/DAC960.c | 9 ++-------
- drivers/block/DAC960.h | 1 -
- 2 files changed, 2 insertions(+), 8 deletions(-)
+ drivers/ata/sata_nv.c | 62 +++++++++++++++++--------------------------
+ 1 file changed, 24 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
-index f781eff7d23e..c9ba48519d0f 100644
---- a/drivers/block/DAC960.c
-+++ b/drivers/block/DAC960.c
-@@ -1179,7 +1179,6 @@ static bool DAC960_V1_EnableMemoryMailboxInterface(DAC960_Controller_T
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 8c683ddd0f58..b6e9ad6d33c9 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -740,32 +740,16 @@ static int nv_adma_slave_config(struct scsi_device *sdev)
+ 	sdev1 = ap->host->ports[1]->link.device[0].sdev;
+ 	if ((port0->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
+ 	    (port1->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
+-		/** We have to set the DMA mask to 32-bit if either port is in
+-		    ATAPI mode, since they are on the same PCI device which is
+-		    used for DMA mapping. If we set the mask we also need to set
+-		    the bounce limit on both ports to ensure that the block
+-		    layer doesn't feed addresses that cause DMA mapping to
+-		    choke. If either SCSI device is not allocated yet, it's OK
+-		    since that port will discover its correct setting when it
+-		    does get allocated.
+-		    Note: Setting 32-bit mask should not fail. */
+-		if (sdev0)
+-			blk_queue_bounce_limit(sdev0->request_queue,
+-					       ATA_DMA_MASK);
+-		if (sdev1)
+-			blk_queue_bounce_limit(sdev1->request_queue,
+-					       ATA_DMA_MASK);
+-
+-		dma_set_mask(&pdev->dev, ATA_DMA_MASK);
++		/*
++		 * We have to set the DMA mask to 32-bit if either port is in
++		 * ATAPI mode, since they are on the same PCI device which is
++		 * used for DMA mapping.  If either SCSI device is not allocated
++		 * yet, it's OK since that port will discover its correct
++		 * setting when it does get allocated.
++		 */
++		rc = dma_set_mask(&pdev->dev, ATA_DMA_MASK);
+ 	} else {
+-		/** This shouldn't fail as it was set to this value before */
+-		dma_set_mask(&pdev->dev, pp->adma_dma_mask);
+-		if (sdev0)
+-			blk_queue_bounce_limit(sdev0->request_queue,
+-					       pp->adma_dma_mask);
+-		if (sdev1)
+-			blk_queue_bounce_limit(sdev1->request_queue,
+-					       pp->adma_dma_mask);
++		rc = dma_set_mask(&pdev->dev, pp->adma_dma_mask);
+ 	}
  
-   if (pci_set_dma_mask(Controller->PCIDevice, DMA_BIT_MASK(32)))
- 	return DAC960_Failure(Controller, "DMA mask out of range");
--  Controller->BounceBufferLimit = DMA_BIT_MASK(32);
+ 	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
+@@ -1131,12 +1115,11 @@ static int nv_adma_port_start(struct ata_port *ap)
  
-   if ((hw_type == DAC960_PD_Controller) || (hw_type == DAC960_P_Controller)) {
-     CommandMailboxesSize =  0;
-@@ -1380,11 +1379,8 @@ static bool DAC960_V2_EnableMemoryMailboxInterface(DAC960_Controller_T
-   dma_addr_t	CommandMailboxDMA;
-   DAC960_V2_CommandStatus_T CommandStatus;
+ 	VPRINTK("ENTER\n");
  
--	if (!pci_set_dma_mask(Controller->PCIDevice, DMA_BIT_MASK(64)))
--		Controller->BounceBufferLimit = DMA_BIT_MASK(64);
--	else if (!pci_set_dma_mask(Controller->PCIDevice, DMA_BIT_MASK(32)))
--		Controller->BounceBufferLimit = DMA_BIT_MASK(32);
--	else
-+	if (pci_set_dma_mask(Controller->PCIDevice, DMA_BIT_MASK(64)) &&
-+	    pci_set_dma_mask(Controller->PCIDevice, DMA_BIT_MASK(32)))
- 		return DAC960_Failure(Controller, "DMA mask out of range");
+-	/* Ensure DMA mask is set to 32-bit before allocating legacy PRD and
+-	   pad buffers */
+-	rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-	if (rc)
+-		return rc;
+-	rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
++	/*
++	 * Ensure DMA mask is set to 32-bit before allocating legacy PRD and
++	 * pad buffers.
++	 */
++	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 	if (rc)
+ 		return rc;
  
-   /* This is a temporary dma mapping, used only in the scope of this function */
-@@ -2540,7 +2536,6 @@ static bool DAC960_RegisterBlockDevice(DAC960_Controller_T *Controller)
- 		continue;
-   	}
-   	Controller->RequestQueue[n] = RequestQueue;
--  	blk_queue_bounce_limit(RequestQueue, Controller->BounceBufferLimit);
-   	RequestQueue->queuedata = Controller;
- 	blk_queue_max_segments(RequestQueue, Controller->DriverScatterGatherLimit);
- 	blk_queue_max_hw_sectors(RequestQueue, Controller->MaxBlocksPerCommand);
-diff --git a/drivers/block/DAC960.h b/drivers/block/DAC960.h
-index 21aff470d268..1439e651928b 100644
---- a/drivers/block/DAC960.h
-+++ b/drivers/block/DAC960.h
-@@ -2295,7 +2295,6 @@ typedef struct DAC960_Controller
-   unsigned short MaxBlocksPerCommand;
-   unsigned short ControllerScatterGatherLimit;
-   unsigned short DriverScatterGatherLimit;
--  u64		BounceBufferLimit;
-   unsigned int CombinedStatusBufferLength;
-   unsigned int InitialStatusLength;
-   unsigned int CurrentStatusLength;
+@@ -1156,13 +1139,16 @@ static int nv_adma_port_start(struct ata_port *ap)
+ 	pp->notifier_clear_block = pp->gen_block +
+ 	       NV_ADMA_NOTIFIER_CLEAR + (4 * ap->port_no);
+ 
+-	/* Now that the legacy PRD and padding buffer are allocated we can
+-	   safely raise the DMA mask to allocate the CPB/APRD table.
+-	   These are allowed to fail since we store the value that ends up
+-	   being used to set as the bounce limit in slave_config later if
+-	   needed. */
+-	dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
+-	dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
++	/*
++	 * Now that the legacy PRD and padding buffer are allocated we can
++	 * try to raise the DMA mask to allocate the CPB/APRD table.
++	 */
++	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++	if (rc) {
++		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++		if (rc)
++			return rc;
++	}
+ 	pp->adma_dma_mask = *dev->dma_mask;
+ 
+ 	mem = dmam_alloc_coherent(dev, NV_ADMA_PORT_PRIV_DMA_SZ,
 -- 
 2.17.0
