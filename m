@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 07/12] scsi: reduce use of block bounce buffers
-Date: Mon, 16 Apr 2018 10:50:27 +0200
-Message-ID: <20180416085032.7367-8-hch@lst.de>
+Subject: [PATCH 08/12] mmc: reduce use of block bounce buffers
+Date: Mon, 16 Apr 2018 10:50:28 +0200
+Message-ID: <20180416085032.7367-9-hch@lst.de>
 References: <20180416085032.7367-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,55 +23,37 @@ List-Id: linux-scsi@vger.kernel.org
 
 We can rely on the dma-mapping code to handle any DMA limits that is
 bigger than the ISA DMA mask for us (either using an iommu or swiotlb),
-so remove setting the block layer bounce limit for anything but the
-unchecked_isa_dma case, or the bouncing for highmem pages.
+so remove setting the block layer bounce limit for anything but bouncing
+for highmem pages.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/scsi/scsi_lib.c | 24 ++----------------------
- 1 file changed, 2 insertions(+), 22 deletions(-)
+ drivers/mmc/core/queue.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0dfec0dedd5e..ebe2cbb48b80 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2142,27 +2142,6 @@ static int scsi_map_queues(struct blk_mq_tag_set *set)
- 	return blk_mq_map_queues(set);
- }
- 
--static u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
--{
--	struct device *host_dev;
--	u64 bounce_limit = 0xffffffff;
--
--	if (shost->unchecked_isa_dma)
--		return BLK_BOUNCE_ISA;
--	/*
--	 * Platforms with virtual-DMA translation
--	 * hardware have no practical limit.
--	 */
--	if (!PCI_DMA_BUS_IS_PHYS)
--		return BLK_BOUNCE_ANY;
--
--	host_dev = scsi_get_device(shost);
--	if (host_dev && host_dev->dma_mask)
--		bounce_limit = (u64)dma_max_pfn(host_dev) << PAGE_SHIFT;
--
--	return bounce_limit;
--}
--
- void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
+index 56e9a803db21..60a02a763d01 100644
+--- a/drivers/mmc/core/queue.c
++++ b/drivers/mmc/core/queue.c
+@@ -351,17 +351,14 @@ static const struct blk_mq_ops mmc_mq_ops = {
+ static void mmc_setup_queue(struct mmc_queue *mq, struct mmc_card *card)
  {
- 	struct device *dev = shost->dma_dev;
-@@ -2182,7 +2161,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
- 	}
+ 	struct mmc_host *host = card->host;
+-	u64 limit = BLK_BOUNCE_HIGH;
+-
+-	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
+-		limit = (u64)dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
  
- 	blk_queue_max_hw_sectors(q, shost->max_sectors);
--	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
-+	if (shost->unchecked_isa_dma)
-+		blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
- 	blk_queue_segment_boundary(q, shost->dma_boundary);
- 	dma_set_seg_boundary(dev, shost->dma_boundary);
+ 	blk_queue_flag_set(QUEUE_FLAG_NONROT, mq->queue);
+ 	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, mq->queue);
+ 	if (mmc_can_erase(card))
+ 		mmc_queue_setup_discard(mq->queue, card);
  
+-	blk_queue_bounce_limit(mq->queue, limit);
++	if (!mmc_dev(host)->dma_mask || !mmc_dev(host)->dma_mask)
++		blk_queue_bounce_limit(mq->queue, BLK_BOUNCE_HIGH);
+ 	blk_queue_max_hw_sectors(mq->queue,
+ 		min(host->max_blk_count, host->max_req_size / 512));
+ 	blk_queue_max_segments(mq->queue, host->max_segs);
 -- 
 2.17.0
