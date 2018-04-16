@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 01/12] iscsi_tcp: don't set a bounce limit
-Date: Mon, 16 Apr 2018 10:50:21 +0200
-Message-ID: <20180416085032.7367-2-hch@lst.de>
+Subject: [PATCH 02/12] storsvc: don't set a bounce limit
+Date: Mon, 16 Apr 2018 10:50:22 +0200
+Message-ID: <20180416085032.7367-3-hch@lst.de>
 References: <20180416085032.7367-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,20 +25,22 @@ The default already is to never bounce, so the call is a no-op.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/scsi/iscsi_tcp.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/storvsc_drv.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 2ba4b68fdb73..b025a0b74341 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -962,7 +962,6 @@ static int iscsi_sw_tcp_slave_configure(struct scsi_device *sdev)
- 	if (conn->datadgst_en)
- 		sdev->request_queue->backing_dev_info->capabilities
- 			|= BDI_CAP_STABLE_WRITES;
--	blk_queue_bounce_limit(sdev->request_queue, BLK_BOUNCE_ANY);
- 	blk_queue_dma_alignment(sdev->request_queue, 0);
- 	return 0;
- }
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 8c51d628b52e..5f2d177c3bd9 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1382,9 +1382,6 @@ static int storvsc_device_alloc(struct scsi_device *sdevice)
+ 
+ static int storvsc_device_configure(struct scsi_device *sdevice)
+ {
+-
+-	blk_queue_bounce_limit(sdevice->request_queue, BLK_BOUNCE_ANY);
+-
+ 	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
+ 
+ 	/* Ensure there are no gaps in presented sgls */
 -- 
 2.17.0
