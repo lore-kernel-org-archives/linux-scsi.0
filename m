@@ -1,67 +1,38 @@
-From: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH 08/12] mmc: reduce use of block bounce buffers
-Date: Mon, 16 Apr 2018 11:51:23 +0100
-Message-ID: <2067b808-65b3-e4d9-e376-1062abc1542f@arm.com>
-References: <20180416085032.7367-1-hch@lst.de>
-	<20180416085032.7367-9-hch@lst.de>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: [RESEND PATCH v1 0/2] Print the request tag in Block/SCSI trace
+ events
+Date: Mon, 16 Apr 2018 14:30:03 +0000
+Message-ID: <7a9ea1426253406a91253a0501783c90@SIWEX5A.sing.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180416085032.7367-9-hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Steven Rostedt <rostedt@goodmis.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mingo@redhad.com" <mingo@redhad.com>, "Bart.VanAssche@sandisk.com" <Bart.VanAssche@sandisk.com>"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Bean Huo (beanhuo)" <beanhuo@micron.com>, "rajatja@google.com" <rajatja@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 16/04/18 09:50, Christoph Hellwig wrote:
-> We can rely on the dma-mapping code to handle any DMA limits that is
-> bigger than the ISA DMA mask for us (either using an iommu or swiotlb),
-> so remove setting the block layer bounce limit for anything but bouncing
-> for highmem pages.
-> 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> ---
->   drivers/mmc/core/queue.c | 7 ++-----
->   1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
-> index 56e9a803db21..60a02a763d01 100644
-> --- a/drivers/mmc/core/queue.c
-> +++ b/drivers/mmc/core/queue.c
-> @@ -351,17 +351,14 @@ static const struct blk_mq_ops mmc_mq_ops = {
->   static void mmc_setup_queue(struct mmc_queue *mq, struct mmc_card *card)
->   {
->   	struct mmc_host *host = card->host;
-> -	u64 limit = BLK_BOUNCE_HIGH;
-> -
-> -	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
-> -		limit = (u64)dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
->   
->   	blk_queue_flag_set(QUEUE_FLAG_NONROT, mq->queue);
->   	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, mq->queue);
->   	if (mmc_can_erase(card))
->   		mmc_queue_setup_discard(mq->queue, card);
->   
-> -	blk_queue_bounce_limit(mq->queue, limit);
-> +	if (!mmc_dev(host)->dma_mask || !mmc_dev(host)->dma_mask)
+These patches are to add the printout of the request tag in Block/SCSI trace
+events when tracing one request or command, this is very useful for tracing
+the task running status in the storage device which supports multiple command
+queue.
 
-I'm almost surprised that GCC doesn't warn about "x || x", but 
-nevertheless I think you've lost a "*" here...
+As for the first patch " Add tag in SCSI trace events", copied from
+Rajat Jain [1]. I am just re-sending here.
+ 
+[1]https://patchwork.kernel.org/patch/6399661/
 
-Robin.
+-- Resend since patches need to go through the block and SCSI subsystem, and need related
+maintainer's confirmation.
 
-> +		blk_queue_bounce_limit(mq->queue, BLK_BOUNCE_HIGH);
->   	blk_queue_max_hw_sectors(mq->queue,
->   		min(host->max_blk_count, host->max_req_size / 512));
->   	blk_queue_max_segments(mq->queue, host->max_segs);
-> 
+Bean Huo (2):
+  trace: events: scsi: Add tag in SCSI trace events
+  trace: events: block: Add tag in block trace events
+
+ include/trace/events/block.h | 36 +++++++++++++++++++++++++-----------
+ include/trace/events/scsi.h  | 20 +++++++++++++-------
+ 2 files changed, 38 insertions(+), 18 deletions(-)
+
+-- 
+2.7.4
