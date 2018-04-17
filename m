@@ -1,78 +1,34 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v2] target: Fix Fortify_panic kernel exception
-Date: Tue, 17 Apr 2018 10:33:21 -0500
-Message-ID: <1523979202-61407-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: hch@lst.de, nab@linux-iscsi.org, martin.petersen@oracle.com
-Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-block@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Tue, 17 Apr 2018 09:25:15 -0700
+Message-ID: <CAGXu5jLcrymg8bDXB=MRKwwAqN2Y=qMeO4PNDQ_t4DekyOk+JQ@mail.gmail.com>
+References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5j+-PNYxSc3v+QtQLK0S3wdtFthFSxNM_69kFDnPQX0Gaw@mail.gmail.com>
+ <CAGXu5j+_UH0h9qeYCKKjhC7jw-mi_=fg4ASHi2=pCF9xGTpA4Q@mail.gmail.com>
+ <2864697.7uzmEJovl2@natalenko.name> <CAGXu5jLSmJv9AstzsgSscrv-wA7FwfrxAKRxj-FVBmihQvnj1g@mail.gmail.com>
+ <CAGXu5j+dh1zm32iBjRVh0s+3gLJYgjwt+z1aBJmrK2Cr8XPWnA@mail.gmail.com>
+ <CAGXu5jLhnWnUiscP9B=kTEFNyRw9jgFn7Zr5FxhZrO20553+1Q@mail.gmail.com>
+ <CAGXu5jKuZwicyyXH2gB3vp-OjtS+MkG+hqxV1cq1jaG9vAAO=g@mail.gmail.com>
+ <CAGXu5jLQuzpjFcfjpT=MvgOxBizFNMjnfmY+E7eCHkDAV5swHg@mail.gmail.com> <8faec18239a6104b250d9668bb1d3abc@natalenko.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <8faec18239a6104b250d9668bb1d3abc@natalenko.name>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bart.vanassche@wdc.com>, Paolo Valente <paolo.valente@linaro.org>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The bug exists in the memcmp in which the length passed in must
-be guaranteed to be 1. This bug currently exists because
-the second pointer passed in, can be smaller than the
-cmd->data_length, which causes a fortify_panic.
+On Tue, Apr 17, 2018 at 2:19 AM, Oleksandr Natalenko
+<oleksandr@natalenko.name> wrote:
+> By any chance, have you tried to simplify the reproducer environment, or it
+> still needs my complex layout to trigger things even with KASAN?
 
-The fix is to use memchr_inv instead to find whether or not
-a 0 exists instead of using memcmp. This way you dont have to
-worry about buffer overflow which is the reason for the
-fortify_panic.
+I haven't tried minimizing the reproducer yet, no. Now that I have a
+specific place to watch in the kernel for the corruption, though, that
+might help. If I get stuck again today, I'll try it.
 
-The bug was found by running a block backstore via LIO.
+-Kees
 
-[  496.212958] Call Trace:
-[  496.212960] [c0000007e58e3800] [c000000000cbbefc] fortify_panic+0x24/0x38 (unreliable)
-[  496.212965] [c0000007e58e3860] [d00000000f150c28] iblock_execute_write_same+0x3b8/0x3c0 [target_core_iblock]
-[  496.212976] [c0000007e58e3910] [d000000006c737d4] __target_execute_cmd+0x54/0x150 [target_core_mod]
-[  496.212982] [c0000007e58e3940] [d000000006d32ce4] ibmvscsis_write_pending+0x74/0xe0 [ibmvscsis]
-[  496.212991] [c0000007e58e39b0] [d000000006c74fc8] transport_generic_new_cmd+0x318/0x370 [target_core_mod]
-[  496.213001] [c0000007e58e3a30] [d000000006c75084] transport_handle_cdb_direct+0x64/0xd0 [target_core_mod]
-[  496.213011] [c0000007e58e3aa0] [d000000006c75298] target_submit_cmd_map_sgls+0x1a8/0x320 [target_core_mod]
-[  496.213021] [c0000007e58e3b30] [d000000006c75458] target_submit_cmd+0x48/0x60 [target_core_mod]
-[  496.213026] [c0000007e58e3bd0] [d000000006d34c20] ibmvscsis_scheduler+0x370/0x600 [ibmvscsis]
-[  496.213031] [c0000007e58e3c90] [c00000000013135c] process_one_work+0x1ec/0x580
-[  496.213035] [c0000007e58e3d20] [c000000000131798] worker_thread+0xa8/0x600
-[  496.213039] [c0000007e58e3dc0] [c00000000013a468] kthread+0x168/0x1b0
-[  496.213044] [c0000007e58e3e30] [c00000000000b528] ret_from_kernel_thread+0x5c/0xb4
-
-Fixes: 2237498f0b5c ("target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout")
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Reviewed-by: Steven Royer <seroyer@linux.vnet.ibm.com>
-Tested-by: Taylor Jakobson <tjakobs@us.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: <stable@vger.kernel.org>
----
- drivers/target/target_core_iblock.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 07c814c..6042901 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -427,8 +427,8 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct scatterlist *sg = &cmd->t_data_sg[0];
--	unsigned char *buf, zero = 0x00, *p = &zero;
--	int rc, ret;
-+	unsigned char *buf, *not_zero;
-+	int ret;
- 
- 	buf = kmap(sg_page(sg)) + sg->offset;
- 	if (!buf)
-@@ -437,10 +437,10 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
- 	 * Fall back to block_execute_write_same() slow-path if
- 	 * incoming WRITE_SAME payload does not contain zeros.
- 	 */
--	rc = memcmp(buf, p, cmd->data_length);
-+	not_zero = memchr_inv(buf, 0x00, cmd->data_length);
- 	kunmap(sg_page(sg));
- 
--	if (rc)
-+	if (not_zero)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
- 	ret = blkdev_issue_zeroout(bdev,
 -- 
-2.7.2
+Kees Cook
+Pixel Security
