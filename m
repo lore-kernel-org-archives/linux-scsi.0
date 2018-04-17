@@ -1,72 +1,52 @@
 From: Kees Cook <keescook@chromium.org>
 Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Tue, 17 Apr 2018 09:30:59 -0700
-Message-ID: <CAGXu5jJK3JuwLBGLbS1i6hBdyg_mkbVibbu6irfsnTOE1QhtfA@mail.gmail.com>
+Date: Tue, 17 Apr 2018 09:42:42 -0700
+Message-ID: <CAGXu5jLsX+nmc8hRSdOa28js7=ggPSGkUuTHbc3DUEcKSpEDbw@mail.gmail.com>
 References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5j+-PNYxSc3v+QtQLK0S3wdtFthFSxNM_69kFDnPQX0Gaw@mail.gmail.com>
  <CAGXu5j+_UH0h9qeYCKKjhC7jw-mi_=fg4ASHi2=pCF9xGTpA4Q@mail.gmail.com>
  <2864697.7uzmEJovl2@natalenko.name> <CAGXu5jLSmJv9AstzsgSscrv-wA7FwfrxAKRxj-FVBmihQvnj1g@mail.gmail.com>
  <CAGXu5j+dh1zm32iBjRVh0s+3gLJYgjwt+z1aBJmrK2Cr8XPWnA@mail.gmail.com>
  <CAGXu5jLhnWnUiscP9B=kTEFNyRw9jgFn7Zr5FxhZrO20553+1Q@mail.gmail.com>
- <CAGXu5jKuZwicyyXH2gB3vp-OjtS+MkG+hqxV1cq1jaG9vAAO=g@mail.gmail.com>
- <CAGXu5jLQuzpjFcfjpT=MvgOxBizFNMjnfmY+E7eCHkDAV5swHg@mail.gmail.com> <1523959328.3250.11.camel@linux.vnet.ibm.com>
+ <CAGXu5jKuZwicyyXH2gB3vp-OjtS+MkG+hqxV1cq1jaG9vAAO=g@mail.gmail.com> <CAGXu5jLQuzpjFcfjpT=MvgOxBizFNMjnfmY+E7eCHkDAV5swHg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1523959328.3250.11.camel@linux.vnet.ibm.com>
+In-Reply-To: <CAGXu5jLQuzpjFcfjpT=MvgOxBizFNMjnfmY+E7eCHkDAV5swHg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bart.vanassche@wdc.com>, Paolo Valente <paolo.valente@linaro.org>, David Windsor <dave@nullcore.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org
+To: Oleksandr Natalenko <oleksandr@natalenko.name>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bart.vanassche@wdc.com>, Paolo Valente <paolo.valente@linaro.org>
+Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 17, 2018 at 3:02 AM, James Bottomley
-<jejb@linux.vnet.ibm.com> wrote:
-> On Mon, 2018-04-16 at 20:12 -0700, Kees Cook wrote:
->> I still haven't figured this out, though... any have a moment to look
->> at this?
+On Mon, Apr 16, 2018 at 8:12 PM, Kees Cook <keescook@chromium.org> wrote:
+> With a hardware watchpoint, I've isolated the corruption to here:
 >
-> Just to let you know you're not alone ... but I can't make any sense of
-> this either.  The bfdq is the elevator_data, which is initialised when
-> the scheduler is attached, so it shouldn't change.  Is it possible to
-> set a data break point on elevator_data after it's initialised and see
-> if it got changed by something?
+> bfq_dispatch_request+0x2be/0x1610:
+> __bfq_dispatch_request at block/bfq-iosched.c:3902
+> 3900            if (rq) {
+> 3901    inc_in_driver_start_rq:
+> 3902                    bfqd->rq_in_driver++;
+> 3903    start_rq:
+> 3904                    rq->rq_flags |= RQF_STARTED;
+> 3905            }
 
-Yeah, it seems like some pointer chain is getting overwritten outside
-of a lock or rcu or ?. I don't know this code well enough to guess at
-where to check, though. What I find so strange is that the structure
-offsets are different between bfpd's rq_in_driver field and
-scsi_request's sense field, so even THAT doesn't look to be clear-cut
-either:
+FWIW, the stacktrace here (removing the ? lines) is:
 
-struct bfq_data {
-        struct request_queue *     queue;                /*     0     8 */
-        struct list_head           dispatch;             /*     8    16 */
-        struct bfq_group *         root_group;           /*    24     8 */
-        struct rb_root             queue_weights_tree;   /*    32     8 */
-        struct rb_root             group_weights_tree;   /*    40     8 */
-        int                        busy_queues;          /*    48     4 */
-        int                        wr_busy_queues;       /*    52     4 */
-        int                        queued;               /*    56     4 */
-        int                        rq_in_driver;         /*    60     4 */
-...
+[   34.311980] RIP: 0010:bfq_dispatch_request+0x2be/0x1610
+[   34.452491]  blk_mq_do_dispatch_sched+0x1d9/0x260
+[   34.454561]  blk_mq_sched_dispatch_requests+0x3da/0x4b0
+[   34.458789]  __blk_mq_run_hw_queue+0xae/0x130
+[   34.460001]  __blk_mq_delay_run_hw_queue+0x192/0x280
+[   34.460823]  blk_mq_run_hw_queue+0x10b/0x1b0
+[   34.463240]  blk_mq_sched_insert_request+0x3bd/0x4d0
+[   34.467342]  blk_execute_rq+0xcf/0x140
+[   34.468483]  sg_io+0x2f7/0x730
 
-struct scsi_request {
-        unsigned char              __cmd[16];            /*     0    16 */
-        unsigned char *            cmd;                  /*    16     8 */
-        short unsigned int         cmd_len;              /*    24     2 */
+Can anyone tell me more about the memory allocation layout of the
+various variables here? It looks like struct request is a header in
+front of struct scsi_request? How do struct elevator_queue, struct
+blk_mq_ctx, and struct blk_mq_hw_ctx overlap these?
 
-        /* XXX 2 bytes hole, try to pack */
-
-        int                        result;               /*    28     4 */
-        unsigned int               sense_len;            /*    32     4 */
-        unsigned int               resid_len;            /*    36     4 */
-        int                        retries;              /*    40     4 */
-
-        /* XXX 4 bytes hole, try to pack */
-
-        void *                     sense;                /*    48     8 */
-...
-
-This is _so_ weird. :P
+Regardless, I'll check for elevator data changing too...
 
 -Kees
 
