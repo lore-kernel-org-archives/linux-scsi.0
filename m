@@ -1,104 +1,40 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: usercopy whitelist woe in scsi_sense_cache
-Date: Tue, 17 Apr 2018 17:12:11 -0600
-Message-ID: <fd35a1de-aca7-2c72-5935-c9789c9c0962@kernel.dk>
-References: <10360653.ov98egbaqx@natalenko.name>
- <CAGXu5jLhnWnUiscP9B=kTEFNyRw9jgFn7Zr5FxhZrO20553+1Q@mail.gmail.com>
- <CAGXu5jKuZwicyyXH2gB3vp-OjtS+MkG+hqxV1cq1jaG9vAAO=g@mail.gmail.com>
- <CAGXu5jLQuzpjFcfjpT=MvgOxBizFNMjnfmY+E7eCHkDAV5swHg@mail.gmail.com>
- <CAGXu5jJTMqbXia7TmN2yEW11SM+XC3pkMt=bb+xBrY7-OOf=tw@mail.gmail.com>
- <CAGXu5j+xX3kDDS_sPY44hPVb=8isMX-evYzPx3ur=rge1rL5JQ@mail.gmail.com>
- <CAGXu5jJmvKcANUSsCz3fjGSv-tv1hceNd3rOpT4WTfYRb65RRA@mail.gmail.com>
- <8473f909-2123-0cfc-43b1-beba0b1aef9b@kernel.dk>
- <CAGXu5jL9miO3OXpjAxm9t8v=f_f5StB=Tk=aV8BVRdEj-Y-PDA@mail.gmail.com>
- <CAGXu5jKVPQi0cdTbe5Y1DNHdiJ6-kEFRBTNv7znuqT9w5eifGg@mail.gmail.com>
- <07f263ff-cea6-ac3c-944b-0f36fee8ba25@kernel.dk>
- <CAGXu5j+kHipvoyFWjGp8M6+83zbd6yHOzwxQ-2LNBQbD5-jS9w@mail.gmail.com>
- <8b32e079-d4e6-3fea-a89d-ff856e4e13b1@kernel.dk>
- <0fbf2b13-8bae-c7c5-d930-ebaafdc72202@kernel.dk>
- <CAGXu5jK2qwHLN+ormmCpeVPTMwojYELPOfEYsB60LwZ7pQcpcg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Martin Wilck <mwilck@suse.com>
+Subject: [PATCH v3 0/6] scsi: handle special return codes for ABORTED COMMAND
+Date: Wed, 18 Apr 2018 01:35:05 +0200
+Message-ID: <20180417233511.6573-1-mwilck@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jK2qwHLN+ormmCpeVPTMwojYELPOfEYsB60LwZ7pQcpcg@mail.gmail.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Bart Van Assche <bart.vanassche@wdc.com>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 4/17/18 5:06 PM, Kees Cook wrote:
-> On Tue, Apr 17, 2018 at 3:57 PM, Jens Axboe <axboe@kernel.dk> wrote:
->> On 4/17/18 3:48 PM, Jens Axboe wrote:
->>> On 4/17/18 3:47 PM, Kees Cook wrote:
->>>> On Tue, Apr 17, 2018 at 2:39 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>> On 4/17/18 3:25 PM, Kees Cook wrote:
->>>>>> On Tue, Apr 17, 2018 at 1:46 PM, Kees Cook <keescook@chromium.org> wrote:
->>>>>>> I see elv.priv[1] assignments made in a few places -- is it possible
->>>>>>> there is some kind of uninitialized-but-not-NULL state that can leak
->>>>>>> in there?
->>>>>>
->>>>>> Got it. This fixes it for me:
->>>>>>
->>>>>> diff --git a/block/blk-mq.c b/block/blk-mq.c
->>>>>> index 0dc9e341c2a7..859df3160303 100644
->>>>>> --- a/block/blk-mq.c
->>>>>> +++ b/block/blk-mq.c
->>>>>> @@ -363,7 +363,7 @@ static struct request *blk_mq_get_request(struct
->>>>>> request_queue *q,
->>>>>>
->>>>>>         rq = blk_mq_rq_ctx_init(data, tag, op);
->>>>>>         if (!op_is_flush(op)) {
->>>>>> -               rq->elv.icq = NULL;
->>>>>> +               memset(&rq->elv, 0, sizeof(rq->elv));
->>>>>>                 if (e && e->type->ops.mq.prepare_request) {
->>>>>>                         if (e->type->icq_cache && rq_ioc(bio))
->>>>>>                                 blk_mq_sched_assign_ioc(rq, bio);
->>>>>> @@ -461,7 +461,7 @@ void blk_mq_free_request(struct request *rq)
->>>>>>                         e->type->ops.mq.finish_request(rq);
->>>>>>                 if (rq->elv.icq) {
->>>>>>                         put_io_context(rq->elv.icq->ioc);
->>>>>> -                       rq->elv.icq = NULL;
->>>>>> +                       memset(&rq->elv, 0, sizeof(rq->elv));
->>>>>>                 }
->>>>>>         }
->>>>>
->>>>> This looks like a BFQ problem, this should not be necessary. Paolo,
->>>>> you're calling your own prepare request handler from the insert
->>>>> as well, and your prepare request does nothing if rq->elv.icq == NULL.
->>>>
->>>> I sent the patch anyway, since it's kind of a robustness improvement,
->>>> I'd hope. If you fix BFQ also, please add:
->>>
->>> It's also a memset() in the hot path, would prefer to avoid that...
->>> The issue here is really the convoluted bfq usage of insert/prepare,
->>> I'm sure Paolo can take it from here.
->>
->> Does this fix it?
->>
->> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
->> index f0ecd98509d8..d883469a1582 100644
->> --- a/block/bfq-iosched.c
->> +++ b/block/bfq-iosched.c
->> @@ -4934,8 +4934,11 @@ static void bfq_prepare_request(struct request *rq, struct bio *bio)
->>         bool new_queue = false;
->>         bool bfqq_already_existing = false, split = false;
->>
->> -       if (!rq->elv.icq)
->> +       if (!rq->elv.icq) {
->> +               rq->elv.priv[0] = rq->elv.priv[1] = NULL;
->>                 return;
->> +       }
->> +
->>         bic = icq_to_bic(rq->elv.icq);
->>
->>         spin_lock_irq(&bfqd->lock);
-> 
-> It does! Excellent. :)
+Here is another attempt to handle the special return codes for ABORTED COMMAND
+for certain SCSI devices. Following MKP's recommendation, I've created two
+new BLIST flags, simplifying the code in scsi_error.c compared to the previous
+versions. Rather than using "free" bits, I increased the length of
+blist_flag_t to 64 bit, and used previously unused bits. I also added checking
+for obsolete and unused bits.
 
-Sweet! I'll add a comment and queue it up for 4.17 and mark for stable, with
-your annotations too.
+For the blist_flag_t size increase, I used sparse to try and avoid regressions;
+that necessitated fixing sparse's errors for the current code first.
+
+Martin Wilck (6):
+  ilog2: create truly constant version for sparse
+  scsi: use const_ilog2 for array indices
+  scsi: devinfo: change blist_flag_t to 64bit
+  scsi: devinfo: warn on undefined blist flags
+  scsi: devinfo: add BLIST_RETRY_ITF for EMC Symmetrix
+  scsi: devinfo: BLIST_RETRY_ASC_C1 for Fujitsu ETERNUS
+
+ drivers/scsi/Makefile       |  2 +-
+ drivers/scsi/scsi_debugfs.c |  2 +-
+ drivers/scsi/scsi_devinfo.c | 28 +++++++++++++----
+ drivers/scsi/scsi_error.c   |  7 +++++
+ drivers/scsi/scsi_sysfs.c   |  2 +-
+ include/linux/log2.h        | 35 ++++++++++++++-------
+ include/scsi/scsi_device.h  |  2 +-
+ include/scsi/scsi_devinfo.h | 75 ++++++++++++++++++++++++++++++---------------
+ 8 files changed, 107 insertions(+), 46 deletions(-)
 
 -- 
-Jens Axboe
+2.16.1
