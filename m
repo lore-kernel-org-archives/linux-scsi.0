@@ -1,347 +1,163 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 3/3] sd_zbc: Avoid that resetting a zone fails sporadically
-Date: Mon, 16 Apr 2018 18:04:41 -0700
-Message-ID: <20180417010441.28903-4-bart.vanassche@wdc.com>
-References: <20180417010441.28903-1-bart.vanassche@wdc.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180417010441.28903-1-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>, Damien Le Moal <damien.lemoal@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, stable@vger.kernel.org
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Mon, 16 Apr 2018 20:12:42 -0700
+Message-ID: <CAGXu5jLQuzpjFcfjpT=MvgOxBizFNMjnfmY+E7eCHkDAV5swHg@mail.gmail.com>
+References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5j+-PNYxSc3v+QtQLK0S3wdtFthFSxNM_69kFDnPQX0Gaw@mail.gmail.com>
+ <CAGXu5j+_UH0h9qeYCKKjhC7jw-mi_=fg4ASHi2=pCF9xGTpA4Q@mail.gmail.com>
+ <2864697.7uzmEJovl2@natalenko.name> <CAGXu5jLSmJv9AstzsgSscrv-wA7FwfrxAKRxj-FVBmihQvnj1g@mail.gmail.com>
+ <CAGXu5j+dh1zm32iBjRVh0s+3gLJYgjwt+z1aBJmrK2Cr8XPWnA@mail.gmail.com>
+ <CAGXu5jLhnWnUiscP9B=kTEFNyRw9jgFn7Zr5FxhZrO20553+1Q@mail.gmail.com> <CAGXu5jKuZwicyyXH2gB3vp-OjtS+MkG+hqxV1cq1jaG9vAAO=g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGXu5jKuZwicyyXH2gB3vp-OjtS+MkG+hqxV1cq1jaG9vAAO=g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oleksandr Natalenko <oleksandr@natalenko.name>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bart.vanassche@wdc.com>, Paolo Valente <paolo.valente@linaro.org>
+Cc: David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Since SCSI scanning occurs asynchronously, since sd_revalidate_disk()
-is called from sd_probe_async() and since sd_revalidate_disk() calls
-sd_zbc_read_zones() it can happen that sd_zbc_read_zones() is called
-concurrently with blkdev_report_zones() and/or blkdev_reset_zones().
-That can cause these functions to fail with -EIO because
-sd_zbc_read_zones() e.g. sets q->nr_zones to zero before restoring it
-to the actual value, even if no drive characteristics have changed.
-Avoid that this can happen by making the following changes:
-- Protect the code that updates zone information with blk_queue_enter()
-  and blk_queue_exit().
-- Modify sd_zbc_setup_seq_zones_bitmap() and sd_zbc_setup() such that
-  these functions do not modify struct scsi_disk before all zone
-  information has been obtained.
+On Mon, Apr 16, 2018 at 1:44 PM, Kees Cook <keescook@chromium.org> wrote:
+> On Thu, Apr 12, 2018 at 8:02 PM, Kees Cook <keescook@chromium.org> wrote:
+>> On Thu, Apr 12, 2018 at 3:47 PM, Kees Cook <keescook@chromium.org> wrote:
+>>> After fixing up some build issues in the middle of the 4.16 cycle, I
+>>> get an unhelpful bisect result of commit 0a4b6e2f80aa ("Merge branch
+>>> 'for-4.16/block'"). Instead of letting the test run longer, I'm going
+>>> to switch to doing several shorter test boots per kernel and see if
+>>> that helps. One more bisect coming...
+>>
+>> Okay, so I can confirm the bisect points at the _merge_ itself, not a
+>> specific patch. I'm not sure how to proceed here. It looks like some
+>> kind of interaction between separate trees? Jens, do you have
+>> suggestions on how to track this down?
+>
+> Turning off HARDENED_USERCOPY and turning on KASAN, I see the same report:
+>
+> [   38.274106] BUG: KASAN: slab-out-of-bounds in _copy_to_user+0x42/0x60
+> [   38.274841] Read of size 22 at addr ffff8800122b8c4b by task smartctl/1064
+> [   38.275630]
+> [   38.275818] CPU: 2 PID: 1064 Comm: smartctl Not tainted 4.17.0-rc1-ARCH+ #266
+> [   38.276631] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),
+> BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+> [   38.277690] Call Trace:
+> [   38.277988]  dump_stack+0x71/0xab
+> [   38.278397]  ? _copy_to_user+0x42/0x60
+> [   38.278833]  print_address_description+0x6a/0x270
+> [   38.279368]  ? _copy_to_user+0x42/0x60
+> [   38.279800]  kasan_report+0x243/0x360
+> [   38.280221]  _copy_to_user+0x42/0x60
+> [   38.280635]  sg_io+0x459/0x660
+> ...
+>
+> Though we get slightly more details (some we already knew):
+>
+> [   38.301330] Allocated by task 329:
+> [   38.301734]  kmem_cache_alloc_node+0xca/0x220
+> [   38.302239]  scsi_mq_init_request+0x64/0x130 [scsi_mod]
+> [   38.302821]  blk_mq_alloc_rqs+0x2cf/0x370
+> [   38.303265]  blk_mq_sched_alloc_tags.isra.4+0x7d/0xb0
+> [   38.303820]  blk_mq_init_sched+0xf0/0x220
+> [   38.304268]  elevator_switch+0x17a/0x2c0
+> [   38.304705]  elv_iosched_store+0x173/0x220
+> [   38.305171]  queue_attr_store+0x72/0xb0
+> [   38.305602]  kernfs_fop_write+0x188/0x220
+> [   38.306049]  __vfs_write+0xb6/0x330
+> [   38.306436]  vfs_write+0xe9/0x240
+> [   38.306804]  ksys_write+0x98/0x110
+> [   38.307181]  do_syscall_64+0x6d/0x1d0
+> [   38.307590]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> [   38.308142]
+> [   38.308316] Freed by task 0:
+> [   38.308652] (stack is not available)
+> [   38.309060]
+> [   38.309243] The buggy address belongs to the object at ffff8800122b8c00
+> [   38.309243]  which belongs to the cache scsi_sense_cache of size 96
+> [   38.310625] The buggy address is located 75 bytes inside of
+> [   38.310625]  96-byte region [ffff8800122b8c00, ffff8800122b8c60)
 
-Note: since commit 055f6e18e08f ("block: Make q_usage_counter also
-track legacy requests"; kernel v4.15) the request queue freezing
-mechanism also affects legacy request queues.
+With a hardware watchpoint, I've isolated the corruption to here:
 
-Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: stable@vger.kernel.org # v4.10
----
- drivers/scsi/sd_zbc.c  | 140 +++++++++++++++++++++++++++++--------------------
- include/linux/blkdev.h |   5 ++
- 2 files changed, 87 insertions(+), 58 deletions(-)
+bfq_dispatch_request+0x2be/0x1610:
+__bfq_dispatch_request at block/bfq-iosched.c:3902
+3900            if (rq) {
+3901    inc_in_driver_start_rq:
+3902                    bfqd->rq_in_driver++;
+3903    start_rq:
+3904                    rq->rq_flags |= RQF_STARTED;
+3905            }
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 2d0c06f7db3e..323e3dc4bc59 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -390,8 +390,10 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf)
-  *
-  * Check that all zones of the device are equal. The last zone can however
-  * be smaller. The zone size must also be a power of two number of LBAs.
-+ *
-+ * Returns the zone size in bytes upon success or an error code upon failure.
-  */
--static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
-+static s64 sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- {
- 	u64 zone_blocks = 0;
- 	sector_t block = 0;
-@@ -402,8 +404,6 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	int ret;
- 	u8 same;
- 
--	sdkp->zone_blocks = 0;
--
- 	/* Get a buffer */
- 	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
- 	if (!buf)
-@@ -435,16 +435,17 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 
- 		/* Parse zone descriptors */
- 		while (rec < buf + buf_len) {
--			zone_blocks = get_unaligned_be64(&rec[8]);
--			if (sdkp->zone_blocks == 0) {
--				sdkp->zone_blocks = zone_blocks;
--			} else if (zone_blocks != sdkp->zone_blocks &&
--				   (block + zone_blocks < sdkp->capacity
--				    || zone_blocks > sdkp->zone_blocks)) {
--				zone_blocks = 0;
-+			u64 this_zone_blocks = get_unaligned_be64(&rec[8]);
+Through some race condition(?), rq_in_driver is also sense_buffer, and
+it can get incremented. Specifically, I am doing:
+
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 25c14c58385c..f50d5053d732 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -6,6 +6,8 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/blk-mq.h>
++#include <scsi/scsi_request.h>
++#include <linux/hw_breakpoint.h>
+
+ #include <trace/events/block.h>
+
+@@ -428,6 +430,18 @@ void blk_mq_sched_restart(struct blk_mq_hw_ctx *const hctx)
+        }
+ }
+
++static void sample_hbp_handler(struct perf_event *bp,
++                               struct perf_sample_data *data,
++                               struct pt_regs *regs)
++{
++        printk(KERN_INFO "sense_buffer value is changed\n");
++        dump_stack();
++        printk(KERN_INFO "Dump stack from sample_hbp_handler\n");
++}
 +
-+			if (zone_blocks == 0) {
-+				zone_blocks = this_zone_blocks;
-+			} else if (this_zone_blocks != zone_blocks &&
-+				   (block + this_zone_blocks < sdkp->capacity
-+				    || this_zone_blocks > zone_blocks)) {
-+				this_zone_blocks = 0;
- 				goto out;
- 			}
--			block += zone_blocks;
-+			block += this_zone_blocks;
- 			rec += 64;
- 		}
- 
-@@ -457,8 +458,6 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 
- 	} while (block < sdkp->capacity);
- 
--	zone_blocks = sdkp->zone_blocks;
--
- out:
- 	if (!zone_blocks) {
- 		if (sdkp->first_scan)
-@@ -478,8 +477,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 				  "Zone size too large\n");
- 		ret = -ENODEV;
- 	} else {
--		sdkp->zone_blocks = zone_blocks;
--		sdkp->zone_shift = ilog2(zone_blocks);
-+		ret = zone_blocks;
- 	}
- 
- out_free:
-@@ -490,15 +488,14 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 
- /**
-  * sd_zbc_alloc_zone_bitmap - Allocate a zone bitmap (one bit per zone).
-- * @sdkp: The disk of the bitmap
-+ * @nr_zones: Number of zones to allocate space for.
-+ * @numa_node: NUMA node to allocate the memory from.
-  */
--static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
-+static inline unsigned long *
-+sd_zbc_alloc_zone_bitmap(u32 nr_zones, int numa_node)
- {
--	struct request_queue *q = sdkp->disk->queue;
--
--	return kzalloc_node(BITS_TO_LONGS(sdkp->nr_zones)
--			    * sizeof(unsigned long),
--			    GFP_KERNEL, q->node);
-+	return kzalloc_node(BITS_TO_LONGS(nr_zones) * sizeof(unsigned long),
-+			    GFP_KERNEL, numa_node);
- }
- 
- /**
-@@ -506,6 +503,7 @@ static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
-  * @sdkp: disk used
-  * @buf: report reply buffer
-  * @buflen: length of @buf
-+ * @zone_shift: logarithm base 2 of the number of blocks in a zone
-  * @seq_zones_bitmap: bitmap of sequential zones to set
-  *
-  * Parse reported zone descriptors in @buf to identify sequential zones and
-@@ -515,7 +513,7 @@ static inline unsigned long *sd_zbc_alloc_zone_bitmap(struct scsi_disk *sdkp)
-  * Return the LBA after the last zone reported.
-  */
- static sector_t sd_zbc_get_seq_zones(struct scsi_disk *sdkp, unsigned char *buf,
--				     unsigned int buflen,
-+				     unsigned int buflen, u32 zone_shift,
- 				     unsigned long *seq_zones_bitmap)
- {
- 	sector_t lba, next_lba = sdkp->capacity;
-@@ -534,7 +532,7 @@ static sector_t sd_zbc_get_seq_zones(struct scsi_disk *sdkp, unsigned char *buf,
- 		if (type != ZBC_ZONE_TYPE_CONV &&
- 		    cond != ZBC_ZONE_COND_READONLY &&
- 		    cond != ZBC_ZONE_COND_OFFLINE)
--			set_bit(lba >> sdkp->zone_shift, seq_zones_bitmap);
-+			set_bit(lba >> zone_shift, seq_zones_bitmap);
- 		next_lba = lba + get_unaligned_be64(&rec[8]);
- 		rec += 64;
- 	}
-@@ -543,12 +541,16 @@ static sector_t sd_zbc_get_seq_zones(struct scsi_disk *sdkp, unsigned char *buf,
- }
- 
- /**
-- * sd_zbc_setup_seq_zones_bitmap - Initialize the disk seq zone bitmap.
-+ * sd_zbc_setup_seq_zones_bitmap - Initialize a seq zone bitmap.
-  * @sdkp: target disk
-+ * @zone_shift: logarithm base 2 of the number of blocks in a zone
-+ * @nr_zones: number of zones to set up a seq zone bitmap for
-  *
-  * Allocate a zone bitmap and initialize it by identifying sequential zones.
-  */
--static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
-+static unsigned long *
-+sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp, u32 zone_shift,
-+			      u32 nr_zones)
- {
- 	struct request_queue *q = sdkp->disk->queue;
- 	unsigned long *seq_zones_bitmap;
-@@ -556,9 +558,9 @@ static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
- 	unsigned char *buf;
- 	int ret = -ENOMEM;
- 
--	seq_zones_bitmap = sd_zbc_alloc_zone_bitmap(sdkp);
-+	seq_zones_bitmap = sd_zbc_alloc_zone_bitmap(nr_zones, q->node);
- 	if (!seq_zones_bitmap)
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
- 
- 	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
- 	if (!buf)
-@@ -569,7 +571,7 @@ static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
- 		if (ret)
- 			goto out;
- 		lba = sd_zbc_get_seq_zones(sdkp, buf, SD_ZBC_BUF_SIZE,
--					   seq_zones_bitmap);
-+					   zone_shift, seq_zones_bitmap);
- 	}
- 
- 	if (lba != sdkp->capacity) {
-@@ -581,12 +583,9 @@ static int sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp)
- 	kfree(buf);
- 	if (ret) {
- 		kfree(seq_zones_bitmap);
--		return ret;
-+		return ERR_PTR(ret);
- 	}
--
--	q->seq_zones_bitmap = seq_zones_bitmap;
--
--	return 0;
-+	return seq_zones_bitmap;
- }
- 
- static void sd_zbc_cleanup(struct scsi_disk *sdkp)
-@@ -602,44 +601,64 @@ static void sd_zbc_cleanup(struct scsi_disk *sdkp)
- 	q->nr_zones = 0;
- }
- 
--static int sd_zbc_setup(struct scsi_disk *sdkp)
-+static int sd_zbc_setup(struct scsi_disk *sdkp, u32 zone_blocks)
- {
- 	struct request_queue *q = sdkp->disk->queue;
-+	u32 zone_shift = ilog2(zone_blocks);
-+	u32 nr_zones;
- 	int ret;
- 
--	/* READ16/WRITE16 is mandatory for ZBC disks */
--	sdkp->device->use_16_for_rw = 1;
--	sdkp->device->use_10_for_rw = 0;
--
- 	/* chunk_sectors indicates the zone size */
--	blk_queue_chunk_sectors(sdkp->disk->queue,
--			logical_to_sectors(sdkp->device, sdkp->zone_blocks));
--	sdkp->nr_zones =
--		round_up(sdkp->capacity, sdkp->zone_blocks) >> sdkp->zone_shift;
-+	blk_queue_chunk_sectors(q,
-+			logical_to_sectors(sdkp->device, zone_blocks));
-+	nr_zones = round_up(sdkp->capacity, zone_blocks) >> zone_shift;
- 
- 	/*
- 	 * Initialize the device request queue information if the number
- 	 * of zones changed.
- 	 */
--	if (sdkp->nr_zones != q->nr_zones) {
--
--		sd_zbc_cleanup(sdkp);
--
--		q->nr_zones = sdkp->nr_zones;
--		if (sdkp->nr_zones) {
--			q->seq_zones_wlock = sd_zbc_alloc_zone_bitmap(sdkp);
--			if (!q->seq_zones_wlock) {
-+	if (nr_zones != sdkp->nr_zones || nr_zones != q->nr_zones) {
-+		unsigned long *seq_zones_wlock = NULL, *seq_zones_bitmap = NULL;
-+		size_t zone_bitmap_size;
++struct perf_event * __percpu *sample_hbp;
++int ok_to_go;
 +
-+		if (nr_zones) {
-+			seq_zones_wlock = sd_zbc_alloc_zone_bitmap(nr_zones,
-+								   q->node);
-+			if (!seq_zones_wlock) {
- 				ret = -ENOMEM;
- 				goto err;
- 			}
- 
--			ret = sd_zbc_setup_seq_zones_bitmap(sdkp);
--			if (ret) {
--				sd_zbc_cleanup(sdkp);
-+			seq_zones_bitmap = sd_zbc_setup_seq_zones_bitmap(sdkp,
-+							zone_shift, nr_zones);
-+			if (IS_ERR(seq_zones_bitmap)) {
-+				ret = PTR_ERR(seq_zones_bitmap);
-+				kfree(seq_zones_wlock);
- 				goto err;
- 			}
- 		}
--
-+		zone_bitmap_size = BITS_TO_LONGS(nr_zones) *
-+			sizeof(unsigned long);
-+		blk_mq_freeze_queue(q);
-+		if (q->nr_zones != nr_zones) {
-+			/* READ16/WRITE16 is mandatory for ZBC disks */
-+			sdkp->device->use_16_for_rw = 1;
-+			sdkp->device->use_10_for_rw = 0;
-+
-+			sdkp->zone_blocks = zone_blocks;
-+			sdkp->zone_shift = zone_shift;
-+			sdkp->nr_zones = nr_zones;
-+			q->nr_zones = nr_zones;
-+			swap(q->seq_zones_wlock, seq_zones_wlock);
-+			swap(q->seq_zones_bitmap, seq_zones_bitmap);
-+		} else if (memcmp(q->seq_zones_bitmap, seq_zones_bitmap,
-+				  zone_bitmap_size) != 0) {
-+			memcpy(q->seq_zones_bitmap, seq_zones_bitmap,
-+			       zone_bitmap_size);
-+		}
-+		blk_mq_unfreeze_queue(q);
-+		kfree(seq_zones_wlock);
-+		kfree(seq_zones_bitmap);
- 	}
- 
- 	return 0;
-@@ -651,6 +670,7 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
- 
- int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ void blk_mq_sched_insert_request(struct request *rq, bool at_head,
+                                 bool run_queue, bool async)
  {
-+	int64_t zone_blocks;
- 	int ret;
- 
- 	if (!sd_is_zoned(sdkp))
-@@ -687,12 +707,16 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 	 * Check zone size: only devices with a constant zone size (except
- 	 * an eventual last runt zone) that is a power of 2 are supported.
- 	 */
--	ret = sd_zbc_check_zone_size(sdkp);
--	if (ret)
-+	zone_blocks = sd_zbc_check_zone_size(sdkp);
-+	ret = -EFBIG;
-+	if (zone_blocks != (u32)zone_blocks)
-+		goto err;
-+	ret = zone_blocks;
-+	if (ret < 0)
- 		goto err;
- 
- 	/* The drive satisfies the kernel restrictions: set it up */
--	ret = sd_zbc_setup(sdkp);
-+	ret = sd_zbc_setup(sdkp, zone_blocks);
- 	if (ret)
- 		goto err;
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 9af3e0f430bc..21e21f273a21 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -605,6 +605,11 @@ struct request_queue {
- 	 * initialized by the low level device driver (e.g. scsi/sd.c).
- 	 * Stacking drivers (device mappers) may or may not initialize
- 	 * these fields.
-+	 *
-+	 * Reads of this information must be protected with blk_queue_enter() /
-+	 * blk_queue_exit(). Modifying this information is only allowed while
-+	 * no requests are being processed. See also blk_mq_freeze_queue() and
-+	 * blk_mq_unfreeze_queue().
- 	 */
- 	unsigned int		nr_zones;
- 	unsigned long		*seq_zones_bitmap;
+@@ -435,6 +449,16 @@ void blk_mq_sched_insert_request(struct request
+*rq, bool at_head,
+        struct elevator_queue *e = q->elevator;
+        struct blk_mq_ctx *ctx = rq->mq_ctx;
+        struct blk_mq_hw_ctx *hctx = blk_mq_map_queue(q, ctx->cpu);
++       struct perf_event_attr attr;
++       struct scsi_request *req = scsi_req(rq);
++
++       if (ok_to_go) {
++               hw_breakpoint_init(&attr);
++               attr.bp_addr = (uintptr_t)&(req->sense);
++               attr.bp_len = HW_BREAKPOINT_LEN_8;
++               attr.bp_type = HW_BREAKPOINT_W;
++               sample_hbp = register_wide_hw_breakpoint(&attr,
+sample_hbp_handler, NULL);
++       }
+
+        /* flush rq in flush machinery need to be dispatched directly */
+        if (!(rq->rq_flags & RQF_FLUSH_SEQ) && op_is_flush(rq->cmd_flags)) {
+@@ -461,6 +485,9 @@ void blk_mq_sched_insert_request(struct request
+*rq, bool at_head,
+ run:
+        if (run_queue)
+                blk_mq_run_hw_queue(hctx, async);
++
++       if (ok_to_go)
++               unregister_wide_hw_breakpoint(sample_hbp);
+ }
+
+ void blk_mq_sched_insert_requests(struct request_queue *q,
+
+Where "ok_to_go" is wired up to a sysctl so I don't trip other things
+(?) at boot-time.
+
+I still haven't figured this out, though... any have a moment to look at this?
+
+-Kees
+
 -- 
-2.16.3
+Kees Cook
+Pixel Security
