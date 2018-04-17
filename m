@@ -1,45 +1,76 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] blk-mq: Clear out elevator private data
-Date: Tue, 17 Apr 2018 15:45:38 -0600
-Message-ID: <7d192394-568c-53e0-4359-723769c3ed7d@kernel.dk>
-References: <20180417214218.GA44753@beast>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: usercopy whitelist woe in scsi_sense_cache
+Date: Tue, 17 Apr 2018 14:47:00 -0700
+Message-ID: <CAGXu5j+kHipvoyFWjGp8M6+83zbd6yHOzwxQ-2LNBQbD5-jS9w@mail.gmail.com>
+References: <10360653.ov98egbaqx@natalenko.name> <CAGXu5j+-PNYxSc3v+QtQLK0S3wdtFthFSxNM_69kFDnPQX0Gaw@mail.gmail.com>
+ <CAGXu5j+_UH0h9qeYCKKjhC7jw-mi_=fg4ASHi2=pCF9xGTpA4Q@mail.gmail.com>
+ <2864697.7uzmEJovl2@natalenko.name> <CAGXu5jLSmJv9AstzsgSscrv-wA7FwfrxAKRxj-FVBmihQvnj1g@mail.gmail.com>
+ <CAGXu5j+dh1zm32iBjRVh0s+3gLJYgjwt+z1aBJmrK2Cr8XPWnA@mail.gmail.com>
+ <CAGXu5jLhnWnUiscP9B=kTEFNyRw9jgFn7Zr5FxhZrO20553+1Q@mail.gmail.com>
+ <CAGXu5jKuZwicyyXH2gB3vp-OjtS+MkG+hqxV1cq1jaG9vAAO=g@mail.gmail.com>
+ <CAGXu5jLQuzpjFcfjpT=MvgOxBizFNMjnfmY+E7eCHkDAV5swHg@mail.gmail.com>
+ <CAGXu5jJTMqbXia7TmN2yEW11SM+XC3pkMt=bb+xBrY7-OOf=tw@mail.gmail.com>
+ <CAGXu5j+xX3kDDS_sPY44hPVb=8isMX-evYzPx3ur=rge1rL5JQ@mail.gmail.com>
+ <CAGXu5jJmvKcANUSsCz3fjGSv-tv1hceNd3rOpT4WTfYRb65RRA@mail.gmail.com>
+ <8473f909-2123-0cfc-43b1-beba0b1aef9b@kernel.dk> <CAGXu5jL9miO3OXpjAxm9t8v=f_f5StB=Tk=aV8BVRdEj-Y-PDA@mail.gmail.com>
+ <CAGXu5jKVPQi0cdTbe5Y1DNHdiJ6-kEFRBTNv7znuqT9w5eifGg@mail.gmail.com> <07f263ff-cea6-ac3c-944b-0f36fee8ba25@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180417214218.GA44753@beast>
-Content-Language: en-US
+In-Reply-To: <07f263ff-cea6-ac3c-944b-0f36fee8ba25@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, linux-kernel@vger.kernel.org, Paolo Valente <paolo.valente@linaro.org>, Bart Van Assche <bart.vanassche@wdc.com>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Bart Van Assche <bart.vanassche@wdc.com>, David Windsor <dave@nullcore.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 4/17/18 3:42 PM, Kees Cook wrote:
-> Some elevators may not correctly check rq->rq_flags & RQF_ELVPRIV, and
-> may attempt to read rq->elv fields. When requests got reused, this
-> caused BFQ to think it already had a bfqq (rq->elv.priv[1]) allocated.
-> This could lead to odd behaviors like having the sense buffer address
-> slowly start incrementing. This eventually tripped HARDENED_USERCOPY
-> and KASAN.
-> 
-> This patch wipes all of rq->elv instead of just rq->elv.icq. While
-> it shouldn't technically be needed, this ends up being a robustness
-> improvement that should lead to at least finding bugs in elevators faster.
+On Tue, Apr 17, 2018 at 2:39 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 4/17/18 3:25 PM, Kees Cook wrote:
+>> On Tue, Apr 17, 2018 at 1:46 PM, Kees Cook <keescook@chromium.org> wrote:
+>>> I see elv.priv[1] assignments made in a few places -- is it possible
+>>> there is some kind of uninitialized-but-not-NULL state that can leak
+>>> in there?
+>>
+>> Got it. This fixes it for me:
+>>
+>> diff --git a/block/blk-mq.c b/block/blk-mq.c
+>> index 0dc9e341c2a7..859df3160303 100644
+>> --- a/block/blk-mq.c
+>> +++ b/block/blk-mq.c
+>> @@ -363,7 +363,7 @@ static struct request *blk_mq_get_request(struct
+>> request_queue *q,
+>>
+>>         rq = blk_mq_rq_ctx_init(data, tag, op);
+>>         if (!op_is_flush(op)) {
+>> -               rq->elv.icq = NULL;
+>> +               memset(&rq->elv, 0, sizeof(rq->elv));
+>>                 if (e && e->type->ops.mq.prepare_request) {
+>>                         if (e->type->icq_cache && rq_ioc(bio))
+>>                                 blk_mq_sched_assign_ioc(rq, bio);
+>> @@ -461,7 +461,7 @@ void blk_mq_free_request(struct request *rq)
+>>                         e->type->ops.mq.finish_request(rq);
+>>                 if (rq->elv.icq) {
+>>                         put_io_context(rq->elv.icq->ioc);
+>> -                       rq->elv.icq = NULL;
+>> +                       memset(&rq->elv, 0, sizeof(rq->elv));
+>>                 }
+>>         }
+>
+> This looks like a BFQ problem, this should not be necessary. Paolo,
+> you're calling your own prepare request handler from the insert
+> as well, and your prepare request does nothing if rq->elv.icq == NULL.
 
-Comments from the other email still apply, we should not need to do this
-full memset() for every request. From a quick look, BFQ needs to straighten
-out its usage of prepare request and interactions with insert_request.
+I sent the patch anyway, since it's kind of a robustness improvement,
+I'd hope. If you fix BFQ also, please add:
 
-> Reported-by: Oleksandr Natalenko <oleksandr@natalenko.name>
-> Fixes: bd166ef183c26 ("blk-mq-sched: add framework for MQ capable IO schedulers")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
-> In theory, BFQ needs to also check the RQF_ELVPRIV flag, but I'll leave that
-> to Paolo to figure out. Also, my Fixes line is kind of a best-guess. This
-> is where icq was originally wiped, so it seemed as good a commit as any.
+Reported-by: Oleksandr Natalenko <oleksandr@natalenko.name>
+Root-caused-by: Kees Cook <keescook@chromium.org>
 
-Yeah, that's probably a bit too broad for fixes :-)
+:) I gotta task-switch to other things!
+
+Thanks for the pointers, and thank you Oleksandr for providing the reproducer!
+
+-Kees
 
 -- 
-Jens Axboe
+Kees Cook
+Pixel Security
