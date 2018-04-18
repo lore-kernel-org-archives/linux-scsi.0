@@ -1,78 +1,38 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v3 5/6] scsi: devinfo: add BLIST_RETRY_ITF for EMC Symmetrix
-Date: Wed, 18 Apr 2018 01:35:10 +0200
-Message-ID: <20180417233511.6573-6-mwilck@suse.com>
-References: <20180417233511.6573-1-mwilck@suse.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH v3 1/6] ilog2: create truly constant version for sparse
+Date: Tue, 17 Apr 2018 17:07:04 -0700
+Message-ID: <CA+55aFxLY2=RVAD8m-3bf4vKWpPKWSmjN_tLVWwb4Y7w81UTbA@mail.gmail.com>
+References: <20180417233511.6573-1-mwilck@suse.com> <20180417233511.6573-2-mwilck@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180417233511.6573-1-mwilck@suse.com>
+In-Reply-To: <20180417233511.6573-2-mwilck@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Janusz Dziemidowicz <rraptorr@nails.eu.org>, James Bottomley <JBottomley@Odin.com>, Kurt Garloff <garloff@suse.de>
+To: Martin Wilck <mwilck@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Thomas Gleixner <tglx@linutronix.de>, Jonathan Corbet <corbet@lwn.net>, Randy Dunlap <rdunlap@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-EMC Symmetrix returns 'internal target error' for a variety
-of conditions, most of which will be transient.
-So we should always retry it, even with failfast set.
-Otherwise we'd get spurious path flaps with multipath.
+On Tue, Apr 17, 2018 at 4:35 PM, Martin Wilck <mwilck@suse.com> wrote:
+> Sparse emits errors about ilog2() in array indices because of the use of
+> __ilog2_32() and __ilog2_64(),
 
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/scsi_devinfo.c | 3 ++-
- drivers/scsi/scsi_error.c   | 4 ++++
- include/scsi/scsi_devinfo.h | 4 +++-
- 3 files changed, 9 insertions(+), 2 deletions(-)
+If sparse warns about it, then presumably gcc with -Wvla warns about it too?
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index c05843a..f7b94c1 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -161,7 +161,8 @@ static struct {
- 	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* EMC CLARiiON, storage on LUN 0 */
- 	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* EMC CLARiiON, no storage on LUN 0 */
- 	{"EMC",  "Invista", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_REPORTLUN2},
-+	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN |
-+	 BLIST_REPORTLUN2 | BLIST_RETRY_ITF},
- 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
- 	{"easyRAID", "16P", NULL, BLIST_NOREPORTLUN},
- 	{"easyRAID", "X6P", NULL, BLIST_NOREPORTLUN},
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ac3b1c3..1dee91f 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -38,6 +38,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_dh.h>
-+#include <scsi/scsi_devinfo.h>
- #include <scsi/sg.h>
- 
- #include "scsi_priv.h"
-@@ -524,6 +525,9 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (sshdr.asc == 0x10) /* DIF */
- 			return SUCCESS;
- 
-+		if (sshdr.asc == 0x44 && sdev->sdev_bflags & BLIST_RETRY_ITF)
-+			return ADD_TO_MLQUEUE;
-+
- 		return NEEDS_RETRY;
- 	case NOT_READY:
- 	case UNIT_ATTENTION:
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 3434e14..91a327e 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -63,8 +63,10 @@
- #define BLIST_MAX_1024		((__force blist_flags_t)(1ULL << 30))
- /* Use UNMAP limit for WRITE SAME */
- #define BLIST_UNMAP_LIMIT_WS	((__force blist_flags_t)(1ULL << 31))
-+/* Always retry ABORTED_COMMAND with Internal Target Failure */
-+#define BLIST_RETRY_ITF		((__force blist_flags_t)(1ULL << 32))
- 
--#define __BLIST_LAST_USED BLIST_UNMAP_LIMIT_WS
-+#define __BLIST_LAST_USED BLIST_RETRY_ITF
- 
- #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
- 			       (__force blist_flags_t) \
--- 
-2.16.1
+And if thats the case, then __builtin_constant_p() and a ternary
+operation isn't good enough, because gcc -Wvla is even more anal than
+sparse is.
+
+Which is why we have that __is_constexpr() magic for min/max().
+
+So I suspect that what you'd want is
+
+  #define ilog2(n) \
+        __builtin_choose_expr(__is_constexpr(n), \
+                const_ilog2(n), \
+                __builtin_choose_expr(sizeof(n) <= 4, \
+                        __ilog2_u32(n), \
+                        __ilog2_u64(n)))
+
+or something. Hmm?
+
+           Linus
