@@ -1,25 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mptfc: fix spelling mistake in macro names
-Date: Thu, 19 Apr 2018 00:09:16 -0400
-Message-ID: <yq1y3hjltw3.fsf@oracle.com>
-References: <20180418113038.1239-1-colin.king@canonical.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 01/12] iscsi_tcp: don't set a bounce limit
+Date: Thu, 19 Apr 2018 00:29:38 -0400
+Message-ID: <yq1h8o7lsy5.fsf@oracle.com>
+References: <20180416085032.7367-1-hch@lst.de>
+	<20180416085032.7367-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180418113038.1239-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 18 Apr 2018 12:30:38 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Philippe Ombredanne <pombredanne@nexb.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20180416085032.7367-2-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+	of "Mon, 16 Apr 2018 10:50:21 +0200")
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Christoph,
 
-> Rename macros MPI_FCPORTPAGE0_SUPPORT_SPEED_UKNOWN and
-> MPI_FCPORTPAGE0_CURRENT_SPEED_UKNOWN to add in missing N in UNKNOWN
+> The default already is to never bounce, so the call is a no-op.
 
-Applied to 4.18/scsi-queue. Thanks.
+Applied to 4.18/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
