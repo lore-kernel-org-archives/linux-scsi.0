@@ -1,85 +1,105 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 26/39] rtc/proc: switch to
- proc_create_single_data
-Date: Thu, 19 Apr 2018 14:41:27 +0200
-Message-ID: <20180419124140.9309-27-hch@lst.de>
+Subject: [PATCH 23/39] staging/rtl8192u: simplify procfs code
+Date: Thu, 19 Apr 2018 14:41:24 +0200
+Message-ID: <20180419124140.9309-24-hch@lst.de>
 References: <20180419124140.9309-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <jfs-discussion-bounces@lists.sourceforge.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180419124140.9309-1-hch@lst.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/options/jfs-discussion>,
- <mailto:jfs-discussion-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=jfs-discussion>
-List-Post: <mailto:jfs-discussion@lists.sourceforge.net>
-List-Help: <mailto:jfs-discussion-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/jfs-discussion>,
- <mailto:jfs-discussion-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: jfs-discussion-bounces@lists.sourceforge.net
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Corey Minyard <minyard@acm.org>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-And stop trying to get a reference on the submodule, procfs code deals
-with release after and unloaded module and thus removed proc entry.
+Unwind the registration loop into individual calls.  Switch to use
+proc_create_single where applicable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/rtc/rtc-proc.c | 33 ++-------------------------------
- 1 file changed, 2 insertions(+), 31 deletions(-)
+ drivers/staging/rtl8192u/r8192U_core.c | 67 ++++++--------------------
+ 1 file changed, 14 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/rtc/rtc-proc.c b/drivers/rtc/rtc-proc.c
-index 31e7e23cc5be..a9dd9218fae2 100644
---- a/drivers/rtc/rtc-proc.c
-+++ b/drivers/rtc/rtc-proc.c
-@@ -107,40 +107,11 @@ static int rtc_proc_show(struct seq_file *seq, void *offset)
- 	return 0;
+diff --git a/drivers/staging/rtl8192u/r8192U_core.c b/drivers/staging/rtl8192u/r8192U_core.c
+index d607c59761cf..7a0dbc0fa18e 100644
+--- a/drivers/staging/rtl8192u/r8192U_core.c
++++ b/drivers/staging/rtl8192u/r8192U_core.c
+@@ -646,64 +646,25 @@ static void rtl8192_proc_module_init(void)
+ 	rtl8192_proc = proc_mkdir(RTL819xU_MODULE_NAME, init_net.proc_net);
  }
  
--static int rtc_proc_open(struct inode *inode, struct file *file)
+-/*
+- * seq_file wrappers for procfile show routines.
+- */
+-static int rtl8192_proc_open(struct inode *inode, struct file *file)
 -{
--	int ret;
--	struct rtc_device *rtc = PDE_DATA(inode);
+-	struct net_device *dev = proc_get_parent_data(inode);
+-	int (*show)(struct seq_file *, void *) = PDE_DATA(inode);
 -
--	if (!try_module_get(rtc->owner))
--		return -ENODEV;
--
--	ret = single_open(file, rtc_proc_show, rtc);
--	if (ret)
--		module_put(rtc->owner);
--	return ret;
+-	return single_open(file, show, dev);
 -}
 -
--static int rtc_proc_release(struct inode *inode, struct file *file)
--{
--	int res = single_release(inode, file);
--	struct rtc_device *rtc = PDE_DATA(inode);
--
--	module_put(rtc->owner);
--	return res;
--}
--
--static const struct file_operations rtc_proc_fops = {
--	.open		= rtc_proc_open,
+-static const struct file_operations rtl8192_proc_fops = {
+-	.open		= rtl8192_proc_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release	= rtc_proc_release,
+-	.release	= single_release,
 -};
 -
- void rtc_proc_add_device(struct rtc_device *rtc)
+-/*
+- * Table of proc files we need to create.
+- */
+-struct rtl8192_proc_file {
+-	char name[12];
+-	int (*show)(struct seq_file *, void *);
+-};
+-
+-static const struct rtl8192_proc_file rtl8192_proc_files[] = {
+-	{ "stats-rx",	&proc_get_stats_rx },
+-	{ "stats-tx",	&proc_get_stats_tx },
+-	{ "stats-ap",	&proc_get_stats_ap },
+-	{ "registers",	&proc_get_registers },
+-	{ "" }
+-};
+-
+ static void rtl8192_proc_init_one(struct net_device *dev)
  {
- 	if (is_rtc_hctosys(rtc))
--		proc_create_data("driver/rtc", 0, NULL, &rtc_proc_fops, rtc);
-+		proc_create_single_data("driver/rtc", 0, NULL, rtc_proc_show,
-+				rtc);
+-	const struct rtl8192_proc_file *f;
+ 	struct proc_dir_entry *dir;
+ 
+-	if (rtl8192_proc) {
+-		dir = proc_mkdir_data(dev->name, 0, rtl8192_proc, dev);
+-		if (!dir) {
+-			RT_TRACE(COMP_ERR,
+-				 "Unable to initialize /proc/net/rtl8192/%s\n",
+-				 dev->name);
+-			return;
+-		}
++	if (!rtl8192_proc)
++		return;
+ 
+-		for (f = rtl8192_proc_files; f->name[0]; f++) {
+-			if (!proc_create_data(f->name, S_IFREG | S_IRUGO, dir,
+-					      &rtl8192_proc_fops, f->show)) {
+-				RT_TRACE(COMP_ERR,
+-					 "Unable to initialize /proc/net/rtl8192/%s/%s\n",
+-					 dev->name, f->name);
+-				return;
+-			}
+-		}
+-	}
++	dir = proc_mkdir_data(dev->name, 0, rtl8192_proc, dev);
++	if (!dir)
++		return;
++
++	proc_create_single("stats-rx", S_IFREG | S_IRUGO, dir,
++			proc_get_stats_rx);
++	proc_create_single("stats-tx", S_IFREG | S_IRUGO, dir,
++			proc_get_stats_tx);
++	proc_create_single("stats-ap", S_IFREG | S_IRUGO, dir,
++			proc_get_stats_ap);
++	proc_create_single("registers", S_IFREG | S_IRUGO, dir,
++			proc_get_registers);
  }
  
- void rtc_proc_del_device(struct rtc_device *rtc)
+ static void rtl8192_proc_remove_one(struct net_device *dev)
 -- 
 2.17.0
-
-
-------------------------------------------------------------------------------
-Check out the vibrant tech community on one of the world's most
-engaging tech sites, Slashdot.org! http://sdm.link/slashdot
