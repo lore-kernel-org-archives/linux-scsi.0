@@ -1,217 +1,123 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 30/39] netfilter/xt_hashlimit: switch to proc_create_{seq,single}_data
-Date: Thu, 19 Apr 2018 14:41:31 +0200
-Message-ID: <20180419124140.9309-31-hch@lst.de>
+Subject: [PATCH 25/39] drbd: switch to proc_create_single
+Date: Thu, 19 Apr 2018 14:41:26 +0200
+Message-ID: <20180419124140.9309-26-hch@lst.de>
 References: <20180419124140.9309-1-hch@lst.de>
-Return-path: <netdev-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <jfs-discussion-bounces@lists.sourceforge.net>
 In-Reply-To: <20180419124140.9309-1-hch@lst.de>
-Sender: netdev-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/jfs-discussion>,
+ <mailto:jfs-discussion-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=jfs-discussion>
+List-Post: <mailto:jfs-discussion@lists.sourceforge.net>
+List-Help: <mailto:jfs-discussion-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/jfs-discussion>,
+ <mailto:jfs-discussion-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: jfs-discussion-bounces@lists.sourceforge.net
 To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Corey Minyard <minyard@acm.org>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And use proc private data directly instead of doing a detour
-through seq->private.
+And stop messing with try_module_get on THIS_MODULE, which doesn't make
+any sense here.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- net/netfilter/xt_hashlimit.c | 92 +++++++-----------------------------
- 1 file changed, 18 insertions(+), 74 deletions(-)
+ drivers/block/drbd/drbd_int.h  |  2 +-
+ drivers/block/drbd/drbd_main.c |  3 ++-
+ drivers/block/drbd/drbd_proc.c | 34 +---------------------------------
+ 3 files changed, 4 insertions(+), 35 deletions(-)
 
-diff --git a/net/netfilter/xt_hashlimit.c b/net/netfilter/xt_hashlimit.c
-index 0cd73567e7ff..9b16402f29af 100644
---- a/net/netfilter/xt_hashlimit.c
-+++ b/net/netfilter/xt_hashlimit.c
-@@ -57,9 +57,9 @@ static inline struct hashlimit_net *hashlimit_pernet(struct net *net)
+diff --git a/drivers/block/drbd/drbd_int.h b/drivers/block/drbd/drbd_int.h
+index 06ecee1b528e..461ddec04e7c 100644
+--- a/drivers/block/drbd/drbd_int.h
++++ b/drivers/block/drbd/drbd_int.h
+@@ -1643,7 +1643,7 @@ void drbd_bump_write_ordering(struct drbd_resource *resource, struct drbd_backin
+ 
+ /* drbd_proc.c */
+ extern struct proc_dir_entry *drbd_proc;
+-extern const struct file_operations drbd_proc_fops;
++int drbd_seq_show(struct seq_file *seq, void *v);
+ 
+ /* drbd_actlog.c */
+ extern bool drbd_al_begin_io_prepare(struct drbd_device *device, struct drbd_interval *i);
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index 185f1ef00a7c..c2d154faac02 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -3010,7 +3010,8 @@ static int __init drbd_init(void)
+ 		goto fail;
+ 
+ 	err = -ENOMEM;
+-	drbd_proc = proc_create_data("drbd", S_IFREG | S_IRUGO , NULL, &drbd_proc_fops, NULL);
++	drbd_proc = proc_create_single("drbd", S_IFREG | S_IRUGO , NULL,
++			drbd_seq_show);
+ 	if (!drbd_proc)	{
+ 		pr_err("unable to register proc file\n");
+ 		goto fail;
+diff --git a/drivers/block/drbd/drbd_proc.c b/drivers/block/drbd/drbd_proc.c
+index 582caeb0de86..74ef29247bb5 100644
+--- a/drivers/block/drbd/drbd_proc.c
++++ b/drivers/block/drbd/drbd_proc.c
+@@ -33,18 +33,7 @@
+ #include <linux/drbd.h>
+ #include "drbd_int.h"
+ 
+-static int drbd_proc_open(struct inode *inode, struct file *file);
+-static int drbd_proc_release(struct inode *inode, struct file *file);
+-
+-
+ struct proc_dir_entry *drbd_proc;
+-const struct file_operations drbd_proc_fops = {
+-	.owner		= THIS_MODULE,
+-	.open		= drbd_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= drbd_proc_release,
+-};
+ 
+ static void seq_printf_with_thousands_grouping(struct seq_file *seq, long v)
+ {
+@@ -235,7 +224,7 @@ static void drbd_syncer_progress(struct drbd_device *device, struct seq_file *se
+ 	}
  }
  
- /* need to declare this at the top */
--static const struct file_operations dl_file_ops_v2;
--static const struct file_operations dl_file_ops_v1;
--static const struct file_operations dl_file_ops;
-+static const struct seq_operations dl_seq_ops_v2;
-+static const struct seq_operations dl_seq_ops_v1;
-+static const struct seq_operations dl_seq_ops;
- 
- /* hash table crap */
- struct dsthash_dst {
-@@ -272,7 +272,7 @@ static int htable_create(struct net *net, struct hashlimit_cfg3 *cfg,
+-static int drbd_seq_show(struct seq_file *seq, void *v)
++int drbd_seq_show(struct seq_file *seq, void *v)
  {
- 	struct hashlimit_net *hashlimit_net = hashlimit_pernet(net);
- 	struct xt_hashlimit_htable *hinfo;
--	const struct file_operations *fops;
-+	const struct seq_operations *ops;
- 	unsigned int size, i;
- 	int ret;
+ 	int i, prev_i = -1;
+ 	const char *sn;
+@@ -345,24 +334,3 @@ static int drbd_seq_show(struct seq_file *seq, void *v)
  
-@@ -321,19 +321,19 @@ static int htable_create(struct net *net, struct hashlimit_cfg3 *cfg,
- 
- 	switch (revision) {
- 	case 1:
--		fops = &dl_file_ops_v1;
-+		ops = &dl_seq_ops_v1;
- 		break;
- 	case 2:
--		fops = &dl_file_ops_v2;
-+		ops = &dl_seq_ops_v2;
- 		break;
- 	default:
--		fops = &dl_file_ops;
-+		ops = &dl_seq_ops;
- 	}
- 
--	hinfo->pde = proc_create_data(name, 0,
-+	hinfo->pde = proc_create_seq_data(name, 0,
- 		(family == NFPROTO_IPV4) ?
- 		hashlimit_net->ipt_hashlimit : hashlimit_net->ip6t_hashlimit,
--		fops, hinfo);
-+		ops, hinfo);
- 	if (hinfo->pde == NULL) {
- 		kfree(hinfo->name);
- 		vfree(hinfo);
-@@ -1057,7 +1057,7 @@ static struct xt_match hashlimit_mt_reg[] __read_mostly = {
- static void *dl_seq_start(struct seq_file *s, loff_t *pos)
- 	__acquires(htable->lock)
- {
--	struct xt_hashlimit_htable *htable = s->private;
-+	struct xt_hashlimit_htable *htable = PDE_DATA(file_inode(s->private));
- 	unsigned int *bucket;
- 
- 	spin_lock_bh(&htable->lock);
-@@ -1074,7 +1074,7 @@ static void *dl_seq_start(struct seq_file *s, loff_t *pos)
- 
- static void *dl_seq_next(struct seq_file *s, void *v, loff_t *pos)
- {
--	struct xt_hashlimit_htable *htable = s->private;
-+	struct xt_hashlimit_htable *htable = PDE_DATA(file_inode(s->private));
- 	unsigned int *bucket = v;
- 
- 	*pos = ++(*bucket);
-@@ -1088,7 +1088,7 @@ static void *dl_seq_next(struct seq_file *s, void *v, loff_t *pos)
- static void dl_seq_stop(struct seq_file *s, void *v)
- 	__releases(htable->lock)
- {
--	struct xt_hashlimit_htable *htable = s->private;
-+	struct xt_hashlimit_htable *htable = PDE_DATA(file_inode(s->private));
- 	unsigned int *bucket = v;
- 
- 	if (!IS_ERR(bucket))
-@@ -1130,7 +1130,7 @@ static void dl_seq_print(struct dsthash_ent *ent, u_int8_t family,
- static int dl_seq_real_show_v2(struct dsthash_ent *ent, u_int8_t family,
- 			       struct seq_file *s)
- {
--	const struct xt_hashlimit_htable *ht = s->private;
-+	struct xt_hashlimit_htable *ht = PDE_DATA(file_inode(s->private));
- 
- 	spin_lock(&ent->lock);
- 	/* recalculate to show accurate numbers */
-@@ -1145,7 +1145,7 @@ static int dl_seq_real_show_v2(struct dsthash_ent *ent, u_int8_t family,
- static int dl_seq_real_show_v1(struct dsthash_ent *ent, u_int8_t family,
- 			       struct seq_file *s)
- {
--	const struct xt_hashlimit_htable *ht = s->private;
-+	struct xt_hashlimit_htable *ht = PDE_DATA(file_inode(s->private));
- 
- 	spin_lock(&ent->lock);
- 	/* recalculate to show accurate numbers */
-@@ -1160,7 +1160,7 @@ static int dl_seq_real_show_v1(struct dsthash_ent *ent, u_int8_t family,
- static int dl_seq_real_show(struct dsthash_ent *ent, u_int8_t family,
- 			    struct seq_file *s)
- {
--	const struct xt_hashlimit_htable *ht = s->private;
-+	struct xt_hashlimit_htable *ht = PDE_DATA(file_inode(s->private));
- 
- 	spin_lock(&ent->lock);
- 	/* recalculate to show accurate numbers */
-@@ -1174,7 +1174,7 @@ static int dl_seq_real_show(struct dsthash_ent *ent, u_int8_t family,
- 
- static int dl_seq_show_v2(struct seq_file *s, void *v)
- {
--	struct xt_hashlimit_htable *htable = s->private;
-+	struct xt_hashlimit_htable *htable = PDE_DATA(file_inode(s->private));
- 	unsigned int *bucket = (unsigned int *)v;
- 	struct dsthash_ent *ent;
- 
-@@ -1188,7 +1188,7 @@ static int dl_seq_show_v2(struct seq_file *s, void *v)
- 
- static int dl_seq_show_v1(struct seq_file *s, void *v)
- {
--	struct xt_hashlimit_htable *htable = s->private;
-+	struct xt_hashlimit_htable *htable = PDE_DATA(file_inode(s->private));
- 	unsigned int *bucket = v;
- 	struct dsthash_ent *ent;
- 
-@@ -1202,7 +1202,7 @@ static int dl_seq_show_v1(struct seq_file *s, void *v)
- 
- static int dl_seq_show(struct seq_file *s, void *v)
- {
--	struct xt_hashlimit_htable *htable = s->private;
-+	struct xt_hashlimit_htable *htable = PDE_DATA(file_inode(s->private));
- 	unsigned int *bucket = v;
- 	struct dsthash_ent *ent;
- 
-@@ -1235,62 +1235,6 @@ static const struct seq_operations dl_seq_ops = {
- 	.show  = dl_seq_show
- };
- 
--static int dl_proc_open_v2(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+-
+-static int drbd_proc_open(struct inode *inode, struct file *file)
 -{
--	int ret = seq_open(file, &dl_seq_ops_v2);
+-	int err;
 -
--	if (!ret) {
--		struct seq_file *sf = file->private_data;
--
--		sf->private = PDE_DATA(inode);
+-	if (try_module_get(THIS_MODULE)) {
+-		err = single_open(file, drbd_seq_show, NULL);
+-		if (err)
+-			module_put(THIS_MODULE);
+-		return err;
 -	}
--	return ret;
+-	return -ENODEV;
 -}
 -
--static int dl_proc_open_v1(struct inode *inode, struct file *file)
+-static int drbd_proc_release(struct inode *inode, struct file *file)
 -{
--	int ret = seq_open(file, &dl_seq_ops_v1);
--
--	if (!ret) {
--		struct seq_file *sf = file->private_data;
--		sf->private = PDE_DATA(inode);
--	}
--	return ret;
+-	module_put(THIS_MODULE);
+-	return single_release(inode, file);
 -}
 -
--static int dl_proc_open(struct inode *inode, struct file *file)
--{
--	int ret = seq_open(file, &dl_seq_ops);
--
--	if (!ret) {
--		struct seq_file *sf = file->private_data;
--
--		sf->private = PDE_DATA(inode);
--	}
--	return ret;
--}
--
--static const struct file_operations dl_file_ops_v2 = {
--	.open    = dl_proc_open_v2,
--	.read    = seq_read,
--	.llseek  = seq_lseek,
--	.release = seq_release
--};
--
--static const struct file_operations dl_file_ops_v1 = {
--	.open    = dl_proc_open_v1,
--	.read    = seq_read,
--	.llseek  = seq_lseek,
--	.release = seq_release
--};
--
--static const struct file_operations dl_file_ops = {
--	.open    = dl_proc_open,
--	.read    = seq_read,
--	.llseek  = seq_lseek,
--	.release = seq_release
--};
--
- static int __net_init hashlimit_proc_net_init(struct net *net)
- {
- 	struct hashlimit_net *hashlimit_net = hashlimit_pernet(net);
+-/* PROC FS stuff end */
 -- 
 2.17.0
+
+
+------------------------------------------------------------------------------
+Check out the vibrant tech community on one of the world's most
+engaging tech sites, Slashdot.org! http://sdm.link/slashdot
