@@ -1,15 +1,15 @@
 From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 01/12] iscsi_tcp: don't set a bounce limit
-Date: Thu, 19 Apr 2018 00:29:38 -0400
-Message-ID: <yq1h8o7lsy5.fsf@oracle.com>
+Subject: Re: [PATCH 02/12] storsvc: don't set a bounce limit
+Date: Thu, 19 Apr 2018 00:29:52 -0400
+Message-ID: <yq1d0yvlsxr.fsf@oracle.com>
 References: <20180416085032.7367-1-hch@lst.de>
-	<20180416085032.7367-2-hch@lst.de>
+	<20180416085032.7367-3-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180416085032.7367-2-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-	of "Mon, 16 Apr 2018 10:50:21 +0200")
+In-Reply-To: <20180416085032.7367-3-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+	of "Mon, 16 Apr 2018 10:50:22 +0200")
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
