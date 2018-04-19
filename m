@@ -1,226 +1,410 @@
-From: Long Li <longli@linuxonhyperv.com>
-Subject: [Patch v2] Storvsc: Select channel based on available percentage of ring buffer to write
-Date: Thu, 19 Apr 2018 14:54:24 -0700
-Message-ID: <20180419215424.3557-1-longli@linuxonhyperv.com>
-Reply-To: longli@microsoft.com
+From: Anatoliy Glagolev <glagolig@gmail.com>
+Subject: Re: [PATCH] bsg referencing bus driver module
+Date: Thu, 19 Apr 2018 15:10:09 -0700
+Message-ID: <CANFzKepRSA+VoVAvOfW6U_qHFVDZex+=hQ=QhU+7Z=unvwejJQ@mail.gmail.com>
+References: <CANFzKepsGq0EHX4GPtC0RZOWqVf2fTJ6uA2WH-SZNsBuwMJ5KA@mail.gmail.com>
+ <CANFzKer6QDaJALX3LKPF2DV6LgczTh-efQe9+zeK8BuxTWFt1A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CANFzKer6QDaJALX3LKPF2DV6LgczTh-efQe9+zeK8BuxTWFt1A@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>
+To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc: axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp, martin.petersen@oracle.com, jthumshirn@suse.de, hare@suse.com, bblock@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>
+Updated: rebased on recent Linux, cc-ed maintainers per instructions
+in MAINTAINERS file
 
-This is a best effort for estimating on how busy the ring buffer is for
-that channel, based on available buffer to write in percentage. It is still
-possible that at the time of actual ring buffer write, the space may not be
-available due to other processes may be writing at the time.
+>From df939b80d02bf37b21efaaef8ede86cfd39b0cb8 Mon Sep 17 00:00:00 2001
+From: Anatoliy Glagolev <aglagolev@purestorage.com>
+Date: Thu, 19 Apr 2018 15:06:06 -0600
+Subject: [PATCH] bsg referencing parent module
 
-Selecting a channel based on how full it is can reduce the possibility that
-a ring buffer write will fail, and avoid the situation a channel is over
-busy.
-
-Now it's possible that storvsc can use a smaller ring buffer size
-(e.g. 40k bytes) to take advantage of cache locality.
-
-Changes.
-v2: Pre-allocate struct cpumask on the heap.
-Struct cpumask is a big structure (1k bytes) when CONFIG_NR_CPUS=8192 (default
-value when CONFIG_MAXSMP=y). Don't use kernel stack for it by pre-allocating
-them using kmalloc when channels are first initialized.
-
-Signed-off-by: Long Li <longli@microsoft.com>
+Fixing a bug when bsg layer holds the last reference to device
+when the device's module has been unloaded. Upon dropping the
+reference the device's release function may touch memory of
+the unloaded module.
 ---
- drivers/scsi/storvsc_drv.c | 90 ++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 72 insertions(+), 18 deletions(-)
+ block/bsg-lib.c                  | 24 ++++++++++++++++++++++--
+ block/bsg.c                      | 29 ++++++++++++++++++++++++++---
+ drivers/scsi/scsi_transport_fc.c |  8 ++++++--
+ include/linux/bsg-lib.h          |  4 ++++
+ include/linux/bsg.h              |  5 +++++
+ 5 files changed, 63 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index a2ec0bc9e9fa..2a9fff94dd1a 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -395,6 +395,12 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
- 
- module_param(storvsc_vcpus_per_sub_channel, int, S_IRUGO);
- MODULE_PARM_DESC(storvsc_vcpus_per_sub_channel, "Ratio of VCPUs to subchannels");
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+index fc2e5ff..90c28fd 100644
+--- a/block/bsg-lib.c
++++ b/block/bsg-lib.c
+@@ -309,6 +309,25 @@ struct request_queue *bsg_setup_queue(struct
+device *dev, const char *name,
+  bsg_job_fn *job_fn, int dd_job_size,
+  void (*release)(struct device *))
+ {
++ return bsg_setup_queue_ex(dev, name, job_fn, dd_job_size, release,
++ NULL);
++}
++EXPORT_SYMBOL_GPL(bsg_setup_queue);
 +
-+static int ring_avail_percent_lowater = 10;
-+module_param(ring_avail_percent_lowater, int, S_IRUGO);
-+MODULE_PARM_DESC(ring_avail_percent_lowater,
-+		"Select a channel if available ring size > this in percent");
-+
- /*
-  * Timeout in seconds for all devices managed by this driver.
-  */
-@@ -468,6 +474,13 @@ struct storvsc_device {
- 	 * Mask of CPUs bound to subchannels.
- 	 */
- 	struct cpumask alloced_cpus;
-+	/*
-+	 * Pre-allocated struct cpumask for each hardware queue.
-+	 * struct cpumask is used by selecting out-going channels. It is a
-+	 * big structure, default to 1024k bytes when CONFIG_MAXSMP=y.
-+	 * Pre-allocate it to avoid allocation on the kernel stack.
-+	 */
-+	struct cpumask *cpumask_chns;
- 	/* Used for vsc/vsp channel reset process */
- 	struct storvsc_cmd_request init_request;
- 	struct storvsc_cmd_request reset_request;
-@@ -872,6 +885,13 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
- 	if (stor_device->stor_chns == NULL)
- 		return -ENOMEM;
- 
-+	stor_device->cpumask_chns = kcalloc(num_possible_cpus(),
-+			sizeof(struct cpumask), GFP_KERNEL);
-+	if (stor_device->cpumask_chns == NULL) {
-+		kfree(stor_device->stor_chns);
-+		return -ENOMEM;
-+	}
-+
- 	stor_device->stor_chns[device->channel->target_cpu] = device->channel;
- 	cpumask_set_cpu(device->channel->target_cpu,
- 			&stor_device->alloced_cpus);
-@@ -1232,6 +1252,7 @@ static int storvsc_dev_remove(struct hv_device *device)
- 	vmbus_close(device->channel);
- 
- 	kfree(stor_device->stor_chns);
-+	kfree(stor_device->cpumask_chns);
- 	kfree(stor_device);
- 	return 0;
++/**
++ * bsg_setup_queue - Create and add the bsg hooks so we can receive requests
++ * @dev: device to attach bsg device to
++ * @name: device to give bsg device
++ * @job_fn: bsg job handler
++ * @dd_job_size: size of LLD data needed for each job
++ * @release: @dev release function
++ * @dev_module: @dev's module
++ */
++struct request_queue *bsg_setup_queue_ex(struct device *dev, const char *name,
++ bsg_job_fn *job_fn, int dd_job_size,
++ void (*release)(struct device *),
++ struct module *dev_module)
++{
+  struct request_queue *q;
+  int ret;
+
+@@ -331,7 +350,8 @@ struct request_queue *bsg_setup_queue(struct
+device *dev, const char *name,
+  blk_queue_softirq_done(q, bsg_softirq_done);
+  blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+
+- ret = bsg_register_queue(q, dev, name, &bsg_transport_ops, release);
++ ret = bsg_register_queue_ex(q, dev, name, &bsg_transport_ops, release,
++ dev_module);
+  if (ret) {
+  printk(KERN_ERR "%s: bsg interface failed to "
+        "initialize - register queue\n", dev->kobj.name);
+@@ -343,4 +363,4 @@ struct request_queue *bsg_setup_queue(struct
+device *dev, const char *name,
+  blk_cleanup_queue(q);
+  return ERR_PTR(ret);
  }
-@@ -1241,7 +1262,7 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
+-EXPORT_SYMBOL_GPL(bsg_setup_queue);
++EXPORT_SYMBOL_GPL(bsg_setup_queue_ex);
+diff --git a/block/bsg.c b/block/bsg.c
+index defa06c..6920c5b 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -750,7 +750,8 @@ static struct bsg_device *__bsg_get_device(int
+minor, struct request_queue *q)
+  return bd;
+ }
+
+-static struct bsg_device *bsg_get_device(struct inode *inode, struct
+file *file)
++static struct bsg_device *bsg_get_device(struct inode *inode, struct
+file *file,
++ struct bsg_class_device **pbcd)
  {
- 	u16 slot = 0;
- 	u16 hash_qnum;
--	struct cpumask alloced_mask;
-+	struct cpumask *alloced_mask = &stor_device->cpumask_chns[q_num];
- 	int num_channels, tgt_cpu;
- 
- 	if (stor_device->num_sc == 0)
-@@ -1257,10 +1278,10 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
- 	 * III. Mapping is persistent.
- 	 */
- 
--	cpumask_and(&alloced_mask, &stor_device->alloced_cpus,
-+	cpumask_and(alloced_mask, &stor_device->alloced_cpus,
- 		    cpumask_of_node(cpu_to_node(q_num)));
- 
--	num_channels = cpumask_weight(&alloced_mask);
-+	num_channels = cpumask_weight(alloced_mask);
- 	if (num_channels == 0)
- 		return stor_device->device->channel;
- 
-@@ -1268,7 +1289,7 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
- 	while (hash_qnum >= num_channels)
- 		hash_qnum -= num_channels;
- 
--	for_each_cpu(tgt_cpu, &alloced_mask) {
-+	for_each_cpu(tgt_cpu, alloced_mask) {
- 		if (slot == hash_qnum)
- 			break;
- 		slot++;
-@@ -1285,9 +1306,9 @@ static int storvsc_do_io(struct hv_device *device,
+  struct bsg_device *bd;
+  struct bsg_class_device *bcd;
+@@ -766,6 +767,7 @@ static struct bsg_device *bsg_get_device(struct
+inode *inode, struct file *file)
+
+  if (!bcd)
+  return ERR_PTR(-ENODEV);
++ *pbcd = bcd;
+
+  bd = __bsg_get_device(iminor(inode), bcd->queue);
+  if (bd)
+@@ -781,22 +783,34 @@ static struct bsg_device *bsg_get_device(struct
+inode *inode, struct file *file)
+ static int bsg_open(struct inode *inode, struct file *file)
  {
- 	struct storvsc_device *stor_device;
- 	struct vstor_packet *vstor_packet;
--	struct vmbus_channel *outgoing_channel;
-+	struct vmbus_channel *outgoing_channel, *channel;
- 	int ret = 0;
--	struct cpumask alloced_mask;
-+	struct cpumask *alloced_mask;
- 	int tgt_cpu;
- 
- 	vstor_packet = &request->vstor_packet;
-@@ -1301,22 +1322,53 @@ static int storvsc_do_io(struct hv_device *device,
- 	/*
- 	 * Select an an appropriate channel to send the request out.
- 	 */
--
- 	if (stor_device->stor_chns[q_num] != NULL) {
- 		outgoing_channel = stor_device->stor_chns[q_num];
--		if (outgoing_channel->target_cpu == smp_processor_id()) {
-+		if (outgoing_channel->target_cpu == q_num) {
- 			/*
- 			 * Ideally, we want to pick a different channel if
- 			 * available on the same NUMA node.
- 			 */
--			cpumask_and(&alloced_mask, &stor_device->alloced_cpus,
-+			alloced_mask = &stor_device->cpumask_chns[q_num];
-+			cpumask_and(alloced_mask, &stor_device->alloced_cpus,
- 				    cpumask_of_node(cpu_to_node(q_num)));
--			for_each_cpu_wrap(tgt_cpu, &alloced_mask,
--					outgoing_channel->target_cpu + 1) {
--				if (tgt_cpu != outgoing_channel->target_cpu) {
--					outgoing_channel =
--					stor_device->stor_chns[tgt_cpu];
--					break;
+  struct bsg_device *bd;
++ struct bsg_class_device *bcd;
+
+- bd = bsg_get_device(inode, file);
++ bd = bsg_get_device(inode, file, &bcd);
+
+  if (IS_ERR(bd))
+  return PTR_ERR(bd);
+
+  file->private_data = bd;
++ if (bcd->parent_module) {
++ if (!try_module_get(bcd->parent_module)) {
++ bsg_put_device(bd);
++ return -ENODEV;
++ }
++ }
+  return 0;
+ }
+
+ static int bsg_release(struct inode *inode, struct file *file)
+ {
++ int ret;
+  struct bsg_device *bd = file->private_data;
++ struct module *parent_module = bd->queue->bsg_dev.parent_module;
+
+  file->private_data = NULL;
+- return bsg_put_device(bd);
++ ret = bsg_put_device(bd);
++ if (parent_module)
++ module_put(parent_module);
++ return ret;
+ }
+
+ static __poll_t bsg_poll(struct file *file, poll_table *wait)
+@@ -922,6 +936,14 @@ int bsg_register_queue(struct request_queue *q,
+struct device *parent,
+  const char *name, const struct bsg_ops *ops,
+  void (*release)(struct device *))
+ {
++ return bsg_register_queue_ex(q, parent, name, ops, release, NULL);
++}
 +
-+			for_each_cpu_wrap(tgt_cpu, alloced_mask, q_num + 1) {
-+				if (tgt_cpu == q_num)
-+					continue;
-+				channel = stor_device->stor_chns[tgt_cpu];
-+				if (hv_get_avail_to_write_percent(
-+							&channel->outbound)
-+						> ring_avail_percent_lowater) {
-+					outgoing_channel = channel;
-+					goto found_channel;
-+				}
-+			}
++int bsg_register_queue_ex(struct request_queue *q, struct device *parent,
++ const char *name, const struct bsg_ops *ops,
++ void (*release)(struct device *),
++ struct module *parent_module)
++{
+  struct bsg_class_device *bcd;
+  dev_t dev;
+  int ret;
+@@ -958,6 +980,7 @@ int bsg_register_queue(struct request_queue *q,
+struct device *parent,
+  bcd->parent = get_device(parent);
+  bcd->release = release;
+  bcd->ops = ops;
++ bcd->parent_module = parent_module;
+  kref_init(&bcd->ref);
+  dev = MKDEV(bsg_major, bcd->minor);
+  class_dev = device_create(bsg_class, parent, dev, NULL, "%s", devname);
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index be3be0f..f21f7d2 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -3772,17 +3772,21 @@ static int fc_bsg_dispatch(struct bsg_job *job)
+  struct fc_internal *i = to_fc_internal(shost->transportt);
+  struct request_queue *q;
+  char bsg_name[20];
++ struct module *shost_module = NULL;
+
+  fc_host->rqst_q = NULL;
+
+  if (!i->f->bsg_request)
+  return -ENOTSUPP;
+
++ if (shost->hostt)
++ shost_module = shost->hostt->module;
 +
-+			/*
-+			 * All the other channels on the same NUMA node are
-+			 * busy. Try to use the channel on the current CPU
-+			 */
-+			if (hv_get_avail_to_write_percent(
-+						&outgoing_channel->outbound)
-+					> ring_avail_percent_lowater)
-+				goto found_channel;
-+
-+			/*
-+			 * If we reach here, all the channels on the current
-+			 * NUMA node are busy. Try to find a channel in
-+			 * other NUMA nodes
-+			 */
-+			cpumask_andnot(alloced_mask, &stor_device->alloced_cpus,
-+					cpumask_of_node(cpu_to_node(q_num)));
-+
-+			for_each_cpu(tgt_cpu, alloced_mask) {
-+				channel = stor_device->stor_chns[tgt_cpu];
-+				if (hv_get_avail_to_write_percent(
-+							&channel->outbound)
-+						> ring_avail_percent_lowater) {
-+					outgoing_channel = channel;
-+					goto found_channel;
- 				}
- 			}
- 		}
-@@ -1324,7 +1376,7 @@ static int storvsc_do_io(struct hv_device *device,
- 		outgoing_channel = get_og_chn(stor_device, q_num);
- 	}
- 
--
-+found_channel:
- 	vstor_packet->flags |= REQUEST_COMPLETION_FLAG;
- 
- 	vstor_packet->vm_srb.length = (sizeof(struct vmscsi_request) -
-@@ -1732,8 +1784,9 @@ static int storvsc_probe(struct hv_device *device,
- 				(num_cpus - 1) / storvsc_vcpus_per_sub_channel;
- 	}
- 
--	scsi_driver.can_queue = (max_outstanding_req_per_channel *
--				 (max_sub_channels + 1));
-+	scsi_driver.can_queue = max_outstanding_req_per_channel *
-+				(max_sub_channels + 1) *
-+				(100 - ring_avail_percent_lowater) / 100;
- 
- 	host = scsi_host_alloc(&scsi_driver,
- 			       sizeof(struct hv_host_device));
-@@ -1864,6 +1917,7 @@ static int storvsc_probe(struct hv_device *device,
- 
- err_out1:
- 	kfree(stor_device->stor_chns);
-+	kfree(stor_device->cpumask_chns);
- 	kfree(stor_device);
- 
- err_out0:
+  snprintf(bsg_name, sizeof(bsg_name),
+  "fc_host%d", shost->host_no);
+
+- q = bsg_setup_queue(dev, bsg_name, fc_bsg_dispatch, i->f->dd_bsg_size,
+- NULL);
++ q = bsg_setup_queue_ex(dev, bsg_name, fc_bsg_dispatch,
++ i->f->dd_bsg_size, NULL, shost_module);
+  if (IS_ERR(q)) {
+  dev_err(dev,
+  "fc_host%d: bsg interface failed to initialize - setup queue\n",
+diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+index 28a7ccc..232c855 100644
+--- a/include/linux/bsg-lib.h
++++ b/include/linux/bsg-lib.h
+@@ -74,6 +74,10 @@ void bsg_job_done(struct bsg_job *job, int result,
+ struct request_queue *bsg_setup_queue(struct device *dev, const char *name,
+  bsg_job_fn *job_fn, int dd_job_size,
+  void (*release)(struct device *));
++struct request_queue *bsg_setup_queue_ex(struct device *dev, const char *name,
++ bsg_job_fn *job_fn, int dd_job_size,
++ void (*release)(struct device *),
++ struct module *dev_module);
+ void bsg_job_put(struct bsg_job *job);
+ int __must_check bsg_job_get(struct bsg_job *job);
+
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index 0c7dd9c..0e7c26c 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -23,11 +23,16 @@ struct bsg_class_device {
+  struct kref ref;
+  const struct bsg_ops *ops;
+  void (*release)(struct device *);
++ struct module *parent_module;
+ };
+
+ int bsg_register_queue(struct request_queue *q, struct device *parent,
+  const char *name, const struct bsg_ops *ops,
+  void (*release)(struct device *));
++int bsg_register_queue_ex(struct request_queue *q, struct device *parent,
++ const char *name, const struct bsg_ops *ops,
++ void (*release)(struct device *),
++ struct module *parent_module);
+ int bsg_scsi_register_queue(struct request_queue *q, struct device *parent);
+ void bsg_unregister_queue(struct request_queue *q);
+ #else
 -- 
-2.14.1
+1.9.1
+
+
+On Thu, Apr 19, 2018 at 10:07 AM, Anatoliy Glagolev <glagolig@gmail.com> wrote:
+> +linux-block
+>
+> On Tue, Apr 17, 2018 at 1:05 PM, Anatoliy Glagolev <glagolig@gmail.com> wrote:
+>> Description: bsg_release may crash while decrementing reference to the
+>> parent device with the following stack:
+>>
+>> [16834.636216,07] Call Trace:
+>>                              ...   scsi_proc_hostdir_rm
+>> [16834.641944,07]  [<ffffffff8141723f>] scsi_host_dev_release+0x3f/0x130
+>> [16834.647740,07]  [<ffffffff813e4f82>] device_release+0x32/0xa0
+>> [16834.653423,07]  [<ffffffff812dc6c7>] kobject_cleanup+0x77/0x190
+>> [16834.659002,07]  [<ffffffff812dc585>] kobject_put+0x25/0x50
+>> [16834.664430,07]  [<ffffffff813e5277>] put_device+0x17/0x20
+>> [16834.669740,07]  [<ffffffff812d0334>] bsg_kref_release_function+0x24/0x30
+>> [16834.675007,07]  [<ffffffff812d14a6>] bsg_release+0x166/0x1d0
+>> [16834.680148,07]  [<ffffffff8119ba2b>] __fput+0xcb/0x1d0
+>> [16834.685156,07]  [<ffffffff8119bb6e>] ____fput+0xe/0x10
+>> [16834.690017,07]  [<ffffffff81077476>] task_work_run+0x86/0xb0
+>> [16834.694781,07]  [<ffffffff81057043>] exit_to_usermode_loop+0x6b/0x9a
+>> [16834.699466,07]  [<ffffffff81002875>] syscall_return_slowpath+0x55/0x60
+>> [16834.704110,07]  [<ffffffff8172d615>] int_ret_from_sys_call+0x25/0x9f
+>>
+>> if the parent driver implementing the device has unloaded. To address
+>> the problem, taking a reference to the parent driver module.
+>>
+>> Note: this is a follow-up to earlier discussion "[PATCH] Waiting for
+>> scsi_host_template release".
+>>
+>> ---
+>>  block/bsg.c                      | 31 +++++++++++++++++++++++++++----
+>>  drivers/scsi/scsi_transport_fc.c |  3 ++-
+>>  include/linux/bsg.h              |  5 +++++
+>>  3 files changed, 34 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/block/bsg.c b/block/bsg.c
+>> index b9a5361..0aa7d74 100644
+>> --- a/block/bsg.c
+>> +++ b/block/bsg.c
+>> @@ -798,7 +798,8 @@ found:
+>>   return bd;
+>>  }
+>>
+>> -static struct bsg_device *bsg_get_device(struct inode *inode, struct
+>> file *file)
+>> +static struct bsg_device *bsg_get_device(struct inode *inode, struct
+>> file *file,
+>> + struct bsg_class_device **pbcd)
+>>  {
+>>   struct bsg_device *bd;
+>>   struct bsg_class_device *bcd;
+>> @@ -814,6 +815,7 @@ static struct bsg_device *bsg_get_device(struct
+>> inode *inode, struct file *file)
+>>
+>>   if (!bcd)
+>>   return ERR_PTR(-ENODEV);
+>> + *pbcd = bcd;
+>>
+>>   bd = __bsg_get_device(iminor(inode), bcd->queue);
+>>   if (bd)
+>> @@ -829,22 +831,34 @@ static struct bsg_device *bsg_get_device(struct
+>> inode *inode, struct file *file)
+>>  static int bsg_open(struct inode *inode, struct file *file)
+>>  {
+>>   struct bsg_device *bd;
+>> + struct bsg_class_device *bcd;
+>>
+>> - bd = bsg_get_device(inode, file);
+>> + bd = bsg_get_device(inode, file, &bcd);
+>>
+>>   if (IS_ERR(bd))
+>>   return PTR_ERR(bd);
+>>
+>>   file->private_data = bd;
+>> + if (bcd->parent_module) {
+>> + if (!try_module_get(bcd->parent_module)) {
+>> + bsg_put_device(bd);
+>> + return -ENODEV;
+>> + }
+>> + }
+>>   return 0;
+>>  }
+>>
+>>  static int bsg_release(struct inode *inode, struct file *file)
+>>  {
+>> + int ret;
+>>   struct bsg_device *bd = file->private_data;
+>> + struct module *parent_module = bd->queue->bsg_dev.parent_module;
+>>
+>>   file->private_data = NULL;
+>> - return bsg_put_device(bd);
+>> + ret = bsg_put_device(bd);
+>> + if (parent_module)
+>> + module_put(parent_module);
+>> + return ret;
+>>  }
+>>
+>>  static unsigned int bsg_poll(struct file *file, poll_table *wait)
+>> @@ -977,6 +991,14 @@ EXPORT_SYMBOL_GPL(bsg_unregister_queue);
+>>  int bsg_register_queue(struct request_queue *q, struct device *parent,
+>>         const char *name, void (*release)(struct device *))
+>>  {
+>> + return bsg_register_queue_ex(q, parent, name, release, NULL);
+>> +}
+>> +EXPORT_SYMBOL_GPL(bsg_register_queue);
+>> +
+>> +int bsg_register_queue_ex(struct request_queue *q, struct device *parent,
+>> +          const char *name, void (*release)(struct device *),
+>> +          struct module *parent_module)
+>> +{
+>>   struct bsg_class_device *bcd;
+>>   dev_t dev;
+>>   int ret;
+>> @@ -1012,6 +1034,7 @@ int bsg_register_queue(struct request_queue *q,
+>> struct device *parent,
+>>   bcd->queue = q;
+>>   bcd->parent = get_device(parent);
+>>   bcd->release = release;
+>> + bcd->parent_module = parent_module;
+>>   kref_init(&bcd->ref);
+>>   dev = MKDEV(bsg_major, bcd->minor);
+>>   class_dev = device_create(bsg_class, parent, dev, NULL, "%s", devname);
+>> @@ -1039,7 +1062,7 @@ unlock:
+>>   mutex_unlock(&bsg_mutex);
+>>   return ret;
+>>  }
+>> -EXPORT_SYMBOL_GPL(bsg_register_queue);
+>> +EXPORT_SYMBOL_GPL(bsg_register_queue_ex);
+>>
+>>  static struct cdev bsg_cdev;
+>>
+>> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+>> index 24eaaf6..c153f80 100644
+>> --- a/drivers/scsi/scsi_transport_fc.c
+>> +++ b/drivers/scsi/scsi_transport_fc.c
+>> @@ -4064,7 +4064,8 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct
+>> fc_host_attrs *fc_host)
+>>   blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+>>   blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
+>>
+>> - err = bsg_register_queue(q, dev, bsg_name, NULL);
+>> + err = bsg_register_queue_ex(q, dev, bsg_name, NULL,
+>> + shost->hostt->module);
+>>   if (err) {
+>>   printk(KERN_ERR "fc_host%d: bsg interface failed to "
+>>   "initialize - register queue\n",
+>> diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+>> index 7173f6e..fe41e83 100644
+>> --- a/include/linux/bsg.h
+>> +++ b/include/linux/bsg.h
+>> @@ -12,11 +12,16 @@ struct bsg_class_device {
+>>   struct request_queue *queue;
+>>   struct kref ref;
+>>   void (*release)(struct device *);
+>> + struct module *parent_module;
+>>  };
+>>
+>>  extern int bsg_register_queue(struct request_queue *q,
+>>        struct device *parent, const char *name,
+>>        void (*release)(struct device *));
+>> +extern int bsg_register_queue_ex(struct request_queue *q,
+>> +         struct device *parent, const char *name,
+>> +         void (*release)(struct device *),
+>> +         struct module *parent_module);
+>>  extern void bsg_unregister_queue(struct request_queue *);
+>>  #else
+>>  static inline int bsg_register_queue(struct request_queue *q,
+>> --
+>> 1.9.1
