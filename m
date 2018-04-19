@@ -1,68 +1,114 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 36/39] proc: don't detour through seq->private to get the inode
-Date: Thu, 19 Apr 2018 14:41:37 +0200
-Message-ID: <20180419124140.9309-37-hch@lst.de>
+Subject: [PATCH 29/39] neigh: switch to proc_create_seq_data
+Date: Thu, 19 Apr 2018 14:41:30 +0200
+Message-ID: <20180419124140.9309-30-hch@lst.de>
 References: <20180419124140.9309-1-hch@lst.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <jfs-discussion-bounces@lists.sourceforge.net>
 In-Reply-To: <20180419124140.9309-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/jfs-discussion>,
+ <mailto:jfs-discussion-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=jfs-discussion>
+List-Post: <mailto:jfs-discussion@lists.sourceforge.net>
+List-Help: <mailto:jfs-discussion-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/jfs-discussion>,
+ <mailto:jfs-discussion-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: jfs-discussion-bounces@lists.sourceforge.net
 To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Corey Minyard <minyard@acm.org>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
+
+And use proc private data directly instead of doing a detour
+through seq->private.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/proc/array.c | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+ net/core/neighbour.c | 31 ++++++-------------------------
+ 1 file changed, 6 insertions(+), 25 deletions(-)
 
-diff --git a/fs/proc/array.c b/fs/proc/array.c
-index ae2c807fd719..b34796b562ef 100644
---- a/fs/proc/array.c
-+++ b/fs/proc/array.c
-@@ -677,7 +677,7 @@ get_children_pid(struct inode *inode, struct pid *pid_prev, loff_t pos)
+diff --git a/net/core/neighbour.c b/net/core/neighbour.c
+index 7b7a14abba28..cbfb6d71b8be 100644
+--- a/net/core/neighbour.c
++++ b/net/core/neighbour.c
+@@ -58,7 +58,7 @@ static void neigh_update_notify(struct neighbour *neigh, u32 nlmsg_pid);
+ static int pneigh_ifdown(struct neigh_table *tbl, struct net_device *dev);
  
- static int children_seq_show(struct seq_file *seq, void *v)
+ #ifdef CONFIG_PROC_FS
+-static const struct file_operations neigh_stat_seq_fops;
++static const struct seq_operations neigh_stat_seq_ops;
+ #endif
+ 
+ /*
+@@ -1550,8 +1550,8 @@ void neigh_table_init(int index, struct neigh_table *tbl)
+ 		panic("cannot create neighbour cache statistics");
+ 
+ #ifdef CONFIG_PROC_FS
+-	if (!proc_create_data(tbl->id, 0, init_net.proc_net_stat,
+-			      &neigh_stat_seq_fops, tbl))
++	if (!proc_create_seq_data(tbl->id, 0, init_net.proc_net_stat,
++			      &neigh_stat_seq_ops, tbl))
+ 		panic("cannot create neighbour proc dir entry");
+ #endif
+ 
+@@ -2774,7 +2774,7 @@ EXPORT_SYMBOL(neigh_seq_stop);
+ 
+ static void *neigh_stat_seq_start(struct seq_file *seq, loff_t *pos)
  {
--	struct inode *inode = seq->private;
-+	struct inode *inode = file_inode(seq->file);
- 	pid_t pid;
+-	struct neigh_table *tbl = seq->private;
++	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
+ 	int cpu;
  
- 	pid = pid_nr_ns(v, inode->i_sb->s_fs_info);
-@@ -688,14 +688,14 @@ static int children_seq_show(struct seq_file *seq, void *v)
+ 	if (*pos == 0)
+@@ -2791,7 +2791,7 @@ static void *neigh_stat_seq_start(struct seq_file *seq, loff_t *pos)
  
- static void *children_seq_start(struct seq_file *seq, loff_t *pos)
+ static void *neigh_stat_seq_next(struct seq_file *seq, void *v, loff_t *pos)
  {
--	return get_children_pid(seq->private, NULL, *pos);
-+	return get_children_pid(file_inode(seq->file), NULL, *pos);
- }
+-	struct neigh_table *tbl = seq->private;
++	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
+ 	int cpu;
  
- static void *children_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ 	for (cpu = *pos; cpu < nr_cpu_ids; ++cpu) {
+@@ -2810,7 +2810,7 @@ static void neigh_stat_seq_stop(struct seq_file *seq, void *v)
+ 
+ static int neigh_stat_seq_show(struct seq_file *seq, void *v)
  {
- 	struct pid *pid;
+-	struct neigh_table *tbl = seq->private;
++	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
+ 	struct neigh_statistics *st = v;
  
--	pid = get_children_pid(seq->private, v, *pos + 1);
-+	pid = get_children_pid(file_inode(seq->file), v, *pos + 1);
- 	put_pid(v);
- 
- 	++*pos;
-@@ -716,17 +716,7 @@ static const struct seq_operations children_seq_ops = {
- 
- static int children_seq_open(struct inode *inode, struct file *file)
- {
--	struct seq_file *m;
--	int ret;
+ 	if (v == SEQ_START_TOKEN) {
+@@ -2849,25 +2849,6 @@ static const struct seq_operations neigh_stat_seq_ops = {
+ 	.stop	= neigh_stat_seq_stop,
+ 	.show	= neigh_stat_seq_show,
+ };
 -
--	ret = seq_open(file, &children_seq_ops);
--	if (ret)
--		return ret;
+-static int neigh_stat_seq_open(struct inode *inode, struct file *file)
+-{
+-	int ret = seq_open(file, &neigh_stat_seq_ops);
 -
--	m = file->private_data;
--	m->private = inode;
--
+-	if (!ret) {
+-		struct seq_file *sf = file->private_data;
+-		sf->private = PDE_DATA(inode);
+-	}
 -	return ret;
-+	return seq_open(file, &children_seq_ops);
- }
+-};
+-
+-static const struct file_operations neigh_stat_seq_fops = {
+-	.open 	 = neigh_stat_seq_open,
+-	.read	 = seq_read,
+-	.llseek	 = seq_lseek,
+-	.release = seq_release,
+-};
+-
+ #endif /* CONFIG_PROC_FS */
  
- const struct file_operations proc_tid_children_operations = {
+ static inline size_t neigh_nlmsg_size(void)
 -- 
 2.17.0
+
+
+------------------------------------------------------------------------------
+Check out the vibrant tech community on one of the world's most
+engaging tech sites, Slashdot.org! http://sdm.link/slashdot
