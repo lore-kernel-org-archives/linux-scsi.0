@@ -1,467 +1,171 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 38/39] ide: replace ->proc_fops with ->proc_show
-Date: Thu, 19 Apr 2018 14:41:39 +0200
-Message-ID: <20180419124140.9309-39-hch@lst.de>
+Subject: [PATCH 34/39] atm: switch to
+ proc_create_seq_private
+Date: Thu, 19 Apr 2018 14:41:35 +0200
+Message-ID: <20180419124140.9309-35-hch@lst.de>
 References: <20180419124140.9309-1-hch@lst.de>
-Return-path: <netdev-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <jfs-discussion-bounces@lists.sourceforge.net>
 In-Reply-To: <20180419124140.9309-1-hch@lst.de>
-Sender: netdev-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/jfs-discussion>,
+ <mailto:jfs-discussion-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=jfs-discussion>
+List-Post: <mailto:jfs-discussion@lists.sourceforge.net>
+List-Help: <mailto:jfs-discussion-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/jfs-discussion>,
+ <mailto:jfs-discussion-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: jfs-discussion-bounces@lists.sourceforge.net
 To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Corey Minyard <minyard@acm.org>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Just set up the show callback in the tty_operations, and use
-proc_create_single_data to create the file without additional
-boilerplace code.
+And remove proc boilerplate code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ide/ide-cd.c          |  15 +---
- drivers/ide/ide-disk_proc.c   |  62 ++--------------
- drivers/ide/ide-floppy_proc.c |  17 +----
- drivers/ide/ide-proc.c        | 136 +++++-----------------------------
- drivers/ide/ide-tape.c        |  17 +----
- include/linux/ide.h           |   6 +-
- 6 files changed, 31 insertions(+), 222 deletions(-)
+ net/atm/proc.c | 72 +++++++++-----------------------------------------
+ 1 file changed, 13 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 5a8e8e3c22cd..b52a7bdace52 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1426,21 +1426,8 @@ static int idecd_capacity_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int idecd_capacity_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, idecd_capacity_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations idecd_capacity_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= idecd_capacity_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static ide_proc_entry_t idecd_proc[] = {
--	{ "capacity", S_IFREG|S_IRUGO, &idecd_capacity_proc_fops },
-+	{ "capacity", S_IFREG|S_IRUGO, idecd_capacity_proc_show },
- 	{}
+diff --git a/net/atm/proc.c b/net/atm/proc.c
+index f272b0f59d82..0b0495a41bbe 100644
+--- a/net/atm/proc.c
++++ b/net/atm/proc.c
+@@ -68,7 +68,6 @@ static void atm_dev_info(struct seq_file *seq, const struct atm_dev *dev)
+ struct vcc_state {
+ 	int bucket;
+ 	struct sock *sk;
+-	int family;
  };
  
-diff --git a/drivers/ide/ide-disk_proc.c b/drivers/ide/ide-disk_proc.c
-index 82a36ced4e96..95d239b2f646 100644
---- a/drivers/ide/ide-disk_proc.c
-+++ b/drivers/ide/ide-disk_proc.c
-@@ -52,19 +52,6 @@ static int idedisk_cache_proc_show(struct seq_file *m, void *v)
- 	return 0;
+ static inline int compare_family(struct sock *sk, int family)
+@@ -106,23 +105,13 @@ static int __vcc_walk(struct sock **sock, int family, int *bucket, loff_t l)
+ 	return (l < 0);
  }
  
--static int idedisk_cache_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, idedisk_cache_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations idedisk_cache_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= idedisk_cache_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static int idedisk_capacity_proc_show(struct seq_file *m, void *v)
+-static inline void *vcc_walk(struct vcc_state *state, loff_t l)
++static inline void *vcc_walk(struct seq_file *seq, loff_t l)
  {
- 	ide_drive_t*drive = (ide_drive_t *)m->private;
-@@ -73,19 +60,6 @@ static int idedisk_capacity_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int idedisk_capacity_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, idedisk_capacity_proc_show, PDE_DATA(inode));
+-	return __vcc_walk(&state->sk, state->family, &state->bucket, l) ?
+-	       state : NULL;
 -}
 -
--static const struct file_operations idedisk_capacity_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= idedisk_capacity_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
+-static int __vcc_seq_open(struct inode *inode, struct file *file,
+-	int family, const struct seq_operations *ops)
+-{
+-	struct vcc_state *state;
 -
- static int __idedisk_proc_show(struct seq_file *m, ide_drive_t *drive, u8 sub_cmd)
+-	state = __seq_open_private(file, ops, sizeof(*state));
+-	if (state == NULL)
+-		return -ENOMEM;
++	struct vcc_state *state = seq->private;
++	int family = (uintptr_t)(PDE_DATA(file_inode(seq->file)));
+ 
+-	state->family = family;
+-	return 0;
++	return __vcc_walk(&state->sk, family, &state->bucket, l) ?
++	       state : NULL;
+ }
+ 
+ static void *vcc_seq_start(struct seq_file *seq, loff_t *pos)
+@@ -133,7 +122,7 @@ static void *vcc_seq_start(struct seq_file *seq, loff_t *pos)
+ 
+ 	read_lock(&vcc_sklist_lock);
+ 	state->sk = SEQ_START_TOKEN;
+-	return left ? vcc_walk(state, left) : SEQ_START_TOKEN;
++	return left ? vcc_walk(seq, left) : SEQ_START_TOKEN;
+ }
+ 
+ static void vcc_seq_stop(struct seq_file *seq, void *v)
+@@ -144,9 +133,7 @@ static void vcc_seq_stop(struct seq_file *seq, void *v)
+ 
+ static void *vcc_seq_next(struct seq_file *seq, void *v, loff_t *pos)
  {
- 	u8 *buf;
-@@ -114,43 +88,17 @@ static int idedisk_sv_proc_show(struct seq_file *m, void *v)
- 	return __idedisk_proc_show(m, m->private, ATA_SMART_READ_VALUES);
+-	struct vcc_state *state = seq->private;
+-
+-	v = vcc_walk(state, 1);
++	v = vcc_walk(seq, 1);
+ 	*pos += !!PTR_ERR(v);
+ 	return v;
  }
- 
--static int idedisk_sv_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, idedisk_sv_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations idedisk_sv_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= idedisk_sv_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static int idedisk_st_proc_show(struct seq_file *m, void *v)
- {
- 	return __idedisk_proc_show(m, m->private, ATA_SMART_READ_THRESHOLDS);
- }
- 
--static int idedisk_st_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, idedisk_st_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations idedisk_st_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= idedisk_st_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- ide_proc_entry_t ide_disk_proc[] = {
--	{ "cache",	  S_IFREG|S_IRUGO, &idedisk_cache_proc_fops	},
--	{ "capacity",	  S_IFREG|S_IRUGO, &idedisk_capacity_proc_fops	},
--	{ "geometry",	  S_IFREG|S_IRUGO, &ide_geometry_proc_fops	},
--	{ "smart_values", S_IFREG|S_IRUSR, &idedisk_sv_proc_fops	},
--	{ "smart_thresholds", S_IFREG|S_IRUSR, &idedisk_st_proc_fops	},
-+	{ "cache",	  S_IFREG|S_IRUGO, idedisk_cache_proc_show	},
-+	{ "capacity",	  S_IFREG|S_IRUGO, idedisk_capacity_proc_show	},
-+	{ "geometry",	  S_IFREG|S_IRUGO, ide_geometry_proc_show	},
-+	{ "smart_values", S_IFREG|S_IRUSR, idedisk_sv_proc_show		},
-+	{ "smart_thresholds", S_IFREG|S_IRUSR, idedisk_st_proc_show	},
- 	{}
+@@ -280,18 +267,6 @@ static const struct seq_operations pvc_seq_ops = {
+ 	.show	= pvc_seq_show,
  };
  
-diff --git a/drivers/ide/ide-floppy_proc.c b/drivers/ide/ide-floppy_proc.c
-index 471457ebea67..7f697ddb5fe5 100644
---- a/drivers/ide/ide-floppy_proc.c
-+++ b/drivers/ide/ide-floppy_proc.c
-@@ -14,22 +14,9 @@ static int idefloppy_capacity_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int idefloppy_capacity_proc_open(struct inode *inode, struct file *file)
+-static int pvc_seq_open(struct inode *inode, struct file *file)
 -{
--	return single_open(file, idefloppy_capacity_proc_show, PDE_DATA(inode));
+-	return __vcc_seq_open(inode, file, PF_ATMPVC, &pvc_seq_ops);
 -}
 -
--static const struct file_operations idefloppy_capacity_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= idefloppy_capacity_proc_open,
+-static const struct file_operations pvc_seq_fops = {
+-	.open		= pvc_seq_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release	= single_release,
+-	.release	= seq_release_private,
 -};
 -
- ide_proc_entry_t ide_floppy_proc[] = {
--	{ "capacity",	S_IFREG|S_IRUGO, &idefloppy_capacity_proc_fops	},
--	{ "geometry",	S_IFREG|S_IRUGO, &ide_geometry_proc_fops	},
-+	{ "capacity",	S_IFREG|S_IRUGO, idefloppy_capacity_proc_show	},
-+	{ "geometry",	S_IFREG|S_IRUGO, ide_geometry_proc_show		},
- 	{}
+ static int vcc_seq_show(struct seq_file *seq, void *v)
+ {
+ 	if (v == SEQ_START_TOKEN) {
+@@ -314,18 +289,6 @@ static const struct seq_operations vcc_seq_ops = {
+ 	.show	= vcc_seq_show,
  };
  
-diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
-index b3b8b8822d6a..45c997430332 100644
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -56,19 +56,6 @@ static int ide_imodel_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int ide_imodel_proc_open(struct inode *inode, struct file *file)
+-static int vcc_seq_open(struct inode *inode, struct file *file)
 -{
--	return single_open(file, ide_imodel_proc_show, PDE_DATA(inode));
+-	return __vcc_seq_open(inode, file, 0, &vcc_seq_ops);
 -}
 -
--static const struct file_operations ide_imodel_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_imodel_proc_open,
+-static const struct file_operations vcc_seq_fops = {
+-	.open		= vcc_seq_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release	= single_release,
+-	.release	= seq_release_private,
 -};
 -
- static int ide_mate_proc_show(struct seq_file *m, void *v)
+ static int svc_seq_show(struct seq_file *seq, void *v)
  {
- 	ide_hwif_t	*hwif = (ide_hwif_t *) m->private;
-@@ -80,19 +67,6 @@ static int ide_mate_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int ide_mate_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ide_mate_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations ide_mate_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_mate_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static int ide_channel_proc_show(struct seq_file *m, void *v)
- {
- 	ide_hwif_t	*hwif = (ide_hwif_t *) m->private;
-@@ -101,19 +75,6 @@ static int ide_channel_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int ide_channel_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ide_channel_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations ide_channel_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_channel_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static int ide_identify_proc_show(struct seq_file *m, void *v)
- {
- 	ide_drive_t *drive = (ide_drive_t *)m->private;
-@@ -141,19 +102,6 @@ static int ide_identify_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int ide_identify_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ide_identify_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations ide_identify_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_identify_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- /**
-  *	ide_find_setting	-	find a specific setting
-  *	@st: setting table pointer
-@@ -441,27 +389,14 @@ static const struct file_operations ide_settings_proc_fops = {
- 	.write		= ide_settings_proc_write,
+ 	static const char atm_svc_banner[] =
+@@ -349,18 +312,6 @@ static const struct seq_operations svc_seq_ops = {
+ 	.show	= svc_seq_show,
  };
  
--static int ide_capacity_proc_show(struct seq_file *m, void *v)
-+int ide_capacity_proc_show(struct seq_file *m, void *v)
- {
- 	seq_printf(m, "%llu\n", (long long)0x7fffffff);
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(ide_capacity_proc_show);
- 
--static int ide_capacity_proc_open(struct inode *inode, struct file *file)
+-static int svc_seq_open(struct inode *inode, struct file *file)
 -{
--	return single_open(file, ide_capacity_proc_show, NULL);
+-	return __vcc_seq_open(inode, file, PF_ATMSVC, &svc_seq_ops);
 -}
 -
--const struct file_operations ide_capacity_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_capacity_proc_open,
+-static const struct file_operations svc_seq_fops = {
+-	.open		= svc_seq_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release	= single_release,
+-	.release	= seq_release_private,
 -};
--EXPORT_SYMBOL_GPL(ide_capacity_proc_fops);
 -
--static int ide_geometry_proc_show(struct seq_file *m, void *v)
-+int ide_geometry_proc_show(struct seq_file *m, void *v)
+ static ssize_t proc_dev_atm_read(struct file *file, char __user *buf,
+ 				 size_t count, loff_t *pos)
  {
- 	ide_drive_t	*drive = (ide_drive_t *) m->private;
- 
-@@ -471,20 +406,7 @@ static int ide_geometry_proc_show(struct seq_file *m, void *v)
- 			drive->bios_cyl, drive->bios_head, drive->bios_sect);
- 	return 0;
- }
--
--static int ide_geometry_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ide_geometry_proc_show, PDE_DATA(inode));
--}
--
--const struct file_operations ide_geometry_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_geometry_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--EXPORT_SYMBOL(ide_geometry_proc_fops);
-+EXPORT_SYMBOL(ide_geometry_proc_show);
- 
- static int ide_dmodel_proc_show(struct seq_file *seq, void *v)
- {
-@@ -495,19 +417,6 @@ static int ide_dmodel_proc_show(struct seq_file *seq, void *v)
+@@ -434,9 +385,12 @@ int __init atm_proc_init(void)
+ 	if (!atm_proc_root)
+ 		return -ENOMEM;
+ 	proc_create_seq("devices", 0444, atm_proc_root, &atm_dev_seq_ops);
+-	proc_create("pvc", 0444, atm_proc_root, &pvc_seq_fops);
+-	proc_create("svc", 0444, atm_proc_root, &svc_seq_fops);
+-	proc_create("vc", 0444, atm_proc_root, &vcc_seq_fops);
++	proc_create_seq_private("pvc", 0444, atm_proc_root, &pvc_seq_ops,
++			sizeof(struct vcc_state), (void *)(uintptr_t)PF_ATMPVC);
++	proc_create_seq_private("svc", 0444, atm_proc_root, &svc_seq_ops,
++			sizeof(struct vcc_state), (void *)(uintptr_t)PF_ATMSVC);
++	proc_create_seq_private("vc", 0444, atm_proc_root, &vcc_seq_ops,
++			sizeof(struct vcc_state), NULL);
  	return 0;
  }
  
--static int ide_dmodel_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ide_dmodel_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations ide_dmodel_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_dmodel_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static int ide_driver_proc_show(struct seq_file *m, void *v)
- {
- 	ide_drive_t		*drive = (ide_drive_t *)m->private;
-@@ -523,19 +432,6 @@ static int ide_driver_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int ide_driver_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ide_driver_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations ide_driver_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_driver_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static int ide_media_proc_show(struct seq_file *m, void *v)
- {
- 	ide_drive_t	*drive = (ide_drive_t *) m->private;
-@@ -567,11 +463,10 @@ static const struct file_operations ide_media_proc_fops = {
- };
- 
- static ide_proc_entry_t generic_drive_entries[] = {
--	{ "driver",	S_IFREG|S_IRUGO,	 &ide_driver_proc_fops	},
--	{ "identify",	S_IFREG|S_IRUSR,	 &ide_identify_proc_fops},
--	{ "media",	S_IFREG|S_IRUGO,	 &ide_media_proc_fops	},
--	{ "model",	S_IFREG|S_IRUGO,	 &ide_dmodel_proc_fops	},
--	{ "settings",	S_IFREG|S_IRUSR|S_IWUSR, &ide_settings_proc_fops},
-+	{ "driver",	S_IFREG|S_IRUGO,	 ide_driver_proc_show	},
-+	{ "identify",	S_IFREG|S_IRUSR,	 ide_identify_proc_show	},
-+	{ "media",	S_IFREG|S_IRUGO,	 ide_media_proc_show	},
-+	{ "model",	S_IFREG|S_IRUGO,	 ide_dmodel_proc_show	},
- 	{}
- };
- 
-@@ -582,7 +477,7 @@ static void ide_add_proc_entries(struct proc_dir_entry *dir, ide_proc_entry_t *p
- 	if (!dir || !p)
- 		return;
- 	while (p->name != NULL) {
--		ent = proc_create_data(p->name, p->mode, dir, p->proc_fops, data);
-+		ent = proc_create_single_data(p->name, p->mode, dir, p->show, data);
- 		if (!ent) return;
- 		p++;
- 	}
-@@ -647,8 +542,12 @@ void ide_proc_port_register_devices(ide_hwif_t *hwif)
- 			continue;
- 
- 		drive->proc = proc_mkdir(drive->name, parent);
--		if (drive->proc)
-+		if (drive->proc) {
- 			ide_add_proc_entries(drive->proc, generic_drive_entries, drive);
-+			proc_create_data("setting", S_IFREG|S_IRUSR|S_IWUSR,
-+					drive->proc, &ide_settings_proc_fops,
-+					drive);
-+		}
- 		sprintf(name, "ide%d/%s", (drive->name[2]-'a')/2, drive->name);
- 		ent = proc_symlink(drive->name, proc_ide_root, name);
- 		if (!ent) return;
-@@ -658,6 +557,7 @@ void ide_proc_port_register_devices(ide_hwif_t *hwif)
- void ide_proc_unregister_device(ide_drive_t *drive)
- {
- 	if (drive->proc) {
-+		remove_proc_entry("settings", drive->proc);
- 		ide_remove_proc_entries(drive->proc, generic_drive_entries);
- 		remove_proc_entry(drive->name, proc_ide_root);
- 		remove_proc_entry(drive->name, drive->hwif->proc);
-@@ -666,9 +566,9 @@ void ide_proc_unregister_device(ide_drive_t *drive)
- }
- 
- static ide_proc_entry_t hwif_entries[] = {
--	{ "channel",	S_IFREG|S_IRUGO,	&ide_channel_proc_fops	},
--	{ "mate",	S_IFREG|S_IRUGO,	&ide_mate_proc_fops	},
--	{ "model",	S_IFREG|S_IRUGO,	&ide_imodel_proc_fops	},
-+	{ "channel",	S_IFREG|S_IRUGO,	ide_channel_proc_show	},
-+	{ "mate",	S_IFREG|S_IRUGO,	ide_mate_proc_show	},
-+	{ "model",	S_IFREG|S_IRUGO,	ide_imodel_proc_show	},
- 	{}
- };
- 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index fd57e8ccc47a..ac2c6820c65a 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -1847,22 +1847,9 @@ static int idetape_name_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--static int idetape_name_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, idetape_name_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations idetape_name_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= idetape_name_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static ide_proc_entry_t idetape_proc[] = {
--	{ "capacity",	S_IFREG|S_IRUGO,	&ide_capacity_proc_fops	},
--	{ "name",	S_IFREG|S_IRUGO,	&idetape_name_proc_fops	},
-+	{ "capacity",	S_IFREG|S_IRUGO,	ide_capacity_proc_show	},
-+	{ "name",	S_IFREG|S_IRUGO,	idetape_name_proc_show	},
- 	{}
- };
- 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index ca9d34feb572..752464f5a772 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -961,7 +961,7 @@ __IDE_PROC_DEVSET(_name, _min, _max, NULL, NULL)
- typedef struct {
- 	const char	*name;
- 	umode_t		mode;
--	const struct file_operations *proc_fops;
-+	int (*show)(struct seq_file *, void *);
- } ide_proc_entry_t;
- 
- void proc_ide_create(void);
-@@ -973,8 +973,8 @@ void ide_proc_unregister_port(ide_hwif_t *);
- void ide_proc_register_driver(ide_drive_t *, struct ide_driver *);
- void ide_proc_unregister_driver(ide_drive_t *, struct ide_driver *);
- 
--extern const struct file_operations ide_capacity_proc_fops;
--extern const struct file_operations ide_geometry_proc_fops;
-+int ide_capacity_proc_show(struct seq_file *m, void *v);
-+int ide_geometry_proc_show(struct seq_file *m, void *v);
- #else
- static inline void proc_ide_create(void) { ; }
- static inline void proc_ide_destroy(void) { ; }
 -- 
 2.17.0
+
+
+------------------------------------------------------------------------------
+Check out the vibrant tech community on one of the world's most
+engaging tech sites, Slashdot.org! http://sdm.link/slashdot
