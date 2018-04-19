@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/39] ipv{4,
- 6}/tcp: simplify procfs registration
-Date: Thu, 19 Apr 2018 14:41:07 +0200
-Message-ID: <20180419124140.9309-7-hch@lst.de>
+Subject: [PATCH 05/39] ipv{4, 6}/udp{,
+ lite}: simplify proc registration
+Date: Thu, 19 Apr 2018 14:41:06 +0200
+Message-ID: <20180419124140.9309-6-hch@lst.de>
 References: <20180419124140.9309-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,169 +21,176 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid most of the afinfo indirections and just call the proc helpers
-directly.
+Remove a couple indirections to make the code look like most other
+protocols.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/net/tcp.h   | 11 ++----
- net/ipv4/tcp_ipv4.c | 85 +++++++++++++++++----------------------------
- net/ipv6/tcp_ipv6.c | 27 +++++++++-----
- 3 files changed, 53 insertions(+), 70 deletions(-)
+ include/net/udp.h  | 20 ++++------
+ net/ipv4/udp.c     | 99 +++++++++++++++++-----------------------------
+ net/ipv4/udplite.c | 21 +++-------
+ net/ipv6/udp.c     | 30 +++++++++-----
+ net/ipv6/udplite.c | 21 +++-------
+ 5 files changed, 78 insertions(+), 113 deletions(-)
 
-diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 9c9b3768b350..51dc7a26a2fa 100644
---- a/include/net/tcp.h
-+++ b/include/net/tcp.h
-@@ -1747,27 +1747,22 @@ enum tcp_seq_states {
- 	TCP_SEQ_STATE_ESTABLISHED,
- };
+diff --git a/include/net/udp.h b/include/net/udp.h
+index 0676b272f6ac..093cd323f66a 100644
+--- a/include/net/udp.h
++++ b/include/net/udp.h
+@@ -408,31 +408,27 @@ do {									\
+ #define __UDPX_INC_STATS(sk, field) __UDP_INC_STATS(sock_net(sk), field, 0)
+ #endif
  
--int tcp_seq_open(struct inode *inode, struct file *file);
-+void *tcp_seq_start(struct seq_file *seq, loff_t *pos);
-+void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos);
-+void tcp_seq_stop(struct seq_file *seq, void *v);
- 
- struct tcp_seq_afinfo {
+-/* /proc */
+-int udp_seq_open(struct inode *inode, struct file *file);
+-
++#ifdef CONFIG_PROC_FS
+ struct udp_seq_afinfo {
 -	char				*name;
  	sa_family_t			family;
+ 	struct udp_table		*udp_table;
 -	const struct file_operations	*seq_fops;
 -	struct seq_operations		seq_ops;
  };
  
- struct tcp_iter_state {
- 	struct seq_net_private	p;
+ struct udp_iter_state {
+ 	struct seq_net_private  p;
 -	sa_family_t		family;
- 	enum tcp_seq_states	state;
- 	struct sock		*syn_wait_sk;
- 	int			bucket, offset, sbucket, num;
- 	loff_t			last_pos;
+ 	int			bucket;
+-	struct udp_table	*udp_table;
  };
  
--int tcp_proc_register(struct net *net, struct tcp_seq_afinfo *afinfo);
--void tcp_proc_unregister(struct net *net, struct tcp_seq_afinfo *afinfo);
--
- extern struct request_sock_ops tcp_request_sock_ops;
- extern struct request_sock_ops tcp6_request_sock_ops;
+-#ifdef CONFIG_PROC_FS
+-int udp_proc_register(struct net *net, struct udp_seq_afinfo *afinfo);
+-void udp_proc_unregister(struct net *net, struct udp_seq_afinfo *afinfo);
++void *udp_seq_start(struct seq_file *seq, loff_t *pos);
++void *udp_seq_next(struct seq_file *seq, void *v, loff_t *pos);
++void udp_seq_stop(struct seq_file *seq, void *v);
++
++extern const struct file_operations udp_afinfo_seq_fops;
++extern const struct file_operations udp6_afinfo_seq_fops;
  
-diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
-index f70586b50838..645f259d0972 100644
---- a/net/ipv4/tcp_ipv4.c
-+++ b/net/ipv4/tcp_ipv4.c
-@@ -1961,6 +1961,7 @@ EXPORT_SYMBOL(tcp_v4_destroy_sock);
-  */
- static void *listening_get_next(struct seq_file *seq, void *cur)
+ int udp4_proc_init(void);
+ void udp4_proc_exit(void);
+-#endif
++#endif /* CONFIG_PROC_FS */
+ 
+ int udpv4_offload_init(void);
+ 
+diff --git a/net/ipv4/udp.c b/net/ipv4/udp.c
+index 24b5c59b1c53..d48790ddb6cf 100644
+--- a/net/ipv4/udp.c
++++ b/net/ipv4/udp.c
+@@ -2579,12 +2579,13 @@ EXPORT_SYMBOL(udp_prot);
+ static struct sock *udp_get_first(struct seq_file *seq, int start)
  {
-+	struct tcp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
- 	struct tcp_iter_state *st = seq->private;
+ 	struct sock *sk;
++	struct udp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
+ 	struct udp_iter_state *state = seq->private;
  	struct net *net = seq_file_net(seq);
- 	struct inet_listen_hashbucket *ilb;
-@@ -1983,7 +1984,7 @@ static void *listening_get_next(struct seq_file *seq, void *cur)
- 	sk_for_each_from(sk) {
- 		if (!net_eq(sock_net(sk), net))
+ 
+-	for (state->bucket = start; state->bucket <= state->udp_table->mask;
++	for (state->bucket = start; state->bucket <= afinfo->udp_table->mask;
+ 	     ++state->bucket) {
+-		struct udp_hslot *hslot = &state->udp_table->hash[state->bucket];
++		struct udp_hslot *hslot = &afinfo->udp_table->hash[state->bucket];
+ 
+ 		if (hlist_empty(&hslot->head))
  			continue;
--		if (sk->sk_family == st->family)
-+		if (sk->sk_family == afinfo->family)
- 			return sk;
- 	}
- 	spin_unlock(&ilb->lock);
-@@ -2020,6 +2021,7 @@ static inline bool empty_bucket(const struct tcp_iter_state *st)
-  */
- static void *established_get_first(struct seq_file *seq)
- {
-+	struct tcp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
- 	struct tcp_iter_state *st = seq->private;
- 	struct net *net = seq_file_net(seq);
- 	void *rc = NULL;
-@@ -2036,7 +2038,7 @@ static void *established_get_first(struct seq_file *seq)
- 
- 		spin_lock_bh(lock);
- 		sk_nulls_for_each(sk, node, &tcp_hashinfo.ehash[st->bucket].chain) {
--			if (sk->sk_family != st->family ||
-+			if (sk->sk_family != afinfo->family ||
- 			    !net_eq(sock_net(sk), net)) {
+@@ -2593,7 +2594,7 @@ static struct sock *udp_get_first(struct seq_file *seq, int start)
+ 		sk_for_each(sk, &hslot->head) {
+ 			if (!net_eq(sock_net(sk), net))
  				continue;
- 			}
-@@ -2051,6 +2053,7 @@ static void *established_get_first(struct seq_file *seq)
+-			if (sk->sk_family == state->family)
++			if (sk->sk_family == afinfo->family)
+ 				goto found;
+ 		}
+ 		spin_unlock_bh(&hslot->lock);
+@@ -2605,16 +2606,17 @@ static struct sock *udp_get_first(struct seq_file *seq, int start)
  
- static void *established_get_next(struct seq_file *seq, void *cur)
+ static struct sock *udp_get_next(struct seq_file *seq, struct sock *sk)
  {
-+	struct tcp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
- 	struct sock *sk = cur;
- 	struct hlist_nulls_node *node;
- 	struct tcp_iter_state *st = seq->private;
-@@ -2062,7 +2065,8 @@ static void *established_get_next(struct seq_file *seq, void *cur)
- 	sk = sk_nulls_next(sk);
++	struct udp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
+ 	struct udp_iter_state *state = seq->private;
+ 	struct net *net = seq_file_net(seq);
  
- 	sk_nulls_for_each_from(sk, node) {
--		if (sk->sk_family == st->family && net_eq(sock_net(sk), net))
-+		if (sk->sk_family == afinfo->family &&
-+		    net_eq(sock_net(sk), net))
- 			return sk;
+ 	do {
+ 		sk = sk_next(sk);
+-	} while (sk && (!net_eq(sock_net(sk), net) || sk->sk_family != state->family));
++	} while (sk && (!net_eq(sock_net(sk), net) || sk->sk_family != afinfo->family));
+ 
+ 	if (!sk) {
+-		if (state->bucket <= state->udp_table->mask)
+-			spin_unlock_bh(&state->udp_table->hash[state->bucket].lock);
++		if (state->bucket <= afinfo->udp_table->mask)
++			spin_unlock_bh(&afinfo->udp_table->hash[state->bucket].lock);
+ 		return udp_get_first(seq, state->bucket + 1);
  	}
- 
-@@ -2135,7 +2139,7 @@ static void *tcp_seek_last_pos(struct seq_file *seq)
- 	return rc;
+ 	return sk;
+@@ -2630,15 +2632,16 @@ static struct sock *udp_get_idx(struct seq_file *seq, loff_t pos)
+ 	return pos ? NULL : sk;
  }
  
--static void *tcp_seq_start(struct seq_file *seq, loff_t *pos)
-+void *tcp_seq_start(struct seq_file *seq, loff_t *pos)
+-static void *udp_seq_start(struct seq_file *seq, loff_t *pos)
++void *udp_seq_start(struct seq_file *seq, loff_t *pos)
  {
- 	struct tcp_iter_state *st = seq->private;
- 	void *rc;
-@@ -2156,8 +2160,9 @@ static void *tcp_seq_start(struct seq_file *seq, loff_t *pos)
- 	st->last_pos = *pos;
- 	return rc;
+ 	struct udp_iter_state *state = seq->private;
+ 	state->bucket = MAX_UDP_PORTS;
+ 
+ 	return *pos ? udp_get_idx(seq, *pos-1) : SEQ_START_TOKEN;
  }
-+EXPORT_SYMBOL(tcp_seq_start);
++EXPORT_SYMBOL(udp_seq_start);
  
--static void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+-static void *udp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++void *udp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
  {
- 	struct tcp_iter_state *st = seq->private;
- 	void *rc = NULL;
-@@ -2186,8 +2191,9 @@ static void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- 	st->last_pos = *pos;
- 	return rc;
+ 	struct sock *sk;
+ 
+@@ -2650,56 +2653,17 @@ static void *udp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ 	++*pos;
+ 	return sk;
  }
-+EXPORT_SYMBOL(tcp_seq_next);
++EXPORT_SYMBOL(udp_seq_next);
  
--static void tcp_seq_stop(struct seq_file *seq, void *v)
-+void tcp_seq_stop(struct seq_file *seq, void *v)
+-static void udp_seq_stop(struct seq_file *seq, void *v)
++void udp_seq_stop(struct seq_file *seq, void *v)
  {
- 	struct tcp_iter_state *st = seq->private;
++	struct udp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
+ 	struct udp_iter_state *state = seq->private;
  
-@@ -2202,47 +2208,7 @@ static void tcp_seq_stop(struct seq_file *seq, void *v)
- 		break;
- 	}
+-	if (state->bucket <= state->udp_table->mask)
+-		spin_unlock_bh(&state->udp_table->hash[state->bucket].lock);
++	if (state->bucket <= afinfo->udp_table->mask)
++		spin_unlock_bh(&afinfo->udp_table->hash[state->bucket].lock);
  }
 -
--int tcp_seq_open(struct inode *inode, struct file *file)
+-int udp_seq_open(struct inode *inode, struct file *file)
 -{
--	struct tcp_seq_afinfo *afinfo = PDE_DATA(inode);
--	struct tcp_iter_state *s;
+-	struct udp_seq_afinfo *afinfo = PDE_DATA(inode);
+-	struct udp_iter_state *s;
 -	int err;
 -
 -	err = seq_open_net(inode, file, &afinfo->seq_ops,
--			  sizeof(struct tcp_iter_state));
+-			   sizeof(struct udp_iter_state));
 -	if (err < 0)
 -		return err;
 -
 -	s = ((struct seq_file *)file->private_data)->private;
 -	s->family		= afinfo->family;
--	s->last_pos		= 0;
--	return 0;
+-	s->udp_table		= afinfo->udp_table;
+-	return err;
 -}
--EXPORT_SYMBOL(tcp_seq_open);
+-EXPORT_SYMBOL(udp_seq_open);
 -
--int tcp_proc_register(struct net *net, struct tcp_seq_afinfo *afinfo)
+-/* ------------------------------------------------------------------------ */
+-int udp_proc_register(struct net *net, struct udp_seq_afinfo *afinfo)
 -{
--	int rc = 0;
 -	struct proc_dir_entry *p;
+-	int rc = 0;
 -
--	afinfo->seq_ops.start		= tcp_seq_start;
--	afinfo->seq_ops.next		= tcp_seq_next;
--	afinfo->seq_ops.stop		= tcp_seq_stop;
+-	afinfo->seq_ops.start		= udp_seq_start;
+-	afinfo->seq_ops.next		= udp_seq_next;
+-	afinfo->seq_ops.stop		= udp_seq_stop;
 -
 -	p = proc_create_data(afinfo->name, 0444, net->proc_net,
 -			     afinfo->seq_fops, afinfo);
@@ -191,119 +198,227 @@ index f70586b50838..645f259d0972 100644
 -		rc = -ENOMEM;
 -	return rc;
 -}
--EXPORT_SYMBOL(tcp_proc_register);
+-EXPORT_SYMBOL(udp_proc_register);
 -
--void tcp_proc_unregister(struct net *net, struct tcp_seq_afinfo *afinfo)
+-void udp_proc_unregister(struct net *net, struct udp_seq_afinfo *afinfo)
 -{
 -	remove_proc_entry(afinfo->name, net->proc_net);
 -}
--EXPORT_SYMBOL(tcp_proc_unregister);
-+EXPORT_SYMBOL(tcp_seq_stop);
+-EXPORT_SYMBOL(udp_proc_unregister);
++EXPORT_SYMBOL(udp_seq_stop);
  
- static void get_openreq4(const struct request_sock *req,
- 			 struct seq_file *f, int i)
-@@ -2377,6 +2343,19 @@ static int tcp4_seq_show(struct seq_file *seq, void *v)
+ /* ------------------------------------------------------------------------ */
+ static void udp4_format_sock(struct sock *sp, struct seq_file *f,
+@@ -2739,32 +2703,43 @@ int udp4_seq_show(struct seq_file *seq, void *v)
  	return 0;
  }
  
-+static const struct seq_operations tcp4_seq_ops = {
-+	.show		= tcp4_seq_show,
-+	.start		= tcp_seq_start,
-+	.next		= tcp_seq_next,
-+	.stop		= tcp_seq_stop,
+-static const struct file_operations udp_afinfo_seq_fops = {
++static const struct seq_operations udp_seq_ops = {
++	.start		= udp_seq_start,
++	.next		= udp_seq_next,
++	.stop		= udp_seq_stop,
++	.show		= udp4_seq_show,
 +};
 +
-+static int tcp_seq_open(struct inode *inode, struct file *file)
++static int udp_seq_open(struct inode *inode, struct file *file)
 +{
-+	return seq_open_net(inode, file, &tcp4_seq_ops,
-+			  sizeof(struct tcp_iter_state));
++	return seq_open_net(inode, file, &udp_seq_ops,
++			sizeof(struct udp_iter_state));
 +}
 +
- static const struct file_operations tcp_afinfo_seq_fops = {
- 	.open    = tcp_seq_open,
- 	.read    = seq_read,
-@@ -2385,22 +2364,20 @@ static const struct file_operations tcp_afinfo_seq_fops = {
++const struct file_operations udp_afinfo_seq_fops = {
+ 	.open     = udp_seq_open,
+ 	.read     = seq_read,
+ 	.llseek   = seq_lseek,
+ 	.release  = seq_release_net
  };
++EXPORT_SYMBOL(udp_afinfo_seq_fops);
  
- static struct tcp_seq_afinfo tcp4_seq_afinfo = {
--	.name		= "tcp",
+-/* ------------------------------------------------------------------------ */
+ static struct udp_seq_afinfo udp4_seq_afinfo = {
+-	.name		= "udp",
  	.family		= AF_INET,
--	.seq_fops	= &tcp_afinfo_seq_fops,
+ 	.udp_table	= &udp_table,
+-	.seq_fops	= &udp_afinfo_seq_fops,
 -	.seq_ops	= {
--		.show		= tcp4_seq_show,
+-		.show		= udp4_seq_show,
 -	},
  };
  
- static int __net_init tcp4_proc_init_net(struct net *net)
+ static int __net_init udp4_proc_init_net(struct net *net)
  {
--	return tcp_proc_register(net, &tcp4_seq_afinfo);
-+	if (!proc_create_data("tcp", 0444, net->proc_net,
-+			&tcp_afinfo_seq_fops, &tcp4_seq_afinfo))
+-	return udp_proc_register(net, &udp4_seq_afinfo);
++	if (!proc_create_data("udp", 0444, net->proc_net, &udp_afinfo_seq_fops,
++			&udp4_seq_afinfo))
 +		return -ENOMEM;
 +	return 0;
  }
  
- static void __net_exit tcp4_proc_exit_net(struct net *net)
+ static void __net_exit udp4_proc_exit_net(struct net *net)
  {
--	tcp_proc_unregister(net, &tcp4_seq_afinfo);
-+	remove_proc_entry("tcp", net->proc_net);
+-	udp_proc_unregister(net, &udp4_seq_afinfo);
++	remove_proc_entry("udp", net->proc_net);
  }
  
- static struct pernet_operations tcp4_net_ops = {
-diff --git a/net/ipv6/tcp_ipv6.c b/net/ipv6/tcp_ipv6.c
-index 6d664d83cd16..c0329bb1692f 100644
---- a/net/ipv6/tcp_ipv6.c
-+++ b/net/ipv6/tcp_ipv6.c
-@@ -1909,30 +1909,41 @@ static int tcp6_seq_show(struct seq_file *seq, void *v)
+ static struct pernet_operations udp4_net_ops = {
+diff --git a/net/ipv4/udplite.c b/net/ipv4/udplite.c
+index f96614e9b9a5..4a6e67bfbe0d 100644
+--- a/net/ipv4/udplite.c
++++ b/net/ipv4/udplite.c
+@@ -14,6 +14,7 @@
+ #define pr_fmt(fmt) "UDPLite: " fmt
+ 
+ #include <linux/export.h>
++#include <linux/proc_fs.h>
+ #include "udp_impl.h"
+ 
+ struct udp_table 	udplite_table __read_mostly;
+@@ -73,32 +74,22 @@ static struct inet_protosw udplite4_protosw = {
+ };
+ 
+ #ifdef CONFIG_PROC_FS
+-
+-static const struct file_operations udplite_afinfo_seq_fops = {
+-	.open     = udp_seq_open,
+-	.read     = seq_read,
+-	.llseek   = seq_lseek,
+-	.release  = seq_release_net
+-};
+-
+ static struct udp_seq_afinfo udplite4_seq_afinfo = {
+-	.name		= "udplite",
+ 	.family		= AF_INET,
+ 	.udp_table 	= &udplite_table,
+-	.seq_fops	= &udplite_afinfo_seq_fops,
+-	.seq_ops	= {
+-		.show		= udp4_seq_show,
+-	},
+ };
+ 
+ static int __net_init udplite4_proc_init_net(struct net *net)
+ {
+-	return udp_proc_register(net, &udplite4_seq_afinfo);
++	if (!proc_create_data("udplite", 0444, net->proc_net,
++			&udp_afinfo_seq_fops, &udplite4_seq_afinfo))
++		return -ENOMEM;
++	return 0;
+ }
+ 
+ static void __net_exit udplite4_proc_exit_net(struct net *net)
+ {
+-	udp_proc_unregister(net, &udplite4_seq_afinfo);
++	remove_proc_entry("udplite", net->proc_net);
+ }
+ 
+ static struct pernet_operations udplite4_net_ops = {
+diff --git a/net/ipv6/udp.c b/net/ipv6/udp.c
+index 4ec76a87aeb8..68f11d6e3912 100644
+--- a/net/ipv6/udp.c
++++ b/net/ipv6/udp.c
+@@ -1480,31 +1480,43 @@ int udp6_seq_show(struct seq_file *seq, void *v)
  	return 0;
  }
  
-+static const struct seq_operations tcp6_seq_ops = {
-+	.show		= tcp6_seq_show,
-+	.start		= tcp_seq_start,
-+	.next		= tcp_seq_next,
-+	.stop		= tcp_seq_stop,
+-static const struct file_operations udp6_afinfo_seq_fops = {
+-	.open     = udp_seq_open,
++static const struct seq_operations udp6_seq_ops = {
++	.start		= udp_seq_start,
++	.next		= udp_seq_next,
++	.stop		= udp_seq_stop,
++	.show		= udp6_seq_show,
 +};
 +
-+static int tcp6_seq_open(struct inode *inode, struct file *file)
++static int udp6_seq_open(struct inode *inode, struct file *file)
 +{
-+	return seq_open_net(inode, file, &tcp6_seq_ops,
-+			  sizeof(struct tcp_iter_state));
++	return seq_open_net(inode, file, &udp6_seq_ops,
++			sizeof(struct udp_iter_state));
 +}
 +
- static const struct file_operations tcp6_afinfo_seq_fops = {
--	.open    = tcp_seq_open,
-+	.open    = tcp6_seq_open,
- 	.read    = seq_read,
- 	.llseek  = seq_lseek,
- 	.release = seq_release_net
++const struct file_operations udp6_afinfo_seq_fops = {
++	.open     = udp6_seq_open,
+ 	.read     = seq_read,
+ 	.llseek   = seq_lseek,
+ 	.release  = seq_release_net
  };
++EXPORT_SYMBOL(udp6_afinfo_seq_fops);
  
- static struct tcp_seq_afinfo tcp6_seq_afinfo = {
--	.name		= "tcp6",
+ static struct udp_seq_afinfo udp6_seq_afinfo = {
+-	.name		= "udp6",
  	.family		= AF_INET6,
--	.seq_fops	= &tcp6_afinfo_seq_fops,
+ 	.udp_table	= &udp_table,
+-	.seq_fops	= &udp6_afinfo_seq_fops,
 -	.seq_ops	= {
--		.show		= tcp6_seq_show,
+-		.show		= udp6_seq_show,
 -	},
  };
  
- int __net_init tcp6_proc_init(struct net *net)
+ int __net_init udp6_proc_init(struct net *net)
  {
--	return tcp_proc_register(net, &tcp6_seq_afinfo);
-+	if (!proc_create_data("tcp6", 0444, net->proc_net,
-+			&tcp6_afinfo_seq_fops, &tcp6_seq_afinfo))
+-	return udp_proc_register(net, &udp6_seq_afinfo);
++	if (!proc_create_data("udp6", 0444, net->proc_net,
++			&udp6_afinfo_seq_fops, &udp6_seq_afinfo))
 +		return -ENOMEM;
 +	return 0;
  }
  
- void tcp6_proc_exit(struct net *net)
+ void udp6_proc_exit(struct net *net)
  {
--	tcp_proc_unregister(net, &tcp6_seq_afinfo);
-+	remove_proc_entry("tcp6", net->proc_net);
+-	udp_proc_unregister(net, &udp6_seq_afinfo);
++	remove_proc_entry("udp6", net->proc_net);
  }
- #endif
+ #endif /* CONFIG_PROC_FS */
  
+diff --git a/net/ipv6/udplite.c b/net/ipv6/udplite.c
+index 14ae32bb1f3d..a119e57196b5 100644
+--- a/net/ipv6/udplite.c
++++ b/net/ipv6/udplite.c
+@@ -12,6 +12,7 @@
+  *		2 of the License, or (at your option) any later version.
+  */
+ #include <linux/export.h>
++#include <linux/proc_fs.h>
+ #include "udp_impl.h"
+ 
+ static int udplitev6_rcv(struct sk_buff *skb)
+@@ -92,32 +93,22 @@ void udplitev6_exit(void)
+ }
+ 
+ #ifdef CONFIG_PROC_FS
+-
+-static const struct file_operations udplite6_afinfo_seq_fops = {
+-	.open     = udp_seq_open,
+-	.read     = seq_read,
+-	.llseek   = seq_lseek,
+-	.release  = seq_release_net
+-};
+-
+ static struct udp_seq_afinfo udplite6_seq_afinfo = {
+-	.name		= "udplite6",
+ 	.family		= AF_INET6,
+ 	.udp_table	= &udplite_table,
+-	.seq_fops	= &udplite6_afinfo_seq_fops,
+-	.seq_ops	= {
+-		.show		= udp6_seq_show,
+-	},
+ };
+ 
+ static int __net_init udplite6_proc_init_net(struct net *net)
+ {
+-	return udp_proc_register(net, &udplite6_seq_afinfo);
++	if (!proc_create_data("udplite6", 0444, net->proc_net,
++			&udp6_afinfo_seq_fops, &udplite6_seq_afinfo))
++		return -ENOMEM;
++	return 0;
+ }
+ 
+ static void __net_exit udplite6_proc_exit_net(struct net *net)
+ {
+-	udp_proc_unregister(net, &udplite6_seq_afinfo);
++	remove_proc_entry("udplite6", net->proc_net);
+ }
+ 
+ static struct pernet_operations udplite6_net_ops = {
 -- 
 2.17.0
 
