@@ -1,15 +1,15 @@
-From: Alexandre Belloni <alexandre.belloni@bootlin.com>
-Subject: Re: [PATCH 26/39] rtc/proc: switch to proc_create_single_data
-Date: Thu, 19 Apr 2018 15:10:27 +0200
-Message-ID: <20180419131027.GC7369@piout.net>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 03/39] proc: introduce proc_create_seq_private
+Date: Thu, 19 Apr 2018 17:18:18 +0300
+Message-ID: <20180419141818.pjys7at4xmz2h6ho@mwanda>
 References: <20180419124140.9309-1-hch@lst.de>
- <20180419124140.9309-27-hch@lst.de>
+ <20180419124140.9309-4-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20180419124140.9309-27-hch@lst.de>
+In-Reply-To: <20180419124140.9309-4-hch@lst.de>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -20,74 +20,51 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, jfs-discussion@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jiri Slaby <jslaby@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, Corey Minyard <minyard@acm.org>, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, megaraidlinux.pdl@broadcom.com, linux-kernel@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, linux-ide@vger.kernel.org, netfilter-devel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, netdev@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, linux-afs@lists.infradead.org, jfs-discussion@lists.sourceforge.net, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 19/04/2018 14:41:27+0200, Christoph Hellwig wrote:
-> And stop trying to get a reference on the submodule, procfs code deals
-> with release after and unloaded module and thus removed proc entry.
-> 
-
-Are you sure about that? The rtc module is not the one adding the procfs
-file so I'm not sure how the procfs code can handle it.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/rtc/rtc-proc.c | 33 ++-------------------------------
->  1 file changed, 2 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/rtc/rtc-proc.c b/drivers/rtc/rtc-proc.c
-> index 31e7e23cc5be..a9dd9218fae2 100644
-> --- a/drivers/rtc/rtc-proc.c
-> +++ b/drivers/rtc/rtc-proc.c
-> @@ -107,40 +107,11 @@ static int rtc_proc_show(struct seq_file *seq, void *offset)
->  	return 0;
->  }
+On Thu, Apr 19, 2018 at 02:41:04PM +0200, Christoph Hellwig wrote:
+> diff --git a/drivers/s390/cio/blacklist.c b/drivers/s390/cio/blacklist.c
+> index 2a3f874a21d5..ad35cddcf6af 100644
+> --- a/drivers/s390/cio/blacklist.c
+> +++ b/drivers/s390/cio/blacklist.c
+> @@ -391,28 +391,15 @@ static const struct seq_operations cio_ignore_proc_seq_ops = {
+>  	.show  = cio_ignore_proc_seq_show,
+>  };
 >  
-> -static int rtc_proc_open(struct inode *inode, struct file *file)
+> -static int
+> -cio_ignore_proc_open(struct inode *inode, struct file *file)
 > -{
-> -	int ret;
-> -	struct rtc_device *rtc = PDE_DATA(inode);
-> -
-> -	if (!try_module_get(rtc->owner))
-> -		return -ENODEV;
-> -
-> -	ret = single_open(file, rtc_proc_show, rtc);
-> -	if (ret)
-> -		module_put(rtc->owner);
-> -	return ret;
+> -	return seq_open_private(file, &cio_ignore_proc_seq_ops,
+> -				sizeof(struct ccwdev_iter));
 > -}
 > -
-> -static int rtc_proc_release(struct inode *inode, struct file *file)
-> -{
-> -	int res = single_release(inode, file);
-> -	struct rtc_device *rtc = PDE_DATA(inode);
-> -
-> -	module_put(rtc->owner);
-> -	return res;
-> -}
-> -
-> -static const struct file_operations rtc_proc_fops = {
-> -	.open		= rtc_proc_open,
-> -	.read		= seq_read,
-> -	.llseek		= seq_lseek,
-> -	.release	= rtc_proc_release,
+> -static const struct file_operations cio_ignore_proc_fops = {
+> -	.open    = cio_ignore_proc_open,
+> -	.read    = seq_read,
+> -	.llseek  = seq_lseek,
+> -	.release = seq_release_private,
+> -	.write   = cio_ignore_write,
+                   ^^^^^^^^^^^^^^^^
+The cio_ignore_write() function isn't used any more so compilers will
+complain.
+
 > -};
 > -
->  void rtc_proc_add_device(struct rtc_device *rtc)
+>  static int
+>  cio_ignore_proc_init (void)
 >  {
->  	if (is_rtc_hctosys(rtc))
-> -		proc_create_data("driver/rtc", 0, NULL, &rtc_proc_fops, rtc);
-> +		proc_create_single_data("driver/rtc", 0, NULL, rtc_proc_show,
-> +				rtc);
->  }
+>  	struct proc_dir_entry *entry;
 >  
->  void rtc_proc_del_device(struct rtc_device *rtc)
-> -- 
-> 2.17.0
-> 
+> -	entry = proc_create("cio_ignore", S_IFREG | S_IRUGO | S_IWUSR, NULL,
+> -			    &cio_ignore_proc_fops);
+> +	entry = proc_create_seq_private("cio_ignore",
+> +			S_IFREG | S_IRUGO | S_IWUSR, NULL,
+> +			&cio_ignore_proc_seq_ops, sizeof(struct ccwdev_iter),
+> +			NULL);
+>  	if (!entry)
+>  		return -ENOENT;
+>  	return 0;
 
--- 
-Alexandre Belloni, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
+regards,
+dan carpenter
