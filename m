@@ -1,8 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: =?utf-8?q?=5BPATCH_11/39=5D_netfilter/x=5Ftables?=
- =?utf-8?q?=3A_simplify_=D1=95eq=5Ffile_code?=
-Date: Thu, 19 Apr 2018 14:41:12 +0200
-Message-ID: <20180419124140.9309-12-hch@lst.de>
+Subject: [PATCH 18/39] megaraid: simplify procfs code
+Date: Thu, 19 Apr 2018 14:41:19 +0200
+Message-ID: <20180419124140.9309-19-hch@lst.de>
 References: <20180419124140.9309-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,138 +20,217 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Just use the address family from the proc private data instead of copying
-it into per-file data.
+Use remove_proc_subtree to remove the whole subtree on cleanup, and
+unwind the registration loop into individual calls.  Switch to use
+proc_create_single.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- net/netfilter/x_tables.c | 39 +++++++++++----------------------------
- 1 file changed, 11 insertions(+), 28 deletions(-)
+ drivers/scsi/megaraid.c | 140 +++++++++++-----------------------------
+ drivers/scsi/megaraid.h |  12 ----
+ 2 files changed, 36 insertions(+), 116 deletions(-)
 
-diff --git a/net/netfilter/x_tables.c b/net/netfilter/x_tables.c
-index 71325fef647d..3704101af27f 100644
---- a/net/netfilter/x_tables.c
-+++ b/net/netfilter/x_tables.c
-@@ -1489,15 +1489,10 @@ void *xt_unregister_table(struct xt_table *table)
- EXPORT_SYMBOL_GPL(xt_unregister_table);
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 7195cff51d4c..91f5e2c68dbc 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2731,53 +2731,6 @@ proc_show_rdrv_40(struct seq_file *m, void *v)
+ 	return proc_show_rdrv(m, m->private, 30, 39);
+ }
+ 
+-
+-/*
+- * seq_file wrappers for procfile show routines.
+- */
+-static int mega_proc_open(struct inode *inode, struct file *file)
+-{
+-	adapter_t *adapter = proc_get_parent_data(inode);
+-	int (*show)(struct seq_file *, void *) = PDE_DATA(inode);
+-
+-	return single_open(file, show, adapter);
+-}
+-
+-static const struct file_operations mega_proc_fops = {
+-	.open		= mega_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-
+-/*
+- * Table of proc files we need to create.
+- */
+-struct mega_proc_file {
+-	const char *name;
+-	unsigned short ptr_offset;
+-	int (*show) (struct seq_file *m, void *v);
+-};
+-
+-static const struct mega_proc_file mega_proc_files[] = {
+-	{ "config",	      offsetof(adapter_t, proc_read), proc_show_config },
+-	{ "stat",	      offsetof(adapter_t, proc_stat), proc_show_stat },
+-	{ "mailbox",	      offsetof(adapter_t, proc_mbox), proc_show_mbox },
+-#if MEGA_HAVE_ENH_PROC
+-	{ "rebuild-rate",     offsetof(adapter_t, proc_rr), proc_show_rebuild_rate },
+-	{ "battery-status",   offsetof(adapter_t, proc_battery), proc_show_battery },
+-	{ "diskdrives-ch0",   offsetof(adapter_t, proc_pdrvstat[0]), proc_show_pdrv_ch0 },
+-	{ "diskdrives-ch1",   offsetof(adapter_t, proc_pdrvstat[1]), proc_show_pdrv_ch1 },
+-	{ "diskdrives-ch2",   offsetof(adapter_t, proc_pdrvstat[2]), proc_show_pdrv_ch2 },
+-	{ "diskdrives-ch3",   offsetof(adapter_t, proc_pdrvstat[3]), proc_show_pdrv_ch3 },
+-	{ "raiddrives-0-9",   offsetof(adapter_t, proc_rdrvstat[0]), proc_show_rdrv_10 },
+-	{ "raiddrives-10-19", offsetof(adapter_t, proc_rdrvstat[1]), proc_show_rdrv_20 },
+-	{ "raiddrives-20-29", offsetof(adapter_t, proc_rdrvstat[2]), proc_show_rdrv_30 },
+-	{ "raiddrives-30-39", offsetof(adapter_t, proc_rdrvstat[3]), proc_show_rdrv_40 },
+-#endif
+-	{ NULL }
+-};
+-
+ /**
+  * mega_create_proc_entry()
+  * @index - index in soft state array
+@@ -2788,31 +2741,45 @@ static const struct mega_proc_file mega_proc_files[] = {
+ static void
+ mega_create_proc_entry(int index, struct proc_dir_entry *parent)
+ {
+-	const struct mega_proc_file *f;
+-	adapter_t	*adapter = hba_soft_state[index];
+-	struct proc_dir_entry	*dir, *de, **ppde;
+-	u8		string[16];
++	adapter_t *adapter = hba_soft_state[index];
++	struct proc_dir_entry *dir;
++	u8 string[16];
+ 
+ 	sprintf(string, "hba%d", adapter->host->host_no);
+-
+-	dir = adapter->controller_proc_dir_entry =
+-		proc_mkdir_data(string, 0, parent, adapter);
+-	if(!dir) {
++	dir = proc_mkdir_data(string, 0, parent, adapter);
++	if (!dir) {
+ 		dev_warn(&adapter->dev->dev, "proc_mkdir failed\n");
+ 		return;
+ 	}
+ 
+-	for (f = mega_proc_files; f->name; f++) {
+-		de = proc_create_data(f->name, S_IRUSR, dir, &mega_proc_fops,
+-				      f->show);
+-		if (!de) {
+-			dev_warn(&adapter->dev->dev, "proc_create failed\n");
+-			return;
+-		}
+-
+-		ppde = (void *)adapter + f->ptr_offset;
+-		*ppde = de;
+-	}
++	proc_create_single_data("config", S_IRUSR, dir,
++			proc_show_config, adapter);
++	proc_create_single_data("stat", S_IRUSR, dir,
++			proc_show_stat, adapter);
++	proc_create_single_data("mailbox", S_IRUSR, dir,
++			proc_show_mbox, adapter);
++#if MEGA_HAVE_ENH_PROC
++	proc_create_single_data("rebuild-rate", S_IRUSR, dir,
++			proc_show_rebuild_rate, adapter);
++	proc_create_single_data("battery-status", S_IRUSR, dir,
++			proc_show_battery, adapter);
++	proc_create_single_data("diskdrives-ch0", S_IRUSR, dir,
++			proc_show_pdrv_ch0, adapter);
++	proc_create_single_data("diskdrives-ch1", S_IRUSR, dir,
++			proc_show_pdrv_ch1, adapter);
++	proc_create_single_data("diskdrives-ch2", S_IRUSR, dir,
++			proc_show_pdrv_ch2, adapter);
++	proc_create_single_data("diskdrives-ch3", S_IRUSR, dir,
++			proc_show_pdrv_ch3, adapter);
++	proc_create_single_data("raiddrives-0-9", S_IRUSR, dir,
++			proc_show_rdrv_10, adapter);
++	proc_create_single_data("raiddrives-10-19", S_IRUSR, dir,
++			proc_show_rdrv_20, adapter);
++	proc_create_single_data("raiddrives-20-29", S_IRUSR, dir,
++			proc_show_rdrv_30, adapter);
++	proc_create_single_data("raiddrives-30-39", S_IRUSR, dir,
++			proc_show_rdrv_40, adapter);
++#endif
+ }
+ 
+ #else
+@@ -4580,6 +4547,7 @@ megaraid_remove_one(struct pci_dev *pdev)
+ {
+ 	struct Scsi_Host *host = pci_get_drvdata(pdev);
+ 	adapter_t *adapter = (adapter_t *)host->hostdata;
++	char buf[12] = { 0 };
+ 
+ 	scsi_remove_host(host);
+ 
+@@ -4594,44 +4562,8 @@ megaraid_remove_one(struct pci_dev *pdev)
+ 
+ 	mega_free_sgl(adapter);
+ 
+-#ifdef CONFIG_PROC_FS
+-	if (adapter->controller_proc_dir_entry) {
+-		remove_proc_entry("stat", adapter->controller_proc_dir_entry);
+-		remove_proc_entry("config",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("mailbox",
+-				adapter->controller_proc_dir_entry);
+-#if MEGA_HAVE_ENH_PROC
+-		remove_proc_entry("rebuild-rate",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("battery-status",
+-				adapter->controller_proc_dir_entry);
+-
+-		remove_proc_entry("diskdrives-ch0",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("diskdrives-ch1",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("diskdrives-ch2",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("diskdrives-ch3",
+-				adapter->controller_proc_dir_entry);
+-
+-		remove_proc_entry("raiddrives-0-9",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("raiddrives-10-19",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("raiddrives-20-29",
+-				adapter->controller_proc_dir_entry);
+-		remove_proc_entry("raiddrives-30-39",
+-				adapter->controller_proc_dir_entry);
+-#endif
+-		{
+-			char	buf[12] = { 0 };
+-			sprintf(buf, "hba%d", adapter->host->host_no);
+-			remove_proc_entry(buf, mega_proc_dir_entry);
+-		}
+-	}
+-#endif
++	sprintf(buf, "hba%d", adapter->host->host_no);
++	remove_proc_subtree(buf, mega_proc_dir_entry);
+ 
+ 	pci_free_consistent(adapter->dev, MEGA_BUFFER_SIZE,
+ 			adapter->mega_buffer, adapter->buf_dma_handle);
+diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
+index 21eba2fd465a..18e85d9267ff 100644
+--- a/drivers/scsi/megaraid.h
++++ b/drivers/scsi/megaraid.h
+@@ -814,18 +814,6 @@ typedef struct {
  
  #ifdef CONFIG_PROC_FS
--struct xt_names_priv {
--	struct seq_net_private p;
--	u_int8_t af;
--};
- static void *xt_table_seq_start(struct seq_file *seq, loff_t *pos)
- {
--	struct xt_names_priv *priv = seq->private;
- 	struct net *net = seq_file_net(seq);
--	u_int8_t af = priv->af;
-+	u_int8_t af = (unsigned long)PDE_DATA(file_inode(seq->file));
- 
- 	mutex_lock(&xt[af].mutex);
- 	return seq_list_start(&net->xt.tables[af], *pos);
-@@ -1505,17 +1500,15 @@ static void *xt_table_seq_start(struct seq_file *seq, loff_t *pos)
- 
- static void *xt_table_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- {
--	struct xt_names_priv *priv = seq->private;
- 	struct net *net = seq_file_net(seq);
--	u_int8_t af = priv->af;
-+	u_int8_t af = (unsigned long)PDE_DATA(file_inode(seq->file));
- 
- 	return seq_list_next(v, &net->xt.tables[af], pos);
- }
- 
- static void xt_table_seq_stop(struct seq_file *seq, void *v)
- {
--	struct xt_names_priv *priv = seq->private;
--	u_int8_t af = priv->af;
-+	u_int8_t af = (unsigned long)PDE_DATA(file_inode(seq->file));
- 
- 	mutex_unlock(&xt[af].mutex);
- }
-@@ -1538,16 +1531,8 @@ static const struct seq_operations xt_table_seq_ops = {
- 
- static int xt_table_open(struct inode *inode, struct file *file)
- {
--	int ret;
--	struct xt_names_priv *priv;
+ 	struct proc_dir_entry	*controller_proc_dir_entry;
+-	struct proc_dir_entry	*proc_read;
+-	struct proc_dir_entry	*proc_stat;
+-	struct proc_dir_entry	*proc_mbox;
 -
--	ret = seq_open_net(inode, file, &xt_table_seq_ops,
--			   sizeof(struct xt_names_priv));
--	if (!ret) {
--		priv = ((struct seq_file *)file->private_data)->private;
--		priv->af = (unsigned long)PDE_DATA(inode);
--	}
--	return ret;
-+	return seq_open_net(inode, file, &xt_table_seq_ops,
-+			sizeof(struct seq_net_private));
- }
- 
- static const struct file_operations xt_table_ops = {
-@@ -1563,7 +1548,7 @@ static const struct file_operations xt_table_ops = {
-  */
- struct nf_mttg_trav {
- 	struct list_head *head, *curr;
--	uint8_t class, nfproto;
-+	uint8_t class;
- };
- 
- enum {
-@@ -1580,6 +1565,7 @@ static void *xt_mttg_seq_next(struct seq_file *seq, void *v, loff_t *ppos,
- 		[MTTG_TRAV_NFP_UNSPEC] = MTTG_TRAV_NFP_SPEC,
- 		[MTTG_TRAV_NFP_SPEC]   = MTTG_TRAV_DONE,
- 	};
-+	uint8_t nfproto = (unsigned long)PDE_DATA(file_inode(seq->file));
- 	struct nf_mttg_trav *trav = seq->private;
- 
- 	switch (trav->class) {
-@@ -1594,9 +1580,9 @@ static void *xt_mttg_seq_next(struct seq_file *seq, void *v, loff_t *ppos,
- 		if (trav->curr != trav->head)
- 			break;
- 		mutex_unlock(&xt[NFPROTO_UNSPEC].mutex);
--		mutex_lock(&xt[trav->nfproto].mutex);
-+		mutex_lock(&xt[nfproto].mutex);
- 		trav->head = trav->curr = is_target ?
--			&xt[trav->nfproto].target : &xt[trav->nfproto].match;
-+			&xt[nfproto].target : &xt[nfproto].match;
- 		trav->class = next_class[trav->class];
- 		break;
- 	case MTTG_TRAV_NFP_SPEC:
-@@ -1628,6 +1614,7 @@ static void *xt_mttg_seq_start(struct seq_file *seq, loff_t *pos,
- 
- static void xt_mttg_seq_stop(struct seq_file *seq, void *v)
- {
-+	uint8_t nfproto = (unsigned long)PDE_DATA(file_inode(seq->file));
- 	struct nf_mttg_trav *trav = seq->private;
- 
- 	switch (trav->class) {
-@@ -1635,7 +1622,7 @@ static void xt_mttg_seq_stop(struct seq_file *seq, void *v)
- 		mutex_unlock(&xt[NFPROTO_UNSPEC].mutex);
- 		break;
- 	case MTTG_TRAV_NFP_SPEC:
--		mutex_unlock(&xt[trav->nfproto].mutex);
-+		mutex_unlock(&xt[nfproto].mutex);
- 		break;
- 	}
- }
-@@ -1680,8 +1667,6 @@ static int xt_match_open(struct inode *inode, struct file *file)
- 	trav = __seq_open_private(file, &xt_match_seq_ops, sizeof(*trav));
- 	if (!trav)
- 		return -ENOMEM;
+-#if MEGA_HAVE_ENH_PROC
+-	struct proc_dir_entry	*proc_rr;
+-	struct proc_dir_entry	*proc_battery;
+-#define MAX_PROC_CHANNELS	4
+-	struct proc_dir_entry	*proc_pdrvstat[MAX_PROC_CHANNELS];
+-	struct proc_dir_entry	*proc_rdrvstat[MAX_PROC_CHANNELS];
+-#endif
 -
--	trav->nfproto = (unsigned long)PDE_DATA(inode);
- 	return 0;
- }
+ #endif
  
-@@ -1732,8 +1717,6 @@ static int xt_target_open(struct inode *inode, struct file *file)
- 	trav = __seq_open_private(file, &xt_target_seq_ops, sizeof(*trav));
- 	if (!trav)
- 		return -ENOMEM;
--
--	trav->nfproto = (unsigned long)PDE_DATA(inode);
- 	return 0;
- }
- 
+ 	int	has_64bit_addr;		/* are we using 64-bit addressing */
 -- 
 2.17.0
 
