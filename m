@@ -1,193 +1,43 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [v2] scsi: ips: fix firmware timestamps for 32-bit
-Date: Fri, 20 Apr 2018 18:04:40 +0200
-Message-ID: <20180420160459.3621883-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] storvsc: Set up correct queue depth values for IDE
+ devices
+Date: Fri, 20 Apr 2018 15:36:45 -0400
+Message-ID: <yq1fu3pisaa.fsf@oracle.com>
+References: <20180322214718.29547-1-longli@linuxonhyperv.com>
+ <DM5PR2101MB1030FD5B6261CC7BCF0092D1DCAF0@DM5PR2101MB1030.namprd21.prod.outlook.com>
+ <MWHPR2101MB072978A101FEFBCF2D32E872CEB60@MWHPR2101MB0729.namprd21.prod.outlook.com>
+ <yq1bmefna14.fsf@oracle.com>
+ <MWHPR2101MB072916BAB0F56AA2CD8C444BCEB50@MWHPR2101MB0729.namprd21.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <MWHPR2101MB072916BAB0F56AA2CD8C444BCEB50@MWHPR2101MB0729.namprd21.prod.outlook.com>
+ (Long Li's message of "Thu, 19 Apr 2018 04:59:12 +0000")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Long Li <longli@linuxonhyperv.com>
 List-Id: linux-scsi@vger.kernel.org
 
-do_gettimeofday() is deprecated since it will stop working in 2038 on
-32-bit platforms, leading to incorrect times passed to the firmware.
-On 64-bit platforms the current code appears to be fine, as the
-calculation passes an 8-bit century number into the firmware that can
-represent times long in the future (possibly until 25599).
 
-Using ktime_get_real_seconds() to get a 64-bit seconds value and
-time64_to_tm() to convert it into the firmware format greatly simplifies
-the ips timekeeping code, makes 32-bit and 64-bit behave the same way
-here, and gets us closer to removing the deprecated interfaces.
+Long,
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-v2: addressed review comments from Finn Thain:
-  - rewrite changelog text
-  - drop now-unused macros
-  - fix incorrect century calculation
----
- drivers/scsi/ips.c | 78 +++++++++++-------------------------------------------
- drivers/scsi/ips.h | 11 +-------
- 2 files changed, 17 insertions(+), 72 deletions(-)
+> If num_cpus=1, we don't have any sub channels.
+>
+> The host offers one sub channel for VM with 5 CPUs, after that it offers
+> an additional sub channel every 4 CPUs.
+>
+> The primary channel is always offered.
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index a70f36a6d205..0e8a22c38c11 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -291,7 +291,7 @@ static void ips_freescb(ips_ha_t *, ips_scb_t *);
- static void ips_setup_funclist(ips_ha_t *);
- static void ips_statinit(ips_ha_t *);
- static void ips_statinit_memio(ips_ha_t *);
--static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time_t);
-+static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time64_t);
- static void ips_ffdc_reset(ips_ha_t *, int);
- static void ips_ffdc_time(ips_ha_t *);
- static uint32_t ips_statupd_copperhead(ips_ha_t *);
-@@ -985,10 +985,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 
- 	/* FFDC */
- 	if (le32_to_cpu(ha->subsys->param[3]) & 0x300000) {
--		struct timeval tv;
--
--		do_gettimeofday(&tv);
--		ha->last_ffdc = tv.tv_sec;
-+		ha->last_ffdc = ktime_get_real_seconds();
- 		ha->reset_count++;
- 		ips_ffdc_reset(ha, IPS_INTR_IORL);
- 	}
-@@ -2392,7 +2389,6 @@ static int
- ips_hainit(ips_ha_t * ha)
- {
- 	int i;
--	struct timeval tv;
- 
- 	METHOD_TRACE("ips_hainit", 1);
- 
-@@ -2407,8 +2403,7 @@ ips_hainit(ips_ha_t * ha)
- 
- 	/* Send FFDC */
- 	ha->reset_count = 1;
--	do_gettimeofday(&tv);
--	ha->last_ffdc = tv.tv_sec;
-+	ha->last_ffdc = ktime_get_real_seconds();
- 	ips_ffdc_reset(ha, IPS_INTR_IORL);
- 
- 	if (!ips_read_config(ha, IPS_INTR_IORL)) {
-@@ -2548,12 +2543,9 @@ ips_next(ips_ha_t * ha, int intr)
- 
- 	if ((ha->subsys->param[3] & 0x300000)
- 	    && (ha->scb_activelist.count == 0)) {
--		struct timeval tv;
--
--		do_gettimeofday(&tv);
--
--		if (tv.tv_sec - ha->last_ffdc > IPS_SECS_8HOURS) {
--			ha->last_ffdc = tv.tv_sec;
-+		time64_t now = ktime_get_real_seconds();
-+		if (now - ha->last_ffdc > IPS_SECS_8HOURS) {
-+			ha->last_ffdc = now;
- 			ips_ffdc_time(ha);
- 		}
- 	}
-@@ -5988,59 +5980,21 @@ ips_ffdc_time(ips_ha_t * ha)
- /*                                                                          */
- /****************************************************************************/
- static void
--ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time_t current_time)
-+ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time64_t current_time)
- {
--	long days;
--	long rem;
--	int i;
--	int year;
--	int yleap;
--	int year_lengths[2] = { IPS_DAYS_NORMAL_YEAR, IPS_DAYS_LEAP_YEAR };
--	int month_lengths[12][2] = { {31, 31},
--	{28, 29},
--	{31, 31},
--	{30, 30},
--	{31, 31},
--	{30, 30},
--	{31, 31},
--	{31, 31},
--	{30, 30},
--	{31, 31},
--	{30, 30},
--	{31, 31}
--	};
-+	struct tm tm;
- 
- 	METHOD_TRACE("ips_fix_ffdc_time", 1);
- 
--	days = current_time / IPS_SECS_DAY;
--	rem = current_time % IPS_SECS_DAY;
--
--	scb->cmd.ffdc.hour = (rem / IPS_SECS_HOUR);
--	rem = rem % IPS_SECS_HOUR;
--	scb->cmd.ffdc.minute = (rem / IPS_SECS_MIN);
--	scb->cmd.ffdc.second = (rem % IPS_SECS_MIN);
--
--	year = IPS_EPOCH_YEAR;
--	while (days < 0 || days >= year_lengths[yleap = IPS_IS_LEAP_YEAR(year)]) {
--		int newy;
--
--		newy = year + (days / IPS_DAYS_NORMAL_YEAR);
--		if (days < 0)
--			--newy;
--		days -= (newy - year) * IPS_DAYS_NORMAL_YEAR +
--		    IPS_NUM_LEAP_YEARS_THROUGH(newy - 1) -
--		    IPS_NUM_LEAP_YEARS_THROUGH(year - 1);
--		year = newy;
--	}
--
--	scb->cmd.ffdc.yearH = year / 100;
--	scb->cmd.ffdc.yearL = year % 100;
--
--	for (i = 0; days >= month_lengths[i][yleap]; ++i)
--		days -= month_lengths[i][yleap];
-+	time64_to_tm(current_time, 0, &tm);
- 
--	scb->cmd.ffdc.month = i + 1;
--	scb->cmd.ffdc.day = days + 1;
-+	scb->cmd.ffdc.hour   = tm.tm_hour;
-+	scb->cmd.ffdc.minute = tm.tm_min;
-+	scb->cmd.ffdc.second = tm.tm_sec;
-+	scb->cmd.ffdc.yearH  = (tm.tm_year + 1900) / 100;
-+	scb->cmd.ffdc.yearL  = tm.tm_year % 100;
-+	scb->cmd.ffdc.month  = tm.tm_mon + 1;
-+	scb->cmd.ffdc.day    = tm.tm_mday;
- }
- 
- /****************************************************************************
-diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
-index 366be3b2f9b4..db546171e97f 100644
---- a/drivers/scsi/ips.h
-+++ b/drivers/scsi/ips.h
-@@ -402,16 +402,7 @@
-    #define IPS_BIOS_HEADER             0xC0
- 
-    /* time oriented stuff */
--   #define IPS_IS_LEAP_YEAR(y)           (((y % 4 == 0) && ((y % 100 != 0) || (y % 400 == 0))) ? 1 : 0)
--   #define IPS_NUM_LEAP_YEARS_THROUGH(y) ((y) / 4 - (y) / 100 + (y) / 400)
--
--   #define IPS_SECS_MIN                 60
--   #define IPS_SECS_HOUR                3600
-    #define IPS_SECS_8HOURS              28800
--   #define IPS_SECS_DAY                 86400
--   #define IPS_DAYS_NORMAL_YEAR         365
--   #define IPS_DAYS_LEAP_YEAR           366
--   #define IPS_EPOCH_YEAR               1970
- 
-    /*
-     * Scsi_Host Template
-@@ -1054,7 +1045,7 @@ typedef struct ips_ha {
-    uint8_t            active;
-    int                ioctl_reset;        /* IOCTL Requested Reset Flag */
-    uint16_t           reset_count;        /* number of resets           */
--   time_t             last_ffdc;          /* last time we sent ffdc info*/
-+   time64_t           last_ffdc;          /* last time we sent ffdc info*/
-    uint8_t            slot_num;           /* PCI Slot Number            */
-    int                ioctl_len;          /* size of ioctl buffer       */
-    dma_addr_t         ioctl_busaddr;      /* dma address of ioctl buffer*/
+Applied to 4.17/scsi-fixes. Thanks!
+
 -- 
-2.9.0
+Martin K. Petersen	Oracle Linux Engineering
