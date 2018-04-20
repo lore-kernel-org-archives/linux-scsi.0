@@ -1,33 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 0/6] scsi: handle special return codes for ABORTED COMMAND
-Date: Fri, 20 Apr 2018 19:15:38 -0400
-Message-ID: <yq1efj9h3l1.fsf@oracle.com>
-References: <20180417233511.6573-1-mwilck@suse.com>
+Subject: Re: [PATCH][V2] isci: Fix infinite loop in while loop
+Date: Fri, 20 Apr 2018 19:24:47 -0400
+Message-ID: <yq1a7txh35s.fsf@oracle.com>
+References: <20180420095716.2143-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180417233511.6573-1-mwilck@suse.com> (Martin Wilck's message
-        of "Wed, 18 Apr 2018 01:35:05 +0200")
+In-Reply-To: <20180420095716.2143-1-colin.king@canonical.com> (Colin King's
+        message of "Fri, 20 Apr 2018 10:57:16 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Martin,
+Colin,
 
-> Here is another attempt to handle the special return codes for ABORTED
-> COMMAND for certain SCSI devices. Following MKP's recommendation, I've
-> created two new BLIST flags, simplifying the code in scsi_error.c
-> compared to the previous versions. Rather than using "free" bits, I
-> increased the length of blist_flag_t to 64 bit, and used previously
-> unused bits. I also added checking for obsolete and unused bits.
->
-> For the blist_flag_t size increase, I used sparse to try and avoid
-> regressions; that necessitated fixing sparse's errors for the current
-> code first.
+> In the case when the phy_mask is bitwise anded with the phy_index bit
+> is zero the continue statement currently jumps to the next iteration
+> of the while loop and phy_index is never actually incremented,
+> potentially causing an infinite loop if phy_index is less than
+> SCI_MAX_PHS. Fix this by turning the while loop into a for loop.
 
-Much better, thanks for reworking this. Applied to 4.18/scsi-queue.
+Applied to 4.17/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
