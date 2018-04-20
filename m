@@ -1,32 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] target: Fix Fortify_panic kernel exception
-Date: Fri, 20 Apr 2018 19:09:48 -0400
-Message-ID: <yq1muxxh3ur.fsf@oracle.com>
-References: <1523979202-61407-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3 0/6] scsi: handle special return codes for ABORTED COMMAND
+Date: Fri, 20 Apr 2018 19:15:38 -0400
+Message-ID: <yq1efj9h3l1.fsf@oracle.com>
+References: <20180417233511.6573-1-mwilck@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1523979202-61407-1-git-send-email-bryantly@linux.vnet.ibm.com>
-        (Bryant G. Ly's message of "Tue, 17 Apr 2018 10:33:21 -0500")
-Sender: stable-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: hch@lst.de, nab@linux-iscsi.org, martin.petersen@oracle.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-block@vger.kernel.org, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180417233511.6573-1-mwilck@suse.com> (Martin Wilck's message
+        of "Wed, 18 Apr 2018 01:35:05 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Martin Wilck <mwilck@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Bryant,
+Martin,
 
-> The bug exists in the memcmp in which the length passed in must be
-> guaranteed to be 1. This bug currently exists because the second
-> pointer passed in, can be smaller than the cmd->data_length, which
-> causes a fortify_panic.
+> Here is another attempt to handle the special return codes for ABORTED
+> COMMAND for certain SCSI devices. Following MKP's recommendation, I've
+> created two new BLIST flags, simplifying the code in scsi_error.c
+> compared to the previous versions. Rather than using "free" bits, I
+> increased the length of blist_flag_t to 64 bit, and used previously
+> unused bits. I also added checking for obsolete and unused bits.
 >
-> The fix is to use memchr_inv instead to find whether or not a 0 exists
-> instead of using memcmp. This way you dont have to worry about buffer
-> overflow which is the reason for the fortify_panic.
+> For the blist_flag_t size increase, I used sparse to try and avoid
+> regressions; that necessitated fixing sparse's errors for the current
+> code first.
 
-Clarified the commit description a bit and applied the patch
-4.17/scsi-fixes. Thanks!
+Much better, thanks for reworking this. Applied to 4.18/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
