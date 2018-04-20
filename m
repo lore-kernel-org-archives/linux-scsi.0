@@ -1,50 +1,50 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH][V2] isci: Fix infinite loop in while loop
-Date: Fri, 20 Apr 2018 10:57:16 +0100
-Message-ID: <20180420095716.2143-1-colin.king@canonical.com>
+From: Stephen Hemminger <stephen@networkplumber.org>
+Subject: Re: [Patch v2] Storvsc: Select channel based on available
+ percentage of ring buffer to write
+Date: Fri, 20 Apr 2018 08:50:43 -0700
+Message-ID: <20180420085043.3a678b89@xeon-e3>
+References: <20180419215424.3557-1-longli@linuxonhyperv.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20180419215424.3557-1-longli@linuxonhyperv.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@linuxonhyperv.com>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Thu, 19 Apr 2018 14:54:24 -0700
+Long Li <longli@linuxonhyperv.com> wrote:
 
-In the case when the phy_mask is bitwise anded with the
-phy_index bit is zero the continue statement currently jumps
-to the next iteration of the while loop and phy_index is
-never actually incremented, potentially causing an infinite
-loop if phy_index is less than SCI_MAX_PHS. Fix this by turning
-the while loop into a for loop.
+> From: Long Li <longli@microsoft.com>
+> 
+> This is a best effort for estimating on how busy the ring buffer is for
+> that channel, based on available buffer to write in percentage. It is still
+> possible that at the time of actual ring buffer write, the space may not be
+> available due to other processes may be writing at the time.
+> 
+> Selecting a channel based on how full it is can reduce the possibility that
+> a ring buffer write will fail, and avoid the situation a channel is over
+> busy.
+> 
+> Now it's possible that storvsc can use a smaller ring buffer size
+> (e.g. 40k bytes) to take advantage of cache locality.
+> 
+> Changes.
+> v2: Pre-allocate struct cpumask on the heap.
+> Struct cpumask is a big structure (1k bytes) when CONFIG_NR_CPUS=8192 (default
+> value when CONFIG_MAXSMP=y). Don't use kernel stack for it by pre-allocating
+> them using kmalloc when channels are first initialized.
+> 
+> Signed-off-by: Long Li <longli@microsoft.com>
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/isci/port_config.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
-index edb7be786c65..9e8de1462593 100644
---- a/drivers/scsi/isci/port_config.c
-+++ b/drivers/scsi/isci/port_config.c
-@@ -291,7 +291,7 @@ sci_mpc_agent_validate_phy_configuration(struct isci_host *ihost,
- 		 * Note: We have not moved the current phy_index so we will actually
- 		 *       compare the startting phy with itself.
- 		 *       This is expected and required to add the phy to the port. */
--		while (phy_index < SCI_MAX_PHYS) {
-+		for (; phy_index < SCI_MAX_PHYS; phy_index++) {
- 			if ((phy_mask & (1 << phy_index)) == 0)
- 				continue;
- 			sci_phy_get_sas_address(&ihost->phys[phy_index],
-@@ -311,7 +311,6 @@ sci_mpc_agent_validate_phy_configuration(struct isci_host *ihost,
- 					      &ihost->phys[phy_index]);
- 
- 			assigned_phy_mask |= (1 << phy_index);
--			phy_index++;
- 		}
- 
- 	}
--- 
-2.17.0
+Reviewed-by: Stephen Hemminger <sthemmin@microsoft.com>
