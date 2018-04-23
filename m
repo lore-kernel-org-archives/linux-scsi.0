@@ -1,52 +1,38 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH 2/5] ide: kill ide_toggle_bounce
-Date: Thu, 26 Apr 2018 09:11:21 -0600
-Message-ID: <682db9af-33bc-639d-8930-7a66c30bc644@kernel.dk>
-References: <20180424181625.22410-1-hch@lst.de>
-	<20180424181625.22410-3-hch@lst.de>
-	<5aaca0d3-417f-57f3-969f-b4c777c3fd48@kernel.dk>
-	<20180426072033.GA14700@lst.de>
+From: Martin Wilck <mwilck@suse.com>
+Subject: Re: [PATCH v3 0/6] scsi: handle special return codes for ABORTED
+ COMMAND
+Date: Mon, 23 Apr 2018 11:33:51 +0200
+Message-ID: <1524476031.2075.24.camel@suse.com>
+References: <20180417233511.6573-1-mwilck@suse.com>
+         <yq1efj9h3l1.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180426072033.GA14700-jcswGhMUV9g@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1efj9h3l1.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 4/26/18 1:20 AM, Christoph Hellwig wrote:
-> On Tue, Apr 24, 2018 at 08:02:56PM -0600, Jens Axboe wrote:
->> On 4/24/18 12:16 PM, Christoph Hellwig wrote:
->>> ide_toggle_bounce did select various strange block bounce limits, including
->>> not bouncing at all as soon as an iommu is present in the system.  Given
->>> that the dma_map routines now handle any required bounce buffering except
->>> for ISA DMA, and the ide code already must handle either ISA DMA or highmem
->>> at least for iommu equipped systems we can get rid of the block layer
->>> bounce limit setting entirely.
->>
->> Pretty sure I was the one to add this code, when highmem page IO was
->> enabled about two decades ago...
->>
->> Outside of DMA, the issue was that the PIO code could not handle
->> highmem. That's not the case anymore, so this should be fine.
+On Fri, 2018-04-20 at 19:15 -0400, Martin K. Petersen wrote:
 > 
-> Yes, that is the rationale.  Any chance to you could look over the
-> other patches as well?  Except for the networking one for which I'd
-> really like to see a review from Dave all the users of the interface
-> are block related.
+> Much better, thanks for reworking this. Applied to 4.18/scsi-queue.
 
-You can add my reviewed-by to 1-3, and 5. Looks good to me.
+Thank you!
+
+By the way, I've been wondering whether declaring blist_flags_t
+__bitwise was a wise decision. blist_flags_t is kernel-internal, thus
+endianness doesn't matter. OTOH, using __bitwise requires explicit
+casts in many places, which may suppress warnings about integer size
+mismatch and made me overlook some places where I had to change
+"unsigned long" to "unsigned long long" in the first place
+(in the submitted and applied version I think I caught them all).
+
+Regards,
+Martin
 
 -- 
-Jens Axboe
+Dr. Martin Wilck <mwilck@suse.com>, Tel. +49 (0)911 74053 2107
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
