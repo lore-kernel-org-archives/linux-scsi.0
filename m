@@ -1,7 +1,8 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 3/5] ide: remove the PCI_DMA_BUS_IS_PHYS check
-Date: Tue, 24 Apr 2018 20:16:23 +0200
-Message-ID: <20180424181625.22410-4-hch@lst.de>
+Subject: [PATCH 4/5] net: remove the PCI_DMA_BUS_IS_PHYS check in
+	illegal_highdma
+Date: Tue, 24 Apr 2018 20:16:24 +0200
+Message-ID: <20180424181625.22410-5-hch@lst.de>
 References: <20180424181625.22410-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,29 +22,53 @@ To: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-ar
 Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-We now have ways to deal with drainage in the block layer, and libata has
-been using it for ages.  We also want to get rid of PCI_DMA_BUS_IS_PHYS
-now, so just reduce the PCI transfer size for ide - anyone who cares for
-performance on PCI controllers should have switched to libata long ago.
+These days the dma mapping routines must be able to handle any address
+supported by the device, be that using an iommu, or swiotlb if none is
+supported.  With that the PCI_DMA_BUS_IS_PHYS check in illegal_highdma
+is not needed and can be removed.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/ide/ide-probe.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ net/core/dev.c | 20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
 
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 8d8ed036ca0a..56d7bc228cb3 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -796,8 +796,7 @@ static int ide_init_queue(ide_drive_t *drive)
- 	 * This will be fixed once we teach pci_map_sg() about our boundary
- 	 * requirements, hopefully soon. *FIXME*
- 	 */
--	if (!PCI_DMA_BUS_IS_PHYS)
--		max_sg_entries >>= 1;
-+	max_sg_entries >>= 1;
- #endif /* CONFIG_PCI */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index af0558b00c6c..060256cbf4f3 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -2884,11 +2884,7 @@ void netdev_rx_csum_fault(struct net_device *dev)
+ EXPORT_SYMBOL(netdev_rx_csum_fault);
+ #endif
  
- 	blk_queue_max_segments(q, max_sg_entries);
+-/* Actually, we should eliminate this check as soon as we know, that:
+- * 1. IOMMU is present and allows to map all the memory.
+- * 2. No high memory really exists on this machine.
+- */
+-
++/* XXX: check that highmem exists at all on the given machine. */
+ static int illegal_highdma(struct net_device *dev, struct sk_buff *skb)
+ {
+ #ifdef CONFIG_HIGHMEM
+@@ -2902,20 +2898,6 @@ static int illegal_highdma(struct net_device *dev, struct sk_buff *skb)
+ 				return 1;
+ 		}
+ 	}
+-
+-	if (PCI_DMA_BUS_IS_PHYS) {
+-		struct device *pdev = dev->dev.parent;
+-
+-		if (!pdev)
+-			return 0;
+-		for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
+-			skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
+-			dma_addr_t addr = page_to_phys(skb_frag_page(frag));
+-
+-			if (!pdev->dma_mask || addr + PAGE_SIZE - 1 > *pdev->dma_mask)
+-				return 1;
+-		}
+-	}
+ #endif
+ 	return 0;
+ }
 -- 
 2.17.0
