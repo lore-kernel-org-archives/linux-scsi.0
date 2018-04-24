@@ -1,92 +1,30 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 2/3] scsi: ufs: Extract devfreq registration
-Date: Tue, 24 Apr 2018 14:08:09 -0700
-Message-ID: <41c6fd36826ee853c86b3fb3e069903c@codeaurora.org>
-References: <20180424002016.9205-1-bjorn.andersson@linaro.org>
- <20180424002016.9205-3-bjorn.andersson@linaro.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: Regression 4.17-rc1: SSD doesn properly resume causing system
+ hang (NULL pointer dereference)
+Date: Tue, 24 Apr 2018 21:17:50 +0000
+Message-ID: <19e19bc6b2fef11faf428fe75447b06e56af9ffd.camel@wdc.com>
+References: <59ca6556-11a6-4f77-76e7-d51c7175eb32@molgen.mpg.de>
+         <67ffdf0050a04bf3615c3d8a3a90b0c9c2aeb1ad.camel@wdc.com>
+         <2cc5f0fb-4caa-9c28-7daa-68993d5cb41a@molgen.mpg.de>
+         <14ff1ed06e36a372680872c227b5abe389c753da.camel@wdc.com>
+         <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
+         <134955874b401e6764077393c75ab2d4549b940a.camel@wdc.com>
+         <6a2162a7-5f48-c107-0b1c-5258089522c5@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180424002016.9205-3-bjorn.andersson@linaro.org>
+In-Reply-To: <6a2162a7-5f48-c107-0b1c-5258089522c5@molgen.mpg.de>
+Content-Language: en-US
+Content-ID: <D45FB520D4C1E0478444848C53851307@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>, linux-scsi-owner@vger.kernel.org
+To: "pmenzel+linux-block@molgen.mpg.de" <pmenzel+linux-block@molgen.mpg.de>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "regressions@leemhuis.info" <regressions@leemhuis.info>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-04-23 17:20, Bjorn Andersson wrote:
-> Failing to register with devfreq leaves hba->devfreq assigned, which
-> causes the error path to dereference the ERR_PTR(). Rather than bolting
-> on more conditionals, move the call of devm_devfreq_add_device() into
-> it's own function and only update hba->devfreq once it's successfully
-> registered.
-> 
-> The subsequent patch builds upon this to make UFS actually work again,
-> as it's been broken since f1d981eaecf8 ("PM / devfreq: Use the 
-> available
-> min/max frequency")
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 31 ++++++++++++++++++++++---------
->  1 file changed, 22 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 8f22a980b1a7..2253f24309ec 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1255,6 +1255,26 @@ static struct devfreq_dev_profile 
-> ufs_devfreq_profile = {
->  	.get_dev_status	= ufshcd_devfreq_get_dev_status,
->  };
-> 
-> +static int ufshcd_devfreq_init(struct ufs_hba *hba)
-> +{
-> +	struct devfreq *devfreq;
-> +	int ret;
-> +
-> +	devfreq = devm_devfreq_add_device(hba->dev,
-> +			&ufs_devfreq_profile,
-> +			"simple_ondemand",
-> +			NULL);
-> +	if (IS_ERR(devfreq)) {
-> +		ret = PTR_ERR(devfreq);
-> +		dev_err(hba->dev, "Unable to register with devfreq %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	hba->devfreq = devfreq;
-> +
-> +	return 0;
-> +}
-> +
->  static void __ufshcd_suspend_clkscaling(struct ufs_hba *hba)
->  {
->  	unsigned long flags;
-> @@ -6399,16 +6419,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  				sizeof(struct ufs_pa_layer_attr));
->  			hba->clk_scaling.saved_pwr_info.is_valid = true;
->  			if (!hba->devfreq) {
-> -				hba->devfreq = devm_devfreq_add_device(hba->dev,
-> -							&ufs_devfreq_profile,
-> -							"simple_ondemand",
-> -							NULL);
-> -				if (IS_ERR(hba->devfreq)) {
-> -					ret = PTR_ERR(hba->devfreq);
-> -					dev_err(hba->dev, "Unable to register with devfreq %d\n",
-> -							ret);
-> +				ret = ufshcd_devfreq_init(hba);
-> +				if (ret)
->  					goto out;
-> -				}
->  			}
->  			hba->clk_scaling.is_allowed = true;
->  		}
-
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+T24gVHVlLCAyMDE4LTA0LTI0IGF0IDIzOjA0ICswMjAwLCBQYXVsIE1lbnplbCB3cm90ZToNCj4g
+SSBhcHBsaWVkIHlvdXIgY2hhbmdlLCBhbmQgcmVidWlsdCB0aGUgTGludXgga2VybmVsLiBVbmZv
+cnR1bmF0ZWx5LCBpdCANCj4gbG9va3MgbGlrZSwgaXQgZGlkbuKAmXQgbWFrZSBhIGRpZmZlcmVu
+Y2UuDQoNCkluIHRoYXQgY2FzZSBJIGRvbid0IGtub3cgd2hhdCBpcyBjYXVzaW5nIHRoZSBmYWls
+dXJlLiBDYW4geW91IHJ1biBhIGJpc2VjdA0KdG8gZGV0ZXJtaW5lIHdoaWNoIGNvbW1pdCBpbnRy
+b2R1Y2VkIHRoaXMgcmVncmVzc2lvbj8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg==
