@@ -1,42 +1,67 @@
-From: Palmer Dabbelt <palmer@sifive.com>
-Subject: Re: [PATCH 5/5] PCI: remove PCI_DMA_BUS_IS_PHYS
-Date: Tue, 24 Apr 2018 11:23:16 -0700 (PDT)
-Message-ID: <mhng-1f7fdc5e-bbef-409b-80cb-6a6bbb76eca4@palmer-si-x1c4>
-References: <20180424181625.22410-6-hch@lst.de>
-Mime-Version: 1.0 (MHng)
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: Regression 4.17-rc1: SSD doesn properly resume causing system
+ hang (NULL pointer dereference)
+Date: Tue, 24 Apr 2018 18:27:00 +0000
+Message-ID: <134955874b401e6764077393c75ab2d4549b940a.camel@wdc.com>
+References: <59ca6556-11a6-4f77-76e7-d51c7175eb32@molgen.mpg.de>
+         <67ffdf0050a04bf3615c3d8a3a90b0c9c2aeb1ad.camel@wdc.com>
+         <2cc5f0fb-4caa-9c28-7daa-68993d5cb41a@molgen.mpg.de>
+         <14ff1ed06e36a372680872c227b5abe389c753da.camel@wdc.com>
+         <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180424181625.22410-6-hch@lst.de>
+In-Reply-To: <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
+Content-Language: en-US
+Content-ID: <00C2865DF868434DBD0A303CCF8BD2F6@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
+To: "pmenzel+linux-block@molgen.mpg.de" <pmenzel+linux-block@molgen.mpg.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "regressions@leemhuis.info" <regressions@leemhuis.info>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 24 Apr 2018 11:16:25 PDT (-0700), Christoph Hellwig wrote:
-> This was used by the ide, scsi and networking code in the past to
-> determine if they should bounce payloads.  Now that the dma mapping
-> always have to support dma to all physical memory (thanks to swiotlb
-> for non-iommu systems) there is no need to this crude hack any more.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-> [...]
-> diff --git a/arch/riscv/include/asm/pci.h b/arch/riscv/include/asm/pci.h
-> index 0f2fc9ef20fc..b3638c505728 100644
-> --- a/arch/riscv/include/asm/pci.h
-> +++ b/arch/riscv/include/asm/pci.h
-> @@ -26,9 +26,6 @@
->  /* RISC-V shim does not initialize PCI bus */
->  #define pcibios_assign_all_busses() 1
->
-> -/* We do not have an IOMMU */
-> -#define PCI_DMA_BUS_IS_PHYS 1
-> -
->  extern int isa_dma_bridge_buggy;
->
->  #ifdef CONFIG_PCI
-
-Thanks!
-
-Acked-by: Palmer Dabbelt <palmer@sifive.com> (For the RISC-V change)
+T24gVHVlLCAyMDE4LTA0LTI0IGF0IDE5OjM3ICswMjAwLCBQYXVsIE1lbnplbCB3cm90ZToNCj4g
+T24gMDQvMjQvMTggMTk6MzEsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gSGVyZSBpdCBpcywg
+cGFzdGVkIGFzIGNpdGF0aW9uLCBhcyBvdGhlcndpc2UgVGh1bmRlcmJpcmQgd291bGQgd3JhcCB0
+aGUgDQo+IGxpbmUuDQo+IA0KPiA+IChnZGIpIGRpc2FzIGJsa19zZXRfcnVudGltZV9hY3RpdmUN
+Cj4gPiBEdW1wIG9mIGFzc2VtYmxlciBjb2RlIGZvciBmdW5jdGlvbiBibGtfc2V0X3J1bnRpbWVf
+YWN0aXZlOg0KPiA+ICAgIDB4YzE1MTg2MTAgPCswPjoJY2FsbCAgIDB4YzEwNmFjOWMgPF9fZmVu
+dHJ5X18+DQo+ID4gICAgMHhjMTUxODYxNSA8KzU+OglwdXNoICAgJWVicA0KPiA+ICAgIDB4YzE1
+MTg2MTYgPCs2PjoJbW92ICAgICVlc3AsJWVicA0KPiA+ICAgIDB4YzE1MTg2MTggPCs4PjoJc3Vi
+ICAgICQweDE0LCVlc3ANCj4gPiAgICAweGMxNTE4NjFiIDwrMTE+Ogltb3YgICAgJWVieCwtMHhj
+KCVlYnApDQo+ID4gICAgMHhjMTUxODYxZSA8KzE0PjoJbW92ICAgICVlYXgsJWVieA0KPiA+ICAg
+IDB4YzE1MTg2MjAgPCsxNj46CW1vdiAgICAlZ3M6MHgxNCwlZWF4DQo+ID4gICAgMHhjMTUxODYy
+NiA8KzIyPjoJbW92ICAgICVlYXgsLTB4MTAoJWVicCkNCj4gPiAgICAweGMxNTE4NjI5IDwrMjU+
+Ogl4b3IgICAgJWVheCwlZWF4DQo+ID4gICAgMHhjMTUxODYyYiA8KzI3PjoJdGVzdCAgICVlYngs
+JWVieA0KPiA+ICAgIDB4YzE1MTg2MmQgPCsyOT46CW1vdiAgICAlZXNpLC0weDgoJWVicCkNCj4g
+PiAgICAweGMxNTE4NjMwIDwrMzI+Ogltb3YgICAgJWVkaSwtMHg0KCVlYnApDQo+ID4gICAgMHhj
+MTUxODYzMyA8KzM1PjoJamUgICAgIDB4YzE1MTg2YjMgPGJsa19zZXRfcnVudGltZV9hY3RpdmUr
+MTYzPg0KPiA+ICAgIDB4YzE1MTg2MzUgPCszNz46CW1vdiAgICAweGZjKCVlYngpLCVlYXgNCj4g
+PiAgICAweGMxNTE4NjNiIDwrNDM+OgljYWxsICAgMHhjMWE0YjkyMCA8X3Jhd19zcGluX2xvY2tf
+aXJxPg0KPiA+ICAgIDB4YzE1MTg2NDAgPCs0OD46CW1vdiAgICAweDE1MCglZWJ4KSwlZXNpDQo+
+ID4gICAgMHhjMTUxODY0NiA8KzU0PjoJeG9yICAgICVlYXgsJWVheA0KPiA+ICAgIDB4YzE1MTg2
+NDggPCs1Nj46CW1vdiAgICAweGMxY2E3ZDIwLCVlZGkNCj4gPiAgICAweGMxNTE4NjRlIDwrNjI+
+Ogltb3YgICAgJWVheCwweDE1NCglZWJ4KQ0KPiA+ICAgIDB4YzE1MTg2NTQgPCs2OD46CWNtcCAg
+ICAkMHhmZmZmZmYwYywlZXNpDQo+ID4gICAgMHhjMTUxODY1YSA8Kzc0PjoJbW92ICAgICVlZGks
+LTB4MTQoJWVicCkNCj4gPiAgICAweGMxNTE4NjVkIDwrNzc+OglqZSAgICAgMHhjMTUxODZhNSA8
+YmxrX3NldF9ydW50aW1lX2FjdGl2ZSsxNDk+DQo+ID4gICAgMHhjMTUxODY1ZiA8Kzc5PjoJbW92
+ICAgICVlZGksMHhmNCglZXNpKQ0KDQpUaGUgZS1tYWlsIGF0IHRoZSBzdGFydCBvZiB0aGlzIGUt
+bWFpbCB0aHJlYWQgc2hvd3MgdGhhdCAlZXNpID09IE5VTEwgYXQNCnRoZSB0aW1lIG9mIHRoZSBj
+cmFzaCBhbmQgYWxzbyB0aGF0IHRoZSBjcmFzaCBvY2N1cnJlZCBhdCBvZmZzZXQgNzkgKDB4NGYp
+DQppbiB0aGlzIGZ1bmN0aW9uLiBJIHRoaW5rIHRoYXQgbWVhbnMgdGhhdCB0aGUgY3Jhc2ggb2Nj
+dXJyZWQgaW4gdGhlIGZvbGxvd2luZw0KY29kZTogcG1fcmVxdWVzdF9hdXRvc3VzcGVuZChxLT5k
+ZXYpIGFuZCBhbHNvIHRoYXQgdGhpcyBtZWFucyB0aGF0IHEtPmRldiA9PQ0KTlVMTC4gQ2FuIHlv
+dSB0ZXN0IHRoZSAodW50ZXN0ZWQpIHBhdGNoIGJlbG93Pw0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9zY3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2QuYw0KaW5kZXggNTdjYWU0N2FiMWMyLi5iMDI5
+YTk0YTFlNjYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2QuYw0KKysrIGIvZHJpdmVycy9z
+Y3NpL3NkLmMNCkBAIC0zMjcyLDcgKzMyNzIsNiBAQCBzdGF0aWMgdm9pZCBzZF9wcm9iZV9hc3lu
+YyhzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQogCQlnZC0+ZXZlbnRzIHw9IERJU0tfRVZFTlRf
+TUVESUFfQ0hBTkdFOw0KIAl9DQogDQotCWJsa19wbV9ydW50aW1lX2luaXQoc2RwLT5yZXF1ZXN0
+X3F1ZXVlLCBkZXYpOw0KIAlkZXZpY2VfYWRkX2Rpc2soZGV2LCBnZCk7DQogCWlmIChzZGtwLT5j
+YXBhY2l0eSkNCiAJCXNkX2RpZl9jb25maWdfaG9zdChzZGtwKTsNCkBAIC0zMzkwLDYgKzMzODks
+OCBAQCBzdGF0aWMgaW50IHNkX3Byb2JlKHN0cnVjdCBkZXZpY2UgKmRldikNCiAJZ2V0X2Rldmlj
+ZShkZXYpOw0KIAlkZXZfc2V0X2RydmRhdGEoZGV2LCBzZGtwKTsNCiANCisJYmxrX3BtX3J1bnRp
+bWVfaW5pdChzZHAtPnJlcXVlc3RfcXVldWUsIGRldik7DQorDQogCWdldF9kZXZpY2UoJnNka3At
+PmRldik7CS8qIHByZXZlbnQgcmVsZWFzZSBiZWZvcmUgc2RfcHJvYmVfYXN5bmMoKSAqLw0KIAlX
+QVJOX09OX09OQ0UoIXF1ZXVlX3dvcmsoc3lzdGVtX3VuYm91bmRfd3EsICZzZGtwLT5wcm9iZV93
+b3JrKSk7DQogDQoNClRoYW5rcywNCg0KQmFydC4=
