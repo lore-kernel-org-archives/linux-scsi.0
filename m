@@ -1,102 +1,30 @@
-From: MyungJoo Ham <myungjoo.ham@samsung.com>
-Subject: RE: Re: [PATCH 1/3] PM / devfreq: Actually support providing
- freq_table
-Date: Tue, 24 Apr 2018 15:09:14 +0900
-Message-ID: <529236451.01524550500717.JavaMail.epsvc@epcpmgr01>
-References: <20180424052916.GD2052@tuxbook-pro>
-        <20180424002016.9205-1-bjorn.andersson@linaro.org>
-        <20180424002016.9205-2-bjorn.andersson@linaro.org>
-        <5ADE9AE6.9090601@samsung.com>
-        <CGME20180424002041epcas5p11439bec6de910c2a465c5cf3acb45a3b@epcms1p5>
-Reply-To: myungjoo.ham@samsung.com
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination
+ (v4)
+Date: Tue, 24 Apr 2018 09:25:11 +0200
+Message-ID: <20180424072511.GA18419@kroah.com>
+References: <20161110135443.GA28767@kroah.com>
+ <1478788527-7372-1-git-send-email-andrey2805@gmail.com>
+ <CAK=zhgpUo-t=xBm93NmBf6q-VD01C2s7mqFOy-C7Vo=WABGvSw@mail.gmail.com>
+ <9C0A3C06154E83419DE77BA0861EAE4F011467C3A0@MCMAIL.media-clone.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180424052916.GD2052@tuxbook-pro>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>, Chanwoo Choi <cw00.choi@samsung.com>
-Cc: Kyungmin Park <kyungmin.park@samsung.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, Vivek Gautam <vivek.gautam@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <9C0A3C06154E83419DE77BA0861EAE4F011467C3A0@MCMAIL.media-clone.com>
+Sender: stable-owner@vger.kernel.org
+To: Igor Rybak <igor@media-clone.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Andrey Grodzovsky <andrey2805@gmail.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, Ezra Kohavi <ezra@media-clone.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
->On Mon 23 Apr 19:48 PDT 2018, Chanwoo Choi wrote:
->
->> Hi,
->> 
->> On 2018??? 04??? 24??? 09:20, Bjorn Andersson wrote:
->> > The code in devfreq_add_device() handles the case where a freq_table is
->> > passed by the client, but then requests min and max frequences from
->> > the, in this case absent, opp tables.
->> > 
->> > Read the min and max frequencies from the frequency table, which has
->> > been built from the opp table if one exists, instead of querying the
->> > opp table.
->> > 
->> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->> > ---
->> > 
->> > An alternative approach is to clarify in the devfreq code that it's not
->> > possible to pass a freq_table and then in patch 3 create an opp table for the
->> > device in runtime; although the error handling of this becomes non-trivial.
->> > 
->> > Transitioning the UFSHCD to use opp tables directly is hindered by the fact
->> > that the Qualcomm UFS hardware has two different clocks that needs to be
->> > running at different rates, so we would need a way to describe the two rates in
->> > the opp table. (And would force us to change the DT binding)
->> > 
->> >  drivers/devfreq/devfreq.c | 22 ++++------------------
->> >  1 file changed, 4 insertions(+), 18 deletions(-)
->> > 
->> > diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
->> > index fe2af6aa88fc..086ced50a13d 100644
->> > --- a/drivers/devfreq/devfreq.c
->> > +++ b/drivers/devfreq/devfreq.c
->> > @@ -74,30 +74,16 @@ static struct devfreq *find_device_devfreq(struct device *dev)
->> >  
->> >  static unsigned long find_available_min_freq(struct devfreq *devfreq)
->> >  {
->> > -	struct dev_pm_opp *opp;
->> > -	unsigned long min_freq = 0;
->> > -
->> > -	opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &min_freq);
->> > -	if (IS_ERR(opp))
->> > -		min_freq = 0;
->> > -	else
->> > -		dev_pm_opp_put(opp);
->> > +	struct devfreq_dev_profile *profile = devfreq->profile;
->> >  
->> > -	return min_freq;
->> > +	return profile->freq_table[0];
->> 
->> It is wrong. The thermal framework support the devfreq-cooling device
->> which uses the dev_pm_opp_enable/disable().
->> 
->
->Okay, that makes sense. So rather than registering a custom freq_table I
->should register the min and max frequency using dev_pm_opp_add().
->
->> In order to find the correct available min frequency,
->> the devfreq have to use the OPP function instead of using the first entry
->> of the freq_table array.
->> 
->
->Based on this there seems to be room for cleaning out the freq_table
->from devfreq, to reduce the confusion. I will review this further.
+On Mon, Apr 23, 2018 at 06:28:03PM +0000, Igor Rybak wrote:
+> Hi,
+> 
+> We are running kernel 4.4.0-22 and the patch below does not seem to be present in the mpt3sas driver. Can you please confirm?
 
-Could you please check if the bug suffering you gets resolved by
-replacing 0 with ULONG_MAX in the function find_available_max_freq?
+Please update your kernel, this patch was in the 4.4.36 kernel release
+which came out December 2, 2016, well over a full year ago.
 
--                max_freq = 0;
-+                max_freq = ULONG_MAX;
+thanks,
 
-Even if you are not using OPP, these functions should provide somewhat
-"compatible" values.
-
-Cheers,
-MyungJoo
-
-
->
->Thanks,
->Bjorn
->
+greg k-h
