@@ -1,76 +1,40 @@
 From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: [PATCH 1/3] PM / devfreq: Actually support providing freq_table
-Date: Mon, 23 Apr 2018 17:20:14 -0700
-Message-ID: <20180424002016.9205-2-bjorn.andersson@linaro.org>
-References: <20180424002016.9205-1-bjorn.andersson@linaro.org>
+Subject: [PATCH 0/3] Fix UFS and devfreq interaction
+Date: Mon, 23 Apr 2018 17:20:13 -0700
+Message-ID: <20180424002016.9205-1-bjorn.andersson@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180424002016.9205-1-bjorn.andersson@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The code in devfreq_add_device() handles the case where a freq_table is
-passed by the client, but then requests min and max frequences from
-the, in this case absent, opp tables.
+With the introduction of f1d981eaecf8 ("PM / devfreq: Use the available min/max
+frequency") the UFS host controller driver (UFSHCD) stopped probing for
+platforms that supports frequency scaling, e.g. all modern Qualcomm platforms.
 
-Read the min and max frequencies from the frequency table, which has
-been built from the opp table if one exists, instead of querying the
-opp table.
+The cause of this was UFSHCD's reliance of not registering any frequencies and
+then being called by devfreq to switch between the frequencies 0 and UINT_MAX.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
+The devfreq code implies that the client is able to pass the frequency table,
+instead of relying on opp tables, so the first patch makes this actually work.
+The second patch extracts the devfreq registration in the UFSHCD driver, both
+to facilitate the third patch and to remove a dereference of an ERR_PTR() in
+the case that devfreq registration fails. Finally, the third patch picks the
+two frequencies from the freq-table provided in UFSHCD and pass these to
+devfreq, as well as map these frequencies back to the step up/down actions.
 
-An alternative approach is to clarify in the devfreq code that it's not
-possible to pass a freq_table and then in patch 3 create an opp table for the
-device in runtime; although the error handling of this becomes non-trivial.
 
-Transitioning the UFSHCD to use opp tables directly is hindered by the fact
-that the Qualcomm UFS hardware has two different clocks that needs to be
-running at different rates, so we would need a way to describe the two rates in
-the opp table. (And would force us to change the DT binding)
+With this UFS is once again functional on the db820c, and is needed to get UFS
+working on SDM845 (both tested).
 
- drivers/devfreq/devfreq.c | 22 ++++------------------
- 1 file changed, 4 insertions(+), 18 deletions(-)
+Bjorn Andersson (3):
+  PM / devfreq: Actually support providing freq_table
+  scsi: ufs: Extract devfreq registration
+  scsi: ufs: Use freq table with devfreq
 
-diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
-index fe2af6aa88fc..086ced50a13d 100644
---- a/drivers/devfreq/devfreq.c
-+++ b/drivers/devfreq/devfreq.c
-@@ -74,30 +74,16 @@ static struct devfreq *find_device_devfreq(struct device *dev)
- 
- static unsigned long find_available_min_freq(struct devfreq *devfreq)
- {
--	struct dev_pm_opp *opp;
--	unsigned long min_freq = 0;
--
--	opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &min_freq);
--	if (IS_ERR(opp))
--		min_freq = 0;
--	else
--		dev_pm_opp_put(opp);
-+	struct devfreq_dev_profile *profile = devfreq->profile;
- 
--	return min_freq;
-+	return profile->freq_table[0];
- }
- 
- static unsigned long find_available_max_freq(struct devfreq *devfreq)
- {
--	struct dev_pm_opp *opp;
--	unsigned long max_freq = ULONG_MAX;
--
--	opp = dev_pm_opp_find_freq_floor(devfreq->dev.parent, &max_freq);
--	if (IS_ERR(opp))
--		max_freq = 0;
--	else
--		dev_pm_opp_put(opp);
-+	struct devfreq_dev_profile *profile = devfreq->profile;
- 
--	return max_freq;
-+	return profile->freq_table[profile->max_state - 1];
- }
- 
- /**
+ drivers/devfreq/devfreq.c | 22 +++------------
+ drivers/scsi/ufs/ufshcd.c | 68 ++++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 57 insertions(+), 33 deletions(-)
+
 -- 
 2.16.2
