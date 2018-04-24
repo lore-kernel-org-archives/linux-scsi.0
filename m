@@ -1,7 +1,7 @@
 From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: [PATCH 3/3] scsi: ufs: Use freq table with devfreq
-Date: Mon, 23 Apr 2018 17:20:16 -0700
-Message-ID: <20180424002016.9205-4-bjorn.andersson@linaro.org>
+Subject: [PATCH 2/3] scsi: ufs: Extract devfreq registration
+Date: Mon, 23 Apr 2018 17:20:15 -0700
+Message-ID: <20180424002016.9205-3-bjorn.andersson@linaro.org>
 References: <20180424002016.9205-1-bjorn.andersson@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180424002016.9205-1-bjorn.andersson@linaro.org>
@@ -10,90 +10,70 @@ To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@lin
 Cc: MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-devfreq requires that the client operates on actual frequencies, not
-only 0 and UMAX_INT and as such UFS brok with the introduction of
-f1d981eaecf8 ("PM / devfreq: Use the available min/max frequency").
+Failing to register with devfreq leaves hba->devfreq assigned, which
+causes the error path to dereference the ERR_PTR(). Rather than bolting
+on more conditionals, move the call of devm_devfreq_add_device() into
+it's own function and only update hba->devfreq once it's successfully
+registered.
 
-This patch registers the frequencies of the first clock with devfreq and
-use these to determine if we're trying to step up or down.
+The subsequent patch builds upon this to make UFS actually work again,
+as it's been broken since f1d981eaecf8 ("PM / devfreq: Use the available
+min/max frequency")
 
 Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 39 ++++++++++++++++++++++++++++++++-------
- 1 file changed, 32 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2253f24309ec..07b1f3c7bd2d 100644
+index 8f22a980b1a7..2253f24309ec 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1168,16 +1168,13 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 	ktime_t start;
- 	bool scale_up, sched_clk_scaling_suspend_work = false;
-+	struct list_head *clk_list = &hba->clk_list_head;
-+	struct ufs_clk_info *clki;
- 	unsigned long irq_flags;
+@@ -1255,6 +1255,26 @@ static struct devfreq_dev_profile ufs_devfreq_profile = {
+ 	.get_dev_status	= ufshcd_devfreq_get_dev_status,
+ };
  
- 	if (!ufshcd_is_clkscaling_supported(hba))
- 		return -EINVAL;
- 
--	if ((*freq > 0) && (*freq < UINT_MAX)) {
--		dev_err(hba->dev, "%s: invalid freq = %lu\n", __func__, *freq);
--		return -EINVAL;
--	}
--
- 	spin_lock_irqsave(hba->host->host_lock, irq_flags);
- 	if (ufshcd_eh_in_progress(hba)) {
- 		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-@@ -1187,7 +1184,13 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	if (!hba->clk_scaling.active_reqs)
- 		sched_clk_scaling_suspend_work = true;
- 
--	scale_up = (*freq == UINT_MAX) ? true : false;
-+	if (list_empty(clk_list)) {
-+		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		goto out;
++static int ufshcd_devfreq_init(struct ufs_hba *hba)
++{
++	struct devfreq *devfreq;
++	int ret;
++
++	devfreq = devm_devfreq_add_device(hba->dev,
++			&ufs_devfreq_profile,
++			"simple_ondemand",
++			NULL);
++	if (IS_ERR(devfreq)) {
++		ret = PTR_ERR(devfreq);
++		dev_err(hba->dev, "Unable to register with devfreq %d\n", ret);
++		return ret;
 +	}
 +
-+	clki = list_first_entry(&hba->clk_list_head, struct ufs_clk_info, list);
-+	scale_up = (*freq == clki->max_freq) ? true : false;
- 	if (!ufshcd_is_devfreq_scaling_required(hba, scale_up)) {
- 		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
- 		ret = 0;
-@@ -1257,11 +1260,33 @@ static struct devfreq_dev_profile ufs_devfreq_profile = {
- 
- static int ufshcd_devfreq_init(struct ufs_hba *hba)
++	hba->devfreq = devfreq;
++
++	return 0;
++}
++
+ static void __ufshcd_suspend_clkscaling(struct ufs_hba *hba)
  {
-+	struct devfreq_dev_profile *profile;
-+	struct list_head *clk_list = &hba->clk_list_head;
-+	struct ufs_clk_info *clki;
- 	struct devfreq *devfreq;
- 	int ret;
- 
-+	/* Skip devfreq if we don't have any clocks in the list */
-+	if (list_empty(clk_list))
-+		return 0;
-+
-+	profile = devm_kmemdup(hba->dev, &ufs_devfreq_profile,
-+			       sizeof(ufs_devfreq_profile), GFP_KERNEL);
-+	if (!profile)
-+		return -ENOMEM;
-+
-+	profile->max_state = 2;
-+	profile->freq_table = devm_kcalloc(hba->dev, profile->max_state,
-+					   sizeof(unsigned long), GFP_KERNEL);
-+	if (!profile->freq_table)
-+		return -ENOMEM;
-+
-+	clki = list_first_entry(&hba->clk_list_head, struct ufs_clk_info, list);
-+	profile->freq_table[0] = clki->min_freq;
-+	profile->freq_table[1] = clki->max_freq;
-+
- 	devfreq = devm_devfreq_add_device(hba->dev,
--			&ufs_devfreq_profile,
-+			profile,
- 			"simple_ondemand",
- 			NULL);
- 	if (IS_ERR(devfreq)) {
+ 	unsigned long flags;
+@@ -6399,16 +6419,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 				sizeof(struct ufs_pa_layer_attr));
+ 			hba->clk_scaling.saved_pwr_info.is_valid = true;
+ 			if (!hba->devfreq) {
+-				hba->devfreq = devm_devfreq_add_device(hba->dev,
+-							&ufs_devfreq_profile,
+-							"simple_ondemand",
+-							NULL);
+-				if (IS_ERR(hba->devfreq)) {
+-					ret = PTR_ERR(hba->devfreq);
+-					dev_err(hba->dev, "Unable to register with devfreq %d\n",
+-							ret);
++				ret = ufshcd_devfreq_init(hba);
++				if (ret)
+ 					goto out;
+-				}
+ 			}
+ 			hba->clk_scaling.is_allowed = true;
+ 		}
 -- 
 2.16.2
