@@ -1,39 +1,76 @@
-From: Anatoliy Glagolev <glagolig@gmail.com>
-Subject: Re: [PATCH] bsg referencing bus driver module
-Date: Mon, 23 Apr 2018 12:38:48 -0600
-Message-ID: <20180423183845.GA21609@xldev-tmpl.dev.purestorage.com>
-References: <CANFzKepsGq0EHX4GPtC0RZOWqVf2fTJ6uA2WH-SZNsBuwMJ5KA@mail.gmail.com>
- <CANFzKer6QDaJALX3LKPF2DV6LgczTh-efQe9+zeK8BuxTWFt1A@mail.gmail.com>
- <CANFzKepRSA+VoVAvOfW6U_qHFVDZex+=hQ=QhU+7Z=unvwejJQ@mail.gmail.com>
- <1524218126.3321.6.camel@HansenPartnership.com>
- <20180420224404.GC32372@xldev-tmpl.dev.purestorage.com>
- <1524383279.3389.7.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: [PATCH 1/3] PM / devfreq: Actually support providing freq_table
+Date: Mon, 23 Apr 2018 17:20:14 -0700
+Message-ID: <20180424002016.9205-2-bjorn.andersson@linaro.org>
+References: <20180424002016.9205-1-bjorn.andersson@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1524383279.3389.7.camel@HansenPartnership.com>
+In-Reply-To: <20180424002016.9205-1-bjorn.andersson@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp, martin.petersen@oracle.com, jthumshirn@suse.de, hare@suse.com, bblock@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
+To: MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks, James. The idea of cutting communications with Scsi_Host at
-bsg_unregister_queue(..) time and leaving bsg_class_device to
-its own fate makes a lot of sense, conceptually. But there are
-implementation issues that are difficult to work around.
+The code in devfreq_add_device() handles the case where a freq_table is
+passed by the client, but then requests min and max frequences from
+the, in this case absent, opp tables.
 
-bsg.c creates bsg_class_device and takes a reference to Scsi_Host
-at bsg_register_queue(..) time. The reference is dropped at
-bsg_class_device's release(..) function. If the driver implementing
-Scsi_Host template is not around we crash.
-We could move the reference drop from bsg_class_device's release(..)
-function to bsg_unregister_queue(..). That would be a small change in
-bsg.c. But bsg.c sets Scsi_Host as the parent of bsg_class_device's
-device. We cannot have a device around with a dangling parent.
-A device's parent cannot be changed dynamically. Not setting
-the device's parent at creation may affect software relying
-on bsg_class_device - Scsi_Host child-parent relations.
+Read the min and max frequencies from the frequency table, which has
+been built from the opp table if one exists, instead of querying the
+opp table.
 
-It looks like I am out of options. Do you have suggestions on
-how to work around Scsi_Host being bsg_class_device's parent?
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+
+An alternative approach is to clarify in the devfreq code that it's not
+possible to pass a freq_table and then in patch 3 create an opp table for the
+device in runtime; although the error handling of this becomes non-trivial.
+
+Transitioning the UFSHCD to use opp tables directly is hindered by the fact
+that the Qualcomm UFS hardware has two different clocks that needs to be
+running at different rates, so we would need a way to describe the two rates in
+the opp table. (And would force us to change the DT binding)
+
+ drivers/devfreq/devfreq.c | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
+index fe2af6aa88fc..086ced50a13d 100644
+--- a/drivers/devfreq/devfreq.c
++++ b/drivers/devfreq/devfreq.c
+@@ -74,30 +74,16 @@ static struct devfreq *find_device_devfreq(struct device *dev)
+ 
+ static unsigned long find_available_min_freq(struct devfreq *devfreq)
+ {
+-	struct dev_pm_opp *opp;
+-	unsigned long min_freq = 0;
+-
+-	opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &min_freq);
+-	if (IS_ERR(opp))
+-		min_freq = 0;
+-	else
+-		dev_pm_opp_put(opp);
++	struct devfreq_dev_profile *profile = devfreq->profile;
+ 
+-	return min_freq;
++	return profile->freq_table[0];
+ }
+ 
+ static unsigned long find_available_max_freq(struct devfreq *devfreq)
+ {
+-	struct dev_pm_opp *opp;
+-	unsigned long max_freq = ULONG_MAX;
+-
+-	opp = dev_pm_opp_find_freq_floor(devfreq->dev.parent, &max_freq);
+-	if (IS_ERR(opp))
+-		max_freq = 0;
+-	else
+-		dev_pm_opp_put(opp);
++	struct devfreq_dev_profile *profile = devfreq->profile;
+ 
+-	return max_freq;
++	return profile->freq_table[profile->max_state - 1];
+ }
+ 
+ /**
+-- 
+2.16.2
