@@ -1,35 +1,28 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 26/39] rtc/proc: switch to proc_create_single_data
-Date: Tue, 24 Apr 2018 16:15:24 +0200
-Message-ID: <20180424141524.GB26136@lst.de>
-References: <20180419124140.9309-1-hch@lst.de> <20180419124140.9309-27-hch@lst.de> <20180419131027.GC7369@piout.net>
+Subject: Re: [PATCH 16/39] ipmi: simplify procfs code
+Date: Tue, 24 Apr 2018 16:16:01 +0200
+Message-ID: <20180424141601.GC26136@lst.de>
+References: <20180419124140.9309-1-hch@lst.de> <20180419124140.9309-17-hch@lst.de> <f322f243-9ab1-7e9f-00a4-9652cd288ca2@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180419131027.GC7369@piout.net>
+In-Reply-To: <f322f243-9ab1-7e9f-00a4-9652cd288ca2@acm.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexandre Belloni <alexandre.belloni@bootlin.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Corey Minyard <minyard@acm.org>, Alessandro Zummo <a.zummo@towertech.it>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Corey Minyard <minyard@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 19, 2018 at 03:10:27PM +0200, Alexandre Belloni wrote:
-> On 19/04/2018 14:41:27+0200, Christoph Hellwig wrote:
-> > And stop trying to get a reference on the submodule, procfs code deals
-> > with release after and unloaded module and thus removed proc entry.
-> > 
-> 
-> Are you sure about that? The rtc module is not the one adding the procfs
-> file so I'm not sure how the procfs code can handle it.
+On Thu, Apr 19, 2018 at 10:29:29AM -0500, Corey Minyard wrote:
+> On 04/19/2018 07:41 AM, Christoph Hellwig wrote:
+>> Use remove_proc_subtree to remove the whole subtree on cleanup instead
+>> of a hand rolled list of proc entries, unwind the registration loop into
+>> individual calls.  Switch to use proc_create_single to further simplify
+>> the code.
+>
+> I'm yanking all the proc code out of the IPMI driver in 3.18.  So this is 
+> probably
+> not necessary.
 
-The proc file is removed from this call chain:
-
-  <driver>_exit (module_exit handler)
-    -> rtc_device_unregister
-      -> rtc_proc_del_device
-        -> remove_proc_entry
-
-remove_proc_entry takes care of waiting for currently active file
-operation instances and makes sure every new operation never calls
-into the actual proc file ops.  Same behavior as in RTC exists all
-over the kernel.
+Ok, I'll drop this patch.
