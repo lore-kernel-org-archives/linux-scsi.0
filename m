@@ -1,67 +1,125 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: Regression 4.17-rc1: SSD doesn properly resume causing system
- hang (NULL pointer dereference)
-Date: Tue, 24 Apr 2018 18:27:00 +0000
-Message-ID: <134955874b401e6764077393c75ab2d4549b940a.camel@wdc.com>
-References: <59ca6556-11a6-4f77-76e7-d51c7175eb32@molgen.mpg.de>
-         <67ffdf0050a04bf3615c3d8a3a90b0c9c2aeb1ad.camel@wdc.com>
-         <2cc5f0fb-4caa-9c28-7daa-68993d5cb41a@molgen.mpg.de>
-         <14ff1ed06e36a372680872c227b5abe389c753da.camel@wdc.com>
-         <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH 1/3] PM / devfreq: Actually support providing freq_table
+Date: Tue, 24 Apr 2018 11:38:59 -0700
+Message-ID: <20180424183859.GC18510@minitux>
+References: <20180424002016.9205-1-bjorn.andersson@linaro.org>
+ <CGME20180424002041epcas5p11439bec6de910c2a465c5cf3acb45a3b@epcas5p1.samsung.com>
+ <20180424002016.9205-2-bjorn.andersson@linaro.org>
+ <5ADE9AE6.9090601@samsung.com>
+ <20180424052916.GD2052@tuxbook-pro>
+ <5ADEDC1A.2000101@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
-Content-Language: en-US
-Content-ID: <00C2865DF868434DBD0A303CCF8BD2F6@namprd04.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <5ADEDC1A.2000101@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "pmenzel+linux-block@molgen.mpg.de" <pmenzel+linux-block@molgen.mpg.de>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "regressions@leemhuis.info" <regressions@leemhuis.info>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Chanwoo Choi <cw00.choi@samsung.com>
+Cc: MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTA0LTI0IGF0IDE5OjM3ICswMjAwLCBQYXVsIE1lbnplbCB3cm90ZToNCj4g
-T24gMDQvMjQvMTggMTk6MzEsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gSGVyZSBpdCBpcywg
-cGFzdGVkIGFzIGNpdGF0aW9uLCBhcyBvdGhlcndpc2UgVGh1bmRlcmJpcmQgd291bGQgd3JhcCB0
-aGUgDQo+IGxpbmUuDQo+IA0KPiA+IChnZGIpIGRpc2FzIGJsa19zZXRfcnVudGltZV9hY3RpdmUN
-Cj4gPiBEdW1wIG9mIGFzc2VtYmxlciBjb2RlIGZvciBmdW5jdGlvbiBibGtfc2V0X3J1bnRpbWVf
-YWN0aXZlOg0KPiA+ICAgIDB4YzE1MTg2MTAgPCswPjoJY2FsbCAgIDB4YzEwNmFjOWMgPF9fZmVu
-dHJ5X18+DQo+ID4gICAgMHhjMTUxODYxNSA8KzU+OglwdXNoICAgJWVicA0KPiA+ICAgIDB4YzE1
-MTg2MTYgPCs2PjoJbW92ICAgICVlc3AsJWVicA0KPiA+ICAgIDB4YzE1MTg2MTggPCs4PjoJc3Vi
-ICAgICQweDE0LCVlc3ANCj4gPiAgICAweGMxNTE4NjFiIDwrMTE+Ogltb3YgICAgJWVieCwtMHhj
-KCVlYnApDQo+ID4gICAgMHhjMTUxODYxZSA8KzE0PjoJbW92ICAgICVlYXgsJWVieA0KPiA+ICAg
-IDB4YzE1MTg2MjAgPCsxNj46CW1vdiAgICAlZ3M6MHgxNCwlZWF4DQo+ID4gICAgMHhjMTUxODYy
-NiA8KzIyPjoJbW92ICAgICVlYXgsLTB4MTAoJWVicCkNCj4gPiAgICAweGMxNTE4NjI5IDwrMjU+
-Ogl4b3IgICAgJWVheCwlZWF4DQo+ID4gICAgMHhjMTUxODYyYiA8KzI3PjoJdGVzdCAgICVlYngs
-JWVieA0KPiA+ICAgIDB4YzE1MTg2MmQgPCsyOT46CW1vdiAgICAlZXNpLC0weDgoJWVicCkNCj4g
-PiAgICAweGMxNTE4NjMwIDwrMzI+Ogltb3YgICAgJWVkaSwtMHg0KCVlYnApDQo+ID4gICAgMHhj
-MTUxODYzMyA8KzM1PjoJamUgICAgIDB4YzE1MTg2YjMgPGJsa19zZXRfcnVudGltZV9hY3RpdmUr
-MTYzPg0KPiA+ICAgIDB4YzE1MTg2MzUgPCszNz46CW1vdiAgICAweGZjKCVlYngpLCVlYXgNCj4g
-PiAgICAweGMxNTE4NjNiIDwrNDM+OgljYWxsICAgMHhjMWE0YjkyMCA8X3Jhd19zcGluX2xvY2tf
-aXJxPg0KPiA+ICAgIDB4YzE1MTg2NDAgPCs0OD46CW1vdiAgICAweDE1MCglZWJ4KSwlZXNpDQo+
-ID4gICAgMHhjMTUxODY0NiA8KzU0PjoJeG9yICAgICVlYXgsJWVheA0KPiA+ICAgIDB4YzE1MTg2
-NDggPCs1Nj46CW1vdiAgICAweGMxY2E3ZDIwLCVlZGkNCj4gPiAgICAweGMxNTE4NjRlIDwrNjI+
-Ogltb3YgICAgJWVheCwweDE1NCglZWJ4KQ0KPiA+ICAgIDB4YzE1MTg2NTQgPCs2OD46CWNtcCAg
-ICAkMHhmZmZmZmYwYywlZXNpDQo+ID4gICAgMHhjMTUxODY1YSA8Kzc0PjoJbW92ICAgICVlZGks
-LTB4MTQoJWVicCkNCj4gPiAgICAweGMxNTE4NjVkIDwrNzc+OglqZSAgICAgMHhjMTUxODZhNSA8
-YmxrX3NldF9ydW50aW1lX2FjdGl2ZSsxNDk+DQo+ID4gICAgMHhjMTUxODY1ZiA8Kzc5PjoJbW92
-ICAgICVlZGksMHhmNCglZXNpKQ0KDQpUaGUgZS1tYWlsIGF0IHRoZSBzdGFydCBvZiB0aGlzIGUt
-bWFpbCB0aHJlYWQgc2hvd3MgdGhhdCAlZXNpID09IE5VTEwgYXQNCnRoZSB0aW1lIG9mIHRoZSBj
-cmFzaCBhbmQgYWxzbyB0aGF0IHRoZSBjcmFzaCBvY2N1cnJlZCBhdCBvZmZzZXQgNzkgKDB4NGYp
-DQppbiB0aGlzIGZ1bmN0aW9uLiBJIHRoaW5rIHRoYXQgbWVhbnMgdGhhdCB0aGUgY3Jhc2ggb2Nj
-dXJyZWQgaW4gdGhlIGZvbGxvd2luZw0KY29kZTogcG1fcmVxdWVzdF9hdXRvc3VzcGVuZChxLT5k
-ZXYpIGFuZCBhbHNvIHRoYXQgdGhpcyBtZWFucyB0aGF0IHEtPmRldiA9PQ0KTlVMTC4gQ2FuIHlv
-dSB0ZXN0IHRoZSAodW50ZXN0ZWQpIHBhdGNoIGJlbG93Pw0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9zY3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2QuYw0KaW5kZXggNTdjYWU0N2FiMWMyLi5iMDI5
-YTk0YTFlNjYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2QuYw0KKysrIGIvZHJpdmVycy9z
-Y3NpL3NkLmMNCkBAIC0zMjcyLDcgKzMyNzIsNiBAQCBzdGF0aWMgdm9pZCBzZF9wcm9iZV9hc3lu
-YyhzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQogCQlnZC0+ZXZlbnRzIHw9IERJU0tfRVZFTlRf
-TUVESUFfQ0hBTkdFOw0KIAl9DQogDQotCWJsa19wbV9ydW50aW1lX2luaXQoc2RwLT5yZXF1ZXN0
-X3F1ZXVlLCBkZXYpOw0KIAlkZXZpY2VfYWRkX2Rpc2soZGV2LCBnZCk7DQogCWlmIChzZGtwLT5j
-YXBhY2l0eSkNCiAJCXNkX2RpZl9jb25maWdfaG9zdChzZGtwKTsNCkBAIC0zMzkwLDYgKzMzODks
-OCBAQCBzdGF0aWMgaW50IHNkX3Byb2JlKHN0cnVjdCBkZXZpY2UgKmRldikNCiAJZ2V0X2Rldmlj
-ZShkZXYpOw0KIAlkZXZfc2V0X2RydmRhdGEoZGV2LCBzZGtwKTsNCiANCisJYmxrX3BtX3J1bnRp
-bWVfaW5pdChzZHAtPnJlcXVlc3RfcXVldWUsIGRldik7DQorDQogCWdldF9kZXZpY2UoJnNka3At
-PmRldik7CS8qIHByZXZlbnQgcmVsZWFzZSBiZWZvcmUgc2RfcHJvYmVfYXN5bmMoKSAqLw0KIAlX
-QVJOX09OX09OQ0UoIXF1ZXVlX3dvcmsoc3lzdGVtX3VuYm91bmRfd3EsICZzZGtwLT5wcm9iZV93
-b3JrKSk7DQogDQoNClRoYW5rcywNCg0KQmFydC4=
+On Tue 24 Apr 00:26 PDT 2018, Chanwoo Choi wrote:
+
+> Hi,
+> 
+> On 2018??? 04??? 24??? 14:29, Bjorn Andersson wrote:
+> > On Mon 23 Apr 19:48 PDT 2018, Chanwoo Choi wrote:
+> > 
+> >> Hi,
+> >>
+> >> On 2018??? 04??? 24??? 09:20, Bjorn Andersson wrote:
+> >>> The code in devfreq_add_device() handles the case where a freq_table is
+> >>> passed by the client, but then requests min and max frequences from
+> >>> the, in this case absent, opp tables.
+> >>>
+> >>> Read the min and max frequencies from the frequency table, which has
+> >>> been built from the opp table if one exists, instead of querying the
+> >>> opp table.
+> >>>
+> >>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> >>> ---
+> >>>
+> >>> An alternative approach is to clarify in the devfreq code that it's not
+> >>> possible to pass a freq_table and then in patch 3 create an opp table for the
+> >>> device in runtime; although the error handling of this becomes non-trivial.
+> >>>
+> >>> Transitioning the UFSHCD to use opp tables directly is hindered by the fact
+> >>> that the Qualcomm UFS hardware has two different clocks that needs to be
+> >>> running at different rates, so we would need a way to describe the two rates in
+> >>> the opp table. (And would force us to change the DT binding)
+> >>>
+> >>>  drivers/devfreq/devfreq.c | 22 ++++------------------
+> >>>  1 file changed, 4 insertions(+), 18 deletions(-)
+> >>>
+> >>> diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
+> >>> index fe2af6aa88fc..086ced50a13d 100644
+> >>> --- a/drivers/devfreq/devfreq.c
+> >>> +++ b/drivers/devfreq/devfreq.c
+> >>> @@ -74,30 +74,16 @@ static struct devfreq *find_device_devfreq(struct device *dev)
+> >>>  
+> >>>  static unsigned long find_available_min_freq(struct devfreq *devfreq)
+> >>>  {
+> >>> -	struct dev_pm_opp *opp;
+> >>> -	unsigned long min_freq = 0;
+> >>> -
+> >>> -	opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &min_freq);
+> >>> -	if (IS_ERR(opp))
+> >>> -		min_freq = 0;
+> >>> -	else
+> >>> -		dev_pm_opp_put(opp);
+> >>> +	struct devfreq_dev_profile *profile = devfreq->profile;
+> >>>  
+> >>> -	return min_freq;
+> >>> +	return profile->freq_table[0];
+> >>
+> >> It is wrong. The thermal framework support the devfreq-cooling device
+> >> which uses the dev_pm_opp_enable/disable().
+> >>
+> > 
+> > Okay, that makes sense. So rather than registering a custom freq_table I
+> > should register the min and max frequency using dev_pm_opp_add().
+> 
+> Thanks.
+> 
+> > 
+> >> In order to find the correct available min frequency,
+> >> the devfreq have to use the OPP function instead of using the first entry
+> >> of the freq_table array.
+> >>
+> > 
+> > Based on this there seems to be room for cleaning out the freq_table
+> > from devfreq, to reduce the confusion. I will review this further.
+> 
+> Actually, devfreq must need to have the freq_table[] array. But, freq_table[]
+> array should be handled in the devfreq core. Now, the devfreq device drivers can
+> touch the freq_table. I think it is not good.
+> 
+> There is a reason why we have to maintain the freq_table[] as the internal variable.
+> OPP doesn't provide the OPP API which get the all registered frequencies.
+> If devfreq-cooling device disables the specific frequency by using dev_pm_oppdisable(),
+> the user of OPP interface can not get the disabled frequency list.
+> So, I maintain the freq_table even if using the OPP interface.
+> 
+
+Thanks for the clarification, I see some possibilities for improving
+this but it makes sense.
+
+> And, devfreq-cooling device uses the freq_table directly because
+> released MALi driver from ARM initializes the freq_table list
+> directly.
+> 
+
+Forgive me if I misunderstand this, but isn't this exactly what I'm
+trying to do in patch 3? Which stopped working back in v4.15-rc1, with
+the introduction of f1d981eaecf8 ("PM / devfreq: Use the available
+min/max frequency").
+
+> I have no any objection for refactoring. Just I'm sharing the issue
+> and current status.
+> 
+
+Thanks for sharing the current status and helping me understand how to
+properly use devfreq.
+
+Regards,
+Bjorn
