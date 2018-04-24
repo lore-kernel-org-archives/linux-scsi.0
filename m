@@ -1,115 +1,56 @@
-From: Chanwoo Choi <cw00.choi@samsung.com>
-Subject: Re: [PATCH 1/3] PM / devfreq: Actually support providing freq_table
-Date: Tue, 24 Apr 2018 16:26:18 +0900
-Message-ID: <5ADEDC1A.2000101@samsung.com>
-References: <20180424002016.9205-1-bjorn.andersson@linaro.org>
-        <CGME20180424002041epcas5p11439bec6de910c2a465c5cf3acb45a3b@epcas5p1.samsung.com>
-        <20180424002016.9205-2-bjorn.andersson@linaro.org>
-        <5ADE9AE6.9090601@samsung.com> <20180424052916.GD2052@tuxbook-pro>
+From: Steffen Maier <maier@linux.ibm.com>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination
+ (v2)
+Date: Tue, 24 Apr 2018 11:09:03 +0200
+Message-ID: <10db11e2-1e15-2b16-f5e6-81fbf2581683@linux.ibm.com>
+References: <2179ecb8-183f-a500-4d65-10f64f0f43cc@suse.de>
+ <1478045394-19536-1-git-send-email-andrey2805@gmail.com>
+ <dbeededa-e2fc-53d3-997c-34ba1129a80b@suse.de>
+ <CAK=zhgpYj0TcrPK8kQ-TTqGfU=JHZbXr+2-szGf1w_XcOU3p9Q@mail.gmail.com>
+ <CAJphD_qrQftfCOn_uzXCfdX=Xv9BYvVQ60AZ4DR2rc3gfXQa_Q@mail.gmail.com>
+ <30w645ulbhlofxrk1h4a9q3s.1478144944778@email.android.com>
+ <CAK=zhgra2zDZon5fuW1OwQfJ_2ExkAzcsKGiuBJaLYX6sMoTCQ@mail.gmail.com>
+ <38e3e634-6e08-58bd-bc11-8a0a470b78d9@suse.de>
+ <yq1k2cjw6dn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20180424052916.GD2052@tuxbook-pro>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1k2cjw6dn.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Igor Rybak <igor@media-clone.com>, Andrey Grodzovsky <andrey2805@gmail.com>, Ezra Kohavi <ezra@media-clone.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
 
-On 2018년 04월 24일 14:29, Bjorn Andersson wrote:
-> On Mon 23 Apr 19:48 PDT 2018, Chanwoo Choi wrote:
+On 11/04/2016 05:35 PM, Martin K. Petersen wrote:
+>>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 > 
->> Hi,
->>
->> On 2018??? 04??? 24??? 09:20, Bjorn Andersson wrote:
->>> The code in devfreq_add_device() handles the case where a freq_table is
->>> passed by the client, but then requests min and max frequences from
->>> the, in this case absent, opp tables.
->>>
->>> Read the min and max frequencies from the frequency table, which has
->>> been built from the opp table if one exists, instead of querying the
->>> opp table.
->>>
->>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->>> ---
->>>
->>> An alternative approach is to clarify in the devfreq code that it's not
->>> possible to pass a freq_table and then in patch 3 create an opp table for the
->>> device in runtime; although the error handling of this becomes non-trivial.
->>>
->>> Transitioning the UFSHCD to use opp tables directly is hindered by the fact
->>> that the Qualcomm UFS hardware has two different clocks that needs to be
->>> running at different rates, so we would need a way to describe the two rates in
->>> the opp table. (And would force us to change the DT binding)
->>>
->>>  drivers/devfreq/devfreq.c | 22 ++++------------------
->>>  1 file changed, 4 insertions(+), 18 deletions(-)
->>>
->>> diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
->>> index fe2af6aa88fc..086ced50a13d 100644
->>> --- a/drivers/devfreq/devfreq.c
->>> +++ b/drivers/devfreq/devfreq.c
->>> @@ -74,30 +74,16 @@ static struct devfreq *find_device_devfreq(struct device *dev)
->>>  
->>>  static unsigned long find_available_min_freq(struct devfreq *devfreq)
->>>  {
->>> -	struct dev_pm_opp *opp;
->>> -	unsigned long min_freq = 0;
->>> -
->>> -	opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &min_freq);
->>> -	if (IS_ERR(opp))
->>> -		min_freq = 0;
->>> -	else
->>> -		dev_pm_opp_put(opp);
->>> +	struct devfreq_dev_profile *profile = devfreq->profile;
->>>  
->>> -	return min_freq;
->>> +	return profile->freq_table[0];
->>
->> It is wrong. The thermal framework support the devfreq-cooling device
->> which uses the dev_pm_opp_enable/disable().
->>
+> Hannes> Checking with SAT-3 (section 6.2.4: Commands the SATL queues
+> Hannes> internally) the implemented behaviour is standards conformant,
+> Hannes> although the standard also allows for returning 'TASK SET FULL'
+> Hannes> or 'BUSY' in these cases.  Doing so would nicely solve this
+> Hannes> issue.
 > 
-> Okay, that makes sense. So rather than registering a custom freq_table I
-> should register the min and max frequency using dev_pm_opp_add().
+> I agree with Hannes that it would be appropriate for the SATL to report
+> busy when it makes an non-queued command queueable.
 
-Thanks.
+Wouldn't this potentially still cause problems if the secure erase takes 
+longer than max_retries * scmd_tmo. I.e. the command timing out by 
+default after 180 seconds as in 
+https://www.spinics.net/lists/linux-block/msg24837.html ?
 
-> 
->> In order to find the correct available min frequency,
->> the devfreq have to use the OPP function instead of using the first entry
->> of the freq_table array.
->>
-> 
-> Based on this there seems to be room for cleaning out the freq_table
-> from devfreq, to reduce the confusion. I will review this further.
-
-Actually, devfreq must need to have the freq_table[] array. But, freq_table[]
-array should be handled in the devfreq core. Now, the devfreq device drivers can
-touch the freq_table. I think it is not good.
-
-There is a reason why we have to maintain the freq_table[] as the internal variable.
-OPP doesn't provide the OPP API which get the all registered frequencies.
-If devfreq-cooling device disables the specific frequency by using dev_pm_oppdisable(),
-the user of OPP interface can not get the disabled frequency list.
-So, I maintain the freq_table even if using the OPP interface.
-
-And, devfreq-cooling device uses the freq_table directly because released MALi driver
-from ARM initializes the freq_table list directly.
-
-I have no any objection for refactoring. Just I'm sharing the issue and current status.
-
-> 
-> Thanks,
-> Bjorn
-> 
-> 
-> 
-
+The fix approach here seems to also handle this gracefully.
 
 -- 
-Best Regards,
-Chanwoo Choi
-Samsung Electronics
+Mit freundlichen Grüßen / Kind regards
+Steffen Maier
+
+Linux on z Systems Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
