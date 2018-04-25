@@ -1,49 +1,43 @@
-From: Paul Menzel <pmenzel+linux-block@molgen.mpg.de>
-Subject: Re: Regression 4.17-rc1: SSD doesn properly resume causing system
- hang (NULL pointer dereference)
-Date: Wed, 25 Apr 2018 07:37:55 +0200
-Message-ID: <d5e8823e-27bd-dabe-174f-b111a48b440a@molgen.mpg.de>
-References: <59ca6556-11a6-4f77-76e7-d51c7175eb32@molgen.mpg.de>
- <67ffdf0050a04bf3615c3d8a3a90b0c9c2aeb1ad.camel@wdc.com>
- <2cc5f0fb-4caa-9c28-7daa-68993d5cb41a@molgen.mpg.de>
- <14ff1ed06e36a372680872c227b5abe389c753da.camel@wdc.com>
- <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
- <134955874b401e6764077393c75ab2d4549b940a.camel@wdc.com>
- <6a2162a7-5f48-c107-0b1c-5258089522c5@molgen.mpg.de>
- <19e19bc6b2fef11faf428fe75447b06e56af9ffd.camel@wdc.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: isci: remove redundant check on in_connection_align_insertion_frequency
+Date: Wed, 25 Apr 2018 11:58:43 +0100
+Message-ID: <20180425105843.8607-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <19e19bc6b2fef11faf428fe75447b06e56af9ffd.camel@wdc.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: jejb@linux.vnet.ibm.com, regressions@leemhuis.info, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, martin.petersen@oracle.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Dear Bart,
+From: Colin Ian King <colin.king@canonical.com>
 
+The sanity check on u->in_connection_align_insertion_frequency is being
+performed twice and hence the first check can be removed since it is
+redundant. Cleans up cppcheck warning:
 
-Am 24.04.2018 um 23:17 schrieb Bart Van Assche:
-> On Tue, 2018-04-24 at 23:04 +0200, Paul Menzel wrote:
->> I applied your change, and rebuilt the Linux kernel. Unfortunately, it
->> looks like, it didn’t make a difference.
-> 
-> In that case I don't know what is causing the failure. Can you run a bisect
-> to determine which commit introduced this regression?
+drivers/scsi/ibmvscsi/ibmvscsi.c:1711: (warning) Identical inner 'if'
+condition is always true.
 
-With `scsi_mod.use_blk_mq=n` the system resumes fine, so for to me 
-unknown reasons, that Kconfig option get selected in my Linux kernel 
-configuration. I remember having similar issues when this was enabled by 
-default in Linux 4.13-rc?, so it was just a configuration problem and 
-not a regression. Unfortunately, the Linux configuration files are not 
-under version control, so I cannot check, but it is probably my fault.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/isci/init.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Sorry for the noise, and please tell me, what I can do to get the option 
-working on this old device.
-
-
-Kind regards,
-
-Paul
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 922e3e56c90d..05cf4daf8788 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -433,9 +433,6 @@ static enum sci_status sci_user_parameters_set(struct isci_host *ihost,
+ 		      (u->max_speed_generation > SCIC_SDS_PARM_NO_SPEED)))
+ 			return SCI_FAILURE_INVALID_PARAMETER_VALUE;
+ 
+-		if (u->in_connection_align_insertion_frequency < 3)
+-			return SCI_FAILURE_INVALID_PARAMETER_VALUE;
+-
+ 		if ((u->in_connection_align_insertion_frequency < 3) ||
+ 		    (u->align_insertion_frequency == 0) ||
+ 		    (u->notify_enable_spin_up_insertion_frequency == 0))
+-- 
+2.17.0
