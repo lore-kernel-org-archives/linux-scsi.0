@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 37/40] proc: don't detour through seq->private to get the inode
-Date: Wed, 25 Apr 2018 17:48:24 +0200
-Message-ID: <20180425154827.32251-38-hch@lst.de>
+Subject: [PATCH 33/40] bluetooth: switch to proc_create_seq_data
+Date: Wed, 25 Apr 2018 17:48:20 +0200
+Message-ID: <20180425154827.32251-34-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,59 +21,100 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
+And use proc private data directly instead of doing a detour
+through seq->private and private state.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/proc/array.c | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+ net/bluetooth/af_bluetooth.c | 40 +++++-------------------------------
+ 1 file changed, 5 insertions(+), 35 deletions(-)
 
-diff --git a/fs/proc/array.c b/fs/proc/array.c
-index ae2c807fd719..b34796b562ef 100644
---- a/fs/proc/array.c
-+++ b/fs/proc/array.c
-@@ -677,7 +677,7 @@ get_children_pid(struct inode *inode, struct pid *pid_prev, loff_t pos)
+diff --git a/net/bluetooth/af_bluetooth.c b/net/bluetooth/af_bluetooth.c
+index 84d92a077834..3264e1873219 100644
+--- a/net/bluetooth/af_bluetooth.c
++++ b/net/bluetooth/af_bluetooth.c
+@@ -605,15 +605,10 @@ int bt_sock_wait_ready(struct sock *sk, unsigned long flags)
+ EXPORT_SYMBOL(bt_sock_wait_ready);
  
- static int children_seq_show(struct seq_file *seq, void *v)
+ #ifdef CONFIG_PROC_FS
+-struct bt_seq_state {
+-	struct bt_sock_list *l;
+-};
+-
+ static void *bt_seq_start(struct seq_file *seq, loff_t *pos)
+ 	__acquires(seq->private->l->lock)
  {
--	struct inode *inode = seq->private;
-+	struct inode *inode = file_inode(seq->file);
- 	pid_t pid;
+-	struct bt_seq_state *s = seq->private;
+-	struct bt_sock_list *l = s->l;
++	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
  
- 	pid = pid_nr_ns(v, inode->i_sb->s_fs_info);
-@@ -688,14 +688,14 @@ static int children_seq_show(struct seq_file *seq, void *v)
+ 	read_lock(&l->lock);
+ 	return seq_hlist_start_head(&l->head, *pos);
+@@ -621,8 +616,7 @@ static void *bt_seq_start(struct seq_file *seq, loff_t *pos)
  
- static void *children_seq_start(struct seq_file *seq, loff_t *pos)
+ static void *bt_seq_next(struct seq_file *seq, void *v, loff_t *pos)
  {
--	return get_children_pid(seq->private, NULL, *pos);
-+	return get_children_pid(file_inode(seq->file), NULL, *pos);
+-	struct bt_seq_state *s = seq->private;
+-	struct bt_sock_list *l = s->l;
++	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
+ 
+ 	return seq_hlist_next(v, &l->head, pos);
+ }
+@@ -630,16 +624,14 @@ static void *bt_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ static void bt_seq_stop(struct seq_file *seq, void *v)
+ 	__releases(seq->private->l->lock)
+ {
+-	struct bt_seq_state *s = seq->private;
+-	struct bt_sock_list *l = s->l;
++	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
+ 
+ 	read_unlock(&l->lock);
  }
  
- static void *children_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ static int bt_seq_show(struct seq_file *seq, void *v)
  {
- 	struct pid *pid;
+-	struct bt_seq_state *s = seq->private;
+-	struct bt_sock_list *l = s->l;
++	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
  
--	pid = get_children_pid(seq->private, v, *pos + 1);
-+	pid = get_children_pid(file_inode(seq->file), v, *pos + 1);
- 	put_pid(v);
+ 	if (v == SEQ_START_TOKEN) {
+ 		seq_puts(seq ,"sk               RefCnt Rmem   Wmem   User   Inode  Parent");
+@@ -681,35 +673,13 @@ static const struct seq_operations bt_seq_ops = {
+ 	.show  = bt_seq_show,
+ };
  
- 	++*pos;
-@@ -716,17 +716,7 @@ static const struct seq_operations children_seq_ops = {
- 
- static int children_seq_open(struct inode *inode, struct file *file)
+-static int bt_seq_open(struct inode *inode, struct file *file)
+-{
+-	struct bt_sock_list *sk_list;
+-	struct bt_seq_state *s;
+-
+-	sk_list = PDE_DATA(inode);
+-	s = __seq_open_private(file, &bt_seq_ops,
+-			       sizeof(struct bt_seq_state));
+-	if (!s)
+-		return -ENOMEM;
+-
+-	s->l = sk_list;
+-	return 0;
+-}
+-
+-static const struct file_operations bt_fops = {
+-	.open = bt_seq_open,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = seq_release_private
+-};
+-
+ int bt_procfs_init(struct net *net, const char *name,
+ 		   struct bt_sock_list *sk_list,
+ 		   int (* seq_show)(struct seq_file *, void *))
  {
--	struct seq_file *m;
--	int ret;
--
--	ret = seq_open(file, &children_seq_ops);
--	if (ret)
--		return ret;
--
--	m = file->private_data;
--	m->private = inode;
--
--	return ret;
-+	return seq_open(file, &children_seq_ops);
+ 	sk_list->custom_seq_show = seq_show;
+ 
+-	if (!proc_create_data(name, 0, net->proc_net, &bt_fops, sk_list))
++	if (!proc_create_seq_data(name, 0, net->proc_net, &bt_seq_ops, sk_list))
+ 		return -ENOMEM;
+ 	return 0;
  }
- 
- const struct file_operations proc_tid_children_operations = {
 -- 
 2.17.0
