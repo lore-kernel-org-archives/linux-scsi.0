@@ -1,38 +1,35 @@
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: Re: [PATCH 3/3] scsi: ufs: Use freq table with devfreq
-Date: Tue, 24 Apr 2018 15:14:09 -0700
-Message-ID: <20180424221409.GE18510@minitux>
-References: <20180424002016.9205-1-bjorn.andersson@linaro.org>
- <20180424002016.9205-4-bjorn.andersson@linaro.org>
- <5e59150bf025e2caa1deadfec7293ecd@codeaurora.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 2/5] ide: kill ide_toggle_bounce
+Date: Tue, 24 Apr 2018 20:02:56 -0600
+Message-ID: <5aaca0d3-417f-57f3-969f-b4c777c3fd48@kernel.dk>
+References: <20180424181625.22410-1-hch@lst.de>
+ <20180424181625.22410-3-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5e59150bf025e2caa1deadfec7293ecd@codeaurora.org>
+In-Reply-To: <20180424181625.22410-3-hch@lst.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>, linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue 24 Apr 15:08 PDT 2018, Subhash Jadavani wrote:
+On 4/24/18 12:16 PM, Christoph Hellwig wrote:
+> ide_toggle_bounce did select various strange block bounce limits, including
+> not bouncing at all as soon as an iommu is present in the system.  Given
+> that the dma_map routines now handle any required bounce buffering except
+> for ISA DMA, and the ide code already must handle either ISA DMA or highmem
+> at least for iommu equipped systems we can get rid of the block layer
+> bounce limit setting entirely.
 
-> On 2018-04-23 17:20, Bjorn Andersson wrote:
-> > devfreq requires that the client operates on actual frequencies, not
-> > only 0 and UMAX_INT and as such UFS brok with the introduction of
-> > f1d981eaecf8 ("PM / devfreq: Use the available min/max frequency").
-> > 
-> > This patch registers the frequencies of the first clock with devfreq and
-> > use these to determine if we're trying to step up or down.
-> > 
-[..]
-> 
-> Looks good to me.
-> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-> 
+Pretty sure I was the one to add this code, when highmem page IO was
+enabled about two decades ago...
 
-Thanks Subhash. Unfortunately I need to respin this to register the opp
-table based on our freq table, so there will be a v2 of this soon.
+Outside of DMA, the issue was that the PIO code could not handle
+highmem. That's not the case anymore, so this should be fine.
 
-Regards,
-Bjorn
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
+
+-- 
+Jens Axboe
