@@ -1,57 +1,55 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/40] megaraid: simplify procfs code
-Date: Wed, 25 Apr 2018 17:48:06 +0200
-Message-ID: <20180425154827.32251-20-hch@lst.de>
+Subject: [PATCH 24/40] staging/rtl8192u: simplify procfs code
+Date: Wed, 25 Apr 2018 17:48:11 +0200
+Message-ID: <20180425154827.32251-25-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <jfs-discussion-bounces@lists.sourceforge.net>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 In-Reply-To: <20180425154827.32251-1-hch@lst.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/options/jfs-discussion>,
- <mailto:jfs-discussion-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=jfs-discussion>
-List-Post: <mailto:jfs-discussion@lists.sourceforge.net>
-List-Help: <mailto:jfs-discussion-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/jfs-discussion>,
- <mailto:jfs-discussion-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: jfs-discussion-bounces@lists.sourceforge.net
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Use remove_proc_subtree to remove the whole subtree on cleanup, and
-unwind the registration loop into individual calls.  Switch to use
-proc_create_single.
+Unwind the registration loop into individual calls.  Switch to use
+proc_create_single where applicable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/megaraid.c | 140 +++++++++++-----------------------------
- drivers/scsi/megaraid.h |  12 ----
- 2 files changed, 36 insertions(+), 116 deletions(-)
+ drivers/staging/rtl8192u/r8192U_core.c | 67 ++++++--------------------
+ 1 file changed, 14 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 7195cff51d4c..91f5e2c68dbc 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -2731,53 +2731,6 @@ proc_show_rdrv_40(struct seq_file *m, void *v)
- 	return proc_show_rdrv(m, m->private, 30, 39);
+diff --git a/drivers/staging/rtl8192u/r8192U_core.c b/drivers/staging/rtl8192u/r8192U_core.c
+index d607c59761cf..7a0dbc0fa18e 100644
+--- a/drivers/staging/rtl8192u/r8192U_core.c
++++ b/drivers/staging/rtl8192u/r8192U_core.c
+@@ -646,64 +646,25 @@ static void rtl8192_proc_module_init(void)
+ 	rtl8192_proc = proc_mkdir(RTL819xU_MODULE_NAME, init_net.proc_net);
  }
  
--
 -/*
 - * seq_file wrappers for procfile show routines.
 - */
--static int mega_proc_open(struct inode *inode, struct file *file)
+-static int rtl8192_proc_open(struct inode *inode, struct file *file)
 -{
--	adapter_t *adapter = proc_get_parent_data(inode);
+-	struct net_device *dev = proc_get_parent_data(inode);
 -	int (*show)(struct seq_file *, void *) = PDE_DATA(inode);
 -
--	return single_open(file, show, adapter);
+-	return single_open(file, show, dev);
 -}
 -
--static const struct file_operations mega_proc_fops = {
--	.open		= mega_proc_open,
+-static const struct file_operations rtl8192_proc_fops = {
+-	.open		= rtl8192_proc_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
 -	.release	= single_release,
@@ -60,181 +58,59 @@ index 7195cff51d4c..91f5e2c68dbc 100644
 -/*
 - * Table of proc files we need to create.
 - */
--struct mega_proc_file {
--	const char *name;
--	unsigned short ptr_offset;
--	int (*show) (struct seq_file *m, void *v);
+-struct rtl8192_proc_file {
+-	char name[12];
+-	int (*show)(struct seq_file *, void *);
 -};
 -
--static const struct mega_proc_file mega_proc_files[] = {
--	{ "config",	      offsetof(adapter_t, proc_read), proc_show_config },
--	{ "stat",	      offsetof(adapter_t, proc_stat), proc_show_stat },
--	{ "mailbox",	      offsetof(adapter_t, proc_mbox), proc_show_mbox },
--#if MEGA_HAVE_ENH_PROC
--	{ "rebuild-rate",     offsetof(adapter_t, proc_rr), proc_show_rebuild_rate },
--	{ "battery-status",   offsetof(adapter_t, proc_battery), proc_show_battery },
--	{ "diskdrives-ch0",   offsetof(adapter_t, proc_pdrvstat[0]), proc_show_pdrv_ch0 },
--	{ "diskdrives-ch1",   offsetof(adapter_t, proc_pdrvstat[1]), proc_show_pdrv_ch1 },
--	{ "diskdrives-ch2",   offsetof(adapter_t, proc_pdrvstat[2]), proc_show_pdrv_ch2 },
--	{ "diskdrives-ch3",   offsetof(adapter_t, proc_pdrvstat[3]), proc_show_pdrv_ch3 },
--	{ "raiddrives-0-9",   offsetof(adapter_t, proc_rdrvstat[0]), proc_show_rdrv_10 },
--	{ "raiddrives-10-19", offsetof(adapter_t, proc_rdrvstat[1]), proc_show_rdrv_20 },
--	{ "raiddrives-20-29", offsetof(adapter_t, proc_rdrvstat[2]), proc_show_rdrv_30 },
--	{ "raiddrives-30-39", offsetof(adapter_t, proc_rdrvstat[3]), proc_show_rdrv_40 },
--#endif
--	{ NULL }
+-static const struct rtl8192_proc_file rtl8192_proc_files[] = {
+-	{ "stats-rx",	&proc_get_stats_rx },
+-	{ "stats-tx",	&proc_get_stats_tx },
+-	{ "stats-ap",	&proc_get_stats_ap },
+-	{ "registers",	&proc_get_registers },
+-	{ "" }
 -};
 -
- /**
-  * mega_create_proc_entry()
-  * @index - index in soft state array
-@@ -2788,31 +2741,45 @@ static const struct mega_proc_file mega_proc_files[] = {
- static void
- mega_create_proc_entry(int index, struct proc_dir_entry *parent)
+ static void rtl8192_proc_init_one(struct net_device *dev)
  {
--	const struct mega_proc_file *f;
--	adapter_t	*adapter = hba_soft_state[index];
--	struct proc_dir_entry	*dir, *de, **ppde;
--	u8		string[16];
-+	adapter_t *adapter = hba_soft_state[index];
-+	struct proc_dir_entry *dir;
-+	u8 string[16];
+-	const struct rtl8192_proc_file *f;
+ 	struct proc_dir_entry *dir;
  
- 	sprintf(string, "hba%d", adapter->host->host_no);
--
--	dir = adapter->controller_proc_dir_entry =
--		proc_mkdir_data(string, 0, parent, adapter);
--	if(!dir) {
-+	dir = proc_mkdir_data(string, 0, parent, adapter);
-+	if (!dir) {
- 		dev_warn(&adapter->dev->dev, "proc_mkdir failed\n");
- 		return;
- 	}
- 
--	for (f = mega_proc_files; f->name; f++) {
--		de = proc_create_data(f->name, S_IRUSR, dir, &mega_proc_fops,
--				      f->show);
--		if (!de) {
--			dev_warn(&adapter->dev->dev, "proc_create failed\n");
+-	if (rtl8192_proc) {
+-		dir = proc_mkdir_data(dev->name, 0, rtl8192_proc, dev);
+-		if (!dir) {
+-			RT_TRACE(COMP_ERR,
+-				 "Unable to initialize /proc/net/rtl8192/%s\n",
+-				 dev->name);
 -			return;
 -		}
--
--		ppde = (void *)adapter + f->ptr_offset;
--		*ppde = de;
--	}
-+	proc_create_single_data("config", S_IRUSR, dir,
-+			proc_show_config, adapter);
-+	proc_create_single_data("stat", S_IRUSR, dir,
-+			proc_show_stat, adapter);
-+	proc_create_single_data("mailbox", S_IRUSR, dir,
-+			proc_show_mbox, adapter);
-+#if MEGA_HAVE_ENH_PROC
-+	proc_create_single_data("rebuild-rate", S_IRUSR, dir,
-+			proc_show_rebuild_rate, adapter);
-+	proc_create_single_data("battery-status", S_IRUSR, dir,
-+			proc_show_battery, adapter);
-+	proc_create_single_data("diskdrives-ch0", S_IRUSR, dir,
-+			proc_show_pdrv_ch0, adapter);
-+	proc_create_single_data("diskdrives-ch1", S_IRUSR, dir,
-+			proc_show_pdrv_ch1, adapter);
-+	proc_create_single_data("diskdrives-ch2", S_IRUSR, dir,
-+			proc_show_pdrv_ch2, adapter);
-+	proc_create_single_data("diskdrives-ch3", S_IRUSR, dir,
-+			proc_show_pdrv_ch3, adapter);
-+	proc_create_single_data("raiddrives-0-9", S_IRUSR, dir,
-+			proc_show_rdrv_10, adapter);
-+	proc_create_single_data("raiddrives-10-19", S_IRUSR, dir,
-+			proc_show_rdrv_20, adapter);
-+	proc_create_single_data("raiddrives-20-29", S_IRUSR, dir,
-+			proc_show_rdrv_30, adapter);
-+	proc_create_single_data("raiddrives-30-39", S_IRUSR, dir,
-+			proc_show_rdrv_40, adapter);
-+#endif
- }
++	if (!rtl8192_proc)
++		return;
  
- #else
-@@ -4580,6 +4547,7 @@ megaraid_remove_one(struct pci_dev *pdev)
- {
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	adapter_t *adapter = (adapter_t *)host->hostdata;
-+	char buf[12] = { 0 };
- 
- 	scsi_remove_host(host);
- 
-@@ -4594,44 +4562,8 @@ megaraid_remove_one(struct pci_dev *pdev)
- 
- 	mega_free_sgl(adapter);
- 
--#ifdef CONFIG_PROC_FS
--	if (adapter->controller_proc_dir_entry) {
--		remove_proc_entry("stat", adapter->controller_proc_dir_entry);
--		remove_proc_entry("config",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("mailbox",
--				adapter->controller_proc_dir_entry);
--#if MEGA_HAVE_ENH_PROC
--		remove_proc_entry("rebuild-rate",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("battery-status",
--				adapter->controller_proc_dir_entry);
--
--		remove_proc_entry("diskdrives-ch0",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("diskdrives-ch1",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("diskdrives-ch2",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("diskdrives-ch3",
--				adapter->controller_proc_dir_entry);
--
--		remove_proc_entry("raiddrives-0-9",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("raiddrives-10-19",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("raiddrives-20-29",
--				adapter->controller_proc_dir_entry);
--		remove_proc_entry("raiddrives-30-39",
--				adapter->controller_proc_dir_entry);
--#endif
--		{
--			char	buf[12] = { 0 };
--			sprintf(buf, "hba%d", adapter->host->host_no);
--			remove_proc_entry(buf, mega_proc_dir_entry);
+-		for (f = rtl8192_proc_files; f->name[0]; f++) {
+-			if (!proc_create_data(f->name, S_IFREG | S_IRUGO, dir,
+-					      &rtl8192_proc_fops, f->show)) {
+-				RT_TRACE(COMP_ERR,
+-					 "Unable to initialize /proc/net/rtl8192/%s/%s\n",
+-					 dev->name, f->name);
+-				return;
+-			}
 -		}
 -	}
--#endif
-+	sprintf(buf, "hba%d", adapter->host->host_no);
-+	remove_proc_subtree(buf, mega_proc_dir_entry);
++	dir = proc_mkdir_data(dev->name, 0, rtl8192_proc, dev);
++	if (!dir)
++		return;
++
++	proc_create_single("stats-rx", S_IFREG | S_IRUGO, dir,
++			proc_get_stats_rx);
++	proc_create_single("stats-tx", S_IFREG | S_IRUGO, dir,
++			proc_get_stats_tx);
++	proc_create_single("stats-ap", S_IFREG | S_IRUGO, dir,
++			proc_get_stats_ap);
++	proc_create_single("registers", S_IFREG | S_IRUGO, dir,
++			proc_get_registers);
+ }
  
- 	pci_free_consistent(adapter->dev, MEGA_BUFFER_SIZE,
- 			adapter->mega_buffer, adapter->buf_dma_handle);
-diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
-index 21eba2fd465a..18e85d9267ff 100644
---- a/drivers/scsi/megaraid.h
-+++ b/drivers/scsi/megaraid.h
-@@ -814,18 +814,6 @@ typedef struct {
- 
- #ifdef CONFIG_PROC_FS
- 	struct proc_dir_entry	*controller_proc_dir_entry;
--	struct proc_dir_entry	*proc_read;
--	struct proc_dir_entry	*proc_stat;
--	struct proc_dir_entry	*proc_mbox;
--
--#if MEGA_HAVE_ENH_PROC
--	struct proc_dir_entry	*proc_rr;
--	struct proc_dir_entry	*proc_battery;
--#define MAX_PROC_CHANNELS	4
--	struct proc_dir_entry	*proc_pdrvstat[MAX_PROC_CHANNELS];
--	struct proc_dir_entry	*proc_rdrvstat[MAX_PROC_CHANNELS];
--#endif
--
- #endif
- 
- 	int	has_64bit_addr;		/* are we using 64-bit addressing */
+ static void rtl8192_proc_remove_one(struct net_device *dev)
 -- 
 2.17.0
-
-
-------------------------------------------------------------------------------
-Check out the vibrant tech community on one of the world's most
-engaging tech sites, Slashdot.org! http://sdm.link/slashdot
