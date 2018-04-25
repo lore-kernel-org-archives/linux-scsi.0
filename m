@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 33/40] bluetooth: switch to proc_create_seq_data
-Date: Wed, 25 Apr 2018 17:48:20 +0200
-Message-ID: <20180425154827.32251-34-hch@lst.de>
+Subject: [PATCH 38/40] ide: remove ide_driver_proc_write
+Date: Wed, 25 Apr 2018 17:48:25 +0200
+Message-ID: <20180425154827.32251-39-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,100 +21,76 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And use proc private data directly instead of doing a detour
-through seq->private and private state.
+The driver proc file hasn't been writeable for a long time, so this is
+just dead code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- net/bluetooth/af_bluetooth.c | 40 +++++-------------------------------
- 1 file changed, 5 insertions(+), 35 deletions(-)
+ drivers/ide/ide-proc.c | 46 ------------------------------------------
+ 1 file changed, 46 deletions(-)
 
-diff --git a/net/bluetooth/af_bluetooth.c b/net/bluetooth/af_bluetooth.c
-index 84d92a077834..3264e1873219 100644
---- a/net/bluetooth/af_bluetooth.c
-+++ b/net/bluetooth/af_bluetooth.c
-@@ -605,15 +605,10 @@ int bt_sock_wait_ready(struct sock *sk, unsigned long flags)
- EXPORT_SYMBOL(bt_sock_wait_ready);
- 
- #ifdef CONFIG_PROC_FS
--struct bt_seq_state {
--	struct bt_sock_list *l;
--};
--
- static void *bt_seq_start(struct seq_file *seq, loff_t *pos)
- 	__acquires(seq->private->l->lock)
- {
--	struct bt_seq_state *s = seq->private;
--	struct bt_sock_list *l = s->l;
-+	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
- 
- 	read_lock(&l->lock);
- 	return seq_hlist_start_head(&l->head, *pos);
-@@ -621,8 +616,7 @@ static void *bt_seq_start(struct seq_file *seq, loff_t *pos)
- 
- static void *bt_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- {
--	struct bt_seq_state *s = seq->private;
--	struct bt_sock_list *l = s->l;
-+	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
- 
- 	return seq_hlist_next(v, &l->head, pos);
- }
-@@ -630,16 +624,14 @@ static void *bt_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- static void bt_seq_stop(struct seq_file *seq, void *v)
- 	__releases(seq->private->l->lock)
- {
--	struct bt_seq_state *s = seq->private;
--	struct bt_sock_list *l = s->l;
-+	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
- 
- 	read_unlock(&l->lock);
+diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
+index 863db44c7916..b3b8b8822d6a 100644
+--- a/drivers/ide/ide-proc.c
++++ b/drivers/ide/ide-proc.c
+@@ -528,58 +528,12 @@ static int ide_driver_proc_open(struct inode *inode, struct file *file)
+ 	return single_open(file, ide_driver_proc_show, PDE_DATA(inode));
  }
  
- static int bt_seq_show(struct seq_file *seq, void *v)
- {
--	struct bt_seq_state *s = seq->private;
--	struct bt_sock_list *l = s->l;
-+	struct bt_sock_list *l = PDE_DATA(file_inode(seq->file));
- 
- 	if (v == SEQ_START_TOKEN) {
- 		seq_puts(seq ,"sk               RefCnt Rmem   Wmem   User   Inode  Parent");
-@@ -681,35 +673,13 @@ static const struct seq_operations bt_seq_ops = {
- 	.show  = bt_seq_show,
- };
- 
--static int bt_seq_open(struct inode *inode, struct file *file)
+-static int ide_replace_subdriver(ide_drive_t *drive, const char *driver)
 -{
--	struct bt_sock_list *sk_list;
--	struct bt_seq_state *s;
+-	struct device *dev = &drive->gendev;
+-	int ret = 1;
+-	int err;
 -
--	sk_list = PDE_DATA(inode);
--	s = __seq_open_private(file, &bt_seq_ops,
--			       sizeof(struct bt_seq_state));
--	if (!s)
--		return -ENOMEM;
+-	device_release_driver(dev);
+-	/* FIXME: device can still be in use by previous driver */
+-	strlcpy(drive->driver_req, driver, sizeof(drive->driver_req));
+-	err = device_attach(dev);
+-	if (err < 0)
+-		printk(KERN_WARNING "IDE: %s: device_attach error: %d\n",
+-			__func__, err);
+-	drive->driver_req[0] = 0;
+-	if (dev->driver == NULL) {
+-		err = device_attach(dev);
+-		if (err < 0)
+-			printk(KERN_WARNING
+-				"IDE: %s: device_attach(2) error: %d\n",
+-				__func__, err);
+-	}
+-	if (dev->driver && !strcmp(dev->driver->name, driver))
+-		ret = 0;
 -
--	s->l = sk_list;
--	return 0;
+-	return ret;
 -}
 -
--static const struct file_operations bt_fops = {
--	.open = bt_seq_open,
--	.read = seq_read,
--	.llseek = seq_lseek,
--	.release = seq_release_private
--};
+-static ssize_t ide_driver_proc_write(struct file *file, const char __user *buffer,
+-				     size_t count, loff_t *pos)
+-{
+-	ide_drive_t	*drive = PDE_DATA(file_inode(file));
+-	char name[32];
 -
- int bt_procfs_init(struct net *net, const char *name,
- 		   struct bt_sock_list *sk_list,
- 		   int (* seq_show)(struct seq_file *, void *))
- {
- 	sk_list->custom_seq_show = seq_show;
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EACCES;
+-	if (count > 31)
+-		count = 31;
+-	if (copy_from_user(name, buffer, count))
+-		return -EFAULT;
+-	name[count] = '\0';
+-	if (ide_replace_subdriver(drive, name))
+-		return -EINVAL;
+-	return count;
+-}
+-
+ static const struct file_operations ide_driver_proc_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.open		= ide_driver_proc_open,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+ 	.release	= single_release,
+-	.write		= ide_driver_proc_write,
+ };
  
--	if (!proc_create_data(name, 0, net->proc_net, &bt_fops, sk_list))
-+	if (!proc_create_seq_data(name, 0, net->proc_net, &bt_seq_ops, sk_list))
- 		return -ENOMEM;
- 	return 0;
- }
+ static int ide_media_proc_show(struct seq_file *m, void *v)
 -- 
 2.17.0
