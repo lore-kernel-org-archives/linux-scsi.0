@@ -1,49 +1,189 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: Regression 4.17-rc1: SSD doesn properly resume causing system
- hang (NULL pointer dereference)
-Date: Wed, 25 Apr 2018 12:26:25 +0000
-Message-ID: <df8a54d242adb7c26ceef57d6a0e7a51232f911c.camel@wdc.com>
+From: Paul Menzel <pmenzel+linux-block@molgen.mpg.de>
+Subject: =?UTF-8?Q?Re:_Regression_4.17-rc1:_SSD_doesn=e2=80=99t_properly_res?=
+ =?UTF-8?Q?ume_causing_system_hang_=28NULL_pointer_dereference=29?=
+Date: Wed, 25 Apr 2018 14:34:50 +0200
+Message-ID: <db0952af-d603-227e-3d58-ac466eb707a9@molgen.mpg.de>
 References: <59ca6556-11a6-4f77-76e7-d51c7175eb32@molgen.mpg.de>
-         <67ffdf0050a04bf3615c3d8a3a90b0c9c2aeb1ad.camel@wdc.com>
-         <2cc5f0fb-4caa-9c28-7daa-68993d5cb41a@molgen.mpg.de>
-         <14ff1ed06e36a372680872c227b5abe389c753da.camel@wdc.com>
-         <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
-         <134955874b401e6764077393c75ab2d4549b940a.camel@wdc.com>
-         <6a2162a7-5f48-c107-0b1c-5258089522c5@molgen.mpg.de>
-         <19e19bc6b2fef11faf428fe75447b06e56af9ffd.camel@wdc.com>
-         <d5e8823e-27bd-dabe-174f-b111a48b440a@molgen.mpg.de>
+ <67ffdf0050a04bf3615c3d8a3a90b0c9c2aeb1ad.camel@wdc.com>
+ <2cc5f0fb-4caa-9c28-7daa-68993d5cb41a@molgen.mpg.de>
+ <14ff1ed06e36a372680872c227b5abe389c753da.camel@wdc.com>
+ <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
+ <134955874b401e6764077393c75ab2d4549b940a.camel@wdc.com>
+ <6a2162a7-5f48-c107-0b1c-5258089522c5@molgen.mpg.de>
+ <19e19bc6b2fef11faf428fe75447b06e56af9ffd.camel@wdc.com>
+ <d5e8823e-27bd-dabe-174f-b111a48b440a@molgen.mpg.de>
+ <df8a54d242adb7c26ceef57d6a0e7a51232f911c.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="------------ms090307000707090808070303"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d5e8823e-27bd-dabe-174f-b111a48b440a@molgen.mpg.de>
-Content-Language: en-US
-Content-ID: <FE91950BECF7584C87337527A29C55C6@namprd04.prod.outlook.com>
+In-Reply-To: <df8a54d242adb7c26ceef57d6a0e7a51232f911c.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "pmenzel+linux-block@molgen.mpg.de" <pmenzel+linux-block@molgen.mpg.de>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "regressions@leemhuis.info" <regressions@leemhuis.info>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: jejb@linux.vnet.ibm.com, regressions@leemhuis.info, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, martin.petersen@oracle.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE4LTA0LTI1IGF0IDA3OjM3ICswMjAwLCBQYXVsIE1lbnplbCB3cm90ZToNCj4g
-QW0gMjQuMDQuMjAxOCB1bSAyMzoxNyBzY2hyaWViIEJhcnQgVmFuIEFzc2NoZToNCj4gPiBPbiBU
-dWUsIDIwMTgtMDQtMjQgYXQgMjM6MDQgKzAyMDAsIFBhdWwgTWVuemVsIHdyb3RlOg0KPiA+ID4g
-SSBhcHBsaWVkIHlvdXIgY2hhbmdlLCBhbmQgcmVidWlsdCB0aGUgTGludXgga2VybmVsLiBVbmZv
-cnR1bmF0ZWx5LCBpdA0KPiA+ID4gbG9va3MgbGlrZSwgaXQgZGlkbuKAmXQgbWFrZSBhIGRpZmZl
-cmVuY2UuDQo+ID4gDQo+ID4gSW4gdGhhdCBjYXNlIEkgZG9uJ3Qga25vdyB3aGF0IGlzIGNhdXNp
-bmcgdGhlIGZhaWx1cmUuIENhbiB5b3UgcnVuIGEgYmlzZWN0DQo+ID4gdG8gZGV0ZXJtaW5lIHdo
-aWNoIGNvbW1pdCBpbnRyb2R1Y2VkIHRoaXMgcmVncmVzc2lvbj8NCj4gDQo+IFdpdGggYHNjc2lf
-bW9kLnVzZV9ibGtfbXE9bmAgdGhlIHN5c3RlbSByZXN1bWVzIGZpbmUsIHNvIGZvciB0byBtZSAN
-Cj4gdW5rbm93biByZWFzb25zLCB0aGF0IEtjb25maWcgb3B0aW9uIGdldCBzZWxlY3RlZCBpbiBt
-eSBMaW51eCBrZXJuZWwgDQo+IGNvbmZpZ3VyYXRpb24uIEkgcmVtZW1iZXIgaGF2aW5nIHNpbWls
-YXIgaXNzdWVzIHdoZW4gdGhpcyB3YXMgZW5hYmxlZCBieSANCj4gZGVmYXVsdCBpbiBMaW51eCA0
-LjEzLXJjPywgc28gaXQgd2FzIGp1c3QgYSBjb25maWd1cmF0aW9uIHByb2JsZW0gYW5kIA0KPiBu
-b3QgYSByZWdyZXNzaW9uLiBVbmZvcnR1bmF0ZWx5LCB0aGUgTGludXggY29uZmlndXJhdGlvbiBm
-aWxlcyBhcmUgbm90IA0KPiB1bmRlciB2ZXJzaW9uIGNvbnRyb2wsIHNvIEkgY2Fubm90IGNoZWNr
-LCBidXQgaXQgaXMgcHJvYmFibHkgbXkgZmF1bHQuDQo+IA0KPiBTb3JyeSBmb3IgdGhlIG5vaXNl
-LCBhbmQgcGxlYXNlIHRlbGwgbWUsIHdoYXQgSSBjYW4gZG8gdG8gZ2V0IHRoZSBvcHRpb24gDQo+
-IHdvcmtpbmcgb24gdGhpcyBvbGQgZGV2aWNlLg0KDQpIZWxsbyBQYXVsLA0KDQpEaWQgdGhlIHNh
-bWUgc3lzdGVtIGJvb3QgZmluZSB3aXRoIGEgcHJldmlvdXMga2VybmVsIHdpdGggc2NzaS1tcSBl
-bmFibGVkPw0KQW55d2F5LCB3ZSB3b3VsZCBsaWtlIHRvIGtub3cgd2hhdCBpcyB0aGUgcm9vdCBj
-YXVzZSBzdWNoIHRoYXQgdGhpcyBOVUxMDQpwb2ludGVyIGRlcmVmZXJlbmNlIGNhbiBiZSBmaXhl
-ZC4gVGhlcmUgYXJlIG5hbWVseSBwbGFucyB0byByZW1vdmUgdGhlDQpsZWdhY3kgYmxvY2sgbGF5
-ZXIgaW4gdGhlIG5vdCB0b28gZGlzdGFudCBmdXR1cmUuDQoNClRoYW5rcywNCg0KQmFydC4=
+This is a cryptographically signed message in MIME format.
+
+--------------ms090307000707090808070303
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+
+Dear Bart,
+
+
+On 04/25/18 14:26, Bart Van Assche wrote:
+> On Wed, 2018-04-25 at 07:37 +0200, Paul Menzel wrote:
+>> Am 24.04.2018 um 23:17 schrieb Bart Van Assche:
+>>> On Tue, 2018-04-24 at 23:04 +0200, Paul Menzel wrote:
+>>>> I applied your change, and rebuilt the Linux kernel. Unfortunately, =
+it
+>>>> looks like, it didn=E2=80=99t make a difference.
+>>>
+>>> In that case I don't know what is causing the failure. Can you run a =
+bisect
+>>> to determine which commit introduced this regression?
+>>
+>> With `scsi_mod.use_blk_mq=3Dn` the system resumes fine, so for to me
+>> unknown reasons, that Kconfig option get selected in my Linux kernel
+>> configuration. I remember having similar issues when this was enabled =
+by
+>> default in Linux 4.13-rc?, so it was just a configuration problem and
+>> not a regression. Unfortunately, the Linux configuration files are not=
+
+>> under version control, so I cannot check, but it is probably my fault.=
+
+>>
+>> Sorry for the noise, and please tell me, what I can do to get the opti=
+on
+>> working on this old device.
+
+> Did the same system boot fine with a previous kernel with scsi-mq enabl=
+ed?
+
+No, as far as I know it never worked, see thread *[Regression 4.13-rc1]=20
+Resume does not work on Lenovo X60t* [1].
+
+> Anyway, we would like to know what is the root cause such that this NUL=
+L
+> pointer dereference can be fixed. There are namely plans to remove the
+> legacy block layer in the not too distant future.
+
+I=E2=80=99ll be happy to test proposed changes.
+
+
+Kind regards,
+
+Paul
+
+
+PS: Your mailer also changed *doesn=E2=80=99t* to *doesn* in the subject =
+line.
+
+
+[1] https://www.spinics.net/lists/linux-scsi/msg111457.html
+
+
+--------------ms090307000707090808070303
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
+EFowggUSMIID+qADAgECAgkA4wvV+K8l2YEwDQYJKoZIhvcNAQELBQAwgYIxCzAJBgNVBAYT
+AkRFMSswKQYDVQQKDCJULVN5c3RlbXMgRW50ZXJwcmlzZSBTZXJ2aWNlcyBHbWJIMR8wHQYD
+VQQLDBZULVN5c3RlbXMgVHJ1c3QgQ2VudGVyMSUwIwYDVQQDDBxULVRlbGVTZWMgR2xvYmFs
+Um9vdCBDbGFzcyAyMB4XDTE2MDIyMjEzMzgyMloXDTMxMDIyMjIzNTk1OVowgZUxCzAJBgNV
+BAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1dHNjaGVu
+IEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNVBAMTJERG
+Ti1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBAMtg1/9moUHN0vqHl4pzq5lN6mc5WqFggEcVToyVsuXPztNXS43O+FZs
+FVV2B+pG/cgDRWM+cNSrVICxI5y+NyipCf8FXRgPxJiZN7Mg9mZ4F4fCnQ7MSjLnFp2uDo0p
+eQcAIFTcFV9Kltd4tjTTwXS1nem/wHdN6r1ZB+BaL2w8pQDcNb1lDY9/Mm3yWmpLYgHurDg0
+WUU2SQXaeMpqbVvAgWsRzNI8qIv4cRrKO+KA3Ra0Z3qLNupOkSk9s1FcragMvp0049ENF4N1
+xDkesJQLEvHVaY4l9Lg9K7/AjsMeO6W/VRCrKq4Xl14zzsjz9AkH4wKGMUZrAcUQDBHHWekC
+AwEAAaOCAXQwggFwMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUk+PYMiba1fFKpZFK4OpL
+4qIMz+EwHwYDVR0jBBgwFoAUv1kgNgB5oKAia4zV8mHSuCzLgkowEgYDVR0TAQH/BAgwBgEB
+/wIBAjAzBgNVHSAELDAqMA8GDSsGAQQBga0hgiwBAQQwDQYLKwYBBAGBrSGCLB4wCAYGZ4EM
+AQICMEwGA1UdHwRFMEMwQaA/oD2GO2h0dHA6Ly9wa2kwMzM2LnRlbGVzZWMuZGUvcmwvVGVs
+ZVNlY19HbG9iYWxSb290X0NsYXNzXzIuY3JsMIGGBggrBgEFBQcBAQR6MHgwLAYIKwYBBQUH
+MAGGIGh0dHA6Ly9vY3NwMDMzNi50ZWxlc2VjLmRlL29jc3ByMEgGCCsGAQUFBzAChjxodHRw
+Oi8vcGtpMDMzNi50ZWxlc2VjLmRlL2NydC9UZWxlU2VjX0dsb2JhbFJvb3RfQ2xhc3NfMi5j
+ZXIwDQYJKoZIhvcNAQELBQADggEBAIcL/z4Cm2XIVi3WO5qYi3FP2ropqiH5Ri71sqQPrhE4
+eTizDnS6dl2e6BiClmLbTDPo3flq3zK9LExHYFV/53RrtCyD2HlrtrdNUAtmB7Xts5et6u5/
+MOaZ/SLick0+hFvu+c+Z6n/XUjkurJgARH5pO7917tALOxrN5fcPImxHhPalR6D90Bo0fa3S
+PXez7vTXTf/D6OWST1k+kEcQSrCFWMBvf/iu7QhCnh7U3xQuTY+8npTD5+32GPg8SecmqKc2
+2CzeIs2LgtjZeOJVEqM7h0S2EQvVDFKvaYwPBt/QolOLV5h7z/0HJPT8vcP9SpIClxvyt7bP
+ZYoaorVyGTkwggWNMIIEdaADAgECAgwcOtRQhH7u81j4jncwDQYJKoZIhvcNAQELBQAwgZUx
+CzAJBgNVBAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1
+dHNjaGVuIEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNV
+BAMTJERGTi1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjAeFw0xNjExMDMxNTI0
+NDhaFw0zMTAyMjIyMzU5NTlaMGoxCzAJBgNVBAYTAkRFMQ8wDQYDVQQIDAZCYXllcm4xETAP
+BgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxhbmNrLUdlc2VsbHNjaGFmdDEVMBMG
+A1UEAwwMTVBHIENBIC0gRzAyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnhx4
+59Lh4WqgOs/Md04XxU2yFtfM15ZuJV0PZP7BmqSJKLLPyqmOrADfNdJ5PIGBto2JBhtRRBHd
+G0GROOvTRHjzOga95WOTeura79T21FWwwAwa29OFnD3ZplQs6HgdwQrZWNi1WHNJxn/4mA19
+rNEBUc5urSIpZPvZi5XmlF3v3JHOlx3KWV7mUteB4pwEEfGTg4npPAJbp2o7arxQdoIq+Pu2
+OsvqhD7Rk4QeaX+EM1QS4lqd1otW4hE70h/ODPy1xffgbZiuotWQLC6nIwa65Qv6byqlIX0q
+Zuu99Vsu+r3sWYsL5SBkgecNI7fMJ5tfHrjoxfrKl/ErTAt8GQIDAQABo4ICBTCCAgEwEgYD
+VR0TAQH/BAgwBgEB/wIBATAOBgNVHQ8BAf8EBAMCAQYwKQYDVR0gBCIwIDANBgsrBgEEAYGt
+IYIsHjAPBg0rBgEEAYGtIYIsAQEEMB0GA1UdDgQWBBTEiKUH7rh7qgwTv9opdGNSG0lwFjAf
+BgNVHSMEGDAWgBST49gyJtrV8UqlkUrg6kviogzP4TCBjwYDVR0fBIGHMIGEMECgPqA8hjpo
+dHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jcmwvY2Fjcmwu
+Y3JsMECgPqA8hjpodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1
+Yi9jcmwvY2FjcmwuY3JsMIHdBggrBgEFBQcBAQSB0DCBzTAzBggrBgEFBQcwAYYnaHR0cDov
+L29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEoGCCsGAQUFBzAChj5odHRwOi8v
+Y2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNy
+dDBKBggrBgEFBQcwAoY+aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9vdC1nMi1j
+YS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBABLpeD5FygzqOjj+
+/lAOy20UQOGWlx0RMuPcI4nuyFT8SGmK9lD7QCg/HoaJlfU/r78ex+SEide326evlFAoJXIF
+jVyzNltDhpMKrPIDuh2N12zyn1EtagqPL6hu4pVRzcBpl/F2HCvtmMx5K4WN1L1fmHWLcSap
+dhXLvAZ9RG/B3rqyULLSNN8xHXYXpmtvG0VGJAndZ+lj+BH7uvd3nHWnXEHC2q7iQlDUqg0a
+wIqWJgdLlx1Q8Dg/sodv0m+LN0kOzGvVDRCmowBdWGhhusD+duKV66pBl+qhC+4LipariWaM
+qK5ppMQROATjYeNRvwI+nDcEXr2vDaKmdbxgDVwwggWvMIIEl6ADAgECAgweKlJIhfynPMVG
+/KIwDQYJKoZIhvcNAQELBQAwajELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJheWVybjERMA8G
+A1UEBwwITXVlbmNoZW4xIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MRUwEwYD
+VQQDDAxNUEcgQ0EgLSBHMDIwHhcNMTcxMTE0MTEzNDE2WhcNMjAxMTEzMTEzNDE2WjCBizEL
+MAkGA1UEBhMCREUxIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MTQwMgYDVQQL
+DCtNYXgtUGxhbmNrLUluc3RpdHV0IGZ1ZXIgbW9sZWt1bGFyZSBHZW5ldGlrMQ4wDAYDVQQL
+DAVNUElNRzEUMBIGA1UEAwwLUGF1bCBNZW56ZWwwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+ggEKAoIBAQDIh/UR/AX/YQ48VWWDMLTYtXjYJyhRHMc81ZHMMoaoG66lWB9MtKRTnB5lovLZ
+enTIUyPsCrMhTqV9CWzDf6v9gOTWVxHEYqrUwK5H1gx4XoK81nfV8oGV4EKuVmmikTXiztGz
+peyDmOY8o/EFNWP7YuRkY/lPQJQBeBHYq9AYIgX4StuXu83nusq4MDydygVOeZC15ts0tv3/
+6WmibmZd1OZRqxDOkoBbY3Djx6lERohs3IKS6RKiI7e90rCSy9rtidJBOvaQS9wvtOSKPx0a
++2pAgJEVzZFjOAfBcXydXtqXhcpOi2VCyl+7+LnnTz016JJLsCBuWEcB3kP9nJYNAgMBAAGj
+ggIxMIICLTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIF4DAdBgNVHSUEFjAUBggrBgEFBQcD
+AgYIKwYBBQUHAwQwHQYDVR0OBBYEFHM0Mc3XjMLlhWpp4JufRELL4A/qMB8GA1UdIwQYMBaA
+FMSIpQfuuHuqDBO/2il0Y1IbSXAWMCAGA1UdEQQZMBeBFXBtZW56ZWxAbW9sZ2VuLm1wZy5k
+ZTB9BgNVHR8EdjB0MDigNqA0hjJodHRwOi8vY2RwMS5wY2EuZGZuLmRlL21wZy1nMi1jYS9w
+dWIvY3JsL2NhY3JsLmNybDA4oDagNIYyaHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzIt
+Y2EvcHViL2NybC9jYWNybC5jcmwwgc0GCCsGAQUFBwEBBIHAMIG9MDMGCCsGAQUFBzABhido
+dHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwQgYIKwYBBQUHMAKGNmh0
+dHA6Ly9jZHAxLnBjYS5kZm4uZGUvbXBnLWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNydDBC
+BggrBgEFBQcwAoY2aHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzItY2EvcHViL2NhY2Vy
+dC9jYWNlcnQuY3J0MEAGA1UdIAQ5MDcwDwYNKwYBBAGBrSGCLAEBBDARBg8rBgEEAYGtIYIs
+AQEEAwYwEQYPKwYBBAGBrSGCLAIBBAMGMA0GCSqGSIb3DQEBCwUAA4IBAQCQs6bUDROpFO2F
+Qz2FMgrdb39VEo8P3DhmpqkaIMC5ZurGbbAL/tAR6lpe4af682nEOJ7VW86ilsIJgm1j0ueY
+aOuL8jrN4X7IF/8KdZnnNnImW3QVni6TCcc+7+ggci9JHtt0IDCj5vPJBpP/dKXLCN4M+exl
+GXYpfHgxh8gclJPY1rquhQrihCzHfKB01w9h9tWZDVMtSoy9EUJFhCXw7mYUsvBeJwZesN2B
+fndPkrXx6XWDdU3S1LyKgHlLIFtarLFm2Hb5zAUR33h+26cN6ohcGqGEEzgIG8tXS8gztEaj
+1s2RyzmKd4SXTkKR3GhkZNVWy+gM68J7jP6zzN+cMYIDmjCCA5YCAQEwejBqMQswCQYDVQQG
+EwJERTEPMA0GA1UECAwGQmF5ZXJuMREwDwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4
+LVBsYW5jay1HZXNlbGxzY2hhZnQxFTATBgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzF
+RvyiMA0GCWCGSAFlAwQCAQUAoIIB8TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
+SIb3DQEJBTEPFw0xODA0MjUxMjM0NTBaMC8GCSqGSIb3DQEJBDEiBCBjavHDOfHhGV7YBg7T
+LWwXZoIUNIS86bfeM9jAukg+7jBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglg
+hkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcG
+BSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGJBgkrBgEEAYI3EAQxfDB6MGoxCzAJBgNVBAYTAkRF
+MQ8wDQYDVQQIDAZCYXllcm4xETAPBgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxh
+bmNrLUdlc2VsbHNjaGFmdDEVMBMGA1UEAwwMTVBHIENBIC0gRzAyAgweKlJIhfynPMVG/KIw
+gYsGCyqGSIb3DQEJEAILMXygejBqMQswCQYDVQQGEwJERTEPMA0GA1UECAwGQmF5ZXJuMREw
+DwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4LVBsYW5jay1HZXNlbGxzY2hhZnQxFTAT
+BgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzFRvyiMA0GCSqGSIb3DQEBAQUABIIBADim
+QRiHfhZUNzszHL6Y7GTf3tLYWtbKB3KCFSjU7CT+nqZXiEZTc4uGMOU9ENNhuCWgNZR9KiWu
+n6/fcgerx1sVvzLZ7pBhUq6GoKTxAV7ZQkPpjS3g5bbXiAorE2dWXZBmRpUZQwOjjLmGRMnm
+oni+cjwXVZKwyBsjlo6lVPop78oz8ET933cFq6xOeE4H5zPvo3SX8ZrE3NrCXYIHLNpZXE+5
+4xnJjgFEzepbTWG9m5BJvQonqJJB6Q34ADFJgmqvv2n2sJJFEIk1wQGrP8WVBho1DI8b1HtW
+DGWkzLYFqM9aEDVxlFSFtK+zn27P8e5knLmyQGxealkbmQl8TpUAAAAAAAA=
+--------------ms090307000707090808070303--
