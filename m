@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 25/40] resource: switch to proc_create_seq_data
-Date: Wed, 25 Apr 2018 17:48:12 +0200
-Message-ID: <20180425154827.32251-26-hch@lst.de>
+Subject: [PATCH 26/40] drbd: switch to proc_create_single
+Date: Wed, 25 Apr 2018 17:48:13 +0200
+Message-ID: <20180425154827.32251-27-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,82 +21,99 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And use the root resource directly from the proc private data.
+And stop messing with try_module_get on THIS_MODULE, which doesn't make
+any sense here.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- kernel/resource.c | 43 +++++--------------------------------------
- 1 file changed, 5 insertions(+), 38 deletions(-)
+ drivers/block/drbd/drbd_int.h  |  2 +-
+ drivers/block/drbd/drbd_main.c |  3 ++-
+ drivers/block/drbd/drbd_proc.c | 34 +---------------------------------
+ 3 files changed, 4 insertions(+), 35 deletions(-)
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 2af6c03858b9..b589dda910b3 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -87,7 +87,7 @@ enum { MAX_IORES_LEVEL = 5 };
- static void *r_start(struct seq_file *m, loff_t *pos)
- 	__acquires(resource_lock)
- {
--	struct resource *p = m->private;
-+	struct resource *p = PDE_DATA(file_inode(m->file));
- 	loff_t l = 0;
- 	read_lock(&resource_lock);
- 	for (p = p->child; p && l < *pos; p = r_next(m, p, &l))
-@@ -103,7 +103,7 @@ static void r_stop(struct seq_file *m, void *v)
+diff --git a/drivers/block/drbd/drbd_int.h b/drivers/block/drbd/drbd_int.h
+index 06ecee1b528e..461ddec04e7c 100644
+--- a/drivers/block/drbd/drbd_int.h
++++ b/drivers/block/drbd/drbd_int.h
+@@ -1643,7 +1643,7 @@ void drbd_bump_write_ordering(struct drbd_resource *resource, struct drbd_backin
  
- static int r_show(struct seq_file *m, void *v)
- {
--	struct resource *root = m->private;
-+	struct resource *root = PDE_DATA(file_inode(m->file));
- 	struct resource *r = v, *p;
- 	unsigned long long start, end;
- 	int width = root->end < 0x10000 ? 4 : 8;
-@@ -135,44 +135,11 @@ static const struct seq_operations resource_op = {
- 	.show	= r_show,
- };
+ /* drbd_proc.c */
+ extern struct proc_dir_entry *drbd_proc;
+-extern const struct file_operations drbd_proc_fops;
++int drbd_seq_show(struct seq_file *seq, void *v);
  
--static int ioports_open(struct inode *inode, struct file *file)
--{
--	int res = seq_open(file, &resource_op);
--	if (!res) {
--		struct seq_file *m = file->private_data;
--		m->private = &ioport_resource;
--	}
--	return res;
--}
+ /* drbd_actlog.c */
+ extern bool drbd_al_begin_io_prepare(struct drbd_device *device, struct drbd_interval *i);
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index 185f1ef00a7c..c2d154faac02 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -3010,7 +3010,8 @@ static int __init drbd_init(void)
+ 		goto fail;
+ 
+ 	err = -ENOMEM;
+-	drbd_proc = proc_create_data("drbd", S_IFREG | S_IRUGO , NULL, &drbd_proc_fops, NULL);
++	drbd_proc = proc_create_single("drbd", S_IFREG | S_IRUGO , NULL,
++			drbd_seq_show);
+ 	if (!drbd_proc)	{
+ 		pr_err("unable to register proc file\n");
+ 		goto fail;
+diff --git a/drivers/block/drbd/drbd_proc.c b/drivers/block/drbd/drbd_proc.c
+index 582caeb0de86..74ef29247bb5 100644
+--- a/drivers/block/drbd/drbd_proc.c
++++ b/drivers/block/drbd/drbd_proc.c
+@@ -33,18 +33,7 @@
+ #include <linux/drbd.h>
+ #include "drbd_int.h"
+ 
+-static int drbd_proc_open(struct inode *inode, struct file *file);
+-static int drbd_proc_release(struct inode *inode, struct file *file);
 -
--static int iomem_open(struct inode *inode, struct file *file)
--{
--	int res = seq_open(file, &resource_op);
--	if (!res) {
--		struct seq_file *m = file->private_data;
--		m->private = &iomem_resource;
--	}
--	return res;
--}
 -
--static const struct file_operations proc_ioports_operations = {
--	.open		= ioports_open,
+ struct proc_dir_entry *drbd_proc;
+-const struct file_operations drbd_proc_fops = {
+-	.owner		= THIS_MODULE,
+-	.open		= drbd_proc_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release	= seq_release,
+-	.release	= drbd_proc_release,
 -};
--
--static const struct file_operations proc_iomem_operations = {
--	.open		= iomem_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
--};
--
- static int __init ioresources_init(void)
+ 
+ static void seq_printf_with_thousands_grouping(struct seq_file *seq, long v)
  {
--	proc_create("ioports", 0, NULL, &proc_ioports_operations);
--	proc_create("iomem", 0, NULL, &proc_iomem_operations);
-+	proc_create_seq_data("ioports", 0, NULL, &resource_op,
-+			&ioport_resource);
-+	proc_create_seq_data("iomem", 0, NULL, &resource_op, &iomem_resource);
+@@ -235,7 +224,7 @@ static void drbd_syncer_progress(struct drbd_device *device, struct seq_file *se
+ 	}
+ }
+ 
+-static int drbd_seq_show(struct seq_file *seq, void *v)
++int drbd_seq_show(struct seq_file *seq, void *v)
+ {
+ 	int i, prev_i = -1;
+ 	const char *sn;
+@@ -345,24 +334,3 @@ static int drbd_seq_show(struct seq_file *seq, void *v)
+ 
  	return 0;
  }
- __initcall(ioresources_init);
+-
+-static int drbd_proc_open(struct inode *inode, struct file *file)
+-{
+-	int err;
+-
+-	if (try_module_get(THIS_MODULE)) {
+-		err = single_open(file, drbd_seq_show, NULL);
+-		if (err)
+-			module_put(THIS_MODULE);
+-		return err;
+-	}
+-	return -ENODEV;
+-}
+-
+-static int drbd_proc_release(struct inode *inode, struct file *file)
+-{
+-	module_put(THIS_MODULE);
+-	return single_release(inode, file);
+-}
+-
+-/* PROC FS stuff end */
 -- 
 2.17.0
