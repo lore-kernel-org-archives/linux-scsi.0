@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 30/40] neigh: switch to proc_create_seq_data
-Date: Wed, 25 Apr 2018 17:48:17 +0200
-Message-ID: <20180425154827.32251-31-hch@lst.de>
+Subject: [PATCH 27/40] rtc/proc: switch to proc_create_single_data
+Date: Wed, 25 Apr 2018 17:48:14 +0200
+Message-ID: <20180425154827.32251-28-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,90 +21,60 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And use proc private data directly instead of doing a detour
-through seq->private.
+And stop trying to get a reference on the submodule, procfs code deals
+with release after and unloaded module and thus removed proc entry.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- net/core/neighbour.c | 31 ++++++-------------------------
- 1 file changed, 6 insertions(+), 25 deletions(-)
+ drivers/rtc/rtc-proc.c | 33 ++-------------------------------
+ 1 file changed, 2 insertions(+), 31 deletions(-)
 
-diff --git a/net/core/neighbour.c b/net/core/neighbour.c
-index ce519861be59..1fb43bff417d 100644
---- a/net/core/neighbour.c
-+++ b/net/core/neighbour.c
-@@ -59,7 +59,7 @@ static int pneigh_ifdown_and_unlock(struct neigh_table *tbl,
- 				    struct net_device *dev);
+diff --git a/drivers/rtc/rtc-proc.c b/drivers/rtc/rtc-proc.c
+index 31e7e23cc5be..a9dd9218fae2 100644
+--- a/drivers/rtc/rtc-proc.c
++++ b/drivers/rtc/rtc-proc.c
+@@ -107,40 +107,11 @@ static int rtc_proc_show(struct seq_file *seq, void *offset)
+ 	return 0;
+ }
  
- #ifdef CONFIG_PROC_FS
--static const struct file_operations neigh_stat_seq_fops;
-+static const struct seq_operations neigh_stat_seq_ops;
- #endif
- 
- /*
-@@ -1558,8 +1558,8 @@ void neigh_table_init(int index, struct neigh_table *tbl)
- 		panic("cannot create neighbour cache statistics");
- 
- #ifdef CONFIG_PROC_FS
--	if (!proc_create_data(tbl->id, 0, init_net.proc_net_stat,
--			      &neigh_stat_seq_fops, tbl))
-+	if (!proc_create_seq_data(tbl->id, 0, init_net.proc_net_stat,
-+			      &neigh_stat_seq_ops, tbl))
- 		panic("cannot create neighbour proc dir entry");
- #endif
- 
-@@ -2786,7 +2786,7 @@ EXPORT_SYMBOL(neigh_seq_stop);
- 
- static void *neigh_stat_seq_start(struct seq_file *seq, loff_t *pos)
- {
--	struct neigh_table *tbl = seq->private;
-+	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
- 	int cpu;
- 
- 	if (*pos == 0)
-@@ -2803,7 +2803,7 @@ static void *neigh_stat_seq_start(struct seq_file *seq, loff_t *pos)
- 
- static void *neigh_stat_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- {
--	struct neigh_table *tbl = seq->private;
-+	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
- 	int cpu;
- 
- 	for (cpu = *pos; cpu < nr_cpu_ids; ++cpu) {
-@@ -2822,7 +2822,7 @@ static void neigh_stat_seq_stop(struct seq_file *seq, void *v)
- 
- static int neigh_stat_seq_show(struct seq_file *seq, void *v)
- {
--	struct neigh_table *tbl = seq->private;
-+	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
- 	struct neigh_statistics *st = v;
- 
- 	if (v == SEQ_START_TOKEN) {
-@@ -2861,25 +2861,6 @@ static const struct seq_operations neigh_stat_seq_ops = {
- 	.stop	= neigh_stat_seq_stop,
- 	.show	= neigh_stat_seq_show,
- };
--
--static int neigh_stat_seq_open(struct inode *inode, struct file *file)
+-static int rtc_proc_open(struct inode *inode, struct file *file)
 -{
--	int ret = seq_open(file, &neigh_stat_seq_ops);
+-	int ret;
+-	struct rtc_device *rtc = PDE_DATA(inode);
 -
--	if (!ret) {
--		struct seq_file *sf = file->private_data;
--		sf->private = PDE_DATA(inode);
--	}
+-	if (!try_module_get(rtc->owner))
+-		return -ENODEV;
+-
+-	ret = single_open(file, rtc_proc_show, rtc);
+-	if (ret)
+-		module_put(rtc->owner);
 -	return ret;
+-}
+-
+-static int rtc_proc_release(struct inode *inode, struct file *file)
+-{
+-	int res = single_release(inode, file);
+-	struct rtc_device *rtc = PDE_DATA(inode);
+-
+-	module_put(rtc->owner);
+-	return res;
+-}
+-
+-static const struct file_operations rtc_proc_fops = {
+-	.open		= rtc_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= rtc_proc_release,
 -};
 -
--static const struct file_operations neigh_stat_seq_fops = {
--	.open 	 = neigh_stat_seq_open,
--	.read	 = seq_read,
--	.llseek	 = seq_lseek,
--	.release = seq_release,
--};
--
- #endif /* CONFIG_PROC_FS */
+ void rtc_proc_add_device(struct rtc_device *rtc)
+ {
+ 	if (is_rtc_hctosys(rtc))
+-		proc_create_data("driver/rtc", 0, NULL, &rtc_proc_fops, rtc);
++		proc_create_single_data("driver/rtc", 0, NULL, rtc_proc_show,
++				rtc);
+ }
  
- static inline size_t neigh_nlmsg_size(void)
+ void rtc_proc_del_device(struct rtc_device *rtc)
 -- 
 2.17.0
