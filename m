@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 35/40] atm: switch to proc_create_seq_private
-Date: Wed, 25 Apr 2018 17:48:22 +0200
-Message-ID: <20180425154827.32251-36-hch@lst.de>
+Subject: [PATCH 34/40] atm: simplify procfs code
+Date: Wed, 25 Apr 2018 17:48:21 +0200
+Message-ID: <20180425154827.32251-35-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,146 +21,103 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And remove proc boilerplate code.
+Use remove_proc_subtree to remove the whole subtree on cleanup, and
+unwind the registration loop into individual calls.  Switch to use
+proc_create_seq where applicable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- net/atm/proc.c | 72 +++++++++-----------------------------------------
- 1 file changed, 13 insertions(+), 59 deletions(-)
+ net/atm/proc.c | 65 ++++++--------------------------------------------
+ 1 file changed, 7 insertions(+), 58 deletions(-)
 
 diff --git a/net/atm/proc.c b/net/atm/proc.c
-index f272b0f59d82..0b0495a41bbe 100644
+index 55410c00c7e2..f272b0f59d82 100644
 --- a/net/atm/proc.c
 +++ b/net/atm/proc.c
-@@ -68,7 +68,6 @@ static void atm_dev_info(struct seq_file *seq, const struct atm_dev *dev)
- struct vcc_state {
- 	int bucket;
- 	struct sock *sk;
--	int family;
+@@ -257,18 +257,6 @@ static const struct seq_operations atm_dev_seq_ops = {
+ 	.show	= atm_dev_seq_show,
  };
  
- static inline int compare_family(struct sock *sk, int family)
-@@ -106,23 +105,13 @@ static int __vcc_walk(struct sock **sock, int family, int *bucket, loff_t l)
- 	return (l < 0);
- }
- 
--static inline void *vcc_walk(struct vcc_state *state, loff_t l)
-+static inline void *vcc_walk(struct seq_file *seq, loff_t l)
- {
--	return __vcc_walk(&state->sk, state->family, &state->bucket, l) ?
--	       state : NULL;
+-static int atm_dev_seq_open(struct inode *inode, struct file *file)
+-{
+-	return seq_open(file, &atm_dev_seq_ops);
 -}
 -
--static int __vcc_seq_open(struct inode *inode, struct file *file,
--	int family, const struct seq_operations *ops)
--{
--	struct vcc_state *state;
--
--	state = __seq_open_private(file, ops, sizeof(*state));
--	if (state == NULL)
--		return -ENOMEM;
-+	struct vcc_state *state = seq->private;
-+	int family = (uintptr_t)(PDE_DATA(file_inode(seq->file)));
- 
--	state->family = family;
--	return 0;
-+	return __vcc_walk(&state->sk, family, &state->bucket, l) ?
-+	       state : NULL;
- }
- 
- static void *vcc_seq_start(struct seq_file *seq, loff_t *pos)
-@@ -133,7 +122,7 @@ static void *vcc_seq_start(struct seq_file *seq, loff_t *pos)
- 
- 	read_lock(&vcc_sklist_lock);
- 	state->sk = SEQ_START_TOKEN;
--	return left ? vcc_walk(state, left) : SEQ_START_TOKEN;
-+	return left ? vcc_walk(seq, left) : SEQ_START_TOKEN;
- }
- 
- static void vcc_seq_stop(struct seq_file *seq, void *v)
-@@ -144,9 +133,7 @@ static void vcc_seq_stop(struct seq_file *seq, void *v)
- 
- static void *vcc_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- {
--	struct vcc_state *state = seq->private;
--
--	v = vcc_walk(state, 1);
-+	v = vcc_walk(seq, 1);
- 	*pos += !!PTR_ERR(v);
- 	return v;
- }
-@@ -280,18 +267,6 @@ static const struct seq_operations pvc_seq_ops = {
- 	.show	= pvc_seq_show,
- };
- 
--static int pvc_seq_open(struct inode *inode, struct file *file)
--{
--	return __vcc_seq_open(inode, file, PF_ATMPVC, &pvc_seq_ops);
--}
--
--static const struct file_operations pvc_seq_fops = {
--	.open		= pvc_seq_open,
+-static const struct file_operations devices_seq_fops = {
+-	.open		= atm_dev_seq_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release	= seq_release_private,
+-	.release	= seq_release,
 -};
 -
- static int vcc_seq_show(struct seq_file *seq, void *v)
+ static int pvc_seq_show(struct seq_file *seq, void *v)
  {
- 	if (v == SEQ_START_TOKEN) {
-@@ -314,18 +289,6 @@ static const struct seq_operations vcc_seq_ops = {
- 	.show	= vcc_seq_show,
- };
+ 	static char atm_pvc_banner[] =
+@@ -440,58 +428,19 @@ void atm_proc_dev_deregister(struct atm_dev *dev)
+ 	kfree(dev->proc_name);
+ }
  
--static int vcc_seq_open(struct inode *inode, struct file *file)
+-static struct atm_proc_entry {
+-	char *name;
+-	const struct file_operations *proc_fops;
+-	struct proc_dir_entry *dirent;
+-} atm_proc_ents[] = {
+-	{ .name = "devices",	.proc_fops = &devices_seq_fops },
+-	{ .name = "pvc",	.proc_fops = &pvc_seq_fops },
+-	{ .name = "svc",	.proc_fops = &svc_seq_fops },
+-	{ .name = "vc",		.proc_fops = &vcc_seq_fops },
+-	{ .name = NULL,		.proc_fops = NULL }
+-};
+-
+-static void atm_proc_dirs_remove(void)
 -{
--	return __vcc_seq_open(inode, file, 0, &vcc_seq_ops);
+-	static struct atm_proc_entry *e;
+-
+-	for (e = atm_proc_ents; e->name; e++) {
+-		if (e->dirent)
+-			remove_proc_entry(e->name, atm_proc_root);
+-	}
+-	remove_proc_entry("atm", init_net.proc_net);
 -}
 -
--static const struct file_operations vcc_seq_fops = {
--	.open		= vcc_seq_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release_private,
--};
--
- static int svc_seq_show(struct seq_file *seq, void *v)
+ int __init atm_proc_init(void)
  {
- 	static const char atm_svc_banner[] =
-@@ -349,18 +312,6 @@ static const struct seq_operations svc_seq_ops = {
- 	.show	= svc_seq_show,
- };
- 
--static int svc_seq_open(struct inode *inode, struct file *file)
--{
--	return __vcc_seq_open(inode, file, PF_ATMSVC, &svc_seq_ops);
--}
+-	static struct atm_proc_entry *e;
+-	int ret;
 -
--static const struct file_operations svc_seq_fops = {
--	.open		= svc_seq_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release_private,
--};
--
- static ssize_t proc_dev_atm_read(struct file *file, char __user *buf,
- 				 size_t count, loff_t *pos)
- {
-@@ -434,9 +385,12 @@ int __init atm_proc_init(void)
+ 	atm_proc_root = proc_net_mkdir(&init_net, "atm", init_net.proc_net);
  	if (!atm_proc_root)
- 		return -ENOMEM;
- 	proc_create_seq("devices", 0444, atm_proc_root, &atm_dev_seq_ops);
--	proc_create("pvc", 0444, atm_proc_root, &pvc_seq_fops);
--	proc_create("svc", 0444, atm_proc_root, &svc_seq_fops);
--	proc_create("vc", 0444, atm_proc_root, &vcc_seq_fops);
-+	proc_create_seq_private("pvc", 0444, atm_proc_root, &pvc_seq_ops,
-+			sizeof(struct vcc_state), (void *)(uintptr_t)PF_ATMPVC);
-+	proc_create_seq_private("svc", 0444, atm_proc_root, &svc_seq_ops,
-+			sizeof(struct vcc_state), (void *)(uintptr_t)PF_ATMSVC);
-+	proc_create_seq_private("vc", 0444, atm_proc_root, &vcc_seq_ops,
-+			sizeof(struct vcc_state), NULL);
- 	return 0;
+-		goto err_out;
+-	for (e = atm_proc_ents; e->name; e++) {
+-		struct proc_dir_entry *dirent;
+-
+-		dirent = proc_create(e->name, 0444,
+-				     atm_proc_root, e->proc_fops);
+-		if (!dirent)
+-			goto err_out_remove;
+-		e->dirent = dirent;
+-	}
+-	ret = 0;
+-out:
+-	return ret;
+-
+-err_out_remove:
+-	atm_proc_dirs_remove();
+-err_out:
+-	ret = -ENOMEM;
+-	goto out;
++		return -ENOMEM;
++	proc_create_seq("devices", 0444, atm_proc_root, &atm_dev_seq_ops);
++	proc_create("pvc", 0444, atm_proc_root, &pvc_seq_fops);
++	proc_create("svc", 0444, atm_proc_root, &svc_seq_fops);
++	proc_create("vc", 0444, atm_proc_root, &vcc_seq_fops);
++	return 0;
  }
  
+ void atm_proc_exit(void)
+ {
+-	atm_proc_dirs_remove();
++	remove_proc_subtree("atm", init_net.proc_net);
+ }
 -- 
 2.17.0
