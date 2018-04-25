@@ -1,35 +1,49 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 2/5] ide: kill ide_toggle_bounce
-Date: Tue, 24 Apr 2018 20:02:56 -0600
-Message-ID: <5aaca0d3-417f-57f3-969f-b4c777c3fd48@kernel.dk>
-References: <20180424181625.22410-1-hch@lst.de>
- <20180424181625.22410-3-hch@lst.de>
+From: Paul Menzel <pmenzel+linux-block@molgen.mpg.de>
+Subject: Re: Regression 4.17-rc1: SSD doesn properly resume causing system
+ hang (NULL pointer dereference)
+Date: Wed, 25 Apr 2018 07:37:55 +0200
+Message-ID: <d5e8823e-27bd-dabe-174f-b111a48b440a@molgen.mpg.de>
+References: <59ca6556-11a6-4f77-76e7-d51c7175eb32@molgen.mpg.de>
+ <67ffdf0050a04bf3615c3d8a3a90b0c9c2aeb1ad.camel@wdc.com>
+ <2cc5f0fb-4caa-9c28-7daa-68993d5cb41a@molgen.mpg.de>
+ <14ff1ed06e36a372680872c227b5abe389c753da.camel@wdc.com>
+ <a3a7f906-3681-15cc-67af-b96e4ac71b0e@molgen.mpg.de>
+ <134955874b401e6764077393c75ab2d4549b940a.camel@wdc.com>
+ <6a2162a7-5f48-c107-0b1c-5258089522c5@molgen.mpg.de>
+ <19e19bc6b2fef11faf428fe75447b06e56af9ffd.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180424181625.22410-3-hch@lst.de>
+In-Reply-To: <19e19bc6b2fef11faf428fe75447b06e56af9ffd.camel@wdc.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: jejb@linux.vnet.ibm.com, regressions@leemhuis.info, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, martin.petersen@oracle.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 4/24/18 12:16 PM, Christoph Hellwig wrote:
-> ide_toggle_bounce did select various strange block bounce limits, including
-> not bouncing at all as soon as an iommu is present in the system.  Given
-> that the dma_map routines now handle any required bounce buffering except
-> for ISA DMA, and the ide code already must handle either ISA DMA or highmem
-> at least for iommu equipped systems we can get rid of the block layer
-> bounce limit setting entirely.
+Dear Bart,
 
-Pretty sure I was the one to add this code, when highmem page IO was
-enabled about two decades ago...
 
-Outside of DMA, the issue was that the PIO code could not handle
-highmem. That's not the case anymore, so this should be fine.
+Am 24.04.2018 um 23:17 schrieb Bart Van Assche:
+> On Tue, 2018-04-24 at 23:04 +0200, Paul Menzel wrote:
+>> I applied your change, and rebuilt the Linux kernel. Unfortunately, it
+>> looks like, it didn’t make a difference.
+> 
+> In that case I don't know what is causing the failure. Can you run a bisect
+> to determine which commit introduced this regression?
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
+With `scsi_mod.use_blk_mq=n` the system resumes fine, so for to me 
+unknown reasons, that Kconfig option get selected in my Linux kernel 
+configuration. I remember having similar issues when this was enabled by 
+default in Linux 4.13-rc?, so it was just a configuration problem and 
+not a regression. Unfortunately, the Linux configuration files are not 
+under version control, so I cannot check, but it is probably my fault.
 
--- 
-Jens Axboe
+Sorry for the noise, and please tell me, what I can do to get the option 
+working on this old device.
+
+
+Kind regards,
+
+Paul
