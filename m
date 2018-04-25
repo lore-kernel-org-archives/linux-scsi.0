@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/40] afs: simplify procfs code
-Date: Wed, 25 Apr 2018 17:48:08 +0200
-Message-ID: <20180425154827.32251-22-hch@lst.de>
+Subject: [PATCH 23/40] jfs: simplify procfs code
+Date: Wed, 25 Apr 2018 17:48:10 +0200
+Message-ID: <20180425154827.32251-24-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -26,270 +26,256 @@ proc_create_seq where applicable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/afs/proc.c | 134 ++++++--------------------------------------------
- 1 file changed, 15 insertions(+), 119 deletions(-)
+ fs/jfs/jfs_debug.c    | 43 ++++++++++++++-----------------------------
+ fs/jfs/jfs_debug.h    | 10 +++++-----
+ fs/jfs/jfs_logmgr.c   | 14 +-------------
+ fs/jfs/jfs_metapage.c | 14 +-------------
+ fs/jfs/jfs_txnmgr.c   | 28 ++--------------------------
+ fs/jfs/jfs_xtree.c    | 14 +-------------
+ 6 files changed, 24 insertions(+), 99 deletions(-)
 
-diff --git a/fs/afs/proc.c b/fs/afs/proc.c
-index 839a22280606..3aad32762989 100644
---- a/fs/afs/proc.c
-+++ b/fs/afs/proc.c
-@@ -62,7 +62,6 @@ static const struct file_operations afs_proc_rootcell_fops = {
- 	.llseek		= no_llseek,
- };
+diff --git a/fs/jfs/jfs_debug.c b/fs/jfs/jfs_debug.c
+index a70907606025..35a5b2a81ae0 100644
+--- a/fs/jfs/jfs_debug.c
++++ b/fs/jfs/jfs_debug.c
+@@ -29,7 +29,6 @@
  
--static int afs_proc_cell_volumes_open(struct inode *inode, struct file *file);
- static void *afs_proc_cell_volumes_start(struct seq_file *p, loff_t *pos);
- static void *afs_proc_cell_volumes_next(struct seq_file *p, void *v,
- 					loff_t *pos);
-@@ -76,15 +75,6 @@ static const struct seq_operations afs_proc_cell_volumes_ops = {
- 	.show	= afs_proc_cell_volumes_show,
- };
+ #ifdef PROC_FS_JFS /* see jfs_debug.h */
  
--static const struct file_operations afs_proc_cell_volumes_fops = {
--	.open		= afs_proc_cell_volumes_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
+-static struct proc_dir_entry *base;
+ #ifdef CONFIG_JFS_DEBUG
+ static int jfs_loglevel_proc_show(struct seq_file *m, void *v)
+ {
+@@ -66,43 +65,29 @@ static const struct file_operations jfs_loglevel_proc_fops = {
+ };
+ #endif
+ 
+-static struct {
+-	const char	*name;
+-	const struct file_operations *proc_fops;
+-} Entries[] = {
+-#ifdef CONFIG_JFS_STATISTICS
+-	{ "lmstats",	&jfs_lmstats_proc_fops, },
+-	{ "txstats",	&jfs_txstats_proc_fops, },
+-	{ "xtstat",	&jfs_xtstat_proc_fops, },
+-	{ "mpstat",	&jfs_mpstat_proc_fops, },
+-#endif
+-#ifdef CONFIG_JFS_DEBUG
+-	{ "TxAnchor",	&jfs_txanchor_proc_fops, },
+-	{ "loglevel",	&jfs_loglevel_proc_fops }
+-#endif
 -};
+-#define NPROCENT	ARRAY_SIZE(Entries)
 -
--static int afs_proc_cell_vlservers_open(struct inode *inode,
--					struct file *file);
- static void *afs_proc_cell_vlservers_start(struct seq_file *p, loff_t *pos);
- static void *afs_proc_cell_vlservers_next(struct seq_file *p, void *v,
- 					  loff_t *pos);
-@@ -98,14 +88,6 @@ static const struct seq_operations afs_proc_cell_vlservers_ops = {
- 	.show	= afs_proc_cell_vlservers_show,
- };
+ void jfs_proc_init(void)
+ {
+-	int i;
++	struct proc_dir_entry *base;
  
--static const struct file_operations afs_proc_cell_vlservers_fops = {
--	.open		= afs_proc_cell_vlservers_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
--};
+-	if (!(base = proc_mkdir("fs/jfs", NULL)))
++	base = proc_mkdir("fs/jfs", NULL);
++	if (!base)
+ 		return;
+ 
+-	for (i = 0; i < NPROCENT; i++)
+-		proc_create(Entries[i].name, 0, base, Entries[i].proc_fops);
++#ifdef CONFIG_JFS_STATISTICS
++	proc_create_single("lmstats", 0, base, jfs_lmstats_proc_show);
++	proc_create_single("txstats", 0, base, jfs_txstats_proc_show);
++	proc_create_single("xtstat", 0, base, jfs_xtstat_proc_show);
++	proc_create_single("mpstat", 0, base, jfs_mpstat_proc_show);
++#endif
++#ifdef CONFIG_JFS_DEBUG
++	proc_create_single("TxAnchor", 0, base, jfs_txanchor_proc_show);
++	proc_create("loglevel", 0, base, &jfs_loglevel_proc_fops);
++#endif
+ }
+ 
+ void jfs_proc_clean(void)
+ {
+-	int i;
 -
--static int afs_proc_servers_open(struct inode *inode, struct file *file);
- static void *afs_proc_servers_start(struct seq_file *p, loff_t *pos);
- static void *afs_proc_servers_next(struct seq_file *p, void *v,
- 					loff_t *pos);
-@@ -119,13 +101,6 @@ static const struct seq_operations afs_proc_servers_ops = {
- 	.show	= afs_proc_servers_show,
- };
+-	if (base) {
+-		for (i = 0; i < NPROCENT; i++)
+-			remove_proc_entry(Entries[i].name, base);
+-		remove_proc_entry("fs/jfs", NULL);
+-	}
++	remove_proc_subtree("fs/jfs", NULL);
+ }
  
--static const struct file_operations afs_proc_servers_fops = {
--	.open		= afs_proc_servers_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
--};
--
- static int afs_proc_sysname_open(struct inode *inode, struct file *file);
- static int afs_proc_sysname_release(struct inode *inode, struct file *file);
- static void *afs_proc_sysname_start(struct seq_file *p, loff_t *pos);
-@@ -152,7 +127,7 @@ static const struct file_operations afs_proc_sysname_fops = {
- 	.write		= afs_proc_sysname_write,
- };
+ #endif /* PROC_FS_JFS */
+diff --git a/fs/jfs/jfs_debug.h b/fs/jfs/jfs_debug.h
+index eafd1300a00b..0d9e35da8462 100644
+--- a/fs/jfs/jfs_debug.h
++++ b/fs/jfs/jfs_debug.h
+@@ -62,7 +62,7 @@ extern void jfs_proc_clean(void);
  
--static const struct file_operations afs_proc_stats_fops;
-+static int afs_proc_stats_show(struct seq_file *m, void *v);
+ extern int jfsloglevel;
  
- /*
-  * initialise the /proc/fs/afs/ directory
-@@ -167,8 +142,8 @@ int afs_proc_init(struct afs_net *net)
+-extern const struct file_operations jfs_txanchor_proc_fops;
++int jfs_txanchor_proc_show(struct seq_file *m, void *v);
  
- 	if (!proc_create("cells", 0644, net->proc_afs, &afs_proc_cells_fops) ||
- 	    !proc_create("rootcell", 0644, net->proc_afs, &afs_proc_rootcell_fops) ||
--	    !proc_create("servers", 0644, net->proc_afs, &afs_proc_servers_fops) ||
--	    !proc_create("stats", 0644, net->proc_afs, &afs_proc_stats_fops) ||
-+	    !proc_create_seq("servers", 0644, net->proc_afs, &afs_proc_servers_ops) ||
-+	    !proc_create_single("stats", 0644, net->proc_afs, afs_proc_stats_show) ||
- 	    !proc_create("sysname", 0644, net->proc_afs, &afs_proc_sysname_fops))
- 		goto error_tree;
- 
-@@ -196,16 +171,7 @@ void afs_proc_cleanup(struct afs_net *net)
+ /* information message: e.g., configuration, major event */
+ #define jfs_info(fmt, arg...) do {			\
+@@ -105,10 +105,10 @@ extern const struct file_operations jfs_txanchor_proc_fops;
+  *	----------
   */
- static int afs_proc_cells_open(struct inode *inode, struct file *file)
- {
--	struct seq_file *m;
--	int ret;
--
--	ret = seq_open(file, &afs_proc_cells_ops);
--	if (ret < 0)
--		return ret;
--
--	m = file->private_data;
--	m->private = PDE_DATA(inode);
--	return 0;
-+	return seq_open(file, &afs_proc_cells_ops);
+ #ifdef	CONFIG_JFS_STATISTICS
+-extern const struct file_operations jfs_lmstats_proc_fops;
+-extern const struct file_operations jfs_txstats_proc_fops;
+-extern const struct file_operations jfs_mpstat_proc_fops;
+-extern const struct file_operations jfs_xtstat_proc_fops;
++int jfs_lmstats_proc_show(struct seq_file *m, void *v);
++int jfs_txstats_proc_show(struct seq_file *m, void *v);
++int jfs_mpstat_proc_show(struct seq_file *m, void *v);
++int jfs_xtstat_proc_show(struct seq_file *m, void *v);
+ 
+ #define	INCREMENT(x)		((x)++)
+ #define	DECREMENT(x)		((x)--)
+diff --git a/fs/jfs/jfs_logmgr.c b/fs/jfs/jfs_logmgr.c
+index 0e5d412c0b01..6b68df395892 100644
+--- a/fs/jfs/jfs_logmgr.c
++++ b/fs/jfs/jfs_logmgr.c
+@@ -2493,7 +2493,7 @@ int lmLogFormat(struct jfs_log *log, s64 logAddress, int logSize)
  }
  
- /*
-@@ -430,10 +396,11 @@ int afs_proc_cell_setup(struct afs_net *net, struct afs_cell *cell)
- 	if (!dir)
- 		goto error_dir;
- 
--	if (!proc_create_data("vlservers", 0, dir,
--			      &afs_proc_cell_vlservers_fops, cell) ||
--	    !proc_create_data("volumes", 0, dir,
--			      &afs_proc_cell_volumes_fops, cell))
-+	if (!proc_create_seq_data("vlservers", 0, dir,
-+			&afs_proc_cell_vlservers_ops, cell))
-+		goto error_tree;
-+	if (!proc_create_seq_data("volumes", 0, dir, &afs_proc_cell_volumes_ops,
-+			cell))
- 		goto error_tree;
- 
- 	_leave(" = 0");
-@@ -458,29 +425,6 @@ void afs_proc_cell_remove(struct afs_net *net, struct afs_cell *cell)
- 	_leave("");
- }
- 
--/*
-- * open "/proc/fs/afs/<cell>/volumes" which provides a summary of extant cells
-- */
--static int afs_proc_cell_volumes_open(struct inode *inode, struct file *file)
--{
--	struct afs_cell *cell;
--	struct seq_file *m;
--	int ret;
--
--	cell = PDE_DATA(inode);
--	if (!cell)
--		return -ENOENT;
--
--	ret = seq_open(file, &afs_proc_cell_volumes_ops);
--	if (ret < 0)
--		return ret;
--
--	m = file->private_data;
--	m->private = cell;
--
--	return 0;
--}
--
- /*
-  * set up the iterator to start reading from the cells list and return the
-  * first item
-@@ -488,7 +432,7 @@ static int afs_proc_cell_volumes_open(struct inode *inode, struct file *file)
- static void *afs_proc_cell_volumes_start(struct seq_file *m, loff_t *_pos)
- 	__acquires(cell->proc_lock)
+ #ifdef CONFIG_JFS_STATISTICS
+-static int jfs_lmstats_proc_show(struct seq_file *m, void *v)
++int jfs_lmstats_proc_show(struct seq_file *m, void *v)
  {
--	struct afs_cell *cell = m->private;
-+	struct afs_cell *cell = PDE_DATA(file_inode(m->file));
- 
- 	_enter("cell=%p pos=%Ld", cell, *_pos);
- 
-@@ -502,7 +446,7 @@ static void *afs_proc_cell_volumes_start(struct seq_file *m, loff_t *_pos)
- static void *afs_proc_cell_volumes_next(struct seq_file *p, void *v,
- 					loff_t *_pos)
- {
--	struct afs_cell *cell = p->private;
-+	struct afs_cell *cell = PDE_DATA(file_inode(p->file));
- 
- 	_enter("cell=%p pos=%Ld", cell, *_pos);
- 	return seq_list_next(v, &cell->proc_volumes, _pos);
-@@ -514,7 +458,7 @@ static void *afs_proc_cell_volumes_next(struct seq_file *p, void *v,
- static void afs_proc_cell_volumes_stop(struct seq_file *p, void *v)
- 	__releases(cell->proc_lock)
- {
--	struct afs_cell *cell = p->private;
-+	struct afs_cell *cell = PDE_DATA(file_inode(p->file));
- 
- 	read_unlock(&cell->proc_lock);
- }
-@@ -530,7 +474,7 @@ static const char afs_vol_types[3][3] = {
-  */
- static int afs_proc_cell_volumes_show(struct seq_file *m, void *v)
- {
--	struct afs_cell *cell = m->private;
-+	struct afs_cell *cell = PDE_DATA(file_inode(m->file));
- 	struct afs_volume *vol = list_entry(v, struct afs_volume, proc_link);
- 
- 	/* Display header on line 1 */
-@@ -546,30 +490,6 @@ static int afs_proc_cell_volumes_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--/*
-- * open "/proc/fs/afs/<cell>/vlservers" which provides a list of volume
-- * location server
-- */
--static int afs_proc_cell_vlservers_open(struct inode *inode, struct file *file)
--{
--	struct afs_cell *cell;
--	struct seq_file *m;
--	int ret;
--
--	cell = PDE_DATA(inode);
--	if (!cell)
--		return -ENOENT;
--
--	ret = seq_open(file, &afs_proc_cell_vlservers_ops);
--	if (ret<0)
--		return ret;
--
--	m = file->private_data;
--	m->private = cell;
--
--	return 0;
--}
--
- /*
-  * set up the iterator to start reading from the cells list and return the
-  * first item
-@@ -578,7 +498,7 @@ static void *afs_proc_cell_vlservers_start(struct seq_file *m, loff_t *_pos)
- 	__acquires(rcu)
- {
- 	struct afs_addr_list *alist;
--	struct afs_cell *cell = m->private;
-+	struct afs_cell *cell = PDE_DATA(file_inode(m->file));
- 	loff_t pos = *_pos;
- 
- 	rcu_read_lock();
-@@ -603,7 +523,7 @@ static void *afs_proc_cell_vlservers_next(struct seq_file *p, void *v,
- 					  loff_t *_pos)
- {
- 	struct afs_addr_list *alist;
--	struct afs_cell *cell = p->private;
-+	struct afs_cell *cell = PDE_DATA(file_inode(p->file));
- 	loff_t pos;
- 
- 	alist = rcu_dereference(cell->vl_addrs);
-@@ -643,15 +563,6 @@ static int afs_proc_cell_vlservers_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
--/*
-- * open "/proc/fs/afs/servers" which provides a summary of active
-- * servers
-- */
--static int afs_proc_servers_open(struct inode *inode, struct file *file)
--{
--	return seq_open(file, &afs_proc_servers_ops);
--}
--
- /*
-  * Set up the iterator to start reading from the server list and return the
-  * first item.
-@@ -931,18 +842,3 @@ static int afs_proc_stats_show(struct seq_file *m, void *v)
- 		   atomic_long_read(&net->n_store_bytes));
+ 	seq_printf(m,
+ 		       "JFS Logmgr stats\n"
+@@ -2510,16 +2510,4 @@ static int jfs_lmstats_proc_show(struct seq_file *m, void *v)
+ 		       lmStat.partial_page);
  	return 0;
  }
 -
--/*
-- * Open "/proc/fs/afs/stats" to allow reading of the stat counters.
-- */
--static int afs_proc_stats_open(struct inode *inode, struct file *file)
+-static int jfs_lmstats_proc_open(struct inode *inode, struct file *file)
 -{
--	return single_open(file, afs_proc_stats_show, NULL);
+-	return single_open(file, jfs_lmstats_proc_show, NULL);
 -}
 -
--static const struct file_operations afs_proc_stats_fops = {
--	.open		= afs_proc_stats_open,
+-const struct file_operations jfs_lmstats_proc_fops = {
+-	.open		= jfs_lmstats_proc_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release        = single_release,
+-	.release	= single_release,
 -};
+ #endif /* CONFIG_JFS_STATISTICS */
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index 1a3b0cc22ad3..fa2c6824c7f2 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -815,7 +815,7 @@ void __invalidate_metapages(struct inode *ip, s64 addr, int len)
+ }
+ 
+ #ifdef CONFIG_JFS_STATISTICS
+-static int jfs_mpstat_proc_show(struct seq_file *m, void *v)
++int jfs_mpstat_proc_show(struct seq_file *m, void *v)
+ {
+ 	seq_printf(m,
+ 		       "JFS Metapage statistics\n"
+@@ -828,16 +828,4 @@ static int jfs_mpstat_proc_show(struct seq_file *m, void *v)
+ 		       mpStat.lockwait);
+ 	return 0;
+ }
+-
+-static int jfs_mpstat_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, jfs_mpstat_proc_show, NULL);
+-}
+-
+-const struct file_operations jfs_mpstat_proc_fops = {
+-	.open		= jfs_mpstat_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+ #endif
+diff --git a/fs/jfs/jfs_txnmgr.c b/fs/jfs/jfs_txnmgr.c
+index 4d973524c887..a5663cb621d8 100644
+--- a/fs/jfs/jfs_txnmgr.c
++++ b/fs/jfs/jfs_txnmgr.c
+@@ -2998,7 +2998,7 @@ int jfs_sync(void *arg)
+ }
+ 
+ #if defined(CONFIG_PROC_FS) && defined(CONFIG_JFS_DEBUG)
+-static int jfs_txanchor_proc_show(struct seq_file *m, void *v)
++int jfs_txanchor_proc_show(struct seq_file *m, void *v)
+ {
+ 	char *freewait;
+ 	char *freelockwait;
+@@ -3032,22 +3032,10 @@ static int jfs_txanchor_proc_show(struct seq_file *m, void *v)
+ 		       list_empty(&TxAnchor.unlock_queue) ? "" : "not ");
+ 	return 0;
+ }
+-
+-static int jfs_txanchor_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, jfs_txanchor_proc_show, NULL);
+-}
+-
+-const struct file_operations jfs_txanchor_proc_fops = {
+-	.open		= jfs_txanchor_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+ #endif
+ 
+ #if defined(CONFIG_PROC_FS) && defined(CONFIG_JFS_STATISTICS)
+-static int jfs_txstats_proc_show(struct seq_file *m, void *v)
++int jfs_txstats_proc_show(struct seq_file *m, void *v)
+ {
+ 	seq_printf(m,
+ 		       "JFS TxStats\n"
+@@ -3072,16 +3060,4 @@ static int jfs_txstats_proc_show(struct seq_file *m, void *v)
+ 		       TxStat.txLockAlloc_freelock);
+ 	return 0;
+ }
+-
+-static int jfs_txstats_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, jfs_txstats_proc_show, NULL);
+-}
+-
+-const struct file_operations jfs_txstats_proc_fops = {
+-	.open		= jfs_txstats_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+ #endif
+diff --git a/fs/jfs/jfs_xtree.c b/fs/jfs/jfs_xtree.c
+index 5cde6d2fcfca..2c200b5256a6 100644
+--- a/fs/jfs/jfs_xtree.c
++++ b/fs/jfs/jfs_xtree.c
+@@ -3874,7 +3874,7 @@ s64 xtTruncate_pmap(tid_t tid, struct inode *ip, s64 committed_size)
+ }
+ 
+ #ifdef CONFIG_JFS_STATISTICS
+-static int jfs_xtstat_proc_show(struct seq_file *m, void *v)
++int jfs_xtstat_proc_show(struct seq_file *m, void *v)
+ {
+ 	seq_printf(m,
+ 		       "JFS Xtree statistics\n"
+@@ -3887,16 +3887,4 @@ static int jfs_xtstat_proc_show(struct seq_file *m, void *v)
+ 		       xtStat.split);
+ 	return 0;
+ }
+-
+-static int jfs_xtstat_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, jfs_xtstat_proc_show, NULL);
+-}
+-
+-const struct file_operations jfs_xtstat_proc_fops = {
+-	.open		= jfs_xtstat_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+ #endif
 -- 
 2.17.0
 
