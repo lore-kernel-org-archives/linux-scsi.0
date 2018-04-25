@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 32/40] netfilter/x_tables: switch to proc_create_seq_private
-Date: Wed, 25 Apr 2018 17:48:19 +0200
-Message-ID: <20180425154827.32251-33-hch@lst.de>
+Subject: [PATCH 35/40] atm: switch to proc_create_seq_private
+Date: Wed, 25 Apr 2018 17:48:22 +0200
+Message-ID: <20180425154827.32251-36-hch@lst.de>
 References: <20180425154827.32251-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,82 +25,142 @@ And remove proc boilerplate code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- net/netfilter/x_tables.c | 42 ++++++----------------------------------
- 1 file changed, 6 insertions(+), 36 deletions(-)
+ net/atm/proc.c | 72 +++++++++-----------------------------------------
+ 1 file changed, 13 insertions(+), 59 deletions(-)
 
-diff --git a/net/netfilter/x_tables.c b/net/netfilter/x_tables.c
-index 344dd01a5027..0e314f95a4a3 100644
---- a/net/netfilter/x_tables.c
-+++ b/net/netfilter/x_tables.c
-@@ -1648,22 +1648,6 @@ static const struct seq_operations xt_match_seq_ops = {
- 	.show	= xt_match_seq_show,
+diff --git a/net/atm/proc.c b/net/atm/proc.c
+index f272b0f59d82..0b0495a41bbe 100644
+--- a/net/atm/proc.c
++++ b/net/atm/proc.c
+@@ -68,7 +68,6 @@ static void atm_dev_info(struct seq_file *seq, const struct atm_dev *dev)
+ struct vcc_state {
+ 	int bucket;
+ 	struct sock *sk;
+-	int family;
  };
  
--static int xt_match_open(struct inode *inode, struct file *file)
--{
--	struct nf_mttg_trav *trav;
--	trav = __seq_open_private(file, &xt_match_seq_ops, sizeof(*trav));
--	if (!trav)
--		return -ENOMEM;
--	return 0;
--}
--
--static const struct file_operations xt_match_ops = {
--	.open	 = xt_match_open,
--	.read	 = seq_read,
--	.llseek	 = seq_lseek,
--	.release = seq_release_private,
--};
--
- static void *xt_target_seq_start(struct seq_file *seq, loff_t *pos)
+ static inline int compare_family(struct sock *sk, int family)
+@@ -106,23 +105,13 @@ static int __vcc_walk(struct sock **sock, int family, int *bucket, loff_t l)
+ 	return (l < 0);
+ }
+ 
+-static inline void *vcc_walk(struct vcc_state *state, loff_t l)
++static inline void *vcc_walk(struct seq_file *seq, loff_t l)
  {
- 	return xt_mttg_seq_start(seq, pos, true);
-@@ -1698,22 +1682,6 @@ static const struct seq_operations xt_target_seq_ops = {
- 	.show	= xt_target_seq_show,
- };
- 
--static int xt_target_open(struct inode *inode, struct file *file)
--{
--	struct nf_mttg_trav *trav;
--	trav = __seq_open_private(file, &xt_target_seq_ops, sizeof(*trav));
--	if (!trav)
--		return -ENOMEM;
--	return 0;
+-	return __vcc_walk(&state->sk, state->family, &state->bucket, l) ?
+-	       state : NULL;
 -}
 -
--static const struct file_operations xt_target_ops = {
--	.open	 = xt_target_open,
--	.read	 = seq_read,
--	.llseek	 = seq_lseek,
--	.release = seq_release_private,
+-static int __vcc_seq_open(struct inode *inode, struct file *file,
+-	int family, const struct seq_operations *ops)
+-{
+-	struct vcc_state *state;
+-
+-	state = __seq_open_private(file, ops, sizeof(*state));
+-	if (state == NULL)
+-		return -ENOMEM;
++	struct vcc_state *state = seq->private;
++	int family = (uintptr_t)(PDE_DATA(file_inode(seq->file)));
+ 
+-	state->family = family;
+-	return 0;
++	return __vcc_walk(&state->sk, family, &state->bucket, l) ?
++	       state : NULL;
+ }
+ 
+ static void *vcc_seq_start(struct seq_file *seq, loff_t *pos)
+@@ -133,7 +122,7 @@ static void *vcc_seq_start(struct seq_file *seq, loff_t *pos)
+ 
+ 	read_lock(&vcc_sklist_lock);
+ 	state->sk = SEQ_START_TOKEN;
+-	return left ? vcc_walk(state, left) : SEQ_START_TOKEN;
++	return left ? vcc_walk(seq, left) : SEQ_START_TOKEN;
+ }
+ 
+ static void vcc_seq_stop(struct seq_file *seq, void *v)
+@@ -144,9 +133,7 @@ static void vcc_seq_stop(struct seq_file *seq, void *v)
+ 
+ static void *vcc_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ {
+-	struct vcc_state *state = seq->private;
+-
+-	v = vcc_walk(state, 1);
++	v = vcc_walk(seq, 1);
+ 	*pos += !!PTR_ERR(v);
+ 	return v;
+ }
+@@ -280,18 +267,6 @@ static const struct seq_operations pvc_seq_ops = {
+ 	.show	= pvc_seq_show,
+ };
+ 
+-static int pvc_seq_open(struct inode *inode, struct file *file)
+-{
+-	return __vcc_seq_open(inode, file, PF_ATMPVC, &pvc_seq_ops);
+-}
+-
+-static const struct file_operations pvc_seq_fops = {
+-	.open		= pvc_seq_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= seq_release_private,
 -};
 -
- #define FORMAT_TABLES	"_tables_names"
- #define	FORMAT_MATCHES	"_tables_matches"
- #define FORMAT_TARGETS 	"_tables_targets"
-@@ -1787,8 +1755,9 @@ int xt_proto_init(struct net *net, u_int8_t af)
+ static int vcc_seq_show(struct seq_file *seq, void *v)
+ {
+ 	if (v == SEQ_START_TOKEN) {
+@@ -314,18 +289,6 @@ static const struct seq_operations vcc_seq_ops = {
+ 	.show	= vcc_seq_show,
+ };
  
- 	strlcpy(buf, xt_prefix[af], sizeof(buf));
- 	strlcat(buf, FORMAT_MATCHES, sizeof(buf));
--	proc = proc_create_data(buf, 0440, net->proc_net, &xt_match_ops,
--				(void *)(unsigned long)af);
-+	proc = proc_create_seq_private(buf, 0440, net->proc_net,
-+			&xt_match_seq_ops, sizeof(struct nf_mttg_trav),
-+			(void *)(unsigned long)af);
- 	if (!proc)
- 		goto out_remove_tables;
- 	if (uid_valid(root_uid) && gid_valid(root_gid))
-@@ -1796,8 +1765,9 @@ int xt_proto_init(struct net *net, u_int8_t af)
+-static int vcc_seq_open(struct inode *inode, struct file *file)
+-{
+-	return __vcc_seq_open(inode, file, 0, &vcc_seq_ops);
+-}
+-
+-static const struct file_operations vcc_seq_fops = {
+-	.open		= vcc_seq_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= seq_release_private,
+-};
+-
+ static int svc_seq_show(struct seq_file *seq, void *v)
+ {
+ 	static const char atm_svc_banner[] =
+@@ -349,18 +312,6 @@ static const struct seq_operations svc_seq_ops = {
+ 	.show	= svc_seq_show,
+ };
  
- 	strlcpy(buf, xt_prefix[af], sizeof(buf));
- 	strlcat(buf, FORMAT_TARGETS, sizeof(buf));
--	proc = proc_create_data(buf, 0440, net->proc_net, &xt_target_ops,
--				(void *)(unsigned long)af);
-+	proc = proc_create_seq_private(buf, 0440, net->proc_net,
-+			 &xt_target_seq_ops, sizeof(struct nf_mttg_trav),
-+			 (void *)(unsigned long)af);
- 	if (!proc)
- 		goto out_remove_matches;
- 	if (uid_valid(root_uid) && gid_valid(root_gid))
+-static int svc_seq_open(struct inode *inode, struct file *file)
+-{
+-	return __vcc_seq_open(inode, file, PF_ATMSVC, &svc_seq_ops);
+-}
+-
+-static const struct file_operations svc_seq_fops = {
+-	.open		= svc_seq_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= seq_release_private,
+-};
+-
+ static ssize_t proc_dev_atm_read(struct file *file, char __user *buf,
+ 				 size_t count, loff_t *pos)
+ {
+@@ -434,9 +385,12 @@ int __init atm_proc_init(void)
+ 	if (!atm_proc_root)
+ 		return -ENOMEM;
+ 	proc_create_seq("devices", 0444, atm_proc_root, &atm_dev_seq_ops);
+-	proc_create("pvc", 0444, atm_proc_root, &pvc_seq_fops);
+-	proc_create("svc", 0444, atm_proc_root, &svc_seq_fops);
+-	proc_create("vc", 0444, atm_proc_root, &vcc_seq_fops);
++	proc_create_seq_private("pvc", 0444, atm_proc_root, &pvc_seq_ops,
++			sizeof(struct vcc_state), (void *)(uintptr_t)PF_ATMPVC);
++	proc_create_seq_private("svc", 0444, atm_proc_root, &svc_seq_ops,
++			sizeof(struct vcc_state), (void *)(uintptr_t)PF_ATMSVC);
++	proc_create_seq_private("vc", 0444, atm_proc_root, &vcc_seq_ops,
++			sizeof(struct vcc_state), NULL);
+ 	return 0;
+ }
+ 
 -- 
 2.17.0
