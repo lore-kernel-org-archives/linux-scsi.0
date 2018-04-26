@@ -1,29 +1,45 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 06/40] proc: introduce proc_create_single{,_data}
-Date: Thu, 26 Apr 2018 11:45:50 +1000 (AEST)
-Message-ID: <alpine.LNX.2.21.1804261118050.8@nippy.intranet>
-References: <20180425154827.32251-1-hch@lst.de> <20180425154827.32251-7-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 2/5] ide: kill ide_toggle_bounce
+Date: Thu, 26 Apr 2018 09:20:33 +0200
+Message-ID: <20180426072033.GA14700@lst.de>
+References: <20180424181625.22410-1-hch@lst.de>
+	<20180424181625.22410-3-hch@lst.de>
+	<5aaca0d3-417f-57f3-969f-b4c777c3fd48@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180425154827.32251-7-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <5aaca0d3-417f-57f3-969f-b4c777c3fd48-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 25 Apr 2018, Christoph Hellwig wrote:
+On Tue, Apr 24, 2018 at 08:02:56PM -0600, Jens Axboe wrote:
+> On 4/24/18 12:16 PM, Christoph Hellwig wrote:
+> > ide_toggle_bounce did select various strange block bounce limits, including
+> > not bouncing at all as soon as an iommu is present in the system.  Given
+> > that the dma_map routines now handle any required bounce buffering except
+> > for ISA DMA, and the ide code already must handle either ISA DMA or highmem
+> > at least for iommu equipped systems we can get rid of the block layer
+> > bounce limit setting entirely.
+> 
+> Pretty sure I was the one to add this code, when highmem page IO was
+> enabled about two decades ago...
+> 
+> Outside of DMA, the issue was that the PIO code could not handle
+> highmem. That's not the case anymore, so this should be fine.
 
->  
-> -/*
-> - * /proc/nubus stuff
-> - */
-> -
-
-I don't think that the introduction of proc_create_single{,_data} alters 
-the value of that comment. That comment and similar comments in the same 
-file do have a purpose, which is to keep separate the /proc/nubus 
-implementation is kept separate from the /proc/bus/nubus/devices 
-implementation and so on.
-
--- 
+Yes, that is the rationale.  Any chance to you could look over the
+other patches as well?  Except for the networking one for which I'd
+really like to see a review from Dave all the users of the interface
+are block related.
