@@ -1,53 +1,39 @@
-From: Rik van Riel <riel@surriel.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC NOTES] x86 ZONE_DMA love
-Date: Thu, 26 Apr 2018 21:09:17 -0400
-Message-ID: <1524791357.13490.1.camel@surriel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [LSF/MM TOPIC NOTES] x86 ZONE_DMA love
+Date: Thu, 26 Apr 2018 22:35:56 -0700
+Message-ID: <20180427053556.GB11339@infradead.org>
 References: <20180426215406.GB27853@wotan.suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-bYFiuVr7tqybapqy96A6"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20180426215406.GB27853@wotan.suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-mm@kvack.org
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, matthew@wil.cx, x86@kernel.org, linux-spi@vger.kernel.org, linux-kernel@vger.kernel.org, luto@amacapital.net, broonie@kernel.org, jthumshirn@suse.de, cl@linux.com, mhocko@kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-mm@kvack.org, mhocko@kernel.org, cl@linux.com, Jan Kara <jack@suse.cz>, matthew@wil.cx, x86@kernel.org, luto@amacapital.net, martin.petersen@oracle.com, jthumshirn@suse.de, broonie@kernel.org, linux-spi@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Apr 26, 2018 at 09:54:06PM +0000, Luis R. Rodriguez wrote:
+> In practice if you don't have a floppy device on x86, you don't need ZONE_DMA,
 
---=-bYFiuVr7tqybapqy96A6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I call BS on that, and you actually explain later why it it BS due
+to some drivers using it more explicitly.  But even more importantly
+we have plenty driver using it through dma_alloc_* and a small DMA
+mask, and they are in use - we actually had a 4.16 regression due to
+them.
 
-On Thu, 2018-04-26 at 21:54 +0000, Luis R. Rodriguez wrote:
-> Below are my notes on the ZONE_DMA discussion at LSF/MM 2018. There
-> were some
-> earlier discussion prior to my arrival to the session about moving
-> around
-> ZOME_DMA around, if someone has notes on that please share too :)
+> SCSI is *severely* affected:
 
-We took notes during LSF/MM 2018. Not a whole lot
-on your topic, but most of the MM and plenary
-topics have some notes.
+Not really.  We have unchecked_isa_dma to support about 4 drivers,
+and less than a hand ful of drivers doing stupid things, which can
+be fixed easily, and just need a volunteer.
 
-https://etherpad.wikimedia.org/p/LSFMM2018
+> That's the end of the review of all current explicit callers on x86.
+> 
+> # dma_alloc_coherent_gfp_flags() and dma_generic_alloc_coherent()
+> 
+> dma_alloc_coherent_gfp_flags() and dma_generic_alloc_coherent() set
+> GFP_DMA if if (dma_mask <= DMA_BIT_MASK(24))
 
---=20
-All Rights Reversed.
---=-bYFiuVr7tqybapqy96A6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEKR73pCCtJ5Xj3yADznnekoTE3oMFAlrieD0ACgkQznnekoTE
-3oPs2wf/e3cU+yw6P/o7RotemUv9dEUwBO9xZB7WTlPx9oXdvNGIbfZ/9dnVphKw
-R4nnCpwrqDFCz3RWyGcd9pLExcz8wqYzMVFcVJfAzrsVc55SGPXPaN9/Q6qJIyim
-4RpsEKrlrpVTJ4eJ/mXs5ExyTPJxQb7LzQHVNLNc0lCzMTf7ScS8s5UTA6rdFFJ6
-u+Syxa9HXvf3oaFCogRFfe2gupp7to8+uOS+VqWCfgfiB+1QrgHEyHXFefrA/ZCv
-N+Et3YTI+AMLY1Z+HpKgVvze9QvjjyPIEOUp0UaM+y6kHRwhrBX0nimEpMvYWWm8
-2kNZ0cQMddPc+h8rH8cQK0maaERb5w==
-=CNgl
------END PGP SIGNATURE-----
-
---=-bYFiuVr7tqybapqy96A6--
+All that code is long gone and replaced with dma-direct.  Which still
+uses GFP_DMA based on the dma mask, though - see above.
