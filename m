@@ -1,39 +1,25 @@
-From: Matthew Wilcox <willy@infradead.org>
+From: Christopher Lameter <cl@linux.com>
 Subject: Re: [LSF/MM TOPIC NOTES] x86 ZONE_DMA love
-Date: Fri, 27 Apr 2018 09:28:22 -0700
-Message-ID: <20180427162822.GE8161@bombadil.infradead.org>
-References: <20180426215406.GB27853@wotan.suse.de>
- <20180427053556.GB11339@infradead.org>
- <20180427161456.GD27853@wotan.suse.de>
+Date: Fri, 27 Apr 2018 11:36:23 -0500 (CDT)
+Message-ID: <alpine.DEB.2.20.1804271136030.11686@nuc-kabylake>
+References: <20180426215406.GB27853@wotan.suse.de> <20180427053556.GB11339@infradead.org> <20180427071843.GB17484@dhcp22.suse.cz> <alpine.DEB.2.20.1804271103160.11686@nuc-kabylake> <20180427161813.GD8161@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180427161456.GD27853@wotan.suse.de>
+In-Reply-To: <20180427161813.GD8161@bombadil.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, mhocko@kernel.org, cl@linux.com, Jan Kara <jack@suse.cz>, matthew@wil.cx, x86@kernel.org, luto@amacapital.net, martin.petersen@oracle.com, jthumshirn@suse.de, broonie@kernel.org, Juergen Gross <jgross@suse.com>, linux-spi@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, linux-scsi@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>, linux-kernel@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-mm@kvack.org, Jan Kara <jack@suse.cz>, matthew@wil.cx, x86@kernel.org, luto@amacapital.net, martin.petersen@oracle.com, jthumshirn@suse.de, broonie@kernel.org, linux-spi@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Apr 27, 2018 at 04:14:56PM +0000, Luis R. Rodriguez wrote:
-> > Not really.  We have unchecked_isa_dma to support about 4 drivers,
-> 
-> Ah very neat:
-> 
->   * CONFIG_CHR_DEV_OSST - "SCSI OnStream SC-x0 tape support"
+On Fri, 27 Apr 2018, Matthew Wilcox wrote:
 
-That's an upper level driver, like cdrom, disk and regular tapes.
+> Some devices have incredibly bogus hardware like 28 bit addressing
+> or 39 bit addressing.  We don't have a good way to allocate memory by
+> physical address other than than saying "GFP_DMA for anything less than
+> 32, GFP_DMA32 (or GFP_KERNEL on 32-bit) for anything less than 64 bit".
+>
+> Even CMA doesn't have a "cma_alloc_phys()".  Maybe that's the right place
+> to put such an allocation API.
 
->   * CONFIG_SCSI_ADVANSYS - "AdvanSys SCSI support"
-
-If we ditch support for the ISA boards, this can go away.
-
->   * CONFIG_SCSI_AHA1542 - "Adaptec AHA1542 support"
-
-Probably true.
-
->   * CONFIG_SCSI_ESAS2R - "ATTO Technology's ExpressSAS RAID adapter driver"
-
-That's being set to 0.
-
-You missed BusLogic.c and gdth.c
+The other way out of this would be to require a IOMMU?
