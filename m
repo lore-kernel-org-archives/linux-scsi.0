@@ -1,83 +1,245 @@
-From: Vikram Auradkar <auradkar@google.com>
-Subject: [RFC] [PATCH] Do not start queue from interrupt context
-Date: Mon, 30 Apr 2018 14:21:27 -0700
-Message-ID: <20180430212127.54865-1-auradkar@google.com>
+From: Anatoliy Glagolev <glagolig@gmail.com>
+Subject: Re: [PATCH] bsg referencing bus driver module
+Date: Tue, 1 May 2018 11:24:16 -0600
+Message-ID: <20180501172415.GA10485@xldev-tmpl.dev.purestorage.com>
+References: <CANFzKepsGq0EHX4GPtC0RZOWqVf2fTJ6uA2WH-SZNsBuwMJ5KA@mail.gmail.com>
+ <CANFzKer6QDaJALX3LKPF2DV6LgczTh-efQe9+zeK8BuxTWFt1A@mail.gmail.com>
+ <CANFzKepRSA+VoVAvOfW6U_qHFVDZex+=hQ=QhU+7Z=unvwejJQ@mail.gmail.com>
+ <1524218126.3321.6.camel@HansenPartnership.com>
+ <20180420224404.GC32372@xldev-tmpl.dev.purestorage.com>
+ <1524383279.3389.7.camel@HansenPartnership.com>
+ <20180423183845.GA21609@xldev-tmpl.dev.purestorage.com>
+ <20180427000059.GA7044@xldev-tmpl.dev.purestorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180427000059.GA7044@xldev-tmpl.dev.purestorage.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Vikram Auradkar <auradkar@google.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc: axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp, martin.petersen@oracle.com, jthumshirn@suse.de, hare@suse.com, bblock@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Lockdep warning is seen when driver is handling a topology change
-event after drive removal.
-Starting queue eventually enables irq, which throws lockdep warning in
-scsi_request_fn. This change makes starting queues async.
+Any comments on the new patch (which, I think, addresses the concern
+about module being stuck in unloadable state forever; if not, there
+would be a leak in the bsg layer)? Or on dropping a reference
+to bsg_class_device's parent early before the bsg_class_device
+itself is gone, to implement James's idea of cutting of the bsg
+layer at fc_bsg_remove time?
 
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 0 at kernel/lockdep.c:2593 trace_hardirqs_on_caller+0x1bc/0x1d0()
-DEBUG_LOCKS_WARN_ON(current->hardirq_context)
-CPU: 0 PID: 0 Comm: swapper/0 Tainted: G           O  3.11.10-dbg-DEV #1
-Hardware name: Intel Grantley,Wellsburg/Ixion_QC_15, BIOS 2.50.0 01/21/2016
- 0000000000000000 ffff881fff803b28 ffffffffa4ea1bd5 ffff881fff803b78
- ffffffffa491bdcc ffff881fff803b68 ffffffffa48ae464 00000000cc6405a0
- 0000000000000000 ffffffffa4805a50 ffff881f9b3ae000 0000000000000000
-Call Trace:
- <IRQ>  [<ffffffffa4ea1bd5>] dump_stack+0x68/0x91
- [<ffffffffa491bdcc>] ? trace_hardirqs_on_caller+0x1bc/0x1d0
- [<ffffffffa48ae464>] warn_slowpath_common+0x94/0xc0
- [<ffffffffa4805a50>] ? _raw_spin_unlock_irq+0x30/0x50
- [<ffffffffa48ae546>] warn_slowpath_fmt+0x46/0x50
- [<ffffffffa491bdcc>] trace_hardirqs_on_caller+0x1bc/0x1d0
- [<ffffffffa491bded>] trace_hardirqs_on+0xd/0x10
- [<ffffffffa4805a50>] _raw_spin_unlock_irq+0x30/0x50
- [<ffffffffa4c5398f>] scsi_request_fn+0xaf/0x720
- [<ffffffffa4b66907>] __blk_run_queue+0x37/0x50
- [<ffffffffa4b66f1e>] blk_start_queue+0x3e/0x80
- [<ffffffffa4c52d7f>] scsi_internal_device_unblock+0x3f/0x90
- [<ffffffffc0358357>] _scsih_ublock_io_device+0x87/0xd0 [mpt2sas]
- [<ffffffffc035c105>] _scsih_tm_tr_send+0x185/0x340 [mpt2sas]
- [<ffffffffc0362e10>] mpt2sas_scsih_event_callback+0x3e0/0x840 [mpt2sas]
- [<ffffffffc034e0ba>] _base_interrupt+0x2fa/0x950 [mpt2sas]
- [<ffffffffa491bcbb>] ? trace_hardirqs_on_caller+0xab/0x1d0
- [<ffffffffa491bded>] ? trace_hardirqs_on+0xd/0x10
- [<ffffffffa4950784>] handle_irq_event_percpu+0x74/0x230
- [<ffffffffa4950988>] handle_irq_event+0x48/0x70
- [<ffffffffa495315e>] ? handle_edge_irq+0x1e/0x110
- [<ffffffffa49531b7>] handle_edge_irq+0x77/0x110
- [<ffffffffa4857d82>] handle_irq+0x22/0x40
- [<ffffffffa4805e9f>] do_IRQ+0x7f/0x110
- [<ffffffffa4ea3f2f>] common_interrupt+0x6f/0x6f
- <EOI>  [<ffffffffa4d3fe8c>] ? __cpuidle_enter_state+0x7c/0x120
- [<ffffffffa4d3fe87>] ? __cpuidle_enter_state+0x77/0x120
- [<ffffffffa4d40105>] cpuidle_enter_state+0xd5/0x250
- [<ffffffffa4909aa8>] cpu_startup_entry+0xb8/0x1e0
- [<ffffffffa4e98536>] rest_init+0xd6/0xe0
- [<ffffffffa4e98465>] ? rest_init+0x5/0xe0
- [<ffffffffa5874ec1>] start_kernel+0x3ed/0x3fa
- [<ffffffffa58748d0>] ? repair_env_string+0x5e/0x5e
- [<ffffffffa58745a5>] x86_64_start_reservations+0x2a/0x2c
- [<ffffffffa58746b0>] x86_64_start_kernel+0x109/0x10d
----[ end trace 46d48ef4760a5d9c ]--
+Thanks.
 
-Signed-off-by: Vikram Auradkar <auradkar@google.com>
----
- drivers/scsi/scsi_lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e9b4f279d29c..72c90233f261 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3178,7 +3178,7 @@ void scsi_start_queue(struct scsi_device *sdev)
- 		blk_mq_unquiesce_queue(q);
- 	} else {
- 		spin_lock_irqsave(q->queue_lock, flags);
--		blk_start_queue(q);
-+		blk_start_queue_async(q);
- 		spin_unlock_irqrestore(q->queue_lock, flags);
- 	}
- }
--- 
-2.17.0.441.gb46fe60e1d-goog
+On Thu, Apr 26, 2018 at 06:01:00PM -0600, Anatoliy Glagolev wrote:
+> Any thoughts on this? Can we really drop a reference from a child device
+> (bsg_class_device) to a parent device (Scsi_Host) while the child device
+> is still around at fc_bsg_remove time?
+> 
+> If not, please consider a fix with module references. I realized that
+> the previous version of the fix had a problem since bsg_open may run
+> more often than bsg_release. Sending a newer version... The new fix
+> piggybacks on the bsg layer logic allocating/freeing bsg_device structs.
+> When all those structs are gone there are no references to Scsi_Host from
+> the user-mode side. The only remaining references are from a SCSI bus
+> driver (like qla2xxx) itself; it is safe to drop the module reference
+> at that time.
+> 
+> 
+> From c744d4fd93578545ad12faa35a3354364793b124 Mon Sep 17 00:00:00 2001
+> From: Anatoliy Glagolev <glagolig@gmail.com>
+> Date: Wed, 25 Apr 2018 19:16:10 -0600
+> Subject: [PATCH] bsg referencing parent module
+> Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
+> 
+> Fixing a bug when bsg layer holds the last reference to device
+> when the device's module has been unloaded. Upon dropping the
+> reference the device's release function may touch memory of
+> the unloaded module.
+> ---
+>  block/bsg-lib.c                  | 24 ++++++++++++++++++++++--
+>  block/bsg.c                      | 22 +++++++++++++++++++++-
+>  drivers/scsi/scsi_transport_fc.c |  8 ++++++--
+>  include/linux/bsg-lib.h          |  4 ++++
+>  include/linux/bsg.h              |  5 +++++
+>  5 files changed, 58 insertions(+), 5 deletions(-)
+> 
+> diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+> index fc2e5ff..bb11786 100644
+> --- a/block/bsg-lib.c
+> +++ b/block/bsg-lib.c
+> @@ -309,6 +309,25 @@ struct request_queue *bsg_setup_queue(struct device *dev, const char *name,
+>  		bsg_job_fn *job_fn, int dd_job_size,
+>  		void (*release)(struct device *))
+>  {
+> +	return bsg_setup_queue_ex(dev, name, job_fn, dd_job_size, release,
+> +		NULL);
+> +}
+> +EXPORT_SYMBOL_GPL(bsg_setup_queue);
+> +
+> +/**
+> + * bsg_setup_queue_ex - Create and add the bsg hooks so we can receive requests
+> + * @dev: device to attach bsg device to
+> + * @name: device to give bsg device
+> + * @job_fn: bsg job handler
+> + * @dd_job_size: size of LLD data needed for each job
+> + * @release: @dev release function
+> + * @dev_module: @dev's module
+> + */
+> +struct request_queue *bsg_setup_queue_ex(struct device *dev, const char *name,
+> +		bsg_job_fn *job_fn, int dd_job_size,
+> +		void (*release)(struct device *),
+> +		struct module *dev_module)
+> +{
+>  	struct request_queue *q;
+>  	int ret;
+>  
+> @@ -331,7 +350,8 @@ struct request_queue *bsg_setup_queue(struct device *dev, const char *name,
+>  	blk_queue_softirq_done(q, bsg_softirq_done);
+>  	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+>  
+> -	ret = bsg_register_queue(q, dev, name, &bsg_transport_ops, release);
+> +	ret = bsg_register_queue_ex(q, dev, name, &bsg_transport_ops, release,
+> +		dev_module);
+>  	if (ret) {
+>  		printk(KERN_ERR "%s: bsg interface failed to "
+>  		       "initialize - register queue\n", dev->kobj.name);
+> @@ -343,4 +363,4 @@ struct request_queue *bsg_setup_queue(struct device *dev, const char *name,
+>  	blk_cleanup_queue(q);
+>  	return ERR_PTR(ret);
+>  }
+> -EXPORT_SYMBOL_GPL(bsg_setup_queue);
+> +EXPORT_SYMBOL_GPL(bsg_setup_queue_ex);
+> diff --git a/block/bsg.c b/block/bsg.c
+> index defa06c..950cd31 100644
+> --- a/block/bsg.c
+> +++ b/block/bsg.c
+> @@ -666,6 +666,7 @@ static int bsg_put_device(struct bsg_device *bd)
+>  {
+>  	int ret = 0, do_free;
+>  	struct request_queue *q = bd->queue;
+> +	struct module *parent_module = q->bsg_dev.parent_module;
+>  
+>  	mutex_lock(&bsg_mutex);
+>  
+> @@ -695,8 +696,11 @@ static int bsg_put_device(struct bsg_device *bd)
+>  	kfree(bd);
+>  out:
+>  	kref_put(&q->bsg_dev.ref, bsg_kref_release_function);
+> -	if (do_free)
+> +	if (do_free) {
+>  		blk_put_queue(q);
+> +		if (parent_module)
+> +			module_put(parent_module);
+> +	}
+>  	return ret;
+>  }
+>  
+> @@ -706,12 +710,19 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
+>  {
+>  	struct bsg_device *bd;
+>  	unsigned char buf[32];
+> +	struct module *parent_module = rq->bsg_dev.parent_module;
+>  
+>  	if (!blk_get_queue(rq))
+>  		return ERR_PTR(-ENXIO);
+>  
+> +	if (parent_module) {
+> +		if (!try_module_get(parent_module))
+> +			return ERR_PTR(-ENODEV);
+> +	}
+>  	bd = bsg_alloc_device();
+>  	if (!bd) {
+> +		if (parent_module)
+> +			module_put(parent_module);
+>  		blk_put_queue(rq);
+>  		return ERR_PTR(-ENOMEM);
+>  	}
+> @@ -922,6 +933,14 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
+>  		const char *name, const struct bsg_ops *ops,
+>  		void (*release)(struct device *))
+>  {
+> +	return bsg_register_queue_ex(q, parent, name, ops, release, NULL);
+> +}
+> +
+> +int bsg_register_queue_ex(struct request_queue *q, struct device *parent,
+> +		const char *name, const struct bsg_ops *ops,
+> +		void (*release)(struct device *),
+> +		struct module *parent_module)
+> +{
+>  	struct bsg_class_device *bcd;
+>  	dev_t dev;
+>  	int ret;
+> @@ -958,6 +977,7 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
+>  	bcd->parent = get_device(parent);
+>  	bcd->release = release;
+>  	bcd->ops = ops;
+> +	bcd->parent_module = parent_module;
+>  	kref_init(&bcd->ref);
+>  	dev = MKDEV(bsg_major, bcd->minor);
+>  	class_dev = device_create(bsg_class, parent, dev, NULL, "%s", devname);
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index be3be0f..f21f7d2 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -3772,17 +3772,21 @@ static int fc_bsg_dispatch(struct bsg_job *job)
+>  	struct fc_internal *i = to_fc_internal(shost->transportt);
+>  	struct request_queue *q;
+>  	char bsg_name[20];
+> +	struct module *shost_module = NULL;
+>  
+>  	fc_host->rqst_q = NULL;
+>  
+>  	if (!i->f->bsg_request)
+>  		return -ENOTSUPP;
+>  
+> +	if (shost->hostt)
+> +		shost_module = shost->hostt->module;
+> +
+>  	snprintf(bsg_name, sizeof(bsg_name),
+>  		 "fc_host%d", shost->host_no);
+>  
+> -	q = bsg_setup_queue(dev, bsg_name, fc_bsg_dispatch, i->f->dd_bsg_size,
+> -			NULL);
+> +	q = bsg_setup_queue_ex(dev, bsg_name, fc_bsg_dispatch,
+> +		i->f->dd_bsg_size, NULL, shost_module);
+>  	if (IS_ERR(q)) {
+>  		dev_err(dev,
+>  			"fc_host%d: bsg interface failed to initialize - setup queue\n",
+> diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+> index 28a7ccc..232c855 100644
+> --- a/include/linux/bsg-lib.h
+> +++ b/include/linux/bsg-lib.h
+> @@ -74,6 +74,10 @@ void bsg_job_done(struct bsg_job *job, int result,
+>  struct request_queue *bsg_setup_queue(struct device *dev, const char *name,
+>  		bsg_job_fn *job_fn, int dd_job_size,
+>  		void (*release)(struct device *));
+> +struct request_queue *bsg_setup_queue_ex(struct device *dev, const char *name,
+> +		bsg_job_fn *job_fn, int dd_job_size,
+> +		void (*release)(struct device *),
+> +		struct module *dev_module);
+>  void bsg_job_put(struct bsg_job *job);
+>  int __must_check bsg_job_get(struct bsg_job *job);
+>  
+> diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+> index 0c7dd9c..0e7c26c 100644
+> --- a/include/linux/bsg.h
+> +++ b/include/linux/bsg.h
+> @@ -23,11 +23,16 @@ struct bsg_class_device {
+>  	struct kref ref;
+>  	const struct bsg_ops *ops;
+>  	void (*release)(struct device *);
+> +	struct module *parent_module;
+>  };
+>  
+>  int bsg_register_queue(struct request_queue *q, struct device *parent,
+>  		const char *name, const struct bsg_ops *ops,
+>  		void (*release)(struct device *));
+> +int bsg_register_queue_ex(struct request_queue *q, struct device *parent,
+> +		const char *name, const struct bsg_ops *ops,
+> +		void (*release)(struct device *),
+> +		struct module *parent_module);
+>  int bsg_scsi_register_queue(struct request_queue *q, struct device *parent);
+>  void bsg_unregister_queue(struct request_queue *q);
+>  #else
+> -- 
+> 1.9.1
+> 
