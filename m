@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 08/11] scsi: hisi_sas: config ATA de-reset as an constrained command for v3 hw
-Date: Wed, 2 May 2018 23:56:31 +0800
-Message-ID: <1525276594-92173-9-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 04/11] scsi: hisi_sas: fix PI memory size
+Date: Wed, 2 May 2018 23:56:27 +0800
+Message-ID: <1525276594-92173-5-git-send-email-john.garry@huawei.com>
 References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,56 +14,31 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-As a unconstrained command, a command can be sent to SATA
-disk even if SATA disk status is BUSY, ERR or DRQ.
+There are 28 bytes of protection information record of SSP for
+v3 hw, 16 bytes for v2 hw, and probably 24 for v1 hw (forgotten
+now).
 
-If an ATA reset assert is successful but ATA reset de-assert
-fails, then it will retry the  reset de-assert. If reset de-
-assert retry is successful, we think it is okay to probe the
-device but actually it still has Err status.
-
-Apparently we need to retry the ATA reset assertion and de-
-assertion instead for this mentioned scenario.
-
-As such, we config ATA reset assert as a constrained command,
-if ATA reset de-assert fails, then ATA reset de-assert
-retry will also fail. Then we will retry the proper process
-of ATA reset assert and de-assert again.
+So use a value big enough in hisi_sas_command_table_ssp.prot to
+cover all cases.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index ffa3cea..026faee 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -351,10 +351,11 @@ struct hisi_sas_err_record_v3 {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
- 
--#define CMD_IS_UNCONSTRAINT(cmd) \
--	((cmd == ATA_CMD_READ_LOG_EXT) || \
--	(cmd == ATA_CMD_READ_LOG_DMA_EXT) || \
--	(cmd == ATA_CMD_DEV_RESET))
-+#define FIS_CMD_IS_UNCONSTRAINED(fis) \
-+	((fis.command == ATA_CMD_READ_LOG_EXT) || \
-+	(fis.command == ATA_CMD_READ_LOG_DMA_EXT) || \
-+	((fis.command == ATA_CMD_DEV_RESET) && \
-+	((fis.control & ATA_SRST) != 0)))
- 
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- {
-@@ -1075,7 +1076,7 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 		<< CMD_HDR_FRAME_TYPE_OFF;
- 	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
- 
--	if (CMD_IS_UNCONSTRAINT(task->ata_task.fis.command))
-+	if (FIS_CMD_IS_UNCONSTRAINED(task->ata_task.fis))
- 		dw1 |= 1 << CMD_HDR_UNCON_CMD_OFF;
- 
- 	hdr->dw1 = cpu_to_le32(dw1);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 147cfaf..04a40c4 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -410,7 +410,7 @@ struct hisi_sas_command_table_ssp {
+ 	union {
+ 		struct {
+ 			struct ssp_command_iu task;
+-			u32 prot[6];
++			u32 prot[7];
+ 		};
+ 		struct ssp_tmf_iu ssp_task;
+ 		struct xfer_rdy_iu xfer_rdy;
 -- 
 1.9.1
