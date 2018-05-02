@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 07/11] scsi: hisi_sas: update PHY linkrate after a controller reset
-Date: Wed, 2 May 2018 23:56:30 +0800
-Message-ID: <1525276594-92173-8-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 08/11] scsi: hisi_sas: config ATA de-reset as an constrained command for v3 hw
+Date: Wed, 2 May 2018 23:56:31 +0800
+Message-ID: <1525276594-92173-9-git-send-email-john.garry@huawei.com>
 References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,177 +14,56 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-After the controller is reset, we currently may not honour the
-PHY max linkrate set via sysfs, in that after a reset we always
-revert to max linkrate of 12Gbps, ignoring the value set via
-sysfs.
+As a unconstrained command, a command can be sent to SATA
+disk even if SATA disk status is BUSY, ERR or DRQ.
 
-This patch modifies to policy to set the programmed PHY linkrate,
-honouring the max linkrate programmed via sysfs.
+If an ATA reset assert is successful but ATA reset de-assert
+fails, then it will retry the  reset de-assert. If reset de-
+assert retry is successful, we think it is okay to probe the
+device but actually it still has Err status.
+
+Apparently we need to retry the ATA reset assertion and de-
+assertion instead for this mentioned scenario.
+
+As such, we config ATA reset assert as a constrained command,
+if ATA reset de-assert fails, then ATA reset de-assert
+retry will also fail. Then we will retry the proper process
+of ATA reset assert and de-assert again.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 16 ++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 31 ++++++++++++++++++-------------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 31 ++++++++++++++++++-------------
- 4 files changed, 53 insertions(+), 26 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 04a40c4..4410538 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -463,4 +463,5 @@ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
- extern bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
- 				enum hisi_sas_phy_event event);
- extern void hisi_sas_release_tasks(struct hisi_hba *hisi_hba);
-+extern u8 hisi_sas_get_prog_phy_linkrate_mask(enum sas_linkrate max);
- #endif
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 1f27f84..ff5b8d7 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -135,6 +135,22 @@ int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag)
- }
- EXPORT_SYMBOL_GPL(hisi_sas_get_ncq_tag);
- 
-+/*
-+ * This function assumes linkrate mask fits in 8 bits, which it
-+ * does for all HW versions supported.
-+ */
-+u8 hisi_sas_get_prog_phy_linkrate_mask(enum sas_linkrate max)
-+{
-+	u16 rate = 0;
-+	int i;
-+
-+	max -= SAS_LINK_RATE_1_5_GBPS;
-+	for (i = 0; i <= max; i++)
-+		rate |= 1 << (i * 2);
-+	return rate;
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_prog_phy_linkrate_mask);
-+
- static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
- {
- 	return device->port->ha->lldd_ha;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 6dda6eb..9e68731 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1216,7 +1216,22 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- 	}
- 
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
--		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x855);
-+		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
-+		struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+		u32 prog_phy_link_rate = 0x800;
-+
-+		if (!sas_phy->phy || (sas_phy->phy->maximum_linkrate <
-+				SAS_LINK_RATE_1_5_GBPS)) {
-+			prog_phy_link_rate = 0x855;
-+		} else {
-+			enum sas_linkrate max = sas_phy->phy->maximum_linkrate;
-+
-+			prog_phy_link_rate =
-+				hisi_sas_get_prog_phy_linkrate_mask(max) |
-+				0x800;
-+		}
-+		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE,
-+			prog_phy_link_rate);
- 		hisi_sas_phy_write32(hisi_hba, i, SAS_PHY_CTRL, sas_phy_ctrl);
- 		hisi_sas_phy_write32(hisi_hba, i, SL_TOUT_CFG, 0x7d7d7d7d);
- 		hisi_sas_phy_write32(hisi_hba, i, SL_CONTROL, 0x0);
-@@ -1585,13 +1600,10 @@ static enum sas_linkrate phy_get_max_linkrate_v2_hw(void)
- static void phy_set_linkrate_v2_hw(struct hisi_hba *hisi_hba, int phy_no,
- 		struct sas_phy_linkrates *r)
- {
--	u32 prog_phy_link_rate =
--		hisi_sas_phy_read32(hisi_hba, phy_no, PROG_PHY_LINK_RATE);
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
--	int i;
- 	enum sas_linkrate min, max;
--	u32 rate_mask = 0;
-+	u32 prog_phy_link_rate = 0x800;
- 
- 	if (r->maximum_linkrate == SAS_LINK_RATE_UNKNOWN) {
- 		max = sas_phy->phy->maximum_linkrate;
-@@ -1604,14 +1616,7 @@ static void phy_set_linkrate_v2_hw(struct hisi_hba *hisi_hba, int phy_no,
- 
- 	sas_phy->phy->maximum_linkrate = max;
- 	sas_phy->phy->minimum_linkrate = min;
--
--	max -= SAS_LINK_RATE_1_5_GBPS;
--
--	for (i = 0; i <= max; i++)
--		rate_mask |= 1 << (i * 2);
--
--	prog_phy_link_rate &= ~0xff;
--	prog_phy_link_rate |= rate_mask;
-+	prog_phy_link_rate |= hisi_sas_get_prog_phy_linkrate_mask(max);
- 
- 	disable_phy_v2_hw(hisi_hba, phy_no);
- 	msleep(100);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 5c0d968..ffa3cea 100644
+index ffa3cea..026faee 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -429,7 +429,22 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
+@@ -351,10 +351,11 @@ struct hisi_sas_err_record_v3 {
+ #define DIR_TO_DEVICE 2
+ #define DIR_RESERVED 3
  
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
--		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x855);
-+		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
-+		struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+		u32 prog_phy_link_rate = 0x800;
-+
-+		if (!sas_phy->phy || (sas_phy->phy->maximum_linkrate <
-+				SAS_LINK_RATE_1_5_GBPS)) {
-+			prog_phy_link_rate = 0x855;
-+		} else {
-+			enum sas_linkrate max = sas_phy->phy->maximum_linkrate;
-+
-+			prog_phy_link_rate =
-+				hisi_sas_get_prog_phy_linkrate_mask(max) |
-+				0x800;
-+		}
-+		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE,
-+			prog_phy_link_rate);
- 		hisi_sas_phy_write32(hisi_hba, i, SAS_RX_TRAIN_TIMER, 0x13e80);
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0, 0xffffffff);
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
-@@ -1869,13 +1884,10 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- static void phy_set_linkrate_v3_hw(struct hisi_hba *hisi_hba, int phy_no,
- 		struct sas_phy_linkrates *r)
+-#define CMD_IS_UNCONSTRAINT(cmd) \
+-	((cmd == ATA_CMD_READ_LOG_EXT) || \
+-	(cmd == ATA_CMD_READ_LOG_DMA_EXT) || \
+-	(cmd == ATA_CMD_DEV_RESET))
++#define FIS_CMD_IS_UNCONSTRAINED(fis) \
++	((fis.command == ATA_CMD_READ_LOG_EXT) || \
++	(fis.command == ATA_CMD_READ_LOG_DMA_EXT) || \
++	((fis.command == ATA_CMD_DEV_RESET) && \
++	((fis.control & ATA_SRST) != 0)))
+ 
+ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
  {
--	u32 prog_phy_link_rate =
--		hisi_sas_phy_read32(hisi_hba, phy_no, PROG_PHY_LINK_RATE);
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
--	int i;
- 	enum sas_linkrate min, max;
--	u32 rate_mask = 0;
-+	u32 prog_phy_link_rate = 0x800;
+@@ -1075,7 +1076,7 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 		<< CMD_HDR_FRAME_TYPE_OFF;
+ 	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
  
- 	if (r->maximum_linkrate == SAS_LINK_RATE_UNKNOWN) {
- 		max = sas_phy->phy->maximum_linkrate;
-@@ -1888,14 +1900,7 @@ static void phy_set_linkrate_v3_hw(struct hisi_hba *hisi_hba, int phy_no,
+-	if (CMD_IS_UNCONSTRAINT(task->ata_task.fis.command))
++	if (FIS_CMD_IS_UNCONSTRAINED(task->ata_task.fis))
+ 		dw1 |= 1 << CMD_HDR_UNCON_CMD_OFF;
  
- 	sas_phy->phy->maximum_linkrate = max;
- 	sas_phy->phy->minimum_linkrate = min;
--
--	max -= SAS_LINK_RATE_1_5_GBPS;
--
--	for (i = 0; i <= max; i++)
--		rate_mask |= 1 << (i * 2);
--
--	prog_phy_link_rate &= ~0xff;
--	prog_phy_link_rate |= rate_mask;
-+	prog_phy_link_rate |= hisi_sas_get_prog_phy_linkrate_mask(max);
- 
- 	disable_phy_v3_hw(hisi_hba, phy_no);
- 	msleep(100);
+ 	hdr->dw1 = cpu_to_le32(dw1);
 -- 
 1.9.1
