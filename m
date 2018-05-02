@@ -1,64 +1,54 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 05/11] scsi: hisi_sas: check sas_dev gone earlier in hisi_sas_abort_task()
-Date: Wed, 2 May 2018 23:56:28 +0800
-Message-ID: <1525276594-92173-6-git-send-email-john.garry@huawei.com>
-References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Andrei Vagin <avagin@openvz.org>
+Subject: [PATCH] scsi: qla2xxx: remove the unused tcm_qla2xxx_cmd_wq
+Date: Wed,  2 May 2018 13:31:13 -0700
+Message-ID: <20180502203113.13183-1-avagin@openvz.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+To: qla2xxx-upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, Andrei Vagin <avagin@openvz.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
-
-It is possible to dereference a NULL-pointer in hisi_sas_abort_task()
-in special scenario when the device has been removed.
-
-If an SMP task times-out, it will call hisi_sas_abort_task() to
-recover. And currently there is a check in hisi_sas_abort_task() to
-avoid the situation of processing the abort for the removed device.
-
-However we have an ordering problem, in that we may reference
-a task for the removed device before checking if the device has
-been removed.
-
-Fix this by only referencing the sas_dev after we know it is still
-present.
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Andrei Vagin <avagin@openvz.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 8f8e642..24416bb 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1166,15 +1166,16 @@ static int hisi_sas_abort_task(struct sas_task *task)
- 	struct hisi_sas_tmf_task tmf_task;
- 	struct domain_device *device = task->dev;
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
--	struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
--	struct device *dev = hisi_hba->dev;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev;
- 	int rc = TMF_RESP_FUNC_FAILED;
- 	unsigned long flags;
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index aadfeaac3898..b63440fec18e 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -48,7 +48,6 @@
+ #include "tcm_qla2xxx.h"
  
--	if (!sas_dev) {
--		dev_warn(dev, "Device has been removed\n");
-+	if (!sas_dev)
- 		return TMF_RESP_FUNC_FAILED;
+ static struct workqueue_struct *tcm_qla2xxx_free_wq;
+-static struct workqueue_struct *tcm_qla2xxx_cmd_wq;
+ 
+ /*
+  * Parse WWN.
+@@ -1976,16 +1975,8 @@ static int tcm_qla2xxx_register_configfs(void)
+ 		goto out_fabric_npiv;
+ 	}
+ 
+-	tcm_qla2xxx_cmd_wq = alloc_workqueue("tcm_qla2xxx_cmd", 0, 0);
+-	if (!tcm_qla2xxx_cmd_wq) {
+-		ret = -ENOMEM;
+-		goto out_free_wq;
 -	}
-+
-+	hisi_hba = dev_to_hisi_hba(task->dev);
-+	dev = hisi_hba->dev;
+-
+ 	return 0;
  
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
+-out_free_wq:
+-	destroy_workqueue(tcm_qla2xxx_free_wq);
+ out_fabric_npiv:
+ 	target_unregister_template(&tcm_qla2xxx_npiv_ops);
+ out_fabric:
+@@ -1995,7 +1986,6 @@ static int tcm_qla2xxx_register_configfs(void)
+ 
+ static void tcm_qla2xxx_deregister_configfs(void)
+ {
+-	destroy_workqueue(tcm_qla2xxx_cmd_wq);
+ 	destroy_workqueue(tcm_qla2xxx_free_wq);
+ 
+ 	target_unregister_template(&tcm_qla2xxx_ops);
 -- 
-1.9.1
+2.14.3
