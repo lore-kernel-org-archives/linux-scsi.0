@@ -1,44 +1,47 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 04/11] scsi: hisi_sas: fix PI memory size
-Date: Wed, 2 May 2018 23:56:27 +0800
-Message-ID: <1525276594-92173-5-git-send-email-john.garry@huawei.com>
-References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 00/11] hisi_sas: some misc patches
+Date: Wed, 2 May 2018 23:56:23 +0800
+Message-ID: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+This patchset introduces some misc changes for the
+driver. These include:
+- fixes for potential problems related to SCSI EH
+  and device removal races
+- fix protection info size for all hw versions
+- some SoC bug workarounds
+- minor optimisations
+- other more minor things
 
-There are 28 bytes of protection information record of SSP for
-v3 hw, 16 bytes for v2 hw, and probably 24 for v1 hw (forgotten
-now).
+John Garry (2):
+  scsi: hisi_sas: stop controller timer for reset
+  scsi: hisi_sas: add readl poll timeout helper wrappers
 
-So use a value big enough in hisi_sas_command_table_ssp.prot to
-cover all cases.
+Xiang Chen (7):
+  scsi: hisi_sas: optimise the usage of DQ locking
+  scsi: hisi_sas: Add some checks to avoid free'ing a sas_task twice
+  scsi: hisi_sas: check host frozen before calling "done" function
+  scsi: hisi_sas: fix PI memory size
+  scsi: hisi_sas: check sas_dev gone earlier in hisi_sas_abort_task()
+  scsi: hisi_sas: update PHY linkrate after a controller reset
+  scsi: hisi_sas: config ATA de-reset as an constrained command for v3
+    hw
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Xiaofei Tan (2):
+  scsi: hisi_sas: remove redundant handling to event95 for v3
+  scsi: hisi_sas: workaround a v3 hw hilink bug
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 147cfaf..04a40c4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -410,7 +410,7 @@ struct hisi_sas_command_table_ssp {
- 	union {
- 		struct {
- 			struct ssp_command_iu task;
--			u32 prot[6];
-+			u32 prot[7];
- 		};
- 		struct ssp_tmf_iu ssp_task;
- 		struct xfer_rdy_iu xfer_rdy;
+ drivers/scsi/hisi_sas/hisi_sas.h       |   4 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  37 +++++++--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  70 +++++++++-------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 142 +++++++++++++++++++++------------
+ 4 files changed, 166 insertions(+), 87 deletions(-)
+
 -- 
 1.9.1
