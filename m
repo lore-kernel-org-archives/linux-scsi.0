@@ -1,24 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mpt3sas: fix spelling mistake: "disbale" -> "disable"
-Date: Tue, 01 May 2018 23:36:42 -0400
-Message-ID: <yq1r2mu6851.fsf@oracle.com>
-References: <20180429123149.11077-1-colin.king@canonical.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: mptfusion: fix spelling mistake: "initators" -> "initiators"
+Date: Wed,  2 May 2018 10:12:43 +0100
+Message-ID: <20180502091243.15175-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180429123149.11077-1-colin.king@canonical.com> (Colin King's
-        message of "Sun, 29 Apr 2018 13:31:49 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+From: Colin Ian King <colin.king@canonical.com>
 
-Colin,
+Trivial fix to spelling mistake in text string
 
-> Trivial fix to spelling mistake in module parameter description text
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/message/fusion/mptbase.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ditto. Also hand-applied to 4.18/scsi-queue.
-
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 51eb1b027963..72e72f93f0f5 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -7635,7 +7635,7 @@ mpt_display_event_info(MPT_ADAPTER *ioc, EventNotificationReply_t *pEventReply)
+ 
+ 		snprintf(evStr, EVENT_DESCR_STR_SZ,
+ 		    "SAS Initiator Device Table Overflow: max initiators=%02d "
+-		    "current initators=%02d",
++		    "current initiators=%02d",
+ 		    max_init, current_init);
+ 		break;
+ 	}
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.17.0
