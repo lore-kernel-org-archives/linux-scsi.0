@@ -1,47 +1,64 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 00/11] hisi_sas: some misc patches
-Date: Wed, 2 May 2018 23:56:23 +0800
-Message-ID: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 05/11] scsi: hisi_sas: check sas_dev gone earlier in hisi_sas_abort_task()
+Date: Wed, 2 May 2018 23:56:28 +0800
+Message-ID: <1525276594-92173-6-git-send-email-john.garry@huawei.com>
+References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset introduces some misc changes for the
-driver. These include:
-- fixes for potential problems related to SCSI EH
-  and device removal races
-- fix protection info size for all hw versions
-- some SoC bug workarounds
-- minor optimisations
-- other more minor things
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-John Garry (2):
-  scsi: hisi_sas: stop controller timer for reset
-  scsi: hisi_sas: add readl poll timeout helper wrappers
+It is possible to dereference a NULL-pointer in hisi_sas_abort_task()
+in special scenario when the device has been removed.
 
-Xiang Chen (7):
-  scsi: hisi_sas: optimise the usage of DQ locking
-  scsi: hisi_sas: Add some checks to avoid free'ing a sas_task twice
-  scsi: hisi_sas: check host frozen before calling "done" function
-  scsi: hisi_sas: fix PI memory size
-  scsi: hisi_sas: check sas_dev gone earlier in hisi_sas_abort_task()
-  scsi: hisi_sas: update PHY linkrate after a controller reset
-  scsi: hisi_sas: config ATA de-reset as an constrained command for v3
-    hw
+If an SMP task times-out, it will call hisi_sas_abort_task() to
+recover. And currently there is a check in hisi_sas_abort_task() to
+avoid the situation of processing the abort for the removed device.
 
-Xiaofei Tan (2):
-  scsi: hisi_sas: remove redundant handling to event95 for v3
-  scsi: hisi_sas: workaround a v3 hw hilink bug
+However we have an ordering problem, in that we may reference
+a task for the removed device before checking if the device has
+been removed.
 
- drivers/scsi/hisi_sas/hisi_sas.h       |   4 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  37 +++++++--
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  70 +++++++++-------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 142 +++++++++++++++++++++------------
- 4 files changed, 166 insertions(+), 87 deletions(-)
+Fix this by only referencing the sas_dev after we know it is still
+present.
 
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 8f8e642..24416bb 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1166,15 +1166,16 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 	struct hisi_sas_tmf_task tmf_task;
+ 	struct domain_device *device = task->dev;
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+-	struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
+-	struct device *dev = hisi_hba->dev;
++	struct hisi_hba *hisi_hba;
++	struct device *dev;
+ 	int rc = TMF_RESP_FUNC_FAILED;
+ 	unsigned long flags;
+ 
+-	if (!sas_dev) {
+-		dev_warn(dev, "Device has been removed\n");
++	if (!sas_dev)
+ 		return TMF_RESP_FUNC_FAILED;
+-	}
++
++	hisi_hba = dev_to_hisi_hba(task->dev);
++	dev = hisi_hba->dev;
+ 
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
 -- 
 1.9.1
