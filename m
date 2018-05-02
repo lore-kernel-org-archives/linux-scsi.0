@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 01/11] scsi: hisi_sas: optimise the usage of DQ locking
-Date: Wed, 2 May 2018 23:56:24 +0800
-Message-ID: <1525276594-92173-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 10/11] scsi: hisi_sas: add readl poll timeout helper wrappers
+Date: Wed, 2 May 2018 23:56:33 +0800
+Message-ID: <1525276594-92173-11-git-send-email-john.garry@huawei.com>
 References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,78 +9,76 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+It is common to use readl poll timeout helpers in the
+driver, so create custom wrappers.
 
-In the DQ tasklet processing it is not necessary to take the DQ
-lock, as there is no contention between adding slots to the CQ and
-removing slots from the matching DQ.
-
-In addition, since we run each DQ in a separate tasklet context,
-there would be no possible contention between DQ processing
-running for the same queue in parallel.
-
-It is still necessary to take hisi_hba lock when free'ing slots.
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 3 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 ---
- 2 files changed, 6 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 ++++++++++++++++++++++------
+ 1 file changed, 22 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index a5abde8..384e4ef 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3151,14 +3151,12 @@ static void cq_tasklet_v2_hw(unsigned long val)
- 	struct hisi_sas_complete_v2_hdr *complete_queue;
- 	u32 rd_point = cq->rd_point, wr_point, dev_id;
- 	int queue = cq->id;
--	struct hisi_sas_dq *dq = &hisi_hba->dq[queue];
- 
- 	if (unlikely(hisi_hba->reject_stp_links_msk))
- 		phys_try_accept_stp_links_v2_hw(hisi_hba);
- 
- 	complete_queue = hisi_hba->complete_hdr[queue];
- 
--	spin_lock(&dq->lock);
- 	wr_point = hisi_sas_read32(hisi_hba, COMPL_Q_0_WR_PTR +
- 				   (0x14 * queue));
- 
-@@ -3208,7 +3206,6 @@ static void cq_tasklet_v2_hw(unsigned long val)
- 	/* update rd_point */
- 	cq->rd_point = rd_point;
- 	hisi_sas_write32(hisi_hba, COMPL_Q_0_RD_PTR + (0x14 * queue), rd_point);
--	spin_unlock(&dq->lock);
- }
- 
- static irqreturn_t cq_interrupt_v2_hw(int irq_no, void *p)
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 33735a7..afc1242 100644
+index d6e705f..28bb71e 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1721,11 +1721,9 @@ static void cq_tasklet_v3_hw(unsigned long val)
- 	struct hisi_sas_complete_v3_hdr *complete_queue;
- 	u32 rd_point = cq->rd_point, wr_point;
- 	int queue = cq->id;
--	struct hisi_sas_dq *dq = &hisi_hba->dq[queue];
- 
- 	complete_queue = hisi_hba->complete_hdr[queue];
- 
--	spin_lock(&dq->lock);
- 	wr_point = hisi_sas_read32(hisi_hba, COMPL_Q_0_WR_PTR +
- 				   (0x14 * queue));
- 
-@@ -1752,7 +1750,6 @@ static void cq_tasklet_v3_hw(unsigned long val)
- 	/* update rd_point */
- 	cq->rd_point = rd_point;
- 	hisi_sas_write32(hisi_hba, COMPL_Q_0_RD_PTR + (0x14 * queue), rd_point);
--	spin_unlock(&dq->lock);
+@@ -394,6 +394,20 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
+ 	return readl(regs);
  }
  
- static irqreturn_t cq_interrupt_v3_hw(int irq_no, void *p)
++#define hisi_sas_read32_poll_timeout(off, val, cond, delay_us,		\
++				     timeout_us)			\
++({									\
++	void __iomem *regs = hisi_hba->regs + off;			\
++	readl_poll_timeout(regs, val, cond, delay_us, timeout_us);	\
++})
++
++#define hisi_sas_read32_poll_timeout_atomic(off, val, cond, delay_us,	\
++					    timeout_us)			\
++({									\
++	void __iomem *regs = hisi_hba->regs + off;			\
++	readl_poll_timeout_atomic(regs, val, cond, delay_us, timeout_us);\
++})
++
+ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct pci_dev *pdev = hisi_hba->pci_dev;
+@@ -684,8 +698,8 @@ static int reset_hw_v3_hw(struct hisi_hba *hisi_hba)
+ 	udelay(50);
+ 
+ 	/* Ensure axi bus idle */
+-	ret = readl_poll_timeout(hisi_hba->regs + AXI_CFG, val, !val,
+-			20000, 1000000);
++	ret = hisi_sas_read32_poll_timeout(AXI_CFG, val, !val,
++					   20000, 1000000);
+ 	if (ret) {
+ 		dev_err(dev, "axi bus is not idle, ret = %d!\n", ret);
+ 		return -EIO;
+@@ -1977,8 +1991,9 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE + AM_CTRL_GLOBAL, 0x1);
+ 
+ 	/* wait until bus idle */
+-	rc = readl_poll_timeout(hisi_hba->regs + AXI_MASTER_CFG_BASE +
+-		AM_CURR_TRANS_RETURN, status, status == 0x3, 10, 100);
++	rc = hisi_sas_read32_poll_timeout(AXI_MASTER_CFG_BASE +
++					  AM_CURR_TRANS_RETURN, status,
++					  status == 0x3, 10, 100);
+ 	if (rc) {
+ 		dev_err(dev, "axi bus is not idle, rc = %d\n", rc);
+ 		return rc;
+@@ -2396,8 +2411,9 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
+ 		AM_CTRL_GLOBAL, reg_val);
+ 
+ 	/* wait until bus idle */
+-	rc = readl_poll_timeout(hisi_hba->regs + AXI_MASTER_CFG_BASE +
+-		AM_CURR_TRANS_RETURN, status, status == 0x3, 10, 100);
++	rc = hisi_sas_read32_poll_timeout(AXI_MASTER_CFG_BASE +
++					  AM_CURR_TRANS_RETURN, status,
++					  status == 0x3, 10, 100);
+ 	if (rc) {
+ 		dev_err(dev, "axi bus is not idle, rc = %d\n", rc);
+ 		clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
 -- 
 1.9.1
