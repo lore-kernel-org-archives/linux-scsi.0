@@ -1,7 +1,7 @@
 From: Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH v2 04/10] scsi: ufs: fix exception event handling
-Date: Thu,  3 May 2018 16:37:16 +0530
-Message-ID: <01e6421c38e4eb1f67f3c98a8dab44a85f791ef2.1525343531.git.asutoshd@codeaurora.org>
+Subject: [PATCH v2 05/10] scsi: ufshcd: fix possible unclocked register access
+Date: Thu,  3 May 2018 16:37:17 +0530
+Message-ID: <7f237069f86547afedcbbdf673cf85dfb20d05fa.1525343531.git.asutoshd@codeaurora.org>
 References: <cover.1525341340.git.asutoshd@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1525341340.git.asutoshd@codeaurora.org>
@@ -9,51 +9,71 @@ In-Reply-To: <cover.1525343531.git.asutoshd@codeaurora.org>
 References: <cover.1525343531.git.asutoshd@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, linux-mmc@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Maya Erez <merez@codeaurora.org>, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Maya Erez <merez@codeaurora.org>
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-The device can set the exception event bit in one of the response UPIU,
-for example to notify the need for urgent BKOPs operation.
-In such a case the host driver calls ufshcd_exception_event_handler to
-handle this notification.
-When trying to check the exception event status (for finding the cause for
-the exception event), the device may be busy with additional SCSI commands
-handling and may not respond within the 100ms timeout.
+vendor specific setup_clocks ops may depend on clocks managed by ufshcd
+driver so if the vendor specific setup_clocks callback is called when
+the required clocks are turned off, it results into unclocked register
+access.
 
-To prevent that, we need to block SCSI commands during handling of
-exception events and allow retransmissions of the query requests,
-in case of timeout.
+This change make sure that required clocks are enabled before vendor
+specific setup_clocks callback is called.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 6dabce8..838ba8f0 100644
+index 838ba8f0..dfeb194 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4967,6 +4967,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- 	hba = container_of(work, struct ufs_hba, eeh_work);
+@@ -6780,9 +6780,16 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 	if (list_empty(head))
+ 		goto out;
  
- 	pm_runtime_get_sync(hba->dev);
-+	scsi_block_requests(hba->host);
- 	err = ufshcd_get_ee_status(hba, &status);
- 	if (err) {
- 		dev_err(hba->dev, "%s: failed to get exception status %d\n",
-@@ -4980,6 +4981,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- 		ufshcd_bkops_exception_event_handler(hba);
+-	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
+-	if (ret)
+-		return ret;
++	/*
++	 * vendor specific setup_clocks ops may depend on clocks managed by
++	 * this standard driver hence call the vendor specific setup_clocks
++	 * before disabling the clocks managed here.
++	 */
++	if (!on) {
++		ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
++		if (ret)
++			return ret;
++	}
+ 
+ 	list_for_each_entry(clki, head, list) {
+ 		if (!IS_ERR_OR_NULL(clki->clk)) {
+@@ -6806,9 +6813,16 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 		}
+ 	}
+ 
+-	ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
+-	if (ret)
+-		return ret;
++	/*
++	 * vendor specific setup_clocks ops may depend on clocks managed by
++	 * this standard driver hence call the vendor specific setup_clocks
++	 * after enabling the clocks managed here.
++	 */
++	if (on) {
++		ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
++		if (ret)
++			return ret;
++	}
  
  out:
-+	scsi_unblock_requests(hba->host);
- 	pm_runtime_put_sync(hba->dev);
- 	return;
- }
+ 	if (ret) {
 -- 
 Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
