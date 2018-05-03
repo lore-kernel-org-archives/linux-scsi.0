@@ -1,64 +1,46 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [LSF/MM TOPIC NOTES] x86 ZONE_DMA love
-Date: Thu, 3 May 2018 10:20:54 +0200
-Message-ID: <CAMuHMdV1D8zYUWzVX3wmayTobX1FPwU7QMXvaimWewuxi7FoNw@mail.gmail.com>
-References: <20180426215406.GB27853@wotan.suse.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: lpfc: fix spelling mistake: "mabilbox" -> "mailbox"
+Date: Thu,  3 May 2018 10:19:01 +0100
+Message-ID: <20180503091901.29547-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180426215406.GB27853@wotan.suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Linux MM <linux-mm@kvack.org>, Michal Hocko <mhocko@kernel.org>, Christoph Lameter <cl@linux.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <matthew@wil.cx>, the arch/x86 maintainers <x86@kernel.org>, Andy Lutomirski <luto@amacapital.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, jthumshirn@suse.de, Mark Brown <broonie@kernel.org>, linux-spi <linux-spi@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Luis,
+From: Colin Ian King <colin.king@canonical.com>
 
-On Thu, Apr 26, 2018 at 11:54 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> x86 implicit and explicit ZONE_DMA users
-> -----------------------------------------
->
-> We list below all x86 implicit and explicit ZONE_DMA users.
->
-> # Explicit x86 users of GFP_DMA or __GFP_DMA
->
->   * drivers/iio/common/ssp_sensors - wonder if enabling this on x86 was a mistake.
->     Note that this needs SPI and SPI needs HAS_IOMEM. I only see HAS_IOMEM on
->     s390 ? But I do think the Intel Minnowboard has SPI, but doubt it has
->    the ssp sensor stuff.
->
->  * drivers/input/rmi4/rmi_spi.c - same SPI question
->  * drivers/media/common/siano/ - make allyesconfig yields it enabled, but
->    not sure if this should ever be on x86
->  * drivers/media/platform/sti/bdisp/ - likewise
->   * drivers/media/platform/sti/hva/ - likewise
->   * drivers/media/usb/gspca/ - likewise
->   * drivers/mmc/host/wbsd.c - likewise
->   * drivers/mtd/nand/gpmi-nand/ - likewise
->   * drivers/net/can/spi/hi311x.c - likewise
->   * drivers/net/can/spi/mcp251x.c - likewise
->   * drivers/net/ethernet/agere/ - likewise
->   * drivers/net/ethernet/neterion/vxge/ - likewise
->   * drivers/net/ethernet/rocker/ - likewise
->   * drivers/net/usb/kalmia.c - likewise
->   * drivers/net/ethernet/neterion/vxge/ - likewise
->   * drivers/spi/spi-pic32-sqi.c - likewise
->   * drivers/spi/spi-sh-msiof.c - likewise
+Trivial fix to spelling mistake in lpfc_printf_log log message
 
-depends on ARCH_SHMOBILE || ARCH_RENESAS || COMPILE_TEST
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->   * drivers/spi/spi-ti-qspi.c - likewise
-
-I haven't checked the others, but probably you want to disable COMPILE_TEST
-to make more educated guesses about driver usage on x86.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 060f0e2f6ff5..dc4334fa41bb 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5117,7 +5117,7 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
+ 		if (rc) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_FIP |
+ 					LOG_DISCOVERY,
+-					"2772 Issue FCF rediscover mabilbox "
++					"2772 Issue FCF rediscover mailbox "
+ 					"command failed, fail through to FCF "
+ 					"dead event\n");
+ 			spin_lock_irq(&phba->hbalock);
+@@ -5209,7 +5209,7 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
+ 				lpfc_printf_log(phba, KERN_ERR, LOG_FIP |
+ 						LOG_DISCOVERY,
+ 						"2774 Issue FCF rediscover "
+-						"mabilbox command failed, "
++						"mailbox command failed, "
+ 						"through to CVL event\n");
+ 				spin_lock_irq(&phba->hbalock);
+ 				phba->fcf.fcf_flag &= ~FCF_ACVL_DISC;
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+2.17.0
