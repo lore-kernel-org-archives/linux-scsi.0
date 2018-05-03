@@ -1,202 +1,33 @@
-From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH] zfcp: fix infinite iteration on ERP ready list
-Date: Thu,  3 May 2018 13:52:47 +0200
-Message-ID: <20180503115247.12859-1-maier@linux.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, Jens Remus <jremus@linux.ibm.com>, stable@vger.kernel.org
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [LSF/MM TOPIC NOTES] x86 ZONE_DMA love
+Date: Thu, 3 May 2018 14:03:38 +0200
+Message-ID: <20180503120338.GG4535@dhcp22.suse.cz>
+References: <20180426215406.GB27853@wotan.suse.de>
+ <20180427053556.GB11339@infradead.org>
+ <20180427161456.GD27853@wotan.suse.de>
+ <20180428084221.GD31684@infradead.org>
+ <20180428185514.GW27853@wotan.suse.de>
+ <CAFhKne8u7KcBkpgiQ0fFZyh5_EorfY-_MJJaEYk3feCOd9LsRQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAFhKne8u7KcBkpgiQ0fFZyh5_EorfY-_MJJaEYk3feCOd9LsRQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <willy6545@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Christoph Hellwig <hch@infradead.org>, Dan Carpenter <dan.carpenter@oracle.com>, Julia Lawall <julia.lawall@lip6.fr>, linux-mm@kvack.org, cl@linux.com, Jan Kara <jack@suse.cz>, matthew@wil.cx, x86@kernel.org, luto@amacapital.net, martin.petersen@oracle.com, jthumshirn@suse.de, broonie@kernel.org, Juergen Gross <jgross@suse.com>, linux-spi@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jens Remus <jremus@linux.ibm.com>
+On Sat 28-04-18 19:10:47, Matthew Wilcox wrote:
+> Another way we could approach this is to get rid of ZONE_DMA. Make GFP_DMA
+> a flag which doesn't map to a zone. Rather, it redirects to a separate
+> allocator. At boot, we hand all memory under 16MB to the DMA allocator. The
+> DMA allocator can have a shrinker which just hands back all the memory once
+> we're under memory pressure (if it's never had an allocation).
 
-zfcp_erp_adapter_reopen() schedules blocking of all of the adapter's
-rports via zfcp_scsi_schedule_rports_block() and enqueues a reopen
-adapter ERP action via zfcp_erp_action_enqueue(). Both are separately
-processed asynchronously and concurrently.
-
-Blocking of rports is done in a kworker by zfcp_scsi_rport_work(). It
-calls zfcp_scsi_rport_block(), which then traces a DBF REC "scpdely" via
-zfcp_dbf_rec_trig().
-zfcp_dbf_rec_trig() acquires the DBF REC spin lock and then iterates with
-list_for_each() over the adapter's ERP ready list without holding the ERP
-lock. This opens a race window in which the current list entry can be
-moved to another list, causing list_for_each() to iterate forever on the
-wrong list, as the erp_ready_head is never encountered as terminal
-condition.
-
-Meanwhile the ERP action can be processed in the ERP thread by
-zfcp_erp_thread(). It calls zfcp_erp_strategy(), which acquires the ERP
-lock and then calls zfcp_erp_action_to_running() to move the ERP action
-from the ready to the running list.
-zfcp_erp_action_to_running() can move the ERP action using list_move()
-just during the aforementioned race window. It then traces a REC RUN
-"erator1" via zfcp_dbf_rec_run().
-zfcp_dbf_rec_run() tries to acquire the DBF REC spin lock. If this is held
-by the infinitely looping kworker, it effectively spins forever.
-
-Example Sequence Diagram:
-
-Process                ERP Thread             rport_work
--------------------    -------------------    -------------------
-zfcp_erp_adapter_reopen()
-zfcp_erp_adapter_block()
-zfcp_scsi_schedule_rports_block()
-lock ERP                                      zfcp_scsi_rport_work()
-zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_ADAPTER)
-list_add_tail() on ready                      !(rport_task==RPORT_ADD)
-wake_up() ERP thread                          zfcp_scsi_rport_block()
-zfcp_dbf_rec_trig()    zfcp_erp_strategy()    zfcp_dbf_rec_trig()
-unlock ERP                                    lock DBF REC
-zfcp_erp_wait()        lock ERP
-|                      zfcp_erp_action_to_running()
-|                                             list_for_each() ready
-|                      list_move()              current entry
-|                        ready to running
-|                      zfcp_dbf_rec_run()       endless loop over running
-|                      zfcp_dbf_rec_run_lvl()
-|                      lock DBF REC spins forever
-
-Any adapter recovery can trigger this, such as setting the device offline
-or reboot.
-
-V4.9 commit 4eeaa4f3f1d6 ("zfcp: close window with unblocked rport during
-rport gone") introduced additional tracing of (un)blocking of rports. It
-missed that the adapter->erp_lock must be held when calling
-zfcp_dbf_rec_trig().
-
-This fix uses the approach formerly introduced by commit aa0fec62391c
-("[SCSI] zfcp: Fix sparse warning by providing new entry in dbf") that got
-later removed by commit ae0904f60fab ("[SCSI] zfcp: Redesign of the debug
-tracing for recovery actions.").
-
-Introduce zfcp_dbf_rec_trig_lock(), a wrapper for zfcp_dbf_rec_trig() that
-acquires and releases the adapter->erp_lock for read.
-
-Reported-by: Sebastian Ott <sebott@linux.ibm.com>
-Signed-off-by: Jens Remus <jremus@linux.ibm.com>
-Fixes: 4eeaa4f3f1d6 ("zfcp: close window with unblocked rport during rport gone")
-Cc: <stable@vger.kernel.org> # 2.6.32+
-Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
----
-
-James, Martin,
-
-this is an important zfcp regression fix.
-It would be nice if it could make it into 4.17-rcX.
-The patch applies to James' fixes branch or Martin's 4.17/scsi-fixes branch.
-
-Regards,
-Steffen
-
- drivers/s390/scsi/zfcp_dbf.c  | 23 ++++++++++++++++++++++-
- drivers/s390/scsi/zfcp_ext.h  |  5 ++++-
- drivers/s390/scsi/zfcp_scsi.c | 14 +++++++-------
- 3 files changed, 33 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index a8b831000b2d..18c4f933e8b9 100644
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -4,7 +4,7 @@
-  *
-  * Debug traces for zfcp.
-  *
-- * Copyright IBM Corp. 2002, 2017
-+ * Copyright IBM Corp. 2002, 2018
-  */
- 
- #define KMSG_COMPONENT "zfcp"
-@@ -308,6 +308,27 @@ void zfcp_dbf_rec_trig(char *tag, struct zfcp_adapter *adapter,
- 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
- }
- 
-+/**
-+ * zfcp_dbf_rec_trig_lock - trace event related to triggered recovery with lock
-+ * @tag: identifier for event
-+ * @adapter: adapter on which the erp_action should run
-+ * @port: remote port involved in the erp_action
-+ * @sdev: scsi device involved in the erp_action
-+ * @want: wanted erp_action
-+ * @need: required erp_action
-+ *
-+ * The adapter->erp_lock must not be held.
-+ */
-+void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
-+			    struct zfcp_port *port, struct scsi_device *sdev,
-+			    u8 want, u8 need)
-+{
-+	unsigned long flags;
-+
-+	read_lock_irqsave(&adapter->erp_lock, flags);
-+	zfcp_dbf_rec_trig(tag, adapter, port, sdev, want, need);
-+	read_unlock_irqrestore(&adapter->erp_lock, flags);
-+}
- 
- /**
-  * zfcp_dbf_rec_run_lvl - trace event related to running recovery
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index bf8ea4df2bb8..e5eed8aac0ce 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -4,7 +4,7 @@
-  *
-  * External function declarations.
-  *
-- * Copyright IBM Corp. 2002, 2016
-+ * Copyright IBM Corp. 2002, 2018
-  */
- 
- #ifndef ZFCP_EXT_H
-@@ -35,6 +35,9 @@ extern int zfcp_dbf_adapter_register(struct zfcp_adapter *);
- extern void zfcp_dbf_adapter_unregister(struct zfcp_adapter *);
- extern void zfcp_dbf_rec_trig(char *, struct zfcp_adapter *,
- 			      struct zfcp_port *, struct scsi_device *, u8, u8);
-+extern void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
-+				   struct zfcp_port *port,
-+				   struct scsi_device *sdev, u8 want, u8 need);
- extern void zfcp_dbf_rec_run(char *, struct zfcp_erp_action *);
- extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
- 				 struct zfcp_erp_action *erp);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 4d2ba5682493..22f9562f415c 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -4,7 +4,7 @@
-  *
-  * Interface to Linux SCSI midlayer.
-  *
-- * Copyright IBM Corp. 2002, 2017
-+ * Copyright IBM Corp. 2002, 2018
-  */
- 
- #define KMSG_COMPONENT "zfcp"
-@@ -618,9 +618,9 @@ static void zfcp_scsi_rport_register(struct zfcp_port *port)
- 	ids.port_id = port->d_id;
- 	ids.roles = FC_RPORT_ROLE_FCP_TARGET;
- 
--	zfcp_dbf_rec_trig("scpaddy", port->adapter, port, NULL,
--			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
--			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
-+	zfcp_dbf_rec_trig_lock("scpaddy", port->adapter, port, NULL,
-+			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
-+			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
- 	rport = fc_remote_port_add(port->adapter->scsi_host, 0, &ids);
- 	if (!rport) {
- 		dev_err(&port->adapter->ccw_device->dev,
-@@ -642,9 +642,9 @@ static void zfcp_scsi_rport_block(struct zfcp_port *port)
- 	struct fc_rport *rport = port->rport;
- 
- 	if (rport) {
--		zfcp_dbf_rec_trig("scpdely", port->adapter, port, NULL,
--				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
--				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
-+		zfcp_dbf_rec_trig_lock("scpdely", port->adapter, port, NULL,
-+				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
-+				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
- 		fc_remote_port_delete(rport);
- 		port->rport = NULL;
- 	}
+Yeah, that was exactly the plan with the CMA allocator... We wouldn't
+need the shrinker because who cares about 16MB which is not usable
+anyway.
 -- 
-2.13.5
+Michal Hocko
+SUSE Labs
