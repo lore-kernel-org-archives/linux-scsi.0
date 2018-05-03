@@ -1,91 +1,202 @@
-From: Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH v2 10/10] scsi: ufs: Add clock ungating to a separate workqueue
-Date: Thu,  3 May 2018 16:37:22 +0530
-Message-ID: <0bfae28dbfb4cf86e80435639b92c7f4023041dc.1525343531.git.asutoshd@codeaurora.org>
-References: <cover.1525341340.git.asutoshd@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1525341340.git.asutoshd@codeaurora.org>
-In-Reply-To: <cover.1525343531.git.asutoshd@codeaurora.org>
-References: <cover.1525343531.git.asutoshd@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, linux-mmc@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Vijay Viswanath <vviswana@codeaurora.org>, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+From: Steffen Maier <maier@linux.ibm.com>
+Subject: [PATCH] zfcp: fix infinite iteration on ERP ready list
+Date: Thu,  3 May 2018 13:52:47 +0200
+Message-ID: <20180503115247.12859-1-maier@linux.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, Jens Remus <jremus@linux.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Vijay Viswanath <vviswana@codeaurora.org>
+From: Jens Remus <jremus@linux.ibm.com>
 
-UFS driver can receive a request during memory reclaim by kswapd.
-So when ufs driver puts the ungate work in queue, and if there are no
-idle workers, kthreadd is invoked to create a new kworker. Since
-kswapd task holds a mutex which kthreadd also needs, this can cause
-a deadlock situation. So ungate work must be done in a separate
-work queue with WQ_MEM_RECLAIM flag enabled.
-Such a workqueue will have a rescue thread which will be called
-when the above deadlock condition is possible.
+zfcp_erp_adapter_reopen() schedules blocking of all of the adapter's
+rports via zfcp_scsi_schedule_rports_block() and enqueues a reopen
+adapter ERP action via zfcp_erp_action_enqueue(). Both are separately
+processed asynchronously and concurrently.
 
-Signed-off-by: Vijay Viswanath <vviswana@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+Blocking of rports is done in a kworker by zfcp_scsi_rport_work(). It
+calls zfcp_scsi_rport_block(), which then traces a DBF REC "scpdely" via
+zfcp_dbf_rec_trig().
+zfcp_dbf_rec_trig() acquires the DBF REC spin lock and then iterates with
+list_for_each() over the adapter's ERP ready list without holding the ERP
+lock. This opens a race window in which the current list entry can be
+moved to another list, causing list_for_each() to iterate forever on the
+wrong list, as the erp_ready_head is never encountered as terminal
+condition.
+
+Meanwhile the ERP action can be processed in the ERP thread by
+zfcp_erp_thread(). It calls zfcp_erp_strategy(), which acquires the ERP
+lock and then calls zfcp_erp_action_to_running() to move the ERP action
+from the ready to the running list.
+zfcp_erp_action_to_running() can move the ERP action using list_move()
+just during the aforementioned race window. It then traces a REC RUN
+"erator1" via zfcp_dbf_rec_run().
+zfcp_dbf_rec_run() tries to acquire the DBF REC spin lock. If this is held
+by the infinitely looping kworker, it effectively spins forever.
+
+Example Sequence Diagram:
+
+Process                ERP Thread             rport_work
+-------------------    -------------------    -------------------
+zfcp_erp_adapter_reopen()
+zfcp_erp_adapter_block()
+zfcp_scsi_schedule_rports_block()
+lock ERP                                      zfcp_scsi_rport_work()
+zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_ADAPTER)
+list_add_tail() on ready                      !(rport_task==RPORT_ADD)
+wake_up() ERP thread                          zfcp_scsi_rport_block()
+zfcp_dbf_rec_trig()    zfcp_erp_strategy()    zfcp_dbf_rec_trig()
+unlock ERP                                    lock DBF REC
+zfcp_erp_wait()        lock ERP
+|                      zfcp_erp_action_to_running()
+|                                             list_for_each() ready
+|                      list_move()              current entry
+|                        ready to running
+|                      zfcp_dbf_rec_run()       endless loop over running
+|                      zfcp_dbf_rec_run_lvl()
+|                      lock DBF REC spins forever
+
+Any adapter recovery can trigger this, such as setting the device offline
+or reboot.
+
+V4.9 commit 4eeaa4f3f1d6 ("zfcp: close window with unblocked rport during
+rport gone") introduced additional tracing of (un)blocking of rports. It
+missed that the adapter->erp_lock must be held when calling
+zfcp_dbf_rec_trig().
+
+This fix uses the approach formerly introduced by commit aa0fec62391c
+("[SCSI] zfcp: Fix sparse warning by providing new entry in dbf") that got
+later removed by commit ae0904f60fab ("[SCSI] zfcp: Redesign of the debug
+tracing for recovery actions.").
+
+Introduce zfcp_dbf_rec_trig_lock(), a wrapper for zfcp_dbf_rec_trig() that
+acquires and releases the adapter->erp_lock for read.
+
+Reported-by: Sebastian Ott <sebott@linux.ibm.com>
+Signed-off-by: Jens Remus <jremus@linux.ibm.com>
+Fixes: 4eeaa4f3f1d6 ("zfcp: close window with unblocked rport during rport gone")
+Cc: <stable@vger.kernel.org> # 2.6.32+
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+Signed-off-by: Steffen Maier <maier@linux.ibm.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 11 ++++++++++-
- drivers/scsi/ufs/ufshcd.h |  1 +
- 2 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 557d538..3be61b7 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1483,7 +1483,8 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
- 		hba->clk_gating.state = REQ_CLKS_ON;
- 		trace_ufshcd_clk_gating(dev_name(hba->dev),
- 					hba->clk_gating.state);
--		schedule_work(&hba->clk_gating.ungate_work);
-+		queue_work(hba->clk_gating.clk_gating_workq,
-+			   &hba->clk_gating.ungate_work);
- 		/*
- 		 * fall through to check if we should wait for this
- 		 * work to be done or not.
-@@ -1669,6 +1670,8 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
+James, Martin,
+
+this is an important zfcp regression fix.
+It would be nice if it could make it into 4.17-rcX.
+The patch applies to James' fixes branch or Martin's 4.17/scsi-fixes branch.
+
+Regards,
+Steffen
+
+ drivers/s390/scsi/zfcp_dbf.c  | 23 ++++++++++++++++++++++-
+ drivers/s390/scsi/zfcp_ext.h  |  5 ++++-
+ drivers/s390/scsi/zfcp_scsi.c | 14 +++++++-------
+ 3 files changed, 33 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index a8b831000b2d..18c4f933e8b9 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -4,7 +4,7 @@
+  *
+  * Debug traces for zfcp.
+  *
+- * Copyright IBM Corp. 2002, 2017
++ * Copyright IBM Corp. 2002, 2018
+  */
  
- static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- {
-+	char wq_name[sizeof("ufs_clk_gating_00")];
-+
- 	if (!ufshcd_is_clkgating_allowed(hba))
- 		return;
- 
-@@ -1676,6 +1679,11 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
- 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
- 
-+	snprintf(wq_name, ARRAY_SIZE(wq_name), "ufs_clk_gating_%d",
-+		 hba->host->host_no);
-+	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(wq_name,
-+							   WQ_MEM_RECLAIM);
-+
- 	hba->clk_gating.is_enabled = true;
- 
- 	hba->clk_gating.delay_attr.show = ufshcd_clkgate_delay_show;
-@@ -1703,6 +1711,7 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
- 	device_remove_file(hba->dev, &hba->clk_gating.enable_attr);
- 	cancel_work_sync(&hba->clk_gating.ungate_work);
- 	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
-+	destroy_workqueue(hba->clk_gating.clk_gating_workq);
+ #define KMSG_COMPONENT "zfcp"
+@@ -308,6 +308,27 @@ void zfcp_dbf_rec_trig(char *tag, struct zfcp_adapter *adapter,
+ 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
  }
  
- /* Must be called with host lock acquired */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 76c31d5..2e6bdc0 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -361,6 +361,7 @@ struct ufs_clk_gating {
- 	struct device_attribute enable_attr;
- 	bool is_enabled;
- 	int active_reqs;
-+	struct workqueue_struct *clk_gating_workq;
- };
++/**
++ * zfcp_dbf_rec_trig_lock - trace event related to triggered recovery with lock
++ * @tag: identifier for event
++ * @adapter: adapter on which the erp_action should run
++ * @port: remote port involved in the erp_action
++ * @sdev: scsi device involved in the erp_action
++ * @want: wanted erp_action
++ * @need: required erp_action
++ *
++ * The adapter->erp_lock must not be held.
++ */
++void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
++			    struct zfcp_port *port, struct scsi_device *sdev,
++			    u8 want, u8 need)
++{
++	unsigned long flags;
++
++	read_lock_irqsave(&adapter->erp_lock, flags);
++	zfcp_dbf_rec_trig(tag, adapter, port, sdev, want, need);
++	read_unlock_irqrestore(&adapter->erp_lock, flags);
++}
  
- struct ufs_saved_pwr_info {
+ /**
+  * zfcp_dbf_rec_run_lvl - trace event related to running recovery
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index bf8ea4df2bb8..e5eed8aac0ce 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -4,7 +4,7 @@
+  *
+  * External function declarations.
+  *
+- * Copyright IBM Corp. 2002, 2016
++ * Copyright IBM Corp. 2002, 2018
+  */
+ 
+ #ifndef ZFCP_EXT_H
+@@ -35,6 +35,9 @@ extern int zfcp_dbf_adapter_register(struct zfcp_adapter *);
+ extern void zfcp_dbf_adapter_unregister(struct zfcp_adapter *);
+ extern void zfcp_dbf_rec_trig(char *, struct zfcp_adapter *,
+ 			      struct zfcp_port *, struct scsi_device *, u8, u8);
++extern void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
++				   struct zfcp_port *port,
++				   struct scsi_device *sdev, u8 want, u8 need);
+ extern void zfcp_dbf_rec_run(char *, struct zfcp_erp_action *);
+ extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
+ 				 struct zfcp_erp_action *erp);
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 4d2ba5682493..22f9562f415c 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -4,7 +4,7 @@
+  *
+  * Interface to Linux SCSI midlayer.
+  *
+- * Copyright IBM Corp. 2002, 2017
++ * Copyright IBM Corp. 2002, 2018
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -618,9 +618,9 @@ static void zfcp_scsi_rport_register(struct zfcp_port *port)
+ 	ids.port_id = port->d_id;
+ 	ids.roles = FC_RPORT_ROLE_FCP_TARGET;
+ 
+-	zfcp_dbf_rec_trig("scpaddy", port->adapter, port, NULL,
+-			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
+-			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
++	zfcp_dbf_rec_trig_lock("scpaddy", port->adapter, port, NULL,
++			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
++			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
+ 	rport = fc_remote_port_add(port->adapter->scsi_host, 0, &ids);
+ 	if (!rport) {
+ 		dev_err(&port->adapter->ccw_device->dev,
+@@ -642,9 +642,9 @@ static void zfcp_scsi_rport_block(struct zfcp_port *port)
+ 	struct fc_rport *rport = port->rport;
+ 
+ 	if (rport) {
+-		zfcp_dbf_rec_trig("scpdely", port->adapter, port, NULL,
+-				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
+-				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
++		zfcp_dbf_rec_trig_lock("scpdely", port->adapter, port, NULL,
++				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
++				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
+ 		fc_remote_port_delete(rport);
+ 		port->rport = NULL;
+ 	}
 -- 
-Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.13.5
