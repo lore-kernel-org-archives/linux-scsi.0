@@ -1,7 +1,7 @@
 From: Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH v2 09/10] scsi: ufs: fix irq return code
-Date: Thu,  3 May 2018 16:37:21 +0530
-Message-ID: <25908e040c7c797e8a5c1bb6b00df4497bdd7b60.1525343531.git.asutoshd@codeaurora.org>
+Subject: [PATCH v2 10/10] scsi: ufs: Add clock ungating to a separate workqueue
+Date: Thu,  3 May 2018 16:37:22 +0530
+Message-ID: <0bfae28dbfb4cf86e80435639b92c7f4023041dc.1525343531.git.asutoshd@codeaurora.org>
 References: <cover.1525341340.git.asutoshd@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1525341340.git.asutoshd@codeaurora.org>
@@ -9,318 +9,83 @@ In-Reply-To: <cover.1525343531.git.asutoshd@codeaurora.org>
 References: <cover.1525343531.git.asutoshd@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, linux-mmc@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, Vijay Viswanath <vviswana@codeaurora.org>, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+From: Vijay Viswanath <vviswana@codeaurora.org>
 
-Return IRQ_HANDLED only if the irq is really handled, this will
-help in catching spurious interrupts that go unhandled.
+UFS driver can receive a request during memory reclaim by kswapd.
+So when ufs driver puts the ungate work in queue, and if there are no
+idle workers, kthreadd is invoked to create a new kworker. Since
+kswapd task holds a mutex which kthreadd also needs, this can cause
+a deadlock situation. So ungate work must be done in a separate
+work queue with WQ_MEM_RECLAIM flag enabled.
+Such a workqueue will have a rescue thread which will be called
+when the above deadlock condition is possible.
 
-Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Signed-off-by: Vijay Viswanath <vviswana@codeaurora.org>
 Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 137 ++++++++++++++++++++++++++++++++++------------
- 1 file changed, 101 insertions(+), 36 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 11 ++++++++++-
+ drivers/scsi/ufs/ufshcd.h |  1 +
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 09b7a3f..557d538 100644
+index 557d538..3be61b7 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -211,7 +211,7 @@ enum {
- 	END_FIX
+@@ -1483,7 +1483,8 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		hba->clk_gating.state = REQ_CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+-		schedule_work(&hba->clk_gating.ungate_work);
++		queue_work(hba->clk_gating.clk_gating_workq,
++			   &hba->clk_gating.ungate_work);
+ 		/*
+ 		 * fall through to check if we should wait for this
+ 		 * work to be done or not.
+@@ -1669,6 +1670,8 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
+ 
+ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ {
++	char wq_name[sizeof("ufs_clk_gating_00")];
++
+ 	if (!ufshcd_is_clkgating_allowed(hba))
+ 		return;
+ 
+@@ -1676,6 +1679,11 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
+ 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
+ 
++	snprintf(wq_name, ARRAY_SIZE(wq_name), "ufs_clk_gating_%d",
++		 hba->host->host_no);
++	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(wq_name,
++							   WQ_MEM_RECLAIM);
++
+ 	hba->clk_gating.is_enabled = true;
+ 
+ 	hba->clk_gating.delay_attr.show = ufshcd_clkgate_delay_show;
+@@ -1703,6 +1711,7 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+ 	device_remove_file(hba->dev, &hba->clk_gating.enable_attr);
+ 	cancel_work_sync(&hba->clk_gating.ungate_work);
+ 	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
++	destroy_workqueue(hba->clk_gating.clk_gating_workq);
+ }
+ 
+ /* Must be called with host lock acquired */
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 76c31d5..2e6bdc0 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -361,6 +361,7 @@ struct ufs_clk_gating {
+ 	struct device_attribute enable_attr;
+ 	bool is_enabled;
+ 	int active_reqs;
++	struct workqueue_struct *clk_gating_workq;
  };
  
--static void ufshcd_tmc_handler(struct ufs_hba *hba);
-+static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba);
- static void ufshcd_async_scan(void *data, async_cookie_t cookie);
- static int ufshcd_reset_and_restore(struct ufs_hba *hba);
- static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
-@@ -4609,19 +4609,29 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index, u8 *resp)
-  * ufshcd_uic_cmd_compl - handle completion of uic command
-  * @hba: per adapter instance
-  * @intr_status: interrupt status generated by the controller
-+ *
-+ * Returns
-+ *  IRQ_HANDLED - If interrupt is valid
-+ *  IRQ_NONE    - If invalid interrupt
-  */
--static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
-+static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- {
-+	irqreturn_t retval = IRQ_NONE;
-+
- 	if ((intr_status & UIC_COMMAND_COMPL) && hba->active_uic_cmd) {
- 		hba->active_uic_cmd->argument2 |=
- 			ufshcd_get_uic_cmd_result(hba);
- 		hba->active_uic_cmd->argument3 =
- 			ufshcd_get_dme_attr_val(hba);
- 		complete(&hba->active_uic_cmd->done);
-+		retval = IRQ_HANDLED;
- 	}
- 
--	if ((intr_status & UFSHCD_UIC_PWR_MASK) && hba->uic_async_done)
-+	if ((intr_status & UFSHCD_UIC_PWR_MASK) && hba->uic_async_done) {
- 		complete(hba->uic_async_done);
-+		retval = IRQ_HANDLED;
-+	}
-+	return retval;
- }
- 
- /**
-@@ -4675,8 +4685,12 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- /**
-  * ufshcd_transfer_req_compl - handle SCSI and query command completion
-  * @hba: per adapter instance
-+ *
-+ * Returns
-+ *  IRQ_HANDLED - If interrupt is valid
-+ *  IRQ_NONE    - If invalid interrupt
-  */
--static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
-+static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
- {
- 	unsigned long completed_reqs;
- 	u32 tr_doorbell;
-@@ -4694,7 +4708,12 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
- 
--	__ufshcd_transfer_req_compl(hba, completed_reqs);
-+	if (completed_reqs) {
-+		__ufshcd_transfer_req_compl(hba, completed_reqs);
-+		return IRQ_HANDLED;
-+	} else {
-+		return IRQ_NONE;
-+	}
- }
- 
- /**
-@@ -5220,16 +5239,21 @@ static void ufshcd_update_uic_reg_hist(struct ufs_uic_err_reg_hist *reg_hist,
- /**
-  * ufshcd_update_uic_error - check and set fatal UIC error flags.
-  * @hba: per-adapter instance
-+ *
-+ * Returns
-+ *  IRQ_HANDLED - If interrupt is valid
-+ *  IRQ_NONE    - If invalid interrupt
-  */
--static void ufshcd_update_uic_error(struct ufs_hba *hba)
-+static irqreturn_t ufshcd_update_uic_error(struct ufs_hba *hba)
- {
- 	u32 reg;
-+	irqreturn_t retval = IRQ_NONE;
- 
- 	/* PHY layer lane error */
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
- 	/* Ignore LINERESET indication, as this is not an error */
- 	if ((reg & UIC_PHY_ADAPTER_LAYER_ERROR) &&
--			(reg & UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK)) {
-+			(reg & UIC_PHY_ADAPTER_LAYER_ERROR_CODE_MASK)) {
- 		/*
- 		 * To know whether this error is fatal or not, DB timeout
- 		 * must be checked but this error is handled separately.
-@@ -5240,57 +5264,73 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
- 
- 	/* PA_INIT_ERROR is fatal and needs UIC reset */
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
--	if (reg)
-+	if ((reg & UIC_DATA_LINK_LAYER_ERROR) &&
-+	    (reg & UIC_DATA_LINK_LAYER_ERROR_CODE_MASK)) {
- 		ufshcd_update_uic_reg_hist(&hba->ufs_stats.dl_err, reg);
--
--	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
--		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
--	else if (hba->dev_quirks &
--		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
--		if (reg & UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED)
--			hba->uic_error |=
--				UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
--		else if (reg & UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT)
--			hba->uic_error |= UFSHCD_UIC_DL_TCx_REPLAY_ERROR;
-+		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT) {
-+			hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
-+		} else if (hba->dev_quirks &
-+			   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
-+			if (reg & UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED)
-+				hba->uic_error |=
-+					UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
-+			else if (reg &
-+				UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT)
-+				hba->uic_error |=
-+					UFSHCD_UIC_DL_TCx_REPLAY_ERROR;
-+		}
-+		retval |= IRQ_HANDLED;
- 	}
- 
- 	/* UIC NL/TL/DME errors needs software retry */
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
--	if (reg) {
-+	if ((reg & UIC_NETWORK_LAYER_ERROR) &&
-+	    (reg & UIC_NETWORK_LAYER_ERROR_CODE_MASK)) {
- 		ufshcd_update_uic_reg_hist(&hba->ufs_stats.nl_err, reg);
- 		hba->uic_error |= UFSHCD_UIC_NL_ERROR;
-+		retval |= IRQ_HANDLED;
- 	}
- 
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
--	if (reg) {
-+	if ((reg & UIC_TRANSPORT_LAYER_ERROR) &&
-+	    (reg & UIC_TRANSPORT_LAYER_ERROR_CODE_MASK)) {
- 		ufshcd_update_uic_reg_hist(&hba->ufs_stats.tl_err, reg);
- 		hba->uic_error |= UFSHCD_UIC_TL_ERROR;
-+		retval |= IRQ_HANDLED;
- 	}
- 
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
--	if (reg) {
-+	if ((reg & UIC_DME_ERROR) &&
-+	    (reg & UIC_DME_ERROR_CODE_MASK)) {
- 		ufshcd_update_uic_reg_hist(&hba->ufs_stats.dme_err, reg);
- 		hba->uic_error |= UFSHCD_UIC_DME_ERROR;
-+		retval |= IRQ_HANDLED;
- 	}
- 
- 	dev_dbg(hba->dev, "%s: UIC error flags = 0x%08x\n",
- 			__func__, hba->uic_error);
-+	return retval;
- }
- 
- /**
-  * ufshcd_check_errors - Check for errors that need s/w attention
-  * @hba: per-adapter instance
-+ *
-+ * Returns
-+ *  IRQ_HANDLED - If interrupt is valid
-+ *  IRQ_NONE    - If invalid interrupt
-  */
--static void ufshcd_check_errors(struct ufs_hba *hba)
-+static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
- {
- 	bool queue_eh_work = false;
-+	irqreturn_t retval = IRQ_NONE;
- 
- 	if (hba->errors & INT_FATAL_ERRORS)
- 		queue_eh_work = true;
- 
- 	if (hba->errors & UIC_ERROR) {
- 		hba->uic_error = 0;
--		ufshcd_update_uic_error(hba);
-+		retval = ufshcd_update_uic_error(hba);
- 		if (hba->uic_error)
- 			queue_eh_work = true;
- 	}
-@@ -5327,6 +5367,7 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 			}
- 			schedule_work(&hba->eh_work);
- 		}
-+		retval |= IRQ_HANDLED;
- 	}
- 	/*
- 	 * if (!queue_eh_work) -
-@@ -5334,40 +5375,58 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 	 * itself without s/w intervention or errors that will be
- 	 * handled by the SCSI core layer.
- 	 */
-+	return retval;
- }
- 
- /**
-  * ufshcd_tmc_handler - handle task management function completion
-  * @hba: per adapter instance
-+ *
-+ * Returns
-+ *  IRQ_HANDLED - If interrupt is valid
-+ *  IRQ_NONE    - If invalid interrupt
-  */
--static void ufshcd_tmc_handler(struct ufs_hba *hba)
-+static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba)
- {
- 	u32 tm_doorbell;
- 
- 	tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
- 	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
--	wake_up(&hba->tm_wq);
-+	if (hba->tm_condition) {
-+		wake_up(&hba->tm_wq);
-+		return IRQ_HANDLED;
-+	} else {
-+		return IRQ_NONE;
-+	}
- }
- 
- /**
-  * ufshcd_sl_intr - Interrupt service routine
-  * @hba: per adapter instance
-  * @intr_status: contains interrupts generated by the controller
-+ *
-+ * Returns
-+ *  IRQ_HANDLED - If interrupt is valid
-+ *  IRQ_NONE    - If invalid interrupt
-  */
--static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
-+static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- {
-+	irqreturn_t retval = IRQ_NONE;
-+
- 	hba->errors = UFSHCD_ERROR_MASK & intr_status;
- 	if (hba->errors)
--		ufshcd_check_errors(hba);
-+		retval |= ufshcd_check_errors(hba);
- 
- 	if (intr_status & UFSHCD_UIC_MASK)
--		ufshcd_uic_cmd_compl(hba, intr_status);
-+		retval |= ufshcd_uic_cmd_compl(hba, intr_status);
- 
- 	if (intr_status & UTP_TASK_REQ_COMPL)
--		ufshcd_tmc_handler(hba);
-+		retval |= ufshcd_tmc_handler(hba);
- 
- 	if (intr_status & UTP_TRANSFER_REQ_COMPL)
--		ufshcd_transfer_req_compl(hba);
-+		retval |= ufshcd_transfer_req_compl(hba);
-+
-+	return retval;
- }
- 
- /**
-@@ -5375,8 +5434,9 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
-  * @irq: irq number
-  * @__hba: pointer to adapter instance
-  *
-- * Returns IRQ_HANDLED - If interrupt is valid
-- *		IRQ_NONE - If invalid interrupt
-+ * Returns
-+ *  IRQ_HANDLED - If interrupt is valid
-+ *  IRQ_NONE    - If invalid interrupt
-  */
- static irqreturn_t ufshcd_intr(int irq, void *__hba)
- {
-@@ -5399,14 +5459,19 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 			intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
- 		if (intr_status)
- 			ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
--		if (enabled_intr_status) {
--			ufshcd_sl_intr(hba, enabled_intr_status);
--			retval = IRQ_HANDLED;
--		}
-+		if (enabled_intr_status)
-+			retval |= ufshcd_sl_intr(hba, enabled_intr_status);
- 
- 		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
- 	} while (intr_status && --retries);
- 
-+	if (retval == IRQ_NONE) {
-+		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x\n",
-+			__func__, intr_status);
-+		ufshcd_hex_dump("host regs: ", hba->mmio_base,
-+				UFSHCI_REG_SPACE_SIZE);
-+	}
-+
- 	spin_unlock(hba->host->host_lock);
- 	return retval;
- }
+ struct ufs_saved_pwr_info {
 -- 
 Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc. 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
