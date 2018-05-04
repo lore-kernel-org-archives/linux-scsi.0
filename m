@@ -1,88 +1,161 @@
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 0/6] firmware_loader: cleanups for v4.18
-Date: Fri,  4 May 2018 10:43:49 -0700
-Message-ID: <20180504174356.13227-1-mcgrof@kernel.org>
+Subject: [PATCH v5 2/6] firmware: use () to terminate kernel-doc function names
+Date: Fri,  4 May 2018 10:43:51 -0700
+Message-ID: <20180504174356.13227-3-mcgrof@kernel.org>
+References: <20180504174356.13227-1-mcgrof@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180504174356.13227-1-mcgrof@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@linuxfoundation.org
 Cc: akpm@linux-foundation.org, keescook@chromium.org, josh@joshtriplett.org, teg@jklm.no, wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org, broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org, torvalds@linux-foundation.org, Abhay_Salunke@dell.com, bjorn.andersson@linaro.org, jewalt@lgsinnovations.com, oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl, davem@davemloft.net, maco@android.com, arve@android.com, tkjos@android.comlinux
 List-Id: linux-scsi@vger.kernel.org
 
-Greg,
+From: Andres Rodriguez <andresx7@gmail.com>
 
-I've reviewed the pending patches for the firmware_laoder and as for
-v4.18, the following 3 patches from Andres have been iterated enough
-that they're ready after I made some final minor changes, mostly just
-style fixes and re-arrangements in terms of order. The new API he was
-suggesting to add requires just a bit more review.
+The kernel-doc spec dictates a function name ends in ().
 
-The last 3 patches are my own and are new, so I'd like further review
-from others on them, but considering the changes Hans de Goede is having
-us consider, I think this will prove useful to his work in terms of
-splitting up code and documenting things properly. One thing that was
-clear -- is our Kconfig entries for FW_LOADER were *extremely* outdated,
-as such I've gone ahead and updated them.
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader/fallback.c |  8 ++++----
+ drivers/base/firmware_loader/main.c     | 20 ++++++++++----------
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-The kconfig wording update for FW_LOADER includes prior conclusions made
-to help justify keeping the split of the firmware fallback sysfs
-interface in terms of size which was discussed with Josh Triplett a
-while ago. It also includes modern recommendations, which would otherwise
-get lost, on what to do about corner case firmware situations on
-provisioning situations which folks have brought to my attention before
-and architectural solutions based on firmwared [0] for a few years now.
-Finally this work also reveals that a couple of candidate drivers could
-likely move to staging considering their age, *or* we could just remove
-the respective firmware build options. SCSI folks? Networking folks? To
-my surprise *nothing* has been done about PREVENT_FIRMWARE_BUILD for
-them since pre-git days!  These sneaky litte buggers are:
-
-  * CONFIG_WANXL --> CONFIG_WANXL_BUILD_FIRMWARE
-  * CONFIG_SCSI_AIC79XX --> CONFIG_AIC79XX_BUILD_FIRMWARE
-
-To this day both of these drivers are building driver *firmwares* when
-the option CONFIG_PREVENT_FIRMWARE_BUILD is disabled, and they don't
-even make use of the firmware API at all. I find it *highly unlikely*
-pre-git day drivers are raging in new radical firmware updates these
-days. I'll go put a knife into some of that unless I hear back from
-SCSI or networking folks that WANXL_BUILD_FIRMWARE and
-AIC79XX_BUILD_FIRMWARE are still hip and very much needed.
-
-On my radar as well are Mimi's latest firmware_loader proposed changes,
-but I think those need considerable review and attention from more security
-folks, Android folks, and the linux-wireless community, our own
-scattered random folks of firmware reviewer folks.
-
-These patches are based on top of linux-next next-20180504, they are
-also available in a respective git branch, both for linux-next [1] and
-linux [2].
-
-Question, and specially rants are greatly appreciated, and of course...
-may the 4th be with you.
-
-[0] https://github.com/teg/firmwared
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20180504-firmware_loader
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20180504-firmware_loader
-
-  Luis
-
-Andres Rodriguez (3):
-  firmware: wrap FW_OPT_* into an enum
-  firmware: use () to terminate kernel-doc function names
-  firmware: rename fw_sysfs_fallback to firmware_fallback_sysfs()
-
-Luis R. Rodriguez (3):
-  firmware_loader: document firmware_sysfs_fallback()
-  firmware_loader: enhance Kconfig documentation over FW_LOADER
-  firmware_loader: move kconfig FW_LOADER entries to its own file
-
- drivers/base/Kconfig                    |  90 +++-----------
- drivers/base/firmware_loader/Kconfig    | 149 ++++++++++++++++++++++++
- drivers/base/firmware_loader/fallback.c |  46 +++++---
- drivers/base/firmware_loader/fallback.h |  18 +--
- drivers/base/firmware_loader/firmware.h |  37 ++++--
- drivers/base/firmware_loader/main.c     |  28 ++---
- 6 files changed, 252 insertions(+), 116 deletions(-)
- create mode 100644 drivers/base/firmware_loader/Kconfig
-
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index b57a7b3b4122..529f7013616f 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -125,7 +125,7 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
+ }
+ 
+ /**
+- * firmware_timeout_store - set number of seconds to wait for firmware
++ * firmware_timeout_store() - set number of seconds to wait for firmware
+  * @class: device class pointer
+  * @attr: device attribute pointer
+  * @buf: buffer to scan for timeout value
+@@ -239,7 +239,7 @@ static int map_fw_priv_pages(struct fw_priv *fw_priv)
+ }
+ 
+ /**
+- * firmware_loading_store - set value in the 'loading' control file
++ * firmware_loading_store() - set value in the 'loading' control file
+  * @dev: device pointer
+  * @attr: device attribute pointer
+  * @buf: buffer to scan for loading control value
+@@ -431,7 +431,7 @@ static int fw_realloc_pages(struct fw_sysfs *fw_sysfs, int min_size)
+ }
+ 
+ /**
+- * firmware_data_write - write method for firmware
++ * firmware_data_write() - write method for firmware
+  * @filp: open sysfs file
+  * @kobj: kobject for the device
+  * @bin_attr: bin_attr structure
+@@ -537,7 +537,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
+ }
+ 
+ /**
+- * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
++ * fw_load_sysfs_fallback() - load a firmware via the sysfs fallback mechanism
+  * @fw_sysfs: firmware sysfs information for the firmware to load
+  * @opt_flags: flags of options, FW_OPT_*
+  * @timeout: timeout to wait for the load
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index 9919f0e6a7cc..7f2bc7e8e3c0 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -597,7 +597,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
+ }
+ 
+ /**
+- * request_firmware: - send firmware request and wait for it
++ * request_firmware() - send firmware request and wait for it
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
+@@ -657,7 +657,7 @@ int request_firmware_direct(const struct firmware **firmware_p,
+ EXPORT_SYMBOL_GPL(request_firmware_direct);
+ 
+ /**
+- * firmware_request_cache: - cache firmware for suspend so resume can use it
++ * firmware_request_cache() - cache firmware for suspend so resume can use it
+  * @name: name of firmware file
+  * @device: device for which firmware should be cached for
+  *
+@@ -681,7 +681,7 @@ int firmware_request_cache(struct device *device, const char *name)
+ EXPORT_SYMBOL_GPL(firmware_request_cache);
+ 
+ /**
+- * request_firmware_into_buf - load firmware into a previously allocated buffer
++ * request_firmware_into_buf() - load firmware into a previously allocated buffer
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded and DMA region allocated
+@@ -713,7 +713,7 @@ request_firmware_into_buf(const struct firmware **firmware_p, const char *name,
+ EXPORT_SYMBOL(request_firmware_into_buf);
+ 
+ /**
+- * release_firmware: - release the resource associated with a firmware image
++ * release_firmware() - release the resource associated with a firmware image
+  * @fw: firmware resource to release
+  **/
+ void release_firmware(const struct firmware *fw)
+@@ -755,7 +755,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ }
+ 
+ /**
+- * request_firmware_nowait - asynchronous version of request_firmware
++ * request_firmware_nowait() - asynchronous version of request_firmware
+  * @module: module requesting the firmware
+  * @uevent: sends uevent to copy the firmware image if this flag
+  *	is non-zero else the firmware copy must be done manually.
+@@ -824,7 +824,7 @@ EXPORT_SYMBOL(request_firmware_nowait);
+ static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
+ 
+ /**
+- * cache_firmware - cache one firmware image in kernel memory space
++ * cache_firmware() - cache one firmware image in kernel memory space
+  * @fw_name: the firmware image name
+  *
+  * Cache firmware in kernel memory so that drivers can use it when
+@@ -866,7 +866,7 @@ static struct fw_priv *lookup_fw_priv(const char *fw_name)
+ }
+ 
+ /**
+- * uncache_firmware - remove one cached firmware image
++ * uncache_firmware() - remove one cached firmware image
+  * @fw_name: the firmware image name
+  *
+  * Uncache one firmware image which has been cached successfully
+@@ -1042,7 +1042,7 @@ static void __device_uncache_fw_images(void)
+ }
+ 
+ /**
+- * device_cache_fw_images - cache devices' firmware
++ * device_cache_fw_images() - cache devices' firmware
+  *
+  * If one device called request_firmware or its nowait version
+  * successfully before, the firmware names are recored into the
+@@ -1075,7 +1075,7 @@ static void device_cache_fw_images(void)
+ }
+ 
+ /**
+- * device_uncache_fw_images - uncache devices' firmware
++ * device_uncache_fw_images() - uncache devices' firmware
+  *
+  * uncache all firmwares which have been cached successfully
+  * by device_uncache_fw_images earlier
+@@ -1092,7 +1092,7 @@ static void device_uncache_fw_images_work(struct work_struct *work)
+ }
+ 
+ /**
+- * device_uncache_fw_images_delay - uncache devices firmwares
++ * device_uncache_fw_images_delay() - uncache devices firmwares
+  * @delay: number of milliseconds to delay uncache device firmwares
+  *
+  * uncache all devices's firmwares which has been cached successfully
 -- 
 2.17.0
