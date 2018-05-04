@@ -1,7 +1,7 @@
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 4/6] firmware_loader: document firmware_sysfs_fallback()
-Date: Fri,  4 May 2018 10:43:53 -0700
-Message-ID: <20180504174356.13227-5-mcgrof@kernel.org>
+Subject: [PATCH v5 3/6] firmware: rename fw_sysfs_fallback to firmware_fallback_sysfs()
+Date: Fri,  4 May 2018 10:43:52 -0700
+Message-ID: <20180504174356.13227-4-mcgrof@kernel.org>
 References: <20180504174356.13227-1-mcgrof@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180504174356.13227-1-mcgrof@kernel.org>
@@ -10,44 +10,101 @@ To: gregkh@linuxfoundation.org
 Cc: akpm@linux-foundation.org, keescook@chromium.org, josh@joshtriplett.org, teg@jklm.no, wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org, broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org, torvalds@linux-foundation.org, Abhay_Salunke@dell.com, bjorn.andersson@linaro.org, jewalt@lgsinnovations.com, oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl, davem@davemloft.net, maco@android.com, arve@android.com, tkjos@android.comlinux
 List-Id: linux-scsi@vger.kernel.org
 
-This also sets the expecations for future fallback interfaces, even
-if they are not exported.
+From: Andres Rodriguez <andresx7@gmail.com>
 
+This is done since this call is now exposed through kernel-doc,
+and since this also paves the way for different future types of
+fallback mechanims.
+
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
+[mcgrof: small coding style changes]
 Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/base/firmware_loader/fallback.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/base/firmware_loader/fallback.c |  8 ++++----
+ drivers/base/firmware_loader/fallback.h | 16 ++++++++--------
+ drivers/base/firmware_loader/firmware.h |  2 +-
+ drivers/base/firmware_loader/main.c     |  2 +-
+ 4 files changed, 14 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 3db9e0f225ac..9169e7b9800c 100644
+index 529f7013616f..3db9e0f225ac 100644
 --- a/drivers/base/firmware_loader/fallback.c
 +++ b/drivers/base/firmware_loader/fallback.c
-@@ -662,6 +662,26 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
+@@ -662,10 +662,10 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
  	return fw_force_sysfs_fallback(opt_flags);
  }
  
-+/**
-+ * firmware_fallback_sysfs() - use the fallback mechanism to find firmware
-+ * @fw: pointer to firmware image
-+ * @name: name of firmware file to look for
-+ * @device: device for which firmware is being loaded
-+ * @opt_flags: options to control firmware loading behaviour
-+ * @ret: return value from direct lookup which triggered the fallback mechanism
-+ *
-+ * This function is called if direct lookup for the firmware failed, it enables
-+ * a fallback mechanism through userspace by exposing a sysfs loading
-+ * interface. Userspace is in charge of loading the firmware through the syfs
-+ * loading interface. This syfs fallback mechanism may be disabled completely
-+ * on a system by setting the proc sysctl value ignore_sysfs_fallback to true.
-+ * If this false we check if the internal API caller set the @FW_OPT_NOFALLBACK
-+ * flag, if so it would also disable the fallback mechanism. A system may want
-+ * to enfoce the sysfs fallback mechanism at all times, it can do this by
-+ * setting ignore_sysfs_fallback to false and force_sysfs_fallback to true.
-+ * Enabling force_sysfs_fallback is functionally equivalent to build a kernel
-+ * with CONFIG_FW_LOADER_USER_HELPER_FALLBACK.
-+ **/
- int firmware_fallback_sysfs(struct firmware *fw, const char *name,
- 			    struct device *device,
- 			    enum fw_opt opt_flags,
+-int fw_sysfs_fallback(struct firmware *fw, const char *name,
+-		      struct device *device,
+-		      enum fw_opt opt_flags,
+-		      int ret)
++int firmware_fallback_sysfs(struct firmware *fw, const char *name,
++			    struct device *device,
++			    enum fw_opt opt_flags,
++			    int ret)
+ {
+ 	if (!fw_run_sysfs_fallback(opt_flags))
+ 		return ret;
+diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
+index a3b73a09db6c..21063503e4ea 100644
+--- a/drivers/base/firmware_loader/fallback.h
++++ b/drivers/base/firmware_loader/fallback.h
+@@ -31,10 +31,10 @@ struct firmware_fallback_config {
+ };
+ 
+ #ifdef CONFIG_FW_LOADER_USER_HELPER
+-int fw_sysfs_fallback(struct firmware *fw, const char *name,
+-		      struct device *device,
+-		      enum fw_opt opt_flags,
+-		      int ret);
++int firmware_fallback_sysfs(struct firmware *fw, const char *name,
++			    struct device *device,
++			    enum fw_opt opt_flags,
++			    int ret);
+ void kill_pending_fw_fallback_reqs(bool only_kill_custom);
+ 
+ void fw_fallback_set_cache_timeout(void);
+@@ -43,10 +43,10 @@ void fw_fallback_set_default_timeout(void);
+ int register_sysfs_loader(void);
+ void unregister_sysfs_loader(void);
+ #else /* CONFIG_FW_LOADER_USER_HELPER */
+-static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
+-				    struct device *device,
+-				    enum fw_opt opt_flags,
+-				    int ret)
++static inline int firmware_fallback_sysfs(struct firmware *fw, const char *name,
++					  struct device *device,
++					  enum fw_opt opt_flags,
++					  int ret)
+ {
+ 	/* Keep carrying over the same error */
+ 	return ret;
+diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
+index 4f433b447367..4c1395f8e7ed 100644
+--- a/drivers/base/firmware_loader/firmware.h
++++ b/drivers/base/firmware_loader/firmware.h
+@@ -20,7 +20,7 @@
+  * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
+  * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
+  *	filesystem lookup fails at finding the firmware.  For details refer to
+- *	fw_sysfs_fallback().
++ *	firmware_fallback_sysfs().
+  * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
+  * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
+  *	cache the firmware upon suspend, so that upon resume races against the
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index 7f2bc7e8e3c0..d951af29017a 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -581,7 +581,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
+ 			dev_warn(device,
+ 				 "Direct firmware load for %s failed with error %d\n",
+ 				 name, ret);
+-		ret = fw_sysfs_fallback(fw, name, device, opt_flags, ret);
++		ret = firmware_fallback_sysfs(fw, name, device, opt_flags, ret);
+ 	} else
+ 		ret = assign_fw(fw, device, opt_flags);
+ 
 -- 
 2.17.0
