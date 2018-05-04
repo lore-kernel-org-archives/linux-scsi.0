@@ -1,7 +1,7 @@
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 2/6] firmware: use () to terminate kernel-doc function names
-Date: Fri,  4 May 2018 10:43:51 -0700
-Message-ID: <20180504174356.13227-3-mcgrof@kernel.org>
+Subject: [PATCH v5 5/6] firmware_loader: enhance Kconfig documentation over FW_LOADER
+Date: Fri,  4 May 2018 10:43:54 -0700
+Message-ID: <20180504174356.13227-6-mcgrof@kernel.org>
 References: <20180504174356.13227-1-mcgrof@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180504174356.13227-1-mcgrof@kernel.org>
@@ -10,152 +10,223 @@ To: gregkh@linuxfoundation.org
 Cc: akpm@linux-foundation.org, keescook@chromium.org, josh@joshtriplett.org, teg@jklm.no, wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org, broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org, torvalds@linux-foundation.org, Abhay_Salunke@dell.com, bjorn.andersson@linaro.org, jewalt@lgsinnovations.com, oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl, davem@davemloft.net, maco@android.com, arve@android.com, tkjos@android.comlinux
 List-Id: linux-scsi@vger.kernel.org
 
-From: Andres Rodriguez <andresx7@gmail.com>
+If you try to read FW_LOADER today it speaks of old riddles and
+unless you have been following development closely you will loose
+track of what is what. Even the documentation for PREVENT_FIRMWARE_BUILD
+is a bit fuzzy and how it fits into this big picture.
 
-The kernel-doc spec dictates a function name ends in ().
+Give the FW_LOADER kconfig documentation some love with more up to
+date developments and recommendations. While at it, wrap the FW_LOADER
+code into its own menu to compartamentalize and make it clearer which
+components really are part of the FW_LOADER. This should also make
+it easier to later move these kconfig entries into the firmware_loader/
+directory later.
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
 Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/base/firmware_loader/fallback.c |  8 ++++----
- drivers/base/firmware_loader/main.c     | 20 ++++++++++----------
- 2 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/base/Kconfig | 160 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 126 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index b57a7b3b4122..529f7013616f 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -125,7 +125,7 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
- }
+diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+index 29b0eb452b3a..bf2d464b0e2c 100644
+--- a/drivers/base/Kconfig
++++ b/drivers/base/Kconfig
+@@ -70,39 +70,64 @@ config STANDALONE
+ 	  If unsure, say Y.
  
- /**
-- * firmware_timeout_store - set number of seconds to wait for firmware
-+ * firmware_timeout_store() - set number of seconds to wait for firmware
-  * @class: device class pointer
-  * @attr: device attribute pointer
-  * @buf: buffer to scan for timeout value
-@@ -239,7 +239,7 @@ static int map_fw_priv_pages(struct fw_priv *fw_priv)
- }
+ config PREVENT_FIRMWARE_BUILD
+-	bool "Prevent firmware from being built"
++	bool "Disable drivers features which enable custom firmware building"
+ 	default y
+ 	help
+-	  Say yes to avoid building firmware. Firmware is usually shipped
+-	  with the driver and only when updating the firmware should a
+-	  rebuild be made.
+-	  If unsure, say Y here.
++	  Say yes to disable driver features which enable building a custom
++	  driver firmwar at kernel build time. These drivers do not use the
++	  kernel firmware API to load firmware (CONFIG_FW_LOADER), instead they
++	  use their own custom loading mechanism. The required firmware is
++	  usually shipped with the driver, building the driver firmware
++	  should only be needed if you have an updated firmware source.
++
++	  Firmware should not be being built as part of kernel, these days
++	  you should always prevent this and say Y here. There are only two
++	  old drivers which enable building of its firmware at kernel build
++	  time:
++
++	    o CONFIG_WANXL through CONFIG_WANXL_BUILD_FIRMWARE
++	    o CONFIG_SCSI_AIC79XX through CONFIG_AIC79XX_BUILD_FIRMWARE
++
++menu "Firmware loader"
  
- /**
-- * firmware_loading_store - set value in the 'loading' control file
-+ * firmware_loading_store() - set value in the 'loading' control file
-  * @dev: device pointer
-  * @attr: device attribute pointer
-  * @buf: buffer to scan for loading control value
-@@ -431,7 +431,7 @@ static int fw_realloc_pages(struct fw_sysfs *fw_sysfs, int min_size)
- }
+ config FW_LOADER
+-	tristate "Userspace firmware loading support" if EXPERT
++	tristate "Firmware loading facility" if EXPERT
+ 	default y
+ 	---help---
+-	  This option is provided for the case where none of the in-tree modules
+-	  require userspace firmware loading support, but a module built
+-	  out-of-tree does.
++	  This enables the firmware loading facility in the kernel. The kernel
++	  will first look for built-in firmware, if it has any. Next, it will
++	  look for the requested firmware in a series of filesystem paths:
++
++		o firmware_class path module parameter or kernel boot param
++		o /lib/firmware/updates/UTS_RELEASE
++		o /lib/firmware/updates
++		o /lib/firmware/UTS_RELEASE
++		o /lib/firmware
++
++	  Enabling this feature only increases your kernel image by about
++	  828 bytes, enable this option unless you are certain you don't
++	  need firmware.
++
++	  You typically want this built-in (=y) but you can also enable this
++	  as a module, in which case the firmware_class module will be built.
++	  You also want to be sure to enable this built-in if you are going to
++	  enable built-in firmware (CONFIG_EXTRA_FIRMWARE).
++
++if FW_LOADER
  
- /**
-- * firmware_data_write - write method for firmware
-+ * firmware_data_write() - write method for firmware
-  * @filp: open sysfs file
-  * @kobj: kobject for the device
-  * @bin_attr: bin_attr structure
-@@ -537,7 +537,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
- }
+ config EXTRA_FIRMWARE
+-	string "External firmware blobs to build into the kernel binary"
+-	depends on FW_LOADER
++	string "Build these firmware blobs into the kernel binary"
+ 	help
+-	  Various drivers in the kernel source tree may require firmware,
+-	  which is generally available in your distribution's linux-firmware
+-	  package.
++	  Device drivers which require firmware can typically deal with
++	  having the kernel load firmware from the various supported
++	  /lib/firmware/ paths. This option enables you to build into the
++	  kernel firmware files. Built-in firmware searches are preceeded
++	  over firmware lookups using your filesystem over the supported
++	  /lib/firmware paths documented on CONFIG_FW_LOADER.
  
- /**
-- * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
-+ * fw_load_sysfs_fallback() - load a firmware via the sysfs fallback mechanism
-  * @fw_sysfs: firmware sysfs information for the firmware to load
-  * @opt_flags: flags of options, FW_OPT_*
-  * @timeout: timeout to wait for the load
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index 9919f0e6a7cc..7f2bc7e8e3c0 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -597,7 +597,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
- }
+-	  The linux-firmware package should install firmware into
+-	  /lib/firmware/ on your system, so they can be loaded by userspace
+-	  helpers on request.
+-
+-	  This option allows firmware to be built into the kernel for the case
+-	  where the user either cannot or doesn't want to provide it from
+-	  userspace at runtime (for example, when the firmware in question is
+-	  required for accessing the boot device, and the user doesn't want to
+-	  use an initrd).
++	  This may be useful for testing or if the firmware is required early on
++	  in boot and cannot rely on the firmware being placed in an initrd or
++	  initramfs.
  
- /**
-- * request_firmware: - send firmware request and wait for it
-+ * request_firmware() - send firmware request and wait for it
-  * @firmware_p: pointer to firmware image
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded
-@@ -657,7 +657,7 @@ int request_firmware_direct(const struct firmware **firmware_p,
- EXPORT_SYMBOL_GPL(request_firmware_direct);
+ 	  This option is a string and takes the (space-separated) names of the
+ 	  firmware files -- the same names that appear in MODULE_FIRMWARE()
+@@ -113,7 +138,7 @@ config EXTRA_FIRMWARE
+ 	  For example, you might set CONFIG_EXTRA_FIRMWARE="usb8388.bin", copy
+ 	  the usb8388.bin file into /lib/firmware, and build the kernel. Then
+ 	  any request_firmware("usb8388.bin") will be satisfied internally
+-	  without needing to call out to userspace.
++	  inside the kernel without ever looking at your filesystem at runtime.
  
- /**
-- * firmware_request_cache: - cache firmware for suspend so resume can use it
-+ * firmware_request_cache() - cache firmware for suspend so resume can use it
-  * @name: name of firmware file
-  * @device: device for which firmware should be cached for
-  *
-@@ -681,7 +681,7 @@ int firmware_request_cache(struct device *device, const char *name)
- EXPORT_SYMBOL_GPL(firmware_request_cache);
+ 	  WARNING: If you include additional firmware files into your binary
+ 	  kernel image that are not available under the terms of the GPL,
+@@ -130,22 +155,89 @@ config EXTRA_FIRMWARE_DIR
+ 	  looks for the firmware files listed in the EXTRA_FIRMWARE option.
  
- /**
-- * request_firmware_into_buf - load firmware into a previously allocated buffer
-+ * request_firmware_into_buf() - load firmware into a previously allocated buffer
-  * @firmware_p: pointer to firmware image
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded and DMA region allocated
-@@ -713,7 +713,7 @@ request_firmware_into_buf(const struct firmware **firmware_p, const char *name,
- EXPORT_SYMBOL(request_firmware_into_buf);
+ config FW_LOADER_USER_HELPER
+-	bool
++	bool "Enable the firmware sysfs fallback mechanism"
++	help
++	  This option enables a sysfs loading facility to enable firmware
++	  loading to the kernel through userspace as a fallback mechanism
++	  if and only if the kernel's direct filesystem lookup for the
++	  firmware failed using the different /lib/firmware/ paths, or the
++	  path specified in the firmware_class path module parameter, or the
++	  firmware_class path kernel boot parameter if the firmware_class is
++	  built-in. For details on how to work with the sysfs fallback mechanism
++	  refer to Documentation/driver-api/firmware/fallback-mechanisms.rst.
++
++	  The direct filesystem lookup for firwmare is always used first now.
++
++	  If the kernel's direct filesystem lookup for firware fails to find
++	  the requested firmware a sysfs fallback loading facility is made
++	  available and userspace is informed about this through uevents.
++	  The uevent can be supressed if the driver explicitly requested it,
++	  this is known as the driver using the custom fallback mechanism.
++	  If the custom fallback mechanism is used userspace must always
++	  acknowledge failure to find firmware as the timeout for the fallback
++	  mechanism is disabled, and failed requests will linger forever.
++
++	  This used to be the default firmware loading facility, and udev used
++	  listen for uvents to load firmware for the kernel. The firmware
++	  loading facility functionality in udev has been removed, as such it
++	  can no longer be relied upon as a fallback mechanism. Linux no longer
++	  relies on or uses a fallback mechanism in userspace.
++
++	  Since this was the default firmware loading facility at one point,
++	  old userspace may exist which relies upon it, and as such this
++	  mechanism can never be removed from the kernel.
++
++	  You should only enable this functionality if you are certain you
++	  require a fallback mechanism and have a userspace mechanism ready to
++	  load firmware in case it is not found. Another reason kernels may
++	  have this feature enabled is to support a driver which explicitly
++	  relies on this fallback mechanism. Only two drivers need this today:
++
++	    o CONFIG_LEDS_LP55XX_COMMON
++	    o CONFIG_DELL_RBU
++
++	  Outside of supporting the above drivers, another reason for needing
++	  this may be that your firmware resides outside of the paths the kernel
++	  looks for and cannot possibily be specified using the firmware_class
++	  path module parameter or kernel firmware_class path boot parameter
++	  if firmware_class is built-in.
++
++	  A modern use case may be to temporarily mount a custom partition
++	  during provisioning which is only accessible to userspace, and then
++	  to use it to look for and fetch the required firmware. Such type of
++	  driver functionality may not even ever be desirable upstream by
++	  vendors, and as such is only required to be supported as an interface
++	  for provisioning. Since udev's firmware loading facility has been
++	  removed you can use firmwared or a fork of it to customize how you
++	  want to load firmware based on uevents issued:
++	  https://github.com/teg/firmwared
++
++	  Enabling this option will increase your kernel image size by about
++	  13436 bytes.
++
++	  If you are unsure about this, say N here, unless you are Linux
++	  distribution and need to support the above two drivers, or you are
++	  certain you need to support some really custom firmware loading
++	  facility in userspace.
  
- /**
-- * release_firmware: - release the resource associated with a firmware image
-+ * release_firmware() - release the resource associated with a firmware image
-  * @fw: firmware resource to release
-  **/
- void release_firmware(const struct firmware *fw)
-@@ -755,7 +755,7 @@ static void request_firmware_work_func(struct work_struct *work)
- }
+ config FW_LOADER_USER_HELPER_FALLBACK
+-	bool "Fallback user-helper invocation for firmware loading"
+-	depends on FW_LOADER
+-	select FW_LOADER_USER_HELPER
++	bool "Force the firmware sysfs fallback mechanism when possible"
++	depends on FW_LOADER_USER_HELPER
+ 	help
+-	  This option enables / disables the invocation of user-helper
+-	  (e.g. udev) for loading firmware files as a fallback after the
+-	  direct file loading in kernel fails.  The user-mode helper is
+-	  no longer required unless you have a special firmware file that
+-	  resides in a non-standard path. Moreover, the udev support has
+-	  been deprecated upstream.
++	  Enabling this option forces a sysfs userspace fallback mechanism
++	  to be used for all firmware requests which explicitly do not disable a
++	  a fallback mechanism. Firmware calls which do prohibit a fallback
++	  mechanism is request_firmware_direct(). This option is kept for
++          backward compatibility purposes given this precise mechanism can also
++	  be enabled by setting the proc sysctl value to true:
++
++	       /proc/sys/kernel/firmware_config/force_sysfs_fallback
  
- /**
-- * request_firmware_nowait - asynchronous version of request_firmware
-+ * request_firmware_nowait() - asynchronous version of request_firmware
-  * @module: module requesting the firmware
-  * @uevent: sends uevent to copy the firmware image if this flag
-  *	is non-zero else the firmware copy must be done manually.
-@@ -824,7 +824,7 @@ EXPORT_SYMBOL(request_firmware_nowait);
- static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
+ 	  If you are unsure about this, say N here.
  
- /**
-- * cache_firmware - cache one firmware image in kernel memory space
-+ * cache_firmware() - cache one firmware image in kernel memory space
-  * @fw_name: the firmware image name
-  *
-  * Cache firmware in kernel memory so that drivers can use it when
-@@ -866,7 +866,7 @@ static struct fw_priv *lookup_fw_priv(const char *fw_name)
- }
- 
- /**
-- * uncache_firmware - remove one cached firmware image
-+ * uncache_firmware() - remove one cached firmware image
-  * @fw_name: the firmware image name
-  *
-  * Uncache one firmware image which has been cached successfully
-@@ -1042,7 +1042,7 @@ static void __device_uncache_fw_images(void)
- }
- 
- /**
-- * device_cache_fw_images - cache devices' firmware
-+ * device_cache_fw_images() - cache devices' firmware
-  *
-  * If one device called request_firmware or its nowait version
-  * successfully before, the firmware names are recored into the
-@@ -1075,7 +1075,7 @@ static void device_cache_fw_images(void)
- }
- 
- /**
-- * device_uncache_fw_images - uncache devices' firmware
-+ * device_uncache_fw_images() - uncache devices' firmware
-  *
-  * uncache all firmwares which have been cached successfully
-  * by device_uncache_fw_images earlier
-@@ -1092,7 +1092,7 @@ static void device_uncache_fw_images_work(struct work_struct *work)
- }
- 
- /**
-- * device_uncache_fw_images_delay - uncache devices firmwares
-+ * device_uncache_fw_images_delay() - uncache devices firmwares
-  * @delay: number of milliseconds to delay uncache device firmwares
-  *
-  * uncache all devices's firmwares which has been cached successfully
++endif # FW_LOADER
++endmenu
++
+ config WANT_DEV_COREDUMP
+ 	bool
+ 	help
 -- 
 2.17.0
