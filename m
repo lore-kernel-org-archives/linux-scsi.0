@@ -1,15 +1,15 @@
 From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH 34/40] atm: simplify procfs code
-Date: Sat, 05 May 2018 07:51:18 -0500
-Message-ID: <87r2mq2rll.fsf@xmission.com>
+Subject: Re: [PATCH 38/40] ide: remove ide_driver_proc_write
+Date: Sat, 05 May 2018 08:09:42 -0500
+Message-ID: <87efiq2qqx.fsf@xmission.com>
 References: <20180425154827.32251-1-hch@lst.de>
- <20180425154827.32251-35-hch@lst.de>
+ <20180425154827.32251-39-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20180425154827.32251-35-hch@lst.de> (Christoph Hellwig's message
- of "Wed, 25 Apr 2018 17:48:21 +0200")
+In-Reply-To: <20180425154827.32251-39-hch@lst.de> (Christoph Hellwig's message
+ of "Wed, 25 Apr 2018 17:48:25 +0200")
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -25,54 +25,89 @@ List-Id: linux-scsi@vger.kernel.org
 
 Christoph Hellwig <hch@lst.de> writes:
 
-> Use remove_proc_subtree to remove the whole subtree on cleanup, and
-> unwind the registration loop into individual calls.  Switch to use
-> proc_create_seq where applicable.
+> The driver proc file hasn't been writeable for a long time, so this is
+> just dead code.
 
-Can you please explain why you are removing the error handling when
-you are unwinding the registration loop?
+It is possible to chmod this file to get at the write method.  Not that
+I think anyone does.
 
->  int __init atm_proc_init(void)
->  {
-> -	static struct atm_proc_entry *e;
-> -	int ret;
-> -
->  	atm_proc_root = proc_net_mkdir(&init_net, "atm", init_net.proc_net);
->  	if (!atm_proc_root)
-> -		goto err_out;
-> -	for (e = atm_proc_ents; e->name; e++) {
-> -		struct proc_dir_entry *dirent;
-> -
-> -		dirent = proc_create(e->name, 0444,
-> -				     atm_proc_root, e->proc_fops);
-> -		if (!dirent)
-> -			goto err_out_remove;
-> -		e->dirent = dirent;
-> -	}
-> -	ret = 0;
-> -out:
-> -	return ret;
-> -
-> -err_out_remove:
-> -	atm_proc_dirs_remove();
-> -err_out:
-> -	ret = -ENOMEM;
-> -	goto out;
-> +		return -ENOMEM;
-> +	proc_create_seq("devices", 0444, atm_proc_root, &atm_dev_seq_ops);
-> +	proc_create("pvc", 0444, atm_proc_root, &pvc_seq_fops);
-> +	proc_create("svc", 0444, atm_proc_root, &svc_seq_fops);
-> +	proc_create("vc", 0444, atm_proc_root, &vcc_seq_fops);
-> +	return 0;
->  }
+It looks like this code was merged in 2.3.99-pre1 with permissions
+S_IFREG|S_IRUGO so I don't think the write support was ever finished.
 
-These proc entries could fail to register with -ENOMEM if for no other
-reason.  Can you justify the removal of the error handling?
+That cap_capable in the write method looks down right scary/buggy.
 
-Can you please at least mention that removal in your change description
-and explain why it is reasonable.
-
-As it sits this is not a semantics preserving transformation, and the
-difference is not documented.  Which raises red flags for me.
+Acked-by: "Eric W. Biederman" <ebiederm@xmission.com>
 
 Eric
+
+
+
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/ide/ide-proc.c | 46 ------------------------------------------
+>  1 file changed, 46 deletions(-)
+>
+> diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
+> index 863db44c7916..b3b8b8822d6a 100644
+> --- a/drivers/ide/ide-proc.c
+> +++ b/drivers/ide/ide-proc.c
+> @@ -528,58 +528,12 @@ static int ide_driver_proc_open(struct inode *inode, struct file *file)
+>  	return single_open(file, ide_driver_proc_show, PDE_DATA(inode));
+>  }
+>  
+> -static int ide_replace_subdriver(ide_drive_t *drive, const char *driver)
+> -{
+> -	struct device *dev = &drive->gendev;
+> -	int ret = 1;
+> -	int err;
+> -
+> -	device_release_driver(dev);
+> -	/* FIXME: device can still be in use by previous driver */
+> -	strlcpy(drive->driver_req, driver, sizeof(drive->driver_req));
+> -	err = device_attach(dev);
+> -	if (err < 0)
+> -		printk(KERN_WARNING "IDE: %s: device_attach error: %d\n",
+> -			__func__, err);
+> -	drive->driver_req[0] = 0;
+> -	if (dev->driver == NULL) {
+> -		err = device_attach(dev);
+> -		if (err < 0)
+> -			printk(KERN_WARNING
+> -				"IDE: %s: device_attach(2) error: %d\n",
+> -				__func__, err);
+> -	}
+> -	if (dev->driver && !strcmp(dev->driver->name, driver))
+> -		ret = 0;
+> -
+> -	return ret;
+> -}
+> -
+> -static ssize_t ide_driver_proc_write(struct file *file, const char __user *buffer,
+> -				     size_t count, loff_t *pos)
+> -{
+> -	ide_drive_t	*drive = PDE_DATA(file_inode(file));
+> -	char name[32];
+> -
+> -	if (!capable(CAP_SYS_ADMIN))
+> -		return -EACCES;
+> -	if (count > 31)
+> -		count = 31;
+> -	if (copy_from_user(name, buffer, count))
+> -		return -EFAULT;
+> -	name[count] = '\0';
+> -	if (ide_replace_subdriver(drive, name))
+> -		return -EINVAL;
+> -	return count;
+> -}
+> -
+>  static const struct file_operations ide_driver_proc_fops = {
+>  	.owner		= THIS_MODULE,
+>  	.open		= ide_driver_proc_open,
+>  	.read		= seq_read,
+>  	.llseek		= seq_lseek,
+>  	.release	= single_release,
+> -	.write		= ide_driver_proc_write,
+>  };
+>  
+>  static int ide_media_proc_show(struct seq_file *m, void *v)
