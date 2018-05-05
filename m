@@ -1,104 +1,78 @@
 From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH 11/40] ipv6/flowlabel: simplify pid namespace lookup
-Date: Sat, 05 May 2018 07:37:33 -0500
-Message-ID: <878t8y46sy.fsf@xmission.com>
+Subject: Re: [PATCH 34/40] atm: simplify procfs code
+Date: Sat, 05 May 2018 07:51:18 -0500
+Message-ID: <87r2mq2rll.fsf@xmission.com>
 References: <20180425154827.32251-1-hch@lst.de>
-        <20180425154827.32251-12-hch@lst.de>
+ <20180425154827.32251-35-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20180425154827.32251-12-hch@lst.de> (Christoph Hellwig's message
-        of "Wed, 25 Apr 2018 17:47:58 +0200")
-Sender: netdev-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20180425154827.32251-35-hch@lst.de> (Christoph Hellwig's message
+ of "Wed, 25 Apr 2018 17:48:21 +0200")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jiri Slaby <jslaby@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
 Christoph Hellwig <hch@lst.de> writes:
 
-> The shole seq_file sequence already operates under a single RCU lock pair,
-> so move the pid namespace lookup into it, and stop grabbing a reference
-> and remove all kinds of boilerplate code.
+> Use remove_proc_subtree to remove the whole subtree on cleanup, and
+> unwind the registration loop into individual calls.  Switch to use
+> proc_create_seq where applicable.
 
-This is wrong.
+Can you please explain why you are removing the error handling when
+you are unwinding the registration loop?
 
-Move task_active_pid_ns(current) from open to seq_start actually means
-that the results if you pass this proc file between callers the results
-will change.  So this breaks file descriptor passing.
+>  int __init atm_proc_init(void)
+>  {
+> -	static struct atm_proc_entry *e;
+> -	int ret;
+> -
+>  	atm_proc_root = proc_net_mkdir(&init_net, "atm", init_net.proc_net);
+>  	if (!atm_proc_root)
+> -		goto err_out;
+> -	for (e = atm_proc_ents; e->name; e++) {
+> -		struct proc_dir_entry *dirent;
+> -
+> -		dirent = proc_create(e->name, 0444,
+> -				     atm_proc_root, e->proc_fops);
+> -		if (!dirent)
+> -			goto err_out_remove;
+> -		e->dirent = dirent;
+> -	}
+> -	ret = 0;
+> -out:
+> -	return ret;
+> -
+> -err_out_remove:
+> -	atm_proc_dirs_remove();
+> -err_out:
+> -	ret = -ENOMEM;
+> -	goto out;
+> +		return -ENOMEM;
+> +	proc_create_seq("devices", 0444, atm_proc_root, &atm_dev_seq_ops);
+> +	proc_create("pvc", 0444, atm_proc_root, &pvc_seq_fops);
+> +	proc_create("svc", 0444, atm_proc_root, &svc_seq_fops);
+> +	proc_create("vc", 0444, atm_proc_root, &vcc_seq_fops);
+> +	return 0;
+>  }
 
-Open is a bad place to access current.  In the middle of read/write is
-broken.
+These proc entries could fail to register with -ENOMEM if for no other
+reason.  Can you justify the removal of the error handling?
 
+Can you please at least mention that removal in your change description
+and explain why it is reasonable.
 
-In this particular instance looking up the pid namespace with
-task_active_pid_ns was a personal brain fart.  What the code should be
-doing (with an appropriate helper) is:
-
-struct pid_namespace *pid_ns = inode->i_sb->s_fs_info;
-
-Because each mount of proc is bound to a pid namespace.  Looking up the
-pid namespace from the super_block is a much better way to go.
+As it sits this is not a semantics preserving transformation, and the
+difference is not documented.  Which raises red flags for me.
 
 Eric
-
-
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  net/ipv6/ip6_flowlabel.c | 28 +++++-----------------------
->  1 file changed, 5 insertions(+), 23 deletions(-)
->
-> diff --git a/net/ipv6/ip6_flowlabel.c b/net/ipv6/ip6_flowlabel.c
-> index c05c4e82a7ca..a9f221d45ef9 100644
-> --- a/net/ipv6/ip6_flowlabel.c
-> +++ b/net/ipv6/ip6_flowlabel.c
-> @@ -754,7 +754,10 @@ static struct ip6_flowlabel *ip6fl_get_idx(struct seq_file *seq, loff_t pos)
->  static void *ip6fl_seq_start(struct seq_file *seq, loff_t *pos)
->  	__acquires(RCU)
->  {
-> +	struct ip6fl_iter_state *state = ip6fl_seq_private(seq);
-> +
->  	rcu_read_lock_bh();
-> +	state->pid_ns = task_active_pid_ns(current);
->  	return *pos ? ip6fl_get_idx(seq, *pos - 1) : SEQ_START_TOKEN;
->  }
->  
-> @@ -810,36 +813,15 @@ static const struct seq_operations ip6fl_seq_ops = {
->  
->  static int ip6fl_seq_open(struct inode *inode, struct file *file)
->  {
-> -	struct seq_file *seq;
-> -	struct ip6fl_iter_state *state;
-> -	int err;
-> -
-> -	err = seq_open_net(inode, file, &ip6fl_seq_ops,
-> +	return seq_open_net(inode, file, &ip6fl_seq_ops,
->  			   sizeof(struct ip6fl_iter_state));
-> -
-> -	if (!err) {
-> -		seq = file->private_data;
-> -		state = ip6fl_seq_private(seq);
-> -		rcu_read_lock();
-> -		state->pid_ns = get_pid_ns(task_active_pid_ns(current));
-> -		rcu_read_unlock();
-> -	}
-> -	return err;
-> -}
-> -
-> -static int ip6fl_seq_release(struct inode *inode, struct file *file)
-> -{
-> -	struct seq_file *seq = file->private_data;
-> -	struct ip6fl_iter_state *state = ip6fl_seq_private(seq);
-> -	put_pid_ns(state->pid_ns);
-> -	return seq_release_net(inode, file);
->  }
->  
->  static const struct file_operations ip6fl_seq_fops = {
->  	.open		=	ip6fl_seq_open,
->  	.read		=	seq_read,
->  	.llseek		=	seq_lseek,
-> -	.release	=	ip6fl_seq_release,
-> +	.release	=	seq_release_net,
->  };
->  
->  static int __net_init ip6_flowlabel_proc_init(struct net *net)
