@@ -1,84 +1,57 @@
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: [PATCH v2 1/2] scsi: ufs: Extract devfreq registration
-Date: Fri,  4 May 2018 15:44:26 -0700
-Message-ID: <20180504224427.32606-2-bjorn.andersson@linaro.org>
-References: <20180504224427.32606-1-bjorn.andersson@linaro.org>
+From: Wenwen Wang <wang6495@umn.edu>
+Subject: [PATCH] scsi: mpt3sas: fix a missing-check bug
+Date: Sat,  5 May 2018 01:31:35 -0500
+Message-ID: <1525501896-8235-1-git-send-email-wang6495@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180504224427.32606-1-bjorn.andersson@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+To: Wenwen Wang <wang6495@umn.edu>
+Cc: Kangjie Lu <kjlu@umn.edu>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:LSILOGIC MPT FUSION DRIVERS
+        FC/SAS/SPI" <MPT-FusionLinux.pdl@broadcom.com>, "open list:LSILOGIC MPT FUSION DRIVERS
+        FC/SAS/SPI" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Failing to register with devfreq leaves hba->devfreq assigned, which
-causes the error path to dereference the ERR_PTR(). Rather than bolting
-on more conditionals, move the call of devm_devfreq_add_device() into
-it's own function and only update hba->devfreq once it's successfully
-registered.
+In _ctl_ioctl_main(), 'ioctl_header' is first copied from the userspace
+pointer 'arg'. 'ioctl_header.ioc_number' is then verified by
+_ctl_verify_adapter(). If the verification is failed, an error code -ENODEV
+is returned. Otherwise, the verification result, i.e., the MPT3SAS adapter
+that matches with the 'ioctl_header.ioc_number', is saved to 'ioc'. Later
+on, if the 'cmd' is MPT3COMMAND, the whole ioctl command struct is copied
+again from the userspace pointer 'arg' and saved to 'karg'. Then the
+function _ctl_do_mpt_command() is invoked to execute the command with the
+adapter 'ioc' and 'karg' as inputs.
 
-The subsequent patch builds upon this to make UFS actually work again,
-as it's been broken since f1d981eaecf8 ("PM / devfreq: Use the available
-min/max frequency")
+Given that the pointer 'arg' resides in userspace, a malicious userspace
+process can race to change the 'ioc_number' between the two copies, which
+will cause inconsistency issues, potentially security issues since an
+inconsistent adapter could be used with the command struct 'karg' as inputs
+of _ctl_do_mpt_command(). Moreover, the user can potentially provide a
+valid 'ioc_number' to pass the verification, and then modify it to an
+invalid 'ioc_number'. That means, an invalid 'ioc_number' can potentially
+bypass the verification check.
 
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+To fix this issue, we need to recheck the 'ioc_number' copied after the
+second copy to make sure it is not changed since the first copy.
+
+Signed-off-by: Wenwen Wang <wang6495@umn.edu>
 ---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Changes since v1:
-- None
-
- drivers/scsi/ufs/ufshcd.c | 31 ++++++++++++++++++++++---------
- 1 file changed, 22 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8f22a980b1a7..2253f24309ec 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1255,6 +1255,26 @@ static struct devfreq_dev_profile ufs_devfreq_profile = {
- 	.get_dev_status	= ufshcd_devfreq_get_dev_status,
- };
- 
-+static int ufshcd_devfreq_init(struct ufs_hba *hba)
-+{
-+	struct devfreq *devfreq;
-+	int ret;
-+
-+	devfreq = devm_devfreq_add_device(hba->dev,
-+			&ufs_devfreq_profile,
-+			"simple_ondemand",
-+			NULL);
-+	if (IS_ERR(devfreq)) {
-+		ret = PTR_ERR(devfreq);
-+		dev_err(hba->dev, "Unable to register with devfreq %d\n", ret);
-+		return ret;
-+	}
-+
-+	hba->devfreq = devfreq;
-+
-+	return 0;
-+}
-+
- static void __ufshcd_suspend_clkscaling(struct ufs_hba *hba)
- {
- 	unsigned long flags;
-@@ -6399,16 +6419,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 				sizeof(struct ufs_pa_layer_attr));
- 			hba->clk_scaling.saved_pwr_info.is_valid = true;
- 			if (!hba->devfreq) {
--				hba->devfreq = devm_devfreq_add_device(hba->dev,
--							&ufs_devfreq_profile,
--							"simple_ondemand",
--							NULL);
--				if (IS_ERR(hba->devfreq)) {
--					ret = PTR_ERR(hba->devfreq);
--					dev_err(hba->dev, "Unable to register with devfreq %d\n",
--							ret);
-+				ret = ufshcd_devfreq_init(hba);
-+				if (ret)
- 					goto out;
--				}
- 			}
- 			hba->clk_scaling.is_allowed = true;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index d3cb387..0c140c7 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -2388,6 +2388,11 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 			break;
  		}
+ 
++		if (karg.hdr.ioc_number != ioctl_header.ioc_number) {
++			ret = -EINVAL;
++			break;
++		}
++
+ 		if (_IOC_SIZE(cmd) == sizeof(struct mpt3_ioctl_command)) {
+ 			uarg = arg;
+ 			ret = _ctl_do_mpt_command(ioc, karg, &uarg->mf);
 -- 
-2.17.0
+2.7.4
