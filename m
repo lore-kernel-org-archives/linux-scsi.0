@@ -1,82 +1,72 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH 1/4] scsi: ufs: add quirk to fix mishandling
- utrlclr/utmrlclr
-Date: Sun, 06 May 2018 15:44:15 +0530
-Message-ID: <1525601658-31989-2-git-send-email-alim.akhtar@samsung.com>
-References: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
-        <CGME20180506102638epcas1p17bea76e1a5dbac535d5d6a10181f7e29@epcas1p1.samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vivek.gautam@codeaurora.org, subhashj@codeaurora.org, vinholikatti@gmail.com, olof@lixom.net, alim.akhtar@samsung.com
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: Re: simplify procfs code for seq_file instances V2
+Date: Sun, 6 May 2018 20:19:49 +0300
+Message-ID: <20180506171948.GA769@avx2>
+References: <20180425154827.32251-1-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <20180425154827.32251-1-hch@lst.de>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jiri Slaby <jslaby@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, linux-afs@lists.infradead.org, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-In the right behavior, setting the bit to '0' indicates clear and
-'1' indicates no change. If host controller handles this the other way,
-UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR can be used.
+On Wed, Apr 25, 2018 at 05:47:47PM +0200, Christoph Hellwig wrote:
+> Changes since V1:
+>  - open code proc_create_data to avoid setting not fully initialized
+>    entries live
+>  - use unsigned int for state_size
 
-Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |  5 +++++
- 2 files changed, 24 insertions(+), 2 deletions(-)
+Need this to maintain sizeof(struct proc_dir_entry):
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 00e7905..9898ce5 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -675,7 +675,24 @@ static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
-  */
- static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
+Otherwise ACK fs/proc/ part.
+
+diff --git a/fs/proc/internal.h b/fs/proc/internal.h
+index 6d171485c45b..a318ae5b36b4 100644
+--- a/fs/proc/internal.h
++++ b/fs/proc/internal.h
+@@ -48,8 +48,8 @@ struct proc_dir_entry {
+ 		const struct seq_operations *seq_ops;
+ 		int (*single_show)(struct seq_file *, void *);
+ 	};
+-	unsigned int state_size;
+ 	void *data;
++	unsigned int state_size;
+ 	unsigned int low_ino;
+ 	nlink_t nlink;
+ 	kuid_t uid;
+@@ -62,9 +62,9 @@ struct proc_dir_entry {
+ 	umode_t mode;
+ 	u8 namelen;
+ #ifdef CONFIG_64BIT
+-#define SIZEOF_PDE_INLINE_NAME	(192-139)
++#define SIZEOF_PDE_INLINE_NAME	(192-155)
+ #else
+-#define SIZEOF_PDE_INLINE_NAME	(128-87)
++#define SIZEOF_PDE_INLINE_NAME	(128-95)
+ #endif
+ 	char inline_name[SIZEOF_PDE_INLINE_NAME];
+ } __randomize_layout;
+diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
+index baf1994289ce..7d94fa005b0d 100644
+--- a/fs/proc/proc_net.c
++++ b/fs/proc/proc_net.c
+@@ -40,7 +40,7 @@ static struct net *get_proc_net(const struct inode *inode)
+ 
+ static int seq_open_net(struct inode *inode, struct file *file)
  {
--	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
-+		ufshcd_writel(hba, (1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+	else
-+		ufshcd_writel(hba, ~(1 << pos),
-+				REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+}
-+
-+/**
-+ * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
-+ * @hba: per adapter instance
-+ * @pos: position of the bit to be cleared
-+ */
-+static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
-+{
-+	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
-+		ufshcd_writel(hba, (1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
-+	else
-+		ufshcd_writel(hba, ~(1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
- }
- 
- /**
-@@ -5398,7 +5415,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
- 		goto out;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-+	ufshcd_utmrl_clear(hba, tag);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	/* poll for max. 1 sec to clear door bell register by h/w */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8110dcd..43035f8 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -595,6 +595,11 @@ struct ufs_hba {
- 	 */
- 	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			0x80
- 
-+	/*
-+	 * Cleaer handling for transfer/task request list is just opposite.
-+	 */
-+	#define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		0x100
-+
- 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
- 
- 	/* Device deviations from standard UFS device spec. */
--- 
-2.7.4
+-	size_t state_size = PDE(inode)->state_size;
++	unsigned int state_size = PDE(inode)->state_size;
+ 	struct seq_net_private *p;
+ 	struct net *net;
