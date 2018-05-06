@@ -1,42 +1,69 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH 0/4] Add required changes to ufshcd to support exynos ufs
- hci
-Date: Sun, 06 May 2018 15:44:14 +0530
-Message-ID: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
-References: <CGME20180506102636epcas2p3432b71e5c867f6cfec16cf2a8c74b0e2@epcas2p3.samsung.com>
+Subject: [PATCH 4/4] scsi: ufs: make ufshcd_config_pwr_mode of non-static
+ func
+Date: Sun, 06 May 2018 15:44:18 +0530
+Message-ID: <1525601658-31989-5-git-send-email-alim.akhtar@samsung.com>
+References: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
+        <CGME20180506102643epcas2p24ed80d7ede859db73c2595724d9c2414@epcas2p2.samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vivek.gautam@codeaurora.org, subhashj@codeaurora.org, vinholikatti@gmail.com, olof@lixom.net, alim.akhtar@samsung.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All
+This makes ufshcd_config_pwr_mode non-static so that other vendors
+like exynos can use the same.
 
-These patches are part of a larger patch series [1] which attempts upstreaming
-EXYNOS UFS driver support. There was not much activities after v5 of that
-series. In between I saw there were other teams in Samsung tried upstreaming
-the same, but that has not really gone anywhere.
-I have taken this task again and here is another attempt to upstream exynos-ufs
-driver support. I have divided the patches into two series, one which adds
-required infra in the ufshcd core needed by exynos-ufs driver and other part
-will have actual exynos-ufs driver. Splitting this has a advantage of less
-reviewing over head.
+Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 5 ++---
+ drivers/scsi/ufs/ufshcd.h | 2 ++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-I am floating these as a new patch set.
-
-[1] https://www.spinics.net/lists/linux-scsi/msg90292.html
-
-These patches are based on mainline v4.17-rc3.
-
-Alim Akhtar (4):
-  scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
-  scsi: ufs: add quirk not to allow reset of interrupt aggregation
-  scsi: ufs: add quirk to enable host controller without hce
-  scsi: ufs: make ufshcd_config_pwr_mode of non-static func
-
- drivers/scsi/ufs/ufshcd.c | 104 ++++++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/ufs/ufshcd.h |  18 ++++++++
- 2 files changed, 114 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 5bfd385..68aefcd 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -233,8 +233,6 @@ static void ufshcd_suspend_clkscaling(struct ufs_hba *hba);
+ static void __ufshcd_suspend_clkscaling(struct ufs_hba *hba);
+ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up);
+ static irqreturn_t ufshcd_intr(int irq, void *__hba);
+-static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+-		struct ufs_pa_layer_attr *desired_pwr_mode);
+ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 			     struct ufs_pa_layer_attr *pwr_mode);
+ static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
+@@ -3969,7 +3967,7 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+  * @hba: per-adapter instance
+  * @desired_pwr_mode: desired power configuration
+  */
+-static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 		struct ufs_pa_layer_attr *desired_pwr_mode)
+ {
+ 	struct ufs_pa_layer_attr final_params = { 0 };
+@@ -3987,6 +3985,7 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
+ 
+ /**
+  * ufshcd_complete_dev_init() - checks device readiness
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 013a07e..b42a5a3 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -805,6 +805,8 @@ extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u8 attr_set, u32 mib_val, u8 peer);
+ extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u32 *mib_val, u8 peer);
++extern int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++			struct ufs_pa_layer_attr *desired_pwr_mode);
+ 
+ /* UIC command interfaces for DME primitives */
+ #define DME_LOCAL	0
 -- 
 2.7.4
