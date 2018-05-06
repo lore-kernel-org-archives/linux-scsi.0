@@ -1,49 +1,42 @@
-From: Wenwen Wang <wang6495@umn.edu>
-Subject: [PATCH] scsi: 3ware: fix a missing-check bug
-Date: Sun,  6 May 2018 00:50:47 -0500
-Message-ID: <1525585856-17639-1-git-send-email-wang6495@umn.edu>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH 0/4] Add required changes to ufshcd to support exynos ufs
+ hci
+Date: Sun, 06 May 2018 15:44:14 +0530
+Message-ID: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
+References: <CGME20180506102636epcas2p3432b71e5c867f6cfec16cf2a8c74b0e2@epcas2p3.samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wenwen Wang <wang6495@umn.edu>
-Cc: Kangjie Lu <kjlu@umn.edu>, Adam Radford <aradford@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vivek.gautam@codeaurora.org, subhashj@codeaurora.org, vinholikatti@gmail.com, olof@lixom.net, alim.akhtar@samsung.com
 List-Id: linux-scsi@vger.kernel.org
 
-In twl_chrdev_ioctl(), the ioctl driver command is firstly copied from the
-userspace pointer 'argp' and saved to the kernel object 'driver_command'.
-Then a security check is performed on the data buffer size indicated by
-'driver_command', which is 'driver_command.buffer_length'. If the security
-check is passed, the entire ioctl command is copied again from the 'argp'
-pointer and saved to the kernel object 'tw_ioctl'. Then, various operations
-are performed on 'tw_ioctl' according to the 'cmd'. Given that the 'argp'
-pointer resides in userspace, a malicious userspace process can race to
-change the buffer size between the two copies. This way, the user can
-bypass the security check and inject invalid data buffer size. This can
-cause potential security issues in the following execution.
+Hi All
 
-This patch checks the buffer size obtained in the second copy. An error
-code -EINVAL will be returned if it is not same as the original one in the
-first copy.
+These patches are part of a larger patch series [1] which attempts upstreaming
+EXYNOS UFS driver support. There was not much activities after v5 of that
+series. In between I saw there were other teams in Samsung tried upstreaming
+the same, but that has not really gone anywhere.
+I have taken this task again and here is another attempt to upstream exynos-ufs
+driver support. I have divided the patches into two series, one which adds
+required infra in the ufshcd core needed by exynos-ufs driver and other part
+will have actual exynos-ufs driver. Splitting this has a advantage of less
+reviewing over head.
 
-Signed-off-by: Wenwen Wang <wang6495@umn.edu>
----
- drivers/scsi/3w-sas.c | 5 +++++
- 1 file changed, 5 insertions(+)
+I am floating these as a new patch set.
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index cf9f2a0..ea41969 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -757,6 +757,11 @@ static long twl_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
- 	/* Now copy down the entire ioctl */
- 	if (copy_from_user(tw_ioctl, argp, driver_command.buffer_length + sizeof(TW_Ioctl_Buf_Apache) - 1))
- 		goto out3;
-+	if (tw_ioctl->driver_command.buffer_length !=
-+	    driver_command.buffer_length) {
-+		retval = -EINVAL;
-+		goto out3;
-+	}
- 
- 	/* See which ioctl we are doing */
- 	switch (cmd) {
+[1] https://www.spinics.net/lists/linux-scsi/msg90292.html
+
+These patches are based on mainline v4.17-rc3.
+
+Alim Akhtar (4):
+  scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
+  scsi: ufs: add quirk not to allow reset of interrupt aggregation
+  scsi: ufs: add quirk to enable host controller without hce
+  scsi: ufs: make ufshcd_config_pwr_mode of non-static func
+
+ drivers/scsi/ufs/ufshcd.c | 104 ++++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/ufs/ufshcd.h |  18 ++++++++
+ 2 files changed, 114 insertions(+), 8 deletions(-)
+
 -- 
 2.7.4
