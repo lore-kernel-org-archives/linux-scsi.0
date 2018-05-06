@@ -1,48 +1,50 @@
 From: Wenwen Wang <wang6495@umn.edu>
-Subject: [PATCH] scsi: sg: fix a missing-check bug
-Date: Sat,  5 May 2018 22:21:34 -0500
-Message-ID: <1525576895-15708-1-git-send-email-wang6495@umn.edu>
+Subject: [PATCH] scsi: 3w-9xxx: fix a missing-check bug
+Date: Sat,  5 May 2018 22:43:13 -0500
+Message-ID: <1525578221-16283-1-git-send-email-wang6495@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Wenwen Wang <wang6495@umn.edu>
-Cc: Kangjie Lu <kjlu@umn.edu>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SG DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: Kangjie Lu <kjlu@umn.edu>, Adam Radford <aradford@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In sg_write(), the opcode of the command is firstly copied from the
-userspace pointer 'buf' and saved to the kernel variable 'opcode', using
-the __get_user() function. The size of the command, i.e., 'cmd_size' is
-then calculated based on the 'opcode'. After that, the whole command,
-including the opcode, is copied again from 'buf' using the
-__copy_from_user() function and saved to 'cmnd'. Finally, the function
- sg_common_write() is invoked to process 'cmnd'. Given that the 'buf'
+In twa_chrdev_ioctl(), the ioctl driver command is firstly copied from the
+userspace pointer 'argp' and saved to the kernel object 'driver_command'.
+Then a security check is performed on the data buffer size indicated by
+'driver_command', which is 'driver_command.buffer_length'. If the security
+check is passed, the entire ioctl command is copied again from the 'argp'
+pointer and saved to the kernel object 'tw_ioctl'. Then, various operations
+are performed on 'tw_ioctl' according to the 'cmd'. Given that the 'argp'
 pointer resides in userspace, a malicious userspace process can race to
-change the opcode of the command between the two copies. That means, the
-opcode indicated by the variable 'opcode' could be different from the
-opcode in 'cmnd'. This can cause inconsistent data in 'cmnd' and
-potential logical errors in the function sg_common_write(), as it needs to
-work on 'cmnd'.
+change the buffer size between the two copies. This way, the user can
+bypass the security check and inject invalid data buffer size. This can
+cause potential security issues in the following execution.
 
-This patch reuses the opcode obtained in the first copy and only copies the
-remaining part of the command from userspace.
+This patch checks the buffer size obtained in the second copy. An error
+code -EINVAL will be returned if it is not same as the original one in the
+first copy.
 
 Signed-off-by: Wenwen Wang <wang6495@umn.edu>
 ---
- drivers/scsi/sg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/3w-9xxx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c198b963..0ad8106 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -657,7 +657,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 	hp->flags = input_size;	/* structure abuse ... */
- 	hp->pack_id = old_hdr.pack_id;
- 	hp->usr_ptr = NULL;
--	if (__copy_from_user(cmnd, buf, cmd_size))
-+	cmnd[0] = opcode;
-+	if (__copy_from_user(cmnd + 1, buf + 1, cmd_size - 1))
- 		return -EFAULT;
- 	/*
- 	 * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index b42c9c4..8bc43db 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -684,6 +684,12 @@ static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
+ 	if (copy_from_user(tw_ioctl, argp, driver_command.buffer_length + sizeof(TW_Ioctl_Buf_Apache) - 1))
+ 		goto out3;
+ 
++	if (tw_ioctl->driver_command.buffer_length
++		 != driver_command.buffer_length) {
++		retval = TW_IOCTL_ERROR_OS_EINVAL;
++		goto out3;
++	}
++
+ 	/* See which ioctl we are doing */
+ 	switch (cmd) {
+ 	case TW_IOCTL_FIRMWARE_PASS_THROUGH:
 -- 
 2.7.4
