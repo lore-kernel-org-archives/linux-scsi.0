@@ -1,104 +1,185 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: simplify procfs code for seq_file instances V2
-Date: Sun, 6 May 2018 18:45:31 +0100
-Message-ID: <20180506174531.GK30522@ZenIV.linux.org.uk>
-References: <20180425154827.32251-1-hch@lst.de>
- <20180506171948.GA769@avx2>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH-next] scsi: libsas: dynamically allocate and free ata host
+Date: Mon, 7 May 2018 10:11:12 +0800
+Message-ID: <20180507021112.29036-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180506171948.GA769@avx2>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, dan.j.williams@intel.com, Jason Yan <yanaijie@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, May 06, 2018 at 08:19:49PM +0300, Alexey Dobriyan wrote:
-> +++ b/fs/proc/internal.h
-> @@ -48,8 +48,8 @@ struct proc_dir_entry {
->  		const struct seq_operations *seq_ops;
->  		int (*single_show)(struct seq_file *, void *);
->  	};
-> -	unsigned int state_size;
->  	void *data;
-> +	unsigned int state_size;
->  	unsigned int low_ino;
->  	nlink_t nlink;
->  	kuid_t uid;
+Now the ata host for libsas is embedded in domain_device, and the ->kref
+member is not initialized. Afer we add ata transport class,
+ata_host_get() will be called when adding transport ATA port and a
+warning will be triggered as below:
 
-Makes sense
+refcount_t: increment on 0; use-after-free.
+WARNING: CPU: 2 PID: 103 at lib/refcount.c:153 refcount_inc+0x40/0x48
+......
+Call trace:
+ refcount_inc+0x40/0x48
+ ata_host_get+0x10/0x18
+ ata_tport_add+0x40/0x120
+ ata_sas_tport_add+0xc/0x14
+ sas_ata_init+0x7c/0xc8
+ sas_discover_domain+0x380/0x53c
+ process_one_work+0x12c/0x288
+ worker_thread+0x58/0x3f0
+ kthread+0xfc/0x128
+ ret_from_fork+0x10/0x18
 
-> @@ -62,9 +62,9 @@ struct proc_dir_entry {
->  	umode_t mode;
->  	u8 namelen;
->  #ifdef CONFIG_64BIT
-> -#define SIZEOF_PDE_INLINE_NAME	(192-139)
-> +#define SIZEOF_PDE_INLINE_NAME	(192-155)
->  #else
-> -#define SIZEOF_PDE_INLINE_NAME	(128-87)
-> +#define SIZEOF_PDE_INLINE_NAME	(128-95)
+And also when removing transport ATA port ata_host_put() will be called
+and another similar warning will be triggered. If the refcount decreased
+to zero, the ata host will be freed. But this ata host is only part of
+domain_device, it cannot be freed directly.
 
->  #endif
->  	char inline_name[SIZEOF_PDE_INLINE_NAME];
->  } __randomize_layout;
+So we have to change this embedded static ata host to a dynamically
+allocated ata host and initialize the ->kref member. To use
+ata_host_get() and ata_host_put() in libsas, we need to move the
+declaration of these functions to the public libata.h.
 
-*UGH*
+Fixes: b6240a4df018 ("scsi: libsas: add transport class for ATA devices")
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: John Garry <john.garry@huawei.com>
+---
+ drivers/ata/libata-core.c          |  1 +
+ drivers/ata/libata.h               |  2 --
+ drivers/scsi/libsas/sas_ata.c      | 40 +++++++++++++++++++++++++-------------
+ drivers/scsi/libsas/sas_discover.c |  2 ++
+ include/linux/libata.h             |  2 ++
+ include/scsi/libsas.h              |  2 +-
+ 6 files changed, 32 insertions(+), 17 deletions(-)
 
-Both to the original state and that kind of "adjustments".
-Incidentally, with __bugger_layout in there these expressions
-are simply wrong.
-
-If nothing else, I would suggest turning the last one into
-	char inline_name[];
-in hope that layout won't get... randomized that much and
-used
-
-#ifdef CONFIG_64BIT
-#define PDE_SIZE 192
-#else
-#define PDE_SIZE 128
-#endif
-
-union __proc_dir_entry {
-	char pad[PDE_SIZE];
-	struct proc_dir_entry real;
-};
-
-#define SIZEOF_PDE_INLINE_NAME (PDE_SIZE - offsetof(struct proc_dir_entry, inline_name))
-
-for constants, adjusted sizeof and sizeof_field when creating
-proc_dir_entry_cache and turned proc_root into
-
-union __proc_dir_entry __proc_root = { .real = {
-        .low_ino        = PROC_ROOT_INO,
-        .namelen        = 5,
-        .mode           = S_IFDIR | S_IRUGO | S_IXUGO,
-        .nlink          = 2,
-        .refcnt         = REFCOUNT_INIT(1),
-        .proc_iops      = &proc_root_inode_operations,
-        .proc_fops      = &proc_root_operations,
-        .parent         = &__proc_root.real,
-        .subdir         = RB_ROOT,
-        .name           = __proc_root.real.inline_name,
-        .inline_name    = "/proc",
-}};
-
-#define proc_root __proc_root.real
-(or actually used __proc_root.real in all of a 6 places where it remains).
-
-> diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
-> index baf1994289ce..7d94fa005b0d 100644
-> --- a/fs/proc/proc_net.c
-> +++ b/fs/proc/proc_net.c
-> @@ -40,7 +40,7 @@ static struct net *get_proc_net(const struct inode *inode)
->  
->  static int seq_open_net(struct inode *inode, struct file *file)
->  {
-> -	size_t state_size = PDE(inode)->state_size;
-> +	unsigned int state_size = PDE(inode)->state_size;
->  	struct seq_net_private *p;
->  	struct net *net;
-
-<shakes head>
-You and your "size_t is evil" crusade...
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 68596bd4cf06..33c2dfbbc02d 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6424,6 +6424,7 @@ void ata_host_init(struct ata_host *host, struct device *dev,
+ 	host->n_tags = ATA_MAX_QUEUE - 1;
+ 	host->dev = dev;
+ 	host->ops = ops;
++	kref_init(&host->kref);
+ }
+ 
+ void __ata_port_probe(struct ata_port *ap)
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 9e21c49cf6be..f953cb4bb1ba 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -100,8 +100,6 @@ extern int ata_port_probe(struct ata_port *ap);
+ extern void __ata_port_probe(struct ata_port *ap);
+ extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 				      u8 page, void *buf, unsigned int sectors);
+-extern void ata_host_get(struct ata_host *host);
+-extern void ata_host_put(struct ata_host *host);
+ 
+ #define to_ata_port(d) container_of(d, struct ata_port, tdev)
+ 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index ff1d612f6fb9..41cdda7a926b 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -557,34 +557,46 @@ int sas_ata_init(struct domain_device *found_dev)
+ {
+ 	struct sas_ha_struct *ha = found_dev->port->ha;
+ 	struct Scsi_Host *shost = ha->core.shost;
++	struct ata_host *ata_host;
+ 	struct ata_port *ap;
+ 	int rc;
+ 
+-	ata_host_init(&found_dev->sata_dev.ata_host, ha->dev, &sas_sata_ops);
+-	ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
+-				&sata_port_info,
+-				shost);
++	ata_host = kzalloc(sizeof(*ata_host), GFP_KERNEL);
++	if (!ata_host)	{
++		SAS_DPRINTK("ata host alloc failed.\n");
++		return -ENOMEM;
++	}
++
++	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
++
++	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
+ 	if (!ap) {
+ 		SAS_DPRINTK("ata_sas_port_alloc failed.\n");
+-		return -ENODEV;
++		rc = -ENODEV;
++		goto free_host;
+ 	}
+ 
+ 	ap->private_data = found_dev;
+ 	ap->cbl = ATA_CBL_SATA;
+ 	ap->scsi_host = shost;
+ 	rc = ata_sas_port_init(ap);
+-	if (rc) {
+-		ata_sas_port_destroy(ap);
+-		return rc;
+-	}
+-	rc = ata_sas_tport_add(found_dev->sata_dev.ata_host.dev, ap);
+-	if (rc) {
+-		ata_sas_port_destroy(ap);
+-		return rc;
+-	}
++	if (rc)
++		goto destroy_port;
++
++	rc = ata_sas_tport_add(ata_host->dev, ap);
++	if (rc)
++		goto destroy_port;
++
++	found_dev->sata_dev.ata_host = ata_host;
+ 	found_dev->sata_dev.ap = ap;
+ 
+ 	return 0;
++
++destroy_port:
++	ata_sas_port_destroy(ap);
++free_host:
++	ata_host_put(ata_host);
++	return rc;
+ }
+ 
+ void sas_ata_task_abort(struct sas_task *task)
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 1ffca28fe6a8..0148ae62a52a 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -316,6 +316,8 @@ void sas_free_device(struct kref *kref)
+ 	if (dev_is_sata(dev) && dev->sata_dev.ap) {
+ 		ata_sas_tport_delete(dev->sata_dev.ap);
+ 		ata_sas_port_destroy(dev->sata_dev.ap);
++		ata_host_put(dev->sata_dev.ata_host);
++		dev->sata_dev.ata_host = NULL;
+ 		dev->sata_dev.ap = NULL;
+ 	}
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0619ebf4d475..852cdb2fc692 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1110,6 +1110,8 @@ extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
+ extern struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+ 			const struct ata_port_info * const * ppi, int n_ports);
+ extern int ata_slave_link_init(struct ata_port *ap);
++extern void ata_host_get(struct ata_host *host);
++extern void ata_host_put(struct ata_host *host);
+ extern int ata_host_start(struct ata_host *host);
+ extern int ata_host_register(struct ata_host *host,
+ 			     struct scsi_host_template *sht);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 225ab7783dfd..3de3b10da19a 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -161,7 +161,7 @@ struct sata_device {
+ 	u8     port_no;        /* port number, if this is a PM (Port) */
+ 
+ 	struct ata_port *ap;
+-	struct ata_host ata_host;
++	struct ata_host *ata_host;
+ 	struct smp_resp rps_resp ____cacheline_aligned; /* report_phy_sata_resp */
+ 	u8     fis[ATA_RESP_FIS_SIZE];
+ };
+-- 
+2.13.6
