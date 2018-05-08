@@ -1,37 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: 3w-9xxx: fix a missing-check bug
-Date: Tue, 08 May 2018 01:34:10 -0400
-Message-ID: <yq1muxaww19.fsf@oracle.com>
-References: <1525740413-23443-1-git-send-email-wang6495@umn.edu>
+Subject: Re: [PATCH 0/3] scsi: arcmsr: Add driver parameter cmd_timeout for scsi command timeout setting
+Date: Tue, 08 May 2018 01:41:59 -0400
+Message-ID: <yq1in7ywvo8.fsf@oracle.com>
+References: <1525675401.8876.9.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525740413-23443-1-git-send-email-wang6495@umn.edu> (Wenwen
-        Wang's message of "Mon, 7 May 2018 19:46:43 -0500")
+In-Reply-To: <1525675401.8876.9.camel@Centos6.3-64> (Ching Huang's message of
+        "Mon, 07 May 2018 14:43:21 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wenwen Wang <wang6495@umn.edu>
-Cc: Kangjie Lu <kjlu@umn.edu>, Adam Radford <aradford@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Wenwen,
+Hello Ching,
 
-> In twa_chrdev_ioctl(), the ioctl driver command is firstly copied from the
-> userspace pointer 'argp' and saved to the kernel object 'driver_command'.
-> Then a security check is performed on the data buffer size indicated by
-> 'driver_command', which is 'driver_command.buffer_length'. If the security
-> check is passed, the entire ioctl command is copied again from the 'argp'
-> pointer and saved to the kernel object 'tw_ioctl'. Then, various operations
-> are performed on 'tw_ioctl' according to the 'cmd'. Given that the 'argp'
-> pointer resides in userspace, a malicious userspace process can race to
-> change the buffer size between the two copies. This way, the user can
-> bypass the security check and inject invalid data buffer size. This can
-> cause potential security issues in the following execution.
->
-> This patch checks for capable(CAP_SYS_ADMIN) in twa_chrdev_open()t o avoid
-> the above issues.
+> 1. Add driver parameter cmd_timeout, default value is ARCMSR_DEFAULT_TIMEOUT.
+> 2. Add slave_configure callback function to set device command timeout value.
+> 3. Update driver version to v1.40.00.06-20180504.
 
-Applied patch 1 + 2 to 4.18/scsi-queue. Thank you.
+I am not so keen on arcmsr overriding the timeout set by the admin or
+application.
+
+Also, instead of introducing this module parameter, why not simply ask
+the user to change rq_timeout?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
