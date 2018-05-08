@@ -1,31 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/11] hisi_sas: some misc patches
-Date: Tue, 08 May 2018 01:16:17 -0400
-Message-ID: <yq1tvriybfi.fsf@oracle.com>
-References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] mptlan: fix mpt_lan_sdu_send()'s return type
+Date: Tue, 08 May 2018 01:21:56 -0400
+Message-ID: <yq1h8niyb63.fsf@oracle.com>
+References: <20180424131558.3010-1-luc.vanoostenryck@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525276594-92173-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Wed, 2 May 2018 23:56:23 +0800")
+In-Reply-To: <20180424131558.3010-1-luc.vanoostenryck@gmail.com> (Luc Van
+        Oostenryck's message of "Tue, 24 Apr 2018 15:15:58 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org
+To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Luc,
 
-> This patchset introduces some misc changes for the
-> driver. These include:
-> - fixes for potential problems related to SCSI EH
->   and device removal races
-> - fix protection info size for all hw versions
-> - some SoC bug workarounds
-> - minor optimisations
-> - other more minor things
+> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
+> which is a typedef for an enum type, but the implementation in this
+> driver returns an 'int'.
 
-Applied to 4.18/scsi-queue. Thanks!
+You forgot to update the function prototype accordingly.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
