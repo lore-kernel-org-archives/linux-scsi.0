@@ -1,194 +1,65 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH-next v2] scsi: libsas: dynamically allocate and free ata host
-Date: Mon, 7 May 2018 19:15:10 +0800
-Message-ID: <20180507111510.32816-1-yanaijie@huawei.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: [PATCH] scsi: 3ware: fix a missing-check bug
+Date: Mon, 7 May 2018 17:20:41 -0700
+Message-ID: <CAHtARFHhLtG=LuQxqwB4eM5yUdZMkb4Xu0wkuu5nrOL6GQZVTw@mail.gmail.com>
+References: <1525585856-17639-1-git-send-email-wang6495@umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1525585856-17639-1-git-send-email-wang6495@umn.edu>
 Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, dan.j.williams@intel.com, Jason Yan <yanaijie@huawei.com>
+To: Wenwen Wang <wang6495@umn.edu>
+Cc: Kangjie Lu <kjlu@umn.edu>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Now the ata host for libsas is embedded in domain_device, and the ->kref
-member is not initialized. Afer we add ata transport class,
-ata_host_get() will be called when adding transport ATA port and a
-warning will be triggered as below:
+On Sat, May 5, 2018 at 10:50 PM, Wenwen Wang <wang6495@umn.edu> wrote:
+> In twl_chrdev_ioctl(), the ioctl driver command is firstly copied from the
+> userspace pointer 'argp' and saved to the kernel object 'driver_command'.
+> Then a security check is performed on the data buffer size indicated by
+> 'driver_command', which is 'driver_command.buffer_length'. If the security
+> check is passed, the entire ioctl command is copied again from the 'argp'
+> pointer and saved to the kernel object 'tw_ioctl'. Then, various operations
+> are performed on 'tw_ioctl' according to the 'cmd'. Given that the 'argp'
+> pointer resides in userspace, a malicious userspace process can race to
+> change the buffer size between the two copies. This way, the user can
+> bypass the security check and inject invalid data buffer size. This can
+> cause potential security issues in the following execution.
+>
+> This patch checks the buffer size obtained in the second copy. An error
+> code -EINVAL will be returned if it is not same as the original one in the
+> first copy.
+>
+> Signed-off-by: Wenwen Wang <wang6495@umn.edu>
+> ---
+>  drivers/scsi/3w-sas.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+> index cf9f2a0..ea41969 100644
+> --- a/drivers/scsi/3w-sas.c
+> +++ b/drivers/scsi/3w-sas.c
+> @@ -757,6 +757,11 @@ static long twl_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
+>         /* Now copy down the entire ioctl */
+>         if (copy_from_user(tw_ioctl, argp, driver_command.buffer_length + sizeof(TW_Ioctl_Buf_Apache) - 1))
+>                 goto out3;
+> +       if (tw_ioctl->driver_command.buffer_length !=
+> +           driver_command.buffer_length) {
+> +               retval = -EINVAL;
+> +               goto out3;
+> +       }
+>
+>         /* See which ioctl we are doing */
+>         switch (cmd) {
+> --
+> 2.7.4
+>
 
-refcount_t: increment on 0; use-after-free.
-WARNING: CPU: 2 PID: 103 at lib/refcount.c:153 refcount_inc+0x40/0x48
-......
-Call trace:
- refcount_inc+0x40/0x48
- ata_host_get+0x10/0x18
- ata_tport_add+0x40/0x120
- ata_sas_tport_add+0xc/0x14
- sas_ata_init+0x7c/0xc8
- sas_discover_domain+0x380/0x53c
- process_one_work+0x12c/0x288
- worker_thread+0x58/0x3f0
- kthread+0xfc/0x128
- ret_from_fork+0x10/0x18
+1. Returning -EINVAL after the copy_from_user() doesn't prevent any
+invalid copy down to kernel mode from happening.
+2. twl_chrdev_open() checks for capable(CAP_SYS_ADMIN):
 
-And also when removing transport ATA port ata_host_put() will be called
-and another similar warning will be triggered. If the refcount decreased
-to zero, the ata host will be freed. But this ata host is only part of
-domain_device, it cannot be freed directly.
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-sas.c#n834
 
-So we have to change this embedded static ata host to a dynamically
-allocated ata host and initialize the ->kref member. To use
-ata_host_get() and ata_host_put() in libsas, we need to move the
-declaration of these functions to the public libata.h and export them.
+I don't see the point in this patch.
 
-v2: export ata_host_get() and ata_host_put().
-
-Fixes: b6240a4df018 ("scsi: libsas: add transport class for ATA devices")
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: John Garry <john.garry@huawei.com>
----
- drivers/ata/libata-core.c          |  3 +++
- drivers/ata/libata.h               |  2 --
- drivers/scsi/libsas/sas_ata.c      | 40 +++++++++++++++++++++++++-------------
- drivers/scsi/libsas/sas_discover.c |  2 ++
- include/linux/libata.h             |  2 ++
- include/scsi/libsas.h              |  2 +-
- 6 files changed, 34 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 68596bd4cf06..cdb48dccfb45 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6424,6 +6424,7 @@ void ata_host_init(struct ata_host *host, struct device *dev,
- 	host->n_tags = ATA_MAX_QUEUE - 1;
- 	host->dev = dev;
- 	host->ops = ops;
-+	kref_init(&host->kref);
- }
- 
- void __ata_port_probe(struct ata_port *ap)
-@@ -7391,3 +7392,5 @@ EXPORT_SYMBOL_GPL(ata_cable_80wire);
- EXPORT_SYMBOL_GPL(ata_cable_unknown);
- EXPORT_SYMBOL_GPL(ata_cable_ignore);
- EXPORT_SYMBOL_GPL(ata_cable_sata);
-+EXPORT_SYMBOL_GPL(ata_host_get);
-+EXPORT_SYMBOL_GPL(ata_host_put);
-\ No newline at end of file
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 9e21c49cf6be..f953cb4bb1ba 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -100,8 +100,6 @@ extern int ata_port_probe(struct ata_port *ap);
- extern void __ata_port_probe(struct ata_port *ap);
- extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 				      u8 page, void *buf, unsigned int sectors);
--extern void ata_host_get(struct ata_host *host);
--extern void ata_host_put(struct ata_host *host);
- 
- #define to_ata_port(d) container_of(d, struct ata_port, tdev)
- 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index ff1d612f6fb9..41cdda7a926b 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -557,34 +557,46 @@ int sas_ata_init(struct domain_device *found_dev)
- {
- 	struct sas_ha_struct *ha = found_dev->port->ha;
- 	struct Scsi_Host *shost = ha->core.shost;
-+	struct ata_host *ata_host;
- 	struct ata_port *ap;
- 	int rc;
- 
--	ata_host_init(&found_dev->sata_dev.ata_host, ha->dev, &sas_sata_ops);
--	ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
--				&sata_port_info,
--				shost);
-+	ata_host = kzalloc(sizeof(*ata_host), GFP_KERNEL);
-+	if (!ata_host)	{
-+		SAS_DPRINTK("ata host alloc failed.\n");
-+		return -ENOMEM;
-+	}
-+
-+	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
-+
-+	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
- 	if (!ap) {
- 		SAS_DPRINTK("ata_sas_port_alloc failed.\n");
--		return -ENODEV;
-+		rc = -ENODEV;
-+		goto free_host;
- 	}
- 
- 	ap->private_data = found_dev;
- 	ap->cbl = ATA_CBL_SATA;
- 	ap->scsi_host = shost;
- 	rc = ata_sas_port_init(ap);
--	if (rc) {
--		ata_sas_port_destroy(ap);
--		return rc;
--	}
--	rc = ata_sas_tport_add(found_dev->sata_dev.ata_host.dev, ap);
--	if (rc) {
--		ata_sas_port_destroy(ap);
--		return rc;
--	}
-+	if (rc)
-+		goto destroy_port;
-+
-+	rc = ata_sas_tport_add(ata_host->dev, ap);
-+	if (rc)
-+		goto destroy_port;
-+
-+	found_dev->sata_dev.ata_host = ata_host;
- 	found_dev->sata_dev.ap = ap;
- 
- 	return 0;
-+
-+destroy_port:
-+	ata_sas_port_destroy(ap);
-+free_host:
-+	ata_host_put(ata_host);
-+	return rc;
- }
- 
- void sas_ata_task_abort(struct sas_task *task)
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 1ffca28fe6a8..0148ae62a52a 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -316,6 +316,8 @@ void sas_free_device(struct kref *kref)
- 	if (dev_is_sata(dev) && dev->sata_dev.ap) {
- 		ata_sas_tport_delete(dev->sata_dev.ap);
- 		ata_sas_port_destroy(dev->sata_dev.ap);
-+		ata_host_put(dev->sata_dev.ata_host);
-+		dev->sata_dev.ata_host = NULL;
- 		dev->sata_dev.ap = NULL;
- 	}
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0619ebf4d475..852cdb2fc692 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1110,6 +1110,8 @@ extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
- extern struct ata_host *ata_host_alloc_pinfo(struct device *dev,
- 			const struct ata_port_info * const * ppi, int n_ports);
- extern int ata_slave_link_init(struct ata_port *ap);
-+extern void ata_host_get(struct ata_host *host);
-+extern void ata_host_put(struct ata_host *host);
- extern int ata_host_start(struct ata_host *host);
- extern int ata_host_register(struct ata_host *host,
- 			     struct scsi_host_template *sht);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 225ab7783dfd..3de3b10da19a 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -161,7 +161,7 @@ struct sata_device {
- 	u8     port_no;        /* port number, if this is a PM (Port) */
- 
- 	struct ata_port *ap;
--	struct ata_host ata_host;
-+	struct ata_host *ata_host;
- 	struct smp_resp rps_resp ____cacheline_aligned; /* report_phy_sata_resp */
- 	u8     fis[ATA_RESP_FIS_SIZE];
- };
--- 
-2.13.6
+-Adam
