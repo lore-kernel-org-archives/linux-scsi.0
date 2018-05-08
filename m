@@ -1,24 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mptsas: fix spelling mistake: "matchs" -> "matches"
-Date: Tue, 08 May 2018 01:27:39 -0400
-Message-ID: <yq1zi1awwc4.fsf@oracle.com>
-References: <20180503101807.30482-1-colin.king@canonical.com>
+Subject: Re: [PATCH v2] scsi: 3w-9xxx: fix a missing-check bug
+Date: Tue, 08 May 2018 01:34:10 -0400
+Message-ID: <yq1muxaww19.fsf@oracle.com>
+References: <1525740413-23443-1-git-send-email-wang6495@umn.edu>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180503101807.30482-1-colin.king@canonical.com> (Colin King's
-        message of "Thu, 3 May 2018 11:18:07 +0100")
+In-Reply-To: <1525740413-23443-1-git-send-email-wang6495@umn.edu> (Wenwen
+        Wang's message of "Mon, 7 May 2018 19:46:43 -0500")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Wenwen Wang <wang6495@umn.edu>
+Cc: Kangjie Lu <kjlu@umn.edu>, Adam Radford <aradford@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Wenwen,
 
-> Trivial fix to spelling mistake in warning message
+> In twa_chrdev_ioctl(), the ioctl driver command is firstly copied from the
+> userspace pointer 'argp' and saved to the kernel object 'driver_command'.
+> Then a security check is performed on the data buffer size indicated by
+> 'driver_command', which is 'driver_command.buffer_length'. If the security
+> check is passed, the entire ioctl command is copied again from the 'argp'
+> pointer and saved to the kernel object 'tw_ioctl'. Then, various operations
+> are performed on 'tw_ioctl' according to the 'cmd'. Given that the 'argp'
+> pointer resides in userspace, a malicious userspace process can race to
+> change the buffer size between the two copies. This way, the user can
+> bypass the security check and inject invalid data buffer size. This can
+> cause potential security issues in the following execution.
+>
+> This patch checks for capable(CAP_SYS_ADMIN) in twa_chrdev_open()t o avoid
+> the above issues.
 
-Applied to 4.18/scsi-queue.
+Applied patch 1 + 2 to 4.18/scsi-queue. Thank you.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
