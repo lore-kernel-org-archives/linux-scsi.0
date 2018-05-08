@@ -1,27 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] zfcp: fix infinite iteration on ERP ready list
-Date: Tue, 08 May 2018 00:02:18 -0400
-Message-ID: <yq1d0y6ztf9.fsf@oracle.com>
-References: <20180503115247.12859-1-maier@linux.ibm.com>
+Subject: Re: [PATCH 00/11] hisi_sas: some misc patches
+Date: Tue, 08 May 2018 01:16:17 -0400
+Message-ID: <yq1tvriybfi.fsf@oracle.com>
+References: <1525276594-92173-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180503115247.12859-1-maier@linux.ibm.com> (Steffen Maier's
-        message of "Thu, 3 May 2018 13:52:47 +0200")
-Sender: stable-owner@vger.kernel.org
-To: Steffen Maier <maier@linux.ibm.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Jens Remus <jremus@linux.ibm.com>, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1525276594-92173-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Wed, 2 May 2018 23:56:23 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Steffen,
+John,
 
-> zfcp_erp_adapter_reopen() schedules blocking of all of the adapter's
-> rports via zfcp_scsi_schedule_rports_block() and enqueues a reopen
-> adapter ERP action via zfcp_erp_action_enqueue(). Both are separately
-> processed asynchronously and concurrently.
+> This patchset introduces some misc changes for the
+> driver. These include:
+> - fixes for potential problems related to SCSI EH
+>   and device removal races
+> - fix protection info size for all hw versions
+> - some SoC bug workarounds
+> - minor optimisations
+> - other more minor things
 
-Applied to 4.17/scsi-fixes. Thank you!
+Applied to 4.18/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
