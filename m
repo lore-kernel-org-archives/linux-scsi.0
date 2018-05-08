@@ -1,19 +1,19 @@
 From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] scsi: 3ware: fix a missing-check bug
-Date: Mon, 7 May 2018 17:20:41 -0700
-Message-ID: <CAHtARFHhLtG=LuQxqwB4eM5yUdZMkb4Xu0wkuu5nrOL6GQZVTw@mail.gmail.com>
-References: <1525585856-17639-1-git-send-email-wang6495@umn.edu>
+Subject: Re: [PATCH] scsi: 3w-9xxx: fix a missing-check bug
+Date: Mon, 7 May 2018 17:27:24 -0700
+Message-ID: <CAHtARFFEH3Q5BPL+36i_UHn5+yDfe8QyMQe_n-b1Q87fsZQOpQ@mail.gmail.com>
+References: <1525578221-16283-1-git-send-email-wang6495@umn.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525585856-17639-1-git-send-email-wang6495@umn.edu>
+In-Reply-To: <1525578221-16283-1-git-send-email-wang6495@umn.edu>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Wenwen Wang <wang6495@umn.edu>
 Cc: Kangjie Lu <kjlu@umn.edu>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, May 5, 2018 at 10:50 PM, Wenwen Wang <wang6495@umn.edu> wrote:
-> In twl_chrdev_ioctl(), the ioctl driver command is firstly copied from the
+On Sat, May 5, 2018 at 8:43 PM, Wenwen Wang <wang6495@umn.edu> wrote:
+> In twa_chrdev_ioctl(), the ioctl driver command is firstly copied from the
 > userspace pointer 'argp' and saved to the kernel object 'driver_command'.
 > Then a security check is performed on the data buffer size indicated by
 > 'driver_command', which is 'driver_command.buffer_length'. If the security
@@ -31,35 +31,32 @@ On Sat, May 5, 2018 at 10:50 PM, Wenwen Wang <wang6495@umn.edu> wrote:
 >
 > Signed-off-by: Wenwen Wang <wang6495@umn.edu>
 > ---
->  drivers/scsi/3w-sas.c | 5 +++++
->  1 file changed, 5 insertions(+)
+>  drivers/scsi/3w-9xxx.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 >
-> diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-> index cf9f2a0..ea41969 100644
-> --- a/drivers/scsi/3w-sas.c
-> +++ b/drivers/scsi/3w-sas.c
-> @@ -757,6 +757,11 @@ static long twl_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
->         /* Now copy down the entire ioctl */
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index b42c9c4..8bc43db 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
+> @@ -684,6 +684,12 @@ static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long
 >         if (copy_from_user(tw_ioctl, argp, driver_command.buffer_length + sizeof(TW_Ioctl_Buf_Apache) - 1))
 >                 goto out3;
-> +       if (tw_ioctl->driver_command.buffer_length !=
-> +           driver_command.buffer_length) {
-> +               retval = -EINVAL;
+>
+> +       if (tw_ioctl->driver_command.buffer_length
+> +                != driver_command.buffer_length) {
+> +               retval = TW_IOCTL_ERROR_OS_EINVAL;
 > +               goto out3;
 > +       }
->
+> +
 >         /* See which ioctl we are doing */
 >         switch (cmd) {
+>         case TW_IOCTL_FIRMWARE_PASS_THROUGH:
 > --
 > 2.7.4
 >
 
-1. Returning -EINVAL after the copy_from_user() doesn't prevent any
-invalid copy down to kernel mode from happening.
-2. twl_chrdev_open() checks for capable(CAP_SYS_ADMIN):
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-sas.c#n834
-
-I don't see the point in this patch.
+Drop this patch and create a new one that checks for:  if
+!capable(CAP_SYS_ADMIN) in twa_chrdev_ioctl() (like 3w-sas.c does) and
+I'll ack it.
 
 -Adam
