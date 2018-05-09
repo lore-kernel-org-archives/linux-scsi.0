@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 6/6] scsi: hisi_sas: add check of device in hisi_sas_task_exec()
-Date: Wed, 9 May 2018 23:10:50 +0800
-Message-ID: <1525878650-213087-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 4/6] scsi: hisi_sas: Don't lock DQ for complete task sending
+Date: Wed, 9 May 2018 23:10:48 +0800
+Message-ID: <1525878650-213087-5-git-send-email-john.garry@huawei.com>
 References: <1525878650-213087-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,94 +9,340 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1525878650-213087-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Currently we don't check that device is not gone before
-dereferencing it's elements in the function
-hisi_sas_task_exec() (specifically, the DQ pointer).
+Currently we lock the DQ to protect whole delivery process.
+So this stops us building slots for the same queue in
+parallel, and can affect performance.
 
-This patch fixes this issue by filling in the DQ
-pointer in hisi_sas_task_prep(), after we check
-that the device pointer is still safe to
-reference.
+To optimise it, only lock the DQ during special periods,
+specifically when allocating a slot from the DQ and when
+delivering a slot to the HW.
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+This approach is now safe, thanks to the previous patches
+to ensure that we always deliver a slot to the HW once
+allocated.
+
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  4 ++-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 49 ++++++++++++++++++++--------------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 27 ++++++++++++++-----
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 29 +++++++++++++++-----
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 ++++++++++++++-----
+ 5 files changed, 96 insertions(+), 41 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 3a1caa04..52fc709 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -161,7 +161,7 @@ struct hisi_sas_cq {
+ 
+ struct hisi_sas_dq {
+ 	struct hisi_hba *hisi_hba;
+-	struct hisi_sas_slot	*slot_prep;
++	struct list_head list;
+ 	spinlock_t lock;
+ 	int	wr_point;
+ 	int	id;
+@@ -181,6 +181,7 @@ struct hisi_sas_device {
+ 
+ struct hisi_sas_slot {
+ 	struct list_head entry;
++	struct list_head delivery;
+ 	struct sas_task *task;
+ 	struct hisi_sas_port	*port;
+ 	u64	n_elem;
+@@ -190,6 +191,7 @@ struct hisi_sas_slot {
+ 	int	cmplt_queue_slot;
+ 	int	idx;
+ 	int	abort;
++	int	ready;
+ 	void	*buf;
+ 	dma_addr_t buf_dma;
+ 	void	*cmd_hdr;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a451625..39f694e 100644
+index 58cbe1f..bf374a7 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -310,12 +310,13 @@ static void hisi_sas_slot_abort(struct work_struct *work)
+@@ -307,9 +307,9 @@ static void hisi_sas_slot_abort(struct work_struct *work)
  		task->task_done(task);
  }
  
--static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq *dq,
-+static int hisi_sas_task_prep(struct sas_task *task,
-+			      struct hisi_sas_dq **dq_pointer,
- 			      int is_tmf, struct hisi_sas_tmf_task *tmf,
- 			      int *pass)
+-static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+-		*dq, int is_tmf, struct hisi_sas_tmf_task *tmf,
+-		int *pass)
++static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq *dq,
++			      int is_tmf, struct hisi_sas_tmf_task *tmf,
++			      int *pass)
  {
--	struct hisi_hba *hisi_hba = dq->hisi_hba;
+ 	struct hisi_hba *hisi_hba = dq->hisi_hba;
  	struct domain_device *device = task->dev;
-+	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	struct hisi_sas_port *port;
- 	struct hisi_sas_slot *slot;
-@@ -323,8 +324,9 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq *dq,
- 	struct asd_sas_port *sas_port = device->port;
+@@ -321,7 +321,8 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
  	struct device *dev = hisi_hba->dev;
  	int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
--	int  n_elem = 0, n_elem_req = 0, n_elem_resp = 0;
-+	int n_elem = 0, n_elem_req = 0, n_elem_resp = 0;
- 	unsigned long flags, flags_dq;
-+	struct hisi_sas_dq *dq;
- 	int wr_q_index;
+ 	int  n_elem = 0, n_elem_req = 0, n_elem_resp = 0;
+-	unsigned long flags;
++	unsigned long flags, flags_dq;
++	int wr_q_index;
  
  	if (!sas_port) {
-@@ -352,6 +354,8 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq *dq,
- 		return -ECOMM;
+ 		struct task_status_struct *ts = &task->task_status;
+@@ -422,12 +423,18 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 		goto err_out_tag;
  	}
  
-+	*dq_pointer = dq = sas_dev->dq;
+-	rc = hisi_hba->hw->get_free_slot(hisi_hba, dq);
+-	if (rc)
++	spin_lock_irqsave(&dq->lock, flags_dq);
++	wr_q_index = hisi_hba->hw->get_free_slot(hisi_hba, dq);
++	if (wr_q_index < 0) {
++		spin_unlock_irqrestore(&dq->lock, flags_dq);
+ 		goto err_out_buf;
++	}
 +
- 	port = to_hisi_sas_port(sas_port);
- 	if (port && !port->port_attached) {
- 		dev_info(dev, "task prep: %s port%d not attach device\n",
-@@ -520,22 +524,21 @@ static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
- 	unsigned long flags;
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
- 	struct device *dev = hisi_hba->dev;
--	struct domain_device *device = task->dev;
--	struct hisi_sas_device *sas_dev = device->lldd_dev;
--	struct hisi_sas_dq *dq = sas_dev->dq;
-+	struct hisi_sas_dq *dq = NULL;
++	list_add_tail(&slot->delivery, &dq->list);
++	spin_unlock_irqrestore(&dq->lock, flags_dq);
  
- 	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags)))
+ 	dlvry_queue = dq->id;
+-	dlvry_queue_slot = dq->wr_point;
++	dlvry_queue_slot = wr_q_index;
+ 
+ 	slot->idx = slot_idx;
+ 	slot->n_elem = n_elem;
+@@ -471,8 +478,8 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 	task->task_state_flags |= SAS_TASK_AT_INITIATOR;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	dq->slot_prep = slot;
+ 	++(*pass);
++	slot->ready = 1;
+ 
+ 	return 0;
+ 
+@@ -518,11 +525,11 @@ static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
  		return -EINVAL;
  
  	/* protect task_prep and start_delivery sequence */
--	rc = hisi_sas_task_prep(task, dq, is_tmf, tmf, &pass);
-+	rc = hisi_sas_task_prep(task, &dq, is_tmf, tmf, &pass);
+-	spin_lock_irqsave(&dq->lock, flags);
+ 	rc = hisi_sas_task_prep(task, dq, is_tmf, tmf, &pass);
  	if (rc)
  		dev_err(dev, "task exec: failed[%d]!\n", rc);
  
--	spin_lock_irqsave(&dq->lock, flags);
--	if (likely(pass))
-+	if (likely(pass)) {
-+		spin_lock_irqsave(&dq->lock, flags);
++	spin_lock_irqsave(&dq->lock, flags);
+ 	if (likely(pass))
  		hisi_hba->hw->start_delivery(dq);
--	spin_unlock_irqrestore(&dq->lock, flags);
-+		spin_unlock_irqrestore(&dq->lock, flags);
-+	}
+ 	spin_unlock_irqrestore(&dq->lock, flags);
+@@ -1503,7 +1510,8 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 	struct hisi_sas_cmd_hdr *cmd_hdr_base;
+ 	struct hisi_sas_dq *dq = sas_dev->dq;
+ 	int dlvry_queue_slot, dlvry_queue, n_elem = 0, rc, slot_idx;
+-	unsigned long flags, flags_dq;
++	unsigned long flags, flags_dq = 0;
++	int wr_q_index;
  
- 	return rc;
+ 	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags)))
+ 		return -EINVAL;
+@@ -1531,16 +1539,18 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 		rc = -ENOMEM;
+ 		goto err_out_tag;
+ 	}
++
+ 	spin_lock_irqsave(&dq->lock, flags_dq);
+-	rc = hisi_hba->hw->get_free_slot(hisi_hba, dq);
+-	if (rc) {
+-		rc = -ENOMEM;
++	wr_q_index = hisi_hba->hw->get_free_slot(hisi_hba, dq);
++	if (wr_q_index < 0) {
+ 		spin_unlock_irqrestore(&dq->lock, flags_dq);
+ 		goto err_out_buf;
+ 	}
++	list_add_tail(&slot->delivery, &dq->list);
++	spin_unlock_irqrestore(&dq->lock, flags_dq);
+ 
+ 	dlvry_queue = dq->id;
+-	dlvry_queue_slot = dq->wr_point;
++	dlvry_queue_slot = wr_q_index;
+ 
+ 	slot->idx = slot_idx;
+ 	slot->n_elem = n_elem;
+@@ -1560,18 +1570,16 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 	hisi_sas_task_prep_abort(hisi_hba, slot, device_id,
+ 				      abort_flag, task_tag);
+ 
+-	spin_lock_irqsave(&hisi_hba->lock, flags);
+-	list_add_tail(&slot->entry, &sas_dev->list);
+-	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	task->task_state_flags |= SAS_TASK_AT_INITIATOR;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	dq->slot_prep = slot;
+-
++	slot->ready = 1;
+ 	/* send abort command to the chip */
++	spin_lock_irqsave(&dq->lock, flags);
++	list_add_tail(&slot->entry, &sas_dev->list);
+ 	hisi_hba->hw->start_delivery(dq);
+-	spin_unlock_irqrestore(&dq->lock, flags_dq);
++	spin_unlock_irqrestore(&dq->lock, flags);
+ 
+ 	return 0;
+ 
+@@ -1856,6 +1864,7 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 
+ 		/* Delivery queue structure */
+ 		spin_lock_init(&dq->lock);
++		INIT_LIST_HEAD(&dq->list);
+ 		dq->id = i;
+ 		dq->hisi_hba = hisi_hba;
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 7781a01..abe175f 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -921,18 +921,33 @@ static int get_wideport_bitmap_v1_hw(struct hisi_hba *hisi_hba, int port_id)
+ 		return -EAGAIN;
+ 	}
+ 
+-	return 0;
++	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
++
++	return w;
  }
+ 
++/* DQ lock must be taken here */
+ static void start_delivery_v1_hw(struct hisi_sas_dq *dq)
+ {
+ 	struct hisi_hba *hisi_hba = dq->hisi_hba;
+-	int dlvry_queue = dq->slot_prep->dlvry_queue;
+-	int dlvry_queue_slot = dq->slot_prep->dlvry_queue_slot;
++	struct hisi_sas_slot *s, *s1;
++	struct list_head *dq_list;
++	int dlvry_queue = dq->id;
++	int wp, count = 0;
++
++	dq_list = &dq->list;
++	list_for_each_entry_safe(s, s1, &dq->list, delivery) {
++		if (!s->ready)
++			break;
++		count++;
++		wp = (s->dlvry_queue_slot + 1) % HISI_SAS_QUEUE_SLOTS;
++		list_del(&s->delivery);
++	}
++
++	if (!count)
++		return;
+ 
+-	dq->wr_point = ++dlvry_queue_slot % HISI_SAS_QUEUE_SLOTS;
+-	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14),
+-			 dq->wr_point);
++	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14), wp);
+ }
+ 
+ static void prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 9f77fd8..911bb76 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1663,23 +1663,38 @@ static int get_wideport_bitmap_v2_hw(struct hisi_hba *hisi_hba, int port_id)
+ 	r = hisi_sas_read32_relaxed(hisi_hba,
+ 				DLVRY_Q_0_RD_PTR + (queue * 0x14));
+ 	if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
+-		dev_warn(dev, "full queue=%d r=%d w=%d\n\n",
++		dev_warn(dev, "full queue=%d r=%d w=%d\n",
+ 				queue, r, w);
+ 		return -EAGAIN;
+ 	}
+ 
+-	return 0;
++	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
++
++	return w;
+ }
+ 
++/* DQ lock must be taken here */
+ static void start_delivery_v2_hw(struct hisi_sas_dq *dq)
+ {
+ 	struct hisi_hba *hisi_hba = dq->hisi_hba;
+-	int dlvry_queue = dq->slot_prep->dlvry_queue;
+-	int dlvry_queue_slot = dq->slot_prep->dlvry_queue_slot;
++	struct hisi_sas_slot *s, *s1;
++	struct list_head *dq_list;
++	int dlvry_queue = dq->id;
++	int wp, count = 0;
++
++	dq_list = &dq->list;
++	list_for_each_entry_safe(s, s1, &dq->list, delivery) {
++		if (!s->ready)
++			break;
++		count++;
++		wp = (s->dlvry_queue_slot + 1) % HISI_SAS_QUEUE_SLOTS;
++		list_del(&s->delivery);
++	}
++
++	if (!count)
++		return;
+ 
+-	dq->wr_point = ++dlvry_queue_slot % HISI_SAS_QUEUE_SLOTS;
+-	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14),
+-			 dq->wr_point);
++	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14), wp);
+ }
+ 
+ static void prep_prd_sge_v2_hw(struct hisi_hba *hisi_hba,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 8cd1374..56f1046 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -840,23 +840,37 @@ static int get_wideport_bitmap_v3_hw(struct hisi_hba *hisi_hba, int port_id)
+ 	r = hisi_sas_read32_relaxed(hisi_hba,
+ 				DLVRY_Q_0_RD_PTR + (queue * 0x14));
+ 	if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
+-		dev_warn(dev, "full queue=%d r=%d w=%d\n\n",
++		dev_warn(dev, "full queue=%d r=%d w=%d\n",
+ 				queue, r, w);
+ 		return -EAGAIN;
+ 	}
+ 
+-	return 0;
++	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
++
++	return w;
+ }
+ 
+ static void start_delivery_v3_hw(struct hisi_sas_dq *dq)
+ {
+ 	struct hisi_hba *hisi_hba = dq->hisi_hba;
+-	int dlvry_queue = dq->slot_prep->dlvry_queue;
+-	int dlvry_queue_slot = dq->slot_prep->dlvry_queue_slot;
++	struct hisi_sas_slot *s, *s1;
++	struct list_head *dq_list;
++	int dlvry_queue = dq->id;
++	int wp, count = 0;
++
++	dq_list = &dq->list;
++	list_for_each_entry_safe(s, s1, &dq->list, delivery) {
++		if (!s->ready)
++			break;
++		count++;
++		wp = (s->dlvry_queue_slot + 1) % HISI_SAS_QUEUE_SLOTS;
++		list_del(&s->delivery);
++	}
++
++	if (!count)
++		return;
+ 
+-	dq->wr_point = ++dlvry_queue_slot % HISI_SAS_QUEUE_SLOTS;
+-	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14),
+-			 dq->wr_point);
++	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14), wp);
+ }
+ 
+ static void prep_prd_sge_v3_hw(struct hisi_hba *hisi_hba,
 -- 
 1.9.1
