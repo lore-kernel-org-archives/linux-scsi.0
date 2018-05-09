@@ -1,69 +1,62 @@
-From: Wenwen Wang <wang6495@umn.edu>
-Subject: Re: [PATCH] scsi: mpt3sas: fix a missing-check bug
-Date: Wed, 9 May 2018 00:28:53 -0500
-Message-ID: <CAAa=b7dx5kfBzD+CTxMsonRj8c5mA5QRAud8PmfZJ0fYxh_cYw@mail.gmail.com>
-References: <1525501896-8235-1-git-send-email-wang6495@umn.edu>
+From: Steffen Maier <maier@linux.ibm.com>
+Subject: Re: [PATCH 0/3] scsi: arcmsr: Add driver parameter cmd_timeout for
+ scsi command timeout setting
+Date: Wed, 9 May 2018 11:05:02 +0200
+Message-ID: <d84beeb7-b502-c465-ea39-7d85bdcdb72f@linux.ibm.com>
+References: <1525675401.8876.9.camel@Centos6.3-64>
+ <yq1in7ywvo8.fsf@oracle.com> <1525761166.4261.8.camel@Centos6.3-64>
+ <1525761818.4261.12.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525501896-8235-1-git-send-email-wang6495@umn.edu>
+In-Reply-To: <1525761818.4261.12.camel@Centos6.3-64>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wenwen Wang <wang6495@umn.edu>
-Cc: Kangjie Lu <kjlu@umn.edu>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>, "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Ching Huang <ching2048@areca.com.tw>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hello
 
-Could you please review this patch? We need a confirmation because we
-are working on an approaching deadline.
+On 05/08/2018 08:43 AM, Ching Huang wrote:
+> On Tue, 2018-05-08 at 14:32 +0800, Ching Huang wrote:
+>> On Tue, 2018-05-08 at 01:41 -0400, Martin K. Petersen wrote:
+>>> Hello Ching,
+>>>
+>>>> 1. Add driver parameter cmd_timeout, default value is ARCMSR_DEFAULT_TIMEOUT.
+>>>> 2. Add slave_configure callback function to set device command timeout value.
+>>>> 3. Update driver version to v1.40.00.06-20180504.
+>>>
+>>> I am not so keen on arcmsr overriding the timeout set by the admin or
+>>> application.
+>>>
+>>> Also, instead of introducing this module parameter, why not simply ask
+>>> the user to change rq_timeout?
+>>>
+>> This timeout setting only after device has been inquiry successfully.
+>> Of course, user can set timeout value to /sys/block/sdX/device/timeout.
+>> But user does not like to set this value once command timeout occurred.
+>> They rather like timeout never happen.
+>>
+> This timeout setting apply to all devices, its better than user has to
+> set one bye one for each device.
 
-Thanks!
-Wenwen
+Udev rules?
 
-On Sat, May 5, 2018 at 1:31 AM, Wenwen Wang <wang6495@umn.edu> wrote:
-> In _ctl_ioctl_main(), 'ioctl_header' is first copied from the userspace
-> pointer 'arg'. 'ioctl_header.ioc_number' is then verified by
-> _ctl_verify_adapter(). If the verification is failed, an error code -ENODEV
-> is returned. Otherwise, the verification result, i.e., the MPT3SAS adapter
-> that matches with the 'ioctl_header.ioc_number', is saved to 'ioc'. Later
-> on, if the 'cmd' is MPT3COMMAND, the whole ioctl command struct is copied
-> again from the userspace pointer 'arg' and saved to 'karg'. Then the
-> function _ctl_do_mpt_command() is invoked to execute the command with the
-> adapter 'ioc' and 'karg' as inputs.
->
-> Given that the pointer 'arg' resides in userspace, a malicious userspace
-> process can race to change the 'ioc_number' between the two copies, which
-> will cause inconsistency issues, potentially security issues since an
-> inconsistent adapter could be used with the command struct 'karg' as inputs
-> of _ctl_do_mpt_command(). Moreover, the user can potentially provide a
-> valid 'ioc_number' to pass the verification, and then modify it to an
-> invalid 'ioc_number'. That means, an invalid 'ioc_number' can potentially
-> bypass the verification check.
->
-> To fix this issue, we need to recheck the 'ioc_number' copied after the
-> second copy to make sure it is not changed since the first copy.
->
-> Signed-off-by: Wenwen Wang <wang6495@umn.edu>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c | 5 +++++
->  1 file changed, 5 insertions(+)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> index d3cb387..0c140c7 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> @@ -2388,6 +2388,11 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
->                         break;
->                 }
->
-> +               if (karg.hdr.ioc_number != ioctl_header.ioc_number) {
-> +                       ret = -EINVAL;
-> +                       break;
-> +               }
-> +
->                 if (_IOC_SIZE(cmd) == sizeof(struct mpt3_ioctl_command)) {
->                         uarg = arg;
->                         ret = _ctl_do_mpt_command(ioc, karg, &uarg->mf);
-> --
-> 2.7.4
->
+Something roughly like bottom of:
+https://www.ibm.com/support/knowledgecenter/ST3FR7_8.1.2/com.ibm.storwize.v7000.812.doc/svc_linux_settings.html
+or better doing the assignment with udev builtins (fix the syntax error 
+with model):
+https://www.ibm.com/support/knowledgecenter/ST3FR7_8.1.2/com.ibm.storwize.v7000.812.doc/svc_zs_statechange_3fgeri.html
+
+-- 
+Mit freundlichen Grüßen / Kind regards
+Steffen Maier
+
+Linux on z Systems Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
