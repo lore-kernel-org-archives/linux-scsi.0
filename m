@@ -1,50 +1,69 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v6 00/13] firmware_loader changes for v4.18
-Date: Tue, 8 May 2018 15:45:02 -0700
-Message-ID: <CAGXu5jJ=9XKn=z1T16iV-BoN88QLh7q+OicZxc5TvEjioriGMA@mail.gmail.com>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
+From: Wenwen Wang <wang6495@umn.edu>
+Subject: Re: [PATCH] scsi: mpt3sas: fix a missing-check bug
+Date: Wed, 9 May 2018 00:28:53 -0500
+Message-ID: <CAAa=b7dx5kfBzD+CTxMsonRj8c5mA5QRAud8PmfZJ0fYxh_cYw@mail.gmail.com>
+References: <1525501896-8235-1-git-send-email-wang6495@umn.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+In-Reply-To: <1525501896-8235-1-git-send-email-wang6495@umn.edu>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Andrew Morton <akpm@linux-foundation.org>, Josh Triplett <josh@joshtriplett.org>, maco@android.com, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, bjorn.andersson@linaro.org, teg@jklm.no, wagi@monom.org, Hans de Goede <hdegoede@redhat.com>, Andres Rodriguez <andresx7@gmail.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Jakub Kicinski <kubakici@wp.pl>, Shuah Khan <shuah@kernel.org>, Martin Fuzzey <mfuzzey@parkeon.com>, David Howells <dhowells@redhat.com>, pali.rohar@gmail.com, Takashi Iwai <tiwai@suse.de>, Kalle Valo <kvalo@codeaurora.org>, Arend van Spriel <arend.vanspriel@broadcom.com>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Nicolas Broeking <nbroeking@me.com>, Vikram
+To: Wenwen Wang <wang6495@umn.edu>
+Cc: Kangjie Lu <kjlu@umn.edu>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>, "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, May 8, 2018 at 11:12 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> Greg,
->
-> Here is what I have queued up for the firmware_loader for v4.18. It
-> includes a slew of cleanup work, and the new firmware_request_nowarn()
-> which is quiet but enables the sysfs fallback mechanism. I've gone ahead
-> and also queued up a few minor fixes for the firmware loader documentation
-> which have come up recently. These changes are available on my git tree
-> both based on linux-next [0] and Linus' latest tree [1]. Folks working
-> on new developments for the firmware loader can use my linux-next
-> branch 20180508-firmware_loader_for-v4.18-try2 for now.
->
-> 0-day sends its blessings.
->
-> The patches from Mimi's series still require a bit more discussion and
-> review. The discussion over the EFI firmware fallback mechanism is still
-> ongoing.
->
-> As for the rename that you wanted, perhaps we can do this late in the
-> merge window considering we're at rc4 now. I can prep something up for
-> that later.
->
-> Question, and specially rants are warmly welcomed.
+Hello
 
-I sent some typo catches, but with those fixed, please consider the
-whole series:
-
-Reviewed-by: Kees Cook <keescook@chromium.org>
+Could you please review this patch? We need a confirmation because we
+are working on an approaching deadline.
 
 Thanks!
+Wenwen
 
--Kees
-
--- 
-Kees Cook
-Pixel Security
+On Sat, May 5, 2018 at 1:31 AM, Wenwen Wang <wang6495@umn.edu> wrote:
+> In _ctl_ioctl_main(), 'ioctl_header' is first copied from the userspace
+> pointer 'arg'. 'ioctl_header.ioc_number' is then verified by
+> _ctl_verify_adapter(). If the verification is failed, an error code -ENODEV
+> is returned. Otherwise, the verification result, i.e., the MPT3SAS adapter
+> that matches with the 'ioctl_header.ioc_number', is saved to 'ioc'. Later
+> on, if the 'cmd' is MPT3COMMAND, the whole ioctl command struct is copied
+> again from the userspace pointer 'arg' and saved to 'karg'. Then the
+> function _ctl_do_mpt_command() is invoked to execute the command with the
+> adapter 'ioc' and 'karg' as inputs.
+>
+> Given that the pointer 'arg' resides in userspace, a malicious userspace
+> process can race to change the 'ioc_number' between the two copies, which
+> will cause inconsistency issues, potentially security issues since an
+> inconsistent adapter could be used with the command struct 'karg' as inputs
+> of _ctl_do_mpt_command(). Moreover, the user can potentially provide a
+> valid 'ioc_number' to pass the verification, and then modify it to an
+> invalid 'ioc_number'. That means, an invalid 'ioc_number' can potentially
+> bypass the verification check.
+>
+> To fix this issue, we need to recheck the 'ioc_number' copied after the
+> second copy to make sure it is not changed since the first copy.
+>
+> Signed-off-by: Wenwen Wang <wang6495@umn.edu>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> index d3cb387..0c140c7 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> @@ -2388,6 +2388,11 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+>                         break;
+>                 }
+>
+> +               if (karg.hdr.ioc_number != ioctl_header.ioc_number) {
+> +                       ret = -EINVAL;
+> +                       break;
+> +               }
+> +
+>                 if (_IOC_SIZE(cmd) == sizeof(struct mpt3_ioctl_command)) {
+>                         uarg = arg;
+>                         ret = _ctl_do_mpt_command(ioc, karg, &uarg->mf);
+> --
+> 2.7.4
+>
