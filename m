@@ -1,254 +1,57 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 5/6] scsi: hisi_sas: Use device lock to protect slot alloc/free
-Date: Wed, 9 May 2018 23:10:49 +0800
-Message-ID: <1525878650-213087-6-git-send-email-john.garry@huawei.com>
-References: <1525878650-213087-1-git-send-email-john.garry@huawei.com>
+From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Subject: Re: [PATCH v6 12/13] Documentation: remove stale firmware API
+ reference
+Date: Wed, 9 May 2018 12:12:09 -0300
+Message-ID: <20180509121209.1e332f63@vento.lan>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
+        <20180508181247.19431-13-mcgrof@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525878650-213087-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <20180508181247.19431-13-mcgrof@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org, keescook@chromium.org, josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org, david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no, wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org, broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org, torvalds@linux-foundation.org, Abhay_Salunke@dell.com, jewalt@lgsinnovations.com, oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Em Tue,  8 May 2018 11:12:46 -0700
+"Luis R. Rodriguez" <mcgrof@kernel.org> escreveu:
 
-The IPTT of a slot is unique, and we currently use hisi_hba lock
-to protect it.
+> It refers to a pending patch, but this was merged eons ago.
 
-Now slot is managed on hisi_sas_device.list, so use DQ lock to
-protect for allocating and freeing the slot.
+Didn't know that such patch was already merged. Great!
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 56 ++++++++++------------------------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  3 --
- 2 files changed, 16 insertions(+), 43 deletions(-)
+Regards,
+Mauro
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index bf374a7..a451625 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -214,6 +214,8 @@ static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
- void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 			     struct hisi_sas_slot *slot)
- {
-+	struct hisi_sas_dq *dq = &hisi_hba->dq[slot->dlvry_queue];
-+	unsigned long flags;
- 
- 	if (task) {
- 		struct device *dev = hisi_hba->dev;
-@@ -233,11 +235,15 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 	if (slot->buf)
- 		dma_pool_free(hisi_hba->buffer_pool, slot->buf, slot->buf_dma);
- 
-+	spin_lock_irqsave(&dq->lock, flags);
- 	list_del_init(&slot->entry);
-+	spin_unlock_irqrestore(&dq->lock, flags);
- 	slot->buf = NULL;
- 	slot->task = NULL;
- 	slot->port = NULL;
-+	spin_lock_irqsave(&hisi_hba->lock, flags);
- 	hisi_sas_slot_index_free(hisi_hba, slot->idx);
-+	spin_unlock_irqrestore(&hisi_hba->lock, flags);
- 
- 	/* slot memory is fully zeroed when it is reused */
- }
-@@ -286,7 +292,6 @@ static void hisi_sas_slot_abort(struct work_struct *work)
- 	struct scsi_lun lun;
- 	struct device *dev = hisi_hba->dev;
- 	int tag = abort_slot->idx;
--	unsigned long flags;
- 
- 	if (!(task->task_proto & SAS_PROTOCOL_SSP)) {
- 		dev_err(dev, "cannot abort slot for non-ssp task\n");
-@@ -300,9 +305,7 @@ static void hisi_sas_slot_abort(struct work_struct *work)
- 	hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun, &tmf_task);
- out:
- 	/* Do cleanup for this task */
--	spin_lock_irqsave(&hisi_hba->lock, flags);
- 	hisi_sas_slot_task_free(hisi_hba, task, abort_slot);
--	spin_unlock_irqrestore(&hisi_hba->lock, flags);
- 	if (task->task_done)
- 		task->task_done(task);
- }
-@@ -471,9 +474,9 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq *dq,
- 		break;
- 	}
- 
--	spin_lock_irqsave(&hisi_hba->lock, flags);
-+	spin_lock_irqsave(&dq->lock, flags);
- 	list_add_tail(&slot->entry, &sas_dev->list);
--	spin_unlock_irqrestore(&hisi_hba->lock, flags);
-+	spin_unlock_irqrestore(&dq->lock, flags);
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	task->task_state_flags |= SAS_TASK_AT_INITIATOR;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
-@@ -1047,7 +1050,6 @@ static int hisi_sas_softreset_ata_disk(struct domain_device *device)
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct device *dev = hisi_hba->dev;
- 	int s = sizeof(struct host_to_dev_fis);
--	unsigned long flags;
- 
- 	ata_for_each_link(link, ap, EDGE) {
- 		int pmp = sata_srst_pmp(link);
-@@ -1072,11 +1074,8 @@ static int hisi_sas_softreset_ata_disk(struct domain_device *device)
- 		dev_err(dev, "ata disk reset failed\n");
- 	}
- 
--	if (rc == TMF_RESP_FUNC_COMPLETE) {
--		spin_lock_irqsave(&hisi_hba->lock, flags);
-+	if (rc == TMF_RESP_FUNC_COMPLETE)
- 		hisi_sas_release_task(hisi_hba, device);
--		spin_unlock_irqrestore(&hisi_hba->lock, flags);
--	}
- 
- 	return rc;
- }
-@@ -1173,7 +1172,6 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	struct device *dev = hisi_hba->dev;
- 	struct Scsi_Host *shost = hisi_hba->shost;
- 	u32 old_state, state;
--	unsigned long flags;
- 	int rc;
- 
- 	if (!hisi_hba->hw->soft_reset)
-@@ -1197,9 +1195,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 		scsi_unblock_requests(shost);
- 		goto out;
- 	}
--	spin_lock_irqsave(&hisi_hba->lock, flags);
- 	hisi_sas_release_tasks(hisi_hba);
--	spin_unlock_irqrestore(&hisi_hba->lock, flags);
- 
- 	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
- 
-@@ -1274,11 +1270,8 @@ static int hisi_sas_abort_task(struct sas_task *task)
- 		 * will have already been completed
- 		 */
- 		if (rc == TMF_RESP_FUNC_COMPLETE && rc2 != TMF_RESP_FUNC_SUCC) {
--			if (task->lldd_task) {
--				spin_lock_irqsave(&hisi_hba->lock, flags);
-+			if (task->lldd_task)
- 				hisi_sas_do_release_task(hisi_hba, task, slot);
--				spin_unlock_irqrestore(&hisi_hba->lock, flags);
--			}
- 		}
- 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
- 		task->task_proto & SAS_PROTOCOL_STP) {
-@@ -1300,11 +1293,8 @@ static int hisi_sas_abort_task(struct sas_task *task)
- 		rc = hisi_sas_internal_task_abort(hisi_hba, device,
- 			     HISI_SAS_INT_ABT_CMD, tag);
- 		if (((rc < 0) || (rc == TMF_RESP_FUNC_FAILED)) &&
--					task->lldd_task) {
--			spin_lock_irqsave(&hisi_hba->lock, flags);
-+					task->lldd_task)
- 			hisi_sas_do_release_task(hisi_hba, task, slot);
--			spin_unlock_irqrestore(&hisi_hba->lock, flags);
--		}
- 	}
- 
- out:
-@@ -1319,7 +1309,6 @@ static int hisi_sas_abort_task_set(struct domain_device *device, u8 *lun)
- 	struct device *dev = hisi_hba->dev;
- 	struct hisi_sas_tmf_task tmf_task;
- 	int rc = TMF_RESP_FUNC_FAILED;
--	unsigned long flags;
- 
- 	rc = hisi_sas_internal_task_abort(hisi_hba, device,
- 					HISI_SAS_INT_ABT_DEV, 0);
-@@ -1332,11 +1321,8 @@ static int hisi_sas_abort_task_set(struct domain_device *device, u8 *lun)
- 	tmf_task.tmf = TMF_ABORT_TASK_SET;
- 	rc = hisi_sas_debug_issue_ssp_tmf(device, lun, &tmf_task);
- 
--	if (rc == TMF_RESP_FUNC_COMPLETE) {
--		spin_lock_irqsave(&hisi_hba->lock, flags);
-+	if (rc == TMF_RESP_FUNC_COMPLETE)
- 		hisi_sas_release_task(hisi_hba, device);
--		spin_unlock_irqrestore(&hisi_hba->lock, flags);
--	}
- 
- 	return rc;
- }
-@@ -1369,7 +1355,6 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct device *dev = hisi_hba->dev;
- 	int rc = TMF_RESP_FUNC_FAILED;
--	unsigned long flags;
- 
- 	if (sas_dev->dev_status != HISI_SAS_DEV_EH)
- 		return TMF_RESP_FUNC_FAILED;
-@@ -1385,11 +1370,9 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
- 
- 	rc = hisi_sas_debug_I_T_nexus_reset(device);
- 
--	if ((rc == TMF_RESP_FUNC_COMPLETE) || (rc == -ENODEV)) {
--		spin_lock_irqsave(&hisi_hba->lock, flags);
-+	if ((rc == TMF_RESP_FUNC_COMPLETE) || (rc == -ENODEV))
- 		hisi_sas_release_task(hisi_hba, device);
--		spin_unlock_irqrestore(&hisi_hba->lock, flags);
--	}
-+
- 	return rc;
- }
- 
-@@ -1398,7 +1381,6 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct device *dev = hisi_hba->dev;
--	unsigned long flags;
- 	int rc = TMF_RESP_FUNC_FAILED;
- 
- 	sas_dev->dev_status = HISI_SAS_DEV_EH;
-@@ -1418,11 +1400,8 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
- 
- 		rc = sas_phy_reset(phy, 1);
- 
--		if (rc == 0) {
--			spin_lock_irqsave(&hisi_hba->lock, flags);
-+		if (rc == 0)
- 			hisi_sas_release_task(hisi_hba, device);
--			spin_unlock_irqrestore(&hisi_hba->lock, flags);
--		}
- 		sas_put_local_phy(phy);
- 	} else {
- 		struct hisi_sas_tmf_task tmf_task = { .tmf =  TMF_LU_RESET };
-@@ -1436,11 +1415,8 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
- 		hisi_sas_dereg_device(hisi_hba, device);
- 
- 		rc = hisi_sas_debug_issue_ssp_tmf(device, lun, &tmf_task);
--		if (rc == TMF_RESP_FUNC_COMPLETE) {
--			spin_lock_irqsave(&hisi_hba->lock, flags);
-+		if (rc == TMF_RESP_FUNC_COMPLETE)
- 			hisi_sas_release_task(hisi_hba, device);
--			spin_unlock_irqrestore(&hisi_hba->lock, flags);
--		}
- 	}
- out:
- 	if (rc != TMF_RESP_FUNC_COMPLETE)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 56f1046..c013673 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2373,7 +2373,6 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
- 	u32 device_state, status;
- 	int rc;
- 	u32 reg_val;
--	unsigned long flags;
- 
- 	if (!pdev->pm_cap) {
- 		dev_err(dev, "PCI PM not supported\n");
-@@ -2418,9 +2417,7 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
- 	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, device_state);
- 
--	spin_lock_irqsave(&hisi_hba->lock, flags);
- 	hisi_sas_release_tasks(hisi_hba);
--	spin_unlock_irqrestore(&hisi_hba->lock, flags);
- 
- 	sas_suspend_ha(sha);
- 	return 0;
--- 
-1.9.1
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  Documentation/dell_rbu.txt | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
+> index 0fdb6aa2704c..077fdc29a0d0 100644
+> --- a/Documentation/dell_rbu.txt
+> +++ b/Documentation/dell_rbu.txt
+> @@ -121,9 +121,6 @@ read back the image downloaded.
+>  
+>  .. note::
+>  
+> -   This driver requires a patch for firmware_class.c which has the modified
+> -   request_firmware_nowait function.
+> -
+
+>     Also after updating the BIOS image a user mode application needs to execute
+>     code which sends the BIOS update request to the BIOS. So on the next reboot
+>     the BIOS knows about the new image downloaded and it updates itself.
+
+You should likely remove the "Also" here.
+
+With that,
+
+Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+
+Regards,
+Mauro
