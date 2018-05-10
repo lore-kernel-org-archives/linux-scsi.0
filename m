@@ -1,42 +1,69 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v6 05/13] firmware_loader: enhance Kconfig documentation
- over FW_LOADER
-Date: Wed, 9 May 2018 16:01:09 -0700
-Message-ID: <CAGXu5jLn0m_9j=r=x1JefRVEYMvR4Q--e8pCufZyoVQkWe507A@mail.gmail.com>
-References: <20180508181247.19431-1-mcgrof@kernel.org> <20180508181247.19431-6-mcgrof@kernel.org>
- <CAGXu5jJXMxx2Xna_M_g1wsS59XnYKqHAGdxhzDtk3PhnLL-gQQ@mail.gmail.com> <20180509205544.GW27853@wotan.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: qlogicpti: Fix an error handling path in 'qpti_sbus_probe()'
+Date: Thu, 10 May 2018 13:45:58 +0200
+Message-ID: <20180510114558.20769-1-christophe.jaillet@wanadoo.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180509205544.GW27853@wotan.suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Andrew Morton <akpm@linux-foundation.org>, Josh Triplett <josh@joshtriplett.org>, maco@android.com, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, bjorn.andersson@linaro.org, Tom Gundersen <teg@jklm.no>, wagi@monom.org, Hans de Goede <hdegoede@redhat.com>, Andres Rodriguez <andresx7@gmail.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Jakub Kicinski <kubakici@wp.pl>, Shuah Khan <shuah@kernel.org>, Martin Fuzzey <mfuzzey@parkeon.com>, David Howells <dhowells@redhat.com>, pali.rohar@gmail.com, Takashi Iwai <tiwai@suse.de>, Kalle Valo <kvalo@codeaurora.org>, Arend van Spriel <arend.vanspriel@broadcom.com>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Nicolas Broeking <nbroeking@me.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 9, 2018 at 1:55 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> On Tue, May 08, 2018 at 03:42:33PM -0700, Kees Cook wrote:
->> On Tue, May 8, 2018 at 11:12 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
->> > +         This used to be the default firmware loading facility, and udev used
->> > +         to listen for uvents to load firmware for the kernel. The firmware
->> > +         loading facility functionality in udev has been removed, as such it
->> > +         can no longer be relied upon as a fallback mechanism. Linux no longer
->> > +         relies on or uses a fallback mechanism in userspace. If you need to
->> > +         rely on one refer to the permissively licensed firmwared:
->>
->> Typo: firmware
->
-> Thanks fixed all typos except this one, this one is meant to be firmwared as
-> that is the name of the project, the url is below.
->
->>
->> > +
->> > +         https://github.com/teg/firmwared
+The 'free_irq()' call is not at the right place in the error handling path.
+The changed order has been introduced in commit 3d4253d9afab
+("[SCSI] qlogicpti: Convert to new SBUS device framework.")
 
-Oh! Yes, hah. :) Thanks!
+Fixes: 3d4253d9afab ("[SCSI] qlogicpti: Convert to new SBUS device framework.")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Please review carefully.  This patch is proposed because it triggers one of
+my coccinelle scripts. I'm not 100% sure if correct.
 
--Kees
+The script tries to spot wrongly ordered error handling path. It is:
+@@
+identifier l1, l2;
+@@
 
+  if (...) {
+     ...
+*     goto l1;
+  }
+  ...
+  if (...) {
+     ...
+*     goto l2;
+  }
+  ...
+*l1:
+  ...
+*l2:
+  ...
+---
+ drivers/scsi/qlogicpti.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index cec9a14982e6..8578e566ab41 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1385,6 +1385,9 @@ static int qpti_sbus_probe(struct platform_device *op)
+ 			  qpti->req_cpu, qpti->req_dvma);
+ #undef QSIZE
+ 
++fail_free_irq:
++	free_irq(qpti->irq, qpti);
++
+ fail_unmap_regs:
+ 	of_iounmap(&op->resource[0], qpti->qregs,
+ 		   resource_size(&op->resource[0]));
+@@ -1392,9 +1395,6 @@ static int qpti_sbus_probe(struct platform_device *op)
+ 		of_iounmap(&op->resource[0], qpti->sreg,
+ 			   sizeof(unsigned char));
+ 
+-fail_free_irq:
+-	free_irq(qpti->irq, qpti);
+-
+ fail_unlink:
+ 	scsi_host_put(host);
+ 
 -- 
-Kees Cook
-Pixel Security
+2.17.0
