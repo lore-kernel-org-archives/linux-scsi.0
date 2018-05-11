@@ -1,7 +1,7 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 6/7] cxlflash: Abstract hardware dependent assignments
-Date: Fri, 11 May 2018 14:06:05 -0500
-Message-ID: <1526065565-39041-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 7/7] cxlflash: Isolate external module dependencies
+Date: Fri, 11 May 2018 14:06:19 -0500
+Message-ID: <1526065579-39079-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
@@ -19,66 +19,129 @@ To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Mart
 Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-As a staging cleanup to support transport specific builds of the cxlflash
-module, relocate device dependent assignments to header files. This will
-avoid littering the core driver with conditional compilation logic.
+Depending on the underlying transport, cxlflash has a dependency on either
+the CXL or OCXL drivers, which are enabled via their Kconfig option.
+Instead of having a module wide dependency on these config options, it is
+better to isolate the object modules that are dependent on the CXL and OCXL
+drivers and adjust the module dependencies accordingly.
+
+This commit isolates the object files that are dependent on CXL and/or
+OCXL. The cxl/ocxl fops used in the core driver are tucked under an ifdef
+to avoid compilation errors.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c |  7 ++-----
- drivers/scsi/cxlflash/main.h | 15 +++++++++++++++
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ drivers/scsi/cxlflash/Kconfig     | 2 +-
+ drivers/scsi/cxlflash/Makefile    | 4 +++-
+ drivers/scsi/cxlflash/lunmgt.c    | 4 +++-
+ drivers/scsi/cxlflash/main.c      | 2 --
+ drivers/scsi/cxlflash/main.h      | 5 +++++
+ drivers/scsi/cxlflash/superpipe.c | 3 ++-
+ drivers/scsi/cxlflash/vlun.c      | 3 ++-
+ 7 files changed, 16 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/Kconfig b/drivers/scsi/cxlflash/Kconfig
+index e2a3a1b..f1b17e3 100644
+--- a/drivers/scsi/cxlflash/Kconfig
++++ b/drivers/scsi/cxlflash/Kconfig
+@@ -4,7 +4,7 @@
+ 
+ config CXLFLASH
+ 	tristate "Support for IBM CAPI Flash"
+-	depends on PCI && SCSI && CXL && OCXL && EEH
++	depends on PCI && SCSI && (CXL || OCXL) && EEH
+ 	select IRQ_POLL
+ 	default m
+ 	help
+diff --git a/drivers/scsi/cxlflash/Makefile b/drivers/scsi/cxlflash/Makefile
+index 5124c68..283377d 100644
+--- a/drivers/scsi/cxlflash/Makefile
++++ b/drivers/scsi/cxlflash/Makefile
+@@ -1,2 +1,4 @@
+ obj-$(CONFIG_CXLFLASH) += cxlflash.o
+-cxlflash-y += main.o superpipe.o lunmgt.o vlun.o cxl_hw.o ocxl_hw.o
++cxlflash-y += main.o superpipe.o lunmgt.o vlun.o
++cxlflash-$(CONFIG_CXL) += cxl_hw.o
++cxlflash-$(CONFIG_OCXL) += ocxl_hw.o
+diff --git a/drivers/scsi/cxlflash/lunmgt.c b/drivers/scsi/cxlflash/lunmgt.c
+index 4d232e2..edea125 100644
+--- a/drivers/scsi/cxlflash/lunmgt.c
++++ b/drivers/scsi/cxlflash/lunmgt.c
+@@ -12,9 +12,11 @@
+  * 2 of the License, or (at your option) any later version.
+  */
+ 
+-#include <misc/cxl.h>
+ #include <asm/unaligned.h>
+ 
++#include <linux/interrupt.h>
++#include <linux/pci.h>
++
+ #include <scsi/scsi_host.h>
+ #include <uapi/scsi/cxlflash_ioctl.h>
+ 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index c91e912..cd7dcc5 100644
+index cd7dcc5..6637116 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -3708,11 +3708,8 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	cfg->init_state = INIT_STATE_NONE;
- 	cfg->dev = pdev;
- 	cfg->cxl_fops = cxlflash_cxl_fops;
--
--	if (ddv->flags & CXLFLASH_OCXL_DEV)
--		cfg->ops = &cxlflash_ocxl_ops;
--	else
--		cfg->ops = &cxlflash_cxl_ops;
-+	cfg->ops = cxlflash_assign_ops(ddv);
-+	WARN_ON_ONCE(!cfg->ops);
+@@ -19,8 +19,6 @@
  
- 	/*
- 	 * Promoted LUNs move to the top of the LUN table. The rest stay on
+ #include <asm/unaligned.h>
+ 
+-#include <misc/cxl.h>
+-
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
+ #include <uapi/scsi/cxlflash_ioctl.h>
 diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
-index 6f1be62..ed4908e 100644
+index ed4908e..2a39778 100644
 --- a/drivers/scsi/cxlflash/main.h
 +++ b/drivers/scsi/cxlflash/main.h
-@@ -20,6 +20,8 @@
+@@ -107,10 +107,15 @@ cxlflash_assign_ops(struct dev_dependent_vals *ddv)
+ {
+ 	const struct cxlflash_backend_ops *ops = NULL;
+ 
++#ifdef CONFIG_OCXL
+ 	if (ddv->flags & CXLFLASH_OCXL_DEV)
+ 		ops = &cxlflash_ocxl_ops;
++#endif
++
++#ifdef CONFIG_CXL
+ 	if (!(ddv->flags & CXLFLASH_OCXL_DEV))
+ 		ops = &cxlflash_cxl_ops;
++#endif
+ 
+ 	return ops;
+ }
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 5ba6e62..e489d89 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -14,8 +14,9 @@
+ 
+ #include <linux/delay.h>
+ #include <linux/file.h>
++#include <linux/interrupt.h>
++#include <linux/pci.h>
+ #include <linux/syscalls.h>
+-#include <misc/cxl.h>
+ #include <asm/unaligned.h>
+ 
  #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
+diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
+index 5deef57..66e445a 100644
+--- a/drivers/scsi/cxlflash/vlun.c
++++ b/drivers/scsi/cxlflash/vlun.c
+@@ -12,8 +12,9 @@
+  * 2 of the License, or (at your option) any later version.
+  */
  
-+#include "backend.h"
-+
- #define CXLFLASH_NAME		"cxlflash"
- #define CXLFLASH_ADAPTER_NAME	"IBM POWER CXL Flash Adapter"
- #define CXLFLASH_MAX_ADAPTERS	32
-@@ -100,6 +102,19 @@ struct dev_dependent_vals {
- #define CXLFLASH_OCXL_DEV		0x0000000000000004ULL
- };
++#include <linux/interrupt.h>
++#include <linux/pci.h>
+ #include <linux/syscalls.h>
+-#include <misc/cxl.h>
+ #include <asm/unaligned.h>
+ #include <asm/bitsperlong.h>
  
-+static inline const struct cxlflash_backend_ops *
-+cxlflash_assign_ops(struct dev_dependent_vals *ddv)
-+{
-+	const struct cxlflash_backend_ops *ops = NULL;
-+
-+	if (ddv->flags & CXLFLASH_OCXL_DEV)
-+		ops = &cxlflash_ocxl_ops;
-+	if (!(ddv->flags & CXLFLASH_OCXL_DEV))
-+		ops = &cxlflash_cxl_ops;
-+
-+	return ops;
-+}
-+
- struct asyc_intr_info {
- 	u64 status;
- 	char *desc;
 -- 
 2.1.0
