@@ -1,33 +1,48 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] scsi: qlogicpti: Fix an error handling path in
- 'qpti_sbus_probe()'
-Date: Thu, 10 May 2018 15:45:46 +0300
-Message-ID: <20180510124546.gp5f66ugkivwfbhn@mwanda>
-References: <20180510114558.20769-1-christophe.jaillet@wanadoo.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180510114558.20769-1-christophe.jaillet@wanadoo.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 0/7] Miscellaneous patches and bug fixes
+Date: Fri, 11 May 2018 14:04:00 -0500
+Message-ID: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 10, 2018 at 01:45:58PM +0200, Christophe JAILLET wrote:
-> The 'free_irq()' call is not at the right place in the error handling path.
-> The changed order has been introduced in commit 3d4253d9afab
-> ("[SCSI] qlogicpti: Convert to new SBUS device framework.")
-> 
-> Fixes: 3d4253d9afab ("[SCSI] qlogicpti: Convert to new SBUS device framework.")
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
-> Please review carefully.  This patch is proposed because it triggers one of
-> my coccinelle scripts. I'm not 100% sure if correct.
+This patch series adds few improvements to the cxlflash driver and
+it also contains couple of bug fixes.
 
-Looks good to me.
+This patch series is intended for 4.18 and is bisectable.
 
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+Matthew R. Ochs (1):
+  cxlflash: Use local mutex for AFU serialization
 
-regards,
-dan carpenter
+Uma Krishnan (6):
+  cxlflash: Yield to active send threads
+  cxlflash: Limit the debug logs in the IO path
+  cxlflash: Acquire semaphore before invoking ioctl services
+  cxlflash: Add include guards to backend.h
+  cxlflash: Abstract hardware dependent assignments
+  cxlflash: Isolate external module dependencies
+
+ drivers/scsi/cxlflash/Kconfig     |  2 +-
+ drivers/scsi/cxlflash/Makefile    |  4 +++-
+ drivers/scsi/cxlflash/backend.h   |  5 +++++
+ drivers/scsi/cxlflash/common.h    |  1 +
+ drivers/scsi/cxlflash/lunmgt.c    |  4 +++-
+ drivers/scsi/cxlflash/main.c      | 21 +++++++++------------
+ drivers/scsi/cxlflash/main.h      | 20 ++++++++++++++++++++
+ drivers/scsi/cxlflash/superpipe.c |  9 ++++++++-
+ drivers/scsi/cxlflash/vlun.c      |  3 ++-
+ 9 files changed, 52 insertions(+), 17 deletions(-)
+
+-- 
+2.1.0
