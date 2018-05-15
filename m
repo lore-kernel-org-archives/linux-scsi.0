@@ -1,62 +1,88 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 11/40] ipv6/flowlabel: simplify pid namespace
-	lookup
-Date: Tue, 15 May 2018 16:56:43 +0200
-Message-ID: <20180515145643.GA661@lst.de>
-References: <20180425154827.32251-1-hch@lst.de>
-	<20180425154827.32251-12-hch@lst.de> <878t8y46sy.fsf@xmission.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.17-rc5
+Date: Tue, 15 May 2018 17:16:32 +0200
+Message-ID: <1526397392.17390.1.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <878t8y46sy.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: linux-rtc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alessandro Zummo <a.zummo-BfzFCNDTiLLj+vYz1yj4TQ@public.gmane.org>, Alexandre Belloni <alexandre.belloni-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-afs-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jiri Slaby <jslaby-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, May 05, 2018 at 07:37:33AM -0500, Eric W. Biederman wrote:
-> Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
-> 
-> > The shole seq_file sequence already operates under a single RCU lock pair,
-> > so move the pid namespace lookup into it, and stop grabbing a reference
-> > and remove all kinds of boilerplate code.
-> 
-> This is wrong.
-> 
-> Move task_active_pid_ns(current) from open to seq_start actually means
-> that the results if you pass this proc file between callers the results
-> will change.  So this breaks file descriptor passing.
-> 
-> Open is a bad place to access current.  In the middle of read/write is
-> broken.
-> 
-> 
-> In this particular instance looking up the pid namespace with
-> task_active_pid_ns was a personal brain fart.  What the code should be
-> doing (with an appropriate helper) is:
-> 
-> struct pid_namespace *pid_ns = inode->i_sb->s_fs_info;
-> 
-> Because each mount of proc is bound to a pid namespace.  Looking up the
-> pid namespace from the super_block is a much better way to go.
+Two small driver fixes: aacraid to fix an unknown IU type on task
+management functions which causes a firmware fault and vmw_pvscsi to
+change a return code to retry the operation instead of causing an
+immediate error
 
-What do you have in mind for the helper?  For now I've thrown it in
-opencoded into my working tree, but I'd be glad to add a helper.
+The patch is available here:
 
-struct pid_namespace *proc_pid_namespace(struct inode *inode)
-{
-	// maybe warn on for s_magic not on procfs??
-	return inode->i_sb->s_fs_info;
-}
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-?
+The short changelog is:
+
+Dave Carroll (1):
+      scsi: aacraid: Correct hba_send to include iu_type
+
+Jim Gill (1):
+      scsi: vmw-pvscsi: return DID_BUS_BUSY for adapter-initated aborts
+
+And the diffstat:
+
+ drivers/scsi/aacraid/commsup.c | 8 ++++----
+ drivers/scsi/vmw_pvscsi.c      | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/aacraid/commsup.c
+b/drivers/scsi/aacraid/commsup.c
+index 0156c9623c35..d62ddd63f4fe 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -724,6 +724,8 @@ int aac_hba_send(u8 command, struct fib *fibptr,
+fib_callback callback,
+ 	int wait;
+ 	unsigned long flags = 0;
+ 	unsigned long mflags = 0;
++	struct aac_hba_cmd_req *hbacmd = (struct aac_hba_cmd_req *)
++			fibptr->hw_fib_va;
+ 
+ 	fibptr->flags = (FIB_CONTEXT_FLAG |
+FIB_CONTEXT_FLAG_NATIVE_HBA);
+ 	if (callback) {
+@@ -734,11 +736,9 @@ int aac_hba_send(u8 command, struct fib *fibptr,
+fib_callback callback,
+ 		wait = 1;
+ 
+ 
+-	if (command == HBA_IU_TYPE_SCSI_CMD_REQ) {
+-		struct aac_hba_cmd_req *hbacmd =
+-			(struct aac_hba_cmd_req *)fibptr->hw_fib_va;
++	hbacmd->iu_type = command;
+ 
+-		hbacmd->iu_type = command;
++	if (command == HBA_IU_TYPE_SCSI_CMD_REQ) {
+ 		/* bit1 of request_id must be 0 */
+ 		hbacmd->request_id =
+ 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2)
++ 1);
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index c374e3b5c678..777e5f1e52d1 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -609,7 +609,7 @@ static void pvscsi_complete_request(struct
+pvscsi_adapter *adapter,
+ 			break;
+ 
+ 		case BTSTAT_ABORTQUEUE:
+-			cmd->result = (DID_ABORT << 16);
++			cmd->result = (DID_BUS_BUSY << 16);
+ 			break;
+ 
+ 		case BTSTAT_SCSIPARITY:
