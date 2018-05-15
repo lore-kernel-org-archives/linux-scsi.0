@@ -1,88 +1,526 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.17-rc5
-Date: Tue, 15 May 2018 17:16:32 +0200
-Message-ID: <1526397392.17390.1.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH 2/2] Remove percpu_ida
+Date: Tue, 15 May 2018 09:00:43 -0700
+Message-ID: <20180515160043.27044-3-willy@infradead.org>
+References: <20180515160043.27044-1-willy@infradead.org>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20180515160043.27044-1-willy@infradead.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, linux-usb@vger.kernel.org, kvm@vger.kernel.org, virtualization@lists.linux-foundation.org, netdev@vger.kernel.org, Juergen Gross <jgross@suse.com>, qla2xxx-upstream@qlogic.com, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Two small driver fixes: aacraid to fix an unknown IU type on task
-management functions which causes a firmware fault and vmw_pvscsi to
-change a return code to retry the operation instead of causing an
-immediate error
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-The patch is available here:
+With its one user gone, remove the library code.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Dave Carroll (1):
-      scsi: aacraid: Correct hba_send to include iu_type
-
-Jim Gill (1):
-      scsi: vmw-pvscsi: return DID_BUS_BUSY for adapter-initated aborts
-
-And the diffstat:
-
- drivers/scsi/aacraid/commsup.c | 8 ++++----
- drivers/scsi/vmw_pvscsi.c      | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-With full diff below.
-
-James
-
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
+ include/linux/percpu_ida.h |  83 --------
+ lib/Makefile               |   2 +-
+ lib/percpu_ida.c           | 391 -------------------------------------
+ 3 files changed, 1 insertion(+), 475 deletions(-)
+ delete mode 100644 include/linux/percpu_ida.h
+ delete mode 100644 lib/percpu_ida.c
 
-diff --git a/drivers/scsi/aacraid/commsup.c
-b/drivers/scsi/aacraid/commsup.c
-index 0156c9623c35..d62ddd63f4fe 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -724,6 +724,8 @@ int aac_hba_send(u8 command, struct fib *fibptr,
-fib_callback callback,
- 	int wait;
- 	unsigned long flags = 0;
- 	unsigned long mflags = 0;
-+	struct aac_hba_cmd_req *hbacmd = (struct aac_hba_cmd_req *)
-+			fibptr->hw_fib_va;
- 
- 	fibptr->flags = (FIB_CONTEXT_FLAG |
-FIB_CONTEXT_FLAG_NATIVE_HBA);
- 	if (callback) {
-@@ -734,11 +736,9 @@ int aac_hba_send(u8 command, struct fib *fibptr,
-fib_callback callback,
- 		wait = 1;
- 
- 
--	if (command == HBA_IU_TYPE_SCSI_CMD_REQ) {
--		struct aac_hba_cmd_req *hbacmd =
--			(struct aac_hba_cmd_req *)fibptr->hw_fib_va;
-+	hbacmd->iu_type = command;
- 
--		hbacmd->iu_type = command;
-+	if (command == HBA_IU_TYPE_SCSI_CMD_REQ) {
- 		/* bit1 of request_id must be 0 */
- 		hbacmd->request_id =
- 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2)
-+ 1);
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index c374e3b5c678..777e5f1e52d1 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -609,7 +609,7 @@ static void pvscsi_complete_request(struct
-pvscsi_adapter *adapter,
- 			break;
- 
- 		case BTSTAT_ABORTQUEUE:
--			cmd->result = (DID_ABORT << 16);
-+			cmd->result = (DID_BUS_BUSY << 16);
- 			break;
- 
- 		case BTSTAT_SCSIPARITY:
+diff --git a/include/linux/percpu_ida.h b/include/linux/percpu_ida.h
+deleted file mode 100644
+index 07d78e4653bc..000000000000
+--- a/include/linux/percpu_ida.h
++++ /dev/null
+@@ -1,83 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-#ifndef __PERCPU_IDA_H__
+-#define __PERCPU_IDA_H__
+-
+-#include <linux/types.h>
+-#include <linux/bitops.h>
+-#include <linux/init.h>
+-#include <linux/sched.h>
+-#include <linux/spinlock_types.h>
+-#include <linux/wait.h>
+-#include <linux/cpumask.h>
+-
+-struct percpu_ida_cpu;
+-
+-struct percpu_ida {
+-	/*
+-	 * number of tags available to be allocated, as passed to
+-	 * percpu_ida_init()
+-	 */
+-	unsigned			nr_tags;
+-	unsigned			percpu_max_size;
+-	unsigned			percpu_batch_size;
+-
+-	struct percpu_ida_cpu __percpu	*tag_cpu;
+-
+-	/*
+-	 * Bitmap of cpus that (may) have tags on their percpu freelists:
+-	 * steal_tags() uses this to decide when to steal tags, and which cpus
+-	 * to try stealing from.
+-	 *
+-	 * It's ok for a freelist to be empty when its bit is set - steal_tags()
+-	 * will just keep looking - but the bitmap _must_ be set whenever a
+-	 * percpu freelist does have tags.
+-	 */
+-	cpumask_t			cpus_have_tags;
+-
+-	struct {
+-		spinlock_t		lock;
+-		/*
+-		 * When we go to steal tags from another cpu (see steal_tags()),
+-		 * we want to pick a cpu at random. Cycling through them every
+-		 * time we steal is a bit easier and more or less equivalent:
+-		 */
+-		unsigned		cpu_last_stolen;
+-
+-		/* For sleeping on allocation failure */
+-		wait_queue_head_t	wait;
+-
+-		/*
+-		 * Global freelist - it's a stack where nr_free points to the
+-		 * top
+-		 */
+-		unsigned		nr_free;
+-		unsigned		*freelist;
+-	} ____cacheline_aligned_in_smp;
+-};
+-
+-/*
+- * Number of tags we move between the percpu freelist and the global freelist at
+- * a time
+- */
+-#define IDA_DEFAULT_PCPU_BATCH_MOVE	32U
+-/* Max size of percpu freelist, */
+-#define IDA_DEFAULT_PCPU_SIZE	((IDA_DEFAULT_PCPU_BATCH_MOVE * 3) / 2)
+-
+-int percpu_ida_alloc(struct percpu_ida *pool, int state);
+-void percpu_ida_free(struct percpu_ida *pool, unsigned tag);
+-
+-void percpu_ida_destroy(struct percpu_ida *pool);
+-int __percpu_ida_init(struct percpu_ida *pool, unsigned long nr_tags,
+-	unsigned long max_size, unsigned long batch_size);
+-static inline int percpu_ida_init(struct percpu_ida *pool, unsigned long nr_tags)
+-{
+-	return __percpu_ida_init(pool, nr_tags, IDA_DEFAULT_PCPU_SIZE,
+-		IDA_DEFAULT_PCPU_BATCH_MOVE);
+-}
+-
+-typedef int (*percpu_ida_cb)(unsigned, void *);
+-int percpu_ida_for_each_free(struct percpu_ida *pool, percpu_ida_cb fn,
+-	void *data);
+-
+-unsigned percpu_ida_free_tags(struct percpu_ida *pool, int cpu);
+-#endif /* __PERCPU_IDA_H__ */
+diff --git a/lib/Makefile b/lib/Makefile
+index ce20696d5a92..7626dece1d27 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -39,7 +39,7 @@ obj-y += bcd.o div64.o sort.o parser.o debug_locks.o random32.o \
+ 	 bust_spinlocks.o kasprintf.o bitmap.o scatterlist.o \
+ 	 gcd.o lcm.o list_sort.o uuid.o flex_array.o iov_iter.o clz_ctz.o \
+ 	 bsearch.o find_bit.o llist.o memweight.o kfifo.o \
+-	 percpu-refcount.o percpu_ida.o rhashtable.o reciprocal_div.o \
++	 percpu-refcount.o rhashtable.o reciprocal_div.o \
+ 	 once.o refcount.o usercopy.o errseq.o bucket_locks.o
+ obj-$(CONFIG_STRING_SELFTEST) += test_string.o
+ obj-y += string_helpers.o
+diff --git a/lib/percpu_ida.c b/lib/percpu_ida.c
+deleted file mode 100644
+index 6016f1deb1f5..000000000000
+--- a/lib/percpu_ida.c
++++ /dev/null
+@@ -1,391 +0,0 @@
+-/*
+- * Percpu IDA library
+- *
+- * Copyright (C) 2013 Datera, Inc. Kent Overstreet
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation; either version 2, or (at
+- * your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-
+-#include <linux/mm.h>
+-#include <linux/bitmap.h>
+-#include <linux/bitops.h>
+-#include <linux/bug.h>
+-#include <linux/err.h>
+-#include <linux/export.h>
+-#include <linux/init.h>
+-#include <linux/kernel.h>
+-#include <linux/percpu.h>
+-#include <linux/sched/signal.h>
+-#include <linux/string.h>
+-#include <linux/spinlock.h>
+-#include <linux/percpu_ida.h>
+-
+-struct percpu_ida_cpu {
+-	/*
+-	 * Even though this is percpu, we need a lock for tag stealing by remote
+-	 * CPUs:
+-	 */
+-	spinlock_t			lock;
+-
+-	/* nr_free/freelist form a stack of free IDs */
+-	unsigned			nr_free;
+-	unsigned			freelist[];
+-};
+-
+-static inline void move_tags(unsigned *dst, unsigned *dst_nr,
+-			     unsigned *src, unsigned *src_nr,
+-			     unsigned nr)
+-{
+-	*src_nr -= nr;
+-	memcpy(dst + *dst_nr, src + *src_nr, sizeof(unsigned) * nr);
+-	*dst_nr += nr;
+-}
+-
+-/*
+- * Try to steal tags from a remote cpu's percpu freelist.
+- *
+- * We first check how many percpu freelists have tags
+- *
+- * Then we iterate through the cpus until we find some tags - we don't attempt
+- * to find the "best" cpu to steal from, to keep cacheline bouncing to a
+- * minimum.
+- */
+-static inline void steal_tags(struct percpu_ida *pool,
+-			      struct percpu_ida_cpu *tags)
+-{
+-	unsigned cpus_have_tags, cpu = pool->cpu_last_stolen;
+-	struct percpu_ida_cpu *remote;
+-
+-	for (cpus_have_tags = cpumask_weight(&pool->cpus_have_tags);
+-	     cpus_have_tags; cpus_have_tags--) {
+-		cpu = cpumask_next(cpu, &pool->cpus_have_tags);
+-
+-		if (cpu >= nr_cpu_ids) {
+-			cpu = cpumask_first(&pool->cpus_have_tags);
+-			if (cpu >= nr_cpu_ids)
+-				BUG();
+-		}
+-
+-		pool->cpu_last_stolen = cpu;
+-		remote = per_cpu_ptr(pool->tag_cpu, cpu);
+-
+-		cpumask_clear_cpu(cpu, &pool->cpus_have_tags);
+-
+-		if (remote == tags)
+-			continue;
+-
+-		spin_lock(&remote->lock);
+-
+-		if (remote->nr_free) {
+-			memcpy(tags->freelist,
+-			       remote->freelist,
+-			       sizeof(unsigned) * remote->nr_free);
+-
+-			tags->nr_free = remote->nr_free;
+-			remote->nr_free = 0;
+-		}
+-
+-		spin_unlock(&remote->lock);
+-
+-		if (tags->nr_free)
+-			break;
+-	}
+-}
+-
+-/*
+- * Pop up to IDA_PCPU_BATCH_MOVE IDs off the global freelist, and push them onto
+- * our percpu freelist:
+- */
+-static inline void alloc_global_tags(struct percpu_ida *pool,
+-				     struct percpu_ida_cpu *tags)
+-{
+-	move_tags(tags->freelist, &tags->nr_free,
+-		  pool->freelist, &pool->nr_free,
+-		  min(pool->nr_free, pool->percpu_batch_size));
+-}
+-
+-static inline unsigned alloc_local_tag(struct percpu_ida_cpu *tags)
+-{
+-	int tag = -ENOSPC;
+-
+-	spin_lock(&tags->lock);
+-	if (tags->nr_free)
+-		tag = tags->freelist[--tags->nr_free];
+-	spin_unlock(&tags->lock);
+-
+-	return tag;
+-}
+-
+-/**
+- * percpu_ida_alloc - allocate a tag
+- * @pool: pool to allocate from
+- * @state: task state for prepare_to_wait
+- *
+- * Returns a tag - an integer in the range [0..nr_tags) (passed to
+- * tag_pool_init()), or otherwise -ENOSPC on allocation failure.
+- *
+- * Safe to be called from interrupt context (assuming it isn't passed
+- * TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE, of course).
+- *
+- * @gfp indicates whether or not to wait until a free id is available (it's not
+- * used for internal memory allocations); thus if passed __GFP_RECLAIM we may sleep
+- * however long it takes until another thread frees an id (same semantics as a
+- * mempool).
+- *
+- * Will not fail if passed TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE.
+- */
+-int percpu_ida_alloc(struct percpu_ida *pool, int state)
+-{
+-	DEFINE_WAIT(wait);
+-	struct percpu_ida_cpu *tags;
+-	unsigned long flags;
+-	int tag;
+-
+-	local_irq_save(flags);
+-	tags = this_cpu_ptr(pool->tag_cpu);
+-
+-	/* Fastpath */
+-	tag = alloc_local_tag(tags);
+-	if (likely(tag >= 0)) {
+-		local_irq_restore(flags);
+-		return tag;
+-	}
+-
+-	while (1) {
+-		spin_lock(&pool->lock);
+-
+-		/*
+-		 * prepare_to_wait() must come before steal_tags(), in case
+-		 * percpu_ida_free() on another cpu flips a bit in
+-		 * cpus_have_tags
+-		 *
+-		 * global lock held and irqs disabled, don't need percpu lock
+-		 */
+-		if (state != TASK_RUNNING)
+-			prepare_to_wait(&pool->wait, &wait, state);
+-
+-		if (!tags->nr_free)
+-			alloc_global_tags(pool, tags);
+-		if (!tags->nr_free)
+-			steal_tags(pool, tags);
+-
+-		if (tags->nr_free) {
+-			tag = tags->freelist[--tags->nr_free];
+-			if (tags->nr_free)
+-				cpumask_set_cpu(smp_processor_id(),
+-						&pool->cpus_have_tags);
+-		}
+-
+-		spin_unlock(&pool->lock);
+-		local_irq_restore(flags);
+-
+-		if (tag >= 0 || state == TASK_RUNNING)
+-			break;
+-
+-		if (signal_pending_state(state, current)) {
+-			tag = -ERESTARTSYS;
+-			break;
+-		}
+-
+-		schedule();
+-
+-		local_irq_save(flags);
+-		tags = this_cpu_ptr(pool->tag_cpu);
+-	}
+-	if (state != TASK_RUNNING)
+-		finish_wait(&pool->wait, &wait);
+-
+-	return tag;
+-}
+-EXPORT_SYMBOL_GPL(percpu_ida_alloc);
+-
+-/**
+- * percpu_ida_free - free a tag
+- * @pool: pool @tag was allocated from
+- * @tag: a tag previously allocated with percpu_ida_alloc()
+- *
+- * Safe to be called from interrupt context.
+- */
+-void percpu_ida_free(struct percpu_ida *pool, unsigned tag)
+-{
+-	struct percpu_ida_cpu *tags;
+-	unsigned long flags;
+-	unsigned nr_free;
+-
+-	BUG_ON(tag >= pool->nr_tags);
+-
+-	local_irq_save(flags);
+-	tags = this_cpu_ptr(pool->tag_cpu);
+-
+-	spin_lock(&tags->lock);
+-	tags->freelist[tags->nr_free++] = tag;
+-
+-	nr_free = tags->nr_free;
+-	spin_unlock(&tags->lock);
+-
+-	if (nr_free == 1) {
+-		cpumask_set_cpu(smp_processor_id(),
+-				&pool->cpus_have_tags);
+-		wake_up(&pool->wait);
+-	}
+-
+-	if (nr_free == pool->percpu_max_size) {
+-		spin_lock(&pool->lock);
+-
+-		/*
+-		 * Global lock held and irqs disabled, don't need percpu
+-		 * lock
+-		 */
+-		if (tags->nr_free == pool->percpu_max_size) {
+-			move_tags(pool->freelist, &pool->nr_free,
+-				  tags->freelist, &tags->nr_free,
+-				  pool->percpu_batch_size);
+-
+-			wake_up(&pool->wait);
+-		}
+-		spin_unlock(&pool->lock);
+-	}
+-
+-	local_irq_restore(flags);
+-}
+-EXPORT_SYMBOL_GPL(percpu_ida_free);
+-
+-/**
+- * percpu_ida_destroy - release a tag pool's resources
+- * @pool: pool to free
+- *
+- * Frees the resources allocated by percpu_ida_init().
+- */
+-void percpu_ida_destroy(struct percpu_ida *pool)
+-{
+-	free_percpu(pool->tag_cpu);
+-	free_pages((unsigned long) pool->freelist,
+-		   get_order(pool->nr_tags * sizeof(unsigned)));
+-}
+-EXPORT_SYMBOL_GPL(percpu_ida_destroy);
+-
+-/**
+- * percpu_ida_init - initialize a percpu tag pool
+- * @pool: pool to initialize
+- * @nr_tags: number of tags that will be available for allocation
+- *
+- * Initializes @pool so that it can be used to allocate tags - integers in the
+- * range [0, nr_tags). Typically, they'll be used by driver code to refer to a
+- * preallocated array of tag structures.
+- *
+- * Allocation is percpu, but sharding is limited by nr_tags - for best
+- * performance, the workload should not span more cpus than nr_tags / 128.
+- */
+-int __percpu_ida_init(struct percpu_ida *pool, unsigned long nr_tags,
+-	unsigned long max_size, unsigned long batch_size)
+-{
+-	unsigned i, cpu, order;
+-
+-	memset(pool, 0, sizeof(*pool));
+-
+-	init_waitqueue_head(&pool->wait);
+-	spin_lock_init(&pool->lock);
+-	pool->nr_tags = nr_tags;
+-	pool->percpu_max_size = max_size;
+-	pool->percpu_batch_size = batch_size;
+-
+-	/* Guard against overflow */
+-	if (nr_tags > (unsigned) INT_MAX + 1) {
+-		pr_err("percpu_ida_init(): nr_tags too large\n");
+-		return -EINVAL;
+-	}
+-
+-	order = get_order(nr_tags * sizeof(unsigned));
+-	pool->freelist = (void *) __get_free_pages(GFP_KERNEL, order);
+-	if (!pool->freelist)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < nr_tags; i++)
+-		pool->freelist[i] = i;
+-
+-	pool->nr_free = nr_tags;
+-
+-	pool->tag_cpu = __alloc_percpu(sizeof(struct percpu_ida_cpu) +
+-				       pool->percpu_max_size * sizeof(unsigned),
+-				       sizeof(unsigned));
+-	if (!pool->tag_cpu)
+-		goto err;
+-
+-	for_each_possible_cpu(cpu)
+-		spin_lock_init(&per_cpu_ptr(pool->tag_cpu, cpu)->lock);
+-
+-	return 0;
+-err:
+-	percpu_ida_destroy(pool);
+-	return -ENOMEM;
+-}
+-EXPORT_SYMBOL_GPL(__percpu_ida_init);
+-
+-/**
+- * percpu_ida_for_each_free - iterate free ids of a pool
+- * @pool: pool to iterate
+- * @fn: interate callback function
+- * @data: parameter for @fn
+- *
+- * Note, this doesn't guarantee to iterate all free ids restrictly. Some free
+- * ids might be missed, some might be iterated duplicated, and some might
+- * be iterated and not free soon.
+- */
+-int percpu_ida_for_each_free(struct percpu_ida *pool, percpu_ida_cb fn,
+-	void *data)
+-{
+-	unsigned long flags;
+-	struct percpu_ida_cpu *remote;
+-	unsigned cpu, i, err = 0;
+-
+-	local_irq_save(flags);
+-	for_each_possible_cpu(cpu) {
+-		remote = per_cpu_ptr(pool->tag_cpu, cpu);
+-		spin_lock(&remote->lock);
+-		for (i = 0; i < remote->nr_free; i++) {
+-			err = fn(remote->freelist[i], data);
+-			if (err)
+-				break;
+-		}
+-		spin_unlock(&remote->lock);
+-		if (err)
+-			goto out;
+-	}
+-
+-	spin_lock(&pool->lock);
+-	for (i = 0; i < pool->nr_free; i++) {
+-		err = fn(pool->freelist[i], data);
+-		if (err)
+-			break;
+-	}
+-	spin_unlock(&pool->lock);
+-out:
+-	local_irq_restore(flags);
+-	return err;
+-}
+-EXPORT_SYMBOL_GPL(percpu_ida_for_each_free);
+-
+-/**
+- * percpu_ida_free_tags - return free tags number of a specific cpu or global pool
+- * @pool: pool related
+- * @cpu: specific cpu or global pool if @cpu == nr_cpu_ids
+- *
+- * Note: this just returns a snapshot of free tags number.
+- */
+-unsigned percpu_ida_free_tags(struct percpu_ida *pool, int cpu)
+-{
+-	struct percpu_ida_cpu *remote;
+-	if (cpu == nr_cpu_ids)
+-		return pool->nr_free;
+-	remote = per_cpu_ptr(pool->tag_cpu, cpu);
+-	return remote->nr_free;
+-}
+-EXPORT_SYMBOL_GPL(percpu_ida_free_tags);
+-- 
+2.17.0
