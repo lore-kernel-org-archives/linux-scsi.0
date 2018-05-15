@@ -1,24 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: esas2r: fix spelling mistake: "requestss" -> "requests"
-Date: Mon, 14 May 2018 22:40:53 -0400
-Message-ID: <yq1k1s5myiy.fsf@oracle.com>
-References: <20180508215435.20190-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: clean up generated file scsi_devinfo_tbl.c
+Date: Mon, 14 May 2018 22:48:38 -0400
+Message-ID: <yq17eo5my61.fsf@oracle.com>
+References: <6e64c815-43dd-3945-6c58-66b1e0533403@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180508215435.20190-1-colin.king@canonical.com> (Colin King's
-        message of "Tue, 8 May 2018 22:54:35 +0100")
+In-Reply-To: <6e64c815-43dd-3945-6c58-66b1e0533403@infradead.org> (Randy
+        Dunlap's message of "Sun, 13 May 2018 17:10:52 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Bradley Grove <linuxdrivers@attotech.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, LKML <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Randy,
 
-> Trivial fix to spelling mistake in esas2r_debug message
+> "make clean" should remove the generated file "scsi_devinfo_tbl.c", so
+> list it in the clean-files variable so that the file gets cleaned up.
 
-Applied to 4.18/scsi-queue. Thanks!
+Applied to 4.17/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
