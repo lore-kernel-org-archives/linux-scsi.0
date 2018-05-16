@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 39/42] ide: remove ide_driver_proc_write
-Date: Wed, 16 May 2018 11:43:43 +0200
-Message-ID: <20180516094346.20506-40-hch@lst.de>
+Subject: [PATCH 32/42] neigh: switch to proc_create_seq_data
+Date: Wed, 16 May 2018 11:43:36 +0200
+Message-ID: <20180516094346.20506-33-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,77 +21,90 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-The driver proc file hasn't been writeable for a long time, so this is
-just dead code.
+And use proc private data directly instead of doing a detour
+through seq->private.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: "Eric W. Biederman" <ebiederm@xmission.com>
 ---
- drivers/ide/ide-proc.c | 46 ------------------------------------------
- 1 file changed, 46 deletions(-)
+ net/core/neighbour.c | 31 ++++++-------------------------
+ 1 file changed, 6 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
-index 863db44c7916..b3b8b8822d6a 100644
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -528,58 +528,12 @@ static int ide_driver_proc_open(struct inode *inode, struct file *file)
- 	return single_open(file, ide_driver_proc_show, PDE_DATA(inode));
- }
+diff --git a/net/core/neighbour.c b/net/core/neighbour.c
+index ce519861be59..1fb43bff417d 100644
+--- a/net/core/neighbour.c
++++ b/net/core/neighbour.c
+@@ -59,7 +59,7 @@ static int pneigh_ifdown_and_unlock(struct neigh_table *tbl,
+ 				    struct net_device *dev);
  
--static int ide_replace_subdriver(ide_drive_t *drive, const char *driver)
--{
--	struct device *dev = &drive->gendev;
--	int ret = 1;
--	int err;
--
--	device_release_driver(dev);
--	/* FIXME: device can still be in use by previous driver */
--	strlcpy(drive->driver_req, driver, sizeof(drive->driver_req));
--	err = device_attach(dev);
--	if (err < 0)
--		printk(KERN_WARNING "IDE: %s: device_attach error: %d\n",
--			__func__, err);
--	drive->driver_req[0] = 0;
--	if (dev->driver == NULL) {
--		err = device_attach(dev);
--		if (err < 0)
--			printk(KERN_WARNING
--				"IDE: %s: device_attach(2) error: %d\n",
--				__func__, err);
--	}
--	if (dev->driver && !strcmp(dev->driver->name, driver))
--		ret = 0;
--
--	return ret;
--}
--
--static ssize_t ide_driver_proc_write(struct file *file, const char __user *buffer,
--				     size_t count, loff_t *pos)
--{
--	ide_drive_t	*drive = PDE_DATA(file_inode(file));
--	char name[32];
--
--	if (!capable(CAP_SYS_ADMIN))
--		return -EACCES;
--	if (count > 31)
--		count = 31;
--	if (copy_from_user(name, buffer, count))
--		return -EFAULT;
--	name[count] = '\0';
--	if (ide_replace_subdriver(drive, name))
--		return -EINVAL;
--	return count;
--}
--
- static const struct file_operations ide_driver_proc_fops = {
- 	.owner		= THIS_MODULE,
- 	.open		= ide_driver_proc_open,
- 	.read		= seq_read,
- 	.llseek		= seq_lseek,
- 	.release	= single_release,
--	.write		= ide_driver_proc_write,
+ #ifdef CONFIG_PROC_FS
+-static const struct file_operations neigh_stat_seq_fops;
++static const struct seq_operations neigh_stat_seq_ops;
+ #endif
+ 
+ /*
+@@ -1558,8 +1558,8 @@ void neigh_table_init(int index, struct neigh_table *tbl)
+ 		panic("cannot create neighbour cache statistics");
+ 
+ #ifdef CONFIG_PROC_FS
+-	if (!proc_create_data(tbl->id, 0, init_net.proc_net_stat,
+-			      &neigh_stat_seq_fops, tbl))
++	if (!proc_create_seq_data(tbl->id, 0, init_net.proc_net_stat,
++			      &neigh_stat_seq_ops, tbl))
+ 		panic("cannot create neighbour proc dir entry");
+ #endif
+ 
+@@ -2786,7 +2786,7 @@ EXPORT_SYMBOL(neigh_seq_stop);
+ 
+ static void *neigh_stat_seq_start(struct seq_file *seq, loff_t *pos)
+ {
+-	struct neigh_table *tbl = seq->private;
++	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
+ 	int cpu;
+ 
+ 	if (*pos == 0)
+@@ -2803,7 +2803,7 @@ static void *neigh_stat_seq_start(struct seq_file *seq, loff_t *pos)
+ 
+ static void *neigh_stat_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ {
+-	struct neigh_table *tbl = seq->private;
++	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
+ 	int cpu;
+ 
+ 	for (cpu = *pos; cpu < nr_cpu_ids; ++cpu) {
+@@ -2822,7 +2822,7 @@ static void neigh_stat_seq_stop(struct seq_file *seq, void *v)
+ 
+ static int neigh_stat_seq_show(struct seq_file *seq, void *v)
+ {
+-	struct neigh_table *tbl = seq->private;
++	struct neigh_table *tbl = PDE_DATA(file_inode(seq->file));
+ 	struct neigh_statistics *st = v;
+ 
+ 	if (v == SEQ_START_TOKEN) {
+@@ -2861,25 +2861,6 @@ static const struct seq_operations neigh_stat_seq_ops = {
+ 	.stop	= neigh_stat_seq_stop,
+ 	.show	= neigh_stat_seq_show,
  };
+-
+-static int neigh_stat_seq_open(struct inode *inode, struct file *file)
+-{
+-	int ret = seq_open(file, &neigh_stat_seq_ops);
+-
+-	if (!ret) {
+-		struct seq_file *sf = file->private_data;
+-		sf->private = PDE_DATA(inode);
+-	}
+-	return ret;
+-};
+-
+-static const struct file_operations neigh_stat_seq_fops = {
+-	.open 	 = neigh_stat_seq_open,
+-	.read	 = seq_read,
+-	.llseek	 = seq_lseek,
+-	.release = seq_release,
+-};
+-
+ #endif /* CONFIG_PROC_FS */
  
- static int ide_media_proc_show(struct seq_file *m, void *v)
+ static inline size_t neigh_nlmsg_size(void)
 -- 
 2.17.0
