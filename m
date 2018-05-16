@@ -1,308 +1,133 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/42] ipv{4,6}/tcp: simplify procfs registration
-Date: Wed, 16 May 2018 11:43:14 +0200
-Message-ID: <20180516094346.20506-11-hch@lst.de>
+Subject: [PATCH 04/42] proc: simplify proc_register calling conventions
+Date: Wed, 16 May 2018 11:43:08 +0200
+Message-ID: <20180516094346.20506-5-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180516094346.20506-1-hch@lst.de>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid most of the afinfo indirections and just call the proc helpers
-directly.
+Return registered entry on success, return NULL on failure and free the
+passed in entry.  Also expose it in internal.h as we'll start using it
+in proc_net.c soon.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/net/tcp.h   | 11 ++----
- net/ipv4/tcp_ipv4.c | 85 +++++++++++++++++----------------------------
- net/ipv6/tcp_ipv6.c | 27 +++++++++-----
- 3 files changed, 53 insertions(+), 70 deletions(-)
+ fs/proc/generic.c  | 44 ++++++++++++++++++--------------------------
+ fs/proc/internal.h |  2 ++
+ 2 files changed, 20 insertions(+), 26 deletions(-)
 
-diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 9c9b3768b350..51dc7a26a2fa 100644
---- a/include/net/tcp.h
-+++ b/include/net/tcp.h
-@@ -1747,27 +1747,22 @@ enum tcp_seq_states {
- 	TCP_SEQ_STATE_ESTABLISHED,
+diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+index 2078e70e1595..bd8480ff0d35 100644
+--- a/fs/proc/generic.c
++++ b/fs/proc/generic.c
+@@ -346,13 +346,12 @@ static const struct inode_operations proc_dir_inode_operations = {
+ 	.setattr	= proc_notify_change,
  };
  
--int tcp_seq_open(struct inode *inode, struct file *file);
-+void *tcp_seq_start(struct seq_file *seq, loff_t *pos);
-+void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos);
-+void tcp_seq_stop(struct seq_file *seq, void *v);
- 
- struct tcp_seq_afinfo {
--	char				*name;
- 	sa_family_t			family;
--	const struct file_operations	*seq_fops;
--	struct seq_operations		seq_ops;
- };
- 
- struct tcp_iter_state {
- 	struct seq_net_private	p;
--	sa_family_t		family;
- 	enum tcp_seq_states	state;
- 	struct sock		*syn_wait_sk;
- 	int			bucket, offset, sbucket, num;
- 	loff_t			last_pos;
- };
- 
--int tcp_proc_register(struct net *net, struct tcp_seq_afinfo *afinfo);
--void tcp_proc_unregister(struct net *net, struct tcp_seq_afinfo *afinfo);
--
- extern struct request_sock_ops tcp_request_sock_ops;
- extern struct request_sock_ops tcp6_request_sock_ops;
- 
-diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
-index f70586b50838..645f259d0972 100644
---- a/net/ipv4/tcp_ipv4.c
-+++ b/net/ipv4/tcp_ipv4.c
-@@ -1961,6 +1961,7 @@ EXPORT_SYMBOL(tcp_v4_destroy_sock);
-  */
- static void *listening_get_next(struct seq_file *seq, void *cur)
+-static int proc_register(struct proc_dir_entry * dir, struct proc_dir_entry * dp)
++/* returns the registered entry, or frees dp and returns NULL on failure */
++struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
++		struct proc_dir_entry *dp)
  {
-+	struct tcp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
- 	struct tcp_iter_state *st = seq->private;
- 	struct net *net = seq_file_net(seq);
- 	struct inet_listen_hashbucket *ilb;
-@@ -1983,7 +1984,7 @@ static void *listening_get_next(struct seq_file *seq, void *cur)
- 	sk_for_each_from(sk) {
- 		if (!net_eq(sock_net(sk), net))
- 			continue;
--		if (sk->sk_family == st->family)
-+		if (sk->sk_family == afinfo->family)
- 			return sk;
+-	int ret;
+-
+-	ret = proc_alloc_inum(&dp->low_ino);
+-	if (ret)
+-		return ret;
++	if (proc_alloc_inum(&dp->low_ino))
++		goto out_free_entry;
+ 
+ 	write_lock(&proc_subdir_lock);
+ 	dp->parent = dir;
+@@ -360,12 +359,16 @@ static int proc_register(struct proc_dir_entry * dir, struct proc_dir_entry * dp
+ 		WARN(1, "proc_dir_entry '%s/%s' already registered\n",
+ 		     dir->name, dp->name);
+ 		write_unlock(&proc_subdir_lock);
+-		proc_free_inum(dp->low_ino);
+-		return -EEXIST;
++		goto out_free_inum;
  	}
- 	spin_unlock(&ilb->lock);
-@@ -2020,6 +2021,7 @@ static inline bool empty_bucket(const struct tcp_iter_state *st)
-  */
- static void *established_get_first(struct seq_file *seq)
- {
-+	struct tcp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
- 	struct tcp_iter_state *st = seq->private;
- 	struct net *net = seq_file_net(seq);
- 	void *rc = NULL;
-@@ -2036,7 +2038,7 @@ static void *established_get_first(struct seq_file *seq)
+ 	write_unlock(&proc_subdir_lock);
  
- 		spin_lock_bh(lock);
- 		sk_nulls_for_each(sk, node, &tcp_hashinfo.ehash[st->bucket].chain) {
--			if (sk->sk_family != st->family ||
-+			if (sk->sk_family != afinfo->family ||
- 			    !net_eq(sock_net(sk), net)) {
- 				continue;
- 			}
-@@ -2051,6 +2053,7 @@ static void *established_get_first(struct seq_file *seq)
- 
- static void *established_get_next(struct seq_file *seq, void *cur)
- {
-+	struct tcp_seq_afinfo *afinfo = PDE_DATA(file_inode(seq->file));
- 	struct sock *sk = cur;
- 	struct hlist_nulls_node *node;
- 	struct tcp_iter_state *st = seq->private;
-@@ -2062,7 +2065,8 @@ static void *established_get_next(struct seq_file *seq, void *cur)
- 	sk = sk_nulls_next(sk);
- 
- 	sk_nulls_for_each_from(sk, node) {
--		if (sk->sk_family == st->family && net_eq(sock_net(sk), net))
-+		if (sk->sk_family == afinfo->family &&
-+		    net_eq(sock_net(sk), net))
- 			return sk;
- 	}
- 
-@@ -2135,7 +2139,7 @@ static void *tcp_seek_last_pos(struct seq_file *seq)
- 	return rc;
- }
- 
--static void *tcp_seq_start(struct seq_file *seq, loff_t *pos)
-+void *tcp_seq_start(struct seq_file *seq, loff_t *pos)
- {
- 	struct tcp_iter_state *st = seq->private;
- 	void *rc;
-@@ -2156,8 +2160,9 @@ static void *tcp_seq_start(struct seq_file *seq, loff_t *pos)
- 	st->last_pos = *pos;
- 	return rc;
- }
-+EXPORT_SYMBOL(tcp_seq_start);
- 
--static void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- {
- 	struct tcp_iter_state *st = seq->private;
- 	void *rc = NULL;
-@@ -2186,8 +2191,9 @@ static void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- 	st->last_pos = *pos;
- 	return rc;
- }
-+EXPORT_SYMBOL(tcp_seq_next);
- 
--static void tcp_seq_stop(struct seq_file *seq, void *v)
-+void tcp_seq_stop(struct seq_file *seq, void *v)
- {
- 	struct tcp_iter_state *st = seq->private;
- 
-@@ -2202,47 +2208,7 @@ static void tcp_seq_stop(struct seq_file *seq, void *v)
- 		break;
- 	}
- }
--
--int tcp_seq_open(struct inode *inode, struct file *file)
--{
--	struct tcp_seq_afinfo *afinfo = PDE_DATA(inode);
--	struct tcp_iter_state *s;
--	int err;
--
--	err = seq_open_net(inode, file, &afinfo->seq_ops,
--			  sizeof(struct tcp_iter_state));
--	if (err < 0)
--		return err;
--
--	s = ((struct seq_file *)file->private_data)->private;
--	s->family		= afinfo->family;
--	s->last_pos		= 0;
 -	return 0;
--}
--EXPORT_SYMBOL(tcp_seq_open);
--
--int tcp_proc_register(struct net *net, struct tcp_seq_afinfo *afinfo)
--{
--	int rc = 0;
--	struct proc_dir_entry *p;
--
--	afinfo->seq_ops.start		= tcp_seq_start;
--	afinfo->seq_ops.next		= tcp_seq_next;
--	afinfo->seq_ops.stop		= tcp_seq_stop;
--
--	p = proc_create_data(afinfo->name, 0444, net->proc_net,
--			     afinfo->seq_fops, afinfo);
--	if (!p)
--		rc = -ENOMEM;
--	return rc;
--}
--EXPORT_SYMBOL(tcp_proc_register);
--
--void tcp_proc_unregister(struct net *net, struct tcp_seq_afinfo *afinfo)
--{
--	remove_proc_entry(afinfo->name, net->proc_net);
--}
--EXPORT_SYMBOL(tcp_proc_unregister);
-+EXPORT_SYMBOL(tcp_seq_stop);
- 
- static void get_openreq4(const struct request_sock *req,
- 			 struct seq_file *f, int i)
-@@ -2377,6 +2343,19 @@ static int tcp4_seq_show(struct seq_file *seq, void *v)
- 	return 0;
++	return dp;
++out_free_inum:
++	proc_free_inum(dp->low_ino);
++out_free_entry:
++	pde_free(dp);
++	return NULL;
  }
  
-+static const struct seq_operations tcp4_seq_ops = {
-+	.show		= tcp4_seq_show,
-+	.start		= tcp_seq_start,
-+	.next		= tcp_seq_next,
-+	.stop		= tcp_seq_stop,
-+};
-+
-+static int tcp_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open_net(inode, file, &tcp4_seq_ops,
-+			  sizeof(struct tcp_iter_state));
-+}
-+
- static const struct file_operations tcp_afinfo_seq_fops = {
- 	.open    = tcp_seq_open,
- 	.read    = seq_read,
-@@ -2385,22 +2364,20 @@ static const struct file_operations tcp_afinfo_seq_fops = {
- };
- 
- static struct tcp_seq_afinfo tcp4_seq_afinfo = {
--	.name		= "tcp",
- 	.family		= AF_INET,
--	.seq_fops	= &tcp_afinfo_seq_fops,
--	.seq_ops	= {
--		.show		= tcp4_seq_show,
--	},
- };
- 
- static int __net_init tcp4_proc_init_net(struct net *net)
- {
--	return tcp_proc_register(net, &tcp4_seq_afinfo);
-+	if (!proc_create_data("tcp", 0444, net->proc_net,
-+			&tcp_afinfo_seq_fops, &tcp4_seq_afinfo))
-+		return -ENOMEM;
-+	return 0;
+ static struct proc_dir_entry *__proc_create(struct proc_dir_entry **parent,
+@@ -443,10 +446,7 @@ struct proc_dir_entry *proc_symlink(const char *name,
+ 		if (ent->data) {
+ 			strcpy((char*)ent->data,dest);
+ 			ent->proc_iops = &proc_link_inode_operations;
+-			if (proc_register(parent, ent) < 0) {
+-				pde_free(ent);
+-				ent = NULL;
+-			}
++			ent = proc_register(parent, ent);
+ 		} else {
+ 			pde_free(ent);
+ 			ent = NULL;
+@@ -470,11 +470,9 @@ struct proc_dir_entry *proc_mkdir_data(const char *name, umode_t mode,
+ 		ent->proc_fops = &proc_dir_operations;
+ 		ent->proc_iops = &proc_dir_inode_operations;
+ 		parent->nlink++;
+-		if (proc_register(parent, ent) < 0) {
+-			pde_free(ent);
++		ent = proc_register(parent, ent);
++		if (!ent)
+ 			parent->nlink--;
+-			ent = NULL;
+-		}
+ 	}
+ 	return ent;
  }
- 
- static void __net_exit tcp4_proc_exit_net(struct net *net)
- {
--	tcp_proc_unregister(net, &tcp4_seq_afinfo);
-+	remove_proc_entry("tcp", net->proc_net);
+@@ -505,11 +503,9 @@ struct proc_dir_entry *proc_create_mount_point(const char *name)
+ 		ent->proc_fops = NULL;
+ 		ent->proc_iops = NULL;
+ 		parent->nlink++;
+-		if (proc_register(parent, ent) < 0) {
+-			pde_free(ent);
++		ent = proc_register(parent, ent);
++		if (!ent)
+ 			parent->nlink--;
+-			ent = NULL;
+-		}
+ 	}
+ 	return ent;
  }
- 
- static struct pernet_operations tcp4_net_ops = {
-diff --git a/net/ipv6/tcp_ipv6.c b/net/ipv6/tcp_ipv6.c
-index 6d664d83cd16..c0329bb1692f 100644
---- a/net/ipv6/tcp_ipv6.c
-+++ b/net/ipv6/tcp_ipv6.c
-@@ -1909,30 +1909,41 @@ static int tcp6_seq_show(struct seq_file *seq, void *v)
- 	return 0;
+@@ -539,11 +535,7 @@ struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
+ 	pde->proc_fops = proc_fops;
+ 	pde->data = data;
+ 	pde->proc_iops = &proc_file_inode_operations;
+-	if (proc_register(parent, pde) < 0)
+-		goto out_free;
+-	return pde;
+-out_free:
+-	pde_free(pde);
++	return proc_register(parent, pde);
+ out:
+ 	return NULL;
  }
- 
-+static const struct seq_operations tcp6_seq_ops = {
-+	.show		= tcp6_seq_show,
-+	.start		= tcp_seq_start,
-+	.next		= tcp_seq_next,
-+	.stop		= tcp_seq_stop,
-+};
-+
-+static int tcp6_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open_net(inode, file, &tcp6_seq_ops,
-+			  sizeof(struct tcp_iter_state));
-+}
-+
- static const struct file_operations tcp6_afinfo_seq_fops = {
--	.open    = tcp_seq_open,
-+	.open    = tcp6_seq_open,
- 	.read    = seq_read,
- 	.llseek  = seq_lseek,
- 	.release = seq_release_net
- };
- 
- static struct tcp_seq_afinfo tcp6_seq_afinfo = {
--	.name		= "tcp6",
- 	.family		= AF_INET6,
--	.seq_fops	= &tcp6_afinfo_seq_fops,
--	.seq_ops	= {
--		.show		= tcp6_seq_show,
--	},
- };
- 
- int __net_init tcp6_proc_init(struct net *net)
- {
--	return tcp_proc_register(net, &tcp6_seq_afinfo);
-+	if (!proc_create_data("tcp6", 0444, net->proc_net,
-+			&tcp6_afinfo_seq_fops, &tcp6_seq_afinfo))
-+		return -ENOMEM;
-+	return 0;
- }
- 
- void tcp6_proc_exit(struct net *net)
- {
--	tcp_proc_unregister(net, &tcp6_seq_afinfo);
-+	remove_proc_entry("tcp6", net->proc_net);
- }
- #endif
- 
+diff --git a/fs/proc/internal.h b/fs/proc/internal.h
+index 0f1692e63cb6..488e67490312 100644
+--- a/fs/proc/internal.h
++++ b/fs/proc/internal.h
+@@ -162,6 +162,8 @@ extern bool proc_fill_cache(struct file *, struct dir_context *, const char *, i
+ /*
+  * generic.c
+  */
++struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
++		struct proc_dir_entry *dp);
+ extern struct dentry *proc_lookup(struct inode *, struct dentry *, unsigned int);
+ struct dentry *proc_lookup_de(struct inode *, struct dentry *, struct proc_dir_entry *);
+ extern int proc_readdir(struct file *, struct dir_context *);
 -- 
 2.17.0
