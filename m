@@ -1,52 +1,79 @@
 From: Alim Akhtar <alim.akhtar@gmail.com>
-Subject: Re: [PATCH 0/4] Add required changes to ufshcd to support exynos ufs hci
-Date: Wed, 16 May 2018 10:00:23 +0530
-Message-ID: <CAGOxZ52VVFcXkO+y842js3WiRA7U2TLi8tZ_kz=71Q4V5t480A@mail.gmail.com>
-References: <CGME20180506102636epcas2p3432b71e5c867f6cfec16cf2a8c74b0e2@epcas2p3.samsung.com>
- <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
+Subject: Re: [RFC PATCH V2] scsi: ufs: Add specific callback for setting DMA mask
+Date: Wed, 16 May 2018 10:01:01 +0530
+Message-ID: <CAGOxZ52yZ8Xqype7AVsH43DWOA2byh2kW3SGsfHyHtzqSH6QPw@mail.gmail.com>
+References: <CGME20180308111416epcas1p4f9f1dbb36e8567121c6236ac0e9b4e03@epcas1p4.samsung.com>
+ <1520507013-2410-1-git-send-email-alim.akhtar@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
+In-Reply-To: <1520507013-2410-1-git-send-email-alim.akhtar@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vivek.gautam@codeaurora.org, subhashj@codeaurora.org, vinayak holikatti <vinholikatti@gmail.com>, Olof Johansson <olof@lixom.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vinayak holikatti <vinholikatti@gmail.com>, subhashj@codeaurora.org, devicetree@vger.kernel.org, Shaik Ameer Basha <shaik.ameer@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All,
+Ping !!!
 
-Any thought on this patch set?
-
-
-On Sun, May 6, 2018 at 3:44 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
-> Hi All
+On Thu, Mar 8, 2018 at 4:33 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
+> Currently DMA mask for UFS HCI is set by reading CAP register's
+> [64AS] bit. Some HCI controller like Exynos support 36-bit bus address.
+> This works perfectly fine with DMA mask set as 64 in case there is no
+> IOMMU attached to HCI.
+> In case if HCI is behind an IOMMU, setting DMA mask as 64 bit won't
+> work as HCI has only 36bit addressing and SMMU has created mapping of
+> 64 bit and as the device truncates the address, its mapping will not
+> be found by iommu.
+> To resolve such issues, let the variant driver sets its own DMA mask.
 >
-> These patches are part of a larger patch series [1] which attempts upstreaming
-> EXYNOS UFS driver support. There was not much activities after v5 of that
-> series. In between I saw there were other teams in Samsung tried upstreaming
-> the same, but that has not really gone anywhere.
-> I have taken this task again and here is another attempt to upstream exynos-ufs
-> driver support. I have divided the patches into two series, one which adds
-> required infra in the ufshcd core needed by exynos-ufs driver and other part
-> will have actual exynos-ufs driver. Splitting this has a advantage of less
-> reviewing over head.
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 3 +++
+>  drivers/scsi/ufs/ufshcd.h | 2 ++
+>  2 files changed, 5 insertions(+)
 >
-> I am floating these as a new patch set.
+> I am not sure if there are other ways available to handle such cases.
+> The IOMMU I am talking about is arm-smmu and it DT binding does not
+> give much idea about handling such cases.
+> Have tested this patch with HCI controller with IOMMU attached.
 >
-> [1] https://www.spinics.net/lists/linux-scsi/msg90292.html
+> Changes Since V1:
+>         - Fixed build issue as reported by Kbuild test robot.
 >
-> These patches are based on mainline v4.17-rc3.
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index a355d98..9a1374e 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7781,6 +7781,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+>   */
+>  static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+>  {
+> +       if (hba->vops && hba->vops->set_dma_mask)
+> +               return hba->vops->set_dma_mask(hba);
+> +
+>         if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
+>                 if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+>                         return 0;
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 1332e54..89c6dae 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -297,6 +297,7 @@ struct ufs_pwr_mode_info {
+>   * @resume: called during host controller PM callback
+>   * @dbg_register_dump: used to dump controller debug information
+>   * @phy_initialization: used to initialize phys
+> + * @set_dma_mask: used to set variant specific DMA mask
+>   */
+>  struct ufs_hba_variant_ops {
+>         const char *name;
+> @@ -325,6 +326,7 @@ struct ufs_hba_variant_ops {
+>         int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+>         void    (*dbg_register_dump)(struct ufs_hba *hba);
+>         int     (*phy_initialization)(struct ufs_hba *);
+> +       int     (*set_dma_mask)(struct ufs_hba *hba);
+>  };
 >
-> Alim Akhtar (4):
->   scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
->   scsi: ufs: add quirk not to allow reset of interrupt aggregation
->   scsi: ufs: add quirk to enable host controller without hce
->   scsi: ufs: make ufshcd_config_pwr_mode of non-static func
->
->  drivers/scsi/ufs/ufshcd.c | 104 ++++++++++++++++++++++++++++++++++++++++++----
->  drivers/scsi/ufs/ufshcd.h |  18 ++++++++
->  2 files changed, 114 insertions(+), 8 deletions(-)
->
+>  /* clock gating state  */
 > --
 > 2.7.4
 >
