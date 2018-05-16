@@ -1,136 +1,43 @@
-From: "liwei (CM)" <liwei213@huawei.com>
-Subject: =?gb2312?B?tPC4tDogW1BBVENIIHY5IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczog?=
- =?gb2312?Q?add_document_for_hisi-ufs?=
-Date: Wed, 16 May 2018 07:18:41 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA629CE@DGGEMM506-MBX.china.huawei.com>
-References: <20180417140814.38098-1-liwei213@huawei.com>
- <20180417140814.38098-3-liwei213@huawei.com>
- <20180424125827.k2dgeu6uon75wzni@rob-hp-laptop>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH 4/4] scsi: ufs: make ufshcd_config_pwr_mode of non-static
+ func
+Date: Wed, 16 May 2018 07:51:04 +0000
+Message-ID: <DM5PR04MB1085F180B84B88B4D10FE83EFC920@DM5PR04MB1085.namprd04.prod.outlook.com>
+References: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
+        <CGME20180506102643epcas2p24ed80d7ede859db73c2595724d9c2414@epcas2p2.samsung.com>
+ <1525601658-31989-5-git-send-email-alim.akhtar@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Language: zh-CN
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "liwei (CM)" <liwei213@huawei.com>, Rob Herring <robh@kernel.org>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>, "yamada.masahiro@socionext.com" <yamada.masahiro@socionext.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "khilman@baylibre.com" <khilman@baylibre.com>, zangleigang <zangleigang@hisilicon.com>, "krzk@kernel.org" <krzk@kernel.org>, "treding@nvidia.com" <treding@nvidia.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "Fengbaopeng (kevin,
- Kirin Solution Dept)" <fengbaopeng@hisilicon.com>, "gregory.clement@free-electrons.com" <gregory.clement@free-electrons.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, thomas.petazzoni@fr
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1525601658-31989-5-git-send-email-alim.akhtar@samsung.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alim Akhtar <alim.akhtar@samsung.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "olof@lixom.net" <olof@lixom.net>
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIFJvYiAmIEFybmQNCg0KU29ycnkgdG8gYm90aGVyIHlvdSwgZG8geW91IGhhdmUgYW55IG90
-aGVyIHF1ZXN0aW9ucyBvciBjb21tZW50cz8gSWYgbm90LCB3ZSB3aWxsIGNvbnRpbnVlIHRvIGlz
-c3VlIHBhdGNoIHYxMC4NCg0KTG9vayBmb3J3YXJkIHRvIHlvdXIgcmVwbHksIHRoYW5rIHlvdSEN
-Cg0KDQotLS0tLdPKvP7Urbz+LS0tLS0NCreivP7IyzogbGl3ZWkgKENNKSANCreiy83KsbzkOiAy
-MDE4xOo01MIyNMjVIDIxOjU0DQrK1bz+yMs6ICdSb2IgSGVycmluZycNCrOty806IG1hcmsucnV0
-bGFuZEBhcm0uY29tOyBjYXRhbGluLm1hcmluYXNAYXJtLmNvbTsgd2lsbC5kZWFjb25AYXJtLmNv
-bTsgdmluaG9saWthdHRpQGdtYWlsLmNvbTsgamVqYkBsaW51eC52bmV0LmlibS5jb207IG1hcnRp
-bi5wZXRlcnNlbkBvcmFjbGUuY29tOyBraGlsbWFuQGJheWxpYnJlLmNvbTsgYXJuZEBhcm5kYi5k
-ZTsgZ3JlZ29yeS5jbGVtZW50QGZyZWUtZWxlY3Ryb25zLmNvbTsgdGhvbWFzLnBldGF6em9uaUBm
-cmVlLWVsZWN0cm9ucy5jb207IHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tOyByaWt1LnZv
-aXBpb0BsaW5hcm8ub3JnOyB0cmVkaW5nQG52aWRpYS5jb207IGtyemtAa2VybmVsLm9yZzsgZGV2
-aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxp
-bnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5l
-bC5vcmc7IHphbmdsZWlnYW5nOyBHZW5namlhbmZlbmc7IGd1b2RvbmcueHVAbGluYXJvLm9yZw0K
-1vfM4jogtPC4tDogW1BBVENIIHY5IDIvNV0gZHQtYmluZGluZ3M6IHNjc2k6IHVmczogYWRkIGRv
-Y3VtZW50IGZvciBoaXNpLXVmcw0KDQpIaSwgUm9iDQoNClRoYW5rcyBmb3IgeW91ciBwYXRpZW5j
-ZS4NCg0KSGksIEFybmQNCg0KRnJvbSBSb2IncyBzdWdnZXN0aW9uLCB3ZSBoYXZlIHRvIGxpc3Qg
-dGhlIHByb3BlcnRpZXMgbm9kZSBpbiB1ZnMtaGlzaS50eHQgYmluZ2luZ3MgZXZlbiBpZiBkb2N1
-bWVudGVkIGluIHRoZSBjb21tb24gYmluZGluZy4NCg0KLS0tLS3Tyrz+1K28/i0tLS0tDQq3orz+
-yMs6IFJvYiBIZXJyaW5nIFttYWlsdG86cm9iaEBrZXJuZWwub3JnXSANCreiy83KsbzkOiAyMDE4
-xOo01MIyNMjVIDIwOjU4DQrK1bz+yMs6IGxpd2VpIChDTSkNCrOty806IG1hcmsucnV0bGFuZEBh
-cm0uY29tOyBjYXRhbGluLm1hcmluYXNAYXJtLmNvbTsgd2lsbC5kZWFjb25AYXJtLmNvbTsgdmlu
-aG9saWthdHRpQGdtYWlsLmNvbTsgamVqYkBsaW51eC52bmV0LmlibS5jb207IG1hcnRpbi5wZXRl
-cnNlbkBvcmFjbGUuY29tOyBraGlsbWFuQGJheWxpYnJlLmNvbTsgYXJuZEBhcm5kYi5kZTsgZ3Jl
-Z29yeS5jbGVtZW50QGZyZWUtZWxlY3Ryb25zLmNvbTsgdGhvbWFzLnBldGF6em9uaUBmcmVlLWVs
-ZWN0cm9ucy5jb207IHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tOyByaWt1LnZvaXBpb0Bs
-aW5hcm8ub3JnOyB0cmVkaW5nQG52aWRpYS5jb207IGtyemtAa2VybmVsLm9yZzsgZGV2aWNldHJl
-ZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFy
-bS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7
-IHphbmdsZWlnYW5nOyBHZW5namlhbmZlbmc7IGd1b2RvbmcueHVAbGluYXJvLm9yZw0K1vfM4jog
-UmU6IFtQQVRDSCB2OSAyLzVdIGR0LWJpbmRpbmdzOiBzY3NpOiB1ZnM6IGFkZCBkb2N1bWVudCBm
-b3IgaGlzaS11ZnMNCg0KT24gVHVlLCBBcHIgMTcsIDIwMTggYXQgMTA6MDg6MTFQTSArMDgwMCwg
-TGkgV2VpIHdyb3RlOg0KPiBhZGQgdWZzIG5vZGUgZG9jdW1lbnQgZm9yIEhpc2lsaWNvbi4NCj4g
-DQo+IFNpZ25lZC1vZmYtYnk6IExpIFdlaSA8bGl3ZWkyMTNAaHVhd2VpLmNvbT4NCj4gLS0tDQo+
-ICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dCB8IDI5
-ICsrKysrKysrKysrKysrKysrKysrKysNCj4gIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91
-ZnNoY2QtcGx0ZnJtLnR4dCAgICAgIHwgMTAgKysrKystLS0NCj4gIDIgZmlsZXMgY2hhbmdlZCwg
-MzYgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBE
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPiANCj4g
-ZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhp
-c2kudHh0IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlzaS50
-eHQNCj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gaW5kZXggMDAwMDAwMDAwMDAwLi5kNDlhYjdk
-OGYzMWQNCj4gLS0tIC9kZXYvbnVsbA0KPiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUv
-YmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPiBAQCAtMCwwICsxLDI5IEBADQo+ICsqIEhpc2ls
-aWNvbiBVbml2ZXJzYWwgRmxhc2ggU3RvcmFnZSAoVUZTKSBIb3N0IENvbnRyb2xsZXINCj4gKw0K
-PiArVUZTIG5vZGVzIGFyZSBkZWZpbmVkIHRvIGRlc2NyaWJlIG9uLWNoaXAgVUZTIGhhcmR3YXJl
-IG1hY3JvLg0KPiArRWFjaCBVRlMgSG9zdCBDb250cm9sbGVyIHNob3VsZCBoYXZlIGl0cyBvd24g
-bm9kZS4NCj4gKw0KPiArUmVxdWlyZWQgcHJvcGVydGllczoNCj4gKy0gY29tcGF0aWJsZSAgICAg
-ICAgOiBjb21wYXRpYmxlIGxpc3QsIGNvbnRhaW5zIG9uZSBvZiB0aGUgZm9sbG93aW5nIC0NCj4g
-KwkJCQkJImhpc2lsaWNvbixoaTM2NjAtdWZzIiwgImplZGVjLHVmcy0xLjEiIGZvciBoaXNpIHVm
-cw0KPiArCQkJCQlob3N0IGNvbnRyb2xsZXIgcHJlc2VudCBvbiBIaTM2eHggY2hpcHNldC4NCj4g
-Ky0gcmVnICAgICAgICAgICAgICAgOiBzaG91bGQgY29udGFpbiBVRlMgcmVnaXN0ZXIgYWRkcmVz
-cyBzcGFjZSAmIFVGUyBTWVMgQ1RSTCByZWdpc3RlciBhZGRyZXNzLA0KPiArLSBpbnRlcnJ1cHQt
-cGFyZW50ICA6IGludGVycnVwdCBkZXZpY2UNCj4gKy0gaW50ZXJydXB0cyAgICAgICAgOiBpbnRl
-cnJ1cHQgbnVtYmVyDQo+ICstIHJlc2V0cyAgICAgICAgICAgIDogcmVzZXQgbm9kZSByZWdpc3Rl
-ciwgdGhlICJhcnN0IiBjb3JyZXNwb25kcyB0byByZXNldCB0aGUgQVBCL0FYSSBidXMuDQoNCmFy
-c3QgYmVsb25ncyBpbiByZXNldC1uYW1lcy4NCg0KT0ssIEkgd2lsbCBmaXggaXQgaW4gbmV4dCBw
-YXRjaDsNCg0KPiArLSByZXNldC1uYW1lcyAgICAgICA6IGRlc2NyaWJlIHJlc2V0IG5vZGUgcmVn
-aXN0ZXINCg0KV2hhdCBoYXBwZW5lZCB0byBjbG9ja3M/IFlvdSBzdGlsbCBoYXZlIHRvIGxpc3Qg
-d2hpY2ggb25lcyBhcHBseSBldmVuIGlmIA0KZG9jdW1lbnRlZCBpbiB0aGUgY29tbW9uIGJpbmRp
-bmcuDQoNCk9LLCBJIHdpbGwgZml4IGl0IGluIG5leHQgcGF0Y2g7DQoNCj4gKw0KPiArRXhhbXBs
-ZToNCj4gKw0KPiArCXVmczogdWZzQGZmM2IwMDAwIHsNCj4gKwkJY29tcGF0aWJsZSA9ICJoaXNp
-bGljb24saGkzNjYwLXVmcyIsICJqZWRlYyx1ZnMtMS4xIjsNCj4gKwkJLyogMDogSENJIHN0YW5k
-YXJkICovDQo+ICsJCS8qIDE6IFVGUyBTWVMgQ1RSTCAqLw0KPiArCQlyZWcgPSA8MHgwIDB4ZmYz
-YjAwMDAgMHgwIDB4MTAwMD4sDQo+ICsJCQk8MHgwIDB4ZmYzYjEwMDAgMHgwIDB4MTAwMD47DQo+
-ICsJCWludGVycnVwdC1wYXJlbnQgPSA8JmdpYz47DQo+ICsJCWludGVycnVwdHMgPSA8R0lDX1NQ
-SSAyNzggSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+ICsJCS8qIG9mZnNldDogMHg4NDsgYml0OiA3
-ICAqLw0KPiArCQlyZXNldHMgPSA8JmNyZ19yc3QgMHg4NCA3PjsNCj4gKwkJcmVzZXQtbmFtZXMg
-PSAiYXJzdCI7DQo+ICsJfTsNCj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJl
-ZS9iaW5kaW5ncy91ZnMvdWZzaGNkLXBsdGZybS50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0DQo+IGluZGV4IGMzOWRmZWY3NmExOC4u
-YWRjZmI3OWY2M2Y1IDEwMDY0NA0KPiAtLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
-ZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0DQo+ICsrKyBiL0RvY3VtZW50YXRpb24vZGV2aWNl
-dHJlZS9iaW5kaW5ncy91ZnMvdWZzaGNkLXBsdGZybS50eHQNCj4gQEAgLTQxLDYgKzQxLDggQEAg
-T3B0aW9uYWwgcHJvcGVydGllczoNCj4gIC1sYW5lcy1wZXItZGlyZWN0aW9uCTogbnVtYmVyIG9m
-IGxhbmVzIGF2YWlsYWJsZSBwZXIgZGlyZWN0aW9uIC0gZWl0aGVyIDEgb3IgMi4NCj4gIAkJCSAg
-Tm90ZSB0aGF0IGl0IGlzIGFzc3VtZSBzYW1lIG51bWJlciBvZiBsYW5lcyBpcyB1c2VkIGJvdGgN
-Cj4gIAkJCSAgZGlyZWN0aW9ucyBhdCBvbmNlLiBJZiBub3Qgc3BlY2lmaWVkLCBkZWZhdWx0IGlz
-IDIgbGFuZXMgcGVyIGRpcmVjdGlvbi4NCj4gKy0gcmVzZXRzICAgICAgICAgICAgOiByZXNldCBu
-b2RlIHJlZ2lzdGVyLCB0aGUgInJzdCIgY29ycmVzcG9uZHMgdG8gcmVzZXQgdGhlIHdob2xlIFVG
-UyBJUC4NCj4gKy0gcmVzZXQtbmFtZXMgICAgICAgOiBkZXNjcmliZSByZXNldCBub2RlIHJlZ2lz
-dGVyDQoNCkRvZXMgeW91ciBjb250cm9sbGVyIGhhdmUgMSBvciAyIHJlc2V0cz8gVGhlcmUncyBu
-byBwb2ludCBpbiBhZGRpbmcgdGhpcyANCmhlcmUgaWYgaXQgZG9lc24ndCBhcHBseSB0byB5b3Vy
-IGNvbnRyb2xsZXIuDQoNClRoZXJlIGFyZSAyIHJlc2V0IGluIG91ciBzb2MgaW5pdCwgdGhlICJy
-c3QiIGNvcnJlc3BvbmRzIHRvIHJlc2V0IHRoZSB3aG9sZSBVRlMgSVAsIGFuZCAiIGFyc3QgIiBv
-bmx5IHJlc2V0IHRoZSBBUEIvQVhJIGJ1cy4NCkRpc2N1c3NlZCB3aXRoIG91ciBzb2MgY29sbGVh
-Z3VlcyB0aGF0ICJhcnN0IiBpcyBhc3NlcnQgYnkgZGVmYXVsdCBhbmQgbmVlZHMgdG8gZGVhc3Nl
-cnQsYnV0IGl0IGRvbmUgaW4gYm9vdGxvYWRlcixzbyB3aWxsIHJlbW92ZSAnYXJzdCcgaW4gbmV4
-dCBwYXRjaC4NCg0KQWJvdXQgdGhlICdyZXNldCcgcHJvcGVydHmjrGl0IHNlZW1zIHRoYXQgQXJu
-ZCBCZXJnbWFubiBoYXMgZGlmZmVyZW50IHN1Z2dlc3Rpb26jrGhlIHN1Z2dlc3RlZCB0aGF0IGFk
-ZCAncnN0JyB0byB1ZnNoY2QtcGx0ZnJtIGJlY2F1c2UgaXQgc2VlbXMgY29tbW9uLg0KQnV0IGl0
-IGxvb2tzIGxpa2Ugb25seSBvdXIgc29jIGluaXQgbmVlZHMgaXQuIFdoYXQncyB5b3VyIG9waW5p
-b24/IERvZXMgaXQgc3RpbGwgbmVlZHMgYWRkIHRvIGNvbW1vbiBiaW5kaW5ncz8NCg0KDQo+ICBO
-b3RlOiBJZiBhYm92ZSBwcm9wZXJ0aWVzIGFyZSBub3QgZGVmaW5lZCBpdCBjYW4gYmUgYXNzdW1l
-ZCB0aGF0IHRoZSBzdXBwbHkNCj4gIHJlZ3VsYXRvcnMgb3IgY2xvY2tzIGFyZSBhbHdheXMgb24u
-DQo+IEBAIC02MSw5ICs2MywxMSBAQCBFeGFtcGxlOg0KPiAgCQl2Y2NxLW1heC1taWNyb2FtcCA9
-IDIwMDAwMDsNCj4gIAkJdmNjcTItbWF4LW1pY3JvYW1wID0gMjAwMDAwOw0KPiAgDQo+IC0JCWNs
-b2NrcyA9IDwmY29yZSAwPiwgPCZyZWYgMD4sIDwmaWZhY2UgMD47DQo+IC0JCWNsb2NrLW5hbWVz
-ID0gImNvcmVfY2xrIiwgInJlZl9jbGsiLCAiaWZhY2VfY2xrIjsNCj4gLQkJZnJlcS10YWJsZS1o
-eiA9IDwxMDAwMDAwMDAgMjAwMDAwMDAwPiwgPDAgMD4sIDwwIDA+Ow0KPiArCQljbG9ja3MgPSA8
-JmNvcmUgMD4sIDwmcmVmIDA+LCA8JnBoeSAwPiwgPCZpZmFjZSAwPjsNCj4gKwkJY2xvY2stbmFt
-ZXMgPSAiY29yZV9jbGsiLCAicmVmX2NsayIsICJwaHlfY2xrIiwgImlmYWNlX2NsayI7DQo+ICsJ
-CWZyZXEtdGFibGUtaHogPSA8MTAwMDAwMDAwIDIwMDAwMDAwMD4sIDwwIDA+LCA8MCAwPiwgPDAg
-MD47DQo+ICsJCXJlc2V0cyA9IDwmcmVzZXQgMCAxPjsNCj4gKwkJcmVzZXQtbmFtZXMgPSAicnN0
-IjsNCj4gIAkJcGh5cyA9IDwmdWZzcGh5MT47DQo+ICAJCXBoeS1uYW1lcyA9ICJ1ZnNwaHkiOw0K
-PiAgCX07DQo+IC0tIA0KPiAyLjE1LjANCj4gDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1h
-cm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org <linux-scsi-owner@vger.kernel.org>
+> On Behalf Of Alim Akhtar
+> Sent: Sunday, May 06, 2018 1:14 PM
+> To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com;
+> vivek.gautam@codeaurora.org; subhashj@codeaurora.org;
+> vinholikatti@gmail.com; olof@lixom.net; alim.akhtar@samsung.com
+> Subject: [PATCH 4/4] scsi: ufs: make ufshcd_config_pwr_mode of non-static
+> func
+>=20
+> This makes ufshcd_config_pwr_mode non-static so that other vendors like
+> exynos can use the same.
+>=20
+> Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+Acked-by: Avri Altman <avri.altman@wdc.com>
+
+Might be also useful exporting an API for all uic commands?
+
+Thanks,
+Avri=20
