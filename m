@@ -1,7 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/42] ipv{4,6}/ping: simplify proc file creation
-Date: Wed, 16 May 2018 11:43:15 +0200
-Message-ID: <20180516094346.20506-12-hch@lst.de>
+Subject: [PATCH 12/42] =?UTF-8?q?ipv{4,
+ 6}/raw:=20simplify=20=D1=95eq=5Ffil?= =?UTF-8?q?e=20code?=
+Date: Wed, 16 May 2018 11:43:16 +0200
+Message-ID: <20180516094346.20506-13-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,178 +22,158 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Remove the pointless ping_seq_afinfo indirection and make the code look
-like most other protocols.
+Pass the hashtable to the proc private data instead of copying
+it into the per-file private data.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/net/ping.h | 11 ----------
- net/ipv4/ping.c    | 50 +++++++++++++---------------------------------
- net/ipv6/ping.c    | 35 +++++++++++++++++++++-----------
- 3 files changed, 37 insertions(+), 59 deletions(-)
+ include/net/raw.h |  4 ----
+ net/ipv4/raw.c    | 36 ++++++++++++------------------------
+ net/ipv6/raw.c    |  6 ++++--
+ 3 files changed, 16 insertions(+), 30 deletions(-)
 
-diff --git a/include/net/ping.h b/include/net/ping.h
-index 4cd90d6b5c25..fd080e043a6e 100644
---- a/include/net/ping.h
-+++ b/include/net/ping.h
-@@ -83,20 +83,9 @@ int  ping_queue_rcv_skb(struct sock *sk, struct sk_buff *skb);
- bool ping_rcv(struct sk_buff *skb);
- 
- #ifdef CONFIG_PROC_FS
--struct ping_seq_afinfo {
--	char				*name;
--	sa_family_t			family;
--	const struct file_operations	*seq_fops;
--	const struct seq_operations	seq_ops;
--};
--
--extern const struct file_operations ping_seq_fops;
--
- void *ping_seq_start(struct seq_file *seq, loff_t *pos, sa_family_t family);
- void *ping_seq_next(struct seq_file *seq, void *v, loff_t *pos);
- void ping_seq_stop(struct seq_file *seq, void *v);
--int ping_proc_register(struct net *net, struct ping_seq_afinfo *afinfo);
--void ping_proc_unregister(struct net *net, struct ping_seq_afinfo *afinfo);
- 
- int __init ping_proc_init(void);
- void ping_proc_exit(void);
-diff --git a/net/ipv4/ping.c b/net/ipv4/ping.c
-index 56a010622f70..4d21c24dba78 100644
---- a/net/ipv4/ping.c
-+++ b/net/ipv4/ping.c
-@@ -1150,58 +1150,36 @@ static int ping_v4_seq_show(struct seq_file *seq, void *v)
- 	return 0;
- }
- 
--static int ping_seq_open(struct inode *inode, struct file *file)
-+static const struct seq_operations ping_v4_seq_ops = {
-+	.start		= ping_v4_seq_start,
-+	.show		= ping_v4_seq_show,
-+	.next		= ping_seq_next,
-+	.stop		= ping_seq_stop,
-+};
-+
-+static int ping_v4_seq_open(struct inode *inode, struct file *file)
- {
--	struct ping_seq_afinfo *afinfo = PDE_DATA(inode);
--	return seq_open_net(inode, file, &afinfo->seq_ops,
-+	return seq_open_net(inode, file, &ping_v4_seq_ops,
- 			   sizeof(struct ping_iter_state));
- }
- 
--const struct file_operations ping_seq_fops = {
--	.open		= ping_seq_open,
-+const struct file_operations ping_v4_seq_fops = {
-+	.open		= ping_v4_seq_open,
- 	.read		= seq_read,
- 	.llseek		= seq_lseek,
- 	.release	= seq_release_net,
+diff --git a/include/net/raw.h b/include/net/raw.h
+index 99d26d0c4a19..9c9fa98a91a4 100644
+--- a/include/net/raw.h
++++ b/include/net/raw.h
+@@ -48,7 +48,6 @@ void raw_proc_exit(void);
+ struct raw_iter_state {
+ 	struct seq_net_private p;
+ 	int bucket;
+-	struct raw_hashinfo *h;
  };
--EXPORT_SYMBOL_GPL(ping_seq_fops);
--
--static struct ping_seq_afinfo ping_v4_seq_afinfo = {
--	.name		= "icmp",
--	.family		= AF_INET,
--	.seq_fops	= &ping_seq_fops,
--	.seq_ops	= {
--		.start		= ping_v4_seq_start,
--		.show		= ping_v4_seq_show,
--		.next		= ping_seq_next,
--		.stop		= ping_seq_stop,
--	},
--};
  
--int ping_proc_register(struct net *net, struct ping_seq_afinfo *afinfo)
-+static int __net_init ping_v4_proc_init_net(struct net *net)
+ static inline struct raw_iter_state *raw_seq_private(struct seq_file *seq)
+@@ -58,9 +57,6 @@ static inline struct raw_iter_state *raw_seq_private(struct seq_file *seq)
+ void *raw_seq_start(struct seq_file *seq, loff_t *pos);
+ void *raw_seq_next(struct seq_file *seq, void *v, loff_t *pos);
+ void raw_seq_stop(struct seq_file *seq, void *v);
+-int raw_seq_open(struct inode *ino, struct file *file,
+-		 struct raw_hashinfo *h, const struct seq_operations *ops);
+-
+ #endif
+ 
+ int raw_hash_sk(struct sock *sk);
+diff --git a/net/ipv4/raw.c b/net/ipv4/raw.c
+index 1b4d3355624a..ae57962b31e3 100644
+--- a/net/ipv4/raw.c
++++ b/net/ipv4/raw.c
+@@ -1003,11 +1003,12 @@ struct proto raw_prot = {
+ static struct sock *raw_get_first(struct seq_file *seq)
  {
--	struct proc_dir_entry *p;
--	p = proc_create_data(afinfo->name, 0444, net->proc_net,
--			     afinfo->seq_fops, afinfo);
--	if (!p)
-+	if (!proc_create("icmp", 0444, net->proc_net, &ping_v4_seq_fops))
+ 	struct sock *sk;
++	struct raw_hashinfo *h = PDE_DATA(file_inode(seq->file));
+ 	struct raw_iter_state *state = raw_seq_private(seq);
+ 
+ 	for (state->bucket = 0; state->bucket < RAW_HTABLE_SIZE;
+ 			++state->bucket) {
+-		sk_for_each(sk, &state->h->ht[state->bucket])
++		sk_for_each(sk, &h->ht[state->bucket])
+ 			if (sock_net(sk) == seq_file_net(seq))
+ 				goto found;
+ 	}
+@@ -1018,6 +1019,7 @@ static struct sock *raw_get_first(struct seq_file *seq)
+ 
+ static struct sock *raw_get_next(struct seq_file *seq, struct sock *sk)
+ {
++	struct raw_hashinfo *h = PDE_DATA(file_inode(seq->file));
+ 	struct raw_iter_state *state = raw_seq_private(seq);
+ 
+ 	do {
+@@ -1027,7 +1029,7 @@ static struct sock *raw_get_next(struct seq_file *seq, struct sock *sk)
+ 	} while (sk && sock_net(sk) != seq_file_net(seq));
+ 
+ 	if (!sk && ++state->bucket < RAW_HTABLE_SIZE) {
+-		sk = sk_head(&state->h->ht[state->bucket]);
++		sk = sk_head(&h->ht[state->bucket]);
+ 		goto try_again;
+ 	}
+ 	return sk;
+@@ -1045,9 +1047,9 @@ static struct sock *raw_get_idx(struct seq_file *seq, loff_t pos)
+ 
+ void *raw_seq_start(struct seq_file *seq, loff_t *pos)
+ {
+-	struct raw_iter_state *state = raw_seq_private(seq);
++	struct raw_hashinfo *h = PDE_DATA(file_inode(seq->file));
+ 
+-	read_lock(&state->h->lock);
++	read_lock(&h->lock);
+ 	return *pos ? raw_get_idx(seq, *pos - 1) : SEQ_START_TOKEN;
+ }
+ EXPORT_SYMBOL_GPL(raw_seq_start);
+@@ -1067,9 +1069,9 @@ EXPORT_SYMBOL_GPL(raw_seq_next);
+ 
+ void raw_seq_stop(struct seq_file *seq, void *v)
+ {
+-	struct raw_iter_state *state = raw_seq_private(seq);
++	struct raw_hashinfo *h = PDE_DATA(file_inode(seq->file));
+ 
+-	read_unlock(&state->h->lock);
++	read_unlock(&h->lock);
+ }
+ EXPORT_SYMBOL_GPL(raw_seq_stop);
+ 
+@@ -1110,25 +1112,10 @@ static const struct seq_operations raw_seq_ops = {
+ 	.show  = raw_seq_show,
+ };
+ 
+-int raw_seq_open(struct inode *ino, struct file *file,
+-		 struct raw_hashinfo *h, const struct seq_operations *ops)
+-{
+-	int err;
+-	struct raw_iter_state *i;
+-
+-	err = seq_open_net(ino, file, ops, sizeof(struct raw_iter_state));
+-	if (err < 0)
+-		return err;
+-
+-	i = raw_seq_private((struct seq_file *)file->private_data);
+-	i->h = h;
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(raw_seq_open);
+-
+ static int raw_v4_seq_open(struct inode *inode, struct file *file)
+ {
+-	return raw_seq_open(inode, file, &raw_v4_hashinfo, &raw_seq_ops);
++	return seq_open_net(inode, file, &raw_seq_ops,
++			sizeof(struct raw_iter_state));
+ }
+ 
+ static const struct file_operations raw_seq_fops = {
+@@ -1140,7 +1127,8 @@ static const struct file_operations raw_seq_fops = {
+ 
+ static __net_init int raw_init_net(struct net *net)
+ {
+-	if (!proc_create("raw", 0444, net->proc_net, &raw_seq_fops))
++	if (!proc_create_data("raw", 0444, net->proc_net, &raw_seq_fops,
++			&raw_v4_hashinfo))
  		return -ENOMEM;
+ 
  	return 0;
- }
--EXPORT_SYMBOL_GPL(ping_proc_register);
--
--void ping_proc_unregister(struct net *net, struct ping_seq_afinfo *afinfo)
--{
--	remove_proc_entry(afinfo->name, net->proc_net);
--}
--EXPORT_SYMBOL_GPL(ping_proc_unregister);
--
--static int __net_init ping_v4_proc_init_net(struct net *net)
--{
--	return ping_proc_register(net, &ping_v4_seq_afinfo);
--}
+diff --git a/net/ipv6/raw.c b/net/ipv6/raw.c
+index 5eb9b08947ed..dade69bf61e6 100644
+--- a/net/ipv6/raw.c
++++ b/net/ipv6/raw.c
+@@ -1306,7 +1306,8 @@ static const struct seq_operations raw6_seq_ops = {
  
- static void __net_exit ping_v4_proc_exit_net(struct net *net)
+ static int raw6_seq_open(struct inode *inode, struct file *file)
  {
--	ping_proc_unregister(net, &ping_v4_seq_afinfo);
-+	remove_proc_entry("icmp", net->proc_net);
+-	return raw_seq_open(inode, file, &raw_v6_hashinfo, &raw6_seq_ops);
++	return seq_open_net(inode, file, &raw6_seq_ops,
++			sizeof(struct raw_iter_state));
  }
  
- static struct pernet_operations ping_v4_net_ops = {
-diff --git a/net/ipv6/ping.c b/net/ipv6/ping.c
-index 746eeae7f581..45d5c8e0f2bf 100644
---- a/net/ipv6/ping.c
-+++ b/net/ipv6/ping.c
-@@ -24,6 +24,7 @@
- #include <net/protocol.h>
- #include <net/udp.h>
- #include <net/transp_v6.h>
-+#include <linux/proc_fs.h>
- #include <net/ping.h>
+ static const struct file_operations raw6_seq_fops = {
+@@ -1318,7 +1319,8 @@ static const struct file_operations raw6_seq_fops = {
  
- /* Compatibility glue so we can support IPv6 when it's compiled as a module */
-@@ -215,26 +216,36 @@ static int ping_v6_seq_show(struct seq_file *seq, void *v)
+ static int __net_init raw6_init_net(struct net *net)
+ {
+-	if (!proc_create("raw6", 0444, net->proc_net, &raw6_seq_fops))
++	if (!proc_create_data("raw6", 0444, net->proc_net, &raw6_seq_fops,
++			&raw_v6_hashinfo))
+ 		return -ENOMEM;
+ 
  	return 0;
- }
- 
--static struct ping_seq_afinfo ping_v6_seq_afinfo = {
--	.name		= "icmp6",
--	.family		= AF_INET6,
--	.seq_fops       = &ping_seq_fops,
--	.seq_ops	= {
--		.start		= ping_v6_seq_start,
--		.show		= ping_v6_seq_show,
--		.next		= ping_seq_next,
--		.stop		= ping_seq_stop,
--	},
-+static const struct seq_operations ping_v6_seq_ops = {
-+	.start		= ping_v6_seq_start,
-+	.show		= ping_v6_seq_show,
-+	.next		= ping_seq_next,
-+	.stop		= ping_seq_stop,
-+};
-+
-+static int ping_v6_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open_net(inode, file, &ping_v6_seq_ops,
-+			   sizeof(struct ping_iter_state));
-+}
-+
-+const struct file_operations ping_v6_seq_fops = {
-+	.open		= ping_v6_seq_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= seq_release_net,
- };
- 
- static int __net_init ping_v6_proc_init_net(struct net *net)
- {
--	return ping_proc_register(net, &ping_v6_seq_afinfo);
-+	if (!proc_create("icmp6", 0444, net->proc_net, &ping_v6_seq_fops))
-+		return -ENOMEM;
-+	return 0;
- }
- 
- static void __net_init ping_v6_proc_exit_net(struct net *net)
- {
--	return ping_proc_unregister(net, &ping_v6_seq_afinfo);
-+	remove_proc_entry("icmp6", net->proc_net);
- }
- 
- static struct pernet_operations ping_v6_net_ops = {
 -- 
 2.17.0
