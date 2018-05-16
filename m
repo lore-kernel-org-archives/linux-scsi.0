@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/42] sgi-gru: simplify procfs code
-Date: Wed, 16 May 2018 11:43:24 +0200
-Message-ID: <20180516094346.20506-21-hch@lst.de>
+Subject: [PATCH 22/42] sg: simplify procfs code
+Date: Wed, 16 May 2018 11:43:26 +0200
+Message-ID: <20180516094346.20506-23-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,119 +25,236 @@ Use remove_proc_subtree to remove the whole subtree on cleanup, and
 unwind the registration loop into individual calls.  Switch to use
 proc_create_seq where applicable.
 
+Also don't bother handling proc_create* failures - the driver works
+perfectly fine without the proc files, and the cleanup will handle
+missing files gracefully.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/misc/sgi-gru/gruprocfs.c | 81 ++++++--------------------------
- 1 file changed, 14 insertions(+), 67 deletions(-)
+ drivers/scsi/sg.c | 124 +++++-----------------------------------------
+ 1 file changed, 12 insertions(+), 112 deletions(-)
 
-diff --git a/drivers/misc/sgi-gru/gruprocfs.c b/drivers/misc/sgi-gru/gruprocfs.c
-index 4f7635922394..42ea2eccaee9 100644
---- a/drivers/misc/sgi-gru/gruprocfs.c
-+++ b/drivers/misc/sgi-gru/gruprocfs.c
-@@ -270,16 +270,6 @@ static int options_open(struct inode *inode, struct file *file)
- 	return single_open(file, options_show, NULL);
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index c198b96368dd..8ff687158704 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -66,7 +66,6 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
+ static char *sg_version_date = "20140603";
+ 
+ static int sg_proc_init(void);
+-static void sg_proc_cleanup(void);
+ #endif
+ 
+ #define SG_ALLOW_DIO_DEF 0
+@@ -1661,7 +1660,7 @@ static void __exit
+ exit_sg(void)
+ {
+ #ifdef CONFIG_SCSI_PROC_FS
+-	sg_proc_cleanup();
++	remove_proc_subtree("scsi/sg", NULL);
+ #endif				/* CONFIG_SCSI_PROC_FS */
+ 	scsi_unregister_interface(&sg_interface);
+ 	class_destroy(sg_sysfs_class);
+@@ -2274,11 +2273,6 @@ sg_get_dev(int dev)
  }
  
--static int cch_open(struct inode *inode, struct file *file)
--{
--	return seq_open(file, &cch_seq_ops);
--}
+ #ifdef CONFIG_SCSI_PROC_FS
 -
--static int gru_open(struct inode *inode, struct file *file)
--{
--	return seq_open(file, &gru_seq_ops);
--}
+-static struct proc_dir_entry *sg_proc_sgp = NULL;
 -
- /* *INDENT-OFF* */
- static const struct file_operations statistics_fops = {
- 	.open 		= statistics_open,
-@@ -305,73 +295,30 @@ static const struct file_operations options_fops = {
- 	.release 	= single_release,
+-static char sg_proc_sg_dirname[] = "scsi/sg";
+-
+ static int sg_proc_seq_show_int(struct seq_file *s, void *v);
+ 
+ static int sg_proc_single_open_adio(struct inode *inode, struct file *file);
+@@ -2306,37 +2300,11 @@ static const struct file_operations dressz_fops = {
  };
  
--static const struct file_operations cch_fops = {
--	.open 		= cch_open,
--	.read 		= seq_read,
--	.llseek 	= seq_lseek,
--	.release 	= seq_release,
--};
--static const struct file_operations gru_fops = {
--	.open 		= gru_open,
--	.read 		= seq_read,
--	.llseek 	= seq_lseek,
--	.release 	= seq_release,
+ static int sg_proc_seq_show_version(struct seq_file *s, void *v);
+-static int sg_proc_single_open_version(struct inode *inode, struct file *file);
+-static const struct file_operations version_fops = {
+-	.owner = THIS_MODULE,
+-	.open = sg_proc_single_open_version,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = single_release,
 -};
 -
--static struct proc_entry {
--	char *name;
--	umode_t mode;
--	const struct file_operations *fops;
--	struct proc_dir_entry *entry;
--} proc_files[] = {
--	{"statistics", 0644, &statistics_fops},
--	{"mcs_statistics", 0644, &mcs_statistics_fops},
--	{"debug_options", 0644, &options_fops},
--	{"cch_status", 0444, &cch_fops},
--	{"gru_status", 0444, &gru_fops},
--	{NULL}
+ static int sg_proc_seq_show_devhdr(struct seq_file *s, void *v);
+-static int sg_proc_single_open_devhdr(struct inode *inode, struct file *file);
+-static const struct file_operations devhdr_fops = {
+-	.owner = THIS_MODULE,
+-	.open = sg_proc_single_open_devhdr,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = single_release,
 -};
--/* *INDENT-ON* */
 -
- static struct proc_dir_entry *proc_gru __read_mostly;
+ static int sg_proc_seq_show_dev(struct seq_file *s, void *v);
+-static int sg_proc_open_dev(struct inode *inode, struct file *file);
+ static void * dev_seq_start(struct seq_file *s, loff_t *pos);
+ static void * dev_seq_next(struct seq_file *s, void *v, loff_t *pos);
+ static void dev_seq_stop(struct seq_file *s, void *v);
+-static const struct file_operations dev_fops = {
+-	.owner = THIS_MODULE,
+-	.open = sg_proc_open_dev,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = seq_release,
+-};
+ static const struct seq_operations dev_seq_ops = {
+ 	.start = dev_seq_start,
+ 	.next  = dev_seq_next,
+@@ -2345,14 +2313,6 @@ static const struct seq_operations dev_seq_ops = {
+ };
  
--static int create_proc_file(struct proc_entry *p)
--{
--	p->entry = proc_create(p->name, p->mode, proc_gru, p->fops);
--	if (!p->entry)
--		return -1;
+ static int sg_proc_seq_show_devstrs(struct seq_file *s, void *v);
+-static int sg_proc_open_devstrs(struct inode *inode, struct file *file);
+-static const struct file_operations devstrs_fops = {
+-	.owner = THIS_MODULE,
+-	.open = sg_proc_open_devstrs,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = seq_release,
+-};
+ static const struct seq_operations devstrs_seq_ops = {
+ 	.start = dev_seq_start,
+ 	.next  = dev_seq_next,
+@@ -2361,14 +2321,6 @@ static const struct seq_operations devstrs_seq_ops = {
+ };
+ 
+ static int sg_proc_seq_show_debug(struct seq_file *s, void *v);
+-static int sg_proc_open_debug(struct inode *inode, struct file *file);
+-static const struct file_operations debug_fops = {
+-	.owner = THIS_MODULE,
+-	.open = sg_proc_open_debug,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = seq_release,
+-};
+ static const struct seq_operations debug_seq_ops = {
+ 	.start = dev_seq_start,
+ 	.next  = dev_seq_next,
+@@ -2376,50 +2328,23 @@ static const struct seq_operations debug_seq_ops = {
+ 	.show  = sg_proc_seq_show_debug,
+ };
+ 
+-
+-struct sg_proc_leaf {
+-	const char * name;
+-	const struct file_operations * fops;
+-};
+-
+-static const struct sg_proc_leaf sg_proc_leaf_arr[] = {
+-	{"allow_dio", &adio_fops},
+-	{"debug", &debug_fops},
+-	{"def_reserved_size", &dressz_fops},
+-	{"device_hdr", &devhdr_fops},
+-	{"devices", &dev_fops},
+-	{"device_strs", &devstrs_fops},
+-	{"version", &version_fops}
+-};
+-
+ static int
+ sg_proc_init(void)
+ {
+-	int num_leaves = ARRAY_SIZE(sg_proc_leaf_arr);
+-	int k;
++	struct proc_dir_entry *p;
+ 
+-	sg_proc_sgp = proc_mkdir(sg_proc_sg_dirname, NULL);
+-	if (!sg_proc_sgp)
++	p = proc_mkdir("scsi/sg", NULL);
++	if (!p)
+ 		return 1;
+-	for (k = 0; k < num_leaves; ++k) {
+-		const struct sg_proc_leaf *leaf = &sg_proc_leaf_arr[k];
+-		umode_t mask = leaf->fops->write ? S_IRUGO | S_IWUSR : S_IRUGO;
+-		proc_create(leaf->name, mask, sg_proc_sgp, leaf->fops);
+-	}
 -	return 0;
 -}
--
--static void delete_proc_files(void)
+ 
+-static void
+-sg_proc_cleanup(void)
 -{
--	struct proc_entry *p;
+-	int k;
+-	int num_leaves = ARRAY_SIZE(sg_proc_leaf_arr);
 -
--	if (proc_gru) {
--		for (p = proc_files; p->name; p++)
--			if (p->entry)
--				remove_proc_entry(p->name, proc_gru);
--		proc_remove(proc_gru);
--	}
--}
--
- int gru_proc_init(void)
- {
--	struct proc_entry *p;
--
- 	proc_gru = proc_mkdir("sgi_uv/gru", NULL);
--
--	for (p = proc_files; p->name; p++)
--		if (create_proc_file(p))
--			goto err;
-+	if (!proc_gru)
-+		return -1;
-+	if (!proc_create("statistics", 0644, proc_gru, &statistics_fops))
-+		goto err;
-+	if (!proc_create("mcs_statistics", 0644, proc_gru, &mcs_statistics_fops))
-+		goto err;
-+	if (!proc_create("debug_options", 0644, proc_gru, &options_fops))
-+		goto err;
-+	if (!proc_create_seq("cch_status", 0444, proc_gru, &cch_seq_ops))
-+		goto err;
-+	if (!proc_create_seq("gru_status", 0444, proc_gru, &gru_seq_ops))
-+		goto err;
- 	return 0;
--
- err:
--	delete_proc_files();
-+	remove_proc_subtree("sgi_uv/gru", NULL);
- 	return -1;
+-	if (!sg_proc_sgp)
+-		return;
+-	for (k = 0; k < num_leaves; ++k)
+-		remove_proc_entry(sg_proc_leaf_arr[k].name, sg_proc_sgp);
+-	remove_proc_entry(sg_proc_sg_dirname, NULL);
++	proc_create("allow_dio", S_IRUGO | S_IWUSR, p, &adio_fops);
++	proc_create_seq("debug", S_IRUGO, p, &debug_seq_ops);
++	proc_create("def_reserved_size", S_IRUGO | S_IWUSR, p, &dressz_fops);
++	proc_create_single("device_hdr", S_IRUGO, p, sg_proc_seq_show_devhdr);
++	proc_create_seq("devices", S_IRUGO, p, &dev_seq_ops);
++	proc_create_seq("device_strs", S_IRUGO, p, &devstrs_seq_ops);
++	proc_create_single("version", S_IRUGO, p, sg_proc_seq_show_version);
++	return 0;
  }
  
- void gru_proc_exit(void)
- {
--	delete_proc_files();
-+	remove_proc_subtree("sgi_uv/gru", NULL);
+ 
+@@ -2482,22 +2407,12 @@ static int sg_proc_seq_show_version(struct seq_file *s, void *v)
+ 	return 0;
  }
+ 
+-static int sg_proc_single_open_version(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, sg_proc_seq_show_version, NULL);
+-}
+-
+ static int sg_proc_seq_show_devhdr(struct seq_file *s, void *v)
+ {
+ 	seq_puts(s, "host\tchan\tid\tlun\ttype\topens\tqdepth\tbusy\tonline\n");
+ 	return 0;
+ }
+ 
+-static int sg_proc_single_open_devhdr(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, sg_proc_seq_show_devhdr, NULL);
+-}
+-
+ struct sg_proc_deviter {
+ 	loff_t	index;
+ 	size_t	max;
+@@ -2531,11 +2446,6 @@ static void dev_seq_stop(struct seq_file *s, void *v)
+ 	kfree(s->private);
+ }
+ 
+-static int sg_proc_open_dev(struct inode *inode, struct file *file)
+-{
+-        return seq_open(file, &dev_seq_ops);
+-}
+-
+ static int sg_proc_seq_show_dev(struct seq_file *s, void *v)
+ {
+ 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+@@ -2562,11 +2472,6 @@ static int sg_proc_seq_show_dev(struct seq_file *s, void *v)
+ 	return 0;
+ }
+ 
+-static int sg_proc_open_devstrs(struct inode *inode, struct file *file)
+-{
+-        return seq_open(file, &devstrs_seq_ops);
+-}
+-
+ static int sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
+ {
+ 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
+@@ -2650,11 +2555,6 @@ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
+ 	}
+ }
+ 
+-static int sg_proc_open_debug(struct inode *inode, struct file *file)
+-{
+-        return seq_open(file, &debug_seq_ops);
+-}
+-
+ static int sg_proc_seq_show_debug(struct seq_file *s, void *v)
+ {
+ 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
 -- 
 2.17.0
