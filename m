@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 27/42] resource: switch to proc_create_seq_data
-Date: Wed, 16 May 2018 11:43:31 +0200
-Message-ID: <20180516094346.20506-28-hch@lst.de>
+Subject: [PATCH 36/42] atm: simplify procfs code
+Date: Wed, 16 May 2018 11:43:40 +0200
+Message-ID: <20180516094346.20506-37-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,82 +21,107 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And use the root resource directly from the proc private data.
+Use remove_proc_subtree to remove the whole subtree on cleanup, and
+unwind the registration loop into individual calls.  Switch to use
+proc_create_seq where applicable.
+
+Also don't bother handling proc_create* failures - the driver works
+perfectly fine without the proc files, and the cleanup will handle
+missing files gracefully.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- kernel/resource.c | 43 +++++--------------------------------------
- 1 file changed, 5 insertions(+), 38 deletions(-)
+ net/atm/proc.c | 65 ++++++--------------------------------------------
+ 1 file changed, 7 insertions(+), 58 deletions(-)
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 2af6c03858b9..b589dda910b3 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -87,7 +87,7 @@ enum { MAX_IORES_LEVEL = 5 };
- static void *r_start(struct seq_file *m, loff_t *pos)
- 	__acquires(resource_lock)
- {
--	struct resource *p = m->private;
-+	struct resource *p = PDE_DATA(file_inode(m->file));
- 	loff_t l = 0;
- 	read_lock(&resource_lock);
- 	for (p = p->child; p && l < *pos; p = r_next(m, p, &l))
-@@ -103,7 +103,7 @@ static void r_stop(struct seq_file *m, void *v)
- 
- static int r_show(struct seq_file *m, void *v)
- {
--	struct resource *root = m->private;
-+	struct resource *root = PDE_DATA(file_inode(m->file));
- 	struct resource *r = v, *p;
- 	unsigned long long start, end;
- 	int width = root->end < 0x10000 ? 4 : 8;
-@@ -135,44 +135,11 @@ static const struct seq_operations resource_op = {
- 	.show	= r_show,
+diff --git a/net/atm/proc.c b/net/atm/proc.c
+index 55410c00c7e2..f272b0f59d82 100644
+--- a/net/atm/proc.c
++++ b/net/atm/proc.c
+@@ -257,18 +257,6 @@ static const struct seq_operations atm_dev_seq_ops = {
+ 	.show	= atm_dev_seq_show,
  };
  
--static int ioports_open(struct inode *inode, struct file *file)
+-static int atm_dev_seq_open(struct inode *inode, struct file *file)
 -{
--	int res = seq_open(file, &resource_op);
--	if (!res) {
--		struct seq_file *m = file->private_data;
--		m->private = &ioport_resource;
--	}
--	return res;
+-	return seq_open(file, &atm_dev_seq_ops);
 -}
 -
--static int iomem_open(struct inode *inode, struct file *file)
--{
--	int res = seq_open(file, &resource_op);
--	if (!res) {
--		struct seq_file *m = file->private_data;
--		m->private = &iomem_resource;
--	}
--	return res;
--}
--
--static const struct file_operations proc_ioports_operations = {
--	.open		= ioports_open,
+-static const struct file_operations devices_seq_fops = {
+-	.open		= atm_dev_seq_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
 -	.release	= seq_release,
 -};
 -
--static const struct file_operations proc_iomem_operations = {
--	.open		= iomem_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
--};
--
- static int __init ioresources_init(void)
+ static int pvc_seq_show(struct seq_file *seq, void *v)
  {
--	proc_create("ioports", 0, NULL, &proc_ioports_operations);
--	proc_create("iomem", 0, NULL, &proc_iomem_operations);
-+	proc_create_seq_data("ioports", 0, NULL, &resource_op,
-+			&ioport_resource);
-+	proc_create_seq_data("iomem", 0, NULL, &resource_op, &iomem_resource);
- 	return 0;
+ 	static char atm_pvc_banner[] =
+@@ -440,58 +428,19 @@ void atm_proc_dev_deregister(struct atm_dev *dev)
+ 	kfree(dev->proc_name);
  }
- __initcall(ioresources_init);
+ 
+-static struct atm_proc_entry {
+-	char *name;
+-	const struct file_operations *proc_fops;
+-	struct proc_dir_entry *dirent;
+-} atm_proc_ents[] = {
+-	{ .name = "devices",	.proc_fops = &devices_seq_fops },
+-	{ .name = "pvc",	.proc_fops = &pvc_seq_fops },
+-	{ .name = "svc",	.proc_fops = &svc_seq_fops },
+-	{ .name = "vc",		.proc_fops = &vcc_seq_fops },
+-	{ .name = NULL,		.proc_fops = NULL }
+-};
+-
+-static void atm_proc_dirs_remove(void)
+-{
+-	static struct atm_proc_entry *e;
+-
+-	for (e = atm_proc_ents; e->name; e++) {
+-		if (e->dirent)
+-			remove_proc_entry(e->name, atm_proc_root);
+-	}
+-	remove_proc_entry("atm", init_net.proc_net);
+-}
+-
+ int __init atm_proc_init(void)
+ {
+-	static struct atm_proc_entry *e;
+-	int ret;
+-
+ 	atm_proc_root = proc_net_mkdir(&init_net, "atm", init_net.proc_net);
+ 	if (!atm_proc_root)
+-		goto err_out;
+-	for (e = atm_proc_ents; e->name; e++) {
+-		struct proc_dir_entry *dirent;
+-
+-		dirent = proc_create(e->name, 0444,
+-				     atm_proc_root, e->proc_fops);
+-		if (!dirent)
+-			goto err_out_remove;
+-		e->dirent = dirent;
+-	}
+-	ret = 0;
+-out:
+-	return ret;
+-
+-err_out_remove:
+-	atm_proc_dirs_remove();
+-err_out:
+-	ret = -ENOMEM;
+-	goto out;
++		return -ENOMEM;
++	proc_create_seq("devices", 0444, atm_proc_root, &atm_dev_seq_ops);
++	proc_create("pvc", 0444, atm_proc_root, &pvc_seq_fops);
++	proc_create("svc", 0444, atm_proc_root, &svc_seq_fops);
++	proc_create("vc", 0444, atm_proc_root, &vcc_seq_fops);
++	return 0;
+ }
+ 
+ void atm_proc_exit(void)
+ {
+-	atm_proc_dirs_remove();
++	remove_proc_subtree("atm", init_net.proc_net);
+ }
 -- 
 2.17.0
