@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 34/42] netfilter/x_tables: switch to proc_create_seq_private
-Date: Wed, 16 May 2018 11:43:38 +0200
-Message-ID: <20180516094346.20506-35-hch@lst.de>
+Subject: [PATCH 27/42] resource: switch to proc_create_seq_data
+Date: Wed, 16 May 2018 11:43:31 +0200
+Message-ID: <20180516094346.20506-28-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,86 +21,82 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And remove proc boilerplate code.
+And use the root resource directly from the proc private data.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- net/netfilter/x_tables.c | 42 ++++++----------------------------------
- 1 file changed, 6 insertions(+), 36 deletions(-)
+ kernel/resource.c | 43 +++++--------------------------------------
+ 1 file changed, 5 insertions(+), 38 deletions(-)
 
-diff --git a/net/netfilter/x_tables.c b/net/netfilter/x_tables.c
-index 344dd01a5027..0e314f95a4a3 100644
---- a/net/netfilter/x_tables.c
-+++ b/net/netfilter/x_tables.c
-@@ -1648,22 +1648,6 @@ static const struct seq_operations xt_match_seq_ops = {
- 	.show	= xt_match_seq_show,
- };
- 
--static int xt_match_open(struct inode *inode, struct file *file)
--{
--	struct nf_mttg_trav *trav;
--	trav = __seq_open_private(file, &xt_match_seq_ops, sizeof(*trav));
--	if (!trav)
--		return -ENOMEM;
--	return 0;
--}
--
--static const struct file_operations xt_match_ops = {
--	.open	 = xt_match_open,
--	.read	 = seq_read,
--	.llseek	 = seq_lseek,
--	.release = seq_release_private,
--};
--
- static void *xt_target_seq_start(struct seq_file *seq, loff_t *pos)
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 2af6c03858b9..b589dda910b3 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -87,7 +87,7 @@ enum { MAX_IORES_LEVEL = 5 };
+ static void *r_start(struct seq_file *m, loff_t *pos)
+ 	__acquires(resource_lock)
  {
- 	return xt_mttg_seq_start(seq, pos, true);
-@@ -1698,22 +1682,6 @@ static const struct seq_operations xt_target_seq_ops = {
- 	.show	= xt_target_seq_show,
+-	struct resource *p = m->private;
++	struct resource *p = PDE_DATA(file_inode(m->file));
+ 	loff_t l = 0;
+ 	read_lock(&resource_lock);
+ 	for (p = p->child; p && l < *pos; p = r_next(m, p, &l))
+@@ -103,7 +103,7 @@ static void r_stop(struct seq_file *m, void *v)
+ 
+ static int r_show(struct seq_file *m, void *v)
+ {
+-	struct resource *root = m->private;
++	struct resource *root = PDE_DATA(file_inode(m->file));
+ 	struct resource *r = v, *p;
+ 	unsigned long long start, end;
+ 	int width = root->end < 0x10000 ? 4 : 8;
+@@ -135,44 +135,11 @@ static const struct seq_operations resource_op = {
+ 	.show	= r_show,
  };
  
--static int xt_target_open(struct inode *inode, struct file *file)
+-static int ioports_open(struct inode *inode, struct file *file)
 -{
--	struct nf_mttg_trav *trav;
--	trav = __seq_open_private(file, &xt_target_seq_ops, sizeof(*trav));
--	if (!trav)
--		return -ENOMEM;
--	return 0;
+-	int res = seq_open(file, &resource_op);
+-	if (!res) {
+-		struct seq_file *m = file->private_data;
+-		m->private = &ioport_resource;
+-	}
+-	return res;
 -}
 -
--static const struct file_operations xt_target_ops = {
--	.open	 = xt_target_open,
--	.read	 = seq_read,
--	.llseek	 = seq_lseek,
--	.release = seq_release_private,
+-static int iomem_open(struct inode *inode, struct file *file)
+-{
+-	int res = seq_open(file, &resource_op);
+-	if (!res) {
+-		struct seq_file *m = file->private_data;
+-		m->private = &iomem_resource;
+-	}
+-	return res;
+-}
+-
+-static const struct file_operations proc_ioports_operations = {
+-	.open		= ioports_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= seq_release,
 -};
 -
- #define FORMAT_TABLES	"_tables_names"
- #define	FORMAT_MATCHES	"_tables_matches"
- #define FORMAT_TARGETS 	"_tables_targets"
-@@ -1787,8 +1755,9 @@ int xt_proto_init(struct net *net, u_int8_t af)
- 
- 	strlcpy(buf, xt_prefix[af], sizeof(buf));
- 	strlcat(buf, FORMAT_MATCHES, sizeof(buf));
--	proc = proc_create_data(buf, 0440, net->proc_net, &xt_match_ops,
--				(void *)(unsigned long)af);
-+	proc = proc_create_seq_private(buf, 0440, net->proc_net,
-+			&xt_match_seq_ops, sizeof(struct nf_mttg_trav),
-+			(void *)(unsigned long)af);
- 	if (!proc)
- 		goto out_remove_tables;
- 	if (uid_valid(root_uid) && gid_valid(root_gid))
-@@ -1796,8 +1765,9 @@ int xt_proto_init(struct net *net, u_int8_t af)
- 
- 	strlcpy(buf, xt_prefix[af], sizeof(buf));
- 	strlcat(buf, FORMAT_TARGETS, sizeof(buf));
--	proc = proc_create_data(buf, 0440, net->proc_net, &xt_target_ops,
--				(void *)(unsigned long)af);
-+	proc = proc_create_seq_private(buf, 0440, net->proc_net,
-+			 &xt_target_seq_ops, sizeof(struct nf_mttg_trav),
-+			 (void *)(unsigned long)af);
- 	if (!proc)
- 		goto out_remove_matches;
- 	if (uid_valid(root_uid) && gid_valid(root_gid))
+-static const struct file_operations proc_iomem_operations = {
+-	.open		= iomem_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= seq_release,
+-};
+-
+ static int __init ioresources_init(void)
+ {
+-	proc_create("ioports", 0, NULL, &proc_ioports_operations);
+-	proc_create("iomem", 0, NULL, &proc_iomem_operations);
++	proc_create_seq_data("ioports", 0, NULL, &resource_op,
++			&ioport_resource);
++	proc_create_seq_data("iomem", 0, NULL, &resource_op, &iomem_resource);
+ 	return 0;
+ }
+ __initcall(ioresources_init);
 -- 
 2.17.0
