@@ -1,14 +1,14 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/7] cxlflash: Yield to active send threads
-Date: Wed, 16 May 2018 10:09:28 -0500
-Message-ID: <20180516150928.GA8754@p8tul1-build.aus.stglabs.ibm.com>
+Subject: Re: [PATCH 2/7] cxlflash: Limit the debug logs in the IO path
+Date: Wed, 16 May 2018 10:53:45 -0500
+Message-ID: <20180516155345.GB8754@p8tul1-build.aus.stglabs.ibm.com>
 References: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1526065486-38860-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1526065508-38897-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 Content-Disposition: inline
-In-Reply-To: <1526065486-38860-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+In-Reply-To: <1526065508-38897-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
  <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
 List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
@@ -23,37 +23,15 @@ To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, May 11, 2018 at 02:04:46PM -0500, Uma Krishnan wrote:
-> The following Oops may be encountered if the device is reset, i.e. EEH
-> recovery, while there is heavy I/O traffic:
+On Fri, May 11, 2018 at 02:05:08PM -0500, Uma Krishnan wrote:
+> The kernel log can get filled with debug messages from send_cmd_ioarrin()
+> when dynamic debug is enabled for the cxlflash module and there is a lot
+> of legacy I/O traffic.
 > 
-> 59:mon> t
-> [c000200db64bb680] c008000009264c40 cxlflash_queuecommand+0x3b8/0x500
-> 					[cxlflash]
-> [c000200db64bb770] c00000000090d3b0 scsi_dispatch_cmd+0x130/0x2f0
-> [c000200db64bb7f0] c00000000090fdd8 scsi_request_fn+0x3c8/0x8d0
-> [c000200db64bb900] c00000000067f528 __blk_run_queue+0x68/0xb0
-> [c000200db64bb930] c00000000067ab80 __elv_add_request+0x140/0x3c0
-> [c000200db64bb9b0] c00000000068daac blk_execute_rq_nowait+0xec/0x1a0
-> [c000200db64bba00] c00000000068dbb0 blk_execute_rq+0x50/0xe0
-> [c000200db64bba50] c0000000006b2040 sg_io+0x1f0/0x520
-> [c000200db64bbaf0] c0000000006b2e94 scsi_cmd_ioctl+0x534/0x610
-> [c000200db64bbc20] c000000000926208 sd_ioctl+0x118/0x280
-> [c000200db64bbcc0] c00000000069f7ac blkdev_ioctl+0x7fc/0xe30
-> [c000200db64bbd20] c000000000439204 block_ioctl+0x84/0xa0
-> [c000200db64bbd40] c0000000003f8514 do_vfs_ioctl+0xd4/0xa00
-> [c000200db64bbde0] c0000000003f8f04 SyS_ioctl+0xc4/0x130
-> [c000200db64bbe30] c00000000000b184 system_call+0x58/0x6c
-> 
-> When there is no room to send the I/O request, the cached room is refreshed
-> by reading the memory mapped command room value from the AFU. The AFU
-> register mapping is refreshed during a reset, creating a race condition
-> that can lead to the Oops above.
-> 
-> During a device reset, the AFU should not be unmapped until all the active
-> send threads quiesce. An atomic counter, cmds_active, is currently used to
-> track internal AFU commands and quiesce during reset. This same counter can
-> also be used for the active send threads.
+> While these messages are necessary to debug issues that involve command
+> tracking, the abundance of data can overwrite other useful data in the
+> log. The best option available is to limit the messages that should
+> serve most of the common use cases.
 > 
 > Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
