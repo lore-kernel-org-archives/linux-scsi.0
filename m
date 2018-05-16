@@ -1,132 +1,82 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: ufshcd: Remove VLA usage
-Date: Wed, 16 May 2018 13:54:50 -0700
-Message-ID: <fdc105dd5b8a8597fc9858b19d536450@codeaurora.org>
-References: <20180502235809.GA13998@beast>
+Subject: Re: [PATCH v2 01/10] scsi: ufs: Allowing power mode change
+Date: Wed, 16 May 2018 14:09:51 -0700
+Message-ID: <33a5e196be45bfeb0bea49a446e8af98@codeaurora.org>
+References: <cover.1525343531.git.asutoshd@codeaurora.org>
+ <75e5ea5901004ef95b37aed719686214910f6541.1525343531.git.asutoshd@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180502235809.GA13998@beast>
+In-Reply-To: <75e5ea5901004ef95b37aed719686214910f6541.1525343531.git.asutoshd@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+To: Asutosh Das <asutoshd@codeaurora.org>
+Cc: cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Yaniv Gardi <ygardi@codeaurora.org>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-05-02 16:58, Kees Cook wrote:
-> On the quest to remove all VLAs from the kernel[1] this moves buffers
-> off the stack. In the second instance, this collapses two separately
-> allocated buffers into a single buffer, since they are used 
-> consecutively,
-> which saves 256 bytes (QUERY_DESC_MAX_SIZE + 1) of stack space.
+On 2018-05-03 04:07, Asutosh Das wrote:
+> From: Yaniv Gardi <ygardi@codeaurora.org>
 > 
-> [1]
-> https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+> Due to M-PHY issues, moving from HS to any other mode or gear or
+> even Hibern8 may cause some un-predicted behavior
+> of the device.
+> This patch adds provides a quirk to address that.
 > 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 34 ++++++++++++++++++++++++++--------
->  1 file changed, 26 insertions(+), 8 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 8 +++++++-
+>  drivers/scsi/ufs/ufshcd.h | 7 +++++++
+>  2 files changed, 14 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 00e79057f870..a271534362f6 100644
+> index 5bc9dc1..f3083fe 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5958,14 +5958,18 @@ static void ufshcd_init_icc_levels(struct 
-> ufs_hba *hba)
->  {
->  	int ret;
->  	int buff_len = hba->desc_size.pwr_desc;
-> -	u8 desc_buf[hba->desc_size.pwr_desc];
-> +	u8 *desc_buf;
-> +
-> +	desc_buf = kmalloc(buff_len, GFP_KERNEL);
-> +	if (!desc_buf)
-> +		return;
-> 
->  	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
->  	if (ret) {
->  		dev_err(hba->dev,
->  			"%s: Failed reading power descriptor.len = %d ret = %d",
->  			__func__, buff_len, ret);
-> -		return;
-> +		goto out;
->  	}
-> 
->  	hba->init_prefetch_data.icc_level =
-> @@ -5983,6 +5987,8 @@ static void ufshcd_init_icc_levels(struct ufs_hba 
+> @@ -4162,9 +4162,15 @@ static int ufshcd_link_startup(struct ufs_hba 
 > *hba)
->  			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
->  			__func__, hba->init_prefetch_data.icc_level , ret);
+>  			goto out;
+>  	} while (ret && retries--);
 > 
-> +out:
-> +	kfree(desc_buf);
->  }
-> 
->  /**
-> @@ -6052,9 +6058,17 @@ static int ufs_get_device_desc(struct ufs_hba 
-> *hba,
->  			       struct ufs_dev_desc *dev_desc)
->  {
->  	int err;
-> +	size_t buff_len;
->  	u8 model_index;
-> -	u8 str_desc_buf[QUERY_DESC_MAX_SIZE + 1] = {0};
-> -	u8 desc_buf[hba->desc_size.dev_desc];
-> +	u8 *desc_buf;
+> -	if (ret)
+> +	if (ret) {
+>  		/* failed to get the link up... retire */
+>  		goto out;
+> +	}
 > +
-> +	buff_len = max_t(size_t, hba->desc_size.dev_desc,
-> +			 QUERY_DESC_MAX_SIZE + 1);
-> +	desc_buf = kmalloc(buff_len, GFP_KERNEL);
-> +	if (!desc_buf) {
-> +		err = -ENOMEM;
-> +		goto out;
+> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_PWR_MODE_CHANGE) {
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(TX_LCC_ENABLE), 0);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(TX_LCC_ENABLE), 1);
 > +	}
 > 
->  	err = ufshcd_read_device_desc(hba, desc_buf, 
-> hba->desc_size.dev_desc);
->  	if (err) {
-> @@ -6072,7 +6086,10 @@ static int ufs_get_device_desc(struct ufs_hba 
-> *hba,
+>  	if (link_startup_again) {
+>  		link_startup_again = false;
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index cbe46f6..bb4ecfb 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -591,6 +591,13 @@ struct ufs_hba {
+>  	 */
+>  	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
 > 
->  	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+> +	/*
+> +	 * Needs to be enabled if moving from HS to any other gear/mode or 
+> even
+> +	 * hibern8 causes unpredicted behavior of device.
+> +	 * If this quirk is enabled, standard UFS driver will disable/enable
+> +	 * TX_LCC.
+> +	 */
+> +	#define UFSHCD_QUIRK_BROKEN_PWR_MODE_CHANGE		UFS_BIT(8)
+>  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
 > 
-> -	err = ufshcd_read_string_desc(hba, model_index, str_desc_buf,
-> +	/* Zero-pad entire buffer for string termination. */
-> +	memset(desc_buf, 0, buff_len);
-> +
-> +	err = ufshcd_read_string_desc(hba, model_index, desc_buf,
->  				      QUERY_DESC_MAX_SIZE, true/*ASCII*/);
->  	if (err) {
->  		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
-> @@ -6080,15 +6097,16 @@ static int ufs_get_device_desc(struct ufs_hba 
-> *hba,
->  		goto out;
->  	}
-> 
-> -	str_desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
-> -	strlcpy(dev_desc->model, (str_desc_buf + QUERY_DESC_HDR_SIZE),
-> -		min_t(u8, str_desc_buf[QUERY_DESC_LENGTH_OFFSET],
-> +	desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
-> +	strlcpy(dev_desc->model, (desc_buf + QUERY_DESC_HDR_SIZE),
-> +		min_t(u8, desc_buf[QUERY_DESC_LENGTH_OFFSET],
->  		      MAX_MODEL_LEN));
-> 
->  	/* Null terminate the model string */
->  	dev_desc->model[MAX_MODEL_LEN] = '\0';
-> 
->  out:
-> +	kfree(desc_buf);
->  	return err;
->  }
-> 
-> --
-> 2.17.0
+>  	/* Device deviations from standard UFS device spec. */
 
-
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+This was probably needed in early generation of UFS devices (non 
+commercial) and may not be really needed now. I believe we can skip this 
+patch.
 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
