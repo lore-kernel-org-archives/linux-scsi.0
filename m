@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/42] acpi/battery: simplify procfs code
-Date: Wed, 16 May 2018 11:43:23 +0200
-Message-ID: <20180516094346.20506-20-hch@lst.de>
+Subject: [PATCH 20/42] sgi-gru: simplify procfs code
+Date: Wed, 16 May 2018 11:43:24 +0200
+Message-ID: <20180516094346.20506-21-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -26,197 +26,118 @@ unwind the registration loop into individual calls.  Switch to use
 proc_create_seq where applicable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/acpi/battery.c | 121 +++++++++--------------------------------
- 1 file changed, 26 insertions(+), 95 deletions(-)
+ drivers/misc/sgi-gru/gruprocfs.c | 81 ++++++--------------------------
+ 1 file changed, 14 insertions(+), 67 deletions(-)
 
-diff --git a/drivers/acpi/battery.c b/drivers/acpi/battery.c
-index bdb24d636d9a..76550689ce10 100644
---- a/drivers/acpi/battery.c
-+++ b/drivers/acpi/battery.c
-@@ -81,14 +81,6 @@ MODULE_PARM_DESC(cache_time, "cache time in milliseconds");
- #ifdef CONFIG_ACPI_PROCFS_POWER
- extern struct proc_dir_entry *acpi_lock_battery_dir(void);
- extern void *acpi_unlock_battery_dir(struct proc_dir_entry *acpi_battery_dir);
--
--enum acpi_battery_files {
--	info_tag = 0,
--	state_tag,
--	alarm_tag,
--	ACPI_BATTERY_NUMFILES,
--};
--
- #endif
- 
- static const struct acpi_device_id battery_device_ids[] = {
-@@ -985,9 +977,10 @@ static const char *acpi_battery_units(const struct acpi_battery *battery)
- 		"mA" : "mW";
+diff --git a/drivers/misc/sgi-gru/gruprocfs.c b/drivers/misc/sgi-gru/gruprocfs.c
+index 4f7635922394..42ea2eccaee9 100644
+--- a/drivers/misc/sgi-gru/gruprocfs.c
++++ b/drivers/misc/sgi-gru/gruprocfs.c
+@@ -270,16 +270,6 @@ static int options_open(struct inode *inode, struct file *file)
+ 	return single_open(file, options_show, NULL);
  }
  
--static int acpi_battery_print_info(struct seq_file *seq, int result)
-+static int acpi_battery_info_proc_show(struct seq_file *seq, void *offset)
- {
- 	struct acpi_battery *battery = seq->private;
-+	int result = acpi_battery_update(battery, false);
- 
- 	if (result)
- 		goto end;
-@@ -1041,9 +1034,10 @@ static int acpi_battery_print_info(struct seq_file *seq, int result)
- 	return result;
- }
- 
--static int acpi_battery_print_state(struct seq_file *seq, int result)
-+static int acpi_battery_state_proc_show(struct seq_file *seq, void *offset)
- {
- 	struct acpi_battery *battery = seq->private;
-+	int result = acpi_battery_update(battery, false);
- 
- 	if (result)
- 		goto end;
-@@ -1088,9 +1082,10 @@ static int acpi_battery_print_state(struct seq_file *seq, int result)
- 	return result;
- }
- 
--static int acpi_battery_print_alarm(struct seq_file *seq, int result)
-+static int acpi_battery_alarm_proc_show(struct seq_file *seq, void *offset)
- {
- 	struct acpi_battery *battery = seq->private;
-+	int result = acpi_battery_update(battery, false);
- 
- 	if (result)
- 		goto end;
-@@ -1142,82 +1137,22 @@ static ssize_t acpi_battery_write_alarm(struct file *file,
- 	return result;
- }
- 
--typedef int(*print_func)(struct seq_file *seq, int result);
--
--static print_func acpi_print_funcs[ACPI_BATTERY_NUMFILES] = {
--	acpi_battery_print_info,
--	acpi_battery_print_state,
--	acpi_battery_print_alarm,
--};
--
--static int acpi_battery_read(int fid, struct seq_file *seq)
-+static int acpi_battery_alarm_proc_open(struct inode *inode, struct file *file)
- {
--	struct acpi_battery *battery = seq->private;
--	int result = acpi_battery_update(battery, false);
--	return acpi_print_funcs[fid](seq, result);
-+	return single_open(file, acpi_battery_alarm_proc_show, PDE_DATA(inode));
- }
- 
--#define DECLARE_FILE_FUNCTIONS(_name) \
--static int acpi_battery_read_##_name(struct seq_file *seq, void *offset) \
--{ \
--	return acpi_battery_read(_name##_tag, seq); \
--} \
--static int acpi_battery_##_name##_open_fs(struct inode *inode, struct file *file) \
--{ \
--	return single_open(file, acpi_battery_read_##_name, PDE_DATA(inode)); \
+-static int cch_open(struct inode *inode, struct file *file)
+-{
+-	return seq_open(file, &cch_seq_ops);
 -}
 -
--DECLARE_FILE_FUNCTIONS(info);
--DECLARE_FILE_FUNCTIONS(state);
--DECLARE_FILE_FUNCTIONS(alarm);
+-static int gru_open(struct inode *inode, struct file *file)
+-{
+-	return seq_open(file, &gru_seq_ops);
+-}
 -
--#undef DECLARE_FILE_FUNCTIONS
--
--#define FILE_DESCRIPTION_RO(_name) \
--	{ \
--	.name = __stringify(_name), \
--	.mode = S_IRUGO, \
--	.ops = { \
--		.open = acpi_battery_##_name##_open_fs, \
--		.read = seq_read, \
--		.llseek = seq_lseek, \
--		.release = single_release, \
--		.owner = THIS_MODULE, \
--		}, \
--	}
--
--#define FILE_DESCRIPTION_RW(_name) \
--	{ \
--	.name = __stringify(_name), \
--	.mode = S_IFREG | S_IRUGO | S_IWUSR, \
--	.ops = { \
--		.open = acpi_battery_##_name##_open_fs, \
--		.read = seq_read, \
--		.llseek = seq_lseek, \
--		.write = acpi_battery_write_##_name, \
--		.release = single_release, \
--		.owner = THIS_MODULE, \
--		}, \
--	}
--
--static const struct battery_file {
--	struct file_operations ops;
--	umode_t mode;
--	const char *name;
--} acpi_battery_file[] = {
--	FILE_DESCRIPTION_RO(info),
--	FILE_DESCRIPTION_RO(state),
--	FILE_DESCRIPTION_RW(alarm),
-+static const struct file_operations acpi_battery_alarm_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= acpi_battery_alarm_proc_open,
-+	.read		= seq_read,
-+	.write		= acpi_battery_write_alarm,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
+ /* *INDENT-OFF* */
+ static const struct file_operations statistics_fops = {
+ 	.open 		= statistics_open,
+@@ -305,73 +295,30 @@ static const struct file_operations options_fops = {
+ 	.release 	= single_release,
  };
  
--#undef FILE_DESCRIPTION_RO
--#undef FILE_DESCRIPTION_RW
+-static const struct file_operations cch_fops = {
+-	.open 		= cch_open,
+-	.read 		= seq_read,
+-	.llseek 	= seq_lseek,
+-	.release 	= seq_release,
+-};
+-static const struct file_operations gru_fops = {
+-	.open 		= gru_open,
+-	.read 		= seq_read,
+-	.llseek 	= seq_lseek,
+-	.release 	= seq_release,
+-};
 -
- static int acpi_battery_add_fs(struct acpi_device *device)
- {
--	struct proc_dir_entry *entry = NULL;
--	int i;
+-static struct proc_entry {
+-	char *name;
+-	umode_t mode;
+-	const struct file_operations *fops;
+-	struct proc_dir_entry *entry;
+-} proc_files[] = {
+-	{"statistics", 0644, &statistics_fops},
+-	{"mcs_statistics", 0644, &mcs_statistics_fops},
+-	{"debug_options", 0644, &options_fops},
+-	{"cch_status", 0444, &cch_fops},
+-	{"gru_status", 0444, &gru_fops},
+-	{NULL}
+-};
+-/* *INDENT-ON* */
 -
- 	printk(KERN_WARNING PREFIX "Deprecated procfs I/F for battery is loaded,"
- 			" please retry with CONFIG_ACPI_PROCFS_POWER cleared\n");
- 	if (!acpi_device_dir(device)) {
-@@ -1227,28 +1162,24 @@ static int acpi_battery_add_fs(struct acpi_device *device)
- 			return -ENODEV;
- 	}
+ static struct proc_dir_entry *proc_gru __read_mostly;
  
--	for (i = 0; i < ACPI_BATTERY_NUMFILES; ++i) {
--		entry = proc_create_data(acpi_battery_file[i].name,
--					 acpi_battery_file[i].mode,
--					 acpi_device_dir(device),
--					 &acpi_battery_file[i].ops,
--					 acpi_driver_data(device));
--		if (!entry)
--			return -ENODEV;
+-static int create_proc_file(struct proc_entry *p)
+-{
+-	p->entry = proc_create(p->name, p->mode, proc_gru, p->fops);
+-	if (!p->entry)
+-		return -1;
+-	return 0;
+-}
+-
+-static void delete_proc_files(void)
+-{
+-	struct proc_entry *p;
+-
+-	if (proc_gru) {
+-		for (p = proc_files; p->name; p++)
+-			if (p->entry)
+-				remove_proc_entry(p->name, proc_gru);
+-		proc_remove(proc_gru);
 -	}
-+	if (!proc_create_single_data("info", S_IRUGO, acpi_device_dir(device),
-+			acpi_battery_info_proc_show, acpi_driver_data(device)))
-+		return -ENODEV;
-+	if (!proc_create_single_data("state", S_IRUGO, acpi_device_dir(device),
-+			acpi_battery_state_proc_show, acpi_driver_data(device)))
-+		return -ENODEV;
-+	if (!proc_create_data("alarm", S_IFREG | S_IRUGO | S_IWUSR,
-+			acpi_device_dir(device), &acpi_battery_alarm_fops,
-+			acpi_driver_data(device)))
-+		return -ENODEV;
- 	return 0;
- }
- 
- static void acpi_battery_remove_fs(struct acpi_device *device)
- {
--	int i;
- 	if (!acpi_device_dir(device))
- 		return;
--	for (i = 0; i < ACPI_BATTERY_NUMFILES; ++i)
--		remove_proc_entry(acpi_battery_file[i].name,
--				  acpi_device_dir(device));
+-}
 -
--	remove_proc_entry(acpi_device_bid(device), acpi_battery_dir);
-+	remove_proc_subtree(acpi_device_bid(device), acpi_battery_dir);
- 	acpi_device_dir(device) = NULL;
+ int gru_proc_init(void)
+ {
+-	struct proc_entry *p;
+-
+ 	proc_gru = proc_mkdir("sgi_uv/gru", NULL);
+-
+-	for (p = proc_files; p->name; p++)
+-		if (create_proc_file(p))
+-			goto err;
++	if (!proc_gru)
++		return -1;
++	if (!proc_create("statistics", 0644, proc_gru, &statistics_fops))
++		goto err;
++	if (!proc_create("mcs_statistics", 0644, proc_gru, &mcs_statistics_fops))
++		goto err;
++	if (!proc_create("debug_options", 0644, proc_gru, &options_fops))
++		goto err;
++	if (!proc_create_seq("cch_status", 0444, proc_gru, &cch_seq_ops))
++		goto err;
++	if (!proc_create_seq("gru_status", 0444, proc_gru, &gru_seq_ops))
++		goto err;
+ 	return 0;
+-
+ err:
+-	delete_proc_files();
++	remove_proc_subtree("sgi_uv/gru", NULL);
+ 	return -1;
  }
  
+ void gru_proc_exit(void)
+ {
+-	delete_proc_files();
++	remove_proc_subtree("sgi_uv/gru", NULL);
+ }
 -- 
 2.17.0
