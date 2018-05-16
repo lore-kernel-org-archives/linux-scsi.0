@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 29/42] rtc/proc: switch to proc_create_single_data
-Date: Wed, 16 May 2018 11:43:33 +0200
-Message-ID: <20180516094346.20506-30-hch@lst.de>
+Subject: [PATCH 30/42] bonding: switch to proc_create_seq_data
+Date: Wed, 16 May 2018 11:43:34 +0200
+Message-ID: <20180516094346.20506-31-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,61 +21,94 @@ To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.
 Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-And stop trying to get a reference on the submodule, procfs code deals
-with release after an unloaded module and thus removed proc entry.
+And use proc private data directly instead of doing a detour
+through seq->private.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
 ---
- drivers/rtc/rtc-proc.c | 33 ++-------------------------------
- 1 file changed, 2 insertions(+), 31 deletions(-)
+ drivers/net/bonding/bond_procfs.c | 36 ++++++-------------------------
+ 1 file changed, 6 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/rtc/rtc-proc.c b/drivers/rtc/rtc-proc.c
-index 31e7e23cc5be..a9dd9218fae2 100644
---- a/drivers/rtc/rtc-proc.c
-+++ b/drivers/rtc/rtc-proc.c
-@@ -107,40 +107,11 @@ static int rtc_proc_show(struct seq_file *seq, void *offset)
- 	return 0;
- }
+diff --git a/drivers/net/bonding/bond_procfs.c b/drivers/net/bonding/bond_procfs.c
+index 01059f1a7bca..9f7d83e827c3 100644
+--- a/drivers/net/bonding/bond_procfs.c
++++ b/drivers/net/bonding/bond_procfs.c
+@@ -10,7 +10,7 @@
+ static void *bond_info_seq_start(struct seq_file *seq, loff_t *pos)
+ 	__acquires(RCU)
+ {
+-	struct bonding *bond = seq->private;
++	struct bonding *bond = PDE_DATA(file_inode(seq->file));
+ 	struct list_head *iter;
+ 	struct slave *slave;
+ 	loff_t off = 0;
+@@ -29,7 +29,7 @@ static void *bond_info_seq_start(struct seq_file *seq, loff_t *pos)
  
--static int rtc_proc_open(struct inode *inode, struct file *file)
+ static void *bond_info_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ {
+-	struct bonding *bond = seq->private;
++	struct bonding *bond = PDE_DATA(file_inode(seq->file));
+ 	struct list_head *iter;
+ 	struct slave *slave;
+ 	bool found = false;
+@@ -56,7 +56,7 @@ static void bond_info_seq_stop(struct seq_file *seq, void *v)
+ 
+ static void bond_info_show_master(struct seq_file *seq)
+ {
+-	struct bonding *bond = seq->private;
++	struct bonding *bond = PDE_DATA(file_inode(seq->file));
+ 	const struct bond_opt_value *optval;
+ 	struct slave *curr, *primary;
+ 	int i;
+@@ -167,7 +167,7 @@ static void bond_info_show_master(struct seq_file *seq)
+ static void bond_info_show_slave(struct seq_file *seq,
+ 				 const struct slave *slave)
+ {
+-	struct bonding *bond = seq->private;
++	struct bonding *bond = PDE_DATA(file_inode(seq->file));
+ 
+ 	seq_printf(seq, "\nSlave Interface: %s\n", slave->dev->name);
+ 	seq_printf(seq, "MII Status: %s\n", bond_slave_link_status(slave->link));
+@@ -257,38 +257,14 @@ static const struct seq_operations bond_info_seq_ops = {
+ 	.show  = bond_info_seq_show,
+ };
+ 
+-static int bond_info_open(struct inode *inode, struct file *file)
 -{
--	int ret;
--	struct rtc_device *rtc = PDE_DATA(inode);
+-	struct seq_file *seq;
+-	int res;
 -
--	if (!try_module_get(rtc->owner))
--		return -ENODEV;
+-	res = seq_open(file, &bond_info_seq_ops);
+-	if (!res) {
+-		/* recover the pointer buried in proc_dir_entry data */
+-		seq = file->private_data;
+-		seq->private = PDE_DATA(inode);
+-	}
 -
--	ret = single_open(file, rtc_proc_show, rtc);
--	if (ret)
--		module_put(rtc->owner);
--	return ret;
--}
--
--static int rtc_proc_release(struct inode *inode, struct file *file)
--{
--	int res = single_release(inode, file);
--	struct rtc_device *rtc = PDE_DATA(inode);
--
--	module_put(rtc->owner);
 -	return res;
 -}
 -
--static const struct file_operations rtc_proc_fops = {
--	.open		= rtc_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= rtc_proc_release,
+-static const struct file_operations bond_info_fops = {
+-	.owner   = THIS_MODULE,
+-	.open    = bond_info_open,
+-	.read    = seq_read,
+-	.llseek  = seq_lseek,
+-	.release = seq_release,
 -};
 -
- void rtc_proc_add_device(struct rtc_device *rtc)
+ void bond_create_proc_entry(struct bonding *bond)
  {
- 	if (is_rtc_hctosys(rtc))
--		proc_create_data("driver/rtc", 0, NULL, &rtc_proc_fops, rtc);
-+		proc_create_single_data("driver/rtc", 0, NULL, rtc_proc_show,
-+				rtc);
- }
+ 	struct net_device *bond_dev = bond->dev;
+ 	struct bond_net *bn = net_generic(dev_net(bond_dev), bond_net_id);
  
- void rtc_proc_del_device(struct rtc_device *rtc)
+ 	if (bn->proc_dir) {
+-		bond->proc_entry = proc_create_data(bond_dev->name,
+-						    0444, bn->proc_dir,
+-						    &bond_info_fops, bond);
++		bond->proc_entry = proc_create_seq_data(bond_dev->name, 0444,
++				bn->proc_dir, &bond_info_seq_ops, bond);
+ 		if (bond->proc_entry == NULL)
+ 			netdev_warn(bond_dev, "Cannot create /proc/net/%s/%s\n",
+ 				    DRV_NAME, bond_dev->name);
 -- 
 2.17.0
