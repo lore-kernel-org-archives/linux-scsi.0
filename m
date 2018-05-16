@@ -1,39 +1,133 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 7/7] cxlflash: Isolate external module dependencies
-Date: Wed, 16 May 2018 11:13:16 -0500
-Message-ID: <20180516161316.GF8754@p8tul1-build.aus.stglabs.ibm.com>
-References: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1526065579-39079-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: ufshcd: Remove VLA usage
+Date: Wed, 16 May 2018 13:54:50 -0700
+Message-ID: <fdc105dd5b8a8597fc9858b19d536450@codeaurora.org>
+References: <20180502235809.GA13998@beast>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Disposition: inline
-In-Reply-To: <1526065579-39079-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180502235809.GA13998@beast>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, May 11, 2018 at 02:06:19PM -0500, Uma Krishnan wrote:
-> Depending on the underlying transport, cxlflash has a dependency on either
-> the CXL or OCXL drivers, which are enabled via their Kconfig option.
-> Instead of having a module wide dependency on these config options, it is
-> better to isolate the object modules that are dependent on the CXL and OCXL
-> drivers and adjust the module dependencies accordingly.
+On 2018-05-02 16:58, Kees Cook wrote:
+> On the quest to remove all VLAs from the kernel[1] this moves buffers
+> off the stack. In the second instance, this collapses two separately
+> allocated buffers into a single buffer, since they are used 
+> consecutively,
+> which saves 256 bytes (QUERY_DESC_MAX_SIZE + 1) of stack space.
 > 
-> This commit isolates the object files that are dependent on CXL and/or
-> OCXL. The cxl/ocxl fops used in the core driver are tucked under an ifdef
-> to avoid compilation errors.
+> [1]
+> https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
 > 
-> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 34 ++++++++++++++++++++++++++--------
+>  1 file changed, 26 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 00e79057f870..a271534362f6 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5958,14 +5958,18 @@ static void ufshcd_init_icc_levels(struct 
+> ufs_hba *hba)
+>  {
+>  	int ret;
+>  	int buff_len = hba->desc_size.pwr_desc;
+> -	u8 desc_buf[hba->desc_size.pwr_desc];
+> +	u8 *desc_buf;
+> +
+> +	desc_buf = kmalloc(buff_len, GFP_KERNEL);
+> +	if (!desc_buf)
+> +		return;
+> 
+>  	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
+>  	if (ret) {
+>  		dev_err(hba->dev,
+>  			"%s: Failed reading power descriptor.len = %d ret = %d",
+>  			__func__, buff_len, ret);
+> -		return;
+> +		goto out;
+>  	}
+> 
+>  	hba->init_prefetch_data.icc_level =
+> @@ -5983,6 +5987,8 @@ static void ufshcd_init_icc_levels(struct ufs_hba 
+> *hba)
+>  			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
+>  			__func__, hba->init_prefetch_data.icc_level , ret);
+> 
+> +out:
+> +	kfree(desc_buf);
+>  }
+> 
+>  /**
+> @@ -6052,9 +6058,17 @@ static int ufs_get_device_desc(struct ufs_hba 
+> *hba,
+>  			       struct ufs_dev_desc *dev_desc)
+>  {
+>  	int err;
+> +	size_t buff_len;
+>  	u8 model_index;
+> -	u8 str_desc_buf[QUERY_DESC_MAX_SIZE + 1] = {0};
+> -	u8 desc_buf[hba->desc_size.dev_desc];
+> +	u8 *desc_buf;
+> +
+> +	buff_len = max_t(size_t, hba->desc_size.dev_desc,
+> +			 QUERY_DESC_MAX_SIZE + 1);
+> +	desc_buf = kmalloc(buff_len, GFP_KERNEL);
+> +	if (!desc_buf) {
+> +		err = -ENOMEM;
+> +		goto out;
+> +	}
+> 
+>  	err = ufshcd_read_device_desc(hba, desc_buf, 
+> hba->desc_size.dev_desc);
+>  	if (err) {
+> @@ -6072,7 +6086,10 @@ static int ufs_get_device_desc(struct ufs_hba 
+> *hba,
+> 
+>  	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+> 
+> -	err = ufshcd_read_string_desc(hba, model_index, str_desc_buf,
+> +	/* Zero-pad entire buffer for string termination. */
+> +	memset(desc_buf, 0, buff_len);
+> +
+> +	err = ufshcd_read_string_desc(hba, model_index, desc_buf,
+>  				      QUERY_DESC_MAX_SIZE, true/*ASCII*/);
+>  	if (err) {
+>  		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
+> @@ -6080,15 +6097,16 @@ static int ufs_get_device_desc(struct ufs_hba 
+> *hba,
+>  		goto out;
+>  	}
+> 
+> -	str_desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
+> -	strlcpy(dev_desc->model, (str_desc_buf + QUERY_DESC_HDR_SIZE),
+> -		min_t(u8, str_desc_buf[QUERY_DESC_LENGTH_OFFSET],
+> +	desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
+> +	strlcpy(dev_desc->model, (desc_buf + QUERY_DESC_HDR_SIZE),
+> +		min_t(u8, desc_buf[QUERY_DESC_LENGTH_OFFSET],
+>  		      MAX_MODEL_LEN));
+> 
+>  	/* Null terminate the model string */
+>  	dev_desc->model[MAX_MODEL_LEN] = '\0';
+> 
+>  out:
+> +	kfree(desc_buf);
+>  	return err;
+>  }
+> 
+> --
+> 2.17.0
 
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
