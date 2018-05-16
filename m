@@ -1,85 +1,63 @@
-From: Alim Akhtar <alim.akhtar@gmail.com>
-Subject: Re: [RFC PATCH V2] scsi: ufs: Add specific callback for setting DMA mask
-Date: Wed, 16 May 2018 10:01:01 +0530
-Message-ID: <CAGOxZ52yZ8Xqype7AVsH43DWOA2byh2kW3SGsfHyHtzqSH6QPw@mail.gmail.com>
-References: <CGME20180308111416epcas1p4f9f1dbb36e8567121c6236ac0e9b4e03@epcas1p4.samsung.com>
- <1520507013-2410-1-git-send-email-alim.akhtar@samsung.com>
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+Subject: Re: [PATCH 1/2] Convert target drivers to use sbitmap
+Date: Wed, 16 May 2018 08:54:31 +0300
+Message-ID: <8736ys9mco.fsf@linux.intel.com>
+References: <20180515160043.27044-1-willy@infradead.org> <20180515160043.27044-2-willy@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha512; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1520507013-2410-1-git-send-email-alim.akhtar@samsung.com>
+In-Reply-To: <20180515160043.27044-2-willy@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vinayak holikatti <vinholikatti@gmail.com>, subhashj@codeaurora.org, devicetree@vger.kernel.org, Shaik Ameer Basha <shaik.ameer@samsung.com>
+To: Matthew Wilcox <willy@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, linux-usb@vger.kernel.org, kvm@vger.kernel.org, virtualization@lists.linux-foundation.org, netdev@vger.kernel.org, Juergen Gross <jgross@suse.com>, qla2xxx-upstream@qlogic.com, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Ping !!!
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Mar 8, 2018 at 4:33 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
-> Currently DMA mask for UFS HCI is set by reading CAP register's
-> [64AS] bit. Some HCI controller like Exynos support 36-bit bus address.
-> This works perfectly fine with DMA mask set as 64 in case there is no
-> IOMMU attached to HCI.
-> In case if HCI is behind an IOMMU, setting DMA mask as 64 bit won't
-> work as HCI has only 36bit addressing and SMMU has created mapping of
-> 64 bit and as the device truncates the address, its mapping will not
-> be found by iommu.
-> To resolve such issues, let the variant driver sets its own DMA mask.
+
+Hi,
+
+Matthew Wilcox <willy@infradead.org> writes:
+> From: Matthew Wilcox <mawilcox@microsoft.com>
 >
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+> The sbitmap and the percpu_ida perform essentially the same task,
+> allocating tags for commands.  Since the sbitmap is more used than
+> the percpu_ida, convert the percpu_ida users to the sbitmap API.
+>
+> Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 3 +++
->  drivers/scsi/ufs/ufshcd.h | 2 ++
->  2 files changed, 5 insertions(+)
->
-> I am not sure if there are other ways available to handle such cases.
-> The IOMMU I am talking about is arm-smmu and it DT binding does not
-> give much idea about handling such cases.
-> Have tested this patch with HCI controller with IOMMU attached.
->
-> Changes Since V1:
->         - Fixed build issue as reported by Kbuild test robot.
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index a355d98..9a1374e 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -7781,6 +7781,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
->   */
->  static int ufshcd_set_dma_mask(struct ufs_hba *hba)
->  {
-> +       if (hba->vops && hba->vops->set_dma_mask)
-> +               return hba->vops->set_dma_mask(hba);
-> +
->         if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
->                 if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
->                         return 0;
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 1332e54..89c6dae 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -297,6 +297,7 @@ struct ufs_pwr_mode_info {
->   * @resume: called during host controller PM callback
->   * @dbg_register_dump: used to dump controller debug information
->   * @phy_initialization: used to initialize phys
-> + * @set_dma_mask: used to set variant specific DMA mask
->   */
->  struct ufs_hba_variant_ops {
->         const char *name;
-> @@ -325,6 +326,7 @@ struct ufs_hba_variant_ops {
->         int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->         void    (*dbg_register_dump)(struct ufs_hba *hba);
->         int     (*phy_initialization)(struct ufs_hba *);
-> +       int     (*set_dma_mask)(struct ufs_hba *hba);
->  };
->
->  /* clock gating state  */
-> --
-> 2.7.4
->
 
+[...]
 
+>  drivers/usb/gadget/function/f_tcm.c      |  8 +++---
 
--- 
-Regards,
-Alim
+for drivers/usb/gadget/function/f_tcm.c
+
+Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+
+=2D-=20
+balbi
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAlr7x5kACgkQzL64meEa
+mQZTNw/7BeARv5AHTU76jM8Zj2RGQnhmwK+vPHpdEEIiwl+eENFkYn8HCpxz6Fy/
+8+ZLFWGD2OSNpenF/oHeMyuLjbD1nbeYk95GU3zXJbeTQp7Cl5m5j05mcAqziWD6
+I+EExa95spRapO1A03KDnDsOgCe9nVM+j2BT/nXvUiSmyT3Z80XcuextwlpFCh0t
+Lzw+k9HT8LfdgFKIY4d8fXBakn/Ezuvcm1thYlLJNACjePusCvo8Fv4R3jVTsmFJ
+OdsgkEIPhHUJnyg13fAWatJU77mzxhH1wu+3gAUv5UuhAu7QEvLTlOMYRc/Jp5JG
+U+y/wxeoY1VgmFlZDHPcm/W8wGGlM5Lv2KqPuwBjxErHxJ0Mzf4/MFatLj3g+QOK
+pzmlRNpl+36e5+kifuQhZk+YiqgOwQIs96HmZlwCZy0E1IfZYY8d1mFky0aocqbG
+Mi096aKi4JIhXJ/cbi4bWlq26P/LQdYQYa83WfZQN0pHKVdaI1baUbtU3EFqt1PV
+/asEEy8d0bt4HD3kutz3Kv2wqKbKP4i3aR8voXhI9Er09EXjxtL6mM2y3z4jhYDa
+SocWSQ88Y+vNhWWtZXOTKK1/lonuPjIdR8Xb4BOaWnJgb/XXNaj7nioloxjxA8It
+sDGjUAaySMhhC2Ga2WcrkXOJRmbVL5lyBi9nJWm7viDHOJIfZLI=
+=DXbr
+-----END PGP SIGNATURE-----
+--=-=-=--
