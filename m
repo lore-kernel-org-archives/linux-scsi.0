@@ -1,496 +1,270 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 31/42] hostap: switch to proc_create_{seq,single}_data
-Date: Wed, 16 May 2018 11:43:35 +0200
-Message-ID: <20180516094346.20506-32-hch@lst.de>
+Subject: [PATCH 25/42] jfs: simplify procfs code
+Date: Wed, 16 May 2018 11:43:29 +0200
+Message-ID: <20180516094346.20506-26-hch@lst.de>
 References: <20180516094346.20506-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Return-path: <netdev-owner@vger.kernel.org>
 In-Reply-To: <20180516094346.20506-1-hch@lst.de>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+Sender: netdev-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-And use proc private data directly instead of doing a detour
-through seq->private.
+Use remove_proc_subtree to remove the whole subtree on cleanup, and
+unwind the registration loop into individual calls.  Switch to use
+proc_create_seq where applicable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- .../net/wireless/intersil/hostap/hostap_ap.c  |  70 ++-------
- .../net/wireless/intersil/hostap/hostap_hw.c  |  17 +--
- .../wireless/intersil/hostap/hostap_proc.c    | 143 +++---------------
- 3 files changed, 39 insertions(+), 191 deletions(-)
+ fs/jfs/jfs_debug.c    | 43 ++++++++++++++-----------------------------
+ fs/jfs/jfs_debug.h    | 10 +++++-----
+ fs/jfs/jfs_logmgr.c   | 14 +-------------
+ fs/jfs/jfs_metapage.c | 14 +-------------
+ fs/jfs/jfs_txnmgr.c   | 28 ++--------------------------
+ fs/jfs/jfs_xtree.c    | 14 +-------------
+ 6 files changed, 24 insertions(+), 99 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-index 4f76f81dd3af..d1884b8913e7 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-@@ -69,7 +69,7 @@ static void prism2_send_mgmt(struct net_device *dev,
- #ifndef PRISM2_NO_PROCFS_DEBUG
- static int ap_debug_proc_show(struct seq_file *m, void *v)
+diff --git a/fs/jfs/jfs_debug.c b/fs/jfs/jfs_debug.c
+index a70907606025..35a5b2a81ae0 100644
+--- a/fs/jfs/jfs_debug.c
++++ b/fs/jfs/jfs_debug.c
+@@ -29,7 +29,6 @@
+ 
+ #ifdef PROC_FS_JFS /* see jfs_debug.h */
+ 
+-static struct proc_dir_entry *base;
+ #ifdef CONFIG_JFS_DEBUG
+ static int jfs_loglevel_proc_show(struct seq_file *m, void *v)
  {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 
- 	seq_printf(m, "BridgedUnicastFrames=%u\n", ap->bridged_unicast);
- 	seq_printf(m, "BridgedMulticastFrames=%u\n", ap->bridged_multicast);
-@@ -81,18 +81,6 @@ static int ap_debug_proc_show(struct seq_file *m, void *v)
- 	seq_printf(m, "tx_drop_nonassoc=%u\n", ap->tx_drop_nonassoc);
- 	return 0;
- }
--
--static int ap_debug_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ap_debug_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations ap_debug_proc_fops = {
--	.open		= ap_debug_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
- #endif /* PRISM2_NO_PROCFS_DEBUG */
- 
- 
-@@ -333,7 +321,7 @@ void hostap_deauth_all_stas(struct net_device *dev, struct ap_data *ap,
- 
- static int ap_control_proc_show(struct seq_file *m, void *v)
- {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 	char *policy_txt;
- 	struct mac_entry *entry;
- 
-@@ -365,20 +353,20 @@ static int ap_control_proc_show(struct seq_file *m, void *v)
- 
- static void *ap_control_proc_start(struct seq_file *m, loff_t *_pos)
- {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 	spin_lock_bh(&ap->mac_restrictions.lock);
- 	return seq_list_start_head(&ap->mac_restrictions.mac_list, *_pos);
- }
- 
- static void *ap_control_proc_next(struct seq_file *m, void *v, loff_t *_pos)
- {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 	return seq_list_next(v, &ap->mac_restrictions.mac_list, _pos);
- }
- 
- static void ap_control_proc_stop(struct seq_file *m, void *v)
- {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 	spin_unlock_bh(&ap->mac_restrictions.lock);
- }
- 
-@@ -389,24 +377,6 @@ static const struct seq_operations ap_control_proc_seqops = {
- 	.show	= ap_control_proc_show,
+@@ -66,43 +65,29 @@ static const struct file_operations jfs_loglevel_proc_fops = {
  };
+ #endif
  
--static int ap_control_proc_open(struct inode *inode, struct file *file)
--{
--	int ret = seq_open(file, &ap_control_proc_seqops);
--	if (ret == 0) {
--		struct seq_file *m = file->private_data;
--		m->private = PDE_DATA(inode);
--	}
--	return ret;
--}
--
--static const struct file_operations ap_control_proc_fops = {
--	.open		= ap_control_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
+-static struct {
+-	const char	*name;
+-	const struct file_operations *proc_fops;
+-} Entries[] = {
+-#ifdef CONFIG_JFS_STATISTICS
+-	{ "lmstats",	&jfs_lmstats_proc_fops, },
+-	{ "txstats",	&jfs_txstats_proc_fops, },
+-	{ "xtstat",	&jfs_xtstat_proc_fops, },
+-	{ "mpstat",	&jfs_mpstat_proc_fops, },
+-#endif
+-#ifdef CONFIG_JFS_DEBUG
+-	{ "TxAnchor",	&jfs_txanchor_proc_fops, },
+-	{ "loglevel",	&jfs_loglevel_proc_fops }
+-#endif
 -};
+-#define NPROCENT	ARRAY_SIZE(Entries)
 -
--
- int ap_control_add_mac(struct mac_restrictions *mac_restrictions, u8 *mac)
+ void jfs_proc_init(void)
  {
- 	struct mac_entry *entry;
-@@ -585,20 +555,20 @@ static int prism2_ap_proc_show(struct seq_file *m, void *v)
+-	int i;
++	struct proc_dir_entry *base;
  
- static void *prism2_ap_proc_start(struct seq_file *m, loff_t *_pos)
- {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 	spin_lock_bh(&ap->sta_table_lock);
- 	return seq_list_start_head(&ap->sta_list, *_pos);
- }
- 
- static void *prism2_ap_proc_next(struct seq_file *m, void *v, loff_t *_pos)
- {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 	return seq_list_next(v, &ap->sta_list, _pos);
- }
- 
- static void prism2_ap_proc_stop(struct seq_file *m, void *v)
- {
--	struct ap_data *ap = m->private;
-+	struct ap_data *ap = PDE_DATA(file_inode(m->file));
- 	spin_unlock_bh(&ap->sta_table_lock);
- }
- 
-@@ -608,23 +578,6 @@ static const struct seq_operations prism2_ap_proc_seqops = {
- 	.stop	= prism2_ap_proc_stop,
- 	.show	= prism2_ap_proc_show,
- };
--
--static int prism2_ap_proc_open(struct inode *inode, struct file *file)
--{
--	int ret = seq_open(file, &prism2_ap_proc_seqops);
--	if (ret == 0) {
--		struct seq_file *m = file->private_data;
--		m->private = PDE_DATA(inode);
--	}
--	return ret;
--}
--
--static const struct file_operations prism2_ap_proc_fops = {
--	.open		= prism2_ap_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
--};
- #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
- 
- 
-@@ -896,12 +849,13 @@ void hostap_init_ap_proc(local_info_t *local)
+-	if (!(base = proc_mkdir("fs/jfs", NULL)))
++	base = proc_mkdir("fs/jfs", NULL);
++	if (!base)
  		return;
  
- #ifndef PRISM2_NO_PROCFS_DEBUG
--	proc_create_data("ap_debug", 0, ap->proc, &ap_debug_proc_fops, ap);
-+	proc_create_single_data("ap_debug", 0, ap->proc, ap_debug_proc_show, ap);
- #endif /* PRISM2_NO_PROCFS_DEBUG */
- 
- #ifndef PRISM2_NO_KERNEL_IEEE80211_MGMT
--	proc_create_data("ap_control", 0, ap->proc, &ap_control_proc_fops, ap);
--	proc_create_data("ap", 0, ap->proc, &prism2_ap_proc_fops, ap);
-+	proc_create_seq_data("ap_control", 0, ap->proc, &ap_control_proc_seqops,
-+			ap);
-+	proc_create_seq_data("ap", 0, ap->proc, &prism2_ap_proc_seqops, ap);
- #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
- 
- }
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-index 5c4a17a18968..2720aa39f530 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-@@ -2951,19 +2951,6 @@ static int prism2_registers_proc_show(struct seq_file *m, void *v)
- 
- 	return 0;
- }
--
--static int prism2_registers_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, prism2_registers_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations prism2_registers_proc_fops = {
--	.open		= prism2_registers_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- #endif /* PRISM2_NO_PROCFS_DEBUG */
- 
- 
-@@ -3279,8 +3266,8 @@ static int hostap_hw_ready(struct net_device *dev)
- 		}
- 		hostap_init_proc(local);
- #ifndef PRISM2_NO_PROCFS_DEBUG
--		proc_create_data("registers", 0, local->proc,
--				 &prism2_registers_proc_fops, local);
-+		proc_create_single_data("registers", 0, local->proc,
-+				 prism2_registers_proc_show, local);
- #endif /* PRISM2_NO_PROCFS_DEBUG */
- 		hostap_init_ap_proc(local);
- 		return 0;
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_proc.c b/drivers/net/wireless/intersil/hostap/hostap_proc.c
-index d234231bf532..5b33ccab9188 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_proc.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_proc.c
-@@ -43,18 +43,6 @@ static int prism2_debug_proc_show(struct seq_file *m, void *v)
- 
- 	return 0;
- }
--
--static int prism2_debug_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, prism2_debug_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations prism2_debug_proc_fops = {
--	.open		= prism2_debug_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
- #endif /* PRISM2_NO_PROCFS_DEBUG */
- 
- 
-@@ -95,19 +83,6 @@ static int prism2_stats_proc_show(struct seq_file *m, void *v)
- 	return 0;
+-	for (i = 0; i < NPROCENT; i++)
+-		proc_create(Entries[i].name, 0, base, Entries[i].proc_fops);
++#ifdef CONFIG_JFS_STATISTICS
++	proc_create_single("lmstats", 0, base, jfs_lmstats_proc_show);
++	proc_create_single("txstats", 0, base, jfs_txstats_proc_show);
++	proc_create_single("xtstat", 0, base, jfs_xtstat_proc_show);
++	proc_create_single("mpstat", 0, base, jfs_mpstat_proc_show);
++#endif
++#ifdef CONFIG_JFS_DEBUG
++	proc_create_single("TxAnchor", 0, base, jfs_txanchor_proc_show);
++	proc_create("loglevel", 0, base, &jfs_loglevel_proc_fops);
++#endif
  }
  
--static int prism2_stats_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, prism2_stats_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations prism2_stats_proc_fops = {
--	.open		= prism2_stats_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
--
- static int prism2_wds_proc_show(struct seq_file *m, void *v)
+ void jfs_proc_clean(void)
  {
- 	struct list_head *ptr = v;
-@@ -122,20 +97,20 @@ static int prism2_wds_proc_show(struct seq_file *m, void *v)
- 
- static void *prism2_wds_proc_start(struct seq_file *m, loff_t *_pos)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	read_lock_bh(&local->iface_lock);
- 	return seq_list_start(&local->hostap_interfaces, *_pos);
- }
- 
- static void *prism2_wds_proc_next(struct seq_file *m, void *v, loff_t *_pos)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	return seq_list_next(v, &local->hostap_interfaces, _pos);
- }
- 
- static void prism2_wds_proc_stop(struct seq_file *m, void *v)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	read_unlock_bh(&local->iface_lock);
- }
- 
-@@ -146,27 +121,9 @@ static const struct seq_operations prism2_wds_proc_seqops = {
- 	.show	= prism2_wds_proc_show,
- };
- 
--static int prism2_wds_proc_open(struct inode *inode, struct file *file)
--{
--	int ret = seq_open(file, &prism2_wds_proc_seqops);
--	if (ret == 0) {
--		struct seq_file *m = file->private_data;
--		m->private = PDE_DATA(inode);
+-	int i;
+-
+-	if (base) {
+-		for (i = 0; i < NPROCENT; i++)
+-			remove_proc_entry(Entries[i].name, base);
+-		remove_proc_entry("fs/jfs", NULL);
 -	}
--	return ret;
--}
--
--static const struct file_operations prism2_wds_proc_fops = {
--	.open		= prism2_wds_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
--};
--
--
- static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	struct list_head *ptr = v;
- 	struct hostap_bss_info *bss;
- 
-@@ -193,20 +150,20 @@ static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
- 
- static void *prism2_bss_list_proc_start(struct seq_file *m, loff_t *_pos)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	spin_lock_bh(&local->lock);
- 	return seq_list_start_head(&local->bss_list, *_pos);
++	remove_proc_subtree("fs/jfs", NULL);
  }
  
- static void *prism2_bss_list_proc_next(struct seq_file *m, void *v, loff_t *_pos)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	return seq_list_next(v, &local->bss_list, _pos);
+ #endif /* PROC_FS_JFS */
+diff --git a/fs/jfs/jfs_debug.h b/fs/jfs/jfs_debug.h
+index eafd1300a00b..0d9e35da8462 100644
+--- a/fs/jfs/jfs_debug.h
++++ b/fs/jfs/jfs_debug.h
+@@ -62,7 +62,7 @@ extern void jfs_proc_clean(void);
+ 
+ extern int jfsloglevel;
+ 
+-extern const struct file_operations jfs_txanchor_proc_fops;
++int jfs_txanchor_proc_show(struct seq_file *m, void *v);
+ 
+ /* information message: e.g., configuration, major event */
+ #define jfs_info(fmt, arg...) do {			\
+@@ -105,10 +105,10 @@ extern const struct file_operations jfs_txanchor_proc_fops;
+  *	----------
+  */
+ #ifdef	CONFIG_JFS_STATISTICS
+-extern const struct file_operations jfs_lmstats_proc_fops;
+-extern const struct file_operations jfs_txstats_proc_fops;
+-extern const struct file_operations jfs_mpstat_proc_fops;
+-extern const struct file_operations jfs_xtstat_proc_fops;
++int jfs_lmstats_proc_show(struct seq_file *m, void *v);
++int jfs_txstats_proc_show(struct seq_file *m, void *v);
++int jfs_mpstat_proc_show(struct seq_file *m, void *v);
++int jfs_xtstat_proc_show(struct seq_file *m, void *v);
+ 
+ #define	INCREMENT(x)		((x)++)
+ #define	DECREMENT(x)		((x)--)
+diff --git a/fs/jfs/jfs_logmgr.c b/fs/jfs/jfs_logmgr.c
+index 0e5d412c0b01..6b68df395892 100644
+--- a/fs/jfs/jfs_logmgr.c
++++ b/fs/jfs/jfs_logmgr.c
+@@ -2493,7 +2493,7 @@ int lmLogFormat(struct jfs_log *log, s64 logAddress, int logSize)
  }
  
- static void prism2_bss_list_proc_stop(struct seq_file *m, void *v)
+ #ifdef CONFIG_JFS_STATISTICS
+-static int jfs_lmstats_proc_show(struct seq_file *m, void *v)
++int jfs_lmstats_proc_show(struct seq_file *m, void *v)
  {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	spin_unlock_bh(&local->lock);
- }
- 
-@@ -217,24 +174,6 @@ static const struct seq_operations prism2_bss_list_proc_seqops = {
- 	.show	= prism2_bss_list_proc_show,
- };
- 
--static int prism2_bss_list_proc_open(struct inode *inode, struct file *file)
--{
--	int ret = seq_open(file, &prism2_bss_list_proc_seqops);
--	if (ret == 0) {
--		struct seq_file *m = file->private_data;
--		m->private = PDE_DATA(inode);
--	}
--	return ret;
--}
--
--static const struct file_operations prism2_bss_list_proc_fops = {
--	.open		= prism2_bss_list_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= seq_release,
--};
--
--
- static int prism2_crypt_proc_show(struct seq_file *m, void *v)
- {
- 	local_info_t *local = m->private;
-@@ -252,19 +191,6 @@ static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+ 	seq_printf(m,
+ 		       "JFS Logmgr stats\n"
+@@ -2510,16 +2510,4 @@ static int jfs_lmstats_proc_show(struct seq_file *m, void *v)
+ 		       lmStat.partial_page);
  	return 0;
  }
- 
--static int prism2_crypt_proc_open(struct inode *inode, struct file *file)
+-
+-static int jfs_lmstats_proc_open(struct inode *inode, struct file *file)
 -{
--	return single_open(file, prism2_crypt_proc_show, PDE_DATA(inode));
+-	return single_open(file, jfs_lmstats_proc_show, NULL);
 -}
 -
--static const struct file_operations prism2_crypt_proc_fops = {
--	.open		= prism2_crypt_proc_open,
+-const struct file_operations jfs_lmstats_proc_fops = {
+-	.open		= jfs_lmstats_proc_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
 -	.release	= single_release,
 -};
--
--
- static ssize_t prism2_pda_proc_read(struct file *file, char __user *buf,
- 				    size_t count, loff_t *_pos)
- {
-@@ -342,7 +268,7 @@ static int prism2_io_debug_proc_read(char *page, char **start, off_t off,
- #ifndef PRISM2_NO_STATION_MODES
- static int prism2_scan_results_proc_show(struct seq_file *m, void *v)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	unsigned long entry;
- 	int i, len;
- 	struct hfa384x_hostscan_result *scanres;
-@@ -392,7 +318,7 @@ static int prism2_scan_results_proc_show(struct seq_file *m, void *v)
- 
- static void *prism2_scan_results_proc_start(struct seq_file *m, loff_t *_pos)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	spin_lock_bh(&local->lock);
- 
- 	/* We have a header (pos 0) + N results to show (pos 1...N) */
-@@ -403,7 +329,7 @@ static void *prism2_scan_results_proc_start(struct seq_file *m, loff_t *_pos)
- 
- static void *prism2_scan_results_proc_next(struct seq_file *m, void *v, loff_t *_pos)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 
- 	++*_pos;
- 	if (*_pos > local->last_scan_results_count)
-@@ -413,7 +339,7 @@ static void *prism2_scan_results_proc_next(struct seq_file *m, void *v, loff_t *
- 
- static void prism2_scan_results_proc_stop(struct seq_file *m, void *v)
- {
--	local_info_t *local = m->private;
-+	local_info_t *local = PDE_DATA(file_inode(m->file));
- 	spin_unlock_bh(&local->lock);
+ #endif /* CONFIG_JFS_STATISTICS */
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index 1a3b0cc22ad3..fa2c6824c7f2 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -815,7 +815,7 @@ void __invalidate_metapages(struct inode *ip, s64 addr, int len)
  }
  
-@@ -423,25 +349,6 @@ static const struct seq_operations prism2_scan_results_proc_seqops = {
- 	.stop	= prism2_scan_results_proc_stop,
- 	.show	= prism2_scan_results_proc_show,
- };
+ #ifdef CONFIG_JFS_STATISTICS
+-static int jfs_mpstat_proc_show(struct seq_file *m, void *v)
++int jfs_mpstat_proc_show(struct seq_file *m, void *v)
+ {
+ 	seq_printf(m,
+ 		       "JFS Metapage statistics\n"
+@@ -828,16 +828,4 @@ static int jfs_mpstat_proc_show(struct seq_file *m, void *v)
+ 		       mpStat.lockwait);
+ 	return 0;
+ }
 -
--static int prism2_scan_results_proc_open(struct inode *inode, struct file *file)
+-static int jfs_mpstat_proc_open(struct inode *inode, struct file *file)
 -{
--	int ret = seq_open(file, &prism2_scan_results_proc_seqops);
--	if (ret == 0) {
--		struct seq_file *m = file->private_data;
--		m->private = PDE_DATA(inode);
--	}
--	return ret;
+-	return single_open(file, jfs_mpstat_proc_show, NULL);
 -}
 -
--static const struct file_operations prism2_scan_results_proc_fops = {
--	.open		= prism2_scan_results_proc_open,
+-const struct file_operations jfs_mpstat_proc_fops = {
+-	.open		= jfs_mpstat_proc_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
--	.release	= seq_release,
+-	.release	= single_release,
 -};
--
--
- #endif /* PRISM2_NO_STATION_MODES */
- 
- 
-@@ -463,29 +370,29 @@ void hostap_init_proc(local_info_t *local)
- 	}
- 
- #ifndef PRISM2_NO_PROCFS_DEBUG
--	proc_create_data("debug", 0, local->proc,
--			 &prism2_debug_proc_fops, local);
-+	proc_create_single_data("debug", 0, local->proc,
-+			prism2_debug_proc_show, local);
- #endif /* PRISM2_NO_PROCFS_DEBUG */
--	proc_create_data("stats", 0, local->proc,
--			 &prism2_stats_proc_fops, local);
--	proc_create_data("wds", 0, local->proc,
--			 &prism2_wds_proc_fops, local);
-+	proc_create_single_data("stats", 0, local->proc, prism2_stats_proc_show,
-+			local);
-+	proc_create_seq_data("wds", 0, local->proc,
-+			&prism2_wds_proc_seqops, local);
- 	proc_create_data("pda", 0, local->proc,
- 			 &prism2_pda_proc_fops, local);
- 	proc_create_data("aux_dump", 0, local->proc,
- 			 local->func->read_aux_fops ?: &prism2_aux_dump_proc_fops,
- 			 local);
--	proc_create_data("bss_list", 0, local->proc,
--			 &prism2_bss_list_proc_fops, local);
--	proc_create_data("crypt", 0, local->proc,
--			 &prism2_crypt_proc_fops, local);
-+	proc_create_seq_data("bss_list", 0, local->proc,
-+			&prism2_bss_list_proc_seqops, local);
-+	proc_create_single_data("crypt", 0, local->proc, prism2_crypt_proc_show,
-+		local);
- #ifdef PRISM2_IO_DEBUG
--	proc_create_data("io_debug", 0, local->proc,
--			 &prism2_io_debug_proc_fops, local);
-+	proc_create_single_data("io_debug", 0, local->proc,
-+			prism2_debug_proc_show, local);
- #endif /* PRISM2_IO_DEBUG */
- #ifndef PRISM2_NO_STATION_MODES
--	proc_create_data("scan_results", 0, local->proc,
--			 &prism2_scan_results_proc_fops, local);
-+	proc_create_seq_data("scan_results", 0, local->proc,
-+			&prism2_scan_results_proc_seqops, local);
- #endif /* PRISM2_NO_STATION_MODES */
+ #endif
+diff --git a/fs/jfs/jfs_txnmgr.c b/fs/jfs/jfs_txnmgr.c
+index 4d973524c887..a5663cb621d8 100644
+--- a/fs/jfs/jfs_txnmgr.c
++++ b/fs/jfs/jfs_txnmgr.c
+@@ -2998,7 +2998,7 @@ int jfs_sync(void *arg)
  }
  
+ #if defined(CONFIG_PROC_FS) && defined(CONFIG_JFS_DEBUG)
+-static int jfs_txanchor_proc_show(struct seq_file *m, void *v)
++int jfs_txanchor_proc_show(struct seq_file *m, void *v)
+ {
+ 	char *freewait;
+ 	char *freelockwait;
+@@ -3032,22 +3032,10 @@ static int jfs_txanchor_proc_show(struct seq_file *m, void *v)
+ 		       list_empty(&TxAnchor.unlock_queue) ? "" : "not ");
+ 	return 0;
+ }
+-
+-static int jfs_txanchor_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, jfs_txanchor_proc_show, NULL);
+-}
+-
+-const struct file_operations jfs_txanchor_proc_fops = {
+-	.open		= jfs_txanchor_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+ #endif
+ 
+ #if defined(CONFIG_PROC_FS) && defined(CONFIG_JFS_STATISTICS)
+-static int jfs_txstats_proc_show(struct seq_file *m, void *v)
++int jfs_txstats_proc_show(struct seq_file *m, void *v)
+ {
+ 	seq_printf(m,
+ 		       "JFS TxStats\n"
+@@ -3072,16 +3060,4 @@ static int jfs_txstats_proc_show(struct seq_file *m, void *v)
+ 		       TxStat.txLockAlloc_freelock);
+ 	return 0;
+ }
+-
+-static int jfs_txstats_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, jfs_txstats_proc_show, NULL);
+-}
+-
+-const struct file_operations jfs_txstats_proc_fops = {
+-	.open		= jfs_txstats_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+ #endif
+diff --git a/fs/jfs/jfs_xtree.c b/fs/jfs/jfs_xtree.c
+index 5cde6d2fcfca..2c200b5256a6 100644
+--- a/fs/jfs/jfs_xtree.c
++++ b/fs/jfs/jfs_xtree.c
+@@ -3874,7 +3874,7 @@ s64 xtTruncate_pmap(tid_t tid, struct inode *ip, s64 committed_size)
+ }
+ 
+ #ifdef CONFIG_JFS_STATISTICS
+-static int jfs_xtstat_proc_show(struct seq_file *m, void *v)
++int jfs_xtstat_proc_show(struct seq_file *m, void *v)
+ {
+ 	seq_printf(m,
+ 		       "JFS Xtree statistics\n"
+@@ -3887,16 +3887,4 @@ static int jfs_xtstat_proc_show(struct seq_file *m, void *v)
+ 		       xtStat.split);
+ 	return 0;
+ }
+-
+-static int jfs_xtstat_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, jfs_xtstat_proc_show, NULL);
+-}
+-
+-const struct file_operations jfs_xtstat_proc_fops = {
+-	.open		= jfs_xtstat_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+ #endif
 -- 
 2.17.0
