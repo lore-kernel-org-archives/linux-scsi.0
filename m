@@ -1,153 +1,35 @@
-From: Michael Kelley <mhkelley58@gmail.com>
-Subject: [PATCH 1/1] scsi: storvsc: Avoid allocating memory for temp cpumasks
-Date: Thu, 17 May 2018 14:07:40 -0700
-Message-ID: <1526591260-27162-1-git-send-email-mikelley@microsoft.com>
-Reply-To: mikelley@microsoft.com
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kys@microsoft.com, sthemmin@microsoft.com, martin.petersen@oracle.com, longli@microsoft.com, jejb@linux.vnet.ibm.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: mikelley@microsoft.com
+From: Stephen Hemminger <stephen@networkplumber.org>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Avoid allocating memory for temp
+ cpumasks
+Date: Thu, 17 May 2018 16:39:23 -0700
+Message-ID: <20180517163923.022c0536@xeon-e3>
+References: <1526591260-27162-1-git-send-email-mikelley@microsoft.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1526591260-27162-1-git-send-email-mikelley@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Michael Kelley <mhkelley58@gmail.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, mikelley@microsoft.com, devel@linuxdriverproject.org, sthemmin@microsoft.com
 List-Id: linux-scsi@vger.kernel.org
 
-Current code allocates 240 Kbytes (in typical configs) for
-each synthetic SCSI controller to use as temp cpumask variables.
-Recode to avoid needing the temp cpumask variables and remove the
-memory allocation.
+On Thu, 17 May 2018 14:07:40 -0700
+Michael Kelley <mhkelley58@gmail.com> wrote:
 
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
----
+> Current code allocates 240 Kbytes (in typical configs) for
+> each synthetic SCSI controller to use as temp cpumask variables.
+> Recode to avoid needing the temp cpumask variables and remove the
+> memory allocation.
+> 
+> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
 
-This patch is for the 4.18/scsi-queue branch and improves on commit
-2217a47de42f on April 20, 2018.
-
----
- drivers/scsi/storvsc_drv.c | 50 ++++++++++++++++++----------------------------
- 1 file changed, 19 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index d3897c4..a667119 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -474,13 +474,6 @@ struct storvsc_device {
- 	 * Mask of CPUs bound to subchannels.
- 	 */
- 	struct cpumask alloced_cpus;
--	/*
--	 * Pre-allocated struct cpumask for each hardware queue.
--	 * struct cpumask is used by selecting out-going channels. It is a
--	 * big structure, default to 1024k bytes when CONFIG_MAXSMP=y.
--	 * Pre-allocate it to avoid allocation on the kernel stack.
--	 */
--	struct cpumask *cpumask_chns;
- 	/* Used for vsc/vsp channel reset process */
- 	struct storvsc_cmd_request init_request;
- 	struct storvsc_cmd_request reset_request;
-@@ -885,13 +878,6 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
- 	if (stor_device->stor_chns == NULL)
- 		return -ENOMEM;
- 
--	stor_device->cpumask_chns = kcalloc(num_possible_cpus(),
--			sizeof(struct cpumask), GFP_KERNEL);
--	if (stor_device->cpumask_chns == NULL) {
--		kfree(stor_device->stor_chns);
--		return -ENOMEM;
--	}
--
- 	stor_device->stor_chns[device->channel->target_cpu] = device->channel;
- 	cpumask_set_cpu(device->channel->target_cpu,
- 			&stor_device->alloced_cpus);
-@@ -1252,7 +1238,6 @@ static int storvsc_dev_remove(struct hv_device *device)
- 	vmbus_close(device->channel);
- 
- 	kfree(stor_device->stor_chns);
--	kfree(stor_device->cpumask_chns);
- 	kfree(stor_device);
- 	return 0;
- }
-@@ -1262,7 +1247,7 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
- {
- 	u16 slot = 0;
- 	u16 hash_qnum;
--	struct cpumask *alloced_mask = &stor_device->cpumask_chns[q_num];
-+	const struct cpumask *node_mask;
- 	int num_channels, tgt_cpu;
- 
- 	if (stor_device->num_sc == 0)
-@@ -1278,10 +1263,13 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
- 	 * III. Mapping is persistent.
- 	 */
- 
--	cpumask_and(alloced_mask, &stor_device->alloced_cpus,
--		    cpumask_of_node(cpu_to_node(q_num)));
-+	node_mask = cpumask_of_node(cpu_to_node(q_num));
- 
--	num_channels = cpumask_weight(alloced_mask);
-+	num_channels = 0;
-+	for_each_cpu(tgt_cpu, &stor_device->alloced_cpus) {
-+		if (cpumask_test_cpu(tgt_cpu, node_mask))
-+			num_channels++;
-+	}
- 	if (num_channels == 0)
- 		return stor_device->device->channel;
- 
-@@ -1289,7 +1277,9 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
- 	while (hash_qnum >= num_channels)
- 		hash_qnum -= num_channels;
- 
--	for_each_cpu(tgt_cpu, alloced_mask) {
-+	for_each_cpu(tgt_cpu, &stor_device->alloced_cpus) {
-+		if (!cpumask_test_cpu(tgt_cpu, node_mask))
-+			continue;
- 		if (slot == hash_qnum)
- 			break;
- 		slot++;
-@@ -1308,7 +1298,7 @@ static int storvsc_do_io(struct hv_device *device,
- 	struct vstor_packet *vstor_packet;
- 	struct vmbus_channel *outgoing_channel, *channel;
- 	int ret = 0;
--	struct cpumask *alloced_mask;
-+	const struct cpumask *node_mask;
- 	int tgt_cpu;
- 
- 	vstor_packet = &request->vstor_packet;
-@@ -1329,11 +1319,11 @@ static int storvsc_do_io(struct hv_device *device,
- 			 * Ideally, we want to pick a different channel if
- 			 * available on the same NUMA node.
- 			 */
--			alloced_mask = &stor_device->cpumask_chns[q_num];
--			cpumask_and(alloced_mask, &stor_device->alloced_cpus,
--				    cpumask_of_node(cpu_to_node(q_num)));
--
--			for_each_cpu_wrap(tgt_cpu, alloced_mask, q_num + 1) {
-+			node_mask = cpumask_of_node(cpu_to_node(q_num));
-+			for_each_cpu_wrap(tgt_cpu,
-+				 &stor_device->alloced_cpus, q_num + 1) {
-+				if (!cpumask_test_cpu(tgt_cpu, node_mask))
-+					continue;
- 				if (tgt_cpu == q_num)
- 					continue;
- 				channel = stor_device->stor_chns[tgt_cpu];
-@@ -1359,10 +1349,9 @@ static int storvsc_do_io(struct hv_device *device,
- 			 * NUMA node are busy. Try to find a channel in
- 			 * other NUMA nodes
- 			 */
--			cpumask_andnot(alloced_mask, &stor_device->alloced_cpus,
--					cpumask_of_node(cpu_to_node(q_num)));
--
--			for_each_cpu(tgt_cpu, alloced_mask) {
-+			for_each_cpu(tgt_cpu, &stor_device->alloced_cpus) {
-+				if (cpumask_test_cpu(tgt_cpu, node_mask))
-+					continue;
- 				channel = stor_device->stor_chns[tgt_cpu];
- 				if (hv_get_avail_to_write_percent(
- 							&channel->outbound)
-@@ -1911,7 +1900,6 @@ static int storvsc_probe(struct hv_device *device,
- 
- err_out1:
- 	kfree(stor_device->stor_chns);
--	kfree(stor_device->cpumask_chns);
- 	kfree(stor_device);
- 
- err_out0:
--- 
-2.7.4
+Acked-by: Stephen Hemminger <sthemmin@microsoft.com>
