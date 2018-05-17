@@ -1,125 +1,165 @@
-From: "liwei (CM)" <liwei213@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2OSAyLzVdIGR0LWJpbmRpbmdzOiBz?=
- =?utf-8?Q?csi:_ufs:_add_document_for_hisi-ufs?=
-Date: Thu, 17 May 2018 00:50:23 +0000
-Message-ID: <1699CE87DE933F49876AD744B5DC140FA63AC2@DGGEMM506-MBX.china.huawei.com>
-References: <20180417140814.38098-1-liwei213@huawei.com>
- <20180417140814.38098-3-liwei213@huawei.com>
- <20180424125827.k2dgeu6uon75wzni@rob-hp-laptop>
- <1699CE87DE933F49876AD744B5DC140FA5AC86@DGGEMM506-MBS.china.huawei.com>
- <CAL_JsqLf_r=NHHP2ZNEJOoLORXztF1KnU+tq-+COt4CPMLAsiA@mail.gmail.com>
+From: Anatoliy Glagolev <glagolig@gmail.com>
+Subject: [PATCH] Bsg referencing parent device
+Date: Wed, 16 May 2018 19:02:17 -0600
+Message-ID: <20180517010214.GA18978@xldev-tmpl.dev.purestorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAL_JsqLf_r=NHHP2ZNEJOoLORXztF1KnU+tq-+COt4CPMLAsiA@mail.gmail.com>
-Content-Language: zh-CN
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "khilman@baylibre.com" <khilman@baylibre.com>, "arnd@arndb.de" <arnd@arndb.de>, "gregory.clement@free-electrons.com" <gregory.clement@free-electrons.com>, "thomas.petazzoni@free-electrons.com" <thomas.petazzoni@free-electrons.com>, "yamada.masahiro@socionext.com" <yamada.masahiro@socionext.com>, "riku.voipio@linaro.org" <riku.voipio@linaro.org>, "treding@nvidia.com" <treding@nvidia.com>, "krzk@kernel.org" <krzk@kernel.org>
+To: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: James.Bottomley@hansenpartnership.com
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIFJvYg0KDQotLS0tLemCruS7tuWOn+S7ti0tLS0tDQrlj5Hku7bkuro6IFJvYiBIZXJyaW5n
-IFttYWlsdG86cm9iaEBrZXJuZWwub3JnXSANCuWPkemAgeaXtumXtDogMjAxOOW5tDXmnIgxNuaX
-pSAyMToxNg0K5pS25Lu25Lq6OiBsaXdlaSAoQ00pDQrmioTpgIE6IG1hcmsucnV0bGFuZEBhcm0u
-Y29tOyBjYXRhbGluLm1hcmluYXNAYXJtLmNvbTsgd2lsbC5kZWFjb25AYXJtLmNvbTsgdmluaG9s
-aWthdHRpQGdtYWlsLmNvbTsgamVqYkBsaW51eC52bmV0LmlibS5jb207IG1hcnRpbi5wZXRlcnNl
-bkBvcmFjbGUuY29tOyBraGlsbWFuQGJheWxpYnJlLmNvbTsgYXJuZEBhcm5kYi5kZTsgZ3JlZ29y
-eS5jbGVtZW50QGZyZWUtZWxlY3Ryb25zLmNvbTsgdGhvbWFzLnBldGF6em9uaUBmcmVlLWVsZWN0
-cm9ucy5jb207IHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tOyByaWt1LnZvaXBpb0BsaW5h
-cm8ub3JnOyB0cmVkaW5nQG52aWRpYS5jb207IGtyemtAa2VybmVsLm9yZzsgZGV2aWNldHJlZUB2
-Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1r
-ZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IHph
-bmdsZWlnYW5nOyBHZW5namlhbmZlbmc7IGd1b2RvbmcueHVAbGluYXJvLm9yZw0K5Li76aKYOiBS
-ZTog562U5aSNOiBbUEFUQ0ggdjkgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9j
-dW1lbnQgZm9yIGhpc2ktdWZzDQoNCk9uIFR1ZSwgQXByIDI0LCAyMDE4IGF0IDg6NTQgQU0sIGxp
-d2VpIChDTSkgPGxpd2VpMjEzQGh1YXdlaS5jb20+IHdyb3RlOg0KPiBIaSwgUm9iDQo+DQo+IFRo
-YW5rcyBmb3IgeW91ciBwYXRpZW5jZS4NCj4NCj4gSGksIEFybmQNCj4NCj4gRnJvbSBSb2IncyBz
-dWdnZXN0aW9uLCB3ZSBoYXZlIHRvIGxpc3QgdGhlIHByb3BlcnRpZXMgbm9kZSBpbiB1ZnMtaGlz
-aS50eHQgYmluZ2luZ3MgZXZlbiBpZiBkb2N1bWVudGVkIGluIHRoZSBjb21tb24gYmluZGluZy4N
-Cj4NCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IFJvYiBIZXJyaW5nIFtt
-YWlsdG86cm9iaEBrZXJuZWwub3JnXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQ05pyIMjTml6Ug
-MjA6NTgNCj4g5pS25Lu25Lq6OiBsaXdlaSAoQ00pDQo+IOaKhOmAgTogbWFyay5ydXRsYW5kQGFy
-bS5jb207IGNhdGFsaW4ubWFyaW5hc0Bhcm0uY29tOyB3aWxsLmRlYWNvbkBhcm0uY29tOyB2aW5o
-b2xpa2F0dGlAZ21haWwuY29tOyBqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbTsgbWFydGluLnBldGVy
-c2VuQG9yYWNsZS5jb207IGtoaWxtYW5AYmF5bGlicmUuY29tOyBhcm5kQGFybmRiLmRlOyBncmVn
-b3J5LmNsZW1lbnRAZnJlZS1lbGVjdHJvbnMuY29tOyB0aG9tYXMucGV0YXp6b25pQGZyZWUtZWxl
-Y3Ryb25zLmNvbTsgeWFtYWRhLm1hc2FoaXJvQHNvY2lvbmV4dC5jb207IHJpa3Uudm9pcGlvQGxp
-bmFyby5vcmc7IHRyZWRpbmdAbnZpZGlhLmNvbTsga3J6a0BrZXJuZWwub3JnOyBkZXZpY2V0cmVl
-QHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJt
-LWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsg
-emFuZ2xlaWdhbmc7IEdlbmdqaWFuZmVuZzsgZ3VvZG9uZy54dUBsaW5hcm8ub3JnDQo+IOS4u+mi
-mDogUmU6IFtQQVRDSCB2OSAyLzVdIGR0LWJpbmRpbmdzOiBzY3NpOiB1ZnM6IGFkZCBkb2N1bWVu
-dCBmb3IgaGlzaS11ZnMNCj4NCj4gT24gVHVlLCBBcHIgMTcsIDIwMTggYXQgMTA6MDg6MTFQTSAr
-MDgwMCwgTGkgV2VpIHdyb3RlOg0KPj4gYWRkIHVmcyBub2RlIGRvY3VtZW50IGZvciBIaXNpbGlj
-b24uDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogTGkgV2VpIDxsaXdlaTIxM0BodWF3ZWkuY29tPg0K
-Pj4gLS0tDQo+PiAgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlz
-aS50eHQgfCAyOSArKysrKysrKysrKysrKysrKysrKysrDQo+PiAgLi4uL2RldmljZXRyZWUvYmlu
-ZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0ICAgICAgfCAxMCArKysrKy0tLQ0KPj4gIDIgZmls
-ZXMgY2hhbmdlZCwgMzYgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4+ICBjcmVhdGUg
-bW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlz
-aS50eHQNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3Vmcy91ZnMtaGlzaS50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-dWZzL3Vmcy1oaXNpLnR4dA0KPj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4+IGluZGV4IDAwMDAw
-MDAwMDAwMC4uZDQ5YWI3ZDhmMzFkDQo+PiAtLS0gL2Rldi9udWxsDQo+PiArKysgYi9Eb2N1bWVu
-dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPj4gQEAgLTAsMCAr
-MSwyOSBAQA0KPj4gKyogSGlzaWxpY29uIFVuaXZlcnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhv
-c3QgQ29udHJvbGxlcg0KPj4gKw0KPj4gK1VGUyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmli
-ZSBvbi1jaGlwIFVGUyBoYXJkd2FyZSBtYWNyby4NCj4+ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xs
-ZXIgc2hvdWxkIGhhdmUgaXRzIG93biBub2RlLg0KPj4gKw0KPj4gK1JlcXVpcmVkIHByb3BlcnRp
-ZXM6DQo+PiArLSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBhdGlibGUgbGlzdCwgY29udGFpbnMg
-b25lIG9mIHRoZSBmb2xsb3dpbmcgLQ0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAiaGlzaWxpY29uLGhpMzY2MC11ZnMiLCAiamVkZWMsdWZzLTEuMSIgZm9yIGhpc2kg
-dWZzDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhvc3QgY29udHJv
-bGxlciBwcmVzZW50IG9uIEhpMzZ4eCBjaGlwc2V0Lg0KPj4gKy0gcmVnICAgICAgICAgICAgICAg
-OiBzaG91bGQgY29udGFpbiBVRlMgcmVnaXN0ZXIgYWRkcmVzcyBzcGFjZSAmIFVGUyBTWVMgQ1RS
-TCByZWdpc3RlciBhZGRyZXNzLA0KPj4gKy0gaW50ZXJydXB0LXBhcmVudCAgOiBpbnRlcnJ1cHQg
-ZGV2aWNlDQo+PiArLSBpbnRlcnJ1cHRzICAgICAgICA6IGludGVycnVwdCBudW1iZXINCj4+ICst
-IHJlc2V0cyAgICAgICAgICAgIDogcmVzZXQgbm9kZSByZWdpc3RlciwgdGhlICJhcnN0IiBjb3Jy
-ZXNwb25kcyB0byByZXNldCB0aGUgQVBCL0FYSSBidXMuDQo+DQo+IGFyc3QgYmVsb25ncyBpbiBy
-ZXNldC1uYW1lcy4NCj4NCj4gT0ssIEkgd2lsbCBmaXggaXQgaW4gbmV4dCBwYXRjaDsNCj4NCj4+
-ICstIHJlc2V0LW5hbWVzICAgICAgIDogZGVzY3JpYmUgcmVzZXQgbm9kZSByZWdpc3Rlcg0KPg0K
-PiBXaGF0IGhhcHBlbmVkIHRvIGNsb2Nrcz8gWW91IHN0aWxsIGhhdmUgdG8gbGlzdCB3aGljaCBv
-bmVzIGFwcGx5IGV2ZW4gaWYNCj4gZG9jdW1lbnRlZCBpbiB0aGUgY29tbW9uIGJpbmRpbmcuDQo+
-DQo+IE9LLCBJIHdpbGwgZml4IGl0IGluIG5leHQgcGF0Y2g7DQo+DQo+PiArDQo+PiArRXhhbXBs
-ZToNCj4+ICsNCj4+ICsgICAgIHVmczogdWZzQGZmM2IwMDAwIHsNCj4+ICsgICAgICAgICAgICAg
-Y29tcGF0aWJsZSA9ICJoaXNpbGljb24saGkzNjYwLXVmcyIsICJqZWRlYyx1ZnMtMS4xIjsNCj4+
-ICsgICAgICAgICAgICAgLyogMDogSENJIHN0YW5kYXJkICovDQo+PiArICAgICAgICAgICAgIC8q
-IDE6IFVGUyBTWVMgQ1RSTCAqLw0KPj4gKyAgICAgICAgICAgICByZWcgPSA8MHgwIDB4ZmYzYjAw
-MDAgMHgwIDB4MTAwMD4sDQo+PiArICAgICAgICAgICAgICAgICAgICAgPDB4MCAweGZmM2IxMDAw
-IDB4MCAweDEwMDA+Ow0KPj4gKyAgICAgICAgICAgICBpbnRlcnJ1cHQtcGFyZW50ID0gPCZnaWM+
-Ow0KPj4gKyAgICAgICAgICAgICBpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMjc4IElSUV9UWVBFX0xF
-VkVMX0hJR0g+Ow0KPj4gKyAgICAgICAgICAgICAvKiBvZmZzZXQ6IDB4ODQ7IGJpdDogNyAgKi8N
-Cj4+ICsgICAgICAgICAgICAgcmVzZXRzID0gPCZjcmdfcnN0IDB4ODQgNz47DQo+PiArICAgICAg
-ICAgICAgIHJlc2V0LW5hbWVzID0gImFyc3QiOw0KPj4gKyAgICAgfTsNCj4+IGRpZmYgLS1naXQg
-YS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0
-IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnNoY2QtcGx0ZnJtLnR4
-dA0KPj4gaW5kZXggYzM5ZGZlZjc2YTE4Li5hZGNmYjc5ZjYzZjUgMTAwNjQ0DQo+PiAtLS0gYS9E
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0DQo+
-PiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRm
-cm0udHh0DQo+PiBAQCAtNDEsNiArNDEsOCBAQCBPcHRpb25hbCBwcm9wZXJ0aWVzOg0KPj4gIC1s
-YW5lcy1wZXItZGlyZWN0aW9uIDogbnVtYmVyIG9mIGxhbmVzIGF2YWlsYWJsZSBwZXIgZGlyZWN0
-aW9uIC0gZWl0aGVyIDEgb3IgMi4NCj4+ICAgICAgICAgICAgICAgICAgICAgICAgIE5vdGUgdGhh
-dCBpdCBpcyBhc3N1bWUgc2FtZSBudW1iZXIgb2YgbGFuZXMgaXMgdXNlZCBib3RoDQo+PiAgICAg
-ICAgICAgICAgICAgICAgICAgICBkaXJlY3Rpb25zIGF0IG9uY2UuIElmIG5vdCBzcGVjaWZpZWQs
-IGRlZmF1bHQgaXMgMiBsYW5lcyBwZXIgZGlyZWN0aW9uLg0KPj4gKy0gcmVzZXRzICAgICAgICAg
-ICAgOiByZXNldCBub2RlIHJlZ2lzdGVyLCB0aGUgInJzdCIgY29ycmVzcG9uZHMgdG8gcmVzZXQg
-dGhlIHdob2xlIFVGUyBJUC4NCj4+ICstIHJlc2V0LW5hbWVzICAgICAgIDogZGVzY3JpYmUgcmVz
-ZXQgbm9kZSByZWdpc3Rlcg0KPg0KPiBEb2VzIHlvdXIgY29udHJvbGxlciBoYXZlIDEgb3IgMiBy
-ZXNldHM/IFRoZXJlJ3Mgbm8gcG9pbnQgaW4gYWRkaW5nIHRoaXMNCj4gaGVyZSBpZiBpdCBkb2Vz
-bid0IGFwcGx5IHRvIHlvdXIgY29udHJvbGxlci4NCj4NCj4gVGhlcmUgYXJlIDIgcmVzZXQgaW4g
-b3VyIHNvYyBpbml0LCB0aGUgInJzdCIgY29ycmVzcG9uZHMgdG8gcmVzZXQgdGhlIHdob2xlIFVG
-UyBJUCwgYW5kICIgYXJzdCAiIG9ubHkgcmVzZXQgdGhlIEFQQi9BWEkgYnVzLg0KPiBEaXNjdXNz
-ZWQgd2l0aCBvdXIgc29jIGNvbGxlYWd1ZXMgdGhhdCAiYXJzdCIgaXMgYXNzZXJ0IGJ5IGRlZmF1
-bHQgYW5kIG5lZWRzIHRvIGRlYXNzZXJ0LGJ1dCBpdCBkb25lIGluIGJvb3Rsb2FkZXIsc28gd2ls
-bCByZW1vdmUgJ2Fyc3QnIGluIG5leHQgcGF0Y2guDQo+DQo+IEFib3V0IHRoZSAncmVzZXQnIHBy
-b3BlcnR577yMaXQgc2VlbXMgdGhhdCBBcm5kIEJlcmdtYW5uIGhhcyBkaWZmZXJlbnQgc3VnZ2Vz
-dGlvbu+8jGhlIHN1Z2dlc3RlZCB0aGF0IGFkZCAncnN0JyB0byB1ZnNoY2QtcGx0ZnJtIGJlY2F1
-c2UgaXQgc2VlbXMgY29tbW9uLg0KPiBCdXQgaXQgbG9va3MgbGlrZSBvbmx5IG91ciBzb2MgaW5p
-dCBuZWVkcyBpdC4gV2hhdCdzIHlvdXIgb3Bpbmlvbj8gRG9lcyBpdCBzdGlsbCBuZWVkcyBhZGQg
-dG8gY29tbW9uIGJpbmRpbmdzPw0KDQpGb3IgYSBzaW5nbGUgcmVzZXQsIHRoZW4gSSdtIGZpbmUg
-d2l0aCBpdCBiZWluZyBpbiB0aGUgY29tbW9uDQpiaW5kaW5ncy4gSWYgdGhlcmUgYXJlIG11bHRp
-cGxlIHRoZW4gaXQgc2hvdWxkIGJlIGluIHRoZSBzcGVjaWZpYw0KYmluZGluZ3MgYXMgdGhlIHJl
-c2V0IG5hbWVzIGFyZSBsaWtlbHkgZGlmZmVyZW50Lg0KDQpPSywgSSB3aWxsIHJlbW92ZSB0aGUg
-J2Fyc3QnIGFuZCBrZWVwIG9ubHkgJ3JzdCcgaW4gdG5lIGNvbW1vbiBiaW5naW5ncy4NCg0KUm9i
-DQo=
+A follow-up on earlier discussions:
+[PATCH] bsg referencing bus driver module
+https://www.spinics.net/lists/linux-scsi/msg119631.html
+[PATCH] Waiting for scsi_host_template release
+https://www.spinics.net/lists/linux-scsi/msg119432.html
+
+All these discussions are attempts to fix a crash after
+SCSI transport driver unload if a user-mode process
+holds a handle in BSG layer towards the unloaded driver
+via SCSI mid-layer:
+
+[16834.636216,07] Call Trace:
+                             ...   scsi_proc_hostdir_rm
+[16834.641944,07]  [<ffffffff8141723f>] scsi_host_dev_release+0x3f/0x130
+[16834.647740,07]  [<ffffffff813e4f82>] device_release+0x32/0xa0
+[16834.653423,07]  [<ffffffff812dc6c7>] kobject_cleanup+0x77/0x190
+[16834.659002,07]  [<ffffffff812dc585>] kobject_put+0x25/0x50
+[16834.664430,07]  [<ffffffff813e5277>] put_device+0x17/0x20
+[16834.669740,07]  [<ffffffff812d0334>] bsg_kref_release_function+0x24/0x30
+[16834.675007,07]  [<ffffffff812d14a6>] bsg_release+0x166/0x1d0
+[16834.680148,07]  [<ffffffff8119ba2b>] __fput+0xcb/0x1d0
+[16834.685156,07]  [<ffffffff8119bb6e>] ____fput+0xe/0x10
+[16834.690017,07]  [<ffffffff81077476>] task_work_run+0x86/0xb0
+[16834.694781,07]  [<ffffffff81057043>] exit_to_usermode_loop+0x6b/0x9a
+[16834.699466,07]  [<ffffffff81002875>] syscall_return_slowpath+0x55/0x60
+[16834.704110,07]  [<ffffffff8172d615>] int_ret_from_sys_call+0x25/0x9f
+
+The latest input from earlier discussions was to cut off access
+to the unloaded driver at bsg_unregister_queue time by calling
+blk_cleanup_queue. If we do that we still have to release
+the reference to the parent device (otherwise we crash with
+the same stack). The next logical step is, rather than maintaining
+a "part-time" reference to be dropped early, we discard
+referencing completely.
+Discarding the reference turns out to be the only thing needed
+to fix the problem: all transport drivers already do blk_cleanup_queue
+before releasing their reference to the parent device.
+
+>From 7eaa9b43f0b99766b1d197044eb4d2e549d11a24 Mon Sep 17 00:00:00 2001
+From: Anatoliy Glagolev <glagolig@gmail.com>
+Date: Wed, 16 May 2018 17:03:09 -0600
+Subject: [PATCH] Bsg referencing parent device
+Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
+
+Bsg holding reference to a parent device may result in a crash
+if user closes a bsg file handle after the parent device driver
+has unloaded.
+Holding a reference is not really needed: parent device must exist
+between bsg_register_queue and bsg_unregister_queue. Before
+the device goes away the caller does blk_cleanup_queue so that
+all in-flight requests to the device are gone and all new requests
+cannot pass beyond the queue. The queue itself is a refcounted
+object and it will stay alive with a bsg file.
+---
+ block/bsg.c | 37 +++++++++++++++++--------------------
+ 1 file changed, 17 insertions(+), 20 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index defa06c..f9e4b91 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -650,18 +650,6 @@ static struct bsg_device *bsg_alloc_device(void)
+ 	return bd;
+ }
+ 
+-static void bsg_kref_release_function(struct kref *kref)
+-{
+-	struct bsg_class_device *bcd =
+-		container_of(kref, struct bsg_class_device, ref);
+-	struct device *parent = bcd->parent;
+-
+-	if (bcd->release)
+-		bcd->release(bcd->parent);
+-
+-	put_device(parent);
+-}
+-
+ static int bsg_put_device(struct bsg_device *bd)
+ {
+ 	int ret = 0, do_free;
+@@ -694,7 +682,6 @@ static int bsg_put_device(struct bsg_device *bd)
+ 
+ 	kfree(bd);
+ out:
+-	kref_put(&q->bsg_dev.ref, bsg_kref_release_function);
+ 	if (do_free)
+ 		blk_put_queue(q);
+ 	return ret;
+@@ -760,8 +747,6 @@ static struct bsg_device *bsg_get_device(struct inode *inode, struct file *file)
+ 	 */
+ 	mutex_lock(&bsg_mutex);
+ 	bcd = idr_find(&bsg_minor_idr, iminor(inode));
+-	if (bcd)
+-		kref_get(&bcd->ref);
+ 	mutex_unlock(&bsg_mutex);
+ 
+ 	if (!bcd)
+@@ -772,8 +757,6 @@ static struct bsg_device *bsg_get_device(struct inode *inode, struct file *file)
+ 		return bd;
+ 
+ 	bd = bsg_add_device(inode, bcd->queue, file);
+-	if (IS_ERR(bd))
+-		kref_put(&bcd->ref, bsg_kref_release_function);
+ 
+ 	return bd;
+ }
+@@ -902,6 +885,8 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 
+ void bsg_unregister_queue(struct request_queue *q)
+ {
++	struct device *parent;
++	void (*release)(struct device *dev);
+ 	struct bsg_class_device *bcd = &q->bsg_dev;
+ 
+ 	if (!bcd->class_dev)
+@@ -913,8 +898,21 @@ void bsg_unregister_queue(struct request_queue *q)
+ 		sysfs_remove_link(&q->kobj, "bsg");
+ 	device_unregister(bcd->class_dev);
+ 	bcd->class_dev = NULL;
+-	kref_put(&bcd->ref, bsg_kref_release_function);
++	parent = bcd->parent;
++	release = bcd->release;
++	bcd->parent = NULL;
++	bcd->release = NULL;
+ 	mutex_unlock(&bsg_mutex);
++
++	/*
++	 * The caller of bsg_[un]register_queue must hold a reference
++	 * to the parent device between ..register.. and ..unregister..
++	 * so we do not maintain a refcount to parent here.
++	 * Note: the caller is expected to blk_cleanup_queue(q)
++	 * before releasing the reference to the parent device.
++	 */
++	if (release)
++		release(parent);
+ }
+ EXPORT_SYMBOL_GPL(bsg_unregister_queue);
+ 
+@@ -955,10 +953,9 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
+ 
+ 	bcd->minor = ret;
+ 	bcd->queue = q;
+-	bcd->parent = get_device(parent);
++	bcd->parent = parent;
+ 	bcd->release = release;
+ 	bcd->ops = ops;
+-	kref_init(&bcd->ref);
+ 	dev = MKDEV(bsg_major, bcd->minor);
+ 	class_dev = device_create(bsg_class, parent, dev, NULL, "%s", devname);
+ 	if (IS_ERR(class_dev)) {
+-- 
+1.9.1
