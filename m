@@ -1,7 +1,7 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 06/25] zfcp: fix missing REC trigger trace for all objects in ERP_FAILED
-Date: Thu, 17 May 2018 19:14:48 +0200
-Message-ID: <20180517171507.18237-7-maier@linux.ibm.com>
+Subject: [PATCH 07/25] zfcp: fix missing REC trigger trace on enqueue without ERP thread
+Date: Thu, 17 May 2018 19:14:49 +0200
+Message-ID: <20180517171507.18237-8-maier@linux.ibm.com>
 References: <20180517171507.18237-1-maier@linux.ibm.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20180517171507.18237-1-maier@linux.ibm.com>
@@ -9,19 +9,6 @@ Sender: stable-owner@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-That other commit introduced an inconsistency because it would trace
-on ERP_FAILED for all callers of port forced reopen triggers
-(not just terminate_rport_io), but it would not trace on ERP_FAILED
-for all callers of other ERP triggers such as adapter, port regular, LUN.
-
-Therefore, generalize that other commit. zfcp_erp_action_enqueue()
-already had two early outs which re-used the one zfcp_dbf_rec_trig() call.
-All ERP trigger functions finally run through zfcp_erp_action_enqueue().
-So move the special handling for ZFCP_STATUS_COMMON_ERP_FAILED into
-zfcp_erp_action_enqueue() and add another early out with new trace marker
-for pseudo ERP need in this case. This removes all early returns from
-all ERP trigger functions so we always end up at zfcp_dbf_rec_trig().
 
 Example trace record formatted with zfcpdbf from s390-tools:
 
@@ -43,146 +30,32 @@ LUN status     : 0x...
 Ready count    : 0x...
 Running count  : 0x...
 ERP want       : 0x0.                   ZFCP_ERP_ACTION_REOPEN_...
-ERP need       : 0xe0                   ZFCP_ERP_ACTION_FAILED
+ERP need       : 0xc0                   ZFCP_ERP_ACTION_NONE
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
 Cc: <stable@vger.kernel.org> #2.6.38+
 Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
 ---
- drivers/s390/scsi/zfcp_erp.c | 79 ++++++++++++++++++++++++++++----------------
- 1 file changed, 51 insertions(+), 28 deletions(-)
+ drivers/s390/scsi/zfcp_erp.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index 5c368cdfc455..20fe59300d0e 100644
+index 20fe59300d0e..69dfb328dba4 100644
 --- a/drivers/s390/scsi/zfcp_erp.c
 +++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -143,6 +143,49 @@ static void zfcp_erp_action_dismiss_adapter(struct zfcp_adapter *adapter)
+@@ -315,8 +315,11 @@ static int zfcp_erp_action_enqueue(int want, struct zfcp_adapter *adapter,
+ 		goto out;
  	}
- }
  
-+static int zfcp_erp_handle_failed(int want, struct zfcp_adapter *adapter,
-+				  struct zfcp_port *port,
-+				  struct scsi_device *sdev)
-+{
-+	int need = want;
-+	struct zfcp_scsi_dev *zsdev;
-+
-+	switch (want) {
-+	case ZFCP_ERP_ACTION_REOPEN_LUN:
-+		zsdev = sdev_to_zfcp(sdev);
-+		if (atomic_read(&zsdev->status) & ZFCP_STATUS_COMMON_ERP_FAILED)
-+			need = 0;
-+		break;
-+	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
-+		if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_ERP_FAILED)
-+			need = 0;
-+		break;
-+	case ZFCP_ERP_ACTION_REOPEN_PORT:
-+		if (atomic_read(&port->status) &
-+		    ZFCP_STATUS_COMMON_ERP_FAILED) {
-+			need = 0;
-+			/* ensure propagation of failed status to new devices */
-+			zfcp_erp_set_port_status(
-+				port, ZFCP_STATUS_COMMON_ERP_FAILED);
-+		}
-+		break;
-+	case ZFCP_ERP_ACTION_REOPEN_ADAPTER:
-+		if (atomic_read(&adapter->status) &
-+		    ZFCP_STATUS_COMMON_ERP_FAILED) {
-+			need = 0;
-+			/* ensure propagation of failed status to new devices */
-+			zfcp_erp_set_adapter_status(
-+				adapter, ZFCP_STATUS_COMMON_ERP_FAILED);
-+		}
-+		break;
-+	default:
-+		need = 0;
-+		break;
-+	}
-+
-+	return need;
-+}
-+
- static int zfcp_erp_required_act(int want, struct zfcp_adapter *adapter,
- 				 struct zfcp_port *port,
- 				 struct scsi_device *sdev)
-@@ -266,6 +309,12 @@ static int zfcp_erp_action_enqueue(int want, struct zfcp_adapter *adapter,
- 	int retval = 1, need;
- 	struct zfcp_erp_action *act;
- 
-+	need = zfcp_erp_handle_failed(want, adapter, port, sdev);
-+	if (!need) {
-+		need = ZFCP_ERP_ACTION_FAILED; /* marker for trace */
+-	if (!adapter->erp_thread)
+-		return -EIO;
++	if (!adapter->erp_thread) {
++		need = ZFCP_ERP_ACTION_NONE; /* marker for trace */
++		retval = -EIO;
 +		goto out;
 +	}
-+
- 	if (!adapter->erp_thread)
- 		return -EIO;
  
-@@ -314,12 +363,6 @@ static int _zfcp_erp_adapter_reopen(struct zfcp_adapter *adapter,
- 	zfcp_erp_adapter_block(adapter, clear_mask);
- 	zfcp_scsi_schedule_rports_block(adapter);
- 
--	/* ensure propagation of failed status to new devices */
--	if (atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_ERP_FAILED) {
--		zfcp_erp_set_adapter_status(adapter,
--					    ZFCP_STATUS_COMMON_ERP_FAILED);
--		return -EIO;
--	}
- 	return zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_ADAPTER,
- 				       adapter, NULL, NULL, id, 0);
- }
-@@ -338,12 +381,8 @@ void zfcp_erp_adapter_reopen(struct zfcp_adapter *adapter, int clear, char *id)
- 	zfcp_scsi_schedule_rports_block(adapter);
- 
- 	write_lock_irqsave(&adapter->erp_lock, flags);
--	if (atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_ERP_FAILED)
--		zfcp_erp_set_adapter_status(adapter,
--					    ZFCP_STATUS_COMMON_ERP_FAILED);
--	else
--		zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_ADAPTER, adapter,
--					NULL, NULL, id, 0);
-+	zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_ADAPTER, adapter,
-+				NULL, NULL, id, 0);
- 	write_unlock_irqrestore(&adapter->erp_lock, flags);
- }
- 
-@@ -384,13 +423,6 @@ static void _zfcp_erp_port_forced_reopen(struct zfcp_port *port, int clear,
- 	zfcp_erp_port_block(port, clear);
- 	zfcp_scsi_schedule_rport_block(port);
- 
--	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_ERP_FAILED) {
--		zfcp_dbf_rec_trig(id, port->adapter, port, NULL,
--				  ZFCP_ERP_ACTION_REOPEN_PORT_FORCED,
--				  ZFCP_ERP_ACTION_FAILED);
--		return;
--	}
--
- 	zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_PORT_FORCED,
- 				port->adapter, port, NULL, id, 0);
- }
-@@ -416,12 +448,6 @@ static int _zfcp_erp_port_reopen(struct zfcp_port *port, int clear, char *id)
- 	zfcp_erp_port_block(port, clear);
- 	zfcp_scsi_schedule_rport_block(port);
- 
--	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_ERP_FAILED) {
--		/* ensure propagation of failed status to new devices */
--		zfcp_erp_set_port_status(port, ZFCP_STATUS_COMMON_ERP_FAILED);
--		return -EIO;
--	}
--
- 	return zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_PORT,
- 				       port->adapter, port, NULL, id, 0);
- }
-@@ -461,9 +487,6 @@ static void _zfcp_erp_lun_reopen(struct scsi_device *sdev, int clear, char *id,
- 
- 	zfcp_erp_lun_block(sdev, clear);
- 
--	if (atomic_read(&zfcp_sdev->status) & ZFCP_STATUS_COMMON_ERP_FAILED)
--		return;
--
- 	zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_LUN, adapter,
- 				zfcp_sdev->port, sdev, id, act_status);
- }
+ 	need = zfcp_erp_required_act(want, adapter, port, sdev);
+ 	if (!need)
 -- 
 2.16.3
